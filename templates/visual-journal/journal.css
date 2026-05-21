@@ -1,7 +1,9 @@
 /**
  * Visual Journal v0.2.1 — 用户交付样式（journal.css）
  * 双形态：手机 9:16 · Web 16:9（断点 768px）
+ * 字体：Google Fonts（导出 zip 在线打开时需联网加载）
  */
+@import url("https://fonts.googleapis.com/css2?family=Zhi+Mang+Xing&family=Ma+Shan+Zheng&family=Long+Cang&display=swap");
 @import url("journal-screens.css");
 
 :root {
@@ -24,8 +26,10 @@
     rgba(0, 0, 0, 0.2) 50%,
     transparent 100%
   );
-  --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, serif;
-  --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-handwriting: "Zhi Mang Xing", "Ma Shan Zheng", "STKaiti", "KaiTi", cursive;
+  --font-brush: "Ma Shan Zheng", "Long Cang", "STKaiti", cursive;
+  --font-serif: var(--font-handwriting);
+  --font-sans: var(--font-handwriting);
   --chapter-gap: 4px;
   --radius: 0;
   --page-pad: 0;
@@ -118,7 +122,7 @@ html {
 body {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 48px;
   line-height: 1.5;
   color: var(--text);
   background: var(--bg);
@@ -224,17 +228,17 @@ html[data-layout="auto"] .cover-hero__media img {
 
 .cover-hero__text h1 {
   margin: 0 0 6px;
-  font-family: var(--font-serif);
-  font-size: clamp(1.75rem, 5vw + 0.5rem, 3rem);
-  font-weight: 600;
+  font-family: var(--font-brush);
+  font-size: clamp(2.1rem, 6vw + 0.75rem, 3.5rem);
+  font-weight: 400;
   line-height: 1.08;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
 }
 
 .cover-hero__text .subtitle {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   opacity: 0.92;
@@ -275,7 +279,7 @@ html[data-layout="auto"] .cover-hero__media img {
 .trip-meta {
   text-align: center;
   padding: 16px 16px 6px;
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
@@ -284,10 +288,10 @@ html[data-layout="auto"] .cover-hero__media img {
 .hook-line {
   margin: 0 auto 20px;
   padding: 0 16px;
-  max-width: 20em;
+  max-width: 16em;
   text-align: center;
   font-family: var(--font-serif);
-  font-size: 16px;
+  font-size: 64px;
   line-height: 1.45;
 }
 
@@ -312,39 +316,24 @@ html[data-layout="auto"] .cover-hero__media img {
 }
 
 .chapter-header__index {
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 400;
   letter-spacing: 0.18em;
   color: var(--accent);
 }
 
 .chapter-header h2 {
   margin: 2px 0 0;
-  font-family: var(--font-serif);
-  font-size: 18px;
-  font-weight: 600;
-}
-
-@media (min-width: 48rem) {
-  .chapter-header h2 {
-    font-size: 22px;
-  }
-}
-
-@media (min-width: 90rem) {
-  html[data-layout="web"] .chapter-header h2 {
-    font-size: clamp(22px, 1.4vw, 28px);
-  }
-
-  html[data-layout="web"] .hook-line {
-    font-size: clamp(16px, 1.1vw, 20px);
-  }
+  font-family: var(--font-brush);
+  font-size: 72px;
+  font-weight: 400;
+  line-height: 1.12;
 }
 
 .chapter-lead {
   margin: 0;
   padding: 0 16px 10px;
-  font-size: 14px;
+  font-size: inherit;
   color: var(--muted);
 }
 
@@ -364,22 +353,22 @@ html[data-layout="auto"] .cover-hero__media img {
   text-align: center;
   padding: 20px 16px 6px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.06em;
 }
 
 .divider-place strong {
   display: block;
   margin-top: 4px;
-  font-family: var(--font-serif);
-  font-size: 15px;
+  font-family: var(--font-brush);
+  font-size: 18px;
   color: var(--text);
 }
 
 /* 附录块：仅金样例演示 media-row */
 .chapter--appendix .chapter-header h2 {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 17px;
+  font-weight: 400;
   color: var(--muted);
 }
 
@@ -510,7 +499,7 @@ video.media-card__visual {
   bottom: 16px;
   right: 16px;
   padding: 6px 12px;
-  font-size: 11px;
+  font-size: 13px;
   color: #fff;
   background: rgba(0, 0, 0, 0.55);
   border-radius: 4px;
@@ -530,14 +519,14 @@ video.media-card__visual {
 
 .media-card__overlay-text .media-card__title {
   margin: 0 0 4px;
-  font-family: var(--font-serif);
-  font-size: 17px;
-  font-weight: 600;
+  font-family: var(--font-brush);
+  font-size: 20px;
+  font-weight: 400;
 }
 
 .media-card__overlay-text .media-card__caption {
   margin: 0;
-  font-size: 13px;
+  font-size: 16px;
   opacity: 0.92;
 }
 
@@ -567,14 +556,14 @@ video.media-card__visual {
 
 .media-card__body .media-card__title {
   margin: 0 0 4px;
-  font-family: var(--font-serif);
-  font-size: 17px;
-  font-weight: 600;
+  font-family: var(--font-brush);
+  font-size: 20px;
+  font-weight: 400;
 }
 
 .media-card__body .media-card__caption {
   margin: 0;
-  font-size: 14px;
+  font-size: inherit;
   color: var(--muted);
 }
 
@@ -625,14 +614,14 @@ html[data-layout="mobile"] .media-card__overlay-text {
 }
 
 .voice-bar__duration {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 
 .voice-transcript {
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .voice-transcript summary {
@@ -852,7 +841,7 @@ html[data-layout="web"] .media-card__frame[data-aspect-kind="panorama"] img {
 
 .media-row__caption {
   padding: 10px 16px 14px;
-  font-size: 13px;
+  font-size: inherit;
   color: var(--muted);
   background: var(--bg-page);
 }
@@ -1000,7 +989,7 @@ html[data-layout="web"] .media-scroll__item[data-aspect-kind="panorama"] img.med
   text-align: center;
   padding: 28px 20px 20px;
   font-family: var(--font-serif);
-  font-size: 16px;
+  font-size: inherit;
   max-width: 22em;
   margin: 0 auto;
 }
@@ -1008,7 +997,7 @@ html[data-layout="web"] .media-scroll__item[data-aspect-kind="panorama"] img.med
 .footer-cta {
   text-align: center;
   padding: 16px 16px calc(32px + var(--safe-bottom));
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   color: var(--muted);
   border-top: 1px solid var(--border);
@@ -1075,7 +1064,7 @@ html[data-layout="web"] .media-scroll__item[data-aspect-kind="panorama"] img.med
 
 .cover-share__place {
   margin: 0 0 8px;
-  font-size: 13px;
+  font-size: 15px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   opacity: 0.88;
@@ -1083,16 +1072,16 @@ html[data-layout="web"] .media-scroll__item[data-aspect-kind="panorama"] img.med
 
 .cover-share__dates {
   margin: 0 0 20px;
-  font-size: 14px;
+  font-size: 17px;
   letter-spacing: 0.06em;
   opacity: 0.75;
 }
 
 .cover-share__title {
   margin: 0 0 16px;
-  font-family: var(--font-serif);
-  font-size: clamp(36px, 8vw, 52px);
-  font-weight: 600;
+  font-family: var(--font-brush);
+  font-size: clamp(42px, 9vw, 60px);
+  font-weight: 400;
   line-height: 1.12;
 }
 
@@ -1100,7 +1089,7 @@ html[data-layout="web"] .media-scroll__item[data-aspect-kind="panorama"] img.med
   margin: 0;
   max-width: 16em;
   font-family: var(--font-serif);
-  font-size: clamp(16px, 3.6vw, 20px);
+  font-size: 64px;
   line-height: 1.45;
   opacity: 0.92;
 }
