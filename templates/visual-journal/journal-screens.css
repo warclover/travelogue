@@ -6,8 +6,8 @@ html[data-layout="auto"] .layout-screen {
   width: 100%;
   max-width: var(--bleed-width);
   margin: 0 auto 12px;
-  aspect-ratio: 16 / 9;
-  max-height: min(85vh, 85dvh, calc(var(--bleed-width) * 9 / 16));
+  aspect-ratio: var(--screen-aspect, 16 / 9);
+  height: auto;
   overflow: hidden;
   background: var(--screen-tone, var(--bg-page));
   box-sizing: border-box;
@@ -74,17 +74,49 @@ html[data-layout="auto"] .layout-screen__grid--2col {
 
 /* 横图专用：多行横条（避免 3col 竖条槽裁切横图） */
 html[data-layout="web"] .layout-screen__grid--landscape-stack-2,
-html[data-layout="auto"] .layout-screen__grid--landscape-stack-2 {
-  grid-template-columns: 1fr;
-  grid-template-rows: repeat(2, 1fr);
-  align-items: stretch;
-}
-
+html[data-layout="auto"] .layout-screen__grid--landscape-stack-2,
 html[data-layout="web"] .layout-screen__grid--landscape-stack-3,
 html[data-layout="auto"] .layout-screen__grid--landscape-stack-3 {
   grid-template-columns: 1fr;
-  grid-template-rows: repeat(3, 1fr);
+  grid-auto-rows: auto;
   align-items: stretch;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-2"] .layout-screen__grid--landscape-stack-2 .layout-slot,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-2"] .layout-screen__grid--landscape-stack-2 .layout-slot,
+html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-3"] .layout-screen__grid--landscape-stack-3 .layout-slot,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-3"] .layout-screen__grid--landscape-stack-3 .layout-slot {
+  aspect-ratio: var(--slot-aspect, 16 / 9);
+  width: 100%;
+  height: auto;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-2"],
+html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-2"],
+html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-3"],
+html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-3"] {
+  aspect-ratio: auto;
+  height: auto;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"] .layout-screen__grid--2col,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"] .layout-screen__grid--2col {
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: auto;
+  align-items: start;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"] .layout-slot,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"] .layout-slot {
+  aspect-ratio: var(--slot-aspect, 3 / 4);
+  width: 100%;
+  height: auto;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"],
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"] {
+  aspect-ratio: auto;
+  height: auto;
 }
 
 html[data-layout="web"] .layout-screen__grid--2x2,
@@ -151,8 +183,6 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-tall-1"] .layout-sc
   justify-content: center;
 }
 
-html[data-layout="web"] .layout-screen[data-pattern="screen-panorama-1"] .layout-slot__img--contain,
-html[data-layout="auto"] .layout-screen[data-pattern="screen-panorama-1"] .layout-slot__img--contain,
 html[data-layout="web"] .layout-screen[data-pattern="screen-square-1"] .layout-slot__img--contain,
 html[data-layout="auto"] .layout-screen[data-pattern="screen-square-1"] .layout-slot__img--contain,
 html[data-layout="web"] .layout-screen[data-pattern="screen-tall-1"] .layout-slot__img--contain,
@@ -163,8 +193,23 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-tall-1"] .layout-sl
   max-height: 100%;
 }
 
-html[data-layout="web"] .layout-screen[data-pattern="screen-panorama-1"],
-html[data-layout="auto"] .layout-screen[data-pattern="screen-panorama-1"] {
-  aspect-ratio: 21 / 9;
-  max-height: min(48vh, calc(var(--bleed-width) * 9 / 21));
+html[data-layout="web"] .layout-screen[data-pattern="screen-panorama-1"] .layout-slot__img--cover,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-panorama-1"] .layout-slot__img--cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* 竖屏多图：无原生 --screen-aspect 时默认 3:4 */
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"],
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"],
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-3"],
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-3"] {
+  aspect-ratio: var(--screen-aspect, 3 / 4);
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-1"],
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-1"] {
+  aspect-ratio: var(--screen-aspect, 3 / 4);
 }

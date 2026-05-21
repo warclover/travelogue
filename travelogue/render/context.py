@@ -79,6 +79,10 @@ _WEB_IMAGE_SIZES: dict[str, str] = {
     ),
     "row_third": "(min-width: 1920px) 720px, (min-width: 1200px) 600px, 33vw",
     "row_half": "(min-width: 1920px) 1100px, (min-width: 1200px) 900px, 50vw",
+    "screen_full": (
+        "(min-width: 1920px) 2200px, (min-width: 1200px) 1800px, "
+        "(min-width: 768px) 1400px, 100vw"
+    ),
     "scroll": (
         "(min-width: 1920px) 1000px, (min-width: 1200px) 760px, "
         "(min-width: 768px) 620px, 86vw"
@@ -383,6 +387,15 @@ def _screen_tone_css(tone: dict | None) -> str | None:
     return f"#{r:02x}{g:02x}{b:02x}"
 
 
+def _screen_aspect_ratio_css(asset: dict) -> str | None:
+    """Native source ratio for single-slot screens (avoids squashed 16:9 boxes)."""
+    w = int(asset.get("nativeWidth") or asset.get("width") or 0)
+    h = int(asset.get("nativeHeight") or asset.get("height") or 0)
+    if w > 0 and h > 0:
+        return f"{w} / {h}"
+    return None
+
+
 def build_layout_screen(
     screen: dict,
     assets: dict[str, dict],
@@ -394,7 +407,9 @@ def build_layout_screen(
     pattern_id = screen.get("patternId", "screen-landscape-1")
     grid_class = grid_class_for_pattern(pattern_id)
     n_slots = len(screen.get("slots") or [])
-    if "3x3" in grid_class or n_slots >= 9:
+    if "1col" in grid_class and n_slots == 1:
+        sizes_slot = "screen_full"
+    elif "3x3" in grid_class or n_slots >= 9:
         sizes_slot = "row_third"
     elif "2x2" in grid_class or "2col" in grid_class or n_slots == 2:
         sizes_slot = "row_half"
@@ -413,6 +428,8 @@ def build_layout_screen(
         else:
             slot_sizes = sizes_slot
         srcset = compile_srcset(asset, mobile=export_layout == "mobile")
+        slot_aspect = _screen_aspect_ratio_css(asset)
+        slot_style = f"--slot-aspect: {slot_aspect};" if slot_aspect else ""
         entry: dict = {
             "slotIndex": slot.get("slot", j),
             "fit": fit,
@@ -422,14 +439,33 @@ def build_layout_screen(
             "sizes": pick_image_sizes(export_layout, slot_sizes),
             "alt": alt_text(None, asset, meta_title),
             "loading": "eager" if eager and j == 0 else "lazy",
+            "slotStyle": slot_style,
         }
         if role:
             entry["role"] = role
         slots_out.append(entry)
+
+    screen_aspect: str | None = None
+    if n_slots == 1 and "1col" in grid_class:
+        first_aid = (screen.get("slots") or [{}])[0].get("assetId", "")
+        if first_aid and first_aid in assets:
+            screen_aspect = _screen_aspect_ratio_css(assets[first_aid])
+
+    style_parts: list[str] = []
+    if screen_aspect:
+        style_parts.append(f"--screen-aspect: {screen_aspect}")
+    tone = _screen_tone_css(screen.get("tone"))
+    if tone:
+        style_parts.append(f"--screen-tone: {tone}")
+    screen_style = "; ".join(style_parts)
+    if screen_style:
+        screen_style += ";"
+
     return {
         "patternId": pattern_id,
         "gridClass": grid_class,
-        "screenTone": _screen_tone_css(screen.get("tone")),
+        "screenTone": tone,
+        "screenStyle": screen_style,
         "slots": slots_out,
     }
 

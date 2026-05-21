@@ -296,6 +296,8 @@ def ingest_into_trip(
             "sourceFile": f"source/{dest_source.name}",
             "displayFile": display_rel,
             "srcset": srcset_rel,
+            "nativeWidth": img.width,
+            "nativeHeight": img.height,
             "width": out_w,
             "height": out_h,
             "aspectKind": aspect_kind,

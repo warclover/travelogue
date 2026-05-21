@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
+from pathlib import Path
 
 from travelogue.curation.layout_planner import (
     aspect_kind_for_asset,
@@ -99,16 +100,27 @@ def layout_eligible_assets(trip: dict) -> list[dict]:
     ]
 
 
-def apply_low_resolution_exclusion(trip: dict) -> str | None:
+def apply_low_resolution_exclusion(
+    trip: dict,
+    *,
+    trip_dir: Path | None = None,
+) -> str | None:
     """Mark明显偏低分辨率 assets; returns warning message if any dropped."""
     from travelogue.config import get_config
-    from travelogue.curation.asset_quality import partition_low_resolution_assets
+    from travelogue.curation.asset_quality import (
+        backfill_native_dimensions,
+        partition_low_resolution_assets,
+    )
+
+    if trip_dir is not None:
+        backfill_native_dimensions(trip, Path(trip_dir))
 
     cfg = get_config().ingest
     all_assets = trip.get("assets") or []
     _, dropped, warn = partition_low_resolution_assets(
         all_assets,
         min_long_edge_px=cfg.min_long_edge_layout_px,
+        min_short_edge_px=cfg.min_short_edge_layout_px,
         median_ratio=cfg.low_res_median_ratio,
         peak_ratio=cfg.low_res_peak_ratio,
     )
@@ -212,6 +224,85 @@ def _cover_candidates(
     scored.sort(reverse=True)
     out = [cover_id] + [aid for _, aid in scored[: limit - 1]]
     return out[:limit]
+
+
+_MAX_CHAPTER_ITEMS = 8
+_DEFAULT_CARD_LAYOUT = {"fill": True, "bleed": True, "overlay": True}
+
+
+def _item_asset_ids(item: dict) -> list[str]:
+    if item.get("type") == "media-card":
+        aid = item.get("assetId")
+        return [aid] if aid else []
+    if item.get("type") in ("media-row", "media-scroll"):
+        return list(item.get("assetIds") or [])
+    return []
+
+
+def _filter_item_excluded(item: dict, excluded: set[str]) -> dict | None:
+    itype = item.get("type")
+    if itype == "media-card":
+        aid = item.get("assetId")
+        if not aid or aid in excluded:
+            return None
+        return item
+    if itype in ("media-row", "media-scroll"):
+        aids = [a for a in item.get("assetIds") or [] if a not in excluded]
+        if not aids:
+            return None
+        out = dict(item)
+        out["assetIds"] = aids
+        return out
+    return item
+
+
+def _items_from_screen_asset_ids(asset_ids: list[str]) -> list[dict]:
+    """Rebuild a compact items[] from screens (schema max 8)."""
+    items: list[dict] = []
+    i = 0
+    while i < len(asset_ids) and len(items) < _MAX_CHAPTER_ITEMS:
+        chunk = asset_ids[i : i + 3]
+        if len(chunk) == 1:
+            items.append(
+                {
+                    "type": "media-card",
+                    "assetId": chunk[0],
+                    "layout": dict(_DEFAULT_CARD_LAYOUT),
+                }
+            )
+            i += 1
+        else:
+            layout = "landscape-triple" if len(chunk) >= 3 else "landscape-pair"
+            items.append(
+                {"type": "media-row", "assetIds": chunk[:3], "rowLayout": layout}
+            )
+            i += len(chunk[:3])
+    return items[:_MAX_CHAPTER_ITEMS]
+
+
+def _sanitize_chapters_after_exclusion(chapters: list[dict], excluded: set[str]) -> None:
+    """Drop excluded assets from items[] and keep within schema maxItems."""
+    for ch in chapters:
+        items = []
+        for it in ch.get("items", []):
+            kept = _filter_item_excluded(it, excluded)
+            if kept is not None:
+                items.append(kept)
+        if len(items) > _MAX_CHAPTER_ITEMS:
+            aids: list[str] = []
+            for sc in ch.get("screens") or []:
+                for sl in sc.get("slots") or []:
+                    aid = sl.get("assetId")
+                    if aid and aid not in excluded and aid not in aids:
+                        aids.append(aid)
+            if aids:
+                items = _items_from_screen_asset_ids(aids)
+            else:
+                flat: list[str] = []
+                for it in items:
+                    flat.extend(_item_asset_ids(it))
+                items = _items_from_screen_asset_ids(flat)
+        ch["items"] = items
 
 
 def _group_assets_by_day(assets: list[dict], cover_id: str) -> list[list[str]]:
@@ -335,11 +426,12 @@ def run_curate(
     export_layout: str | None = None,
     layout_engine: str | None = None,
     apply_layout: bool = True,
+    trip_dir: Path | None = None,
 ) -> CurateResult:
     if len(trip.get("assets") or []) < 4:
         raise CurateError("E_CURATE_TOO_FEW", "need at least 4 assets to curate")
 
-    res_warn = apply_low_resolution_exclusion(trip)
+    res_warn = apply_low_resolution_exclusion(trip, trip_dir=trip_dir)
     layout_assets = layout_eligible_assets(trip)
     if len(layout_assets) < 4:
         raise CurateError(
@@ -364,6 +456,13 @@ def run_curate(
     if engine not in (LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS):
         engine = LAYOUT_ENGINE_LEGACY
     cover_id = sync_trip_covers(trip, export_layout=layout, assets=layout_assets)
+    curation = trip.get("curation") or {}
+    by_layout = curation.get("coverByLayout") or {}
+    skip_screen_ids: set[str] = set()
+    if layout in ("auto", "web") and isinstance(by_layout, dict):
+        web_cover = by_layout.get("web") or ""
+        if web_cover:
+            skip_screen_ids.add(web_cover)
 
     buckets = _group_assets_by_day(layout_assets, cover_id)
     aspects = {a["id"]: aspect_kind_for_asset(a) for a in layout_assets}
@@ -378,12 +477,16 @@ def run_curate(
         layout_engine=engine,
         assets=layout_assets,
         orientation_summary=summary_dict,
+        skip_screen_asset_ids=skip_screen_ids,
     )
     assets_by_id = {a["id"]: a for a in layout_assets}
     for ch, bucket in zip(chapters, [b for b in buckets if b]):
         span = _bucket_day_span(bucket, assets_by_id)
         if span:
             ch.setdefault("curation", {})["daySpan"] = span
+    excluded_ids = set(curation.get("excludedLowResAssetIds") or [])
+    if excluded_ids:
+        _sanitize_chapters_after_exclusion(chapters, excluded_ids)
     trip["chapters"] = chapters
     trip["exportLayout"] = layout
     trip["layoutEngine"] = engine

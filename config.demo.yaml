@@ -15,5 +15,6 @@ ingest:
   dedupe_phash: true
   dedupe_burst: true
   min_long_edge_layout_px: 800
+  min_short_edge_layout_px: 600
   low_res_median_ratio: 0.55
   low_res_peak_ratio: 0.42

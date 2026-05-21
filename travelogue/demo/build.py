@@ -157,7 +157,12 @@ def run_demo_from_album(
         meta["hook"] = hook[:56]
 
     try:
-        curate_result = run_curate(trip, export_layout=export_layout, apply_layout=True)
+        curate_result = run_curate(
+            trip,
+            export_layout=export_layout,
+            apply_layout=True,
+            trip_dir=trip_root,
+        )
     except CurateError as exc:
         raise DemoError(exc.code, str(exc)) from exc
 

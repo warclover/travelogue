@@ -39,6 +39,7 @@ ingest:
   dedupe_burst: true
   # 策展时剔除明显低于本批中位分辨率的照片（仍保留在 trip.json，不参与版面/封面）
   min_long_edge_layout_px: 800
+  min_short_edge_layout_px: 600
   low_res_median_ratio: 0.55
   low_res_peak_ratio: 0.42
   max_video_clip_mb: 1.5

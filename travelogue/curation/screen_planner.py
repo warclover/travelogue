@@ -79,7 +79,9 @@ def screens_layout_active(trip: dict, *, override: str | None = None) -> bool:
 
 
 def _default_fits(pattern_id: str, n: int) -> list[LayoutFit]:
-    if pattern_id in ("screen-tall-1", "screen-panorama-1", "screen-square-1"):
+    if pattern_id == "screen-panorama-1":
+        return ["cover"] * n
+    if pattern_id in ("screen-tall-1", "screen-square-1"):
         return ["contain"] * n
     if pattern_id == "screen-portrait-1":
         return ["cover"] * n
@@ -356,7 +358,10 @@ def _flush_portrait_pending(
         )
         buf = buf[3:]
     if len(buf) == 2:
-        screens.append(_make_screen("screen-portrait-2", buf, screen_id="", aspects=aspects))
+        for aid in buf:
+            screens.append(
+                _make_screen("screen-portrait-1", [aid], screen_id="", aspects=aspects)
+            )
     elif len(buf) == 1:
         # 单张竖图：cover 满屏，避免 contain 信箱（PRD）
         screens.append(
@@ -384,21 +389,14 @@ def _plan_one_screen(
     family, run_len = _run_length(remaining, aspects)
 
     if family == "panorama":
-        return _make_screen("screen-panorama-1", [remaining[0]], screen_id=""), 1
+        # 单张超宽图用 landscape-1 + 渲染时原生 aspect-ratio，避免 21:9 固定槽压扁
+        return _make_screen("screen-landscape-1", [remaining[0]], screen_id=""), 1
 
     if family == "tall":
         return _make_screen("screen-tall-1", [remaining[0]], screen_id=""), 1
 
     if family == "portrait":
         return None, 0
-
-    if family == "landscape" and run_len in (2, 3):
-        n = run_len
-        pattern = _pattern_id("landscape", n)
-        return (
-            _make_screen(pattern, remaining[:n], screen_id="", aspects=aspects),
-            n,
-        )
 
     burst_groups = burst_groups or {}
     probe = remaining[: min(run_len, MAX_SLOTS_PER_SCREEN)]
@@ -441,8 +439,7 @@ def _pick_chapter_hero(
             best_kind = kind
     if not best_id:
         return None
-    pat = "screen-panorama-1" if best_kind == "panorama" else "screen-landscape-1"
-    return best_id, pat
+    return best_id, "screen-landscape-1"
 
 
 def _sort_asset_ids_by_taken(
@@ -476,6 +473,7 @@ def plan_screens_for_chapter(
     burst_seconds: float = 3.0,
     mixed_proximity_seconds: float | None = None,
     orientation_summary: dict | None = None,
+    skip_screen_asset_ids: set[str] | None = None,
 ) -> list[dict]:
     """
     Map ordered asset ids → screens[] (one pattern per screen; reset after each screen).
@@ -489,12 +487,14 @@ def plan_screens_for_chapter(
 
     assets_map: dict[str, dict] = assets or {}
     ids = _sort_asset_ids_by_taken(list(asset_ids), assets_map)
+    skip = skip_screen_asset_ids or set()
     hero_preface: list[dict] = []
     if len(ids) >= CHAPTER_HERO_MIN_ASSETS and assets_map:
         hero = _pick_chapter_hero(ids, aspects, assets_map)
         if hero:
             hid, pat = hero
-            hero_preface.append(_make_screen(pat, [hid], screen_id=""))
+            if hid not in skip:
+                hero_preface.append(_make_screen(pat, [hid], screen_id=""))
             ids = [aid for aid in ids if aid != hid]
     burst_groups: dict[str, int] = {}
     if assets_map:
@@ -546,6 +546,20 @@ def plan_screens_for_chapter(
                     i += 3
                     continue
 
+        fam, run_len = _run_length(ids[i:], aspects)
+        if fam == "landscape" and run_len in (2, 3) and not pending_portraits:
+            for j in range(run_len):
+                _append(
+                    _make_screen(
+                        "screen-landscape-1",
+                        [ids[i + j]],
+                        screen_id="",
+                        aspects=aspects,
+                    )
+                )
+            i += run_len
+            continue
+
         fam = _family_kind(aspects.get(ids[i], "square"))
 
         if fam == "portrait":
@@ -578,9 +592,9 @@ def plan_screens_for_chapter(
                     continue
             if len(pending_portraits) == 2:
                 pair = [a for a in pending_portraits if _is_std_portrait_id(a, aspects)]
-                if len(pair) == 2:
+                for aid in pair:
                     _append(
-                        _make_screen("screen-portrait-2", pair, screen_id="", aspects=aspects)
+                        _make_screen("screen-portrait-1", [aid], screen_id="", aspects=aspects)
                     )
                 pending_portraits.clear()
             continue
@@ -638,6 +652,7 @@ def attach_screens_day_buckets(
     burst_seconds: float = 3.0,
     mixed_proximity_seconds: float | None = None,
     orientation_summary: dict | None = None,
+    skip_screen_asset_ids: set[str] | None = None,
 ) -> list[dict]:
     """
     Plan screens on each day bucket (full takenAt sequence), assign to chapters
@@ -659,6 +674,7 @@ def attach_screens_day_buckets(
         out.append(ch)
 
     ch_by_id = {ch["id"]: ch for ch in out}
+    skip = skip_screen_asset_ids or set()
     seq_per_ch: dict[str, int] = {}
     gallery_asset_ids: set[str] = set()
     for ch in out:
@@ -680,11 +696,12 @@ def attach_screens_day_buckets(
             burst_seconds=burst_seconds,
             mixed_proximity_seconds=mixed_proximity_seconds,
             orientation_summary=orientation_summary,
+            skip_screen_asset_ids=skip,
         )
         ch["screens"] = gal_screens
 
     for bucket in day_buckets:
-        filtered = [a for a in bucket if a not in gallery_asset_ids]
+        filtered = [a for a in bucket if a not in gallery_asset_ids and a not in skip]
         if not filtered:
             continue
         bucket = filtered
@@ -698,6 +715,7 @@ def attach_screens_day_buckets(
             burst_seconds=burst_seconds,
             mixed_proximity_seconds=mixed_proximity_seconds,
             orientation_summary=orientation_summary,
+            skip_screen_asset_ids=skip,
         )
         for sc in bucket_screens:
             slots = sc.get("slots") or []
@@ -724,6 +742,7 @@ def attach_screens_to_chapters(
     orientation_summary: dict | None = None,
     plan_scope: str | None = None,
     day_buckets: list[list[str]] | None = None,
+    skip_screen_asset_ids: set[str] | None = None,
 ) -> list[dict]:
     """Add screens[] to each chapter (per-chapter or per-day bucket scope)."""
     from travelogue.config import default_screen_plan_scope
@@ -738,6 +757,7 @@ def attach_screens_to_chapters(
             burst_seconds=burst_seconds,
             mixed_proximity_seconds=mixed_proximity_seconds,
             orientation_summary=orientation_summary,
+            skip_screen_asset_ids=skip_screen_asset_ids,
         )
 
     assets_by_id: dict[str, dict] = {}
@@ -760,6 +780,7 @@ def attach_screens_to_chapters(
                 burst_seconds=burst_seconds,
                 mixed_proximity_seconds=mixed_proximity_seconds,
                 orientation_summary=orientation_summary,
+                skip_screen_asset_ids=skip_screen_asset_ids,
             )
         else:
             ch["screens"] = []

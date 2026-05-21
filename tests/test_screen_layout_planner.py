@@ -122,11 +122,38 @@ def test_plan_landscape_triple_then_single_portrait():
         "p1": "portrait",
     }
     screens = plan_screens_for_chapter(ids, aspects, chapter_id="ch-02")
-    assert len(screens) == 2
-    assert screens[0]["patternId"] == "screen-landscape-3"
-    assert screens[1]["patternId"] == "screen-portrait-1"
-    assert screens[1]["slots"][0]["fit"] == "cover"
-    assert grid_class_for_pattern("screen-landscape-3") == "layout-screen__grid--landscape-stack-3"
+    assert len(screens) == 4
+    assert all(sc["patternId"] == "screen-landscape-1" for sc in screens[:3])
+    assert screens[3]["patternId"] == "screen-portrait-1"
+    assert screens[3]["slots"][0]["fit"] == "cover"
+
+
+def test_panorama_single_uses_landscape_screen_with_cover():
+    screens = plan_screens_for_chapter(
+        ["p1"],
+        {"p1": "panorama"},
+        chapter_id="ch-pano",
+        assets={"p1": {"id": "p1", "width": 2400, "height": 900, "takenAt": "2025-05-01T12:00:00Z"}},
+    )
+    assert screens[0]["patternId"] == "screen-landscape-1"
+    assert screens[0]["slots"][0]["fit"] == "cover"
+
+
+def test_skip_web_cover_skips_chapter_hero_screen():
+    ids = ["cover", "l2", "l3", "l4", "l5"]
+    aspects = {**{x: "landscape" for x in ids}, "cover": "panorama"}
+    assets = {
+        i: {"id": i, "width": 2400, "height": 900, "takenAt": f"2025-05-01T12:0{x}:00Z"}
+        for x, i in enumerate(ids)
+    }
+    screens = plan_screens_for_chapter(
+        ids,
+        aspects,
+        chapter_id="ch-skip",
+        assets=assets,
+        skip_screen_asset_ids={"cover"},
+    )
+    assert screens[0]["slots"][0]["assetId"] != "cover"
 
 
 def test_chapter_opens_with_landscape_hero_when_enough_assets():
@@ -211,14 +238,14 @@ def test_portrait_heavy_summary():
     assert screens[1]["patternId"] == "screen-portrait-3"
 
 
-def test_landscape_pair_uses_stack_grid_not_columns():
+def test_landscape_pair_splits_into_two_single_screens():
     ids = ["l1", "l2"]
     aspects = _aspects(ids, {x: "landscape" for x in ids})
     screens = plan_screens_for_chapter(ids, aspects, chapter_id="ch-stack2")
-    assert len(screens) == 1
-    assert screens[0]["patternId"] == "screen-landscape-2"
-    assert grid_class_for_pattern("screen-landscape-2") == "layout-screen__grid--landscape-stack-2"
-    assert all(s["fit"] == "cover" for s in screens[0]["slots"])
+    assert len(screens) == 2
+    assert screens[0]["patternId"] == "screen-landscape-1"
+    assert screens[1]["patternId"] == "screen-landscape-1"
+    assert all(s["fit"] == "cover" for sc in screens for s in sc["slots"])
 
 
 def test_portrait_pattern_rejects_landscape_asset():
@@ -279,5 +306,9 @@ def test_attach_screens_day_scope_via_buckets_param():
         plan_scope="day",
         day_buckets=[["p1", "p2"]],
     )
-    assert len(out[0]["screens"]) == 1
-    assert out[0]["screens"][0]["patternId"] == "screen-portrait-2"
+    assert sum(len(ch["screens"]) for ch in out) == 2
+    assert all(
+        sc["patternId"] == "screen-portrait-1"
+        for ch in out
+        for sc in ch["screens"]
+    )

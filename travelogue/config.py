@@ -26,6 +26,7 @@ class IngestConfig:
     dedupe_phash: bool = True
     dedupe_burst: bool = True
     min_long_edge_layout_px: int = 800
+    min_short_edge_layout_px: int = 600
     low_res_median_ratio: float = 0.55
     low_res_peak_ratio: float = 0.42
 
@@ -58,6 +59,7 @@ def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
         dedupe_phash=bool(raw.get("dedupe_phash", True)),
         dedupe_burst=bool(raw.get("dedupe_burst", True)),
         min_long_edge_layout_px=int(raw.get("min_long_edge_layout_px", 800)),
+        min_short_edge_layout_px=int(raw.get("min_short_edge_layout_px", 600)),
         low_res_median_ratio=float(raw.get("low_res_median_ratio", 0.55)),
         low_res_peak_ratio=float(raw.get("low_res_peak_ratio", 0.42)),
     )

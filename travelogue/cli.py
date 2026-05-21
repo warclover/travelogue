@@ -296,7 +296,7 @@ def cmd_trip_new(
         typer.echo(f"OK ingest +{result.added} assets · batch {result.batch_id}")
         if layout != "auto":
             try:
-                cur = run_curate(trip, export_layout=layout)
+                cur = run_curate(trip, export_layout=layout, trip_dir=trip_json.parent)
             except CurateError as exc:
                 typer.echo(str(exc), err=True)
                 raise typer.Exit(1) from exc
@@ -407,7 +407,12 @@ def cmd_curate(
     trip_path = _resolve(path, trips_dir=trips_dir)
     trip = TripService().load(trip_path)
     try:
-        result = run_curate(trip, export_layout=layout, apply_layout=not no_layout)
+        result = run_curate(
+            trip,
+            export_layout=layout,
+            apply_layout=not no_layout,
+            trip_dir=trip_path.parent,
+        )
     except CurateError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc

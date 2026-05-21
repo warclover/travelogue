@@ -60,6 +60,8 @@ def reexport_asset(
     )
     asset["displayFile"] = display_rel
     asset["srcset"] = srcset_rel
+    asset["nativeWidth"] = img.width
+    asset["nativeHeight"] = img.height
     asset["width"] = out_w
     asset["height"] = out_h
     if crop_m:

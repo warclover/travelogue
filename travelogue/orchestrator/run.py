@@ -80,7 +80,12 @@ def run_trip(
 
         elif stage == "curate":
             assert_stage_allowed(trip, "curate")
-            run_curate(trip, export_layout=export_layout, apply_layout=True)
+            run_curate(
+                trip,
+                export_layout=export_layout,
+                apply_layout=True,
+                trip_dir=trip_root,
+            )
             result.stages.append("curate")
             save()
 

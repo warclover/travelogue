@@ -395,6 +395,7 @@ def build_chapters_from_buckets(
     layout_engine: str = "legacy",
     assets: list[dict] | None = None,
     orientation_summary: dict | None = None,
+    skip_screen_asset_ids: set[str] | None = None,
 ) -> list[dict]:
     """Plan items per chapter bucket (Agent 1 day groups → Agent 1.5 layout)."""
     from travelogue.curation.screen_planner import (
@@ -436,6 +437,7 @@ def build_chapters_from_buckets(
             orientation_summary=orientation_summary,
             day_buckets=non_empty,
             mixed_proximity_seconds=default_mixed_proximity_seconds(),
+            skip_screen_asset_ids=skip_screen_asset_ids,
         )
     return chapters
 

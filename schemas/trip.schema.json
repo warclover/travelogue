@@ -217,6 +217,16 @@
         "focalPoint": { "$ref": "#/$defs/focalPoint" },
         "width": { "type": "integer", "minimum": 1 },
         "height": { "type": "integer", "minimum": 1 },
+        "nativeWidth": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Original source pixel width before WebP upscale"
+        },
+        "nativeHeight": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Original source pixel height before WebP upscale"
+        },
         "takenAt": { "type": "string", "format": "date-time" },
         "place": { "$ref": "#/$defs/place" },
         "duration": { "type": "number", "minimum": 0 },
