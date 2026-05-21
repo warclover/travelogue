@@ -1,0 +1,61 @@
+"""Validate → render (share) → preview → export."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+
+from travelogue.export.packager import ExportError, export_trip
+from travelogue.render.engine import RenderError, render_trip
+from travelogue.render.preview import render_preview_jpg
+from travelogue.services.trip import TripService
+from travelogue.services.validate import validate_trip
+
+
+@dataclass
+class PublishResult:
+    trip_path: Path
+    index_html: Path
+    preview_jpg: Path | None
+    zip_path: Path
+
+
+def publish_trip(
+    trip_path: Path,
+    *,
+    confirm_privacy: bool = True,
+    no_preview: bool = False,
+    output_zip: Path | None = None,
+    validate: bool = True,
+) -> PublishResult:
+    """Full Agent 3 publish path for a trip.json workspace."""
+    trip_path = trip_path.resolve()
+    trip_root = trip_path.parent
+
+    if validate:
+        trip = TripService().load(trip_path)
+        errs = [e for e in validate_trip(trip) if not e.startswith("WARN:")]
+        if errs:
+            raise RenderError("E_VALIDATE", errs[0])
+
+    render_trip(trip_path, trip_root, export_mode="share", validate=False)
+
+    preview: Path | None = None
+    if not no_preview:
+        preview = render_preview_jpg(trip_path, trip_root=trip_root)
+
+    zip_path = export_trip(
+        trip_path,
+        output_zip=output_zip,
+        confirm_privacy=confirm_privacy,
+        no_preview=True,  # already generated
+        validate=False,
+        auto_render=False,  # already rendered
+    )
+
+    return PublishResult(
+        trip_path=trip_path,
+        index_html=trip_root / "index.html",
+        preview_jpg=preview,
+        zip_path=zip_path,
+    )

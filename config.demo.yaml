@@ -1,0 +1,19 @@
+# Demo 专用配置（更快导入，适合本地演示）
+# 使用：travelogue demo ./album --config config.demo.yaml
+# 若未指定 --config 且项目根存在本文件，demo 会自动加载
+
+trips_dir: ./trips
+
+ingest:
+  max_photos: 50
+  webp_widths: [800, 1600]
+  webp_quality: 82
+  generate_crops: false
+  min_edge_px: 320
+  phash_threshold: 10
+  burst_seconds: 3.0
+  dedupe_phash: true
+  dedupe_burst: true
+  min_long_edge_layout_px: 800
+  low_res_median_ratio: 0.55
+  low_res_peak_ratio: 0.42

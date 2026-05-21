@@ -1,0 +1,17 @@
+<div class="layout-screen layout-screen--16x9" data-block="layout-screen" data-pattern="{{patternId}}"{{#if screenTone}} style="--screen-tone: {{screenTone}}"{{/if}}>
+  <div class="layout-screen__grid {{gridClass}}">
+    {{#each slots}}
+    <figure class="layout-slot" data-slot="{{slotIndex}}"{{#if role}} data-role="{{role}}"{{/if}}>
+      <img class="layout-slot__img layout-slot__img--{{fit}}"
+        src="{{src}}"
+        {{#if hasSrcset}}
+        srcset="{{srcset}}"
+        sizes="{{sizes}}"
+        {{/if}}
+        alt="{{alt}}"
+        loading="{{loading}}"
+        decoding="async" />
+    </figure>
+    {{/each}}
+  </div>
+</div>

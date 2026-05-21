@@ -1,0 +1,217 @@
+{
+  "version": "0.2",
+  "tripId": "render-golden-demo",
+  "templateId": "visual-journal",
+  "exportLayout": "auto",
+  "meta": {
+    "title": "雨后京都",
+    "subtitle": "五天，两个人",
+    "hook": "鸭川边那阵吹干雨衣的风。",
+    "dateStart": "2025-04-02",
+    "dateEnd": "2025-04-06",
+    "places": ["京都"],
+    "tone": "relaxed"
+  },
+  "coverAssetId": "cover",
+  "assets": [
+    {
+      "id": "cover",
+      "type": "image",
+      "sourceFile": "source/cover.jpg",
+      "displayFile": "assets/demo/cover-w1600.webp",
+      "srcset": [
+        { "file": "assets/demo/cover-w800.webp", "width": 800 },
+        { "file": "assets/demo/cover-w1600.webp", "width": 1600 }
+      ]
+    },
+    {
+      "id": "asset-001",
+      "type": "image",
+      "sourceFile": "source/a1.jpg",
+      "displayFile": "assets/demo/station-w1600.webp",
+      "srcset": [
+        { "file": "assets/demo/station-w800.webp", "width": 800 },
+        { "file": "assets/demo/station-w1600.webp", "width": 1600 }
+      ],
+      "tags": ["车站", "雨天", "霓虹"],
+      "voice": {
+        "audioFile": "assets/demo/placeholder.m4a",
+        "durationSec": 24,
+        "transcript": "车窗上的水珠把霓虹拉得很长。",
+        "source": "user",
+        "showTranscript": true
+      }
+    },
+    {
+      "id": "asset-002",
+      "type": "image",
+      "sourceFile": "source/a2.jpg",
+      "displayFile": "assets/demo/umbrella-w1600.webp",
+      "srcset": [
+        { "file": "assets/demo/umbrella-w800.webp", "width": 800 },
+        { "file": "assets/demo/umbrella-w1600.webp", "width": 1600 }
+      ]
+    },
+    {
+      "id": "vid-001",
+      "type": "video",
+      "sourceFile": "source/v1.mp4",
+      "displayFile": "assets/demo/video.mp4",
+      "posterFile": "assets/demo/video-poster-w1600.webp",
+      "duration": 6,
+      "hasAudio": true
+    },
+    {
+      "id": "asset-010",
+      "type": "image",
+      "sourceFile": "source/a10.jpg",
+      "displayFile": "assets/demo/lantern-w1600.webp",
+      "voice": {
+        "audioFile": "assets/demo/placeholder.m4a",
+        "durationSec": 18,
+        "transcript": "别拍了，就这样走一段。",
+        "source": "user",
+        "showTranscript": true
+      }
+    },
+    {
+      "id": "scroll-1",
+      "type": "image",
+      "sourceFile": "source/s1.jpg",
+      "displayFile": "assets/demo/scroll-bamboo-w1600.webp"
+    },
+    {
+      "id": "scroll-2",
+      "type": "image",
+      "sourceFile": "source/s2.jpg",
+      "displayFile": "assets/demo/scroll-platform-w1600.webp"
+    },
+    {
+      "id": "scroll-3",
+      "type": "image",
+      "sourceFile": "source/s3.jpg",
+      "displayFile": "assets/demo/scroll-ice-w1600.webp"
+    },
+    {
+      "id": "asset-030",
+      "type": "image",
+      "sourceFile": "source/a30.jpg",
+      "displayFile": "assets/demo/night-river-w1600.webp"
+    },
+    {
+      "id": "asset-031",
+      "type": "image",
+      "sourceFile": "source/a31.jpg",
+      "displayFile": "assets/demo/night-return-w1600.webp"
+    }
+  ],
+  "chapters": [
+    {
+      "id": "ch-01",
+      "index": 1,
+      "patternId": "open",
+      "title": "抵达",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "asset-001",
+          "title": "京都站",
+          "caption": "第一次看见这座城市的雨。",
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        },
+        {
+          "type": "media-card",
+          "assetId": "asset-002",
+          "title": "站台边",
+          "caption": "",
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        }
+      ],
+      "curation": { "memoryAnchors": ["抵达", "关西机场"] }
+    },
+    {
+      "id": "ch-02",
+      "index": 2,
+      "patternId": "moment",
+      "title": "夜雨巷子",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "vid-001",
+          "title": "花见小路",
+          "caption": "灯笼在积水里晃",
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        },
+        {
+          "type": "media-card",
+          "assetId": "asset-010",
+          "title": "转角",
+          "caption": "别拍了，就这样走一段",
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        }
+      ],
+      "curation": {
+        "daySpan": ["2025-04-03"],
+        "places": ["祇园"],
+        "memoryAnchors": ["避雨", "花见小路"]
+      }
+    },
+    {
+      "id": "ch-03",
+      "index": 3,
+      "patternId": "gallery",
+      "title": "竹林与站台",
+      "lead": "人太多，高光在站台边",
+      "items": [
+        {
+          "type": "media-scroll",
+          "assetIds": ["scroll-1", "scroll-2", "scroll-3"],
+          "caption": "竹林、小火车、冰淇淋",
+          "voice": {
+            "audioFile": "assets/demo/placeholder.m4a",
+            "durationSec": 31,
+            "transcript": "排了很久队，但第一口值得。",
+            "source": "user",
+            "showTranscript": true
+          }
+        }
+      ],
+      "curation": { "daySpan": ["2025-04-04"], "places": ["岚山"] }
+    },
+    {
+      "id": "ch-04",
+      "index": 4,
+      "patternId": "close",
+      "title": "鸭川",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "asset-030",
+          "title": "最后一晚",
+          "caption": "鞋晾在河堤上",
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        },
+        {
+          "type": "media-card",
+          "assetId": "asset-031",
+          "title": "回程",
+          "caption": "没买纪念品",
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        }
+      ],
+      "curation": { "memoryAnchors": ["鸭川", "最后一晚"] }
+    }
+  ],
+  "epilogue": "五天的雨，打乱了一半行程。",
+  "privacy": { "level": "private", "stripExifOnExport": true, "confirmedAt": null },
+  "pipeline": {
+    "status": "copy_locked",
+    "locks": { "structure": true, "copy": true },
+    "runs": []
+  },
+  "createdAt": "2026-05-19T08:00:00Z",
+  "updatedAt": "2026-05-19T10:00:00Z"
+}

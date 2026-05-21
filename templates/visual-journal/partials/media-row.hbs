@@ -1,0 +1,18 @@
+<figure class="media-row{{#if rowClass}} {{rowClass}}{{/if}}" data-block="media-row"{{#if rowLayout}} data-row-layout="{{rowLayout}}"{{/if}}>
+  {{#each cells}}
+  <div class="media-card__frame" data-aspect-kind="{{aspectKind}}">
+    <img class="media-card__visual"
+      src="{{src}}"
+      {{#if hasSrcset}}
+      srcset="{{srcset}}"
+      sizes="{{sizes}}"
+      {{/if}}
+      alt="{{alt}}"
+      loading="lazy"
+      decoding="async" />
+  </div>
+  {{/each}}
+  {{#if hasCaption}}
+  <p class="media-row__caption"{{#if editable}} data-editable="caption"{{/if}}>{{caption}}</p>
+  {{/if}}
+</figure>

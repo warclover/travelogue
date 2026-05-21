@@ -1,0 +1,30 @@
+<div class="longshot-toolbar share-toolbar" data-block="share-toolbar" role="complementary" aria-label="分享工具"
+  data-share-title="{{title}}"
+  {{#if hasShareZip}}data-share-zip="{{shareZipFile}}"{{/if}}>
+  <div class="share-toolbar__panel" id="share-panel" hidden>
+    <button type="button" class="share-toolbar__item" data-share-action="copy-link">
+      复制链接
+    </button>
+    {{#if hasShareZip}}
+    <button type="button" class="share-toolbar__item" data-share-action="download-zip">
+      下载分享包
+    </button>
+    {{/if}}
+    <button type="button" class="share-toolbar__item" data-share-action="native">
+      系统分享…
+    </button>
+  </div>
+  <div class="share-toolbar__fab-row">
+    <button type="button" id="longshot-save" class="longshot-toolbar__btn"
+      data-longshot-trigger
+      data-longshot-label="保存长图"
+      data-longshot-busy="生成中…">
+      保存长图
+    </button>
+    <button type="button" id="share-toggle" class="longshot-toolbar__btn share-toolbar__toggle"
+      aria-expanded="false" aria-controls="share-panel" aria-haspopup="true">
+      分享
+    </button>
+  </div>
+  <p class="longshot-toolbar__hint">长图 · 链接{{#if hasShareZip}} · 分享包{{/if}}</p>
+</div>

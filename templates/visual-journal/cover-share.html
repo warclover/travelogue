@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-layout="mobile">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>cover-share · preview.jpg 对照</title>
+  <link rel="stylesheet" href="journal.css" />
+</head>
+<body class="cover-share-page">
+  <!-- Playwright / Pillow 截图目标：1080×1920，节点 #cover-share-canvas -->
+  <div id="cover-share-canvas" class="cover-share" data-block="cover-share" role="img" aria-label="雨后京都分享封面">
+    <div class="cover-share__media">
+      <img src="assets/demo/cover-w1600.webp"
+        srcset="assets/demo/cover-w800.webp 800w, assets/demo/cover-w1600.webp 1600w"
+        sizes="1080px"
+        alt="雨中的京都站"
+        loading="eager"
+        decoding="async" />
+    </div>
+    <motion.div class="cover-share__overlay" aria-hidden="true"></div>
+    <div class="cover-share__text">
+      <p class="cover-share__place">京都</p>
+      <p class="cover-share__dates"><time datetime="2025-04-02/2025-04-06">2025.04.02 – 04.06</time></p>
+      <h1 class="cover-share__title">雨后京都</h1>
+      <p class="cover-share__hook">鸭川边那阵吹干雨衣的风。</p>
+    </div>
+  </div>
+</body>
+</html>

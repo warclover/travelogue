@@ -1,0 +1,139 @@
+{
+  "id": "visual-journal",
+  "version": "0.2.1",
+  "name": "Visual Journal",
+  "description": "视觉优先有声相册：图/视频充满版面；手机 9:16 / Web 16:9 双形态。",
+  "page": {
+    "type": "share-page",
+    "breakpointWeb": "48rem",
+    "breakpointWebPx": 768,
+    "layoutProfiles": {
+      "mobile": {
+        "label": "手机分享",
+        "aspectCover": "9/16",
+        "aspectMedia": "9/16",
+        "aspectScroll": "9/16",
+        "captionOverlay": true,
+        "pagePadding": "0"
+      },
+      "web": {
+        "label": "Web 浏览",
+        "aspectCover": "16/9",
+        "aspectMedia": "16/9",
+        "aspectScroll": "16/9",
+        "captionOverlay": false,
+        "pageWidth": "min(1100px, 96vw)",
+        "bleedWidth": "min(1400px, 100vw)"
+      }
+    }
+  },
+  "limits": {
+    "tripTitleMaxChars": 20,
+    "tripSubtitleMaxChars": 32,
+    "hookMaxChars": 56,
+    "chapterTitleMaxChars": 12,
+    "chapterLeadMaxChars": 80,
+    "mediaTitleMaxChars": 14,
+    "captionMaxChars": 60,
+    "transcriptPreviewMaxChars": 40,
+    "epilogueMaxChars": 80,
+    "minChapters": 3,
+    "maxChapters": 5,
+    "maxPhotosPerTrip": 50,
+    "maxVideosPerTrip": 3,
+    "maxVoicePerTrip": 15,
+    "maxVoicePerChapter": 5,
+    "maxVideosPerChapter": 1,
+    "maxMediaCardsPerChapter": 8
+  },
+  "blocks": [
+    "cover-hero",
+    "trip-meta",
+    "hook-line",
+    "chapter-header",
+    "chapter-lead",
+    "media-card",
+    "media-row",
+    "media-scroll",
+    "divider-place",
+    "epilogue",
+    "footer-cta"
+  ],
+  "patterns": [
+    {
+      "id": "open",
+      "label": "开篇",
+      "sequence": ["chapter-header", "chapter-lead", "media-card", "media-card"]
+    },
+    {
+      "id": "gallery",
+      "label": "图集",
+      "sequence": ["chapter-header", "chapter-lead", "media-scroll"]
+    },
+    {
+      "id": "moment",
+      "label": "高光",
+      "sequence": ["chapter-header", "media-card", "media-card"]
+    },
+    {
+      "id": "close",
+      "label": "收尾",
+      "sequence": ["chapter-header", "media-card", "media-card"]
+    }
+  ],
+  "narrativeRules": [
+    "图/视频占屏主导；全页可见文字建议不超过 600 字",
+    "chapter-lead 允许为空",
+    "有 video 原声时不叠加同卡 voice",
+    "moment 章至少一张 media-card 含 voice（若 trip 存在语音素材）",
+    "caption 优先来自 ASR 精简，禁止 ASR 全文直接作为唯一展示文案",
+    "章标题用地点/情绪/事件，避免 Day1/Day2"
+  ],
+  "rules": [
+    "首屏 cover-hero + trip-meta；hook-line 在 meta 下且可省略",
+    "每章以 chapter-header 开头",
+    "主图使用 media-card--fill + media-card--bleed 充满版面",
+    "手机形态：media-card--overlay 标题叠在图下缘；Web 形态：标题在图下 body 区",
+    "导出时在 html 写入 data-layout=mobile|web；或依赖 CSS 断点 48rem(768px) 自适应",
+    "video 不得出现在 cover；有原声不叠 voice",
+    "divider-place 仅跨天或跨地",
+    "分享导出时长转写默认折叠",
+    "viewport 须含 viewport-fit=cover；body 建议 overflow-x:hidden",
+    "图片输出优先 img+srcset；见 docs/ADAPTIVE-LAYOUT.md"
+  ],
+  "exportLayout": {
+    "values": ["auto", "mobile", "web"],
+    "default": "auto",
+    "htmlAttr": "data-layout"
+  },
+  "layoutEngine": {
+    "values": ["legacy", "screens"],
+    "default": "legacy",
+    "version": "screens-2",
+    "doc": "docs/web端模板.prd",
+    "screenPatterns": [
+      "screen-portrait-1",
+      "screen-portrait-2",
+      "screen-portrait-3",
+      "screen-portrait-1-landscape-2",
+      "screen-portrait-4",
+      "screen-portrait-6",
+      "screen-portrait-9",
+      "screen-landscape-1",
+      "screen-landscape-2",
+      "screen-landscape-3",
+      "screen-landscape-4",
+      "screen-landscape-6",
+      "screen-landscape-9",
+      "screen-square-1",
+      "screen-square-4",
+      "screen-square-9",
+      "screen-panorama-1",
+      "screen-tall-1"
+    ]
+  },
+  "adaptive": {
+    "doc": "docs/ADAPTIVE-LAYOUT.md",
+    "layers": ["viewport-safe-area", "fluid-css", "srcset-crop", "export-layout"]
+  }
+}

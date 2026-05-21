@@ -1,0 +1,508 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://travelogue.local/schemas/trip.schema.json",
+  "title": "Travelogue Trip",
+  "description": "trip.json v0.2 — single source of truth for visual-journal template",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "tripId",
+    "templateId",
+    "exportLayout",
+    "meta",
+    "coverAssetId",
+    "assets",
+    "chapters",
+    "privacy",
+    "pipeline",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "version": { "const": "0.2" },
+    "tripId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$"
+    },
+    "templateId": { "const": "visual-journal" },
+    "exportLayout": {
+      "type": "string",
+      "enum": ["auto", "mobile", "web"],
+      "default": "auto"
+    },
+    "layoutEngine": {
+      "type": "string",
+      "enum": ["legacy", "screens"],
+      "default": "legacy",
+      "description": "Web layout: legacy (media-card/row) or screens (16:9 stage)"
+    },
+    "layoutEngineVersion": {
+      "type": "string",
+      "description": "screens engine rules version, e.g. screens-1"
+    },
+    "meta": { "$ref": "#/$defs/meta" },
+    "coverAssetId": { "type": "string" },
+    "coverCandidates": {
+      "type": "array",
+      "items": { "type": "string" },
+      "maxItems": 5
+    },
+    "assets": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/asset" }
+    },
+    "chapters": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/chapter" }
+    },
+    "epilogue": { "type": "string", "maxLength": 80 },
+    "privacy": { "$ref": "#/$defs/privacy" },
+    "pipeline": { "$ref": "#/$defs/pipeline" },
+    "userNotes": { "type": "string", "maxLength": 2000 },
+    "slug": { "type": ["string", "null"] },
+    "publishedAt": { "type": ["string", "null"], "format": "date-time" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "curation": { "$ref": "#/$defs/tripCuration" },
+    "export": { "$ref": "#/$defs/exportOptions" }
+  },
+  "$defs": {
+    "exportOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "longShot": {
+          "type": "boolean",
+          "description": "P0: include 保存长图 bundle in draft/share export (default true in renderer)"
+        }
+      }
+    },
+    "orientationSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total",
+        "landscape",
+        "portrait",
+        "square",
+        "panorama",
+        "tall",
+        "export_layout"
+      ],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "landscape": { "type": "integer", "minimum": 0 },
+        "portrait": { "type": "integer", "minimum": 0 },
+        "square": { "type": "integer", "minimum": 0 },
+        "panorama": { "type": "integer", "minimum": 0 },
+        "tall": { "type": "integer", "minimum": 0 },
+        "export_layout": {
+          "type": "string",
+          "enum": ["auto", "mobile", "web"]
+        }
+      }
+    },
+    "tripCuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "orientationSummary": { "$ref": "#/$defs/orientationSummary" },
+        "layoutPlanVersion": { "type": "string" },
+        "layoutPlanRunId": { "type": "string" },
+        "coverByLayout": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mobile": { "type": "string" },
+            "web": { "type": "string" }
+          }
+        },
+        "coverCandidatesByLayout": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mobile": { "type": "array", "items": { "type": "string" }, "maxItems": 5 },
+            "web": { "type": "array", "items": { "type": "string" }, "maxItems": 5 }
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "excludedLowResAssetIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "dateStart", "dateEnd", "places", "tone"],
+      "properties": {
+        "title": { "type": "string", "maxLength": 20 },
+        "subtitle": { "type": "string", "maxLength": 32 },
+        "hook": { "type": "string", "maxLength": 56 },
+        "dateStart": { "type": "string", "format": "date" },
+        "dateEnd": { "type": "string", "format": "date" },
+        "places": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "companions": { "type": "string", "maxLength": 32 },
+        "tone": { "type": "string", "enum": ["relaxed", "documentary"] }
+      }
+    },
+    "place": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["city"],
+      "properties": {
+        "city": { "type": "string" },
+        "country": { "type": "string", "minLength": 2, "maxLength": 2 }
+      }
+    },
+    "focalPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "y": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "srcsetEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "width"],
+      "properties": {
+        "file": { "type": "string" },
+        "width": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "voice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["audioFile", "transcript", "source"],
+      "properties": {
+        "audioFile": { "type": "string" },
+        "durationSec": { "type": "number", "minimum": 5, "maximum": 180 },
+        "transcript": { "type": "string", "maxLength": 4000 },
+        "transcriptPreview": { "type": "string", "maxLength": 40 },
+        "source": { "const": "user" },
+        "showTranscript": { "type": "boolean", "default": true }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "sourceFile"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["image", "video", "audio"] },
+        "sourceFile": { "type": "string" },
+        "displayFile": { "type": "string" },
+        "posterFile": { "type": "string" },
+        "srcset": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/srcsetEntry" }
+        },
+        "cropMobile": { "type": "string" },
+        "cropWeb": { "type": "string" },
+        "focalPoint": { "$ref": "#/$defs/focalPoint" },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "takenAt": { "type": "string", "format": "date-time" },
+        "place": { "$ref": "#/$defs/place" },
+        "duration": { "type": "number", "minimum": 0 },
+        "hasAudio": { "type": "boolean" },
+        "ingestBatchId": { "type": "string" },
+        "dedupeGroupId": { "type": "string" },
+        "locked": { "type": "boolean" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 32 },
+          "maxItems": 8,
+          "description": "Semantic tags from Agent 0 vision/heuristic; 3-5 recommended"
+        },
+        "tagsSource": {
+          "type": "string",
+          "enum": ["heuristic", "exif", "clip", "vlm", "user"],
+          "description": "How tags were produced"
+        },
+        "voice": { "$ref": "#/$defs/voice" },
+        "aspectKind": {
+          "type": "string",
+          "enum": ["portrait", "landscape", "square", "panorama", "tall"],
+          "description": "Composition bucket from classify_aspect (Agent 0 / layout)"
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "image" } } },
+          "then": { "required": ["displayFile"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "video" } } },
+          "then": { "required": ["displayFile", "posterFile", "duration"] }
+        }
+      ]
+    },
+    "mediaCardLayout": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fill": { "type": "boolean" },
+        "bleed": { "type": "boolean" },
+        "overlay": { "type": "boolean" },
+        "slot": {
+          "type": "string",
+          "enum": ["panorama", "square", "tall"],
+          "description": "Wide/tall/square card treatment for render CSS"
+        }
+      }
+    },
+    "mediaCardItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "assetId"],
+      "properties": {
+        "type": { "const": "media-card" },
+        "assetId": { "type": "string" },
+        "title": { "type": "string", "maxLength": 14 },
+        "caption": { "type": "string", "maxLength": 60 },
+        "edited": { "type": "boolean" },
+        "layout": { "$ref": "#/$defs/mediaCardLayout" }
+      }
+    },
+    "mediaRowItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "assetIds", "rowLayout"],
+      "properties": {
+        "type": { "const": "media-row" },
+        "assetIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 2,
+          "maxItems": 3
+        },
+        "rowLayout": {
+          "type": "string",
+          "enum": [
+            "landscape-triple",
+            "landscape-pair",
+            "portrait-triple",
+            "portrait-pair",
+            "square-triple",
+            "square-pair"
+          ]
+        }
+      }
+    },
+    "mediaScrollItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "assetIds"],
+      "properties": {
+        "type": { "const": "media-scroll" },
+        "assetIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 3,
+          "maxItems": 5
+        },
+        "caption": { "type": "string", "maxLength": 60 },
+        "voice": { "$ref": "#/$defs/voice" }
+      }
+    },
+    "chapterItem": {
+      "oneOf": [
+        { "$ref": "#/$defs/mediaCardItem" },
+        { "$ref": "#/$defs/mediaRowItem" },
+        { "$ref": "#/$defs/mediaScrollItem" }
+      ]
+    },
+    "chapterCuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "anchorAssetId": { "type": "string" },
+        "daySpan": {
+          "type": "array",
+          "items": { "type": "string", "format": "date" }
+        },
+        "places": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "memoryAnchors": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 24 },
+          "maxItems": 3,
+          "description": "User memory hooks at G1; fed to Agent 2"
+        }
+      }
+    },
+    "chapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "index", "patternId", "title", "items"],
+      "properties": {
+        "id": { "type": "string" },
+        "index": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "patternId": {
+          "type": "string",
+          "enum": ["open", "gallery", "moment", "close"]
+        },
+        "title": { "type": "string", "maxLength": 12 },
+        "lead": { "type": "string", "maxLength": 80 },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": { "$ref": "#/$defs/chapterItem" }
+        },
+        "screens": {
+          "type": "array",
+          "description": "Web layoutEngine=screens; optional when legacy",
+          "items": { "$ref": "#/$defs/layoutScreen" }
+        },
+        "curation": { "$ref": "#/$defs/chapterCuration" }
+      }
+    },
+    "layoutScreenSlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assetId", "slot", "fit"],
+      "properties": {
+        "assetId": { "type": "string" },
+        "slot": { "type": "integer", "minimum": 0, "maximum": 8 },
+        "fit": { "type": "string", "enum": ["cover", "contain"] },
+        "role": { "type": "string", "enum": ["portrait", "landscape"] }
+      }
+    },
+    "layoutScreen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["screenId", "patternId", "slots"],
+      "properties": {
+        "screenId": { "type": "string" },
+        "patternId": {
+          "type": "string",
+          "enum": [
+            "screen-portrait-1",
+            "screen-portrait-2",
+            "screen-portrait-3",
+            "screen-portrait-1-landscape-2",
+            "screen-portrait-4",
+            "screen-portrait-6",
+            "screen-portrait-9",
+            "screen-landscape-1",
+            "screen-landscape-2",
+            "screen-landscape-3",
+            "screen-landscape-4",
+            "screen-landscape-6",
+            "screen-landscape-9",
+            "screen-square-1",
+            "screen-square-2",
+            "screen-square-3",
+            "screen-square-4",
+            "screen-square-6",
+            "screen-square-9",
+            "screen-panorama-1",
+            "screen-tall-1"
+          ]
+        },
+        "tone": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "r": { "type": "integer", "minimum": 0, "maximum": 255 },
+            "g": { "type": "integer", "minimum": 0, "maximum": 255 },
+            "b": { "type": "integer", "minimum": 0, "maximum": 255 }
+          }
+        },
+        "slots": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 9,
+          "items": { "$ref": "#/$defs/layoutScreenSlot" }
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "stripExifOnExport", "confirmedAt"],
+      "properties": {
+        "level": { "type": "string", "enum": ["private", "unlisted", "public"] },
+        "stripExifOnExport": { "type": "boolean" },
+        "confirmedAt": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "pipelineRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runId", "agent", "startedAt", "finishedAt"],
+      "properties": {
+        "runId": { "type": "string" },
+        "agent": {
+          "type": "string",
+          "enum": ["media_lab", "curator", "layout", "storyteller", "publisher"]
+        },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "finishedAt": { "type": "string", "format": "date-time" },
+        "model": { "type": ["string", "null"] }
+      }
+    },
+    "pipeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "locks"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft_ingest",
+            "ingest_ready",
+            "structure_draft",
+            "structure_locked",
+            "copy_draft",
+            "copy_locked",
+            "rendered",
+            "exported"
+          ]
+        },
+        "lastBatchId": { "type": "string" },
+        "layoutStatus": {
+          "type": "string",
+          "enum": ["pending", "layout_draft", "layout_locked"]
+        },
+        "pendingAssets": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "locks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["structure", "copy"],
+          "properties": {
+            "structure": { "type": "boolean" },
+            "layout": { "type": "boolean" },
+            "copy": { "type": "boolean" }
+          }
+        },
+        "runs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/pipelineRun" }
+        }
+      }
+    }
+  }
+}

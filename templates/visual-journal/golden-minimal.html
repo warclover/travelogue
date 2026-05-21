@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-export="draft" data-layout="mobile">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>短途 · Visual Journal 空状态金样例</title>
+  <meta name="description" content="hook/lead/voice/caption 省略与 :empty 行为演示" />
+  <link rel="stylesheet" href="journal.css" />
+</head>
+<body>
+  <main>
+    <article itemscope itemtype="https://schema.org/Trip">
+      <header class="cover-hero" data-block="cover-hero">
+        <div class="cover-hero__media">
+          <img src="assets/demo/fallback-w1600.webp"
+            srcset="assets/demo/fallback-w800.webp 800w, assets/demo/fallback-w1600.webp 1600w"
+            sizes="100vw" alt="封面占位" loading="eager" decoding="async" />
+        </div>
+        <motion.div class="cover-hero__overlay" aria-hidden="true"></motion.div>
+        <div class="cover-hero__text">
+          <h1 itemprop="name">短途</h1>
+          <p class="subtitle">一天</p>
+        </motion.div>
+      </header>
+
+      <div class="page">
+        <div class="trip-meta" data-block="trip-meta">
+          <time datetime="2025-05-01/2025-05-01">2025.05.01</time> · 本地
+        </motion.div>
+        <p class="hook-line" data-block="hook-line"></p>
+
+        <section class="chapter" id="ch-01" data-chapter-id="ch-01" data-pattern="open">
+          <header class="chapter-header" data-block="chapter-header">
+            <span class="chapter-header__index">01</span>
+            <h2>出发</h2>
+          </header>
+          <figure class="media-card media-card--bleed media-card--fill media-card--overlay"
+            data-block="media-card" data-asset-id="asset-min-001">
+            <div class="media-card__frame">
+              <img class="media-card__visual"
+                src="assets/demo/fallback-w1600.webp"
+                srcset="assets/demo/fallback-w800.webp 800w, assets/demo/fallback-w1600.webp 1600w"
+                sizes="100vw" alt="路边" loading="lazy" decoding="async" />
+              <div class="media-card__overlay-text">
+                <h3 class="media-card__title">路边</h3>
+              </motion.div>
+            </motion.div>
+          </figure>
+          <figure class="media-card media-card--bleed media-card--fill media-card--overlay"
+            data-block="media-card" data-asset-id="asset-min-002">
+            <div class="media-card__frame">
+              <img class="media-card__visual"
+                src="assets/demo/fallback-w1600.webp"
+                srcset="assets/demo/fallback-w800.webp 800w, assets/demo/fallback-w1600.webp 1600w"
+                sizes="100vw" alt="车窗" loading="lazy" decoding="async" />
+            </motion.div>
+          </figure>
+        </section>
+
+        <footer class="footer-cta" data-block="footer-cta">
+          <p>Travelogue · Visual Journal</p>
+        </footer>
+      </div>
+    </article>
+  </main>
+</body>
+</html>

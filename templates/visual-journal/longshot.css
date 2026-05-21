@@ -1,0 +1,397 @@
+/**
+ * Travelogue · 保存长图（渐进增强，可选 bundle）
+ * 与 journal.css 并列交付；P0 默认随 zip 分发（见 trip.export.longShot、SHARING.md）。
+ */
+
+.longshot-toolbar {
+  position: fixed;
+  z-index: 150;
+  right: max(12px, env(safe-area-inset-right, 0px));
+  bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.longshot-toolbar__btn {
+  pointer-events: auto;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: 999px;
+  background: #2d4a3e;
+  color: #f0f7f4;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+}
+
+.longshot-toolbar__btn:hover:not(:disabled) {
+  background: #3d6b5a;
+}
+
+.longshot-toolbar__btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.longshot-toolbar__hint {
+  pointer-events: none;
+  margin: 0;
+  padding: 4px 10px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #6a6560;
+  background: rgba(245, 242, 235, 0.92);
+  border-radius: 8px;
+  max-width: 12rem;
+  text-align: right;
+}
+
+.share-toolbar__panel {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 6px;
+  min-width: 9.5rem;
+  margin-bottom: 4px;
+  background: rgba(245, 242, 235, 0.96);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22);
+}
+
+.share-toolbar__fab-row {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.share-toolbar__panel[hidden] {
+  display: none !important;
+}
+
+.share-toolbar__item {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #2a2826;
+  cursor: pointer;
+}
+
+.share-toolbar__item:hover:not(:disabled) {
+  background: rgba(45, 74, 62, 0.1);
+}
+
+.share-toolbar__item--primary {
+  background: #2d4a3e;
+  color: #f0f7f4;
+}
+
+.share-toolbar__item--primary:hover:not(:disabled) {
+  background: #3d6b5a;
+}
+
+.share-toolbar__item:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.share-toolbar__toggle[aria-expanded="true"] {
+  background: #3d6b5a;
+}
+
+.longshot-toast {
+  position: fixed;
+  z-index: 160;
+  left: 50%;
+  bottom: max(72px, calc(16px + env(safe-area-inset-bottom, 0px)));
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #f0f7f4;
+  background: rgba(28, 27, 26, 0.88);
+  border-radius: 8px;
+  max-width: min(90vw, 320px);
+  text-align: center;
+}
+
+.longshot-toast--error {
+  background: rgba(90, 40, 32, 0.92);
+}
+
+.longshot-toast[hidden] {
+  display: none !important;
+}
+
+/* —— 截图态：390px 宽、展开横滑、强化可读性 —— */
+html.longshot-capturing-root {
+  background: var(--bg-page, #111110);
+  width: 390px;
+  max-width: 390px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body.longshot-capturing {
+  overflow: visible;
+  background: var(--bg-page, #111110);
+  width: 390px;
+  max-width: 390px;
+  margin-left: auto;
+  margin-right: auto;
+  /* 截屏视口固定 390px，避免 100vw / dvh 按真机视口算导致比例失真 */
+  --bleed-width: 390px;
+  --page-width: 390px;
+  --cover-max-h: none;
+  --media-max-h: none;
+}
+
+body.longshot-capturing .longshot-toolbar,
+body.longshot-capturing .golden-banner,
+body.longshot-capturing .footer-cta {
+  display: none !important;
+}
+
+body.longshot-capturing main {
+  width: 390px;
+  max-width: 390px;
+  margin-left: auto;
+  margin-right: auto;
+  background: var(--bg-page, #111110);
+  overflow: visible;
+}
+
+body.longshot-capturing .page {
+  padding-bottom: 24px;
+  width: 100%;
+  max-width: 100%;
+}
+
+body.longshot-capturing .chapter {
+  margin-bottom: 0;
+}
+
+/* 封面：取消 100vw 与固定 9:16 盒，按原图比例 */
+body.longshot-capturing .cover-hero {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  aspect-ratio: auto;
+  max-height: none;
+  height: auto;
+  min-height: 0;
+  display: block;
+  overflow: hidden;
+}
+
+body.longshot-capturing .cover-hero__media {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  background: var(--surface, #1a1918);
+}
+
+body.longshot-capturing .cover-hero__media img {
+  position: static;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none !important;
+  min-height: 0;
+  object-fit: fill;
+  object-position: center;
+}
+
+body.longshot-capturing canvas[data-longshot-raster] {
+  display: block;
+  max-width: none !important;
+  max-height: none !important;
+  min-height: 0;
+}
+
+body.longshot-capturing .cover-hero__overlay {
+  display: none;
+}
+
+body.longshot-capturing .cover-hero__text {
+  position: relative;
+}
+
+body.longshot-capturing .trip-meta {
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  padding: 14px 16px 8px;
+}
+
+body.longshot-capturing .hook-line {
+  font-size: 16px;
+  line-height: 1.55;
+  max-width: 22em;
+  margin-bottom: 16px;
+}
+
+body.longshot-capturing .chapter-header {
+  padding: 12px 16px 6px;
+}
+
+body.longshot-capturing .chapter-header h2 {
+  font-size: 20px;
+}
+
+body.longshot-capturing .chapter-lead {
+  font-size: 15px;
+  line-height: 1.5;
+  padding-bottom: 8px;
+}
+
+body.longshot-capturing .epilogue {
+  font-size: 15px;
+  line-height: 1.55;
+  padding: 16px 20px 8px;
+  text-align: center;
+}
+
+/* 单卡：长图按 390px 宽自然比例，不用 dvh 限高（与屏上预览的紧凑横图区分） */
+body.longshot-capturing .media-card--bleed {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+body.longshot-capturing .media-card--fill .media-card__frame,
+body.longshot-capturing .media-card__frame {
+  max-height: none !important;
+  height: auto;
+  display: block;
+  aspect-ratio: auto;
+}
+
+body.longshot-capturing .media-card__visual,
+body.longshot-capturing .media-card__visual img,
+body.longshot-capturing img.media-card__visual {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none !important;
+  min-height: 0;
+  aspect-ratio: unset;
+  object-fit: fill;
+  object-position: center;
+}
+
+body.longshot-capturing .media-card__frame,
+body.longshot-capturing .cover-hero__media,
+body.longshot-capturing .media-scroll__item {
+  display: block !important;
+  position: relative !important;
+  overflow: visible !important;
+  height: auto;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+}
+
+body.longshot-capturing .media-card,
+body.longshot-capturing figure.media-card {
+  display: block !important;
+  overflow: visible !important;
+}
+
+body.longshot-capturing .media-card--landscape + .media-card--landscape {
+  margin-top: 4px;
+}
+
+/* 横滑章纵向展开：按原比例完整显示，不强制 9:16 裁切 */
+body.longshot-capturing .media-scroll__track {
+  flex-direction: column;
+  overflow: visible;
+  scroll-snap-type: none;
+  gap: 4px;
+}
+
+body.longshot-capturing .media-scroll__item {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: auto;
+  max-height: none;
+  height: auto;
+  background: var(--surface, #1a1918);
+}
+
+body.longshot-capturing .media-scroll__item .media-card__frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: auto;
+}
+
+body.longshot-capturing .media-scroll__item .media-card__visual,
+body.longshot-capturing .media-scroll__item img.media-card__visual {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  aspect-ratio: unset;
+  object-fit: contain;
+  object-position: center;
+}
+
+body.longshot-capturing .media-scroll__footer {
+  padding: 8px 16px 12px;
+}
+
+/* 组图 / 旧 row：长图单列自然比例 */
+body.longshot-capturing .media-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  max-width: 100%;
+}
+
+body.longshot-capturing .media-row--landscape-triple,
+body.longshot-capturing .media-row--landscape-pair,
+body.longshot-capturing .media-row--portrait-triple,
+body.longshot-capturing .media-row--portrait-pair,
+body.longshot-capturing .media-row--square-triple,
+body.longshot-capturing .media-row--square-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+body.longshot-capturing .media-row .media-card__frame {
+  height: auto;
+  max-height: none !important;
+}
+
+body.longshot-capturing .media-row .media-card__visual,
+body.longshot-capturing .media-row img.media-card__visual {
+  width: 100%;
+  height: auto;
+  max-height: none !important;
+  object-fit: contain;
+}
+
+@media print {
+  .longshot-toolbar {
+    display: none !important;
+  }
+}

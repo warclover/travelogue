@@ -1,0 +1,113 @@
+{
+  "version": "0.2",
+  "tripId": "fixture-structure-locked",
+  "templateId": "visual-journal",
+  "exportLayout": "auto",
+  "meta": {
+    "title": "待命名旅程",
+    "dateStart": "2025-04-02",
+    "dateEnd": "2025-04-06",
+    "places": ["京都"],
+    "tone": "relaxed"
+  },
+  "coverAssetId": "asset-001",
+  "coverCandidates": ["asset-001", "asset-002", "asset-003"],
+  "assets": [
+    {
+      "id": "asset-001",
+      "type": "image",
+      "sourceFile": "source/a1.jpg",
+      "displayFile": "assets/asset-001-w1600.webp",
+      "srcset": [
+        { "file": "assets/asset-001-w800.webp", "width": 800 },
+        { "file": "assets/asset-001-w1600.webp", "width": 1600 }
+      ],
+      "takenAt": "2025-04-02T10:00:00+09:00",
+      "place": { "city": "京都", "country": "JP" }
+    },
+    {
+      "id": "asset-002",
+      "type": "image",
+      "sourceFile": "source/a2.jpg",
+      "displayFile": "assets/asset-002-w1600.webp",
+      "takenAt": "2025-04-03T14:00:00+09:00",
+      "place": { "city": "京都", "country": "JP" }
+    },
+    {
+      "id": "asset-003",
+      "type": "image",
+      "sourceFile": "source/a3.jpg",
+      "displayFile": "assets/asset-003-w1600.webp",
+      "takenAt": "2025-04-04T16:00:00+09:00",
+      "place": { "city": "京都", "country": "JP" },
+      "voice": {
+        "audioFile": "assets/asset-003-voice.m4a",
+        "durationSec": 12,
+        "transcript": "雨太大了我们先回酒店。",
+        "transcriptPreview": "雨太大了，先回酒店。",
+        "source": "user",
+        "showTranscript": true
+      }
+    },
+    {
+      "id": "asset-004",
+      "type": "image",
+      "sourceFile": "source/a4.jpg",
+      "displayFile": "assets/asset-004-w1600.webp",
+      "takenAt": "2025-04-03T18:00:00+09:00",
+      "place": { "city": "京都", "country": "JP" }
+    },
+    {
+      "id": "asset-005",
+      "type": "image",
+      "sourceFile": "source/a5.jpg",
+      "displayFile": "assets/asset-005-w1600.webp",
+      "takenAt": "2025-04-04T18:00:00+09:00",
+      "place": { "city": "京都", "country": "JP" }
+    }
+  ],
+  "chapters": [
+    {
+      "id": "ch-01",
+      "index": 1,
+      "patternId": "open",
+      "title": "",
+      "lead": "",
+      "items": [
+        { "type": "media-card", "assetId": "asset-001", "layout": { "fill": true, "bleed": true, "overlay": true } },
+        { "type": "media-card", "assetId": "asset-002", "layout": { "fill": true, "bleed": true, "overlay": true } }
+      ],
+      "curation": { "anchorAssetId": "asset-001", "daySpan": ["2025-04-02"], "places": ["京都"] }
+    },
+    {
+      "id": "ch-02",
+      "index": 2,
+      "patternId": "moment",
+      "title": "",
+      "lead": "",
+      "items": [
+        { "type": "media-card", "assetId": "asset-003", "layout": { "fill": true, "bleed": true, "overlay": true } },
+        { "type": "media-card", "assetId": "asset-004", "layout": { "fill": true, "bleed": true, "overlay": true } }
+      ],
+      "curation": { "anchorAssetId": "asset-003", "daySpan": ["2025-04-03"], "places": ["京都"] }
+    },
+    {
+      "id": "ch-03",
+      "index": 3,
+      "patternId": "close",
+      "title": "",
+      "lead": "",
+      "items": [{ "type": "media-card", "assetId": "asset-005", "layout": { "fill": true, "bleed": true, "overlay": true } }],
+      "curation": { "anchorAssetId": "asset-005", "daySpan": ["2025-04-04"], "places": ["京都"] }
+    }
+  ],
+  "epilogue": "",
+  "privacy": { "level": "private", "stripExifOnExport": true, "confirmedAt": null },
+  "pipeline": {
+    "status": "structure_locked",
+    "locks": { "structure": true, "copy": false },
+    "runs": []
+  },
+  "createdAt": "2026-05-19T08:00:00Z",
+  "updatedAt": "2026-05-19T09:00:00Z"
+}

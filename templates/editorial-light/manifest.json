@@ -1,0 +1,74 @@
+{
+  "id": "editorial-light",
+  "version": "0.1.0",
+  "name": "Editorial Light",
+  "description": "杂志风单页分享游记。移动优先，零 JS 可阅读。",
+  "page": {
+    "type": "share-page",
+    "maxWidth": "720px",
+    "bleedMaxWidth": "960px"
+  },
+  "limits": {
+    "titleMaxChars": 24,
+    "subtitleMaxChars": 40,
+    "hookMaxChars": 56,
+    "chapterTitleMaxChars": 16,
+    "chapterIntroMaxChars": 280,
+    "captionMaxChars": 40,
+    "quoteMaxChars": 120,
+    "minChapters": 3,
+    "maxChapters": 7,
+    "maxAssetsPerChapter": 6,
+    "maxVideosPerTrip": 3,
+    "maxVideosPerChapter": 1
+  },
+  "blocks": [
+    "cover-hero",
+    "trip-meta",
+    "hook-line",
+    "toc-jump",
+    "chapter-header",
+    "chapter-intro",
+    "figure-single",
+    "figure-duo",
+    "figure-trio",
+    "figure-scroll",
+    "quote-pull",
+    "video-loop",
+    "divider-place",
+    "timeline-bridge",
+    "map-overview",
+    "epilogue",
+    "footer-cta"
+  ],
+  "patterns": [
+    {
+      "id": "opening-moment",
+      "label": "开篇一刻",
+      "sequence": ["chapter-header", "chapter-intro", "figure-single", "figure-duo"]
+    },
+    {
+      "id": "place-day",
+      "label": "一地一日",
+      "sequence": ["divider-place", "chapter-header", "chapter-intro", "figure-trio", "figure-scroll"]
+    },
+    {
+      "id": "highlight-clip",
+      "label": "高光片段",
+      "sequence": ["chapter-header", "video-loop", "quote-pull", "figure-single"]
+    },
+    {
+      "id": "quiet-close",
+      "label": "收尾",
+      "sequence": ["chapter-intro", "figure-single", "quote-pull"]
+    }
+  ],
+  "rules": [
+    "首屏仅 cover-hero + trip-meta，hook-line 不进入 cover 遮罩内",
+    "每章必须以 chapter-header 开头",
+    "连续 figure-single 不得超过 2 个，第 3 个须换 pattern 或插入 quote-pull / divider-place",
+    "video-loop 不得紧邻 cover-hero，最早出现在第 2 章",
+    "全页 quote-pull 至少 0、至多 3",
+    "divider-place 仅用于跨城市或跨天章节边界"
+  ]
+}

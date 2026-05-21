@@ -1,0 +1,116 @@
+/**
+ * Visual Journal — 金样例预览壳（golden.css）
+ * 用户 zip 仅包含 journal.css，不含本文件与顶栏脚本。
+ */
+@import url("journal.css");
+
+.golden-banner {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  padding: calc(8px + var(--safe-top)) 12px 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  font-size: 11px;
+  background: #1c1b1a;
+  color: #c8c4bc;
+  border-bottom: 1px solid #2a2826;
+}
+
+.golden-banner strong {
+  color: #8fbc9f;
+}
+
+.layout-switch {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.layout-switch button {
+  padding: 4px 12px;
+  font-size: 11px;
+  border: 1px solid #4a4844;
+  border-radius: 999px;
+  background: transparent;
+  color: #c8c4bc;
+  cursor: pointer;
+}
+
+.layout-switch button[aria-pressed="true"] {
+  background: #3d6b5a;
+  border-color: #3d6b5a;
+  color: #fff;
+}
+
+.layout-hint {
+  width: 100%;
+  text-align: center;
+  color: #8a8478;
+  font-size: 10px;
+}
+
+.golden-longshot-btn {
+  padding: 4px 14px;
+  font-size: 11px;
+  border: 1px solid #5a7a6a;
+  border-radius: 999px;
+  background: #2d4a3e;
+  color: #e8f0ec;
+  cursor: pointer;
+}
+
+.golden-longshot-btn:hover:not(:disabled) {
+  background: #3d6b5a;
+  border-color: #3d6b5a;
+}
+
+.golden-longshot-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.golden-longshot-toast {
+  width: 100%;
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 10px;
+  color: #8fbc9f;
+}
+
+.golden-longshot-toast--error {
+  color: #e8a090;
+}
+
+/* Long-shot capture: fixed phone width, hide preview chrome */
+body.golden-capturing {
+  overflow: hidden;
+}
+
+body.golden-capturing .golden-banner {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+html.golden-capturing-root {
+  background: var(--color-paper, #f5f2eb);
+}
+
+body.golden-capturing main {
+  width: 390px;
+  max-width: 390px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media print {
+  .golden-banner,
+  .layout-switch,
+  .golden-longshot-btn {
+    display: none !important;
+  }
+}

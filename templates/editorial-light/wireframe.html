@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>线框 · Editorial Light · 京都五日</title>
+  <meta name="description" content="[wireframe] 杂志风单页游记结构预览" />
+  <!-- 正式版：og:title / og:image / og:description 由托管层注入 -->
+  <link rel="stylesheet" href="wireframe.css" />
+</head>
+<body>
+
+  <div class="wf-banner" role="note">
+    线框模式 · 灰块 = 媒体占位 · 黑标 = <code>data-block</code> 块 ID ·
+    示例 trip：<strong>京都五日</strong>
+  </div>
+
+  <main>
+    <article itemscope itemtype="https://schema.org/Trip">
+
+      <!-- ① cover-hero -->
+      <header class="cover-hero wf-block wf-block--bleed" data-block="cover-hero">
+        <div class="wf-placeholder" aria-hidden="true">COVER IMAGE 16:9 / crop</div>
+        <div class="cover-hero__overlay" aria-hidden="true"></div>
+        <div class="cover-hero__text">
+          <h1 itemprop="name">雨后京都</h1>
+          <p itemprop="description">石板路、纸伞与第一口抹茶</p>
+        </div>
+      </header>
+
+      <div class="wf-page">
+
+        <!-- ② trip-meta -->
+        <div class="trip-meta wf-block" data-block="trip-meta">
+          <time datetime="2025-04-02/2025-04-06">2025.04.02 – 04.06</time>
+          · 京都
+          · 5 天
+          · 两人
+        </div>
+
+        <!-- ③ hook-line -->
+        <p class="hook-line wf-block" data-block="hook-line">
+          最想记住的不是景点，是鸭川边那阵吹干雨衣的风。
+        </p>
+
+        <!-- ④ toc-jump（章节≥5 时显示；本例 4 章仍展示线框） -->
+        <nav class="toc-jump wf-block" data-block="toc-jump" aria-label="章节">
+          <span>01 抵达</span>
+          <span>02 祇园</span>
+          <span>03 岚山</span>
+          <span>04 收尾</span>
+        </nav>
+
+        <!-- —— 章 1 · pattern: opening-moment —— -->
+        <section class="chapter" id="ch-01" aria-labelledby="ch-01-title">
+          <p class="wf-pattern-tag">pattern: opening-moment</p>
+
+          <header class="chapter-header wf-block" data-block="chapter-header" id="ch-01-title">
+            <span class="chapter-header__index">01</span>
+            <h2>抵达</h2>
+          </header>
+
+          <div class="chapter-intro wf-block" data-block="chapter-intro">
+            <p>关西机场到京都站的那一路，雨没有停。出租车窗上的水珠把霓虹拉成长线，我们谁也没说话。</p>
+            <span class="mood">疲惫</span>
+          </div>
+
+          <figure class="figure-single wf-block" data-block="figure-single">
+            <div class="wf-placeholder">PHOTO anchor · 4:3</div>
+            <figcaption>京都站外，第一次看见城市的雨</figcaption>
+          </figure>
+
+          <figure class="figure-duo wf-block" data-block="figure-duo">
+            <div class="figure-duo__grid">
+              <div class="wf-placeholder">PHOTO A</div>
+              <div class="wf-placeholder">PHOTO B</div>
+            </div>
+            <figcaption>酒店大堂的伞架与湿鞋印</figcaption>
+          </figure>
+        </section>
+
+        <!-- —— 章 2 · pattern: highlight-clip —— -->
+        <section class="chapter" id="ch-02" aria-labelledby="ch-02-title">
+          <p class="wf-pattern-tag">pattern: highlight-clip</p>
+
+          <!-- ⑬ divider-place（跨天/跨区可选；本章为新区域） -->
+          <div class="divider-place wf-block" data-block="divider-place">
+            <small>2025.04.03</small>
+            <strong>祇园 · 东山</strong>
+          </div>
+
+          <header class="chapter-header wf-block" data-block="chapter-header" id="ch-02-title">
+            <span class="chapter-header__index">02</span>
+            <h2>祇园夜雨</h2>
+          </header>
+
+          <div class="chapter-intro wf-block" data-block="chapter-intro">
+            <p>灯笼在积水的石板上抖，游客散了之后，巷子才像自己的。短视频里那段脚步声，比任何文案都准。</p>
+          </div>
+
+          <!-- ⑫ video-loop：不得出现在第一章 -->
+          <figure class="video-loop wf-block" data-block="video-loop">
+            <div class="wf-placeholder">VIDEO 3–8s · 9:16 · muted loop</div>
+            <p class="video-loop__badge">▶ 轻触播放声音</p>
+          </figure>
+
+          <blockquote class="quote-pull wf-block" data-block="quote-pull">
+            「别拍照了，就这样走一段。」—— 语音原话
+          </blockquote>
+
+          <figure class="figure-single wf-block" data-block="figure-single">
+            <div class="wf-placeholder">PHOTO · vertical ok</div>
+            <figcaption>花见小路转角</figcaption>
+          </figure>
+        </section>
+
+        <!-- ⑭ timeline-bridge -->
+        <p class="timeline-bridge wf-block" data-block="timeline-bridge">
+          同日午后 · 步行至鸭川
+        </p>
+
+        <!-- —— 章 3 · pattern: place-day —— -->
+        <section class="chapter" id="ch-03" aria-labelledby="ch-03-title">
+          <p class="wf-pattern-tag">pattern: place-day</p>
+
+          <div class="divider-place wf-block" data-block="divider-place">
+            <small>2025.04.04</small>
+            <strong>岚山</strong>
+          </div>
+
+          <header class="chapter-header wf-block" data-block="chapter-header" id="ch-03-title">
+            <span class="chapter-header__index">03</span>
+            <h2>竹林与列车</h2>
+          </header>
+
+          <div class="chapter-intro wf-block" data-block="chapter-intro">
+            <p>竹林里人太多，反而在站台边的小卖部吃到了最好吃的抹茶冰淇淋。旅行里的高光常常在计划外。</p>
+          </div>
+
+          <figure class="figure-trio wf-block" data-block="figure-trio">
+            <div class="figure-trio__grid">
+              <div class="figure-trio__main">
+                <div class="wf-placeholder">PHOTO main</div>
+              </div>
+              <div class="figure-trio__side">
+                <div class="wf-placeholder">PHOTO b</div>
+              </div>
+              <div class="figure-trio__side">
+                <div class="wf-placeholder">PHOTO c</div>
+              </div>
+            </div>
+            <figcaption>竹林、站台、冰淇淋 — 一章一 trio</figcaption>
+          </figure>
+
+          <figure class="figure-scroll wf-block" data-block="figure-scroll">
+            <div class="figure-scroll__track">
+              <div class="wf-placeholder">scroll 1</div>
+              <div class="wf-placeholder">scroll 2</div>
+              <div class="wf-placeholder">scroll 3</div>
+            </div>
+            <figcaption>保津川沿线连拍（横滑 · 全页最多 2 次）</figcaption>
+          </figure>
+        </section>
+
+        <!-- —— 章 4 · pattern: quiet-close —— -->
+        <section class="chapter" id="ch-04" aria-labelledby="ch-04-title">
+          <p class="wf-pattern-tag">pattern: quiet-close</p>
+
+          <header class="chapter-header wf-block" data-block="chapter-header" id="ch-04-title">
+            <span class="chapter-header__index">04</span>
+            <h2>带走什么</h2>
+          </header>
+
+          <div class="chapter-intro wf-block" data-block="chapter-intro">
+            <p>最后一晚在鸭川边把鞋晾干。没有再买纪念品，手机里多了一段不想剪辑完整的长视频。</p>
+          </div>
+
+          <figure class="figure-single wf-block" data-block="figure-single">
+            <div class="wf-placeholder">PHOTO closing</div>
+            <figcaption>鸭川 · 夜</figcaption>
+          </figure>
+
+          <blockquote class="quote-pull wf-block" data-block="quote-pull">
+            若再去，想住在更靠近河的地方，什么都不排。
+          </blockquote>
+        </section>
+
+        <!-- ⑮ map-overview（可选） -->
+        <section class="map-overview wf-block" data-block="map-overview" aria-label="路线概览">
+          <div class="wf-placeholder">STATIC MAP · 城市级点位 · 无精确住址</div>
+          <figcaption style="text-align:center;color:var(--wf-muted);font-size:13px;margin-top:8px">
+            京都站 → 祇园 → 岚山 → 鸭川（示意）
+          </figcaption>
+        </section>
+
+        <!-- ⑯ epilogue -->
+        <footer class="epilogue wf-block" data-block="epilogue">
+          <p>五天的雨把行程打乱了一半，也打乱了我们对「必须打卡」的执念。回去之后，最先翻开的可能是那一段没开声音的短视频。</p>
+        </footer>
+
+        <!-- ⑰ footer-cta -->
+        <footer class="footer-cta wf-block" data-block="footer-cta">
+          <p>由 Travelogue 生成 · 2025-04-10</p>
+          <p><!-- 后期 --> 用同样版式记录你的旅行</p>
+        </footer>
+
+      </div>
+    </article>
+  </main>
+
+</body>
+</html>

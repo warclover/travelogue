@@ -1,0 +1,30 @@
+<section class="chapter" id="{{id}}" data-chapter-id="{{id}}" data-pattern="{{patternId}}"
+  {{#if hasMemoryAnchors}}data-memory-anchors="{{memoryAnchors}}"{{/if}}>
+  {{#if showDivider}}
+  {{> divider-place}}
+  {{/if}}
+  <header class="chapter-header" data-block="chapter-header">
+    <span class="chapter-header__index">{{index}}</span>
+    <h2>{{title}}</h2>
+  </header>
+  {{#if hasLead}}
+  <p class="chapter-lead" data-block="chapter-lead">{{lead}}</p>
+  {{/if}}
+  {{#if useScreensEngine}}
+  {{#each screens}}
+  {{> layout-screen}}
+  {{/each}}
+  {{else}}
+  {{#each items}}
+  {{#if isMediaCard}}
+  {{> media-card}}
+  {{/if}}
+  {{#if isMediaRow}}
+  {{> media-row}}
+  {{/if}}
+  {{#if isMediaScroll}}
+  {{> media-scroll}}
+  {{/if}}
+  {{/each}}
+  {{/if}}
+</section>

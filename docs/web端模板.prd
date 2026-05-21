@@ -1,0 +1,504 @@
+# Travelogue · Web 端模板 PRD（Visual Journal · Web Stage）
+
+| 属性 | 内容 |
+|------|------|
+| **产品代号** | Travelogue |
+| **文档类型** | Web 端版式与排版子系统 PRD |
+| **模板 ID** | `visual-journal`（Web 形态扩展，不另立模板目录） |
+| **文档版本** | v0.1.1 |
+| **状态** | Draft · 待评审（含附录 C 差距跟踪） |
+| **关联文档** | [TEMPLATE-visual-journal.md](./TEMPLATE-visual-journal.md)、[PRD-LAYOUT.md](./PRD-LAYOUT.md)、[LAYOUT-PLANNER.md](./LAYOUT-PLANNER.md)、[ADAPTIVE-LAYOUT.md](./ADAPTIVE-LAYOUT.md)、[DATA-MODEL.md](./DATA-MODEL.md)、[RENDER-CONTRACT.md](./RENDER-CONTRACT.md) |
+| **实现参考（现状）** | `templates/visual-journal/journal.css`、`travelogue/curation/layout_planner.py` |
+| **更新日期** | 2026-05-21 |
+
+---
+
+## 1. 文档目的
+
+本 PRD 定义 **Web 端（`exportLayout: web` 或视口 ≥768px）** 下，如何将用户上传的**多比例照片**自动编排为「**每一屏都是一次艺术展示**」的杂志式版面。
+
+- **模板** = 规则与边界（槽位、比例盒、裁切策略、留白规则）  
+- **算法** = 在边界内聚合素材、分章、分屏、选版式、填槽  
+- **渲染** = 将 `trip.json` 映射为 HTML/CSS（禁止 LLM 直出 DOM）
+
+> 手机端 9:16 单列扫读仍以 [TEMPLATE-visual-journal.md](./TEMPLATE-visual-journal.md) 为准；本文档**仅约束 Web 舞台排版**的演进目标。  
+> 算法阈值与 rowLayout 命名见 [LAYOUT-PLANNER.md](./LAYOUT-PLANNER.md)；本文档定义**产品决策与 pattern 库**，细则文档随实现同步修订。
+
+---
+
+## 2. 背景与问题
+
+### 2.1 用户素材现实
+
+一次上传的照片以 **16:9 横版**、**9:16 竖版**为主，另有 **4:5、3:2、全景、方图** 等（产品层归入「五类构图」，见 §4）。
+
+在**显示器**上浏览时，若仅按单张原图 `contain` 纵向堆叠：
+
+- 横图利用率低，缺乏「展墙」感  
+- 竖图三张无法拼成饱满横屏幅面  
+- 连拍 / 同主题多图缺少「一组一屏」的叙事节奏  
+
+### 2.2 产品目标
+
+| ID | 目标 | 衡量 |
+|----|------|------|
+| W-G1 | 每 **屏（screen）** 在逻辑上对应 **16:9 舞台**，像素随视口自适应 | 金样例 Web 模式 + fixture 回归 |
+| W-G2 | 横/竖/五类图有**可枚举的预制版式（pattern）** 与**选用算法** | pattern 表 + 同输入可复现 |
+| W-G3 | 拼图位允许 **cover 轻微裁切**；单张竖图 **居中 + 章内相邻色留白** | 视觉验收清单 |
+| W-G4 | 单屏最多 **9 张**，服务连拍 / 同主题组图 | 超 9 自动拆屏 |
+| W-G5 | 与现有流水线兼容：只写 `trip.json`，出版人零 LLM 渲染 | [RENDER-CONTRACT.md](./RENDER-CONTRACT.md) |
+
+### 2.3 非目标
+
+- 无限种自由 Grid / 拖拽排版器  
+- 像素级 InDesign 式手工微调  
+- 替代手机端 9:16 形态（手机规则不变）  
+- 微信小程序内嵌页的独立模板（P2 另议）  
+- 视频与照片同槽位复杂混排（视频仍走 `media-card--video`，P1 仅保证不破坏屏高）
+
+---
+
+## 3. 核心概念：章（Chapter）与屏（Screen）
+
+### 3.1 已拍板模型：**B · 章内多屏**
+
+| 概念 | 定义 | 类比 |
+|------|------|------|
+| **章（chapter）** | 叙事单元：按**时间**（天/段）、**地点**或**策展/内容逻辑**划分 | 画册中的一「幕」 |
+| **屏（screen）** | 布局单元：一块 **16:9 逻辑舞台** 上的一次**完整视觉展示** | 展墙上的一「屏」 |
+
+关系：
+
+- **一章可含多屏**（一天 30 张图 → 1 章 多屏，而非强行 1 章 1 屏）  
+- **每填满一屏或算法切分后，下一屏重新运行排版算法**（重置当前屏的 pattern 选择，不沿用上一屏的 grid 惯性）  
+- 用户滚动时：章内连续多个 screen 纵向衔接；章与章之间保留章节标题等叙事锚点  
+
+```text
+trip
+ └── chapters[]
+       ├── chapter-header / chapter-lead（可选）
+       └── screens[]          ← 新增逻辑结构（见 §7）
+             ├── screen 1     ← 16:9 舞台 + pattern + slots
+             ├── screen 2
+             └── screen N
+```
+
+### 3.2 「16:9 舞台」的含义
+
+- **不是**把每张图都裁成 16:9  
+- **是**每个 screen 对外呈现一个 **aspect-ratio: 16/9**（或 `min-height` 等价）的**布局容器**，宽度随 `--bleed-width` / 视口 `clamp` 自适应  
+- 容器内通过 **槽位（slot）** 放置 1–9 张图；槽位内按 §5 使用 `cover` 或 `contain`  
+
+---
+
+## 4. 构图分类（与非标处理）
+
+沿用 [LAYOUT-PLANNER.md](./LAYOUT-PLANNER.md) **五类（AspectKind）**，**不单独增设「非标」类**：
+
+| 类型 | 宽高比 w/h | 说明 |
+|------|------------|------|
+| **landscape** 标准横 | 1.08 – 2.0 | 含 16:9、3:2、4:3、5:4 等用户裁切 |
+| **portrait** 标准竖 | 0.5 – 0.93 | 含 9:16、3:4、4:5 等 |
+| **square** 方图 | 0.93 – 1.08 | 1:1 及近似正方 |
+| **panorama** 全景 | ≥ 2.0 | 超宽条，专用槽位 |
+| **tall** 超长竖 | ≤ 0.5 | 长截图/窄条，禁止与 portrait 并排 |
+
+**非标比例**（如 4:5、5:4）落入横/竖带后，按该带规则选 pattern；仅**极端比例**升为 panorama / square / tall。
+
+---
+
+## 5. 填满、裁切与留白（已拍板）
+
+| 场景 | 策略 | 说明 |
+|------|------|------|
+| 竖×3 拼满横屏舞台 | **`object-fit: cover`** | 允许轻微裁高/裁宽，三槽合成接近 16:9，**不留缝** |
+| 横×N 宫格（2×2、3×3） | **`cover`**（默认） | 同主题组图可接受边缘裁切；P1 可对「精选单张」降级 `contain` |
+| 单张竖占一屏 | **Web screens：`cover` 满槽兜底**；不再 contain 居中 | 优先竖×2/竖×3 或 1 竖+2 横混排 |
+| 留白填充色 | **同章相邻色（chapter-tone）** | 从本章已排图片主色/相邻 asset 采样，写入 CSS 变量 `--screen-tone`；禁止纯黑信箱（除非本章全暗） |
+| 单张横 / 全景 | 横图 **优先铺满舞台宽度**；全景 **21:9 或 2:1 槽** | 见 pattern 表 |
+| 视频 | 默认 **contain**；P1 与横图槽对齐 | 不参与九宫格拼图 |
+
+---
+
+## 6. 预制版式库（Pattern Catalog · Web Screen）
+
+### 6.1 设计原则
+
+- Pattern **有限枚举**（目标 v1：**约 25–35 种**），非数学穷尽全排列  
+- 算法在**当前屏剩余队列**上选 **一个** pattern；满屏或达 9 张 → **下一屏重置**  
+- 章内先按 **连续同 AspectKind** 切 **run**，再在 run 内/跨 run 组屏（§8）  
+- **横与竖不混排于 legacy row**（v1）；Web screens 允许 **`screen-portrait-1-landscape-2`**（竖左 + 双横右，时间邻近）
+
+### 6.2 Pattern 清单（v1 · 必做）
+
+| patternId | 槽位数 | 适用 run | 布局摘要 | 填槽 |
+|-----------|--------|----------|----------|------|
+| `screen-landscape-1` | 1 | 横×1 | 单张横图满屏 | cover 或 contain-hero |
+| `screen-landscape-2` | 2 | 横×2 | 1×2 横排 | cover |
+| `screen-landscape-3` | 3 | 横×3 | 1×3 横排 | cover |
+| `screen-landscape-4` | 4 | 横×4 | **2×2** | cover |
+| `screen-landscape-6` | 6 | 横×6 | 3×2 | cover |
+| `screen-landscape-9` | 9 | 横×9 | **3×3** | cover |
+| `screen-portrait-1` | 1 | 竖×1 | 章末孤儿竖图 **cover 满屏** | cover |
+| `screen-portrait-1-landscape-2` | 3 | 1 竖 + 2 横 | **竖左 + 双横右** 拼满 16:9 | cover；`takenAt` 邻近 ≤3s |
+| `screen-portrait-2` | 2 | 竖×2 | 2 列（Web 三列栅格占 2 格，见现状） | cover |
+| `screen-portrait-3` | 3 | 竖×3 | **3 列拼满 16:9** | **cover** |
+| `screen-portrait-4` | 4 | 竖×4 | 4 列或 2×2 竖槽（实现取视觉更稳者） | cover |
+| `screen-portrait-6` | 6 | 竖×6 | 3×2 | cover |
+| `screen-portrait-9` | 9 | 竖×9 | 3×3 | cover |
+| `screen-square-1` | 1 | 方×1 | 方图居中 | contain |
+| `screen-square-4` | 4 | 方×4 | 2×2 | cover |
+| `screen-square-9` | 9 | 方×9 | 3×3 | cover |
+| `screen-panorama-1` | 1 | 全景×1 | 超宽条（21:9 盒） | contain 宽条 |
+| `screen-tall-1` | 1 | 超长竖×1 | 限高竖条 | contain |
+
+**连拍 / 同主题**：当策展标记 `groupId` 或时间戳差 < 阈值（如 3s）且 **aspectKind 一致** 时，优先选用 **4 / 6 / 9** 宫格 pattern，直至该组耗尽或满 9 张拆屏。
+
+### 6.3 Pattern 清单（v2 ·  backlog）
+
+| patternId | 说明 |
+|-----------|------|
+| `screen-mixed-landscape-portrait` | 左 1 横 + 右 2 竖（竖图为主章节） |
+| `screen-landscape-1-portrait-2` | 定制槽位比 |
+| `screen-feature-1-plus-grid-4` | 1 张大图 + 4 缩略 |
+
+---
+
+## 7. 数据模型扩展（trip.json）
+
+在现有 `chapters[].items[]` 之上，增加 **屏级结构**（二选一，实现时择一写入 schema）：
+
+### 方案 A（推荐）：显式 `screens`
+
+```json
+{
+  "chapterId": "ch-02",
+  "title": "清水寺",
+  "screens": [
+    {
+      "screenId": "sc-02-01",
+      "patternId": "screen-portrait-3",
+      "tone": { "r": 45, "g": 52, "b": 48 },
+      "slots": [
+        { "assetId": "asset-012", "slot": 0, "fit": "cover" },
+        { "assetId": "asset-013", "slot": 1, "fit": "cover" },
+        { "assetId": "asset-014", "slot": 2, "fit": "cover" }
+      ]
+    }
+  ]
+}
+```
+
+### 方案 B（过渡）：`items[].screenIndex` + `items[].patternId`
+
+保留扁平 `items[]`，用 `screenIndex` 分组；渲染器按组合并 DOM。MVP 过渡可用，长期倾向方案 A。
+
+**兼容**：无 `screens` 的旧 `trip.json` 降级为「每 item 一屏 `screen-*-1`」。
+
+---
+
+## 8. 排版算法（四层流水线）
+
+```mermaid
+flowchart TB
+  A[Layer A 素材画像] --> B[Layer B 分章]
+  B --> C[Layer C 分屏 + 选 pattern]
+  C --> D[Layer D 填槽与 tone]
+  D --> R[Publisher 渲染]
+```
+
+### Layer A · 素材画像（全局，一次）
+
+**输入**：全部 `assets[]`（ingest 后宽高、`aspectKind`、时间、可选 `groupId`）  
+
+**输出**：
+
+```json
+{
+  "orientationSummary": {
+    "total": 42,
+    "landscape": 18,
+    "portrait": 15,
+    "square": 4,
+    "panorama": 3,
+    "tall": 2,
+    "exportLayout": "web"
+  }
+}
+```
+
+**用途**：G1 闸口文案；指导 Layer B（竖图占比高 → 章内多竖屏；横图多 → 多 2×2/3×3）。
+
+### Layer B · 分章（叙事）
+
+**输入**：A + EXIF 时间 + 地点聚类 + 策展 Agent 幕意图  
+
+**输出**：`chapters[]`（3–7 章），每章候选照片 ID 列表  
+
+**规则**：与现 `curate.build_chapters_from_buckets` 对齐；**不在此层决定宫格**。
+
+### Layer C · 分屏 + 选 pattern（章内，每屏重置）
+
+**输入**：本章有序 `assetId[]`  
+
+**过程**：
+
+1. 按顺序切 **run**（连续相同 `aspectKind`）  
+2. 对每个 run，按优先级贪心组屏：  
+   - 若 run 长度 ≥9 且像连拍 → `screen-*-9`，消费 9 张，**开新屏**  
+   - 若长度 =4/6/9 → 对应宫格  
+   - 若长度 =3 且 portrait → `screen-portrait-3`（cover）  
+   - 若长度 =2 → pair pattern  
+   - 若长度 =1 → 单张 pattern  
+3. 单屏已达 **9 张** 或当前 pattern 槽位已满 → **结束本屏**，下一屏 **重新从步骤 1 对待消费队列**  
+4. panorama / tall **独占一屏**，不与其它 kind 合并  
+
+**输出**：`screens[]` 或带 `screenIndex` 的 items  
+
+### Layer D · 填槽与 chapter-tone
+
+- 为每个 screen 计算 `--screen-tone`（本章首张或槽位邻接图平均色）  
+- 写入 `fit: cover | contain`  
+- 可选：为 cover 槽生成 `-w.webp` 裁切（ingest P1，见 [ADAPTIVE-LAYOUT.md](./ADAPTIVE-LAYOUT.md)）
+
+---
+
+## 9. 模板与 CSS 契约
+
+### 9.1 DOM 结构（Web）
+
+```html
+<section class="chapter" data-chapter-id="…">
+  <header class="chapter-header">…</header>
+  <div class="layout-screen layout-screen--16x9"
+       data-pattern="screen-portrait-3"
+       style="--screen-tone: #2d3438">
+    <div class="layout-screen__grid layout-screen__grid--3col">
+      <figure class="layout-slot" data-slot="0">
+        <img class="layout-slot__img layout-slot__img--cover" … />
+      </figure>
+      …
+    </div>
+    <div class="layout-screen__caption">…</div>  <!-- 可选，组级 caption -->
+  </div>
+  <!-- 更多 layout-screen -->
+</section>
+```
+
+### 9.2 CSS 要求
+
+| 类 / 变量 | 用途 |
+|-----------|------|
+| `.layout-screen--16x9` | `aspect-ratio: 16/9`；`max-width: var(--bleed-width)`；居中 |
+| `.layout-screen__grid--3x3` 等 | 栅格槽位 |
+| `.layout-slot__img--cover` | `object-fit: cover` |
+| `.layout-slot__img--contain` | `object-fit: contain` |
+| `--screen-tone` | 单竖留白背景 / 槽位间隙（如需） |
+| `html[data-layout="web"]` | 强制 Web 规则；与 768px 断点并存 |
+
+**交付物**：样式仍合并进 `journal.css`（或 `journal-web-screens.css` 再合并），用户 zip **不**含 `golden.css`。
+
+### 9.3 与现有块的关系
+
+| 现状块 | Web 演进 |
+|--------|----------|
+| `media-card` | 单槽 screen 或特殊 panorama/tall |
+| `media-row` | 由 `layout-screen` + grid 替代（迁移期可并存） |
+| `media-scroll` | 保留用于「图集章」横滑；**不占 16:9 屏**（或一 scroll 算一屏，P1 定） |
+
+---
+
+## 10. Agent 职责
+
+| Agent | Web 端职责 |
+|-------|------------|
+| **Agent 0 媒体** | 宽高、`aspectKind`、多档 WebP、`srcset`；可选 cover 裁切 |
+| **Agent 1 策展** | 分章、封面、连拍/主题 `groupId`、幕情绪 |
+| **Agent 1.5 排版** | **Layer A–D**；写 `screens[]`、`patternId`、`tone` |
+| **Agent 2 叙事** | 组级/屏级 caption（可选）；不改 pattern |
+| **Agent 3 出版** | `layout-screen` DOM；校验 pattern 白名单 |
+
+---
+
+## 11. 用户故事
+
+| ID | 作为… | 我想要… | 以便… |
+|----|--------|---------|--------|
+| US-W01 | 旅行者 | 桌面打开游记时横图以宫格饱满展示 | 像展览而不是长条相册 |
+| US-W02 | 旅行者 | 三张竖图拼成一整屏 | 不浪费显示器宽度 |
+| US-W03 | 旅行者 | 单张竖图两侧是和谐色而不是黑边 | 延续本章氛围 |
+| US-W04 | 旅行者 | 连拍 9 张一屏 3×3 | 表达「那一瞬」 |
+| US-W05 | 旅行者 | 一天很多图分多屏浏览 | 有节奏、不一次挤爆 |
+| US-W06 | 编辑 | 改图序后重新分屏排版 | 结构可重算 |
+| US-W07 | 开发者 | pattern 与 trip.json 可回归测试 | CI 稳定 |
+
+---
+
+## 12. 验收标准（Web Stage v1）
+
+| ID | 条件 |
+|----|------|
+| W-T01 | `exportLayout: web` 时，章内出现 `layout-screen--16x9` |
+| W-T02 | `screen-portrait-3` 三槽 **cover**，无明显竖缝 |
+| W-T03 | `screen-portrait-1-landscape-2` 竖左 + 双横右 **cover**；孤儿竖为 `screen-portrait-1` **cover** |
+| W-T04 | 横图 4/9 张触发 2×2 / 3×3 |
+| W-T05 | 单屏 >9 张自动拆为两屏及以上 |
+| W-T06 | 全景 / tall 不进入竖三列/横九宫 |
+| W-T07 | 同 `trip.json` 重跑排版结果一致 |
+| W-T08 | 金样例 Web 模式可预览全部 v1 pattern（新增 `golden-web-screens.html` 或扩展现有 golden） |
+
+---
+
+## 13. 实施阶段
+
+> **P1 任务拆解与验收勾选**见 [附录 C](#附录-c--与现实现差距跟踪表)。
+
+| 阶段 | 范围 | 产出 |
+|------|------|------|
+| **P0 文档** | 本 PRD + 更新 LAYOUT-PLANNER 交叉引用 | 评审通过 |
+| **P1 数据** | `trip.schema.json` 增加 `screens[]` | 校验器 · **C-P1-01** |
+| **P1 算法** | `layout_planner` Web 分支重写为 Layer C | fixture 回归 · **C-P1-02～05** |
+| **P1 模板** | `journal.css` + partials `layout-screen.hbs` | 金样例 · **C-P1-06～08** |
+| **P2** | chapter-tone 自动采样、混排 pattern | ingest crop 可选 · **C-P2-*** |
+| **P3** | Layout Composer 专职 Agent、G1 屏级预览 | CLI `layout replan` |
+
+---
+
+## 14. 风险与开放问题
+
+| 项 | 说明 | 建议 |
+|----|------|------|
+| 封面是否占一屏 | 封面 hero 独立于 `screens` | 保持 `cover-hero`，不计入章内 9 张 |
+| `media-scroll` 与 screen 关系 | 横滑章是否算多屏 | P1 定为 scroll 独占一章，不占 16:9 grid |
+| 语音条位置 | 屏级 vs 卡级 | 仍在 slot 下方 `voice-bar`，不破坏 16:9 栅格高度 |
+| 性能 | 9 张 cover + 大图 | `srcset` + 懒加载；首屏 eager |
+| 打印 | 多屏 16:9 | `@media print` 拆屏为纵向堆叠 |
+
+---
+
+## 15. 版本记录
+
+| 版本 | 日期 | 说明 |
+|------|------|------|
+| v0.1 | 2026-05-21 | 初稿：模型 B、五类归入、单屏≤9、cover/相邻色、四层算法、pattern v1 表 |
+| v0.1.1 | 2026-05-21 | 新增附录 C：与现实现差距跟踪表（P1 任务 ID 对照） |
+
+---
+
+## 附录 A · 与现版 `visual-journal` 差异摘要
+
+| 维度 | 现 v0.2.1 | 本 PRD 目标 |
+|------|-----------|-------------|
+| 结构单位 | `items[]` 堆叠 | `chapters[].screens[]` |
+| Web 画布 | 出血 + contain 为主 | **16:9 screen 容器** |
+| 竖三列 | contain，两图时三列栅格空一格 | **3×cover 满幅** |
+| 横图组 | 最多 3 横一排 | **2×2 / 3×3 至 9 张** |
+| 单竖留白 | 页面背景色 | **chapter-tone** |
+| 排版重置 | 章内连续 scan | **每屏重置** |
+
+---
+
+## 附录 B · 文档索引
+
+| 文档 | 角色 |
+|------|------|
+| 本文档 | Web 端产品需求（章/屏、pattern、填满规则） |
+| [PRD-LAYOUT.md](./PRD-LAYOUT.md) | 排版子系统总 PRD |
+| [LAYOUT-PLANNER.md](./LAYOUT-PLANNER.md) | 算法阈值与实现细则（随 P1 更新） |
+| [TEMPLATE-visual-journal.md](./TEMPLATE-visual-journal.md) | 全模板块与双形态 |
+
+---
+
+## 附录 C · 与现实现差距跟踪表
+
+> **对照基线（现网）**：`templates/visual-journal/journal.css`、`partials/*.hbs`、`travelogue/curation/layout_planner.py`、`schemas/trip.schema.json`（v0.2.1）。  
+> **状态列**：`—` 已对齐 · `△` 部分 · `✗` 未做。P1 任务 ID 供 issue / 里程碑勾选。
+
+### C.1 已对齐（无需 P1 重做）
+
+| ID | 维度 | 现实现 | PRD | 状态 |
+|----|------|--------|-----|------|
+| C-OK-01 | 模板 ID | `visual-journal` | 不另立目录 | — |
+| C-OK-02 | Web 触发 | `exportLayout: web` · 768px · `data-layout="web"` | 同 | — |
+| C-OK-03 | 构图五类 | `classify_aspect` / `aspectKind` | 非标并入横竖带 | — |
+| C-OK-04 | 全局统计 | `summarize_orientations` → `orientationSummary` | Layer A | — |
+| C-OK-05 | 章内连续分组 | `plan_chapter_items` 按序扫 run | Layer C run | — |
+| C-OK-06 | 竖×3 / 竖×2 | `portrait-triple` / `portrait-pair` | 有（**裁切策略不同**，见 C.3） | △ |
+| C-OK-07 | 横×3 / 横×2 | `landscape-triple` / `landscape-pair` | 有（**无 4/6/9**，见 C.3） | △ |
+| C-OK-08 | 方×3 / 方×2 | `square-triple` / `square-pair` | 有（**无 4/6/9**） | △ |
+| C-OK-09 | 全景 / 超长竖独占 | `media-card` + `slot` | 同 | — |
+| C-OK-10 | 横竖不混排于同一 row | 同质 `media-row` | v1 同 | — |
+| C-OK-11 | 章级叙事 pattern | `open` / `moment` / `gallery` / `close` | 保留 | — |
+| C-OK-12 | 块白名单 | manifest 块列表 | 扩展 `layout-screen`，仍禁自由 HTML | △ |
+
+### C.2 核心差距明细
+
+| ID | 差距项 | 现实现 | PRD 目标 | 状态 | P1 任务 |
+|----|--------|--------|----------|------|---------|
+| C-GAP-01 | **信息架构 · 屏** | `chapters[].items[]` 纵向堆叠 | `chapters[].screens[]` | — | **C-P1-01** schema |
+| C-GAP-02 | **单屏张数上限** | 无章内上限 | 单屏 ≤9，超出拆屏 | — | **C-P1-02** planner |
+| C-GAP-03 | **每屏重置排版** | 章内一次 `plan_chapter_items` | 满屏后下一屏重算 pattern | — | **C-P1-02** |
+| C-GAP-04 | **16:9 舞台容器** | 无；各 card/row 自高 | `.layout-screen--16x9` | — | **C-P1-06** CSS |
+| C-GAP-05 | **屏级 patternId** | 仅章级 `patternId` + `rowLayout` | `screen-landscape-9` 等 | — | **C-P1-01**、**C-P1-07** render |
+| C-GAP-06 | **横宫格 4/6/9** | 最多横×3 | 2×2 / 3×2 / 3×3 | ✗ | **C-P1-03** |
+| C-GAP-07 | **竖宫格 4/6/9** | 最多竖×3 | 含 3×3 cover | ✗ | **C-P1-03** |
+| C-GAP-08 | **竖三列填满** | `object-fit: contain` | **`cover`** 拼满 16:9 | ✗ | **C-P1-06** |
+| C-GAP-09 | **竖×2 布局** | 三列栅格占 2 格（第三格空） | cover；视觉满幅 | ✗ | **C-P1-06** |
+| C-GAP-10 | **单竖留白** | 页面 `--bg-page` | `--screen-tone` 同章相邻色 | ✗ | **C-P2-01** tone |
+| C-GAP-11 | **连拍 / 主题组** | 无 `groupId` / 时间阈值 | 优先 4/6/9 宫格 | ✗ | **C-P2-02** curate |
+| C-GAP-12 | **统计驱动分屏策略** | `orientationSummary`  mainly 闸口文案 | 影响分章/分屏策略 | ✗ | **C-P1-04** |
+| C-GAP-13 | **gallery 章语义** | Web 松散卡合并为 `media-scroll` | 16:9 栅格屏（或 scroll 独占章，见 §14） | △ | **C-P1-05** |
+| C-GAP-14 | **DOM / partials** | `media-card` / `media-row` / `media-scroll` | `layout-screen.hbs` + `layout-slot` | ✗ | **C-P1-07** |
+| C-GAP-15 | **金样例覆盖** | `golden.html` 演示 row/scroll | 全部 v1 `screen-*`（W-T08） | ✗ | **C-P1-08** |
+| C-GAP-16 | **混排横+竖** | 无 | v2 backlog | ✗ | **C-P2-03** |
+| C-GAP-17 | **验收项** | `GOLDEN-CHECKLIST` / `LAYOUT-PLANNER` 针对 row | W-T01～W-T08 针对 screen | ✗ | **C-P1-08** |
+
+### C.3 差距总览（排期用）
+
+| 类别 | 状态 | 差距程度 | 主要改动面 | P1 任务 |
+|------|------|----------|------------|---------|
+| `screens[]` 数据模型 | — | **大** | schema、validator、render | C-P1-01 |
+| 分屏 + 每屏重置 + ≤9 张 | — | **大** | `screen_planner.py` | C-P1-02 |
+| 横/竖 4·6·9 宫格 | — | **大** | `screen_planner.py` screens-2 | C-P1-03 |
+| 统计 → 分屏策略 | — | **中** | `orientationSummary` 启发 | C-P1-04 |
+| gallery vs screen | △ | **中** | 渲染不用 scroll | C-P1-05 |
+| `layout-screen` CSS/DOM | — | **大** | `journal-screens.css` | C-P1-06、C-P1-07 |
+| cover 拼图 | — | **中** | cover / contain | C-P1-06 |
+| chapter-tone | △ | **中** | `screen_tone.py` | C-P2-01 |
+| 连拍 burst | — | **中** | `takenAt` 阈值 | C-P2-02 |
+| 双引擎回归 | — | **中** | `test_dual_layout_engine.py` | M4 |
+| 混排 pattern | ✗ | **v2** | backlog | C-P2-03 |
+
+### C.4 P1 任务单（建议拆解）
+
+| 任务 ID | 标题 | 依赖 | 产出 | 验收 |
+|---------|------|------|------|------|
+| **C-P1-01** | `trip.schema` 增加 `chapters[].screens[]` | — | schema + fixture | 校验通过；旧 trip 降级策略文档化 |
+| **C-P1-02** | Web `plan_screens_for_chapter`（≤9 · 满屏重置） | C-P1-01 | planner API | 同输入可复现；单屏 >9 自动拆 |
+| **C-P1-03** | pattern v1：横/竖/方 4·6·9 | C-P1-02 | `patternId` 枚举 + 单元测试 | W-T04、W-T05 |
+| **C-P1-04** | `orientationSummary` 参与分屏启发 | C-P1-02 | planner/curate 钩子 | 竖占比高 → 更多 `screen-portrait-*` |
+| **C-P1-05** | gallery 章：scroll 与 screen 策略拍板并实现 | §14 | 更新 `LAYOUT-PLANNER.md` | gallery 章行为与 PRD 一致 |
+| **C-P1-06** | `journal.css`：`layout-screen--16x9`、slot、**cover** | — | CSS | W-T01、W-T02、W-T03（tone 可先占位色） |
+| **C-P1-07** | 渲染：`layout-screen.hbs` + render context | C-P1-01、C-P1-06 | `index.html` 输出 | W-T01；无未知 pattern |
+| **C-P1-08** | 金样例 + DOM 回归 | C-P1-06、C-P1-07 | `golden.html` 或 `golden-web-screens.html` | W-T08；`dom_compare` 更新 |
+
+**建议实现顺序（最小步逼近 PRD）**：
+
+1. **C-P1-06**（CSS cover + 16:9 盒，可在现有 `media-row` 上试效果）  
+2. **C-P1-03** + **C-P1-02**（planner 宫格与分屏）  
+3. **C-P1-01** + **C-P1-07**（数据与渲染切到 `screens[]`）  
+4. **C-P1-04**、**C-P1-05**、**C-P1-08**  
+5. **C-P2-01**～**C-P2-03**（tone、连拍、混排）
+
+### C.5 与附录 A 的关系
+
+| 附录 | 用途 |
+|------|------|
+| **附录 A** | 产品级差异摘要（一页纸） |
+| **附录 C（本节）** | 工程跟踪表 + P1 任务 ID + 状态勾选 |
+
+### C.6 跟踪表维护约定
+
+- 任务开工：在 §15 版本记录或 PR 中引用 `C-P1-xx`。  
+- 任务完成：将对应行 `状态` 改为 `—` 或 `△`，并勾选 §12 `W-Txx`。  
+- 现基线变更（如 planner 已支持 4 宫格）：更新 **C.1 / C.2** 与 `LAYOUT-PLANNER.md`，勿只改本节状态。

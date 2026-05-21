@@ -1,0 +1,34 @@
+# Local config & secrets
+config.yaml
+.env
+.env.*
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+
+# Runtime trip data
+trips/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Export artifacts (optional local)
+*.zip
+
+# Local debug / screenshots
+_debug/
+.playwright-mcp/
+page-real-mobile.png

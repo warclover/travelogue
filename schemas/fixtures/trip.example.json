@@ -1,0 +1,169 @@
+{
+  "version": "0.2",
+  "tripId": "kyoto-2025-04",
+  "templateId": "visual-journal",
+  "exportLayout": "auto",
+  "meta": {
+    "title": "雨后京都",
+    "subtitle": "五天，两个人",
+    "hook": "鸭川边那阵吹干雨衣的风。",
+    "dateStart": "2025-04-02",
+    "dateEnd": "2025-04-06",
+    "places": ["京都"],
+    "companions": "两人",
+    "tone": "relaxed"
+  },
+  "coverAssetId": "asset-001",
+  "coverCandidates": ["asset-001", "asset-002", "asset-010"],
+  "assets": [
+    {
+      "id": "asset-001",
+      "type": "image",
+      "sourceFile": "source/IMG_001.heic",
+      "displayFile": "assets/asset-001-w1600.webp",
+      "srcset": [
+        { "file": "assets/asset-001-w800.webp", "width": 800 },
+        { "file": "assets/asset-001-w1600.webp", "width": 1600 }
+      ],
+      "focalPoint": { "x": 0.5, "y": 0.45 },
+      "width": 4032,
+      "height": 3024,
+      "takenAt": "2025-04-02T15:30:00+09:00",
+      "place": { "city": "京都", "country": "JP" },
+      "ingestBatchId": "batch-001"
+    },
+    {
+      "id": "asset-002",
+      "type": "image",
+      "sourceFile": "source/IMG_002.heic",
+      "displayFile": "assets/asset-002-w1600.webp",
+      "takenAt": "2025-04-02T18:00:00+09:00",
+      "place": { "city": "京都", "country": "JP" },
+      "ingestBatchId": "batch-001"
+    },
+    {
+      "id": "asset-010",
+      "type": "image",
+      "sourceFile": "source/IMG_010.heic",
+      "displayFile": "assets/asset-010-w1600.webp",
+      "takenAt": "2025-04-03T20:10:00+09:00",
+      "place": { "city": "京都", "country": "JP" },
+      "voice": {
+        "audioFile": "assets/asset-010-voice.m4a",
+        "durationSec": 18,
+        "transcript": "雨太大了我们先回酒店拿伞。",
+        "transcriptPreview": "雨太大了，先回酒店。",
+        "source": "user",
+        "showTranscript": true
+      }
+    },
+    {
+      "id": "asset-011",
+      "type": "image",
+      "sourceFile": "source/IMG_011.heic",
+      "displayFile": "assets/asset-011-w1600.webp",
+      "takenAt": "2025-04-03T21:00:00+09:00",
+      "place": { "city": "京都", "country": "JP" },
+      "ingestBatchId": "batch-001"
+    },
+    {
+      "id": "asset-012",
+      "type": "image",
+      "sourceFile": "source/IMG_012.heic",
+      "displayFile": "assets/asset-012-w1600.webp",
+      "takenAt": "2025-04-04T10:00:00+09:00",
+      "place": { "city": "京都", "country": "JP" },
+      "ingestBatchId": "batch-001"
+    }
+  ],
+  "chapters": [
+    {
+      "id": "ch-01",
+      "index": 1,
+      "patternId": "open",
+      "title": "抵达",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "asset-001",
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        },
+        {
+          "type": "media-card",
+          "assetId": "asset-002",
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        }
+      ],
+      "curation": {
+        "anchorAssetId": "asset-001",
+        "daySpan": ["2025-04-02"],
+        "places": ["京都"]
+      }
+    },
+    {
+      "id": "ch-02",
+      "index": 2,
+      "patternId": "moment",
+      "title": "祇园夜雨",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "asset-010",
+          "title": "石板路",
+          "caption": "雨太大了，先回酒店。",
+          "edited": false,
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        },
+        {
+          "type": "media-card",
+          "assetId": "asset-011",
+          "title": "夜灯",
+          "caption": "",
+          "edited": false,
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        }
+      ],
+      "curation": {
+        "anchorAssetId": "asset-010",
+        "daySpan": ["2025-04-03"],
+        "places": ["京都"]
+      }
+    },
+    {
+      "id": "ch-03",
+      "index": 3,
+      "patternId": "close",
+      "title": "回程",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "asset-012",
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        }
+      ],
+      "curation": {
+        "anchorAssetId": "asset-012",
+        "daySpan": ["2025-04-04"],
+        "places": ["京都"]
+      }
+    }
+  ],
+  "epilogue": "",
+  "privacy": {
+    "level": "private",
+    "stripExifOnExport": true,
+    "confirmedAt": null
+  },
+  "pipeline": {
+    "status": "structure_draft",
+    "lastBatchId": "batch-001",
+    "pendingAssets": [],
+    "locks": { "structure": false, "copy": false },
+    "runs": []
+  },
+  "createdAt": "2026-05-19T08:00:00Z",
+  "updatedAt": "2026-05-19T08:00:00Z"
+}

@@ -1,0 +1,38 @@
+<figure class="{{classes}}"
+  data-block="media-card" data-asset-id="{{assetId}}"
+  {{#if hasTags}}data-tags="{{tagsAttr}}"{{/if}}>
+  <div class="media-card__frame"{{#unless isVideo}} data-aspect-kind="{{aspectKind}}"{{/unless}}>
+    {{#if isVideo}}
+    <video class="media-card__visual" poster="{{poster}}"
+      muted playsinline loop preload="metadata">
+      <source src="{{videoFile}}" type="video/mp4" />
+    </video>
+    {{#if playBadge}}
+    <span class="media-card__play-badge">{{playBadge}}</span>
+    {{/if}}
+    {{else}}
+    <img class="media-card__visual"
+      src="{{src}}"
+      {{#if hasSrcset}}
+      srcset="{{srcset}}"
+      sizes="{{sizes}}"
+      {{/if}}
+      alt="{{alt}}"
+      loading="{{loading}}"
+      decoding="async" />
+    {{/if}}
+    <div class="media-card__overlay-text">
+      {{#if hasTitle}}
+      <h3 class="media-card__title"{{#if editable}} data-editable="title"{{/if}}>{{title}}</h3>
+      {{/if}}
+      {{#if hasCaption}}
+      <p class="media-card__caption"{{#if editable}} data-editable="caption"{{/if}}>{{caption}}</p>
+      {{/if}}
+    </div>
+  </div>
+  {{#if hasVoice}}
+  <figcaption class="media-card__body">
+    {{> voice-bar}}
+  </figcaption>
+  {{/if}}
+</figure>

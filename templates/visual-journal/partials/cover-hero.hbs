@@ -1,0 +1,19 @@
+<header class="cover-hero" data-block="cover-hero">
+  <div class="cover-hero__media">
+    <img src="{{cover.src}}"
+      {{#if cover.hasSrcset}}
+      srcset="{{cover.srcset}}"
+      sizes="{{cover.sizes}}"
+      {{/if}}
+      alt="{{cover.alt}}"
+      loading="eager"
+      decoding="async" />
+  </div>
+  <div class="cover-hero__overlay" aria-hidden="true"></div>
+  <div class="cover-hero__text">
+    <h1 itemprop="name">{{title}}</h1>
+    {{#if hasSubtitle}}
+    <p class="subtitle">{{subtitle}}</p>
+    {{/if}}
+  </div>
+</header>

@@ -1,0 +1,25 @@
+<div class="media-scroll" data-block="media-scroll">
+  <div class="media-scroll__track">
+    {{#each slides}}
+    <figure class="media-scroll__item" data-aspect-kind="{{aspectKind}}">
+      <img class="media-card__visual"
+        src="{{src}}"
+        {{#if hasSrcset}}
+        srcset="{{srcset}}"
+        sizes="{{sizes}}"
+        {{/if}}
+        alt="{{alt}}"
+        loading="lazy"
+        decoding="async" />
+    </figure>
+    {{/each}}
+  </div>
+  <div class="media-scroll__footer">
+    {{#if hasCaption}}
+    <p class="media-card__caption"{{#if editable}} data-editable="caption"{{/if}}>{{caption}}</p>
+    {{/if}}
+    {{#if hasVoice}}
+    {{> voice-bar}}
+    {{/if}}
+  </div>
+</div>

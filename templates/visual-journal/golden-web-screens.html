@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-export="draft" data-layout="web" data-layout-engine="screens">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Web Screens 金样例 · Visual Journal</title>
+  <link rel="stylesheet" href="journal.css" />
+</head>
+<body>
+  <p style="text-align:center;font:11px system-ui;padding:8px;color:#6f6a63">
+    layoutEngine=screens 预览 · 对照 <a href="golden.html">golden.html</a>（legacy）
+  </p>
+  <main>
+    <article>
+      <section class="chapter" data-chapter-id="demo" data-pattern="moment">
+        <header class="chapter-header" data-block="chapter-header">
+          <span class="chapter-header__index">01</span>
+          <h2>竖三列 cover</h2>
+        </header>
+        <div class="layout-screen layout-screen--16x9" data-block="layout-screen" data-pattern="screen-portrait-3"
+          style="--screen-tone: #e8e4df">
+          <div class="layout-screen__grid layout-screen__grid--3col">
+            <figure class="layout-slot" data-slot="0">
+              <img class="layout-slot__img layout-slot__img--cover"
+                src="assets/demo/scroll-bamboo-w1600.webp"
+                srcset="assets/demo/scroll-bamboo-w800.webp 800w, assets/demo/scroll-bamboo-w1600.webp 1600w"
+                sizes="33vw" alt="竹" loading="eager" decoding="async" />
+            </figure>
+            <figure class="layout-slot" data-slot="1">
+              <img class="layout-slot__img layout-slot__img--cover"
+                src="assets/demo/scroll-platform-w1600.webp"
+                srcset="assets/demo/scroll-platform-w800.webp 800w, assets/demo/scroll-platform-w1600.webp 1600w"
+                sizes="33vw" alt="站台" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="layout-slot" data-slot="2">
+              <img class="layout-slot__img layout-slot__img--cover"
+                src="assets/demo/scroll-ice-w1600.webp"
+                srcset="assets/demo/scroll-ice-w800.webp 800w, assets/demo/scroll-ice-w1600.webp 1600w"
+                sizes="33vw" alt="冰" loading="lazy" decoding="async" />
+            </figure>
+          </div>
+        </div>
+        <header class="chapter-header" data-block="chapter-header">
+          <span class="chapter-header__index">02</span>
+          <h2>1 竖 + 2 横（screen-portrait-1-landscape-2）</h2>
+        </header>
+        <div class="layout-screen layout-screen--16x9" data-block="layout-screen"
+          data-pattern="screen-portrait-1-landscape-2" style="--screen-tone: #d8ddd9">
+          <div class="layout-screen__grid layout-screen__grid--portrait-left-2landscape">
+            <figure class="layout-slot" data-slot="0" data-role="portrait">
+              <img class="layout-slot__img layout-slot__img--cover"
+                src="assets/demo/lantern-w1600.webp"
+                srcset="assets/demo/lantern-w800.webp 800w, assets/demo/lantern-w1600.webp 1600w"
+                sizes="33vw" alt="灯笼" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="layout-slot" data-slot="1" data-role="landscape">
+              <img class="layout-slot__img layout-slot__img--cover"
+                src="assets/demo/station-w1600.webp"
+                srcset="assets/demo/station-w800.webp 800w, assets/demo/station-w1600.webp 1600w"
+                sizes="50vw" alt="车站" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="layout-slot" data-slot="2" data-role="landscape">
+              <img class="layout-slot__img layout-slot__img--cover"
+                src="assets/demo/umbrella-w1600.webp"
+                srcset="assets/demo/umbrella-w800.webp 800w, assets/demo/umbrella-w1600.webp 1600w"
+                sizes="50vw" alt="伞" loading="lazy" decoding="async" />
+            </figure>
+          </div>
+        </div>
+        <header class="chapter-header" data-block="chapter-header">
+          <span class="chapter-header__index">03</span>
+          <h2>横图 2×2（screen-landscape-4）</h2>
+        </header>
+        <div class="layout-screen layout-screen--16x9" data-block="layout-screen" data-pattern="screen-landscape-4">
+          <div class="layout-screen__grid layout-screen__grid--2x2">
+            <figure class="layout-slot" data-slot="0">
+              <img class="layout-slot__img layout-slot__img--cover"
+                src="assets/demo/station-w1600.webp" alt="1" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="layout-slot" data-slot="1">
+              <img class="layout-slot__img layout-slot__img--cover"
+                src="assets/demo/umbrella-w1600.webp" alt="2" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="layout-slot" data-slot="2">
+              <img class="layout-slot__img layout-slot__img--cover"
+                src="assets/demo/lantern-w1600.webp" alt="3" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="layout-slot" data-slot="3">
+              <img class="layout-slot__img layout-slot__img--cover"
+                src="assets/demo/night-river-w1600.webp" alt="4" loading="lazy" decoding="async" />
+            </figure>
+          </div>
+        </div>
+        <header class="chapter-header" data-block="chapter-header">
+          <span class="chapter-header__index">04</span>
+          <h2>横图单张</h2>
+        </header>
+        <div class="layout-screen layout-screen--16x9" data-block="layout-screen" data-pattern="screen-landscape-1">
+          <div class="layout-screen__grid layout-screen__grid--1col">
+            <figure class="layout-slot" data-slot="0">
+              <img class="layout-slot__img layout-slot__img--cover"
+                src="assets/demo/station-w1600.webp"
+                srcset="assets/demo/station-w800.webp 800w, assets/demo/station-w1600.webp 1600w"
+                sizes="100vw" alt="车站" loading="lazy" decoding="async" />
+            </figure>
+          </div>
+        </div>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

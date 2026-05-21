@@ -1,0 +1,161 @@
+{
+  "version": "0.2",
+  "tripId": "fixture-copy-locked",
+  "templateId": "visual-journal",
+  "exportLayout": "auto",
+  "meta": {
+    "title": "雨后京都",
+    "subtitle": "五天，两个人",
+    "hook": "鸭川边那阵吹干雨衣的风。",
+    "dateStart": "2025-04-02",
+    "dateEnd": "2025-04-06",
+    "places": ["京都"],
+    "tone": "relaxed"
+  },
+  "coverAssetId": "asset-001",
+  "coverCandidates": ["asset-001", "asset-002", "asset-003"],
+  "assets": [
+    {
+      "id": "asset-001",
+      "type": "image",
+      "sourceFile": "source/a1.jpg",
+      "displayFile": "assets/asset-001-w1600.webp",
+      "srcset": [
+        { "file": "assets/asset-001-w800.webp", "width": 800 },
+        { "file": "assets/asset-001-w1600.webp", "width": 1600 }
+      ],
+      "takenAt": "2025-04-02T10:00:00+09:00",
+      "place": { "city": "京都", "country": "JP" },
+      "tags": ["车站", "雨天", "抵达"],
+      "tagsSource": "heuristic"
+    },
+    {
+      "id": "asset-002",
+      "type": "image",
+      "sourceFile": "source/a2.jpg",
+      "displayFile": "assets/asset-002-w1600.webp",
+      "takenAt": "2025-04-03T14:00:00+09:00",
+      "place": { "city": "京都", "country": "JP" }
+    },
+    {
+      "id": "asset-003",
+      "type": "image",
+      "sourceFile": "source/a3.jpg",
+      "displayFile": "assets/asset-003-w1600.webp",
+      "takenAt": "2025-04-04T16:00:00+09:00",
+      "place": { "city": "京都", "country": "JP" },
+      "tags": ["雨天", "石板路", "夜景"],
+      "tagsSource": "heuristic",
+      "voice": {
+        "audioFile": "assets/asset-003-voice.m4a",
+        "durationSec": 12,
+        "transcript": "雨太大了我们先回酒店拿伞。",
+        "transcriptPreview": "雨太大了，先回酒店。",
+        "source": "user",
+        "showTranscript": true
+      }
+    },
+    {
+      "id": "asset-004",
+      "type": "image",
+      "sourceFile": "source/a4.jpg",
+      "displayFile": "assets/asset-004-w1600.webp",
+      "takenAt": "2025-04-03T18:00:00+09:00",
+      "place": { "city": "京都", "country": "JP" }
+    },
+    {
+      "id": "asset-005",
+      "type": "image",
+      "sourceFile": "source/a5.jpg",
+      "displayFile": "assets/asset-005-w1600.webp",
+      "takenAt": "2025-04-04T18:00:00+09:00",
+      "place": { "city": "京都", "country": "JP" }
+    }
+  ],
+  "chapters": [
+    {
+      "id": "ch-01",
+      "index": 1,
+      "patternId": "open",
+      "title": "抵达",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "asset-001",
+          "title": "京都站",
+          "caption": "雨一直没停。",
+          "edited": false,
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        },
+        {
+          "type": "media-card",
+          "assetId": "asset-002",
+          "title": "鸭川",
+          "caption": "",
+          "edited": false,
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        }
+      ],
+      "curation": { "anchorAssetId": "asset-001", "daySpan": ["2025-04-02"], "places": ["京都"] }
+    },
+    {
+      "id": "ch-02",
+      "index": 2,
+      "patternId": "moment",
+      "title": "祇园夜雨",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "asset-003",
+          "title": "石板路",
+          "caption": "雨太大了，先回酒店。",
+          "edited": false,
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        },
+        {
+          "type": "media-card",
+          "assetId": "asset-004",
+          "title": "路灯",
+          "caption": "",
+          "edited": false,
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        }
+      ],
+      "curation": {
+        "anchorAssetId": "asset-003",
+        "daySpan": ["2025-04-03"],
+        "places": ["京都"],
+        "memoryAnchors": ["避雨", "小酒馆"]
+      }
+    },
+    {
+      "id": "ch-03",
+      "index": 3,
+      "patternId": "close",
+      "title": "回程",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "asset-005",
+          "title": "再见",
+          "caption": "",
+          "edited": false,
+          "layout": { "fill": true, "bleed": true, "overlay": true }
+        }
+      ],
+      "curation": { "anchorAssetId": "asset-005", "daySpan": ["2025-04-04"], "places": ["京都"] }
+    }
+  ],
+  "epilogue": "鞋还是湿的。",
+  "privacy": { "level": "private", "stripExifOnExport": true, "confirmedAt": null },
+  "pipeline": {
+    "status": "copy_locked",
+    "locks": { "structure": true, "copy": true },
+    "runs": []
+  },
+  "createdAt": "2026-05-19T08:00:00Z",
+  "updatedAt": "2026-05-19T10:00:00Z"
+}

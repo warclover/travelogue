@@ -1,0 +1,9 @@
+<div class="voice-bar" data-block="voice-bar">
+  <span class="voice-bar__icon" aria-hidden="true"></span>
+  <audio controls preload="none" src="{{audioFile}}" aria-label="{{ariaLabel}}"></audio>
+  <span class="voice-bar__duration">{{duration}}</span>
+</div>
+<details class="voice-transcript"{{#if transcriptOpen}} open{{/if}}>
+  <summary>转写</summary>
+  <p class="voice-transcript__full"{{#if editableTranscript}} data-editable="transcript"{{/if}}>{{transcript}}</p>
+</details>

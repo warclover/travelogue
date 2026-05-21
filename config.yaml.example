@@ -1,0 +1,69 @@
+# Travelogue 本地配置样例
+# 复制为 config.yaml 并勿提交到 Git
+
+trips_dir: ./trips
+
+llm:
+  provider: openai
+  model: gpt-4o-mini
+  api_key_env: OPENAI_API_KEY
+  timeout_sec: 120
+
+ffmpeg:
+  path: ffmpeg
+
+geocode:
+  enabled: false
+  provider: null
+  api_key_env: null
+
+# Web 排版引擎：legacy（media-row）| screens（16:9 舞台）；exportLayout=web|auto 宽屏时生效
+layout:
+  web_layout_engine: screens
+  # 组屏范围：day=按策展日桶时间序全序列；chapter=仅章内 items 顺序
+  screen_plan_scope: day
+  # 1 竖 + 2 横混排时三张图 takenAt 最大跨度（秒）
+  mixed_proximity_seconds: 12
+
+ingest:
+  max_photos: 50
+  max_videos: 3
+  max_video_source_sec: 15
+  webp_widths: [800, 1600, 2400]
+  webp_quality: 82
+  generate_crops: false
+  min_edge_px: 320
+  phash_threshold: 8
+  burst_seconds: 3.0
+  dedupe_phash: true
+  dedupe_burst: true
+  # 策展时剔除明显低于本批中位分辨率的照片（仍保留在 trip.json，不参与版面/封面）
+  min_long_edge_layout_px: 800
+  low_res_median_ratio: 0.55
+  low_res_peak_ratio: 0.42
+  max_video_clip_mb: 1.5
+  max_zip_mb: 25
+
+vision:
+  enabled: false
+  provider: none  # none | heuristic | clip | vlm
+  max_tags_per_asset: 5
+
+preview:
+  width: 1080
+  height: 1920
+  jpeg_quality: 88
+
+export:
+  max_zip_mb: 25
+  preview_width: 1080
+  strip_exif: true
+
+narrative:
+  tone_default: relaxed
+  max_auto_fix_retries: 2
+  banned_phrases:
+    - 综上所述
+    - 值得一提的是
+    - 美不胜收
+    - 令人难忘

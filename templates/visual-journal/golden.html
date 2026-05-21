@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-export="draft" data-longshot="on">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>雨后京都 · Visual Journal 金样例</title>
+  <meta name="description" content="Visual Journal v0.2.1：pattern 标准章 + 真实 img/srcset 演示" />
+  <link rel="stylesheet" href="golden.css" />
+  <link rel="stylesheet" href="longshot.css" />
+</head>
+<body>
+
+  <div class="golden-banner" role="note">
+    <strong>Visual Journal</strong> v0.2.1
+    <div class="layout-switch" role="group" aria-label="版式预览">
+      <button type="button" data-layout="auto" aria-pressed="true">自适应</button>
+      <button type="button" data-layout="mobile">朋友圈 9:16</button>
+      <button type="button" data-layout="web">Web 16:9</button>
+    </div>
+    <button type="button" id="golden-save-longshot" class="golden-longshot-btn"
+      data-longshot-trigger data-longshot-label="保存长图">保存长图</button>
+    <span class="layout-hint">标准章 open / moment / gallery / close · 附录 media-row · 语音 5 处 · 长图按朋友圈 9:16 导出</span>
+  </div>
+
+  <main>
+    <article itemscope itemtype="https://schema.org/Trip">
+
+      <header class="cover-hero" data-block="cover-hero">
+        <div class="cover-hero__media">
+          <img src="assets/demo/cover-w1600.webp"
+            srcset="assets/demo/cover-w800.webp 800w, assets/demo/cover-w1600.webp 1600w"
+            sizes="100vw"
+            alt="雨中的京都站"
+            loading="eager"
+            decoding="async" />
+        </div>
+        <div class="cover-hero__overlay" aria-hidden="true"></div>
+        <div class="cover-hero__text">
+          <h1 itemprop="name">雨后京都</h1>
+          <p class="subtitle">五天，两个人</p>
+        </div>
+      </header>
+
+      <div class="page">
+        <div class="trip-meta" data-block="trip-meta">
+          <time datetime="2025-04-02/2025-04-06">2025.04.02 – 04.06</time> · 京都 · 5 天
+        </div>
+        <p class="hook-line" data-block="hook-line">鸭川边那阵吹干雨衣的风。</p>
+
+        <!-- pattern: open — header + 2× media-card -->
+        <section class="chapter" id="ch-01" data-chapter-id="ch-01" data-pattern="open"
+          data-memory-anchors="抵达,关西机场">
+          <header class="chapter-header" data-block="chapter-header">
+            <span class="chapter-header__index">01</span>
+            <h2>抵达</h2>
+          </header>
+          <figure class="media-card media-card--bleed media-card--fill media-card--overlay"
+            data-block="media-card" data-asset-id="asset-001"
+            data-tags="车站,雨天,霓虹">
+            <div class="media-card__frame">
+              <img class="media-card__visual"
+                src="assets/demo/station-w1600.webp"
+                srcset="assets/demo/station-w800.webp 800w, assets/demo/station-w1600.webp 1600w"
+                sizes="100vw"
+                alt="京都站雨景"
+                loading="eager"
+                decoding="async" />
+              <div class="media-card__overlay-text">
+                <h3 class="media-card__title" data-editable="title">京都站</h3>
+                <p class="media-card__caption" data-editable="caption">第一次看见这座城市的雨。</p>
+              </div>
+            </div>
+            <figcaption class="media-card__body">
+              <div class="voice-bar" data-block="voice-bar">
+                <span class="voice-bar__icon" aria-hidden="true"></span>
+                <audio controls preload="none" aria-label="语音：京都站"></audio>
+                <span class="voice-bar__duration">0:24</span>
+              </div>
+              <details class="voice-transcript">
+                <summary>转写</summary>
+                <p class="voice-transcript__full" data-editable="transcript">车窗上的水珠把霓虹拉得很长，我们谁也没说话，但都知道已经到了。</p>
+              </details>
+            </figcaption>
+          </figure>
+          <figure class="media-card media-card--bleed media-card--fill media-card--overlay"
+            data-block="media-card" data-asset-id="asset-002"
+            data-tags="伞架,湿鞋,站台">
+            <div class="media-card__frame">
+              <img class="media-card__visual"
+                src="assets/demo/umbrella-w1600.webp"
+                srcset="assets/demo/umbrella-w800.webp 800w, assets/demo/umbrella-w1600.webp 1600w"
+                sizes="100vw"
+                alt="伞架与站台"
+                loading="lazy"
+                decoding="async" />
+              <div class="media-card__overlay-text">
+                <h3 class="media-card__title" data-editable="title">站台边</h3>
+              </div>
+            </div>
+          </figure>
+        </section>
+
+        <!-- pattern: moment — video + media-card(voice) -->
+        <section class="chapter" id="ch-02" data-chapter-id="ch-02" data-pattern="moment"
+          data-memory-anchors="避雨,花见小路">
+          <div class="divider-place" data-block="divider-place">
+            <time datetime="2025-04-03">04.03</time><strong>祇园</strong>
+          </div>
+          <header class="chapter-header" data-block="chapter-header">
+            <span class="chapter-header__index">02</span>
+            <h2>夜雨巷子</h2>
+          </header>
+          <figure class="media-card media-card--bleed media-card--fill media-card--video media-card--overlay"
+            data-block="media-card" data-asset-id="vid-001"
+            data-tags="夜景,视频,灯笼">
+            <div class="media-card__frame">
+              <img class="media-card__visual"
+                src="assets/demo/video-poster-w1600.webp"
+                srcset="assets/demo/video-poster-w800.webp 800w, assets/demo/video-poster-w1600.webp 1600w"
+                sizes="100vw"
+                alt="花见小路夜景视频封面"
+                loading="lazy"
+                decoding="async" />
+              <span class="media-card__play-badge">6s · 轻触开声</span>
+              <div class="media-card__overlay-text">
+                <h3 class="media-card__title" data-editable="title">花见小路</h3>
+                <p class="media-card__caption" data-editable="caption">灯笼在积水里晃</p>
+              </div>
+            </div>
+          </figure>
+          <figure class="media-card media-card--bleed media-card--fill media-card--overlay"
+            data-block="media-card" data-asset-id="asset-010"
+            data-tags="灯笼,雨夜,转角">
+            <div class="media-card__frame">
+              <img class="media-card__visual"
+                src="assets/demo/lantern-w1600.webp"
+                srcset="assets/demo/lantern-w800.webp 800w, assets/demo/lantern-w1600.webp 1600w"
+                sizes="100vw"
+                alt="转角灯笼"
+                loading="lazy"
+                decoding="async" />
+              <div class="media-card__overlay-text">
+                <h3 class="media-card__title" data-editable="title">转角</h3>
+                <p class="media-card__caption" data-editable="caption">别拍了，就这样走一段</p>
+              </div>
+            </div>
+            <figcaption class="media-card__body">
+              <div class="voice-bar" data-block="voice-bar">
+                <span class="voice-bar__icon" aria-hidden="true"></span>
+                <audio controls preload="none" aria-label="语音：转角"></audio>
+                <span class="voice-bar__duration">0:18</span>
+              </div>
+              <details class="voice-transcript">
+                <summary>转写</summary>
+                <p class="voice-transcript__full" data-editable="transcript">别拍了，就这样走一段。雨声比人还多。</p>
+              </details>
+            </figcaption>
+          </figure>
+        </section>
+
+        <!-- pattern: gallery — media-scroll only -->
+        <section class="chapter" id="ch-03" data-chapter-id="ch-03" data-pattern="gallery"
+          data-memory-anchors="排队,冰淇淋">
+          <div class="divider-place" data-block="divider-place">
+            <time datetime="2025-04-04">04.04</time><strong>岚山</strong>
+          </div>
+          <header class="chapter-header" data-block="chapter-header">
+            <span class="chapter-header__index">03</span>
+            <h2>竹林与站台</h2>
+          </header>
+          <p class="chapter-lead" data-block="chapter-lead">人太多，高光在站台边</p>
+          <div class="media-scroll" data-block="media-scroll">
+            <div class="media-scroll__track">
+              <figure class="media-scroll__item">
+                <img class="media-card__visual"
+                  src="assets/demo/scroll-bamboo-w1600.webp"
+                  srcset="assets/demo/scroll-bamboo-w800.webp 800w, assets/demo/scroll-bamboo-w1600.webp 1600w"
+                  sizes="86vw"
+                  alt="竹林"
+                  loading="lazy"
+                  decoding="async" />
+              </figure>
+              <figure class="media-scroll__item">
+                <img class="media-card__visual"
+                  src="assets/demo/scroll-platform-w1600.webp"
+                  srcset="assets/demo/scroll-platform-w800.webp 800w, assets/demo/scroll-platform-w1600.webp 1600w"
+                  sizes="86vw"
+                  alt="站台"
+                  loading="lazy"
+                  decoding="async" />
+              </figure>
+              <figure class="media-scroll__item">
+                <img class="media-card__visual"
+                  src="assets/demo/scroll-ice-w1600.webp"
+                  srcset="assets/demo/scroll-ice-w800.webp 800w, assets/demo/scroll-ice-w1600.webp 1600w"
+                  sizes="86vw"
+                  alt="冰淇淋"
+                  loading="lazy"
+                  decoding="async" />
+              </figure>
+            </div>
+            <div class="media-scroll__footer">
+              <p class="media-card__caption" data-editable="caption">竹林、小火车、冰淇淋</p>
+              <div class="voice-bar" data-block="voice-bar">
+                <span class="voice-bar__icon" aria-hidden="true"></span>
+                <audio controls preload="none" aria-label="语音：岚山"></audio>
+                <span class="voice-bar__duration">0:31</span>
+              </div>
+              <details class="voice-transcript">
+                <summary>转写</summary>
+                <p class="voice-transcript__full" data-editable="transcript">排了很久队，但第一口值得。</p>
+              </details>
+            </div>
+          </div>
+        </section>
+
+        <!-- pattern: close -->
+        <section class="chapter" id="ch-04" data-chapter-id="ch-04" data-pattern="close"
+          data-memory-anchors="鸭川,最后一晚">
+          <header class="chapter-header" data-block="chapter-header">
+            <span class="chapter-header__index">04</span>
+            <h2>鸭川</h2>
+          </header>
+          <figure class="media-card media-card--bleed media-card--fill media-card--overlay"
+            data-block="media-card" data-asset-id="asset-030"
+            data-tags="河堤,夜景,鞋子">
+            <div class="media-card__frame">
+              <img class="media-card__visual"
+                src="assets/demo/night-river-w1600.webp"
+                srcset="assets/demo/night-river-w800.webp 800w, assets/demo/night-river-w1600.webp 1600w"
+                sizes="100vw"
+                alt="鸭川夜景"
+                loading="lazy"
+                decoding="async" />
+              <div class="media-card__overlay-text">
+                <h3 class="media-card__title" data-editable="title">最后一晚</h3>
+                <p class="media-card__caption" data-editable="caption">鞋晾在河堤上</p>
+              </div>
+            </div>
+            <figcaption class="media-card__body">
+              <div class="voice-bar" data-block="voice-bar">
+                <span class="voice-bar__icon" aria-hidden="true"></span>
+                <audio controls preload="none" aria-label="语音：鸭川"></audio>
+                <span class="voice-bar__duration">0:15</span>
+              </div>
+              <details class="voice-transcript">
+                <summary>转写</summary>
+                <p class="voice-transcript__full" data-editable="transcript">若再去，想住在更靠近河的地方。</p>
+              </details>
+            </figcaption>
+          </figure>
+          <figure class="media-card media-card--bleed media-card--fill media-card--overlay"
+            data-block="media-card" data-asset-id="asset-031"
+            data-tags="回程,夜色">
+            <div class="media-card__frame">
+              <img class="media-card__visual"
+                src="assets/demo/night-return-w1600.webp"
+                srcset="assets/demo/night-return-w800.webp 800w, assets/demo/night-return-w1600.webp 1600w"
+                sizes="100vw"
+                alt="回程"
+                loading="lazy"
+                decoding="async" />
+              <div class="media-card__overlay-text">
+                <h3 class="media-card__title" data-editable="title">回程</h3>
+                <p class="media-card__caption" data-editable="caption">没买纪念品</p>
+              </div>
+            </div>
+            <figcaption class="media-card__body">
+              <div class="voice-bar" data-block="voice-bar">
+                <span class="voice-bar__icon" aria-hidden="true"></span>
+                <audio controls preload="none" aria-label="语音：回程"></audio>
+                <span class="voice-bar__duration">0:12</span>
+              </div>
+              <details class="voice-transcript">
+                <summary>转写</summary>
+                <p class="voice-transcript__full" data-editable="transcript">手机里多了一段没剪完的视频。</p>
+              </details>
+            </figcaption>
+          </figure>
+        </section>
+
+        <!-- 附录：media-row 块演示（非 pattern 序列） -->
+        <section class="chapter chapter--appendix" id="ch-demo-row" data-demo="media-row">
+          <header class="chapter-header" data-block="chapter-header">
+            <span class="chapter-header__index">—</span>
+            <h2>附录 · 双图 media-row</h2>
+          </header>
+          <figure class="media-row" data-block="media-row">
+            <div class="media-card__frame">
+              <img class="media-card__visual"
+                src="assets/demo/row-umbrella-w1600.webp"
+                srcset="assets/demo/row-umbrella-w800.webp 800w, assets/demo/row-umbrella-w1600.webp 1600w"
+                sizes="50vw"
+                alt="伞架"
+                loading="lazy"
+                decoding="async" />
+            </div>
+            <div class="media-card__frame">
+              <img class="media-card__visual"
+                src="assets/demo/row-shoes-w1600.webp"
+                srcset="assets/demo/row-shoes-w800.webp 800w, assets/demo/row-shoes-w1600.webp 1600w"
+                sizes="50vw"
+                alt="湿鞋印"
+                loading="lazy"
+                decoding="async" />
+            </div>
+            <p class="media-row__caption" data-editable="caption">伞架与湿鞋印</p>
+          </figure>
+        </section>
+
+        <p class="epilogue" data-block="epilogue">五天的雨，打乱了一半行程。</p>
+        <footer class="footer-cta" data-block="footer-cta">
+          <p>Travelogue · Visual Journal</p>
+        </footer>
+      </div>
+    </article>
+  </main>
+
+  <script>
+  (function () {
+    var root = document.documentElement;
+    var btns = document.querySelectorAll(".layout-switch [data-layout]");
+    var manual = false;
+    function setLayout(v) {
+      if (v === "auto") {
+        root.removeAttribute("data-layout");
+      } else {
+        root.setAttribute("data-layout", v);
+      }
+      btns.forEach(function (b) {
+        var on = b.getAttribute("data-layout") === v;
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    }
+    btns.forEach(function (b) {
+      b.addEventListener("click", function () {
+        manual = b.getAttribute("data-layout") !== "auto";
+        setLayout(b.getAttribute("data-layout"));
+      });
+    });
+    var mq = window.matchMedia("(min-width: 48rem)");
+    function auto() {
+      if (!manual) {
+        root.removeAttribute("data-layout");
+        btns.forEach(function (b) {
+          b.setAttribute("aria-pressed", b.getAttribute("data-layout") === "auto" ? "true" : "false");
+        });
+      }
+    }
+    mq.addEventListener("change", auto);
+    auto();
+  })();
+  </script>
+  <script src="vendor/html2canvas.min.js" defer></script>
+  <script src="longshot.js" defer></script>
+</body>
+</html>
