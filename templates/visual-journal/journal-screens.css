@@ -99,22 +99,15 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-3"] {
   height: auto;
 }
 
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"] .layout-screen__grid--2col,
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"] .layout-screen__grid--2col {
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid--2col,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid--2col {
   grid-template-columns: repeat(2, 1fr);
   grid-auto-rows: auto;
   align-items: start;
 }
 
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"] .layout-slot,
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"] .layout-slot {
-  aspect-ratio: var(--slot-aspect, 3 / 4);
-  width: 100%;
-  height: auto;
-}
-
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"],
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"] {
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]),
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) {
   aspect-ratio: auto;
   height: auto;
 }
@@ -151,7 +144,7 @@ html[data-layout="auto"] .layout-screen__grid--3x3 {
   display: block;
   width: 100%;
   height: 100%;
-  object-position: center;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.45) * 100%);
 }
 
 .layout-slot__img--cover {
@@ -168,6 +161,150 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-1"] .layou
 
 .layout-slot__img--contain {
   object-fit: contain;
+}
+
+/* 竖屏主舞台高度（双列 / 三列 / contain 单屏） */
+html[data-layout="web"],
+html[data-layout="auto"] {
+  --portrait-stage-vh: 108vh;
+  /* 人物横排：略小于出血宽，双列留白由 gap 吃掉 */
+  --portrait-row-inset: clamp(12px, 1.5vw, 24px);
+  --portrait-row-gap-pair: clamp(16px, 2.5vw, 40px);
+  --portrait-row-gap-triple: clamp(8px, 1vw, 18px);
+  --portrait-row-width: calc(100% - 2 * var(--portrait-row-inset));
+}
+
+/* 人物竖图：双列 / 三列 · 顶对齐 · 横铺出血宽 */
+html[data-layout="web"] .layout-screen[data-layout-hint="person-pair"],
+html[data-layout="auto"] .layout-screen[data-layout-hint="person-pair"],
+html[data-layout="web"] .layout-screen[data-layout-hint="person-triple"],
+html[data-layout="auto"] .layout-screen[data-layout-hint="person-triple"] {
+  aspect-ratio: unset;
+  height: auto;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 12px var(--portrait-row-inset);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+html[data-layout="web"] .layout-screen[data-layout-hint="person-pair"] .layout-screen__grid,
+html[data-layout="auto"] .layout-screen[data-layout-hint="person-pair"] .layout-screen__grid,
+html[data-layout="web"] .layout-screen[data-layout-hint="person-triple"] .layout-screen__grid,
+html[data-layout="auto"] .layout-screen[data-layout-hint="person-triple"] .layout-screen__grid {
+  height: auto;
+  width: var(--portrait-row-width);
+  max-width: var(--portrait-row-width);
+  margin: 0 auto;
+}
+
+/* 双列：两图宽 + gap = 行宽 */
+html[data-layout="web"] .layout-screen[data-layout-hint="person-pair"] .layout-screen__grid--2col,
+html[data-layout="auto"] .layout-screen[data-layout-hint="person-pair"] .layout-screen__grid--2col {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--portrait-row-gap-pair);
+  align-items: start;
+  justify-items: stretch;
+}
+
+html[data-layout="web"] .layout-screen[data-layout-hint="person-pair"] .layout-slot,
+html[data-layout="auto"] .layout-screen[data-layout-hint="person-pair"] .layout-slot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  aspect-ratio: unset;
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  background: transparent;
+}
+
+html[data-layout="web"] .layout-screen[data-layout-hint="person-pair"] .layout-slot__img--contain,
+html[data-layout="auto"] .layout-screen[data-layout-hint="person-pair"] .layout-slot__img--contain {
+  display: block;
+  height: var(--portrait-stage-vh);
+  width: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: top center;
+}
+
+/* 三列：总宽略小于屏，顶对齐铺满 */
+html[data-layout="web"] .layout-screen[data-layout-hint="person-triple"] .layout-screen__grid--3col,
+html[data-layout="auto"] .layout-screen[data-layout-hint="person-triple"] .layout-screen__grid--3col {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--portrait-row-gap-triple);
+  align-items: start;
+  justify-items: stretch;
+}
+
+html[data-layout="web"] .layout-screen[data-layout-hint="person-triple"] .layout-slot,
+html[data-layout="auto"] .layout-screen[data-layout-hint="person-triple"] .layout-slot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  aspect-ratio: unset;
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  background: transparent;
+}
+
+html[data-layout="web"] .layout-screen[data-layout-hint="person-triple"] .layout-slot__img--contain,
+html[data-layout="auto"] .layout-screen[data-layout-hint="person-triple"] .layout-slot__img--contain {
+  display: block;
+  height: var(--portrait-stage-vh);
+  width: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: top center;
+}
+
+/* 风景竖图三列并排（portrait-3 · cover）：整行高度 108vh */
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-3"]:not([data-layout-hint]),
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-3"]:not([data-layout-hint]) {
+  aspect-ratio: unset;
+  height: auto;
+  min-height: 0;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-3"]:not([data-layout-hint]) .layout-screen__grid,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-3"]:not([data-layout-hint]) .layout-screen__grid {
+  height: auto;
+  width: 100%;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-3"]:not([data-layout-hint]) .layout-screen__grid--3col,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-3"]:not([data-layout-hint]) .layout-screen__grid--3col {
+  grid-template-columns: repeat(3, 1fr);
+  align-items: stretch;
+  gap: 3px;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-3"]:not([data-layout-hint]) .layout-slot,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-3"]:not([data-layout-hint]) .layout-slot {
+  height: var(--portrait-stage-vh);
+  min-height: var(--portrait-stage-vh);
+  aspect-ratio: unset;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-3"]:not([data-layout-hint]) .layout-slot__img--cover,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-3"]:not([data-layout-hint]) .layout-slot__img--cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 横图多槽：底对齐减轻 16:9 / 16:10 混拼高度差 */
+html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid--2x2,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid--2x2,
+html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-6"] .layout-screen__grid--3x2,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-6"] .layout-screen__grid--3x2 {
+  align-items: end;
 }
 
 html[data-layout="web"] .layout-screen[data-pattern="screen-panorama-1"] .layout-screen__grid--1col .layout-slot,
@@ -201,15 +338,18 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-panorama-1"] .layou
   object-position: center;
 }
 
-/* 竖屏多图：无原生 --screen-aspect 时默认 3:4 */
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"],
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"],
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-3"],
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-3"] {
+/* 竖屏多图（风景拼图 cover）：保留舞台比例；人物屏由 layoutHint 规则覆盖 */
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]),
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) {
   aspect-ratio: var(--screen-aspect, 3 / 4);
 }
 
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-1"],
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-1"] {
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]),
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]) {
   aspect-ratio: var(--screen-aspect, 3 / 4);
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot {
+  aspect-ratio: var(--slot-aspect, 3 / 4);
 }

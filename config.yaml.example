@@ -44,9 +44,12 @@ ingest:
   low_res_peak_ratio: 0.42
   max_video_clip_mb: 1.5
   max_zip_mb: 25
+  # 人脸检测（需 pip install -e ".[vision]"）；用于人物竖图免拼图、焦点
+  detect_faces: true
+  face_min_size_px: 48
 
 vision:
-  enabled: false
+  enabled: true
   provider: none  # none | heuristic | clip | vlm
   max_tags_per_asset: 5
 

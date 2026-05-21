@@ -29,6 +29,18 @@ class IngestConfig:
     min_short_edge_layout_px: int = 600
     low_res_median_ratio: float = 0.55
     low_res_peak_ratio: float = 0.42
+    detect_faces: bool = True
+    face_min_size_px: int = 48
+
+
+@dataclass
+class VisionConfig:
+    enabled: bool = False
+
+
+@dataclass
+class ExportConfig:
+    max_zip_mb: int = 25
 
 
 @dataclass
@@ -44,6 +56,8 @@ class AppConfig:
     trips_dir: Path = field(default_factory=lambda: ROOT / "trips")
     ingest: IngestConfig = field(default_factory=IngestConfig)
     layout: LayoutConfig = field(default_factory=LayoutConfig)
+    vision: VisionConfig = field(default_factory=VisionConfig)
+    export: ExportConfig = field(default_factory=ExportConfig)
 
 
 def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
@@ -62,6 +76,8 @@ def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
         min_short_edge_layout_px=int(raw.get("min_short_edge_layout_px", 600)),
         low_res_median_ratio=float(raw.get("low_res_median_ratio", 0.55)),
         low_res_peak_ratio=float(raw.get("low_res_peak_ratio", 0.42)),
+        detect_faces=bool(raw.get("detect_faces", True)),
+        face_min_size_px=int(raw.get("face_min_size_px", 48)),
     )
 
 
@@ -88,14 +104,19 @@ def load_config(path: Path | None = None) -> AppConfig:
     if scope not in ("chapter", "day"):
         scope = "day"
     mixed_gap = float(layout_raw.get("mixed_proximity_seconds", 12.0))
+    export_raw = data.get("export") if isinstance(data.get("export"), dict) else {}
+    vision_raw = data.get("vision") if isinstance(data.get("vision"), dict) else {}
+    vision_enabled = bool(vision_raw.get("enabled", False))
     return AppConfig(
         trips_dir=trips_dir,
         ingest=_ingest_from_dict(ingest_raw),
+        export=ExportConfig(max_zip_mb=int(export_raw.get("max_zip_mb", 25))),
         layout=LayoutConfig(
             web_layout_engine=web_engine,
             screen_plan_scope=scope,
             mixed_proximity_seconds=mixed_gap,
         ),
+        vision=VisionConfig(enabled=vision_enabled),
     )
 
 

@@ -22,6 +22,17 @@ def asset_short_edge(asset: dict) -> int:
     return min(nw, nh)
 
 
+def is_suspected_thumbnail_asset(
+    asset: dict,
+    *,
+    min_short_edge_px: int = 600,
+) -> bool:
+    """True when native pixels look like a thumbnail or upscaled small source."""
+    if asset_short_edge(asset) < min_short_edge_px:
+        return True
+    return is_upscaled_thumbnail(asset)
+
+
 def is_upscaled_thumbnail(asset: dict) -> bool:
     """Source was small but display metadata was upscaled on export."""
     nw = int(asset.get("nativeWidth") or 0)

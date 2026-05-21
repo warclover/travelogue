@@ -273,6 +273,16 @@ def ingest_into_trip(
         asset_id = _next_asset_id(assets)
         aspect_kind = classify_aspect(img.width, img.height)
         focal = (0.5, 0.45)
+        tags: list[str] = []
+        from travelogue.media.subject_detect import analyze_subject
+
+        subj = analyze_subject(
+            img, min_face_size=cfg.face_min_size_px, enabled=cfg.detect_faces
+        )
+        if subj.has_face:
+            focal = subj.focal
+            tags = list(subj.tags)
+            ingest_stats["faces_detected"] = ingest_stats.get("faces_detected", 0) + 1
 
         dest_source = source_dir / f"{asset_id}.jpg"
         if photo.resolve() != dest_source.resolve():
@@ -306,12 +316,18 @@ def ingest_into_trip(
             "dedupeGroupId": f"dhash:{dhash}",
             "focalPoint": {"x": focal[0], "y": focal[1]},
         }
+        if tags:
+            entry["tags"] = tags
+            entry["tagsSource"] = "heuristic"
         if crop_m:
             entry["cropMobile"] = crop_m
         if crop_w:
             entry["cropWeb"] = crop_w
 
         assets.append(entry)
+        short_edge = min(img.width, img.height)
+        if short_edge < cfg.min_short_edge_layout_px:
+            ingest_stats.setdefault("suspected_thumbnail_ids", []).append(asset_id)
         added += 1
         dates.append(loaded.taken_at.date())
         date_sources.append(loaded.date_source)
@@ -351,6 +367,21 @@ def ingest_into_trip(
     trip["updatedAt"] = _utc_now_iso()
     if not trip.get("coverAssetId") and assets:
         trip["coverAssetId"] = assets[0]["id"]
+
+    if len(assets) >= 6:
+        from travelogue.curation.asset_quality import partition_low_resolution_assets
+
+        _, would_drop, preview_warn = partition_low_resolution_assets(
+            assets,
+            min_long_edge_px=cfg.min_long_edge_layout_px,
+            min_short_edge_px=cfg.min_short_edge_layout_px,
+            median_ratio=cfg.low_res_median_ratio,
+            peak_ratio=cfg.low_res_peak_ratio,
+        )
+        if would_drop:
+            ingest_stats["curate_low_res_preview_ids"] = [a["id"] for a in would_drop]
+            if preview_warn:
+                ingest_stats["curate_low_res_preview_warn"] = preview_warn
 
     return IngestResult(
         added=added,

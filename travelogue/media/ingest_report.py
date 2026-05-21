@@ -42,6 +42,27 @@ def format_ingest_report(result, trip: dict | None = None) -> str:
     if stats.get("exif_rotations"):
         lines.append(f"  EXIF 旋转: {stats['exif_rotations']}")
 
+    thumb_ids = stats.get("suspected_thumbnail_ids") or []
+    if thumb_ids:
+        preview = ", ".join(thumb_ids[:8])
+        if len(thumb_ids) > 8:
+            preview += f" …共 {len(thumb_ids)} 张"
+        lines.append(f"  疑似缩略图（短边过小）: {preview}")
+
+    curate_preview = stats.get("curate_low_res_preview_ids") or []
+    if curate_preview:
+        preview = ", ".join(curate_preview[:8])
+        if len(curate_preview) > 8:
+            preview += f" …共 {len(curate_preview)} 张"
+        lines.append(f"  策展将剔除低分辨率: {preview}")
+        warn = stats.get("curate_low_res_preview_warn")
+        if warn:
+            lines.append(f"  {warn}")
+
+    faces_n = stats.get("faces_detected", 0)
+    if faces_n:
+        lines.append(f"  检测到人脸: {faces_n} 张（排版将避免人物竖拼/人景混排）")
+
     if trip and trip.get("assets"):
         layout = trip.get("exportLayout", "mobile")
         s = summarize_orientations(trip["assets"], export_layout=layout)  # type: ignore[arg-type]

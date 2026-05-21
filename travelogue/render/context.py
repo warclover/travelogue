@@ -429,7 +429,20 @@ def build_layout_screen(
             slot_sizes = sizes_slot
         srcset = compile_srcset(asset, mobile=export_layout == "mobile")
         slot_aspect = _screen_aspect_ratio_css(asset)
-        slot_style = f"--slot-aspect: {slot_aspect};" if slot_aspect else ""
+        style_parts_slot: list[str] = []
+        if slot_aspect:
+            style_parts_slot.append(f"--slot-aspect: {slot_aspect}")
+        fp = asset.get("focalPoint") or {}
+        try:
+            fx = float(fp.get("x", 0.5))
+            fy = float(fp.get("y", 0.45))
+            style_parts_slot.append(f"--focal-x: {fx}")
+            style_parts_slot.append(f"--focal-y: {fy}")
+        except (TypeError, ValueError):
+            pass
+        slot_style = "; ".join(style_parts_slot)
+        if slot_style:
+            slot_style += ";"
         entry: dict = {
             "slotIndex": slot.get("slot", j),
             "fit": fit,
@@ -445,8 +458,10 @@ def build_layout_screen(
             entry["role"] = role
         slots_out.append(entry)
 
+    layout_hint = screen.get("layoutHint")
     screen_aspect: str | None = None
-    if n_slots == 1 and "1col" in grid_class:
+    # 人物竖屏用 layoutHint + 视口高度 CSS，勿再套整屏 --screen-aspect（否则大底色+小图）
+    if layout_hint not in ("person-pair", "person-triple") and n_slots == 1 and "1col" in grid_class:
         first_aid = (screen.get("slots") or [{}])[0].get("assetId", "")
         if first_aid and first_aid in assets:
             screen_aspect = _screen_aspect_ratio_css(assets[first_aid])
@@ -466,6 +481,8 @@ def build_layout_screen(
         "gridClass": grid_class,
         "screenTone": tone,
         "screenStyle": screen_style,
+        "layoutHint": layout_hint,
+        "hasLayoutHint": bool(layout_hint),
         "slots": slots_out,
     }
 

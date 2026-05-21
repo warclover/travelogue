@@ -15,6 +15,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "piexif>=1.1"]
 heif = ["pillow-heif>=0.16"]
+vision = ["opencv-python-headless>=4.8.0"]
 
 [project.scripts]
 travelogue = "travelogue.cli:main"

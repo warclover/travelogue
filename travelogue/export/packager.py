@@ -6,6 +6,7 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+from travelogue.config import get_config
 from travelogue.export.exif import write_asset_to_zip
 from travelogue.render.context import collect_asset_paths
 from travelogue.render.engine import RenderError, render_trip, should_include_long_shot
@@ -117,7 +118,7 @@ def export_trip(
         ("vendor/html2canvas.min.js", trip_root / "vendor" / "html2canvas.min.js"),
     )
 
-    max_zip_mb = 80
+    max_zip_mb = get_config().export.max_zip_mb
     photo_n = len(trip.get("assets") or [])
 
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:

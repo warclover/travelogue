@@ -33,6 +33,7 @@
 | [ADAPTIVE-LAYOUT.md](./ADAPTIVE-LAYOUT.md) | 终端自适应 |
 | [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md) | 技术架构 |
 | [DEVELOPMENT.md](./DEVELOPMENT.md) | 开发手册 |
+| [WORKSHOP.md](./WORKSHOP.md) | **本地工坊**：一条龙脚本、验收与 Web screens 自检 |
 | [ACCEPTANCE.md](./ACCEPTANCE.md) | MVP 验收 |
 | [SHARING.md](./SHARING.md) | **双轨分享**：微信群长图（P0）vs 小程序鉴权 HTML（P2） |
 | [PRD-LAYOUT.md](./PRD-LAYOUT.md) | **排版布局 PRD**（专职 Agent 1.5 规划） |

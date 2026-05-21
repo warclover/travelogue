@@ -9,6 +9,18 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
+from travelogue.curation.aspect_buckets import prefix_same_bucket
+from travelogue.curation.asset_subject import (
+    any_asset_has_person,
+    asset_has_person,
+    portrait_fit_for_asset,
+)
+from travelogue.curation.aspect_buckets import prefix_same_bucket
+from travelogue.curation.asset_subject import (
+    any_asset_has_person,
+    asset_has_person,
+    portrait_fit_for_asset,
+)
 from travelogue.curation.layout_planner import (
     _effective_profile,
     _is_std_landscape,
@@ -78,15 +90,34 @@ def screens_layout_active(trip: dict, *, override: str | None = None) -> bool:
     return _effective_profile(export_layout) == "web"  # type: ignore[arg-type]
 
 
-def _default_fits(pattern_id: str, n: int) -> list[LayoutFit]:
+def _fits_for_screen(
+    pattern_id: str,
+    asset_ids: list[str],
+    *,
+    assets_map: dict[str, dict] | None = None,
+    fits_override: list[LayoutFit] | None = None,
+) -> list[LayoutFit]:
+    if fits_override is not None:
+        return list(fits_override)
+    assets_map = assets_map or {}
+    n = len(asset_ids)
     if pattern_id == "screen-panorama-1":
         return ["cover"] * n
     if pattern_id in ("screen-tall-1", "screen-square-1"):
         return ["contain"] * n
-    if pattern_id == "screen-portrait-1":
-        return ["cover"] * n
+    if pattern_id in ("screen-portrait-1", "screen-portrait-2", "screen-portrait-3"):
+        return [
+            portrait_fit_for_asset(assets_map.get(aid), default="cover")
+            for aid in asset_ids
+        ]
     if pattern_id == PATTERN_PORTRAIT_1_LANDSCAPE_2:
-        return ["cover"] * n
+        fits: list[LayoutFit] = []
+        for idx, aid in enumerate(asset_ids):
+            if idx == 0:
+                fits.append(portrait_fit_for_asset(assets_map.get(aid), default="cover"))
+            else:
+                fits.append("cover")
+        return fits
     return ["cover"] * n
 
 
@@ -137,12 +168,18 @@ def _make_screen(
     fits: list[LayoutFit] | None = None,
     tone: dict | None = None,
     aspects: dict[str, AspectKind] | None = None,
+    assets_map: dict[str, dict] | None = None,
 ) -> dict:
     if slots is None:
         ids = list(asset_ids or [])
         if aspects is not None:
             ids = _filter_ids_for_pattern(ids, pattern_id, aspects)
-        fit_list = fits or _default_fits(pattern_id, len(ids))
+        fit_list = _fits_for_screen(
+            pattern_id,
+            ids,
+            assets_map=assets_map,
+            fits_override=fits,
+        )
         slots = []
         for idx, aid in enumerate(ids):
             fit: LayoutFit = fit_list[idx] if idx < len(fit_list) else fit_list[-1]
@@ -160,12 +197,15 @@ def _make_mixed_portrait_landscape_screen(
     landscape_ids: list[str],
     *,
     screen_id: str = "",
+    assets_map: dict[str, dict] | None = None,
 ) -> dict:
+    assets_map = assets_map or {}
+    p_fit = portrait_fit_for_asset(assets_map.get(portrait_id), default="cover")
     return _make_screen(
         PATTERN_PORTRAIT_1_LANDSCAPE_2,
         screen_id=screen_id,
         slots=[
-            {"assetId": portrait_id, "slot": 0, "fit": "cover", "role": "portrait"},
+            {"assetId": portrait_id, "slot": 0, "fit": p_fit, "role": "portrait"},
             {"assetId": landscape_ids[0], "slot": 1, "fit": "cover", "role": "landscape"},
             {"assetId": landscape_ids[1], "slot": 2, "fit": "cover", "role": "landscape"},
         ],
@@ -321,6 +361,61 @@ def _run_length(remaining: list[str], aspects: dict[str, AspectKind]) -> tuple[s
     return fam, n
 
 
+PERSON_LAYOUT_PAIR = "person-pair"
+PERSON_LAYOUT_TRIPLE = "person-triple"
+
+
+def _person_portrait_ids(buf: list[str], assets_map: dict[str, dict]) -> list[str]:
+    return [a for a in buf if asset_has_person(assets_map.get(a, {}))]
+
+
+def _emit_person_portrait_screens(
+    person_ids: list[str],
+    aspects: dict[str, AspectKind],
+    *,
+    assets_map: dict[str, dict],
+) -> list[dict]:
+    """人物竖图：仅三列(≥3) / 双列(2)；单张不单独成屏（见余片 cover portrait-1）。"""
+    screens: list[dict] = []
+    buf = list(person_ids)
+    while len(buf) >= 3:
+        trio = buf[:3]
+        screen = _make_screen(
+            "screen-portrait-3",
+            trio,
+            screen_id="",
+            aspects=aspects,
+            assets_map=assets_map,
+        )
+        screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
+        screens.append(screen)
+        buf = buf[3:]
+    while len(buf) >= 2:
+        pair = buf[:2]
+        screen = _make_screen(
+            "screen-portrait-2",
+            pair,
+            screen_id="",
+            aspects=aspects,
+            assets_map=assets_map,
+        )
+        screen["layoutHint"] = PERSON_LAYOUT_PAIR
+        screens.append(screen)
+        buf = buf[2:]
+    if len(buf) == 1:
+        screens.append(
+            _make_screen(
+                "screen-portrait-1",
+                [buf[0]],
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
+                fits=["cover"],
+            )
+        )
+    return screens
+
+
 def _can_mixed_p1_l2(
     portrait_id: str,
     landscape_ids: list[str],
@@ -335,6 +430,8 @@ def _can_mixed_p1_l2(
         return False
     if not all(_is_landscape_id(lid, aspects) for lid in landscape_ids):
         return False
+    if asset_has_person(assets.get(portrait_id, {})):
+        return False
     return _time_near_chain(
         [portrait_id, landscape_ids[0], landscape_ids[1]],
         assets,
@@ -345,32 +442,56 @@ def _can_mixed_p1_l2(
 def _flush_portrait_pending(
     pending: list[str],
     aspects: dict[str, AspectKind],
+    *,
+    assets_map: dict[str, dict] | None = None,
 ) -> list[dict]:
-    """Emit portrait-3 / portrait-2 / cover portrait-1 for buffered std portraits only."""
+    """Emit portrait-3 (风景竖图) or portrait-1 (含人物) for buffered std portraits."""
+    assets_map = assets_map or {}
     screens: list[dict] = []
     buf = [a for a in pending if _is_std_portrait_id(a, aspects)]
     overflow = [a for a in pending if a not in buf]
     pending.clear()
     pending.extend(overflow)
+
+    person_buf = _person_portrait_ids(buf, assets_map)
+    scenery_buf = [a for a in buf if a not in person_buf]
+    buf.clear()
+    buf.extend(scenery_buf)
+
+    screens.extend(
+        _emit_person_portrait_screens(person_buf, aspects, assets_map=assets_map)
+    )
+
     while len(buf) >= 3:
+        trio = buf[:3]
         screens.append(
-            _make_screen("screen-portrait-3", buf[:3], screen_id="", aspects=aspects)
+            _make_screen(
+                "screen-portrait-3",
+                trio,
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
+            )
         )
         buf = buf[3:]
     if len(buf) == 2:
-        for aid in buf:
-            screens.append(
-                _make_screen("screen-portrait-1", [aid], screen_id="", aspects=aspects)
+        screens.append(
+            _make_screen(
+                "screen-portrait-2",
+                buf,
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
             )
+        )
     elif len(buf) == 1:
-        # 单张竖图：cover 满屏，避免 contain 信箱（PRD）
         screens.append(
             _make_screen(
                 "screen-portrait-1",
                 buf,
                 screen_id="",
                 aspects=aspects,
-                fits=["cover"],
+                assets_map=assets_map,
             )
         )
     return screens
@@ -382,11 +503,40 @@ def _plan_one_screen(
     *,
     burst_groups: dict[str, int] | None = None,
     portrait_heavy: bool = False,
+    assets_map: dict[str, dict] | None = None,
 ) -> tuple[dict | None, int]:
     if not remaining:
         return None, 0
 
+    assets_map = assets_map or {}
     family, run_len = _run_length(remaining, aspects)
+
+    if family == "landscape":
+        land_run = remaining[:run_len]
+        bucket_ids = prefix_same_bucket(land_run, assets_map)
+        if len(bucket_ids) <= 3:
+            return (
+                _make_screen(
+                    "screen-landscape-1",
+                    [bucket_ids[0]],
+                    screen_id="",
+                    aspects=aspects,
+                    assets_map=assets_map,
+                ),
+                1,
+            )
+        burst_groups = burst_groups or {}
+        probe = bucket_ids[: min(len(bucket_ids), MAX_SLOTS_PER_SCREEN)]
+        burst_run = _same_burst_group(probe, burst_groups) if len(probe) >= 4 else False
+        n = _pick_grid_count(
+            len(bucket_ids),
+            family,
+            burst_run=burst_run,
+            portrait_heavy=portrait_heavy,
+        )
+        ids = bucket_ids[:n]
+        pattern = _pattern_id(family, n)
+        return _make_screen(pattern, ids, screen_id="", aspects=aspects, assets_map=assets_map), n
 
     if family == "panorama":
         # 单张超宽图用 landscape-1 + 渲染时原生 aspect-ratio，避免 21:9 固定槽压扁
@@ -410,7 +560,9 @@ def _plan_one_screen(
     )
     ids = remaining[:n]
     pattern = _pattern_id(family, n)
-    return _make_screen(pattern, ids, screen_id="", aspects=aspects), n
+    return _make_screen(
+        pattern, ids, screen_id="", aspects=aspects, assets_map=assets_map
+    ), n
 
 
 CHAPTER_HERO_MIN_ASSETS = 5
@@ -519,7 +671,11 @@ def plan_screens_for_chapter(
             portrait_id, [l1, l2], aspects, assets_map, burst_seconds=mix_gap
         ):
             return False
-        _append(_make_mixed_portrait_landscape_screen(portrait_id, [l1, l2]))
+        _append(
+            _make_mixed_portrait_landscape_screen(
+                portrait_id, [l1, l2], assets_map=assets_map
+            )
+        )
         return True
 
     while i < len(ids):
@@ -555,6 +711,7 @@ def plan_screens_for_chapter(
                         [ids[i + j]],
                         screen_id="",
                         aspects=aspects,
+                        assets_map=assets_map,
                     )
                 )
             i += run_len
@@ -575,11 +732,53 @@ def plan_screens_for_chapter(
             while len(pending_portraits) >= 3:
                 batch = [a for a in pending_portraits[:3] if _is_std_portrait_id(a, aspects)]
                 if len(batch) >= 3:
-                    _append(
-                        _make_screen(
-                            "screen-portrait-3", batch[:3], screen_id="", aspects=aspects
+                    if any_asset_has_person(batch, assets_map):
+                        persons = _person_portrait_ids(batch, assets_map)
+                        scenery = [a for a in batch if a not in persons]
+                        for sc in _emit_person_portrait_screens(
+                            persons, aspects, assets_map=assets_map
+                        ):
+                            _append(sc)
+                        if len(scenery) >= 3:
+                            _append(
+                                _make_screen(
+                                    "screen-portrait-3",
+                                    scenery[:3],
+                                    screen_id="",
+                                    aspects=aspects,
+                                    assets_map=assets_map,
+                                )
+                            )
+                        elif len(scenery) == 2:
+                            _append(
+                                _make_screen(
+                                    "screen-portrait-2",
+                                    scenery,
+                                    screen_id="",
+                                    aspects=aspects,
+                                    assets_map=assets_map,
+                                )
+                            )
+                        elif len(scenery) == 1:
+                            _append(
+                                _make_screen(
+                                    "screen-portrait-1",
+                                    scenery,
+                                    screen_id="",
+                                    aspects=aspects,
+                                    assets_map=assets_map,
+                                )
+                            )
+                    else:
+                        _append(
+                            _make_screen(
+                                "screen-portrait-3",
+                                batch[:3],
+                                screen_id="",
+                                aspects=aspects,
+                                assets_map=assets_map,
+                            )
                         )
-                    )
                     del pending_portraits[:3]
                 else:
                     break
@@ -592,10 +791,24 @@ def plan_screens_for_chapter(
                     continue
             if len(pending_portraits) == 2:
                 pair = [a for a in pending_portraits if _is_std_portrait_id(a, aspects)]
-                for aid in pair:
-                    _append(
-                        _make_screen("screen-portrait-1", [aid], screen_id="", aspects=aspects)
-                    )
+                if pair and all(
+                    asset_has_person(assets_map.get(aid, {})) for aid in pair
+                ):
+                    for sc in _emit_person_portrait_screens(
+                        pair, aspects, assets_map=assets_map
+                    ):
+                        _append(sc)
+                else:
+                    for aid in pair:
+                        _append(
+                            _make_screen(
+                                "screen-portrait-1",
+                                [aid],
+                                screen_id="",
+                                aspects=aspects,
+                                assets_map=assets_map,
+                            )
+                        )
                 pending_portraits.clear()
             continue
 
@@ -605,7 +818,9 @@ def plan_screens_for_chapter(
                     pending_portraits.clear()
                     i += 2
                     continue
-            for sc in _flush_portrait_pending(pending_portraits, aspects):
+            for sc in _flush_portrait_pending(
+                pending_portraits, aspects, assets_map=assets_map
+            ):
                 _append(sc)
 
         if fam == "tall":
@@ -619,6 +834,7 @@ def plan_screens_for_chapter(
             aspects,
             burst_groups=burst_groups,
             portrait_heavy=portrait_heavy,
+            assets_map=assets_map,
         )
         if not screen or consumed < 1:
             i += 1
@@ -627,7 +843,9 @@ def plan_screens_for_chapter(
         i += consumed
 
     if pending_portraits:
-        for sc in _flush_portrait_pending(pending_portraits, aspects):
+        for sc in _flush_portrait_pending(
+            pending_portraits, aspects, assets_map=assets_map
+        ):
             _append(sc)
 
     if hero_preface:
