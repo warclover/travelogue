@@ -72,7 +72,7 @@ def _print_demo_result(
             f"mtime={s.get('mtime_dates', 0)}"
         )
     for w in s.get("date_warnings") or []:
-        typer.echo(f"  ⚠ {w}")
+        typer.echo(f"  WARN: {w}")
     if s.get("mediaClassSummary"):
         parts = [f"{k}={v}" for k, v in sorted(s["mediaClassSummary"].items()) if v]
         typer.echo(f"  media: {', '.join(parts)}")
@@ -641,6 +641,11 @@ def cmd_render(
         "--dual",
         help="write index.html (web+screens) and index-mobile.html (mobile+legacy)",
     ),
+    font_theme: Optional[str] = typer.Option(
+        None,
+        "--font-theme",
+        help="ui (default YaHei stack) | magazine (system KaiTi backup theme)",
+    ),
 ) -> None:
     """Render index.html + journal.css from trip.json."""
     if mode not in ("draft", "share"):
@@ -649,6 +654,10 @@ def cmd_render(
     if web_layout is not None and web_layout not in ("legacy", "screens"):
         typer.echo("E_CLI: --web-layout must be legacy or screens", err=True)
         raise typer.Exit(1)
+    if font_theme is not None and font_theme not in ("ui", "magazine"):
+        typer.echo("E_CLI: --font-theme must be ui or magazine", err=True)
+        raise typer.Exit(1)
+    theme_arg = None if font_theme in (None, "ui") else font_theme
     out_html = index_name
     if out_html is None and web_layout == "screens":
         out_html = "index-screens.html"
@@ -663,6 +672,7 @@ def cmd_render(
                 export_mode=mode,
                 validate=not no_validate,
                 update_pipeline=mark_rendered,
+                font_theme=theme_arg,
             )
             typer.echo(f"OK {web_path}")
             typer.echo(f"OK {mobile_path}")
@@ -675,6 +685,7 @@ def cmd_render(
             update_pipeline=mark_rendered,
             layout_engine=web_layout,
             index_name=out_html,
+            font_theme=theme_arg,
         )
     except RenderError as exc:
         typer.echo(str(exc), err=True)

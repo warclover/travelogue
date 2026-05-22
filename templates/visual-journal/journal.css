@@ -1,9 +1,9 @@
 /**
  * Visual Journal v0.2.1 — 用户交付样式（journal.css）
  * 双形态：手机 9:16 · Web 16:9（断点 768px）
- * 字体：Google Fonts（导出 zip 在线打开时需联网加载）
+ * 字体：全书微软雅黑栈 + 各平台系统无衬线回退（无需联网）
+ * 可选杂志体：html[data-font-theme="magazine"] 使用 --font-legacy-brush
  */
-@import url("https://fonts.googleapis.com/css2?family=Zhi+Mang+Xing&family=Ma+Shan+Zheng&family=Long+Cang&display=swap");
 @import url("journal-screens.css");
 
 :root {
@@ -26,10 +26,16 @@
     rgba(0, 0, 0, 0.2) 50%,
     transparent 100%
   );
-  --font-handwriting: "Zhi Mang Xing", "Ma Shan Zheng", "STKaiti", "KaiTi", cursive;
-  --font-brush: "Ma Shan Zheng", "Long Cang", "STKaiti", cursive;
-  --font-serif: var(--font-handwriting);
-  --font-sans: var(--font-handwriting);
+  /* 主字体：雅黑优先，无则各 OS 中文/西文系统 UI 字体 */
+  --font-ui:
+    "Microsoft YaHei", "微软雅黑", "PingFang SC", "Hiragino Sans GB",
+    "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans SC",
+    "Segoe UI", system-ui, -apple-system, sans-serif;
+  /* 备份：旧版杂志手写体（data-font-theme="magazine" 时启用） */
+  --font-legacy-brush: "STKaiti", "KaiTi", "FangSong", serif;
+  --font-sans: var(--font-ui);
+  --font-brush: var(--font-ui);
+  --font-serif: var(--font-ui);
   --chapter-gap: 4px;
   --radius: 0;
   --page-pad: 0;
@@ -87,6 +93,13 @@ html[data-layout="mobile"] {
   --accent: #7cb89a;
   --accent-soft: rgba(124, 184, 154, 0.15);
   --border: #2a2826;
+}
+
+/* 可选：杂志手写体（备份主题，默认不启用） */
+html[data-font-theme="magazine"] {
+  --font-sans: var(--font-legacy-brush);
+  --font-brush: var(--font-legacy-brush);
+  --font-serif: var(--font-legacy-brush);
 }
 
 html[data-layout="web"] {

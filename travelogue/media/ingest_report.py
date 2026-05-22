@@ -40,7 +40,7 @@ def format_ingest_report(result, trip: dict | None = None) -> str:
             f"mtime={stats.get('mtime_dates', 0)}"
         )
     for w in stats.get("date_warnings") or []:
-        lines.append(f"  ⚠ {w}")
+        lines.append(f"  WARN: {w}")
     summary = stats.get("mediaClassSummary")
     if isinstance(summary, dict) and summary:
         parts = [f"{k}={v}" for k, v in sorted(summary.items()) if v]

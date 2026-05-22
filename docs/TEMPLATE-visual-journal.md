@@ -366,7 +366,7 @@ flowchart TB
 | `--bleed-width` | `100vw` | `min(1400px, 100vw)` |
 | `--page-width` | `100%` | `min(1100px, 96vw)` |
 
-字体：标题衬线栈 + 正文系统无衬线；标题 `clamp(1.75rem, 5vw + 0.5rem, 3rem)`。
+字体：全书 **微软雅黑栈**（`--font-ui`），回退 PingFang / Noto Sans SC / Segoe UI / `system-ui`；无需 Google Fonts。可选备份主题：`python -m travelogue render … --font-theme magazine`（或 `trip.export.fontTheme`）→ `data-font-theme="magazine"` 使用系统楷体栈。标题字号见 `journal.css` 各块 `clamp`。
 
 ---
 

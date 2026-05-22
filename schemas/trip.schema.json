@@ -78,6 +78,11 @@
         "longShot": {
           "type": "boolean",
           "description": "P0: include 保存长图 bundle in draft/share export (default true in renderer)"
+        },
+        "fontTheme": {
+          "type": "string",
+          "enum": ["ui", "magazine"],
+          "description": "Optional HTML font theme (default ui / Microsoft YaHei stack)"
         }
       }
     },
@@ -406,7 +411,13 @@
         },
         "segmentId": {
           "type": "string",
-          "description": "Travel time segment from curation.segments"
+          "description": "Primary travel time segment for this chapter (most assets)"
+        },
+        "segmentIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 5,
+          "description": "All segments represented when day buckets were merged across trips"
         }
       }
     },

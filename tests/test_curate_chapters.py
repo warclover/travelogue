@@ -2,7 +2,16 @@
 
 from __future__ import annotations
 
-from travelogue.curation.curate import _chapter_titles, _group_assets_by_day, _merge_small_buckets, run_curate
+from travelogue.curation.curate import (
+    _cap_book_buckets,
+    _chapter_titles,
+    _group_assets_by_day,
+    _merge_small_buckets,
+    _normalize_bucket_counts,
+    _title_for_bucket_span,
+    run_curate,
+)
+from travelogue.services.manifest_limits import chapter_limits
 
 
 def _assets_for_days(days: list[str], *, prefix: str = "a") -> list[dict]:
@@ -20,6 +29,39 @@ def _assets_for_days(days: list[str], *, prefix: str = "a") -> list[dict]:
     return out
 
 
+def test_cap_book_buckets_limits_multi_segment_chapters() -> None:
+    buckets = [[f"a{i}"] for i in range(11)]
+    seg_ids = ["seg-01"] * 3 + ["seg-02"] * 2 + ["seg-03"] * 1 + ["seg-04"] * 3 + ["seg-05"] * 2
+    norm = _normalize_bucket_counts(buckets, seg_ids)
+    min_c, max_c = chapter_limits()
+    assert min_c <= len(norm.buckets) <= max_c
+    assert len(norm.primary_segment_ids) == len(norm.buckets)
+    assert len(norm.segment_ids_per_bucket) == len(norm.buckets)
+    assert sum(len(b) for b in norm.buckets) == 11
+
+
+def test_normalize_primary_segment_by_asset_weight() -> None:
+    norm = _normalize_bucket_counts(
+        [["a1", "a2", "a3"], ["b1"]],
+        ["seg-a", "seg-b"],
+    )
+    assert norm.primary_segment_ids[0] == "seg-a"
+
+
+def test_chapter_title_cross_year_span() -> None:
+    title = _title_for_bucket_span(["2010-07-11", "2026-05-20"])
+    assert title == "2010–2026"
+
+
+def test_chapter_titles_cross_year_in_bucket() -> None:
+    assets = [
+        {"id": "o", "takenAt": "2010-07-11T12:00:00Z"},
+        {"id": "n", "takenAt": "2026-05-20T12:00:00Z"},
+    ]
+    titles = _chapter_titles([["o", "n"]], assets, {"places": ["京都"]})
+    assert titles[0] == "2010–2026"
+
+
 def test_merge_small_buckets_combines_pairs() -> None:
     buckets = [["a", "b", "c"], ["d"], ["e", "f", "g"]]
     merged = _merge_small_buckets(buckets, min_size=3)
@@ -31,7 +73,7 @@ def test_merge_small_buckets_combines_pairs() -> None:
 def test_group_by_day_keeps_calendar_buckets_not_flatten_years() -> None:
     assets: list[dict] = []
     for day in ("2010-07-11", "2026-05-20"):
-        for j in range(3):
+        for j in range(4):
             assets.append(
                 {
                     "id": f"{day}-{j}",
@@ -41,7 +83,7 @@ def test_group_by_day_keeps_calendar_buckets_not_flatten_years() -> None:
                     "takenAt": f"{day}T{10 + j}:00:00Z",
                 }
             )
-    buckets = _group_assets_by_day(assets, cover_id=assets[0]["id"])
+    buckets = _group_assets_by_day(assets, cover_id="")
     assert len(buckets) >= 2
     years = set()
     for b in buckets:

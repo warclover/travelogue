@@ -46,12 +46,15 @@ def test_curate_builds_three_plus_chapters(tmp_path: Path) -> None:
         day = 2 + (i % 3)
         a["takenAt"] = f"2025-04-0{day}T12:00:00Z"
     result = run_curate(trip, export_layout="mobile")
-    assert result.chapter_count >= 3
+    from travelogue.services.manifest_limits import chapter_limits
+
+    min_c, max_c = chapter_limits()
+    assert result.chapter_count >= min_c
     assert trip["pipeline"]["status"] == "structure_draft"
     assert trip["pipeline"]["layoutStatus"] == "layout_draft"
     rows = [it for ch in trip["chapters"] for it in ch["items"] if it.get("type") == "media-row"]
     assert not rows
-    assert len(trip["chapters"]) >= 3
+    assert min_c <= len(trip["chapters"]) <= max_c
 
 
 def test_date_span_warning_for_mixed_years() -> None:
@@ -80,6 +83,42 @@ def test_curate_writes_segments_for_multi_month_album(tmp_path: Path) -> None:
         a["dateConfidence"] = "high"
         a["mediaClass"] = "photo"
     run_curate(trip, export_layout="mobile")
+    from travelogue.services.manifest_limits import chapter_limits
+
+    min_c, max_c = chapter_limits()
     segs = (trip.get("curation") or {}).get("segments") or []
     assert len(segs) >= 2
+    assert min_c <= len(trip["chapters"]) <= max_c
     assert trip["chapters"][0].get("curation", {}).get("segmentId")
+
+
+def test_curate_caps_chapters_for_wide_span_album(tmp_path: Path) -> None:
+    """Many calendar buckets across years → still 3–5 chapters (manifest)."""
+    from travelogue.services.manifest_limits import chapter_limits
+
+    trips = tmp_path / "trips"
+    trip_json = create_trip("wide-span", trips)
+    trip_dir = trips / "wide-span"
+    import json
+
+    trip = json.loads(trip_json.read_text(encoding="utf-8"))
+    ingest_into_trip(trip, trip_dir, from_dir=_album(tmp_path, 12), dedupe=False)
+    day_starts = [
+        "2010-07-11",
+        "2010-08-03",
+        "2014-10-04",
+        "2020-01-15",
+        "2022-06-01",
+        "2026-05-20",
+    ]
+    for i, a in enumerate(trip["assets"]):
+        day = day_starts[i % len(day_starts)]
+        a["takenAt"] = f"{day}T12:00:00Z"
+        a["dateSource"] = "exif"
+        a["dateConfidence"] = "high"
+        a["mediaClass"] = "photo"
+        a["width"] = 1200
+        a["height"] = 800
+    run_curate(trip, export_layout="auto", layout_engine="screens")
+    min_c, max_c = chapter_limits()
+    assert min_c <= len(trip["chapters"]) <= max_c

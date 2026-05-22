@@ -521,6 +521,7 @@ def build_render_context(
     trip_root: Path | None = None,
     layout_engine_override: str | None = None,
     export_layout_override: str | None = None,
+    font_theme: str | None = None,
 ) -> dict:
     """export_mode: draft | share"""
     is_draft = export_mode == "draft"
@@ -641,6 +642,9 @@ def build_render_context(
         html_attrs.append(f'data-layout-engine="{layout_engine}"')
     if include_long_shot:
         html_attrs.append('data-longshot="on"')
+    theme = font_theme or (trip.get("export") or {}).get("fontTheme") or ""
+    if theme == "magazine":
+        html_attrs.append('data-font-theme="magazine"')
 
     asset_version = _longshot_bundle_version(trip)
     zip_name = share_zip_filename(trip)

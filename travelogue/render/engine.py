@@ -91,6 +91,7 @@ def render_html(
     template_dir: Path | None = None,
     layout_engine_override: str | None = None,
     export_layout_override: str | None = None,
+    font_theme: str | None = None,
 ) -> str:
     if template_id != "visual-journal":
         raise RenderError("E_RENDER_TEMPLATE", f"unsupported templateId: {template_id}")
@@ -106,6 +107,7 @@ def render_html(
         trip_root=trip_root,
         layout_engine_override=layout_engine_override,
         export_layout_override=export_layout_override,
+        font_theme=font_theme,
     )
     return template(ctx, partials=partials)
 
@@ -123,6 +125,7 @@ def render_trip(
     export_layout_override: str | None = None,
     update_pipeline: bool = False,
     include_longshot: bool | None = None,
+    font_theme: str | None = None,
 ) -> Path:
     trip_path = trip_path.resolve()
     trip_root = trip_path.parent
@@ -148,6 +151,7 @@ def render_trip(
         trip_root=trip_root,
         layout_engine_override=layout_engine,
         export_layout_override=export_layout_override,
+        font_theme=font_theme,
     )
 
     if write_index:
@@ -188,6 +192,7 @@ def render_trip_surfaces(
     export_mode: str = "draft",
     validate: bool = True,
     update_pipeline: bool = False,
+    font_theme: str | None = None,
 ) -> tuple[Path, Path]:
     """Write index.html (web + screens) and index-mobile.html (mobile + legacy) from one trip.json."""
     from travelogue.curation.screen_planner import LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS
@@ -207,6 +212,7 @@ def render_trip_surfaces(
         export_layout_override="web",
         update_pipeline=False,
         include_longshot=False,
+        font_theme=font_theme,
     ) / "index.html"
     mobile_index = render_trip(
         trip_path,
@@ -218,5 +224,6 @@ def render_trip_surfaces(
         layout_engine=LAYOUT_ENGINE_LEGACY,
         export_layout_override="mobile",
         update_pipeline=update_pipeline,
+        font_theme=font_theme,
     ) / "index-mobile.html"
     return web_index, mobile_index
