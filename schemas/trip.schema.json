@@ -50,7 +50,7 @@
     },
     "assets": {
       "type": "array",
-      "maxItems": 50,
+      "maxItems": 250,
       "items": { "$ref": "#/$defs/asset" }
     },
     "chapters": {

@@ -184,7 +184,7 @@
   "epilogueMaxChars": 80,
   "minChapters": 3,
   "maxChapters": 5,
-  "maxPhotosPerTrip": 50,
+  "maxPhotosPerTrip": 250,
   "maxVideosPerTrip": 3,
   "maxVoicePerTrip": 15,
   "maxVoicePerChapter": 5,

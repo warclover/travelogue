@@ -382,6 +382,7 @@ def build_chapters_from_plan(
             orientation_summary=summary_dict,
             day_buckets=[asset_ids],
             mixed_proximity_seconds=default_mixed_proximity_seconds(),
+            trip_photo_total=len(asset_ids),
         )
     return chapters, summary
 
@@ -430,6 +431,7 @@ def build_chapters_from_buckets(
     ):
         from travelogue.config import default_mixed_proximity_seconds
 
+        layout_total = sum(len(b) for b in non_empty)
         chapters = attach_screens_to_chapters(
             chapters,
             aspects,
@@ -438,6 +440,7 @@ def build_chapters_from_buckets(
             day_buckets=non_empty,
             mixed_proximity_seconds=default_mixed_proximity_seconds(),
             skip_screen_asset_ids=skip_screen_asset_ids,
+            trip_photo_total=layout_total,
         )
     return chapters
 

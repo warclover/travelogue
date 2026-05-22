@@ -76,7 +76,7 @@ def _file_signature(path: Path) -> str:
 def scan_image_paths(
     directory: Path,
     *,
-    max_photos: int = 50,
+    max_photos: int = 250,
     recursive: bool = True,
     min_edge_px: int = MIN_EDGE_PX,
 ) -> tuple[list[Path], dict]:

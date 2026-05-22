@@ -6,10 +6,18 @@ from datetime import datetime, timedelta, timezone
 
 from travelogue.curation.screen_planner import (
     PATTERN_PORTRAIT_1_LANDSCAPE_2,
+    NineGridPlannerState,
+    ScreenLayoutPlannerState,
     attach_screens_day_buckets,
     attach_screens_to_chapters,
     burst_group_map,
     grid_class_for_pattern,
+    is_nine_grid_pattern,
+    is_portrait_single_pattern,
+    is_six_grid_pattern,
+    is_triple_row_pattern,
+    layout_kind_from_pattern,
+    nine_grid_limits_for_trip,
     plan_screens_for_chapter,
     screens_layout_active,
 )
@@ -111,6 +119,101 @@ def test_plan_landscape_nine_is_3x3():
     assert len(screens) == 1
     assert screens[0]["patternId"] == "screen-landscape-9"
     assert len(screens[0]["slots"]) == 9
+
+
+def test_nine_grid_limits_by_trip_size():
+    assert nine_grid_limits_for_trip(50) == (0, 1)
+    assert nine_grid_limits_for_trip(51) == (2, 5)
+    assert nine_grid_limits_for_trip(100) == (2, 5)
+    assert nine_grid_limits_for_trip(101) == (4, 8)
+    assert nine_grid_limits_for_trip(231) == (6, 10)
+
+
+def _nine_patterns(screens: list[dict]) -> list[str]:
+    return [sc["patternId"] for sc in screens if is_nine_grid_pattern(sc["patternId"])]
+
+
+def test_trip_under_50_allows_at_most_one_nine_grid():
+    ids = [f"l{i}" for i in range(18)]
+    aspects = _aspects(ids, {x: "landscape" for x in ids})
+    state = NineGridPlannerState.from_trip_total(40)
+    screens = plan_screens_for_chapter(
+        ids, aspects, chapter_id="ch-cap", layout_state=state
+    )
+    assert len(_nine_patterns(screens)) <= 1
+    assert state.used <= 1
+
+
+def _assert_no_consecutive_pattern_pairs(
+    screens: list[dict],
+    *,
+    pred_a,
+    pred_b=None,
+) -> None:
+    if pred_b is None:
+        pred_b = pred_a
+    for i in range(len(screens) - 1):
+        a, b = screens[i]["patternId"], screens[i + 1]["patternId"]
+        assert not (pred_a(a) and pred_b(b))
+
+
+def test_no_consecutive_triple_six_or_portrait_single():
+    base = datetime(2025, 5, 1, 12, 0, 0, tzinfo=timezone.utc)
+    ids = [f"p{i}" for i in range(24)]
+    assets = {
+        aid: {
+            "id": aid,
+            "takenAt": (base + timedelta(seconds=i % 2)).isoformat().replace("+00:00", "Z"),
+        }
+        for i, aid in enumerate(ids)
+    }
+    aspects = _aspects(ids, {x: "portrait" for x in ids})
+    state = ScreenLayoutPlannerState.from_trip_total(220)
+    screens = plan_screens_for_chapter(
+        ids,
+        aspects,
+        chapter_id="ch-rhythm",
+        assets=assets,
+        burst_seconds=3.0,
+        layout_state=state,
+    )
+    _assert_no_consecutive_pattern_pairs(screens, pred_a=is_triple_row_pattern)
+    _assert_no_consecutive_pattern_pairs(screens, pred_a=is_six_grid_pattern)
+    _assert_no_consecutive_pattern_pairs(
+        screens, pred_a=is_triple_row_pattern, pred_b=is_six_grid_pattern
+    )
+    _assert_no_consecutive_pattern_pairs(
+        screens, pred_a=is_six_grid_pattern, pred_b=is_triple_row_pattern
+    )
+    _assert_no_consecutive_pattern_pairs(screens, pred_a=is_portrait_single_pattern)
+
+
+def test_trip_200_plus_caps_nine_and_no_consecutive():
+    base = datetime(2025, 5, 1, 12, 0, 0, tzinfo=timezone.utc)
+    ids = [f"l{i}" for i in range(72)]
+    assets = {
+        aid: {
+            "id": aid,
+            "takenAt": (base + timedelta(seconds=i % 3)).isoformat().replace("+00:00", "Z"),
+        }
+        for i, aid in enumerate(ids)
+    }
+    aspects = _aspects(ids, {x: "landscape" for x in ids})
+    state = NineGridPlannerState.from_trip_total(220)
+    screens = plan_screens_for_chapter(
+        ids,
+        aspects,
+        chapter_id="ch-big",
+        assets=assets,
+        burst_seconds=3.0,
+        layout_state=state,
+    )
+    nines = _nine_patterns(screens)
+    assert 1 <= len(nines) <= 10
+    assert state.used == len(nines)
+    for i in range(len(screens) - 1):
+        if is_nine_grid_pattern(screens[i]["patternId"]):
+            assert not is_nine_grid_pattern(screens[i + 1]["patternId"])
 
 
 def test_plan_landscape_triple_then_single_portrait():
@@ -306,9 +409,7 @@ def test_attach_screens_day_scope_via_buckets_param():
         plan_scope="day",
         day_buckets=[["p1", "p2"]],
     )
-    assert sum(len(ch["screens"]) for ch in out) == 2
-    assert all(
-        sc["patternId"] == "screen-portrait-1"
-        for ch in out
-        for sc in ch["screens"]
-    )
+    assert sum(len(ch["screens"]) for ch in out) == 1
+    assert out[0]["screens"][0]["patternId"] == "screen-portrait-2"
+    assert len(out[0]["screens"][0]["slots"]) == 2
+    assert len(out[1]["screens"]) == 0

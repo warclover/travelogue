@@ -16,7 +16,7 @@ except ImportError:  # pragma: no cover
 
 @dataclass
 class IngestConfig:
-    max_photos: int = 50
+    max_photos: int = 250
     webp_widths: tuple[int, ...] = (800, 1600, 2400)
     webp_quality: int = 82
     generate_crops: bool = False
@@ -63,7 +63,7 @@ class AppConfig:
 def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
     widths = raw.get("webp_widths") or [800, 1600, 2400]
     return IngestConfig(
-        max_photos=int(raw.get("max_photos", 50)),
+        max_photos=int(raw.get("max_photos", 250)),
         webp_widths=tuple(int(w) for w in widths),
         webp_quality=int(raw.get("webp_quality", 82)),
         generate_crops=bool(raw.get("generate_crops", False)),

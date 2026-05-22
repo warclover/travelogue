@@ -47,7 +47,7 @@
 | F-ING-01 | jpg/png/heic/webp 可导入 | ☐ |
 | F-ING-02 | 原图在 `source/`，不破坏相册原目录 | ☐ |
 | F-ING-03 | 有/无 EXIF 均不崩溃 | ☐ |
-| F-ING-04 | >50 张提示拒绝或分批 | ☐ |
+| F-ING-04 | >250 张提示拒绝或分批 | ☐ |
 | F-ING-05 | mp4/mov ≤15s 可导入 | ☐ |
 | F-ING-06 | 生成 w800/w1600 WebP | ☐ |
 

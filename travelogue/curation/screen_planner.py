@@ -6,15 +6,10 @@ See docs/web端模板.prd and docs/web端模板升级计划.md.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
 
-from travelogue.curation.aspect_buckets import prefix_same_bucket
-from travelogue.curation.asset_subject import (
-    any_asset_has_person,
-    asset_has_person,
-    portrait_fit_for_asset,
-)
 from travelogue.curation.aspect_buckets import prefix_same_bucket
 from travelogue.curation.asset_subject import (
     any_asset_has_person,
@@ -68,6 +63,130 @@ PATTERN_GRID_CLASS: dict[str, str] = {
 # Multi-column grids in 16:9 create portrait-shaped slots — only for portrait family.
 _LANDSCAPE_GRID_SIZES = (9, 6, 4)
 _PORTRAIT_COLUMN_GRID_SIZES = (9, 6, 3, 2, 1)
+
+
+def nine_grid_limits_for_trip(total_photos: int) -> tuple[int, int]:
+    """
+    Min/max nine-grid screens (pattern *-9) for a trip by layout-eligible photo count.
+
+    Rules:
+    - ≤50: at most 1 (min 0)
+    - 51–100: 2–5
+    - 101–200: 4–8
+    - >200: 6–10
+    """
+    if total_photos <= 50:
+        return 0, 1
+    if total_photos <= 100:
+        return 2, 5
+    if total_photos <= 200:
+        return 4, 8
+    return 6, 10
+
+
+def is_nine_grid_pattern(pattern_id: str) -> bool:
+    return pattern_id.endswith("-9")
+
+
+def is_triple_row_pattern(pattern_id: str) -> bool:
+    """三张一排（竖/方三列等 *-3）。"""
+    return pattern_id.endswith("-3")
+
+
+def is_six_grid_pattern(pattern_id: str) -> bool:
+    """六张两排（3×2 · *-6）。"""
+    return pattern_id.endswith("-6")
+
+
+def is_portrait_single_pattern(pattern_id: str) -> bool:
+    return pattern_id in ("screen-portrait-1", "screen-tall-1")
+
+
+LayoutKind = Literal["none", "nine", "triple", "six", "portrait_single", "other"]
+
+
+def layout_kind_from_pattern(pattern_id: str) -> LayoutKind:
+    if is_nine_grid_pattern(pattern_id):
+        return "nine"
+    if is_triple_row_pattern(pattern_id):
+        return "triple"
+    if is_six_grid_pattern(pattern_id):
+        return "six"
+    if is_portrait_single_pattern(pattern_id):
+        return "portrait_single"
+    return "other"
+
+
+@dataclass
+class ScreenLayoutPlannerState:
+    """
+    Trip-level screens rhythm: nine-grid quota + consecutive layout bans.
+
+    No back-to-back: *-9, *-3, *-6, *-3 with *-6 (either order), screen-portrait-1.
+    """
+
+    nine_min: int
+    nine_max: int
+    nine_used: int = 0
+    last_kind: LayoutKind = "none"
+
+    @classmethod
+    def from_trip_total(cls, total_photos: int) -> ScreenLayoutPlannerState:
+        lo, hi = nine_grid_limits_for_trip(total_photos)
+        return cls(nine_min=lo, nine_max=hi)
+
+    @property
+    def min_count(self) -> int:
+        return self.nine_min
+
+    @property
+    def max_count(self) -> int:
+        return self.nine_max
+
+    @property
+    def used(self) -> int:
+        return self.nine_used
+
+    @property
+    def last_was_nine(self) -> bool:
+        return self.last_kind == "nine"
+
+    def can_use_nine(self) -> bool:
+        return self.last_kind != "nine" and self.nine_used < self.nine_max
+
+    def should_prefer_nine(self) -> bool:
+        return self.nine_used < self.nine_min and self.can_use_nine()
+
+    def can_pick_grid_size(self, size: int) -> bool:
+        if size == 9:
+            return self.can_use_nine()
+        if size == 3:
+            return self.last_kind not in ("triple", "six")
+        if size == 6:
+            return self.last_kind not in ("six", "triple")
+        return True
+
+    def can_emit_pattern(self, pattern_id: str) -> bool:
+        kind = layout_kind_from_pattern(pattern_id)
+        if kind == "nine":
+            return self.can_use_nine()
+        if kind == "triple":
+            return self.last_kind not in ("triple", "six")
+        if kind == "six":
+            return self.last_kind not in ("six", "triple")
+        if kind == "portrait_single":
+            return self.last_kind != "portrait_single"
+        return True
+
+    def note_screen(self, pattern_id: str) -> None:
+        kind = layout_kind_from_pattern(pattern_id)
+        if kind == "nine":
+            self.nine_used += 1
+        self.last_kind = kind if kind != "other" else "other"
+
+
+# Backward-compatible alias (tests / older call sites)
+NineGridPlannerState = ScreenLayoutPlannerState
 
 
 def grid_class_for_pattern(pattern_id: str) -> str:
@@ -318,35 +437,49 @@ def _pick_grid_count(
     *,
     burst_run: bool = False,
     portrait_heavy: bool = False,
+    layout_state: ScreenLayoutPlannerState | None = None,
 ) -> int:
     """Pick largest grid ≤ run_len (landscape: 4/6/9 only; portrait: column grids)."""
     cap = min(run_len, MAX_SLOTS_PER_SCREEN)
+    allow_nine = layout_state is None or layout_state.can_use_nine()
+    prefer_nine = layout_state is not None and layout_state.should_prefer_nine()
+
+    def _allowed_sizes(candidates: list[int]) -> list[int]:
+        out = [s for s in candidates if s != 9 or allow_nine]
+        if layout_state is None:
+            return out
+        return [s for s in out if layout_state.can_pick_grid_size(s)]
+
     if family == "landscape":
         sizes = _LANDSCAPE_GRID_SIZES
         preferred: list[int] = []
-        if burst_run and cap >= 4:
-            preferred.extend([9, 4])
+        if prefer_nine and burst_run and cap >= 9:
+            preferred.extend(_allowed_sizes([9, 6, 4]))
+        elif burst_run and cap >= 4:
+            preferred.extend(_allowed_sizes([9, 4]))
         else:
-            preferred.extend([9, 6, 4])
+            preferred.extend(_allowed_sizes([9, 6, 4]))
         for size in preferred:
             if size <= cap:
                 return size
         for size in sizes:
-            if size <= cap:
+            if size <= cap and (layout_state is None or layout_state.can_pick_grid_size(size)):
                 return size
         return 1
 
-    preferred = []
-    if burst_run and cap >= 4:
-        preferred.extend([9, 4])
+    preferred: list[int] = []
+    if prefer_nine and burst_run and cap >= 9:
+        preferred.extend(_allowed_sizes([9, 6, 4, 3]))
+    elif burst_run and cap >= 4:
+        preferred.extend(_allowed_sizes([9, 4]))
     if portrait_heavy and family == "portrait":
-        preferred.extend([9, 6, 3])
+        preferred.extend(_allowed_sizes([9, 6, 3]))
     sizes = _PORTRAIT_COLUMN_GRID_SIZES if family == "portrait" else _GRID_SIZES
     for size in preferred:
         if size in sizes and size <= cap:
             return size
     for size in sizes:
-        if size <= cap:
+        if size <= cap and (layout_state is None or layout_state.can_pick_grid_size(size)):
             return size
     return 1
 
@@ -374,12 +507,31 @@ def _emit_person_portrait_screens(
     aspects: dict[str, AspectKind],
     *,
     assets_map: dict[str, dict],
+    layout_state: ScreenLayoutPlannerState | None = None,
+    pending: list[str] | None = None,
 ) -> list[dict]:
     """人物竖图：仅三列(≥3) / 双列(2)；单张不单独成屏（见余片 cover portrait-1）。"""
     screens: list[dict] = []
     buf = list(person_ids)
+    defer: list[str] = []
     while len(buf) >= 3:
         trio = buf[:3]
+        if layout_state is not None and not layout_state.can_emit_pattern("screen-portrait-3"):
+            if layout_state.can_emit_pattern("screen-portrait-2"):
+                screen = _make_screen(
+                    "screen-portrait-2",
+                    trio[:2],
+                    screen_id="",
+                    aspects=aspects,
+                    assets_map=assets_map,
+                )
+                screen["layoutHint"] = PERSON_LAYOUT_PAIR
+                screens.append(screen)
+                buf = [trio[2]] + buf[3:]
+                continue
+            defer.extend(trio)
+            buf = buf[3:]
+            continue
         screen = _make_screen(
             "screen-portrait-3",
             trio,
@@ -402,11 +554,40 @@ def _emit_person_portrait_screens(
         screen["layoutHint"] = PERSON_LAYOUT_PAIR
         screens.append(screen)
         buf = buf[2:]
-    if len(buf) == 1:
+    if buf:
+        screens.extend(
+            _emit_portrait_single_screens(
+                buf,
+                aspects,
+                assets_map=assets_map,
+                layout_state=layout_state,
+                pending=pending or defer,
+            )
+        )
+    if pending is not None and defer:
+        pending[:0] = defer
+    return screens
+
+
+def _emit_portrait_single_screens(
+    portrait_ids: list[str],
+    aspects: dict[str, AspectKind],
+    *,
+    assets_map: dict[str, dict],
+    layout_state: ScreenLayoutPlannerState | None,
+    pending: list[str] | None = None,
+) -> list[dict]:
+    """Emit screen-portrait-1, or defer when consecutive singles are banned."""
+    screens: list[dict] = []
+    for aid in portrait_ids:
+        if layout_state is not None and not layout_state.can_emit_pattern("screen-portrait-1"):
+            if pending is not None:
+                pending.append(aid)
+            continue
         screens.append(
             _make_screen(
                 "screen-portrait-1",
-                [buf[0]],
+                [aid],
                 screen_id="",
                 aspects=aspects,
                 assets_map=assets_map,
@@ -414,6 +595,40 @@ def _emit_person_portrait_screens(
             )
         )
     return screens
+
+
+def _plan_portrait_triple_row(
+    trio: list[str],
+    aspects: dict[str, AspectKind],
+    *,
+    assets_map: dict[str, dict],
+    layout_state: ScreenLayoutPlannerState | None,
+    pending: list[str],
+) -> list[dict]:
+    """三张一排；若与上一屏冲突则降为双列并回退余片。"""
+    if layout_state is None or layout_state.can_emit_pattern("screen-portrait-3"):
+        return [
+            _make_screen(
+                "screen-portrait-3",
+                trio,
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
+            )
+        ]
+    if layout_state.can_emit_pattern("screen-portrait-2"):
+        pending.insert(0, trio[2])
+        return [
+            _make_screen(
+                "screen-portrait-2",
+                trio[:2],
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
+            )
+        ]
+    pending[:0] = trio
+    return []
 
 
 def _can_mixed_p1_l2(
@@ -444,6 +659,7 @@ def _flush_portrait_pending(
     aspects: dict[str, AspectKind],
     *,
     assets_map: dict[str, dict] | None = None,
+    layout_state: ScreenLayoutPlannerState | None = None,
 ) -> list[dict]:
     """Emit portrait-3 (风景竖图) or portrait-1 (含人物) for buffered std portraits."""
     assets_map = assets_map or {}
@@ -459,18 +675,24 @@ def _flush_portrait_pending(
     buf.extend(scenery_buf)
 
     screens.extend(
-        _emit_person_portrait_screens(person_buf, aspects, assets_map=assets_map)
+        _emit_person_portrait_screens(
+            person_buf,
+            aspects,
+            assets_map=assets_map,
+            layout_state=layout_state,
+            pending=pending,
+        )
     )
 
     while len(buf) >= 3:
         trio = buf[:3]
-        screens.append(
-            _make_screen(
-                "screen-portrait-3",
+        screens.extend(
+            _plan_portrait_triple_row(
                 trio,
-                screen_id="",
-                aspects=aspects,
+                aspects,
                 assets_map=assets_map,
+                layout_state=layout_state,
+                pending=pending,
             )
         )
         buf = buf[3:]
@@ -485,13 +707,13 @@ def _flush_portrait_pending(
             )
         )
     elif len(buf) == 1:
-        screens.append(
-            _make_screen(
-                "screen-portrait-1",
+        screens.extend(
+            _emit_portrait_single_screens(
                 buf,
-                screen_id="",
-                aspects=aspects,
+                aspects,
                 assets_map=assets_map,
+                layout_state=layout_state,
+                pending=pending,
             )
         )
     return screens
@@ -504,6 +726,7 @@ def _plan_one_screen(
     burst_groups: dict[str, int] | None = None,
     portrait_heavy: bool = False,
     assets_map: dict[str, dict] | None = None,
+    layout_state: ScreenLayoutPlannerState | None = None,
 ) -> tuple[dict | None, int]:
     if not remaining:
         return None, 0
@@ -533,10 +756,25 @@ def _plan_one_screen(
             family,
             burst_run=burst_run,
             portrait_heavy=portrait_heavy,
+            layout_state=layout_state,
         )
         ids = bucket_ids[:n]
         pattern = _pattern_id(family, n)
-        return _make_screen(pattern, ids, screen_id="", aspects=aspects, assets_map=assets_map), n
+        if layout_state is not None and not layout_state.can_emit_pattern(pattern):
+            smaller = _pick_grid_count(
+                len(bucket_ids),
+                family,
+                burst_run=burst_run,
+                portrait_heavy=portrait_heavy,
+                layout_state=layout_state,
+            )
+            if smaller < n:
+                n = smaller
+                ids = bucket_ids[:n]
+                pattern = _pattern_id(family, n)
+        return _make_screen(
+            pattern, ids, screen_id="", aspects=aspects, assets_map=assets_map
+        ), n
 
     if family == "panorama":
         # 单张超宽图用 landscape-1 + 渲染时原生 aspect-ratio，避免 21:9 固定槽压扁
@@ -557,9 +795,20 @@ def _plan_one_screen(
         family,
         burst_run=burst_run,
         portrait_heavy=portrait_heavy,
+        layout_state=layout_state,
     )
     ids = remaining[:n]
     pattern = _pattern_id(family, n)
+    if layout_state is not None and not layout_state.can_emit_pattern(pattern):
+        n = _pick_grid_count(
+            run_len,
+            family,
+            burst_run=burst_run,
+            portrait_heavy=portrait_heavy,
+            layout_state=layout_state,
+        )
+        ids = remaining[:n]
+        pattern = _pattern_id(family, n)
     return _make_screen(
         pattern, ids, screen_id="", aspects=aspects, assets_map=assets_map
     ), n
@@ -626,6 +875,7 @@ def plan_screens_for_chapter(
     mixed_proximity_seconds: float | None = None,
     orientation_summary: dict | None = None,
     skip_screen_asset_ids: set[str] | None = None,
+    layout_state: ScreenLayoutPlannerState | None = None,
 ) -> list[dict]:
     """
     Map ordered asset ids → screens[] (one pattern per screen; reset after each screen).
@@ -663,6 +913,8 @@ def plan_screens_for_chapter(
         screen["screenId"] = f"{chapter_id}-sc-{seq:02d}"
 
     def _append(screen: dict) -> None:
+        if layout_state:
+            layout_state.note_screen(screen.get("patternId", ""))
         _assign_id(screen)
         screens.append(screen)
 
@@ -736,19 +988,22 @@ def plan_screens_for_chapter(
                         persons = _person_portrait_ids(batch, assets_map)
                         scenery = [a for a in batch if a not in persons]
                         for sc in _emit_person_portrait_screens(
-                            persons, aspects, assets_map=assets_map
+                            persons,
+                            aspects,
+                            assets_map=assets_map,
+                            layout_state=layout_state,
+                            pending=pending_portraits,
                         ):
                             _append(sc)
                         if len(scenery) >= 3:
-                            _append(
-                                _make_screen(
-                                    "screen-portrait-3",
-                                    scenery[:3],
-                                    screen_id="",
-                                    aspects=aspects,
-                                    assets_map=assets_map,
-                                )
-                            )
+                            for sc in _plan_portrait_triple_row(
+                                scenery[:3],
+                                aspects,
+                                assets_map=assets_map,
+                                layout_state=layout_state,
+                                pending=pending_portraits,
+                            ):
+                                _append(sc)
                         elif len(scenery) == 2:
                             _append(
                                 _make_screen(
@@ -760,25 +1015,23 @@ def plan_screens_for_chapter(
                                 )
                             )
                         elif len(scenery) == 1:
-                            _append(
-                                _make_screen(
-                                    "screen-portrait-1",
-                                    scenery,
-                                    screen_id="",
-                                    aspects=aspects,
-                                    assets_map=assets_map,
-                                )
-                            )
-                    else:
-                        _append(
-                            _make_screen(
-                                "screen-portrait-3",
-                                batch[:3],
-                                screen_id="",
-                                aspects=aspects,
+                            for sc in _emit_portrait_single_screens(
+                                scenery,
+                                aspects,
                                 assets_map=assets_map,
-                            )
-                        )
+                                layout_state=layout_state,
+                                pending=pending_portraits,
+                            ):
+                                _append(sc)
+                    else:
+                        for sc in _plan_portrait_triple_row(
+                            batch[:3],
+                            aspects,
+                            assets_map=assets_map,
+                            layout_state=layout_state,
+                            pending=pending_portraits,
+                        ):
+                            _append(sc)
                     del pending_portraits[:3]
                 else:
                     break
@@ -795,20 +1048,23 @@ def plan_screens_for_chapter(
                     asset_has_person(assets_map.get(aid, {})) for aid in pair
                 ):
                     for sc in _emit_person_portrait_screens(
-                        pair, aspects, assets_map=assets_map
+                        pair,
+                        aspects,
+                        assets_map=assets_map,
+                        layout_state=layout_state,
+                        pending=pending_portraits,
                     ):
                         _append(sc)
                 else:
-                    for aid in pair:
-                        _append(
-                            _make_screen(
-                                "screen-portrait-1",
-                                [aid],
-                                screen_id="",
-                                aspects=aspects,
-                                assets_map=assets_map,
-                            )
+                    _append(
+                        _make_screen(
+                            "screen-portrait-2",
+                            pair,
+                            screen_id="",
+                            aspects=aspects,
+                            assets_map=assets_map,
                         )
+                    )
                 pending_portraits.clear()
             continue
 
@@ -819,7 +1075,10 @@ def plan_screens_for_chapter(
                     i += 2
                     continue
             for sc in _flush_portrait_pending(
-                pending_portraits, aspects, assets_map=assets_map
+                pending_portraits,
+                aspects,
+                assets_map=assets_map,
+                layout_state=layout_state,
             ):
                 _append(sc)
 
@@ -835,6 +1094,7 @@ def plan_screens_for_chapter(
             burst_groups=burst_groups,
             portrait_heavy=portrait_heavy,
             assets_map=assets_map,
+            layout_state=layout_state,
         )
         if not screen or consumed < 1:
             i += 1
@@ -871,6 +1131,7 @@ def attach_screens_day_buckets(
     mixed_proximity_seconds: float | None = None,
     orientation_summary: dict | None = None,
     skip_screen_asset_ids: set[str] | None = None,
+    trip_photo_total: int | None = None,
 ) -> list[dict]:
     """
     Plan screens on each day bucket (full takenAt sequence), assign to chapters
@@ -893,6 +1154,14 @@ def attach_screens_day_buckets(
 
     ch_by_id = {ch["id"]: ch for ch in out}
     skip = skip_screen_asset_ids or set()
+    if trip_photo_total is None:
+        all_ids: set[str] = set()
+        for bucket in day_buckets:
+            all_ids.update(bucket)
+        for ch in chapters:
+            all_ids.update(_collect_asset_ids_from_chapter(ch))
+        trip_photo_total = len(all_ids)
+    layout_state = ScreenLayoutPlannerState.from_trip_total(trip_photo_total)
     seq_per_ch: dict[str, int] = {}
     gallery_asset_ids: set[str] = set()
     for ch in out:
@@ -915,6 +1184,7 @@ def attach_screens_day_buckets(
             mixed_proximity_seconds=mixed_proximity_seconds,
             orientation_summary=orientation_summary,
             skip_screen_asset_ids=skip,
+            layout_state=layout_state,
         )
         ch["screens"] = gal_screens
 
@@ -934,6 +1204,7 @@ def attach_screens_day_buckets(
             mixed_proximity_seconds=mixed_proximity_seconds,
             orientation_summary=orientation_summary,
             skip_screen_asset_ids=skip,
+            layout_state=layout_state,
         )
         for sc in bucket_screens:
             slots = sc.get("slots") or []
@@ -961,6 +1232,7 @@ def attach_screens_to_chapters(
     plan_scope: str | None = None,
     day_buckets: list[list[str]] | None = None,
     skip_screen_asset_ids: set[str] | None = None,
+    trip_photo_total: int | None = None,
 ) -> list[dict]:
     """Add screens[] to each chapter (per-chapter or per-day bucket scope)."""
     from travelogue.config import default_screen_plan_scope
@@ -976,6 +1248,7 @@ def attach_screens_to_chapters(
             mixed_proximity_seconds=mixed_proximity_seconds,
             orientation_summary=orientation_summary,
             skip_screen_asset_ids=skip_screen_asset_ids,
+            trip_photo_total=trip_photo_total,
         )
 
     assets_by_id: dict[str, dict] = {}
@@ -983,6 +1256,12 @@ def attach_screens_to_chapters(
         assets_by_id = assets
     elif isinstance(assets, list):
         assets_by_id = {a["id"]: a for a in assets if a.get("id")}
+
+    if trip_photo_total is None:
+        trip_photo_total = len(assets_by_id) if assets_by_id else sum(
+            len(_collect_asset_ids_from_chapter(ch)) for ch in chapters
+        )
+    layout_state = ScreenLayoutPlannerState.from_trip_total(trip_photo_total)
 
     out: list[dict] = []
     for ch in chapters:
@@ -999,6 +1278,7 @@ def attach_screens_to_chapters(
                 mixed_proximity_seconds=mixed_proximity_seconds,
                 orientation_summary=orientation_summary,
                 skip_screen_asset_ids=skip_screen_asset_ids,
+                layout_state=layout_state,
             )
         else:
             ch["screens"] = []

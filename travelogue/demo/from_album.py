@@ -23,7 +23,7 @@ __all__ = [
 def scan_album(
     directory: Path,
     *,
-    max_photos: int = 50,
+    max_photos: int = 250,
     recursive: bool = True,
     min_edge_px: int = 320,
 ) -> tuple[list[Path], dict]:
@@ -55,7 +55,7 @@ def demo_from_album(
     title: str = "我的旅途",
     place: str = "旅途",
     hook: str = "",
-    max_photos: int = 50,
+    max_photos: int = 250,
     recursive: bool = True,
     render: bool = True,
     export_layout: str = "mobile",

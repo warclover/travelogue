@@ -78,7 +78,7 @@ def run_demo_from_album(
     title: str = "我的旅途",
     place: str = "旅途",
     hook: str = "",
-    max_photos: int = 50,
+    max_photos: int = 250,
     recursive: bool = True,
     render: bool = True,
     export_layout: str = "mobile",

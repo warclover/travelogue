@@ -62,5 +62,6 @@ CI：`.github/workflows/ci.yml`（push/PR 时跑 pytest + fixture validate）。
 | 1 | `kyoto-2025` | 横多 · Web 版式已修 |
 | 2 | 自建竖图册 | `workshop-pipeline` + 竖图相册 |
 | 3 | 连拍/九宫格 | 同主题多图 |
+| 4 | `linzhi` | 林芝 · `D:\Photos\林芝` · 大批量验收 |
 
 自动化替身：`tests/test_portrait_heavy_workshop.py`（竖图 ingest → screens）。

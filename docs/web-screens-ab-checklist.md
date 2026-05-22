@@ -14,6 +14,7 @@
 | 1 | 京都雨后 | `kyoto-2025` | 横多 | ☑ 2026-05 Web 原生比例 + 缩略图剔除 |
 | 2 | （竖图为主） | 自建 tripId | 竖多 | ☐ · `workshop-pipeline.ps1` 或 `test_portrait_heavy_workshop` |
 | 3 | （连拍/九宫格） | | 同主题多图 | ☐ |
+| 4 | 林芝 | `linzhi` · `D:\Photos\林芝` | 大批量（≈250） | ☐ |
 
 ## 每套检查项
 

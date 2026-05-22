@@ -26,7 +26,7 @@ layout:
   mixed_proximity_seconds: 12
 
 ingest:
-  max_photos: 50
+  max_photos: 250
   max_videos: 3
   max_video_source_sec: 15
   webp_widths: [800, 1600, 2400]

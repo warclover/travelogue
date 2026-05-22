@@ -5,7 +5,7 @@
 trips_dir: ./trips
 
 ingest:
-  max_photos: 50
+  max_photos: 250
   webp_widths: [800, 1600]
   webp_quality: 82
   generate_crops: false

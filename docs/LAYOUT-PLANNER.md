@@ -158,6 +158,8 @@
 | 竖三列 | `screen-portrait-3` · **cover** 拼满 16:9 |
 | 单竖 | `screen-portrait-1` · **cover** 满屏兜底；或 `screen-portrait-1-landscape-2`（1 竖+2 横，时间邻近） |
 | 连拍 | `takenAt` 间隔 ≤ `ingest.burst_seconds` 且同构图族 → 优先 4/9 宫格 |
+| 九宫格配额 | 按游记**布局可用照片总数**：≤50 最多 1 次；51–100 为 2–5 次；101–200 为 4–8 次；>200 为 6–10 次；**禁止连续两屏均为 `*-9`** |
+| 连续排版禁令 | 禁止连续两屏 `*-3`（三张一排）；禁止连续两屏 `*-6`（六张两排）；禁止 `*-3` 与 `*-6` 相邻（任意顺序）；禁止连续两屏 `screen-portrait-1` / `screen-tall-1` |
 | gallery 章 | screens 引擎下仍从 items 展平为 **多屏 mosaic**；渲染不用 `media-scroll` |
 | legacy | `layoutEngine=legacy` 仍走 §5 上表 `media-row` / `media-card` |
 
