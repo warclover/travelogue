@@ -5,7 +5,10 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from travelogue.curation.screen_planner import (
+    PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     PATTERN_PORTRAIT_1_LANDSCAPE_2,
+    PATTERN_PORTRAIT_GRID_8,
+    PERSON_LAYOUT_GRID_8,
     NineGridPlannerState,
     ScreenLayoutPlannerState,
     attach_screens_day_buckets,
@@ -21,6 +24,7 @@ from travelogue.curation.screen_planner import (
     plan_screens_for_chapter,
     screens_layout_active,
 )
+from travelogue.curation.screen_layout_state import portrait_grid8_max_for_trip
 from travelogue.media.image_ops import classify_aspect
 
 
@@ -71,6 +75,251 @@ def test_plan_mixed_two_landscapes_then_portrait():
     assert len(screens) == 1
     assert screens[0]["patternId"] == PATTERN_PORTRAIT_1_LANDSCAPE_2
     assert screens[0]["slots"][0]["assetId"] == "p1"
+
+
+def test_plan_mosaic_5_main_portrait_3land():
+    ids = ["l-main", "p1", "b1", "b2", "b3"]
+    aspects = {
+        "l-main": "landscape",
+        "p1": "portrait",
+        "b1": "landscape",
+        "b2": "landscape",
+        "b3": "landscape",
+    }
+    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
+    assets = {
+        aid: {
+            "id": aid,
+            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
+        }
+        for i, aid in enumerate(ids)
+    }
+    screens = plan_screens_for_chapter(
+        ids, aspects, assets=assets, burst_seconds=30.0, chapter_id="ch-m5"
+    )
+    assert len(screens) == 1
+    assert screens[0]["patternId"] == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
+    assert [s["assetId"] for s in screens[0]["slots"]] == ids
+    assert screens[0]["slots"][0]["role"] == "main"
+    assert screens[0]["slots"][1]["role"] == "portrait"
+    assert grid_class_for_pattern(PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND) == (
+        "layout-screen__grid--mosaic-5-main-portrait-3land"
+    )
+    assert layout_kind_from_pattern(PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND) == "other"
+
+
+def test_plan_mosaic_5_prefers_cover_score_for_main():
+    ids = ["l-low", "p1", "l-high", "b2", "b3"]
+    aspects = {aid: ("portrait" if aid == "p1" else "landscape") for aid in ids}
+    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
+    assets = {
+        aid: {
+            "id": aid,
+            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
+            "aspectKind": "landscape" if aid != "p1" else "portrait",
+            "width": 1600 if aid == "l-high" else 800,
+            "height": 900 if aid == "l-high" else 800,
+        }
+        for i, aid in enumerate(ids)
+    }
+    screens = plan_screens_for_chapter(
+        ids, aspects, assets=assets, burst_seconds=60.0, chapter_id="ch-m5-main"
+    )
+    assert screens[0]["patternId"] == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
+    assert screens[0]["slots"][0]["assetId"] == "l-high"
+
+
+def test_plan_mosaic_5_requires_time_proximity():
+    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
+    assets = {
+        "l1": {"id": "l1", "takenAt": base.isoformat().replace("+00:00", "Z")},
+        "p1": {
+            "id": "p1",
+            "takenAt": (base + timedelta(seconds=1)).isoformat().replace("+00:00", "Z"),
+        },
+        "l2": {
+            "id": "l2",
+            "takenAt": (base + timedelta(seconds=2)).isoformat().replace("+00:00", "Z"),
+        },
+        "l3": {
+            "id": "l3",
+            "takenAt": (base + timedelta(minutes=5)).isoformat().replace("+00:00", "Z"),
+        },
+        "l4": {
+            "id": "l4",
+            "takenAt": (base + timedelta(minutes=6)).isoformat().replace("+00:00", "Z"),
+        },
+    }
+    ids = ["l1", "p1", "l2", "l3", "l4"]
+    aspects = {aid: ("portrait" if aid == "p1" else "landscape") for aid in ids}
+    screens = plan_screens_for_chapter(
+        ids, aspects, assets=assets, burst_seconds=3.0, chapter_id="ch-m5-far"
+    )
+    assert all(sc["patternId"] != PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND for sc in screens)
+
+
+def test_plan_mosaic_5_skips_chapter_hero_when_chapter_is_exactly_five():
+    """章首 Hero 与五图拼版互斥：整章恰好 5 张且符合拼版时不拆出 landscape-1。"""
+    ids = ["l-low", "p1", "l-high", "b2", "b3"]
+    aspects = {aid: ("portrait" if aid == "p1" else "landscape") for aid in ids}
+    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
+    assets = {
+        aid: {
+            "id": aid,
+            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
+            "aspectKind": "landscape" if aid != "p1" else "portrait",
+            "width": 1600 if aid == "l-high" else 800,
+            "height": 900 if aid == "l-high" else 800,
+        }
+        for i, aid in enumerate(ids)
+    }
+    screens = plan_screens_for_chapter(
+        ids, aspects, assets=assets, burst_seconds=60.0, chapter_id="ch-m5-no-hero"
+    )
+    assert len(screens) == 1
+    assert screens[0]["patternId"] == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
+    assert screens[0]["slots"][0]["assetId"] == "l-high"
+
+
+def test_portrait_grid8_limits_by_trip_size():
+    assert portrait_grid8_max_for_trip(50) == 0
+    assert portrait_grid8_max_for_trip(51) == 2
+    assert portrait_grid8_max_for_trip(150) == 4
+    assert portrait_grid8_max_for_trip(250) == 6
+
+
+def test_plan_portrait_grid8_when_trip_over_50_and_portrait_heavy():
+    ids = [f"p{i}" for i in range(8)]
+    aspects = {x: "portrait" for x in ids}
+    base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=timezone.utc)
+    assets = {
+        aid: {
+            "id": aid,
+            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
+        }
+        for i, aid in enumerate(ids)
+    }
+    screens = plan_screens_for_chapter(
+        ids,
+        aspects,
+        assets=assets,
+        burst_seconds=10.0,
+        chapter_id="ch-p8",
+        trip_photo_total=60,
+        orientation_summary={"portrait": 40, "landscape": 20},
+    )
+    assert len(screens) == 1
+    assert screens[0]["patternId"] == PATTERN_PORTRAIT_GRID_8
+    assert len(screens[0]["slots"]) == 8
+    assert layout_kind_from_pattern(PATTERN_PORTRAIT_GRID_8) == "other"
+    assert (
+        grid_class_for_pattern(PATTERN_PORTRAIT_GRID_8)
+        == "layout-screen__grid--portrait-2x4"
+    )
+
+
+def test_plan_portrait_grid8_person_hint():
+    ids = [f"p{i}" for i in range(8)]
+    aspects = {x: "portrait" for x in ids}
+    base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=timezone.utc)
+    assets = {
+        aid: {
+            "id": aid,
+            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
+            "tags": ["person"],
+        }
+        for i, aid in enumerate(ids)
+    }
+    screens = plan_screens_for_chapter(
+        ids,
+        aspects,
+        assets=assets,
+        burst_seconds=10.0,
+        chapter_id="ch-p8p",
+        trip_photo_total=60,
+        orientation_summary={"portrait": 35, "landscape": 25},
+    )
+    assert screens[0]["layoutHint"] == PERSON_LAYOUT_GRID_8
+    assert all(s["fit"] == "contain" for s in screens[0]["slots"])
+
+
+def test_plan_no_portrait_grid8_when_trip_at_most_50():
+    ids = [f"p{i}" for i in range(8)]
+    aspects = {x: "portrait" for x in ids}
+    screens = plan_screens_for_chapter(
+        ids,
+        aspects,
+        chapter_id="ch-no8",
+        trip_photo_total=50,
+        orientation_summary={"portrait": 30, "landscape": 20},
+    )
+    assert all(sc["patternId"] != PATTERN_PORTRAIT_GRID_8 for sc in screens)
+
+
+def test_plan_no_portrait_grid8_when_not_portrait_heavy():
+    ids = [f"p{i}" for i in range(8)]
+    aspects = {x: "portrait" for x in ids}
+    base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=timezone.utc)
+    assets = {
+        aid: {
+            "id": aid,
+            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
+        }
+        for i, aid in enumerate(ids)
+    }
+    screens = plan_screens_for_chapter(
+        ids,
+        aspects,
+        assets=assets,
+        burst_seconds=10.0,
+        chapter_id="ch-lheavy",
+        trip_photo_total=80,
+        orientation_summary={"portrait": 20, "landscape": 60},
+    )
+    assert all(sc["patternId"] != PATTERN_PORTRAIT_GRID_8 for sc in screens)
+
+
+def test_plan_portrait_grid8_ten_yields_grid_plus_remainder():
+    ids = [f"p{i}" for i in range(10)]
+    aspects = {x: "portrait" for x in ids}
+    base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=timezone.utc)
+    assets = {
+        aid: {
+            "id": aid,
+            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
+        }
+        for i, aid in enumerate(ids)
+    }
+    screens = plan_screens_for_chapter(
+        ids,
+        aspects,
+        assets=assets,
+        burst_seconds=10.0,
+        chapter_id="ch-p10",
+        trip_photo_total=60,
+        orientation_summary={"portrait": 40, "landscape": 20},
+    )
+    assert screens[0]["patternId"] == PATTERN_PORTRAIT_GRID_8
+    assert sum(1 for sc in screens if sc["patternId"] == PATTERN_PORTRAIT_GRID_8) == 1
+    assert sum(len(sc.get("slots") or []) for sc in screens) == 10
+
+
+def test_plan_mosaic_5_beats_mixed_p1_l2_when_five_fit():
+    ids = ["p1", "l1", "l2", "l3", "l4"]
+    aspects = {aid: ("portrait" if aid == "p1" else "landscape") for aid in ids}
+    base = datetime(2025, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+    assets = {
+        aid: {
+            "id": aid,
+            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
+        }
+        for i, aid in enumerate(ids)
+    }
+    screens = plan_screens_for_chapter(
+        ids, aspects, assets=assets, burst_seconds=10.0, chapter_id="ch-m5-over"
+    )
+    assert len(screens) == 1
+    assert screens[0]["patternId"] == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
 
 
 def test_plan_mixed_requires_time_proximity_when_exif_present():

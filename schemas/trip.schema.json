@@ -136,6 +136,35 @@
         "excludedLowResAssetIds": {
           "type": "array",
           "items": { "type": "string" }
+        },
+        "segments": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/timeSegment" }
+        },
+        "primarySegmentId": { "type": "string" },
+        "mediaClassSummary": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "timeSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "dateStart", "dateEnd", "assetIds"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string", "maxLength": 24 },
+        "dateStart": { "type": "string", "format": "date" },
+        "dateEnd": { "type": "string", "format": "date" },
+        "assetIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "places": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 3
         }
       }
     },
@@ -250,6 +279,18 @@
           "type": "string",
           "enum": ["portrait", "landscape", "square", "panorama", "tall"],
           "description": "Composition bucket from classify_aspect (Agent 0 / layout)"
+        },
+        "dateSource": {
+          "type": "string",
+          "enum": ["exif", "filename", "mtime"]
+        },
+        "dateConfidence": {
+          "type": "string",
+          "enum": ["high", "low"]
+        },
+        "mediaClass": {
+          "type": "string",
+          "enum": ["photo", "screenshot", "thumbnail", "reupload", "archive", "unknown"]
         }
       },
       "allOf": [
@@ -300,7 +341,7 @@
           "type": "array",
           "items": { "type": "string" },
           "minItems": 2,
-          "maxItems": 3
+          "maxItems": 8
         },
         "rowLayout": {
           "type": "string",
@@ -310,8 +351,14 @@
             "portrait-triple",
             "portrait-pair",
             "square-triple",
-            "square-pair"
+            "square-pair",
+            "mobile-landscape-grid-8",
+            "mobile-portrait-grid-4"
           ]
+        },
+        "layoutHint": {
+          "type": "string",
+          "enum": ["person-grid-4"]
         }
       }
     },
@@ -356,6 +403,10 @@
           "items": { "type": "string", "maxLength": 24 },
           "maxItems": 3,
           "description": "User memory hooks at G1; fed to Agent 2"
+        },
+        "segmentId": {
+          "type": "string",
+          "description": "Travel time segment from curation.segments"
         }
       }
     },
@@ -410,6 +461,8 @@
             "screen-portrait-2",
             "screen-portrait-3",
             "screen-portrait-1-landscape-2",
+            "screen-mosaic-5-main-portrait-3land",
+            "screen-portrait-grid-8",
             "screen-portrait-4",
             "screen-portrait-6",
             "screen-portrait-9",
@@ -440,8 +493,8 @@
         },
         "layoutHint": {
           "type": "string",
-          "enum": ["person-pair", "person-triple"],
-          "description": "Person portrait: 2-col pair or 3-col row (incl. single centered in 3-col)"
+          "enum": ["person-pair", "person-triple", "person-grid-8"],
+          "description": "Person portrait: 2-col pair, 3-col row, or 4×2 grid (contain per slot)"
         },
         "slots": {
           "type": "array",

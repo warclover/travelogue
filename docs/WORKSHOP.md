@@ -19,7 +19,7 @@ cd C:\Users\xiafe\Projects\travelogue
 .\scripts\workshop-pipeline.ps1 -AlbumPath "D:\Photos\..." -TripId my-trip-2025 -Export -ConfirmPrivacy
 ```
 
-等价于：`from-album` → `lock structure` → `narrate` → `render --dual` → `validate`。
+等价于：`from-album` → `lock structure` → `narrate` → `render --dual` → `validate`；加 `-Export -ConfirmPrivacy` 时再 `lock copy` → `export`。
 
 ---
 
@@ -33,12 +33,15 @@ cd C:\Users\xiafe\Projects\travelogue
 
 ---
 
-## 3. 导入时低清提示
+## 3. 导入提示（低清 · 日期 · 素材类型）
 
-`ingest` 会在 CLI 报告中显示：
+`ingest` / `curate` 会在 CLI 报告中显示：
 
 - **疑似缩略图**：原图短边 &lt; `min_short_edge_layout_px`（默认 600）
 - **策展将剔除低分辨率**：按本批中位数预估（与 `curate` 一致）
+- **日期来源**：exif / filename / mtime 计数；mtime 占比高时警告
+- **素材类型**：`photo` / `screenshot` / `archive` 等（见 [老图.md](./老图.md)）
+- **多时间段**：`curate` 写入 `curation.segments[]`，按段分章（间隔默认 14 天）
 
 ---
 

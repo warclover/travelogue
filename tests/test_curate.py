@@ -62,3 +62,24 @@ def test_date_span_warning_for_mixed_years() -> None:
     msg = _date_span_warning(assets)
     assert msg is not None
     assert "跨度" in msg
+    assert "过滤旧图" not in msg
+
+
+def test_curate_writes_segments_for_multi_month_album(tmp_path: Path) -> None:
+    trips = tmp_path / "trips"
+    trip_json = create_trip("seg-test", trips)
+    trip_dir = trips / "seg-test"
+    import json
+
+    trip = json.loads(trip_json.read_text(encoding="utf-8"))
+    ingest_into_trip(trip, trip_dir, from_dir=_album(tmp_path, 8), dedupe=False)
+    for i, a in enumerate(trip["assets"]):
+        month = 3 if i < 4 else 10
+        a["takenAt"] = f"2025-{month:02d}-{(i % 5) + 10:02d}T12:00:00Z"
+        a["dateSource"] = "exif"
+        a["dateConfidence"] = "high"
+        a["mediaClass"] = "photo"
+    run_curate(trip, export_layout="mobile")
+    segs = (trip.get("curation") or {}).get("segments") or []
+    assert len(segs) >= 2
+    assert trip["chapters"][0].get("curation", {}).get("segmentId")

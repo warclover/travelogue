@@ -30,7 +30,6 @@
   --font-brush: "Ma Shan Zheng", "Long Cang", "STKaiti", cursive;
   --font-serif: var(--font-handwriting);
   --font-sans: var(--font-handwriting);
-  --font-size: 72px;
   --chapter-gap: 4px;
   --radius: 0;
   --page-pad: 0;
@@ -123,7 +122,7 @@ html {
 body {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: var(--font-size);
+  font-size: 48px;
   line-height: 1.5;
   color: var(--text);
   background: var(--bg);
@@ -230,7 +229,7 @@ html[data-layout="auto"] .cover-hero__media img {
 .cover-hero__text h1 {
   margin: 0 0 6px;
   font-family: var(--font-brush);
-  font-size: var(--font-size);
+  font-size: clamp(2.1rem, 6vw + 0.75rem, 3.5rem);
   font-weight: 400;
   line-height: 1.08;
   letter-spacing: 0.04em;
@@ -239,7 +238,7 @@ html[data-layout="auto"] .cover-hero__media img {
 
 .cover-hero__text .subtitle {
   margin: 0;
-  font-size: var(--font-size);
+  font-size: 15px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   opacity: 0.92;
@@ -280,7 +279,7 @@ html[data-layout="auto"] .cover-hero__media img {
 .trip-meta {
   text-align: center;
   padding: 16px 16px 6px;
-  font-size: var(--font-size);
+  font-size: 13px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
@@ -292,7 +291,7 @@ html[data-layout="auto"] .cover-hero__media img {
   max-width: 16em;
   text-align: center;
   font-family: var(--font-serif);
-  font-size: var(--font-size);
+  font-size: 64px;
   line-height: 1.45;
 }
 
@@ -317,7 +316,7 @@ html[data-layout="auto"] .cover-hero__media img {
 }
 
 .chapter-header__index {
-  font-size: var(--font-size);
+  font-size: 12px;
   font-weight: 400;
   letter-spacing: 0.18em;
   color: var(--accent);
@@ -326,7 +325,7 @@ html[data-layout="auto"] .cover-hero__media img {
 .chapter-header h2 {
   margin: 2px 0 0;
   font-family: var(--font-brush);
-  font-size: var(--font-size);
+  font-size: 72px;
   font-weight: 400;
   line-height: 1.12;
 }
@@ -334,7 +333,7 @@ html[data-layout="auto"] .cover-hero__media img {
 .chapter-lead {
   margin: 0;
   padding: 0 16px 10px;
-  font-size: var(--font-size);
+  font-size: inherit;
   color: var(--muted);
 }
 
@@ -354,7 +353,7 @@ html[data-layout="auto"] .cover-hero__media img {
   text-align: center;
   padding: 20px 16px 6px;
   color: var(--muted);
-  font-size: var(--font-size);
+  font-size: 13px;
   letter-spacing: 0.06em;
 }
 
@@ -362,13 +361,13 @@ html[data-layout="auto"] .cover-hero__media img {
   display: block;
   margin-top: 4px;
   font-family: var(--font-brush);
-  font-size: var(--font-size);
+  font-size: 18px;
   color: var(--text);
 }
 
 /* 附录块：仅金样例演示 media-row */
 .chapter--appendix .chapter-header h2 {
-  font-size: var(--font-size);
+  font-size: 17px;
   font-weight: 400;
   color: var(--muted);
 }
@@ -429,7 +428,7 @@ html[data-layout="auto"] .cover-hero__media img {
     margin-top: 2px;
   }
 
-  /* 旧 trip 若仍含 media-row，手机端强制单列叠放 */
+  /* 旧 trip 若仍含 media-row，手机端强制单列叠放（8 宫格拼图除外） */
   .media-row--landscape-triple,
   .media-row--landscape-pair,
   .media-row--portrait-triple,
@@ -439,6 +438,69 @@ html[data-layout="auto"] .cover-hero__media img {
     display: flex;
     flex-direction: column;
     gap: 2px;
+  }
+
+  html[data-layout="mobile"] .media-row--mobile-landscape-grid-8,
+  html[data-layout="auto"] .media-row--mobile-landscape-grid-8 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+    gap: 3px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-height: min(92dvh, 720px);
+  }
+
+  html[data-layout="mobile"] .media-row--mobile-landscape-grid-8 .media-card__frame,
+  html[data-layout="auto"] .media-row--mobile-landscape-grid-8 .media-card__frame {
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  html[data-layout="mobile"] .media-row--mobile-landscape-grid-8 img.media-card__visual,
+  html[data-layout="auto"] .media-row--mobile-landscape-grid-8 img.media-card__visual {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  /* 四竖 2×2：自拍/连拍人物或风景（>30 张游记拼图） */
+  html[data-layout="mobile"] .media-row--mobile-portrait-grid-4,
+  html[data-layout="auto"] .media-row--mobile-portrait-grid-4 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 3px;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    max-height: min(88dvh, 680px);
+  }
+
+  html[data-layout="mobile"] .media-row--mobile-portrait-grid-4 .media-card__frame,
+  html[data-layout="auto"] .media-row--mobile-portrait-grid-4 .media-card__frame {
+    aspect-ratio: 3 / 4;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  html[data-layout="mobile"] .media-row--mobile-portrait-grid-4 img.media-card__visual,
+  html[data-layout="auto"] .media-row--mobile-portrait-grid-4 img.media-card__visual {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  html[data-layout="mobile"] .media-row--mobile-portrait-grid-4[data-layout-hint="person-grid-4"] img.media-card__visual,
+  html[data-layout="auto"] .media-row--mobile-portrait-grid-4[data-layout-hint="person-grid-4"] img.media-card__visual {
+    object-fit: contain;
   }
 
   .media-row [data-aspect-kind="landscape"] img.media-card__visual {
@@ -500,7 +562,7 @@ video.media-card__visual {
   bottom: 16px;
   right: 16px;
   padding: 6px 12px;
-  font-size: var(--font-size);
+  font-size: 13px;
   color: #fff;
   background: rgba(0, 0, 0, 0.55);
   border-radius: 4px;
@@ -521,13 +583,13 @@ video.media-card__visual {
 .media-card__overlay-text .media-card__title {
   margin: 0 0 4px;
   font-family: var(--font-brush);
-  font-size: var(--font-size);
+  font-size: 20px;
   font-weight: 400;
 }
 
 .media-card__overlay-text .media-card__caption {
   margin: 0;
-  font-size: var(--font-size);
+  font-size: 16px;
   opacity: 0.92;
 }
 
@@ -558,13 +620,13 @@ video.media-card__visual {
 .media-card__body .media-card__title {
   margin: 0 0 4px;
   font-family: var(--font-brush);
-  font-size: var(--font-size);
+  font-size: 20px;
   font-weight: 400;
 }
 
 .media-card__body .media-card__caption {
   margin: 0;
-  font-size: var(--font-size);
+  font-size: inherit;
   color: var(--muted);
 }
 
@@ -615,14 +677,14 @@ html[data-layout="mobile"] .media-card__overlay-text {
 }
 
 .voice-bar__duration {
-  font-size: var(--font-size);
+  font-size: 13px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 
 .voice-transcript {
   margin-top: 8px;
-  font-size: var(--font-size);
+  font-size: 15px;
 }
 
 .voice-transcript summary {
@@ -842,7 +904,7 @@ html[data-layout="web"] .media-card__frame[data-aspect-kind="panorama"] img {
 
 .media-row__caption {
   padding: 10px 16px 14px;
-  font-size: var(--font-size);
+  font-size: inherit;
   color: var(--muted);
   background: var(--bg-page);
 }
@@ -990,7 +1052,7 @@ html[data-layout="web"] .media-scroll__item[data-aspect-kind="panorama"] img.med
   text-align: center;
   padding: 28px 20px 20px;
   font-family: var(--font-serif);
-  font-size: var(--font-size);
+  font-size: inherit;
   max-width: 22em;
   margin: 0 auto;
 }
@@ -998,7 +1060,7 @@ html[data-layout="web"] .media-scroll__item[data-aspect-kind="panorama"] img.med
 .footer-cta {
   text-align: center;
   padding: 16px 16px calc(32px + var(--safe-bottom));
-  font-size: var(--font-size);
+  font-size: 12px;
   letter-spacing: 0.06em;
   color: var(--muted);
   border-top: 1px solid var(--border);
@@ -1065,7 +1127,7 @@ html[data-layout="web"] .media-scroll__item[data-aspect-kind="panorama"] img.med
 
 .cover-share__place {
   margin: 0 0 8px;
-  font-size: var(--font-size);
+  font-size: 15px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   opacity: 0.88;
@@ -1073,7 +1135,7 @@ html[data-layout="web"] .media-scroll__item[data-aspect-kind="panorama"] img.med
 
 .cover-share__dates {
   margin: 0 0 20px;
-  font-size: var(--font-size);
+  font-size: 17px;
   letter-spacing: 0.06em;
   opacity: 0.75;
 }
@@ -1081,7 +1143,7 @@ html[data-layout="web"] .media-scroll__item[data-aspect-kind="panorama"] img.med
 .cover-share__title {
   margin: 0 0 16px;
   font-family: var(--font-brush);
-  font-size: var(--font-size);
+  font-size: clamp(42px, 9vw, 60px);
   font-weight: 400;
   line-height: 1.12;
 }
@@ -1090,7 +1152,7 @@ html[data-layout="web"] .media-scroll__item[data-aspect-kind="panorama"] img.med
   margin: 0;
   max-width: 16em;
   font-family: var(--font-serif);
-  font-size: var(--font-size);
+  font-size: 64px;
   line-height: 1.45;
   opacity: 0.92;
 }
@@ -1108,4 +1170,32 @@ html[data-export="share"] .voice-transcript:not([open]) .voice-transcript__full 
   .voice-bar audio {
     display: none !important;
   }
+}
+
+/* 审核用大字号：渲染根节点加 data-typography="review" */
+html[data-typography="review"] body,
+html[data-typography="review"] .trip-meta,
+html[data-typography="review"] .hook-line,
+html[data-typography="review"] .chapter-header__index,
+html[data-typography="review"] .chapter-header h2,
+html[data-typography="review"] .chapter-lead,
+html[data-typography="review"] .divider-place,
+html[data-typography="review"] .divider-place strong,
+html[data-typography="review"] .media-card__overlay-text .media-card__title,
+html[data-typography="review"] .media-card__overlay-text .media-card__caption,
+html[data-typography="review"] .media-card__body .media-card__title,
+html[data-typography="review"] .media-card__body .media-card__caption,
+html[data-typography="review"] .media-card__play-badge,
+html[data-typography="review"] .voice-bar__duration,
+html[data-typography="review"] .voice-transcript,
+html[data-typography="review"] .media-row__caption,
+html[data-typography="review"] .epilogue,
+html[data-typography="review"] .footer-cta,
+html[data-typography="review"] .cover-hero__text h1,
+html[data-typography="review"] .cover-hero__text .subtitle,
+html[data-typography="review"] .cover-share__place,
+html[data-typography="review"] .cover-share__dates,
+html[data-typography="review"] .cover-share__title,
+html[data-typography="review"] .cover-share__hook {
+  font-size: 72px;
 }

@@ -18,19 +18,21 @@ if (-not (Test-Path $AlbumPath)) {
     Write-Error "album not found: $AlbumPath"
 }
 
-$args = @(
+if ($Export -and -not $ConfirmPrivacy) {
+    Write-Error "-Export requires -ConfirmPrivacy (sets privacy.confirmedAt, strips EXIF in zip)"
+}
+
+$fromAlbumArgs = @(
     "-m", "travelogue", "from-album", $AlbumPath,
     "--title", $Title,
     "--layout", "auto",
-    "--no-render",
-    "--publish:$(if ($Export) { 'true' } else { 'false' })"
+    "--no-render"
 )
-if ($TripId) { $args += @("--trip-id", $TripId) }
-if ($Place) { $args += @("--place", $Place) }
-if ($Force) { $args += "--force" }
-if ($Export -and $ConfirmPrivacy) { $args += "--confirm-privacy" }
+if ($TripId) { $fromAlbumArgs += @("--trip-id", $TripId) }
+if ($Place) { $fromAlbumArgs += @("--place", $Place) }
+if ($Force) { $fromAlbumArgs += "--force" }
 
-python @args
+python @fromAlbumArgs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 $tripRoot = if ($TripId) { "trips\$TripId" } else { Get-ChildItem trips -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 1 -ExpandProperty FullName }
@@ -42,8 +44,15 @@ python -m travelogue narrate $id
 python -m travelogue render $tripJson --dual
 python -m travelogue validate $tripJson
 
+if ($Export) {
+    python -m travelogue lock $id copy
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    python -m travelogue export $id --confirm-privacy
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+
 Write-Host ""
 Write-Host "OK workshop -> $tripRoot"
 Write-Host "  index.html · index-mobile.html"
-if ($Export) { Write-Host "  trip-$id.zip (if publish succeeded)" }
+if ($Export) { Write-Host "  trip-$id.zip" }
 Write-Host "  python -m http.server 8766  (cd $tripRoot)"

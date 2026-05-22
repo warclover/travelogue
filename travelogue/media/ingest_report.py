@@ -39,6 +39,12 @@ def format_ingest_report(result, trip: dict | None = None) -> str:
             f"filename={stats.get('filename_dates', 0)} "
             f"mtime={stats.get('mtime_dates', 0)}"
         )
+    for w in stats.get("date_warnings") or []:
+        lines.append(f"  ⚠ {w}")
+    summary = stats.get("mediaClassSummary")
+    if isinstance(summary, dict) and summary:
+        parts = [f"{k}={v}" for k, v in sorted(summary.items()) if v]
+        lines.append(f"  素材类型: {', '.join(parts)}")
     if stats.get("exif_rotations"):
         lines.append(f"  EXIF 旋转: {stats['exif_rotations']}")
 

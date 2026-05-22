@@ -35,8 +35,27 @@ class CurateResult:
     warnings: list[str]
 
 
-def _date_span_warning(assets: list[dict], *, max_span_days: int = 365) -> str | None:
-    """Warn when takenAt spans multiple years (mixed archive + trip photos)."""
+def _date_span_warning(
+    assets: list[dict],
+    segments: list | None = None,
+    *,
+    max_span_days: int = 365,
+) -> str | None:
+    """Warn when multiple time segments or a very wide date span is detected."""
+    from travelogue.curation.time_segments import TimeSegment
+
+    if segments and len(segments) >= 2:
+        labels = []
+        for s in segments:
+            if isinstance(s, TimeSegment):
+                labels.append(s.label)
+            else:
+                labels.append(str(s.get("label", s.get("id", ""))))
+        preview = "、".join(labels[:4])
+        if len(segments) > 4:
+            preview += f" 等{len(segments)}段"
+        return f"检测到 {len(segments)} 个时间段（{preview}），已按段分章；可在 G1 合并或调整"
+
     dates = [d for a in assets if (d := _parse_asset_date(a))]
     if len(dates) < 2:
         return None
@@ -45,7 +64,7 @@ def _date_span_warning(assets: list[dict], *, max_span_days: int = 365) -> str |
     if span > max_span_days:
         return (
             f"素材拍摄日跨度 {span} 天（{lo.isoformat()} – {hi.isoformat()}），"
-            "分章可能混杂多段旅行，建议核对相册或过滤旧图"
+            "已按日期分章；跨段合册可在 G1 合并时间段"
         )
     return None
 
@@ -62,6 +81,8 @@ def _parse_asset_date(asset: dict) -> date | None:
 
 def _cover_score(asset: dict, export_layout: str) -> float:
     """Mobile: prefer tall/portrait. Web: prefer landscape / panorama for 16:9 displays."""
+    from travelogue.curation.media_classify import cover_class_weight
+
     kind = aspect_kind_for_asset(asset)
     if kind == "square":
         return 0.0
@@ -80,14 +101,14 @@ def _cover_score(asset: dict, export_layout: str) -> float:
         elif kind == "landscape":
             target = 16 / 9
             score *= 1.0 + 0.35 / (1.0 + abs(ratio - target))
-        return score
+        return score * cover_class_weight(asset.get("mediaClass"))
 
     score = h / w
     if kind == "tall":
         score *= 1.1
     if kind == "panorama":
         score *= 0.85
-    return score
+    return score * cover_class_weight(asset.get("mediaClass"))
 
 
 def layout_eligible_assets(trip: dict) -> list[dict]:
@@ -383,15 +404,35 @@ def _bucket_day_span(bucket: list[str], assets_by_id: dict[str, dict]) -> list[s
     return [d.isoformat() for d in dates]
 
 
-def _chapter_titles(buckets: list[list[str]], assets: list[dict], meta: dict) -> list[str]:
+def _chapter_titles(
+    buckets: list[list[str]],
+    assets: list[dict],
+    meta: dict,
+    *,
+    bucket_segment_ids: list[str] | None = None,
+    segment_labels: dict[str, str] | None = None,
+) -> list[str]:
     place = (meta.get("places") or ["旅途"])[0]
     assets_by_id = {a["id"]: a for a in assets}
     titles: list[str] = []
     day_seen: dict[str, int] = {}
+    seg_day_seen: dict[str, int] = {}
+    bucket_segment_ids = bucket_segment_ids or []
+    segment_labels = segment_labels or {}
+
     for i, bucket in enumerate(buckets):
         if not bucket:
             titles.append(f"片段{i + 1}")
             continue
+
+        seg_id = bucket_segment_ids[i] if i < len(bucket_segment_ids) else ""
+        if seg_id and segment_labels.get(seg_id):
+            n = seg_day_seen.get(seg_id, 0)
+            seg_day_seen[seg_id] = n + 1
+            if n == 0:
+                titles.append(segment_labels[seg_id][:12])
+                continue
+
         span = _bucket_day_span(bucket, assets_by_id)
         if len(span) > 1:
             d0 = date.fromisoformat(span[0])
@@ -399,7 +440,7 @@ def _chapter_titles(buckets: list[list[str]], assets: list[dict], meta: dict) ->
             base = f"{d0.month}月{d0.day}–{d1.month}月{d1.day}日"
             titles.append(base[:12])
             continue
-        d = _parse_asset_date(next((a for a in assets if a["id"] == bucket[0]), {}))
+        d = _parse_asset_date(assets_by_id.get(bucket[0], {}))
         if d:
             key = d.isoformat()
             n = day_seen.get(key, 0)
@@ -418,6 +459,39 @@ def _chapter_titles(buckets: list[list[str]], assets: list[dict], meta: dict) ->
         else:
             titles.append(f"{place}·{i}"[:12])
     return titles
+
+
+def _group_assets_by_segments(
+    layout_assets: list[dict],
+    cover_id: str,
+    meta: dict,
+) -> tuple[list[list[str]], list[str], list]:
+    """Segment cluster → per-segment day buckets → flat chapter bucket list."""
+    from travelogue.curation.time_segments import TimeSegment, cluster_time_segments
+
+    place = (meta.get("places") or ["旅途"])[0]
+    by_id = {a["id"]: a for a in layout_assets}
+    segments = cluster_time_segments(layout_assets, place=place)
+
+    all_buckets: list[list[str]] = []
+    bucket_segment_ids: list[str] = []
+
+    for seg in segments:
+        seg_assets = [by_id[aid] for aid in seg.asset_ids if aid in by_id]
+        if not seg_assets:
+            continue
+        local_cover = cover_id if cover_id in {a["id"] for a in seg_assets} else ""
+        seg_buckets = _group_assets_by_day(seg_assets, local_cover)
+        for b in seg_buckets:
+            all_buckets.append(b)
+            bucket_segment_ids.append(seg.id)
+
+    if not all_buckets:
+        all_buckets = _group_assets_by_day(layout_assets, cover_id)
+        bucket_segment_ids = [""] * len(all_buckets)
+        segments = []
+
+    return all_buckets, bucket_segment_ids, segments
 
 
 def run_curate(
@@ -464,9 +538,22 @@ def run_curate(
         if web_cover:
             skip_screen_ids.add(web_cover)
 
-    buckets = _group_assets_by_day(layout_assets, cover_id)
+    meta = trip.get("meta", {})
+    buckets, bucket_segment_ids, segments = _group_assets_by_segments(
+        layout_assets, cover_id, meta
+    )
+    places = meta.get("places") or []
+    segment_labels = {s.id: s.label for s in segments}
+    curation_segments = [s.to_dict(places=places) for s in segments]
+
     aspects = {a["id"]: aspect_kind_for_asset(a) for a in layout_assets}
-    titles = _chapter_titles(buckets, layout_assets, trip.get("meta", {}))
+    titles = _chapter_titles(
+        buckets,
+        layout_assets,
+        meta,
+        bucket_segment_ids=bucket_segment_ids,
+        segment_labels=segment_labels,
+    )
     summary = summarize_orientations(layout_assets, export_layout=layout)  # type: ignore[arg-type]
     summary_dict = summary.to_dict()
     chapters = build_chapters_from_buckets(
@@ -478,12 +565,18 @@ def run_curate(
         assets=layout_assets,
         orientation_summary=summary_dict,
         skip_screen_asset_ids=skip_screen_ids,
+        trip_photo_total=len(layout_assets),
     )
     assets_by_id = {a["id"]: a for a in layout_assets}
-    for ch, bucket in zip(chapters, [b for b in buckets if b]):
+    for ch, bucket, seg_id in zip(
+        chapters, [b for b in buckets if b], bucket_segment_ids
+    ):
+        ch_cur = ch.setdefault("curation", {})
         span = _bucket_day_span(bucket, assets_by_id)
         if span:
-            ch.setdefault("curation", {})["daySpan"] = span
+            ch_cur["daySpan"] = span
+        if seg_id:
+            ch_cur["segmentId"] = seg_id
     excluded_ids = set(curation.get("excludedLowResAssetIds") or [])
     if excluded_ids:
         _sanitize_chapters_after_exclusion(chapters, excluded_ids)
@@ -495,8 +588,20 @@ def run_curate(
     curation = trip.setdefault("curation", {})
     curation["orientationSummary"] = summary_dict
     curation["layoutPlanVersion"] = LAYOUT_PLAN_VERSION
+    if curation_segments:
+        curation["segments"] = curation_segments
+        if len(curation_segments) == 1:
+            curation["primarySegmentId"] = curation_segments[0]["id"]
+        else:
+            best = max(curation_segments, key=lambda s: len(s.get("assetIds") or []))
+            curation["primarySegmentId"] = best["id"]
+    from travelogue.curation.media_classify import summarize_media_classes
+
+    mc = summarize_media_classes(trip.get("assets") or [])
+    if mc:
+        curation["mediaClassSummary"] = mc
     warnings: list[str] = []
-    span_warn = _date_span_warning(layout_assets)
+    span_warn = _date_span_warning(layout_assets, segments)
     if span_warn:
         warnings.append(span_warn)
     if res_warn:

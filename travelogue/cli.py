@@ -71,6 +71,11 @@ def _print_demo_result(
             f"filename={s.get('filename_dates', 0)} "
             f"mtime={s.get('mtime_dates', 0)}"
         )
+    for w in s.get("date_warnings") or []:
+        typer.echo(f"  ⚠ {w}")
+    if s.get("mediaClassSummary"):
+        parts = [f"{k}={v}" for k, v in sorted(s["mediaClassSummary"].items()) if v]
+        typer.echo(f"  media: {', '.join(parts)}")
     typer.echo(f"  trip.json: {result.trip_json}")
     if published and result.zip_path:
         typer.echo(f"  zip: {result.zip_path}")

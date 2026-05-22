@@ -12,7 +12,6 @@ from travelogue.config import IngestConfig, get_config
 from travelogue.media.image_ops import (
     classify_aspect,
     export_webp_variants,
-    filter_trip_dates,
     load_image_normalized,
     min_dimension_ok,
     save_jpeg_without_exif,
@@ -300,6 +299,11 @@ def ingest_into_trip(
             focal=focal,
         )
 
+        from travelogue.curation.media_classify import (
+            classify_media_class,
+            date_confidence_for_source,
+        )
+
         entry: dict = {
             "id": asset_id,
             "type": "image",
@@ -312,10 +316,18 @@ def ingest_into_trip(
             "height": out_h,
             "aspectKind": aspect_kind,
             "takenAt": loaded.taken_at.replace(tzinfo=None).isoformat() + "Z",
+            "dateSource": loaded.date_source,
+            "dateConfidence": date_confidence_for_source(loaded.date_source),
             "ingestBatchId": batch,
             "dedupeGroupId": f"dhash:{dhash}",
             "focalPoint": {"x": focal[0], "y": focal[1]},
         }
+        entry["mediaClass"] = classify_media_class(
+            path=photo,
+            img=img,
+            date_source=loaded.date_source,
+            asset=entry,
+        )
         if tags:
             entry["tags"] = tags
             entry["tagsSource"] = "heuristic"
@@ -343,13 +355,17 @@ def ingest_into_trip(
             f"need at least 4 assets in trip after ingest (have {len(assets)})",
         )
 
+    from travelogue.curation.media_classify import (
+        refine_archive_media_class,
+        summarize_media_classes,
+    )
+    from travelogue.media.trip_dates import apply_meta_dates_from_assets
+
+    refine_archive_media_class(assets)
     trip["assets"] = assets
-    meta = trip.setdefault("meta", {})
-    if dates:
-        dates = filter_trip_dates(dates, sources=date_sources)
-        dates.sort()
-        meta["dateStart"] = dates[0].isoformat()
-        meta["dateEnd"] = dates[-1].isoformat()
+    for w in apply_meta_dates_from_assets(trip):
+        ingest_stats.setdefault("date_warnings", []).append(w)
+    ingest_stats["mediaClassSummary"] = summarize_media_classes(assets)
 
     pipe["status"] = "ingest_ready"
     pipe["lastBatchId"] = batch

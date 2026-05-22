@@ -1,4 +1,4 @@
-<figure class="media-row{{#if rowClass}} {{rowClass}}{{/if}}" data-block="media-row"{{#if rowLayout}} data-row-layout="{{rowLayout}}"{{/if}}>
+<figure class="media-row{{#if rowClass}} {{rowClass}}{{/if}}" data-block="media-row"{{#if rowLayout}} data-row-layout="{{rowLayout}}"{{/if}}{{#if layoutHint}} data-layout-hint="{{layoutHint}}"{{/if}}>
   {{#each cells}}
   <div class="media-card__frame" data-aspect-kind="{{aspectKind}}">
     <img class="media-card__visual"

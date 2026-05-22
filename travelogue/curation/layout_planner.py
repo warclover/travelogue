@@ -7,8 +7,18 @@ See docs/LAYOUT-PLANNER.md for product rules (mobile 9:16 vs web 16:9).
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from datetime import datetime
 from typing import Literal
 
+from travelogue.curation.asset_subject import any_asset_has_person
+from travelogue.curation.mobile_layout_state import (
+    MOBILE_GRID4_ROW_LAYOUT,
+    MOBILE_GRID8_ROW_LAYOUT,
+    MOBILE_PERSON_GRID4_HINT,
+    MOBILE_PUZZLE_MIN_PHOTOS,
+    MobilePuzzlePlannerState,
+    mobile_puzzle_enabled,
+)
 from travelogue.media.image_ops import AspectKind, classify_aspect
 
 ExportLayout = Literal["auto", "mobile", "web"]
@@ -19,6 +29,8 @@ RowLayout = Literal[
     "portrait-pair",
     "square-triple",
     "square-pair",
+    "mobile-landscape-grid-8",
+    "mobile-portrait-grid-4",
     "default",
 ]
 
@@ -99,7 +111,13 @@ def _card(asset_id: str, *, slot: str | None = None) -> dict:
     }
 
 
-def _row(asset_ids: list[str], row_layout: RowLayout, *, caption: str = "") -> dict:
+def _row(
+    asset_ids: list[str],
+    row_layout: RowLayout,
+    *,
+    caption: str = "",
+    layout_hint: str | None = None,
+) -> dict:
     item: dict = {
         "type": "media-row",
         "assetIds": asset_ids,
@@ -107,6 +125,18 @@ def _row(asset_ids: list[str], row_layout: RowLayout, *, caption: str = "") -> d
     }
     if caption:
         item["caption"] = caption[:60]
+    if layout_hint:
+        item["layoutHint"] = layout_hint
+    return item
+
+
+def _mobile_portrait_grid4_row(
+    portrait_ids: list[str],
+    assets_map: dict[str, dict],
+) -> dict:
+    item = _row(portrait_ids, MOBILE_GRID4_ROW_LAYOUT)  # type: ignore[arg-type]
+    if any_asset_has_person(portrait_ids, assets_map):
+        item["layoutHint"] = MOBILE_PERSON_GRID4_HINT
     return item
 
 
@@ -185,16 +215,143 @@ def _mobile_card(aid: str, k: AspectKind) -> dict:
     return _card(aid)
 
 
+def _assets_map_from_list(
+    assets: list[dict] | dict[str, dict] | None,
+) -> dict[str, dict]:
+    if not assets:
+        return {}
+    if isinstance(assets, dict):
+        return assets
+    return {str(a.get("id", "")): a for a in assets if a.get("id")}
+
+
+def _parse_taken_ts(asset: dict) -> float | None:
+    raw = asset.get("takenAt")
+    if not raw:
+        return None
+    try:
+        text = str(raw).replace("Z", "+00:00")
+        return datetime.fromisoformat(text).timestamp()
+    except (TypeError, ValueError):
+        return None
+
+
+def _time_near_chain(
+    asset_ids: list[str],
+    assets: dict[str, dict],
+    *,
+    burst_seconds: float,
+) -> bool:
+    stamps = [_parse_taken_ts(assets.get(aid, {})) for aid in asset_ids]
+    valid = [t for t in stamps if t is not None]
+    if len(valid) < 2:
+        return True
+    return max(valid) - min(valid) <= burst_seconds
+
+
+def _time_near_sequential(
+    asset_ids: list[str],
+    assets: dict[str, dict],
+    *,
+    burst_seconds: float,
+) -> bool:
+    """True when each adjacent pair in order spans ≤ burst_seconds (or EXIF missing)."""
+    stamps = [_parse_taken_ts(assets.get(aid, {})) for aid in asset_ids]
+    known = [(i, t) for i, t in enumerate(stamps) if t is not None]
+    if len(known) < 2:
+        return True
+    for (_, t0), (_, t1) in zip(known, known[1:]):
+        if abs(t1 - t0) > burst_seconds:
+            return False
+    return True
+
+
+def _plan_chapter_items_mobile(
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    *,
+    assets_map: dict[str, dict],
+    trip_photo_total: int,
+    burst_seconds: float = 3.0,
+    puzzle_state: MobilePuzzlePlannerState | None = None,
+) -> list[dict]:
+    """
+    Mobile: default single cards; when trip > 30 photos, emit landscape 8-grid
+    or portrait 4-grid (2×2) on sequential burst runs (quota per trip).
+    """
+    if not mobile_puzzle_enabled(trip_photo_total):
+        return [_mobile_card(aid, _kind(aid, aspects)) for aid in asset_ids]
+
+    state = puzzle_state or MobilePuzzlePlannerState.from_trip_total(trip_photo_total)
+    items: list[dict] = []
+    ids = list(asset_ids)
+    i = 0
+    while i < len(ids):
+        aid = ids[i]
+        k = _kind(aid, aspects)
+        if k == "landscape":
+            run: list[str] = []
+            while i < len(ids) and _kind(ids[i], aspects) == "landscape":
+                run.append(ids[i])
+                i += 1
+            j = 0
+            while j < len(run):
+                window = run[j : j + 8]
+                if (
+                    len(window) == 8
+                    and state.can_use_grid8()
+                    and _time_near_sequential(
+                        window, assets_map, burst_seconds=burst_seconds
+                    )
+                ):
+                    items.append(_row(window, MOBILE_GRID8_ROW_LAYOUT))  # type: ignore[arg-type]
+                    state.note_grid8()
+                    j += 8
+                else:
+                    items.append(_mobile_card(run[j], "landscape"))
+                    j += 1
+            continue
+        if k == "portrait":
+            run = []
+            while i < len(ids) and _kind(ids[i], aspects) == "portrait":
+                run.append(ids[i])
+                i += 1
+            j = 0
+            while j < len(run):
+                window = run[j : j + 4]
+                if (
+                    len(window) == 4
+                    and state.can_use_grid4()
+                    and _time_near_sequential(
+                        window, assets_map, burst_seconds=burst_seconds
+                    )
+                ):
+                    items.append(_mobile_portrait_grid4_row(window, assets_map))
+                    state.note_grid4()
+                    j += 4
+                else:
+                    items.append(_mobile_card(run[j], "portrait"))
+                    j += 1
+            continue
+        items.append(_mobile_card(aid, k))
+        i += 1
+    return items
+
+
 def plan_chapter_items(
     asset_ids: list[str],
     aspects: dict[str, AspectKind],
     *,
     export_layout: ExportLayout = "auto",
+    assets: list[dict] | dict[str, dict] | None = None,
+    trip_photo_total: int | None = None,
+    burst_seconds: float = 3.0,
+    puzzle_state: MobilePuzzlePlannerState | None = None,
 ) -> list[dict]:
     """
     Map asset order → media-card / media-row / media-scroll.
 
-    Mobile: single-column media-card only (no row/scroll collage).
+    Mobile: mostly single-column cards; trip > 30 may insert 8-landscape or 4-portrait 2×2 rows.
     Web: row packing for landscape/portrait/square groups.
 
     Special kinds (never forced into wrong row on web):
@@ -205,7 +362,15 @@ def plan_chapter_items(
     """
     profile = _effective_profile(export_layout)
     if profile == "mobile":
-        return [_mobile_card(aid, _kind(aid, aspects)) for aid in asset_ids]
+        total = trip_photo_total if trip_photo_total is not None else len(asset_ids)
+        return _plan_chapter_items_mobile(
+            asset_ids,
+            aspects,
+            assets_map=_assets_map_from_list(assets),
+            trip_photo_total=total,
+            burst_seconds=burst_seconds,
+            puzzle_state=puzzle_state,
+        )
 
     items: list[dict] = []
     ids = list(asset_ids)
@@ -329,7 +494,18 @@ def build_chapters_from_plan(
     layout_engine: str = "legacy",
     assets: list[dict] | None = None,
 ) -> tuple[list[dict], OrientationSummary]:
-    items = plan_chapter_items(asset_ids, aspects, export_layout=export_layout)
+    assets_map = _assets_map_from_list(assets)
+    puzzle_state: MobilePuzzlePlannerState | None = None
+    if mobile_puzzle_enabled(len(asset_ids)):
+        puzzle_state = MobilePuzzlePlannerState.from_trip_total(len(asset_ids))
+    items = plan_chapter_items(
+        asset_ids,
+        aspects,
+        export_layout=export_layout,
+        assets=assets_map,
+        trip_photo_total=len(asset_ids),
+        puzzle_state=puzzle_state,
+    )
     buckets = distribute_items_to_chapters(items)
     total = len(buckets)
     default_titles = ["抵达", "途中", "片段", "尾声"]
@@ -397,6 +573,7 @@ def build_chapters_from_buckets(
     assets: list[dict] | None = None,
     orientation_summary: dict | None = None,
     skip_screen_asset_ids: set[str] | None = None,
+    trip_photo_total: int | None = None,
 ) -> list[dict]:
     """Plan items per chapter bucket (Agent 1 day groups → Agent 1.5 layout)."""
     from travelogue.curation.screen_planner import (
@@ -409,8 +586,23 @@ def build_chapters_from_buckets(
     chapters: list[dict] = []
     non_empty = [b for b in buckets if b]
     total = len(non_empty)
+    if trip_photo_total is None and assets:
+        trip_photo_total = len(assets)
+    elif trip_photo_total is None:
+        trip_photo_total = sum(len(b) for b in non_empty)
+    assets_map = _assets_map_from_list(assets)
+    puzzle_state: MobilePuzzlePlannerState | None = None
+    if trip_photo_total and mobile_puzzle_enabled(trip_photo_total):
+        puzzle_state = MobilePuzzlePlannerState.from_trip_total(trip_photo_total)
     for idx, asset_ids in enumerate(non_empty, start=1):
-        items = plan_chapter_items(asset_ids, aspects, export_layout=export_layout)
+        items = plan_chapter_items(
+            asset_ids,
+            aspects,
+            export_layout=export_layout,
+            assets=assets_map,
+            trip_photo_total=trip_photo_total,
+            puzzle_state=puzzle_state,
+        )
         pat = pattern_for_chapter_index(idx, total, items)
         ch_items = list(items)
         if pat == "gallery":
@@ -431,7 +623,10 @@ def build_chapters_from_buckets(
     ):
         from travelogue.config import default_mixed_proximity_seconds
 
-        layout_total = sum(len(b) for b in non_empty)
+        if trip_photo_total is None and assets:
+            trip_photo_total = len(assets)
+        elif trip_photo_total is None:
+            trip_photo_total = sum(len(b) for b in non_empty)
         chapters = attach_screens_to_chapters(
             chapters,
             aspects,
@@ -440,7 +635,7 @@ def build_chapters_from_buckets(
             day_buckets=non_empty,
             mixed_proximity_seconds=default_mixed_proximity_seconds(),
             skip_screen_asset_ids=skip_screen_asset_ids,
-            trip_photo_total=layout_total,
+            trip_photo_total=trip_photo_total,
         )
     return chapters
 

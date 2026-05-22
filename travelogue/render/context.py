@@ -307,9 +307,12 @@ def build_media_row(
         if row_layout in ("landscape-triple", "square-triple", "portrait-triple")
         else "row_half"
     )
+    if row_layout in ("mobile-landscape-grid-8", "mobile-portrait-grid-4"):
+        row_slot = "row_half"
     sizes = pick_image_sizes(export_layout, row_slot)
     for cell in cells:
         cell["sizes"] = sizes
+    layout_hint = (item.get("layoutHint") or "").strip() or None
     return {
         "isMediaCard": False,
         "isMediaRow": True,
@@ -319,6 +322,8 @@ def build_media_row(
         "hasCaption": bool(caption),
         "rowLayout": row_layout or None,
         "rowClass": row_class,
+        "layoutHint": layout_hint,
+        "hasLayoutHint": bool(layout_hint),
         "editable": is_draft,
     }
 

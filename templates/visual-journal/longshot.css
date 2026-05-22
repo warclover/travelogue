@@ -18,7 +18,7 @@
 .longshot-toolbar__btn {
   pointer-events: auto;
   padding: 10px 16px;
-  font-size: 72px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.02em;
   border: none;
@@ -42,7 +42,7 @@
   pointer-events: none;
   margin: 0;
   padding: 4px 10px;
-  font-size: 72px;
+  font-size: 10px;
   line-height: 1.4;
   color: #6a6560;
   background: rgba(245, 242, 235, 0.92);
@@ -80,7 +80,7 @@
 
 .share-toolbar__item {
   padding: 8px 12px;
-  font-size: 72px;
+  font-size: 13px;
   font-weight: 500;
   text-align: left;
   border: none;
@@ -120,7 +120,7 @@
   transform: translateX(-50%);
   margin: 0;
   padding: 8px 14px;
-  font-size: 72px;
+  font-size: 12px;
   line-height: 1.4;
   color: #f0f7f4;
   background: rgba(28, 27, 26, 0.88);
@@ -234,13 +234,13 @@ body.longshot-capturing .cover-hero__text {
 }
 
 body.longshot-capturing .trip-meta {
-  font-size: 72px;
+  font-size: 13px;
   letter-spacing: 0.1em;
   padding: 14px 16px 8px;
 }
 
 body.longshot-capturing .hook-line {
-  font-size: 72px;
+  font-size: 16px;
   line-height: 1.55;
   max-width: 22em;
   margin-bottom: 16px;
@@ -251,17 +251,17 @@ body.longshot-capturing .chapter-header {
 }
 
 body.longshot-capturing .chapter-header h2 {
-  font-size: 72px;
+  font-size: 20px;
 }
 
 body.longshot-capturing .chapter-lead {
-  font-size: 72px;
+  font-size: 15px;
   line-height: 1.5;
   padding-bottom: 8px;
 }
 
 body.longshot-capturing .epilogue {
-  font-size: 72px;
+  font-size: 15px;
   line-height: 1.55;
   padding: 16px 20px 8px;
   text-align: center;

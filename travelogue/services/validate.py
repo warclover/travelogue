@@ -94,6 +94,12 @@ def validate_manifest(
     if meta.get("hook") and char_len(meta["hook"]) > limits.get("hookMaxChars", 56):
         errors.append("E_VALIDATE_LIMIT meta.hook too long")
 
+    max_photos = int(limits.get("maxPhotosPerTrip", 250))
+    if len(assets) > max_photos:
+        errors.append(
+            f"E_INGEST_LIMIT_PHOTOS asset count {len(assets)} exceeds maxPhotosPerTrip {max_photos}"
+        )
+
     cover = trip.get("coverAssetId")
     if cover and cover not in assets and status not in ("draft_ingest",):
         errors.append(f"E_VALIDATE_REF coverAssetId missing: {cover}")
