@@ -13,6 +13,8 @@ try:
 except ImportError:  # pragma: no cover
     yaml = None  # type: ignore
 
+from travelogue.llm.presets import PROVIDER_PRESETS
+
 
 @dataclass
 class IngestConfig:
@@ -51,6 +53,15 @@ class NarrativeConfig:
 
 
 @dataclass
+class LlmConfig:
+    provider: str = "stub"  # stub | deepseek | dashscope
+    model: str = "deepseek-chat"
+    api_key_env: str = "DEEPSEEK_API_KEY"
+    base_url: str | None = None
+    timeout_sec: int = 120
+
+
+@dataclass
 class LayoutConfig:
     """Web layout engine default when exportLayout is web (see docs/web端模板升级计划.md)."""
     web_layout_engine: str = "screens"  # legacy | screens
@@ -66,6 +77,7 @@ class AppConfig:
     vision: VisionConfig = field(default_factory=VisionConfig)
     export: ExportConfig = field(default_factory=ExportConfig)
     narrative: NarrativeConfig = field(default_factory=NarrativeConfig)
+    llm: LlmConfig = field(default_factory=LlmConfig)
 
 
 def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
@@ -115,9 +127,16 @@ def load_config(path: Path | None = None) -> AppConfig:
     export_raw = data.get("export") if isinstance(data.get("export"), dict) else {}
     vision_raw = data.get("vision") if isinstance(data.get("vision"), dict) else {}
     narrative_raw = data.get("narrative") if isinstance(data.get("narrative"), dict) else {}
+    llm_raw = data.get("llm") if isinstance(data.get("llm"), dict) else {}
     vision_enabled = bool(vision_raw.get("enabled", False))
     banned_raw = narrative_raw.get("banned_phrases") or []
     banned = tuple(str(p) for p in banned_raw if p) if isinstance(banned_raw, list) else ()
+    llm_provider = str(llm_raw.get("provider", "stub")).strip().lower()
+    if llm_provider not in ("stub", "deepseek", "dashscope"):
+        llm_provider = "stub"
+    llm_preset = PROVIDER_PRESETS.get(llm_provider, {})
+    llm_base = llm_raw.get("base_url")
+    llm_base_url = str(llm_base).strip() if llm_base else None
     return AppConfig(
         trips_dir=trips_dir,
         ingest=_ingest_from_dict(ingest_raw),
@@ -132,6 +151,13 @@ def load_config(path: Path | None = None) -> AppConfig:
             tone_default=str(narrative_raw.get("tone_default", "relaxed")),
             max_auto_fix_retries=int(narrative_raw.get("max_auto_fix_retries", 2)),
             banned_phrases=banned,
+        ),
+        llm=LlmConfig(
+            provider=llm_provider,
+            model=str(llm_raw.get("model") or llm_preset.get("default_model", "deepseek-chat")),
+            api_key_env=str(llm_raw.get("api_key_env") or llm_preset.get("api_key_env", "DEEPSEEK_API_KEY")),
+            base_url=llm_base_url,
+            timeout_sec=int(llm_raw.get("timeout_sec", 120)),
         ),
     )
 

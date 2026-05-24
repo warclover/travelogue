@@ -24,7 +24,7 @@ from travelogue.orchestrator.run import RunResult, run_trip
 from travelogue.render.engine import RenderError, render_trip, render_trip_surfaces
 from travelogue.render.preview import render_preview_jpg
 from travelogue.services.layout import LayoutError, apply_layout_to_trip
-from travelogue.services.narrate import run_narrate
+from travelogue.services.narrate import NarrateError, run_narrate
 from travelogue.services.pipeline_state import PipelineError
 from travelogue.services.trip import TripNotFoundError, TripService
 from travelogue.services.trip_factory import create_trip
@@ -35,7 +35,9 @@ trip_app = typer.Typer(help="Create and list trip workspaces")
 demo_app = typer.Typer(help="Quick demos (real photos → HTML preview)")
 app.add_typer(trip_app, name="trip")
 app.add_typer(demo_app, name="demo")
+llm_app = typer.Typer(help="LLM provider utilities")
 media_app = typer.Typer(help="Re-export pixels from source/")
+app.add_typer(llm_app, name="llm")
 app.add_typer(media_app, name="media")
 
 
@@ -472,10 +474,17 @@ def cmd_lock(
 def cmd_narrate(
     path: str = typer.Argument(..., help="trip.json path or tripId"),
     tone: Optional[str] = typer.Option(None, "--tone"),
+    provider: Optional[str] = typer.Option(
+        None,
+        "--provider",
+        help="stub | deepseek | dashscope (default: config llm.provider or stub)",
+    ),
     dry_run: bool = typer.Option(False, "--dry-run"),
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
+    config: Optional[Path] = typer.Option(None, "--config"),
 ) -> None:
-    """Agent 2 stub: rule-based hook and chapter leads."""
+    """Agent 2: hook, leads, captions via LLM or rule stub."""
+    _load_cfg(config)
     trip_path = _resolve(path, trips_dir=trips_dir)
     trip = TripService().load(trip_path)
     try:
@@ -486,12 +495,39 @@ def cmd_narrate(
     except PipelineError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
-    result = run_narrate(trip, tone=tone, dry_run=dry_run)
+    try:
+        result = run_narrate(trip, tone=tone, dry_run=dry_run, provider=provider)
+    except NarrateError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from exc
     if dry_run:
         typer.echo(f"dry-run would update: {', '.join(result.fields_updated) or '(none)'}")
         return
     TripService().save(trip, trip_path)
-    typer.echo(f"OK narrate · updated {', '.join(result.fields_updated) or '(none)'}")
+    prov = provider or get_config().llm.provider or "stub"
+    typer.echo(f"OK narrate ({prov}) · updated {', '.join(result.fields_updated) or '(none)'}")
+
+
+@llm_app.command("ping")
+def cmd_llm_ping(
+    provider: Optional[str] = typer.Option(
+        None,
+        "--provider",
+        help="deepseek | dashscope (default: config llm.provider)",
+    ),
+    config: Optional[Path] = typer.Option(None, "--config"),
+) -> None:
+    """Verify LLM API key and connectivity."""
+    from travelogue.llm.client import llm_ping
+    from travelogue.llm.errors import LlmError
+
+    _load_cfg(config)
+    try:
+        msg = llm_ping(provider=provider)
+    except LlmError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from exc
+    typer.echo(f"OK llm ping · {msg}")
 
 
 @app.command("status")

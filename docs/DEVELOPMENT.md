@@ -130,7 +130,8 @@ mkdir trips\demo-kyoto\assets
 | `travelogue ingest <tripId> [--batch]` | 0 | EXIF + WebP |
 | `travelogue curate <tripId>` | 1 | 分章提案 |
 | `travelogue lock structure <tripId>` | — | G1 确认 |
-| `travelogue narrate <tripId> [--tone relaxed]` | 2 | 生成文案 |
+| `travelogue narrate <tripId> [--tone relaxed] [--provider stub\|deepseek\|dashscope]` | 2 | 生成文案（LLM 或 stub） |
+| `travelogue llm ping [--provider deepseek]` | — | 验证 API 连通 |
 | `travelogue lock copy <tripId>` | — | G2 确认 |
 | `travelogue render <tripId>` | 3 | 输出 index.html |
 | `travelogue export <tripId> [--confirm-privacy]` | 3 | zip + preview.jpg |

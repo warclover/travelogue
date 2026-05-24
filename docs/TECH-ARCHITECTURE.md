@@ -88,7 +88,7 @@ flowchart TB
 
 ## 4. 仓库目录（当前实现）
 
-> 早期设计中的 `agents/`、`runner.py` 已落地为 `curation/`、`media/`、`services/narrate.py`、`render/`。Agent 2 为规则 stub（无 LLM）；ffmpeg 尚未接入 Python。
+> 早期设计中的 `agents/`、`runner.py` 已落地为 `curation/`、`media/`、`services/narrate.py`、`llm/`、`render/`。Agent 2 支持 **DeepSeek / 百炼 DashScope** 或 **rule-stub** fallback；ffmpeg 尚未接入 Python。
 
 ```
 travelogue/
@@ -100,7 +100,8 @@ travelogue/
 │   ├── config.py
 │   ├── curation/               # curate, bucket_planning, chapter_titles, screen_planner, …
 │   ├── media/                  # Agent 0（ingest, image_ops, …）
-│   ├── services/               # validate, narrate(stub), layout, manifest_limits
+│   ├── services/               # validate, narrate, llm_narrate, layout, manifest_limits
+│   ├── llm/                    # OpenAI-compatible client (deepseek, dashscope)
 │   ├── render/                 # Agent 3（pybars3 → journal.hbs）
 │   ├── export/
 │   ├── orchestrator/

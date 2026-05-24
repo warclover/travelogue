@@ -203,8 +203,27 @@ def run_narrate(
     *,
     tone: str | None = None,
     dry_run: bool = False,
+    provider: str | None = None,
 ) -> NarrateResult:
-    """Fill meta.hook, chapter leads, and epilogue from trip metadata (respects edited flags)."""
+    """Fill meta.hook, chapter leads, captions, epilogue (stub or LLM)."""
+    from travelogue.config import get_config
+    from travelogue.services.llm_narrate import run_llm_narrate
+
+    prov = (provider or get_config().llm.provider or "stub").strip().lower()
+    if prov not in ("stub", "deepseek", "dashscope"):
+        raise NarrateError("E_NARRATE_PROVIDER", f"unknown provider {prov!r}")
+    if prov == "stub":
+        return _run_narrate_stub(trip, tone=tone, dry_run=dry_run)
+    return run_llm_narrate(trip, provider=prov, tone=tone, dry_run=dry_run)
+
+
+def _run_narrate_stub(
+    trip: dict,
+    *,
+    tone: str | None = None,
+    dry_run: bool = False,
+) -> NarrateResult:
+    """Rule-based hook and chapter leads (no LLM)."""
     meta = trip.setdefault("meta", {})
     if tone:
         meta["tone"] = tone if tone in ("relaxed", "documentary") else meta.get("tone", "relaxed")

@@ -60,6 +60,8 @@ python -m travelogue demo verify
 | `test_curate.py` | 跨天分章、章数 3–5、多 segment 合册 |
 | `test_compare_web_layout.py` | legacy vs screens A/B 渲染 |
 | `test_narrate.py` | 规则 stub、禁用词 |
+| `test_llm_narrate.py` | LLM narrate（mock chat） |
+| `test_llm_client.py` | LLM provider 解析 |
 | `test_pipeline_run.py` | 流水线顺序 |
 
 ```powershell
