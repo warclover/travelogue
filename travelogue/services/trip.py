@@ -55,10 +55,15 @@ class TripService:
         return trip_json.resolve().parent
 
     def resolve_trip_json(self, trip_id_or_path: str | Path, *, trips_dir: Path | None = None) -> Path:
-        """Resolve tripId or path to trip.json."""
+        """Resolve tripId, trip dir, or trip.json path."""
         p = Path(trip_id_or_path)
         if p.is_file():
             return p.resolve()
+        for root in (p, self.root / p, Path.cwd() / p):
+            if root.is_dir():
+                trip_json = root / "trip.json"
+                if trip_json.is_file():
+                    return trip_json.resolve()
         if p.suffix == ".json" and p.exists():
             return p.resolve()
         base = trips_dir or (self.root / "trips")
