@@ -12,6 +12,9 @@ from typing import Any
 
 from travelogue.llm.errors import LlmError
 from travelogue.llm.presets import PROVIDER_PRESETS
+
+
+@dataclass(frozen=True)
 class LlmRuntime:
     provider: str
     model: str
@@ -33,7 +36,11 @@ def resolve_llm_runtime(provider: str | None = None, *, cfg: object | None = Non
     if preset is None:
         raise LlmError("E_LLM_PROVIDER", f"unknown provider {prov!r}; use deepseek | dashscope | stub")
 
-    api_key_env = llm.api_key_env or preset["api_key_env"]
+    api_key_env = (
+        preset["api_key_env"]
+        if provider and prov != (llm.provider or "").strip().lower()
+        else (llm.api_key_env or preset["api_key_env"])
+    )
     api_key = os.environ.get(api_key_env, "").strip()
     if not api_key:
         raise LlmError("E_LLM_AUTH", f"missing API key env {api_key_env}")
