@@ -44,6 +44,13 @@ class ExportConfig:
 
 
 @dataclass
+class NarrativeConfig:
+    tone_default: str = "relaxed"
+    max_auto_fix_retries: int = 2
+    banned_phrases: tuple[str, ...] = ()
+
+
+@dataclass
 class LayoutConfig:
     """Web layout engine default when exportLayout is web (see docs/web端模板升级计划.md)."""
     web_layout_engine: str = "screens"  # legacy | screens
@@ -58,6 +65,7 @@ class AppConfig:
     layout: LayoutConfig = field(default_factory=LayoutConfig)
     vision: VisionConfig = field(default_factory=VisionConfig)
     export: ExportConfig = field(default_factory=ExportConfig)
+    narrative: NarrativeConfig = field(default_factory=NarrativeConfig)
 
 
 def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
@@ -106,7 +114,10 @@ def load_config(path: Path | None = None) -> AppConfig:
     mixed_gap = float(layout_raw.get("mixed_proximity_seconds", 12.0))
     export_raw = data.get("export") if isinstance(data.get("export"), dict) else {}
     vision_raw = data.get("vision") if isinstance(data.get("vision"), dict) else {}
+    narrative_raw = data.get("narrative") if isinstance(data.get("narrative"), dict) else {}
     vision_enabled = bool(vision_raw.get("enabled", False))
+    banned_raw = narrative_raw.get("banned_phrases") or []
+    banned = tuple(str(p) for p in banned_raw if p) if isinstance(banned_raw, list) else ()
     return AppConfig(
         trips_dir=trips_dir,
         ingest=_ingest_from_dict(ingest_raw),
@@ -117,6 +128,11 @@ def load_config(path: Path | None = None) -> AppConfig:
             mixed_proximity_seconds=mixed_gap,
         ),
         vision=VisionConfig(enabled=vision_enabled),
+        narrative=NarrativeConfig(
+            tone_default=str(narrative_raw.get("tone_default", "relaxed")),
+            max_auto_fix_retries=int(narrative_raw.get("max_auto_fix_retries", 2)),
+            banned_phrases=banned,
+        ),
     )
 
 

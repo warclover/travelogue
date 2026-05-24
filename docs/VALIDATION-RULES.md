@@ -88,9 +88,9 @@ flowchart LR
 
 | 规则 ID | 检查 | 错误码 |
 |---------|------|--------|
-| VR-N01 | 禁用词表命中 → 失败或警告 | `E_VALIDATE_MANIFEST`（**未实现**；narrate stub 有部分过滤） |
-| VR-N02 | `meta.places` 与章 `curation.places` 不得含未在 assets 出现的境外城市（启发式） | 警告 |
-| VR-N03 | caption 不得等于 transcript 全文（>80% 重合） | 同上 |
+| VR-N01 | 禁用词表命中 → 失败 | `E_VALIDATE_MANIFEST`（已实现；词表见 `config.yaml` → `narrative.banned_phrases`） |
+| VR-N02 | `meta.places` 与章 `curation.places` 不得含未在 assets 出现的境外城市（启发式） | `WARN:`（已实现） |
+| VR-N03 | caption 不得等于 transcript 全文（>80% 重合） | `WARN:`（已实现） |
 
 禁用词默认：`config.yaml` → `narrative.banned_phrases`。
 

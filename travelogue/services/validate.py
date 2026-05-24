@@ -246,6 +246,10 @@ def validate_manifest(
     if status == "copy_locked" and not locks.get("copy"):
         errors.append("E_VALIDATE_MANIFEST copy_locked but locks.copy false (VR-S02)")
 
+    from travelogue.services.narrative_validate import validate_narrative
+
+    errors.extend(validate_narrative(trip))
+
     return errors
 
 

@@ -41,6 +41,8 @@ def format_ingest_report(result, trip: dict | None = None) -> str:
         )
     for w in stats.get("date_warnings") or []:
         lines.append(f"  WARN: {w}")
+    for hint in stats.get("journey_hints") or []:
+        lines.append(f"  提示: {hint}")
     summary = stats.get("mediaClassSummary")
     if isinstance(summary, dict) and summary:
         parts = [f"{k}={v}" for k, v in sorted(summary.items()) if v]

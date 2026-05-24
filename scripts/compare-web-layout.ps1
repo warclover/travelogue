@@ -2,6 +2,7 @@
 # Usage:
 #   .\scripts\compare-web-layout.ps1 trips\demo-kyoto-2025
 #   .\scripts\compare-web-layout.ps1 trips\demo-kyoto-2025 -Serve
+# Cross-platform: python scripts/compare_web_layout.py trips\<tripId>
 
 param(
     [Parameter(Mandatory = $true, Position = 0)]

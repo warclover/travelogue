@@ -98,7 +98,7 @@ travelogue/
 ├── travelogue/                 # Python 包
 │   ├── cli.py
 │   ├── config.py
-│   ├── curation/               # Agent 1 + 1.5（curate, screen_planner, …）
+│   ├── curation/               # curate, bucket_planning, chapter_titles, screen_planner, …
 │   ├── media/                  # Agent 0（ingest, image_ops, …）
 │   ├── services/               # validate, narrate(stub), layout, manifest_limits
 │   ├── render/                 # Agent 3（pybars3 → journal.hbs）

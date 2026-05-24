@@ -2,19 +2,40 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
-from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import NamedTuple
 
+from travelogue.curation.bucket_planning import (
+    bucket_day_span,
+    cap_book_buckets,
+    group_assets_by_day,
+    group_assets_by_segments,
+    merge_small_buckets,
+    merge_small_buckets_with_segments,
+    normalize_bucket_counts,
+)
+from travelogue.curation.chapter_titles import chapter_titles, title_for_bucket_span
 from travelogue.curation.layout_planner import (
     aspect_kind_for_asset,
     build_chapters_from_buckets,
     summarize_orientations,
 )
+from travelogue.curation.time_segments import TimeSegment, parse_asset_date
 from travelogue.services.layout import LAYOUT_PLAN_VERSION, format_layout_summary
 from travelogue.services.pipeline_state import set_layout_status
+
+# Backward-compatible private aliases for tests and internal callers.
+_cap_book_buckets = cap_book_buckets
+_chapter_titles = chapter_titles
+_group_assets_by_day = group_assets_by_day
+_group_assets_by_segments = group_assets_by_segments
+_merge_small_buckets = merge_small_buckets
+_merge_small_buckets_with_segments = merge_small_buckets_with_segments
+_normalize_bucket_counts = normalize_bucket_counts
+_title_for_bucket_span = title_for_bucket_span
+_bucket_day_span = bucket_day_span
+_parse_asset_date = parse_asset_date
 
 
 def _utc_now_iso() -> str:
@@ -43,8 +64,6 @@ def _date_span_warning(
     max_span_days: int = 365,
 ) -> str | None:
     """Warn when multiple time segments or a very wide date span is detected."""
-    from travelogue.curation.time_segments import TimeSegment
-
     if segments and len(segments) >= 2:
         labels = []
         for s in segments:
@@ -60,7 +79,7 @@ def _date_span_warning(
             "可在 G1 合并段，或拆成多本游记"
         )
 
-    dates = [d for a in assets if (d := _parse_asset_date(a))]
+    dates = [d for a in assets if (d := parse_asset_date(a))]
     if len(dates) < 2:
         return None
     lo, hi = min(dates), max(dates)
@@ -71,16 +90,6 @@ def _date_span_warning(
             "已合成一本并按日期编排；可在 G1 合并时间段或拆成多本"
         )
     return None
-
-
-def _parse_asset_date(asset: dict) -> date | None:
-    raw = asset.get("takenAt")
-    if not raw:
-        return None
-    try:
-        return datetime.fromisoformat(str(raw).replace("Z", "+00:00")).date()
-    except ValueError:
-        return None
 
 
 def _cover_score(asset: dict, export_layout: str) -> float:
@@ -252,7 +261,6 @@ def _cover_candidates(
 
 
 _MAX_CHAPTER_ITEMS = 8
-_DEFAULT_CARD_LAYOUT = {"fill": True, "bleed": True, "overlay": True}
 
 
 def _item_asset_ids(item: dict) -> list[str]:
@@ -292,7 +300,7 @@ def _items_from_screen_asset_ids(asset_ids: list[str]) -> list[dict]:
                 {
                     "type": "media-card",
                     "assetId": chunk[0],
-                    "layout": dict(_DEFAULT_CARD_LAYOUT),
+                    "layout": {"fill": True, "bleed": True, "overlay": True},
                 }
             )
             i += 1
@@ -328,352 +336,6 @@ def _sanitize_chapters_after_exclusion(chapters: list[dict], excluded: set[str])
                     flat.extend(_item_asset_ids(it))
                 items = _items_from_screen_asset_ids(flat)
         ch["items"] = items
-
-
-def _group_assets_by_day(assets: list[dict], cover_id: str) -> list[list[str]]:
-    body = [a for a in assets if a["id"] != cover_id]
-    if len(body) < 4:
-        body = list(assets)
-
-    by_day: dict[date, list[str]] = defaultdict(list)
-    no_date: list[str] = []
-    for a in sorted(body, key=lambda x: x.get("takenAt") or ""):
-        d = _parse_asset_date(a)
-        if d:
-            by_day[d].append(a["id"])
-        else:
-            no_date.append(a["id"])
-
-    buckets: list[list[str]] = [by_day[k] for k in sorted(by_day)]
-    if no_date:
-        buckets.append(no_date)
-
-    if not buckets:
-        return [[a["id"] for a in body]]
-
-    return _merge_small_buckets(buckets, min_size=3)
-
-
-class NormalizedBuckets(NamedTuple):
-    buckets: list[list[str]]
-    primary_segment_ids: list[str]
-    segment_ids_per_bucket: list[list[str]]
-
-
-def _align_segment_ids(segment_ids: list[str] | None, count: int) -> list[str]:
-    seg = list(segment_ids or [])
-    if len(seg) < count:
-        seg.extend([""] * (count - len(seg)))
-    return seg[:count]
-
-
-def _primary_segment_in_chunk(
-    out: list[list[str]],
-    seg: list[str],
-    start: int,
-    end: int,
-) -> str:
-    weights: dict[str, int] = defaultdict(int)
-    for j in range(start, end):
-        sid = seg[j] if j < len(seg) else ""
-        if sid:
-            weights[sid] += len(out[j])
-    if not weights:
-        return seg[start] if start < len(seg) else ""
-    return max(weights, key=weights.get)
-
-
-def _segments_in_chunk(seg: list[str], start: int, end: int) -> list[str]:
-    seen: list[str] = []
-    for j in range(start, end):
-        sid = seg[j] if j < len(seg) else ""
-        if sid and sid not in seen:
-            seen.append(sid)
-    return seen
-
-
-def _normalize_bucket_counts(
-    buckets: list[list[str]],
-    segment_ids: list[str] | None = None,
-    *,
-    min_chapters: int | None = None,
-    max_chapters: int | None = None,
-    min_bucket_size: int = 3,
-) -> NormalizedBuckets:
-    """Merge day buckets to fit manifest chapter limits; preserve segment metadata."""
-    from travelogue.services.manifest_limits import chapter_limits
-
-    min_c, max_c = chapter_limits()
-    if min_chapters is not None:
-        min_c = min_chapters
-    if max_chapters is not None:
-        max_c = max_chapters
-
-    out = [list(b) for b in buckets if b]
-    if not out:
-        return NormalizedBuckets([], [], [])
-
-    seg = _align_segment_ids(segment_ids, len(out))
-    seg_all: list[list[str]] = [[s] if s else [] for s in seg]
-
-    n = len(out)
-    if n > max_c:
-        merged: list[list[str]] = []
-        merged_primary: list[str] = []
-        merged_all: list[list[str]] = []
-        per = (n + max_c - 1) // max_c
-        for i in range(0, n, per):
-            end = min(i + per, n)
-            group: list[str] = []
-            for j in range(i, end):
-                group.extend(out[j])
-            merged.append(group)
-            merged_primary.append(_primary_segment_in_chunk(out, seg, i, end))
-            merged_all.append(_segments_in_chunk(seg, i, end))
-        out, seg, seg_all = merged, merged_primary, merged_all
-
-    out, seg, seg_all = _merge_small_buckets_with_segments(
-        out, seg, seg_all, min_size=min_bucket_size
-    )
-
-    if len(out) < min_c:
-        flat_count = sum(len(b) for b in out)
-        target = (
-            min_c
-            if flat_count < 9
-            else min(max_c, max(min_c, len(out) or min_c))
-        )
-        while len(out) < target:
-            largest_i = max(range(len(out)), key=lambda i: len(out[i]))
-            bucket = out[largest_i]
-            if len(bucket) < 2:
-                break
-            mid = len(bucket) // 2
-            out[largest_i] = bucket[:mid]
-            out.insert(largest_i + 1, bucket[mid:])
-            split_seg = seg[largest_i]
-            seg.insert(largest_i + 1, split_seg)
-            split_all = list(seg_all[largest_i])
-            seg_all.insert(largest_i + 1, split_all)
-
-    return NormalizedBuckets(out, seg, seg_all)
-
-
-def _cap_book_buckets(
-    buckets: list[list[str]],
-    bucket_segment_ids: list[str] | None = None,
-    *,
-    min_chapters: int | None = None,
-    max_chapters: int | None = None,
-) -> tuple[list[list[str]], list[str]]:
-    """Backward-compatible wrapper (primary segment ids only)."""
-    norm = _normalize_bucket_counts(
-        buckets,
-        bucket_segment_ids,
-        min_chapters=min_chapters,
-        max_chapters=max_chapters,
-    )
-    return norm.buckets, norm.primary_segment_ids
-
-
-def _merge_small_buckets(buckets: list[list[str]], *, min_size: int = 3) -> list[list[str]]:
-    """Merge chapters with fewer than min_size photos into neighbors (preserve day order)."""
-    merged, _, _ = _merge_small_buckets_with_segments(
-        buckets,
-        [""] * len(buckets),
-        [[""]] * len(buckets),
-        min_size=min_size,
-    )
-    return merged
-
-
-def _merge_segment_lists(a: list[str], b: list[str]) -> list[str]:
-    out = list(a)
-    for sid in b:
-        if sid and sid not in out:
-            out.append(sid)
-    return out
-
-
-def _merge_small_buckets_with_segments(
-    buckets: list[list[str]],
-    segment_ids: list[str],
-    segment_ids_all: list[list[str]] | None = None,
-    *,
-    min_size: int = 3,
-) -> tuple[list[list[str]], list[str], list[list[str]]]:
-    """Like _merge_small_buckets; keeps primary and full segment lists per bucket."""
-    out = [list(b) for b in buckets if b]
-    seg = _align_segment_ids(segment_ids, len(out))
-    seg_all = list(segment_ids_all or [])
-    if len(seg_all) < len(out):
-        seg_all.extend([[] for _ in range(len(out) - len(seg_all))])
-    seg_all = [
-        list(seg_all[i]) if i < len(seg_all) and seg_all[i] else ([seg[i]] if seg[i] else [])
-        for i in range(len(out))
-    ]
-    if not out:
-        return out, seg, seg_all
-    while True:
-        small = [i for i, b in enumerate(out) if len(b) < min_size]
-        if not small or len(out) <= 1:
-            break
-        idx = min(small, key=lambda i: len(out[i]))
-        if idx > 0:
-            left_n, right_n = len(out[idx - 1]), len(out[idx])
-            out[idx - 1].extend(out[idx])
-            seg_all[idx - 1] = _merge_segment_lists(seg_all[idx - 1], seg_all[idx])
-            if right_n > left_n and seg[idx]:
-                seg[idx - 1] = seg[idx]
-            del out[idx]
-            del seg[idx]
-            del seg_all[idx]
-        else:
-            left_n, right_n = len(out[0]), len(out[1])
-            out[0].extend(out[1])
-            seg_all[0] = _merge_segment_lists(seg_all[0], seg_all[1])
-            if right_n > left_n and seg[1]:
-                seg[0] = seg[1]
-            del out[1]
-            del seg[1]
-            del seg_all[1]
-    for i, sid in enumerate(seg):
-        if sid and sid not in seg_all[i]:
-            seg_all[i].insert(0, sid)
-    return out, seg, seg_all
-
-
-def _bucket_day_span(bucket: list[str], assets_by_id: dict[str, dict]) -> list[str]:
-    dates = sorted(
-        {
-            d
-            for aid in bucket
-            if (d := _parse_asset_date(assets_by_id.get(aid, {})))
-        }
-    )
-    return [d.isoformat() for d in dates]
-
-
-def _title_for_bucket_span(span: list[str]) -> str | None:
-    if len(span) < 2:
-        return None
-    d0 = date.fromisoformat(span[0])
-    d1 = date.fromisoformat(span[-1])
-    if d0.year != d1.year:
-        return f"{d0.year}–{d1.year}"[:12]
-    if d0.month == d1.month and d0.day == d1.day:
-        return f"{d0.month}月{d0.day}日"[:12]
-    return f"{d0.month}月{d0.day}–{d1.month}月{d1.day}日"[:12]
-
-
-def _chapter_titles(
-    buckets: list[list[str]],
-    assets: list[dict],
-    meta: dict,
-    *,
-    bucket_segment_ids: list[str] | None = None,
-    bucket_segment_ids_all: list[list[str]] | None = None,
-    segment_labels: dict[str, str] | None = None,
-) -> list[str]:
-    place = (meta.get("places") or ["旅途"])[0]
-    assets_by_id = {a["id"]: a for a in assets}
-    titles: list[str] = []
-    day_seen: dict[str, int] = {}
-    seg_day_seen: dict[str, int] = {}
-    bucket_segment_ids = bucket_segment_ids or []
-    bucket_segment_ids_all = bucket_segment_ids_all or []
-    segment_labels = segment_labels or {}
-
-    for i, bucket in enumerate(buckets):
-        if not bucket:
-            titles.append(f"片段{i + 1}")
-            continue
-
-        span = _bucket_day_span(bucket, assets_by_id)
-        if len(span) > 1:
-            d0 = date.fromisoformat(span[0])
-            d1 = date.fromisoformat(span[-1])
-            if d0.year != d1.year:
-                titles.append(f"{d0.year}–{d1.year}"[:12])
-                continue
-
-        all_seg = (
-            bucket_segment_ids_all[i]
-            if i < len(bucket_segment_ids_all)
-            else []
-        )
-        if len(all_seg) > 1:
-            labels = [segment_labels[s][:8] for s in all_seg if segment_labels.get(s)]
-            if labels:
-                titles.append("·".join(labels[:2])[:12])
-                continue
-
-        seg_id = bucket_segment_ids[i] if i < len(bucket_segment_ids) else ""
-        if seg_id and segment_labels.get(seg_id):
-            n = seg_day_seen.get(seg_id, 0)
-            seg_day_seen[seg_id] = n + 1
-            if n == 0:
-                titles.append(segment_labels[seg_id][:12])
-                continue
-
-        if len(span) > 1:
-            span_title = _title_for_bucket_span(span)
-            if span_title:
-                titles.append(span_title)
-                continue
-        d = _parse_asset_date(assets_by_id.get(bucket[0], {}))
-        if d:
-            key = d.isoformat()
-            n = day_seen.get(key, 0)
-            day_seen[key] = n + 1
-            base = f"{d.month}月{d.day}日"
-            if n == 0:
-                titles.append(base[:12])
-            elif n == 1:
-                titles.append(f"{base}·二"[:12])
-            else:
-                titles.append(f"{base}·{n + 1}"[:12])
-        elif i == 0:
-            titles.append("抵达"[:12])
-        elif i == len(buckets) - 1:
-            titles.append("尾声"[:12])
-        else:
-            titles.append(f"{place}·{i}"[:12])
-    return titles
-
-
-def _group_assets_by_segments(
-    layout_assets: list[dict],
-    cover_id: str,
-    meta: dict,
-) -> tuple[list[list[str]], list[str], list[list[str]], list]:
-    """Segment cluster → per-segment day buckets → flat chapter bucket list."""
-    from travelogue.curation.time_segments import TimeSegment, cluster_time_segments
-
-    place = (meta.get("places") or ["旅途"])[0]
-    by_id = {a["id"]: a for a in layout_assets}
-    segments = cluster_time_segments(layout_assets, place=place)
-
-    all_buckets: list[list[str]] = []
-    bucket_segment_ids: list[str] = []
-
-    for seg in segments:
-        seg_assets = [by_id[aid] for aid in seg.asset_ids if aid in by_id]
-        if not seg_assets:
-            continue
-        local_cover = cover_id if cover_id in {a["id"] for a in seg_assets} else ""
-        seg_buckets = _group_assets_by_day(seg_assets, local_cover)
-        for b in seg_buckets:
-            all_buckets.append(b)
-            bucket_segment_ids.append(seg.id)
-
-    if not all_buckets:
-        all_buckets = _group_assets_by_day(layout_assets, cover_id)
-        bucket_segment_ids = [""] * len(all_buckets)
-        segments = []
-
-    norm = _normalize_bucket_counts(all_buckets, bucket_segment_ids)
-    return norm.buckets, norm.primary_segment_ids, norm.segment_ids_per_bucket, segments
 
 
 def run_curate(
@@ -721,7 +383,7 @@ def run_curate(
             skip_screen_ids.add(web_cover)
 
     meta = trip.get("meta", {})
-    buckets, bucket_segment_ids, bucket_segment_ids_all, segments = _group_assets_by_segments(
+    buckets, bucket_segment_ids, bucket_segment_ids_all, segments = group_assets_by_segments(
         layout_assets, cover_id, meta
     )
     places = meta.get("places") or []
@@ -729,7 +391,7 @@ def run_curate(
     curation_segments = [s.to_dict(places=places) for s in segments]
 
     aspects = {a["id"]: aspect_kind_for_asset(a) for a in layout_assets}
-    titles = _chapter_titles(
+    titles = chapter_titles(
         buckets,
         layout_assets,
         meta,
@@ -758,7 +420,7 @@ def run_curate(
         bucket_segment_ids_all,
     ):
         ch_cur = ch.setdefault("curation", {})
-        span = _bucket_day_span(bucket, assets_by_id)
+        span = bucket_day_span(bucket, assets_by_id)
         if span:
             ch_cur["daySpan"] = span
         if seg_id:

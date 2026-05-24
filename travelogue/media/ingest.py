@@ -365,6 +365,14 @@ def ingest_into_trip(
     trip["assets"] = assets
     for w in apply_meta_dates_from_assets(trip):
         ingest_stats.setdefault("date_warnings", []).append(w)
+
+    from travelogue.media.ingest_preview import preview_multi_journey
+
+    place = (trip.get("meta") or {}).get("places") or ["旅途"]
+    journey_hint = preview_multi_journey(assets, place=place[0] if place else "旅途")
+    if journey_hint:
+        ingest_stats.setdefault("journey_hints", []).append(journey_hint)
+
     ingest_stats["mediaClassSummary"] = summarize_media_classes(assets)
 
     pipe["status"] = "ingest_ready"

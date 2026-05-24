@@ -56,7 +56,9 @@ python -m travelogue demo verify
 |------|----------|
 | `test_validate.py` | 超字数、缺 ref、封面视频 → 错误码 |
 | `test_validate_limits.py` | VR-L07/L08、VR-M03 |
+| `test_narrative_validate.py` | VR-N01/N02/N03、ingest 多旅程预检 |
 | `test_curate.py` | 跨天分章、章数 3–5、多 segment 合册 |
+| `test_compare_web_layout.py` | legacy vs screens A/B 渲染 |
 | `test_narrate.py` | 规则 stub、禁用词 |
 | `test_pipeline_run.py` | 流水线顺序 |
 
