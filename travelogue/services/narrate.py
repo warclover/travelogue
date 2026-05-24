@@ -185,9 +185,10 @@ def _build_lead(
 
     if tone == "documentary":
         return f"{title or place}，{n} 张。"
+    subject = place or title or "这一段"
     if n >= 2:
-        return f"{title or place}，{n} 帧留在这里。"
-    return f"{title}，{place}。" if title else f"在{place}。"
+        return f"{subject}这一段，{n} 帧慢慢铺开。"
+    return f"{subject}，再走一步。"
 
 
 def _build_epilogue(meta: dict, *, tone: str) -> str:

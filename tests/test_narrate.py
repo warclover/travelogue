@@ -51,7 +51,7 @@ def _sample_trip() -> dict:
 
 def test_narrate_fills_hook_leads_epilogue() -> None:
     trip = _sample_trip()
-    result = run_narrate(trip, tone="relaxed")
+    result = run_narrate(trip, tone="relaxed", provider="stub")
     assert "meta.hook" in result.fields_updated
     assert trip["meta"]["hook"]
     assert "京都" in trip["meta"]["hook"]
@@ -64,16 +64,16 @@ def test_narrate_respects_edited_chapter() -> None:
     trip = _sample_trip()
     trip["chapters"][0]["edited"] = True
     trip["chapters"][0]["lead"] = "用户写的导语"
-    run_narrate(trip)
+    run_narrate(trip, provider="stub")
     assert trip["chapters"][0]["lead"] == "用户写的导语"
 
 
 def test_narrate_documentary_tone_differs() -> None:
     trip = _sample_trip()
-    run_narrate(trip, tone="documentary")
+    run_narrate(trip, tone="documentary", provider="stub")
     doc_hook = trip["meta"]["hook"]
     trip2 = _sample_trip()
-    run_narrate(trip2, tone="relaxed")
+    run_narrate(trip2, tone="relaxed", provider="stub")
     assert doc_hook != trip2["meta"]["hook"]
 
 
@@ -83,21 +83,33 @@ def test_narrate_uses_voice_excerpt() -> None:
         "transcriptPreview": "雨太大了先回酒店",
         "transcript": "雨太大了我们先回酒店。",
     }
-    run_narrate(trip)
+    run_narrate(trip, provider="stub")
     assert "雨太大了" in trip["chapters"][1]["lead"]
+
+
+def test_narrate_lead_does_not_repeat_title_place() -> None:
+    trip = _sample_trip()
+    trip["meta"]["places"] = ["林芝"]
+    trip["chapters"][1]["title"] = "5月–6月·林芝·2"
+    trip["chapters"][1]["lead"] = ""
+    run_narrate(trip, provider="stub")
+    lead = trip["chapters"][1]["lead"]
+    assert lead
+    assert not lead.startswith(trip["chapters"][1]["title"])
+    assert lead != f"{trip['chapters'][1]['title']}，林芝。"
 
 
 def test_narrate_dry_run_no_mutation() -> None:
     trip = _sample_trip()
     before = copy.deepcopy(trip)
-    result = run_narrate(trip, dry_run=True)
+    result = run_narrate(trip, dry_run=True, provider="stub")
     assert result.fields_updated
     assert trip == before
 
 
 def test_narrate_respects_manifest_char_limits() -> None:
     trip = _sample_trip()
-    run_narrate(trip)
+    run_narrate(trip, provider="stub")
     lim = _manifest_limits()
     assert len(trip["meta"]["hook"]) <= lim["hookMaxChars"]
     for ch in trip["chapters"]:
@@ -120,6 +132,6 @@ def test_narrate_unique_leads_per_chapter() -> None:
     trip = _sample_trip()
     for ch in trip["chapters"]:
         ch["title"] = "4月2日"
-    run_narrate(trip)
+    run_narrate(trip, provider="stub")
     leads = [ch["lead"] for ch in trip["chapters"]]
     assert len(leads) == len(set(leads))

@@ -35,6 +35,7 @@ def run_trip(
     validate: bool = True,
     skip_locked: bool = True,
     dedupe: bool = True,
+    narrate_provider: str | None = None,
 ) -> RunResult:
     trip_path = trip_path.resolve()
     trip_root = trip_path.parent
@@ -110,7 +111,7 @@ def run_trip(
             if status == "copy_locked" and skip_locked:
                 continue
             assert_stage_allowed(trip, "narrate")
-            run_narrate(trip)
+            run_narrate(trip, provider=narrate_provider)
             result.stages.append("narrate")
             save()
 

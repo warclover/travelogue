@@ -65,7 +65,7 @@ def test_g1_narrate_then_dual_render(g1_workspace: Path) -> None:
     assert trip["pipeline"]["status"] == "structure_locked"
 
     before_hook = trip["meta"].get("hook", "")
-    result = run_narrate(trip)
+    result = run_narrate(trip, provider="stub")
     assert "meta.hook" in result.fields_updated
     assert trip["meta"]["hook"] and trip["meta"]["hook"] != before_hook
     assert all(ch.get("lead") for ch in trip["chapters"])
@@ -88,6 +88,7 @@ def test_run_trip_from_lock_structure(g1_workspace: Path) -> None:
         until="render",
         validate=False,
         skip_locked=True,
+        narrate_provider="stub",
     )
     assert "narrate" in run_result.stages
     assert "render" in run_result.stages
