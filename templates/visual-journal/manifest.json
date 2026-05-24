@@ -108,7 +108,7 @@
   },
   "layoutEngine": {
     "values": ["legacy", "screens"],
-    "default": "legacy",
+    "default": "screens",
     "version": "screens-2",
     "doc": "docs/web端模板.prd",
     "screenPatterns": [

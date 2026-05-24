@@ -5,7 +5,7 @@
 | **文档版本** | v0.1 |
 | **阶段** | P0 本地工坊 |
 | **关联** | `CHARTER.md`、`AGENT-ARCHITECTURE.md`、`DATA-MODEL.md` |
-| **更新日期** | 2026-05-19 |
+| **更新日期** | 2026-05-22 |
 
 ---
 
@@ -86,41 +86,30 @@ flowchart TB
 
 ---
 
-## 4. 仓库目录（目标）
+## 4. 仓库目录（当前实现）
+
+> 早期设计中的 `agents/`、`runner.py` 已落地为 `curation/`、`media/`、`services/narrate.py`、`render/`。Agent 2 为规则 stub（无 LLM）；ffmpeg 尚未接入 Python。
 
 ```
 travelogue/
-├── docs/                      # P0 文档
+├── docs/
 ├── schemas/
-│   └── trip.schema.json
-├── templates/
-│   └── visual-journal/
-│       ├── manifest.json
-│       ├── golden.html
-│       ├── golden.css
-│       └── journal.hbs          # 待：正式 Handlebars 模板
-├── travelogue/                # Python 包（待实现）
-│   ├── __init__.py
-│   ├── cli.py                 # 入口
+├── templates/visual-journal/   # journal.hbs + journal.css + manifest.json
+├── travelogue/                 # Python 包
+│   ├── cli.py
+│   ├── config.py
+│   ├── curation/               # Agent 1 + 1.5（curate, screen_planner, …）
+│   ├── media/                  # Agent 0（ingest, image_ops, …）
+│   ├── services/               # validate, narrate(stub), layout, manifest_limits
+│   ├── render/                 # Agent 3（pybars3 → journal.hbs）
+│   ├── export/
 │   ├── orchestrator/
-│   │   ├── pipeline.py        # 状态机
-│   │   └── runner.py
-│   ├── agents/
-│   │   ├── media_lab.py
-│   │   ├── curator.py
-│   │   ├── storyteller.py
-│   │   └── publisher.py
-│   ├── services/
-│   │   ├── trip.py            # 读写 trip.json
-│   │   └── validate.py        # schema + manifest
-│   └── render/
-│       └── handlebars.py
+│   └── demo/
 ├── scripts/
-│   └── gen_golden_html.py
-├── trips/                     # 运行时数据（.gitignore）
+├── tests/
+├── trips/                      # 运行时（.gitignore）
 ├── config.yaml.example
-├── pyproject.toml               # 待
-└── README.md
+└── pyproject.toml
 ```
 
 ---

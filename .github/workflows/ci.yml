@@ -25,4 +25,11 @@ jobs:
       - name: Validate fixtures
         run: |
           python scripts/validate_trip.py schemas/fixtures/trip.example.json --level all
+          python scripts/validate_trip.py schemas/fixtures/trip.ingest_ready.json --level all
+          python scripts/validate_trip.py schemas/fixtures/trip.structure_locked.json --level all
+          python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level all
           python scripts/validate_trip.py schemas/fixtures/trip.render_golden.json --level all
+
+      - name: Demo verify (fixtures + DOM)
+        run: |
+          python -c "from travelogue.demo.verify import run_demo_verify; import sys; r=run_demo_verify(skip_pytest=True); print('\n'.join(r.messages)); sys.exit(0 if r.ok else 1)"

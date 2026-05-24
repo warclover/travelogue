@@ -5,7 +5,7 @@
 | **文档版本** | v0.1 |
 | **原则** | 关键路径必测；不追求高覆盖率 |
 | **关联** | `VALIDATION-RULES.md`、`DEFINITION-OF-DONE.md` |
-| **更新日期** | 2026-05-19 |
+| **更新日期** | 2026-05-22 |
 
 ---
 
@@ -34,13 +34,16 @@
 | `schemas/fixtures/trip.structure_locked.json` | Agent 2 输入 |
 | `schemas/fixtures/trip.copy_locked.json` | Agent 3 输入 |
 
-**CI 必跑**：
+**CI 必跑**（`.github/workflows/ci.yml`）：
 
 ```powershell
+python -m pytest tests/ -q
 python scripts/validate_trip.py schemas/fixtures/trip.example.json --level all
 python scripts/validate_trip.py schemas/fixtures/trip.ingest_ready.json --level all
 python scripts/validate_trip.py schemas/fixtures/trip.structure_locked.json --level all
 python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level all
+python scripts/validate_trip.py schemas/fixtures/trip.render_golden.json --level all
+python -m travelogue demo verify
 ```
 
 ---
@@ -52,9 +55,10 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 | 模块 | 用例示例 |
 |------|----------|
 | `test_validate.py` | 超字数、缺 ref、封面视频 → 错误码 |
-| `test_curate_rules.py` | 跨天分章、章数 3–5 |
-| `test_narrative_merge.py` | `edited: true` 不覆盖 |
-| `test_pipeline.py` | 错误 status 调 narrate → E_PIPELINE_ORDER |
+| `test_validate_limits.py` | VR-L07/L08、VR-M03 |
+| `test_curate.py` | 跨天分章、章数 3–5、多 segment 合册 |
+| `test_narrate.py` | 规则 stub、禁用词 |
+| `test_pipeline_run.py` | 流水线顺序 |
 
 ```powershell
 pip install pytest jsonschema pyyaml

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from pathlib import Path
 
 from travelogue.services.validate import load_json
@@ -31,7 +33,22 @@ class TripService:
     def save(self, trip: dict, path: Path | str) -> None:
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps(trip, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        payload = json.dumps(trip, ensure_ascii=False, indent=2) + "\n"
+        fd, tmp_path = tempfile.mkstemp(
+            suffix=".json",
+            prefix=f".{p.stem}-",
+            dir=p.parent,
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                handle.write(payload)
+            os.replace(tmp_path, p)
+        except Exception:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
 
     def resolve_trip_root(self, trip_json: Path) -> Path:
         """Directory containing trip.json and assets/."""

@@ -5,8 +5,8 @@
 | **文档版本** | v0.1 |
 | **L1** | [schemas/trip.schema.json](../schemas/trip.schema.json) |
 | **L2** | [templates/visual-journal/manifest.json](../templates/visual-journal/manifest.json) |
-| **实现** | `scripts/validate_trip.py`（待扩展） |
-| **更新日期** | 2026-05-19 |
+| **实现** | `travelogue/services/validate.py` |
+| **更新日期** | 2026-05-22 |
 
 ---
 
@@ -50,9 +50,9 @@ flowchart LR
 | VR-L03 | `chapter.title` ≤ 12 | 同上 |
 | VR-L04 | `chapter.lead` ≤ 80 | 同上 |
 | VR-L05 | `item.caption` ≤ 60 | 同上 |
-| VR-L06 | 图片 asset 数 ≤ 30 | 同上 |
-| VR-L07 | 视频 asset 数 ≤ 3 | 同上 |
-| VR-L08 | trip 级 voice 数 ≤ 15 | 同上 |
+| VR-L06 | 图片 asset 数 ≤ `maxPhotosPerTrip` (**250**) | `E_INGEST_LIMIT_PHOTOS` |
+| VR-L07 | 视频 asset 数 ≤ 3 | `E_VALIDATE_MANIFEST` |
+| VR-L08 | trip 级 voice 数 ≤ 15 | `E_VALIDATE_MANIFEST` |
 
 字数：**中文按字符计**（`len()`），非字节。
 
@@ -71,7 +71,7 @@ flowchart LR
 | VR-P01 | `patternId` ∈ {open, gallery, moment, close} | `E_VALIDATE_MANIFEST` |
 | VR-P02 | 第 1 章（index=1）`patternId === open` | 同上 |
 | VR-P03 | 最后 1 章 `patternId === close` | 同上 |
-| VR-P04 | `gallery` 章含 `media-scroll` 且 3–5 图 | 同上 |
+| VR-P04 | `gallery` 章含 `media-scroll` 且 3–5 图 | `E_VALIDATE_MANIFEST`（已实现） |
 | VR-P05 | `moment` 章含至少 **2 个视觉单元**（`media-card` / `media-row` / `media-scroll` 各计 1，每个 `layout-screen` 计 1） | 同上 |
 
 ### 3.4 视频与语音
@@ -80,7 +80,7 @@ flowchart LR
 |---------|------|--------|
 | VR-M01 | `coverAssetId` 不得为 video | `E_VALIDATE_MANIFEST` |
 | VR-M02 | 第 1 章 items 中不得含 video | 同上 |
-| VR-M03 | 每章 video 数 ≤ `maxVideosPerChapter` (1) | 同上 |
+| VR-M03 | 每章 video 数 ≤ `maxVideosPerChapter` (1) | `E_VALIDATE_MANIFEST`（已实现） |
 | VR-M04 | `hasAudio===true` 的 video 卡不得同卡挂 `voice` | 同上 |
 | VR-M05 | trip 存在任意 `voice` 时，至少 1 章 `moment` 且该章有带 voice 的 card | 同上（警告级可配置） |
 
@@ -88,7 +88,7 @@ flowchart LR
 
 | 规则 ID | 检查 | 错误码 |
 |---------|------|--------|
-| VR-N01 | 禁用词表命中 → 失败或警告 | `E_VALIDATE_MANIFEST` |
+| VR-N01 | 禁用词表命中 → 失败或警告 | `E_VALIDATE_MANIFEST`（**未实现**；narrate stub 有部分过滤） |
 | VR-N02 | `meta.places` 与章 `curation.places` 不得含未在 assets 出现的境外城市（启发式） | 警告 |
 | VR-N03 | caption 不得等于 transcript 全文（>80% 重合） | 同上 |
 

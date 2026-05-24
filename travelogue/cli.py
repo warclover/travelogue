@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional
 
 import typer
+import typer.main
 
 import json
 
@@ -183,6 +184,12 @@ def demo_main(
     """Album → ingest → curate → render; with --publish also exports share zip."""
     if ctx.invoked_subcommand is not None:
         return
+    if album_dir is not None:
+        sub_name = str(album_dir)
+        demo_group = typer.main.get_group(demo_app)
+        sub_cmd = demo_group.get_command(ctx, sub_name)
+        if sub_cmd is not None:
+            return ctx.invoke(sub_cmd)
     if album_dir is None:
         typer.echo(ctx.get_help())
         raise typer.Exit(1)

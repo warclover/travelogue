@@ -531,16 +531,16 @@ flowchart TB
 
 ---
 
-## 15. 待实现（非开放争议）
+## 15. 实现状态（2026-05）
 
-| ID | 项 | 负责模块 |
-|----|-----|----------|
-| IMP-01 | `trip.schema.json` 含 exportLayout、srcset、focalPoint | schema |
-| IMP-02 | Handlebars 输出 srcset / picture | render |
-| IMP-03 | ingest 多档 WebP + 可选 -m/-w 裁切 | ingest |
-| IMP-04 | 导出时根据 exportLayout 写 data-layout | export |
-| IMP-05 | 微信 / iOS / 4K 真机回归 | QA |
-| IMP-06 | `trip.schema.json` 正式字段 `export.longShot` | schema |
+| ID | 项 | 状态 |
+|----|-----|------|
+| IMP-01 | `trip.schema.json` 含 exportLayout、srcset、focalPoint | ✅ |
+| IMP-02 | Handlebars 输出 srcset / picture | ✅ |
+| IMP-03 | ingest 多档 WebP + 可选 -m/-w 裁切 | ✅ |
+| IMP-04 | 导出时根据 exportLayout 写 data-layout | ✅ |
+| IMP-05 | 微信 / iOS / 4K 真机回归 | ☐ QA |
+| IMP-06 | `trip.schema.json` 正式字段 `export.longShot` | ✅ |
 
 ---
 

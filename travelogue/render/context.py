@@ -6,7 +6,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from travelogue.media.image_ops import classify_aspect, detect_orientation
-from travelogue.paths import LONGSHOT_JS, SHARE_JS
+from travelogue.paths import JOURNAL_CSS, JOURNAL_SCREENS_CSS, LONGSHOT_JS, SHARE_JS
 from travelogue.services.validate import asset_map
 
 
@@ -14,7 +14,7 @@ def _longshot_bundle_version(trip: dict) -> str:
     """Pin asset cache-busting to bundle mtimes so template changes invalidate
     even when trip.json is unchanged."""
     stamps: list[int] = []
-    for path in (LONGSHOT_JS, SHARE_JS):
+    for path in (JOURNAL_CSS, JOURNAL_SCREENS_CSS, LONGSHOT_JS, SHARE_JS):
         try:
             stamps.append(int(path.stat().st_mtime))
         except OSError:

@@ -58,6 +58,25 @@ def asset_map(trip: dict) -> dict[str, dict]:
     return {a["id"]: a for a in trip.get("assets", [])}
 
 
+def chapter_asset_ids(chapter: dict) -> list[str]:
+    """Asset ids referenced by chapter items and screens."""
+    ids: list[str] = []
+    for it in chapter.get("items", []):
+        itype = it.get("type")
+        if itype == "media-card":
+            aid = it.get("assetId")
+            if aid:
+                ids.append(aid)
+        elif itype in ("media-row", "media-scroll"):
+            ids.extend(it.get("assetIds") or [])
+    for screen in chapter.get("screens") or []:
+        for slot in screen.get("slots") or []:
+            aid = slot.get("assetId")
+            if aid:
+                ids.append(aid)
+    return ids
+
+
 def chapter_visual_units(chapter: dict) -> int:
     """
     Count presentation units in a chapter (VR-P05).
@@ -97,8 +116,24 @@ def validate_manifest(
     max_photos = int(limits.get("maxPhotosPerTrip", 250))
     if len(assets) > max_photos:
         errors.append(
-            f"E_INGEST_LIMIT_PHOTOS asset count {len(assets)} exceeds maxPhotosPerTrip {max_photos}"
+            f"E_INGEST_LIMIT_PHOTOS asset count {len(assets)} exceeds maxPhotosPerTrip {max_photos} (VR-L06)"
         )
+
+    max_videos = int(limits.get("maxVideosPerTrip", 3))
+    trip_videos = sum(1 for a in assets.values() if a.get("type") == "video")
+    if trip_videos > max_videos:
+        errors.append(
+            f"E_VALIDATE_MANIFEST video count {trip_videos} exceeds maxVideosPerTrip {max_videos} (VR-L07)"
+        )
+
+    max_voices = int(limits.get("maxVoicePerTrip", 15))
+    trip_voices = sum(1 for a in assets.values() if a.get("voice"))
+    if trip_voices > max_voices:
+        errors.append(
+            f"E_VALIDATE_MANIFEST voice count {trip_voices} exceeds maxVoicePerTrip {max_voices} (VR-L08)"
+        )
+
+    max_videos_per_ch = int(limits.get("maxVideosPerChapter", 1))
 
     cover = trip.get("coverAssetId")
     if cover and cover not in assets and status not in ("draft_ingest",):
@@ -116,7 +151,6 @@ def validate_manifest(
         errors.append("E_VALIDATE_MANIFEST chapters required after curate")
 
     card_asset_ids: list[str] = []
-    trip_voices = sum(1 for a in assets.values() if a.get("voice"))
     has_moment_voice = False
 
     for i, ch in enumerate(chapters):
@@ -134,6 +168,17 @@ def validate_manifest(
             errors.append(
                 "E_VALIDATE_MANIFEST moment chapter needs >=2 visual units "
                 "(media-card/row/scroll or layout-screen) (VR-P05)"
+            )
+
+        ch_videos = [
+            aid
+            for aid in chapter_asset_ids(ch)
+            if aid in assets and assets[aid].get("type") == "video"
+        ]
+        if len(ch_videos) > max_videos_per_ch:
+            errors.append(
+                f"E_VALIDATE_MANIFEST chapters[{i}] video count {len(ch_videos)} "
+                f"exceeds maxVideosPerChapter {max_videos_per_ch} (VR-M03)"
             )
 
         for it in items:
@@ -171,6 +216,16 @@ def validate_manifest(
                             f"E_VALIDATE_LAYOUT rowLayout {rl} expects {expected} assets, got {len(aids)}"
                         )
                 for aid in it.get("assetIds") or []:
+                    if aid not in assets:
+                        errors.append(f"E_VALIDATE_REF unknown assetId {aid}")
+
+            elif it.get("type") == "media-scroll":
+                aids = it.get("assetIds") or []
+                if pid == "gallery" and (len(aids) < 3 or len(aids) > 5):
+                    errors.append(
+                        f"E_VALIDATE_MANIFEST gallery media-scroll needs 3–5 assets, got {len(aids)} (VR-P04)"
+                    )
+                for aid in aids:
                     if aid not in assets:
                         errors.append(f"E_VALIDATE_REF unknown assetId {aid}")
 
