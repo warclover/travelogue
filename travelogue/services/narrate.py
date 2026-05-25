@@ -7,6 +7,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import lru_cache
+from pathlib import Path
 
 from travelogue.paths import MANIFEST_PATH
 
@@ -205,6 +206,8 @@ def run_narrate(
     tone: str | None = None,
     dry_run: bool = False,
     provider: str | None = None,
+    regenerate: bool = False,
+    cache_dir: Path | None = None,
 ) -> NarrateResult:
     """Fill meta.hook, chapter leads, captions, epilogue (stub or LLM)."""
     from travelogue.config import get_config
@@ -214,8 +217,15 @@ def run_narrate(
     if prov not in ("stub", "deepseek", "dashscope"):
         raise NarrateError("E_NARRATE_PROVIDER", f"unknown provider {prov!r}")
     if prov == "stub":
-        return _run_narrate_stub(trip, tone=tone, dry_run=dry_run)
-    return run_llm_narrate(trip, provider=prov, tone=tone, dry_run=dry_run)
+        return _run_narrate_stub(trip, tone=tone, dry_run=dry_run, regenerate=regenerate)
+    return run_llm_narrate(
+        trip,
+        provider=prov,
+        tone=tone,
+        dry_run=dry_run,
+        regenerate=regenerate,
+        cache_dir=cache_dir,
+    )
 
 
 def _run_narrate_stub(
@@ -223,6 +233,7 @@ def _run_narrate_stub(
     *,
     tone: str | None = None,
     dry_run: bool = False,
+    regenerate: bool = False,
 ) -> NarrateResult:
     """Rule-based hook and chapter leads (no LLM)."""
     meta = trip.setdefault("meta", {})
@@ -242,7 +253,7 @@ def _run_narrate_stub(
 
     lim = _manifest_limits()
 
-    if not meta.get("hook") and not meta.get("edited"):
+    if not meta.get("edited") and (regenerate or not (meta.get("hook") or "").strip()):
         if not dry_run:
             meta["hook"] = _finalize_copy(
                 _build_hook(meta, photo_count=photo_count, tone=tone_val),
@@ -253,24 +264,25 @@ def _run_narrate_stub(
     for ch in chapters:
         if ch.get("edited"):
             continue
-        if not (ch.get("lead") or "").strip():
-            idx = int(ch.get("index") or 0)
-            if not dry_run:
-                ch["lead"] = _finalize_copy(
-                    _build_lead(
-                        ch,
-                        assets=assets,
-                        default_place=place,
-                        tone=tone_val,
-                        chapter_index=idx,
-                        chapter_total=chapter_total,
-                    ),
-                    lim["chapterLeadMaxChars"],
-                    seen=lead_seen,
-                )
-            updated.append(f"chapters[{ch.get('index')}].lead")
+        if not regenerate and (ch.get("lead") or "").strip():
+            continue
+        idx = int(ch.get("index") or 0)
+        if not dry_run:
+            ch["lead"] = _finalize_copy(
+                _build_lead(
+                    ch,
+                    assets=assets,
+                    default_place=place,
+                    tone=tone_val,
+                    chapter_index=idx,
+                    chapter_total=chapter_total,
+                ),
+                lim["chapterLeadMaxChars"],
+                seen=lead_seen,
+            )
+        updated.append(f"chapters[{ch.get('index')}].lead")
 
-    if not (trip.get("epilogue") or "").strip() and chapter_total >= 2:
+    if chapter_total >= 2 and (regenerate or not (trip.get("epilogue") or "").strip()):
         if not dry_run:
             trip["epilogue"] = _finalize_copy(
                 _build_epilogue(meta, tone=tone_val),

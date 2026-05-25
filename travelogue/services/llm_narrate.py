@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import json
 from copy import deepcopy
+from pathlib import Path
 from typing import Any, Callable
 
 from travelogue.config import get_config
 from travelogue.llm.client import chat_completion, parse_json_content
+from travelogue.llm.narrate_cache import read_cached, write_cached
 from travelogue.services.narrate import (
     NarrateError,
     NarrateResult,
@@ -77,39 +79,96 @@ def _chapter_user_prompt(brief: dict[str, Any], *, fix_errors: list[str] | None 
     return "\n".join(parts)
 
 
-def _narrative_field_errors(trip: dict) -> list[str]:
+def _narrative_field_errors(
+    trip: dict,
+    *,
+    meta_only: bool = False,
+    chapter_index: int | None = None,
+) -> list[str]:
     errs = [e for e in validate_narrative(trip) if not e.startswith("WARN:")]
+    if meta_only:
+        errs = [e for e in errs if "chapters[" not in e]
+    elif chapter_index is not None:
+        prefix = f"chapters[{chapter_index}]"
+        errs = [e for e in errs if prefix in e]
     lim = _manifest_limits()
     meta = trip.get("meta") or {}
-    hook = meta.get("hook") or ""
-    if hook and len(hook) > lim["hookMaxChars"]:
-        errs.append(f"meta.hook exceeds {lim['hookMaxChars']} chars")
-    epilogue = trip.get("epilogue") or ""
-    if epilogue and len(epilogue) > lim["epilogueMaxChars"]:
-        errs.append(f"epilogue exceeds {lim['epilogueMaxChars']} chars")
-    for i, ch in enumerate(trip.get("chapters") or []):
-        lead = ch.get("lead") or ""
-        if lead and len(lead) > lim["chapterLeadMaxChars"]:
-            errs.append(f"chapters[{i}].lead exceeds {lim['chapterLeadMaxChars']} chars")
-        for j, it in enumerate(ch.get("items") or []):
-            cap = it.get("caption") or ""
-            if cap and len(cap) > 60:
-                errs.append(f"chapters[{i}].items[{j}].caption too long")
+    if meta_only or chapter_index is None:
+        hook = meta.get("hook") or ""
+        if hook and len(hook) > lim["hookMaxChars"]:
+            errs.append(f"meta.hook exceeds {lim['hookMaxChars']} chars")
+        epilogue = trip.get("epilogue") or ""
+        if epilogue and len(epilogue) > lim["epilogueMaxChars"]:
+            errs.append(f"epilogue exceeds {lim['epilogueMaxChars']} chars")
+    if chapter_index is None and not meta_only:
+        chapters = trip.get("chapters") or []
+        for i, ch in enumerate(chapters):
+            lead = ch.get("lead") or ""
+            if lead and len(lead) > lim["chapterLeadMaxChars"]:
+                errs.append(f"chapters[{i}].lead exceeds {lim['chapterLeadMaxChars']} chars")
+            for j, it in enumerate(ch.get("items") or []):
+                cap = it.get("caption") or ""
+                if cap and len(cap) > 60:
+                    errs.append(f"chapters[{i}].items[{j}].caption too long")
+    elif chapter_index is not None:
+        chapters = trip.get("chapters") or []
+        if chapter_index < len(chapters):
+            ch = chapters[chapter_index]
+            lead = ch.get("lead") or ""
+            if lead and len(lead) > lim["chapterLeadMaxChars"]:
+                errs.append(f"chapters[{chapter_index}].lead exceeds {lim['chapterLeadMaxChars']} chars")
+            for j, it in enumerate(ch.get("items") or []):
+                cap = it.get("caption") or ""
+                if cap and len(cap) > 60:
+                    errs.append(f"chapters[{chapter_index}].items[{j}].caption too long")
     return errs
 
 
-def _needs_meta(trip: dict) -> bool:
+def _stub_lead_for_chapter(
+    trip: dict,
+    chapter: dict,
+    *,
+    tone: str,
+    lead_seen: set[str],
+) -> str:
+    from travelogue.services.narrate import _build_lead
+
+    meta = trip.get("meta") or {}
+    assets = {a["id"]: a for a in trip.get("assets") or []}
+    places = meta.get("places") or ["旅途"]
+    chapters = trip.get("chapters") or []
+    idx = int(chapter.get("index") or 0)
+    lim = _manifest_limits()
+    return _finalize_copy(
+        _build_lead(
+            chapter,
+            assets=assets,
+            default_place=places[0],
+            tone=tone,
+            chapter_index=idx,
+            chapter_total=len(chapters),
+        ),
+        lim["chapterLeadMaxChars"],
+        seen=lead_seen,
+    )
+
+
+def _needs_meta(trip: dict, *, regenerate: bool = False) -> bool:
     meta = trip.get("meta") or {}
     if meta.get("edited"):
-        return bool(not (trip.get("epilogue") or "").strip())
-    need_hook = not (meta.get("hook") or "").strip()
-    need_epilogue = not (trip.get("epilogue") or "").strip() and len(trip.get("chapters") or []) >= 2
+        return bool(regenerate and not (trip.get("epilogue") or "").strip())
+    need_hook = regenerate or not (meta.get("hook") or "").strip()
+    need_epilogue = (
+        regenerate or not (trip.get("epilogue") or "").strip()
+    ) and len(trip.get("chapters") or []) >= 2
     return need_hook or need_epilogue
 
 
-def _chapter_needs_copy(chapter: dict) -> bool:
+def _chapter_needs_copy(chapter: dict, *, regenerate: bool = False) -> bool:
     if chapter.get("edited"):
         return False
+    if regenerate:
+        return True
     if not (chapter.get("lead") or "").strip():
         return True
     for item in chapter.get("items") or []:
@@ -120,41 +179,43 @@ def _chapter_needs_copy(chapter: dict) -> bool:
     return False
 
 
-def _planned_fields(trip: dict) -> list[str]:
+def _planned_fields(trip: dict, *, regenerate: bool = False) -> list[str]:
     fields: list[str] = []
     meta = trip.get("meta") or {}
-    if not meta.get("edited") and not (meta.get("hook") or "").strip():
+    if not meta.get("edited") and (regenerate or not (meta.get("hook") or "").strip()):
         fields.append("meta.hook")
     for ch in trip.get("chapters") or []:
         if ch.get("edited"):
             continue
         idx = ch.get("index")
-        if not (ch.get("lead") or "").strip():
+        if regenerate or not (ch.get("lead") or "").strip():
             fields.append(f"chapters[{idx}].lead")
         for item in ch.get("items") or []:
-            if (
-                item.get("type") == "media-card"
-                and not item.get("edited")
-                and not (item.get("caption") or "").strip()
-            ):
+            if item.get("type") != "media-card" or item.get("edited"):
+                continue
+            if regenerate or not (item.get("caption") or "").strip():
                 fields.append(f"chapters[{idx}].items[{item.get('assetId')}].caption")
-    if not (trip.get("epilogue") or "").strip() and len(trip.get("chapters") or []) >= 2:
+    if len(trip.get("chapters") or []) >= 2 and (
+        regenerate or not (trip.get("epilogue") or "").strip()
+    ):
         if not meta.get("edited"):
             fields.append("epilogue")
     return fields
 
 
-def _apply_meta_payload(trip: dict, payload: dict[str, Any]) -> list[str]:
+def _apply_meta_payload(
+    trip: dict, payload: dict[str, Any], *, regenerate: bool = False
+) -> list[str]:
     updated: list[str] = []
     lim = _manifest_limits()
     meta = trip.setdefault("meta", {})
     if not meta.get("edited"):
         hook = (payload.get("meta") or {}).get("hook")
-        if hook and not (meta.get("hook") or "").strip():
+        if hook and (regenerate or not (meta.get("hook") or "").strip()):
             meta["hook"] = _finalize_copy(str(hook), lim["hookMaxChars"])
             updated.append("meta.hook")
     epilogue = payload.get("epilogue")
-    if epilogue and not (trip.get("epilogue") or "").strip():
+    if epilogue and (regenerate or not (trip.get("epilogue") or "").strip()):
         trip["epilogue"] = _finalize_copy(str(epilogue), lim["epilogueMaxChars"])
         updated.append("epilogue")
     return updated
@@ -166,13 +227,14 @@ def _apply_chapter_payload(
     payload: dict[str, Any],
     *,
     lead_seen: set[str],
+    regenerate: bool = False,
 ) -> list[str]:
     updated: list[str] = []
     lim = _manifest_limits()
     idx = chapter.get("index")
-    if not chapter.get("edited") and not (chapter.get("lead") or "").strip():
+    if not chapter.get("edited"):
         lead = payload.get("lead")
-        if lead:
+        if lead and (regenerate or not (chapter.get("lead") or "").strip()):
             chapter["lead"] = _finalize_copy(
                 str(lead),
                 lim["chapterLeadMaxChars"],
@@ -183,7 +245,7 @@ def _apply_chapter_payload(
     for item in chapter.get("items") or []:
         if item.get("type") != "media-card" or item.get("edited"):
             continue
-        if (item.get("caption") or "").strip():
+        if (item.get("caption") or "").strip() and not regenerate:
             continue
         aid = item.get("assetId")
         cap = captions.get(aid)
@@ -193,12 +255,55 @@ def _apply_chapter_payload(
     return updated
 
 
+def _chat_for_brief(
+    brief: dict[str, Any],
+    *,
+    scope: str,
+    provider: str,
+    model: str,
+    cache_dir: Path | None,
+    regenerate: bool,
+    chat_fn: Callable[[list[dict[str, str]]], str] | None,
+    messages: list[dict[str, str]],
+) -> str:
+    if cache_dir and not regenerate:
+        cached = read_cached(
+            cache_dir,
+            provider=provider,
+            model=model,
+            scope=scope,
+            brief=brief,
+        )
+        if cached is not None:
+            return json.dumps(cached, ensure_ascii=False)
+    if chat_fn is not None:
+        content = chat_fn(messages)
+    else:
+        content = chat_completion(messages, provider=provider)
+    if cache_dir:
+        try:
+            payload = parse_json_content(content)
+            write_cached(
+                cache_dir,
+                provider=provider,
+                model=model,
+                scope=scope,
+                brief=brief,
+                payload=payload,
+            )
+        except NarrateError:
+            pass
+    return content
+
+
 def run_llm_narrate(
     trip: dict,
     *,
     provider: str,
     tone: str | None = None,
     dry_run: bool = False,
+    regenerate: bool = False,
+    cache_dir: Path | None = None,
     chat_fn: Callable[[list[dict[str, str]]], str] | None = None,
 ) -> NarrateResult:
     """Fill hook, leads, captions, epilogue via LLM (metadata brief only)."""
@@ -207,7 +312,7 @@ def run_llm_narrate(
         meta["tone"] = tone if tone in ("relaxed", "documentary") else meta.get("tone", "relaxed")
     tone_val = meta.get("tone") or get_config().narrative.tone_default or "relaxed"
 
-    planned = _planned_fields(trip)
+    planned = _planned_fields(trip, regenerate=regenerate)
     if dry_run:
         return NarrateResult(fields_updated=planned)
 
@@ -217,24 +322,28 @@ def run_llm_narrate(
     max_retries = get_config().narrative.max_auto_fix_retries
     lead_seen: set[str] = set()
     updated: list[str] = []
+    rt_model = get_config().llm.model or provider
 
-    def _chat(messages: list[dict[str, str]]) -> str:
-        if chat_fn is not None:
-            return chat_fn(messages)
-        return chat_completion(messages, provider=provider)
-
-    if _needs_meta(trip):
-        brief = build_meta_brief(trip, tone=tone_val)
+    if _needs_meta(trip, regenerate=regenerate):
+        brief = build_meta_brief(trip, tone=tone_val, regenerate=regenerate)
         fix_errors: list[str] | None = None
         for attempt in range(max_retries + 1):
             prompt = _meta_user_prompt(brief, fix_errors=fix_errors)
-            content = _chat(
-                [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": prompt}]
+            messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": prompt}]
+            content = _chat_for_brief(
+                brief,
+                scope="meta",
+                provider=provider,
+                model=rt_model,
+                cache_dir=cache_dir,
+                regenerate=regenerate,
+                chat_fn=chat_fn,
+                messages=messages,
             )
             payload = parse_json_content(content)
             before = deepcopy(trip)
-            batch = _apply_meta_payload(trip, payload)
-            errs = _narrative_field_errors(trip)
+            batch = _apply_meta_payload(trip, payload, regenerate=regenerate)
+            errs = _narrative_field_errors(trip, meta_only=True)
             if not errs:
                 updated.extend(batch)
                 break
@@ -244,18 +353,31 @@ def run_llm_narrate(
                 raise NarrateError("E_NARRATE_RETRY_EXHAUSTED", "; ".join(errs[:3]))
             fix_errors = errs
 
-    for chapter in trip.get("chapters") or []:
-        if not _chapter_needs_copy(chapter):
+    chapters = trip.get("chapters") or []
+    for ch_idx in range(len(chapters)):
+        chapter = trip["chapters"][ch_idx]
+        if not _chapter_needs_copy(chapter, regenerate=regenerate):
             continue
-        brief = build_chapter_brief(trip, chapter, tone=tone_val)
+        brief = build_chapter_brief(trip, chapter, tone=tone_val, regenerate=regenerate)
         ch_id = brief["chapter"]["id"]
         fix_errors = None
+        last_payload: dict[str, Any] | None = None
         for attempt in range(max_retries + 1):
+            chapter = trip["chapters"][ch_idx]
             prompt = _chapter_user_prompt(brief, fix_errors=fix_errors)
-            content = _chat(
-                [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": prompt}]
+            messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": prompt}]
+            content = _chat_for_brief(
+                brief,
+                scope=f"chapter-{ch_id}",
+                provider=provider,
+                model=rt_model,
+                cache_dir=cache_dir,
+                regenerate=regenerate,
+                chat_fn=chat_fn,
+                messages=messages,
             )
             payload = parse_json_content(content)
+            last_payload = payload
             if payload.get("chapterId") and payload.get("chapterId") != ch_id:
                 if attempt >= max_retries:
                     raise NarrateError(
@@ -265,20 +387,40 @@ def run_llm_narrate(
                 fix_errors = [f"chapterId must be {ch_id!r}"]
                 continue
             before = deepcopy(trip)
-            batch = _apply_chapter_payload(trip, chapter, payload, lead_seen=lead_seen)
-            errs = _narrative_field_errors(trip)
+            batch = _apply_chapter_payload(
+                trip, chapter, payload, lead_seen=lead_seen, regenerate=regenerate
+            )
+            errs = _narrative_field_errors(trip, chapter_index=ch_idx)
             if not errs:
                 updated.extend(batch)
                 break
             trip.clear()
             trip.update(before)
             if attempt >= max_retries:
+                if any("VR-N04" in e for e in errs) and last_payload is not None:
+                    chapter = trip["chapters"][ch_idx]
+                    batch = _apply_chapter_payload(
+                        trip,
+                        chapter,
+                        last_payload,
+                        lead_seen=lead_seen,
+                        regenerate=regenerate,
+                    )
+                    chapter["lead"] = _stub_lead_for_chapter(
+                        trip, chapter, tone=tone_val, lead_seen=lead_seen
+                    )
+                    idx = chapter.get("index")
+                    if f"chapters[{idx}].lead" not in batch:
+                        batch.append(f"chapters[{idx}].lead")
+                    stub_errs = _narrative_field_errors(trip, chapter_index=ch_idx)
+                    if not stub_errs:
+                        updated.extend(batch)
+                        break
                 raise NarrateError("E_NARRATE_RETRY_EXHAUSTED", "; ".join(errs[:3]))
             fix_errors = errs
 
     pipe = trip.setdefault("pipeline", {})
     pipe["status"] = "copy_draft"
-    rt_model = get_config().llm.model or provider
     pipe.setdefault("runs", []).append(
         {
             "runId": f"narrate-{_utc_now_iso()}",

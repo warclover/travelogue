@@ -36,6 +36,15 @@ def test_vr_n02_overseas_place_without_asset():
     assert any("巴黎" in e for e in warns)
 
 
+def test_vr_n04_lead_repeats_title():
+    trip = _base_trip()
+    ch = trip["chapters"][0]
+    ch["title"] = "5月–6月·林芝·2"
+    ch["lead"] = "5月–6月·林芝·2，林芝。"
+    errs = [e for e in validate_narrative(trip) if "VR-N04" in e]
+    assert errs
+
+
 def test_vr_n03_caption_transcript_overlap():
     trip = _base_trip()
     ch = trip["chapters"][1]

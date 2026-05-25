@@ -9,7 +9,7 @@ trips_dir: ./trips
 llm:
   provider: deepseek          # stub | deepseek | dashscope
   model: deepseek-chat
-  api_key_env: DEEPSEEK_API_KEY
+  api_key_env: DEEPSEEK_API_KEY  # 密钥写在项目根 .env（见 .env.example），或系统环境变量
   timeout_sec: 120
   # 百炼对照：
   # provider: dashscope

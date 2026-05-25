@@ -24,6 +24,7 @@ from travelogue.orchestrator.run import RunResult, run_trip
 from travelogue.render.engine import RenderError, render_trip, render_trip_surfaces
 from travelogue.render.preview import render_preview_jpg
 from travelogue.services.layout import LayoutError, apply_layout_to_trip
+from travelogue.llm.errors import LlmError
 from travelogue.services.narrate import NarrateError, run_narrate
 from travelogue.services.pipeline_state import PipelineError
 from travelogue.services.trip import TripNotFoundError, TripService
@@ -480,6 +481,11 @@ def cmd_narrate(
         help="stub | deepseek | dashscope (default: config llm.provider or stub)",
     ),
     dry_run: bool = typer.Option(False, "--dry-run"),
+    regenerate: bool = typer.Option(
+        False,
+        "--regenerate",
+        help="Rewrite non-edited hook, leads, captions, epilogue",
+    ),
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
     config: Optional[Path] = typer.Option(None, "--config"),
 ) -> None:
@@ -496,7 +502,15 @@ def cmd_narrate(
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
     try:
-        result = run_narrate(trip, tone=tone, dry_run=dry_run, provider=provider)
+        cache_dir = trip_path.parent / ".cache" / "narrate"
+        result = run_narrate(
+            trip,
+            tone=tone,
+            dry_run=dry_run,
+            provider=provider,
+            regenerate=regenerate,
+            cache_dir=cache_dir,
+        )
     except NarrateError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
@@ -506,6 +520,8 @@ def cmd_narrate(
     TripService().save(trip, trip_path)
     prov = provider or get_config().llm.provider or "stub"
     typer.echo(f"OK narrate ({prov}) · updated {', '.join(result.fields_updated) or '(none)'}")
+    if result.fields_updated:
+        typer.echo(f"  next: python -m travelogue render {path}")
 
 
 @llm_app.command("ping")
@@ -566,6 +582,12 @@ def cmd_run(
     confirm_privacy: bool = typer.Option(False, "--confirm-privacy"),
     no_preview: bool = typer.Option(False, "--no-preview"),
     skip_locked: bool = typer.Option(True, "--skip-locked/--no-skip-locked"),
+    narrate_provider: Optional[str] = typer.Option(
+        None,
+        "--narrate-provider",
+        help="stub | deepseek | dashscope for narrate stage",
+    ),
+    regenerate: bool = typer.Option(False, "--regenerate", help="Force rewrite copy on narrate stage"),
 ) -> None:
     """Run pipeline stages in order up to --until."""
     trip_path = _resolve(path, trips_dir=trips_dir)
@@ -579,9 +601,25 @@ def cmd_run(
             confirm_privacy=confirm_privacy,
             no_preview=no_preview,
             skip_locked=skip_locked,
+            narrate_provider=narrate_provider,
+            regenerate=regenerate,
         )
-    except (IngestError, CurateError, LayoutError, PipelineError, RenderError, ExportError) as exc:
+    except (
+        IngestError,
+        CurateError,
+        LayoutError,
+        PipelineError,
+        RenderError,
+        ExportError,
+        NarrateError,
+        LlmError,
+    ) as exc:
         typer.echo(str(exc), err=True)
+        if isinstance(exc, LlmError) and exc.code == "E_LLM_AUTH":
+            typer.echo(
+                "  hint: add DEEPSEEK_API_KEY to project .env (see .env.example) or set the env var",
+                err=True,
+            )
         raise typer.Exit(1) from exc
     typer.echo(f"OK run · stages: {', '.join(result.stages)}")
     if result.publish:

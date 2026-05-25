@@ -96,6 +96,20 @@ def _is_overseas_place(name: str) -> bool:
     return False
 
 
+def lead_repeats_title(title: str, lead: str, *, place: str = "") -> bool:
+    """True when lead mostly echoes chapter title (VR-N04)."""
+    title = (title or "").strip()
+    lead = (lead or "").strip()
+    place = (place or "").strip()
+    if not title or not lead:
+        return False
+    if lead.startswith(title):
+        return True
+    if place and lead in (f"{title}，{place}。", f"{title}，{place}"):
+        return True
+    return _overlap_ratio(lead, title) >= 0.85
+
+
 def _overlap_ratio(a: str, b: str) -> float:
     a, b = a.strip(), b.strip()
     if not a or not b:
@@ -141,6 +155,18 @@ def validate_narrative(trip: dict) -> list[str]:
             )
 
     for i, ch in enumerate(trip.get("chapters") or []):
+        title = (ch.get("title") or "").strip()
+        lead = (ch.get("lead") or "").strip()
+        if title and lead:
+            places = (ch.get("curation") or {}).get("places") or []
+            place = places[0] if places else ""
+            if not place:
+                meta_places = trip.get("meta", {}).get("places") or []
+                place = meta_places[0] if meta_places else ""
+            if lead_repeats_title(title, lead, place=str(place)):
+                issues.append(
+                    f"E_VALIDATE_MANIFEST lead repeats chapter title in chapters[{i}] (VR-N04)"
+                )
         for j, it in enumerate(ch.get("items") or []):
             if it.get("type") != "media-card":
                 continue

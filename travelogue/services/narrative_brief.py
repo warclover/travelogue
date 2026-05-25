@@ -48,7 +48,7 @@ def manifest_limits_brief() -> dict[str, int]:
     }
 
 
-def build_meta_brief(trip: dict, *, tone: str) -> dict[str, Any]:
+def build_meta_brief(trip: dict, *, tone: str, regenerate: bool = False) -> dict[str, Any]:
     meta = trip.get("meta") or {}
     curation = trip.get("curation") or {}
     segments = curation.get("segments") or []
@@ -68,13 +68,15 @@ def build_meta_brief(trip: dict, *, tone: str) -> dict[str, Any]:
         "limits": manifest_limits_brief(),
         "fieldsRequested": ["meta.hook", "epilogue"],
         "existing": {
-            "hook": meta.get("hook") or "",
-            "epilogue": trip.get("epilogue") or "",
+            "hook": "" if regenerate else (meta.get("hook") or ""),
+            "epilogue": "" if regenerate else (trip.get("epilogue") or ""),
         },
     }
 
 
-def build_chapter_brief(trip: dict, chapter: dict, *, tone: str) -> dict[str, Any]:
+def build_chapter_brief(
+    trip: dict, chapter: dict, *, tone: str, regenerate: bool = False
+) -> dict[str, Any]:
     meta = trip.get("meta") or {}
     assets = {a["id"]: a for a in trip.get("assets") or []}
     ch_cur = chapter.get("curation") or {}
@@ -90,8 +92,9 @@ def build_chapter_brief(trip: dict, chapter: dict, *, tone: str) -> dict[str, An
             {
                 "assetId": aid,
                 "existingTitle": item.get("title") or "",
-                "existingCaption": item.get("caption") or "",
-                "skipCaption": bool(item.get("edited")) or bool((item.get("caption") or "").strip()),
+                "existingCaption": "" if regenerate else (item.get("caption") or ""),
+                "skipCaption": bool(item.get("edited"))
+                or (bool((item.get("caption") or "").strip()) and not regenerate),
                 "asset": _asset_brief(asset),
             }
         )
@@ -112,7 +115,7 @@ def build_chapter_brief(trip: dict, chapter: dict, *, tone: str) -> dict[str, An
             "memoryAnchors": ch_cur.get("memoryAnchors") or [],
             "daySpan": ch_cur.get("daySpan") or [],
             "segmentId": ch_cur.get("segmentId"),
-            "existingLead": chapter.get("lead") or "",
+            "existingLead": "" if regenerate else (chapter.get("lead") or ""),
             "items": items_out,
         },
         "fieldsRequested": ["lead", "items[].caption"],

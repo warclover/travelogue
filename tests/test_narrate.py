@@ -99,6 +99,16 @@ def test_narrate_lead_does_not_repeat_title_place() -> None:
     assert lead != f"{trip['chapters'][1]['title']}，林芝。"
 
 
+def test_narrate_regenerate_overwrites_existing_lead() -> None:
+    trip = _sample_trip()
+    trip["chapters"][1]["title"] = "5月–6月·林芝·2"
+    trip["chapters"][1]["lead"] = "5月–6月·林芝·2，林芝。"
+    run_narrate(trip, provider="stub", regenerate=True)
+    lead = trip["chapters"][1]["lead"]
+    assert lead != "5月–6月·林芝·2，林芝。"
+    assert not lead.startswith("5月–6月·林芝·2")
+
+
 def test_narrate_dry_run_no_mutation() -> None:
     trip = _sample_trip()
     before = copy.deepcopy(trip)

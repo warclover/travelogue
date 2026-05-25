@@ -143,3 +143,142 @@ def test_llm_narrate_dry_run_lists_fields():
     result = run_llm_narrate(trip, provider="deepseek", dry_run=True)
     assert "meta.hook" in result.fields_updated
     assert not trip["meta"].get("hook")
+
+
+def test_llm_narrate_regenerate_planned_fields():
+    trip = _sample_trip()
+    run_narrate(trip, provider="stub")
+    before_lead = trip["chapters"][0]["lead"]
+    result = run_llm_narrate(trip, provider="deepseek", dry_run=True, regenerate=True)
+    assert f"chapters[{trip['chapters'][0]['index']}].lead" in result.fields_updated
+    assert trip["chapters"][0]["lead"] == before_lead
+
+
+def test_llm_narrate_meta_ignores_stale_chapter_vr04():
+    trip = _sample_trip()
+    trip["chapters"][0]["title"] = "4月2日"
+    trip["chapters"][0]["lead"] = "4月2日，京都。"
+    trip["meta"]["hook"] = ""
+
+    def fake_chat(messages: list[dict[str, str]]) -> str:
+        user = messages[-1]["content"]
+        if "meta 文案" in user:
+            return json.dumps(
+                {"meta": {"hook": "新的 hook。"}, "epilogue": "再见。"},
+                ensure_ascii=False,
+            )
+        if "ch-01" in user:
+            return json.dumps(
+                {
+                    "chapterId": "ch-01",
+                    "lead": "从车站出发。",
+                    "items": [{"assetId": "a1", "caption": "站前。"}],
+                },
+                ensure_ascii=False,
+            )
+        if "ch-02" in user:
+            return json.dumps(
+                {
+                    "chapterId": "ch-02",
+                    "lead": "夜里走进祇园。",
+                    "items": [{"assetId": "a2", "caption": "灯。"}],
+                },
+                ensure_ascii=False,
+            )
+        return json.dumps(
+            {
+                "chapterId": "ch-03",
+                "lead": "岚山的风很轻。",
+                "items": [{"assetId": "a3", "caption": "山道。"}],
+            },
+            ensure_ascii=False,
+        )
+
+    run_llm_narrate(trip, provider="deepseek", chat_fn=fake_chat, regenerate=True)
+    assert trip["meta"]["hook"] == "新的 hook。"
+
+
+def test_llm_narrate_vr04_falls_back_to_stub_lead():
+    trip = _sample_trip()
+    trip["chapters"] = [trip["chapters"][0]]
+    trip["chapters"][0]["title"] = "4月2日"
+    trip["chapters"][0]["lead"] = ""
+    trip["meta"]["hook"] = "已有 hook"
+
+    def fake_chat(messages: list[dict[str, str]]) -> str:
+        user = messages[-1]["content"]
+        if "meta 文案" in user:
+            return json.dumps({"meta": {"hook": "已有 hook"}, "epilogue": None}, ensure_ascii=False)
+        return json.dumps(
+            {
+                "chapterId": "ch-01",
+                "lead": "4月2日，京都。",
+                "items": [{"assetId": "a1", "caption": "站前。"}],
+            },
+            ensure_ascii=False,
+        )
+
+    run_llm_narrate(trip, provider="deepseek", chat_fn=fake_chat, regenerate=True)
+    lead = trip["chapters"][0]["lead"]
+    assert lead
+    assert not lead.startswith("4月2日，京都")
+
+
+def test_llm_narrate_cache_skips_chat(tmp_path):
+    trip = _sample_trip()
+    calls: list[str] = []
+
+    def fake_chat(messages: list[dict[str, str]]) -> str:
+        user = messages[-1]["content"]
+        calls.append(user)
+        if "meta 文案" in user:
+            return json.dumps(
+                {"meta": {"hook": "缓存 hook。"}, "epilogue": "再见。"},
+                ensure_ascii=False,
+            )
+        if "ch-01" in user:
+            return json.dumps(
+                {
+                    "chapterId": "ch-01",
+                    "lead": "导语一。",
+                    "items": [{"assetId": "a1", "caption": "图注一。"}],
+                },
+                ensure_ascii=False,
+            )
+        if "ch-02" in user:
+            return json.dumps(
+                {
+                    "chapterId": "ch-02",
+                    "lead": "导语二。",
+                    "items": [{"assetId": "a2", "caption": "图注二。"}],
+                },
+                ensure_ascii=False,
+            )
+        return json.dumps(
+            {
+                "chapterId": "ch-03",
+                "lead": "导语三。",
+                "items": [{"assetId": "a3", "caption": "图注三。"}],
+            },
+            ensure_ascii=False,
+        )
+
+    cache_dir = tmp_path / "cache"
+    run_llm_narrate(
+        trip,
+        provider="deepseek",
+        chat_fn=fake_chat,
+        cache_dir=cache_dir,
+    )
+    first_calls = len(calls)
+    assert first_calls >= 1
+
+    trip2 = _sample_trip()
+    run_llm_narrate(
+        trip2,
+        provider="deepseek",
+        chat_fn=fake_chat,
+        cache_dir=cache_dir,
+    )
+    assert len(calls) == first_calls
+    assert trip2["meta"]["hook"] == "缓存 hook。"

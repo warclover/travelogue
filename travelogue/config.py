@@ -185,6 +185,9 @@ _cached: AppConfig | None = None
 
 def get_config(*, reload: bool = False, path: Path | None = None) -> AppConfig:
     global _cached
+    from travelogue.env import load_dotenv_files
+
+    load_dotenv_files()
     if _cached is None or reload:
         _cached = load_config(path)
     return _cached
