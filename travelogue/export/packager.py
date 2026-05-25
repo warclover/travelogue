@@ -9,7 +9,7 @@ from pathlib import Path
 from travelogue.config import get_config
 from travelogue.export.exif import write_asset_to_zip
 from travelogue.render.context import collect_asset_paths
-from travelogue.render.engine import RenderError, render_trip, should_include_long_shot
+from travelogue.render.engine import RenderError, render_trip, should_include_long_shot, should_include_screenplay
 from travelogue.render.preview import render_preview_jpg
 from travelogue.services.trip import TripService
 from travelogue.services.validate import validate_trip
@@ -117,6 +117,10 @@ def export_trip(
         ("longshot.css", trip_root / "longshot.css"),
         ("vendor/html2canvas.min.js", trip_root / "vendor" / "html2canvas.min.js"),
     )
+    screenplay_files = (
+        ("screenplay.js", trip_root / "screenplay.js"),
+        ("screenplay.css", trip_root / "screenplay.css"),
+    )
 
     max_zip_mb = get_config().export.max_zip_mb
     photo_n = len(trip.get("assets") or [])
@@ -132,6 +136,11 @@ def export_trip(
 
         if should_include_long_shot(trip, export_mode="share"):
             for arc, path in longshot_files:
+                if path.is_file():
+                    zf.write(path, arc)
+
+        if should_include_screenplay(trip):
+            for arc, path in screenplay_files:
                 if path.is_file():
                     zf.write(path, arc)
 

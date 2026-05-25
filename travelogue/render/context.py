@@ -6,7 +6,14 @@ from datetime import date, datetime
 from pathlib import Path
 
 from travelogue.media.image_ops import classify_aspect, detect_orientation
-from travelogue.paths import JOURNAL_CSS, JOURNAL_SCREENS_CSS, LONGSHOT_JS, SHARE_JS
+from travelogue.paths import (
+    JOURNAL_CSS,
+    JOURNAL_SCREENS_CSS,
+    LONGSHOT_JS,
+    SCREENPLAY_CSS,
+    SCREENPLAY_JS,
+    SHARE_JS,
+)
 from travelogue.services.validate import asset_map
 
 
@@ -14,7 +21,14 @@ def _longshot_bundle_version(trip: dict) -> str:
     """Pin asset cache-busting to bundle mtimes so template changes invalidate
     even when trip.json is unchanged."""
     stamps: list[int] = []
-    for path in (JOURNAL_CSS, JOURNAL_SCREENS_CSS, LONGSHOT_JS, SHARE_JS):
+    for path in (
+        JOURNAL_CSS,
+        JOURNAL_SCREENS_CSS,
+        LONGSHOT_JS,
+        SHARE_JS,
+        SCREENPLAY_JS,
+        SCREENPLAY_CSS,
+    ):
         try:
             stamps.append(int(path.stat().st_mtime))
         except OSError:
@@ -627,12 +641,17 @@ def build_render_context(
         }
         chapters_out.append(ch_ctx)
 
-    from travelogue.render.engine import should_include_long_shot
+    from travelogue.render.engine import should_include_long_shot, should_include_screenplay
 
     include_long_shot = should_include_long_shot(
         trip,
         export_mode=export_mode,
         layout_engine_override=layout_engine_override,
+    )
+    include_screenplay = should_include_screenplay(
+        trip,
+        layout_engine_override=layout_engine_override,
+        export_layout_override=export_layout_override,
     )
 
     html_attrs = [f'data-export="{export_mode}"']
@@ -642,6 +661,8 @@ def build_render_context(
         html_attrs.append(f'data-layout-engine="{layout_engine}"')
     if include_long_shot:
         html_attrs.append('data-longshot="on"')
+    if include_screenplay:
+        html_attrs.append('data-screenplay="on"')
     theme = font_theme or (trip.get("export") or {}).get("fontTheme") or ""
     if theme == "magazine":
         html_attrs.append('data-font-theme="magazine"')
@@ -654,6 +675,7 @@ def build_render_context(
         "lang": "zh-CN",
         "htmlExtraAttrs": " ".join(html_attrs),
         "includeLongShot": include_long_shot,
+        "includeScreenplay": include_screenplay,
         "assetVersion": asset_version,
         "hasShareZip": zip_ready,
         "shareZipFile": zip_name if zip_ready else None,

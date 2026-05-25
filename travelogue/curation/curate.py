@@ -260,16 +260,12 @@ def _cover_candidates(
     return out[:limit]
 
 
-_MAX_CHAPTER_ITEMS = 8
-
-
-def _item_asset_ids(item: dict) -> list[str]:
-    if item.get("type") == "media-card":
-        aid = item.get("assetId")
-        return [aid] if aid else []
-    if item.get("type") in ("media-row", "media-scroll"):
-        return list(item.get("assetIds") or [])
-    return []
+from travelogue.curation.chapter_items import (
+    MAX_CHAPTER_ITEMS,
+    collect_screen_asset_ids,
+    item_asset_ids,
+    items_from_asset_ids,
+)
 
 
 def _filter_item_excluded(item: dict, excluded: set[str]) -> dict | None:
@@ -289,30 +285,6 @@ def _filter_item_excluded(item: dict, excluded: set[str]) -> dict | None:
     return item
 
 
-def _items_from_screen_asset_ids(asset_ids: list[str]) -> list[dict]:
-    """Rebuild a compact items[] from screens (schema max 8)."""
-    items: list[dict] = []
-    i = 0
-    while i < len(asset_ids) and len(items) < _MAX_CHAPTER_ITEMS:
-        chunk = asset_ids[i : i + 3]
-        if len(chunk) == 1:
-            items.append(
-                {
-                    "type": "media-card",
-                    "assetId": chunk[0],
-                    "layout": {"fill": True, "bleed": True, "overlay": True},
-                }
-            )
-            i += 1
-        else:
-            layout = "landscape-triple" if len(chunk) >= 3 else "landscape-pair"
-            items.append(
-                {"type": "media-row", "assetIds": chunk[:3], "rowLayout": layout}
-            )
-            i += len(chunk[:3])
-    return items[:_MAX_CHAPTER_ITEMS]
-
-
 def _sanitize_chapters_after_exclusion(chapters: list[dict], excluded: set[str]) -> None:
     """Drop excluded assets from items[] and keep within schema maxItems."""
     for ch in chapters:
@@ -321,20 +293,21 @@ def _sanitize_chapters_after_exclusion(chapters: list[dict], excluded: set[str])
             kept = _filter_item_excluded(it, excluded)
             if kept is not None:
                 items.append(kept)
-        if len(items) > _MAX_CHAPTER_ITEMS:
-            aids: list[str] = []
-            for sc in ch.get("screens") or []:
-                for sl in sc.get("slots") or []:
-                    aid = sl.get("assetId")
-                    if aid and aid not in excluded and aid not in aids:
-                        aids.append(aid)
-            if aids:
-                items = _items_from_screen_asset_ids(aids)
-            else:
+        if len(items) > MAX_CHAPTER_ITEMS:
+            aids = [
+                aid
+                for aid in collect_screen_asset_ids(ch)
+                if aid not in excluded
+            ]
+            if not aids:
                 flat: list[str] = []
                 for it in items:
-                    flat.extend(_item_asset_ids(it))
-                items = _items_from_screen_asset_ids(flat)
+                    flat.extend(aid for aid in item_asset_ids(it) if aid not in flat)
+                aids = flat
+            if aids:
+                items = items_from_asset_ids(aids)
+            else:
+                items = items[:MAX_CHAPTER_ITEMS]
         ch["items"] = items
 
 

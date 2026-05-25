@@ -1,0 +1,24 @@
+<div class="screenplay-toolbar" data-block="screenplay-toolbar" role="complementary" aria-label="自动播放">
+  <button type="button" id="screenplay-start" class="screenplay-toolbar__btn"
+    aria-pressed="false"
+    data-screenplay-label="自动播放"
+    data-screenplay-busy="退出播放">
+    自动播放
+  </button>
+  <p class="screenplay-toolbar__hint">全屏 · 逐屏 · 每屏 2 秒</p>
+</div>
+<div id="screenplay-root" class="screenplay-root" hidden aria-hidden="true">
+  <div class="screenplay-stage">
+    <div class="screenplay-slide" data-screenplay-layer="a"></div>
+    <div class="screenplay-slide" data-screenplay-layer="b"></div>
+  </div>
+  <div class="screenplay-chrome">
+    <div class="screenplay-progress" aria-hidden="true">
+      <span class="screenplay-progress__bar"></span>
+    </div>
+    <span class="screenplay-counter" aria-live="polite"></span>
+    <button type="button" class="screenplay-chrome__stop" data-screenplay-action="stop">
+      退出
+    </button>
+  </div>
+</div>

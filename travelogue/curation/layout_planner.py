@@ -560,6 +560,9 @@ def build_chapters_from_plan(
             mixed_proximity_seconds=default_mixed_proximity_seconds(),
             trip_photo_total=len(asset_ids),
         )
+        from travelogue.curation.chapter_items import compact_chapter_items_for_screens
+
+        compact_chapter_items_for_screens(chapters)
     return chapters, summary
 
 
@@ -637,6 +640,9 @@ def build_chapters_from_buckets(
             skip_screen_asset_ids=skip_screen_asset_ids,
             trip_photo_total=trip_photo_total,
         )
+        from travelogue.curation.chapter_items import compact_chapter_items_for_screens
+
+        compact_chapter_items_for_screens(chapters)
     return chapters
 
 

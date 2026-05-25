@@ -16,4 +16,12 @@
     <p class="subtitle">{{subtitle}}</p>
     {{/if}}
   </div>
+  {{#if includeScreenplay}}
+  <button type="button" class="cover-hero__play" data-screenplay-trigger="start"
+    data-screenplay-label="▶ 自动播放"
+    data-screenplay-busy="退出播放"
+    aria-label="自动播放，全屏逐屏放映">
+    ▶ 自动播放
+  </button>
+  {{/if}}
 </header>

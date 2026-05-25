@@ -8,6 +8,9 @@
   {{#if includeLongShot}}
   <link rel="stylesheet" href="longshot.css?v={{assetVersion}}" />
   {{/if}}
+  {{#if includeScreenplay}}
+  <link rel="stylesheet" href="screenplay.css?v={{assetVersion}}" />
+  {{/if}}
 </head>
 <body>
   <main>
@@ -33,6 +36,10 @@
   <script src="vendor/html2canvas.min.js?v={{assetVersion}}" defer></script>
   <script src="longshot.js?v={{assetVersion}}" defer></script>
   <script src="share.js?v={{assetVersion}}" defer></script>
+  {{/if}}
+  {{#if includeScreenplay}}
+  {{> screenplay-toolbar}}
+  <script src="screenplay.js?v={{assetVersion}}" defer></script>
   {{/if}}
 </body>
 </html>

@@ -713,7 +713,7 @@ def cmd_render(
     index_name: Optional[str] = typer.Option(
         None,
         "--index-name",
-        help="output HTML filename (default index.html or index-screens.html when --web-layout screens)",
+        help="output HTML filename (default index.html)",
     ),
     no_validate: bool = typer.Option(False, "--no-validate", help="skip validation"),
     mark_rendered: bool = typer.Option(False, "--mark-rendered", help="set pipeline.status=rendered"),
@@ -740,8 +740,6 @@ def cmd_render(
         raise typer.Exit(1)
     theme_arg = None if font_theme in (None, "ui") else font_theme
     out_html = index_name
-    if out_html is None and web_layout == "screens":
-        out_html = "index-screens.html"
     if out_html is None:
         out_html = "index.html"
     trip_path = _resolve(path)
@@ -772,6 +770,11 @@ def cmd_render(
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
     typer.echo(f"OK {out_dir / out_html}")
+    trip = TripService().load(trip_path)
+    from travelogue.render.engine import should_include_screenplay
+
+    if should_include_screenplay(trip, layout_engine_override=web_layout):
+        typer.echo("  自动播放: 封面或右下角「自动播放」· 建议用本地 http 打开（全屏需用户手势）")
 
 
 @app.command("preview")

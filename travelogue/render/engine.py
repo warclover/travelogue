@@ -13,6 +13,8 @@ from travelogue.paths import (
     JOURNAL_SCREENS_CSS,
     LONGSHOT_CSS,
     LONGSHOT_JS,
+    SCREENPLAY_CSS,
+    SCREENPLAY_JS,
     SHARE_JS,
     TEMPLATE_VISUAL_JOURNAL,
 )
@@ -45,6 +47,26 @@ def should_include_long_shot(
     return bool(flag)
 
 
+def should_include_screenplay(
+    trip: dict,
+    *,
+    layout_engine_override: str | None = None,
+    export_layout_override: str | None = None,
+) -> bool:
+    """Web screens slideshow: auto-play layout-screen blocks in fullscreen."""
+    from travelogue.curation.screen_planner import screens_layout_active
+
+    if not screens_layout_active(trip, override=layout_engine_override):
+        return False
+
+    export_layout = export_layout_override or trip.get("exportLayout", "auto")
+    if export_layout == "mobile":
+        return False
+
+    chapters = trip.get("chapters") or []
+    return any(ch.get("screens") for ch in chapters)
+
+
 def copy_longshot_bundle(out_dir: Path) -> None:
     """Copy longshot.js, share.js, longshot.css, and vendored html2canvas into trip output."""
     out_dir = out_dir.resolve()
@@ -65,6 +87,17 @@ def copy_longshot_bundle(out_dir: Path) -> None:
     dest_vendor = vendor_dir / "html2canvas.min.js"
     if dest_vendor.resolve() != HTML2CANVAS_VENDOR.resolve():
         shutil.copy2(HTML2CANVAS_VENDOR, dest_vendor)
+
+
+def copy_screenplay_bundle(out_dir: Path) -> None:
+    """Copy screenplay.js and screenplay.css into trip output."""
+    out_dir = out_dir.resolve()
+    for src, name in ((SCREENPLAY_JS, "screenplay.js"), (SCREENPLAY_CSS, "screenplay.css")):
+        if not src.is_file():
+            raise RenderError("E_RENDER_SCREENPLAY", f"missing {src.name}")
+        dest = out_dir / name
+        if dest.resolve() != src.resolve():
+            shutil.copy2(src, dest)
 
 
 def _load_partials(compiler: Compiler, partials_dir: Path) -> dict:
@@ -171,6 +204,13 @@ def render_trip(
         )
     if include_longshot:
         copy_longshot_bundle(out_dir)
+
+    if should_include_screenplay(
+        trip,
+        layout_engine_override=layout_engine,
+        export_layout_override=export_layout_override,
+    ):
+        copy_screenplay_bundle(out_dir)
 
     if update_pipeline:
         from datetime import datetime, timezone

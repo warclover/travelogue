@@ -46,6 +46,9 @@ def prepare_trip_web_screens(trip: dict) -> dict:
         day_buckets=[bucket] if bucket else None,
         mixed_proximity_seconds=default_mixed_proximity_seconds(),
     )
+    from travelogue.curation.chapter_items import compact_chapter_items_for_screens
+
+    compact_chapter_items_for_screens(t["chapters"])
     return t
 
 

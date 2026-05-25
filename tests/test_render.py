@@ -51,6 +51,33 @@ def test_render_screens_engine_outputs_layout_screen(trip_workspace: Path) -> No
     assert 'layout-slot__img--cover' in html
 
 
+def test_render_screens_includes_screenplay_bundle(trip_workspace: Path) -> None:
+    trip = json.loads((trip_workspace / "trip.json").read_text(encoding="utf-8"))
+    trip["exportLayout"] = "web"
+    trip["layoutEngine"] = "screens"
+    from travelogue.curation.layout_planner import aspect_kind_for_asset
+    from travelogue.curation.screen_planner import attach_screens_to_chapters
+
+    aspects = {a["id"]: aspect_kind_for_asset(a) for a in trip.get("assets", [])}
+    trip["chapters"] = attach_screens_to_chapters(trip.get("chapters", []), aspects)
+    (trip_workspace / "trip.json").write_text(
+        json.dumps(trip, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    render_trip(
+        trip_workspace / "trip.json",
+        validate=False,
+        layout_engine="screens",
+        export_layout_override="web",
+    )
+    assert (trip_workspace / "screenplay.js").is_file()
+    assert (trip_workspace / "screenplay.css").is_file()
+    html = (trip_workspace / "index.html").read_text(encoding="utf-8")
+    assert 'data-screenplay="on"' in html
+    assert "screenplay-start" in html
+    assert "screenplay.js" in html
+    assert "longshot.js" not in html
+
+
 def test_render_html_has_core_blocks(trip_workspace: Path) -> None:
     trip = json.loads((trip_workspace / "trip.json").read_text(encoding="utf-8"))
     html = render_html(trip, export_mode="draft", trip_root=trip_workspace)

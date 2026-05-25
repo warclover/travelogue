@@ -71,6 +71,28 @@ def test_longshot_disabled_for_screens_engine(golden_trip: dict) -> None:
     assert 'data-longshot="on"' not in html
 
 
+def test_screenplay_enabled_for_screens_engine(golden_trip: dict) -> None:
+    trip = prepare_trip_web_screens(golden_trip)
+    from travelogue.render.engine import should_include_screenplay
+
+    assert should_include_screenplay(trip) is True
+    html = render_html(trip, export_mode="draft", layout_engine_override="screens")
+    assert 'data-screenplay="on"' in html
+    assert "screenplay-start" in html
+    assert "screenplay.js" in html
+    assert "screenplay.css" in html
+
+
+def test_screenplay_disabled_for_legacy_web(golden_trip: dict) -> None:
+    trip = prepare_trip_web_legacy(golden_trip)
+    from travelogue.render.engine import should_include_screenplay
+
+    assert should_include_screenplay(trip) is False
+    html = render_html(trip, export_mode="draft")
+    assert 'data-screenplay="on"' not in html
+    assert "screenplay-start" not in html
+
+
 def test_longshot_enabled_for_legacy_web(golden_trip: dict) -> None:
     trip = prepare_trip_web_legacy(golden_trip)
     trip.setdefault("export", {})["longShot"] = True
