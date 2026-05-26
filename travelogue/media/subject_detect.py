@@ -13,6 +13,7 @@ class FaceDetectionResult:
     focal: tuple[float, float]
     tags: tuple[str, ...]
     face_count: int
+    salient_box: dict[str, float] | None = None
 
 
 def _opencv_available() -> bool:
@@ -72,6 +73,24 @@ def focal_from_faces(
     return (min(1.0, max(0.0, cx)), min(1.0, max(0.0, cy)))
 
 
+def salient_box_from_faces(
+    faces: list[tuple[int, int, int, int]],
+    *,
+    img_w: int,
+    img_h: int,
+) -> dict[str, float] | None:
+    """Normalized salient region from largest face box."""
+    if not faces or img_w <= 0 or img_h <= 0:
+        return None
+    x, y, w, h = max(faces, key=lambda b: b[2] * b[3])
+    return {
+        "x": round(min(1.0, max(0.0, x / img_w)), 4),
+        "y": round(min(1.0, max(0.0, y / img_h)), 4),
+        "w": round(min(1.0, max(0.0, w / img_w)), 4),
+        "h": round(min(1.0, max(0.0, h / img_h)), 4),
+    }
+
+
 def analyze_subject(
     img: Image.Image,
     *,
@@ -81,11 +100,12 @@ def analyze_subject(
     """Run face detection; safe no-op when disabled or OpenCV missing."""
     default_focal = (0.5, 0.45)
     if not enabled:
-        return FaceDetectionResult(False, default_focal, (), 0)
+        return FaceDetectionResult(False, default_focal, (), 0, None)
 
     faces = detect_faces_in_image(img, min_size=min_face_size)
     if not faces:
-        return FaceDetectionResult(False, default_focal, (), 0)
+        return FaceDetectionResult(False, default_focal, (), 0, None)
 
     focal = focal_from_faces(faces, img_w=img.width, img_h=img.height)
-    return FaceDetectionResult(True, focal, ("person", "face"), len(faces))
+    salient = salient_box_from_faces(faces, img_w=img.width, img_h=img.height)
+    return FaceDetectionResult(True, focal, ("person", "face"), len(faces), salient)

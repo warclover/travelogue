@@ -24,6 +24,11 @@ from travelogue.curation.asset_caption import (
     resolve_caption,
 )
 from travelogue.services.narrative_brief import build_chapter_brief, build_meta_brief
+from travelogue.services.narrative_scope import (
+    captions_allowed,
+    chapter_lead_allowed,
+    resolve_narrative_scope,
+)
 from travelogue.services.narrative_validate import validate_narrative
 
 SYSTEM_PROMPT = """你是旅行视觉游记的文案编辑。你只输出合法 JSON，不写 HTML。
@@ -187,12 +192,24 @@ def _chapter_indices(trip: dict, chapter_id: str | None) -> list[int]:
     return [idx]
 
 
-def _chapter_needs_copy(chapter: dict, trip: dict, *, regenerate: bool = False) -> bool:
+def _chapter_needs_copy(
+    chapter: dict,
+    trip: dict,
+    *,
+    regenerate: bool = False,
+    scope: str = "frame",
+) -> bool:
     if chapter.get("edited"):
         return False
-    if regenerate:
+    chapters = trip.get("chapters") or []
+    need_lead = chapter_lead_allowed(chapter, chapters, scope) and (
+        regenerate or not (chapter.get("lead") or "").strip()
+    )
+    if need_lead:
         return True
-    if not (chapter.get("lead") or "").strip():
+    if not captions_allowed(scope):
+        return False
+    if regenerate:
         return True
     assets = {a["id"]: a for a in trip.get("assets") or []}
     item_by_asset = {
@@ -212,20 +229,32 @@ def _chapter_needs_copy(chapter: dict, trip: dict, *, regenerate: bool = False) 
     return False
 
 
-def _planned_fields(trip: dict, *, regenerate: bool = False, chapter_id: str | None = None) -> list[str]:
+def _planned_fields(
+    trip: dict,
+    *,
+    regenerate: bool = False,
+    chapter_id: str | None = None,
+    scope: str | None = None,
+) -> list[str]:
+    scope_val = resolve_narrative_scope(override=scope)
     fields: list[str] = []
     meta = trip.get("meta") or {}
+    chapters = trip.get("chapters") or []
     if not chapter_id and not meta.get("edited") and (regenerate or not (meta.get("hook") or "").strip()):
         fields.append("meta.hook")
     assets = {a["id"]: a for a in trip.get("assets") or []}
-    for ch in trip.get("chapters") or []:
+    for ch in chapters:
         if chapter_id and ch.get("id") != chapter_id:
             continue
         if ch.get("edited"):
             continue
         idx = ch.get("index")
-        if regenerate or not (ch.get("lead") or "").strip():
+        if chapter_lead_allowed(ch, chapters, scope_val) and (
+            regenerate or not (ch.get("lead") or "").strip()
+        ):
             fields.append(f"chapters[{idx}].lead")
+        if not captions_allowed(scope_val):
+            continue
         item_by_asset = {
             it.get("assetId"): it
             for it in ch.get("items") or []
@@ -242,7 +271,7 @@ def _planned_fields(trip: dict, *, regenerate: bool = False, chapter_id: str | N
                 fields.append(f"assets[{aid}].caption")
     if (
         not chapter_id
-        and len(trip.get("chapters") or []) >= 2
+        and len(chapters) >= 2
         and (regenerate or not (trip.get("epilogue") or "").strip())
     ):
         if not meta.get("edited"):
@@ -275,11 +304,13 @@ def _apply_chapter_payload(
     *,
     lead_seen: set[str],
     regenerate: bool = False,
+    scope: str = "frame",
 ) -> list[str]:
     updated: list[str] = []
     lim = _manifest_limits()
     idx = chapter.get("index")
-    if not chapter.get("edited"):
+    chapters = trip.get("chapters") or []
+    if not chapter.get("edited") and chapter_lead_allowed(chapter, chapters, scope):
         lead = payload.get("lead")
         if lead and (regenerate or not (chapter.get("lead") or "").strip()):
             chapter["lead"] = _finalize_copy(
@@ -288,6 +319,8 @@ def _apply_chapter_payload(
                 seen=lead_seen,
             )
             updated.append(f"chapters[{idx}].lead")
+    if not captions_allowed(scope):
+        return updated
     captions = {it.get("assetId"): it.get("caption") for it in payload.get("items") or []}
     assets = {a["id"]: a for a in trip.get("assets") or []}
     item_by_asset = {
@@ -362,8 +395,16 @@ def run_llm_narrate(
     cache_dir: Path | None = None,
     chat_fn: Callable[[list[dict[str, str]]], str] | None = None,
     chapter_id: str | None = None,
+    scope: str | None = None,
 ) -> NarrateResult:
     """Fill hook, leads, captions, epilogue via LLM (metadata brief only)."""
+    from travelogue.services.narrative_scope import apply_scope_cleanup
+
+    scope_val = resolve_narrative_scope(override=scope)
+    if not dry_run:
+        apply_scope_cleanup(trip, scope_val)
+        curation = trip.setdefault("curation", {})
+        curation["narrativeScope"] = scope_val
     if chapter_id:
         _chapter_indices(trip, chapter_id)
     meta = trip.setdefault("meta", {})
@@ -371,7 +412,7 @@ def run_llm_narrate(
         meta["tone"] = tone if tone in ("relaxed", "documentary") else meta.get("tone", "relaxed")
     tone_val = meta.get("tone") or get_config().narrative.tone_default or "relaxed"
 
-    planned = _planned_fields(trip, regenerate=regenerate, chapter_id=chapter_id)
+    planned = _planned_fields(trip, regenerate=regenerate, chapter_id=chapter_id, scope=scope_val)
     if dry_run:
         return NarrateResult(fields_updated=planned)
 
@@ -415,9 +456,11 @@ def run_llm_narrate(
     chapters = trip.get("chapters") or []
     for ch_idx in _chapter_indices(trip, chapter_id):
         chapter = trip["chapters"][ch_idx]
-        if not _chapter_needs_copy(chapter, trip, regenerate=regenerate):
+        if not _chapter_needs_copy(chapter, trip, regenerate=regenerate, scope=scope_val):
             continue
-        brief = build_chapter_brief(trip, chapter, tone=tone_val, regenerate=regenerate)
+        brief = build_chapter_brief(
+            trip, chapter, tone=tone_val, regenerate=regenerate, scope=scope_val
+        )
         ch_id = brief["chapter"]["id"]
         fix_errors = None
         last_payload: dict[str, Any] | None = None
@@ -447,7 +490,7 @@ def run_llm_narrate(
                 continue
             before = deepcopy(trip)
             batch = _apply_chapter_payload(
-                trip, chapter, payload, lead_seen=lead_seen, regenerate=regenerate
+                trip, chapter, payload, lead_seen=lead_seen, regenerate=regenerate, scope=scope_val
             )
             errs = _narrative_field_errors(trip, chapter_index=ch_idx)
             if not errs:
@@ -464,6 +507,7 @@ def run_llm_narrate(
                         last_payload,
                         lead_seen=lead_seen,
                         regenerate=regenerate,
+                        scope=scope_val,
                     )
                     chapter["lead"] = _stub_lead_for_chapter(
                         trip, chapter, tone=tone_val, lead_seen=lead_seen

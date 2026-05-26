@@ -6,7 +6,16 @@ import statistics
 from pathlib import Path
 from typing import Any
 
+from travelogue.config import IngestConfig, get_config
 
+
+def asset_sharpness(asset: dict) -> float:
+    quality = asset.get("quality")
+    if isinstance(quality, dict):
+        val = quality.get("sharpness")
+        if isinstance(val, (int, float)):
+            return float(val)
+    return 0.0
 def asset_long_edge(asset: dict) -> int:
     """Use native (source) pixels when present — not upscaled WebP export size."""
     nw = int(asset.get("nativeWidth") or asset.get("width") or 0)
@@ -116,3 +125,44 @@ def partition_low_resolution_assets(
         f"（原生短边 < {min_short_edge_px}px 或长边低于本批阈值；误传缩略图）"
     )
     return kept, dropped, warn
+
+
+def apply_layout_eligibility_marks(
+    trip: dict,
+    assets: list[dict] | None = None,
+    *,
+    cfg: IngestConfig | None = None,
+) -> str | None:
+    """
+    Mark layoutEligible on each image asset and write curation.excludedLowResAssetIds.
+
+    Low-resolution assets stay in assets[] but are excluded from cover/chapters/screens.
+    """
+    assets = assets if assets is not None else trip.get("assets") or []
+    cfg = cfg or get_config().ingest
+
+    for a in assets:
+        if a.get("type", "image") == "video":
+            continue
+        a["layoutEligible"] = True
+        a.pop("excludeReason", None)
+
+    _, dropped, warn = partition_low_resolution_assets(
+        assets,
+        min_long_edge_px=cfg.min_long_edge_layout_px,
+        min_short_edge_px=cfg.min_short_edge_layout_px,
+        median_ratio=cfg.low_res_median_ratio,
+        peak_ratio=cfg.low_res_peak_ratio,
+    )
+    dropped_ids = {a["id"] for a in dropped}
+    for a in assets:
+        if a["id"] in dropped_ids:
+            a["layoutEligible"] = False
+            a["excludeReason"] = "low_resolution"
+
+    curation = trip.setdefault("curation", {})
+    if dropped:
+        curation["excludedLowResAssetIds"] = [a["id"] for a in dropped]
+    else:
+        curation.pop("excludedLowResAssetIds", None)
+    return warn

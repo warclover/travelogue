@@ -1,0 +1,64 @@
+{
+  "chapters": [
+    {
+      "id": "ch-01",
+      "patternId": "open",
+      "screens": [
+        {
+          "patternId": "screen-portrait-1",
+          "slotAssetIds": [
+            "p1"
+          ]
+        },
+        {
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": [
+            "l1"
+          ]
+        },
+        {
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": [
+            "l2"
+          ]
+        },
+        {
+          "patternId": "screen-portrait-1",
+          "slotAssetIds": [
+            "p2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch-02",
+      "patternId": "close",
+      "screens": [
+        {
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": [
+            "l3"
+          ]
+        },
+        {
+          "patternId": "screen-portrait-1",
+          "slotAssetIds": [
+            "p3"
+          ]
+        },
+        {
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": [
+            "l4"
+          ]
+        },
+        {
+          "patternId": "screen-portrait-1",
+          "slotAssetIds": [
+            "p4"
+          ]
+        }
+      ]
+    }
+  ]
+}

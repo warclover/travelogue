@@ -432,11 +432,9 @@ def cmd_curate(
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
     TripService().save(trip, trip_path)
-    typer.echo(f"OK curate · cover {result.cover_asset_id}")
-    typer.echo(f"  {result.chapter_count} chapters · {result.day_groups} day groups")
-    typer.echo(f"  {result.layout_summary}")
-    for w in result.warnings:
-        typer.echo(f"  WARN {w}")
+    from travelogue.curation.curate_report import format_curate_report
+
+    typer.echo(format_curate_report(result, trip))
 
 
 @app.command("lock")

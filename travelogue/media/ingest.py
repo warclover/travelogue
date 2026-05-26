@@ -9,6 +9,8 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 from travelogue.config import IngestConfig, get_config
+from travelogue.curation.asset_quality import apply_layout_eligibility_marks, asset_sharpness
+from travelogue.media.heuristic_tags import build_heuristic_tags
 from travelogue.media.image_ops import (
     classify_aspect,
     export_webp_variants,
@@ -17,6 +19,7 @@ from travelogue.media.image_ops import (
     save_jpeg_without_exif,
 )
 from travelogue.media.phash import dhash_hex, is_near_duplicate
+from travelogue.media.sharpness import sharpness_score
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"}
 HEIC_SUFFIXES = {".heic", ".heif"}
@@ -135,12 +138,13 @@ def _existing_md5_sigs(trip: dict) -> set[str]:
     return sigs
 
 
-def _existing_dhashes(trip: dict) -> list[str]:
-    out: list[str] = []
-    for a in trip.get("assets") or []:
+def _existing_dhash_refs(trip: dict) -> list[tuple[str, int]]:
+    assets = trip.get("assets") or []
+    out: list[tuple[str, int]] = []
+    for idx, a in enumerate(assets):
         gid = a.get("dedupeGroupId") or ""
         if gid.startswith("dhash:"):
-            out.append(gid[6:])
+            out.append((gid[6:], idx))
     return out
 
 
@@ -157,6 +161,170 @@ def _is_burst_duplicate(
     if (img.width, img.height) != (w, h):
         return False
     return abs(loaded.taken_at.timestamp() - ts) <= burst_seconds
+
+
+def _find_phash_asset_index(
+    dhash: str,
+    refs: list[tuple[str, int]],
+    *,
+    threshold: int,
+) -> int | None:
+    for dh, idx in refs:
+        if is_near_duplicate(dhash, dh, threshold=threshold):
+            return idx
+    return None
+
+
+def _missing_derivative_paths(trip_dir: Path, assets: list[dict]) -> list[tuple[str, str]]:
+    """Return (assetId, relativePath) for display/srcset files that should exist."""
+    missing: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    for asset in assets:
+        aid = asset.get("id", "")
+        for rel in [asset.get("displayFile"), *[e.get("file") for e in asset.get("srcset") or []]]:
+            if not rel or rel in seen:
+                continue
+            seen.add(rel)
+            if not (trip_dir / rel).is_file():
+                missing.append((aid, rel))
+    return missing
+
+
+def _resolve_place_city(
+    loaded,
+    *,
+    trip_dir: Path,
+    geocode_enabled: bool,
+) -> tuple[dict | None, dict | None]:
+    geo = loaded.geo
+    if geo is None:
+        return None, None
+    geo_obj = {"lat": round(geo.lat, 6), "lon": round(geo.lon, 6)}
+    place = None
+    if geocode_enabled:
+        from travelogue.media.geocode import reverse_geocode_city
+
+        cache_path = trip_dir.parent / ".geocode-cache.json"
+        city = reverse_geocode_city(geo.lat, geo.lon, cache_path=cache_path, enabled=True)
+        if city:
+            place = {"city": city}
+    return geo_obj, place
+
+
+def _build_asset_entry(
+    *,
+    asset_id: str,
+    photo: Path,
+    loaded,
+    img: Image.Image,
+    batch: str,
+    dhash: str,
+    cfg: IngestConfig,
+    assets_dir: Path,
+    source_dir: Path,
+    generate_crops: bool,
+    burst_group_id: str | None,
+    sharpness: float,
+    max_tags: int,
+    geocode_enabled: bool,
+    trip_dir: Path,
+    ingest_stats: dict,
+) -> dict:
+    from travelogue.media.color_metrics import dominant_tone_hex, mean_luma
+    from travelogue.curation.media_classify import classify_media_class, date_confidence_for_source
+    from travelogue.media.subject_detect import analyze_subject
+
+    aspect_kind = classify_aspect(img.width, img.height)
+    focal = (0.5, 0.45)
+    subj = analyze_subject(img, min_face_size=cfg.face_min_size_px, enabled=cfg.detect_faces)
+    if subj.has_face:
+        focal = subj.focal
+        ingest_stats["faces_detected"] = ingest_stats.get("faces_detected", 0) + 1
+
+    dest_source = source_dir / f"{asset_id}.jpg"
+    if photo.resolve() != dest_source.resolve() or not dest_source.is_file():
+        save_jpeg_without_exif(img, dest_source)
+
+    display_rel, srcset_rel, out_w, out_h, crop_m, crop_w = export_webp_variants(
+        img,
+        assets_dir,
+        asset_id,
+        widths=cfg.webp_widths,
+        quality=cfg.webp_quality,
+        generate_crops=generate_crops,
+        focal=focal,
+    )
+
+    geo_obj, place = _resolve_place_city(loaded, trip_dir=trip_dir, geocode_enabled=geocode_enabled)
+    if geo_obj:
+        ingest_stats["gps_assets"] = ingest_stats.get("gps_assets", 0) + 1
+
+    tags = build_heuristic_tags(
+        taken_at=loaded.taken_at,
+        aspect_kind=aspect_kind,
+        subject_tags=subj.tags,
+        place_city=(place or {}).get("city") if place else None,
+        max_tags=max_tags,
+    )
+
+    entry: dict = {
+        "id": asset_id,
+        "type": "image",
+        "sourceFile": f"source/{dest_source.name}",
+        "displayFile": display_rel,
+        "srcset": srcset_rel,
+        "nativeWidth": img.width,
+        "nativeHeight": img.height,
+        "width": out_w,
+        "height": out_h,
+        "aspectKind": aspect_kind,
+        "takenAt": loaded.taken_at.replace(tzinfo=None).isoformat() + "Z",
+        "dateSource": loaded.date_source,
+        "dateConfidence": date_confidence_for_source(loaded.date_source),
+        "ingestBatchId": batch,
+        "dedupeGroupId": f"dhash:{dhash}",
+        "focalPoint": {"x": focal[0], "y": focal[1]},
+        "quality": {
+            "sharpness": round(sharpness, 2),
+            "meanLuma": round(mean_luma(img), 4),
+        },
+        "dominantTone": dominant_tone_hex(img),
+        "layoutEligible": True,
+    }
+    entry["mediaClass"] = classify_media_class(
+        path=photo,
+        img=img,
+        date_source=loaded.date_source,
+        asset=entry,
+    )
+    if tags:
+        entry["tags"] = tags
+        entry["tagsSource"] = "heuristic"
+    if crop_m:
+        entry["cropMobile"] = crop_m
+    if crop_w:
+        entry["cropWeb"] = crop_w
+    if geo_obj:
+        entry["geo"] = geo_obj
+    if place:
+        entry["place"] = place
+    if burst_group_id:
+        entry["burstGroupId"] = burst_group_id
+    if subj.salient_box:
+        entry["salientBox"] = subj.salient_box
+    return entry
+
+
+def _upsert_asset(
+    *,
+    assets: list[dict],
+    replace_index: int | None,
+    entry: dict,
+) -> None:
+    if replace_index is not None:
+        assets[replace_index] = entry
+        return
+    assets.append(entry)
 
 
 def ingest_into_trip(
@@ -177,10 +345,13 @@ def ingest_into_trip(
 
     Does not assign chapters (run curate after).
     """
-    cfg = cfg or get_config().ingest
+    app_cfg = get_config()
+    cfg = cfg or app_cfg.ingest
     max_photos = max_photos if max_photos is not None else cfg.max_photos
     if generate_crops is None:
         generate_crops = cfg.generate_crops
+    geocode_enabled = app_cfg.geocode.enabled
+    max_tags = app_cfg.vision.max_tags_per_asset if app_cfg.vision.enabled else 5
 
     source_dir = trip_dir / "source"
     assets_dir = trip_dir / "assets"
@@ -214,10 +385,8 @@ def ingest_into_trip(
 
     batch = batch_id or f"batch-{datetime.now().strftime('%Y%m%d-%H%M')}"
     known_md5 = _existing_md5_sigs(trip) if dedupe else set()
-    known_dhashes = _existing_dhashes(trip) if dedupe else []
+    dhash_refs: list[tuple[str, int]] = _existing_dhash_refs(trip) if dedupe else []
     assets: list[dict] = list(trip.get("assets") or [])
-    dates: list[date] = []
-    date_sources: list[str] = []
     ingest_stats = {
         "exif_dates": 0,
         "filename_dates": 0,
@@ -226,10 +395,15 @@ def ingest_into_trip(
         "deduped": 0,
         "deduped_phash": 0,
         "deduped_burst": 0,
+        "deduped_phash_replaced": 0,
+        "deduped_burst_replaced": 0,
     }
     added = 0
     skipped = 0
     last_burst: tuple[float, int, int] | None = None
+    last_kept_ts: float | None = None
+    burst_counter = 0
+    current_burst_group: str | None = None
 
     for photo in photos:
         sig = _file_signature(photo)
@@ -245,120 +419,113 @@ def ingest_into_trip(
             continue
 
         img = loaded.image
+        sharp = sharpness_score(img)
         use_burst = dedupe and cfg.dedupe_burst
         use_phash = dedupe and cfg.dedupe_phash
+        replace_index: int | None = None
+
         if use_burst and _is_burst_duplicate(
             loaded, last=last_burst, burst_seconds=cfg.burst_seconds
         ):
-            ingest_stats["deduped_burst"] += 1
-            skipped += 1
-            continue
+            if assets:
+                prev_sharp = asset_sharpness(assets[-1])
+                if sharp > prev_sharp:
+                    replace_index = len(assets) - 1
+                    ingest_stats["deduped_burst_replaced"] += 1
+                else:
+                    ingest_stats["deduped_burst"] += 1
+                    skipped += 1
+                    continue
+            else:
+                ingest_stats["deduped_burst"] += 1
+                skipped += 1
+                continue
 
         dhash = dhash_hex(img)
         degenerate = dhash == "0000000000000000"
-        if (
-            use_phash
-            and not degenerate
-            and any(is_near_duplicate(dhash, h, threshold=cfg.phash_threshold) for h in known_dhashes)
-        ):
-            ingest_stats["deduped_phash"] += 1
-            skipped += 1
-            continue
+        if use_phash and not degenerate and replace_index is None:
+            match_idx = _find_phash_asset_index(
+                dhash, dhash_refs, threshold=cfg.phash_threshold
+            )
+            if match_idx is not None:
+                prev_sharp = asset_sharpness(assets[match_idx])
+                if sharp > prev_sharp:
+                    replace_index = match_idx
+                    ingest_stats["deduped_phash_replaced"] += 1
+                else:
+                    ingest_stats["deduped_phash"] += 1
+                    skipped += 1
+                    continue
 
-        known_md5.add(sig)
-        known_dhashes.append(dhash)
-        last_burst = (loaded.taken_at.timestamp(), img.width, img.height)
+        if replace_index is None:
+            known_md5.add(sig)
+            dhash_refs.append((dhash, len(assets)))
+            asset_id = _next_asset_id(assets)
+        else:
+            asset_id = assets[replace_index]["id"]
+            for i, (dh, idx) in enumerate(dhash_refs):
+                if idx == replace_index:
+                    dhash_refs[i] = (dhash, replace_index)
+                    break
 
-        asset_id = _next_asset_id(assets)
-        aspect_kind = classify_aspect(img.width, img.height)
-        focal = (0.5, 0.45)
-        tags: list[str] = []
-        from travelogue.media.subject_detect import analyze_subject
+        ts = loaded.taken_at.timestamp()
+        if last_kept_ts is None or abs(ts - last_kept_ts) > cfg.burst_seconds:
+            burst_counter += 1
+            current_burst_group = f"burst-{burst_counter:03d}"
+        last_kept_ts = ts
 
-        subj = analyze_subject(
-            img, min_face_size=cfg.face_min_size_px, enabled=cfg.detect_faces
-        )
-        if subj.has_face:
-            focal = subj.focal
-            tags = list(subj.tags)
-            ingest_stats["faces_detected"] = ingest_stats.get("faces_detected", 0) + 1
-
-        dest_source = source_dir / f"{asset_id}.jpg"
-        if photo.resolve() != dest_source.resolve():
-            save_jpeg_without_exif(img, dest_source)
-        elif not dest_source.is_file():
-            save_jpeg_without_exif(img, dest_source)
-
-        display_rel, srcset_rel, out_w, out_h, crop_m, crop_w = export_webp_variants(
-            img,
-            assets_dir,
-            asset_id,
-            widths=cfg.webp_widths,
-            quality=cfg.webp_quality,
-            generate_crops=generate_crops,
-            focal=focal,
-        )
-
-        from travelogue.curation.media_classify import (
-            classify_media_class,
-            date_confidence_for_source,
-        )
-
-        entry: dict = {
-            "id": asset_id,
-            "type": "image",
-            "sourceFile": f"source/{dest_source.name}",
-            "displayFile": display_rel,
-            "srcset": srcset_rel,
-            "nativeWidth": img.width,
-            "nativeHeight": img.height,
-            "width": out_w,
-            "height": out_h,
-            "aspectKind": aspect_kind,
-            "takenAt": loaded.taken_at.replace(tzinfo=None).isoformat() + "Z",
-            "dateSource": loaded.date_source,
-            "dateConfidence": date_confidence_for_source(loaded.date_source),
-            "ingestBatchId": batch,
-            "dedupeGroupId": f"dhash:{dhash}",
-            "focalPoint": {"x": focal[0], "y": focal[1]},
-        }
-        entry["mediaClass"] = classify_media_class(
-            path=photo,
+        entry = _build_asset_entry(
+            asset_id=asset_id,
+            photo=photo,
+            loaded=loaded,
             img=img,
-            date_source=loaded.date_source,
-            asset=entry,
+            batch=batch,
+            dhash=dhash,
+            cfg=cfg,
+            assets_dir=assets_dir,
+            source_dir=source_dir,
+            generate_crops=generate_crops,
+            burst_group_id=current_burst_group,
+            sharpness=sharp,
+            max_tags=max_tags,
+            geocode_enabled=geocode_enabled,
+            trip_dir=trip_dir,
+            ingest_stats=ingest_stats,
         )
-        if tags:
-            entry["tags"] = tags
-            entry["tagsSource"] = "heuristic"
-        if crop_m:
-            entry["cropMobile"] = crop_m
-        if crop_w:
-            entry["cropWeb"] = crop_w
 
-        assets.append(entry)
+        _upsert_asset(
+            assets=assets,
+            replace_index=replace_index,
+            entry=entry,
+        )
+
+        last_burst = (ts, img.width, img.height)
         short_edge = min(img.width, img.height)
         if short_edge < cfg.min_short_edge_layout_px:
             ingest_stats.setdefault("suspected_thumbnail_ids", []).append(asset_id)
-        added += 1
-        dates.append(loaded.taken_at.date())
-        date_sources.append(loaded.date_source)
+        if replace_index is None:
+            added += 1
         ingest_stats[f"{loaded.date_source}_dates"] = (
             ingest_stats.get(f"{loaded.date_source}_dates", 0) + 1
         )
         if loaded.had_exif_orientation:
             ingest_stats["exif_rotations"] += 1
 
-    if added == 0 and len(assets) < 4:
+    if len(assets) < 4:
         raise IngestError(
             "E_INGEST_TOO_FEW",
             f"need at least 4 assets in trip after ingest (have {len(assets)})",
         )
 
-    from travelogue.curation.media_classify import (
-        refine_archive_media_class,
-        summarize_media_classes,
-    )
+    missing_derivatives = _missing_derivative_paths(trip_dir, assets)
+    if missing_derivatives:
+        aid, rel = missing_derivatives[0]
+        raise IngestError(
+            "E_INGEST_DERIVATIVE_MISSING",
+            f"{aid}: missing {rel}",
+        )
+
+    from travelogue.curation.media_classify import refine_archive_media_class, summarize_media_classes
     from travelogue.media.trip_dates import apply_meta_dates_from_assets
 
     refine_archive_media_class(assets)
@@ -375,6 +542,14 @@ def ingest_into_trip(
 
     ingest_stats["mediaClassSummary"] = summarize_media_classes(assets)
 
+    low_res_warn = apply_layout_eligibility_marks(trip, assets, cfg=cfg)
+    excluded = (trip.get("curation") or {}).get("excludedLowResAssetIds") or []
+    if excluded:
+        ingest_stats["low_res_excluded_ids"] = list(excluded)
+        ingest_stats["low_res_excluded_count"] = len(excluded)
+        if low_res_warn:
+            ingest_stats["low_res_excluded_warn"] = low_res_warn
+
     pipe["status"] = "ingest_ready"
     pipe["lastBatchId"] = batch
     pipe["pendingAssets"] = []
@@ -389,23 +564,9 @@ def ingest_into_trip(
         }
     )
     trip["updatedAt"] = _utc_now_iso()
-    if not trip.get("coverAssetId") and assets:
-        trip["coverAssetId"] = assets[0]["id"]
-
-    if len(assets) >= 6:
-        from travelogue.curation.asset_quality import partition_low_resolution_assets
-
-        _, would_drop, preview_warn = partition_low_resolution_assets(
-            assets,
-            min_long_edge_px=cfg.min_long_edge_layout_px,
-            min_short_edge_px=cfg.min_short_edge_layout_px,
-            median_ratio=cfg.low_res_median_ratio,
-            peak_ratio=cfg.low_res_peak_ratio,
-        )
-        if would_drop:
-            ingest_stats["curate_low_res_preview_ids"] = [a["id"] for a in would_drop]
-            if preview_warn:
-                ingest_stats["curate_low_res_preview_warn"] = preview_warn
+    eligible = [a for a in assets if a.get("layoutEligible", True)]
+    if not trip.get("coverAssetId") and eligible:
+        trip["coverAssetId"] = eligible[0]["id"]
 
     return IngestResult(
         added=added,

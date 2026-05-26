@@ -82,6 +82,17 @@ def test_render_screens_includes_screenplay_bundle(trip_workspace: Path) -> None
     assert "longshot.js" not in html
 
 
+def test_render_hides_cover_title_when_title_equals_place(trip_workspace: Path) -> None:
+    trip = json.loads((trip_workspace / "trip.json").read_text(encoding="utf-8"))
+    trip.setdefault("curation", {})["narrativeScope"] = "frame"
+    trip["meta"]["title"] = "京都"
+    trip["meta"]["places"] = ["京都"]
+    html = render_html(trip, export_mode="draft", trip_root=trip_workspace)
+    assert "cover-hero--photo-only" in html
+    assert 'class="cover-hero__text"' not in html
+    assert "cover-hero__title-sr" in html
+
+
 def test_render_html_has_core_blocks(trip_workspace: Path) -> None:
     trip = json.loads((trip_workspace / "trip.json").read_text(encoding="utf-8"))
     html = render_html(trip, export_mode="draft", trip_root=trip_workspace)

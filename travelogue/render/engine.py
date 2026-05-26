@@ -86,12 +86,14 @@ def should_include_screenplay(
 
 
 def copy_longshot_bundle(out_dir: Path) -> None:
-    """Copy longshot.js, share.js, longshot.css, and vendored html2canvas into trip output."""
+    """Copy longshot.js, share.js, longshot.css, copy-toggle, and vendored html2canvas."""
     out_dir = out_dir.resolve()
     for src, name in (
         (LONGSHOT_JS, "longshot.js"),
         (SHARE_JS, "share.js"),
         (LONGSHOT_CSS, "longshot.css"),
+        (COPY_TOGGLE_JS, "copy-toggle.js"),
+        (COPY_DISPLAY_CSS, "copy-display.css"),
     ):
         if not src.is_file():
             raise RenderError("E_RENDER_LONGSHOT", f"missing {src.name}")

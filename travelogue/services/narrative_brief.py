@@ -6,6 +6,7 @@ from typing import Any
 
 from travelogue.curation.asset_caption import asset_skips_caption, chapter_caption_asset_ids, resolve_caption
 from travelogue.services.narrate import _manifest_limits
+from travelogue.services.narrative_scope import captions_allowed, chapter_lead_allowed
 
 
 def _asset_brief(asset: dict) -> dict[str, Any]:
@@ -68,9 +69,15 @@ def build_meta_brief(trip: dict, *, tone: str, regenerate: bool = False) -> dict
 
 
 def build_chapter_brief(
-    trip: dict, chapter: dict, *, tone: str, regenerate: bool = False
+    trip: dict,
+    chapter: dict,
+    *,
+    tone: str,
+    regenerate: bool = False,
+    scope: str = "frame",
 ) -> dict[str, Any]:
     meta = trip.get("meta") or {}
+    chapters = trip.get("chapters") or []
     assets = {a["id"]: a for a in trip.get("assets") or []}
     ch_cur = chapter.get("curation") or {}
     items_out: list[dict[str, Any]] = []
@@ -79,21 +86,27 @@ def build_chapter_brief(
         for it in chapter.get("items") or []
         if it.get("type") == "media-card" and it.get("assetId")
     }
-    for aid in chapter_caption_asset_ids(chapter):
-        item = item_by_asset.get(aid)
-        asset = assets.get(aid) or {}
-        existing = resolve_caption(item, asset)
-        items_out.append(
-            {
-                "assetId": aid,
-                "existingTitle": (item.get("title") if item else "") or "",
-                "existingCaption": "" if regenerate else existing,
-                "skipCaption": bool(item and item.get("edited"))
-                or asset_skips_caption(asset)
-                or (bool(existing) and not regenerate),
-                "asset": _asset_brief(asset),
-            }
-        )
+    if captions_allowed(scope):
+        for aid in chapter_caption_asset_ids(chapter):
+            item = item_by_asset.get(aid)
+            asset = assets.get(aid) or {}
+            existing = resolve_caption(item, asset)
+            items_out.append(
+                {
+                    "assetId": aid,
+                    "existingTitle": (item.get("title") if item else "") or "",
+                    "existingCaption": "" if regenerate else existing,
+                    "skipCaption": bool(item and item.get("edited"))
+                    or asset_skips_caption(asset)
+                    or (bool(existing) and not regenerate),
+                    "asset": _asset_brief(asset),
+                }
+            )
+    fields_requested: list[str] = []
+    if chapter_lead_allowed(chapter, chapters, scope):
+        fields_requested.append("lead")
+    if captions_allowed(scope):
+        fields_requested.append("items[].caption")
     return {
         "task": "fill_chapter_copy",
         "trip": {
@@ -114,5 +127,5 @@ def build_chapter_brief(
             "existingLead": "" if regenerate else (chapter.get("lead") or ""),
             "items": items_out,
         },
-        "fieldsRequested": ["lead", "items[].caption"],
+        "fieldsRequested": fields_requested,
     }

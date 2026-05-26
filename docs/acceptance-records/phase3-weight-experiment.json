@@ -1,0 +1,236 @@
+[
+  {
+    "tripId": "linzhi",
+    "diagnostics": {
+      "layoutEligibleAssets": 211,
+      "bucketCount": 5,
+      "mosaicBucketCount": 0,
+      "galleryChapterCount": 3,
+      "buckets": [
+        {
+          "bucketIndex": 1,
+          "chapterPattern": "open",
+          "assetCount": 45,
+          "hasMosaicWindow": false,
+          "beamEligible": true
+        },
+        {
+          "bucketIndex": 2,
+          "chapterPattern": "gallery",
+          "assetCount": 30,
+          "hasMosaicWindow": false,
+          "beamEligible": false
+        },
+        {
+          "bucketIndex": 3,
+          "chapterPattern": "gallery",
+          "assetCount": 62,
+          "hasMosaicWindow": false,
+          "beamEligible": false
+        },
+        {
+          "bucketIndex": 4,
+          "chapterPattern": "gallery",
+          "assetCount": 39,
+          "hasMosaicWindow": false,
+          "beamEligible": false
+        },
+        {
+          "bucketIndex": 5,
+          "chapterPattern": "close",
+          "assetCount": 34,
+          "hasMosaicWindow": false,
+          "beamEligible": true
+        }
+      ]
+    },
+    "presets": [
+      {
+        "preset": "phase3b_baseline",
+        "weights": {
+          "aspect_match": 0.16,
+          "sharpness": 0.0667,
+          "hero_separation": 0.08,
+          "temporal_coherence": 0.12,
+          "diversity": 0.0933,
+          "arc_fit": 0.12,
+          "burst_integrity": 0.1067,
+          "luminance_continuity": 0.08,
+          "subject_run": 0.0667,
+          "tone_continuity": 0.1067
+        },
+        "identicalToLegacy": true,
+        "bucketPicksChanged": 0,
+        "totalBuckets": 3,
+        "screens": 75,
+        "patternDiversity": 0.0933,
+        "arcProfile": {
+          "profile": "dynamic",
+          "beats": 5
+        },
+        "searchBudget": {
+          "evaluations": 14,
+          "elapsedMs": 10.88,
+          "timedOut": false,
+          "exhausted": false,
+          "allowBurstSplit": false
+        }
+      },
+      {
+        "preset": "diversity_boost",
+        "weights": {
+          "aspect_match": 0.1282,
+          "sharpness": 0.0641,
+          "hero_separation": 0.0769,
+          "temporal_coherence": 0.1154,
+          "diversity": 0.2308,
+          "arc_fit": 0.1154,
+          "burst_integrity": 0.0256,
+          "luminance_continuity": 0.0769,
+          "subject_run": 0.0641,
+          "tone_continuity": 0.1026
+        },
+        "identicalToLegacy": true,
+        "bucketPicksChanged": 0,
+        "totalBuckets": 3,
+        "screens": 75,
+        "patternDiversity": 0.0933,
+        "arcProfile": {
+          "profile": "dynamic",
+          "beats": 5
+        },
+        "searchBudget": {
+          "evaluations": 14,
+          "elapsedMs": 7.83,
+          "timedOut": false,
+          "exhausted": false,
+          "allowBurstSplit": false
+        }
+      },
+      {
+        "preset": "diversity_aggressive",
+        "weights": {
+          "aspect_match": 0.08,
+          "sharpness": 0.0533,
+          "hero_separation": 0.0667,
+          "temporal_coherence": 0.0933,
+          "diversity": 0.3733,
+          "arc_fit": 0.1067,
+          "burst_integrity": 0.0133,
+          "luminance_continuity": 0.0667,
+          "subject_run": 0.0533,
+          "tone_continuity": 0.0933
+        },
+        "identicalToLegacy": true,
+        "bucketPicksChanged": 0,
+        "totalBuckets": 3,
+        "screens": 75,
+        "patternDiversity": 0.0933,
+        "arcProfile": {
+          "profile": "dynamic",
+          "beats": 5
+        },
+        "searchBudget": {
+          "evaluations": 14,
+          "elapsedMs": 9.27,
+          "timedOut": false,
+          "exhausted": false,
+          "allowBurstSplit": false
+        }
+      },
+      {
+        "preset": "anti_burst",
+        "weights": {
+          "aspect_match": 0.1497,
+          "sharpness": 0.068,
+          "hero_separation": 0.0816,
+          "temporal_coherence": 0.1088,
+          "diversity": 0.2177,
+          "arc_fit": 0.1088,
+          "burst_integrity": 0.0068,
+          "luminance_continuity": 0.0816,
+          "subject_run": 0.068,
+          "tone_continuity": 0.1088
+        },
+        "identicalToLegacy": true,
+        "bucketPicksChanged": 0,
+        "totalBuckets": 3,
+        "screens": 75,
+        "patternDiversity": 0.0933,
+        "arcProfile": {
+          "profile": "dynamic",
+          "beats": 5
+        },
+        "searchBudget": {
+          "evaluations": 14,
+          "elapsedMs": 7.62,
+          "timedOut": false,
+          "exhausted": false,
+          "allowBurstSplit": false
+        }
+      },
+      {
+        "preset": "diversity_only_push",
+        "weights": {
+          "aspect_match": 0.0533,
+          "sharpness": 0.04,
+          "hero_separation": 0.0533,
+          "temporal_coherence": 0.0667,
+          "diversity": 0.5333,
+          "arc_fit": 0.08,
+          "burst_integrity": 0.0133,
+          "luminance_continuity": 0.0533,
+          "subject_run": 0.04,
+          "tone_continuity": 0.0667
+        },
+        "identicalToLegacy": true,
+        "bucketPicksChanged": 0,
+        "totalBuckets": 3,
+        "screens": 75,
+        "patternDiversity": 0.0933,
+        "arcProfile": {
+          "profile": "dynamic",
+          "beats": 5
+        },
+        "searchBudget": {
+          "evaluations": 14,
+          "elapsedMs": 10.54,
+          "timedOut": false,
+          "exhausted": false,
+          "allowBurstSplit": false
+        }
+      },
+      {
+        "preset": "low_aspect_high_diversity",
+        "weights": {
+          "aspect_match": 0.0213,
+          "sharpness": 0.0532,
+          "hero_separation": 0.0851,
+          "temporal_coherence": 0.0851,
+          "diversity": 0.3723,
+          "arc_fit": 0.1064,
+          "burst_integrity": 0.0213,
+          "luminance_continuity": 0.0851,
+          "subject_run": 0.0638,
+          "tone_continuity": 0.1064
+        },
+        "identicalToLegacy": true,
+        "bucketPicksChanged": 0,
+        "totalBuckets": 3,
+        "screens": 75,
+        "patternDiversity": 0.0933,
+        "arcProfile": {
+          "profile": "dynamic",
+          "beats": 5
+        },
+        "searchBudget": {
+          "evaluations": 14,
+          "elapsedMs": 8.69,
+          "timedOut": false,
+          "exhausted": false,
+          "allowBurstSplit": false
+        }
+      }
+    ]
+  }
+]

@@ -6,6 +6,7 @@ from collections import defaultdict
 from datetime import date
 from typing import NamedTuple
 
+from travelogue.curation.curate_scoring import sort_bucket_asset_ids
 from travelogue.curation.time_segments import TimeSegment, cluster_time_segments, parse_asset_date
 
 
@@ -40,14 +41,51 @@ def group_assets_by_day(assets: list[dict], cover_id: str) -> list[list[str]]:
         else:
             no_date.append(a["id"])
 
-    buckets: list[list[str]] = [by_day[k] for k in sorted(by_day)]
+    buckets: list[list[str]] = []
     if no_date:
         buckets.append(no_date)
+    buckets.extend([by_day[k] for k in sorted(by_day)])
 
     if not buckets:
         return [[a["id"] for a in body]]
 
-    return merge_small_buckets(buckets, min_size=3)
+    merged = merge_small_buckets(buckets, min_size=3)
+    return _sort_all_buckets(merged, {a["id"]: a for a in assets})
+
+
+def _sort_all_buckets(buckets: list[list[str]], assets_by_id: dict[str, dict]) -> list[list[str]]:
+    return [sort_bucket_asset_ids(b, assets_by_id) for b in buckets]
+
+
+def _merge_adjacent_to_chapter_limit(
+    out: list[list[str]],
+    seg: list[str],
+    seg_all: list[list[str]],
+    max_c: int,
+) -> tuple[list[list[str]], list[str], list[list[str]]]:
+    """Merge adjacent buckets until count <= max_c; prefer same-segment pairs."""
+    while len(out) > max_c:
+        best_i = -1
+        best_cost = float("inf")
+        for i in range(len(out) - 1):
+            same_seg = bool(seg[i]) and seg[i] == seg[i + 1]
+            cost = (0 if same_seg else 1000) + len(out[i]) + len(out[i + 1])
+            if cost < best_cost:
+                best_cost = cost
+                best_i = i
+        if best_i < 0:
+            break
+        i = best_i
+        right_n = len(out[i + 1])
+        left_n = len(out[i])
+        out[i].extend(out[i + 1])
+        seg_all[i] = _merge_segment_lists(seg_all[i], seg_all[i + 1])
+        if right_n > left_n and seg[i + 1]:
+            seg[i] = seg[i + 1]
+        del out[i + 1]
+        del seg[i + 1]
+        del seg_all[i + 1]
+    return out, seg, seg_all
 
 
 def _align_segment_ids(segment_ids: list[str] | None, count: int) -> list[str]:
@@ -108,19 +146,7 @@ def normalize_bucket_counts(
 
     n = len(out)
     if n > max_c:
-        merged: list[list[str]] = []
-        merged_primary: list[str] = []
-        merged_all: list[list[str]] = []
-        per = (n + max_c - 1) // max_c
-        for i in range(0, n, per):
-            end = min(i + per, n)
-            group: list[str] = []
-            for j in range(i, end):
-                group.extend(out[j])
-            merged.append(group)
-            merged_primary.append(_primary_segment_in_chunk(out, seg, i, end))
-            merged_all.append(_segments_in_chunk(seg, i, end))
-        out, seg, seg_all = merged, merged_primary, merged_all
+        out, seg, seg_all = _merge_adjacent_to_chapter_limit(out, seg, seg_all, max_c)
 
     out, seg, seg_all = merge_small_buckets_with_segments(
         out, seg, seg_all, min_size=min_bucket_size
@@ -147,6 +173,11 @@ def normalize_bucket_counts(
             seg_all.insert(largest_i + 1, split_all)
 
     return NormalizedBuckets(out, seg, seg_all)
+
+
+def sort_buckets_in_place(buckets: list[list[str]], assets_by_id: dict[str, dict]) -> None:
+    for i, bucket in enumerate(buckets):
+        buckets[i] = sort_bucket_asset_ids(bucket, assets_by_id)
 
 
 def cap_book_buckets(
@@ -237,11 +268,20 @@ def group_assets_by_segments(
     layout_assets: list[dict],
     cover_id: str,
     meta: dict,
+    *,
+    segment_gap_days: int = 14,
+    city_gap_days: int = 3,
+    min_bucket_size: int = 3,
 ) -> tuple[list[list[str]], list[str], list[list[str]], list]:
     """Segment cluster → per-segment day buckets → flat chapter bucket list."""
     place = (meta.get("places") or ["旅途"])[0]
     by_id = {a["id"]: a for a in layout_assets}
-    segments = cluster_time_segments(layout_assets, place=place)
+    segments = cluster_time_segments(
+        layout_assets,
+        gap_days=segment_gap_days,
+        city_gap_days=city_gap_days,
+        place=place,
+    )
 
     all_buckets: list[list[str]] = []
     bucket_segment_ids: list[str] = []
@@ -261,5 +301,10 @@ def group_assets_by_segments(
         bucket_segment_ids = [""] * len(all_buckets)
         segments = []
 
-    norm = normalize_bucket_counts(all_buckets, bucket_segment_ids)
+    norm = normalize_bucket_counts(
+        all_buckets,
+        bucket_segment_ids,
+        min_bucket_size=min_bucket_size,
+    )
+    sort_buckets_in_place(norm.buckets, by_id)
     return norm.buckets, norm.primary_segment_ids, norm.segment_ids_per_bucket, segments

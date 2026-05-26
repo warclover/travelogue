@@ -1,0 +1,92 @@
+[
+  {
+    "tripId": "mao",
+    "layout": "web",
+    "assetCount": 29,
+    "identicalToLegacy": true,
+    "legacy": {
+      "screenCount": 15,
+      "patternDiversity": 0.2667,
+      "aspectMatchRate": 1.0
+    },
+    "phase2": {
+      "screenCount": 15,
+      "patternDiversity": 0.2667,
+      "aspectMatchRate": 1.0,
+      "replanApplied": true
+    },
+    "delta": {
+      "patternDiversity": 0.0,
+      "aspectMatchRate": 0.0
+    },
+    "weights": {
+      "aspect_match": 0.2206,
+      "sharpness": 0.0735,
+      "hero_separation": 0.0882,
+      "temporal_coherence": 0.1765,
+      "diversity": 0.1471,
+      "arc_fit": 0.1765,
+      "burst_integrity": 0.1176
+    }
+  },
+  {
+    "tripId": "linzhi",
+    "layout": "web",
+    "assetCount": 231,
+    "identicalToLegacy": true,
+    "legacy": {
+      "screenCount": 75,
+      "patternDiversity": 0.0933,
+      "aspectMatchRate": 1.0
+    },
+    "phase2": {
+      "screenCount": 75,
+      "patternDiversity": 0.0933,
+      "aspectMatchRate": 1.0,
+      "replanApplied": true
+    },
+    "delta": {
+      "patternDiversity": 0.0,
+      "aspectMatchRate": 0.0
+    },
+    "weights": {
+      "aspect_match": 0.2206,
+      "sharpness": 0.0735,
+      "hero_separation": 0.0882,
+      "temporal_coherence": 0.1765,
+      "diversity": 0.1471,
+      "arc_fit": 0.1765,
+      "burst_integrity": 0.1176
+    }
+  },
+  {
+    "tripId": "maomi",
+    "layout": "web",
+    "assetCount": 33,
+    "identicalToLegacy": true,
+    "legacy": {
+      "screenCount": 18,
+      "patternDiversity": 0.3333,
+      "aspectMatchRate": 1.0
+    },
+    "phase2": {
+      "screenCount": 18,
+      "patternDiversity": 0.3333,
+      "aspectMatchRate": 1.0,
+      "replanApplied": true
+    },
+    "delta": {
+      "patternDiversity": 0.0,
+      "aspectMatchRate": 0.0
+    },
+    "weights": {
+      "aspect_match": 0.2206,
+      "sharpness": 0.0735,
+      "hero_separation": 0.0882,
+      "temporal_coherence": 0.1765,
+      "diversity": 0.1471,
+      "arc_fit": 0.1765,
+      "burst_integrity": 0.1176
+    }
+  }
+]

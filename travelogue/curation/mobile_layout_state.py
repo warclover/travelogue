@@ -52,6 +52,10 @@ class MobilePuzzlePlannerState:
     grid4_max: int
     grid8_used: int = 0
     grid4_used: int = 0
+    grid8_chapter_used: int = 0
+    grid4_chapter_used: int = 0
+    grid8_per_chapter_max: int = 1
+    grid4_per_chapter_max: int = 1
 
     @classmethod
     def from_trip_total(cls, total_photos: int) -> MobilePuzzlePlannerState:
@@ -61,13 +65,25 @@ class MobilePuzzlePlannerState:
         )
 
     def can_use_grid8(self) -> bool:
-        return self.grid8_used < self.grid8_max
+        return (
+            self.grid8_used < self.grid8_max
+            and self.grid8_chapter_used < self.grid8_per_chapter_max
+        )
 
     def can_use_grid4(self) -> bool:
-        return self.grid4_used < self.grid4_max
+        return (
+            self.grid4_used < self.grid4_max
+            and self.grid4_chapter_used < self.grid4_per_chapter_max
+        )
+
+    def begin_chapter(self) -> None:
+        self.grid8_chapter_used = 0
+        self.grid4_chapter_used = 0
 
     def note_grid8(self) -> None:
         self.grid8_used += 1
+        self.grid8_chapter_used += 1
 
     def note_grid4(self) -> None:
         self.grid4_used += 1
+        self.grid4_chapter_used += 1

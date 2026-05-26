@@ -27,6 +27,8 @@ def format_ingest_report(result, trip: dict | None = None) -> str:
         ("deduped", "完全重复"),
         ("deduped_phash", "相似图(phash)"),
         ("deduped_burst", "连拍"),
+        ("deduped_phash_replaced", "相似图替换为更清晰"),
+        ("deduped_burst_replaced", "连拍替换为更清晰"),
         ("skipped_small", "过小"),
         ("skipped_open", "无法打开"),
     ):
@@ -57,19 +59,23 @@ def format_ingest_report(result, trip: dict | None = None) -> str:
             preview += f" …共 {len(thumb_ids)} 张"
         lines.append(f"  疑似缩略图（短边过小）: {preview}")
 
-    curate_preview = stats.get("curate_low_res_preview_ids") or []
+    curate_preview = stats.get("low_res_excluded_ids") or stats.get("curate_low_res_preview_ids") or []
     if curate_preview:
         preview = ", ".join(curate_preview[:8])
         if len(curate_preview) > 8:
             preview += f" …共 {len(curate_preview)} 张"
-        lines.append(f"  策展将剔除低分辨率: {preview}")
-        warn = stats.get("curate_low_res_preview_warn")
+        lines.append(f"  低分辨率（不参与排版）: {preview}")
+        warn = stats.get("low_res_excluded_warn") or stats.get("curate_low_res_preview_warn")
         if warn:
             lines.append(f"  {warn}")
 
     faces_n = stats.get("faces_detected", 0)
     if faces_n:
         lines.append(f"  检测到人脸: {faces_n} 张（排版将避免人物竖拼/人景混排）")
+
+    gps_n = stats.get("gps_assets", 0)
+    if gps_n:
+        lines.append(f"  含 GPS: {gps_n} 张")
 
     if trip and trip.get("assets"):
         layout = trip.get("exportLayout", "mobile")

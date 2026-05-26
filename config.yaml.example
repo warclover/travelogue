@@ -2,7 +2,7 @@
 # 复制为 config.yaml 并勿提交到 Git
 #
 # 说明：config.py 读取 trips_dir / ingest / layout / export / vision / narrative / llm。
-# ffmpeg / geocode 段为规划预留，Python 运行时尚未加载（视频转码待实现）。
+# ffmpeg / geocode 段：geocode.enabled 已接入 ingest（Nominatim + 本地缓存）；ffmpeg 仍为规划预留。
 
 trips_dir: ./trips
 
@@ -25,6 +25,14 @@ geocode:
   provider: null
   api_key_env: null
 
+curate:
+  segment_gap_days: 14
+  city_gap_days: 3
+  min_bucket_size: 3
+  # legacy | v2_adaptive | v2_five_beat — 叙事弧（ADR-002 Phase 3a，默认 legacy）
+  arc_mode: legacy
+  arc_flat_variance_threshold: 0.08
+
 # Web 排版引擎：legacy（media-row）| screens（16:9 舞台）；exportLayout=web|auto 宽屏时生效
 layout:
   web_layout_engine: screens
@@ -32,6 +40,58 @@ layout:
   screen_plan_scope: day
   # 1 竖 + 2 横混排时三张图 takenAt 最大跨度（秒）
   mixed_proximity_seconds: 12
+  # 智能排版 V2（ADR-002）；enabled=false 时与 legacy 完全等价
+  scoring:
+    enabled: false
+    beam_width: 3
+    max_screens_per_chapter: 12
+    min_layout_eligible: 3
+    min_aspect_kinds: 1
+    search_timeout_ms: 2000
+    max_candidates_per_bucket: 12
+    max_evaluations_per_trip: 500
+    allow_burst_split: false
+    subject_run_tolerance: 1
+    weights:
+      aspect_match: 0.0
+      sharpness: 0.0
+      hero_separation: 0.0
+      temporal_coherence: 0.0
+      diversity: 0.0
+      arc_fit: 0.0
+      burst_integrity: 0.0
+      luminance_continuity: 0.0
+      subject_run: 0.0
+  feedback:
+    enabled: false
+    log_path: null
+
+# --- Phase-3a 智能排版（beam 护栏 + 自适应叙事弧 + 亮度/主题 run）---
+# layout:
+#   scoring:
+#     enabled: true
+#     beam_width: 3
+#     search_timeout_ms: 2000
+#     max_candidates_per_bucket: 12
+#     max_evaluations_per_trip: 500
+#     allow_burst_split: false
+#     subject_run_tolerance: 1
+#     weights:
+#       aspect_match: 0.13
+#       sharpness: 0.05
+#       temporal_coherence: 0.10
+#       burst_integrity: 0.08
+#       diversity: 0.08
+#       arc_fit: 0.10
+#       hero_separation: 0.06
+#       luminance_continuity: 0.06
+#       tone_continuity: 0.08
+#       subject_run: 0.05
+# curate:
+#   arc_mode: v2_adaptive
+
+# 已有 trip 补写色彩指标（不重新 ingest）：
+#   python scripts/backfill_color_metrics.py mao linzhi
 
 ingest:
   max_photos: 250
@@ -74,6 +134,8 @@ export:
 narrative:
   tone_default: relaxed
   max_auto_fix_retries: 2
+  # frame: 仅 hook+epilogue | frame_chapters: +首末章 lead | full: +全章 lead + 图注
+  scope: frame
   banned_phrases:
     - 综上所述
     - 值得一提的是

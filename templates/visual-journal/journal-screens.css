@@ -380,12 +380,33 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-3"]:not([d
   object-fit: cover;
 }
 
-/* 横图多槽：底对齐减轻 16:9 / 16:10 混拼高度差 */
+/* 横图宫格 2×2 / 3×2：槽位等高 stretch + cover，避免各行 cell 高度不一致 */
 html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid--2x2,
 html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid--2x2,
+html[data-layout="web"] .layout-screen[data-pattern="screen-square-4"] .layout-screen__grid--2x2,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-square-4"] .layout-screen__grid--2x2,
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-4"] .layout-screen__grid--2x2,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-4"] .layout-screen__grid--2x2,
 html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-6"] .layout-screen__grid--3x2,
 html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-6"] .layout-screen__grid--3x2 {
-  align-items: end;
+  align-items: stretch;
+}
+
+html[data-layout="web"] .layout-screen__grid--2x2 .layout-slot,
+html[data-layout="auto"] .layout-screen__grid--2x2 .layout-slot,
+html[data-layout="web"] .layout-screen__grid--3x2 .layout-slot,
+html[data-layout="auto"] .layout-screen__grid--3x2 .layout-slot {
+  height: 100%;
+  min-height: 0;
+}
+
+html[data-layout="web"] .layout-screen__grid--2x2 .layout-slot__img--cover,
+html[data-layout="auto"] .layout-screen__grid--2x2 .layout-slot__img--cover,
+html[data-layout="web"] .layout-screen__grid--3x2 .layout-slot__img--cover,
+html[data-layout="auto"] .layout-screen__grid--3x2 .layout-slot__img--cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 html[data-layout="web"] .layout-screen[data-pattern="screen-panorama-1"] .layout-screen__grid--1col .layout-slot,

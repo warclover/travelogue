@@ -36,8 +36,23 @@ class IngestConfig:
 
 
 @dataclass
+class CurateConfig:
+    segment_gap_days: int = 14
+    city_gap_days: int = 3
+    min_bucket_size: int = 3
+    arc_mode: str = "legacy"  # legacy | v2_adaptive | v2_five_beat (alias)
+    arc_flat_variance_threshold: float = 0.08
+
+
+@dataclass
+class GeocodeConfig:
+    enabled: bool = False
+
+
+@dataclass
 class VisionConfig:
     enabled: bool = False
+    max_tags_per_asset: int = 5
 
 
 @dataclass
@@ -50,6 +65,8 @@ class NarrativeConfig:
     tone_default: str = "relaxed"
     max_auto_fix_retries: int = 2
     banned_phrases: tuple[str, ...] = ()
+    # frame: hook+epilogue only | frame_chapters: +首末章 lead | full: +全章 lead + 图注
+    scope: str = "frame"
 
 
 @dataclass
@@ -62,11 +79,48 @@ class LlmConfig:
 
 
 @dataclass
+class LayoutScoringConfig:
+    """V2 layout search (ADR-002); disabled by default = legacy behavior."""
+    enabled: bool = False
+    beam_width: int = 3
+    max_screens_per_chapter: int = 12
+    min_layout_eligible: int = 3
+    min_aspect_kinds: int = 1
+    search_timeout_ms: int = 2000
+    max_candidates_per_bucket: int = 12
+    max_evaluations_per_trip: int = 500
+    allow_burst_split: bool = False
+    subject_run_tolerance: int = 1
+    weights: dict[str, float] = field(
+        default_factory=lambda: {
+            "aspect_match": 0.0,
+            "sharpness": 0.0,
+            "hero_separation": 0.0,
+            "temporal_coherence": 0.0,
+            "diversity": 0.0,
+            "arc_fit": 0.0,
+            "burst_integrity": 0.0,
+            "luminance_continuity": 0.0,
+            "subject_run": 0.0,
+            "tone_continuity": 0.0,
+        }
+    )
+
+
+@dataclass
+class LayoutFeedbackConfig:
+    enabled: bool = False
+    log_path: str | None = None
+
+
+@dataclass
 class LayoutConfig:
     """Web layout engine default when exportLayout is web (see docs/web端模板升级计划.md)."""
     web_layout_engine: str = "screens"  # legacy | screens
     screen_plan_scope: str = "day"  # chapter | day — day = 按策展日桶全序列组屏
     mixed_proximity_seconds: float = 12.0  # 1竖+2横混排 takenAt 跨度上限
+    scoring: LayoutScoringConfig = field(default_factory=LayoutScoringConfig)
+    feedback: LayoutFeedbackConfig = field(default_factory=LayoutFeedbackConfig)
 
 
 @dataclass
@@ -75,6 +129,8 @@ class AppConfig:
     ingest: IngestConfig = field(default_factory=IngestConfig)
     layout: LayoutConfig = field(default_factory=LayoutConfig)
     vision: VisionConfig = field(default_factory=VisionConfig)
+    geocode: GeocodeConfig = field(default_factory=GeocodeConfig)
+    curate: CurateConfig = field(default_factory=CurateConfig)
     export: ExportConfig = field(default_factory=ExportConfig)
     narrative: NarrativeConfig = field(default_factory=NarrativeConfig)
     llm: LlmConfig = field(default_factory=LlmConfig)
@@ -101,6 +157,33 @@ def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
     )
 
 
+def _layout_scoring_from_dict(raw: dict[str, Any]) -> LayoutScoringConfig:
+    weights_raw = raw.get("weights") if isinstance(raw.get("weights"), dict) else {}
+    default_weights = LayoutScoringConfig().weights
+    weights = {k: float(weights_raw.get(k, default_weights.get(k, 0.0))) for k in default_weights}
+    return LayoutScoringConfig(
+        enabled=bool(raw.get("enabled", False)),
+        beam_width=int(raw.get("beam_width", 3)),
+        max_screens_per_chapter=int(raw.get("max_screens_per_chapter", 12)),
+        min_layout_eligible=int(raw.get("min_layout_eligible", 3)),
+        min_aspect_kinds=int(raw.get("min_aspect_kinds", 1)),
+        search_timeout_ms=int(raw.get("search_timeout_ms", 2000)),
+        max_candidates_per_bucket=int(raw.get("max_candidates_per_bucket", 12)),
+        max_evaluations_per_trip=int(raw.get("max_evaluations_per_trip", 500)),
+        allow_burst_split=bool(raw.get("allow_burst_split", False)),
+        subject_run_tolerance=int(raw.get("subject_run_tolerance", 1)),
+        weights=weights,
+    )
+
+
+def _layout_feedback_from_dict(raw: dict[str, Any]) -> LayoutFeedbackConfig:
+    log_path = raw.get("log_path")
+    return LayoutFeedbackConfig(
+        enabled=bool(raw.get("enabled", False)),
+        log_path=str(log_path).strip() if log_path else None,
+    )
+
+
 def load_config(path: Path | None = None) -> AppConfig:
     """Load config.yaml from path, or ./config.yaml, or defaults."""
     candidates = [path, Path.cwd() / "config.yaml", ROOT / "config.yaml"]
@@ -124,11 +207,16 @@ def load_config(path: Path | None = None) -> AppConfig:
     if scope not in ("chapter", "day"):
         scope = "day"
     mixed_gap = float(layout_raw.get("mixed_proximity_seconds", 12.0))
+    scoring_raw = layout_raw.get("scoring") if isinstance(layout_raw.get("scoring"), dict) else {}
+    feedback_raw = layout_raw.get("feedback") if isinstance(layout_raw.get("feedback"), dict) else {}
     export_raw = data.get("export") if isinstance(data.get("export"), dict) else {}
     vision_raw = data.get("vision") if isinstance(data.get("vision"), dict) else {}
     narrative_raw = data.get("narrative") if isinstance(data.get("narrative"), dict) else {}
     llm_raw = data.get("llm") if isinstance(data.get("llm"), dict) else {}
+    geocode_raw = data.get("geocode") if isinstance(data.get("geocode"), dict) else {}
+    curate_raw = data.get("curate") if isinstance(data.get("curate"), dict) else {}
     vision_enabled = bool(vision_raw.get("enabled", False))
+    vision_max_tags = int(vision_raw.get("max_tags_per_asset", 5))
     banned_raw = narrative_raw.get("banned_phrases") or []
     banned = tuple(str(p) for p in banned_raw if p) if isinstance(banned_raw, list) else ()
     llm_provider = str(llm_raw.get("provider", "stub")).strip().lower()
@@ -145,12 +233,25 @@ def load_config(path: Path | None = None) -> AppConfig:
             web_layout_engine=web_engine,
             screen_plan_scope=scope,
             mixed_proximity_seconds=mixed_gap,
+            scoring=_layout_scoring_from_dict(scoring_raw),
+            feedback=_layout_feedback_from_dict(feedback_raw),
         ),
-        vision=VisionConfig(enabled=vision_enabled),
+        vision=VisionConfig(enabled=vision_enabled, max_tags_per_asset=vision_max_tags),
+        geocode=GeocodeConfig(enabled=bool(geocode_raw.get("enabled", False))),
+        curate=CurateConfig(
+            segment_gap_days=int(curate_raw.get("segment_gap_days", 14)),
+            city_gap_days=int(curate_raw.get("city_gap_days", 3)),
+            min_bucket_size=int(curate_raw.get("min_bucket_size", 3)),
+            arc_mode=str(curate_raw.get("arc_mode", "legacy")).strip().lower(),
+            arc_flat_variance_threshold=float(
+                curate_raw.get("arc_flat_variance_threshold", 0.08)
+            ),
+        ),
         narrative=NarrativeConfig(
             tone_default=str(narrative_raw.get("tone_default", "relaxed")),
             max_auto_fix_retries=int(narrative_raw.get("max_auto_fix_retries", 2)),
             banned_phrases=banned,
+            scope=str(narrative_raw.get("scope", "frame")),
         ),
         llm=LlmConfig(
             provider=llm_provider,

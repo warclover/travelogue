@@ -93,6 +93,80 @@ html[data-layout="mobile"] {
   --accent: #7cb89a;
   --accent-soft: rgba(124, 184, 154, 0.15);
   --border: #2a2826;
+  /* 正文字号比 Web 小 2 号（每号 4px；小字每号 2px） */
+  --type-step: 4px;
+  --type-sm-step: 2px;
+  --type-body: calc(48px - 2 * var(--type-step));
+  --type-hook: calc(64px - 2 * var(--type-step));
+  --type-chapter: calc(72px - 2 * var(--type-step));
+  --type-card-title: calc(20px - 2 * var(--type-step));
+  --type-divider-strong: calc(18px - 2 * var(--type-step));
+  --type-voice: calc(15px - 2 * var(--type-sm-step));
+  --type-meta: calc(13px - 2 * var(--type-sm-step));
+  --type-caption: calc(16px - 2 * var(--type-sm-step));
+  --type-footer: calc(12px - 2 * var(--type-sm-step));
+  --type-index: calc(12px - 2 * var(--type-sm-step));
+  --type-appendix: calc(17px - 2 * var(--type-sm-step));
+}
+
+html[data-layout="mobile"] .cover-hero__media img {
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* Mobile 正文：仅 index-mobile（data-layout=mobile），Web 字号不变 */
+html[data-layout="mobile"] body {
+  font-size: var(--type-body);
+}
+
+html[data-layout="mobile"] .trip-meta {
+  font-size: var(--type-meta);
+}
+
+html[data-layout="mobile"] .hook-line {
+  font-size: var(--type-hook);
+}
+
+html[data-layout="mobile"] .chapter-header__index {
+  font-size: var(--type-index);
+}
+
+html[data-layout="mobile"] .chapter-header h2 {
+  font-size: var(--type-chapter);
+}
+
+html[data-layout="mobile"] .divider-place {
+  font-size: var(--type-meta);
+}
+
+html[data-layout="mobile"] .divider-place strong {
+  font-size: var(--type-divider-strong);
+}
+
+html[data-layout="mobile"] .chapter--appendix .chapter-header h2 {
+  font-size: var(--type-appendix);
+}
+
+html[data-layout="mobile"] .media-card__play-badge,
+html[data-layout="mobile"] .voice-bar__duration {
+  font-size: var(--type-meta);
+}
+
+html[data-layout="mobile"] .media-card__overlay-text .media-card__title,
+html[data-layout="mobile"] .media-card__body .media-card__title {
+  font-size: var(--type-card-title);
+}
+
+html[data-layout="mobile"] .media-card__overlay-text .media-card__caption {
+  font-size: var(--type-caption);
+}
+
+html[data-layout="mobile"] .voice-transcript {
+  font-size: var(--type-voice);
+}
+
+html[data-layout="mobile"] .footer-cta {
+  font-size: var(--type-footer);
 }
 
 /* 可选：杂志手写体（备份主题，默认不启用） */
@@ -255,6 +329,23 @@ html[data-layout="auto"] .cover-hero__media img {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   opacity: 0.92;
+}
+
+/* frame 模式：封面不叠标题，纯照片 */
+.cover-hero--photo-only .cover-hero__overlay {
+  display: none;
+}
+
+.cover-hero__title-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* 封面与正文无缝衔接 */

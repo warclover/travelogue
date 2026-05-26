@@ -15,12 +15,18 @@
   background: #2a3540;
 }
 
-.screenplay-toolbar__btn--secondary:hover:not(:disabled) {
+.screenplay-toolbar__btn--secondary:hover:not(:disabled):not([aria-pressed="true"]) {
   background: #3d5060;
 }
 
 .screenplay-toolbar__btn--secondary[aria-pressed="true"] {
   background: #3d4a3d;
+  color: #eef6f2;
+}
+
+.screenplay-toolbar__btn--secondary[aria-pressed="true"]:hover:not(:disabled) {
+  background: #4d5a4d;
+  color: #eef6f2;
 }
 
 .screenplay-toolbar__btn--longshot {

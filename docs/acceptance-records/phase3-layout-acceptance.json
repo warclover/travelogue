@@ -1,0 +1,40 @@
+[
+  {
+    "tripId": "mao",
+    "weightsPreset": "phase3b",
+    "arcProfile": {
+      "profile": "dynamic",
+      "beats": 5
+    },
+    "identicalToLegacy": true,
+    "legacy": {
+      "screens": 15,
+      "aspectMatchRate": 1.0
+    },
+    "phase3": {
+      "screens": 15,
+      "aspectMatchRate": 1.0,
+      "patternDiversity": 0.2667,
+      "replanApplied": true
+    }
+  },
+  {
+    "tripId": "linzhi",
+    "weightsPreset": "phase3b",
+    "arcProfile": {
+      "profile": "dynamic",
+      "beats": 5
+    },
+    "identicalToLegacy": true,
+    "legacy": {
+      "screens": 75,
+      "aspectMatchRate": 1.0
+    },
+    "phase3": {
+      "screens": 75,
+      "aspectMatchRate": 1.0,
+      "patternDiversity": 0.0933,
+      "replanApplied": true
+    }
+  }
+]

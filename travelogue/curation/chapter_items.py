@@ -27,12 +27,57 @@ def collect_screen_asset_ids(chapter: dict) -> list[str]:
     return aids
 
 
+def _row_layout_for_screen(pattern_id: str, slot_count: int) -> str:
+    pid = pattern_id or ""
+    if "portrait" in pid:
+        return "portrait-triple" if slot_count >= 3 else "portrait-pair"
+    if "square" in pid:
+        return "square-triple" if slot_count >= 3 else "square-pair"
+    return "landscape-triple" if slot_count >= 3 else "landscape-pair"
+
+
+def item_stub_for_screen(screen: dict) -> dict | None:
+    """One screens[] entry → one items[] block (schema stub for Web screens engine)."""
+    slots = screen.get("slots") or []
+    aids = [sl["assetId"] for sl in slots if sl.get("assetId")]
+    if not aids:
+        return None
+    if len(aids) == 1:
+        return {
+            "type": "media-card",
+            "assetId": aids[0],
+            "layout": {"fill": True, "bleed": True, "overlay": True},
+        }
+    row_layout = _row_layout_for_screen(str(screen.get("patternId") or ""), len(aids))
+    return {
+        "type": "media-row",
+        "assetIds": aids[:3],
+        "rowLayout": row_layout,
+    }
+
+
+def items_from_screens(
+    chapter: dict,
+    *,
+    max_blocks: int = MAX_CHAPTER_ITEMS,
+) -> list[dict]:
+    """Build compact items[] — one block per screen (≤ max_blocks)."""
+    items: list[dict] = []
+    for sc in chapter.get("screens") or []:
+        if len(items) >= max_blocks:
+            break
+        stub = item_stub_for_screen(sc)
+        if stub:
+            items.append(stub)
+    return items
+
+
 def items_from_asset_ids(
     asset_ids: list[str],
     *,
     max_blocks: int = MAX_CHAPTER_ITEMS,
 ) -> list[dict]:
-    """Rebuild a compact items[] from asset ids (schema max blocks)."""
+    """Rebuild a compact items[] from asset ids (legacy chunk fallback)."""
     items: list[dict] = []
     i = 0
     while i < len(asset_ids) and len(items) < max_blocks:
@@ -80,6 +125,70 @@ def count_chapter_screen_slots(chapter: dict) -> int:
     return n
 
 
+def resolve_chapter_items_for_render(
+    chapter: dict,
+    *,
+    export_layout: str,
+    layout_engine: str,
+    is_longshot: bool,
+    aspects: dict[str, str],
+    assets_map: dict[str, dict],
+    trip_photo_total: int,
+) -> list[dict]:
+    """
+    Pick items[] for HTML render.
+
+    - longshot: one card per screen slot (vertical stack)
+    - mobile + screens trip: re-run mobile layout planner (trip.json items may be schema stub)
+    - otherwise: stored items[]
+    """
+    if is_longshot and chapter.get("screens"):
+        return flatten_screens_to_items(chapter)
+
+    from travelogue.curation.layout_planner import (
+        _apply_gallery_layout,
+        plan_chapter_items,
+    )
+    from travelogue.curation.mobile_layout_state import (
+        MobilePuzzlePlannerState,
+        mobile_puzzle_enabled,
+    )
+    from travelogue.curation.screen_planner import LAYOUT_ENGINE_LEGACY
+
+    is_mobile = export_layout == "mobile"
+    is_stub = bool((chapter.get("curation") or {}).get("layoutStub"))
+    if not (
+        layout_engine == LAYOUT_ENGINE_LEGACY
+        and is_mobile
+        and chapter.get("screens")
+        and is_stub
+    ):
+        return list(chapter.get("items") or [])
+
+    asset_ids = collect_screen_asset_ids(chapter)
+    if not asset_ids:
+        return list(chapter.get("items") or [])
+
+    puzzle_state = None
+    if mobile_puzzle_enabled(trip_photo_total):
+        puzzle_state = MobilePuzzlePlannerState.from_trip_total(trip_photo_total)
+        puzzle_state.begin_chapter()
+
+    items = plan_chapter_items(
+        asset_ids,
+        aspects,
+        export_layout="mobile",
+        assets=assets_map,
+        trip_photo_total=trip_photo_total,
+        puzzle_state=puzzle_state,
+    )
+    if chapter.get("patternId") == "gallery":
+        if chapter.get("screens"):
+            return flatten_screens_to_items(chapter)
+        items = _apply_gallery_layout(items, export_layout="mobile")
+    return items
+
+
 def compact_chapter_items_for_screens(chapters: list[dict]) -> None:
     """
     When layoutEngine=screens, items[] is a legacy/mobile stub (≤8 blocks).
@@ -89,9 +198,11 @@ def compact_chapter_items_for_screens(chapters: list[dict]) -> None:
     for ch in chapters:
         if not ch.get("screens"):
             continue
-        aids = collect_screen_asset_ids(ch)
-        if aids:
-            ch["items"] = items_from_asset_ids(aids)
+        stub_items = items_from_screens(ch)
+        if stub_items:
+            ch["items"] = stub_items
+            ch_cur = ch.setdefault("curation", {})
+            ch_cur["layoutStub"] = True
         elif len(ch.get("items") or []) > MAX_CHAPTER_ITEMS:
             flat: list[str] = []
             for it in ch.get("items") or []:
@@ -99,3 +210,14 @@ def compact_chapter_items_for_screens(chapters: list[dict]) -> None:
                     if aid not in flat:
                         flat.append(aid)
             ch["items"] = items_from_asset_ids(flat)
+            ch.setdefault("curation", {})["layoutStub"] = True
+
+
+def summarize_screen_patterns(chapters: list[dict]) -> dict[str, int]:
+    """Count screen patternId usage across chapters (layout observability)."""
+    counts: dict[str, int] = {}
+    for ch in chapters:
+        for sc in ch.get("screens") or []:
+            pid = str(sc.get("patternId") or "unknown")
+            counts[pid] = counts.get(pid, 0) + 1
+    return counts

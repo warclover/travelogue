@@ -82,7 +82,7 @@ def test_parse_json_content_strips_fence():
 
 def test_run_narrate_defaults_to_stub():
     trip = _sample_trip()
-    result = run_narrate(trip, provider="stub")
+    result = run_narrate(trip, provider="stub", scope="full")
     assert trip["meta"]["hook"]
     assert result.fields_updated
     assert trip["pipeline"]["runs"][-1]["model"] == "rule-stub"
@@ -129,7 +129,7 @@ def test_llm_narrate_mock_meta_and_chapters():
             )
         pytest.fail(f"unexpected prompt: {user[:200]}")
 
-    result = run_llm_narrate(trip, provider="deepseek", chat_fn=fake_chat)
+    result = run_llm_narrate(trip, provider="deepseek", chat_fn=fake_chat, scope="full")
     assert "meta.hook" in result.fields_updated
     assert trip["meta"]["hook"] == "雨中的京都，慢慢走。"
     assert all(ch["lead"] for ch in trip["chapters"])
@@ -140,16 +140,16 @@ def test_llm_narrate_mock_meta_and_chapters():
 
 def test_llm_narrate_dry_run_lists_fields():
     trip = _sample_trip()
-    result = run_llm_narrate(trip, provider="deepseek", dry_run=True)
+    result = run_llm_narrate(trip, provider="deepseek", dry_run=True, scope="full")
     assert "meta.hook" in result.fields_updated
     assert not trip["meta"].get("hook")
 
 
 def test_llm_narrate_regenerate_planned_fields():
     trip = _sample_trip()
-    run_narrate(trip, provider="stub")
+    run_narrate(trip, provider="stub", scope="full")
     before_lead = trip["chapters"][0]["lead"]
-    result = run_llm_narrate(trip, provider="deepseek", dry_run=True, regenerate=True)
+    result = run_llm_narrate(trip, provider="deepseek", dry_run=True, regenerate=True, scope="full")
     assert f"chapters[{trip['chapters'][0]['index']}].lead" in result.fields_updated
     assert trip["chapters"][0]["lead"] == before_lead
 
@@ -194,7 +194,7 @@ def test_llm_narrate_meta_ignores_stale_chapter_vr04():
             ensure_ascii=False,
         )
 
-    run_llm_narrate(trip, provider="deepseek", chat_fn=fake_chat, regenerate=True)
+    run_llm_narrate(trip, provider="deepseek", chat_fn=fake_chat, regenerate=True, scope="full")
     assert trip["meta"]["hook"] == "新的 hook。"
 
 
@@ -218,7 +218,7 @@ def test_llm_narrate_vr04_falls_back_to_stub_lead():
             ensure_ascii=False,
         )
 
-    run_llm_narrate(trip, provider="deepseek", chat_fn=fake_chat, regenerate=True)
+    run_llm_narrate(trip, provider="deepseek", chat_fn=fake_chat, regenerate=True, scope="full")
     lead = trip["chapters"][0]["lead"]
     assert lead
     assert not lead.startswith("4月2日，京都")
@@ -269,6 +269,7 @@ def test_llm_narrate_cache_skips_chat(tmp_path):
         provider="deepseek",
         chat_fn=fake_chat,
         cache_dir=cache_dir,
+        scope="full",
     )
     first_calls = len(calls)
     assert first_calls >= 1
@@ -279,6 +280,7 @@ def test_llm_narrate_cache_skips_chat(tmp_path):
         provider="deepseek",
         chat_fn=fake_chat,
         cache_dir=cache_dir,
+        scope="full",
     )
     assert len(calls) == first_calls
     assert trip2["meta"]["hook"] == "缓存 hook。"

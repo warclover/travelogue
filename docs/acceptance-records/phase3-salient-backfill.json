@@ -1,0 +1,18 @@
+[
+  {
+    "tripId": "mao",
+    "processed": 29,
+    "facesDetected": 27,
+    "withSalientBox": 27,
+    "totalImages": 29,
+    "opencv": true
+  },
+  {
+    "tripId": "linzhi",
+    "processed": 231,
+    "facesDetected": 108,
+    "withSalientBox": 108,
+    "totalImages": 231,
+    "opencv": true
+  }
+]

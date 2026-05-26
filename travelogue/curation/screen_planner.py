@@ -6,7 +6,6 @@ See docs/web端模板.prd and docs/web端模板升级计划.md.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Literal
 
 from travelogue.curation.aspect_buckets import prefix_same_bucket
@@ -42,6 +41,7 @@ LAYOUT_ENGINE_LEGACY: LayoutEngine = "legacy"
 LAYOUT_ENGINE_SCREENS: LayoutEngine = "screens"
 LAYOUT_ENGINE_VERSION_SCREENS = "screens-2"
 MAX_SLOTS_PER_SCREEN = 9
+MIN_TRIP_PHOTOS_FOR_MOSAIC = 35
 
 PATTERN_PORTRAIT_1_LANDSCAPE_2 = "screen-portrait-1-landscape-2"
 PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND = "screen-mosaic-5-main-portrait-3land"
@@ -220,16 +220,13 @@ def _pick_main_landscape_id(
     landscape_ids: list[str],
     assets_map: dict[str, dict],
 ) -> str:
-    from travelogue.curation.curate import _cover_score
+    from travelogue.curation.curate_scoring import hero_score, median_sharpness
 
-    best_id = landscape_ids[0]
-    best_score = -1.0
-    for aid in landscape_ids:
-        score = _cover_score(assets_map.get(aid) or {}, "web")
-        if score > best_score:
-            best_score = score
-            best_id = aid
-    return best_id
+    med = median_sharpness(list(assets_map.values()))
+    return max(
+        landscape_ids,
+        key=lambda aid: hero_score(assets_map.get(aid) or {}, median_sharp=med),
+    )
 
 
 def _can_mosaic_5_main_portrait_3land(
@@ -389,14 +386,9 @@ def _pattern_id(family: str, count: int) -> str:
 
 
 def _parse_taken_ts(asset: dict) -> float | None:
-    raw = asset.get("takenAt")
-    if not raw:
-        return None
-    try:
-        text = str(raw).replace("Z", "+00:00")
-        return datetime.fromisoformat(text).timestamp()
-    except (TypeError, ValueError):
-        return None
+    from travelogue.curation.burst_utils import parse_taken_ts
+
+    return parse_taken_ts(asset)
 
 
 def _time_near_chain(
@@ -405,12 +397,9 @@ def _time_near_chain(
     *,
     burst_seconds: float,
 ) -> bool:
-    """True when all known takenAt timestamps span ≤ burst_seconds (or EXIF missing)."""
-    stamps = [_parse_taken_ts(assets.get(aid, {})) for aid in asset_ids]
-    valid = [t for t in stamps if t is not None]
-    if len(valid) < 2:
-        return True
-    return max(valid) - min(valid) <= burst_seconds
+    from travelogue.curation.burst_utils import time_near_chain
+
+    return time_near_chain(asset_ids, assets, burst_seconds=burst_seconds)
 
 
 def burst_group_map(
@@ -420,38 +409,18 @@ def burst_group_map(
     *,
     burst_seconds: float = 3.0,
 ) -> dict[str, int]:
-    """Assign burst group ids from takenAt proximity + same aspect family."""
-    groups: dict[str, int] = {}
-    gid = 0
-    last_ts: float | None = None
-    last_family: str | None = None
-    for aid in asset_ids:
-        fam = _family_kind(aspects.get(aid, "square"))
-        ts = _parse_taken_ts(assets.get(aid, {}))
-        if (
-            last_ts is not None
-            and ts is not None
-            and last_family == fam
-            and abs(ts - last_ts) <= burst_seconds
-        ):
-            groups[aid] = gid
-        else:
-            gid += 1
-            groups[aid] = gid
-        if ts is not None:
-            last_ts = ts
-        last_family = fam
-    return groups
+    from travelogue.curation.burst_utils import burst_group_map as _map
+
+    return _map(asset_ids, assets, aspects, burst_seconds=burst_seconds)
 
 
 def _same_burst_group(
     asset_ids: list[str],
     burst_groups: dict[str, int],
 ) -> bool:
-    if len(asset_ids) < 2:
-        return False
-    g0 = burst_groups.get(asset_ids[0])
-    return g0 is not None and all(burst_groups.get(a) == g0 for a in asset_ids)
+    from travelogue.curation.burst_utils import same_burst_group
+
+    return same_burst_group(asset_ids, burst_groups)
 
 
 def _pick_largest_allowed_grid(
@@ -829,23 +798,31 @@ def _pick_chapter_hero(
     asset_ids: list[str],
     aspects: dict[str, AspectKind],
     assets_map: dict[str, dict],
+    *,
+    preferred_id: str | None = None,
 ) -> tuple[str, str] | None:
     """Best landscape/panorama for opening 16:9 hero screen (web editorial rhythm)."""
-    from travelogue.curation.curate import _cover_score
+    from travelogue.curation.curate_scoring import hero_score, median_sharpness
+
+    med = median_sharpness(list(assets_map.values()))
+    if preferred_id and preferred_id in asset_ids:
+        kind = aspects.get(preferred_id, "square")
+        if kind in ("landscape", "panorama"):
+            asset = assets_map.get(preferred_id) or {}
+            if hero_score(asset, median_sharp=med) > 0:
+                return preferred_id, "screen-landscape-1"
 
     best_id = ""
     best_score = 0.0
-    best_kind: AspectKind = "landscape"
     for aid in asset_ids:
         kind = aspects.get(aid, "square")
         if kind not in ("landscape", "panorama"):
             continue
         asset = assets_map.get(aid) or {}
-        score = _cover_score(asset, "web")
+        score = hero_score(asset, median_sharp=med)
         if score > best_score:
             best_score = score
             best_id = aid
-            best_kind = kind
     if not best_id:
         return None
     return best_id, "screen-landscape-1"
@@ -885,6 +862,10 @@ def plan_screens_for_chapter(
     skip_screen_asset_ids: set[str] | None = None,
     layout_state: ScreenLayoutPlannerState | None = None,
     trip_photo_total: int | None = None,
+    preferred_hero_id: str | None = None,
+    include_chapter_hero: bool = True,
+    enable_mosaic: bool = True,
+    enable_portrait_grid8: bool = True,
 ) -> list[dict]:
     """
     Map ordered asset ids → screens[] (one pattern per screen; reset after each screen).
@@ -898,7 +879,7 @@ def plan_screens_for_chapter(
     trip_total = trip_photo_total if trip_photo_total is not None else len(asset_ids)
     use_portrait_grid8 = portrait_grid8_allowed(
         trip_total, portrait_heavy=portrait_heavy
-    )
+    ) and enable_portrait_grid8
 
     assets_map: dict[str, dict] = assets or {}
     ids = _sort_asset_ids_by_taken(list(asset_ids), assets_map)
@@ -917,12 +898,15 @@ def plan_screens_for_chapter(
         and _can_portrait_grid8_window(ids, aspects, assets_map, burst_seconds=mix_gap)
     )
     if (
-        len(ids) >= CHAPTER_HERO_MIN_ASSETS
+        include_chapter_hero
+        and len(ids) >= CHAPTER_HERO_MIN_ASSETS
         and assets_map
         and not skip_hero_for_mosaic_5
         and not skip_hero_for_portrait_grid8
     ):
-        hero = _pick_chapter_hero(ids, aspects, assets_map)
+        hero = _pick_chapter_hero(
+            ids, aspects, assets_map, preferred_id=preferred_hero_id
+        )
         if hero:
             hid, pat = hero
             if hid not in skip:
@@ -964,6 +948,10 @@ def plan_screens_for_chapter(
         return True
 
     def _try_mosaic_5_at(start: int) -> bool:
+        if not enable_mosaic:
+            return False
+        if trip_total < MIN_TRIP_PHOTOS_FOR_MOSAIC:
+            return False
         if pending_portraits or start + 4 >= len(ids):
             return False
         ordered = _can_mosaic_5_main_portrait_3land(
@@ -980,6 +968,8 @@ def plan_screens_for_chapter(
         return True
 
     def _try_drain_portrait_grid8() -> bool:
+        if not enable_portrait_grid8:
+            return False
         if not use_portrait_grid8:
             return False
         if layout_state is not None and not layout_state.can_use_portrait_grid8():
@@ -1213,6 +1203,28 @@ def plan_screens_for_chapter(
     return screens
 
 
+def _preferred_hero_for_bucket(
+    bucket: list[str],
+    asset_to_ch: dict[str, str],
+    hero_by_ch: dict[str, str],
+    assets_by_id: dict[str, dict],
+) -> str | None:
+    from travelogue.curation.curate_scoring import hero_score, median_sharpness
+
+    med = median_sharpness(list(assets_by_id.values()))
+    heroes: list[str] = []
+    for aid in bucket:
+        ch_id = asset_to_ch.get(aid)
+        if not ch_id:
+            continue
+        hid = hero_by_ch.get(ch_id)
+        if hid and hid in bucket:
+            heroes.append(hid)
+    if not heroes:
+        return None
+    return max(set(heroes), key=lambda h: hero_score(assets_by_id.get(h) or {}, median_sharp=med))
+
+
 def attach_screens_day_buckets(
     chapters: list[dict],
     day_buckets: list[list[str]],
@@ -1245,6 +1257,10 @@ def attach_screens_day_buckets(
         out.append(ch)
 
     ch_by_id = {ch["id"]: ch for ch in out}
+    hero_by_ch = {
+        ch["id"]: str((ch.get("curation") or {}).get("heroAssetId") or "")
+        for ch in out
+    }
     skip = skip_screen_asset_ids or set()
     if trip_photo_total is None:
         all_ids: set[str] = set()
@@ -1288,6 +1304,9 @@ def attach_screens_day_buckets(
         bucket = filtered
         if not bucket:
             continue
+        preferred_hero = _preferred_hero_for_bucket(
+            bucket, asset_to_ch, hero_by_ch, assets_by_id
+        )
         bucket_screens = plan_screens_for_chapter(
             bucket,
             aspects,
@@ -1299,6 +1318,7 @@ def attach_screens_day_buckets(
             skip_screen_asset_ids=skip,
             layout_state=layout_state,
             trip_photo_total=trip_photo_total,
+            preferred_hero_id=preferred_hero,
         )
         for sc in bucket_screens:
             slots = sc.get("slots") or []
@@ -1363,6 +1383,7 @@ def attach_screens_to_chapters(
         asset_ids = _collect_asset_ids_from_chapter(ch)
 
         if asset_ids:
+            hero_id = (ch.get("curation") or {}).get("heroAssetId")
             ch["screens"] = plan_screens_for_chapter(
                 asset_ids,
                 aspects,
@@ -1374,6 +1395,7 @@ def attach_screens_to_chapters(
                 skip_screen_asset_ids=skip_screen_asset_ids,
                 layout_state=layout_state,
                 trip_photo_total=trip_photo_total,
+                preferred_hero_id=hero_id,
             )
         else:
             ch["screens"] = []

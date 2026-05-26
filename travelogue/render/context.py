@@ -626,6 +626,9 @@ def build_render_context(
     cover_srcset = compile_srcset(cover_asset, mobile=image_layout == "mobile")
 
     meta_line, meta_datetime = format_trip_meta(meta)
+    from travelogue.services.narrative_scope import resolve_cover_show_title
+
+    cover_show_title = resolve_cover_show_title(trip)
     hook = (meta.get("hook") or "").strip()
     epilogue = (trip.get("epilogue") or "").strip()
     if strip_narrative_copy:
@@ -633,7 +636,13 @@ def build_render_context(
         epilogue = ""
 
     chapters_out = []
-    from travelogue.curation.chapter_items import flatten_screens_to_items
+    from travelogue.curation.chapter_items import resolve_chapter_items_for_render
+    from travelogue.curation.layout_planner import aspect_kind_for_asset
+
+    aspects_map = {a["id"]: aspect_kind_for_asset(a) for a in trip.get("assets", []) if a.get("id")}
+    layout_eligible_count = sum(
+        1 for a in trip.get("assets", []) if a.get("layoutEligible", True)
+    )
 
     for i, ch in enumerate(trip.get("chapters", [])):
         idx = ch.get("index", i + 1)
@@ -660,10 +669,14 @@ def build_render_context(
                 )
 
         items_out = []
-        chapter_items = (
-            flatten_screens_to_items(ch)
-            if is_longshot_surface and ch.get("screens")
-            else ch.get("items", [])
+        chapter_items = resolve_chapter_items_for_render(
+            ch,
+            export_layout=image_layout,
+            layout_engine=layout_engine,
+            is_longshot=is_longshot_surface,
+            aspects=aspects_map,
+            assets_map=assets,
+            trip_photo_total=layout_eligible_count,
         )
         caption_on_asset = is_longshot_surface and bool(ch.get("screens"))
         for j, it in enumerate(chapter_items):
@@ -759,6 +772,7 @@ def build_render_context(
         html_attrs.append(f'data-longshot-mobile-url="{LONGSHOT_INDEX_NAME}"')
     if include_screenplay:
         html_attrs.append('data-screenplay="on"')
+    if include_screenplay or include_long_shot:
         html_attrs.append('data-copy-toggle="on"')
     if is_draft:
         html_attrs.append('data-inline-edit="on"')
@@ -792,6 +806,7 @@ def build_render_context(
         "title": meta_title,
         "subtitle": (meta.get("subtitle") or "").strip(),
         "hasSubtitle": bool((meta.get("subtitle") or "").strip()),
+        "coverShowTitle": cover_show_title,
         "cover": {
             "src": cover_src,
             "hasSrcset": bool(cover_srcset),

@@ -15,6 +15,14 @@ from travelogue.curation.bucket_planning import (
     merge_small_buckets_with_segments,
     normalize_bucket_counts,
 )
+from travelogue.curation.curate_patterns import pattern_hint_for_bucket
+from travelogue.curation.curate_scoring import (
+    cover_candidates as _cover_candidates,
+    cover_score as _cover_score,
+    median_sharpness,
+    pick_chapter_hero,
+    pick_cover_asset_id as _pick_cover_asset_id,
+)
 from travelogue.curation.chapter_titles import chapter_titles, title_for_bucket_span
 from travelogue.curation.layout_planner import (
     aspect_kind_for_asset,
@@ -92,38 +100,6 @@ def _date_span_warning(
     return None
 
 
-def _cover_score(asset: dict, export_layout: str) -> float:
-    """Mobile: prefer tall/portrait. Web: prefer landscape / panorama for 16:9 displays."""
-    from travelogue.curation.media_classify import cover_class_weight
-
-    kind = aspect_kind_for_asset(asset)
-    if kind == "square":
-        return 0.0
-    w = int(asset.get("width") or 1)
-    h = int(asset.get("height") or 1)
-    if w <= 0 or h <= 0:
-        return 0.0
-
-    if export_layout == "web":
-        if kind in ("portrait", "tall"):
-            return 0.0
-        ratio = w / h
-        score = ratio
-        if kind == "panorama":
-            score *= 1.2
-        elif kind == "landscape":
-            target = 16 / 9
-            score *= 1.0 + 0.35 / (1.0 + abs(ratio - target))
-        return score * cover_class_weight(asset.get("mediaClass"))
-
-    score = h / w
-    if kind == "tall":
-        score *= 1.1
-    if kind == "panorama":
-        score *= 0.85
-    return score * cover_class_weight(asset.get("mediaClass"))
-
-
 def layout_eligible_assets(trip: dict) -> list[dict]:
     """Assets usable for cover, chapters, and screens (excludes low-res curation drops)."""
     excluded = set((trip.get("curation") or {}).get("excludedLowResAssetIds") or [])
@@ -140,30 +116,15 @@ def apply_low_resolution_exclusion(
     trip_dir: Path | None = None,
 ) -> str | None:
     """Mark明显偏低分辨率 assets; returns warning message if any dropped."""
-    from travelogue.config import get_config
     from travelogue.curation.asset_quality import (
+        apply_layout_eligibility_marks,
         backfill_native_dimensions,
-        partition_low_resolution_assets,
     )
 
     if trip_dir is not None:
         backfill_native_dimensions(trip, Path(trip_dir))
 
-    cfg = get_config().ingest
-    all_assets = trip.get("assets") or []
-    _, dropped, warn = partition_low_resolution_assets(
-        all_assets,
-        min_long_edge_px=cfg.min_long_edge_layout_px,
-        min_short_edge_px=cfg.min_short_edge_layout_px,
-        median_ratio=cfg.low_res_median_ratio,
-        peak_ratio=cfg.low_res_peak_ratio,
-    )
-    curation = trip.setdefault("curation", {})
-    if dropped:
-        curation["excludedLowResAssetIds"] = [a["id"] for a in dropped]
-    else:
-        curation.pop("excludedLowResAssetIds", None)
-    return warn
+    return apply_layout_eligibility_marks(trip)
 
 
 def resolve_cover_asset_id(
@@ -215,49 +176,6 @@ def sync_trip_covers(
     curation.pop("coverByLayout", None)
     curation.pop("coverCandidatesByLayout", None)
     return cover_id
-
-
-def _pick_cover_asset_id(
-    assets: list[dict],
-    *,
-    export_layout: str = "mobile",
-    exclude: set[str] | None = None,
-) -> str:
-    exclude = exclude or set()
-    best_id = ""
-    best_score = 0.0
-    for a in assets:
-        if a["id"] in exclude or a.get("type") == "video":
-            continue
-        score = _cover_score(a, export_layout)
-        if score > best_score:
-            best_score = score
-            best_id = a["id"]
-    if best_id:
-        return best_id
-    for a in assets:
-        if a["id"] not in exclude and a.get("type") != "video":
-            return a["id"]
-    return assets[0]["id"]
-
-
-def _cover_candidates(
-    assets: list[dict],
-    cover_id: str,
-    *,
-    export_layout: str = "mobile",
-    limit: int = 5,
-) -> list[str]:
-    scored: list[tuple[float, str]] = []
-    for a in assets:
-        if a["id"] == cover_id or a.get("type") == "video":
-            continue
-        score = _cover_score(a, export_layout)
-        if score > 0:
-            scored.append((score, a["id"]))
-    scored.sort(reverse=True)
-    out = [cover_id] + [aid for _, aid in scored[: limit - 1]]
-    return out[:limit]
 
 
 from travelogue.curation.chapter_items import (
@@ -336,8 +254,10 @@ def run_curate(
         LAYOUT_ENGINE_VERSION_SCREENS,
     )
 
-    from travelogue.config import default_web_layout_engine
+    from travelogue.config import default_web_layout_engine, get_config
 
+    app_cfg = get_config()
+    cur_cfg = app_cfg.curate
     layout = export_layout or trip.get("exportLayout") or "auto"
     engine = (
         layout_engine
@@ -357,13 +277,62 @@ def run_curate(
 
     meta = trip.get("meta", {})
     buckets, bucket_segment_ids, bucket_segment_ids_all, segments = group_assets_by_segments(
-        layout_assets, cover_id, meta
+        layout_assets,
+        cover_id,
+        meta,
+        segment_gap_days=cur_cfg.segment_gap_days,
+        city_gap_days=cur_cfg.city_gap_days,
+        min_bucket_size=cur_cfg.min_bucket_size,
     )
-    places = meta.get("places") or []
     segment_labels = {s.id: s.label for s in segments}
-    curation_segments = [s.to_dict(places=places) for s in segments]
+    curation_segments = [s.to_dict() for s in segments]
 
     aspects = {a["id"]: aspect_kind_for_asset(a) for a in layout_assets}
+    non_empty_buckets = [b for b in buckets if b]
+    arc_profile = "dynamic"
+    use_arc = cur_cfg.arc_mode in ("v2_adaptive", "v2_five_beat")
+    if use_arc:
+        from travelogue.curation.arc_patterns import (
+            arc_pattern_hint_for_bucket,
+            arc_profile_to_dict,
+            infer_arc_profile,
+        )
+
+        if cur_cfg.arc_mode == "v2_adaptive":
+            arc_profile = infer_arc_profile(
+                layout_assets,
+                non_empty_buckets,
+                flat_threshold=cur_cfg.arc_flat_variance_threshold,
+            )
+        pattern_hints = []
+        total_buckets = len(non_empty_buckets)
+        for i, b in enumerate(non_empty_buckets):
+            arc_hint = arc_pattern_hint_for_bucket(
+                i + 1, total_buckets, profile=arc_profile
+            )
+            pattern_hints.append(
+                arc_hint
+                if arc_hint
+                else pattern_hint_for_bucket(i + 1, total_buckets, b, aspects)
+            )
+    else:
+        pattern_hints = [
+            pattern_hint_for_bucket(i + 1, len(non_empty_buckets), b, aspects)
+            for i, b in enumerate(non_empty_buckets)
+        ]
+    assets_by_id = {a["id"]: a for a in layout_assets}
+    med_sharp = median_sharpness(layout_assets)
+    chapter_heroes: dict[str, str] = {}
+    for i, bucket in enumerate(non_empty_buckets):
+        hero = pick_chapter_hero(
+            bucket,
+            assets_by_id,
+            exclude=skip_screen_ids,
+            median_sharp=med_sharp,
+        )
+        if hero:
+            chapter_heroes[f"ch-{i + 1:02d}"] = hero
+
     titles = chapter_titles(
         buckets,
         layout_assets,
@@ -384,13 +353,14 @@ def run_curate(
         orientation_summary=summary_dict,
         skip_screen_asset_ids=skip_screen_ids,
         trip_photo_total=len(layout_assets),
+        pattern_hints=pattern_hints,
     )
-    assets_by_id = {a["id"]: a for a in layout_assets}
-    for ch, bucket, seg_id, seg_ids in zip(
+    for ch, bucket, seg_id, seg_ids, hint in zip(
         chapters,
-        [b for b in buckets if b],
+        non_empty_buckets,
         bucket_segment_ids,
         bucket_segment_ids_all,
+        pattern_hints,
     ):
         ch_cur = ch.setdefault("curation", {})
         span = bucket_day_span(bucket, assets_by_id)
@@ -400,17 +370,104 @@ def run_curate(
             ch_cur["segmentId"] = seg_id
         if len(seg_ids) > 1:
             ch_cur["segmentIds"] = seg_ids
+        ch_cur["patternHint"] = hint
+        hero_id = chapter_heroes.get(ch.get("id", ""))
+        if hero_id:
+            ch_cur["heroAssetId"] = hero_id
     excluded_ids = set(curation.get("excludedLowResAssetIds") or [])
     if excluded_ids:
         _sanitize_chapters_after_exclusion(chapters, excluded_ids)
+
+    from travelogue.curation.degradation import assess_degradation
+    from travelogue.curation.layout_metrics import compute_layout_metrics
+    from travelogue.curation.layout_scoring import ScoringWeights
+    from travelogue.curation.layout_search import maybe_replan_chapters
+
+    layout_cfg = app_cfg.layout
+    pipe_status = (trip.get("pipeline") or {}).get("status") or ""
+    structure_locked = pipe_status in (
+        "structure_locked",
+        "copy_draft",
+        "copy_locked",
+        "rendered",
+        "exported",
+    )
+    degradation = assess_degradation(
+        layout_assets,
+        aspects,
+        min_layout_eligible=layout_cfg.scoring.min_layout_eligible,
+        min_aspect_kinds=layout_cfg.scoring.min_aspect_kinds,
+        structure_locked=structure_locked,
+        force_relayout=False,
+    )
+    scoring_weights = ScoringWeights.from_dict(layout_cfg.scoring.weights)
+    chapters, replan_meta = maybe_replan_chapters(
+        chapters,
+        buckets=non_empty_buckets,
+        aspects=aspects,
+        assets=layout_assets,
+        scoring_enabled=layout_cfg.scoring.enabled,
+        weights=scoring_weights,
+        beam_width=layout_cfg.scoring.beam_width,
+        degradation=degradation,
+        arc_mode=cur_cfg.arc_mode,
+        arc_profile=arc_profile,
+        chapter_heroes=chapter_heroes,
+        orientation_summary=summary_dict,
+        skip_screen_asset_ids=skip_screen_ids,
+        mixed_proximity_seconds=layout_cfg.mixed_proximity_seconds,
+        trip_photo_total=len(layout_assets),
+        search_timeout_ms=layout_cfg.scoring.search_timeout_ms,
+        max_candidates_per_bucket=layout_cfg.scoring.max_candidates_per_bucket,
+        max_evaluations_per_trip=layout_cfg.scoring.max_evaluations_per_trip,
+        allow_burst_split=layout_cfg.scoring.allow_burst_split,
+        subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
+    )
+    layout_metrics = compute_layout_metrics(chapters)
+    degradation_reason = degradation.reason if degradation.force_legacy and layout_cfg.scoring.enabled else None
+    decision_logs = replan_meta.get("decisionLogs") or None
+
     trip["chapters"] = chapters
     trip["exportLayout"] = layout
     trip["layoutEngine"] = engine
     if engine == LAYOUT_ENGINE_SCREENS:
         trip["layoutEngineVersion"] = LAYOUT_ENGINE_VERSION_SCREENS
     curation = trip.setdefault("curation", {})
+    if degradation_reason:
+        curation["degradationReason"] = degradation_reason
+    if decision_logs:
+        curation["layoutDecisionLog"] = decision_logs
+    if replan_meta.get("searchBudget"):
+        curation["layoutSearchBudget"] = replan_meta["searchBudget"]
+    if use_arc:
+        from travelogue.curation.arc_patterns import arc_profile_to_dict
+
+        curation["arcProfile"] = arc_profile_to_dict(arc_profile)
+    curation["layoutMetrics"] = layout_metrics
+    curation["curatePlanVersion"] = "1.1"
     curation["orientationSummary"] = summary_dict
     curation["layoutPlanVersion"] = LAYOUT_PLAN_VERSION
+    curation["chapterPlan"] = [
+        {
+            "chapterIndex": ch.get("index"),
+            "chapterId": ch.get("id"),
+            "assetCount": len(non_empty_buckets[i]) if i < len(non_empty_buckets) else 0,
+            "daySpan": (ch.get("curation") or {}).get("daySpan"),
+            "segmentId": (ch.get("curation") or {}).get("segmentId"),
+            "patternHint": pattern_hints[i] if i < len(pattern_hints) else None,
+            "patternId": ch.get("patternId"),
+            "heroAssetId": chapter_heroes.get(ch.get("id", "")),
+        }
+        for i, ch in enumerate(chapters)
+    ]
+    if chapter_heroes:
+        curation["chapterHeroAssetIds"] = dict(chapter_heroes)
+
+    from travelogue.curation.chapter_items import summarize_screen_patterns
+
+    pattern_summary = summarize_screen_patterns(chapters)
+    if pattern_summary:
+        curation["layoutPlanSummary"] = pattern_summary
     if curation_segments:
         curation["segments"] = curation_segments
         if len(curation_segments) == 1:
@@ -429,6 +486,17 @@ def run_curate(
         warnings.append(span_warn)
     if res_warn:
         warnings.append(res_warn)
+
+    cross_seg = sum(
+        1 for ch in chapters if len((ch.get("curation") or {}).get("segmentIds") or []) > 1
+    )
+    if cross_seg:
+        warnings.append(f"{cross_seg} 章跨时间段合并，章标题已标注多段信息")
+
+    undated_seg = any(s.label.startswith("未标注") for s in segments)
+    if undated_seg:
+        warnings.append("含未标注日期照片，已单独成段或置于末段")
+
     if warnings:
         curation["warnings"] = warnings
 

@@ -155,6 +155,63 @@
         "mediaClassSummary": {
           "type": "object",
           "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "curatePlanVersion": { "type": "string" },
+        "chapterPlan": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "chapterIndex": { "type": "integer" },
+              "chapterId": { "type": "string" },
+              "assetCount": { "type": "integer", "minimum": 0 },
+              "daySpan": {
+                "type": "array",
+                "items": { "type": "string", "format": "date" }
+              },
+              "segmentId": { "type": "string" },
+              "patternHint": { "type": "string" },
+              "patternId": { "type": "string" },
+              "heroAssetId": { "type": "string" }
+            }
+          }
+        },
+        "chapterHeroAssetIds": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "layoutPlanSummary": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "arcProfile": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Adaptive narrative arc profile (Phase 3a)"
+        },
+        "layoutMetrics": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Offline layout evaluation metrics"
+        },
+        "layoutDecisionLog": {
+          "type": "array",
+          "items": { "type": "object", "additionalProperties": true }
+        },
+        "layoutSearchBudget": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Beam search guardrail stats"
+        },
+        "degradationReason": {
+          "type": "string",
+          "description": "Why smart layout fell back to legacy"
+        },
+        "narrativeScope": {
+          "type": "string",
+          "enum": ["frame", "frame_chapters", "full"],
+          "description": "Copy generation scope used at last narrate run"
         }
       }
     },
@@ -310,6 +367,51 @@
         "mediaClass": {
           "type": "string",
           "enum": ["photo", "screenshot", "thumbnail", "reupload", "archive", "unknown"]
+        },
+        "layoutEligible": {
+          "type": "boolean",
+          "description": "False when excluded from cover/chapters/screens (e.g. low resolution)"
+        },
+        "excludeReason": {
+          "type": "string",
+          "enum": ["low_resolution"]
+        },
+        "quality": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sharpness": { "type": "number", "minimum": 0 },
+            "meanLuma": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "dominantTone": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "description": "Average tone hex for spread continuity scoring"
+        },
+        "salientBox": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x", "y", "w", "h"],
+          "properties": {
+            "x": { "type": "number", "minimum": 0, "maximum": 1 },
+            "y": { "type": "number", "minimum": 0, "maximum": 1 },
+            "w": { "type": "number", "minimum": 0, "maximum": 1 },
+            "h": { "type": "number", "minimum": 0, "maximum": 1 }
+          },
+          "description": "Primary subject region (face box when detected)"
+        },
+        "burstGroupId": {
+          "type": "string",
+          "description": "Time-proximate burst cluster id from ingest"
+        },
+        "geo": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+            "lon": { "type": "number", "minimum": -180, "maximum": 180 }
+          }
         }
       },
       "allOf": [
@@ -430,8 +532,17 @@
         "segmentIds": {
           "type": "array",
           "items": { "type": "string" },
-          "maxItems": 5,
+          "maxItems": 16,
           "description": "All segments represented when day buckets were merged across trips"
+        },
+        "patternHint": {
+          "type": "string",
+          "enum": ["open", "gallery", "moment", "close"]
+        },
+        "heroAssetId": { "type": "string" },
+        "layoutStub": {
+          "type": "boolean",
+          "description": "True when items[] is a compact stub derived from screens[]"
         }
       }
     },
@@ -470,7 +581,7 @@
         "assetId": { "type": "string" },
         "slot": { "type": "integer", "minimum": 0, "maximum": 8 },
         "fit": { "type": "string", "enum": ["cover", "contain"] },
-        "role": { "type": "string", "enum": ["portrait", "landscape"] }
+        "role": { "type": "string", "enum": ["portrait", "landscape", "main"] }
       }
     },
     "layoutScreen": {

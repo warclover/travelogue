@@ -83,3 +83,25 @@ def test_pick_cover_web_excludes_portrait() -> None:
     assets = [_asset("port", 900, 2000), _asset("land", 1600, 900)]
     assert _pick_cover_asset_id(assets, export_layout="mobile") == "port"
     assert _pick_cover_asset_id(assets, export_layout="web") == "land"
+
+
+def test_mobile_cover_prefers_portrait_thumb_over_landscape_photo() -> None:
+    """WeChat-style portrait thumbs should win mobile cover over sharp landscapes."""
+    assets = [
+        {
+            **_asset("land", 1920, 962),
+            "mediaClass": "photo",
+            "layoutEligible": True,
+            "quality": {"sharpness": 2000.0},
+        },
+        {
+            **_asset("port-thumb", 1280, 1920),
+            "mediaClass": "thumbnail",
+            "layoutEligible": True,
+            "nativeWidth": 1280,
+            "nativeHeight": 1920,
+            "quality": {"sharpness": 800.0},
+        },
+    ]
+    assert _pick_cover_asset_id(assets, export_layout="mobile") == "port-thumb"
+    assert _pick_cover_asset_id(assets, export_layout="web") == "land"

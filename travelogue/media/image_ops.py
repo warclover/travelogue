@@ -35,12 +35,19 @@ _FILENAME_DATE_PATTERNS = (
 
 
 @dataclass
+class GeoCoords:
+    lat: float
+    lon: float
+
+
+@dataclass
 class ImageLoadResult:
     image: Image.Image
     taken_at: datetime
     date_source: str  # exif | filename | mtime
     had_exif_orientation: bool
     orientation_tag: int | None
+    geo: GeoCoords | None = None
 
 
 class ImageOpsError(Exception):
@@ -72,6 +79,54 @@ def parse_datetime_from_filename(path: Path) -> datetime | None:
         except ValueError:
             continue
     return None
+
+
+def _rational_to_float(value: object) -> float:
+    if isinstance(value, tuple) and len(value) == 2:
+        num, den = value
+        if den:
+            return float(num) / float(den)
+    if isinstance(value, (int, float)):
+        return float(value)
+    return 0.0
+
+
+def _gps_coord(values: object, ref: str) -> float | None:
+    if not isinstance(values, (list, tuple)) or len(values) != 3:
+        return None
+    deg = _rational_to_float(values[0])
+    minutes = _rational_to_float(values[1])
+    seconds = _rational_to_float(values[2])
+    coord = deg + minutes / 60.0 + seconds / 3600.0
+    if ref in ("S", "W"):
+        coord = -coord
+    return coord
+
+
+def read_exif_gps(img: Image.Image) -> GeoCoords | None:
+    """Read latitude/longitude from EXIF GPS IFD when present."""
+    try:
+        exif = img.getexif()
+        if not exif:
+            return None
+        gps = exif.get_ifd(0x8825)
+        if not gps:
+            return None
+        lat_vals = gps.get(2)
+        lat_ref = gps.get(1)
+        lon_vals = gps.get(4)
+        lon_ref = gps.get(3)
+        if lat_vals is None or lon_vals is None:
+            return None
+        lat = _gps_coord(lat_vals, str(lat_ref or "N"))
+        lon = _gps_coord(lon_vals, str(lon_ref or "E"))
+        if lat is None or lon is None:
+            return None
+        if abs(lat) > 90 or abs(lon) > 180:
+            return None
+        return GeoCoords(lat=lat, lon=lon)
+    except Exception:
+        return None
 
 
 def read_exif_orientation(img: Image.Image) -> int | None:
@@ -114,6 +169,7 @@ def load_image_normalized(path: Path) -> ImageLoadResult:
     img = Image.open(path)
     ori_tag = read_exif_orientation(img)
     had_ori = ori_tag is not None and ori_tag != 1
+    geo = read_exif_gps(img)
     taken_at, date_source = resolve_photo_datetime(path, img)
     img = ImageOps.exif_transpose(img)
     if img.mode not in ("RGB", "L"):
@@ -124,6 +180,7 @@ def load_image_normalized(path: Path) -> ImageLoadResult:
         date_source=date_source,
         had_exif_orientation=had_ori,
         orientation_tag=ori_tag,
+        geo=geo,
     )
 
 

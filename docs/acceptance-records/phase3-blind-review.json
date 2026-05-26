@@ -1,0 +1,72 @@
+[
+  {
+    "tripId": "mao",
+    "reviewDir": "trips/mao/_blind-review",
+    "mappingSealedIn": "_blind-review/key.json",
+    "evalTemplate": "_blind-review/subjective_eval.template.json",
+    "objective": {
+      "weightsPreset": "phase3b",
+      "identicalToLegacy": true,
+      "legacyMetrics": {
+        "screenCount": 15,
+        "chapterCount": 3,
+        "patternDiversity": 0.2667,
+        "patternIds": [
+          "screen-landscape-1",
+          "screen-portrait-2",
+          "screen-landscape-4",
+          "screen-landscape-1",
+          "screen-portrait-1",
+          "screen-landscape-1",
+          "screen-landscape-1",
+          "screen-portrait-1",
+          "screen-landscape-1",
+          "screen-landscape-1",
+          "screen-landscape-1",
+          "screen-landscape-1",
+          "screen-portrait-1",
+          "screen-landscape-1",
+          "screen-portrait-1"
+        ],
+        "screensPerChapter": {
+          "ch-01": 5,
+          "ch-02": 5,
+          "ch-03": 5
+        }
+      },
+      "phase3Metrics": {
+        "screenCount": 15,
+        "chapterCount": 3,
+        "patternDiversity": 0.2667,
+        "patternIds": [
+          "screen-landscape-1",
+          "screen-portrait-2",
+          "screen-landscape-4",
+          "screen-landscape-1",
+          "screen-portrait-1",
+          "screen-landscape-1",
+          "screen-landscape-1",
+          "screen-portrait-1",
+          "screen-landscape-1",
+          "screen-landscape-1",
+          "screen-landscape-1",
+          "screen-landscape-1",
+          "screen-portrait-1",
+          "screen-landscape-1",
+          "screen-portrait-1"
+        ],
+        "screensPerChapter": {
+          "ch-01": 5,
+          "ch-02": 5,
+          "ch-03": 5
+        }
+      },
+      "arcProfile": {
+        "profile": "dynamic",
+        "beats": 5
+      },
+      "legacyScreens": 15,
+      "phase3Screens": 15
+    }
+  }
+]

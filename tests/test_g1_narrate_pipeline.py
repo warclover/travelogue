@@ -65,7 +65,7 @@ def test_g1_narrate_then_dual_render(g1_workspace: Path) -> None:
     assert trip["pipeline"]["status"] == "structure_locked"
 
     before_hook = trip["meta"].get("hook", "")
-    result = run_narrate(trip, provider="stub")
+    result = run_narrate(trip, provider="stub", scope="full")
     assert "meta.hook" in result.fields_updated
     assert trip["meta"]["hook"] and trip["meta"]["hook"] != before_hook
     assert all(ch.get("lead") for ch in trip["chapters"])

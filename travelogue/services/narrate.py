@@ -209,10 +209,18 @@ def run_narrate(
     regenerate: bool = False,
     cache_dir: Path | None = None,
     chapter_id: str | None = None,
+    scope: str | None = None,
 ) -> NarrateResult:
     """Fill meta.hook, chapter leads, captions, epilogue (stub or LLM)."""
     from travelogue.config import get_config
     from travelogue.services.llm_narrate import run_llm_narrate
+    from travelogue.services.narrative_scope import apply_scope_cleanup, resolve_narrative_scope
+
+    scope_val = resolve_narrative_scope(override=scope)
+    if not dry_run:
+        apply_scope_cleanup(trip, scope_val)
+        curation = trip.setdefault("curation", {})
+        curation["narrativeScope"] = scope_val
 
     prov = (provider or get_config().llm.provider or "stub").strip().lower()
     if prov not in ("stub", "deepseek", "dashscope"):
@@ -223,10 +231,14 @@ def run_narrate(
         _chapter_indices(trip, chapter_id)
         if dry_run:
             return NarrateResult(
-                fields_updated=_planned_fields(trip, regenerate=regenerate, chapter_id=chapter_id)
+                fields_updated=_planned_fields(
+                    trip, regenerate=regenerate, chapter_id=chapter_id, scope=scope_val
+                )
             )
     if prov == "stub":
-        return _run_narrate_stub(trip, tone=tone, dry_run=dry_run, regenerate=regenerate)
+        return _run_narrate_stub(
+            trip, tone=tone, dry_run=dry_run, regenerate=regenerate, scope=scope_val
+        )
     return run_llm_narrate(
         trip,
         provider=prov,
@@ -235,6 +247,7 @@ def run_narrate(
         regenerate=regenerate,
         cache_dir=cache_dir,
         chapter_id=chapter_id,
+        scope=scope_val,
     )
 
 
@@ -244,8 +257,11 @@ def _run_narrate_stub(
     tone: str | None = None,
     dry_run: bool = False,
     regenerate: bool = False,
+    scope: str = "frame",
 ) -> NarrateResult:
     """Rule-based hook and chapter leads (no LLM)."""
+    from travelogue.services.narrative_scope import chapter_lead_allowed
+
     meta = trip.setdefault("meta", {})
     if tone:
         meta["tone"] = tone if tone in ("relaxed", "documentary") else meta.get("tone", "relaxed")
@@ -273,6 +289,8 @@ def _run_narrate_stub(
 
     for ch in chapters:
         if ch.get("edited"):
+            continue
+        if not chapter_lead_allowed(ch, chapters, scope):
             continue
         if not regenerate and (ch.get("lead") or "").strip():
             continue

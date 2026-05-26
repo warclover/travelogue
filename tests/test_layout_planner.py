@@ -16,6 +16,7 @@ from travelogue.curation.mobile_layout_state import (
     MOBILE_GRID8_ROW_LAYOUT,
     MOBILE_PERSON_GRID4_HINT,
     MOBILE_PUZZLE_MIN_PHOTOS,
+    MobilePuzzlePlannerState,
     mobile_grid4_max_for_trip,
     mobile_grid8_max_for_trip,
 )
@@ -120,11 +121,12 @@ def test_gallery_layout_preserves_media_row_on_web():
     assert merged[1]["assetIds"] == ["a1", "a2", "a3"]
 
 
-def test_gallery_layout_keeps_cards_on_mobile():
+def test_gallery_layout_scroll_on_mobile():
     cards = [_card("c1"), _card("c2"), _card("c3")]
     merged = _apply_gallery_layout(cards, export_layout="mobile")
-    assert merged == cards
-    assert not any(it.get("type") == "media-scroll" for it in merged)
+    assert len(merged) == 1
+    assert merged[0]["type"] == "media-scroll"
+    assert merged[0]["assetIds"] == ["c1", "c2", "c3"]
 
 
 def test_mobile_grid8_limits_by_trip_size():
@@ -299,5 +301,27 @@ def test_mobile_grid8_respects_trip_quota():
         trip_photo_total=50,
     )
     grids = [it for it in items if it.get("rowLayout") == MOBILE_GRID8_ROW_LAYOUT]
-    assert len(grids) == 2
-    assert sum(1 for it in items if it["type"] == "media-card") == 8
+    assert len(grids) == 1
+    assert sum(1 for it in items if it["type"] == "media-card") == 16
+
+
+def test_mobile_grid8_per_chapter_then_trip_quota():
+    ids_a = [f"a{i}" for i in range(8)]
+    ids_b = [f"b{i}" for i in range(8)]
+    aspects = {x: "landscape" for x in ids_a + ids_b}
+    base = datetime(2025, 7, 1, 12, 0, 0, tzinfo=timezone.utc)
+    assets = {}
+    for i, aid in enumerate(ids_a + ids_b):
+        assets[aid] = {
+            "id": aid,
+            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
+        }
+    state = MobilePuzzlePlannerState.from_trip_total(50)
+    items_a = plan_chapter_items(
+        ids_a, aspects, export_layout="mobile", assets=assets, trip_photo_total=50, puzzle_state=state
+    )
+    state.begin_chapter()
+    items_b = plan_chapter_items(
+        ids_b, aspects, export_layout="mobile", assets=assets, trip_photo_total=50, puzzle_state=state
+    )
+    assert sum(1 for it in items_a + items_b if it.get("rowLayout") == MOBILE_GRID8_ROW_LAYOUT) == 2

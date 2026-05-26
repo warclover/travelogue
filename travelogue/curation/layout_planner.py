@@ -7,10 +7,10 @@ See docs/LAYOUT-PLANNER.md for product rules (mobile 9:16 vs web 16:9).
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from datetime import datetime
 from typing import Literal
 
 from travelogue.curation.asset_subject import any_asset_has_person
+from travelogue.curation.burst_utils import sort_ids_by_sharpness, time_near_sequential
 from travelogue.curation.mobile_layout_state import (
     MOBILE_GRID4_ROW_LAYOUT,
     MOBILE_GRID8_ROW_LAYOUT,
@@ -155,6 +155,18 @@ def _apply_gallery_layout(
     """
     profile = _effective_profile(export_layout)
     if profile == "mobile":
+        if any(it.get("type") == "media-scroll" for it in ch_items):
+            return ch_items
+        ids: list[str] = []
+        for it in ch_items:
+            if it.get("type") == "media-card":
+                aid = it.get("assetId")
+                if aid:
+                    ids.append(aid)
+            elif it.get("type") == "media-row":
+                ids.extend(it.get("assetIds") or [])
+        if len(ids) >= 3:
+            return [_scroll(ids)]
         return ch_items
 
     if any(it.get("type") == "media-scroll" for it in ch_items):
@@ -226,14 +238,9 @@ def _assets_map_from_list(
 
 
 def _parse_taken_ts(asset: dict) -> float | None:
-    raw = asset.get("takenAt")
-    if not raw:
-        return None
-    try:
-        text = str(raw).replace("Z", "+00:00")
-        return datetime.fromisoformat(text).timestamp()
-    except (TypeError, ValueError):
-        return None
+    from travelogue.curation.burst_utils import parse_taken_ts
+
+    return parse_taken_ts(asset)
 
 
 def _time_near_chain(
@@ -242,11 +249,9 @@ def _time_near_chain(
     *,
     burst_seconds: float,
 ) -> bool:
-    stamps = [_parse_taken_ts(assets.get(aid, {})) for aid in asset_ids]
-    valid = [t for t in stamps if t is not None]
-    if len(valid) < 2:
-        return True
-    return max(valid) - min(valid) <= burst_seconds
+    from travelogue.curation.burst_utils import time_near_chain
+
+    return time_near_chain(asset_ids, assets, burst_seconds=burst_seconds)
 
 
 def _time_near_sequential(
@@ -255,15 +260,7 @@ def _time_near_sequential(
     *,
     burst_seconds: float,
 ) -> bool:
-    """True when each adjacent pair in order spans ≤ burst_seconds (or EXIF missing)."""
-    stamps = [_parse_taken_ts(assets.get(aid, {})) for aid in asset_ids]
-    known = [(i, t) for i, t in enumerate(stamps) if t is not None]
-    if len(known) < 2:
-        return True
-    for (_, t0), (_, t1) in zip(known, known[1:]):
-        if abs(t1 - t0) > burst_seconds:
-            return False
-    return True
+    return time_near_sequential(asset_ids, assets, burst_seconds=burst_seconds)
 
 
 def _plan_chapter_items_mobile(
@@ -304,7 +301,8 @@ def _plan_chapter_items_mobile(
                         window, assets_map, burst_seconds=burst_seconds
                     )
                 ):
-                    items.append(_row(window, MOBILE_GRID8_ROW_LAYOUT))  # type: ignore[arg-type]
+                    ordered = sort_ids_by_sharpness(window, assets_map)
+                    items.append(_row(ordered, MOBILE_GRID8_ROW_LAYOUT))  # type: ignore[arg-type]
                     state.note_grid8()
                     j += 8
                 else:
@@ -326,7 +324,8 @@ def _plan_chapter_items_mobile(
                         window, assets_map, burst_seconds=burst_seconds
                     )
                 ):
-                    items.append(_mobile_portrait_grid4_row(window, assets_map))
+                    ordered = sort_ids_by_sharpness(window, assets_map)
+                    items.append(_mobile_portrait_grid4_row(ordered, assets_map))
                     state.note_grid4()
                     j += 4
                 else:
@@ -577,8 +576,10 @@ def build_chapters_from_buckets(
     orientation_summary: dict | None = None,
     skip_screen_asset_ids: set[str] | None = None,
     trip_photo_total: int | None = None,
+    pattern_hints: list[str] | None = None,
 ) -> list[dict]:
     """Plan items per chapter bucket (Agent 1 day groups → Agent 1.5 layout)."""
+    from travelogue.curation.curate_patterns import resolve_chapter_pattern
     from travelogue.curation.screen_planner import (
         LAYOUT_ENGINE_SCREENS,
         attach_screens_to_chapters,
@@ -598,6 +599,8 @@ def build_chapters_from_buckets(
     if trip_photo_total and mobile_puzzle_enabled(trip_photo_total):
         puzzle_state = MobilePuzzlePlannerState.from_trip_total(trip_photo_total)
     for idx, asset_ids in enumerate(non_empty, start=1):
+        if puzzle_state is not None:
+            puzzle_state.begin_chapter()
         items = plan_chapter_items(
             asset_ids,
             aspects,
@@ -606,7 +609,8 @@ def build_chapters_from_buckets(
             trip_photo_total=trip_photo_total,
             puzzle_state=puzzle_state,
         )
-        pat = pattern_for_chapter_index(idx, total, items)
+        hint = pattern_hints[idx - 1] if pattern_hints and idx - 1 < len(pattern_hints) else None
+        pat = resolve_chapter_pattern(idx, total, items, hint=hint)
         ch_items = list(items)
         if pat == "gallery":
             ch_items = _apply_gallery_layout(ch_items, export_layout=export_layout)

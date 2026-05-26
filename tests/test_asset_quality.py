@@ -57,6 +57,9 @@ def test_apply_exclusion_writes_curation() -> None:
     assert msg
     assert trip["curation"]["excludedLowResAssetIds"] == ["a6"]
     assert len(layout_eligible_assets(trip)) == 5
+    dropped = next(a for a in trip["assets"] if a["id"] == "a6")
+    assert dropped["layoutEligible"] is False
+    assert dropped["excludeReason"] == "low_resolution"
 
 
 def test_asset_long_edge_prefers_native() -> None:

@@ -345,7 +345,11 @@
   }
 
   function initCaptionDisplay() {
-    applyCaptionDisplay(readCaptionDisplayPref());
+    if (document.documentElement.getAttribute("data-photos-only") === "on") {
+      applyCaptionDisplay(false);
+    } else {
+      applyCaptionDisplay(readCaptionDisplayPref());
+    }
     if (isDraftPreview() && readCaptionEditPref()) {
       applyCaptionEditMode(true);
     }

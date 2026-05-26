@@ -1,4 +1,4 @@
-<header class="cover-hero" data-block="cover-hero">
+<header class="cover-hero{{#unless coverShowTitle}} cover-hero--photo-only{{/unless}}" data-block="cover-hero">
   <div class="cover-hero__media">
     <img src="{{cover.src}}"
       {{#if cover.hasSrcset}}
@@ -9,6 +9,7 @@
       loading="eager"
       decoding="async" />
   </div>
+  {{#if coverShowTitle}}
   <div class="cover-hero__overlay" aria-hidden="true"></div>
   <div class="cover-hero__text">
     <h1 itemprop="name">{{title}}</h1>
@@ -16,6 +17,9 @@
     <p class="subtitle">{{subtitle}}</p>
     {{/if}}
   </div>
+  {{else}}
+  <h1 class="cover-hero__title-sr" itemprop="name">{{title}}</h1>
+  {{/if}}
   {{#if includeScreenplay}}
   <button type="button" class="cover-hero__play" data-screenplay-trigger="start"
     data-screenplay-label="▶ 自动播放"

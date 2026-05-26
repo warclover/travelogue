@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="journal.css?v={{assetVersion}}" />
   {{#if includeLongShot}}
   <link rel="stylesheet" href="longshot.css?v={{assetVersion}}" />
+  <link rel="stylesheet" href="copy-display.css?v={{assetVersion}}" />
   {{/if}}
   {{#if isDraft}}
   <link rel="stylesheet" href="inline-edit.css?v={{assetVersion}}" />
@@ -42,6 +43,7 @@
   {{#if includeLongShot}}
   {{> longshot-toolbar}}
   <script src="vendor/html2canvas.min.js?v={{assetVersion}}" defer></script>
+  <script src="copy-toggle.js?v={{assetVersion}}" defer></script>
   <script src="longshot.js?v={{assetVersion}}" defer></script>
   <script src="share.js?v={{assetVersion}}" defer></script>
   {{/if}}
