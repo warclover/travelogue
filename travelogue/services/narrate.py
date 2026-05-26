@@ -68,10 +68,7 @@ def _finalize_copy(text: str, max_chars: int, *, seen: set[str] | None = None) -
     return t[:max_chars]
 
 
-class NarrateError(Exception):
-    def __init__(self, code: str, message: str) -> None:
-        self.code = code
-        super().__init__(f"{code}: {message}")
+from travelogue.services.errors import NarrateError  # re-exported for CLI/tests
 
 
 @dataclass
@@ -214,7 +211,11 @@ def run_narrate(
     """Fill meta.hook, chapter leads, captions, epilogue (stub or LLM)."""
     from travelogue.config import get_config
     from travelogue.services.llm_narrate import run_llm_narrate
-    from travelogue.services.narrative_scope import apply_scope_cleanup, resolve_narrative_scope
+    from travelogue.services.narrative_scope import (
+        apply_scope_cleanup,
+        assert_chapter_narrate_allowed,
+        resolve_narrative_scope,
+    )
 
     scope_val = resolve_narrative_scope(override=scope)
     if not dry_run:
@@ -225,10 +226,12 @@ def run_narrate(
     prov = (provider or get_config().llm.provider or "stub").strip().lower()
     if prov not in ("stub", "deepseek", "dashscope"):
         raise NarrateError("E_NARRATE_PROVIDER", f"unknown provider {prov!r}")
-    if chapter_id and prov == "stub":
+    if chapter_id:
         from travelogue.services.llm_narrate import _chapter_indices, _planned_fields
 
         _chapter_indices(trip, chapter_id)
+        assert_chapter_narrate_allowed(trip, chapter_id, scope_val)
+    if chapter_id and prov == "stub":
         if dry_run:
             return NarrateResult(
                 fields_updated=_planned_fields(

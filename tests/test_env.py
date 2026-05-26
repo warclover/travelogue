@@ -20,6 +20,7 @@ def test_load_dotenv_files(tmp_path, monkeypatch):
     env_file = tmp_path / ".env"
     env_file.write_text("DEEPSEEK_API_KEY=from-dotenv\n", encoding="utf-8")
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    monkeypatch.setattr(env_mod, "ROOT", tmp_path)
     monkeypatch.chdir(tmp_path)
     loaded = load_dotenv_files()
     assert loaded

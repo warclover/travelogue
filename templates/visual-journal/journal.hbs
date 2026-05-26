@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="journal.css?v={{assetVersion}}" />
   {{#if includeLongShot}}
   <link rel="stylesheet" href="longshot.css?v={{assetVersion}}" />
-  <link rel="stylesheet" href="copy-display.css?v={{assetVersion}}" />
   {{/if}}
   {{#if isDraft}}
   <link rel="stylesheet" href="inline-edit.css?v={{assetVersion}}" />
@@ -16,6 +15,10 @@
   {{#if includeScreenplay}}
   <link rel="stylesheet" href="copy-display.css?v={{assetVersion}}" />
   <link rel="stylesheet" href="screenplay.css?v={{assetVersion}}" />
+  {{else}}
+    {{#if includeLongShot}}
+  <link rel="stylesheet" href="copy-display.css?v={{assetVersion}}" />
+    {{/if}}
   {{/if}}
   {{#if includeLongshotBridge}}
   <link rel="stylesheet" href="longshot.css?v={{assetVersion}}" />

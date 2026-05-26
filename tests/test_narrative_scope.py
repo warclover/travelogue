@@ -72,6 +72,26 @@ def test_chapter_lead_allowed_by_scope() -> None:
     assert all(chapter_lead_allowed(ch, chapters, SCOPE_FULL) for ch in chapters)
 
 
+def test_chapter_lead_allowed_uses_min_max_index_not_hardcoded_one() -> None:
+    chapters = [
+        {"id": "ch-a", "index": 2},
+        {"id": "ch-b", "index": 5},
+        {"id": "ch-c", "index": 7},
+    ]
+    assert chapter_lead_allowed(chapters[0], chapters, SCOPE_FRAME_CHAPTERS) is True
+    assert chapter_lead_allowed(chapters[1], chapters, SCOPE_FRAME_CHAPTERS) is False
+    assert chapter_lead_allowed(chapters[2], chapters, SCOPE_FRAME_CHAPTERS) is True
+
+
+def test_narrate_chapter_id_rejected_when_out_of_scope() -> None:
+    from travelogue.services.narrate import NarrateError
+
+    trip = _sample_trip()
+    with pytest.raises(NarrateError) as exc:
+        run_narrate(trip, provider="stub", chapter_id="ch-02", scope=SCOPE_FRAME)
+    assert exc.value.code == "E_NARRATE_SCOPE"
+
+
 def test_apply_scope_cleanup_clears_middle_copy() -> None:
     trip = _sample_trip()
     cleared = apply_scope_cleanup(trip, SCOPE_FRAME)
@@ -120,6 +140,7 @@ def test_llm_narrate_frame_skips_chapter_calls() -> None:
             )
         pytest.fail(f"unexpected chapter prompt under frame scope: {user[:200]}")
 
+    apply_scope_cleanup(trip, SCOPE_FRAME)
     run_llm_narrate(trip, provider="deepseek", chat_fn=fake_chat, scope=SCOPE_FRAME, regenerate=True)
     assert len(calls) == 1
     assert trip["meta"]["hook"] == "frame hook。"
@@ -149,14 +170,14 @@ def test_resolve_cover_show_title_frame_hides_place_name() -> None:
     assert resolve_cover_show_title(trip) is False
 
 
-def test_resolve_cover_show_title_frame_shows_distinct_title() -> None:
+def test_resolve_cover_show_title_frame_hides_custom_title() -> None:
     from travelogue.services.narrative_scope import resolve_cover_show_title
 
     trip = _sample_trip()
-    trip["meta"]["title"] = "滇西三月"
-    trip["meta"]["places"] = ["大理"]
+    trip["meta"]["title"] = "雨后京都"
+    trip["meta"]["places"] = ["京都"]
     trip.setdefault("curation", {})["narrativeScope"] = SCOPE_FRAME
-    assert resolve_cover_show_title(trip) is True
+    assert resolve_cover_show_title(trip) is False
 
 
 def test_resolve_cover_show_title_full_always_shows() -> None:

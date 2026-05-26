@@ -3,10 +3,26 @@
 from __future__ import annotations
 
 import json
+import threading
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
+
+_NOMINATIM_MIN_INTERVAL_S = 1.1
+_geocode_lock = threading.Lock()
+_last_geocode_at = 0.0
+
+
+def _throttle_nominatim() -> None:
+    global _last_geocode_at
+    with _geocode_lock:
+        now = time.monotonic()
+        wait = _NOMINATIM_MIN_INTERVAL_S - (now - _last_geocode_at)
+        if wait > 0:
+            time.sleep(wait)
+        _last_geocode_at = time.monotonic()
 
 
 def _cache_key(lat: float, lon: float) -> str:
@@ -62,6 +78,7 @@ def reverse_geocode_city(
     req = urllib.request.Request(url, headers={"User-Agent": user_agent})
     city: str | None = None
     try:
+        _throttle_nominatim()
         with urllib.request.urlopen(req, timeout=8) as resp:
             payload = json.loads(resp.read().decode("utf-8"))
         address = payload.get("address") if isinstance(payload, dict) else {}

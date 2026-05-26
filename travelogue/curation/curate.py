@@ -447,8 +447,9 @@ def run_curate(
     curation["curatePlanVersion"] = "1.1"
     curation["orientationSummary"] = summary_dict
     curation["layoutPlanVersion"] = LAYOUT_PLAN_VERSION
-    curation["chapterPlan"] = [
-        {
+    curation["chapterPlan"] = []
+    for i, ch in enumerate(chapters):
+        plan_entry: dict = {
             "chapterIndex": ch.get("index"),
             "chapterId": ch.get("id"),
             "assetCount": len(non_empty_buckets[i]) if i < len(non_empty_buckets) else 0,
@@ -456,10 +457,11 @@ def run_curate(
             "segmentId": (ch.get("curation") or {}).get("segmentId"),
             "patternHint": pattern_hints[i] if i < len(pattern_hints) else None,
             "patternId": ch.get("patternId"),
-            "heroAssetId": chapter_heroes.get(ch.get("id", "")),
         }
-        for i, ch in enumerate(chapters)
-    ]
+        hero_plan_id = chapter_heroes.get(ch.get("id", ""))
+        if hero_plan_id:
+            plan_entry["heroAssetId"] = hero_plan_id
+        curation["chapterPlan"].append(plan_entry)
     if chapter_heroes:
         curation["chapterHeroAssetIds"] = dict(chapter_heroes)
 
@@ -481,6 +483,17 @@ def run_curate(
     if mc:
         curation["mediaClassSummary"] = mc
     warnings: list[str] = []
+    replan_skip = replan_meta.get("skipReason")
+    if replan_skip == "search_timeout":
+        budget = replan_meta.get("searchBudget") or {}
+        ms = budget.get("elapsedMs")
+        suffix = f" ({ms}ms)" if ms is not None else ""
+        warnings.append(f"布局搜索超时{suffix}，已保留当前候选布局")
+    elif replan_skip == "search_eval_exhausted":
+        budget = replan_meta.get("searchBudget") or {}
+        n = budget.get("evaluations")
+        suffix = f" ({n} 次评估)" if n is not None else ""
+        warnings.append(f"布局搜索评估预算用尽{suffix}，已保留当前候选布局")
     span_warn = _date_span_warning(layout_assets, segments)
     if span_warn:
         warnings.append(span_warn)

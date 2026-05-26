@@ -121,3 +121,49 @@ def test_phash_dedupe_keeps_sharper_frame_and_derivatives(tmp_path: Path) -> Non
         assert (trip_dir / asset["displayFile"]).is_file(), asset["id"]
         for entry in asset.get("srcset") or []:
             assert (trip_dir / entry["file"]).is_file(), asset["id"]
+
+
+def test_reingest_same_album_skips_existing_md5(tmp_path: Path) -> None:
+    import shutil
+
+    trips = tmp_path / "trips"
+    trip_json = create_trip("reingest-md5", trips, title="二次导入")
+    trip_dir = trips / "reingest-md5"
+    trip = json.loads(trip_json.read_text(encoding="utf-8"))
+    album = _album_base(tmp_path, 4)
+
+    cfg = IngestConfig(dedupe_burst=False, dedupe_phash=False)
+    ingest_into_trip(trip, trip_dir, from_dir=album, dedupe=True, cfg=cfg)
+    count_after_first = len(trip["assets"])
+    assert count_after_first == 4
+    assert all(a.get("contentSig") for a in trip["assets"])
+
+    shutil.copy2(album / "p00.jpg", album / "rescan_p00.jpg")
+    result = ingest_into_trip(trip, trip_dir, from_dir=album, dedupe=True, cfg=cfg)
+    assert result.stats.get("deduped", 0) >= 1
+    assert len(trip["assets"]) == count_after_first
+
+
+def test_burst_replace_registers_md5_within_same_ingest(tmp_path: Path) -> None:
+    import shutil
+
+    trips = tmp_path / "trips"
+    trip_json = create_trip("burst-md5", trips, title="连拍 MD5")
+    trip_dir = trips / "burst-md5"
+    trip = json.loads(trip_json.read_text(encoding="utf-8"))
+    album = _album_base(tmp_path, 4)
+    base = Image.effect_noise((1200, 1600), 80).convert("RGB")
+    blur_path = album / "burst_blur.jpg"
+    sharp_path = album / "burst_sharp.jpg"
+    base.filter(ImageFilter.GaussianBlur(radius=10)).save(blur_path, quality=95)
+    base.save(sharp_path, quality=95)
+    t0 = time.time()
+    os.utime(blur_path, (t0, t0))
+    os.utime(sharp_path, (t0 + 1, t0 + 1))
+    shutil.copy2(sharp_path, album / "dup_same_sharp.jpg")
+    os.utime(album / "dup_same_sharp.jpg", (t0 + 2, t0 + 2))
+
+    cfg = IngestConfig(dedupe_burst=True, dedupe_phash=False, burst_seconds=3.0)
+    result = ingest_into_trip(trip, trip_dir, from_dir=album, dedupe=True, cfg=cfg)
+    assert result.stats.get("deduped", 0) >= 1
+    assert len(trip["assets"]) == 5

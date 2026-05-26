@@ -130,6 +130,10 @@ def _next_asset_id(assets: list[dict]) -> str:
 def _existing_md5_sigs(trip: dict) -> set[str]:
     sigs: set[str] = set()
     for a in trip.get("assets") or []:
+        content_sig = a.get("contentSig")
+        if isinstance(content_sig, str) and content_sig:
+            sigs.add(content_sig)
+            continue
         gid = a.get("dedupeGroupId") or ""
         if gid.startswith("md5:"):
             sigs.add(gid[4:])
@@ -229,6 +233,7 @@ def _build_asset_entry(
     geocode_enabled: bool,
     trip_dir: Path,
     ingest_stats: dict,
+    content_sig: str | None = None,
 ) -> dict:
     from travelogue.media.color_metrics import dominant_tone_hex, mean_luma
     from travelogue.curation.media_classify import classify_media_class, date_confidence_for_source
@@ -291,6 +296,8 @@ def _build_asset_entry(
         "dominantTone": dominant_tone_hex(img),
         "layoutEligible": True,
     }
+    if content_sig:
+        entry["contentSig"] = content_sig
     entry["mediaClass"] = classify_media_class(
         path=photo,
         img=img,
@@ -462,6 +469,7 @@ def ingest_into_trip(
             dhash_refs.append((dhash, len(assets)))
             asset_id = _next_asset_id(assets)
         else:
+            known_md5.add(sig)
             asset_id = assets[replace_index]["id"]
             for i, (dh, idx) in enumerate(dhash_refs):
                 if idx == replace_index:
@@ -491,6 +499,7 @@ def ingest_into_trip(
             geocode_enabled=geocode_enabled,
             trip_dir=trip_dir,
             ingest_stats=ingest_stats,
+            content_sig=sig,
         )
 
         _upsert_asset(

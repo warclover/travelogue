@@ -93,20 +93,22 @@ html[data-layout="mobile"] {
   --accent: #7cb89a;
   --accent-soft: rgba(124, 184, 154, 0.15);
   --border: #2a2826;
-  /* 正文字号比 Web 小 2 号（每号 4px；小字每号 2px） */
+  /* 移动端阅读字号（Web 展示级 64–72px 不适用竖屏阅读） */
   --type-step: 4px;
   --type-sm-step: 2px;
-  --type-body: calc(48px - 2 * var(--type-step));
-  --type-hook: calc(64px - 2 * var(--type-step));
-  --type-chapter: calc(72px - 2 * var(--type-step));
-  --type-card-title: calc(20px - 2 * var(--type-step));
-  --type-divider-strong: calc(18px - 2 * var(--type-step));
-  --type-voice: calc(15px - 2 * var(--type-sm-step));
-  --type-meta: calc(13px - 2 * var(--type-sm-step));
-  --type-caption: calc(16px - 2 * var(--type-sm-step));
-  --type-footer: calc(12px - 2 * var(--type-sm-step));
-  --type-index: calc(12px - 2 * var(--type-sm-step));
-  --type-appendix: calc(17px - 2 * var(--type-sm-step));
+  --type-body: 40px;
+  --type-hook: 28px;
+  --type-chapter: 22px;
+  --type-epilogue: 26px;
+  --type-card-title: max(12px, calc(20px - 2 * var(--type-step)));
+  --type-divider-strong: max(12px, calc(18px - 2 * var(--type-sm-step)));
+  --type-voice: max(12px, calc(15px - 2 * var(--type-sm-step)));
+  --type-meta: 13px;
+  --type-caption: max(12px, calc(16px - 2 * var(--type-sm-step)));
+  --type-footer: max(10px, calc(12px - 2 * var(--type-sm-step)));
+  --type-index: max(10px, calc(12px - 2 * var(--type-sm-step)));
+  --type-appendix: max(12px, calc(17px - 2 * var(--type-sm-step)));
+  font-size: var(--type-body);
 }
 
 html[data-layout="mobile"] .cover-hero__media img {
@@ -123,16 +125,24 @@ html[data-layout="mobile"] .trip-meta {
   font-size: var(--type-meta);
 }
 
-html[data-layout="mobile"] .hook-line {
-  font-size: var(--type-hook);
-}
-
 html[data-layout="mobile"] .chapter-header__index {
   font-size: var(--type-index);
 }
 
 html[data-layout="mobile"] .chapter-header h2 {
   font-size: var(--type-chapter);
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+}
+
+html[data-layout="mobile"] .hook-line {
+  font-size: var(--type-hook);
+  line-height: 1.45;
+}
+
+html[data-layout="mobile"] .epilogue {
+  font-size: var(--type-epilogue);
+  line-height: 1.45;
 }
 
 html[data-layout="mobile"] .divider-place {
@@ -383,7 +393,7 @@ html[data-layout="auto"] .cover-hero__media img {
 .trip-meta {
   text-align: center;
   padding: 16px 16px 6px;
-  font-size: 13px;
+  font-size: var(--type-meta, 13px);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
@@ -395,7 +405,7 @@ html[data-layout="auto"] .cover-hero__media img {
   max-width: 16em;
   text-align: center;
   font-family: var(--font-serif);
-  font-size: 64px;
+  font-size: var(--type-hook, 64px);
   line-height: 1.45;
 }
 
@@ -429,7 +439,7 @@ html[data-layout="auto"] .cover-hero__media img {
 .chapter-header h2 {
   margin: 2px 0 0;
   font-family: var(--font-brush);
-  font-size: 72px;
+  font-size: var(--type-chapter, 72px);
   font-weight: 400;
   line-height: 1.12;
 }

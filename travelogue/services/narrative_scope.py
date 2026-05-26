@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+from travelogue.constants import VALID_NARRATIVE_SCOPES
 from travelogue.curation.asset_caption import (
     apply_caption_to_trip,
     chapter_caption_asset_ids,
     find_item_for_asset,
     resolve_caption,
 )
+from travelogue.services.errors import NarrateError
 
 SCOPE_FRAME = "frame"
 SCOPE_FRAME_CHAPTERS = "frame_chapters"
 SCOPE_FULL = "full"
-VALID_SCOPES = frozenset({SCOPE_FRAME, SCOPE_FRAME_CHAPTERS, SCOPE_FULL})
+VALID_SCOPES = VALID_NARRATIVE_SCOPES
 
 
 def normalize_scope(raw: str | None) -> str:
@@ -34,6 +36,15 @@ def captions_allowed(scope: str) -> bool:
     return normalize_scope(scope) == SCOPE_FULL
 
 
+def _chapter_index_values(chapters: list[dict]) -> list[int]:
+    out: list[int] = []
+    for ch in chapters:
+        idx = int(ch.get("index") or 0)
+        if idx > 0:
+            out.append(idx)
+    return out
+
+
 def chapter_lead_allowed(
     chapter: dict,
     chapters: list[dict],
@@ -44,18 +55,64 @@ def chapter_lead_allowed(
         return True
     if scope == SCOPE_FRAME:
         return False
-    idx = int(chapter.get("index") or 0)
-    total = len(chapters)
-    if total <= 0:
+    indices = _chapter_index_values(chapters)
+    if not indices:
         return False
-    return idx == 1 or idx >= total
+    idx = int(chapter.get("index") or 0)
+    return idx == min(indices) or idx == max(indices)
+
+
+def chapter_has_caption_slots(chapter: dict, trip: dict) -> bool:
+    """True when scope=full would plan at least one caption for this chapter."""
+    assets = {a["id"]: a for a in trip.get("assets") or [] if a.get("id")}
+    item_by_asset = {
+        it.get("assetId"): it
+        for it in chapter.get("items") or []
+        if it.get("type") == "media-card" and it.get("assetId")
+    }
+    for aid in chapter_caption_asset_ids(chapter):
+        item = item_by_asset.get(aid)
+        if item and item.get("edited"):
+            continue
+        asset = assets.get(aid)
+        if asset and asset.get("edited"):
+            continue
+        if asset and asset.get("skipCaption"):
+            continue
+        return True
+    return False
+
+
+def chapter_narrate_allowed(chapter: dict, trip: dict, scope: str) -> bool:
+    chapters = trip.get("chapters") or []
+    scope = normalize_scope(scope)
+    if chapter_lead_allowed(chapter, chapters, scope):
+        return True
+    if captions_allowed(scope) and chapter_has_caption_slots(chapter, trip):
+        return True
+    return False
+
+
+def assert_chapter_narrate_allowed(trip: dict, chapter_id: str, scope: str) -> None:
+    chapters = trip.get("chapters") or []
+    chapter = next((c for c in chapters if c.get("id") == chapter_id), None)
+    if chapter is None:
+        raise NarrateError("E_NARRATE_CHAPTER", f"unknown chapter {chapter_id!r}")
+    if chapter_narrate_allowed(chapter, trip, scope):
+        return
+    scope_val = normalize_scope(scope)
+    raise NarrateError(
+        "E_NARRATE_SCOPE",
+        f"chapter {chapter_id!r} has no narratable fields under scope {scope_val!r} "
+        "(frame: meta hook/epilogue only; frame_chapters: first/last chapter leads + hook/epilogue)",
+    )
 
 
 def resolve_cover_show_title(trip: dict) -> bool:
     """
     Whether to overlay meta.title on the cover hero.
 
-    frame / frame_chapters: hide when title equals the primary place (hook carries narrative).
+    frame / frame_chapters: hide (hook + trip-meta carry place/date).
     full: show whenever title is set.
     """
     meta = trip.get("meta") or {}
@@ -66,11 +123,7 @@ def resolve_cover_show_title(trip: dict) -> bool:
     scope = normalize_scope(scope_raw) if scope_raw else resolve_narrative_scope()
     if scope == SCOPE_FULL:
         return True
-    places = meta.get("places") or []
-    primary_place = (places[0] or "").strip() if places else ""
-    if primary_place and title == primary_place:
-        return False
-    return True
+    return False
 
 
 def apply_scope_cleanup(trip: dict, scope: str) -> list[str]:

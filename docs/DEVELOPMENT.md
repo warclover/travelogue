@@ -45,6 +45,18 @@ copy config.yaml.example config.yaml
 $env:OPENAI_API_KEY = "sk-..."
 ```
 
+#### narrative.scope（文案范围）
+
+自 v0.2 起默认 `narrative.scope: frame`（仅生成 hook + epilogue，不生成中间章导语/图注）。
+
+| 值 | 行为 |
+|----|------|
+| `frame` | hook + epilogue；封面不叠标题 |
+| `frame_chapters` | 上述 + 首章/末章 lead |
+| `full` | 全章 lead + 图注（旧版行为） |
+
+**从旧项目升级**：若需要保留全章导语与图注，在 `config.yaml` 中显式设置 `narrative.scope: full` 后再运行 `narrate --regenerate`。`frame` 模式下 narrate 会清理 scope 不允许的中间文案（用户手动 `edited` 的字段除外）。
+
 ### 3.2 环境变量（推荐）
 
 | 变量 | 说明 |

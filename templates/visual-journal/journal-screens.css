@@ -380,6 +380,40 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-3"]:not([d
   object-fit: cover;
 }
 
+/* 竖屏双列拼图：高度随内容，避免 3:4 舞台下方留白 */
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid {
+  height: auto;
+  width: 100%;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot {
+  aspect-ratio: unset;
+  height: auto;
+  min-height: 0;
+  align-self: start;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot__img--cover,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot__img--cover {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--slot-aspect, 3 / 4);
+  object-fit: cover;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot__img--contain,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot__img--contain {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: var(--portrait-stage-vh);
+  object-fit: contain;
+  object-position: top center;
+}
+
 /* 横图宫格 2×2 / 3×2：槽位等高 stretch + cover，避免各行 cell 高度不一致 */
 html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid--2x2,
 html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid--2x2,
@@ -440,18 +474,8 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-panorama-1"] .layou
   object-position: center;
 }
 
-/* 竖屏多图（风景拼图 cover）：保留舞台比例；人物屏由 layoutHint 规则覆盖 */
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]),
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) {
-  aspect-ratio: var(--screen-aspect, 3 / 4);
-}
-
+/* 竖屏单图：保留 3:4 舞台比例 */
 html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]),
 html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]) {
   aspect-ratio: var(--screen-aspect, 3 / 4);
-}
-
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot,
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot {
-  aspect-ratio: var(--slot-aspect, 3 / 4);
 }

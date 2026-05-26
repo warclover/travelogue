@@ -329,6 +329,10 @@
         "hasAudio": { "type": "boolean" },
         "ingestBatchId": { "type": "string" },
         "dedupeGroupId": { "type": "string" },
+        "contentSig": {
+          "type": "string",
+          "description": "MD5 content signature (size:hex) for cross-ingest dedupe"
+        },
         "locked": { "type": "boolean" },
         "tags": {
           "type": "array",

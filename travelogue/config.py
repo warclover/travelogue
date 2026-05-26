@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from travelogue.constants import VALID_ARC_MODES, VALID_NARRATIVE_SCOPES
 from travelogue.paths import ROOT
+
+_log = logging.getLogger(__name__)
 
 try:
     import yaml
@@ -184,6 +188,22 @@ def _layout_feedback_from_dict(raw: dict[str, Any]) -> LayoutFeedbackConfig:
     )
 
 
+def _normalize_arc_mode(raw: object) -> str:
+    val = str(raw or "legacy").strip().lower()
+    if val not in VALID_ARC_MODES:
+        _log.warning("invalid curate.arc_mode %r, using legacy", raw)
+        return "legacy"
+    return val
+
+
+def _normalize_narrative_scope(raw: object) -> str:
+    val = str(raw or "frame").strip().lower()
+    if val not in VALID_NARRATIVE_SCOPES:
+        _log.warning("invalid narrative.scope %r, using frame", raw)
+        return "frame"
+    return val
+
+
 def load_config(path: Path | None = None) -> AppConfig:
     """Load config.yaml from path, or ./config.yaml, or defaults."""
     candidates = [path, Path.cwd() / "config.yaml", ROOT / "config.yaml"]
@@ -242,7 +262,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             segment_gap_days=int(curate_raw.get("segment_gap_days", 14)),
             city_gap_days=int(curate_raw.get("city_gap_days", 3)),
             min_bucket_size=int(curate_raw.get("min_bucket_size", 3)),
-            arc_mode=str(curate_raw.get("arc_mode", "legacy")).strip().lower(),
+            arc_mode=_normalize_arc_mode(curate_raw.get("arc_mode", "legacy")),
             arc_flat_variance_threshold=float(
                 curate_raw.get("arc_flat_variance_threshold", 0.08)
             ),
@@ -251,7 +271,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             tone_default=str(narrative_raw.get("tone_default", "relaxed")),
             max_auto_fix_retries=int(narrative_raw.get("max_auto_fix_retries", 2)),
             banned_phrases=banned,
-            scope=str(narrative_raw.get("scope", "frame")),
+            scope=_normalize_narrative_scope(narrative_raw.get("scope", "frame")),
         ),
         llm=LlmConfig(
             provider=llm_provider,

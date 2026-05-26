@@ -10,8 +10,8 @@ from typing import Any, Callable
 from travelogue.config import get_config
 from travelogue.llm.client import chat_completion, parse_json_content
 from travelogue.llm.narrate_cache import read_cached, write_cached
+from travelogue.services.errors import NarrateError
 from travelogue.services.narrate import (
-    NarrateError,
     NarrateResult,
     _finalize_copy,
     _manifest_limits,
@@ -397,14 +397,16 @@ def run_llm_narrate(
     chapter_id: str | None = None,
     scope: str | None = None,
 ) -> NarrateResult:
-    """Fill hook, leads, captions, epilogue via LLM (metadata brief only)."""
-    from travelogue.services.narrative_scope import apply_scope_cleanup
+    """
+    Fill hook, leads, captions, epilogue via LLM (metadata brief only).
 
+    Prefer ``run_narrate`` as the entry point: it runs scope cleanup and writes
+    ``curation.narrativeScope``. This function only persists ``narrativeScope``
+    (no cleanup) when ``dry_run`` is false.
+    """
     scope_val = resolve_narrative_scope(override=scope)
     if not dry_run:
-        apply_scope_cleanup(trip, scope_val)
-        curation = trip.setdefault("curation", {})
-        curation["narrativeScope"] = scope_val
+        trip.setdefault("curation", {})["narrativeScope"] = scope_val
     if chapter_id:
         _chapter_indices(trip, chapter_id)
     meta = trip.setdefault("meta", {})
