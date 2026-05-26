@@ -727,6 +727,11 @@ def cmd_render(
         "--font-theme",
         help="ui (default YaHei stack) | magazine (system KaiTi backup theme)",
     ),
+    copy_display: Optional[str] = typer.Option(
+        None,
+        "--copy-display",
+        help="full | photos — hide hook/lead/captions at render (trip.json unchanged unless set in export.copyDisplay)",
+    ),
 ) -> None:
     """Render index.html + journal.css from trip.json."""
     if mode not in ("draft", "share"):
@@ -737,6 +742,9 @@ def cmd_render(
         raise typer.Exit(1)
     if font_theme is not None and font_theme not in ("ui", "magazine"):
         typer.echo("E_CLI: --font-theme must be ui or magazine", err=True)
+        raise typer.Exit(1)
+    if copy_display is not None and copy_display not in ("full", "photos"):
+        typer.echo("E_CLI: --copy-display must be full or photos", err=True)
         raise typer.Exit(1)
     theme_arg = None if font_theme in (None, "ui") else font_theme
     out_html = index_name
@@ -752,6 +760,7 @@ def cmd_render(
                 validate=not no_validate,
                 update_pipeline=mark_rendered,
                 font_theme=theme_arg,
+                copy_display_override=copy_display,
             )
             typer.echo(f"OK {web_path}")
             typer.echo(f"OK {mobile_path}")
@@ -765,16 +774,52 @@ def cmd_render(
             layout_engine=web_layout,
             index_name=out_html,
             font_theme=theme_arg,
+            copy_display_override=copy_display,
         )
     except RenderError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
     typer.echo(f"OK {out_dir / out_html}")
     trip = TripService().load(trip_path)
-    from travelogue.render.engine import should_include_screenplay
+    from travelogue.render.engine import should_include_long_shot, should_include_screenplay
 
     if should_include_screenplay(trip, layout_engine_override=web_layout):
         typer.echo("  自动播放: 封面或右下角「自动播放」· 建议用本地 http 打开（全屏需用户手势）")
+        typer.echo("  文案切换: 右下角「隐藏文案/显示文案」（偏好保存在浏览器 sessionStorage）")
+        if not should_include_long_shot(trip, layout_engine_override=web_layout):
+            typer.echo("  保存长图: 右下角「保存长图」→ index-longshot.html 自动生成")
+            typer.echo("  预览: python -m travelogue serve <trip>  （长图需 http，不可用 file://）")
+    from travelogue.render.copy_display import is_photos_only, resolve_copy_display
+
+    if is_photos_only(resolve_copy_display(trip, override=copy_display)):
+        typer.echo("  纯照片模式: 已隐藏 hook/导语/图注（trip.json 文案保留，改 export.copyDisplay=full 可恢复）")
+    if mode == "draft":
+        typer.echo("  文案编辑: python -m travelogue serve <trip> 打开后点击文案保存到 trip.json")
+
+
+@app.command("serve")
+def cmd_serve(
+    path: str = typer.Argument(..., help="trip directory, trip.json, or tripId"),
+    port: int = typer.Option(8766, "--port", "-p", help="HTTP port"),
+    host: str = typer.Option("127.0.0.1", "--host", help="bind address"),
+    index: str = typer.Option("index.html", "--index", help="entry HTML filename"),
+) -> None:
+    """Serve trip output with inline copy save API (draft editing)."""
+    from travelogue.web.serve import resolve_trip_serve_dir, serve_trip_directory
+
+    try:
+        trip_path = _resolve(path)
+        serve_dir = resolve_trip_serve_dir(trip_path)
+    except (TripNotFoundError, FileNotFoundError) as exc:
+        typer.echo(f"E_SERVE: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    if not (serve_dir / index).is_file():
+        typer.echo(f"E_SERVE: {index} not found in {serve_dir} — run render first", err=True)
+        raise typer.Exit(1)
+    try:
+        serve_trip_directory(serve_dir, port=port, host=host, index=index)
+    except KeyboardInterrupt:
+        raise typer.Exit(0) from None
 
 
 @app.command("preview")

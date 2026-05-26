@@ -23,6 +23,19 @@ def test_resolve_trip_json_accepts_trip_dir_path(tmp_path: Path, monkeypatch) ->
     trip_json = trip_dir / "trip.json"
     trip_json.write_text('{"tripId":"demo"}', encoding="utf-8")
     svc = TripService(root=tmp_path)
-    assert svc.resolve_trip_json("linzhi".replace("linzhi", "demo")) == trip_json.resolve()
+    assert svc.resolve_trip_json("demo") == trip_json.resolve()
     assert svc.resolve_trip_json("trips/demo") == trip_json.resolve()
     assert svc.resolve_trip_json("trips/demo/trip.json") == trip_json.resolve()
+
+
+def test_resolve_trip_json_from_inside_trip_dir(tmp_path: Path, monkeypatch) -> None:
+    """When cwd is trips/demo, trips/demo and . should still resolve."""
+    trip_dir = tmp_path / "trips" / "demo"
+    trip_dir.mkdir(parents=True)
+    trip_json = trip_dir / "trip.json"
+    trip_json.write_text('{"tripId":"demo"}', encoding="utf-8")
+    monkeypatch.chdir(trip_dir)
+    svc = TripService()
+    assert svc.resolve_trip_json("trips/demo") == trip_json.resolve()
+    assert svc.resolve_trip_json(".") == trip_json.resolve()
+    assert svc.resolve_trip_json("demo") == trip_json.resolve()

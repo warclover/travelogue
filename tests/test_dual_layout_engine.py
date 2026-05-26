@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -69,6 +70,38 @@ def test_longshot_disabled_for_screens_engine(golden_trip: dict) -> None:
     assert should_include_long_shot(trip) is False
     html = render_html(trip, export_mode="draft", layout_engine_override="screens")
     assert 'data-longshot="on"' not in html
+    assert 'data-longshot-bridge="on"' in html
+    assert "longshot-bridge" in html
+    assert "longshot-bridge.js" in html
+
+
+def test_longshot_bridge_writes_longshot_sidecar(tmp_path: Path) -> None:
+    from travelogue.render.engine import LONGSHOT_INDEX_NAME, render_trip
+
+    fixture = FIXTURES_DIR / "trip.render_golden.json"
+    trip = json.loads(fixture.read_text(encoding="utf-8"))
+    demo = Path(__file__).resolve().parents[1] / "templates" / "visual-journal" / "assets"
+    if not demo.is_dir():
+        pytest.skip("demo assets not present")
+    trip = prepare_trip_web_screens(trip)
+    ws = tmp_path / "bridge-trip"
+    ws.mkdir()
+    shutil.copytree(demo, ws / "assets")
+    (ws / "assets" / "demo" / "placeholder.m4a").write_bytes(b"")
+    (ws / "assets" / "demo" / "video.mp4").write_bytes(b"")
+    (ws / "trip.json").write_text(json.dumps(trip, ensure_ascii=False, indent=2), encoding="utf-8")
+    render_trip(ws / "trip.json", validate=False, layout_engine="screens")
+    assert (ws / LONGSHOT_INDEX_NAME).is_file()
+    assert (ws / "longshot.js").is_file()
+    assert (ws / "longshot-bridge.js").is_file()
+    longshot = (ws / LONGSHOT_INDEX_NAME).read_text(encoding="utf-8")
+    assert 'data-longshot="on"' in longshot
+    assert "longshot-save" in longshot
+    assert 'data-block="layout-screen"' not in longshot
+    main = (ws / "index.html").read_text(encoding="utf-8")
+    assert 'data-longshot-bridge="on"' in main
+    assert "longshot-bridge" in main
+    assert f'data-longshot-mobile-url="{LONGSHOT_INDEX_NAME}"' in main
 
 
 def test_screenplay_enabled_for_screens_engine(golden_trip: dict) -> None:
@@ -81,6 +114,21 @@ def test_screenplay_enabled_for_screens_engine(golden_trip: dict) -> None:
     assert "screenplay-start" in html
     assert "screenplay.js" in html
     assert "screenplay.css" in html
+
+
+def test_screenplay_photos_mode_keeps_copy_in_dom_for_toggle(golden_trip: dict):
+    """Interactive screens bundle keeps narrative in HTML; CSS/JS toggles visibility."""
+    from travelogue.render.dual_layout_regression import prepare_trip_web_screens
+
+    trip = prepare_trip_web_screens(golden_trip)
+    trip.setdefault("export", {})["copyDisplay"] = "photos"
+    html = render_html(trip, export_mode="draft", layout_engine_override="screens")
+    assert 'data-copy-display="photos"' in html
+    assert 'data-copy-toggle="on"' in html
+    assert "copy-display-toggle" in html
+    assert "copy-toggle.js" in html
+    assert trip["meta"]["hook"] in html
+    assert 'data-block="hook-line"' in html
 
 
 def test_screenplay_disabled_for_legacy_web(golden_trip: dict) -> None:

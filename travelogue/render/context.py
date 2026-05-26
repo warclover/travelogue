@@ -7,8 +7,13 @@ from pathlib import Path
 
 from travelogue.media.image_ops import classify_aspect, detect_orientation
 from travelogue.paths import (
+    COPY_DISPLAY_CSS,
+    COPY_TOGGLE_JS,
+    INLINE_EDIT_CSS,
+    INLINE_EDIT_JS,
     JOURNAL_CSS,
     JOURNAL_SCREENS_CSS,
+    LONGSHOT_BRIDGE_JS,
     LONGSHOT_JS,
     SCREENPLAY_CSS,
     SCREENPLAY_JS,
@@ -28,6 +33,11 @@ def _longshot_bundle_version(trip: dict) -> str:
         SHARE_JS,
         SCREENPLAY_JS,
         SCREENPLAY_CSS,
+        COPY_TOGGLE_JS,
+        COPY_DISPLAY_CSS,
+        LONGSHOT_BRIDGE_JS,
+        INLINE_EDIT_JS,
+        INLINE_EDIT_CSS,
     ):
         try:
             stamps.append(int(path.stat().st_mtime))
@@ -106,7 +116,7 @@ _WEB_IMAGE_SIZES: dict[str, str] = {
 
 def pick_image_sizes(export_layout: str, slot: str) -> str:
     """Responsive `sizes` for srcset; web/auto use desktop tiers up to bleed 1920px."""
-    if export_layout == "mobile":
+    if export_layout in ("mobile", "longshot"):
         return _MOBILE_IMAGE_SIZES[slot]
     return _WEB_IMAGE_SIZES[slot]
 
@@ -210,7 +220,13 @@ def format_trip_meta(meta: dict) -> tuple[str, str]:
     return line, dt_attr
 
 
-def build_voice(voice: dict, *, asset_id: str, label: str, is_draft: bool) -> dict:
+def build_voice(
+    voice: dict,
+    *,
+    label: str,
+    is_draft: bool,
+    edit_path_transcript: str | None = None,
+) -> dict:
     return {
         "hasVoice": True,
         "audioFile": voice.get("audioFile", ""),
@@ -218,7 +234,8 @@ def build_voice(voice: dict, *, asset_id: str, label: str, is_draft: bool) -> di
         "ariaLabel": f"语音：{label}",
         "transcript": voice.get("transcript") or voice.get("transcriptPreview") or "",
         "transcriptOpen": is_draft and voice.get("showTranscript", True),
-        "editableTranscript": is_draft,
+        "editableTranscript": is_draft and bool(edit_path_transcript),
+        "editPathTranscript": edit_path_transcript if is_draft else None,
     }
 
 
@@ -230,6 +247,7 @@ def build_media_card(
     export_layout: str,
     is_draft: bool,
     eager: bool = False,
+    photos_only: bool = False,
 ) -> dict:
     layout = item.get("layout") or {}
     src = pick_image_src(asset, export_layout=export_layout)
@@ -237,6 +255,9 @@ def build_media_card(
     alt = alt_text(item, asset, meta_title)
     title = (item.get("title") or "").strip()
     caption = (item.get("caption") or "").strip()
+    if photos_only:
+        title = ""
+        caption = ""
     tags = asset.get("tags") or []
     voice = asset.get("voice")
     is_video = asset.get("type") == "video"
@@ -265,6 +286,8 @@ def build_media_card(
         "caption": caption,
         "hasCaption": bool(caption),
         "editable": is_draft,
+        "editPathTitle": f"items.{asset['id']}.title" if is_draft else None,
+        "editPathCaption": f"items.{asset['id']}.caption" if is_draft else None,
         "hasVoice": False,
         "playBadge": None,
     }
@@ -282,9 +305,9 @@ def build_media_card(
         ctx.update(
             build_voice(
                 voice,
-                asset_id=asset["id"],
                 label=title or alt,
                 is_draft=is_draft,
+                edit_path_transcript=f"assets.{asset['id']}.voice.transcript" if is_draft else None,
             )
         )
 
@@ -298,6 +321,9 @@ def build_media_row(
     meta_title: str,
     export_layout: str,
     is_draft: bool,
+    chapter_id: str,
+    item_index: int,
+    photos_only: bool = False,
 ) -> dict:
     cells = []
     for aid in item.get("assetIds", []):
@@ -314,6 +340,8 @@ def build_media_row(
             }
         )
     caption = (item.get("caption") or "").strip()
+    if photos_only:
+        caption = ""
     row_layout = (item.get("rowLayout") or "").strip()
     row_class = f"media-row--{row_layout}" if row_layout and row_layout != "default" else ""
     row_slot = (
@@ -327,6 +355,7 @@ def build_media_row(
     for cell in cells:
         cell["sizes"] = sizes
     layout_hint = (item.get("layoutHint") or "").strip() or None
+    edit_caption = f"chapters.{chapter_id}.items.{item_index}.caption" if is_draft else None
     return {
         "isMediaCard": False,
         "isMediaRow": True,
@@ -339,6 +368,7 @@ def build_media_row(
         "layoutHint": layout_hint,
         "hasLayoutHint": bool(layout_hint),
         "editable": is_draft,
+        "editPathCaption": edit_caption,
     }
 
 
@@ -349,6 +379,9 @@ def build_media_scroll(
     meta_title: str,
     export_layout: str,
     is_draft: bool,
+    chapter_id: str,
+    item_index: int,
+    photos_only: bool = False,
 ) -> dict:
     slides = []
     for aid in item.get("assetIds", []):
@@ -365,7 +398,10 @@ def build_media_scroll(
             }
         )
     caption = (item.get("caption") or "").strip()
+    if photos_only:
+        caption = ""
     voice = item.get("voice")
+    edit_caption = f"chapters.{chapter_id}.items.{item_index}.caption" if is_draft else None
     ctx: dict = {
         "isMediaCard": False,
         "isMediaRow": False,
@@ -375,14 +411,17 @@ def build_media_scroll(
         "hasCaption": bool(caption),
         "hasVoice": False,
         "editable": is_draft,
+        "editPathCaption": edit_caption,
     }
     if voice:
         ctx.update(
             build_voice(
                 voice,
-                asset_id="scroll",
                 label=caption or meta_title,
                 is_draft=is_draft,
+                edit_path_transcript=(
+                    f"chapters.{chapter_id}.items.{item_index}.voice.transcript" if is_draft else None
+                ),
             )
         )
     return ctx
@@ -536,40 +575,59 @@ def build_render_context(
     layout_engine_override: str | None = None,
     export_layout_override: str | None = None,
     font_theme: str | None = None,
+    copy_display_override: str | None = None,
 ) -> dict:
     """export_mode: draft | share"""
+    from travelogue.render.copy_display import is_photos_only, resolve_copy_display
+
     is_draft = export_mode == "draft"
     is_share = export_mode == "share"
-    assets = asset_map(trip)
-    meta = trip.get("meta", {})
+    copy_display = resolve_copy_display(trip, override=copy_display_override)
+    photos_only = is_photos_only(copy_display)
     export_layout = export_layout_override or trip.get("exportLayout", "auto")
+    is_longshot_surface = export_layout == "longshot"
+    image_layout = "mobile" if is_longshot_surface else export_layout
     from travelogue.curation.screen_planner import resolve_layout_engine, screens_layout_active
+    from travelogue.render.engine import should_include_screenplay
 
     layout_engine = resolve_layout_engine(trip, override=layout_engine_override)
     use_screens_global = screens_layout_active(trip, override=layout_engine_override)
+    include_screenplay = should_include_screenplay(
+        trip,
+        layout_engine_override=layout_engine_override,
+        export_layout_override=export_layout_override,
+    )
+    strip_narrative_copy = photos_only and not include_screenplay
+    assets = asset_map(trip)
+    meta = trip.get("meta", {})
     meta_title = meta.get("title", "")
 
     from travelogue.curation.curate import resolve_cover_asset_id
 
-    cover_id = resolve_cover_asset_id(trip, export_layout=export_layout)
+    cover_id = resolve_cover_asset_id(trip, export_layout=image_layout)
     if not cover_id or cover_id not in assets:
         cover_id = trip.get("coverAssetId") or ""
     cover_asset = assets[cover_id]
-    cover_src = pick_image_src(cover_asset, export_layout=export_layout)
-    cover_srcset = compile_srcset(cover_asset, mobile=export_layout == "mobile")
+    cover_src = pick_image_src(cover_asset, export_layout=image_layout)
+    cover_srcset = compile_srcset(cover_asset, mobile=image_layout == "mobile")
 
     meta_line, meta_datetime = format_trip_meta(meta)
     hook = (meta.get("hook") or "").strip()
     epilogue = (trip.get("epilogue") or "").strip()
+    if strip_narrative_copy:
+        hook = ""
+        epilogue = ""
 
     chapters_out = []
+    from travelogue.curation.chapter_items import flatten_screens_to_items
+
     for i, ch in enumerate(trip.get("chapters", [])):
         idx = ch.get("index", i + 1)
         curation = ch.get("curation") or {}
         anchors = curation.get("memoryAnchors") or []
-        use_screens = use_screens_global and bool(ch.get("screens"))
+        use_screens = use_screens_global and bool(ch.get("screens")) and not is_longshot_surface
         screens_out = []
-        if use_screens:
+        if use_screens_global and bool(ch.get("screens")) and not is_longshot_surface:
             raw_screens = enrich_screen_tones(
                 ch.get("screens", []),
                 assets,
@@ -582,13 +640,18 @@ def build_render_context(
                         sc,
                         assets,
                         meta_title=meta_title,
-                        export_layout=export_layout,
+                        export_layout=image_layout,
                         eager=i == 0 and j == 0,
                     )
                 )
 
         items_out = []
-        for j, it in enumerate(ch.get("items", [])):
+        chapter_items = (
+            flatten_screens_to_items(ch)
+            if is_longshot_surface and ch.get("screens")
+            else ch.get("items", [])
+        )
+        for j, it in enumerate(chapter_items):
             itype = it.get("type")
             eager = i == 0 and j == 0
             if itype == "media-card":
@@ -598,9 +661,10 @@ def build_render_context(
                         it,
                         assets[aid],
                         meta_title=meta_title,
-                        export_layout=export_layout,
+                        export_layout=image_layout,
                         is_draft=is_draft,
                         eager=eager,
+                        photos_only=strip_narrative_copy,
                     )
                 )
             elif itype == "media-row":
@@ -609,8 +673,11 @@ def build_render_context(
                         it,
                         assets,
                         meta_title=meta_title,
-                        export_layout=export_layout,
+                        export_layout=image_layout,
                         is_draft=is_draft,
+                        chapter_id=ch["id"],
+                        item_index=j,
+                        photos_only=strip_narrative_copy,
                     )
                 )
             elif itype == "media-scroll":
@@ -619,12 +686,17 @@ def build_render_context(
                         it,
                         assets,
                         meta_title=meta_title,
-                        export_layout=export_layout,
+                        export_layout=image_layout,
                         is_draft=is_draft,
+                        chapter_id=ch["id"],
+                        item_index=j,
+                        photos_only=strip_narrative_copy,
                     )
                 )
 
         lead = (ch.get("lead") or "").strip()
+        if strip_narrative_copy:
+            lead = ""
         ch_ctx = {
             "id": ch["id"],
             "patternId": ch.get("patternId", ""),
@@ -632,6 +704,8 @@ def build_render_context(
             "title": ch.get("title", ""),
             "lead": lead,
             "hasLead": bool(lead),
+            "editableLead": is_draft and bool(lead),
+            "editLeadPath": f"chapters.{ch['id']}.lead" if is_draft else None,
             "hasMemoryAnchors": bool(anchors),
             "memoryAnchors": ",".join(anchors) if anchors else None,
             "useScreensEngine": use_screens,
@@ -641,14 +715,15 @@ def build_render_context(
         }
         chapters_out.append(ch_ctx)
 
-    from travelogue.render.engine import should_include_long_shot, should_include_screenplay
+    from travelogue.render.engine import should_include_long_shot, should_include_longshot_bridge, LONGSHOT_INDEX_NAME
 
     include_long_shot = should_include_long_shot(
         trip,
         export_mode=export_mode,
         layout_engine_override=layout_engine_override,
+        export_layout_override=export_layout_override,
     )
-    include_screenplay = should_include_screenplay(
+    include_longshot_bridge = should_include_longshot_bridge(
         trip,
         layout_engine_override=layout_engine_override,
         export_layout_override=export_layout_override,
@@ -657,12 +732,20 @@ def build_render_context(
     html_attrs = [f'data-export="{export_mode}"']
     if export_layout and export_layout != "auto":
         html_attrs.append(f'data-layout="{export_layout}"')
-    if use_screens_global:
+    if use_screens_global and not is_longshot_surface:
         html_attrs.append(f'data-layout-engine="{layout_engine}"')
     if include_long_shot:
         html_attrs.append('data-longshot="on"')
+    if include_longshot_bridge:
+        html_attrs.append('data-longshot-bridge="on"')
+        html_attrs.append(f'data-longshot-mobile-url="{LONGSHOT_INDEX_NAME}"')
     if include_screenplay:
         html_attrs.append('data-screenplay="on"')
+        html_attrs.append('data-copy-toggle="on"')
+    if is_draft:
+        html_attrs.append('data-inline-edit="on"')
+    if photos_only:
+        html_attrs.append('data-copy-display="photos"')
     theme = font_theme or (trip.get("export") or {}).get("fontTheme") or ""
     if theme == "magazine":
         html_attrs.append('data-font-theme="magazine"')
@@ -675,11 +758,15 @@ def build_render_context(
         "lang": "zh-CN",
         "htmlExtraAttrs": " ".join(html_attrs),
         "includeLongShot": include_long_shot,
+        "includeLongshotBridge": include_longshot_bridge,
+        "longshotMobileUrl": LONGSHOT_INDEX_NAME if include_longshot_bridge else None,
         "includeScreenplay": include_screenplay,
         "assetVersion": asset_version,
         "hasShareZip": zip_ready,
         "shareZipFile": zip_name if zip_ready else None,
         "exportLayout": export_layout,
+        "copyDisplay": copy_display,
+        "isPhotosOnly": photos_only,
         "layoutEngine": layout_engine,
         "exportMode": export_mode,
         "isDraft": is_draft,
@@ -691,15 +778,18 @@ def build_render_context(
             "src": cover_src,
             "hasSrcset": bool(cover_srcset),
             "srcset": cover_srcset,
-            "sizes": pick_image_sizes(export_layout, "cover"),
+            "sizes": pick_image_sizes(image_layout, "cover"),
             "alt": alt_text(None, cover_asset, meta_title),
         },
         "tripMetaLine": meta_line,
         "tripMetaDatetime": meta_datetime,
         "hook": hook,
         "hasHook": bool(hook),
+        "editableHook": is_draft and bool(hook),
         "epilogue": epilogue,
         "hasEpilogue": bool(epilogue),
+        "editableEpilogue": is_draft and bool(epilogue),
+        "tripId": trip.get("tripId") or "",
         "chapters": chapters_out,
         "tripRoot": str(trip_root) if trip_root else None,
     }

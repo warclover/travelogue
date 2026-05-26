@@ -3,13 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232d4a3e'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='15' font-family='sans-serif' fill='%23f0f7f4'%3ET%3C/text%3E%3C/svg%3E" />
   <title>{{title}}</title>
   <link rel="stylesheet" href="journal.css?v={{assetVersion}}" />
   {{#if includeLongShot}}
   <link rel="stylesheet" href="longshot.css?v={{assetVersion}}" />
   {{/if}}
+  {{#if isDraft}}
+  <link rel="stylesheet" href="inline-edit.css?v={{assetVersion}}" />
+  {{/if}}
   {{#if includeScreenplay}}
+  <link rel="stylesheet" href="copy-display.css?v={{assetVersion}}" />
   <link rel="stylesheet" href="screenplay.css?v={{assetVersion}}" />
+  {{/if}}
+  {{#if includeLongshotBridge}}
+  <link rel="stylesheet" href="longshot.css?v={{assetVersion}}" />
   {{/if}}
 </head>
 <body>
@@ -19,13 +27,13 @@
       <div class="page">
         {{> trip-meta}}
         {{#if hasHook}}
-        <p class="hook-line" data-block="hook-line">{{hook}}</p>
+        <p class="hook-line" data-block="hook-line"{{#if editableHook}} data-editable="hook" data-edit-path="meta.hook"{{/if}}>{{hook}}</p>
         {{/if}}
         {{#each chapters}}
         {{> chapter}}
         {{/each}}
         {{#if hasEpilogue}}
-        <p class="epilogue" data-block="epilogue">{{epilogue}}</p>
+        <p class="epilogue" data-block="epilogue"{{#if editableEpilogue}} data-editable="epilogue" data-edit-path="epilogue"{{/if}}>{{epilogue}}</p>
         {{/if}}
         {{> footer-cta}}
       </div>
@@ -39,7 +47,14 @@
   {{/if}}
   {{#if includeScreenplay}}
   {{> screenplay-toolbar}}
+  <script src="copy-toggle.js?v={{assetVersion}}" defer></script>
   <script src="screenplay.js?v={{assetVersion}}" defer></script>
+  {{#if includeLongshotBridge}}
+  <script src="longshot-bridge.js?v={{assetVersion}}" defer></script>
+  {{/if}}
+  {{/if}}
+  {{#if isDraft}}
+  <script src="inline-edit.js?v={{assetVersion}}" defer></script>
   {{/if}}
 </body>
 </html>

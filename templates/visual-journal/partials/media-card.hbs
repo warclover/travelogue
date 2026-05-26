@@ -23,10 +23,10 @@
     {{/if}}
     <div class="media-card__overlay-text">
       {{#if hasTitle}}
-      <h3 class="media-card__title"{{#if editable}} data-editable="title"{{/if}}>{{title}}</h3>
+      <h3 class="media-card__title"{{#if editable}} data-editable="title"{{#if editPathTitle}} data-edit-path="{{editPathTitle}}"{{/if}}{{/if}}>{{title}}</h3>
       {{/if}}
       {{#if hasCaption}}
-      <p class="media-card__caption"{{#if editable}} data-editable="caption"{{/if}}>{{caption}}</p>
+      <p class="media-card__caption"{{#if editable}} data-editable="caption"{{#if editPathCaption}} data-edit-path="{{editPathCaption}}"{{/if}}{{/if}}>{{caption}}</p>
       {{/if}}
     </div>
   </div>

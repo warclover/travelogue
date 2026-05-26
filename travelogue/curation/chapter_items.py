@@ -55,6 +55,31 @@ def items_from_asset_ids(
     return items[:max_blocks]
 
 
+def flatten_screens_to_items(chapter: dict) -> list[dict]:
+    """Expand screens[].slots into one media-card each (longshot vertical stack)."""
+    items: list[dict] = []
+    for sc in chapter.get("screens") or []:
+        for slot in sc.get("slots") or []:
+            aid = slot.get("assetId")
+            if not aid:
+                continue
+            items.append(
+                {
+                    "type": "media-card",
+                    "assetId": aid,
+                    "layout": {"fill": True, "bleed": True, "overlay": False},
+                }
+            )
+    return items
+
+
+def count_chapter_screen_slots(chapter: dict) -> int:
+    n = 0
+    for sc in chapter.get("screens") or []:
+        n += len(sc.get("slots") or [])
+    return n
+
+
 def compact_chapter_items_for_screens(chapters: list[dict]) -> None:
     """
     When layoutEngine=screens, items[] is a legacy/mobile stub (≤8 blocks).

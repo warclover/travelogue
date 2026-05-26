@@ -8,7 +8,7 @@
     <h2>{{title}}</h2>
   </header>
   {{#if hasLead}}
-  <p class="chapter-lead" data-block="chapter-lead">{{lead}}</p>
+  <p class="chapter-lead" data-block="chapter-lead"{{#if editableLead}} data-editable="lead" data-edit-path="{{editLeadPath}}"{{/if}}>{{lead}}</p>
   {{/if}}
   {{#if useScreensEngine}}
   {{#each screens}}

@@ -1,0 +1,138 @@
+"""Apply inline copy edits from draft HTML preview to trip.json."""
+
+from __future__ import annotations
+
+from datetime import datetime, timezone
+
+HOOK_MAX = 56
+EPILOGUE_MAX = 80
+LEAD_MAX = 80
+CAPTION_MAX = 60
+TITLE_MAX = 14
+TRANSCRIPT_MAX = 2000
+
+
+class CopyPatchError(Exception):
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        super().__init__(f"{code}: {message}")
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _find_item_by_asset_id(trip: dict, asset_id: str) -> dict | None:
+    for ch in trip.get("chapters") or []:
+        for it in ch.get("items") or []:
+            if it.get("type") == "media-card" and it.get("assetId") == asset_id:
+                return it
+            if it.get("type") in ("media-row", "media-scroll"):
+                if asset_id in (it.get("assetIds") or []):
+                    return it
+    return None
+
+
+def apply_copy_patch(trip: dict, path: str, value: str) -> str:
+    """
+    Apply one edit path. Returns a short label for logging.
+
+    Paths: meta.hook, epilogue, chapters.<id>.lead,
+           chapters.<id>.items.<index>.caption|voice.transcript,
+           items.<assetId>.caption|title, assets.<assetId>.voice.transcript
+    """
+    value = (value or "").strip()
+    meta = trip.setdefault("meta", {})
+
+    if path == "meta.hook":
+        meta["hook"] = value[:HOOK_MAX]
+        meta["edited"] = True
+        return "meta.hook"
+
+    if path == "epilogue":
+        trip["epilogue"] = value[:EPILOGUE_MAX]
+        meta["edited"] = True
+        return "epilogue"
+
+    if path.startswith("chapters.") and path.endswith(".lead"):
+        ch_id = path[len("chapters.") : -len(".lead")]
+        for ch in trip.get("chapters") or []:
+            if ch.get("id") == ch_id:
+                ch["lead"] = value[:LEAD_MAX]
+                ch["edited"] = True
+                return path
+        raise CopyPatchError("E_COPY_PATCH", f"unknown chapter {ch_id!r}")
+
+    if path.startswith("chapters.") and ".items." in path:
+        parts = path.split(".")
+        if len(parts) >= 5 and parts[0] == "chapters" and parts[2] == "items":
+            ch_id = parts[1]
+            try:
+                idx = int(parts[3])
+            except ValueError as exc:
+                raise CopyPatchError("E_COPY_PATCH", f"invalid item index in {path!r}") from exc
+            field = ".".join(parts[4:])
+            for ch in trip.get("chapters") or []:
+                if ch.get("id") != ch_id:
+                    continue
+                items = ch.get("items") or []
+                if idx < 0 or idx >= len(items):
+                    raise CopyPatchError("E_COPY_PATCH", f"item index {idx} out of range for {ch_id!r}")
+                item = items[idx]
+                if field == "caption":
+                    item["caption"] = value[:CAPTION_MAX]
+                    item["edited"] = True
+                    return path
+                if field == "voice.transcript":
+                    voice = item.setdefault("voice", {})
+                    voice["transcript"] = value[:TRANSCRIPT_MAX]
+                    return path
+                raise CopyPatchError("E_COPY_PATCH", f"unsupported item field {field!r}")
+        raise CopyPatchError("E_COPY_PATCH", f"unsupported path {path!r}")
+
+    if path.startswith("items.") and path.endswith(".caption"):
+        asset_id = path[len("items.") : -len(".caption")]
+        item = _find_item_by_asset_id(trip, asset_id)
+        if not item:
+            raise CopyPatchError("E_COPY_PATCH", f"unknown item asset {asset_id!r}")
+        item["caption"] = value[:CAPTION_MAX]
+        item["edited"] = True
+        return path
+
+    if path.startswith("items.") and path.endswith(".title"):
+        asset_id = path[len("items.") : -len(".title")]
+        item = _find_item_by_asset_id(trip, asset_id)
+        if not item or item.get("type") != "media-card":
+            raise CopyPatchError("E_COPY_PATCH", f"unknown media-card {asset_id!r}")
+        item["title"] = value[:TITLE_MAX]
+        item["edited"] = True
+        return path
+
+    if path.startswith("assets.") and path.endswith(".voice.transcript"):
+        asset_id = path[len("assets.") : -len(".voice.transcript")]
+        assets = {a.get("id"): a for a in trip.get("assets") or [] if a.get("id")}
+        asset = assets.get(asset_id)
+        if not asset:
+            raise CopyPatchError("E_COPY_PATCH", f"unknown asset {asset_id!r}")
+        voice = asset.setdefault("voice", {})
+        voice["transcript"] = value[:TRANSCRIPT_MAX]
+        return path
+
+    raise CopyPatchError("E_COPY_PATCH", f"unsupported path {path!r}")
+
+
+def apply_copy_patches(trip: dict, patches: list[dict]) -> list[str]:
+    updated: list[str] = []
+    for patch in patches:
+        path = patch.get("path")
+        if not path:
+            continue
+        updated.append(apply_copy_patch(trip, str(path), str(patch.get("value") or "")))
+    if updated:
+        trip["updatedAt"] = _utc_now_iso()
+        pipe = trip.setdefault("pipeline", {})
+        if pipe.get("status") == "copy_locked":
+            pipe["status"] = "copy_draft"
+            locks = pipe.setdefault("locks", {})
+            locks["copy"] = False
+    return updated

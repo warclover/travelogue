@@ -2,6 +2,35 @@
  * Travelogue · Web screens 自动播放（全屏逐屏）
  */
 
+.screenplay-toolbar__fab-row {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.screenplay-toolbar__btn--secondary {
+  background: #2a3540;
+}
+
+.screenplay-toolbar__btn--secondary:hover:not(:disabled) {
+  background: #3d5060;
+}
+
+.screenplay-toolbar__btn--secondary[aria-pressed="true"] {
+  background: #3d4a3d;
+}
+
+.screenplay-toolbar__btn--longshot {
+  background: #2d4a3e;
+}
+
+.screenplay-toolbar__btn--longshot:hover:not(:disabled) {
+  background: #3d6b5a;
+}
+
 .screenplay-toolbar {
   position: fixed;
   z-index: 150;

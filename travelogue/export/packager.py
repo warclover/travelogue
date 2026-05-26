@@ -9,7 +9,14 @@ from pathlib import Path
 from travelogue.config import get_config
 from travelogue.export.exif import write_asset_to_zip
 from travelogue.render.context import collect_asset_paths
-from travelogue.render.engine import RenderError, render_trip, should_include_long_shot, should_include_screenplay
+from travelogue.render.engine import (
+    LONGSHOT_INDEX_NAME,
+    RenderError,
+    render_trip,
+    should_include_long_shot,
+    should_include_longshot_bridge,
+    should_include_screenplay,
+)
 from travelogue.render.preview import render_preview_jpg
 from travelogue.services.trip import TripService
 from travelogue.services.validate import validate_trip
@@ -120,6 +127,8 @@ def export_trip(
     screenplay_files = (
         ("screenplay.js", trip_root / "screenplay.js"),
         ("screenplay.css", trip_root / "screenplay.css"),
+        ("copy-toggle.js", trip_root / "copy-toggle.js"),
+        ("copy-display.css", trip_root / "copy-display.css"),
     )
 
     max_zip_mb = get_config().export.max_zip_mb
@@ -134,7 +143,13 @@ def export_trip(
         if preview_path.is_file():
             zf.write(preview_path, "preview.jpg")
 
-        if should_include_long_shot(trip, export_mode="share"):
+        wrote_longshot_bundle = False
+        longshot_sidecar = trip_root / LONGSHOT_INDEX_NAME
+        if longshot_sidecar.is_file() and should_include_longshot_bridge(trip):
+            zf.write(longshot_sidecar, LONGSHOT_INDEX_NAME)
+            wrote_longshot_bundle = True
+
+        if should_include_long_shot(trip, export_mode="share") or wrote_longshot_bundle:
             for arc, path in longshot_files:
                 if path.is_file():
                     zf.write(path, arc)

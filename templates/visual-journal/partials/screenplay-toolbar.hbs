@@ -1,11 +1,25 @@
-<div class="screenplay-toolbar" data-block="screenplay-toolbar" role="complementary" aria-label="自动播放">
-  <button type="button" id="screenplay-start" class="screenplay-toolbar__btn"
-    aria-pressed="false"
-    data-screenplay-label="自动播放"
-    data-screenplay-busy="退出播放">
-    自动播放
-  </button>
-  <p class="screenplay-toolbar__hint">全屏 · 逐屏 · 每屏 2 秒</p>
+<div class="screenplay-toolbar" data-block="screenplay-toolbar" role="complementary" aria-label="浏览工具">
+  <div class="screenplay-toolbar__fab-row">
+    <button type="button" id="screenplay-start" class="screenplay-toolbar__btn"
+      aria-pressed="false"
+      data-screenplay-label="自动播放"
+      data-screenplay-busy="退出播放">
+      自动播放
+    </button>
+    <button type="button" id="copy-display-toggle" class="screenplay-toolbar__btn screenplay-toolbar__btn--secondary"
+      aria-pressed="false"
+      data-copy-label-hide="隐藏文案"
+      data-copy-label-show="显示文案">
+      隐藏文案
+    </button>
+    {{#if includeLongshotBridge}}
+    <button type="button" id="longshot-bridge" class="screenplay-toolbar__btn screenplay-toolbar__btn--longshot"
+      title="使用手机版竖向排版生成 PNG，可先选 2×/3× 清晰度">
+      保存长图
+    </button>
+    {{/if}}
+  </div>
+  <p class="screenplay-toolbar__hint">全屏 · 逐屏 · 文案可切换{{#if isDraft}} · 点击文案可编辑{{/if}}{{#if includeLongshotBridge}} · 长图可选 2×/3×{{/if}}</p>
 </div>
 <div id="screenplay-root" class="screenplay-root" hidden aria-hidden="true">
   <div class="screenplay-stage">

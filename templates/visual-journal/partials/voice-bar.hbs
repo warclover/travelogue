@@ -5,5 +5,5 @@
 </div>
 <details class="voice-transcript"{{#if transcriptOpen}} open{{/if}}>
   <summary>转写</summary>
-  <p class="voice-transcript__full"{{#if editableTranscript}} data-editable="transcript"{{/if}}>{{transcript}}</p>
+  <p class="voice-transcript__full"{{#if editableTranscript}} data-editable="transcript"{{#if editPathTranscript}} data-edit-path="{{editPathTranscript}}"{{/if}}{{/if}}>{{transcript}}</p>
 </details>

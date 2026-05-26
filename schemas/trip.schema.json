@@ -83,6 +83,11 @@
           "type": "string",
           "enum": ["ui", "magazine"],
           "description": "Optional HTML font theme (default ui / Microsoft YaHei stack)"
+        },
+        "copyDisplay": {
+          "type": "string",
+          "enum": ["full", "photos"],
+          "description": "Render: full shows hook/lead/captions; photos hides narrative copy (trip.json unchanged)"
         }
       }
     },

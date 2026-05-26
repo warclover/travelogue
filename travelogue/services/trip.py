@@ -59,15 +59,45 @@ class TripService:
         p = Path(trip_id_or_path)
         if p.is_file():
             return p.resolve()
-        for root in (p, self.root / p, Path.cwd() / p):
-            if root.is_dir():
-                trip_json = root / "trip.json"
+
+        cwd = Path.cwd()
+        cwd_trip_json = cwd / "trip.json"
+        cwd_trip_id = cwd.name if cwd_trip_json.is_file() else None
+        normalized = str(p).replace("\\", "/").strip("/")
+
+        search_roots: list[Path] = [p, self.root / p, cwd / p]
+        if cwd_trip_id:
+            if p in (Path("."), Path("..")) or normalized in (
+                cwd_trip_id,
+                f"trips/{cwd_trip_id}",
+                f"./{cwd_trip_id}",
+            ):
+                search_roots.insert(0, cwd)
+
+        seen: set[Path] = set()
+        for root in search_roots:
+            try:
+                resolved = root.resolve()
+            except OSError:
+                continue
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            if resolved.is_dir():
+                trip_json = resolved / "trip.json"
                 if trip_json.is_file():
                     return trip_json.resolve()
+
         if p.suffix == ".json" and p.exists():
             return p.resolve()
+
         base = trips_dir or (self.root / "trips")
-        candidate = base / str(trip_id_or_path) / "trip.json"
+        trip_key = p.name if normalized.startswith("trips/") else str(trip_id_or_path)
+        candidate = base / trip_key / "trip.json"
         if candidate.is_file():
             return candidate.resolve()
+
+        if cwd_trip_id and str(trip_id_or_path) == cwd_trip_id:
+            return cwd_trip_json.resolve()
+
         raise TripNotFoundError(f"E_TRIP_NOT_FOUND {trip_id_or_path}")

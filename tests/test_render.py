@@ -71,8 +71,12 @@ def test_render_screens_includes_screenplay_bundle(trip_workspace: Path) -> None
     )
     assert (trip_workspace / "screenplay.js").is_file()
     assert (trip_workspace / "screenplay.css").is_file()
+    assert (trip_workspace / "copy-toggle.js").is_file()
+    assert (trip_workspace / "copy-display.css").is_file()
     html = (trip_workspace / "index.html").read_text(encoding="utf-8")
     assert 'data-screenplay="on"' in html
+    assert 'data-copy-toggle="on"' in html
+    assert "copy-display-toggle" in html
     assert "screenplay-start" in html
     assert "screenplay.js" in html
     assert "longshot.js" not in html
@@ -169,6 +173,14 @@ def test_render_media_row_uses_source_and_aspect_kind(trip_workspace: Path) -> N
         "assetIds": [trip["assets"][0]["id"], trip["assets"][1]["id"]],
         "rowLayout": "landscape-pair",
     }
-    ctx = build_media_row(row, assets, meta_title="测试", export_layout="mobile", is_draft=True)
+    ctx = build_media_row(
+        row,
+        assets,
+        meta_title="测试",
+        export_layout="mobile",
+        is_draft=True,
+        chapter_id="ch-01",
+        item_index=0,
+    )
     assert ctx["cells"][0]["src"].startswith("assets/")
     assert ctx["cells"][0]["aspectKind"] in ("portrait", "landscape", "square", "panorama", "tall")

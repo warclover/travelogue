@@ -13,6 +13,6 @@
   </div>
   {{/each}}
   {{#if hasCaption}}
-  <p class="media-row__caption"{{#if editable}} data-editable="caption"{{/if}}>{{caption}}</p>
+  <p class="media-row__caption"{{#if editable}} data-editable="caption"{{#if editPathCaption}} data-edit-path="{{editPathCaption}}"{{/if}}{{/if}}>{{caption}}</p>
   {{/if}}
 </figure>

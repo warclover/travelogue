@@ -1,0 +1,112 @@
+"""Serve trip output directory with inline copy save API."""
+
+from __future__ import annotations
+
+import json
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+
+from travelogue.services.trip import TripService
+from travelogue.web.copy_patch import CopyPatchError, apply_copy_patches
+
+SAVE_PATH = "/__travelogue/save-copy"
+FAVICON_SILENT_PATHS = frozenset({"/favicon.ico", "/favicon.svg"})
+
+
+class TripPreviewHandler(SimpleHTTPRequestHandler):
+    trip_json_path: Path
+
+    def __init__(self, *args, directory: str | None = None, trip_json: Path | None = None, **kwargs):
+        self.trip_json_path = trip_json or Path("trip.json")
+        super().__init__(*args, directory=directory, **kwargs)
+
+    def do_GET(self) -> None:  # noqa: N802
+        if self.path.split("?", 1)[0] in FAVICON_SILENT_PATHS:
+            self.send_response(204)
+            self.end_headers()
+            return
+        super().do_GET()
+
+    def do_POST(self) -> None:  # noqa: N802
+        if self.path.split("?", 1)[0] != SAVE_PATH:
+            self.send_error(404)
+            return
+        length = int(self.headers.get("Content-Length") or 0)
+        body = self.rfile.read(length) if length else b""
+        try:
+            payload = json.loads(body.decode("utf-8") or "{}")
+        except json.JSONDecodeError:
+            self._json_response(400, {"ok": False, "error": "invalid JSON"})
+            return
+        patches = payload.get("patches")
+        if not isinstance(patches, list) or not patches:
+            self._json_response(400, {"ok": False, "error": "patches required"})
+            return
+        svc = TripService()
+        try:
+            trip = svc.load(self.trip_json_path)
+            updated = apply_copy_patches(trip, patches)
+            svc.save(trip, self.trip_json_path)
+        except CopyPatchError as exc:
+            self._json_response(400, {"ok": False, "error": str(exc)})
+            return
+        except Exception as exc:
+            self._json_response(500, {"ok": False, "error": str(exc)})
+            return
+        self._json_response(200, {"ok": True, "updated": updated})
+
+    def _json_response(self, status: int, payload: dict) -> None:
+        data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def end_headers(self) -> None:
+        self.send_header("Cache-Control", "no-cache")
+        super().end_headers()
+
+
+def serve_trip_directory(
+    trip_dir: Path,
+    *,
+    port: int = 8766,
+    host: str = "127.0.0.1",
+    index: str = "index.html",
+) -> None:
+    trip_dir = trip_dir.resolve()
+    trip_json = trip_dir / "trip.json"
+    if not trip_json.is_file():
+        raise FileNotFoundError(f"trip.json not found in {trip_dir}")
+
+    handler = partial(
+        TripPreviewHandler,
+        directory=str(trip_dir),
+        trip_json=trip_json,
+    )
+    server = ThreadingHTTPServer((host, port), handler)
+    url = f"http://{host}:{port}/{index}"
+    print(f"Serving {trip_dir}")
+    print(f"  preview: {url}")
+    print(f"  inline edit saves to: {trip_json}")
+    print("  Ctrl+C to stop")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nStopped.")
+    finally:
+        server.server_close()
+
+
+def resolve_trip_serve_dir(path: Path) -> Path:
+    path = path.resolve()
+    if path.is_file() and path.name == "trip.json":
+        return path.parent
+    if path.is_dir():
+        if (path / "trip.json").is_file():
+            return path
+        if (path / "index.html").is_file():
+            return path
+    raise FileNotFoundError(f"cannot serve {path}")
