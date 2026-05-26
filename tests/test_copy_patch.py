@@ -101,6 +101,19 @@ def test_patches_unlock_copy_locked() -> None:
     assert trip != before
 
 
+def test_apply_asset_caption() -> None:
+    trip = _sample_trip()
+    apply_copy_patch(trip, "assets.a1.caption", "资产图注")
+    assert trip["assets"][0]["caption"] == "资产图注"
+
+
+def test_items_caption_falls_back_to_asset() -> None:
+    trip = _sample_trip()
+    trip["chapters"][0]["items"] = []
+    apply_copy_patch(trip, "items.a1.caption", "资产图注")
+    assert trip["assets"][0]["caption"] == "资产图注"
+
+
 def test_unknown_path_raises() -> None:
     trip = _sample_trip()
     with pytest.raises(CopyPatchError):

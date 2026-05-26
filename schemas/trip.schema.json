@@ -285,6 +285,11 @@
           "description": "How tags were produced"
         },
         "voice": { "$ref": "#/$defs/voice" },
+        "caption": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Per-asset caption (screens/longshot); complements chapter items[]"
+        },
         "aspectKind": {
           "type": "string",
           "enum": ["portrait", "landscape", "square", "panorama", "tall"],

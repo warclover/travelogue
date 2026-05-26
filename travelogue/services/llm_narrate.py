@@ -17,6 +17,7 @@ from travelogue.services.narrate import (
     _manifest_limits,
     _utc_now_iso,
 )
+from travelogue.curation.asset_caption import apply_caption_to_trip, chapter_caption_asset_ids, resolve_caption
 from travelogue.services.narrative_brief import build_chapter_brief, build_meta_brief
 from travelogue.services.narrative_validate import validate_narrative
 
@@ -164,17 +165,24 @@ def _needs_meta(trip: dict, *, regenerate: bool = False) -> bool:
     return need_hook or need_epilogue
 
 
-def _chapter_needs_copy(chapter: dict, *, regenerate: bool = False) -> bool:
+def _chapter_needs_copy(chapter: dict, trip: dict, *, regenerate: bool = False) -> bool:
     if chapter.get("edited"):
         return False
     if regenerate:
         return True
     if not (chapter.get("lead") or "").strip():
         return True
-    for item in chapter.get("items") or []:
-        if item.get("type") != "media-card" or item.get("edited"):
+    assets = {a["id"]: a for a in trip.get("assets") or []}
+    item_by_asset = {
+        it.get("assetId"): it
+        for it in chapter.get("items") or []
+        if it.get("type") == "media-card" and it.get("assetId")
+    }
+    for aid in chapter_caption_asset_ids(chapter):
+        item = item_by_asset.get(aid)
+        if item and item.get("edited"):
             continue
-        if not (item.get("caption") or "").strip():
+        if not resolve_caption(item, assets.get(aid)).strip():
             return True
     return False
 
@@ -184,17 +192,24 @@ def _planned_fields(trip: dict, *, regenerate: bool = False) -> list[str]:
     meta = trip.get("meta") or {}
     if not meta.get("edited") and (regenerate or not (meta.get("hook") or "").strip()):
         fields.append("meta.hook")
+    assets = {a["id"]: a for a in trip.get("assets") or []}
     for ch in trip.get("chapters") or []:
         if ch.get("edited"):
             continue
         idx = ch.get("index")
         if regenerate or not (ch.get("lead") or "").strip():
             fields.append(f"chapters[{idx}].lead")
-        for item in ch.get("items") or []:
-            if item.get("type") != "media-card" or item.get("edited"):
+        item_by_asset = {
+            it.get("assetId"): it
+            for it in ch.get("items") or []
+            if it.get("type") == "media-card" and it.get("assetId")
+        }
+        for aid in chapter_caption_asset_ids(ch):
+            item = item_by_asset.get(aid)
+            if item and item.get("edited"):
                 continue
-            if regenerate or not (item.get("caption") or "").strip():
-                fields.append(f"chapters[{idx}].items[{item.get('assetId')}].caption")
+            if regenerate or not resolve_caption(item, assets.get(aid)).strip():
+                fields.append(f"assets[{aid}].caption")
     if len(trip.get("chapters") or []) >= 2 and (
         regenerate or not (trip.get("epilogue") or "").strip()
     ):
@@ -242,16 +257,22 @@ def _apply_chapter_payload(
             )
             updated.append(f"chapters[{idx}].lead")
     captions = {it.get("assetId"): it.get("caption") for it in payload.get("items") or []}
-    for item in chapter.get("items") or []:
-        if item.get("type") != "media-card" or item.get("edited"):
+    assets = {a["id"]: a for a in trip.get("assets") or []}
+    item_by_asset = {
+        it.get("assetId"): it
+        for it in chapter.get("items") or []
+        if it.get("type") == "media-card" and it.get("assetId")
+    }
+    for aid in chapter_caption_asset_ids(chapter):
+        item = item_by_asset.get(aid)
+        if item and item.get("edited"):
             continue
-        if (item.get("caption") or "").strip() and not regenerate:
+        if resolve_caption(item, assets.get(aid)).strip() and not regenerate:
             continue
-        aid = item.get("assetId")
         cap = captions.get(aid)
         if cap:
-            item["caption"] = _finalize_copy(str(cap), 60)
-            updated.append(f"chapters[{idx}].items[{aid}].caption")
+            final = _finalize_copy(str(cap), 60)
+            updated.extend(apply_caption_to_trip(trip, aid, final))
     return updated
 
 
@@ -356,7 +377,7 @@ def run_llm_narrate(
     chapters = trip.get("chapters") or []
     for ch_idx in range(len(chapters)):
         chapter = trip["chapters"][ch_idx]
-        if not _chapter_needs_copy(chapter, regenerate=regenerate):
+        if not _chapter_needs_copy(chapter, trip, regenerate=regenerate):
             continue
         brief = build_chapter_brief(trip, chapter, tone=tone_val, regenerate=regenerate)
         ch_id = brief["chapter"]["id"]

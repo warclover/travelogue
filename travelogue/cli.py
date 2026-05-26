@@ -822,6 +822,68 @@ def cmd_serve(
         raise typer.Exit(0) from None
 
 
+@app.command("migrate-captions")
+def cmd_migrate_captions(
+    path: str = typer.Argument(..., help="trip.json path or tripId"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="report only, do not save"),
+) -> None:
+    """Copy media-card item captions onto assets[].caption when missing."""
+    from travelogue.curation.asset_caption import migrate_captions_to_assets
+
+    trip_path = _resolve(path)
+    svc = TripService()
+    trip = svc.load(trip_path)
+    migrated = migrate_captions_to_assets(trip)
+    if not migrated:
+        typer.echo("OK migrate-captions · nothing to migrate")
+        return
+    if dry_run:
+        typer.echo(f"OK migrate-captions · would migrate {len(migrated)} assets: {', '.join(migrated[:8])}")
+        return
+    svc.save(trip, trip_path)
+    typer.echo(f"OK migrate-captions · migrated {len(migrated)} assets")
+
+
+@app.command("longshot-smoke")
+def cmd_longshot_smoke(
+    path: str = typer.Argument(..., help="trip directory, trip.json, or tripId"),
+    port: int = typer.Option(0, "--port", "-p", help="HTTP port (0 = random)"),
+    no_capture: bool = typer.Option(False, "--no-capture", help="DOM/API checks only"),
+) -> None:
+    """Playwright smoke test for index-longshot.html (requires playwright + chromium)."""
+    from travelogue.render.engine import LONGSHOT_INDEX_NAME
+    from travelogue.web.longshot_smoke import LongshotSmokeError, run_longshot_smoke
+    from travelogue.web.serve import resolve_trip_serve_dir
+
+    try:
+        trip_path = _resolve(path)
+        serve_dir = resolve_trip_serve_dir(trip_path)
+    except (TripNotFoundError, FileNotFoundError) as exc:
+        typer.echo(f"E_LONGSHOT_SMOKE: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    sidecar = serve_dir / LONGSHOT_INDEX_NAME
+    if not sidecar.is_file():
+        typer.echo(f"E_LONGSHOT_SMOKE: {LONGSHOT_INDEX_NAME} not found — run render first", err=True)
+        raise typer.Exit(1)
+    try:
+        result = run_longshot_smoke(
+            serve_dir,
+            port=port,
+            capture_first_chapter=not no_capture,
+        )
+    except LongshotSmokeError as exc:
+        typer.echo(f"E_LONGSHOT_SMOKE: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    typer.echo(
+        f"OK longshot-smoke · chapters={result['chapter_count']} cards={result['media_card_count']} "
+        f"url={result['url']}"
+    )
+    if result.get("first_chapter_blob_bytes"):
+        typer.echo(f"  capture: {result['first_chapter_blob_bytes']} bytes (chapter 1 @ 1×)")
+    elif result.get("capture_skipped"):
+        typer.echo(f"  capture skipped: {result['capture_skipped']}")
+
+
 @app.command("preview")
 def cmd_preview(
     path: str = typer.Argument(..., help="trip.json path or tripId"),

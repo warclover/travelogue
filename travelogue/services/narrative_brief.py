@@ -4,15 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from travelogue.curation.asset_caption import chapter_caption_asset_ids, resolve_caption
 from travelogue.services.narrate import _manifest_limits
-
-
-def _chapter_asset_ids(chapter: dict) -> list[str]:
-    ids: list[str] = []
-    for item in chapter.get("items") or []:
-        if item.get("type") == "media-card" and item.get("assetId"):
-            ids.append(item["assetId"])
-    return ids
 
 
 def _asset_brief(asset: dict) -> dict[str, Any]:
@@ -81,20 +74,22 @@ def build_chapter_brief(
     assets = {a["id"]: a for a in trip.get("assets") or []}
     ch_cur = chapter.get("curation") or {}
     items_out: list[dict[str, Any]] = []
-    for item in chapter.get("items") or []:
-        if item.get("type") != "media-card":
-            continue
-        aid = item.get("assetId")
-        if not aid:
-            continue
+    item_by_asset = {
+        it.get("assetId"): it
+        for it in chapter.get("items") or []
+        if it.get("type") == "media-card" and it.get("assetId")
+    }
+    for aid in chapter_caption_asset_ids(chapter):
+        item = item_by_asset.get(aid)
         asset = assets.get(aid) or {}
+        existing = resolve_caption(item, asset)
         items_out.append(
             {
                 "assetId": aid,
-                "existingTitle": item.get("title") or "",
-                "existingCaption": "" if regenerate else (item.get("caption") or ""),
-                "skipCaption": bool(item.get("edited"))
-                or (bool((item.get("caption") or "").strip()) and not regenerate),
+                "existingTitle": (item.get("title") if item else "") or "",
+                "existingCaption": "" if regenerate else existing,
+                "skipCaption": bool(item and item.get("edited"))
+                or (bool(existing) and not regenerate),
                 "asset": _asset_brief(asset),
             }
         )

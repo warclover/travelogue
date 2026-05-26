@@ -5,7 +5,7 @@
 | **文档版本** | v0.1 |
 | **状态** | 已拍板（产品方向） |
 | **关联** | `PRD-MVP.md` §5.4、`F-EXP-07`、`TEMPLATE-visual-journal.md` §13.5、[API-MINIAPP.md](./API-MINIAPP.md) |
-| **更新日期** | 2026-05-19 |
+| **更新日期** | 2026-05-22 |
 
 ---
 
@@ -32,11 +32,12 @@
 
 | 项 | 规格 |
 |----|------|
-| 入口 | 游记页右下角 **「保存长图」**；金样例 `golden.html` 顶栏同款 |
-| 版式 | 与 Visual Journal 金样例一致：`data-layout=mobile`，宽 **390px**，9:16 卡片 |
-| 技术 | `longshot.js` + vendored `html2canvas`；横滑章纵向展开 |
-| 默认 | **draft / share 渲染均开启**；`export.longShot: false` 可关闭 |
-| zip | 默认 **包含** longshot bundle（约 +200KB） |
+| 入口 | 游记页右下角 **「保存长图」**；Web screens 经 bridge 打开 **`index-longshot.html`** |
+| 版式 | 专用长图面：`data-layout=longshot`，screens 槽位展平为竖向 `media-card` 栈；宽 **390px** |
+| 技术 | `longshot.js` + vendored `html2canvas`；支持 **按章** 或整篇导出、2×/3× 清晰度 |
+| 运行 | 须本地 **`travelogue serve`**（非 `file://`）；微信内预览弹窗 + 长按保存提示 |
+| 默认 | **draft / share 渲染均开启** sidecar；`export.longShot: false` 可关闭 |
+| zip | 默认 **包含** longshot bundle（`index-longshot.html` + `longshot.js/css` 等，约 +200KB） |
 
 ### 2.3 隐私与免责（产品立场）
 
@@ -124,3 +125,4 @@ flowchart LR
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v0.1 | 2026-05-19 | 双轨策略：微信群长图 P0；小程序鉴权 HTML P2 |
+| v0.2 | 2026-05-22 | 长图专用面 `index-longshot.html`、按章导出、serve 要求、zip 含 sidecar |

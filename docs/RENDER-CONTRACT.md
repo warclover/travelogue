@@ -225,7 +225,7 @@ media-card
 | `layoutEngine` | 长图 |
 |----------------|------|
 | `legacy`（含 Web `media-row`） | ✅ 默认开启 |
-| `screens`（`layout-screen`） | ❌ 暂不输出 toolbar；请用 `--web-layout legacy` 或第二份 HTML |
+| `screens`（`layout-screen`） | ❌ 主 HTML 无 toolbar；✅ **`index-longshot.html` sidecar**（screens 展平） |
 
 规格详见 `PRD-MVP.md` §6.7.1。
 

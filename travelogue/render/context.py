@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from pathlib import Path
 
+from travelogue.curation.asset_caption import resolve_caption
 from travelogue.media.image_ops import classify_aspect, detect_orientation
 from travelogue.paths import (
     COPY_DISPLAY_CSS,
@@ -248,19 +249,32 @@ def build_media_card(
     is_draft: bool,
     eager: bool = False,
     photos_only: bool = False,
+    chapter_id: str | None = None,
+    item_index: int | None = None,
+    caption_on_asset: bool = False,
 ) -> dict:
     layout = item.get("layout") or {}
     src = pick_image_src(asset, export_layout=export_layout)
     srcset = compile_srcset(asset, mobile=export_layout == "mobile")
     alt = alt_text(item, asset, meta_title)
     title = (item.get("title") or "").strip()
-    caption = (item.get("caption") or "").strip()
+    caption = resolve_caption(item, asset)
     if photos_only:
         title = ""
         caption = ""
     tags = asset.get("tags") or []
     voice = asset.get("voice")
     is_video = asset.get("type") == "video"
+
+    if is_draft:
+        if caption_on_asset:
+            edit_caption = f"assets.{asset['id']}.caption"
+        elif chapter_id is not None and item_index is not None:
+            edit_caption = f"chapters.{chapter_id}.items.{item_index}.caption"
+        else:
+            edit_caption = f"items.{asset['id']}.caption"
+    else:
+        edit_caption = None
 
     ctx: dict = {
         "isMediaCard": True,
@@ -287,7 +301,7 @@ def build_media_card(
         "hasCaption": bool(caption),
         "editable": is_draft,
         "editPathTitle": f"items.{asset['id']}.title" if is_draft else None,
-        "editPathCaption": f"items.{asset['id']}.caption" if is_draft else None,
+        "editPathCaption": edit_caption,
         "hasVoice": False,
         "playBadge": None,
     }
@@ -651,6 +665,7 @@ def build_render_context(
             if is_longshot_surface and ch.get("screens")
             else ch.get("items", [])
         )
+        caption_on_asset = is_longshot_surface and bool(ch.get("screens"))
         for j, it in enumerate(chapter_items):
             itype = it.get("type")
             eager = i == 0 and j == 0
@@ -665,6 +680,9 @@ def build_render_context(
                         is_draft=is_draft,
                         eager=eager,
                         photos_only=strip_narrative_copy,
+                        chapter_id=ch["id"],
+                        item_index=j,
+                        caption_on_asset=caption_on_asset,
                     )
                 )
             elif itype == "media-row":

@@ -523,6 +523,13 @@
         '<button type="button" class="longshot-preview__btn" data-action="close">关闭</button>' +
         "</div></div>";
       document.body.appendChild(previewEl);
+      previewEl._previewState = { onNext: null };
+      previewEl.querySelector('[data-action="next"]').addEventListener("click", function () {
+        var st = previewEl._previewState;
+        closePreviewModal();
+        if (st && st.onNext) st.onNext();
+      });
+      previewEl.querySelector('[data-action="close"]').addEventListener("click", closePreviewModal);
     }
 
     var url = URL.createObjectURL(blob);
@@ -531,6 +538,8 @@
     var nameEl = previewEl.querySelector(".longshot-preview__filename");
     var nextBtn = previewEl.querySelector('[data-action="next"]');
     var titleEl = previewEl.querySelector(".longshot-preview__title");
+
+    previewEl._previewState.onNext = meta.onNext || null;
 
     if (img) {
       if (img._prevUrl) URL.revokeObjectURL(img._prevUrl);
@@ -550,29 +559,23 @@
     }
     if (nextBtn) {
       nextBtn.hidden = !(meta.batch && meta.index < meta.total);
-      nextBtn.textContent = meta.index < meta.total ? "下一张（" + (meta.index + 1) + "/" + meta.total + "）" : "下一张";
+      nextBtn.textContent =
+        meta.index < meta.total ? "下一张（" + (meta.index + 1) + "/" + meta.total + "）" : "下一张";
     }
 
     previewEl.hidden = false;
+  }
 
-    function closePreview() {
-      previewEl.hidden = true;
-      if (img && img._prevUrl) {
-        URL.revokeObjectURL(img._prevUrl);
-        img._prevUrl = null;
-        img.removeAttribute("src");
-      }
-      nextBtn.removeEventListener("click", onNext);
-      previewEl.querySelector('[data-action="close"]').removeEventListener("click", closePreview);
+  function closePreviewModal() {
+    if (!previewEl) return;
+    previewEl.hidden = true;
+    if (previewEl._previewState) previewEl._previewState.onNext = null;
+    var img = previewEl.querySelector(".longshot-preview__img");
+    if (img && img._prevUrl) {
+      URL.revokeObjectURL(img._prevUrl);
+      img._prevUrl = null;
+      img.removeAttribute("src");
     }
-
-    function onNext() {
-      closePreview();
-      if (meta.onNext) meta.onNext();
-    }
-
-    nextBtn.addEventListener("click", onNext);
-    previewEl.querySelector('[data-action="close"]').addEventListener("click", closePreview);
   }
 
   function deliverCaptureResult(blob, filename, options) {

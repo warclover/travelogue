@@ -39,7 +39,7 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
 
     Paths: meta.hook, epilogue, chapters.<id>.lead,
            chapters.<id>.items.<index>.caption|voice.transcript,
-           items.<assetId>.caption|title, assets.<assetId>.voice.transcript
+           items.<assetId>.caption|title, assets.<assetId>.caption|voice.transcript
     """
     value = (value or "").strip()
     meta = trip.setdefault("meta", {})
@@ -93,10 +93,24 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
     if path.startswith("items.") and path.endswith(".caption"):
         asset_id = path[len("items.") : -len(".caption")]
         item = _find_item_by_asset_id(trip, asset_id)
-        if not item:
+        if item:
+            item["caption"] = value[:CAPTION_MAX]
+            item["edited"] = True
+            return path
+        assets = {a.get("id"): a for a in trip.get("assets") or [] if a.get("id")}
+        asset = assets.get(asset_id)
+        if not asset:
             raise CopyPatchError("E_COPY_PATCH", f"unknown item asset {asset_id!r}")
-        item["caption"] = value[:CAPTION_MAX]
-        item["edited"] = True
+        asset["caption"] = value[:CAPTION_MAX]
+        return path
+
+    if path.startswith("assets.") and path.endswith(".caption"):
+        asset_id = path[len("assets.") : -len(".caption")]
+        assets = {a.get("id"): a for a in trip.get("assets") or [] if a.get("id")}
+        asset = assets.get(asset_id)
+        if not asset:
+            raise CopyPatchError("E_COPY_PATCH", f"unknown asset {asset_id!r}")
+        asset["caption"] = value[:CAPTION_MAX]
         return path
 
     if path.startswith("items.") and path.endswith(".title"):

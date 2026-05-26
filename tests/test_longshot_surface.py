@@ -93,6 +93,38 @@ def test_bridge_points_to_longshot_sidecar(screens_trip: dict) -> None:
     assert f'data-longshot-mobile-url="{LONGSHOT_INDEX_NAME}"' in html
 
 
+def test_share_longshot_sidecar_has_no_inline_edit(screens_trip: dict) -> None:
+    html = render_html(
+        screens_trip,
+        export_mode="share",
+        layout_engine_override="screens",
+        export_layout_override="longshot",
+    )
+    assert 'data-export="share"' in html
+    assert 'data-longshot="on"' in html
+    assert 'data-inline-edit="on"' not in html
+    assert "inline-edit.js" not in html
+    assert "data-editable" not in html
+
+
+def test_longshot_caption_edit_path_on_asset(screens_trip: dict) -> None:
+    """Screens flatten stubs lack items[] captions; draft edits target assets[].caption."""
+    trip = json.loads(json.dumps(screens_trip))
+    aid = trip["chapters"][0]["screens"][0]["slots"][0]["assetId"]
+    for asset in trip["assets"]:
+        if asset.get("id") == aid:
+            asset["caption"] = "长图图注"
+            break
+    html = render_html(
+        trip,
+        export_mode="draft",
+        layout_engine_override="screens",
+        export_layout_override="longshot",
+    )
+    assert "长图图注" in html
+    assert f'data-edit-path="assets.{aid}.caption"' in html
+
+
 def test_render_trip_writes_longshot_sidecar(tmp_path: Path, screens_trip: dict) -> None:
     demo = Path(__file__).resolve().parents[1] / "templates" / "visual-journal" / "assets"
     if not demo.is_dir():

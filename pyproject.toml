@@ -13,7 +13,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "piexif>=1.1"]
+dev = ["pytest>=8.0", "piexif>=1.1", "playwright>=1.40"]
+playwright = ["playwright>=1.40"]
 heif = ["pillow-heif>=0.16"]
 vision = ["opencv-python-headless>=4.8.0"]
 

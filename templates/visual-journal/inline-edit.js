@@ -102,6 +102,8 @@
       }
       if (e.key === "Escape") {
         e.preventDefault();
+        var initial = (el.getAttribute("data-edit-initial") || "").trim();
+        el.textContent = initial;
         el.removeAttribute("contenteditable");
         el.classList.remove("inline-edit__field--active");
         el.blur();

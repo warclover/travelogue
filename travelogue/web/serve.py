@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -12,6 +13,7 @@ from travelogue.web.copy_patch import CopyPatchError, apply_copy_patches
 
 SAVE_PATH = "/__travelogue/save-copy"
 FAVICON_SILENT_PATHS = frozenset({"/favicon.ico", "/favicon.svg"})
+_trip_write_lock = threading.Lock()
 
 
 class TripPreviewHandler(SimpleHTTPRequestHandler):
@@ -45,9 +47,10 @@ class TripPreviewHandler(SimpleHTTPRequestHandler):
             return
         svc = TripService()
         try:
-            trip = svc.load(self.trip_json_path)
-            updated = apply_copy_patches(trip, patches)
-            svc.save(trip, self.trip_json_path)
+            with _trip_write_lock:
+                trip = svc.load(self.trip_json_path)
+                updated = apply_copy_patches(trip, patches)
+                svc.save(trip, self.trip_json_path)
         except CopyPatchError as exc:
             self._json_response(400, {"ok": False, "error": str(exc)})
             return

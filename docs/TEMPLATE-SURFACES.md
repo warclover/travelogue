@@ -4,7 +4,22 @@
 |------|------|
 | **模板 ID** | `visual-journal` |
 | **关联** | [TEMPLATE-visual-journal.md](./TEMPLATE-visual-journal.md)、[web端模板.prd](./web端模板.prd)、[0521任务.md](./0521任务.md) |
-| **更新** | 2026-05-21 |
+| **更新** | 2026-05-22 |
+
+---
+
+## 三 HTML 表面（2026-05）
+
+| 文件 | `data-layout` | 版式 | 长图 | 内联编辑 |
+|------|---------------|------|------|----------|
+| `index.html` | `web` | `screens[]` | bridge → 长图面 | ✅ draft |
+| `index-longshot.html` | `longshot` | `screens` 展平为 `media-card` 竖栈 | ✅ 主入口 | ✅ draft |
+| `index-mobile.html` | `mobile` | `legacy` `items[]` | ✅（legacy DOM） | ✅ draft |
+
+- **`render --dual`**：同时写出 `index.html` + `index-mobile.html`；screens 引擎 trip 另写 **`index-longshot.html`** sidecar。
+- **长图预览**：须 `python -m travelogue serve trips/<id>`（`http://`）；`file://` 会因 CORS/资源加载禁用长图导出。
+- **按章长图**：>30 张默认按章；>45 张禁用「完整长图」；微信内 UA 提示长按保存。
+- **share 渲染**：`export_mode=share` 时长图 bundle 仍默认包含，但 **无** inline-edit；再渲染 sidecar 为分享态。
 
 ---
 
