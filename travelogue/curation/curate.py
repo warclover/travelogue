@@ -488,12 +488,18 @@ def run_curate(
         budget = replan_meta.get("searchBudget") or {}
         ms = budget.get("elapsedMs")
         suffix = f" ({ms}ms)" if ms is not None else ""
-        warnings.append(f"布局搜索超时{suffix}，已保留当前候选布局")
+        warnings.append(
+            f"布局搜索超时{suffix}，已保留当前候选布局"
+            " — 可在 config.yaml 调高 layout.scoring.search_timeout_ms"
+        )
     elif replan_skip == "search_eval_exhausted":
         budget = replan_meta.get("searchBudget") or {}
         n = budget.get("evaluations")
         suffix = f" ({n} 次评估)" if n is not None else ""
-        warnings.append(f"布局搜索评估预算用尽{suffix}，已保留当前候选布局")
+        warnings.append(
+            f"布局搜索评估预算用尽{suffix}，已保留当前候选布局"
+            " — 可在 config.yaml 调高 layout.scoring.max_evaluations_per_trip"
+        )
     span_warn = _date_span_warning(layout_assets, segments)
     if span_warn:
         warnings.append(span_warn)

@@ -8,7 +8,19 @@ from PIL import Image
 
 
 def _iter_rgb_pixels(img: Image.Image):
-    yield from img.convert("RGB").getdata()
+    rgb = img.convert("RGB")
+    if hasattr(rgb, "get_flattened_data"):
+        data = rgb.get_flattened_data()
+        if data:
+            sample = data[0]
+            if isinstance(sample, tuple) and len(sample) >= 3:
+                for px in data:
+                    yield px[0], px[1], px[2]
+                return
+            for i in range(0, len(data) - 2, 3):
+                yield data[i], data[i + 1], data[i + 2]
+            return
+    yield from rgb.getdata()
 
 
 def mean_luma(img: Image.Image) -> float:

@@ -219,10 +219,16 @@ def _make_screen(
 def _pick_main_landscape_id(
     landscape_ids: list[str],
     assets_map: dict[str, dict],
+    *,
+    median_sharp: float | None = None,
 ) -> str:
     from travelogue.curation.curate_scoring import hero_score, median_sharpness
 
-    med = median_sharpness(list(assets_map.values()))
+    med = (
+        median_sharp
+        if median_sharp is not None
+        else median_sharpness(list(assets_map.values()))
+    )
     return max(
         landscape_ids,
         key=lambda aid: hero_score(assets_map.get(aid) or {}, median_sharp=med),
@@ -235,6 +241,7 @@ def _can_mosaic_5_main_portrait_3land(
     assets: dict[str, dict],
     *,
     burst_seconds: float,
+    median_sharp: float | None = None,
 ) -> list[str] | None:
     """
     Five-photo mosaic: 1 main landscape (top-left), 1 portrait (top-right),
@@ -248,7 +255,7 @@ def _can_mosaic_5_main_portrait_3land(
         return None
     if not _time_near_chain(asset_ids, assets, burst_seconds=burst_seconds):
         return None
-    main = _pick_main_landscape_id(landscapes, assets)
+    main = _pick_main_landscape_id(landscapes, assets, median_sharp=median_sharp)
     bottom = _sort_asset_ids_by_taken([a for a in landscapes if a != main], assets)
     return [main, portraits[0], bottom[0], bottom[1], bottom[2]]
 
@@ -800,11 +807,16 @@ def _pick_chapter_hero(
     assets_map: dict[str, dict],
     *,
     preferred_id: str | None = None,
+    median_sharp: float | None = None,
 ) -> tuple[str, str] | None:
     """Best landscape/panorama for opening 16:9 hero screen (web editorial rhythm)."""
     from travelogue.curation.curate_scoring import hero_score, median_sharpness
 
-    med = median_sharpness(list(assets_map.values()))
+    med = (
+        median_sharp
+        if median_sharp is not None
+        else median_sharpness(list(assets_map.values()))
+    )
     if preferred_id and preferred_id in asset_ids:
         kind = aspects.get(preferred_id, "square")
         if kind in ("landscape", "panorama"):
@@ -866,6 +878,7 @@ def plan_screens_for_chapter(
     include_chapter_hero: bool = True,
     enable_mosaic: bool = True,
     enable_portrait_grid8: bool = True,
+    median_sharp: float | None = None,
 ) -> list[dict]:
     """
     Map ordered asset ids → screens[] (one pattern per screen; reset after each screen).
@@ -882,13 +895,20 @@ def plan_screens_for_chapter(
     ) and enable_portrait_grid8
 
     assets_map: dict[str, dict] = assets or {}
+    from travelogue.curation.curate_scoring import median_sharpness
+
+    med_sharp = (
+        median_sharp
+        if median_sharp is not None
+        else (median_sharpness(list(assets_map.values())) if assets_map else 0.0)
+    )
     ids = _sort_asset_ids_by_taken(list(asset_ids), assets_map)
     skip = skip_screen_asset_ids or set()
     hero_preface: list[dict] = []
     skip_hero_for_mosaic_5 = (
         len(ids) == 5
         and _can_mosaic_5_main_portrait_3land(
-            ids, aspects, assets_map, burst_seconds=mix_gap
+            ids, aspects, assets_map, burst_seconds=mix_gap, median_sharp=med_sharp
         )
         is not None
     )
@@ -905,7 +925,7 @@ def plan_screens_for_chapter(
         and not skip_hero_for_portrait_grid8
     ):
         hero = _pick_chapter_hero(
-            ids, aspects, assets_map, preferred_id=preferred_hero_id
+            ids, aspects, assets_map, preferred_id=preferred_hero_id, median_sharp=med_sharp
         )
         if hero:
             hid, pat = hero
@@ -959,6 +979,7 @@ def plan_screens_for_chapter(
             aspects,
             assets_map,
             burst_seconds=mix_gap,
+            median_sharp=med_sharp,
         )
         if not ordered:
             return False
@@ -1208,10 +1229,16 @@ def _preferred_hero_for_bucket(
     asset_to_ch: dict[str, str],
     hero_by_ch: dict[str, str],
     assets_by_id: dict[str, dict],
+    *,
+    median_sharp: float | None = None,
 ) -> str | None:
     from travelogue.curation.curate_scoring import hero_score, median_sharpness
 
-    med = median_sharpness(list(assets_by_id.values()))
+    med = (
+        median_sharp
+        if median_sharp is not None
+        else median_sharpness(list(assets_by_id.values()))
+    )
     heroes: list[str] = []
     for aid in bucket:
         ch_id = asset_to_ch.get(aid)
@@ -1246,6 +1273,10 @@ def attach_screens_day_buckets(
         assets_by_id = assets
     elif isinstance(assets, list):
         assets_by_id = {a["id"]: a for a in assets if a.get("id")}
+
+    from travelogue.curation.curate_scoring import median_sharpness
+
+    med_sharp = median_sharpness(list(assets_by_id.values())) if assets_by_id else 0.0
 
     asset_to_ch: dict[str, str] = {}
     out: list[dict] = []
@@ -1305,7 +1336,7 @@ def attach_screens_day_buckets(
         if not bucket:
             continue
         preferred_hero = _preferred_hero_for_bucket(
-            bucket, asset_to_ch, hero_by_ch, assets_by_id
+            bucket, asset_to_ch, hero_by_ch, assets_by_id, median_sharp=med_sharp
         )
         bucket_screens = plan_screens_for_chapter(
             bucket,
@@ -1319,6 +1350,7 @@ def attach_screens_day_buckets(
             layout_state=layout_state,
             trip_photo_total=trip_photo_total,
             preferred_hero_id=preferred_hero,
+            median_sharp=med_sharp,
         )
         for sc in bucket_screens:
             slots = sc.get("slots") or []

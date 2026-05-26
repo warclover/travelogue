@@ -57,6 +57,12 @@ $env:OPENAI_API_KEY = "sk-..."
 
 **从旧项目升级**：若需要保留全章导语与图注，在 `config.yaml` 中显式设置 `narrative.scope: full` 后再运行 `narrate --regenerate`。`frame` 模式下 narrate 会清理 scope 不允许的中间文案（用户手动 `edited` 的字段除外）。
 
+**二次 ingest 去重**：2026-05 起新 ingest 会写入 `assets[].contentSig`。老 trip 可先运行：
+
+```powershell
+python scripts/backfill_content_sig.py linzhi mao
+```
+
 ### 3.2 环境变量（推荐）
 
 | 变量 | 说明 |

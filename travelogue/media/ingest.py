@@ -127,6 +127,11 @@ def _next_asset_id(assets: list[dict]) -> str:
     return f"asset-{max_n + 1:03d}"
 
 
+def content_signature(path: Path) -> str:
+    """Stable MD5 signature (size:hex) for cross-ingest dedupe."""
+    return _file_signature(path)
+
+
 def _existing_md5_sigs(trip: dict) -> set[str]:
     sigs: set[str] = set()
     for a in trip.get("assets") or []:

@@ -33,6 +33,20 @@ def format_curate_report(result, trip: dict | None = None) -> str:
             lines.append(f"    [{idx}] {title or '—'} · {n} 张 · {pat}")
         if len(plan) > 6:
             lines.append(f"    …共 {len(plan)} 章")
+        budget = curation.get("layoutSearchBudget") or {}
+        if budget.get("timedOut") or budget.get("exhausted"):
+            evals = budget.get("evaluations")
+            elapsed = budget.get("elapsedMs")
+            detail = []
+            if evals is not None:
+                detail.append(f"{evals} eval")
+            if elapsed is not None:
+                detail.append(f"{elapsed}ms")
+            suffix = f" ({', '.join(detail)})" if detail else ""
+            if budget.get("timedOut"):
+                lines.append(f"  布局搜索: 超时{suffix}")
+            elif budget.get("exhausted"):
+                lines.append(f"  布局搜索: 评估预算用尽{suffix}")
 
     for w in getattr(result, "warnings", None) or []:
         lines.append(f"  WARN: {w}")

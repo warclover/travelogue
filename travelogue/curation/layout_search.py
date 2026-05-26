@@ -44,10 +44,14 @@ def _preferred_hero_for_bucket(
     asset_to_ch: dict[str, str],
     hero_by_ch: dict[str, str],
     assets_by_id: dict[str, dict],
+    *,
+    median_sharp: float | None = None,
 ) -> str | None:
     from travelogue.curation.screen_planner import _preferred_hero_for_bucket as _pick
 
-    return _pick(bucket, asset_to_ch, hero_by_ch, assets_by_id)
+    return _pick(
+        bucket, asset_to_ch, hero_by_ch, assets_by_id, median_sharp=median_sharp
+    )
 
 
 def _apply_winning_plan_to_state(
@@ -107,6 +111,9 @@ def _replan_day_buckets_beam(
     total_ch = len(out)
     decision_logs: list[dict] = []
     skip = skip_screen_asset_ids or set()
+    from travelogue.curation.curate_scoring import median_sharpness
+
+    med_sharp = median_sharpness(list(assets_by_id.values())) if assets_by_id else 0.0
 
     for bucket_idx, bucket in enumerate(day_buckets):
         if not budget.can_evaluate():
@@ -115,7 +122,7 @@ def _replan_day_buckets_beam(
         if not filtered:
             continue
         preferred_hero = _preferred_hero_for_bucket(
-            filtered, asset_to_ch, hero_by_ch, assets_by_id
+            filtered, asset_to_ch, hero_by_ch, assets_by_id, median_sharp=med_sharp
         )
         candidates = generate_day_bucket_candidates(
             filtered,
