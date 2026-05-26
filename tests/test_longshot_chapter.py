@@ -32,10 +32,12 @@ def test_longshot_js_chapter_mode_api() -> None:
     assert "longshot-file-banner" in js
 
 
-def test_toolbar_minimal_fab_only() -> None:
+def test_toolbar_caption_controls() -> None:
     html = TOOLBAR.read_text(encoding="utf-8")
     assert "longshot-save" in html
     assert "share-toggle" in html
+    assert "longshot-caption-toggle" in html
+    assert "longshot-caption-edit" in html
     assert "data-longshot-mode" not in html
     assert "data-longshot-scale-option" not in html
 
@@ -46,6 +48,16 @@ def test_export_panel_in_longshot_js() -> None:
     assert "longshot-export-sheet" in js
     assert "data-longshot-mode" in js
     assert "data-longshot-scale-option" in js
+    assert "data-longshot-include-captions" in js
+    assert "data-caption-display" in js
+    assert "applyCaptionDisplay" in js
+    assert "initCaptionDisplay" in js
+
+
+def test_longshot_css_caption_display() -> None:
+    css = LONGSHOT_CSS.read_text(encoding="utf-8")
+    assert "data-caption-display" in css
+    assert ".longshot-toolbar__btn--secondary" in css
 
 
 def test_longshot_css_preview_and_wechat() -> None:

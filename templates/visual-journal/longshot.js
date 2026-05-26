@@ -24,6 +24,10 @@
   var DISCLAIMER_KEY = "travelogue:longshotDisclaimer";
   var FORMAT_KEY = "travelogue:longshotFormat";
   var SCALE_KEY = "travelogue:longshotScale";
+  var CAPTION_DISPLAY_KEY = "travelogue:captionDisplay";
+  var CAPTION_EDIT_KEY = "travelogue:captionEdit";
+  var CAPTION_ON = "on";
+  var CAPTION_OFF = "off";
 
   var html2canvasPromise = null;
   var toastEl = null;
@@ -221,19 +225,131 @@
     return imgTotal > SINGLE_PAGE_MAX_IMAGES && imgTotal <= LARGE_TRIP_IMAGES;
   }
 
-  function buildExportSummary(mode, scale, imgTotal, chapterCount) {
+  function buildExportSummary(mode, scale, imgTotal, chapterCount, includeCaptions) {
     var scaleLabel = scale + "×";
+    var capNote = includeCaptions === false ? " · 无图注" : "";
     if (mode === MODE_CHAPTER) {
       var n = Math.max(1, chapterCount || 1);
-      return n + " 章 · " + n + " 张 PNG · " + scaleLabel + " · 适合微信群";
+      return n + " 章 · " + n + " 张 PNG · " + scaleLabel + " · 适合微信群" + capNote;
     }
     if (imgTotal > LARGE_TRIP_IMAGES) {
-      return "单张长图 · 约 " + imgTotal + " 张 · " + scaleLabel + " · 不推荐";
+      return "单张长图 · 约 " + imgTotal + " 张 · " + scaleLabel + " · 不推荐" + capNote;
     }
     if (imgTotal > SINGLE_PAGE_MAX_IMAGES) {
-      return "单张长图 · 约 " + imgTotal + " 张 · " + scaleLabel + " · 可能较慢";
+      return "单张长图 · 约 " + imgTotal + " 张 · " + scaleLabel + " · 可能较慢" + capNote;
     }
-    return "单张长图 · 约 " + imgTotal + " 张 · " + scaleLabel;
+    return "单张长图 · 约 " + imgTotal + " 张 · " + scaleLabel + capNote;
+  }
+
+  function isDraftPreview() {
+    return document.documentElement.getAttribute("data-export") === "draft";
+  }
+
+  function areCaptionsVisible() {
+    return document.documentElement.getAttribute("data-caption-display") !== CAPTION_OFF;
+  }
+
+  function syncCaptionToggleUI() {
+    var btn = document.getElementById("longshot-caption-toggle");
+    if (!btn) return;
+    var visible = areCaptionsVisible();
+    btn.setAttribute("aria-pressed", visible ? "false" : "true");
+    btn.textContent = visible
+      ? btn.getAttribute("data-label-on") || "图注：开"
+      : btn.getAttribute("data-label-off") || "图注：关";
+  }
+
+  function syncCaptionEditUI() {
+    var btn = document.getElementById("longshot-caption-edit");
+    if (!btn) return;
+    var on = document.documentElement.getAttribute("data-caption-edit") === "on";
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.classList.toggle("longshot-toolbar__btn--active", on);
+    btn.textContent = on ? "完成编辑" : "编辑图注";
+  }
+
+  function syncExportCaptionCheckbox() {
+    if (!exportSheetEl) return;
+    var cb = exportSheetEl.querySelector("[data-longshot-include-captions]");
+    if (cb) cb.checked = areCaptionsVisible();
+  }
+
+  function applyCaptionDisplay(visible) {
+    var root = document.documentElement;
+    if (visible) {
+      root.removeAttribute("data-caption-display");
+    } else {
+      root.setAttribute("data-caption-display", CAPTION_OFF);
+    }
+    syncCaptionToggleUI();
+    syncExportCaptionCheckbox();
+    try {
+      global.sessionStorage.setItem(CAPTION_DISPLAY_KEY, visible ? CAPTION_ON : CAPTION_OFF);
+    } catch (_eCap) {
+      /* private mode */
+    }
+  }
+
+  function readCaptionDisplayPref() {
+    try {
+      var v = global.sessionStorage.getItem(CAPTION_DISPLAY_KEY);
+      if (v === CAPTION_ON) return true;
+      if (v === CAPTION_OFF) return false;
+    } catch (_eRead) {
+      /* ignore */
+    }
+    return true;
+  }
+
+  function applyCaptionEditMode(on) {
+    var root = document.documentElement;
+    if (on && isDraftPreview()) {
+      root.setAttribute("data-caption-edit", "on");
+    } else {
+      root.removeAttribute("data-caption-edit");
+    }
+    syncCaptionEditUI();
+    try {
+      if (on) global.sessionStorage.setItem(CAPTION_EDIT_KEY, "1");
+      else global.sessionStorage.removeItem(CAPTION_EDIT_KEY);
+    } catch (_eEdit) {
+      /* ignore */
+    }
+  }
+
+  function readCaptionEditPref() {
+    try {
+      return global.sessionStorage.getItem(CAPTION_EDIT_KEY) === "1";
+    } catch (_ePref) {
+      return false;
+    }
+  }
+
+  function bindCaptionControls() {
+    var toggleBtn = document.getElementById("longshot-caption-toggle");
+    if (toggleBtn && toggleBtn.dataset.captionBound !== "1") {
+      toggleBtn.dataset.captionBound = "1";
+      toggleBtn.addEventListener("click", function () {
+        applyCaptionDisplay(!areCaptionsVisible());
+      });
+    }
+    var editBtn = document.getElementById("longshot-caption-edit");
+    if (editBtn && editBtn.dataset.captionBound !== "1") {
+      editBtn.dataset.captionBound = "1";
+      editBtn.addEventListener("click", function () {
+        var next = document.documentElement.getAttribute("data-caption-edit") !== "on";
+        applyCaptionEditMode(next);
+        if (next) toast("点击图注文字可直接修改（需 travelogue serve）");
+      });
+    }
+  }
+
+  function initCaptionDisplay() {
+    applyCaptionDisplay(readCaptionDisplayPref());
+    if (isDraftPreview() && readCaptionEditPref()) {
+      applyCaptionEditMode(true);
+    }
+    bindCaptionControls();
   }
 
   function updateSaveButtonLabel() {
@@ -302,7 +418,8 @@
         getUserSelectedMode(),
         getUserSelectedScale(),
         imgTotal,
-        chapterCount
+        chapterCount,
+        areCaptionsVisible()
       );
     }
   }
@@ -333,6 +450,11 @@
       "</div>" +
       '<p class="longshot-export-sheet__field-note">高清适合放大看细节，文件更大、耗时更长。</p>' +
       "</div>" +
+      '<div class="longshot-export-sheet__field">' +
+      '<label class="longshot-export-sheet__check">' +
+      '<input type="checkbox" data-longshot-include-captions checked />' +
+      "<span>包含图注（章导语仍保留）</span></label>" +
+      "</div>" +
       '<p class="longshot-export-sheet__summary" data-longshot-export-summary></p>' +
       '<p class="longshot-export-sheet__note longshot-export-sheet__note--wechat">微信内若无法下载，生成后会弹出预览，长按图片保存。</p>' +
       '<p class="longshot-export-sheet__note longshot-export-sheet__note--bridge">排版与 Web 浏览可能略有不同。</p>' +
@@ -343,6 +465,14 @@
     document.body.appendChild(exportSheetEl);
     bindModeToggle(exportSheetEl);
     bindScaleToggle(exportSheetEl);
+    var captionCb = exportSheetEl.querySelector("[data-longshot-include-captions]");
+    if (captionCb && captionCb.dataset.bound !== "1") {
+      captionCb.dataset.bound = "1";
+      captionCb.addEventListener("change", function () {
+        applyCaptionDisplay(!!captionCb.checked);
+        updateExportPanelUI(exportSheetEl);
+      });
+    }
     return exportSheetEl;
   }
 
@@ -350,6 +480,7 @@
     return new Promise(function (resolve, reject) {
       var sheet = getExportSheet();
       updateExportPanelUI(sheet);
+      syncExportCaptionCheckbox();
 
       var bodyNote = sheet.querySelector(".longshot-export-sheet__body");
       var seenDisclaimer = false;
@@ -393,6 +524,7 @@
         resolve({
           mode: getUserSelectedMode(),
           scale: getUserSelectedScale(),
+          includeCaptions: areCaptionsVisible(),
         });
       }
 
@@ -1693,6 +1825,7 @@
   function init() {
     if (guardFileProtocol()) return;
     applyQueryPrefs();
+    initCaptionDisplay();
     ensureWeChatBanner();
     document
       .querySelectorAll("[data-longshot-trigger]")
@@ -1739,5 +1872,8 @@
     MAX_CAPTURE_SCALE: MAX_CAPTURE_SCALE,
     openExportPanel: openExportPanel,
     buildExportSummary: buildExportSummary,
+    areCaptionsVisible: areCaptionsVisible,
+    applyCaptionDisplay: applyCaptionDisplay,
+    applyCaptionEditMode: applyCaptionEditMode,
   };
 })(typeof window !== "undefined" ? window : this);

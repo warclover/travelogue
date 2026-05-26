@@ -14,6 +14,19 @@
       系统分享…
     </button>
   </div>
+  <div class="share-toolbar__fab-row longshot-toolbar__controls">
+    {{#if isDraft}}
+    <button type="button" id="longshot-caption-edit" class="longshot-toolbar__btn longshot-toolbar__btn--secondary"
+      aria-pressed="false" data-caption-edit-toggle title="点击图注文字可修改并保存到 trip.json">
+      编辑图注
+    </button>
+    {{/if}}
+    <button type="button" id="longshot-caption-toggle" class="longshot-toolbar__btn longshot-toolbar__btn--secondary"
+      aria-pressed="false" data-caption-display-toggle
+      data-label-on="图注：开" data-label-off="图注：关" title="隐藏或显示图片下方图注（导出长图同样生效）">
+      图注：开
+    </button>
+  </div>
   <div class="share-toolbar__fab-row">
     <button type="button" id="longshot-save" class="longshot-toolbar__btn"
       data-longshot-trigger
