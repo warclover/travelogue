@@ -208,6 +208,7 @@ def run_narrate(
     provider: str | None = None,
     regenerate: bool = False,
     cache_dir: Path | None = None,
+    chapter_id: str | None = None,
 ) -> NarrateResult:
     """Fill meta.hook, chapter leads, captions, epilogue (stub or LLM)."""
     from travelogue.config import get_config
@@ -216,6 +217,14 @@ def run_narrate(
     prov = (provider or get_config().llm.provider or "stub").strip().lower()
     if prov not in ("stub", "deepseek", "dashscope"):
         raise NarrateError("E_NARRATE_PROVIDER", f"unknown provider {prov!r}")
+    if chapter_id and prov == "stub":
+        from travelogue.services.llm_narrate import _chapter_indices, _planned_fields
+
+        _chapter_indices(trip, chapter_id)
+        if dry_run:
+            return NarrateResult(
+                fields_updated=_planned_fields(trip, regenerate=regenerate, chapter_id=chapter_id)
+            )
     if prov == "stub":
         return _run_narrate_stub(trip, tone=tone, dry_run=dry_run, regenerate=regenerate)
     return run_llm_narrate(
@@ -225,6 +234,7 @@ def run_narrate(
         dry_run=dry_run,
         regenerate=regenerate,
         cache_dir=cache_dir,
+        chapter_id=chapter_id,
     )
 
 

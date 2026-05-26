@@ -28,8 +28,14 @@ def item_caption(item: dict | None) -> str:
     return (item.get("caption") or "").strip()
 
 
+def asset_skips_caption(asset: dict | None) -> bool:
+    return bool(asset and asset.get("skipCaption"))
+
+
 def resolve_caption(item: dict | None, asset: dict | None) -> str:
-    """Display precedence: item caption, then asset caption."""
+    """Display precedence: item caption, then asset caption; skipCaption wins."""
+    if asset_skips_caption(asset):
+        return ""
     return item_caption(item) or asset_caption(asset)
 
 
@@ -43,10 +49,15 @@ def find_item_for_asset(chapter: dict, asset_id: str) -> dict | None:
     return None
 
 
-def set_asset_caption(trip: dict, asset_id: str, caption: str) -> bool:
+def set_asset_caption(trip: dict, asset_id: str, caption: str, *, skip: bool | None = None) -> bool:
     for asset in trip.get("assets") or []:
         if asset.get("id") == asset_id:
-            asset["caption"] = caption
+            if skip or not (caption or "").strip():
+                asset.pop("caption", None)
+                asset["skipCaption"] = True
+            else:
+                asset["caption"] = caption
+                asset.pop("skipCaption", None)
             return True
     return False
 
@@ -54,15 +65,22 @@ def set_asset_caption(trip: dict, asset_id: str, caption: str) -> bool:
 def apply_caption_to_trip(trip: dict, asset_id: str, caption: str) -> list[str]:
     """
     Write caption to assets[].caption and matching chapter items[] when present.
+    Empty caption sets skipCaption on the asset.
     Returns log labels.
     """
     updated: list[str] = []
-    if set_asset_caption(trip, asset_id, caption):
-        updated.append(f"assets.{asset_id}.caption")
+    cap = (caption or "").strip()
+    if set_asset_caption(trip, asset_id, cap):
+        updated.append(
+            f"assets.{asset_id}.skipCaption" if not cap else f"assets.{asset_id}.caption"
+        )
     for ch in trip.get("chapters") or []:
         item = find_item_for_asset(ch, asset_id)
         if item and item.get("type") == "media-card":
-            item["caption"] = caption
+            if cap:
+                item["caption"] = cap
+            else:
+                item.pop("caption", None)
             updated.append(f"chapters.{ch.get('id')}.items.{asset_id}.caption")
             break
     return updated

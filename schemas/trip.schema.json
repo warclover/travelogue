@@ -290,6 +290,10 @@
           "maxLength": 60,
           "description": "Per-asset caption (screens/longshot); complements chapter items[]"
         },
+        "skipCaption": {
+          "type": "boolean",
+          "description": "When true, hide caption and skip narrate for this asset"
+        },
         "aspectKind": {
           "type": "string",
           "enum": ["portrait", "landscape", "square", "panorama", "tall"],

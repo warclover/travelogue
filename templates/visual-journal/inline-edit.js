@@ -56,7 +56,11 @@
         el.classList.remove("inline-edit__field--saving");
         if (result.ok && result.body && result.body.ok) {
           el.classList.add("inline-edit__field--saved");
-          showToast("已保存到 trip.json");
+          var msg = "已保存到 trip.json";
+          if (result.body.rendered && result.body.rendered.length) {
+            msg += " · 已更新 " + result.body.rendered.join("、");
+          }
+          showToast(msg);
           return;
         }
         var msg =

@@ -110,7 +110,22 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
         asset = assets.get(asset_id)
         if not asset:
             raise CopyPatchError("E_COPY_PATCH", f"unknown asset {asset_id!r}")
-        asset["caption"] = value[:CAPTION_MAX]
+        from travelogue.curation.asset_caption import apply_caption_to_trip
+
+        apply_caption_to_trip(trip, asset_id, value[:CAPTION_MAX] if value else "")
+        return path
+
+    if path.startswith("assets.") and path.endswith(".skipCaption"):
+        asset_id = path[len("assets.") : -len(".skipCaption")]
+        assets = {a.get("id"): a for a in trip.get("assets") or [] if a.get("id")}
+        asset = assets.get(asset_id)
+        if not asset:
+            raise CopyPatchError("E_COPY_PATCH", f"unknown asset {asset_id!r}")
+        if value.lower() in ("true", "1", "yes"):
+            asset["skipCaption"] = True
+            asset.pop("caption", None)
+        else:
+            asset.pop("skipCaption", None)
         return path
 
     if path.startswith("items.") and path.endswith(".title"):

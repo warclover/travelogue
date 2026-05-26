@@ -33,6 +33,8 @@
 
 **MVP 完成**：上表 **AC-01～AC-07** 全部为 ☑。
 
+**AC-07 推荐路径（2026-05）**：`travelogue serve` → `index-longshot.html` → 隐藏/编辑图注 → **按章 2×** 导出 → 发微信群。
+
 ---
 
 ## 3. 功能验收矩阵（按需求 ID）
@@ -81,14 +83,14 @@
 
 | 需求 ID | 验收步骤 | 通过 |
 |---------|----------|------|
-| F-ED-03 | 改字后重渲染生效 | ☐ |
+| F-ED-03 | 改字后重渲染生效 | ☑ · `serve` 保存后 auto re-render（`--no-rerender` 可关） |
 | F-ED-04 | 浏览器可预览 | ☐ |
 | F-EXP-01 | 相对路径、离线可开 | ☐ |
 | F-EXP-02 | 无 JS 仍可阅读主内容 | ☐ |
 | F-EXP-03 | `preview.jpg` 9:16 存在 | ☐ |
 | F-EXP-04 | zip 解压即 `index.html` | ☐ |
 | F-EXP-05 | 未 `privacy.confirmedAt` 不可 export | ☐ |
-| F-EXP-07 | 点击「保存长图」下载竖版 PNG；横滑章完整展开；金样例与 trip 页一致 | ☐ |
+| F-EXP-07 | 点击「保存长图」下载竖版 PNG；**screens trip 用 `index-longshot.html`**；须 `travelogue serve`（非 file://）；支持按章 + 隐藏图注 | ☐ |
 | F-EXP-07b | 默认 export zip 含 longshot bundle；`--no-longshot` 可剔除 | ☐ |
 
 ---
@@ -154,6 +156,8 @@
 | 是否愿分享 | | | |
 | AC-04 含视频 | | | |
 | 备注 | | | |
+
+**Trip 1 林芝（进行中）**：见 [acceptance-records/linzhi.md](./acceptance-records/linzhi.md)。
 
 ---
 

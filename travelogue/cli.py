@@ -486,6 +486,11 @@ def cmd_narrate(
         "--regenerate",
         help="Rewrite non-edited hook, leads, captions, epilogue",
     ),
+    chapter_id: Optional[str] = typer.Option(
+        None,
+        "--chapter-id",
+        help="Only narrate this chapter (skips meta/epilogue); use with --regenerate",
+    ),
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
     config: Optional[Path] = typer.Option(None, "--config"),
 ) -> None:
@@ -510,6 +515,7 @@ def cmd_narrate(
             provider=provider,
             regenerate=regenerate,
             cache_dir=cache_dir,
+            chapter_id=chapter_id,
         )
     except NarrateError as exc:
         typer.echo(str(exc), err=True)
@@ -521,7 +527,8 @@ def cmd_narrate(
     prov = provider or get_config().llm.provider or "stub"
     typer.echo(f"OK narrate ({prov}) · updated {', '.join(result.fields_updated) or '(none)'}")
     if result.fields_updated:
-        typer.echo(f"  next: python -m travelogue render {path}")
+        scope = f" (chapter {chapter_id})" if chapter_id else ""
+        typer.echo(f"  next: python -m travelogue render {path}{scope}")
 
 
 @llm_app.command("ping")
@@ -803,6 +810,11 @@ def cmd_serve(
     port: int = typer.Option(8766, "--port", "-p", help="HTTP port"),
     host: str = typer.Option("127.0.0.1", "--host", help="bind address"),
     index: str = typer.Option("index.html", "--index", help="entry HTML filename"),
+    rerender: bool = typer.Option(
+        True,
+        "--rerender/--no-rerender",
+        help="re-render HTML after inline save (F-ED-03)",
+    ),
 ) -> None:
     """Serve trip output with inline copy save API (draft editing)."""
     from travelogue.web.serve import resolve_trip_serve_dir, serve_trip_directory
@@ -817,7 +829,7 @@ def cmd_serve(
         typer.echo(f"E_SERVE: {index} not found in {serve_dir} — run render first", err=True)
         raise typer.Exit(1)
     try:
-        serve_trip_directory(serve_dir, port=port, host=host, index=index)
+        serve_trip_directory(serve_dir, port=port, host=host, index=index, auto_rerender=rerender)
     except KeyboardInterrupt:
         raise typer.Exit(0) from None
 

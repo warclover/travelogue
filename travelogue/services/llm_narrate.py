@@ -17,7 +17,12 @@ from travelogue.services.narrate import (
     _manifest_limits,
     _utc_now_iso,
 )
-from travelogue.curation.asset_caption import apply_caption_to_trip, chapter_caption_asset_ids, resolve_caption
+from travelogue.curation.asset_caption import (
+    apply_caption_to_trip,
+    asset_skips_caption,
+    chapter_caption_asset_ids,
+    resolve_caption,
+)
 from travelogue.services.narrative_brief import build_chapter_brief, build_meta_brief
 from travelogue.services.narrative_validate import validate_narrative
 
@@ -31,7 +36,7 @@ SYSTEM_PROMPT = """你是旅行视觉游记的文案编辑。你只输出合法 
 5. 禁用词：综上所述、值得一提的是、不可否认、众所周知、总而言之、美不胜收、令人难忘。
 6. relaxed 语气可感官细节；documentary 语气偏时间地点事实，少用感叹号。
 7. lead 不要复述 chapter.title，不要以 chapter.title 开头，也不要写成“标题，地点。”这种格式。
-8. 若 items[].skipCaption 为 true，不要输出该图的 caption。"""
+8. 若 brief 中 items[].skipCaption 为 true（或 assets[].skipCaption），不要输出该图的 caption。"""
 
 
 def _meta_user_prompt(brief: dict[str, Any], *, fix_errors: list[str] | None = None) -> str:
@@ -165,6 +170,23 @@ def _needs_meta(trip: dict, *, regenerate: bool = False) -> bool:
     return need_hook or need_epilogue
 
 
+def _find_chapter_index(trip: dict, chapter_id: str) -> int | None:
+    for i, ch in enumerate(trip.get("chapters") or []):
+        if ch.get("id") == chapter_id:
+            return i
+    return None
+
+
+def _chapter_indices(trip: dict, chapter_id: str | None) -> list[int]:
+    chapters = trip.get("chapters") or []
+    if not chapter_id:
+        return list(range(len(chapters)))
+    idx = _find_chapter_index(trip, chapter_id)
+    if idx is None:
+        raise NarrateError("E_NARRATE_CHAPTER", f"unknown chapter {chapter_id!r}")
+    return [idx]
+
+
 def _chapter_needs_copy(chapter: dict, trip: dict, *, regenerate: bool = False) -> bool:
     if chapter.get("edited"):
         return False
@@ -182,18 +204,23 @@ def _chapter_needs_copy(chapter: dict, trip: dict, *, regenerate: bool = False) 
         item = item_by_asset.get(aid)
         if item and item.get("edited"):
             continue
-        if not resolve_caption(item, assets.get(aid)).strip():
+        asset = assets.get(aid)
+        if asset_skips_caption(asset) and not regenerate:
+            continue
+        if not resolve_caption(item, asset).strip():
             return True
     return False
 
 
-def _planned_fields(trip: dict, *, regenerate: bool = False) -> list[str]:
+def _planned_fields(trip: dict, *, regenerate: bool = False, chapter_id: str | None = None) -> list[str]:
     fields: list[str] = []
     meta = trip.get("meta") or {}
-    if not meta.get("edited") and (regenerate or not (meta.get("hook") or "").strip()):
+    if not chapter_id and not meta.get("edited") and (regenerate or not (meta.get("hook") or "").strip()):
         fields.append("meta.hook")
     assets = {a["id"]: a for a in trip.get("assets") or []}
     for ch in trip.get("chapters") or []:
+        if chapter_id and ch.get("id") != chapter_id:
+            continue
         if ch.get("edited"):
             continue
         idx = ch.get("index")
@@ -208,10 +235,15 @@ def _planned_fields(trip: dict, *, regenerate: bool = False) -> list[str]:
             item = item_by_asset.get(aid)
             if item and item.get("edited"):
                 continue
-            if regenerate or not resolve_caption(item, assets.get(aid)).strip():
+            asset = assets.get(aid)
+            if asset_skips_caption(asset) and not regenerate:
+                continue
+            if regenerate or not resolve_caption(item, asset).strip():
                 fields.append(f"assets[{aid}].caption")
-    if len(trip.get("chapters") or []) >= 2 and (
-        regenerate or not (trip.get("epilogue") or "").strip()
+    if (
+        not chapter_id
+        and len(trip.get("chapters") or []) >= 2
+        and (regenerate or not (trip.get("epilogue") or "").strip())
     ):
         if not meta.get("edited"):
             fields.append("epilogue")
@@ -267,7 +299,10 @@ def _apply_chapter_payload(
         item = item_by_asset.get(aid)
         if item and item.get("edited"):
             continue
-        if resolve_caption(item, assets.get(aid)).strip() and not regenerate:
+        asset = assets.get(aid)
+        if asset_skips_caption(asset) and not regenerate:
+            continue
+        if resolve_caption(item, asset).strip() and not regenerate:
             continue
         cap = captions.get(aid)
         if cap:
@@ -326,14 +361,17 @@ def run_llm_narrate(
     regenerate: bool = False,
     cache_dir: Path | None = None,
     chat_fn: Callable[[list[dict[str, str]]], str] | None = None,
+    chapter_id: str | None = None,
 ) -> NarrateResult:
     """Fill hook, leads, captions, epilogue via LLM (metadata brief only)."""
+    if chapter_id:
+        _chapter_indices(trip, chapter_id)
     meta = trip.setdefault("meta", {})
     if tone:
         meta["tone"] = tone if tone in ("relaxed", "documentary") else meta.get("tone", "relaxed")
     tone_val = meta.get("tone") or get_config().narrative.tone_default or "relaxed"
 
-    planned = _planned_fields(trip, regenerate=regenerate)
+    planned = _planned_fields(trip, regenerate=regenerate, chapter_id=chapter_id)
     if dry_run:
         return NarrateResult(fields_updated=planned)
 
@@ -345,7 +383,7 @@ def run_llm_narrate(
     updated: list[str] = []
     rt_model = get_config().llm.model or provider
 
-    if _needs_meta(trip, regenerate=regenerate):
+    if not chapter_id and _needs_meta(trip, regenerate=regenerate):
         brief = build_meta_brief(trip, tone=tone_val, regenerate=regenerate)
         fix_errors: list[str] | None = None
         for attempt in range(max_retries + 1):
@@ -375,7 +413,7 @@ def run_llm_narrate(
             fix_errors = errs
 
     chapters = trip.get("chapters") or []
-    for ch_idx in range(len(chapters)):
+    for ch_idx in _chapter_indices(trip, chapter_id):
         chapter = trip["chapters"][ch_idx]
         if not _chapter_needs_copy(chapter, trip, regenerate=regenerate):
             continue

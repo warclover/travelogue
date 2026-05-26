@@ -50,6 +50,19 @@ def test_apply_caption_to_trip_writes_asset_and_item() -> None:
     assert trip["chapters"][0]["items"][0]["caption"] == "新图注"
 
 
+def test_empty_caption_sets_skip_caption() -> None:
+    from travelogue.curation.asset_caption import apply_caption_to_trip, resolve_caption
+
+    trip = {
+        "assets": [{"id": "a1", "caption": "旧"}],
+        "chapters": [{"id": "ch-01", "items": [{"type": "media-card", "assetId": "a1", "caption": "旧"}]}],
+    }
+    apply_caption_to_trip(trip, "a1", "")
+    assert trip["assets"][0].get("skipCaption") is True
+    assert "caption" not in trip["assets"][0]
+    assert resolve_caption(trip["chapters"][0]["items"][0], trip["assets"][0]) == ""
+
+
 def test_copy_patch_assets_caption_roundtrip() -> None:
     trip = {"assets": [{"id": "a1"}], "chapters": []}
     apply_copy_patch(trip, "assets.a1.caption", "保存图注")

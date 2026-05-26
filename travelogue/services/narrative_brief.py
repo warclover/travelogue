@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from travelogue.curation.asset_caption import chapter_caption_asset_ids, resolve_caption
+from travelogue.curation.asset_caption import asset_skips_caption, chapter_caption_asset_ids, resolve_caption
 from travelogue.services.narrate import _manifest_limits
 
 
@@ -89,6 +89,7 @@ def build_chapter_brief(
                 "existingTitle": (item.get("title") if item else "") or "",
                 "existingCaption": "" if regenerate else existing,
                 "skipCaption": bool(item and item.get("edited"))
+                or asset_skips_caption(asset)
                 or (bool(existing) and not regenerate),
                 "asset": _asset_brief(asset),
             }

@@ -1,4 +1,4 @@
-"""Serve trip output directory with inline copy save API."""
+"""Serve auto re-render after inline copy save."""
 
 from __future__ import annotations
 
@@ -18,9 +18,18 @@ _trip_write_lock = threading.Lock()
 
 class TripPreviewHandler(SimpleHTTPRequestHandler):
     trip_json_path: Path
+    auto_rerender: bool = True
 
-    def __init__(self, *args, directory: str | None = None, trip_json: Path | None = None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        directory: str | None = None,
+        trip_json: Path | None = None,
+        auto_rerender: bool = True,
+        **kwargs,
+    ):
         self.trip_json_path = trip_json or Path("trip.json")
+        self.auto_rerender = auto_rerender
         super().__init__(*args, directory=directory, **kwargs)
 
     def do_GET(self) -> None:  # noqa: N802
@@ -46,18 +55,23 @@ class TripPreviewHandler(SimpleHTTPRequestHandler):
             self._json_response(400, {"ok": False, "error": "patches required"})
             return
         svc = TripService()
+        rendered: list[str] = []
         try:
             with _trip_write_lock:
                 trip = svc.load(self.trip_json_path)
                 updated = apply_copy_patches(trip, patches)
                 svc.save(trip, self.trip_json_path)
+                if self.auto_rerender:
+                    from travelogue.web.rerender import rerender_draft_trip
+
+                    rendered = rerender_draft_trip(self.trip_json_path)
         except CopyPatchError as exc:
             self._json_response(400, {"ok": False, "error": str(exc)})
             return
         except Exception as exc:
             self._json_response(500, {"ok": False, "error": str(exc)})
             return
-        self._json_response(200, {"ok": True, "updated": updated})
+        self._json_response(200, {"ok": True, "updated": updated, "rendered": rendered})
 
     def _json_response(self, status: int, payload: dict) -> None:
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -78,6 +92,7 @@ def serve_trip_directory(
     port: int = 8766,
     host: str = "127.0.0.1",
     index: str = "index.html",
+    auto_rerender: bool = True,
 ) -> None:
     trip_dir = trip_dir.resolve()
     trip_json = trip_dir / "trip.json"
@@ -88,12 +103,17 @@ def serve_trip_directory(
         TripPreviewHandler,
         directory=str(trip_dir),
         trip_json=trip_json,
+        auto_rerender=auto_rerender,
     )
     server = ThreadingHTTPServer((host, port), handler)
     url = f"http://{host}:{port}/{index}"
     print(f"Serving {trip_dir}")
     print(f"  preview: {url}")
     print(f"  inline edit saves to: {trip_json}")
+    if auto_rerender:
+        print("  auto re-render: index.html + index-longshot.html after save")
+    else:
+        print("  auto re-render: off (run render manually)")
     print("  Ctrl+C to stop")
     try:
         server.serve_forever()
