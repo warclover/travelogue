@@ -170,6 +170,27 @@ body.screenplay-active {
   box-sizing: border-box;
 }
 
+.screenplay-root .screenplay-aux-slide {
+  box-sizing: border-box;
+  width: min(var(--screenplay-vw), calc(var(--screenplay-vh) * 0.75));
+  max-height: var(--screenplay-vh);
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.screenplay-root .screenplay-aux-slide.cover-hero {
+  width: min(var(--screenplay-vw), calc(var(--screenplay-vh) * 0.5625));
+}
+
+.screenplay-root .featured-grid__card[data-asset-id] {
+  cursor: pointer;
+}
+
+.screenplay-root .trip-index__link {
+  cursor: pointer;
+}
+
 .screenplay-slide.is-visible .layout-screen--screenplay {
   animation: screenplay-enter 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }

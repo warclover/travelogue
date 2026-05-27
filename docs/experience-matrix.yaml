@@ -1,0 +1,146 @@
+# Travelogue · 阅读体验配置矩阵
+# 权威说明：docs/PRD-EXPERIENCE.md
+# ADR：docs/adr/003-experience-reading-modes.md
+
+version: "0.1"
+
+profiles:
+  legacy:
+    label: 经典浏览
+    description: 与 2026-05 现版等价；无 snap / breath / folio 增强
+    scroll:
+      snap: off
+      breath: off
+      folio: off
+    present:
+      dwell_ms: 2000
+      featured_only: false
+      sync_scroll_on_exit: false
+    longshot:
+      breath: off
+      folio: off
+
+  performance:
+    label: 性能优先
+    description: share zip 默认；longshot 捕获路径
+    scroll:
+      snap: off
+      breath: off
+      folio: off
+    present:
+      dwell_ms: 2000
+      featured_only: false
+      sync_scroll_on_exit: true
+    longshot:
+      breath: off
+      folio: off
+
+  default_hybrid:
+    label: 默认 Hybrid
+    description: 工坊 draft · web 推荐组合（ADR-003 默认）
+    scroll:
+      snap: proximity
+      breath: soft
+      folio: lite
+    present:
+      dwell_ms: 2000
+      featured_only: false
+      sync_scroll_on_exit: true
+    longshot:
+      breath: off
+      folio: off
+
+  magazine:
+    label: 杂志感
+    description: 桌面验收；慎用大批量 + mobile
+    scroll:
+      snap: proximity
+      breath: flow
+      folio: full
+    present:
+      dwell_ms: 2500
+      featured_only: false
+      sync_scroll_on_exit: true
+    longshot:
+      breath: off
+      folio: off
+
+defaults:
+  draft_web_profile: default_hybrid
+  share_zip_profile: performance
+  mobile_profile: legacy
+  longshot_surface_profile: performance
+
+surfaces:
+  index.html:
+    layout: web
+    modes: [scroll, present]
+    profile_from: trip.export.reading.profile
+  index-mobile.html:
+    layout: mobile
+    modes: [scroll, longshot]
+    force_profile: legacy
+  index-longshot.html:
+    layout: longshot
+    modes: [scroll, longshot]
+    force_profile: performance
+
+conflicts:
+  - id: lenis_vs_present
+    when: { active_mode: present }
+    resolve: { pause_lenis: true, breath_scrub: off }
+
+  - id: folio_vs_longshot
+    when: { surface: index-longshot.html }
+    resolve: { folio: off }
+
+  - id: motion_vs_longshot_capture
+    when: { action: longshot_capture }
+    resolve: { teardown: [breath, scroll_trigger, lenis], folio: off, breath: off }
+
+  - id: inline_edit
+    when: { inline_edit: true }
+    resolve: { profile: legacy, present_enabled: false }
+
+  - id: reduced_motion
+    when: { prefers_reduced_motion: true }
+    resolve: { snap: off, breath: off, present_fade_ms: 0 }
+
+  - id: featured_grid_dedupe
+    when: { folio: full, featured_grid: true }
+    resolve: { exclude_grid_assets_from_screens: true }
+
+mode_capabilities:
+  scroll:
+    breath_reveal: true
+    lenis: optional
+    scroll_snap: true
+    folio_chrome: true
+    gallery_pin: optional
+  present:
+    breath_reveal: false
+    lenis: false
+    folio_page_meta: true
+    featured_only_option: true
+  longshot:
+    breath: false
+    folio: false
+    flatten_screens: true
+
+epic_map:
+  E0: screen_order_contract
+  E1: profile_config_shell
+  E2: default_hybrid_minimal
+  E3: present_scroll_sync
+  E4: longshot_teardown
+  E5: appendix_a_user_tier
+  E6: breath_flow_featured_present
+  E7: folio_full
+  E8: breath_cinematic_gallery_pin
+
+acceptance_crosswalk:
+  AC-EXP-01: [AC-RM-01, screen_order]
+  AC-EXP-02: [AC-RM-07, default_hybrid]
+  AC-EXP-03: [AC-RM-04, AC-BR-06, longshot_teardown]
+  AC-EXP-04: [AC-DF-01, AC-DF-02, appendix_a]
+  AC-EXP-05: [AC-FO-01, AC-FO-02, appendix_c]

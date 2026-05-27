@@ -7,6 +7,9 @@ from typing import Any, Mapping
 
 from travelogue.curation.layout_planner import AspectKind
 
+# PRD-EXPERIENCE appendix A §4 · beam + userTier
+FEATURED_BEAM_BONUS_PER_ASSET = 0.15
+FEATURED_HERO_SEPARATION_HALVED = 0.5
 
 @dataclass(frozen=True)
 class ScoringWeights:
@@ -388,14 +391,30 @@ def score_screen(
     arc_profile: str = "dynamic",
     hero_asset_ids: set[str] | None = None,
     prior_pattern_ids: list[str] | None = None,
+    featured_beam: bool = False,
 ) -> ScoreBreakdown:
+    """Per-screen base score (aspect, sharpness, hero, temporal, diversity, arc).
+
+    ``ScoreBreakdown.total`` here covers only single-screen dimensions. Cross-screen
+    terms (burst_integrity, luminance/tone continuity, subject_run) are aggregated in
+    ``score_screen_plan`` only.
+    """
     bd = ScoreBreakdown()
     bd.aspect_match = score_aspect_match(screen, aspects)
     bd.sharpness = score_sharpness(screen, assets_by_id)
     bd.temporal_coherence = score_temporal_coherence(screen, assets_by_id)
     if hero_asset_ids:
         slot_ids = {s.get("assetId") for s in (screen.get("slots") or []) if s.get("assetId")}
-        bd.hero_separation = 0.0 if slot_ids & hero_asset_ids else 1.0
+        overlap = slot_ids & hero_asset_ids
+        if overlap:
+            if featured_beam and any(
+                (assets_by_id.get(aid) or {}).get("userTier") == "featured" for aid in overlap
+            ):
+                bd.hero_separation = FEATURED_HERO_SEPARATION_HALVED
+            else:
+                bd.hero_separation = 0.0
+        else:
+            bd.hero_separation = 1.0
     else:
         bd.hero_separation = 1.0
     pid = screen.get("patternId")
@@ -430,6 +449,7 @@ def score_screen_plan(
     arc_profile: str = "dynamic",
     hero_asset_ids: set[str] | None = None,
     subject_run_tolerance: int = 1,
+    featured_beam: bool = False,
 ) -> ScoreBreakdown:
     """Aggregate score for a full screen sequence in one day bucket / chapter."""
     if not screens:
@@ -447,6 +467,7 @@ def score_screen_plan(
             arc_profile=arc_profile,
             hero_asset_ids=hero_asset_ids,
             prior_pattern_ids=prior,
+            featured_beam=featured_beam,
         )
         parts.append(bd)
         prior.append(screen.get("patternId") or "")
@@ -484,6 +505,14 @@ def score_screen_plan(
         + weights.tone_continuity * avg.tone_continuity
         + weights.subject_run * avg.subject_run
     )
+    if featured_beam:
+        featured_n = 0
+        for screen in screens:
+            for slot in screen.get("slots") or []:
+                aid = slot.get("assetId")
+                if aid and (assets_by_id.get(aid) or {}).get("userTier") == "featured":
+                    featured_n += 1
+        avg.total += featured_n * FEATURED_BEAM_BONUS_PER_ASSET
     return avg
 
 

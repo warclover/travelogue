@@ -1,0 +1,13 @@
+<section class="featured-grid" data-block="featured-grid" data-present-aux="true" aria-label="精选索引">
+  <header class="featured-grid__head">
+    <span class="featured-grid__label">Selected</span>
+    <h2 class="featured-grid__title">精选</h2>
+  </header>
+  <div class="featured-grid__cards">
+    {{#each cards}}
+    <figure class="featured-grid__card" data-asset-id="{{assetId}}">
+      <img class="featured-grid__img" src="{{src}}" alt="{{alt}}" loading="lazy" />
+    </figure>
+    {{/each}}
+  </div>
+</section>

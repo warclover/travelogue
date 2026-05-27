@@ -115,6 +115,13 @@ ingest:
   # 人脸检测（需 pip install -e ".[vision]"）；用于人物竖图免拼图、焦点
   detect_faces: true
   face_min_size_px: 48
+  featured_dir_names: ["主图上传", "精选", "featured", "hero"]
+  material_dir_names: ["素材上传", "素材", "material", "extras"]
+  warn_featured_count_above: 30
+
+curate:
+  featured_weight: 1.35
+  featured_min_for_cover_pool: 2
 
 vision:
   enabled: true
@@ -125,6 +132,14 @@ preview:
   width: 1080
   height: 1920
   jpeg_quality: 88
+
+# 阅读体验 profile 默认（PRD-EXPERIENCE · 见 docs/experience-matrix.yaml）
+render:
+  reading:
+    default_profile: default_hybrid
+    share_profile: performance
+    mobile_profile: legacy
+    longshot_surface_profile: performance
 
 export:
   max_zip_mb: 25

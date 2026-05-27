@@ -29,6 +29,36 @@
   var CAPTION_ON = "on";
   var CAPTION_OFF = "off";
 
+  function readingConfig() {
+    return global.__TRAVELOGUE_READING__ || {};
+  }
+
+  /** Tear down scroll motion before longshot capture (E4). */
+  function teardownReadingMotion() {
+    if (global.TravelogueBreath && typeof global.TravelogueBreath.destroy === "function") {
+      global.TravelogueBreath.destroy();
+    }
+    document.querySelectorAll(".breath-reveal").forEach(function (el) {
+      el.classList.add("is-visible");
+      el.style.opacity = "1";
+      el.style.transform = "none";
+    });
+  }
+
+  function restoreReadingMotion() {
+    var scroll = (readingConfig().scroll || {});
+    var breath = scroll.breath || "off";
+    if (breath === "off") return;
+    if (global.TravelogueBreath && typeof global.TravelogueBreath.init === "function") {
+      global.TravelogueBreath.init();
+    }
+  }
+
+  global.TravelogueReading = global.TravelogueReading || {};
+  global.TravelogueReading.teardown = teardownReadingMotion;
+  global.TravelogueReading.restore = restoreReadingMotion;
+  global.TravelogueReading.config = readingConfig;
+
   var html2canvasPromise = null;
   var toastEl = null;
   var progressEl = null;
@@ -1442,6 +1472,7 @@
 
   async function captureMainToBlob(options) {
     options = options || {};
+    teardownReadingMotion();
     var outputFormat = resolveOutputFormat(options.format);
 
     if (isFileProtocol()) {
@@ -1618,6 +1649,7 @@
       if (prevLayout) root.setAttribute("data-layout", prevLayout);
       else root.removeAttribute("data-layout");
       window.scrollTo(0, prevScroll);
+      restoreReadingMotion();
     }
   }
 

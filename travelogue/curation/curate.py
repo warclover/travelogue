@@ -100,6 +100,49 @@ def _date_span_warning(
     return None
 
 
+READING_LARGE_SCREEN_THRESHOLD = 36
+READING_LARGE_ASSET_THRESHOLD = 100
+
+
+def reading_experience_warnings(
+    trip: dict,
+    chapters: list[dict],
+    layout_assets: list[dict],
+) -> list[str]:
+    """Warn on heavy reading-mode combos (PRD-EXPERIENCE §9 · P3-4)."""
+    reading = (trip.get("export") or {}).get("reading") or {}
+    scroll = reading.get("scroll") or {}
+    breath = str(scroll.get("breath") or "")
+    folio = str(scroll.get("folio") or "")
+    profile = str(reading.get("profile") or "")
+
+    if profile == "magazine":
+        breath = breath or "flow"
+        folio = folio or "full"
+    elif profile == "default_hybrid":
+        folio = folio or "lite"
+
+    if breath != "cinematic" or folio != "full":
+        return []
+
+    out: list[str] = []
+    screen_count = sum(len(ch.get("screens") or []) for ch in chapters)
+    photo_count = len(layout_assets)
+
+    out.append(
+        "reading · cinematic + folio full 同开 · 建议改用 default_hybrid 或 folio=lite"
+    )
+    if screen_count >= READING_LARGE_SCREEN_THRESHOLD:
+        out.append(
+            f"reading · cinematic + folio full + {screen_count} 屏 · 大 trip 建议降级 default_hybrid"
+        )
+    if photo_count >= READING_LARGE_ASSET_THRESHOLD:
+        out.append(
+            f"reading · cinematic + folio full + {photo_count} 张图 · 性能风险 WARN"
+        )
+    return out
+
+
 def layout_eligible_assets(trip: dict) -> list[dict]:
     """Assets usable for cover, chapters, and screens (excludes low-res curation drops)."""
     excluded = set((trip.get("curation") or {}).get("excludedLowResAssetIds") or [])
@@ -152,6 +195,8 @@ def sync_trip_covers(
     *,
     export_layout: str | None = None,
     assets: list[dict] | None = None,
+    featured_weight: float = 1.35,
+    featured_min_for_cover_pool: int = 2,
 ) -> str:
     """Write coverAssetId (+ coverByLayout when exportLayout=auto). Returns primary cover id."""
     assets = assets if assets is not None else layout_eligible_assets(trip)
@@ -159,20 +204,46 @@ def sync_trip_covers(
     curation = trip.setdefault("curation", {})
 
     if layout == "auto":
-        mobile_id = _pick_cover_asset_id(assets, export_layout="mobile")
-        web_id = _pick_cover_asset_id(assets, export_layout="web")
+        mobile_id = _pick_cover_asset_id(
+            assets, export_layout="mobile", featured_weight=featured_weight
+        )
+        web_id = _pick_cover_asset_id(assets, export_layout="web", featured_weight=featured_weight)
         curation["coverByLayout"] = {"mobile": mobile_id, "web": web_id}
         trip["coverAssetId"] = mobile_id
-        trip["coverCandidates"] = _cover_candidates(assets, mobile_id, export_layout="mobile")
+        trip["coverCandidates"] = _cover_candidates(
+            assets,
+            mobile_id,
+            export_layout="mobile",
+            featured_weight=featured_weight,
+            featured_min=featured_min_for_cover_pool,
+        )
         curation["coverCandidatesByLayout"] = {
-            "mobile": _cover_candidates(assets, mobile_id, export_layout="mobile"),
-            "web": _cover_candidates(assets, web_id, export_layout="web"),
+            "mobile": _cover_candidates(
+                assets,
+                mobile_id,
+                export_layout="mobile",
+                featured_weight=featured_weight,
+                featured_min=featured_min_for_cover_pool,
+            ),
+            "web": _cover_candidates(
+                assets,
+                web_id,
+                export_layout="web",
+                featured_weight=featured_weight,
+                featured_min=featured_min_for_cover_pool,
+            ),
         }
         return mobile_id
 
-    cover_id = _pick_cover_asset_id(assets, export_layout=layout)
+    cover_id = _pick_cover_asset_id(assets, export_layout=layout, featured_weight=featured_weight)
     trip["coverAssetId"] = cover_id
-    trip["coverCandidates"] = _cover_candidates(assets, cover_id, export_layout=layout)
+    trip["coverCandidates"] = _cover_candidates(
+        assets,
+        cover_id,
+        export_layout=layout,
+        featured_weight=featured_weight,
+        featured_min=featured_min_for_cover_pool,
+    )
     curation.pop("coverByLayout", None)
     curation.pop("coverCandidatesByLayout", None)
     return cover_id
@@ -266,7 +337,13 @@ def run_curate(
     )
     if engine not in (LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS):
         engine = LAYOUT_ENGINE_LEGACY
-    cover_id = sync_trip_covers(trip, export_layout=layout, assets=layout_assets)
+    cover_id = sync_trip_covers(
+        trip,
+        export_layout=layout,
+        assets=layout_assets,
+        featured_weight=cur_cfg.featured_weight,
+        featured_min_for_cover_pool=cur_cfg.featured_min_for_cover_pool,
+    )
     curation = trip.get("curation") or {}
     by_layout = curation.get("coverByLayout") or {}
     skip_screen_ids: set[str] = set()
@@ -329,6 +406,7 @@ def run_curate(
             assets_by_id,
             exclude=skip_screen_ids,
             median_sharp=med_sharp,
+            featured_weight=cur_cfg.featured_weight,
         )
         if hero:
             chapter_heroes[f"ch-{i + 1:02d}"] = hero
@@ -505,6 +583,48 @@ def run_curate(
         warnings.append(span_warn)
     if res_warn:
         warnings.append(res_warn)
+
+    from travelogue.curation.curate_scoring import build_user_tier_curation
+
+    cover_for_tier: dict[str, str] | None = None
+    if layout == "auto":
+        raw = curation.get("coverByLayout")
+        cover_for_tier = raw if isinstance(raw, dict) else None
+    elif layout == "web" and trip.get("coverAssetId"):
+        cover_for_tier = {"web": str(trip["coverAssetId"])}
+
+    tier_fields, tier_warnings = build_user_tier_curation(
+        trip,
+        layout_assets,
+        cover_by_layout=cover_for_tier,
+        chapter_heroes=chapter_heroes,
+        featured_weight=cur_cfg.featured_weight,
+        warn_featured_above=app_cfg.ingest.warn_featured_count_above,
+    )
+    if tier_fields:
+        curation.update(tier_fields)
+    warnings.extend(tier_warnings)
+
+    from travelogue.curation.folio_plan import build_folio_plan
+
+    folio_plan = build_folio_plan(
+        trip,
+        chapters,
+        layout_assets,
+        featured_weight=cur_cfg.featured_weight,
+        mutate_screens=True,
+    )
+    if folio_plan.get("featuredGrid"):
+        curation["folioPlan"] = folio_plan
+        n_grid = len(folio_plan.get("featuredGridAssetIds") or [])
+        warnings.append(f"folio featured-grid · {n_grid} 张精选（已从正文 screens 去重）")
+    elif folio_plan.get("plateAssetIds"):
+        curation["folioPlan"] = {
+            k: folio_plan[k]
+            for k in ("index", "foreword", "featuredGrid", "featuredGridAssetIds", "plateAssetIds")
+        }
+
+    warnings.extend(reading_experience_warnings(trip, chapters, layout_assets))
 
     cross_seg = sum(
         1 for ch in chapters if len((ch.get("curation") or {}).get("segmentIds") or []) > 1

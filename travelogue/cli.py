@@ -38,8 +38,10 @@ app.add_typer(trip_app, name="trip")
 app.add_typer(demo_app, name="demo")
 llm_app = typer.Typer(help="LLM provider utilities")
 media_app = typer.Typer(help="Re-export pixels from source/")
+tier_app = typer.Typer(help="userTier promote (G2 serve · appendix A)")
 app.add_typer(llm_app, name="llm")
 app.add_typer(media_app, name="media")
+app.add_typer(tier_app, name="tier")
 
 
 def _load_cfg(config: Path | None) -> None:
@@ -122,6 +124,8 @@ def _run_demo_cmd(
     publish: bool = False,
     confirm_privacy: bool = True,
     no_preview: bool = False,
+    featured_dir: Optional[Path] = None,
+    material_dir: Optional[Path] = None,
 ) -> None:
     cfg_path = resolve_demo_config(config)
     if cfg_path:
@@ -147,6 +151,8 @@ def _run_demo_cmd(
             publish=publish,
             confirm_privacy=confirm_privacy,
             no_preview=no_preview,
+            featured_dir=featured_dir,
+            material_dir=material_dir,
         )
     except DemoError as exc:
         typer.echo(str(exc), err=True)
@@ -183,6 +189,12 @@ def demo_main(
         help="required for --publish (sets privacy.confirmedAt, strips EXIF)",
     ),
     no_preview: bool = typer.Option(False, "--no-preview", help="skip preview.jpg in zip"),
+    featured_dir: Optional[Path] = typer.Option(
+        None, "--featured-dir", help="精选文件夹（双源 ingest；默认识别 album 下 精选/featured 等）"
+    ),
+    material_dir: Optional[Path] = typer.Option(
+        None, "--material-dir", help="素材文件夹（双源 ingest；默认识别 album 下 素材/material 等）"
+    ),
 ) -> None:
     """Album → ingest → curate → render; with --publish also exports share zip."""
     if ctx.invoked_subcommand is not None:
@@ -215,6 +227,8 @@ def demo_main(
         publish=publish,
         confirm_privacy=confirm_privacy,
         no_preview=no_preview,
+        featured_dir=featured_dir,
+        material_dir=material_dir,
     )
 
 
@@ -243,6 +257,12 @@ def cmd_from_album(
         help="required for --publish (sets privacy.confirmedAt, strips EXIF)",
     ),
     no_preview: bool = typer.Option(False, "--no-preview", help="skip preview.jpg in zip"),
+    featured_dir: Optional[Path] = typer.Option(
+        None, "--featured-dir", help="精选文件夹（双源 ingest）"
+    ),
+    material_dir: Optional[Path] = typer.Option(
+        None, "--material-dir", help="素材文件夹（双源 ingest）"
+    ),
 ) -> None:
     """Same as ``demo <album>`` — explicit top-level entry (album → HTML or zip)."""
     if publish and not confirm_privacy:
@@ -264,6 +284,8 @@ def cmd_from_album(
         publish=publish,
         confirm_privacy=confirm_privacy,
         no_preview=no_preview,
+        featured_dir=featured_dir,
+        material_dir=material_dir,
     )
 
 
@@ -364,6 +386,8 @@ def cmd_ingest(
     incremental: bool = typer.Option(False, "--incremental"),
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
     config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
+    featured_dir: Optional[Path] = typer.Option(None, "--featured-dir", help="精选文件夹（双源 ingest）"),
+    material_dir: Optional[Path] = typer.Option(None, "--material-dir", help="素材文件夹（双源 ingest）"),
 ) -> None:
     """Agent 0: import photos into trip (ingest_ready)."""
     _load_cfg(config)
@@ -379,6 +403,8 @@ def cmd_ingest(
             generate_crops=not no_crop,
             dedupe=not no_dedupe,
             incremental=incremental,
+            featured_dir=featured_dir,
+            material_dir=material_dir,
         )
     except IngestError as exc:
         typer.echo(str(exc), err=True)
@@ -737,6 +763,11 @@ def cmd_render(
         "--copy-display",
         help="full | photos — hide hook/lead/captions at render (trip.json unchanged unless set in export.copyDisplay)",
     ),
+    reading_profile: Optional[str] = typer.Option(
+        None,
+        "--reading-profile",
+        help="legacy | performance | default_hybrid | magazine — override export.reading.profile",
+    ),
 ) -> None:
     """Render index.html + journal.css from trip.json."""
     if mode not in ("draft", "share"):
@@ -756,6 +787,17 @@ def cmd_render(
     if out_html is None:
         out_html = "index.html"
     trip_path = _resolve(path)
+    if reading_profile and reading_profile not in (
+        "legacy",
+        "performance",
+        "default_hybrid",
+        "magazine",
+    ):
+        typer.echo(
+            "E_CLI: --reading-profile must be legacy, performance, default_hybrid, or magazine",
+            err=True,
+        )
+        raise typer.Exit(1)
     try:
         if dual:
             web_path, mobile_path = render_trip_surfaces(
@@ -766,6 +808,7 @@ def cmd_render(
                 update_pipeline=mark_rendered,
                 font_theme=theme_arg,
                 copy_display_override=copy_display,
+                reading_profile_override=reading_profile,
             )
             typer.echo(f"OK {web_path}")
             typer.echo(f"OK {mobile_path}")
@@ -780,6 +823,7 @@ def cmd_render(
             index_name=out_html,
             font_theme=theme_arg,
             copy_display_override=copy_display,
+            reading_profile_override=reading_profile,
         )
     except RenderError as exc:
         typer.echo(str(exc), err=True)
@@ -789,7 +833,7 @@ def cmd_render(
     from travelogue.render.engine import should_include_long_shot, should_include_screenplay
 
     if should_include_screenplay(trip, layout_engine_override=web_layout):
-        typer.echo("  自动播放: 封面或右下角「自动播放」· 建议用本地 http 打开（全屏需用户手势）")
+        typer.echo("  放映: 封面或右下角「放映」· 建议用本地 http 打开（全屏需用户手势）")
         typer.echo("  文案切换: 右下角「隐藏文案/显示文案」（偏好保存在浏览器 sessionStorage）")
         if not should_include_long_shot(trip, layout_engine_override=web_layout):
             typer.echo("  保存长图: 右下角「保存长图」→ index-longshot.html 自动生成")
@@ -892,6 +936,58 @@ def cmd_longshot_smoke(
         typer.echo(f"  capture: {result['first_chapter_blob_bytes']} bytes (chapter 1 @ 1×)")
     elif result.get("capture_skipped"):
         typer.echo(f"  capture skipped: {result['capture_skipped']}")
+
+
+@tier_app.command("promote")
+def cmd_tier_promote(
+    path: str = typer.Argument(..., help="trip.json path or tripId"),
+    asset_ids: list[str] = typer.Argument(..., help="asset id(s) to promote to featured"),
+    trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
+) -> None:
+    """G2 serve: promote material assets to featured userTier (userTierSource=user)."""
+    from travelogue.web.tier_patch import TierPatchError, apply_tier_promotions
+
+    trip_path = _resolve(path, trips_dir=trips_dir)
+    svc = TripService()
+    trip = svc.load(trip_path)
+    try:
+        promoted = apply_tier_promotions(trip, asset_ids)
+    except TierPatchError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from exc
+    svc.save(trip, trip_path)
+    if promoted:
+        typer.echo(f"OK tier promote · {', '.join(promoted)}")
+    else:
+        typer.echo("OK tier promote · no changes")
+
+
+@app.command("export-pdf")
+def cmd_export_pdf(
+    path: str = typer.Argument(..., help="trip directory, trip.json, or tripId"),
+    out: Optional[Path] = typer.Option(None, "--out", "-o", help="output PDF path"),
+    index: str = typer.Option("index.html", "--index", help="HTML entry (index.html | index-mobile.html)"),
+    width: int = typer.Option(1200, "--width", help="PDF viewport width in px"),
+    port: int = typer.Option(0, "--port", "-p", help="HTTP port (0 = random)"),
+) -> None:
+    """Export trip HTML to PDF via Playwright (requires playwright + chromium)."""
+    from travelogue.export.pdf import PdfExportError, export_trip_pdf
+    from travelogue.web.serve import resolve_trip_serve_dir
+
+    try:
+        trip_path = _resolve(path)
+        serve_dir = resolve_trip_serve_dir(trip_path)
+        out_path = export_trip_pdf(
+            serve_dir,
+            index=index,
+            output=out,
+            port=port,
+            width_px=width,
+        )
+    except (TripNotFoundError, FileNotFoundError, PdfExportError) as exc:
+        typer.echo(f"E_EXPORT_PDF: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    typer.echo(f"OK export-pdf · {out_path}")
 
 
 @app.command("preview")
@@ -1088,6 +1184,8 @@ def cmd_demo_from_album_hidden(
     publish: bool = typer.Option(False, "--publish"),
     confirm_privacy: bool = typer.Option(True, "--confirm-privacy/--no-confirm-privacy"),
     no_preview: bool = typer.Option(False, "--no-preview"),
+    featured_dir: Optional[Path] = typer.Option(None, "--featured-dir"),
+    material_dir: Optional[Path] = typer.Option(None, "--material-dir"),
 ) -> None:
     """Alias for ``travelogue demo`` (same pipeline)."""
     _run_demo_cmd(
@@ -1106,6 +1204,8 @@ def cmd_demo_from_album_hidden(
         publish=publish,
         confirm_privacy=confirm_privacy,
         no_preview=no_preview,
+        featured_dir=featured_dir,
+        material_dir=material_dir,
     )
 
 

@@ -108,12 +108,18 @@ def test_screenplay_enabled_for_screens_engine(golden_trip: dict) -> None:
     trip = prepare_trip_web_screens(golden_trip)
     from travelogue.render.engine import should_include_screenplay
 
-    assert should_include_screenplay(trip) is True
-    html = render_html(trip, export_mode="draft", layout_engine_override="screens")
-    assert 'data-screenplay="on"' in html
-    assert "screenplay-start" in html
-    assert "screenplay.js" in html
-    assert "screenplay.css" in html
+    assert should_include_screenplay(trip, export_mode="share") is True
+    assert should_include_screenplay(trip, export_mode="draft") is False
+    draft_html = render_html(trip, export_mode="draft", layout_engine_override="screens")
+    assert 'data-screenplay="on"' not in draft_html
+    assert "screenplay.js" not in draft_html
+    assert 'data-inline-edit="on"' in draft_html
+    assert 'data-longshot-bridge="on"' in draft_html
+    share_html = render_html(trip, export_mode="share", layout_engine_override="screens")
+    assert 'data-screenplay="on"' in share_html
+    assert "screenplay-start" in share_html
+    assert "screenplay.js" in share_html
+    assert "screenplay.css" in share_html
 
 
 def test_screenplay_photos_mode_keeps_copy_in_dom_for_toggle(golden_trip: dict):

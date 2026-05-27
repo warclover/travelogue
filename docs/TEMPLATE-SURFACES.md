@@ -4,7 +4,8 @@
 |------|------|
 | **模板 ID** | `visual-journal` |
 | **关联** | [TEMPLATE-visual-journal.md](./TEMPLATE-visual-journal.md)、[web端模板.prd](./web端模板.prd)、[0521任务.md](./0521任务.md) |
-| **更新** | 2026-05-22 |
+| **更新** | 2026-05-27 |
+| **阅读体验** | [PRD-EXPERIENCE.md](./PRD-EXPERIENCE.md) · [experience-matrix.yaml](./experience-matrix.yaml) |
 
 ---
 
@@ -20,6 +21,20 @@
 - **长图预览**：须 `python -m travelogue serve trips/<id>`（`http://`）；`file://` 会因 CORS/资源加载禁用长图导出。
 - **按章长图**：>30 张默认按章；>45 张禁用「完整长图」；微信内 UA 提示长按保存。
 - **share 渲染**：`export_mode=share` 时长图 bundle 仍默认包含，但 **无** inline-edit；再渲染 sidecar 为分享态。
+
+---
+
+## 三阅读模式（2026-05-27 · PRD-EXPERIENCE）
+
+| 模式 | ID | 入口 | 表面 | profile 来源 |
+|------|-----|------|------|--------------|
+| **浏览** | `scroll` | 打开 `index.html` | web · mobile | `export.reading.profile`（mobile 强制 `legacy`） |
+| **放映** | `present` | toolbar **放映** | web only · `screenplay.js` | 同上；激活时暂停 Lenis / breath |
+| **长图** | `longshot` | **长图** · `index-longshot.html` | web · mobile · `longshot.js` | `performance`（捕获前 teardown 动效） |
+
+- **屏序契约**：`chapters[].screens[]` 为 scroll / present / longshot **唯一顺序源**（ADR-003）。
+- **Hybrid（默认）**：`default_hybrid` = scroll-snap proximity + breath soft + folio lite；详见 [PRD-EXPERIENCE.md §7](./PRD-EXPERIENCE.md)。
+- **内联编辑**：draft 态强制 `legacy` profile，禁用 present（见 `experience-matrix.yaml` · `inline_edit`）。
 
 ---
 

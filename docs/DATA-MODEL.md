@@ -71,10 +71,30 @@ trips/{tripId}/
 | 字段 | 类型 | 默认 | 说明 |
 |------|------|------|------|
 | `longShot` | boolean \| null | 默认 **`true`**（P0） | 是否注入「保存长图」bundle；`false` 关闭 |
+| `reading` | object? | v1.0+ · 见 §3.3 | 三阅读模式与 Hybrid 配置；权威见 [PRD-EXPERIENCE.md](./PRD-EXPERIENCE.md) |
 
 CLI：`travelogue export … --no-longshot` 写入 `export.longShot=false`。
 
 **分享语义**（见 `SHARING.md`）：长图路径 **不** 依赖 `privacy.confirmedAt`；zip/HTML 私密分享仍依赖 `privacy` 闸口。
+
+### 3.3 `export.reading` 对象（v1.0+ · 体验 PRD）
+
+| 字段 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `profile` | enum | `default_hybrid` | `legacy` \| `performance` \| `default_hybrid` \| `magazine`；展开为下方子字段默认值 |
+| `present.dwellMs` | number | 2000 | 放映模式单屏停留（ms） |
+| `present.featuredOnly` | boolean | false | 仅放映 `userTier: featured` 素材 |
+| `present.syncScrollOnExit` | boolean | true | 退出放映时 scroll 位置与当前屏对齐 |
+| `present.skipAuxBlocks` | boolean | false | 跳过 cover / epilogue 等辅助块 |
+| `scroll.snap` | enum | 依 profile | `off` \| `proximity` \| `mandatory` |
+| `scroll.breath` | enum | 依 profile | `off` \| `soft` \| `flow` \| `cinematic` \| `gallery` |
+| `scroll.folio` | enum | 依 profile | `off` \| `lite` \| `full` |
+| `longshot.breath` | enum | `off` | longshot 面强制 off |
+| `longshot.folio` | enum | `off` | longshot 面强制 off |
+
+**Profile 默认值**（见 [experience-matrix.yaml](./experience-matrix.yaml)）：工坊 draft web → `default_hybrid`；share zip / longshot 捕获 → `performance`；`index-mobile.html` → `legacy`（12 个月内不启用 breath/folio）。
+
+**废弃别名（兼容 1 版本）**：`export.breathMode` → `reading.scroll.breath`；`export.folioMode` → `reading.scroll.folio`。
 
 ---
 
@@ -149,6 +169,8 @@ CLI：`travelogue export … --no-longshot` 写入 `export.longShot=false`。
 | `aspectKind` | enum? | `portrait` \| `landscape` \| `square` \| `panorama` \| `tall`（`classify_aspect`） |
 | `tags` | string[]? | Agent 0 语义标签，**3–5 个推荐**，供 Agent 2 |
 | `tagsSource` | enum? | `heuristic` \| `exif` \| `clip` \| `vlm` \| `user` |
+| `userTier` | enum? | v1.0+ · `featured` \| `material`；默认 `material`；见 [PRD-EXPERIENCE-附录A-精选上传.md](./PRD-EXPERIENCE-附录A-精选上传.md) |
+| `userTierSource` | enum? | `ingest` \| `user`（G2 serve 升格为 featured） |
 
 ### 6.2 图片 `type: image`
 

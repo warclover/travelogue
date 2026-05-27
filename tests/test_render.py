@@ -68,7 +68,10 @@ def test_render_screens_includes_screenplay_bundle(trip_workspace: Path) -> None
         validate=False,
         layout_engine="screens",
         export_layout_override="web",
+        export_mode="share",
     )
+    assert (trip_workspace / "screenplay-hash.js").is_file()
+    assert (trip_workspace / "screenplay-bookmarks.js").is_file()
     assert (trip_workspace / "screenplay.js").is_file()
     assert (trip_workspace / "screenplay.css").is_file()
     assert (trip_workspace / "copy-toggle.js").is_file()
@@ -78,6 +81,8 @@ def test_render_screens_includes_screenplay_bundle(trip_workspace: Path) -> None
     assert 'data-copy-toggle="on"' in html
     assert "copy-display-toggle" in html
     assert "screenplay-start" in html
+    assert "screenplay-hash.js" in html
+    assert "screenplay-bookmarks.js" in html
     assert "screenplay.js" in html
     assert "longshot.js" not in html
 

@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
 | **文档体系** | P0 立项 + P0.5 工程执行 |
-| **更新日期** | 2026-05-19 |
+| **更新日期** | 2026-05-27 |
 
 ---
 
@@ -41,6 +41,19 @@
 | [web端模板.prd](./web端模板.prd) | **Web 端模板 PRD**（章/屏、16:9 舞台、pattern 库） |
 | [web端模板升级计划.md](./web端模板升级计划.md) | **Web 升级实施计划**（layoutEngine legacy/screens） |
 | [LAYOUT-PLANNER.md](./LAYOUT-PLANNER.md) | 排版算法细则（阈值、rowLayout、CSS） |
+| [PRD-EXPERIENCE.md](./PRD-EXPERIENCE.md) | **阅读体验 PRD**：三模式 · Hybrid · `export.reading` · 路线图 E0–E8 |
+| [IMPLEMENTATION-EXPERIENCE.md](./IMPLEMENTATION-EXPERIENCE.md) | **实施任务清单**（E0–E8 逻辑顺序 · 进度跟踪） |
+| [experience-matrix.yaml](./experience-matrix.yaml) | 阅读 profile / 降级矩阵（机器可读） |
+
+### 阅读体验附录（PRD-EXPERIENCE）
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-EXPERIENCE-附录A-精选上传.md](./PRD-EXPERIENCE-附录A-精选上传.md) | 双文件夹 · `userTier` · curate 加权 |
+| [PRD-EXPERIENCE-附录B-滚动动效.md](./PRD-EXPERIENCE-附录B-滚动动效.md) | 呼吸感 · Lenis · breath profile |
+| [PRD-EXPERIENCE-附录C-Folio版式.md](./PRD-EXPERIENCE-附录C-Folio版式.md) | Folio 九屏 · screen-plate · featured-grid |
+
+> 旧稿 [双文件夹.md](./双文件夹.md)、[页面互动呼吸感.md](./页面互动呼吸感.md)、[Folio版式借鉴.md](./Folio版式借鉴.md)、[阅读模式融合.md](./阅读模式融合.md) 已重定向至上述体系。
 
 ---
 
@@ -64,6 +77,7 @@
 |------|------|
 | [adr/README.md](./adr/README.md) | ADR 索引 |
 | [adr/001-delivery-and-media.md](./adr/001-delivery-and-media.md) | 交付 zip、体积、视觉标签、状态机、封面 |
+| [adr/003-experience-reading-modes.md](./adr/003-experience-reading-modes.md) | 三阅读模式 · Hybrid · `export.reading.profile` · Epic 顺序 |
 
 ### Fixtures
 
@@ -100,3 +114,4 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 | 2026-05-19 | P0 文档包 |
 | 2026-05-19 | P0.5 工程执行文档 + validate 脚本 + fixtures |
 | 2026-05-19 | ADR-001：交付/媒体/标签/状态机/封面 |
+| 2026-05-27 | PRD-EXPERIENCE v1.0：三模式 + Hybrid + 三附录 + ADR-003 + experience-matrix |

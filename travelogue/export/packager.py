@@ -154,7 +154,7 @@ def export_trip(
                 if path.is_file():
                     zf.write(path, arc)
 
-        if should_include_screenplay(trip):
+        if should_include_screenplay(trip, export_mode="share"):
             for arc, path in screenplay_files:
                 if path.is_file():
                     zf.write(path, arc)

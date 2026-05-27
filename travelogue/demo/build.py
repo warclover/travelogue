@@ -89,6 +89,8 @@ def run_demo_from_album(
     publish: bool = False,
     confirm_privacy: bool = True,
     no_preview: bool = False,
+    featured_dir: Path | None = None,
+    material_dir: Path | None = None,
 ) -> DemoResult:
     """
     One-shot demo using the same services as ``travelogue ingest`` / ``curate`` / ``render``.
@@ -140,6 +142,8 @@ def run_demo_from_album(
             max_photos=max_photos,
             recursive=recursive,
             dedupe=dedupe,
+            featured_dir=featured_dir,
+            material_dir=material_dir,
         )
     except IngestError as exc:
         raise _wrap_ingest_error(exc) from exc

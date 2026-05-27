@@ -63,3 +63,73 @@ def test_demo_from_album_builds_trip(tmp_path: Path) -> None:
         if it.get("type") == "media-card"
     }
     assert cover not in used, "cover image must not repeat in chapter cards"
+
+
+def _dual_album(tmp_path: Path, featured_n: int = 2, material_n: int = 4) -> Path:
+    root = tmp_path / "album-dual"
+    feat = root / "精选"
+    mat = root / "素材上传"
+    feat.mkdir(parents=True)
+    mat.mkdir(parents=True)
+    for i in range(featured_n):
+        img = Image.new("RGB", (1600, 900), color=(200, 90 + i * 10, 50))
+        img.save(feat / f"feat-{i:02d}.jpg", quality=90)
+    for i in range(material_n):
+        img = Image.new("RGB", (1600, 900), color=(60, 100 + i * 5, 140))
+        img.save(mat / f"mat-{i:02d}.jpg", quality=90)
+    return root
+
+
+def test_demo_from_album_auto_dual_folder_user_tier(tmp_path: Path) -> None:
+    album = _dual_album(tmp_path)
+    trips = tmp_path / "trips"
+    result = demo_from_album(
+        album,
+        trips_dir=trips,
+        trip_id="demo-dual-auto",
+        title="双源",
+        dedupe=False,
+        render=False,
+    )
+    import json
+
+    trip = json.loads(result.trip_json.read_text(encoding="utf-8"))
+    featured = [a for a in trip["assets"] if a.get("userTier") == "featured"]
+    material = [a for a in trip["assets"] if a.get("userTier") == "material"]
+    assert len(featured) == 2
+    assert len(material) == 4
+    assert all(a.get("importSource") == "featured" for a in featured)
+    assert result.stats.get("userTierSummary", {}).get("featured") == 2
+
+
+def test_demo_from_album_explicit_tier_dirs(tmp_path: Path) -> None:
+    album = tmp_path / "album-root"
+    album.mkdir()
+    featured = tmp_path / "my-featured"
+    material = tmp_path / "my-material"
+    featured.mkdir(parents=True)
+    material.mkdir(parents=True)
+    for i in range(2):
+        Image.new("RGB", (1600, 900), color=(220, 80, 40)).save(featured / f"f-{i}.jpg", quality=90)
+    for i in range(4):
+        Image.new("RGB", (1600, 900), color=(50, 90, 160)).save(material / f"m-{i}.jpg", quality=90)
+
+    from travelogue.demo.build import run_demo_from_album
+
+    trips = tmp_path / "trips"
+    result = run_demo_from_album(
+        album,
+        trips_dir=trips,
+        trip_id="demo-dual-explicit",
+        featured_dir=featured,
+        material_dir=material,
+        dedupe=False,
+        render=False,
+        force=True,
+    )
+    import json
+
+    trip = json.loads(result.trip_json.read_text(encoding="utf-8"))
+    assert len([a for a in trip["assets"] if a.get("userTier") == "featured"]) == 2
+    assert len([a for a in trip["assets"] if a.get("userTier") == "material"]) == 4
+    assert result.stats.get("tier_mode") == "explicit"

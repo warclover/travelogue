@@ -62,6 +62,8 @@ def demo_from_album(
     force: bool = False,
     dedupe: bool = True,
     config: Path | None = None,
+    featured_dir: Path | None = None,
+    material_dir: Path | None = None,
 ) -> DemoResult:
     """Backward-compatible alias for :func:`run_demo_from_album`."""
     return run_demo_from_album(
@@ -78,4 +80,6 @@ def demo_from_album(
         force=force,
         dedupe=dedupe,
         config=config,
+        featured_dir=featured_dir,
+        material_dir=material_dir,
     )

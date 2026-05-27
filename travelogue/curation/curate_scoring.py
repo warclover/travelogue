@@ -143,21 +143,63 @@ def hero_score(asset: dict, *, median_sharp: float = 0.0) -> float:
     )
 
 
+def featured_weight_multiplier(asset: dict, *, weight: float = 1.35) -> float:
+    if asset.get("userTier") == "featured":
+        return weight
+    return 1.0
+
+
+def featured_eligible(assets: list[dict]) -> list[dict]:
+    return [a for a in assets if a.get("userTier") == "featured"]
+
+
+def effective_cover_score(
+    asset: dict,
+    export_layout: str,
+    *,
+    median_sharp: float = 0.0,
+    featured_weight: float = 1.35,
+) -> float:
+    return cover_score(asset, export_layout, median_sharp=median_sharp) * featured_weight_multiplier(
+        asset, weight=featured_weight
+    )
+
+
+def effective_hero_score(
+    asset: dict,
+    *,
+    median_sharp: float = 0.0,
+    featured_weight: float = 1.35,
+) -> float:
+    return hero_score(asset, median_sharp=median_sharp) * featured_weight_multiplier(
+        asset, weight=featured_weight
+    )
+
+
 def pick_cover_asset_id(
     assets: list[dict],
     *,
     export_layout: str = "mobile",
     exclude: set[str] | None = None,
+    featured_weight: float = 1.35,
 ) -> str:
     exclude = exclude or set()
     pool = cover_asset_pool(assets, export_layout=export_layout)
-    median_sharp = median_sharpness(pool)
+    featured_pool = [
+        a
+        for a in pool
+        if a.get("userTier") == "featured" and a["id"] not in exclude and a.get("type") != "video"
+    ]
+    search_pool = featured_pool if featured_pool else pool
+    median_sharp = median_sharpness(search_pool)
     best_id = ""
     best_score = 0.0
-    for a in pool:
+    for a in search_pool:
         if a["id"] in exclude or a.get("type") == "video":
             continue
-        score = cover_score(a, export_layout, median_sharp=median_sharp)
+        score = effective_cover_score(
+            a, export_layout, median_sharp=median_sharp, featured_weight=featured_weight
+        )
         if score > best_score:
             best_score = score
             best_id = a["id"]
@@ -175,6 +217,8 @@ def cover_candidates(
     *,
     export_layout: str = "mobile",
     limit: int = 5,
+    featured_weight: float = 1.35,
+    featured_min: int = 2,
 ) -> list[str]:
     """Top covers with diverse aspect / day when possible."""
     pool = cover_asset_pool(assets, export_layout=export_layout)
@@ -183,7 +227,9 @@ def cover_candidates(
     for a in pool:
         if a["id"] == cover_id or a.get("type") == "video":
             continue
-        score = cover_score(a, export_layout, median_sharp=median_sharp)
+        score = effective_cover_score(
+            a, export_layout, median_sharp=median_sharp, featured_weight=featured_weight
+        )
         if score > 0:
             scored.append((score, a))
     scored.sort(key=lambda x: x[0], reverse=True)
@@ -198,6 +244,8 @@ def cover_candidates(
         if d:
             seen_days.add(d.isoformat())
 
+    featured_in_out = 1 if (cover_asset and cover_asset.get("userTier") == "featured") else 0
+
     for _, a in scored:
         if len(out) >= limit:
             break
@@ -207,6 +255,8 @@ def cover_candidates(
         if aspect in seen_aspects and day_key in seen_days:
             continue
         out.append(a["id"])
+        if a.get("userTier") == "featured":
+            featured_in_out += 1
         seen_aspects.add(aspect)
         if day_key:
             seen_days.add(day_key)
@@ -216,6 +266,21 @@ def cover_candidates(
             break
         if a["id"] not in out:
             out.append(a["id"])
+            if a.get("userTier") == "featured":
+                featured_in_out += 1
+
+    if featured_min > 0:
+        featured_ids = [a["id"] for _, a in scored if a.get("userTier") == "featured"]
+        need = featured_min - featured_in_out
+        for fid in featured_ids:
+            if need <= 0 or len(out) >= limit:
+                break
+            if fid not in out and fid != cover_id:
+                if len(out) >= limit:
+                    out[-1] = fid
+                else:
+                    out.append(fid)
+                need -= 1
     return out[:limit]
 
 
@@ -225,6 +290,7 @@ def pick_chapter_hero(
     *,
     exclude: set[str] | None = None,
     median_sharp: float = 0.0,
+    featured_weight: float = 1.35,
 ) -> str | None:
     exclude = exclude or set()
     best_id: str | None = None
@@ -235,7 +301,7 @@ def pick_chapter_hero(
         a = assets_by_id.get(aid)
         if not a:
             continue
-        score = hero_score(a, median_sharp=median_sharp)
+        score = effective_hero_score(a, median_sharp=median_sharp, featured_weight=featured_weight)
         if score > best:
             best = score
             best_id = aid
@@ -265,3 +331,60 @@ def sort_bucket_asset_ids(bucket: list[str], assets_by_id: dict[str, dict]) -> l
             result.append(aid)
             i += 1
     return result
+
+
+def build_user_tier_curation(
+    trip: dict,
+    layout_assets: list[dict],
+    *,
+    cover_by_layout: dict[str, str] | None,
+    chapter_heroes: dict[str, str],
+    featured_weight: float = 1.35,
+    warn_featured_above: int = 30,
+) -> tuple[dict, list[str]]:
+    """Write curation.userTierSummary and related fields; return extra warnings."""
+    from travelogue.media.user_tier import count_user_tiers
+
+    warnings: list[str] = []
+    all_assets = trip.get("assets") or []
+    counts = count_user_tiers(all_assets)
+    if counts["featured"] == 0:
+        return {}, warnings
+
+    layout_featured = sum(1 for a in layout_assets if a.get("userTier") == "featured")
+    fields: dict = {
+        "userTierSummary": {
+            "featured": counts["featured"],
+            "material": counts["material"],
+            "featuredInLayout": layout_featured,
+        },
+        "featuredHeroByChapter": dict(chapter_heroes),
+    }
+
+    featured_cover_pool: list[str] = []
+    for layout in ("mobile", "web"):
+        pool = cover_asset_pool(layout_assets, export_layout=layout)
+        for asset in pool:
+            if asset.get("userTier") != "featured":
+                continue
+            if effective_cover_score(asset, layout, featured_weight=featured_weight) <= 0:
+                continue
+            if asset["id"] not in featured_cover_pool:
+                featured_cover_pool.append(asset["id"])
+    if featured_cover_pool:
+        fields["featuredCoverPool"] = featured_cover_pool
+
+    if counts["featured"] > warn_featured_above:
+        warnings.append(
+            f"精选照片 {counts['featured']} 张，超过建议上限 {warn_featured_above}"
+        )
+
+    web_cover = (cover_by_layout or {}).get("web") if isinstance(cover_by_layout, dict) else None
+    if web_cover:
+        cover_asset = next((a for a in layout_assets if a.get("id") == web_cover), None)
+        featured_web = [a for a in layout_assets if a.get("userTier") == "featured"]
+        if featured_web and cover_asset and cover_asset.get("userTier") != "featured":
+            if not any(effective_cover_score(a, "web", featured_weight=featured_weight) > 0 for a in featured_web):
+                warnings.append("精选均为竖图，Web 封面已回退到素材横图")
+
+    return fields, warnings

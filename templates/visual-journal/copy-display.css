@@ -3,7 +3,10 @@
  */
 html[data-copy-display="photos"] [data-block="hook-line"],
 html[data-copy-display="photos"] [data-block="chapter-lead"],
-html[data-copy-display="photos"] [data-block="epilogue"] {
+html[data-copy-display="photos"] [data-block="epilogue"],
+html[data-copy-display="photos"] [data-block="epilogue-screen"],
+html[data-copy-display="photos"] [data-block="foreword-spread"],
+html[data-copy-display="photos"] [data-block="screen-spread"] {
   display: none !important;
 }
 
@@ -19,6 +22,9 @@ html[data-copy-display="photos"] .media-scroll__footer .media-card__caption {
 html[data-photos-only="on"] [data-block="hook-line"],
 html[data-photos-only="on"] [data-block="chapter-lead"],
 html[data-photos-only="on"] [data-block="epilogue"],
+html[data-photos-only="on"] [data-block="epilogue-screen"],
+html[data-photos-only="on"] [data-block="foreword-spread"],
+html[data-photos-only="on"] [data-block="screen-spread"],
 html[data-photos-only="on"] .media-card__overlay-text,
 html[data-photos-only="on"] .media-card__caption,
 html[data-photos-only="on"] .media-row__caption,

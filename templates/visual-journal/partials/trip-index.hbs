@@ -1,0 +1,21 @@
+<nav class="trip-index" data-block="trip-index" data-present-aux="true" aria-label="章节目录">
+  <header class="trip-index__head">
+    <span class="trip-index__label">Index</span>
+    <h2 class="trip-index__title">目录</h2>
+  </header>
+  <ol class="trip-index__list">
+    {{#each entries}}
+    <li class="trip-index__item">
+      <a class="trip-index__link" href="#{{id}}">
+        <span class="trip-index__num">{{index}}</span>
+        <span class="trip-index__text">
+          <span class="trip-index__chapter">{{title}}</span>
+          {{#if hasDesc}}
+          <span class="trip-index__desc">{{desc}}</span>
+          {{/if}}
+        </span>
+      </a>
+    </li>
+    {{/each}}
+  </ol>
+</nav>

@@ -1,0 +1,14 @@
+<section class="foreword-spread" data-block="foreword-spread" data-present-aux="true" aria-label="前言">
+  <header class="foreword-spread__rail">
+    <span class="foreword-spread__label">Foreword</span>
+    {{#if hasChapterTitle}}
+    <h2 class="foreword-spread__chapter">{{chapterTitle}}</h2>
+    {{/if}}
+  </header>
+  <div class="foreword-spread__body">
+    <p class="foreword-spread__lead">{{lead}}</p>
+    {{#if hasPullQuote}}
+    <blockquote class="foreword-spread__pull">{{pullQuote}}</blockquote>
+    {{/if}}
+  </div>
+</section>

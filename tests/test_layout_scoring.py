@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from travelogue.curation.layout_scoring import ScoringWeights, score_aspect_match, PHASE2_WEIGHTS, score_screen
 
 
@@ -99,3 +101,56 @@ def test_subject_run_soft_allows_one_outlier():
         ["a1", "a2", "a3", "a4"], assets, target_run=3, tolerance=1
     )
     assert score >= 0.5
+
+
+def test_featured_beam_bonus_per_asset_in_plan() -> None:
+    from travelogue.curation.layout_scoring import FEATURED_BEAM_BONUS_PER_ASSET, score_screen_plan
+
+    weights = ScoringWeights(aspect_match=1.0)
+    screen = {
+        "patternId": "screen-portrait-2",
+        "slots": [
+            {"assetId": "f1", "role": "portrait"},
+            {"assetId": "f2", "role": "portrait"},
+        ],
+    }
+    aspects = {"f1": "portrait", "f2": "portrait"}
+    assets = {
+        "f1": {"id": "f1", "userTier": "featured"},
+        "f2": {"id": "f2", "userTier": "featured"},
+    }
+    base = score_screen_plan(
+        [screen], aspects=aspects, assets_by_id=assets, weights=weights, featured_beam=False
+    )
+    boosted = score_screen_plan(
+        [screen], aspects=aspects, assets_by_id=assets, weights=weights, featured_beam=True
+    )
+    assert boosted.total - base.total == pytest.approx(2 * FEATURED_BEAM_BONUS_PER_ASSET)
+
+
+def test_featured_beam_halves_hero_separation_when_hero_reused() -> None:
+    from travelogue.curation.layout_scoring import FEATURED_HERO_SEPARATION_HALVED
+
+    weights = ScoringWeights(hero_separation=1.0)
+    screen = {"patternId": "screen-landscape-1", "slots": [{"assetId": "hero1"}]}
+    hero_ids = {"hero1"}
+
+    feat = score_screen(
+        screen,
+        aspects={},
+        assets_by_id={"hero1": {"id": "hero1", "userTier": "featured"}},
+        weights=weights,
+        hero_asset_ids=hero_ids,
+        featured_beam=True,
+    )
+    mat = score_screen(
+        screen,
+        aspects={},
+        assets_by_id={"hero1": {"id": "hero1", "userTier": "material"}},
+        weights=weights,
+        hero_asset_ids=hero_ids,
+        featured_beam=True,
+    )
+    assert feat.hero_separation == FEATURED_HERO_SEPARATION_HALVED
+    assert mat.hero_separation == 0.0
+    assert feat.total > mat.total

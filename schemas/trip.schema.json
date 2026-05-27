@@ -88,7 +88,76 @@
           "type": "string",
           "enum": ["full", "photos"],
           "description": "Render: full shows hook/lead/captions; photos hides narrative copy (trip.json unchanged)"
+        },
+        "breathMode": {
+          "type": "string",
+          "enum": ["off", "soft", "flow", "cinematic", "gallery"],
+          "description": "Deprecated alias for export.reading.scroll.breath (1-version compat)"
+        },
+        "folioMode": {
+          "type": "string",
+          "enum": ["off", "lite", "full"],
+          "description": "Deprecated alias for export.reading.scroll.folio (1-version compat)"
+        },
+        "reading": { "$ref": "#/$defs/readingOptions" }
+      }
+    },
+    "readingOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "profile": {
+          "type": "string",
+          "enum": ["legacy", "performance", "default_hybrid", "magazine"],
+          "description": "Reading experience preset (PRD-EXPERIENCE); expands scroll/present/longshot defaults"
+        },
+        "present": { "$ref": "#/$defs/readingPresent" },
+        "scroll": { "$ref": "#/$defs/readingScroll" },
+        "longshot": { "$ref": "#/$defs/readingLongshot" },
+        "mobileProfile": {
+          "type": "string",
+          "enum": ["legacy", "performance", "default_hybrid", "magazine"],
+          "description": "Optional profile override for index-mobile.html (P5 · ADR-003 opt-in)"
         }
+      }
+    },
+    "readingPresent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dwellMs": { "type": "integer", "minimum": 500, "maximum": 30000 },
+        "featuredOnly": { "type": "boolean" },
+        "syncScrollOnExit": { "type": "boolean" },
+        "skipAuxBlocks": { "type": "boolean" },
+        "deepLink": {
+          "type": "boolean",
+          "description": "Enable URL hash #present/N deep links (P5)"
+        }
+      }
+    },
+    "readingScroll": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "snap": { "type": "string", "enum": ["off", "proximity", "mandatory"] },
+        "breath": {
+          "type": "string",
+          "enum": ["off", "soft", "flow", "cinematic", "gallery"]
+        },
+        "folio": { "type": "string", "enum": ["off", "lite", "full"] },
+        "breathEngine": {
+          "type": "string",
+          "enum": ["native", "gsap"],
+          "description": "Scrub engine for cinematic/gallery (P5 · gsap loads CDN when set)"
+        }
+      }
+    },
+    "readingLongshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "breath": { "type": "string", "enum": ["off"] },
+        "folio": { "type": "string", "enum": ["off"] }
       }
     },
     "orientationSummary": {
@@ -212,6 +281,40 @@
           "type": "string",
           "enum": ["frame", "frame_chapters", "full"],
           "description": "Copy generation scope used at last narrate run"
+        },
+        "folioPlan": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "index": { "type": "boolean" },
+            "foreword": { "type": "boolean" },
+            "featuredGrid": { "type": "boolean" },
+            "featuredGridAssetIds": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "plateAssetIds": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "userTierSummary": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "featured": { "type": "integer", "minimum": 0 },
+            "material": { "type": "integer", "minimum": 0 },
+            "featuredInLayout": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "featuredHeroByChapter": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "featuredCoverPool": {
+          "type": "array",
+          "items": { "type": "string" }
         }
       }
     },
@@ -344,6 +447,21 @@
           "type": "string",
           "enum": ["heuristic", "exif", "clip", "vlm", "user"],
           "description": "How tags were produced"
+        },
+        "userTier": {
+          "type": "string",
+          "enum": ["featured", "material"],
+          "description": "User intent from featured vs material ingest folder (PRD-EXPERIENCE appendix A)"
+        },
+        "userTierSource": {
+          "type": "string",
+          "enum": ["ingest", "user"],
+          "description": "How userTier was assigned"
+        },
+        "importSource": {
+          "type": "string",
+          "enum": ["featured", "material", "legacy"],
+          "description": "Original ingest folder (PRD-EXPERIENCE appendix A §3.1)"
         },
         "voice": { "$ref": "#/$defs/voice" },
         "caption": {

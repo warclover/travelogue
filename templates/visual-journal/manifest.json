@@ -56,6 +56,11 @@
     "media-row",
     "media-scroll",
     "divider-place",
+    "foreword-spread",
+    "trip-index",
+    "featured-grid",
+    "screen-spread",
+    "epilogue-screen",
     "epilogue",
     "footer-cta"
   ],
@@ -131,7 +136,9 @@
       "screen-square-4",
       "screen-square-9",
       "screen-panorama-1",
-      "screen-tall-1"
+      "screen-tall-1",
+      "screen-plate",
+      "screen-spread"
     ]
   },
   "adaptive": {

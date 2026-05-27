@@ -23,6 +23,22 @@ def format_ingest_report(result, trip: dict | None = None) -> str:
     if stats.get("total_assets"):
         lines.append(f"trip 内共 {stats['total_assets']} 张")
 
+    summary = stats.get("userTierSummary")
+    if isinstance(summary, dict) and summary.get("featured", 0) > 0:
+        lines.append(
+            f"  精选/素材: featured={summary.get('featured', 0)} "
+            f"material={summary.get('material', 0)}"
+        )
+    for w in stats.get("tier_warnings") or []:
+        lines.append(f"  WARN: {w}")
+    if stats.get("tier_upgraded"):
+        lines.append(f"  跨夹升格精选: {stats['tier_upgraded']}")
+    if stats.get("tier_mode") == "dual":
+        lines.append(
+            f"  双文件夹: featured={stats.get('featured_count', 0)} "
+            f"material={stats.get('material_count', 0)}"
+        )
+
     for key, label in (
         ("deduped", "完全重复"),
         ("deduped_phash", "相似图(phash)"),

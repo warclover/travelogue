@@ -1,0 +1,592 @@
+{
+  "version": "0.2",
+  "tripId": "linzhi-ci",
+  "templateId": "visual-journal",
+  "exportLayout": "web",
+  "meta": {
+    "title": "雨后京都",
+    "subtitle": "五天，两个人",
+    "hook": "鸭川边那阵吹干雨衣的风。",
+    "dateStart": "2025-04-02",
+    "dateEnd": "2025-04-06",
+    "places": [
+      "京都"
+    ],
+    "tone": "relaxed"
+  },
+  "coverAssetId": "cover",
+  "assets": [
+    {
+      "id": "cover",
+      "type": "image",
+      "sourceFile": "source/cover.jpg",
+      "displayFile": "assets/demo/cover-w1600.webp",
+      "srcset": [
+        {
+          "file": "assets/demo/cover-w800.webp",
+          "width": 800
+        },
+        {
+          "file": "assets/demo/cover-w1600.webp",
+          "width": 1600
+        }
+      ]
+    },
+    {
+      "id": "asset-001",
+      "type": "image",
+      "sourceFile": "source/a1.jpg",
+      "displayFile": "assets/demo/station-w1600.webp",
+      "srcset": [
+        {
+          "file": "assets/demo/station-w800.webp",
+          "width": 800
+        },
+        {
+          "file": "assets/demo/station-w1600.webp",
+          "width": 1600
+        }
+      ],
+      "tags": [
+        "车站",
+        "雨天",
+        "霓虹"
+      ],
+      "voice": {
+        "audioFile": "assets/demo/placeholder.m4a",
+        "durationSec": 24,
+        "transcript": "车窗上的水珠把霓虹拉得很长。",
+        "source": "user",
+        "showTranscript": true
+      }
+    },
+    {
+      "id": "asset-002",
+      "type": "image",
+      "sourceFile": "source/a2.jpg",
+      "displayFile": "assets/demo/umbrella-w1600.webp",
+      "srcset": [
+        {
+          "file": "assets/demo/umbrella-w800.webp",
+          "width": 800
+        },
+        {
+          "file": "assets/demo/umbrella-w1600.webp",
+          "width": 1600
+        }
+      ]
+    },
+    {
+      "id": "vid-001",
+      "type": "video",
+      "sourceFile": "source/v1.mp4",
+      "displayFile": "assets/demo/video.mp4",
+      "posterFile": "assets/demo/video-poster-w1600.webp",
+      "duration": 6,
+      "hasAudio": true
+    },
+    {
+      "id": "asset-010",
+      "type": "image",
+      "sourceFile": "source/a10.jpg",
+      "displayFile": "assets/demo/lantern-w1600.webp",
+      "voice": {
+        "audioFile": "assets/demo/placeholder.m4a",
+        "durationSec": 18,
+        "transcript": "别拍了，就这样走一段。",
+        "source": "user",
+        "showTranscript": true
+      }
+    },
+    {
+      "id": "scroll-1",
+      "type": "image",
+      "sourceFile": "source/s1.jpg",
+      "displayFile": "assets/demo/scroll-bamboo-w1600.webp"
+    },
+    {
+      "id": "scroll-2",
+      "type": "image",
+      "sourceFile": "source/s2.jpg",
+      "displayFile": "assets/demo/scroll-platform-w1600.webp"
+    },
+    {
+      "id": "scroll-3",
+      "type": "image",
+      "sourceFile": "source/s3.jpg",
+      "displayFile": "assets/demo/scroll-ice-w1600.webp"
+    },
+    {
+      "id": "asset-030",
+      "type": "image",
+      "sourceFile": "source/a30.jpg",
+      "displayFile": "assets/demo/night-river-w1600.webp"
+    },
+    {
+      "id": "asset-031",
+      "type": "image",
+      "sourceFile": "source/a31.jpg",
+      "displayFile": "assets/demo/night-return-w1600.webp"
+    }
+  ],
+  "chapters": [
+    {
+      "id": "ch-01",
+      "index": 1,
+      "patternId": "open",
+      "title": "段1",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "cover",
+          "layout": {
+            "fill": true,
+            "bleed": true
+          }
+        }
+      ],
+      "screens": [
+        {
+          "screenId": "ch-01-sc-01",
+          "patternId": "screen-landscape-1",
+          "slots": [
+            {
+              "assetId": "cover",
+              "slot": 0,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-01-sc-02",
+          "patternId": "screen-portrait-2",
+          "slots": [
+            {
+              "assetId": "asset-001",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-002",
+              "slot": 1,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-01-sc-03",
+          "patternId": "screen-landscape-2",
+          "slots": [
+            {
+              "assetId": "asset-010",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "scroll-1",
+              "slot": 1,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-01-sc-04",
+          "patternId": "screen-landscape-4",
+          "slots": [
+            {
+              "assetId": "scroll-2",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "scroll-3",
+              "slot": 1,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-030",
+              "slot": 2,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-031",
+              "slot": 3,
+              "fit": "cover"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch-02",
+      "index": 2,
+      "patternId": "open",
+      "title": "段2",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "cover",
+          "layout": {
+            "fill": true,
+            "bleed": true
+          }
+        }
+      ],
+      "screens": [
+        {
+          "screenId": "ch-02-sc-01",
+          "patternId": "screen-portrait-2",
+          "slots": [
+            {
+              "assetId": "cover",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-001",
+              "slot": 1,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-02-sc-02",
+          "patternId": "screen-landscape-2",
+          "slots": [
+            {
+              "assetId": "asset-002",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-010",
+              "slot": 1,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-02-sc-03",
+          "patternId": "screen-landscape-4",
+          "slots": [
+            {
+              "assetId": "scroll-1",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "scroll-2",
+              "slot": 1,
+              "fit": "cover"
+            },
+            {
+              "assetId": "scroll-3",
+              "slot": 2,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-030",
+              "slot": 3,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-02-sc-04",
+          "patternId": "screen-landscape-1",
+          "slots": [
+            {
+              "assetId": "asset-031",
+              "slot": 0,
+              "fit": "cover"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch-03",
+      "index": 3,
+      "patternId": "open",
+      "title": "段3",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "cover",
+          "layout": {
+            "fill": true,
+            "bleed": true
+          }
+        }
+      ],
+      "screens": [
+        {
+          "screenId": "ch-03-sc-01",
+          "patternId": "screen-landscape-2",
+          "slots": [
+            {
+              "assetId": "cover",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-001",
+              "slot": 1,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-03-sc-02",
+          "patternId": "screen-landscape-4",
+          "slots": [
+            {
+              "assetId": "asset-002",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-010",
+              "slot": 1,
+              "fit": "cover"
+            },
+            {
+              "assetId": "scroll-1",
+              "slot": 2,
+              "fit": "cover"
+            },
+            {
+              "assetId": "scroll-2",
+              "slot": 3,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-03-sc-03",
+          "patternId": "screen-landscape-1",
+          "slots": [
+            {
+              "assetId": "scroll-3",
+              "slot": 0,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-03-sc-04",
+          "patternId": "screen-portrait-2",
+          "slots": [
+            {
+              "assetId": "asset-030",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-031",
+              "slot": 1,
+              "fit": "cover"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch-04",
+      "index": 4,
+      "patternId": "open",
+      "title": "段4",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "cover",
+          "layout": {
+            "fill": true,
+            "bleed": true
+          }
+        }
+      ],
+      "screens": [
+        {
+          "screenId": "ch-04-sc-01",
+          "patternId": "screen-landscape-4",
+          "slots": [
+            {
+              "assetId": "cover",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-001",
+              "slot": 1,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-002",
+              "slot": 2,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-010",
+              "slot": 3,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-04-sc-02",
+          "patternId": "screen-landscape-1",
+          "slots": [
+            {
+              "assetId": "scroll-1",
+              "slot": 0,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-04-sc-03",
+          "patternId": "screen-portrait-2",
+          "slots": [
+            {
+              "assetId": "scroll-2",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "scroll-3",
+              "slot": 1,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-04-sc-04",
+          "patternId": "screen-landscape-2",
+          "slots": [
+            {
+              "assetId": "asset-030",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-031",
+              "slot": 1,
+              "fit": "cover"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch-05",
+      "index": 5,
+      "patternId": "open",
+      "title": "段5",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "cover",
+          "layout": {
+            "fill": true,
+            "bleed": true
+          }
+        }
+      ],
+      "screens": [
+        {
+          "screenId": "ch-05-sc-01",
+          "patternId": "screen-landscape-1",
+          "slots": [
+            {
+              "assetId": "cover",
+              "slot": 0,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-05-sc-02",
+          "patternId": "screen-portrait-2",
+          "slots": [
+            {
+              "assetId": "asset-001",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-002",
+              "slot": 1,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-05-sc-03",
+          "patternId": "screen-landscape-2",
+          "slots": [
+            {
+              "assetId": "asset-010",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "scroll-1",
+              "slot": 1,
+              "fit": "cover"
+            }
+          ]
+        },
+        {
+          "screenId": "ch-05-sc-04",
+          "patternId": "screen-landscape-4",
+          "slots": [
+            {
+              "assetId": "scroll-2",
+              "slot": 0,
+              "fit": "cover"
+            },
+            {
+              "assetId": "scroll-3",
+              "slot": 1,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-030",
+              "slot": 2,
+              "fit": "cover"
+            },
+            {
+              "assetId": "asset-031",
+              "slot": 3,
+              "fit": "cover"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "epilogue": "五天的雨，打乱了一半行程。",
+  "privacy": {
+    "level": "private",
+    "stripExifOnExport": true,
+    "confirmedAt": null
+  },
+  "pipeline": {
+    "status": "copy_locked",
+    "locks": {
+      "structure": true,
+      "copy": true
+    },
+    "runs": []
+  },
+  "createdAt": "2026-05-19T08:00:00Z",
+  "updatedAt": "2026-05-19T10:00:00Z",
+  "layoutEngine": "screens",
+  "layoutEngineVersion": "screens-2"
+}

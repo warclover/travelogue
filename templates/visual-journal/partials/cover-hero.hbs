@@ -1,4 +1,4 @@
-<header class="cover-hero{{#unless coverShowTitle}} cover-hero--photo-only{{/unless}}" data-block="cover-hero">
+<header class="cover-hero{{#unless coverShowTitle}} cover-hero--photo-only{{/unless}}" data-block="cover-hero" data-present-aux="true">
   <div class="cover-hero__media">
     <img src="{{cover.src}}"
       {{#if cover.hasSrcset}}
@@ -22,10 +22,10 @@
   {{/if}}
   {{#if includeScreenplay}}
   <button type="button" class="cover-hero__play" data-screenplay-trigger="start"
-    data-screenplay-label="▶ 自动播放"
-    data-screenplay-busy="退出播放"
-    aria-label="自动播放，全屏逐屏放映">
-    ▶ 自动播放
+    data-screenplay-label="▶ 放映"
+    data-screenplay-busy="退出放映"
+    aria-label="放映，全屏逐屏展示">
+    ▶ 放映
   </button>
   {{/if}}
 </header>

@@ -1,0 +1,15 @@
+<figure class="screen-spread" data-block="screen-spread" data-present-aux="true">
+  <div class="screen-spread__media">
+    <img class="screen-spread__img" src="{{src}}" alt="{{alt}}" loading="lazy" decoding="async"
+      {{#if hasSrcset}}
+      srcset="{{srcset}}"
+      sizes="{{sizes}}"
+      {{/if}} />
+  </div>
+  <figcaption class="screen-spread__copy">
+    <p class="screen-spread__body">{{body}}</p>
+    {{#if hasPullQuote}}
+    <blockquote class="screen-spread__pull">{{pullQuote}}</blockquote>
+    {{/if}}
+  </figcaption>
+</figure>

@@ -11,6 +11,8 @@ from PIL import Image, ImageFilter
 
 from travelogue.config import IngestConfig
 from travelogue.media.ingest import (
+    IngestAssetBuildContext,
+    IngestPhotoPayload,
     _build_asset_entry,
     _load_photo,
     _missing_derivative_paths,
@@ -44,28 +46,33 @@ def test_replace_upsert_must_not_delete_same_id_derivatives(tmp_path: Path) -> N
 
     cfg = IngestConfig(dedupe_burst=True, dedupe_phash=False, burst_seconds=3.0)
     assets: list[dict] = []
+    build_ctx = IngestAssetBuildContext(
+        cfg=cfg,
+        assets_dir=assets_dir,
+        source_dir=source_dir,
+        trip_dir=trip_dir,
+        ingest_stats={},
+        batch="batch-test",
+        generate_crops=False,
+        max_tags=5,
+        geocode_enabled=False,
+    )
 
     for photo in (blur_path, sharp_path):
         loaded = _load_photo(photo)
         img = loaded.image
         asset_id = "asset-001"
         entry = _build_asset_entry(
-            asset_id=asset_id,
-            photo=photo,
-            loaded=loaded,
-            img=img,
-            batch="batch-test",
-            dhash="abc",
-            cfg=cfg,
-            assets_dir=assets_dir,
-            source_dir=source_dir,
-            generate_crops=False,
-            burst_group_id="burst-001",
-            sharpness=sharpness_score(img),
-            max_tags=5,
-            geocode_enabled=False,
-            trip_dir=trip_dir,
-            ingest_stats={},
+            build_ctx,
+            IngestPhotoPayload(
+                asset_id=asset_id,
+                photo=photo,
+                loaded=loaded,
+                img=img,
+                dhash="abc",
+                sharpness=sharpness_score(img),
+                burst_group_id="burst-001",
+            ),
         )
         _upsert_asset(assets=assets, replace_index=0 if assets else None, entry=entry)
 

@@ -146,6 +146,7 @@ def _replan_day_buckets_beam(
             weights=weights,
             arc_profile=arc_profile,
             subject_run_tolerance=subject_run_tolerance,
+            featured_beam=True,
         )
         best_plan = legacy_plan
         best_score = legacy_score
@@ -174,6 +175,7 @@ def _replan_day_buckets_beam(
                 arc_profile=arc_profile,
                 hero_asset_ids=hero_ids or None,
                 subject_run_tolerance=subject_run_tolerance,
+                featured_beam=True,
             )
             if bd.total > best_score.total + 1e-6:
                 best_plan = plan

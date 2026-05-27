@@ -5,9 +5,11 @@ from __future__ import annotations
 from datetime import date, datetime
 from pathlib import Path
 
-from travelogue.curation.asset_caption import resolve_caption
+from travelogue.curation.asset_caption import asset_caption, resolve_caption
 from travelogue.media.image_ops import classify_aspect, detect_orientation
 from travelogue.paths import (
+    BREATH_CSS,
+    BREATH_JS,
     COPY_DISPLAY_CSS,
     COPY_TOGGLE_JS,
     INLINE_EDIT_CSS,
@@ -17,6 +19,8 @@ from travelogue.paths import (
     LONGSHOT_BRIDGE_JS,
     LONGSHOT_JS,
     SCREENPLAY_CSS,
+    SCREENPLAY_HASH_JS,
+    SCREENPLAY_BOOKMARKS_JS,
     SCREENPLAY_JS,
     SHARE_JS,
 )
@@ -30,10 +34,14 @@ def _longshot_bundle_version(trip: dict) -> str:
     for path in (
         JOURNAL_CSS,
         JOURNAL_SCREENS_CSS,
+        BREATH_JS,
+        BREATH_CSS,
         LONGSHOT_JS,
         SHARE_JS,
         SCREENPLAY_JS,
         SCREENPLAY_CSS,
+        SCREENPLAY_HASH_JS,
+        SCREENPLAY_BOOKMARKS_JS,
         COPY_TOGGLE_JS,
         COPY_DISPLAY_CSS,
         LONGSHOT_BRIDGE_JS,
@@ -475,6 +483,11 @@ def build_layout_screen(
     meta_title: str,
     export_layout: str,
     eager: bool = False,
+    screen_index: int | None = None,
+    chapter_index: str | None = None,
+    folio_lite: bool = False,
+    is_plate: bool = False,
+    featured_asset_ids: frozenset[str] | None = None,
 ) -> dict:
     pattern_id = screen.get("patternId", "screen-landscape-1")
     grid_class = grid_class_for_pattern(pattern_id)
@@ -548,7 +561,11 @@ def build_layout_screen(
     if screen_style:
         screen_style += ";"
 
-    return {
+    featured_ids = featured_asset_ids or frozenset()
+    slot_aids = [sl.get("assetId", "") for sl in screen.get("slots") or []]
+    is_featured = any(aid in featured_ids for aid in slot_aids if aid)
+
+    out: dict = {
         "patternId": pattern_id,
         "gridClass": grid_class,
         "screenTone": tone,
@@ -556,7 +573,32 @@ def build_layout_screen(
         "layoutHint": layout_hint,
         "hasLayoutHint": bool(layout_hint),
         "slots": slots_out,
+        "isFeatured": is_featured,
     }
+    if screen_index is not None:
+        out["screenIndex"] = screen_index
+        out["hasScreenIndex"] = True
+    if chapter_index:
+        out["chapterIndex"] = chapter_index
+        out["hasChapterIndex"] = True
+    joined_aids = ",".join(aid for aid in slot_aids if aid)
+    if joined_aids:
+        out["assetIds"] = joined_aids
+        out["hasAssetIds"] = True
+    if folio_lite:
+        out["folioLite"] = True
+        if is_plate:
+            out["isPlate"] = True
+            out["patternId"] = "screen-plate"
+            first_aid = slot_aids[0] if slot_aids else ""
+            if first_aid and first_aid in assets:
+                cap = asset_caption(assets[first_aid])
+                if cap:
+                    out["plateCaption"] = cap
+                    out["hasPlateCaption"] = True
+        if screen_index is not None:
+            out["folioPageLabel"] = f"Plate · {screen_index:02d}"
+    return out
 
 
 def chapter_divider(ch: dict, index: int) -> dict:
@@ -581,6 +623,129 @@ def chapter_divider(ch: dict, index: int) -> dict:
     return divider
 
 
+def _trip_index_desc(lead: str, *, max_len: int = 48) -> str:
+    text = lead.strip()
+    if len(text) <= max_len:
+        return text
+    return text[: max_len - 1].rstrip() + "…"
+
+
+def build_trip_index_entries(chapters: list[dict]) -> list[dict]:
+    entries: list[dict] = []
+    for ch in chapters:
+        idx = ch.get("index", len(entries) + 1)
+        lead = str(ch.get("lead") or "")
+        desc = _trip_index_desc(lead)
+        entries.append(
+            {
+                "id": ch.get("id", f"ch-{idx:02d}"),
+                "index": f"{int(idx):02d}",
+                "title": ch.get("title", ""),
+                "desc": desc,
+                "hasDesc": bool(desc),
+            }
+        )
+    return entries
+
+
+def build_featured_grid_cards(
+    asset_ids: list[str],
+    assets: dict[str, dict],
+    *,
+    meta_title: str,
+    export_layout: str,
+) -> list[dict]:
+    cards: list[dict] = []
+    for aid in asset_ids:
+        asset = assets.get(aid)
+        if not asset:
+            continue
+        srcset = compile_srcset(asset, mobile=export_layout == "mobile")
+        cards.append(
+            {
+                "assetId": aid,
+                "src": pick_image_src(asset, export_layout=export_layout),
+                "hasSrcset": bool(srcset),
+                "srcset": srcset,
+                "sizes": pick_image_sizes(export_layout, "row_third"),
+                "alt": alt_text(None, asset, meta_title),
+            }
+        )
+    return cards
+
+
+def _extract_pull_quote(text: str, *, max_len: int = 40) -> str:
+    text = text.strip()
+    if not text:
+        return ""
+    for sep in ("。", "！", "？", "，", ",", "；", ";", "·"):
+        if sep in text:
+            chunk = text.split(sep, 1)[0].strip()
+            if chunk:
+                text = chunk
+                break
+    if len(text) <= max_len:
+        return text
+    return text[: max_len - 1].rstrip() + "…"
+
+
+def build_foreword_spread(first_chapter: dict, *, trip_hook: str = "") -> dict | None:
+    lead = str(first_chapter.get("lead") or "").strip()
+    if not lead:
+        return None
+    title = str(first_chapter.get("title") or "").strip()
+    pull = _extract_pull_quote(lead)
+    if not pull or pull == lead:
+        pull = (trip_hook or "").strip()
+    return {
+        "chapterTitle": title,
+        "hasChapterTitle": bool(title),
+        "lead": lead,
+        "pullQuote": pull,
+        "hasPullQuote": bool(pull and pull != lead),
+    }
+
+
+def build_screen_spread(
+    chapter: dict,
+    screen: dict,
+    assets: dict[str, dict],
+    *,
+    meta_title: str,
+    export_layout: str,
+    trip_hook: str = "",
+) -> dict | None:
+    slots = screen.get("slots") or []
+    if not slots:
+        return None
+    aid = slots[0].get("assetId", "")
+    asset = assets.get(aid)
+    if not asset:
+        return None
+    lead = str(chapter.get("lead") or "").strip()
+    anchors = (chapter.get("curation") or {}).get("memoryAnchors") or []
+    body = lead
+    if not body and anchors:
+        body = " · ".join(str(a) for a in anchors[:3])
+    if not body:
+        return None
+    pull = _extract_pull_quote(body)
+    if not pull or pull == body:
+        hook = (trip_hook or "").strip()
+        pull = hook if hook and hook != body else ""
+    srcset = compile_srcset(asset, mobile=export_layout == "mobile")
+    return {
+        "src": pick_image_src(asset, export_layout=export_layout),
+        "hasSrcset": bool(srcset),
+        "srcset": srcset,
+        "sizes": pick_image_sizes(export_layout, "row_half"),
+        "alt": alt_text(None, asset, meta_title),
+        "body": body,
+        "pullQuote": pull,
+        "hasPullQuote": bool(pull),
+    }
+
+
 def build_render_context(
     trip: dict,
     *,
@@ -590,9 +755,11 @@ def build_render_context(
     export_layout_override: str | None = None,
     font_theme: str | None = None,
     copy_display_override: str | None = None,
+    index_name: str = "index.html",
+    reading_profile_override: str | None = None,
 ) -> dict:
     """export_mode: draft | share"""
-    from travelogue.render.copy_display import is_photos_only, resolve_copy_display
+    from travelogue.render.copy_display import is_photos_only, resolve_copy_display, should_strip_narrative_copy
 
     is_draft = export_mode == "draft"
     is_share = export_mode == "share"
@@ -608,11 +775,53 @@ def build_render_context(
     use_screens_global = screens_layout_active(trip, override=layout_engine_override)
     include_screenplay = should_include_screenplay(
         trip,
+        export_mode=export_mode,
         layout_engine_override=layout_engine_override,
         export_layout_override=export_layout_override,
     )
-    strip_narrative_copy = photos_only and not include_screenplay
+    strip_narrative_copy = should_strip_narrative_copy(
+        photos_only=photos_only,
+        include_screenplay=include_screenplay,
+        is_draft=is_draft,
+    )
     assets = asset_map(trip)
+
+    from travelogue.config import get_config
+    from travelogue.render.reading_profile import (
+        featured_asset_ids as collect_featured_ids,
+        reading_html_attrs,
+        reading_json_for_html,
+        resolve_reading_payload,
+    )
+
+    cfg = get_config()
+    reading_defaults = {
+        "draft_web_profile": cfg.render.reading.default_profile,
+        "share_zip_profile": cfg.render.reading.share_profile,
+        "mobile_profile": cfg.render.reading.mobile_profile,
+        "longshot_surface_profile": cfg.render.reading.longshot_surface_profile,
+    }
+    reading_payload = resolve_reading_payload(
+        trip,
+        export_mode=export_mode,
+        export_layout_override=export_layout_override,
+        index_name=index_name,
+        reading_profile_override=reading_profile_override,
+        config_defaults=reading_defaults,
+    )
+    scroll_reading = reading_payload.get("scroll") or {}
+    folio_mode = scroll_reading.get("folio", "off")
+    folio_lite = folio_mode in ("lite", "full")
+    folio_full = folio_mode == "full" and not is_longshot_surface
+    include_breath = scroll_reading.get("breath", "off") not in ("off", "")
+    include_breath_flow = scroll_reading.get("breath") == "flow"
+    include_breath_scrub = scroll_reading.get("breath") in ("cinematic", "gallery")
+    include_breath_gsap_runtime = (
+        include_breath_scrub and scroll_reading.get("breathEngine") == "gsap"
+    )
+    has_featured_assets = bool(reading_payload.get("featuredAssetIds"))
+    reading_json = reading_json_for_html(reading_payload)
+
     meta = trip.get("meta", {})
     meta_title = meta.get("title", "")
 
@@ -644,11 +853,35 @@ def build_render_context(
         1 for a in trip.get("assets", []) if a.get("layoutEligible", True)
     )
 
+    featured_ids = frozenset(collect_featured_ids(trip))
+    global_screen_index = 0
+
+    folio_plan: dict = {}
+    grid_exclude: frozenset[str] = frozenset()
+    if folio_full:
+        from travelogue.curation.folio_plan import resolve_folio_plan
+
+        layout_eligible = [a for a in trip.get("assets", []) if a.get("layoutEligible", True)]
+        folio_plan = resolve_folio_plan(trip, trip.get("chapters") or [], layout_eligible)
+        if folio_plan.get("featuredGrid"):
+            grid_exclude = frozenset(folio_plan.get("featuredGridAssetIds") or [])
+
+    foreword_spread: dict | None = None
+    has_foreword_spread = False
+    if folio_full and folio_plan.get("foreword"):
+        chapters_raw = trip.get("chapters") or []
+        if chapters_raw:
+            first_lead = (chapters_raw[0].get("lead") or "").strip()
+            if first_lead and not strip_narrative_copy:
+                foreword_spread = build_foreword_spread(chapters_raw[0], trip_hook=hook)
+                has_foreword_spread = foreword_spread is not None
+
     for i, ch in enumerate(trip.get("chapters", [])):
         idx = ch.get("index", i + 1)
         curation = ch.get("curation") or {}
         anchors = curation.get("memoryAnchors") or []
         use_screens = use_screens_global and bool(ch.get("screens")) and not is_longshot_surface
+        raw_screens_for_spread: list[dict] = []
         screens_out = []
         if use_screens_global and bool(ch.get("screens")) and not is_longshot_surface:
             raw_screens = enrich_screen_tones(
@@ -657,16 +890,47 @@ def build_render_context(
                 trip_root=trip_root,
                 chapter_index=idx,
             )
-            for j, sc in enumerate(raw_screens):
+            chapter_screen_seq = 0
+            for sc in raw_screens:
+                slots = sc.get("slots") or []
+                if grid_exclude:
+                    slots = [s for s in slots if s.get("assetId") not in grid_exclude]
+                    if not slots:
+                        continue
+                    if len(slots) != len(sc.get("slots") or []):
+                        sc = dict(sc)
+                        sc["slots"] = slots
+                raw_screens_for_spread.append(sc)
+                chapter_screen_seq += 1
+                global_screen_index += 1
                 screens_out.append(
                     build_layout_screen(
                         sc,
                         assets,
                         meta_title=meta_title,
                         export_layout=image_layout,
-                        eager=i == 0 and j == 0,
+                        eager=i == 0 and chapter_screen_seq == 1,
+                        screen_index=global_screen_index,
+                        chapter_index=f"{idx:02d}",
+                        folio_lite=folio_lite,
+                        is_plate=chapter_screen_seq == 1,
+                        featured_asset_ids=featured_ids,
                     )
                 )
+
+        screen_spread: dict | None = None
+        has_screen_spread = False
+        if folio_full and use_screens and raw_screens_for_spread:
+            spread_src = raw_screens_for_spread[-1]
+            screen_spread = build_screen_spread(
+                ch,
+                spread_src,
+                assets,
+                meta_title=meta_title,
+                export_layout=image_layout,
+                trip_hook=hook,
+            )
+            has_screen_spread = screen_spread is not None
 
         items_out = []
         chapter_items = resolve_chapter_items_for_render(
@@ -728,6 +992,8 @@ def build_render_context(
         lead = (ch.get("lead") or "").strip()
         if strip_narrative_copy:
             lead = ""
+        if i == 0 and has_foreword_spread:
+            lead = ""
         ch_ctx = {
             "id": ch["id"],
             "patternId": ch.get("patternId", ""),
@@ -741,10 +1007,28 @@ def build_render_context(
             "memoryAnchors": ",".join(anchors) if anchors else None,
             "useScreensEngine": use_screens,
             "screens": screens_out,
+            "hasScreenSpread": has_screen_spread,
+            "screenSpread": screen_spread or {},
             "items": items_out,
             **chapter_divider(ch, idx),
         }
         chapters_out.append(ch_ctx)
+
+    trip_index_entries: list[dict] = []
+    featured_grid_cards: list[dict] = []
+    has_trip_index = False
+    has_featured_grid = False
+    if folio_full and folio_plan.get("index"):
+        trip_index_entries = build_trip_index_entries(trip.get("chapters") or [])
+        has_trip_index = bool(trip_index_entries)
+    if folio_full and folio_plan.get("featuredGrid"):
+        featured_grid_cards = build_featured_grid_cards(
+            list(folio_plan.get("featuredGridAssetIds") or []),
+            assets,
+            meta_title=meta_title,
+            export_layout=image_layout,
+        )
+        has_featured_grid = len(featured_grid_cards) >= 4
 
     from travelogue.render.engine import should_include_long_shot, should_include_longshot_bridge, LONGSHOT_INDEX_NAME
 
@@ -772,7 +1056,7 @@ def build_render_context(
         html_attrs.append(f'data-longshot-mobile-url="{LONGSHOT_INDEX_NAME}"')
     if include_screenplay:
         html_attrs.append('data-screenplay="on"')
-    if include_screenplay or include_long_shot:
+    if include_screenplay or include_long_shot or include_longshot_bridge:
         html_attrs.append('data-copy-toggle="on"')
     if is_draft:
         html_attrs.append('data-inline-edit="on"')
@@ -781,6 +1065,8 @@ def build_render_context(
     theme = font_theme or (trip.get("export") or {}).get("fontTheme") or ""
     if theme == "magazine":
         html_attrs.append('data-font-theme="magazine"')
+
+    html_attrs.extend(reading_html_attrs(reading_payload))
 
     asset_version = _longshot_bundle_version(trip)
     zip_name = share_zip_filename(trip)
@@ -825,6 +1111,21 @@ def build_render_context(
         "tripId": trip.get("tripId") or "",
         "chapters": chapters_out,
         "tripRoot": str(trip_root) if trip_root else None,
+        "readingJson": reading_json,
+        "includeBreath": include_breath,
+        "includeBreathFlow": include_breath_flow,
+        "includeBreathScrub": include_breath_scrub,
+        "includeBreathGsapRuntime": include_breath_gsap_runtime,
+        "hasFeaturedAssets": has_featured_assets,
+        "folioLite": folio_lite,
+        "folioFull": folio_full,
+        "hasTripIndex": has_trip_index,
+        "tripIndex": {"entries": trip_index_entries},
+        "hasFeaturedGrid": has_featured_grid,
+        "featuredGrid": {"cards": featured_grid_cards},
+        "hasForewordSpread": has_foreword_spread,
+        "forewordSpread": foreword_spread or {},
+        "useEpilogueScreen": folio_lite and bool(epilogue),
     }
 
 

@@ -29,6 +29,7 @@ jobs:
           python scripts/validate_trip.py schemas/fixtures/trip.structure_locked.json --level all
           python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level all
           python scripts/validate_trip.py schemas/fixtures/trip.render_golden.json --level all
+          python scripts/validate_trip.py schemas/fixtures/trip.linzhi_screens.json --level all
 
       - name: Demo verify (fixtures + DOM)
         run: |

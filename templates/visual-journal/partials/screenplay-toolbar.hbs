@@ -1,11 +1,22 @@
 <div class="screenplay-toolbar" data-block="screenplay-toolbar" role="complementary" aria-label="浏览工具">
   <div class="screenplay-toolbar__fab-row">
+    {{#if includeScreenplay}}
     <button type="button" id="screenplay-start" class="screenplay-toolbar__btn"
       aria-pressed="false"
-      data-screenplay-label="自动播放"
-      data-screenplay-busy="退出播放">
-      自动播放
+      data-screenplay-label="放映"
+      data-screenplay-busy="退出放映">
+      放映
     </button>
+    {{#if hasFeaturedAssets}}
+    <button type="button" id="featured-present-toggle" class="screenplay-toolbar__btn screenplay-toolbar__btn--secondary"
+      aria-pressed="false"
+      data-label-on="精选放映"
+      data-label-off="全部放映"
+      title="仅放映 userTier: featured 的屏（保持原顺序）">
+      精选放映
+    </button>
+    {{/if}}
+    {{/if}}
     <button type="button" id="photos-only-toggle" class="screenplay-toolbar__btn screenplay-toolbar__btn--secondary"
       aria-pressed="false"
       data-label-on="纯照片"
@@ -26,8 +37,9 @@
     </button>
     {{/if}}
   </div>
-  <p class="screenplay-toolbar__hint">全屏 · 逐屏 · 文案可切换{{#if isDraft}} · 点击文案可编辑{{/if}}{{#if includeLongshotBridge}} · 长图可选 2×/3×{{/if}}</p>
+  <p class="screenplay-toolbar__hint">{{#if includeScreenplay}}全屏 · 逐屏 · {{/if}}文案可切换{{#if isDraft}} · 点击文案可编辑{{/if}}{{#if includeLongshotBridge}} · 长图可选 2×/3×{{/if}}</p>
 </div>
+{{#if includeScreenplay}}
 <div id="screenplay-root" class="screenplay-root" hidden aria-hidden="true">
   <div class="screenplay-stage">
     <div class="screenplay-slide" data-screenplay-layer="a"></div>
@@ -43,3 +55,4 @@
     </button>
   </div>
 </div>
+{{/if}}

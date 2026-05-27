@@ -7,6 +7,9 @@ import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from pathlib import Path
+from typing import Any
+
+from PIL import Image
 
 from travelogue.config import IngestConfig, get_config
 from travelogue.curation.asset_quality import apply_layout_eligibility_marks, asset_sharpness
@@ -30,6 +33,38 @@ class IngestError(Exception):
     def __init__(self, code: str, message: str) -> None:
         self.code = code
         super().__init__(f"{code}: {message}")
+
+
+@dataclass
+class IngestAssetBuildContext:
+    """Shared ingest pipeline state for building one asset entry."""
+
+    cfg: IngestConfig
+    assets_dir: Path
+    source_dir: Path
+    trip_dir: Path
+    ingest_stats: dict
+    batch: str
+    generate_crops: bool
+    max_tags: int
+    geocode_enabled: bool
+    dual_ingest: bool = False
+
+
+@dataclass
+class IngestPhotoPayload:
+    """Per-photo inputs for ``_build_asset_entry``."""
+
+    asset_id: str
+    photo: Path
+    loaded: Any
+    img: Image.Image
+    dhash: str
+    sharpness: float
+    burst_group_id: str | None = None
+    content_sig: str | None = None
+    user_tier: str = "material"
+    import_source: str | None = None
 
 
 @dataclass
@@ -67,6 +102,7 @@ def _load_photo(path: Path):
 
 
 def _file_signature(path: Path) -> str:
+    """Content fingerprint for dedupe (size + MD5). Not for security/crypto use."""
     st = path.stat()
     digest = hashlib.md5()
     with path.open("rb") as f:
@@ -220,93 +256,77 @@ def _resolve_place_city(
     return geo_obj, place
 
 
-def _build_asset_entry(
-    *,
-    asset_id: str,
-    photo: Path,
-    loaded,
-    img: Image.Image,
-    batch: str,
-    dhash: str,
-    cfg: IngestConfig,
-    assets_dir: Path,
-    source_dir: Path,
-    generate_crops: bool,
-    burst_group_id: str | None,
-    sharpness: float,
-    max_tags: int,
-    geocode_enabled: bool,
-    trip_dir: Path,
-    ingest_stats: dict,
-    content_sig: str | None = None,
-) -> dict:
+def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) -> dict:
     from travelogue.media.color_metrics import dominant_tone_hex, mean_luma
     from travelogue.curation.media_classify import classify_media_class, date_confidence_for_source
     from travelogue.media.subject_detect import analyze_subject
 
-    aspect_kind = classify_aspect(img.width, img.height)
+    cfg = ctx.cfg
+    aspect_kind = classify_aspect(photo.img.width, photo.img.height)
     focal = (0.5, 0.45)
-    subj = analyze_subject(img, min_face_size=cfg.face_min_size_px, enabled=cfg.detect_faces)
+    subj = analyze_subject(photo.img, min_face_size=cfg.face_min_size_px, enabled=cfg.detect_faces)
     if subj.has_face:
         focal = subj.focal
-        ingest_stats["faces_detected"] = ingest_stats.get("faces_detected", 0) + 1
+        ctx.ingest_stats["faces_detected"] = ctx.ingest_stats.get("faces_detected", 0) + 1
 
-    dest_source = source_dir / f"{asset_id}.jpg"
-    if photo.resolve() != dest_source.resolve() or not dest_source.is_file():
-        save_jpeg_without_exif(img, dest_source)
+    dest_source = ctx.source_dir / f"{photo.asset_id}.jpg"
+    if photo.photo.resolve() != dest_source.resolve() or not dest_source.is_file():
+        save_jpeg_without_exif(photo.img, dest_source)
 
     display_rel, srcset_rel, out_w, out_h, crop_m, crop_w = export_webp_variants(
-        img,
-        assets_dir,
-        asset_id,
+        photo.img,
+        ctx.assets_dir,
+        photo.asset_id,
         widths=cfg.webp_widths,
         quality=cfg.webp_quality,
-        generate_crops=generate_crops,
+        generate_crops=ctx.generate_crops,
         focal=focal,
     )
 
-    geo_obj, place = _resolve_place_city(loaded, trip_dir=trip_dir, geocode_enabled=geocode_enabled)
+    geo_obj, place = _resolve_place_city(
+        photo.loaded, trip_dir=ctx.trip_dir, geocode_enabled=ctx.geocode_enabled
+    )
     if geo_obj:
-        ingest_stats["gps_assets"] = ingest_stats.get("gps_assets", 0) + 1
+        ctx.ingest_stats["gps_assets"] = ctx.ingest_stats.get("gps_assets", 0) + 1
 
     tags = build_heuristic_tags(
-        taken_at=loaded.taken_at,
+        taken_at=photo.loaded.taken_at,
         aspect_kind=aspect_kind,
         subject_tags=subj.tags,
         place_city=(place or {}).get("city") if place else None,
-        max_tags=max_tags,
+        max_tags=ctx.max_tags,
     )
 
     entry: dict = {
-        "id": asset_id,
+        "id": photo.asset_id,
         "type": "image",
         "sourceFile": f"source/{dest_source.name}",
         "displayFile": display_rel,
         "srcset": srcset_rel,
-        "nativeWidth": img.width,
-        "nativeHeight": img.height,
+        "nativeWidth": photo.img.width,
+        "nativeHeight": photo.img.height,
         "width": out_w,
         "height": out_h,
         "aspectKind": aspect_kind,
-        "takenAt": loaded.taken_at.replace(tzinfo=None).isoformat() + "Z",
-        "dateSource": loaded.date_source,
-        "dateConfidence": date_confidence_for_source(loaded.date_source),
-        "ingestBatchId": batch,
-        "dedupeGroupId": f"dhash:{dhash}",
+        "takenAt": photo.loaded.taken_at.replace(tzinfo=None).isoformat() + "Z",
+        "dateSource": photo.loaded.date_source,
+        "dateConfidence": date_confidence_for_source(photo.loaded.date_source),
+        "ingestBatchId": ctx.batch,
+        "dedupeGroupId": f"dhash:{photo.dhash}",
         "focalPoint": {"x": focal[0], "y": focal[1]},
         "quality": {
-            "sharpness": round(sharpness, 2),
-            "meanLuma": round(mean_luma(img), 4),
+            "sharpness": round(photo.sharpness, 2),
+            "meanLuma": round(mean_luma(photo.img), 4),
         },
-        "dominantTone": dominant_tone_hex(img),
+        "dominantTone": dominant_tone_hex(photo.img),
         "layoutEligible": True,
     }
-    if content_sig:
-        entry["contentSig"] = content_sig
+    if photo.content_sig:
+        entry["contentSig"] = photo.content_sig
     entry["mediaClass"] = classify_media_class(
-        path=photo,
-        img=img,
-        date_source=loaded.date_source,
+        path=photo.photo,
+        img=photo.img,
+        date_source=photo.loaded.date_source,
         asset=entry,
     )
     if tags:
@@ -320,10 +340,18 @@ def _build_asset_entry(
         entry["geo"] = geo_obj
     if place:
         entry["place"] = place
-    if burst_group_id:
-        entry["burstGroupId"] = burst_group_id
+    if photo.burst_group_id:
+        entry["burstGroupId"] = photo.burst_group_id
     if subj.salient_box:
         entry["salientBox"] = subj.salient_box
+    from travelogue.media.user_tier import apply_user_tier_fields
+
+    apply_user_tier_fields(
+        entry,
+        tier=photo.user_tier,
+        dual_ingest=ctx.dual_ingest,
+        import_source=photo.import_source,
+    )
     return entry
 
 
@@ -351,6 +379,8 @@ def ingest_into_trip(
     dedupe: bool = True,
     incremental: bool = False,
     cfg: IngestConfig | None = None,
+    featured_dir: Path | None = None,
+    material_dir: Path | None = None,
 ) -> IngestResult:
     """
     Import images into trip_dir/source + assets; append trip.assets[].
@@ -371,21 +401,61 @@ def ingest_into_trip(
     assets_dir.mkdir(parents=True, exist_ok=True)
 
     scan_root = from_dir or source_dir
-    if from_dir:
-        photos, scan_stats = scan_image_paths(
-            from_dir, max_photos=max_photos, recursive=recursive, min_edge_px=cfg.min_edge_px
+    from travelogue.media.user_tier import (
+        resolve_dual_folders,
+        scan_tiered_image_paths,
+        upgrade_asset_tier,
+        count_user_tiers,
+    )
+
+    feat_dir, mat_dir, tier_mode = resolve_dual_folders(
+        scan_root,
+        cfg,
+        featured_dir=featured_dir,
+        material_dir=material_dir,
+    )
+    if tier_mode == "single" and from_dir:
+        photo_tiers, scan_stats = scan_tiered_image_paths(
+            featured_dir=None,
+            material_dir=None,
+            single_dir=from_dir,
+            max_photos=max_photos,
+            recursive=recursive,
+            min_edge_px=cfg.min_edge_px,
+        )
+    elif from_dir and tier_mode in ("auto", "explicit"):
+        photo_tiers, scan_stats = scan_tiered_image_paths(
+            featured_dir=feat_dir,
+            material_dir=mat_dir,
+            single_dir=None,
+            max_photos=max_photos,
+            recursive=recursive,
+            min_edge_px=cfg.min_edge_px,
+        )
+        scan_stats["tier_mode"] = tier_mode
+    elif from_dir:
+        photo_tiers, scan_stats = scan_tiered_image_paths(
+            featured_dir=None,
+            material_dir=None,
+            single_dir=from_dir,
+            max_photos=max_photos,
+            recursive=recursive,
+            min_edge_px=cfg.min_edge_px,
         )
     else:
         photos, scan_stats = scan_image_paths(
             scan_root, max_photos=max_photos, recursive=recursive, min_edge_px=cfg.min_edge_px
         )
+        photo_tiers = [(p, "material") for p in photos]
+        scan_stats.setdefault("mode", "single")
 
+    dual_ingest = scan_stats.get("mode") == "dual"
     pipe = trip.setdefault("pipeline", {})
     if incremental:
         pending = set(pipe.get("pendingAssets") or [])
         if pending:
             assets_by_id = {a["id"]: a for a in trip.get("assets") or []}
-            photos = []
+            photo_tiers = []
             for aid in sorted(pending):
                 a = assets_by_id.get(aid)
                 if not a:
@@ -393,7 +463,8 @@ def ingest_into_trip(
                 src_name = Path(a.get("sourceFile", "")).name
                 p = source_dir / src_name
                 if p.is_file():
-                    photos.append(p)
+                    tier = a.get("userTier") or "material"
+                    photo_tiers.append((p, tier))
 
     batch = batch_id or f"batch-{datetime.now().strftime('%Y%m%d-%H%M')}"
     known_md5 = _existing_md5_sigs(trip) if dedupe else set()
@@ -417,9 +488,24 @@ def ingest_into_trip(
     burst_counter = 0
     current_burst_group: str | None = None
 
-    for photo in photos:
+    build_ctx = IngestAssetBuildContext(
+        cfg=cfg,
+        assets_dir=assets_dir,
+        source_dir=source_dir,
+        trip_dir=trip_dir,
+        ingest_stats=ingest_stats,
+        batch=batch,
+        generate_crops=generate_crops,
+        max_tags=max_tags,
+        geocode_enabled=geocode_enabled,
+        dual_ingest=dual_ingest,
+    )
+
+    for photo, user_tier in photo_tiers:
         sig = _file_signature(photo)
         if dedupe and sig in known_md5:
+            if upgrade_asset_tier(assets, sig, tier=user_tier):
+                ingest_stats["tier_upgraded"] = ingest_stats.get("tier_upgraded", 0) + 1
             ingest_stats["deduped"] += 1
             skipped += 1
             continue
@@ -487,25 +573,37 @@ def ingest_into_trip(
             current_burst_group = f"burst-{burst_counter:03d}"
         last_kept_ts = ts
 
+        replace_import_source = None
+        replace_tier_source = None
+        tier_for_entry = user_tier
+        if replace_index is not None:
+            old_asset = assets[replace_index]
+            replace_import_source = old_asset.get("importSource")
+            from travelogue.media.user_tier import (
+                preserve_user_tier_on_replace,
+                preserve_user_tier_source_on_replace,
+            )
+
+            tier_for_entry = preserve_user_tier_on_replace(old_asset, user_tier)
+            replace_tier_source = preserve_user_tier_source_on_replace(old_asset, tier_for_entry)
+
         entry = _build_asset_entry(
-            asset_id=asset_id,
-            photo=photo,
-            loaded=loaded,
-            img=img,
-            batch=batch,
-            dhash=dhash,
-            cfg=cfg,
-            assets_dir=assets_dir,
-            source_dir=source_dir,
-            generate_crops=generate_crops,
-            burst_group_id=current_burst_group,
-            sharpness=sharp,
-            max_tags=max_tags,
-            geocode_enabled=geocode_enabled,
-            trip_dir=trip_dir,
-            ingest_stats=ingest_stats,
-            content_sig=sig,
+            build_ctx,
+            IngestPhotoPayload(
+                asset_id=asset_id,
+                photo=photo,
+                loaded=loaded,
+                img=img,
+                dhash=dhash,
+                sharpness=sharp,
+                burst_group_id=current_burst_group,
+                content_sig=sig,
+                user_tier=tier_for_entry,
+                import_source=replace_import_source,
+            ),
         )
+        if replace_tier_source:
+            entry["userTierSource"] = replace_tier_source
 
         _upsert_asset(
             assets=assets,
@@ -555,6 +653,12 @@ def ingest_into_trip(
         ingest_stats.setdefault("journey_hints", []).append(journey_hint)
 
     ingest_stats["mediaClassSummary"] = summarize_media_classes(assets)
+    ingest_stats["userTierSummary"] = count_user_tiers(assets)
+    featured_n = ingest_stats["userTierSummary"].get("featured", 0)
+    if featured_n > cfg.warn_featured_count_above:
+        ingest_stats.setdefault("tier_warnings", []).append(
+            f"精选照片 {featured_n} 张，超过建议上限 {cfg.warn_featured_count_above}（仍已导入）"
+        )
 
     low_res_warn = apply_layout_eligibility_marks(trip, assets, cfg=cfg)
     excluded = (trip.get("curation") or {}).get("excludedLowResAssetIds") or []

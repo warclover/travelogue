@@ -8,6 +8,10 @@ from pathlib import Path
 from pybars import Compiler
 
 from travelogue.paths import (
+    BREATH_CSS,
+    BREATH_JS,
+    BREATH_LENIS_JS,
+    BREATH_GSAP_JS,
     COPY_DISPLAY_CSS,
     COPY_TOGGLE_JS,
     HTML2CANVAS_VENDOR,
@@ -18,7 +22,9 @@ from travelogue.paths import (
     LONGSHOT_CSS,
     LONGSHOT_JS,
     LONGSHOT_BRIDGE_JS,
+    SCREENPLAY_BOOKMARKS_JS,
     SCREENPLAY_CSS,
+    SCREENPLAY_HASH_JS,
     SCREENPLAY_JS,
     SHARE_JS,
     TEMPLATE_VISUAL_JOURNAL,
@@ -65,13 +71,13 @@ def should_include_long_shot(
     return bool(flag)
 
 
-def should_include_screenplay(
+def web_screens_surface_active(
     trip: dict,
     *,
     layout_engine_override: str | None = None,
     export_layout_override: str | None = None,
 ) -> bool:
-    """Web screens slideshow: auto-play layout-screen blocks in fullscreen."""
+    """Web index with chapter screens[] (present / longshot-bridge eligibility)."""
     from travelogue.curation.screen_planner import screens_layout_active
 
     if not screens_layout_active(trip, override=layout_engine_override):
@@ -83,6 +89,25 @@ def should_include_screenplay(
 
     chapters = trip.get("chapters") or []
     return any(ch.get("screens") for ch in chapters)
+
+
+def should_include_screenplay(
+    trip: dict,
+    *,
+    export_mode: str = "draft",
+    layout_engine_override: str | None = None,
+    export_layout_override: str | None = None,
+) -> bool:
+    """Web screens slideshow: auto-play layout-screen blocks in fullscreen."""
+    # AC-EXP-09 / experience-matrix inline_edit: draft preview disables present.
+    if export_mode == "draft":
+        return False
+
+    return web_screens_surface_active(
+        trip,
+        layout_engine_override=layout_engine_override,
+        export_layout_override=export_layout_override,
+    )
 
 
 def copy_longshot_bundle(out_dir: Path) -> None:
@@ -116,7 +141,7 @@ def should_include_longshot_bridge(
     export_layout_override: str | None = None,
 ) -> bool:
     """Web screens page: jump to index-longshot.html for save-longshot (P0 path A)."""
-    return should_include_screenplay(
+    return web_screens_surface_active(
         trip,
         layout_engine_override=layout_engine_override,
         export_layout_override=export_layout_override,
@@ -125,6 +150,113 @@ def should_include_longshot_bridge(
         layout_engine_override=layout_engine_override,
         export_layout_override=export_layout_override,
     )
+
+
+def _reading_payload_for_breath(
+    trip: dict,
+    *,
+    export_mode: str = "draft",
+    export_layout_override: str | None = None,
+    index_name: str = "index.html",
+    reading_profile_override: str | None = None,
+) -> dict:
+    from travelogue.config import get_config
+    from travelogue.render.reading_profile import resolve_reading_payload
+
+    cfg = get_config()
+    return resolve_reading_payload(
+        trip,
+        export_mode=export_mode,
+        export_layout_override=export_layout_override,
+        index_name=index_name,
+        reading_profile_override=reading_profile_override,
+        config_defaults={
+            "draft_web_profile": cfg.render.reading.default_profile,
+            "share_zip_profile": cfg.render.reading.share_profile,
+            "mobile_profile": cfg.render.reading.mobile_profile,
+            "longshot_surface_profile": cfg.render.reading.longshot_surface_profile,
+        },
+    )
+
+
+def should_include_breath(
+    trip: dict,
+    *,
+    export_mode: str = "draft",
+    layout_engine_override: str | None = None,
+    export_layout_override: str | None = None,
+    index_name: str = "index.html",
+    reading_profile_override: str | None = None,
+) -> bool:
+    payload = _reading_payload_for_breath(
+        trip,
+        export_mode=export_mode,
+        export_layout_override=export_layout_override,
+        index_name=index_name,
+        reading_profile_override=reading_profile_override,
+    )
+    breath = (payload.get("scroll") or {}).get("breath", "off")
+    return breath not in ("off", "", None)
+
+
+def should_include_breath_flow(
+    trip: dict,
+    *,
+    export_mode: str = "draft",
+    layout_engine_override: str | None = None,
+    export_layout_override: str | None = None,
+    index_name: str = "index.html",
+    reading_profile_override: str | None = None,
+) -> bool:
+    payload = _reading_payload_for_breath(
+        trip,
+        export_mode=export_mode,
+        export_layout_override=export_layout_override,
+        index_name=index_name,
+        reading_profile_override=reading_profile_override,
+    )
+    return (payload.get("scroll") or {}).get("breath") == "flow"
+
+
+def should_include_breath_scrub(
+    trip: dict,
+    *,
+    export_mode: str = "draft",
+    layout_engine_override: str | None = None,
+    export_layout_override: str | None = None,
+    index_name: str = "index.html",
+    reading_profile_override: str | None = None,
+) -> bool:
+    payload = _reading_payload_for_breath(
+        trip,
+        export_mode=export_mode,
+        export_layout_override=export_layout_override,
+        index_name=index_name,
+        reading_profile_override=reading_profile_override,
+    )
+    return (payload.get("scroll") or {}).get("breath") in ("cinematic", "gallery")
+
+
+def copy_breath_bundle(out_dir: Path, *, include_flow: bool = False, include_scrub: bool = False) -> None:
+    out_dir = out_dir.resolve()
+    for src, name in ((BREATH_JS, "breath.js"), (BREATH_CSS, "breath.css")):
+        if not src.is_file():
+            raise RenderError("E_RENDER_BREATH", f"missing {src.name}")
+        dest = out_dir / name
+        if dest.resolve() != src.resolve():
+            shutil.copy2(src, dest)
+    if include_flow:
+        if not BREATH_LENIS_JS.is_file():
+            raise RenderError("E_RENDER_BREATH", "missing breath-lenis.js")
+        dest = out_dir / "breath-lenis.js"
+        if dest.resolve() != BREATH_LENIS_JS.resolve():
+            shutil.copy2(BREATH_LENIS_JS, dest)
+    if include_scrub:
+        if not BREATH_GSAP_JS.is_file():
+            raise RenderError("E_RENDER_BREATH", "missing breath-gsap.js")
+        dest = out_dir / "breath-gsap.js"
+        if dest.resolve() != BREATH_GSAP_JS.resolve():
+            shutil.copy2(BREATH_GSAP_JS, dest)
 
 
 def write_longshot_sidecar(
@@ -148,6 +280,7 @@ def write_longshot_sidecar(
         export_layout_override=EXPORT_LAYOUT_LONGSHOT,
         font_theme=font_theme,
         copy_display_override=copy_display_override,
+        index_name=LONGSHOT_INDEX_NAME,
     )
     dest = out_dir / LONGSHOT_INDEX_NAME
     dest.write_text(html, encoding="utf-8", newline="\n")
@@ -159,7 +292,25 @@ def copy_screenplay_bundle(out_dir: Path) -> None:
     """Copy screenplay, copy-toggle, copy-display, and longshot-bridge assets."""
     out_dir = out_dir.resolve()
     for src, name in (
+        (SCREENPLAY_HASH_JS, "screenplay-hash.js"),
+        (SCREENPLAY_BOOKMARKS_JS, "screenplay-bookmarks.js"),
         (SCREENPLAY_JS, "screenplay.js"),
+        (SCREENPLAY_CSS, "screenplay.css"),
+        (COPY_TOGGLE_JS, "copy-toggle.js"),
+        (COPY_DISPLAY_CSS, "copy-display.css"),
+        (LONGSHOT_BRIDGE_JS, "longshot-bridge.js"),
+    ):
+        if not src.is_file():
+            raise RenderError("E_RENDER_SCREENPLAY", f"missing {src.name}")
+        dest = out_dir / name
+        if dest.resolve() != src.resolve():
+            shutil.copy2(src, dest)
+
+
+def copy_longshot_bridge_bundle(out_dir: Path) -> None:
+    """Draft web toolbar: longshot bridge + copy toggles without present bundle."""
+    out_dir = out_dir.resolve()
+    for src, name in (
         (SCREENPLAY_CSS, "screenplay.css"),
         (COPY_TOGGLE_JS, "copy-toggle.js"),
         (COPY_DISPLAY_CSS, "copy-display.css"),
@@ -212,6 +363,8 @@ def render_html(
     export_layout_override: str | None = None,
     font_theme: str | None = None,
     copy_display_override: str | None = None,
+    index_name: str = "index.html",
+    reading_profile_override: str | None = None,
 ) -> str:
     if template_id != "visual-journal":
         raise RenderError("E_RENDER_TEMPLATE", f"unsupported templateId: {template_id}")
@@ -229,6 +382,8 @@ def render_html(
         export_layout_override=export_layout_override,
         font_theme=font_theme,
         copy_display_override=copy_display_override,
+        index_name=index_name,
+        reading_profile_override=reading_profile_override,
     )
     return template(ctx, partials=partials)
 
@@ -248,6 +403,7 @@ def render_trip(
     include_longshot: bool | None = None,
     font_theme: str | None = None,
     copy_display_override: str | None = None,
+    reading_profile_override: str | None = None,
 ) -> Path:
     trip_path = trip_path.resolve()
     trip_root = trip_path.parent
@@ -275,6 +431,8 @@ def render_trip(
         export_layout_override=export_layout_override,
         font_theme=font_theme,
         copy_display_override=copy_display_override,
+        index_name=index_name,
+        reading_profile_override=reading_profile_override,
     )
 
     if write_index:
@@ -300,10 +458,45 @@ def render_trip(
 
     if should_include_screenplay(
         trip,
+        export_mode=export_mode,
         layout_engine_override=layout_engine,
         export_layout_override=export_layout_override,
     ):
         copy_screenplay_bundle(out_dir)
+    elif should_include_longshot_bridge(
+        trip,
+        layout_engine_override=layout_engine,
+        export_layout_override=export_layout_override,
+    ):
+        copy_longshot_bridge_bundle(out_dir)
+
+    if should_include_breath(
+        trip,
+        export_mode=export_mode,
+        layout_engine_override=layout_engine,
+        export_layout_override=export_layout_override,
+        index_name=index_name,
+        reading_profile_override=reading_profile_override,
+    ):
+        copy_breath_bundle(
+            out_dir,
+            include_flow=should_include_breath_flow(
+                trip,
+                export_mode=export_mode,
+                layout_engine_override=layout_engine,
+                export_layout_override=export_layout_override,
+                index_name=index_name,
+                reading_profile_override=reading_profile_override,
+            ),
+            include_scrub=should_include_breath_scrub(
+                trip,
+                export_mode=export_mode,
+                layout_engine_override=layout_engine,
+                export_layout_override=export_layout_override,
+                index_name=index_name,
+                reading_profile_override=reading_profile_override,
+            ),
+        )
 
     if (
         write_index
@@ -348,6 +541,7 @@ def render_trip_surfaces(
     update_pipeline: bool = False,
     font_theme: str | None = None,
     copy_display_override: str | None = None,
+    reading_profile_override: str | None = None,
 ) -> tuple[Path, Path]:
     """Write index.html (web + screens) and index-mobile.html (mobile + legacy) from one trip.json."""
     from travelogue.curation.screen_planner import LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS
@@ -369,6 +563,7 @@ def render_trip_surfaces(
         include_longshot=False,
         font_theme=font_theme,
         copy_display_override=copy_display_override,
+        reading_profile_override=reading_profile_override,
     ) / "index.html"
     mobile_index = render_trip(
         trip_path,
@@ -382,5 +577,6 @@ def render_trip_surfaces(
         update_pipeline=update_pipeline,
         font_theme=font_theme,
         copy_display_override=copy_display_override,
+        reading_profile_override=reading_profile_override,
     ) / "index-mobile.html"
     return web_index, mobile_index

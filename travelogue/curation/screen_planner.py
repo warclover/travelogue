@@ -42,6 +42,7 @@ LAYOUT_ENGINE_SCREENS: LayoutEngine = "screens"
 LAYOUT_ENGINE_VERSION_SCREENS = "screens-2"
 MAX_SLOTS_PER_SCREEN = 9
 MIN_TRIP_PHOTOS_FOR_MOSAIC = 35
+DEFAULT_FEATURED_WEIGHT = 1.35
 
 PATTERN_PORTRAIT_1_LANDSCAPE_2 = "screen-portrait-1-landscape-2"
 PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND = "screen-mosaic-5-main-portrait-3land"
@@ -74,6 +75,8 @@ PATTERN_GRID_CLASS: dict[str, str] = {
     "screen-square-9": "layout-screen__grid--3x3",
     "screen-panorama-1": "layout-screen__grid--1col",
     "screen-tall-1": "layout-screen__grid--1col",
+    "screen-plate": "layout-screen__grid--1col",
+    "screen-spread": "layout-screen__grid--1col",
 }
 
 # Multi-column grids in 16:9 create portrait-shaped slots — only for portrait family.
@@ -112,7 +115,7 @@ def _fits_for_screen(
         return list(fits_override)
     assets_map = assets_map or {}
     n = len(asset_ids)
-    if pattern_id == "screen-panorama-1":
+    if pattern_id in ("screen-panorama-1", "screen-plate"):
         return ["cover"] * n
     if pattern_id in ("screen-tall-1", "screen-square-1"):
         return ["contain"] * n
@@ -221,8 +224,9 @@ def _pick_main_landscape_id(
     assets_map: dict[str, dict],
     *,
     median_sharp: float | None = None,
+    featured_weight: float = DEFAULT_FEATURED_WEIGHT,
 ) -> str:
-    from travelogue.curation.curate_scoring import hero_score, median_sharpness
+    from travelogue.curation.curate_scoring import effective_hero_score, median_sharpness
 
     med = (
         median_sharp
@@ -231,7 +235,9 @@ def _pick_main_landscape_id(
     )
     return max(
         landscape_ids,
-        key=lambda aid: hero_score(assets_map.get(aid) or {}, median_sharp=med),
+        key=lambda aid: effective_hero_score(
+            assets_map.get(aid) or {}, median_sharp=med, featured_weight=featured_weight
+        ),
     )
 
 
@@ -808,9 +814,10 @@ def _pick_chapter_hero(
     *,
     preferred_id: str | None = None,
     median_sharp: float | None = None,
+    featured_weight: float = DEFAULT_FEATURED_WEIGHT,
 ) -> tuple[str, str] | None:
     """Best landscape/panorama for opening 16:9 hero screen (web editorial rhythm)."""
-    from travelogue.curation.curate_scoring import hero_score, median_sharpness
+    from travelogue.curation.curate_scoring import effective_hero_score, median_sharpness
 
     med = (
         median_sharp
@@ -821,7 +828,7 @@ def _pick_chapter_hero(
         kind = aspects.get(preferred_id, "square")
         if kind in ("landscape", "panorama"):
             asset = assets_map.get(preferred_id) or {}
-            if hero_score(asset, median_sharp=med) > 0:
+            if effective_hero_score(asset, median_sharp=med, featured_weight=featured_weight) > 0:
                 return preferred_id, "screen-landscape-1"
 
     best_id = ""
@@ -831,7 +838,7 @@ def _pick_chapter_hero(
         if kind not in ("landscape", "panorama"):
             continue
         asset = assets_map.get(aid) or {}
-        score = hero_score(asset, median_sharp=med)
+        score = effective_hero_score(asset, median_sharp=med, featured_weight=featured_weight)
         if score > best_score:
             best_score = score
             best_id = aid
@@ -877,6 +884,7 @@ def plan_screens_for_chapter(
     preferred_hero_id: str | None = None,
     include_chapter_hero: bool = True,
     enable_mosaic: bool = True,
+    featured_weight: float = DEFAULT_FEATURED_WEIGHT,
     enable_portrait_grid8: bool = True,
     median_sharp: float | None = None,
 ) -> list[dict]:
@@ -925,7 +933,12 @@ def plan_screens_for_chapter(
         and not skip_hero_for_portrait_grid8
     ):
         hero = _pick_chapter_hero(
-            ids, aspects, assets_map, preferred_id=preferred_hero_id, median_sharp=med_sharp
+            ids,
+            aspects,
+            assets_map,
+            preferred_id=preferred_hero_id,
+            median_sharp=med_sharp,
+            featured_weight=featured_weight,
         )
         if hero:
             hid, pat = hero
@@ -1231,8 +1244,9 @@ def _preferred_hero_for_bucket(
     assets_by_id: dict[str, dict],
     *,
     median_sharp: float | None = None,
+    featured_weight: float = DEFAULT_FEATURED_WEIGHT,
 ) -> str | None:
-    from travelogue.curation.curate_scoring import hero_score, median_sharpness
+    from travelogue.curation.curate_scoring import effective_hero_score, median_sharpness
 
     med = (
         median_sharp
@@ -1249,7 +1263,12 @@ def _preferred_hero_for_bucket(
             heroes.append(hid)
     if not heroes:
         return None
-    return max(set(heroes), key=lambda h: hero_score(assets_by_id.get(h) or {}, median_sharp=med))
+    return max(
+        set(heroes),
+        key=lambda h: effective_hero_score(
+            assets_by_id.get(h) or {}, median_sharp=med, featured_weight=featured_weight
+        ),
+    )
 
 
 def attach_screens_day_buckets(
@@ -1263,6 +1282,7 @@ def attach_screens_day_buckets(
     orientation_summary: dict | None = None,
     skip_screen_asset_ids: set[str] | None = None,
     trip_photo_total: int | None = None,
+    featured_weight: float = DEFAULT_FEATURED_WEIGHT,
 ) -> list[dict]:
     """
     Plan screens on each day bucket (full takenAt sequence), assign to chapters
@@ -1336,7 +1356,12 @@ def attach_screens_day_buckets(
         if not bucket:
             continue
         preferred_hero = _preferred_hero_for_bucket(
-            bucket, asset_to_ch, hero_by_ch, assets_by_id, median_sharp=med_sharp
+            bucket,
+            asset_to_ch,
+            hero_by_ch,
+            assets_by_id,
+            median_sharp=med_sharp,
+            featured_weight=featured_weight,
         )
         bucket_screens = plan_screens_for_chapter(
             bucket,
@@ -1351,6 +1376,7 @@ def attach_screens_day_buckets(
             trip_photo_total=trip_photo_total,
             preferred_hero_id=preferred_hero,
             median_sharp=med_sharp,
+            featured_weight=featured_weight,
         )
         for sc in bucket_screens:
             slots = sc.get("slots") or []
@@ -1379,6 +1405,7 @@ def attach_screens_to_chapters(
     day_buckets: list[list[str]] | None = None,
     skip_screen_asset_ids: set[str] | None = None,
     trip_photo_total: int | None = None,
+    featured_weight: float = DEFAULT_FEATURED_WEIGHT,
 ) -> list[dict]:
     """Add screens[] to each chapter (per-chapter or per-day bucket scope)."""
     from travelogue.config import default_screen_plan_scope
@@ -1395,6 +1422,7 @@ def attach_screens_to_chapters(
             orientation_summary=orientation_summary,
             skip_screen_asset_ids=skip_screen_asset_ids,
             trip_photo_total=trip_photo_total,
+            featured_weight=featured_weight,
         )
 
     assets_by_id: dict[str, dict] = {}
@@ -1428,6 +1456,7 @@ def attach_screens_to_chapters(
                 layout_state=layout_state,
                 trip_photo_total=trip_photo_total,
                 preferred_hero_id=hero_id,
+                featured_weight=featured_weight,
             )
         else:
             ch["screens"] = []

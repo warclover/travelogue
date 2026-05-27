@@ -37,6 +37,10 @@ class IngestConfig:
     low_res_peak_ratio: float = 0.42
     detect_faces: bool = True
     face_min_size_px: int = 48
+    featured_dir_names: tuple[str, ...] = ("主图上传", "精选", "featured", "hero")
+    material_dir_names: tuple[str, ...] = ("素材上传", "素材", "material", "extras")
+    featured_priority_on_truncation: bool = True
+    warn_featured_count_above: int = 30
 
 
 @dataclass
@@ -46,6 +50,8 @@ class CurateConfig:
     min_bucket_size: int = 3
     arc_mode: str = "legacy"  # legacy | v2_adaptive | v2_five_beat (alias)
     arc_flat_variance_threshold: float = 0.08
+    featured_weight: float = 1.35
+    featured_min_for_cover_pool: int = 2
 
 
 @dataclass
@@ -62,6 +68,19 @@ class VisionConfig:
 @dataclass
 class ExportConfig:
     max_zip_mb: int = 25
+
+
+@dataclass
+class RenderReadingConfig:
+    default_profile: str = "default_hybrid"
+    share_profile: str = "performance"
+    mobile_profile: str = "legacy"
+    longshot_surface_profile: str = "performance"
+
+
+@dataclass
+class RenderConfig:
+    reading: RenderReadingConfig = field(default_factory=RenderReadingConfig)
 
 
 @dataclass
@@ -136,6 +155,7 @@ class AppConfig:
     geocode: GeocodeConfig = field(default_factory=GeocodeConfig)
     curate: CurateConfig = field(default_factory=CurateConfig)
     export: ExportConfig = field(default_factory=ExportConfig)
+    render: RenderConfig = field(default_factory=RenderConfig)
     narrative: NarrativeConfig = field(default_factory=NarrativeConfig)
     llm: LlmConfig = field(default_factory=LlmConfig)
 
@@ -158,6 +178,10 @@ def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
         low_res_peak_ratio=float(raw.get("low_res_peak_ratio", 0.42)),
         detect_faces=bool(raw.get("detect_faces", True)),
         face_min_size_px=int(raw.get("face_min_size_px", 48)),
+        featured_dir_names=tuple(str(x) for x in (raw.get("featured_dir_names") or ["主图上传", "精选", "featured", "hero"])),
+        material_dir_names=tuple(str(x) for x in (raw.get("material_dir_names") or ["素材上传", "素材", "material", "extras"])),
+        featured_priority_on_truncation=bool(raw.get("featured_priority_on_truncation", True)),
+        warn_featured_count_above=int(raw.get("warn_featured_count_above", 30)),
     )
 
 
@@ -178,6 +202,20 @@ def _layout_scoring_from_dict(raw: dict[str, Any]) -> LayoutScoringConfig:
         subject_run_tolerance=int(raw.get("subject_run_tolerance", 1)),
         weights=weights,
     )
+
+
+def _render_reading_from_dict(raw: dict[str, Any]) -> RenderReadingConfig:
+    return RenderReadingConfig(
+        default_profile=str(raw.get("default_profile", "default_hybrid")),
+        share_profile=str(raw.get("share_profile", "performance")),
+        mobile_profile=str(raw.get("mobile_profile", "legacy")),
+        longshot_surface_profile=str(raw.get("longshot_surface_profile", "performance")),
+    )
+
+
+def _render_from_dict(raw: dict[str, Any]) -> RenderConfig:
+    reading_raw = raw.get("reading") if isinstance(raw.get("reading"), dict) else {}
+    return RenderConfig(reading=_render_reading_from_dict(reading_raw))
 
 
 def _layout_feedback_from_dict(raw: dict[str, Any]) -> LayoutFeedbackConfig:
@@ -235,6 +273,7 @@ def load_config(path: Path | None = None) -> AppConfig:
     llm_raw = data.get("llm") if isinstance(data.get("llm"), dict) else {}
     geocode_raw = data.get("geocode") if isinstance(data.get("geocode"), dict) else {}
     curate_raw = data.get("curate") if isinstance(data.get("curate"), dict) else {}
+    render_raw = data.get("render") if isinstance(data.get("render"), dict) else {}
     vision_enabled = bool(vision_raw.get("enabled", False))
     vision_max_tags = int(vision_raw.get("max_tags_per_asset", 5))
     banned_raw = narrative_raw.get("banned_phrases") or []
@@ -249,6 +288,7 @@ def load_config(path: Path | None = None) -> AppConfig:
         trips_dir=trips_dir,
         ingest=_ingest_from_dict(ingest_raw),
         export=ExportConfig(max_zip_mb=int(export_raw.get("max_zip_mb", 25))),
+        render=_render_from_dict(render_raw),
         layout=LayoutConfig(
             web_layout_engine=web_engine,
             screen_plan_scope=scope,
@@ -266,6 +306,8 @@ def load_config(path: Path | None = None) -> AppConfig:
             arc_flat_variance_threshold=float(
                 curate_raw.get("arc_flat_variance_threshold", 0.08)
             ),
+            featured_weight=float(curate_raw.get("featured_weight", 1.35)),
+            featured_min_for_cover_pool=int(curate_raw.get("featured_min_for_cover_pool", 2)),
         ),
         narrative=NarrativeConfig(
             tone_default=str(narrative_raw.get("tone_default", "relaxed")),
