@@ -3,21 +3,50 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
-| **文档体系** | P0 立项 + P0.5 工程执行 |
+| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2 Studio** + **Phase 3 素材洞察** |
 | **更新日期** | 2026-05-27 |
 
 ---
 
 ## 阅读顺序（新人）
 
-1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)  
+1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · 已冻结）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（素材洞察 · 第三阶段）  
 2. [AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md)  
 2b. [PRD-LAYOUT.md](./PRD-LAYOUT.md)（排版布局子系统 · Agent 1.5）  
 3. [DATA-MODEL.md](./DATA-MODEL.md) + [schemas/trip.schema.json](../schemas/trip.schema.json)  
 4. [TEMPLATE-visual-journal.md](./TEMPLATE-visual-journal.md) + [golden.html](../templates/visual-journal/golden.html)  
 5. **开发前必读 P0.5**（§下）  
 6. [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md) → [DEVELOPMENT.md](./DEVELOPMENT.md)  
-7. [ACCEPTANCE.md](./ACCEPTANCE.md)
+7. [ACCEPTANCE.md](./ACCEPTANCE.md)（MVP）→ [ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md)（Phase 2）
+
+---
+
+## Phase 2 · Studio 与可分享体验
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE2.md](./PRD-PHASE2.md) | **Phase 2 产品需求**（Studio + export-longshot + 交付物层级） |
+| [IMPLEMENTATION-PHASE2.md](./IMPLEMENTATION-PHASE2.md) | **实施任务清单**（M8–M11 · 进度跟踪） |
+| [ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md) | Phase 2 验收（AC-P2-01～06） |
+| [adr/004-studio-hub-server.md](./adr/004-studio-hub-server.md) | Hub Server vs 单 trip serve |
+| [adr/005-longshot-server-side.md](./adr/005-longshot-server-side.md) | Playwright + longshot.js 服务端长图 |
+
+阅读顺序：**PRD-PHASE2** → **IMPLEMENTATION-PHASE2** → ADR-004/005 → 开发时同步 **CLI-SPEC** / **WORKSHOP** / **SHARING**。
+
+---
+
+## Phase 3 · 素材洞察（Recasa × PhotoMapAI）
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE3.md](./PRD-PHASE3.md) | **Phase 3 产品需求** v0.2（双引擎编排 + 智能预选 + setup-engines） |
+| [adr/006-media-engines-integration.md](./adr/006-media-engines-integration.md) | 引擎集成架构决策 |
+| IMPLEMENTATION-PHASE3.md | 实施任务清单（M12–M15 · 待写） |
+| ACCEPTANCE-PHASE3.md | Phase 3 验收（AC-P3-01～06 · 待写） |
+
+**前置**：Phase 2 ≥ M8b + M9 可用。**代号**：素材洞察。**注意**：与 [SHARING.md](./SHARING.md) 中小程序 **P3** 轨道无关，后者规划为 Phase 4。
+
+阅读顺序：**PRD-PHASE3** → ADR-006 → IMPLEMENTATION-PHASE3（待写）→ ERROR-CODES Phase 3 附录。
 
 ---
 
@@ -26,17 +55,18 @@
 | 文档 | 说明 |
 |------|------|
 | [CHARTER.md](./CHARTER.md) | 项目章程 |
-| [PRD-MVP.md](./PRD-MVP.md) | 产品需求 |
+| [PRD-MVP.md](./PRD-MVP.md) | MVP 产品需求（**已冻结**） |
+| [PRD-PHASE2.md](./PRD-PHASE2.md) | **Phase 2**：Studio 工作台 + 服务端长图 + 交付物层级 |
 | [AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md) | 智能体流水线 |
 | [DATA-MODEL.md](./DATA-MODEL.md) | 数据模型 |
 | [TEMPLATE-visual-journal.md](./TEMPLATE-visual-journal.md) | 模板 PRD |
 | [ADAPTIVE-LAYOUT.md](./ADAPTIVE-LAYOUT.md) | 终端自适应 |
 | [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md) | 技术架构 |
 | [DEVELOPMENT.md](./DEVELOPMENT.md) | 开发手册 |
-| [WORKSHOP.md](./WORKSHOP.md) | **本地工坊**：一条龙脚本、验收与 Web screens 自检 |
+| [WORKSHOP.md](./WORKSHOP.md) | **本地工坊**：Phase 2 推荐 Studio；开发者 workshop 脚本 |
 | [老图.md](./老图.md) | **混册/老图/截图**：时间段分段、`mediaClass` 与编排原则 |
 | [ACCEPTANCE.md](./ACCEPTANCE.md) | MVP 验收 |
-| [SHARING.md](./SHARING.md) | **双轨分享**：微信群长图（P0）vs 小程序鉴权 HTML（P2） |
+| [SHARING.md](./SHARING.md) | **双轨分享**：服务端长图（Phase 2 主路径）vs 小程序鉴权 HTML（P3） |
 | [PRD-LAYOUT.md](./PRD-LAYOUT.md) | **排版布局 PRD**（专职 Agent 1.5 规划） |
 | [web端模板.prd](./web端模板.prd) | **Web 端模板 PRD**（章/屏、16:9 舞台、pattern 库） |
 | [web端模板升级计划.md](./web端模板升级计划.md) | **Web 升级实施计划**（layoutEngine legacy/screens） |
@@ -115,3 +145,6 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 | 2026-05-19 | P0.5 工程执行文档 + validate 脚本 + fixtures |
 | 2026-05-19 | ADR-001：交付/媒体/标签/状态机/封面 |
 | 2026-05-27 | PRD-EXPERIENCE v1.0：三模式 + Hybrid + 三附录 + ADR-003 + experience-matrix |
+| 2026-05-27 | PRD-PHASE2 **v0.2.1**：跨文档一致性补丁（SHARING 双轨、250 张、bat、cancel/upload/GIL） |
+| 2026-05-27 | PRD-PHASE2 **v0.3.1**：M8a/b；Chrome allowlist；reveal API；开发准入补丁 |
+| 2026-05-27 | PRD-PHASE3 **v0.2.0**：评审修订（compose 双容器、路径策略、测试、M12-0） |

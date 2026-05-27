@@ -61,6 +61,9 @@
             msg += " · 已更新 " + result.body.rendered.join("、");
           }
           showToast(msg);
+          try {
+            window.dispatchEvent(new CustomEvent("travelogue:copy-saved"));
+          } catch (e) {}
           return;
         }
         var msg =

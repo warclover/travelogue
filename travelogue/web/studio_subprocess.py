@@ -1,0 +1,110 @@
+"""Run Studio import pipeline in a child process (M10 · GIL isolation)."""
+
+from __future__ import annotations
+
+import multiprocessing as mp
+from pathlib import Path
+from typing import Any
+
+
+def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_event: mp.Event) -> None:
+    from travelogue.config import AppConfig, get_config
+    from travelogue.demo.build import DemoError
+    from travelogue.web.studio_pipeline import run_studio_pipeline
+
+    def progress(stage: str, stage_index: int, stage_hint: str) -> None:
+        if cancel_event.is_set():
+            raise DemoError("E_STUDIO_CANCELLED", "cancelled")
+        progress_queue.put(
+            {
+                "type": "progress",
+                "stage": stage,
+                "stageIndex": stage_index,
+                "stageHint": stage_hint,
+            }
+        )
+
+    cfg: AppConfig | None = None
+    cfg_path = payload.get("configPath")
+    if cfg_path:
+        cfg = get_config(reload=True, path=Path(cfg_path))
+
+    try:
+        result = run_studio_pipeline(
+            Path(payload["albumPath"]),
+            trips_dir=Path(payload["tripsDir"]) if payload.get("tripsDir") else None,
+            trip_id=payload.get("tripId"),
+            title=str(payload.get("title") or "我的旅途"),
+            place=str(payload.get("place") or "旅途"),
+            force=bool(payload.get("force")),
+            dedupe=bool(payload.get("dedupe", True)),
+            host=str(payload.get("host") or "127.0.0.1"),
+            port=int(payload.get("port") or 8766),
+            config=Path(cfg_path) if cfg_path else None,
+            app_config=cfg,
+            progress=progress,
+        )
+        progress_queue.put(
+            {
+                "type": "done",
+                "result": {
+                    "tripId": result.trip_id,
+                    "tripDir": str(result.trip_dir),
+                    "previewUrl": result.preview_url,
+                },
+            }
+        )
+    except DemoError as exc:
+        progress_queue.put(
+            {
+                "type": "error",
+                "code": exc.code,
+                "message": str(exc),
+                "demo": True,
+            }
+        )
+    except Exception as exc:
+        progress_queue.put(
+            {
+                "type": "error",
+                "code": "E_STUDIO_PIPELINE",
+                "message": str(exc),
+                "demo": False,
+            }
+        )
+
+
+class ImportSubprocess:
+    def __init__(self, payload: dict[str, Any]) -> None:
+        self._ctx = mp.get_context("spawn")
+        self._cancel = self._ctx.Event()
+        self._queue: mp.Queue = self._ctx.Queue()
+        self._process = self._ctx.Process(
+            target=_import_worker,
+            args=(payload, self._queue, self._cancel),
+            daemon=True,
+        )
+
+    def start(self) -> None:
+        self._process.start()
+
+    def cancel(self) -> None:
+        self._cancel.set()
+        if self._process.is_alive():
+            self._process.terminate()
+
+    def join(self, timeout: float | None = None) -> None:
+        self._process.join(timeout)
+
+    @property
+    def alive(self) -> bool:
+        return self._process.is_alive()
+
+    def drain(self) -> list[dict[str, Any]]:
+        events: list[dict[str, Any]] = []
+        while True:
+            try:
+                events.append(self._queue.get_nowait())
+            except Exception:
+                break
+        return events

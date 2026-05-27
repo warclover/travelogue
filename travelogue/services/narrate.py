@@ -34,6 +34,7 @@ def _manifest_limits() -> dict[str, int]:
             "hookMaxChars": HOOK_MAX,
             "chapterLeadMaxChars": LEAD_MAX,
             "epilogueMaxChars": EPILOGUE_MAX,
+            "captionMaxChars": 60,
         }
     data = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     lim = data.get("limits") or {}
@@ -41,6 +42,7 @@ def _manifest_limits() -> dict[str, int]:
         "hookMaxChars": int(lim.get("hookMaxChars", HOOK_MAX)),
         "chapterLeadMaxChars": int(lim.get("chapterLeadMaxChars", LEAD_MAX)),
         "epilogueMaxChars": int(lim.get("epilogueMaxChars", EPILOGUE_MAX)),
+        "captionMaxChars": int(lim.get("captionMaxChars", 60)),
     }
 
 
@@ -133,6 +135,103 @@ def _voice_excerpt(chapter: dict, assets: dict[str, dict]) -> str:
     return ""
 
 
+def _format_asset_date(raw: str) -> str:
+    dt = _parse_iso_date(raw)
+    if not dt:
+        return ""
+    return f"{dt.month}月{dt.day}日"
+
+
+def _trip_day_count(meta: dict) -> int:
+    ds = _parse_iso_date(meta.get("dateStart", ""))
+    de = _parse_iso_date(meta.get("dateEnd", ""))
+    if ds and de:
+        return max(1, (de.date() - ds.date()).days + 1)
+    return 1
+
+
+def _pick_template(templates: list[str], seed: str) -> str:
+    if not templates:
+        return ""
+    idx = sum(ord(c) for c in seed) % len(templates)
+    return templates[idx]
+
+
+STUB_CAPTION_TEMPLATES: dict[str, tuple[str, ...]] = {
+    "portrait": ("{place}的竖构图。", "抬头看见{place}。", "{date}的{place}。"),
+    "landscape": ("{place}的远景。", "横展开的{place}。", "{date}留在{place}。"),
+    "panorama": ("{place}徐徐展开。", "宽幅里的{place}。", "全景里的{place}。"),
+    "square": ("{place}的一格。", "方构图里的{place}。", "{date}·{place}。"),
+    "tall": ("{place}的竖长一帧。", "向上延伸的{place}。", "{date}的{place}。"),
+    "default": ("{place}的一帧。", "旅途里的一帧。", "{date}的{place}。"),
+}
+
+
+def _build_stub_caption(asset: dict, *, default_place: str) -> str:
+    place = ((asset.get("place") or {}).get("city") or "").strip() or default_place or "这里"
+    date = _format_asset_date(str(asset.get("takenAt") or ""))
+    kind = str(asset.get("aspectKind") or "default")
+    templates = STUB_CAPTION_TEMPLATES.get(kind) or STUB_CAPTION_TEMPLATES["default"]
+    template = _pick_template(list(templates), str(asset.get("id") or place))
+    return template.format(place=place, date=date or "这一天").strip()
+
+
+def _stub_caption_asset_ids(trip: dict) -> list[str]:
+    from travelogue.curation.asset_caption import chapter_caption_asset_ids
+
+    ids: list[str] = []
+    cover = trip.get("coverAssetId")
+    if cover:
+        ids.append(str(cover))
+    for ch in trip.get("chapters") or []:
+        for aid in chapter_caption_asset_ids(ch)[:2]:
+            if aid not in ids:
+                ids.append(aid)
+    return ids
+
+
+def _apply_stub_captions(
+    trip: dict,
+    *,
+    default_place: str,
+    regenerate: bool = False,
+    dry_run: bool = False,
+    max_chars: int = 60,
+) -> list[str]:
+    from travelogue.curation.asset_caption import (
+        apply_caption_to_trip,
+        find_item_for_asset,
+        resolve_caption,
+    )
+
+    assets = {a["id"]: a for a in trip.get("assets") or [] if a.get("id")}
+    updated: list[str] = []
+    for aid in _stub_caption_asset_ids(trip):
+        asset = assets.get(aid)
+        if not asset or asset.get("edited") or asset.get("skipCaption"):
+            continue
+        has_caption = False
+        for ch in trip.get("chapters") or []:
+            item = find_item_for_asset(ch, aid)
+            if item and item.get("edited"):
+                has_caption = True
+                break
+        if has_caption:
+            continue
+        if not regenerate and resolve_caption(None, asset).strip():
+            continue
+        caption = _finalize_copy(
+            _build_stub_caption(asset, default_place=default_place),
+            max_chars,
+        )
+        if not caption:
+            continue
+        if not dry_run:
+            apply_caption_to_trip(trip, aid, caption)
+        updated.append(f"assets.{aid}.caption")
+    return updated
+
+
 def _build_hook(meta: dict, *, photo_count: int, tone: str) -> str:
     places = meta.get("places") or ["旅途"]
     place = places[0]
@@ -146,11 +245,42 @@ def _build_hook(meta: dict, *, photo_count: int, tone: str) -> str:
             return f"{place}，{span}。"
         return f"{title} · {place}。"
 
+    day_count = _trip_day_count(meta)
+    templates = [
+        f"在{place}的{day_count}天，{photo_count} 张碎片拼成这一页。",
+        f"{place}·{span or f'{day_count}天'}，慢慢翻。",
+        f"走进{place}，{photo_count} 帧留在这里。",
+        f"{title} · 关于{place}的{day_count}天。",
+    ]
     if span and photo_count:
-        return f"在{place}的{span}，{photo_count} 张碎片拼成这一页。"
-    if span:
-        return f"{place}的{span}，慢慢翻。"
-    return f"{title} · 关于{place}的几帧。"
+        templates.append(f"在{place}的{span}，{photo_count} 张碎片拼成这一页。")
+    seed = str(title or place)
+    return _pick_template(templates, seed)
+
+
+def _chapter_day_label(chapter: dict, assets: dict[str, dict]) -> str:
+    dates: list[datetime] = []
+    for aid in _chapter_asset_ids(chapter):
+        raw = (assets.get(aid) or {}).get("takenAt") or ""
+        dt = _parse_iso_date(str(raw))
+        if dt:
+            dates.append(dt)
+    if dates:
+        earliest = min(dates)
+        return f"{earliest.month}月{earliest.day}日"
+    title = (chapter.get("title") or "").strip()
+    if title and "月" in title and "日" in title:
+        return title
+    return ""
+
+
+def _build_lead_frame(chapter_index: int, day_label: str, place: str) -> str:
+    parts = [f"Day {chapter_index}"]
+    if day_label:
+        parts.append(day_label)
+    if place:
+        parts.append(place)
+    return " · ".join(parts) + "。"
 
 
 def _build_lead(
@@ -171,6 +301,11 @@ def _build_lead(
     if voice and tone != "documentary":
         lead = f"「{voice}」——{title or place}。" if title else f"「{voice}」"
         return lead
+
+    if tone != "documentary":
+        day_label = _chapter_day_label(chapter, assets)
+        place_str = place or title or default_place
+        return _build_lead_frame(chapter_index, day_label, place_str)
 
     if chapter_index == 1:
         if tone == "documentary":
@@ -328,6 +463,15 @@ def _run_narrate_stub(
                 lim["epilogueMaxChars"],
             )
         updated.append("epilogue")
+
+    caption_updates = _apply_stub_captions(
+        trip,
+        default_place=place,
+        regenerate=regenerate,
+        dry_run=dry_run,
+        max_chars=lim["captionMaxChars"],
+    )
+    updated.extend(caption_updates)
 
     if dry_run:
         return NarrateResult(fields_updated=updated)

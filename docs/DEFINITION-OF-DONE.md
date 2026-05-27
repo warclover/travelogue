@@ -3,8 +3,9 @@
 | 属性 | 内容 |
 |------|------|
 | **文档版本** | v0.1 |
-| **MVP 完成** | 全部 M1–M7 Done + [ACCEPTANCE.md](./ACCEPTANCE.md) AC-01～06 |
-| **更新日期** | 2026-05-19 |
+| **MVP 完成** | 全部 M1–M7 Done + [ACCEPTANCE.md](./ACCEPTANCE.md) AC-01～07 |
+| **Phase 2 完成** | M8–M10 Done + [ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md) AC-P2-01～06 |
+| **更新日期** | 2026-05-27 |
 
 ---
 
@@ -87,6 +88,53 @@
 | 记录 | 3 次 trip 填验收表 §7 |
 | Backlog | P1/P2 问题清单入库 |
 
+### M8a · 架构跑通（Phase 2 · W1）
+
+| 项 | Done 标准 |
+|----|-----------|
+| serve --studio + StudioMixin | 单端口 8766；dispatcher 在 `studio_routes.py` |
+| Pipeline + Job | `--pick-folder` → rendered；stageHint 分档 |
+| API | import（409+existingTripId）+ status |
+| 回归 | 无 `--studio` 时 serve 与 MVP 一致 |
+| 出口 | 维护者 CLI 可预览 |
+
+### M8b · Studio Web（Phase 2 · W2）
+
+| 项 | Done 标准 |
+|----|-----------|
+| studio.html | 空态 + 选图 + stageHint + soft warning |
+| Studio Chrome | allowlist 注入；**longshot 面不注入**（UX-P2-06） |
+| API | GET /trips + 最近链接 |
+| 验收 | AC-P2-01a；AC-P2-03；UX-P2-* |
+
+### M9 · 可分享闭环（Phase 2 · W2–3）
+
+| 项 | Done 标准 |
+|----|-----------|
+| export-longshot | P0 captureMainToBlob + P1 fallback |
+| 分段 | 高度 >5000px；单章 >60 卡兜底 |
+| scale | CLI 默认 1；**Studio UI 默认 2** |
+| Studio 长图 UI | chrome 最小按钮 + 路径面板 + **POST /reveal** |
+| Playwright | base_url 复用 8766；browser 单例 |
+| 稳定性 | LS-P2-01：5 trip P0 ≥80%；LS-P2-04 |
+| 验收 | **AC-P2-01b**；AC-P2-02 |
+
+### M10 · 工作台成熟化（Phase 2 · W3–4）
+
+| 项 | Done 标准 |
+|----|-----------|
+| trip 列表 | 完整 UI（M8 已有 API + 最近链接） |
+| 工具栏 | preview-toolbar 替换 chrome；zip 高级；stale 长图提示 |
+| pipeline | 子进程 + 失败重试/返回工作台 |
+| 验收 | AC-P2-04（完整）；AC-P2-06 |
+
+### M11 · PyInstaller（Phase 2 · **P2 backlog**）
+
+| 项 | Done 标准 |
+|----|-----------|
+| exe | 可选；**不阻塞** Phase 2 完成 |
+| 原生选文件夹 | IFileDialog（非 tkinter M8） |
+
 ---
 
 ## 3. Agent 阶段 Done（横切）
@@ -105,3 +153,6 @@
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v0.1 | 2026-05-19 | 初稿 |
+| v0.2 | 2026-05-27 | 新增 M8–M11（Phase 2；v0.2 评审修订） |
+| v0.3 | 2026-05-27 | Studio Chrome；M9 长图 UI/路径；AC 里程碑拆分 |
+| v0.3.1 | 2026-05-27 | M8a/b；allowlist；reveal；409 body |

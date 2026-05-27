@@ -13,6 +13,9 @@ from typing import Iterator
 from travelogue.config import AppConfig, app_config_scope, get_config
 from travelogue.services.trip import TripService
 from travelogue.web.copy_patch import CopyPatchError, apply_copy_patches
+from travelogue.web.studio_chrome import inject_studio_chrome, should_inject_studio_chrome
+from travelogue.web.studio_routes import StudioMixin
+from travelogue.web.studio_uploads import sweep_stale_uploads
 from travelogue.web.tier_patch import TierPatchError, apply_tier_promotions
 
 SAVE_PATH = "/__travelogue/save-copy"
@@ -21,7 +24,7 @@ FAVICON_SILENT_PATHS = frozenset({"/favicon.ico", "/favicon.svg"})
 _trip_write_lock = threading.Lock()
 
 
-class TripPreviewHandler(SimpleHTTPRequestHandler):
+class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
     trip_json_path: Path
     auto_rerender: bool = True
     app_config: AppConfig | None = None
@@ -32,10 +35,18 @@ class TripPreviewHandler(SimpleHTTPRequestHandler):
         directory: str | None = None,
         trip_json: Path | None = None,
         auto_rerender: bool = True,
+        studio_mode: bool = False,
+        trips_dir: Path | None = None,
+        studio_host: str = "127.0.0.1",
+        studio_port: int = 8766,
         **kwargs,
     ):
         self.trip_json_path = trip_json or Path("trip.json")
         self.auto_rerender = auto_rerender
+        self.studio_mode = studio_mode
+        self.trips_dir = trips_dir
+        self.studio_host = studio_host
+        self.studio_port = studio_port
         super().__init__(*args, directory=directory, **kwargs)
 
     @contextmanager
@@ -48,14 +59,42 @@ class TripPreviewHandler(SimpleHTTPRequestHandler):
                 yield active
 
     def do_GET(self) -> None:  # noqa: N802
-        if self.path.split("?", 1)[0] in FAVICON_SILENT_PATHS:
+        path = self.path.split("?", 1)[0]
+        if path in FAVICON_SILENT_PATHS:
             self.send_response(204)
             self.end_headers()
+            return
+        if self.studio_mode:
+            if self.studio_dispatch_GET(path):
+                return
+            parts = self.studio_trip_parts(path)
+            if parts is not None:
+                trip_id, rel_path = parts
+                if self._serve_trip_static(trip_id, rel_path):
+                    return
+            self.send_error(404)
             return
         super().do_GET()
 
     def do_POST(self) -> None:  # noqa: N802
         path = self.path.split("?", 1)[0]
+        if self.studio_mode:
+            if self.studio_dispatch_POST(path):
+                return
+            api = self._studio_trip_api(path)
+            if api is not None:
+                trip_id, action = api
+                if self.studio_bind_trip(trip_id) is None:
+                    self.send_error(404)
+                    return
+                if action == "save-copy":
+                    self._handle_save_copy()
+                    return
+                if action == "promote-tier":
+                    self._handle_promote_tier()
+                    return
+            self.send_error(404)
+            return
         if path == SAVE_PATH:
             self._handle_save_copy()
             return
@@ -63,6 +102,44 @@ class TripPreviewHandler(SimpleHTTPRequestHandler):
             self._handle_promote_tier()
             return
         self.send_error(404)
+
+    def _serve_trip_static(self, trip_id: str, rel_path: str) -> bool:
+        trip_dir = self.studio_bind_trip(trip_id)
+        if trip_dir is None:
+            return False
+        target = (trip_dir / rel_path).resolve()
+        try:
+            target.relative_to(trip_dir.resolve())
+        except ValueError:
+            return False
+        if not target.is_file():
+            self.send_error(404)
+            return True
+
+        if (
+            should_inject_studio_chrome(rel_path)
+            and target.suffix.lower() in {".html", ".htm"}
+        ):
+            html = target.read_text(encoding="utf-8", errors="replace")
+            html = inject_studio_chrome(html)
+            data = html.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return True
+
+        old_directory = self.directory
+        old_path = self.path
+        self.directory = str(trip_dir)
+        self.path = "/" + rel_path.replace("\\", "/")
+        try:
+            super().do_GET()
+        finally:
+            self.directory = old_directory
+            self.path = old_path
+        return True
 
     def _read_json_body(self) -> dict:
         length = int(self.headers.get("Content-Length") or 0)
@@ -167,6 +244,7 @@ def serve_trip_directory(
         directory=str(trip_dir),
         trip_json=trip_json,
         auto_rerender=auto_rerender,
+        studio_mode=False,
     )
     server = ThreadingHTTPServer((host, port), handler)
     url = f"http://{host}:{port}/{index}"
@@ -177,6 +255,47 @@ def serve_trip_directory(
         print("  auto re-render: index.html + index-longshot.html after save")
     else:
         print("  auto re-render: off (run render manually)")
+    print("  Ctrl+C to stop")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nStopped.")
+    finally:
+        TripPreviewHandler.app_config = prev_handler_cfg
+        server.server_close()
+
+
+def serve_studio_directory(
+    trips_dir: Path,
+    *,
+    port: int = 8766,
+    host: str = "127.0.0.1",
+    auto_rerender: bool = True,
+    app_config: AppConfig | None = None,
+) -> None:
+    trips_dir = trips_dir.resolve()
+    trips_dir.mkdir(parents=True, exist_ok=True)
+    sweep_stale_uploads(trips_dir)
+
+    pinned_cfg = app_config or get_config()
+    prev_handler_cfg = TripPreviewHandler.app_config
+    TripPreviewHandler.app_config = pinned_cfg
+
+    handler = partial(
+        TripPreviewHandler,
+        directory=str(trips_dir),
+        trip_json=trips_dir / ".studio-placeholder" / "trip.json",
+        auto_rerender=auto_rerender,
+        studio_mode=True,
+        trips_dir=trips_dir,
+        studio_host=host,
+        studio_port=port,
+    )
+    server = ThreadingHTTPServer((host, port), handler)
+    url = f"http://{host}:{port}/"
+    print(f"Studio mode · trips: {trips_dir}")
+    print(f"  workbench: {url}")
+    print(f"  import API: POST {url.rstrip('/')}/__travelogue/import")
     print("  Ctrl+C to stop")
     try:
         server.serve_forever()

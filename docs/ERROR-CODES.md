@@ -80,6 +80,34 @@
 | `E_EXPORT_PRIVACY` | 未 `--confirm-privacy` |
 | `E_EXPORT_NOT_RENDERED` | 无 index.html |
 
+### Studio / 长图 `E_STU_*` / `E_LNG_*`（Phase 2）
+
+| 代码 | 说明 | Studio 用户文案（中文） |
+|------|------|-------------------------|
+| `E_STU_JOB_NOT_FOUND` | 无效 jobId | 任务不存在或已过期，请重新开始 |
+| `E_STU_IMPORT_BUSY` | 已有 import Job 运行 | 正在处理上一本游记，请稍候 |
+| `E_STU_UPLOAD_FAILED` | 浏览器上传写入失败 | 上传失败，请检查磁盘空间后重试 |
+| `E_LNG_PLAYWRIGHT` | 未安装 playwright/chromium | 无法生成长图。请运行：pip install 'travelogue[playwright]' && playwright install chromium |
+| `E_LNG_NO_LONGSHOT` | 无 index-longshot.html | 请先完成渲染，或检查 export.longShot 配置 |
+| `E_LNG_CAPTURE_FAILED` | captureMainToBlob 失败 | 长图生成失败，请重试（M10+ 可按章导出） |
+| `E_STUDIO_REVEAL_DENIED` | reveal 路径不在 trips 根下 | 无法打开该文件 |
+| `E_STUDIO_JOB_BUSY` | 已有 import / longshot / narrate Job | 正在处理上一任务，请稍候 |
+| `E_STUDIO_CANCELLED` | 用户取消 Job | 已取消 |
+| `E_STUDIO_UPLOAD_EMPTY` | multipart 无文件 | 未收到任何照片文件 |
+| `E_STUDIO_PIPELINE` | 导入子进程或 pipeline 异常 | 导入失败，请重试 |
+| `E_LLM_AUTH` | 未配置 LLM API Key | 未配置 LLM API Key，无法生成杂志感文案 |
+| `E_EXPORT_PRIVACY` | Studio zip 未 confirmPrivacy | 导出 zip 需要确认隐私设置 |
+
+### Demo / ingest 用户文案（Studio 映射）
+
+| 代码 | Studio 用户文案（中文） |
+|------|-------------------------|
+| `E_INGEST_TOO_FEW` / `E_DEMO_TOO_FEW` | 至少需要 4 张照片，请换一个文件夹 |
+| `E_INGEST_EMPTY` | 文件夹里没有找到照片 |
+| `E_DEMO_NOT_DIR` | 所选路径不是文件夹 |
+| `E_DEMO_EXISTS` | 该游记已存在 | **409** body 含 `existingTripId`；确认后 `POST import` + `"force": true` |
+| `E_INGEST_HEIC` | 发现 HEIC 照片无法读取。请安装 pillow-heif 或转换为 JPG |
+
 ---
 
 ## 3. 版本历史
@@ -87,3 +115,7 @@
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v0.1 | 2026-05-19 | 初稿 |
+| v0.2 | 2026-05-27 | Phase 2 Studio / longshot 错误码 |
+| v0.2.1 | 2026-05-27 | E_DEMO_EXISTS 确认流 + force 参数 |
+| v0.3.1 | 2026-05-27 | E_DEMO_EXISTS 409 body；E_LNG_CAPTURE_FAILED 文案 |
+| v0.3.2 | 2026-05-27 | M10 Studio Job 错误码；E_LLM_AUTH；E_STUDIO_REVEAL_DENIED |

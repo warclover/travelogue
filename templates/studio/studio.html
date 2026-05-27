@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Travelogue Studio</title>
+  <link rel="stylesheet" href="/__studio/studio.css" />
+</head>
+<body>
+  <div class="studio">
+    <header class="studio__hero">
+      <p class="studio__eyebrow">Travelogue · 旅行游记工坊</p>
+      <h1 class="studio__title">把旅行照片变成一篇杂志风长图，直接发微信</h1>
+      <ul class="studio__features">
+        <li>自动分章排版</li>
+        <li>无需注册</li>
+        <li>照片留在本地</li>
+      </ul>
+    </header>
+
+    <section class="studio__sample" aria-label="输出效果预览">
+      <img src="/__studio/assets/sample-longshot.jpg" alt="长图输出样例" class="studio__sample-img" />
+      <p class="studio__sample-caption">输出效果预览（占位样例）</p>
+    </section>
+
+    <section class="studio__panel">
+      <h2 class="studio__panel-title">开始制作</h2>
+      <p class="studio__hint">推荐 50–100 张照片效果最佳；最多 250 张。</p>
+
+      <form id="studio-import-form" class="studio__form">
+        <label class="studio__label" for="album-path">照片文件夹路径（Windows）</label>
+        <input id="album-path" name="albumPath" type="text" class="studio__input"
+          placeholder="例如 D:\Photos\Kyoto2025" autocomplete="off" />
+        <div class="studio__row">
+          <label class="studio__label" for="trip-title">标题</label>
+          <input id="trip-title" name="title" type="text" class="studio__input" value="我的旅途" />
+        </div>
+        <div class="studio__row">
+          <label class="studio__label" for="trip-place">地点</label>
+          <input id="trip-place" name="place" type="text" class="studio__input" value="旅途" />
+        </div>
+        <button type="submit" class="studio__btn studio__btn--primary" id="studio-submit-path">
+          使用路径导入
+        </button>
+      </form>
+
+      <div class="studio__divider">或</div>
+
+      <button type="button" id="studio-demo-album" class="studio__btn studio__btn--secondary">
+        试用示例相册（无需准备照片）
+      </button>
+
+      <div class="studio__upload">
+        <label class="studio__btn studio__btn--secondary">
+          选择照片文件夹（浏览器上传）
+          <input id="album-upload" type="file" webkitdirectory directory multiple hidden />
+        </label>
+        <progress id="upload-progress" class="studio__progress" value="0" max="100" hidden></progress>
+      </div>
+
+      <p id="studio-warning" class="studio__warning" hidden></p>
+      <p id="studio-error" class="studio__error" role="alert" hidden></p>
+
+      <div id="studio-progress" class="studio__job" hidden>
+        <p id="studio-stage" class="studio__stage"></p>
+        <div class="studio__bar"><div id="studio-bar-fill" class="studio__bar-fill"></div></div>
+        <button type="button" id="studio-cancel" class="studio__btn studio__btn--ghost" hidden>
+          取消导入
+        </button>
+      </div>
+
+      <div id="studio-failure" class="studio__failure" hidden>
+        <p id="studio-failure-msg" class="studio__failure-msg"></p>
+        <div class="studio__failure-actions">
+          <button type="button" id="studio-retry" class="studio__btn studio__btn--primary">重试</button>
+          <a href="/" class="studio__btn studio__btn--secondary">返回工作台</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="studio__trips" id="studio-trips" hidden>
+      <h2 class="studio__panel-title">我的游记</h2>
+      <ul id="studio-trips-list" class="studio__trips-list"></ul>
+    </section>
+
+    <section class="studio__recent" id="studio-recent" hidden>
+      <h2 class="studio__panel-title">最近游记</h2>
+      <ul id="studio-recent-list" class="studio__recent-list"></ul>
+    </section>
+  </div>
+  <script src="/__studio/studio.js" defer></script>
+</body>
+</html>

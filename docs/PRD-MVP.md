@@ -4,9 +4,10 @@
 |------|------|
 | **产品代号** | Travelogue |
 | **文档版本** | v0.2.1-MVP |
-| **状态** | Draft · 本地验证阶段（P0 文档已齐） |
+| **状态** | Draft · 本地验证阶段（**MVP 需求已冻结**） |
 | **交付形态** | 照片 + 可选短视频 → 杂志风 HTML 游记包（zip 离线单元） |
 | **MVP 阶段** | P0 本地工坊 + P1 轻量分享实验 |
+| **后续** | Phase 2 见 [PRD-PHASE2.md](./PRD-PHASE2.md)（本 MVP PRD **已冻结**） |
 | **关联文档** | [docs/README.md](./README.md)、`CHARTER.md`、`PRD-LAYOUT.md`、`SHARING.md`、`adr/001-delivery-and-media.md`、`AGENT-ARCHITECTURE.md`、`DATA-MODEL.md`、`MEDIA-PIPELINE.md`、`NARRATIVE-PROMPTS.md` |
 | **更新日期** | 2026-05-19 |
 
@@ -241,6 +242,8 @@ flowchart LR
 | F-ING-02 | 将原文件拷贝至 `source/`（不修改相册原件） | 拷贝完成后可断点重入 |
 | F-ING-03 | 解析 EXIF：DateTimeOriginal、GPS | 无 EXIF 标记 `undated` |
 | F-ING-04 | 导入 ≤30 张图片；超出提示裁剪或分批 | 硬上限可配置，默认 30 |
+
+> **实现说明（2026-05）**：代码与 `config.yaml.example` 默认 **`max_photos: 250`**；manifest `maxPhotosPerTrip: 250`。[PRD-PHASE2.md](./PRD-PHASE2.md) Studio 以 250 为基准。本行保留 MVP 草案表述，**以配置为准**。
 | F-ING-05 | 导入 ≤3 个视频（mp4/mov）；单文件 ≤15s（超出提示裁剪） | 元数据记录时长 |
 | F-ING-06 | 生成 `assets/` 展示用图：WebP，宽 1600/800 两档 | 主图 1600，缩略 800 |
 

@@ -1,0 +1,434 @@
+(function () {
+  "use strict";
+
+  var HINT_KEY = "travelogue.studio.editHint.dismissed";
+  var LONGSHOT_SCALE = 2;
+  var SLOW_JOB_MS = 30000;
+  var pollTimer = null;
+  var longshotJobId = null;
+  var narrateJobId = null;
+
+  function tripIdFromPath() {
+    var parts = window.location.pathname.replace(/^\/+|\/+$/g, "").split("/");
+    return parts[0] || "";
+  }
+
+  function postJson(url, payload) {
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload || {}),
+    }).then(function (resp) {
+      return resp.json().then(function (body) {
+        return { status: resp.status, body: body };
+      });
+    });
+  }
+
+  function pollJob(jobId, onDone, onSlow) {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+    var started = Date.now();
+    var slowShown = false;
+    pollTimer = setInterval(function () {
+      if (onSlow && !slowShown && Date.now() - started > SLOW_JOB_MS) {
+        slowShown = true;
+        onSlow();
+      }
+      fetch("/__travelogue/status?jobId=" + encodeURIComponent(jobId))
+        .then(function (resp) { return resp.json(); })
+        .then(function (job) {
+          if (
+            job.status === "succeeded" ||
+            job.status === "failed" ||
+            job.status === "cancelled"
+          ) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+            onDone(job);
+          }
+        })
+        .catch(function () {});
+    }, 800);
+  }
+
+  function setLongshotStatus(root, text, visible) {
+    var status = root.querySelector(".preview-toolbar__longshot-status");
+    if (!status) return;
+    status.hidden = !visible;
+    status.textContent = text || "";
+  }
+
+  function setSlowHint(root, text, visible) {
+    var el = root.querySelector(".preview-toolbar__slow-hint");
+    if (!el) {
+      el = document.createElement("span");
+      el.className = "preview-toolbar__slow-hint";
+      el.hidden = true;
+      var bar = root.querySelector(".preview-toolbar__bar");
+      if (bar) bar.appendChild(el);
+    }
+    el.hidden = !visible;
+    el.textContent = text || "";
+  }
+
+  function showLongshotPanel(root, job) {
+    var panel = root.querySelector(".preview-toolbar__longshot-panel");
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.className = "preview-toolbar__longshot-panel";
+      root.appendChild(panel);
+    }
+    panel.hidden = false;
+
+    if (job.status === "failed") {
+      var err = (job.error && (job.error.message || job.error.code)) || "导出失败";
+      panel.innerHTML = '<p class="preview-toolbar__longshot-error">' + err + "</p>";
+      return;
+    }
+
+    var result = job.result || {};
+    var outputs = result.outputs || [];
+    var method = result.captureMethod || "p0";
+    var segmented = result.segmented || outputs.length > 1;
+    var html = '<p class="preview-toolbar__longshot-ok">长图已保存</p>';
+    if (segmented && outputs.length > 1) {
+      html +=
+        '<p class="preview-toolbar__longshot-compat">已按章导出 ' +
+        outputs.length +
+        " 张，底部含页码（如 2/5）便于微信按序发送。</p>";
+    }
+    if (method === "p1") {
+      html +=
+        '<p class="preview-toolbar__longshot-compat">已使用兼容模式导出，与预览可能有细微差异。</p>';
+    }
+    if (outputs.length) {
+      html += '<ul class="preview-toolbar__longshot-paths">';
+      outputs.forEach(function (p) {
+        html += "<li>" + p + "</li>";
+      });
+      html += "</ul>";
+      html +=
+        '<button type="button" class="preview-toolbar__reveal" data-path="' +
+        outputs[0].replace(/"/g, "&quot;") +
+        '">在文件夹中显示</button>';
+    }
+    panel.innerHTML = html;
+    var revealBtn = panel.querySelector(".preview-toolbar__reveal");
+    if (revealBtn) {
+      revealBtn.addEventListener("click", function () {
+        postJson("/__travelogue/reveal", { path: revealBtn.getAttribute("data-path") });
+      });
+    }
+    hideStaleHint(root);
+  }
+
+  function staleHintEl(root) {
+    return root.querySelector(".preview-toolbar__stale");
+  }
+
+  function showStaleHint(root) {
+    var el = staleHintEl(root);
+    if (el) el.hidden = false;
+  }
+
+  function hideStaleHint(root) {
+    var el = staleHintEl(root);
+    if (el) el.hidden = true;
+  }
+
+  function refreshStaleHint(root, tripId) {
+    fetch("/__travelogue/trips")
+      .then(function (resp) { return resp.json(); })
+      .then(function (data) {
+        var trips = data.trips || [];
+        var trip = trips.filter(function (t) { return t.tripId === tripId; })[0];
+        if (trip && trip.longshotStale) {
+          showStaleHint(root);
+        }
+      })
+      .catch(function () {});
+  }
+
+  function toggleAdvancedMenu(root) {
+    var menu = root.querySelector(".preview-toolbar__menu");
+    if (!menu) return;
+    menu.hidden = !menu.hidden;
+  }
+
+  function exportZip(tripId, root) {
+    if (!window.confirm("导出 zip 包用于自行托管或备份，不是微信分享主路径。继续？")) {
+      return;
+    }
+    postJson("/__travelogue/export", { tripId: tripId, confirmPrivacy: true })
+      .then(function (res) {
+        if (res.status !== 200 || !res.body.ok) {
+          window.alert((res.body && res.body.message) || "导出失败");
+          return;
+        }
+        var zipPath = res.body.zipPath;
+        if (zipPath && window.confirm("zip 已生成：\n" + zipPath + "\n\n在文件夹中显示？")) {
+          postJson("/__travelogue/reveal", { path: zipPath });
+        }
+      })
+      .catch(function () {
+        window.alert("导出失败");
+      });
+  }
+
+  function startLongshot(root, tripId) {
+    var btn = root.querySelector(".preview-toolbar__longshot");
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    setLongshotStatus(root, "正在生成长图…", true);
+    setSlowHint(root, "", false);
+
+    postJson("/__travelogue/longshot", {
+      tripId: tripId,
+      scale: LONGSHOT_SCALE,
+      format: "png",
+    })
+      .then(function (res) {
+        if (res.status === 409) {
+          setLongshotStatus(root, (res.body && res.body.message) || "请稍候再试", true);
+          btn.disabled = false;
+          return;
+        }
+        if (res.status !== 202 || !res.body.jobId) {
+          setLongshotStatus(root, "无法开始导出", true);
+          btn.disabled = false;
+          return;
+        }
+        longshotJobId = res.body.jobId;
+        pollJob(
+          res.body.jobId,
+          function (job) {
+            btn.disabled = false;
+            setLongshotStatus(root, "", false);
+            setSlowHint(root, "", false);
+            if (job.status === "succeeded") {
+              showLongshotPanel(root, job);
+            } else if (job.status === "failed") {
+              showLongshotPanel(root, job);
+            }
+          },
+          function () {
+            setSlowHint(root, "比预期久一些，请耐心等待…", true);
+          }
+        );
+      })
+      .catch(function () {
+        btn.disabled = false;
+        setLongshotStatus(root, "网络错误", true);
+      });
+  }
+
+  function startLlmNarrate(root, tripId, btn) {
+    if (!btn || btn.disabled) return;
+    if (
+      !window.confirm(
+        "将调用 LLM 重写 hook、导语与图注，可能覆盖未锁定的文案。继续？"
+      )
+    ) {
+      return;
+    }
+    btn.disabled = true;
+    setSlowHint(root, "", false);
+    setLongshotStatus(root, "正在生成杂志感文案…", true);
+
+    postJson("/__travelogue/narrate", { tripId: tripId })
+      .then(function (res) {
+        if (res.status === 409 || res.status === 400) {
+          setLongshotStatus(root, (res.body && res.body.message) || "无法开始", true);
+          btn.disabled = false;
+          return;
+        }
+        if (res.status !== 202 || !res.body.jobId) {
+          setLongshotStatus(root, "无法开始文案生成", true);
+          btn.disabled = false;
+          return;
+        }
+        narrateJobId = res.body.jobId;
+        pollJob(
+          res.body.jobId,
+          function (job) {
+            btn.disabled = false;
+            narrateJobId = null;
+            setLongshotStatus(root, "", false);
+            setSlowHint(root, "", false);
+            if (job.status === "succeeded") {
+              window.location.reload();
+              return;
+            }
+            var err = (job.error && (job.error.message || job.error.code)) || "文案生成失败";
+            window.alert(err);
+          },
+          function () {
+            setSlowHint(root, "比预期久一些，请耐心等待…", true);
+          }
+        );
+      })
+      .catch(function () {
+        btn.disabled = false;
+        setLongshotStatus(root, "网络错误", true);
+      });
+  }
+
+  function cancelLongshot(root) {
+    if (!longshotJobId) return;
+    postJson("/__travelogue/cancel", { jobId: longshotJobId }).finally(function () {
+      longshotJobId = null;
+      var btn = root.querySelector(".preview-toolbar__longshot");
+      if (btn) btn.disabled = false;
+      setLongshotStatus(root, "已取消", true);
+      setSlowHint(root, "", false);
+    });
+  }
+
+  function refreshPreviewCover(root, tripId) {
+    fetch("/__travelogue/trips")
+      .then(function (resp) { return resp.json(); })
+      .then(function (data) {
+        var trips = data.trips || [];
+        var trip = trips.filter(function (t) { return t.tripId === tripId; })[0];
+        if (!trip || !trip.previewPath) return;
+
+        var card = root.querySelector(".preview-toolbar__preview-card");
+        if (!card) {
+          card = document.createElement("div");
+          card.className = "preview-toolbar__preview-card";
+          root.appendChild(card);
+        }
+        card.hidden = false;
+        card.innerHTML =
+          '<p class="preview-toolbar__preview-title">封面引流图 preview.jpg（9:16）</p>' +
+          '<p class="preview-toolbar__preview-path">' + trip.previewPath + "</p>" +
+          '<button type="button" class="preview-toolbar__reveal preview-toolbar__preview-reveal" data-path="' +
+          trip.previewPath.replace(/"/g, "&quot;") +
+          '">在文件夹中显示</button>';
+        var revealBtn = card.querySelector(".preview-toolbar__preview-reveal");
+        if (revealBtn) {
+          revealBtn.addEventListener("click", function () {
+            postJson("/__travelogue/reveal", { path: revealBtn.getAttribute("data-path") });
+          });
+        }
+      })
+      .catch(function () {});
+  }
+
+  function initToolbar(root) {
+    var tripId = tripIdFromPath();
+    if (!tripId) return;
+
+    var bar = root.querySelector(".preview-toolbar__bar");
+
+    fetch("/__travelogue/config")
+      .then(function (resp) { return resp.json(); })
+      .then(function (cfg) {
+        if (cfg.llmAvailable) {
+          var llmBtn = document.createElement("button");
+          llmBtn.type = "button";
+          llmBtn.className = "preview-toolbar__llm";
+          llmBtn.textContent = "生成杂志感文案";
+          llmBtn.addEventListener("click", function () {
+            startLlmNarrate(root, tripId, llmBtn);
+          });
+          bar.appendChild(llmBtn);
+        }
+      })
+      .catch(function () {});
+
+    var longshotBtn = document.createElement("button");
+    longshotBtn.type = "button";
+    longshotBtn.className = "preview-toolbar__longshot";
+    longshotBtn.innerHTML =
+      '保存长图 <span class="preview-toolbar__scale-badge">推荐 · 适合手机</span>';
+    bar.appendChild(longshotBtn);
+
+    var status = document.createElement("span");
+    status.className = "preview-toolbar__longshot-status";
+    status.hidden = true;
+    bar.appendChild(status);
+
+    var stale = document.createElement("span");
+    stale.className = "preview-toolbar__stale";
+    stale.hidden = true;
+    stale.textContent = "内容已更新，请重新生成长图";
+    bar.appendChild(stale);
+
+    var advancedWrap = document.createElement("div");
+    advancedWrap.className = "preview-toolbar__advanced";
+    advancedWrap.innerHTML =
+      '<button type="button" class="preview-toolbar__advanced-btn">高级</button>' +
+      '<div class="preview-toolbar__menu" hidden>' +
+      '<button type="button" class="preview-toolbar__export-zip">导出 zip（自行托管）</button>' +
+      "</div>";
+    bar.appendChild(advancedWrap);
+
+    longshotBtn.addEventListener("click", function () {
+      startLongshot(root, tripId);
+    });
+
+    advancedWrap.querySelector(".preview-toolbar__advanced-btn").addEventListener("click", function () {
+      toggleAdvancedMenu(root);
+    });
+    advancedWrap.querySelector(".preview-toolbar__export-zip").addEventListener("click", function () {
+      toggleAdvancedMenu(root);
+      exportZip(tripId, root);
+    });
+
+    document.addEventListener("click", function (ev) {
+      if (!advancedWrap.contains(ev.target)) {
+        var menu = root.querySelector(".preview-toolbar__menu");
+        if (menu) menu.hidden = true;
+      }
+    });
+
+    refreshStaleHint(root, tripId);
+    refreshPreviewCover(root, tripId);
+
+    window.addEventListener("travelogue:copy-saved", function () {
+      showStaleHint(root);
+    });
+  }
+
+  function init() {
+    document.documentElement.setAttribute("data-preview-toolbar", "on");
+
+    var root = document.createElement("div");
+    root.className = "preview-toolbar";
+    root.innerHTML =
+      '<div class="preview-toolbar__bar">' +
+      '<a class="preview-toolbar__back" href="/">← 返回工作台</a>' +
+      "</div>";
+
+    var hintHidden = false;
+    try {
+      hintHidden = localStorage.getItem(HINT_KEY) === "1";
+    } catch (e) {}
+
+    if (!hintHidden) {
+      var hint = document.createElement("div");
+      hint.className = "preview-toolbar__hint";
+      hint.innerHTML =
+        '<span>点击标题、导语、图注即可修改 · 修改后自动保存</span>' +
+        '<button type="button" class="preview-toolbar__dismiss" aria-label="关闭提示">知道了</button>';
+      hint.querySelector(".preview-toolbar__dismiss").addEventListener("click", function () {
+        hint.hidden = true;
+        try { localStorage.setItem(HINT_KEY, "1"); } catch (e2) {}
+      });
+      root.appendChild(hint);
+    }
+
+    document.body.insertBefore(root, document.body.firstChild);
+    initToolbar(root);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();

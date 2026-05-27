@@ -2,10 +2,10 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.1 |
+| **文档版本** | v0.3.1 |
 | **状态** | 已拍板（产品方向） |
-| **关联** | `PRD-MVP.md` §5.4、`F-EXP-07`、`TEMPLATE-visual-journal.md` §13.5、[API-MINIAPP.md](./API-MINIAPP.md) |
-| **更新日期** | 2026-05-22 |
+| **关联** | `PRD-MVP.md` §5.4、`PRD-PHASE2.md` §8、`F-EXP-07`、`F-LNG-*`、`TEMPLATE-visual-journal.md` §13.5、[API-MINIAPP.md](./API-MINIAPP.md) |
+| **更新日期** | 2026-05-27 |
 
 ---
 
@@ -18,11 +18,11 @@
 | **A · 长图直发** | 单张竖版 PNG（9:16 杂志风） | 发到 **微信群**、朋友圈九宫格替代 | 用户 **接受** 照片出现在群内；**不**走身份验证 |
 | **B · 完整游记** | HTML 游记（`index.html` + 资源） | **小程序** 打开、仅受邀者可看 | **敏感**；访问需 **身份验证**；导出剥离精确 GPS |
 
-> **P0 必须交付 A**（保存长图）。**B 的托管与小程序鉴权** 属 P2，MVP 阶段可先本地 zip + 文档约定。
+> **P0 必须交付 A**（保存长图）。**Phase 2 主路径** 为服务端 `export-longshot`（Playwright）；客户端 html2canvas 保留为预览/降级。**B 的托管与小程序鉴权** 属 P3。
 
 ---
 
-## 2. 路径 A：保存长图（P0）
+## 2. 路径 A：保存长图（P0 · Phase 2 升级）
 
 ### 2.1 用户故事
 
@@ -32,12 +32,19 @@
 
 | 项 | 规格 |
 |----|------|
-| 入口 | 游记页右下角 **「保存长图」**；Web screens 经 bridge 打开 **`index-longshot.html`** |
-| 版式 | 专用长图面：`data-layout=longshot`，screens 槽位展平为竖向 `media-card` 栈；宽 **390px** |
-| 技术 | `longshot.js` + vendored `html2canvas`；支持 **按章** 或整篇导出、2×/3× 清晰度 |
-| 运行 | 须本地 **`travelogue serve`**（非 `file://`）；微信内预览弹窗 + 长按保存提示 |
-| 默认 | **draft / share 渲染均开启** sidecar；`export.longShot: false` 可关闭 |
-| zip | 默认 **包含** longshot bundle（`index-longshot.html` + `longshot.js/css` 等，约 +200KB） |
+| **主入口（Phase 2）** | Studio「保存长图」或 `travelogue export-longshot` |
+| **技术（Phase 2 主路径）** | Playwright 加载 `index-longshot.html` → `TravelogueLongshot.captureMainToBlob` → PNG 文件 |
+| **分段（服务端）** | 输出高度 **≤5000px** → 单 PNG；**>5000px** 或单章 **>60** media-card → 按章 `{title}-ch{nn}.png` |
+| **分段（客户端）** | 仍遵循 `longshot.js`：**>45** 张禁用整篇，提示按章导出（F-EXP-07） |
+| **降级入口** | 游记页 / `index-longshot.html` → 客户端 html2canvas（F-EXP-07） |
+| 版式 | 专用长图面：`data-layout=longshot`；宽 **390px** × scale |
+| **默认 scale** | CLI **`1`**；Studio UI **`2`（推荐）** — 见 ADR-005 D4 |
+| 微信引流 | 可先发已有 **`preview.jpg`**（9:16 封面）；长图专用 thumb **P2 backlog** |
+| 运行 | 须 **http://** 服务（Hub / serve）；非 `file://` |
+| 默认 | draft 渲染开启 longshot sidecar；`export.longShot: false` 可关闭 |
+| zip | longshot bundle 仍可打包进 zip；**产品 UI 不默认引导 zip** |
+
+详见 [adr/005-longshot-server-side.md](./adr/005-longshot-server-side.md)。
 
 ### 2.3 隐私与免责（产品立场）
 
@@ -48,7 +55,7 @@
 
 ### 2.4 验收
 
-见 `ACCEPTANCE.md` **AC-07**、**F-EXP-07**（P0 闸门）。
+见 [ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md) **AC-P2-02**（主路径）、[ACCEPTANCE.md](./ACCEPTANCE.md) **AC-07**（客户端回归）、**F-LNG-*** / **F-EXP-07**。
 
 ---
 
@@ -126,3 +133,5 @@ flowchart LR
 |------|------|------|
 | v0.1 | 2026-05-19 | 双轨策略：微信群长图 P0；小程序鉴权 HTML P2 |
 | v0.2 | 2026-05-22 | 长图专用面 `index-longshot.html`、按章导出、serve 要求、zip 含 sidecar |
+| v0.3 | 2026-05-27 | scale 双默认；preview.jpg 引流说明 |
+| v0.3.1 | 2026-05-27 | 分段双轨：服务端高度/张数兜底 vs 客户端 >45 张 |

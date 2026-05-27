@@ -1,0 +1,193 @@
+html[data-preview-toolbar="on"] {
+  scroll-padding-top: 56px;
+}
+
+.preview-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.preview-toolbar__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-height: 44px;
+  padding: 8px 16px;
+  background: rgba(26, 47, 40, 0.94);
+  color: #f5fbf8;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+.preview-toolbar__back {
+  color: #c8e6d8;
+  text-decoration: none;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.preview-toolbar__back:hover { color: #fff; }
+
+.preview-toolbar__hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px;
+  font-size: 13px;
+  background: rgba(61, 107, 90, 0.92);
+  color: #f5fbf8;
+}
+.preview-toolbar__hint[hidden] { display: none !important; }
+
+.preview-toolbar__dismiss {
+  border: none;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.preview-toolbar__longshot {
+  margin-left: auto;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.preview-toolbar__longshot:disabled { opacity: 0.6; cursor: wait; }
+
+.preview-toolbar__scale-badge {
+  font-size: 11px;
+  font-weight: 500;
+  color: #ffd89a;
+  white-space: nowrap;
+}
+
+.preview-toolbar__llm {
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.preview-toolbar__llm:disabled { opacity: 0.6; cursor: wait; }
+
+.preview-toolbar__longshot-status,
+.preview-toolbar__stale,
+.preview-toolbar__slow-hint {
+  font-size: 12px;
+  color: #c8e6d8;
+  white-space: nowrap;
+}
+.preview-toolbar__stale { color: #ffd89a; }
+.preview-toolbar__slow-hint { color: #a8dcc8; font-style: italic; }
+.preview-toolbar__longshot-status[hidden],
+.preview-toolbar__stale[hidden],
+.preview-toolbar__slow-hint[hidden] { display: none !important; }
+
+.preview-toolbar__advanced {
+  position: relative;
+}
+
+.preview-toolbar__advanced-btn,
+.preview-toolbar__export-zip {
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e8f5ef;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.preview-toolbar__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 180px;
+  padding: 6px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+.preview-toolbar__menu[hidden] { display: none !important; }
+
+.preview-toolbar__export-zip {
+  display: block;
+  width: 100%;
+  text-align: left;
+  color: #1a2f28;
+  background: transparent;
+  border-radius: 6px;
+}
+.preview-toolbar__export-zip:hover { background: #eef5f1; }
+
+.preview-toolbar__longshot-panel {
+  padding: 10px 16px;
+  background: rgba(245, 251, 248, 0.96);
+  color: #1a2f28;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+.preview-toolbar__longshot-panel[hidden] { display: none !important; }
+
+.preview-toolbar__preview-card {
+  padding: 10px 16px;
+  background: rgba(232, 245, 239, 0.96);
+  color: #1a2f28;
+  font-size: 13px;
+  border-top: 1px solid rgba(61, 107, 90, 0.18);
+}
+.preview-toolbar__preview-card[hidden] { display: none !important; }
+.preview-toolbar__preview-title {
+  margin: 0 0 6px;
+  font-weight: 600;
+  font-size: 12px;
+  color: #3d6b5a;
+}
+.preview-toolbar__preview-path {
+  margin: 0 0 8px;
+  word-break: break-all;
+  font-size: 12px;
+  color: #4a5c55;
+}
+
+.preview-toolbar__longshot-ok { margin: 0 0 6px; font-weight: 600; }
+.preview-toolbar__longshot-compat {
+  margin: 0 0 8px;
+  color: #6b4c1e;
+  font-size: 12px;
+}
+.preview-toolbar__longshot-error { margin: 0; color: #9b2c2c; }
+.preview-toolbar__longshot-paths {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  word-break: break-all;
+}
+
+.preview-toolbar__reveal {
+  border: none;
+  background: #3d6b5a;
+  color: #fff;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}

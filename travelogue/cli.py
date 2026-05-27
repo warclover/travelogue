@@ -853,9 +853,93 @@ def cmd_render(
         typer.echo("  文案编辑: python -m travelogue serve <trip> 打开后点击文案保存到 trip.json")
 
 
+@app.command("studio")
+def cmd_studio(
+    pick_folder: Optional[Path] = typer.Option(
+        None,
+        "--pick-folder",
+        help="album folder path; run pipeline before serving",
+    ),
+    pick_folder_dialog: bool = typer.Option(
+        False,
+        "--pick-folder-dialog",
+        help="open Windows folder picker (IFileDialog) before serving",
+    ),
+    demo_album: bool = typer.Option(
+        False,
+        "--demo-album",
+        help="import bundled demo album before serving (M11)",
+    ),
+    port: int = typer.Option(8766, "--port", "-p", help="HTTP port"),
+    host: str = typer.Option("127.0.0.1", "--host", help="bind address"),
+    no_open: bool = typer.Option(False, "--no-open", help="do not open browser"),
+    title: str = typer.Option("我的旅途", "--title", help="trip title"),
+    place: str = typer.Option("旅途", "--place", help="default place name"),
+    trips_dir: Optional[Path] = typer.Option(None, "--trips-dir", help="trips root directory"),
+    config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
+) -> None:
+    """Launch Studio workbench (serve --studio on trips directory)."""
+    import webbrowser
+
+    from travelogue.demo.build import DemoError
+    from travelogue.web.serve import serve_studio_directory
+    from travelogue.web.studio_pipeline import run_studio_pipeline
+
+    _load_cfg(config)
+    cfg = get_config()
+    root = (trips_dir or cfg.trips_dir).resolve()
+    root.mkdir(parents=True, exist_ok=True)
+
+    album_path: Path | None = pick_folder
+    if demo_album:
+        from travelogue.desktop.demo_album import resolve_demo_album_dir
+
+        album_path = resolve_demo_album_dir()
+    elif pick_folder_dialog:
+        from travelogue.desktop.folder_dialog import pick_folder as open_folder_dialog
+
+        album_path = open_folder_dialog(title="选择照片文件夹")
+        if album_path is None:
+            typer.echo("未选择文件夹", err=True)
+            raise typer.Exit(1)
+
+    preview_url: str | None = None
+    if album_path is not None:
+        try:
+            result = run_studio_pipeline(
+                album_path,
+                trips_dir=root,
+                title=title,
+                place=place,
+                host=host,
+                port=port,
+                app_config=cfg,
+            )
+        except DemoError as exc:
+            typer.echo(f"{exc.code}: {exc}", err=True)
+            raise typer.Exit(1) from exc
+        preview_url = result.preview_url
+        typer.echo(f"OK studio pipeline · trip {result.trip_id}")
+        typer.echo(f"  photos: {result.photo_count}")
+        typer.echo(f"  preview: {preview_url}")
+
+    if not no_open:
+        webbrowser.open(preview_url or f"http://{host}:{port}/")
+
+    try:
+        serve_studio_directory(
+            root,
+            port=port,
+            host=host,
+            app_config=cfg,
+        )
+    except KeyboardInterrupt:
+        raise typer.Exit(0) from None
+
+
 @app.command("serve")
 def cmd_serve(
-    path: str = typer.Argument(..., help="trip directory, trip.json, or tripId"),
+    path: str = typer.Argument(..., help="trip directory, trip.json, tripId, or trips/ root with --studio"),
     port: int = typer.Option(8766, "--port", "-p", help="HTTP port"),
     host: str = typer.Option("127.0.0.1", "--host", help="bind address"),
     index: str = typer.Option("index.html", "--index", help="entry HTML filename"),
@@ -864,14 +948,30 @@ def cmd_serve(
         "--rerender/--no-rerender",
         help="re-render HTML after inline save (F-ED-03)",
     ),
+    studio: bool = typer.Option(False, "--studio", help="Studio workbench mode (trips root)"),
     config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
+    trips_dir: Optional[Path] = typer.Option(None, "--trips-dir", help="trips root when path is tripId"),
 ) -> None:
     """Serve trip output with inline copy save API (draft editing)."""
-    from travelogue.web.serve import resolve_trip_serve_dir, serve_trip_directory
+    from travelogue.web.serve import resolve_trip_serve_dir, serve_studio_directory, serve_trip_directory
 
     _load_cfg(config)
+    cfg = get_config()
+    if studio:
+        root = Path(path).resolve() if path else (trips_dir or cfg.trips_dir).resolve()
+        try:
+            serve_studio_directory(
+                root,
+                port=port,
+                host=host,
+                auto_rerender=rerender,
+                app_config=cfg,
+            )
+        except KeyboardInterrupt:
+            raise typer.Exit(0) from None
+        return
     try:
-        trip_path = _resolve(path)
+        trip_path = _resolve(path, trips_dir=trips_dir)
         serve_dir = resolve_trip_serve_dir(trip_path)
     except (TripNotFoundError, FileNotFoundError) as exc:
         typer.echo(f"E_SERVE: {exc}", err=True)
@@ -1004,6 +1104,37 @@ def cmd_export_pdf(
         typer.echo(f"E_EXPORT_PDF: {exc}", err=True)
         raise typer.Exit(1) from exc
     typer.echo(f"OK export-pdf · {out_path}")
+
+
+@app.command("export-longshot")
+def cmd_export_longshot(
+    path: str = typer.Argument(..., help="trip directory, trip.json, or tripId"),
+    out: Optional[Path] = typer.Option(None, "--out", "-o", help="output PNG path (single file only)"),
+    scale: int = typer.Option(1, "--scale", help="capture scale (1–3)"),
+    format: str = typer.Option("png", "--format", "-f", help="png | jpeg"),
+    chapter: Optional[int] = typer.Option(None, "--chapter", help="export one chapter (1-based)"),
+    port: int = typer.Option(0, "--port", "-p", help="HTTP port when no serve running (0 = random)"),
+) -> None:
+    """Export trip longshot PNG via Playwright (requires playwright + chromium)."""
+    from travelogue.export.longshot import LongshotExportError, export_trip_longshot
+    from travelogue.web.serve import resolve_trip_serve_dir
+
+    try:
+        trip_path = _resolve(path)
+        serve_dir = resolve_trip_serve_dir(trip_path)
+        result = export_trip_longshot(
+            serve_dir,
+            scale=scale,
+            fmt=format,
+            chapter=chapter,
+            output=out,
+            port=port,
+        )
+    except (TripNotFoundError, FileNotFoundError, LongshotExportError) as exc:
+        typer.echo(f"E_EXPORT_LONGSHOT: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    for item in result.outputs:
+        typer.echo(f"OK export-longshot · {item.path} ({item.capture_method})")
 
 
 @app.command("preview")

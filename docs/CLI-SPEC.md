@@ -4,9 +4,9 @@
 |------|------|
 | **命令名** | `travelogue` |
 | **文档版本** | v0.1 |
-| **实现状态** | P0/P1 核心命令已实现（见 §2 表） |
-| **关联** | `AGENT-ARCHITECTURE.md`、`DEVELOPMENT.md`、`ERROR-CODES.md`、[API-MINIAPP.md](./API-MINIAPP.md)（小程序 HTTP 对照） |
-| **更新日期** | 2026-05-19 |
+| **实现状态** | P0/P1 核心命令已实现；**Phase 2** `studio` / `export-longshot` 见 §2.2（待实现） |
+| **关联** | `AGENT-ARCHITECTURE.md`、`DEVELOPMENT.md`、`ERROR-CODES.md`、[PRD-PHASE2.md](./PRD-PHASE2.md)、[API-MINIAPP.md](./API-MINIAPP.md) |
+| **更新日期** | 2026-05-27 |
 
 ---
 
@@ -56,7 +56,70 @@ python -m travelogue <子命令> …
 
 **禁止**：在 `structure_locked` 之前调用 `narrate`（返回 `E_PIPELINE_ORDER`）。
 
-### 2.1 `travelogue run <tripId> --from <stage>`
+### 2.2 Phase 2 命令（Studio · 待实现）
+
+| 命令 | 说明 | 等价 |
+|------|------|------|
+| **`studio`** | 启动 Studio 工作台 | `serve <trips_dir> --studio` |
+| **`studio --pick-folder PATH`** | 先 pipeline，再 serve，再打开预览 | PATH **必填**（M8 无原生对话框） |
+| **`export-longshot <trip>`** | 服务端长图 PNG（P0/P1 fallback） | 见 ADR-005 |
+
+#### `travelogue studio`
+
+| 选项 | 说明 |
+|------|------|
+| `--pick-folder PATH` | 相册绝对路径；先跑 pipeline 再进入 serve |
+| `--port` / `-p` | 默认 **8766**（与 serve 统一） |
+| `--host` | 默认 `127.0.0.1` |
+| `--no-open` | 不自动打开浏览器 |
+| `--trips-dir` | trips 根目录（默认 `config.trips_dir`） |
+| `--config` | 指定 config.yaml |
+
+**默认 pipeline**：`from-album(layout=auto)` → auto lock → `narrate(stub)` → `render --dual`。
+
+**进度**：Job 返回 `stageIndex` / `stageCount` / **`stageHint`**（1/4…4/4 + 预估时间），**无**连续 `progress` 百分比。
+
+#### `travelogue serve` 扩展
+
+| 选项 | 说明 |
+|------|------|
+| `--studio` | 启用 Studio 路由（`/`、 `/__travelogue/*`）+ trip 子路径 |
+
+无 `--studio` 时行为与 MVP **完全一致**。
+
+#### `travelogue export-longshot <trip>`
+
+| 选项 | 说明 |
+|------|------|
+| `--format` | `png`（默认）\| `jpeg` |
+| `--scale` | CLI 默认 **`1`**；Studio UI 默认 **`2`（推荐）**；`3` 超高清 |
+| `--chapter` | 仅第 N 章（1-based） |
+| `-o` / `--out` | 输出路径 |
+| `--port` | 临时 HTTP（0=随机） |
+
+**捕获**：P0 `captureMainToBlob` → P1 `main` screenshot fallback → P2 客户端 html2canvas（Plan B）。
+
+**import body**：`{ "albumPath", "title?", "place?", "force": false }` — `E_DEMO_EXISTS` 时 UI 确认后 **`force: true`** 重试。
+
+**上传清理**：Job succeeded → 删 `trips/_uploads/{jobId}/`；failed 保留 24h。
+
+**分段**：输出高度 >5000px 或单章 >60 media-card → 按章 `{title}-ch{nn}.png`。
+
+#### Studio HTTP（`serve --studio` · 单端口 8766）
+
+| 方法 | 路径 |
+|------|------|
+| `GET` | `/` · `/__travelogue/trips` · `/__travelogue/status` |
+| `POST` | `/__travelogue/import` · `/__travelogue/longshot` · `/__travelogue/reveal` · `/__travelogue/cancel`（M10） |
+| `GET/POST` | `/{tripId}/…` · `/{tripId}/__travelogue/save-copy`（与 MVP 相同） |
+
+详见 [adr/004-studio-hub-server.md](./adr/004-studio-hub-server.md) v0.3。
+
+**Studio Chrome**：`serve --studio` 对 `/{tripId}/*.html` 注入 `studio-chrome.js`（M8 返回/编辑提示；M9 长图按钮；M10 完整 toolbar）。
+
+---
+
+### 2.3 `travelogue run <tripId> --from <stage>`
 
 从指定阶段执行到下一人工闸口或 `--until`。
 
@@ -301,3 +364,6 @@ travelogue export demo --confirm-privacy
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v0.1 | 2026-05-19 | P0.5 CLI 规范初稿 |
+| v0.2.1 | 2026-05-27 | cancel、force import、upload 清理、bat 入口 |
+| v0.3 | 2026-05-27 | stageHint；Studio scale=2 默认；Studio Chrome |
+| v0.3.1 | 2026-05-27 | reveal API；--trips-dir；409 body |

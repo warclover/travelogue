@@ -14,12 +14,14 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "piexif>=1.1", "playwright>=1.40"]
+desktop = ["comtypes>=1.4", "pyinstaller>=6.6"]
 playwright = ["playwright>=1.40"]
 heif = ["pillow-heif>=0.16"]
 vision = ["opencv-python-headless>=4.8.0"]
 
 [project.scripts]
 travelogue = "travelogue.cli:main"
+travelogue-studio = "travelogue.desktop.launcher:main"
 
 [build-system]
 requires = ["setuptools>=61"]

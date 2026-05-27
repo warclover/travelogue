@@ -87,6 +87,16 @@ def test_narrate_uses_voice_excerpt() -> None:
     assert "雨太大了" in trip["chapters"][1]["lead"]
 
 
+def test_narrate_lead_day_format_f_nar_p2_01() -> None:
+    trip = _sample_trip()
+    trip["assets"][1]["takenAt"] = "2025-04-03T10:00:00Z"
+    run_narrate(trip, provider="stub", scope="full")
+    lead = trip["chapters"][1]["lead"]
+    assert lead.startswith("Day 2 ·")
+    assert "4月3日" in lead
+    assert "祇园" in lead
+
+
 def test_narrate_lead_does_not_repeat_title_place() -> None:
     trip = _sample_trip()
     trip["meta"]["places"] = ["林芝"]

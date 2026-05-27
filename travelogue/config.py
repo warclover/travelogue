@@ -13,6 +13,15 @@ from typing import Any, Iterator
 from travelogue.constants import VALID_ARC_MODES, VALID_NARRATIVE_SCOPES
 from travelogue.paths import ROOT
 
+
+def _default_trips_dir() -> Path:
+    try:
+        from travelogue.desktop.bundle import default_trips_dir
+
+        return default_trips_dir()
+    except Exception:
+        return ROOT / "trips"
+
 _log = logging.getLogger(__name__)
 
 try:
@@ -151,7 +160,7 @@ class LayoutConfig:
 
 @dataclass
 class AppConfig:
-    trips_dir: Path = field(default_factory=lambda: ROOT / "trips")
+    trips_dir: Path = field(default_factory=_default_trips_dir)
     ingest: IngestConfig = field(default_factory=IngestConfig)
     layout: LayoutConfig = field(default_factory=LayoutConfig)
     vision: VisionConfig = field(default_factory=VisionConfig)
@@ -258,7 +267,15 @@ def load_config(path: Path | None = None) -> AppConfig:
     trips = data.get("trips_dir", "./trips")
     trips_dir = Path(trips)
     if not trips_dir.is_absolute():
-        trips_dir = (Path.cwd() / trips_dir).resolve()
+        base = Path.cwd()
+        try:
+            from travelogue.desktop.bundle import exe_dir, is_frozen
+
+            if is_frozen():
+                base = exe_dir()
+        except Exception:
+            pass
+        trips_dir = (base / trips_dir).resolve()
     ingest_raw = data.get("ingest") if isinstance(data.get("ingest"), dict) else {}
     layout_raw = data.get("layout") if isinstance(data.get("layout"), dict) else {}
     web_engine = str(layout_raw.get("web_layout_engine", "screens")).strip().lower()

@@ -1,0 +1,15 @@
+# Studio import stage hints (PRD §7.3 · F-STU-14)
+stages:
+  curate: "约 30 秒"
+  narrate: "约 10 秒"
+  render: "约 30 秒"
+  longshot: "约 20–40 秒"
+  llm_narrate: "约 30–60 秒"
+
+ingest:
+  - max_photos: 50
+    hint: "约 30 秒"
+  - max_photos: 100
+    hint: "约 1 分钟"
+  - max_photos: 250
+    hint: "约 2 分钟"
