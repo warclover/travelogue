@@ -7,7 +7,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Callable
 
-from travelogue.config import get_config
+from travelogue.config import AppConfig, get_config
 from travelogue.llm.client import chat_completion, parse_json_content
 from travelogue.llm.narrate_cache import read_cached, write_cached
 from travelogue.services.errors import NarrateError
@@ -95,8 +95,9 @@ def _narrative_field_errors(
     *,
     meta_only: bool = False,
     chapter_index: int | None = None,
+    cfg: AppConfig | None = None,
 ) -> list[str]:
-    errs = [e for e in validate_narrative(trip) if not e.startswith("WARN:")]
+    errs = [e for e in validate_narrative(trip, cfg=cfg) if not e.startswith("WARN:")]
     if meta_only:
         errs = [e for e in errs if "chapters[" not in e]
     elif chapter_index is not None:
@@ -235,8 +236,9 @@ def _planned_fields(
     regenerate: bool = False,
     chapter_id: str | None = None,
     scope: str | None = None,
+    cfg: AppConfig | None = None,
 ) -> list[str]:
-    scope_val = resolve_narrative_scope(override=scope)
+    scope_val = resolve_narrative_scope(override=scope, cfg=cfg)
     fields: list[str] = []
     meta = trip.get("meta") or {}
     chapters = trip.get("chapters") or []
@@ -396,6 +398,7 @@ def run_llm_narrate(
     chat_fn: Callable[[list[dict[str, str]]], str] | None = None,
     chapter_id: str | None = None,
     scope: str | None = None,
+    cfg: AppConfig | None = None,
 ) -> NarrateResult:
     """
     Fill hook, leads, captions, epilogue via LLM (metadata brief only).
@@ -404,7 +407,7 @@ def run_llm_narrate(
     ``curation.narrativeScope``. This function only persists ``narrativeScope``
     (no cleanup) when ``dry_run`` is false.
     """
-    scope_val = resolve_narrative_scope(override=scope)
+    scope_val = resolve_narrative_scope(override=scope, cfg=cfg)
     if not dry_run:
         trip.setdefault("curation", {})["narrativeScope"] = scope_val
     if chapter_id:
@@ -412,19 +415,22 @@ def run_llm_narrate(
     meta = trip.setdefault("meta", {})
     if tone:
         meta["tone"] = tone if tone in ("relaxed", "documentary") else meta.get("tone", "relaxed")
-    tone_val = meta.get("tone") or get_config().narrative.tone_default or "relaxed"
+    app_cfg = cfg or get_config()
+    tone_val = meta.get("tone") or app_cfg.narrative.tone_default or "relaxed"
 
-    planned = _planned_fields(trip, regenerate=regenerate, chapter_id=chapter_id, scope=scope_val)
+    planned = _planned_fields(
+        trip, regenerate=regenerate, chapter_id=chapter_id, scope=scope_val, cfg=app_cfg
+    )
     if dry_run:
         return NarrateResult(fields_updated=planned)
 
     if not planned:
         return NarrateResult(fields_updated=[])
 
-    max_retries = get_config().narrative.max_auto_fix_retries
+    max_retries = app_cfg.narrative.max_auto_fix_retries
     lead_seen: set[str] = set()
     updated: list[str] = []
-    rt_model = get_config().llm.model or provider
+    rt_model = app_cfg.llm.model or provider
 
     if not chapter_id and _needs_meta(trip, regenerate=regenerate):
         brief = build_meta_brief(trip, tone=tone_val, regenerate=regenerate)
@@ -445,7 +451,7 @@ def run_llm_narrate(
             payload = parse_json_content(content)
             before = deepcopy(trip)
             batch = _apply_meta_payload(trip, payload, regenerate=regenerate)
-            errs = _narrative_field_errors(trip, meta_only=True)
+            errs = _narrative_field_errors(trip, meta_only=True, cfg=app_cfg)
             if not errs:
                 updated.extend(batch)
                 break
@@ -494,7 +500,7 @@ def run_llm_narrate(
             batch = _apply_chapter_payload(
                 trip, chapter, payload, lead_seen=lead_seen, regenerate=regenerate, scope=scope_val
             )
-            errs = _narrative_field_errors(trip, chapter_index=ch_idx)
+            errs = _narrative_field_errors(trip, chapter_index=ch_idx, cfg=app_cfg)
             if not errs:
                 updated.extend(batch)
                 break
@@ -517,7 +523,7 @@ def run_llm_narrate(
                     idx = chapter.get("index")
                     if f"chapters[{idx}].lead" not in batch:
                         batch.append(f"chapters[{idx}].lead")
-                    stub_errs = _narrative_field_errors(trip, chapter_index=ch_idx)
+                    stub_errs = _narrative_field_errors(trip, chapter_index=ch_idx, cfg=app_cfg)
                     if not stub_errs:
                         updated.extend(batch)
                         break

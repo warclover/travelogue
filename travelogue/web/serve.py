@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import json
 import threading
+from contextlib import contextmanager
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import Iterator
 
+from travelogue.config import AppConfig, app_config_scope, get_config
 from travelogue.services.trip import TripService
 from travelogue.web.copy_patch import CopyPatchError, apply_copy_patches
 from travelogue.web.tier_patch import TierPatchError, apply_tier_promotions
@@ -21,6 +24,7 @@ _trip_write_lock = threading.Lock()
 class TripPreviewHandler(SimpleHTTPRequestHandler):
     trip_json_path: Path
     auto_rerender: bool = True
+    app_config: AppConfig | None = None
 
     def __init__(
         self,
@@ -33,6 +37,15 @@ class TripPreviewHandler(SimpleHTTPRequestHandler):
         self.trip_json_path = trip_json or Path("trip.json")
         self.auto_rerender = auto_rerender
         super().__init__(*args, directory=directory, **kwargs)
+
+    @contextmanager
+    def _app_config_scope(self) -> Iterator[AppConfig]:
+        cfg = self.app_config
+        if cfg is None:
+            yield get_config()
+        else:
+            with app_config_scope(cfg) as active:
+                yield active
 
     def do_GET(self) -> None:  # noqa: N802
         if self.path.split("?", 1)[0] in FAVICON_SILENT_PATHS:
@@ -72,14 +85,15 @@ class TripPreviewHandler(SimpleHTTPRequestHandler):
         svc = TripService()
         rendered: list[str] = []
         try:
-            with _trip_write_lock:
-                trip = svc.load(self.trip_json_path)
-                updated = apply_copy_patches(trip, patches)
-                svc.save(trip, self.trip_json_path)
-                if self.auto_rerender:
-                    from travelogue.web.rerender import rerender_draft_trip
+            with self._app_config_scope():
+                with _trip_write_lock:
+                    trip = svc.load(self.trip_json_path)
+                    updated = apply_copy_patches(trip, patches)
+                    svc.save(trip, self.trip_json_path)
+                    if self.auto_rerender:
+                        from travelogue.web.rerender import rerender_draft_trip
 
-                    rendered = rerender_draft_trip(self.trip_json_path)
+                        rendered = rerender_draft_trip(self.trip_json_path)
         except CopyPatchError as exc:
             self._json_response(400, {"ok": False, "error": str(exc)})
             return
@@ -100,14 +114,15 @@ class TripPreviewHandler(SimpleHTTPRequestHandler):
         svc = TripService()
         rendered: list[str] = []
         try:
-            with _trip_write_lock:
-                trip = svc.load(self.trip_json_path)
-                promoted = apply_tier_promotions(trip, ids)
-                svc.save(trip, self.trip_json_path)
-                if self.auto_rerender and promoted:
-                    from travelogue.web.rerender import rerender_draft_trip
+            with self._app_config_scope():
+                with _trip_write_lock:
+                    trip = svc.load(self.trip_json_path)
+                    promoted = apply_tier_promotions(trip, ids)
+                    svc.save(trip, self.trip_json_path)
+                    if self.auto_rerender and promoted:
+                        from travelogue.web.rerender import rerender_draft_trip
 
-                    rendered = rerender_draft_trip(self.trip_json_path)
+                        rendered = rerender_draft_trip(self.trip_json_path)
         except TierPatchError as exc:
             self._json_response(400, {"ok": False, "error": str(exc)})
             return
@@ -136,11 +151,16 @@ def serve_trip_directory(
     host: str = "127.0.0.1",
     index: str = "index.html",
     auto_rerender: bool = True,
+    app_config: AppConfig | None = None,
 ) -> None:
     trip_dir = trip_dir.resolve()
     trip_json = trip_dir / "trip.json"
     if not trip_json.is_file():
         raise FileNotFoundError(f"trip.json not found in {trip_dir}")
+
+    pinned_cfg = app_config or get_config()
+    prev_handler_cfg = TripPreviewHandler.app_config
+    TripPreviewHandler.app_config = pinned_cfg
 
     handler = partial(
         TripPreviewHandler,
@@ -163,6 +183,7 @@ def serve_trip_directory(
     except KeyboardInterrupt:
         print("\nStopped.")
     finally:
+        TripPreviewHandler.app_config = prev_handler_cfg
         server.server_close()
 
 

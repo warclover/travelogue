@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from travelogue.config import AppConfig
+
 from travelogue.curation.bucket_planning import (
     bucket_day_span,
     cap_book_buckets,
@@ -157,6 +159,7 @@ def apply_low_resolution_exclusion(
     trip: dict,
     *,
     trip_dir: Path | None = None,
+    app_cfg: AppConfig | None = None,
 ) -> str | None:
     """Mark明显偏低分辨率 assets; returns warning message if any dropped."""
     from travelogue.curation.asset_quality import (
@@ -167,7 +170,7 @@ def apply_low_resolution_exclusion(
     if trip_dir is not None:
         backfill_native_dimensions(trip, Path(trip_dir))
 
-    return apply_layout_eligibility_marks(trip)
+    return apply_layout_eligibility_marks(trip, app_cfg=app_cfg)
 
 
 def resolve_cover_asset_id(
@@ -307,11 +310,15 @@ def run_curate(
     layout_engine: str | None = None,
     apply_layout: bool = True,
     trip_dir: Path | None = None,
+    cfg: AppConfig | None = None,
 ) -> CurateResult:
     if len(trip.get("assets") or []) < 4:
         raise CurateError("E_CURATE_TOO_FEW", "need at least 4 assets to curate")
 
-    res_warn = apply_low_resolution_exclusion(trip, trip_dir=trip_dir)
+    from travelogue.config import default_web_layout_engine, get_config
+
+    app_cfg = cfg or get_config()
+    res_warn = apply_low_resolution_exclusion(trip, trip_dir=trip_dir, app_cfg=app_cfg)
     layout_assets = layout_eligible_assets(trip)
     if len(layout_assets) < 4:
         raise CurateError(
@@ -325,15 +332,12 @@ def run_curate(
         LAYOUT_ENGINE_VERSION_SCREENS,
     )
 
-    from travelogue.config import default_web_layout_engine, get_config
-
-    app_cfg = get_config()
     cur_cfg = app_cfg.curate
     layout = export_layout or trip.get("exportLayout") or "auto"
     engine = (
         layout_engine
         or trip.get("layoutEngine")
-        or default_web_layout_engine(layout)
+        or default_web_layout_engine(layout, cfg=app_cfg)
     )
     if engine not in (LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS):
         engine = LAYOUT_ENGINE_LEGACY

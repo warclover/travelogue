@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from travelogue.config import AppConfig, app_config_scope
 from travelogue.export.packager import ExportError, export_trip
 from travelogue.render.engine import RenderError, render_trip
 from travelogue.render.preview import render_preview_jpg
@@ -27,8 +28,27 @@ def publish_trip(
     no_preview: bool = False,
     output_zip: Path | None = None,
     validate: bool = True,
+    cfg: AppConfig | None = None,
 ) -> PublishResult:
     """Full Agent 3 publish path for a trip.json workspace."""
+    with app_config_scope(cfg):
+        return _publish_trip_stages(
+            trip_path,
+            confirm_privacy=confirm_privacy,
+            no_preview=no_preview,
+            output_zip=output_zip,
+            validate=validate,
+        )
+
+
+def _publish_trip_stages(
+    trip_path: Path,
+    *,
+    confirm_privacy: bool = True,
+    no_preview: bool = False,
+    output_zip: Path | None = None,
+    validate: bool = True,
+) -> PublishResult:
     trip_path = trip_path.resolve()
     trip_root = trip_path.parent
 

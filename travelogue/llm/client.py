@@ -25,9 +25,12 @@ class LlmRuntime:
 
 def resolve_llm_runtime(provider: str | None = None, *, cfg: object | None = None) -> LlmRuntime:
     """Resolve provider, model, API key, and base URL for a chat call."""
-    from travelogue.config import get_config
+    from travelogue.config import AppConfig, get_config
 
-    llm = cfg or get_config().llm
+    if isinstance(cfg, AppConfig):
+        llm = cfg.llm
+    else:
+        llm = cfg or get_config().llm
     prov = (provider or llm.provider or "stub").strip().lower()
     if prov == "stub":
         raise LlmError("E_LLM_STUB", "LLM provider is stub; set llm.provider in config.yaml")

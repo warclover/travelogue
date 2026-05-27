@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
+
+from travelogue.config import AppConfig
 
 from travelogue.curation.asset_caption import asset_caption, resolve_caption
 from travelogue.media.image_ops import classify_aspect, detect_orientation
@@ -746,20 +749,80 @@ def build_screen_spread(
     }
 
 
-def build_render_context(
+@dataclass
+class SurfaceContext:
+    """Resolved export surface flags and reading profile (resolve phase)."""
+
+    export_mode: str
+    is_draft: bool
+    is_share: bool
+    copy_display: str
+    photos_only: bool
+    export_layout: str
+    is_longshot_surface: bool
+    image_layout: str
+    layout_engine: str
+    use_screens_global: bool
+    include_screenplay: bool
+    strip_narrative_copy: bool
+    assets: dict[str, dict]
+    reading_payload: dict
+    reading_json: str
+    folio_lite: bool
+    folio_full: bool
+    include_breath: bool
+    include_breath_flow: bool
+    include_breath_scrub: bool
+    include_breath_gsap_runtime: bool
+    include_scroll_keyboard_nav: bool
+    has_featured_assets: bool
+    include_long_shot: bool
+    include_longshot_bridge: bool
+    present_preview_url: str | None
+    index_name: str
+    font_theme: str | None
+    layout_engine_override: str | None
+    export_layout_override: str | None
+
+
+@dataclass
+class ChaptersRenderBundle:
+    """Chapter list and folio extras (enrich phase)."""
+
+    chapters_out: list[dict]
+    foreword_spread: dict | None
+    has_foreword_spread: bool
+    trip_index_entries: list[dict]
+    has_trip_index: bool
+    featured_grid_cards: list[dict]
+    has_featured_grid: bool
+
+
+def resolve_surface_context(
     trip: dict,
     *,
     export_mode: str = "draft",
-    trip_root: Path | None = None,
     layout_engine_override: str | None = None,
     export_layout_override: str | None = None,
     font_theme: str | None = None,
     copy_display_override: str | None = None,
     index_name: str = "index.html",
     reading_profile_override: str | None = None,
-) -> dict:
-    """export_mode: draft | share"""
+    cfg: AppConfig | None = None,
+) -> SurfaceContext:
+    from travelogue.config import get_config, reading_profile_defaults
+    from travelogue.curation.screen_planner import resolve_layout_engine, screens_layout_active
     from travelogue.render.copy_display import is_photos_only, resolve_copy_display, should_strip_narrative_copy
+    from travelogue.render.engine import (
+        should_include_long_shot,
+        should_include_longshot_bridge,
+        should_include_screenplay,
+        web_screens_surface_active,
+    )
+    from travelogue.render.reading_profile import (
+        reading_json_for_html,
+        resolve_reading_payload,
+    )
 
     is_draft = export_mode == "draft"
     is_share = export_mode == "share"
@@ -768,9 +831,6 @@ def build_render_context(
     export_layout = export_layout_override or trip.get("exportLayout", "auto")
     is_longshot_surface = export_layout == "longshot"
     image_layout = "mobile" if is_longshot_surface else export_layout
-    from travelogue.curation.screen_planner import resolve_layout_engine, screens_layout_active
-    from travelogue.render.engine import should_include_screenplay
-
     layout_engine = resolve_layout_engine(trip, override=layout_engine_override)
     use_screens_global = screens_layout_active(trip, override=layout_engine_override)
     include_screenplay = should_include_screenplay(
@@ -786,21 +846,8 @@ def build_render_context(
     )
     assets = asset_map(trip)
 
-    from travelogue.config import get_config
-    from travelogue.render.reading_profile import (
-        featured_asset_ids as collect_featured_ids,
-        reading_html_attrs,
-        reading_json_for_html,
-        resolve_reading_payload,
-    )
-
-    cfg = get_config()
-    reading_defaults = {
-        "draft_web_profile": cfg.render.reading.default_profile,
-        "share_zip_profile": cfg.render.reading.share_profile,
-        "mobile_profile": cfg.render.reading.mobile_profile,
-        "longshot_surface_profile": cfg.render.reading.longshot_surface_profile,
-    }
+    app_cfg = cfg or get_config()
+    reading_defaults = reading_profile_defaults(app_cfg)
     reading_payload = resolve_reading_payload(
         trip,
         export_mode=export_mode,
@@ -819,40 +866,98 @@ def build_render_context(
     include_breath_gsap_runtime = (
         include_breath_scrub and scroll_reading.get("breathEngine") == "gsap"
     )
+    include_scroll_keyboard_nav = scroll_reading.get("keyboardNav") is True
     has_featured_assets = bool(reading_payload.get("featuredAssetIds"))
     reading_json = reading_json_for_html(reading_payload)
 
-    meta = trip.get("meta", {})
-    meta_title = meta.get("title", "")
+    include_long_shot = should_include_long_shot(
+        trip,
+        export_mode=export_mode,
+        layout_engine_override=layout_engine_override,
+        export_layout_override=export_layout_override,
+    )
+    include_longshot_bridge = (
+        is_draft
+        and index_name == "index.html"
+        and should_include_longshot_bridge(
+            trip,
+            layout_engine_override=layout_engine_override,
+            export_layout_override=export_layout_override,
+        )
+    )
+    present_preview_url = (
+        "index-present.html"
+        if is_draft
+        and index_name == "index.html"
+        and web_screens_surface_active(
+            trip,
+            layout_engine_override=layout_engine_override,
+            export_layout_override=export_layout_override,
+        )
+        else None
+    )
 
-    from travelogue.curation.curate import resolve_cover_asset_id
+    return SurfaceContext(
+        export_mode=export_mode,
+        is_draft=is_draft,
+        is_share=is_share,
+        copy_display=copy_display,
+        photos_only=photos_only,
+        export_layout=export_layout,
+        is_longshot_surface=is_longshot_surface,
+        image_layout=image_layout,
+        layout_engine=layout_engine,
+        use_screens_global=use_screens_global,
+        include_screenplay=include_screenplay,
+        strip_narrative_copy=strip_narrative_copy,
+        assets=assets,
+        reading_payload=reading_payload,
+        reading_json=reading_json,
+        folio_lite=folio_lite,
+        folio_full=folio_full,
+        include_breath=include_breath,
+        include_breath_flow=include_breath_flow,
+        include_breath_scrub=include_breath_scrub,
+        include_breath_gsap_runtime=include_breath_gsap_runtime,
+        include_scroll_keyboard_nav=include_scroll_keyboard_nav,
+        has_featured_assets=has_featured_assets,
+        include_long_shot=include_long_shot,
+        include_longshot_bridge=include_longshot_bridge,
+        present_preview_url=present_preview_url,
+        index_name=index_name,
+        font_theme=font_theme,
+        layout_engine_override=layout_engine_override,
+        export_layout_override=export_layout_override,
+    )
 
-    cover_id = resolve_cover_asset_id(trip, export_layout=image_layout)
-    if not cover_id or cover_id not in assets:
-        cover_id = trip.get("coverAssetId") or ""
-    cover_asset = assets[cover_id]
-    cover_src = pick_image_src(cover_asset, export_layout=image_layout)
-    cover_srcset = compile_srcset(cover_asset, mobile=image_layout == "mobile")
 
-    meta_line, meta_datetime = format_trip_meta(meta)
-    from travelogue.services.narrative_scope import resolve_cover_show_title
-
-    cover_show_title = resolve_cover_show_title(trip)
-    hook = (meta.get("hook") or "").strip()
-    epilogue = (trip.get("epilogue") or "").strip()
-    if strip_narrative_copy:
-        hook = ""
-        epilogue = ""
-
-    chapters_out = []
+def build_chapters_render_context(
+    trip: dict,
+    surface: SurfaceContext,
+    *,
+    trip_root: Path | None,
+    meta_title: str,
+    hook: str,
+) -> ChaptersRenderBundle:
     from travelogue.curation.chapter_items import resolve_chapter_items_for_render
     from travelogue.curation.layout_planner import aspect_kind_for_asset
+    from travelogue.render.reading_profile import featured_asset_ids as collect_featured_ids
 
+    assets = surface.assets
+    strip_narrative_copy = surface.strip_narrative_copy
+    is_draft = surface.is_draft
+    folio_lite = surface.folio_lite
+    folio_full = surface.folio_full
+    use_screens_global = surface.use_screens_global
+    is_longshot_surface = surface.is_longshot_surface
+    layout_engine = surface.layout_engine
+    image_layout = surface.image_layout
+
+    chapters_out: list[dict] = []
     aspects_map = {a["id"]: aspect_kind_for_asset(a) for a in trip.get("assets", []) if a.get("id")}
     layout_eligible_count = sum(
         1 for a in trip.get("assets", []) if a.get("layoutEligible", True)
     )
-
     featured_ids = frozenset(collect_featured_ids(trip))
     global_screen_index = 0
 
@@ -1030,43 +1135,98 @@ def build_render_context(
         )
         has_featured_grid = len(featured_grid_cards) >= 4
 
-    from travelogue.render.engine import should_include_long_shot, should_include_longshot_bridge, LONGSHOT_INDEX_NAME
+    return ChaptersRenderBundle(
+        chapters_out=chapters_out,
+        foreword_spread=foreword_spread,
+        has_foreword_spread=has_foreword_spread,
+        trip_index_entries=trip_index_entries,
+        has_trip_index=has_trip_index,
+        featured_grid_cards=featured_grid_cards,
+        has_featured_grid=has_featured_grid,
+    )
 
-    include_long_shot = should_include_long_shot(
+
+def build_render_context(
+    trip: dict,
+    *,
+    export_mode: str = "draft",
+    trip_root: Path | None = None,
+    layout_engine_override: str | None = None,
+    export_layout_override: str | None = None,
+    font_theme: str | None = None,
+    copy_display_override: str | None = None,
+    index_name: str = "index.html",
+    reading_profile_override: str | None = None,
+    cfg: AppConfig | None = None,
+) -> dict:
+    """export_mode: draft | share | present-preview"""
+    from travelogue.curation.curate import resolve_cover_asset_id
+    from travelogue.render.engine import LONGSHOT_INDEX_NAME
+    from travelogue.render.reading_profile import reading_html_attrs
+    from travelogue.services.narrative_scope import resolve_cover_show_title
+
+    surface = resolve_surface_context(
         trip,
         export_mode=export_mode,
         layout_engine_override=layout_engine_override,
         export_layout_override=export_layout_override,
-    )
-    include_longshot_bridge = should_include_longshot_bridge(
-        trip,
-        layout_engine_override=layout_engine_override,
-        export_layout_override=export_layout_override,
+        font_theme=font_theme,
+        copy_display_override=copy_display_override,
+        index_name=index_name,
+        reading_profile_override=reading_profile_override,
+        cfg=cfg,
     )
 
-    html_attrs = [f'data-export="{export_mode}"']
-    if export_layout and export_layout != "auto":
-        html_attrs.append(f'data-layout="{export_layout}"')
-    if use_screens_global and not is_longshot_surface:
-        html_attrs.append(f'data-layout-engine="{layout_engine}"')
-    if include_long_shot:
+    meta = trip.get("meta", {})
+    meta_title = meta.get("title", "")
+    assets = surface.assets
+    image_layout = surface.image_layout
+
+    cover_id = resolve_cover_asset_id(trip, export_layout=image_layout)
+    if not cover_id or cover_id not in assets:
+        cover_id = trip.get("coverAssetId") or ""
+    cover_asset = assets[cover_id]
+    cover_src = pick_image_src(cover_asset, export_layout=image_layout)
+    cover_srcset = compile_srcset(cover_asset, mobile=image_layout == "mobile")
+
+    meta_line, meta_datetime = format_trip_meta(meta)
+    cover_show_title = resolve_cover_show_title(trip, cfg=cfg)
+    hook = (meta.get("hook") or "").strip()
+    epilogue = (trip.get("epilogue") or "").strip()
+    if surface.strip_narrative_copy:
+        hook = ""
+        epilogue = ""
+
+    chapters_bundle = build_chapters_render_context(
+        trip,
+        surface,
+        trip_root=trip_root,
+        meta_title=meta_title,
+        hook=hook,
+    )
+
+    html_attrs = [f'data-export="{surface.export_mode}"']
+    if surface.export_layout and surface.export_layout != "auto":
+        html_attrs.append(f'data-layout="{surface.export_layout}"')
+    if surface.use_screens_global and not surface.is_longshot_surface:
+        html_attrs.append(f'data-layout-engine="{surface.layout_engine}"')
+    if surface.include_long_shot:
         html_attrs.append('data-longshot="on"')
-    if include_longshot_bridge:
+    if surface.include_longshot_bridge:
         html_attrs.append('data-longshot-bridge="on"')
         html_attrs.append(f'data-longshot-mobile-url="{LONGSHOT_INDEX_NAME}"')
-    if include_screenplay:
+    if surface.include_screenplay:
         html_attrs.append('data-screenplay="on"')
-    if include_screenplay or include_long_shot or include_longshot_bridge:
+    if surface.include_screenplay or surface.include_long_shot or surface.include_longshot_bridge:
         html_attrs.append('data-copy-toggle="on"')
-    if is_draft:
+    if surface.is_draft:
         html_attrs.append('data-inline-edit="on"')
-    if photos_only:
+    if surface.photos_only:
         html_attrs.append('data-copy-display="photos"')
-    theme = font_theme or (trip.get("export") or {}).get("fontTheme") or ""
+    theme = surface.font_theme or (trip.get("export") or {}).get("fontTheme") or ""
     if theme == "magazine":
         html_attrs.append('data-font-theme="magazine"')
-
-    html_attrs.extend(reading_html_attrs(reading_payload))
+    html_attrs.extend(reading_html_attrs(surface.reading_payload))
 
     asset_version = _longshot_bundle_version(trip)
     zip_name = share_zip_filename(trip)
@@ -1075,20 +1235,20 @@ def build_render_context(
     return {
         "lang": "zh-CN",
         "htmlExtraAttrs": " ".join(html_attrs),
-        "includeLongShot": include_long_shot,
-        "includeLongshotBridge": include_longshot_bridge,
-        "longshotMobileUrl": LONGSHOT_INDEX_NAME if include_longshot_bridge else None,
-        "includeScreenplay": include_screenplay,
+        "includeLongShot": surface.include_long_shot,
+        "includeLongshotBridge": surface.include_longshot_bridge,
+        "longshotMobileUrl": LONGSHOT_INDEX_NAME if surface.include_longshot_bridge else None,
+        "includeScreenplay": surface.include_screenplay,
         "assetVersion": asset_version,
         "hasShareZip": zip_ready,
         "shareZipFile": zip_name if zip_ready else None,
-        "exportLayout": export_layout,
-        "copyDisplay": copy_display,
-        "isPhotosOnly": photos_only,
-        "layoutEngine": layout_engine,
-        "exportMode": export_mode,
-        "isDraft": is_draft,
-        "isShare": is_share,
+        "exportLayout": surface.export_layout,
+        "copyDisplay": surface.copy_display,
+        "isPhotosOnly": surface.photos_only,
+        "layoutEngine": surface.layout_engine,
+        "exportMode": surface.export_mode,
+        "isDraft": surface.is_draft,
+        "isShare": surface.is_share,
         "title": meta_title,
         "subtitle": (meta.get("subtitle") or "").strip(),
         "hasSubtitle": bool((meta.get("subtitle") or "").strip()),
@@ -1104,28 +1264,30 @@ def build_render_context(
         "tripMetaDatetime": meta_datetime,
         "hook": hook,
         "hasHook": bool(hook),
-        "editableHook": is_draft and bool(hook),
+        "editableHook": surface.is_draft and bool(hook),
         "epilogue": epilogue,
         "hasEpilogue": bool(epilogue),
-        "editableEpilogue": is_draft and bool(epilogue),
+        "editableEpilogue": surface.is_draft and bool(epilogue),
         "tripId": trip.get("tripId") or "",
-        "chapters": chapters_out,
+        "chapters": chapters_bundle.chapters_out,
         "tripRoot": str(trip_root) if trip_root else None,
-        "readingJson": reading_json,
-        "includeBreath": include_breath,
-        "includeBreathFlow": include_breath_flow,
-        "includeBreathScrub": include_breath_scrub,
-        "includeBreathGsapRuntime": include_breath_gsap_runtime,
-        "hasFeaturedAssets": has_featured_assets,
-        "folioLite": folio_lite,
-        "folioFull": folio_full,
-        "hasTripIndex": has_trip_index,
-        "tripIndex": {"entries": trip_index_entries},
-        "hasFeaturedGrid": has_featured_grid,
-        "featuredGrid": {"cards": featured_grid_cards},
-        "hasForewordSpread": has_foreword_spread,
-        "forewordSpread": foreword_spread or {},
-        "useEpilogueScreen": folio_lite and bool(epilogue),
+        "readingJson": surface.reading_json,
+        "includeBreath": surface.include_breath,
+        "includeBreathFlow": surface.include_breath_flow,
+        "includeBreathScrub": surface.include_breath_scrub,
+        "includeBreathGsapRuntime": surface.include_breath_gsap_runtime,
+        "includeScrollKeyboardNav": surface.include_scroll_keyboard_nav,
+        "presentPreviewUrl": surface.present_preview_url,
+        "hasFeaturedAssets": surface.has_featured_assets,
+        "folioLite": surface.folio_lite,
+        "folioFull": surface.folio_full,
+        "hasTripIndex": chapters_bundle.has_trip_index,
+        "tripIndex": {"entries": chapters_bundle.trip_index_entries},
+        "hasFeaturedGrid": chapters_bundle.has_featured_grid,
+        "featuredGrid": {"cards": chapters_bundle.featured_grid_cards},
+        "hasForewordSpread": chapters_bundle.has_foreword_spread,
+        "forewordSpread": chapters_bundle.foreword_spread or {},
+        "useEpilogueScreen": surface.folio_lite and bool(epilogue),
     }
 
 

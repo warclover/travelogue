@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Literal
 
+from travelogue.config import AppConfig
 from travelogue.curation.aspect_buckets import prefix_same_bucket
 from travelogue.curation.asset_subject import (
     any_asset_has_person,
@@ -1407,11 +1408,12 @@ def attach_screens_to_chapters(
     skip_screen_asset_ids: set[str] | None = None,
     trip_photo_total: int | None = None,
     featured_weight: float = DEFAULT_FEATURED_WEIGHT,
+    cfg: AppConfig | None = None,
 ) -> list[dict]:
     """Add screens[] to each chapter (per-chapter or per-day bucket scope)."""
     from travelogue.config import default_screen_plan_scope
 
-    scope = (plan_scope or default_screen_plan_scope()).strip().lower()
+    scope = (plan_scope or default_screen_plan_scope(cfg=cfg)).strip().lower()
     if scope == "day" and day_buckets:
         return attach_screens_day_buckets(
             chapters,

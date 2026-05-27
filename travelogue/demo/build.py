@@ -6,7 +6,7 @@ import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from travelogue.config import get_config
+from travelogue.config import AppConfig, app_config_scope, get_config
 from travelogue.util.trip_slug import demo_trip_id_from_album
 from travelogue.paths import DEMO_CONFIG_PATH
 from travelogue.curation.curate import CurateError, run_curate
@@ -50,6 +50,7 @@ def publish_demo_trip(
     confirm_privacy: bool = True,
     validate: bool = False,
     no_preview: bool = False,
+    cfg: AppConfig | None = None,
 ) -> RunResult:
     """Auto lock → narrate → export share zip from a demo workspace."""
     return run_trip(
@@ -60,6 +61,7 @@ def publish_demo_trip(
         no_preview=no_preview,
         validate=validate,
         skip_locked=True,
+        cfg=cfg,
     )
 
 
@@ -120,6 +122,52 @@ def run_demo_from_album(
             )
         shutil.rmtree(trip_dir)
 
+    with app_config_scope(cfg):
+        return _run_demo_from_album_scoped(
+            album_dir=album_dir,
+            cfg=cfg,
+            trips_root=trips_root,
+            slug=slug,
+            trip_dir=trip_dir,
+            title=title,
+            place=place,
+            hook=hook,
+            max_photos=max_photos,
+            recursive=recursive,
+            render=render,
+            export_layout=export_layout,
+            dedupe=dedupe,
+            validate=validate,
+            publish=publish,
+            confirm_privacy=confirm_privacy,
+            no_preview=no_preview,
+            featured_dir=featured_dir,
+            material_dir=material_dir,
+        )
+
+
+def _run_demo_from_album_scoped(
+    *,
+    album_dir: Path,
+    cfg: AppConfig,
+    trips_root: Path,
+    slug: str,
+    trip_dir: Path,
+    title: str,
+    place: str,
+    hook: str,
+    max_photos: int,
+    recursive: bool,
+    render: bool,
+    export_layout: str,
+    dedupe: bool,
+    validate: bool,
+    publish: bool,
+    confirm_privacy: bool,
+    no_preview: bool,
+    featured_dir: Path | None,
+    material_dir: Path | None,
+) -> DemoResult:
     trip_json = create_trip(
         slug,
         trips_root,
@@ -142,6 +190,7 @@ def run_demo_from_album(
             max_photos=max_photos,
             recursive=recursive,
             dedupe=dedupe,
+            app_cfg=cfg,
             featured_dir=featured_dir,
             material_dir=material_dir,
         )
@@ -166,6 +215,7 @@ def run_demo_from_album(
             export_layout=export_layout,
             apply_layout=True,
             trip_dir=trip_root,
+            cfg=cfg,
         )
     except CurateError as exc:
         raise DemoError(exc.code, str(exc)) from exc
@@ -185,14 +235,26 @@ def run_demo_from_album(
         trip = svc.load(trip_json)
         surface = trip.get("exportLayout", export_layout)
         if surface == "auto":
-            web_path, mobile_path = render_trip_surfaces(
-                trip_json, trip_root, export_mode="draft", validate=validate, update_pipeline=True
+            web_path, mobile_path, present_path = render_trip_surfaces(
+                trip_json,
+                trip_root,
+                export_mode="draft",
+                validate=validate,
+                update_pipeline=True,
+                cfg=cfg,
             )
             index_html = web_path
             stats["index_mobile_html"] = str(mobile_path)
+            if present_path is not None:
+                stats["index_present_html"] = str(present_path)
         else:
             render_trip(
-                trip_json, trip_root, export_mode="draft", validate=validate, update_pipeline=True
+                trip_json,
+                trip_root,
+                export_mode="draft",
+                validate=validate,
+                update_pipeline=True,
+                cfg=cfg,
             )
         stages.append("render")
         trip = svc.load(trip_json)
@@ -203,7 +265,14 @@ def run_demo_from_album(
 
     if publish:
         if not render:
-            render_trip(trip_json, trip_root, export_mode="draft", validate=validate, update_pipeline=True)
+            render_trip(
+                trip_json,
+                trip_root,
+                export_mode="draft",
+                validate=validate,
+                update_pipeline=True,
+                cfg=cfg,
+            )
             stages.append("render")
         try:
             run_result = publish_demo_trip(
@@ -211,6 +280,7 @@ def run_demo_from_album(
                 confirm_privacy=confirm_privacy,
                 validate=validate,
                 no_preview=no_preview,
+                cfg=cfg,
             )
         except Exception as exc:
             raise DemoError(getattr(exc, "code", "E_DEMO_PUBLISH"), str(exc)) from exc

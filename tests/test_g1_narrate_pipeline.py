@@ -73,7 +73,7 @@ def test_g1_narrate_then_dual_render(g1_workspace: Path) -> None:
     assert trip["pipeline"]["status"] == "copy_draft"
     trip_path.write_text(json.dumps(trip, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    web, mobile = render_trip_surfaces(trip_path, validate=False)
+    web, mobile, _present = render_trip_surfaces(trip_path, validate=False)
     web_html = web.read_text(encoding="utf-8")
     mobile_html = mobile.read_text(encoding="utf-8")
     assert trip["meta"]["hook"] in web_html

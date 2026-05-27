@@ -30,12 +30,21 @@ def trip_workspace(tmp_path: Path) -> Path:
 
 
 def test_render_trip_surfaces_writes_both_indexes(trip_workspace: Path) -> None:
-    web, mobile = render_trip_surfaces(trip_workspace / "trip.json", validate=False)
+    web, mobile, present = render_trip_surfaces(trip_workspace / "trip.json", validate=False)
     assert web.name == "index.html"
     assert mobile.name == "index-mobile.html"
+    assert present is not None
+    assert present.name == "index-present.html"
     web_html = web.read_text(encoding="utf-8")
     mobile_html = mobile.read_text(encoding="utf-8")
+    present_html = present.read_text(encoding="utf-8")
     assert 'data-layout="web"' in web_html or 'data-layout-engine="screens"' in web_html
     assert 'data-layout="mobile"' in mobile_html
     assert "layout-screen" in web_html or 'data-block="layout-screen"' in web_html
+    assert 'data-export="draft"' in web_html
+    assert 'data-export="present-preview"' in present_html
+    assert 'data-screenplay="on"' in present_html
+    assert "screenplay.js" in present_html
+    assert "inline-edit.js" not in present_html
+    assert 'data-export="draft"' not in present_html or present_html.count('data-export=') == 1
     assert 'data-longshot="on"' in mobile_html or "longshot" in mobile_html.lower()

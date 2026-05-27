@@ -18,7 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from travelogue.config import CurateConfig, LayoutScoringConfig, get_config
+from travelogue.config import LayoutScoringConfig, config_override, get_config
 from travelogue.curation.curate import run_curate
 from travelogue.curation.layout_metrics import compute_layout_metrics
 from travelogue.curation.layout_scoring import PHASE3B_WEIGHTS, PHASE3_WEIGHTS, score_aspect_match
@@ -47,16 +47,10 @@ def _run_curate(
     layout_cfg = replace(base.layout, scoring=scoring)
     curate_cfg = replace(base.curate, arc_mode=arc_mode)
     cfg = replace(base, layout=layout_cfg, curate=curate_cfg)
-    import travelogue.config as config_mod
-
-    prev = config_mod._cached
-    config_mod._cached = cfg
-    try:
+    with config_override(cfg):
         t = _prepare_trip(trip)
         run_curate(t, export_layout=layout, apply_layout=True, trip_dir=trip_dir)
         return t
-    finally:
-        config_mod._cached = prev
 
 
 def _has_color_metrics(trip: dict) -> bool:

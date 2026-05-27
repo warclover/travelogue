@@ -6,7 +6,7 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from travelogue.config import get_config
+from travelogue.config import AppConfig, app_config_scope, get_config
 from travelogue.export.exif import write_asset_to_zip
 from travelogue.render.context import collect_asset_paths
 from travelogue.render.engine import (
@@ -57,6 +57,7 @@ def export_trip(
     validate: bool = True,
     auto_render: bool = True,
     no_longshot: bool = False,
+    cfg: AppConfig | None = None,
 ) -> Path:
     """
     Package share-ready zip: index.html, journal.css, assets/, preview.jpg.
@@ -64,6 +65,30 @@ def export_trip(
     Requires --confirm-privacy (sets privacy.confirmedAt).
     Renders share HTML before packaging when auto_render is True.
     """
+    with app_config_scope(cfg):
+        return _export_trip_stages(
+            trip_path,
+            output_zip=output_zip,
+            confirm_privacy=confirm_privacy,
+            no_preview=no_preview,
+            strip_exif=strip_exif,
+            validate=validate,
+            auto_render=auto_render,
+            no_longshot=no_longshot,
+        )
+
+
+def _export_trip_stages(
+    trip_path: Path,
+    *,
+    output_zip: Path | None = None,
+    confirm_privacy: bool = False,
+    no_preview: bool = False,
+    strip_exif: bool | None = None,
+    validate: bool = True,
+    auto_render: bool = True,
+    no_longshot: bool = False,
+) -> Path:
     if not confirm_privacy:
         raise ExportError(
             "E_EXPORT_PRIVACY",
@@ -80,6 +105,7 @@ def export_trip(
         if errs:
             raise ExportError("E_VALIDATE", errs[0])
 
+    app_cfg = get_config()
     do_strip = strip_exif
     if do_strip is None:
         do_strip = bool(trip.get("privacy", {}).get("stripExifOnExport", True))
@@ -131,7 +157,7 @@ def export_trip(
         ("copy-display.css", trip_root / "copy-display.css"),
     )
 
-    max_zip_mb = get_config().export.max_zip_mb
+    max_zip_mb = app_cfg.export.max_zip_mb
     photo_n = len(trip.get("assets") or [])
 
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:

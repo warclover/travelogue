@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 
+from travelogue.config import AppConfig
 from travelogue.paths import MANIFEST_PATH
 
 # F-NAR-05 · manifest limits (F-NAR-01)
@@ -207,6 +208,7 @@ def run_narrate(
     cache_dir: Path | None = None,
     chapter_id: str | None = None,
     scope: str | None = None,
+    cfg: AppConfig | None = None,
 ) -> NarrateResult:
     """Fill meta.hook, chapter leads, captions, epilogue (stub or LLM)."""
     from travelogue.config import get_config
@@ -217,13 +219,14 @@ def run_narrate(
         resolve_narrative_scope,
     )
 
-    scope_val = resolve_narrative_scope(override=scope)
+    app_cfg = cfg or get_config()
+    scope_val = resolve_narrative_scope(override=scope, cfg=app_cfg)
     if not dry_run:
         apply_scope_cleanup(trip, scope_val)
         curation = trip.setdefault("curation", {})
         curation["narrativeScope"] = scope_val
 
-    prov = (provider or get_config().llm.provider or "stub").strip().lower()
+    prov = (provider or app_cfg.llm.provider or "stub").strip().lower()
     if prov not in ("stub", "deepseek", "dashscope"):
         raise NarrateError("E_NARRATE_PROVIDER", f"unknown provider {prov!r}")
     if chapter_id:
@@ -235,7 +238,11 @@ def run_narrate(
         if dry_run:
             return NarrateResult(
                 fields_updated=_planned_fields(
-                    trip, regenerate=regenerate, chapter_id=chapter_id, scope=scope_val
+                    trip,
+                    regenerate=regenerate,
+                    chapter_id=chapter_id,
+                    scope=scope_val,
+                    cfg=app_cfg,
                 )
             )
     if prov == "stub":
@@ -251,6 +258,7 @@ def run_narrate(
         cache_dir=cache_dir,
         chapter_id=chapter_id,
         scope=scope_val,
+        cfg=app_cfg,
     )
 
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from travelogue.config import AppConfig, app_config_scope
 from travelogue.curation.curate import CurateError, run_curate
 from travelogue.export.packager import ExportError, export_trip
 from travelogue.media.ingest import IngestError, ingest_into_trip
@@ -24,6 +25,39 @@ class RunResult:
 
 
 def run_trip(
+    trip_path: Path,
+    *,
+    from_stage: str = "ingest",
+    until: Until = "rendered",
+    album_dir: Path | None = None,
+    export_layout: str = "mobile",
+    confirm_privacy: bool = False,
+    no_preview: bool = False,
+    validate: bool = True,
+    skip_locked: bool = True,
+    dedupe: bool = True,
+    narrate_provider: str | None = None,
+    regenerate: bool = False,
+    cfg: AppConfig | None = None,
+) -> RunResult:
+    with app_config_scope(cfg):
+        return _run_trip_stages(
+            trip_path,
+            from_stage=from_stage,
+            until=until,
+            album_dir=album_dir,
+            export_layout=export_layout,
+            confirm_privacy=confirm_privacy,
+            no_preview=no_preview,
+            validate=validate,
+            skip_locked=skip_locked,
+            dedupe=dedupe,
+            narrate_provider=narrate_provider,
+            regenerate=regenerate,
+        )
+
+
+def _run_trip_stages(
     trip_path: Path,
     *,
     from_stage: str = "ingest",
@@ -93,7 +127,7 @@ def run_trip(
 
         elif stage == "layout":
             assert_stage_allowed(trip, "layout")
-            apply_layout_to_trip(trip, export_layout=export_layout)
+            apply_layout_to_trip(trip, export_layout=export_layout, cfg=get_config())
             result.stages.append("layout")
             save()
 

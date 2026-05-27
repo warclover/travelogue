@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.config import get_config
+from travelogue.config import AppConfig, get_config
 from travelogue.services.narrate import BANNED_PHRASES
 from travelogue.services.validate import asset_map
 
@@ -46,10 +46,10 @@ OVERSEAS_PLACE_HINTS: frozenset[str] = frozenset(
 )
 
 
-def banned_phrases() -> tuple[str, ...]:
-    cfg = get_config().narrative
-    if cfg.banned_phrases:
-        return tuple(cfg.banned_phrases)
+def banned_phrases(cfg: AppConfig | None = None) -> tuple[str, ...]:
+    narrative = (cfg or get_config()).narrative
+    if narrative.banned_phrases:
+        return tuple(narrative.banned_phrases)
     return BANNED_PHRASES
 
 
@@ -123,14 +123,14 @@ def _overlap_ratio(a: str, b: str) -> float:
     return common / max(len(longer), 1)
 
 
-def validate_narrative(trip: dict) -> list[str]:
+def validate_narrative(trip: dict, *, cfg: AppConfig | None = None) -> list[str]:
     """Return VR-N01/N02/N03 messages (errors or WARN: warnings)."""
     issues: list[str] = []
     assets = asset_map(trip)
     asset_cities = _asset_cities(assets)
 
     for path, text in _text_fields(trip):
-        for phrase in banned_phrases():
+        for phrase in banned_phrases(cfg):
             if phrase and phrase in text:
                 issues.append(
                     f"E_VALIDATE_MANIFEST banned phrase {phrase!r} in {path} (VR-N01)"

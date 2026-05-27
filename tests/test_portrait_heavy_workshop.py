@@ -34,7 +34,7 @@ def test_portrait_heavy_curate_and_dual_render(tmp_path: Path) -> None:
     run_curate(trip, export_layout="auto", layout_engine="screens", trip_dir=trip_dir)
     trip_json.write_text(json.dumps(trip, ensure_ascii=False, indent=2), encoding="utf-8")
     validate_trip(trip)
-    web, mobile = render_trip_surfaces(
+    web, mobile, _present = render_trip_surfaces(
         trip_json, trip_dir, export_mode="draft", validate=False
     )
     assert web.is_file() and mobile.is_file()

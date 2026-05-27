@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from functools import lru_cache
+import threading
 from typing import Any
 
 from travelogue.paths import ROOT
@@ -16,6 +16,7 @@ except ImportError:  # pragma: no cover
 EXPORT_LAYOUT_LONGSHOT = "longshot"
 SURFACE_WEB = "index.html"
 SURFACE_MOBILE = "index-mobile.html"
+SURFACE_PRESENT_PREVIEW = "index-present.html"
 SURFACE_LONGSHOT = "index-longshot.html"
 
 VALID_PROFILES = frozenset({"legacy", "performance", "default_hybrid", "magazine"})
@@ -31,6 +32,11 @@ _FALLBACK_MATRIX: dict[str, Any] = {
                 "dwell_ms": 2000,
                 "featured_only": False,
                 "sync_scroll_on_exit": False,
+                "auto_advance": True,
+                "manual_controls": True,
+                "tap_zone_nav": True,
+                "click_stage": "pause",
+                "loop": False,
             },
             "longshot": {"breath": "off", "folio": "off"},
         },
@@ -40,15 +46,30 @@ _FALLBACK_MATRIX: dict[str, Any] = {
                 "dwell_ms": 2000,
                 "featured_only": False,
                 "sync_scroll_on_exit": True,
+                "auto_advance": True,
+                "manual_controls": True,
+                "tap_zone_nav": True,
+                "click_stage": "pause",
+                "loop": False,
             },
             "longshot": {"breath": "off", "folio": "off"},
         },
         "default_hybrid": {
-            "scroll": {"snap": "proximity", "breath": "soft", "folio": "lite"},
+            "scroll": {
+                "snap": "proximity",
+                "breath": "soft",
+                "folio": "lite",
+                "keyboard_nav": True,
+            },
             "present": {
                 "dwell_ms": 2000,
                 "featured_only": False,
                 "sync_scroll_on_exit": True,
+                "auto_advance": True,
+                "manual_controls": True,
+                "tap_zone_nav": True,
+                "click_stage": "pause",
+                "loop": False,
             },
             "longshot": {"breath": "off", "folio": "off"},
         },
@@ -58,6 +79,11 @@ _FALLBACK_MATRIX: dict[str, Any] = {
                 "dwell_ms": 2500,
                 "featured_only": False,
                 "sync_scroll_on_exit": True,
+                "auto_advance": True,
+                "manual_controls": True,
+                "tap_zone_nav": True,
+                "click_stage": "pause",
+                "loop": False,
             },
             "longshot": {"breath": "off", "folio": "off"},
         },
@@ -71,14 +97,36 @@ _FALLBACK_MATRIX: dict[str, Any] = {
 }
 
 
-@lru_cache(maxsize=1)
+_matrix_cache: dict[str, Any] | None = None
+_matrix_cache_mtime: float | None = None
+_matrix_cache_lock = threading.Lock()
+
+
 def load_experience_matrix() -> dict[str, Any]:
-    if yaml is None or not _MATRIX_PATH.is_file():
-        return _FALLBACK_MATRIX
-    raw = yaml.safe_load(_MATRIX_PATH.read_text(encoding="utf-8"))
-    if not isinstance(raw, dict):
-        return _FALLBACK_MATRIX
-    return raw
+    global _matrix_cache, _matrix_cache_mtime
+    with _matrix_cache_lock:
+        try:
+            mtime = _MATRIX_PATH.stat().st_mtime if _MATRIX_PATH.is_file() else None
+        except OSError:
+            mtime = None
+        if _matrix_cache is not None and _matrix_cache_mtime == mtime:
+            return _matrix_cache
+        if yaml is None or not _MATRIX_PATH.is_file():
+            loaded = _FALLBACK_MATRIX
+        else:
+            raw = yaml.safe_load(_MATRIX_PATH.read_text(encoding="utf-8"))
+            loaded = raw if isinstance(raw, dict) else _FALLBACK_MATRIX
+        _matrix_cache = loaded
+        _matrix_cache_mtime = mtime
+        return loaded
+
+
+def reset_experience_matrix_cache() -> None:
+    """Clear cached experience-matrix.yaml (tests)."""
+    global _matrix_cache, _matrix_cache_mtime
+    with _matrix_cache_lock:
+        _matrix_cache = None
+        _matrix_cache_mtime = None
 
 
 def resolve_surface_name(
@@ -88,6 +136,8 @@ def resolve_surface_name(
 ) -> str:
     if index_name == SURFACE_LONGSHOT or export_layout_override == EXPORT_LAYOUT_LONGSHOT:
         return SURFACE_LONGSHOT
+    if index_name == SURFACE_PRESENT_PREVIEW:
+        return SURFACE_PRESENT_PREVIEW
     if index_name == SURFACE_MOBILE or export_layout_override == "mobile":
         return SURFACE_MOBILE
     return SURFACE_WEB
@@ -114,7 +164,7 @@ def default_profile_for_surface(
         return cfg["mobile_profile"]
     if surface == SURFACE_LONGSHOT:
         return cfg["longshot_surface_profile"]
-    if export_mode == "share":
+    if export_mode in ("share", "present-preview"):
         return cfg["share_zip_profile"]
     return cfg["draft_web_profile"]
 
@@ -153,6 +203,9 @@ def _enum_str(val: Any, default: str = "off") -> str:
 
 def _present_to_js(raw: dict[str, Any]) -> dict[str, Any]:
     deep_link = raw.get("deep_link", raw.get("deepLink", True))
+    click_stage = str(raw.get("click_stage", raw.get("clickStage", "pause"))).strip().lower()
+    if click_stage not in ("pause", "stop", "none"):
+        click_stage = "pause"
     return {
         "dwellMs": int(raw.get("dwell_ms", raw.get("dwellMs", 2000))),
         "featuredOnly": bool(raw.get("featured_only", raw.get("featuredOnly", False))),
@@ -161,6 +214,11 @@ def _present_to_js(raw: dict[str, Any]) -> dict[str, Any]:
         ),
         "skipAuxBlocks": bool(raw.get("skip_aux_blocks", raw.get("skipAuxBlocks", False))),
         "deepLink": bool(deep_link),
+        "autoAdvance": bool(raw.get("auto_advance", raw.get("autoAdvance", True))),
+        "loop": bool(raw.get("loop", False)),
+        "manualControls": bool(raw.get("manual_controls", raw.get("manualControls", True))),
+        "tapZoneNav": bool(raw.get("tap_zone_nav", raw.get("tapZoneNav", True))),
+        "clickStage": click_stage,
     }
 
 
@@ -174,6 +232,7 @@ def _scroll_to_js(raw: dict[str, Any]) -> dict[str, Any]:
         "breath": _enum_str(raw.get("breath"), "off"),
         "folio": _enum_str(raw.get("folio"), "off"),
         "breathEngine": engine_text,
+        "keyboardNav": bool(raw.get("keyboard_nav", raw.get("keyboardNav", False))),
     }
 
 
@@ -309,6 +368,8 @@ def reading_html_attrs(payload: dict[str, Any]) -> list[str]:
         attrs.append(f'data-breath="{breath}"')
     if folio and folio != "off":
         attrs.append(f'data-folio="{folio}"')
+    if scroll.get("keyboardNav") is True:
+        attrs.append('data-keyboard-nav="on"')
     return attrs
 
 

@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
-from travelogue.config import IngestConfig, get_config
+from travelogue.config import AppConfig, IngestConfig, get_config
 from travelogue.media.asset_slots import asset_display_slots
 from travelogue.media.image_ops import (
     classify_aspect,
@@ -34,9 +34,11 @@ def reexport_asset(
     *,
     slot: str = "media",
     cfg: IngestConfig | None = None,
+    app_cfg: AppConfig | None = None,
 ) -> None:
     """Regenerate displayFile, srcset, cropMobile/cropWeb from source JPEG."""
-    cfg = cfg or get_config().ingest
+    resolved = app_cfg or get_config()
+    cfg = cfg or resolved.ingest
     assets_dir = trip_dir / "assets"
     source_rel = asset.get("sourceFile", "")
     source_path = trip_dir / source_rel
@@ -80,9 +82,11 @@ def reexport_trip_assets(
     *,
     asset_ids: list[str] | None = None,
     cfg: IngestConfig | None = None,
+    app_cfg: AppConfig | None = None,
 ) -> ReexportResult:
     """Re-export some or all image assets (pixels only; chapters unchanged)."""
-    cfg = cfg or get_config().ingest
+    resolved = app_cfg or get_config()
+    cfg = cfg or resolved.ingest
     slots = asset_display_slots(trip)
     assets = trip.get("assets") or []
     by_id = {a["id"]: a for a in assets if a.get("type") == "image"}

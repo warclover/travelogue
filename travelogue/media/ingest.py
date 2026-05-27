@@ -11,7 +11,7 @@ from typing import Any
 
 from PIL import Image
 
-from travelogue.config import IngestConfig, get_config
+from travelogue.config import AppConfig, IngestConfig, get_config
 from travelogue.curation.asset_quality import apply_layout_eligibility_marks, asset_sharpness
 from travelogue.media.heuristic_tags import build_heuristic_tags
 from travelogue.media.image_ops import (
@@ -379,6 +379,7 @@ def ingest_into_trip(
     dedupe: bool = True,
     incremental: bool = False,
     cfg: IngestConfig | None = None,
+    app_cfg: AppConfig | None = None,
     featured_dir: Path | None = None,
     material_dir: Path | None = None,
 ) -> IngestResult:
@@ -387,13 +388,13 @@ def ingest_into_trip(
 
     Does not assign chapters (run curate after).
     """
-    app_cfg = get_config()
-    cfg = cfg or app_cfg.ingest
+    resolved_app = app_cfg or get_config()
+    cfg = cfg or resolved_app.ingest
     max_photos = max_photos if max_photos is not None else cfg.max_photos
     if generate_crops is None:
         generate_crops = cfg.generate_crops
-    geocode_enabled = app_cfg.geocode.enabled
-    max_tags = app_cfg.vision.max_tags_per_asset if app_cfg.vision.enabled else 5
+    geocode_enabled = resolved_app.geocode.enabled
+    max_tags = resolved_app.vision.max_tags_per_asset if resolved_app.vision.enabled else 5
 
     source_dir = trip_dir / "source"
     assets_dir = trip_dir / "assets"

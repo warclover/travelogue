@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from travelogue.config import AppConfig
 from travelogue.constants import VALID_NARRATIVE_SCOPES
 from travelogue.curation.asset_caption import (
     apply_caption_to_trip,
@@ -24,12 +25,12 @@ def normalize_scope(raw: str | None) -> str:
     return val
 
 
-def resolve_narrative_scope(*, override: str | None = None) -> str:
+def resolve_narrative_scope(*, override: str | None = None, cfg: AppConfig | None = None) -> str:
     if override is not None:
         return normalize_scope(override)
     from travelogue.config import get_config
 
-    return normalize_scope(get_config().narrative.scope)
+    return normalize_scope((cfg or get_config()).narrative.scope)
 
 
 def captions_allowed(scope: str) -> bool:
@@ -108,7 +109,7 @@ def assert_chapter_narrate_allowed(trip: dict, chapter_id: str, scope: str) -> N
     )
 
 
-def resolve_cover_show_title(trip: dict) -> bool:
+def resolve_cover_show_title(trip: dict, *, cfg: AppConfig | None = None) -> bool:
     """
     Whether to overlay meta.title on the cover hero.
 
@@ -120,7 +121,7 @@ def resolve_cover_show_title(trip: dict) -> bool:
     if not title:
         return False
     scope_raw = (trip.get("curation") or {}).get("narrativeScope")
-    scope = normalize_scope(scope_raw) if scope_raw else resolve_narrative_scope()
+    scope = normalize_scope(scope_raw) if scope_raw else resolve_narrative_scope(cfg=cfg)
     if scope == SCOPE_FULL:
         return True
     return False

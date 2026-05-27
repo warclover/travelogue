@@ -99,3 +99,51 @@ def test_screenplay_present_bookmarks_implementation() -> None:
         encoding="utf-8"
     )
     assert "data-asset-ids" in layout
+
+
+def test_present_config_payload_fields() -> None:
+    payload = resolve_reading_payload(
+        {"chapters": [], "assets": []},
+        export_mode="share",
+        export_layout_override="web",
+    )
+    present = payload["present"]
+    assert present["autoAdvance"] is True
+    assert present["manualControls"] is True
+    assert present["tapZoneNav"] is True
+    assert present["clickStage"] == "pause"
+    assert present["loop"] is False
+
+
+def test_default_hybrid_scroll_keyboard_nav() -> None:
+    payload = resolve_reading_payload(
+        {"chapters": [], "assets": []},
+        export_mode="draft",
+        export_layout_override="web",
+    )
+    assert payload["scroll"]["keyboardNav"] is True
+
+
+def test_screenplay_manual_nav_implementation() -> None:
+    js = SCREENPLAY_JS.read_text(encoding="utf-8")
+    toolbar = (TEMPLATE_VISUAL_JOURNAL / "partials/screenplay-toolbar.hbs").read_text(
+        encoding="utf-8"
+    )
+    journal = (TEMPLATE_VISUAL_JOURNAL / "journal.hbs").read_text(encoding="utf-8")
+    assert "manualControlsEnabled" in js
+    assert "autoAdvanceEnabled" in js
+    assert "tapZoneNavEnabled" in js
+    assert "clickStageMode" in js
+    assert "scheduleAdvance" in js
+    assert 'data-screenplay-action="prev"' in toolbar
+    assert "scroll-nav.js" in journal
+
+
+def test_present_preview_uses_share_profile() -> None:
+    payload = resolve_reading_payload(
+        {"chapters": [], "assets": []},
+        export_mode="present-preview",
+        export_layout_override="web",
+        index_name="index-present.html",
+    )
+    assert payload["profile"] == "performance"

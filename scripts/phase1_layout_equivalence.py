@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from travelogue.config import AppConfig, LayoutScoringConfig, get_config
+from travelogue.config import LayoutScoringConfig, config_override, get_config
 from travelogue.curation.curate import run_curate
 
 
@@ -66,16 +66,10 @@ def _run_curate(trip: dict, *, layout: str, scoring_enabled: bool) -> dict:
     layout_cfg = replace(base.layout, scoring=scoring)
     cfg = replace(base, layout=layout_cfg)
 
-    import travelogue.config as config_mod
-
-    prev = config_mod._cached
-    config_mod._cached = cfg
-    try:
+    with config_override(cfg):
         t = _prepare_trip(trip)
         run_curate(t, export_layout=layout, apply_layout=True)
         return layout_snapshot(t.get("chapters") or [])
-    finally:
-        config_mod._cached = prev
 
 
 def compare_trip(trip_path: Path, *, layout: str = "web") -> dict:

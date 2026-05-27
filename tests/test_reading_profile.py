@@ -128,7 +128,7 @@ def test_render_html_reading_profile_override_legacy(screens_trip: tuple[Path, d
 
 def test_render_trip_surfaces_mobile_legacy_profile(screens_trip: tuple[Path, dict]) -> None:
     ws, _ = screens_trip
-    web_path, mobile_path = render_trip_surfaces(ws / "trip.json", validate=False)
+    web_path, mobile_path, _present = render_trip_surfaces(ws / "trip.json", validate=False)
     web_html = web_path.read_text(encoding="utf-8")
     mobile_html = mobile_path.read_text(encoding="utf-8")
     assert _extract_reading_json(web_html)["profile"] == "default_hybrid"

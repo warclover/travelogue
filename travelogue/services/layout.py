@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
+from travelogue.config import AppConfig
 from travelogue.curation.layout_planner import build_chapters_from_plan, summarize_orientations
 from travelogue.curation.layout_planner import aspect_kind_for_asset as _aspect_kind_for_asset
 from travelogue.services.pipeline_state import set_layout_status
@@ -146,6 +147,7 @@ def apply_layout_to_trip(
     export_layout: str | None = None,
     layout_engine: str | None = None,
     preserve_titles: bool = True,
+    cfg: AppConfig | None = None,
 ) -> LayoutResult:
     """
     Recompute chapters[].items[] from asset aspects and exportLayout.
@@ -167,7 +169,7 @@ def apply_layout_to_trip(
     engine = (
         layout_engine
         or trip.get("layoutEngine")
-        or default_web_layout_engine(layout)
+        or default_web_layout_engine(layout, cfg=cfg)
     )
     if engine not in (LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS):
         raise LayoutError("E_LAYOUT_ENGINE", "layout_engine must be legacy or screens")

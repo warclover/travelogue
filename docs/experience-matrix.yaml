@@ -16,6 +16,11 @@ profiles:
       dwell_ms: 2000
       featured_only: false
       sync_scroll_on_exit: false
+      auto_advance: true
+      manual_controls: true
+      tap_zone_nav: true
+      click_stage: pause
+      loop: false
     longshot:
       breath: off
       folio: off
@@ -31,6 +36,11 @@ profiles:
       dwell_ms: 2000
       featured_only: false
       sync_scroll_on_exit: true
+      auto_advance: true
+      manual_controls: true
+      tap_zone_nav: true
+      click_stage: pause
+      loop: false
     longshot:
       breath: off
       folio: off
@@ -42,10 +52,16 @@ profiles:
       snap: proximity
       breath: soft
       folio: lite
+      keyboard_nav: true
     present:
       dwell_ms: 2000
       featured_only: false
       sync_scroll_on_exit: true
+      auto_advance: true
+      manual_controls: true
+      tap_zone_nav: true
+      click_stage: pause
+      loop: false
     longshot:
       breath: off
       folio: off
@@ -61,9 +77,11 @@ profiles:
       dwell_ms: 2500
       featured_only: false
       sync_scroll_on_exit: true
-    longshot:
-      breath: off
-      folio: off
+      auto_advance: true
+      manual_controls: true
+      tap_zone_nav: true
+      click_stage: pause
+      loop: false
 
 defaults:
   draft_web_profile: default_hybrid
@@ -76,6 +94,10 @@ surfaces:
     layout: web
     modes: [scroll, present]
     profile_from: trip.export.reading.profile
+  index-present.html:
+    layout: web
+    modes: [present]
+    force_profile: performance
   index-mobile.html:
     layout: mobile
     modes: [scroll, longshot]

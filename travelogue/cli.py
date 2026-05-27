@@ -403,6 +403,7 @@ def cmd_ingest(
             generate_crops=not no_crop,
             dedupe=not no_dedupe,
             incremental=incremental,
+            app_cfg=get_config(),
             featured_dir=featured_dir,
             material_dir=material_dir,
         )
@@ -426,7 +427,7 @@ def cmd_media_reexport(
     trip_path = _resolve(path, trips_dir=trips_dir)
     trip_root = trip_path.parent
     trip = TripService().load(trip_path)
-    result = reexport_trip_assets(trip, trip_root, asset_ids=asset_id)
+    result = reexport_trip_assets(trip, trip_root, asset_ids=asset_id, app_cfg=get_config())
     TripService().save(trip, trip_path)
     typer.echo("OK reexport")
     typer.echo(format_ingest_report(result, trip))
@@ -540,6 +541,7 @@ def cmd_narrate(
             regenerate=regenerate,
             cache_dir=cache_dir,
             chapter_id=chapter_id,
+            cfg=get_config(),
         )
     except NarrateError as exc:
         typer.echo(str(exc), err=True)
@@ -619,8 +621,10 @@ def cmd_run(
         help="stub | deepseek | dashscope for narrate stage",
     ),
     regenerate: bool = typer.Option(False, "--regenerate", help="Force rewrite copy on narrate stage"),
+    config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
 ) -> None:
     """Run pipeline stages in order up to --until."""
+    _load_cfg(config)
     trip_path = _resolve(path, trips_dir=trips_dir)
     try:
         result: RunResult = run_trip(
@@ -634,6 +638,7 @@ def cmd_run(
             skip_locked=skip_locked,
             narrate_provider=narrate_provider,
             regenerate=regenerate,
+            cfg=get_config(),
         )
     except (
         IngestError,
@@ -800,7 +805,7 @@ def cmd_render(
         raise typer.Exit(1)
     try:
         if dual:
-            web_path, mobile_path = render_trip_surfaces(
+            web_path, mobile_path, present_path = render_trip_surfaces(
                 trip_path,
                 out,
                 export_mode=mode,
@@ -812,6 +817,8 @@ def cmd_render(
             )
             typer.echo(f"OK {web_path}")
             typer.echo(f"OK {mobile_path}")
+            if present_path is not None:
+                typer.echo(f"OK {present_path}")
             return
         out_dir = render_trip(
             trip_path,
@@ -857,10 +864,12 @@ def cmd_serve(
         "--rerender/--no-rerender",
         help="re-render HTML after inline save (F-ED-03)",
     ),
+    config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
 ) -> None:
     """Serve trip output with inline copy save API (draft editing)."""
     from travelogue.web.serve import resolve_trip_serve_dir, serve_trip_directory
 
+    _load_cfg(config)
     try:
         trip_path = _resolve(path)
         serve_dir = resolve_trip_serve_dir(trip_path)
@@ -871,7 +880,14 @@ def cmd_serve(
         typer.echo(f"E_SERVE: {index} not found in {serve_dir} — run render first", err=True)
         raise typer.Exit(1)
     try:
-        serve_trip_directory(serve_dir, port=port, host=host, index=index, auto_rerender=rerender)
+        serve_trip_directory(
+            serve_dir,
+            port=port,
+            host=host,
+            index=index,
+            auto_rerender=rerender,
+            app_config=get_config(),
+        )
     except KeyboardInterrupt:
         raise typer.Exit(0) from None
 
@@ -1021,8 +1037,10 @@ def cmd_export(
         "--no-longshot",
         help="omit 保存长图 bundle from export (trip.export.longShot=false)",
     ),
+    config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
 ) -> None:
     """Package index.html + assets into trip-{id}.zip (share mode)."""
+    _load_cfg(config)
     trip_path = _resolve(path)
     try:
         zip_path = export_trip(
@@ -1032,6 +1050,7 @@ def cmd_export(
             no_preview=no_preview,
             validate=not no_validate,
             no_longshot=no_longshot,
+            cfg=get_config(),
         )
     except (ExportError, RenderError) as exc:
         typer.echo(str(exc), err=True)
@@ -1050,8 +1069,10 @@ def cmd_publish(
     ),
     no_preview: bool = typer.Option(False, "--no-preview", help="skip preview.jpg"),
     no_validate: bool = typer.Option(False, "--no-validate", help="skip validation"),
+    config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
 ) -> None:
     """Validate → render (share) → preview → export zip."""
+    _load_cfg(config)
     trip_path = _resolve(path)
     try:
         result: PublishResult = publish_trip(
@@ -1060,6 +1081,7 @@ def cmd_publish(
             no_preview=no_preview,
             output_zip=output,
             validate=not no_validate,
+            cfg=get_config(),
         )
     except (ExportError, RenderError) as exc:
         typer.echo(str(exc), err=True)

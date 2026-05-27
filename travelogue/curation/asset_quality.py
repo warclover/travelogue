@@ -6,7 +6,7 @@ import statistics
 from pathlib import Path
 from typing import Any
 
-from travelogue.config import IngestConfig, get_config
+from travelogue.config import AppConfig, IngestConfig, get_config
 
 
 def asset_sharpness(asset: dict) -> float:
@@ -132,6 +132,7 @@ def apply_layout_eligibility_marks(
     assets: list[dict] | None = None,
     *,
     cfg: IngestConfig | None = None,
+    app_cfg: AppConfig | None = None,
 ) -> str | None:
     """
     Mark layoutEligible on each image asset and write curation.excludedLowResAssetIds.
@@ -139,7 +140,8 @@ def apply_layout_eligibility_marks(
     Low-resolution assets stay in assets[] but are excluded from cover/chapters/screens.
     """
     assets = assets if assets is not None else trip.get("assets") or []
-    cfg = cfg or get_config().ingest
+    resolved = app_cfg or get_config()
+    cfg = cfg or resolved.ingest
 
     for a in assets:
         if a.get("type", "image") == "video":

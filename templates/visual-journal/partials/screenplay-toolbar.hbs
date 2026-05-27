@@ -37,7 +37,7 @@
     </button>
     {{/if}}
   </div>
-  <p class="screenplay-toolbar__hint">{{#if includeScreenplay}}全屏 · 逐屏 · {{/if}}文案可切换{{#if isDraft}} · 点击文案可编辑{{/if}}{{#if includeLongshotBridge}} · 长图可选 2×/3×{{/if}}</p>
+  <p class="screenplay-toolbar__hint">{{#if includeScreenplay}}全屏 · 逐屏 · ←→ 翻页 · {{/if}}{{#if presentPreviewUrl}}<a class="screenplay-toolbar__link" href="{{presentPreviewUrl}}">放映预览</a> · {{/if}}文案可切换{{#if isDraft}} · 点击文案可编辑{{/if}}{{#if includeLongshotBridge}} · 长图可选 2×/3×{{/if}}</p>
 </div>
 {{#if includeScreenplay}}
 <div id="screenplay-root" class="screenplay-root" hidden aria-hidden="true">
@@ -46,6 +46,12 @@
     <div class="screenplay-slide" data-screenplay-layer="b"></div>
   </div>
   <div class="screenplay-chrome">
+    <div class="screenplay-chrome__nav" hidden>
+      <button type="button" class="screenplay-chrome__nav-btn" data-screenplay-action="prev" aria-label="上一屏">‹</button>
+      <button type="button" class="screenplay-chrome__nav-btn" data-screenplay-action="pause" aria-label="暂停/继续"
+        data-label-pause="暂停" data-label-play="继续">暂停</button>
+      <button type="button" class="screenplay-chrome__nav-btn" data-screenplay-action="next" aria-label="下一屏">›</button>
+    </div>
     <div class="screenplay-progress" aria-hidden="true">
       <span class="screenplay-progress__bar"></span>
     </div>

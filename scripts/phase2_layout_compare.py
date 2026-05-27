@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from travelogue.config import LayoutScoringConfig, get_config
+from travelogue.config import LayoutScoringConfig, config_override, get_config
 from travelogue.curation.curate import run_curate
 from travelogue.curation.layout_metrics import compute_layout_metrics, pattern_diversity
 from travelogue.curation.layout_scoring import PHASE2_WEIGHTS, score_aspect_match
@@ -65,16 +65,10 @@ def _run_with_weights(trip: dict, *, layout: str, scoring: LayoutScoringConfig) 
     base = get_config(reload=True)
     layout_cfg = replace(base.layout, scoring=scoring)
     cfg = replace(base, layout=layout_cfg)
-    import travelogue.config as config_mod
-
-    prev = config_mod._cached
-    config_mod._cached = cfg
-    try:
+    with config_override(cfg):
         t = _prepare_trip(trip)
         run_curate(t, export_layout=layout, apply_layout=True)
         return t
-    finally:
-        config_mod._cached = prev
 
 
 def compare_trip(trip_path: Path, *, layout: str = "web") -> dict:

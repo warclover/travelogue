@@ -7,6 +7,7 @@ from pathlib import Path
 
 from pybars import Compiler
 
+from travelogue.config import AppConfig
 from travelogue.paths import (
     BREATH_CSS,
     BREATH_JS,
@@ -26,6 +27,7 @@ from travelogue.paths import (
     SCREENPLAY_CSS,
     SCREENPLAY_HASH_JS,
     SCREENPLAY_JS,
+    SCROLL_NAV_JS,
     SHARE_JS,
     TEMPLATE_VISUAL_JOURNAL,
 )
@@ -41,6 +43,7 @@ class RenderError(Exception):
 
 EXPORT_LAYOUT_LONGSHOT = "longshot"
 LONGSHOT_INDEX_NAME = "index-longshot.html"
+PRESENT_PREVIEW_INDEX_NAME = "index-present.html"
 
 
 def should_include_long_shot(
@@ -110,6 +113,33 @@ def should_include_screenplay(
     )
 
 
+def should_include_scroll_keyboard_nav(
+    trip: dict,
+    *,
+    export_mode: str = "draft",
+    export_layout_override: str | None = None,
+    index_name: str = "index.html",
+    reading_profile_override: str | None = None,
+) -> bool:
+    payload = _reading_payload_for_breath(
+        trip,
+        export_mode=export_mode,
+        export_layout_override=export_layout_override,
+        index_name=index_name,
+        reading_profile_override=reading_profile_override,
+    )
+    return (payload.get("scroll") or {}).get("keyboardNav") is True
+
+
+def copy_scroll_nav_bundle(out_dir: Path) -> None:
+    out_dir = out_dir.resolve()
+    if not SCROLL_NAV_JS.is_file():
+        raise RenderError("E_RENDER_SCROLL_NAV", "missing scroll-nav.js")
+    dest = out_dir / "scroll-nav.js"
+    if dest.resolve() != SCROLL_NAV_JS.resolve():
+        shutil.copy2(SCROLL_NAV_JS, dest)
+
+
 def copy_longshot_bundle(out_dir: Path) -> None:
     """Copy longshot.js, share.js, longshot.css, copy-toggle, and vendored html2canvas."""
     out_dir = out_dir.resolve()
@@ -159,23 +189,18 @@ def _reading_payload_for_breath(
     export_layout_override: str | None = None,
     index_name: str = "index.html",
     reading_profile_override: str | None = None,
+    cfg: AppConfig | None = None,
 ) -> dict:
-    from travelogue.config import get_config
+    from travelogue.config import get_config, reading_profile_defaults
     from travelogue.render.reading_profile import resolve_reading_payload
 
-    cfg = get_config()
     return resolve_reading_payload(
         trip,
         export_mode=export_mode,
         export_layout_override=export_layout_override,
         index_name=index_name,
         reading_profile_override=reading_profile_override,
-        config_defaults={
-            "draft_web_profile": cfg.render.reading.default_profile,
-            "share_zip_profile": cfg.render.reading.share_profile,
-            "mobile_profile": cfg.render.reading.mobile_profile,
-            "longshot_surface_profile": cfg.render.reading.longshot_surface_profile,
-        },
+        config_defaults=reading_profile_defaults(cfg or get_config()),
     )
 
 
@@ -365,6 +390,7 @@ def render_html(
     copy_display_override: str | None = None,
     index_name: str = "index.html",
     reading_profile_override: str | None = None,
+    cfg: AppConfig | None = None,
 ) -> str:
     if template_id != "visual-journal":
         raise RenderError("E_RENDER_TEMPLATE", f"unsupported templateId: {template_id}")
@@ -384,6 +410,7 @@ def render_html(
         copy_display_override=copy_display_override,
         index_name=index_name,
         reading_profile_override=reading_profile_override,
+        cfg=cfg,
     )
     return template(ctx, partials=partials)
 
@@ -404,6 +431,7 @@ def render_trip(
     font_theme: str | None = None,
     copy_display_override: str | None = None,
     reading_profile_override: str | None = None,
+    cfg: AppConfig | None = None,
 ) -> Path:
     trip_path = trip_path.resolve()
     trip_root = trip_path.parent
@@ -433,6 +461,7 @@ def render_trip(
         copy_display_override=copy_display_override,
         index_name=index_name,
         reading_profile_override=reading_profile_override,
+        cfg=cfg,
     )
 
     if write_index:
@@ -498,6 +527,15 @@ def render_trip(
             ),
         )
 
+    if should_include_scroll_keyboard_nav(
+        trip,
+        export_mode=export_mode,
+        export_layout_override=export_layout_override,
+        index_name=index_name,
+        reading_profile_override=reading_profile_override,
+    ):
+        copy_scroll_nav_bundle(out_dir)
+
     if (
         write_index
         and index_name == "index.html"
@@ -542,8 +580,9 @@ def render_trip_surfaces(
     font_theme: str | None = None,
     copy_display_override: str | None = None,
     reading_profile_override: str | None = None,
-) -> tuple[Path, Path]:
-    """Write index.html (web + screens) and index-mobile.html (mobile + legacy) from one trip.json."""
+    cfg: AppConfig | None = None,
+) -> tuple[Path, Path, Path | None]:
+    """Write index.html, index-mobile.html, and optionally index-present.html from one trip.json."""
     from travelogue.curation.screen_planner import LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS
 
     trip_path = trip_path.resolve()
@@ -564,6 +603,7 @@ def render_trip_surfaces(
         font_theme=font_theme,
         copy_display_override=copy_display_override,
         reading_profile_override=reading_profile_override,
+        cfg=cfg,
     ) / "index.html"
     mobile_index = render_trip(
         trip_path,
@@ -578,5 +618,24 @@ def render_trip_surfaces(
         font_theme=font_theme,
         copy_display_override=copy_display_override,
         reading_profile_override=reading_profile_override,
+        cfg=cfg,
     ) / "index-mobile.html"
-    return web_index, mobile_index
+    present_index: Path | None = None
+    if export_mode == "draft":
+        present_index = render_trip(
+            trip_path,
+            out_dir,
+            export_mode="present-preview",
+            validate=False,
+            copy_css=False,
+            index_name=PRESENT_PREVIEW_INDEX_NAME,
+            layout_engine=LAYOUT_ENGINE_SCREENS,
+            export_layout_override="web",
+            update_pipeline=False,
+            include_longshot=False,
+            font_theme=font_theme,
+            copy_display_override=copy_display_override,
+            reading_profile_override=reading_profile_override,
+            cfg=cfg,
+        ) / PRESENT_PREVIEW_INDEX_NAME
+    return web_index, mobile_index, present_index
