@@ -28,8 +28,18 @@ from travelogue.web.studio_uploads import (
     save_upload_files,
     sweep_stale_uploads,
     upload_dir_for_job,
+    uploads_root,
 )
 from travelogue.desktop.demo_album import is_demo_album_path, resolve_demo_album_dir
+from travelogue.web.studio_auth import is_loopback_host, studio_post_authorized
+from travelogue.web.studio_trip_id import is_valid_studio_trip_id
+
+MAX_JSON_BODY = 1_048_576
+MAX_MULTIPART_BODY = 200 * 1024 * 1024
+
+
+def _rel_to_trip(trip_dir: Path, target: Path) -> str:
+    return target.resolve().relative_to(trip_dir.resolve()).as_posix()
 
 
 def _resolve_import_album_path(album_raw: str, *, use_demo: bool = False) -> Path:
@@ -56,10 +66,53 @@ class StudioMixin:
     trips_dir: Path | None = None
     studio_host: str = "127.0.0.1"
     studio_port: int = 8766
+    studio_token: str | None = None
+    studio_allow_lan: bool = False
+    studio_config_path: Path | None = None
+
+    def _studio_require_post_auth(self) -> bool:
+        if studio_post_authorized(
+            host=self.studio_host,
+            token=self.studio_token,
+            headers=self.headers,
+            allow_lan=self.studio_allow_lan,
+        ):
+            return True
+        self._json_response(
+            401,
+            {
+                "ok": False,
+                "error": "E_STUDIO_AUTH",
+                "message": user_message("E_STUDIO_AUTH"),
+            },
+        )
+        return False
+
+    def _album_path_allowed(self, album_path: Path, *, trips_root: Path) -> bool:
+        album_path = album_path.resolve()
+        if is_demo_album_path(str(album_path)):
+            return True
+        try:
+            album_path.relative_to(uploads_root(trips_root).resolve())
+            return True
+        except ValueError:
+            pass
+        if is_loopback_host(self.studio_host) and not self.studio_allow_lan:
+            return album_path.is_dir()
+        return False
 
     def studio_dispatch_GET(self, path: str) -> bool:
         if path == "/":
-            self._studio_send_file(STUDIO_TEMPLATE_DIR / "studio.html", "text/html; charset=utf-8")
+            html_path = STUDIO_TEMPLATE_DIR / "studio.html"
+            html = html_path.read_text(encoding="utf-8")
+            token = self.studio_token or ""
+            html = html.replace("__STUDIO_TOKEN__", token)
+            data = html.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
             return True
         if path == STATUS_PATH:
             self._studio_handle_status()
@@ -87,6 +140,8 @@ class StudioMixin:
         return False
 
     def studio_dispatch_POST(self, path: str) -> bool:
+        if not self._studio_require_post_auth():
+            return True
         if path == IMPORT_PATH:
             self._studio_handle_import()
             return True
@@ -121,9 +176,14 @@ class StudioMixin:
         return trip_id, rel
 
     def studio_bind_trip(self, trip_id: str) -> Path | None:
-        if not self.trips_dir:
+        if not self.trips_dir or not is_valid_studio_trip_id(trip_id):
             return None
-        trip_dir = (self.trips_dir / trip_id).resolve()
+        trips_root = self.trips_dir.resolve()
+        trip_dir = (trips_root / trip_id).resolve()
+        try:
+            trip_dir.relative_to(trips_root)
+        except ValueError:
+            return None
         trip_json = trip_dir / "trip.json"
         if not trip_json.is_file():
             return None
@@ -171,6 +231,8 @@ class StudioMixin:
         content_type = self.headers.get("Content-Type", "")
         if "multipart/form-data" in content_type:
             length = int(self.headers.get("Content-Length") or 0)
+            if length > MAX_MULTIPART_BODY:
+                raise DemoError("E_STUDIO_BODY_TOO_LARGE", "upload too large")
             body = self.rfile.read(length) if length else b""
             fields, files = parse_multipart_form(body, content_type)
             if not files:
@@ -225,14 +287,28 @@ class StudioMixin:
             self._json_response(400, {"ok": False, "error": exc.code, "message": str(exc)})
             return
 
+        cfg = self._studio_cfg()
+        trips_root = self.trips_dir or cfg.trips_dir
+        if not use_demo_album and not self._album_path_allowed(album_path, trips_root=trips_root):
+            if upload_dir:
+                delete_upload_dir(upload_dir, trips_dir=trips_root)
+            if precreated_job:
+                get_job_store().finish_import()
+            self._json_response(
+                403,
+                {
+                    "ok": False,
+                    "error": "E_STUDIO_ALBUM_DENIED",
+                    "message": user_message("E_STUDIO_ALBUM_DENIED"),
+                },
+            )
+            return
+
         title = str(payload.get("title") or "我的旅途").strip() or "我的旅途"
         place = str(payload.get("place") or "旅途").strip() or "旅途"
         trip_id = payload.get("tripId")
         trip_id_str = str(trip_id).strip() if trip_id else None
         force = bool(payload.get("force"))
-
-        cfg = self._studio_cfg()
-        trips_root = self.trips_dir or cfg.trips_dir
 
         try:
             assert_album_importable(
@@ -245,7 +321,7 @@ class StudioMixin:
             )
         except DemoError as exc:
             if upload_dir:
-                delete_upload_dir(upload_dir)
+                delete_upload_dir(upload_dir, trips_dir=trips_root)
             if precreated_job:
                 get_job_store().finish_import()
             status = 409 if exc.code == "E_DEMO_EXISTS" else 400
@@ -258,7 +334,7 @@ class StudioMixin:
         job = precreated_job or store.create_import_job()
         if job is None:
             if upload_dir:
-                delete_upload_dir(upload_dir)
+                delete_upload_dir(upload_dir, trips_dir=trips_root)
             self._json_response(
                 409,
                 {
@@ -284,6 +360,8 @@ class StudioMixin:
             "host": host,
             "port": port,
         }
+        if self.studio_config_path and self.studio_config_path.is_file():
+            worker_payload["configPath"] = str(self.studio_config_path.resolve())
 
         def sweep_upload() -> None:
             finished = {"done": False}
@@ -299,7 +377,7 @@ class StudioMixin:
                     ):
                         finished["done"] = True
                         if upload_dir and current.status == "succeeded":
-                            delete_upload_dir(upload_dir)
+                            delete_upload_dir(upload_dir, trips_dir=trips_root)
                         break
                     time.sleep(0.5)
 
@@ -354,7 +432,7 @@ class StudioMixin:
             return
 
         def runner() -> dict:
-            return run_studio_llm_narrate(trip_dir, cfg=cfg)
+            return run_studio_llm_narrate(trip_dir, cfg=cfg, trips_dir=trips_root)
 
         threading.Thread(
             target=lambda: run_narrate_job(job, runner=runner),
@@ -363,6 +441,8 @@ class StudioMixin:
         self._json_response(202, {"ok": True, "jobId": job.job_id})
 
     def _studio_resolve_trip_dir(self, trip_id: str) -> Path | None:
+        if not is_valid_studio_trip_id(trip_id):
+            return None
         trips_root = (self.trips_dir or self._studio_cfg().trips_dir).resolve()
         trip_dir = (trips_root / trip_id).resolve()
         try:
@@ -403,9 +483,6 @@ class StudioMixin:
 
         scale = int(payload.get("scale") or 2)
         fmt = str(payload.get("format") or "png")
-        host = self.studio_host
-        port = self.studio_port
-        base_url = f"http://{host}:{port}"
 
         def runner() -> dict:
             from travelogue.export.longshot import export_trip_longshot
@@ -414,12 +491,11 @@ class StudioMixin:
                 trip_dir,
                 scale=scale,
                 fmt=fmt,
-                base_url=base_url,
-                trip_id=trip_id,
             )
+            rel_outputs = [_rel_to_trip(trip_dir, item.path) for item in result.outputs]
             return {
                 "tripId": trip_id,
-                "outputs": [str(item.path) for item in result.outputs],
+                "outputs": rel_outputs,
                 "captureMethod": result.capture_method,
                 "segmented": len(result.outputs) > 1,
                 "pageCount": len(result.outputs),
@@ -436,13 +512,36 @@ class StudioMixin:
         if not payload:
             return
 
+        trips_root = (self.trips_dir or self._studio_cfg().trips_dir).resolve()
+        trip_id = str(payload.get("tripId") or "").strip()
+        rel_path = str(payload.get("relPath") or "").strip()
         path_raw = str(payload.get("path") or "").strip()
-        if not path_raw:
-            self._json_response(400, {"ok": False, "error": "path required"})
-            return
 
-        trips_root = self.trips_dir or self._studio_cfg().trips_dir
         from travelogue.export.longshot import LongshotExportError, reveal_path_in_folder
+
+        if trip_id and rel_path:
+            trip_dir = self._studio_resolve_trip_dir(trip_id)
+            if trip_dir is None:
+                self._json_response(404, {"ok": False, "error": "trip not found"})
+                return
+            target = (trip_dir / rel_path).resolve()
+            try:
+                target.relative_to(trip_dir.resolve())
+            except ValueError:
+                self._json_response(
+                    403,
+                    {
+                        "ok": False,
+                        "error": "E_STUDIO_REVEAL_DENIED",
+                        "message": user_message("E_STUDIO_REVEAL_DENIED"),
+                    },
+                )
+                return
+            path_raw = str(target)
+
+        if not path_raw:
+            self._json_response(400, {"ok": False, "error": "path or tripId+relPath required"})
+            return
 
         try:
             reveal_path_in_folder(Path(path_raw), allowed_root=trips_root)
@@ -515,7 +614,8 @@ class StudioMixin:
             )
             return
 
-        self._json_response(200, {"ok": True, "zipPath": str(zip_path.resolve())})
+        rel_zip = _rel_to_trip(trip_dir, zip_path)
+        self._json_response(200, {"ok": True, "zipRelPath": rel_zip, "tripId": trip_id})
 
     def _studio_trip_api(self, path: str) -> tuple[str, str] | None:
         if path.endswith(SAVE_COPY_SUFFIX):

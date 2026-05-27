@@ -872,6 +872,11 @@ def cmd_studio(
     ),
     port: int = typer.Option(8766, "--port", "-p", help="HTTP port"),
     host: str = typer.Option("127.0.0.1", "--host", help="bind address"),
+    allow_lan: bool = typer.Option(
+        False,
+        "--allow-lan",
+        help="allow non-loopback bind with X-Studio-Token auth",
+    ),
     no_open: bool = typer.Option(False, "--no-open", help="do not open browser"),
     title: str = typer.Option("我的旅途", "--title", help="trip title"),
     place: str = typer.Option("旅途", "--place", help="default place name"),
@@ -932,6 +937,8 @@ def cmd_studio(
             port=port,
             host=host,
             app_config=cfg,
+            allow_lan=allow_lan,
+            config_path=config,
         )
     except KeyboardInterrupt:
         raise typer.Exit(0) from None
@@ -949,6 +956,11 @@ def cmd_serve(
         help="re-render HTML after inline save (F-ED-03)",
     ),
     studio: bool = typer.Option(False, "--studio", help="Studio workbench mode (trips root)"),
+    allow_lan: bool = typer.Option(
+        False,
+        "--allow-lan",
+        help="allow non-loopback bind with X-Studio-Token auth",
+    ),
     config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
     trips_dir: Optional[Path] = typer.Option(None, "--trips-dir", help="trips root when path is tripId"),
 ) -> None:
@@ -966,6 +978,8 @@ def cmd_serve(
                 host=host,
                 auto_rerender=rerender,
                 app_config=cfg,
+                allow_lan=allow_lan,
+                config_path=config,
             )
         except KeyboardInterrupt:
             raise typer.Exit(0) from None

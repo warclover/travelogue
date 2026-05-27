@@ -25,7 +25,12 @@ def studio_llm_status(*, cfg: AppConfig | None = None) -> dict[str, object]:
         return {"llmAvailable": False, "llmProvider": provider}
 
 
-def run_studio_llm_narrate(trip_dir: Path, *, cfg: AppConfig | None = None) -> dict[str, str]:
+def run_studio_llm_narrate(
+    trip_dir: Path,
+    *,
+    cfg: AppConfig | None = None,
+    trips_dir: Path | None = None,
+) -> dict[str, str]:
     app_cfg = cfg or get_config()
     status = studio_llm_status(cfg=app_cfg)
     if not status.get("llmAvailable"):
@@ -36,8 +41,8 @@ def run_studio_llm_narrate(trip_dir: Path, *, cfg: AppConfig | None = None) -> d
     if not trip_json.is_file():
         raise FileNotFoundError(f"trip.json not found: {trip_json}")
 
-    trips_root = trip_dir.parent
-    svc = TripService(root=trips_root.parent if trips_root.name == "trips" else trips_root)
+    trips_root = (trips_dir or trip_dir.parent).resolve()
+    svc = TripService(root=trips_root.parent)
     trip = svc.load(trip_json)
     provider = str(status["llmProvider"])
 
@@ -63,5 +68,5 @@ def run_studio_llm_narrate(trip_dir: Path, *, cfg: AppConfig | None = None) -> d
     return {
         "tripId": trip_dir.name,
         "provider": provider,
-        "previewPath": str(preview_path.resolve()),
+        "previewRelPath": preview_path.name,
     }

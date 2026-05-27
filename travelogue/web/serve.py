@@ -21,13 +21,13 @@ from travelogue.web.tier_patch import TierPatchError, apply_tier_promotions
 SAVE_PATH = "/__travelogue/save-copy"
 PROMOTE_TIER_PATH = "/__travelogue/promote-tier"
 FAVICON_SILENT_PATHS = frozenset({"/favicon.ico", "/favicon.svg"})
+MAX_JSON_BODY = 1_048_576
 _trip_write_lock = threading.Lock()
 
 
 class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
     trip_json_path: Path
     auto_rerender: bool = True
-    app_config: AppConfig | None = None
 
     def __init__(
         self,
@@ -39,6 +39,10 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
         trips_dir: Path | None = None,
         studio_host: str = "127.0.0.1",
         studio_port: int = 8766,
+        app_config: AppConfig | None = None,
+        studio_token: str | None = None,
+        studio_allow_lan: bool = False,
+        studio_config_path: Path | None = None,
         **kwargs,
     ):
         self.trip_json_path = trip_json or Path("trip.json")
@@ -47,6 +51,10 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
         self.trips_dir = trips_dir
         self.studio_host = studio_host
         self.studio_port = studio_port
+        self.app_config = app_config
+        self.studio_token = studio_token
+        self.studio_allow_lan = studio_allow_lan
+        self.studio_config_path = studio_config_path
         super().__init__(*args, directory=directory, **kwargs)
 
     @contextmanager
@@ -121,7 +129,7 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             and target.suffix.lower() in {".html", ".htm"}
         ):
             html = target.read_text(encoding="utf-8", errors="replace")
-            html = inject_studio_chrome(html)
+            html = inject_studio_chrome(html, studio_token=self.studio_token)
             data = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -141,8 +149,18 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             self.path = old_path
         return True
 
-    def _read_json_body(self) -> dict:
+    def _read_json_body(self, *, max_bytes: int = MAX_JSON_BODY) -> dict:
         length = int(self.headers.get("Content-Length") or 0)
+        if length > max_bytes:
+            self._json_response(
+                413,
+                {
+                    "ok": False,
+                    "error": "E_STUDIO_BODY_TOO_LARGE",
+                    "message": "request body too large",
+                },
+            )
+            return {}
         body = self.rfile.read(length) if length else b""
         try:
             payload = json.loads(body.decode("utf-8") or "{}")
@@ -236,15 +254,13 @@ def serve_trip_directory(
         raise FileNotFoundError(f"trip.json not found in {trip_dir}")
 
     pinned_cfg = app_config or get_config()
-    prev_handler_cfg = TripPreviewHandler.app_config
-    TripPreviewHandler.app_config = pinned_cfg
-
     handler = partial(
         TripPreviewHandler,
         directory=str(trip_dir),
         trip_json=trip_json,
         auto_rerender=auto_rerender,
         studio_mode=False,
+        app_config=pinned_cfg,
     )
     server = ThreadingHTTPServer((host, port), handler)
     url = f"http://{host}:{port}/{index}"
@@ -261,7 +277,6 @@ def serve_trip_directory(
     except KeyboardInterrupt:
         print("\nStopped.")
     finally:
-        TripPreviewHandler.app_config = prev_handler_cfg
         server.server_close()
 
 
@@ -272,15 +287,18 @@ def serve_studio_directory(
     host: str = "127.0.0.1",
     auto_rerender: bool = True,
     app_config: AppConfig | None = None,
+    allow_lan: bool = False,
+    config_path: Path | None = None,
 ) -> None:
+    from travelogue.web.studio_auth import ensure_studio_bind_allowed, is_loopback_host, new_studio_token
+
+    ensure_studio_bind_allowed(host, allow_lan=allow_lan)
     trips_dir = trips_dir.resolve()
     trips_dir.mkdir(parents=True, exist_ok=True)
     sweep_stale_uploads(trips_dir)
 
     pinned_cfg = app_config or get_config()
-    prev_handler_cfg = TripPreviewHandler.app_config
-    TripPreviewHandler.app_config = pinned_cfg
-
+    studio_token = new_studio_token() if allow_lan and not is_loopback_host(host) else None
     handler = partial(
         TripPreviewHandler,
         directory=str(trips_dir),
@@ -290,19 +308,24 @@ def serve_studio_directory(
         trips_dir=trips_dir,
         studio_host=host,
         studio_port=port,
+        app_config=pinned_cfg,
+        studio_token=studio_token,
+        studio_allow_lan=allow_lan,
+        studio_config_path=config_path,
     )
     server = ThreadingHTTPServer((host, port), handler)
     url = f"http://{host}:{port}/"
     print(f"Studio mode · trips: {trips_dir}")
     print(f"  workbench: {url}")
     print(f"  import API: POST {url.rstrip('/')}/__travelogue/import")
+    if studio_token:
+        print(f"  studio token (POST header X-Studio-Token): {studio_token}")
     print("  Ctrl+C to stop")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nStopped.")
     finally:
-        TripPreviewHandler.app_config = prev_handler_cfg
         server.server_close()
 
 

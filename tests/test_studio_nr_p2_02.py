@@ -66,8 +66,6 @@ def test_studio_config_stub_llm_unavailable(tmp_path: Path) -> None:
     port = _free_port()
     cfg = AppConfig()
     cfg.llm.provider = "stub"
-    prev_cfg = TripPreviewHandler.app_config
-    TripPreviewHandler.app_config = cfg
     handler = partial(
         TripPreviewHandler,
         directory=str(trips_dir),
@@ -76,6 +74,7 @@ def test_studio_config_stub_llm_unavailable(tmp_path: Path) -> None:
         trips_dir=trips_dir,
         studio_host="127.0.0.1",
         studio_port=port,
+        app_config=cfg,
     )
     server = ThreadingHTTPServer(("127.0.0.1", port), handler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -90,4 +89,3 @@ def test_studio_config_stub_llm_unavailable(tmp_path: Path) -> None:
     finally:
         server.shutdown()
         server.server_close()
-        TripPreviewHandler.app_config = prev_cfg

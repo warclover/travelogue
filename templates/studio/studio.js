@@ -12,6 +12,16 @@
   var activeJobId = null;
   var SLOW_JOB_MS = 30000;
 
+  function studioAuthHeaders(extra) {
+    var headers = extra || {};
+    var meta = document.querySelector('meta[name="studio-token"]');
+    var token = meta && meta.getAttribute("content");
+    if (token) {
+      headers["X-Studio-Token"] = token;
+    }
+    return headers;
+  }
+
   function $(id) {
     return document.getElementById(id);
   }
@@ -93,7 +103,7 @@
     if (!activeJobId) return Promise.resolve();
     return fetch("/__travelogue/cancel", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: studioAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ jobId: activeJobId }),
     }).finally(function () {
       activeJobId = null;
@@ -160,7 +170,7 @@
   function postImport(body) {
     return fetch("/__travelogue/import", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: studioAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(body),
     }).then(function (resp) {
       return resp.json().then(function (data) {
@@ -328,17 +338,16 @@
     open.textContent = "继续编辑";
     actions.appendChild(open);
 
-    if (trip.previewPath) {
+    if (trip.previewRelPath) {
       var previewBtn = document.createElement("button");
       previewBtn.type = "button";
       previewBtn.className = "studio__btn studio__btn--ghost";
       previewBtn.textContent = "封面 preview.jpg";
-      previewBtn.title = trip.previewPath;
       previewBtn.addEventListener("click", function () {
         fetch("/__travelogue/reveal", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: trip.previewPath }),
+          headers: studioAuthHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ tripId: trip.tripId, relPath: trip.previewRelPath }),
         });
       });
       actions.appendChild(previewBtn);

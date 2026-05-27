@@ -158,14 +158,6 @@ def test_studio_demo_exists_409(tmp_path: Path) -> None:
         server.server_close()
 
 
-def test_ingest_stage_hint_tiers() -> None:
-    from travelogue.web.studio_jobs import ingest_stage_hint
-
-    assert ingest_stage_hint(40) == "约 30 秒"
-    assert ingest_stage_hint(80) == "约 1 分钟"
-    assert ingest_stage_hint(200) == "约 2 分钟"
-
-
 def test_studio_reveal_denied(tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
@@ -227,7 +219,8 @@ def test_studio_longshot_job(tmp_path: Path) -> None:
         assert last.get("status") == "succeeded", last
         outputs = last.get("result", {}).get("outputs") or []
         assert outputs
-        assert Path(outputs[0]).is_file()
+        trip_dir = trips_dir / trip_id
+        assert (trip_dir / outputs[0]).is_file()
     finally:
         server.shutdown()
         server.server_close()

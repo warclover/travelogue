@@ -51,6 +51,7 @@ def list_studio_trips(trips_dir: Path, *, limit: int = 20) -> list[dict]:
         except (OSError, json.JSONDecodeError):
             data = {}
         preview = child / "preview.jpg"
+        preview_rel = "preview.jpg" if preview.is_file() else None
         rows.append(
             (
                 updated_at,
@@ -61,7 +62,7 @@ def list_studio_trips(trips_dir: Path, *, limit: int = 20) -> list[dict]:
                     "updatedAt": updated_at,
                     "photoCount": photo_count,
                     "longshotStale": longshot_outputs_stale(child, trip_mtime=updated_at),
-                    "previewPath": str(preview.resolve()) if preview.is_file() else None,
+                    "previewRelPath": preview_rel,
                 },
             )
         )

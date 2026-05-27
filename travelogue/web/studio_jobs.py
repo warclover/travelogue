@@ -10,7 +10,7 @@ from typing import Any, Callable
 
 from travelogue.demo.build import DemoError
 from travelogue.web.studio_errors import user_message
-from travelogue.web.studio_stages import ingest_stage_hint, stage_hint
+from travelogue.web.studio_stages import stage_hint
 
 STAGE_COUNT = 4
 
@@ -66,6 +66,10 @@ class StudioJobStore:
         with self._lock:
             return self._jobs.get(job_id)
 
+    def is_cancelled(self, job: StudioJob) -> bool:
+        with self._lock:
+            return job.status == "cancelled"
+
     def update(
         self,
         job: StudioJob,
@@ -96,6 +100,27 @@ class StudioJobStore:
                 job.error = error
             if result is not None:
                 job.result = result
+
+    def finalize(
+        self,
+        job: StudioJob,
+        *,
+        status: str,
+        trip_id: str | None = None,
+        error: dict[str, Any] | None = None,
+        result: dict[str, Any] | None = None,
+    ) -> bool:
+        with self._lock:
+            if job.status == "cancelled":
+                return False
+            job.status = status
+            if trip_id is not None:
+                job.trip_id = trip_id
+            if error is not None:
+                job.error = error
+            if result is not None:
+                job.result = result
+            return True
 
     def finish_import(self) -> None:
         with self._lock:
@@ -171,10 +196,6 @@ class StudioJobStore:
             if job.type == "import":
                 self._import_running = False
                 self._import_handles.pop(job_id, None)
-            elif job.type == "longshot":
-                self._longshot_running = False
-            elif job.type == "narrate":
-                self._narrate_running = False
             return job
 
 
@@ -194,69 +215,6 @@ def reset_job_store() -> None:
 ProgressCallback = Callable[[str, int, str], None]
 
 
-def run_import_job(
-    job: StudioJob,
-    *,
-    runner: Callable[[ProgressCallback], dict[str, Any]],
-) -> None:
-    store = get_job_store()
-
-    def on_progress(stage: str, stage_index: int, stage_hint: str) -> None:
-        if job.status == "cancelled":
-            raise DemoError("E_STUDIO_CANCELLED", "cancelled")
-        store.update(
-            job,
-            status="running",
-            stage=stage,
-            stage_index=stage_index,
-            stage_hint=stage_hint,
-        )
-
-    store.update(job, status="running")
-    try:
-        result = runner(on_progress)
-        if job.status == "cancelled":
-            return
-        store.update(
-            job,
-            status="succeeded",
-            trip_id=result.get("tripId"),
-            result=result,
-        )
-    except DemoError as exc:
-        if exc.code == "E_STUDIO_CANCELLED" or job.status == "cancelled":
-            store.update(
-                job,
-                status="cancelled",
-                error={
-                    "code": "E_STUDIO_CANCELLED",
-                    "message": user_message("E_STUDIO_CANCELLED"),
-                },
-            )
-        else:
-            payload = {
-                "code": exc.code,
-                "message": user_message(exc.code, str(exc)),
-            }
-            store.update(job, status="failed", error=payload)
-    except Exception as exc:
-        if job.status == "cancelled":
-            store.update(
-                job,
-                status="cancelled",
-                error={
-                    "code": "E_STUDIO_CANCELLED",
-                    "message": user_message("E_STUDIO_CANCELLED"),
-                },
-            )
-        else:
-            payload = {"code": "E_STUDIO_PIPELINE", "message": str(exc)}
-            store.update(job, status="failed", error=payload)
-    finally:
-        store.finish_import()
-        store.pop_import_handle(job.job_id)
-
-
 def run_import_job_subprocess(job: StudioJob, payload: dict[str, Any]) -> None:
     from travelogue.web.studio_subprocess import ImportSubprocess
 
@@ -274,7 +232,7 @@ def run_import_job_subprocess(job: StudioJob, payload: dict[str, Any]) -> None:
                 if not events and not handle.alive:
                     break
                 for event in events:
-                    if job.status == "cancelled":
+                    if store.is_cancelled(job):
                         handle.cancel()
                         return
                     if event["type"] == "progress":
@@ -286,10 +244,10 @@ def run_import_job_subprocess(job: StudioJob, payload: dict[str, Any]) -> None:
                             stage_hint=event.get("stageHint") or "",
                         )
                     elif event["type"] == "done":
-                        if job.status == "cancelled":
+                        if store.is_cancelled(job):
                             return
                         result = event["result"]
-                        store.update(
+                        store.finalize(
                             job,
                             status="succeeded",
                             trip_id=result.get("tripId"),
@@ -298,11 +256,11 @@ def run_import_job_subprocess(job: StudioJob, payload: dict[str, Any]) -> None:
                         finished = True
                         break
                     elif event["type"] == "error":
-                        if job.status == "cancelled":
+                        if store.is_cancelled(job):
                             return
                         code = event.get("code") or "E_STUDIO_PIPELINE"
                         if code == "E_STUDIO_CANCELLED":
-                            store.update(
+                            store.finalize(
                                 job,
                                 status="cancelled",
                                 error={
@@ -311,7 +269,7 @@ def run_import_job_subprocess(job: StudioJob, payload: dict[str, Any]) -> None:
                                 },
                             )
                         elif event.get("demo"):
-                            store.update(
+                            store.finalize(
                                 job,
                                 status="failed",
                                 error={
@@ -320,25 +278,32 @@ def run_import_job_subprocess(job: StudioJob, payload: dict[str, Any]) -> None:
                                 },
                             )
                         else:
-                            store.update(
+                            store.finalize(
                                 job,
                                 status="failed",
-                                error={"code": code, "message": event.get("message", code)},
+                                error={
+                                    "code": code,
+                                    "message": user_message(code, event.get("message", code)),
+                                },
                             )
                         finished = True
                         break
-                if job.status == "cancelled":
+                if store.is_cancelled(job):
                     handle.cancel()
                     return
                 if not finished:
                     time.sleep(0.15)
             if job.status not in ("succeeded", "failed", "cancelled"):
-                store.update(
+                store.finalize(
                     job,
                     status="failed",
-                    error={"code": "E_STUDIO_PIPELINE", "message": "导入进程异常退出"},
+                    error={
+                        "code": "E_STUDIO_PIPELINE",
+                        "message": user_message("E_STUDIO_PIPELINE"),
+                    },
                 )
         finally:
+            handle.join(timeout=5.0)
             store.finish_import()
             store.pop_import_handle(job.job_id)
 
@@ -353,23 +318,32 @@ def run_longshot_job(
     store = get_job_store()
     store.update(job, status="running", stage="longshot", stage_index=1, stage_count=1)
     try:
+        if store.is_cancelled(job):
+            return
         result = runner()
-        store.update(
+        if store.is_cancelled(job):
+            return
+        store.finalize(
             job,
             status="succeeded",
             trip_id=result.get("tripId"),
             result=result,
         )
     except Exception as exc:
+        if store.is_cancelled(job):
+            return
         from travelogue.export.longshot import LongshotExportError
 
         if isinstance(exc, LongshotExportError):
-            payload = {"code": exc.code, "message": str(exc).split(": ", 1)[-1]}
+            payload = {"code": exc.code, "message": user_message(exc.code, str(exc))}
         elif isinstance(exc, DemoError):
             payload = {"code": exc.code, "message": user_message(exc.code, str(exc))}
         else:
-            payload = {"code": "E_LNG_CAPTURE_FAILED", "message": str(exc)}
-        store.update(job, status="failed", error=payload)
+            payload = {
+                "code": "E_LNG_CAPTURE_FAILED",
+                "message": user_message("E_LNG_CAPTURE_FAILED", str(exc)),
+            }
+        store.finalize(job, status="failed", error=payload)
     finally:
         store.finish_longshot()
 
@@ -388,22 +362,33 @@ def run_narrate_job(
         stage_count=1,
     )
     try:
+        if store.is_cancelled(job):
+            return
         result = runner()
-        store.update(
+        if store.is_cancelled(job):
+            return
+        store.finalize(
             job,
             status="succeeded",
             trip_id=result.get("tripId"),
             result=result,
         )
     except Exception as exc:
+        if store.is_cancelled(job):
+            return
         from travelogue.llm.errors import LlmError
 
         if isinstance(exc, LlmError):
-            payload = {"code": exc.code, "message": str(exc).split(": ", 1)[-1]}
+            payload = {"code": exc.code, "message": user_message(exc.code, str(exc))}
         elif isinstance(exc, DemoError):
             payload = {"code": exc.code, "message": user_message(exc.code, str(exc))}
+        elif isinstance(exc, FileNotFoundError):
+            payload = {
+                "code": "E_TRIP_NOT_FOUND",
+                "message": user_message("E_TRIP_NOT_FOUND", str(exc)),
+            }
         else:
-            payload = {"code": "E_NARRATE_API", "message": str(exc)}
-        store.update(job, status="failed", error=payload)
+            payload = {"code": "E_NARRATE_API", "message": user_message("E_NARRATE_API", str(exc))}
+        store.finalize(job, status="failed", error=payload)
     finally:
         store.finish_narrate()

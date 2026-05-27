@@ -16,10 +16,16 @@ def should_inject_studio_chrome(rel_path: str) -> bool:
     return Path(rel_path).name.lower() in CHROME_ALLOWLIST
 
 
-def inject_studio_chrome(html: str) -> str:
+def inject_studio_chrome(html: str, *, studio_token: str | None = None) -> str:
     if 'data-preview-toolbar="on"' in html:
         return html
     lower = html.lower()
+    if studio_token and "<head" in lower:
+        meta = f'<meta name="studio-token" content="{studio_token}">'
+        if 'name="studio-token"' not in html:
+            head_end = lower.index("<head")
+            insert_at = html.index(">", head_end) + 1
+            html = html[:insert_at] + "\n  " + meta + html[insert_at:]
     if "<body" in lower:
         idx = lower.index("<body")
         end = html.index(">", idx) + 1

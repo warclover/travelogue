@@ -19,8 +19,17 @@ def upload_dir_for_job(trips_dir: Path, job_id: str) -> Path:
     return path
 
 
-def delete_upload_dir(path: Path) -> None:
-    if path.is_dir() and "_uploads" in path.parts:
+def delete_upload_dir(path: Path, *, trips_dir: Path | None = None) -> None:
+    path = path.resolve()
+    if trips_dir is not None:
+        uploads_root_dir = uploads_root(trips_dir).resolve()
+        try:
+            path.relative_to(uploads_root_dir)
+        except ValueError:
+            return
+    elif "_uploads" not in path.parts:
+        return
+    if path.is_dir():
         shutil.rmtree(path, ignore_errors=True)
 
 

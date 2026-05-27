@@ -33,8 +33,8 @@ def test_studio_trips_includes_preview_path(tmp_path: Path) -> None:
     assert trips
     row = trips[0]
     assert row["tripId"] == result.trip_id
-    assert row.get("previewPath")
-    assert Path(row["previewPath"]).is_file()
+    assert row.get("previewRelPath") == "preview.jpg"
+    assert (trips_dir / result.trip_id / "preview.jpg").is_file()
 
 
 def test_longshot_stale_when_trip_newer(tmp_path: Path) -> None:
@@ -81,7 +81,8 @@ def test_studio_export_zip(tmp_path: Path) -> None:
             {"tripId": result.trip_id, "confirmPrivacy": True},
         )
         assert status == 200, body
-        zip_path = Path(body["zipPath"])
+        assert body.get("zipRelPath")
+        zip_path = trips_dir / result.trip_id / body["zipRelPath"]
         assert zip_path.is_file()
         assert zip_path.suffix == ".zip"
     finally:

@@ -13,16 +13,30 @@
     return parts[0] || "";
   }
 
+  function studioAuthHeaders() {
+    var headers = { "Content-Type": "application/json" };
+    var meta = document.querySelector('meta[name="studio-token"]');
+    var token = meta && meta.getAttribute("content");
+    if (token) {
+      headers["X-Studio-Token"] = token;
+    }
+    return headers;
+  }
+
   function postJson(url, payload) {
     return fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: studioAuthHeaders(),
       body: JSON.stringify(payload || {}),
     }).then(function (resp) {
       return resp.json().then(function (body) {
         return { status: resp.status, body: body };
       });
     });
+  }
+
+  function revealTripPath(tripId, relPath) {
+    return postJson("/__travelogue/reveal", { tripId: tripId, relPath: relPath });
   }
 
   function pollJob(jobId, onDone, onSlow) {
@@ -75,6 +89,7 @@
   }
 
   function showLongshotPanel(root, job) {
+    var tripId = tripIdFromPath();
     var panel = root.querySelector(".preview-toolbar__longshot-panel");
     if (!panel) {
       panel = document.createElement("div");
@@ -82,10 +97,14 @@
       root.appendChild(panel);
     }
     panel.hidden = false;
+    panel.textContent = "";
 
     if (job.status === "failed") {
       var err = (job.error && (job.error.message || job.error.code)) || "导出失败";
-      panel.innerHTML = '<p class="preview-toolbar__longshot-error">' + err + "</p>";
+      var errEl = document.createElement("p");
+      errEl.className = "preview-toolbar__longshot-error";
+      errEl.textContent = err;
+      panel.appendChild(errEl);
       return;
     }
 
@@ -93,34 +112,43 @@
     var outputs = result.outputs || [];
     var method = result.captureMethod || "p0";
     var segmented = result.segmented || outputs.length > 1;
-    var html = '<p class="preview-toolbar__longshot-ok">长图已保存</p>';
+
+    var okEl = document.createElement("p");
+    okEl.className = "preview-toolbar__longshot-ok";
+    okEl.textContent = "长图已保存";
+    panel.appendChild(okEl);
+
     if (segmented && outputs.length > 1) {
-      html +=
-        '<p class="preview-toolbar__longshot-compat">已按章导出 ' +
-        outputs.length +
-        " 张，底部含页码（如 2/5）便于微信按序发送。</p>";
+      var segEl = document.createElement("p");
+      segEl.className = "preview-toolbar__longshot-compat";
+      segEl.textContent =
+        "已按章导出 " + outputs.length + " 张，底部含页码（如 2/5）便于微信按序发送。";
+      panel.appendChild(segEl);
     }
     if (method === "p1") {
-      html +=
-        '<p class="preview-toolbar__longshot-compat">已使用兼容模式导出，与预览可能有细微差异。</p>';
+      var compatEl = document.createElement("p");
+      compatEl.className = "preview-toolbar__longshot-compat";
+      compatEl.textContent = "已使用兼容模式导出，与预览可能有细微差异。";
+      panel.appendChild(compatEl);
     }
     if (outputs.length) {
-      html += '<ul class="preview-toolbar__longshot-paths">';
-      outputs.forEach(function (p) {
-        html += "<li>" + p + "</li>";
+      var list = document.createElement("ul");
+      list.className = "preview-toolbar__longshot-paths";
+      outputs.forEach(function (rel) {
+        var li = document.createElement("li");
+        li.textContent = rel;
+        list.appendChild(li);
       });
-      html += "</ul>";
-      html +=
-        '<button type="button" class="preview-toolbar__reveal" data-path="' +
-        outputs[0].replace(/"/g, "&quot;") +
-        '">在文件夹中显示</button>';
-    }
-    panel.innerHTML = html;
-    var revealBtn = panel.querySelector(".preview-toolbar__reveal");
-    if (revealBtn) {
+      panel.appendChild(list);
+
+      var revealBtn = document.createElement("button");
+      revealBtn.type = "button";
+      revealBtn.className = "preview-toolbar__reveal";
+      revealBtn.textContent = "在文件夹中显示";
       revealBtn.addEventListener("click", function () {
-        postJson("/__travelogue/reveal", { path: revealBtn.getAttribute("data-path") });
+        revealTripPath(tripId, outputs[0]);
       });
+      panel.appendChild(revealBtn);
     }
     hideStaleHint(root);
   }
@@ -158,7 +186,7 @@
     menu.hidden = !menu.hidden;
   }
 
-  function exportZip(tripId, root) {
+  function exportZip(tripId) {
     if (!window.confirm("导出 zip 包用于自行托管或备份，不是微信分享主路径。继续？")) {
       return;
     }
@@ -168,9 +196,9 @@
           window.alert((res.body && res.body.message) || "导出失败");
           return;
         }
-        var zipPath = res.body.zipPath;
-        if (zipPath && window.confirm("zip 已生成：\n" + zipPath + "\n\n在文件夹中显示？")) {
-          postJson("/__travelogue/reveal", { path: zipPath });
+        var zipRel = res.body.zipRelPath;
+        if (zipRel && window.confirm("zip 已生成。在文件夹中显示？")) {
+          revealTripPath(tripId, zipRel);
         }
       })
       .catch(function () {
@@ -276,24 +304,13 @@
       });
   }
 
-  function cancelLongshot(root) {
-    if (!longshotJobId) return;
-    postJson("/__travelogue/cancel", { jobId: longshotJobId }).finally(function () {
-      longshotJobId = null;
-      var btn = root.querySelector(".preview-toolbar__longshot");
-      if (btn) btn.disabled = false;
-      setLongshotStatus(root, "已取消", true);
-      setSlowHint(root, "", false);
-    });
-  }
-
   function refreshPreviewCover(root, tripId) {
     fetch("/__travelogue/trips")
       .then(function (resp) { return resp.json(); })
       .then(function (data) {
         var trips = data.trips || [];
         var trip = trips.filter(function (t) { return t.tripId === tripId; })[0];
-        if (!trip || !trip.previewPath) return;
+        if (!trip || !trip.previewRelPath) return;
 
         var card = root.querySelector(".preview-toolbar__preview-card");
         if (!card) {
@@ -302,18 +319,26 @@
           root.appendChild(card);
         }
         card.hidden = false;
-        card.innerHTML =
-          '<p class="preview-toolbar__preview-title">封面引流图 preview.jpg（9:16）</p>' +
-          '<p class="preview-toolbar__preview-path">' + trip.previewPath + "</p>" +
-          '<button type="button" class="preview-toolbar__reveal preview-toolbar__preview-reveal" data-path="' +
-          trip.previewPath.replace(/"/g, "&quot;") +
-          '">在文件夹中显示</button>';
-        var revealBtn = card.querySelector(".preview-toolbar__preview-reveal");
-        if (revealBtn) {
-          revealBtn.addEventListener("click", function () {
-            postJson("/__travelogue/reveal", { path: revealBtn.getAttribute("data-path") });
-          });
-        }
+        card.textContent = "";
+
+        var title = document.createElement("p");
+        title.className = "preview-toolbar__preview-title";
+        title.textContent = "封面引流图 preview.jpg（9:16）";
+        card.appendChild(title);
+
+        var pathEl = document.createElement("p");
+        pathEl.className = "preview-toolbar__preview-path";
+        pathEl.textContent = trip.previewRelPath;
+        card.appendChild(pathEl);
+
+        var revealBtn = document.createElement("button");
+        revealBtn.type = "button";
+        revealBtn.className = "preview-toolbar__reveal preview-toolbar__preview-reveal";
+        revealBtn.textContent = "在文件夹中显示";
+        revealBtn.addEventListener("click", function () {
+          revealTripPath(tripId, trip.previewRelPath);
+        });
+        card.appendChild(revealBtn);
       })
       .catch(function () {});
   }
@@ -376,7 +401,7 @@
     });
     advancedWrap.querySelector(".preview-toolbar__export-zip").addEventListener("click", function () {
       toggleAdvancedMenu(root);
-      exportZip(tripId, root);
+      exportZip(tripId);
     });
 
     document.addEventListener("click", function (ev) {
