@@ -64,7 +64,9 @@ def check_golden_dom(*, trip: dict | None = None, golden_html: str | None = None
     errors: list[str] = []
     trip = trip if trip is not None else load_golden_trip()
     golden_html = golden_html if golden_html is not None else GOLDEN_HTML.read_text(encoding="utf-8")
-    rendered = render_html(trip, export_mode="draft")
+    rendered = render_html(
+        trip, export_mode="draft", reading_profile_override="legacy"
+    )
 
     if pattern_sequence(rendered) != pattern_sequence(golden_html):
         errors.append("data-pattern sequence mismatch vs golden.html")

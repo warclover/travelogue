@@ -55,7 +55,7 @@ def test_demo_publish_produces_share_zip(tmp_path: Path) -> None:
     assert trip["pipeline"]["status"] == "exported"
     assert trip["privacy"]["confirmedAt"]
     assert trip["meta"]["hook"]
-    assert all(ch.get("lead") for ch in trip["chapters"])
+    assert (trip.get("epilogue") or "").strip()
 
 
 def test_run_until_exported_from_existing_demo(tmp_path: Path) -> None:

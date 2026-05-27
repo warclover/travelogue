@@ -915,6 +915,7 @@ def plan_screens_for_chapter(
     hero_preface: list[dict] = []
     skip_hero_for_mosaic_5 = (
         len(ids) == 5
+        and trip_total >= MIN_TRIP_PHOTOS_FOR_MOSAIC
         and _can_mosaic_5_main_portrait_3land(
             ids, aspects, assets_map, burst_seconds=mix_gap, median_sharp=med_sharp
         )

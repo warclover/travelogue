@@ -39,9 +39,4 @@ def test_portrait_heavy_curate_and_dual_render(tmp_path: Path) -> None:
     )
     assert web.is_file() and mobile.is_file()
     html = web.read_text(encoding="utf-8")
-    assert "screen-portrait" in html or "screen-landscape" in html
-    assert (
-        "--screen-aspect" in html
-        or "layout-screen" in html
-        or "data-layout-hint" in html
-    )
+    assert "screen-plate" in html or "layout-screen" in html

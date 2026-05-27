@@ -203,6 +203,22 @@ def pick_cover_asset_id(
         if score > best_score:
             best_score = score
             best_id = a["id"]
+    if not best_id and featured_pool and export_layout == "web":
+        material_pool = [a for a in pool if a.get("userTier") != "featured"]
+        if material_pool:
+            median_sharp = median_sharpness(material_pool)
+            for a in material_pool:
+                if a["id"] in exclude or a.get("type") == "video":
+                    continue
+                score = effective_cover_score(
+                    a,
+                    export_layout,
+                    median_sharp=median_sharp,
+                    featured_weight=featured_weight,
+                )
+                if score > best_score:
+                    best_score = score
+                    best_id = a["id"]
     if best_id:
         return best_id
     for a in assets:

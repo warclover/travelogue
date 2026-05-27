@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from travelogue.curation.screen_planner import (
+    MIN_TRIP_PHOTOS_FOR_MOSAIC,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     PATTERN_PORTRAIT_1_LANDSCAPE_2,
     PATTERN_PORTRAIT_GRID_8,
@@ -95,7 +96,12 @@ def test_plan_mosaic_5_main_portrait_3land():
         for i, aid in enumerate(ids)
     }
     screens = plan_screens_for_chapter(
-        ids, aspects, assets=assets, burst_seconds=30.0, chapter_id="ch-m5"
+        ids,
+        aspects,
+        assets=assets,
+        burst_seconds=30.0,
+        chapter_id="ch-m5",
+        trip_photo_total=MIN_TRIP_PHOTOS_FOR_MOSAIC,
     )
     assert len(screens) == 1
     assert screens[0]["patternId"] == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
@@ -123,7 +129,12 @@ def test_plan_mosaic_5_prefers_cover_score_for_main():
         for i, aid in enumerate(ids)
     }
     screens = plan_screens_for_chapter(
-        ids, aspects, assets=assets, burst_seconds=60.0, chapter_id="ch-m5-main"
+        ids,
+        aspects,
+        assets=assets,
+        burst_seconds=60.0,
+        chapter_id="ch-m5-main",
+        trip_photo_total=MIN_TRIP_PHOTOS_FOR_MOSAIC,
     )
     assert screens[0]["patternId"] == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
     assert screens[0]["slots"][0]["assetId"] == "l-high"
@@ -174,7 +185,12 @@ def test_plan_mosaic_5_skips_chapter_hero_when_chapter_is_exactly_five():
         for i, aid in enumerate(ids)
     }
     screens = plan_screens_for_chapter(
-        ids, aspects, assets=assets, burst_seconds=60.0, chapter_id="ch-m5-no-hero"
+        ids,
+        aspects,
+        assets=assets,
+        burst_seconds=60.0,
+        chapter_id="ch-m5-no-hero",
+        trip_photo_total=MIN_TRIP_PHOTOS_FOR_MOSAIC,
     )
     assert len(screens) == 1
     assert screens[0]["patternId"] == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
@@ -316,7 +332,12 @@ def test_plan_mosaic_5_beats_mixed_p1_l2_when_five_fit():
         for i, aid in enumerate(ids)
     }
     screens = plan_screens_for_chapter(
-        ids, aspects, assets=assets, burst_seconds=10.0, chapter_id="ch-m5-over"
+        ids,
+        aspects,
+        assets=assets,
+        burst_seconds=10.0,
+        chapter_id="ch-m5-over",
+        trip_photo_total=MIN_TRIP_PHOTOS_FOR_MOSAIC,
     )
     assert len(screens) == 1
     assert screens[0]["patternId"] == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND

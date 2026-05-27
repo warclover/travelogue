@@ -221,13 +221,21 @@
     {
       "id": "ch-02",
       "index": 2,
-      "patternId": "open",
+      "patternId": "moment",
       "title": "段2",
       "lead": "",
       "items": [
         {
           "type": "media-card",
-          "assetId": "cover",
+          "assetId": "asset-001",
+          "layout": {
+            "fill": true,
+            "bleed": true
+          }
+        },
+        {
+          "type": "media-card",
+          "assetId": "asset-002",
           "layout": {
             "fill": true,
             "bleed": true
@@ -315,7 +323,7 @@
       "items": [
         {
           "type": "media-card",
-          "assetId": "cover",
+          "assetId": "asset-010",
           "layout": {
             "fill": true,
             "bleed": true
@@ -403,7 +411,7 @@
       "items": [
         {
           "type": "media-card",
-          "assetId": "cover",
+          "assetId": "scroll-1",
           "layout": {
             "fill": true,
             "bleed": true
@@ -485,13 +493,13 @@
     {
       "id": "ch-05",
       "index": 5,
-      "patternId": "open",
+      "patternId": "close",
       "title": "段5",
       "lead": "",
       "items": [
         {
           "type": "media-card",
-          "assetId": "cover",
+          "assetId": "asset-031",
           "layout": {
             "fill": true,
             "bleed": true

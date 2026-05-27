@@ -24,6 +24,7 @@ def test_narrate_chapter_dry_run_skips_meta() -> None:
         provider="deepseek",
         dry_run=True,
         chapter_id="ch-01",
+        scope="full",
     )
     assert "meta.hook" not in result.fields_updated
     assert any("assets[" in f for f in result.fields_updated)
