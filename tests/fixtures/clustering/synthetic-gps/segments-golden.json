@@ -1,0 +1,18 @@
+[
+  {
+    "id": "evt-01",
+    "name": "东京",
+    "startDate": "2025-04-01",
+    "endDate": "2025-04-01",
+    "location": "东京",
+    "assetIds": ["t1", "t2", "t3"]
+  },
+  {
+    "id": "evt-02",
+    "name": "京都",
+    "startDate": "2025-04-01",
+    "endDate": "2025-04-01",
+    "location": "京都",
+    "assetIds": ["k1", "k2", "k3"]
+  }
+]

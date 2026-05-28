@@ -1,0 +1,14 @@
+{
+  "benchKind": "p3_full",
+  "assetCount": 400,
+  "visionEnabled": true,
+  "clipAvailable": true,
+  "elapsedSec": 40.3,
+  "budgetSec": 480,
+  "withinBudget": true,
+  "segmentMode": "geo_event",
+  "geoEventCount": 3,
+  "sceneClusterCount": 1,
+  "embeddingSource": "clip",
+  "embeddingModel": "ViT-B-32/openai"
+}

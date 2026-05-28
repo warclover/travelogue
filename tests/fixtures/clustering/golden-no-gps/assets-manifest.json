@@ -1,0 +1,20 @@
+{
+  "description": "CI golden · 微信另存风格 · 无 GPS（期望 date_fallback）",
+  "assets": [
+    {"id": "d1a", "type": "image", "takenAt": "2025-03-10T10:00:00Z", "width": 800, "height": 600, "sharpness": 0.5, "dateConfidence": "low"},
+    {"id": "d1b", "type": "image", "takenAt": "2025-03-10T11:00:00Z", "width": 800, "height": 600, "sharpness": 0.52},
+    {"id": "d1c", "type": "image", "takenAt": "2025-03-10T12:00:00Z", "width": 800, "height": 600, "sharpness": 0.48},
+    {"id": "d1d", "type": "image", "takenAt": "2025-03-10T13:00:00Z", "width": 800, "height": 600, "sharpness": 0.51},
+    {"id": "d2a", "type": "image", "takenAt": "2025-03-11T09:00:00Z", "width": 800, "height": 600, "sharpness": 0.49},
+    {"id": "d2b", "type": "image", "takenAt": "2025-03-11T10:00:00Z", "width": 800, "height": 600, "sharpness": 0.53},
+    {"id": "d2c", "type": "image", "takenAt": "2025-03-11T11:00:00Z", "width": 800, "height": 600, "sharpness": 0.47},
+    {"id": "d2d", "type": "image", "takenAt": "2025-03-11T12:00:00Z", "width": 800, "height": 600, "sharpness": 0.5},
+    {"id": "d3a", "type": "image", "takenAt": "2025-03-12T14:00:00Z", "width": 800, "height": 600, "sharpness": 0.54},
+    {"id": "d3b", "type": "image", "takenAt": "2025-03-12T15:00:00Z", "width": 800, "height": 600, "sharpness": 0.55},
+    {"id": "d3c", "type": "image", "takenAt": "2025-03-12T16:00:00Z", "width": 800, "height": 600, "sharpness": 0.52},
+    {"id": "d3d", "type": "image", "takenAt": "2025-03-12T17:00:00Z", "width": 800, "height": 600, "sharpness": 0.51},
+    {"id": "d4a", "type": "image", "takenAt": "2025-03-13T08:00:00Z", "width": 800, "height": 600, "sharpness": 0.46},
+    {"id": "d4b", "type": "image", "takenAt": "2025-03-13T09:00:00Z", "width": 800, "height": 600, "sharpness": 0.48},
+    {"id": "d4c", "type": "image", "takenAt": "2025-03-13T10:00:00Z", "width": 800, "height": 600, "sharpness": 0.49}
+  ]
+}

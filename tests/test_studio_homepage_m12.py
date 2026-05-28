@@ -34,6 +34,12 @@ M12_HOME_MARKERS = (
     "studio-trips",
     "studio-scroll-hint",
     'data-studio-v="3"',
+    "studio-advanced-options",
+    "高级 · 分析选项",
+    "studio-cfg-clustering",
+    "studio-cfg-vision",
+    "行程识别",
+    "场景分析",
 )
 
 
@@ -65,6 +71,7 @@ def test_studio_homepage_m12_css() -> None:
     assert "studio-hero__content--hybrid" in css
     assert "studio-hero__recent-card--highlight" in css
     assert "studio-sample-modal" in css
+    assert "studio-advanced" in css
 
 
 def test_studio_homepage_js_strings() -> None:
@@ -78,6 +85,9 @@ def test_studio_homepage_js_strings() -> None:
     assert "renderHybridHero" in js
     assert "focusPathImport" in js
     assert "submitPathImport" in js
+    assert "initAdvancedOptions" in js
+    assert "studio-cfg-clustering" in js
+    assert "SLOW_JOB_VISION_MS" in js
     assert "resumeActiveJobIfAny" in js
     assert "SAMPLE_LONGSHOTS" in js
     assert "rememberCancelled" in js

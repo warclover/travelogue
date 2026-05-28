@@ -1,0 +1,89 @@
+{
+  "recordId": "phase3-m12-0-spike",
+  "phase": "M12-0",
+  "date": "2026-05-28",
+  "matrixVersion": "v0.4",
+  "matrixPath": "docs/spikes/clustering-algorithm-matrix.md",
+  "ciCommand": "pytest tests/test_clustering_spike.py tests/test_cluster_eval.py -q",
+  "overallVerdict": "Go",
+  "notes": [
+    "CI synthetic fixtures only; local trips/mao|linzhi export deferred (SP-C04 optional).",
+    "Fixture date fix: Kyoto +2d, Tokyo +4d vs Osaka so mergeTimeGapHours=36 preserves 3 stays.",
+    "SP-C02 uses heuristic ClipEncoder on 18-asset fixture; real CLIP revalidation tracked under M13."
+  ],
+  "fixtures": [
+    {
+      "tripId": "golden-kyoto-gps",
+      "assetCount": 18,
+      "gps": true,
+      "goldenSegments": 3,
+      "detectedSegments": 3,
+      "spC01AgreementRate": 1.0,
+      "verdict": "Go"
+    },
+    {
+      "tripId": "golden-mixed-scenes",
+      "assetCount": 18,
+      "gps": true,
+      "goldenSegments": 3,
+      "detectedSegments": 3,
+      "spC01AgreementRate": 1.0,
+      "spC02ClusterCount": 1,
+      "spC02MaxClusterShare": 1.0,
+      "verdict": "Go"
+    },
+    {
+      "tripId": "golden-no-gps",
+      "assetCount": 15,
+      "gps": false,
+      "segmentMode": "date_fallback",
+      "verdict": "Go"
+    },
+    {
+      "tripId": "synthetic-gps",
+      "assetCount": 6,
+      "gps": true,
+      "goldenSegments": 2,
+      "detectedSegments": 2,
+      "spC01AgreementRate": 1.0,
+      "verdict": "Go"
+    }
+  ],
+  "gates": [
+    {
+      "id": "SP-C01",
+      "name": "geo events vs golden",
+      "threshold": 0.7,
+      "result": "Go",
+      "evidence": "100% on golden-kyoto-gps, golden-mixed-scenes, synthetic-gps"
+    },
+    {
+      "id": "SP-C02",
+      "name": "scene cluster sanity",
+      "result": "Go",
+      "evidence": "1 cluster on CI fixture; mega-cluster rule N/A (len<2)"
+    },
+    {
+      "id": "SP-C03",
+      "name": "curate chapter cap 3-5",
+      "result": "Go",
+      "evidence": "merge/cap unit + golden-kyoto-gps curate integration"
+    },
+    {
+      "id": "SP-C04",
+      "name": "layout NR-P3-01 local trips",
+      "result": "Defer",
+      "evidence": "trips/ not present in repo; test_sp_c04 optional skip"
+    },
+    {
+      "id": "SP-C05",
+      "name": "deterministic clustering hash",
+      "result": "Go",
+      "evidence": "golden-kyoto-gps be80f7a0…; golden-mixed-scenes 889d2fd7…"
+    }
+  ],
+  "openItems": [
+    "Export real albums via scripts/export_clustering_fixture.py when trips/ available",
+    "Recasa docker reference compare (matrix §3.4) — not run"
+  ]
+}

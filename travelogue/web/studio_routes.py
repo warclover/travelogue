@@ -57,6 +57,7 @@ REVEAL_PATH = "/__travelogue/reveal"
 CANCEL_PATH = "/__travelogue/cancel"
 EXPORT_PATH = "/__travelogue/export"
 PICK_FOLDER_PATH = "/__travelogue/pick-folder"
+CHAPTER_LAYOUT_PATH = "/__travelogue/chapter-layout"
 STUDIO_ASSET_PREFIX = "/__studio/"
 SAVE_COPY_SUFFIX = "/__travelogue/save-copy"
 PROMOTE_TIER_SUFFIX = "/__travelogue/promote-tier"
@@ -123,6 +124,9 @@ class StudioMixin:
             return True
         if path == TRIPS_PATH:
             self._studio_handle_trips()
+            return True
+        if path == CHAPTER_LAYOUT_PATH:
+            self._studio_handle_chapter_layout()
             return True
         if path.startswith(STUDIO_ASSET_PREFIX):
             rel = unquote(path[len(STUDIO_ASSET_PREFIX) :].lstrip("/"))
@@ -220,6 +224,34 @@ class StudioMixin:
         total = studio_trips_total(trips_root)
         self._json_response(200, {"ok": True, "trips": trips, "total": total})
 
+    def _studio_handle_chapter_layout(self) -> None:
+        from travelogue.curation.chapter_explain import build_chapter_explain
+        from travelogue.services.trip import TripService
+
+        query = parse_qs(urlparse(self.path).query)
+        trip_id = (query.get("tripId") or query.get("tripid") or [""])[0]
+        if not trip_id or not is_valid_studio_trip_id(trip_id):
+            self._json_response(400, {"ok": False, "error": "tripId required"})
+            return
+        trips_root = (self.trips_dir or self._studio_cfg().trips_dir).resolve()
+        trip_dir = (trips_root / trip_id).resolve()
+        try:
+            trip_dir.relative_to(trips_root)
+        except ValueError:
+            self._json_response(400, {"ok": False, "error": "invalid tripId"})
+            return
+        trip_json = trip_dir / "trip.json"
+        if not trip_json.is_file():
+            self._json_response(404, {"ok": False, "error": "trip not found"})
+            return
+        trip = TripService(root=trips_root.parent).load(trip_json)
+        stored = ((trip.get("curation") or {}).get("clustering") or {}).get("userSummary")
+        if isinstance(stored, dict) and stored.get("summary"):
+            explain = stored
+        else:
+            explain = build_chapter_explain(trip, trip_dir=trip_dir)
+        self._json_response(200, {"ok": True, **explain})
+
     def _studio_handle_status(self) -> None:
         query = parse_qs(urlparse(self.path).query)
         job_ids = query.get("jobId") or query.get("jobid") or []
@@ -233,10 +265,40 @@ class StudioMixin:
         self._json_response(200, job.to_dict())
 
     def _studio_handle_config(self) -> None:
+        from travelogue.config import load_config, patch_config_file, studio_config_expose
         from travelogue.web.studio_narrate import studio_llm_status
 
-        status = studio_llm_status(cfg=self._studio_cfg())
-        self._json_response(200, {"ok": True, **status})
+        if self.command == "PATCH":
+            payload = self._read_json_body()
+            if not payload:
+                self._json_response(400, {"ok": False, "error": "empty body"})
+                return
+            target = self.studio_config_path or (Path.cwd() / "config.yaml")
+            try:
+                patch_config_file(target, payload)
+            except (ValueError, TypeError) as exc:
+                self._json_response(400, {"ok": False, "error": str(exc)})
+                return
+            except (OSError, PermissionError) as exc:
+                self._json_response(
+                    500,
+                    {
+                        "ok": False,
+                        "error": "E_STUDIO_CONFIG_WRITE",
+                        "detail": str(exc)[:240],
+                    },
+                )
+                return
+            cfg = load_config(target if target.is_file() else None)
+            body = {"ok": True, **studio_config_expose(cfg), **studio_llm_status(cfg=cfg)}
+            self._json_response(200, body)
+            return
+
+        cfg = self._studio_cfg()
+        if self.studio_config_path and self.studio_config_path.is_file():
+            cfg = load_config(self.studio_config_path)
+        status = studio_llm_status(cfg=cfg)
+        self._json_response(200, {"ok": True, **studio_config_expose(cfg), **status})
 
     def _studio_handle_pick_folder(self) -> None:
         import sys
@@ -264,11 +326,22 @@ class StudioMixin:
             return
         from travelogue.desktop.folder_picker_service import request_folder
 
-        chosen = request_folder(title="选择照片文件夹")
-        if chosen is None:
+        result = request_folder(title="选择照片文件夹")
+        if result.error:
+            self._json_response(
+                500,
+                {
+                    "ok": False,
+                    "error": "E_PICK_FOLDER_FAILED",
+                    "message": user_message("E_PICK_FOLDER_FAILED"),
+                    "detail": result.error[:240],
+                },
+            )
+            return
+        if result.cancelled or result.path is None:
             self._json_response(200, {"ok": True, "cancelled": True})
             return
-        self._json_response(200, {"ok": True, "albumPath": str(chosen.resolve())})
+        self._json_response(200, {"ok": True, "albumPath": str(result.path.resolve())})
 
     def _studio_read_import_request(self) -> tuple[dict, Path | None]:
         content_type = self.headers.get("Content-Type", "")

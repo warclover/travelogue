@@ -1,0 +1,49 @@
+{
+  "recordId": "phase3-pf-p3-03-e2e",
+  "phase": "M13",
+  "date": "2026-05-28",
+  "gate": "PF-P3-03",
+  "syntheticRun": {
+    "benchKind": "studio_pipeline_e2e",
+    "photoCount": 150,
+    "visionEnabled": true,
+    "elapsedSec": 155.67,
+    "budgetSec": 1200,
+    "withinBudget": true,
+    "tripId": "album",
+    "previewArtifacts": {
+      "indexHtml": true,
+      "previewJpg": true
+    },
+    "clustering": {
+      "segmentMode": null,
+      "clusterCount": 1,
+      "visionSource": "clip"
+    },
+    "clusterNotice": "",
+    "stageTrace": [
+      {
+        "stage": "ingest",
+        "stageIndex": 1,
+        "stageHint": "约 2 分钟"
+      },
+      {
+        "stage": "curate",
+        "stageIndex": 2,
+        "stageHint": "正在分析场景与行程…"
+      },
+      {
+        "stage": "narrate",
+        "stageIndex": 3,
+        "stageHint": "约 10 秒"
+      },
+      {
+        "stage": "render",
+        "stageIndex": 4,
+        "stageHint": "约 30 秒"
+      }
+    ]
+  },
+  "realTripReferences": [],
+  "pass": true
+}

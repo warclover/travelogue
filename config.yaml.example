@@ -124,9 +124,32 @@ curate:
   featured_min_for_cover_pool: 2
 
 vision:
-  enabled: true
-  provider: none  # none | heuristic | clip | vlm
+  enabled: false                   # true | false | auto — P3-Full CLIP (M13)
+  autoMinPhotos: 80
+  autoMinEligibleRatio: 0.60
+  provider: none                   # none | heuristic | clip
+  model: ViT-B/32
   max_tags_per_asset: 5
+
+# Phase 3 · Curate 聚类 (M12 P3-Lite / M13 P3-Full)
+clustering:
+  enabled: auto                    # true | false | auto
+  autoGpsMinRatio: 0.40
+  segmentCurateMode: event_first   # event_first | date_fallback
+  sceneClusterMode: run_aware      # run_aware | off
+  deterministic: true
+  forceRecluster: false            # true → 删 cache 全量重算 (F-CLU-CACHE-03)
+  geo:
+    eventTimeGapHours: 4
+    minPhotosPerEvent: 3
+    locationProximityKm: 5.5
+    mergeTimeGapHours: 36
+    mergeLocationKm: 55
+    maxEventDays: 4
+  scene:
+    clusterEps: 0.07
+    clusterMinSamples: 10
+    timeoutSec: 480
 
 preview:
   width: 1080

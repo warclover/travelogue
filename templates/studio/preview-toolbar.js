@@ -421,6 +421,43 @@
       .catch(function () {});
   }
 
+  function initChapterExplain(root, tripId) {
+    var body = toolbarBody(root);
+    if (!body || body.querySelector(".preview-toolbar__chapter-explain")) return;
+
+    var wrap = document.createElement("details");
+    wrap.className = "preview-toolbar__chapter-explain";
+    wrap.hidden = true;
+    wrap.innerHTML =
+      '<summary class="preview-toolbar__chapter-explain-summary">为什么这样分章？</summary>' +
+      '<div class="preview-toolbar__chapter-explain-body">' +
+      '<p class="preview-toolbar__chapter-explain-lead"></p>' +
+      '<ul class="preview-toolbar__chapter-explain-list"></ul>' +
+      "</div>";
+    body.appendChild(wrap);
+
+    fetch("/__travelogue/chapter-layout?tripId=" + encodeURIComponent(tripId))
+      .then(function (resp) { return resp.json(); })
+      .then(function (data) {
+        if (!data || !data.ok || !data.summary) return;
+        wrap.hidden = false;
+        var lead = wrap.querySelector(".preview-toolbar__chapter-explain-lead");
+        if (lead) lead.textContent = data.summary;
+        var list = wrap.querySelector(".preview-toolbar__chapter-explain-list");
+        if (list) {
+          list.textContent = "";
+          (data.details || []).forEach(function (line) {
+            var li = document.createElement("li");
+            li.textContent = line;
+            list.appendChild(li);
+          });
+          list.hidden = !(data.details && data.details.length);
+        }
+        syncToolbarHeight(root);
+      })
+      .catch(function () {});
+  }
+
   function initToolbar(root) {
     var tripId = tripIdFromPath();
     if (!tripId) return;
@@ -502,6 +539,7 @@
 
     refreshStaleHint(root, tripId);
     refreshPreviewCover(root, tripId);
+    initChapterExplain(root, tripId);
 
     window.addEventListener("travelogue:copy-saved", function () {
       showStaleHint(root);

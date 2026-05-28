@@ -8,13 +8,23 @@ from typing import Any
 def subject_class_for_asset(asset: dict) -> str:
     """Coarse subject bucket for run scoring (Phase 3a)."""
     tags = {str(t).lower() for t in (asset.get("tags") or []) if t}
+    bucket = str(asset.get("subjectBucket") or "").lower()
     cur = asset.get("curation") or {}
     stags = cur.get("subjectTags") or subject_tags_for_asset(asset)
-    if "has_face" in stags or tags & {"person", "face", "portrait"}:
+    if "has_face" in stags or tags & {"person", "face", "portrait"} or bucket in {
+        "person",
+        "portrait",
+    }:
         return "person"
-    if tags & {"landscape", "scenery", "mountain", "sea", "sky", "nature"}:
+    if tags & {"landscape", "scenery", "mountain", "sea", "sky", "nature"} or bucket in {
+        "landscape",
+        "scenery",
+        "temple",
+        "street",
+        "nature",
+    }:
         return "landscape"
-    if tags & {"food", "meal", "restaurant"}:
+    if tags & {"food", "meal", "restaurant"} or bucket in {"food", "meal"}:
         return "food"
     return "general"
 

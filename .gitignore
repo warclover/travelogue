@@ -31,5 +31,14 @@ Thumbs.db
 
 # Local debug / screenshots
 _debug/
+_tmp_homepage_audit/
+.cache/
 .playwright-mcp/
 page-real-mobile.png
+desktop-*.png
+mobile-*.png
+v3-*.png
+v3b-*.png
+v3c-*.png
+v3final-*.png
+screenshots/

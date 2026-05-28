@@ -1,0 +1,23 @@
+{
+  "description": "CI golden · 3-day Kansai/Kanto stay trip (Osaka → Kyoto → Tokyo) · >36h gaps between cities",
+  "assets": [
+    {"id": "o1", "type": "image", "takenAt": "2025-04-01T09:00:00Z", "geo": {"lat": 34.693, "lon": 135.502}, "place": {"city": "大阪"}, "width": 1200, "height": 1600, "sharpness": 0.6},
+    {"id": "o2", "type": "image", "takenAt": "2025-04-01T10:00:00Z", "geo": {"lat": 34.694, "lon": 135.503}, "place": {"city": "大阪"}, "width": 1200, "height": 1600, "sharpness": 0.62},
+    {"id": "o3", "type": "image", "takenAt": "2025-04-01T11:00:00Z", "geo": {"lat": 34.695, "lon": 135.504}, "place": {"city": "大阪"}, "width": 1200, "height": 1600, "sharpness": 0.61},
+    {"id": "o4", "type": "image", "takenAt": "2025-04-01T14:00:00Z", "geo": {"lat": 34.696, "lon": 135.505}, "place": {"city": "大阪"}, "width": 1200, "height": 1600, "sharpness": 0.59},
+    {"id": "o5", "type": "image", "takenAt": "2025-04-01T15:00:00Z", "geo": {"lat": 34.697, "lon": 135.506}, "place": {"city": "大阪"}, "width": 1200, "height": 1600, "sharpness": 0.63},
+    {"id": "o6", "type": "image", "takenAt": "2025-04-01T16:00:00Z", "geo": {"lat": 34.698, "lon": 135.507}, "place": {"city": "大阪"}, "width": 1200, "height": 1600, "sharpness": 0.58},
+    {"id": "k1", "type": "image", "takenAt": "2025-04-03T09:00:00Z", "geo": {"lat": 35.011, "lon": 135.768}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.65},
+    {"id": "k2", "type": "image", "takenAt": "2025-04-03T10:00:00Z", "geo": {"lat": 35.012, "lon": 135.769}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.64},
+    {"id": "k3", "type": "image", "takenAt": "2025-04-03T11:00:00Z", "geo": {"lat": 35.013, "lon": 135.770}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.66},
+    {"id": "k4", "type": "image", "takenAt": "2025-04-03T14:00:00Z", "geo": {"lat": 35.014, "lon": 135.771}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.67},
+    {"id": "k5", "type": "image", "takenAt": "2025-04-03T15:00:00Z", "geo": {"lat": 35.015, "lon": 135.772}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.62},
+    {"id": "k6", "type": "image", "takenAt": "2025-04-03T16:00:00Z", "geo": {"lat": 35.016, "lon": 135.773}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.61},
+    {"id": "t1", "type": "image", "takenAt": "2025-04-05T09:00:00Z", "geo": {"lat": 35.681, "lon": 139.767}, "place": {"city": "东京"}, "width": 1200, "height": 1600, "sharpness": 0.7},
+    {"id": "t2", "type": "image", "takenAt": "2025-04-05T10:00:00Z", "geo": {"lat": 35.682, "lon": 139.768}, "place": {"city": "东京"}, "width": 1200, "height": 1600, "sharpness": 0.71},
+    {"id": "t3", "type": "image", "takenAt": "2025-04-05T11:00:00Z", "geo": {"lat": 35.683, "lon": 139.769}, "place": {"city": "东京"}, "width": 1200, "height": 1600, "sharpness": 0.69},
+    {"id": "t4", "type": "image", "takenAt": "2025-04-05T14:00:00Z", "geo": {"lat": 35.684, "lon": 139.770}, "place": {"city": "东京"}, "width": 1200, "height": 1600, "sharpness": 0.68},
+    {"id": "t5", "type": "image", "takenAt": "2025-04-05T15:00:00Z", "geo": {"lat": 35.685, "lon": 139.771}, "place": {"city": "东京"}, "width": 1200, "height": 1600, "sharpness": 0.72},
+    {"id": "t6", "type": "image", "takenAt": "2025-04-05T16:00:00Z", "geo": {"lat": 35.686, "lon": 139.772}, "place": {"city": "东京"}, "width": 1200, "height": 1600, "sharpness": 0.73}
+  ]
+}

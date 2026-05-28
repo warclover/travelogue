@@ -86,6 +86,8 @@ def test_studio_config_stub_llm_unavailable(tmp_path: Path) -> None:
         assert body.get("ok") is True
         assert body.get("llmAvailable") is False
         assert body.get("llmProvider") == "stub"
+        assert body.get("clustering", {}).get("enabled") == "auto"
+        assert body.get("vision", {}).get("enabled") == "false"
     finally:
         server.shutdown()
         server.server_close()

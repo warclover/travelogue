@@ -128,6 +128,30 @@
     <input id="trip-place" type="hidden" value="旅途" />
   </form>
 
+  <details class="studio-advanced" id="studio-advanced-options" hidden>
+    <summary class="studio-advanced__summary">高级 · 分析选项</summary>
+    <div class="studio-advanced__body">
+      <div class="studio-advanced__row">
+        <label class="studio-advanced__label" for="studio-cfg-clustering">行程识别</label>
+        <select id="studio-cfg-clustering" class="studio-advanced__select" aria-describedby="studio-cfg-clustering-hint">
+          <option value="auto">自动（推荐）</option>
+          <option value="true">开</option>
+          <option value="false">关</option>
+        </select>
+        <p class="studio-advanced__hint" id="studio-cfg-clustering-hint">有位置信息的照片会自动按行程分段</p>
+      </div>
+      <div class="studio-advanced__row">
+        <label class="studio-advanced__label" for="studio-cfg-vision">场景分析</label>
+        <select id="studio-cfg-vision" class="studio-advanced__select" aria-describedby="studio-cfg-vision-hint">
+          <option value="false">关</option>
+          <option value="auto">自动</option>
+          <option value="true">开</option>
+        </select>
+        <p class="studio-advanced__hint" id="studio-cfg-vision-hint">大相册可让同场景照片排在一起；较慢，首次需下载组件</p>
+      </div>
+    </div>
+  </details>
+
   <!-- Secondary actions -->
   <nav class="studio-hero__secondary" id="studio-hero-secondary" hidden>
     <span class="studio-link__label" id="studio-secondary-label">还没自己的照片？</span>

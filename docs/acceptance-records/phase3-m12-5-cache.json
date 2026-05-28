@@ -1,0 +1,40 @@
+{
+  "recordId": "phase3-m12-5-cache",
+  "phase": "M12.5",
+  "date": "2026-05-28",
+  "gates": [
+    {
+      "id": "F-CLU-CACHE-01",
+      "name": "asset count / manifest invalidation",
+      "status": "Done",
+      "evidence": "tests/test_cluster_cache.py"
+    },
+    {
+      "id": "F-CLU-CACHE-02",
+      "name": "incremental <10% embed + full-trip DBSCAN",
+      "status": "Done",
+      "evidence": "vision/cache.py prepare_scene_embeddings"
+    },
+    {
+      "id": "F-CLU-CACHE-03",
+      "name": ">=30% or forceRecluster full rebuild",
+      "status": "Done",
+      "evidence": "clustering.force_recluster + cluster recluster CLI"
+    },
+    {
+      "id": "F-CLU-CACHE-05",
+      "name": "corrupt npz auto full refresh",
+      "status": "Done",
+      "evidence": "test_corrupt_cache_triggers_full_refresh"
+    }
+  ],
+  "thresholds": {
+    "incrementalMaxRatio": 0.1,
+    "fullReclusterMinRatio": 0.3
+  },
+  "commands": [
+    "python -m travelogue cluster cache-clear <trip>",
+    "python -m travelogue cluster recluster <trip> --force"
+  ],
+  "tests": ["pytest tests/test_cluster_cache.py -q"]
+}

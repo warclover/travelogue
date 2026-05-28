@@ -51,6 +51,7 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     "tripId": result.trip_id,
                     "tripDir": str(result.trip_dir),
                     "previewUrl": result.preview_url,
+                    "clusterNotice": result.cluster_notice or "",
                 },
             }
         )

@@ -1,0 +1,227 @@
+{
+  "recordId": "phase3-m13-ig2",
+  "phase": "M13",
+  "metrics": [
+    "timeInversionRate",
+    "subjectRunScore",
+    "aspectPatternMatchRate",
+    "burstIntegrityViolations"
+  ],
+  "trips": [
+    {
+      "tripId": "golden-mixed-scenes",
+      "assetCount": 18,
+      "baseline": {
+        "mode": "baseline",
+        "chapterCount": 3,
+        "screenCount": 9,
+        "timeInversionRate": 0.0,
+        "subjectRunScore": 0.8889,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 0,
+        "segmentMode": null,
+        "clusterCount": 0,
+        "visionSource": null
+      },
+      "p3Lite": {
+        "mode": "p3_lite",
+        "chapterCount": 3,
+        "screenCount": 9,
+        "timeInversionRate": 0.0,
+        "subjectRunScore": 0.8889,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 0,
+        "segmentMode": "geo_event",
+        "clusterCount": 0,
+        "visionSource": null
+      },
+      "p3Full": {
+        "mode": "p3_full",
+        "chapterCount": 3,
+        "screenCount": 9,
+        "timeInversionRate": 0.0,
+        "subjectRunScore": 0.8889,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 0,
+        "segmentMode": "geo_event",
+        "clusterCount": 3,
+        "visionSource": null
+      },
+      "passesIG2": true,
+      "passesTimeGuard": true,
+      "passesC09": true
+    },
+    {
+      "tripId": "golden-kyoto-gps",
+      "assetCount": 18,
+      "baseline": {
+        "mode": "baseline",
+        "chapterCount": 3,
+        "screenCount": 8,
+        "timeInversionRate": 0.0,
+        "subjectRunScore": 1.0,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 0,
+        "segmentMode": null,
+        "clusterCount": 0,
+        "visionSource": null
+      },
+      "p3Lite": {
+        "mode": "p3_lite",
+        "chapterCount": 3,
+        "screenCount": 8,
+        "timeInversionRate": 0.0,
+        "subjectRunScore": 1.0,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 0,
+        "segmentMode": "geo_event",
+        "clusterCount": 0,
+        "visionSource": null
+      },
+      "p3Full": {
+        "mode": "p3_full",
+        "chapterCount": 3,
+        "screenCount": 8,
+        "timeInversionRate": 0.0,
+        "subjectRunScore": 1.0,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 0,
+        "segmentMode": "geo_event",
+        "clusterCount": 1,
+        "visionSource": null
+      },
+      "passesIG2": true,
+      "passesTimeGuard": true,
+      "passesC09": true
+    },
+    {
+      "tripId": "mao",
+      "assetCount": 29,
+      "baseline": {
+        "mode": "baseline",
+        "chapterCount": 3,
+        "screenCount": 15,
+        "timeInversionRate": 0.0,
+        "subjectRunScore": 1.0,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 1,
+        "segmentMode": null,
+        "clusterCount": 0,
+        "visionSource": null
+      },
+      "p3Lite": {
+        "mode": "p3_lite",
+        "chapterCount": 3,
+        "screenCount": 15,
+        "timeInversionRate": 0.0,
+        "subjectRunScore": 1.0,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 1,
+        "segmentMode": null,
+        "clusterCount": 0,
+        "visionSource": null
+      },
+      "p3Full": {
+        "mode": "p3_full",
+        "chapterCount": 3,
+        "screenCount": 15,
+        "timeInversionRate": 0.0,
+        "subjectRunScore": 1.0,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 1,
+        "segmentMode": null,
+        "clusterCount": 1,
+        "visionSource": null
+      },
+      "passesIG2": true,
+      "passesTimeGuard": true,
+      "passesC09": true
+    },
+    {
+      "tripId": "maomi",
+      "assetCount": 33,
+      "baseline": {
+        "mode": "baseline",
+        "chapterCount": 4,
+        "screenCount": 17,
+        "timeInversionRate": 0.019355,
+        "subjectRunScore": 1.0,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 0,
+        "segmentMode": null,
+        "clusterCount": 0,
+        "visionSource": null
+      },
+      "p3Lite": {
+        "mode": "p3_lite",
+        "chapterCount": 4,
+        "screenCount": 17,
+        "timeInversionRate": 0.019355,
+        "subjectRunScore": 1.0,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 0,
+        "segmentMode": null,
+        "clusterCount": 0,
+        "visionSource": null
+      },
+      "p3Full": {
+        "mode": "p3_full",
+        "chapterCount": 4,
+        "screenCount": 17,
+        "timeInversionRate": 0.019355,
+        "subjectRunScore": 1.0,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 0,
+        "segmentMode": null,
+        "clusterCount": 1,
+        "visionSource": null
+      },
+      "passesIG2": true,
+      "passesTimeGuard": true,
+      "passesC09": true
+    },
+    {
+      "tripId": "linzhi",
+      "assetCount": 232,
+      "baseline": {
+        "mode": "baseline",
+        "chapterCount": 5,
+        "screenCount": 82,
+        "timeInversionRate": 0.002889,
+        "subjectRunScore": 0.8077,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 1,
+        "segmentMode": null,
+        "clusterCount": 0,
+        "visionSource": null
+      },
+      "p3Lite": {
+        "mode": "p3_lite",
+        "chapterCount": 5,
+        "screenCount": 82,
+        "timeInversionRate": 0.002889,
+        "subjectRunScore": 0.8077,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 1,
+        "segmentMode": null,
+        "clusterCount": 0,
+        "visionSource": null
+      },
+      "p3Full": {
+        "mode": "p3_full",
+        "chapterCount": 5,
+        "screenCount": 82,
+        "timeInversionRate": 0.002889,
+        "subjectRunScore": 0.8077,
+        "aspectPatternMatchRate": 1.0,
+        "burstIntegrityViolations": 1,
+        "segmentMode": null,
+        "clusterCount": 1,
+        "visionSource": null
+      },
+      "passesIG2": true,
+      "passesTimeGuard": true,
+      "passesC09": true
+    }
+  ]
+}

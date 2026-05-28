@@ -174,6 +174,9 @@
   var isOffline = false;
   var healthTimer = null;
   var SLOW_JOB_MS = 30000;
+  var SLOW_JOB_VISION_MS = 180000;
+  var SLOW_JOB_VISION_LONG_MS = 480000;
+  var _importVisionEnabled = false;
   var HEALTH_INTERVAL = 30000;
   var _pickInFlight = false;
   var _importGen = 0;
@@ -351,6 +354,7 @@
 
     if (quietOverlay) show($("studio-import-form"), false);
     else show($("studio-import-form"), true);
+    show($("studio-advanced-options"), !quietOverlay);
 
     show($("studio-scroll-hint"), !quietOverlay);
     var scrollText = $("studio-scroll-hint-text");
@@ -720,8 +724,89 @@
     });
   }
 
-  function showSlowHint() { setWarning("比预期久一些，请耐心等待…"); }
+  function showSlowHint(level) {
+    if (level === 3) {
+      setWarning("仍可继续等待，或在「高级 · 分析选项」中关闭场景分析以加快速度");
+      return;
+    }
+    if (level === 2) {
+      setWarning("照片较多，正在仔细分析行程与场景，首次可能较慢");
+      return;
+    }
+    setWarning("比预期久一些，请耐心等待…");
+  }
   function hideSlowHint() { setWarning(""); }
+
+  function refreshImportVisionFlag() {
+    return fetch("/__travelogue/config")
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data || data.ok === false) return;
+        var vis = data.vision && data.vision.enabled;
+        _importVisionEnabled = vis === "true" || vis === "auto";
+      })
+      .catch(function () { _importVisionEnabled = false; });
+  }
+
+  // ── Advanced · analysis options (Phase 3 M12-7) ──
+  function initAdvancedOptions() {
+    var details = $("studio-advanced-options");
+    var cluSelect = $("studio-cfg-clustering");
+    var visSelect = $("studio-cfg-vision");
+    if (!details || !cluSelect || !visSelect) return;
+
+    var _patchPending = false;
+
+    function applyConfig(data) {
+      if (!data || data.ok === false) return;
+      if (data.clustering && data.clustering.enabled) {
+        cluSelect.value = data.clustering.enabled;
+      }
+      if (data.vision && data.vision.enabled) {
+        visSelect.value = data.vision.enabled;
+      }
+    }
+
+    function fetchConfig() {
+      return fetch("/__travelogue/config")
+        .then(function (r) { return r.json(); })
+        .then(applyConfig)
+        .catch(function () { /* silent — defaults in HTML */ });
+    }
+
+    details.addEventListener("toggle", function () {
+      if (details.open) fetchConfig();
+    });
+
+    function patchConfig() {
+      if (_patchPending) return;
+      _patchPending = true;
+      fetch("/__travelogue/config", {
+        method: "PATCH",
+        headers: studioAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          clustering: { enabled: cluSelect.value },
+          vision: { enabled: visSelect.value },
+        }),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          applyConfig(data);
+          if (typeof studioToast === "function") {
+            studioToast("分析选项已保存", { duration: 2000 });
+          }
+        })
+        .catch(function () {
+          if (typeof studioToast === "function") {
+            studioToast("保存失败，请重试", { duration: 2500 });
+          }
+        })
+        .finally(function () { _patchPending = false; });
+    }
+
+    cluSelect.addEventListener("change", patchConfig);
+    visSelect.addEventListener("change", patchConfig);
+  }
 
   function isFirstTime() { return !localStorage.getItem(LS.firstPreviewDone); }
   function markFirstPreviewDone(tripId) {
@@ -732,8 +817,9 @@
   function waitJob(jobId, gen) {
     activeJobId = jobId;
     var started = Date.now();
-    var slowShown = false;
+    var slowShown = 0;
     hideSlowHint();
+    refreshImportVisionFlag();
 
     return new Promise(function (resolve, reject) {
       function finishCancel() {
@@ -752,9 +838,15 @@
             finishCancel();
             return;
           }
-          if (!slowShown && Date.now() - started > SLOW_JOB_MS) {
-            slowShown = true;
-            showSlowHint();
+          if (_importVisionEnabled && !slowShown && Date.now() - started > SLOW_JOB_VISION_LONG_MS) {
+            slowShown = 3;
+            showSlowHint(3);
+          } else if (_importVisionEnabled && slowShown < 2 && Date.now() - started > SLOW_JOB_VISION_MS) {
+            slowShown = 2;
+            showSlowHint(2);
+          } else if (!slowShown && Date.now() - started > SLOW_JOB_MS) {
+            slowShown = 1;
+            showSlowHint(1);
           }
           if (job.status === "running" || job.status === "queued") {
             updateProgress(job);
@@ -825,6 +917,12 @@
       return resp.json().then(function (data) { return { status: resp.status, data: data }; });
     }).then(function (result) {
       if (result.data && result.data.cancelled) return;
+      if (!result.data || result.data.ok === false || result.status >= 400) {
+        var msg = (result.data && (result.data.message || result.data.detail))
+          || "无法打开本机选文件夹。请粘贴路径，或重启 Studio 后重试。";
+        focusPathImport(msg);
+        return;
+      }
       if (result.status === 200 && result.data && result.data.albumPath) {
         var pathInput = $("album-path");
         if (pathInput) pathInput.value = result.data.albumPath;
@@ -841,9 +939,7 @@
         }
         return;
       }
-      var msg = (result.data && result.data.message)
-        || "无法打开本机选文件夹。请粘贴路径，或重启 Studio 后重试。";
-      focusPathImport(msg);
+      focusPathImport("无法打开本机选文件夹。请粘贴路径，或重启 Studio 后重试。");
     }).catch(function () {
       focusPathImport("无法连接 Studio 选文件夹服务。请粘贴路径，或确认 Studio 正在运行。");
     }).finally(function () {
@@ -873,6 +969,10 @@
   function handleImportSuccess(job) {
     var url = job.result && job.result.previewUrl;
     var tripId = job.result && job.result.tripId;
+    var notice = job.result && job.result.clusterNotice;
+    if (notice && typeof studioToast === "function") {
+      studioToast(notice, { duration: 4500 });
+    }
     var first = isFirstTime();
     if (first) markFirstPreviewDone(tripId);
 
@@ -1314,6 +1414,7 @@
     initPathToggle();
     initScrollHint();
     initTripsMore();
+    initAdvancedOptions();
     renderSampleCards();
     initSampleModal();
     renderRecentPaths();

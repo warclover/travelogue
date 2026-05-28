@@ -1,0 +1,50 @@
+{
+  "recordId": "phase3-m14-enhancements",
+  "phase": "M14",
+  "date": "2026-05-28",
+  "features": [
+    {
+      "id": "UX-P3-10",
+      "name": "预览「为什么这样分章」折叠",
+      "status": "Done",
+      "paths": [
+        "travelogue/curation/chapter_explain.py",
+        "templates/studio/preview-toolbar.js",
+        "GET /__travelogue/chapter-layout"
+      ]
+    },
+    {
+      "id": "UX-P3-08",
+      "name": "vision 降级非阻塞 Toast",
+      "status": "Done",
+      "paths": [
+        "travelogue/curation/clustering.py",
+        "templates/studio/studio.js"
+      ]
+    },
+    {
+      "id": "M14-2",
+      "name": "cluster cache 清理 CLI",
+      "status": "Done",
+      "command": "python -m travelogue cluster cache-clear <trip>"
+    },
+    {
+      "id": "M14-6",
+      "name": "pendingAssets CLI stub",
+      "status": "Done",
+      "command": "python -m travelogue cluster pending-assets <trip>"
+    },
+    {
+      "id": "M14-3",
+      "name": "load 时 strip curation.insights",
+      "status": "Done",
+      "paths": ["travelogue/curation/trip_migration.py", "travelogue/services/trip.py"]
+    }
+  ],
+  "tests": [
+    "tests/test_chapter_explain.py",
+    "tests/test_cluster_cli.py",
+    "tests/test_cluster_m14.py",
+    "tests/test_studio_server.py::test_studio_chapter_layout_api"
+  ]
+}

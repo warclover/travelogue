@@ -1,0 +1,132 @@
+"""Studio UX gates · UX-P3-01～07 (Phase 3 §6.4)."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from travelogue.config import AppConfig, ClusteringConfig, VisionConfig
+from travelogue.curation.clustering import run_clustering_layer
+from travelogue.web.studio_jobs import STAGE_COUNT
+from travelogue.web.studio_stages import ingest_stage_hint, stage_hint
+from tests.clustering_fixtures import load_fixture_assets
+from tests.test_studio_server import _distinct_album, _free_port, _get_json, _post_json, _start_studio_server
+
+
+ROOT = Path(__file__).resolve().parents[1]
+STUDIO_HTML = ROOT / "templates" / "studio" / "studio.html"
+PREVIEW_JS = ROOT / "templates" / "studio" / "preview-toolbar.js"
+
+
+def test_ux_p3_01_job_stage_count_is_four() -> None:
+    assert STAGE_COUNT == 4
+
+
+def test_ux_p3_02_stage_hints_cover_p3_lite_and_full(tmp_path: Path) -> None:
+    assert ingest_stage_hint(150) == "约 2 分钟"
+    assert stage_hint("curate") == "约 30 秒"
+    assets = load_fixture_assets("golden-mixed-scenes")
+    trip = {"assets": [dict(a) for a in assets], "curation": {}, "chapters": []}
+    cfg = AppConfig(
+        clustering=ClusteringConfig(enabled="true"),
+        vision=VisionConfig(enabled="true"),
+    )
+    result = run_clustering_layer(trip, trip_dir=tmp_path / "p3", cfg=cfg)
+    assert result.geo_event_count >= 1
+    assert any(
+        token in (result.stage_hint or "")
+        for token in ("识别", "分析", "准备", "重新")
+    )
+
+
+def test_ux_p3_03_advanced_options_and_config_api(tmp_path: Path) -> None:
+    html = STUDIO_HTML.read_text(encoding="utf-8")
+    # Required DOM markers for the M12-7 "high-end · 分析选项" UX (UX-P3-03).
+    for expected in (
+        'id="studio-advanced-options"',
+        'id="studio-cfg-clustering"',
+        'id="studio-cfg-vision"',
+        "高级 · 分析选项",
+    ):
+        assert expected in html, f"missing UX marker: {expected}"
+
+    from tests.test_studio_config_p3 import _start_studio_with_config
+    import yaml
+
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        yaml.safe_dump({"clustering": {"enabled": "true"}, "vision": {"enabled": "true"}}),
+        encoding="utf-8",
+    )
+    port = _free_port()
+    server = _start_studio_with_config(trips_dir, port, config_path=config_path)
+    try:
+        import urllib.request
+
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/__travelogue/config", timeout=5) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+        assert body.get("clustering", {}).get("enabled") == "true"
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_ux_p3_04_cluster_notice_non_blocking_string() -> None:
+    js = (ROOT / "templates" / "studio" / "studio.js").read_text(encoding="utf-8")
+    assert "clusterNotice" in js
+    assert "studio-toast" in js or "showToast" in js or "setWarning" in js
+
+
+def test_ux_p3_05_06_slow_hint_thresholds_and_copy() -> None:
+    js = (ROOT / "templates" / "studio" / "studio.js").read_text(encoding="utf-8")
+    assert "SLOW_JOB_MS = 30000" in js
+    assert "SLOW_JOB_VISION_MS = 180000" in js
+    assert "SLOW_JOB_VISION_LONG_MS = 480000" in js
+    assert "比预期久一些，请耐心等待" in js
+    assert "照片较多，正在仔细分析行程与场景" in js
+    assert "高级 · 分析选项" in js
+
+
+def test_ux_p3_07_preview_toolbar_has_no_cluster_controls() -> None:
+    js = PREVIEW_JS.read_text(encoding="utf-8")
+    forbidden = ("sceneCluster", "clustering.enabled", "行程识别", "studio-cfg-clustering")
+    for token in forbidden:
+        assert token not in js
+    assert "为什么这样分章" in js or "chapter-layout" in js
+
+
+def test_ux_p3_01_import_job_reports_four_stages(tmp_path: Path) -> None:
+    album = _distinct_album(tmp_path, 6)
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    base = f"http://127.0.0.1:{port}"
+    try:
+        status, body = _post_json(
+            f"{base}/__travelogue/import",
+            {"albumPath": str(album), "title": "UX", "place": "测试"},
+        )
+        assert status == 202
+        job_id = body["jobId"]
+        import time
+
+        deadline = time.time() + 180
+        last: dict = {}
+        while time.time() < deadline:
+            status, last = _get_json(f"{base}/__travelogue/status?jobId={job_id}")
+            assert status == 200
+            if last.get("status") in ("succeeded", "failed"):
+                break
+            time.sleep(0.4)
+        assert last.get("status") == "succeeded", last
+        assert last.get("stageCount") == 4
+        assert last.get("stageIndex") == 4
+        assert last.get("stageHint")
+    finally:
+        server.shutdown()
+        server.server_close()

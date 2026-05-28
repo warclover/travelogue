@@ -357,14 +357,29 @@ def run_curate(
             skip_screen_ids.add(web_cover)
 
     meta = trip.get("meta", {})
-    buckets, bucket_segment_ids, bucket_segment_ids_all, segments = group_assets_by_segments(
-        layout_assets,
-        cover_id,
-        meta,
-        segment_gap_days=cur_cfg.segment_gap_days,
-        city_gap_days=cur_cfg.city_gap_days,
-        min_bucket_size=cur_cfg.min_bucket_size,
+    from travelogue.curation.clustering_buckets import (
+        build_buckets_from_clustering,
+        should_use_clustering_buckets,
     )
+
+    if should_use_clustering_buckets(trip, app_cfg):
+        buckets, bucket_segment_ids, bucket_segment_ids_all, segments = build_buckets_from_clustering(
+            trip,
+            layout_assets,
+            cover_id,
+            meta,
+            cfg=app_cfg,
+            min_bucket_size=cur_cfg.min_bucket_size,
+        )
+    else:
+        buckets, bucket_segment_ids, bucket_segment_ids_all, segments = group_assets_by_segments(
+            layout_assets,
+            cover_id,
+            meta,
+            segment_gap_days=cur_cfg.segment_gap_days,
+            city_gap_days=cur_cfg.city_gap_days,
+            min_bucket_size=cur_cfg.min_bucket_size,
+        )
     segment_labels = {s.id: s.label for s in segments}
     curation_segments = [s.to_dict() for s in segments]
 
@@ -672,6 +687,11 @@ def run_curate(
             "model": None,
         }
     )
+
+    if trip_dir is not None:
+        from travelogue.curation.chapter_explain import attach_chapter_explain
+
+        attach_chapter_explain(trip, trip_dir=trip_dir)
 
     return CurateResult(
         chapter_count=len(trip.get("chapters", [])),

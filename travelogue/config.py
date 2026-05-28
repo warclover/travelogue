@@ -8,10 +8,12 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Iterator, Literal
 
 from travelogue.constants import VALID_ARC_MODES, VALID_NARRATIVE_SCOPES
 from travelogue.paths import ROOT
+
+TriState = Literal["true", "false", "auto"]
 
 
 def _default_trips_dir() -> Path:
@@ -72,9 +74,43 @@ class GeocodeConfig:
 
 
 @dataclass
+class GeoClusterConfig:
+    event_time_gap_hours: float = 4.0
+    min_photos_per_event: int = 3
+    location_proximity_km: float = 5.5
+    merge_time_gap_hours: float = 36.0
+    merge_location_km: float = 55.0
+    max_event_days: int = 4
+
+
+@dataclass
+class SceneClusterConfig:
+    cluster_eps: float = 0.07
+    cluster_min_samples: int = 10
+    timeout_sec: int = 480
+
+
+@dataclass
+class ClusteringConfig:
+    enabled: TriState = "auto"
+    auto_gps_min_ratio: float = 0.40
+    segment_curate_mode: Literal["event_first", "date_fallback"] = "event_first"
+    scene_cluster_mode: Literal["run_aware", "off"] = "run_aware"
+    deterministic: bool = True
+    force_recluster: bool = False
+    geo: GeoClusterConfig = field(default_factory=GeoClusterConfig)
+    scene: SceneClusterConfig = field(default_factory=SceneClusterConfig)
+
+
+@dataclass
 class VisionConfig:
-    enabled: bool = False
+    enabled: TriState = "false"
+    auto_min_photos: int = 80
+    auto_min_eligible_ratio: float = 0.60
+    provider: str = "none"
+    model: str = "ViT-B/32"
     max_tags_per_asset: int = 5
+    subject_prompts: tuple[str, ...] = ()
 
 
 @dataclass
@@ -163,9 +199,11 @@ class AppConfig:
     trips_dir: Path = field(default_factory=_default_trips_dir)
     ingest: IngestConfig = field(default_factory=IngestConfig)
     layout: LayoutConfig = field(default_factory=LayoutConfig)
+    clustering: ClusteringConfig = field(default_factory=ClusteringConfig)
     vision: VisionConfig = field(default_factory=VisionConfig)
     geocode: GeocodeConfig = field(default_factory=GeocodeConfig)
     curate: CurateConfig = field(default_factory=CurateConfig)
+    config_path: Path | None = None
     export: ExportConfig = field(default_factory=ExportConfig)
     render: RenderConfig = field(default_factory=RenderConfig)
     narrative: NarrativeConfig = field(default_factory=NarrativeConfig)
@@ -254,6 +292,132 @@ def _normalize_narrative_scope(raw: object) -> str:
     return val
 
 
+def _normalize_tri_state(raw: object, *, default: str = "auto") -> str:
+    if isinstance(raw, bool):
+        return "true" if raw else "false"
+    val = str(raw or default).strip().lower()
+    if val in ("true", "1", "on", "yes"):
+        return "true"
+    if val in ("false", "0", "off", "no"):
+        return "false"
+    if val == "auto":
+        return "auto"
+    _log.warning("invalid tri-state %r, using %s", raw, default)
+    return default
+
+
+def _geo_cluster_from_dict(raw: dict[str, Any]) -> GeoClusterConfig:
+    return GeoClusterConfig(
+        event_time_gap_hours=float(raw.get("eventTimeGapHours", raw.get("event_time_gap_hours", 4))),
+        min_photos_per_event=int(raw.get("minPhotosPerEvent", raw.get("min_photos_per_event", 3))),
+        location_proximity_km=float(
+            raw.get("locationProximityKm", raw.get("location_proximity_km", 5.5))
+        ),
+        merge_time_gap_hours=float(raw.get("mergeTimeGapHours", raw.get("merge_time_gap_hours", 36))),
+        merge_location_km=float(raw.get("mergeLocationKm", raw.get("merge_location_km", 55))),
+        max_event_days=int(raw.get("maxEventDays", raw.get("max_event_days", 4))),
+    )
+
+
+def _scene_cluster_from_dict(raw: dict[str, Any]) -> SceneClusterConfig:
+    return SceneClusterConfig(
+        cluster_eps=float(raw.get("clusterEps", raw.get("cluster_eps", 0.07))),
+        cluster_min_samples=int(raw.get("clusterMinSamples", raw.get("cluster_min_samples", 10))),
+        timeout_sec=int(raw.get("timeoutSec", raw.get("timeout_sec", 480))),
+    )
+
+
+def _clustering_from_dict(raw: dict[str, Any]) -> ClusteringConfig:
+    geo_raw = raw.get("geo") if isinstance(raw.get("geo"), dict) else {}
+    scene_raw = raw.get("scene") if isinstance(raw.get("scene"), dict) else {}
+    segment_mode = str(raw.get("segmentCurateMode", raw.get("segment_curate_mode", "event_first")))
+    if segment_mode not in ("event_first", "date_fallback"):
+        segment_mode = "event_first"
+    scene_mode = str(raw.get("sceneClusterMode", raw.get("scene_cluster_mode", "run_aware")))
+    if scene_mode not in ("run_aware", "off"):
+        scene_mode = "run_aware"
+    return ClusteringConfig(
+        enabled=_normalize_tri_state(raw.get("enabled"), default="auto"),
+        auto_gps_min_ratio=float(raw.get("autoGpsMinRatio", raw.get("auto_gps_min_ratio", 0.40))),
+        segment_curate_mode=segment_mode,
+        scene_cluster_mode=scene_mode,
+        deterministic=bool(raw.get("deterministic", True)),
+        force_recluster=bool(raw.get("forceRecluster", raw.get("force_recluster", False))),
+        geo=_geo_cluster_from_dict(geo_raw),
+        scene=_scene_cluster_from_dict(scene_raw),
+    )
+
+
+def _vision_from_dict(raw: dict[str, Any]) -> VisionConfig:
+    enabled_raw = raw.get("enabled", False)
+    if isinstance(enabled_raw, bool):
+        enabled = "true" if enabled_raw else "false"
+    else:
+        enabled = _normalize_tri_state(enabled_raw, default="false")
+    prompts_raw = raw.get("subject_prompts") or raw.get("subjectPrompts") or []
+    prompts = tuple(str(p).strip() for p in prompts_raw if str(p).strip()) if isinstance(prompts_raw, list) else ()
+    return VisionConfig(
+        enabled=enabled,
+        auto_min_photos=int(raw.get("autoMinPhotos", raw.get("auto_min_photos", 80))),
+        auto_min_eligible_ratio=float(
+            raw.get("autoMinEligibleRatio", raw.get("auto_min_eligible_ratio", 0.60))
+        ),
+        provider=str(raw.get("provider", "none")),
+        model=str(raw.get("model", "ViT-B/32")),
+        max_tags_per_asset=int(raw.get("max_tags_per_asset", 5)),
+        subject_prompts=prompts,
+    )
+
+
+def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
+    """Subset of config safe for Studio GET /__travelogue/config."""
+    return {
+        "clustering": {
+            "enabled": cfg.clustering.enabled,
+            "segmentCurateMode": cfg.clustering.segment_curate_mode,
+            "sceneClusterMode": cfg.clustering.scene_cluster_mode,
+        },
+        "vision": {
+            "enabled": cfg.vision.enabled,
+        },
+    }
+
+
+def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
+    """Merge whitelisted keys into config.yaml on disk."""
+    if yaml is None:
+        raise RuntimeError("PyYAML required to patch config")
+    data: dict[str, Any] = {}
+    if path.is_file():
+        with path.open(encoding="utf-8") as f:
+            loaded = yaml.safe_load(f) or {}
+            if isinstance(loaded, dict):
+                data = loaded
+    allowed_clustering = {"enabled", "segmentCurateMode", "sceneClusterMode"}
+    allowed_vision = {"enabled"}
+    clu_patch = patch.get("clustering") if isinstance(patch.get("clustering"), dict) else {}
+    vis_patch = patch.get("vision") if isinstance(patch.get("vision"), dict) else {}
+    if clu_patch:
+        target = data.setdefault("clustering", {})
+        if not isinstance(target, dict):
+            target = {}
+            data["clustering"] = target
+        for key, val in clu_patch.items():
+            if key in allowed_clustering:
+                target[key] = val
+    if vis_patch:
+        target = data.setdefault("vision", {})
+        if not isinstance(target, dict):
+            target = {}
+            data["vision"] = target
+        for key, val in vis_patch.items():
+            if key in allowed_vision:
+                target[key] = val
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
+
+
 def load_config(path: Path | None = None) -> AppConfig:
     """Load config.yaml from path, or ./config.yaml, or defaults."""
     candidates = [path, Path.cwd() / "config.yaml", ROOT / "config.yaml"]
@@ -294,8 +458,7 @@ def load_config(path: Path | None = None) -> AppConfig:
     geocode_raw = data.get("geocode") if isinstance(data.get("geocode"), dict) else {}
     curate_raw = data.get("curate") if isinstance(data.get("curate"), dict) else {}
     render_raw = data.get("render") if isinstance(data.get("render"), dict) else {}
-    vision_enabled = bool(vision_raw.get("enabled", False))
-    vision_max_tags = int(vision_raw.get("max_tags_per_asset", 5))
+    clustering_raw = data.get("clustering") if isinstance(data.get("clustering"), dict) else {}
     banned_raw = narrative_raw.get("banned_phrases") or []
     banned = tuple(str(p) for p in banned_raw if p) if isinstance(banned_raw, list) else ()
     llm_provider = str(llm_raw.get("provider", "stub")).strip().lower()
@@ -316,8 +479,10 @@ def load_config(path: Path | None = None) -> AppConfig:
             scoring=_layout_scoring_from_dict(scoring_raw),
             feedback=_layout_feedback_from_dict(feedback_raw),
         ),
-        vision=VisionConfig(enabled=vision_enabled, max_tags_per_asset=vision_max_tags),
+        clustering=_clustering_from_dict(clustering_raw),
+        vision=_vision_from_dict(vision_raw),
         geocode=GeocodeConfig(enabled=bool(geocode_raw.get("enabled", False))),
+        config_path=cfg_path,
         curate=CurateConfig(
             segment_gap_days=int(curate_raw.get("segment_gap_days", 14)),
             city_gap_days=int(curate_raw.get("city_gap_days", 3)),

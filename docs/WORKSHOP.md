@@ -135,8 +135,57 @@ CI：`.github/workflows/ci.yml`（push/PR 时跑 pytest + fixture validate）。
 
 ---
 
-## 7. 版本记录
+## 8. Phase 3 聚类验收（M12–M14）
+
+关联：[ACCEPTANCE-PHASE3.md](./ACCEPTANCE-PHASE3.md)、[PRD-PHASE3.md](./PRD-PHASE3.md)
+
+```powershell
+# 聚类 golden + spike
+python -m pytest tests/test_clustering_spike.py tests/test_cluster_eval.py -q
+
+# I-G2 布局对比（fixture 或本地 trips）
+python scripts/phase3_ig2_report.py golden-mixed-scenes --fixture
+python scripts/phase3_ig2_report.py mao maomi linzhi
+
+# 性能 bench（400 张）
+python scripts/phase3_cluster_bench.py --assets 400 --geo-only    # PF-P3-01
+python scripts/phase3_cluster_bench.py --assets 400 --vision      # PF-P3-02 / AC-P3-C05
+
+# 真实 CLIP 验收（需 pip install -e ".[clip]"）
+python scripts/phase3_clip_acceptance.py
+python scripts/phase3_e2e_bench.py --assets 150 --record-real trips/linzhi
+python scripts/diff_curate.py golden-mixed-scenes --fixture
+python -m pytest tests/test_studio_ux_p3.py tests/test_layout_golden.py -q -m "not vision"
+```
+
+验收记录目录：`docs/acceptance-records/phase3-*.json`
+
+**配置**：`config.yaml` 中 `clustering.enabled` / `vision.enabled`；Studio 高级折叠可 PATCH `/__travelogue/config`。
+
+### 8.1 聚类 config 调参（M14-1）
+
+`config.yaml` 常用项（详见 `config.yaml.example`）：
+
+| 键 | 说明 | 默认 |
+|----|------|------|
+| `clustering.enabled` | `true` / `false` / `auto` | `auto` |
+| `clustering.sceneClusterMode` | `run_aware` / `off` | `run_aware` |
+| `clustering.scene.clusterEps` | DBSCAN ε | `0.07` |
+| `vision.enabled` | CLIP 场景分析 | `false` |
+
+布局权重实验：`scripts/phase3_ig2_report.py` + `docs/acceptance-records/phase3-weight-experiment.json`。
+
+NR-P3-01 可选对比：`python scripts/diff_curate.py golden-mixed-scenes --fixture`
+
+### 8.2 GPU / CLIP（M13-4b · 可选）
+
+安装 `pip install -e ".[clip]"` 后，有 NVIDIA GPU 时 PyTorch 会自动使用 CUDA；无 GPU 时走 CPU（400 张 warm ~40s 本机验收）。首次运行需下载 OpenCLIP 权重（不计入 PF-P3-02 预算）。
+
+---
+
+## 9. 版本记录
 
 | 日期 | 变更 |
 |------|------|
 | 2026-05-27 | Phase 2：Studio bat 入口；250 张；服务端长图分段双轨 |
+| 2026-05-28 | Phase 3：§8 聚类验收命令与 bench / I-G2 脚本 |

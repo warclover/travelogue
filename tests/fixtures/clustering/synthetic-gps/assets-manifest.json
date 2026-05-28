@@ -1,0 +1,11 @@
+{
+  "description": "Synthetic GPS trip: Tokyo morning + Kyoto afternoon same day",
+  "assets": [
+    {"id": "t1", "type": "image", "takenAt": "2025-04-01T09:00:00Z", "geo": {"lat": 35.681, "lon": 139.767}, "place": {"city": "东京"}},
+    {"id": "t2", "type": "image", "takenAt": "2025-04-01T10:00:00Z", "geo": {"lat": 35.682, "lon": 139.768}, "place": {"city": "东京"}},
+    {"id": "t3", "type": "image", "takenAt": "2025-04-01T11:00:00Z", "geo": {"lat": 35.683, "lon": 139.769}, "place": {"city": "东京"}},
+    {"id": "k1", "type": "image", "takenAt": "2025-04-01T14:00:00Z", "geo": {"lat": 35.011, "lon": 135.768}, "place": {"city": "京都"}},
+    {"id": "k2", "type": "image", "takenAt": "2025-04-01T15:00:00Z", "geo": {"lat": 35.012, "lon": 135.769}, "place": {"city": "京都"}},
+    {"id": "k3", "type": "image", "takenAt": "2025-04-01T16:00:00Z", "geo": {"lat": 35.013, "lon": 135.770}, "place": {"city": "京都"}}
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "benchKind": "geo_only",
+  "assetCount": 400,
+  "visionEnabled": false,
+  "clipAvailable": true,
+  "elapsedSec": 0.0,
+  "budgetSec": 60,
+  "withinBudget": true,
+  "segmentMode": "geo_event",
+  "geoEventCount": 3,
+  "sceneClusterCount": 0,
+  "embeddingSource": null,
+  "embeddingModel": null
+}

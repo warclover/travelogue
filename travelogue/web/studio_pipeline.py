@@ -25,6 +25,7 @@ class StudioPipelineResult:
     trip_json: Path
     preview_url: str
     photo_count: int
+    cluster_notice: str = ""
 
 
 def count_album_photos(album_dir: Path, *, max_photos: int = 250) -> int:
@@ -121,6 +122,7 @@ def run_studio_pipeline(
 
     with app_config_scope(cfg):
         report("ingest", 1)
+        cluster_notice = ""
         trip_json = create_trip(
             slug,
             trips_root,
@@ -146,12 +148,23 @@ def run_studio_pipeline(
                 raise DemoError("E_DEMO_TOO_FEW", str(exc)) from exc
             raise DemoError(exc.code, str(exc)) from exc
 
+        from travelogue.curation.clustering import run_clustering_layer
+
+        # Emit clustering hint as part of the *curate* stage (the next user-facing
+        # step) so the ingest hint stays semantically tied to ingest only.
+        cluster_result = run_clustering_layer(trip, trip_dir=trip_root, cfg=cfg)
+        cluster_notice = cluster_result.user_notice
+        svc.save(trip, trip_json)
+
         meta = trip.setdefault("meta", {})
         meta["title"] = title[:20]
         if place:
             meta["places"] = [place]
 
-        report("curate", 2)
+        if cluster_result.stage_hint and progress:
+            progress("curate", 2, cluster_result.stage_hint)
+        else:
+            report("curate", 2)
         try:
             run_curate(
                 trip,
@@ -203,4 +216,5 @@ def run_studio_pipeline(
         trip_json=trip_json,
         preview_url=preview_url,
         photo_count=photo_count,
+        cluster_notice=cluster_notice,
     )

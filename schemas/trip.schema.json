@@ -315,6 +315,68 @@
         "featuredCoverPool": {
           "type": "array",
           "items": { "type": "string" }
+        },
+        "clustering": { "$ref": "#/$defs/tripClustering" }
+      }
+    },
+    "geoEventSegment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "startDate", "endDate", "assetIds"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 48 },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "assetIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "location": { "type": "string", "maxLength": 32 }
+      }
+    },
+    "sceneCluster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "assetIds"],
+      "properties": {
+        "id": { "type": "integer" },
+        "label": { "type": "string", "maxLength": 32 },
+        "assetIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "medoidAssetId": { "type": "string" }
+      }
+    },
+    "tripClustering": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "string", "const": "1" },
+        "segmentMode": {
+          "type": "string",
+          "enum": ["geo_event", "date_fallback"]
+        },
+        "segments": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/geoEventSegment" }
+        },
+        "clusters": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sceneCluster" }
+        },
+        "visionModel": { "type": "string" },
+        "vision": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": ["clip", "heuristic"]
+            },
+            "model": { "type": "string" }
+          }
         }
       }
     },
@@ -526,6 +588,33 @@
         "burstGroupId": {
           "type": "string",
           "description": "Time-proximate burst cluster id from ingest"
+        },
+        "eventId": {
+          "type": "string",
+          "description": "Geo event segment id from Phase 3 clustering"
+        },
+        "sceneClusterId": {
+          "type": "integer",
+          "description": "Scene cluster label from embedding DBSCAN; -1 = noise"
+        },
+        "clusterSource": {
+          "type": "string",
+          "enum": ["clip", "heuristic"],
+          "description": "Embedding source used for sceneClusterId"
+        },
+        "subjectBucket": {
+          "type": "string",
+          "description": "Heuristic subject bucket from ingest (Agent 0)"
+        },
+        "subjectClass": {
+          "type": "string",
+          "description": "CLIP zero-shot subject class (Phase 3 M13)"
+        },
+        "subjectConfidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "CLIP subjectClass confidence"
         },
         "geo": {
           "type": "object",

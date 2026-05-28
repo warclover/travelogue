@@ -20,6 +20,8 @@ USER_MESSAGES: dict[str, str] = {
     "E_STUDIO_REVEAL_DENIED": "无法打开该文件",
     "E_PICK_FOLDER_UNSUPPORTED": "当前环境不支持原生选文件夹，请改用路径导入或浏览器上传",
     "E_PICK_FOLDER_DENIED": "仅允许本机访问选文件夹",
+    "E_PICK_FOLDER_FAILED": "无法打开本机文件夹选择器，请粘贴路径或安装 pip install -e \".[desktop]\"",
+    "E_STUDIO_CONFIG_WRITE": "无法写入 config.yaml，请检查文件权限",
     "E_LNG_CAPTURE_FAILED": "长图生成失败，请重试",
     "E_LNG_NO_LONGSHOT": "未找到长图页面，请先完成渲染",
     "E_LNG_PLAYWRIGHT": "无法生成长图，请安装 Playwright",

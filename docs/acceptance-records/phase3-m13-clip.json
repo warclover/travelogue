@@ -1,0 +1,26 @@
+{
+  "recordId": "phase3-m13-clip",
+  "phase": "M13",
+  "date": "2026-05-28",
+  "clipAvailable": true,
+  "embedSource": "clip",
+  "embedModel": "ViT-B-32/openai",
+  "vectorDim": 512,
+  "assetCount": 12,
+  "embedSecWarm": 8.109,
+  "embedSecCold": 122.6,
+  "clusterSec": 6.03,
+  "segmentMode": "date_fallback",
+  "sceneClusterCount": 2,
+  "pass": true,
+  "commands": [
+    "pip install -e \".[clip]\"",
+    "python scripts/phase3_clip_acceptance.py",
+    "pytest tests/test_clip_real.py tests/test_layout_golden.py -m vision -q"
+  ],
+  "notes": [
+    "First run downloads OpenCLIP weights (~350MB); cold embed ~122s on CPU.",
+    "Warm cache embed ~8s for 12 images.",
+    "CI excludes @vision by default; heuristic path unchanged."
+  ]
+}

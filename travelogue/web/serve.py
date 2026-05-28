@@ -15,6 +15,7 @@ from travelogue.services.trip import TripService
 from travelogue.web.copy_patch import CopyPatchError, apply_copy_patches
 from travelogue.web.studio_chrome import inject_studio_chrome, should_inject_studio_chrome
 from travelogue.web.studio_routes import StudioMixin
+from travelogue.web.studio_routes import CONFIG_PATH
 from travelogue.web.studio_uploads import sweep_stale_uploads
 from travelogue.web.tier_patch import TierPatchError, apply_tier_promotions
 
@@ -110,6 +111,15 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             self._handle_promote_tier()
             return
         self.send_error(404)
+
+    def do_PATCH(self) -> None:  # noqa: N802
+        path = self.path.split("?", 1)[0]
+        if self.studio_mode and path == CONFIG_PATH:
+            if not self._studio_require_post_auth():
+                return
+            self._studio_handle_config()
+            return
+        self.send_error(405)
 
     def _serve_trip_static(self, trip_id: str, rel_path: str) -> bool:
         trip_dir = self.studio_bind_trip(trip_id)

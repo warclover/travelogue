@@ -394,7 +394,7 @@ def ingest_into_trip(
     if generate_crops is None:
         generate_crops = cfg.generate_crops
     geocode_enabled = resolved_app.geocode.enabled
-    max_tags = resolved_app.vision.max_tags_per_asset if resolved_app.vision.enabled else 5
+    max_tags = resolved_app.vision.max_tags_per_asset if resolved_app.vision.enabled == "true" else 5
 
     source_dir = trip_dir / "source"
     assets_dir = trip_dir / "assets"

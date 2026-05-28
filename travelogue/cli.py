@@ -39,9 +39,11 @@ app.add_typer(demo_app, name="demo")
 llm_app = typer.Typer(help="LLM provider utilities")
 media_app = typer.Typer(help="Re-export pixels from source/")
 tier_app = typer.Typer(help="userTier promote (G2 serve · appendix A)")
+cluster_app = typer.Typer(help="Phase 3 clustering cache & pending assets (M14)")
 app.add_typer(llm_app, name="llm")
 app.add_typer(media_app, name="media")
 app.add_typer(tier_app, name="tier")
+app.add_typer(cluster_app, name="cluster")
 
 
 def _load_cfg(config: Path | None) -> None:
@@ -1378,6 +1380,78 @@ def cmd_demo_from_album_hidden(
 
 def main() -> None:
     app()
+
+
+@cluster_app.command("recluster")
+def cluster_recluster(
+    trip: str = typer.Argument(..., help="trip id or path to trip.json"),
+    trips_dir: Path = typer.Option(None, "--trips-dir", help="trips root when trip is an id"),
+    force: bool = typer.Option(True, "--force/--no-force", help="force full cache rebuild"),
+) -> None:
+    """Re-run scene clustering with optional force full embed (F-CLU-CACHE-03)."""
+    from dataclasses import replace
+
+    from travelogue.curation.clustering import run_clustering_layer
+    from travelogue.services.trip import TripService
+
+    svc = TripService(root=trips_dir or get_config().trips_dir.parent)
+    trip_json = svc.resolve_trip_json(trip, trips_dir=trips_dir or get_config().trips_dir)
+    trip_dir = trip_json.parent
+    body = svc.load(trip_json)
+    base = get_config(reload=True)
+    clustering = replace(base.clustering, enabled="true", force_recluster=force)
+    vision = replace(base.vision, enabled="true")
+    cfg = replace(base, clustering=clustering, vision=vision)
+    if force:
+        from travelogue.vision.cache import clear_cluster_cache
+
+        clear_cluster_cache(trip_dir)
+    result = run_clustering_layer(body, trip_dir=trip_dir, cfg=cfg)
+    svc.save(body, trip_json)
+    typer.echo(
+        f"OK recluster · mode={result.mode} segments={result.geo_event_count} "
+        f"clusters={result.scene_cluster_count} force={force}"
+    )
+
+
+@cluster_app.command("cache-clear")
+def cluster_cache_clear(
+    trip: str = typer.Argument(..., help="trip id or path to trip.json"),
+    trips_dir: Path = typer.Option(None, "--trips-dir", help="trips root when trip is an id"),
+) -> None:
+    """Remove `.cluster-cache/` for a trip (M14 · F-CLU-CACHE CLI)."""
+    from travelogue.services.trip import TripService
+    from travelogue.vision.cache import clear_cluster_cache
+
+    svc = TripService(root=trips_dir or get_config().trips_dir.parent)
+    trip_json = svc.resolve_trip_json(trip, trips_dir=trips_dir or get_config().trips_dir)
+    trip_dir = trip_json.parent
+    if clear_cluster_cache(trip_dir):
+        typer.echo(f"OK cleared cluster cache · {trip_dir / '.cluster-cache'}")
+    else:
+        typer.echo(f"OK no cluster cache · {trip_dir}")
+
+
+@cluster_app.command("pending-assets")
+def cluster_pending_assets(
+    trip: str = typer.Argument(..., help="trip id or path to trip.json"),
+    trips_dir: Path = typer.Option(None, "--trips-dir", help="trips root when trip is an id"),
+) -> None:
+    """List pipeline.pendingAssets after structure lock (F-CLU-CACHE-04 stub)."""
+    from travelogue.services.trip import TripService
+    from travelogue.vision.cache import list_pending_assets
+
+    svc = TripService(root=trips_dir or get_config().trips_dir.parent)
+    trip_json = svc.resolve_trip_json(trip, trips_dir=trips_dir or get_config().trips_dir)
+    body = svc.load(trip_json)
+    pending = list_pending_assets(body)
+    status = (body.get("pipeline") or {}).get("status") or "unknown"
+    typer.echo(f"pipeline.status={status}")
+    if pending:
+        for aid in pending:
+            typer.echo(aid)
+    else:
+        typer.echo("(no pending assets)")
 
 
 if __name__ == "__main__":

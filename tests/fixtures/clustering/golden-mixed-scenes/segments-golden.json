@@ -1,0 +1,26 @@
+[
+  {
+    "id": "evt-tokyo-may1",
+    "name": "东京",
+    "startDate": "2025-05-01",
+    "endDate": "2025-05-01",
+    "location": "东京",
+    "assetIds": ["s1a", "s1b", "s1c", "s1d", "s1e", "s1f"]
+  },
+  {
+    "id": "evt-kyoto-may3",
+    "name": "京都",
+    "startDate": "2025-05-03",
+    "endDate": "2025-05-03",
+    "location": "京都",
+    "assetIds": ["s2a", "s2b", "s2c", "s2d", "s2e", "s2f"]
+  },
+  {
+    "id": "evt-osaka-may5",
+    "name": "大阪",
+    "startDate": "2025-05-05",
+    "endDate": "2025-05-05",
+    "location": "大阪",
+    "assetIds": ["s3a", "s3b", "s3c", "s3d", "s3e", "s3f"]
+  }
+]

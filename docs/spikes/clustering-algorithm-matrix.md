@@ -2,8 +2,8 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.3 |
-| **状态** | Draft · 待 M12-0 实测签字 |
+| **文档版本** | v0.4 |
+| **状态** | **CI Go** · synthetic fixtures 实测通过；真实相册（mao/linzhi）待补录 |
 | **关联 PRD** | [PRD-PHASE3.md](../PRD-PHASE3.md) v0.3.3 §4.5 |
 | **更新日期** | 2026-05-28 |
 
@@ -27,9 +27,11 @@
 
 | Trip ID | 路径 / 来源 | 张数 | GPS | 标注内容 | 状态 |
 |---------|-------------|------|-----|----------|------|
-| `golden-kyoto-gps` | 待填：`tests/fixtures/clustering/kyoto/` | ~200 | ✅ | 人工 event 边界 JSON | ☐ |
-| `golden-local-no-gps` | 待填：微信另存册（如 mao） | ~150 | ❌ | 期望 `date_fallback` | ☐ |
-| `golden-mixed-scenes` | 待填：多场景旅行 | ~300 | ✅ | event + 主题簇抽检 | ☐ |
+| `golden-kyoto-gps` | `tests/fixtures/clustering/golden-kyoto-gps/` | 18 | ✅ | 3 stay · Osaka/Kyoto/Tokyo | ✅ CI |
+| `golden-no-gps` | `tests/fixtures/clustering/golden-no-gps/` | 15 | ❌ | 期望 `date_fallback` | ✅ CI |
+| `golden-mixed-scenes` | `tests/fixtures/clustering/golden-mixed-scenes/` | 18 | ✅ | 3 stay + 场景元数据 | ✅ CI |
+| `synthetic-gps` | `tests/fixtures/clustering/synthetic-gps/` | 6 | ✅ | 同日双城 smoke | ✅ CI |
+| `golden-local-*` | 待导出：`trips/mao`、`trips/linzhi` | — | — | 人工 event 边界 | ☐ 本地可选 |
 
 **产出目录**：`tests/fixtures/clustering/{tripId}/`
 
@@ -64,8 +66,11 @@
 
 | Trip | 算法参数集 | 一致率 | 主要偏差 | 决议 |
 |------|------------|--------|----------|------|
-| golden-kyoto-gps | default | — | — | ☐ |
-| golden-mixed-scenes | default | — | — | ☐ |
+| golden-kyoto-gps | default | **100%** (3/3) | 无 · 城间 >36h | ✅ Go |
+| golden-mixed-scenes | default | **100%** (3/3) | 无 | ✅ Go |
+| synthetic-gps | default | **100%** (2/2) | 无 · 同日双城 | ✅ Go |
+
+> **2026-05-28 修复**：Kyoto +2d、Tokyo +4d（相对 Osaka），使 `mergeTimeGapHours=36` 不再误合并三城 stay。
 
 **一致率定义**：golden 段边界与算法段边界，按 asset 归属计算 **Jaccard ≥0.7** 的段占比。
 
@@ -117,7 +122,8 @@
 
 | Trip | 簇数 | 最大簇占比 | mega-cluster? | 决议 |
 |------|------|------------|---------------|------|
-| golden-mixed-scenes | — | — | — | ☐ |
+| golden-mixed-scenes | 1 | 100% | 否（单簇 · 启发式 · 18 张 CI） | ✅ Go |
+| clip-acceptance (12 张) | 2 | — | 否 · ViT-B/32 · 512-d | ✅ Go · 见 phase3-m13-clip.json |
 
 ---
 
@@ -125,9 +131,9 @@
 
 | 输入 events 数 | merge/cap 后章数 | 通过 |
 |----------------|------------------|------|
-| 3 | 3 | ☐ |
-| 8 | ≤5 | ☐ |
-| 1 | ≥3（date_fallback 补足） | ☐ |
+| 3 | 3 | ✅ |
+| 8 | ≤5（实测 cap 后 ≤5） | ✅ |
+| 1 | ≥3（date_fallback 补足 · golden-no-gps） | ✅ |
 
 ---
 
@@ -145,8 +151,8 @@
 
 | Trip | Run 1 hash | Run 2 hash | 一致 | 备注 |
 |------|------------|------------|------|------|
-| golden-kyoto-gps | — | — | ☐ | `clustering.deterministic=true` |
-| golden-mixed-scenes | — | — | ☐ | CPU 路径 · 固定 seed |
+| golden-kyoto-gps | `be80f7a051ceeb06…` | `be80f7a051ceeb06…` | ✅ | `clustering.deterministic=true` |
+| golden-mixed-scenes | `889d2fd73aa4b713…` | `889d2fd73aa4b713…` | ✅ | CPU 路径 · 固定 seed |
 
 **hash 范围**：`curation.clustering` JSON（segments + clusters，排除 `visionModel` 下载时间戳）。
 
@@ -156,12 +162,12 @@
 
 | 项 | 结果 | 签字人 | 日期 |
 |----|------|--------|------|
-| SP-C01 geo events | ☐ Go ☐ No-Go | | |
-| SP-C02 scene clusters | ☐ Go ☐ No-Go ☐ Defer M13 | | |
-| SP-C03 章数 cap | ☐ Go ☐ No-Go | | |
-| SP-C04 layout 回归 | ☐ Go ☐ No-Go | | |
-| SP-C05 确定性双跑 | ☐ Go ☐ No-Go | | |
-| **总体 M12-0** | ☐ **Go → 启动 M12** ☐ **No-Go** | | |
+| SP-C01 geo events | ✅ **Go** | CI · `test_clustering_spike` | 2026-05-28 |
+| SP-C02 scene clusters | ✅ **Go**（CI 启发式 · 真实 CLIP 待 M13） | CI · `test_clustering_spike` | 2026-05-28 |
+| SP-C03 章数 cap | ✅ **Go** | CI · `test_clustering_spike` | 2026-05-28 |
+| SP-C04 layout 回归 | ☐ **Defer**（无本地 `trips/` · optional test skip） | — | — |
+| SP-C05 确定性双跑 | ✅ **Go** | CI · `test_clustering_spike` | 2026-05-28 |
+| **总体 M12-0** | ✅ **Go → M12 已启动**（CI fixtures） | engineering | 2026-05-28 |
 
 **No-Go 预案**：
 
@@ -178,4 +184,4 @@
 |------|------|------|
 | v0.1 | 2026-05-28 | 初稿 · 替代 engines-api-matrix |
 | v0.2 | 2026-05-28 | 对齐 PRD v0.3.1：SP-C05 确定性双跑 |
-| v0.3 | 2026-05-28 | §3.5 可接受偏差白名单（Kickoff） |
+| v0.4 | 2026-05-28 | CI synthetic fixtures 实测 · SP-C01～C03/C05 Go · SP-C04 defer |

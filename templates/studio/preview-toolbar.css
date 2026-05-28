@@ -186,6 +186,31 @@ html[data-preview-toolbar="on"] {
 .preview-toolbar__stale[hidden],
 .preview-toolbar__slow-hint[hidden] { display: none !important; }
 
+.preview-toolbar__chapter-explain {
+  margin: 0 12px 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #d8e8e0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.preview-toolbar__chapter-explain[hidden] { display: none !important; }
+.preview-toolbar__chapter-explain-summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #a8dcc8;
+  list-style: none;
+}
+.preview-toolbar__chapter-explain-summary::-webkit-details-marker { display: none; }
+.preview-toolbar__chapter-explain-lead { margin: 8px 0 4px; }
+.preview-toolbar__chapter-explain-list {
+  margin: 0;
+  padding-left: 1.1em;
+  color: #b8ccc4;
+}
+.preview-toolbar__chapter-explain-list[hidden] { display: none !important; }
+
 .preview-toolbar__advanced {
   position: relative;
 }
