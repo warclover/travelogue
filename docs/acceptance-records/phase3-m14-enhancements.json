@@ -30,9 +30,18 @@
     },
     {
       "id": "M14-6",
-      "name": "pendingAssets CLI stub",
+      "name": "F-CLU-CACHE-04 pendingAssets write + drain",
       "status": "Done",
-      "command": "python -m travelogue cluster pending-assets <trip>"
+      "paths": [
+        "travelogue/media/ingest.py",
+        "travelogue/vision/cache.py",
+        "travelogue/cli.py"
+      ],
+      "commands": [
+        "python -m travelogue cluster pending-assets <trip>",
+        "python -m travelogue cluster process-pending <trip>"
+      ],
+      "notes": "post-lock ingest 追加 pendingAssets 而非重置；process-pending 默认复跑 scene clustering 并清空队列，章节边界保持冻结"
     },
     {
       "id": "M14-3",

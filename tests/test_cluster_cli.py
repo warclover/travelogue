@@ -54,3 +54,107 @@ def test_cluster_pending_assets_empty(tmp_path: Path) -> None:
     result = runner.invoke(app, ["cluster", "pending-assets", str(trip_dir / "trip.json")])
     assert result.exit_code == 0
     assert "no pending" in result.stdout.lower()
+
+
+def test_cluster_process_pending_no_op_when_empty(tmp_path: Path) -> None:
+    trip_dir = tmp_path / "p0"
+    trip_dir.mkdir()
+    (trip_dir / "trip.json").write_text(
+        json.dumps(
+            {
+                "tripId": "p0",
+                "pipeline": {
+                    "status": "structure_locked",
+                    "pendingAssets": [],
+                    "locks": {"structure": True, "copy": False},
+                },
+                "assets": [],
+                "chapters": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    runner = CliRunner()
+    result = runner.invoke(
+        app, ["cluster", "process-pending", str(trip_dir / "trip.json")]
+    )
+    assert result.exit_code == 0, result.stdout
+    assert "no pending assets" in result.stdout.lower()
+
+
+def test_cluster_process_pending_drains_list_without_run(tmp_path: Path) -> None:
+    trip_dir = tmp_path / "p1"
+    trip_dir.mkdir()
+    pending = ["a-001", "a-002", "a-003"]
+    (trip_dir / "trip.json").write_text(
+        json.dumps(
+            {
+                "tripId": "p1",
+                "pipeline": {
+                    "status": "structure_locked",
+                    "pendingAssets": pending,
+                    "locks": {"structure": True, "copy": False},
+                },
+                "assets": [],
+                "chapters": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    runner = CliRunner()
+    # --no-run skips scene clustering so this test does not depend on torch/open_clip.
+    result = runner.invoke(
+        app,
+        [
+            "cluster",
+            "process-pending",
+            str(trip_dir / "trip.json"),
+            "--no-run",
+            "--clear",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+    body = json.loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
+    pipe = body["pipeline"]
+    assert pipe["pendingAssets"] == [], "pendingAssets must be empty after --clear"
+    assert pipe["status"] == "structure_locked", "status must not change"
+    assert pipe["locks"] == {"structure": True, "copy": False}
+    assert "pending=3" in result.stdout
+    assert "cleared=3" in result.stdout
+    assert "cluster_mode=skipped" in result.stdout
+
+
+def test_cluster_process_pending_keep_preserves_list(tmp_path: Path) -> None:
+    trip_dir = tmp_path / "p2"
+    trip_dir.mkdir()
+    pending = ["x-001", "x-002"]
+    (trip_dir / "trip.json").write_text(
+        json.dumps(
+            {
+                "tripId": "p2",
+                "pipeline": {
+                    "status": "structure_locked",
+                    "pendingAssets": pending,
+                    "locks": {"structure": True, "copy": False},
+                },
+                "assets": [],
+                "chapters": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        [
+            "cluster",
+            "process-pending",
+            str(trip_dir / "trip.json"),
+            "--no-run",
+            "--keep",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+    body = json.loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
+    assert body["pipeline"]["pendingAssets"] == pending, "--keep must preserve the list"
+    assert "cleared=0" in result.stdout

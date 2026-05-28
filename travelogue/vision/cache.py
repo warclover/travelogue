@@ -164,6 +164,50 @@ def list_pending_assets(trip: dict) -> list[str]:
     return [str(x) for x in pending if x]
 
 
+# F-CLU-CACHE-04 · post-lock statuses where new assets must NOT auto-update chapters
+PIPELINE_LOCKED_STATUSES: frozenset[str] = frozenset(
+    {"structure_locked", "copy_draft", "copy_locked", "rendered", "exported"}
+)
+
+
+def is_pipeline_locked(trip: dict) -> bool:
+    """True when ingest must defer asset ids to pendingAssets (F-CLU-CACHE-04)."""
+    pipe = trip.get("pipeline") or {}
+    status = str(pipe.get("status") or "")
+    if status in PIPELINE_LOCKED_STATUSES:
+        return True
+    locks = pipe.get("locks") or {}
+    return bool(locks.get("structure"))
+
+
+def append_pending_assets(trip: dict, asset_ids: list[str]) -> list[str]:
+    """Merge ``asset_ids`` into ``pipeline.pendingAssets`` preserving insertion order.
+
+    Returns the updated pendingAssets list. No-op for empty input.
+    """
+    pipe = trip.setdefault("pipeline", {})
+    existing = pipe.get("pendingAssets")
+    if not isinstance(existing, list):
+        existing = []
+    merged: list[str] = []
+    seen: set[str] = set()
+    for aid in (*existing, *asset_ids):
+        s = str(aid).strip()
+        if s and s not in seen:
+            seen.add(s)
+            merged.append(s)
+    pipe["pendingAssets"] = merged
+    return merged
+
+
+def clear_pending_assets(trip: dict) -> list[str]:
+    """Empty ``pipeline.pendingAssets`` and return the previous list."""
+    pipe = trip.setdefault("pipeline", {})
+    previous = pipe.get("pendingAssets") or []
+    pipe["pendingAssets"] = []
+    return [str(x) for x in previous if x]
+
+
 def compute_change_ratio(current_ids: list[str], cached_ids: list[str]) -> tuple[float, list[str], list[str]]:
     current_set = set(current_ids)
     cached_set = set(cached_ids)

@@ -182,8 +182,12 @@ ffmpeg -y -i "{source}" -ss 1 -vframes 1 \
 
 ## 10. 完成后状态
 
-- `pipeline.status = ingest_ready`  
-- `pipeline.pendingAssets`：若结构已锁，新 asset id 列入
+- **结构未锁（默认路径）**：`pipeline.status = ingest_ready`、`pipeline.pendingAssets = []`、`pipeline.locks` 初始化为 `{structure: false, copy: false}`。
+- **结构已锁**（`structure_locked` / `copy_draft` / `copy_locked` / `rendered` / `exported` 或 `locks.structure = true`，F-CLU-CACHE-04）：
+  - 保留进入前的 `pipeline.status` 与 `pipeline.locks`（**不**降级回 `ingest_ready`，章节边界保持冻结）。
+  - 新 asset id 追加到 `pipeline.pendingAssets`（去重、保序）；`stats.pendingAssetsAppended` 报告新增数。
+  - 若调用方使用 `--incremental` 重新处理之前 pending 的素材，处理完毕后 `pendingAssets` 清空但 status 仍为 locked。
+  - 排空入口：`python -m travelogue cluster process-pending <trip>`（默认 `--run --clear`；`--no-run` / `--keep` 可调试）。
 
 ---
 

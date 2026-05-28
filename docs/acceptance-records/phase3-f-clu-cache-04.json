@@ -1,0 +1,54 @@
+{
+  "recordId": "phase3-f-clu-cache-04",
+  "feature": "F-CLU-CACHE-04",
+  "phase": "M14",
+  "date": "2026-05-28",
+  "summary": "post-lock ingest writes pipeline.pendingAssets without auto-updating chapter boundaries; CLI cluster process-pending drains the queue with optional scene-cluster re-run",
+  "behaviour": {
+    "preLock": {
+      "pipeline.status": "ingest_ready",
+      "pipeline.pendingAssets": [],
+      "pipeline.locks": {"structure": false, "copy": false}
+    },
+    "postLock": {
+      "trigger": "pipeline.status in {structure_locked, copy_draft, copy_locked, rendered, exported} OR locks.structure == true",
+      "pipeline.status": "preserved (no downgrade to ingest_ready)",
+      "pipeline.locks": "preserved",
+      "pipeline.pendingAssets": "newly-added asset ids appended (dedup, insertion order)",
+      "stats": ["pendingAssetsAppended", "pendingAssetsTotal", "pipelineLocked"]
+    },
+    "postLockIncremental": {
+      "trigger": "ingest_into_trip(incremental=True) after lock",
+      "pipeline.status": "preserved",
+      "pipeline.pendingAssets": []
+    }
+  },
+  "cli": [
+    {
+      "command": "python -m travelogue cluster pending-assets <trip>",
+      "purpose": "inspect pipeline.status + pendingAssets"
+    },
+    {
+      "command": "python -m travelogue cluster process-pending <trip>",
+      "flags": ["--run/--no-run", "--clear/--keep"],
+      "purpose": "optionally re-run scene clustering across the trip and clear pendingAssets; locks/chapters untouched"
+    }
+  ],
+  "modules": [
+    "travelogue/media/ingest.py",
+    "travelogue/vision/cache.py (is_pipeline_locked / append_pending_assets / clear_pending_assets)",
+    "travelogue/cli.py (cluster process-pending)"
+  ],
+  "tests": [
+    "tests/test_ingest_pending_assets.py::test_ingest_pre_lock_keeps_legacy_pending_reset",
+    "tests/test_ingest_pending_assets.py::test_ingest_post_lock_appends_new_asset_ids_to_pending",
+    "tests/test_ingest_pending_assets.py::test_ingest_post_lock_incremental_clears_pending",
+    "tests/test_cluster_cli.py::test_cluster_process_pending_no_op_when_empty",
+    "tests/test_cluster_cli.py::test_cluster_process_pending_drains_list_without_run",
+    "tests/test_cluster_cli.py::test_cluster_process_pending_keep_preserves_list"
+  ],
+  "limitations": [
+    "process-pending --run still recomputes the union DBSCAN; chapter list (trip.chapters) is never mutated.",
+    "Phase 3 has no Studio UI for this; orchestration via CLI per PRD §7.4."
+  ]
+}

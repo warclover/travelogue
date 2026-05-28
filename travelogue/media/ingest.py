@@ -396,6 +396,21 @@ def ingest_into_trip(
     geocode_enabled = resolved_app.geocode.enabled
     max_tags = resolved_app.vision.max_tags_per_asset if resolved_app.vision.enabled == "true" else 5
 
+    # F-CLU-CACHE-04: capture lock state BEFORE we touch the pipeline so we can decide
+    # whether new asset ids go to pendingAssets (post-lock) or replace the batch.
+    from travelogue.vision.cache import (
+        append_pending_assets as _append_pending_assets,
+        is_pipeline_locked as _is_pipeline_locked,
+    )
+
+    existing_asset_ids: set[str] = {
+        str(a["id"]) for a in (trip.get("assets") or []) if a.get("id")
+    }
+    pipeline_was_locked = _is_pipeline_locked(trip)
+    prev_pipe_snapshot = dict(trip.get("pipeline") or {})
+    prev_status = str(prev_pipe_snapshot.get("status") or "")
+    prev_locks = dict(prev_pipe_snapshot.get("locks") or {})
+
     source_dir = trip_dir / "source"
     assets_dir = trip_dir / "assets"
     source_dir.mkdir(parents=True, exist_ok=True)
@@ -669,10 +684,42 @@ def ingest_into_trip(
         if low_res_warn:
             ingest_stats["low_res_excluded_warn"] = low_res_warn
 
-    pipe["status"] = "ingest_ready"
-    pipe["lastBatchId"] = batch
-    pipe["pendingAssets"] = []
-    pipe.setdefault("locks", {"structure": False, "copy": False})
+    new_asset_ids = [
+        str(a["id"])
+        for a in assets
+        if a.get("id") and str(a["id"]) not in existing_asset_ids
+    ]
+    if pipeline_was_locked and not incremental:
+        # F-CLU-CACHE-04: post-lock ingest must NOT auto-update chapters. Keep the
+        # previous status/locks and route new ids to pipeline.pendingAssets.
+        pipe["status"] = prev_status or "structure_locked"
+        if prev_locks:
+            pipe["locks"] = prev_locks
+        else:
+            pipe.setdefault("locks", {"structure": True, "copy": False})
+        pipe["lastBatchId"] = batch
+        _append_pending_assets(trip, new_asset_ids)
+        ingest_stats["pendingAssetsAppended"] = len(new_asset_ids)
+        ingest_stats["pendingAssetsTotal"] = len(pipe.get("pendingAssets") or [])
+        ingest_stats["pipelineLocked"] = True
+    elif pipeline_was_locked and incremental:
+        # Caller deliberately re-imported previously-pending ids; clear the queue
+        # but keep the locked status (chapters remain untouched).
+        pipe["status"] = prev_status or "structure_locked"
+        if prev_locks:
+            pipe["locks"] = prev_locks
+        else:
+            pipe.setdefault("locks", {"structure": True, "copy": False})
+        pipe["lastBatchId"] = batch
+        pipe["pendingAssets"] = []
+        ingest_stats["pendingAssetsAppended"] = 0
+        ingest_stats["pendingAssetsTotal"] = 0
+        ingest_stats["pipelineLocked"] = True
+    else:
+        pipe["status"] = "ingest_ready"
+        pipe["lastBatchId"] = batch
+        pipe["pendingAssets"] = []
+        pipe.setdefault("locks", {"structure": False, "copy": False})
     pipe.setdefault("runs", []).append(
         {
             "runId": batch,

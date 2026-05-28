@@ -206,7 +206,17 @@
 | M14-3 | migrate-on-load：`curation.insights` strip | `serve.py` | ☑ |
 | M14-4 | 预览「为什么这样分章」（§6.4.8） | preview-toolbar | ☑ |
 | M14-5 | vision 降级 Toast | `studio.js` | ☑ |
-| M14-6 | F-CLU-CACHE-04 pendingAssets **文档 + CLI stub** | docs · `cli.py` | ☑ |
+| M14-6 | F-CLU-CACHE-04 pendingAssets **写入 + 排空 CLI** | `media/ingest.py` · `vision/cache.py` · `cli.py` | ☑ |
+
+> **M14-6 实施摘要（F-CLU-CACHE-04）**
+> - `ingest_into_trip` 进入前快照 `pipeline.status` / `pipeline.locks`，结束时分支：
+>   - **pre-lock**：保持旧行为（`status=ingest_ready`、`pendingAssets=[]`）。
+>   - **post-lock（structure_locked / copy_draft / copy_locked / rendered / exported 或 `locks.structure=true`）**：保留原 status 与 locks，新 asset id **追加**到 `pipeline.pendingAssets`（去重、保序），章节边界保持冻结。
+>   - **post-lock + `--incremental`**：把之前的 pendingAssets 重放后清空，状态仍保留 locked。
+>   - 统计字段：`stats.pendingAssetsAppended`、`stats.pendingAssetsTotal`、`stats.pipelineLocked`。
+> - 新增辅助：`travelogue.vision.cache.is_pipeline_locked` / `append_pending_assets` / `clear_pending_assets`。
+> - CLI：`travelogue cluster process-pending <trip>`（默认 `--run` 复跑 scene clustering，再 `--clear` 排空 pendingAssets；可用 `--no-run` / `--keep` 调试）。
+> - 回归：`tests/test_ingest_pending_assets.py`（3 用例）+ `tests/test_cluster_cli.py`（process-pending 三态）。
 
 ---
 

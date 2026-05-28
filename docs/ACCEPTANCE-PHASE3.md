@@ -136,7 +136,7 @@
 | F-CLU-SCE-01～07 | scene_clusters + cache + 单次 forward | M13 |
 | F-CLU-CUR-01～05 | curate + decision_log + burst 优先级 | M12/M13 |
 | F-CLU-CACHE-01～03 | 增量 ingest | **M12.5** |
-| F-CLU-CACHE-04 | pendingAssets | M14/CLI |
+| F-CLU-CACHE-04 | pendingAssets（locked-state 写入 + `cluster process-pending`） | **M14** |
 | F-CLU-CACHE-05 | 损坏 cache 重算 | M12 |
 | F-CLU-STU-01～10 | Studio §6.4 | M12/M13/M14 |
 
