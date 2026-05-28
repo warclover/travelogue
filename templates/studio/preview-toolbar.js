@@ -396,6 +396,15 @@
       startLongshot(root, tripId);
     });
 
+    // Focus longshot button when navigating from stale "更新长图" CTA
+    if (window.location.search.indexOf("focus=longshot") >= 0) {
+      requestAnimationFrame(function () {
+        longshotBtn.scrollIntoView({ behavior: "smooth", block: "center" });
+        longshotBtn.focus();
+        longshotBtn.classList.add("preview-toolbar__longshot--focus");
+      });
+    }
+
     advancedWrap.querySelector(".preview-toolbar__advanced-btn").addEventListener("click", function () {
       toggleAdvancedMenu(root);
     });

@@ -3,14 +3,14 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
-| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2 Studio** + **Phase 3 素材洞察** |
+| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2 Studio** + **Phase 3 Curate 聚类** |
 | **更新日期** | 2026-05-27 |
 
 ---
 
 ## 阅读顺序（新人）
 
-1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · 已冻结）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（素材洞察 · 第三阶段）  
+1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · 已冻结）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（Curate 聚类 · 第三阶段）  
 2. [AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md)  
 2b. [PRD-LAYOUT.md](./PRD-LAYOUT.md)（排版布局子系统 · Agent 1.5）  
 3. [DATA-MODEL.md](./DATA-MODEL.md) + [schemas/trip.schema.json](../schemas/trip.schema.json)  
@@ -35,18 +35,20 @@
 
 ---
 
-## Phase 3 · 素材洞察（Recasa × PhotoMapAI）
+## Phase 3 · Curate 聚类（原生算法）
 
 | 文档 | 说明 |
 |------|------|
-| [PRD-PHASE3.md](./PRD-PHASE3.md) | **Phase 3 产品需求** v0.2（双引擎编排 + 智能预选 + setup-engines） |
-| [adr/006-media-engines-integration.md](./adr/006-media-engines-integration.md) | 引擎集成架构决策 |
-| IMPLEMENTATION-PHASE3.md | 实施任务清单（M12–M15 · 待写） |
-| ACCEPTANCE-PHASE3.md | Phase 3 验收（AC-P3-01～06 · 待写） |
+| [PRD-PHASE3.md](./PRD-PHASE3.md) | **Phase 3 产品需求** v0.3.3 Kickoff |
+| [adr/007-native-clustering.md](./adr/007-native-clustering.md) | 原生聚类架构决策 v0.2（**当前有效**） |
+| [adr/006-media-engines-integration.md](./adr/006-media-engines-integration.md) | 双引擎方案（**Superseded**） |
+| IMPLEMENTATION-PHASE3.md | 实施任务清单（M12–M14 · **v0.3.3**） |
+| ACCEPTANCE-PHASE3.md | Phase 3 验收（**v0.3.3**） |
+| docs/spikes/clustering-algorithm-matrix.md | M12-0 算法 Spike（**v0.1 已写**） |
 
-**前置**：Phase 2 ≥ M8b + M9 可用。**代号**：素材洞察。**注意**：与 [SHARING.md](./SHARING.md) 中小程序 **P3** 轨道无关，后者规划为 Phase 4。
+**前置**：Phase 2 ≥ M8b + M9 可用。**代号**：Curate 聚类。**注意**：与 [SHARING.md](./SHARING.md) 中小程序 **P3** 轨道无关，后者规划为 Phase 4。
 
-阅读顺序：**PRD-PHASE3** → ADR-006 → IMPLEMENTATION-PHASE3（待写）→ ERROR-CODES Phase 3 附录。
+阅读顺序：**PRD-PHASE3** v0.3.3 Kickoff → ADR-007 v0.2 → [智能排版V2.md](./智能排版V2.md) P1 → [IMPLEMENTATION-PHASE3.md](./IMPLEMENTATION-PHASE3.md) → [ACCEPTANCE-PHASE3.md](./ACCEPTANCE-PHASE3.md) → [PRD-STUDIO-HOMEPAGE.md](./PRD-STUDIO-HOMEPAGE.md) §19。
 
 ---
 
@@ -147,4 +149,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 | 2026-05-27 | PRD-EXPERIENCE v1.0：三模式 + Hybrid + 三附录 + ADR-003 + experience-matrix |
 | 2026-05-27 | PRD-PHASE2 **v0.2.1**：跨文档一致性补丁（SHARING 双轨、250 张、bat、cancel/upload/GIL） |
 | 2026-05-27 | PRD-PHASE2 **v0.3.1**：M8a/b；Chrome allowlist；reveal API；开发准入补丁 |
-| 2026-05-27 | PRD-PHASE3 **v0.2.0**：评审修订（compose 双容器、路径策略、测试、M12-0） |
+| 2026-05-28 | PRD-PHASE3 **v0.3.3 Kickoff**：NR-P3-01 §12.1、M12 切割、config API §9.5、M12.5 cache |
+| 2026-05-28 | PRD-PHASE3 **v0.3.2**：§6.4 Studio 前端；UX-P3-01～10 |
+| 2026-05-28 | PRD-PHASE3 **v0.3.0**：战略 pivot 原生 Curate 聚类；ADR-007 替代 ADR-006 |
+| 2026-05-27 | PRD-PHASE3 **v0.2.0**：评审修订（compose 双容器、路径策略、测试、M12-0）— 已由 v0.3 废止 |

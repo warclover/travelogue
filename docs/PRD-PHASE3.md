@@ -1,17 +1,19 @@
-# Travelogue · Phase 3 产品需求文档（PRD）
+﻿# Travelogue · Phase 3 产品需求文档（PRD）
 
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | v0.2.1-PHASE3 |
-| **状态** | Draft · v0.2.1 Spike 就绪（M12-0 完成后可升 v1.0 RFD） |
-| **Phase 3 代号** | 「素材洞察」— Recasa × PhotoMapAI 双引擎协同 |
+| **文档版本** | v0.3.3-PHASE3 |
+| **状态** | **Kickoff-ready** · v0.3.3（项目审核修订：M12 范围切割、NR-P3-01 等价、config API、闸门澄清） |
+| **Phase 3 代号** | 「Curate 聚类」— 原生 geo/time + scene 算法 |
 | **前置条件** | [PRD-MVP.md](./PRD-MVP.md) 管线就绪；**Phase 2 完成闸门**（§13.0）通过后启动 M12 |
-| **交付形态** | Studio 内可选 **「素材洞察」** 步骤：旅行原片按 **行程段（Recasa）** 与 **场景主题（PhotoMapAI）** 分组预览 → 用户确认精选集 → 进入既有 ingest / curate / render 管线 |
-| **关联文档** | [DATA-MODEL.md](./DATA-MODEL.md)、[AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md)、[PRD-PHASE2.md](./PRD-PHASE2.md)、[SHARING.md](./SHARING.md)、[ERROR-CODES.md](./ERROR-CODES.md)、[adr/006-media-engines-integration.md](./adr/006-media-engines-integration.md)（v0.2 Accepted） |
-| **更新日期** | 2026-05-27 |
+| **交付形态** | **用户旅程与 Phase 2 相同**（选文件夹 → pipeline → preview → 长图）；聚类在 **pipeline 内部** 增强 ingest/curate，**无**独立洞察工作台、**无** Docker 引擎栈 |
+| **关联文档** | [DATA-MODEL.md](./DATA-MODEL.md)、[AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md)、[PRD-PHASE2.md](./PRD-PHASE2.md)、[PRD-STUDIO-HOMEPAGE.md](./PRD-STUDIO-HOMEPAGE.md)（首页 IA · §19 与本文 §6.4 对齐）、[PRD-LAYOUT.md](./PRD-LAYOUT.md)、[智能排版V2.md](./智能排版V2.md)（Layer 1.5 · P1 **合并里程碑**）、[ERROR-CODES.md](./ERROR-CODES.md)、[adr/007-native-clustering.md](./adr/007-native-clustering.md)（**Accepted v0.2** · 替代 ADR-006） |
+| **更新日期** | 2026-05-28 |
 
-> **命名说明**：本文 **Phase 3** 指产品第三阶段（素材洞察引擎）。[SHARING.md](./SHARING.md) 中的 **P3 小程序鉴权分享** 为独立轨道，**不在** 本 Phase 范围，后续可称 **Phase 4 · 私密分享**。
+> **命名说明**：本文 **Phase 3** 指产品第三阶段（Curate 聚类引擎）。[SHARING.md](./SHARING.md) 中的 **P3 小程序鉴权分享** 为独立轨道，**不在** 本 Phase 范围，后续称 **Phase 4 · 私密分享**。
+>
+> **战略变更（v0.3.0）**：不再集成 [Recasa](https://github.com/yonie/recasa) / [PhotoMapAI](https://github.com/lstein/PhotoMapAI) 外部引擎；仅 **借鉴算法思路**（MIT），在 `travelogue/` 内实现轻量聚类层。**「素材洞察工作台 / 用户精选 / preview 回流 reingest」** 移出 roadmap（Future · 另独立 PRD 若需要）。
 
 ---
 
@@ -24,33 +26,62 @@
 | **MVP** | ingest → curate（按日/段）→ narrate → render | 技术闭环：文件夹 → 杂志风 HTML |
 | **Phase 2** | Studio 工作台 + 服务端长图 + 非开发者入口 | 选文件夹 → 预览 → 微信长图 |
 
-当前 **curate（Agent 1）** 主要依赖 **EXIF 日期分段 + 规则排版**，对「同一地点混拍多种场景」「连拍重复」「无 GPS 的混册」处理能力有限（见 [老图.md](./老图.md)、ingest 内 pHash 去重）。
+当前 **curate（Agent 1）** 主要依赖 **EXIF 日期切段**（`time_segments.py`）与 **规则排版**，对下列场景能力有限（见 [老图.md](./老图.md)、[智能排版V2.md](./智能排版V2.md)）：
+
+- 同一日历日内 **多地移动**（上午城市 A、下午城市 B）仍被合成一段
+- **场景混杂**（美食/寺庙/人像/夜景）段内乱序，组屏缺少主题 run
+- 无 GPS 时只能按日/城市名粗切，**停留点（stay）** 感弱
 
 ### 1.2 Phase 3 要解决的断裂点
 
-用户导入一次旅行文件夹（常见 **100–800 张**）时，存在 **素材认知断裂**：
+| 断裂 | 现状（Phase 2） | Phase 3 目标 |
+|------|-----------------|--------------|
+| **断裂 A · 行程段** | `segment_gap_days=14` + 城市变化切段；**无 GPS 细粒度 stay** | **geo event**：时间窗 + GPS 跳变 → 更准的 `curation.segments` |
+| **断裂 B · 主题 run** | 启发式 tags + 人脸；**无场景簇** | **scene cluster**：CLIP（可选）→ `sceneClusterId`，驱动 bucket/screen **subject_run** |
 
-| 断裂 | 现状（Phase 2） | 用户感受 |
-|------|-----------------|----------|
-| **断裂 A · 行程感** | curate 按「日/段」分章，但 **看不到地图路线与事件边界** | 「这趟旅行分几段、哪天在哪」要靠自己回忆 |
-| **断裂 B · 主题感** | 无 **场景聚类**（美食/寺庙/人像/夜景混在一起） | 难以快速筛「只要精华 80 张进游记」 |
-| **断裂 C · 精选门槛** | Studio 软提示「>100 张建议精选」，但 **无工具帮精选** | 要么全导入（慢、游记冗长），要么手动删（费时） |
-| **断裂 D · 重复与离群** | ingest 有 pHash；**无地图/事件级去重视图** | 连拍、同角度堆叠不易批量处理 |
+**本 Phase 不解决（移出范围）**：
 
-### 1.3 为何引入 Recasa + PhotoMapAI（而非自研）
+- 用户 **批量精选 80 张** 的工作台（原 v0.2「断裂 C」）
+- 地图 Hero Trail / 语义搜索 UI（原外部引擎能力）
+- 独立 **insights** Job 与 selection manifest
 
-| 引擎 | 擅长 | Travelogue 不重复造轮子 |
-|------|------|-------------------------|
-| **[Recasa](https://github.com/yonie/recasa)** | Events（时间+GPS）、Timeline、Map、Hero Trail、人脸、重复检测 | 行程段划分、地理叙事 |
-| **[PhotoMapAI](https://github.com/lstein/PhotoMapAI)** | CLIP 语义地图、主题聚类、文本/以图搜图 | 场景主题分组、精选辅助 |
+### 1.3 为何原生实现（而非集成外部引擎）
 
-**集成原则（已拍板）**：Travelogue **Python 编排层** + 两引擎 **独立进程/容器** + **共享只读照片目录** + **HTTP API 协同**；**不**合并代码库、**不** fork 为 monolith。
+| 考量 | 决策 |
+|------|------|
+| **产品路径** | 聚类应 ** invisible 增强 curate**，不增加 Docker/setup 墙，不破坏 G-P2-01 |
+| **算法可移植性** | Recasa Event 检测为 **规则算法**（~400 LOC 级）；PhotoMap 核心为 **CLIP embed + 聚类** — 均可在 trip 级实现 |
+| **与排版路线统一** | [智能排版V2.md](./智能排版V2.md) Layer 1.5 已规划 CLIP `subjectClass`；P3 **共用** `travelogue/vision/`，避免双线重复 |
+| **维护** | 无 HTTP 双进程、无容器路径映射、无上游 API 漂移 |
+
+**借鉴声明（非依赖）**：
+
+- **Geo event 思路** 参考 Recasa `event_detector`（时间窗 4h、GPS 跳变、合并 stay）— MIT，实现为 `geo_events.py`
+- **Scene cluster 思路** 参考 PhotoMapAI（CLIP → 降维/聚类）— MIT，实现为 `scene_clusters.py`
 
 ### 1.4 Phase 3 产品定位
 
-> **在「生成游记」之前，增加一层「看懂这次旅行」的素材洞察工作台**：Recasa 回答 **何时何地**，PhotoMapAI 回答 **拍了什么主题**；用户确认精选集后，再走 Phase 2 已验证的 **ingest → curate → 长图** 主路径。
+> **在 Phase 2 主路径不变的前提下**，于 ingest 末 / curate 初注入 **geo/time 段 + scene 簇** 信号，使 **分组、桶规划、屏序、组屏** 更贴近真实旅程与场景局部性。
 
-Phase 3 **不替换** Studio、**不修改** MVP 冻结的模板渲染契约；仅在 pipeline **上游** 增加可选阶段 **「insights」**，并向下游 curate 提供 **结构化 hints**。
+- **不替换** Studio 主流程、**不修改** MVP 冻结的模板渲染契约
+- **不新增** 用户可见的「洞察屏」；可选在 pipeline `stageHint` 增加一行「分析场景…」
+- **默认策略（v0.3.1）**：`clustering.enabled: auto`（有 GPS 时跑 P3-Lite）；`vision.enabled: false`（P3-Full opt-in 或 `auto` 满足阈值时开启，见 §7.2）
+- **Studio 交互（v0.3.2）**：详见 **§6.4**（进度 hint、高级折叠、慢提示；**无** 新页面）
+
+### 1.5 与 Phase 2 时间承诺
+
+Phase 2：**~3 分钟 pipeline → 看到游记**（G-P2-01 端到端 ≤20 分钟含人工编辑）。
+
+Phase 3 增量耗时（150–400 张 · **模型已缓存**）：
+
+| 档位 | 增量步骤 | GPU 目标 | CPU 目标 |
+|------|----------|----------|----------|
+| **P3-Lite** | geo_events only | ≤ 30s | ≤ 60s |
+| **P3-Full** | + CLIP embed + cluster | ≤ 3 分钟 | ≤ 8 分钟 |
+
+**端到端**：仍须满足 **G-P2-01**；P3-Full CPU 路径 soft 上限 **+8 分钟**（400 张 · **模型已缓存**），超出时在 `stageHint` 标注「首次分析较慢」。
+
+**首次 CLIP 模型下载**（~400MB–1.5GB）**不计入** G-P2-01 / G-P3-C05；`stageHint` 单独展示「正在准备场景分析组件…」，用户可继续等待或关闭 vision（§7.2）。
 
 ---
 
@@ -60,360 +91,460 @@ Phase 3 **不替换** Studio、**不修改** MVP 冻结的模板渲染契约；�
 
 | ID | 目标 | 衡量方式 |
 |----|------|----------|
-| **G-P3-01** | 用户能在 Studio 内 **≤10 分钟** 理解一次旅行的 **行程段 + 主题簇** 概览 | 1 次真实旅行（150–400 张）实测 |
-| **G-P3-02** | 用户能基于洞察 **勾选精选集**（目标 **50–120 张**）再生成游记 | 精选后 trip 素材数落在推荐区间 |
-| **G-P3-03** | **洞察主路径零命令行**（选文件夹 → 洞察 → 生成）；引擎为 **一次性/setup 向导** 配置，非每次操作 | AC-P3-03 |
-| **G-P3-08** | **一次性引擎配置** ≤15 分钟（含 Docker/模型下载指引），之后仅 Studio 内「启动分析服务」 | setup-engines 实测 |
-| **G-P3-04** | 洞察结果 **可导出 CSV/JSON 清单**（路径 + event + theme 标签） | AC-P3-05 |
-| **G-P3-05** | 关闭洞察时，Studio 行为与 Phase 2 **完全一致**（NR-P3-01） | 回归测试 |
-| **G-P3-06** | 照片 **默认不出本机**；Recasa/PhotoMapAI 均本地处理 | 隐私审查清单 |
-| **G-P3-07** | curate 章结构 **可消费** insights hints（段标题/封面建议） | trip.json `curation.insights` 字段 |
+| **G-P3-C01** | 有 GPS 的 trip，geo event 与 golden 人工标注 **一致率 ≥70%** | 3 套 fixture trip · pytest + 抽检 |
+| **G-P3-C02** | 启用 scene cluster 后，**subject_run_score** 优于 Phase 2 baseline | [智能排版V2.md](./智能排版V2.md) I-G2 · 黄金样本 |
+| **G-P3-C03** | **time_inversion_rate** 不劣于 Phase 2 | I-G1 · pytest |
+| **G-P3-C04** | `clustering.enabled=false` 或 `vision.enabled=false` 时，curate 与 Phase 2 **documented equivalent**（NR-P3-01） | 双跑 diff 测试 |
+| **G-P3-C05** | 400 张 CPU · P3-Full 聚类 **≤8 分钟**（ingest 内或 curate 前一步） | 计时记录 |
+| **G-P3-C06** | 照片 **不出本机**；CLIP 本地推理，无出站上传 | 隐私审查清单 |
+| **G-P3-C07** | curate 章结构 **可消费** `curation.clustering.segments` hints | §8.1 · trip.json schema |
+| **G-P3-C08** | 相同 trip 目录 + 相同 config + 相同代码版本 → `curation.clustering` 与 curate 章序 **可复现**（deterministic） | 双跑 hash 对比 · CLIP 固定 seed |
+| **G-P3-C09** | P3-Full 启用时，`aspect_pattern_match_rate`、`burst_integrity_violations` **不劣于** Phase 2 | 黄金样本 · 负向 guard |
 
 ### 2.2 非目标（Phase 3 明确不做）
 
-- 替换 Recasa / PhotoMapAI 原生 UI 为唯一入口（允许 **高级用户** 跳转外链，非主路径）
-- 将两引擎 **源码合并** 进 `travelogue/` 主包
+- 集成 Recasa / PhotoMapAI **Docker / HTTP / CLI**
+- **素材洞察工作台**、用户勾选精选集、selection manifest、preview 回流 reingest
+- `travelogue engines up`、`setup-engines.ps1`、`docker-compose.engines.yml`
+- 地图 SDK / Hero Trail 嵌入（Future）
+- 全库相册索引、file watcher、跨 trip 人脸 ID 全局聚类
 - 云端同步、多用户协作、账号体系
-- 实时地图 SDK 嵌入游记 HTML（Map 仅在 **洞察面板** 展示）
-- 自动 LLM 写整篇游记（仍属 Agent 2；insights 仅提供 **结构 hints**）
-- 微信小程序 / 托管分享（见 SHARING 路径 B · Phase 4）
-- 视频素材的主题聚类（Phase 3 **仅照片**；视频仍走 MVP ingest 规则）
-- 要求用户 **每次旅行** 手动配置 Docker / pip / 端口（改为 **一次性 setup + Studio 内按钮**；见 §4.4、§7.6）
+- 自动 LLM 写整篇游记（仍属 Agent 2）
+- 微信小程序 / 托管分享（Phase 4）
+- 视频 **scene 聚类**（Phase 3 仅 **照片** 参与 CLIP；视频仍走 ingest 展示逻辑）
+- Studio **追加照片 / 增量 reingest UI**（Phase 3 仅 CLI/config；用户需 **全量重新导入** 新文件夹）
+- 预览页 **「重新分析」「分段地图」「场景簇列表」** 等聚类控件
+
+**Future · 另立项（不在 v0.3 roadmap）**：「精选工作台」产品 — 可复用本 Phase 的 cluster 结果，但不阻塞 P3 交付。
 
 ---
 
 ## 3. 目标用户与场景
 
-### 3.1 Persona（延续 Phase 2，新增洞察诉求）
+### 3.1 Persona
 
 **Persona A · 普通旅行者（主用户）**
 
-- 一次旅行 **200+ 张** 手机照，想发微信群长图但 **不想全塞进去**
-- 需要「系统帮我先看一遍」，自己 **点选** 要的故事线
+- 选文件夹 → 等几分钟 → 看到 **章节更像「几天在哪」、段内不太跳戏** 的游记
+- **无需** 理解聚类、**无需** 额外点击
 
-**Persona B · 进阶创作者**
+**Persona B · 进阶创作者 / 维护者**
 
-- 愿意看 **Event 边界 + 语义地图**，微调后再 lock 结构
-- 需要导出 **CSV** 做归档或二次处理
-
-**Persona C · 维护者/开发者**
-
-- 需要 Docker Compose **引擎健康检查**、日志、可关闭 insights 的 feature flag
+- 可通过 `config.yaml` 关闭 vision 或切换 `segmentCurateMode: date_fallback` 做 A/B
+- 阅读 `decision_log.json` 理解分段/分簇依据
 
 ### 3.2 核心 User Stories
 
 | ID | 作为… | 我想要… | 以便… |
 |----|--------|---------|--------|
-| **US-P3-01** | 旅行者 | 选文件夹后先看到 **行程 Events 列表**（日期、地点、张数） | 知道这趟旅行分几段 |
-| **US-P3-02** | 旅行者 | 在地图上 **回放路线**（Recasa Hero Trail 或等价嵌入） | 回忆动线 |
-| **US-P3-03** | 旅行者 | 在每个 Event 或整趟旅行上看到 **主题簇**（PhotoMapAI 语义地图缩略） | 按「吃饭/风景」批量勾选 |
-| **US-P3-04** | 旅行者 | **勾选/反选** 照片集合并显示「已选 N 张」 | 控制游记体量 |
-| **US-P3-05** | 旅行者 | 点「生成游记」只对 **精选集** 跑 ingest→curate | 不必手动建子文件夹 |
-| **US-P3-06** | 旅行者 | 洞察失败时 **跳过洞察** 仍可按 Phase 2 全流程 | 不被引擎阻塞 |
-| **US-P3-07** | 进阶用户 | 导出 **insights 清单**（CSV/JSON） | 离线备份或外部工具 |
-| **US-P3-08** | 进阶用户 | 在设置里 **关闭素材洞察**（默认开启策略可配置） | 小相册（≤50 张）快速路径 |
-| **US-P3-09** | 旅行者 | 看到 **重复图组** 提示并一键「每组留 1 张」 | 减少连拍垃圾 |
-| **US-P3-11** | 旅行者 | 一键 **「采用推荐精选（约 80 张）」** | 不用从 400 张里手动反选 |
-| **US-P3-12** | 旅行者 | 首次使用时 **安装向导** 配置分析服务（非 PowerShell 手敲） | 不违背 Phase 2 零命令行 |
+| **US-P3-C01** | 旅行者 | 选文件夹后 **自动** 得到更合理的行程段分章 | 游记读起来有「段」感，无需手动分文件夹 |
+| **US-P3-C02** | 旅行者 | 同一段内 **美食/风景/人像** 不要频繁互插 | 组屏更顺、长图更好看 |
+| **US-P3-C03** | 旅行者 | 无 GPS 或聚类失败时 **仍能** 正常生成游记 | 不被算法阻塞 |
+| **US-P3-C04** | 维护者 | 用配置 **关闭** scene cluster 或整段 clustering | 低配机 / 回归对比 |
+| **US-P3-C05** | 维护者 | 聚类决策写入 **decision_log** | 调参、验收、离线分析 |
+| **US-P3-C06** | 维护者 / QA | CLI **一键** clustering off 双跑并与 Phase 2 baseline diff | NR-P3-01 回归（§12.1） |
 
-### 3.3 场景时间窗与耗时预期
+### 3.3 耗时预期（用户无感 · pipeline 内）
 
-与 MVP/Phase 2 一致：**旅行结束后 24–72 小时**。
-
-#### 3.3.1 洞察阶段耗时（150 张 · 引擎已就绪 · 模型已缓存）
-
-| 步骤 | 并行? | GPU 目标 | CPU 目标 | 说明 |
-|------|-------|----------|----------|------|
-| Recasa 扫描 + Events | 与下行 **并行** | ≤ 3 分钟 | ≤ 5 分钟 | Orchestrator 见 §4.3 |
-| PhotoMapAI 索引 + UMAP | 与上行 **并行** | ≤ 5 分钟 | ≤ 12 分钟 | 400 张 CPU 上限 **20 分钟**（soft warn） |
-| **墙钟合计（并行）** | — | ≤ **8 分钟** | ≤ **15 分钟** | 非两阶段相加 |
-| 用户浏览 + 微调精选 | — | 5–15 分钟 | 人工 | |
-| 后续 Phase 2 pipeline | — | 沿用 Phase 2 | | |
-
-#### 3.3.2 首次运行附加耗时（一次性）
-
-| 项 | 大小/耗时 | 何时发生 |
-|----|-----------|----------|
-| Docker Desktop 安装 | ~2GB 安装包；用户自行完成 | **setup-engines** 检测到缺失时指引 |
-| CLIP / OpenCLIP 权重 | **~400MB–1.5GB**（视 encoder） | **`engines up` 预下载**，非首次 insights 才下 |
-| Recasa 首次扫描索引 | 含在上表 | 同相册二次 **24h 缓存** 跳过 |
-| PhotoMapAI 首次 UMAP | 含在上表 | 索引 `.npz` 可复用 |
-
-**产品承诺**：对用户展示的 stageHint 区分 **`首次分析`**（含模型下载子阶段）与 **`后续分析`** 两档文案（`templates/studio/insights_stages.yaml`）。
+与 §1.5 一致；Studio **仍显示 4 段** progress（ingest → curate → narrate → render）。聚类耗时 **并入 ingest**，`stageHint` 与分级慢提示见 **§6.4.2 / §6.4.4**。
 
 ---
 
 ## 4. 解决方案总览
 
-### 4.1 架构：编排层 + 双引擎
+### 4.1 架构：pipeline 内原生聚类
 
 ```mermaid
 flowchart TB
   subgraph studio [Travelogue Studio :8766]
-    UI[studio.html · 素材洞察面板]
-    ORCH[MediaInsightsOrchestrator]
-    API["/__travelogue/insights/*"]
+    UI[studio.html · Phase 2 流程不变]
+    JOB[StudioJob · 4 stages]
   end
 
-  subgraph engines [本地引擎栈 · 可 Docker]
-    R[Recasa :8080]
-    P[PhotoMapAI :8050]
+  subgraph pipeline [Pipeline 内部]
+    ING[Agent 0 ingest]
+    CLU[ClusteringLayer]
+    GEO[geo_events.py]
+    SCE[scene_clusters.py]
+    VIS[vision/clip_encoder.py]
+    CUR[Agent 1 curate]
+    NAR[Agent 2 narrate]
+    REN[Agent 3 render]
   end
 
-  FS["共享相册目录 albumPath\n只读挂载"]
-
-  UI --> API --> ORCH
-  ORCH -->|httpx REST| R
-  ORCH -->|httpx REST| P
-  R --> FS
-  P --> FS
-  ORCH --> SEL["selection manifest\n.insights/selection.json"]
-  SEL --> PIPE[ingest → curate → narrate → render]
+  UI --> JOB --> ING
+  ING --> CLU
+  CLU --> GEO
+  CLU --> SCE
+  SCE --> VIS
+  CLU --> CUR --> NAR --> REN
+  CLU -->|curation.clustering + asset fields| CUR
 ```
 
-### 4.2 职责边界
+### 4.2 模块职责
 
-| 组件 | 负责 | 不负责 |
+| 模块 | 负责 | 不负责 |
 |------|------|--------|
-| **Recasa** | Events、Timeline、Map、Duplicates、People（可选） | 场景语义聚类、游记渲染 |
-| **PhotoMapAI** | CLIP 索引、UMAP 簇、语义搜索 | 行程 Event 算法、隐私 GPS 剥离策略 |
-| **Travelogue 编排层** | 引擎生命周期、路径对齐、精选 manifest、Studio UI、导出清单、向 curate 写 hints | 重实现 CLIP/Event 算法 |
-| **Phase 2 pipeline** | 精选集 ingest 之后一切 | 洞察 UI |
+| **geo_events** | GPS+时间 stay/event → `curation.clustering.segments[]` | 地图 UI、全库索引 |
+| **scene_clusters** | trip 级 CLIP embed + 聚类 → `asset.sceneClusterId` 等 | 语义搜索、相册 CRUD |
+| **vision** | 模型加载、缓存、optional extra | 独立 Web 服务 |
+| **curate** | 消费 segments + cluster 做章/桶/屏规划 | 重跑 CLIP |
+| **ingest** | EXIF、pHash、sharpness（已有） | 替换 curate |
 
-### 4.3 集成模式与 Orchestrator 调度（M12 决策 · 见 ADR-006）
+### 4.3 两档交付
 
-**主模式 · API 编排（P0）**
+| 档位 | 内容 | 依赖 | 里程碑 |
+|------|------|------|--------|
+| **P3-Lite** | `geo_events` + curate §8.1 | 无新模型 | **M12** |
+| **P3-Full** | + `scene_clusters` + layout 消费 | `pip install -e ".[vision]"` 可选 | **M13**（与智能排版 V2 P1 合并） |
 
-- Recasa：`GET /api/events`、`GET /api/events/{id}/photos`、扫描 `POST /api/scan/trigger`
-- PhotoMapAI：`GET /umap_data/{album_key}`、相册 CRUD、`index_images` CLI 触发（封装为 orchestrator 调用）
-- 关联键：**规范化绝对路径** `file_path`（策略见 §7.5）
+### 4.4 降级链（P0）
 
-**调度策略（P0 · 已决）**
+```text
+clustering.enabled=false     → Phase 2 行为（NR-P3-01）
 
-```mermaid
-sequenceDiagram
-  participant O as Orchestrator
-  participant R as Recasa
-  participant P as PhotoMapAI
-  O->>R: POST scan/trigger (async)
-  O->>P: create album + start index (async)
-  par 并行读同一 albumPath
-    R-->>O: events + photo paths
-    P-->>O: umap clusters + paths
-  end
-  O->>O: join by normalize_path + build InsightItems
+clustering.enabled=auto
+  → layoutEligible 资产中 GPS 有效占比 ≥ autoGpsMinRatio（默认 40%）→ 跑 geo_events（P3-Lite）
+  → 否则 skip geo；curate 走 time_segments / group_assets_by_day（与 Phase 2 相同输入）
+
+clustering.enabled=true      → 强制尝试 geo_events；无 GPS 仍 fallback time_segments
+
+vision.enabled=false         → 不跑 CLIP；P3-Lite only（geo + heuristic tags）
+
+vision.enabled=auto
+  → layoutEligible 照片 ≥ autoMinPhotos（80）且占比 ≥ autoMinEligibleRatio（60%）→ P3-Full
+  → 否则 skip scene_clusters
+
+vision.enabled=true          → 强制 P3-Full（失败则降级 heuristic）
+
+geo 无 GPS / geo_events 失败  → fallback 现有 time_segments / group_assets_by_day
+scene cluster 失败/超时      → 跳过 cluster；heuristic subjectClass only
+vision extra 未安装          → 自动 P3-Lite；不报错阻断
 ```
 
-1. **Recasa 与 PhotoMapAI 索引并行**（独立只读目录，无写冲突）。  
-2. **`engines up` 阶段** 触发 PhotoMapAI **模型预下载 / warmup**（空 album 或 `demo_images`），避免 insights Job 卡在下载。  
-3. join 阶段：任一路径失败 → **部分结果** + 中文说明，不 block 另一引擎数据。  
-4. commit 前：**路径对账**（selected 路径 vs 磁盘 walk）；丢失 >0 → `E_INS_PATH_MISMATCH` 阻断 commit。
-
-**M12-0 · API Spike（M12 编码前必完成）**
+### 4.5 M12-0 · 算法 Spike（编码前必完成）
 
 | 产出 | 内容 |
 |------|------|
-| `docs/spikes/engines-api-matrix.md` | pin 版本下 **实测** 端点、请求/响应样例、鉴权 |
-| `tests/fixtures/engines/` | Recasa events JSON、PhotoMapAI umap JSON **golden** |
-| **Spike 必验项** | 见下表 |
-| `docs/IMPLEMENTATION-PHASE3.md` | **M12-0 期间产出**：Orchestrator / 路径对账 / 智能预选 **接口签名 + 伪代码** |
-| 结论 | Go → PRD 升 **v1.0 RFD**；No-Go → 档位 B 或推迟 Phase 3 |
+| `docs/spikes/clustering-algorithm-matrix.md` | geo_events 参数表、cluster eps/min_samples、与 golden 对比 |
+| `tests/fixtures/clustering/` | 3 套 trip golden：`segments.json`、`clusters.json`、人工标注说明 |
+| `docs/IMPLEMENTATION-PHASE3.md` | 模块签名、伪代码、与 curate/layout 接入点 |
+| 结论 | Go → PRD 升 **v1.0 RFD**；No-Go → 仅 ship P3-Lite 或推迟 P3-Full |
 
-**M12-0 Spike 必验清单**
+**Spike 必验清单**
 
 | ID | 验证项 | 通过标准 |
 |----|--------|----------|
-| SP-01 | Recasa **父目录挂载 + 扫描子路径**（§7.4 方案 A） | `POST /api/scan/trigger` 后子目录 Events 正确；**不**因换 trip 而 compose down |
-| SP-02 | 方案 B 备选：`${PHOTOS_ROOT}` + `${SCAN_SUBPATH}` 动态 `.env` | 若 A 不可行，文档化 B 为默认 |
-| SP-03 | Recasa **缩略图 API** 是否存在 | 有 → 代理 URL；无 → 记录 Pillow 降级（§5.3.5） |
-| SP-04 | PhotoMapAI **容器 GPU**（WSL2 + NVIDIA Container Toolkit） | 有 GPU 时索引加速可测；无则 CPU 路径 documented |
-| SP-05 | PhotoMap 官方/自建 **Dockerfile Go/No-Go** | 决定档位 A 是否双容器或 Recasa 容器 + host PhotoMap |
-| SP-06 | API 稳定性 | 适配层 + pin tag；否则 Plan B |
+| **SP-C01** | geo_events vs golden（有 GPS trip） | 段边界 **一致率 ≥70%** 或 matrix **§3.5 可接受偏差** 产品签字 |
+| **SP-C02** | cluster 参数敏感性（150–400 张） | 簇数 5–40；无 mega-cluster（>50% 图） |
+| **SP-C03** | curate 章数 cap | 任意 event 数 → 合并后 **3–5 章** |
+| **SP-C04** | layout 回归 | mao / maomi / linzhi 黄金样本 **NR-P3-01** + I-G1 不劣化 |
+| **SP-C05** | 双跑确定性 | 同 fixture 两次 clustering → segments/clusters **一致**（G-P3-C08） |
 
-**辅模式 · 目录桥接（P1）**
+### 4.6 分段权威链（P0 · 架构必遵）
 
-- 按 Event 硬链接到 `trips/_insights/{jobId}/events/{eventId}/` 供 PhotoMapAI 分 Album 索引
+存在 **三套** 分段逻辑，必须按下列 **权威顺序** 消费，避免「章按 geo 切、meta 按 14 天段」两套叙事：
 
-**明确不做 · 库内 import**
+```text
+clustering.enabled=false
+  → 完全 Phase 2（group_assets_by_day / time_segments）
 
-- 不在 `travelogue` 进程内 `import recasa.*` / `import photomap.*` 跑双 FastAPI
+clustering.enabled 且 GPS 覆盖率 ≥ clustering.autoGpsMinRatio（默认 40%）
+  → geo_events 产出 curation.clustering.segments[]（**章 hints 主输入**）
+  → time_segments 仅用于：无 GPS 资产归类、meta.places 摘要、多访旅行外层标签
 
-### 4.4 引擎部署档位（保护 Phase 2 零命令线体验）
+clustering.enabled 但 GPS 不足 / geo_events 空
+  → time_segments（与 Phase 2 相同）
+  → segmentMode = date_fallback
 
-| 档位 | 组成 | 用户操作 | 适用 |
-|------|------|----------|------|
-| **A · 推荐（Full Stack）** | **单文件** `docker-compose.engines.yml`：Recasa + PhotoMapAI **双容器** | 首次：`scripts/setup-engines.ps1`；日常：Studio **「启动分析服务」** | 默认文档路径 |
-| **B · Lite** | 仅 Recasa 容器；PhotoMapAI **跳过** | 同左 | 低内存 / 无 GPU；仅 Events，无主题簇 |
-| **C · 开发者** | Host `pip install photomapai` + Docker Recasa | `travelogue engines up --profile dev` | 维护者调试 |
+segmentCurateMode: date_fallback
+  → 强制忽略 geo segments，与 Phase 2 完全一致
+```
 
-**OQ-P3-01 决议（v0.2）**：产品默认推 **档位 A**；ADR-006 同步修订。档位 B 为 Plan B，不是主路径。
+**章 cap（3–5）** 始终最后施加于 **已选定的 segment 源** 之上（§8.1），不反向改变 geo/time 原始边界记录。
 
-**Studio 内引擎 UX（P0）**
+### 4.7 语义信号分工 · `sceneClusterId` vs `subjectClass`（P0）
 
-- 首次开启 insights：若 engines 未就绪 → **安装向导**（检测 Docker / 磁盘 / 内存 → 调用 setup 或打开文档）  
-- 引擎运行中：状态灯 **Recasa ✓ · PhotoMap ✓**  
-- **不要求** 用户记忆 8080/8050 或 docker compose 命令
+| 信号 | 粒度 | 用途 | M12/M13 |
+|------|------|------|---------|
+| **`sceneClusterId`** | 无标签簇 ID | 段内 **run_aware** 屏序、组屏局部聚合 | **M13 必做**（P3-Full） |
+| **`subjectClass`** | 可解释枚举 | 评分权重、章 pattern（智能排版 V2） | **M13 可选**；默认可继续 heuristic |
+| **`subjectConfidence`** | [0,1] | 评分调权 | 同上 |
+
+**单次 CLIP forward（M13 硬约束）**：当 vision 开启时，**同一 forward** 产出 embedding（→ cluster）+ 可选 subjectClass logits；**禁止** 为 cluster 与 subjectClass 各跑一遍 CLIP（G-P3-C05 预算）。
 
 ---
 
 ## 5. 功能范围
 
-### 5.1 In Scope（Phase 3 必做）
+### 5.1 In Scope
 
 | 模块 | 功能点 | 优先级 |
 |------|--------|--------|
-| **M12-0 Spike** | API 矩阵 + golden fixtures（§4.3） | **P0 · 编码前** |
-| **setup-engines** | 两阶段：`setup-engines.ps1 -DetectOnly` + `-Install`；见 §7.4.1 | **P0 · M12 独立验收** |
-| **引擎栈** | `docker-compose.engines.yml`（**Recasa + PhotoMapAI 双容器**）+ 健康检查 | **P0 · M12** |
-| **Orchestrator** | 并行 scan/index、join、路径对账 | **P0 · M12** |
-| **智能预选** | 推荐集 ~80 张 +「只选推荐」 | **P1 · M13** |
-| **Studio 洞察 Job** | stage **`insights`** | **P0 · M13** |
-| **洞察 UI** | 见 §5.4 UX 规格 | **P0 · M13** |
-| **精选导入** | 仅 `selection.json` 内路径进入 ingest | **P0 · M13** |
-| **跳过/降级** | 引擎不可用 → 中文提示 + 「跳过洞察，直接生成」 | **P0 · M13** |
-| **导出清单** | CSV + JSON（path, eventId, eventName, clusterId, selected） | **P1 · M14** |
-| **curate hints** | `trip.json` · `curation.insights` 写入段标签与推荐封面路径 | **P1 · M14** |
-| **重复组辅助** | 读取 Recasa duplicates API（若有）或 ingest pHash 组，UI「每组留最佳」 | **P1 · M14** |
-| **CLI** | `travelogue engines {up|down|status}`、`travelogue insights run --folder PATH` | **P1 · M14** |
-| **Map 嵌入** | Recasa Event 地图 iframe/静态快照（二选一，见 OQ-P3-03） | **P2 · M15** |
+| **M12-0 Spike** | 算法矩阵 + golden fixtures（§4.5） | **P0 · 编码前** |
+| **geo_events** | 时间窗 + GPS 跳变 + stay 合并 + 段命名 | **P0 · M12** |
+| **curate 消费 segments** | §8.1 合并/cap/fallback | **P0 · M12** |
+| **config + feature flag** | `clustering.*`、`vision.*` | **P0 · M12** |
+| **NR-P3-01 回归** | clustering off = Phase 2 | **P0 · M12** |
+| **scene_clusters** | CLIP embed + DBSCAN（或 HDBSCAN）on embeddings | **P1 · M13** |
+| **layout 消费 cluster** | `subject_run`、组屏权重（对齐智能排版 V2 §6） | **P1 · M13** |
+| **vision optional extra** | `[vision]` in pyproject；未安装 graceful degrade | **P0 · M12** |
+| **trip 级缓存** | `trips/{tripId}/.cluster-cache/` embeddings npz | **P1 · M13** |
+| **decision_log 扩展** | 记录 segment/cluster/merge 决策 | **P0 · M12** |
+| **增量 ingest 缓存策略** | §5.3.5 F-CLU-CACHE-* | **P1 · M12.5**（M12 仅 CACHE-05 + 全量重算 fallback） |
+| **stageHint** | ingest 阶段可选中文 hint | **P0 · M12/M13**（§6.4） |
+| **Studio 高级折叠** | 行程/场景分析三态开关 | **P0 · M12/M13**（§6.4.3） |
 
 ### 5.2 Out of Scope
 
-见 §2.2；另：**在 PhotoMapAI 内编辑 Album 配置** 不作为主流程（Travelogue 代创建 Album）。
+见 §2.2；v0.2.x 全部 **F-ENG-***、**F-INS-***、**F-STU-P3-***（洞察 UI）、engines API、setup-engines、preview 回流、遥测 jsonl 等 **均已废止**。
 
 ### 5.3 功能需求明细
 
-#### 5.3.1 引擎生命周期 · F-ENG-*
+#### 5.3.1 地理行程段 · F-CLU-GEO-*
 
 | 需求 ID | 描述 | 验收标准 |
 |---------|------|----------|
-| **F-ENG-01** | `travelogue engines up` 启动 **compose 双容器** | `engines status` → recasa + photomap **ok** |
-| **F-ENG-02** | `setup-engines.ps1` **两阶段**：`-DetectOnly`（只读报告）与 `-Install`（拉镜像/启动/warmup） | 用户先看报告再确认安装 |
-| **F-ENG-02b** | Detect 覆盖：Docker、**WSL2 后端**、磁盘/内存、端口 8080/8050、**GPU/NVIDIA Container Toolkit** | 无 GPU → 报告标注 CPU 模式 |
-| **F-ENG-06** | `engines up` 触发 **模型预下载 / warmup** | 首次 insights 不卡在 CLIP 下载 |
-| **F-ENG-07** | Studio **「启动分析服务」** + 状态灯（用户不见端口号） | US-P3-12 |
-| **F-ENG-08** | **安装向导**（M12）：engines 未 setup 且用户首次点洞察 → 检测摘要 → 引导 setup / 文档 → 确认 | F-ENG-02 + Studio modal；**M12 验收** |
-| **F-ENG-03** | 引擎未就绪时 Studio 洞察页显示 **等待/重试**，不崩溃 | AC-P3-04 |
-| **F-ENG-04** | 所有引擎 HTTP 仅绑定 **127.0.0.1** | 安全审查 |
-| **F-ENG-05** | `.env.engines` 模板：`RECASA_PORT=8080`、`PHOTOMAP_PORT=8050` | 文档 WORKSHOP 附录 |
+| **F-CLU-GEO-01** | 对 ingest 后 assets（有 `takenAt`）按 **可配置时间窗**（默认 4h）切分 | 单段内最大时间 gap ≤ 窗 |
+| **F-CLU-GEO-02** | 有 GPS 时按 **跳变阈值**（默认 ~5km）子切分 | SP-C01 |
+| **F-CLU-GEO-03** | 相邻 stay **合并**（默认 36h + ~50km 内） | 避免半天一段过碎 |
+| **F-CLU-GEO-04** | 输出 `curation.clustering.segments[]` | schema §9.2 |
+| **F-CLU-GEO-05** | 无 GPS / 无日期 → fallback `time_segments` | NR-P3-01 等价 |
+| **F-CLU-GEO-06** | 段封面候选：sharpness + 人脸位置启发式（借鉴 Recasa cover pick） | coverCandidates 加权 |
 
-#### 5.3.2 洞察编排 · F-INS-*
+**默认参数（可 YAML 覆盖）**：
 
-| 需求 ID | 描述 | 验收标准 |
-|---------|------|----------|
-| **F-INS-01** | 对 `albumPath` 触发 Recasa scan（若未索引） | Events 数量 ≥ 1（有 GPS+时间时） |
-| **F-INS-02** | 为整趟旅行创建 PhotoMapAI album `travelogue-{jobId}` | 索引完成可拉 umap_data |
-| **F-INS-03** | **按 Event 子集** 可选拉 cluster（P1：整趟一张地图；P1.5：每 Event 再索引） | OQ-P3-02 |
-| **F-INS-04** | 合并 Recasa photo 列表与 PhotoMapAI cluster 标签 → **统一 InsightItem** | 见 §9.1 |
-| **F-INS-05** | 默认展示 **推荐精选**（`recommended=true`，目标 **60–100 张**）；全量路径在「高级」 | 非默认全选 400 张 |
-| **F-INS-11** | **智能预选**：Event 代表图 + cluster medoid + dedupe 后凑 ~`targetPickCount`（默认 80，可配置 60–120） | US-P3-11；一键「只选推荐」 |
-| **F-INS-12** | commit 前 **路径对账**：`selection` 中每条 path 必须 resolve 且存在于 albumPath | 丢失 → `E_INS_PATH_MISMATCH` |
-| **F-INS-06** | 「每组留 1 张」：重复组内保留 **sharpness 最高**（复用 ingest 指标或 EXIF 时间居中） | US-P3-09 |
-| **F-INS-07** | 精选数 **>250** 硬拦（对齐 MVP 上限）；**>120** soft warning | 与 Phase 2 一致 |
-| **F-INS-08** | 生成游记前写入 `trips/_insights/{jobId}/selection.json` | ingest 只读该列表 |
-| **F-INS-09** | insights Job 可 **cancel**（对齐 Phase 2 Job 模型） | IMPLEMENTATION-PHASE3 |
-| **F-INS-10** | 洞察缓存：同 `albumPath` canonical + mtime **24h**；损坏 → `E_INS_CACHE_CORRUPT` 自动 force refresh | 见 §11 |
-
-#### 5.3.3 Studio UI · F-STU-P3-*
-
-| 需求 ID | 描述 | 验收标准 |
-|---------|------|----------|
-| **F-STU-P3-01** | `--pick-folder` 流程插入 **insights 屏**（可配置跳过） | 见 §6.1 |
-| **F-STU-P3-02** | 左栏 **Events**；右栏 **主题簇**（选中 Event 过滤或全局） | US-P3-01/03 |
-| **F-STU-P3-03** | 底部 **已选 N 张 · 生成游记** CTA | US-P3-05 |
-| **F-STU-P3-04** | **跳过洞察** 链接（小字，不默认高亮） | US-P3-06 |
-| **F-STU-P3-05** | stage 进度增加 **`insights`**：`0/5 正在分析行程与场景…` | stageHint YAML |
-| **F-STU-P3-06** | 引擎错误中文映射（见 §11） | ERROR-CODES 附录 |
-| **F-STU-P3-07** | 设置项：**默认开启洞察**（相册 ≤50 张自动跳过，OQ-P3-04） | G-P3-05 回归 |
-
-#### 5.3.4 下游 curate · F-CUR-P3-*
-
-| 需求 ID | 描述 | 验收标准 |
-|---------|------|----------|
-| **F-CUR-P3-01** | ingest 完成后 `trip.json` 写入 `curation.insights` | schema 见 §9.2 |
-| **F-CUR-P3-02** | curate 读取 `insights.segments[]`：**优先按 Event 分段** 而非纯日历日（可配置 fallback） | 段数与 Events 大致对齐 |
-| **F-CUR-P3-03** | 章标题 hints：Recasa `event.name` 或 `location` + 日期 span | 用户可在 G1 改 |
-| **F-CUR-P3-04** | 封面 hints：代表图 path 进入 `coverCandidates` 加权 | 非强制 |
-
-#### 5.3.5 洞察屏 UX 规格 · F-UX-P3-*
-
-| 项 | 规格 |
-|----|------|
-| **布局** | 桌面：**左栏 Events 28% · 右栏主题簇 72%**；`<1024px`：**上下堆叠**（Events 折叠手风琴置顶） |
-| **缩略图** | 网格 **120×120 CSS px**，`object-fit: cover` |
-| **缩略来源（降级链）** | ① Recasa thumb API → Travelogue **代理转发**；② 无 API → **Pillow** 本地生成 → 缓存 `trips/_insights/{jobId}/thumbs/`（M12-0 SP-03 定稿） |
-| **列表性能** | **分页** 50 + **懒加载**；禁止一次 400 DOM |
-| **主题簇** | 簇标题 + 代表图 + 簇内计数；点簇 **筛选**右栏网格（可叠加 Event 过滤） |
-| **推荐标记** | 推荐项 **星标**；顶栏「已选 N · 推荐 M · 只选推荐 · 全选 · 全不选」 |
-| **底栏** | 固定：**跳过洞察**（次按钮）· **生成游记**（主按钮，N&lt;4 或 N&gt;250 disabled） |
-| **stage 文案** | `templates/studio/insights_stages.yaml`（`parallelGroup` 供 **stageHint 文案**，非双进度条） |
-
-#### 5.3.6 insights 子阶段 · 前端展示策略（P1 · 已决）
-
-**单一主进度条**（与 Phase 2 `stageIndex/stageCount` 一致），**不做** Recasa/PhotoMap 双 progress bar。
-
-| 层 | 行为 |
-|----|------|
-| **Job 级** | `stage=insights`，`stageIndex=0`，`stageCount=5` |
-| **轮询** | `GET /__travelogue/insights/status/{jobId}` 返回 `insightsSubsteps` |
-| **UI 主文案** | `正在分析行程与场景…（约 3–8 分钟）` |
-| **UI 副文案 stageHint** | 动态拼接，例：`Recasa ✓ · 场景分析中…` 或 `行程分析中 · PhotoMap ✓` |
-
-**`insightsSubsteps` 字段（JSON）**
-
-```json
-{
-  "recasa": "pending|running|done|failed|skipped",
-  "photomap": "pending|running|done|failed|skipped",
-  "join": "pending|running|done|failed"
-}
+```yaml
+clustering:
+  geo:
+    eventTimeGapHours: 4
+    minPhotosPerEvent: 3
+    locationProximityKm: 5.5
+    mergeTimeGapHours: 36
+    mergeLocationKm: 55
+    maxEventDays: 4
 ```
 
-前端 **仅** 用 substeps 渲染 hint 行；失败 substep 在 hint 中标注，不增加 stageIndex。
+#### 5.3.2 场景簇 · F-CLU-SCE-*
 
-**insights_stages.yaml 示例字段**：`stageKey`、`label`、`hintFirstRun`、`hintSubsequent`、`parallelGroup`。
+| 需求 ID | 描述 | 验收标准 |
+|---------|------|----------|
+| **F-CLU-SCE-01** | trip 内照片 CLIP embedding（ViT-B/32 或 ONNX 等价） | 仅照片；跳过 video |
+| **F-CLU-SCE-02** | embedding 上 **DBSCAN**（eps/min_samples 可配；UMAP 仅 debug 可选） | SP-C02 |
+| **F-CLU-SCE-03** | 写入 `asset.sceneClusterId`、`asset.clusterSource=clip` | DATA-MODEL 同步 |
+| **F-CLU-SCE-04** | 簇代表图（medoid）供 cover / hero 加权 | §8.1 step 7 |
+| **F-CLU-SCE-05** | 首次运行 lazy 下载模型；后续读 trip cache | G-P3-C05 |
+| **F-CLU-SCE-06** | 失败/超时 → 跳过；`clusterSource=heuristic` | 不阻断 pipeline |
+| **F-CLU-SCE-07** | embedding 与 subjectClass（若启用）**单次 forward** | G-P3-C05；§4.7 |
+
+#### 5.3.3 Curate / Layout 消费 · F-CLU-CUR-*
+
+| 需求 ID | 描述 | 验收标准 |
+|---------|------|----------|
+| **F-CLU-CUR-01** | `segmentCurateMode: event_first` 时优先 segments（§8.1） | G-P3-C07 |
+| **F-CLU-CUR-02** | `sceneClusterMode: run_aware` 时段内按 cluster 成 run | G-P3-C02 |
+| **F-CLU-CUR-03** | `date_fallback` / clustering off → Phase 2 逻辑 | NR-P3-01 |
+| **F-CLU-CUR-04** | `decision_log` 记录 segment/cluster/merge/fallback 决策 | US-P3-C05 · **M12** |
+| **F-CLU-CUR-05** | **排版约束优先级**：`burstGroupId` 完整性 **>** cluster run **>** 纯时间序（§8.1） | G-P3-C09 |
+
+#### 5.3.4 Studio 前端 · F-CLU-STU-*
+
+| 需求 ID | 描述 | 验收标准 |
+|---------|------|----------|
+| **F-CLU-STU-01** | **无** 新页面/新 route；Job stage 仍为 4 段 | Phase 2 UI 回归 · UX-P3-01 |
+| **F-CLU-STU-02** | D′ 区折叠 **「高级 · 分析选项」**：`clustering.enabled`、`vision.enabled` 三态（auto/on/off） | 默认 **auto / false** · §6.4.3 · UX-P3-03 |
+| **F-CLU-STU-03** | ingest `stageHint` 一行括号文案；**不** 增加 `stageCount` | §6.4.2 · UX-P3-02 |
+| **F-CLU-STU-04** | Importing **分级慢提示**（30s / 3min / 8min） | §6.4.4 · UX-P3-05/06 |
+| **F-CLU-STU-05** | 高级选项变更 **写入 `config.yaml`**（全局持久）；首页折叠 **回显当前值** | §6.4.3 · UX-P3-03 |
+| **F-CLU-STU-06** | 预览页 **无** 聚类新控件；价值仅通过成稿章/组屏体现 | §6.4.5 · UX-P3-07 |
+| **F-CLU-STU-07** | 聚类降级 **无** 阻断模态；可选非阻塞 Toast | §6.4.6 · UX-P3-04 |
+| **F-CLU-STU-08** | `#studio-shell-slot-p3` / `#import-primary-slot-p3` **保持空** | PRD-STUDIO-HOMEPAGE §19 |
+| **F-CLU-STU-09** | demo / 样例 trip 应经 P3 pipeline 生成（内容运营） | §6.4.7 |
+| **F-CLU-STU-10** | 预览「为什么这样分章」折叠说明 | **P2 · M14** · §6.4.8 |
+
+#### 5.3.5 增量 ingest 与缓存 · F-CLU-CACHE-*
+
+| 需求 ID | 描述 | 里程碑 | 验收标准 |
+|---------|------|--------|----------|
+| **F-CLU-CACHE-01** | 相册 mtime 或 asset 数变化 → 按 §7.4 失效 cache | **M12.5** | 自动化 |
+| **F-CLU-CACHE-02** | 增量 ingest、新增 asset **<10%** → 仅对新 asset embed；**DBSCAN 全 trip 重跑** | **M12.5** | IMPLEMENTATION |
+| **F-CLU-CACHE-03** | 变化 **≥30%** 或 `forceRecluster=true` → 删 cache，全量重算 | **M12.5** | CLI 可选 |
+| **F-CLU-CACHE-04** | `structure_locked` 后追加素材 → **不**自动改章边界 | **M14 / CLI** | **Phase 3 无 Studio UI**；IMPLEMENTATION 文档 + stub |
+| **F-CLU-CACHE-05** | 损坏 npz → `E_CLUSTER_CACHE_CORRUPT` 自动重算 | **M12** | ERROR-CODES |
+
+**M12 简化（OQ-P3-08 · 已决）**：M12 首版对 embed 变化 **一律全量 recluster**（删 `.cluster-cache` 或跳过重算 geo-only）；**不阻塞** M12 出口。增量策略 M12.5 接入。
+
+---
 
 ## 6. 用户旅程与主流程
 
-### 6.1 Phase 3 端到端（默认开启洞察）
+### 6.1 唯一主路径（与 Phase 2 相同）
 
 ```
 [开始]
-  → 启动 Studio（Phase 2 入口不变）
+  → 启动 Studio
   → 选择照片文件夹
-  → （后台）engines 健康检查；必要时 engines up
-  → 0/5 素材洞察：Recasa 扫描 → Events
-  → 0/5 素材洞察：PhotoMapAI 索引 → 主题簇
-  → 洞察屏：浏览 Events / 地图 / 主题簇
-  → 勾选精选（或「每组留 1 张」）
-  → 1/5 导入精选 → 2/5 排版 → 3/5 文案 → 4/5 渲染
-  → 预览 → 保存长图 → 微信
+  → 1/4～4/4 pipeline（ingest 内含聚类 → curate → narrate → render）
+  → preview + 长图导出
 [结束]
 ```
 
-### 6.2 小相册 fast path（≤50 张）
+**用户无额外步骤**；聚类失败自动降级，不弹阻塞对话框。
 
-```
-选文件夹 → 检测到 ≤50 张 → 跳过 insights（可设置里强制开启）
-→ 直接进入 Phase 2 四段 pipeline
-```
-
-### 6.3 与 Phase 2 旅程对照
+### 6.2 与 Phase 2 对照
 
 | 步骤 | Phase 2 | Phase 3 |
 |------|---------|---------|
-| 选文件夹 | 立刻 pipeline | 可选 **insights 屏** |
-| 分章依据 | EXIF 日/段 | **+ Event hints** |
-| 精选 | 用户手动删图（preview 后） | **洞察屏预精选** |
+| 选文件夹 | 立刻 pipeline | **同** |
+| 分章依据 | EXIF 日/段 | **+ geo events hints**（可 fallback） |
+| 段内序 | 时间 + 启发式 | **+ scene cluster run**（vision on 时） |
 | 长图/分享 | 不变 | 不变 |
 
-### 6.4 关键交互原则
+### 6.3 关键原则
 
-1. **洞察可跳过**：任何引擎失败不得 blocking 主路径（US-P3-06）。  
-2. **默认 local-only**：引擎栈文档明确无出站上传。  
-3. **人类在环**：洞察是 **提案**，不是自动删原片；原文件夹 **只读**。  
-4. **复用 Job 模型**：insights 与 ingest 等同属 `StudioJob`，字段对齐 Phase 2（§9.3）。  
-5. **不破坏 NR-P2-01**：关闭 insights 时 pytest 与 Phase 2 行为一致。
+1. **默认 invisible**：价值体现在成稿结构，不在独立分析 UI。  
+2. **Fail-open**：任一聚类子步骤失败 → 降级，不 blocking。  
+3. **可关闭**：`clustering.enabled=false` 完整回归 Phase 2。  
+4. **不破坏 NR-P2-01**：pytest 与 Phase 2 套件保持绿。  
+5. **质量 invisible，等待可感知**（v0.3.2）：不增第 5 stage；用 `stageHint` + 慢提示交代长耗时；文案用人话（§6.4.9）。
+
+### 6.4 Studio 前端与交互规格（P0）
+
+权威首页 IA：[PRD-STUDIO-HOMEPAGE.md](./PRD-STUDIO-HOMEPAGE.md)。Phase 3 **不改变** 首页六态状态机、Hero、FirstSuccess 跳转；仅扩展 **Importing** 态与 **D′ 高级折叠**。
+
+#### 6.4.1 页面触点范围
+
+| 页面 | P3 改 IA？ | 触点 |
+|------|-----------|------|
+| **首页 `/`** | **否** | Importing 进度区 · D′「高级 · 分析选项」折叠 |
+| **预览 + toolbar** | **否** | **无** 聚类控件（M12–M13）；M14 可选折叠说明 |
+| **长图捕获面** | **否** | — |
+| **新页面** | **禁止** | 洞察屏 · 地图 · 精选工作台 · 顶栏引擎灯 |
+
+**Aha 时刻不变**：[PRD-STUDIO-HOMEPAGE.md](./PRD-STUDIO-HOMEPAGE.md) §6.11 FirstSuccess → preview；聚类价值用户应在 **滑动长图/读章标题** 时感知，而非分析 UI。
+
+#### 6.4.2 进度文案 · stage 与 stageHint
+
+**硬约束**：`stageCount` 恒为 **4**；聚类耗时 **并入 ingest**，不新增 stage 枚举。
+
+**主文案**（与 Phase 2 [PRD-STUDIO-HOMEPAGE.md](./PRD-STUDIO-HOMEPAGE.md) §8.3 一致）：
+
+| `job.stage` | 主文案 |
+|-------------|--------|
+| ingest | 正在准备你的照片… |
+| curate | 正在智能排版… |
+| narrate | 正在撰写游记文字… |
+| render | 正在生成游记预览… |
+
+**展示格式**（现有 `studio.js` · `stageText`）：
+
+```text
+{stageIndex}/{stageCount} {主文案}（{stageHint}）
+```
+
+`stageHint` **可选**、**单行**、置于括号内；curate/narrate/render 通常 **无** clustering hint。
+
+**ingest · stageHint 映射**（后端 `StudioJob.stageHint` 写入）：
+
+| 条件 | stageHint 示例 |
+|------|----------------|
+| 默认（无聚类 / 未进入 clustering） | `约 N 分钟`（Phase 2 按张数分档，见 PRD-PHASE2 §7.3） |
+| P3-Lite · geo 运行中 | `正在识别行程…` |
+| P3-Full · CLIP+cluster 运行中 | `正在分析场景与行程…` |
+| 首次 CLIP 模型下载 | `正在准备场景分析组件（仅首次）…` |
+| cache 损坏重算 | `正在重新分析照片…` |
+
+**禁止 hint 用词**：聚类、GPS 覆盖率、CLIP、DBSCAN、P3-Lite/Full、clusterId（§6.4.9）。
+
+#### 6.4.3 高级 · 分析选项（D′ 区折叠）
+
+**位置**：首页 D′ 区，与「照片准备引导」同级折叠块；**默认收起**。标题：**高级 · 分析选项**。
+
+| 控件标签 | 配置键 | 选项 | 出厂默认 | 说明文案（控件旁） |
+|----------|--------|------|----------|-------------------|
+| **行程识别** | `clustering.enabled` | 自动 / 开 / 关 | **自动** | 有位置信息的照片会自动按行程分段 |
+| **场景分析** | `vision.enabled` | 自动 / 开 / 关 | **关** | 大相册可让同场景照片排在一起；较慢，首次需下载组件 |
+
+**交互决议（v0.3.2 · 已决）**：
+
+- 变更 **立即写入** 用户 `config.yaml`（**全局持久**），非仅当次 session。  
+- 折叠块 **打开时回显** 当前 config 值。  
+- 「自动」旁标注 `(推荐)`；**不** 出厂默认全开。  
+- **无** 独立顶栏设置页、无全局「性能模式」页（M12 scope）。  
+- API：**§9.5** `GET/PATCH /__travelogue/config`；见 IMPLEMENTATION-PHASE3 M12-7b。
+
+#### 6.4.4 Importing · 分级慢提示
+
+在现有 `SLOW_JOB_MS=30s` 基础上扩展（**仅 Importing · ingest 阶段**）：
+
+| 阈值 | 文案 | 里程碑 |
+|------|------|--------|
+| **T+30s** | 比预期久一些，请耐心等待… | Phase 2 已有 · 保持 |
+| **T+3min** | 照片较多，正在仔细分析行程与场景，首次可能较慢 | **M13** · P3-Full 路径 |
+| **T+8min** | 仍可继续等待，或在「高级 · 分析选项」中关闭场景分析以加快速度 | **M13** · 仅 `vision` 实际生效时 |
+
+**已决**：T+8min **不提供**「一键关 vision 并重跑」按钮（避免 cancel+重跑复杂度）；仅文案引导至 §6.4.3。P3-Lite 路径 **不展示** T+3min/T+8min 场景分析专属文案。
+
+#### 6.4.5 预览页 · 价值传递（无新控件）
+
+| 项 | 规则 |
+|----|------|
+| **不做** | 重新分析、分段地图、场景簇列表、章边界拖拽、聚类状态 badge |
+| **价值载体** | 章 title（地点+日期 span）、段内组屏 run、3–5 章节奏 |
+| **toolbar** | 分工不变：改字 · 长图 · 导出；见 PRD-STUDIO-HOMEPAGE §4.2 |
+| **reingest** | Phase 3 **无** preview 回流 reingest；换图需回首页 **重新选文件夹** 全量导入 |
+
+#### 6.4.6 降级与错误 · 前端表现
+
+与 §11 对齐；**默认无模态**：
+
+| 场景 | UI |
+|------|-----|
+| 无 GPS | **无提示** |
+| vision 未安装 / 超时 / 跳过 | **无阻断**；ingest hint 可已结束，不另弹窗 |
+| 用户关闭场景分析后 | 下次 import 按 config 跳过 CLIP |
+| 可选 | 非阻塞 Toast：「已按日期排版完成」（vision 超时降级 · **P2**） |
+| 全流程 Job failed | 沿用 Phase 2 Failed modal + 路径回显 |
+
+**禁止**：红色「聚类失败」banner、引擎状态灯、阻塞式「安装 vision」向导。
+
+#### 6.4.7 空态 / 回访 / 样例
+
+- Hero、样例画廊、游记卡片 **IA 不变**。  
+- **样例/demo trip** 须经 P3 pipeline 生成，避免与用户真实 import 效果落差（内容运营 · 非阻塞 M12）。  
+- 卡片 subtitle 可继续用日期；`meta.places`  enriched 由后端完成，**不要求** 卡片 UI 改版。
+
+#### 6.4.8 预览 · 分段说明（M14 · P2 · 可选）
+
+折叠于预览页 footer 或「？」：**为什么这样分章？**
+
+- 展示 **人话摘要**（如「本次按 4 段行程排版；1 段缺少位置信息，已按日期合并」）。  
+- 数据：`curation.clustering.segments` + `decision_log` 摘要；**不展示** clusterId / 内部 ID。  
+- **默认隐藏**；不对普通用户强推。
+
+#### 6.4.9 文案规范（中文 · Studio）
+
+| 使用 | 禁止使用 |
+|------|----------|
+| 行程、分段、场景、排版 | 聚类、GPS 覆盖率、CLIP、DBSCAN |
+| 正在识别行程… | 正在运行 geo_events… |
+| 场景分析（较慢） | 启用 P3-Full |
+| 已按日期排版 | segmentMode=date_fallback |
+
+Tone：与 Phase 2 杂志感一致 — 温暖、简短、非教程。
+
+#### 6.4.10 线框与实现引用
+
+- 线框：[wireframes/studio-homepage-wireframe.html](./wireframes/studio-homepage-wireframe.html) Importing 态增补 **hint 变体**（P3-Lite / P3-Full / 首次下载）· **M13 设计交付**  
+- 实现：`templates/studio/studio.js`（`stageText` · `showSlowHint`）· `studio.html` D′ 折叠 · `studio.css`
+
+#### 6.4.11 UI 里程碑拆分
+
+| 里程碑 | UI 交付 |
+|--------|---------|
+| **M12** | ingest hint（行程识别）· 高级折叠「行程识别」三态 · config 读写 · T+30s 慢提示 |
+| **M13** | hint（场景分析 / 首次下载）· 「场景分析」三态 · T+3min/T+8min 慢提示 · 线框 hint 变体 |
+| **M14** | 「为什么这样分章」折叠 · cache 清理入口 · 可选 vision 降级 Toast |
 
 ---
 
@@ -423,147 +554,101 @@ sequenceDiagram
 
 ```
 travelogue/
-├── services/
-│   ├── recasa_client.py       # httpx 封装
-│   ├── photomap_client.py
-│   └── media_insights.py      # MediaInsightsOrchestrator
-├── web/
-│   ├── studio_insights.py     # /__travelogue/insights/*
-│   └── studio_insights_jobs.py
-├── engines/
-│   ├── compose.py             # docker compose 调用
-│   └── health.py
-└── cli_engines.py             # engines 子命令
+├── curation/
+│   ├── time_segments.py       # 保留 · fallback
+│   ├── geo_events.py          # 新 · P3-Lite
+│   └── scene_clusters.py      # 新 · P3-Full
+├── vision/                    # 新 · 与智能排版 V2 共用
+│   ├── clip_encoder.py
+│   └── cache.py
+├── media/ingest.py            # 改 · 末段调用 clustering（或 hook）
+└── curation/curate.py         # 改 · 消费 clustering 输出
 ```
 
-### 7.2 端口与配置
-
-| 服务 | 默认端口 | 配置项 |
-|------|----------|--------|
-| Travelogue Studio | 8766 | 不变 |
-| Recasa | 8080 | `TRAVELOGUE_RECASA_URL` |
-| PhotoMapAI | 8050 | `TRAVELOGUE_PHOTOMAP_URL` |
-
-`AppConfig` 新增（`config.py`）：
+### 7.2 配置（`config.yaml`）
 
 ```yaml
-insights:
-  enabled: true
-  skipBelowPhotos: 50
-  recasaUrl: http://127.0.0.1:8080
-  photomapUrl: http://127.0.0.1:8050
-  cacheTtlHours: 24
-  segmentCurateMode: event_first  # event_first | date_fallback
+clustering:
+  enabled: auto                    # true | false | auto
+  autoGpsMinRatio: 0.40          # auto：GPS 有效资产占比 ≥ 此值才跑 geo_events
+  segmentCurateMode: event_first   # event_first | date_fallback
+  sceneClusterMode: run_aware      # run_aware | off
+  geo:
+    eventTimeGapHours: 4
+    minPhotosPerEvent: 3
+    locationProximityKm: 5.5
+    mergeTimeGapHours: 36
+    mergeLocationKm: 55
+    maxEventDays: 4
+  scene:
+    clusterEps: 0.07
+    clusterMinSamples: 10
+    timeoutSec: 480
+  deterministic: true              # CLIP/聚类固定 seed；CI 必开
+
+vision:
+  enabled: false                   # 默认 false；true | auto
+  autoMinPhotos: 80                # auto：layoutEligible 照片 ≥ 此值才开 CLIP
+  autoMinEligibleRatio: 0.60
+  provider: clip                   # clip | heuristic | none
+  model: ViT-B/32
+  cacheDir: null                   # 默认 trips/{id}/.cluster-cache/
 ```
 
-### 7.3 Studio API（新增）
+**默认策略（v0.3.1 · 已决）**
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/__travelogue/insights/start` | body: `{ albumPath, forceRefresh? }` → jobId |
-| GET | `/__travelogue/insights/status/{jobId}` | stage + **`insightsSubsteps`** + events/clusters 摘要 |
-| GET | `/__travelogue/insights/items/{jobId}` | 分页 InsightItem 列表 |
-| PATCH | `/__travelogue/insights/selection/{jobId}` | 更新勾选 |
-| POST | `/__travelogue/insights/selection/{jobId}/dedupe-burst` | 每组留 1 张 |
-| POST | `/__travelogue/insights/commit/{jobId}` | 锁定 selection → 启动 ingest pipeline |
-| GET | `/__travelogue/insights/export/{jobId}.csv` | 导出 |
-| GET | `/__travelogue/engines/status` | recasa / photomap 健康 |
+| 键 | 出厂默认 | 理由 |
+|----|----------|------|
+| `clustering.enabled` | **`auto`** | 无 GPS 相册（如 mao 微信另存）不白等 geo |
+| `vision.enabled` | **`false`** | 避免无收益 8min CPU；用户/Studio 高级设置可开 |
+| `vision.auto` 阈值 | 80 张 + 60% layoutEligible | 大册自动开启 P3-Full |
 
-### 7.4 Docker Compose（引擎栈 · 档位 A）
+**AppConfig** 在 `config.py` 增加 `ClusteringConfig`（与 `VisionConfig` 对齐智能排版 V2）。
 
-#### 7.4.1 卷挂载：动态 albumPath（P0 · M12-0 定稿）
+### 7.3 执行时机与进程模型（OQ-P3-01 · v0.3.1 修订）
 
-**问题**：每次旅行文件夹不同，静态 compose 绑定单一路径会导致换文件夹需 `compose down && up`。
+**逻辑时机**：ingest 完成 asset 列表后、curate 之前，跑 `ClusteringLayer.run(trip, assets)`。
 
-| 方案 | 机制 | 默认 |
-|------|------|------|
-| **A · 父目录挂载（推荐）** | compose 挂载 **`PHOTOS_ROOT`**（如 `D:\Photos`）→ `/photos:ro`；Orchestrator 调用 Recasa scan 时传入 **`scanSubpath`**（相对 PHOTOS_ROOT，如 `Japan-2025`） | **M12-0 SP-01 验证通过后采用** |
-| **B · 动态 .env** | `engines up --photos-root PATH` 写入 `.env.engines` 的 `PHOTOS_ROOT`；compose `volumes: ${PHOTOS_ROOT}:/photos:ro` | A 不可行时的 fallback |
-| **C · 按 Job 重挂载（拒绝）** | 每次 insights 改 compose 卷 | 运维复杂，**不采用** |
+**进程模型（P0）**
 
-**Travelogue 配置**
+| 步骤 | 运行位置 | 说明 |
+|------|----------|------|
+| ingest 媒体 | **import subprocess**（现有） | EXIF、pHash、sharpness |
+| geo_events | import subprocess **末段** | 轻量 · P3-Lite |
+| CLIP embed + cluster | **同 subprocess**（M12）；M13 若内存压力大可拆 **cluster 子步骤** 仍属同一 subprocess | 不与 Studio 父进程共享 PyTorch |
+| curate | 同 pipeline | 读 `trip.json` 已写入 clustering |
 
-```yaml
-engines:
-  photosRoot: D:\Photos          # 用户设置或 wizard 写入
-  # albumPath 必须为 photosRoot 下子目录（或等于 photosRoot）
-```
+- 不新增 Studio Job stage 枚举  
+- **不新增** insights / engines / selection 类 HTTP API（v0.2 废止项）  
+- **允许** §9.5 **config 读写**端点（Studio 高级折叠 · 仅此 2 个增量 API）  
+- **G-P3-C05 计时**：从 import subprocess 启动 clustering 至写入 trip.json 完成（**不含**首次模型下载）
 
-**insights/start 校验**：`normalize_path(albumPath)` 必须是 `normalize_path(photosRoot)` 的子路径；否则 `E_INS_PATH_OUTSIDE_ROOT`。
+**确定性（G-P3-C08）**：`clustering.deterministic=true` 时 — 固定 random seed；CPU 路径；禁用 non-deterministic CUDA op。
 
-PhotoMapAI Album 的 `image_paths` 仍指向 **完整 albumPath**（host 路径）；容器需 **额外 bind** 同一 `PHOTOS_ROOT` 或仅 bind albumPath（Spike 定）。
+### 7.4 缓存与增量 ingest
 
-#### 7.4.2 服务定义
+| 项 | 位置 | 失效 / 刷新 |
+|----|------|-------------|
+| CLIP embeddings | `trips/{tripId}/.cluster-cache/embeddings.npz` | 见 F-CLU-CACHE-* |
+| geo segments | `trip.json` · `curation.clustering` | 随 trip 版本；reingest 重算 |
 
-| 服务 | 镜像/构建 | 端口 | 卷 |
-|------|-----------|------|-----|
-| **recasa** | pin `recasa:1.4.x` | 8080 | `${PHOTOS_ROOT}:/photos:ro`、`recasa_data` |
-| **photomap** | pin / 自建 Dockerfile | 8050 | `${PHOTOS_ROOT}:/photos:ro`（只读）；索引 **`PHOTOMAP_INDEX_DIR`** → 命名卷或 `%LOCALAPPDATA%/travelogue/photomap-index` |
+**增量策略（F-CLU-CACHE-02/03 · M12.5 起）**
 
-`travelogue engines up [--photos-root PATH]` = 写 `.env.engines` + `docker compose up -d` + 健康轮询 + warmup。
-
-#### 7.4.3 GPU 与 CPU 降级（P0）
-
-| 项 | 说明 |
-|----|------|
-| **GPU 条件** | Windows：**Docker Desktop WSL2 后端** + **NVIDIA 驱动** + **NVIDIA Container Toolkit**（WSL 内） |
-| **setup Detect** | 无 GPU / 无 Toolkit → 报告 **「将使用 CPU 分析（较慢）」**；不阻断 Install |
-| **compose 片段** | Spike 验证后写入 `docker-compose.engines.yml`：`deploy.resources.reservations.devices`（Linux/WSL2）；无 GPU 时 **omit** 该段 |
-| **产品文案** | §7.6 区分「推荐 GPU」与「最低 CPU 可跑」 |
-
-**档位 B（Lite）**：`docker compose --profile lite` 仅 Recasa。
-
-#### 7.4.4 setup-engines.ps1 交付范围（M12 独立验收）
-
-| 阶段 | 命令 | 行为 |
-|------|------|------|
-| **Detect** | `setup-engines.ps1 -DetectOnly` | 只读：Docker/WSL2/内存/磁盘/端口/GPU/PHOTOS_ROOT 是否配置；输出 **中文报告 + 建议档位** |
-| **Install** | `setup-engines.ps1 -Install [-PhotosRoot PATH]` | 拉镜像、写 `.env.engines`、compose up、warmup、输出 `engines status` |
-| **Studio** | 安装向导调用 Detect → 用户确认 → Install | F-ENG-08 |
-
-**AC-M12-SETUP**：非技术用户在书面指引下，从 **无 Docker** 到 **`engines status` 全绿**（或明确 Lite 档位）≤30 分钟（不含 Docker Desktop 下载）。
-
-### 7.5 路径规范化（最高风险 · P0）
-
-**存储 canonical 形式（内部一律使用）**
-
-```python
-def normalize_path(path: str | Path, *, base: Path | None = None) -> str:
-    """Resolve 绝对路径 → normpath → normcase（Windows 大小写不敏感比较）"""
-```
-
-| 规则 | 说明 |
+| 条件 | 行为 |
 |------|------|
-| **内部存储** | `str(Path(path).resolve())` 后再 `os.path.normcase` |
-| **比较** | 仅比较 canonical 字符串；**禁止**裸字符串 `==` |
-| **UNC** | `\\server\share\...` resolve 后参与比较 |
-| **尾部 `\`** | resolve 消除 |
-| **引擎回传** | `recasa_client` / `photomap_client` **出口统一** normalize |
-| **ingest 输入** | `selection.json` 只写 canonical |
-| **对账** | commit 时 walk(albumPath) 建 Set(canonical)；差集 → 报错 |
+| 新增 asset **<10%** | 增量 embed 新图；**全 trip DBSCAN 重跑** |
+| 变化 **≥30%** 或 force | 删 cache，全量重算 |
+| **M12 首版** | 任意 reingest → **全量**重算（等同 CACHE-03） |
+| `structure_locked` 后追加 | Phase 3 **不支持 Studio 追加**；后端规则见 F-CLU-CACHE-04 · M14/CLI |
 
-**测试要求（M12 exit）**
+### 7.5 最小资源（P3-Full · vision on）
 
-| 套件 | 覆盖 |
-|------|------|
-| `tests/test_insights_paths.py` | UNC、混合大小写、`/` vs `\`、尾部斜杠、短路径 8.3 |
-| `tests/test_recasa_client_paths.py` | client 归一化 + mock 响应 |
-| `tests/test_photomap_client_paths.py` | 同上 |
-| `tests/test_insights_join_integration.py` | 两引擎 fixture 路径格式故意不一致 → join 成功 |
-
-**Plan B 降级**：对账失败率 >5% 时，**禁止** commit，UI 提示「路径异常，请跳过洞察或联系支持」；不自动 basename 匹配（避免 silent 错图）。
-
-### 7.6 最小资源需求（用户预期管理）
-
-| 项 | 最低 | 推荐 | 说明 |
-|----|------|------|------|
-| **内存** | 8 GB | 16 GB | 双容器 + Studio；8GB 推档位 B |
-| **磁盘（空闲）** | 10 GB | 20 GB | Docker 镜像 ~3GB + 模型 ~1.5GB + 索引缓存 |
-| **GPU** | 无（CPU 可跑） | NVIDIA 8GB+ **且** WSL2 + Container Toolkit | 无 GPU 时 PhotoMap **CPU 索引**；hint 文案标注 |
-| **Docker** | Desktop 4.x + **WSL2 后端** | 同左 | Hyper-V 后端 **不支持** GPU passthrough |
-| **网络（首次）** | 需下载模型/镜像 | — | 之后可离线洞察 |
-
-setup-engines.ps1 **低于最低** 时：警告并建议档位 B 或跳过 insights。
+| 项 | 最低 | 推荐 |
+|----|------|------|
+| **内存** | 8 GB | 16 GB |
+| **磁盘（空闲）** | 2 GB | 5 GB（含模型 ~400MB–1.5GB） |
+| **GPU** | 无（CPU 可跑） | NVIDIA 8GB+ 加速索引 |
+| **Docker** | **不需要** | — |
 
 ---
 
@@ -571,8 +656,9 @@ setup-engines.ps1 **低于最低** 时：警告并建议档位 B 或跳过 insig
 
 ```mermaid
 flowchart LR
-  subgraph phase3 [Phase 3 · 素材洞察]
-    I0[Insights Orchestrator]
+  subgraph phase3 [Phase 3 · ClusteringLayer]
+    GEO[geo_events]
+    SCE[scene_clusters]
   end
   subgraph mvp [MVP 管线]
     A0[Agent 0 ingest]
@@ -580,105 +666,176 @@ flowchart LR
     A2[Agent 2 narrate]
     A3[Agent 3 render]
   end
-  I0 -->|selection.json| A0
-  I0 -->|curation.insights hints| A1
-  A0 --> A1 --> A2 --> A3
+  A0 --> GEO
+  A0 --> SCE
+  GEO --> A1
+  SCE --> A1
+  A1 --> A2 --> A3
 ```
 
-- **Agent 0 之前**：insights（可选）  
-- **Agent 1 增强**：读取 `curation.insights`，不新增 Agent 编号  
-- **G0 闸口**：扩展为「导入完成 **且** （跳过 insights 或 已 commit selection）」
+- **不新增 Agent 编号**；ClusteringLayer 是 Agent 0 与 Agent 1 之间的 **内部增强**  
+- **G0 闸口不变**：ingest 完成即可 curate；无 selection commit 前置条件
 
-### 8.1 curate 消费 `curation.insights` 的规则（P1 · M14）
+### 8.1 curate 消费 `curation.clustering` 的规则（P0 · M12）
 
-**原则**：insights 提供 **hints**，不突破 MVP **3–5 章**硬约束；`segmentCurateMode` 可关。
+**原则**：clustering 提供 **hints**，不突破 MVP **3–5 章**硬约束；`segmentCurateMode` 可关。
 
 #### 优先级（`event_first` 模式）
 
 ```
-1. 读取 curation.insights.segments[]（Recasa Events）
+1. 读取 curation.clustering.segments[]（geo events）
 2. 合并相邻「小 Event」（photo_count < 15 且 time_gap < 4h）→ segment
 3. 若 segment 数 > 5：按 photo_count 降序合并最小相邻对，直到 ≤5
 4. 若 segment 数 < 3：按 date_fallback 从 EXIF 日切分补足
-5. 每章绑定 segment 内 photoPaths（与 ingest assets 交集）
+5. 每章绑定 segment 内 assetIds（与 ingest assets 交集）
 6. 章 title：segment.name || location || 日期 span（可被 G1 覆盖）
-7. coverCandidates：每 segment medoid + insights.themes 代表图加权
+7. coverCandidates：每 segment medoid + clusters 代表图加权
+8. sceneClusterMode=run_aware：段内屏序优先 cluster run（智能排版 V2 §6）
+   └─ **约束优先级（G-P3-C09）**：burstGroupId 完整性 > cluster run > 纯时间序
 ```
+
+**排版约束优先级（P0 · G-P3-C09）**
+
+| 优先级 | 约束 | 说明 |
+|--------|------|------|
+| **1（最高）** | `burstGroupId` 完整性 | 连拍组 **不可拆屏**、不可跨 run 乱序 |
+| **2** | cluster run（`run_aware`） | 同 `sceneClusterId` 尽量相邻成 run |
+| **3（最低）** | 纯 `takenAt` 时间序 | run_aware off 或 cluster 噪声时的 fallback |
 
 **与现有 curate 冲突时**
 
 | 情况 | 行为 |
 |------|------|
-| Recasa 8 Events | 合并 → **≤5 segments** → 映射为 **≤5 chapters** |
-| 无 GPS（segments 空） | **整段 fallback** 到现有 `group_assets_by_day` |
+| 8+ geo events | 合并 → **≤5 segments** → **≤5 chapters** |
+| 无 GPS（segments 空） | **整段 fallback** 到 `time_segments` / `group_assets_by_day` |
 | `segmentCurateMode: date_fallback` | **忽略** segments，与 Phase 2 完全一致 |
-| insights.skipped=true | curate **不读** insights |
+| `clustering.enabled: false` | curate **不读** clustering |
 
 **伪代码**（IMPLEMENTATION-PHASE3.md 展开）：
 
 ```python
-def build_buckets_from_insights(trip, assets, mode):
-    if mode != "event_first" or trip.get("curation", {}).get("insights", {}).get("skipped"):
-        return group_assets_by_day(assets)  # 现有逻辑
-    segments = merge_small_events(trip["curation"]["insights"]["segments"])
+def build_buckets_from_clustering(trip, assets, cfg):
+    if not cfg.clustering.enabled or cfg.clustering.segmentCurateMode == "date_fallback":
+        return group_assets_by_day(assets)
+    segments = trip.get("curation", {}).get("clustering", {}).get("segments", [])
+    if not segments:
+        return group_assets_by_segments(assets)  # 现有 time_segments
+    segments = merge_small_events(segments)
     segments = cap_segments(segments, max_chapters=5, min_chapters=3)
-    return segments_to_buckets(segments, assets)
+    buckets = segments_to_buckets(segments, assets)
+    if cfg.clustering.sceneClusterMode == "run_aware":
+        buckets = apply_cluster_runs_within_buckets(buckets, assets)
+    return buckets
 ```
+
+### 8.2 Agent 2（narrate）与 clustering 边界（P0）
+
+| 项 | 规则 |
+|----|------|
+| **输入** | narrate **只读** curate 已产出的章/桶/屏结构；**不**重跑 geo/CLIP |
+| **可消费字段** | 章 `title` hints、segment `name`/`location`、可选 `clusters[].label`（若 M13 生成） |
+| **禁止** | 用 clustering 结果 **改写** 章边界、asset 归属或屏序 |
+| **文案** | LLM prompt 可引用「第 N 段 · {location}」；**不**暴露 `sceneClusterId` 等内部 ID |
+| **降级** | clustering off 或 `date_fallback` 时，narrate 行为与 Phase 2 **完全一致** |
+
+ClusteringLayer 是 **curate 前** 的信号增强；narrate/render 契约 **不变**（MVP 冻结）。
 
 ---
 
 ## 9. 数据模型
 
-### 9.1 InsightItem（Job 内存 + JSON 缓存，非 trip.json 必填）
+### 9.1 Asset 扩展（ingest / clustering 写入）
+
+与 [智能排版V2.md](./智能排版V2.md) §Layer 1.5 对齐：
 
 ```json
 {
-  "path": "D:\\Photos\\Japan\\IMG_001.jpg",
-  "eventId": 3,
-  "eventName": "京都 · 4月2日",
-  "clusterId": 12,
-  "clusterLabel": "theme_12",
-  "selected": true,
-  "recommended": true,
-  "duplicateGroupId": "dup-a1",
-  "sharpness": 142.5,
-  "thumbUrl": "/__travelogue/insights/thumb/..."
+  "eventId": "evt-03",
+  "sceneClusterId": 12,
+  "subjectClass": "landscape",
+  "subjectConfidence": 0.82,
+  "clusterSource": "clip"
 }
 ```
 
-### 9.2 `trip.json` 扩展 · `curation.insights`（v0.2.3+）
+| 字段 | 说明 |
+|------|------|
+| `eventId` | 关联 `curation.clustering.segments[].id` |
+| `sceneClusterId` | `-1` 表示噪声/outlier；**仅** 驱动段内 run/组屏，**不** 替代章边界 |
+| `subjectClass` | 可解释主题枚举（landscape/food/portrait…）；来自 **单次 CLIP forward** 或 heuristic；供 **layout 评分** 与章 pattern，**不** 单独驱动屏序 |
+| `subjectConfidence` | [0,1]；低置信度时 layout 降权 subjectClass |
+| `clusterSource` | `clip` \| `heuristic` \| `none` |
+
+### 9.2 `trip.json` · `curation.clustering`
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `curation.insights.version` | string | `"1"` |
-| `curation.insights.engineRecasa` | string | Recasa 版本/commit |
-| `curation.insights.enginePhotoMap` | string | PhotoMapAI 版本 |
-| `curation.insights.albumPath` | string | 原始文件夹 |
-| `curation.insights.selectedCount` | number | 精选张数 |
-| `curation.insights.segments[]` | array | `{ eventId, name, startDate, endDate, location, photoPaths[] }` |
-| `curation.insights.themes[]` | array | `{ clusterId, label, photoPaths[] }` |
-| `curation.insights.skipped` | boolean | 用户是否跳过洞察 |
-| `curation.insights.recommendedCount` | number | 智能预选张数 |
+| `curation.clustering.version` | string | `"1"` |
+| `curation.clustering.segmentMode` | string | `geo_event` \| `date_fallback` |
+| `curation.clustering.segments[]` | array | `{ id, name, startDate, endDate, location, assetIds[] }` |
+| `curation.clustering.clusters[]` | array | `{ id, label, assetIds[], medoidAssetId? }` |
+| `curation.clustering.visionModel` | string? | 如 `ViT-B/32`（optional） |
 
 **Schema 兼容性（P0）**
 
-- `curation.insights` 为 **optional**；Phase 2 `validate_trip` **L1 必须忽略未知 optional 子树**（或 schema 显式 optional）  
-- **NR-P3-03**：Phase 3 产出的 `trip.json` 在 **insights 关闭** 的 Phase 2 Studio 中可打开、编辑、export-longshot  
-- 回滚 Phase 3 代码时：旧 trip 含 `curation.insights` **不影响** render/curate（当 `segmentCurateMode=date_fallback`）
+- `curation.clustering` 为 **optional**；Phase 2 `validate_trip` **L1 忽略未知 optional 子树**  
+- **NR-P3-03**：Phase 3 trip 在 clustering off 的 Studio 中可编辑、export-longshot  
+- **Phase 4 分享**：strip `visionModel`；保留 `segments`/`clusters` 摘要若产品需要
 
-### 9.3 Studio Job 扩展
+### 9.3 Studio Job
 
-Phase 2 Job 字段保留；`stage` 枚举增加：
+**不变**：仍为 4 stage（ingest / curate / narrate / render）。  
+**不新增** `insights` stage、`insightsSubsteps`、selection API。
 
-| stage | index | 文案示例 |
-|-------|-------|----------|
-| **insights** | 0 | 0/5 正在分析行程与场景（约 3–8 分钟）… |
-| ingest | 1 | 1/5 正在导入精选… |
-| curate | 2 | 2/5 正在排版… |
-| narrate | 3 | 3/5 正在生成文案… |
-| render | 4 | 4/5 正在渲染… |
+### 9.4 废止字段与 migrate-on-load（v0.2 → v0.3）
 
-`stageCount` 默认 **5**（开启 insights）或 **4**（跳过）。
+以下字段 **不再写入**；读 trip 时 **忽略**（兼容旧 trip）：
+
+- `curation.insights.*`  
+- `engineRecasa` / `enginePhotoMap`  
+- `~/.travelogue/telemetry/insights-events.jsonl`
+
+**migrate-on-load 策略（P1 · Studio serve）**
+
+| 旧字段 | 行为 |
+|--------|------|
+| `curation.insights` | 加载时 **strip**；不迁移为 `curation.clustering`（语义不同） |
+| `engineRecasa` / `enginePhotoMap` | 忽略；不展示引擎状态灯 |
+| 无 `curation.clustering` 的 Phase 2 trip | 正常编辑；下次 reingest 按当前 config 写入 clustering |
+
+**不** 提供批量迁移脚本（v0.3 scope）；用户 reingest 即得新 schema。
+
+### 9.5 Studio API（Phase 3 增量 · v0.3.3）
+
+仅下列端点为本 Phase **新增**；其余 `__travelogue/*` 保持 Phase 2。
+
+| 方法 | 路径 | 请求/响应 | 用途 |
+|------|------|-----------|------|
+| `GET` | `/__travelogue/config` | 返回 `clustering.enabled`、`vision.enabled` 等 **可暴露子树** | 高级折叠回显（§6.4.3） |
+| `PATCH` | `/__travelogue/config` | body：`{ "clustering": { "enabled": "auto" }, "vision": { "enabled": false } }` | 写入用户 `config.yaml` |
+
+**约束**：不暴露 API key、路径、LLM secret；PATCH 仅允许白名单键（`clustering.enabled`、`vision.enabled` 及 PRD §7.2 同级 enum）。错误码见 ERROR-CODES。
+
+### 9.6 `decision_log.json`（M12 · trip 级）
+
+路径：`trips/{tripId}/decision_log.json`（或 `curation/decision_log.json` — IMPLEMENTATION 定稿一处）。
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `version` | string | `"1"` |
+| `pipelineRunId` | string? | 与 Job / ingest run 关联 |
+| `entries[]` | array | 按时间序决策记录 |
+
+**`entries[]` 项（M12 最小集）**
+
+| 字段 | 说明 |
+|------|------|
+| `ts` | ISO8601 |
+| `kind` | `segment_source` \| `merge_events` \| `cap_chapters` \| `fallback` \| `cluster_skip` |
+| `detail` | 人话或结构化摘要（如 `segmentMode: date_fallback`） |
+| `inputSummary` | 可选 · 如 `eventCount: 8 → chapterCount: 4` |
+
+M13 可扩展 `cluster_assign` 等；**不**写入 embedding 向量。
 
 ---
 
@@ -686,108 +843,166 @@ Phase 2 Job 字段保留；`stage` 枚举增加：
 
 | 项 | 要求 |
 |----|------|
-| 原片 | Recasa/PhotoMapAI/Travelogue 均 **只读** 用户目录 |
-| GPS | 洞察屏 **可显示** 精确位置；**游记 export** 仍遵循 MVP 剥离策略（不变） |
-| 网络 | 引擎绑定 127.0.0.1；Document 禁止公网暴露 8080/8050 |
-| 日志 | 不记录 API Key；路径可打码 `.../Japan/**` |
-| 缓存 | `trips/_insights/` 可删；文档说明清理方式 |
+| 原片 | Travelogue **只读** 用户目录；聚类不复制原片 |
+| GPS | 用于 **段命名与 curate**；游记 export 仍遵循 MVP 剥离策略 |
+| 网络 | CLIP 模型 **首次** 下载；之后可离线；无照片出站 |
+| 日志 | 不记录完整路径可配置打码 |
+| 缓存 | `trips/{id}/.cluster-cache/` 可删；不占 `%LOCALAPPDATA%` 全库索引 |
 
 ---
 
-## 11. 错误处理（中文 · Phase 3 附录）
+## 11. 错误处理（中文 · Phase 3）
 
-| 码 | 用户文案 |
-|----|----------|
-| `E_INS_ENGINES_DOWN` | 素材分析服务未启动。请运行「启动分析服务」或跳过洞察直接生成。 |
-| `E_INS_RECASA_TIMEOUT` | 行程分析超时。请检查照片数量或稍后重试，也可跳过洞察。 |
-| `E_INS_PHOTOMAP_INDEX` | 场景分析失败。仍可跳过洞察，按日期自动排版。 |
-| `E_INS_NO_EVENTS` | 照片缺少时间与位置信息，无法划分行程段。已改为按场景分组。 |
-| `E_INS_SELECTION_EMPTY` | 请至少选择 4 张照片。 |
-| `E_INS_SELECTION_TOO_MANY` | 已选超过 250 张，请减少后再生成。 |
-| `E_INS_PATH_MISMATCH` | 部分照片路径无法匹配，无法安全导入。请跳过洞察重试，或检查相册是否被移动。 |
-| `E_INS_CACHE_CORRUPT` | 洞察缓存异常，正在重新分析…（**自动** force refresh，用户无感） |
-| `E_INS_PATH_OUTSIDE_ROOT` | 所选文件夹不在照片根目录内。请在设置中调整照片根目录，或移动相册。 |
+| 码 | 用户文案 | 行为 | Studio UI（§6.4.6） |
+|----|----------|------|---------------------|
+| `E_CLUSTER_VISION_MISSING` | （无弹窗）场景分析不可用，已按日期排版。 | 降级 P3-Lite | **无模态** |
+| `E_CLUSTER_VISION_TIMEOUT` | 场景分析耗时较长，已跳过主题分组。 | 跳过 scene；继续 | **无模态**；可选 Toast P2 |
+| `E_CLUSTER_GEO_EMPTY` | （无弹窗）照片缺少位置信息，已按日期分段。 | fallback time_segments | **无模态** |
+| `E_CLUSTER_CACHE_CORRUPT` | 正在重新分析照片… | 删 cache 重算 | ingest **stageHint** |
 
-维护于 [ERROR-CODES.md](./ERROR-CODES.md) Phase 3 附录（M13 同步）。
+维护于 [ERROR-CODES.md](./ERROR-CODES.md) Phase 3 附录（M12 同步）。
 
 ---
 
 ## 12. 验收标准
 
-完整用例见 **[ACCEPTANCE-PHASE3.md](./ACCEPTANCE-PHASE3.md)**（待写）。PRD 级闸门：
+完整用例见 **[ACCEPTANCE-PHASE3.md](./ACCEPTANCE-PHASE3.md)** v0.3.3。PRD 级闸门：
 
 | ID | 标准 | 验证 |
 |----|------|------|
-| **AC-P3-01** | 150–400 张真实旅行：洞察屏见 **≥2 Events**（有 GPS 时）与 **≥3 主题簇** | 人工 + 截图 |
-| **AC-P3-02** | **一键「只选推荐」** 或手动勾选 **60–120 张** → 游记 + 长图 | 含 Phase 2 AC-P2-01b |
-| **AC-P3-03** | 受测者 **无 CLI** 完成洞察 + 生成 | Studio only |
-| **AC-P3-04** | 停止 Recasa 容器 → **跳过洞察** 仍可生成 | 降级 |
-| **AC-P3-05** | 导出 CSV **列齐全** 且路径可打开 | 自动化部分 |
-| **AC-P3-06** | `curation.insights` 写入且 validate_trip **L1 通过** | schema |
-| **NR-P3-01** | insights **关闭** 时与 Phase 2 **行为一致** | pytest 套件 |
+| **AC-P3-C01** | 3 套有 GPS golden：geo segments **一致率 ≥70%** | G-P3-C01 |
+| **AC-P3-C02** | P3-Full：`subject_run_score` > Phase 2 baseline | G-P3-C02 · 黄金样本 |
+| **AC-P3-C03** | `time_inversion_rate` ≤ Phase 2 baseline | G-P3-C03 |
+| **AC-P3-C04** | `clustering.enabled=false` 双跑 **equivalent** | NR-P3-01 |
+| **AC-P3-C05** | 400 张 CPU P3-Full **≤8 分钟**（模型已缓存） | G-P3-C05 |
+| **AC-P3-C06** | 无 GPS trip：正常成稿 + fallback 标记 | 自动化 |
+| **AC-P3-C07** | curate 输出 **3–5 章**；event 数 >5 时合并 | SP-C03 |
+| **AC-P3-C08** | 同 fixture 双跑：`curation.clustering` hash **一致** | G-P3-C08 · SP-C05 |
+| **AC-P3-C09** | P3-Full：`burst_integrity_violations=0`；`aspect_pattern_match_rate` ≥ Phase 2 | G-P3-C09 |
+| **NR-P3-01** | clustering/vision off = Phase 2 行为 | pytest |
 | **NR-P3-02** | 全量 pytest **0 失败** | 每 PR |
-| **NR-P3-03** | Phase 3 生成的 trip 在 Phase 2 模式 **可编辑/长图** | validate + serve 回归 |
+| **NR-P3-03** | Phase 3 trip 在 clustering off 模式 **可编辑/长图** | serve 回归 |
 
-**Phase 3 完成**：AC-P3-01～06 + NR-P3-01/02/03 + **M12-0** + M12～M14 Done。
+**Phase 3 v1.0 完成**：AC-P3-C01～C09 + NR-P3-01/02/03 + **UX-P3-01～07** + **M12-0 Spike Go** + **M12 + M13 Done**；M14 可选增强。
+
+### 12.1 NR-P3-01 · documented equivalent（v0.3.3 · P0）
+
+**目的**：`clustering.enabled=false` **且** `vision.enabled=false`（或 Phase 3 代码路径 skip ClusteringLayer）时，curate/layout 输出与 **Phase 2 baseline tag** 可比等价。
+
+**比较前提**
+
+| 项 | 规则 |
+|----|------|
+| Fixture | 同一 `tests/fixtures/` trip 目录 |
+| Config | P3 跑：`clustering.enabled=false`；baseline：Phase 2 默认或 documented baseline config |
+| 代码 | 同一 commit；baseline 可为 `git checkout phase2-baseline -- curate` 或 CI 存盘 golden |
+
+**必须一致（diff 为空或 documented ignore）**
+
+| artifact | 字段/结构 |
+|----------|-----------|
+| 章结构 | `chapters[].id`、`chapters[].assetIds`（集合相等、顺序可比） |
+| 屏序 | `screens[].assetIds`  per chapter |
+| 布局关键 metric | `time_inversion_rate` 不劣化；`burst_integrity_violations` 不变 |
+
+**允许差异（ignore list）**
+
+| 字段 | 原因 |
+|------|------|
+| `curation.clustering` | 整棵 optional 子树可为空或 absent |
+| `asset.eventId` / `sceneClusterId` / `clusterSource` | clustering off 不写入 |
+| `decision_log.json` | 可无或仅含 `cluster_skip` |
+| 章 `title` 文案 | narrate stub 非本 NR 范围；结构 ID 一致即可 |
+
+**验证命令（IMPLEMENTATION 定稿）**
+
+```bash
+pytest tests/test_clustering_regression.py -q   # NR-P3-01
+# 或 CLI：travelogue diff-curate --baseline phase2 --trip fixtures/mao
+```
+
+**US-P3-C06**：维护者可通过上述命令在 PR 前自检。
 
 ---
 
 ## 13. 里程碑与排期
 
-### 13.0 Phase 3 启动闸门（M12 前置）
+### 13.0 Phase 3 启动闸门
 
-**全部 ☑ 后** 方可启动 M12 编码：
+| # | 闸门 | 签字 |
+|---|------|------|
+| G1 | Phase 2 **M8b + M9 + M10 Done** | 技术负责人 · Kickoff 书面确认 |
+| G2 | **AC-P2-01b**（UI 长图闭环）通过 | 产品 · Kickoff 书面确认 |
+| G3 | **NR-P2-01** 全量 pytest 绿 | CI / 技术负责人 |
+| G4 | **M12-0 Spike** 完成（§4.5）· SP-C01/03/04/05 **Go** | 产品 + 技术 · matrix 签字 |
 
-| # | 闸门 |
-|---|------|
-| G1 | Phase 2 **M8b + M9 + M10 Done** |
-| G2 | **AC-P2-01b**（UI 长图闭环）通过 |
-| G3 | **NR-P2-01** 全量 pytest 绿 |
-| G4 | **M12-0 Spike** 完成（§4.3） |
+> **Kickoff 规则（v0.3.3）**：**G4 未 Go → 禁止 M12 功能编码**（仅允许 Spike 分支）。G1–G3 未确认 → 仅做 Spike 预研。  
+> **废止**：v0.2 的 G5（洞察入口 5 人可用性测试）。
 
-> Gantt 日期 **相对 Phase 2 完成日 +偏移**，非固定日历。Phase 2 延期则 Phase 3 整体顺延。
-
-### 13.1 里程碑表（建议 Phase 2 完成后 6–8 周）
+### 13.1 里程碑表（建议 Phase 2 完成后 **5–6 周**）
 
 | 里程碑 | 周期 | 交付物 | 验收 |
 |--------|------|--------|------|
-| **M12-0 · API Spike** | W0 | `engines-api-matrix.md` + fixtures + pin 版本 | 端点实测签字 |
-| **M12 · 引擎栈 + Orchestrator** | W1–2 | compose、setup-engines、clients、parallel join | **M12 exit**（§13.2） |
-| **M13 · Studio 洞察屏** | W3–4 | insights UI（§5.4）、智能预选、commit 对账 | AC-P3-01、03、04 |
-| **M14 · curate 消费 + 导出** | W5–6 | §8.1、schema optional、CSV、NR-P3-03 | AC-P3-02、05、06 |
-| **M15 · 体验增强** | W7–8 | Map 嵌入、每 Event 子索引 | 可选 |
+| **M12-0 · 算法 Spike** | W0 | matrix + fixtures + Go/No-Go | SP-C01～**05** |
+| **M12 · P3-Lite** | W1–2 | §13.3 **P0** 包 | AC-P3-C01/C04/C06/C07/**C08** + UX-P3-01～03 |
+| **M12.5 · cache 增量（可选缓冲）** | W2–3 | F-CLU-CACHE-01～03 · 可与 M13 并行 | AL-P3-07 |
+| **M13 · P3-Full** | W3–5 | scene_clusters、vision、layout、**AC-P3-C09** | AC-P3-C02/C03/C05/**C09** + UX-P3-04～07 + **I-G2 报告** |
+| **M14 · 增强（可选）** | W6 | §6.4.8、CACHE-04 CLI、调参 | UX-P3-08～10 |
 
 ```mermaid
 gantt
   title Phase 3 里程碑（相对 Phase 2 完成日 T0）
   dateFormat YYYY-MM-DD
   section Gate
-  M12-0 API Spike     :m120, 2026-08-01, 5d
+  M12-0 Algorithm Spike :m120, 2026-08-01, 5d
   section Core
-  M12 引擎与编排       :m12, after m120, 14d
-  M13 Studio洞察屏     :m13, after m12, 14d
-  M14 curate与导出     :m14, after m13, 14d
+  M12 P3-Lite geo_events :m12, after m120, 14d
+  M125 cache incremental :m125, after m12, 7d
+  M13 P3-Full scene_clusters :m13, after m125, 14d
   section Optional
-  M15 地图与增强       :m15, after m14, 14d
+  M14 tuning cache CLI :m14, after m13, 7d
 ```
 
-> 图中日期为 **示例**；以 §13.0 闸门满足日为 T0 重排。
+任务拆解见 **[IMPLEMENTATION-PHASE3.md](./IMPLEMENTATION-PHASE3.md)** v0.3.3。
 
-任务拆解见 **[IMPLEMENTATION-PHASE3.md](./IMPLEMENTATION-PHASE3.md)**（**M12-0 期间产出**，非 M12 编码后补）。
-
-### 13.2 M12 Exit Criteria（显式闸门）
-
-**全部 ☑** 方可进入 M13：
+### 13.2 M12 Exit Criteria
 
 | # | 验收项 | 验证 |
 |---|--------|------|
-| E1 | **M12-0 Spike** Go（§4.3 清单 SP-01～06） | `engines-api-matrix.md` 签字 |
-| E2 | `setup-engines.ps1 -DetectOnly` + `-Install` 在 **Win11 干净机** 可跑通 | AC-M12-SETUP |
-| E3 | **双容器**（或 Spike 批准的 hybrid）`engines status` 全 **ok** | 自动化 smoke |
-| E4 | **父目录挂载 + 子路径 scan** 换文件夹 **无需** compose down | 手动 / 集成测试 |
-| E5 | Orchestrator **并行 join** golden fixture 成功 | `test_insights_join_integration` |
-| E6 | §7.5 **路径** 四套测试绿 | pytest |
-| E7 | **IMPLEMENTATION-PHASE3.md** 含 orchestrator / 对账 / smart_pick 签名 | 文档 review |
+| E1 | M12-0 Spike Go（SP-C01～**05**） | matrix 签字 |
+| E2 | `geo_events` golden 测试绿 | pytest |
+| E3 | §8.1 curate 接入 + 3–5 章 cap | **AC-P3-C07** |
+| E3b | §8.1 **burst 优先级**规则单测（连拍不拆） | F-CLU-CUR-05 · **非** AC-P3-C09 全量 |
+| E4 | `clustering.enabled=false` NR-P3-01（§12.1） | pytest |
+| E5 | `decision_log` 记录 segment/merge/fallback（§9.6） | F-CLU-CUR-04 |
+| E6 | F-CLU-CACHE-**05** 损坏 cache 重算 | pytest |
+| E7 | IMPLEMENTATION-PHASE3.md review 通过 | 文档 |
+| E8 | Studio UX §6.4：hint + 高级折叠 + config API | UX-P3-01～03 |
+
+> **不在 M12 出口**：AC-P3-C09 全量 layout guard、F-CLU-CACHE-01～03 增量策略 → **M12.5 / M13**。
+
+### 13.3 M12 范围切割（Kickoff · v0.3.3）
+
+| 优先级 | M12 **必达（P0）** | 推迟 |
+|--------|-------------------|------|
+| **P0** | `geo_events`、`§8.1` curate、config、`NR-P3-01` | — |
+| **P0** | `decision_log`（§9.6）、`AC-P3-C08` 确定性 | — |
+| **P0** | Studio §6.4：stageHint（行程）、高级折叠、**§9.5 config API** | — |
+| **P0** | F-CLU-CACHE-**05**；M12 其余 reingest **全量**重算 | CACHE-01～03 → **M12.5** |
+| **P1** | F-CLU-GEO-06 cover 加权 | 可 M12 末或 M13 |
+| **—** | F-CLU-CACHE-04 pendingAssets | **M14 / CLI 文档**；无 Studio UI |
+| **—** | AC-P3-C09、I-G2 全量、`scene_clusters` | **M13** |
+
+**对外承诺**：M12 交付 **P3-Lite 可 ship**；P3-Full 以 M13 为目标，**视 Spike + I-G2 脚本** 而定。
+
+### 13.4 PRD 升 v1.0 RFD 条件
+
+| # | 条件 |
+|---|------|
+| R1 | M12-0 matrix **Go** 签字 |
+| R2 | 本文 v0.3.3 + ACCEPTANCE v0.3.3 + IMPLEMENTATION review |
+| R3 | §15 OQ-P3-03（CLIP 选型）**关闭**（可在 M12-0 末） |
+| R4 | 批准栏（§文末）产品 + 技术双签 |
 
 ---
 
@@ -795,29 +1010,35 @@ gantt
 
 | 风险 | 影响 | 缓解 | Plan B |
 |------|------|------|--------|
-| **运维复杂度**（Docker+模型） | Phase 2 零命令线倒退 | **档位 A 单 compose** + setup-engines + Studio 向导；§7.6 预期 | 档位 B Lite；跳过 insights |
-| **上游引擎停更 / Breaking API** | Phase 3 失效 | pin 镜像 tag；client 适配层；M12-0 Spike | 跳过 insights；必要时 **vendor API fixtures** 维持测试 |
-| Recasa/PhotoMapAI API 变更 | 集成脆 | golden fixtures + 集成测试 | 跳过 insights |
-| 首次索引超时 | 用户流失 | 并行；模型预下载；首次/后续 hint 分档 | Lite 仅 Recasa |
-| **路径不一致** | **静默丢图** | §7.5 canonical + commit 对账 + M12 exit 测试 | **阻断 commit**（不用 basename 静默匹配） |
-| Windows Docker 资源 | OOM | 16GB 推荐；8GB 推 Lite | 跳过 insights |
-| PhotoMapAI 索引污染相册 | 用户困惑 | 索引到 `%LOCALAPPDATA%` | — |
-| curate Event 章数冲突 | 版式异常 | §8.1 合并/ cap | date_fallback |
-| Phase 3 破坏 Phase 2 | 回归失败 | NR-P3-01/03 | insights 默认 off 直到 engines ready |
+| CLIP 首次慢 / CPU 8min+ | 用户等待 | lazy download；stageHint；GPU 可选 | `vision.enabled=false` · P3-Lite only |
+| geo 无 GPS 占比高 | 价值感知弱 | 诚实 fallback；heuristic 城市切段 | 等同 Phase 2 |
+| 簇参数不适配 | 组屏反而乱 | SP-C02 + 黄金样本；config 可调 | `sceneClusterMode: off` |
+| 与智能排版 V2 重复建设 | 浪费 | **M13 合并 milestone** | 单一 `vision/` 模块 |
+| Phase 3 破坏 Phase 2 | 回归失败 | NR-P3-01；feature flag | `clustering.enabled=false` 默认 ship 前验证 |
+| 章数冲突 | 版式异常 | §8.1 merge/cap | `date_fallback` |
+| **非确定性 CLIP/DBSCAN** | 双跑 diff 失败 · CI  flaky | `clustering.deterministic=true`；固定 seed；CPU 路径 | AC-P3-C08 阻塞 M13 merge |
+| **burst vs cluster 冲突** | 连拍被拆屏 | §8.1 优先级 · F-CLU-CUR-05 | `sceneClusterMode: off` |
+| **增量 cache  stale** | 错簇/漏 embed | F-CLU-CACHE-* · mtime 失效 | force recluster CLI |
+| **M12 范围溢出** | 2 周不够 | §13.3 切割 | M12.5 吸收 cache |
+| **geo 70% 未达标** | AC-P3-C01 失败 | matrix §3.5 偏差签字 | 调参或 `date_fallback` ship |
+| **auto 误判** | 小册白等 / 大册未开 CLIP | 阈值可配 · stageHint | 用户手动 override（§6.4.3） |
 
 ---
 
 ## 15. 开放问题
 
-| ID | 问题 | 决议（v0.2） |
-|----|------|--------------|
-| **OQ-P3-01** | PhotoMapAI 部署 | **档位 A：双容器 compose**（默认）；档位 C 仅开发者 |
-| **OQ-P3-02** | 索引粒度 | M13 整趟一 Album；M15 每 Event 子 Album |
-| **OQ-P3-03** | 地图 UI | M15 iframe；M13 Event 卡片 + 文字地点 |
-| **OQ-P3-04** | 默认开启 insights | **>50 张开启**；≤50 跳过；**engines 未 setup 时不弹 insights** |
-| **OQ-P3-05** | Recasa Ollama Tags | Phase 3 不依赖 |
-| **OQ-P3-06** | 上传流 | `_uploads/` → 临时只读目录再挂 Recasa |
-| **OQ-P3-07** | insights 默认 feature flag | **engines ready 前默认 off**；setup 完成后 Studio 提示开启 |
+| ID | 问题 | v0.3.3 决议 |
+|----|------|-------------|
+| **OQ-P3-01** | 聚类执行时机 | **ingest 后、curate 前 · 同 subprocess**（§7.3） |
+| **OQ-P3-02** | UMAP 是否必须 | **否**；生产路径 embedding 上直接 DBSCAN；UMAP 仅 debug/可视化 |
+| **OQ-P3-03** | ONNX vs PyTorch CLIP | **M12-0 结束前必须关闭**；阻塞 M13 第一周编码 |
+| **OQ-P3-04** | 默认 config | **`clustering.enabled: auto`**；**`vision.enabled: false`**（§4.4） |
+| **OQ-P3-05** | 精选工作台 Future | **不在 v0.3 roadmap** |
+| **OQ-P3-06** | decision_log 里程碑 | **M12 P0**（§9.6） |
+| **OQ-P3-07** | 确定性要求 | **M12 起** `deterministic=true`；SP-C05 |
+| **OQ-P3-08** | F-CLU-CACHE 增量是否 M12 必达 | **否** → **M12.5**；M12 全量重算 fallback（§5.3.5） |
+| **OQ-P3-09** | Studio config API vs 无 API | **允许 §9.5 两端点**；禁止 insights/engines API（§7.3） |
+| **OQ-P3-10** | NR-P3-01 等价定义 | **§12.1** + ACCEPTANCE 附录 |
 
 ---
 
@@ -827,41 +1048,51 @@ gantt
 
 | 术语 | 定义 |
 |------|------|
-| **素材洞察** | Phase 3 在 ingest 前的分析与精选阶段 |
-| **Event** | Recasa 按时间+GPS 聚合的行程段 |
-| **主题簇** | PhotoMapAI UMAP/DBSCAN 语义聚类 |
-| **selection manifest** | `.insights/selection.json`，ingest 输入边界 |
-| **引擎栈** | Recasa + PhotoMapAI 本地服务组合 |
+| **Curate 聚类** | Phase 3 pipeline 内 geo/time + scene 算法层 |
+| **geo event / stay** | 时间+GPS 聚合的行程段 |
+| **scene cluster** | CLIP embedding 聚类得到的主题簇 |
+| **P3-Lite** | 仅 geo_events，无 CLIP |
+| **P3-Full** | geo_events + scene_clusters |
+| **ClusteringLayer** | ingest 与 curate 之间的内部模块 |
 
-### 16.2 外部依赖版本（pin 建议）
+### 16.2 依赖（pin 建议）
 
 | 依赖 | 建议 |
 |------|------|
-| Recasa | git tag / Docker image **≥ 1.4.0** |
-| PhotoMapAI | **photomapai ≥ 1.0.6** |
-| Python | **≥ 3.11**（与 Recasa 对齐） |
-| Docker Desktop | Windows 用户引擎栈前提 |
+| Python | **≥ 3.11** |
+| CLIP / open-clip | Spike 定稿；optional `[vision]` extra |
+| scikit-learn | DBSCAN（已有 transitive via 项目） |
+| Docker | **不需要** |
 
-### 16.3 文档交付清单（Phase 3 启动前）
+**算法参考（attribution）**：
+
+- Recasa event detection — [yonie/recasa](https://github.com/yonie/recasa) MIT  
+- PhotoMapAI clustering — [lstein/PhotoMapAI](https://github.com/lstein/PhotoMapAI) MIT  
+
+### 16.3 文档交付清单
 
 | 文档 | 状态 |
 |------|------|
-| PRD-PHASE3.md | 本文 v0.2.1 |
-| adr/006-media-engines-integration.md | **v0.2 Accepted** |
-| IMPLEMENTATION-PHASE3.md | **M12-0 期间产出**（M12 编码输入） |
-| ACCEPTANCE-PHASE3.md | 待写（M13 前） |
-| docs/spikes/engines-api-matrix.md | M12-0 待写 |
-| ERROR-CODES.md §Phase 3 | 待写 |
-| WORKSHOP.md §引擎栈 | 待写 |
+| PRD-PHASE3.md | 本文 **v0.3.3 Kickoff** |
+| PRD-STUDIO-HOMEPAGE.md | §19 与本文 §6.4 交叉引用 |
+| adr/007-native-clustering.md | **Accepted v0.2**（替代 ADR-006） |
+| adr/006-media-engines-integration.md | **Superseded** |
+| IMPLEMENTATION-PHASE3.md | **v0.3.3** |
+| ACCEPTANCE-PHASE3.md | **v0.3.3** |
+| docs/spikes/clustering-algorithm-matrix.md | **v0.2**（待 M12-0 实测签字） |
+| ERROR-CODES.md §Phase 3 | **v0.4.0** 已同步 |
+| DATA-MODEL.md · clustering 字段 | **v0.2.2** 已同步 |
+| 智能排版V2.md · P1 里程碑 | M13 与 P3-Full 对齐 |
 
 ### 16.4 修订记录
 
 | 版本 | 日期 | 变更 |
 |------|------|------|
-| v0.1.0 | 2026-05-27 | 初稿 |
-| v0.2.0 | 2026-05-27 | 评审修订：双容器 compose、setup-engines、并行调度、路径策略、UX/智能预选、curate 规则、测试策略、M12-0 Spike、NR-P3-03 |
-| v0.2.1 | 2026-05-27 | 第三轮：PHOTOS_ROOT 动态挂载、GPU/WSL2 降级、F-ENG-08、insights 单一进度条+substeps、缩略图降级链、E_INS_CACHE_CORRUPT、M12 exit、IMPLEMENTATION M12-0 产出 |
-| v0.2.1 | 2026-05-27 | 动态 PHOTOS_ROOT 挂载、GPU/setup 两阶段、F-ENG-08、insights substeps UI、缩略图降级链、E_INS_CACHE_CORRUPT、M12 exit、IMPLEMENTATION M12-0 产出 |
+| v0.1.0–v0.2.4 | 2026-05-27 | 双引擎素材洞察方案（Recasa×PhotoMapAI）— 见 git history |
+| **v0.3.0** | **2026-05-28** | **战略 pivot**：原生 Curate 聚类；废止洞察工作台/engines/Docker；合并智能排版 V2 P1；ADR-007 替代 ADR-006 |
+| **v0.3.1** | **2026-05-28** | **架构补强**：§4.6 分段权威链、§4.7 信号分工、§4.4 auto 降级、§8.1 burst 优先级、§8.2 narrate 边界、F-CLU-CACHE、decision_log 升 M12、G-P3-C08/C09、默认 config auto/false |
+| **v0.3.2** | **2026-05-28** | **Studio 前端与交互**：§6.4 全规格、F-CLU-STU-01～10 |
+| **v0.3.3** | **2026-05-28** | **Kickoff 审核修订**：§12.1 NR-P3-01、§9.5 config API、§13.3 M12 切割、M12.5 cache、E3/C09 分离、§9.6 decision_log、闸门签字 |
 
 ---
 
@@ -869,15 +1100,20 @@ gantt
 
 | 层级 | 范围 | 策略 |
 |------|------|------|
-| **单元** | `normalize_path`、merge_events、smart_pick | 纯函数；**无引擎** |
-| **Client 契约** | `recasa_client` / `photomap_client` | **httpx MockTransport** + golden JSON（`tests/fixtures/engines/`） |
-| **集成** | Orchestrator join | 本地 `docker compose -f docker-compose.engines.test.yml`；CI **optional** job（`pytest -m engines`） |
-| **E2E** | Studio insights 屏 | Playwright：mock engines API **或** nightly 真引擎 |
-| **回归** | NR-P3-01/03 | Phase 2 套件 + Phase 3 trip fixture 在 insights=off 下 serve/export |
-| **路径** | M12 exit | §7.5 四套测试全绿 |
+| **单元** | `geo_events`、`scene_clusters`、`merge_small_events` | 纯函数；golden segments |
+| **集成** | ingest → clustering → curate | 3 套 fixture trip；无 Docker |
+| **确定性** | 同 fixture 双跑 | `curation.clustering` JSON hash；**M12 必跑**（AC-P3-C08） |
+| **负向 guard** | burst + aspect pattern | P3-Full vs Phase 2 baseline（AC-P3-C09） |
+| **布局回归** | mao / maomi / linzhi | I-G1/I-G2 metrics；NR-P3-01 |
+| **性能** | 400 张 CPU | G-P3-C05 计时；optional CI nightly |
+| **回归** | NR-P3-01/03 | Phase 2 套件 + clustering off |
+| **缓存** | 增量 ingest 10%/30% 边界 | F-CLU-CACHE-02/03 自动化 |
 
-**CI 默认**：不启动 Docker（避免 flaky）；`engines` marker 仅 maintainer / nightly。  
-**Golden**：`InsightItem`、`selection.json`、`curation.insights` 各 1 份 fixture。
+**CI 默认**：不下载 CLIP 权重；vision 测试 **mock embedding** 或 marker `@pytest.mark.vision` optional job。
+
+**CI nightly（optional）**：真 CLIP + 400 张 bench；`deterministic=true` 双跑 hash。
+
+**Golden**：`tests/fixtures/clustering/` 含 `segments.json`、`clusters.json`、期望章数、**双跑 hash 基准**。
 
 ---
 

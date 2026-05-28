@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio 首页线框稿 · 设计评审 v1.4</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-border: #90a4ae;
+      --wf-border-dash: #b0bec5;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-accent: #546e7a;
+      --wf-accent-fill: #cfd8dc;
+      --wf-upload: #1976d2;
+      --wf-upload-fill: #90caf9;
+      --wf-highlight: #fff9c4;
+      --wf-danger: #ffcdd2;
+      --wf-danger-text: #b71c1c;
+      --wf-toast: #37474f;
+      --wf-anno: #e65100;
+      --wf-slot: #e1bee7;
+      --prod-accent: #3d6b5a;
+      --prod-bg: #f4f7f5;
+      --prod-danger-bg: #fdeeee;
+      --prod-toast: #1a2f28;
+      --max-w: 720px;
+      --radius: 12px;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--wf-bg);
+      color: var(--wf-text);
+      line-height: 1.45;
+    }
+
+    .review-bar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: #263238;
+      color: #eceff1;
+      padding: 12px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.25);
+    }
+    .review-bar__title { font-size: 14px; font-weight: 600; margin-right: auto; }
+    .review-bar__title span { color: #80cbc4; font-weight: 400; }
+    .state-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+    .state-tabs button {
+      border: 1px solid #546e7a;
+      background: transparent;
+      color: #eceff1;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .state-tabs button:hover { background: #37474f; }
+    .state-tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+    .review-meta { width: 100%; font-size: 12px; color: #90a4ae; }
+
+    .canvas {
+      max-width: calc(var(--max-w) + 300px);
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+      display: grid;
+      grid-template-columns: var(--max-w) 260px;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 1100px) {
+      .canvas { grid-template-columns: 1fr; }
+      .sidebar { order: -1; }
+    }
+
+    /* Browser chrome mock */
+    .browser-chrome {
+      background: #dee1e6;
+      border: 2px solid var(--wf-border);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 8px 12px 0;
+    }
+    .browser-chrome__dots {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .browser-chrome__dots span {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #b0bec5;
+    }
+    .browser-chrome__tabrow {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .browser-chrome__tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--wf-page);
+      border: 1px solid #b0bec5;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: var(--wf-muted);
+      max-width: 280px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .browser-chrome__tab.is-active { color: var(--wf-text); font-weight: 600; }
+    .browser-chrome__favicon {
+      width: 14px; height: 14px;
+      background: var(--prod-accent);
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .browser-chrome__label {
+      font-size: 10px;
+      color: var(--wf-anno);
+      margin-top: 4px;
+      padding-left: 4px;
+    }
+
+    .phone-frame {
+      background: var(--wf-page);
+      border: 2px solid var(--wf-border);
+      border-top: none;
+      border-radius: 0 0 16px 16px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(38, 50, 56, .12);
+    }
+
+    .wf-state { display: none; }
+    .wf-state.is-visible { display: block; }
+
+    .block-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--wf-anno);
+      margin-bottom: 6px;
+    }
+    .wf-box {
+      border: 1.5px dashed var(--wf-border-dash);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 16px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .wf-box--solid { border-style: solid; border-color: var(--wf-border); }
+    .wf-box--highlight {
+      border: 2px solid #f9a825;
+      box-shadow: 0 0 0 4px rgba(249, 168, 37, .25);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 4px rgba(249, 168, 37, .2); }
+      50% { box-shadow: 0 0 0 8px rgba(249, 168, 37, .35); }
+    }
+    .wf-box--danger { background: var(--wf-danger); border-color: #e57373; }
+    .wf-box--offline { background: #ffecb3; border-color: #ffb74d; }
+
+    .wf-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 16px;
+      border-bottom: 1.5px solid var(--wf-border);
+      background: #eceff1;
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+    .wf-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #66bb6a; display: inline-block; margin-right: 6px;
+    }
+    .wf-slot {
+      border: 1px dotted #9c27b0;
+      background: var(--wf-slot);
+      color: #6a1b9a;
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .hero-eyebrow { font-size: 12px; color: var(--wf-muted); margin: 0 0 8px; letter-spacing: .08em; }
+    .hero-title { font-size: 22px; font-weight: 700; margin: 0 0 12px; line-height: 1.3; }
+    .hero-title--compact { font-size: 20px; margin-bottom: 0; }
+    .hero-pills {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin: 0; padding: 0; list-style: none;
+      font-size: 12px; color: var(--wf-muted);
+    }
+    .hero-pills li::before { content: "◇ "; color: var(--wf-accent); }
+
+    .wf-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 999px;
+      border: 1.5px solid var(--wf-border);
+      background: var(--wf-accent-fill);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: default;
+    }
+    .wf-btn--primary { background: var(--wf-accent); color: #fff; border-color: var(--wf-accent); }
+    .wf-btn--ghost { background: transparent; font-size: 13px; padding: 10px; width: auto; }
+    .wf-btn--sm { font-size: 13px; padding: 8px 14px; width: auto; }
+    .wf-btn--focus {
+      outline: 2px solid #2196f3;
+      outline-offset: 2px;
+    }
+    .wf-badge {
+      font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px;
+      background: #fff; color: var(--wf-accent);
+      border: 1px solid var(--wf-border);
+    }
+    .wf-badge--warn { background: #fff3e0; color: #e65100; border-color: #ffb74d; }
+
+    .wf-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--wf-border);
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+    .wf-label { display: block; font-size: 12px; color: var(--wf-muted); margin-bottom: 6px; }
+
+    .wf-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .wf-card-sm {
+      border: 1.5px dashed var(--wf-border-dash);
+      border-radius: var(--radius);
+      padding: 14px;
+      text-align: center;
+      font-size: 13px;
+      background: #fff;
+    }
+
+    .trip-card-wrap {
+      position: relative;
+      border-radius: var(--radius);
+      transition: box-shadow .15s, background .15s;
+    }
+    .trip-card-wrap--clickable {
+      cursor: pointer;
+      padding: 4px;
+      margin: -4px;
+    }
+    .trip-card-wrap--clickable:hover {
+      background: rgba(84, 110, 122, .08);
+      box-shadow: 0 4px 16px rgba(38, 50, 56, .1);
+    }
+    .trip-card-wrap--clickable:hover .trip-card__chevron { opacity: 1; transform: translateX(0); }
+    .trip-card {
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: 14px;
+      align-items: start;
+    }
+    .trip-card__chevron {
+      font-size: 18px;
+      color: var(--wf-muted);
+      opacity: .35;
+      transform: translateX(-4px);
+      transition: opacity .15s, transform .15s;
+      align-self: center;
+    }
+    .thumb {
+      width: 72px; height: 128px;
+      border-radius: 8px;
+      background: linear-gradient(160deg, #b0bec5, #78909c);
+      border: 1px solid var(--wf-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: #fff; text-align: center;
+    }
+    .thumb--shimmer {
+      background: linear-gradient(90deg, #eceff1 25%, #cfd8dc 50%, #eceff1 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .trip-title {
+      font-weight: 700; font-size: 16px; margin: 0 0 4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px;
+    }
+    .trip-meta { font-size: 12px; color: var(--wf-muted); margin: 0 0 10px; }
+    .trip-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .sample-img {
+      height: 200px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #90a4ae 0%, #546e7a 40%, #37474f 100%);
+      display: flex; align-items: flex-end; justify-content: center;
+      padding: 12px; color: rgba(255,255,255,.8); font-size: 11px;
+    }
+    .sample-caption { text-align: center; font-size: 12px; color: var(--wf-muted); margin: 10px 0 0; }
+
+    .skeleton-lines { display: flex; flex-direction: column; gap: 8px; }
+    .sk-line { height: 12px; border-radius: 4px; background: #eceff1; }
+    .sk-line--w80 { width: 80%; }
+    .sk-line--w60 { width: 60%; }
+    .sk-line--w40 { width: 40%; }
+
+    .progress-block { margin-bottom: 14px; }
+    .progress-label { font-size: 12px; color: var(--wf-muted); margin: 0 0 6px; display: flex; justify-content: space-between; }
+    .progress-label strong { color: var(--wf-text); }
+    .progress-bar {
+      height: 8px; background: #eceff1;
+      border-radius: 999px; overflow: hidden;
+    }
+    .progress-bar__fill { height: 100%; border-radius: 999px; }
+    .progress-bar__fill--upload { background: var(--wf-upload-fill); border: 1px solid var(--wf-upload); }
+    .progress-bar__fill--pipe { background: var(--wf-accent); }
+
+    .error-echo {
+      font-size: 12px;
+      color: var(--wf-muted);
+      margin: 0 0 10px;
+      font-family: Consolas, monospace;
+    }
+
+    .wf-footer { font-size: 12px; color: var(--wf-muted); text-align: center; padding: 8px 0 20px; }
+    .wf-footer a { color: var(--wf-accent); }
+    .wf-checklist {
+      text-align: left;
+      max-width: 360px;
+      margin: 12px auto 0;
+      padding: 12px 16px;
+      background: #eceff1;
+      border-radius: 8px;
+      font-size: 12px;
+      list-style: none;
+    }
+    .wf-checklist li { margin-bottom: 6px; padding-left: 4px; }
+    .wf-checklist li:last-child { margin-bottom: 0; }
+
+    .wf-tooltip {
+      position: absolute; top: -8px; right: 12px;
+      background: #263238; color: #fff;
+      font-size: 11px; padding: 6px 10px;
+      border-radius: 6px; white-space: nowrap;
+    }
+    .wf-tooltip::after {
+      content: ""; position: absolute; bottom: -5px; right: 24px;
+      border: 5px solid transparent; border-top-color: #263238;
+    }
+
+    .overlay-layer { position: relative; min-height: 120px; }
+    .wf-toast {
+      position: absolute; bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--wf-toast); color: #fff;
+      padding: 12px 20px; border-radius: 8px;
+      font-size: 14px; white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 10;
+    }
+    .wf-toast--top {
+      bottom: auto; top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 15px; padding: 16px 24px;
+    }
+    .wf-modal-backdrop {
+      position: absolute; inset: 0;
+      background: rgba(38, 50, 56, .45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 20; border-radius: 0 0 14px 14px;
+    }
+    .wf-modal {
+      background: #fff;
+      border: 2px solid var(--wf-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      width: min(320px, 90%);
+    }
+    .wf-modal h3 { margin: 0 0 8px; font-size: 16px; }
+    .wf-modal p { margin: 0 0 16px; font-size: 13px; color: var(--wf-muted); }
+    .wf-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    .page-inner { padding: 24px 20px 0; }
+    .dim { font-size: 10px; color: var(--wf-muted); border: 1px dotted #b0bec5; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 8px; }
+
+    .sidebar { font-size: 13px; color: var(--wf-text); }
+    .sidebar h2 { font-size: 14px; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 2px solid var(--wf-accent); }
+    .sidebar h3 { font-size: 12px; margin: 20px 0 8px; color: var(--wf-muted); text-transform: uppercase; letter-spacing: .05em; }
+    .anno-list { margin: 0; padding: 0; list-style: none; }
+    .anno-list li { margin-bottom: 12px; padding-left: 12px; border-left: 3px solid var(--wf-anno); }
+    .anno-list strong { display: block; font-size: 12px; color: var(--wf-anno); margin-bottom: 2px; }
+    .anno-list span { color: var(--wf-muted); font-size: 12px; }
+    .spec-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 8px; }
+    .spec-table th, .spec-table td { border: 1px solid #cfd8dc; padding: 5px 6px; text-align: left; vertical-align: top; }
+    .spec-table th { background: #eceff1; }
+    .spec-note { font-size: 11px; color: var(--wf-muted); margin-top: 16px; padding: 10px; background: #eceff1; border-radius: 8px; line-height: 1.5; }
+    .color-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: middle; margin-right: 4px; border: 1px solid #90a4ae; }
+
+    .wf-prep {
+      margin-top: 14px;
+      padding: 12px;
+      background: #f5f8f6;
+      border: 1px dashed #a5d6a7;
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--wf-muted);
+    }
+    .wf-prep summary { cursor: pointer; color: var(--wf-text); font-weight: 600; list-style: none; }
+    .wf-prep summary::-webkit-details-marker { display: none; }
+    .wf-prep ul { margin: 10px 0 0; padding-left: 18px; }
+    .wf-prep li { margin-bottom: 6px; }
+    .wf-nudge {
+      display: block;
+      margin-top: 12px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--prod-accent);
+      font-weight: 600;
+    }
+    .wf-badge--demo { background: #eceff1; color: var(--wf-muted); border-color: #b0bec5; }
+    .wf-subtitle { font-size: 12px; color: var(--wf-muted); margin: 0 0 12px; line-height: 1.5; }
+    .trip-card__menu {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 16px;
+      color: var(--wf-muted);
+      padding: 4px 8px;
+      border: 1px dashed var(--wf-border-dash);
+      border-radius: 4px;
+    }
+    .trip-card-wrap { position: relative; }
+
+    /* v1.4 · Magazine visual direction */
+    .magazine-hero {
+      position: relative;
+      min-height: 420px;
+      margin: 0 0 0;
+      padding: 48px 24px 32px;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.2) 0%, rgba(0,0,0,.65) 100%),
+        linear-gradient(135deg, #5d7a6a 0%, #2c4a3e 40%, #1a2f28 100%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .magazine-hero__eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: .85;
+      margin: 0 0 12px;
+    }
+    .hero-title--magazine {
+      font-size: 26px;
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      line-height: 1.5;
+      margin: 0 0 8px;
+      color: #fff;
+    }
+    .magazine-hero__sub {
+      font-size: 13px;
+      opacity: .88;
+      margin: 0 0 20px;
+      font-weight: 400;
+    }
+    .magazine-hero__cta {
+      background: linear-gradient(135deg, #3d6b5a, #4a7d6a);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,.25);
+      margin-bottom: 16px;
+      animation: breathe 3s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%, 100% { box-shadow: 0 4px 16px rgba(61,107,90,.25); }
+      50% { box-shadow: 0 6px 24px rgba(61,107,90,.4); }
+    }
+    .magazine-hero__pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 11px;
+      opacity: .9;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .magazine-hero__pills li::before { content: "◇ "; }
+
+    .gallery-section { padding: 24px 20px; background: var(--wf-page); }
+    .gallery-section h2 { font-size: 16px; font-weight: 300; letter-spacing: 0.06em; margin: 0 0 16px; }
+    .gallery-carousel {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scroll-snap-type: x mandatory;
+    }
+    .gallery-card {
+      flex: 0 0 140px;
+      scroll-snap-align: center;
+      border-radius: 10px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #90a4ae, #455a64);
+      color: #fff;
+      font-size: 11px;
+      text-align: center;
+    }
+    .gallery-card--featured { flex: 0 0 168px; transform: scale(1.05); box-shadow: 0 8px 24px rgba(0,0,0,.15); }
+    .gallery-card__img { height: 200px; display: flex; align-items: flex-end; justify-content: center; padding: 8px; }
+    .gallery-card--featured .gallery-card__img { height: 240px; }
+    .gallery-card__label { padding: 8px; background: rgba(0,0,0,.4); font-size: 10px; }
+    .gallery-badge { color: #c4956a; font-weight: 700; }
+    .gallery-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 12px; color: var(--wf-muted); }
+
+    .gallery-masonry {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .gallery-masonry .gallery-card { flex: none; width: 100%; }
+    .gallery-masonry .g-tall .gallery-card__img { height: 280px; }
+    .gallery-masonry .g-med .gallery-card__img { height: 220px; }
+    .gallery-masonry .g-short .gallery-card__img { height: 180px; }
+
+    .studio-paper {
+      background-color: #f4f7f5;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23f4f7f5'/%3E%3Crect width='1' height='1' fill='%23f0f3f1' opacity='.3'/%3E%3C/svg%3E");
+    }
+  </style>
+</head>
+<body>
+
+  <header class="review-bar">
+    <div class="review-bar__title">Studio 首页线框稿 <span>v1.4 · 杂志视觉</span></div>
+    <nav class="state-tabs" id="state-tabs" aria-label="切换页面状态">
+      <button type="button" class="is-active" data-state="magazine">②★ 杂志空态</button>
+      <button type="button" data-state="gallery-wall">E★ 灵感墙</button>
+      <button type="button" data-state="loading">① Loading</button>
+      <button type="button" data-state="empty">② 空态</button>
+      <button type="button" data-state="empty-prep">②c 照片引导</button>
+      <button type="button" data-state="empty-path">②b 路径</button>
+      <button type="button" data-state="returning">③ 回访</button>
+      <button type="button" data-state="returning-stale">③b stale</button>
+      <button type="button" data-state="demo-return">⑪ 试用回流</button>
+      <button type="button" data-state="highlight">④ 首次返回</button>
+      <button type="button" data-state="importing">⑤ 导入中</button>
+      <button type="button" data-state="success">⑥ 首次成功</button>
+      <button type="button" data-state="failed">⑦ 失败</button>
+      <button type="button" data-state="offline">⑧ 离线</button>
+      <button type="button" data-state="modal">⑨ Modal</button>
+      <button type="button" data-state="footer">⑩ 页脚</button>
+    </nav>
+    <p class="review-meta">v1.4：杂志 Hero · 灵感画廊 · 双字体/纸张/微交互 · PRD v1.3-HOMEPAGE</p>
+  </header>
+
+  <div class="canvas">
+    <div>
+      <div class="browser-chrome">
+        <div class="browser-chrome__dots"><span></span><span></span><span></span></div>
+        <div class="browser-chrome__tabrow">
+          <div class="browser-chrome__tab is-active" id="browser-tab">
+            <span class="browser-chrome__favicon" title="favicon 16/32"></span>
+            <span id="browser-title">Travelogue Studio</span>
+          </div>
+        </div>
+        <p class="browser-chrome__label">模拟 &lt;title&gt; 动态文案 · favicon → --color-accent</p>
+      </div>
+
+      <div class="phone-frame">
+
+        <!-- Hero snippet: frozen PRD §6.3 -->
+        <!-- pills: 自动分章排版 · 无需注册·照片留在本机 · 约3分钟看到预览 -->
+
+        <section class="wf-state is-visible" id="state-magazine">
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span><span class="wf-dot"></span>本地运行中</span></div>
+          <div class="magazine-hero">
+            <p class="block-label" style="color:#ffcc80;position:absolute;top:52px;left:20px">B★ 杂志 Hero · 空态</p>
+            <p class="magazine-hero__eyebrow">TRAVELogue</p>
+            <h1 class="hero-title--magazine">让每一段旅程<br/>都值得被杂志记录</h1>
+            <p class="magazine-hero__sub">把旅行照片变成杂志风长图，直接发微信</p>
+            <div class="wf-btn magazine-hero__cta">📁 选择照片文件夹</div>
+            <ul class="magazine-hero__pills">
+              <li>自动分章</li><li>留在本机</li><li>约 2–5 分钟</li>
+            </ul>
+            <span class="dim" style="margin-top:12px;color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.3)">真实输出裁切 + 暗角 · ≤180KB · 2–3 张轮换</span>
+          </div>
+          <div class="page-inner studio-paper">
+            <p class="block-label">D′ 次级（无主 CTA）</p>
+            <div class="wf-box wf-box--solid">
+              <div class="wf-row-2" style="margin-bottom:12px">
+                <div class="wf-card-sm">试用示例相册</div>
+                <div class="wf-card-sm">浏览器上传</div>
+              </div>
+              <details class="wf-prep"><summary>💡 不知道选哪个文件夹？ ▸</summary></details>
+            </div>
+            <p class="block-label">E★ 样例轮播 · M12 交付形态</p>
+            <div class="gallery-section" style="padding:16px 0">
+              <h2>他们的旅行故事</h2>
+              <div class="gallery-carousel">
+                <div class="gallery-card"><div class="gallery-card__img">京都</div><div class="gallery-card__label">雨后 · 86 张</div></div>
+                <div class="gallery-card gallery-card--featured"><div class="gallery-card__img">冰岛 <span class="gallery-badge">★ 精选</span></div><div class="gallery-card__label">极光 · 120 张</div></div>
+                <div class="gallery-card"><div class="gallery-card__img">大理</div><div class="gallery-card__label">风花 · 64 张</div></div>
+              </div>
+              <div class="gallery-nav"><span>← 滑动查看更多</span><span>2 / 5 →</span></div>
+              <p class="sample-caption">杂志风竖版长图 · 保存后可直接发微信</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="wf-state" id="state-gallery-wall">
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span>本地运行中</span></div>
+          <div class="page-inner studio-paper" style="padding-top:16px">
+            <p class="block-label">E★ 灵感瀑布流 · M12b（非 M12）</p>
+            <h2 style="font-weight:300;letter-spacing:.06em;margin:0 0 16px">他们的旅行故事</h2>
+            <div class="gallery-masonry">
+              <div class="g-tall"><div class="gallery-card"><div class="gallery-card__img">京都 · 雨后</div></div></div>
+              <div class="g-med"><div class="gallery-card"><div class="gallery-card__img">冰岛 · 极光</div></div></div>
+              <div class="g-short"><div class="gallery-card"><div class="gallery-card__img">东京 · 夜行</div></div></div>
+              <div class="g-med"><div class="gallery-card"><div class="gallery-card__img">大理 · 风花</div></div></div>
+            </div>
+            <p class="sample-caption" style="margin-top:16px">scroll reveal 淡入 · 不等高种草 · 回访态改用横滑 3 卡</p>
+          </div>
+        </section>
+
+        <section class="wf-state" id="state-loading">
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span><span class="wf-dot"></span>本地运行中 · 127.0.0.1:8766</span></div>
+          <div class="page-inner">
+            <div class="wf-box wf-box--solid" style="padding:0;border:none;background:transparent;margin-bottom:20px">
+              <p class="hero-eyebrow">TRAVELOGUE · 旅行游记工坊</p>
+              <h1 class="hero-title">把旅行照片变成一篇杂志风长图，直接发微信</h1>
+              <ul class="hero-pills">
+                <li>自动分章排版</li>
+                <li>无需注册 · 照片留在本机</li>
+                <li>约 2–5 分钟看到预览</li>
+              </ul>
+              <span class="dim">B · Hero · 全态 pills 文案一致（§6.3 冻结）</span>
+            </div>
+            <p class="block-label">C · 骨架</p>
+            <div class="wf-box"><div class="trip-card"><div class="thumb thumb--shimmer"></div><div class="skeleton-lines"><div class="sk-line sk-line--w60"></div><div class="sk-line sk-line--w40"></div></div></div></div>
+            <p class="block-label">D · 骨架</p>
+            <div class="wf-box"><div class="wf-btn" style="opacity:.5">▭▭▭ 加载中…</div></div>
+          </div>
+        </section>
+
+        <section class="wf-state" id="state-empty">
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span><span class="wf-dot"></span>本地运行中 · 127.0.0.1:8766</span></div>
+          <div class="page-inner">
+            <div class="wf-box wf-box--solid" style="padding:0;border:none;background:transparent">
+              <p class="hero-eyebrow">TRAVELOGUE · 旅行游记工坊</p>
+              <h1 class="hero-title">把旅行照片变成一篇杂志风长图，直接发微信</h1>
+              <ul class="hero-pills">
+                <li>自动分章排版</li>
+                <li>无需注册 · 照片留在本机</li>
+                <li>约 2–5 分钟看到预览</li>
+              </ul>
+            </div>
+            <p class="block-label">D′ · v1.2 旧布局（已废弃，见 ②★）</p>
+            <div class="wf-box wf-box--solid" id="studio-import-primary">
+              <h2 style="margin:0 0 8px;font-size:16px">开始制作</h2>
+              <p style="margin:0 0 14px;font-size:13px;color:var(--wf-muted)">推荐 50–100 张 · 最多 250 张<br/>导入约 2–5 分钟可看到预览（取决于照片数量）</p>
+              <div class="wf-btn wf-btn--primary" style="margin-bottom:12px">📁 选择照片文件夹 <span class="wf-badge">推荐</span></div>
+              <details class="wf-prep">
+                <summary>💡 不知道选哪个文件夹？ ▸</summary>
+                <ul>
+                  <li>同一次旅行的照片放一个文件夹（50–100 张最佳）</li>
+                  <li>Day1/Day2 子文件夹：先合并，或分两次导入（每次一篇新游记）</li>
+                  <li>支持 JPG/PNG/WebP/HEIC；照片不会被移动</li>
+                </ul>
+              </details>
+              <div class="wf-row-2" style="margin:12px 0">
+                <div class="wf-card-sm">试用示例相册</div>
+                <div class="wf-card-sm">浏览器上传<br><small>较慢 · 备选</small></div>
+              </div>
+              <a href="#" style="font-size:12px;color:var(--wf-muted)">标题 / 地点 ▸</a>
+              <a href="#" style="font-size:12px;color:var(--wf-muted);float:right">改用文件夹路径 ▸</a>
+              <div style="clear:both"></div>
+            </div>
+            <p class="block-label">E · 样例（置底）</p>
+            <div class="wf-box">
+              <div class="sample-img">9:16 · 示例效果（约 80 张照片）</div>
+              <p class="sample-caption">杂志风竖版长图 · 保存后可拖到微信群<br/><small>实际效果取决于照片数量与质量</small></p>
+            </div>
+            <p class="wf-footer">照片留在本机 · <a href="#">了解如何发微信 ▸</a></p>
+          </div>
+        </section>
+
+        <section class="wf-state" id="state-empty-prep">
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span>本地运行中</span></div>
+          <div class="page-inner">
+            <p class="block-label">D · 照片准备引导（展开态 · Persona A）</p>
+            <div class="wf-box wf-box--solid">
+              <div class="wf-btn wf-btn--primary" style="margin-bottom:12px">📁 选择照片文件夹</div>
+              <details class="wf-prep" open>
+                <summary>💡 不知道选哪个文件夹？ ▾</summary>
+                <ul>
+                  <li>把<strong>同一次旅行</strong>的照片放到一个文件夹里（50–100 张最佳）</li>
+                  <li>若分散在「京都Day1 / 京都Day2」：先合并到一个文件夹，或<strong>分两次导入</strong>（每次生成一篇<strong>新</strong>游记）</li>
+                  <li>支持 JPG / PNG / WebP / HEIC；照片不会被移动或修改</li>
+                  <li>手机照片需先传到电脑（复制到「图片」文件夹或用数据线导入）</li>
+                </ul>
+              </details>
+            </div>
+          </div>
+        </section>
+
+        <section class="wf-state" id="state-empty-path">
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span>本地运行中</span></div>
+          <div class="page-inner">
+            <div style="margin-bottom:16px"><h1 class="hero-title" style="font-size:20px">…</h1></div>
+            <p class="block-label">D · 路径输入展开态</p>
+            <div class="wf-box wf-box--solid">
+              <div class="wf-btn wf-btn--primary" style="margin-bottom:16px;opacity:.6">📁 选择照片文件夹</div>
+              <p style="font-size:12px;color:var(--wf-muted);margin:0 0 12px">▼ 改用文件夹路径（已展开）</p>
+              <label class="wf-label">照片文件夹路径（Windows）</label>
+              <input class="wf-input" type="text" value="D:\Photos\Kyoto2025" readonly />
+              <div class="wf-btn wf-btn--primary">使用路径导入</div>
+              <p style="font-size:11px;color:var(--wf-muted);margin:10px 0 0">选文件夹成功 → Toast「已选择 · 约 N 张」</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="wf-state" id="state-returning">
+          <div class="wf-bar">
+            <span>◆ Travelogue Studio</span>
+            <span><span class="wf-dot"></span>127.0.0.1:8766</span>
+            <span class="wf-slot">#studio-shell-slot-p3</span>
+          </div>
+          <div class="page-inner">
+            <div style="margin-bottom:20px">
+              <p class="hero-eyebrow">TRAVELOGUE · 旅行游记工坊</p>
+              <h1 class="hero-title hero-title--compact">把旅行照片变成一篇杂志风长图，直接发微信</h1>
+              <p style="font-size:11px;color:var(--wf-muted);margin:8px 0 0">回访态：pills 省略 · 标题 20px</p>
+            </div>
+            <p class="block-label">C · 最近编辑</p>
+            <div class="wf-box wf-box--solid">
+              <h2 style="margin:0 0 12px;font-size:16px">继续上次的游记</h2>
+              <div class="trip-card-wrap trip-card-wrap--clickable">
+                <span class="trip-card__menu" title="M13 · 删除游记">⋯</span>
+                <div class="trip-card">
+                  <div class="thumb">preview</div>
+                  <div>
+                    <p class="trip-title">雨后京都</p>
+                    <p class="trip-meta">86 张 · 5月20日</p>
+                    <div class="trip-actions">
+                      <span class="wf-btn wf-btn--primary wf-btn--sm">继续编辑</span>
+                      <span class="wf-btn wf-btn--ghost wf-btn--sm">显示封面</span>
+                    </div>
+                  </div>
+                  <span class="trip-card__chevron">→</span>
+                </div>
+              </div>
+            </div>
+            <p class="block-label">D · 制作新的游记</p>
+            <div class="wf-box" style="padding:14px">
+              <h2 style="margin:0 0 4px;font-size:15px">制作新的游记</h2>
+              <p class="wf-subtitle">每个文件夹会生成一篇<strong>新的</strong>游记，不会覆盖已有游记。</p>
+              <div class="wf-btn wf-btn--primary">📁 选择照片文件夹</div>
+              <details class="wf-prep" style="margin-top:12px">
+                <summary>💡 不知道选哪个文件夹？ ▸</summary>
+                <ul><li>同 §6.13.1 · 见 ②c</li></ul>
+              </details>
+            </div>
+            <p class="block-label">F · 全部游记</p>
+            <div class="wf-box">
+              <p style="text-align:center;margin:0;font-size:12px;color:var(--wf-accent)">查看更多 ▸ → 追加 +20 条，不替换列表</p>
+            </div>
+            <p class="wf-footer">照片留在本机 · <a href="#">了解如何发微信</a></p>
+          </div>
+        </section>
+
+        <section class="wf-state" id="state-returning-stale">
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span>本地运行中</span></div>
+          <div class="page-inner">
+            <p class="block-label">C · stale · Persona B</p>
+            <div class="wf-box wf-box--solid">
+              <h2 style="margin:0 0 12px;font-size:16px">继续上次的游记</h2>
+              <div class="trip-card-wrap trip-card-wrap--clickable">
+                <div class="trip-card">
+                  <div class="thumb">preview</div>
+                  <div>
+                    <p class="trip-title">雨后京都</p>
+                    <p class="trip-meta">86 张 · 5月20日 · <span class="wf-badge wf-badge--warn">长图待更新</span></p>
+                    <div class="trip-actions">
+                      <span class="wf-btn wf-btn--primary wf-btn--sm">更新长图</span>
+                      <span class="wf-btn wf-btn--ghost wf-btn--sm">继续编辑</span>
+                    </div>
+                  </div>
+                  <span class="trip-card__chevron">→</span>
+                </div>
+              </div>
+              <span class="dim">主按钮 = 更新长图 → preview + focus 保存长图 · 整卡同效</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="wf-state" id="state-demo-return">
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span>本地运行中</span></div>
+          <div class="page-inner">
+            <p class="block-label">C · 试用后 · Persona C</p>
+            <div class="wf-box wf-box--solid">
+              <h2 style="margin:0 0 12px;font-size:16px">继续上次的游记</h2>
+              <div class="trip-card-wrap trip-card-wrap--clickable">
+                <div class="trip-card">
+                  <div class="thumb">demo</div>
+                  <div>
+                    <p class="trip-title">示例旅途 <span class="wf-badge wf-badge--demo">示例</span></p>
+                    <p class="trip-meta">6 张 · 5月27日</p>
+                    <span class="wf-btn wf-btn--ghost wf-btn--sm">继续编辑</span>
+                  </div>
+                  <span class="trip-card__chevron">→</span>
+                </div>
+              </div>
+              <a class="wf-nudge" href="#studio-import-primary">试试用自己的照片做一篇 →</a>
+            </div>
+            <p class="block-label">D · 开始制作（仍可见）</p>
+            <div class="wf-box"><div class="wf-btn wf-btn--primary">📁 选择照片文件夹</div></div>
+          </div>
+        </section>
+
+        <section class="wf-state" id="state-highlight">
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span>本地运行中</span></div>
+          <div class="page-inner">
+            <p class="block-label">C · 首次返回 highlight</p>
+            <div class="wf-box wf-box--solid wf-box--highlight" style="position:relative">
+              <span class="wf-tooltip">你的游记在这里，点击继续编辑</span>
+              <div class="trip-card-wrap trip-card-wrap--clickable">
+                <div class="trip-card">
+                  <div class="thumb">preview</div>
+                  <div><p class="trip-title">我的第一篇游记</p><p class="trip-meta">42 张 · 刚刚</p></div>
+                  <span class="trip-card__chevron">→</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="wf-state" id="state-importing">
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span>导入进行中…</span></div>
+          <div class="page-inner">
+            <p class="block-label">G · 双进度（浏览器上传场景）</p>
+            <div class="wf-box wf-box--solid">
+              <div class="progress-block">
+                <p class="progress-label"><span>上传照片</span><strong>65%</strong></p>
+                <div class="progress-bar"><div class="progress-bar__fill progress-bar__fill--upload" style="width:65%"></div></div>
+              </div>
+              <div class="progress-block">
+                <p class="progress-label"><span><strong>2/4</strong> 正在智能排版…</span><strong>约 1 分钟</strong></p>
+                <div class="progress-bar"><div class="progress-bar__fill progress-bar__fill--pipe" style="width:50%"></div></div>
+              </div>
+              <p style="font-size:11px;color:var(--wf-muted);margin:0 0 8px">§8.2：准备照片 → 智能排版 → 撰写文字 → 生成预览</p>
+              <p style="font-size:12px;color:#6d4c41;font-style:italic;margin:0 0 12px">比预期久一些，请耐心等待…</p>
+              <span class="wf-btn wf-btn--ghost">取消导入</span>
+              <p style="font-size:11px;color:var(--wf-muted);margin:12px 0 0">CLI/路径导入：仅显示下方 pipeline 进度条</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="wf-state" id="state-success">
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span>本地运行中</span></div>
+          <div class="page-inner overlay-layer" style="min-height:360px">
+            <div class="wf-toast wf-toast--top">你的第一篇游记已生成，正在打开预览…</div>
+          </div>
+        </section>
+
+        <section class="wf-state" id="state-failed">
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span style="color:var(--wf-danger-text)">导入失败</span></div>
+          <div class="page-inner">
+            <p class="block-label">H · 失败 + 路径回显</p>
+            <div class="wf-box wf-box--danger">
+              <p class="error-echo">D:\Photos\Kyoto2025（3 张照片）</p>
+              <p style="margin:0 0 12px;color:var(--wf-danger-text);font-size:14px">至少需要 4 张照片。请换一个有更多照片的文件夹后重试。</p>
+              <div style="display:flex;gap:10px">
+                <span class="wf-btn wf-btn--primary wf-btn--sm">重试</span>
+                <span class="wf-btn wf-btn--ghost wf-btn--sm">返回</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="wf-state" id="state-offline">
+          <div class="wf-box wf-box--offline" style="margin:0;border-radius:0;border-left:none;border-right:none">
+            <strong>服务已停止</strong> · 请重新启动 Studio
+          </div>
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span style="color:#e65100">● 未连接</span></div>
+          <div class="page-inner"><div class="wf-btn" style="opacity:.4">📁 选择照片文件夹（禁用）</div></div>
+        </section>
+
+        <section class="wf-state" id="state-modal">
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span>本地运行中</span></div>
+          <div class="page-inner overlay-layer" style="min-height:420px">
+            <div class="wf-modal-backdrop">
+              <div class="wf-modal">
+                <h3>该游记已存在</h3>
+                <p>是否覆盖已有内容？覆盖后无法撤销。</p>
+                <div class="wf-modal-actions">
+                  <span class="wf-btn wf-btn--ghost wf-btn--sm">取消</span>
+                  <span class="wf-btn wf-btn--primary wf-btn--sm wf-btn--focus">覆盖并重新导入</span>
+                </div>
+                <p style="font-size:11px;color:var(--wf-muted);margin:12px 0 0">:focus-visible → 蓝色 outline · Tab: 取消 → 主按钮</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="wf-state" id="state-footer">
+          <div class="wf-bar"><span>◆ Travelogue Studio</span><span>本地运行中</span></div>
+          <div class="page-inner">
+            <p class="block-label">I · 页脚展开态</p>
+            <div class="wf-footer">
+              照片与游记保存在本机 · 不会上传云端<br />
+              <a href="#">了解如何发微信 ▾</a>
+              <ol class="wf-checklist">
+                <li>① 在预览页点「保存长图」，得到 PNG 文件</li>
+                <li>② 打开微信，将 PNG 拖入对话框（或从手机相册发送）</li>
+                <li>③ 如果生成了多张长图，按文件名上的编号顺序发送即可</li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <h2 id="sidebar-title">②★ 杂志空态</h2>
+      <ul class="anno-list" id="sidebar-anno"></ul>
+
+      <h3>设计 Token</h3>
+      <table class="spec-table">
+        <tr><th>线框</th><th>产品 CSS</th><th>用途</th></tr>
+        <tr><td><span class="color-swatch" style="background:#546e7a"></span>#546e7a</td><td><span class="color-swatch" style="background:#3d6b5a"></span>--color-accent #3d6b5a</td><td>主色 / favicon</td></tr>
+        <tr><td><span class="color-swatch" style="background:#eceff1"></span>#eceff1</td><td><span class="color-swatch" style="background:#f4f7f5"></span>--color-bg #f4f7f5</td><td>页面背景</td></tr>
+        <tr><td><span class="color-swatch" style="background:#ffcdd2"></span>#ffcdd2</td><td><span class="color-swatch" style="background:#fdeeee"></span>--color-danger-bg</td><td>失败面板</td></tr>
+        <tr><td><span class="color-swatch" style="background:#37474f"></span>#37474f</td><td><span class="color-swatch" style="background:#1a2f28"></span>--color-toast #1a2f28</td><td>Toast</td></tr>
+        <tr><td><span class="color-swatch" style="background:#c4956a"></span>暖金</td><td>--color-accent-warm #c4956a</td><td>★ 精选角标</td></tr>
+      </table>
+
+      <table class="spec-table">
+        <tr><th>层级</th><th>字号</th><th>用途</th></tr>
+        <tr><td>H1 杂志</td><td>26px / 300</td><td>情感标题 · letter-spacing</td></tr>
+        <tr><td>Eyebrow</td><td>11px · 0.2em</td><td>TRAVELOGUE</td></tr>
+        <tr><td>Body</td><td>14–15px</td><td>UI / 按钮</td></tr>
+      </table>
+
+      <table class="spec-table">
+        <tr><th>Slot</th><th>Phase 3</th><th>位置</th></tr>
+        <tr><td>import-primary-slot-p3</td><td>先精选再生成</td><td>D 主按钮下</td></tr>
+        <tr><td>studio-shell-slot-p3</td><td>Phase 4+ 预留（非 P3 引擎）</td><td>A 顶栏右侧 · comment only</td></tr>
+      </table>
+
+      <p class="spec-note">
+        <strong>v1.4 视觉：</strong>Kinfolk 留白 + Unsplash 全幅 · 纸张纹理 · CTA breathing<br />
+        <strong>性能：</strong>Hero ≤180KB · gallery lazy · reduced-motion 关动画<br />
+        <strong>分层：</strong>情感 H1 + 功能副标 · 空态 B★ / 回访 B⁻
+      </p>
+    </aside>
+  </div>
+
+  <script>
+    var BROWSER_TITLES = {
+      magazine: "Travelogue Studio",
+      "gallery-wall": "Travelogue Studio",
+      loading: "Travelogue Studio",
+      empty: "Travelogue Studio",
+      "empty-prep": "Travelogue Studio",
+      "empty-path": "Travelogue Studio",
+      returning: "Travelogue Studio",
+      "returning-stale": "Travelogue Studio",
+      "demo-return": "Travelogue Studio",
+      highlight: "Travelogue Studio",
+      importing: "正在生成… · Travelogue Studio",
+      success: "Travelogue Studio",
+      failed: "导入失败 · Travelogue Studio",
+      offline: "Travelogue Studio",
+      modal: "Travelogue Studio",
+      footer: "Travelogue Studio"
+    };
+
+    var ANNOTATIONS = {
+      magazine: {
+        title: "②★ 杂志空态 · Persona D",
+        items: [
+          ["全幅 Hero", "真实输出裁切 · 非 stock · 蒙版白字"],
+          ["CTA 内嵌", "选择照片文件夹 · 首屏可点 · 已冻结"],
+          ["E★ M12", "横滑 carousel · 瀑布流 → M12b Tab"],
+        ]
+      },
+      "gallery-wall": {
+        title: "E★ 灵感瀑布流 · M12b",
+        items: [
+          ["空态专属", "比回访态更大 · 两列不等高"],
+          ["reveal", "进入视口淡入上移"],
+          ["期望", "情境标签含张数/时间"]
+        ]
+      },
+      loading: {
+        title: "① Loading",
+        items: [
+          ["Hero pills", "约 2–5 分钟看到预览（区间）"],
+          ["骨架屏", "C/D shimmer"]
+        ]
+      },
+      empty: {
+        title: "② 空态 · Persona A 入口",
+        items: [
+          ["照片准备", "折叠「不知道选哪个文件夹？」→ 见 ②c"],
+          ["样例期望", "约 80 张 · 实际取决于数量质量"],
+          ["D 置顶", "E 置底"]
+        ]
+      },
+      "empty-prep": {
+        title: "②c 照片准备展开",
+        items: [
+          ["P0 认知支架", "Day1/Day2 合并或分次导入=新游记"],
+          ["手机照片", "需先传到电脑"],
+          ["非功能", "纯文案"]
+        ]
+      },
+      "empty-path": {
+        title: "②b 路径展开",
+        items: [["路径表单", "降级入口"]]
+      },
+      returning: {
+        title: "③ 回访 · 多次导入",
+        items: [
+          ["Hero 压缩", "20px · 无 pills"],
+          ["D 副标题", "每个文件夹→一篇新游记"],
+          ["⋯ 菜单", "M13 删除占位"]
+        ]
+      },
+      "returning-stale": {
+        title: "③b stale · Persona B",
+        items: [
+          ["主 CTA", "更新长图（非继续编辑）"],
+          ["行为", "preview + focus 保存长图按钮"],
+          ["次按钮", "继续编辑"]
+        ]
+      },
+      "demo-return": {
+        title: "⑪ 试用回流 · Persona C",
+        items: [
+          ["示例徽章", "与真实游记区分"],
+          ["转化引导", "试试用自己的照片做一篇 →"],
+          ["D 仍可见", "主 CTA 不隐藏"]
+        ]
+      },
+      highlight: {
+        title: "④ 首次返回",
+        items: [["pulse + tooltip", "一次性"]]
+      },
+      importing: {
+        title: "⑤ 导入中",
+        items: [
+          ["用户文案", "正在智能排版…（非「排版」术语）"],
+          ["双进度", "上传蓝 + pipeline 绿"],
+          ["标签", "正在生成… · Travelogue Studio"]
+        ]
+      },
+      success: { title: "⑥ 首次成功", items: [["Toast Aha", "≥800ms 跳 preview"]] },
+      failed: {
+        title: "⑦ 失败",
+        items: [
+          ["路径回显", "D:\\…（N 张照片）"],
+          ["标签", "导入失败 · …"]
+        ]
+      },
+      offline: { title: "⑧ 离线", items: [["禁用导入", "health 轮询"]] },
+      modal: { title: "⑨ Modal", items: [["覆盖", "E_DEMO_EXISTS 才覆盖"]] },
+      footer: {
+        title: "⑩ 页脚展开",
+        items: [
+          ["简化第③步", "多张按编号，不提「章」"],
+          ["折叠", "再次点击收起"]
+        ]
+      }
+    };
+
+    var tabs = document.getElementById("state-tabs");
+    var sidebarTitle = document.getElementById("sidebar-title");
+    var sidebarAnno = document.getElementById("sidebar-anno");
+    var browserTitle = document.getElementById("browser-title");
+
+    tabs.addEventListener("click", function (e) {
+      var btn = e.target.closest("button[data-state]");
+      if (!btn) return;
+      var state = btn.getAttribute("data-state");
+      tabs.querySelectorAll("button").forEach(function (b) { b.classList.remove("is-active"); });
+      btn.classList.add("is-active");
+      document.querySelectorAll(".wf-state").forEach(function (s) {
+        s.classList.toggle("is-visible", s.id === "state-" + state);
+      });
+      browserTitle.textContent = BROWSER_TITLES[state] || "Travelogue Studio";
+      var anno = ANNOTATIONS[state];
+      if (!anno) return;
+      sidebarTitle.textContent = anno.title;
+      sidebarAnno.innerHTML = anno.items.map(function (pair) {
+        return "<li><strong>" + pair[0] + "</strong><span>" + pair[1] + "</span></li>";
+      }).join("");
+    });
+
+    sidebarTitle.textContent = ANNOTATIONS.magazine.title;
+    sidebarAnno.innerHTML = ANNOTATIONS.magazine.items.map(function (pair) {
+      return "<li><strong>" + pair[0] + "</strong><span>" + pair[1] + "</span></li>";
+    }).join("");
+    browserTitle.textContent = BROWSER_TITLES.magazine;
+  </script>
+</body>
+</html>

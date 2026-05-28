@@ -96,6 +96,7 @@ def test_studio_trips_list(tmp_path: Path) -> None:
         status, body = _get_json(f"http://127.0.0.1:{port}/__travelogue/trips")
         assert status == 200
         assert body.get("trips")
+        assert body.get("total") is not None
         assert body["trips"][0].get("tripId")
         assert body["trips"][0].get("previewUrl", "").endswith("/index.html")
     finally:

@@ -26,7 +26,7 @@ def longshot_outputs_stale(trip_dir: Path, *, trip_mtime: float) -> bool:
     return trip_mtime > latest_png + 0.5
 
 
-def list_studio_trips(trips_dir: Path, *, limit: int = 20) -> list[dict]:
+def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
     trips_dir = trips_dir.resolve()
     if not trips_dir.is_dir():
         return []
@@ -68,4 +68,13 @@ def list_studio_trips(trips_dir: Path, *, limit: int = 20) -> list[dict]:
         )
 
     rows.sort(key=lambda item: item[0], reverse=True)
-    return [row[1] for row in rows[:limit]]
+    return rows
+
+
+def list_studio_trips(trips_dir: Path, *, limit: int = 20, offset: int = 0) -> list[dict]:
+    rows = _trip_rows(trips_dir)
+    return [row[1] for row in rows[offset : offset + limit]]
+
+
+def studio_trips_total(trips_dir: Path) -> int:
+    return len(_trip_rows(trips_dir))

@@ -22,7 +22,7 @@ from travelogue.web.studio_jobs import (
 )
 from travelogue.web.studio_multipart import parse_multipart_form
 from travelogue.web.studio_pipeline import assert_album_importable
-from travelogue.web.studio_trips import list_studio_trips
+from travelogue.web.studio_trips import list_studio_trips, studio_trips_total
 from travelogue.web.studio_uploads import (
     delete_upload_dir,
     save_upload_files,
@@ -205,9 +205,16 @@ class StudioMixin:
         self.wfile.write(data)
 
     def _studio_handle_trips(self) -> None:
+        query = parse_qs(urlparse(self.path).query)
+        try:
+            limit = int((query.get("limit") or ["20"])[0])
+        except ValueError:
+            limit = 20
+        limit = max(1, min(limit, 100))
         trips_root = self.trips_dir or self._studio_cfg().trips_dir
-        trips = list_studio_trips(trips_root)
-        self._json_response(200, {"ok": True, "trips": trips})
+        trips = list_studio_trips(trips_root, limit=limit)
+        total = studio_trips_total(trips_root)
+        self._json_response(200, {"ok": True, "trips": trips, "total": total})
 
     def _studio_handle_status(self) -> None:
         query = parse_qs(urlparse(self.path).query)

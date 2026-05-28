@@ -5,90 +5,280 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="studio-token" content="__STUDIO_TOKEN__" />
   <title>Travelogue Studio</title>
+  <link rel="icon" href="/__studio/assets/favicon.ico" />
   <link rel="stylesheet" href="/__studio/studio.css" />
 </head>
 <body>
-  <div class="studio">
-    <header class="studio__hero">
-      <p class="studio__eyebrow">Travelogue · 旅行游记工坊</p>
-      <h1 class="studio__title">把旅行照片变成一篇杂志风长图，直接发微信</h1>
-      <ul class="studio__features">
-        <li>自动分章排版</li>
-        <li>无需注册</li>
-        <li>照片留在本地</li>
-      </ul>
-    </header>
 
-    <section class="studio__sample" aria-label="输出效果预览">
-      <img src="/__studio/assets/sample-longshot.jpg" alt="长图输出样例" class="studio__sample-img" />
-      <p class="studio__sample-caption">输出效果预览（占位样例）</p>
-    </section>
+<!-- Offline Banner (hidden by default) -->
+<div id="studio-offline" class="studio__offline-banner" hidden>
+  服务已停止，请重新启动 Studio
+</div>
 
-    <section class="studio__panel">
-      <h2 class="studio__panel-title">开始制作</h2>
-      <p class="studio__hint">推荐 50–100 张照片效果最佳；最多 250 张。</p>
+<div class="studio">
 
-      <form id="studio-import-form" class="studio__form">
-        <label class="studio__label" for="album-path">照片文件夹路径（Windows）</label>
-        <input id="album-path" name="albumPath" type="text" class="studio__input"
-          placeholder="例如 D:\Photos\Kyoto2025" autocomplete="off" />
-        <div class="studio__row">
-          <label class="studio__label" for="trip-title">标题</label>
-          <input id="trip-title" name="title" type="text" class="studio__input" value="我的旅途" />
+  <!-- A · Top Bar -->
+  <header class="studio__topbar">
+    <a href="/" class="studio__topbar-brand">Travelogue Studio</a>
+    <div class="studio__topbar-status">
+      <span id="studio-status-dot" class="studio__topbar-dot"></span>
+      <span id="studio-status-text">本地运行中</span>
+      <span class="studio__topbar-addr" id="studio-copy-addr" title="点击复制">127.0.0.1:8766</span>
+      <!-- Phase 3 slot: engine status light -->
+      <span id="studio-shell-slot-p3" class="studio__slot-p3"></span>
+    </div>
+  </header>
+
+  <!-- B★ Magazine Hero (IdleEmpty) -->
+  <section class="studio__hero studio__hero--magazine" id="studio-hero-magazine" aria-label="Hero">
+    <p class="studio__hero-eyebrow">TRAVELOGUE</p>
+    <h1 class="studio__hero-title studio__hero-title--magazine">让每一段旅程<br/>都值得被杂志记录</h1>
+    <p class="studio__hero-subtitle">把旅行照片变成杂志风长图，直接发微信</p>
+    <!-- Main CTA embedded in Hero -->
+    <button type="button" id="studio-pick-folder" class="studio__btn studio__btn--primary">
+      选择照片文件夹
+    </button>
+    <!-- file input for native folder picker fallback -->
+    <input id="studio-folder-input" type="file" webkitdirectory directory multiple hidden />
+    <ul class="studio__hero-pills">
+      <li>自动分章</li>
+      <li>留在本机</li>
+      <li>约 2–5 分钟</li>
+    </ul>
+  </section>
+
+  <!-- B⁻ Compact Hero (IdleReturning, hidden by default) -->
+  <section class="studio__hero studio__hero--compact" id="studio-hero-compact" hidden aria-label="Hero">
+    <p class="studio__hero-eyebrow">TRAVELOGUE · 旅行游记工坊</p>
+    <h1 class="studio__hero-title">把旅行照片变成一篇杂志风长图，直接发微信</h1>
+  </section>
+
+  <!-- C · Recent Trips (hidden by default) -->
+  <section class="studio__recent" id="studio-recent" hidden>
+    <h2 class="studio__recent-title" id="studio-recent-title">继续上次的游记</h2>
+    <div id="studio-recent-content">
+      <!-- Skeleton (shown during loading) -->
+      <div id="studio-recent-skeleton">
+        <div class="studio__skeleton-card">
+          <div class="studio__skeleton-thumb"></div>
+          <div class="studio__skeleton-lines">
+            <div class="studio__skeleton-line studio__skeleton-line--w80"></div>
+            <div class="studio__skeleton-line studio__skeleton-line--w60"></div>
+          </div>
         </div>
-        <div class="studio__row">
-          <label class="studio__label" for="trip-place">地点</label>
-          <input id="trip-place" name="place" type="text" class="studio__input" value="旅途" />
-        </div>
-        <button type="submit" class="studio__btn studio__btn--primary" id="studio-submit-path">
-          使用路径导入
-        </button>
-      </form>
+      </div>
+      <!-- Real content (populated by JS) -->
+      <div id="studio-recent-list" hidden></div>
+    </div>
+  </section>
 
-      <div class="studio__divider">或</div>
-
+  <!-- D' · Secondary Actions (Empty state, hidden by default) -->
+  <section class="studio__import-section" id="studio-import-empty" hidden>
+    <div class="studio__import-secondary">
       <button type="button" id="studio-demo-album" class="studio__btn studio__btn--secondary">
         试用示例相册（无需准备照片）
       </button>
-
-      <div class="studio__upload">
-        <label class="studio__btn studio__btn--secondary">
-          选择照片文件夹（浏览器上传）
-          <input id="album-upload" type="file" webkitdirectory directory multiple hidden />
-        </label>
-        <progress id="upload-progress" class="studio__progress" value="0" max="100" hidden></progress>
+      <label class="studio__btn studio__btn--secondary">
+        浏览器上传（较慢）
+        <input id="album-upload" type="file" webkitdirectory directory multiple hidden />
+      </label>
+    </div>
+    <details class="studio__prep-guide">
+      <summary>不知道选哪个文件夹？ ▸</summary>
+      <ul>
+        <li>把<strong>同一次旅行</strong>的照片放到一个文件夹里（50–100 张最佳）</li>
+        <li>若分散在「Day1 / Day2」等子文件夹：先<strong>合并</strong>到一个文件夹，或<strong>分两次导入</strong>（每次一篇<strong>新</strong>游记）</li>
+        <li>支持 JPG / PNG / WebP / HEIC；照片<strong>不会被移动或修改</strong></li>
+        <li><strong>手机照片</strong>需先传到电脑（复制到「图片」文件夹或用数据线导入）</li>
+      </ul>
+    </details>
+    <a class="studio__path-toggle" id="studio-path-toggle">改用文件夹路径 ▸</a>
+    <form id="studio-import-form" class="studio__path-form">
+      <label class="studio__label" for="album-path">照片文件夹路径（Windows）</label>
+      <input id="album-path" name="albumPath" type="text" class="studio__input"
+        placeholder="例如 D:\Photos\Kyoto2025" autocomplete="off" />
+      <div class="studio__row">
+        <label class="studio__label" for="trip-title">标题</label>
+        <input id="trip-title" name="title" type="text" class="studio__input" value="我的旅途" />
       </div>
-
-      <p id="studio-warning" class="studio__warning" hidden></p>
-      <p id="studio-error" class="studio__error" role="alert" hidden></p>
-
-      <div id="studio-progress" class="studio__job" hidden>
-        <p id="studio-stage" class="studio__stage"></p>
-        <div class="studio__bar"><div id="studio-bar-fill" class="studio__bar-fill"></div></div>
-        <button type="button" id="studio-cancel" class="studio__btn studio__btn--ghost" hidden>
-          取消导入
-        </button>
+      <div class="studio__row">
+        <label class="studio__label" for="trip-place">地点</label>
+        <input id="trip-place" name="place" type="text" class="studio__input" value="旅途" />
       </div>
+      <button type="submit" class="studio__btn studio__btn--primary" id="studio-submit-path">
+        使用路径导入
+      </button>
+    </form>
+  </section>
 
-      <div id="studio-failure" class="studio__failure" hidden>
-        <p id="studio-failure-msg" class="studio__failure-msg"></p>
-        <div class="studio__failure-actions">
-          <button type="button" id="studio-retry" class="studio__btn studio__btn--primary">重试</button>
-          <a href="/" class="studio__btn studio__btn--secondary">返回工作台</a>
-        </div>
+  <!-- D · New Import (Returning state, hidden by default) -->
+  <section class="studio__import-section" id="studio-import-returning" hidden>
+    <h2 class="studio__import-section-title">制作新的游记</h2>
+    <p class="studio__import-returning-subtitle">
+      每个文件夹会生成一篇<strong>新的</strong>游记，不会覆盖已有游记。
+    </p>
+    <button type="button" id="studio-pick-folder-returning" class="studio__btn studio__btn--primary">
+      选择照片文件夹
+    </button>
+    <input id="studio-folder-input-returning" type="file" webkitdirectory directory multiple hidden />
+    <!-- Phase 3 slot: curated import -->
+    <div id="import-primary-slot-p3" class="studio__slot-p3"></div>
+    <details class="studio__prep-guide" style="margin-top:12px">
+      <summary>不知道选哪个文件夹？ ▸</summary>
+      <ul>
+        <li>把<strong>同一次旅行</strong>的照片放到一个文件夹里（50–100 张最佳）</li>
+        <li>若分散在「Day1 / Day2」等子文件夹：先合并到一个文件夹，或分两次导入（每次一篇新游记）</li>
+        <li>支持 JPG / PNG / WebP / HEIC；照片不会被移动或修改</li>
+        <li>手机照片需先传到电脑（复制到「图片」文件夹或用数据线导入）</li>
+      </ul>
+    </details>
+    <div class="studio__import-secondary" style="margin-top:12px">
+      <button type="button" id="studio-demo-album-returning" class="studio__btn studio__btn--secondary">
+        试用示例相册
+      </button>
+      <label class="studio__btn studio__btn--secondary">
+        浏览器上传
+        <input id="album-upload-returning" type="file" webkitdirectory directory multiple hidden />
+      </label>
+    </div>
+    <a class="studio__path-toggle" id="studio-path-toggle-returning">改用文件夹路径 ▸</a>
+    <form id="studio-import-form-returning" class="studio__path-form">
+      <label class="studio__label" for="album-path-returning">照片文件夹路径（Windows）</label>
+      <input id="album-path-returning" name="albumPath" type="text" class="studio__input"
+        placeholder="例如 D:\Photos\Kyoto2025" autocomplete="off" />
+      <div class="studio__row">
+        <label class="studio__label" for="trip-title-returning">标题</label>
+        <input id="trip-title-returning" name="title" type="text" class="studio__input" value="我的旅途" />
       </div>
-    </section>
+      <div class="studio__row">
+        <label class="studio__label" for="trip-place-returning">地点</label>
+        <input id="trip-place-returning" name="place" type="text" class="studio__input" value="旅途" />
+      </div>
+      <button type="submit" class="studio__btn studio__btn--primary" id="studio-submit-path-returning">
+        使用路径导入
+      </button>
+    </form>
+  </section>
 
-    <section class="studio__trips" id="studio-trips" hidden>
-      <h2 class="studio__panel-title">我的游记</h2>
-      <ul id="studio-trips-list" class="studio__trips-list"></ul>
-    </section>
-
-    <section class="studio__recent" id="studio-recent" hidden>
-      <h2 class="studio__panel-title">最近游记</h2>
-      <ul id="studio-recent-list" class="studio__recent-list"></ul>
-    </section>
+  <!-- Skeleton for D (during loading) -->
+  <div id="studio-import-skeleton" hidden style="margin-bottom:20px">
+    <div class="studio__skeleton-btn"></div>
   </div>
-  <script src="/__studio/studio.js" defer></script>
+
+  <!-- Idle-state validation / import errors (visible when not Importing) -->
+  <p id="studio-import-error" class="studio__error studio__import-error" role="alert" hidden></p>
+
+  <!-- Progress (Importing state) -->
+  <section class="studio__import-section" id="studio-progress-section" hidden>
+    <div id="studio-progress" class="studio__job">
+      <p id="studio-stage" class="studio__stage" aria-live="polite"></p>
+      <div class="studio__bar"><div id="studio-bar-fill" class="studio__bar-fill"></div></div>
+      <button type="button" id="studio-cancel" class="studio__btn studio__btn--ghost" hidden>
+        取消导入
+      </button>
+    </div>
+    <p id="studio-warning" class="studio__warning" hidden></p>
+    <p id="studio-error" class="studio__error" role="alert" hidden></p>
+    <progress id="upload-progress" class="studio__progress" value="0" max="100" hidden></progress>
+  </section>
+
+  <!-- Failure (Failed state) -->
+  <section id="studio-failure" hidden>
+    <p id="studio-failure-echo" class="studio__failure-echo"></p>
+    <div class="studio__failure">
+      <p id="studio-failure-msg" class="studio__failure-msg"></p>
+      <div class="studio__failure-actions">
+        <button type="button" id="studio-retry" class="studio__btn studio__btn--primary studio__btn--sm">重试</button>
+        <a href="/" class="studio__btn studio__btn--secondary studio__btn--sm">返回</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- E★ Gallery Carousel (empty state) -->
+  <section class="studio__gallery" id="studio-gallery" hidden>
+    <h2 class="studio__gallery-title">他们的旅行故事</h2>
+    <div class="studio__gallery-carousel" id="studio-gallery-carousel">
+      <div class="studio__gallery-card" data-label="京都 · 雨后 · 86 张">
+        <div class="studio__gallery-card-img studio__gallery-card-img--photo" style="background-image:url('/__studio/assets/demo-album/demo-01.jpg')">
+          <span class="studio__gallery-card-img-label">京都</span>
+        </div>
+        <div class="studio__gallery-card-label">雨后 · 86 张</div>
+      </div>
+      <div class="studio__gallery-card studio__gallery-card--featured" data-label="冰岛 · 极光 · 120 张">
+        <div class="studio__gallery-card-img studio__gallery-card-img--photo" style="background-image:url('/__studio/assets/demo-album/demo-02.jpg')">
+          <span class="studio__gallery-card-img-label">冰岛 <span class="studio__gallery-badge">★ 精选</span></span>
+        </div>
+        <div class="studio__gallery-card-label">极光 · 120 张</div>
+      </div>
+      <div class="studio__gallery-card" data-label="大理 · 风花 · 64 张">
+        <div class="studio__gallery-card-img studio__gallery-card-img--photo" style="background-image:url('/__studio/assets/demo-album/demo-03.jpg')">
+          <span class="studio__gallery-card-img-label">大理</span>
+        </div>
+        <div class="studio__gallery-card-label">风花 · 64 张</div>
+      </div>
+      <div class="studio__gallery-card" data-label="东京 · 夜行 · 95 张">
+        <div class="studio__gallery-card-img studio__gallery-card-img--photo" style="background-image:url('/__studio/assets/demo-album/demo-04.jpg')">
+          <span class="studio__gallery-card-img-label">东京</span>
+        </div>
+        <div class="studio__gallery-card-label">夜行 · 95 张</div>
+      </div>
+      <div class="studio__gallery-card" data-label="巴黎 · 街角 · 72 张">
+        <div class="studio__gallery-card-img studio__gallery-card-img--photo" style="background-image:url('/__studio/assets/demo-album/demo-05.jpg')">
+          <span class="studio__gallery-card-img-label">巴黎</span>
+        </div>
+        <div class="studio__gallery-card-label">街角 · 72 张</div>
+      </div>
+    </div>
+    <div class="studio__gallery-nav">
+      <button type="button" class="studio__gallery-nav-btn" id="studio-gallery-prev">←</button>
+      <span id="studio-gallery-indicator">1 / 5</span>
+      <button type="button" class="studio__gallery-nav-btn" id="studio-gallery-next">→</button>
+    </div>
+    <p class="studio__gallery-caption">杂志风竖版长图 · 保存后可直接发微信<br/><small>实际效果取决于照片数量与质量</small></p>
+  </section>
+
+  <!-- E⁻ Gallery compact (returning state, hidden by default) -->
+  <section class="studio__gallery studio__gallery--compact" id="studio-gallery-compact" hidden>
+    <div class="studio__gallery-carousel" id="studio-gallery-carousel-compact">
+      <div class="studio__gallery-card">
+        <div class="studio__gallery-card-img studio__gallery-card-img--photo" style="background-image:url('/__studio/assets/demo-album/demo-01.jpg')"></div>
+      </div>
+      <div class="studio__gallery-card studio__gallery-card--featured">
+        <div class="studio__gallery-card-img studio__gallery-card-img--photo" style="background-image:url('/__studio/assets/demo-album/demo-02.jpg')"></div>
+      </div>
+      <div class="studio__gallery-card">
+        <div class="studio__gallery-card-img studio__gallery-card-img--photo" style="background-image:url('/__studio/assets/demo-album/demo-03.jpg')"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- F · All Trips (hidden by default, shown when trips.length >= 2) -->
+  <section class="studio__trips" id="studio-trips" hidden>
+    <h2 class="studio__trips-title">全部游记</h2>
+    <ul id="studio-trips-list" class="studio__trips-list"></ul>
+    <div id="studio-trips-more" class="studio__trips-more" hidden>查看更多 ▸</div>
+  </section>
+
+  <!-- I · Footer -->
+  <footer class="studio__footer">
+    照片与游记保存在本机 · 不会上传云端
+    <br />
+    <a id="studio-footer-toggle">了解如何发微信 ▸</a>
+    <ol id="studio-footer-checklist" class="studio__footer-checklist" hidden>
+      <li>在预览页点「保存长图」，得到 PNG 文件</li>
+      <li>打开微信，将 PNG 拖入对话框（或从手机相册发送）</li>
+      <li>如果生成了多张长图，按文件名上的编号顺序发送即可</li>
+    </ol>
+  </footer>
+
+</div>
+
+<!-- Toast container -->
+<div id="studio-toast-container" class="studio__toast-container"></div>
+
+<script src="/__studio/studio-toast.js" defer></script>
+<script src="/__studio/studio-modal.js" defer></script>
+<script src="/__studio/studio-gallery.js" defer></script>
+<script src="/__studio/studio.js" defer></script>
 </body>
 </html>

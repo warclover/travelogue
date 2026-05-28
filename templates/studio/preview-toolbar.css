@@ -70,6 +70,11 @@ html[data-preview-toolbar="on"] {
   gap: 6px;
 }
 .preview-toolbar__longshot:disabled { opacity: 0.6; cursor: wait; }
+.preview-toolbar__longshot--focus {
+  outline: 2px solid #ffd89a;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(255, 216, 154, .3);
+}
 
 .preview-toolbar__scale-badge {
   font-size: 11px;

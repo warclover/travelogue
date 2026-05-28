@@ -6,7 +6,7 @@
 | **模板** | `visual-journal` |
 | **机器校验** | [schemas/trip.schema.json](../schemas/trip.schema.json) |
 | **关联** | `TEMPLATE-visual-journal.md`、`AGENT-ARCHITECTURE.md` §10 |
-| **更新日期** | 2026-05-19 |
+| **更新日期** | 2026-05-28 |
 
 ---
 
@@ -65,6 +65,41 @@ trips/{tripId}/
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `orientationSummary` | object | `total` / `landscape` / `portrait` / `square` / `panorama` / `tall` / `exportLayout`；见 `LAYOUT-PLANNER.md` |
+| `clustering` | object? | Phase 3 · Curate 聚类输出；见 §3.4 |
+
+### 3.4 `curation.clustering` 对象（可选 · Phase 3 · v0.3+）
+
+由 **ClusteringLayer**（ingest 后、curate 前）写入。权威 PRD：[PRD-PHASE3.md](./PRD-PHASE3.md) §9.2。
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `version` | string | 固定 `"1"` |
+| `segmentMode` | enum | `geo_event` \| `date_fallback` |
+| `segments[]` | array | 地理/时间行程段，见下表 |
+| `clusters[]` | array? | 场景簇（P3-Full · vision on）；见下表 |
+| `visionModel` | string? | 如 `ViT-B/32`；分享时可 strip |
+
+**`segments[]` 项**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | string | 如 `evt-01` |
+| `name` | string | 展示名（地点 + 日期 span） |
+| `startDate` | date | ISO 日期 |
+| `endDate` | date | ISO 日期 |
+| `location` | string? | 城市/地区文案 |
+| `assetIds` | string[] | 本段 asset id 列表 |
+
+**`clusters[]` 项**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | number | 簇 ID；`-1` 表示噪声（若落盘） |
+| `label` | string | 如 `theme_12` |
+| `assetIds` | string[] | 簇内 asset |
+| `medoidAssetId` | string? | 代表图，供 cover 加权 |
+
+**兼容**：旧版 `curation.insights.*` **不再写入**；读取时忽略。`validate_trip` L1 将 `curation.clustering` 视为 optional 子树。
 
 ### 3.2 `export` 对象（v0.2.1+）
 
@@ -169,6 +204,11 @@ CLI：`travelogue export … --no-longshot` 写入 `export.longShot=false`。
 | `aspectKind` | enum? | `portrait` \| `landscape` \| `square` \| `panorama` \| `tall`（`classify_aspect`） |
 | `tags` | string[]? | Agent 0 语义标签，**3–5 个推荐**，供 Agent 2 |
 | `tagsSource` | enum? | `heuristic` \| `exif` \| `clip` \| `vlm` \| `user` |
+| `eventId` | string? | Phase 3 · 关联 `curation.clustering.segments[].id` |
+| `sceneClusterId` | number? | Phase 3 · 场景簇 ID；`-1` 噪声 |
+| `subjectClass` | enum? | Phase 3 / 排版 V2 · `person` \| `pet` \| `landscape` \| `architecture` \| `food` \| `indoor` \| `mixed` \| `unknown` |
+| `subjectConfidence` | number? | [0, 1] |
+| `clusterSource` | enum? | `clip` \| `heuristic` \| `none` |
 | `userTier` | enum? | v1.0+ · `featured` \| `material`；默认 `material`；见 [PRD-EXPERIENCE-附录A-精选上传.md](./PRD-EXPERIENCE-附录A-精选上传.md) |
 | `userTierSource` | enum? | `ingest` \| `user`（G2 serve 升格为 featured） |
 
@@ -315,5 +355,6 @@ CLI：`travelogue export … --no-longshot` 写入 `export.longShot=false`。
 |------|------|------|
 | v0.2 | 2026-05-19 | P0 冻结：pipeline、items、visual-journal |
 | v0.2.1 | 2026-05-19 | ADR-001：`tags`/`tagsSource`、`memoryAnchors`；交付形态澄清 |
+| v0.2.2 | 2026-05-28 | Phase 3：`curation.clustering`；asset `eventId` / `sceneClusterId` / `subjectClass` |
 
-> 架构决策：[adr/001-delivery-and-media.md](./adr/001-delivery-and-media.md)
+> 架构决策：[adr/001-delivery-and-media.md](./adr/001-delivery-and-media.md) · Phase 3：[adr/007-native-clustering.md](./adr/007-native-clustering.md)

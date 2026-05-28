@@ -5,7 +5,7 @@
 | **文档版本** | v0.1 |
 | **格式** | `E_<域>_<名称>` |
 | **关联** | `CLI-SPEC.md`、`VALIDATION-RULES.md` |
-| **更新日期** | 2026-05-19 |
+| **更新日期** | 2026-05-28 |
 
 ---
 
@@ -111,6 +111,17 @@
 | `E_DEMO_EXISTS` | 该游记已存在 | **409** body 含 `existingTripId`；确认后 `POST import` + `"force": true` |
 | `E_INGEST_HEIC` | 发现 HEIC 照片无法读取。请安装 pillow-heif 或转换为 JPG |
 
+### 聚类 `E_CLUSTER_*`（Phase 3 · Curate 聚类）
+
+| 代码 | 说明 | Studio 用户文案（中文） | 行为 |
+|------|------|-------------------------|------|
+| `E_CLUSTER_VISION_MISSING` | 未安装 `[vision]` extra 或模型不可用 | （无弹窗）场景分析不可用，已按日期排版。 | 降级 P3-Lite |
+| `E_CLUSTER_VISION_TIMEOUT` | CLIP/聚类超时 | 场景分析耗时较长，已跳过主题分组。 | 跳过 scene；继续 pipeline |
+| `E_CLUSTER_GEO_EMPTY` | 无有效 GPS/日期，无法 geo 分段 | （无弹窗）照片缺少位置信息，已按日期分段。 | fallback `time_segments` |
+| `E_CLUSTER_CACHE_CORRUPT` | embeddings cache 损坏 | 正在重新分析照片… | 删 cache 自动重算 |
+
+> Phase 3 聚类错误 **默认 fail-open**：记录日志 + 降级，**不** 阻断 ingest/curate 主路径（NR-P3-01）。
+
 ---
 
 ## 3. 版本历史
@@ -122,3 +133,4 @@
 | v0.2.1 | 2026-05-27 | E_DEMO_EXISTS 确认流 + force 参数 |
 | v0.3.1 | 2026-05-27 | E_DEMO_EXISTS 409 body；E_LNG_CAPTURE_FAILED 文案 |
 | v0.3.2 | 2026-05-27 | M10 Studio Job 错误码；E_LLM_AUTH；E_STUDIO_REVEAL_DENIED |
+| v0.4.0 | 2026-05-28 | Phase 3 Curate 聚类：`E_CLUSTER_*`；废止 v0.2 洞察/引擎错误码 |
