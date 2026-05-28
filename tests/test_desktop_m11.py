@@ -51,6 +51,7 @@ def test_pick_folder_cancelled(monkeypatch: pytest.MonkeyPatch) -> None:
             return 1
 
     monkeypatch.setattr(folder_dialog, "_pick_folder_ifiledialog", lambda _title: None)
+    monkeypatch.setattr(folder_dialog, "_pick_folder_tk", lambda _title: None)
     assert folder_dialog.pick_folder(title="test") is None
 
 

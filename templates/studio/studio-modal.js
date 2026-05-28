@@ -9,24 +9,24 @@
   var FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),[tabindex="0"]';
 
   function trapFocus(modal) {
-    var items = modal.querySelectorAll(FOCUSABLE);
-    if (!items.length) return;
-    var first = items[0];
-    var last = items[items.length - 1];
-    modal.addEventListener("keydown", function (e) {
+    function onKeydown(e) {
       if (e.key !== "Tab") return;
+      var items = modal.querySelectorAll(FOCUSABLE);
+      if (!items.length) return;
+      var first = items[0];
+      var last = items[items.length - 1];
       if (e.shiftKey) {
         if (document.activeElement === first) {
           e.preventDefault();
           last.focus();
         }
-      } else {
-        if (document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
+      } else if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
       }
-    });
+    }
+    modal.addEventListener("keydown", onKeydown);
+    return function () { modal.removeEventListener("keydown", onKeydown); };
   }
 
   /**
@@ -80,9 +80,10 @@
 
       var previousFocus = document.activeElement;
       confirmBtn.focus();
-      trapFocus(modal);
+      var releaseTrap = trapFocus(modal);
 
       function cleanup(result) {
+        if (releaseTrap) releaseTrap();
         backdrop.remove();
         if (previousFocus && previousFocus.focus) previousFocus.focus();
         resolve(result);

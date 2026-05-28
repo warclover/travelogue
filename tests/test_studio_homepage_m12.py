@@ -19,8 +19,9 @@ def _reset_jobs() -> None:
 
 M12_HOME_MARKERS = (
     "选择照片文件夹",
-    "是一本",
-    "还没装帧",
+    "studio-browse-folder",
+    "浏览…",
+    "不上传",
     "studio-hero",
     "studio-hero-empty",
     "studio-hero-returning",
@@ -28,7 +29,7 @@ M12_HOME_MARKERS = (
     "studio-import-error",
     "studio-toast.js",
     "studio-modal.js",
-    "路径导入",
+    "选文件夹",
     "studio-gallery",
     "studio-trips",
     "studio-scroll-hint",
@@ -62,6 +63,7 @@ def test_studio_homepage_m12_css() -> None:
     assert "studio-trip-card" in css
     assert "studio-longshot-card" in css
     assert "studio-hero__content--hybrid" in css
+    assert "studio-hero__recent-card--highlight" in css
     assert "studio-sample-modal" in css
 
 
@@ -74,11 +76,19 @@ def test_studio_homepage_js_strings() -> None:
     assert "options.highlight" in js
     assert "tripsListLimit" in js
     assert "renderHybridHero" in js
-    assert "requestNativeFolder" in js
+    assert "focusPathImport" in js
+    assert "submitPathImport" in js
     assert "resumeActiveJobIfAny" in js
     assert "SAMPLE_LONGSHOTS" in js
     assert "rememberCancelled" in js
     assert "pushRecentPath" in js
+    assert "syncImportUiDisabled" in js
+    assert "bumpImportGeneration" in js
+    assert "revokeThumbUrls" in js
+    assert "postMultipartImport" in js
+    assert "_tripsLoadSeq" in js
+    assert "uploadForm" in js
+    assert "setPickControlsDisabled" not in js
 
 
 def test_studio_trips_api_limit_and_total(tmp_path: Path) -> None:

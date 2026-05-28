@@ -26,7 +26,6 @@
   var SS = {
     activeJobId: "travelogue.studio.activeJobId",
     activePending: "travelogue.studio.activePending",
-    importThumbs: "travelogue.studio.importThumbs",
   };
   var SAMPLE_LONGSHOTS = {
     kyoto: {
@@ -176,6 +175,10 @@
   var healthTimer = null;
   var SLOW_JOB_MS = 30000;
   var HEALTH_INTERVAL = 30000;
+  var _pickInFlight = false;
+  var _importGen = 0;
+  var _thumbObjectUrls = [];
+  var _tripsLoadSeq = 0;
 
   // ── Helpers ──
   function $(id) { return document.getElementById(id); }
@@ -238,10 +241,13 @@
 
   function showFailure(msg, echoPath) {
     show($("studio-failure"), true);
-    $("studio-failure-msg").textContent = msg || "导入失败";
+    var msgEl = $("studio-failure-msg");
+    if (msgEl) msgEl.textContent = msg || "导入失败";
     var echoEl = $("studio-failure-echo");
-    if (echoPath) { echoEl.textContent = echoPath; show(echoEl, true); }
-    else show(echoEl, false);
+    if (echoEl) {
+      if (echoPath) { echoEl.textContent = echoPath; show(echoEl, true); }
+      else show(echoEl, false);
+    }
     setTitle("导入失败");
   }
 
@@ -252,19 +258,24 @@
     setTitle();
   }
 
-  function setImportControlsDisabled(disabled) {
+  function setImportUiDisabled(disabled) {
     var ids = [
-      "studio-pick-folder", "studio-new-trip-cta",
-      "studio-submit-path", "studio-demo-album", "studio-path-toggle",
+      "studio-pick-folder", "studio-pick-folder-returning", "studio-browse-folder",
+      "studio-new-trip-cta", "studio-submit-path", "studio-demo-album", "studio-path-toggle",
     ];
     ids.forEach(function (id) { var el = $(id); if (el) el.disabled = disabled; });
-    var uploadInputs = document.querySelectorAll(
-      "#album-upload, #studio-folder-input, #studio-folder-input-returning"
-    );
-    for (var i = 0; i < uploadInputs.length; i++) uploadInputs[i].disabled = disabled;
+    var uploadInput = $("album-upload");
+    if (uploadInput) uploadInput.disabled = disabled;
   }
 
-  function setBusy(busy) { setImportControlsDisabled(busy || isOffline); }
+  function syncImportUiDisabled() {
+    setImportUiDisabled(isOffline || currentState === "Importing" || _pickInFlight);
+  }
+
+  function bumpImportGeneration() { _importGen += 1; }
+  function isImportGenerationStale(gen) { return gen !== _importGen; }
+
+  function setBusy() { syncImportUiDisabled(); }
 
   // ── Hero background (LCP-friendly: try small variant first when available) ──
   var lastHeroSrc = "";
@@ -311,7 +322,7 @@
     else setTitle();
 
     show($("studio-offline"), isOffline);
-    setImportControlsDisabled(isOffline || isImporting);
+    syncImportUiDisabled();
 
     // Hero variant data attribute (controls veil / blur)
     var hero = $("studio-hero");
@@ -339,6 +350,7 @@
     }
 
     if (quietOverlay) show($("studio-import-form"), false);
+    else show($("studio-import-form"), true);
 
     show($("studio-scroll-hint"), !quietOverlay);
     var scrollText = $("studio-scroll-hint-text");
@@ -399,6 +411,17 @@
       if (trip.longshotStale) href = "/" + trip.tripId + "/index.html?focus=longshot";
       card.href = href;
       card.title = (trip.title || trip.tripId) + (trip.longshotStale ? " · 长图待更新" : "");
+
+      if (idx === 0 &&
+          localStorage.getItem(LS.firstPreviewDone) === "1" &&
+          !localStorage.getItem(LS.firstReturnHighlight) &&
+          currentState === "IdleReturning") {
+        card.classList.add("studio-hero__recent-card--highlight");
+        setTimeout(function () {
+          card.classList.remove("studio-hero__recent-card--highlight");
+          localStorage.setItem(LS.firstReturnHighlight, "1");
+        }, 5000);
+      }
 
       if (trip.previewRelPath) {
         var img = document.createElement("img");
@@ -535,7 +558,7 @@
     addCard.className = "studio-trip-card studio-trip-card--add";
     addCard.textContent = "新建游记";
     addCard.addEventListener("click", function () {
-      requestNativeFolder($("trip-title").value, $("trip-place").value, "studio-folder-input-returning");
+      requestNativeFolder($("trip-title").value, $("trip-place").value);
     });
     list.appendChild(addCard);
 
@@ -623,6 +646,13 @@
   }
 
   // ── Import thumbs (real selected photos) ──
+  function revokeThumbUrls() {
+    _thumbObjectUrls.forEach(function (u) {
+      try { URL.revokeObjectURL(u); } catch (e) { /* ignore */ }
+    });
+    _thumbObjectUrls = [];
+  }
+
   function setImportThumbs(urls) {
     var c = $("studio-import-thumbs");
     if (!c) return;
@@ -640,13 +670,15 @@
   }
   function readImportThumbsFromFiles(files) {
     if (!files || !files.length || !window.URL || !URL.createObjectURL) return;
+    revokeThumbUrls();
     var picked = [];
     for (var i = 0; i < files.length && picked.length < 4; i++) {
       var f = files[i];
       var name = (f.webkitRelativePath || f.name || "").toLowerCase();
       if (/\.(jpe?g|png|webp|heic|heif)$/i.test(name)) picked.push(f);
     }
-    setImportThumbs(picked.map(function (f) { return URL.createObjectURL(f); }));
+    _thumbObjectUrls = picked.map(function (f) { return URL.createObjectURL(f); });
+    setImportThumbs(_thumbObjectUrls);
   }
 
   // ── Progress ──
@@ -675,15 +707,16 @@
   }
 
   function cancelActiveJob() {
+    bumpImportGeneration();
     if (!activeJobId) return Promise.resolve();
+    var jobId = activeJobId;
     return fetch("/__travelogue/cancel", {
       method: "POST",
       headers: studioAuthHeaders({ "Content-Type": "application/json" }),
-      body: JSON.stringify({ jobId: activeJobId }),
+      body: JSON.stringify({ jobId: jobId }),
     }).finally(function () {
       activeJobId = null;
       show($("studio-cancel"), false);
-      setBusy(false);
     });
   }
 
@@ -696,15 +729,29 @@
     if (tripId) localStorage.setItem("travelogue.studio.firstTripId", tripId);
   }
 
-  function waitJob(jobId) {
+  function waitJob(jobId, gen) {
     activeJobId = jobId;
     var started = Date.now();
     var slowShown = false;
     hideSlowHint();
 
     return new Promise(function (resolve, reject) {
+      function finishCancel() {
+        activeJobId = null;
+        show($("studio-cancel"), false);
+        hideSlowHint();
+        reject(new Error("已取消"));
+      }
       function tick() {
+        if (isImportGenerationStale(gen)) {
+          finishCancel();
+          return;
+        }
         pollJob(jobId).then(function (job) {
+          if (isImportGenerationStale(gen)) {
+            finishCancel();
+            return;
+          }
           if (!slowShown && Date.now() - started > SLOW_JOB_MS) {
             slowShown = true;
             showSlowHint();
@@ -728,7 +775,48 @@
   }
 
   // ── Import flows ──
-  function requestNativeFolder(titleVal, placeVal, fallbackInputId) {
+  function focusPathImport(message) {
+    var form = $("studio-import-form");
+    var input = $("album-path");
+    show(form, true);
+    if (message) setError(message);
+    if (input) {
+      input.focus();
+      input.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
+  function submitPathImport() {
+    var path = ($("album-path").value || "").trim();
+    if (!path) {
+      setError("请填写照片文件夹路径，例如 D:\\Photos\\Kyoto2025");
+      focusPathImport("");
+      return;
+    }
+    startImport({
+      albumPath: path,
+      title: $("trip-title").value || "我的旅途",
+      place: $("trip-place").value || "旅途",
+      force: false,
+    });
+  }
+
+  function requestNativeFolder(titleVal, placeVal, options) {
+    options = options || {};
+    var autoStart = options.autoStart !== false;
+    if (_pickInFlight) {
+      if (typeof studioToast === "function") {
+        studioToast("文件夹选择器已打开，请在其窗口中操作", { duration: 2500 });
+      }
+      return Promise.resolve();
+    }
+    _pickInFlight = true;
+    syncImportUiDisabled();
+    setError("");
+    var pickToastEl = null;
+    if (typeof studioToast === "function") {
+      pickToastEl = studioToast("正在打开文件夹选择器…", { duration: 0 });
+    }
     return fetch("/__travelogue/pick-folder", {
       method: "POST",
       headers: studioAuthHeaders({ "Content-Type": "application/json" }),
@@ -738,18 +826,32 @@
     }).then(function (result) {
       if (result.data && result.data.cancelled) return;
       if (result.status === 200 && result.data && result.data.albumPath) {
-        return startImport({
-          albumPath: result.data.albumPath,
-          title: titleVal || "我的旅途",
-          place: placeVal || "旅途",
-          force: false,
-        });
+        var pathInput = $("album-path");
+        if (pathInput) pathInput.value = result.data.albumPath;
+        if (autoStart) {
+          return startImport({
+            albumPath: result.data.albumPath,
+            title: titleVal || "我的旅途",
+            place: placeVal || "旅途",
+            force: false,
+          });
+        }
+        if (typeof studioToast === "function") {
+          studioToast("已选择文件夹，点击「开始」导入", { duration: 2500 });
+        }
+        return;
       }
-      var fallback = $(fallbackInputId);
-      if (fallback) fallback.click();
+      var msg = (result.data && result.data.message)
+        || "无法打开本机选文件夹。请粘贴路径，或重启 Studio 后重试。";
+      focusPathImport(msg);
     }).catch(function () {
-      var fallback = $(fallbackInputId);
-      if (fallback) fallback.click();
+      focusPathImport("无法连接 Studio 选文件夹服务。请粘贴路径，或确认 Studio 正在运行。");
+    }).finally(function () {
+      if (pickToastEl && pickToastEl.parentNode) {
+        pickToastEl.parentNode.removeChild(pickToastEl);
+      }
+      _pickInFlight = false;
+      syncImportUiDisabled();
     });
   }
 
@@ -796,13 +898,20 @@
   }
 
   function startImport(body) {
+    var gen = ++_importGen;
     pendingImport = body;
-    try { sessionStorage.setItem(SS.activePending, JSON.stringify(body)); } catch (e) {}
+    try {
+      if (!body.uploadForm) {
+        sessionStorage.setItem(SS.activePending, JSON.stringify(body));
+      } else {
+        sessionStorage.removeItem(SS.activePending);
+      }
+    } catch (e) {}
     if (body && body.albumPath) pushRecentPath(body.albumPath);
     setError("");
     hideFailure();
-    setBusy(true);
     transitionTo("Importing");
+    revokeThumbUrls();
     setImportThumbs(null);
     var stage = $("studio-stage"); if (stage) stage.textContent = "准备导入…";
     var bar = $("studio-bar-fill"); if (bar) bar.style.width = "0%";
@@ -828,7 +937,7 @@
         throw new Error(result.data.message || result.data.error || "导入失败");
       }
       try { sessionStorage.setItem(SS.activeJobId, result.data.jobId); } catch (e) {}
-      return waitJob(result.data.jobId);
+      return waitJob(result.data.jobId, gen);
     }).then(function (job) {
       try { sessionStorage.removeItem(SS.activeJobId); sessionStorage.removeItem(SS.activePending); } catch (e) {}
       handleImportSuccess(job);
@@ -850,7 +959,7 @@
       transitionTo("Failed");
       showFailure(err.message || String(err), echoPath);
     }).finally(function () {
-      setBusy(false);
+      setBusy();
     });
   }
 
@@ -864,8 +973,33 @@
     try { localStorage.setItem(LS.lastCancelled, JSON.stringify(data)); } catch (e) {}
   }
 
+  function postMultipartImport(formData, options) {
+    options = options || {};
+    return new Promise(function (resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/__travelogue/import");
+      var token = (document.querySelector('meta[name="studio-token"]') || {}).content;
+      if (token) xhr.setRequestHeader("X-Studio-Token", token);
+      if (options.onUploadProgress) {
+        xhr.upload.onprogress = options.onUploadProgress;
+      }
+      xhr.onload = function () {
+        var data = {};
+        try { data = JSON.parse(xhr.responseText || "{}"); } catch (e) {}
+        resolve({ status: xhr.status, data: data });
+      };
+      xhr.onerror = function () {
+        reject(new Error(
+          "上传失败：网络中断或照片总量过大（浏览器上传上限约 200MB）。请改用「选择照片文件夹」或路径导入。"
+        ));
+      };
+      xhr.send(formData);
+    });
+  }
+
   function uploadAndImport(files, titleVal, placeVal) {
     if (!files || !files.length) return;
+    var gen = ++_importGen;
     if (files.length > 100) {
       setWarning("照片较多（" + files.length + " 张），建议精选后导入，效果更佳。");
     } else {
@@ -880,9 +1014,9 @@
     }
 
     pendingImport = { uploadForm: true, files: files, fileCount: files.length };
+    try { sessionStorage.removeItem(SS.activePending); } catch (e) {}
     setError("");
     hideFailure();
-    setBusy(true);
     transitionTo("Importing");
     readImportThumbsFromFiles(files);
     var stage = $("studio-stage"); if (stage) stage.textContent = "上传照片中…";
@@ -891,25 +1025,12 @@
     show(progress, true);
     if (progress) progress.value = 0;
 
-    return new Promise(function (resolve, reject) {
-      var xhr = new XMLHttpRequest();
-      xhr.open("POST", "/__travelogue/import");
-      var token = (document.querySelector('meta[name="studio-token"]') || {}).content;
-      if (token) xhr.setRequestHeader("X-Studio-Token", token);
-      xhr.upload.onprogress = function (ev) {
+    return postMultipartImport(form, {
+      onUploadProgress: function (ev) {
         if (ev.lengthComputable && progress) {
           progress.value = Math.round((ev.loaded / ev.total) * 100);
         }
-      };
-      xhr.onload = function () {
-        var data = {};
-        try { data = JSON.parse(xhr.responseText || "{}"); } catch (e) {}
-        resolve({ status: xhr.status, data: data });
-      };
-      xhr.onerror = function () {
-        reject(new Error("上传失败：网络中断或照片总量过大（浏览器上传上限约 200MB）。请改用「选择照片文件夹」或路径导入。"));
-      };
-      xhr.send(form);
+      },
     }).then(function (result) {
       show(progress, false);
       if (result.status === 409 && result.data.error === "E_DEMO_EXISTS") {
@@ -923,14 +1044,14 @@
           : Promise.resolve(window.confirm(result.data.message || "该游记已存在。是否覆盖？"))
         ).then(function (confirmed) {
           if (!confirmed) throw new Error("已取消覆盖");
-          return uploadAndImportWithForce(files, titleVal, placeVal);
+          return uploadAndImportWithForce(files, titleVal, placeVal, gen);
         });
       }
       if (result.status !== 202) {
         throw new Error(result.data.message || result.data.error || "上传失败");
       }
       try { sessionStorage.setItem(SS.activeJobId, result.data.jobId); } catch (e) {}
-      return waitJob(result.data.jobId);
+      return waitJob(result.data.jobId, gen);
     }).then(function (job) {
       try { sessionStorage.removeItem(SS.activeJobId); } catch (e) {}
       handleImportSuccess(job);
@@ -949,12 +1070,13 @@
       }
       showFailure(err.message || String(err), echo);
     }).finally(function () {
-      setBusy(false);
+      revokeThumbUrls();
+      setBusy();
       show(progress, false);
     });
   }
 
-  function uploadAndImportWithForce(files, titleVal, placeVal) {
+  function uploadAndImportWithForce(files, titleVal, placeVal, gen) {
     var retryForm = new FormData();
     retryForm.append("title", titleVal || "我的旅途");
     retryForm.append("place", placeVal || "旅途");
@@ -962,25 +1084,12 @@
     for (var j = 0; j < files.length; j++) {
       retryForm.append("files[]", files[j], files[j].webkitRelativePath || files[j].name);
     }
-    return new Promise(function (resolve, reject) {
-      var xhr = new XMLHttpRequest();
-      xhr.open("POST", "/__travelogue/import");
-      var token = (document.querySelector('meta[name="studio-token"]') || {}).content;
-      if (token) xhr.setRequestHeader("X-Studio-Token", token);
-      xhr.onload = function () {
-        var data = {};
-        try { data = JSON.parse(xhr.responseText || "{}"); } catch (e) {}
-        resolve({ status: xhr.status, data: data });
-      };
-      xhr.onerror = function () {
-        reject(new Error("上传失败：网络中断或照片总量过大（浏览器上传上限约 200MB）。请改用「选择照片文件夹」或路径导入。"));
-      };
-      xhr.send(retryForm);
-    }).then(function (retryResult) {
+    return postMultipartImport(retryForm).then(function (retryResult) {
       if (retryResult.status !== 202) {
         throw new Error(retryResult.data.message || retryResult.data.error || "上传失败");
       }
-      return waitJob(retryResult.data.jobId);
+      try { sessionStorage.setItem(SS.activeJobId, retryResult.data.jobId); } catch (e) {}
+      return waitJob(retryResult.data.jobId, gen);
     });
   }
 
@@ -990,6 +1099,7 @@
     if (options.more) tripsListLimit += 20;
     else if (options.keepLimit !== true) tripsListLimit = 20;
 
+    var seq = ++_tripsLoadSeq;
     var slowToastShown = false;
     var failToastShown = false;
     var slowTimer = setTimeout(function () {
@@ -1004,6 +1114,7 @@
     fetch("/__travelogue/trips?limit=" + encodeURIComponent(String(tripsListLimit)))
       .then(function (r) { if (!r.ok) throw new Error("trips unavailable"); return r.json(); })
       .then(function (data) {
+        if (seq !== _tripsLoadSeq) return;
         clearTimeout(slowTimer); clearTimeout(failTimer);
         tripsData = data.trips || [];
         tripsTotalCount = typeof data.total === "number" ? data.total : tripsData.length;
@@ -1014,6 +1125,7 @@
         }
       })
       .catch(function () {
+        if (seq !== _tripsLoadSeq) return;
         clearTimeout(slowTimer); clearTimeout(failTimer);
         isOffline = true;
         render();
@@ -1080,11 +1192,9 @@
   // ── Path form toggle ──
   function initPathToggle() {
     var toggle = $("studio-path-toggle");
-    var form = $("studio-import-form");
-    if (toggle && form) {
+    if (toggle) {
       toggle.addEventListener("click", function () {
-        show(form, form.hidden);
-        if (!form.hidden) { var inp = $("album-path"); if (inp) inp.focus(); }
+        requestNativeFolder($("trip-title").value, $("trip-place").value, { autoStart: false });
       });
     }
   }
@@ -1116,15 +1226,26 @@
       pendingRaw = sessionStorage.getItem(SS.activePending) || "";
     } catch (e) {}
     if (!jobId) return false;
-    try { if (pendingRaw) pendingImport = JSON.parse(pendingRaw); } catch (e) {}
-    setBusy(true);
+    if (pendingRaw) {
+      try {
+        pendingImport = JSON.parse(pendingRaw);
+        if (pendingImport && pendingImport.uploadForm) {
+          try {
+            sessionStorage.removeItem(SS.activeJobId);
+            sessionStorage.removeItem(SS.activePending);
+          } catch (e) {}
+          return false;
+        }
+      } catch (e) { pendingImport = null; }
+    }
+    var gen = ++_importGen;
     transitionTo("Importing");
     setImportThumbs(null);
     var stage = $("studio-stage"); if (stage) stage.textContent = "恢复上次导入…";
-    waitJob(jobId).then(function (job) {
+    waitJob(jobId, gen).then(function (job) {
       try { sessionStorage.removeItem(SS.activeJobId); sessionStorage.removeItem(SS.activePending); } catch (e) {}
       handleImportSuccess(job);
-      loadTrips();
+      loadTrips({ keepLimit: true });
     }).catch(function (err) {
       try { sessionStorage.removeItem(SS.activeJobId); } catch (e) {}
       if ((err.message || "") === "已取消") {
@@ -1135,7 +1256,7 @@
       transitionTo("Failed");
       var echo = (pendingImport && pendingImport.albumPath) || "";
       showFailure(err.message || String(err), echo);
-    }).finally(function () { setBusy(false); });
+    }).finally(function () { setBusy(); });
     return true;
   }
 
@@ -1182,7 +1303,7 @@
     });
     if (cta) cta.addEventListener("click", function () {
       close();
-      requestNativeFolder($("trip-title").value, $("trip-place").value, "studio-folder-input");
+      requestNativeFolder($("trip-title").value, $("trip-place").value);
     });
   }
 
@@ -1205,44 +1326,33 @@
     }
     startHealthCheck();
 
-    // Primary: empty-state pick folder
+    // Primary: empty-state pick folder → select + auto import
     var pick = $("studio-pick-folder");
     if (pick) pick.addEventListener("click", function () {
-      requestNativeFolder($("trip-title").value, $("trip-place").value, "studio-folder-input");
-    });
-    var pickInput = $("studio-folder-input");
-    if (pickInput) pickInput.addEventListener("change", function (ev) {
-      var files = ev.target.files;
-      if (!files || !files.length) return;
-      uploadAndImport(files, $("trip-title").value, $("trip-place").value);
-      ev.target.value = "";
+      requestNativeFolder($("trip-title").value, $("trip-place").value, { autoStart: true });
     });
 
-    // Primary: returning-state "+ 新建游记"
+    // Returning: new trip + explicit pick folder
     var newTrip = $("studio-new-trip-cta");
     if (newTrip) newTrip.addEventListener("click", function () {
-      requestNativeFolder($("trip-title").value, $("trip-place").value, "studio-folder-input-returning");
+      requestNativeFolder($("trip-title").value, $("trip-place").value, { autoStart: true });
     });
-    var returningInput = $("studio-folder-input-returning");
-    if (returningInput) returningInput.addEventListener("change", function (ev) {
-      var files = ev.target.files;
-      if (!files || !files.length) return;
-      uploadAndImport(files, $("trip-title").value, $("trip-place").value);
-      ev.target.value = "";
+    var pickReturning = $("studio-pick-folder-returning");
+    if (pickReturning) pickReturning.addEventListener("click", function () {
+      requestNativeFolder($("trip-title").value, $("trip-place").value, { autoStart: true });
     });
 
-    // Secondary: path form submit
+    // Path row: browse → fill path, user clicks 开始
+    var browse = $("studio-browse-folder");
+    if (browse) browse.addEventListener("click", function () {
+      requestNativeFolder($("trip-title").value, $("trip-place").value, { autoStart: false });
+    });
+
+    // Path form submit
     var pathForm = $("studio-import-form");
     if (pathForm) pathForm.addEventListener("submit", function (ev) {
       ev.preventDefault();
-      var path = ($("album-path").value || "").trim();
-      if (!path) { setError("请填写照片文件夹路径"); return; }
-      startImport({
-        albumPath: path,
-        title: $("trip-title").value || "我的旅途",
-        place: $("trip-place").value || "旅途",
-        force: false,
-      });
+      submitPathImport();
     });
 
     // Secondary: demo album

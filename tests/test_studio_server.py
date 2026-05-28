@@ -91,7 +91,7 @@ def _reset_jobs() -> None:
 def test_studio_pick_folder_api(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import sys
 
-    import travelogue.desktop.folder_dialog as folder_dialog
+    import travelogue.desktop.folder_picker_service as picker_service
 
     album = _distinct_album(tmp_path, 3)
     trips_dir = tmp_path / "trips"
@@ -101,7 +101,7 @@ def test_studio_pick_folder_api(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     base = f"http://127.0.0.1:{port}"
 
     monkeypatch.setattr(sys, "platform", "win32")
-    monkeypatch.setattr(folder_dialog, "pick_folder", lambda **_: album)
+    monkeypatch.setattr(picker_service, "request_folder", lambda **_: album)
 
     try:
         status, body = _post_json(f"{base}/__travelogue/pick-folder", {})

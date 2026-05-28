@@ -2,7 +2,7 @@
 
 | 文件 | 说明 |
 |------|------|
-| [studio-homepage-photo-first-v3.html](./studio-homepage-photo-first-v3.html) | **首页 v3.0** · 影像优先 · 全幅 Hero · **当前待审核** |
+| [studio-homepage-photo-first-v3.html](./studio-homepage-photo-first-v3.html) | **首页 v3.0** · 影像优先 · 全幅 Hero · **PRD v1.4 对齐 · 已落地** |
 | [studio-homepage-art-cards-v2.html](./studio-homepage-art-cards-v2.html) | 首页 v2.0 · 艺术卡片 · Bento 布局（已落地，用户不满意） |
 | [studio-homepage-wireframe.html](./studio-homepage-wireframe.html) | 首页 v1.4 · 杂志 Hero + 灵感画廊（PRD 对齐版） |
 
@@ -14,7 +14,7 @@
 
 ## 关联 PRD
 
-[PRD-STUDIO-HOMEPAGE.md](../PRD-STUDIO-HOMEPAGE.md) **v1.3.3** · v2 线框**不受 PRD 布局约束**，仅供视觉方向评审
+[PRD-STUDIO-HOMEPAGE.md](../PRD-STUDIO-HOMEPAGE.md) **v1.4.0** · v3 线框与 PRD **已对齐**（2026-05-28）
 
 ## v1.4 已冻结（2026-05-27）
 

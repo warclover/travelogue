@@ -42,9 +42,9 @@
         <span class="studio-btn__label">选择照片文件夹</span>
         <span class="studio-btn__arrow" aria-hidden="true">→</span>
       </button>
-      <input id="studio-folder-input" type="file" webkitdirectory directory multiple hidden />
       <span class="studio-hero__cta-meta">
-        JPG · PNG · WebP · HEIC<br/>建议 50–100 张
+        打开本机文件夹 · 照片<strong>不会上传</strong><br/>
+        JPG · PNG · WebP · HEIC · 建议 50–100 张
       </span>
     </div>
     <p id="studio-import-error" class="studio-error studio-error--inline" role="alert" hidden></p>
@@ -62,7 +62,9 @@
           <span class="studio-btn__plus" aria-hidden="true">+</span>
           <span class="studio-btn__label">新建游记</span>
         </button>
-        <input id="studio-folder-input-returning" type="file" webkitdirectory directory multiple hidden />
+        <button type="button" id="studio-pick-folder-returning" class="studio-btn studio-btn--ghost-inverse">
+          选择文件夹
+        </button>
       </div>
     </div>
     <aside class="studio-hero__hybrid-right" id="studio-hero-recent" aria-label="最近游记">
@@ -111,17 +113,32 @@
     <p class="studio-success__countdown"><span id="studio-success-sec">5</span> 秒后自动打开</p>
   </div>
 
+  <!-- Shared path import (empty + returning) · reads local disk, no browser upload -->
+  <form id="studio-import-form" class="studio-path-form studio-path-form--inline">
+    <label class="studio-path-form__label" for="album-path">照片文件夹</label>
+    <div class="studio-path-form__row">
+      <button type="button" class="studio-btn studio-btn--ghost-inverse studio-btn--sm" id="studio-browse-folder" title="打开本机文件夹选择器">浏览…</button>
+      <input id="album-path" name="albumPath" type="text" class="studio-path-form__input"
+        placeholder="点击「浏览」选择，或粘贴 D:\Photos\Kyoto2025" autocomplete="off" list="studio-recent-paths" />
+      <button type="submit" class="studio-btn studio-btn--ghost-inverse studio-btn--sm" id="studio-submit-path">开始</button>
+    </div>
+    <p class="studio-path-form__hint">浏览 = 本机选文件夹（不上传）· 粘贴路径亦可 · 无 200MB 限制</p>
+    <datalist id="studio-recent-paths"></datalist>
+    <input id="trip-title" type="hidden" value="我的旅途" />
+    <input id="trip-place" type="hidden" value="旅途" />
+  </form>
+
   <!-- Secondary actions -->
   <nav class="studio-hero__secondary" id="studio-hero-secondary" hidden>
     <span class="studio-link__label" id="studio-secondary-label">还没自己的照片？</span>
     <button type="button" class="studio-link" id="studio-demo-album">试用示例</button>
     <span class="studio-link__sep" aria-hidden="true">·</span>
-    <label class="studio-link">
-      浏览器上传
+    <label class="studio-link studio-link--warn" title="仅适合极小文件夹，超过约 200MB 会失败">
+      小文件夹试用（≤200MB）
       <input id="album-upload" type="file" webkitdirectory directory multiple hidden />
     </label>
     <span class="studio-link__sep" aria-hidden="true">·</span>
-    <button type="button" class="studio-link" id="studio-path-toggle">路径导入</button>
+    <button type="button" class="studio-link" id="studio-path-toggle">选文件夹</button>
     <span class="studio-link__sep" aria-hidden="true">·</span>
     <details class="studio-link studio-link--details">
       <summary>帮助</summary>
@@ -131,16 +148,6 @@
       </ul>
     </details>
   </nav>
-
-  <form id="studio-import-form" class="studio-path-form" hidden>
-    <label class="studio-path-form__label" for="album-path">照片文件夹路径（Windows）</label>
-    <input id="album-path" name="albumPath" type="text" class="studio-path-form__input"
-      placeholder="例如 D:\Photos\Kyoto2025" autocomplete="off" list="studio-recent-paths" />
-    <datalist id="studio-recent-paths"></datalist>
-    <input id="trip-title" type="hidden" value="我的旅途" />
-    <input id="trip-place" type="hidden" value="旅途" />
-    <button type="submit" class="studio-btn studio-btn--ghost-inverse studio-btn--sm" id="studio-submit-path">使用路径导入</button>
-  </form>
 
   <button type="button" class="studio-hero__scroll-hint" id="studio-scroll-hint" aria-label="向下滚动" hidden>
     <span id="studio-scroll-hint-text">向下 · 看看别人做的</span>
@@ -179,7 +186,7 @@
       <li>打开微信，将 PNG 拖入对话框（或从手机相册发送）</li>
       <li>多张长图按文件名编号顺序发送即可</li>
     </ol>
-    <p class="studio-footer__sub">v0.2 · 本地运行</p>
+    <p class="studio-footer__sub">v1.4 · 本地运行</p>
   </footer>
 </main>
 

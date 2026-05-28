@@ -1,4 +1,4 @@
-"""Windows IFileOpenDialog folder picker (M11-1)."""
+"""Windows folder picker (M11-1): IFileOpenDialog with tkinter fallback."""
 
 from __future__ import annotations
 
@@ -15,9 +15,28 @@ def pick_folder(*, title: str = "选择照片文件夹") -> Path | None:
     if sys.platform != "win32":
         return None
     try:
-        return _pick_folder_ifiledialog(title)
+        chosen = _pick_folder_ifiledialog(title)
+        if chosen is not None:
+            return chosen
     except Exception:
+        pass
+    return _pick_folder_tk(title)
+
+
+def _pick_folder_tk(title: str) -> Path | None:
+    import tkinter as tk
+    from tkinter import filedialog
+
+    root = tk.Tk()
+    root.withdraw()
+    root.attributes("-topmost", True)
+    try:
+        path = filedialog.askdirectory(title=title, mustexist=True)
+    finally:
+        root.destroy()
+    if not path:
         return None
+    return Path(path)
 
 
 def _pick_folder_ifiledialog(title: str) -> Path | None:
@@ -33,7 +52,8 @@ def _pick_folder_ifiledialog(title: str) -> Path | None:
         )
         dialog.SetOptions(FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST)
         dialog.SetTitle(title)
-        if dialog.Show(None):
+        hr = dialog.Show(None)
+        if hr not in (0, False):
             return None
         item = dialog.GetResult()
         path = item.GetDisplayName(SIGDN_FILESYSPATH)

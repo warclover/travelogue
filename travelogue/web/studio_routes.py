@@ -262,9 +262,9 @@ class StudioMixin:
                 },
             )
             return
-        from travelogue.desktop.folder_dialog import pick_folder
+        from travelogue.desktop.folder_picker_service import request_folder
 
-        chosen = pick_folder(title="选择照片文件夹")
+        chosen = request_folder(title="选择照片文件夹")
         if chosen is None:
             self._json_response(200, {"ok": True, "cancelled": True})
             return

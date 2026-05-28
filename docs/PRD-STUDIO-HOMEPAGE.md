@@ -3,13 +3,14 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | v1.3.3-HOMEPAGE |
-| **状态** | Draft · 待设计评审与 M12 排期 |
-| **页面路由** | `GET /` → `templates/studio/studio.html` |
+| **文档版本** | v1.4.0-HOMEPAGE |
+| **状态** | **Implemented · v3 影像优先**（代码已落地，PRD 反向同步 2026-05-28） |
+| **页面路由** | `GET /` → `templates/studio/studio.html`（`data-studio-v="3"`） |
+| **权威线框** | [wireframes/studio-homepage-photo-first-v3.html](./wireframes/studio-homepage-photo-first-v3.html) |
 | **前置条件** | [PRD-PHASE2.md](./PRD-PHASE2.md) M8–M10 已交付；`travelogue studio` 单端口 8766 |
 | **关联文档** | [PRD-PHASE2.md](./PRD-PHASE2.md) · [PRD-PHASE3.md](./PRD-PHASE3.md) · [IMPLEMENTATION-PHASE2.md](./IMPLEMENTATION-PHASE2.md) · [ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md) · [adr/004](./adr/004-studio-hub-server.md) · [SHARING.md](./SHARING.md) |
 | **负责人** | 首席产品经理 |
-| **更新日期** | 2026-05-27 |
+| **更新日期** | 2026-05-28 |
 
 ---
 
@@ -56,13 +57,39 @@ Phase 2 **无用户账号体系**（见 PRD-PHASE2 §2.2）。本文所称 **「
 
 Phase 2 首页的 **首次成功过渡（§6.11）** 仍是核心 Aha：**用户第一次看到自己生成的游记**。
 
+### 1.4 实现基线（v3 影像优先 · 2026-05-28）
+
+**实现文件**：`templates/studio/studio.html` · `studio.css` · `studio.js` · `studio-toast.js` · `studio-modal.js`
+
+| 维度 | v1.3 PRD 原稿 | **v3 已落地** |
+|------|---------------|---------------|
+| Hero 情感标题 | 让每一段旅程，都值得被杂志记录 | **你的照片 / 是一本还没装帧的杂志** |
+| 回访态 Hero | B⁻ 压缩无全幅图 | **B★ hybrid**：左文案 + 右 **3 张近期卡**（C 并入 Hero） |
+| 回访主 CTA | 选择照片文件夹 | **+ 新建游记**（primary）+ **选择文件夹**（ghost） |
+| 路径导入 | D′ 折叠 | **Hero 内常驻路径栏**：`浏览…` + 输入 + **开始** |
+| 样例区 E | carousel / 真实 pipeline 图 | **3 张 inline SVG 长图样张** + 点击模态 + CTA「用我的照片做一篇」 |
+| 首次成功 | Toast 后自动跳转 preview | **Success overlay**：**5s 倒计时** + **留在首页** / **打开预览** |
+| 导入恢复 | — | `sessionStorage` 恢复 active Job + pending body |
+| 取消导入 | — | 保留路径/来源上下文 + 「重新开始」提示 |
+| 路径记忆 | — | `localStorage.recentPaths` → `<datalist>` 最近 5 条 |
+| pick-folder | M12b 建议新增 | **已交付**（见 §7.3） |
+| 浏览器上传 | 次级「较慢」 | **小文件夹试用（≤200MB）**；**禁止** pick-folder 失败时静默降级到上传 |
+| Offline 检测 | `GET /health` | **未单独实现**；前端降级为 **`GET /trips` 轮询**（§21） |
+
+**导入优先级（冻结 · 2026-05-28）**：
+
+1. **本机选文件夹** — `POST /__travelogue/pick-folder`（主 CTA / 浏览…）
+2. **路径 JSON** — 粘贴或浏览填入后点 **开始** → `{ albumPath }`（**不上传 · 无 200MB 限制**）
+3. **示例相册** — `useDemoAlbum`
+4. **浏览器上传** — `webkitdirectory` multipart（仅极小文件夹；超约 200MB 易失败）
+
 ---
 
 ## 2. 背景与问题
 
-### 2.1 现状（M8–M10 已交付）
+### 2.1 现状（M12 · v3 已交付）
 
-当前 `studio.html` 已具备：Hero、样例长图、路径表单、示例相册、浏览器上传、Job 进度、失败重试、trip 列表。
+当前 `studio.html` 已具备：v3 全幅 Hero、hybrid 回访态、常驻路径栏 + 本机选文件夹、SVG 长图样张模态、示例相册、≤200MB 浏览器上传（明示备选）、Job 进度 + sessionStorage 恢复、取消保留上下文、Success 倒计时、失败重试、trip 列表 + stale 徽章、Toast / Modal、Offline banner（trips 轮询）。
 
 ### 2.2 交互断裂（本 PRD 要解决的）
 
@@ -71,7 +98,7 @@ Phase 2 首页的 **首次成功过渡（§6.11）** 仍是核心 Aha：**用户
 | **HP-GAP-01** | 三种导入方式平铺，无优先级 | 「我该用哪个？」 | 主路径卡片 + 次级折叠 |
 | **HP-GAP-02** | 回访用户与首次用户同一布局 | 老用户只想「继续编辑」 | **回访态**置顶「最近编辑」 |
 | **HP-GAP-03** | trip 列表信息密度低 | 不知道长图是否过期 | 卡片含封面缩略图 + 状态徽章 |
-| **HP-GAP-04** | 原生选文件夹未暴露 | 只能粘贴路径 | 主按钮「选择文件夹」（exe / API） |
+| **HP-GAP-04** | ~~原生选文件夹未暴露~~ | ~~只能粘贴路径~~ | **已解决 · v3**：`POST /__travelogue/pick-folder` + Hero **浏览…** + 路径栏 |
 | **HP-GAP-05** | 系统 confirm 弹窗 | 不像一个产品 | 首页内 Modal 组件 |
 | **HP-GAP-06** | 样例图为占位 | 价值感不足 | 真实输出样例 + 制作标准（§6.6） |
 | **HP-GAP-07** | 首次生成无过渡反馈 | 「完成了吗？」 | §6.11 首次成功过渡 |
@@ -191,34 +218,33 @@ Phase 2 首页的 **首次成功过渡（§6.11）** 仍是核心 Aha：**用户
 
 ### 4.1 首页区块优先级（分态）
 
-**空态（IdleEmpty）**：`A → B★ → D′ → E★ → I`
+**空态（IdleEmpty）**：`A → B★（含路径栏 + 次级链）→ E★ → I`
 
-> **v1.3 IA 调整**：空态 **主 CTA 嵌入杂志 Hero（B）**；D′ 仅保留次级入口（示例 / 上传 / 照片引导），**不重复**主按钮。E★ 升级为 **灵感画廊**（比回访态更大）。
+> **v3 IA（已落地）**：B★ 内嵌 **选择照片文件夹** 主 CTA + **常驻路径栏**（浏览… / 粘贴 / 开始）+ 次级文字链（示例 · ≤200MB 上传 · 帮助）。E★ 为 **SVG 长图样张网格**（非 carousel）。
 
-**回访态（IdleReturning）**：`A → B⁻ → C → D → E⁻ → F → I`
+**回访态（IdleReturning）**：`A → B★ hybrid → F → I`
 
-> B⁻ = 压缩文字 Hero（无全幅图）；E⁻ = 横向 3 卡样例轮播（克制）。
+> **v3**：B★ = 左「+ 新建游记」+ 右 **3 张近期卡**（原 C 区并入 Hero）；路径栏仍常驻；下方 **全部游记** 网格。
 
 ```
-空态 IdleEmpty                 回访态 IdleReturning
-─────────────────              ─────────────────────
-A  顶栏                         A  顶栏
-B★ 杂志 Hero（CTA 内嵌）         B⁻ 压缩 Hero
-D′ 次级操作 + 认知支架          C  最近编辑 ★
-E★ 灵感画廊 / 瀑布流            D  制作新的游记
-I  页脚                         E⁻ 样例轮播（小）
-                               F  全部游记
-                               I  页脚
+空态 IdleEmpty                 回访态 IdleReturning（v3）
+─────────────────              ─────────────────────────
+A  顶栏（叠于 Hero）            A  顶栏
+B★ Hero + 主 CTA               B★ hybrid Hero
+   + 路径栏（浏览/粘贴/开始）       左：+ 新建游记 / 选择文件夹
+   + 次级链（示例/上传/帮助）       右：最近 3 卡
+E★ SVG 长图样张（3 张 + 模态）   F  全部游记网格
+I  页脚                         I  页脚
 ```
 
 | 区块 | 职责 |
 |------|------|
-| **A** | Logo · 本地运行 · favicon |
-| **B★** | 全幅摄影 Hero + 情感标题 + **主 CTA** + pills |
-| **B⁻** | 一行标题 20px · 无全幅图 |
-| **D′** | 示例相册 · 上传 · 照片准备引导 · 路径折叠 |
-| **E★** | 2–5 张样例 · 空态瀑布流或横滑画廊 |
-| **E⁻** | 回访态横滑 3 卡 + 「精选」居中放大 |
+| **A** | 字标 · 绿点 **本地运行中** · 地址复制 → Toast |
+| **B★ · 空态** | 全幅 Hero 背景 · 情感标题 · **选择照片文件夹** · 路径栏 · 次级链 |
+| **B★ · 回访 hybrid** | 「再做一篇？」· **+ 新建游记**（主）· 选择文件夹（次）· 右栏 3 近期卡 |
+| **路径栏** | `浏览…` → pick-folder 填路径 · 粘贴 · **开始** → JSON `albumPath` |
+| **E★** | 3 主题 SVG 长图样张 · 点击模态 · 「用我的照片做一篇」 |
+| **F** | 全部游记卡片网格 · stale 徽章 · 「新建游记」加号卡 |
 
 ### 4.2 与预览页的分工
 
@@ -248,7 +274,8 @@ stateDiagram-v2
   IdleEmpty --> Importing: 开始导入
   IdleReturning --> Importing: 新建导入
   Importing --> FirstSuccess: Job 成功
-  FirstSuccess --> Preview: toast 后跳转
+  FirstSuccess --> Preview: 倒计时或点「打开预览」
+  FirstSuccess --> IdleReturning: 点「留在首页」
   Importing --> Failed: Job 失败
   Failed --> Importing: 重试
   Failed --> IdleEmpty: 取消
@@ -263,7 +290,8 @@ stateDiagram-v2
 | **IdleEmpty** | `trips` 为空 | 无 C/F；D 置顶；E 置底 |
 | **IdleReturning** | `trips.length ≥ 1` | C 置顶；可选首次回访 highlight（§6.11） |
 | **Importing** | active Job | 进度 UI；禁用 D；动态 `<title>` |
-| **FirstSuccess** | Job succeeded，跳转前 | Toast + 可选全屏过渡条（§6.11） |
+| **FirstSuccess** | Job succeeded | Success overlay · **5s 倒计时** · 留在首页 / 打开预览（§6.11） |
+| **Importing 恢复** | 刷新时 sessionStorage 有 activeJobId | 自动续 poll status · 恢复 pending body |
 | **Failed** | Job failed | 失败面板；`<title>` 含「导入失败」 |
 | **Offline** | `GET /health` 失败 | 全页 banner；禁用导入（§21） |
 
@@ -316,80 +344,87 @@ stateDiagram-v2
 |------|------|
 | **背景图** | `templates/studio/assets/hero/` 下 2–3 张 WebP；从 golden trip 长图裁切；`sessionStorage` 或日期 hash 轮换 |
 | **蒙版** | `linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.55) 100%)` + 可选 vignette |
-| **Eyebrow** | `TRAVELOGUE` · `letter-spacing: 0.2em` · 半透明白 |
-| **H1（情感）** | **让每一段旅程，都值得被杂志记录** |
-| **副标题（功能，可选一行）** | 把旅行照片变成杂志风长图，直接发微信 |
-| **主 CTA** | **选择照片文件夹**（Hero 内嵌，首屏无需滚动；**已决 · 2026-05-27**） |
-| **Pills** | ◇ 自动分章 · ◇ 留在本机 · ◇ 约 2–5 分钟 |
-| **高度** | `min-height: 480px`（桌面）；`360px`（窄屏）；图片 `object-fit: cover` |
-| **性能** | Hero 图 **≤ 180KB** · `fetchpriority="high"` · 不 lazy |
-| **对比度** | 白字 on 蒙版 **≥ WCAG AA**（4.5:1） |
+| **Eyebrow** | 空态：`从一个文件夹开始` · 回访：`最近编辑` |
+| **H1（情感）** | **你的照片 / 是一本<em>还没装帧</em>的杂志**（v3 已落地） |
+| **副标题** | 选一次旅行的照片文件夹，2–5 分钟自动排版成**竖版长图** · 照片留在本机，不上传云端 |
+| **主 CTA** | **选择照片文件夹**（空态 Hero 内嵌；**已决 · 2026-05-27**） |
+| **CTA 辅文** | 打开本机文件夹 · 照片**不会上传** · JPG/PNG/WebP/HEIC · 建议 50–100 张 |
+| **路径栏（v3）** | Hero 底部常驻：`浏览…` · 输入 · **开始** · hint「无 200MB 限制」 |
+| **背景图** | golden trip 摄影裁切 + preload；`studio-hero__image` |
 
 **D′ 区不再重复主 CTA** — 仅次级入口 + §6.13 认知支架。
 
-#### B⁻ · 压缩 Hero（回访态 IdleReturning）
+#### B★ · hybrid Hero（回访态 IdleReturning · v3）
 
-Eyebrow + **一行功能标题** 20px · **无全幅图** · 无内嵌 CTA（C 区承担主行动）。
+| 元素 | 规格 |
+|------|------|
+| 左栏 | Eyebrow **最近编辑** · H1 **再做一篇？** · 副标一行 |
+| **主 CTA** | **+ 新建游记**（primary · 等同 pick-folder + autoStart） |
+| 次 CTA | **选择文件夹**（ghost · pick-folder + autoStart） |
+| 右栏 | **最近 3 张**竖版卡（封面 · 标题 · stale 徽章）· 点击进 preview |
+| 路径栏 | 与空态相同 · 常驻 Hero 底部 |
+
+#### B⁻ · 压缩 Hero（v1.3 原稿 · 已由 hybrid 取代）
+
+~~Eyebrow + 一行功能标题 20px · 无全幅图~~ — **v3 回访态保留全幅 Hero + hybrid 布局**。
 
 #### 文案双层策略（冻结）
 
 | 层 | 用途 | 示例 |
 |----|------|------|
-| 情感 H1 | 空态杂志 Hero | 让每一段旅程，都值得被杂志记录 |
-| 功能副标 | 澄清交付物 | 把旅行照片变成杂志风长图，直接发微信 |
-| 主 CTA | 动作 | **选择照片文件夹**（冻结，不做 A/B） |
+| 情感 H1 | 你的照片是一本还没装帧的杂志 | — |
+| 功能副标 | 2–5 分钟竖版长图 · 照片留在本机 | — |
+| 主 CTA（空态） | **选择照片文件夹** | ingest、上传至服务器 |
+| 主 CTA（回访） | **+ 新建游记** | — |
 
-### 6.4 区块 C · 最近编辑（回访态）
+### 6.4 区块 C · 最近编辑（回访态 → v3 并入 Hero hybrid）
 
-**显示条件**：`trips.length >= 1`
+**v3 实现**：最近 **3 条** trip 渲染于 **B★ 右栏** `#studio-hero-recent-list`，不再单独占 C 区全宽列表。
 
-**标题**：`继续上次的游记`
-
-**回访态 Hero 压缩**：标题 **20px**；**省略 pills**（让位 C 区）。
-
-**卡片规格（最多 3 条）** — 竖版封面卡片（cover 在上，body 在下）
+**卡片规格** — 竖版封面卡（cover 在上）
 
 | 字段 | 展示规则 |
 |------|----------|
-| 封面区 | `height: 180px` · lazy · `onerror` 占位（灰色渐变 + 文字） |
-| 标题 | ellipsis + `title` tooltip |
-| **示例标��** | demo trip → 封面右上角徽章 **示例** |
-| 副文案 | `photoCount` · 日期 · stale 徽章 |
-| **主按钮 · 默认** | **继续编辑** |
-| **主按钮 · stale** | **更新长图** → preview + focus toolbar 长图按钮 |
-| 次按钮 | **显示封面**（`reveal` 打开系统文件夹） |
-| **⋯ 菜单** | M13：**删除游记**（线框占位） |
+| 封面 | `previewRelPath` · lazy · `onerror` 纸张色占位 |
+| 标题 | ellipsis |
+| stale | 徽章 **长图待更新** · 点击带 `?focus=longshot` |
+| 示例 | demo trip → 徽章 **示例** |
 
-**整卡可点** · hover 浮起 · `cursor: pointer`
+**F 区「全部游记」**：完整网格 · 前 8 张 `eager` · 末尾 **新建游记** 加号卡 · stale 主路径同 §6.4 原 stale CTA 规则。
 
-**试用回流**：仅示例 trip 时，卡片下 **试试用自己的照片做一篇 →**
+### 6.5 区块 D · 次级操作 / 路径栏（v3）
 
-### 6.5 区块 D′ · 次级操作（空态）/ D · 制作新的游记（回访态）
+**空态 + 回访态**：路径栏 **Hero 内常驻**（非折叠）。次级入口为 Hero 下方 **文字链** `#studio-hero-secondary`：
 
-**空态 D′**（无主 CTA）：试用示例相册 · 浏览器上传 · 照片准备折叠 · 路径折叠 · 多次导入说明见 §6.13
+| 入口 | 行为 |
+|------|------|
+| **试用示例** | `useDemoAlbum` |
+| **小文件夹试用（≤200MB）** | `webkitdirectory` multipart · **仅极小文件夹** |
+| **选文件夹** | 触发 pick-folder（同主 CTA） |
+| **帮助** | `<details>` 折叠 · 照片准备 bullet（§6.13.1 精简版） |
 
-**回访态 D**：副标题「每个文件夹会生成一篇新的游记」+ 选择照片文件夹
+**hint**：`浏览 = 本机选文件夹（不上传）· 粘贴路径亦可 · 无 200MB 限制`
+
+**冻结**：主 CTA / 浏览… **不得**在 pick-folder 失败时静默降级到浏览器上传。
 
 ### 6.6 区块 E · 样例与灵感画廊
 
-#### E★ · 灵感画廊（空态 · P0/P1）
+#### E★ · 长图样张（空态 · v3 已落地）
 
-**标题**：`他们的旅行故事`
+**标题**：`别人做出来的长图，是这个样子`
 
 | 项 | 规格 |
 |----|------|
-| **数量** | 4–6 张样例（城市 / 自然 / 人文 / 美食等风格差异） |
-| **空态布局** | **M12：横滑 carousel**（3–5 张 · 精选居中放大 · `1/5` 指示）· **M12b：两列瀑布流**（空态加大） |
-| **卡片** | 竖版裁切 + 情境标签：`京都 · 雨后 · 86 张 · 约 3 分钟` |
-| **精选** | 居中卡片略大 + ★ 精选 角标（carousel 模式） |
-| **交互** | 左右箭头 / touch swipe · 指示 `1 / 5` |
-| **reveal** | 进入视口 `opacity + translateY` 淡入（§6.14.4） |
-| **素材** | 全部 **真实 pipeline 输出**；CI 维护 `templates/studio/assets/gallery/` |
-| **期望** | 底部：`杂志风竖版长图 · 保存后可直接发微信` + `实际效果取决于照片数量与质量` |
+| **数量** | **3 张**主题样张（京都 / 冰岛 / 林芝） |
+| **形态** | **inline SVG** 模拟竖版长图（非真实 pipeline 图 · 非 carousel） |
+| **交互** | 点击 → 全屏模态滚动查看 · CTA **用我的照片做一篇** → 触发 pick-folder |
+| **期望** | 副标：`点开看完整长图 · 这是我们承诺给你的产出` |
 
-#### E⁻ · 样例轮播（回访态）
+> **与 v1.3 差异**：M12 carousel / M12b 瀑布流 **未按原 PRD 实现**；v3 用 SVG 样张保证零素材依赖与即时加载。后续可替换为真实 golden trip 截图。
 
-横滑 3 卡 · 高度 ≤ 180px · 不抢 C 区注意力。
+#### E⁻ · 回访态样例
+
+**v3**：回访态 **不展示** E 区样例轮播；用户焦点在 hybrid Hero + F 全部游记。
 
 #### 素材标准（单张 fallback）
 
@@ -429,13 +464,13 @@ Modal · 重试 — 同 v1.1
 
 | 步骤 | UI | 时长 |
 |------|-----|------|
-| 1 | 进度条满格 | 即时 |
-| 2 | **StudioToast**（居中偏上，可略大）：「你的第一篇游记已生成，正在打开预览…」 | 显示 |
-| 3 | 可选：D 区上方 **全宽过渡条**（accent 色，indeterminate） | 800ms |
-| 4 | `window.location.href = previewUrl` | Toast 后 **≥800ms** 再跳转（避免闪屏） |
-| 5 | 写入 `firstPreviewDone=1` + `firstTripId` | 跳转前 |
+| 1 | 进度条满格 → 切 **Success overlay**（`#studio-success`） | 即时 |
+| 2 | 文案：首次 **你的第一篇游记已生成** · 非首次 **生成完成** | — |
+| 3 | 主按钮 **打开预览** · 次按钮 **留在首页** | — |
+| 4 | **5s 倒计时** 后自动 `location.href = previewUrl`（可被「留在首页」取消） | 5s |
+| 5 | 写入 `firstPreviewDone=1` | 跳转前 |
 
-**非首次成功**：Toast 缩短为「生成完成，正在打开…」300ms 后跳转。
+**v3 变更**：不再依赖 Toast 作为唯一成功反馈；Toast 仍用于复制 IP、选文件夹提示等轻量场景。
 
 **从 preview 返回 `/` 后（首次）**：
 
@@ -557,9 +592,48 @@ Modal · 重试 — 同 v1.1
 | 覆盖游记 | 该游记已存在 | 覆盖并重新导入 | 取消 |
 | 取消导入 | 确定取消？ | 确定取消 | 继续等待 |
 
-### 7.3 原生选文件夹（CMP-HP-03）
+### 7.3 原生选文件夹（CMP-HP-03 · 已交付 2026-05-28）
 
-方案 A：exe IFileDialog · 方案 B：`POST /__travelogue/pick-folder` · 降级：路径表单
+**前端入口**：
+
+| 控件 | `autoStart` | 行为 |
+|------|-------------|------|
+| `#studio-pick-folder` | true | 选完即 `startImport` |
+| `#studio-new-trip-cta` | true | 同上 |
+| `#studio-browse-folder` | false | 选完填入 `#album-path` · Toast「点击开始导入」 |
+| `#studio-pick-folder-returning` 等 | true/false | 同上 |
+
+**API**：`POST /__travelogue/pick-folder` · body `{}` · 仅 **loopback** · 仅 **Windows**
+
+**响应**：
+
+| 情况 | JSON |
+|------|------|
+| 用户选中 | `{ ok: true, albumPath: "D:\\..." }` |
+| 取消 | `{ ok: true, cancelled: true }` |
+| 非 Win / 非本机 | 4xx + `message` |
+
+**后端实现（子进程 · 可靠）**：
+
+```
+HTTP handler
+  → folder_picker_service.request_folder()
+  → subprocess: python -m travelogue.desktop.pick_folder_worker
+  → pick_folder()：IFileOpenDialog → tkinter fallback
+  → stdout JSON { path | null }
+```
+
+- **全局锁**：同一时刻仅一个选文件夹对话框（防重复点击堆叠）
+- **禁止** `CREATE_NO_WINDOW`（对话框须可见）
+- **禁止** HTTP 工作线程 / daemon tk 线程直接弹窗（已知卡死根因）
+
+**前端防卡死**：
+
+- `_pickInFlight` 锁 · 进行中禁用所有 pick/b browse 按钮
+- Toast「正在打开…」`duration: 0` · **finally** 清除
+- 失败 → `focusPathImport` 提示粘贴路径
+
+**降级**：路径栏粘贴 + **开始**（JSON `albumPath`）— **主路径同等优先级**，非「失败才用」
 
 ### 7.4 键盘与无障碍
 
@@ -578,10 +652,10 @@ Enter 提交 · Esc 关闭 Modal · 进度区 `aria-live="polite"` · Toast `rol
 | 场景 | 文案 |
 |------|------|
 | 复制 IP | 已复制 |
-| 选文件夹成功 | 已选择 · 约 N 张 · 预计 X 分钟 |
-| 新建游记确认 | 将新建一篇游记 · 约 N 张 |
-| 首次生成成功 | 你的第一篇游记已生成，正在打开预览… |
-| 非首次生成 | 生成完成，正在打开… |
+| 打开选文件夹中 | 正在打开文件夹选择器…（进行中 sticky · 结束清除） |
+| 重复点击 browse | 文件夹选择器已打开，请在其窗口中操作 |
+| browse 成功未 autoStart | 已选择文件夹，点击「开始」导入 |
+| 首次生成成功 | Success overlay（§6.11）· 非 Toast 主反馈 |
 | `/trips` 慢 | 加载较慢，请稍候 |
 
 **不纳入 M12**：版本更新 / 新功能通知（留 Phase 3 顶栏 slot）。
@@ -615,16 +689,13 @@ Enter 提交 · Esc 关闭 Modal · 进度区 `aria-live="polite"` · Toast `rol
 | stale 主按钮 | 更新长图 | — |
 | 多次导入 | 每个文件夹会生成一篇新的游记 | — |
 
-### 8.2 M12 画廊形态（已决）
+### 8.2 M12 画廊形态
 
-**M12 交付：横滑 carousel**（非瀑布流）。
-
-| 项 | 决定 |
-|----|------|
-| **形态** | 3–5 张 · 横滑 + 箭头 · `2/5` 指示 · 居中「★ 精选」略大 |
-| **理由** | 实现快（纯 CSS scroll-snap + 少量 JS）；满足 AC-HP-22；触摸/键盘友好 |
-| **M12b** | 空态升级为 **两列不等高瀑布流**（`SampleGallery` masonry 模式） |
-| **回访态 E⁻** | 始终用 **3 卡小轮播**，高度 ≤180px |
+| 项 | v1.3 决定 | **v3 实现（2026-05-28）** |
+|----|-----------|---------------------------|
+| **形态** | M12 carousel · M12b 瀑布流 | **3 张 inline SVG 长图样张** + 模态 |
+| **理由（v3）** | — | 零素材依赖 · 即时加载 · 模态展示完整长图结构 |
+| **后续** | 可替换为 `templates/studio/assets/gallery/` 真实 pipeline 截图 | M12b carousel 仍可作为增强项 |
 
 ### 8.3 Stage 用户文案映射
 
@@ -652,16 +723,18 @@ Enter 提交 · Esc 关闭 Modal · 进度区 `aria-live="polite"` · Toast `rol
 | `GET` | `/__travelogue/status` | Job 轮询 |
 | `POST` | `/__travelogue/cancel` | 取消 |
 | `POST` | `/__travelogue/reveal` | 打开文件夹 |
+| `POST` | `/__travelogue/pick-folder` | **v3 已交付** · Windows 本机选文件夹（子进程 IFileDialog） |
 
-### 9.2 建议新增（M12）
+### 9.2 待新增 / 部分落地
 
-| 方法 | 路径 | 用途 |
-|------|------|------|
-| `GET` | `/__travelogue/health` | `{ "ok": true }`；首页启动检测 + Offline 态 |
-| `POST` | `/__travelogue/pick-folder` | native 选文件夹 |
-| `GET` | `/__travelogue/trips?offset=&limit=` | 可选；「查看更多」分页 |
-| `GET` | `/__travelogue/config` | Phase 3 · 高级折叠回显（PRD §9.5） |
-| `PATCH` | `/__travelogue/config` | Phase 3 · 写入 clustering/vision 三态 |
+| 方法 | 路径 | 用途 | 状态 |
+|------|------|------|------|
+| `GET` | `/__travelogue/health` | Offline 专用探测 | **未实现** · 前端降级 `/trips` |
+| `GET` | `/__travelogue/trips?offset=&limit=` | 「查看更多」分页 | 可选 |
+| `GET` | `/__travelogue/config` | Phase 3 高级折叠 | Phase 3 |
+| `PATCH` | `/__travelogue/config` | Phase 3 写入 | Phase 3 |
+
+> ~~原 M12b「建议新增 pick-folder」~~ → 已移至 §9.1。
 
 ### 9.3 localStorage 键
 
@@ -669,7 +742,18 @@ Enter 提交 · Esc 关闭 Modal · 进度区 `aria-live="polite"` · Toast `rol
 |----|------|
 | `travelogue.studio.firstPreviewDone` | 首次成功 Aha |
 | `travelogue.studio.firstReturnHighlight` | 首次返回 highlight 已展示 |
+| `travelogue.studio.demoTried` | 试用示例标记 |
+| `travelogue.studio.recentPaths` | 路径栏最近 **5** 条（JSON 数组 → datalist） |
+| `travelogue.studio.lastCancelled` | 取消导入上下文 |
 | `travelogue.studio.editHint.dismissed` | 预览编辑提示（已有） |
+
+**sessionStorage（v3 · 导入恢复）**：
+
+| 键 | 用途 |
+|----|------|
+| `travelogue.studio.activeJobId` | 刷新后续 poll 的 Job ID |
+| `travelogue.studio.activePending` | 待恢复 import body（含 `albumPath`） |
+| `travelogue.studio.importThumbs` | 浏览器上传缩略图 URL（可选） |
 
 ---
 
@@ -683,41 +767,45 @@ flowchart TD
   Load --> Return[IdleReturning]
   Empty --> Import[Importing]
   Return --> Import
-  Import --> FS[FirstSuccess · Toast]
+  Import --> FS[FirstSuccess · overlay]
   FS --> Preview[preview]
-  Preview --> Return2[返回 / · 可选 highlight]
+  FS --> Return2[留在首页]
 ```
 
 ---
 
-## 11. 与现有实现差异（Gap List）
+## 11. 与现有实现差异（Gap List · 2026-05-28 复核）
 
-| 项 | 优先级 |
-|----|--------|
-| 首次成功过渡 §6.11 | **P0** |
-| Loading 骨架屏 | **P0** |
-| StudioToast | **P0** |
-| 最近编辑 + 缩略图 | **P0** |
-| health + Offline | **P1** |
-| 样例图标准 + 替换脚本 | **P1** |
-| 顶栏 + favicon + 动态 title | **P1** |
-| 分页「查看更多」 | **P2** |
-| **认知支架 §6.13** | **P0** |
-| **杂志 Hero + 画廊 §6.3/6.6** | **P0** |
-| **视觉语言 §6.14** | **P1** |
-| **Stage 用户文案 §8.2** | **P1** |
-| **stale → 更新长图 CTA** | **P1** |
-| BroadcastChannel 多标签 | **P2**（§21） |
+| 项 | 优先级 | v3 状态 |
+|----|--------|---------|
+| 首次成功过渡 §6.11 | **P0** | ✅ Success overlay + 5s 倒计时 |
+| Loading 骨架屏 | **P0** | ⚠️ 部分（Hero 立即可见；无独立 skeleton 组件） |
+| StudioToast | **P0** | ✅ |
+| 最近编辑 + 缩略图 | **P0** | ✅ hybrid Hero 3 卡 + F 网格 |
+| pick-folder §7.3 | **P0** | ✅ 子进程方案 |
+| 路径栏 + 浏览 | **P0** | ✅ 常驻 + 无 200MB 限制 |
+| **认知支架 §6.13** | **P0** | ✅ 帮助 details 精简版 |
+| **杂志 Hero §6.3** | **P0** | ✅ v3 文案 |
+| **SVG 样张 §6.6** | **P0** | ✅（非 carousel） |
+| Stage 用户文案 §8.3 | **P1** | ✅ |
+| stale 徽章 | **P1** | ✅ |
+| health 专用端点 | **P1** | ❌ 仍用 `/trips` 降级 |
+| 样例 carousel / 瀑布流 | **P1** | ❌ 改为 SVG 样张 |
+| 顶栏 + favicon | **P1** | ✅ |
+| 分页「查看更多」 | **P2** | ⚠️ UI 占位 |
+| BroadcastChannel 多标签 | **P2** | ❌ |
+| trip 删除 · Display Web Font | **M13** | ❌ |
 
 ---
 
 ## 12. 分期交付
 
-| 里程碑 | 范围 |
-|--------|------|
-| **M12 · v1** | §6.13 · §8.2 · Modal · Toast · **Magazine Hero · Sample carousel** |
-| **M12b** | health · pick-folder · **灵感瀑布流** · 纸张纹理 · 微交互 |
-| **M13** | trip 删除 · Display Web Font · 主色占位 · 主色提取 |
+| 里程碑 | 范围 | 状态 |
+|--------|------|------|
+| **M12 · v1** | §6.13 · §8.3 · Modal · Toast · Hero · **SVG 样张** · Success 倒计时 | **已交付（v3）** |
+| **M12 · pick-folder** | §7.3 子进程 IFileDialog · 路径栏 · 防卡死 | **已交付 2026-05-28** |
+| **M12b** | health · **carousel 瀑布流** · 纸张纹理 · 微交互 | **部分** / 样张形态变更 |
+| **M13** | trip 删除 · Display Web Font · 主色占位 · 主色提取 | 待排 |
 
 ---
 
@@ -726,27 +814,29 @@ flowchart TD
 | ID | Then |
 |----|------|
 | **AC-HP-01** | 空态 10s 内见主 CTA |
-| **AC-HP-02** | 回访首屏见「继续编辑」 |
-| **AC-HP-03** | exe 默认无路径框 |
+| **AC-HP-02** | 回访首屏见 **最近 3 卡**（hybrid Hero 右栏）+ **+ 新建游记** |
+| **AC-HP-03** | exe 场景主路径为 pick-folder；路径栏为**同等合法**入口（非「失败才用」） |
 | **AC-HP-04** | 取消 Job 可重导 |
 | **AC-HP-05** | 覆盖用 Modal |
 | **AC-HP-06** | 失败中文 + 重试 |
 | **AC-HP-07** | stale 徽章 |
 | **AC-HP-08** | 预览返回列表更新 |
-| **AC-HP-09** | 首次成功见 Toast 再跳转 preview |
+| **AC-HP-09** | 首次成功见 **Success overlay** · 5s 倒计时 · 可留首页 |
 | **AC-HP-10** | 首次从 preview 返回见 C 区 highlight / tooltip |
 | **AC-HP-11** | `/trips` 请求中 C/D 显示 skeleton，Hero 立即可见 |
 | **AC-HP-12** | 复制 IP 出现 Toast |
 | **AC-HP-13** | Studio 进程停掉后见 Offline banner |
 | **AC-HP-14** | preview.jpg 损坏显示占位，页面不崩 |
-| **AC-HP-15** | 空态/回访 D 区可展开「不知道选哪个文件夹？」 |
-| **AC-HP-16** | 回访 D 区可见「每个文件夹会生成一篇新的游记」 |
+| **AC-HP-15** | Hero 内 **帮助** details 可展开照片准备 bullet |
+| **AC-HP-16** | 回访 hybrid Hero 可见 **+ 新建游记** 与路径栏 |
 | **AC-HP-17** | stale 卡片主按钮为「更新长图」 |
 | **AC-HP-18** | 进度显示用户文案（非 ingest/curate 英文） |
 | **AC-HP-19** | 试用后示例卡 + 转化引导 |
 | **AC-HP-20** | 空态首屏见全幅 Hero + 内嵌主 CTA，无需滚动 |
 | **AC-HP-21** | Hero 背景为真实输出裁切，非 stock |
-| **AC-HP-22** | 空态 E 区 ≥3 张样例可滑动/浏览 |
+| **AC-HP-22** | 空态 E 区 **≥3 张 SVG 样张** 可点击模态浏览 |
+| **AC-HP-24** | 点 **浏览…** 弹出 Windows 文件夹对话框 · 不卡死 · 不堆叠 Toast |
+| **AC-HP-25** | 路径 JSON 导入 **无 200MB 限制** · pick-folder 失败不静默走上传 |
 | **AC-HP-23** | `prefers-reduced-motion` 下无 breathing / reveal 动画 |
 
 ---
@@ -791,10 +881,10 @@ flowchart TD
 
 | 角色 | 动作 |
 |------|------|
-| 设计 | 补充 Loading / FirstSuccess / Toast / Offline 态 Figma |
-| 前端 | `studio-toast.js` · skeleton CSS · §6.11 逻辑 |
-| 后端 | `GET /__travelogue/health`（10 行以内） |
-| 内容 | 按 §6.6 重导 `sample-longshot.jpg` |
+| 设计 | v3 线框见 [photo-first-v3](./wireframes/studio-homepage-photo-first-v3.html) |
+| 前端 | `studio.js` v3 状态机 · pick-folder 防卡死 · sessionStorage 恢复 |
+| 后端 | `pick_folder_worker` 子进程 · `POST /__travelogue/pick-folder` |
+| 内容 | SVG 样张可后续替换为 golden trip 真实截图 |
 
 ---
 
@@ -827,7 +917,7 @@ Phase 3 **Curate 聚类** 在 pipeline 内部运行。**不改变** 首页六态
 | **慢提示** | T+30s / T+3min / T+8min · PRD §6.4.4 |
 | **预览** | **无** 聚类控件；Aha 仍为 §6.11 FirstSuccess |
 | **追加照片** | Phase 3 **不支持** Studio 增量追加；换图需首页 **重新选文件夹** |
-| 线框 | [wireframes/studio-homepage-wireframe.html](./wireframes/studio-homepage-wireframe.html) · M13 增补 hint 变体 |
+| 线框 | [wireframes/studio-homepage-photo-first-v3.html](./wireframes/studio-homepage-photo-first-v3.html) · **PRD v1.4 对齐** |
 
 **原则**：M12 首页 HTML **不增加** Phase 3 业务页面；聚类价值体现在 **preview 成稿质量**。
 
@@ -843,14 +933,14 @@ Phase 3 **Curate 聚类** 在 pipeline 内部运行。**不改变** 首页六态
 
 | 场景 | 行为 |
 |------|------|
-| **Studio 进程崩溃** | 每 **30s** `GET /health`；失败 → **OfflineBanner**：「服务已停止，请重新启动 Studio」+ 禁用导入 |
+| **Studio 进程崩溃** | 每 **30s** `GET /trips`（health 未实现）；失败 → **OfflineBanner** + 禁用导入 |
 | **用户手动删除 `trips/`** | `/trips` → `[]`；降级 **IdleEmpty**；不抛 uncaught error |
 | **`/trips` 500 / 网络错误** | Toast + 重试按钮；3 次失败后 Offline 态 |
 | **preview.jpg 损坏 / 0 字节** | `<img onerror>` → 色块 + 相机 icon 占位 |
 | **标题过长** | CSS ellipsis + `title` tooltip |
 | **>20 篇游记** | 「查看更多」每次 +20 |
 | **同一浏览器多标签** | **P2**：`BroadcastChannel('travelogue.studio')` 在 import 完成 / trip 变更时广播 → 其他 tab `loadTrips()`。**M12 不阻塞**，可接受手动刷新 |
-| **health 端点不存在（旧版后端）** | 前端降级：仅以 `/trips` fetch 失败推断 Offline |
+| **health 端点不存在（旧版后端）** | 前端降级：以 **`GET /trips`** 轮询推断 Offline（**当前实现**） |
 
 ---
 
@@ -864,4 +954,5 @@ Phase 3 **Curate 聚类** 在 pipeline 内部运行。**不改变** 首页六态
 | v1.3-HOMEPAGE | 2026-05-27 | 杂志 Hero · 灵感画廊 · §6.14 |
 | v1.3.1 | 2026-05-27 | **已决**：CTA 冻结「选择照片文件夹」· M12=gallery carousel · M12b=masonry |
 | v1.3.2 | 2026-05-28 | §19 · Phase 3 改为 pipeline 内聚类，取消洞察/引擎首页 slot |
-| v1.3.3 | 2026-05-28 | §19 对齐 PRD-PHASE3 v0.3.2 §6.4：高级折叠、慢提示、无 preview 聚类 UI |
+| v1.3.3 | 2026-05-28 | §19 对齐 PRD-PHASE3 v0.3.2 §6.4 |
+| **v1.4.0** | **2026-05-28** | **反向同步 v3 实现**：§1.4 基线 · hybrid Hero · 常驻路径栏 · pick-folder 子进程 · SVG 样张 · Success 倒计时 · sessionStorage 恢复 · Gap/AC/M12 状态更新 |

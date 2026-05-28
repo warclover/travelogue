@@ -313,6 +313,9 @@ def serve_studio_directory(
         studio_allow_lan=allow_lan,
         studio_config_path=config_path,
     )
+    from travelogue.desktop.folder_picker_service import start_folder_picker_service
+
+    start_folder_picker_service()
     server = ThreadingHTTPServer((host, port), handler)
     url = f"http://{host}:{port}/"
     print(f"Studio mode · trips: {trips_dir}")
