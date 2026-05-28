@@ -1,13 +1,13 @@
 /**
- * Travelogue Studio — M12 Homepage Controller
- * State machine: Loading → IdleEmpty / IdleReturning → Importing → FirstSuccess → Preview
- *                                                       → Failed → Importing/IdleEmpty
- *                                                       → Offline
+ * Travelogue Studio · v3 Photo-First Homepage Controller
+ * State machine: Loading → IdleEmpty / IdleReturning → Importing → FirstSuccess
+ *                                                            → Failed → ...
+ *                                                            → Offline
  */
 (function () {
   "use strict";
 
-  // ── Stage user-facing labels (§8.2) ──
+  // ── Stage labels (§8.2) ──
   var STAGE_LABELS = {
     ingest: "正在准备你的照片…",
     curate: "正在智能排版…",
@@ -20,7 +20,150 @@
     firstPreviewDone: "travelogue.studio.firstPreviewDone",
     firstReturnHighlight: "travelogue.studio.firstReturnHighlight",
     demoTried: "travelogue.studio.demoTried",
+    recentPaths: "travelogue.studio.recentPaths",
+    lastCancelled: "travelogue.studio.lastCancelled",
   };
+  var SS = {
+    activeJobId: "travelogue.studio.activeJobId",
+    activePending: "travelogue.studio.activePending",
+    importThumbs: "travelogue.studio.importThumbs",
+  };
+  var SAMPLE_LONGSHOTS = {
+    kyoto: {
+      title: "京都 · 雨后",
+      meta: "86 张 · 4 章 · 静谧",
+      paper: "#fbf6ee",
+      ink: "#2a2520",
+      colors: ["#b04331", "#3a4b3f", "#c9a85d", "#6c4a32"],
+      chapters: ["雨夜抵达", "庙宇晨光", "竹林深处", "归途"],
+    },
+    iceland: {
+      title: "冰岛 · 极光",
+      meta: "120 张 · 5 章 · 壮阔",
+      paper: "#f0f3f6",
+      ink: "#1a1f2e",
+      colors: ["#2a2a4a", "#7cc1a8", "#5d7a9e", "#b8c5d6", "#3a4862"],
+      chapters: ["落地", "黑沙滩", "极光夜", "蓝冰洞", "告别"],
+    },
+    linzhi: {
+      title: "林芝 · 桃花",
+      meta: "64 张 · 3 章 · 抒情",
+      paper: "#fef3f5",
+      ink: "#3a2530",
+      colors: ["#e6a6b5", "#7a8a72", "#d68aa0"],
+      chapters: ["桃花初放", "雪山之下", "夜话"],
+    },
+  };
+
+  function _pad2(n) { return (n < 10 ? "0" : "") + n; }
+
+  // Build inline SVG that mimics a printed long screenshot page.
+  function buildSampleSVG(key, mode) {
+    var s = SAMPLE_LONGSHOTS[key];
+    if (!s) return "";
+    var W = 300;
+    var H = mode === "full" ? 1320 : 440;
+    var ink = s.ink, paper = s.paper, colors = s.colors;
+    var parts = [];
+    parts.push(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" ' +
+      'preserveAspectRatio="xMidYMid slice" role="img" aria-label="' + s.title + ' 长图样张">'
+    );
+    parts.push(
+      '<defs><linearGradient id="sh-' + key + '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#000" stop-opacity="0"/>' +
+      '<stop offset="1" stop-color="#000" stop-opacity=".35"/>' +
+      '</linearGradient></defs>'
+    );
+    parts.push('<rect width="' + W + '" height="' + H + '" fill="' + paper + '"/>');
+
+    var y = mode === "full" ? 58 : 28;
+    parts.push(
+      '<text x="' + (W / 2) + '" y="' + y + '" text-anchor="middle" ' +
+      'font-family="Georgia,Songti SC,serif" font-size="' + (mode === "full" ? 22 : 14) + '" ' +
+      'fill="' + ink + '">' + s.title + '</text>'
+    );
+    y += mode === "full" ? 18 : 11;
+    parts.push(
+      '<text x="' + (W / 2) + '" y="' + y + '" text-anchor="middle" ' +
+      'font-family="Segoe UI,PingFang SC,sans-serif" font-size="' + (mode === "full" ? 9 : 6) + '" ' +
+      'fill="' + ink + '" opacity=".55">' + s.meta + '</text>'
+    );
+    y += mode === "full" ? 32 : 16;
+
+    var chapterCount = s.chapters.length;
+    var photoH = mode === "full" ? 210 : 60;
+    var textRows = mode === "full" ? 4 : 2;
+    var rowH = mode === "full" ? 7 : 3;
+    var bottomPad = mode === "full" ? 24 : 8;
+
+    for (var i = 0; i < chapterCount; i++) {
+      if (y + photoH + textRows * (rowH + 4) + 30 > H) break;
+      parts.push(
+        '<text x="32" y="' + y + '" font-family="Segoe UI,sans-serif" ' +
+        'font-size="' + (mode === "full" ? 9 : 5.5) + '" fill="' + ink + '" ' +
+        'opacity=".5" letter-spacing="2">CHAPTER ' + _pad2(i + 1) + '</text>'
+      );
+      y += mode === "full" ? 14 : 8;
+      parts.push(
+        '<text x="32" y="' + y + '" font-family="Georgia,Songti SC,serif" ' +
+        'font-size="' + (mode === "full" ? 14 : 7.5) + '" font-weight="600" fill="' + ink + '">' +
+        s.chapters[i] + '</text>'
+      );
+      y += mode === "full" ? 14 : 7;
+      var color = colors[i % colors.length];
+      parts.push(
+        '<rect x="32" y="' + y + '" width="' + (W - 64) + '" height="' + photoH + '" ' +
+        'rx="3" fill="' + color + '"/>' +
+        '<rect x="32" y="' + y + '" width="' + (W - 64) + '" height="' + photoH + '" ' +
+        'rx="3" fill="url(#sh-' + key + ')"/>'
+      );
+      y += photoH + (mode === "full" ? 14 : 7);
+      for (var r = 0; r < textRows; r++) {
+        var w = (W - 64) * (r === textRows - 1 ? 0.5 : 0.92);
+        parts.push(
+          '<rect x="32" y="' + y + '" width="' + w + '" height="' + rowH + '" ' +
+          'rx="1" fill="' + ink + '" opacity=".5"/>'
+        );
+        y += rowH + (mode === "full" ? 8 : 4);
+      }
+      y += bottomPad;
+    }
+    if (mode === "full") {
+      parts.push(
+        '<text x="' + (W / 2) + '" y="' + (H - 40) + '" text-anchor="middle" ' +
+        'font-family="Georgia,serif" font-size="11" fill="' + ink + '" opacity=".4" letter-spacing="6">— end —</text>'
+      );
+    }
+    parts.push('</svg>');
+    return parts.join("");
+  }
+
+  function renderSampleCards() {
+    var container = $("studio-samples");
+    if (!container) return;
+    container.innerHTML = "";
+    Object.keys(SAMPLE_LONGSHOTS).forEach(function (key) {
+      var s = SAMPLE_LONGSHOTS[key];
+      var card = document.createElement("article");
+      card.className = "studio-longshot-card";
+      card.setAttribute("data-sample", key);
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", s.title + " 长图样张");
+      var paper = document.createElement("div");
+      paper.className = "studio-longshot-card__paper";
+      paper.innerHTML = buildSampleSVG(key, "thumb");
+      card.appendChild(paper);
+      var meta = document.createElement("div");
+      meta.className = "studio-longshot-card__meta";
+      var h = document.createElement("h3"); h.textContent = s.title;
+      var p = document.createElement("p"); p.textContent = s.meta;
+      meta.appendChild(h); meta.appendChild(p);
+      card.appendChild(meta);
+      container.appendChild(card);
+    });
+  }
 
   // ── State ──
   var currentState = "Loading";
@@ -50,6 +193,19 @@
     document.title = suffix ? suffix + " · Travelogue Studio" : "Travelogue Studio";
   }
 
+  function formatUpdatedAt(ts) {
+    if (!ts) return "";
+    var d = new Date(ts * 1000);
+    var now = new Date();
+    var diffMs = now - d;
+    var dayMs = 24 * 3600 * 1000;
+    if (diffMs < 60 * 1000) return "刚刚";
+    if (diffMs < 3600 * 1000) return Math.floor(diffMs / 60000) + " 分钟前";
+    if (diffMs < dayMs) return Math.floor(diffMs / 3600000) + " 小时前";
+    if (diffMs < 7 * dayMs) return Math.floor(diffMs / dayMs) + " 天前";
+    return d.toLocaleDateString("zh-CN");
+  }
+
   // ── Error / Warning ──
   function setError(msg) {
     var progressEl = $("studio-error");
@@ -60,10 +216,7 @@
       return;
     }
     if (currentState === "Importing") {
-      if (progressEl) {
-        progressEl.textContent = msg;
-        show(progressEl, true);
-      }
+      if (progressEl) { progressEl.textContent = msg; show(progressEl, true); }
       if (idleEl) show(idleEl, false);
     } else if (idleEl) {
       idleEl.textContent = msg;
@@ -77,6 +230,7 @@
 
   function setWarning(msg) {
     var el = $("studio-warning");
+    if (!el) return;
     if (!msg) { show(el, false); el.textContent = ""; return; }
     el.textContent = msg;
     show(el, true);
@@ -84,161 +238,218 @@
 
   function showFailure(msg, echoPath) {
     show($("studio-failure"), true);
-    show($("studio-progress-section"), false);
     $("studio-failure-msg").textContent = msg || "导入失败";
     var echoEl = $("studio-failure-echo");
-    if (echoPath) {
-      echoEl.textContent = echoPath;
-      show(echoEl, true);
-    } else {
-      show(echoEl, false);
-    }
+    if (echoPath) { echoEl.textContent = echoPath; show(echoEl, true); }
+    else show(echoEl, false);
     setTitle("导入失败");
   }
 
   function hideFailure() {
     show($("studio-failure"), false);
-    $("studio-failure-msg").textContent = "";
+    var msg = $("studio-failure-msg"); if (msg) msg.textContent = "";
     show($("studio-failure-echo"), false);
     setTitle();
   }
 
-  function setBusy(busy) {
-    var ids = ["studio-pick-folder", "studio-pick-folder-returning",
-               "studio-submit-path", "studio-submit-path-returning",
-               "studio-demo-album", "studio-demo-album-returning"];
-    ids.forEach(function (id) {
-      var el = $(id);
-      if (el) el.disabled = busy || isOffline;
-    });
-    // Also disable file inputs when offline
-    var uploadInputs = document.querySelectorAll(".studio__import-section input[type=file]");
-    for (var i = 0; i < uploadInputs.length; i++) {
-      uploadInputs[i].disabled = isOffline;
+  function setImportControlsDisabled(disabled) {
+    var ids = [
+      "studio-pick-folder", "studio-new-trip-cta",
+      "studio-submit-path", "studio-demo-album", "studio-path-toggle",
+    ];
+    ids.forEach(function (id) { var el = $(id); if (el) el.disabled = disabled; });
+    var uploadInputs = document.querySelectorAll(
+      "#album-upload, #studio-folder-input, #studio-folder-input-returning"
+    );
+    for (var i = 0; i < uploadInputs.length; i++) uploadInputs[i].disabled = disabled;
+  }
+
+  function setBusy(busy) { setImportControlsDisabled(busy || isOffline); }
+
+  // ── Hero background (LCP-friendly: try small variant first when available) ──
+  var lastHeroSrc = "";
+  function updateHeroBackground() {
+    var img = $("studio-hero-image");
+    if (!img) return;
+    if (tripsData.length > 0) {
+      var trip = tripsData[0];
+      var rel = trip.previewRelPath;
+      if (rel) {
+        var url = "/" + trip.tripId + "/" + rel;
+        if (url === lastHeroSrc) return;
+        lastHeroSrc = url;
+        var pre = new Image();
+        pre.onload = function () {
+          img.style.backgroundImage = 'url("' + url + '")';
+          img.classList.remove("studio-hero__image--default");
+        };
+        pre.onerror = function () {
+          img.style.backgroundImage = "";
+          img.classList.add("studio-hero__image--default");
+        };
+        pre.src = url;
+        return;
+      }
     }
+    lastHeroSrc = "";
+    img.style.backgroundImage = "";
+    img.classList.add("studio-hero__image--default");
   }
 
   // ── State machine ──
-  function transitionTo(state) {
-    currentState = state;
-    render();
-  }
+  function transitionTo(state) { currentState = state; render(); }
 
   function render() {
     var hasTrips = tripsData.length > 0;
     var isImporting = currentState === "Importing";
     var isFailed = currentState === "Failed";
+    var isSuccess = currentState === "Success";
+    var isLoading = currentState === "Loading";
 
-    // Title
-    if (currentState === "Importing") setTitle("正在生成…");
-    else if (currentState === "Failed") setTitle("导入失败");
+    if (isImporting) setTitle("正在生成…");
+    else if (isFailed) setTitle("导入失败");
     else setTitle();
 
-    // Offline banner
     show($("studio-offline"), isOffline);
+    setImportControlsDisabled(isOffline || isImporting);
 
-    // Disable import actions when offline (AC-HP-13)
-    var offlineIds = ["studio-pick-folder", "studio-pick-folder-returning",
-                      "studio-submit-path", "studio-submit-path-returning",
-                      "studio-demo-album", "studio-demo-album-returning"];
-    offlineIds.forEach(function (id) {
-      var el = $(id);
-      if (el) el.disabled = isOffline;
-    });
-    // Also disable file inputs so wrapped <label> clicks are inert
-    var uploadInputs = document.querySelectorAll(".studio__import-section input[type=file]");
-    for (var ui = 0; ui < uploadInputs.length; ui++) {
-      uploadInputs[ui].disabled = isOffline;
+    // Hero variant data attribute (controls veil / blur)
+    var hero = $("studio-hero");
+    var variant;
+    if (isImporting) variant = "importing";
+    else if (isFailed) variant = "failed";
+    else if (isSuccess) variant = "success";
+    else if (hasTrips) variant = "returning";
+    else variant = "empty";
+    if (hero) hero.setAttribute("data-variant", variant);
+
+    updateHeroBackground();
+
+    show($("studio-hero-empty"), !hasTrips && !isImporting && !isFailed && !isSuccess && !isLoading);
+    show($("studio-hero-returning"), hasTrips && !isImporting && !isFailed && !isSuccess);
+    show($("studio-hero-importing"), isImporting);
+    show($("studio-failure"), isFailed);
+    show($("studio-success"), isSuccess);
+
+    var quietOverlay = isImporting || isFailed || isSuccess || isLoading;
+    show($("studio-hero-secondary"), !quietOverlay);
+    var secondaryLabel = $("studio-secondary-label");
+    if (secondaryLabel) {
+      secondaryLabel.textContent = hasTrips ? "或者" : "还没自己的照片？";
     }
 
-    // Status dot
+    if (quietOverlay) show($("studio-import-form"), false);
+
+    show($("studio-scroll-hint"), !quietOverlay);
+    var scrollText = $("studio-scroll-hint-text");
+    if (scrollText) {
+      if (hasTrips) {
+        var count = tripsTotalCount || tripsData.length;
+        scrollText.textContent = "向下 · 全部 " + count + " 篇游记";
+      } else {
+        scrollText.textContent = "向下 · 看看别人做的";
+      }
+    }
+
     var dot = $("studio-status-dot");
     var statusText = $("studio-status-text");
-    if (isOffline) {
-      dot.className = "studio__topbar-dot studio__topbar-dot--offline";
-      statusText.textContent = "未连接";
-    } else {
-      dot.className = "studio__topbar-dot";
-      statusText.textContent = "本地运行中";
+    if (dot && statusText) {
+      dot.classList.remove("studio-topbar__dot--offline", "studio-topbar__dot--importing");
+      if (isOffline) { dot.classList.add("studio-topbar__dot--offline"); statusText.textContent = "未连接"; }
+      else if (isImporting) { dot.classList.add("studio-topbar__dot--importing"); statusText.textContent = "正在装帧中…"; }
+      else { statusText.textContent = "本地运行中"; }
     }
 
-    // Hero
-    show($("studio-hero-magazine"), !hasTrips && !isImporting && !isFailed);
-    show($("studio-hero-compact"), hasTrips && !isImporting && !isFailed);
-
-    // C · Recent (show during loading + returning)
-    var showRecent = hasTrips && !isImporting && !isFailed;
-    show($("studio-recent"), showRecent || currentState === "Loading");
-    var recentTitle = $("studio-recent-title");
-    if (currentState === "Loading") {
-      // Hide title during loading — skeleton alone is enough
-      if (recentTitle) show(recentTitle, false);
-      show($("studio-recent-skeleton"), true);
-      show($("studio-recent-list"), false);
-    } else if (showRecent) {
-      if (recentTitle) show(recentTitle, true);
-      show($("studio-recent-skeleton"), false);
-      show($("studio-recent-list"), true);
-      renderRecentTrips();
+    if (hasTrips && !isImporting && !isFailed && !isSuccess) {
+      renderHybridHero();
     }
 
-    // D' (empty) / D (returning) / skeleton
-    var showImportEmpty = !hasTrips && !isImporting && !isFailed && currentState !== "Loading";
-    var showImportReturning = hasTrips && !isImporting && !isFailed;
-    show($("studio-import-empty"), showImportEmpty);
-    show($("studio-import-returning"), showImportReturning);
-    show($("studio-import-skeleton"), currentState === "Loading" && !hasTrips);
+    show($("studio-gallery"), !hasTrips && !isImporting && !isFailed && !isSuccess && !isLoading);
+    show($("studio-trips"), hasTrips && !isImporting && !isFailed && !isSuccess);
+    if (hasTrips && !isImporting && !isFailed && !isSuccess) renderAllTrips();
 
-    // Gallery
-    var showGallery = !hasTrips && !isImporting && !isFailed;
-    show($("studio-gallery"), showGallery);
-    if (showGallery) {
-      // Ensure reveal animation fires after hidden→visible transition
-      requestAnimationFrame(function () {
-        var g = $("studio-gallery");
-        if (g && !g.classList.contains("is-revealed")) g.classList.add("is-revealed");
-      });
-    }
-    show($("studio-gallery-compact"), hasTrips && !isImporting && !isFailed);
-    if (hasTrips && !isImporting && !isFailed) {
-      requestAnimationFrame(function () {
-        var gc = $("studio-gallery-compact");
-        if (gc && !gc.classList.contains("is-revealed")) gc.classList.add("is-revealed");
-      });
+    var below = $("studio-below");
+    if (below) {
+      var anyBelow = !isImporting && !isFailed && !isSuccess && !isLoading;
+      below.style.display = anyBelow ? "" : "none";
     }
 
-    // F · All trips
-    show($("studio-trips"), hasTrips && tripsData.length >= 2 && !isImporting && !isFailed);
-    if (hasTrips && !isImporting && !isFailed) {
-      renderAllTrips();
-    }
-
-    // Progress
-    show($("studio-progress-section"), isImporting);
-    // Failure
-    show($("studio-failure"), isFailed);
+    renderFooterStats();
+    renderCancelNotice();
   }
 
-  // ── Trip card rendering ──
-  function formatUpdatedAt(ts) {
-    if (!ts) return "";
-    var d = new Date(ts * 1000);
-    return d.toLocaleDateString("zh-CN");
+  // ── Returning hero: left text + right 3 recent cards ──
+  function renderHybridHero() {
+    var eyebrow = $("studio-recent-eyebrow");
+    if (eyebrow && tripsData[0] && tripsData[0].updatedAt) {
+      eyebrow.textContent = "最近编辑 · " + formatUpdatedAt(tripsData[0].updatedAt);
+    } else if (eyebrow) {
+      eyebrow.textContent = "最近编辑";
+    }
+
+    var list = $("studio-hero-recent-list");
+    if (!list) return;
+    list.innerHTML = "";
+
+    var recent = tripsData.slice(0, 3);
+    recent.forEach(function (trip, idx) {
+      var card = document.createElement("a");
+      card.className = "studio-hero__recent-card";
+      var href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
+      if (trip.longshotStale) href = "/" + trip.tripId + "/index.html?focus=longshot";
+      card.href = href;
+      card.title = (trip.title || trip.tripId) + (trip.longshotStale ? " · 长图待更新" : "");
+
+      if (trip.previewRelPath) {
+        var img = document.createElement("img");
+        img.alt = trip.title || "游记封面";
+        img.loading = idx === 0 ? "eager" : "lazy";
+        img.src = "/" + trip.tripId + "/" + trip.previewRelPath;
+        img.onerror = function () { img.remove(); };
+        card.appendChild(img);
+      }
+
+      if (trip.longshotStale) {
+        var stale = document.createElement("span");
+        stale.className = "studio-hero__recent-card__stale";
+        stale.textContent = "长图待更新";
+        card.appendChild(stale);
+      }
+
+      var meta = document.createElement("div");
+      meta.className = "studio-hero__recent-card__meta";
+      var t = document.createElement("p");
+      t.className = "studio-hero__recent-card__title";
+      t.textContent = trip.title || trip.tripId;
+      meta.appendChild(t);
+      var sub = document.createElement("p");
+      sub.className = "studio-hero__recent-card__sub";
+      var subParts = [];
+      if (trip.photoCount) subParts.push(trip.photoCount + " 张");
+      if (trip.updatedAt) subParts.push(formatUpdatedAt(trip.updatedAt));
+      sub.textContent = subParts.join(" · ");
+      meta.appendChild(sub);
+      card.appendChild(meta);
+
+      list.appendChild(card);
+    });
   }
 
-  function createThumbPlaceholder() {
-    var div = document.createElement("div");
-    div.className = "studio__trip-thumb studio__trip-thumb--placeholder";
-    div.textContent = "preview";
-    return div;
-  }
-
+  // ── Trip cards (all trips grid) ──
   function renderTripCard(trip, options) {
     options = options || {};
-    var wrap = document.createElement("div");
-    wrap.className = "studio__trip-card-wrap";
+    var isDemo = trip.tripId && trip.tripId.indexOf("demo") >= 0;
+    var href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
+    if (trip.longshotStale) {
+      href = "/" + trip.tripId + "/index.html?focus=longshot";
+    }
 
-    // Highlight for first return (most recent trip only)
+    var card = document.createElement("a");
+    card.className = "studio-trip-card";
+    card.href = href;
+    card.title = trip.title || trip.tripId;
+
+    // Highlight first return (only on the latest trip)
     var needsHighlight = false;
     if (options.highlight &&
         localStorage.getItem(LS.firstPreviewDone) === "1" &&
@@ -246,172 +457,196 @@
         currentState === "IdleReturning") {
       needsHighlight = true;
     }
-
     if (needsHighlight) {
-      wrap.classList.add("studio__trip-card-wrap--highlight");
-      var tooltip = document.createElement("span");
-      tooltip.className = "studio__trip-highlight-tooltip";
-      tooltip.textContent = "你的游记在这里，点击继续编辑";
-      wrap.appendChild(tooltip);
+      card.classList.add("studio-trip-card--highlight");
       setTimeout(function () {
-        wrap.classList.remove("studio__trip-card-wrap--highlight");
-        if (tooltip.parentNode) tooltip.remove();
+        card.classList.remove("studio-trip-card--highlight");
         localStorage.setItem(LS.firstReturnHighlight, "1");
       }, 5000);
-      wrap.addEventListener("click", function dismiss() {
-        wrap.classList.remove("studio__trip-card-wrap--highlight");
-        if (tooltip.parentNode) tooltip.remove();
-        localStorage.setItem(LS.firstReturnHighlight, "1");
-        wrap.removeEventListener("click", dismiss);
-      });
     }
 
-    var card = document.createElement("div");
-    card.className = "studio__trip-card";
-
-    // Thumbnail: use <div> placeholder when no preview, <img> otherwise
-    var thumb;
     if (trip.previewRelPath) {
-      thumb = document.createElement("img");
-      thumb.className = "studio__trip-thumb";
-      thumb.alt = trip.title || "游记";
-      thumb.loading = "lazy";
-      thumb.src = "/" + trip.tripId + "/" + trip.previewRelPath;
-      thumb.onerror = function () {
-        // Replace broken <img> with placeholder <div>
-        var placeholder = createThumbPlaceholder();
-        thumb.parentNode.replaceChild(placeholder, thumb);
+      var img = document.createElement("img");
+      img.alt = trip.title || "游记封面";
+      img.loading = options.eager ? "eager" : "lazy";
+      if (options.eager) img.setAttribute("fetchpriority", "high");
+      img.src = "/" + trip.tripId + "/" + trip.previewRelPath;
+      img.onerror = function () {
+        img.remove();
+        var ph = document.createElement("div");
+        ph.className = "studio-trip-card__placeholder";
+        ph.textContent = trip.title || trip.tripId;
+        card.insertBefore(ph, card.firstChild);
       };
+      card.appendChild(img);
     } else {
-      thumb = createThumbPlaceholder();
+      var placeholder = document.createElement("div");
+      placeholder.className = "studio-trip-card__placeholder";
+      placeholder.textContent = trip.title || trip.tripId;
+      card.appendChild(placeholder);
     }
 
-    // Info
-    var info = document.createElement("div");
-    info.className = "studio__trip-info";
+    if (isDemo) {
+      var badge = document.createElement("span");
+      badge.className = "studio-trip-card__demo";
+      badge.textContent = "示例";
+      card.appendChild(badge);
+    }
+
+    var meta = document.createElement("div");
+    meta.className = "studio-trip-card__meta";
 
     var name = document.createElement("p");
-    name.className = "studio__trip-name";
+    name.className = "studio-trip-card__title";
     name.textContent = trip.title || trip.tripId;
-    name.title = trip.title || trip.tripId;
+    meta.appendChild(name);
 
-    // Check if demo trip
-    var isDemo = trip.tripId && trip.tripId.indexOf("demo") >= 0;
-    if (isDemo) {
-      var demoBadge = document.createElement("span");
-      demoBadge.className = "studio__badge studio__badge--demo";
-      demoBadge.textContent = "示例";
-      name.appendChild(document.createTextNode(" "));
-      name.appendChild(demoBadge);
-    }
-
-    var meta = document.createElement("p");
-    meta.className = "studio__trip-meta";
-    var parts = [];
-    if (trip.photoCount) parts.push(trip.photoCount + " 张");
-    if (trip.updatedAt) parts.push(formatUpdatedAt(trip.updatedAt));
-    meta.textContent = parts.join(" · ");
+    var sub = document.createElement("p");
+    sub.className = "studio-trip-card__sub";
+    var subParts = [];
+    if (trip.photoCount) subParts.push(trip.photoCount + " 张");
+    if (trip.updatedAt) subParts.push(formatUpdatedAt(trip.updatedAt));
+    sub.textContent = subParts.join(" · ");
     if (trip.longshotStale) {
-      var staleBadge = document.createElement("span");
-      staleBadge.className = "studio__badge studio__badge--stale";
-      staleBadge.textContent = "长图待更新";
-      meta.appendChild(document.createTextNode(" · "));
-      meta.appendChild(staleBadge);
+      var stale = document.createElement("span");
+      stale.className = "studio-trip-card__stale";
+      stale.textContent = "长图待更新";
+      sub.appendChild(document.createTextNode(" "));
+      sub.appendChild(stale);
     }
+    meta.appendChild(sub);
 
-    var actions = document.createElement("div");
-    actions.className = "studio__trip-actions";
-
-    // Primary button: "更新长图" if stale, "继续编辑" otherwise
-    var primaryBtn = document.createElement("a");
-    primaryBtn.className = "studio__btn studio__btn--primary studio__btn--sm";
-    if (trip.longshotStale) {
-      primaryBtn.textContent = "更新长图";
-      primaryBtn.href = "/" + trip.tripId + "/index.html?focus=longshot";
-    } else {
-      primaryBtn.textContent = "继续编辑";
-      primaryBtn.href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
-    }
-
-    var revealBtn = document.createElement("button");
-    revealBtn.type = "button";
-    revealBtn.className = "studio__btn studio__btn--ghost studio__btn--sm";
-    revealBtn.textContent = "显示封面";
-    revealBtn.addEventListener("click", function (e) {
-      e.stopPropagation();
-      if (trip.previewRelPath) {
-        fetch("/__travelogue/reveal", {
-          method: "POST",
-          headers: studioAuthHeaders({ "Content-Type": "application/json" }),
-          body: JSON.stringify({ tripId: trip.tripId, relPath: trip.previewRelPath }),
-        });
-      }
-    });
-
-    actions.appendChild(primaryBtn);
-    actions.appendChild(revealBtn);
-
-    info.appendChild(name);
-    info.appendChild(meta);
-    info.appendChild(actions);
-
-    // Chevron
-    var chevron = document.createElement("span");
-    chevron.className = "studio__trip-chevron";
-    chevron.textContent = "→";
-
-    card.appendChild(thumb);
-    card.appendChild(info);
-    card.appendChild(chevron);
-    wrap.appendChild(card);
-
-    // Whole card clickable
-    wrap.addEventListener("click", function (e) {
-      if (e.target.closest("a") || e.target.closest("button")) return;
-      window.location.href = primaryBtn.href;
-    });
-
-    return wrap;
-  }
-
-  function renderRecentTrips() {
-    var container = $("studio-recent-list");
-    container.innerHTML = "";
-    var recent = tripsData.slice(0, 3);
-    recent.forEach(function (trip, index) {
-      container.appendChild(renderTripCard(trip, { highlight: index === 0 }));
-    });
-
-    // Demo nudge: if only demo trips
-    var hasUserTrips = tripsData.some(function (t) {
-      return !t.tripId || t.tripId.indexOf("demo") < 0;
-    });
-    var hasDemoTrips = tripsData.some(function (t) {
-      return t.tripId && t.tripId.indexOf("demo") >= 0;
-    });
-    if (hasDemoTrips && !hasUserTrips) {
-      var nudge = document.createElement("a");
-      nudge.className = "studio__demo-nudge";
-      nudge.href = "#studio-import-returning";
-      nudge.textContent = "试试用自己的照片做一篇 →";
-      container.appendChild(nudge);
-    }
+    card.appendChild(meta);
+    return card;
   }
 
   function renderAllTrips() {
     var list = $("studio-trips-list");
+    var count = $("studio-trips-count");
+    if (!list) return;
     list.innerHTML = "";
-    tripsData.forEach(function (trip) {
-      var li = document.createElement("li");
-      li.style.marginBottom = "12px";
-      li.appendChild(renderTripCard(trip));
-      list.appendChild(li);
+
+    tripsData.forEach(function (trip, i) {
+      list.appendChild(renderTripCard(trip, { highlight: i === 0, eager: i < 8 }));
     });
-    // Show "more" button when backend may have truncated (limit 20)
-    var moreBtn = $("studio-trips-more");
-    if (moreBtn) {
-      show(moreBtn, tripsData.length < tripsTotalCount);
+
+    var addCard = document.createElement("button");
+    addCard.type = "button";
+    addCard.className = "studio-trip-card studio-trip-card--add";
+    addCard.textContent = "新建游记";
+    addCard.addEventListener("click", function () {
+      requestNativeFolder($("trip-title").value, $("trip-place").value, "studio-folder-input-returning");
+    });
+    list.appendChild(addCard);
+
+    if (count) {
+      var total = tripsTotalCount || tripsData.length;
+      count.textContent = "共 " + total + " 篇";
     }
+
+    var moreBtn = $("studio-trips-more");
+    if (moreBtn) show(moreBtn, tripsData.length < tripsTotalCount);
+  }
+
+  function renderFooterStats() {
+    var el = $("studio-footer-stats");
+    if (!el) return;
+    if (tripsData.length === 0) {
+      el.textContent = "照片与游记保存在本机 · 不上传云端";
+      return;
+    }
+    var total = tripsTotalCount || tripsData.length;
+    var photos = tripsData.reduce(function (s, t) { return s + (t.photoCount || 0); }, 0);
+    el.textContent = "已生成 " + total + " 篇 · 累计 " + photos + " 张照片 · 全部保存在本机";
+  }
+
+  function renderCancelNotice() {
+    var raw = "";
+    try { raw = localStorage.getItem(LS.lastCancelled) || ""; } catch (e) {}
+    var data = null;
+    if (raw) { try { data = JSON.parse(raw); } catch (e) { data = null; } }
+
+    function applyTo(el) {
+      if (!el) return;
+      if (!data || !data.echo) { show(el, false); return; }
+      el.innerHTML = "";
+      var label = document.createElement("span");
+      label.textContent = "上次取消：" + data.echo;
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "studio-cancel-notice__action";
+      btn.textContent = "重新开始";
+      btn.addEventListener("click", function () {
+        if (data.body) startImport(data.body);
+        try { localStorage.removeItem(LS.lastCancelled); } catch (e) {}
+      });
+      var dismiss = document.createElement("button");
+      dismiss.type = "button";
+      dismiss.className = "studio-cancel-notice__action";
+      dismiss.textContent = "忽略";
+      dismiss.style.opacity = ".6";
+      dismiss.addEventListener("click", function () {
+        try { localStorage.removeItem(LS.lastCancelled); } catch (e) {}
+        show(el, false);
+      });
+      el.appendChild(label);
+      el.appendChild(btn);
+      el.appendChild(dismiss);
+      show(el, true);
+    }
+    applyTo($("studio-cancel-notice"));
+    applyTo($("studio-cancel-notice-returning"));
+  }
+
+  // ── Recent paths memory ──
+  function getRecentPaths() {
+    try { return JSON.parse(localStorage.getItem(LS.recentPaths) || "[]"); }
+    catch (e) { return []; }
+  }
+  function pushRecentPath(p) {
+    if (!p) return;
+    var list = getRecentPaths().filter(function (x) { return x !== p; });
+    list.unshift(p);
+    if (list.length > 5) list = list.slice(0, 5);
+    try { localStorage.setItem(LS.recentPaths, JSON.stringify(list)); } catch (e) {}
+    renderRecentPaths();
+  }
+  function renderRecentPaths() {
+    var dl = $("studio-recent-paths");
+    if (!dl) return;
+    dl.innerHTML = "";
+    getRecentPaths().forEach(function (p) {
+      var opt = document.createElement("option");
+      opt.value = p;
+      dl.appendChild(opt);
+    });
+  }
+
+  // ── Import thumbs (real selected photos) ──
+  function setImportThumbs(urls) {
+    var c = $("studio-import-thumbs");
+    if (!c) return;
+    var spans = c.querySelectorAll("span");
+    var defaults = [
+      "/__studio/assets/demo-album/demo-01.jpg",
+      "/__studio/assets/demo-album/demo-02.jpg",
+      "/__studio/assets/demo-album/demo-03.jpg",
+      "/__studio/assets/demo-album/demo-04.jpg",
+    ];
+    for (var i = 0; i < spans.length; i++) {
+      var u = (urls && urls[i]) || defaults[i];
+      spans[i].style.backgroundImage = 'url("' + u + '")';
+    }
+  }
+  function readImportThumbsFromFiles(files) {
+    if (!files || !files.length || !window.URL || !URL.createObjectURL) return;
+    var picked = [];
+    for (var i = 0; i < files.length && picked.length < 4; i++) {
+      var f = files[i];
+      var name = (f.webkitRelativePath || f.name || "").toLowerCase();
+      if (/\.(jpe?g|png|webp|heic|heif)$/i.test(name)) picked.push(f);
+    }
+    setImportThumbs(picked.map(function (f) { return URL.createObjectURL(f); }));
   }
 
   // ── Progress ──
@@ -420,15 +655,16 @@
     var idx = job.stageIndex || 0;
     var total = job.stageCount || 4;
     var hint = job.stageHint ? "（" + job.stageHint + "）" : "";
-    return idx + "/" + total + " " + label + hint;
+    return idx + "/" + total + " · " + label + hint;
   }
 
   function updateProgress(job) {
-    show($("studio-progress-section"), true);
     hideFailure();
-    $("studio-stage").textContent = stageText(job);
-    var pct = ((job.stageIndex || 0) / (job.stageCount || 4)) * 100;
-    $("studio-bar-fill").style.width = pct + "%";
+    var stage = $("studio-stage"); if (stage) stage.textContent = stageText(job);
+    var pct = Math.round(((job.stageIndex || 0) / (job.stageCount || 4)) * 100);
+    var bar = $("studio-bar-fill"); if (bar) bar.style.width = pct + "%";
+    var pctEl = $("studio-pct");
+    if (pctEl) { pctEl.textContent = pct + "%"; show(pctEl, true); }
     show($("studio-cancel"), job.status === "running" || job.status === "queued");
   }
 
@@ -451,27 +687,10 @@
     });
   }
 
-  function showSlowHint() {
-    var el = $("studio-slow-hint");
-    if (!el) {
-      el = document.createElement("p");
-      el.id = "studio-slow-hint";
-      el.className = "studio__slow-hint";
-      $("studio-progress").appendChild(el);
-    }
-    el.textContent = "比预期久一些，请耐心等待…";
-    show(el, true);
-  }
+  function showSlowHint() { setWarning("比预期久一些，请耐心等待…"); }
+  function hideSlowHint() { setWarning(""); }
 
-  function hideSlowHint() {
-    var el = $("studio-slow-hint");
-    if (el) show(el, false);
-  }
-
-  function isFirstTime() {
-    return !localStorage.getItem(LS.firstPreviewDone);
-  }
-
+  function isFirstTime() { return !localStorage.getItem(LS.firstPreviewDone); }
   function markFirstPreviewDone(tripId) {
     localStorage.setItem(LS.firstPreviewDone, "1");
     if (tripId) localStorage.setItem("travelogue.studio.firstTripId", tripId);
@@ -498,15 +717,8 @@
           activeJobId = null;
           show($("studio-cancel"), false);
           hideSlowHint();
-          if (job.status === "succeeded") {
-            updateProgress(job);
-            resolve(job);
-            return;
-          }
-          if (job.status === "cancelled") {
-            reject(new Error("已取消"));
-            return;
-          }
+          if (job.status === "succeeded") { updateProgress(job); resolve(job); return; }
+          if (job.status === "cancelled") { reject(new Error("已取消")); return; }
           var msg = (job.error && (job.error.message || job.error.code)) || "导入失败";
           reject(new Error(msg));
         }).catch(reject);
@@ -516,50 +728,85 @@
   }
 
   // ── Import flows ──
+  function requestNativeFolder(titleVal, placeVal, fallbackInputId) {
+    return fetch("/__travelogue/pick-folder", {
+      method: "POST",
+      headers: studioAuthHeaders({ "Content-Type": "application/json" }),
+      body: "{}",
+    }).then(function (resp) {
+      return resp.json().then(function (data) { return { status: resp.status, data: data }; });
+    }).then(function (result) {
+      if (result.data && result.data.cancelled) return;
+      if (result.status === 200 && result.data && result.data.albumPath) {
+        return startImport({
+          albumPath: result.data.albumPath,
+          title: titleVal || "我的旅途",
+          place: placeVal || "旅途",
+          force: false,
+        });
+      }
+      var fallback = $(fallbackInputId);
+      if (fallback) fallback.click();
+    }).catch(function () {
+      var fallback = $(fallbackInputId);
+      if (fallback) fallback.click();
+    });
+  }
+
   function postImport(body) {
     return fetch("/__travelogue/import", {
       method: "POST",
       headers: studioAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(body),
     }).then(function (resp) {
-      return resp.json().then(function (data) {
-        return { status: resp.status, data: data };
-      });
+      return resp.json().then(function (data) { return { status: resp.status, data: data }; });
     });
+  }
+
+  var _successTimer = null;
+  function clearSuccessTimer() {
+    if (_successTimer) { clearInterval(_successTimer); _successTimer = null; }
   }
 
   function handleImportSuccess(job) {
     var url = job.result && job.result.previewUrl;
     var tripId = job.result && job.result.tripId;
     var first = isFirstTime();
+    if (first) markFirstPreviewDone(tripId);
 
-    if (first) {
-      markFirstPreviewDone(tripId);
-      if (typeof studioToast === "function") {
-        studioToast("你的第一篇游记已生成，正在打开预览…", { duration: 5000, large: true });
-      }
-      setTimeout(function () {
+    var openLink = $("studio-success-open");
+    var msg = $("studio-success-msg");
+    if (openLink && url) openLink.href = url;
+    if (msg) msg.textContent = first ? "你的第一篇游记已生成" : "生成完成";
+
+    transitionTo("Success");
+
+    var sec = 5;
+    var secEl = $("studio-success-sec");
+    if (secEl) secEl.textContent = String(sec);
+    clearSuccessTimer();
+    _successTimer = setInterval(function () {
+      sec -= 1;
+      if (secEl) secEl.textContent = String(Math.max(0, sec));
+      if (sec <= 0) {
+        clearSuccessTimer();
         if (url) window.location.href = url;
-      }, 800);
-    } else {
-      if (typeof studioToast === "function") {
-        studioToast("生成完成，正在打开…", { duration: 3000 });
       }
-      setTimeout(function () {
-        if (url) window.location.href = url;
-      }, 300);
-    }
+    }, 1000);
   }
 
   function startImport(body) {
     pendingImport = body;
+    try { sessionStorage.setItem(SS.activePending, JSON.stringify(body)); } catch (e) {}
+    if (body && body.albumPath) pushRecentPath(body.albumPath);
     setError("");
     hideFailure();
     setBusy(true);
     transitionTo("Importing");
-    show($("studio-progress-section"), true);
-    $("studio-stage").textContent = "准备导入…";
-    $("studio-bar-fill").style.width = "0%";
+    setImportThumbs(null);
+    var stage = $("studio-stage"); if (stage) stage.textContent = "准备导入…";
+    var bar = $("studio-bar-fill"); if (bar) bar.style.width = "0%";
+    var pctEl = $("studio-pct"); if (pctEl) show(pctEl, false);
 
     return postImport(body).then(function (result) {
       if (result.status === 409 && result.data.error === "E_DEMO_EXISTS") {
@@ -580,13 +827,17 @@
       if (result.status !== 202) {
         throw new Error(result.data.message || result.data.error || "导入失败");
       }
+      try { sessionStorage.setItem(SS.activeJobId, result.data.jobId); } catch (e) {}
       return waitJob(result.data.jobId);
     }).then(function (job) {
+      try { sessionStorage.removeItem(SS.activeJobId); sessionStorage.removeItem(SS.activePending); } catch (e) {}
       handleImportSuccess(job);
       loadTrips();
     }).catch(function (err) {
+      try { sessionStorage.removeItem(SS.activeJobId); } catch (e) {}
       if ((err.message || "") === "已取消") {
         setError("已取消导入");
+        rememberCancelled();
         transitionTo(tripsData.length > 0 ? "IdleReturning" : "IdleEmpty");
         return;
       }
@@ -594,16 +845,23 @@
         transitionTo(tripsData.length > 0 ? "IdleReturning" : "IdleEmpty");
         return;
       }
-      // Build echo path for failure
       var echoPath = "";
-      if (pendingImport && pendingImport.albumPath) {
-        echoPath = pendingImport.albumPath;
-      }
+      if (pendingImport && pendingImport.albumPath) echoPath = pendingImport.albumPath;
       transitionTo("Failed");
       showFailure(err.message || String(err), echoPath);
     }).finally(function () {
       setBusy(false);
     });
+  }
+
+  function rememberCancelled() {
+    if (!pendingImport) return;
+    var echo = "";
+    if (pendingImport.albumPath) echo = pendingImport.albumPath;
+    else if (pendingImport.fileCount) echo = "浏览器上传（" + pendingImport.fileCount + " 张照片）";
+    else if (pendingImport.useDemoAlbum) echo = "示例相册";
+    var data = { echo: echo, body: pendingImport.uploadForm ? null : pendingImport };
+    try { localStorage.setItem(LS.lastCancelled, JSON.stringify(data)); } catch (e) {}
   }
 
   function uploadAndImport(files, titleVal, placeVal) {
@@ -626,10 +884,12 @@
     hideFailure();
     setBusy(true);
     transitionTo("Importing");
-    show($("studio-progress-section"), true);
+    readImportThumbsFromFiles(files);
+    var stage = $("studio-stage"); if (stage) stage.textContent = "上传照片中…";
+    var bar = $("studio-bar-fill"); if (bar) bar.style.width = "0%";
     var progress = $("upload-progress");
     show(progress, true);
-    progress.value = 0;
+    if (progress) progress.value = 0;
 
     return new Promise(function (resolve, reject) {
       var xhr = new XMLHttpRequest();
@@ -637,7 +897,7 @@
       var token = (document.querySelector('meta[name="studio-token"]') || {}).content;
       if (token) xhr.setRequestHeader("X-Studio-Token", token);
       xhr.upload.onprogress = function (ev) {
-        if (ev.lengthComputable) {
+        if (ev.lengthComputable && progress) {
           progress.value = Math.round((ev.loaded / ev.total) * 100);
         }
       };
@@ -646,7 +906,9 @@
         try { data = JSON.parse(xhr.responseText || "{}"); } catch (e) {}
         resolve({ status: xhr.status, data: data });
       };
-      xhr.onerror = function () { reject(new Error("上传失败")); };
+      xhr.onerror = function () {
+        reject(new Error("上传失败：网络中断或照片总量过大（浏览器上传上限约 200MB）。请改用「选择照片文件夹」或路径导入。"));
+      };
       xhr.send(form);
     }).then(function (result) {
       show(progress, false);
@@ -667,12 +929,16 @@
       if (result.status !== 202) {
         throw new Error(result.data.message || result.data.error || "上传失败");
       }
+      try { sessionStorage.setItem(SS.activeJobId, result.data.jobId); } catch (e) {}
       return waitJob(result.data.jobId);
     }).then(function (job) {
+      try { sessionStorage.removeItem(SS.activeJobId); } catch (e) {}
       handleImportSuccess(job);
       loadTrips();
     }).catch(function (err) {
+      try { sessionStorage.removeItem(SS.activeJobId); } catch (e) {}
       if ((err.message || "") === "已取消" || (err.message || "") === "已取消覆盖") {
+        rememberCancelled();
         transitionTo(tripsData.length > 0 ? "IdleReturning" : "IdleEmpty");
         return;
       }
@@ -706,7 +972,9 @@
         try { data = JSON.parse(xhr.responseText || "{}"); } catch (e) {}
         resolve({ status: xhr.status, data: data });
       };
-      xhr.onerror = function () { reject(new Error("上传失败")); };
+      xhr.onerror = function () {
+        reject(new Error("上传失败：网络中断或照片总量过大（浏览器上传上限约 200MB）。请改用「选择照片文件夹」或路径导入。"));
+      };
       xhr.send(retryForm);
     }).then(function (retryResult) {
       if (retryResult.status !== 202) {
@@ -719,35 +987,24 @@
   // ── Load trips (with timeout handling per §6.12) ──
   function loadTrips(options) {
     options = options || {};
-    if (options.more) {
-      tripsListLimit += 20;
-    } else if (options.keepLimit !== true) {
-      tripsListLimit = 20;
-    }
+    if (options.more) tripsListLimit += 20;
+    else if (options.keepLimit !== true) tripsListLimit = 20;
 
     var slowToastShown = false;
     var failToastShown = false;
     var slowTimer = setTimeout(function () {
       slowToastShown = true;
-      if (typeof studioToast === "function") {
-        studioToast("加载较慢，请稍候", { duration: 4000 });
-      }
+      if (typeof studioToast === "function") studioToast("加载较慢，请稍候", { duration: 4000 });
     }, 3000);
     var failTimer = setTimeout(function () {
       failToastShown = true;
-      if (typeof studioToast === "function") {
-        studioToast("加载失败，请检查 Studio 是否运行", { duration: 5000 });
-      }
+      if (typeof studioToast === "function") studioToast("加载失败，请检查 Studio 是否运行", { duration: 5000 });
     }, 10000);
 
     fetch("/__travelogue/trips?limit=" + encodeURIComponent(String(tripsListLimit)))
-      .then(function (r) {
-        if (!r.ok) throw new Error("trips unavailable");
-        return r.json();
-      })
+      .then(function (r) { if (!r.ok) throw new Error("trips unavailable"); return r.json(); })
       .then(function (data) {
-        clearTimeout(slowTimer);
-        clearTimeout(failTimer);
+        clearTimeout(slowTimer); clearTimeout(failTimer);
         tripsData = data.trips || [];
         tripsTotalCount = typeof data.total === "number" ? data.total : tripsData.length;
         if (currentState === "Loading" || currentState === "IdleEmpty" || currentState === "IdleReturning") {
@@ -757,22 +1014,19 @@
         }
       })
       .catch(function () {
-        clearTimeout(slowTimer);
-        clearTimeout(failTimer);
+        clearTimeout(slowTimer); clearTimeout(failTimer);
         isOffline = true;
         render();
         if (tripsData.length === 0) {
           transitionTo("IdleEmpty");
-          if (!failToastShown && !slowToastShown) {
-            if (typeof studioToast === "function") {
-              studioToast("加载失败，请检查 Studio 是否运行", { duration: 5000 });
-            }
+          if (!failToastShown && !slowToastShown && typeof studioToast === "function") {
+            studioToast("加载失败，请检查 Studio 是否运行", { duration: 5000 });
           }
         }
       });
   }
 
-  // ── Health check / Offline detection ──
+  // ── Health check / Offline ──
   function startHealthCheck() {
     function check() {
       fetch("/__travelogue/trips", { method: "GET" })
@@ -780,9 +1034,7 @@
           var wasOffline = isOffline;
           isOffline = !r.ok;
           if (wasOffline && !isOffline) {
-            if (typeof studioToast === "function") {
-              studioToast("服务已恢复", { duration: 2000 });
-            }
+            if (typeof studioToast === "function") studioToast("服务已恢复", { duration: 2000 });
             loadTrips();
           }
           render();
@@ -797,22 +1049,6 @@
     healthTimer = setInterval(check, HEALTH_INTERVAL);
   }
 
-  // ── Gallery initialization ──
-  function initGallery() {
-    var carousel = $("studio-gallery-carousel");
-    if (carousel && typeof studioGallery === "function") {
-      studioGallery(carousel, {
-        prevBtn: $("studio-gallery-prev"),
-        nextBtn: $("studio-gallery-next"),
-        indicator: $("studio-gallery-indicator"),
-      });
-    }
-    var carouselCompact = $("studio-gallery-carousel-compact");
-    if (carouselCompact && typeof studioGallery === "function") {
-      studioGallery(carouselCompact);
-    }
-  }
-
   // ── Footer toggle ──
   function initFooter() {
     var toggle = $("studio-footer-toggle");
@@ -822,7 +1058,7 @@
         e.preventDefault();
         var visible = !checklist.hidden;
         show(checklist, !visible);
-        toggle.textContent = visible ? "了解如何发微信 ▸" : "了解如何发微信 ▾";
+        toggle.textContent = visible ? "如何发到微信 ▸" : "如何发到微信 ▾";
       });
     }
   }
@@ -835,81 +1071,169 @@
       var text = addr.textContent;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(function () {
-          if (typeof studioToast === "function") {
-            studioToast("已复制", { duration: 1500 });
-          }
+          if (typeof studioToast === "function") studioToast("已复制", { duration: 1500 });
         });
       }
     });
   }
 
-  // ── Path form toggles ──
-  function initPathToggles() {
+  // ── Path form toggle ──
+  function initPathToggle() {
     var toggle = $("studio-path-toggle");
     var form = $("studio-import-form");
     if (toggle && form) {
       toggle.addEventListener("click", function () {
-        form.classList.toggle("is-visible");
-      });
-    }
-
-    var toggleR = $("studio-path-toggle-returning");
-    var formR = $("studio-import-form-returning");
-    if (toggleR && formR) {
-      toggleR.addEventListener("click", function () {
-        formR.classList.toggle("is-visible");
+        show(form, form.hidden);
+        if (!form.hidden) { var inp = $("album-path"); if (inp) inp.focus(); }
       });
     }
   }
 
-  // ── "View more" trips ──
+  // ── Scroll hint ──
+  function initScrollHint() {
+    var hint = $("studio-scroll-hint");
+    var below = $("studio-below");
+    if (hint && below) {
+      hint.addEventListener("click", function () {
+        below.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }
+
+  // ── Trips "more" button ──
   function initTripsMore() {
     var moreBtn = $("studio-trips-more");
     if (!moreBtn) return;
-    moreBtn.addEventListener("click", function () {
-      loadTrips({ more: true });
+    moreBtn.addEventListener("click", function () { loadTrips({ more: true }); });
+  }
+
+  // ── Resume in-flight import after page reload ──
+  function resumeActiveJobIfAny() {
+    var jobId = "";
+    var pendingRaw = "";
+    try {
+      jobId = sessionStorage.getItem(SS.activeJobId) || "";
+      pendingRaw = sessionStorage.getItem(SS.activePending) || "";
+    } catch (e) {}
+    if (!jobId) return false;
+    try { if (pendingRaw) pendingImport = JSON.parse(pendingRaw); } catch (e) {}
+    setBusy(true);
+    transitionTo("Importing");
+    setImportThumbs(null);
+    var stage = $("studio-stage"); if (stage) stage.textContent = "恢复上次导入…";
+    waitJob(jobId).then(function (job) {
+      try { sessionStorage.removeItem(SS.activeJobId); sessionStorage.removeItem(SS.activePending); } catch (e) {}
+      handleImportSuccess(job);
+      loadTrips();
+    }).catch(function (err) {
+      try { sessionStorage.removeItem(SS.activeJobId); } catch (e) {}
+      if ((err.message || "") === "已取消") {
+        rememberCancelled();
+        transitionTo(tripsData.length > 0 ? "IdleReturning" : "IdleEmpty");
+        return;
+      }
+      transitionTo("Failed");
+      var echo = (pendingImport && pendingImport.albumPath) || "";
+      showFailure(err.message || String(err), echo);
+    }).finally(function () { setBusy(false); });
+    return true;
+  }
+
+  // ── Sample longshot modal ──
+  function initSampleModal() {
+    var modal = $("studio-sample-modal");
+    var pages = $("studio-sample-pages");
+    var titleEl = $("studio-sample-title");
+    var cta = $("studio-sample-cta");
+    if (!modal || !pages || !titleEl) return;
+
+    function open(key) {
+      var sample = SAMPLE_LONGSHOTS[key];
+      if (!sample) return;
+      titleEl.textContent = sample.title;
+      pages.innerHTML = buildSampleSVG(key, "full");
+      show(modal, true);
+      document.body.style.overflow = "hidden";
+      var sc = document.querySelector(".studio-sample-modal__scroll");
+      if (sc) sc.scrollTop = 0;
+    }
+    function close() {
+      show(modal, false);
+      document.body.style.overflow = "";
+    }
+
+    var samplesHost = $("studio-samples");
+    if (samplesHost) {
+      samplesHost.addEventListener("click", function (e) {
+        var card = e.target.closest(".studio-longshot-card");
+        if (card) open(card.getAttribute("data-sample"));
+      });
+      samplesHost.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        var card = e.target.closest(".studio-longshot-card");
+        if (card) { e.preventDefault(); open(card.getAttribute("data-sample")); }
+      });
+    }
+    modal.querySelectorAll("[data-close]").forEach(function (el) {
+      el.addEventListener("click", close);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !modal.hidden) close();
+    });
+    if (cta) cta.addEventListener("click", function () {
+      close();
+      requestNativeFolder($("trip-title").value, $("trip-place").value, "studio-folder-input");
     });
   }
 
   // ── Main init ──
   document.addEventListener("DOMContentLoaded", function () {
-    initGallery();
     initFooter();
     initCopyAddr();
-    initPathToggles();
+    initPathToggle();
+    initScrollHint();
     initTripsMore();
+    renderSampleCards();
+    initSampleModal();
+    renderRecentPaths();
 
-    // Start loading
     transitionTo("Loading");
-    loadTrips();
+    if (!resumeActiveJobIfAny()) {
+      loadTrips();
+    } else {
+      loadTrips({ keepLimit: true });
+    }
     startHealthCheck();
 
-    // ── Event bindings ──
-
-    // Primary folder pick (Hero)
-    $("studio-pick-folder").addEventListener("click", function () {
-      $("studio-folder-input").click();
+    // Primary: empty-state pick folder
+    var pick = $("studio-pick-folder");
+    if (pick) pick.addEventListener("click", function () {
+      requestNativeFolder($("trip-title").value, $("trip-place").value, "studio-folder-input");
     });
-    $("studio-folder-input").addEventListener("change", function (ev) {
+    var pickInput = $("studio-folder-input");
+    if (pickInput) pickInput.addEventListener("change", function (ev) {
       var files = ev.target.files;
       if (!files || !files.length) return;
       uploadAndImport(files, $("trip-title").value, $("trip-place").value);
       ev.target.value = "";
     });
 
-    // Primary folder pick (Returning)
-    $("studio-pick-folder-returning").addEventListener("click", function () {
-      $("studio-folder-input-returning").click();
+    // Primary: returning-state "+ 新建游记"
+    var newTrip = $("studio-new-trip-cta");
+    if (newTrip) newTrip.addEventListener("click", function () {
+      requestNativeFolder($("trip-title").value, $("trip-place").value, "studio-folder-input-returning");
     });
-    $("studio-folder-input-returning").addEventListener("change", function (ev) {
+    var returningInput = $("studio-folder-input-returning");
+    if (returningInput) returningInput.addEventListener("change", function (ev) {
       var files = ev.target.files;
       if (!files || !files.length) return;
-      uploadAndImport(files, $("trip-title-returning").value, $("trip-place-returning").value);
+      uploadAndImport(files, $("trip-title").value, $("trip-place").value);
       ev.target.value = "";
     });
 
-    // Path form submit (empty)
-    $("studio-import-form").addEventListener("submit", function (ev) {
+    // Secondary: path form submit
+    var pathForm = $("studio-import-form");
+    if (pathForm) pathForm.addEventListener("submit", function (ev) {
       ev.preventDefault();
       var path = ($("album-path").value || "").trim();
       if (!path) { setError("请填写照片文件夹路径"); return; }
@@ -921,57 +1245,27 @@
       });
     });
 
-    // Path form submit (returning)
-    $("studio-import-form-returning").addEventListener("submit", function (ev) {
-      ev.preventDefault();
-      var path = ($("album-path-returning").value || "").trim();
-      if (!path) { setError("请填写照片文件夹路径"); return; }
-      startImport({
-        albumPath: path,
-        title: $("trip-title-returning").value || "我的旅途",
-        place: $("trip-place-returning").value || "旅途",
-        force: false,
-      });
-    });
-
-    // Demo album (empty)
-    $("studio-demo-album").addEventListener("click", function () {
+    // Secondary: demo album
+    var demoBtn = $("studio-demo-album");
+    if (demoBtn) demoBtn.addEventListener("click", function () {
       localStorage.setItem(LS.demoTried, "1");
-      startImport({
-        useDemoAlbum: true,
-        title: "示例旅途",
-        place: "示例",
-        force: false,
-      });
+      startImport({ useDemoAlbum: true, title: "示例旅途", place: "示例", force: false });
     });
 
-    // Demo album (returning)
-    $("studio-demo-album-returning").addEventListener("click", function () {
-      localStorage.setItem(LS.demoTried, "1");
-      startImport({
-        useDemoAlbum: true,
-        title: "示例旅途",
-        place: "示例",
-        force: false,
-      });
-    });
-
-    // Browser upload (empty)
-    $("album-upload").addEventListener("change", function (ev) {
+    // Secondary: browser upload
+    var uploadInput = $("album-upload");
+    if (uploadInput) uploadInput.addEventListener("change", function (ev) {
       uploadAndImport(ev.target.files, $("trip-title").value, $("trip-place").value);
       ev.target.value = "";
     });
 
-    // Browser upload (returning)
-    $("album-upload-returning").addEventListener("change", function (ev) {
-      uploadAndImport(ev.target.files, $("trip-title-returning").value, $("trip-place-returning").value);
-      ev.target.value = "";
-    });
-
-    // Cancel: confirm first, then cancel job
-    $("studio-cancel").addEventListener("click", function () {
+    // Cancel (modal first)
+    var cancelBtn = $("studio-cancel");
+    if (cancelBtn) cancelBtn.addEventListener("click", function () {
       var doCancel = function () {
         cancelActiveJob().then(function () {
+          rememberCancelled();
+          try { sessionStorage.removeItem(SS.activeJobId); sessionStorage.removeItem(SS.activePending); } catch (e) {}
           transitionTo(tripsData.length > 0 ? "IdleReturning" : "IdleEmpty");
         });
       };
@@ -981,16 +1275,15 @@
           body: "取消后将丢失当前进度。",
           confirmText: "确定取消",
           cancelText: "继续等待",
-        }).then(function (confirmed) {
-          if (confirmed) doCancel();
-        });
+        }).then(function (confirmed) { if (confirmed) doCancel(); });
       } else if (window.confirm("确定取消导入？")) {
         doCancel();
       }
     });
 
     // Retry
-    $("studio-retry").addEventListener("click", function () {
+    var retryBtn = $("studio-retry");
+    if (retryBtn) retryBtn.addEventListener("click", function () {
       hideFailure();
       if (!pendingImport) {
         transitionTo(tripsData.length > 0 ? "IdleReturning" : "IdleEmpty");
@@ -1002,5 +1295,14 @@
       }
       startImport(pendingImport);
     });
+
+    // Success: stay on home
+    var stayBtn = $("studio-success-stay");
+    if (stayBtn) stayBtn.addEventListener("click", function () {
+      clearSuccessTimer();
+      transitionTo(tripsData.length > 0 ? "IdleReturning" : "IdleEmpty");
+    });
+    var openBtn = $("studio-success-open");
+    if (openBtn) openBtn.addEventListener("click", function () { clearSuccessTimer(); });
   });
 })();

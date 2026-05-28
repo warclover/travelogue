@@ -2,6 +2,7 @@
   "use strict";
 
   var HINT_KEY = "travelogue.studio.editHint.dismissed";
+  var COLLAPSE_KEY = "travelogue.studio.previewToolbar.collapsed";
   var LONGSHOT_SCALE = 2;
   var SLOW_JOB_MS = 30000;
   var pollTimer = null;
@@ -88,14 +89,88 @@
     el.textContent = text || "";
   }
 
+  function toolbarBody(root) {
+    return root.querySelector(".preview-toolbar__body") || root;
+  }
+
+  function syncToolbarHeight(root) {
+    var collapsed = root.classList.contains("preview-toolbar--collapsed");
+    var handle = root.querySelector(".preview-toolbar__handle");
+    if (collapsed) {
+      var hh = (handle && handle.offsetHeight) || 32;
+      root.style.height = hh + "px";
+      document.documentElement.style.setProperty("--preview-toolbar-h", hh + "px");
+      return;
+    }
+    root.style.height = "";
+    document.documentElement.style.setProperty(
+      "--preview-toolbar-h",
+      (root.offsetHeight || 56) + "px"
+    );
+  }
+
+  function setToolbarCollapsed(root, collapsed, persist) {
+    root.classList.toggle("preview-toolbar--collapsed", collapsed);
+    document.documentElement.setAttribute(
+      "data-preview-toolbar-collapsed",
+      collapsed ? "on" : "off"
+    );
+    var handle = root.querySelector(".preview-toolbar__handle");
+    var collapseBtn = root.querySelector(".preview-toolbar__collapse");
+    if (handle) {
+      handle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    }
+    if (collapseBtn) {
+      collapseBtn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    }
+    if (persist !== false) {
+      try {
+        localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0");
+      } catch (e) {}
+    }
+    requestAnimationFrame(function () {
+      syncToolbarHeight(root);
+    });
+  }
+
+  function toggleToolbarCollapsed(root) {
+    setToolbarCollapsed(root, !root.classList.contains("preview-toolbar--collapsed"));
+  }
+
+  function bindToolbarCollapse(root) {
+    var handle = root.querySelector(".preview-toolbar__handle");
+    var collapseBtn = root.querySelector(".preview-toolbar__collapse");
+    if (handle) {
+      handle.addEventListener("click", function () {
+        setToolbarCollapsed(root, false);
+      });
+    }
+    if (collapseBtn) {
+      collapseBtn.addEventListener("click", function () {
+        setToolbarCollapsed(root, true);
+      });
+    }
+    if (typeof ResizeObserver !== "undefined") {
+      var ro = new ResizeObserver(function () {
+        syncToolbarHeight(root);
+      });
+      ro.observe(root);
+    }
+    window.addEventListener("resize", function () {
+      syncToolbarHeight(root);
+    });
+  }
+
   function showLongshotPanel(root, job) {
     var tripId = tripIdFromPath();
-    var panel = root.querySelector(".preview-toolbar__longshot-panel");
+    var body = toolbarBody(root);
+    var panel = body.querySelector(".preview-toolbar__longshot-panel");
     if (!panel) {
       panel = document.createElement("div");
       panel.className = "preview-toolbar__longshot-panel";
-      root.appendChild(panel);
+      body.appendChild(panel);
     }
+    setToolbarCollapsed(root, false, false);
     panel.hidden = false;
     panel.textContent = "";
 
@@ -209,6 +284,7 @@
   function startLongshot(root, tripId) {
     var btn = root.querySelector(".preview-toolbar__longshot");
     if (!btn || btn.disabled) return;
+    setToolbarCollapsed(root, false, false);
     btn.disabled = true;
     setLongshotStatus(root, "正在生成长图…", true);
     setSlowHint(root, "", false);
@@ -262,6 +338,7 @@
     ) {
       return;
     }
+    setToolbarCollapsed(root, false, false);
     btn.disabled = true;
     setSlowHint(root, "", false);
     setLongshotStatus(root, "正在生成杂志感文案…", true);
@@ -312,11 +389,12 @@
         var trip = trips.filter(function (t) { return t.tripId === tripId; })[0];
         if (!trip || !trip.previewRelPath) return;
 
-        var card = root.querySelector(".preview-toolbar__preview-card");
+        var body = toolbarBody(root);
+        var card = body.querySelector(".preview-toolbar__preview-card");
         if (!card) {
           card = document.createElement("div");
           card.className = "preview-toolbar__preview-card";
-          root.appendChild(card);
+          body.appendChild(card);
         }
         card.hidden = false;
         card.textContent = "";
@@ -348,6 +426,7 @@
     if (!tripId) return;
 
     var bar = root.querySelector(".preview-toolbar__bar");
+    var actions = root.querySelector(".preview-toolbar__actions") || bar;
 
     fetch("/__travelogue/config")
       .then(function (resp) { return resp.json(); })
@@ -360,7 +439,7 @@
           llmBtn.addEventListener("click", function () {
             startLlmNarrate(root, tripId, llmBtn);
           });
-          bar.appendChild(llmBtn);
+          actions.appendChild(llmBtn);
         }
       })
       .catch(function () {});
@@ -370,18 +449,18 @@
     longshotBtn.className = "preview-toolbar__longshot";
     longshotBtn.innerHTML =
       '保存长图 <span class="preview-toolbar__scale-badge">推荐 · 适合手机</span>';
-    bar.appendChild(longshotBtn);
+    actions.appendChild(longshotBtn);
 
     var status = document.createElement("span");
     status.className = "preview-toolbar__longshot-status";
     status.hidden = true;
-    bar.appendChild(status);
+    actions.appendChild(status);
 
     var stale = document.createElement("span");
     stale.className = "preview-toolbar__stale";
     stale.hidden = true;
     stale.textContent = "内容已更新，请重新生成长图";
-    bar.appendChild(stale);
+    actions.appendChild(stale);
 
     var advancedWrap = document.createElement("div");
     advancedWrap.className = "preview-toolbar__advanced";
@@ -390,7 +469,7 @@
       '<div class="preview-toolbar__menu" hidden>' +
       '<button type="button" class="preview-toolbar__export-zip">导出 zip（自行托管）</button>' +
       "</div>";
-    bar.appendChild(advancedWrap);
+    actions.appendChild(advancedWrap);
 
     longshotBtn.addEventListener("click", function () {
       startLongshot(root, tripId);
@@ -398,6 +477,7 @@
 
     // Focus longshot button when navigating from stale "更新长图" CTA
     if (window.location.search.indexOf("focus=longshot") >= 0) {
+      setToolbarCollapsed(root, false, false);
       requestAnimationFrame(function () {
         longshotBtn.scrollIntoView({ behavior: "smooth", block: "center" });
         longshotBtn.focus();
@@ -434,9 +514,21 @@
     var root = document.createElement("div");
     root.className = "preview-toolbar";
     root.innerHTML =
+      '<button type="button" class="preview-toolbar__handle" aria-expanded="false">' +
+      '<span class="preview-toolbar__handle-icon" aria-hidden="true">▾</span>' +
+      '<span class="preview-toolbar__handle-label">显示工具栏</span>' +
+      "</button>" +
+      '<div class="preview-toolbar__body">' +
       '<div class="preview-toolbar__bar">' +
       '<a class="preview-toolbar__back" href="/">← 返回工作台</a>' +
+      '<div class="preview-toolbar__actions"></div>' +
+      '<button type="button" class="preview-toolbar__collapse" aria-expanded="true" aria-label="收起工具栏">' +
+      '<span aria-hidden="true">▴</span>' +
+      "</button>" +
+      "</div>" +
       "</div>";
+
+    var body = root.querySelector(".preview-toolbar__body");
 
     var hintHidden = false;
     try {
@@ -452,12 +544,23 @@
       hint.querySelector(".preview-toolbar__dismiss").addEventListener("click", function () {
         hint.hidden = true;
         try { localStorage.setItem(HINT_KEY, "1"); } catch (e2) {}
+        syncToolbarHeight(root);
       });
-      root.appendChild(hint);
+      body.appendChild(hint);
     }
 
     document.body.insertBefore(root, document.body.firstChild);
+    bindToolbarCollapse(root);
     initToolbar(root);
+
+    var startCollapsed = false;
+    try {
+      startCollapsed = localStorage.getItem(COLLAPSE_KEY) === "1";
+    } catch (e3) {}
+    if (window.location.search.indexOf("focus=longshot") >= 0) {
+      startCollapsed = false;
+    }
+    setToolbarCollapsed(root, startCollapsed, false);
   }
 
   if (document.readyState === "loading") {

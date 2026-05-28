@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio 首页 · 艺术卡片版线框 v2.0</title>
+  <style>
+    /* ── Design tokens (wireframe art direction) ── */
+    :root {
+      --paper: #f6f1e8;
+      --paper-deep: #ebe4d6;
+      --ink: #1a1814;
+      --ink-soft: #4a4540;
+      --muted: #7a746c;
+      --line: rgba(26, 24, 20, .12);
+      --gold: #a67c3d;
+      --gold-soft: rgba(166, 124, 61, .15);
+      --forest: #2a4538;
+      --forest-soft: rgba(42, 69, 56, .08);
+      --card: #fffcf7;
+      --radius-sm: 12px;
+      --radius-md: 20px;
+      --radius-lg: 28px;
+      --shadow: 0 2px 0 rgba(26,24,20,.04), 0 12px 40px rgba(26,24,20,.07);
+      --shadow-hover: 0 4px 0 rgba(26,24,20,.05), 0 20px 48px rgba(26,24,20,.12);
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --font-display: Georgia, "Times New Roman", "Songti SC", serif;
+      --review-bar-h: 56px;
+      --content-max: 1280px;
+      --anno: #c45c26;
+      --slot: #7b5ea7;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.55;
+    }
+
+    /* Paper grain (wireframe simulates texture) */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .35;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+      z-index: 0;
+    }
+
+    /* ── Review chrome ── */
+    .review-bar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      min-height: var(--review-bar-h);
+      background: #1a1814;
+      color: #e8e2d8;
+      padding: 10px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 14px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.2);
+    }
+    .review-bar__title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-right: auto;
+    }
+    .review-bar__title em {
+      font-style: normal;
+      color: #c9a962;
+      font-weight: 400;
+    }
+    .state-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+    .state-tabs button {
+      border: 1px solid #4a4540;
+      background: transparent;
+      color: #e8e2d8;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .state-tabs button:hover { background: #2a2824; }
+    .state-tabs button.is-active {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: #fff;
+    }
+    .bp-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #2a2824;
+      color: #a89f92;
+      font-family: Consolas, monospace;
+    }
+    .review-note {
+      width: 100%;
+      font-size: 11px;
+      color: #8a8278;
+      margin: 0;
+    }
+
+    /* ── Layout shell ── */
+    .canvas {
+      position: relative;
+      z-index: 1;
+      max-width: calc(var(--content-max) + 280px);
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 240px;
+      gap: 28px;
+      align-items: start;
+    }
+    @media (max-width: 1100px) {
+      .canvas { grid-template-columns: 1fr; }
+      .sidebar { order: -1; }
+    }
+
+    .preview-frame {
+      background: var(--paper-deep);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .preview-frame__label {
+      padding: 8px 16px;
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: rgba(255,255,255,.5);
+      border-bottom: 1px solid var(--line);
+    }
+
+    /* ── Page (inside preview) ── */
+    .page {
+      background: var(--paper);
+      min-height: 640px;
+    }
+
+    .page__inner {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      padding: clamp(16px, 3vw, 32px) clamp(16px, 4vw, 40px) 48px;
+    }
+
+    /* States */
+    .wf-state { display: none; }
+    .wf-state.is-active { display: block; }
+
+    /* ── Top bar (minimal pill card) ── */
+    .topbar-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px 18px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      margin-bottom: clamp(20px, 4vw, 32px);
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-decoration: none;
+      color: var(--ink);
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #5a9e6f;
+    }
+
+    /* ── Bento grid ── */
+    .bento {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: clamp(12px, 2vw, 20px);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: box-shadow .2s, transform .2s;
+    }
+    .card:hover { box-shadow: var(--shadow-hover); }
+
+    .card__anno {
+      display: block;
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--anno);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    /* Hero intro card */
+    .card-hero {
+      grid-column: span 7;
+      padding: clamp(28px, 5vw, 48px);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      min-height: clamp(280px, 42vw, 380px);
+      background:
+        linear-gradient(145deg, rgba(42,69,56,.04) 0%, transparent 50%),
+        var(--card);
+      position: relative;
+    }
+    .card-hero::after {
+      content: "";
+      position: absolute;
+      top: 24px; right: 24px;
+      width: clamp(80px, 12vw, 120px);
+      height: clamp(80px, 12vw, 120px);
+      border-radius: 50%;
+      border: 1px solid var(--gold-soft);
+      opacity: .6;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      font-size: 10px;
+      letter-spacing: .28em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .display-title {
+      margin: 0 0 10px;
+      font-family: var(--font-display);
+      font-size: clamp(26px, 4.5vw, 38px);
+      font-weight: 400;
+      line-height: 1.35;
+      letter-spacing: .02em;
+    }
+    .lead {
+      margin: 0 0 24px;
+      font-size: clamp(13px, 2vw, 15px);
+      color: var(--ink-soft);
+      max-width: 36em;
+    }
+    .cta-primary {
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 999px;
+      background: var(--forest);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(42,69,56,.25);
+    }
+    .cta-primary:hover { filter: brightness(1.06); }
+
+    /* Preview sample card (polaroid) */
+    .card-preview {
+      grid-column: span 5;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--forest-soft);
+    }
+    .polaroid {
+      width: 100%;
+      max-width: 220px;
+      background: #fff;
+      padding: 12px 12px 28px;
+      border-radius: 4px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.12);
+      transform: rotate(2deg);
+    }
+    .polaroid__img {
+      aspect-ratio: 3/4;
+      border-radius: 2px;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.1), rgba(0,0,0,.35)),
+        linear-gradient(135deg, #6b8f7a, #2a4538 60%, #1a1814);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 12px;
+      color: rgba(255,255,255,.7);
+      font-size: 10px;
+      letter-spacing: .1em;
+    }
+    .polaroid__cap {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* Pill mini-cards */
+    .card-pills {
+      grid-column: span 12;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .mini-card {
+      padding: 14px 16px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--ink-soft);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+    }
+    .mini-card strong {
+      display: block;
+      font-size: 11px;
+      letter-spacing: .08em;
+      color: var(--gold);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    /* Secondary link cards */
+    .card-links {
+      grid-column: span 12;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .link-card {
+      padding: 16px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--ink-soft);
+      background: transparent;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .link-card:hover {
+      border-color: var(--gold);
+      background: var(--gold-soft);
+    }
+    .link-card--ghost { opacity: .85; font-size: 12px; }
+
+    /* Gallery section */
+    .section-head {
+      grid-column: span 12;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 8px;
+      padding-bottom: 4px;
+    }
+    .section-head h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(18px, 3vw, 22px);
+      font-weight: 400;
+      letter-spacing: .04em;
+    }
+    .section-head span {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .06em;
+    }
+
+    .gallery-grid {
+      grid-column: span 12;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(10px, 2vw, 16px);
+    }
+    .gallery-card {
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      aspect-ratio: 3/4;
+      position: relative;
+      background: var(--ink);
+      box-shadow: var(--shadow);
+    }
+    .gallery-card__bg {
+      position: absolute;
+      inset: 0;
+      opacity: .85;
+    }
+    .gallery-card:nth-child(1) .gallery-card__bg { background: linear-gradient(160deg,#8a9a8e,#4a5d52); }
+    .gallery-card:nth-child(2) .gallery-card__bg { background: linear-gradient(160deg,#5a6a7a,#2a3540); }
+    .gallery-card:nth-child(3) .gallery-card__bg { background: linear-gradient(160deg,#9a8a7a,#5a4a3a); }
+    .gallery-card:nth-child(4) .gallery-card__bg { background: linear-gradient(160deg,#7a8a9a,#3a4a5a); }
+    .gallery-card--feat {
+      grid-row: span 1;
+      box-shadow: var(--shadow-hover);
+      outline: 2px solid var(--gold);
+      outline-offset: 2px;
+    }
+    .gallery-card__meta {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 12px;
+      background: linear-gradient(transparent, rgba(0,0,0,.65));
+      color: #fff;
+      font-size: 11px;
+    }
+    .gallery-card__meta em {
+      display: block;
+      font-style: normal;
+      font-size: 10px;
+      opacity: .75;
+      margin-top: 2px;
+    }
+
+    /* Footer card */
+    .card-footer {
+      grid-column: span 12;
+      margin-top: 8px;
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(255,255,255,.4);
+      border-style: dashed;
+    }
+    .card-footer a { color: var(--forest); cursor: pointer; }
+
+    /* ── Returning state ── */
+    .card-greeting {
+      grid-column: span 12;
+      padding: 20px 24px;
+      border-left: 3px solid var(--gold);
+    }
+    .card-greeting p {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(18px, 3vw, 22px);
+    }
+    .card-greeting small {
+      display: block;
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .card-trip-featured {
+      grid-column: span 8;
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 0;
+      min-height: 200px;
+    }
+    .trip-cover {
+      background: linear-gradient(160deg,#8a9a8e,#4a5d52);
+      min-height: 200px;
+    }
+    .trip-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .trip-body h3 { margin: 0 0 6px; font-size: 18px; }
+    .trip-body p { margin: 0 0 16px; font-size: 12px; color: var(--muted); }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #fff3e0;
+      color: #c45c26;
+      border: 1px solid #ffb74d;
+      margin-left: 6px;
+    }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn-sm {
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-sm--primary { background: var(--forest); color: #fff; }
+    .btn-sm--ghost {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+    }
+
+    .card-new-trip {
+      grid-column: span 4;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      border: 2px dashed var(--line);
+      background: transparent;
+      min-height: 200px;
+    }
+    .card-new-trip .cta-primary { margin-top: 12px; padding: 12px 20px; font-size: 13px; }
+
+    .trips-grid {
+      grid-column: span 12;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .trip-card-sm {
+      overflow: hidden;
+    }
+    .trip-card-sm .trip-cover { height: 140px; min-height: 0; }
+    .trip-card-sm .trip-body { padding: 16px; }
+
+    /* ── Importing state ── */
+    .card-progress {
+      grid-column: span 12;
+      padding: 40px 32px;
+      text-align: center;
+      max-width: 560px;
+      margin: 40px auto;
+    }
+    .progress-bar {
+      height: 6px;
+      background: var(--paper-deep);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+    .progress-bar__fill {
+      height: 100%;
+      width: 45%;
+      background: linear-gradient(90deg, var(--forest), #4a7d6a);
+      border-radius: 999px;
+    }
+    .stage-text {
+      font-size: 15px;
+      margin: 0 0 8px;
+    }
+    .stage-hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: sticky;
+      top: calc(var(--review-bar-h) + 16px);
+      font-size: 12px;
+    }
+    .sidebar h3 {
+      margin: 0 0 12px;
+      font-size: 13px;
+      letter-spacing: .06em;
+    }
+    .sidebar ul {
+      margin: 0 0 20px;
+      padding-left: 16px;
+      color: var(--ink-soft);
+    }
+    .sidebar li { margin-bottom: 6px; }
+    .sidebar .principle {
+      padding: 12px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+    }
+    .sidebar .principle strong {
+      display: block;
+      font-size: 11px;
+      color: var(--gold);
+      margin-bottom: 4px;
+    }
+    .bp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    .bp-table th, .bp-table td {
+      border: 1px solid var(--line);
+      padding: 6px 8px;
+      text-align: left;
+    }
+    .bp-table th { background: var(--paper-deep); }
+
+    /* ── Responsive: tablet ── */
+    @media (max-width: 900px) {
+      .card-hero { grid-column: span 12; min-height: 260px; }
+      .card-preview { grid-column: span 12; }
+      .card-trip-featured { grid-column: span 12; }
+      .card-new-trip { grid-column: span 12; min-height: 160px; }
+      .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+      .card-pills { grid-template-columns: 1fr; }
+      .card-links { grid-template-columns: 1fr; }
+      .card-trip-featured { grid-template-columns: 1fr; }
+      .trip-cover { min-height: 160px; }
+    }
+
+    /* ── Responsive: mobile ── */
+    @media (max-width: 480px) {
+      .topbar-card { border-radius: var(--radius-md); }
+      .gallery-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .gallery-card--feat { grid-column: span 2; aspect-ratio: 16/10; }
+      .display-title { font-size: 24px; }
+      .card-hero::after { display: none; }
+      .trips-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Force mobile preview width */
+    .preview-frame--mobile {
+      max-width: 390px;
+      margin: 0 auto;
+    }
+    .preview-frame--mobile .page__inner { padding: 16px; }
+
+    /* Wide desktop accent */
+    @media (min-width: 1200px) {
+      .gallery-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<header class="review-bar">
+  <div class="review-bar__title">
+    Studio 首页 · <em>艺术卡片版 v2.0</em> · 设计评审线框
+  </div>
+  <div class="state-tabs" role="tablist">
+    <button type="button" class="is-active" data-state="empty">① 空态 · 首屏</button>
+    <button type="button" data-state="returning">② 回访态</button>
+    <button type="button" data-state="importing">③ 导入中</button>
+    <button type="button" data-state="mobile">④ 窄屏 390px</button>
+  </div>
+  <span class="bp-badge" id="bp-indicator">viewport: —</span>
+  <p class="review-note">不受 PRD v1.3 约束 · 卡片式 Bento 布局 · 自适应 390 / 768 / 1280+ · 橙色 = 区块标注</p>
+</header>
+
+<div class="canvas">
+  <div class="preview-wrap">
+    <div class="preview-frame" id="preview-frame">
+      <div class="preview-frame__label">Travelogue Studio · 线框预览</div>
+      <div class="page">
+
+        <!-- ① Empty state -->
+        <section class="wf-state is-active" id="state-empty">
+          <div class="page__inner">
+            <header class="topbar-card">
+              <a class="brand" href="#">Travelogue Studio</a>
+              <div class="status"><span class="dot"></span> 本地运行中</div>
+            </header>
+
+            <div class="bento">
+              <article class="card card-hero">
+                <span class="card__anno">主卡片 · 价值 + 行动</span>
+                <p class="eyebrow">Travelogue</p>
+                <h1 class="display-title">把旅途，装帧成<br/>可以发微信的长图</h1>
+                <p class="lead">选一次旅行的照片文件夹，自动生成杂志风竖版长图。照片留在本机，约 2–5 分钟。</p>
+                <button type="button" class="cta-primary">选择照片文件夹</button>
+              </article>
+
+              <article class="card card-preview">
+                <span class="card__anno">样例卡片 · 输出预期</span>
+                <div class="polaroid">
+                  <div class="polaroid__img">SAMPLE OUTPUT</div>
+                  <p class="polaroid__cap">冰岛 · 极光 · 杂志风长图</p>
+                </div>
+              </article>
+
+              <div class="card-pills">
+                <div class="mini-card"><strong>自动分章</strong>按场景编排</div>
+                <div class="mini-card"><strong>留在本机</strong>不上传云端</div>
+                <div class="mini-card"><strong>约 2–5 分钟</strong>视照片数量</div>
+              </div>
+
+              <div class="card-links">
+                <button type="button" class="link-card">试用示例相册</button>
+                <button type="button" class="link-card">浏览器上传（较慢）</button>
+                <button type="button" class="link-card link-card--ghost">不知道选哪个文件夹？ ▸</button>
+              </div>
+
+              <div class="section-head">
+                <h2>灵感 · 他人的旅行卷宗</h2>
+                <span>横滑浏览 →</span>
+              </div>
+
+              <div class="gallery-grid">
+                <article class="gallery-card">
+                  <div class="gallery-card__bg"></div>
+                  <div class="gallery-card__meta">京都<em>雨后 · 86 张</em></div>
+                </article>
+                <article class="gallery-card gallery-card--feat">
+                  <div class="gallery-card__bg"></div>
+                  <div class="gallery-card__meta">冰岛 ★ 精选<em>极光 · 120 张</em></div>
+                </article>
+                <article class="gallery-card">
+                  <div class="gallery-card__bg"></div>
+                  <div class="gallery-card__meta">大理<em>风花 · 64 张</em></div>
+                </article>
+                <article class="gallery-card">
+                  <div class="gallery-card__bg"></div>
+                  <div class="gallery-card__meta">东京<em>夜行 · 95 张</em></div>
+                </article>
+              </div>
+
+              <footer class="card card-footer">
+                照片与游记保存在本机 · 不会上传云端<br/>
+                <a>了解如何发微信 ▸</a>
+              </footer>
+            </div>
+          </div>
+        </section>
+
+        <!-- ② Returning state -->
+        <section class="wf-state" id="state-returning">
+          <div class="page__inner">
+            <header class="topbar-card">
+              <a class="brand" href="#">Travelogue Studio</a>
+              <div class="status"><span class="dot"></span> 本地运行中</div>
+            </header>
+
+            <div class="bento">
+              <article class="card card-greeting">
+                <span class="card__anno">回访 · 压缩问候</span>
+                <p>欢迎回来，继续你的旅行卷宗</p>
+                <small>每个文件夹会生成一篇新的游记，不会覆盖已有内容</small>
+              </article>
+
+              <article class="card card-trip-featured">
+                <span class="card__anno" style="position:absolute;z-index:1;margin:12px">C · 最近编辑</span>
+                <div class="trip-cover"></div>
+                <div class="trip-body">
+                  <h3>京都之旅 <span class="badge">长图待更新</span></h3>
+                  <p>86 张 · 更新于 2026/3/12</p>
+                  <div class="btn-row">
+                    <button type="button" class="btn-sm btn-sm--primary">更新长图</button>
+                    <button type="button" class="btn-sm btn-sm--ghost">继续编辑</button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card card-new-trip">
+                <span class="card__anno">D · 新建</span>
+                <p style="margin:0;font-size:13px;color:var(--muted)">制作新的游记</p>
+                <button type="button" class="cta-primary">选择照片文件夹</button>
+              </article>
+
+              <div class="section-head">
+                <h2>全部游记</h2>
+                <span>3 篇</span>
+              </div>
+
+              <div class="trips-grid">
+                <article class="card trip-card-sm">
+                  <div class="trip-cover"></div>
+                  <div class="trip-body">
+                    <h3 style="font-size:15px;margin:0 0 4px">大理 · 风花</h3>
+                    <p style="margin:0 0 10px">64 张</p>
+                    <button type="button" class="btn-sm btn-sm--ghost">继续编辑</button>
+                  </div>
+                </article>
+                <article class="card trip-card-sm">
+                  <div class="trip-cover" style="background:linear-gradient(160deg,#5a6a7a,#2a3540)"></div>
+                  <div class="trip-body">
+                    <h3 style="font-size:15px;margin:0 0 4px">示例旅途</h3>
+                    <p style="margin:0 0 10px">示例 · 12 张</p>
+                    <button type="button" class="btn-sm btn-sm--ghost">继续编辑</button>
+                  </div>
+                </article>
+              </div>
+
+              <footer class="card card-footer">
+                照片与游记保存在本机 · <a>了解如何发微信 ▸</a>
+              </footer>
+            </div>
+          </div>
+        </section>
+
+        <!-- ③ Importing -->
+        <section class="wf-state" id="state-importing">
+          <div class="page__inner">
+            <header class="topbar-card">
+              <a class="brand" href="#">Travelogue Studio</a>
+              <div class="status"><span class="dot"></span> 正在生成…</div>
+            </header>
+            <div class="bento">
+              <article class="card card-progress">
+                <span class="card__anno">导入进度 · 单卡片聚焦</span>
+                <p class="stage-text">2/4 正在智能排版…</p>
+                <p class="stage-hint">（约 1 分钟）</p>
+                <div class="progress-bar"><div class="progress-bar__fill"></div></div>
+                <button type="button" class="btn-sm btn-sm--ghost">取消导入</button>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <!-- ④ Mobile (duplicate empty, styled narrow) -->
+        <section class="wf-state" id="state-mobile">
+          <div class="page__inner">
+            <header class="topbar-card">
+              <a class="brand" href="#">Studio</a>
+              <div class="status"><span class="dot"></span> 运行中</div>
+            </header>
+            <div class="bento">
+              <article class="card card-hero" style="grid-column:span 12;min-height:240px;padding:24px">
+                <p class="eyebrow">Travelogue</p>
+                <h1 class="display-title" style="font-size:24px">把旅途，装帧成<br/>可以发微信的长图</h1>
+                <button type="button" class="cta-primary" style="width:100%;justify-content:center">选择照片文件夹</button>
+              </article>
+              <article class="card card-preview" style="grid-column:span 12;padding:16px">
+                <div class="polaroid" style="max-width:160px"><div class="polaroid__img">SAMPLE</div></div>
+              </article>
+              <div class="card-links" style="grid-column:span 12;grid-template-columns:1fr">
+                <button type="button" class="link-card">试用示例相册</button>
+                <button type="button" class="link-card link-card--ghost">不知道怎么选？ ▸</button>
+              </div>
+              <div class="gallery-grid" style="grid-column:span 12">
+                <article class="gallery-card gallery-card--feat" style="grid-column:span 2">
+                  <div class="gallery-card__bg"></div>
+                  <div class="gallery-card__meta">冰岛 ★<em>精选</em></div>
+                </article>
+                <article class="gallery-card"><div class="gallery-card__bg"></div></article>
+                <article class="gallery-card"><div class="gallery-card__bg"></div></article>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <h3>设计方向</h3>
+    <div class="principle">
+      <strong>卡片陈列，而非横带拼贴</strong>
+      全页统一 12 列 Bento；Hero 与样例并排成「主+副」卡片，不再全幅背景带。
+    </div>
+    <div class="principle">
+      <strong>艺术气质</strong>
+      纸感底、Display 衬线标题、拍立得样例、画廊网格——像桌面上的作品集。
+    </div>
+    <div class="principle">
+      <strong>主次清晰</strong>
+      空态仅 1 个实心 CTA；次级入口为虚线 link-card，不抢主卡片。
+    </div>
+
+    <h3>响应式断点</h3>
+    <table class="bp-table">
+      <tr><th>宽度</th><th>布局</th></tr>
+      <tr><td>≤480</td><td>单列 · 画廊 2 列 · CTA 全宽</td></tr>
+      <tr><td>481–900</td><td>Hero/样例堆叠 · 画廊 2 列</td></tr>
+      <tr><td>901–1280</td><td>Bento 7+5 · 画廊 4 列</td></tr>
+      <tr><td>≥1280</td><td>content-max 1280 居中</td></tr>
+    </table>
+
+    <h3>与 v1.4 线框差异</h3>
+    <ul>
+      <li>取消全幅杂志 Hero 背景带</li>
+      <li>取消 D′ 独立白卡片工具区</li>
+      <li>画廊改为静态 card grid（可后续加横滑）</li>
+      <li>回访：Featured + New 并排卡片</li>
+      <li>顶栏改为 pill 浮动卡片</li>
+    </ul>
+
+    <h3>已决（v2 落地）</h3>
+    <ul>
+      <li>画廊：<strong>静态 4 列 grid</strong>（空态展示，回访隐藏）</li>
+      <li>Display 字体：<strong>系统衬线</strong>（Georgia / Songti SC，不引 Web Font）</li>
+      <li>样例卡片：<strong>拍立得</strong> + sample-longshot.jpg</li>
+    </ul>
+  </aside>
+</div>
+
+<script>
+(function () {
+  var tabs = document.querySelectorAll(".state-tabs button");
+  var states = document.querySelectorAll(".wf-state");
+  var frame = document.getElementById("preview-frame");
+  var bp = document.getElementById("bp-indicator");
+
+  function setState(id) {
+    tabs.forEach(function (btn) {
+      btn.classList.toggle("is-active", btn.getAttribute("data-state") === id);
+    });
+    states.forEach(function (el) {
+      el.classList.toggle("is-active", el.id === "state-" + id);
+    });
+    frame.classList.toggle("preview-frame--mobile", id === "mobile");
+    updateBp();
+  }
+
+  function updateBp() {
+    var w = frame.classList.contains("preview-frame--mobile")
+      ? 390
+      : frame.getBoundingClientRect().width;
+    var label = w <= 480 ? "mobile" : w <= 900 ? "tablet" : w <= 1280 ? "desktop" : "wide";
+    bp.textContent = "preview: " + Math.round(w) + "px · " + label;
+  }
+
+  tabs.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      setState(btn.getAttribute("data-state"));
+    });
+  });
+
+  window.addEventListener("resize", updateBp);
+  updateBp();
+})();
+</script>
+</body>
+</html>

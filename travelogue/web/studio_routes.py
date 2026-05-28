@@ -56,6 +56,7 @@ NARRATE_PATH = "/__travelogue/narrate"
 REVEAL_PATH = "/__travelogue/reveal"
 CANCEL_PATH = "/__travelogue/cancel"
 EXPORT_PATH = "/__travelogue/export"
+PICK_FOLDER_PATH = "/__travelogue/pick-folder"
 STUDIO_ASSET_PREFIX = "/__studio/"
 SAVE_COPY_SUFFIX = "/__travelogue/save-copy"
 PROMOTE_TIER_SUFFIX = "/__travelogue/promote-tier"
@@ -160,6 +161,9 @@ class StudioMixin:
         if path == EXPORT_PATH:
             self._studio_handle_export()
             return True
+        if path == PICK_FOLDER_PATH:
+            self._studio_handle_pick_folder()
+            return True
         return False
 
     def studio_trip_parts(self, path: str) -> tuple[str, str] | None:
@@ -233,6 +237,38 @@ class StudioMixin:
 
         status = studio_llm_status(cfg=self._studio_cfg())
         self._json_response(200, {"ok": True, **status})
+
+    def _studio_handle_pick_folder(self) -> None:
+        import sys
+
+        client_host = self.client_address[0] if self.client_address else ""
+        if not is_loopback_host(client_host):
+            self._json_response(
+                403,
+                {
+                    "ok": False,
+                    "error": "E_PICK_FOLDER_DENIED",
+                    "message": user_message("E_PICK_FOLDER_DENIED"),
+                },
+            )
+            return
+        if sys.platform != "win32":
+            self._json_response(
+                501,
+                {
+                    "ok": False,
+                    "error": "E_PICK_FOLDER_UNSUPPORTED",
+                    "message": user_message("E_PICK_FOLDER_UNSUPPORTED"),
+                },
+            )
+            return
+        from travelogue.desktop.folder_dialog import pick_folder
+
+        chosen = pick_folder(title="选择照片文件夹")
+        if chosen is None:
+            self._json_response(200, {"ok": True, "cancelled": True})
+            return
+        self._json_response(200, {"ok": True, "albumPath": str(chosen.resolve())})
 
     def _studio_read_import_request(self) -> tuple[dict, Path | None]:
         content_type = self.headers.get("Content-Type", "")

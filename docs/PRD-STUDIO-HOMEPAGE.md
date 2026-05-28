@@ -275,8 +275,9 @@ stateDiagram-v2
 
 | 项 | 规格 |
 |----|------|
-| 最大内容宽 | `720px`（与现有 `studio.css` 一致） |
-| 外边距 | 水平 `20px`；顶 `32px` 底 `64px` |
+| 内容宽（移动/平板） | `720px` |
+| 内容宽（桌面 >1024px） | `1200px`（卡片网格区）；表单区 `640px` |
+| 外边距 | 水平 `24px`（移动 `16px`） |
 | 卡片圆角 | `12px` |
 | 主色 | `--color-accent: #3d6b5a` |
 | 背景 | `--color-bg: #f4f7f5` |
@@ -291,8 +292,11 @@ stateDiagram-v2
 |------|------|
 | **360–640px** | 单列；padding `16px`；次路径卡片纵向堆叠 |
 | **641–720px** | 单列标准（主设计稿） |
-| **721–1024px** | D 区次路径可 2 列并排 |
-| **>1024px** | `max-width: 720px` 居中；两侧留白 |
+| **721–1024px** | D 区次路径可 2 列并排；Hero 填满容器 |
+| **1025–1440px** | 内容 `max-width: 1200px` 居中；**Hero 全幅**（`100vw`，内容 `1200px`）；画廊可见 4–5 卡 |
+| **>1440px** | 内容 `max-width: 1200px` 居中；**Hero 全幅**（最大 `1400px`）；两侧留白增加 |
+
+> **桌面适配原则**（v1.4 新增）：Hero 全幅呈现杂志冲击感；内容区 1200px 保证画廊/trip 卡片有足够横向空间；表单/页脚等文本密集区缩回 `640px` 内以保可读性。
 
 ### 6.2 区块 A · 顶栏（M12 · P1）
 
@@ -317,7 +321,7 @@ stateDiagram-v2
 | **副标题（功能，可选一行）** | 把旅行照片变成杂志风长图，直接发微信 |
 | **主 CTA** | **选择照片文件夹**（Hero 内嵌，首屏无需滚动；**已决 · 2026-05-27**） |
 | **Pills** | ◇ 自动分章 · ◇ 留在本机 · ◇ 约 2–5 分钟 |
-| **高度** | `min-height: 420px`（桌面）；`360px`（窄屏）；图片 `object-fit: cover` |
+| **高度** | `min-height: 480px`（桌面）；`360px`（窄屏）；图片 `object-fit: cover` |
 | **性能** | Hero 图 **≤ 180KB** · `fetchpriority="high"` · 不 lazy |
 | **对比度** | 白字 on 蒙版 **≥ WCAG AA**（4.5:1） |
 
@@ -343,17 +347,17 @@ Eyebrow + **一行功能标题** 20px · **无全幅图** · 无内嵌 CTA（C �
 
 **回访态 Hero 压缩**：标题 **20px**；**省略 pills**（让位 C 区）。
 
-**卡片规格（最多 3 条）**
+**卡片规格（最多 3 条）** — 竖版封面卡片（cover 在上，body 在下）
 
 | 字段 | 展示规则 |
 |------|----------|
-| 缩略图 | lazy · shimmer · `onerror` 占位 |
+| 封面区 | `height: 180px` · lazy · `onerror` 占位（灰色渐变 + 文字） |
 | 标题 | ellipsis + `title` tooltip |
-| **示例标记** | demo trip → 徽章 **示例** |
+| **示例标��** | demo trip → 封面右上角徽章 **示例** |
 | 副文案 | `photoCount` · 日期 · stale 徽章 |
 | **主按钮 · 默认** | **继续编辑** |
 | **主按钮 · stale** | **更新长图** → preview + focus toolbar 长图按钮 |
-| 次按钮 | 在文件夹中显示封面 |
+| 次按钮 | **显示封面**（`reveal` 打开系统文件夹） |
 | **⋯ 菜单** | M13：**删除游记**（线框占位） |
 
 **整卡可点** · hover 浮起 · `cursor: pointer`
@@ -498,7 +502,7 @@ Modal · 重试 — 同 v1.1
 
 | 角色 | M12（零加载） | M13 可选 |
 |------|---------------|----------|
-| Display / H1 | 系统 UI **Light（300）** · `letter-spacing: 0.04em` · `line-height: 1.5` · **26px** | `@font-face` 衬线或霞鹜文楷 **仅 Hero ~20 字** · `font-display: swap` |
+| Display / H1 | 系统 UI **Light（300）** · `letter-spacing: 0.04em` · `line-height: 1.5` · **30px** | `@font-face` 衬线或霞鹜文楷 **仅 Hero ~20 字** · `font-display: swap` |
 | Eyebrow | `letter-spacing: 0.2em` · uppercase | 同左 |
 | Body / UI | Segoe UI / PingFang SC · 14–15px | 不变 |
 
@@ -516,7 +520,7 @@ Modal · 重试 — 同 v1.1
 
 | 元素 | 行为 | 无障碍 |
 |------|------|--------|
-| Trip 卡片 hover | `translateY(-2px)` + shadow · thumb `scale(1.03)` | 无 hover 设备仍可点 |
+| Trip 卡片 hover | `translateY(-4px)` + shadow · thumb `scale(1.05)` | 无 hover 设备仍可点 |
 | 样例 reveal | IntersectionObserver 淡入上移 | `prefers-reduced-motion: reduce` → 直接显示 |
 | 主 CTA | 极 subtle shadow **breathing** 3s | reduced-motion 关闭 animation |
 | 画廊 swipe | touch + 箭头 | keyboard 左右键可选 |

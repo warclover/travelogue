@@ -18,6 +18,23 @@ def _trip_updated_at(trip_json: Path, data: dict) -> float:
     return trip_json.stat().st_mtime
 
 
+def _pick_preview(trip_dir: Path) -> str | None:
+    """Return a relative cover image, falling back from preview.jpg → ch01 png → longshot png."""
+    primary = trip_dir / "preview.jpg"
+    if primary.is_file():
+        return "preview.jpg"
+    ch01 = sorted(trip_dir.glob("*-ch01.png"))
+    if ch01:
+        return ch01[0].name
+    longshots = sorted(trip_dir.glob("*-longshot.png"))
+    if longshots:
+        return longshots[0].name
+    any_ch = sorted(trip_dir.glob("*-ch*.png"))
+    if any_ch:
+        return any_ch[0].name
+    return None
+
+
 def longshot_outputs_stale(trip_dir: Path, *, trip_mtime: float) -> bool:
     pngs = list(trip_dir.glob("*-longshot.png")) + list(trip_dir.glob("*-ch*.png"))
     if not pngs:
@@ -50,8 +67,7 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
             )
         except (OSError, json.JSONDecodeError):
             data = {}
-        preview = child / "preview.jpg"
-        preview_rel = "preview.jpg" if preview.is_file() else None
+        preview_rel = _pick_preview(child)
         rows.append(
             (
                 updated_at,

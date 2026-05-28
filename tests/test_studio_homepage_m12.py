@@ -19,16 +19,20 @@ def _reset_jobs() -> None:
 
 M12_HOME_MARKERS = (
     "选择照片文件夹",
-    "让每一段旅程",
-    "studio-hero-magazine",
-    "studio-gallery-carousel",
+    "是一本",
+    "还没装帧",
+    "studio-hero",
+    "studio-hero-empty",
+    "studio-hero-returning",
+    "studio-hero-importing",
     "studio-import-error",
     "studio-toast.js",
     "studio-modal.js",
-    "studio-gallery.js",
-    "不知道选哪个文件夹",
-    "每个文件夹会生成一篇",
-    "demo-album/demo-01.jpg",
+    "路径导入",
+    "studio-gallery",
+    "studio-trips",
+    "studio-scroll-hint",
+    'data-studio-v="3"',
 )
 
 
@@ -52,7 +56,13 @@ def test_studio_homepage_m12_html(tmp_path: Path) -> None:
 def test_studio_homepage_m12_css() -> None:
     css_path = Path(__file__).resolve().parents[1] / "templates" / "studio" / "studio.css"
     css = css_path.read_text(encoding="utf-8")
-    assert "sample-longshot.jpg" in css
+    assert "studio-hero" in css
+    assert "studio-hero__image" in css
+    assert "studio-hero__veil" in css
+    assert "studio-trip-card" in css
+    assert "studio-longshot-card" in css
+    assert "studio-hero__content--hybrid" in css
+    assert "studio-sample-modal" in css
 
 
 def test_studio_homepage_js_strings() -> None:
@@ -60,10 +70,15 @@ def test_studio_homepage_js_strings() -> None:
     js = js_path.read_text(encoding="utf-8")
     assert "浏览器上传" in js
     assert "\ufffd" not in js
-    assert "Cancel: confirm first" in js
+    assert "updateHeroBackground" in js
     assert "options.highlight" in js
     assert "tripsListLimit" in js
-    assert "check();" in js
+    assert "renderHybridHero" in js
+    assert "requestNativeFolder" in js
+    assert "resumeActiveJobIfAny" in js
+    assert "SAMPLE_LONGSHOTS" in js
+    assert "rememberCancelled" in js
+    assert "pushRecentPath" in js
 
 
 def test_studio_trips_api_limit_and_total(tmp_path: Path) -> None:

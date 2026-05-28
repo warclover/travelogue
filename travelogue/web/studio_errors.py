@@ -18,6 +18,8 @@ USER_MESSAGES: dict[str, str] = {
     "E_STUDIO_BODY_TOO_LARGE": "请求体过大",
     "E_STUDIO_ALBUM_DENIED": "不允许从该路径导入",
     "E_STUDIO_REVEAL_DENIED": "无法打开该文件",
+    "E_PICK_FOLDER_UNSUPPORTED": "当前环境不支持原生选文件夹，请改用路径导入或浏览器上传",
+    "E_PICK_FOLDER_DENIED": "仅允许本机访问选文件夹",
     "E_LNG_CAPTURE_FAILED": "长图生成失败，请重试",
     "E_LNG_NO_LONGSHOT": "未找到长图页面，请先完成渲染",
     "E_LNG_PLAYWRIGHT": "无法生成长图，请安装 Playwright",
