@@ -377,6 +377,11 @@
             },
             "model": { "type": "string" }
           }
+        },
+        "userSummary": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Derived chapter-layout explanation (Phase 3 · attach_chapter_explain)"
         }
       }
     },
