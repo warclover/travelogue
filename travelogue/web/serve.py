@@ -102,6 +102,9 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
                 if action == "promote-tier":
                     self._handle_promote_tier()
                     return
+                if action == "rerender":
+                    self._studio_handle_rerender()
+                    return
             self.send_error(404)
             return
         if path == SAVE_PATH:
@@ -114,11 +117,22 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
 
     def do_PATCH(self) -> None:  # noqa: N802
         path = self.path.split("?", 1)[0]
-        if self.studio_mode and path == CONFIG_PATH:
-            if not self._studio_require_post_auth():
+        if self.studio_mode:
+            if path == CONFIG_PATH:
+                if not self._studio_require_post_auth():
+                    return
+                self._studio_handle_config()
                 return
-            self._studio_handle_config()
-            return
+            trip_id = self._studio_match_trip_intent(path)
+            if trip_id is not None:
+                self._studio_handle_patch_intent(trip_id)
+                return
+            trip_id = self._studio_match_trip_pipeline(path)
+            if trip_id is not None:
+                if not self._studio_require_post_auth():
+                    return
+                self._studio_handle_patch_pipeline(trip_id)
+                return
         self.send_error(405)
 
     def _serve_trip_static(self, trip_id: str, rel_path: str) -> bool:
@@ -134,8 +148,12 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             self.send_error(404)
             return True
 
+        query = ""
+        if "?" in self.path:
+            query = self.path.split("?", 1)[1]
+
         if (
-            should_inject_studio_chrome(rel_path)
+            should_inject_studio_chrome(rel_path, query)
             and target.suffix.lower() in {".html", ".htm"}
         ):
             html = target.read_text(encoding="utf-8", errors="replace")
@@ -216,6 +234,7 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             self._json_response(400, {"ok": False, "error": "assetIds required"})
             return
         ids = [str(aid).strip() for aid in asset_ids if str(aid).strip()]
+        defer_rerender = payload.get("rerender") is False
         svc = TripService()
         rendered: list[str] = []
         try:
@@ -224,7 +243,7 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
                     trip = svc.load(self.trip_json_path)
                     promoted = apply_tier_promotions(trip, ids)
                     svc.save(trip, self.trip_json_path)
-                    if self.auto_rerender and promoted:
+                    if self.auto_rerender and promoted and not defer_rerender:
                         from travelogue.web.rerender import rerender_draft_trip
 
                         rendered = rerender_draft_trip(self.trip_json_path)
@@ -326,6 +345,18 @@ def serve_studio_directory(
     from travelogue.desktop.folder_picker_service import start_folder_picker_service
 
     start_folder_picker_service()
+
+    def _warm_playwright() -> None:
+        try:
+            from travelogue.export.longshot import warm_playwright_browser
+
+            if warm_playwright_browser():
+                print("  playwright: warmed (longshot ready)")
+        except Exception:
+            pass
+
+    threading.Thread(target=_warm_playwright, daemon=True, name="playwright-warm").start()
+
     server = ThreadingHTTPServer((host, port), handler)
     url = f"http://{host}:{port}/"
     print(f"Studio mode · trips: {trips_dir}")

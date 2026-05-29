@@ -173,6 +173,7 @@ def test_studio_import_job(tmp_path: Path) -> None:
         assert last.get("stageIndex") == 4
         assert last.get("stageHint")
         assert last.get("result", {}).get("previewUrl", "").endswith("/index.html")
+        assert last.get("result", {}).get("photoCount", 0) >= 4
         trip_id = last["tripId"]
         assert (trips_dir / trip_id / "index.html").is_file()
         assert (trips_dir / trip_id / "preview.jpg").is_file()

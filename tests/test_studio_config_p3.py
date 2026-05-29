@@ -78,6 +78,56 @@ def test_studio_config_get_exposes_clustering(tmp_path: Path) -> None:
         server.server_close()
 
 
+def test_studio_config_get_exposes_layout_scoring(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        yaml.safe_dump(
+            {
+                "clustering": {"enabled": "auto"},
+                "vision": {"enabled": "false"},
+                "layout": {"scoring": {"enabled": True}},
+            },
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+    port = _free_port()
+    server = _start_studio_with_config(trips_dir, port, config_path=config_path)
+    try:
+        with request.urlopen(f"http://127.0.0.1:{port}/__travelogue/config", timeout=5) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+        assert body.get("ok") is True
+        assert body.get("layout", {}).get("scoring", {}).get("enabled") is True
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_studio_config_patch_layout_scoring(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("trips_dir: ./trips\n", encoding="utf-8")
+    port = _free_port()
+    server = _start_studio_with_config(trips_dir, port, config_path=config_path)
+    try:
+        status, body = _patch_json(
+            f"http://127.0.0.1:{port}/__travelogue/config",
+            {"layout": {"scoring": {"enabled": True}}},
+        )
+        assert status == 200
+        assert body.get("ok") is True
+        assert body.get("layout", {}).get("scoring", {}).get("enabled") is True
+
+        saved = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        assert saved["layout"]["scoring"]["enabled"] is True
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
 def test_studio_config_patch_persists_yaml(tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()

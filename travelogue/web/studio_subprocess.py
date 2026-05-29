@@ -29,6 +29,15 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
     if cfg_path:
         cfg = get_config(reload=True, path=Path(cfg_path))
 
+    plan_bytes: bytes | None = None
+    raw_plan = payload.get("planBytes")
+    if isinstance(raw_plan, (bytes, bytearray)):
+        plan_bytes = bytes(raw_plan)
+    elif isinstance(raw_plan, str) and raw_plan:
+        import base64
+
+        plan_bytes = base64.b64decode(raw_plan.encode("ascii"))
+
     try:
         result = run_studio_pipeline(
             Path(payload["albumPath"]),
@@ -44,6 +53,9 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             app_config=cfg,
             progress=progress,
             user_notes=payload.get("userNotes"),
+            plan_bytes=plan_bytes,
+            plan_text=payload.get("planText"),
+            plan_filename=str(payload.get("planFilename") or "plan.txt"),
         )
         progress_queue.put(
             {
@@ -57,6 +69,9 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     "intentLine": result.intent_line,
                     "featuredCount": result.featured_count,
                     "segmentCount": result.segment_count,
+                    "tierMode": result.tier_mode,
+                    "g1Pending": result.g1_pending,
+                    "photoCount": result.photo_count,
                 },
             }
         )

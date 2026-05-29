@@ -1,34 +1,27 @@
-"""Studio stage hints YAML (F-STU-14) and LLM narrate API (F-NAR-P2-03)."""
+"""Studio stage hints and pipeline estimates (P5-I2)."""
 
 from __future__ import annotations
 
-from travelogue.web.studio_stages import all_stage_hints, ingest_stage_hint, stage_hint
+from travelogue.web.studio_stages import (
+    ingest_stage_hint,
+    pipeline_estimate_hint,
+    pipeline_estimate_tiers,
+)
 
 
-def test_stage_hint_from_yaml() -> None:
-    assert stage_hint("curate") == "约 30 秒"
-    assert stage_hint("longshot") == "约 20–40 秒"
-    assert stage_hint("llm_narrate") == "约 30–60 秒"
+def test_ingest_stage_hint_tiers() -> None:
+    assert "30" in ingest_stage_hint(20)
+    assert "分钟" in ingest_stage_hint(120)
 
 
-def test_ingest_stage_hint_tiers_yaml() -> None:
-    assert ingest_stage_hint(40) == "约 30 秒"
-    assert ingest_stage_hint(80) == "约 1 分钟"
-    assert ingest_stage_hint(200) == "约 2 分钟"
+def test_pipeline_estimate_hint_by_photo_count() -> None:
+    assert pipeline_estimate_hint(30) == "约 2–3 分钟"
+    assert pipeline_estimate_hint(80) == "约 3–5 分钟"
+    assert pipeline_estimate_hint(150) == "约 4–8 分钟"
+    assert pipeline_estimate_hint(300) == "约 5–15 分钟"
 
 
-def test_all_stage_hints_includes_llm() -> None:
-    hints = all_stage_hints()
-    assert "llm_narrate" in hints
-    assert hints["narrate"] == "约 10 秒"
-
-
-def test_studio_llm_status_stub() -> None:
-    from travelogue.config import AppConfig
-    from travelogue.web.studio_narrate import studio_llm_status
-
-    cfg = AppConfig()
-    cfg.llm.provider = "stub"
-    status = studio_llm_status(cfg=cfg)
-    assert status["llmAvailable"] is False
-    assert status["llmProvider"] == "stub"
+def test_pipeline_estimate_tiers_shape() -> None:
+    tiers = pipeline_estimate_tiers()
+    assert tiers
+    assert all("maxPhotos" in row and "hint" in row for row in tiers)

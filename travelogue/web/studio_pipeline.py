@@ -30,6 +30,59 @@ class StudioPipelineResult:
     intent_line: str = ""
     featured_count: int = 0
     segment_count: int = 0
+    g1_pending: bool = False
+    tier_mode: str = "single"
+
+
+def _resolve_tier_mode(ingest_stats: dict) -> str:
+    mode = ingest_stats.get("tier_mode") or ingest_stats.get("mode")
+    return str(mode) if mode else "single"
+
+
+def _finalize_pipeline_result(
+    *,
+    svc: TripService,
+    trip_json: Path,
+    trip_root: Path,
+    slug: str,
+    host: str,
+    port: int,
+    title: str,
+    photo_count: int,
+    cluster_notice: str,
+    tier_mode: str,
+    g1_pending: bool = False,
+) -> StudioPipelineResult:
+    from travelogue.web.studio_intent_telemetry import write_studio_intent_telemetry
+
+    trip_final = svc.load(trip_json)
+    meta_final = trip_final.get("meta") or {}
+    display_title = str(meta_final.get("title") or title).strip()[:20] or "我的旅途"
+    featured_n, segment_n = _trip_import_stats(trip_final)
+    intent_line = _format_intent_line(display_title, featured_n, segment_n)
+    write_studio_intent_telemetry(
+        trip_final,
+        trip_root,
+        tier_mode=tier_mode,
+        g1_pending=g1_pending,
+        g1_confirmed=not g1_pending and (trip_final.get("pipeline") or {}).get("status")
+        not in (None, "structure_draft"),
+    )
+    preview_url = f"http://{host}:{port}/{slug}/index.html"
+    return StudioPipelineResult(
+        trip_id=slug,
+        trip_dir=trip_root,
+        trip_json=trip_json,
+        preview_url=preview_url,
+        photo_count=photo_count,
+        cluster_notice=cluster_notice,
+        title=display_title,
+        intent_line=intent_line,
+        featured_count=featured_n,
+        segment_count=segment_n,
+        g1_pending=g1_pending,
+        tier_mode=tier_mode,
+    )
 
 
 def _trip_import_stats(trip: dict) -> tuple[int, int]:
@@ -111,6 +164,9 @@ def run_studio_pipeline(
     app_config: AppConfig | None = None,
     progress: ProgressCallback | None = None,
     user_notes: str | None = None,
+    plan_bytes: bytes | None = None,
+    plan_text: str | None = None,
+    plan_filename: str = "plan.txt",
 ) -> StudioPipelineResult:
     album_dir = album_dir.resolve()
     cfg_path = resolve_demo_config(config)
@@ -137,11 +193,14 @@ def run_studio_pipeline(
     photo_count = count_album_photos(album_dir, max_photos=cfg.ingest.max_photos)
     ingest_hint = ingest_stage_hint(photo_count)
 
-    def report(stage: str, index: int) -> None:
-        hint = ingest_hint if stage == "ingest" else stage_hint(stage)
+    def report(stage: str, index: int, hint: str | None = None) -> None:
+        resolved = hint or (ingest_hint if stage == "ingest" else stage_hint(stage))
         if progress:
-            progress(stage, index, hint)
+            progress(stage, index, resolved)
         time.sleep(0)
+
+    def ingest_progress(cur: int, total: int) -> None:
+        report("ingest", 1, f"已处理 {cur}/{total} 张 · {ingest_hint}")
 
     with app_config_scope(cfg):
         report("ingest", 1)
@@ -165,7 +224,21 @@ def run_studio_pipeline(
             user_notes=user_notes,
         )
 
+        if plan_bytes is not None or plan_text:
+            from travelogue.services.intent_plan import ingest_travel_plan
+
+            ingest_travel_plan(
+                trip,
+                trip_root,
+                raw_bytes=plan_bytes,
+                raw_text=plan_text,
+                filename=plan_filename,
+            )
+
         try:
+            def persist_partial_ingest() -> None:
+                svc.save(trip, trip_json)
+
             ingest_result = ingest_into_trip(
                 trip,
                 trip_root,
@@ -173,6 +246,9 @@ def run_studio_pipeline(
                 max_photos=cfg.ingest.max_photos,
                 dedupe=dedupe,
                 app_cfg=cfg,
+                on_progress=ingest_progress if progress else None,
+                on_persist=persist_partial_ingest,
+                resume_ingest=True,
             )
         except IngestError as exc:
             if exc.code in ("E_INGEST_TOO_FEW", "E_INGEST_EMPTY"):
@@ -181,9 +257,13 @@ def run_studio_pipeline(
 
         # F-P4 M15: record dual-folder detection into intent.folders
         ingest_stats = ingest_result.stats or {}
-        tier_mode = ingest_stats.get("tier_mode")
-        featured_detected = tier_mode in ("auto", "explicit") or ingest_stats.get("mode") == "dual"
+        tier_mode = _resolve_tier_mode(ingest_stats)
+        featured_detected = tier_mode in ("auto", "explicit", "dual") or ingest_stats.get("mode") == "dual"
         apply_intent(trip, folders={"featuredDetected": bool(featured_detected)})
+
+        from travelogue.curation.intent_hints import apply_editorial_intent_hints
+
+        apply_editorial_intent_hints(trip)
 
         from travelogue.curation.clustering import run_clustering_layer
 
@@ -208,6 +288,37 @@ def run_studio_pipeline(
         except CurateError as exc:
             raise DemoError(exc.code, str(exc)) from exc
         svc.save(trip, trip_json)
+
+        g1_pending = bool(cfg.studio.g1_confirm_structure)
+        if g1_pending:
+            from travelogue.render.engine import render_trip_surfaces
+            from travelogue.services.pipeline_state import trip_status
+
+            render_trip_surfaces(
+                trip_json,
+                trip_root,
+                export_mode="draft",
+                validate=False,
+                update_pipeline=False,
+                cfg=cfg,
+            )
+            report("render", 4)
+            trip_final = svc.load(trip_json)
+            if trip_status(trip_final) != "structure_draft":
+                g1_pending = False
+            return _finalize_pipeline_result(
+                svc=svc,
+                trip_json=trip_json,
+                trip_root=trip_root,
+                slug=slug,
+                host=host,
+                port=port,
+                title=title,
+                photo_count=photo_count,
+                cluster_notice=cluster_notice,
+                tier_mode=tier_mode,
+                g1_pending=g1_pending,
+            )
 
         report("narrate", 3)
         try:
@@ -241,21 +352,16 @@ def run_studio_pipeline(
             code = getattr(exc, "code", "E_STUDIO_PIPELINE")
             raise DemoError(code, str(exc)) from exc
 
-    preview_url = f"http://{host}:{port}/{slug}/index.html"
-    trip_final = TripService(root=trips_root.parent).load(trip_json)
-    meta_final = trip_final.get("meta") or {}
-    display_title = str(meta_final.get("title") or title).strip()[:20] or "我的旅途"
-    featured_n, segment_n = _trip_import_stats(trip_final)
-    intent_line = _format_intent_line(display_title, featured_n, segment_n)
-    return StudioPipelineResult(
-        trip_id=slug,
-        trip_dir=trip_root,
-        trip_json=trip_json,
-        preview_url=preview_url,
-        photo_count=photo_count,
-        cluster_notice=cluster_notice,
-        title=display_title,
-        intent_line=intent_line,
-        featured_count=featured_n,
-        segment_count=segment_n,
-    )
+        return _finalize_pipeline_result(
+            svc=TripService(root=trips_root.parent),
+            trip_json=trip_json,
+            trip_root=trip_root,
+            slug=slug,
+            host=host,
+            port=port,
+            title=title,
+            photo_count=photo_count,
+            cluster_notice=cluster_notice,
+            tier_mode=tier_mode,
+            g1_pending=False,
+        )

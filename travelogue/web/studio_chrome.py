@@ -6,14 +6,20 @@ from pathlib import Path
 
 CHROME_ALLOWLIST = frozenset({"index.html", "index-mobile.html"})
 
+SHARE_QUERY_MARKERS = ("share=1", "mode=share")
+
 CHROME_INJECT = (
     '<link rel="stylesheet" href="/__studio/preview-toolbar.css">\n'
+    '<script src="/__studio/studio-modal.js" defer></script>\n'
     '<script src="/__studio/preview-toolbar.js" defer></script>'
 )
 
 
-def should_inject_studio_chrome(rel_path: str) -> bool:
-    return Path(rel_path).name.lower() in CHROME_ALLOWLIST
+def should_inject_studio_chrome(rel_path: str, query: str = "") -> bool:
+    if Path(rel_path).name.lower() not in CHROME_ALLOWLIST:
+        return False
+    q = (query or "").lower()
+    return not any(marker in q for marker in SHARE_QUERY_MARKERS)
 
 
 def inject_studio_chrome(html: str, *, studio_token: str | None = None) -> str:

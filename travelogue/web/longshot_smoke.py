@@ -68,7 +68,7 @@ def run_longshot_smoke(
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
-            page = browser.new_page(viewport={"width": 390, "height": 844})
+            page = browser.new_page(viewport={"width": 428, "height": 844})
             page.on(
                 "console",
                 lambda msg: console_errors.append(msg.text) if msg.type == "error" else None,

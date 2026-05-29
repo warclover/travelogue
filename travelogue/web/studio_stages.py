@@ -21,6 +21,13 @@ _DEFAULT_INGEST = (
     (250, "约 2 分钟"),
 )
 
+_DEFAULT_PIPELINE_ESTIMATES = (
+    (50, "约 2–3 分钟"),
+    (100, "约 3–5 分钟"),
+    (200, "约 4–8 分钟"),
+    (999999, "约 5–15 分钟"),
+)
+
 
 @lru_cache(maxsize=1)
 def _load_stages_file() -> dict:
@@ -57,6 +64,41 @@ def ingest_stage_hint(photo_count: int) -> str:
         if photo_count <= limit:
             return hint
     return _DEFAULT_INGEST[-1][1]
+
+
+def pipeline_estimate_hint(photo_count: int) -> str:
+    """P5-I2 · full import pipeline duration hint from photo count."""
+    data = _load_stages_file()
+    tiers = data.get("pipeline_estimates") or []
+    if isinstance(tiers, list):
+        for row in tiers:
+            if not isinstance(row, dict):
+                continue
+            limit = int(row.get("max_photos") or 0)
+            hint = str(row.get("hint") or "").strip()
+            if limit and photo_count <= limit and hint:
+                return hint
+    for limit, hint in _DEFAULT_PIPELINE_ESTIMATES:
+        if photo_count <= limit:
+            return hint
+    return _DEFAULT_PIPELINE_ESTIMATES[-1][1]
+
+
+def pipeline_estimate_tiers() -> list[dict[str, int | str]]:
+    data = _load_stages_file()
+    tiers = data.get("pipeline_estimates") or []
+    rows: list[dict[str, int | str]] = []
+    if isinstance(tiers, list):
+        for row in tiers:
+            if not isinstance(row, dict):
+                continue
+            limit = int(row.get("max_photos") or 0)
+            hint = str(row.get("hint") or "").strip()
+            if limit and hint:
+                rows.append({"maxPhotos": limit, "hint": hint})
+    if rows:
+        return rows
+    return [{"maxPhotos": limit, "hint": hint} for limit, hint in _DEFAULT_PIPELINE_ESTIMATES]
 
 
 def all_stage_hints() -> dict[str, str]:

@@ -50,6 +50,7 @@ class StudioJobStore:
         self._import_running = False
         self._longshot_running = False
         self._narrate_running = False
+        self._g1_running = False
         self._import_handles: dict[str, Any] = {}
 
     def create_import_job(self) -> StudioJob | None:
@@ -169,6 +170,26 @@ class StudioJobStore:
     def finish_narrate(self) -> None:
         with self._lock:
             self._narrate_running = False
+
+    def create_g1_continue_job(self) -> StudioJob | None:
+        with self._lock:
+            if self._g1_running or self._import_running:
+                return None
+            job_id = f"job-{uuid.uuid4().hex[:12]}"
+            job = StudioJob(
+                job_id=job_id,
+                type="g1_continue",
+                status="queued",
+                stage_count=1,
+                stage_hint=stage_hint("render", "约 30 秒"),
+            )
+            self._jobs[job_id] = job
+            self._g1_running = True
+            return job
+
+    def finish_g1(self) -> None:
+        with self._lock:
+            self._g1_running = False
 
     def set_import_handle(self, job_id: str, handle: Any) -> None:
         with self._lock:
@@ -392,3 +413,40 @@ def run_narrate_job(
         store.finalize(job, status="failed", error=payload)
     finally:
         store.finish_narrate()
+
+
+def run_g1_continue_job(
+    job: StudioJob,
+    *,
+    runner: Callable[[], dict[str, Any]],
+) -> None:
+    store = get_job_store()
+    store.update(
+        job,
+        status="running",
+        stage="g1_continue",
+        stage_index=1,
+        stage_count=1,
+    )
+    try:
+        if store.is_cancelled(job):
+            return
+        result = runner()
+        if store.is_cancelled(job):
+            return
+        store.finalize(
+            job,
+            status="succeeded",
+            trip_id=result.get("tripId"),
+            result=result,
+        )
+    except Exception as exc:
+        if store.is_cancelled(job):
+            return
+        if isinstance(exc, DemoError):
+            payload = {"code": exc.code, "message": user_message(exc.code, str(exc))}
+        else:
+            payload = {"code": "E_STUDIO_PIPELINE", "message": str(exc)}
+        store.finalize(job, status="failed", error=payload)
+    finally:
+        store.finish_g1()

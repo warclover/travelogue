@@ -16,6 +16,7 @@ from travelogue.web.studio_chrome import should_inject_studio_chrome
 from travelogue.web.studio_errors import demo_error_payload, user_message
 from travelogue.web.studio_jobs import (
     get_job_store,
+    run_g1_continue_job,
     run_import_job_subprocess,
     run_longshot_job,
     run_narrate_job,
@@ -61,6 +62,10 @@ CHAPTER_LAYOUT_PATH = "/__travelogue/chapter-layout"
 STUDIO_ASSET_PREFIX = "/__studio/"
 SAVE_COPY_SUFFIX = "/__travelogue/save-copy"
 PROMOTE_TIER_SUFFIX = "/__travelogue/promote-tier"
+RERENDER_SUFFIX = "/__travelogue/rerender"
+INTENT_SUFFIX = "/intent"
+PIPELINE_SUFFIX = "/pipeline"
+CURATE_SUFFIX = "/curate"
 
 
 class StudioMixin:
@@ -172,6 +177,10 @@ class StudioMixin:
         if path == PICK_FOLDER_PATH:
             self._studio_handle_pick_folder()
             return True
+        curate_trip_id = self._studio_match_trip_curate(path)
+        if curate_trip_id is not None:
+            self._studio_handle_trip_curate(curate_trip_id)
+            return True
         return False
 
     def studio_trip_parts(self, path: str) -> tuple[str, str] | None:
@@ -238,6 +247,222 @@ class StudioMixin:
             return None
         return trip_id
 
+    def _studio_match_trip_intent(self, path: str) -> str | None:
+        """Return tripId for PATCH /__travelogue/trips/{tripId}/intent."""
+        prefix = TRIPS_PATH + "/"
+        if not path.startswith(prefix) or not path.endswith(INTENT_SUFFIX):
+            return None
+        trip_id = path[len(prefix) : -len(INTENT_SUFFIX)]
+        if not trip_id or "/" in trip_id:
+            return None
+        return trip_id
+
+    def _studio_match_trip_pipeline(self, path: str) -> str | None:
+        prefix = TRIPS_PATH + "/"
+        if not path.startswith(prefix) or not path.endswith(PIPELINE_SUFFIX):
+            return None
+        trip_id = path[len(prefix) : -len(PIPELINE_SUFFIX)]
+        if not trip_id or "/" in trip_id:
+            return None
+        return trip_id
+
+    def _studio_match_trip_curate(self, path: str) -> str | None:
+        prefix = TRIPS_PATH + "/"
+        if not path.startswith(prefix) or not path.endswith(CURATE_SUFFIX):
+            return None
+        trip_id = path[len(prefix) : -len(CURATE_SUFFIX)]
+        if not trip_id or "/" in trip_id:
+            return None
+        return trip_id
+
+    def _studio_handle_patch_pipeline(self, trip_id: str) -> None:
+        from travelogue.services.pipeline_state import trip_status
+        from travelogue.services.trip import TripService
+        from travelogue.web.studio_g1 import continue_after_g1_confirm, lock_trip_structure
+
+        if not is_valid_studio_trip_id(trip_id):
+            self._json_response(400, {"ok": False, "error": "invalid tripId"})
+            return
+        payload = self._read_json_body()
+        if not payload:
+            return
+        target_status = str(payload.get("status") or "").strip()
+        continue_pipeline = bool(payload.get("continuePipeline", payload.get("continue", True)))
+        trips_root = (self.trips_dir or self._studio_cfg().trips_dir).resolve()
+        trip_dir = (trips_root / trip_id).resolve()
+        try:
+            trip_dir.relative_to(trips_root)
+        except ValueError:
+            self._json_response(400, {"ok": False, "error": "invalid tripId"})
+            return
+        trip_json = trip_dir / "trip.json"
+        if not trip_json.is_file():
+            self._json_response(404, {"ok": False, "error": "trip not found"})
+            return
+        svc = TripService(root=trips_root.parent)
+        trip = svc.load(trip_json)
+        if trip_status(trip) != "structure_draft":
+            self._json_response(
+                409,
+                {"ok": False, "error": "E_PIPELINE_ORDER", "message": "章节结构已确认或不可确认"},
+            )
+            return
+        if target_status and target_status != "structure_locked":
+            self._json_response(400, {"ok": False, "error": "unsupported status"})
+            return
+        lock_trip_structure(trip)
+        svc.save(trip, trip_json)
+        if not continue_pipeline:
+            self._json_response(200, {"ok": True, "pipelineStatus": "structure_locked"})
+            return
+
+        cfg = self._studio_cfg()
+        host = self.studio_host
+        port = self.studio_port
+
+        def runner() -> dict:
+            return continue_after_g1_confirm(
+                trip_json, host=host, port=port, cfg=cfg
+            )
+
+        store = get_job_store()
+        job = store.create_g1_continue_job()
+        if job is None:
+            self._json_response(
+                409,
+                {"ok": False, "error": "E_STUDIO_JOB_BUSY", "message": "已有任务进行中"},
+            )
+            return
+        threading.Thread(
+            target=lambda: run_g1_continue_job(job, runner=runner),
+            daemon=True,
+        ).start()
+        self._json_response(
+            202,
+            {"ok": True, "jobId": job.job_id, "pipelineStatus": "structure_locked"},
+        )
+
+    def _studio_handle_trip_curate(self, trip_id: str) -> None:
+        from travelogue.curation.curate import CurateError, run_curate
+        from travelogue.services.trip import TripService
+
+        if not is_valid_studio_trip_id(trip_id):
+            self._json_response(400, {"ok": False, "error": "invalid tripId"})
+            return
+        payload = self._read_json_body()
+        force = bool((payload or {}).get("force", True))
+        trips_root = (self.trips_dir or self._studio_cfg().trips_dir).resolve()
+        trip_dir = (trips_root / trip_id).resolve()
+        try:
+            trip_dir.relative_to(trips_root)
+        except ValueError:
+            self._json_response(400, {"ok": False, "error": "invalid tripId"})
+            return
+        trip_json = trip_dir / "trip.json"
+        if not trip_json.is_file():
+            self._json_response(404, {"ok": False, "error": "trip not found"})
+            return
+        cfg = self._studio_cfg()
+        svc = TripService(root=trips_root.parent)
+
+        def runner() -> dict:
+            trip = svc.load(trip_json)
+            pipe = trip.setdefault("pipeline", {})
+            locks = pipe.setdefault("locks", {})
+            locks["structure"] = False
+            pipe["status"] = "structure_draft"
+            try:
+                run_curate(
+                    trip,
+                    export_layout="auto",
+                    apply_layout=True,
+                    trip_dir=trip_dir,
+                    cfg=cfg,
+                )
+            except CurateError as exc:
+                raise DemoError(exc.code, str(exc)) from exc
+            svc.save(trip, trip_json)
+            from travelogue.render.engine import render_trip_surfaces
+
+            render_trip_surfaces(
+                trip_json,
+                trip_dir,
+                export_mode="draft",
+                validate=False,
+                update_pipeline=False,
+                cfg=cfg,
+            )
+            return {"tripId": trip_id, "pipelineStatus": "structure_draft"}
+
+        store = get_job_store()
+        job = store.create_g1_continue_job()
+        if job is None:
+            self._json_response(
+                409,
+                {"ok": False, "error": "E_STUDIO_JOB_BUSY", "message": "已有任务进行中"},
+            )
+            return
+        threading.Thread(
+            target=lambda: run_g1_continue_job(job, runner=runner),
+            daemon=True,
+        ).start()
+        self._json_response(202, {"ok": True, "jobId": job.job_id})
+
+    def _studio_handle_patch_intent(self, trip_id: str) -> None:
+        from travelogue.services.trip import TripService, apply_intent
+
+        if not is_valid_studio_trip_id(trip_id):
+            self._json_response(400, {"ok": False, "error": "invalid tripId"})
+            return
+        payload = self._read_json_body()
+        if not payload:
+            return
+        trips_root = (self.trips_dir or self._studio_cfg().trips_dir).resolve()
+        trip_dir = (trips_root / trip_id).resolve()
+        try:
+            trip_dir.relative_to(trips_root)
+        except ValueError:
+            self._json_response(400, {"ok": False, "error": "invalid tripId"})
+            return
+        trip_json = trip_dir / "trip.json"
+        if not trip_json.is_file():
+            self._json_response(404, {"ok": False, "error": "trip not found"})
+            return
+        svc = TripService(root=trips_root.parent)
+        try:
+            trip = svc.load(trip_json)
+            kwargs: dict = {}
+            if "title" in payload:
+                kwargs["title"] = payload.get("title")
+            if "places" in payload:
+                kwargs["places"] = payload.get("places")
+            if "userNotes" in payload:
+                kwargs["user_notes"] = payload.get("userNotes")
+            if "travelPlan" in payload:
+                kwargs["travel_plan"] = payload.get("travelPlan")
+            if not kwargs:
+                self._json_response(400, {"ok": False, "error": "no intent fields"})
+                return
+            intent = apply_intent(trip, **kwargs)
+            svc.save(trip, trip_json)
+        except (ValueError, TypeError) as exc:
+            self._json_response(400, {"ok": False, "error": str(exc)})
+            return
+        self._json_response(200, {"ok": True, "intent": intent})
+
+    def _studio_handle_rerender(self) -> None:
+        from travelogue.web.rerender import rerender_draft_trip
+
+        if self.trip_json_path is None or not self.trip_json_path.is_file():
+            self._json_response(404, {"ok": False, "error": "trip not found"})
+            return
+        try:
+            rendered = rerender_draft_trip(self.trip_json_path)
+        except Exception as exc:
+            self._json_response(500, {"ok": False, "error": str(exc)})
+            return
+        self._json_response(200, {"ok": True, "rendered": rendered})
+
     def _studio_handle_entry(self, trip_id: str) -> None:
         from travelogue.services.trip import TripService
         from travelogue.web.studio_entry import build_entry
@@ -260,7 +485,7 @@ class StudioMixin:
         self._json_response(200, {"ok": True, **build_entry(trip, trip_id)})
 
     def _studio_handle_chapter_layout(self) -> None:
-        from travelogue.curation.chapter_explain import build_chapter_explain
+        from travelogue.curation.chapter_explain import build_chapter_explain, build_layout_explain
         from travelogue.services.trip import TripService
 
         query = parse_qs(urlparse(self.path).query)
@@ -282,9 +507,12 @@ class StudioMixin:
         trip = TripService(root=trips_root.parent).load(trip_json)
         stored = ((trip.get("curation") or {}).get("clustering") or {}).get("userSummary")
         if isinstance(stored, dict) and stored.get("summary"):
-            explain = stored
+            explain = dict(stored)
         else:
             explain = build_chapter_explain(trip, trip_dir=trip_dir)
+        layout_explain = build_layout_explain(trip.get("curation") or {})
+        if layout_explain:
+            explain["layoutExplain"] = layout_explain
         self._json_response(200, {"ok": True, **explain})
 
     def _studio_handle_status(self) -> None:
@@ -333,7 +561,17 @@ class StudioMixin:
         if self.studio_config_path and self.studio_config_path.is_file():
             cfg = load_config(self.studio_config_path)
         status = studio_llm_status(cfg=cfg)
-        self._json_response(200, {"ok": True, **studio_config_expose(cfg), **status})
+        from travelogue.web.studio_stages import pipeline_estimate_tiers
+
+        self._json_response(
+            200,
+            {
+                "ok": True,
+                **studio_config_expose(cfg),
+                **status,
+                "pipelineEstimates": pipeline_estimate_tiers(),
+            },
+        )
 
     def _studio_handle_pick_folder(self) -> None:
         import sys
@@ -385,8 +623,17 @@ class StudioMixin:
             if length > MAX_MULTIPART_BODY:
                 raise DemoError("E_STUDIO_BODY_TOO_LARGE", "upload too large")
             body = self.rfile.read(length) if length else b""
-            fields, files = parse_multipart_form(body, content_type)
-            if not files:
+            fields, file_parts = parse_multipart_form(body, content_type)
+            plan_bytes: bytes | None = None
+            plan_filename = "plan.txt"
+            photo_files: list[tuple[str, bytes]] = []
+            for field_name, filename, content in file_parts:
+                if field_name == "planFile":
+                    plan_bytes = content
+                    plan_filename = filename or "plan.txt"
+                else:
+                    photo_files.append((filename, content))
+            if not photo_files:
                 raise DemoError("E_STUDIO_UPLOAD_EMPTY", "未收到任何照片文件")
             store = get_job_store()
             job = store.create_import_job()
@@ -394,7 +641,7 @@ class StudioMixin:
                 raise DemoError("E_STUDIO_JOB_BUSY", "已有导入任务进行中，请稍候")
             trips_root = self.trips_dir or self._studio_cfg().trips_dir
             upload_dir = upload_dir_for_job(trips_root, job.job_id)
-            save_upload_files(upload_dir, files)
+            save_upload_files(upload_dir, photo_files)
             payload = {
                 "albumPath": str(upload_dir),
                 "title": fields.get("title", "我的旅途"),
@@ -405,6 +652,11 @@ class StudioMixin:
             notes = str(fields.get("userNotes") or "").strip()
             if notes:
                 payload["userNotes"] = notes[:200]
+            if plan_bytes is not None:
+                import base64
+
+                payload["_planBytes"] = base64.b64encode(plan_bytes).decode("ascii")
+                payload["_planFilename"] = plan_filename
             return payload, upload_dir
 
         payload = self._read_json_body()
@@ -461,6 +713,11 @@ class StudioMixin:
         title = str(payload.get("title") or "我的旅途").strip() or "我的旅途"
         place = str(payload.get("place") or "旅途").strip() or "旅途"
         user_notes = str(payload.get("userNotes") or "").strip()[:200] or None
+        plan_text = str(payload.get("planText") or "").strip() or None
+        if plan_text and len(plan_text.encode("utf-8")) > 32 * 1024:
+            plan_text = None
+        plan_bytes_b64 = payload.pop("_planBytes", None)
+        plan_filename = str(payload.pop("_planFilename", None) or "plan.txt")
         trip_id = payload.get("tripId")
         trip_id_str = str(trip_id).strip() if trip_id else None
         force = bool(payload.get("force"))
@@ -517,6 +774,11 @@ class StudioMixin:
         }
         if user_notes:
             worker_payload["userNotes"] = user_notes
+        if plan_text:
+            worker_payload["planText"] = plan_text
+        if plan_bytes_b64:
+            worker_payload["planBytes"] = plan_bytes_b64
+            worker_payload["planFilename"] = plan_filename
         if self.studio_config_path and self.studio_config_path.is_file():
             worker_payload["configPath"] = str(self.studio_config_path.resolve())
 
@@ -560,7 +822,22 @@ class StudioMixin:
             self._json_response(404, {"ok": False, "error": "trip not found"})
             return
 
+        from travelogue.services.pipeline_state import trip_status
+        from travelogue.services.trip import TripService
         from travelogue.web.studio_narrate import run_studio_llm_narrate, studio_llm_status
+
+        trips_root = (self.trips_dir or self._studio_cfg().trips_dir).resolve()
+        trip = TripService(root=trips_root.parent).load(trip_dir / "trip.json")
+        if trip_status(trip) == "structure_draft":
+            self._json_response(
+                409,
+                {
+                    "ok": False,
+                    "error": "E_PIPELINE_ORDER",
+                    "message": "请先确认章节顺序",
+                },
+            )
+            return
 
         cfg = self._studio_cfg()
         llm_status = studio_llm_status(cfg=cfg)
@@ -638,24 +915,35 @@ class StudioMixin:
             )
             return
 
-        scale = int(payload.get("scale") or 2)
+        from travelogue.export.longshot import DEFAULT_EXPORT_SCALE, export_trip_longshot
+
+        scale = int(payload.get("scale") or DEFAULT_EXPORT_SCALE)
         fmt = str(payload.get("format") or "png")
 
         def runner() -> dict:
-            from travelogue.export.longshot import export_trip_longshot
+            def on_progress(cur: int, total: int, hint: str) -> None:
+                store.update(
+                    job,
+                    stage_hint=hint,
+                    stage_index=max(cur, 1),
+                    stage_count=max(total, 1),
+                )
 
             result = export_trip_longshot(
                 trip_dir,
                 scale=scale,
                 fmt=fmt,
+                progress=on_progress,
             )
             rel_outputs = [_rel_to_trip(trip_dir, item.path) for item in result.outputs]
             return {
                 "tripId": trip_id,
                 "outputs": rel_outputs,
                 "captureMethod": result.capture_method,
-                "segmented": len(result.outputs) > 1,
+                "segmented": result.segmented,
                 "pageCount": len(result.outputs),
+                "segmentReason": result.segment_reason,
+                "userHint": result.user_hint,
             }
 
         threading.Thread(
@@ -783,4 +1071,8 @@ class StudioMixin:
             trip_id = path[: -len(PROMOTE_TIER_SUFFIX)].strip("/")
             if trip_id and "/" not in trip_id:
                 return trip_id, "promote-tier"
+        if path.endswith(RERENDER_SUFFIX):
+            trip_id = path[: -len(RERENDER_SUFFIX)].strip("/")
+            if trip_id and "/" not in trip_id:
+                return trip_id, "rerender"
         return None

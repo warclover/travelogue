@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 
-def parse_multipart_form(body: bytes, content_type: str) -> tuple[dict[str, str], list[tuple[str, bytes]]]:
+def parse_multipart_form(
+    body: bytes, content_type: str
+) -> tuple[dict[str, str], list[tuple[str, str, bytes]]]:
     boundary = _extract_boundary(content_type)
     if not boundary:
         return {}, []
 
     delimiter = ("--" + boundary).encode("utf-8")
     fields: dict[str, str] = {}
-    files: list[tuple[str, bytes]] = []
+    files: list[tuple[str, str, bytes]] = []
 
     for part in body.split(delimiter):
         part = part.strip(b"\r\n")
@@ -26,7 +28,7 @@ def parse_multipart_form(body: bytes, content_type: str) -> tuple[dict[str, str]
             continue
         filename = _header_value(headers, "filename")
         if filename:
-            files.append((filename, content))
+            files.append((name, filename, content))
         else:
             fields[name] = content.decode("utf-8", errors="replace")
     return fields, files

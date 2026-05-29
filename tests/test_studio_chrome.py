@@ -19,12 +19,19 @@ def test_should_inject_allowlist() -> None:
     assert not should_inject_studio_chrome("longshot.css")
 
 
+def test_share_query_skips_chrome_injection() -> None:
+    assert not should_inject_studio_chrome("index.html", "share=1")
+    assert not should_inject_studio_chrome("index.html", "mode=share&foo=1")
+    assert should_inject_studio_chrome("index.html", "focus=longshot")
+
+
 def test_inject_studio_chrome_adds_script() -> None:
     html = "<html><body><main>hi</main></body></html>"
     out = inject_studio_chrome(html)
     assert 'data-preview-toolbar="on"' in out
     assert "/__studio/preview-toolbar.js" in out
     assert "/__studio/preview-toolbar.css" in out
+    assert "/__studio/studio-modal.js" in out
 
 
 @pytest.fixture(autouse=True)
@@ -79,6 +86,13 @@ def test_studio_chrome_on_index_not_longshot(tmp_path: Path) -> None:
         assert "preview-toolbar.js" in index_html
         assert 'data-preview-toolbar="on"' in index_html
         assert "preview-toolbar.js" not in longshot_html
+
+        with urllib.request.urlopen(
+            f"{base}/{result.trip_id}/index.html?share=1", timeout=10
+        ) as resp:
+            share_html = resp.read().decode("utf-8")
+        assert "preview-toolbar.js" not in share_html
+        assert 'data-preview-toolbar="on"' not in share_html
     finally:
         server.shutdown()
         server.server_close()
