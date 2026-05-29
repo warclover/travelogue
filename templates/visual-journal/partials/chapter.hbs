@@ -3,22 +3,35 @@
   {{#if showDivider}}
   {{> divider-place}}
   {{/if}}
+  {{#if useChapterSeparator}}
+  {{> chapter-separator}}
+  {{else}}
   <header class="chapter-header" data-block="chapter-header">
     <span class="chapter-header__index">{{index}}</span>
     <h2>{{title}}</h2>
   </header>
+  {{/if}}
+  {{#unless useChapterSeparator}}
   {{#if hasLead}}
   <p class="chapter-lead" data-block="chapter-lead"{{#if editableLead}} data-editable="lead" data-edit-path="{{editLeadPath}}"{{/if}}>{{lead}}</p>
   {{/if}}
+  {{/unless}}
   {{#if useScreensEngine}}
   {{#each screens}}
+  {{#if isBreathPause}}
+  {{> breath-pause-screen}}
+  {{else}}
   {{> layout-screen}}
+  {{/if}}
   {{/each}}
   {{#if hasScreenSpread}}
   {{> screen-spread screenSpread}}
   {{/if}}
   {{else}}
   {{#each items}}
+  {{#if isBreathPause}}
+  {{> breath-pause-card}}
+  {{else}}
   {{#if isMediaCard}}
   {{> media-card}}
   {{/if}}
@@ -27,6 +40,7 @@
   {{/if}}
   {{#if isMediaScroll}}
   {{> media-scroll}}
+  {{/if}}
   {{/if}}
   {{/each}}
   {{/if}}

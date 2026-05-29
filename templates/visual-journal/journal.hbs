@@ -61,7 +61,11 @@
         <p class="epilogue" data-block="epilogue" data-present-aux="true"{{#if editableEpilogue}} data-editable="epilogue" data-edit-path="epilogue"{{/if}}>{{epilogue}}</p>
         {{/if}}
         {{/if}}
+        {{#if isLongshotSurface}}
+        {{> longshot-boundary-footer}}
+        {{else}}
         {{> footer-cta}}
+        {{/if}}
       </div>
     </article>
   </main>

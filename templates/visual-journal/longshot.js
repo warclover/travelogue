@@ -1,6 +1,6 @@
 /**
  * Travelogue · 保存长图
- * 将 <main> 按朋友圈 9:16 版式（390px 宽）导出为 PNG。
+ * 将 <main> 按竖版长图版式（428px 宽 · iPhone 15 Pro Max 可读）导出为 PNG。
  * 依赖 html2canvas（优先本地 vendor/，失败则 CDN）。
  */
 (function (global) {
@@ -8,7 +8,7 @@
 
   var HTML2CANVAS_CDN =
     "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
-  var CAPTURE_WIDTH = 390;
+  var CAPTURE_WIDTH = 428;
   var DESKTOP_CAPTURE_SCALE = 3;
   var MOBILE_CAPTURE_SCALE = 2;
   var MAX_CAPTURE_SCALE = 3;

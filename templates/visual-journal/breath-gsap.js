@@ -59,6 +59,13 @@
     triggers.push({ el: el, apply: apply, opts: opts || {} });
   }
 
+  function shouldDegradeCinematic() {
+    var screens = document.querySelectorAll('.layout-screen[data-block="layout-screen"]').length;
+    var coarse = global.matchMedia && global.matchMedia("(pointer: coarse)").matches;
+    var lowMem = global.navigator && global.navigator.deviceMemory && global.navigator.deviceMemory <= 4;
+    return screens > 40 && coarse && lowMem;
+  }
+
   function setupCinematicGsap() {
     var gsap = global.gsap;
     var ScrollTrigger = global.ScrollTrigger;
@@ -385,9 +392,12 @@
   function init(mode) {
     destroy();
     if (mode !== "cinematic" && mode !== "gallery") return;
+    if (mode === "cinematic" && shouldDegradeCinematic()) {
+      mode = "cinematic-lite";
+    }
     document.documentElement.classList.add("breath-scrub-active");
-    var gsapMode = useGsapEngine();
-    if (mode === "cinematic") {
+    var gsapMode = useGsapEngine() && mode !== "cinematic-lite";
+    if (mode === "cinematic" || mode === "cinematic-lite") {
       if (gsapMode) setupCinematicGsap();
       else setupCinematic();
     }

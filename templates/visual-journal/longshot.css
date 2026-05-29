@@ -219,11 +219,11 @@ html[data-caption-display="off"] .media-scroll__footer .media-card__caption {
   display: none !important;
 }
 
-/* —— 截图态：390px 宽、展开横滑、强化可读性 —— */
+/* —— 截图态：428px 宽、展开横滑、强化可读性 —— */
 html.longshot-capturing-root {
   background: var(--bg-page, #111110);
-  width: 390px;
-  max-width: 390px;
+  width: 428px;
+  max-width: 428px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -231,13 +231,13 @@ html.longshot-capturing-root {
 body.longshot-capturing {
   overflow: visible;
   background: var(--bg-page, #111110);
-  width: 390px;
-  max-width: 390px;
+  width: 428px;
+  max-width: 428px;
   margin-left: auto;
   margin-right: auto;
-  /* 截屏视口固定 390px，避免 100vw / dvh 按真机视口算导致比例失真 */
-  --bleed-width: 390px;
-  --page-width: 390px;
+  /* 截屏视口固定 428px，避免 100vw / dvh 按真机视口算导致比例失真 */
+  --bleed-width: 428px;
+  --page-width: 428px;
   --cover-max-h: none;
   --media-max-h: none;
 }
@@ -249,8 +249,8 @@ body.longshot-capturing .footer-cta {
 }
 
 body.longshot-capturing main {
-  width: 390px;
-  max-width: 390px;
+  width: 428px;
+  max-width: 428px;
   margin-left: auto;
   margin-right: auto;
   background: var(--bg-page, #111110);
@@ -349,7 +349,7 @@ body.longshot-capturing .epilogue {
   text-align: center;
 }
 
-/* 单卡：长图按 390px 宽自然比例，不用 dvh 限高（与屏上预览的紧凑横图区分） */
+/* 单卡：长图按 428px 宽自然比例，不用 dvh 限高（与屏上预览的紧凑横图区分） */
 body.longshot-capturing .media-card--bleed {
   width: 100%;
   max-width: 100%;
@@ -970,4 +970,50 @@ body.longshot-capturing .longshot-wechat-banner {
 
 body.longshot-capturing .longshot-export-sheet {
   display: none !important;
+}
+
+/* P5-T2 · longshot breath pause card */
+.breath-pause-card[data-block="breath-pause-card"] {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--breath-tone, #1e1d1b);
+  margin: 0;
+}
+
+.breath-pause-card__label {
+  font-size: 1rem;
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+body.longshot-capturing .breath-pause-card[data-block="breath-pause-card"] {
+  min-height: 96px;
+}
+
+/* P5-L5 · longshot footer boundary */
+.longshot-boundary-footer[data-block="longshot-boundary-footer"] {
+  padding: 32px 16px 40px;
+  text-align: center;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.35));
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.longshot-boundary-footer__stats {
+  margin: 0 0 8px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+
+.longshot-boundary-footer__brand {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+body.longshot-capturing .longshot-boundary-footer[data-block="longshot-boundary-footer"] {
+  padding-bottom: 48px;
 }
