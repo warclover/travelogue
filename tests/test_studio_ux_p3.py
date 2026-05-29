@@ -11,6 +11,7 @@ from travelogue.config import AppConfig, ClusteringConfig, VisionConfig
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.web.studio_jobs import STAGE_COUNT
 from travelogue.web.studio_stages import ingest_stage_hint, stage_hint
+from tests._studio_js import read_studio_js
 from tests.clustering_fixtures import load_fixture_assets
 from tests.test_studio_server import _distinct_album, _free_port, _get_json, _post_json, _start_studio_server
 
@@ -48,7 +49,9 @@ def test_ux_p3_03_advanced_options_and_config_api(tmp_path: Path) -> None:
         'id="studio-advanced-options"',
         'id="studio-cfg-clustering"',
         'id="studio-cfg-vision"',
+        'id="studio-cfg-layout-scoring"',
         "高级 · 分析选项",
+        "智能排版",
     ):
         assert expected in html, f"missing UX marker: {expected}"
 
@@ -76,13 +79,13 @@ def test_ux_p3_03_advanced_options_and_config_api(tmp_path: Path) -> None:
 
 
 def test_ux_p3_04_cluster_notice_non_blocking_string() -> None:
-    js = (ROOT / "templates" / "studio" / "studio.js").read_text(encoding="utf-8")
+    js = read_studio_js()
     assert "clusterNotice" in js
     assert "studio-toast" in js or "showToast" in js or "setWarning" in js
 
 
 def test_ux_p3_05_06_slow_hint_thresholds_and_copy() -> None:
-    js = (ROOT / "templates" / "studio" / "studio.js").read_text(encoding="utf-8")
+    js = read_studio_js()
     assert "SLOW_JOB_MS = 30000" in js
     assert "SLOW_JOB_VISION_MS = 180000" in js
     assert "SLOW_JOB_VISION_LONG_MS = 480000" in js
@@ -97,6 +100,13 @@ def test_ux_p3_07_preview_toolbar_has_no_cluster_controls() -> None:
     for token in forbidden:
         assert token not in js
     assert "为什么这样分章" in js or "chapter-layout" in js
+    assert "layoutExplain" in js
+    assert "排版引擎" in js
+    assert "preview-toolbar__g1-banner" in js
+    assert "preview-drawer__narrate-anchors" in js
+    assert "trapDrawerFocus" in js
+    assert "toolbarConfirm" in js
+    assert "window.alert(" not in js
 
 
 def test_ux_p3_01_import_job_reports_four_stages(tmp_path: Path) -> None:

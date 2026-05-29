@@ -9,6 +9,7 @@ import pytest
 from travelogue.web.studio_jobs import reset_job_store
 from travelogue.web.studio_pipeline import run_studio_pipeline
 from travelogue.web.studio_trips import list_studio_trips, studio_trips_total
+from tests._studio_js import read_studio_js
 from tests.test_studio_server import _distinct_album, _free_port, _get_json, _start_studio_server
 
 
@@ -37,8 +38,10 @@ M12_HOME_MARKERS = (
     "高级 · 分析选项",
     "studio-cfg-clustering",
     "studio-cfg-vision",
+    "studio-cfg-layout-scoring",
     "行程识别",
     "场景分析",
+    "智能排版",
 )
 
 
@@ -74,8 +77,7 @@ def test_studio_homepage_m12_css() -> None:
 
 
 def test_studio_homepage_js_strings() -> None:
-    js_path = Path(__file__).resolve().parents[1] / "templates" / "studio" / "studio.js"
-    js = js_path.read_text(encoding="utf-8")
+    js = read_studio_js()
     assert "浏览器上传" in js
     assert "\ufffd" not in js
     assert "updateHeroBackground" in js

@@ -110,7 +110,7 @@
 | M23-03 | P5-MP-1 | API-MINIAPP 字段对齐审查 | `API-MINIAPP.md` v0.2 · `test_api_miniapp_sync.py` | ☑ |
 | M23-04 | P5-MP-2 | 本地 serve + web-view 手测清单 | `API-MINIAPP.md` §11 · `phase5-webview-manual.json` | ☑ |
 | M23-05 | P5-I4 | ingest 断点续传 | `ingest_checkpoint.py` · `ingest.py` | ☑ |
-| M23-06 | P5-A1 | studio.js 拆 chunk | ☐ |
+| M23-06 | P5-A1 | studio.js 拆 chunk（ES modules 按状态拆分） | `studio.js` 入口 · `js/{state,constants,dom,errors,samples,progress,api,sheet,render,import-flow,advanced,init}.js` · `_studio_js.py` 聚合断言 | ☑ |
 
 ---
 
@@ -185,3 +185,4 @@ M23-03/04    API 对齐 + web-view 手测文档
 | 2026-05-30 | **M23-02 P5-12.3**：CLI-SPEC v0.4 · studio/longshot/HTTP 路由同步 |
 | 2026-05-30 | **M23-03 P5-MP-1**：API-MINIAPP v0.2 字段对齐 · schema 兄弟键无冲突 · `test_api_miniapp_sync.py` |
 | 2026-05-30 | **M23-04 P5-MP-2**：API-MINIAPP v0.3 §11 本地 web-view 手测清单 MP-WV-01～11 · `phase5-webview-manual.json` |
+| 2026-05-30 | **M23-06 P5-A1**：studio.js 2249 行 IIFE → ES modules 按状态拆分（11 模块 + `state.js`）· `<script type=module>` · 共享态收口 `S` · 测试改聚合扫描 |

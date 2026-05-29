@@ -31,11 +31,23 @@
   <header class="studio-topbar">
     <a href="/" class="studio-topbar__brand">TRAVELOGUE · STUDIO</a>
     <div class="studio-topbar__status">
+      <button type="button" id="studio-help-replay" class="studio-topbar__help" title="使用帮助" aria-label="使用帮助">?</button>
       <span id="studio-status-dot" class="studio-topbar__dot"></span>
       <span id="studio-status-text">本地运行中</span>
       <span class="studio-topbar__addr" id="studio-copy-addr" title="点击复制">127.0.0.1:8766</span>
     </div>
   </header>
+
+  <!-- ⓪ Loading content (P5-1.1) -->
+  <div class="studio-hero__content studio-hero__content--center" id="studio-hero-loading" hidden>
+    <p class="studio-hero__masthead">Travelogue · 本地杂志工坊</p>
+    <p class="studio-loading__label">正在加载…</p>
+    <div class="studio-loading__skeleton" aria-hidden="true">
+      <span class="studio-loading__skeleton-bar"></span>
+      <span class="studio-loading__skeleton-bar studio-loading__skeleton-bar--short"></span>
+      <span class="studio-loading__skeleton-bar studio-loading__skeleton-bar--thumb"></span>
+    </div>
+  </div>
 
   <!-- ① Empty content -->
   <div class="studio-hero__content" id="studio-hero-empty" hidden>
@@ -92,6 +104,7 @@
       <span></span><span></span><span></span><span></span>
     </div>
     <p class="studio-import__step" id="studio-stage" aria-live="polite">准备导入…</p>
+    <p id="studio-import-estimate" class="studio-import__estimate" hidden></p>
     <div class="studio-bar"><div id="studio-bar-fill" class="studio-bar__fill"></div></div>
     <p id="studio-pct" class="studio-import__pct" hidden></p>
     <progress id="upload-progress" class="studio-upload-progress" value="0" max="100" hidden></progress>
@@ -116,14 +129,28 @@
     <p class="studio-success__eyebrow">✓ 生成完成</p>
     <p class="studio-success__msg" id="studio-success-msg">你的第一篇游记已生成</p>
     <div class="studio-success__chips" id="studio-success-chips" hidden></div>
-    <div class="studio-failure__actions">
-      <a id="studio-success-open" href="#" class="studio-btn studio-btn--gold">
-        <span class="studio-btn__label">先看杂志排版</span>
+    <p class="studio-success__paths-hint" id="studio-success-paths-hint">群聊发长图 · 沉浸读卷轴</p>
+    <div class="studio-failure__actions studio-success__actions">
+      <button type="button" id="studio-success-longshot" class="studio-btn studio-btn--gold">
+        <span class="studio-btn__label">生成长图</span>
+        <span class="studio-btn__arrow" aria-hidden="true">→</span>
+      </button>
+      <a id="studio-success-open" href="#" class="studio-btn studio-btn--ghost-inverse">
+        <span class="studio-btn__label">打开卷轴预览</span>
         <span class="studio-btn__arrow" aria-hidden="true">→</span>
       </a>
       <button type="button" id="studio-success-stay" class="studio-btn studio-btn--ghost-inverse">留在首页</button>
     </div>
-    <p class="studio-success__countdown"><span id="studio-success-sec">5</span> 秒后自动打开</p>
+    <p class="studio-success__longshot-status" id="studio-success-longshot-status" hidden role="status"></p>
+    <details class="studio-success__wechat" id="studio-success-wechat" hidden>
+      <summary>如何发到微信</summary>
+      <ol>
+        <li>长图已保存到本机 trips 文件夹（已尝试在资源管理器中打开）</li>
+        <li>打开微信，将 PNG 拖入对话框（或从手机相册发送）</li>
+        <li>多张长图按文件名编号顺序发送即可</li>
+      </ol>
+    </details>
+    <p class="studio-success__countdown" hidden aria-hidden="true"><span id="studio-success-sec">5</span> 秒后自动打开</p>
   </div>
 
   <!-- Import sheet (Phase 4) -->
@@ -166,6 +193,12 @@
         </div>
 
         <p class="studio-sheet-hint">相册里若有 <strong>「精选」</strong> 和 <strong>「素材」</strong> 两个子文件夹，封面会优先用精选（建议 8–20 张）。</p>
+        <figure class="studio-sheet-diagram" aria-hidden="true">
+          <pre class="studio-sheet-diagram__tree">我的旅行/
+├── 精选/     ← 封面与章首（8–20 张）
+└── 素材/     ← 其余记录、连拍</pre>
+          <figcaption class="studio-sheet-diagram__caption">一般无需两个文件夹；有精选时排版更杂志感</figcaption>
+        </figure>
 
         <details class="studio-sheet-details">
           <summary>帮你排得更好（可选）</summary>
@@ -217,7 +250,7 @@
   </div>
 
   <details class="studio-advanced studio-advanced--hero" id="studio-advanced-options" hidden>
-    <summary class="studio-advanced__summary">高级 · 分析选项</summary>
+    <summary class="studio-advanced__summary">高级 · 分析选项（一般无需修改）</summary>
     <div class="studio-advanced__body">
       <div class="studio-advanced__row">
         <label class="studio-advanced__label" for="studio-cfg-clustering">行程识别</label>
@@ -226,16 +259,32 @@
           <option value="true">开</option>
           <option value="false">关</option>
         </select>
-        <p class="studio-advanced__hint" id="studio-cfg-clustering-hint">有位置信息的照片会自动按行程分段</p>
+        <p class="studio-advanced__hint" id="studio-cfg-clustering-hint">默认自动：有 GPS 的照片会按行程分段（推荐）</p>
       </div>
       <div class="studio-advanced__row">
         <label class="studio-advanced__label" for="studio-cfg-vision">场景分析</label>
         <select id="studio-cfg-vision" class="studio-advanced__select" aria-describedby="studio-cfg-vision-hint">
-          <option value="false">关</option>
+          <option value="false">关（默认）</option>
           <option value="auto">自动</option>
           <option value="true">开</option>
         </select>
-        <p class="studio-advanced__hint" id="studio-cfg-vision-hint">大相册可让同场景照片排在一起；较慢，首次需下载组件</p>
+        <p class="studio-advanced__hint" id="studio-cfg-vision-hint">默认关闭；大相册可开启以合并同场景照片（较慢，首次需下载组件）</p>
+      </div>
+      <div class="studio-advanced__row">
+        <label class="studio-advanced__label" for="studio-cfg-g1">结构确认（G1）</label>
+        <select id="studio-cfg-g1" class="studio-advanced__select" aria-describedby="studio-cfg-g1-hint">
+          <option value="false">自动继续（推荐）</option>
+          <option value="true">导入后先确认章节</option>
+        </select>
+        <p class="studio-advanced__hint" id="studio-cfg-g1-hint">开启后需预览内确认章节顺序再生成文案</p>
+      </div>
+      <div class="studio-advanced__row">
+        <label class="studio-advanced__label" for="studio-cfg-layout-scoring">智能排版</label>
+        <select id="studio-cfg-layout-scoring" class="studio-advanced__select" aria-describedby="studio-cfg-layout-scoring-hint">
+          <option value="false">经典（默认）</option>
+          <option value="true">实验 · beam 评分</option>
+        </select>
+        <p class="studio-advanced__hint" id="studio-cfg-layout-scoring-hint">实验模式启用多信号 beam 搜索；内测 A/B 用，一般保持默认</p>
       </div>
     </div>
   </details>
@@ -312,7 +361,7 @@
       <div class="studio-sample-modal__pages" id="studio-sample-pages"></div>
       <div class="studio-sample-modal__cta">
         <button type="button" class="studio-btn studio-btn--primary" id="studio-sample-cta">
-          <span class="studio-btn__label">用我的照片做一篇</span>
+          <span class="studio-btn__label">现在用你的照片做一篇</span>
           <span class="studio-btn__arrow" aria-hidden="true">→</span>
         </button>
       </div>
@@ -324,6 +373,6 @@
 
 <script src="/__studio/studio-toast.js" defer></script>
 <script src="/__studio/studio-modal.js" defer></script>
-<script src="/__studio/studio.js" defer></script>
+<script type="module" src="/__studio/studio.js"></script>
 </body>
 </html>
