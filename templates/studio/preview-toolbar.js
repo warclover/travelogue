@@ -8,6 +8,31 @@
   var pollTimer = null;
   var longshotJobId = null;
   var narrateJobId = null;
+  var DRAWER_FOCUSABLE =
+    'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex="0"]';
+
+  function trapDrawerFocus(container) {
+    function onKeydown(e) {
+      if (e.key !== "Tab") return;
+      var items = container.querySelectorAll(DRAWER_FOCUSABLE);
+      if (!items.length) return;
+      var first = items[0];
+      var last = items[items.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    container.addEventListener("keydown", onKeydown);
+    return function () {
+      container.removeEventListener("keydown", onKeydown);
+    };
+  }
 
   function tripIdFromPath() {
     var parts = window.location.pathname.replace(/^\/+|\/+$/g, "").split("/");
@@ -36,6 +61,65 @@
     });
   }
 
+  function patchJson(url, payload) {
+    return fetch(url, {
+      method: "PATCH",
+      headers: studioAuthHeaders(),
+      body: JSON.stringify(payload || {}),
+    }).then(function (resp) {
+      return resp.json().then(function (body) {
+        return { status: resp.status, body: body };
+      });
+    });
+  }
+
+  function tripApiBase(tripId) {
+    return "/" + encodeURIComponent(tripId) + "/__travelogue";
+  }
+
+  var _toastTimer = null;
+
+  function toolbarConfirm(opts) {
+    if (typeof studioModal === "function") {
+      return studioModal(opts);
+    }
+    var msg = (opts.title ? opts.title + "\n\n" : "") + (opts.body || "");
+    return Promise.resolve(window.confirm(msg));
+  }
+
+  function toolbarAlert(message, opts) {
+    opts = opts || {};
+    if (message) showToolbarToast(message, { error: !!opts.error });
+  }
+
+  function showToolbarToast(message, opts) {
+    opts = opts || {};
+    var el = document.getElementById("preview-toolbar-toast");
+    if (!el) {
+      el = document.createElement("p");
+      el.id = "preview-toolbar-toast";
+      el.className = "preview-toolbar__toast";
+      el.setAttribute("role", "status");
+      el.hidden = true;
+      document.body.appendChild(el);
+    }
+    el.textContent = message;
+    el.classList.toggle("preview-toolbar__toast--error", !!opts.error);
+    el.hidden = false;
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(function () {
+      el.hidden = true;
+    }, opts.duration || (opts.error ? 5000 : 2800));
+  }
+
+  var _layoutPending = false;
+  function setLayoutPending(on) {
+    _layoutPending = !!on;
+    document.querySelectorAll(".preview-toolbar__apply-layout").forEach(function (btn) {
+      btn.hidden = !_layoutPending;
+    });
+  }
+
   function revealTripPath(tripId, relPath) {
     return postJson("/__travelogue/reveal", { tripId: tripId, relPath: relPath });
   }
@@ -55,6 +139,9 @@
       fetch("/__travelogue/status?jobId=" + encodeURIComponent(jobId))
         .then(function (resp) { return resp.json(); })
         .then(function (job) {
+          if (job.status === "running" && job.stageHint) {
+            setLongshotStatus(root, "正在生成长图… " + job.stageHint, true);
+          }
           if (
             job.status === "succeeded" ||
             job.status === "failed" ||
@@ -197,6 +284,7 @@
       var segEl = document.createElement("p");
       segEl.className = "preview-toolbar__longshot-compat";
       segEl.textContent =
+        result.userHint ||
         "已按章导出 " + outputs.length + " 张，底部含页码（如 2/5）便于微信按序发送。";
       panel.appendChild(segEl);
     }
@@ -262,23 +350,32 @@
   }
 
   function exportZip(tripId) {
-    if (!window.confirm("导出 zip 包用于自行托管或备份，不是微信分享主路径。继续？")) {
-      return;
-    }
-    postJson("/__travelogue/export", { tripId: tripId, confirmPrivacy: true })
-      .then(function (res) {
-        if (res.status !== 200 || !res.body.ok) {
-          window.alert((res.body && res.body.message) || "导出失败");
-          return;
-        }
-        var zipRel = res.body.zipRelPath;
-        if (zipRel && window.confirm("zip 已生成。在文件夹中显示？")) {
-          revealTripPath(tripId, zipRel);
-        }
-      })
-      .catch(function () {
-        window.alert("导出失败");
+    toolbarConfirm({
+      title: "导出 zip",
+      body: "导出 zip 包用于自行托管或备份，不是微信分享主路径。继续？",
+      confirmText: "继续",
+    }).then(function (ok) {
+      if (!ok) return;
+      return postJson("/__travelogue/export", { tripId: tripId, confirmPrivacy: true });
+    }).then(function (res) {
+      if (!res) return;
+      if (res.status !== 200 || !res.body.ok) {
+        toolbarAlert((res.body && res.body.message) || "导出失败", { error: true });
+        return;
+      }
+      var zipRel = res.body.zipRelPath;
+      if (!zipRel) return;
+      return toolbarConfirm({
+        title: "zip 已生成",
+        body: "是否在文件夹中显示？",
+        confirmText: "显示",
+        cancelText: "关闭",
+      }).then(function (reveal) {
+        if (reveal) revealTripPath(tripId, zipRel);
       });
+    }).catch(function () {
+      toolbarAlert("导出失败", { error: true });
+    });
   }
 
   function startLongshot(root, tripId) {
@@ -331,54 +428,52 @@
 
   function startLlmNarrate(root, tripId, btn) {
     if (!btn || btn.disabled) return;
-    if (
-      !window.confirm(
-        "将调用 LLM 重写 hook、导语与图注，可能覆盖未锁定的文案。继续？"
-      )
-    ) {
-      return;
-    }
-    setToolbarCollapsed(root, false, false);
-    btn.disabled = true;
-    setSlowHint(root, "", false);
-    setLongshotStatus(root, "正在生成杂志感文案…", true);
-
-    postJson("/__travelogue/narrate", { tripId: tripId })
-      .then(function (res) {
-        if (res.status === 409 || res.status === 400) {
-          setLongshotStatus(root, (res.body && res.body.message) || "无法开始", true);
-          btn.disabled = false;
-          return;
-        }
-        if (res.status !== 202 || !res.body.jobId) {
-          setLongshotStatus(root, "无法开始文案生成", true);
-          btn.disabled = false;
-          return;
-        }
-        narrateJobId = res.body.jobId;
-        pollJob(
-          res.body.jobId,
-          function (job) {
-            btn.disabled = false;
-            narrateJobId = null;
-            setLongshotStatus(root, "", false);
-            setSlowHint(root, "", false);
-            if (job.status === "succeeded") {
-              window.location.reload();
-              return;
-            }
-            var err = (job.error && (job.error.message || job.error.code)) || "文案生成失败";
-            window.alert(err);
-          },
-          function () {
-            setSlowHint(root, "比预期久一些，请耐心等待…", true);
-          }
-        );
-      })
-      .catch(function () {
+    toolbarConfirm({
+      title: "生成杂志感文案",
+      body: "将调用 LLM 重写 hook、导语与图注，可能覆盖未锁定的文案。继续？",
+      confirmText: "继续",
+    }).then(function (ok) {
+      if (!ok) return;
+      setToolbarCollapsed(root, false, false);
+      btn.disabled = true;
+      setSlowHint(root, "", false);
+      setLongshotStatus(root, "正在生成杂志感文案…", true);
+      return postJson("/__travelogue/narrate", { tripId: tripId });
+    }).then(function (res) {
+      if (!res) return;
+      if (res.status === 409 || res.status === 400) {
+        setLongshotStatus(root, (res.body && res.body.message) || "无法开始", true);
         btn.disabled = false;
-        setLongshotStatus(root, "网络错误", true);
-      });
+        return;
+      }
+      if (res.status !== 202 || !res.body.jobId) {
+        setLongshotStatus(root, "无法开始文案生成", true);
+        btn.disabled = false;
+        return;
+      }
+      narrateJobId = res.body.jobId;
+      pollJob(
+        res.body.jobId,
+        function (job) {
+          btn.disabled = false;
+          narrateJobId = null;
+          setLongshotStatus(root, "", false);
+          setSlowHint(root, "", false);
+          if (job.status === "succeeded") {
+            window.location.reload();
+            return;
+          }
+          var err = (job.error && (job.error.message || job.error.code)) || "文案生成失败";
+          toolbarAlert(err, { error: true });
+        },
+        function () {
+          setSlowHint(root, "比预期久一些，请耐心等待…", true);
+        }
+      );
+    }).catch(function () {
+      btn.disabled = false;
+      setLongshotStatus(root, "网络错误", true);
+    });
   }
 
   function refreshPreviewCover(root, tripId) {
@@ -421,41 +516,650 @@
       .catch(function () {});
   }
 
-  function initChapterExplain(root, tripId) {
-    var body = toolbarBody(root);
-    if (!body || body.querySelector(".preview-toolbar__chapter-explain")) return;
+  function applyLayoutRerender(tripId, root) {
+    var btn = root.querySelector(".preview-toolbar__apply-layout");
+    if (btn) btn.disabled = true;
+    return postJson(tripApiBase(tripId) + "/rerender", {})
+      .then(function (res) {
+        if (btn) btn.disabled = false;
+        if (res.status !== 200 || !res.body.ok) {
+          showToolbarToast((res.body && res.body.error) || "排版失败", { error: true });
+          return;
+        }
+        setLayoutPending(false);
+        showToolbarToast("排版已更新");
+        window.location.reload();
+      })
+      .catch(function () {
+        if (btn) btn.disabled = false;
+        showToolbarToast("排版失败", { error: true });
+      });
+  }
 
-    var wrap = document.createElement("details");
-    wrap.className = "preview-toolbar__chapter-explain";
-    wrap.hidden = true;
-    wrap.innerHTML =
-      '<summary class="preview-toolbar__chapter-explain-summary">为什么这样分章？</summary>' +
-      '<div class="preview-toolbar__chapter-explain-body">' +
-      '<p class="preview-toolbar__chapter-explain-lead"></p>' +
-      '<ul class="preview-toolbar__chapter-explain-list"></ul>' +
-      "</div>";
-    body.appendChild(wrap);
+  function initTitleEdit(root, tripId) {
+    var wrap = root.querySelector(".preview-toolbar__title-wrap");
+    if (!wrap) return;
 
+    var display = document.createElement("button");
+    display.type = "button";
+    display.className = "preview-toolbar__title";
+    display.title = "点击编辑杂志名";
+    display.textContent = "我的旅途";
+    wrap.appendChild(display);
+
+    function setTitle(text) {
+      var t = (text || "我的旅途").trim() || "我的旅途";
+      display.textContent = t.length > 20 ? t.slice(0, 20) : t;
+      display.dataset.title = t;
+    }
+
+    fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (data && data.intentSummary && data.intentSummary.title) {
+          setTitle(data.intentSummary.title);
+        }
+      })
+      .catch(function () {});
+
+    display.addEventListener("click", function () {
+      if (wrap.querySelector(".preview-toolbar__title-input")) return;
+      var input = document.createElement("input");
+      input.type = "text";
+      input.className = "preview-toolbar__title-input";
+      input.maxLength = 20;
+      input.value = display.dataset.title || display.textContent || "";
+      display.hidden = true;
+      wrap.appendChild(input);
+      input.focus();
+      input.select();
+
+      function finish(save) {
+        var next = (input.value || "").trim();
+        input.remove();
+        display.hidden = false;
+        if (!save) {
+          setTitle(display.dataset.title || display.textContent);
+          return;
+        }
+        if (next.length > 20) {
+          showToolbarToast("杂志名最多 20 个字", { error: true });
+          return;
+        }
+        if (!next) {
+          showToolbarToast("杂志名不能为空", { error: true });
+          return;
+        }
+        var prev = (display.dataset.title || "").trim();
+        if (next === prev) {
+          setTitle(next);
+          return;
+        }
+        display.classList.add("preview-toolbar__title--saving");
+        postJson(tripApiBase(tripId) + "/save-copy", {
+          patches: [{ path: "meta.title", value: next }],
+        })
+          .then(function (res) {
+            display.classList.remove("preview-toolbar__title--saving");
+            if (res.status !== 200 || !res.body.ok) {
+              showToolbarToast((res.body && res.body.error) || "保存失败", { error: true });
+              return;
+            }
+            setTitle(next);
+            showToolbarToast("杂志名已保存");
+            try {
+              window.dispatchEvent(new CustomEvent("travelogue:copy-saved"));
+            } catch (e) {}
+            if (res.body.rendered && res.body.rendered.length) {
+              window.location.reload();
+            }
+          })
+          .catch(function () {
+            display.classList.remove("preview-toolbar__title--saving");
+            showToolbarToast("保存失败", { error: true });
+          });
+      }
+
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          finish(true);
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          finish(false);
+        }
+      });
+      input.addEventListener("blur", function () {
+        finish(true);
+      });
+    });
+  }
+
+  function fetchEntry(tripId) {
+    return fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  }
+
+  function currentChapterId() {
+    var sections = document.querySelectorAll("section.chapter[data-chapter-id]");
+    var best = null;
+    var bestVis = 0;
+    sections.forEach(function (sec) {
+      var rect = sec.getBoundingClientRect();
+      var vis = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+      if (vis > bestVis) {
+        bestVis = vis;
+        best = sec.getAttribute("data-chapter-id");
+      }
+    });
+    return best;
+  }
+
+  function renderExplainBlock(container, title, block) {
+    if (!container || !block || !block.summary) return;
+    var head = document.createElement("h3");
+    head.className = "preview-drawer__subhead";
+    head.textContent = title;
+    container.appendChild(head);
+    var lead = document.createElement("p");
+    lead.className = "preview-drawer__explain-lead";
+    lead.textContent = block.summary;
+    container.appendChild(lead);
+    if (block.details && block.details.length) {
+      var list = document.createElement("ul");
+      list.className = "preview-drawer__explain-list";
+      block.details.forEach(function (line) {
+        var li = document.createElement("li");
+        li.textContent = line;
+        list.appendChild(li);
+      });
+      container.appendChild(list);
+    }
+  }
+
+  function loadChapterExplain(tripId, container) {
+    if (!container) return;
     fetch("/__travelogue/chapter-layout?tripId=" + encodeURIComponent(tripId))
       .then(function (resp) { return resp.json(); })
       .then(function (data) {
-        if (!data || !data.ok || !data.summary) return;
-        wrap.hidden = false;
-        var lead = wrap.querySelector(".preview-toolbar__chapter-explain-lead");
-        if (lead) lead.textContent = data.summary;
-        var list = wrap.querySelector(".preview-toolbar__chapter-explain-list");
-        if (list) {
-          list.textContent = "";
-          (data.details || []).forEach(function (line) {
-            var li = document.createElement("li");
-            li.textContent = line;
-            list.appendChild(li);
-          });
-          list.hidden = !(data.details && data.details.length);
+        if (!data || !data.ok || !data.summary) {
+          container.textContent = "暂无分章说明";
+          return;
         }
-        syncToolbarHeight(root);
+        container.innerHTML = "";
+        renderExplainBlock(container, "为什么这样分章？", {
+          summary: data.summary,
+          details: data.details,
+        });
+        if (data.layoutExplain) {
+          renderExplainBlock(container, "排版引擎", data.layoutExplain);
+        }
+      })
+      .catch(function () {
+        container.textContent = "无法加载分章说明";
+      });
+  }
+
+  function initPreviewDrawers(root, tripId) {
+    var shell = document.createElement("div");
+    shell.className = "preview-drawer-root";
+    shell.hidden = true;
+    shell.innerHTML =
+      '<div class="preview-drawer__scrim"></div>' +
+      '<div class="preview-drawer" role="dialog" aria-modal="true" aria-labelledby="preview-drawer-title" hidden>' +
+      '<div class="preview-drawer__handle" aria-hidden="true"></div>' +
+      '<div class="preview-drawer__head">' +
+      '<h2 id="preview-drawer-title" class="preview-drawer__title"></h2>' +
+      '<button type="button" class="preview-drawer__close" aria-label="关闭">×</button>' +
+      "</div>" +
+      '<div class="preview-drawer__body"></div>' +
+      "</div>";
+    document.body.appendChild(shell);
+
+    var drawer = shell.querySelector(".preview-drawer");
+    var titleEl = shell.querySelector(".preview-drawer__title");
+    var bodyEl = shell.querySelector(".preview-drawer__body");
+    var scrim = shell.querySelector(".preview-drawer__scrim");
+    var closeBtn = shell.querySelector(".preview-drawer__close");
+    var entryCache = null;
+    var drawerFocusRelease = null;
+    var drawerPreviousFocus = null;
+
+    var editTpl =
+      '<label class="preview-drawer__label" for="preview-drawer-title">杂志名</label>' +
+      '<input id="preview-drawer-title" class="preview-drawer__title-input" type="text" maxlength="20" autocomplete="off" placeholder="我的旅途">' +
+      '<label class="preview-drawer__label" for="preview-drawer-notes">写给编辑的一句话</label>' +
+      '<textarea id="preview-drawer-notes" class="preview-drawer__notes" maxlength="200" rows="3" placeholder="例如：带娃慢走，想突出雨后的京都"></textarea>' +
+      '<p class="preview-drawer__chapter-label">当前章：<strong class="preview-drawer__chapter-name"></strong></p>' +
+      '<p class="preview-drawer__label">记忆锚点（0–3 个）</p>' +
+      '<div class="preview-drawer__anchors">' +
+      '<input type="text" class="preview-drawer__anchor" maxlength="24" placeholder="锚点 1">' +
+      '<input type="text" class="preview-drawer__anchor" maxlength="24" placeholder="锚点 2">' +
+      '<input type="text" class="preview-drawer__anchor" maxlength="24" placeholder="锚点 3">' +
+      "</div>" +
+      '<p class="preview-drawer__hint">短词即可，会写进图说，不会瞎编</p>' +
+      '<p class="preview-drawer__featured-help">★ 在任意一屏右下角可将照片标为精选，之后点「应用排版」生效</p>' +
+      '<button type="button" class="preview-drawer__ghost preview-drawer__narrate-anchors">保存并重新生成文案</button>' +
+      '<button type="button" class="preview-drawer__primary preview-drawer__save-edit">保存编辑</button>';
+
+    var structTpl =
+      '<div class="preview-drawer__g1"></div>' +
+      '<div class="preview-drawer__g1-actions" hidden>' +
+      '<button type="button" class="preview-drawer__g1-confirm">章节顺序 OK</button>' +
+      '<button type="button" class="preview-drawer__g1-regenerate">重新生成结构</button>' +
+      "</div>" +
+      '<div class="preview-drawer__explain"></div>' +
+      '<button type="button" class="preview-drawer__primary preview-drawer__apply-layout">应用排版</button>';
+
+    function pollStudioJob(jobId, onDone) {
+      var timer = setInterval(function () {
+        fetch("/__travelogue/status?jobId=" + encodeURIComponent(jobId))
+          .then(function (r) { return r.json(); })
+          .then(function (job) {
+            if (
+              job.status === "succeeded" ||
+              job.status === "failed" ||
+              job.status === "cancelled"
+            ) {
+              clearInterval(timer);
+              onDone(job);
+            }
+          })
+          .catch(function () {});
+      }, 800);
+    }
+
+    function confirmG1Structure() {
+      return patchJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/pipeline", {
+        status: "structure_locked",
+        continuePipeline: true,
+      });
+    }
+
+    function chapterRow(chId) {
+      if (!entryCache || !entryCache.chapters) return null;
+      for (var i = 0; i < entryCache.chapters.length; i++) {
+        if (entryCache.chapters[i].id === chId) return entryCache.chapters[i];
+      }
+      return null;
+    }
+
+    function fillAnchors(chId) {
+      var inputs = bodyEl.querySelectorAll(".preview-drawer__anchor");
+      var row = chapterRow(chId);
+      var anchors = (row && row.memoryAnchors) || [];
+      for (var i = 0; i < inputs.length; i++) {
+        inputs[i].value = anchors[i] || "";
+      }
+      var nameEl = bodyEl.querySelector(".preview-drawer__chapter-name");
+      if (nameEl) nameEl.textContent = (row && row.title) || chId || "—";
+    }
+
+    function closeDrawer() {
+      if (drawerFocusRelease) {
+        drawerFocusRelease();
+        drawerFocusRelease = null;
+      }
+      shell.hidden = true;
+      drawer.hidden = true;
+      document.body.classList.remove("preview-drawer-open");
+      if (drawerPreviousFocus && drawerPreviousFocus.focus) {
+        drawerPreviousFocus.focus();
+      }
+      drawerPreviousFocus = null;
+    }
+
+    function activateDrawerFocus() {
+      drawerPreviousFocus = document.activeElement;
+      if (drawerFocusRelease) drawerFocusRelease();
+      closeBtn.focus();
+      drawerFocusRelease = trapDrawerFocus(drawer);
+    }
+
+    function runG1Confirm(triggerBtn) {
+      if (triggerBtn) triggerBtn.disabled = true;
+      showToolbarToast("正在确认并继续制作…");
+      return confirmG1Structure()
+        .then(function (res) {
+          if (res.status === 202 && res.body && res.body.jobId) {
+            pollStudioJob(res.body.jobId, function (job) {
+              if (triggerBtn) triggerBtn.disabled = false;
+              if (job.status === "succeeded") {
+                showToolbarToast("章节已确认，杂志已更新");
+                window.location.reload();
+                return;
+              }
+              var err = (job.error && (job.error.message || job.error.code)) || "确认失败";
+              showToolbarToast(err, { error: true });
+            });
+            return;
+          }
+          if (triggerBtn) triggerBtn.disabled = false;
+          showToolbarToast((res.body && res.body.error) || "确认失败", { error: true });
+        })
+        .catch(function () {
+          if (triggerBtn) triggerBtn.disabled = false;
+          showToolbarToast("确认失败", { error: true });
+        });
+    }
+
+    function openDrawer(mode) {
+      if (!entryCache) {
+        fetchEntry(tripId).then(function (data) {
+          entryCache = data || {};
+          openDrawer(mode);
+        });
+        return;
+      }
+      shell.hidden = false;
+      drawer.hidden = false;
+      document.body.classList.add("preview-drawer-open");
+      setToolbarCollapsed(root, false, false);
+      requestAnimationFrame(activateDrawerFocus);
+
+      if (mode === "edit") {
+        titleEl.textContent = "编辑";
+        bodyEl.innerHTML = editTpl;
+        var titleInput = bodyEl.querySelector(".preview-drawer__title-input");
+        var notes = bodyEl.querySelector(".preview-drawer__notes");
+        if (titleInput && entryCache.intentSummary) {
+          titleInput.value = entryCache.intentSummary.title || "";
+        }
+        if (notes && entryCache.intentSummary) {
+          notes.value = entryCache.intentSummary.userNotes || "";
+        }
+        fillAnchors(currentChapterId());
+
+        function persistEditDrawer(btn, opts) {
+          opts = opts || {};
+          var chId = currentChapterId();
+          var titleVal = (titleInput && titleInput.value || "").trim();
+          var notesVal = (notes.value || "").trim();
+          var anchorInputs = bodyEl.querySelectorAll(".preview-drawer__anchor");
+          var anchors = [];
+          anchorInputs.forEach(function (inp) {
+            var v = (inp.value || "").trim();
+            if (v) anchors.push(v);
+          });
+          btn.disabled = true;
+          if (titleVal.length > 20) {
+            btn.disabled = false;
+            showToolbarToast("杂志名最多 20 个字", { error: true });
+            return Promise.resolve(false);
+          }
+          var tasks = [
+            patchJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/intent", {
+              title: titleVal || null,
+              userNotes: notesVal || null,
+            }),
+          ];
+          if (chId) {
+            tasks.push(
+              postJson(tripApiBase(tripId) + "/save-copy", {
+                patches: [{
+                  path: "chapters." + chId + ".curation.memoryAnchors",
+                  value: anchors.join(", "),
+                }],
+              })
+            );
+          }
+          return Promise.all(tasks)
+            .then(function (results) {
+              btn.disabled = false;
+              var ok = results.every(function (r) { return r.status === 200 && r.body.ok; });
+              if (!ok) {
+                showToolbarToast("保存失败", { error: true });
+                return false;
+              }
+              if (entryCache.intentSummary) {
+                entryCache.intentSummary.userNotes = notesVal;
+                if (titleVal) entryCache.intentSummary.title = titleVal;
+              }
+              if (chId && entryCache.chapters) {
+                var row = chapterRow(chId);
+                if (row) row.memoryAnchors = anchors;
+              }
+              if (!opts.skipToast) {
+                showToolbarToast(
+                  anchors.length > 0
+                    ? "编辑已保存。可在 ⋯ 菜单中重新生成文案以写入锚点。"
+                    : "编辑已保存"
+                );
+              }
+              return true;
+            })
+            .catch(function () {
+              btn.disabled = false;
+              showToolbarToast("保存失败", { error: true });
+              return false;
+            });
+        }
+
+        bodyEl.querySelector(".preview-drawer__save-edit").addEventListener("click", function () {
+          var btn = this;
+          persistEditDrawer(btn).then(function (ok) {
+            if (ok) closeDrawer();
+          });
+        });
+        var narrateAnchorsBtn = bodyEl.querySelector(".preview-drawer__narrate-anchors");
+        if (narrateAnchorsBtn) {
+          narrateAnchorsBtn.addEventListener("click", function () {
+            var btn = this;
+            persistEditDrawer(btn, { skipToast: true }).then(function (ok) {
+              if (!ok) return;
+              closeDrawer();
+              startLlmNarrate(root, tripId, btn);
+            });
+          });
+        }
+        return;
+      }
+
+      titleEl.textContent = "结构";
+      bodyEl.innerHTML = structTpl;
+      var g1 = bodyEl.querySelector(".preview-drawer__g1");
+      var g1Actions = bodyEl.querySelector(".preview-drawer__g1-actions");
+      var status = entryCache.pipelineStatus || "";
+      var pending = entryCache.g1Pending || status === "structure_draft";
+      if (pending) {
+        g1.className = "preview-drawer__g1 preview-drawer__g1--warn";
+        g1.textContent = "章节结构待确认：请浏览各章顺序，确认后将生成文案并完成排版。";
+        if (g1Actions) g1Actions.hidden = false;
+        var confirmBtn = bodyEl.querySelector(".preview-drawer__g1-confirm");
+        var regenBtn = bodyEl.querySelector(".preview-drawer__g1-regenerate");
+        if (confirmBtn) {
+          confirmBtn.addEventListener("click", function () {
+            runG1Confirm(confirmBtn);
+          });
+        }
+        if (regenBtn) {
+          regenBtn.addEventListener("click", function () {
+            toolbarConfirm({
+              title: "重新生成结构",
+              body: "将重新生成章节结构，可能覆盖当前分章。继续？",
+              confirmText: "继续",
+              danger: true,
+            }).then(function (ok) {
+              if (!ok) return;
+              regenBtn.disabled = true;
+              return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/curate", { force: true });
+            }).then(function (res) {
+              if (!res) return;
+              if (res.status === 202 && res.body && res.body.jobId) {
+                pollStudioJob(res.body.jobId, function (job) {
+                  regenBtn.disabled = false;
+                  if (job.status === "succeeded") {
+                    showToolbarToast("结构已重新生成");
+                    window.location.reload();
+                    return;
+                  }
+                  showToolbarToast("重新生成失败", { error: true });
+                });
+                return;
+              }
+              regenBtn.disabled = false;
+              showToolbarToast("无法开始", { error: true });
+            }).catch(function () {
+              regenBtn.disabled = false;
+              showToolbarToast("重新生成失败", { error: true });
+            });
+          });
+        }
+      } else {
+        g1.className = "preview-drawer__g1 preview-drawer__g1--info";
+        g1.textContent = "章节已按行程排好，可在预览中改字、锚点与精选。";
+        if (g1Actions) g1Actions.hidden = true;
+      }
+      loadChapterExplain(tripId, bodyEl.querySelector(".preview-drawer__explain"));
+      var applyBtn = bodyEl.querySelector(".preview-drawer__apply-layout");
+      applyBtn.hidden = !_layoutPending;
+      applyBtn.addEventListener("click", function () {
+        closeDrawer();
+        applyLayoutRerender(tripId, root);
+      });
+    }
+
+    scrim.addEventListener("click", closeDrawer);
+    closeBtn.addEventListener("click", closeDrawer);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !shell.hidden) closeDrawer();
+    });
+
+    fetchEntry(tripId).then(function (data) {
+      entryCache = data || {};
+    });
+
+    return {
+      openEdit: function () { openDrawer("edit"); },
+      openStructure: function () { openDrawer("structure"); },
+      confirmStructure: function () { return runG1Confirm(null); },
+      close: closeDrawer,
+      refreshEntry: function () {
+        return fetchEntry(tripId).then(function (data) {
+          entryCache = data || {};
+          return entryCache;
+        });
+      },
+    };
+  }
+
+  function initG1Banner(root, tripId, drawers) {
+    var body = toolbarBody(root);
+    if (!body) return;
+    Promise.all([
+      fetch("/__travelogue/config").then(function (r) { return r.ok ? r.json() : null; }),
+      fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry").then(function (r) {
+        return r.ok ? r.json() : null;
+      }),
+    ])
+      .then(function (rows) {
+        var cfg = rows[0];
+        var entry = rows[1];
+        if (!cfg || !entry || !entry.g1Pending) return;
+        if (!(cfg.studio && cfg.studio.g1ConfirmStructure)) return;
+        if (body.querySelector(".preview-toolbar__g1-banner")) return;
+
+        var banner = document.createElement("div");
+        banner.className = "preview-toolbar__g1-banner";
+        banner.setAttribute("role", "status");
+        banner.innerHTML =
+          '<p class="preview-toolbar__g1-banner-text">章节结构待确认（G1 已开启）</p>' +
+          '<div class="preview-toolbar__g1-banner-actions">' +
+          '<button type="button" class="preview-toolbar__g1-banner-open">查看结构</button>' +
+          '<button type="button" class="preview-toolbar__g1-banner-confirm">确认并继续</button>' +
+          "</div>";
+        var bar = body.querySelector(".preview-toolbar__bar");
+        if (bar && bar.nextSibling) {
+          body.insertBefore(banner, bar.nextSibling);
+        } else {
+          body.appendChild(banner);
+        }
+        banner.querySelector(".preview-toolbar__g1-banner-open").addEventListener("click", function () {
+          drawers.openStructure();
+        });
+        banner.querySelector(".preview-toolbar__g1-banner-confirm").addEventListener("click", function () {
+          drawers.confirmStructure();
+        });
       })
       .catch(function () {});
+  }
+
+  function startFeaturedPresent() {
+    var toggle = document.getElementById("featured-present-toggle");
+    var start = document.getElementById("screenplay-start");
+    if (!start) {
+      showToolbarToast("当前页面不支持放映", { error: true });
+      return;
+    }
+    if (toggle && toggle.getAttribute("aria-pressed") !== "true") {
+      toggle.click();
+    }
+    start.click();
+    showToolbarToast("精选放映已开始");
+  }
+
+  function initFeaturedStars(tripId) {
+    var screens = document.querySelectorAll('.layout-screen[data-block="layout-screen"][data-asset-ids]');
+    screens.forEach(function (screen) {
+      if (screen.querySelector(".preview-toolbar__featured-star")) return;
+      var raw = screen.getAttribute("data-asset-ids") || "";
+      var assetId = raw.split(",")[0];
+      if (!assetId) return;
+
+      var star = document.createElement("button");
+      star.type = "button";
+      star.className = "preview-toolbar__featured-star";
+      star.setAttribute("aria-label", "标为精选");
+      star.textContent = "★";
+      if (screen.getAttribute("data-featured") === "true") {
+        star.classList.add("preview-toolbar__featured-star--on");
+        star.setAttribute("aria-pressed", "true");
+      }
+      star.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (star.disabled) return;
+        star.disabled = true;
+        postJson(tripApiBase(tripId) + "/promote-tier", {
+          assetIds: [assetId],
+          rerender: false,
+        })
+          .then(function (res) {
+            star.disabled = false;
+            if (res.status !== 200 || !res.body.ok) {
+              showToolbarToast((res.body && res.body.error) || "标记失败", { error: true });
+              return;
+            }
+            star.classList.add("preview-toolbar__featured-star--on");
+            star.setAttribute("aria-pressed", "true");
+            screen.setAttribute("data-featured", "true");
+            setLayoutPending(true);
+            showToolbarToast("已标为精选 · 点应用排版后生效");
+          })
+          .catch(function () {
+            star.disabled = false;
+            showToolbarToast("标记失败", { error: true });
+          });
+      });
+      screen.style.position = screen.style.position || "relative";
+      screen.appendChild(star);
+    });
+  }
+
+  function revealTripFolder(tripId) {
+    fetch("/__travelogue/trips")
+      .then(function (resp) { return resp.json(); })
+      .then(function (data) {
+        var trips = data.trips || [];
+        var trip = trips.filter(function (t) { return t.tripId === tripId; })[0];
+        var rel = (trip && trip.previewRelPath) || "index.html";
+        return revealTripPath(tripId, rel);
+      })
+      .catch(function () {
+        showToolbarToast("无法打开文件夹", { error: true });
+      });
   }
 
   function initToolbar(root) {
@@ -464,28 +1168,17 @@
 
     var bar = root.querySelector(".preview-toolbar__bar");
     var actions = root.querySelector(".preview-toolbar__actions") || bar;
+    var menuBtn = root.querySelector(".preview-toolbar__menu-btn");
+    var menu = root.querySelector(".preview-toolbar__more-menu");
+    var revealBtn = root.querySelector(".preview-toolbar__reveal-folder");
 
-    fetch("/__travelogue/config")
-      .then(function (resp) { return resp.json(); })
-      .then(function (cfg) {
-        if (cfg.llmAvailable) {
-          var llmBtn = document.createElement("button");
-          llmBtn.type = "button";
-          llmBtn.className = "preview-toolbar__llm";
-          llmBtn.textContent = "生成杂志感文案";
-          llmBtn.addEventListener("click", function () {
-            startLlmNarrate(root, tripId, llmBtn);
-          });
-          actions.appendChild(llmBtn);
-        }
-      })
-      .catch(function () {});
+    var drawers = initPreviewDrawers(root, tripId);
+    initG1Banner(root, tripId, drawers);
 
     var longshotBtn = document.createElement("button");
     longshotBtn.type = "button";
-    longshotBtn.className = "preview-toolbar__longshot";
-    longshotBtn.innerHTML =
-      '保存长图 <span class="preview-toolbar__scale-badge">推荐 · 适合手机</span>';
+    longshotBtn.className = "preview-toolbar__longshot preview-toolbar__longshot--primary";
+    longshotBtn.textContent = "保存长图";
     actions.appendChild(longshotBtn);
 
     var status = document.createElement("span");
@@ -499,20 +1192,16 @@
     stale.textContent = "内容已更新，请重新生成长图";
     actions.appendChild(stale);
 
-    var advancedWrap = document.createElement("div");
-    advancedWrap.className = "preview-toolbar__advanced";
-    advancedWrap.innerHTML =
-      '<button type="button" class="preview-toolbar__advanced-btn">高级</button>' +
-      '<div class="preview-toolbar__menu" hidden>' +
-      '<button type="button" class="preview-toolbar__export-zip">导出 zip（自行托管）</button>' +
-      "</div>";
-    actions.appendChild(advancedWrap);
-
     longshotBtn.addEventListener("click", function () {
       startLongshot(root, tripId);
     });
 
-    // Focus longshot button when navigating from stale "更新长图" CTA
+    if (revealBtn) {
+      revealBtn.addEventListener("click", function () {
+        revealTripFolder(tripId);
+      });
+    }
+
     if (window.location.search.indexOf("focus=longshot") >= 0) {
       setToolbarCollapsed(root, false, false);
       requestAnimationFrame(function () {
@@ -522,24 +1211,88 @@
       });
     }
 
-    advancedWrap.querySelector(".preview-toolbar__advanced-btn").addEventListener("click", function () {
-      toggleAdvancedMenu(root);
-    });
-    advancedWrap.querySelector(".preview-toolbar__export-zip").addEventListener("click", function () {
-      toggleAdvancedMenu(root);
-      exportZip(tripId);
-    });
+    if (menu && menuBtn) {
+      var applyBtn = menu.querySelector(".preview-toolbar__apply-layout");
+      var editBtn = menu.querySelector(".preview-toolbar__open-edit");
+      var structBtn = menu.querySelector(".preview-toolbar__open-structure");
+      var presentBtn = menu.querySelector(".preview-toolbar__present-featured");
+      var llmSlot = menu.querySelector(".preview-toolbar__llm-slot");
+      var zipBtn = menu.querySelector(".preview-toolbar__export-zip");
 
-    document.addEventListener("click", function (ev) {
-      if (!advancedWrap.contains(ev.target)) {
-        var menu = root.querySelector(".preview-toolbar__menu");
-        if (menu) menu.hidden = true;
+      function closeMenu() {
+        menu.hidden = true;
+        menuBtn.setAttribute("aria-expanded", "false");
       }
-    });
+
+      menuBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var open = !menu.hidden;
+        menu.hidden = open;
+        menuBtn.setAttribute("aria-expanded", open ? "false" : "true");
+      });
+
+      if (applyBtn) {
+        applyBtn.hidden = true;
+        applyBtn.addEventListener("click", function () {
+          closeMenu();
+          applyLayoutRerender(tripId, root);
+        });
+      }
+      if (editBtn) {
+        editBtn.addEventListener("click", function () {
+          closeMenu();
+          drawers.openEdit();
+        });
+      }
+      if (structBtn) {
+        structBtn.addEventListener("click", function () {
+          closeMenu();
+          drawers.openStructure();
+        });
+      }
+      if (presentBtn) {
+        drawers.refreshEntry().then(function (data) {
+          var count = (data && data.intentSummary && data.intentSummary.featuredCount) || 0;
+          if (count < 1) presentBtn.hidden = true;
+        });
+        presentBtn.addEventListener("click", function () {
+          closeMenu();
+          startFeaturedPresent();
+        });
+      }
+      if (zipBtn) {
+        zipBtn.addEventListener("click", function () {
+          closeMenu();
+          exportZip(tripId);
+        });
+      }
+
+      fetch("/__travelogue/config")
+        .then(function (resp) { return resp.json(); })
+        .then(function (cfg) {
+          if (!cfg.llmAvailable || !llmSlot) return;
+          var llmBtn = document.createElement("button");
+          llmBtn.type = "button";
+          llmBtn.className = "preview-toolbar__llm";
+          llmBtn.textContent = "生成杂志感文案";
+          llmBtn.addEventListener("click", function () {
+            closeMenu();
+            startLlmNarrate(root, tripId, llmBtn);
+          });
+          llmSlot.appendChild(llmBtn);
+        })
+        .catch(function () {});
+
+      document.addEventListener("click", function (ev) {
+        if (!menu.contains(ev.target) && ev.target !== menuBtn) {
+          closeMenu();
+        }
+      });
+    }
 
     refreshStaleHint(root, tripId);
     refreshPreviewCover(root, tripId);
-    initChapterExplain(root, tripId);
+    initFeaturedStars(tripId);
 
     window.addEventListener("travelogue:copy-saved", function () {
       showStaleHint(root);
@@ -547,6 +1300,14 @@
   }
 
   function init() {
+    if (
+      window.location.search.indexOf("share=1") >= 0 ||
+      window.location.search.indexOf("mode=share") >= 0
+    ) {
+      document.documentElement.setAttribute("data-preview-share", "on");
+      return;
+    }
+
     document.documentElement.setAttribute("data-preview-toolbar", "on");
 
     var root = document.createElement("div");
@@ -557,9 +1318,19 @@
       '<span class="preview-toolbar__handle-label">显示工具栏</span>' +
       "</button>" +
       '<div class="preview-toolbar__body">' +
-      '<div class="preview-toolbar__bar">' +
-      '<a class="preview-toolbar__back" href="/">← 返回工作台</a>' +
+      '<div class="preview-toolbar__bar preview-toolbar__bar--minimal">' +
+      '<a class="preview-toolbar__back" href="/">← 返回</a>' +
       '<div class="preview-toolbar__actions"></div>' +
+      '<button type="button" class="preview-toolbar__reveal-folder">在文件夹中显示</button>' +
+      '<button type="button" class="preview-toolbar__menu-btn" aria-haspopup="true" aria-expanded="false">更多编辑…</button>' +
+      '<div class="preview-toolbar__more-menu" hidden role="menu">' +
+      '<button type="button" class="preview-toolbar__open-edit" role="menuitem">编辑感受与锚点</button>' +
+      '<button type="button" class="preview-toolbar__open-structure" role="menuitem">结构与分章</button>' +
+      '<button type="button" class="preview-toolbar__apply-layout" role="menuitem">应用排版</button>' +
+      '<button type="button" class="preview-toolbar__present-featured" role="menuitem">放映精选</button>' +
+      '<span class="preview-toolbar__llm-slot" role="none"></span>' +
+      '<button type="button" class="preview-toolbar__export-zip" role="menuitem">导出 zip（自行托管）</button>' +
+      "</div>" +
       '<button type="button" class="preview-toolbar__collapse" aria-expanded="true" aria-label="收起工具栏">' +
       '<span aria-hidden="true">▴</span>' +
       "</button>" +
@@ -567,25 +1338,6 @@
       "</div>";
 
     var body = root.querySelector(".preview-toolbar__body");
-
-    var hintHidden = false;
-    try {
-      hintHidden = localStorage.getItem(HINT_KEY) === "1";
-    } catch (e) {}
-
-    if (!hintHidden) {
-      var hint = document.createElement("div");
-      hint.className = "preview-toolbar__hint";
-      hint.innerHTML =
-        '<span>点击标题、导语、图注即可修改 · 修改后自动保存</span>' +
-        '<button type="button" class="preview-toolbar__dismiss" aria-label="关闭提示">知道了</button>';
-      hint.querySelector(".preview-toolbar__dismiss").addEventListener("click", function () {
-        hint.hidden = true;
-        try { localStorage.setItem(HINT_KEY, "1"); } catch (e2) {}
-        syncToolbarHeight(root);
-      });
-      body.appendChild(hint);
-    }
 
     document.body.insertBefore(root, document.body.firstChild);
     bindToolbarCollapse(root);
