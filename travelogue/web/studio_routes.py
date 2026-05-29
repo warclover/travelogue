@@ -128,6 +128,10 @@ class StudioMixin:
         if path == CHAPTER_LAYOUT_PATH:
             self._studio_handle_chapter_layout()
             return True
+        entry_trip_id = self._studio_match_entry(path)
+        if entry_trip_id is not None:
+            self._studio_handle_entry(entry_trip_id)
+            return True
         if path.startswith(STUDIO_ASSET_PREFIX):
             rel = unquote(path[len(STUDIO_ASSET_PREFIX) :].lstrip("/"))
             asset = (STUDIO_TEMPLATE_DIR / rel).resolve()
@@ -223,6 +227,37 @@ class StudioMixin:
         trips = list_studio_trips(trips_root, limit=limit)
         total = studio_trips_total(trips_root)
         self._json_response(200, {"ok": True, "trips": trips, "total": total})
+
+    def _studio_match_entry(self, path: str) -> str | None:
+        """Return tripId for GET /__travelogue/trips/{tripId}/entry, else None."""
+        prefix = TRIPS_PATH + "/"
+        if not path.startswith(prefix) or not path.endswith("/entry"):
+            return None
+        trip_id = path[len(prefix) : -len("/entry")]
+        if not trip_id or "/" in trip_id:
+            return None
+        return trip_id
+
+    def _studio_handle_entry(self, trip_id: str) -> None:
+        from travelogue.services.trip import TripService
+        from travelogue.web.studio_entry import build_entry
+
+        if not is_valid_studio_trip_id(trip_id):
+            self._json_response(400, {"ok": False, "error": "invalid tripId"})
+            return
+        trips_root = (self.trips_dir or self._studio_cfg().trips_dir).resolve()
+        trip_dir = (trips_root / trip_id).resolve()
+        try:
+            trip_dir.relative_to(trips_root)
+        except ValueError:
+            self._json_response(400, {"ok": False, "error": "invalid tripId"})
+            return
+        trip_json = trip_dir / "trip.json"
+        if not trip_json.is_file():
+            self._json_response(404, {"ok": False, "error": "trip not found"})
+            return
+        trip = TripService(root=trips_root.parent).load(trip_json)
+        self._json_response(200, {"ok": True, **build_entry(trip, trip_id)})
 
     def _studio_handle_chapter_layout(self) -> None:
         from travelogue.curation.chapter_explain import build_chapter_explain

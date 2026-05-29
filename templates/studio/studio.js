@@ -1193,6 +1193,7 @@
   function handleImportSuccess(job) {
     var result = job.result || {};
     var url = result.previewUrl;
+    var openUrl = url;
     var tripId = result.tripId;
     var notice = result.clusterNotice;
     if (notice && typeof studioToast === "function") {
@@ -1204,6 +1205,20 @@
     var openLink = $("studio-success-open");
     var msg = $("studio-success-msg");
     if (openLink && url) openLink.href = url;
+
+    // F-P4-PRV-06: upgrade to the "peak" deep link when available.
+    // Graceful: if this resolves after auto-open fires, the base URL is used.
+    if (tripId) {
+      fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry")
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (data && data.ok && data.previewUrl) {
+            openUrl = data.previewUrl;
+            if (openLink) openLink.href = openUrl;
+          }
+        })
+        .catch(function () {});
+    }
     var title = result.title || ($("trip-title") && $("trip-title").value) || "我的旅途";
     var featured = result.featuredCount;
     var segments = result.segmentCount;
@@ -1253,7 +1268,7 @@
         if (secEl) secEl.textContent = String(Math.max(0, sec));
         if (sec <= 0) {
           clearSuccessTimer();
-          if (url) window.location.href = url;
+          if (openUrl) window.location.href = openUrl;
         }
       }, 1000);
     }
@@ -1458,12 +1473,38 @@
   }
 
   // ── Load trips (with timeout handling per §6.12) ──
+  function renderTripsSkeleton(n) {
+    // F-P4-HP-07 / HP-GAP-08: F-area grid skeleton during the initial /trips load.
+    var list = $("studio-trips-list");
+    var section = $("studio-trips");
+    if (!list || !section) return;
+    list.innerHTML = "";
+    for (var i = 0; i < (n || 6); i++) {
+      var card = document.createElement("div");
+      card.className = "studio-trip-card studio-skeleton-card";
+      card.setAttribute("aria-hidden", "true");
+      var thumb = document.createElement("div");
+      thumb.className = "studio-skeleton-card__thumb";
+      var line = document.createElement("div");
+      line.className = "studio-skeleton-card__line";
+      var line2 = document.createElement("div");
+      line2.className = "studio-skeleton-card__line studio-skeleton-card__line--short";
+      card.appendChild(thumb);
+      card.appendChild(line);
+      card.appendChild(line2);
+      list.appendChild(card);
+    }
+    section.hidden = false;
+  }
+
   function loadTrips(options) {
     options = options || {};
     if (options.more) tripsListLimit += 20;
     else if (options.keepLimit !== true) tripsListLimit = 20;
 
     var seq = ++_tripsLoadSeq;
+    // Show skeleton only on the first load (no data yet) so refreshes don't flash.
+    if (tripsData.length === 0 && !options.more) renderTripsSkeleton(6);
     var slowToastShown = false;
     var failToastShown = false;
     var slowTimer = setTimeout(function () {

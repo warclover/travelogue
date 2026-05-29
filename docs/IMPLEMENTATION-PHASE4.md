@@ -11,9 +11,13 @@
 >
 > ⚠️ **代码核查基线（2026-05-29，负责人审核）**
 > - 下表状态基于**源码存在性**核查，**不**代表已通过测试或端到端验证。
-> - **全部 P4 改动尚未提交 git**：前端 `studio.{html,js,css}` 与 `studio_routes/pipeline/subprocess.py` 为未暂存修改；本三份文档与 wireframe 为未跟踪文件。**存在丢失风险，建议尽快固化入库。**
-> - **零自动化测试**：`tests/test_studio_intent.py`、`tests/test_studio_entry.py` 均不存在。
-> - **后端 intent 地基缺位**：schema 无顶层 `intent` 对象、无 `TripService.apply_intent()`、无 `g1_confirm_structure` config、无 `GET .../entry` 路由、brief 未统一 intent 源。AC-P4-01/03/04/06 **当前不可能通过**。
+>
+> ✅ **进度更新（2026-05-30）**
+> - **后端 intent 地基已落地并入库**：schema 顶层 `intent`、`TripService.apply_intent()`、brief 统一 intent 源（`narrative_brief.resolve_user_notes/plan_summary`）、pipeline 接入；`tests/test_studio_intent.py` 13 例通过。
+> - **M16 entry 深链已落地**：`GET /__travelogue/trips/{id}/entry`（`studio_entry.py` peak fallback 链）+ 前端成功页消费；`tests/test_studio_entry.py` 8 例通过。
+> - **P0 暖金对比度定稿**：`--accent-ink: #1a1408` token，`.studio-btn--gold` 引用（≈9:1，AC-P4-A11Y-01）。
+> - **M15-HP-08 骨架屏已落地**：`renderTripsSkeleton()` + `.studio-skeleton-card` shimmer（尊重 reduced-motion）。
+> - 剩余未开始：`g1_confirm_structure` config（M17）、`planFile`/`intent_plan.py`（M18）、预览 drawer（M16b）。
 
 ---
 
@@ -22,8 +26,8 @@
 | 里程碑 | 目标 | 状态 | 估算 | 备注 |
 |--------|------|------|------|------|
 | **M15** | 导入 panel + Intent + API + 进度/成功反馈 + brief | ◑ | ~90% | 前后端地基齐（schema/apply_intent/brief/pipeline/测试）；剩 M15-04 sessionStorage 确认、M15-11 config（随 M17） |
-| **M15-HP** | 首页极易用（§PRD-PHASE4 §6） | ◑ | ~90% | 仅缺 `/trips` 骨架屏；其余 panel/确认区/回访大卡/coach 均有代码 |
-| **M16** | 预览：书名/感受/promote/peak 深链 | ☐ | ~5% | 仅 `promote-tier`（附录 A 既有）；`entry` 深链未实现 |
+| **M15-HP** | 首页极易用（§PRD-PHASE4 §6） | ☑ | ~100% | panel/确认区/回访大卡/coach + `/trips` 骨架屏均落地 |
+| **M16** | 预览：书名/感受/promote/peak 深链 | ◑ | ~35% | `entry` 深链 + 前端消费 ✅；`promote-tier` 既有；toolbar inline 书名/感受/rerender 待接 |
 | **M16b** | 预览编辑/结构 drawer | ☐ | 0% | — |
 | **M17** | G1 结构确认 + memoryAnchors UI | ☐ | 0% | `g1_confirm_structure` config 不存在 |
 | **M18** | plan.txt + 解析 + curate hints | ☐ | 0% | 无 `planFile`/`intent_plan.py`/`intentHints` |
@@ -64,14 +68,14 @@
 | M15-HP-05 | title 从文件夹 basename 预填 + 确认区 | `studio.js` | ☑ | `basenameTitleFromPath`（js 280/349） |
 | M15-HP-06 | 双文件夹折叠图示 + 一行摘要 | `studio.html` | ☑ | html 168/170 |
 | M15-HP-07 | 回访 hybrid：最近 trip **继续编辑** 大卡 + stale「更新长图」 | `studio.js` · `studio.css` | ☑ | `studio-continue-card` + stale（js 415-461/665/763） |
-| M15-HP-08 | `/trips` loading 骨架（F 区网格） | `studio.js` · `studio.css` | ☐ | 无 skeleton 实现 |
+| M15-HP-08 | `/trips` loading 骨架（F 区网格） | `studio.js` · `studio.css` | ☑ | `renderTripsSkeleton()` + `.studio-skeleton-card` shimmer（reduced-motion 关） |
 | M15-HP-09 | 首次 coach mark `coachImportV1` | `studio.js` | ☑ | `coachImportV1`（js 26/468-489） |
 | M15-HP-10 | 试用示例后自动打开 panel + 转化文案 | `studio.js` | ◑ | `useDemoAlbum` 入口在（js 1754）；「现在用你的照片」转化文案待确认 |
 | M15-HP-11 | Importing 时禁止 reopen panel | `studio.js` | ☑ | `_sheetOpen` 守卫 + Esc 守卫（js 1117/1157/1710） |
 | M15-HP-12 | 行内错误文案（附录 B） | `studio.js` | ☑ | `trip-title-error`（html 155） |
 | M15-HP-13 | AC-HP-26～28 手测清单 | `ACCEPTANCE-PHASE4.md` | ☐ | 未执行 |
 
-> **M15-HP 状态**：前端主体 ~90% 完成，**唯一代码缺口是骨架屏（08）**；其余为"已写代码、未测未提交"。建议优先补自动化/手测验证 + git 固化，而非继续堆功能。
+> **M15-HP 状态**：✅ 全部落地（含骨架屏 08）。前端主体已 git 固化。
 
 ---
 
@@ -79,13 +83,13 @@
 
 | 任务 ID | 任务 | 文件/模块 | 状态 | 核查 |
 |---------|------|-----------|------|------|
-| M16-01 | `GET /__travelogue/trips/{id}/entry` peak 深链 | `studio_routes.py` | ☐ | 无 entry 路由 |
-| M16-02 | 打开预览使用 entry URL | `studio.js` | ☐ | — |
+| M16-01 | `GET /__travelogue/trips/{id}/entry` peak 深链 | `studio_routes.py` · `studio_entry.py` | ☑ | peak fallback 链（scene cluster→首内容屏→首屏）+ intentSummary |
+| M16-02 | 打开预览使用 entry URL | `studio.js` | ☑ | 成功页 fetch `/entry` 升级 previewUrl（优雅回退） |
 | M16-03 | toolbar 杂志名 inline + save-copy | `preview-toolbar.js` | ☐ | — |
 | M16-04 | 「编辑感受」textarea + PATCH intent | `preview-toolbar.js` · routes | ☐ | 无 PATCH intent 路由 |
 | M16-05 | 「标为精选」→ promote-tier + toast | `preview-toolbar.js` | ◑ | `promote-tier` 路由既有（附录 A）；toolbar ★ UI 待接 |
 | M16-06 | 「应用排版」→ rerender | 复用 `web/rerender.py` | ◑ | rerender 既有；预览入口待接 |
-| M16-07 | AC-P4-03 自动化 | `tests/test_studio_entry.py` | ☐ | 文件不存在 |
+| M16-07 | AC-P4-03 自动化 | `tests/test_studio_entry.py` | ☑ | 8 例：peak fallback 链 + 深链片段 + intentSummary |
 
 ---
 
@@ -159,6 +163,6 @@
 | **P0** | **git 固化**：未提交 P4 前端 + 文档 + wireframe 入库 | 防丢失 | ✅ 已完成（8678afc/13b33fe/7e11dae/8019502） |
 | **P0** | **后端 intent 地基**：M15-01 schema、M15-02 `apply_intent()`、M15-09 brief 统一、M15-05 pipeline 落盘 | 解锁 AC-P4-01/04/09 | ✅ 已完成（含 13 回归测试，修 2 处 schema bug） |
 | **P0** | **暖金对比度定稿**：`--accent #d2a657` + 白字实测 ~1.9:1 不达标，先定色再继续 UI | PRD §6.12/§6.13 | ⬜ 待做 |
-| **P1** | M16-07 自动化测试（entry）；M15-10 ✅ 已补 | 验收门禁 | ◑ |
-| **P1** | M15-HP-08 骨架屏 | 唯一前端缺口 | ⬜ |
-| **P2** | M16 entry 深链 → M17 G1（含 g1_confirm_structure config）→ M18 plan → M19 评估 | 按依赖推进 | ⬜ |
+| **P1** | M16-07 自动化测试（entry） | 验收门禁 | ✅ |
+| **P1** | M15-HP-08 骨架屏 | 唯一前端缺口 | ✅ |
+| **P2** | M17 G1（含 g1_confirm_structure config）→ M18 plan → M19 评估 | 按依赖推进 | ⬜ |

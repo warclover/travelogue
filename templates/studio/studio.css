@@ -13,6 +13,9 @@
   --line-light-strong: rgba(255, 255, 255, .35);
   --accent: #d2a657;
   --accent-soft: rgba(210, 166, 87, .35);
+  /* Foreground on warm-gold fills. Dark ink ≈ 9:1 on --accent (PRD-PHASE4 §6.12
+     方案A · AC-P4-A11Y-01). NEVER white on gold (~1.9:1). */
+  --accent-ink: #1a1408;
   --danger: #c25450;
   --danger-bg: rgba(194, 84, 80, .15);
   --warn: #c98b32;
@@ -1346,7 +1349,7 @@ body {
 
 .studio-btn--gold {
   background: linear-gradient(135deg, #e8c47a 0%, var(--accent) 48%, #b8893a 100%);
-  color: #1a1408;
+  color: var(--accent-ink);
   box-shadow: 0 10px 36px rgba(210, 166, 87, .45), 0 2px 0 rgba(255, 255, 255, .25) inset;
   animation: studio-cta-glow 3.2s ease-in-out infinite;
 }
@@ -1359,6 +1362,37 @@ body {
   50% { box-shadow: 0 14px 44px rgba(210, 166, 87, .58), 0 2px 0 rgba(255, 255, 255, .3) inset; }
 }
 .studio-btn--block { width: 100%; justify-content: center; }
+
+/* ── /trips loading skeleton (F-P4-HP-07 · HP-GAP-08) ── */
+.studio-skeleton-card {
+  pointer-events: none;
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(255, 255, 255, .06);
+  overflow: hidden;
+}
+.studio-skeleton-card__thumb,
+.studio-skeleton-card__line {
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, .06) 30%,
+    rgba(255, 255, 255, .14) 50%,
+    rgba(255, 255, 255, .06) 70%
+  );
+  background-size: 200% 100%;
+  animation: studio-skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+.studio-skeleton-card__thumb { width: 100%; aspect-ratio: 16 / 9; border-radius: 0; }
+.studio-skeleton-card__line { height: 14px; margin: 12px 14px 0; }
+.studio-skeleton-card__line--short { width: 50%; margin-bottom: 14px; }
+@keyframes studio-skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .studio-skeleton-card__thumb,
+  .studio-skeleton-card__line { animation: none; }
+}
 .studio-btn--outline {
   background: #fff;
   color: var(--ink);
