@@ -81,8 +81,9 @@ def _replan_day_buckets_beam(
     arc_profile: str,
     budget: SearchBudget,
     subject_run_tolerance: int,
+    intent_peak_chapters: set[int] | None = None,
 ) -> tuple[list[dict], list[dict], SearchBudget]:
-    from travelogue.curation.arc_patterns import arc_segment_for_chapter
+    from travelogue.curation.intent_hints import INTENT_PEAK_ARC_BOOST, arc_segment_for_chapter_with_intent
 
     out = deepcopy(chapters)
     asset_to_ch: dict[str, str] = {}
@@ -163,8 +164,16 @@ def _replan_day_buckets_beam(
                 bucket_idx + 1,
             )
             arc_seg = None
+            arc_boost = 0.0
             if _arc_scoring_active(arc_mode):
-                arc_seg = arc_segment_for_chapter(ch_index, total_ch, profile=arc_profile)
+                arc_seg = arc_segment_for_chapter_with_intent(
+                    ch_index,
+                    total_ch,
+                    profile=arc_profile,
+                    peak_chapters=intent_peak_chapters,
+                )
+                if intent_peak_chapters and ch_index in intent_peak_chapters:
+                    arc_boost = INTENT_PEAK_ARC_BOOST
             hero_ids = {hero_by_ch[ch_id]} if ch_id and hero_by_ch.get(ch_id) else set()
             bd = score_screen_plan(
                 plan,
@@ -176,6 +185,7 @@ def _replan_day_buckets_beam(
                 hero_asset_ids=hero_ids or None,
                 subject_run_tolerance=subject_run_tolerance,
                 featured_beam=True,
+                intent_arc_boost=arc_boost,
             )
             if bd.total > best_score.total + 1e-6:
                 best_plan = plan
@@ -236,6 +246,7 @@ def maybe_replan_chapters(
     max_evaluations_per_trip: int = 500,
     allow_burst_split: bool = False,
     subject_run_tolerance: int = 1,
+    intent_peak_chapters: set[int] | None = None,
 ) -> tuple[list[dict], dict[str, Any]]:
     """Return chapters unchanged when scoring off, degraded, or aspect-only."""
     meta: dict[str, Any] = {"replanApplied": False, "decisionLogs": []}
@@ -274,6 +285,7 @@ def maybe_replan_chapters(
         arc_profile=arc_profile,
         budget=budget,
         subject_run_tolerance=subject_run_tolerance,
+        intent_peak_chapters=intent_peak_chapters,
     )
     meta["decisionLogs"] = logs
     meta["searchBudget"] = budget.to_dict()

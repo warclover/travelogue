@@ -4,7 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from travelogue.curation.layout_scoring import ScoringWeights, score_aspect_match, PHASE2_WEIGHTS, score_screen
+from travelogue.curation.layout_scoring import (
+    PHASE3_WEIGHTS,
+    PHASE3B_WEIGHTS,
+    ScoringWeights,
+    resolve_scoring_weights,
+    score_aspect_match,
+    PHASE2_WEIGHTS,
+    score_screen,
+)
 
 
 def test_aspect_match_full_for_portrait_roles():
@@ -154,3 +162,57 @@ def test_featured_beam_halves_hero_separation_when_hero_reused() -> None:
     assert feat.hero_separation == FEATURED_HERO_SEPARATION_HALVED
     assert mat.hero_separation == 0.0
     assert feat.total > mat.total
+
+
+def test_resolve_scoring_weights_zero_fallback_phase3b() -> None:
+    zero = ScoringWeights()
+    resolved = resolve_scoring_weights(
+        zero,
+        scoring_enabled=True,
+        has_color_metrics=True,
+    )
+    assert resolved == PHASE3B_WEIGHTS
+
+
+def test_resolve_scoring_weights_zero_fallback_phase3_without_tone() -> None:
+    zero = ScoringWeights()
+    resolved = resolve_scoring_weights(
+        zero,
+        scoring_enabled=True,
+        has_color_metrics=False,
+    )
+    assert resolved == PHASE3_WEIGHTS
+
+
+def test_resolve_scoring_weights_disabled_keeps_zero() -> None:
+    zero = ScoringWeights()
+    assert resolve_scoring_weights(zero, scoring_enabled=False, has_color_metrics=True) == zero
+
+
+def test_resolve_scoring_weights_custom_unchanged() -> None:
+    custom = ScoringWeights(aspect_match=0.5, sharpness=0.5)
+    assert (
+        resolve_scoring_weights(custom, scoring_enabled=True, has_color_metrics=True)
+        == custom
+    )
+
+
+def test_score_layout_rhythm_alternation_bonus() -> None:
+    from travelogue.curation.layout_scoring import score_layout_rhythm
+
+    hero = {"patternId": "screen-portrait-1", "slots": [{"assetId": "a1"}]}
+    grid = {"patternId": "screen-portrait-3", "slots": [{"assetId": "a2"}, {"assetId": "a3"}]}
+    assert score_layout_rhythm([hero, grid, hero]) > score_layout_rhythm([grid, grid, grid])
+
+
+def test_score_layout_rhythm_same_pattern_zero() -> None:
+    from travelogue.curation.layout_scoring import score_layout_rhythm
+
+    grid = {"patternId": "screen-portrait-3", "slots": [{"assetId": "a1"}, {"assetId": "a2"}]}
+    assert score_layout_rhythm([grid, grid]) == 0.0
+
+
+def test_phase3b_includes_layout_rhythm_weight() -> None:
+    from travelogue.curation.layout_scoring import PHASE3B_WEIGHTS
+
+    assert PHASE3B_WEIGHTS.layout_rhythm > 0

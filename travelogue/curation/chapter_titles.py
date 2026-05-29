@@ -28,6 +28,7 @@ def chapter_titles(
     bucket_segment_ids: list[str] | None = None,
     bucket_segment_ids_all: list[list[str]] | None = None,
     segment_labels: dict[str, str] | None = None,
+    plan_cities: list[str] | None = None,
 ) -> list[str]:
     place = (meta.get("places") or ["旅途"])[0]
     assets_by_id = {a["id"]: a for a in assets}
@@ -37,6 +38,8 @@ def chapter_titles(
     bucket_segment_ids = bucket_segment_ids or []
     bucket_segment_ids_all = bucket_segment_ids_all or []
     segment_labels = segment_labels or {}
+    plan_cities = [c for c in (plan_cities or []) if c][:10]
+    plan_idx = 0
 
     for i, bucket in enumerate(buckets):
         if not bucket:
@@ -61,6 +64,11 @@ def chapter_titles(
             if labels:
                 titles.append("·".join(labels[:2])[:12])
                 continue
+
+        if plan_idx < len(plan_cities):
+            titles.append(plan_cities[plan_idx][:12])
+            plan_idx += 1
+            continue
 
         seg_id = bucket_segment_ids[i] if i < len(bucket_segment_ids) else ""
         if seg_id and segment_labels.get(seg_id):

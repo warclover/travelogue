@@ -3,6 +3,7 @@
 Usage:
   python scripts/diff_curate.py --fixture golden-mixed-scenes
   python scripts/diff_curate.py trips/mao/trip.json
+  python scripts/diff_curate.py trips/demo/trip.json --intent-keywords
 """
 
 from __future__ import annotations
@@ -27,6 +28,11 @@ def main() -> int:
     parser.add_argument("target", help="fixture id or path to trip.json")
     parser.add_argument("--fixture", action="store_true")
     parser.add_argument("--work-dir", type=Path, default=ROOT / ".cache" / "diff-curate")
+    parser.add_argument(
+        "--intent-keywords",
+        action="store_true",
+        help="P-EVAL G-P4-03: report userNotesKeywords chapter hit ratio",
+    )
     args = parser.parse_args()
 
     if args.fixture:
@@ -36,6 +42,13 @@ def main() -> int:
         path = Path(args.target)
         trip = json.loads(path.read_text(encoding="utf-8"))
         trip_id = trip.get("tripId") or path.parent.name
+
+    if args.intent_keywords:
+        from travelogue.curation.intent_hints import evaluate_intent_keyword_coverage
+
+        coverage = evaluate_intent_keyword_coverage(trip)
+        print(json.dumps({"tripId": trip_id, "intentKeywords": coverage}, indent=2, ensure_ascii=False))
+        return 0 if coverage["passesGP403"] else 1
 
     report = evaluate_trip(trip, trip_id=trip_id, work_dir=args.work_dir / trip_id)
     baseline = report["baseline"]

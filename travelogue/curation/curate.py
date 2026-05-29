@@ -315,6 +315,15 @@ def run_curate(
     if len(trip.get("assets") or []) < 4:
         raise CurateError("E_CURATE_TOO_FEW", "need at least 4 assets to curate")
 
+    from travelogue.curation.intent_hints import (
+        apply_editorial_intent_hints,
+        peak_chapter_hints_for_trip,
+        prior_chapter_memory_anchors,
+    )
+
+    apply_editorial_intent_hints(trip)
+    saved_memory_anchors = prior_chapter_memory_anchors(trip)
+
     from travelogue.config import default_web_layout_engine, get_config
 
     app_cfg = cfg or get_config()
@@ -357,6 +366,7 @@ def run_curate(
             skip_screen_ids.add(web_cover)
 
     meta = trip.get("meta", {})
+    meta_places = [str(p) for p in (meta.get("places") or []) if p]
     from travelogue.curation.clustering_buckets import (
         build_buckets_from_clustering,
         should_use_clustering_buckets,
@@ -380,6 +390,22 @@ def run_curate(
             city_gap_days=cur_cfg.city_gap_days,
             min_bucket_size=cur_cfg.min_bucket_size,
         )
+
+    # P5-C3: small albums → fewer chapters (≤15 photos).
+    if len(layout_assets) <= 15:
+        from travelogue.curation.bucket_planning import normalize_bucket_counts
+
+        max_ch = 2 if len(layout_assets) <= 8 else 3
+        norm = normalize_bucket_counts(
+            buckets,
+            bucket_segment_ids,
+            max_chapters=max_ch,
+            min_bucket_size=min(2, cur_cfg.min_bucket_size),
+        )
+        buckets = norm.buckets
+        bucket_segment_ids = norm.primary_segment_ids
+        bucket_segment_ids_all = norm.segment_ids_per_bucket
+
     segment_labels = {s.id: s.label for s in segments}
     curation_segments = [s.to_dict() for s in segments]
 
@@ -420,12 +446,15 @@ def run_curate(
     med_sharp = median_sharpness(layout_assets)
     chapter_heroes: dict[str, str] = {}
     for i, bucket in enumerate(non_empty_buckets):
+        anchors = saved_memory_anchors[i] if i < len(saved_memory_anchors) else None
         hero = pick_chapter_hero(
             bucket,
             assets_by_id,
             exclude=skip_screen_ids,
             median_sharp=med_sharp,
             featured_weight=cur_cfg.featured_weight,
+            memory_anchors=anchors or None,
+            meta_places=meta_places or None,
         )
         if hero:
             chapter_heroes[f"ch-{i + 1:02d}"] = hero
@@ -437,6 +466,11 @@ def run_curate(
         bucket_segment_ids=bucket_segment_ids,
         bucket_segment_ids_all=bucket_segment_ids_all,
         segment_labels=segment_labels,
+        plan_cities=(
+            ((curation.get("intentHints") or {}).get("planCities"))
+            or ((trip.get("intent") or {}).get("travelPlan") or {}).get("cities")
+            or []
+        ),
     )
     summary = summarize_orientations(layout_assets, export_layout=layout)  # type: ignore[arg-type]
     summary_dict = summary.to_dict()
@@ -452,12 +486,14 @@ def run_curate(
         trip_photo_total=len(layout_assets),
         pattern_hints=pattern_hints,
     )
-    for ch, bucket, seg_id, seg_ids, hint in zip(
+    for ch_idx, (ch, bucket, seg_id, seg_ids, hint) in enumerate(
+        zip(
         chapters,
         non_empty_buckets,
         bucket_segment_ids,
         bucket_segment_ids_all,
         pattern_hints,
+        )
     ):
         ch_cur = ch.setdefault("curation", {})
         span = bucket_day_span(bucket, assets_by_id)
@@ -471,6 +507,9 @@ def run_curate(
         hero_id = chapter_heroes.get(ch.get("id", ""))
         if hero_id:
             ch_cur["heroAssetId"] = hero_id
+        anchor_idx = ch_idx
+        if anchor_idx < len(saved_memory_anchors) and saved_memory_anchors[anchor_idx]:
+            ch_cur["memoryAnchors"] = list(saved_memory_anchors[anchor_idx])
     excluded_ids = set(curation.get("excludedLowResAssetIds") or [])
     if excluded_ids:
         _sanitize_chapters_after_exclusion(chapters, excluded_ids)
@@ -478,6 +517,7 @@ def run_curate(
     from travelogue.curation.degradation import assess_degradation
     from travelogue.curation.layout_metrics import compute_layout_metrics
     from travelogue.curation.layout_scoring import ScoringWeights
+    from travelogue.curation.layout_scoring import resolve_scoring_weights
     from travelogue.curation.layout_search import maybe_replan_chapters
 
     layout_cfg = app_cfg.layout
@@ -497,7 +537,13 @@ def run_curate(
         structure_locked=structure_locked,
         force_relayout=False,
     )
-    scoring_weights = ScoringWeights.from_dict(layout_cfg.scoring.weights)
+    has_color_metrics = any(a.get("dominantTone") for a in layout_assets)
+    scoring_weights = resolve_scoring_weights(
+        ScoringWeights.from_dict(layout_cfg.scoring.weights),
+        scoring_enabled=layout_cfg.scoring.enabled,
+        has_color_metrics=has_color_metrics,
+    )
+    intent_peak = peak_chapter_hints_for_trip(trip, len(non_empty_buckets))
     chapters, replan_meta = maybe_replan_chapters(
         chapters,
         buckets=non_empty_buckets,
@@ -519,6 +565,7 @@ def run_curate(
         max_evaluations_per_trip=layout_cfg.scoring.max_evaluations_per_trip,
         allow_burst_split=layout_cfg.scoring.allow_burst_split,
         subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
+        intent_peak_chapters=intent_peak,
     )
     layout_metrics = compute_layout_metrics(chapters)
     degradation_reason = degradation.reason if degradation.force_legacy and layout_cfg.scoring.enabled else None
@@ -688,9 +735,16 @@ def run_curate(
         }
     )
 
-    if trip_dir is not None:
-        from travelogue.curation.chapter_explain import attach_chapter_explain
+    from travelogue.curation.arc_screen_tags import stamp_screen_arc_segments
+    from travelogue.curation.breath_pauses import insert_breath_screens_in_chapters
+    from travelogue.curation.chapter_explain import attach_chapter_explain
 
+    n_breath = insert_breath_screens_in_chapters(chapters)
+    if n_breath:
+        warnings.append(f"卷轴呼吸屏 · 插入 {n_breath} 屏（P5-S5）")
+
+    stamp_screen_arc_segments(trip, arc_profile=arc_profile)
+    if trip_dir is not None:
         attach_chapter_explain(trip, trip_dir=trip_dir)
 
     return CurateResult(

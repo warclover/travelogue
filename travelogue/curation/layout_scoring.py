@@ -23,6 +23,7 @@ class ScoringWeights:
     luminance_continuity: float = 0.0
     subject_run: float = 0.0
     tone_continuity: float = 0.0
+    layout_rhythm: float = 0.0
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, Any] | None) -> ScoringWeights:
@@ -40,6 +41,7 @@ class ScoringWeights:
             luminance_continuity=float(raw.get("luminance_continuity", defaults.luminance_continuity)),
             subject_run=float(raw.get("subject_run", defaults.subject_run)),
             tone_continuity=float(raw.get("tone_continuity", defaults.tone_continuity)),
+            layout_rhythm=float(raw.get("layout_rhythm", defaults.layout_rhythm)),
         )
 
     def normalized(self) -> ScoringWeights:
@@ -54,6 +56,7 @@ class ScoringWeights:
             + self.luminance_continuity
             + self.subject_run
             + self.tone_continuity
+            + self.layout_rhythm
         )
         if total <= 1e-9:
             return self
@@ -68,6 +71,7 @@ class ScoringWeights:
             luminance_continuity=self.luminance_continuity / total,
             subject_run=self.subject_run / total,
             tone_continuity=self.tone_continuity / total,
+            layout_rhythm=self.layout_rhythm / total,
         )
 
     def is_aspect_only(self) -> bool:
@@ -81,6 +85,7 @@ class ScoringWeights:
             self.luminance_continuity,
             self.subject_run,
             self.tone_continuity,
+            self.layout_rhythm,
         )
         return self.aspect_match >= 1.0 - 1e-9 and sum(others) < 1e-9
 
@@ -120,7 +125,38 @@ PHASE3B_WEIGHTS = ScoringWeights(
     luminance_continuity=0.06,
     tone_continuity=0.08,
     subject_run=0.05,
+    layout_rhythm=0.05,
 ).normalized()
+
+
+def _weights_raw_sum(weights: ScoringWeights) -> float:
+    return (
+        weights.aspect_match
+        + weights.sharpness
+        + weights.hero_separation
+        + weights.temporal_coherence
+        + weights.diversity
+        + weights.arc_fit
+        + weights.burst_integrity
+        + weights.luminance_continuity
+        + weights.subject_run
+        + weights.tone_continuity
+        + weights.layout_rhythm
+    )
+
+
+def resolve_scoring_weights(
+    weights: ScoringWeights,
+    *,
+    scoring_enabled: bool,
+    has_color_metrics: bool,
+) -> ScoringWeights:
+    """P5-C1 / D7: when beam scoring is on but config weights are all zero, use PHASE3(B)."""
+    if not scoring_enabled:
+        return weights
+    if _weights_raw_sum(weights) <= 1e-9:
+        return PHASE3B_WEIGHTS if has_color_metrics else PHASE3_WEIGHTS
+    return weights
 
 
 @dataclass
@@ -136,6 +172,7 @@ class ScoreBreakdown:
     luminance_continuity: float = 0.0
     subject_run: float = 0.0
     tone_continuity: float = 0.0
+    layout_rhythm: float = 0.0
 
     def to_dict(self) -> dict[str, float]:
         return {
@@ -150,6 +187,7 @@ class ScoreBreakdown:
             "luminance_continuity": round(self.luminance_continuity, 6),
             "subject_run": round(self.subject_run, 6),
             "tone_continuity": round(self.tone_continuity, 6),
+            "layout_rhythm": round(self.layout_rhythm, 6),
         }
 
 
@@ -381,6 +419,36 @@ def _asset_order_from_screens(screens: list[dict]) -> list[str]:
     return order
 
 
+def score_layout_rhythm(screens: list[dict]) -> float:
+    """P5-R1 · penalize consecutive same layout; reward hero/grid alternation."""
+    from travelogue.curation.longshot_filter import _is_breath_screen, _screen_kind
+
+    scores: list[float] = []
+    prev_kind: str | None = None
+    prev_pid: str | None = None
+    for screen in screens:
+        if _is_breath_screen(screen):
+            continue
+        slots = screen.get("slots") or []
+        if not any(s.get("assetId") for s in slots):
+            continue
+        kind = _screen_kind(screen)
+        pid = str(screen.get("patternId") or "")
+        if prev_kind is None:
+            prev_kind, prev_pid = kind, pid
+            continue
+        if pid and pid == prev_pid:
+            scores.append(0.0)
+        elif kind == prev_kind:
+            scores.append(0.35)
+        else:
+            scores.append(1.0)
+        prev_kind, prev_pid = kind, pid
+    if not scores:
+        return 1.0
+    return sum(scores) / len(scores)
+
+
 def score_screen(
     screen: dict,
     *,
@@ -392,6 +460,7 @@ def score_screen(
     hero_asset_ids: set[str] | None = None,
     prior_pattern_ids: list[str] | None = None,
     featured_beam: bool = False,
+    intent_arc_boost: float = 0.0,
 ) -> ScoreBreakdown:
     """Per-screen base score (aspect, sharpness, hero, temporal, diversity, arc).
 
@@ -426,6 +495,8 @@ def score_screen(
         from travelogue.curation.arc_patterns import arc_pattern_bonus
 
         bd.arc_fit = arc_pattern_bonus(pid or "", arc_segment, profile=arc_profile)
+        if intent_arc_boost > 0:
+            bd.arc_fit = min(1.0, bd.arc_fit + intent_arc_boost)
     else:
         bd.arc_fit = 0.5
     bd.total = (
@@ -450,6 +521,7 @@ def score_screen_plan(
     hero_asset_ids: set[str] | None = None,
     subject_run_tolerance: int = 1,
     featured_beam: bool = False,
+    intent_arc_boost: float = 0.0,
 ) -> ScoreBreakdown:
     """Aggregate score for a full screen sequence in one day bucket / chapter."""
     if not screens:
@@ -468,6 +540,7 @@ def score_screen_plan(
             hero_asset_ids=hero_asset_ids,
             prior_pattern_ids=prior,
             featured_beam=featured_beam,
+            intent_arc_boost=intent_arc_boost,
         )
         parts.append(bd)
         prior.append(screen.get("patternId") or "")
@@ -480,6 +553,7 @@ def score_screen_plan(
         assets_by_id,
         tolerance=subject_run_tolerance,
     )
+    rhythm = score_layout_rhythm(screens)
     avg = ScoreBreakdown()
     n = len(parts)
     for bd in parts:
@@ -493,6 +567,7 @@ def score_screen_plan(
     avg.luminance_continuity = luma
     avg.tone_continuity = tone
     avg.subject_run = subject
+    avg.layout_rhythm = rhythm
     avg.total = (
         weights.aspect_match * avg.aspect_match
         + weights.sharpness * avg.sharpness
@@ -504,6 +579,7 @@ def score_screen_plan(
         + weights.luminance_continuity * avg.luminance_continuity
         + weights.tone_continuity * avg.tone_continuity
         + weights.subject_run * avg.subject_run
+        + weights.layout_rhythm * avg.layout_rhythm
     )
     if featured_beam:
         featured_n = 0

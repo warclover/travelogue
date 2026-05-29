@@ -195,6 +195,13 @@ class LayoutConfig:
 
 
 @dataclass
+class StudioConfig:
+    """Studio workbench (Phase 4 M17 · G1)."""
+
+    g1_confirm_structure: bool = False
+
+
+@dataclass
 class AppConfig:
     trips_dir: Path = field(default_factory=_default_trips_dir)
     ingest: IngestConfig = field(default_factory=IngestConfig)
@@ -203,6 +210,7 @@ class AppConfig:
     vision: VisionConfig = field(default_factory=VisionConfig)
     geocode: GeocodeConfig = field(default_factory=GeocodeConfig)
     curate: CurateConfig = field(default_factory=CurateConfig)
+    studio: StudioConfig = field(default_factory=StudioConfig)
     config_path: Path | None = None
     export: ExportConfig = field(default_factory=ExportConfig)
     render: RenderConfig = field(default_factory=RenderConfig)
@@ -380,6 +388,14 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
         "vision": {
             "enabled": cfg.vision.enabled,
         },
+        "layout": {
+            "scoring": {
+                "enabled": cfg.layout.scoring.enabled,
+            },
+        },
+        "studio": {
+            "g1ConfirmStructure": cfg.studio.g1_confirm_structure,
+        },
     }
 
 
@@ -395,8 +411,12 @@ def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
                 data = loaded
     allowed_clustering = {"enabled", "segmentCurateMode", "sceneClusterMode"}
     allowed_vision = {"enabled"}
+    allowed_layout_scoring = {"enabled"}
+    allowed_studio = {"g1ConfirmStructure", "g1_confirm_structure"}
     clu_patch = patch.get("clustering") if isinstance(patch.get("clustering"), dict) else {}
     vis_patch = patch.get("vision") if isinstance(patch.get("vision"), dict) else {}
+    layout_patch = patch.get("layout") if isinstance(patch.get("layout"), dict) else {}
+    studio_patch = patch.get("studio") if isinstance(patch.get("studio"), dict) else {}
     if clu_patch:
         target = data.setdefault("clustering", {})
         if not isinstance(target, dict):
@@ -413,6 +433,30 @@ def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
         for key, val in vis_patch.items():
             if key in allowed_vision:
                 target[key] = val
+    scoring_patch = (
+        layout_patch.get("scoring") if isinstance(layout_patch.get("scoring"), dict) else {}
+    )
+    if scoring_patch:
+        layout_target = data.setdefault("layout", {})
+        if not isinstance(layout_target, dict):
+            layout_target = {}
+            data["layout"] = layout_target
+        scoring_target = layout_target.setdefault("scoring", {})
+        if not isinstance(scoring_target, dict):
+            scoring_target = {}
+            layout_target["scoring"] = scoring_target
+        for key, val in scoring_patch.items():
+            if key in allowed_layout_scoring:
+                scoring_target[key] = val
+    if studio_patch:
+        target = data.setdefault("studio", {})
+        if not isinstance(target, dict):
+            target = {}
+            data["studio"] = target
+        for key, val in studio_patch.items():
+            if key in allowed_studio:
+                norm_key = "g1_confirm_structure" if key == "g1ConfirmStructure" else key
+                target[norm_key] = val
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
         yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
@@ -459,6 +503,7 @@ def load_config(path: Path | None = None) -> AppConfig:
     curate_raw = data.get("curate") if isinstance(data.get("curate"), dict) else {}
     render_raw = data.get("render") if isinstance(data.get("render"), dict) else {}
     clustering_raw = data.get("clustering") if isinstance(data.get("clustering"), dict) else {}
+    studio_raw = data.get("studio") if isinstance(data.get("studio"), dict) else {}
     banned_raw = narrative_raw.get("banned_phrases") or []
     banned = tuple(str(p) for p in banned_raw if p) if isinstance(banned_raw, list) else ()
     llm_provider = str(llm_raw.get("provider", "stub")).strip().lower()
@@ -506,6 +551,11 @@ def load_config(path: Path | None = None) -> AppConfig:
             api_key_env=str(llm_raw.get("api_key_env") or llm_preset.get("api_key_env", "DEEPSEEK_API_KEY")),
             base_url=llm_base_url,
             timeout_sec=int(llm_raw.get("timeout_sec", 120)),
+        ),
+        studio=StudioConfig(
+            g1_confirm_structure=bool(
+                studio_raw.get("g1_confirm_structure", studio_raw.get("g1ConfirmStructure", False))
+            ),
         ),
     )
 

@@ -90,3 +90,12 @@ def triangular_score(value: float, *, low: float, peak: float, high: float) -> f
     if value <= peak:
         return (value - low) / (peak - low)
     return (high - value) / (high - peak)
+
+
+def dominant_tone_chroma_score(hex_color: str | None) -> float:
+    """0–1 preference for cover saturation (P5-C2)."""
+    if not hex_color or not str(hex_color).strip().startswith("#"):
+        return 0.5
+    L, a, b = _rgb_to_lab(*_hex_to_rgb(str(hex_color)))
+    chroma = math.sqrt(a * a + b * b)
+    return triangular_score(chroma, low=8, peak=35, high=85)

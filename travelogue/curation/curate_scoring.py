@@ -6,6 +6,7 @@ from travelogue.curation.asset_quality import asset_sharpness
 from travelogue.curation.layout_planner import aspect_kind_for_asset
 from travelogue.curation.media_classify import cover_class_weight
 from travelogue.curation.time_segments import parse_asset_date
+from travelogue.media.color_metrics import dominant_tone_chroma_score
 
 _COVER_EXCLUDED_CLASSES = frozenset({"screenshot", "thumbnail", "reupload"})
 _HERO_EXCLUDED_CLASSES = frozenset({"screenshot", "thumbnail", "reupload"})
@@ -72,6 +73,38 @@ def _cover_media_weight(asset: dict, export_layout: str) -> float:
     return weight
 
 
+def _cover_person_multiplier(asset: dict) -> float:
+    """P5-C2: demote portrait/face-heavy assets for cover."""
+    tags = set(asset.get("tags") or [])
+    if tags.intersection({"face", "person", "selfie", "portrait"}):
+        return 0.72
+    return 1.0
+
+
+def _cover_saturation_multiplier(asset: dict) -> float:
+    tone = asset.get("dominantTone")
+    if not tone and isinstance(asset.get("color"), dict):
+        tone = asset["color"].get("dominantTone")
+    score = dominant_tone_chroma_score(tone if isinstance(tone, str) else None)
+    return 0.88 + 0.24 * score
+
+
+def _cover_composition_multiplier(asset: dict, export_layout: str) -> float:
+    """P5-C2: landscape/panorama preference (composition proxy)."""
+    kind = aspect_kind_for_asset(asset)
+    if export_layout == "web":
+        if kind == "panorama":
+            return 1.1
+        if kind == "landscape":
+            return 1.06
+        return 1.0
+    if kind == "tall":
+        return 0.92
+    if kind == "portrait":
+        return 0.96
+    return 1.0
+
+
 def _quality_multiplier(asset: dict, *, export_layout: str, median_sharp: float) -> float:
     mult = 1.0
     if asset.get("dateConfidence") == "low":
@@ -80,9 +113,6 @@ def _quality_multiplier(asset: dict, *, export_layout: str, median_sharp: float)
     if median_sharp > 0 and sharp > 0:
         ratio = sharp / median_sharp
         mult *= min(1.25, max(0.35, ratio))
-    tags = set(asset.get("tags") or [])
-    if export_layout == "mobile" and tags.intersection({"person", "face"}):
-        mult *= 1.08
     return mult
 
 
@@ -119,8 +149,13 @@ def cover_score(
         if kind == "tall":
             base *= 1.1
 
-    return base * _cover_media_weight(asset, export_layout) * _quality_multiplier(
-        asset, export_layout=export_layout, median_sharp=median_sharp
+    return (
+        base
+        * _cover_media_weight(asset, export_layout)
+        * _quality_multiplier(asset, export_layout=export_layout, median_sharp=median_sharp)
+        * _cover_person_multiplier(asset)
+        * _cover_saturation_multiplier(asset)
+        * _cover_composition_multiplier(asset, export_layout)
     )
 
 
@@ -149,6 +184,35 @@ def featured_weight_multiplier(asset: dict, *, weight: float = 1.35) -> float:
     return 1.0
 
 
+def anchor_match_multiplier(
+    asset: dict,
+    anchors: list[str] | None,
+    *,
+    meta_places: list[str] | None = None,
+) -> float:
+    """+5% when asset tags / place fields hit a memory anchor substring (M19)."""
+    if not anchors:
+        return 1.0
+    parts: list[str] = []
+    parts.extend(str(t) for t in (asset.get("tags") or []))
+    for key in ("place", "location", "city", "placeName"):
+        value = asset.get(key)
+        if isinstance(value, str) and value.strip():
+            parts.append(value.strip())
+    if meta_places:
+        parts.extend(str(p) for p in meta_places if p)
+    haystack = " ".join(parts).casefold()
+    if not haystack:
+        return 1.0
+    for anchor in anchors:
+        needle = str(anchor).strip().casefold()
+        if len(needle) >= 1 and needle in haystack:
+            from travelogue.curation.intent_hints import ANCHOR_MATCH_MULTIPLIER
+
+            return ANCHOR_MATCH_MULTIPLIER
+    return 1.0
+
+
 def featured_eligible(assets: list[dict]) -> list[dict]:
     return [a for a in assets if a.get("userTier") == "featured"]
 
@@ -159,9 +223,13 @@ def effective_cover_score(
     *,
     median_sharp: float = 0.0,
     featured_weight: float = 1.35,
+    memory_anchors: list[str] | None = None,
+    meta_places: list[str] | None = None,
 ) -> float:
-    return cover_score(asset, export_layout, median_sharp=median_sharp) * featured_weight_multiplier(
-        asset, weight=featured_weight
+    return (
+        cover_score(asset, export_layout, median_sharp=median_sharp)
+        * featured_weight_multiplier(asset, weight=featured_weight)
+        * anchor_match_multiplier(asset, memory_anchors, meta_places=meta_places)
     )
 
 
@@ -170,9 +238,13 @@ def effective_hero_score(
     *,
     median_sharp: float = 0.0,
     featured_weight: float = 1.35,
+    memory_anchors: list[str] | None = None,
+    meta_places: list[str] | None = None,
 ) -> float:
-    return hero_score(asset, median_sharp=median_sharp) * featured_weight_multiplier(
-        asset, weight=featured_weight
+    return (
+        hero_score(asset, median_sharp=median_sharp)
+        * featured_weight_multiplier(asset, weight=featured_weight)
+        * anchor_match_multiplier(asset, memory_anchors, meta_places=meta_places)
     )
 
 
@@ -307,6 +379,8 @@ def pick_chapter_hero(
     exclude: set[str] | None = None,
     median_sharp: float = 0.0,
     featured_weight: float = 1.35,
+    memory_anchors: list[str] | None = None,
+    meta_places: list[str] | None = None,
 ) -> str | None:
     exclude = exclude or set()
     best_id: str | None = None
@@ -317,7 +391,13 @@ def pick_chapter_hero(
         a = assets_by_id.get(aid)
         if not a:
             continue
-        score = effective_hero_score(a, median_sharp=median_sharp, featured_weight=featured_weight)
+        score = effective_hero_score(
+            a,
+            median_sharp=median_sharp,
+            featured_weight=featured_weight,
+            memory_anchors=memory_anchors,
+            meta_places=meta_places,
+        )
         if score > best:
             best = score
             best_id = aid

@@ -179,3 +179,9 @@ narrative:
     - 值得一提的是
     - 美不胜收
     - 令人难忘
+
+# Phase 4 · Studio 工作台（M17 G1）
+studio:
+  # false（默认）= 模式 A：导入后自动 structure_locked 并继续 narrate/render
+  # true = 模式 B：curate 后停 structure_draft，预览内确认后再继续
+  g1_confirm_structure: false

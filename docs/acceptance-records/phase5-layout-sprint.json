@@ -1,0 +1,19 @@
+{
+  "recordId": "phase5-layout-sprint",
+  "phase": "P5-QS-01",
+  "description": "10-album layout quality sprint: legacy/default vs tuned weights blind compare",
+  "targetWinRate": "≥8/10",
+  "albums": [
+    { "id": "album-01", "path": "trips/demo/trip.json", "photoCount": null, "winner": null, "notes": "" },
+    { "id": "album-02", "path": null, "photoCount": "5-15", "winner": null, "notes": "小相册" },
+    { "id": "album-03", "path": null, "photoCount": "20-40", "winner": null, "notes": "" },
+    { "id": "album-04", "path": null, "photoCount": "50-100", "winner": null, "notes": "" },
+    { "id": "album-05", "path": null, "photoCount": "100-200", "winner": null, "notes": "" },
+    { "id": "album-06", "path": null, "photoCount": null, "winner": null, "notes": "" },
+    { "id": "album-07", "path": null, "photoCount": null, "winner": null, "notes": "" },
+    { "id": "album-08", "path": null, "photoCount": null, "winner": null, "notes": "" },
+    { "id": "album-09", "path": null, "photoCount": null, "winner": null, "notes": "" },
+    { "id": "album-10", "path": null, "photoCount": null, "winner": null, "notes": "" }
+  ],
+  "runs": []
+}
