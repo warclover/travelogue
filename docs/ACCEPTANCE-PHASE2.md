@@ -1,5 +1,7 @@
 # Travelogue · Phase 2 验收标准
 
+> **单轨入口**：[ACCEPTANCE.md](./ACCEPTANCE.md) · 当前发布闸门：[ACCEPTANCE-PHASE5.md](./ACCEPTANCE-PHASE5.md)
+
 | 属性 | 内容 |
 |------|------|
 | **文档版本** | v0.3.1 |

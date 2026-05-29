@@ -1,0 +1,70 @@
+{
+  "recordId": "phase4-intent",
+  "phase": "M19",
+  "date": "2026-05-30",
+  "protocol": "P-EVAL",
+  "description": "Phase 4 editorial intent blind review + keyword coverage (PRD-PHASE4 §2.1)",
+  "samples": {
+    "albums": 3,
+    "variants": ["no_intent", "full_intent"],
+    "pairs": 6
+  },
+  "judges": {
+    "count": 5,
+    "blind": true,
+    "prompt": "哪份更像可转发的杂志？"
+  },
+  "criteria": {
+    "G-P4-07": {
+      "name": "全 intent 盲评胜率",
+      "threshold": "≥4/6 pairs (≥55%)",
+      "status": "Pending manual review"
+    },
+    "G-P4-03": {
+      "name": "userNotesKeywords 章节命中率",
+      "threshold": "≥60%",
+      "command": "python scripts/diff_curate.py <trip.json> --intent-keywords",
+      "status": "Automated via evaluate_intent_keyword_coverage"
+    },
+    "AC-P4-TEL-01": {
+      "name": "studio-intent telemetry",
+      "threshold": "runs/studio-intent.json after import with intent fields",
+      "command": "pytest tests/test_studio_intent_telemetry.py -q && type runs\\studio-intent.json",
+      "status": "Automated"
+    }
+  },
+  "pairs": [],
+  "keywordRuns": [],
+  "features": [
+    {
+      "id": "M19-01",
+      "name": "userNotes 关键词 + peak arc 轻权重",
+      "status": "Done",
+      "paths": ["travelogue/curation/intent_hints.py", "travelogue/curation/layout_search.py"]
+    },
+    {
+      "id": "M19-02",
+      "name": "memoryAnchors 子串匹配选图 +分",
+      "status": "Done",
+      "paths": ["travelogue/curation/curate_scoring.py", "travelogue/curation/curate.py"]
+    },
+    {
+      "id": "M19-03",
+      "name": "diff_curate --intent-keywords",
+      "status": "Done",
+      "paths": ["scripts/diff_curate.py"]
+    },
+    {
+      "id": "M15-12",
+      "name": "studio-intent.json telemetry",
+      "status": "Done",
+      "paths": ["travelogue/web/studio_intent_telemetry.py", "travelogue/web/studio_pipeline.py"]
+    }
+  ],
+  "tests": [
+    "tests/test_intent_hints.py",
+    "tests/test_intent_plan.py",
+    "tests/test_studio_intent_telemetry.py",
+    "tests/test_studio_entry.py"
+  ]
+}

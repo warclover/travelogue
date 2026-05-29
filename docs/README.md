@@ -3,21 +3,21 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
-| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2 Studio** + **Phase 3 Curate 聚类** + **Phase 4 编辑意图** |
-| **更新日期** | 2026-05-28 |
+| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2 Studio** + **Phase 3 Curate 聚类** + **Phase 4 编辑意图** + **Phase 5 整体优化** |
+| **更新日期** | 2026-05-30 |
 
 ---
 
 ## 阅读顺序（新人）
 
-1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · 已冻结）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（Curate 聚类）→ [PRD-PHASE4.md](./PRD-PHASE4.md)（编辑意图 · 杂志心智）  
+1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · 已冻结）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（Curate 聚类）→ [PRD-PHASE4.md](./PRD-PHASE4.md)（编辑意图 · 杂志心智）→ [PRD-PHASE5.md](./PRD-PHASE5.md)（整体优化 · 做深做透）  
 2. [AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md)  
 2b. [PRD-LAYOUT.md](./PRD-LAYOUT.md)（排版布局子系统 · Agent 1.5）  
 3. [DATA-MODEL.md](./DATA-MODEL.md) + [schemas/trip.schema.json](../schemas/trip.schema.json)  
 4. [TEMPLATE-visual-journal.md](./TEMPLATE-visual-journal.md) + [golden.html](../templates/visual-journal/golden.html)  
 5. **开发前必读 P0.5**（§下）  
 6. [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md) → [DEVELOPMENT.md](./DEVELOPMENT.md)  
-7. [ACCEPTANCE.md](./ACCEPTANCE.md)（MVP）→ [ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md)（Phase 2）
+7. [ACCEPTANCE.md](./ACCEPTANCE.md)（**单轨验收入口** · Phase 5 发布闸门）→ 按需 [ACCEPTANCE-PHASE2～5](./ACCEPTANCE-PHASE5.md)
 
 ---
 
@@ -66,6 +66,20 @@
 
 ---
 
+## Phase 5 · 整体优化（Polish · 做深做透）
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE5.md](./PRD-PHASE5.md) | **Phase 5 产品需求** v0.5.4（**双路径交付** · 长图 A + 卷轴 B · Tier 0–4） |
+| [IMPLEMENTATION-PHASE5.md](./IMPLEMENTATION-PHASE5.md) | Phase 5 实施任务清单（M20–M23） |
+| [ACCEPTANCE-PHASE5.md](./ACCEPTANCE-PHASE5.md) | Phase 5 验收（UX-P5-80-01 · UX-P5-SCROLL-01） |
+
+**前置**：Phase 4 M15–M19 代码主线已收口。**代号**：P5-Polish。**决策**：D1–D6 见 PRD §2.2（D4/D5 暂缓）。
+
+阅读顺序：**PRD-PHASE5** →（启动实施时）**IMPLEMENTATION-PHASE5** → **ACCEPTANCE-PHASE5**。
+
+---
+
 ## P0 · 立项与产品
 
 | 文档 | 说明 |
@@ -81,7 +95,7 @@
 | [DEVELOPMENT.md](./DEVELOPMENT.md) | 开发手册 |
 | [WORKSHOP.md](./WORKSHOP.md) | **本地工坊**：Phase 2 推荐 Studio；开发者 workshop 脚本 |
 | [老图.md](./老图.md) | **混册/老图/截图**：时间段分段、`mediaClass` 与编排原则 |
-| [ACCEPTANCE.md](./ACCEPTANCE.md) | MVP 验收 |
+| [ACCEPTANCE.md](./ACCEPTANCE.md) | **单轨验收入口**（MVP 附录 + Phase 2–5 索引 · 当前闸门 Phase 5） |
 | [SHARING.md](./SHARING.md) | **双轨分享**：服务端长图（Phase 2 主路径）vs 小程序鉴权 HTML（P3） |
 | [PRD-LAYOUT.md](./PRD-LAYOUT.md) | **排版布局 PRD**（专职 Agent 1.5 规划） |
 | [web端模板.prd](./web端模板.prd) | **Web 端模板 PRD**（章/屏、16:9 舞台、pattern 库） |
@@ -107,7 +121,7 @@
 
 | 文档 | 说明 |
 |------|------|
-| [CLI-SPEC.md](./CLI-SPEC.md) | CLI 命令契约 |
+| [CLI-SPEC.md](./CLI-SPEC.md) | CLI 命令契约（**v0.4** · studio / export-longshot 已实现） |
 | [ERROR-CODES.md](./ERROR-CODES.md) | 错误码 |
 | [VALIDATION-RULES.md](./VALIDATION-RULES.md) | L1 Schema + L2 Manifest |
 | [MEDIA-PIPELINE.md](./MEDIA-PIPELINE.md) | Agent 0 媒体管线 |

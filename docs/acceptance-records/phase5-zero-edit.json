@@ -1,0 +1,27 @@
+{
+  "recordId": "phase5-zero-edit",
+  "phase": "M20-A",
+  "date": null,
+  "protocol": "UX-P5-80-01",
+  "description": "Phase 5 zero-edit main path: folder → longshot PNG → WeChat (PRD-PHASE5 §5.4)",
+  "persona": "非开发者 · 无 LLM Key · stub narrate OK",
+  "preparation": {
+    "album": "50–100 photos",
+    "folders": ["精选/", "素材/"],
+    "forbidden": ["userNotes", "plan", "anchors", "drawer", "star", "edit copy"],
+    "allowed": ["pick folder", "skip title", "success longshot CTA", "optional ≤10s preview"]
+  },
+  "timing": {
+    "start": "double-click start-studio.bat",
+    "end": "PNG visible in Explorer via reveal",
+    "limitMinutes": 15,
+    "elapsedMinutes": null,
+    "passed": null
+  },
+  "checks": {
+    "AC-P2-02": { "wechatReadable": null },
+    "AC-P4-02": { "featuredChipsOnSuccess": null },
+    "AC-P5-A-01": { "primaryCtaLongshot": null, "noAutoOpenPreview": null }
+  },
+  "runs": []
+}

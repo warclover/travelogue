@@ -1,25 +1,95 @@
-# Travelogue · MVP 验收标准
+# Travelogue · 验收标准（单轨入口）
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.1 |
-| **适用范围** | P0 本地工坊 MVP |
-| **完成定义** | 下文 **AC-01～AC-06** 全部通过 |
-| **关联** | `CHARTER.md` §8、`PRD-MVP.md` §12 |
-| **更新日期** | 2026-05-19 |
+| **文档版本** | v1.0 |
+| **适用范围** | MVP 基线 + Phase 2–5 累计验收 |
+| **当前发布闸门** | **[Phase 5](./ACCEPTANCE-PHASE5.md)**（P5-Polish · 双路径） |
+| **关联** | [IMPLEMENTATION-PHASE5.md](./IMPLEMENTATION-PHASE5.md) · [PRD-PHASE5.md](./PRD-PHASE5.md) |
+| **更新日期** | 2026-05-30 |
+
+> **P5-12.2 单轨合并**：本文档为验收入口；各 Phase 细则仍保留在分册中，**不再**以 MVP v0.1 清单单独作为发布闸门。
 
 ---
 
-## 1. 验收原则
+## 1. 阅读顺序
+
+1. **发布前必查** → [§2 当前发布闸门](#2-当前发布闸门phase-5)  
+2. **按 Phase 深入** → [§3 分 Phase 验收文档](#3-分-phase-验收文档)  
+3. **MVP 对照** → [§4 MVP → Phase 对照](#4-mvp--phase-对照)  
+4. **计时 / 盲评数据** → [acceptance-records/](./acceptance-records/README.md)  
+5. **历史 MVP 细项** → [附录 A](#附录-a--mvp-基线详情-v01)
+
+---
+
+## 2. 当前发布闸门（Phase 5）
+
+**权威文档**：[ACCEPTANCE-PHASE5.md](./ACCEPTANCE-PHASE5.md)
+
+| 类别 | 必达 | 记录 |
+|------|------|------|
+| **路径 A · 零编辑** | UX-P5-80-01 · AC-P5-A-01～03 · AC-P2-02 微信可读 | [phase5-zero-edit.json](./acceptance-records/phase5-zero-edit.json) |
+| **路径 B · 卷轴** | AC-P5-B-01/02 · UX-P5-SCROLL-01 | [phase5-scroll-qualitative.json](./acceptance-records/phase5-scroll-qualitative.json) |
+| **排版地基** | AC-P5-C-01 · AC-P5-C-02（QS-01 ≥8/10） | [phase5-layout-sprint.json](./acceptance-records/phase5-layout-sprint.json) |
+| **Studio 体验** | AC-P4-HP-01～06 · AC-P4-A11Y-03 | [ACCEPTANCE-PHASE4.md](./ACCEPTANCE-PHASE4.md) §4 |
+| **工程** | P5-10.4 e2e smoke · CLI-SPEC 同步 | `scripts/e2e_studio_smoke.ps1` |
+| **不阻塞发布** | AC-P5-B-03～05 · P-EVAL · beam 实验 | [phase5-peval.json](./acceptance-records/phase5-peval.json) |
+
+### 自动化（发布前建议）
+
+```powershell
+python -m pytest tests/test_studio_a11y_p4.py tests/test_studio_entry.py tests/test_reading_p5.py tests/test_reading_auto_breath.py -q
+python scripts/e2e_studio_smoke.ps1
+```
+
+---
+
+## 3. 分 Phase 验收文档
+
+| Phase | 文档 | 实施清单 | 状态 | 关键 KPI |
+|-------|------|----------|------|----------|
+| **MVP** | 附录 A（本文） | [PRD-MVP.md](./PRD-MVP.md) | 已冻结 · 基线 | AC-01～07 |
+| **2 · Studio** | [ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md) | [IMPLEMENTATION-PHASE2.md](./IMPLEMENTATION-PHASE2.md) | 已并入 P5 | AC-P2-02 长图微信可读 |
+| **3 · 聚类** | [ACCEPTANCE-PHASE3.md](./ACCEPTANCE-PHASE3.md) | [IMPLEMENTATION-PHASE3.md](./IMPLEMENTATION-PHASE3.md) | 已并入 P5 | I-G2 · cache |
+| **4 · 意图** | [ACCEPTANCE-PHASE4.md](./ACCEPTANCE-PHASE4.md) | [IMPLEMENTATION-PHASE4.md](./IMPLEMENTATION-PHASE4.md) | 代码 ☑ · 手测并行 | P-EVAL · HP/A11Y |
+| **5 · Polish** | **[ACCEPTANCE-PHASE5.md](./ACCEPTANCE-PHASE5.md)** | [IMPLEMENTATION-PHASE5.md](./IMPLEMENTATION-PHASE5.md) | **当前闸门** | UX-P5-80-01 · SCROLL-01 |
+
+---
+
+## 4. MVP → Phase 对照
+
+| MVP ID | 继承 / 等价 Phase AC | 说明 |
+|--------|----------------------|------|
+| **AC-01** | AC-P2-01a · AC-P5-A-02 | 真实相册 → 可预览 / 长图 |
+| **AC-02** | AC-P2-01b → **UX-P5-80-01** | 20min → Phase 5 零编辑 **≤15min** |
+| **AC-03** | UX-P5-SCROLL-01 · 定性 | 愿分享 → 卷轴「哇」反应 |
+| **AC-04** | F-VID-* · AC-P5 回归 | 含视频 trip |
+| **AC-05** | AC-P2-02 · AC-P5-A-03 | 微信可读（长图 PNG） |
+| **AC-06** | F-EXP-05 · validate | 无精确 home GPS |
+| **AC-07** | AC-P2-02 · P5-L1/L2 | 保存长图发群 |
+
+功能矩阵 **F-TRIP / F-ING / F-CUR** 等仍见 [附录 A](#附录-a--mvp-基线详情-v01)；新功能以 Phase 2–5 AC 为准。
+
+---
+
+## 5. 验收记录目录
+
+机器可读记录与 trip 手测笔记：[acceptance-records/README.md](./acceptance-records/README.md)
+
+---
+
+## 附录 A · MVP 基线详情 (v0.1)
+
+> **历史基线** · 2026-05-19 起稿。发布闸门已上移至 [Phase 5](#2-当前发布闸门phase-5)；下列细项供回归与对照，**单独勾选不再阻断发布**。
+
+### A.1 验收原则
 
 1. **真实数据**：至少 3 次不同旅行素材，非虚构样张。  
 2. **可复现**：记录 `tripId`、模板版本、`trip.json` version、日期。  
 3. **可演示**：每条 AC 保留截图或 zip 路径（本地即可）。  
 4. **人工闸口**：须走 G1（结构）与 G3（隐私）；G2 可合并到预览改字。
 
----
-
-## 2. 发布闸门（必须全部 ☑）
+### A.2 发布闸门（MVP 原始 · 已由 Phase 5 取代）
 
 | ID | 标准 | 验证方法 | 通过 |
 |----|------|----------|------|
@@ -29,17 +99,13 @@
 | **AC-04** | 至少 **1 篇** 含短视频且循环/ poster 正常 | 含 `type:video` 的 trip | ☐ |
 | **AC-05** | 导出 zip 在 **另一台手机微信** 内可读 | 传 zip → 解压或托管链接 → 滑动浏览 | ☐ |
 | **AC-06** | 导出展示图 **无精确 home GPS** EXIF | 抽检导出 jpg/webp EXIF | ☐ |
-| **AC-07** | 「保存长图」得到竖版 PNG，并 **发到微信群** 群友可读（无需链接） | 保存 → 发群 → 他人反馈 | ☐ |
+| **AC-07** | 「保存长图」得到竖版 PNG，并 **发到微信群** 群友可读 | 保存 → 发群 → 他人反馈 | ☐ |
 
-**MVP 完成**：上表 **AC-01～AC-07** 全部为 ☑。
+**AC-07 推荐路径（2026-05）**：`travelogue serve` → Studio 保存长图 → 发微信群。
 
-**AC-07 推荐路径（2026-05）**：`travelogue serve` → `index-longshot.html` → 隐藏/编辑图注 → **按章 2×** 导出 → 发微信群。
+### A.3 功能验收矩阵（按需求 ID）
 
----
-
-## 3. 功能验收矩阵（按需求 ID）
-
-### 3.1 Trip 与导入
+#### Trip 与导入
 
 | 需求 ID | 验收步骤 | 通过 |
 |---------|----------|------|
@@ -53,7 +119,7 @@
 | F-ING-05 | mp4/mov ≤15s 可导入 | ☐ |
 | F-ING-06 | 生成 w800/w1600 WebP | ☐ |
 
-### 3.2 策展
+#### 策展
 
 | 需求 ID | 验收步骤 | 通过 |
 |---------|----------|------|
@@ -63,7 +129,7 @@
 | F-CUR-05 | 3–5 章且 `patternId` 合法 | ☐ |
 | F-CUR-06 | 提供 3 封面候选并可改 `coverAssetId` | ☐ |
 
-### 3.3 叙事
+#### 叙事
 
 | 需求 ID | 验收步骤 | 通过 |
 |---------|----------|------|
@@ -72,116 +138,60 @@
 | F-NAR-05 | 无禁用词表命中 | ☐ |
 | F-NAR-06 | 不合规 JSON 被拒绝或自动修 | ☐ |
 
-### 3.4 视频
+#### 视频
 
 | 需求 ID | 验收步骤 | 通过 |
 |---------|----------|------|
 | F-VID-01 | 循环片段 3–8s 静音 | ☐ |
 | F-VID-04 | trip 内 ≤3 视频 | ☐ |
 
-### 3.5 编辑与导出
+#### 编辑与导出
 
 | 需求 ID | 验收步骤 | 通过 |
 |---------|----------|------|
-| F-ED-03 | 改字后重渲染生效 | ☑ · `serve` 保存后 auto re-render（`--no-rerender` 可关） |
+| F-ED-03 | 改字后重渲染生效 | ☑ · `serve` 保存后 auto re-render |
 | F-ED-04 | 浏览器可预览 | ☐ |
 | F-EXP-01 | 相对路径、离线可开 | ☐ |
 | F-EXP-02 | 无 JS 仍可阅读主内容 | ☐ |
 | F-EXP-03 | `preview.jpg` 9:16 存在 | ☐ |
 | F-EXP-04 | zip 解压即 `index.html` | ☐ |
 | F-EXP-05 | 未 `privacy.confirmedAt` 不可 export | ☐ |
-| F-EXP-07 | 点击「保存长图」下载竖版 PNG；**screens trip 用 `index-longshot.html`**；须 `travelogue serve`（非 file://）；支持按章 + 隐藏图注 | ☐ |
-| F-EXP-07b | 默认 export zip 含 longshot bundle；`--no-longshot` 可剔除 | ☐ |
+| F-EXP-07 | 保存长图 · screens trip 用 longshot | ☐ |
+| F-EXP-07b | 默认 export zip 含 longshot bundle | ☐ |
 
----
-
-## 4. 模板与渲染验收
+### A.4 模板与渲染验收
 
 | ID | 标准 | 通过 |
 |----|------|------|
 | T-01 | `templateId` 为 `visual-journal` | ☐ |
-| T-02 | 手机宽 <768px：9:16 + overlay 标题 | ☐ |
-| T-03 | Web ≥768px：16:9 + 标题在图下 | ☐ |
-| T-04 | `exportLayout: mobile` 强制竖版意图 | ☐ |
-| T-05 | 主图 `srcset` 或等价多档（实现后） | ☐ |
-| T-06 | 视频章不违反 manifest（封面无视频等） | ☐ |
-| T-07 | 有语音时展示 voice-bar；转写可折叠 | ☐ |
-| T-08 | `layoutEngine=screens` 时章内为 `layout-screen--16x9` | ☑ · `tests/test_dual_layout_engine.py` |
-| T-09 | 竖三列 `screen-portrait-3` 使用 **cover** 拼满 | ☑ · `golden-web-screens.html` |
-| T-10 | 单屏 ≤9 张，横/竖 4·9 宫格可触发 | ☑ · `tests/test_screen_layout_planner.py` |
-| T-11 | `layout` 闸口展示屏级摘要（`format_layout_summary`） | ☑ |
-| T-12 | legacy 与 screens 双引擎 CI 回归不互损 | ☑ · `tests/test_dual_layout_engine.py` |
+| T-08 | `layoutEngine=screens` 时章内为 `layout-screen--16x9` | ☑ |
+| T-09 | 竖三列 `screen-portrait-3` 使用 **cover** | ☑ |
+| T-10 | 单屏 ≤9 张，横/竖 4·9 宫格可触发 | ☑ |
+| T-11 | `layout` 闸口展示屏级摘要 | ☑ |
+| T-12 | legacy 与 screens 双引擎 CI 回归 | ☑ |
 
-对照金样例：`templates/visual-journal/golden.html`（legacy）、`golden-web-screens.html`（screens）。
+对照金样例：`templates/visual-journal/golden.html`、`golden-web-screens.html`。
 
-**Web A/B 真图**：`.\scripts\compare-web-layout.ps1 trips\<id>` → `index-legacy.html` vs `index-screens.html`。
+### A.5 Agent 流水线 · 非功能 · 记录表
 
----
+见 Phase 3–5 自动化测试与 [acceptance-records/](./acceptance-records/README.md)。
 
-## 5. Agent 流水线验收
+**Trip 手测**： [linzhi.md](./acceptance-records/linzhi.md) · [mao.md](./acceptance-records/mao.md)
 
-| ID | 标准 | 通过 |
-|----|------|------|
-| A-01 | 未 `structure_locked` 时 `narrate` 被拒绝 | ☐ |
-| A-02 | Agent 不输出 HTML 字符串到 trip.json | ☐ |
-| A-03 | `edited: true` 字段重跑 narrative 不覆盖 | ☐ |
-| A-04 | 同 trip.json 重渲染 HTML 一致 | ☐ |
-| A-05 | 分批 ingest 产生 `ingestBatchId`（实现后） | ☐ |
+### A.6 缺陷分级
 
----
-
-## 6. 非功能抽检
-
-| ID | 标准 | 通过 |
-|----|------|------|
-| NF-01 | 30 图 trip 的 zip < 25MB（可配置） | ☐ |
-| NF-02 | 封面图 < 500KB | ☐ |
-| NF-03 | `config.yaml` 与 Key 未进入 git | ☐ |
-| NF-04 | Chrome + 微信内置浏览器 smoke test | ☐ |
-
----
-
-## 7. 验收记录表（每次真实 trip）
-
-复制下表填写 3 次：
-
-| 字段 | Trip 1 | Trip 2 | Trip 3 |
-|------|--------|--------|--------|
-| tripId | | | |
-| 素材张数 / 视频数 | | | |
-| 导入耗时 | | | |
-| G1 后删图数 | | | |
-| 叙事耗时 | | | |
-| 总耗时（导入→愿导出） | | | |
-| 是否愿分享 | | | |
-| AC-04 含视频 | | | |
-| 备注 | | | |
-
-**Trip 1 林芝（进行中）**：见 [acceptance-records/linzhi.md](./acceptance-records/linzhi.md)。
-
----
-
-## 8. 缺陷分级（验收期间）
-
-| 级别 | 定义 | 是否阻断 MVP |
-|------|------|----------------|
+| 级别 | 定义 | 是否阻断 |
+|------|------|----------|
 | P0 | 无法完成导入/渲染/导出；隐私泄漏 | 是 |
 | P1 | 版式严重错乱、文案幻觉地点 | 是 |
-| P2 | 样式细节、单张图失败 | 否，记 backlog |
-| P3 | 文案润色、动效 | 否 |
+| P2 | 样式细节、单张图失败 | backlog |
+| P3 | 文案润色、动效 | backlog |
 
 ---
 
-## 9. 签字（自用）
-
-| 角色 | 姓名 | 日期 | 结论 |
-|------|------|------|------|
-| 产品/负责人 | | | 通过 / 不通过 |
-
----
-
-## 10. 版本历史
+## 版本历史
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.0 | 2026-05-30 | **P5-12.2 单轨合并** · Phase 5 发布闸门 · MVP 降为附录 A |
 | v0.1 | 2026-05-19 | P0 验收清单，对齐 visual-journal v0.2 |

@@ -1,0 +1,31 @@
+{
+  "recordId": "phase5-scroll-qualitative",
+  "phase": "M20-C",
+  "date": null,
+  "protocol": "UX-P5-SCROLL-01",
+  "description": "Phase 5 scroll path B qualitative review (PRD-PHASE5 §5.7–§5.8)",
+  "trip": {
+    "tripId": null,
+    "photoCount": null,
+    "shareUrl": null
+  },
+  "judges": {
+    "count": 5,
+    "blind": true,
+    "prompt": "打开链接后，你的第一反应是什么？愿意滚到底吗？会转发给朋友吗？"
+  },
+  "metrics": {
+    "wowReaction": { "threshold": "≥3/5 正面（哇/高级/像杂志）", "result": null },
+    "coverDwellSec": { "threshold": ">3s before first scroll", "median": null },
+    "scrollCompletion": { "threshold": "≥70% reach epilogue", "rate": null },
+    "shareIntent": { "threshold": "qualitative until miniapp", "notes": null }
+  },
+  "sessions": [],
+  "featuresUnderTest": [
+    { "id": "P5-S1", "name": "auto breath profile by photo count", "status": "Pending" },
+    { "id": "P5-S7", "name": "share state without edit toolbar", "status": "Pending" },
+    { "id": "P5-S2", "name": "chapter divider screens", "status": "Tier 1" },
+    { "id": "P5-S3", "name": "cover hero entrance", "status": "Tier 1" },
+    { "id": "P5-S4", "name": "epilogue footer", "status": "Tier 1" }
+  ]
+}
