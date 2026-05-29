@@ -21,7 +21,7 @@
 
 | 里程碑 | 目标 | 状态 | 估算 | 备注 |
 |--------|------|------|------|------|
-| **M15** | 导入 panel + Intent + API + 进度/成功反馈 + brief | ◑ | ~35% | 前端 UI + intentLine 已落地；schema/apply_intent/brief/config/测试缺 |
+| **M15** | 导入 panel + Intent + API + 进度/成功反馈 + brief | ◑ | ~90% | 前后端地基齐（schema/apply_intent/brief/pipeline/测试）；剩 M15-04 sessionStorage 确认、M15-11 config（随 M17） |
 | **M15-HP** | 首页极易用（§PRD-PHASE4 §6） | ◑ | ~90% | 仅缺 `/trips` 骨架屏；其余 panel/确认区/回访大卡/coach 均有代码 |
 | **M16** | 预览：书名/感受/promote/peak 深链 | ☐ | ~5% | 仅 `promote-tier`（附录 A 既有）；`entry` 深链未实现 |
 | **M16b** | 预览编辑/结构 drawer | ☐ | 0% | — |
@@ -35,19 +35,19 @@
 
 | 任务 ID | 任务 | 文件/模块 | 状态 | 核查 |
 |---------|------|-----------|------|------|
-| M15-01 | `trip.intent` schema + `validate_trip` | `schemas/trip.schema.json` · `services/validate.py` | ☐ | schema 无顶层 `intent` 对象 |
-| M15-02 | `TripService.apply_intent()` 双写 meta/userNotes | `services/trip.py` | ☐ | grep 零命中 |
+| M15-01 | `trip.intent` schema + `validate_trip` | `schemas/trip.schema.json` · `services/validate.py` | ☑ | `$defs/intent` + 顶层属性（optional，旧 trip 放行）；测试守护 |
+| M15-02 | `TripService.apply_intent()` 双写 meta/userNotes | `services/trip.py` | ☑ | 单写入口；镜像 meta.title/places + trip.userNotes，**不**写 meta.userNotes；AC-P4-09 测试 |
 | M15-03 | studio.html：Intent 带 UI（title/place/feeling） | `templates/studio/studio.html` | ☑ | `trip-title`/`trip-feeling`/`trip-place` 在 panel |
 | M15-04 | studio.js：sessionStorage · import body | `templates/studio/studio.js` | ◑ | import body 带 title/place/userNotes；sessionStorage 恢复待确认 |
-| M15-05 | import API：`userNotes` · worker 写 intent | `web/studio_routes.py` · `studio_subprocess.py` | ◑ | `userNotes` 已解析(routes 370/428/484)；**worker 未写 intent 对象**（无 schema） |
+| M15-05 | import API：`userNotes` · worker 写 intent | `web/studio_routes.py` · `studio_pipeline.py` | ☑ | pipeline 经 `apply_intent` 落盘 intent + folders 检测；schema 校验通过 |
 | M15-06 | 双文件夹静态说明文案 | `studio.html` · `studio.css` | ☑ | hint 行 + 折叠树形图（html 168/170） |
 | M15-07 | Job.result：`intentLine` featured/segment | `studio_pipeline.py` · `studio_jobs.py` | ☑ | 真实计算（`_format_intent_line`/`_trip_import_stats`） |
 | M15-08 | 成功 overlay 动态文案 | `studio.js` | ☑ | `studio-success-msg`/chips/countdown（js 1204-1246） |
-| M15-09 | `narrative_brief` 统一 userNotes 源 | `services/narrative_brief.py` | ☐ | 仍直接读 `meta.userNotes`，无 `intent` 回退（line 58） |
-| M15-10 | pytest：import 带 title/userNotes | `tests/test_studio_intent.py` | ☐ | 文件不存在 |
-| M15-11 | `config.yaml` `g1_confirm_structure: false` 默认 | `config.py` · example | ☐ | config 无此项 |
+| M15-09 | `narrative_brief` 统一 userNotes 源 | `services/narrative_brief.py` | ☑ | `resolve_user_notes`(trip.userNotes ?? intent.userNotes) + `travelPlanSummary`；修了 `meta.userNotes` 死字段 bug |
+| M15-10 | pytest：import 带 title/userNotes | `tests/test_studio_intent.py` | ☑ | 13 用例：双写不变量 / brief 统一 / schema / pipeline 集成 |
+| M15-11 | `config.yaml` `g1_confirm_structure: false` 默认 | `config.py` · example | ☐ | config 无此项（与 M17 合并实施） |
 
-> **M15 缺口聚焦**：前端与 intentLine 已可用，但 **intent 落盘契约（M15-01/02）缺失** 是阻塞点——前端已在发 `userNotes`/`title`，后端却无 `intent` 对象承接，brief 也未消费。建议 M15 收口顺序：**01 → 02 → 09 → 05(worker 写 intent) → 10(测试)**。
+> **M15 状态（2026-05-29 更新）**：后端 intent 地基已落地（schema + apply_intent + brief 统一 + pipeline 落盘 + 13 回归测试）。修复了两处潜伏的 schema 校验 bug（`meta.userNotes` 死字段写入会致 export 失败）。剩余：M15-04 sessionStorage 恢复待确认、M15-11 config（随 M17）。AC-P4-01/04(stub)/09 现已可通过。
 
 ---
 
@@ -154,11 +154,11 @@
 
 > 当前 P4 的真实障碍不是"功能没做"，而是"前端跑在地基与流程治理之前"。建议按下列顺序收口：
 
-| 优先级 | 动作 | 关联 |
-|--------|------|------|
-| **P0** | **git 固化**：把未提交的 P4 前端 + 三份文档 + wireframe 拆成合理 commit 入库 | 防丢失 |
-| **P0** | **后端 intent 地基**：M15-01 schema `intent` + 迁移、M15-02 `apply_intent()`、M15-09 brief 统一 | 解锁 AC-P4-01/04/06 |
-| **P0** | **暖金对比度定稿**：`--accent #d2a657` + 白字实测 ~1.9:1 不达标，先定色再继续 UI | PRD §6.12/§6.13 |
-| **P1** | M15-10 / M16-07 自动化测试补齐 | 验收门禁 |
-| **P1** | M15-HP-08 骨架屏 | 唯一前端缺口 |
-| **P2** | M16 entry 深链 → M17 G1 → M18 plan → M19 评估 | 按依赖推进 |
+| 优先级 | 动作 | 关联 | 状态 |
+|--------|------|------|------|
+| **P0** | **git 固化**：未提交 P4 前端 + 文档 + wireframe 入库 | 防丢失 | ✅ 已完成（8678afc/13b33fe/7e11dae/8019502） |
+| **P0** | **后端 intent 地基**：M15-01 schema、M15-02 `apply_intent()`、M15-09 brief 统一、M15-05 pipeline 落盘 | 解锁 AC-P4-01/04/09 | ✅ 已完成（含 13 回归测试，修 2 处 schema bug） |
+| **P0** | **暖金对比度定稿**：`--accent #d2a657` + 白字实测 ~1.9:1 不达标，先定色再继续 UI | PRD §6.12/§6.13 | ⬜ 待做 |
+| **P1** | M16-07 自动化测试（entry）；M15-10 ✅ 已补 | 验收门禁 | ◑ |
+| **P1** | M15-HP-08 骨架屏 | 唯一前端缺口 | ⬜ |
+| **P2** | M16 entry 深链 → M17 G1（含 g1_confirm_structure config）→ M18 plan → M19 评估 | 按依赖推进 | ⬜ |

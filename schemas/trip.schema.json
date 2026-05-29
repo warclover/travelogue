@@ -68,9 +68,50 @@
     "createdAt": { "type": "string", "format": "date-time" },
     "updatedAt": { "type": "string", "format": "date-time" },
     "curation": { "$ref": "#/$defs/tripCuration" },
-    "export": { "$ref": "#/$defs/exportOptions" }
+    "export": { "$ref": "#/$defs/exportOptions" },
+    "intent": { "$ref": "#/$defs/intent" }
   },
   "$defs": {
+    "intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version"],
+      "description": "Phase 4 editorial intent (PRD-PHASE4 §4.1). Optional; mirrored to meta/userNotes via TripService.apply_intent.",
+      "properties": {
+        "version": { "const": "1" },
+        "title": { "type": "string", "maxLength": 20 },
+        "places": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 10
+        },
+        "userNotes": { "type": "string", "maxLength": 200 },
+        "travelPlan": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "format": { "type": "string", "enum": ["text", "markdown"] },
+            "filename": { "type": "string" },
+            "summary": { "type": "string", "maxLength": 200 },
+            "cities": {
+              "type": "array",
+              "items": { "type": "string" },
+              "maxItems": 10
+            }
+          }
+        },
+        "folders": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "featuredDetected": { "type": "boolean" },
+            "featuredDir": { "type": "string" },
+            "materialDir": { "type": "string" }
+          }
+        },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      }
+    },
     "exportOptions": {
       "type": "object",
       "additionalProperties": false,

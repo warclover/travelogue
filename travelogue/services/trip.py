@@ -5,13 +5,100 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from travelogue.services.validate import load_json
 
 
 class TripNotFoundError(FileNotFoundError):
     pass
+
+
+_UNSET = object()
+
+
+def _clean_str(value: Any, *, limit: int) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    return text[:limit]
+
+
+def apply_intent(
+    trip: dict,
+    *,
+    title: Any = _UNSET,
+    places: Any = _UNSET,
+    user_notes: Any = _UNSET,
+    travel_plan: Any = _UNSET,
+    folders: Any = _UNSET,
+    submitted_at: str | None = None,
+) -> dict:
+    """Single writer for Phase 4 ``trip.intent`` (PRD-PHASE4 §4.1/§14).
+
+    Atomically updates ``intent`` and mirrors the structural fields to
+    ``meta.title`` / ``meta.places`` / top-level ``userNotes`` so the
+    double-write invariant (AC-P4-09) always holds. Only arguments that are
+    explicitly passed are touched; ``None`` clears the field.
+
+    Returns the updated ``trip.intent`` object.
+    """
+    intent = dict(trip.get("intent") or {})
+    intent["version"] = "1"
+    meta = trip.setdefault("meta", {})
+
+    if title is not _UNSET:
+        cleaned = _clean_str(title, limit=20)
+        if cleaned:
+            intent["title"] = cleaned
+            meta["title"] = cleaned
+        else:
+            intent.pop("title", None)
+
+    if places is not _UNSET:
+        place_list = [
+            p
+            for p in (
+                _clean_str(item, limit=20) for item in (places or [])
+            )
+            if p
+        ][:10]
+        if place_list:
+            intent["places"] = place_list
+            meta["places"] = list(place_list)
+        else:
+            intent.pop("places", None)
+
+    if user_notes is not _UNSET:
+        cleaned = _clean_str(user_notes, limit=200)
+        if cleaned:
+            intent["userNotes"] = cleaned
+            trip["userNotes"] = cleaned
+        else:
+            intent.pop("userNotes", None)
+            trip.pop("userNotes", None)
+
+    if travel_plan is not _UNSET:
+        if travel_plan:
+            intent["travelPlan"] = travel_plan
+        else:
+            intent.pop("travelPlan", None)
+
+    if folders is not _UNSET:
+        if folders:
+            intent["folders"] = folders
+        else:
+            intent.pop("folders", None)
+
+    intent["submittedAt"] = submitted_at or datetime.now(timezone.utc).isoformat(
+        timespec="seconds"
+    )
+    trip["intent"] = intent
+    return intent
 
 
 class TripService:
@@ -51,6 +138,8 @@ class TripService:
             except OSError:
                 pass
             raise
+
+    apply_intent = staticmethod(apply_intent)
 
     def resolve_trip_root(self, trip_json: Path) -> Path:
         """Directory containing trip.json and assets/."""

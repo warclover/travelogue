@@ -11,7 +11,7 @@ from travelogue.curation.curate import CurateError, run_curate
 from travelogue.demo.build import DemoError, resolve_demo_config
 from travelogue.media.ingest import IngestError, ingest_into_trip, scan_image_paths
 from travelogue.orchestrator.run import run_trip
-from travelogue.services.trip import TripService
+from travelogue.services.trip import TripService, apply_intent
 from travelogue.services.trip_factory import create_trip
 from travelogue.util.trip_slug import demo_trip_id_from_album
 from travelogue.web.studio_jobs import ProgressCallback
@@ -156,15 +156,17 @@ def run_studio_pipeline(
         trip_root = trip_json.parent
         svc = TripService(root=trips_root.parent)
         trip = svc.load(trip_json)
-        if user_notes:
-            notes = str(user_notes).strip()[:200]
-            if notes:
-                trip["userNotes"] = notes
-                meta_notes = trip.setdefault("meta", {})
-                meta_notes["userNotes"] = notes
+        # F-P4 M15: single-writer intent — mirrors meta.title/places + trip.userNotes
+        # (never meta.userNotes, which is not in schema).
+        apply_intent(
+            trip,
+            title=title,
+            places=[place] if place else [],
+            user_notes=user_notes,
+        )
 
         try:
-            ingest_into_trip(
+            ingest_result = ingest_into_trip(
                 trip,
                 trip_root,
                 from_dir=album_dir,
@@ -177,6 +179,12 @@ def run_studio_pipeline(
                 raise DemoError("E_DEMO_TOO_FEW", str(exc)) from exc
             raise DemoError(exc.code, str(exc)) from exc
 
+        # F-P4 M15: record dual-folder detection into intent.folders
+        ingest_stats = ingest_result.stats or {}
+        tier_mode = ingest_stats.get("tier_mode")
+        featured_detected = tier_mode in ("auto", "explicit") or ingest_stats.get("mode") == "dual"
+        apply_intent(trip, folders={"featuredDetected": bool(featured_detected)})
+
         from travelogue.curation.clustering import run_clustering_layer
 
         # Emit clustering hint as part of the *curate* stage (the next user-facing
@@ -184,11 +192,6 @@ def run_studio_pipeline(
         cluster_result = run_clustering_layer(trip, trip_dir=trip_root, cfg=cfg)
         cluster_notice = cluster_result.user_notice
         svc.save(trip, trip_json)
-
-        meta = trip.setdefault("meta", {})
-        meta["title"] = title[:20]
-        if place:
-            meta["places"] = [place]
 
         if cluster_result.stage_hint and progress:
             progress("curate", 2, cluster_result.stage_hint)

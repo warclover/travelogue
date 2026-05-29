@@ -30,6 +30,22 @@ def _asset_brief(asset: dict) -> dict[str, Any]:
     return out
 
 
+def resolve_user_notes(trip: dict) -> str | None:
+    """Unified userNotes source (PRD-PHASE4 §8.4): trip.userNotes ?? intent.userNotes."""
+    notes = trip.get("userNotes")
+    if not notes:
+        notes = (trip.get("intent") or {}).get("userNotes")
+    text = str(notes or "").strip()
+    return text or None
+
+
+def resolve_plan_summary(trip: dict) -> str | None:
+    """intent.travelPlan.summary for brief injection (PRD-PHASE4 §8.4)."""
+    plan = (trip.get("intent") or {}).get("travelPlan") or {}
+    text = str(plan.get("summary") or "").strip()
+    return text or None
+
+
 def manifest_limits_brief() -> dict[str, int]:
     lim = _manifest_limits()
     return {
@@ -46,19 +62,23 @@ def build_meta_brief(trip: dict, *, tone: str, regenerate: bool = False) -> dict
     meta = trip.get("meta") or {}
     curation = trip.get("curation") or {}
     segments = curation.get("segments") or []
+    trip_brief: dict[str, Any] = {
+        "tripId": trip.get("tripId"),
+        "title": meta.get("title"),
+        "dateStart": meta.get("dateStart"),
+        "dateEnd": meta.get("dateEnd"),
+        "places": meta.get("places") or [],
+        "tone": tone,
+        "userNotes": resolve_user_notes(trip),
+        "segmentCount": len(segments),
+        "segmentLabels": [s.get("label") for s in segments[:5] if s.get("label")],
+    }
+    plan_summary = resolve_plan_summary(trip)
+    if plan_summary:
+        trip_brief["travelPlanSummary"] = plan_summary
     return {
         "task": "fill_trip_meta",
-        "trip": {
-            "tripId": trip.get("tripId"),
-            "title": meta.get("title"),
-            "dateStart": meta.get("dateStart"),
-            "dateEnd": meta.get("dateEnd"),
-            "places": meta.get("places") or [],
-            "tone": tone,
-            "userNotes": meta.get("userNotes"),
-            "segmentCount": len(segments),
-            "segmentLabels": [s.get("label") for s in segments[:5] if s.get("label")],
-        },
+        "trip": trip_brief,
         "limits": manifest_limits_brief(),
         "fieldsRequested": ["meta.hook", "epilogue"],
         "existing": {
@@ -107,13 +127,17 @@ def build_chapter_brief(
         fields_requested.append("lead")
     if captions_allowed(scope):
         fields_requested.append("items[].caption")
+    trip_brief: dict[str, Any] = {
+        "tripId": trip.get("tripId"),
+        "places": meta.get("places") or [],
+        "tone": tone,
+    }
+    user_notes = resolve_user_notes(trip)
+    if user_notes:
+        trip_brief["userNotes"] = user_notes
     return {
         "task": "fill_chapter_copy",
-        "trip": {
-            "tripId": trip.get("tripId"),
-            "places": meta.get("places") or [],
-            "tone": tone,
-        },
+        "trip": trip_brief,
         "limits": manifest_limits_brief(),
         "chapter": {
             "id": chapter.get("id") or f"ch-{chapter.get('index', 0):02d}",
