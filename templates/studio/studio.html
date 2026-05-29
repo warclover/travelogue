@@ -8,13 +8,23 @@
   <link rel="icon" href="/__studio/assets/favicon.ico" />
   <link rel="stylesheet" href="/__studio/studio.css" />
 </head>
-<body data-studio-v="3">
+<body data-studio-v="4">
 
 <div id="studio-offline" class="studio-offline-banner" hidden>
   服务已停止，请重新启动 Studio
 </div>
 
 <section class="studio-hero" id="studio-hero">
+  <div class="studio-hero__orbs" aria-hidden="true">
+    <span class="studio-hero__orb studio-hero__orb--1"></span>
+    <span class="studio-hero__orb studio-hero__orb--2"></span>
+    <span class="studio-hero__orb studio-hero__orb--3"></span>
+  </div>
+  <div class="studio-hero__deck" aria-hidden="true">
+    <span class="studio-hero__deck-sheet studio-hero__deck-sheet--back"></span>
+    <span class="studio-hero__deck-sheet studio-hero__deck-sheet--mid"></span>
+    <span class="studio-hero__deck-sheet studio-hero__deck-sheet--front"></span>
+  </div>
   <div class="studio-hero__image studio-hero__image--default" id="studio-hero-image"></div>
   <div class="studio-hero__veil"></div>
 
@@ -29,23 +39,27 @@
 
   <!-- ① Empty content -->
   <div class="studio-hero__content" id="studio-hero-empty" hidden>
-    <span class="studio-hero__eyebrow" id="studio-hero-eyebrow">从一个文件夹开始</span>
+    <p class="studio-hero__masthead">Travelogue · 本地杂志工坊</p>
+    <span class="studio-hero__eyebrow" id="studio-hero-eyebrow">照片 · 编排 · 长图</span>
     <h1 class="studio-hero__title">
-      你的照片<br/>是一本<em>还没装帧</em>的杂志
+      你的照片<br/><span class="studio-hero__title-accent">是一本<em>还没装帧</em>的杂志</span>
     </h1>
     <p class="studio-hero__lead">
-      选一次旅行的照片文件夹，2–5 分钟自动排版成<strong>竖版长图</strong>。<br/>
-      照片留在本机，不上传云端。
+      选一次旅行的文件夹，几分钟排成<strong>可发微信的竖版长图</strong>——<br/>
+      像编辑部一样分章、选图、留白，而不是九宫格相册。
     </p>
+    <div class="studio-hero__meta-row" aria-label="产品承诺">
+      <span class="studio-hero__pill">照片留在本机</span>
+      <span class="studio-hero__meta-dot" aria-hidden="true">·</span>
+      <span class="studio-hero__pill">杂志风排版</span>
+      <span class="studio-hero__meta-dot" aria-hidden="true">·</span>
+      <span class="studio-hero__pill">2–5 分钟成稿</span>
+    </div>
     <div class="studio-hero__cta-row">
-      <button type="button" id="studio-pick-folder" class="studio-btn studio-btn--primary">
-        <span class="studio-btn__label">选择照片文件夹</span>
+      <button type="button" id="studio-open-sheet" class="studio-btn studio-btn--gold">
+        <span class="studio-btn__label">制作我的杂志</span>
         <span class="studio-btn__arrow" aria-hidden="true">→</span>
       </button>
-      <span class="studio-hero__cta-meta">
-        打开本机文件夹 · 照片<strong>不会上传</strong><br/>
-        JPG · PNG · WebP · HEIC · 建议 50–100 张
-      </span>
     </div>
     <p id="studio-import-error" class="studio-error studio-error--inline" role="alert" hidden></p>
     <p id="studio-cancel-notice" class="studio-cancel-notice" hidden></p>
@@ -55,15 +69,13 @@
   <div class="studio-hero__content studio-hero__content--hybrid" id="studio-hero-returning" hidden>
     <div class="studio-hero__hybrid-left">
       <span class="studio-hero__eyebrow" id="studio-recent-eyebrow">最近编辑</span>
-      <h1 class="studio-hero__title studio-hero__title--lg">再做一篇？</h1>
-      <p class="studio-hero__lead">选一个新的照片文件夹，几分钟内得到一张可发微信的长图。</p>
+      <div id="studio-continue-card" class="studio-continue-card" hidden></div>
+      <h1 class="studio-hero__title studio-hero__title--lg studio-hero__title--after-card">再做一篇？</h1>
+      <p class="studio-hero__lead">选一个新的照片文件夹，为另一次旅行做一本杂志。</p>
       <div class="studio-hero__cta-row">
-        <button type="button" id="studio-new-trip-cta" class="studio-btn studio-btn--primary">
+        <button type="button" id="studio-open-sheet-returning" class="studio-btn studio-btn--gold">
           <span class="studio-btn__plus" aria-hidden="true">+</span>
-          <span class="studio-btn__label">新建游记</span>
-        </button>
-        <button type="button" id="studio-pick-folder-returning" class="studio-btn studio-btn--ghost-inverse">
-          选择文件夹
+          <span class="studio-btn__label">新建杂志</span>
         </button>
       </div>
     </div>
@@ -103,9 +115,10 @@
   <div class="studio-hero__content studio-hero__content--center" id="studio-success" hidden>
     <p class="studio-success__eyebrow">✓ 生成完成</p>
     <p class="studio-success__msg" id="studio-success-msg">你的第一篇游记已生成</p>
+    <div class="studio-success__chips" id="studio-success-chips" hidden></div>
     <div class="studio-failure__actions">
-      <a id="studio-success-open" href="#" class="studio-btn studio-btn--primary">
-        <span class="studio-btn__label">打开预览</span>
+      <a id="studio-success-open" href="#" class="studio-btn studio-btn--gold">
+        <span class="studio-btn__label">先看杂志排版</span>
         <span class="studio-btn__arrow" aria-hidden="true">→</span>
       </a>
       <button type="button" id="studio-success-stay" class="studio-btn studio-btn--ghost-inverse">留在首页</button>
@@ -113,22 +126,97 @@
     <p class="studio-success__countdown"><span id="studio-success-sec">5</span> 秒后自动打开</p>
   </div>
 
-  <!-- Shared path import (empty + returning) · reads local disk, no browser upload -->
-  <form id="studio-import-form" class="studio-path-form studio-path-form--inline">
-    <label class="studio-path-form__label" for="album-path">照片文件夹</label>
-    <div class="studio-path-form__row">
-      <button type="button" class="studio-btn studio-btn--ghost-inverse studio-btn--sm" id="studio-browse-folder" title="打开本机文件夹选择器">浏览…</button>
-      <input id="album-path" name="albumPath" type="text" class="studio-path-form__input"
-        placeholder="点击「浏览」选择，或粘贴 D:\Photos\Kyoto2025" autocomplete="off" list="studio-recent-paths" />
-      <button type="submit" class="studio-btn studio-btn--ghost-inverse studio-btn--sm" id="studio-submit-path">开始</button>
-    </div>
-    <p class="studio-path-form__hint">浏览 = 本机选文件夹（不上传）· 粘贴路径亦可 · 无 200MB 限制</p>
-    <datalist id="studio-recent-paths"></datalist>
-    <input id="trip-title" type="hidden" value="我的旅途" />
-    <input id="trip-place" type="hidden" value="旅途" />
-  </form>
+  <!-- Import sheet (Phase 4) -->
+  <div id="studio-sheet-root" class="studio-sheet-root" hidden>
+    <div class="studio-sheet-root__scrim" id="studio-sheet-scrim" data-close-sheet></div>
+    <div
+      id="studio-import-sheet"
+      class="studio-import-sheet"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="studio-sheet-title"
+    >
+      <div class="studio-import-sheet__handle" aria-hidden="true"></div>
+      <header class="studio-import-sheet__head">
+        <h2 id="studio-sheet-title" class="studio-import-sheet__title">制作杂志</h2>
+        <button type="button" class="studio-import-sheet__close" id="studio-sheet-close" aria-label="关闭">×</button>
+      </header>
 
-  <details class="studio-advanced" id="studio-advanced-options" hidden>
+      <div class="studio-import-sheet__body">
+        <button type="button" id="studio-sheet-pick" class="studio-btn studio-btn--gold studio-btn--block">
+          选择照片文件夹
+        </button>
+        <p id="studio-sheet-picked" class="studio-sheet-picked" hidden></p>
+
+        <div id="studio-sheet-confirm" class="studio-sheet-confirm" hidden>
+          <div class="studio-field">
+            <label for="trip-title">给这本杂志起个名字</label>
+            <input id="trip-title" type="text" maxlength="20" autocomplete="off" value="我的旅途" />
+            <p id="trip-title-error" class="studio-field__error" hidden></p>
+          </div>
+          <div class="studio-field">
+            <label for="trip-feeling">写给编辑的一句话 <span class="studio-field__opt">（可选）</span></label>
+            <input id="trip-feeling" type="text" maxlength="200" autocomplete="off"
+              placeholder="带娃慢走，别写成导游词" />
+          </div>
+          <button type="button" id="studio-sheet-start" class="studio-btn studio-btn--gold studio-btn--block">
+            开始制作
+          </button>
+          <button type="button" id="studio-sheet-skip" class="studio-sheet-skip">跳过，用默认名</button>
+        </div>
+
+        <p class="studio-sheet-hint">相册里若有 <strong>「精选」</strong> 和 <strong>「素材」</strong> 两个子文件夹，封面会优先用精选（建议 8–20 张）。</p>
+
+        <details class="studio-sheet-details">
+          <summary>帮你排得更好（可选）</summary>
+          <div class="studio-sheet-details__body">
+            <div class="studio-field">
+              <label for="trip-place">主地点</label>
+              <input id="trip-place" type="text" maxlength="12" autocomplete="off" placeholder="京都" />
+            </div>
+            <div class="studio-field">
+              <label for="plan-file">行程单（txt / md）</label>
+              <input id="plan-file" type="file" accept=".txt,.md,text/plain,text/markdown" />
+              <p class="studio-field__hint">只帮我们分章，不会公开发布</p>
+            </div>
+            <pre class="studio-sheet-tree" aria-hidden="true">京都旅行/
+├── 精选/     ← 最满意的 8–20 张
+└── 素材/     ← 其余记录、连拍</pre>
+          </div>
+        </details>
+
+        <details class="studio-sheet-details">
+          <summary>其他导入方式</summary>
+          <div class="studio-sheet-details__body">
+            <form id="studio-import-form" class="studio-path-form">
+              <div class="studio-path-form__row">
+                <button type="button" class="studio-btn studio-btn--sm studio-btn--outline" id="studio-browse-folder">浏览…</button>
+                <input id="album-path" name="albumPath" type="text" class="studio-path-form__input"
+                  placeholder="D:\Photos\Kyoto2025" autocomplete="off" list="studio-recent-paths" />
+                <button type="submit" class="studio-btn studio-btn--sm studio-btn--outline" id="studio-submit-path">开始</button>
+              </div>
+              <datalist id="studio-recent-paths"></datalist>
+            </form>
+            <label class="studio-sheet-upload">
+              小文件夹试用（≤200MB）
+              <input id="album-upload" type="file" webkitdirectory directory multiple hidden />
+            </label>
+          </div>
+        </details>
+
+        <p class="studio-sheet-foot">每个文件夹会生成一篇<strong>新的</strong>杂志，不会覆盖已有游记。
+          <button type="button" class="studio-sheet-foot__help" id="studio-sheet-help">照片怎么准备？</button>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div id="studio-coach" class="studio-coach" hidden>
+    <p id="studio-coach-text" class="studio-coach__text"></p>
+    <button type="button" id="studio-coach-skip" class="studio-coach__skip">跳过</button>
+  </div>
+
+  <details class="studio-advanced studio-advanced--hero" id="studio-advanced-options" hidden>
     <summary class="studio-advanced__summary">高级 · 分析选项</summary>
     <div class="studio-advanced__body">
       <div class="studio-advanced__row">
@@ -162,7 +250,7 @@
       <input id="album-upload" type="file" webkitdirectory directory multiple hidden />
     </label>
     <span class="studio-link__sep" aria-hidden="true">·</span>
-    <button type="button" class="studio-link" id="studio-path-toggle">选文件夹</button>
+    <button type="button" class="studio-link" id="studio-path-toggle">制作杂志</button>
     <span class="studio-link__sep" aria-hidden="true">·</span>
     <details class="studio-link studio-link--details">
       <summary>帮助</summary>
@@ -183,8 +271,8 @@
   <!-- Empty state · "长图样张" gallery -->
   <section class="studio-second" id="studio-gallery" hidden>
     <div class="studio-second__head">
-      <h2 class="studio-second__title">别人做出来的长图，是这个样子</h2>
-      <span class="studio-second__hint">点开看完整长图 · 这是我们承诺给你的产出</span>
+      <h2 class="studio-second__title">成品长图，长这样</h2>
+      <span class="studio-second__hint">点开看完整样张 · 这就是你会得到的杂志形态</span>
     </div>
     <div class="studio-second__grid studio-second__grid--samples" id="studio-samples"></div>
   </section>

@@ -26,6 +26,28 @@ class StudioPipelineResult:
     preview_url: str
     photo_count: int
     cluster_notice: str = ""
+    title: str = ""
+    intent_line: str = ""
+    featured_count: int = 0
+    segment_count: int = 0
+
+
+def _trip_import_stats(trip: dict) -> tuple[int, int]:
+    assets = trip.get("assets") or []
+    featured = sum(1 for a in assets if a.get("userTier") == "featured")
+    clustering = (trip.get("curation") or {}).get("clustering") or {}
+    segments = clustering.get("segments") or []
+    return featured, len(segments)
+
+
+def _format_intent_line(title: str, featured: int, segments: int) -> str:
+    label = (title or "我的旅途").strip()[:20] or "我的旅途"
+    parts = [f"《{label}》"]
+    if featured > 0:
+        parts.append(f"精选 {featured} 张")
+    if segments > 0:
+        parts.append(f"行程 {segments} 段")
+    return " · ".join(parts)
 
 
 def count_album_photos(album_dir: Path, *, max_photos: int = 250) -> int:
@@ -88,6 +110,7 @@ def run_studio_pipeline(
     config: Path | None = None,
     app_config: AppConfig | None = None,
     progress: ProgressCallback | None = None,
+    user_notes: str | None = None,
 ) -> StudioPipelineResult:
     album_dir = album_dir.resolve()
     cfg_path = resolve_demo_config(config)
@@ -133,6 +156,12 @@ def run_studio_pipeline(
         trip_root = trip_json.parent
         svc = TripService(root=trips_root.parent)
         trip = svc.load(trip_json)
+        if user_notes:
+            notes = str(user_notes).strip()[:200]
+            if notes:
+                trip["userNotes"] = notes
+                meta_notes = trip.setdefault("meta", {})
+                meta_notes["userNotes"] = notes
 
         try:
             ingest_into_trip(
@@ -210,6 +239,11 @@ def run_studio_pipeline(
             raise DemoError(code, str(exc)) from exc
 
     preview_url = f"http://{host}:{port}/{slug}/index.html"
+    trip_final = TripService(root=trips_root.parent).load(trip_json)
+    meta_final = trip_final.get("meta") or {}
+    display_title = str(meta_final.get("title") or title).strip()[:20] or "我的旅途"
+    featured_n, segment_n = _trip_import_stats(trip_final)
+    intent_line = _format_intent_line(display_title, featured_n, segment_n)
     return StudioPipelineResult(
         trip_id=slug,
         trip_dir=trip_root,
@@ -217,4 +251,8 @@ def run_studio_pipeline(
         preview_url=preview_url,
         photo_count=photo_count,
         cluster_notice=cluster_notice,
+        title=display_title,
+        intent_line=intent_line,
+        featured_count=featured_n,
+        segment_count=segment_n,
     )

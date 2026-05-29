@@ -43,6 +43,7 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             config=Path(cfg_path) if cfg_path else None,
             app_config=cfg,
             progress=progress,
+            user_notes=payload.get("userNotes"),
         )
         progress_queue.put(
             {
@@ -52,6 +53,10 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     "tripDir": str(result.trip_dir),
                     "previewUrl": result.preview_url,
                     "clusterNotice": result.cluster_notice or "",
+                    "title": result.title,
+                    "intentLine": result.intent_line,
+                    "featuredCount": result.featured_count,
+                    "segmentCount": result.segment_count,
                 },
             }
         )

@@ -22,6 +22,8 @@
     demoTried: "travelogue.studio.demoTried",
     recentPaths: "travelogue.studio.recentPaths",
     lastCancelled: "travelogue.studio.lastCancelled",
+    studioIntent: "travelogue.studio.intent",
+    coachImportV1: "travelogue.studio.coachImportV1",
   };
   var SS = {
     activeJobId: "travelogue.studio.activeJobId",
@@ -182,6 +184,8 @@
   var _importGen = 0;
   var _thumbObjectUrls = [];
   var _tripsLoadSeq = 0;
+  var _sheetOpen = false;
+  var _pendingAlbumPath = null;
 
   // ── Helpers ──
   function $(id) { return document.getElementById(id); }
@@ -263,12 +267,226 @@
 
   function setImportUiDisabled(disabled) {
     var ids = [
-      "studio-pick-folder", "studio-pick-folder-returning", "studio-browse-folder",
-      "studio-new-trip-cta", "studio-submit-path", "studio-demo-album", "studio-path-toggle",
+      "studio-open-sheet", "studio-open-sheet-returning", "studio-sheet-pick",
+      "studio-sheet-start", "studio-sheet-skip", "studio-browse-folder",
+      "studio-submit-path", "studio-demo-album", "studio-path-toggle",
+      "studio-sample-cta",
     ];
     ids.forEach(function (id) { var el = $(id); if (el) el.disabled = disabled; });
     var uploadInput = $("album-upload");
     if (uploadInput) uploadInput.disabled = disabled;
+  }
+
+  function basenameTitleFromPath(path) {
+    if (!path) return "我的旅途";
+    var base = String(path).replace(/[/\\]+$/, "").split(/[/\\]/).pop() || "";
+    base = base.replace(/\.[^.]+$/, "").trim();
+    if (!base) return "我的旅途";
+    return base.length > 20 ? base.slice(0, 20) : base;
+  }
+
+  function saveIntent() {
+    try {
+      localStorage.setItem(LS.studioIntent, JSON.stringify({
+        title: ($("trip-title") && $("trip-title").value) || "",
+        place: ($("trip-place") && $("trip-place").value) || "",
+        feeling: ($("trip-feeling") && $("trip-feeling").value) || "",
+      }));
+    } catch (e) {}
+  }
+
+  function loadIntent() {
+    try {
+      var raw = localStorage.getItem(LS.studioIntent);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      if ($("trip-title") && data.title) $("trip-title").value = data.title;
+      if ($("trip-place") && data.place) $("trip-place").value = data.place;
+      if ($("trip-feeling") && data.feeling) $("trip-feeling").value = data.feeling;
+    } catch (e) {}
+  }
+
+  function validateTitleField() {
+    var input = $("trip-title");
+    var err = $("trip-title-error");
+    if (!input || !err) return true;
+    var v = (input.value || "").trim();
+    if (v.length > 20) {
+      err.textContent = "杂志名最多 20 个字";
+      show(err, true);
+      return false;
+    }
+    show(err, false);
+    return true;
+  }
+
+  function resetSheetConfirm() {
+    _pendingAlbumPath = null;
+    show($("studio-sheet-confirm"), false);
+    show($("studio-sheet-picked"), false);
+    var picked = $("studio-sheet-picked");
+    if (picked) picked.textContent = "";
+    var pickBtn = $("studio-sheet-pick");
+    if (pickBtn) {
+      pickBtn.disabled = false;
+      pickBtn.textContent = "选择照片文件夹";
+    }
+  }
+
+  function showSheetConfirm(albumPath) {
+    _pendingAlbumPath = albumPath;
+    var picked = $("studio-sheet-picked");
+    if (picked) {
+      picked.textContent = "已选择：" + albumPath;
+      show(picked, true);
+    }
+    var pickBtn = $("studio-sheet-pick");
+    if (pickBtn) {
+      pickBtn.disabled = true;
+      pickBtn.textContent = "已选择文件夹";
+    }
+    var titleInput = $("trip-title");
+    if (titleInput) titleInput.value = basenameTitleFromPath(albumPath);
+    show($("studio-sheet-confirm"), true);
+    validateTitleField();
+    if (titleInput) titleInput.focus();
+  }
+
+  function isSheetOpen() { return _sheetOpen; }
+
+  function openImportSheet() {
+    if (currentState === "Importing") {
+      if (typeof studioToast === "function") {
+        studioToast("正在制作杂志，请稍候", { duration: 2500 });
+      }
+      return;
+    }
+    loadIntent();
+    resetSheetConfirm();
+    var root = $("studio-sheet-root");
+    if (root) show(root, true);
+    _sheetOpen = true;
+    document.body.classList.add("studio-sheet-open");
+    setError("");
+    var pick = $("studio-sheet-pick");
+    if (pick) pick.focus();
+    maybeShowCoach(1);
+  }
+
+  function closeImportSheet() {
+    saveIntent();
+    var root = $("studio-sheet-root");
+    if (root) show(root, false);
+    _sheetOpen = false;
+    document.body.classList.remove("studio-sheet-open");
+  }
+
+  function buildImportPayload(extra) {
+    extra = extra || {};
+    var title = ($("trip-title") && $("trip-title").value.trim()) || "我的旅途";
+    var place = ($("trip-place") && $("trip-place").value.trim()) || "旅途";
+    var feeling = ($("trip-feeling") && $("trip-feeling").value.trim()) || "";
+    var body = {
+      albumPath: extra.albumPath || _pendingAlbumPath,
+      title: title.slice(0, 20),
+      place: place,
+      force: !!extra.force,
+    };
+    if (feeling) body.userNotes = feeling.slice(0, 200);
+    return body;
+  }
+
+  function submitSheetImport(skipTitleEdit) {
+    if (!_pendingAlbumPath) {
+      setError("请先选择照片文件夹");
+      return;
+    }
+    if (!skipTitleEdit && !validateTitleField()) return;
+    saveIntent();
+    closeImportSheet();
+    var body = buildImportPayload({ albumPath: _pendingAlbumPath });
+    if (typeof studioToast === "function") {
+      studioToast("将新建一篇杂志 · 开始制作", { duration: 2200 });
+    }
+    startImport(body);
+  }
+
+  function renderContinueCard() {
+    var host = $("studio-continue-card");
+    if (!host || !tripsData.length) {
+      show(host, false);
+      return;
+    }
+    var trip = tripsData[0];
+    host.innerHTML = "";
+    show(host, true);
+    var titleAfter = $("studio-hero-returning");
+    var h1 = titleAfter && titleAfter.querySelector(".studio-hero__title--after-card");
+    if (h1) show(h1, false);
+
+    var thumb = document.createElement("div");
+    thumb.className = "studio-continue-card__thumb";
+    if (trip.previewRelPath) {
+      var img = document.createElement("img");
+      img.alt = trip.title || "";
+      img.src = "/" + trip.tripId + "/" + trip.previewRelPath;
+      img.onerror = function () { img.remove(); };
+      thumb.appendChild(img);
+    }
+    host.appendChild(thumb);
+
+    var t = document.createElement("p");
+    t.className = "studio-continue-card__title";
+    t.textContent = trip.title || trip.tripId;
+    host.appendChild(t);
+
+    var sub = document.createElement("p");
+    sub.className = "studio-continue-card__sub";
+    sub.textContent = formatUpdatedAt(trip.updatedAt) || "继续上次的杂志";
+    host.appendChild(sub);
+
+    var actions = document.createElement("div");
+    actions.className = "studio-continue-card__actions";
+
+    var cont = document.createElement("a");
+    cont.className = "studio-btn studio-btn--gold";
+    cont.href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
+    cont.textContent = "继续编辑";
+    actions.appendChild(cont);
+
+    if (trip.longshotStale) {
+      var lng = document.createElement("a");
+      lng.className = "studio-btn studio-btn--ghost-inverse";
+      lng.href = "/" + trip.tripId + "/index.html?focus=longshot";
+      lng.textContent = "更新长图";
+      actions.appendChild(lng);
+    }
+    host.appendChild(actions);
+  }
+
+  function maybeShowCoach(step) {
+    var done = parseInt(localStorage.getItem(LS.coachImportV1) || "0", 10);
+    if (done >= 2) return;
+    if (step === 1 && done >= 1) return;
+    var coach = $("studio-coach");
+    var text = $("studio-coach-text");
+    if (!coach || !text) return;
+    var messages = [
+      "从这里开始 · 照片留在本机，不上传云端",
+      "选一次旅行的文件夹即可",
+    ];
+    text.textContent = messages[step - 1] || messages[0];
+    coach.style.top = step === 1 ? "auto" : "auto";
+    coach.style.bottom = step === 1 ? "120px" : "280px";
+    coach.style.left = step === 1 ? "clamp(20px, 4vw, 48px)" : "50%";
+    coach.style.transform = step === 1 ? "none" : "translateX(-50%)";
+    show(coach, true);
+    localStorage.setItem(LS.coachImportV1, String(Math.max(done, step)));
+  }
+
+  function dismissCoach() {
+    show($("studio-coach"), false);
+    localStorage.setItem(LS.coachImportV1, "2");
   }
 
   function syncImportUiDisabled() {
@@ -352,8 +570,8 @@
       secondaryLabel.textContent = hasTrips ? "或者" : "还没自己的照片？";
     }
 
-    if (quietOverlay) show($("studio-import-form"), false);
-    else show($("studio-import-form"), true);
+    if (quietOverlay) closeImportSheet();
+    show($("studio-import-form"), false);
     show($("studio-advanced-options"), !quietOverlay);
 
     show($("studio-scroll-hint"), !quietOverlay);
@@ -377,7 +595,12 @@
     }
 
     if (hasTrips && !isImporting && !isFailed && !isSuccess) {
+      renderContinueCard();
       renderHybridHero();
+    } else {
+      show($("studio-continue-card"), false);
+      var h1 = document.querySelector(".studio-hero__title--after-card");
+      if (h1) show(h1, true);
     }
 
     show($("studio-gallery"), !hasTrips && !isImporting && !isFailed && !isSuccess && !isLoading);
@@ -696,7 +919,12 @@
 
   function updateProgress(job) {
     hideFailure();
-    var stage = $("studio-stage"); if (stage) stage.textContent = stageText(job);
+    var stage = $("studio-stage");
+    var line = stageText(job);
+    if (job.result && job.result.intentLine && (job.stageIndex || 0) >= 2) {
+      line = line + "\n" + job.result.intentLine;
+    }
+    if (stage) stage.textContent = line;
     var pct = Math.round(((job.stageIndex || 0) / (job.stageCount || 4)) * 100);
     var bar = $("studio-bar-fill"); if (bar) bar.style.width = pct + "%";
     var pctEl = $("studio-pct");
@@ -882,20 +1110,18 @@
     var path = ($("album-path").value || "").trim();
     if (!path) {
       setError("请填写照片文件夹路径，例如 D:\\Photos\\Kyoto2025");
-      focusPathImport("");
+      openImportSheet();
       return;
     }
-    startImport({
-      albumPath: path,
-      title: $("trip-title").value || "我的旅途",
-      place: $("trip-place").value || "旅途",
-      force: false,
-    });
+    pushRecentPath(path);
+    if (!_sheetOpen) openImportSheet();
+    showSheetConfirm(path);
+    setError("");
   }
 
   function requestNativeFolder(titleVal, placeVal, options) {
     options = options || {};
-    var autoStart = options.autoStart !== false;
+    var autoStart = options.autoStart === true;
     if (_pickInFlight) {
       if (typeof studioToast === "function") {
         studioToast("文件夹选择器已打开，请在其窗口中操作", { duration: 2500 });
@@ -926,22 +1152,20 @@
       if (result.status === 200 && result.data && result.data.albumPath) {
         var pathInput = $("album-path");
         if (pathInput) pathInput.value = result.data.albumPath;
-        if (autoStart) {
-          return startImport({
-            albumPath: result.data.albumPath,
-            title: titleVal || "我的旅途",
-            place: placeVal || "旅途",
-            force: false,
-          });
-        }
-        if (typeof studioToast === "function") {
-          studioToast("已选择文件夹，点击「开始」导入", { duration: 2500 });
-        }
+        if (titleVal && $("trip-title")) $("trip-title").value = titleVal;
+        if (placeVal && $("trip-place")) $("trip-place").value = placeVal;
+        if (!_sheetOpen) openImportSheet();
+        showSheetConfirm(result.data.albumPath);
+        maybeShowCoach(2);
+        dismissCoach();
+        if (autoStart) submitSheetImport(true);
         return;
       }
-      focusPathImport("无法打开本机选文件夹。请粘贴路径，或重启 Studio 后重试。");
+      openImportSheet();
+      setError("无法打开本机选文件夹。请用「其他导入方式」粘贴路径。");
     }).catch(function () {
-      focusPathImport("无法连接 Studio 选文件夹服务。请粘贴路径，或确认 Studio 正在运行。");
+      openImportSheet();
+      setError("无法连接选文件夹服务。请粘贴路径，或确认 Studio 正在运行。");
     }).finally(function () {
       if (pickToastEl && pickToastEl.parentNode) {
         pickToastEl.parentNode.removeChild(pickToastEl);
@@ -967,9 +1191,10 @@
   }
 
   function handleImportSuccess(job) {
-    var url = job.result && job.result.previewUrl;
-    var tripId = job.result && job.result.tripId;
-    var notice = job.result && job.result.clusterNotice;
+    var result = job.result || {};
+    var url = result.previewUrl;
+    var tripId = result.tripId;
+    var notice = result.clusterNotice;
     if (notice && typeof studioToast === "function") {
       studioToast(notice, { duration: 4500 });
     }
@@ -979,22 +1204,59 @@
     var openLink = $("studio-success-open");
     var msg = $("studio-success-msg");
     if (openLink && url) openLink.href = url;
-    if (msg) msg.textContent = first ? "你的第一篇游记已生成" : "生成完成";
+    var title = result.title || ($("trip-title") && $("trip-title").value) || "我的旅途";
+    var featured = result.featuredCount;
+    var segments = result.segmentCount;
+    if (msg) {
+      if (featured > 0) {
+        msg.textContent = "《" + title + "》已生成 · " + featured + " 张精选已用于封面与章首";
+      } else {
+        msg.textContent = "《" + title + "》已生成 · 可在预览中标记精选照片";
+      }
+      if (segments > 0) msg.textContent += " · " + segments + " 段行程";
+    }
+
+    var chipsHost = $("studio-success-chips");
+    if (chipsHost) {
+      chipsHost.innerHTML = "";
+      if (featured > 0) {
+        var c1 = document.createElement("span");
+        c1.className = "studio-success__chip";
+        c1.textContent = "精选 " + featured + " 张";
+        chipsHost.appendChild(c1);
+      }
+      if (segments > 0) {
+        var c2 = document.createElement("span");
+        c2.className = "studio-success__chip";
+        c2.textContent = "行程 " + segments + " 段";
+        chipsHost.appendChild(c2);
+      }
+      show(chipsHost, chipsHost.childElementCount > 0);
+    }
 
     transitionTo("Success");
 
-    var sec = 5;
+    var autoOpen = first || !localStorage.getItem(LS.firstPreviewDone + ".noAuto");
+    var sec = (result.intentLine || featured > 0) ? 8 : 5;
+    if (!first && localStorage.getItem(LS.firstPreviewDone) === "1") {
+      autoOpen = false;
+      sec = 0;
+    }
     var secEl = $("studio-success-sec");
+    var countdownP = document.querySelector(".studio-success__countdown");
     if (secEl) secEl.textContent = String(sec);
+    if (countdownP) show(countdownP, autoOpen && sec > 0);
     clearSuccessTimer();
-    _successTimer = setInterval(function () {
-      sec -= 1;
-      if (secEl) secEl.textContent = String(Math.max(0, sec));
-      if (sec <= 0) {
-        clearSuccessTimer();
-        if (url) window.location.href = url;
-      }
-    }, 1000);
+    if (autoOpen && sec > 0) {
+      _successTimer = setInterval(function () {
+        sec -= 1;
+        if (secEl) secEl.textContent = String(Math.max(0, sec));
+        if (sec <= 0) {
+          clearSuccessTimer();
+          if (url) window.location.href = url;
+        }
+      }, 1000);
+    }
   }
 
   function startImport(body) {
@@ -1107,8 +1369,10 @@
     }
 
     var form = new FormData();
-    form.append("title", titleVal || "我的旅途");
-    form.append("place", placeVal || "旅途");
+    form.append("title", titleVal || ($("trip-title") && $("trip-title").value) || "我的旅途");
+    form.append("place", placeVal || ($("trip-place") && $("trip-place").value) || "旅途");
+    var feeling = ($("trip-feeling") && $("trip-feeling").value.trim()) || "";
+    if (feeling) form.append("userNotes", feeling.slice(0, 200));
     for (var i = 0; i < files.length; i++) {
       form.append("files[]", files[i], files[i].webkitRelativePath || files[i].name);
     }
@@ -1291,12 +1555,7 @@
 
   // ── Path form toggle ──
   function initPathToggle() {
-    var toggle = $("studio-path-toggle");
-    if (toggle) {
-      toggle.addEventListener("click", function () {
-        requestNativeFolder($("trip-title").value, $("trip-place").value, { autoStart: false });
-      });
-    }
+    /* studio-path-toggle → openImportSheet (initImportSheet) */
   }
 
   // ── Scroll hint ──
@@ -1403,7 +1662,52 @@
     });
     if (cta) cta.addEventListener("click", function () {
       close();
-      requestNativeFolder($("trip-title").value, $("trip-place").value);
+      openImportSheet();
+      localStorage.setItem(LS.demoTried, "1");
+    });
+  }
+
+  function initImportSheet() {
+    ["studio-open-sheet", "studio-open-sheet-returning", "studio-path-toggle"].forEach(function (id) {
+      var el = $(id);
+      if (el) el.addEventListener("click", function () { openImportSheet(); });
+    });
+    var scrim = $("studio-sheet-scrim");
+    if (scrim) scrim.addEventListener("click", function () {
+      if (currentState !== "Importing") closeImportSheet();
+    });
+    var closeBtn = $("studio-sheet-close");
+    if (closeBtn) closeBtn.addEventListener("click", closeImportSheet);
+    var pick = $("studio-sheet-pick");
+    if (pick) pick.addEventListener("click", function () {
+      requestNativeFolder(null, null, { autoStart: false });
+    });
+    var startBtn = $("studio-sheet-start");
+    if (startBtn) startBtn.addEventListener("click", function () { submitSheetImport(false); });
+    var skipBtn = $("studio-sheet-skip");
+    if (skipBtn) skipBtn.addEventListener("click", function () { submitSheetImport(true); });
+    var titleInput = $("trip-title");
+    if (titleInput) {
+      titleInput.addEventListener("blur", saveIntent);
+      titleInput.addEventListener("input", validateTitleField);
+    }
+    ["trip-place", "trip-feeling"].forEach(function (id) {
+      var el = $(id);
+      if (el) el.addEventListener("blur", saveIntent);
+    });
+    var help = $("studio-sheet-help");
+    if (help) help.addEventListener("click", function () {
+      if (typeof studioToast === "function") {
+        studioToast(
+          "同一次旅行的照片放一个文件夹（50–100 张最佳）。可建「精选」「素材」子文件夹。照片不会被移动或修改。",
+          { duration: 6000 }
+        );
+      }
+    });
+    var coachSkip = $("studio-coach-skip");
+    if (coachSkip) coachSkip.addEventListener("click", dismissCoach);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && _sheetOpen && currentState !== "Importing") closeImportSheet();
     });
   }
 
@@ -1417,7 +1721,9 @@
     initAdvancedOptions();
     renderSampleCards();
     initSampleModal();
+    initImportSheet();
     renderRecentPaths();
+    loadIntent();
 
     transitionTo("Loading");
     if (!resumeActiveJobIfAny()) {
@@ -1427,26 +1733,10 @@
     }
     startHealthCheck();
 
-    // Primary: empty-state pick folder → select + auto import
-    var pick = $("studio-pick-folder");
-    if (pick) pick.addEventListener("click", function () {
-      requestNativeFolder($("trip-title").value, $("trip-place").value, { autoStart: true });
-    });
-
-    // Returning: new trip + explicit pick folder
-    var newTrip = $("studio-new-trip-cta");
-    if (newTrip) newTrip.addEventListener("click", function () {
-      requestNativeFolder($("trip-title").value, $("trip-place").value, { autoStart: true });
-    });
-    var pickReturning = $("studio-pick-folder-returning");
-    if (pickReturning) pickReturning.addEventListener("click", function () {
-      requestNativeFolder($("trip-title").value, $("trip-place").value, { autoStart: true });
-    });
-
-    // Path row: browse → fill path, user clicks 开始
+    // Path row: browse → fill path + confirm in sheet
     var browse = $("studio-browse-folder");
     if (browse) browse.addEventListener("click", function () {
-      requestNativeFolder($("trip-title").value, $("trip-place").value, { autoStart: false });
+      requestNativeFolder(null, null, { autoStart: false });
     });
 
     // Path form submit
@@ -1460,13 +1750,19 @@
     var demoBtn = $("studio-demo-album");
     if (demoBtn) demoBtn.addEventListener("click", function () {
       localStorage.setItem(LS.demoTried, "1");
+      closeImportSheet();
       startImport({ useDemoAlbum: true, title: "示例旅途", place: "示例", force: false });
     });
 
     // Secondary: browser upload
     var uploadInput = $("album-upload");
     if (uploadInput) uploadInput.addEventListener("change", function (ev) {
-      uploadAndImport(ev.target.files, $("trip-title").value, $("trip-place").value);
+      closeImportSheet();
+      uploadAndImport(
+        ev.target.files,
+        ($("trip-title") && $("trip-title").value) || "我的旅途",
+        ($("trip-place") && $("trip-place").value) || "旅途"
+      );
       ev.target.value = "";
     });
 

@@ -367,6 +367,9 @@ class StudioMixin:
                 "force": fields.get("force", "").lower() in ("1", "true", "yes"),
                 "_job": job,
             }
+            notes = str(fields.get("userNotes") or "").strip()
+            if notes:
+                payload["userNotes"] = notes[:200]
             return payload, upload_dir
 
         payload = self._read_json_body()
@@ -422,6 +425,7 @@ class StudioMixin:
 
         title = str(payload.get("title") or "我的旅途").strip() or "我的旅途"
         place = str(payload.get("place") or "旅途").strip() or "旅途"
+        user_notes = str(payload.get("userNotes") or "").strip()[:200] or None
         trip_id = payload.get("tripId")
         trip_id_str = str(trip_id).strip() if trip_id else None
         force = bool(payload.get("force"))
@@ -476,6 +480,8 @@ class StudioMixin:
             "host": host,
             "port": port,
         }
+        if user_notes:
+            worker_payload["userNotes"] = user_notes
         if self.studio_config_path and self.studio_config_path.is_file():
             worker_payload["configPath"] = str(self.studio_config_path.resolve())
 
