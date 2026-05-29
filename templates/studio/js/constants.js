@@ -18,7 +18,7 @@ export const STUDIO_ERROR_MESSAGES = {
   E_DEMO_TOO_FEW: "至少需要 4 张照片，请换一个文件夹",
   E_INGEST_EMPTY: "文件夹里没有找到照片",
   E_INGEST_TOO_FEW: "至少需要 4 张照片，请换一个文件夹",
-  E_STUDIO_JOB_BUSY: "已有任务进行中，请稍候",
+  E_STUDIO_JOB_BUSY: "排队中，请稍候",
   E_STUDIO_UPLOAD_EMPTY: "未收到任何照片文件",
   E_STUDIO_CANCELLED: "已取消",
   E_STUDIO_PIPELINE: "导入失败，请重试",

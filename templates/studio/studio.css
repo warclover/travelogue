@@ -842,6 +842,30 @@ body {
 }
 .studio-cancel-notice__action:hover { color: #f0c474; }
 
+/* P5-H4 · Returning hero recent path hint */
+.studio-recent-path-hint {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, .72);
+  line-height: 1.5;
+  max-width: 36em;
+}
+.studio-recent-path-hint__path {
+  color: rgba(255, 255, 255, .9);
+  word-break: break-all;
+}
+.studio-recent-path-hint__action {
+  margin-left: 6px;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.studio-recent-path-hint__action:hover { color: #f0c474; }
+
 /* ── Failure ── */
 .studio-failure__eyebrow {
   font-size: 11px;

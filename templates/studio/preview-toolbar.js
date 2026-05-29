@@ -61,6 +61,23 @@
     });
   }
 
+  function isJobBusy409(res) {
+    return res.status === 409 && res.body && res.body.error === "E_STUDIO_JOB_BUSY";
+  }
+
+  function postJsonBusyRetry(url, payload, attempt) {
+    attempt = attempt || 0;
+    return postJson(url, payload).then(function (res) {
+      if (!isJobBusy409(res) || attempt >= 3) return res;
+      showToolbarToast("排队中，请稍候…");
+      return new Promise(function (resolve) {
+        setTimeout(function () {
+          resolve(postJsonBusyRetry(url, payload, attempt + 1));
+        }, 2000);
+      });
+    });
+  }
+
   function patchJson(url, payload) {
     return fetch(url, {
       method: "PATCH",
@@ -386,12 +403,17 @@
     setLongshotStatus(root, "正在生成长图…", true);
     setSlowHint(root, "", false);
 
-    postJson("/__travelogue/longshot", {
+    postJsonBusyRetry("/__travelogue/longshot", {
       tripId: tripId,
       scale: LONGSHOT_SCALE,
       format: "png",
     })
       .then(function (res) {
+        if (isJobBusy409(res)) {
+          setLongshotStatus(root, "排队中，请稍候…", true);
+          btn.disabled = false;
+          return;
+        }
         if (res.status === 409) {
           setLongshotStatus(root, (res.body && res.body.message) || "请稍候再试", true);
           btn.disabled = false;

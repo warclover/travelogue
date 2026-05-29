@@ -2,8 +2,22 @@
  * Travelogue Studio · sample longshot cards + preview modal.
  */
 import { SAMPLE_LONGSHOTS, LS } from "./constants.js";
-import { $, show } from "./dom.js";
+import { $, show, trapSheetFocus } from "./dom.js";
 import { openImportSheet } from "./sheet.js";
+
+var _modalFocusRelease = null;
+var _modalPreviousFocus = null;
+
+function releaseModalFocusTrap(restoreFocus) {
+  if (_modalFocusRelease) {
+    _modalFocusRelease();
+    _modalFocusRelease = null;
+  }
+  if (restoreFocus && _modalPreviousFocus && _modalPreviousFocus.focus) {
+    try { _modalPreviousFocus.focus(); } catch (e) { /* ignore */ }
+  }
+  _modalPreviousFocus = null;
+}
 
 function _pad2(n) { return (n < 10 ? "0" : "") + n; }
 
@@ -154,10 +168,15 @@ export function initSampleModal() {
     pages.innerHTML = buildSampleFull(key);
     show(modal, true);
     document.body.style.overflow = "hidden";
+    _modalPreviousFocus = document.activeElement;
+    _modalFocusRelease = trapSheetFocus(modal);
+    var closeBtn = modal.querySelector(".studio-sample-modal__close");
+    if (closeBtn) closeBtn.focus();
     var sc = document.querySelector(".studio-sample-modal__scroll");
     if (sc) sc.scrollTop = 0;
   }
   function close() {
+    releaseModalFocusTrap(true);
     show(modal, false);
     document.body.style.overflow = "";
   }

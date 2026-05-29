@@ -230,9 +230,8 @@
               </div>
               <datalist id="studio-recent-paths"></datalist>
             </form>
-            <label class="studio-sheet-upload">
+            <label class="studio-sheet-upload" for="album-upload">
               小文件夹试用（≤200MB）
-              <input id="album-upload" type="file" webkitdirectory directory multiple hidden />
             </label>
           </div>
         </details>
@@ -294,9 +293,8 @@
     <span class="studio-link__label" id="studio-secondary-label">还没自己的照片？</span>
     <button type="button" class="studio-link" id="studio-demo-album">试用示例</button>
     <span class="studio-link__sep" aria-hidden="true">·</span>
-    <label class="studio-link studio-link--warn" title="仅适合极小文件夹，超过约 200MB 会失败">
+    <label class="studio-link studio-link--warn" for="album-upload" title="仅适合极小文件夹，超过约 200MB 会失败">
       小文件夹试用（≤200MB）
-      <input id="album-upload" type="file" webkitdirectory directory multiple hidden />
     </label>
     <span class="studio-link__sep" aria-hidden="true">·</span>
     <button type="button" class="studio-link" id="studio-path-toggle">制作杂志</button>
@@ -368,6 +366,8 @@
     </div>
   </div>
 </div>
+
+<input id="album-upload" type="file" webkitdirectory directory multiple hidden aria-label="小文件夹试用上传" />
 
 <div id="studio-toast-container" class="studio-toast-container"></div>
 

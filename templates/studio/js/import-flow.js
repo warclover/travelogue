@@ -3,7 +3,7 @@
  */
 import { LS, SS, IMPORT_PHOTO_CAP, SUCCESS_LONGSHOT_SCALE, SUCCESS_SLOW_MS } from "./constants.js";
 import { S } from "./state.js";
-import { $, show, studioAuthHeaders, syncImportUiDisabled, setBusy } from "./dom.js";
+import { $, show, studioAuthHeaders, syncImportUiDisabled, setBusy, withJobBusyRetry, isJobBusyResponse } from "./dom.js";
 import {
   setError, setWarning, hideFailure, showFailure, humanizeStudioError, setImportEstimate,
 } from "./errors.js";
@@ -195,19 +195,26 @@ export function startSuccessLongshot() {
   if (btn && btn.disabled) return;
   if (btn) btn.disabled = true;
   setSuccessLongshotStatus("正在生成长图…", false);
-  fetch("/__travelogue/longshot", {
-    method: "POST",
-    headers: studioAuthHeaders({ "Content-Type": "application/json" }),
-    body: JSON.stringify({
-      tripId: _successTripId,
-      scale: SUCCESS_LONGSHOT_SCALE,
-      format: "png",
-    }),
-  })
-    .then(function (resp) {
+  function postSuccessLongshot() {
+    return fetch("/__travelogue/longshot", {
+      method: "POST",
+      headers: studioAuthHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        tripId: _successTripId,
+        scale: SUCCESS_LONGSHOT_SCALE,
+        format: "png",
+      }),
+    }).then(function (resp) {
       return resp.json().then(function (body) { return { status: resp.status, body: body }; });
-    })
+    });
+  }
+  withJobBusyRetry(postSuccessLongshot)
     .then(function (res) {
+      if (isJobBusyResponse(res)) {
+        if (btn) btn.disabled = false;
+        setSuccessLongshotStatus("排队中，请稍候…", true);
+        return;
+      }
       if (res.status === 409) {
         if (btn) btn.disabled = false;
         setSuccessLongshotStatus((res.body && res.body.message) || "请稍候再试", true);
@@ -338,7 +345,7 @@ export function startImport(body) {
   var bar = $("studio-bar-fill"); if (bar) bar.style.width = "0%";
   var pctEl = $("studio-pct"); if (pctEl) show(pctEl, false);
 
-  return postImport(body).then(function (result) {
+  return withJobBusyRetry(function () { return postImport(body); }).then(function (result) {
     if (result.status === 409 && result.data.error === "E_DEMO_EXISTS") {
       return (typeof studioModal === "function"
         ? studioModal({
@@ -434,12 +441,14 @@ export function uploadAndImportCore(files, titleVal, placeVal) {
   show(progress, true);
   if (progress) progress.value = 0;
 
-  return postMultipartImport(form, {
-    onUploadProgress: function (ev) {
-      if (ev.lengthComputable && progress) {
-        progress.value = Math.round((ev.loaded / ev.total) * 100);
-      }
-    },
+  return withJobBusyRetry(function () {
+    return postMultipartImport(form, {
+      onUploadProgress: function (ev) {
+        if (ev.lengthComputable && progress) {
+          progress.value = Math.round((ev.loaded / ev.total) * 100);
+        }
+      },
+    });
   }).then(function (result) {
     show(progress, false);
     if (result.status === 409 && result.data.error === "E_DEMO_EXISTS") {
@@ -494,7 +503,7 @@ export function uploadAndImportWithForce(files, titleVal, placeVal, gen) {
   for (var j = 0; j < files.length; j++) {
     retryForm.append("files[]", files[j], files[j].webkitRelativePath || files[j].name);
   }
-  return postMultipartImport(retryForm).then(function (retryResult) {
+  return withJobBusyRetry(function () { return postMultipartImport(retryForm); }).then(function (retryResult) {
     if (retryResult.status !== 202) {
       throw new Error(retryResult.data.message || retryResult.data.error || "上传失败");
     }

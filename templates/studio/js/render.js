@@ -4,7 +4,7 @@
 import { LS } from "./constants.js";
 import { S } from "./state.js";
 import { $, show, setTitle, formatUpdatedAt, syncImportUiDisabled } from "./dom.js";
-import { closeImportSheet } from "./sheet.js";
+import { closeImportSheet, getRecentPaths } from "./sheet.js";
 import { requestNativeFolder, startImport } from "./import-flow.js";
 
 // ── Hero background (LCP-friendly: try small variant first when available) ──
@@ -107,8 +107,10 @@ export function render() {
   if (hasTrips && !isImporting && !isFailed && !isSuccess) {
     renderContinueCard();
     renderHybridHero();
+    renderRecentPathHint();
   } else {
     show($("studio-continue-card"), false);
+    show($("studio-recent-path-hint"), false);
     var h1 = document.querySelector(".studio-hero__title--after-card");
     if (h1) show(h1, true);
   }
@@ -246,6 +248,53 @@ export function renderHybridHero() {
 
     list.appendChild(card);
   });
+}
+
+/** P5-H4 · Returning hero: suggest reusing the most recent import path. */
+export function renderRecentPathHint() {
+  var host = $("studio-recent-path-hint");
+  if (!host) {
+    var ctaRow = document.querySelector("#studio-hero-returning .studio-hero__cta-row");
+    if (!ctaRow || !ctaRow.parentNode) return;
+    host = document.createElement("p");
+    host.id = "studio-recent-path-hint";
+    host.className = "studio-recent-path-hint";
+    host.hidden = true;
+    ctaRow.parentNode.insertBefore(host, ctaRow.nextSibling);
+  }
+  var recent = getRecentPaths();
+  if (!recent.length) {
+    show(host, false);
+    return;
+  }
+  var path = recent[0];
+  host.innerHTML = "";
+  var label = document.createElement("span");
+  label.textContent = "继续使用 ";
+  var pathSpan = document.createElement("span");
+  pathSpan.className = "studio-recent-path-hint__path";
+  pathSpan.textContent = path;
+  pathSpan.title = path;
+  var btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "studio-recent-path-hint__action";
+  btn.textContent = "导入";
+  btn.addEventListener("click", function () {
+    var titleEl = $("trip-title");
+    var placeEl = $("trip-place");
+    var title = titleEl && titleEl.value ? titleEl.value.trim() : "";
+    var place = placeEl && placeEl.value ? placeEl.value.trim() : "";
+    startImport({
+      albumPath: path,
+      title: title || undefined,
+      place: place || undefined,
+    });
+  });
+  host.appendChild(label);
+  host.appendChild(pathSpan);
+  host.appendChild(document.createTextNode("？"));
+  host.appendChild(btn);
+  show(host, true);
 }
 
 // ── Trip cards (all trips grid) ──
