@@ -357,6 +357,24 @@
           "type": "array",
           "items": { "type": "string" }
         },
+        "intentHints": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Read-only editorial hints from Studio intent (Phase 4 M18+)",
+          "properties": {
+            "planCities": {
+              "type": "array",
+              "items": { "type": "string" },
+              "maxItems": 10
+            },
+            "userNotesKeywords": {
+              "type": "array",
+              "items": { "type": "string" },
+              "maxItems": 10
+            },
+            "featuredBoost": { "type": "boolean" }
+          }
+        },
         "clustering": { "$ref": "#/$defs/tripClustering" }
       }
     },
@@ -872,7 +890,8 @@
             "screen-square-6",
             "screen-square-9",
             "screen-panorama-1",
-            "screen-tall-1"
+            "screen-tall-1",
+            "screen-breath-pause"
           ]
         },
         "tone": {
@@ -889,13 +908,39 @@
           "enum": ["person-pair", "person-triple", "person-grid-8"],
           "description": "Person portrait: 2-col pair, 3-col row, or 4×2 grid (contain per slot)"
         },
+        "arcSegment": {
+          "type": "string",
+          "enum": ["open", "rise", "peak", "fall", "close", "moment"],
+          "description": "Narrative arc beat for smart layout V2 (Phase 4 entry deep link)"
+        },
+        "breathLabel": {
+          "type": "string",
+          "description": "Display label for screen-breath-pause (default ···)"
+        },
         "slots": {
           "type": "array",
-          "minItems": 1,
           "maxItems": 9,
           "items": { "$ref": "#/$defs/layoutScreenSlot" }
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "patternId": { "const": "screen-breath-pause" } } },
+          "then": {
+            "properties": {
+              "slots": { "maxItems": 0 }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "patternId": { "not": { "const": "screen-breath-pause" } } } },
+          "then": {
+            "properties": {
+              "slots": { "minItems": 1 }
+            }
+          }
+        }
+      ]
     },
     "privacy": {
       "type": "object",
