@@ -7,7 +7,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from PIL import Image
 
@@ -382,6 +382,10 @@ def ingest_into_trip(
     app_cfg: AppConfig | None = None,
     featured_dir: Path | None = None,
     material_dir: Path | None = None,
+    on_progress: Callable[[int, int], None] | None = None,
+    resume_ingest: bool = True,
+    on_persist: Callable[[], None] | None = None,
+    min_assets: int = 4,
 ) -> IngestResult:
     """
     Import images into trip_dir/source + assets; append trip.assets[].
@@ -466,6 +470,14 @@ def ingest_into_trip(
         scan_stats.setdefault("mode", "single")
 
     dual_ingest = scan_stats.get("mode") == "dual"
+    album_root = from_dir.resolve() if from_dir else scan_root.resolve()
+    from travelogue.media import ingest_checkpoint as icp
+
+    checkpoint_keys: set[str] = set()
+    if from_dir and resume_ingest:
+        checkpoint = icp.load_ingest_checkpoint(trip_dir)
+        if checkpoint and str(checkpoint.get("sourceRoot") or "") == str(album_root):
+            checkpoint_keys = set(checkpoint.get("processedRelPaths") or [])
     pipe = trip.setdefault("pipeline", {})
     if incremental:
         pending = set(pipe.get("pendingAssets") or [])
@@ -497,6 +509,15 @@ def ingest_into_trip(
         "deduped_phash_replaced": 0,
         "deduped_burst_replaced": 0,
     }
+    if checkpoint_keys and from_dir:
+        before = len(photo_tiers)
+        photo_tiers = [
+            (photo, tier)
+            for photo, tier in photo_tiers
+            if icp.source_key(photo, album_root) not in checkpoint_keys
+        ]
+        ingest_stats["ingestResumedFromCheckpoint"] = len(checkpoint_keys)
+        ingest_stats["ingestSkippedCheckpoint"] = before - len(photo_tiers)
     added = 0
     skipped = 0
     last_burst: tuple[float, int, int] | None = None
@@ -517,19 +538,31 @@ def ingest_into_trip(
         dual_ingest=dual_ingest,
     )
 
+    total_photos = len(photo_tiers)
+    processed = 0
+
+    def _emit_progress() -> None:
+        if on_progress and total_photos > 0:
+            on_progress(processed, total_photos)
+
     for photo, user_tier in photo_tiers:
+        processed += 1
         sig = _file_signature(photo)
         if dedupe and sig in known_md5:
             if upgrade_asset_tier(assets, sig, tier=user_tier):
                 ingest_stats["tier_upgraded"] = ingest_stats.get("tier_upgraded", 0) + 1
             ingest_stats["deduped"] += 1
             skipped += 1
+            if processed == 1 or processed % 5 == 0 or processed == total_photos:
+                _emit_progress()
             continue
 
         try:
             loaded = _load_photo(photo)
         except IngestError:
             skipped += 1
+            if processed == 1 or processed % 5 == 0 or processed == total_photos:
+                _emit_progress()
             continue
 
         img = loaded.image
@@ -549,10 +582,14 @@ def ingest_into_trip(
                 else:
                     ingest_stats["deduped_burst"] += 1
                     skipped += 1
+                    if processed == 1 or processed % 5 == 0 or processed == total_photos:
+                        _emit_progress()
                     continue
             else:
                 ingest_stats["deduped_burst"] += 1
                 skipped += 1
+                if processed == 1 or processed % 5 == 0 or processed == total_photos:
+                    _emit_progress()
                 continue
 
         dhash = dhash_hex(img)
@@ -569,6 +606,8 @@ def ingest_into_trip(
                 else:
                     ingest_stats["deduped_phash"] += 1
                     skipped += 1
+                    if processed == 1 or processed % 5 == 0 or processed == total_photos:
+                        _emit_progress()
                     continue
 
         if replace_index is None:
@@ -639,10 +678,26 @@ def ingest_into_trip(
         if loaded.had_exif_orientation:
             ingest_stats["exif_rotations"] += 1
 
-    if len(assets) < 4:
+        if from_dir and resume_ingest:
+            rel_key = icp.source_key(photo, album_root)
+            checkpoint_keys.add(rel_key)
+            if processed == 1 or processed % 5 == 0 or processed == total_photos:
+                icp.save_ingest_checkpoint(
+                    trip_dir,
+                    source_root=str(album_root),
+                    processed_rel_paths=sorted(checkpoint_keys),
+                    total=total_photos,
+                )
+                if on_persist:
+                    on_persist()
+
+        if processed == 1 or processed % 5 == 0 or processed == total_photos:
+            _emit_progress()
+
+    if min_assets and len(assets) < min_assets:
         raise IngestError(
             "E_INGEST_TOO_FEW",
-            f"need at least 4 assets in trip after ingest (have {len(assets)})",
+            f"need at least {min_assets} assets in trip after ingest (have {len(assets)})",
         )
 
     missing_derivatives = _missing_derivative_paths(trip_dir, assets)
@@ -733,6 +788,9 @@ def ingest_into_trip(
     eligible = [a for a in assets if a.get("layoutEligible", True)]
     if not trip.get("coverAssetId") and eligible:
         trip["coverAssetId"] = eligible[0]["id"]
+
+    if from_dir and resume_ingest:
+        icp.clear_ingest_checkpoint(trip_dir)
 
     return IngestResult(
         added=added,
