@@ -41,6 +41,16 @@ def test_p5_h4_returning_recent_path_hint() -> None:
 
 def test_p5_32_preview_longshot_busy_retry() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
-    assert "postJsonBusyRetry" in js
+    assert "StudioApi.postJsonBusyRetry" in js or "postJsonBusyRetry" in js
+    assert "StudioApi" in js
     assert "排队中，请稍候" in js
-    assert "E_STUDIO_JOB_BUSY" in js
+
+
+def test_p5_a4_shared_http_module() -> None:
+    js = read_studio_js()
+    assert "export function postJson" in js or "function postJson" in js
+    assert "export function patchJson" in js
+    assert "postJsonBusyRetry" in js
+    api = (ROOT / "templates" / "studio" / "studio-api.js").read_text(encoding="utf-8")
+    assert "window.StudioApi" in api
+    assert "./js/http.js" in api

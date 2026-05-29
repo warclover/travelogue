@@ -3,7 +3,8 @@
  */
 import { LS, SS, IMPORT_PHOTO_CAP, SUCCESS_LONGSHOT_SCALE, SUCCESS_SLOW_MS } from "./constants.js";
 import { S } from "./state.js";
-import { $, show, studioAuthHeaders, syncImportUiDisabled, setBusy, withJobBusyRetry, isJobBusyResponse } from "./dom.js";
+import { $, show, syncImportUiDisabled, setBusy } from "./dom.js";
+import { studioAuthHeaders, withJobBusyRetry, isJobBusyResponse, postJson } from "./http.js";
 import {
   setError, setWarning, hideFailure, showFailure, humanizeStudioError, setImportEstimate,
 } from "./errors.js";
@@ -196,16 +197,10 @@ export function startSuccessLongshot() {
   if (btn) btn.disabled = true;
   setSuccessLongshotStatus("正在生成长图…", false);
   function postSuccessLongshot() {
-    return fetch("/__travelogue/longshot", {
-      method: "POST",
-      headers: studioAuthHeaders({ "Content-Type": "application/json" }),
-      body: JSON.stringify({
-        tripId: _successTripId,
-        scale: SUCCESS_LONGSHOT_SCALE,
-        format: "png",
-      }),
-    }).then(function (resp) {
-      return resp.json().then(function (body) { return { status: resp.status, body: body }; });
+    return postJson("/__travelogue/longshot", {
+      tripId: _successTripId,
+      scale: SUCCESS_LONGSHOT_SCALE,
+      format: "png",
     });
   }
   withJobBusyRetry(postSuccessLongshot)

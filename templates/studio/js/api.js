@@ -6,8 +6,9 @@ import {
 } from "./constants.js";
 import { S } from "./state.js";
 import {
-  $, show, studioAuthHeaders, bumpImportGeneration, isImportGenerationStale,
+  $, show, bumpImportGeneration, isImportGenerationStale,
 } from "./dom.js";
+import { studioAuthHeaders, postJson } from "./http.js";
 import { humanizeStudioError, showSlowHint, hideSlowHint } from "./errors.js";
 import { updateProgress } from "./progress.js";
 import { render, transitionTo } from "./render.js";
@@ -43,13 +44,7 @@ export function refreshImportVisionFlag() {
 }
 
 export function postImport(body) {
-  return fetch("/__travelogue/import", {
-    method: "POST",
-    headers: studioAuthHeaders({ "Content-Type": "application/json" }),
-    body: JSON.stringify(body),
-  }).then(function (resp) {
-    return resp.json().then(function (data) { return { status: resp.status, data: data }; });
-  });
+  return postJson("/__travelogue/import", body);
 }
 
 export function postMultipartImport(formData, options) {

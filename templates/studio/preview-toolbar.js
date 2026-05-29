@@ -39,56 +39,15 @@
     return parts[0] || "";
   }
 
-  function studioAuthHeaders() {
-    var headers = { "Content-Type": "application/json" };
-    var meta = document.querySelector('meta[name="studio-token"]');
-    var token = meta && meta.getAttribute("content");
-    if (token) {
-      headers["X-Studio-Token"] = token;
-    }
-    return headers;
+  var StudioApi = window.StudioApi;
+  if (!StudioApi || typeof StudioApi.postJson !== "function") {
+    console.error("preview-toolbar: StudioApi not loaded (include studio-api.js before preview-toolbar.js)");
+    return;
   }
-
-  function postJson(url, payload) {
-    return fetch(url, {
-      method: "POST",
-      headers: studioAuthHeaders(),
-      body: JSON.stringify(payload || {}),
-    }).then(function (resp) {
-      return resp.json().then(function (body) {
-        return { status: resp.status, body: body };
-      });
-    });
-  }
-
-  function isJobBusy409(res) {
-    return res.status === 409 && res.body && res.body.error === "E_STUDIO_JOB_BUSY";
-  }
-
-  function postJsonBusyRetry(url, payload, attempt) {
-    attempt = attempt || 0;
-    return postJson(url, payload).then(function (res) {
-      if (!isJobBusy409(res) || attempt >= 3) return res;
-      showToolbarToast("排队中，请稍候…");
-      return new Promise(function (resolve) {
-        setTimeout(function () {
-          resolve(postJsonBusyRetry(url, payload, attempt + 1));
-        }, 2000);
-      });
-    });
-  }
-
-  function patchJson(url, payload) {
-    return fetch(url, {
-      method: "PATCH",
-      headers: studioAuthHeaders(),
-      body: JSON.stringify(payload || {}),
-    }).then(function (resp) {
-      return resp.json().then(function (body) {
-        return { status: resp.status, body: body };
-      });
-    });
-  }
+  var postJson = StudioApi.postJson;
+  var patchJson = StudioApi.patchJson;
+  var postJsonBusyRetry = StudioApi.postJsonBusyRetry;
+  var isJobBusy409 = StudioApi.isJobBusyResponse;
 
   function tripApiBase(tripId) {
     return "/" + encodeURIComponent(tripId) + "/__travelogue";
@@ -407,7 +366,7 @@
       tripId: tripId,
       scale: LONGSHOT_SCALE,
       format: "png",
-    })
+    }, { onBusy: function () { showToolbarToast("排队中，请稍候…"); } })
       .then(function (res) {
         if (isJobBusy409(res)) {
           setLongshotStatus(root, "排队中，请稍候…", true);
