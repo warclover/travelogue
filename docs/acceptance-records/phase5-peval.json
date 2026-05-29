@@ -1,0 +1,24 @@
+{
+  "recordId": "phase5-peval",
+  "phase": "P5-8.1",
+  "protocol": "P-EVAL",
+  "description": "Phase 5 layout blind review: legacy default vs P5 beam (PHASE3B + R1)",
+  "criteria": {
+    "layoutBlind": {
+      "name": "排版盲评 · beam 胜率",
+      "threshold": "≥55% prefer beam on judged pairs",
+      "status": "Pending manual review"
+    },
+    "G-P5-03": {
+      "name": "排版质量冲刺",
+      "record": "phase5-layout-sprint.json",
+      "threshold": "≥8/10 tuned wins"
+    },
+    "phase4Intent": {
+      "name": "Intent P-EVAL",
+      "record": "phase4-intent.json"
+    }
+  },
+  "command": "python scripts/phase5_blind_review.py <tripId> --seed 42",
+  "pairs": []
+}
