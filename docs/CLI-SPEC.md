@@ -4,9 +4,9 @@
 |------|------|
 | **命令名** | `travelogue` |
 | **文档版本** | v0.1 |
-| **实现状态** | P0/P1 核心命令已实现；**Phase 2** `studio` / `export-longshot` 见 §2.2（待实现） |
-| **关联** | `AGENT-ARCHITECTURE.md`、`DEVELOPMENT.md`、`ERROR-CODES.md`、[PRD-PHASE2.md](./PRD-PHASE2.md)、[API-MINIAPP.md](./API-MINIAPP.md) |
-| **更新日期** | 2026-05-27 |
+| **实现状态** | P0/P1 核心命令已实现；**Phase 2** `studio` / `export-longshot` / `serve --studio` **已实现**（P5-12.3 同步） |
+| **关联** | `AGENT-ARCHITECTURE.md`、`DEVELOPMENT.md`、`ERROR-CODES.md`、[PRD-PHASE2.md](./PRD-PHASE2.md)、[ACCEPTANCE.md](./ACCEPTANCE.md) |
+| **更新日期** | 2026-05-30 |
 
 ---
 
@@ -53,69 +53,101 @@ python -m travelogue <子命令> …
 | `demo from-album` | （同上，别名） | — | 同上 |
 | `status` | — | 任意 | — |
 | `run` | 0–3 | 见 `--from` | 链式推进 |
+| **`studio`** | Studio | — | 启动工作台 HTTP |
+| **`serve --studio`** | Studio | — | trips 根目录 Hub |
+| **`export-longshot`** | 3 | `rendered`+ | 服务端长图 PNG |
 
 **禁止**：在 `structure_locked` 之前调用 `narrate`（返回 `E_PIPELINE_ORDER`）。
 
-### 2.2 Phase 2 命令（Studio · 待实现）
+### 2.2 Phase 2 · Studio 与长图（**已实现**）
 
 | 命令 | 说明 | 等价 |
 |------|------|------|
 | **`studio`** | 启动 Studio 工作台 | `serve <trips_dir> --studio` |
-| **`studio --pick-folder PATH`** | 先 pipeline，再 serve，再打开预览 | PATH **必填**（M8 无原生对话框） |
-| **`export-longshot <trip>`** | 服务端长图 PNG（P0/P1 fallback） | 见 ADR-005 |
+| **`studio --pick-folder PATH`** | 先 pipeline，再 serve，再打开预览 | PATH 必填（脚本/CI） |
+| **`studio --pick-folder-dialog`** | Windows 原生文件夹选择后再 pipeline | 桌面用户推荐 |
+| **`export-longshot <trip>`** | Playwright 服务端长图 PNG | 见 §3.13 · ADR-005 |
 
 #### `travelogue studio`
 
 | 选项 | 说明 |
 |------|------|
 | `--pick-folder PATH` | 相册绝对路径；先跑 pipeline 再进入 serve |
-| `--port` / `-p` | 默认 **8766**（与 serve 统一） |
+| `--pick-folder-dialog` | Windows IFileDialog 选文件夹（Phase 4+） |
+| `--demo-album` | 导入内置 demo 相册后 serve |
+| `--port` / `-p` | 默认 **8766** |
 | `--host` | 默认 `127.0.0.1` |
+| `--allow-lan` | 非 loopback 绑定 · 需 `X-Studio-Token` |
 | `--no-open` | 不自动打开浏览器 |
+| `--title` / `--place` | pipeline 默认杂志名/地点 |
 | `--trips-dir` | trips 根目录（默认 `config.trips_dir`） |
 | `--config` | 指定 config.yaml |
 
-**默认 pipeline**：`from-album(layout=auto)` → auto lock → `narrate(stub)` → `render --dual`。
+**入口脚本**：`scripts/start-studio.bat`（双击启动 · 等价 `python -m travelogue studio`）。
 
-**进度**：Job 返回 `stageIndex` / `stageCount` / **`stageHint`**（1/4…4/4 + 预估时间），**无**连续 `progress` 百分比。
+**默认 Web pipeline**（`run_studio_pipeline`）：ingest → curate → narrate(stub) → render(dual) · 4 阶段 Job · `stageHint` 人话预估。
+
+**进度**：Job 返回 `stageIndex` / `stageCount` / **`stageHint`**；ingest 子进度 `processed/total`（P5-I1）。
 
 #### `travelogue serve` 扩展
 
 | 选项 | 说明 |
 |------|------|
-| `--studio` | 启用 Studio 路由（`/`、 `/__travelogue/*`）+ trip 子路径 |
+| `--studio` | 启用 Studio 路由（`/`、`/__travelogue/*`）+ trip 子路径 |
+| `--allow-lan` | 局域网访问 + token 鉴权 |
+| `--trips-dir` | path 为 tripId 时解析 trips 根 |
 
-无 `--studio` 时行为与 MVP **完全一致**。
+无 `--studio` 时行为与 MVP **单 trip 预览**一致。
 
-#### `travelogue export-longshot <trip>`
+#### `travelogue export-longshot <trip>`（§3.13）
 
 | 选项 | 说明 |
 |------|------|
-| `--format` | `png`（默认）\| `jpeg` |
-| `--scale` | CLI 默认 **`1`**；Studio UI 默认 **`2`（推荐）**；`3` 超高清 |
+| `--format` / `-f` | `png`（默认）\| `jpeg` |
+| `--scale` | CLI 默认 **`1`**；Studio HTTP / UI 默认 **`2`**（推荐）；最大 `3` |
 | `--chapter` | 仅第 N 章（1-based） |
-| `-o` / `--out` | 输出路径 |
-| `--port` | 临时 HTTP（0=随机） |
+| `-o` / `--out` | 单文件输出路径（不分段时） |
+| `--port` / `-p` | 临时 HTTP（0=随机） |
 
-**捕获**：P0 `captureMainToBlob` → P1 `main` screenshot fallback → P2 客户端 html2canvas（Plan B）。
+**捕获宽度**：**428px** × scale（P5-L1 · 弃 390 默认）。
 
-**import body**：`{ "albumPath", "title?", "place?", "force": false }` — `E_DEMO_EXISTS` 时 UI 确认后 **`force: true`** 重试。
+**分段（P5-L2）**：预估单张 **>20MB** 或高度超阈值 → 按章 `{title}-ch{nn}.png` · Job 返回 `userHint`。
 
-**上传清理**：Job succeeded → 删 `trips/_uploads/{jobId}/`；failed 保留 24h。
-
-**分段**：输出高度 >5000px 或单章 >60 media-card → 按章 `{title}-ch{nn}.png`。
+**依赖**：`pip install playwright` + Chromium（Studio 启动时可 warm）。
 
 #### Studio HTTP（`serve --studio` · 单端口 8766）
 
-| 方法 | 路径 |
-|------|------|
-| `GET` | `/` · `/__travelogue/trips` · `/__travelogue/status` |
-| `POST` | `/__travelogue/import` · `/__travelogue/longshot` · `/__travelogue/reveal` · `/__travelogue/cancel`（M10） |
-| `GET/POST` | `/{tripId}/…` · `/{tripId}/__travelogue/save-copy`（与 MVP 相同） |
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `GET` | `/` | Studio 首页 |
+| `GET` | `/__travelogue/trips` | trip 列表 |
+| `GET` | `/__travelogue/trips/{id}/entry` | 预览深链 · peakScreenId |
+| `GET` | `/__travelogue/status?jobId=` | import / longshot / narrate Job |
+| `GET` | `/__travelogue/config` | 分析选项 · layout.scoring 等 |
+| `PATCH` | `/__travelogue/config` | 持久化 config.yaml 白名单字段 |
+| `GET` | `/__travelogue/chapter-layout?tripId=` | 分章 + 排版 explain |
+| `POST` | `/__travelogue/import` | JSON 或 multipart 上传 |
+| `POST` | `/__travelogue/longshot` | `{ tripId, scale? }` → Job |
+| `POST` | `/__travelogue/narrate` | LLM 文案 Job |
+| `POST` | `/__travelogue/reveal` | 资源管理器定位文件 |
+| `POST` | `/__travelogue/cancel` | 取消活跃 Job |
+| `POST` | `/__travelogue/export` | share zip（需隐私确认） |
+| `POST` | `/__travelogue/pick-folder` | Windows 文件夹选择 |
+| `POST` | `/__travelogue/trips/{id}/curate` | 强制重跑 curate |
+| `PATCH` | `/__travelogue/trips/{id}/intent` | 杂志名 · userNotes |
+| `PATCH` | `/__travelogue/trips/{id}/pipeline` | G1 确认 · `continuePipeline` |
+| `POST` | `/{tripId}/__travelogue/save-copy` | 预览内联改字 / 锚点 |
+| `POST` | `/{tripId}/__travelogue/promote-tier` | ★ 标为精选 |
+| `POST` | `/{tripId}/__travelogue/rerender` | 应用排版重渲染 |
+| `GET` | `/{tripId}/…` | trip 静态资源 · preview 注入 toolbar |
+
+**import body（JSON）**：`{ "albumPath", "title?", "place?", "userNotes?", "planText?", "force": false }` — `E_DEMO_EXISTS` 时 UI 确认后 **`force: true`** 重试。
+
+**上传清理**：Job succeeded → 删 `trips/_uploads/{jobId}/`；failed 保留 24h。
 
 详见 [adr/004-studio-hub-server.md](./adr/004-studio-hub-server.md) v0.3。
 
-**Studio Chrome**：`serve --studio` 对 `/{tripId}/*.html` 注入 `studio-chrome.js`（M8 返回/编辑提示；M9 长图按钮；M10 完整 toolbar）。
+**Preview Chrome**：`index.html` / `index-mobile.html` 注入 `preview-toolbar.js` + `studio-modal.js`（`?share=1` / `mode=share` **不**注入 · P5-S7）。
 
 ---
 
@@ -303,6 +335,32 @@ travelogue layout demo-雨后京都 --layout web --render
 
 ---
 
+### 3.12 `travelogue studio`（已实现 · Phase 2/5）
+
+见 [§2.2](#22-phase-2--studio-与长图已实现)。常用：
+
+```powershell
+python -m travelogue studio
+python -m travelogue studio --pick-folder-dialog
+python -m travelogue studio --pick-folder D:\Photos\trip --no-open
+```
+
+---
+
+### 3.13 `travelogue export-longshot <trip>`（已实现 · Phase 2/5）
+
+Playwright 捕获 `index-longshot.html`（须已 `render` 且 sidecar 存在）。
+
+```powershell
+python -m travelogue export-longshot demo-雨后京都
+python -m travelogue export-longshot demo-雨后京都 --scale 2 -o out.png
+python -m travelogue export-longshot demo-雨后京都 --chapter 2
+```
+
+失败码：`E_EXPORT_LONGSHOT`（见 `ERROR-CODES.md`）。Studio 内等价 `POST /__travelogue/longshot`。
+
+---
+
 ## 4. 推荐工作流
 
 **一键 Demo（与下面分步同一套 ingest/curate/render）：**
@@ -367,3 +425,4 @@ travelogue export demo --confirm-privacy
 | v0.2.1 | 2026-05-27 | cancel、force import、upload 清理、bat 入口 |
 | v0.3 | 2026-05-27 | stageHint；Studio scale=2 默认；Studio Chrome |
 | v0.3.1 | 2026-05-27 | reveal API；--trips-dir；409 body |
+| v0.4 | 2026-05-30 | **P5-12.3**：studio/export-longshot 已实现 · HTTP 路由补全 · 428px/20MB 长图 · preview-toolbar |

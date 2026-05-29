@@ -2,10 +2,10 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.1-draft |
-| **状态** | 设计稿（**未实现**）；供小程序与云端对齐 |
+| **文档版本** | v0.3-draft |
+| **状态** | 设计稿（**未实现**）；供小程序与云端对齐 · **P5-MP-1 字段对齐审查已过**（与 `trip.schema.json` v0.2 + share 态渲染一致）· **P5-MP-2 本地 web-view 手测清单**（§11） |
 | **关联** | [SHARING.md](./SHARING.md)、[CLI-SPEC.md](./CLI-SPEC.md)、[DATA-MODEL.md](./DATA-MODEL.md)、[schemas/trip.schema.json](../schemas/trip.schema.json) |
-| **更新日期** | 2026-05-19 |
+| **更新日期** | 2026-05-30 |
 
 ---
 
@@ -79,7 +79,8 @@ flowchart TB
 | 编码 | UTF-8 JSON |
 | 时间 | ISO 8601 UTC，`Z` 后缀 |
 | Trip 主键 | `tripId`（与 CLI 目录名一致，如 `kyoto-2025-04`） |
-| 数据契约 | 响应体中的 `trip` 对象 **必须符合** `trip.schema.json` |
+| 数据契约 | 响应体中的 `trip` 对象 **必须符合** `trip.schema.json`（v0.2 · 顶层 `additionalProperties: false`） |
+| 云端元数据 | `trip.schema.json` 顶层 **禁止额外字段**；云端独有字段（见 §4）**作为 `trip` 的同级兄弟键**放在响应信封内，**不得**塞进 `trip` 对象 |
 
 ### 3.2 鉴权
 
@@ -135,21 +136,43 @@ flowchart TB
 
 ---
 
-## 4. 资源模型（API 扩展字段）
+## 4. 资源模型（schema 内 vs 云端兄弟键）
 
-在现有 `trip.json` 之上，云端 **可增** 以下字段（建议写入 schema `x-cloud` 或独立表，合并进 GET 响应）：
+> **审查结论（P5-MP-1）**：`trip.schema.json` v0.2 顶层为 `additionalProperties: false`，**不能**直接往 `trip` 对象塞云端字段，否则 `validate` 422。下表区分「已是 schema 原生字段」与「必须作为 `trip` 同级兄弟键的云端元数据」。
+
+### 4.1 schema 原生字段（已存在，云端直接复用）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `publishedAt` | string \| null（`date-time`） | **已是 schema 顶层字段**；云端首次 publish 成功后回写 |
+| `slug` | string \| null | **已是 schema 顶层字段**；可作私密分享 slug（替代旧草案的 `shareId`） |
+| `assets[].displayFile` | string | schema 不限格式 → **允许** `https://cdn.../assets/...` 绝对 URL |
+| `assets[].srcset[].file` | string | 同上，允许 HTTPS 绝对 URL |
+| `privacy.confirmedAt` | string \| null（`date-time`） | share 发布前必填（见 §6.6） |
+| `export.longShot` | boolean | share 包默认 `false`（见 §6.6） |
+
+### 4.2 云端独有字段（**响应信封内 · `trip` 同级**，不进 `trip`）
+
+```json
+{
+  "trip": { /* 严格符合 trip.schema.json */ },
+  "ownerId": "wx-openid-...",
+  "shareId": "inv-7f3a",
+  "publish": { "shareUrl": "...", "cdnPrefix": "...", "zipObjectKey": "..." }
+}
+```
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `ownerId` | string | 微信 `openid` 或统一用户 id |
-| `shareId` | string | 私密分享 slug（可选，用于受邀链接） |
-| `publishedAt` | string \| null | 首次成功 publish 时间 |
+| `shareId` | string | 受邀分享标识（与 `trip.slug` 区分：`slug` 入 trip，`shareId` 为云端授权态） |
 | `publish` | object | `{ "shareUrl", "cdnPrefix", "zipObjectKey" }` |
-| `assets[].displayFile` | string | 允许 `https://cdn.../assets/...` 绝对 URL |
+
+> 若未来需把云端字段并入持久化的 trip 文档，须先在 `trip.schema.json` 显式新增属性（破坏性变更，走 `/v2`）。
 
 **资源 URL 规则**：
 
-- Worker 完成后，将 `assets/{id}-w800.webp` 等写入 COS，并回写 `displayFile` / `srcset[].file` 为 HTTPS URL。  
+- Worker 完成后，将 `assets/{id}-w800.webp` 等写入 COS，并回写 `assets[].displayFile` / `assets[].srcset[].file` 为 HTTPS URL。  
 - 小程序 **web-view** 与 `<image>` 均要求合法备案域名。
 
 ---
@@ -173,6 +196,8 @@ CLI 同步执行的阶段，在云端拆为 **Job**（对应 `pipeline.runs[]`�
 | `publish` | `publish` | `rendered` 或更早 | `exported` + CDN |
 | `pipeline` | `run` | 视 `--from` | 视 `--until` |
 | `demo` | `demo <album>` | — | `structure_draft`（+`rendered`） |
+
+> **pipeline 子状态**（schema v0.2）：`pipeline.layoutStatus`（`pending` \| `layout_draft` \| `layout_locked`）与 `pipeline.locks.layout` 为 Phase 4/5 新增；`layout` Job 完成后云端应回写 `layoutStatus`，不改主 `status` 机。`pipeline.status` 八态与 §9.3 状态机一致。
 
 ### 5.2 Job 状态
 
@@ -329,8 +354,8 @@ CLI 同步执行的阶段，在云端拆为 **Job**（对应 `pipeline.runs[]`�
 | `lock_structure` | `coverAssetId` | `--cover` |
 | `narrate` | `tone`, `field`, `dryRun` | `--tone`, `--field`, `--dry-run` |
 | `lock_copy` | — | — |
-| `render` | `mode`, `exportLayout` | `--mode draft\|share`, `--layout` |
-| `export` | `confirmPrivacy`, `noPreview`, `noLongshot`, `output` | `--confirm-privacy`, `--no-preview`, `--no-longshot` |
+| `render` | `mode`, `exportLayout`, `webLayout`, `dual`, `fontTheme`, `copyDisplay`, `readingProfile` | `--mode draft\|share`, `--layout`, `--web-layout`, `--dual`, `--font-theme`, `--copy-display`, `--reading-profile`（P5） |
+| `export` | `confirmPrivacy`, `noPreview`, `noValidate`, `noLongshot`, `output` | `--confirm-privacy`, `--no-preview`, `--no-validate`, `--no-longshot` |
 | `publish` | `confirmPrivacy`, `noPreview` | 同 `publish` 命令 |
 | `pipeline` | `from`, `until`, `skipLocked` | `run --from`, `--until`, `--skip-locked` |
 | `demo` | `title`, `place`, `hook`, `maxPhotos`, `dedupe`, `render`, `exportLayout` | `demo` 各选项 |
@@ -401,6 +426,8 @@ CLI 同步执行的阶段，在云端拆为 **Job**（对应 `pipeline.runs[]`�
 - `export.longShot = false`（默认关闭长图 FAB）  
 - `privacy.confirmedAt` 必填  
 - 不含 `golden-banner` 预览壳  
+- **不注入 Studio chrome**：share 态（`?share=1` / `mode=share`）渲染**不**注入 `preview-toolbar.js` / `studio-modal.js`（P5-S7 · D21 share 态 vs edit 态分离）  
+- **保留 Phase 5 阅读字段**：share render 须透传 `export.reading.profile` / `export.copyDisplay` / `export.fontTheme`；`export.breathMode` / `export.folioMode` 为 `export.reading.scroll.*` 的 1 版本兼容别名，新写入走 `reading.scroll`  
 
 #### `GET /trips/{tripId}/share-url`
 
@@ -464,6 +491,8 @@ web-view：`src="{{shareUrl}}"`（域名需在小程序后台配置业务域名�
 | `demo <album>` | `POST /trips` + upload + `jobs` type=`demo` | 异步 | 快捷链路；默认 `config.demo` 等价项 |
 | `demo verify` | —（CI 专用） | — | 不进小程序 API |
 | `demo golden` | — | — | 开发预览 |
+| `studio` / `serve --studio` | —（本地工作台） | — | 本地 HTTP 工作台；云端由小程序 UI + 上述 API 替代 |
+| `export-longshot <trip>` | **可选** `POST /trips/{id}/longshot`（远期，见 §8） | 异步 | 路径 A；群分享不强制进 API |
 
 ---
 
@@ -529,7 +558,57 @@ draft_ingest → ingest_ready → structure_draft → structure_locked
 
 ---
 
-## 11. 实现路线（建议）
+## 11. 本地 serve + web-view 模拟手测清单（P5-MP-2）
+
+> **目的**：云端 API 尚未实现前，用 **本地 `serve`** 加载 **share 态 HTML**，模拟微信小程序 **web-view** 加载 `shareUrl`（§6.6）的体验，提前验证渲染/字段契约与 share/edit 两态分叉（D21 · P5-S7）。
+> **关联 AC**：[ACCEPTANCE-PHASE5.md](./ACCEPTANCE-PHASE5.md) AC-P5-B-02（share 态无 toolbar）· 记录 [acceptance-records/phase5-webview-manual.json](./acceptance-records/phase5-webview-manual.json)。
+
+### 11.1 准备
+
+```powershell
+# 1) 渲染 share 态产物（index.html / index-mobile.html）
+travelogue render <tripId> --mode share
+# 2) 单 trip 本地预览（默认 127.0.0.1:8766）
+travelogue serve <tripId>
+```
+
+share 态由 **URL query** 触发，与 edit 态共用同一文件：
+
+| URL | 态 | 注入 |
+|-----|----|------|
+| `http://127.0.0.1:8766/index.html?share=1` | **share（= web-view）** | **不**注入 `preview-toolbar.js` / `studio-modal.js` |
+| `http://127.0.0.1:8766/index.html?mode=share` | 同上（别名） | 同上 |
+| `http://127.0.0.1:8766/index.html` | edit（Studio 预览） | 注入 toolbar（对照基线） |
+
+> 注入判定见 `travelogue/web/studio_chrome.py`：`CHROME_ALLOWLIST = {index.html, index-mobile.html}` · `SHARE_QUERY_MARKERS = (share=1, mode=share)`。
+
+**web-view 尺寸模拟**：Chrome/Edge DevTools → 设备工具栏 → iPhone 15 Pro Max（428×926）竖屏；中端 Android（如 Pixel 5）用于 P5-S9 性能预算。
+
+### 11.2 清单
+
+| ID | 步骤 | 期望 | 通过 |
+|----|------|------|------|
+| **MP-WV-01** | `?share=1` 打开 index.html | 无 preview toolbar / 无 modal；view-source 不含 `preview-toolbar.js` | ☐ |
+| **MP-WV-02** | 去掉 `?share=1`（对照） | 出现 toolbar；确认两态由同一文件 + query 分叉 | ☐ |
+| **MP-WV-03** | 移动 share：`index-mobile.html?share=1` | 竖屏排版正常 · 同样无 chrome | ☐ |
+| **MP-WV-04** | `export.longShot=false`（share 默认） | 无「保存长图」FAB（路径 A 不入 web-view） | ☐ |
+| **MP-WV-05** | 检查 `privacy.confirmedAt` | 非空（render `--mode share` 前置；为空应在 publish 闸门拦截） | ☐ |
+| **MP-WV-06** | 卷轴交互（DevTools iPhone） | breath / Lenis / snap 生效 · 封面停留 >3s · 滚动顺滑 | ☐ |
+| **MP-WV-07** | 中端 Android · >50 张 trip | 无肉眼卡顿；必要时 hero 屏级降级（P5-S9） | ☐ |
+| **MP-WV-08** | hash 深链 `#present/2`（若 `reading.present.deepLink`） | 定位到对应屏 | ☐ |
+| **MP-WV-09** | 字段透传 | `export.reading.profile` / `copyDisplay` / `fontTheme` 在 share HTML 生效（对照 trip.json） | ☐ |
+| **MP-WV-10** | 绝对 URL 预演 | 手动把一条 `assets[].displayFile` 改为 `https://…` → `validate` 通过且图片可载（验证 §4.1 允许绝对 URL） | ☐ |
+| **MP-WV-11** | 域名清单对照 | 对照 §10：`request` / `uploadFile` / `web-view 业务域名` 三类合法域名已记录 | ☐ |
+
+### 11.3 局限（本地 vs 真机）
+
+- 本地 `serve` **无鉴权 token**（§3.2 阅读 token 仅云端校验）；本清单只验渲染/字段，不验 token 流程。
+- 真机 web-view 受**业务域名白名单**约束（§10）；本地用 `127.0.0.1` 不触发，需上线前在小程序后台配置后于真机复测。
+- `wx.miniProgram` JS-SDK 桥接（返回/分享）本地不可用，留待 Tier 4 真机。
+
+---
+
+## 12. 实现路线（建议）
 
 | 阶段 | 交付 | 依赖 |
 |------|------|------|
@@ -549,7 +628,7 @@ draft_ingest → ingest_ready → structure_draft → structure_locked
 
 ---
 
-## 12. OpenAPI 与版本
+## 13. OpenAPI 与版本
 
 - 正式 OpenAPI 3.1 文件：**待** `docs/openapi/miniapp-v1.yaml`（由本文档生成）。  
 - URL 版本：`/v1`；`trip.json` 内 `version` 字段独立演进。  
@@ -557,8 +636,10 @@ draft_ingest → ingest_ready → structure_draft → structure_locked
 
 ---
 
-## 13. 版本记录
+## 14. 版本记录
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v0.1-draft | 2026-05-19 | 初稿：端点、Job 模型、CLI 对照表、双轨分享 |
+| v0.2-draft | 2026-05-30 | **P5-MP-1 字段对齐审查**：§4 区分 schema 原生字段 vs 云端兄弟键（`additionalProperties:false` 无冲突）· `publishedAt`/`slug` 归位 · render Job 补 P5 旗标 · share 包补 reading/Studio chrome 约定 · pipeline `layoutStatus`/`locks.layout` |
+| v0.3-draft | 2026-05-30 | **P5-MP-2 本地 web-view 手测清单**：§11 share 态本地 serve 模拟 · MP-WV-01～11 · 两态分叉/字段透传/性能预算 · 记录 `phase5-webview-manual.json` |

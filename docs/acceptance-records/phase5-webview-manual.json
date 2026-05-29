@@ -1,0 +1,33 @@
+{
+  "recordId": "phase5-webview-manual",
+  "phase": "M23-04",
+  "date": null,
+  "protocol": "P5-MP-2",
+  "description": "Local serve + web-view simulation for share-mode HTML (API-MINIAPP.md §11)",
+  "persona": "开发者 / 手测者",
+  "preparation": {
+    "render": "travelogue render <tripId> --mode share",
+    "serve": "travelogue serve <tripId>",
+    "shareUrl": "http://127.0.0.1:8766/index.html?share=1",
+    "device": "DevTools iPhone 15 Pro Max (428x926) + 中端 Android (P5-S9)"
+  },
+  "checks": {
+    "MP-WV-01": { "desc": "?share=1 无 preview toolbar", "passed": null },
+    "MP-WV-02": { "desc": "去掉 ?share=1 出现 toolbar（对照）", "passed": null },
+    "MP-WV-03": { "desc": "index-mobile.html?share=1 竖屏正常", "passed": null },
+    "MP-WV-04": { "desc": "export.longShot=false 无长图 FAB", "passed": null },
+    "MP-WV-05": { "desc": "privacy.confirmedAt 非空", "passed": null },
+    "MP-WV-06": { "desc": "breath/Lenis/snap 生效 · 封面 >3s", "passed": null },
+    "MP-WV-07": { "desc": ">50 张中端 Android 无肉眼卡顿", "passed": null },
+    "MP-WV-08": { "desc": "hash 深链 #present/N 定位", "passed": null },
+    "MP-WV-09": { "desc": "reading.profile/copyDisplay/fontTheme 透传", "passed": null },
+    "MP-WV-10": { "desc": "displayFile 绝对 HTTPS URL validate 通过", "passed": null },
+    "MP-WV-11": { "desc": "§10 三类合法域名清单已记录", "passed": null }
+  },
+  "limitations": [
+    "本地无阅读 token 鉴权（§3.2 仅云端校验）",
+    "业务域名白名单需上线后真机复测",
+    "wx.miniProgram JS-SDK 桥接本地不可用（Tier 4）"
+  ],
+  "runs": []
+}
