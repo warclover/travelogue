@@ -243,6 +243,28 @@ def _longshot_to_js(raw: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def count_trip_photos(trip: dict) -> int:
+    """Count photo assets for P5-S1 auto breath."""
+    n = 0
+    for asset in trip.get("assets") or []:
+        if not isinstance(asset, dict):
+            continue
+        kind = str(asset.get("kind") or "photo").strip().lower()
+        if kind in ("photo", "image", ""):
+            n += 1
+    return n
+
+
+def auto_breath_for_trip(trip: dict) -> str:
+    """P5-S1 / D18: <20 soft · 20–50 flow · >50 cinematic."""
+    n = count_trip_photos(trip)
+    if n < 20:
+        return "soft"
+    if n <= 50:
+        return "flow"
+    return "cinematic"
+
+
 def featured_asset_ids(trip: dict) -> list[str]:
     out: list[str] = []
     for asset in trip.get("assets") or []:
@@ -294,6 +316,12 @@ def resolve_reading_payload(
         export_layout_override=export_layout_override,
     )
     export_reading = _normalize_export_reading(trip)
+    raw_export = trip.get("export") if isinstance(trip.get("export"), dict) else {}
+    reading_raw = raw_export.get("reading") if isinstance(raw_export.get("reading"), dict) else {}
+    scroll_explicit = (
+        isinstance(reading_raw.get("scroll"), dict)
+        and reading_raw["scroll"].get("breath") not in (None, "")
+    )
 
     profile_name = reading_profile_override or export_reading.get("profile")
     if profile_name:
@@ -324,6 +352,18 @@ def resolve_reading_payload(
     scroll = _scroll_to_js(scroll_raw)
     present = _present_to_js(present_raw)
     longshot = _longshot_to_js(longshot_raw)
+
+    # P5-S1: auto breath on web draft when user has not set scroll.breath.
+    if (
+        surface == SURFACE_WEB
+        and export_mode == "draft"
+        and not scroll_explicit
+        and reading_profile_override is None
+    ):
+        auto_breath = auto_breath_for_trip(trip)
+        scroll["breath"] = auto_breath
+        if auto_breath == "cinematic":
+            scroll["breathEngine"] = "gsap"
 
     # Surface hard constraints (experience-matrix.yaml surfaces + conflicts).
     if surface == SURFACE_LONGSHOT:

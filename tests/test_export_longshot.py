@@ -9,13 +9,18 @@ from pathlib import Path
 import pytest
 
 from travelogue.export.longshot import (
+    CAPTURE_WIDTH,
+    MAX_WECHAT_BYTES,
     LongshotExportError,
+    _estimate_output_bytes,
+    _segment_user_hint,
     _should_segment,
     _slug_title,
     apply_chapter_watermark,
     export_trip_longshot,
     reveal_path_in_folder,
     reset_browser_pool_for_tests,
+    warm_playwright_browser,
 )
 from travelogue.paths import FIXTURES_DIR
 from travelogue.render.dual_layout_regression import prepare_trip_web_screens
@@ -53,9 +58,29 @@ def test_slug_title_strips_invalid_chars() -> None:
     assert _slug_title('bad<>:"/\\|?*name') == "badname"
 
 
+def test_capture_width_is_428() -> None:
+    assert CAPTURE_WIDTH == 428
+
+
 def test_should_segment_by_height() -> None:
     assert _should_segment({"scrollHeight": 3000, "perChapter": [10]}, scale=2) is True
     assert _should_segment({"scrollHeight": 1000, "perChapter": [10]}, scale=1) is False
+
+
+def test_should_segment_by_estimated_size() -> None:
+    metrics = {"scrollHeight": 12000, "perChapter": [10]}
+    assert _estimate_output_bytes(metrics, scale=2, fmt="png") > MAX_WECHAT_BYTES
+    assert _should_segment(metrics, scale=2, fmt="png") is True
+
+
+def test_segment_user_hint_size() -> None:
+    hint = _segment_user_hint(5, "size")
+    assert "5 张" in hint
+    assert "20MB" in hint
+
+
+def test_warm_playwright_browser_best_effort() -> None:
+    assert warm_playwright_browser() is True
 
 
 def test_should_segment_by_chapter_cards() -> None:
@@ -67,7 +92,7 @@ def test_apply_chapter_watermark_adds_label() -> None:
 
     from PIL import Image
 
-    img = Image.new("RGB", (390, 200), (240, 240, 240))
+    img = Image.new("RGB", (CAPTURE_WIDTH, 200), (240, 240, 240))
     buf = BytesIO()
     img.save(buf, format="PNG")
     raw = buf.getvalue()

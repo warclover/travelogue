@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 
-def pick_best_src_for_capture(srcset: str, required_width: int = 390) -> str | None:
+def pick_best_src_for_capture(srcset: str, required_width: int = 428) -> str | None:
     entries: list[tuple[int, str]] = []
     for part in srcset.split(","):
         chunk = part.strip()
@@ -50,6 +50,7 @@ def test_longshot_js_exports_quality_constants() -> None:
         encoding="utf-8"
     )
     assert "DESKTOP_CAPTURE_SCALE = 3" in js
+    assert "CAPTURE_WIDTH = 428" in js
     assert "MOBILE_CAPTURE_SCALE = 2" in js
     assert "LARGE_TRIP_IMAGES = 45" in js
     assert "SINGLE_PAGE_MAX_IMAGES = 30" in js

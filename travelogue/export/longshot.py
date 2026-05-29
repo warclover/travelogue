@@ -16,9 +16,13 @@ from typing import Any
 
 from travelogue.render.engine import LONGSHOT_INDEX_NAME
 
-CAPTURE_WIDTH = 390
+CAPTURE_WIDTH = 428
+DEFAULT_EXPORT_SCALE = 2
 MAX_SINGLE_HEIGHT_PX = 5000
 MAX_CHAPTER_CARDS = 60
+MAX_WECHAT_BYTES = 20 * 1024 * 1024
+
+ProgressFn = Any  # Callable[[int, int, str], None] — avoid circular import noise
 
 
 class LongshotExportError(Exception):
@@ -38,6 +42,9 @@ class LongshotExportResult:
     outputs: list[LongshotOutput] = field(default_factory=list)
     capture_method: str = "p0"
     title: str = "travelogue"
+    segmented: bool = False
+    segment_reason: str = ""
+    user_hint: str = ""
 
     @property
     def paths(self) -> list[Path]:
@@ -103,6 +110,54 @@ class _PlaywrightBrowserPool:
 _BROWSER_POOL = _PlaywrightBrowserPool()
 
 
+def warm_playwright_browser() -> bool:
+    """P5-L4 · lazy-warm Chromium pool on Studio startup (best-effort)."""
+    try:
+        _BROWSER_POOL.acquire()
+        _BROWSER_POOL.release()
+        return True
+    except LongshotExportError:
+        return False
+
+
+def _estimate_output_bytes(metrics: dict[str, Any], *, scale: int, fmt: str) -> int:
+    """Rough byte budget for WeChat 20MB gate (P5-L2)."""
+    scroll_h = max(int(metrics.get("scrollHeight") or 0), 844)
+    width = CAPTURE_WIDTH * scale
+    height = scroll_h * scale
+    bpp = 1.1 if fmt == "jpeg" else 2.2
+    return int(width * height * bpp)
+
+
+def _segment_user_hint(total: int, reason: str) -> str:
+    if total <= 1:
+        return ""
+    base = f"相册较长，已自动分成 {total} 张"
+    if reason == "size":
+        return base + "（单张 ≤20MB，便于微信发送）"
+    if reason == "height":
+        return base + "（单张过高，按章导出更稳）"
+    if reason == "cards":
+        return base + "（单章照片过多，按章导出更清晰）"
+    return base + "，便于按序发微信"
+
+
+def _segment_reason(metrics: dict[str, Any], *, scale: int, fmt: str) -> str:
+    if _estimate_output_bytes(metrics, scale=scale, fmt=fmt) > MAX_WECHAT_BYTES:
+        return "size"
+    estimated_height = int(metrics.get("scrollHeight") or 0) * scale
+    if estimated_height > MAX_SINGLE_HEIGHT_PX:
+        return "height"
+    per_chapter = metrics.get("perChapter") or []
+    if any(int(n or 0) > MAX_CHAPTER_CARDS for n in per_chapter):
+        return "cards"
+    return ""
+
+
+def _should_segment(metrics: dict[str, Any], scale: int, *, fmt: str = "png") -> bool:
+    return bool(_segment_reason(metrics, scale=scale, fmt=fmt))
+
+
 def _slug_title(title: str) -> str:
     cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", title).strip()
     return cleaned or "travelogue"
@@ -162,14 +217,6 @@ def _page_metrics(page) -> dict[str, Any]:
     )
 
 
-def _should_segment(metrics: dict[str, Any], scale: int) -> bool:
-    estimated_height = int(metrics.get("scrollHeight") or 0) * scale
-    if estimated_height > MAX_SINGLE_HEIGHT_PX:
-        return True
-    per_chapter = metrics.get("perChapter") or []
-    return any(int(n or 0) > MAX_CHAPTER_CARDS for n in per_chapter)
-
-
 _CAPTURE_P0_JS = """
 async (opts) => {
   const out = await window.TravelogueLongshot.captureMainToBlob({
@@ -225,7 +272,11 @@ async (opts) => {
     binary += String.fromCharCode.apply(null, u8.subarray(i, i + chunk));
   }
   const ch = chapters[opts.chapterIndex];
-  const chTitle = (ch && ch.querySelector(".chapter-header h2") || {}).textContent || "";
+  const titleEl =
+    ch &&
+    (ch.querySelector(".chapter-separator__title") ||
+      ch.querySelector(".chapter-header h2"));
+  const chTitle = (titleEl || {}).textContent || "";
   return {
     base64: btoa(binary),
     title: out.title,
@@ -339,7 +390,7 @@ def _maybe_watermark(
 def export_trip_longshot(
     trip_dir: Path,
     *,
-    scale: int = 1,
+    scale: int = DEFAULT_EXPORT_SCALE,
     fmt: str = "png",
     chapter: int | None = None,
     output: Path | None = None,
@@ -349,6 +400,7 @@ def export_trip_longshot(
     port: int = 0,
     timeout_ms: int = 180_000,
     watermark: bool = True,
+    progress: ProgressFn | None = None,
 ) -> LongshotExportResult:
     trip_dir = trip_dir.resolve()
     longshot_html = trip_dir / LONGSHOT_INDEX_NAME
@@ -369,10 +421,18 @@ def export_trip_longshot(
     browser = _BROWSER_POOL.acquire()
     capture_method = "p0"
     outputs: list[LongshotOutput] = []
+    segment_reason = ""
+    user_hint = ""
+
+    def _report(cur: int, total: int, hint: str) -> None:
+        if progress:
+            progress(cur, total, hint)
 
     try:
+        _report(0, 1, "正在打开浏览器…")
         page = browser.new_page(viewport={"width": CAPTURE_WIDTH, "height": 844})
         page.goto(url, wait_until="networkidle", timeout=timeout_ms)
+        _report(0, 1, "正在加载长图页面…")
         page.wait_for_function(
             "() => window.TravelogueLongshot && document.documentElement.dataset.longshot === 'on'",
             timeout=30_000,
@@ -380,10 +440,14 @@ def export_trip_longshot(
 
         metrics = _page_metrics(page)
         chapter_count = max(int(metrics.get("chapterCount") or 0), 1)
+        do_segment = chapter is None and _should_segment(metrics, scale, fmt=fmt)
+        if do_segment:
+            segment_reason = _segment_reason(metrics, scale=scale, fmt=fmt) or "height"
 
         if chapter is not None:
             if chapter < 1 or chapter > chapter_count:
                 raise LongshotExportError("E_LNG_CAPTURE_FAILED", f"章节 {chapter} 不存在")
+            _report(1, 1, f"第 {chapter}/{chapter_count} 段")
             data, method = _capture_bytes(
                 page, scale=scale, fmt=fmt, chapter_index=chapter - 1
             )
@@ -391,28 +455,61 @@ def export_trip_longshot(
             out_path = output or trip_dir / f"{title}-ch{chapter:02d}.{ext}"
             _write_output(out_path, data)
             outputs.append(LongshotOutput(path=out_path, capture_method=method))
-        elif _should_segment(metrics, scale):
+        elif do_segment:
             for idx in range(chapter_count):
+                _report(idx + 1, chapter_count, f"第 {idx + 1}/{chapter_count} 段")
                 data, method = _capture_bytes(
                     page, scale=scale, fmt=fmt, chapter_index=idx
                 )
                 capture_method = method if idx == 0 else capture_method
+                if len(data) > MAX_WECHAT_BYTES and fmt == "png":
+                    data, method = _capture_bytes(
+                        page, scale=scale, fmt="jpeg", chapter_index=idx
+                    )
+                    ext = "jpg"
                 data = _maybe_watermark(
                     data,
                     page=idx + 1,
                     total=chapter_count,
-                    fmt=fmt,
+                    fmt=fmt if ext != "jpg" else "jpeg",
                     watermark=watermark,
                 )
                 out_path = trip_dir / f"{title}-ch{idx + 1:02d}.{ext}"
                 _write_output(out_path, data)
                 outputs.append(LongshotOutput(path=out_path, capture_method=method))
+            user_hint = _segment_user_hint(chapter_count, segment_reason)
         else:
+            _report(1, 1, "正在合成长图…")
             data, method = _capture_bytes(page, scale=scale, fmt=fmt)
             capture_method = method
-            out_path = output or trip_dir / f"{title}-longshot.{ext}"
-            _write_output(out_path, data)
-            outputs.append(LongshotOutput(path=out_path, capture_method=method))
+            if len(data) > MAX_WECHAT_BYTES:
+                segment_reason = "size"
+                for idx in range(chapter_count):
+                    _report(idx + 1, chapter_count, f"第 {idx + 1}/{chapter_count} 段")
+                    data, method = _capture_bytes(
+                        page, scale=scale, fmt=fmt, chapter_index=idx
+                    )
+                    capture_method = method if idx == 0 else capture_method
+                    if len(data) > MAX_WECHAT_BYTES and fmt == "png":
+                        data, method = _capture_bytes(
+                            page, scale=scale, fmt="jpeg", chapter_index=idx
+                        )
+                        ext = "jpg"
+                    data = _maybe_watermark(
+                        data,
+                        page=idx + 1,
+                        total=chapter_count,
+                        fmt=fmt if ext != "jpg" else "jpeg",
+                        watermark=watermark,
+                    )
+                    out_path = trip_dir / f"{title}-ch{idx + 1:02d}.{ext}"
+                    _write_output(out_path, data)
+                    outputs.append(LongshotOutput(path=out_path, capture_method=method))
+                user_hint = _segment_user_hint(chapter_count, segment_reason)
+            else:
+                out_path = output or trip_dir / f"{title}-longshot.{ext}"
+                _write_output(out_path, data)
+                outputs.append(LongshotOutput(path=out_path, capture_method=method))
 
         page.close()
     finally:
@@ -421,7 +518,18 @@ def export_trip_longshot(
             server.shutdown()
             server.server_close()
 
-    return LongshotExportResult(outputs=outputs, capture_method=capture_method, title=title)
+    segmented = len(outputs) > 1
+    if segmented and not user_hint:
+        user_hint = _segment_user_hint(len(outputs), segment_reason or "height")
+
+    return LongshotExportResult(
+        outputs=outputs,
+        capture_method=capture_method,
+        title=title,
+        segmented=segmented,
+        segment_reason=segment_reason,
+        user_hint=user_hint,
+    )
 
 
 def reveal_path_in_folder(path: Path, *, allowed_root: Path) -> None:

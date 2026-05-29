@@ -9,6 +9,9 @@ EPILOGUE_MAX = 80
 LEAD_MAX = 80
 CAPTION_MAX = 60
 TITLE_MAX = 14
+META_TITLE_MAX = 20
+ANCHOR_MAX = 24
+ANCHOR_MAX_ITEMS = 3
 TRANSCRIPT_MAX = 2000
 
 
@@ -48,6 +51,32 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
         meta["hook"] = value[:HOOK_MAX]
         meta["edited"] = True
         return "meta.hook"
+
+    if path == "meta.title":
+        from travelogue.services.trip import apply_intent
+
+        cleaned = value[:META_TITLE_MAX].strip()
+        apply_intent(trip, title=cleaned if cleaned else None)
+        meta["edited"] = True
+        return "meta.title"
+
+    if path.startswith("chapters.") and path.endswith(".curation.memoryAnchors"):
+        ch_id = path[len("chapters.") : -len(".curation.memoryAnchors")]
+        anchors = [
+            part.strip()[:ANCHOR_MAX]
+            for part in value.replace("，", ",").split(",")
+            if part.strip()
+        ][:ANCHOR_MAX_ITEMS]
+        for ch in trip.get("chapters") or []:
+            if ch.get("id") == ch_id:
+                curation = ch.setdefault("curation", {})
+                if anchors:
+                    curation["memoryAnchors"] = anchors
+                else:
+                    curation.pop("memoryAnchors", None)
+                ch["edited"] = True
+                return path
+        raise CopyPatchError("E_COPY_PATCH", f"unknown chapter {ch_id!r}")
 
     if path == "epilogue":
         trip["epilogue"] = value[:EPILOGUE_MAX]

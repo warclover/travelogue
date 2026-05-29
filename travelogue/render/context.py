@@ -479,6 +479,40 @@ def _screen_aspect_ratio_css(asset: dict) -> str | None:
     return None
 
 
+def build_epilogue_stats(trip: dict) -> dict:
+    """P5-S4 · trip summary for epilogue stats screen."""
+    assets = [
+        a
+        for a in trip.get("assets") or []
+        if a.get("layoutEligible", True) and a.get("type") != "video"
+    ]
+    days: set[str] = set()
+    places: set[str] = set()
+    for ch in trip.get("chapters") or []:
+        cur = ch.get("curation") or {}
+        for d in cur.get("daySpan") or []:
+            key = str(d)[:10]
+            if key:
+                days.add(key)
+        for p in cur.get("places") or []:
+            text = str(p).strip()
+            if text:
+                places.add(text)
+    meta = trip.get("meta") or {}
+    if isinstance(meta.get("place"), str) and meta["place"].strip():
+        places.add(meta["place"].strip())
+    photo_count = len(assets)
+    day_count = max(len(days), 1) if photo_count else 0
+    place_count = max(len(places), 1) if photo_count else 0
+    summary = f"{day_count} 天 · {place_count} 个地方 · {photo_count} 张照片"
+    return {
+        "dayCount": day_count,
+        "placeCount": place_count,
+        "photoCount": photo_count,
+        "summaryLine": summary,
+    }
+
+
 def build_layout_screen(
     screen: dict,
     assets: dict[str, dict],
@@ -493,6 +527,14 @@ def build_layout_screen(
     featured_asset_ids: frozenset[str] | None = None,
 ) -> dict:
     pattern_id = screen.get("patternId", "screen-landscape-1")
+    if pattern_id == "screen-breath-pause":
+        from travelogue.curation.breath_pauses import build_breath_pause_render_ctx
+
+        return build_breath_pause_render_ctx(
+            screen,
+            screen_index=screen_index,
+            chapter_index=chapter_index,
+        )
     grid_class = grid_class_for_pattern(pattern_id)
     n_slots = len(screen.get("slots") or [])
     if "1col" in grid_class and n_slots == 1:
@@ -981,7 +1023,13 @@ def build_chapters_render_context(
                 foreword_spread = build_foreword_spread(chapters_raw[0], trip_hook=hook)
                 has_foreword_spread = foreword_spread is not None
 
-    for i, ch in enumerate(trip.get("chapters", [])):
+    raw_chapters = trip.get("chapters") or []
+    if is_longshot_surface:
+        from travelogue.curation.longshot_filter import chapters_for_longshot_render
+
+        raw_chapters = chapters_for_longshot_render(raw_chapters)
+
+    for i, ch in enumerate(raw_chapters):
         idx = ch.get("index", i + 1)
         curation = ch.get("curation") or {}
         anchors = curation.get("memoryAnchors") or []
@@ -1047,6 +1095,10 @@ def build_chapters_render_context(
             assets_map=assets,
             trip_photo_total=layout_eligible_count,
         )
+        if is_longshot_surface:
+            from travelogue.curation.breath_pauses import interleave_breath_items
+
+            chapter_items = interleave_breath_items(chapter_items)
         caption_on_asset = is_longshot_surface and bool(ch.get("screens"))
         for j, it in enumerate(chapter_items):
             itype = it.get("type")
@@ -1093,6 +1145,28 @@ def build_chapters_render_context(
                         photos_only=strip_narrative_copy,
                     )
                 )
+            elif itype == "breath-pause":
+                tone = (ch.get("curation") or {}).get("tone") or {}
+                r = int(tone.get("r", 26)) if isinstance(tone, dict) else 26
+                g = int(tone.get("g", 32)) if isinstance(tone, dict) else 32
+                b = int(tone.get("b", 38)) if isinstance(tone, dict) else 38
+                items_out.append(
+                    {
+                        "isBreathPause": True,
+                        "breathLabel": it.get("label") or "···",
+                        "breathStyle": f"--breath-tone: rgb({r}, {g}, {b});",
+                    }
+                )
+
+        use_chapter_separator = (
+            use_screens_global
+            and not is_longshot_surface
+            and surface.include_breath
+            and int(idx) > 1
+        )
+        chapter_tone = None
+        if use_chapter_separator and raw_screens_for_spread:
+            chapter_tone = _screen_tone_css((raw_screens_for_spread[0] or {}).get("tone"))
 
         lead = (ch.get("lead") or "").strip()
         if strip_narrative_copy:
@@ -1115,6 +1189,10 @@ def build_chapters_render_context(
             "hasScreenSpread": has_screen_spread,
             "screenSpread": screen_spread or {},
             "items": items_out,
+            "useChapterSeparator": use_chapter_separator,
+            "chapterSeparatorStyle": (
+                f"background: {chapter_tone or _DEFAULT_SCREEN_TONE};" if use_chapter_separator else ""
+            ),
             **chapter_divider(ch, idx),
         }
         chapters_out.append(ch_ctx)
@@ -1205,6 +1283,17 @@ def build_render_context(
         hook=hook,
     )
 
+    use_epilogue_stats = (
+        surface.use_screens_global
+        and not surface.is_longshot_surface
+        and surface.include_breath
+    )
+    epilogue_stats = (
+        build_epilogue_stats(trip)
+        if (use_epilogue_stats or surface.is_longshot_surface)
+        else None
+    )
+
     html_attrs = [f'data-export="{surface.export_mode}"']
     if surface.export_layout and surface.export_layout != "auto":
         html_attrs.append(f'data-layout="{surface.export_layout}"')
@@ -1266,7 +1355,7 @@ def build_render_context(
         "hasHook": bool(hook),
         "editableHook": surface.is_draft and bool(hook),
         "epilogue": epilogue,
-        "hasEpilogue": bool(epilogue),
+        "hasEpilogue": bool(epilogue) or use_epilogue_stats,
         "editableEpilogue": surface.is_draft and bool(epilogue),
         "tripId": trip.get("tripId") or "",
         "chapters": chapters_bundle.chapters_out,
@@ -1287,7 +1376,10 @@ def build_render_context(
         "featuredGrid": {"cards": chapters_bundle.featured_grid_cards},
         "hasForewordSpread": chapters_bundle.has_foreword_spread,
         "forewordSpread": chapters_bundle.foreword_spread or {},
-        "useEpilogueScreen": surface.folio_lite and bool(epilogue),
+        "isLongshotSurface": surface.is_longshot_surface,
+        "epilogueStats": epilogue_stats,
+        "useEpilogueStats": use_epilogue_stats,
+        "useEpilogueScreen": (surface.folio_lite and bool(epilogue)) or use_epilogue_stats,
     }
 
 

@@ -58,10 +58,14 @@ def test_longshot_surface_contract(screens_trip: dict) -> None:
 
 
 def _expected_longshot_cards(trip: dict) -> int:
+    from travelogue.curation.breath_pauses import interleave_breath_items
+    from travelogue.curation.longshot_filter import chapters_for_longshot_render
+
     total = 0
-    for ch in trip.get("chapters") or []:
+    for ch in chapters_for_longshot_render(trip.get("chapters") or []):
         if ch.get("screens"):
-            total += count_chapter_screen_slots(ch)
+            items = interleave_breath_items(flatten_screens_to_items(ch))
+            total += sum(1 for it in items if it.get("type") == "media-card")
             continue
         for it in ch.get("items") or []:
             if it.get("type") == "media-card":
