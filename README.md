@@ -5,7 +5,7 @@
 
 | 属性 | 内容 |
 |------|------|
-| **阶段** | Phase 2「可分享体验」；Phase 3 PRD **v0.3.3 Kickoff**（M12-0 → M12 → M13） |
+| **阶段** | Phase 2「可分享体验」；Phase 3 Curate 聚类；Phase 4 **编辑意图**（[PRD-PHASE4.md](docs/PRD-PHASE4.md)） |
 | **主模板** | `visual-journal` v0.2.1 |
 | **文档入口** | [docs/README.md](docs/README.md) |
 
@@ -17,6 +17,7 @@
 |--------|------|
 | **Phase 2 产品与任务** | [docs/PRD-PHASE2.md](docs/PRD-PHASE2.md) · [docs/IMPLEMENTATION-PHASE2.md](docs/IMPLEMENTATION-PHASE2.md) |
 | **Phase 3 Curate 聚类（原生算法）** | [docs/PRD-PHASE3.md](docs/PRD-PHASE3.md) · [docs/adr/007-native-clustering.md](docs/adr/007-native-clustering.md) |
+| **Phase 4 编辑意图（杂志心智）** | [docs/PRD-PHASE4.md](docs/PRD-PHASE4.md) · [docs/IMPLEMENTATION-PHASE4.md](docs/IMPLEMENTATION-PHASE4.md) |
 | Phase 2 验收 | [docs/ACCEPTANCE-PHASE2.md](docs/ACCEPTANCE-PHASE2.md) |
 | MVP 需求（已冻结） | [docs/PRD-MVP.md](docs/PRD-MVP.md) |
 | 分享策略（长图 vs 小程序） | [docs/SHARING.md](docs/SHARING.md) |

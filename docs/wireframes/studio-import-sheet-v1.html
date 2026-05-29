@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio Import Sheet v1 · Phase 4 Wireframe</title>
+  <style>
+    :root {
+      --ink: #0d0d0d;
+      --paper: #f7f4ee;
+      --accent: #d2a657;
+      --muted: rgba(13, 13, 13, .55);
+      --line: rgba(13, 13, 13, .12);
+      --danger: #c25450;
+      --wf-label: #e85d04;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); font-size: 14px; color: var(--ink); background: #e8e4dc; }
+    .wf-meta { padding: 12px 20px; background: #fff; border-bottom: 2px solid var(--wf-label); }
+    .wf-meta h1 { margin: 0 0 4px; font-size: 16px; }
+    .wf-meta p { margin: 0; font-size: 12px; color: var(--muted); }
+    .wf-tabs { display: flex; gap: 4px; padding: 12px 20px 0; flex-wrap: wrap; }
+    .wf-tabs button {
+      border: 1px solid var(--line); background: #fff; padding: 8px 14px; border-radius: 8px 8px 0 0;
+      cursor: pointer; font-size: 13px;
+    }
+    .wf-tabs button[aria-selected="true"] { background: var(--paper); border-bottom-color: var(--paper); font-weight: 600; }
+    .wf-panel { display: none; padding: 20px; }
+    .wf-panel[data-active="true"] { display: block; }
+    .wf-stage {
+      max-width: 420px; margin: 0 auto; min-height: 640px; position: relative;
+      border-radius: 12px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,.18);
+      background: #1a1814; color: #fff;
+    }
+    .wf-hero-bg {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #1a1814 0%, #2a2520 50%, #1f2a26 100%);
+      opacity: .9;
+    }
+    .wf-hero-fg { position: relative; z-index: 1; padding: 24px 20px 0; min-height: 200px; }
+    .wf-hero-fg h2 { margin: 0; font-size: 22px; font-weight: 300; letter-spacing: .04em; line-height: 1.4; }
+    .wf-hero-fg p { margin: 12px 0 0; font-size: 13px; opacity: .75; }
+    .wf-cta-ghost {
+      display: inline-block; margin-top: 16px; padding: 10px 18px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.35); color: #fff; font-size: 13px;
+    }
+    .wf-scrim {
+      position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 2;
+    }
+    .wf-sheet {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+      background: var(--paper); color: var(--ink); border-radius: 16px 16px 0 0;
+      padding: 12px 20px 24px; max-height: 72%;
+      overflow-y: auto;
+    }
+    .wf-sheet-handle { width: 40px; height: 4px; background: var(--line); border-radius: 2px; margin: 0 auto 12px; }
+    .wf-sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .wf-sheet-head h3 { margin: 0; font-size: 17px; }
+    .wf-close { border: none; background: none; font-size: 20px; cursor: pointer; color: var(--muted); }
+    .wf-btn-primary {
+      display: block; width: 100%; padding: 14px; border: none; border-radius: 10px;
+      background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0,0,0,.15);
+    }
+    .wf-btn-secondary {
+      display: block; width: 100%; margin-top: 10px; padding: 12px; border-radius: 10px;
+      border: 1px solid var(--line); background: #fff; font-size: 14px; cursor: pointer;
+    }
+    .wf-field { margin-top: 14px; }
+    .wf-field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--muted); }
+    .wf-field input {
+      width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px;
+    }
+    .wf-field .err { font-size: 12px; color: var(--danger); margin-top: 4px; }
+    .wf-hint { font-size: 12px; color: var(--muted); margin: 12px 0 0; line-height: 1.5; }
+    .wf-confirm {
+      margin-top: 16px; padding: 14px; background: #fff; border: 1px dashed var(--accent);
+      border-radius: 10px;
+    }
+    .wf-confirm[hidden] { display: none; }
+    .wf-skip { display: inline-block; margin-top: 8px; font-size: 12px; color: var(--accent); text-decoration: underline; cursor: pointer; }
+    details { margin-top: 12px; font-size: 13px; }
+    summary { cursor: pointer; font-weight: 600; }
+    .wf-tree { font-family: ui-monospace, monospace; font-size: 12px; background: #fff; padding: 10px; border-radius: 8px; margin-top: 8px; }
+    .wf-label-tag {
+      display: inline-block; font-size: 10px; font-weight: 700; color: var(--wf-label);
+      text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px;
+    }
+    .wf-returning .wf-card-main {
+      background: var(--paper); color: var(--ink); border-radius: 12px; padding: 14px;
+      border: 2px solid var(--accent); margin-top: 12px;
+    }
+    .wf-returning .wf-card-main .thumb {
+      height: 100px; background: linear-gradient(120deg, #ccc, #999); border-radius: 8px; margin-bottom: 10px;
+    }
+    .wf-returning .wf-card-main .btns { display: flex; gap: 8px; margin-top: 10px; }
+    .wf-returning .wf-card-main .btns button { flex: 1; padding: 10px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+    .wf-returning .wf-card-main .btns .primary { background: var(--accent); color: #fff; border: none; }
+    .wf-returning .wf-card-main .btns .ghost { background: transparent; border: 1px solid var(--line); }
+  </style>
+</head>
+<body>
+  <div class="wf-meta">
+    <h1>Phase 4 · studio-import-sheet v1</h1>
+    <p>PRD-PHASE4 v0.4.2 · 选夹优先 · Token 对齐 studio.css · 非最终实现</p>
+  </div>
+  <div class="wf-tabs" role="tablist">
+    <button type="button" role="tab" aria-selected="true" data-tab="t1">① 空态 panel</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="t2">② 选夹后确认</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="t3">③ 回访大卡</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="t4">④ 错误态</button>
+  </div>
+
+  <div id="t1" class="wf-panel" data-active="true" role="tabpanel">
+    <div class="wf-stage">
+      <div class="wf-hero-bg"></div>
+      <div class="wf-hero-fg">
+        <span class="wf-label-tag">Hero 空态</span>
+        <h2>你的照片<br/>是一本<em>还没装帧</em>的杂志</h2>
+        <p>主 CTA 已点 · 打开 sheet</p>
+        <span class="wf-cta-ghost">制作我的杂志 →</span>
+      </div>
+      <div class="wf-scrim"></div>
+      <div class="wf-sheet" role="dialog" aria-labelledby="sheet-title-1">
+        <div class="wf-sheet-handle"></div>
+        <div class="wf-sheet-head">
+          <h3 id="sheet-title-1">制作杂志</h3>
+          <button type="button" class="wf-close" aria-label="关闭">×</button>
+        </div>
+        <span class="wf-label-tag">步骤 1 · 主路径</span>
+        <button type="button" class="wf-btn-primary">选择照片文件夹</button>
+        <p class="wf-hint">相册里若有「精选」和「素材」两个子文件夹，封面会优先用精选（建议 8–20 张）。</p>
+        <details>
+          <summary>帮你排得更好（可选）</summary>
+          <p class="wf-hint">主地点 · 行程单 · 精选图示</p>
+        </details>
+        <details>
+          <summary>其他导入方式</summary>
+          <p class="wf-hint">粘贴路径 · 小文件夹上传</p>
+        </details>
+        <p class="wf-hint">每个文件夹会生成一篇新的游记，不会覆盖已有游记。</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="t2" class="wf-panel" role="tabpanel">
+    <div class="wf-stage">
+      <div class="wf-hero-bg"></div>
+      <div class="wf-scrim"></div>
+      <div class="wf-sheet">
+        <div class="wf-sheet-handle"></div>
+        <div class="wf-sheet-head"><h3>制作杂志</h3><button type="button" class="wf-close">×</button></div>
+        <button type="button" class="wf-btn-primary" disabled style="opacity:.6">已选 D:\Photos\Kyoto2025</button>
+        <div class="wf-confirm">
+          <span class="wf-label-tag">步骤 2 · 确认区</span>
+          <div class="wf-field">
+            <label for="t">给这本杂志起个名字</label>
+            <input id="t" type="text" value="Kyoto2025" />
+          </div>
+          <div class="wf-field">
+            <label>写给编辑的一句话（可选）</label>
+            <input type="text" placeholder="带娃慢走，别写成导游词" />
+          </div>
+          <button type="button" class="wf-btn-primary" style="margin-top:12px">开始制作</button>
+          <span class="wf-skip">跳过，用默认名</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="t3" class="wf-panel" role="tabpanel">
+    <div class="wf-stage wf-returning">
+      <div class="wf-hero-bg"></div>
+      <div class="wf-hero-fg" style="min-height:320px">
+        <span class="wf-label-tag">回访 hybrid · 左 60%</span>
+        <h2 style="font-size:18px">再做一篇？</h2>
+        <div class="wf-card-main">
+          <div class="thumb"></div>
+          <strong>雨后京都</strong>
+          <div class="btns">
+            <button type="button" class="primary">继续编辑</button>
+            <button type="button" class="ghost">更新长图</button>
+          </div>
+        </div>
+        <button type="button" class="wf-btn-secondary" style="margin-top:12px;width:auto;display:inline-block">+ 新建杂志</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="t4" class="wf-panel" role="tabpanel">
+    <div class="wf-stage">
+      <div class="wf-scrim"></div>
+      <div class="wf-sheet">
+        <div class="wf-sheet-head"><h3>制作杂志</h3><button type="button" class="wf-close">×</button></div>
+        <div class="wf-field">
+          <label>给这本杂志起个名字</label>
+          <input type="text" value="这是一句超过二十个字限制的杂志名称呀" />
+          <p class="err">杂志名最多 20 个字</p>
+        </div>
+        <button type="button" class="wf-btn-primary">选择照片文件夹</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll(".wf-tabs button").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll(".wf-tabs button").forEach(function (b) {
+          b.setAttribute("aria-selected", "false");
+        });
+        document.querySelectorAll(".wf-panel").forEach(function (p) {
+          p.dataset.active = "false";
+        });
+        btn.setAttribute("aria-selected", "true");
+        var id = btn.getAttribute("data-tab");
+        var panel = document.getElementById(id);
+        if (panel) panel.dataset.active = "true";
+      });
+    });
+  </script>
+</body>
+</html>

@@ -3,14 +3,14 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
-| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2 Studio** + **Phase 3 Curate 聚类** |
-| **更新日期** | 2026-05-27 |
+| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2 Studio** + **Phase 3 Curate 聚类** + **Phase 4 编辑意图** |
+| **更新日期** | 2026-05-28 |
 
 ---
 
 ## 阅读顺序（新人）
 
-1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · 已冻结）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（Curate 聚类 · 第三阶段）  
+1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · 已冻结）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（Curate 聚类）→ [PRD-PHASE4.md](./PRD-PHASE4.md)（编辑意图 · 杂志心智）  
 2. [AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md)  
 2b. [PRD-LAYOUT.md](./PRD-LAYOUT.md)（排版布局子系统 · Agent 1.5）  
 3. [DATA-MODEL.md](./DATA-MODEL.md) + [schemas/trip.schema.json](../schemas/trip.schema.json)  
@@ -46,9 +46,23 @@
 | ACCEPTANCE-PHASE3.md | Phase 3 验收（**v0.3.3**） |
 | docs/spikes/clustering-algorithm-matrix.md | M12-0 算法 Spike（**v0.1 已写**） |
 
-**前置**：Phase 2 ≥ M8b + M9 可用。**代号**：Curate 聚类。**注意**：与 [SHARING.md](./SHARING.md) 中小程序 **P3** 轨道无关，后者规划为 Phase 4。
+**前置**：Phase 2 ≥ M8b + M9 可用。**代号**：Curate 聚类。**注意**：与 [SHARING.md](./SHARING.md) 中小程序鉴权轨道无关（后者为 **分享 Phase 4**）。
 
 阅读顺序：**PRD-PHASE3** v0.3.3 Kickoff → ADR-007 v0.2 → [智能排版V2.md](./智能排版V2.md) P1 → [IMPLEMENTATION-PHASE3.md](./IMPLEMENTATION-PHASE3.md) → [ACCEPTANCE-PHASE3.md](./ACCEPTANCE-PHASE3.md) → [PRD-STUDIO-HOMEPAGE.md](./PRD-STUDIO-HOMEPAGE.md) §19。
+
+---
+
+## Phase 4 · 编辑意图（Intent Layer + G1）
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE4.md](./PRD-PHASE4.md) | **Phase 4 产品需求** v0.4.3（意图层 · 导入 panel · 预览 drawer · 附录 A–C） |
+| [IMPLEMENTATION-PHASE4.md](./IMPLEMENTATION-PHASE4.md) | 实施任务清单（M15–M19 · 含真实完成度核查） |
+| [ACCEPTANCE-PHASE4.md](./ACCEPTANCE-PHASE4.md) | Phase 4 验收（AC-P4-01～09 · A11Y · P-EVAL） |
+
+**前置**：Phase 2 Studio 可完成导入→预览→长图；Phase 3 建议已合入（成功页可展示行程段数）。**代号**：P4-Intent。**注意**：与分享轨道「小程序 Phase 4」区分。
+
+阅读顺序：**PRD-PHASE4** → **IMPLEMENTATION-PHASE4** → 附录 A 精选上传 → **ACCEPTANCE-PHASE4**。
 
 ---
 

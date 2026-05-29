@@ -8,7 +8,7 @@
 | **页面路由** | `GET /` → `templates/studio/studio.html`（`data-studio-v="3"`） |
 | **权威线框** | [wireframes/studio-homepage-photo-first-v3.html](./wireframes/studio-homepage-photo-first-v3.html) |
 | **前置条件** | [PRD-PHASE2.md](./PRD-PHASE2.md) M8–M10 已交付；`travelogue studio` 单端口 8766 |
-| **关联文档** | [PRD-PHASE2.md](./PRD-PHASE2.md) · [PRD-PHASE3.md](./PRD-PHASE3.md) · [IMPLEMENTATION-PHASE2.md](./IMPLEMENTATION-PHASE2.md) · [ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md) · [adr/004](./adr/004-studio-hub-server.md) · [SHARING.md](./SHARING.md) |
+| **关联文档** | [PRD-PHASE2.md](./PRD-PHASE2.md) · [PRD-PHASE3.md](./PRD-PHASE3.md) · **[PRD-PHASE4.md](./PRD-PHASE4.md) §6（极易用 + 导入 panel）** · [IMPLEMENTATION-PHASE2.md](./IMPLEMENTATION-PHASE2.md) · [ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md) · [adr/004](./adr/004-studio-hub-server.md) · [SHARING.md](./SHARING.md) |
 | **负责人** | 首席产品经理 |
 | **更新日期** | 2026-05-28 |
 
@@ -109,6 +109,12 @@ Phase 2 首页的 **首次成功过渡（§6.11）** 仍是核心 Aha：**用户
 | **HP-GAP-12** | stale 徽章与 CTA 不一致 | 点了继续编辑还要自己找长图 | §6.4 更新长图 CTA |
 | **HP-GAP-13** | 试用后无转化引导 | 示例看完就停 | §6.13.3 试用回流 |
 | **HP-GAP-14** | 首页像工具不像作品 | 摄影用户无感 | §6.3 · §6.6 杂志 Hero + 画廊 |
+| **HP-GAP-15** | Intent 藏 hidden，用户不知可起名 | 像批量工具 | [PRD-PHASE4](./PRD-PHASE4.md) §6.3 导入 panel |
+| **HP-GAP-16** | 路径栏常驻，非开发者怯于粘贴 | 主视觉像命令行 | Phase 4 · 路径收「更多方式」 |
+| **HP-GAP-17** | 选文件夹后还要点「开始」 | 多一步 | Phase 4 · pick 后自动 import |
+| **HP-GAP-18** | 回访「继续编辑」不够醒目 | 找上次 trip 慢 | Phase 4 · 最近大卡 |
+| **HP-GAP-19** | 精选双夹无语义 | 不懂如何准备照片 | Phase 4 §6.4 图示 |
+| **HP-GAP-20** | 首次不知点哪 | 10 秒找不到主操作 | Phase 4 · 主 CTA + coach mark |
 
 ### 2.3 产品目标
 
@@ -806,6 +812,7 @@ flowchart TD
 | **M12 · pick-folder** | §7.3 子进程 IFileDialog · 路径栏 · 防卡死 | **已交付 2026-05-28** |
 | **M12b** | health · **carousel 瀑布流** · 纸张纹理 · 微交互 | **部分** / 样张形态变更 |
 | **M13** | trip 删除 · Display Web Font · 主色占位 · 主色提取 | 待排 |
+| **M15-HP · Phase 4** | 导入 panel · 自动 import · 路径折叠 · 回访大卡 · coach | 见 [PRD-PHASE4](./PRD-PHASE4.md) §6 · **待交付** |
 
 ---
 
@@ -838,6 +845,10 @@ flowchart TD
 | **AC-HP-24** | 点 **浏览…** 弹出 Windows 文件夹对话框 · 不卡死 · 不堆叠 Toast |
 | **AC-HP-25** | 路径 JSON 导入 **无 200MB 限制** · pick-folder 失败不静默走上传 |
 | **AC-HP-23** | `prefers-reduced-motion` 下无 breathing / reveal 动画 |
+| **AC-HP-26** | 主 CTA「制作我的杂志」打开导入 panel（Phase 4） | ☐ |
+| **AC-HP-27** | panel 内选文件夹后 **自动开始**导入，无需点「开始」 | ☐ |
+| **AC-HP-28** | 路径粘贴仅在 panel「更多方式」内 | ☐ |
+| **AC-HP-29** | 回访最近 trip **继续编辑** 一键进预览（含 peak 深链） | ☐ |
 
 ---
 

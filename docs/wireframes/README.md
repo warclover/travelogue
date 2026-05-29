@@ -5,12 +5,15 @@
 | [studio-homepage-photo-first-v3.html](./studio-homepage-photo-first-v3.html) | **首页 v3.0** · 影像优先 · 全幅 Hero · **PRD v1.4 对齐 · 已落地** |
 | [studio-homepage-art-cards-v2.html](./studio-homepage-art-cards-v2.html) | 首页 v2.0 · 艺术卡片 · Bento 布局（已落地，用户不满意） |
 | [studio-homepage-wireframe.html](./studio-homepage-wireframe.html) | 首页 v1.4 · 杂志 Hero + 灵感画廊（PRD 对齐版） |
+| [studio-import-sheet-v1.html](./studio-import-sheet-v1.html) | **Phase 4 · 导入 panel v1** · 选夹优先 · [PRD-PHASE4](../PRD-PHASE4.md) v0.4.2 |
 
 ## 如何查看
 
 双击 HTML 文件，或用浏览器打开。
 
 **v3.0 评审 Tab**：**① 空态（首次）** · **② 回访** · **③ 导入中** · **④ 窄屏 390px**
+
+**import-sheet v1 Tab**：**① 空态 panel** · **② 选夹后确认** · **③ 回访大卡** · **④ 错误态**
 
 ## 关联 PRD
 
