@@ -1,0 +1,56 @@
+{
+  "cities": [
+    {
+      "canonical": "大阪",
+      "aliases": ["Osaka", "osaka", "大坂", "おおさか", "大阪市"]
+    },
+    {
+      "canonical": "京都",
+      "aliases": ["Kyoto", "kyoto", "京都市", "きょうと", "Kyōto"]
+    },
+    {
+      "canonical": "东京",
+      "aliases": ["Tokyo", "tokyo", "東京", "とうきょう", "东京都"]
+    },
+    {
+      "canonical": "奈良",
+      "aliases": ["Nara", "nara", "奈良市"]
+    },
+    {
+      "canonical": "神户",
+      "aliases": ["Kobe", "kobe", "神戸", "神户市"]
+    },
+    {
+      "canonical": "横滨",
+      "aliases": ["Yokohama", "yokohama", "横浜"]
+    },
+    {
+      "canonical": "名古屋",
+      "aliases": ["Nagoya", "nagoya"]
+    },
+    {
+      "canonical": "札幌",
+      "aliases": ["Sapporo", "sapporo"]
+    },
+    {
+      "canonical": "福冈",
+      "aliases": ["Fukuoka", "fukuoka", "福岡"]
+    },
+    {
+      "canonical": "冲绳",
+      "aliases": ["Okinawa", "okinawa", "沖縄", "那霸", "那覇"]
+    },
+    {
+      "canonical": "巴黎",
+      "aliases": ["Paris", "paris"]
+    },
+    {
+      "canonical": "伦敦",
+      "aliases": ["London", "london"]
+    },
+    {
+      "canonical": "纽约",
+      "aliases": ["New York", "NYC", "nyc"]
+    }
+  ]
+}

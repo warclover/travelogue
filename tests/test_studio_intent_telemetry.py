@@ -1,0 +1,58 @@
+"""AC-P4-TEL-01 · studio intent telemetry."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from travelogue.web.studio_intent_telemetry import (
+    build_studio_intent_telemetry,
+    write_studio_intent_telemetry,
+)
+from travelogue.web.studio_pipeline import run_studio_pipeline
+from tests.test_studio_server import _distinct_album
+
+
+def test_build_studio_intent_telemetry_fields() -> None:
+    trip = {
+        "tripId": "demo",
+        "userNotes": "带娃慢走",
+        "intent": {"travelPlan": {"cities": ["京都"]}, "title": "京都"},
+        "assets": [{"userTier": "featured"}, {"userTier": "material"}],
+        "chapters": [{"curation": {"memoryAnchors": ["寺", "雨"]}}],
+        "pipeline": {"status": "rendered"},
+    }
+    payload = build_studio_intent_telemetry(trip, tier_mode="dual", g1_pending=False)
+    assert payload["hasUserNotes"] is True
+    assert payload["featuredCount"] == 1
+    assert payload["tierMode"] == "dual"
+    assert payload["planUploaded"] is True
+    assert payload["anchorCount"] == 2
+    assert payload["g1Pending"] is False
+
+
+def test_write_studio_intent_telemetry_file(tmp_path: Path) -> None:
+    trip = {"tripId": "demo", "assets": [], "chapters": []}
+    path = write_studio_intent_telemetry(trip, tmp_path, tier_mode="single")
+    assert path == tmp_path / "runs" / "studio-intent.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["tripId"] == "demo"
+    assert payload["tierMode"] == "single"
+
+
+def test_pipeline_writes_studio_intent_telemetry(tmp_path: Path) -> None:
+    album = _distinct_album(tmp_path, 6)
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    result = run_studio_pipeline(
+        album,
+        trips_dir=trips_dir,
+        user_notes="慢走",
+        dedupe=False,
+    )
+    tel_path = result.trip_dir / "runs" / "studio-intent.json"
+    assert tel_path.is_file()
+    payload = json.loads(tel_path.read_text(encoding="utf-8"))
+    assert payload["hasUserNotes"] is True
+    assert payload["tripId"] == result.trip_id
+    assert result.tier_mode
