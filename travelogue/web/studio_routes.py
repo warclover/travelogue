@@ -175,6 +175,9 @@ class StudioMixin:
     def _studio_cfg(self) -> AppConfig:
         return self.app_config or get_config()
 
+    def _studio_handle_config(self) -> None:
+        config_handlers.handle_config(self)
+
     def _studio_handle_patch_pipeline(self, trip_id: str) -> None:
         trip_handlers.handle_patch_pipeline(self, trip_id)
 
