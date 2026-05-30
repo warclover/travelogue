@@ -4,6 +4,7 @@
 import { LS, SS, IMPORT_PHOTO_CAP, SUCCESS_LONGSHOT_SCALE, SUCCESS_SLOW_MS } from "./constants.js";
 import { S } from "./state.js";
 import { $, show, syncImportUiDisabled, setBusy } from "./dom.js";
+import { isGenericPlace } from "./constants.js";
 import { studioAuthHeaders, withJobBusyRetry, isJobBusyResponse, postJson } from "./http.js";
 import {
   setError, setWarning, hideFailure, showFailure, humanizeStudioError, setImportEstimate,
@@ -296,20 +297,34 @@ export function handleImportSuccess(job) {
   var segments = result.segmentCount;
   var photoCount = result.photoCount || 0;
   if (msg) {
-    if (featured > 0) {
+    if (result.g1Pending) {
+      msg.textContent =
+        "《" + title + "》章节结构已排好 · 请在预览中确认后继续生成文案";
+      if (segments > 0) msg.textContent += " · " + segments + " 段行程";
+    } else if (featured > 0) {
       msg.textContent = "《" + title + "》已生成 · " + featured + " 张精选已用于封面与章首";
+      if (segments > 0) msg.textContent += " · " + segments + " 段行程";
+      if (photoCount >= IMPORT_PHOTO_CAP) {
+        msg.textContent += " · 已优先保留精选与前 " + IMPORT_PHOTO_CAP + " 张";
+      }
     } else {
       msg.textContent = "《" + title + "》已生成 · 可在预览中标记精选照片";
-    }
-    if (segments > 0) msg.textContent += " · " + segments + " 段行程";
-    if (photoCount >= IMPORT_PHOTO_CAP) {
-      msg.textContent += " · 已优先保留精选与前 " + IMPORT_PHOTO_CAP + " 张";
+      if (segments > 0) msg.textContent += " · " + segments + " 段行程";
+      if (photoCount >= IMPORT_PHOTO_CAP) {
+        msg.textContent += " · 已优先保留精选与前 " + IMPORT_PHOTO_CAP + " 张";
+      }
     }
   }
 
   var chipsHost = $("studio-success-chips");
   if (chipsHost) {
     chipsHost.innerHTML = "";
+    if (result.g1Pending) {
+      var g1Chip = document.createElement("span");
+      g1Chip.className = "studio-success__chip";
+      g1Chip.textContent = "待确认章节结构";
+      chipsHost.appendChild(g1Chip);
+    }
     if (featured > 0) {
       var c1 = document.createElement("span");
       c1.className = "studio-success__chip";
@@ -439,7 +454,7 @@ export function uploadAndImportCore(files, titleVal, placeVal) {
   form.append("title", titleVal || ($("trip-title") && $("trip-title").value) || "我的旅途");
   var placeRaw = (placeVal || ($("trip-place") && $("trip-place").value) || "").trim();
   form.append("place", placeRaw || "旅途");
-  form.append("placeUserSet", placeRaw ? "true" : "false");
+  form.append("placeUserSet", placeRaw && !isGenericPlace(placeRaw) ? "true" : "false");
   var feeling = ($("trip-feeling") && $("trip-feeling").value.trim()) || "";
   if (feeling) form.append("userNotes", feeling.slice(0, 200));
   appendPlanFileToForm(form);
@@ -460,21 +475,25 @@ export function uploadAndImportCore(files, titleVal, placeVal) {
   show(progress, true);
   if (progress) progress.value = 0;
 
-  return postMultipartImport(form, {
-    onUploadProgress: function (ev) {
-      if (ev.lengthComputable && progress) {
-        progress.value = Math.round((ev.loaded / ev.total) * 100);
+  return withJobBusyRetry(function () {
+    return postMultipartImport(form, {
+      onUploadProgress: function (ev) {
+        if (ev.lengthComputable && progress) {
+          progress.value = Math.round((ev.loaded / ev.total) * 100);
+        }
+      },
+    }).then(function (result) {
+      if (isJobBusyResponse(result)) {
+        if (typeof studioToast === "function") {
+          studioToast("排队中，请稍候…", { duration: 2800 });
+        }
+        throw { code: "E_STUDIO_JOB_BUSY", message: "排队中，请稍候" };
       }
-    },
-  }).then(function (result) {
-    if (isJobBusyResponse(result)) {
-      if (typeof studioToast === "function") {
-        studioToast("排队中，请稍候…", { duration: 2800 });
-      }
-      throw { code: "E_STUDIO_JOB_BUSY", message: "排队中，请稍候" };
-    }
-    return result;
-  }).then(function (result) {
+      return result;
+    });
+  }, { onBusy: function () {
+    if (typeof studioToast === "function") studioToast("排队中，请稍候…", { duration: 2800 });
+  } }).then(function (result) {
     show(progress, false);
     var data = importResponseData(result);
     if (result.status === 409 && data.error === "E_DEMO_EXISTS") {
@@ -526,7 +545,10 @@ export function uploadAndImportWithForce(files, titleVal, placeVal, gen) {
   retryForm.append("title", titleVal || "我的旅途");
   var retryPlace = (placeVal || "").trim();
   retryForm.append("place", retryPlace || "旅途");
-  retryForm.append("placeUserSet", retryPlace ? "true" : "false");
+  retryForm.append(
+    "placeUserSet",
+    retryPlace && !isGenericPlace(retryPlace) ? "true" : "false"
+  );
   retryForm.append("force", "true");
   appendPlanFileToForm(retryForm);
   for (var j = 0; j < files.length; j++) {
@@ -554,7 +576,7 @@ export function resumeActiveJobIfAny() {
   if (pendingRaw) {
     try {
       S.pendingImport = JSON.parse(pendingRaw);
-      if (S.pendingImport && S.pendingImport.uploadForm) {
+      if (S.pendingImport && S.pendingImport.uploadForm && !jobId) {
         try {
           sessionStorage.removeItem(SS.activeJobId);
           sessionStorage.removeItem(SS.activePending);
@@ -581,7 +603,7 @@ export function resumeActiveJobIfAny() {
     }
     transitionTo("Failed");
     var echo = (S.pendingImport && S.pendingImport.albumPath) || "";
-    showFailure(err.message || String(err), echo);
+    showFailure(err.message || String(err), echo, err.code);
   }).finally(function () { setBusy(); });
   return true;
 }

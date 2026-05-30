@@ -6,6 +6,14 @@
 /** Mirror travelogue/web/studio_constants.py STUDIO_USER_NOTES_MAX_LEN */
 export const STUDIO_USER_NOTES_MAX_LEN = 200;
 
+/** Mirror travelogue/services/copy_subject.py GENERIC_PLACES */
+export const GENERIC_PLACES = new Set(["", "旅途", "未知"]);
+
+export function isGenericPlace(name) {
+  var s = (name || "").trim();
+  return !s || GENERIC_PLACES.has(s);
+}
+
 // ── Stage labels (§8.2) ──
 export const STAGE_LABELS = {
   ingest: "正在准备你的照片…",

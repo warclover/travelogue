@@ -308,5 +308,57 @@ def test_build_chapter_brief_strips_exif_places_when_suppressed() -> None:
     brief = build_chapter_brief(trip, trip["chapters"][0], tone="relaxed", scope="full")
     assert brief["chapter"]["places"] == []
     assert brief["trip"]["editorialSubject"] == "小学毕业"
+    assert "city" not in (brief["chapter"]["items"][0].get("asset") or {})
+
+
+def test_stub_caption_uses_title_not_exif_city() -> None:
+    from travelogue.services.narrate import _build_stub_caption
+
+    meta = {"title": "小学毕业", "places": ["旅途"]}
+    intent = {"placesUserSet": False}
+    assets = [{"place": {"city": "大理"}}]
+    asset = {
+        "id": "a1",
+        "takenAt": "2025-06-01T10:00:00Z",
+        "place": {"city": "大理"},
+        "aspectKind": "portrait",
+    }
+    cap = _build_stub_caption(
+        asset,
+        default_place="小学毕业",
+        meta=meta,
+        intent=intent,
+        assets=assets,
+    )
+    assert "小学毕业" in cap
+    assert "大理" not in cap
+
+
+def test_geo_segment_name_uses_editorial_subject_not_exif() -> None:
+    from travelogue.curation.geo_events import detect_geo_events
+    from travelogue.config import GeoClusterConfig
+
+    assets = [
+        {
+            "id": f"a{i}",
+            "type": "image",
+            "takenAt": f"2025-06-0{(i % 3) + 1}T{10 + i}:00:00Z",
+            "geo": {"lat": 25.6 + i * 0.001, "lon": 100.2},
+            "place": {"city": "大理"},
+        }
+        for i in range(6)
+    ]
+    meta = {"title": "小学毕业", "places": ["旅途"]}
+    intent = {"placesUserSet": False}
+    segs = detect_geo_events(
+        assets,
+        cfg=GeoClusterConfig(min_photos_per_event=3),
+        meta=meta,
+        intent=intent,
+    )
+    assert segs
+    for seg in segs:
+        assert "大理" not in seg.name
+        assert "小学毕业" in seg.name
 
 

@@ -83,9 +83,24 @@ def _segment_name(
     *,
     index: int,
     total: int,
+    suppress_geo: bool = False,
+    label_place: str | None = None,
 ) -> str:
-    place = (location or "旅途").strip()[:16]
-    if start.year != end.year:
+    if suppress_geo:
+        place = (label_place or "").strip()[:16]
+    else:
+        place = (location or "旅途").strip()[:16]
+
+    if suppress_geo and not place:
+        if start.year != end.year:
+            base = f"{start.year}–{end.year}"
+        elif start.month != end.month:
+            base = f"{start.month}月–{end.month}月"
+        elif start != end:
+            base = f"{start.month}月{start.day}–{end.day}日"
+        else:
+            base = f"{start.month}月{start.day}日"
+    elif start.year != end.year:
         base = f"{start.year}–{end.year}·{place}"
     elif start.month != end.month:
         base = f"{start.month}月–{end.month}月·{place}"
@@ -169,6 +184,8 @@ def _rows_to_segment(
     *,
     index: int,
     total: int,
+    suppress_geo: bool = False,
+    label_place: str | None = None,
 ) -> GeoSegment | None:
     if not rows:
         return None
@@ -178,7 +195,15 @@ def _rows_to_segment(
     location = _dominant_location(assets)
     return GeoSegment(
         id=f"evt-{index:02d}",
-        name=_segment_name(start, end, location, index=index, total=total),
+        name=_segment_name(
+            start,
+            end,
+            location,
+            index=index,
+            total=total,
+            suppress_geo=suppress_geo,
+            label_place=label_place,
+        ),
         start_date=start,
         end_date=end,
         location=location,
@@ -196,8 +221,22 @@ def detect_geo_events(
     merge_time_gap_hours: float | None = None,
     merge_location_km: float | None = None,
     max_event_days: int | None = None,
+    meta: dict | None = None,
+    intent: dict | None = None,
 ) -> list[GeoSegment]:
     """Detect stay/event segments from GPS + takenAt (Recasa-inspired rules)."""
+    from travelogue.services.copy_subject import (
+        narrative_copy_subject,
+        suppress_chapter_geo_places,
+    )
+
+    suppress_geo = False
+    label_place: str | None = None
+    if meta is not None:
+        suppress_geo = suppress_chapter_geo_places(meta, intent=intent, assets=assets)
+        if suppress_geo:
+            label_place = narrative_copy_subject(meta, intent=intent, assets=assets)
+
     geo_cfg = cfg or GeoClusterConfig()
     gap_h = event_time_gap_hours if event_time_gap_hours is not None else geo_cfg.event_time_gap_hours
     min_photos = (
@@ -238,9 +277,15 @@ def detect_geo_events(
     orphan_rows: list[tuple[datetime, str, dict, tuple[float, float] | None]] = []
     for chunk in merged_chunks:
         if len(chunk) >= min_photos:
-            segments.append(
-                _rows_to_segment(chunk, index=len(segments) + 1, total=max(1, len(merged_chunks)))
+            seg = _rows_to_segment(
+                chunk,
+                index=len(segments) + 1,
+                total=max(1, len(merged_chunks)),
+                suppress_geo=suppress_geo,
+                label_place=label_place,
             )
+            if seg is not None:
+                segments.append(seg)
         else:
             orphan_rows.extend(chunk)
 
@@ -260,9 +305,15 @@ def detect_geo_events(
             if dt.date() > segments[best_i].end_date:
                 segments[best_i].end_date = dt.date()
     elif orphan_rows and not segments:
-        segments.append(
-            _rows_to_segment(orphan_rows, index=1, total=1)  # type: ignore[arg-type]
+        orphan_seg = _rows_to_segment(
+            orphan_rows,  # type: ignore[arg-type]
+            index=1,
+            total=1,
+            suppress_geo=suppress_geo,
+            label_place=label_place,
         )
+        if orphan_seg is not None:
+            segments.append(orphan_seg)
 
     # Assign no-GPS assets by takenAt falling inside a segment span.
     assigned: set[str] = {aid for seg in segments for aid in seg.asset_ids}
@@ -291,7 +342,13 @@ def detect_geo_events(
     for i, seg in enumerate(segments, start=1):
         seg.id = f"evt-{i:02d}"
         seg.name = _segment_name(
-            seg.start_date, seg.end_date, seg.location, index=i, total=len(segments)
+            seg.start_date,
+            seg.end_date,
+            seg.location,
+            index=i,
+            total=len(segments),
+            suppress_geo=suppress_geo,
+            label_place=label_place,
         )
         seg.asset_ids = sorted(
             dict.fromkeys(seg.asset_ids),

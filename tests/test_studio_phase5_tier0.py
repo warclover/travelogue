@@ -70,6 +70,18 @@ def test_studio_intent_scoped_by_album_path() -> None:
     assert "placeUserSet" in sheet
 
 
+def test_studio_constants_is_generic_place() -> None:
+    js = (ROOT / "templates" / "studio" / "js" / "constants.js").read_text(encoding="utf-8")
+    assert "isGenericPlace" in js
+    assert "GENERIC_PLACES" in js
+
+
+def test_import_flow_g1_pending_success_copy() -> None:
+    js = (ROOT / "templates" / "studio" / "js" / "import-flow.js").read_text(encoding="utf-8")
+    assert "g1Pending" in js
+    assert "待确认章节结构" in js
+
+
 def test_trip_schema_allows_places_user_set() -> None:
     schema = (ROOT / "schemas" / "trip.schema.json").read_text(encoding="utf-8")
     assert "placesUserSet" in schema

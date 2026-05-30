@@ -2,7 +2,7 @@
  * Travelogue Studio · import sheet, intent fields, coach marks,
  * recent paths, import thumbs, and large-upload confirm.
  */
-import { LS, UPLOAD_BYTES_SOFT_LIMIT } from "./constants.js";
+import { LS, UPLOAD_BYTES_SOFT_LIMIT, isGenericPlace } from "./constants.js";
 import { S } from "./state.js";
 import {
   $, show, formatBytes, basenameTitleFromPath,
@@ -145,7 +145,7 @@ export function buildImportPayload(extra) {
     albumPath: extra.albumPath || S._pendingAlbumPath,
     title: title.slice(0, 20),
     place: placeRaw || "旅途",
-    placeUserSet: !!placeRaw,
+    placeUserSet: !!placeRaw && !isGenericPlace(placeRaw),
     force: !!extra.force,
   };
   if (feeling) body.userNotes = feeling.slice(0, 200);

@@ -150,7 +150,12 @@ class ClusteringLayer:
         log: ClusterDecisionLog,
     ) -> _GeoStage:
         try:
-            segments = detect_geo_events(assets, cfg=cfg.clustering.geo)
+            segments = detect_geo_events(
+                assets,
+                cfg=cfg.clustering.geo,
+                meta=trip.get("meta") or {},
+                intent=trip.get("intent"),
+            )
         except Exception as exc:
             _log.warning("geo_events failed: %s", exc, exc_info=True)
             log.add("fallback", f"geo_events error: {exc}")

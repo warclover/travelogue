@@ -172,8 +172,37 @@ STUB_CAPTION_TEMPLATES: dict[str, tuple[str, ...]] = {
 }
 
 
-def _build_stub_caption(asset: dict, *, default_place: str) -> str:
-    place = ((asset.get("place") or {}).get("city") or "").strip() or default_place or "这里"
+def _caption_place_for_asset(
+    asset: dict,
+    *,
+    default_place: str,
+    meta: dict | None = None,
+    intent: dict | None = None,
+    assets: list[dict] | None = None,
+) -> str:
+    from travelogue.services.copy_subject import suppress_chapter_geo_places
+
+    if meta is not None and suppress_chapter_geo_places(meta, intent=intent, assets=assets):
+        return default_place or "这里"
+    city = ((asset.get("place") or {}).get("city") or "").strip()
+    return city or default_place or "这里"
+
+
+def _build_stub_caption(
+    asset: dict,
+    *,
+    default_place: str,
+    meta: dict | None = None,
+    intent: dict | None = None,
+    assets: list[dict] | None = None,
+) -> str:
+    place = _caption_place_for_asset(
+        asset,
+        default_place=default_place,
+        meta=meta,
+        intent=intent,
+        assets=assets,
+    )
     date = _format_asset_date(str(asset.get("takenAt") or ""))
     kind = str(asset.get("aspectKind") or "default")
     templates = STUB_CAPTION_TEMPLATES.get(kind) or STUB_CAPTION_TEMPLATES["default"]
@@ -202,6 +231,8 @@ def _apply_stub_captions(
     regenerate: bool = False,
     dry_run: bool = False,
     max_chars: int = 60,
+    meta: dict | None = None,
+    intent: dict | None = None,
 ) -> list[str]:
     from travelogue.curation.asset_caption import (
         apply_caption_to_trip,
@@ -209,7 +240,10 @@ def _apply_stub_captions(
         resolve_caption,
     )
 
-    assets = {a["id"]: a for a in trip.get("assets") or [] if a.get("id")}
+    meta = meta if meta is not None else trip.get("meta") or {}
+    intent = intent if intent is not None else trip.get("intent")
+    asset_list = trip.get("assets") or []
+    assets = {a["id"]: a for a in asset_list if a.get("id")}
     updated: list[str] = []
     for aid in _stub_caption_asset_ids(trip):
         asset = assets.get(aid)
@@ -226,7 +260,13 @@ def _apply_stub_captions(
         if not regenerate and resolve_caption(None, asset).strip():
             continue
         caption = _finalize_copy(
-            _build_stub_caption(asset, default_place=default_place),
+            _build_stub_caption(
+                asset,
+                default_place=default_place,
+                meta=meta,
+                intent=intent,
+                assets=asset_list,
+            ),
             max_chars,
         )
         if not caption:
@@ -507,6 +547,8 @@ def _run_narrate_stub(
         regenerate=regenerate,
         dry_run=dry_run,
         max_chars=lim["captionMaxChars"],
+        meta=meta,
+        intent=intent,
     )
     updated.extend(caption_updates)
 

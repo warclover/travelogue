@@ -9,7 +9,7 @@ from travelogue.services.narrate import _manifest_limits
 from travelogue.services.narrative_scope import captions_allowed, chapter_lead_allowed
 
 
-def _asset_brief(asset: dict) -> dict[str, Any]:
+def _asset_brief(asset: dict, *, include_geo_city: bool = True) -> dict[str, Any]:
     place = asset.get("place") or {}
     voice = asset.get("voice") or {}
     excerpt = (voice.get("transcriptPreview") or voice.get("transcript") or "").strip()
@@ -21,9 +21,10 @@ def _asset_brief(asset: dict) -> dict[str, Any]:
         "aspectKind": asset.get("aspectKind"),
         "mediaClass": asset.get("mediaClass"),
     }
-    city = place.get("city")
-    if city:
-        out["city"] = city
+    if include_geo_city:
+        city = place.get("city")
+        if city:
+            out["city"] = city
     if excerpt:
         out["voiceExcerpt"] = excerpt[:120]
         out["hasVoice"] = True
@@ -59,7 +60,11 @@ def manifest_limits_brief() -> dict[str, int]:
 
 
 def build_meta_brief(trip: dict, *, tone: str, regenerate: bool = False) -> dict[str, Any]:
-    from travelogue.services.copy_subject import narrative_copy_subject, places_user_set
+    from travelogue.services.copy_subject import (
+        effective_meta_places,
+        narrative_copy_subject,
+        places_user_set,
+    )
 
     meta = trip.get("meta") or {}
     intent = trip.get("intent")
@@ -71,7 +76,7 @@ def build_meta_brief(trip: dict, *, tone: str, regenerate: bool = False) -> dict
         "title": meta.get("title"),
         "dateStart": meta.get("dateStart"),
         "dateEnd": meta.get("dateEnd"),
-        "places": meta.get("places") or [],
+        "places": effective_meta_places(meta, intent=intent, assets=assets),
         "editorialSubject": narrative_copy_subject(meta, intent=intent, assets=assets),
         "placesUserSet": places_user_set(intent),
         "tone": tone,
@@ -102,9 +107,20 @@ def build_chapter_brief(
     regenerate: bool = False,
     scope: str = "frame",
 ) -> dict[str, Any]:
+    from travelogue.services.copy_subject import (
+        effective_meta_places,
+        filter_chapter_places_for_copy,
+        narrative_copy_subject,
+        places_user_set,
+        suppress_chapter_geo_places,
+    )
+
     meta = trip.get("meta") or {}
+    intent = trip.get("intent")
+    assets_list = trip.get("assets") or []
+    include_geo_city = not suppress_chapter_geo_places(meta, intent=intent, assets=assets_list)
     chapters = trip.get("chapters") or []
-    assets = {a["id"]: a for a in trip.get("assets") or []}
+    assets = {a["id"]: a for a in assets_list}
     ch_cur = chapter.get("curation") or {}
     items_out: list[dict[str, Any]] = []
     item_by_asset = {
@@ -125,7 +141,7 @@ def build_chapter_brief(
                     "skipCaption": bool(item and item.get("edited"))
                     or asset_skips_caption(asset)
                     or (bool(existing) and not regenerate),
-                    "asset": _asset_brief(asset),
+                    "asset": _asset_brief(asset, include_geo_city=include_geo_city),
                 }
             )
     fields_requested: list[str] = []
@@ -133,17 +149,9 @@ def build_chapter_brief(
         fields_requested.append("lead")
     if captions_allowed(scope):
         fields_requested.append("items[].caption")
-    from travelogue.services.copy_subject import (
-        filter_chapter_places_for_copy,
-        narrative_copy_subject,
-        places_user_set,
-    )
-
-    intent = trip.get("intent")
-    assets_list = trip.get("assets") or []
     trip_brief: dict[str, Any] = {
         "tripId": trip.get("tripId"),
-        "places": meta.get("places") or [],
+        "places": effective_meta_places(meta, intent=intent, assets=assets_list),
         "editorialSubject": narrative_copy_subject(meta, intent=intent, assets=assets_list),
         "placesUserSet": places_user_set(intent),
         "tone": tone,
