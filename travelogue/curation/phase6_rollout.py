@@ -202,11 +202,16 @@ def rollout_bucket(trip_id: str, *, cohort_salt: str, traffic_percent: float) ->
 
 
 def phase6_in_rollout_cohort(trip_id: str, cfg: AppConfig) -> bool:
-    """True when trip should receive Phase 6 behavior under current rollout gate."""
+    """True when trip should receive Phase 6 behavior under current rollout gate.
+
+    ``stage=off`` disables gray bucketing only — all trips with a valid id still
+    receive Phase 6 (no P5-stable override). Use ``apply_p5_rollback_config`` or
+    blocklist for emergency full rollback.
+    """
     rollout = cfg.phase6.rollout
     tid = str(trip_id or "").strip()
     if not tid:
-        return True
+        return False
     if tid in rollout.blocklist_trip_ids:
         return False
     if tid in rollout.allowlist_trip_ids:

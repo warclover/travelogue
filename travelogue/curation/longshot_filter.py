@@ -169,21 +169,38 @@ def select_longshot_screens(
             chosen.add(i)
 
     if max_consecutive_same_pattern > 0:
-        ordered = sorted(chosen)
-        filtered: list[int] = []
-        for idx in ordered:
-            trial = filtered + [idx]
-            trial_screens = [content[i] for i in trial]
-            from travelogue.curation.layout_constraints import plan_violates_consecutive_pattern
+        from travelogue.curation.layout_constraints import plan_violates_consecutive_pattern
 
-            if plan_violates_consecutive_pattern(
+        ordered = sorted(chosen)
+        required = sorted(must & set(ordered))
+        seed: list[int] = []
+        if required:
+            req_screens = [content[i] for i in required]
+            if not plan_violates_consecutive_pattern(
+                req_screens,
+                max_streak=max_consecutive_same_pattern,
+            ):
+                seed = required
+        best: list[int] = []
+
+        def _search(pos: int, current: list[int]) -> None:
+            nonlocal best
+            if len(current) > len(best):
+                best = list(current)
+            if pos >= len(ordered):
+                return
+            _search(pos + 1, current)
+            trial = current + [ordered[pos]]
+            trial_screens = [content[i] for i in trial]
+            if not plan_violates_consecutive_pattern(
                 trial_screens,
                 max_streak=max_consecutive_same_pattern,
             ):
-                continue
-            filtered.append(idx)
-        if filtered:
-            chosen = set(filtered)
+                _search(pos + 1, trial)
+
+        _search(0, seed)
+        if best:
+            chosen = set(best)
 
     keep = chosen
     out: list[dict] = []

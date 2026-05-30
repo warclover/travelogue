@@ -231,8 +231,8 @@ phase6:
     coverPreferenceWinrateMin: 0.50
   # G1 10% 灰度门控（默认 off；放量时见 docs/config-phase6-g1.example.yaml）
   rollout:
-    stage: off                  # off | G1 | G2 | G3
-    trafficPercent: 0           # 0=全量 P6（stage=off）或 cohort 外仍走 P5 覆盖
+    stage: off                  # off = 无分桶灰度，全员 P6；G1/G2/G3 = 按 trafficPercent 分桶
+    trafficPercent: 0           # stage=off 时忽略；G* 时为 cohort 入组比例 0..100
     cohortSalt: travelogue-p6   # tripId + salt 稳定分桶 0..99
     allowlistTripIds: []        # 强制纳入 Phase 6 行为
     blocklistTripIds: []        # 强制回退 P5-stable 行为

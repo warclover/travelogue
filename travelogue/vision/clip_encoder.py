@@ -343,6 +343,7 @@ class ClipEncoder:
         self.batch_auto_tune_samples = max(1, int(batch_auto_tune_samples))
         self.web_derivative_cosine_max = float(web_derivative_cosine_max)
         self._tuned_batch_size: int | None = None
+        self._oom_cap: int | None = None
         self._prefetch_disabled = False
         self._web_derivative_disabled = False
         self.last_embed_stats: EmbedStats | None = None
@@ -510,14 +511,18 @@ class ClipEncoder:
 
     def _effective_batch_size(self, photos: list[dict], trip_dir: Path) -> int:
         if self.batch_size == 0:
-            return 1
-        if self._tuned_batch_size is not None:
-            return self._tuned_batch_size
-        if not self.batch_auto_tune:
-            return self.batch_size
-        tuned = self._auto_tune_batch_size(photos, trip_dir)
-        self._tuned_batch_size = tuned
-        return tuned
+            base = 1
+        elif self._tuned_batch_size is not None:
+            base = self._tuned_batch_size
+        elif not self.batch_auto_tune:
+            base = self.batch_size
+        else:
+            tuned = self._auto_tune_batch_size(photos, trip_dir)
+            self._tuned_batch_size = tuned
+            base = tuned
+        if self._oom_cap is not None:
+            return max(1, min(base, self._oom_cap))
+        return base
 
     def _auto_tune_batch_size(self, photos: list[dict], trip_dir: Path) -> int:
         """P7-G1 · probe batch sizes on a small sample."""
@@ -528,33 +533,35 @@ class ClipEncoder:
             return max(1, self.batch_size)
         candidates = [b for b in (32, 16, 8, 4, 2, 1) if b <= max(1, self.batch_size)] or [1]
         best = 1
-        for bs in candidates:
-            try:
-                tensors = self._load_batch_tensors(sample[:bs], trip_dir)
-                if not tensors:
-                    continue
-                batch = torch.stack(tensors).to(self._device)
-                t0 = time.monotonic()
-                with torch.no_grad():
-                    _ = self._model.encode_image(batch)
-                elapsed = time.monotonic() - t0
-                if elapsed < 2.0 or bs == 1:
-                    best = bs
+        with self._infer_lock:
+            for bs in candidates:
+                try:
+                    tensors = self._load_batch_tensors(sample[:bs], trip_dir)
+                    if not tensors:
+                        continue
+                    batch = torch.stack(tensors).to(self._device)
+                    t0 = time.monotonic()
+                    with torch.no_grad():
+                        _ = self._model.encode_image(batch)
+                    elapsed = time.monotonic() - t0
+                    if elapsed < 2.0 or bs == 1:
+                        best = bs
+                        break
+                except RuntimeError as exc:
+                    if "out of memory" in str(exc).lower():
+                        if self._device == "cuda":
+                            torch.cuda.empty_cache()
+                        continue
                     break
-            except RuntimeError as exc:
-                if "out of memory" in str(exc).lower():
-                    if self._device == "cuda":
-                        torch.cuda.empty_cache()
-                    continue
-                break
         _log.info("CLIP auto batch tune → %d (requested %d)", best, self.batch_size)
         return best
 
-    def _load_image_tensor(self, path: Path) -> Any:
+    def _load_image_tensor(self, path: Path, *, preprocess: Any | None = None) -> Any:
         from PIL import Image
 
-        img = Image.open(path).convert("RGB")
-        return self._preprocess(img)
+        pp = preprocess if preprocess is not None else self._preprocess
+        with Image.open(path) as img:
+            return pp(img.convert("RGB"))
 
     def _load_batch_tensors(
         self,
@@ -598,9 +605,12 @@ class ClipEncoder:
                 if "out of memory" not in str(exc).lower() or len(tensors) <= 1:
                     raise
                 stats.oom_halves += 1
-                if self.dynamic_backoff and self._tuned_batch_size is None:
+                if self.dynamic_backoff:
                     half = max(1, len(tensors) // 2)
-                    self._tuned_batch_size = half
+                    if self._oom_cap is None:
+                        self._oom_cap = half
+                    else:
+                        self._oom_cap = min(self._oom_cap, half)
                 mid = len(tensors) // 2
                 left_v, left_s = self._encode_batch_tensors(
                     tensors[:mid], batch_assets[:mid], stats=stats
@@ -642,6 +652,7 @@ class ClipEncoder:
         if deterministic:
             torch.manual_seed(0)
 
+        self._oom_cap = None
         self._load_persisted_batch_if_needed(trip_dir)
         self._maybe_gate_web_derivative(photos, trip_dir)
 
@@ -661,17 +672,34 @@ class ClipEncoder:
         while i < len(photos):
             batch_assets = photos[i : i + batch_size]
             ready: list[tuple[dict, Path]] = []
+            missing: list[dict] = []
             for asset in batch_assets:
                 path, used_web = _resolve_asset_path(
                     asset, trip_dir, prefer_web_derivative=self._effective_prefer_web()
                 )
                 if path is None or not path.is_file():
-                    vectors.append(_heuristic_vector(asset))
-                    ids.append(asset["id"])
+                    missing.append(asset)
                     continue
                 if used_web:
                     stats.web_derivative_hits += 1
                 ready.append((asset, path))
+
+            if missing and ready:
+                stats.fallback_single += len(batch_assets)
+                for asset in batch_assets:
+                    vectors.append(_heuristic_vector(asset))
+                    ids.append(asset["id"])
+                stats.batches += 1
+                i += len(batch_assets)
+                continue
+
+            if missing and not ready:
+                for asset in missing:
+                    vectors.append(_heuristic_vector(asset))
+                    ids.append(asset["id"])
+                stats.batches += 1
+                i += len(batch_assets)
+                continue
 
             if ready:
                 if (
@@ -731,18 +759,22 @@ class ClipEncoder:
             next_i = i
             if stats.prefetch_enabled and next_i < len(photos):
                 prefetch_assets = photos[next_i : next_i + batch_size]
+                prefer_web = self._effective_prefer_web()
+                preprocess = self._preprocess
 
                 def _prefetch_load(
                     assets: list[dict] = prefetch_assets,
                     td: Path = trip_dir,
+                    pw: bool = prefer_web,
+                    pp: Any = preprocess,
                 ) -> list[Any]:
                     out: list[Any] = []
                     for a in assets:
                         p, _ = _resolve_asset_path(
-                            a, td, prefer_web_derivative=self._effective_prefer_web()
+                            a, td, prefer_web_derivative=pw
                         )
                         if p is not None and p.is_file():
-                            out.append(self._load_image_tensor(p))
+                            out.append(self._load_image_tensor(p, preprocess=pp))
                     return out
 
                 prefetch_future = _prefetch_pool.submit(_prefetch_load)
@@ -756,6 +788,7 @@ class ClipEncoder:
         stats.recommended_batch_size = self._tuned_batch_size or batch_size
         stats.web_derivative_gated = self._web_derivative_disabled
         self.last_embed_stats = stats
+        self._oom_cap = None
         mat = np.array(vectors, dtype=np.float32)
         return EmbedResult(ids, mat, "clip", model=f"{self.model_name}/{self.pretrained}")
 

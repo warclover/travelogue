@@ -121,6 +121,22 @@ class StudioMixin:
             return static_handlers.handle_studio_asset(self, path)
         return False
 
+    def studio_dispatch_PATCH(self, path: str) -> bool:
+        if not self._studio_require_post_auth():
+            return True
+        if path == CONFIG_PATH:
+            config_handlers.handle_config(self)
+            return True
+        trip_id = match_trip_intent(path)
+        if trip_id is not None:
+            trip_handlers.handle_patch_intent(self, trip_id)
+            return True
+        trip_id = match_trip_pipeline(path)
+        if trip_id is not None:
+            trip_handlers.handle_patch_pipeline(self, trip_id)
+            return True
+        return False
+
     def studio_dispatch_POST(self, path: str) -> bool:
         if not self._studio_require_post_auth():
             return True

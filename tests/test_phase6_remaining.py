@@ -126,6 +126,17 @@ def test_rollout_bucket_stable() -> None:
     assert 0 <= a <= 99
 
 
+def test_phase6_in_rollout_cohort_off_means_full_p6() -> None:
+    cfg = AppConfig(
+        phase6=Phase6ObservabilityConfig(
+            rollout=Phase6RolloutConfig(stage="off", traffic_percent=0.0),
+        )
+    )
+    assert phase6_in_rollout_cohort("trip-a", cfg) is True
+    assert phase6_in_rollout_cohort("", cfg) is False
+    assert phase6_in_rollout_cohort("  ", cfg) is False
+
+
 def test_phase6_in_rollout_cohort_allowlist_and_bucket() -> None:
     cfg = AppConfig(
         phase6=Phase6ObservabilityConfig(

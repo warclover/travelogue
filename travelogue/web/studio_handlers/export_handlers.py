@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import threading
 from pathlib import Path
-from typing import Any
+from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 from travelogue.web.studio_errors import user_message
 from travelogue.web.studio_handlers.common import rel_to_trip, resolve_trip_dir, studio_ctx
 from travelogue.web.studio_jobs import get_job_store, run_longshot_job, run_narrate_job
 
 
-def handle_narrate(handler: Any) -> None:
+def handle_narrate(handler: StudioHandlerProtocol) -> None:
     from travelogue.services.pipeline_state import trip_status
     from travelogue.web.studio_narrate import run_studio_llm_narrate, studio_llm_status
 
@@ -77,7 +77,7 @@ def handle_narrate(handler: Any) -> None:
     handler._json_response(202, {"ok": True, "jobId": job.job_id})
 
 
-def handle_longshot(handler: Any) -> None:
+def handle_longshot(handler: StudioHandlerProtocol) -> None:
     from travelogue.export.longshot import DEFAULT_EXPORT_SCALE, export_trip_longshot
 
     payload = handler._read_json_body()
@@ -159,7 +159,7 @@ def handle_longshot(handler: Any) -> None:
     handler._json_response(202, {"ok": True, "jobId": job.job_id})
 
 
-def handle_reveal(handler: Any) -> None:
+def handle_reveal(handler: StudioHandlerProtocol) -> None:
     from travelogue.export.longshot import LongshotExportError, reveal_path_in_folder
 
     payload = handler._read_json_body()
@@ -211,7 +211,7 @@ def handle_reveal(handler: Any) -> None:
     handler._json_response(200, {"ok": True})
 
 
-def handle_export(handler: Any) -> None:
+def handle_export(handler: StudioHandlerProtocol) -> None:
     from travelogue.export.packager import ExportError, export_trip
 
     payload = handler._read_json_body()

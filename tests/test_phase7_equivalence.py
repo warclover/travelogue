@@ -147,14 +147,52 @@ def test_skip_duplicate_signatures_preserves_golden_layout() -> None:
     assert layout_snapshot(replanned_off) == layout_snapshot(legacy)
 
 
+def test_ac_p7_08_rollback_patch_matches_p6_flags() -> None:
+    rollback_mod = _load_script_module(
+        "phase7_verify_rollback_testmod",
+        "scripts/phase7_verify_rollback.py",
+    )
+    patch = rollback_mod.rollback_patch()
+    assert patch["vision"]["batch_size"] == 0
+    assert patch["vision"]["prefer_web_derivative"] is False
+    assert patch["pipeline"]["parallel_embed"] is False
+    assert patch["ingest"]["webp_method"] == 6
+    assert patch["layout_scoring"]["incremental"] is False
+
+
+def test_ac_p7_07_embed_stats_telemetry_shape() -> None:
+    from travelogue.vision.clip_encoder import EmbedStats
+
+    stats = EmbedStats(
+        elapsed_ms=12.5,
+        batch_size=8,
+        batches=3,
+        prefetch_enabled=True,
+        web_derivative_hits=2,
+        cache_hit_ratio=0.5,
+        recommended_batch_size=8,
+    )
+    payload = stats.to_dict()
+    for key in (
+        "elapsedMs",
+        "batchSize",
+        "batches",
+        "prefetchEnabled",
+        "webDerivativeHits",
+        "cacheHitRatio",
+        "recommendedBatchSize",
+    ):
+        assert key in payload
+
+
 def test_gate_runner_from_record_passes(tmp_path: Path) -> None:
     gate_mod = _load_script_module("phase7_gate_run_testmod", "scripts/phase7_gate_run.py")
     record = _passing_nr_record()
     perf_summary = perf_mod._compute_ac(record)
     eq_summary = eq_mod._compute_nr_and_ac(record)
     record["ac_p7"] = {**perf_summary["ac_p7"], **eq_summary["ac_p7"]}
-    record["ac_p7"]["AC-P7-07"] = True  # telemetry present (L2)
-    record["ac_p7"]["AC-P7-08"] = True  # rollback drill
+    record["ac_p7"]["AC-P7-07"] = True
+    record["ac_p7"]["AC-P7-08"] = True
     rec_path = tmp_path / "phase7-perf-eval.json"
     rec_path.write_text(json.dumps(record, indent=2), encoding="utf-8")
     summary, code = gate_mod._from_record_summary(rec_path, strict=True)

@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import mimetypes
 from pathlib import Path
-from typing import Any
+from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from urllib.parse import unquote
 
 from travelogue.paths import STUDIO_TEMPLATE_DIR
 from travelogue.web.studio_handlers.paths import STUDIO_ASSET_PREFIX
 
 
-def handle_home(handler: Any) -> None:
+def handle_home(handler: StudioHandlerProtocol) -> None:
     html_path = STUDIO_TEMPLATE_DIR / "studio.html"
     html = html_path.read_text(encoding="utf-8")
     token = handler.studio_token or ""
@@ -24,7 +24,7 @@ def handle_home(handler: Any) -> None:
     handler.wfile.write(data)
 
 
-def handle_studio_asset(handler: Any, path: str) -> bool:
+def handle_studio_asset(handler: StudioHandlerProtocol, path: str) -> bool:
     rel = unquote(path[len(STUDIO_ASSET_PREFIX) :].lstrip("/"))
     asset = (STUDIO_TEMPLATE_DIR / rel).resolve()
     try:

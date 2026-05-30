@@ -87,11 +87,17 @@ def _cluster_labels(
         except Exception as exc:
             _log.warning("HDBSCAN failed, falling back to DBSCAN: %s", exc)
 
-    from sklearn.cluster import DBSCAN
+    try:
+        from sklearn.cluster import DBSCAN
 
-    db = DBSCAN(eps=eps, min_samples=min_samples_eff, metric="cosine")
-    labels = db.fit_predict(mat)
-    return labels, None, "dbscan"
+        db = DBSCAN(eps=eps, min_samples=min_samples_eff, metric="cosine")
+        labels = db.fit_predict(mat)
+        return labels, None, "dbscan"
+    except Exception as exc:
+        _log.warning("DBSCAN failed, assigning noise labels: %s", exc)
+        import numpy as np
+
+        return np.full(mat.shape[0], -1, dtype=int), None, "dbscan"
 
 
 @dataclass
@@ -108,13 +114,15 @@ def compute_scene_clusters(
     eps: float = 0.07,
     min_samples: int = 10,
     algorithm: ClusterAlgorithm = "hdbscan",
-    deterministic: bool = True,
+    deterministic: bool = True,  # reserved; stable output via re-numbering below
 ) -> SceneClusterResult:
     """Cluster L2-normalized embeddings; default HDBSCAN (Phase 6).
 
     Raw cluster labels reflect discovery order and can shift between runs.
     We re-number clusters deterministically (member count desc, then first asset_id).
+    The ``deterministic`` flag is accepted for API compatibility with clustering cfg.
     """
+    _ = deterministic
     import numpy as np
 
     if len(asset_ids) == 0:

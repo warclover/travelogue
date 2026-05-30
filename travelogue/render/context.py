@@ -262,12 +262,12 @@ def format_trip_meta(
 
 
 def build_voice(
-    voice: dict,
+    voice: VoiceSourceContext | dict,
     *,
     label: str,
     is_draft: bool,
     edit_path_transcript: str | None = None,
-) -> dict:
+) -> VoiceRenderContext:
     return {
         "hasVoice": True,
         "audioFile": voice.get("audioFile", ""),
@@ -487,20 +487,8 @@ def build_media_scroll(
 
 from travelogue.curation.screen_planner import grid_class_for_pattern
 from travelogue.curation.screen_tone import enrich_screen_tones
-
-_DEFAULT_SCREEN_TONE = "#e8e4df"
-
-
-def _screen_tone_css(tone: dict | None) -> str | None:
-    if not tone:
-        return _DEFAULT_SCREEN_TONE
-    try:
-        r = int(tone.get("r", 0))
-        g = int(tone.get("g", 0))
-        b = int(tone.get("b", 0))
-    except (TypeError, ValueError):
-        return _DEFAULT_SCREEN_TONE
-    return f"#{r:02x}{g:02x}{b:02x}"
+from travelogue.render.context_types import VoiceRenderContext, VoiceSourceContext
+from travelogue.render.screen_tone import screen_tone_css
 
 
 def _screen_aspect_ratio_css(asset: dict) -> str | None:
@@ -651,7 +639,7 @@ def build_layout_screen(
     style_parts: list[str] = []
     if screen_aspect:
         style_parts.append(f"--screen-aspect: {screen_aspect}")
-    tone = _screen_tone_css(screen.get("tone"))
+    tone = screen_tone_css(screen.get("tone"))
     if tone:
         style_parts.append(f"--screen-tone: {tone}")
     screen_style = "; ".join(style_parts)

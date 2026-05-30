@@ -23,24 +23,28 @@ class ParallelEmbedCoordinator:
         self.trip_dir = trip_dir
         self.cfg = cfg
         self.chunk_size = max(1, int(chunk_size))
-        self._assets: list[dict] = []
+        self._all_offered: list[dict] = []
+        self._pending: list[dict] = []
         self._lock = threading.Lock()
         self._worker: threading.Thread | None = None
         self._error: Exception | None = None
 
     def offer(self, asset: dict) -> None:
-        spawn = False
+        run_chunk = False
         with self._lock:
-            self._assets.append(asset)
-            if len(self._assets) % self.chunk_size == 0:
-                spawn = True
-        if spawn:
+            self._all_offered.append(asset)
+            self._pending.append(asset)
+            if len(self._pending) % self.chunk_size == 0:
+                run_chunk = True
+        if run_chunk:
             self._spawn_worker()
 
     def finish(self) -> None:
+        run_chunk = False
         with self._lock:
-            pending = bool(self._assets)
-        if pending:
+            if self._pending:
+                run_chunk = True
+        if run_chunk:
             self._spawn_worker()
         worker = self._worker
         if worker is not None:
@@ -53,16 +57,17 @@ class ParallelEmbedCoordinator:
         if prior is not None:
             prior.join()
         with self._lock:
-            snapshot = list(self._assets)
+            trip_assets = list(self._all_offered)
+            self._pending.clear()
         self._worker = threading.Thread(
             target=self._run_snapshot,
-            args=(snapshot,),
+            args=(trip_assets,),
             name="parallel-embed",
             daemon=True,
         )
         self._worker.start()
 
-    def _run_snapshot(self, assets: list[dict]) -> None:
+    def _run_snapshot(self, trip_assets: list[dict]) -> None:
         try:
             from travelogue.vision.clip_encoder import get_clip_encoder
             from travelogue.vision.cache import prepare_scene_embeddings
@@ -74,7 +79,7 @@ class ParallelEmbedCoordinator:
             )
             prepare_scene_embeddings(
                 self.trip_dir,
-                assets,
+                trip_assets,
                 encoder,
                 force_recluster=False,
                 deterministic=deterministic,

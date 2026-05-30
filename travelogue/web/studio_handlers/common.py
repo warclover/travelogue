@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+
+from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from urllib.parse import parse_qs, urlparse
 
 from travelogue.desktop.demo_album import is_demo_album_path, resolve_demo_album_dir
@@ -31,7 +33,7 @@ def resolve_import_album_path(album_raw: str, *, use_demo: bool = False) -> Path
     return Path(album_raw)
 
 
-def studio_ctx(handler: Any) -> AppContext:
+def studio_ctx(handler: StudioHandlerProtocol) -> AppContext:
     return app_context_from_handler(handler)
 
 
@@ -48,7 +50,7 @@ def resolve_trip_dir(ctx: AppContext, trip_id: str) -> Path | None:
     return trip_dir
 
 
-def bind_studio_trip(handler: Any, trip_id: str) -> Path | None:
+def bind_studio_trip(handler: StudioHandlerProtocol, trip_id: str) -> Path | None:
     """Resolve trip dir and set handler.trip_json_path (Studio static serving)."""
     trip_dir = resolve_trip_dir(studio_ctx(handler), trip_id)
     if trip_dir is None:
@@ -99,12 +101,14 @@ def match_trip_api(path: str) -> tuple[str, str] | None:
     return None
 
 
-def trip_id_from_query(handler: Any) -> str:
+def trip_id_from_query(handler: StudioHandlerProtocol) -> str:
     query = parse_qs(urlparse(handler.path).query)
     return (query.get("tripId") or query.get("tripid") or [""])[0]
 
 
-def load_trip_or_404(handler: Any, trip_id: str) -> tuple[Path, dict] | None:
+def load_trip_or_404(
+    handler: StudioHandlerProtocol, trip_id: str
+) -> tuple[Path, dict] | None:
     if not is_valid_studio_trip_id(trip_id):
         handler._json_response(400, {"ok": False, "error": "invalid tripId"})
         return None

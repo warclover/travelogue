@@ -33,6 +33,16 @@ def test_parallel_embed_coordinator_writes_cache(tmp_path: Path, monkeypatch) ->
     from travelogue.vision import clip_encoder as enc_mod
 
     monkeypatch.setattr(enc_mod, "clip_torch_available", lambda: False)
+    from travelogue.vision import cache as cache_mod
+
+    calls: list[list[str]] = []
+    _orig_prepare = cache_mod.prepare_scene_embeddings
+
+    def _spy(trip_dir, assets, encoder, **kwargs):
+        calls.append([a["id"] for a in assets])
+        return _orig_prepare(trip_dir, assets, encoder, **kwargs)
+
+    monkeypatch.setattr(cache_mod, "prepare_scene_embeddings", _spy)
 
     cfg = AppConfig(
         vision=VisionConfig(enabled="false", batch_size=8),
@@ -45,6 +55,7 @@ def test_parallel_embed_coordinator_writes_cache(tmp_path: Path, monkeypatch) ->
         coord.offer(a)
     coord.finish()
 
+    assert calls == [["a00", "a01"], ["a00", "a01", "a02", "a03"]]
     cached = load_embedding_cache(tmp_path)
     assert cached is not None
     assert len(cached["asset_ids"]) == 4

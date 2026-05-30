@@ -4,15 +4,14 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any
-
 from travelogue.config import load_config, patch_config_file, studio_config_expose
 from travelogue.web.studio_auth import is_loopback_host
 from travelogue.web.studio_errors import user_message
 from travelogue.web.studio_handlers.common import studio_ctx
+from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 
-def handle_config(handler: Any) -> None:
+def handle_config(handler: StudioHandlerProtocol) -> None:
     from travelogue.web.studio_narrate import studio_llm_status
     from travelogue.web.studio_stages import pipeline_estimate_tiers
 
@@ -58,7 +57,7 @@ def handle_config(handler: Any) -> None:
     )
 
 
-def handle_pick_folder(handler: Any) -> None:
+def handle_pick_folder(handler: StudioHandlerProtocol) -> None:
     client_host = handler.client_address[0] if handler.client_address else ""
     if not is_loopback_host(client_host):
         handler._json_response(

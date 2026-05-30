@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import threading
-from typing import Any
+from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from urllib.parse import parse_qs, urlparse
 
 from travelogue.demo.build import DemoError
@@ -17,7 +17,7 @@ from travelogue.web.studio_trips import list_studio_trips, studio_trips_total
 from travelogue.web.studio_trip_id import is_valid_studio_trip_id
 
 
-def handle_trips(handler: Any) -> None:
+def handle_trips(handler: StudioHandlerProtocol) -> None:
     query = parse_qs(urlparse(handler.path).query)
     try:
         limit = int((query.get("limit") or ["20"])[0])
@@ -30,7 +30,7 @@ def handle_trips(handler: Any) -> None:
     handler._json_response(200, {"ok": True, "trips": trips, "total": total})
 
 
-def handle_entry(handler: Any, trip_id: str) -> None:
+def handle_entry(handler: StudioHandlerProtocol, trip_id: str) -> None:
     from travelogue.web.studio_entry import build_entry
 
     loaded = load_trip_or_404(handler, trip_id)
@@ -40,7 +40,7 @@ def handle_entry(handler: Any, trip_id: str) -> None:
     handler._json_response(200, {"ok": True, **build_entry(trip, trip_id)})
 
 
-def handle_chapter_layout(handler: Any) -> None:
+def handle_chapter_layout(handler: StudioHandlerProtocol) -> None:
     from travelogue.curation.chapter_explain import build_chapter_explain, build_layout_explain
 
     trip_id = trip_id_from_query(handler)
@@ -62,7 +62,7 @@ def handle_chapter_layout(handler: Any) -> None:
     handler._json_response(200, {"ok": True, **explain})
 
 
-def handle_patch_intent(handler: Any, trip_id: str) -> None:
+def handle_patch_intent(handler: StudioHandlerProtocol, trip_id: str) -> None:
     from travelogue.services.trip import apply_intent
 
     payload = handler._read_json_body()
@@ -106,7 +106,7 @@ def handle_patch_intent(handler: Any, trip_id: str) -> None:
     handler._json_response(200, {"ok": True, "intent": intent})
 
 
-def handle_patch_pipeline(handler: Any, trip_id: str) -> None:
+def handle_patch_pipeline(handler: StudioHandlerProtocol, trip_id: str) -> None:
     from travelogue.services.pipeline_state import trip_status
     from travelogue.web.studio_g1 import continue_after_g1_confirm, lock_trip_structure
 
@@ -164,7 +164,7 @@ def handle_patch_pipeline(handler: Any, trip_id: str) -> None:
     )
 
 
-def handle_trip_curate(handler: Any, trip_id: str) -> None:
+def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
     from travelogue.curation.curate import CurateError, run_curate
     from travelogue.render.engine import render_trip_surfaces
 
@@ -219,7 +219,7 @@ def handle_trip_curate(handler: Any, trip_id: str) -> None:
     handler._json_response(202, {"ok": True, "jobId": job.job_id})
 
 
-def handle_rerender(handler: Any) -> None:
+def handle_rerender(handler: StudioHandlerProtocol) -> None:
     from travelogue.web.rerender import rerender_draft_trip
 
     if handler.trip_json_path is None or not handler.trip_json_path.is_file():

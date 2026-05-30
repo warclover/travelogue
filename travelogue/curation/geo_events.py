@@ -140,7 +140,7 @@ def _adaptive_gap_threshold_hours(
     p75 = gaps[int(n * 0.75)]
     p90 = gaps[int(n * 0.90)]
 
-    if p90 > p75 * 3 and p75 > 0:
+    if p90 > max(p75 * 3, 1e-6):
         # Bimodal gap distribution: prefer the upper mode (inter-session / lunch
         # breaks) rather than the dense within-session gaps near p75.
         upper = [g for g in gaps if g >= p90 * 0.85]
@@ -360,12 +360,19 @@ def detect_geo_events(
     if orphan_rows and segments:
         for row in orphan_rows:
             dt, aid, asset, _ = row
+            d = dt.date()
+
+            def _date_segment_distance(seg: GeoSegment) -> int:
+                if seg.start_date <= d <= seg.end_date:
+                    return 0
+                return min(
+                    abs((d - seg.start_date).days),
+                    abs((d - seg.end_date).days),
+                )
+
             best_i = min(
                 range(len(segments)),
-                key=lambda i: abs(
-                    (dt.date() - segments[i].start_date).days
-                    + (dt.date() - segments[i].end_date).days
-                ),
+                key=lambda i: _date_segment_distance(segments[i]),
             )
             segments[best_i].asset_ids.append(aid)
             if dt.date() < segments[best_i].start_date:

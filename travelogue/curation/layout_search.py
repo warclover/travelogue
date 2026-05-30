@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import copy
+import logging
 from typing import Any
+
+_log = logging.getLogger(__name__)
 
 from travelogue.curation.degradation import DegradationAssessment
 from travelogue.curation.decision_log import LayoutDecisionLog
@@ -159,14 +162,21 @@ def _replan_day_buckets_beam(
             budget=budget,
         )
         if max_consecutive_same_pattern > 0:
-            candidates = [
+            filtered = [
                 plan
                 for plan in candidates
                 if not plan_violates_consecutive_pattern(
                     plan,
                     max_streak=max_consecutive_same_pattern,
                 )
-            ] or candidates
+            ]
+            if not filtered and candidates:
+                _log.warning(
+                    "layout_search: no plan satisfies consecutive pattern "
+                    "(max_streak=%d); using unfiltered candidates",
+                    max_consecutive_same_pattern,
+                )
+            candidates = filtered or candidates
         legacy_plan = candidates[0][1] if candidates else []
         legacy_sig = _screens_signature([{"screens": legacy_plan}])
         if budget.can_evaluate():

@@ -119,24 +119,11 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
 
     def do_PATCH(self) -> None:  # noqa: N802
         path = self.path.split("?", 1)[0]
+        if self.studio_mode and self.studio_dispatch_PATCH(path):
+            return
         if self.studio_mode:
-            if path == CONFIG_PATH:
-                if not self._studio_require_post_auth():
-                    return
-                self._studio_handle_config()
-                return
-            trip_id = self._studio_match_trip_intent(path)
-            if trip_id is not None:
-                if not self._studio_require_post_auth():
-                    return
-                self._studio_handle_patch_intent(trip_id)
-                return
-            trip_id = self._studio_match_trip_pipeline(path)
-            if trip_id is not None:
-                if not self._studio_require_post_auth():
-                    return
-                self._studio_handle_patch_pipeline(trip_id)
-                return
+            self.send_error(405)
+            return
         self.send_error(405)
 
     def _serve_trip_static(self, trip_id: str, rel_path: str) -> bool:

@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from urllib.parse import parse_qs, urlparse
 
 from travelogue.web.studio_jobs import get_job_store
 
 
-def handle_status(handler: Any) -> None:
+def handle_status(handler: StudioHandlerProtocol) -> None:
     query = parse_qs(urlparse(handler.path).query)
     job_ids = query.get("jobId") or query.get("jobid") or []
     if not job_ids:
@@ -21,7 +21,7 @@ def handle_status(handler: Any) -> None:
     handler._json_response(200, job.to_dict())
 
 
-def handle_cancel(handler: Any) -> None:
+def handle_cancel(handler: StudioHandlerProtocol) -> None:
     payload = handler._read_json_body()
     if not payload:
         return

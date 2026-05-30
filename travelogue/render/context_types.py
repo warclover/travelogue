@@ -5,6 +5,29 @@ from __future__ import annotations
 from typing import Any, NotRequired, TypedDict
 
 
+class VoiceSourceContext(TypedDict, total=False):
+    """Asset/chapter item voice payload before template enrichment."""
+
+    audioFile: str
+    durationSec: float | int
+    transcript: str
+    transcriptPreview: str
+    showTranscript: bool
+
+
+class VoiceRenderContext(TypedDict, total=False):
+    """Handlebars voice bar context from build_voice."""
+
+    hasVoice: bool
+    audioFile: str
+    duration: str
+    ariaLabel: str
+    transcript: str
+    transcriptOpen: bool
+    editableTranscript: bool
+    editPathTranscript: str | None
+
+
 class MediaCardContext(TypedDict, total=False):
     """Handlebars context for a single media card (required keys enforced at build)."""
 

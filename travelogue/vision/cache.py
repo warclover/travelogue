@@ -26,6 +26,22 @@ FULL_RECLUSTER_MIN_RATIO = 0.30
 CacheMode = Literal["full", "incremental", "prune", "reuse"]
 
 _cache_write_lock = threading.Lock()
+_trip_cache_locks: dict[str, threading.Lock] = {}
+_trip_cache_locks_guard = threading.Lock()
+
+
+def _cache_write_lock_for(trip_dir: Path) -> threading.Lock:
+    """Per-trip write lock; falls back to global lock if path is unusable."""
+    try:
+        key = str(trip_dir.resolve())
+    except OSError:
+        return _cache_write_lock
+    with _trip_cache_locks_guard:
+        lock = _trip_cache_locks.get(key)
+        if lock is None:
+            lock = threading.Lock()
+            _trip_cache_locks[key] = lock
+        return lock
 
 
 @dataclass
@@ -170,19 +186,32 @@ def save_cache_manifest(
     return final_path
 
 
+def _load_npz_embedding_cache(path: Path) -> dict[str, Any] | None:
+    import numpy as np
+
+    try:
+        data = np.load(path, allow_pickle=False)
+    except ValueError:
+        data = np.load(path, allow_pickle=True)
+    if "asset_ids" not in data or "vectors" not in data:
+        return None
+    raw_ids = data["asset_ids"]
+    if raw_ids.dtype == object:
+        ids = [str(x) for x in raw_ids.tolist()]
+    else:
+        ids = [str(x) for x in raw_ids.tolist()]
+    vectors = data["vectors"]
+    source = str(data.get("source") or "clip")
+    model = str(data.get("model") or "")
+    return {"asset_ids": ids, "vectors": vectors, "source": source, "model": model}
+
+
 def load_embedding_cache(trip_dir: Path) -> dict[str, Any] | None:
     path = cache_path_for_trip(trip_dir)
     if not path.is_file():
         return None
     try:
-        import numpy as np
-
-        data = np.load(path, allow_pickle=True)
-        ids = [str(x) for x in data["asset_ids"].tolist()]
-        vectors = data["vectors"]
-        source = str(data.get("source") or "clip")
-        model = str(data.get("model") or "")
-        return {"asset_ids": ids, "vectors": vectors, "source": source, "model": model}
+        return _load_npz_embedding_cache(path)
     except Exception as exc:
         _log.warning("corrupt cluster cache %s: %s", path, exc)
         return None
@@ -206,14 +235,14 @@ def save_embedding_cache(
         return cache_path_for_trip(trip_dir)
     import numpy as np
 
-    with _cache_write_lock:
+    with _cache_write_lock_for(trip_dir):
         out_dir = cache_dir_for_trip(trip_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         tmp_path = out_dir / EMBEDDINGS_TMP
         final_path = out_dir / EMBEDDINGS_FILE
         np.savez_compressed(
             tmp_path,
-            asset_ids=np.array(asset_ids, dtype=object),
+            asset_ids=np.asarray(asset_ids, dtype=str),
             vectors=vectors,
             source=np.array(source),
             model=np.array(model or ""),
@@ -240,8 +269,14 @@ def clear_cluster_cache(trip_dir: Path) -> bool:
         return False
     import shutil
 
-    with _cache_write_lock:
+    with _cache_write_lock_for(trip_dir):
         shutil.rmtree(cache_root)
+    try:
+        key = str(trip_dir.resolve())
+        with _trip_cache_locks_guard:
+            _trip_cache_locks.pop(key, None)
+    except OSError:
+        pass
     return True
 
 

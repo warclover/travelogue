@@ -88,16 +88,23 @@ def _coalesce_small_scene_groups(
     pending_cluster: int | None = None
     for cluster_id, ids in groups:
         bucket_ids = pending + ids
-        bucket_cluster = cluster_id if cluster_id is not None else pending_cluster
+        bucket_cluster = (
+            pending_cluster
+            if pending_cluster is not None
+            else cluster_id
+        )
         if len(bucket_ids) >= min_photos_per_sub:
             coalesced.append((bucket_cluster, bucket_ids))
             pending = []
             pending_cluster = None
         else:
             pending = bucket_ids
-            pending_cluster = bucket_cluster if bucket_cluster is not None else cluster_id
+            if pending_cluster is None:
+                pending_cluster = cluster_id
     if pending:
-        if coalesced:
+        if len(pending) >= min_photos_per_sub:
+            coalesced.append((pending_cluster, pending))
+        elif coalesced:
             last_cluster, last_ids = coalesced[-1]
             coalesced[-1] = (last_cluster, last_ids + pending)
         else:

@@ -37,6 +37,18 @@ def _assets(n: int, *, prefix: str = "a") -> list[dict]:
     ]
 
 
+def test_embedding_cache_roundtrip_without_pickle(tmp_path: Path) -> None:
+    ids = ["a01", "a02", "b99"]
+    vectors = np.random.RandomState(9).rand(len(ids), 8).astype(np.float32)
+    save_embedding_cache(tmp_path, asset_ids=ids, vectors=vectors, source="heuristic", model="h1")
+    cached = load_embedding_cache(tmp_path)
+    assert cached is not None
+    assert cached["asset_ids"] == ids
+    npz_path = tmp_path / ".cluster-cache" / "embeddings.npz"
+    loaded = np.load(npz_path, allow_pickle=False)
+    assert loaded["asset_ids"].dtype != object
+
+
 def test_plan_full_when_no_cache(tmp_path: Path) -> None:
     ids = [a["id"] for a in _assets(10)]
     plan = plan_embedding_refresh(tmp_path, ids)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from travelogue.curation.geo_events import (
@@ -34,6 +34,50 @@ def _asset(
     if city:
         out["place"] = {"city": city}
     return out
+
+
+def test_adaptive_gap_bimodal_when_p75_is_zero() -> None:
+    """Uniform short gaps: p75=0 but p90>0 should still pick upper-mode threshold."""
+    base = datetime(2025, 6, 1, 10, 0, 0)
+    timestamps = [base + timedelta(minutes=i * 5) for i in range(20)]
+    timestamps.append(base + timedelta(hours=8))
+    chosen = _adaptive_gap_threshold_hours(timestamps, fallback_hours=4.0)
+    assert chosen >= 4.0
+
+
+def test_orphan_inside_long_segment_not_short_neighbor() -> None:
+    """Photo inside a long segment must not attach to a shorter same-day segment."""
+    assets = []
+    for i in range(5):
+        assets.append(
+            _asset(
+                f"long{i}",
+                f"2025-05-01T{9 + i:02d}:00:00Z",
+                35.68 + i * 0.001,
+                139.76,
+                city="东京",
+            )
+        )
+    for i in range(3):
+        assets.append(
+            _asset(
+                f"short{i}",
+                f"2025-05-01T20:00:00Z",
+                35.01 + i * 0.001,
+                135.76,
+                city="京都",
+            )
+        )
+    assets.append(
+        _asset("orphan", "2025-05-05T12:00:00Z", 35.685, 139.765, city="东京")
+    )
+    segs, _ = detect_geo_events(
+        assets,
+        cfg=GeoClusterConfig(min_photos_per_event=3, event_gap_mode="fixed"),
+        event_time_gap_hours=72.0,
+    )
+    long_seg = next(s for s in segs if "long0" in s.asset_ids)
+    assert "orphan" in long_seg.asset_ids
 
 
 def test_haversine_km_tokyo_kyoto_approx() -> None:

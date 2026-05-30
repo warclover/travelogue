@@ -5,7 +5,7 @@ from __future__ import annotations
 import threading
 import time
 from pathlib import Path
-from typing import Any
+from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 from travelogue.demo.build import DemoError
 from travelogue.services.copy_subject import is_generic_place
@@ -29,7 +29,7 @@ from travelogue.web.studio_uploads import (
 )
 
 
-def read_import_request(handler: Any) -> tuple[dict, Path | None]:
+def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | None]:
     content_type = handler.headers.get("Content-Type", "")
     if "multipart/form-data" in content_type:
         length = int(handler.headers.get("Content-Length") or 0)
@@ -85,7 +85,7 @@ def read_import_request(handler: Any) -> tuple[dict, Path | None]:
     return payload, None
 
 
-def album_path_allowed(handler: Any, album_path: Path, *, trips_root: Path) -> bool:
+def album_path_allowed(handler: StudioHandlerProtocol, album_path: Path, *, trips_root: Path) -> bool:
     album_path = album_path.resolve()
     if is_demo_album_path(str(album_path)):
         return True
@@ -99,7 +99,7 @@ def album_path_allowed(handler: Any, album_path: Path, *, trips_root: Path) -> b
     return False
 
 
-def handle_import(handler: Any) -> None:
+def handle_import(handler: StudioHandlerProtocol) -> None:
     try:
         payload, upload_dir = read_import_request(handler)
     except DemoError as exc:
@@ -227,18 +227,18 @@ def handle_import(handler: Any) -> None:
         worker_payload["configPath"] = str(handler.studio_config_path.resolve())
 
     def sweep_upload() -> None:
-        finished = {"done": False}
+        finished = threading.Event()
 
         def watch() -> None:
             deadline = time.time() + STUDIO_IMPORT_JOB_WATCH_SEC
-            while time.time() < deadline and not finished["done"]:
+            while time.time() < deadline and not finished.is_set():
                 current = store.get(job_id)
                 if current and current.status in (
                     "succeeded",
                     "failed",
                     "cancelled",
                 ):
-                    finished["done"] = True
+                    finished.set()
                     if upload_dir and current.status == "succeeded":
                         delete_upload_dir(upload_dir, trips_dir=trips_root)
                     break

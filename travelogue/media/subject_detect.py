@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass
 
 from PIL import Image
@@ -26,21 +27,23 @@ def _opencv_available() -> bool:
 
 
 _cascade_classifier = None
+_cascade_lock = threading.Lock()
 
 
 def _get_cascade_classifier():
     """P7-B1 · lazy singleton Haar cascade."""
     global _cascade_classifier
-    if _cascade_classifier is not None:
-        return _cascade_classifier
-    import cv2
+    with _cascade_lock:
+        if _cascade_classifier is not None:
+            return _cascade_classifier
+        import cv2
 
-    cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-    classifier = cv2.CascadeClassifier(cascade_path)
-    if classifier.empty():
-        return None
-    _cascade_classifier = classifier
-    return _cascade_classifier
+        cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+        classifier = cv2.CascadeClassifier(cascade_path)
+        if classifier.empty():
+            return None
+        _cascade_classifier = classifier
+        return _cascade_classifier
 
 
 def reset_cascade_classifier() -> None:

@@ -81,6 +81,47 @@ def test_max_pattern_repeat_streak_metric() -> None:
     assert max_pattern_repeat_streak(chapters) == 4
 
 
+def test_longshot_mmr_off_vs_on_diversity() -> None:
+    """MMR on should not pick a more homogeneous set than MMR off at same cap."""
+    assets_by_id = {
+        f"a{i}": {"id": f"a{i}", "dominantTone": tone}
+        for i, tone in enumerate(
+            ("#111111", "#111112", "#222233", "#334455", "#556677", "#8899aa")
+        )
+    }
+    screens = [
+        _screen("screen-portrait-1", "a0"),
+        _screen("screen-portrait-1", "a1"),
+        _screen("screen-portrait-2", "a2"),
+        _screen("screen-portrait-3", "a3"),
+        _screen("screen-portrait-4", "a4"),
+        _screen("screen-portrait-5", "a5"),
+    ]
+
+    def _tone_variety(picked: list[dict]) -> int:
+        tones = {
+            assets_by_id[sc["slots"][0]["assetId"]]["dominantTone"] for sc in picked
+        }
+        return len(tones)
+
+    off = select_longshot_screens(
+        screens,
+        max_screens=4,
+        assets_by_id=assets_by_id,
+        enable_mmr=False,
+        max_consecutive_same_pattern=2,
+    )
+    on = select_longshot_screens(
+        screens,
+        max_screens=4,
+        assets_by_id=assets_by_id,
+        enable_mmr=True,
+        max_consecutive_same_pattern=2,
+    )
+    assert len(off) == len(on) == 4
+    assert _tone_variety(on) >= _tone_variety(off)
+
+
 def test_longshot_mmr_prefers_diverse_patterns() -> None:
     assets_by_id = {
         "a0": {"id": "a0", "dominantTone": "#112233"},

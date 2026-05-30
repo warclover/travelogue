@@ -15,21 +15,8 @@ from travelogue.render.context_types import (
     ScreenSpreadContext,
     TripIndexEntryContext,
 )
+from travelogue.render.screen_tone import DEFAULT_SCREEN_TONE, screen_tone_css
 from travelogue.render.surface import SurfaceContext
-
-_DEFAULT_SCREEN_TONE = "#e8e4df"
-
-
-def _screen_tone_css(tone: dict | None) -> str | None:
-    if not tone:
-        return _DEFAULT_SCREEN_TONE
-    try:
-        r = int(tone.get("r", 0))
-        g = int(tone.get("g", 0))
-        b = int(tone.get("b", 0))
-    except (TypeError, ValueError):
-        return _DEFAULT_SCREEN_TONE
-    return f"#{r:02x}{g:02x}{b:02x}"
 
 
 @dataclass
@@ -266,7 +253,7 @@ def build_chapters_render_context(
         )
         chapter_tone = None
         if use_chapter_separator and raw_screens_for_spread:
-            chapter_tone = _screen_tone_css((raw_screens_for_spread[0] or {}).get("tone"))
+            chapter_tone = screen_tone_css((raw_screens_for_spread[0] or {}).get("tone"))
 
         lead = (ch.get("lead") or "").strip()
         if strip_narrative_copy:
@@ -291,7 +278,7 @@ def build_chapters_render_context(
             "items": items_out,
             "useChapterSeparator": use_chapter_separator,
             "chapterSeparatorStyle": (
-                f"background: {chapter_tone or _DEFAULT_SCREEN_TONE};" if use_chapter_separator else ""
+                f"background: {chapter_tone or DEFAULT_SCREEN_TONE};" if use_chapter_separator else ""
             ),
             **chapter_divider(
                 ch,
