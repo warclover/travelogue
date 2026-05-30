@@ -158,3 +158,37 @@ def test_reveal_path_allows_inside_trips(tmp_path: Path) -> None:
     target = trip / "demo-longshot.png"
     target.write_bytes(b"png")
     reveal_path_in_folder(target, allowed_root=allowed)
+
+
+def test_export_longshot_closes_page_when_goto_fails(
+    longshot_workspace: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Regression: page must close on navigation failure (no pool leak)."""
+    closed: list[bool] = []
+
+    class _FakePage:
+        viewport_size = {"width": CAPTURE_WIDTH, "height": 844}
+
+        def goto(self, *args: object, **kwargs: object) -> None:
+            raise TimeoutError("navigation timeout")
+
+        def close(self) -> None:
+            closed.append(True)
+
+        def wait_for_function(self, *args: object, **kwargs: object) -> None:
+            raise AssertionError("wait_for_function should not run after failed goto")
+
+    class _FakeBrowser:
+        def new_page(self, **kwargs: object) -> _FakePage:
+            return _FakePage()
+
+    monkeypatch.setattr(
+        "travelogue.export.longshot._BROWSER_POOL.acquire",
+        lambda: _FakeBrowser(),
+    )
+    monkeypatch.setattr("travelogue.export.longshot._BROWSER_POOL.release", lambda: None)
+
+    with pytest.raises(TimeoutError, match="navigation timeout"):
+        export_trip_longshot(longshot_workspace, base_url="http://127.0.0.1:9/")
+
+    assert closed == [True]
