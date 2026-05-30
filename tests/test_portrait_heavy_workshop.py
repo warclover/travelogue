@@ -12,6 +12,10 @@ from travelogue.render.engine import render_trip_surfaces
 from travelogue.services.trip_factory import create_trip
 from travelogue.services.validate import validate_trip
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def _portrait_album(tmp_path: Path, n: int = 8) -> Path:
     album = tmp_path / "portrait-album"

@@ -16,6 +16,8 @@ from travelogue.media.user_tier import TIER_FEATURED, upgrade_asset_tier
 from travelogue.services.trip import TripService
 from travelogue.services.trip_factory import create_trip
 
+pytestmark = pytest.mark.integration
+
 
 def _write_photo(path: Path, size: tuple[int, int] = (1600, 900), color=(120, 80, 40)) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)

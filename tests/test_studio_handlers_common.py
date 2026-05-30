@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
+import pytest
+
+from travelogue.config import get_config
+from travelogue.runtime import AppContext
+from travelogue.services.trip_factory import create_trip
 from travelogue.web.studio_handlers.common import (
     match_entry,
     match_trip_curate,
     match_trip_intent,
     match_trip_pipeline,
     match_trip_suffix,
+    resolve_trip_dir,
 )
 from travelogue.web.studio_handlers.paths import (
     CURATE_SUFFIX,
@@ -15,6 +23,8 @@ from travelogue.web.studio_handlers.paths import (
     PIPELINE_SUFFIX,
     TRIPS_PATH,
 )
+
+pytestmark = pytest.mark.unit
 
 
 def test_match_trip_suffix_extracts_trip_id() -> None:
@@ -33,3 +43,27 @@ def test_match_wrappers_align_with_suffix() -> None:
     assert match_trip_intent(f"{TRIPS_PATH}/{tid}{INTENT_SUFFIX}") == tid
     assert match_trip_pipeline(f"{TRIPS_PATH}/{tid}{PIPELINE_SUFFIX}") == tid
     assert match_trip_curate(f"{TRIPS_PATH}/{tid}{CURATE_SUFFIX}") == tid
+
+
+def test_resolve_trip_dir_rejects_invalid_id(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    ctx = AppContext(cfg=get_config(), trips_root=trips_dir)
+    assert resolve_trip_dir(ctx, "../evil") is None
+    assert resolve_trip_dir(ctx, "bad/id") is None
+
+
+def test_resolve_trip_dir_requires_trip_json(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    (trips_dir / "empty-trip").mkdir(parents=True)
+    ctx = AppContext(cfg=get_config(), trips_root=trips_dir)
+    assert resolve_trip_dir(ctx, "empty-trip") is None
+
+
+def test_resolve_trip_dir_finds_existing_trip(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    create_trip("demo-01", trips_dir)
+    ctx = AppContext(cfg=get_config(), trips_root=trips_dir)
+    trip_dir = resolve_trip_dir(ctx, "demo-01")
+    assert trip_dir is not None
+    assert (trip_dir / "trip.json").is_file()

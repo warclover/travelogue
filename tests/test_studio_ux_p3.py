@@ -109,6 +109,7 @@ def test_ux_p3_07_preview_toolbar_has_no_cluster_controls() -> None:
     assert "window.alert(" not in js
 
 
+@pytest.mark.e2e
 def test_ux_p3_01_import_job_reports_four_stages(tmp_path: Path) -> None:
     album = _distinct_album(tmp_path, 6)
     trips_dir = tmp_path / "trips"
@@ -123,16 +124,13 @@ def test_ux_p3_01_import_job_reports_four_stages(tmp_path: Path) -> None:
         )
         assert status == 202
         job_id = body["jobId"]
-        import time
+        from tests.studio_test_helpers import wait_for_job
 
-        deadline = time.time() + 180
-        last: dict = {}
-        while time.time() < deadline:
-            status, last = _get_json(f"{base}/__travelogue/status?jobId={job_id}")
-            assert status == 200
-            if last.get("status") in ("succeeded", "failed"):
-                break
-            time.sleep(0.4)
+        last = wait_for_job(
+            lambda: _get_json(f"{base}/__travelogue/status?jobId={job_id}")[1],
+            timeout_sec=180,
+            poll_sec=0.05,
+        )
         assert last.get("status") == "succeeded", last
         assert last.get("stageCount") == 4
         assert last.get("stageIndex") == 4

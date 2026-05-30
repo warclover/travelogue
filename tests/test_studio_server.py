@@ -15,7 +15,10 @@ import pytest
 from travelogue.web.serve import TripPreviewHandler
 from travelogue.web.studio_jobs import reset_job_store
 from travelogue.web.studio_pipeline import run_studio_pipeline
+from tests.studio_test_helpers import wait_for_job
 from tests.test_ingest import _album
+
+pytestmark = pytest.mark.e2e
 
 
 def _distinct_album(tmp_path: Path, n: int = 6) -> Path:
@@ -160,14 +163,12 @@ def test_studio_import_job(tmp_path: Path) -> None:
         assert status == 202
         job_id = body["jobId"]
 
-        deadline = time.time() + 180
-        last: dict = {}
-        while time.time() < deadline:
-            status, last = _get_json(f"{base}/__travelogue/status?jobId={job_id}")
-            assert status == 200
-            if last.get("status") in ("succeeded", "failed"):
-                break
-            time.sleep(0.5)
+        def _fetch() -> dict:
+            status_code, payload = _get_json(f"{base}/__travelogue/status?jobId={job_id}")
+            assert status_code == 200
+            return payload
+
+        last = wait_for_job(_fetch, timeout_sec=180, poll_sec=0.05)
 
         assert last.get("status") == "succeeded", last
         assert last.get("stageIndex") == 4
@@ -264,15 +265,13 @@ def test_studio_longshot_job(tmp_path: Path) -> None:
         )
         assert status == 202, body
         job_id = body["jobId"]
-        deadline = time.time() + 180
-        result: dict = {}
-        while time.time() < deadline:
-            status, result = _get_json(f"{base}/__travelogue/status?jobId={job_id}")
-            assert status == 200
-            if result.get("status") in ("succeeded", "failed"):
-                break
-            time.sleep(0.5)
-        return result
+
+        def _fetch() -> dict:
+            status_code, payload = _get_json(f"{base}/__travelogue/status?jobId={job_id}")
+            assert status_code == 200
+            return payload
+
+        return wait_for_job(_fetch, timeout_sec=180, poll_sec=0.05)
 
     try:
         last = _submit_longshot_once()

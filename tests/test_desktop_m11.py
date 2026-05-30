@@ -55,7 +55,9 @@ def test_pick_folder_cancelled(monkeypatch: pytest.MonkeyPatch) -> None:
     assert folder_dialog.pick_folder(title="test") is None
 
 
+@pytest.mark.e2e
 def test_studio_import_demo_album(tmp_path: Path) -> None:
+    from tests.studio_test_helpers import wait_for_job
     from tests.test_studio_server import (
         _free_port,
         _get_json,
@@ -79,15 +81,11 @@ def test_studio_import_demo_album(tmp_path: Path) -> None:
         assert status == 202, body
         job_id = body["jobId"]
 
-        import time
-
-        deadline = time.time() + 180
-        last: dict = {}
-        while time.time() < deadline:
-            status, last = _get_json(f"{base}/__travelogue/status?jobId={job_id}")
-            if last.get("status") in ("succeeded", "failed"):
-                break
-            time.sleep(0.5)
+        last = wait_for_job(
+            lambda: _get_json(f"{base}/__travelogue/status?jobId={job_id}")[1],
+            timeout_sec=180,
+            poll_sec=0.05,
+        )
 
         assert last.get("status") == "succeeded", last
         assert (trips_dir / last["tripId"] / "index.html").is_file()

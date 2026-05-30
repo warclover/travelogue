@@ -45,6 +45,7 @@ M12_HOME_MARKERS = (
 )
 
 
+@pytest.mark.e2e
 def test_studio_homepage_m12_html(tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
@@ -102,6 +103,7 @@ def test_studio_homepage_js_strings() -> None:
     assert "setPickControlsDisabled" not in js
 
 
+@pytest.mark.e2e
 def test_studio_trips_api_limit_and_total(tmp_path: Path) -> None:
     album = _distinct_album(tmp_path, 6)
     trips_dir = tmp_path / "trips"

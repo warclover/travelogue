@@ -14,6 +14,10 @@ from travelogue.web.studio_g1 import lock_trip_structure
 from travelogue.web.studio_pipeline import run_studio_pipeline
 from tests.test_studio_server import _distinct_album, _free_port, _start_studio_server
 
+import pytest
+
+pytestmark = pytest.mark.e2e
+
 
 def _patch_json(url: str, payload: dict) -> tuple[int, dict]:
     data = json.dumps(payload).encode("utf-8")

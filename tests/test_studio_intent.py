@@ -72,6 +72,13 @@ def test_apply_intent_only_touches_passed_args() -> None:
     assert trip["intent"]["folders"] == {"featuredDetected": True}
 
 
+def test_apply_intent_empty_places_keeps_schema_meta_placeholder() -> None:
+    trip: dict = {"meta": {"places": ["旅途"]}}
+    apply_intent(trip, places=[], places_user_set=False)
+    assert "places" not in trip["intent"]
+    assert trip["meta"]["places"] == ["旅途"]
+
+
 def test_tripservice_exposes_apply_intent() -> None:
     trip: dict = {}
     TripService.apply_intent(trip, title="x")
@@ -175,6 +182,18 @@ def test_schema_old_trip_without_intent_still_valid() -> None:
 
 
 # ── pipeline integration (M15-05 · AC-P4-01/09) ───────────────────────────────
+
+
+def test_pipeline_default_place_passes_schema(tmp_path: Path) -> None:
+    """Default generic place must keep meta.places valid for export/validate."""
+    album = _distinct_album(tmp_path, 6)
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    result = run_studio_pipeline(album, trips_dir=trips_dir, dedupe=False)
+    trip = json.loads(result.trip_json.read_text(encoding="utf-8"))
+    assert trip["meta"].get("places")
+    errors = validate_trip(trip, level="schema")
+    assert errors == [], errors
 
 
 def test_pipeline_persists_intent_and_passes_schema(tmp_path: Path) -> None:

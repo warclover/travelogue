@@ -9,6 +9,10 @@ from pathlib import Path
 from travelogue.demo.build import run_demo_from_album
 from tests.test_ingest import _album
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_share_zip_within_config_budget(tmp_path: Path) -> None:
     """12 photos → zip builds; oversized trips record curation warning."""

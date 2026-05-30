@@ -13,6 +13,8 @@ from travelogue.demo.build import run_demo_from_album
 from travelogue.orchestrator.run import run_trip
 from tests.test_ingest import _album
 
+pytestmark = pytest.mark.integration
+
 
 def _assert_share_zip(zip_path: Path) -> None:
     assert zip_path.is_file()

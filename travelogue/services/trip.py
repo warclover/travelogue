@@ -78,7 +78,10 @@ def apply_intent(
             meta["places"] = list(place_list)
         else:
             intent.pop("places", None)
-            meta.pop("places", None)
+            # meta.places is schema-required (minItems: 1); omitting intent places
+            # only means copy may prefer title/EXIF — keep a valid meta placeholder.
+            if not meta.get("places"):
+                meta["places"] = ["旅途"]
 
     if places_user_set is not _UNSET:
         if places_user_set:

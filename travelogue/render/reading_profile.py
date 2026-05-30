@@ -98,18 +98,30 @@ _FALLBACK_MATRIX: dict[str, Any] = {
 
 
 _matrix_cache: dict[str, Any] | None = None
-_matrix_cache_mtime: float | None = None
+_matrix_cache_key: tuple[int, int] | None = None
 _matrix_cache_lock = threading.Lock()
 
 
+def _matrix_file_cache_key() -> tuple[int, int] | None:
+    """File identity for cache invalidation (mtime_ns + size).
+
+    Windows ``st_mtime`` can stay unchanged across rapid rewrites; pairing
+    nanosecond mtime with size catches content updates in the same tick.
+    """
+    try:
+        if not _MATRIX_PATH.is_file():
+            return None
+        st = _MATRIX_PATH.stat()
+        return (st.st_mtime_ns, st.st_size)
+    except OSError:
+        return None
+
+
 def load_experience_matrix() -> dict[str, Any]:
-    global _matrix_cache, _matrix_cache_mtime
+    global _matrix_cache, _matrix_cache_key
     with _matrix_cache_lock:
-        try:
-            mtime = _MATRIX_PATH.stat().st_mtime if _MATRIX_PATH.is_file() else None
-        except OSError:
-            mtime = None
-        if _matrix_cache is not None and _matrix_cache_mtime == mtime:
+        key = _matrix_file_cache_key()
+        if _matrix_cache is not None and _matrix_cache_key == key:
             return _matrix_cache
         if yaml is None or not _MATRIX_PATH.is_file():
             loaded = _FALLBACK_MATRIX
@@ -117,16 +129,16 @@ def load_experience_matrix() -> dict[str, Any]:
             raw = yaml.safe_load(_MATRIX_PATH.read_text(encoding="utf-8"))
             loaded = raw if isinstance(raw, dict) else _FALLBACK_MATRIX
         _matrix_cache = loaded
-        _matrix_cache_mtime = mtime
+        _matrix_cache_key = key
         return loaded
 
 
 def reset_experience_matrix_cache() -> None:
     """Clear cached experience-matrix.yaml (tests)."""
-    global _matrix_cache, _matrix_cache_mtime
+    global _matrix_cache, _matrix_cache_key
     with _matrix_cache_lock:
         _matrix_cache = None
-        _matrix_cache_mtime = None
+        _matrix_cache_key = None
 
 
 def resolve_surface_name(

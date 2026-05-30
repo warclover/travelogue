@@ -82,6 +82,8 @@ def test_experience_matrix_cache_tracks_mtime(tmp_path, monkeypatch):
     matrix.write_text("profiles: {x: {}}\ndefaults: {}\n", encoding="utf-8")
     second = load_experience_matrix()
     assert first is not second
+    assert "x" in (second.get("profiles") or {})
+    assert "x" not in (first.get("profiles") or {})
 
 
 def test_serve_handler_config_scope_isolates_threads():

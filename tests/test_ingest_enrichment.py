@@ -9,10 +9,14 @@ from pathlib import Path
 
 from PIL import Image, ImageFilter
 
+import pytest
+
 from travelogue.config import IngestConfig
 from travelogue.media.ingest import ingest_into_trip
 from travelogue.media.sharpness import sharpness_score
 from travelogue.services.trip_factory import create_trip
+
+pytestmark = pytest.mark.integration
 
 
 def _album_base(tmp_path: Path, n: int = 4, *, size: tuple[int, int] = (2400, 3200)) -> Path:

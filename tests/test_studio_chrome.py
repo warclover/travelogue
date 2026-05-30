@@ -41,6 +41,7 @@ def _reset_jobs() -> None:
     reset_job_store()
 
 
+@pytest.mark.e2e
 def test_studio_home_html(tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
@@ -58,6 +59,7 @@ def test_studio_home_html(tmp_path: Path) -> None:
         server.server_close()
 
 
+@pytest.mark.e2e
 def test_studio_chrome_on_index_not_longshot(tmp_path: Path) -> None:
     album = _distinct_album(tmp_path, 6)
     trips_dir = tmp_path / "trips"
@@ -102,6 +104,7 @@ def test_studio_chrome_on_index_not_longshot(tmp_path: Path) -> None:
         server.server_close()
 
 
+@pytest.mark.e2e
 def test_studio_trips_list(tmp_path: Path) -> None:
     album = _distinct_album(tmp_path, 6)
     trips_dir = tmp_path / "trips"

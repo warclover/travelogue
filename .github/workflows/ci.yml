@@ -7,7 +7,7 @@ on:
     branches: [master, main]
 
 jobs:
-  test:
+  test-pr:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,8 +19,61 @@ jobs:
       - name: Install package
         run: pip install -e ".[dev]"
 
-      - name: Pytest
-        run: python -m pytest tests/ -q
+      - name: Pytest (PR fast · unit + unmarked)
+        run: |
+          python -m pytest tests/ -q \
+            -m "not integration and not e2e and not vision and not playwright_serial" \
+            --cov=travelogue.web.studio_handlers \
+            --cov=travelogue.web.studio_subprocess \
+            --cov=travelogue.services.trip \
+            --cov-report=term-missing:skip-covered \
+            --cov-fail-under=55
+
+  test-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: pip install -e ".[dev]"
+
+      - name: Pytest (integration pipeline)
+        run: |
+          python -m pytest tests/ -q \
+            -m "integration and not e2e and not vision and not playwright_serial"
+
+  test-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package + Playwright
+        run: |
+          pip install -e ".[dev,playwright]"
+          playwright install chromium
+
+      - name: Pytest (e2e + browser)
+        run: python -m pytest tests/ -q -m "e2e or playwright_serial"
+
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: pip install -e ".[dev]"
 
       - name: Validate fixtures
         run: |

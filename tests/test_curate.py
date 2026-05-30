@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from pathlib import Path
+
+import pytest
 
 from travelogue.curation.curate import _date_span_warning, _pick_cover_asset_id, run_curate
 from travelogue.media.ingest import ingest_into_trip
@@ -34,14 +35,9 @@ def test_web_cover_prefers_landscape() -> None:
     assert mobile in ("tall", "port")
 
 
-def test_curate_builds_three_plus_chapters(tmp_path: Path) -> None:
-    trips = tmp_path / "trips"
-    trip_json = create_trip("curate-test", trips)
-    trip_dir = trips / "curate-test"
-    import json
-
-    trip = json.loads(trip_json.read_text(encoding="utf-8"))
-    ingest_into_trip(trip, trip_dir, from_dir=_album(tmp_path, 8), dedupe=False)
+@pytest.mark.integration
+def test_curate_builds_three_plus_chapters(ingested_trip) -> None:
+    _ws, trip = ingested_trip
     for i, a in enumerate(trip["assets"]):
         day = 2 + (i % 3)
         a["takenAt"] = f"2025-04-0{day}T12:00:00Z"
@@ -68,14 +64,9 @@ def test_date_span_warning_for_mixed_years() -> None:
     assert "过滤旧图" not in msg
 
 
-def test_curate_writes_segments_for_multi_month_album(tmp_path: Path) -> None:
-    trips = tmp_path / "trips"
-    trip_json = create_trip("seg-test", trips)
-    trip_dir = trips / "seg-test"
-    import json
-
-    trip = json.loads(trip_json.read_text(encoding="utf-8"))
-    ingest_into_trip(trip, trip_dir, from_dir=_album(tmp_path, 8), dedupe=False)
+@pytest.mark.integration
+def test_curate_writes_segments_for_multi_month_album(ingested_trip) -> None:
+    _ws, trip = ingested_trip
     for i, a in enumerate(trip["assets"]):
         month = 3 if i < 4 else 10
         a["takenAt"] = f"2025-{month:02d}-{(i % 5) + 10:02d}T12:00:00Z"
@@ -92,7 +83,8 @@ def test_curate_writes_segments_for_multi_month_album(tmp_path: Path) -> None:
     assert trip["chapters"][0].get("curation", {}).get("segmentId")
 
 
-def test_curate_caps_chapters_for_wide_span_album(tmp_path: Path) -> None:
+@pytest.mark.integration
+def test_curate_caps_chapters_for_wide_span_album(tmp_path) -> None:
     """Many calendar buckets across years → still 3–5 chapters (manifest)."""
     from travelogue.services.manifest_limits import chapter_limits
 

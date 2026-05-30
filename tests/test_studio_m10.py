@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from pathlib import Path
 
 import pytest
@@ -10,6 +9,7 @@ import pytest
 from travelogue.web.studio_jobs import get_job_store, reset_job_store
 from travelogue.web.studio_pipeline import run_studio_pipeline
 from travelogue.web.studio_trips import list_studio_trips, longshot_outputs_stale
+from tests.studio_test_helpers import wait_for_job
 from tests.test_studio_server import (
     _distinct_album,
     _free_port,
@@ -17,6 +17,8 @@ from tests.test_studio_server import (
     _post_json,
     _start_studio_server,
 )
+
+pytestmark = pytest.mark.e2e
 
 
 @pytest.fixture(autouse=True)
@@ -113,13 +115,12 @@ def test_studio_cancel_import_job(tmp_path: Path) -> None:
         assert cancel_status == 200
         assert cancel_body.get("status") in ("cancelled", "running", "queued", "succeeded")
 
-        deadline = time.time() + 120
-        last: dict = {}
-        while time.time() < deadline:
-            status, last = _get_json(f"{base}/__travelogue/status?jobId={job_id}")
-            if last.get("status") in ("cancelled", "succeeded", "failed"):
-                break
-            time.sleep(0.3)
+        last = wait_for_job(
+            lambda: _get_json(f"{base}/__travelogue/status?jobId={job_id}")[1],
+            timeout_sec=120,
+            poll_sec=0.05,
+            terminal=frozenset({"cancelled", "succeeded", "failed"}),
+        )
 
         assert last.get("status") in ("cancelled", "succeeded")
         if last.get("status") == "cancelled":
