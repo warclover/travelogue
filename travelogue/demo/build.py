@@ -15,13 +15,12 @@ from travelogue.orchestrator.pipeline import PublishResult
 from travelogue.orchestrator.run import RunResult, run_trip
 from travelogue.render.engine import render_trip, render_trip_surfaces
 from travelogue.services.trip import TripService
+from travelogue.errors import CodeError
 from travelogue.services.trip_factory import create_trip
 
 
-class DemoError(Exception):
-    def __init__(self, code: str, message: str) -> None:
-        self.code = code
-        super().__init__(f"{code}: {message}")
+class DemoError(CodeError):
+    pass
 
 
 @dataclass

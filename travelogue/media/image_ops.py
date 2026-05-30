@@ -50,11 +50,12 @@ class ImageLoadResult:
     geo: GeoCoords | None = None
 
 
-class ImageOpsError(Exception):
+from travelogue.errors import PlainCodeError
+
+
+class ImageOpsError(PlainCodeError):
     def __init__(self, message: str, *, code: str = "E_IMAGE_OPS") -> None:
-        self.code = code
-        self.message = message
-        super().__init__(message)
+        super().__init__(message, code=code)
 
 
 def _parse_exif_datetime(raw: object) -> datetime | None:

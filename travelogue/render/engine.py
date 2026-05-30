@@ -31,14 +31,13 @@ from travelogue.paths import (
     SHARE_JS,
     TEMPLATE_VISUAL_JOURNAL,
 )
+from travelogue.errors import CodeError
 from travelogue.render.context import build_render_context, collect_asset_paths
 from travelogue.services.validate import validate_trip
 
 
-class RenderError(Exception):
-    def __init__(self, code: str, message: str) -> None:
-        self.code = code
-        super().__init__(f"{code}: {message}")
+class RenderError(CodeError):
+    pass
 
 
 EXPORT_LAYOUT_LONGSHOT = "longshot"

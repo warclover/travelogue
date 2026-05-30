@@ -13,6 +13,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from travelogue.errors import PlainCodeError
+
 _log = logging.getLogger(__name__)
 
 SUBJECT_CLASSES = (
@@ -33,12 +35,9 @@ _encoder_singleton: ClipEncoder | None = None
 _prefetch_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="clip-prefetch")
 
 
-class VisionMissingError(Exception):
-    code = "E_CLUSTER_VISION_MISSING"
-
+class VisionMissingError(PlainCodeError):
     def __init__(self, message: str = "vision extra not installed") -> None:
-        super().__init__(message)
-        self.message = message
+        super().__init__(message, code="E_CLUSTER_VISION_MISSING")
 
 
 def vision_stack_available() -> bool:

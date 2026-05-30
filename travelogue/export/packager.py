@@ -19,13 +19,12 @@ from travelogue.render.engine import (
 )
 from travelogue.render.preview import render_preview_jpg
 from travelogue.services.trip import TripService
+from travelogue.errors import CodeError
 from travelogue.services.validate import validate_trip
 
 
-class ExportError(Exception):
-    def __init__(self, code: str, message: str) -> None:
-        self.code = code
-        super().__init__(f"{code}: {message}")
+class ExportError(CodeError):
+    pass
 
 
 def _mark_rendered(trip: dict) -> None:

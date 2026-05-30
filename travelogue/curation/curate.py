@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from travelogue.config import AppConfig
+from travelogue.errors import CodeError
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 from travelogue.curation.bucket_planning import (
@@ -56,10 +57,8 @@ _bucket_day_span = bucket_day_span
 _parse_asset_date = parse_asset_date
 
 
-class CurateError(Exception):
-    def __init__(self, code: str, message: str) -> None:
-        self.code = code
-        super().__init__(f"{code}: {message}")
+class CurateError(CodeError):
+    pass
 
 
 @dataclass

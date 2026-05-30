@@ -13,13 +13,12 @@ from travelogue.layout_contract import (
     VALID_EXPORT_LAYOUTS,
     format_layout_summary,
 )
+from travelogue.errors import CodeError
 from travelogue.services.pipeline_state import set_layout_status
 
 
-class LayoutError(Exception):
-    def __init__(self, code: str, message: str) -> None:
-        self.code = code
-        super().__init__(f"{code}: {message}")
+class LayoutError(CodeError):
+    pass
 
 
 @dataclass

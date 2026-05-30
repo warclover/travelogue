@@ -13,6 +13,7 @@ from typing import Any, Callable
 from PIL import Image
 
 from travelogue.config import AppConfig, IngestConfig, get_config
+from travelogue.errors import CodeError
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 from travelogue.curation.asset_quality import apply_layout_eligibility_marks, asset_sharpness
 from travelogue.curation.media_classify import (
@@ -114,10 +115,8 @@ def guard_raw_in_directory(
     return stats
 
 
-class IngestError(Exception):
-    def __init__(self, code: str, message: str) -> None:
-        self.code = code
-        super().__init__(f"{code}: {message}")
+class IngestError(CodeError):
+    pass
 
 
 @dataclass

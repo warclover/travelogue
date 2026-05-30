@@ -6,14 +6,13 @@ import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+from travelogue.errors import PlainCodeError
 from travelogue.render.engine import LONGSHOT_INDEX_NAME
 
 
-class LongshotSmokeError(Exception):
+class LongshotSmokeError(PlainCodeError):
     def __init__(self, message: str, *, code: str = "E_LONGSHOT_SMOKE") -> None:
-        self.code = code
-        self.message = message
-        super().__init__(message)
+        super().__init__(message, code=code)
 
 
 def _start_static_server(directory: Path, host: str, port: int) -> ThreadingHTTPServer:

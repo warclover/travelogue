@@ -6,12 +6,12 @@ import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+from travelogue.errors import PlainCodeError
 
-class PdfExportError(Exception):
+
+class PdfExportError(PlainCodeError):
     def __init__(self, message: str, *, code: str = "E_PDF_EXPORT") -> None:
-        self.code = code
-        self.message = message
-        super().__init__(message)
+        super().__init__(message, code=code)
 
 
 def _start_static_server(directory: Path, host: str, port: int) -> ThreadingHTTPServer:

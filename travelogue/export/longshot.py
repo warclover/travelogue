@@ -15,6 +15,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from travelogue.errors import CodeError
 from travelogue.render.engine import LONGSHOT_INDEX_NAME
 
 _log = logging.getLogger(__name__)
@@ -28,10 +29,8 @@ MAX_WECHAT_BYTES = 20 * 1024 * 1024
 ProgressFn = Any  # Callable[[int, int, str], None] — avoid circular import noise
 
 
-class LongshotExportError(Exception):
-    def __init__(self, code: str, message: str) -> None:
-        self.code = code
-        super().__init__(f"{code}: {message}")
+class LongshotExportError(CodeError):
+    pass
 
 
 @dataclass

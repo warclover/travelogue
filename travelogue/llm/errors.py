@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from travelogue.errors import CodeError
 
-class LlmError(Exception):
-    def __init__(self, code: str, message: str) -> None:
-        self.code = code
-        super().__init__(f"{code}: {message}")
+
+class LlmError(CodeError):
+    pass

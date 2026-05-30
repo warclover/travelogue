@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
+from travelogue.errors import CodeError
 from travelogue.media.user_tier import promote_assets_to_featured
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 
-class TierPatchError(Exception):
-    def __init__(self, code: str, message: str) -> None:
-        self.code = code
-        super().__init__(f"{code}: {message}")
+class TierPatchError(CodeError):
+    pass
 
 
 def apply_tier_promotions(trip: dict, asset_ids: list[str]) -> list[str]:

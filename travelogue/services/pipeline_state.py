@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Literal
 
+from travelogue.errors import CodeError
+
 Stage = Literal["ingest", "curate", "layout", "narrate", "render", "export", "lock_structure", "lock_copy"]
 Until = Literal["ingest", "structure", "layout", "copy", "rendered", "exported"]
 
@@ -30,10 +32,8 @@ STAGE_MIN_STATUS: dict[Stage, str] = {
 }
 
 
-class PipelineError(Exception):
-    def __init__(self, code: str, message: str) -> None:
-        self.code = code
-        super().__init__(f"{code}: {message}")
+class PipelineError(CodeError):
+    pass
 
 
 def trip_status(trip: dict) -> str:

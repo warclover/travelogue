@@ -1,7 +1,7 @@
 """Service-layer error types."""
 
+from travelogue.errors import CodeError
 
-class NarrateError(Exception):
-    def __init__(self, code: str, message: str) -> None:
-        self.code = code
-        super().__init__(f"{code}: {message}")
+
+class NarrateError(CodeError):
+    pass

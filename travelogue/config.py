@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Iterator, Literal
 
 from travelogue.constants import VALID_ARC_MODES, VALID_NARRATIVE_SCOPES
+from travelogue.config_helpers import cfg_bool, cfg_dict, cfg_float, cfg_get, cfg_int, cfg_str
 from travelogue.paths import ROOT
 
 TriState = Literal["true", "false", "auto"]
@@ -435,8 +436,8 @@ def _layout_scoring_from_dict(raw: dict[str, Any]) -> LayoutScoringConfig:
         max_evaluations_per_trip=int(raw.get("max_evaluations_per_trip", 500)),
         allow_burst_split=bool(raw.get("allow_burst_split", False)),
         subject_run_tolerance=int(raw.get("subject_run_tolerance", 1)),
-        skip_duplicate_signatures=bool(
-            raw.get("skip_duplicate_signatures", raw.get("skipDuplicateSignatures", True))
+        skip_duplicate_signatures=cfg_bool(
+            raw, "skip_duplicate_signatures", "skipDuplicateSignatures", True
         ),
         incremental=bool(raw.get("incremental", False)),
         weights=weights,
@@ -501,14 +502,12 @@ def _geo_cluster_from_dict(raw: dict[str, Any]) -> GeoClusterConfig:
         gap_mode = "auto"
     return GeoClusterConfig(
         event_gap_mode=gap_mode,  # type: ignore[arg-type]
-        event_time_gap_hours=float(raw.get("eventTimeGapHours", raw.get("event_time_gap_hours", 4))),
-        min_photos_per_event=int(raw.get("minPhotosPerEvent", raw.get("min_photos_per_event", 3))),
-        location_proximity_km=float(
-            raw.get("locationProximityKm", raw.get("location_proximity_km", 5.5))
-        ),
-        merge_time_gap_hours=float(raw.get("mergeTimeGapHours", raw.get("merge_time_gap_hours", 36))),
-        merge_location_km=float(raw.get("mergeLocationKm", raw.get("merge_location_km", 55))),
-        max_event_days=int(raw.get("maxEventDays", raw.get("max_event_days", 4))),
+        event_time_gap_hours=cfg_float(raw, "event_time_gap_hours", "eventTimeGapHours", 4.0),
+        min_photos_per_event=cfg_int(raw, "min_photos_per_event", "minPhotosPerEvent", 3),
+        location_proximity_km=cfg_float(raw, "location_proximity_km", "locationProximityKm", 5.5),
+        merge_time_gap_hours=cfg_float(raw, "merge_time_gap_hours", "mergeTimeGapHours", 36.0),
+        merge_location_km=cfg_float(raw, "merge_location_km", "mergeLocationKm", 55.0),
+        max_event_days=cfg_int(raw, "max_event_days", "maxEventDays", 4),
     )
 
 
@@ -518,42 +517,36 @@ def _scene_cluster_from_dict(raw: dict[str, Any]) -> SceneClusterConfig:
         algo = "hdbscan"
     return SceneClusterConfig(
         algorithm=algo,  # type: ignore[arg-type]
-        cluster_eps=float(raw.get("clusterEps", raw.get("cluster_eps", 0.07))),
-        cluster_min_samples=int(raw.get("clusterMinSamples", raw.get("cluster_min_samples", 10))),
-        timeout_sec=int(raw.get("timeoutSec", raw.get("timeout_sec", 480))),
+        cluster_eps=cfg_float(raw, "cluster_eps", "clusterEps", 0.07),
+        cluster_min_samples=cfg_int(raw, "cluster_min_samples", "clusterMinSamples", 10),
+        timeout_sec=cfg_int(raw, "timeout_sec", "timeoutSec", 480),
     )
 
 
 def _clustering_from_dict(raw: dict[str, Any]) -> ClusteringConfig:
-    geo_raw = raw.get("geo") if isinstance(raw.get("geo"), dict) else {}
-    scene_raw = raw.get("scene") if isinstance(raw.get("scene"), dict) else {}
-    segment_mode = str(raw.get("segmentCurateMode", raw.get("segment_curate_mode", "event_first")))
+    geo_raw = cfg_dict(raw, "geo")
+    scene_raw = cfg_dict(raw, "scene")
+    segment_mode = cfg_str(raw, "segment_curate_mode", "segmentCurateMode", "event_first")
     if segment_mode not in ("event_first", "date_fallback"):
         segment_mode = "event_first"
-    scene_mode = str(raw.get("sceneClusterMode", raw.get("scene_cluster_mode", "run_aware")))
+    scene_mode = cfg_str(raw, "scene_cluster_mode", "sceneClusterMode", "run_aware")
     if scene_mode not in ("run_aware", "off"):
         scene_mode = "run_aware"
     return ClusteringConfig(
         enabled=_normalize_tri_state(raw.get("enabled"), default="auto"),
-        auto_gps_min_ratio=float(raw.get("autoGpsMinRatio", raw.get("auto_gps_min_ratio", 0.40))),
+        auto_gps_min_ratio=cfg_float(raw, "auto_gps_min_ratio", "autoGpsMinRatio", 0.40),
         segment_curate_mode=segment_mode,
         scene_cluster_mode=scene_mode,
         deterministic=bool(raw.get("deterministic", True)),
-        deterministic_strict=bool(
-            raw.get("deterministicStrict", raw.get("deterministic_strict", False))
-        ),
-        force_recluster=bool(raw.get("forceRecluster", raw.get("force_recluster", False))),
-        cache_abi_version=str(raw.get("cacheAbiVersion", raw.get("cache_abi_version", "v1"))),
-        cache_config_fingerprint=str(
-            raw.get("cacheConfigFingerprint", raw.get("cache_config_fingerprint", "auto"))
-        ),
+        deterministic_strict=cfg_bool(raw, "deterministic_strict", "deterministicStrict", False),
+        force_recluster=cfg_bool(raw, "force_recluster", "forceRecluster", False),
+        cache_abi_version=cfg_str(raw, "cache_abi_version", "cacheAbiVersion", "v1"),
+        cache_config_fingerprint=cfg_str(raw, "cache_config_fingerprint", "cacheConfigFingerprint", "auto"),
         geo=_geo_cluster_from_dict(geo_raw),
         scene=_scene_cluster_from_dict(scene_raw),
-        enable_scene_sub_segments=bool(
-            raw.get("enableSceneSubSegments", raw.get("enable_scene_sub_segments", True))
-        ),
-        scene_subsegment_min_photos=int(
-            raw.get("sceneSubsegmentMinPhotos", raw.get("scene_subsegment_min_photos", 3))
+        enable_scene_sub_segments=cfg_bool(raw, "enable_scene_sub_segments", "enableSceneSubSegments", True),
+        scene_subsegment_min_photos=cfg_int(
+            raw, "scene_subsegment_min_photos", "sceneSubsegmentMinPhotos", 3
         ),
     )
 
@@ -564,44 +557,34 @@ def _vision_from_dict(raw: dict[str, Any]) -> VisionConfig:
         enabled = "true" if enabled_raw else "false"
     else:
         enabled = _normalize_tri_state(enabled_raw, default="false")
-    prompts_raw = raw.get("subject_prompts") or raw.get("subjectPrompts") or []
+    prompts_raw = cfg_get(raw, "subject_prompts", "subjectPrompts", ())
     prompts = tuple(str(p).strip() for p in prompts_raw if str(p).strip()) if isinstance(prompts_raw, list) else ()
     return VisionConfig(
         enabled=enabled,
-        auto_min_photos=int(raw.get("autoMinPhotos", raw.get("auto_min_photos", 80))),
-        auto_min_eligible_ratio=float(
-            raw.get("autoMinEligibleRatio", raw.get("auto_min_eligible_ratio", 0.60))
-        ),
+        auto_min_photos=cfg_int(raw, "auto_min_photos", "autoMinPhotos", 80),
+        auto_min_eligible_ratio=cfg_float(raw, "auto_min_eligible_ratio", "autoMinEligibleRatio", 0.60),
         provider=str(raw.get("provider", "none")),
         model=str(raw.get("model", "ViT-B/32")),
         max_tags_per_asset=int(raw.get("max_tags_per_asset", 5)),
         subject_prompts=prompts,
-        batch_size=int(raw.get("batch_size", raw.get("batchSize", 16))),
-        session_singleton=bool(raw.get("session_singleton", raw.get("sessionSingleton", True))),
-        prefer_web_derivative=bool(
-            raw.get("prefer_web_derivative", raw.get("preferWebDerivative", True))
-        ),
-        preload_on_folder_pick=bool(
-            raw.get("preload_on_folder_pick", raw.get("preloadOnFolderPick", True))
-        ),
-        batch_auto_tune=bool(raw.get("batch_auto_tune", raw.get("batchAutoTune", True))),
-        batch_auto_tune_samples=int(
-            raw.get("batch_auto_tune_samples", raw.get("batchAutoTuneSamples", 8))
-        ),
-        dynamic_backoff=bool(raw.get("dynamic_backoff", raw.get("dynamicBackoff", True))),
+        batch_size=cfg_int(raw, "batch_size", "batchSize", 16),
+        session_singleton=cfg_bool(raw, "session_singleton", "sessionSingleton", True),
+        prefer_web_derivative=cfg_bool(raw, "prefer_web_derivative", "preferWebDerivative", True),
+        preload_on_folder_pick=cfg_bool(raw, "preload_on_folder_pick", "preloadOnFolderPick", True),
+        batch_auto_tune=cfg_bool(raw, "batch_auto_tune", "batchAutoTune", True),
+        batch_auto_tune_samples=cfg_int(raw, "batch_auto_tune_samples", "batchAutoTuneSamples", 8),
+        dynamic_backoff=cfg_bool(raw, "dynamic_backoff", "dynamicBackoff", True),
         prefetch=bool(raw.get("prefetch", True)),
-        web_derivative_cosine_max=float(
-            raw.get("web_derivative_cosine_max", raw.get("webDerivativeCosineMax", 0.02))
+        web_derivative_cosine_max=cfg_float(
+            raw, "web_derivative_cosine_max", "webDerivativeCosineMax", 0.02
         ),
     )
 
 
 def _pipeline_from_dict(raw: dict[str, Any]) -> PipelineConfig:
     return PipelineConfig(
-        parallel_embed=bool(raw.get("parallel_embed", raw.get("parallelEmbed", False))),
-        parallel_embed_chunk=int(
-            raw.get("parallel_embed_chunk", raw.get("parallelEmbedChunk", 32))
-        ),
+        parallel_embed=cfg_bool(raw, "parallel_embed", "parallelEmbed", False),
+        parallel_embed_chunk=cfg_int(raw, "parallel_embed_chunk", "parallelEmbedChunk", 32),
     )
 
 
