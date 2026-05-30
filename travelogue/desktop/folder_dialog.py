@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
+
+_log = logging.getLogger(__name__)
 
 FOS_PICKFOLDERS = 0x00000020
 FOS_FORCEFILESYSTEM = 0x00000040
@@ -19,7 +22,7 @@ def pick_folder(*, title: str = "选择照片文件夹") -> Path | None:
         if chosen is not None:
             return chosen
     except Exception:
-        pass
+        _log.debug("IFileOpenDialog folder pick failed; using tkinter fallback", exc_info=True)
     return _pick_folder_tk(title)
 
 

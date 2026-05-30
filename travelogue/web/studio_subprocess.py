@@ -10,6 +10,7 @@ from typing import Any
 def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_event: mp.Event) -> None:
     from travelogue.config import AppConfig, get_config
     from travelogue.demo.build import DemoError
+    from travelogue.web.studio_errors import user_message
     from travelogue.web.studio_pipeline import run_studio_pipeline
 
     def progress(stage: str, stage_index: int, stage_hint: str) -> None:
@@ -85,16 +86,16 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             {
                 "type": "error",
                 "code": exc.code,
-                "message": str(exc),
+                "message": user_message(exc.code, str(exc)),
                 "demo": True,
             }
         )
-    except Exception as exc:
+    except Exception:
         progress_queue.put(
             {
                 "type": "error",
                 "code": "E_STUDIO_PIPELINE",
-                "message": str(exc),
+                "message": user_message("E_STUDIO_PIPELINE"),
                 "demo": False,
             }
         )

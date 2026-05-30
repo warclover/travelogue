@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import zipfile
-from datetime import datetime, timezone
 from pathlib import Path
 
 from travelogue.config import AppConfig, app_config_scope, get_config
+from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 from travelogue.export.exif import write_asset_to_zip
 from travelogue.render.context import collect_asset_paths
 from travelogue.render.engine import (
@@ -26,10 +26,6 @@ class ExportError(Exception):
     def __init__(self, code: str, message: str) -> None:
         self.code = code
         super().__init__(f"{code}: {message}")
-
-
-def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _mark_rendered(trip: dict) -> None:
@@ -103,7 +99,10 @@ def _export_trip_stages(
     if validate:
         errs = [e for e in validate_trip(trip) if not e.startswith("WARN:")]
         if errs:
-            raise ExportError("E_VALIDATE", errs[0])
+            first = errs[0]
+            from travelogue.services.validate import validation_error_code
+
+            raise ExportError(validation_error_code(first), first)
 
     app_cfg = get_config()
     do_strip = strip_exif

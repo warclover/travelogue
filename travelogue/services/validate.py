@@ -13,6 +13,14 @@ def load_json(path: Path) -> dict:
         return json.load(f)
 
 
+def validation_error_code(err: str) -> str:
+    """Extract E_VALIDATE_* code from validate_trip error string."""
+    token = err.split()[0]
+    if token.startswith("E_VALIDATE"):
+        return token
+    return "E_VALIDATE"
+
+
 def char_len(s: str) -> int:
     return len(s)
 

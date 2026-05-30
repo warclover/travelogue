@@ -35,6 +35,18 @@ def _release_resources_before_playwright(request: pytest.FixtureRequest):
     gc.collect()
 
 
+@pytest.fixture(autouse=True)
+def _reset_clip_encoder_singleton() -> None:
+    """Avoid CLIP singleton state leaking between vision/clustering tests."""
+    yield
+    try:
+        from travelogue.vision.clip_encoder import reset_clip_encoder_singleton
+
+        reset_clip_encoder_singleton()
+    except Exception:
+        pass
+
+
 @pytest.fixture(scope="session")
 def session_ingested_trip(tmp_path_factory: pytest.TempPathFactory) -> IngestedTripWorkspace:
     """One ingest per session — copy into per-test tmp dirs to skip re-ingest."""

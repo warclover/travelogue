@@ -177,6 +177,8 @@ def resolve_scoring_weights(
     """P5-C1 / D7 / P6-D1: default weight presets when config weights are all zero."""
     if not scoring_enabled:
         return weights
+    if weights.is_aspect_only():
+        return weights
     if _weights_raw_sum(weights) <= 1e-9:
         if enable_gravity_balance:
             return PHASE6_WEIGHTS

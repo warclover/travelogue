@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 HOOK_MAX = 56
 EPILOGUE_MAX = 80
@@ -19,10 +19,6 @@ class CopyPatchError(Exception):
     def __init__(self, code: str, message: str) -> None:
         self.code = code
         super().__init__(f"{code}: {message}")
-
-
-def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _find_item_by_asset_id(trip: dict, asset_id: str) -> dict | None:

@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 from functools import lru_cache
 from pathlib import Path
 
 from travelogue.paths import STUDIO_TEMPLATE_DIR
+
+_log = logging.getLogger(__name__)
 
 _DEFAULT_STAGES = {
     "curate": "约 30 秒",
@@ -40,6 +43,7 @@ def _load_stages_file() -> dict:
         data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         return data if isinstance(data, dict) else {}
     except Exception:
+        _log.debug("failed to load studio stages from %s", path, exc_info=True)
         return {}
 
 

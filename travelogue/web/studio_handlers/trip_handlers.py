@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 import threading
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from urllib.parse import parse_qs, urlparse
 
 from travelogue.demo.build import DemoError
+from travelogue.web.studio_errors import internal_error_payload
 from travelogue.web.studio_handlers.common import (
     load_trip_or_404,
     studio_ctx,
@@ -15,6 +17,8 @@ from travelogue.web.studio_handlers.common import (
 from travelogue.web.studio_jobs import get_job_store, run_g1_continue_job
 from travelogue.web.studio_trips import list_studio_trips, studio_trips_total
 from travelogue.web.studio_trip_id import is_valid_studio_trip_id
+
+_log = logging.getLogger(__name__)
 
 
 def handle_trips(handler: StudioHandlerProtocol) -> None:
@@ -227,7 +231,8 @@ def handle_rerender(handler: StudioHandlerProtocol) -> None:
         return
     try:
         rendered = rerender_draft_trip(handler.trip_json_path)
-    except Exception as exc:
-        handler._json_response(500, {"ok": False, "error": str(exc)})
+    except Exception:
+        _log.exception("rerender failed for %s", handler.trip_json_path)
+        handler._json_response(500, internal_error_payload())
         return
     handler._json_response(200, {"ok": True, "rendered": rendered})

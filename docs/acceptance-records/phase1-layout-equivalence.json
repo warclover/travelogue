@@ -1,32 +1,22 @@
 [
   {
+    "tripId": "linzhi",
+    "layout": "web",
+    "assetCount": 232,
+    "equivalent": true,
+    "legacyChapterCount": 5,
+    "scoredChapterCount": 5,
+    "legacyScreenCount": 99,
+    "scoredScreenCount": 99
+  },
+  {
     "tripId": "mao",
     "layout": "web",
     "assetCount": 29,
     "equivalent": true,
     "legacyChapterCount": 3,
     "scoredChapterCount": 3,
-    "legacyScreenCount": 15,
-    "scoredScreenCount": 15
-  },
-  {
-    "tripId": "linzhi",
-    "layout": "web",
-    "assetCount": 231,
-    "equivalent": true,
-    "legacyChapterCount": 5,
-    "scoredChapterCount": 5,
-    "legacyScreenCount": 75,
-    "scoredScreenCount": 75
-  },
-  {
-    "tripId": "maomi",
-    "layout": "web",
-    "assetCount": 33,
-    "equivalent": true,
-    "legacyChapterCount": 4,
-    "scoredChapterCount": 4,
-    "legacyScreenCount": 18,
-    "scoredScreenCount": 18
+    "legacyScreenCount": 19,
+    "scoredScreenCount": 19
   }
 ]

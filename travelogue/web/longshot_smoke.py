@@ -10,7 +10,10 @@ from travelogue.render.engine import LONGSHOT_INDEX_NAME
 
 
 class LongshotSmokeError(Exception):
-    pass
+    def __init__(self, message: str, *, code: str = "E_LONGSHOT_SMOKE") -> None:
+        self.code = code
+        self.message = message
+        super().__init__(message)
 
 
 def _start_static_server(directory: Path, host: str, port: int) -> ThreadingHTTPServer:

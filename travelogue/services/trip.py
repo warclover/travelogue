@@ -13,11 +13,13 @@ from travelogue.services.validate import load_json
 
 
 class TripNotFoundError(FileNotFoundError):
-    pass
+    code = "E_TRIP_NOT_FOUND"
 
 
 class TripSaveError(OSError):
     """Atomic trip.json write failed (I/O, permissions, target locked)."""
+
+    code = "E_TRIP_SAVE_BUSY"
 
 
 _UNSET = object()

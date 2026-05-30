@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
-def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 
 class ClusterDecisionLog:

@@ -52,6 +52,22 @@ def _load_cfg(config: Path | None) -> None:
         get_config(reload=True, path=config)
 
 
+_EXPORT_LAYOUTS = frozenset({"auto", "mobile", "web"})
+_WEB_LAYOUTS = frozenset({"legacy", "screens"})
+
+
+def _require_export_layout(layout: str) -> None:
+    if layout not in _EXPORT_LAYOUTS:
+        typer.echo("E_CLI: --layout must be auto, mobile, or web", err=True)
+        raise typer.Exit(1)
+
+
+def _require_web_layout(web_layout: str | None) -> None:
+    if web_layout is not None and web_layout not in _WEB_LAYOUTS:
+        typer.echo("E_CLI: --web-layout must be legacy or screens", err=True)
+        raise typer.Exit(1)
+
+
 def _trip_svc(trip_json: Path) -> TripService:
     """TripService scoped to the project root for a resolved trip.json."""
     return app_context_for_trip_json(trip_json).trip_service()
@@ -139,9 +155,7 @@ def _run_demo_cmd(
     if cfg_path:
         _load_cfg(cfg_path)
         typer.echo(f"config: {cfg_path}")
-    if layout not in ("auto", "mobile", "web"):
-        typer.echo("E_CLI: --layout must be auto, mobile, or web", err=True)
-        raise typer.Exit(1)
+    _require_export_layout(layout)
     try:
         result = run_demo_from_album(
             album_dir,
@@ -458,9 +472,7 @@ def cmd_curate(
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
 ) -> None:
     """Agent 1+1.5: day chapters, cover, row layout (structure_draft)."""
-    if layout not in ("auto", "mobile", "web"):
-        typer.echo("E_CLI: --layout must be auto, mobile, or web", err=True)
-        raise typer.Exit(1)
+    _require_export_layout(layout)
     trip_path = _resolve(path, trips_dir=trips_dir)
     trip = _trip_svc(trip_path).load(trip_path)
     try:
@@ -583,7 +595,6 @@ def cmd_llm_ping(
 ) -> None:
     """Verify LLM API key and connectivity."""
     from travelogue.llm.client import llm_ping
-    from travelogue.llm.errors import LlmError
 
     _load_cfg(config)
     try:
@@ -695,12 +706,8 @@ def cmd_layout(
     no_validate: bool = typer.Option(False, "--no-validate", help="skip validation after save"),
 ) -> None:
     """Re-run Agent 1.5 layout on existing trip.json (chapters/items only)."""
-    if layout not in ("auto", "mobile", "web"):
-        typer.echo("E_CLI: --layout must be auto, mobile, or web", err=True)
-        raise typer.Exit(1)
-    if web_layout is not None and web_layout not in ("legacy", "screens"):
-        typer.echo("E_CLI: --web-layout must be legacy or screens", err=True)
-        raise typer.Exit(1)
+    _require_export_layout(layout)
+    _require_web_layout(web_layout)
     trip_path = _resolve(path)
     svc = _trip_svc(trip_path)
     trip = svc.load(trip_path)
@@ -793,9 +800,7 @@ def cmd_render(
     if mode not in ("draft", "share"):
         typer.echo("E_CLI: --mode must be draft or share", err=True)
         raise typer.Exit(1)
-    if web_layout is not None and web_layout not in ("legacy", "screens"):
-        typer.echo("E_CLI: --web-layout must be legacy or screens", err=True)
-        raise typer.Exit(1)
+    _require_web_layout(web_layout)
     if font_theme is not None and font_theme not in ("ui", "magazine"):
         typer.echo("E_CLI: --font-theme must be ui or magazine", err=True)
         raise typer.Exit(1)

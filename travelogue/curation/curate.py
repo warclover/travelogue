@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 
 from travelogue.config import AppConfig
+from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 from travelogue.curation.bucket_planning import (
     bucket_day_span,
@@ -54,10 +54,6 @@ _normalize_bucket_counts = normalize_bucket_counts
 _title_for_bucket_span = title_for_bucket_span
 _bucket_day_span = bucket_day_span
 _parse_asset_date = parse_asset_date
-
-
-def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 class CurateError(Exception):
@@ -611,13 +607,9 @@ def run_curate(
 
     layout_cfg = app_cfg.layout
     pipe_status = (trip.get("pipeline") or {}).get("status") or ""
-    structure_locked = pipe_status in (
-        "structure_locked",
-        "copy_draft",
-        "copy_locked",
-        "rendered",
-        "exported",
-    )
+    from travelogue.domain.pipeline import PIPELINE_LOCKED_STATUSES
+
+    structure_locked = pipe_status in PIPELINE_LOCKED_STATUSES
     degradation = assess_degradation(
         layout_assets,
         aspects,

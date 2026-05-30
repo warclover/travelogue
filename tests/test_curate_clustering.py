@@ -95,13 +95,22 @@ def test_merge_small_geo_events_combines_neighbors() -> None:
 
 def test_vision_clustering_writes_scene_fields(tmp_path) -> None:
     pytest.importorskip("sklearn")
+    from PIL import Image
+
     trip_dir = tmp_path / "vision-trip"
     trip_dir.mkdir()
+    (trip_dir / "assets").mkdir()
     cfg = AppConfig(
         clustering=ClusteringConfig(enabled="true"),
         vision=VisionConfig(enabled="true"),
     )
     trip = _gps_trip()
+    for idx, asset in enumerate(trip["assets"]):
+        rel = f"assets/{asset['id']}.webp"
+        path = trip_dir / rel
+        Image.new("RGB", (120, 120), color=(idx * 17 % 255, 80, 120)).save(path)
+        asset["displayFile"] = rel
+        asset["sourceFile"] = rel
     result = run_clustering_layer(trip, trip_dir=trip_dir, cfg=cfg)
     assert result.mode == "full"
     assert trip["curation"]["clustering"].get("clusters") is not None

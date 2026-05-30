@@ -16,6 +16,7 @@ from travelogue.services.copy_subject import (
     narrative_copy_subject,
     user_place_explicit,
 )
+from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 # F-NAR-05 · manifest limits (F-NAR-01)
 HOOK_MAX = 56
@@ -82,10 +83,6 @@ from travelogue.services.errors import NarrateError  # re-exported for CLI/tests
 @dataclass
 class NarrateResult:
     fields_updated: list[str]
-
-
-def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _parse_iso_date(raw: str) -> datetime | None:

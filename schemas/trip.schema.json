@@ -520,6 +520,29 @@
           "type": "object",
           "additionalProperties": true,
           "description": "Derived chapter-layout explanation (Phase 3 · attach_chapter_explain)"
+        },
+        "embedStats": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "P7 telemetry: CLIP embedding run statistics",
+          "properties": {
+            "elapsedMs": { "type": "number" },
+            "batchSize": { "type": "integer" },
+            "batches": { "type": "integer" },
+            "prefetchEnabled": { "type": "boolean" },
+            "webDerivativeHits": { "type": "integer" },
+            "webDerivativeFallbacks": { "type": "integer" },
+            "webDerivativeGated": { "type": "boolean" },
+            "cacheHitRatio": { "type": "number" },
+            "fallbackSingle": { "type": "integer" },
+            "oomHalves": { "type": "integer" },
+            "autoBatchTuned": { "type": "boolean" },
+            "recommendedBatchSize": { "type": "integer" }
+          }
+        },
+        "embedSkipped": {
+          "type": "boolean",
+          "description": "True when embedding cache was reused and CLIP embed was skipped"
         }
       }
     },
@@ -1092,6 +1115,11 @@
         "runs": {
           "type": "array",
           "items": { "$ref": "#/$defs/pipelineRun" }
+        },
+        "timings": {
+          "type": "object",
+          "additionalProperties": { "type": "number" },
+          "description": "P7 telemetry: per-stage elapsed milliseconds"
         }
       }
     }

@@ -454,7 +454,10 @@ def render_trip(
     if validate:
         errs = [e for e in validate_trip(trip) if not e.startswith("WARN:")]
         if errs:
-            raise RenderError("E_VALIDATE", errs[0])
+            first = errs[0]
+            from travelogue.services.validate import validation_error_code
+
+            raise RenderError(validation_error_code(first), first)
 
     for rel, abs_path in collect_asset_paths(trip, trip_root):
         if not abs_path.is_file():

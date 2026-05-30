@@ -166,7 +166,7 @@ def _replan_day_buckets_beam(
                 plan
                 for plan in candidates
                 if not plan_violates_consecutive_pattern(
-                    plan,
+                    plan[1],
                     max_streak=max_consecutive_same_pattern,
                 )
             ]

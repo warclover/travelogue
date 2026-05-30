@@ -710,7 +710,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             if is_frozen():
                 base = exe_dir()
         except Exception:
-            pass
+            _log.debug("frozen exe_dir lookup failed; using cwd for trips_dir", exc_info=True)
         trips_dir = (base / trips_dir).resolve()
     ingest_raw = data.get("ingest") if isinstance(data.get("ingest"), dict) else {}
     layout_raw = data.get("layout") if isinstance(data.get("layout"), dict) else {}

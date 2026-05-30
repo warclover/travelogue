@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import re
 import subprocess
 import sys
@@ -15,6 +16,8 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.render.engine import LONGSHOT_INDEX_NAME
+
+_log = logging.getLogger(__name__)
 
 CAPTURE_WIDTH = 428
 DEFAULT_EXPORT_SCALE = 2
@@ -335,6 +338,7 @@ def _capture_bytes(page, *, scale: int, fmt: str, chapter_index: int | None = No
     try:
         return _capture_p0(page, scale=scale, fmt=fmt, chapter_index=chapter_index)
     except Exception:
+        _log.warning("longshot P0 capture failed; falling back to P1", exc_info=True)
         return _capture_p1(page, scale=scale, fmt=fmt)
 
 

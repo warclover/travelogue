@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import threading
 from contextlib import contextmanager
 from functools import partial
@@ -13,6 +14,7 @@ from typing import Iterator
 from travelogue.config import AppConfig, app_config_scope, get_config
 from travelogue.services.trip import TripService
 from travelogue.web.copy_patch import CopyPatchError, apply_copy_patches
+from travelogue.web.studio_errors import internal_error_payload
 from travelogue.web.studio_chrome import inject_studio_chrome, should_inject_studio_chrome
 from travelogue.web.studio_routes import StudioMixin
 from travelogue.web.studio_routes import CONFIG_PATH
@@ -23,6 +25,7 @@ SAVE_PATH = "/__travelogue/save-copy"
 PROMOTE_TIER_PATH = "/__travelogue/promote-tier"
 FAVICON_SILENT_PATHS = frozenset({"/favicon.ico", "/favicon.svg"})
 MAX_JSON_BODY = 1_048_576
+_log = logging.getLogger(__name__)
 _trip_write_lock = threading.Lock()
 
 
@@ -211,8 +214,9 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
         except CopyPatchError as exc:
             self._json_response(400, {"ok": False, "error": str(exc)})
             return
-        except Exception as exc:
-            self._json_response(500, {"ok": False, "error": str(exc)})
+        except Exception:
+            _log.exception("copy patch failed for %s", self.trip_json_path)
+            self._json_response(500, internal_error_payload())
             return
         self._json_response(200, {"ok": True, "updated": updated, "rendered": rendered})
 
@@ -241,8 +245,9 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
         except TierPatchError as exc:
             self._json_response(400, {"ok": False, "error": str(exc)})
             return
-        except Exception as exc:
-            self._json_response(500, {"ok": False, "error": str(exc)})
+        except Exception:
+            _log.exception("tier promotion failed for %s", self.trip_json_path)
+            self._json_response(500, internal_error_payload())
             return
         self._json_response(200, {"ok": True, "promoted": promoted, "rendered": rendered})
 
@@ -354,7 +359,8 @@ def serve_studio_directory(
     print(f"  workbench: {url}")
     print(f"  import API: POST {url.rstrip('/')}/__travelogue/import")
     if studio_token:
-        print(f"  studio token (POST header X-Studio-Token): {studio_token}")
+        masked = f"****{studio_token[-4:]}" if len(studio_token) > 4 else "****"
+        print(f"  studio token (POST header X-Studio-Token): {masked}")
     print("  Ctrl+C to stop")
     try:
         server.serve_forever()

@@ -56,7 +56,10 @@ def _publish_trip_stages(
         trip = TripService().load(trip_path)
         errs = [e for e in validate_trip(trip) if not e.startswith("WARN:")]
         if errs:
-            raise RenderError("E_VALIDATE", errs[0])
+            first = errs[0]
+            from travelogue.services.validate import validation_error_code
+
+            raise RenderError(validation_error_code(first), first)
 
     render_trip(trip_path, trip_root, export_mode="share", validate=False)
 

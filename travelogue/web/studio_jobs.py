@@ -452,7 +452,10 @@ def run_g1_continue_job(
         if isinstance(exc, DemoError):
             payload = {"code": exc.code, "message": user_message(exc.code, str(exc))}
         else:
-            payload = {"code": "E_STUDIO_PIPELINE", "message": str(exc)}
+            payload = {
+                "code": "E_STUDIO_PIPELINE",
+                "message": user_message("E_STUDIO_PIPELINE"),
+            }
         store.finalize(job, status="failed", error=payload)
     finally:
         store.finish_g1()

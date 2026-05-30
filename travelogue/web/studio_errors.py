@@ -29,7 +29,18 @@ USER_MESSAGES: dict[str, str] = {
     "E_NARRATE_API": "文案生成失败，请重试",
     "E_TRIP_NOT_FOUND": "游记不存在",
     "E_EXPORT_PRIVACY": "导出 zip 需要确认隐私设置",
+    "E_SERVER": "服务内部错误，请稍后重试",
+    "E_STUDIO_RERENDER": "预览重新渲染失败，请稍后重试",
 }
+
+
+def internal_error_payload() -> dict[str, str | bool]:
+    """JSON body for unexpected server failures (no exception text leaked)."""
+    return {
+        "ok": False,
+        "error": "E_SERVER",
+        "message": user_message("E_SERVER"),
+    }
 
 
 def user_message(code: str, fallback: str = "") -> str:

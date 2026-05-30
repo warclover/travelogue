@@ -2,19 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 from travelogue.media.user_tier import promote_assets_to_featured
+from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 
 class TierPatchError(Exception):
     def __init__(self, code: str, message: str) -> None:
         self.code = code
         super().__init__(f"{code}: {message}")
-
-
-def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def apply_tier_promotions(trip: dict, asset_ids: list[str]) -> list[str]:

@@ -26,13 +26,13 @@ def handle_config(handler: StudioHandlerProtocol) -> None:
         except (ValueError, TypeError) as exc:
             handler._json_response(400, {"ok": False, "error": str(exc)})
             return
-        except (OSError, PermissionError) as exc:
+        except (OSError, PermissionError):
             handler._json_response(
                 500,
                 {
                     "ok": False,
                     "error": "E_STUDIO_CONFIG_WRITE",
-                    "detail": str(exc)[:240],
+                    "message": user_message("E_STUDIO_CONFIG_WRITE"),
                 },
             )
             return

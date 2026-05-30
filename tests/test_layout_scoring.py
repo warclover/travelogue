@@ -165,6 +165,17 @@ def test_featured_beam_halves_hero_separation_when_hero_reused() -> None:
     assert feat.total > mat.total
 
 
+def test_resolve_scoring_weights_preserves_aspect_only() -> None:
+    aspect_only = ScoringWeights(aspect_match=1.0)
+    resolved = resolve_scoring_weights(
+        aspect_only,
+        scoring_enabled=True,
+        has_color_metrics=True,
+        enable_gravity_balance=True,
+    )
+    assert resolved.is_aspect_only()
+
+
 def test_resolve_scoring_weights_zero_fallback_phase6_default() -> None:
     zero = ScoringWeights()
     resolved = resolve_scoring_weights(

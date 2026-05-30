@@ -196,6 +196,22 @@ def test_handle_rerender_success(tmp_path: Path) -> None:
     assert handler.response == (200, {"ok": True, "rendered": ["index.html"]})
 
 
+def test_handle_rerender_hides_internal_error(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trip_json = create_trip("demo-rerender-err", trips_dir)
+    handler = MockStudioHandler(trips_dir)
+    handler.trip_json_path = trip_json
+    with patch(
+        "travelogue.web.rerender.rerender_draft_trip",
+        side_effect=RuntimeError("/secret/path failed"),
+    ):
+        handle_rerender(handler)
+    assert handler.response == (
+        500,
+        {"ok": False, "error": "E_SERVER", "message": "服务内部错误，请稍后重试"},
+    )
+
+
 def test_handle_trip_curate_starts_job(tmp_path: Path) -> None:
     from travelogue.web.studio_handlers.trip_handlers import handle_trip_curate
 

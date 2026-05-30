@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
 
 from travelogue.config import AppConfig
+from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 from travelogue.curation.layout_planner import build_chapters_from_plan, summarize_orientations
 from travelogue.curation.layout_planner import aspect_kind_for_asset as _aspect_kind_for_asset
 from travelogue.layout_contract import (
@@ -28,10 +28,6 @@ class LayoutResult:
     orientation_summary: dict
     chapter_count: int
     item_count: int
-
-
-def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def extract_ordered_asset_ids(trip: dict) -> list[str]:

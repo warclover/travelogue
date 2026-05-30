@@ -287,9 +287,7 @@ def list_pending_assets(trip: dict) -> list[str]:
     return [str(x) for x in pending if x]
 
 
-PIPELINE_LOCKED_STATUSES: frozenset[str] = frozenset(
-    {"structure_locked", "copy_draft", "copy_locked", "rendered", "exported"}
-)
+from travelogue.domain.pipeline import PIPELINE_LOCKED_STATUSES
 
 
 def is_pipeline_locked(trip: dict) -> bool:

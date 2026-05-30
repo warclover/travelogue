@@ -13,6 +13,7 @@ from typing import Any, Callable
 from PIL import Image
 
 from travelogue.config import AppConfig, IngestConfig, get_config
+from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 from travelogue.curation.asset_quality import apply_layout_eligibility_marks, asset_sharpness
 from travelogue.curation.media_classify import (
     classify_media_class,
@@ -158,10 +159,6 @@ class IngestResult:
     skipped: int = 0
     batch_id: str = ""
     stats: dict = field(default_factory=dict)
-
-
-def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _register_heif() -> None:

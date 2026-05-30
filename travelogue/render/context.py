@@ -156,11 +156,6 @@ def pick_image_src(asset: dict, *, export_layout: str = "mobile") -> str:
     return asset.get("displayFile") or asset.get("sourceFile") or ""
 
 
-def pick_collage_src(asset: dict) -> str:
-    """Same as pick_image_src — display assets are no longer pre-cropped."""
-    return pick_image_src(asset)
-
-
 def asset_aspect_kind(asset: dict) -> str:
     kind = asset.get("aspectKind")
     if kind in ("portrait", "landscape", "square", "panorama", "tall"):
@@ -486,7 +481,6 @@ def build_media_scroll(
 
 
 from travelogue.curation.screen_planner import grid_class_for_pattern
-from travelogue.curation.screen_tone import enrich_screen_tones
 from travelogue.render.context_types import VoiceRenderContext, VoiceSourceContext
 from travelogue.render.screen_tone import screen_tone_css
 

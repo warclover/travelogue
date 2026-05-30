@@ -51,7 +51,10 @@ class ImageLoadResult:
 
 
 class ImageOpsError(Exception):
-    pass
+    def __init__(self, message: str, *, code: str = "E_IMAGE_OPS") -> None:
+        self.code = code
+        self.message = message
+        super().__init__(message)
 
 
 def _parse_exif_datetime(raw: object) -> datetime | None:

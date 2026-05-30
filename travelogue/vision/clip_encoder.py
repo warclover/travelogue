@@ -685,8 +685,30 @@ class ClipEncoder:
                 ready.append((asset, path))
 
             if missing and ready:
-                stats.fallback_single += len(batch_assets)
-                for asset in batch_assets:
+                stats.fallback_single += len(missing)
+                tensors = [self._load_image_tensor(p) for _, p in ready]
+                encode_assets = [a for a, _ in ready]
+                try:
+                    batch_vectors, batch_proposals = self._encode_batch_tensors(
+                        tensors, encode_assets, stats=stats
+                    )
+                    vectors.extend(batch_vectors)
+                    ids.extend(a["id"] for a in encode_assets[: len(batch_vectors)])
+                    subject_proposals.extend(batch_proposals)
+                except RuntimeError:
+                    stats.fallback_single += len(ready)
+                    for asset, path in ready:
+                        with self._infer_lock:
+                            tensor = self._load_image_tensor(path).unsqueeze(0).to(self._device)
+                            with torch.no_grad():
+                                feat = self._model.encode_image(tensor)
+                                feat = feat / feat.norm(dim=-1, keepdim=True)
+                        subject = self._subject_class_for(feat)
+                        if subject is not None:
+                            subject_proposals.append((asset, subject[0], subject[1]))
+                        vectors.append(feat.cpu().numpy()[0].tolist())
+                        ids.append(asset["id"])
+                for asset in missing:
                     vectors.append(_heuristic_vector(asset))
                     ids.append(asset["id"])
                 stats.batches += 1
@@ -789,6 +811,16 @@ class ClipEncoder:
         stats.web_derivative_gated = self._web_derivative_disabled
         self.last_embed_stats = stats
         self._oom_cap = None
+        if vectors:
+            dim = len(vectors[0])
+            if any(len(row) != dim for row in vectors):
+                _log.warning("CLIP embed mixed dimensions; falling back to heuristic")
+                ids = [a["id"] for a in photos]
+                mat = np.array([_heuristic_vector(a) for a in photos], dtype=np.float32)
+                norms = np.linalg.norm(mat, axis=1, keepdims=True)
+                norms = np.where(norms < 1e-8, 1.0, norms)
+                mat = mat / norms
+                return EmbedResult(ids, mat, "heuristic", model="heuristic-v1")
         mat = np.array(vectors, dtype=np.float32)
         return EmbedResult(ids, mat, "clip", model=f"{self.model_name}/{self.pretrained}")
 

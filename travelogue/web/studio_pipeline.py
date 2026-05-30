@@ -423,6 +423,7 @@ def run_studio_pipeline(
 
             render_preview_jpg(trip_json, trip_root=trip_root)
             pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
+            trip = svc.load(trip_json)
             _flush_pipeline_timings()
             svc.save(trip, trip_json)
         except Exception as exc:

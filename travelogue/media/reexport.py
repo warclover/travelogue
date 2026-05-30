@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from pathlib import Path
 
 from travelogue.config import AppConfig, IngestConfig, get_config
+from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 from travelogue.media.asset_slots import asset_display_slots
 from travelogue.media.image_ops import (
     classify_aspect,
@@ -22,10 +22,6 @@ class ReexportResult:
     updated: int = 0
     failed: list[str] = field(default_factory=list)
     stats: dict = field(default_factory=dict)
-
-
-def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def reexport_asset(
