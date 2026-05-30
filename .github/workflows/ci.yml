@@ -9,12 +9,15 @@ on:
 jobs:
   test-pr:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install package
         run: pip install -e ".[dev]"
@@ -27,7 +30,15 @@ jobs:
             --cov=travelogue.web.studio_subprocess \
             --cov=travelogue.services.trip \
             --cov-report=term-missing:skip-covered \
-            --cov-fail-under=55
+            --cov-report=xml:coverage.xml \
+            --cov-fail-under=60
+
+      - name: Upload coverage artifact
+        if: matrix.python-version == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
 
   test-integration:
     runs-on: ubuntu-latest

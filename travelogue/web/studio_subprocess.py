@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 import multiprocessing as mp
 from pathlib import Path
 from typing import Any
 
+_log = logging.getLogger(__name__)
 
 def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_event: mp.Event) -> None:
     from travelogue.config import AppConfig, get_config
@@ -91,6 +93,7 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             }
         )
     except Exception:
+        _log.exception("studio import subprocess failed")
         progress_queue.put(
             {
                 "type": "error",

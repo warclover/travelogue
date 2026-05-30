@@ -86,13 +86,13 @@ class _PlaywrightBrowserPool:
                 try:
                     self._browser.close()
                 except Exception:
-                    pass
+                    _log.debug("browser close failed during idle cleanup", exc_info=True)
                 self._browser = None
             if self._playwright:
                 try:
                     self._playwright.stop()
                 except Exception:
-                    pass
+                    _log.debug("playwright stop failed during idle cleanup", exc_info=True)
                 self._playwright = None
             self._idle_timer = None
 

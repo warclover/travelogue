@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from travelogue.config import AppConfig
+from travelogue.config import AppConfig, CurateConfig
 from travelogue.errors import CodeError
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
@@ -364,31 +364,44 @@ def _sanitize_chapters_after_exclusion(chapters: list[dict], excluded: set[str])
         ch["items"] = items
 
 
-def run_curate(
+@dataclass
+class _CuratePreflight:
+    """Resolved layout/cover context before bucket planning."""
+
+    app_cfg: AppConfig
+    cur_cfg: CurateConfig
+    layout: str
+    engine: str
+    layout_assets: list[dict]
+    cover_id: str
+    cover_p6: bool
+    skip_screen_ids: set[str]
+    res_warn: str | None
+    saved_memory_anchors: list[list[str] | None]
+
+
+@dataclass
+class _CurateBucketPlan:
+    buckets: list[list[str]]
+    bucket_segment_ids: list[str]
+    bucket_segment_ids_all: list[list[str]]
+    segments: list
+    segment_labels: dict[str, str]
+    curation_segments: list[dict]
+    meta_places: list[str]
+
+
+def _curate_preflight(
     trip: dict,
     *,
-    export_layout: str | None = None,
-    layout_engine: str | None = None,
-    apply_layout: bool = True,
-    trip_dir: Path | None = None,
-    cfg: AppConfig | None = None,
-) -> CurateResult:
-    if len(trip.get("assets") or []) < MIN_CURATE_ASSETS:
-        raise CurateError(
-            "E_CURATE_TOO_FEW",
-            f"need at least {MIN_CURATE_ASSETS} assets to curate",
-        )
-
-    from travelogue.curation.intent_hints import (
-        apply_editorial_intent_hints,
-        peak_chapter_hints_for_trip,
-        prior_chapter_memory_anchors,
-    )
-
-    apply_editorial_intent_hints(trip)
-    saved_memory_anchors = prior_chapter_memory_anchors(trip)
-
+    export_layout: str | None,
+    layout_engine: str | None,
+    trip_dir: Path | None,
+    cfg: AppConfig | None,
+    saved_memory_anchors: list[list[str] | None],
+) -> _CuratePreflight:
     from travelogue.config import default_web_layout_engine, get_config
+    from travelogue.curation.screen_planner import LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS
 
     app_cfg = cfg or get_config()
     trip_id = str(trip.get("tripId") or (trip_dir.name if trip_dir else "")).strip()
@@ -408,12 +421,6 @@ def run_curate(
             "E_CURATE_TOO_FEW",
             f"need at least {MIN_CURATE_ASSETS} layout-eligible assets after resolution filter",
         )
-
-    from travelogue.curation.screen_planner import (
-        LAYOUT_ENGINE_LEGACY,
-        LAYOUT_ENGINE_SCREENS,
-        LAYOUT_ENGINE_VERSION_SCREENS,
-    )
 
     cur_cfg = app_cfg.curate
     layout = export_layout or trip.get("exportLayout") or "auto"
@@ -439,27 +446,44 @@ def run_curate(
         web_cover = by_layout.get("web") or ""
         if web_cover:
             skip_screen_ids.add(web_cover)
+    return _CuratePreflight(
+        app_cfg=app_cfg,
+        cur_cfg=cur_cfg,
+        layout=layout,
+        engine=engine,
+        layout_assets=layout_assets,
+        cover_id=cover_id,
+        cover_p6=cover_p6,
+        skip_screen_ids=skip_screen_ids,
+        res_warn=res_warn,
+        saved_memory_anchors=saved_memory_anchors,
+    )
 
-    meta = trip.get("meta", {})
+
+def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBucketPlan:
+    from travelogue.curation.clustering_buckets import (
+        build_buckets_from_clustering,
+        should_use_clustering_buckets,
+    )
     from travelogue.services.copy_subject import effective_meta_places
 
+    meta = trip.get("meta", {})
     meta_places = effective_meta_places(
         meta,
         intent=trip.get("intent"),
         assets=trip.get("assets") or [],
     )
-    from travelogue.curation.clustering_buckets import (
-        build_buckets_from_clustering,
-        should_use_clustering_buckets,
-    )
+    cur_cfg = preflight.cur_cfg
+    layout_assets = preflight.layout_assets
+    cover_id = preflight.cover_id
 
-    if should_use_clustering_buckets(trip, app_cfg):
+    if should_use_clustering_buckets(trip, preflight.app_cfg):
         buckets, bucket_segment_ids, bucket_segment_ids_all, segments = build_buckets_from_clustering(
             trip,
             layout_assets,
             cover_id,
             meta,
-            cfg=app_cfg,
+            cfg=preflight.app_cfg,
             min_bucket_size=cur_cfg.min_bucket_size,
         )
     else:
@@ -473,7 +497,6 @@ def run_curate(
             min_bucket_size=cur_cfg.min_bucket_size,
         )
 
-    # P5-C3: small albums → fewer chapters (≤SMALL_ALBUM_PHOTO_CAP photos).
     if len(layout_assets) <= SMALL_ALBUM_PHOTO_CAP:
         from travelogue.curation.bucket_planning import normalize_bucket_counts
 
@@ -490,6 +513,75 @@ def run_curate(
 
     segment_labels = {s.id: s.label for s in segments}
     curation_segments = [s.to_dict() for s in segments]
+    return _CurateBucketPlan(
+        buckets=buckets,
+        bucket_segment_ids=bucket_segment_ids,
+        bucket_segment_ids_all=bucket_segment_ids_all,
+        segments=segments,
+        segment_labels=segment_labels,
+        curation_segments=curation_segments,
+        meta_places=meta_places,
+    )
+
+
+def run_curate(
+    trip: dict,
+    *,
+    export_layout: str | None = None,
+    layout_engine: str | None = None,
+    apply_layout: bool = True,
+    trip_dir: Path | None = None,
+    cfg: AppConfig | None = None,
+) -> CurateResult:
+    if len(trip.get("assets") or []) < MIN_CURATE_ASSETS:
+        raise CurateError(
+            "E_CURATE_TOO_FEW",
+            f"need at least {MIN_CURATE_ASSETS} assets to curate",
+        )
+
+    from travelogue.curation.intent_hints import (
+        apply_editorial_intent_hints,
+        peak_chapter_hints_for_trip,
+        prior_chapter_memory_anchors,
+    )
+
+    apply_editorial_intent_hints(trip)
+    saved_memory_anchors = prior_chapter_memory_anchors(trip)
+
+    preflight = _curate_preflight(
+        trip,
+        export_layout=export_layout,
+        layout_engine=layout_engine,
+        trip_dir=trip_dir,
+        cfg=cfg,
+        saved_memory_anchors=saved_memory_anchors,
+    )
+    app_cfg = preflight.app_cfg
+    cur_cfg = preflight.cur_cfg
+    layout = preflight.layout
+    engine = preflight.engine
+    layout_assets = preflight.layout_assets
+    cover_id = preflight.cover_id
+    skip_screen_ids = preflight.skip_screen_ids
+    res_warn = preflight.res_warn
+    saved_memory_anchors = preflight.saved_memory_anchors
+
+    from travelogue.curation.screen_planner import (
+        LAYOUT_ENGINE_LEGACY,
+        LAYOUT_ENGINE_SCREENS,
+        LAYOUT_ENGINE_VERSION_SCREENS,
+    )
+
+    bucket_plan = _build_curate_buckets(trip, preflight)
+    buckets = bucket_plan.buckets
+    bucket_segment_ids = bucket_plan.bucket_segment_ids
+    bucket_segment_ids_all = bucket_plan.bucket_segment_ids_all
+    segments = bucket_plan.segments
+    segment_labels = bucket_plan.segment_labels
+    curation_segments = bucket_plan.curation_segments
+    meta_places = bucket_plan.meta_places
+    meta = trip.get("meta", {})
+    curation = trip.get("curation") or {}
 
     aspects = {a["id"]: aspect_kind_for_asset(a) for a in layout_assets}
     non_empty_buckets = [b for b in buckets if b]

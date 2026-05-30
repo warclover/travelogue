@@ -32,5 +32,5 @@ def test_cli_commands_registered() -> None:
     from travelogue.cli import app
 
     names = {cmd.name for cmd in app.registered_commands if cmd.name}
-    for required in ("studio", "export-longshot", "serve"):
+    for required in ("studio", "export-longshot", "serve", "quick"):
         assert required in names

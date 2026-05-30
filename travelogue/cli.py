@@ -254,6 +254,34 @@ def demo_main(
     )
 
 
+@app.command("quick")
+def cmd_quick(
+    album_dir: Path = typer.Argument(..., help="folder with JPG/PNG/WebP/HEIC"),
+    title: str = typer.Option("我的旅途", "--title", "-t"),
+    place: str = typer.Option("旅途", "--place", "-p"),
+    trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
+    max_photos: int = typer.Option(250, "--max-photos"),
+    layout: str = typer.Option("auto", "--layout", "-l", help="default auto (web screens)"),
+    force: bool = typer.Option(False, "--force", help="replace existing trip folder"),
+    config: Optional[Path] = typer.Option(None, "--config"),
+) -> None:
+    """One-shot album → ingest → curate → render (shortcut for ``from-album --layout auto``)."""
+    _run_demo_cmd(
+        album_dir,
+        title=title,
+        place=place,
+        hook="",
+        trip_id=None,
+        trips_dir=trips_dir,
+        max_photos=max_photos,
+        layout=layout,
+        no_render=False,
+        force=force,
+        no_dedupe=False,
+        config=config,
+    )
+
+
 @app.command("from-album")
 def cmd_from_album(
     album_dir: Path = typer.Argument(..., help="folder with JPG/PNG/WebP/HEIC"),
