@@ -226,6 +226,7 @@ def build_buckets_from_clustering(
             layout_assets,
             cover_id,
             meta,
+            intent=trip.get("intent"),
             segment_gap_days=cfg.curate.segment_gap_days,
             city_gap_days=cfg.curate.city_gap_days,
             min_bucket_size=min_bucket_size,

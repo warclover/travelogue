@@ -45,6 +45,11 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             trip_id=payload.get("tripId"),
             title=str(payload.get("title") or "我的旅途"),
             place=str(payload.get("place") or "旅途"),
+            place_user_set=(
+                bool(payload["placeUserSet"])
+                if "placeUserSet" in payload
+                else None
+            ),
             force=bool(payload.get("force")),
             dedupe=bool(payload.get("dedupe", True)),
             host=str(payload.get("host") or "127.0.0.1"),

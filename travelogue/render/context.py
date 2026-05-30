@@ -222,10 +222,17 @@ def media_card_classes(layout: dict | None, asset: dict) -> str:
     return " ".join(classes)
 
 
-def format_trip_meta(meta: dict) -> tuple[str, str]:
+def format_trip_meta(
+    meta: dict,
+    *,
+    intent: dict | None = None,
+    assets: list[dict] | None = None,
+) -> tuple[str, str]:
+    from travelogue.services.copy_subject import narrative_copy_subject
+
     start = meta.get("dateStart", "")
     end = meta.get("dateEnd", "")
-    place = (meta.get("places") or ["—"])[0]
+    place = narrative_copy_subject(meta, intent=intent, assets=assets)
     days = 1
     try:
         d0 = date.fromisoformat(start)
@@ -507,11 +514,21 @@ def _screen_aspect_ratio_css(asset: dict) -> str | None:
 
 def build_epilogue_stats(trip: dict) -> EpilogueStatsContext:
     """P5-S4 · trip summary for epilogue stats screen."""
+    from travelogue.services.copy_subject import (
+        filter_chapter_places_for_copy,
+        narrative_copy_subject,
+        suppress_chapter_geo_places,
+    )
+
     assets = [
         a
         for a in trip.get("assets") or []
         if a.get("layoutEligible", True) and a.get("type") != "video"
     ]
+    meta = trip.get("meta") or {}
+    intent = trip.get("intent")
+    asset_list = trip.get("assets") or []
+    suppress_geo = suppress_chapter_geo_places(meta, intent=intent, assets=asset_list)
     days: set[str] = set()
     places: set[str] = set()
     for ch in trip.get("chapters") or []:
@@ -520,12 +537,19 @@ def build_epilogue_stats(trip: dict) -> EpilogueStatsContext:
             key = str(d)[:10]
             if key:
                 days.add(key)
-        for p in cur.get("places") or []:
-            text = str(p).strip()
-            if text:
-                places.add(text)
-    meta = trip.get("meta") or {}
-    if isinstance(meta.get("place"), str) and meta["place"].strip():
+        if not suppress_geo:
+            for p in filter_chapter_places_for_copy(
+                cur.get("places"),
+                meta,
+                intent=intent,
+                assets=asset_list,
+            ):
+                places.add(p)
+    if suppress_geo:
+        subject = narrative_copy_subject(meta, intent=intent, assets=asset_list)
+        if subject and subject not in {"", "旅途"}:
+            places.add(subject)
+    elif isinstance(meta.get("place"), str) and meta["place"].strip():
         places.add(meta["place"].strip())
     photo_count = len(assets)
     day_count = max(len(days), 1) if photo_count else 0
@@ -674,12 +698,26 @@ def build_layout_screen(
     return out
 
 
-def chapter_divider(ch: dict, index: int) -> ChapterDividerContext:
+def chapter_divider(
+    ch: dict,
+    index: int,
+    *,
+    meta: dict | None = None,
+    intent: dict | None = None,
+    assets: list[dict] | None = None,
+) -> ChapterDividerContext:
+    from travelogue.services.copy_subject import filter_chapter_places_for_copy
+
     if index <= 1:
         return {"showDivider": False}
     curation = ch.get("curation") or {}
     day_span = curation.get("daySpan") or []
-    places = curation.get("places") or []
+    places = filter_chapter_places_for_copy(
+        curation.get("places"),
+        meta or {},
+        intent=intent,
+        assets=assets,
+    )
     if not day_span and not places:
         return {"showDivider": False}
     divider: ChapterDividerContext = {"showDivider": True}

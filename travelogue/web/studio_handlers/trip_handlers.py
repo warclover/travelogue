@@ -80,7 +80,17 @@ def handle_patch_intent(handler: Any, trip_id: str) -> None:
         if "title" in payload:
             kwargs["title"] = payload.get("title")
         if "places" in payload:
+            from travelogue.services.copy_subject import is_generic_place
+
             kwargs["places"] = payload.get("places")
+            if "placesUserSet" in payload:
+                kwargs["places_user_set"] = bool(payload.get("placesUserSet"))
+            else:
+                raw_places = payload.get("places") or []
+                kwargs["places_user_set"] = bool(
+                    raw_places
+                    and not all(is_generic_place(str(p)) for p in raw_places)
+                )
         if "userNotes" in payload:
             kwargs["user_notes"] = payload.get("userNotes")
         if "travelPlan" in payload:

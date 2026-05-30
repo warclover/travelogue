@@ -6,6 +6,7 @@ from datetime import date
 
 from travelogue.curation.bucket_planning import bucket_day_span
 from travelogue.curation.time_segments import parse_asset_date
+from travelogue.services.copy_subject import narrative_copy_subject
 
 
 def title_for_bucket_span(span: list[str]) -> str | None:
@@ -25,12 +26,13 @@ def chapter_titles(
     assets: list[dict],
     meta: dict,
     *,
+    intent: dict | None = None,
     bucket_segment_ids: list[str] | None = None,
     bucket_segment_ids_all: list[list[str]] | None = None,
     segment_labels: dict[str, str] | None = None,
     plan_cities: list[str] | None = None,
 ) -> list[str]:
-    place = (meta.get("places") or ["旅途"])[0]
+    place = narrative_copy_subject(meta, intent=intent, assets=assets)
     assets_by_id = {a["id"]: a for a in assets}
     titles: list[str] = []
     day_seen: dict[str, int] = {}

@@ -4,7 +4,7 @@
 import { LS } from "./constants.js";
 import { S } from "./state.js";
 import { $, show, setTitle, formatUpdatedAt, syncImportUiDisabled, cssBackgroundImage } from "./dom.js";
-import { closeImportSheet, getRecentPaths } from "./sheet.js";
+import { buildImportPayload, closeImportSheet, getRecentPaths } from "./sheet.js";
 import { requestNativeFolder, startImport } from "./import-bridge.js";
 import { registerRender } from "./navigation.js";
 
@@ -279,15 +279,8 @@ export function renderRecentPathHint() {
   btn.className = "studio-recent-path-hint__action";
   btn.textContent = "导入";
   btn.addEventListener("click", function () {
-    var titleEl = $("trip-title");
-    var placeEl = $("trip-place");
-    var title = titleEl && titleEl.value ? titleEl.value.trim() : "";
-    var place = placeEl && placeEl.value ? placeEl.value.trim() : "";
-    startImport({
-      albumPath: path,
-      title: title || undefined,
-      place: place || undefined,
-    });
+    var body = buildImportPayload({ albumPath: path });
+    startImport(body);
   });
   host.appendChild(label);
   host.appendChild(pathSpan);

@@ -59,7 +59,11 @@ def manifest_limits_brief() -> dict[str, int]:
 
 
 def build_meta_brief(trip: dict, *, tone: str, regenerate: bool = False) -> dict[str, Any]:
+    from travelogue.services.copy_subject import narrative_copy_subject, places_user_set
+
     meta = trip.get("meta") or {}
+    intent = trip.get("intent")
+    assets = trip.get("assets") or []
     curation = trip.get("curation") or {}
     segments = curation.get("segments") or []
     trip_brief: dict[str, Any] = {
@@ -68,6 +72,8 @@ def build_meta_brief(trip: dict, *, tone: str, regenerate: bool = False) -> dict
         "dateStart": meta.get("dateStart"),
         "dateEnd": meta.get("dateEnd"),
         "places": meta.get("places") or [],
+        "editorialSubject": narrative_copy_subject(meta, intent=intent, assets=assets),
+        "placesUserSet": places_user_set(intent),
         "tone": tone,
         "userNotes": resolve_user_notes(trip),
         "segmentCount": len(segments),
@@ -127,9 +133,19 @@ def build_chapter_brief(
         fields_requested.append("lead")
     if captions_allowed(scope):
         fields_requested.append("items[].caption")
+    from travelogue.services.copy_subject import (
+        filter_chapter_places_for_copy,
+        narrative_copy_subject,
+        places_user_set,
+    )
+
+    intent = trip.get("intent")
+    assets_list = trip.get("assets") or []
     trip_brief: dict[str, Any] = {
         "tripId": trip.get("tripId"),
         "places": meta.get("places") or [],
+        "editorialSubject": narrative_copy_subject(meta, intent=intent, assets=assets_list),
+        "placesUserSet": places_user_set(intent),
         "tone": tone,
     }
     user_notes = resolve_user_notes(trip)
@@ -144,7 +160,12 @@ def build_chapter_brief(
             "index": chapter.get("index"),
             "patternId": chapter.get("patternId"),
             "title": chapter.get("title"),
-            "places": ch_cur.get("places") or [],
+            "places": filter_chapter_places_for_copy(
+                ch_cur.get("places"),
+                meta,
+                intent=intent,
+                assets=assets_list,
+            ),
             "memoryAnchors": ch_cur.get("memoryAnchors") or [],
             "daySpan": ch_cur.get("daySpan") or [],
             "segmentId": ch_cur.get("segmentId"),

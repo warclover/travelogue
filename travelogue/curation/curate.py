@@ -375,7 +375,13 @@ def run_curate(
             skip_screen_ids.add(web_cover)
 
     meta = trip.get("meta", {})
-    meta_places = [str(p) for p in (meta.get("places") or []) if p]
+    from travelogue.services.copy_subject import effective_meta_places
+
+    meta_places = effective_meta_places(
+        meta,
+        intent=trip.get("intent"),
+        assets=trip.get("assets") or [],
+    )
     from travelogue.curation.clustering_buckets import (
         build_buckets_from_clustering,
         should_use_clustering_buckets,
@@ -395,6 +401,7 @@ def run_curate(
             layout_assets,
             cover_id,
             meta,
+            intent=trip.get("intent"),
             segment_gap_days=cur_cfg.segment_gap_days,
             city_gap_days=cur_cfg.city_gap_days,
             min_bucket_size=cur_cfg.min_bucket_size,
@@ -472,6 +479,7 @@ def run_curate(
         buckets,
         layout_assets,
         meta,
+        intent=trip.get("intent"),
         bucket_segment_ids=bucket_segment_ids,
         bucket_segment_ids_all=bucket_segment_ids_all,
         segment_labels=segment_labels,

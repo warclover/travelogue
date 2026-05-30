@@ -8,6 +8,7 @@ from typing import NamedTuple
 
 from travelogue.curation.curate_scoring import sort_bucket_asset_ids
 from travelogue.curation.time_segments import TimeSegment, cluster_time_segments, parse_asset_date
+from travelogue.services.copy_subject import narrative_copy_subject, user_place_explicit
 
 
 class NormalizedBuckets(NamedTuple):
@@ -269,18 +270,22 @@ def group_assets_by_segments(
     cover_id: str,
     meta: dict,
     *,
+    intent: dict | None = None,
     segment_gap_days: int = 14,
     city_gap_days: int = 3,
     min_bucket_size: int = 3,
 ) -> tuple[list[list[str]], list[str], list[list[str]], list]:
     """Segment cluster → per-segment day buckets → flat chapter bucket list."""
-    place = (meta.get("places") or ["旅途"])[0]
+    places = meta.get("places") or []
+    explicit_place = str(places[0]).strip() if places else None
+    place = narrative_copy_subject(meta, intent=intent, assets=layout_assets)
     by_id = {a["id"]: a for a in layout_assets}
     segments = cluster_time_segments(
         layout_assets,
         gap_days=segment_gap_days,
         city_gap_days=city_gap_days,
         place=place,
+        explicit_place=explicit_place if user_place_explicit(meta, intent=intent) else None,
     )
 
     all_buckets: list[list[str]] = []

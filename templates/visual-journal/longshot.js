@@ -28,6 +28,7 @@
   var CAPTION_EDIT_KEY = "travelogue:captionEdit";
   var CAPTION_ON = "on";
   var CAPTION_OFF = "off";
+  var PROGRESS_DONE_DISMISS_MS = 3000;
 
   function readingConfig() {
     return global.__TRAVELOGUE_READING__ || {};
@@ -62,6 +63,7 @@
   var html2canvasPromise = null;
   var toastEl = null;
   var progressEl = null;
+  var progressHideTimer = null;
   var selectedScaleCache = null;
 
   function scriptDir() {
@@ -959,7 +961,15 @@
     return progressEl;
   }
 
+  function clearProgressHideTimer() {
+    if (progressHideTimer) {
+      clearTimeout(progressHideTimer);
+      progressHideTimer = null;
+    }
+  }
+
   function showProgress(pct, detail) {
+    clearProgressHideTimer();
     var el = getProgress();
     el.hidden = false;
     var bar = el.querySelector(".longshot-progress__bar");
@@ -969,7 +979,16 @@
   }
 
   function hideProgress() {
+    clearProgressHideTimer();
     if (progressEl) progressEl.hidden = true;
+  }
+
+  function scheduleHideProgress(delayMs) {
+    clearProgressHideTimer();
+    progressHideTimer = setTimeout(function () {
+      progressHideTimer = null;
+      hideProgress();
+    }, delayMs || PROGRESS_DONE_DISMISS_MS);
   }
 
   function preloadImages(root, onProgress) {
@@ -1670,6 +1689,7 @@
     }
     if (!options.quietProgress) {
       showProgress(100, "完成");
+      scheduleHideProgress(PROGRESS_DONE_DISMISS_MS);
     }
     var fmtLabel = result.outputFormat === "jpeg" ? "JPEG" : "PNG";
     var sizeLabel = formatBytes(result.blob.size);
@@ -1817,6 +1837,7 @@
         });
       })
       .catch(function (err) {
+        hideProgress();
         if ((err && err.message) === "已取消") return;
         console.error("[longshot]", err);
         toast(mapCaptureError(err), true);

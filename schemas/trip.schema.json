@@ -85,6 +85,10 @@
           "items": { "type": "string" },
           "maxItems": 10
         },
+        "placesUserSet": {
+          "type": "boolean",
+          "description": "True when Studio user explicitly filled 主地点; false when default/blank so copy prefers magazine title over EXIF city"
+        },
         "userNotes": { "type": "string", "maxLength": 200 },
         "travelPlan": {
           "type": "object",

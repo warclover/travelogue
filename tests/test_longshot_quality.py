@@ -57,6 +57,8 @@ def test_longshot_js_exports_quality_constants() -> None:
     assert "captureLongShotByChapter" in js
     assert "JPEG_QUALITY = 0.96" in js
     assert "getUserSelectedScale" in js
+    assert "PROGRESS_DONE_DISMISS_MS = 3000" in js
+    assert "scheduleHideProgress" in js
     toolbar = (
         Path(__file__).resolve().parents[1]
         / "templates"

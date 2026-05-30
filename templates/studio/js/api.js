@@ -13,6 +13,7 @@ import { humanizeStudioError, showSlowHint, hideSlowHint } from "./errors.js";
 import { updateProgress } from "./progress.js";
 import { renderNow, transitionTo } from "./navigation.js";
 import { pollJobUntilDone } from "./job-poll.js";
+import { normalizeCompletedImportJob } from "./import-job.js";
 
 export function pollJob(jobId) {
   return fetch("/__travelogue/status?jobId=" + encodeURIComponent(jobId))
@@ -109,6 +110,7 @@ export function waitJob(jobId, gen) {
     show($("studio-cancel"), false);
     hideSlowHint();
     if (job.status === "succeeded") {
+      job = normalizeCompletedImportJob(job);
       updateProgress(job);
       return job;
     }

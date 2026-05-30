@@ -13,6 +13,7 @@ from travelogue.media.ingest import IngestError, ingest_into_trip, scan_image_pa
 from travelogue.orchestrator.run import run_trip
 from travelogue.orchestrator.studio_hooks import StudioHooks
 from travelogue.runtime import AppContext
+from travelogue.services.copy_subject import is_generic_place
 from travelogue.services.trip import TripService, apply_intent
 from travelogue.services.trip_factory import create_trip
 from travelogue.util.trip_slug import demo_trip_id_from_album
@@ -158,6 +159,7 @@ def run_studio_pipeline(
     trip_id: str | None = None,
     title: str = "我的旅途",
     place: str = "旅途",
+    place_user_set: bool | None = None,
     force: bool = False,
     dedupe: bool = True,
     host: str = "127.0.0.1",
@@ -220,10 +222,17 @@ def run_studio_pipeline(
         trip = svc.load(trip_json)
         # F-P4 M15: single-writer intent — mirrors meta.title/places + trip.userNotes
         # (never meta.userNotes, which is not in schema).
+        place_raw = str(place or "").strip()
+        resolved_place_user_set = (
+            bool(place_user_set)
+            if place_user_set is not None
+            else bool(place_raw) and not is_generic_place(place_raw)
+        )
         apply_intent(
             trip,
             title=title,
-            places=[place] if place else [],
+            places=[place_raw] if resolved_place_user_set else [],
+            places_user_set=resolved_place_user_set,
             user_notes=user_notes,
         )
 

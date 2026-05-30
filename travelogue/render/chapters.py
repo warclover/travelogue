@@ -277,7 +277,13 @@ def build_chapters_render_context(
             "chapterSeparatorStyle": (
                 f"background: {chapter_tone or _DEFAULT_SCREEN_TONE};" if use_chapter_separator else ""
             ),
-            **chapter_divider(ch, idx),
+            **chapter_divider(
+                ch,
+                idx,
+                meta=trip.get("meta") or {},
+                intent=trip.get("intent"),
+                assets=trip.get("assets") or [],
+            ),
         }
         chapters_out.append(ch_ctx)
 

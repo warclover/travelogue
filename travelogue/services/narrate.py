@@ -11,6 +11,11 @@ from pathlib import Path
 
 from travelogue.config import AppConfig
 from travelogue.paths import MANIFEST_PATH
+from travelogue.services.copy_subject import (
+    is_generic_place,
+    narrative_copy_subject,
+    user_place_explicit,
+)
 
 # F-NAR-05 · manifest limits (F-NAR-01)
 HOOK_MAX = 56
@@ -232,9 +237,15 @@ def _apply_stub_captions(
     return updated
 
 
-def _build_hook(meta: dict, *, photo_count: int, tone: str) -> str:
-    places = meta.get("places") or ["旅途"]
-    place = places[0]
+def _build_hook(
+    meta: dict,
+    *,
+    photo_count: int,
+    tone: str,
+    intent: dict | None = None,
+    assets: list[dict] | None = None,
+) -> str:
+    place = narrative_copy_subject(meta, intent=intent, assets=assets)
     title = meta.get("title") or "旅途"
     span = _format_date_span(meta.get("dateStart", ""), meta.get("dateEnd", ""))
 
@@ -286,6 +297,8 @@ def _build_lead_frame(chapter_index: int, day_label: str, place: str) -> str:
 def _build_lead(
     chapter: dict,
     *,
+    meta: dict,
+    intent: dict | None = None,
     assets: dict[str, dict],
     default_place: str,
     tone: str,
@@ -293,8 +306,18 @@ def _build_lead(
     chapter_total: int,
 ) -> str:
     title = (chapter.get("title") or "").strip()
+    from travelogue.services.copy_subject import suppress_chapter_geo_places
+
     places = _chapter_places(chapter, assets)
-    place = places[0] if places else default_place
+    asset_list = list(assets.values())
+    if suppress_chapter_geo_places(meta, intent=intent, assets=asset_list):
+        place = default_place
+    elif places and user_place_explicit(meta, intent=intent):
+        place = places[0]
+    elif places and is_generic_place((meta.get("places") or ["旅途"])[0]):
+        place = default_place
+    else:
+        place = places[0] if places else default_place
     n = len(_chapter_asset_ids(chapter))
     voice = _voice_excerpt(chapter, assets)
 
@@ -325,9 +348,14 @@ def _build_lead(
     return f"{subject}，再走一步。"
 
 
-def _build_epilogue(meta: dict, *, tone: str) -> str:
-    places = meta.get("places") or ["旅途"]
-    place = places[0]
+def _build_epilogue(
+    meta: dict,
+    *,
+    tone: str,
+    intent: dict | None = None,
+    assets: list[dict] | None = None,
+) -> str:
+    place = narrative_copy_subject(meta, intent=intent, assets=assets)
     if tone == "documentary":
         return f"{place}，行程归档。"
     return f"下次再见，{place}。"
@@ -413,10 +441,11 @@ def _run_narrate_stub(
         meta["tone"] = tone if tone in ("relaxed", "documentary") else meta.get("tone", "relaxed")
 
     updated: list[str] = []
-    places = meta.get("places") or ["旅途"]
-    place = places[0]
+    intent = trip.get("intent")
+    asset_list = trip.get("assets") or []
+    place = narrative_copy_subject(meta, intent=intent, assets=asset_list)
     tone_val = meta.get("tone") or "relaxed"
-    assets = {a["id"]: a for a in trip.get("assets") or []}
+    assets = {a["id"]: a for a in asset_list}
     photo_count = sum(1 for a in assets.values() if a.get("type", "image") == "image")
     chapters = trip.get("chapters") or []
     chapter_total = len(chapters)
@@ -428,7 +457,13 @@ def _run_narrate_stub(
     if not meta.get("edited") and (regenerate or not (meta.get("hook") or "").strip()):
         if not dry_run:
             meta["hook"] = _finalize_copy(
-                _build_hook(meta, photo_count=photo_count, tone=tone_val),
+                _build_hook(
+                    meta,
+                    photo_count=photo_count,
+                    tone=tone_val,
+                    intent=intent,
+                    assets=asset_list,
+                ),
                 lim["hookMaxChars"],
             )
         updated.append("meta.hook")
@@ -445,6 +480,8 @@ def _run_narrate_stub(
             ch["lead"] = _finalize_copy(
                 _build_lead(
                     ch,
+                    meta=meta,
+                    intent=intent,
                     assets=assets,
                     default_place=place,
                     tone=tone_val,
@@ -459,7 +496,7 @@ def _run_narrate_stub(
     if chapter_total >= 2 and (regenerate or not (trip.get("epilogue") or "").strip()):
         if not dry_run:
             trip["epilogue"] = _finalize_copy(
-                _build_epilogue(meta, tone=tone_val),
+                _build_epilogue(meta, tone=tone_val, intent=intent, assets=asset_list),
                 lim["epilogueMaxChars"],
             )
         updated.append("epilogue")

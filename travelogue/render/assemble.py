@@ -82,7 +82,11 @@ def build_render_context(
     cover_src = pick_image_src(cover_asset, export_layout=image_layout)
     cover_srcset = compile_srcset(cover_asset, mobile=image_layout == "mobile")
 
-    meta_line, meta_datetime = format_trip_meta(meta)
+    meta_line, meta_datetime = format_trip_meta(
+        meta,
+        intent=trip.get("intent"),
+        assets=trip.get("assets") or [],
+    )
     cover_show_title = resolve_cover_show_title(trip, cfg=cfg)
     hook = (meta.get("hook") or "").strip()
     epilogue = (trip.get("epilogue") or "").strip()

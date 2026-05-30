@@ -7,6 +7,8 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from typing import Any
 
+from travelogue.services.copy_subject import is_generic_place
+
 
 DEFAULT_SEGMENT_GAP_DAYS = 14
 DEFAULT_CITY_GAP_DAYS = 3
@@ -89,6 +91,7 @@ def cluster_time_segments(
     gap_days: int = DEFAULT_SEGMENT_GAP_DAYS,
     city_gap_days: int = DEFAULT_CITY_GAP_DAYS,
     place: str = "旅途",
+    explicit_place: str | None = None,
 ) -> list[TimeSegment]:
     """Split assets when consecutive takenAt gap exceeds gap_days or city changes."""
     dated: list[tuple[date, str, dict]] = []
@@ -127,7 +130,12 @@ def cluster_time_segments(
         d0 = group[0][0]
         d1 = group[-1][0]
         seg_places = _segment_places(group)
-        label_place = seg_places[0] if seg_places else place
+        if seg_places and explicit_place and not is_generic_place(explicit_place):
+            label_place = seg_places[0]
+        elif seg_places:
+            label_place = place
+        else:
+            label_place = place
         label = _segment_label(d0, d1, label_place, seg_index=idx, total=len(groups))
         segments.append(
             TimeSegment(

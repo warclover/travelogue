@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.demo.build import DemoError
+from travelogue.services.copy_subject import is_generic_place
 from travelogue.desktop.demo_album import is_demo_album_path
 from travelogue.web.studio_auth import is_loopback_host
 from travelogue.web.studio_errors import demo_error_payload, user_message
@@ -54,10 +55,17 @@ def read_import_request(handler: Any) -> tuple[dict, Path | None]:
         ctx = studio_ctx(handler)
         upload_dir = upload_dir_for_job(ctx.trips_root, job.job_id)
         save_upload_files(upload_dir, photo_files)
+        upload_place_raw = str(fields.get("place") or "").strip()
+        upload_place_user_set = str(fields.get("placeUserSet") or "").lower() in (
+            "1",
+            "true",
+            "yes",
+        ) or bool(upload_place_raw and not is_generic_place(upload_place_raw))
         payload = {
             "albumPath": str(upload_dir),
             "title": fields.get("title", "我的旅途"),
-            "place": fields.get("place", "旅途"),
+            "place": upload_place_raw or "旅途",
+            "placeUserSet": upload_place_user_set,
             "force": fields.get("force", "").lower() in ("1", "true", "yes"),
             "_job": job,
         }
@@ -138,7 +146,13 @@ def handle_import(handler: Any) -> None:
         return
 
     title = str(payload.get("title") or "我的旅途").strip() or "我的旅途"
-    place = str(payload.get("place") or "旅途").strip() or "旅途"
+    place_raw = str(payload.get("place") or "").strip()
+    place = place_raw or "旅途"
+    place_user_set = (
+        bool(payload.get("placeUserSet"))
+        if "placeUserSet" in payload
+        else bool(place_raw and not is_generic_place(place_raw))
+    )
     user_notes = (
         str(payload.get("userNotes") or "").strip()[:STUDIO_USER_NOTES_MAX_LEN] or None
     )
@@ -196,6 +210,7 @@ def handle_import(handler: Any) -> None:
         "tripId": trip_id_str,
         "title": title,
         "place": place,
+        "placeUserSet": place_user_set,
         "force": force,
         "dedupe": not (use_demo_album or is_demo_album_path(str(album_path))),
         "host": host,

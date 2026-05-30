@@ -37,6 +37,7 @@ def apply_intent(
     *,
     title: Any = _UNSET,
     places: Any = _UNSET,
+    places_user_set: Any = _UNSET,
     user_notes: Any = _UNSET,
     travel_plan: Any = _UNSET,
     folders: Any = _UNSET,
@@ -62,6 +63,7 @@ def apply_intent(
             meta["title"] = cleaned
         else:
             intent.pop("title", None)
+            meta.pop("title", None)
 
     if places is not _UNSET:
         place_list = [
@@ -76,6 +78,13 @@ def apply_intent(
             meta["places"] = list(place_list)
         else:
             intent.pop("places", None)
+            meta.pop("places", None)
+
+    if places_user_set is not _UNSET:
+        if places_user_set:
+            intent["placesUserSet"] = True
+        else:
+            intent.pop("placesUserSet", None)
 
     if user_notes is not _UNSET:
         cleaned = _clean_str(user_notes, limit=200)

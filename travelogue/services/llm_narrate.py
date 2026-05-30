@@ -37,7 +37,7 @@ SYSTEM_PROMPT = """你是旅行视觉游记的文案编辑。你只输出合法 
 1. 中文、短句；禁止流水账、公文腔和 AI 套话。
 2. 严格遵守 brief.limits 字数上限（按字符计）。
 3. 只写 brief 中 fieldsRequested 请求的字段；brief.existing 已有内容不要重复输出。
-4. 地点、人物、事件必须来自 brief，禁止虚构未出现的境外城市或人物。
+4. 地点、人物、事件必须来自 brief；优先用 trip.editorialSubject 作为全书主语（杂志名/主题）。若 placesUserSet 为 false，不要用 trip.places 或 EXIF 城市覆盖 editorialSubject。
 5. 禁用词：综上所述、值得一提的是、不可否认、众所周知、总而言之、美不胜收、令人难忘。
 6. relaxed 语气可感官细节；documentary 语气偏时间地点事实，少用感叹号。
 7. lead 不要复述 chapter.title，不要以 chapter.title 开头，也不要写成“标题，地点。”这种格式。
@@ -143,19 +143,23 @@ def _stub_lead_for_chapter(
     tone: str,
     lead_seen: set[str],
 ) -> str:
+    from travelogue.services.copy_subject import narrative_copy_subject
     from travelogue.services.narrate import _build_lead
 
     meta = trip.get("meta") or {}
-    assets = {a["id"]: a for a in trip.get("assets") or []}
-    places = meta.get("places") or ["旅途"]
+    intent = trip.get("intent")
+    asset_list = trip.get("assets") or []
+    assets = {a["id"]: a for a in asset_list}
     chapters = trip.get("chapters") or []
     idx = int(chapter.get("index") or 0)
     lim = _manifest_limits()
     return _finalize_copy(
         _build_lead(
             chapter,
+            meta=meta,
+            intent=intent,
             assets=assets,
-            default_place=places[0],
+            default_place=narrative_copy_subject(meta, intent=intent, assets=asset_list),
             tone=tone,
             chapter_index=idx,
             chapter_total=len(chapters),

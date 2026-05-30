@@ -17,6 +17,7 @@ export function saveIntent() {
       title: ($("trip-title") && $("trip-title").value) || "",
       place: ($("trip-place") && $("trip-place").value) || "",
       feeling: ($("trip-feeling") && $("trip-feeling").value) || "",
+      albumPath: S._pendingAlbumPath || "",
     }));
   } catch (e) {}
 }
@@ -26,9 +27,12 @@ export function loadIntent() {
     var raw = localStorage.getItem(LS.studioIntent);
     if (!raw) return;
     var data = JSON.parse(raw);
-    if ($("trip-title") && data.title) $("trip-title").value = data.title;
-    if ($("trip-place") && data.place) $("trip-place").value = data.place;
-    if ($("trip-feeling") && data.feeling) $("trip-feeling").value = data.feeling;
+    var sameAlbum = !data.albumPath || data.albumPath === S._pendingAlbumPath;
+    if ($("trip-title") && data.title && sameAlbum) $("trip-title").value = data.title;
+    if ($("trip-place")) {
+      $("trip-place").value = (sameAlbum && data.place) ? data.place : "";
+    }
+    if ($("trip-feeling") && data.feeling && sameAlbum) $("trip-feeling").value = data.feeling;
   } catch (e) {}
 }
 
@@ -73,6 +77,9 @@ export function showSheetConfirm(albumPath) {
   }
   var titleInput = $("trip-title");
   if (titleInput) titleInput.value = basenameTitleFromPath(albumPath);
+  var placeInput = $("trip-place");
+  if (placeInput) placeInput.value = "";
+  loadIntent();
   show($("studio-sheet-confirm"), true);
   validateTitleField();
   if (titleInput) titleInput.focus();
@@ -132,12 +139,13 @@ export function readPlanTextForImport() {
 export function buildImportPayload(extra) {
   extra = extra || {};
   var title = ($("trip-title") && $("trip-title").value.trim()) || "我的旅途";
-  var place = ($("trip-place") && $("trip-place").value.trim()) || "旅途";
+  var placeRaw = ($("trip-place") && $("trip-place").value.trim()) || "";
   var feeling = ($("trip-feeling") && $("trip-feeling").value.trim()) || "";
   var body = {
     albumPath: extra.albumPath || S._pendingAlbumPath,
     title: title.slice(0, 20),
-    place: place,
+    place: placeRaw || "旅途",
+    placeUserSet: !!placeRaw,
     force: !!extra.force,
   };
   if (feeling) body.userNotes = feeling.slice(0, 200);
@@ -158,7 +166,10 @@ export function submitSheetImport(skipTitleEdit) {
     if (typeof studioToast === "function") {
       studioToast("将新建一篇杂志 · 开始制作", { duration: 2200 });
     }
-    startImport(body);
+    return startImport(body);
+  }).catch(function (err) {
+    setError((err && err.message) || String(err) || "无法开始制作，请重试");
+    openImportSheet();
   });
 }
 

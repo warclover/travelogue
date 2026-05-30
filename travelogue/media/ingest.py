@@ -755,8 +755,15 @@ def _finalize_ingest_assets(
     for w in apply_meta_dates_from_assets(trip):
         ingest_stats.setdefault("date_warnings", []).append(w)
 
-    place = (trip.get("meta") or {}).get("places") or ["旅途"]
-    journey_hint = preview_multi_journey(assets, place=place[0] if place else "旅途")
+    from travelogue.services.copy_subject import narrative_copy_subject
+
+    meta = trip.get("meta") or {}
+    journey_place = narrative_copy_subject(
+        meta,
+        intent=trip.get("intent"),
+        assets=assets,
+    )
+    journey_hint = preview_multi_journey(assets, place=journey_place)
     if journey_hint:
         ingest_stats.setdefault("journey_hints", []).append(journey_hint)
 

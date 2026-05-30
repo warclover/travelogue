@@ -56,6 +56,30 @@ def test_p5_a4_shared_http_module() -> None:
     assert "export function patchJson" in http
 
 
+def test_studio_nested_import_success_guard() -> None:
+    flow = (ROOT / "templates" / "studio" / "js" / "import-flow.js").read_text(encoding="utf-8")
+    assert "if (!job) return" in flow
+    job_mod = (ROOT / "templates" / "studio" / "js" / "import-job.js").read_text(encoding="utf-8")
+    assert "normalizeCompletedImportJob" in job_mod
+
+
+def test_studio_intent_scoped_by_album_path() -> None:
+    sheet = (ROOT / "templates" / "studio" / "js" / "sheet.js").read_text(encoding="utf-8")
+    assert "albumPath" in sheet
+    assert "sameAlbum" in sheet
+    assert "placeUserSet" in sheet
+
+
+def test_trip_schema_allows_places_user_set() -> None:
+    schema = (ROOT / "schemas" / "trip.schema.json").read_text(encoding="utf-8")
+    assert "placesUserSet" in schema
+
+
+def test_p5_a1_studio_entry_loads_render_module() -> None:
+    entry = (ROOT / "templates" / "studio" / "studio.js").read_text(encoding="utf-8")
+    assert 'import "./js/render.js"' in entry
+
+
 def test_p5_esm_cycle_break() -> None:
     render = (ROOT / "templates" / "studio" / "js" / "render.js").read_text(encoding="utf-8")
     sheet = (ROOT / "templates" / "studio" / "js" / "sheet.js").read_text(encoding="utf-8")

@@ -12,6 +12,7 @@ import { transitionTo } from "./navigation.js";
 import { registerImportHandlers } from "./import-bridge.js";
 import { registerLeaveSuccessHandler } from "./navigation.js";
 import { pollJobUntilDone } from "./job-poll.js";
+import { importResponseData, normalizeCompletedImportJob } from "./import-job.js";
 import { postImport, postMultipartImport, waitJob, loadTrips } from "./api.js";
 import {
   openImportSheet, showSheetConfirm, submitSheetImport, pushRecentPath,
@@ -250,6 +251,10 @@ export function markFirstPreviewDone(tripId) {
 }
 
 export function handleImportSuccess(job) {
+  job = normalizeCompletedImportJob(job);
+  if (!job || typeof job !== "object") {
+    throw new Error("导入已完成，请刷新页面后在首页查看");
+  }
   var result = job.result || {};
   var url = result.previewUrl;
   var openUrl = url;
@@ -356,7 +361,8 @@ export function startImport(body) {
   var pctEl = $("studio-pct"); if (pctEl) show(pctEl, false);
 
   return withJobBusyRetry(function () { return postImport(body); }).then(function (result) {
-    if (result.status === 409 && result.data.error === "E_DEMO_EXISTS") {
+    var data = importResponseData(result);
+    if (result.status === 409 && data.error === "E_DEMO_EXISTS") {
       return (typeof studioModal === "function"
         ? studioModal({
             title: "该游记已存在",
@@ -364,7 +370,7 @@ export function startImport(body) {
             confirmText: "覆盖并重新导入",
             cancelText: "取消",
           })
-        : Promise.resolve(window.confirm(result.data.message || "该游记已存在。是否覆盖？"))
+        : Promise.resolve(window.confirm(data.message || "该游记已存在。是否覆盖？"))
       ).then(function (confirmed) {
         if (!confirmed) throw new Error("已取消覆盖");
         body.force = true;
@@ -372,11 +378,12 @@ export function startImport(body) {
       });
     }
     if (result.status !== 202) {
-      throw { code: result.data.error, message: result.data.message || result.data.error || "导入失败" };
+      throw { code: data.error, message: data.message || data.error || "导入失败" };
     }
-    try { sessionStorage.setItem(SS.activeJobId, result.data.jobId); } catch (e) {}
-    return waitJob(result.data.jobId, gen);
+    try { sessionStorage.setItem(SS.activeJobId, data.jobId); } catch (e) {}
+    return waitJob(data.jobId, gen);
   }).then(function (job) {
+    if (!job) return;
     try { sessionStorage.removeItem(SS.activeJobId); sessionStorage.removeItem(SS.activePending); } catch (e) {}
     handleImportSuccess(job);
     loadTrips();
@@ -430,7 +437,9 @@ export function uploadAndImportCore(files, titleVal, placeVal) {
 
   var form = new FormData();
   form.append("title", titleVal || ($("trip-title") && $("trip-title").value) || "我的旅途");
-  form.append("place", placeVal || ($("trip-place") && $("trip-place").value) || "旅途");
+  var placeRaw = (placeVal || ($("trip-place") && $("trip-place").value) || "").trim();
+  form.append("place", placeRaw || "旅途");
+  form.append("placeUserSet", placeRaw ? "true" : "false");
   var feeling = ($("trip-feeling") && $("trip-feeling").value.trim()) || "";
   if (feeling) form.append("userNotes", feeling.slice(0, 200));
   appendPlanFileToForm(form);
@@ -467,7 +476,8 @@ export function uploadAndImportCore(files, titleVal, placeVal) {
     return result;
   }).then(function (result) {
     show(progress, false);
-    if (result.status === 409 && result.data.error === "E_DEMO_EXISTS") {
+    var data = importResponseData(result);
+    if (result.status === 409 && data.error === "E_DEMO_EXISTS") {
       return (typeof studioModal === "function"
         ? studioModal({
             title: "该游记已存在",
@@ -475,18 +485,19 @@ export function uploadAndImportCore(files, titleVal, placeVal) {
             confirmText: "覆盖并重新导入",
             cancelText: "取消",
           })
-        : Promise.resolve(window.confirm(result.data.message || "该游记已存在。是否覆盖？"))
+        : Promise.resolve(window.confirm(data.message || "该游记已存在。是否覆盖？"))
       ).then(function (confirmed) {
         if (!confirmed) throw new Error("已取消覆盖");
         return uploadAndImportWithForce(files, titleVal, placeVal, gen);
       });
     }
     if (result.status !== 202) {
-      throw { code: result.data.error, message: result.data.message || result.data.error || "上传失败" };
+      throw { code: data.error, message: data.message || data.error || "上传失败" };
     }
-    try { sessionStorage.setItem(SS.activeJobId, result.data.jobId); } catch (e) {}
-    return waitJob(result.data.jobId, gen);
+    try { sessionStorage.setItem(SS.activeJobId, data.jobId); } catch (e) {}
+    return waitJob(data.jobId, gen);
   }).then(function (job) {
+    if (!job) return;
     try { sessionStorage.removeItem(SS.activeJobId); } catch (e) {}
     handleImportSuccess(job);
     loadTrips();
@@ -513,18 +524,21 @@ export function uploadAndImportCore(files, titleVal, placeVal) {
 export function uploadAndImportWithForce(files, titleVal, placeVal, gen) {
   var retryForm = new FormData();
   retryForm.append("title", titleVal || "我的旅途");
-  retryForm.append("place", placeVal || "旅途");
+  var retryPlace = (placeVal || "").trim();
+  retryForm.append("place", retryPlace || "旅途");
+  retryForm.append("placeUserSet", retryPlace ? "true" : "false");
   retryForm.append("force", "true");
   appendPlanFileToForm(retryForm);
   for (var j = 0; j < files.length; j++) {
     retryForm.append("files[]", files[j], files[j].webkitRelativePath || files[j].name);
   }
   return postMultipartImport(retryForm).then(function (retryResult) {
+    var data = importResponseData(retryResult);
     if (retryResult.status !== 202) {
-      throw new Error(retryResult.data.message || retryResult.data.error || "上传失败");
+      throw new Error(data.message || data.error || "上传失败");
     }
-    try { sessionStorage.setItem(SS.activeJobId, retryResult.data.jobId); } catch (e) {}
-    return waitJob(retryResult.data.jobId, gen);
+    try { sessionStorage.setItem(SS.activeJobId, data.jobId); } catch (e) {}
+    return waitJob(data.jobId, gen);
   });
 }
 
@@ -554,6 +568,7 @@ export function resumeActiveJobIfAny() {
   setImportThumbs(null);
   var stage = $("studio-stage"); if (stage) stage.textContent = "恢复上次导入…";
   waitJob(jobId, gen).then(function (job) {
+    if (!job) return;
     try { sessionStorage.removeItem(SS.activeJobId); sessionStorage.removeItem(SS.activePending); } catch (e) {}
     handleImportSuccess(job);
     loadTrips({ keepLimit: true });

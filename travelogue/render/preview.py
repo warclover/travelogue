@@ -54,7 +54,13 @@ def render_preview_jpg(
     draw = ImageDraw.Draw(img)
 
     meta = trip.get("meta", {})
-    place = (meta.get("places") or [""])[0]
+    from travelogue.services.copy_subject import narrative_copy_subject
+
+    place = narrative_copy_subject(
+        meta,
+        intent=trip.get("intent"),
+        assets=trip.get("assets") or [],
+    )
     font_place = _load_font(28)
     font_date = _load_font(24)
     font_title = _load_font(72)
