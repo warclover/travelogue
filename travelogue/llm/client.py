@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -12,6 +13,11 @@ from typing import Any
 
 from travelogue.llm.errors import LlmError
 from travelogue.llm.presets import PROVIDER_PRESETS
+
+_RETRYABLE_HTTP = frozenset({429, 502, 503})
+_RETRYABLE_URL_CODES = frozenset({"E_LLM_TIMEOUT", "E_LLM_NETWORK"})
+_MAX_ATTEMPTS = 3
+_RETRY_BASE_SEC = 1.0
 
 
 @dataclass(frozen=True)
@@ -76,6 +82,40 @@ def parse_json_content(raw: str) -> dict[str, Any]:
     return data
 
 
+def _url_error_code(exc: urllib.error.URLError) -> str:
+    reason = exc.reason
+    if isinstance(reason, TimeoutError):
+        return "E_LLM_TIMEOUT"
+    if isinstance(reason, ConnectionRefusedError):
+        return "E_LLM_CONNECT"
+    if isinstance(reason, OSError) and reason.errno is not None:
+        return "E_LLM_NETWORK"
+    msg = str(reason or exc).lower()
+    if "timed out" in msg or "timeout" in msg:
+        return "E_LLM_TIMEOUT"
+    return "E_LLM_NETWORK"
+
+
+def _http_error_retryable(exc: urllib.error.HTTPError) -> bool:
+    return exc.code in _RETRYABLE_HTTP
+
+
+def _url_error_retryable(exc: urllib.error.URLError) -> bool:
+    return _url_error_code(exc) in _RETRYABLE_URL_CODES
+
+
+def _post_chat(req: urllib.request.Request, *, timeout_sec: int) -> dict[str, Any]:
+    with urllib.request.urlopen(req, timeout=timeout_sec) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def _extract_content(data: dict[str, Any]) -> str:
+    try:
+        return str(data["choices"][0]["message"]["content"])
+    except (KeyError, IndexError, TypeError) as exc:
+        raise LlmError("E_LLM_RESPONSE", f"unexpected response shape: {data!r}") from exc
+
+
 def chat_completion(
     messages: list[dict[str, str]],
     *,
@@ -104,21 +144,30 @@ def chat_completion(
         },
         method="POST",
     )
-    try:
-        with urllib.request.urlopen(req, timeout=rt.timeout_sec) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="replace")[:400]
-        raise LlmError("E_LLM_HTTP", f"HTTP {exc.code}: {detail}") from exc
-    except urllib.error.URLError as exc:
-        raise LlmError("E_LLM_TIMEOUT", str(exc.reason)) from exc
-    except TimeoutError as exc:
-        raise LlmError("E_LLM_TIMEOUT", "request timed out") from exc
 
-    try:
-        return str(data["choices"][0]["message"]["content"])
-    except (KeyError, IndexError, TypeError) as exc:
-        raise LlmError("E_LLM_RESPONSE", f"unexpected response shape: {data!r}") from exc
+    last_http: urllib.error.HTTPError | None = None
+    for attempt in range(_MAX_ATTEMPTS):
+        try:
+            data = _post_chat(req, timeout_sec=rt.timeout_sec)
+            return _extract_content(data)
+        except urllib.error.HTTPError as exc:
+            last_http = exc
+            if not _http_error_retryable(exc) or attempt >= _MAX_ATTEMPTS - 1:
+                detail = exc.read().decode("utf-8", errors="replace")[:400]
+                raise LlmError("E_LLM_HTTP", f"HTTP {exc.code}: {detail}") from exc
+            time.sleep(_RETRY_BASE_SEC * (2**attempt))
+        except urllib.error.URLError as exc:
+            if _url_error_retryable(exc) and attempt < _MAX_ATTEMPTS - 1:
+                time.sleep(_RETRY_BASE_SEC * (2**attempt))
+                continue
+            code = _url_error_code(exc)
+            raise LlmError(code, str(exc.reason)) from exc
+        except TimeoutError as exc:
+            raise LlmError("E_LLM_TIMEOUT", "request timed out") from exc
+
+    assert last_http is not None
+    detail = last_http.read().decode("utf-8", errors="replace")[:400]
+    raise LlmError("E_LLM_HTTP", f"HTTP {last_http.code}: {detail}") from last_http
 
 
 def llm_ping(*, provider: str | None = None) -> str:

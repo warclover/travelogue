@@ -3,9 +3,10 @@
  */
 import { LS } from "./constants.js";
 import { S } from "./state.js";
-import { $, show, setTitle, formatUpdatedAt, syncImportUiDisabled } from "./dom.js";
+import { $, show, setTitle, formatUpdatedAt, syncImportUiDisabled, cssBackgroundImage } from "./dom.js";
 import { closeImportSheet, getRecentPaths } from "./sheet.js";
-import { requestNativeFolder, startImport, clearSuccessLongshotPoll } from "./import-flow.js";
+import { requestNativeFolder, startImport } from "./import-bridge.js";
+import { registerRender } from "./navigation.js";
 
 // ── Hero background (LCP-friendly: try small variant first when available) ──
 export function updateHeroBackground() {
@@ -20,7 +21,8 @@ export function updateHeroBackground() {
       S.lastHeroSrc = url;
       var pre = new Image();
       pre.onload = function () {
-        img.style.backgroundImage = 'url("' + url + '")';
+        var bg = cssBackgroundImage(url);
+        if (bg) img.style.backgroundImage = bg;
         img.classList.remove("studio-hero__image--default");
       };
       pre.onerror = function () {
@@ -34,15 +36,6 @@ export function updateHeroBackground() {
   S.lastHeroSrc = "";
   img.style.backgroundImage = "";
   img.classList.add("studio-hero__image--default");
-}
-
-// ── State machine ──
-export function transitionTo(state) {
-  if (S.currentState === "Success" && state !== "Success") {
-    clearSuccessLongshotPoll();
-  }
-  S.currentState = state;
-  render();
 }
 
 export function render() {
@@ -465,3 +458,5 @@ export function renderCancelNotice() {
   applyTo($("studio-cancel-notice"));
   applyTo($("studio-cancel-notice-returning"));
 }
+
+registerRender(render);

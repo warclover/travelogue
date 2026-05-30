@@ -32,7 +32,8 @@ def test_inject_studio_chrome_adds_script() -> None:
     assert "/__studio/preview-toolbar.js" in out
     assert "/__studio/preview-toolbar.css" in out
     assert "/__studio/studio-modal.js" in out
-    assert "/__studio/studio-api.js" in out
+    assert 'type="module" src="/__studio/preview-toolbar.js"' in out
+    assert "/__studio/studio-api.js" not in out
 
 
 @pytest.fixture(autouse=True)
@@ -85,7 +86,8 @@ def test_studio_chrome_on_index_not_longshot(tmp_path: Path) -> None:
             longshot_html = resp.read().decode("utf-8")
 
         assert "preview-toolbar.js" in index_html
-        assert "studio-api.js" in index_html
+        assert 'type="module" src="/__studio/preview-toolbar.js"' in index_html
+        assert "studio-api.js" not in index_html
         assert 'data-preview-toolbar="on"' in index_html
         assert "preview-toolbar.js" not in longshot_html
 

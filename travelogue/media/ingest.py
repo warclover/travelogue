@@ -13,7 +13,19 @@ from PIL import Image
 
 from travelogue.config import AppConfig, IngestConfig, get_config
 from travelogue.curation.asset_quality import apply_layout_eligibility_marks, asset_sharpness
+from travelogue.curation.media_classify import (
+    classify_media_class,
+    date_confidence_for_source,
+    refine_archive_media_class,
+    summarize_media_classes,
+)
+from travelogue.media import ingest_checkpoint as icp
+from travelogue.media.color_metrics import dominant_tone_hex, mean_luma
 from travelogue.media.heuristic_tags import build_heuristic_tags
+from travelogue.media.ingest_preview import preview_multi_journey
+from travelogue.media.subject_detect import analyze_subject
+from travelogue.media.trip_dates import apply_meta_dates_from_assets
+from travelogue.vision.cache import append_pending_assets, is_pipeline_locked
 from travelogue.media.image_ops import (
     classify_aspect,
     export_webp_variants,
@@ -27,6 +39,8 @@ from travelogue.media.sharpness import sharpness_score
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"}
 HEIC_SUFFIXES = {".heic", ".heif"}
 MIN_EDGE_PX = 320
+INGEST_PROGRESS_EVERY_N = 5
+INGEST_MIN_ASSETS_DEFAULT = 4
 
 
 class IngestError(Exception):
@@ -257,10 +271,6 @@ def _resolve_place_city(
 
 
 def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) -> dict:
-    from travelogue.media.color_metrics import dominant_tone_hex, mean_luma
-    from travelogue.curation.media_classify import classify_media_class, date_confidence_for_source
-    from travelogue.media.subject_detect import analyze_subject
-
     cfg = ctx.cfg
     aspect_kind = classify_aspect(photo.img.width, photo.img.height)
     focal = (0.5, 0.45)
@@ -367,66 +377,38 @@ def _upsert_asset(
     assets.append(entry)
 
 
-def ingest_into_trip(
+def _ingest_progress_tick(processed: int, total: int) -> bool:
+    return (
+        processed == 1
+        or processed % INGEST_PROGRESS_EVERY_N == 0
+        or processed == total
+    )
+
+
+@dataclass
+class _IngestScanResult:
+    photo_tiers: list[tuple[Path, str]]
+    scan_stats: dict[str, Any]
+    dual_ingest: bool
+    album_root: Path
+    checkpoint_keys: set[str]
+
+
+def _scan_photos_for_ingest(
+    *,
     trip: dict,
     trip_dir: Path,
-    *,
-    from_dir: Path | None = None,
-    batch_id: str | None = None,
-    max_photos: int | None = None,
-    recursive: bool = True,
-    generate_crops: bool | None = None,
-    dedupe: bool = True,
-    incremental: bool = False,
-    cfg: IngestConfig | None = None,
-    app_cfg: AppConfig | None = None,
-    featured_dir: Path | None = None,
-    material_dir: Path | None = None,
-    on_progress: Callable[[int, int], None] | None = None,
-    resume_ingest: bool = True,
-    on_persist: Callable[[], None] | None = None,
-    min_assets: int = 4,
-) -> IngestResult:
-    """
-    Import images into trip_dir/source + assets; append trip.assets[].
-
-    Does not assign chapters (run curate after).
-    """
-    resolved_app = app_cfg or get_config()
-    cfg = cfg or resolved_app.ingest
-    max_photos = max_photos if max_photos is not None else cfg.max_photos
-    if generate_crops is None:
-        generate_crops = cfg.generate_crops
-    geocode_enabled = resolved_app.geocode.enabled
-    max_tags = resolved_app.vision.max_tags_per_asset if resolved_app.vision.enabled == "true" else 5
-
-    # F-CLU-CACHE-04: capture lock state BEFORE we touch the pipeline so we can decide
-    # whether new asset ids go to pendingAssets (post-lock) or replace the batch.
-    from travelogue.vision.cache import (
-        append_pending_assets as _append_pending_assets,
-        is_pipeline_locked as _is_pipeline_locked,
-    )
-
-    existing_asset_ids: set[str] = {
-        str(a["id"]) for a in (trip.get("assets") or []) if a.get("id")
-    }
-    pipeline_was_locked = _is_pipeline_locked(trip)
-    prev_pipe_snapshot = dict(trip.get("pipeline") or {})
-    prev_status = str(prev_pipe_snapshot.get("status") or "")
-    prev_locks = dict(prev_pipe_snapshot.get("locks") or {})
-
-    source_dir = trip_dir / "source"
-    assets_dir = trip_dir / "assets"
-    source_dir.mkdir(parents=True, exist_ok=True)
-    assets_dir.mkdir(parents=True, exist_ok=True)
-
-    scan_root = from_dir or source_dir
-    from travelogue.media.user_tier import (
-        resolve_dual_folders,
-        scan_tiered_image_paths,
-        upgrade_asset_tier,
-        count_user_tiers,
-    )
+    from_dir: Path | None,
+    scan_root: Path,
+    cfg: IngestConfig,
+    max_photos: int,
+    recursive: bool,
+    incremental: bool,
+    featured_dir: Path | None,
+    material_dir: Path | None,
+    resume_ingest: bool,
+) -> _IngestScanResult:
+    from travelogue.media.user_tier import resolve_dual_folders, scan_tiered_image_paths
 
     feat_dir, mat_dir, tier_mode = resolve_dual_folders(
         scan_root,
@@ -471,17 +453,17 @@ def ingest_into_trip(
 
     dual_ingest = scan_stats.get("mode") == "dual"
     album_root = from_dir.resolve() if from_dir else scan_root.resolve()
-    from travelogue.media import ingest_checkpoint as icp
-
     checkpoint_keys: set[str] = set()
     if from_dir and resume_ingest:
         checkpoint = icp.load_ingest_checkpoint(trip_dir)
         if checkpoint and str(checkpoint.get("sourceRoot") or "") == str(album_root):
             checkpoint_keys = set(checkpoint.get("processedRelPaths") or [])
-    pipe = trip.setdefault("pipeline", {})
+
     if incremental:
+        pipe = trip.get("pipeline") or {}
         pending = set(pipe.get("pendingAssets") or [])
         if pending:
+            source_dir = trip_dir / "source"
             assets_by_id = {a["id"]: a for a in trip.get("assets") or []}
             photo_tiers = []
             for aid in sorted(pending):
@@ -494,272 +476,45 @@ def ingest_into_trip(
                     tier = a.get("userTier") or "material"
                     photo_tiers.append((p, tier))
 
-    batch = batch_id or f"batch-{datetime.now().strftime('%Y%m%d-%H%M')}"
-    known_md5 = _existing_md5_sigs(trip) if dedupe else set()
-    dhash_refs: list[tuple[str, int]] = _existing_dhash_refs(trip) if dedupe else []
-    assets: list[dict] = list(trip.get("assets") or [])
-    ingest_stats = {
-        "exif_dates": 0,
-        "filename_dates": 0,
-        "mtime_dates": 0,
-        "exif_rotations": 0,
-        "deduped": 0,
-        "deduped_phash": 0,
-        "deduped_burst": 0,
-        "deduped_phash_replaced": 0,
-        "deduped_burst_replaced": 0,
-    }
-    if checkpoint_keys and from_dir:
-        before = len(photo_tiers)
-        photo_tiers = [
-            (photo, tier)
-            for photo, tier in photo_tiers
-            if icp.source_key(photo, album_root) not in checkpoint_keys
-        ]
-        ingest_stats["ingestResumedFromCheckpoint"] = len(checkpoint_keys)
-        ingest_stats["ingestSkippedCheckpoint"] = before - len(photo_tiers)
-    added = 0
-    skipped = 0
-    last_burst: tuple[float, int, int] | None = None
-    last_kept_ts: float | None = None
-    burst_counter = 0
-    current_burst_group: str | None = None
-
-    build_ctx = IngestAssetBuildContext(
-        cfg=cfg,
-        assets_dir=assets_dir,
-        source_dir=source_dir,
-        trip_dir=trip_dir,
-        ingest_stats=ingest_stats,
-        batch=batch,
-        generate_crops=generate_crops,
-        max_tags=max_tags,
-        geocode_enabled=geocode_enabled,
+    return _IngestScanResult(
+        photo_tiers=photo_tiers,
+        scan_stats=scan_stats,
         dual_ingest=dual_ingest,
+        album_root=album_root,
+        checkpoint_keys=checkpoint_keys,
     )
 
-    total_photos = len(photo_tiers)
-    processed = 0
 
-    def _emit_progress() -> None:
-        if on_progress and total_photos > 0:
-            on_progress(processed, total_photos)
-
-    for photo, user_tier in photo_tiers:
-        processed += 1
-        sig = _file_signature(photo)
-        if dedupe and sig in known_md5:
-            if upgrade_asset_tier(assets, sig, tier=user_tier):
-                ingest_stats["tier_upgraded"] = ingest_stats.get("tier_upgraded", 0) + 1
-            ingest_stats["deduped"] += 1
-            skipped += 1
-            if processed == 1 or processed % 5 == 0 or processed == total_photos:
-                _emit_progress()
-            continue
-
-        try:
-            loaded = _load_photo(photo)
-        except IngestError:
-            skipped += 1
-            if processed == 1 or processed % 5 == 0 or processed == total_photos:
-                _emit_progress()
-            continue
-
-        img = loaded.image
-        sharp = sharpness_score(img)
-        use_burst = dedupe and cfg.dedupe_burst
-        use_phash = dedupe and cfg.dedupe_phash
-        replace_index: int | None = None
-
-        if use_burst and _is_burst_duplicate(
-            loaded, last=last_burst, burst_seconds=cfg.burst_seconds
-        ):
-            if assets:
-                prev_sharp = asset_sharpness(assets[-1])
-                if sharp > prev_sharp:
-                    replace_index = len(assets) - 1
-                    ingest_stats["deduped_burst_replaced"] += 1
-                else:
-                    ingest_stats["deduped_burst"] += 1
-                    skipped += 1
-                    if processed == 1 or processed % 5 == 0 or processed == total_photos:
-                        _emit_progress()
-                    continue
-            else:
-                ingest_stats["deduped_burst"] += 1
-                skipped += 1
-                if processed == 1 or processed % 5 == 0 or processed == total_photos:
-                    _emit_progress()
-                continue
-
-        dhash = dhash_hex(img)
-        degenerate = dhash == "0000000000000000"
-        if use_phash and not degenerate and replace_index is None:
-            match_idx = _find_phash_asset_index(
-                dhash, dhash_refs, threshold=cfg.phash_threshold
-            )
-            if match_idx is not None:
-                prev_sharp = asset_sharpness(assets[match_idx])
-                if sharp > prev_sharp:
-                    replace_index = match_idx
-                    ingest_stats["deduped_phash_replaced"] += 1
-                else:
-                    ingest_stats["deduped_phash"] += 1
-                    skipped += 1
-                    if processed == 1 or processed % 5 == 0 or processed == total_photos:
-                        _emit_progress()
-                    continue
-
-        if replace_index is None:
-            known_md5.add(sig)
-            dhash_refs.append((dhash, len(assets)))
-            asset_id = _next_asset_id(assets)
-        else:
-            known_md5.add(sig)
-            asset_id = assets[replace_index]["id"]
-            for i, (dh, idx) in enumerate(dhash_refs):
-                if idx == replace_index:
-                    dhash_refs[i] = (dhash, replace_index)
-                    break
-
-        ts = loaded.taken_at.timestamp()
-        if last_kept_ts is None or abs(ts - last_kept_ts) > cfg.burst_seconds:
-            burst_counter += 1
-            current_burst_group = f"burst-{burst_counter:03d}"
-        last_kept_ts = ts
-
-        replace_import_source = None
-        replace_tier_source = None
-        tier_for_entry = user_tier
-        if replace_index is not None:
-            old_asset = assets[replace_index]
-            replace_import_source = old_asset.get("importSource")
-            from travelogue.media.user_tier import (
-                preserve_user_tier_on_replace,
-                preserve_user_tier_source_on_replace,
-            )
-
-            tier_for_entry = preserve_user_tier_on_replace(old_asset, user_tier)
-            replace_tier_source = preserve_user_tier_source_on_replace(old_asset, tier_for_entry)
-
-        entry = _build_asset_entry(
-            build_ctx,
-            IngestPhotoPayload(
-                asset_id=asset_id,
-                photo=photo,
-                loaded=loaded,
-                img=img,
-                dhash=dhash,
-                sharpness=sharp,
-                burst_group_id=current_burst_group,
-                content_sig=sig,
-                user_tier=tier_for_entry,
-                import_source=replace_import_source,
-            ),
-        )
-        if replace_tier_source:
-            entry["userTierSource"] = replace_tier_source
-
-        _upsert_asset(
-            assets=assets,
-            replace_index=replace_index,
-            entry=entry,
-        )
-
-        last_burst = (ts, img.width, img.height)
-        short_edge = min(img.width, img.height)
-        if short_edge < cfg.min_short_edge_layout_px:
-            ingest_stats.setdefault("suspected_thumbnail_ids", []).append(asset_id)
-        if replace_index is None:
-            added += 1
-        ingest_stats[f"{loaded.date_source}_dates"] = (
-            ingest_stats.get(f"{loaded.date_source}_dates", 0) + 1
-        )
-        if loaded.had_exif_orientation:
-            ingest_stats["exif_rotations"] += 1
-
-        if from_dir and resume_ingest:
-            rel_key = icp.source_key(photo, album_root)
-            checkpoint_keys.add(rel_key)
-            if processed == 1 or processed % 5 == 0 or processed == total_photos:
-                icp.save_ingest_checkpoint(
-                    trip_dir,
-                    source_root=str(album_root),
-                    processed_rel_paths=sorted(checkpoint_keys),
-                    total=total_photos,
-                )
-                if on_persist:
-                    on_persist()
-
-        if processed == 1 or processed % 5 == 0 or processed == total_photos:
-            _emit_progress()
-
-    if min_assets and len(assets) < min_assets:
-        raise IngestError(
-            "E_INGEST_TOO_FEW",
-            f"need at least {min_assets} assets in trip after ingest (have {len(assets)})",
-        )
-
-    missing_derivatives = _missing_derivative_paths(trip_dir, assets)
-    if missing_derivatives:
-        aid, rel = missing_derivatives[0]
-        raise IngestError(
-            "E_INGEST_DERIVATIVE_MISSING",
-            f"{aid}: missing {rel}",
-        )
-
-    from travelogue.curation.media_classify import refine_archive_media_class, summarize_media_classes
-    from travelogue.media.trip_dates import apply_meta_dates_from_assets
-
-    refine_archive_media_class(assets)
-    trip["assets"] = assets
-    for w in apply_meta_dates_from_assets(trip):
-        ingest_stats.setdefault("date_warnings", []).append(w)
-
-    from travelogue.media.ingest_preview import preview_multi_journey
-
-    place = (trip.get("meta") or {}).get("places") or ["旅途"]
-    journey_hint = preview_multi_journey(assets, place=place[0] if place else "旅途")
-    if journey_hint:
-        ingest_stats.setdefault("journey_hints", []).append(journey_hint)
-
-    ingest_stats["mediaClassSummary"] = summarize_media_classes(assets)
-    ingest_stats["userTierSummary"] = count_user_tiers(assets)
-    featured_n = ingest_stats["userTierSummary"].get("featured", 0)
-    if featured_n > cfg.warn_featured_count_above:
-        ingest_stats.setdefault("tier_warnings", []).append(
-            f"精选照片 {featured_n} 张，超过建议上限 {cfg.warn_featured_count_above}（仍已导入）"
-        )
-
-    low_res_warn = apply_layout_eligibility_marks(trip, assets, cfg=cfg)
-    excluded = (trip.get("curation") or {}).get("excludedLowResAssetIds") or []
-    if excluded:
-        ingest_stats["low_res_excluded_ids"] = list(excluded)
-        ingest_stats["low_res_excluded_count"] = len(excluded)
-        if low_res_warn:
-            ingest_stats["low_res_excluded_warn"] = low_res_warn
-
+def _apply_ingest_pipeline_state(
+    *,
+    trip: dict,
+    batch: str,
+    assets: list[dict],
+    existing_asset_ids: set[str],
+    pipeline_was_locked: bool,
+    incremental: bool,
+    prev_status: str,
+    prev_locks: dict,
+    ingest_stats: dict,
+) -> None:
+    pipe = trip.setdefault("pipeline", {})
     new_asset_ids = [
         str(a["id"])
         for a in assets
         if a.get("id") and str(a["id"]) not in existing_asset_ids
     ]
     if pipeline_was_locked and not incremental:
-        # F-CLU-CACHE-04: post-lock ingest must NOT auto-update chapters. Keep the
-        # previous status/locks and route new ids to pipeline.pendingAssets.
         pipe["status"] = prev_status or "structure_locked"
         if prev_locks:
             pipe["locks"] = prev_locks
         else:
             pipe.setdefault("locks", {"structure": True, "copy": False})
         pipe["lastBatchId"] = batch
-        _append_pending_assets(trip, new_asset_ids)
+        append_pending_assets(trip, new_asset_ids)
         ingest_stats["pendingAssetsAppended"] = len(new_asset_ids)
         ingest_stats["pendingAssetsTotal"] = len(pipe.get("pendingAssets") or [])
         ingest_stats["pipelineLocked"] = True
     elif pipeline_was_locked and incremental:
-        # Caller deliberately re-imported previously-pending ids; clear the queue
-        # but keep the locked status (chapters remain untouched).
         pipe["status"] = prev_status or "structure_locked"
         if prev_locks:
             pipe["locks"] = prev_locks
@@ -789,12 +544,417 @@ def ingest_into_trip(
     if not trip.get("coverAssetId") and eligible:
         trip["coverAssetId"] = eligible[0]["id"]
 
+
+@dataclass
+class _IngestLoopState:
+    known_md5: set[str]
+    dhash_refs: list[tuple[str, int]]
+    assets: list[dict]
+    ingest_stats: dict
+    last_burst: tuple[float, int, int] | None
+    last_kept_ts: float | None
+    burst_counter: int
+    current_burst_group: str | None
+    added: int
+    skipped: int
+    checkpoint_keys: set[str]
+
+
+def _process_one_ingest_photo(
+    *,
+    photo: Path,
+    user_tier: str,
+    state: _IngestLoopState,
+    build_ctx: IngestAssetBuildContext,
+    cfg: IngestConfig,
+    dedupe: bool,
+    from_dir: Path | None,
+    album_root: Path,
+    trip_dir: Path,
+    resume_ingest: bool,
+    processed: int,
+    total_photos: int,
+    on_persist: Callable[[], None] | None,
+    emit_progress: Callable[[], None],
+) -> None:
+    # ADR-011: user_tier imports ingest symbols — keep lazy here.
+    from travelogue.media.user_tier import (
+        preserve_user_tier_on_replace,
+        preserve_user_tier_source_on_replace,
+        upgrade_asset_tier,
+    )
+
+    sig = _file_signature(photo)
+    if dedupe and sig in state.known_md5:
+        if upgrade_asset_tier(state.assets, sig, tier=user_tier):
+            state.ingest_stats["tier_upgraded"] = state.ingest_stats.get("tier_upgraded", 0) + 1
+        state.ingest_stats["deduped"] += 1
+        state.skipped += 1
+        if _ingest_progress_tick(processed, total_photos):
+            emit_progress()
+        return
+
+    try:
+        loaded = _load_photo(photo)
+    except IngestError:
+        state.skipped += 1
+        if _ingest_progress_tick(processed, total_photos):
+            emit_progress()
+        return
+
+    img = loaded.image
+    sharp = sharpness_score(img)
+    use_burst = dedupe and cfg.dedupe_burst
+    use_phash = dedupe and cfg.dedupe_phash
+    replace_index: int | None = None
+
+    if use_burst and _is_burst_duplicate(
+        loaded, last=state.last_burst, burst_seconds=cfg.burst_seconds
+    ):
+        if state.assets:
+            prev_sharp = asset_sharpness(state.assets[-1])
+            if sharp > prev_sharp:
+                replace_index = len(state.assets) - 1
+                state.ingest_stats["deduped_burst_replaced"] += 1
+            else:
+                state.ingest_stats["deduped_burst"] += 1
+                state.skipped += 1
+                if _ingest_progress_tick(processed, total_photos):
+                    emit_progress()
+                return
+        else:
+            state.ingest_stats["deduped_burst"] += 1
+            state.skipped += 1
+            if _ingest_progress_tick(processed, total_photos):
+                emit_progress()
+            return
+
+    dhash = dhash_hex(img)
+    degenerate = dhash == "0000000000000000"
+    if use_phash and not degenerate and replace_index is None:
+        match_idx = _find_phash_asset_index(
+            dhash, state.dhash_refs, threshold=cfg.phash_threshold
+        )
+        if match_idx is not None:
+            prev_sharp = asset_sharpness(state.assets[match_idx])
+            if sharp > prev_sharp:
+                replace_index = match_idx
+                state.ingest_stats["deduped_phash_replaced"] += 1
+            else:
+                state.ingest_stats["deduped_phash"] += 1
+                state.skipped += 1
+                if _ingest_progress_tick(processed, total_photos):
+                    emit_progress()
+                return
+
+    if replace_index is None:
+        state.known_md5.add(sig)
+        state.dhash_refs.append((dhash, len(state.assets)))
+        asset_id = _next_asset_id(state.assets)
+    else:
+        state.known_md5.add(sig)
+        asset_id = state.assets[replace_index]["id"]
+        for i, (dh, idx) in enumerate(state.dhash_refs):
+            if idx == replace_index:
+                state.dhash_refs[i] = (dhash, replace_index)
+                break
+
+    ts = loaded.taken_at.timestamp()
+    if state.last_kept_ts is None or abs(ts - state.last_kept_ts) > cfg.burst_seconds:
+        state.burst_counter += 1
+        state.current_burst_group = f"burst-{state.burst_counter:03d}"
+    state.last_kept_ts = ts
+
+    replace_import_source = None
+    replace_tier_source = None
+    tier_for_entry = user_tier
+    if replace_index is not None:
+        old_asset = state.assets[replace_index]
+        replace_import_source = old_asset.get("importSource")
+        tier_for_entry = preserve_user_tier_on_replace(old_asset, user_tier)
+        replace_tier_source = preserve_user_tier_source_on_replace(old_asset, tier_for_entry)
+
+    entry = _build_asset_entry(
+        build_ctx,
+        IngestPhotoPayload(
+            asset_id=asset_id,
+            photo=photo,
+            loaded=loaded,
+            img=img,
+            dhash=dhash,
+            sharpness=sharp,
+            burst_group_id=state.current_burst_group,
+            content_sig=sig,
+            user_tier=tier_for_entry,
+            import_source=replace_import_source,
+        ),
+    )
+    if replace_tier_source:
+        entry["userTierSource"] = replace_tier_source
+
+    _upsert_asset(
+        assets=state.assets,
+        replace_index=replace_index,
+        entry=entry,
+    )
+
+    state.last_burst = (ts, img.width, img.height)
+    short_edge = min(img.width, img.height)
+    if short_edge < cfg.min_short_edge_layout_px:
+        state.ingest_stats.setdefault("suspected_thumbnail_ids", []).append(asset_id)
+    if replace_index is None:
+        state.added += 1
+    state.ingest_stats[f"{loaded.date_source}_dates"] = (
+        state.ingest_stats.get(f"{loaded.date_source}_dates", 0) + 1
+    )
+    if loaded.had_exif_orientation:
+        state.ingest_stats["exif_rotations"] += 1
+
+    if from_dir and resume_ingest:
+        rel_key = icp.source_key(photo, album_root)
+        state.checkpoint_keys.add(rel_key)
+        if _ingest_progress_tick(processed, total_photos):
+            icp.save_ingest_checkpoint(
+                trip_dir,
+                source_root=str(album_root),
+                processed_rel_paths=sorted(state.checkpoint_keys),
+                total=total_photos,
+            )
+            if on_persist:
+                on_persist()
+
+    if _ingest_progress_tick(processed, total_photos):
+        emit_progress()
+
+
+def _finalize_ingest_assets(
+    *,
+    trip: dict,
+    trip_dir: Path,
+    assets: list[dict],
+    ingest_stats: dict,
+    cfg: IngestConfig,
+    min_assets: int,
+) -> None:
+    if min_assets and len(assets) < min_assets:
+        raise IngestError(
+            "E_INGEST_TOO_FEW",
+            f"need at least {min_assets} assets in trip after ingest (have {len(assets)})",
+        )
+
+    missing_derivatives = _missing_derivative_paths(trip_dir, assets)
+    if missing_derivatives:
+        aid, rel = missing_derivatives[0]
+        raise IngestError(
+            "E_INGEST_DERIVATIVE_MISSING",
+            f"{aid}: missing {rel}",
+        )
+
+    refine_archive_media_class(assets)
+    trip["assets"] = assets
+    for w in apply_meta_dates_from_assets(trip):
+        ingest_stats.setdefault("date_warnings", []).append(w)
+
+    place = (trip.get("meta") or {}).get("places") or ["旅途"]
+    journey_hint = preview_multi_journey(assets, place=place[0] if place else "旅途")
+    if journey_hint:
+        ingest_stats.setdefault("journey_hints", []).append(journey_hint)
+
+    from travelogue.media.user_tier import count_user_tiers
+
+    ingest_stats["mediaClassSummary"] = summarize_media_classes(assets)
+    ingest_stats["userTierSummary"] = count_user_tiers(assets)
+    featured_n = ingest_stats["userTierSummary"].get("featured", 0)
+    if featured_n > cfg.warn_featured_count_above:
+        ingest_stats.setdefault("tier_warnings", []).append(
+            f"精选照片 {featured_n} 张，超过建议上限 {cfg.warn_featured_count_above}（仍已导入）"
+        )
+
+    low_res_warn = apply_layout_eligibility_marks(trip, assets, cfg=cfg)
+    excluded = (trip.get("curation") or {}).get("excludedLowResAssetIds") or []
+    if excluded:
+        ingest_stats["low_res_excluded_ids"] = list(excluded)
+        ingest_stats["low_res_excluded_count"] = len(excluded)
+        if low_res_warn:
+            ingest_stats["low_res_excluded_warn"] = low_res_warn
+
+
+def ingest_into_trip(
+    trip: dict,
+    trip_dir: Path,
+    *,
+    from_dir: Path | None = None,
+    batch_id: str | None = None,
+    max_photos: int | None = None,
+    recursive: bool = True,
+    generate_crops: bool | None = None,
+    dedupe: bool = True,
+    incremental: bool = False,
+    cfg: IngestConfig | None = None,
+    app_cfg: AppConfig | None = None,
+    featured_dir: Path | None = None,
+    material_dir: Path | None = None,
+    on_progress: Callable[[int, int], None] | None = None,
+    resume_ingest: bool = True,
+    on_persist: Callable[[], None] | None = None,
+    min_assets: int = INGEST_MIN_ASSETS_DEFAULT,
+) -> IngestResult:
+    """
+    Import images into trip_dir/source + assets; append trip.assets[].
+
+    Does not assign chapters (run curate after).
+    """
+    resolved_app = app_cfg or get_config()
+    cfg = cfg or resolved_app.ingest
+    max_photos = max_photos if max_photos is not None else cfg.max_photos
+    if generate_crops is None:
+        generate_crops = cfg.generate_crops
+    geocode_enabled = resolved_app.geocode.enabled
+    max_tags = resolved_app.vision.max_tags_per_asset if resolved_app.vision.enabled == "true" else 5
+
+    # F-CLU-CACHE-04: capture lock state BEFORE we touch the pipeline so we can decide
+    # whether new asset ids go to pendingAssets (post-lock) or replace the batch.
+    existing_asset_ids: set[str] = {
+        str(a["id"]) for a in (trip.get("assets") or []) if a.get("id")
+    }
+    pipeline_was_locked = is_pipeline_locked(trip)
+    prev_pipe_snapshot = dict(trip.get("pipeline") or {})
+    prev_status = str(prev_pipe_snapshot.get("status") or "")
+    prev_locks = dict(prev_pipe_snapshot.get("locks") or {})
+
+    source_dir = trip_dir / "source"
+    assets_dir = trip_dir / "assets"
+    source_dir.mkdir(parents=True, exist_ok=True)
+    assets_dir.mkdir(parents=True, exist_ok=True)
+
+    scan_root = from_dir or source_dir
+    scan = _scan_photos_for_ingest(
+        trip=trip,
+        trip_dir=trip_dir,
+        from_dir=from_dir,
+        scan_root=scan_root,
+        cfg=cfg,
+        max_photos=max_photos,
+        recursive=recursive,
+        incremental=incremental,
+        featured_dir=featured_dir,
+        material_dir=material_dir,
+        resume_ingest=resume_ingest,
+    )
+    photo_tiers = scan.photo_tiers
+    scan_stats = scan.scan_stats
+    dual_ingest = scan.dual_ingest
+    album_root = scan.album_root
+    checkpoint_keys = scan.checkpoint_keys
+
+    batch = batch_id or f"batch-{datetime.now().strftime('%Y%m%d-%H%M')}"
+    known_md5 = _existing_md5_sigs(trip) if dedupe else set()
+    dhash_refs: list[tuple[str, int]] = _existing_dhash_refs(trip) if dedupe else []
+    assets: list[dict] = list(trip.get("assets") or [])
+    ingest_stats = {
+        "exif_dates": 0,
+        "filename_dates": 0,
+        "mtime_dates": 0,
+        "exif_rotations": 0,
+        "deduped": 0,
+        "deduped_phash": 0,
+        "deduped_burst": 0,
+        "deduped_phash_replaced": 0,
+        "deduped_burst_replaced": 0,
+    }
+    if checkpoint_keys and from_dir:
+        before = len(photo_tiers)
+        photo_tiers = [
+            (photo, tier)
+            for photo, tier in photo_tiers
+            if icp.source_key(photo, album_root) not in checkpoint_keys
+        ]
+        ingest_stats["ingestResumedFromCheckpoint"] = len(checkpoint_keys)
+        ingest_stats["ingestSkippedCheckpoint"] = before - len(photo_tiers)
+    loop_state = _IngestLoopState(
+        known_md5=known_md5,
+        dhash_refs=dhash_refs,
+        assets=assets,
+        ingest_stats=ingest_stats,
+        last_burst=None,
+        last_kept_ts=None,
+        burst_counter=0,
+        current_burst_group=None,
+        added=0,
+        skipped=0,
+        checkpoint_keys=checkpoint_keys,
+    )
+
+    build_ctx = IngestAssetBuildContext(
+        cfg=cfg,
+        assets_dir=assets_dir,
+        source_dir=source_dir,
+        trip_dir=trip_dir,
+        ingest_stats=ingest_stats,
+        batch=batch,
+        generate_crops=generate_crops,
+        max_tags=max_tags,
+        geocode_enabled=geocode_enabled,
+        dual_ingest=dual_ingest,
+    )
+
+    total_photos = len(photo_tiers)
+    processed = 0
+
+    def _emit_progress() -> None:
+        if on_progress and total_photos > 0:
+            on_progress(processed, total_photos)
+
+    for photo, user_tier in photo_tiers:
+        processed += 1
+        _process_one_ingest_photo(
+            photo=photo,
+            user_tier=user_tier,
+            state=loop_state,
+            build_ctx=build_ctx,
+            cfg=cfg,
+            dedupe=dedupe,
+            from_dir=from_dir,
+            album_root=album_root,
+            trip_dir=trip_dir,
+            resume_ingest=resume_ingest,
+            processed=processed,
+            total_photos=total_photos,
+            on_persist=on_persist,
+            emit_progress=_emit_progress,
+        )
+
+    added = loop_state.added
+    skipped = loop_state.skipped
+    assets = loop_state.assets
+    ingest_stats = loop_state.ingest_stats
+
+    _finalize_ingest_assets(
+        trip=trip,
+        trip_dir=trip_dir,
+        assets=assets,
+        ingest_stats=ingest_stats,
+        cfg=cfg,
+        min_assets=min_assets,
+    )
+    _apply_ingest_pipeline_state(
+        trip=trip,
+        batch=batch,
+        assets=assets,
+        existing_asset_ids=existing_asset_ids,
+        pipeline_was_locked=pipeline_was_locked,
+        incremental=incremental,
+        prev_status=prev_status,
+        prev_locks=prev_locks,
+        ingest_stats=ingest_stats,
+    )
+
     if from_dir and resume_ingest:
         icp.clear_ingest_checkpoint(trip_dir)
 
     return IngestResult(
-        added=added,
-        skipped=skipped,
+        added=loop_state.added,
+        skipped=loop_state.skipped,
         batch_id=batch,
-        stats={**scan_stats, **ingest_stats, "total_assets": len(assets)},
+        stats={**scan_stats, **loop_state.ingest_stats, "total_assets": len(loop_state.assets)},
     )

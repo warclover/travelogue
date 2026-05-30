@@ -5,7 +5,7 @@
 | **文档版本** | v0.1 |
 | **MVP 完成** | 全部 M1–M7 Done + [ACCEPTANCE.md](./ACCEPTANCE.md) AC-01～07 |
 | **Phase 2 完成** | M8–M10 Done + [ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md) AC-P2-01～06 |
-| **更新日期** | 2026-05-27 |
+| **更新日期** | 2026-05-30 |
 
 ---
 
@@ -17,6 +17,17 @@
 - [ ] 若改 `trip.schema.json` / `manifest.json`：同步 **fixtures + 文档**  
 - [ ] `CLI-SPEC.md` 中对应命令已实现或标注 `NOT IMPLEMENTED`  
 - [ ] 无 API Key、精确 GPS 写入日志或提交文件  
+- [ ] 新增/大改 Python 模块时遵守 **§1.1 模块体量**（软上限，见 [ADR-010](./adr/010-tech-debt-sprint.md)）
+
+### 1.1 模块体量（软上限 · ADR-010）
+
+| 类型 | 建议上限 | 超出时 |
+|------|----------|--------|
+| 单文件「编排 + 叶逻辑」混装（如旧 `context.py`） | ~800 行 | 拆 `surface` / `chapters` / `assemble` 或域 handlers |
+| HTTP 路由 Mixin | ~250 行 | 迁入 `studio_handlers/` |
+| 屏规划主文件 | ~400 行 | 阶段迁入 `screen_planner_stages.py` |
+
+> 非 CI 硬门禁；PR 评审时作为还债信号。已有测试（`test_build_render_context`、layout golden 等）须保持通过。
 
 ---
 
@@ -156,3 +167,4 @@
 | v0.2 | 2026-05-27 | 新增 M8–M11（Phase 2；v0.2 评审修订） |
 | v0.3 | 2026-05-27 | Studio Chrome；M9 长图 UI/路径；AC 里程碑拆分 |
 | v0.3.1 | 2026-05-27 | M8a/b；allowlist；reveal；409 body |
+| v0.3.2 | 2026-05-30 | §1.1 模块体量软上限（ADR-010 还债） |

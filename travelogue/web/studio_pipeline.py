@@ -11,6 +11,8 @@ from travelogue.curation.curate import CurateError, run_curate
 from travelogue.demo.build import DemoError, resolve_demo_config
 from travelogue.media.ingest import IngestError, ingest_into_trip, scan_image_paths
 from travelogue.orchestrator.run import run_trip
+from travelogue.orchestrator.studio_hooks import StudioHooks
+from travelogue.runtime import AppContext
 from travelogue.services.trip import TripService, apply_intent
 from travelogue.services.trip_factory import create_trip
 from travelogue.util.trip_slug import demo_trip_id_from_album
@@ -213,7 +215,8 @@ def run_studio_pipeline(
             export_layout="auto",
         )
         trip_root = trip_json.parent
-        svc = TripService(root=trips_root.parent)
+        app_ctx = AppContext(cfg=cfg, trips_root=trips_root.resolve())
+        svc = app_ctx.trip_service()
         trip = svc.load(trip_json)
         # F-P4 M15: single-writer intent — mirrors meta.title/places + trip.userNotes
         # (never meta.userNotes, which is not in schema).
@@ -321,6 +324,7 @@ def run_studio_pipeline(
             )
 
         report("narrate", 3)
+        hooks = StudioHooks(on_stage=report)
         try:
             run_trip(
                 trip_json,
@@ -330,6 +334,7 @@ def run_studio_pipeline(
                 narrate_provider="stub",
                 validate=False,
                 cfg=cfg,
+                studio_hooks=hooks,
             )
         except Exception as exc:
             code = getattr(exc, "code", "E_STUDIO_PIPELINE")
@@ -344,6 +349,7 @@ def run_studio_pipeline(
                 skip_locked=True,
                 validate=False,
                 cfg=cfg,
+                studio_hooks=hooks,
             )
             from travelogue.render.preview import render_preview_jpg
 
@@ -353,7 +359,7 @@ def run_studio_pipeline(
             raise DemoError(code, str(exc)) from exc
 
         return _finalize_pipeline_result(
-            svc=TripService(root=trips_root.parent),
+            svc=app_ctx.trip_service(),
             trip_json=trip_json,
             trip_root=trip_root,
             slug=slug,

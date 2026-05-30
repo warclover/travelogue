@@ -11,7 +11,8 @@ import {
 import { studioAuthHeaders, postJson } from "./http.js";
 import { humanizeStudioError, showSlowHint, hideSlowHint } from "./errors.js";
 import { updateProgress } from "./progress.js";
-import { render, transitionTo } from "./render.js";
+import { renderNow, transitionTo } from "./navigation.js";
+import { pollJobUntilDone } from "./job-poll.js";
 
 export function pollJob(jobId) {
   return fetch("/__travelogue/status?jobId=" + encodeURIComponent(jobId))
@@ -78,48 +79,47 @@ export function waitJob(jobId, gen) {
   hideSlowHint();
   refreshImportVisionFlag();
 
-  return new Promise(function (resolve, reject) {
-    function finishCancel() {
+  return pollJobUntilDone(jobId, {
+    intervalMs: 500,
+    startedAt: started,
+    shouldAbort: function () { return isImportGenerationStale(gen); },
+    onTick: function (job, tickStarted) {
+      if (isImportGenerationStale(gen)) return;
+      var elapsed = Date.now() - tickStarted;
+      if (S._importVisionEnabled && !slowShown && elapsed > SLOW_JOB_VISION_LONG_MS) {
+        slowShown = 3;
+        showSlowHint(3);
+      } else if (S._importVisionEnabled && slowShown < 2 && elapsed > SLOW_JOB_VISION_MS) {
+        slowShown = 2;
+        showSlowHint(2);
+      } else if (!slowShown && elapsed > SLOW_JOB_MS) {
+        slowShown = 1;
+        showSlowHint(1);
+      }
+      if (job.status === "running" || job.status === "queued") updateProgress(job);
+    },
+  }).then(function (job) {
+    if (isImportGenerationStale(gen)) {
       S.activeJobId = null;
       show($("studio-cancel"), false);
       hideSlowHint();
-      reject(new Error("已取消"));
+      throw new Error("已取消");
     }
-    function tick() {
-      if (isImportGenerationStale(gen)) {
-        finishCancel();
-        return;
-      }
-      pollJob(jobId).then(function (job) {
-        if (isImportGenerationStale(gen)) {
-          finishCancel();
-          return;
-        }
-        if (S._importVisionEnabled && !slowShown && Date.now() - started > SLOW_JOB_VISION_LONG_MS) {
-          slowShown = 3;
-          showSlowHint(3);
-        } else if (S._importVisionEnabled && slowShown < 2 && Date.now() - started > SLOW_JOB_VISION_MS) {
-          slowShown = 2;
-          showSlowHint(2);
-        } else if (!slowShown && Date.now() - started > SLOW_JOB_MS) {
-          slowShown = 1;
-          showSlowHint(1);
-        }
-        if (job.status === "running" || job.status === "queued") {
-          updateProgress(job);
-          setTimeout(tick, 500);
-          return;
-        }
-        S.activeJobId = null;
-        show($("studio-cancel"), false);
-        hideSlowHint();
-        if (job.status === "succeeded") { updateProgress(job); resolve(job); return; }
-        if (job.status === "cancelled") { reject(new Error("已取消")); return; }
-        var err = job.error || {};
-        reject(new Error(humanizeStudioError(err.code, err.message || err.code)));
-      }).catch(reject);
+    S.activeJobId = null;
+    show($("studio-cancel"), false);
+    hideSlowHint();
+    if (job.status === "succeeded") {
+      updateProgress(job);
+      return job;
     }
-    tick();
+    if (job.status === "cancelled") throw new Error("已取消");
+    var err = job.error || {};
+    throw new Error(humanizeStudioError(err.code, err.message || err.code));
+  }).catch(function (err) {
+    S.activeJobId = null;
+    show($("studio-cancel"), false);
+    hideSlowHint();
+    throw err;
   });
 }
 
@@ -177,14 +177,14 @@ export function loadTrips(options) {
       if (S.currentState === "Loading" || S.currentState === "IdleEmpty" || S.currentState === "IdleReturning") {
         transitionTo(S.tripsData.length > 0 ? "IdleReturning" : "IdleEmpty");
       } else {
-        render();
+        renderNow();
       }
     })
     .catch(function () {
       if (seq !== S._tripsLoadSeq) return;
       clearTimeout(slowTimer); clearTimeout(failTimer);
       S.isOffline = true;
-      render();
+      renderNow();
       if (S.tripsData.length === 0) {
         transitionTo("IdleEmpty");
         if (!failToastShown && !slowToastShown && typeof studioToast === "function") {
@@ -205,12 +205,12 @@ export function startHealthCheck() {
           if (typeof studioToast === "function") studioToast("服务已恢复", { duration: 2000 });
           loadTrips();
         }
-        render();
+        renderNow();
       })
       .catch(function () {
         var wasOffline = S.isOffline;
         S.isOffline = true;
-        if (!wasOffline) render();
+        if (!wasOffline) renderNow();
       });
   }
   check();

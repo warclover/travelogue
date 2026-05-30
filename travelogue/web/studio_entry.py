@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from travelogue.web.studio_constants import STUDIO_USER_NOTES_MAX_LEN
+
 
 def _ordered_screens(trip: dict) -> list[tuple[str, list[str], str | None]]:
     """All (screenId, assetIds, arcSegment) across chapters in document order."""
@@ -82,7 +84,7 @@ def build_intent_summary(trip: dict) -> dict[str, Any]:
         "featuredCount": featured,
         "segmentCount": len(segments),
         "hasUserNotes": bool(user_notes),
-        "userNotes": user_notes[:200] if user_notes else "",
+        "userNotes": user_notes[:STUDIO_USER_NOTES_MAX_LEN] if user_notes else "",
     }
 
 

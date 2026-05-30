@@ -131,6 +131,21 @@ def should_include_scroll_keyboard_nav(
     return (payload.get("scroll") or {}).get("keyboardNav") is True
 
 
+def _copy_named_files(
+    out_dir: Path,
+    pairs: tuple[tuple[Path, str], ...],
+    *,
+    error_code: str,
+) -> None:
+    out_dir = out_dir.resolve()
+    for src, name in pairs:
+        if not src.is_file():
+            raise RenderError(error_code, f"missing {src.name}")
+        dest = out_dir / name
+        if dest.resolve() != src.resolve():
+            shutil.copy2(src, dest)
+
+
 def copy_scroll_nav_bundle(out_dir: Path) -> None:
     out_dir = out_dir.resolve()
     if not SCROLL_NAV_JS.is_file():
@@ -143,18 +158,17 @@ def copy_scroll_nav_bundle(out_dir: Path) -> None:
 def copy_longshot_bundle(out_dir: Path) -> None:
     """Copy longshot.js, share.js, longshot.css, copy-toggle, and vendored html2canvas."""
     out_dir = out_dir.resolve()
-    for src, name in (
-        (LONGSHOT_JS, "longshot.js"),
-        (SHARE_JS, "share.js"),
-        (LONGSHOT_CSS, "longshot.css"),
-        (COPY_TOGGLE_JS, "copy-toggle.js"),
-        (COPY_DISPLAY_CSS, "copy-display.css"),
-    ):
-        if not src.is_file():
-            raise RenderError("E_RENDER_LONGSHOT", f"missing {src.name}")
-        dest = out_dir / name
-        if dest.resolve() != src.resolve():
-            shutil.copy2(src, dest)
+    _copy_named_files(
+        out_dir,
+        (
+            (LONGSHOT_JS, "longshot.js"),
+            (SHARE_JS, "share.js"),
+            (LONGSHOT_CSS, "longshot.css"),
+            (COPY_TOGGLE_JS, "copy-toggle.js"),
+            (COPY_DISPLAY_CSS, "copy-display.css"),
+        ),
+        error_code="E_RENDER_LONGSHOT",
+    )
     vendor_dir = out_dir / "vendor"
     vendor_dir.mkdir(parents=True, exist_ok=True)
     if not HTML2CANVAS_VENDOR.is_file():
@@ -264,12 +278,11 @@ def should_include_breath_scrub(
 
 def copy_breath_bundle(out_dir: Path, *, include_flow: bool = False, include_scrub: bool = False) -> None:
     out_dir = out_dir.resolve()
-    for src, name in ((BREATH_JS, "breath.js"), (BREATH_CSS, "breath.css")):
-        if not src.is_file():
-            raise RenderError("E_RENDER_BREATH", f"missing {src.name}")
-        dest = out_dir / name
-        if dest.resolve() != src.resolve():
-            shutil.copy2(src, dest)
+    _copy_named_files(
+        out_dir,
+        ((BREATH_JS, "breath.js"), (BREATH_CSS, "breath.css")),
+        error_code="E_RENDER_BREATH",
+    )
     if include_flow:
         if not BREATH_LENIS_JS.is_file():
             raise RenderError("E_RENDER_BREATH", "missing breath-lenis.js")
@@ -315,54 +328,48 @@ def write_longshot_sidecar(
 
 def copy_screenplay_bundle(out_dir: Path) -> None:
     """Copy screenplay, copy-toggle, copy-display, and longshot-bridge assets."""
-    out_dir = out_dir.resolve()
-    for src, name in (
-        (SCREENPLAY_HASH_JS, "screenplay-hash.js"),
-        (SCREENPLAY_BOOKMARKS_JS, "screenplay-bookmarks.js"),
-        (SCREENPLAY_JS, "screenplay.js"),
-        (SCREENPLAY_CSS, "screenplay.css"),
-        (COPY_TOGGLE_JS, "copy-toggle.js"),
-        (COPY_DISPLAY_CSS, "copy-display.css"),
-        (LONGSHOT_BRIDGE_JS, "longshot-bridge.js"),
-    ):
-        if not src.is_file():
-            raise RenderError("E_RENDER_SCREENPLAY", f"missing {src.name}")
-        dest = out_dir / name
-        if dest.resolve() != src.resolve():
-            shutil.copy2(src, dest)
+    _copy_named_files(
+        out_dir,
+        (
+            (SCREENPLAY_HASH_JS, "screenplay-hash.js"),
+            (SCREENPLAY_BOOKMARKS_JS, "screenplay-bookmarks.js"),
+            (SCREENPLAY_JS, "screenplay.js"),
+            (SCREENPLAY_CSS, "screenplay.css"),
+            (COPY_TOGGLE_JS, "copy-toggle.js"),
+            (COPY_DISPLAY_CSS, "copy-display.css"),
+            (LONGSHOT_BRIDGE_JS, "longshot-bridge.js"),
+        ),
+        error_code="E_RENDER_SCREENPLAY",
+    )
 
 
 def copy_longshot_bridge_bundle(out_dir: Path) -> None:
     """Draft web toolbar: longshot bridge + copy toggles without present bundle."""
-    out_dir = out_dir.resolve()
-    for src, name in (
-        (SCREENPLAY_CSS, "screenplay.css"),
-        (COPY_TOGGLE_JS, "copy-toggle.js"),
-        (COPY_DISPLAY_CSS, "copy-display.css"),
-        (LONGSHOT_BRIDGE_JS, "longshot-bridge.js"),
-    ):
-        if not src.is_file():
-            raise RenderError("E_RENDER_SCREENPLAY", f"missing {src.name}")
-        dest = out_dir / name
-        if dest.resolve() != src.resolve():
-            shutil.copy2(src, dest)
+    _copy_named_files(
+        out_dir,
+        (
+            (SCREENPLAY_CSS, "screenplay.css"),
+            (COPY_TOGGLE_JS, "copy-toggle.js"),
+            (COPY_DISPLAY_CSS, "copy-display.css"),
+            (LONGSHOT_BRIDGE_JS, "longshot-bridge.js"),
+        ),
+        error_code="E_RENDER_SCREENPLAY",
+    )
 
 
 def copy_inline_edit_bundle(out_dir: Path) -> None:
     """Copy inline-edit assets for draft preview."""
-    out_dir = out_dir.resolve()
-    for src, name in (
-        (INLINE_EDIT_JS, "inline-edit.js"),
-        (INLINE_EDIT_CSS, "inline-edit.css"),
-    ):
-        if not src.is_file():
-            raise RenderError("E_RENDER_INLINE_EDIT", f"missing {src.name}")
-        dest = out_dir / name
-        if dest.resolve() != src.resolve():
-            shutil.copy2(src, dest)
+    _copy_named_files(
+        out_dir,
+        (
+            (INLINE_EDIT_JS, "inline-edit.js"),
+            (INLINE_EDIT_CSS, "inline-edit.css"),
+        ),
+        error_code="E_RENDER_INLINE_EDIT",
+    )
 
 
-def _load_partials(compiler: Compiler, partials_dir: Path) -> dict:
+def _load_partials(compiler: Compiler, partials_dir: Path) -> dict[str, object]:
     partials: dict = {}
     for path in sorted(partials_dir.glob("*.hbs")):
         name = path.stem
@@ -419,6 +426,7 @@ def render_trip(
     trip_path: Path,
     out_dir: Path | None = None,
     *,
+    trip: dict | None = None,
     export_mode: str = "draft",
     validate: bool = True,
     copy_css: bool = True,
@@ -440,7 +448,8 @@ def render_trip(
 
     from travelogue.services.trip import TripService
 
-    trip = TripService().load(trip_path)
+    if trip is None:
+        trip = TripService().load(trip_path)
 
     if validate:
         errs = [e for e in validate_trip(trip) if not e.startswith("WARN:")]
@@ -589,6 +598,11 @@ def render_trip_surfaces(
     trip_root = trip_path.parent
     out_dir = (out_dir or trip_root).resolve()
 
+    from travelogue.services.trip import TripService
+
+    trip = TripService().load(trip_path)
+    shared = {"trip": trip, "cfg": cfg}
+
     web_index = render_trip(
         trip_path,
         out_dir,
@@ -603,7 +617,7 @@ def render_trip_surfaces(
         font_theme=font_theme,
         copy_display_override=copy_display_override,
         reading_profile_override=reading_profile_override,
-        cfg=cfg,
+        **shared,
     ) / "index.html"
     mobile_index = render_trip(
         trip_path,
@@ -618,7 +632,7 @@ def render_trip_surfaces(
         font_theme=font_theme,
         copy_display_override=copy_display_override,
         reading_profile_override=reading_profile_override,
-        cfg=cfg,
+        **shared,
     ) / "index-mobile.html"
     present_index: Path | None = None
     if export_mode == "draft":
@@ -636,6 +650,6 @@ def render_trip_surfaces(
             font_theme=font_theme,
             copy_display_override=copy_display_override,
             reading_profile_override=reading_profile_override,
-            cfg=cfg,
+            **shared,
         ) / PRESENT_PREVIEW_INDEX_NAME
     return web_index, mobile_index, present_index

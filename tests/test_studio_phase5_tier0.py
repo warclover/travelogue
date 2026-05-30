@@ -41,8 +41,8 @@ def test_p5_h4_returning_recent_path_hint() -> None:
 
 def test_p5_32_preview_longshot_busy_retry() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
-    assert "StudioApi.postJsonBusyRetry" in js or "postJsonBusyRetry" in js
-    assert "StudioApi" in js
+    assert "postJsonBusyRetry" in js
+    assert './js/http.js"' in js
     assert "排队中，请稍候" in js
 
 
@@ -51,6 +51,19 @@ def test_p5_a4_shared_http_module() -> None:
     assert "export function postJson" in js or "function postJson" in js
     assert "export function patchJson" in js
     assert "postJsonBusyRetry" in js
-    api = (ROOT / "templates" / "studio" / "studio-api.js").read_text(encoding="utf-8")
-    assert "window.StudioApi" in api
-    assert "./js/http.js" in api
+    http = (ROOT / "templates" / "studio" / "js" / "http.js").read_text(encoding="utf-8")
+    assert "export function postJson" in http
+    assert "export function patchJson" in http
+
+
+def test_p5_esm_cycle_break() -> None:
+    render = (ROOT / "templates" / "studio" / "js" / "render.js").read_text(encoding="utf-8")
+    sheet = (ROOT / "templates" / "studio" / "js" / "sheet.js").read_text(encoding="utf-8")
+    api = (ROOT / "templates" / "studio" / "js" / "api.js").read_text(encoding="utf-8")
+    assert "import-bridge.js" in render
+    assert "import-flow.js" not in render
+    assert "import-bridge.js" in sheet
+    assert "import-flow.js" not in sheet
+    assert "navigation.js" in api
+    assert "render.js" not in api
+    assert "pollJobUntilDone" in api

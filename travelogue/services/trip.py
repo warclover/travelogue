@@ -16,6 +16,10 @@ class TripNotFoundError(FileNotFoundError):
     pass
 
 
+class TripSaveError(OSError):
+    """Atomic trip.json write failed (I/O, permissions, target locked)."""
+
+
 _UNSET = object()
 
 
@@ -135,11 +139,28 @@ class TripService:
             prefix=f".{p.stem}-",
             dir=p.parent,
         )
+        opened = False
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                opened = True
                 handle.write(payload)
-            os.replace(tmp_path, p)
+                handle.flush()
+                os.fsync(handle.fileno())
+            try:
+                os.replace(tmp_path, p)
+            except OSError as exc:
+                win_busy = os.name == "nt" and getattr(exc, "winerror", None) in (5, 32)
+                if win_busy or isinstance(exc, PermissionError):
+                    raise TripSaveError(
+                        f"E_TRIP_SAVE_BUSY cannot replace {p.name}: file may be open elsewhere"
+                    ) from exc
+                raise
         except Exception:
+            if not opened:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
             try:
                 os.unlink(tmp_path)
             except OSError:

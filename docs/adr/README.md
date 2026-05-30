@@ -7,5 +7,9 @@
 | [003](./003-experience-reading-modes.md) | 三阅读模式 · Hybrid · `export.reading.profile` · Epic E0–E8 | 已采纳 | 2026-05-27 |
 | [004](./004-studio-hub-server.md) | Studio = `serve --studio` 单进程（v0.2 撤销双 Hub） | 已采纳 | 2026-05-27 |
 | [005](./005-longshot-server-side.md) | 长图 P0/P1 fallback；scale=1；高度分段 | 已采纳 | 2026-05-27 |
+| [006](./006-media-engines-integration.md) | 媒体引擎集成 | 已采纳 | — |
+| [007](./007-native-clustering.md) | 原生聚类 | 已采纳 | — |
+| [010](./010-tech-debt-sprint.md) | Phase 5 后架构还债：handlers、AppContext、render 分层 | 已采纳 | 2026-05-30 |
+| [011](./011-import-strategy.md) | 延迟 import 策略（循环依赖 / 热循环） | 已采纳 | 2026-05-30 |
 
 新建 ADR 请使用 `00N-简短英文名.md`，并在本表登记。

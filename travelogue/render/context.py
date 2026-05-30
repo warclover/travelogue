@@ -2,11 +2,23 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 
-from travelogue.config import AppConfig
+from travelogue.render.context_types import (
+    BreathPauseItemContext,
+    ChapterDividerContext,
+    ChapterRenderContext,
+    EpilogueStatsContext,
+    FeaturedGridCardContext,
+    ForewordSpreadContext,
+    LayoutScreenContext,
+    MediaCardContext,
+    MediaRowContext,
+    MediaScrollContext,
+    ScreenSpreadContext,
+    TripIndexEntryContext,
+)
 
 from travelogue.curation.asset_caption import asset_caption, resolve_caption
 from travelogue.media.image_ops import classify_aspect, detect_orientation
@@ -28,6 +40,12 @@ from travelogue.paths import (
     SHARE_JS,
 )
 from travelogue.services.validate import asset_map
+
+
+def _asset_lookup(assets: dict[str, dict], aid: str) -> dict | None:
+    if not aid:
+        return None
+    return assets.get(aid)
 
 
 def _longshot_bundle_version(trip: dict) -> str:
@@ -267,7 +285,7 @@ def build_media_card(
     chapter_id: str | None = None,
     item_index: int | None = None,
     caption_on_asset: bool = False,
-) -> dict:
+) -> MediaCardContext:
     layout = item.get("layout") or {}
     src = pick_image_src(asset, export_layout=export_layout)
     srcset = compile_srcset(asset, mobile=export_layout == "mobile")
@@ -291,7 +309,7 @@ def build_media_card(
     else:
         edit_caption = None
 
-    ctx: dict = {
+    ctx: MediaCardContext = {
         "isMediaCard": True,
         "isMediaRow": False,
         "isMediaScroll": False,
@@ -353,10 +371,12 @@ def build_media_row(
     chapter_id: str,
     item_index: int,
     photos_only: bool = False,
-) -> dict:
+) -> MediaRowContext:
     cells = []
     for aid in item.get("assetIds", []):
-        asset = assets[aid]
+        asset = _asset_lookup(assets, aid)
+        if not asset:
+            continue
         kind = asset_aspect_kind(asset)
         cells.append(
             {
@@ -411,10 +431,12 @@ def build_media_scroll(
     chapter_id: str,
     item_index: int,
     photos_only: bool = False,
-) -> dict:
+) -> MediaScrollContext:
     slides = []
     for aid in item.get("assetIds", []):
-        asset = assets[aid]
+        asset = _asset_lookup(assets, aid)
+        if not asset:
+            continue
         kind = asset_aspect_kind(asset)
         slides.append(
             {
@@ -431,7 +453,7 @@ def build_media_scroll(
         caption = ""
     voice = item.get("voice")
     edit_caption = f"chapters.{chapter_id}.items.{item_index}.caption" if is_draft else None
-    ctx: dict = {
+    ctx: MediaScrollContext = {
         "isMediaCard": False,
         "isMediaRow": False,
         "isMediaScroll": True,
@@ -483,7 +505,7 @@ def _screen_aspect_ratio_css(asset: dict) -> str | None:
     return None
 
 
-def build_epilogue_stats(trip: dict) -> dict:
+def build_epilogue_stats(trip: dict) -> EpilogueStatsContext:
     """P5-S4 · trip summary for epilogue stats screen."""
     assets = [
         a
@@ -529,7 +551,7 @@ def build_layout_screen(
     folio_lite: bool = False,
     is_plate: bool = False,
     featured_asset_ids: frozenset[str] | None = None,
-) -> dict:
+) -> LayoutScreenContext:
     pattern_id = screen.get("patternId", "screen-landscape-1")
     if pattern_id == "screen-breath-pause":
         from travelogue.curation.breath_pauses import build_breath_pause_render_ctx
@@ -554,7 +576,9 @@ def build_layout_screen(
     mixed_p1_l2 = pattern_id == "screen-portrait-1-landscape-2"
     for j, slot in enumerate(screen.get("slots") or []):
         aid = slot.get("assetId", "")
-        asset = assets[aid]
+        asset = _asset_lookup(assets, aid)
+        if not asset:
+            continue
         fit = slot.get("fit", "cover")
         role = slot.get("role")
         if mixed_p1_l2:
@@ -614,7 +638,7 @@ def build_layout_screen(
     slot_aids = [sl.get("assetId", "") for sl in screen.get("slots") or []]
     is_featured = any(aid in featured_ids for aid in slot_aids if aid)
 
-    out: dict = {
+    out: LayoutScreenContext = {
         "patternId": pattern_id,
         "gridClass": grid_class,
         "screenTone": tone,
@@ -650,7 +674,7 @@ def build_layout_screen(
     return out
 
 
-def chapter_divider(ch: dict, index: int) -> dict:
+def chapter_divider(ch: dict, index: int) -> ChapterDividerContext:
     if index <= 1:
         return {"showDivider": False}
     curation = ch.get("curation") or {}
@@ -658,7 +682,7 @@ def chapter_divider(ch: dict, index: int) -> dict:
     places = curation.get("places") or []
     if not day_span and not places:
         return {"showDivider": False}
-    divider: dict = {"showDivider": True}
+    divider: ChapterDividerContext = {"showDivider": True}
     if day_span:
         d = day_span[0]
         try:
@@ -679,8 +703,8 @@ def _trip_index_desc(lead: str, *, max_len: int = 48) -> str:
     return text[: max_len - 1].rstrip() + "…"
 
 
-def build_trip_index_entries(chapters: list[dict]) -> list[dict]:
-    entries: list[dict] = []
+def build_trip_index_entries(chapters: list[dict]) -> list[TripIndexEntryContext]:
+    entries: list[TripIndexEntryContext] = []
     for ch in chapters:
         idx = ch.get("index", len(entries) + 1)
         lead = str(ch.get("lead") or "")
@@ -703,8 +727,8 @@ def build_featured_grid_cards(
     *,
     meta_title: str,
     export_layout: str,
-) -> list[dict]:
-    cards: list[dict] = []
+) -> list[FeaturedGridCardContext]:
+    cards: list[FeaturedGridCardContext] = []
     for aid in asset_ids:
         asset = assets.get(aid)
         if not asset:
@@ -738,7 +762,7 @@ def _extract_pull_quote(text: str, *, max_len: int = 40) -> str:
     return text[: max_len - 1].rstrip() + "…"
 
 
-def build_foreword_spread(first_chapter: dict, *, trip_hook: str = "") -> dict | None:
+def build_foreword_spread(first_chapter: dict, *, trip_hook: str = "") -> ForewordSpreadContext | None:
     lead = str(first_chapter.get("lead") or "").strip()
     if not lead:
         return None
@@ -763,7 +787,7 @@ def build_screen_spread(
     meta_title: str,
     export_layout: str,
     trip_hook: str = "",
-) -> dict | None:
+) -> ScreenSpreadContext | None:
     slots = screen.get("slots") or []
     if not slots:
         return None
@@ -792,598 +816,6 @@ def build_screen_spread(
         "body": body,
         "pullQuote": pull,
         "hasPullQuote": bool(pull),
-    }
-
-
-@dataclass
-class SurfaceContext:
-    """Resolved export surface flags and reading profile (resolve phase)."""
-
-    export_mode: str
-    is_draft: bool
-    is_share: bool
-    copy_display: str
-    photos_only: bool
-    export_layout: str
-    is_longshot_surface: bool
-    image_layout: str
-    layout_engine: str
-    use_screens_global: bool
-    include_screenplay: bool
-    strip_narrative_copy: bool
-    assets: dict[str, dict]
-    reading_payload: dict
-    reading_json: str
-    folio_lite: bool
-    folio_full: bool
-    include_breath: bool
-    include_breath_flow: bool
-    include_breath_scrub: bool
-    include_breath_gsap_runtime: bool
-    include_scroll_keyboard_nav: bool
-    has_featured_assets: bool
-    include_long_shot: bool
-    include_longshot_bridge: bool
-    present_preview_url: str | None
-    index_name: str
-    font_theme: str | None
-    layout_engine_override: str | None
-    export_layout_override: str | None
-
-
-@dataclass
-class ChaptersRenderBundle:
-    """Chapter list and folio extras (enrich phase)."""
-
-    chapters_out: list[dict]
-    foreword_spread: dict | None
-    has_foreword_spread: bool
-    trip_index_entries: list[dict]
-    has_trip_index: bool
-    featured_grid_cards: list[dict]
-    has_featured_grid: bool
-
-
-def resolve_surface_context(
-    trip: dict,
-    *,
-    export_mode: str = "draft",
-    layout_engine_override: str | None = None,
-    export_layout_override: str | None = None,
-    font_theme: str | None = None,
-    copy_display_override: str | None = None,
-    index_name: str = "index.html",
-    reading_profile_override: str | None = None,
-    cfg: AppConfig | None = None,
-) -> SurfaceContext:
-    from travelogue.config import get_config, reading_profile_defaults
-    from travelogue.curation.screen_planner import resolve_layout_engine, screens_layout_active
-    from travelogue.render.copy_display import is_photos_only, resolve_copy_display, should_strip_narrative_copy
-    from travelogue.render.engine import (
-        should_include_long_shot,
-        should_include_longshot_bridge,
-        should_include_screenplay,
-        web_screens_surface_active,
-    )
-    from travelogue.render.reading_profile import (
-        reading_json_for_html,
-        resolve_reading_payload,
-    )
-
-    is_draft = export_mode == "draft"
-    is_share = export_mode == "share"
-    copy_display = resolve_copy_display(trip, override=copy_display_override)
-    photos_only = is_photos_only(copy_display)
-    export_layout = export_layout_override or trip.get("exportLayout", "auto")
-    is_longshot_surface = export_layout == "longshot"
-    image_layout = "mobile" if is_longshot_surface else export_layout
-    layout_engine = resolve_layout_engine(trip, override=layout_engine_override)
-    use_screens_global = screens_layout_active(trip, override=layout_engine_override)
-    include_screenplay = should_include_screenplay(
-        trip,
-        export_mode=export_mode,
-        layout_engine_override=layout_engine_override,
-        export_layout_override=export_layout_override,
-    )
-    strip_narrative_copy = should_strip_narrative_copy(
-        photos_only=photos_only,
-        include_screenplay=include_screenplay,
-        is_draft=is_draft,
-    )
-    assets = asset_map(trip)
-
-    app_cfg = cfg or get_config()
-    reading_defaults = reading_profile_defaults(app_cfg)
-    reading_payload = resolve_reading_payload(
-        trip,
-        export_mode=export_mode,
-        export_layout_override=export_layout_override,
-        index_name=index_name,
-        reading_profile_override=reading_profile_override,
-        config_defaults=reading_defaults,
-    )
-    scroll_reading = reading_payload.get("scroll") or {}
-    folio_mode = scroll_reading.get("folio", "off")
-    folio_lite = folio_mode in ("lite", "full")
-    folio_full = folio_mode == "full" and not is_longshot_surface
-    include_breath = scroll_reading.get("breath", "off") not in ("off", "")
-    include_breath_flow = scroll_reading.get("breath") == "flow"
-    include_breath_scrub = scroll_reading.get("breath") in ("cinematic", "gallery")
-    include_breath_gsap_runtime = (
-        include_breath_scrub and scroll_reading.get("breathEngine") == "gsap"
-    )
-    include_scroll_keyboard_nav = scroll_reading.get("keyboardNav") is True
-    has_featured_assets = bool(reading_payload.get("featuredAssetIds"))
-    reading_json = reading_json_for_html(reading_payload)
-
-    include_long_shot = should_include_long_shot(
-        trip,
-        export_mode=export_mode,
-        layout_engine_override=layout_engine_override,
-        export_layout_override=export_layout_override,
-    )
-    include_longshot_bridge = (
-        is_draft
-        and index_name == "index.html"
-        and should_include_longshot_bridge(
-            trip,
-            layout_engine_override=layout_engine_override,
-            export_layout_override=export_layout_override,
-        )
-    )
-    present_preview_url = (
-        "index-present.html"
-        if is_draft
-        and index_name == "index.html"
-        and web_screens_surface_active(
-            trip,
-            layout_engine_override=layout_engine_override,
-            export_layout_override=export_layout_override,
-        )
-        else None
-    )
-
-    return SurfaceContext(
-        export_mode=export_mode,
-        is_draft=is_draft,
-        is_share=is_share,
-        copy_display=copy_display,
-        photos_only=photos_only,
-        export_layout=export_layout,
-        is_longshot_surface=is_longshot_surface,
-        image_layout=image_layout,
-        layout_engine=layout_engine,
-        use_screens_global=use_screens_global,
-        include_screenplay=include_screenplay,
-        strip_narrative_copy=strip_narrative_copy,
-        assets=assets,
-        reading_payload=reading_payload,
-        reading_json=reading_json,
-        folio_lite=folio_lite,
-        folio_full=folio_full,
-        include_breath=include_breath,
-        include_breath_flow=include_breath_flow,
-        include_breath_scrub=include_breath_scrub,
-        include_breath_gsap_runtime=include_breath_gsap_runtime,
-        include_scroll_keyboard_nav=include_scroll_keyboard_nav,
-        has_featured_assets=has_featured_assets,
-        include_long_shot=include_long_shot,
-        include_longshot_bridge=include_longshot_bridge,
-        present_preview_url=present_preview_url,
-        index_name=index_name,
-        font_theme=font_theme,
-        layout_engine_override=layout_engine_override,
-        export_layout_override=export_layout_override,
-    )
-
-
-def build_chapters_render_context(
-    trip: dict,
-    surface: SurfaceContext,
-    *,
-    trip_root: Path | None,
-    meta_title: str,
-    hook: str,
-) -> ChaptersRenderBundle:
-    from travelogue.curation.chapter_items import resolve_chapter_items_for_render
-    from travelogue.curation.layout_planner import aspect_kind_for_asset
-    from travelogue.render.reading_profile import featured_asset_ids as collect_featured_ids
-
-    assets = surface.assets
-    strip_narrative_copy = surface.strip_narrative_copy
-    is_draft = surface.is_draft
-    folio_lite = surface.folio_lite
-    folio_full = surface.folio_full
-    use_screens_global = surface.use_screens_global
-    is_longshot_surface = surface.is_longshot_surface
-    layout_engine = surface.layout_engine
-    image_layout = surface.image_layout
-
-    chapters_out: list[dict] = []
-    aspects_map = {a["id"]: aspect_kind_for_asset(a) for a in trip.get("assets", []) if a.get("id")}
-    layout_eligible_count = sum(
-        1 for a in trip.get("assets", []) if a.get("layoutEligible", True)
-    )
-    featured_ids = frozenset(collect_featured_ids(trip))
-    global_screen_index = 0
-
-    folio_plan: dict = {}
-    grid_exclude: frozenset[str] = frozenset()
-    if folio_full:
-        from travelogue.curation.folio_plan import resolve_folio_plan
-
-        layout_eligible = [a for a in trip.get("assets", []) if a.get("layoutEligible", True)]
-        folio_plan = resolve_folio_plan(trip, trip.get("chapters") or [], layout_eligible)
-        if folio_plan.get("featuredGrid"):
-            grid_exclude = frozenset(folio_plan.get("featuredGridAssetIds") or [])
-
-    foreword_spread: dict | None = None
-    has_foreword_spread = False
-    if folio_full and folio_plan.get("foreword"):
-        chapters_raw = trip.get("chapters") or []
-        if chapters_raw:
-            first_lead = (chapters_raw[0].get("lead") or "").strip()
-            if first_lead and not strip_narrative_copy:
-                foreword_spread = build_foreword_spread(chapters_raw[0], trip_hook=hook)
-                has_foreword_spread = foreword_spread is not None
-
-    raw_chapters = trip.get("chapters") or []
-    if is_longshot_surface:
-        from travelogue.curation.longshot_filter import chapters_for_longshot_render
-
-        raw_chapters = chapters_for_longshot_render(raw_chapters)
-
-    for i, ch in enumerate(raw_chapters):
-        idx = ch.get("index", i + 1)
-        curation = ch.get("curation") or {}
-        anchors = curation.get("memoryAnchors") or []
-        use_screens = use_screens_global and bool(ch.get("screens")) and not is_longshot_surface
-        raw_screens_for_spread: list[dict] = []
-        screens_out = []
-        if use_screens_global and bool(ch.get("screens")) and not is_longshot_surface:
-            raw_screens = enrich_screen_tones(
-                ch.get("screens", []),
-                assets,
-                trip_root=trip_root,
-                chapter_index=idx,
-            )
-            chapter_screen_seq = 0
-            for sc in raw_screens:
-                slots = sc.get("slots") or []
-                if grid_exclude:
-                    slots = [s for s in slots if s.get("assetId") not in grid_exclude]
-                    if not slots:
-                        continue
-                    if len(slots) != len(sc.get("slots") or []):
-                        sc = dict(sc)
-                        sc["slots"] = slots
-                raw_screens_for_spread.append(sc)
-                chapter_screen_seq += 1
-                global_screen_index += 1
-                screens_out.append(
-                    build_layout_screen(
-                        sc,
-                        assets,
-                        meta_title=meta_title,
-                        export_layout=image_layout,
-                        eager=i == 0 and chapter_screen_seq == 1,
-                        screen_index=global_screen_index,
-                        chapter_index=f"{idx:02d}",
-                        folio_lite=folio_lite,
-                        is_plate=chapter_screen_seq == 1,
-                        featured_asset_ids=featured_ids,
-                    )
-                )
-
-        screen_spread: dict | None = None
-        has_screen_spread = False
-        if folio_full and use_screens and raw_screens_for_spread:
-            spread_src = raw_screens_for_spread[-1]
-            screen_spread = build_screen_spread(
-                ch,
-                spread_src,
-                assets,
-                meta_title=meta_title,
-                export_layout=image_layout,
-                trip_hook=hook,
-            )
-            has_screen_spread = screen_spread is not None
-
-        items_out = []
-        chapter_items = resolve_chapter_items_for_render(
-            ch,
-            export_layout=image_layout,
-            layout_engine=layout_engine,
-            is_longshot=is_longshot_surface,
-            aspects=aspects_map,
-            assets_map=assets,
-            trip_photo_total=layout_eligible_count,
-        )
-        if is_longshot_surface:
-            from travelogue.curation.breath_pauses import interleave_breath_items
-
-            chapter_items = interleave_breath_items(chapter_items)
-        caption_on_asset = is_longshot_surface and bool(ch.get("screens"))
-        for j, it in enumerate(chapter_items):
-            itype = it.get("type")
-            eager = i == 0 and j == 0
-            if itype == "media-card":
-                aid = it["assetId"]
-                items_out.append(
-                    build_media_card(
-                        it,
-                        assets[aid],
-                        meta_title=meta_title,
-                        export_layout=image_layout,
-                        is_draft=is_draft,
-                        eager=eager,
-                        photos_only=strip_narrative_copy,
-                        chapter_id=ch["id"],
-                        item_index=j,
-                        caption_on_asset=caption_on_asset,
-                    )
-                )
-            elif itype == "media-row":
-                items_out.append(
-                    build_media_row(
-                        it,
-                        assets,
-                        meta_title=meta_title,
-                        export_layout=image_layout,
-                        is_draft=is_draft,
-                        chapter_id=ch["id"],
-                        item_index=j,
-                        photos_only=strip_narrative_copy,
-                    )
-                )
-            elif itype == "media-scroll":
-                items_out.append(
-                    build_media_scroll(
-                        it,
-                        assets,
-                        meta_title=meta_title,
-                        export_layout=image_layout,
-                        is_draft=is_draft,
-                        chapter_id=ch["id"],
-                        item_index=j,
-                        photos_only=strip_narrative_copy,
-                    )
-                )
-            elif itype == "breath-pause":
-                tone = (ch.get("curation") or {}).get("tone") or {}
-                r = int(tone.get("r", 26)) if isinstance(tone, dict) else 26
-                g = int(tone.get("g", 32)) if isinstance(tone, dict) else 32
-                b = int(tone.get("b", 38)) if isinstance(tone, dict) else 38
-                items_out.append(
-                    {
-                        "isBreathPause": True,
-                        "breathLabel": it.get("label") or "···",
-                        "breathStyle": f"--breath-tone: rgb({r}, {g}, {b});",
-                    }
-                )
-
-        use_chapter_separator = (
-            use_screens_global
-            and not is_longshot_surface
-            and surface.include_breath
-            and int(idx) > 1
-        )
-        chapter_tone = None
-        if use_chapter_separator and raw_screens_for_spread:
-            chapter_tone = _screen_tone_css((raw_screens_for_spread[0] or {}).get("tone"))
-
-        lead = (ch.get("lead") or "").strip()
-        if strip_narrative_copy:
-            lead = ""
-        if i == 0 and has_foreword_spread:
-            lead = ""
-        ch_ctx = {
-            "id": ch["id"],
-            "patternId": ch.get("patternId", ""),
-            "index": f"{idx:02d}",
-            "title": ch.get("title", ""),
-            "lead": lead,
-            "hasLead": bool(lead),
-            "editableLead": is_draft and bool(lead),
-            "editLeadPath": f"chapters.{ch['id']}.lead" if is_draft else None,
-            "hasMemoryAnchors": bool(anchors),
-            "memoryAnchors": ",".join(anchors) if anchors else None,
-            "useScreensEngine": use_screens,
-            "screens": screens_out,
-            "hasScreenSpread": has_screen_spread,
-            "screenSpread": screen_spread or {},
-            "items": items_out,
-            "useChapterSeparator": use_chapter_separator,
-            "chapterSeparatorStyle": (
-                f"background: {chapter_tone or _DEFAULT_SCREEN_TONE};" if use_chapter_separator else ""
-            ),
-            **chapter_divider(ch, idx),
-        }
-        chapters_out.append(ch_ctx)
-
-    trip_index_entries: list[dict] = []
-    featured_grid_cards: list[dict] = []
-    has_trip_index = False
-    has_featured_grid = False
-    if folio_full and folio_plan.get("index"):
-        trip_index_entries = build_trip_index_entries(trip.get("chapters") or [])
-        has_trip_index = bool(trip_index_entries)
-    if folio_full and folio_plan.get("featuredGrid"):
-        featured_grid_cards = build_featured_grid_cards(
-            list(folio_plan.get("featuredGridAssetIds") or []),
-            assets,
-            meta_title=meta_title,
-            export_layout=image_layout,
-        )
-        has_featured_grid = len(featured_grid_cards) >= 4
-
-    return ChaptersRenderBundle(
-        chapters_out=chapters_out,
-        foreword_spread=foreword_spread,
-        has_foreword_spread=has_foreword_spread,
-        trip_index_entries=trip_index_entries,
-        has_trip_index=has_trip_index,
-        featured_grid_cards=featured_grid_cards,
-        has_featured_grid=has_featured_grid,
-    )
-
-
-def build_render_context(
-    trip: dict,
-    *,
-    export_mode: str = "draft",
-    trip_root: Path | None = None,
-    layout_engine_override: str | None = None,
-    export_layout_override: str | None = None,
-    font_theme: str | None = None,
-    copy_display_override: str | None = None,
-    index_name: str = "index.html",
-    reading_profile_override: str | None = None,
-    cfg: AppConfig | None = None,
-) -> dict:
-    """export_mode: draft | share | present-preview"""
-    from travelogue.curation.curate import resolve_cover_asset_id
-    from travelogue.render.engine import LONGSHOT_INDEX_NAME
-    from travelogue.render.reading_profile import reading_html_attrs
-    from travelogue.services.narrative_scope import resolve_cover_show_title
-
-    surface = resolve_surface_context(
-        trip,
-        export_mode=export_mode,
-        layout_engine_override=layout_engine_override,
-        export_layout_override=export_layout_override,
-        font_theme=font_theme,
-        copy_display_override=copy_display_override,
-        index_name=index_name,
-        reading_profile_override=reading_profile_override,
-        cfg=cfg,
-    )
-
-    meta = trip.get("meta", {})
-    meta_title = meta.get("title", "")
-    assets = surface.assets
-    image_layout = surface.image_layout
-
-    cover_id = resolve_cover_asset_id(trip, export_layout=image_layout)
-    if not cover_id or cover_id not in assets:
-        cover_id = trip.get("coverAssetId") or ""
-    cover_asset = assets[cover_id]
-    cover_src = pick_image_src(cover_asset, export_layout=image_layout)
-    cover_srcset = compile_srcset(cover_asset, mobile=image_layout == "mobile")
-
-    meta_line, meta_datetime = format_trip_meta(meta)
-    cover_show_title = resolve_cover_show_title(trip, cfg=cfg)
-    hook = (meta.get("hook") or "").strip()
-    epilogue = (trip.get("epilogue") or "").strip()
-    if surface.strip_narrative_copy:
-        hook = ""
-        epilogue = ""
-
-    chapters_bundle = build_chapters_render_context(
-        trip,
-        surface,
-        trip_root=trip_root,
-        meta_title=meta_title,
-        hook=hook,
-    )
-
-    use_epilogue_stats = (
-        surface.use_screens_global
-        and not surface.is_longshot_surface
-        and surface.include_breath
-    )
-    epilogue_stats = (
-        build_epilogue_stats(trip)
-        if (use_epilogue_stats or surface.is_longshot_surface)
-        else None
-    )
-
-    html_attrs = [f'data-export="{surface.export_mode}"']
-    if surface.export_layout and surface.export_layout != "auto":
-        html_attrs.append(f'data-layout="{surface.export_layout}"')
-    if surface.use_screens_global and not surface.is_longshot_surface:
-        html_attrs.append(f'data-layout-engine="{surface.layout_engine}"')
-    if surface.include_long_shot:
-        html_attrs.append('data-longshot="on"')
-    if surface.include_longshot_bridge:
-        html_attrs.append('data-longshot-bridge="on"')
-        html_attrs.append(f'data-longshot-mobile-url="{LONGSHOT_INDEX_NAME}"')
-    if surface.include_screenplay:
-        html_attrs.append('data-screenplay="on"')
-    if surface.include_screenplay or surface.include_long_shot or surface.include_longshot_bridge:
-        html_attrs.append('data-copy-toggle="on"')
-    if surface.is_draft:
-        html_attrs.append('data-inline-edit="on"')
-    if surface.photos_only:
-        html_attrs.append('data-copy-display="photos"')
-    theme = surface.font_theme or (trip.get("export") or {}).get("fontTheme") or ""
-    if theme == "magazine":
-        html_attrs.append('data-font-theme="magazine"')
-    html_attrs.extend(reading_html_attrs(surface.reading_payload))
-
-    asset_version = _longshot_bundle_version(trip)
-    zip_name = share_zip_filename(trip)
-    zip_ready = has_share_zip(trip, trip_root)
-
-    return {
-        "lang": "zh-CN",
-        "htmlExtraAttrs": " ".join(html_attrs),
-        "includeLongShot": surface.include_long_shot,
-        "includeLongshotBridge": surface.include_longshot_bridge,
-        "longshotMobileUrl": LONGSHOT_INDEX_NAME if surface.include_longshot_bridge else None,
-        "includeScreenplay": surface.include_screenplay,
-        "assetVersion": asset_version,
-        "hasShareZip": zip_ready,
-        "shareZipFile": zip_name if zip_ready else None,
-        "exportLayout": surface.export_layout,
-        "copyDisplay": surface.copy_display,
-        "isPhotosOnly": surface.photos_only,
-        "layoutEngine": surface.layout_engine,
-        "exportMode": surface.export_mode,
-        "isDraft": surface.is_draft,
-        "isShare": surface.is_share,
-        "title": meta_title,
-        "subtitle": (meta.get("subtitle") or "").strip(),
-        "hasSubtitle": bool((meta.get("subtitle") or "").strip()),
-        "coverShowTitle": cover_show_title,
-        "cover": {
-            "src": cover_src,
-            "hasSrcset": bool(cover_srcset),
-            "srcset": cover_srcset,
-            "sizes": pick_image_sizes(image_layout, "cover"),
-            "alt": alt_text(None, cover_asset, meta_title),
-        },
-        "tripMetaLine": meta_line,
-        "tripMetaDatetime": meta_datetime,
-        "hook": hook,
-        "hasHook": bool(hook),
-        "editableHook": surface.is_draft and bool(hook),
-        "epilogue": epilogue,
-        "hasEpilogue": bool(epilogue) or use_epilogue_stats,
-        "editableEpilogue": surface.is_draft and bool(epilogue),
-        "tripId": trip.get("tripId") or "",
-        "chapters": chapters_bundle.chapters_out,
-        "tripRoot": str(trip_root) if trip_root else None,
-        "readingJson": surface.reading_json,
-        "includeBreath": surface.include_breath,
-        "includeBreathFlow": surface.include_breath_flow,
-        "includeBreathScrub": surface.include_breath_scrub,
-        "includeBreathGsapRuntime": surface.include_breath_gsap_runtime,
-        "includeScrollKeyboardNav": surface.include_scroll_keyboard_nav,
-        "presentPreviewUrl": surface.present_preview_url,
-        "hasFeaturedAssets": surface.has_featured_assets,
-        "folioLite": surface.folio_lite,
-        "folioFull": surface.folio_full,
-        "hasTripIndex": chapters_bundle.has_trip_index,
-        "tripIndex": {"entries": chapters_bundle.trip_index_entries},
-        "hasFeaturedGrid": chapters_bundle.has_featured_grid,
-        "featuredGrid": {"cards": chapters_bundle.featured_grid_cards},
-        "hasForewordSpread": chapters_bundle.has_foreword_spread,
-        "forewordSpread": chapters_bundle.foreword_spread or {},
-        "isLongshotSurface": surface.is_longshot_surface,
-        "epilogueStats": epilogue_stats,
-        "useEpilogueStats": use_epilogue_stats,
-        "useEpilogueScreen": (surface.folio_lite and bool(epilogue)) or use_epilogue_stats,
     }
 
 
@@ -1423,7 +855,9 @@ def collect_asset_paths(trip: dict, trip_root: Path) -> list[tuple[str, Path]]:
                 if v:
                     add(v.get("audioFile"))
                 for aid in it.get("assetIds", []):
-                    a = assets[aid]
+                    a = _asset_lookup(assets, aid)
+                    if not a:
+                        continue
                     add(pick_image_src(a, export_layout=export_layout))
 
     from travelogue.curation.curate import resolve_cover_asset_id
@@ -1441,3 +875,13 @@ def collect_asset_paths(trip: dict, trip_root: Path) -> list[tuple[str, Path]]:
             add(pick_image_src(cover, export_layout=profile))
 
     return out
+
+
+from travelogue.render.assemble import build_render_context  # noqa: E402
+from travelogue.render.chapters import ChaptersRenderBundle, build_chapters_render_context  # noqa: E402
+
+__all__ = [
+    "ChaptersRenderBundle",
+    "build_chapters_render_context",
+    "build_render_context",
+]

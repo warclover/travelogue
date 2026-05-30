@@ -8,8 +8,11 @@ import { studioAuthHeaders, withJobBusyRetry, isJobBusyResponse, postJson } from
 import {
   setError, setWarning, hideFailure, showFailure, humanizeStudioError, setImportEstimate,
 } from "./errors.js";
-import { transitionTo } from "./render.js";
-import { pollJob, postImport, postMultipartImport, waitJob, loadTrips } from "./api.js";
+import { transitionTo } from "./navigation.js";
+import { registerImportHandlers } from "./import-bridge.js";
+import { registerLeaveSuccessHandler } from "./navigation.js";
+import { pollJobUntilDone } from "./job-poll.js";
+import { postImport, postMultipartImport, waitJob, loadTrips } from "./api.js";
 import {
   openImportSheet, showSheetConfirm, submitSheetImport, pushRecentPath,
   appendPlanFileToForm, revokeThumbUrls, setImportThumbs, readImportThumbsFromFiles,
@@ -101,13 +104,15 @@ export function requestNativeFolder(titleVal, placeVal, options) {
 let _successTimer = null;
 let _successTripId = null;
 let _successLongshotPoll = null;
+var _successLongshotAbort = false;
 
 export function clearSuccessTimer() {
   if (_successTimer) { clearInterval(_successTimer); _successTimer = null; }
 }
 
 export function clearSuccessLongshotPoll() {
-  if (_successLongshotPoll) { clearInterval(_successLongshotPoll); _successLongshotPoll = null; }
+  _successLongshotAbort = true;
+  _successLongshotPoll = null;
 }
 
 export function setSuccessLongshotStatus(text, isError) {
@@ -164,27 +169,37 @@ export function onSuccessLongshotDone(job) {
 
 export function pollSuccessLongshot(jobId, started) {
   clearSuccessLongshotPoll();
+  _successLongshotAbort = false;
+  _successLongshotPoll = jobId;
   var slowShown = false;
-  _successLongshotPoll = setInterval(function () {
-    if (!slowShown && Date.now() - started > SUCCESS_SLOW_MS) {
-      slowShown = true;
-      setSuccessLongshotStatus("比预期久一些，仍在生成长图…", false);
-    }
-    pollJob(jobId).then(function (job) {
+  pollJobUntilDone(jobId, {
+    intervalMs: 500,
+    startedAt: started,
+    slowMs: SUCCESS_SLOW_MS,
+    shouldAbort: function () { return _successLongshotAbort; },
+    onSlow: function () {
+      if (!slowShown) {
+        slowShown = true;
+        setSuccessLongshotStatus("比预期久一些，仍在生成长图…", false);
+      }
+    },
+    onTick: function (job) {
       if (job.status === "running" || job.status === "queued") {
         var hint = job.stageHint || job.stageLabel;
         if (hint) setSuccessLongshotStatus("正在生成长图… " + hint, false);
-        return;
       }
-      clearSuccessLongshotPoll();
-      onSuccessLongshotDone(job);
-    }).catch(function () {
-      clearSuccessLongshotPoll();
-      var btn = $("studio-success-longshot");
-      if (btn) btn.disabled = false;
-      setSuccessLongshotStatus("网络错误，请重试", true);
-    });
-  }, 500);
+    },
+  }).then(function (job) {
+    if (_successLongshotAbort) return;
+    _successLongshotPoll = null;
+    onSuccessLongshotDone(job);
+  }).catch(function (err) {
+    if (_successLongshotAbort) return;
+    _successLongshotPoll = null;
+    var btn = $("studio-success-longshot");
+    if (btn) btn.disabled = false;
+    setSuccessLongshotStatus((err && err.message) || "网络错误，请重试", true);
+  });
 }
 
 export function startSuccessLongshot() {
@@ -555,3 +570,6 @@ export function resumeActiveJobIfAny() {
   }).finally(function () { setBusy(); });
   return true;
 }
+
+registerImportHandlers({ startImport: startImport, requestNativeFolder: requestNativeFolder });
+registerLeaveSuccessHandler(clearSuccessLongshotPoll);

@@ -77,6 +77,7 @@
 |------|------|
 | `E_RENDER_TEMPLATE` | 模板文件缺失 |
 | `E_RENDER_ASSET_MISSING` | displayFile 不存在 |
+| `E_RENDER_COVER_MISSING` | 无可用封面 asset（layoutEligible） |
 | `E_EXPORT_PRIVACY` | 未 `--confirm-privacy` |
 | `E_EXPORT_NOT_RENDERED` | 无 index.html |
 

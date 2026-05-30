@@ -160,36 +160,43 @@ def _export_trip_stages(
     max_zip_mb = app_cfg.export.max_zip_mb
     photo_n = len(trip.get("assets") or [])
 
-    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-        zf.write(index, "index.html")
-        zf.write(css, "journal.css")
-        screens_css = trip_root / "journal-screens.css"
-        if screens_css.is_file():
-            zf.write(screens_css, "journal-screens.css")
-        if preview_path.is_file():
-            zf.write(preview_path, "preview.jpg")
+    try:
+        with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            zf.write(index, "index.html")
+            zf.write(css, "journal.css")
+            screens_css = trip_root / "journal-screens.css"
+            if screens_css.is_file():
+                zf.write(screens_css, "journal-screens.css")
+            if preview_path.is_file():
+                zf.write(preview_path, "preview.jpg")
 
-        wrote_longshot_bundle = False
-        longshot_sidecar = trip_root / LONGSHOT_INDEX_NAME
-        if longshot_sidecar.is_file() and should_include_longshot_bridge(trip):
-            zf.write(longshot_sidecar, LONGSHOT_INDEX_NAME)
-            wrote_longshot_bundle = True
+            wrote_longshot_bundle = False
+            longshot_sidecar = trip_root / LONGSHOT_INDEX_NAME
+            if longshot_sidecar.is_file() and should_include_longshot_bridge(trip):
+                zf.write(longshot_sidecar, LONGSHOT_INDEX_NAME)
+                wrote_longshot_bundle = True
 
-        if should_include_long_shot(trip, export_mode="share") or wrote_longshot_bundle:
-            for arc, path in longshot_files:
-                if path.is_file():
-                    zf.write(path, arc)
+            if should_include_long_shot(trip, export_mode="share") or wrote_longshot_bundle:
+                for arc, path in longshot_files:
+                    if path.is_file():
+                        zf.write(path, arc)
 
-        if should_include_screenplay(trip, export_mode="share"):
-            for arc, path in screenplay_files:
-                if path.is_file():
-                    zf.write(path, arc)
+            if should_include_screenplay(trip, export_mode="share"):
+                for arc, path in screenplay_files:
+                    if path.is_file():
+                        zf.write(path, arc)
 
-        for rel, abs_path in asset_paths:
-            if rel in seen or not abs_path.is_file():
-                continue
-            seen.add(rel)
-            write_asset_to_zip(zf, rel, abs_path, strip_exif=do_strip)
+            for rel, abs_path in asset_paths:
+                if rel in seen or not abs_path.is_file():
+                    continue
+                seen.add(rel)
+                write_asset_to_zip(zf, rel, abs_path, strip_exif=do_strip)
+    except Exception:
+        try:
+            zip_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
 
     # Zip now exists beside index.html — re-render so share toolbar offers download.
     render_trip(trip_path, trip_root, export_mode="share", validate=False)

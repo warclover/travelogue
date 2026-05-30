@@ -14,6 +14,7 @@ from travelogue.render.engine import RenderError, render_trip, render_trip_surfa
 from travelogue.services.layout import LayoutError, apply_layout_to_trip
 from travelogue.services.narrate import run_narrate
 from travelogue.services.pipeline_state import PipelineError, Until, assert_stage_allowed
+from travelogue.orchestrator.studio_hooks import StudioHooks
 from travelogue.services.trip import TripService
 
 
@@ -39,6 +40,7 @@ def run_trip(
     narrate_provider: str | None = None,
     regenerate: bool = False,
     cfg: AppConfig | None = None,
+    studio_hooks: StudioHooks | None = None,
 ) -> RunResult:
     with app_config_scope(cfg):
         return _run_trip_stages(
@@ -54,6 +56,7 @@ def run_trip(
             dedupe=dedupe,
             narrate_provider=narrate_provider,
             regenerate=regenerate,
+            studio_hooks=studio_hooks,
         )
 
 
@@ -71,6 +74,7 @@ def _run_trip_stages(
     dedupe: bool = True,
     narrate_provider: str | None = None,
     regenerate: bool = False,
+    studio_hooks: StudioHooks | None = None,
 ) -> RunResult:
     trip_path = trip_path.resolve()
     trip_root = trip_path.parent
@@ -96,9 +100,22 @@ def _run_trip_stages(
     }
     stop_stage = until_map.get(until, "render")
 
+    stage_index = {
+        "ingest": 1,
+        "curate": 2,
+        "layout": 2,
+        "lock_structure": 2,
+        "narrate": 3,
+        "lock_copy": 3,
+        "render": 4,
+        "export": 4,
+    }
+
     for stage in stages_order[start_idx:]:
         if stages_order.index(stage) > stages_order.index(stop_stage):
             break
+        if studio_hooks is not None:
+            studio_hooks.report(stage, stage_index.get(stage, 0))
 
         if stage == "ingest":
             if album_dir is None:

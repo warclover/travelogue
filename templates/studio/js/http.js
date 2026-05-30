@@ -1,6 +1,6 @@
 /**
  * Travelogue Studio · shared JSON HTTP helpers (P5-A4).
- * Used by ESM modules and exposed to classic scripts via studio-api.js.
+ * Used by Studio ESM modules (homepage, preview toolbar).
  */
 
 export function studioAuthHeaders(extra) {

@@ -27,6 +27,7 @@ from travelogue.services.layout import LayoutError, apply_layout_to_trip
 from travelogue.llm.errors import LlmError
 from travelogue.services.narrate import NarrateError, run_narrate
 from travelogue.services.pipeline_state import PipelineError
+from travelogue.runtime import app_context_for_trips_dir, app_context_for_trip_json
 from travelogue.services.trip import TripNotFoundError, TripService
 from travelogue.services.trip_factory import create_trip
 from travelogue.services.validate import validate_trip
@@ -49,6 +50,11 @@ app.add_typer(cluster_app, name="cluster")
 def _load_cfg(config: Path | None) -> None:
     if config:
         get_config(reload=True, path=config)
+
+
+def _trip_svc(trip_json: Path) -> TripService:
+    """TripService scoped to the project root for a resolved trip.json."""
+    return app_context_for_trip_json(trip_json).trip_service()
 
 
 def _print_demo_result(
@@ -292,11 +298,11 @@ def cmd_from_album(
 
 
 def _resolve(path: str, *, trips_dir: Path | None = None) -> Path:
+    ctx = app_context_for_trips_dir(trips_dir)
     try:
-        svc = TripService()
-        if trips_dir:
-            svc.root = trips_dir.parent if trips_dir.name == "trips" else trips_dir
-        return svc.resolve_trip_json(path, trips_dir=trips_dir)
+        return ctx.trip_service().resolve_trip_json(
+            path, trips_dir=trips_dir or ctx.trips_root
+        )
     except TripNotFoundError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
@@ -325,13 +331,14 @@ def cmd_trip_new(
     trip_json = create_trip(trip_id, root, title=title, place=place, export_layout=layout)
     typer.echo(f"OK trip {trip_dir}")
     if from_dir:
-        trip = TripService(root=root.parent).load(trip_json)
+        svc = app_context_for_trips_dir(trips_dir).trip_service()
+        trip = svc.load(trip_json)
         try:
             result = ingest_into_trip(trip, trip_dir, from_dir=from_dir, generate_crops=False)
         except IngestError as exc:
             typer.echo(str(exc), err=True)
             raise typer.Exit(1) from exc
-        TripService(root=root.parent).save(trip, trip_json)
+        svc.save(trip, trip_json)
         typer.echo(f"OK ingest +{result.added} assets · batch {result.batch_id}")
         if layout != "auto":
             try:
@@ -339,7 +346,7 @@ def cmd_trip_new(
             except CurateError as exc:
                 typer.echo(str(exc), err=True)
                 raise typer.Exit(1) from exc
-            TripService(root=root.parent).save(trip, trip_json)
+            svc.save(trip, trip_json)
             typer.echo(f"OK curate {cur.chapter_count} chapters · {cur.layout_summary}")
 
 
@@ -395,7 +402,7 @@ def cmd_ingest(
     _load_cfg(config)
     trip_path = _resolve(path, trips_dir=trips_dir)
     trip_root = trip_path.parent
-    trip = TripService().load(trip_path)
+    trip = _trip_svc(trip_path).load(trip_path)
     try:
         result = ingest_into_trip(
             trip,
@@ -412,7 +419,7 @@ def cmd_ingest(
     except IngestError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
-    TripService().save(trip, trip_path)
+    _trip_svc(trip_path).save(trip, trip_path)
     typer.echo("OK ingest")
     typer.echo(format_ingest_report(result, trip))
 
@@ -428,9 +435,9 @@ def cmd_media_reexport(
     _load_cfg(config)
     trip_path = _resolve(path, trips_dir=trips_dir)
     trip_root = trip_path.parent
-    trip = TripService().load(trip_path)
+    trip = _trip_svc(trip_path).load(trip_path)
     result = reexport_trip_assets(trip, trip_root, asset_ids=asset_id, app_cfg=get_config())
-    TripService().save(trip, trip_path)
+    _trip_svc(trip_path).save(trip, trip_path)
     typer.echo("OK reexport")
     typer.echo(format_ingest_report(result, trip))
     if result.failed:
@@ -449,7 +456,7 @@ def cmd_curate(
         typer.echo("E_CLI: --layout must be auto, mobile, or web", err=True)
         raise typer.Exit(1)
     trip_path = _resolve(path, trips_dir=trips_dir)
-    trip = TripService().load(trip_path)
+    trip = _trip_svc(trip_path).load(trip_path)
     try:
         result = run_curate(
             trip,
@@ -460,7 +467,7 @@ def cmd_curate(
     except CurateError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
-    TripService().save(trip, trip_path)
+    _trip_svc(trip_path).save(trip, trip_path)
     from travelogue.curation.curate_report import format_curate_report
 
     typer.echo(format_curate_report(result, trip))
@@ -475,7 +482,7 @@ def cmd_lock(
 ) -> None:
     """Lock structure or copy gate."""
     trip_path = _resolve(path, trips_dir=trips_dir)
-    trip = TripService().load(trip_path)
+    trip = _trip_svc(trip_path).load(trip_path)
     pipe = trip.setdefault("pipeline", {})
     locks = pipe.setdefault("locks", {"structure": False, "copy": False})
     assets = {a["id"] for a in trip.get("assets", [])}
@@ -495,7 +502,7 @@ def cmd_lock(
     else:
         typer.echo("E_CLI: lock target must be structure or copy", err=True)
         raise typer.Exit(1)
-    TripService().save(trip, trip_path)
+    _trip_svc(trip_path).save(trip, trip_path)
 
 
 @app.command("narrate")
@@ -524,7 +531,7 @@ def cmd_narrate(
     """Agent 2: hook, leads, captions via LLM or rule stub."""
     _load_cfg(config)
     trip_path = _resolve(path, trips_dir=trips_dir)
-    trip = TripService().load(trip_path)
+    trip = _trip_svc(trip_path).load(trip_path)
     try:
         from travelogue.services.pipeline_state import assert_stage_allowed
 
@@ -551,7 +558,7 @@ def cmd_narrate(
     if dry_run:
         typer.echo(f"dry-run would update: {', '.join(result.fields_updated) or '(none)'}")
         return
-    TripService().save(trip, trip_path)
+    _trip_svc(trip_path).save(trip, trip_path)
     prov = provider or get_config().llm.provider or "stub"
     typer.echo(f"OK narrate ({prov}) · updated {', '.join(result.fields_updated) or '(none)'}")
     if result.fields_updated:
@@ -589,7 +596,7 @@ def cmd_status(
 ) -> None:
     """Print pipeline status, locks, asset/chapter counts."""
     trip_path = _resolve(path, trips_dir=trips_dir)
-    trip = TripService().load(trip_path)
+    trip = _trip_svc(trip_path).load(trip_path)
     pipe = trip.get("pipeline", {})
     runs = pipe.get("runs") or []
     last = runs[-1] if runs else {}
@@ -689,7 +696,7 @@ def cmd_layout(
         typer.echo("E_CLI: --web-layout must be legacy or screens", err=True)
         raise typer.Exit(1)
     trip_path = _resolve(path)
-    svc = TripService()
+    svc = _trip_svc(trip_path)
     trip = svc.load(trip_path)
     try:
         result = apply_layout_to_trip(
@@ -725,7 +732,7 @@ def cmd_validate(
 ) -> None:
     """Validate trip.json (L1 schema + L2 manifest)."""
     trip_path = _resolve(path)
-    trip = TripService().load(trip_path)
+    trip = _trip_svc(trip_path).load(trip_path)
     errors = validate_trip(trip, level=level)
     warns = [e for e in errors if e.startswith("WARN:")]
     errs = [e for e in errors if not e.startswith("WARN:")]
@@ -838,7 +845,7 @@ def cmd_render(
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
     typer.echo(f"OK {out_dir / out_html}")
-    trip = TripService().load(trip_path)
+    trip = _trip_svc(trip_path).load(trip_path)
     from travelogue.render.engine import should_include_long_shot, should_include_screenplay
 
     if should_include_screenplay(trip, layout_engine_override=web_layout):
@@ -1017,7 +1024,7 @@ def cmd_migrate_captions(
     from travelogue.curation.asset_caption import migrate_captions_to_assets
 
     trip_path = _resolve(path)
-    svc = TripService()
+    svc = _trip_svc(trip_path)
     trip = svc.load(trip_path)
     migrated = migrate_captions_to_assets(trip)
     if not migrated:
@@ -1080,7 +1087,7 @@ def cmd_tier_promote(
     from travelogue.web.tier_patch import TierPatchError, apply_tier_promotions
 
     trip_path = _resolve(path, trips_dir=trips_dir)
-    svc = TripService()
+    svc = _trip_svc(trip_path)
     trip = svc.load(trip_path)
     try:
         promoted = apply_tier_promotions(trip, asset_ids)
@@ -1392,10 +1399,9 @@ def cluster_recluster(
     from dataclasses import replace
 
     from travelogue.curation.clustering import run_clustering_layer
-    from travelogue.services.trip import TripService
-
-    svc = TripService(root=trips_dir or get_config().trips_dir.parent)
-    trip_json = svc.resolve_trip_json(trip, trips_dir=trips_dir or get_config().trips_dir)
+    ctx = app_context_for_trips_dir(trips_dir)
+    svc = ctx.trip_service()
+    trip_json = svc.resolve_trip_json(trip, trips_dir=trips_dir or ctx.trips_root)
     trip_dir = trip_json.parent
     body = svc.load(trip_json)
     base = get_config(reload=True)
@@ -1420,11 +1426,11 @@ def cluster_cache_clear(
     trips_dir: Path = typer.Option(None, "--trips-dir", help="trips root when trip is an id"),
 ) -> None:
     """Remove `.cluster-cache/` for a trip (M14 · F-CLU-CACHE CLI)."""
-    from travelogue.services.trip import TripService
     from travelogue.vision.cache import clear_cluster_cache
 
-    svc = TripService(root=trips_dir or get_config().trips_dir.parent)
-    trip_json = svc.resolve_trip_json(trip, trips_dir=trips_dir or get_config().trips_dir)
+    ctx = app_context_for_trips_dir(trips_dir)
+    svc = ctx.trip_service()
+    trip_json = svc.resolve_trip_json(trip, trips_dir=trips_dir or ctx.trips_root)
     trip_dir = trip_json.parent
     if clear_cluster_cache(trip_dir):
         typer.echo(f"OK cleared cluster cache · {trip_dir / '.cluster-cache'}")
@@ -1438,11 +1444,11 @@ def cluster_pending_assets(
     trips_dir: Path = typer.Option(None, "--trips-dir", help="trips root when trip is an id"),
 ) -> None:
     """List pipeline.pendingAssets after structure lock (F-CLU-CACHE-04)."""
-    from travelogue.services.trip import TripService
     from travelogue.vision.cache import list_pending_assets
 
-    svc = TripService(root=trips_dir or get_config().trips_dir.parent)
-    trip_json = svc.resolve_trip_json(trip, trips_dir=trips_dir or get_config().trips_dir)
+    ctx = app_context_for_trips_dir(trips_dir)
+    svc = ctx.trip_service()
+    trip_json = svc.resolve_trip_json(trip, trips_dir=trips_dir or ctx.trips_root)
     body = svc.load(trip_json)
     pending = list_pending_assets(body)
     status = (body.get("pipeline") or {}).get("status") or "unknown"
@@ -1477,15 +1483,15 @@ def cluster_process_pending(
     from dataclasses import replace
 
     from travelogue.curation.clustering import run_clustering_layer
-    from travelogue.services.trip import TripService
     from travelogue.vision.cache import (
         clear_pending_assets,
         is_pipeline_locked,
         list_pending_assets,
     )
 
-    svc = TripService(root=trips_dir or get_config().trips_dir.parent)
-    trip_json = svc.resolve_trip_json(trip, trips_dir=trips_dir or get_config().trips_dir)
+    ctx = app_context_for_trips_dir(trips_dir)
+    svc = ctx.trip_service()
+    trip_json = svc.resolve_trip_json(trip, trips_dir=trips_dir or ctx.trips_root)
     trip_dir = trip_json.parent
     body = svc.load(trip_json)
     pending_before = list_pending_assets(body)

@@ -11,6 +11,14 @@ export { isJobBusyResponse, withJobBusyRetry, postJsonBusyRetry } from "./http.j
 export function $(id) { return document.getElementById(id); }
 export function show(el, visible) { if (el) el.hidden = !visible; }
 
+/** Safe value for element.style.backgroundImage (blocks CSS-breaking quotes). */
+export function cssBackgroundImage(url) {
+  if (!url || typeof url !== "string") return "";
+  var s = url;
+  if (/[\x00-\x1f"'\\]/.test(s)) return "";
+  return 'url("' + s.replace(/\\/g, "\\\\").replace(/"/g, "\\22") + '")';
+}
+
 export function sheetFocusableElements(sheet) {
   return Array.prototype.filter.call(sheet.querySelectorAll(SHEET_FOCUSABLE), function (el) {
     if (el.disabled || el.getAttribute("aria-hidden") === "true") return false;

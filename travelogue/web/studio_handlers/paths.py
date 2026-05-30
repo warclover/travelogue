@@ -1,0 +1,22 @@
+"""Studio HTTP path constants."""
+
+from __future__ import annotations
+
+IMPORT_PATH = "/__travelogue/import"
+STATUS_PATH = "/__travelogue/status"
+CONFIG_PATH = "/__travelogue/config"
+TRIPS_PATH = "/__travelogue/trips"
+LONGSHOT_PATH = "/__travelogue/longshot"
+NARRATE_PATH = "/__travelogue/narrate"
+REVEAL_PATH = "/__travelogue/reveal"
+CANCEL_PATH = "/__travelogue/cancel"
+EXPORT_PATH = "/__travelogue/export"
+PICK_FOLDER_PATH = "/__travelogue/pick-folder"
+CHAPTER_LAYOUT_PATH = "/__travelogue/chapter-layout"
+STUDIO_ASSET_PREFIX = "/__studio/"
+SAVE_COPY_SUFFIX = "/__travelogue/save-copy"
+PROMOTE_TIER_SUFFIX = "/__travelogue/promote-tier"
+RERENDER_SUFFIX = "/__travelogue/rerender"
+INTENT_SUFFIX = "/intent"
+PIPELINE_SUFFIX = "/pipeline"
+CURATE_SUFFIX = "/curate"

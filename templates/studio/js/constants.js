@@ -3,6 +3,9 @@
  * Static label/error/sample data and tunable thresholds (no runtime state).
  */
 
+/** Mirror travelogue/web/studio_constants.py STUDIO_USER_NOTES_MAX_LEN */
+export const STUDIO_USER_NOTES_MAX_LEN = 200;
+
 // ── Stage labels (§8.2) ──
 export const STAGE_LABELS = {
   ingest: "正在准备你的照片…",

@@ -12,7 +12,7 @@ import { S } from "./js/state.js";
 import { LS, SS } from "./js/constants.js";
 import { $ } from "./js/dom.js";
 import { hideFailure, loadPipelineEstimates } from "./js/errors.js";
-import { transitionTo } from "./js/render.js";
+import { transitionTo } from "./js/navigation.js";
 import { loadTrips, startHealthCheck, cancelActiveJob } from "./js/api.js";
 import { renderSampleCards, initSampleModal } from "./js/samples.js";
 import {
@@ -93,7 +93,7 @@ document.addEventListener("DOMContentLoaded", function () {
         rememberCancelled();
         try { sessionStorage.removeItem(SS.activeJobId); sessionStorage.removeItem(SS.activePending); } catch (e) {}
         transitionTo(S.tripsData.length > 0 ? "IdleReturning" : "IdleEmpty");
-      });
+      }).catch(function () { /* user cancel or network blip — stay on current UI */ });
     };
     if (typeof studioModal === "function") {
       studioModal({

@@ -1,0 +1,118 @@
+"""Shared Studio handler helpers."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+from urllib.parse import parse_qs, urlparse
+
+from travelogue.desktop.demo_album import is_demo_album_path, resolve_demo_album_dir
+from travelogue.demo.build import DemoError
+from travelogue.runtime import AppContext, app_context_from_handler
+from travelogue.web.studio_handlers.paths import (
+    CURATE_SUFFIX,
+    INTENT_SUFFIX,
+    PIPELINE_SUFFIX,
+    PROMOTE_TIER_SUFFIX,
+    RERENDER_SUFFIX,
+    SAVE_COPY_SUFFIX,
+    TRIPS_PATH,
+)
+from travelogue.web.studio_trip_id import is_valid_studio_trip_id
+
+
+def rel_to_trip(trip_dir: Path, target: Path) -> str:
+    return target.resolve().relative_to(trip_dir.resolve()).as_posix()
+
+
+def resolve_import_album_path(album_raw: str, *, use_demo: bool = False) -> Path:
+    if use_demo or is_demo_album_path(album_raw):
+        return resolve_demo_album_dir()
+    return Path(album_raw)
+
+
+def studio_ctx(handler: Any) -> AppContext:
+    return app_context_from_handler(handler)
+
+
+def resolve_trip_dir(ctx: AppContext, trip_id: str) -> Path | None:
+    if not is_valid_studio_trip_id(trip_id):
+        return None
+    trip_dir = (ctx.trips_root / trip_id).resolve()
+    try:
+        trip_dir.relative_to(ctx.trips_root)
+    except ValueError:
+        return None
+    if not (trip_dir / "trip.json").is_file():
+        return None
+    return trip_dir
+
+
+def bind_studio_trip(handler: Any, trip_id: str) -> Path | None:
+    """Resolve trip dir and set handler.trip_json_path (Studio static serving)."""
+    trip_dir = resolve_trip_dir(studio_ctx(handler), trip_id)
+    if trip_dir is None:
+        return None
+    handler.trip_json_path = trip_dir / "trip.json"
+    return trip_dir
+
+
+def match_trip_suffix(path: str, suffix: str) -> str | None:
+    prefix = TRIPS_PATH + "/"
+    if not path.startswith(prefix) or not path.endswith(suffix):
+        return None
+    trip_id = path[len(prefix) : -len(suffix)]
+    if not trip_id or "/" in trip_id:
+        return None
+    return trip_id
+
+
+def match_entry(path: str) -> str | None:
+    return match_trip_suffix(path, "/entry")
+
+
+def match_trip_intent(path: str) -> str | None:
+    return match_trip_suffix(path, INTENT_SUFFIX)
+
+
+def match_trip_pipeline(path: str) -> str | None:
+    return match_trip_suffix(path, PIPELINE_SUFFIX)
+
+
+def match_trip_curate(path: str) -> str | None:
+    return match_trip_suffix(path, CURATE_SUFFIX)
+
+
+def match_trip_api(path: str) -> tuple[str, str] | None:
+    if path.endswith(SAVE_COPY_SUFFIX):
+        trip_id = path[: -len(SAVE_COPY_SUFFIX)].strip("/")
+        if trip_id and "/" not in trip_id:
+            return trip_id, "save-copy"
+    if path.endswith(PROMOTE_TIER_SUFFIX):
+        trip_id = path[: -len(PROMOTE_TIER_SUFFIX)].strip("/")
+        if trip_id and "/" not in trip_id:
+            return trip_id, "promote-tier"
+    if path.endswith(RERENDER_SUFFIX):
+        trip_id = path[: -len(RERENDER_SUFFIX)].strip("/")
+        if trip_id and "/" not in trip_id:
+            return trip_id, "rerender"
+    return None
+
+
+def trip_id_from_query(handler: Any) -> str:
+    query = parse_qs(urlparse(handler.path).query)
+    return (query.get("tripId") or query.get("tripid") or [""])[0]
+
+
+def load_trip_or_404(handler: Any, trip_id: str) -> tuple[Path, dict] | None:
+    if not is_valid_studio_trip_id(trip_id):
+        handler._json_response(400, {"ok": False, "error": "invalid tripId"})
+        return None
+    ctx = studio_ctx(handler)
+    trip_dir = resolve_trip_dir(ctx, trip_id)
+    if trip_dir is None:
+        handler._json_response(404, {"ok": False, "error": "trip not found"})
+        return None
+    trip_json = trip_dir / "trip.json"
+    trip = ctx.trip_service().load(trip_json)
+    return trip_dir, trip

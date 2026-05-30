@@ -1,13 +1,25 @@
-(function () {
-  "use strict";
+/**
+ * Travelogue Studio · preview page toolbar (ESM).
+ */
+"use strict";
 
-  var HINT_KEY = "travelogue.studio.editHint.dismissed";
-  var COLLAPSE_KEY = "travelogue.studio.previewToolbar.collapsed";
-  var LONGSHOT_SCALE = 2;
-  var SLOW_JOB_MS = 30000;
-  var pollTimer = null;
-  var longshotJobId = null;
-  var narrateJobId = null;
+import {
+  postJson,
+  patchJson,
+  postJsonBusyRetry,
+  isJobBusyResponse,
+} from "./js/http.js";
+import { startJobPollInterval, pollJobUntilDone } from "./js/job-poll.js";
+import { STUDIO_USER_NOTES_MAX_LEN } from "./js/constants.js";
+
+var isJobBusy409 = isJobBusyResponse;
+var HINT_KEY = "travelogue.studio.editHint.dismissed";
+var COLLAPSE_KEY = "travelogue.studio.previewToolbar.collapsed";
+var LONGSHOT_SCALE = 2;
+var SLOW_JOB_MS = 30000;
+var pollCancel = null;
+var longshotJobId = null;
+var narrateJobId = null;
   var DRAWER_FOCUSABLE =
     'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex="0"]';
 
@@ -38,16 +50,6 @@
     var parts = window.location.pathname.replace(/^\/+|\/+$/g, "").split("/");
     return parts[0] || "";
   }
-
-  var StudioApi = window.StudioApi;
-  if (!StudioApi || typeof StudioApi.postJson !== "function") {
-    console.error("preview-toolbar: StudioApi not loaded (include studio-api.js before preview-toolbar.js)");
-    return;
-  }
-  var postJson = StudioApi.postJson;
-  var patchJson = StudioApi.patchJson;
-  var postJsonBusyRetry = StudioApi.postJsonBusyRetry;
-  var isJobBusy409 = StudioApi.isJobBusyResponse;
 
   function tripApiBase(tripId) {
     return "/" + encodeURIComponent(tripId) + "/__travelogue";
@@ -100,36 +102,25 @@
     return postJson("/__travelogue/reveal", { tripId: tripId, relPath: relPath });
   }
 
-  function pollJob(jobId, onDone, onSlow) {
-    if (pollTimer) {
-      clearInterval(pollTimer);
-      pollTimer = null;
+  function pollJob(jobId, root, onDone, onSlow) {
+    if (pollCancel) {
+      pollCancel();
+      pollCancel = null;
     }
-    var started = Date.now();
-    var slowShown = false;
-    pollTimer = setInterval(function () {
-      if (onSlow && !slowShown && Date.now() - started > SLOW_JOB_MS) {
-        slowShown = true;
-        onSlow();
-      }
-      fetch("/__travelogue/status?jobId=" + encodeURIComponent(jobId))
-        .then(function (resp) { return resp.json(); })
-        .then(function (job) {
-          if (job.status === "running" && job.stageHint) {
-            setLongshotStatus(root, "正在生成长图… " + job.stageHint, true);
-          }
-          if (
-            job.status === "succeeded" ||
-            job.status === "failed" ||
-            job.status === "cancelled"
-          ) {
-            clearInterval(pollTimer);
-            pollTimer = null;
-            onDone(job);
-          }
-        })
-        .catch(function () {});
-    }, 800);
+    pollCancel = startJobPollInterval(jobId, {
+      intervalMs: 800,
+      slowMs: SLOW_JOB_MS,
+      onSlow: onSlow,
+      onTick: function (job) {
+        if (job.status === "running" && job.stageHint && root) {
+          setLongshotStatus(root, "正在生成长图… " + job.stageHint, true);
+        }
+      },
+      onDone: function (job) {
+        pollCancel = null;
+        onDone(job);
+      },
+    });
   }
 
   function setLongshotStatus(root, text, visible) {
@@ -386,6 +377,7 @@
         longshotJobId = res.body.jobId;
         pollJob(
           res.body.jobId,
+          root,
           function (job) {
             btn.disabled = false;
             setLongshotStatus(root, "", false);
@@ -435,6 +427,7 @@
       narrateJobId = res.body.jobId;
       pollJob(
         res.body.jobId,
+        root,
         function (job) {
           btn.disabled = false;
           narrateJobId = null;
@@ -712,7 +705,9 @@
       '<label class="preview-drawer__label" for="preview-drawer-title-input">杂志名</label>' +
       '<input id="preview-drawer-title-input" class="preview-drawer__title-input" type="text" maxlength="20" autocomplete="off" placeholder="我的旅途">' +
       '<label class="preview-drawer__label" for="preview-drawer-notes">写给编辑的一句话</label>' +
-      '<textarea id="preview-drawer-notes" class="preview-drawer__notes" maxlength="200" rows="3" placeholder="例如：带娃慢走，想突出雨后的京都"></textarea>' +
+      '<textarea id="preview-drawer-notes" class="preview-drawer__notes" maxlength="' +
+      STUDIO_USER_NOTES_MAX_LEN +
+      '" rows="3" placeholder="例如：带娃慢走，想突出雨后的京都"></textarea>' +
       '<p class="preview-drawer__chapter-label">当前章：<strong class="preview-drawer__chapter-name"></strong></p>' +
       '<p class="preview-drawer__label">记忆锚点（0–3 个）</p>' +
       '<div class="preview-drawer__anchors">' +
@@ -735,21 +730,11 @@
       '<button type="button" class="preview-drawer__primary preview-drawer__apply-layout">应用排版</button>';
 
     function pollStudioJob(jobId, onDone) {
-      var timer = setInterval(function () {
-        fetch("/__travelogue/status?jobId=" + encodeURIComponent(jobId))
-          .then(function (r) { return r.json(); })
-          .then(function (job) {
-            if (
-              job.status === "succeeded" ||
-              job.status === "failed" ||
-              job.status === "cancelled"
-            ) {
-              clearInterval(timer);
-              onDone(job);
-            }
-          })
-          .catch(function () {});
-      }, 800);
+      pollJobUntilDone(jobId, { intervalMs: 800 })
+        .then(onDone)
+        .catch(function () {
+          onDone({ status: "failed", error: { message: "网络错误" } });
+        });
     }
 
     function confirmG1Structure() {
@@ -1334,9 +1319,8 @@
     setToolbarCollapsed(root, startCollapsed, false);
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
-})();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}

@@ -32,7 +32,13 @@ from travelogue.curation.layout_planner import (
     summarize_orientations,
 )
 from travelogue.curation.time_segments import TimeSegment, parse_asset_date
-from travelogue.services.layout import LAYOUT_PLAN_VERSION, format_layout_summary
+from travelogue.curation.curate_limits import (
+    COMPACT_ALBUM_PHOTO_CAP,
+    MIN_CURATE_ASSETS,
+    SEGMENT_LABEL_PREVIEW_LIMIT,
+    SMALL_ALBUM_PHOTO_CAP,
+)
+from travelogue.layout_contract import LAYOUT_PLAN_VERSION, format_layout_summary
 from travelogue.services.pipeline_state import set_layout_status
 
 # Backward-compatible private aliases for tests and internal callers.
@@ -81,8 +87,8 @@ def _date_span_warning(
                 labels.append(s.label)
             else:
                 labels.append(str(s.get("label", s.get("id", ""))))
-        preview = "、".join(labels[:4])
-        if len(segments) > 4:
+        preview = "、".join(labels[:SEGMENT_LABEL_PREVIEW_LIMIT])
+        if len(segments) > SEGMENT_LABEL_PREVIEW_LIMIT:
             preview += f" 等{len(segments)}段"
         return (
             f"检测到 {len(segments)} 个时间段（{preview}），已合成一本并按段编排；"
@@ -312,8 +318,11 @@ def run_curate(
     trip_dir: Path | None = None,
     cfg: AppConfig | None = None,
 ) -> CurateResult:
-    if len(trip.get("assets") or []) < 4:
-        raise CurateError("E_CURATE_TOO_FEW", "need at least 4 assets to curate")
+    if len(trip.get("assets") or []) < MIN_CURATE_ASSETS:
+        raise CurateError(
+            "E_CURATE_TOO_FEW",
+            f"need at least {MIN_CURATE_ASSETS} assets to curate",
+        )
 
     from travelogue.curation.intent_hints import (
         apply_editorial_intent_hints,
@@ -329,10 +338,10 @@ def run_curate(
     app_cfg = cfg or get_config()
     res_warn = apply_low_resolution_exclusion(trip, trip_dir=trip_dir, app_cfg=app_cfg)
     layout_assets = layout_eligible_assets(trip)
-    if len(layout_assets) < 4:
+    if len(layout_assets) < MIN_CURATE_ASSETS:
         raise CurateError(
             "E_CURATE_TOO_FEW",
-            "need at least 4 layout-eligible assets after resolution filter",
+            f"need at least {MIN_CURATE_ASSETS} layout-eligible assets after resolution filter",
         )
 
     from travelogue.curation.screen_planner import (
@@ -391,11 +400,11 @@ def run_curate(
             min_bucket_size=cur_cfg.min_bucket_size,
         )
 
-    # P5-C3: small albums → fewer chapters (≤15 photos).
-    if len(layout_assets) <= 15:
+    # P5-C3: small albums → fewer chapters (≤SMALL_ALBUM_PHOTO_CAP photos).
+    if len(layout_assets) <= SMALL_ALBUM_PHOTO_CAP:
         from travelogue.curation.bucket_planning import normalize_bucket_counts
 
-        max_ch = 2 if len(layout_assets) <= 8 else 3
+        max_ch = 2 if len(layout_assets) <= COMPACT_ALBUM_PHOTO_CAP else 3
         norm = normalize_bucket_counts(
             buckets,
             bucket_segment_ids,
@@ -488,11 +497,12 @@ def run_curate(
     )
     for ch_idx, (ch, bucket, seg_id, seg_ids, hint) in enumerate(
         zip(
-        chapters,
-        non_empty_buckets,
-        bucket_segment_ids,
-        bucket_segment_ids_all,
-        pattern_hints,
+            chapters,
+            non_empty_buckets,
+            bucket_segment_ids,
+            bucket_segment_ids_all,
+            pattern_hints,
+            strict=True,
         )
     ):
         ch_cur = ch.setdefault("curation", {})
@@ -722,7 +732,9 @@ def run_curate(
     else:
         set_layout_status(trip, "pending")
 
+    # Main pipeline status (structure_draft); layoutStatus above is the Agent 1.5 sub-state.
     pipe["status"] = "structure_draft"
+    # Re-curate from structure_draft clears the post-lock pending ingest queue.
     pipe["pendingAssets"] = []
     trip["updatedAt"] = now
     pipe.setdefault("runs", []).append(

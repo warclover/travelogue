@@ -6,10 +6,10 @@ import { LS, UPLOAD_BYTES_SOFT_LIMIT } from "./constants.js";
 import { S } from "./state.js";
 import {
   $, show, formatBytes, basenameTitleFromPath,
-  trapSheetFocus, releaseSheetFocusTrap,
+  trapSheetFocus, releaseSheetFocusTrap, cssBackgroundImage,
 } from "./dom.js";
 import { setError } from "./errors.js";
-import { startImport, requestNativeFolder } from "./import-flow.js";
+import { startImport, requestNativeFolder } from "./import-bridge.js";
 
 export function saveIntent() {
   try {
@@ -237,7 +237,8 @@ export function setImportThumbs(urls) {
   ];
   for (var i = 0; i < spans.length; i++) {
     var u = (urls && urls[i]) || defaults[i];
-    spans[i].style.backgroundImage = 'url("' + u + '")';
+    var bg = cssBackgroundImage(u);
+    spans[i].style.backgroundImage = bg || "";
   }
 }
 export function readImportThumbsFromFiles(files) {

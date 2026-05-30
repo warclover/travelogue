@@ -302,9 +302,30 @@ def _capture_p0(page, *, scale: int, fmt: str, chapter_index: int | None = None)
     return data, str(payload.get("method") or "p0")
 
 
-def _capture_p1(page, *, fmt: str) -> tuple[bytes, str]:
+def _capture_p1(page, *, scale: int, fmt: str) -> tuple[bytes, str]:
     ext = "jpeg" if fmt == "jpeg" else "png"
-    data = page.locator("main").screenshot(type=ext)
+    scale = max(1, min(int(scale), 3))
+    cdp = None
+    if scale > 1:
+        cdp = page.context.new_cdp_session(page)
+        viewport = page.viewport_size or {"width": CAPTURE_WIDTH, "height": 844}
+        cdp.send(
+            "Emulation.setDeviceMetricsOverride",
+            {
+                "mobile": False,
+                "width": viewport["width"],
+                "height": viewport["height"],
+                "deviceScaleFactor": scale,
+            },
+        )
+    try:
+        data = page.locator("main").screenshot(type=ext)
+    finally:
+        if cdp is not None:
+            try:
+                cdp.send("Emulation.clearDeviceMetricsOverride")
+            finally:
+                cdp.detach()
     if len(data) < 1024:
         raise LongshotExportError("E_LNG_CAPTURE_FAILED", "screenshot 输出过小")
     return data, "p1"
@@ -314,7 +335,7 @@ def _capture_bytes(page, *, scale: int, fmt: str, chapter_index: int | None = No
     try:
         return _capture_p0(page, scale=scale, fmt=fmt, chapter_index=chapter_index)
     except Exception:
-        return _capture_p1(page, fmt=fmt)
+        return _capture_p1(page, scale=scale, fmt=fmt)
 
 
 def _write_output(path: Path, data: bytes) -> None:
@@ -428,6 +449,7 @@ def export_trip_longshot(
         if progress:
             progress(cur, total, hint)
 
+    page = None
     try:
         _report(0, 1, "正在打开浏览器…")
         page = browser.new_page(viewport={"width": CAPTURE_WIDTH, "height": 844})
@@ -510,9 +532,12 @@ def export_trip_longshot(
                 out_path = output or trip_dir / f"{title}-longshot.{ext}"
                 _write_output(out_path, data)
                 outputs.append(LongshotOutput(path=out_path, capture_method=method))
-
-        page.close()
     finally:
+        if page is not None:
+            try:
+                page.close()
+            except Exception:
+                pass
         _BROWSER_POOL.release()
         if server is not None:
             server.shutdown()
