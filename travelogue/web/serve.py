@@ -92,6 +92,8 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
                 return
             api = self._studio_trip_api(path)
             if api is not None:
+                if not self._studio_require_post_auth():
+                    return
                 trip_id, action = api
                 if self.studio_bind_trip(trip_id) is None:
                     self.send_error(404)
@@ -125,6 +127,8 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
                 return
             trip_id = self._studio_match_trip_intent(path)
             if trip_id is not None:
+                if not self._studio_require_post_auth():
+                    return
                 self._studio_handle_patch_intent(trip_id)
                 return
             trip_id = self._studio_match_trip_pipeline(path)

@@ -350,7 +350,7 @@ class StudioMixin:
             self._json_response(400, {"ok": False, "error": "invalid tripId"})
             return
         payload = self._read_json_body()
-        force = bool((payload or {}).get("force", True))
+        force = bool((payload or {}).get("force", False))
         trips_root = (self.trips_dir or self._studio_cfg().trips_dir).resolve()
         trip_dir = (trips_root / trip_id).resolve()
         try:
@@ -917,8 +917,23 @@ class StudioMixin:
 
         from travelogue.export.longshot import DEFAULT_EXPORT_SCALE, export_trip_longshot
 
-        scale = int(payload.get("scale") or DEFAULT_EXPORT_SCALE)
-        fmt = str(payload.get("format") or "png")
+        try:
+            scale = int(payload.get("scale") or DEFAULT_EXPORT_SCALE)
+        except (TypeError, ValueError):
+            self._json_response(
+                400,
+                {"ok": False, "error": "invalid scale", "message": "scale 须为整数"},
+            )
+            return
+        fmt = str(payload.get("format") or "png").strip().lower()
+        if fmt not in ("png", "jpeg", "jpg"):
+            self._json_response(
+                400,
+                {"ok": False, "error": "invalid format", "message": "format 须为 png 或 jpeg"},
+            )
+            return
+        if fmt == "jpg":
+            fmt = "jpeg"
 
         def runner() -> dict:
             def on_progress(cur: int, total: int, hint: str) -> None:

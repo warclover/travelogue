@@ -5,7 +5,7 @@ import { LS } from "./constants.js";
 import { S } from "./state.js";
 import { $, show, setTitle, formatUpdatedAt, syncImportUiDisabled } from "./dom.js";
 import { closeImportSheet, getRecentPaths } from "./sheet.js";
-import { requestNativeFolder, startImport } from "./import-flow.js";
+import { requestNativeFolder, startImport, clearSuccessLongshotPoll } from "./import-flow.js";
 
 // ── Hero background (LCP-friendly: try small variant first when available) ──
 export function updateHeroBackground() {
@@ -37,7 +37,13 @@ export function updateHeroBackground() {
 }
 
 // ── State machine ──
-export function transitionTo(state) { S.currentState = state; render(); }
+export function transitionTo(state) {
+  if (S.currentState === "Success" && state !== "Success") {
+    clearSuccessLongshotPoll();
+  }
+  S.currentState = state;
+  render();
+}
 
 export function render() {
   var hasTrips = S.tripsData.length > 0;

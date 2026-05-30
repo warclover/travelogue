@@ -104,7 +104,8 @@ def test_ig2_local_trip_optional(trip_id: str, tmp_path: Path) -> None:
 def test_ly_p3_03_aspect_pattern_threshold_on_ci_fixture(tmp_path: Path) -> None:
     trip = load_fixture_trip(CI_FIXTURE)
     report = evaluate_trip(trip, trip_id=CI_FIXTURE, work_dir=tmp_path / "ly03")
-    assert report["p3Full"]["aspectPatternMatchRate"] >= 0.95
+    assert report["passesLY03"]
+    assert report["p3Full"]["aspectPatternMatchRate"] >= report["baseline"]["aspectPatternMatchRate"]
 
 
 def test_ly_p3_04_scene_cluster_off_matches_baseline_screen_order(tmp_path: Path) -> None:

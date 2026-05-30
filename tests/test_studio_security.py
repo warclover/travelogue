@@ -156,3 +156,55 @@ def test_studio_post_requires_token_on_allow_lan(tmp_path: Path) -> None:
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_studio_patch_intent_requires_token_on_allow_lan(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trip_id = "demo-test"
+    trip_dir = trips_dir / trip_id
+    trip_dir.mkdir(parents=True)
+    (trip_dir / "trip.json").write_text(
+        json.dumps({"tripId": trip_id, "meta": {"title": "T"}, "intent": {}}),
+        encoding="utf-8",
+    )
+    port = _free_port()
+    token = "test-token-value"
+    handler = partial(
+        TripPreviewHandler,
+        directory=str(trips_dir),
+        trip_json=trip_dir / "trip.json",
+        studio_mode=True,
+        trips_dir=trips_dir,
+        studio_host="0.0.0.0",
+        studio_port=port,
+        studio_token=token,
+        studio_allow_lan=True,
+    )
+    server = ThreadingHTTPServer(("127.0.0.1", port), handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base = f"http://127.0.0.1:{port}"
+
+    try:
+        payload = json.dumps({"title": "新标题"}).encode("utf-8")
+        req = request.Request(
+            f"{base}/__travelogue/trips/{trip_id}/intent",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="PATCH",
+        )
+        with pytest.raises(error.HTTPError) as exc:
+            request.urlopen(req, timeout=5)
+        assert exc.value.code == 401
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_longshot_cancel_releases_job_slot() -> None:
+    store = get_job_store()
+    job = store.create_longshot_job()
+    assert job is not None
+    store.cancel_job(job.job_id)
+    retry = store.create_longshot_job()
+    assert retry is not None

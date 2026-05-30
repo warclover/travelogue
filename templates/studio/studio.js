@@ -24,7 +24,7 @@ import {
 } from "./js/init.js";
 import {
   requestNativeFolder, submitPathImport, startImport, uploadAndImport,
-  rememberCancelled, resumeActiveJobIfAny, clearSuccessTimer, startSuccessLongshot,
+  rememberCancelled, resumeActiveJobIfAny, clearSuccessTimer, clearSuccessLongshotPoll, startSuccessLongshot,
 } from "./js/import-flow.js";
 
 // ── Main init ──
@@ -126,10 +126,14 @@ document.addEventListener("DOMContentLoaded", function () {
   var stayBtn = $("studio-success-stay");
   if (stayBtn) stayBtn.addEventListener("click", function () {
     clearSuccessTimer();
+    clearSuccessLongshotPoll();
     transitionTo(S.tripsData.length > 0 ? "IdleReturning" : "IdleEmpty");
   });
   var openBtn = $("studio-success-open");
-  if (openBtn) openBtn.addEventListener("click", function () { clearSuccessTimer(); });
+  if (openBtn) openBtn.addEventListener("click", function () {
+    clearSuccessTimer();
+    clearSuccessLongshotPoll();
+  });
   var longshotBtn = $("studio-success-longshot");
   if (longshotBtn) longshotBtn.addEventListener("click", function () {
     clearSuccessTimer();

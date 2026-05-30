@@ -151,7 +151,7 @@ class StudioJobStore:
 
     def create_narrate_job(self) -> StudioJob | None:
         with self._lock:
-            if self._narrate_running:
+            if self._narrate_running or self._import_running:
                 return None
             job_id = f"job-{uuid.uuid4().hex[:12]}"
             job = StudioJob(
@@ -217,6 +217,12 @@ class StudioJobStore:
             if job.type == "import":
                 self._import_running = False
                 self._import_handles.pop(job_id, None)
+            elif job.type == "longshot":
+                self._longshot_running = False
+            elif job.type == "narrate":
+                self._narrate_running = False
+            elif job.type == "g1_continue":
+                self._g1_running = False
             return job
 
 

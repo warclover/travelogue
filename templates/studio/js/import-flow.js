@@ -436,14 +436,20 @@ export function uploadAndImportCore(files, titleVal, placeVal) {
   show(progress, true);
   if (progress) progress.value = 0;
 
-  return withJobBusyRetry(function () {
-    return postMultipartImport(form, {
-      onUploadProgress: function (ev) {
-        if (ev.lengthComputable && progress) {
-          progress.value = Math.round((ev.loaded / ev.total) * 100);
-        }
-      },
-    });
+  return postMultipartImport(form, {
+    onUploadProgress: function (ev) {
+      if (ev.lengthComputable && progress) {
+        progress.value = Math.round((ev.loaded / ev.total) * 100);
+      }
+    },
+  }).then(function (result) {
+    if (isJobBusyResponse(result)) {
+      if (typeof studioToast === "function") {
+        studioToast("排队中，请稍候…", { duration: 2800 });
+      }
+      throw { code: "E_STUDIO_JOB_BUSY", message: "排队中，请稍候" };
+    }
+    return result;
   }).then(function (result) {
     show(progress, false);
     if (result.status === 409 && result.data.error === "E_DEMO_EXISTS") {
@@ -498,7 +504,7 @@ export function uploadAndImportWithForce(files, titleVal, placeVal, gen) {
   for (var j = 0; j < files.length; j++) {
     retryForm.append("files[]", files[j], files[j].webkitRelativePath || files[j].name);
   }
-  return withJobBusyRetry(function () { return postMultipartImport(retryForm); }).then(function (retryResult) {
+  return postMultipartImport(retryForm).then(function (retryResult) {
     if (retryResult.status !== 202) {
       throw new Error(retryResult.data.message || retryResult.data.error || "上传失败");
     }

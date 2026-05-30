@@ -223,8 +223,12 @@ def format_trip_meta(meta: dict) -> tuple[str, str]:
             return d
 
     if start and end:
-        label = f"{date.fromisoformat(start).strftime('%Y.%m.%d')} – {fmt_short(end)}"
-        dt_attr = f"{start}/{end}"
+        try:
+            label = f"{date.fromisoformat(start).strftime('%Y.%m.%d')} – {fmt_short(end)}"
+            dt_attr = f"{start}/{end}"
+        except ValueError:
+            label = f"{fmt_short(start)} – {fmt_short(end)}"
+            dt_attr = f"{start}/{end}"
     else:
         label = ""
         dt_attr = ""

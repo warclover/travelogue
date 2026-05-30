@@ -244,13 +244,18 @@ def _longshot_to_js(raw: dict[str, Any]) -> dict[str, Any]:
 
 
 def count_trip_photos(trip: dict) -> int:
-    """Count photo assets for P5-S1 auto breath."""
+    """Count image assets for P5-S1 auto breath."""
     n = 0
     for asset in trip.get("assets") or []:
         if not isinstance(asset, dict):
             continue
-        kind = str(asset.get("kind") or "photo").strip().lower()
-        if kind in ("photo", "image", ""):
+        atype = str(asset.get("type") or "").strip().lower()
+        if atype == "image":
+            n += 1
+            continue
+        # Legacy tests / fixtures may use kind=photo without type.
+        kind = str(asset.get("kind") or "").strip().lower()
+        if not atype and kind in ("photo", "image"):
             n += 1
     return n
 
@@ -318,10 +323,9 @@ def resolve_reading_payload(
     export_reading = _normalize_export_reading(trip)
     raw_export = trip.get("export") if isinstance(trip.get("export"), dict) else {}
     reading_raw = raw_export.get("reading") if isinstance(raw_export.get("reading"), dict) else {}
-    scroll_explicit = (
-        isinstance(reading_raw.get("scroll"), dict)
-        and reading_raw["scroll"].get("breath") not in (None, "")
-    )
+    normalized_scroll = export_reading.get("scroll") if isinstance(export_reading.get("scroll"), dict) else {}
+    scroll_explicit = normalized_scroll.get("breath") not in (None, "")
+    profile_explicit = export_reading.get("profile") not in (None, "")
 
     profile_name = reading_profile_override or export_reading.get("profile")
     if profile_name:
@@ -358,6 +362,7 @@ def resolve_reading_payload(
         surface == SURFACE_WEB
         and export_mode == "draft"
         and not scroll_explicit
+        and not profile_explicit
         and reading_profile_override is None
     ):
         auto_breath = auto_breath_for_trip(trip)

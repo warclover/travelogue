@@ -709,8 +709,8 @@
     var drawerPreviousFocus = null;
 
     var editTpl =
-      '<label class="preview-drawer__label" for="preview-drawer-title">杂志名</label>' +
-      '<input id="preview-drawer-title" class="preview-drawer__title-input" type="text" maxlength="20" autocomplete="off" placeholder="我的旅途">' +
+      '<label class="preview-drawer__label" for="preview-drawer-title-input">杂志名</label>' +
+      '<input id="preview-drawer-title-input" class="preview-drawer__title-input" type="text" maxlength="20" autocomplete="off" placeholder="我的旅途">' +
       '<label class="preview-drawer__label" for="preview-drawer-notes">写给编辑的一句话</label>' +
       '<textarea id="preview-drawer-notes" class="preview-drawer__notes" maxlength="200" rows="3" placeholder="例如：带娃慢走，想突出雨后的京都"></textarea>' +
       '<p class="preview-drawer__chapter-label">当前章：<strong class="preview-drawer__chapter-name"></strong></p>' +

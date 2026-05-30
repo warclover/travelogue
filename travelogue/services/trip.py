@@ -84,6 +84,13 @@ def apply_intent(
 
     if travel_plan is not _UNSET:
         if travel_plan:
+            if not isinstance(travel_plan, dict):
+                raise ValueError("travelPlan must be an object")
+            import json
+
+            payload = json.dumps(travel_plan, ensure_ascii=False)
+            if len(payload.encode("utf-8")) > 8192:
+                raise ValueError("travelPlan too large (max 8KB)")
             intent["travelPlan"] = travel_plan
         else:
             intent.pop("travelPlan", None)

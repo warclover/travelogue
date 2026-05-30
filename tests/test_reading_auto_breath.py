@@ -13,6 +13,17 @@ def _trip(n: int) -> dict:
     return {"assets": [{"id": f"a{i}", "kind": "photo"} for i in range(n)], "chapters": []}
 
 
+def test_count_trip_photos_uses_image_type() -> None:
+    trip = {
+        "assets": [
+            {"id": "a1", "type": "image"},
+            {"id": "a2", "type": "video"},
+            {"id": "a3", "kind": "photo"},
+        ]
+    }
+    assert count_trip_photos(trip) == 2
+
+
 def test_count_trip_photos() -> None:
     assert count_trip_photos(_trip(0)) == 0
     assert count_trip_photos(_trip(19)) == 19
