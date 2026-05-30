@@ -259,6 +259,21 @@ def main() -> int:
         work_dir=args.work_dir,
     )
     print(json.dumps(stats, indent=2, ensure_ascii=False))
+    from travelogue.web.studio_telemetry import format_telemetry_lines
+
+    summary = {
+        "pipelineStatus": "benchmark",
+        "timingsMs": {
+            "ingestMs": stats["ingest_time_ms"],
+            "embedMs": stats["clip_embed_time_ms"],
+            "clusterMs": stats["cluster_time_ms"],
+            "curateMs": stats["curate_beam_time_ms"],
+            "totalMs": stats["studio_e2e_ms"],
+        },
+    }
+    print("\n--- telemetry (median ms) ---")
+    for line in format_telemetry_lines(summary):
+        print(line)
 
     if args.write:
         record = _load_json(args.record) if args.record.is_file() else {"schemaVersion": "1"}

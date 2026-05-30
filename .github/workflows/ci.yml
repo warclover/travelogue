@@ -87,3 +87,6 @@ jobs:
       - name: Demo verify (fixtures + DOM)
         run: |
           python -c "from travelogue.demo.verify import run_demo_verify; import sys; r=run_demo_verify(skip_pytest=True); print('\n'.join(r.messages)); sys.exit(0 if r.ok else 1)"
+
+      - name: Quality gate (layout + studio regression)
+        run: python scripts/quality_gate.py

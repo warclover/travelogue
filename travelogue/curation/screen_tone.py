@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from travelogue.media.color_metrics import _iter_rgb_pixels
+
 _DEFAULT_TONE = {"r": 232, "g": 228, "b": 223}
 
 _FALLBACK_TONES = (
@@ -29,7 +31,7 @@ def sample_tone_from_path(path: Path) -> dict | None:
     try:
         with Image.open(path) as img:
             rgb = img.convert("RGB").resize((32, 32))
-            pixels = list(rgb.getdata())
+            pixels = list(_iter_rgb_pixels(rgb))
         if not pixels:
             return None
         r = sum(p[0] for p in pixels) // len(pixels)

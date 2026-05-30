@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from travelogue.web.studio_constants import STUDIO_USER_NOTES_MAX_LEN
+from travelogue.web.studio_telemetry import build_pipeline_telemetry_summary
 
 
 def _ordered_screens(trip: dict) -> list[tuple[str, list[str], str | None]]:
@@ -115,6 +116,7 @@ def build_entry(trip: dict, trip_id: str) -> dict[str, Any]:
         preview_url = f"{preview_url}#screen-{peak}"
         scroll_share_url = f"{scroll_share_url}#screen-{peak}"
     pipeline = trip.get("pipeline") or {}
+    telemetry = build_pipeline_telemetry_summary(trip)
     return {
         "previewUrl": preview_url,
         "scrollShareUrl": scroll_share_url,
@@ -123,4 +125,5 @@ def build_entry(trip: dict, trip_id: str) -> dict[str, Any]:
         "pipelineStatus": pipeline.get("status"),
         "g1Pending": pipeline.get("status") == "structure_draft",
         "chapters": build_chapter_summaries(trip),
+        "telemetry": telemetry,
     }

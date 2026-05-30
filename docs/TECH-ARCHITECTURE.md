@@ -386,8 +386,12 @@ Phase 7 在不改变编排语义的前提下，对 **ingest → CLIP embed → c
 
 | 字段 / 脚本 | 用途 |
 |-------------|------|
-| `trip.pipeline.timings` | `ingestMs` · `embedMs` · `clusterMs` · `curateMs` · `renderMs` · `totalMs` |
-| `curation.clustering.embedStats` | batch 大小、web derivative 命中率、降级次数、`cacheHitRatio` |
+| `trip.pipeline.timings` | `ingestMs` · `embedMs` · `clusterMs` · `curateMs` · `renderMs` · `totalMs`（**已写入 `schemas/trip.schema.json`**） |
+| `curation.clustering.embedStats` | batch 大小、web derivative 命中率、降级次数、`cacheHitRatio`（**已 schema 化**） |
+| `travelogue/web/studio_telemetry.py` | 从 trip 构建摘要；Studio `entry.telemetry` 暴露 |
+| `scripts/quality_gate.py` | PR/CI 回归：fixture schema + layout/studio pytest |
+| `scripts/e2e_trip_acceptance.py` | 真实 trip：L1/L2 校验 + phase1 等价 + telemetry |
+| `docs/QUALITY-GATE.md` | PR 自检清单 |
 | `scripts/phase7_benchmark_run.py` | 分阶段 timed benchmark（写 perf-eval） |
 | `scripts/phase7_pipeline_perf.py` | 分项 benchmark + p95 AC 校验 |
 | `scripts/phase7_equivalence_check.py` | NR 双门槛（fixed=100%，real≥95%） |

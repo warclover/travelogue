@@ -80,6 +80,7 @@ def _cluster_labels(
                 min_samples=max(2, min_samples_eff // 2),
                 metric="cosine",
                 cluster_selection_method="eom",
+                copy=True,
             )
             labels = clusterer.fit_predict(mat)
             probs = getattr(clusterer, "probabilities_", None)

@@ -1,0 +1,26 @@
+[
+  {
+    "tripId": "linzhi",
+    "ok": true,
+    "issues": [],
+    "layoutEquivalent": true,
+    "pipelineStatus": "exported",
+    "telemetry": {
+      "pipelineStatus": "exported"
+    },
+    "assetCount": 232,
+    "chapterCount": 5
+  },
+  {
+    "tripId": "mao",
+    "ok": true,
+    "issues": [],
+    "layoutEquivalent": true,
+    "pipelineStatus": "structure_draft",
+    "telemetry": {
+      "pipelineStatus": "structure_draft"
+    },
+    "assetCount": 29,
+    "chapterCount": 3
+  }
+]
