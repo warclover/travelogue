@@ -82,6 +82,8 @@ def _replan_day_buckets_beam(
     budget: SearchBudget,
     subject_run_tolerance: int,
     intent_peak_chapters: set[int] | None = None,
+    enable_gravity_balance: bool = True,
+    max_consecutive_same_pattern: int = 2,
 ) -> tuple[list[dict], list[dict], SearchBudget]:
     from travelogue.curation.intent_hints import INTENT_PEAK_ARC_BOOST, arc_segment_for_chapter_with_intent
 
@@ -115,6 +117,7 @@ def _replan_day_buckets_beam(
     from travelogue.curation.curate_scoring import median_sharpness
 
     med_sharp = median_sharpness(list(assets_by_id.values())) if assets_by_id else 0.0
+    from travelogue.curation.layout_constraints import plan_violates_consecutive_pattern
 
     for bucket_idx, bucket in enumerate(day_buckets):
         if not budget.can_evaluate():
@@ -138,6 +141,15 @@ def _replan_day_buckets_beam(
             beam_width=beam_width,
             budget=budget,
         )
+        if max_consecutive_same_pattern > 0:
+            candidates = [
+                plan
+                for plan in candidates
+                if not plan_violates_consecutive_pattern(
+                    plan,
+                    max_streak=max_consecutive_same_pattern,
+                )
+            ] or candidates
         legacy_plan = candidates[0] if candidates else []
         legacy_sig = _screens_signature([{"screens": legacy_plan}])
         legacy_score = score_screen_plan(
@@ -148,6 +160,7 @@ def _replan_day_buckets_beam(
             arc_profile=arc_profile,
             subject_run_tolerance=subject_run_tolerance,
             featured_beam=True,
+            enable_gravity_balance=enable_gravity_balance,
         )
         best_plan = legacy_plan
         best_score = legacy_score
@@ -186,6 +199,7 @@ def _replan_day_buckets_beam(
                 subject_run_tolerance=subject_run_tolerance,
                 featured_beam=True,
                 intent_arc_boost=arc_boost,
+                enable_gravity_balance=enable_gravity_balance,
             )
             if bd.total > best_score.total + 1e-6:
                 best_plan = plan
@@ -247,6 +261,8 @@ def maybe_replan_chapters(
     allow_burst_split: bool = False,
     subject_run_tolerance: int = 1,
     intent_peak_chapters: set[int] | None = None,
+    enable_gravity_balance: bool = True,
+    max_consecutive_same_pattern: int = 2,
 ) -> tuple[list[dict], dict[str, Any]]:
     """Return chapters unchanged when scoring off, degraded, or aspect-only."""
     meta: dict[str, Any] = {"replanApplied": False, "decisionLogs": []}
@@ -286,6 +302,8 @@ def maybe_replan_chapters(
         budget=budget,
         subject_run_tolerance=subject_run_tolerance,
         intent_peak_chapters=intent_peak_chapters,
+        enable_gravity_balance=enable_gravity_balance,
+        max_consecutive_same_pattern=max_consecutive_same_pattern,
     )
     meta["decisionLogs"] = logs
     meta["searchBudget"] = budget.to_dict()

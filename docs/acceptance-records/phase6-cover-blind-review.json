@@ -1,0 +1,73 @@
+{
+  "recordId": "phase6-cover-blind-review",
+  "phase": "P6-Stability",
+  "instructions": "Blind review: show covers side-by-side without version labels. Set winner to p5 or p6.",
+  "pairs": [
+    {
+      "pairId": "proxy-thirds-mobile",
+      "tripId": "proxy-thirds-mobile",
+      "exportLayout": "mobile",
+      "baselineCoverAssetId": "center",
+      "candidateCoverAssetId": "thirds",
+      "baselineRubricScore": 1.3658,
+      "candidateRubricScore": 1.5122,
+      "winner": null,
+      "notes": "Fill winner=p5|p6 after blind human review"
+    },
+    {
+      "pairId": "proxy-thirds-web",
+      "tripId": "proxy-thirds-web",
+      "exportLayout": "web",
+      "baselineCoverAssetId": "thirds",
+      "candidateCoverAssetId": "thirds",
+      "baselineRubricScore": 2.6908,
+      "candidateRubricScore": 2.6908,
+      "winner": null,
+      "notes": "Fill winner=p5|p6 after blind human review"
+    },
+    {
+      "pairId": "proxy-vivid-mobile",
+      "tripId": "proxy-vivid-mobile",
+      "exportLayout": "mobile",
+      "baselineCoverAssetId": "vivid",
+      "candidateCoverAssetId": "vivid",
+      "baselineRubricScore": 1.3944,
+      "candidateRubricScore": 1.3944,
+      "winner": null,
+      "notes": "Fill winner=p5|p6 after blind human review"
+    },
+    {
+      "pairId": "proxy-combo-mobile",
+      "tripId": "proxy-combo-mobile",
+      "exportLayout": "mobile",
+      "baselineCoverAssetId": "strong",
+      "candidateCoverAssetId": "strong",
+      "baselineRubricScore": 1.4459,
+      "candidateRubricScore": 1.4459,
+      "winner": null,
+      "notes": "Fill winner=p5|p6 after blind human review"
+    },
+    {
+      "pairId": "proxy-tall-thirds",
+      "tripId": "proxy-tall-thirds",
+      "exportLayout": "mobile",
+      "baselineCoverAssetId": "flat",
+      "candidateCoverAssetId": "hero",
+      "baselineRubricScore": 1.5381,
+      "candidateRubricScore": 1.678,
+      "winner": null,
+      "notes": "Fill winner=p5|p6 after blind human review"
+    },
+    {
+      "pairId": "linzhi-fixture",
+      "tripId": "linzhi-fixture",
+      "exportLayout": "mobile",
+      "baselineCoverAssetId": "cover",
+      "candidateCoverAssetId": "cover",
+      "baselineRubricScore": 0.0,
+      "candidateRubricScore": 0.0,
+      "winner": null,
+      "notes": "Fill winner=p5|p6 after blind human review"
+    }
+  ]
+}

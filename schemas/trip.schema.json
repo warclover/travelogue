@@ -253,6 +253,54 @@
             "web": { "type": "array", "items": { "type": "string" }, "maxItems": 5 }
           }
         },
+        "coverExplain": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "code": { "type": "string" },
+              "label": { "type": "string" },
+              "multiplier": { "type": "number" },
+              "reason": { "type": "string" }
+            },
+            "required": ["code", "label", "reason"]
+          }
+        },
+        "coverExplainByLayout": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mobile": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "code": { "type": "string" },
+                  "label": { "type": "string" },
+                  "multiplier": { "type": "number" },
+                  "reason": { "type": "string" }
+                },
+                "required": ["code", "label", "reason"]
+              }
+            },
+            "web": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "code": { "type": "string" },
+                  "label": { "type": "string" },
+                  "multiplier": { "type": "number" },
+                  "reason": { "type": "string" }
+                },
+                "required": ["code", "label", "reason"]
+              }
+            }
+          }
+        },
         "warnings": {
           "type": "array",
           "items": { "type": "string" }
@@ -409,7 +457,13 @@
           "type": "array",
           "items": { "type": "string" }
         },
-        "medoidAssetId": { "type": "string" }
+        "medoidAssetId": { "type": "string" },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Average HDBSCAN membership probability for cluster members (Phase 6)"
+        }
       }
     },
     "tripClustering": {
@@ -440,6 +494,27 @@
             },
             "model": { "type": "string" }
           }
+        },
+        "sceneAlgorithm": {
+          "type": "string",
+          "enum": ["hdbscan", "dbscan"],
+          "description": "Scene clustering algorithm used (Phase 6)"
+        },
+        "eventSegmentation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "gapMode": {
+              "type": "string",
+              "enum": ["auto", "fixed"]
+            },
+            "thresholdHours": { "type": "number", "minimum": 0 }
+          }
+        },
+        "sceneSubSegmentation": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Geo×Scene sub-segmentation metadata (Phase 6)"
         },
         "userSummary": {
           "type": "object",
@@ -663,7 +738,13 @@
         },
         "sceneClusterId": {
           "type": "integer",
-          "description": "Scene cluster label from embedding DBSCAN; -1 = noise"
+          "description": "Scene cluster label from embedding clustering; -1 = noise"
+        },
+        "sceneClusterConfidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "HDBSCAN membership probability (Phase 6)"
         },
         "clusterSource": {
           "type": "string",

@@ -112,6 +112,8 @@ class ClusteringLayer:
             scene_count, vision_hint = self._run_scene_clustering(
                 trip, body, trip_dir=trip_dir, cfg=cfg, log=log
             )
+            if scene_count > 0 and cfg.clustering.enable_scene_sub_segments and geo.segments:
+                self._apply_scene_subsegments(trip, geo, cfg=cfg, log=log)
 
         effective_mode = self._resolve_effective_mode(geo, scene_count)
         hint = self._build_stage_hint(geo, scene_count, vision_hint)
@@ -150,7 +152,7 @@ class ClusteringLayer:
         log: ClusterDecisionLog,
     ) -> _GeoStage:
         try:
-            segments = detect_geo_events(
+            segments, gap_meta = detect_geo_events(
                 assets,
                 cfg=cfg.clustering.geo,
                 meta=trip.get("meta") or {},
@@ -169,6 +171,7 @@ class ClusteringLayer:
             "version": "1",
             "segmentMode": "geo_event",
             "segments": [s.to_dict() for s in segments],
+            "eventSegmentation": gap_meta,
         }
         by_id = {a["id"]: a for a in trip.get("assets") or []}
         for seg in segments:
@@ -182,6 +185,39 @@ class ClusteringLayer:
             input_summary=f"eventCount={len(segments)}",
         )
         return _GeoStage(segment_mode="geo_event", segments=segments)
+
+    @staticmethod
+    def _apply_scene_subsegments(
+        trip: dict,
+        geo: _GeoStage,
+        *,
+        cfg: AppConfig,
+        log: ClusterDecisionLog,
+    ) -> None:
+        from travelogue.curation.scene_subsegments import apply_scene_subsegments
+
+        assets_by_id = {a["id"]: a for a in trip.get("assets") or [] if a.get("id")}
+        refined, meta = apply_scene_subsegments(
+            geo.segments,
+            assets_by_id,
+            min_photos_per_sub=cfg.clustering.scene_subsegment_min_photos,
+        )
+        if len(refined) == len(geo.segments):
+            return
+        geo.segments = refined
+        clustering = trip.setdefault("curation", {}).setdefault("clustering", {})
+        clustering["segments"] = [s.to_dict() for s in refined]
+        clustering["sceneSubSegmentation"] = meta
+        by_id = assets_by_id
+        for seg in refined:
+            for aid in seg.asset_ids:
+                asset = by_id.get(aid)
+                if asset is not None:
+                    asset["eventId"] = seg.id
+        log.add(
+            "scene_subsegment",
+            f"split={meta.get('parentSplitCount', 0)} segments={len(refined)}",
+        )
 
     @staticmethod
     def _resolve_effective_mode(geo: _GeoStage, scene_count: int) -> ClusteringMode:
@@ -252,27 +288,30 @@ class ClusteringLayer:
             )
             if not embed.asset_ids:
                 return 0, ""
-            clusters = compute_scene_clusters(
+            scene_result = compute_scene_clusters(
                 embed.asset_ids,
                 embed.vectors,
                 eps=scene_cfg.cluster_eps,
                 min_samples=scene_cfg.cluster_min_samples,
+                algorithm=scene_cfg.algorithm,
                 deterministic=cfg.clustering.deterministic,
             )
             assign_scene_cluster_fields(
                 trip,
                 embed.asset_ids,
                 embed.vectors,
-                clusters,
+                scene_result.clusters,
                 cluster_source=embed.source,
                 model=embed.model,
+                algorithm=scene_cfg.algorithm,
+                probabilities_by_id=scene_result.probabilities_by_id,
             )
             log.add(
                 "cluster_assign",
-                f"scene clusters via {embed.source}",
-                input_summary=f"clusterCount={len(clusters)}",
+                f"scene clusters via {embed.source} ({scene_cfg.algorithm})",
+                input_summary=f"clusterCount={len(scene_result.clusters)}",
             )
-            return len(clusters), hints[-1] if hints else "正在分析场景与行程…"
+            return len(scene_result.clusters), hints[-1] if hints else "正在分析场景与行程…"
 
         # NOTE: Python threads cannot be killed. We deliberately drop the pool
         # with wait=False on timeout/failure so the surrounding pipeline can

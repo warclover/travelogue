@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -136,17 +135,33 @@ def _clip_cache_roots() -> list[Path]:
 
 
 def _heuristic_vector(asset: dict) -> list[float]:
+    from colorsys import rgb_to_hls
+
     w = float(asset.get("width") or 1000)
     h = float(asset.get("height") or 1000)
     ratio = w / max(h, 1.0)
     sharp = float(asset.get("sharpness") or 0.0)
     luma = float(asset.get("meanLuma") or 0.5)
+
     tone_raw = str(asset.get("dominantTone") or "")
-    tone = (int(hashlib.md5(tone_raw.encode()).hexdigest()[:8], 16) % 1000) / 1000.0
+    hue, saturation = 0.0, 0.0
+    if tone_raw.startswith("#") and len(tone_raw) >= 7:
+        try:
+            r = int(tone_raw[1:3], 16) / 255.0
+            g = int(tone_raw[3:5], 16) / 255.0
+            b = int(tone_raw[5:7], 16) / 255.0
+            hue, _l, saturation = rgb_to_hls(r, g, b)
+        except ValueError:
+            pass
+
     subj = str(asset.get("subjectClass") or asset.get("subjectBucket") or "")
-    subj_h = (int(hashlib.md5(subj.encode()).hexdigest()[:8], 16) % 1000) / 1000.0
+    if subj in SUBJECT_CLASSES:
+        subject_idx = SUBJECT_CLASSES.index(subj) / max(len(SUBJECT_CLASSES) - 1, 1)
+    else:
+        subject_idx = 0.5
+
     face = 1.0 if asset.get("faceCount") else 0.0
-    return [ratio, sharp, luma, tone, subj_h, face, w / 4000.0, h / 4000.0]
+    return [ratio, sharp, luma, hue, saturation, subject_idx, face, w / 4000.0]
 
 
 @dataclass

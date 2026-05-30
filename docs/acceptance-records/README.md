@@ -9,7 +9,16 @@
 
 ---
 
-## Phase 5（当前）
+## Phase 6（开发准备）
+
+| 文件 | 用途 | 命令 / 说明 |
+|------|------|-------------|
+| [phase6-quality-eval.json](./phase6-quality-eval.json) | AC-P6 / BR-P6 指标记录 | `python scripts/phase6_metrics_baseline.py --summary --write` |
+| [phase6-rollout-log.json](./phase6-rollout-log.json) | G0-G3 灰度与回滚日志 | 手动记录 + 发布值班更新 |
+
+---
+
+## Phase 5（当前生产闸门）
 
 | 文件 | 用途 | 命令 / 说明 |
 |------|------|-------------|

@@ -1,0 +1,10 @@
+[
+  {
+    "id": "evt-kyoto-day",
+    "name": "京都",
+    "startDate": "2025-06-01",
+    "endDate": "2025-06-01",
+    "location": "京都",
+    "assetIds": ["a1", "a2", "a3", "a4", "a5", "a6"]
+  }
+]

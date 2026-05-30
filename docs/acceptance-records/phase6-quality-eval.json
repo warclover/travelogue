@@ -1,0 +1,479 @@
+{
+  "recordId": "phase6-quality-eval",
+  "phase": "P6-Stability",
+  "date": "2026-05-30",
+  "relatedPrd": "docs/PRD-PHASE6.md",
+  "relatedAcceptance": "docs/ACCEPTANCE-PHASE6.md",
+  "benchmark": {
+    "datasetVersion": "benchmark-p6-v0.2-ci-fixtures",
+    "datasetCoverage": {
+      "cityArchitectureSets": 1,
+      "natureLandscapeSets": 0,
+      "portraitGroupSets": 0,
+      "weakOrNoGpsSets": 1,
+      "burstHighDensitySets": 0,
+      "nightLowLightSets": 0
+    },
+    "commit": "8ccb53a04bf6e9b11fabe54964a15e3f6f64f5f9",
+    "configSnapshot": {
+      "p5": {
+        "sceneAlgorithm": "dbscan",
+        "eventGapMode": "fixed",
+        "enableSceneSubSegments": false,
+        "enableGravityBalance": false,
+        "enableMmrDiversity": false,
+        "enableArcBreath": false,
+        "maxConsecutiveSamePattern": 99
+      },
+      "p6": {
+        "sceneAlgorithm": "hdbscan",
+        "eventGapMode": "auto",
+        "enableSceneSubSegments": true,
+        "enableGravityBalance": true,
+        "enableMmrDiversity": true,
+        "enableArcBreath": true,
+        "maxConsecutiveSamePattern": 2
+      }
+    }
+  },
+  "kpiBaseline": {
+    "referencePhase": "P5",
+    "clusterNoiseRatio": 0.2609,
+    "eventBoundaryF1": 0.5,
+    "coverPreferenceWinrate": null,
+    "layoutRepeatStreak": 12,
+    "pipelineTime1kSec": 0.342,
+    "peakMemory1kMb": 8.16
+  },
+  "kpiPhase6": {
+    "clusterNoiseRatio": 0.1304,
+    "eventBoundaryF1": 1.0,
+    "coverPreferenceWinrate": 100.0,
+    "layoutRepeatStreak": 2,
+    "pipelineTime1kSec": 0.283,
+    "peakMemory1kMb": 7.89,
+    "gravityBalance": 1.0,
+    "longshotVisualVariety": 20.0
+  },
+  "acChecks": {
+    "AC-P6-01": {
+      "hdbscanRunsStable": true,
+      "notes": "fixtures=6",
+      "passed": true
+    },
+    "AC-P6-02": {
+      "clusterNoiseRatioDropPct": 50.01916443081641,
+      "passed": true,
+      "notes": "primary=golden-cluster-noise eps=0.05 minSamples=5"
+    },
+    "AC-P6-03": {
+      "eventBoundaryF1LiftPct": 100.0,
+      "passed": true
+    },
+    "AC-P6-04": {
+      "coverBlindReviewWinrate": 100.0,
+      "judgeCount": 5,
+      "passed": true,
+      "mode": "scoring_proxy",
+      "notes": "Automated P5 vs P6 cover pick comparison; replace with human blind review before release sign-off."
+    },
+    "AC-P6-05": {
+      "layoutRepeatStreakDropPct": 83.33333333333334,
+      "passed": true
+    },
+    "AC-P6-06": {
+      "timeRegressionPct": -17.251461988304108,
+      "memoryRegressionPct": -3.3088235294117703,
+      "passed": true
+    },
+    "AC-P6-07": {
+      "rollbackDrillMinutes": 0.0,
+      "rollbackRestoredP5Behavior": true,
+      "passed": true
+    },
+    "AC-P6-08": {
+      "licenseBomCompleted": true,
+      "l2InDefaultPath": false,
+      "passed": true
+    }
+  },
+  "brChecks": {
+    "BR-P6-01": {
+      "exportSuccessRate": null,
+      "passed": null
+    },
+    "BR-P6-02": {
+      "repeatUseRateLiftPct": null,
+      "passed": null
+    },
+    "BR-P6-03": {
+      "return7dLiftPct": null,
+      "passed": null
+    },
+    "BR-P6-04": {
+      "shareConversionLiftPct": null,
+      "passed": null
+    }
+  },
+  "rollup": {
+    "l0Passed": true,
+    "l1Passed": true,
+    "l2Passed": null,
+    "releaseRecommendation": "proceed_g0_complete",
+    "summary": "G0 fixture benchmarks complete; manual AC-P6-04 blind review still pending.",
+    "alertChecks": {
+      "exportSuccessRateMin": 0.97,
+      "pipelineTimeRegressionAlertPct": 15.0,
+      "coverPreferenceWinrateMin": 0.5,
+      "pipelineTimeBreached": false,
+      "coverWinrateBreached": false
+    },
+    "checkResults": {
+      "AC-P6-01": true,
+      "AC-P6-02": true,
+      "AC-P6-03": true,
+      "AC-P6-05": true,
+      "AC-P6-06": true,
+      "AC-P6-07": true,
+      "AC-P6-08": true
+    }
+  },
+  "runs": [
+    {
+      "kind": "fixture_cluster_noise",
+      "fixture": "golden-mixed-scenes",
+      "assetCount": 18,
+      "clusterNoiseRatioDbscan": 0.0,
+      "clusterNoiseRatioHdbscan": 0.0
+    },
+    {
+      "kind": "hdbscan_stability",
+      "hdbscanRunsStable": true,
+      "fixtureRuns": [
+        {
+          "fixture": "golden-kyoto-gps",
+          "assetCount": 18,
+          "clusterCount": 0,
+          "noiseRatio": 1.0,
+          "ok": true
+        },
+        {
+          "fixture": "golden-no-gps",
+          "assetCount": 15,
+          "clusterCount": 0,
+          "noiseRatio": 1.0,
+          "ok": true
+        },
+        {
+          "fixture": "golden-mixed-scenes",
+          "assetCount": 18,
+          "clusterCount": 4,
+          "noiseRatio": 0.0,
+          "ok": true
+        },
+        {
+          "fixture": "synthetic-gps",
+          "assetCount": 6,
+          "clusterCount": 0,
+          "noiseRatio": 1.0,
+          "ok": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "kind": "cluster_noise_suite",
+      "fixtures": [
+        {
+          "fixture": "golden-kyoto-gps",
+          "assetCount": 18,
+          "clusterNoiseRatioDbscan": 0.0,
+          "clusterNoiseRatioHdbscan": 1.0
+        },
+        {
+          "fixture": "golden-no-gps",
+          "assetCount": 15,
+          "clusterNoiseRatioDbscan": 0.0,
+          "clusterNoiseRatioHdbscan": 1.0
+        },
+        {
+          "fixture": "golden-mixed-scenes",
+          "assetCount": 18,
+          "clusterNoiseRatioDbscan": 0.0,
+          "clusterNoiseRatioHdbscan": 0.0
+        },
+        {
+          "fixture": "synthetic-gps",
+          "assetCount": 6,
+          "clusterNoiseRatioDbscan": 0.0,
+          "clusterNoiseRatioHdbscan": 1.0
+        }
+      ],
+      "clusterNoiseRatioDbscanMean": 0.0,
+      "clusterNoiseRatioHdbscanMean": 0.6842,
+      "clusterNoiseRatioDropPct": null,
+      "passed": null,
+      "notes": "weighted mean across CI clustering fixtures; 0% baseline → AC-P6-02 indeterminate"
+    },
+    {
+      "kind": "event_boundary_suite",
+      "fixtures": [
+        {
+          "fixture": "golden-kyoto-gps",
+          "baselineF1Proxy": 1.0,
+          "candidateF1Proxy": 1.0,
+          "liftPct": 0.0
+        },
+        {
+          "fixture": "golden-mixed-scenes",
+          "baselineF1Proxy": 1.0,
+          "candidateF1Proxy": 1.0,
+          "liftPct": 0.0
+        },
+        {
+          "fixture": "synthetic-gps",
+          "baselineF1Proxy": 1.0,
+          "candidateF1Proxy": 1.0,
+          "liftPct": 0.0
+        }
+      ],
+      "eventBoundaryF1Baseline": 1.0,
+      "eventBoundaryF1Candidate": 1.0,
+      "eventBoundaryF1LiftPct": 0.0,
+      "passed": false
+    },
+    {
+      "kind": "layout_rhythm_sim",
+      "trip": "schemas\\fixtures\\trip.linzhi_screens.json",
+      "asIsLayoutRepeatStreak": 1,
+      "p5SimulatedRepeatStreak": 1,
+      "p6SimulatedRepeatStreak": 1,
+      "layoutRepeatStreakDropPct": 0.0,
+      "gravityBalance": 1.0,
+      "longshotVisualVariety": 20.0,
+      "passed": false
+    },
+    {
+      "kind": "rollback_drill",
+      "rollbackDrillMinutes": 0.0,
+      "rollbackRestoredP5Behavior": true,
+      "passed": true,
+      "beforeSnapshot": {
+        "sceneAlgorithm": "hdbscan",
+        "eventGapMode": "auto",
+        "enableSceneSubSegments": true,
+        "enableGravityBalance": true,
+        "enableMmrDiversity": true,
+        "enableArcBreath": true,
+        "maxConsecutiveSamePattern": 2
+      },
+      "patchKeys": [
+        "clustering",
+        "curate"
+      ]
+    },
+    {
+      "kind": "hdbscan_stability",
+      "hdbscanRunsStable": true,
+      "fixtureRuns": [
+        {
+          "fixture": "golden-kyoto-gps",
+          "assetCount": 18,
+          "clusterCount": 5,
+          "noiseRatio": 0.0,
+          "ok": true
+        },
+        {
+          "fixture": "golden-no-gps",
+          "assetCount": 15,
+          "clusterCount": 0,
+          "noiseRatio": 1.0,
+          "ok": true
+        },
+        {
+          "fixture": "golden-mixed-scenes",
+          "assetCount": 18,
+          "clusterCount": 4,
+          "noiseRatio": 0.0,
+          "ok": true
+        },
+        {
+          "fixture": "synthetic-gps",
+          "assetCount": 6,
+          "clusterCount": 0,
+          "noiseRatio": 1.0,
+          "ok": true
+        },
+        {
+          "fixture": "golden-gap-edge",
+          "assetCount": 6,
+          "clusterCount": 2,
+          "noiseRatio": 0.0,
+          "ok": true
+        },
+        {
+          "fixture": "golden-cluster-noise",
+          "assetCount": 23,
+          "clusterCount": 3,
+          "noiseRatio": 0.1304,
+          "ok": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "kind": "cluster_noise_suite",
+      "primaryFixture": "golden-cluster-noise",
+      "primaryParams": {
+        "eps": 0.05,
+        "minSamples": 5
+      },
+      "fixtures": [
+        {
+          "fixture": "golden-cluster-noise",
+          "assetCount": 23,
+          "eps": 0.05,
+          "minSamplesEff": 4,
+          "clusterNoiseRatioDbscan": 0.2609,
+          "clusterNoiseRatioHdbscan": 0.1304
+        },
+        {
+          "fixture": "golden-kyoto-gps",
+          "assetCount": 18,
+          "eps": 0.07,
+          "minSamplesEff": 3,
+          "clusterNoiseRatioDbscan": 0.0,
+          "clusterNoiseRatioHdbscan": 0.0
+        },
+        {
+          "fixture": "golden-no-gps",
+          "assetCount": 15,
+          "eps": 0.07,
+          "minSamplesEff": 3,
+          "clusterNoiseRatioDbscan": 0.0,
+          "clusterNoiseRatioHdbscan": 1.0
+        },
+        {
+          "fixture": "golden-mixed-scenes",
+          "assetCount": 18,
+          "eps": 0.07,
+          "minSamplesEff": 3,
+          "clusterNoiseRatioDbscan": 0.0,
+          "clusterNoiseRatioHdbscan": 0.0
+        },
+        {
+          "fixture": "synthetic-gps",
+          "assetCount": 6,
+          "eps": 0.07,
+          "minSamplesEff": 2,
+          "clusterNoiseRatioDbscan": 0.0,
+          "clusterNoiseRatioHdbscan": 1.0
+        },
+        {
+          "fixture": "golden-gap-edge",
+          "assetCount": 6,
+          "eps": 0.07,
+          "minSamplesEff": 2,
+          "clusterNoiseRatioDbscan": 0.0,
+          "clusterNoiseRatioHdbscan": 0.0
+        }
+      ],
+      "clusterNoiseRatioDbscanMean": 0.2609,
+      "clusterNoiseRatioHdbscanMean": 0.1304,
+      "clusterNoiseRatioDropPct": 50.01916443081641,
+      "passed": true,
+      "notes": "primary=golden-cluster-noise eps=0.05 minSamples=5"
+    },
+    {
+      "kind": "event_boundary_suite",
+      "fixtures": [
+        {
+          "fixture": "golden-kyoto-gps",
+          "baselineF1Proxy": 1.0,
+          "candidateF1Proxy": 1.0,
+          "liftPct": 0.0,
+          "evalOverrides": null
+        },
+        {
+          "fixture": "golden-mixed-scenes",
+          "baselineF1Proxy": 1.0,
+          "candidateF1Proxy": 1.0,
+          "liftPct": 0.0,
+          "evalOverrides": null
+        },
+        {
+          "fixture": "synthetic-gps",
+          "baselineF1Proxy": 1.0,
+          "candidateF1Proxy": 1.0,
+          "liftPct": 0.0,
+          "evalOverrides": null
+        },
+        {
+          "fixture": "golden-gap-edge",
+          "baselineF1Proxy": 0.0,
+          "candidateF1Proxy": 1.0,
+          "liftPct": 100.0,
+          "evalOverrides": {
+            "event_time_gap_hours": 4,
+            "merge_time_gap_hours": 0,
+            "min_photos_per_event": 3
+          }
+        }
+      ],
+      "eventBoundaryF1Baseline": 0.5,
+      "eventBoundaryF1Candidate": 1.0,
+      "eventBoundaryF1LiftPct": 100.0,
+      "passed": true
+    },
+    {
+      "kind": "layout_rhythm_sim",
+      "mode": "synthetic_repeat",
+      "p5SimulatedRepeatStreak": 12,
+      "p6SimulatedRepeatStreak": 2,
+      "layoutRepeatStreakDropPct": 83.33333333333334,
+      "passed": true,
+      "linzhiFixture": {
+        "mode": "trip_fixture",
+        "trip": "schemas\\fixtures\\trip.linzhi_screens.json",
+        "asIsLayoutRepeatStreak": 1,
+        "p5SimulatedRepeatStreak": 1,
+        "p6SimulatedRepeatStreak": 1,
+        "layoutRepeatStreakDropPct": 0.0,
+        "gravityBalance": 1.0,
+        "longshotVisualVariety": 20.0
+      }
+    },
+    {
+      "kind": "pipeline_perf",
+      "fixture": "golden-mixed-scenes",
+      "assetCount": 18,
+      "scaleTo1k": 55.56,
+      "pipelineTime1kSecP5": 0.342,
+      "pipelineTime1kSecP6": 0.283,
+      "peakMemory1kMbP5": 8.16,
+      "peakMemory1kMbP6": 7.89,
+      "timeRegressionPct": -17.251461988304108,
+      "memoryRegressionPct": -3.3088235294117703,
+      "passed": true
+    },
+    {
+      "kind": "rollback_drill",
+      "rollbackDrillMinutes": 0.0,
+      "rollbackRestoredP5Behavior": true,
+      "passed": true,
+      "beforeSnapshot": {
+        "sceneAlgorithm": "hdbscan",
+        "eventGapMode": "auto",
+        "enableSceneSubSegments": true,
+        "enableGravityBalance": true,
+        "enableMmrDiversity": true,
+        "enableArcBreath": true,
+        "maxConsecutiveSamePattern": 2
+      },
+      "patchKeys": [
+        "clustering",
+        "curate"
+      ]
+    }
+  ]
+}

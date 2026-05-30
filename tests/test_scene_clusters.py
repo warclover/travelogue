@@ -13,7 +13,8 @@ def test_compute_scene_clusters_groups_similar_vectors() -> None:
     base_a = np.array([1.0, 0.0, 0.0], dtype=np.float32)
     base_b = np.array([0.0, 1.0, 0.0], dtype=np.float32)
     vectors = np.vstack([np.tile(base_a, (6, 1)), np.tile(base_b, (6, 1))])
-    clusters = compute_scene_clusters(ids, vectors, eps=0.25, min_samples=3)
+    result = compute_scene_clusters(ids, vectors, eps=0.25, min_samples=3, algorithm="dbscan")
+    clusters = result.clusters
     assert len(clusters) == 2
     assert sum(len(c.asset_ids) for c in clusters) == 12
 
@@ -24,7 +25,8 @@ def test_assign_scene_cluster_fields_writes_trip() -> None:
         [[1, 0, 0], [1, 0, 0], [0, 1, 0], [0, 1, 0]],
         dtype=np.float32,
     )
-    clusters = compute_scene_clusters(ids, vectors, eps=0.2, min_samples=2)
+    result = compute_scene_clusters(ids, vectors, eps=0.2, min_samples=2, algorithm="dbscan")
+    clusters = result.clusters
     trip = {"assets": [{"id": i} for i in ids], "curation": {}}
     assign_scene_cluster_fields(trip, ids, vectors, clusters, cluster_source="heuristic")
     assert trip["curation"]["clustering"]["clusters"]
@@ -35,11 +37,22 @@ def test_assign_scene_cluster_fields_writes_trip() -> None:
 def test_noise_cluster_id_for_outliers() -> None:
     ids = ["o1"]
     vectors = np.array([[0.5, 0.5, 0.5]], dtype=np.float32)
-    clusters = compute_scene_clusters(ids, vectors, eps=0.01, min_samples=5)
-    assert clusters == []
+    result = compute_scene_clusters(ids, vectors, eps=0.01, min_samples=5, algorithm="dbscan")
+    assert result.clusters == []
     trip = {"assets": [{"id": "o1"}], "curation": {}}
-    assign_scene_cluster_fields(trip, ids, vectors, clusters, cluster_source="heuristic")
+    assign_scene_cluster_fields(trip, ids, vectors, result.clusters, cluster_source="heuristic")
     assert trip["assets"][0]["sceneClusterId"] == NOISE_CLUSTER_ID
+
+
+def test_hdbscan_default_groups_similar_vectors() -> None:
+    pytest.importorskip("sklearn")
+    ids = [f"h{i}" for i in range(12)]
+    base_a = np.array([1.0, 0.0, 0.0], dtype=np.float32)
+    base_b = np.array([0.0, 1.0, 0.0], dtype=np.float32)
+    vectors = np.vstack([np.tile(base_a, (6, 1)), np.tile(base_b, (6, 1))])
+    result = compute_scene_clusters(ids, vectors, min_samples=3)
+    assert len(result.clusters) >= 1
+    assert sum(len(c.asset_ids) for c in result.clusters) >= 6
 
 
 @pytest.mark.vision

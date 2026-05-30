@@ -9,6 +9,23 @@ BREATH_PATTERN = "screen-breath-pause"
 DEFAULT_INTERVAL = 4
 
 
+def arc_breath_interval(arc_segment: str | None) -> int:
+    """P6 / ART-E1 · shorter pauses after peak, longer during setup."""
+    seg = (arc_segment or "").strip().lower()
+    if seg == "peak":
+        return 3
+    if seg in ("climax", "resolution", "epilogue"):
+        return 5
+    if seg in ("setup", "hook"):
+        return 6
+    return DEFAULT_INTERVAL
+
+
+def _screen_arc_segment(screen: dict) -> str | None:
+    raw = screen.get("arcSegment")
+    return str(raw).strip().lower() if raw else None
+
+
 def _new_breath_screen(*, label: str = "") -> dict:
     return {
         "screenId": f"breath-{uuid.uuid4().hex[:8]}",
@@ -22,12 +39,14 @@ def insert_breath_screens_in_chapters(
     chapters: list[dict],
     *,
     interval: int = DEFAULT_INTERVAL,
+    arc_driven: bool = False,
 ) -> int:
     """Mutate chapters: insert breath pause screens every `interval` photo screens (path B)."""
-    if interval < 2:
+    if interval < 2 and not arc_driven:
         return 0
     inserted = 0
     since_pause = 0
+    next_interval = interval
     for ch in chapters:
         screens = ch.get("screens") or []
         if not screens:
@@ -40,9 +59,18 @@ def insert_breath_screens_in_chapters(
             if not any(s.get("assetId") for s in sc.get("slots") or []):
                 continue
             new_screens.append(sc)
+            if arc_driven:
+                next_interval = max(2, arc_breath_interval(_screen_arc_segment(sc)))
             since_pause += 1
-            if since_pause >= interval:
-                new_screens.append(_new_breath_screen())
+            if since_pause >= next_interval:
+                tone = sc.get("tone") if isinstance(sc.get("tone"), dict) else None
+                label = "···"
+                if _screen_arc_segment(sc) == "peak":
+                    label = "—"
+                breath = _new_breath_screen(label=label)
+                if tone:
+                    breath["tone"] = dict(tone)
+                new_screens.append(breath)
                 inserted += 1
                 since_pause = 0
         ch["screens"] = new_screens

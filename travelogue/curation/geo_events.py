@@ -120,6 +120,65 @@ def _dominant_location(assets: list[dict]) -> str | None:
     return Counter(cities).most_common(1)[0][0]
 
 
+def _adaptive_gap_threshold_hours(
+    timestamps: list[datetime],
+    *,
+    fallback_hours: float,
+) -> float:
+    """Pick a split threshold from the gap distribution (Phase 6 P6-B1)."""
+    if len(timestamps) < 4:
+        return fallback_hours
+
+    gaps = sorted(
+        (timestamps[i + 1] - timestamps[i]).total_seconds() / 3600.0
+        for i in range(len(timestamps) - 1)
+    )
+    if not gaps:
+        return fallback_hours
+
+    n = len(gaps)
+    p75 = gaps[int(n * 0.75)]
+    p90 = gaps[int(n * 0.90)]
+
+    if p90 > p75 * 3 and p75 > 0:
+        # Bimodal gap distribution: prefer the upper mode (inter-session / lunch
+        # breaks) rather than the dense within-session gaps near p75.
+        upper = [g for g in gaps if g >= p90 * 0.85]
+        if upper:
+            return upper[len(upper) // 2]
+        candidates = [g for g in gaps if p75 <= g <= p90]
+        if candidates:
+            return candidates[-1]
+
+    return fallback_hours
+
+
+def _resolve_gap_hours(
+    gps_rows: list[tuple[datetime, str, dict, tuple[float, float]]],
+    *,
+    cfg: GeoClusterConfig,
+    event_time_gap_hours: float | None,
+) -> tuple[float, str]:
+    """Return (gap_hours, gap_mode) with fail-open to fixed fallback."""
+    fallback = (
+        event_time_gap_hours
+        if event_time_gap_hours is not None
+        else cfg.event_time_gap_hours
+    )
+    mode = cfg.event_gap_mode
+    if mode != "auto":
+        return fallback, "fixed"
+
+    try:
+        timestamps = [row[0] for row in gps_rows]
+        adaptive = _adaptive_gap_threshold_hours(timestamps, fallback_hours=fallback)
+        if adaptive <= 0 or adaptive > 168:
+            return fallback, "fixed"
+        return adaptive, "auto"
+    except Exception:
+        return fallback, "fixed"
+
+
 def _time_split_groups(
     rows: list[tuple[datetime, str, dict, tuple[float, float]]],
     *,
@@ -223,8 +282,11 @@ def detect_geo_events(
     max_event_days: int | None = None,
     meta: dict | None = None,
     intent: dict | None = None,
-) -> list[GeoSegment]:
-    """Detect stay/event segments from GPS + takenAt (Recasa-inspired rules)."""
+) -> tuple[list[GeoSegment], dict[str, Any]]:
+    """Detect stay/event segments from GPS + takenAt (Recasa-inspired rules).
+
+    Returns (segments, segmentation_meta) where meta includes gapMode/thresholdHours.
+    """
     from travelogue.services.copy_subject import (
         narrative_copy_subject,
         suppress_chapter_geo_places,
@@ -238,7 +300,7 @@ def detect_geo_events(
             label_place = narrative_copy_subject(meta, intent=intent, assets=assets)
 
     geo_cfg = cfg or GeoClusterConfig()
-    gap_h = event_time_gap_hours if event_time_gap_hours is not None else geo_cfg.event_time_gap_hours
+    gap_meta: dict[str, Any] = {"gapMode": geo_cfg.event_gap_mode, "thresholdHours": geo_cfg.event_time_gap_hours}
     min_photos = (
         min_photos_per_event if min_photos_per_event is not None else geo_cfg.min_photos_per_event
     )
@@ -259,9 +321,15 @@ def detect_geo_events(
             continue
         gps_rows.append((dt, asset["id"], asset, geo))
     if not gps_rows:
-        return []
+        return [], gap_meta
 
     gps_rows.sort(key=lambda r: r[0])
+    gap_h, gap_mode_used = _resolve_gap_hours(
+        gps_rows,
+        cfg=geo_cfg,
+        event_time_gap_hours=event_time_gap_hours,
+    )
+    gap_meta = {"gapMode": gap_mode_used, "thresholdHours": round(gap_h, 3)}
     time_groups = _time_split_groups(gps_rows, gap_hours=gap_h)
     raw_chunks: list[list[tuple[datetime, str, dict, tuple[float, float]]]] = []
     for tg in time_groups:
@@ -355,4 +423,4 @@ def detect_geo_events(
             key=lambda aid: (asset_taken_at.get(aid, ""), aid),
         )
 
-    return [s for s in segments if s.asset_ids]
+    return [s for s in segments if s.asset_ids], gap_meta

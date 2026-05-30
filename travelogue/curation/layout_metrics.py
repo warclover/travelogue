@@ -26,6 +26,43 @@ def pattern_diversity(chapters: list[dict]) -> float:
     return len(set(pids)) / len(pids)
 
 
+def max_pattern_repeat_streak(chapters: list[dict]) -> int:
+    """Longest run of identical patternId across reading order (P6-D3 metric)."""
+    streak = 0
+    best = 0
+    prev: str | None = None
+    for ch in chapters:
+        for screen in ch.get("screens") or []:
+            pid = screen.get("patternId")
+            if not pid:
+                streak = 0
+                prev = None
+                continue
+            if pid == prev:
+                streak += 1
+            else:
+                streak = 1
+                prev = pid
+            best = max(best, streak)
+    return best
+
+
+def longshot_visual_variety(chapters: list[dict], assets_by_id: Mapping[str, dict]) -> float:
+    """0–100 variety score from pattern/tone/kind diversity (P6-D2 metric)."""
+    from travelogue.curation.longshot_filter import _screen_diversity_key
+
+    keys: list[tuple] = []
+    for ch in chapters:
+        for screen in ch.get("screens") or []:
+            if not any(s.get("assetId") for s in (screen.get("slots") or [])):
+                continue
+            keys.append(_screen_diversity_key(screen, assets_by_id))
+    if not keys:
+        return 0.0
+    unique = len(set(keys))
+    return round(unique / len(keys) * 100.0, 2)
+
+
 def screens_per_chapter(chapters: list[dict]) -> dict[str, int]:
     return {ch.get("id", ""): len(ch.get("screens") or []) for ch in chapters}
 
@@ -161,13 +198,20 @@ def compute_layout_metrics(
     subject_run_tolerance: int = 1,
 ) -> dict[str, Any]:
     pids = _screen_pattern_ids(chapters)
+    assets_by_id = {a["id"]: a for a in (assets or []) if a.get("id")}
     out: dict[str, Any] = {
         "screenCount": len(pids),
         "chapterCount": len(chapters),
         "patternDiversity": round(pattern_diversity(chapters), 4),
+        "layoutRepeatStreak": max_pattern_repeat_streak(chapters),
         "patternIds": pids,
         "screensPerChapter": screens_per_chapter(chapters),
     }
+    if assets_by_id:
+        from travelogue.curation.layout_scoring import score_gravity_balance
+
+        out["gravityBalance"] = round(score_gravity_balance(chapters, assets_by_id), 4)
+        out["longshotVisualVariety"] = longshot_visual_variety(chapters, assets_by_id)
     if assets:
         out.update(
             compute_layout_quality_metrics(

@@ -350,7 +350,7 @@ def test_geo_segment_name_uses_editorial_subject_not_exif() -> None:
     ]
     meta = {"title": "小学毕业", "places": ["旅途"]}
     intent = {"placesUserSet": False}
-    segs = detect_geo_events(
+    segs, _meta = detect_geo_events(
         assets,
         cfg=GeoClusterConfig(min_photos_per_event=3),
         meta=meta,

@@ -19,6 +19,8 @@ from travelogue.curation.bucket_planning import (
 )
 from travelogue.curation.curate_patterns import pattern_hint_for_bucket
 from travelogue.curation.curate_scoring import (
+    build_cover_explain,
+    cover_asset_pool,
     cover_candidates as _cover_candidates,
     cover_score as _cover_score,
     median_sharpness,
@@ -199,6 +201,35 @@ def resolve_cover_asset_id(
     return _pick_cover_asset_id(assets, export_layout=profile)
 
 
+def _cover_explain_for(
+    assets: list[dict],
+    cover_id: str,
+    export_layout: str,
+) -> list[dict]:
+    asset = next((a for a in assets if a.get("id") == cover_id), None)
+    if not asset:
+        return []
+    pool = cover_asset_pool(assets, export_layout=export_layout)
+    return build_cover_explain(
+        asset,
+        export_layout,
+        median_sharp=median_sharpness(pool),
+    )
+
+
+def _attach_cover_explain(
+    curation: dict,
+    assets: list[dict],
+    cover_id: str,
+    export_layout: str,
+) -> None:
+    explain = _cover_explain_for(assets, cover_id, export_layout)
+    if explain:
+        curation["coverExplain"] = explain
+    else:
+        curation.pop("coverExplain", None)
+
+
 def sync_trip_covers(
     trip: dict,
     *,
@@ -242,6 +273,19 @@ def sync_trip_covers(
                 featured_min=featured_min_for_cover_pool,
             ),
         }
+        mobile_explain = _cover_explain_for(assets, mobile_id, "mobile")
+        web_explain = _cover_explain_for(assets, web_id, "web")
+        if mobile_explain:
+            curation["coverExplain"] = mobile_explain
+        else:
+            curation.pop("coverExplain", None)
+        if mobile_explain or web_explain:
+            curation["coverExplainByLayout"] = {
+                "mobile": mobile_explain,
+                "web": web_explain,
+            }
+        else:
+            curation.pop("coverExplainByLayout", None)
         return mobile_id
 
     cover_id = _pick_cover_asset_id(assets, export_layout=layout, featured_weight=featured_weight)
@@ -255,6 +299,8 @@ def sync_trip_covers(
     )
     curation.pop("coverByLayout", None)
     curation.pop("coverCandidatesByLayout", None)
+    curation.pop("coverExplainByLayout", None)
+    _attach_cover_explain(curation, assets, cover_id, layout)
     return cover_id
 
 
@@ -336,6 +382,11 @@ def run_curate(
     from travelogue.config import default_web_layout_engine, get_config
 
     app_cfg = cfg or get_config()
+    trip_id = str(trip.get("tripId") or (trip_dir.name if trip_dir else "")).strip()
+    if trip_id:
+        from travelogue.curation.phase6_rollout import resolve_curate_config_for_trip
+
+        app_cfg = resolve_curate_config_for_trip(app_cfg, trip_id)
     res_warn = apply_low_resolution_exclusion(trip, trip_dir=trip_dir, app_cfg=app_cfg)
     layout_assets = layout_eligible_assets(trip)
     if len(layout_assets) < MIN_CURATE_ASSETS:
@@ -560,6 +611,7 @@ def run_curate(
         ScoringWeights.from_dict(layout_cfg.scoring.weights),
         scoring_enabled=layout_cfg.scoring.enabled,
         has_color_metrics=has_color_metrics,
+        enable_gravity_balance=cur_cfg.enable_gravity_balance,
     )
     intent_peak = peak_chapter_hints_for_trip(trip, len(non_empty_buckets))
     chapters, replan_meta = maybe_replan_chapters(
@@ -584,8 +636,14 @@ def run_curate(
         allow_burst_split=layout_cfg.scoring.allow_burst_split,
         subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
         intent_peak_chapters=intent_peak,
+        enable_gravity_balance=cur_cfg.enable_gravity_balance,
+        max_consecutive_same_pattern=cur_cfg.max_consecutive_same_pattern,
     )
-    layout_metrics = compute_layout_metrics(chapters)
+    layout_metrics = compute_layout_metrics(
+        chapters,
+        layout_assets,
+        subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
+    )
     degradation_reason = degradation.reason if degradation.force_legacy and layout_cfg.scoring.enabled else None
     decision_logs = replan_meta.get("decisionLogs") or None
 
@@ -759,11 +817,14 @@ def run_curate(
     from travelogue.curation.breath_pauses import insert_breath_screens_in_chapters
     from travelogue.curation.chapter_explain import attach_chapter_explain
 
-    n_breath = insert_breath_screens_in_chapters(chapters)
-    if n_breath:
-        warnings.append(f"卷轴呼吸屏 · 插入 {n_breath} 屏（P5-S5）")
-
     stamp_screen_arc_segments(trip, arc_profile=arc_profile)
+    n_breath = insert_breath_screens_in_chapters(
+        chapters,
+        arc_driven=cur_cfg.enable_arc_breath,
+    )
+    if n_breath:
+        warnings.append(f"卷轴呼吸屏 · 插入 {n_breath} 屏（叙事弧驱动）")
+
     if trip_dir is not None:
         attach_chapter_explain(trip, trip_dir=trip_dir)
 

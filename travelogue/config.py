@@ -66,6 +66,11 @@ class CurateConfig:
     arc_flat_variance_threshold: float = 0.08
     featured_weight: float = 1.35
     featured_min_for_cover_pool: int = 2
+    enable_gravity_balance: bool = True
+    enable_mmr_diversity: bool = True
+    max_consecutive_same_pattern: int = 2
+    longshot_mmr_lambda: float = 0.72
+    enable_arc_breath: bool = True
 
 
 @dataclass
@@ -75,6 +80,7 @@ class GeocodeConfig:
 
 @dataclass
 class GeoClusterConfig:
+    event_gap_mode: Literal["fixed", "auto"] = "auto"
     event_time_gap_hours: float = 4.0
     min_photos_per_event: int = 3
     location_proximity_km: float = 5.5
@@ -85,6 +91,7 @@ class GeoClusterConfig:
 
 @dataclass
 class SceneClusterConfig:
+    algorithm: Literal["hdbscan", "dbscan"] = "hdbscan"
     cluster_eps: float = 0.07
     cluster_min_samples: int = 10
     timeout_sec: int = 480
@@ -100,6 +107,8 @@ class ClusteringConfig:
     force_recluster: bool = False
     geo: GeoClusterConfig = field(default_factory=GeoClusterConfig)
     scene: SceneClusterConfig = field(default_factory=SceneClusterConfig)
+    enable_scene_sub_segments: bool = True
+    scene_subsegment_min_photos: int = 3
 
 
 @dataclass
@@ -174,6 +183,8 @@ class LayoutScoringConfig:
             "luminance_continuity": 0.0,
             "subject_run": 0.0,
             "tone_continuity": 0.0,
+            "layout_rhythm": 0.0,
+            "gravity_balance": 0.0,
         }
     )
 
@@ -202,6 +213,45 @@ class StudioConfig:
 
 
 @dataclass
+class Phase6AcThresholds:
+    """AC-P6 acceptance gates (Phase 6 §18)."""
+
+    cluster_noise_ratio_drop_pct: float = 15.0
+    event_boundary_f1_lift_pct: float = 10.0
+    layout_repeat_streak_drop_pct: float = 25.0
+    pipeline_time_regression_pct: float = 10.0
+    peak_memory_regression_pct: float = 15.0
+    cover_blind_review_winrate_pct: float = 60.0
+
+
+@dataclass
+class Phase6AlertThresholds:
+    """Operational alert thresholds (PRD-PHASE6 §18.2)."""
+
+    export_success_rate_min: float = 0.97
+    pipeline_time_regression_alert_pct: float = 15.0
+    cover_preference_winrate_min: float = 0.50
+
+
+@dataclass
+class Phase6RolloutConfig:
+    """Gray rollout gate (PRD-PHASE6 §14). Buckets by tripId + cohortSalt."""
+
+    stage: Literal["off", "G0", "G1", "G2", "G3"] = "off"
+    traffic_percent: float = 0.0
+    cohort_salt: str = "travelogue-p6"
+    allowlist_trip_ids: tuple[str, ...] = ()
+    blocklist_trip_ids: tuple[str, ...] = ()
+
+
+@dataclass
+class Phase6ObservabilityConfig:
+    ac: Phase6AcThresholds = field(default_factory=Phase6AcThresholds)
+    alerts: Phase6AlertThresholds = field(default_factory=Phase6AlertThresholds)
+    rollout: Phase6RolloutConfig = field(default_factory=Phase6RolloutConfig)
+
+
+@dataclass
 class AppConfig:
     trips_dir: Path = field(default_factory=_default_trips_dir)
     ingest: IngestConfig = field(default_factory=IngestConfig)
@@ -216,6 +266,76 @@ class AppConfig:
     render: RenderConfig = field(default_factory=RenderConfig)
     narrative: NarrativeConfig = field(default_factory=NarrativeConfig)
     llm: LlmConfig = field(default_factory=LlmConfig)
+    phase6: Phase6ObservabilityConfig = field(default_factory=Phase6ObservabilityConfig)
+
+
+def _phase6_ac_from_dict(raw: dict[str, Any]) -> Phase6AcThresholds:
+    defaults = Phase6AcThresholds()
+    return Phase6AcThresholds(
+        cluster_noise_ratio_drop_pct=float(
+            raw.get("clusterNoiseRatioDropPct", raw.get("cluster_noise_ratio_drop_pct", defaults.cluster_noise_ratio_drop_pct))
+        ),
+        event_boundary_f1_lift_pct=float(
+            raw.get("eventBoundaryF1LiftPct", raw.get("event_boundary_f1_lift_pct", defaults.event_boundary_f1_lift_pct))
+        ),
+        layout_repeat_streak_drop_pct=float(
+            raw.get("layoutRepeatStreakDropPct", raw.get("layout_repeat_streak_drop_pct", defaults.layout_repeat_streak_drop_pct))
+        ),
+        pipeline_time_regression_pct=float(
+            raw.get("pipelineTimeRegressionPct", raw.get("pipeline_time_regression_pct", defaults.pipeline_time_regression_pct))
+        ),
+        peak_memory_regression_pct=float(
+            raw.get("peakMemoryRegressionPct", raw.get("peak_memory_regression_pct", defaults.peak_memory_regression_pct))
+        ),
+        cover_blind_review_winrate_pct=float(
+            raw.get("coverBlindReviewWinratePct", raw.get("cover_blind_review_winrate_pct", defaults.cover_blind_review_winrate_pct))
+        ),
+    )
+
+
+def _phase6_alerts_from_dict(raw: dict[str, Any]) -> Phase6AlertThresholds:
+    defaults = Phase6AlertThresholds()
+    return Phase6AlertThresholds(
+        export_success_rate_min=float(
+            raw.get("exportSuccessRateMin", raw.get("export_success_rate_min", defaults.export_success_rate_min))
+        ),
+        pipeline_time_regression_alert_pct=float(
+            raw.get(
+                "pipelineTimeRegressionAlertPct",
+                raw.get("pipeline_time_regression_alert_pct", defaults.pipeline_time_regression_alert_pct),
+            )
+        ),
+        cover_preference_winrate_min=float(
+            raw.get("coverPreferenceWinrateMin", raw.get("cover_preference_winrate_min", defaults.cover_preference_winrate_min))
+        ),
+    )
+
+
+def _phase6_from_dict(raw: dict[str, Any]) -> Phase6ObservabilityConfig:
+    ac_raw = raw.get("ac") if isinstance(raw.get("ac"), dict) else {}
+    alerts_raw = raw.get("alerts") if isinstance(raw.get("alerts"), dict) else {}
+    rollout_raw = raw.get("rollout") if isinstance(raw.get("rollout"), dict) else {}
+    stage_raw = str(rollout_raw.get("stage", "off")).strip().upper()
+    if stage_raw == "OFF" or stage_raw not in ("G0", "G1", "G2", "G3"):
+        stage_key: Literal["off", "G0", "G1", "G2", "G3"] = "off"
+    else:
+        stage_key = stage_raw  # type: ignore[assignment]
+    allow_raw = rollout_raw.get("allowlistTripIds") or rollout_raw.get("allowlist_trip_ids") or []
+    block_raw = rollout_raw.get("blocklistTripIds") or rollout_raw.get("blocklist_trip_ids") or []
+    rollout = Phase6RolloutConfig(
+        stage=stage_key,
+        traffic_percent=float(
+            rollout_raw.get("trafficPercent", rollout_raw.get("traffic_percent", 0.0))
+        ),
+        cohort_salt=str(rollout_raw.get("cohortSalt", rollout_raw.get("cohort_salt", "travelogue-p6"))),
+        allowlist_trip_ids=tuple(str(x) for x in allow_raw if x) if isinstance(allow_raw, list) else (),
+        blocklist_trip_ids=tuple(str(x) for x in block_raw if x) if isinstance(block_raw, list) else (),
+    )
+    return Phase6ObservabilityConfig(
+        ac=_phase6_ac_from_dict(ac_raw),
+        alerts=_phase6_alerts_from_dict(alerts_raw),
+        rollout=rollout,
+    )
 
 
 def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
@@ -315,7 +435,11 @@ def _normalize_tri_state(raw: object, *, default: str = "auto") -> str:
 
 
 def _geo_cluster_from_dict(raw: dict[str, Any]) -> GeoClusterConfig:
+    gap_mode = str(raw.get("eventGapMode", raw.get("event_gap_mode", "auto")))
+    if gap_mode not in ("fixed", "auto"):
+        gap_mode = "auto"
     return GeoClusterConfig(
+        event_gap_mode=gap_mode,  # type: ignore[arg-type]
         event_time_gap_hours=float(raw.get("eventTimeGapHours", raw.get("event_time_gap_hours", 4))),
         min_photos_per_event=int(raw.get("minPhotosPerEvent", raw.get("min_photos_per_event", 3))),
         location_proximity_km=float(
@@ -328,7 +452,11 @@ def _geo_cluster_from_dict(raw: dict[str, Any]) -> GeoClusterConfig:
 
 
 def _scene_cluster_from_dict(raw: dict[str, Any]) -> SceneClusterConfig:
+    algo = str(raw.get("algorithm", "hdbscan")).lower()
+    if algo not in ("hdbscan", "dbscan"):
+        algo = "hdbscan"
     return SceneClusterConfig(
+        algorithm=algo,  # type: ignore[arg-type]
         cluster_eps=float(raw.get("clusterEps", raw.get("cluster_eps", 0.07))),
         cluster_min_samples=int(raw.get("clusterMinSamples", raw.get("cluster_min_samples", 10))),
         timeout_sec=int(raw.get("timeoutSec", raw.get("timeout_sec", 480))),
@@ -353,6 +481,12 @@ def _clustering_from_dict(raw: dict[str, Any]) -> ClusteringConfig:
         force_recluster=bool(raw.get("forceRecluster", raw.get("force_recluster", False))),
         geo=_geo_cluster_from_dict(geo_raw),
         scene=_scene_cluster_from_dict(scene_raw),
+        enable_scene_sub_segments=bool(
+            raw.get("enableSceneSubSegments", raw.get("enable_scene_sub_segments", True))
+        ),
+        scene_subsegment_min_photos=int(
+            raw.get("sceneSubsegmentMinPhotos", raw.get("scene_subsegment_min_photos", 3))
+        ),
     )
 
 
@@ -501,9 +635,11 @@ def load_config(path: Path | None = None) -> AppConfig:
     llm_raw = data.get("llm") if isinstance(data.get("llm"), dict) else {}
     geocode_raw = data.get("geocode") if isinstance(data.get("geocode"), dict) else {}
     curate_raw = data.get("curate") if isinstance(data.get("curate"), dict) else {}
+    curate_layout_raw = curate_raw.get("layout") if isinstance(curate_raw.get("layout"), dict) else {}
     render_raw = data.get("render") if isinstance(data.get("render"), dict) else {}
     clustering_raw = data.get("clustering") if isinstance(data.get("clustering"), dict) else {}
     studio_raw = data.get("studio") if isinstance(data.get("studio"), dict) else {}
+    phase6_raw = data.get("phase6") if isinstance(data.get("phase6"), dict) else {}
     banned_raw = narrative_raw.get("banned_phrases") or []
     banned = tuple(str(p) for p in banned_raw if p) if isinstance(banned_raw, list) else ()
     llm_provider = str(llm_raw.get("provider", "stub")).strip().lower()
@@ -538,6 +674,36 @@ def load_config(path: Path | None = None) -> AppConfig:
             ),
             featured_weight=float(curate_raw.get("featured_weight", 1.35)),
             featured_min_for_cover_pool=int(curate_raw.get("featured_min_for_cover_pool", 2)),
+            enable_gravity_balance=bool(
+                curate_layout_raw.get(
+                    "enable_gravity_balance",
+                    curate_raw.get("enable_gravity_balance", True),
+                )
+            ),
+            enable_mmr_diversity=bool(
+                curate_layout_raw.get(
+                    "enable_mmr_diversity",
+                    curate_raw.get("enable_mmr_diversity", True),
+                )
+            ),
+            max_consecutive_same_pattern=int(
+                curate_layout_raw.get(
+                    "max_consecutive_same_pattern",
+                    curate_raw.get("max_consecutive_same_pattern", 2),
+                )
+            ),
+            longshot_mmr_lambda=float(
+                curate_layout_raw.get(
+                    "longshot_mmr_lambda",
+                    curate_raw.get("longshot_mmr_lambda", 0.72),
+                )
+            ),
+            enable_arc_breath=bool(
+                curate_layout_raw.get(
+                    "enable_arc_breath",
+                    curate_raw.get("enable_arc_breath", True),
+                )
+            ),
         ),
         narrative=NarrativeConfig(
             tone_default=str(narrative_raw.get("tone_default", "relaxed")),
@@ -557,6 +723,7 @@ def load_config(path: Path | None = None) -> AppConfig:
                 studio_raw.get("g1_confirm_structure", studio_raw.get("g1ConfirmStructure", False))
             ),
         ),
+        phase6=_phase6_from_dict(phase6_raw),
     )
 
 

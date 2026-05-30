@@ -1,0 +1,28 @@
+{
+  "description": "CI golden · 3 scene clusters + borderline outliers · AC-P6-02 noise regression",
+  "assets": [
+    {"id": "s1a", "type": "image", "takenAt": "2025-05-01T09:00:00Z", "geo": {"lat": 35.681, "lon": 139.767}, "place": {"city": "东京"}, "width": 1200, "height": 800, "sharpness": 0.6, "meanLuma": 0.7, "dominantTone": "warm", "subjectBucket": "landscape"},
+    {"id": "s1b", "type": "image", "takenAt": "2025-05-01T09:30:00Z", "geo": {"lat": 35.682, "lon": 139.768}, "place": {"city": "东京"}, "width": 1200, "height": 800, "sharpness": 0.61, "meanLuma": 0.71, "dominantTone": "warm", "subjectBucket": "landscape"},
+    {"id": "s1c", "type": "image", "takenAt": "2025-05-01T10:00:00Z", "geo": {"lat": 35.683, "lon": 139.769}, "place": {"city": "东京"}, "width": 1200, "height": 800, "sharpness": 0.59, "meanLuma": 0.72, "dominantTone": "warm", "subjectBucket": "landscape"},
+    {"id": "s1d", "type": "image", "takenAt": "2025-05-01T10:30:00Z", "geo": {"lat": 35.684, "lon": 139.770}, "place": {"city": "东京"}, "width": 800, "height": 1200, "sharpness": 0.62, "meanLuma": 0.5, "dominantTone": "neutral", "subjectBucket": "food"},
+    {"id": "s1e", "type": "image", "takenAt": "2025-05-01T11:00:00Z", "geo": {"lat": 35.685, "lon": 139.771}, "place": {"city": "东京"}, "width": 800, "height": 1200, "sharpness": 0.63, "meanLuma": 0.48, "dominantTone": "neutral", "subjectBucket": "food"},
+    {"id": "s1f", "type": "image", "takenAt": "2025-05-01T11:30:00Z", "geo": {"lat": 35.686, "lon": 139.772}, "place": {"city": "东京"}, "width": 800, "height": 1200, "sharpness": 0.64, "meanLuma": 0.47, "dominantTone": "neutral", "subjectBucket": "food"},
+    {"id": "s2a", "type": "image", "takenAt": "2025-05-03T09:00:00Z", "geo": {"lat": 35.011, "lon": 135.768}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.65, "meanLuma": 0.55, "dominantTone": "cool", "subjectBucket": "temple"},
+    {"id": "s2b", "type": "image", "takenAt": "2025-05-03T10:00:00Z", "geo": {"lat": 35.012, "lon": 135.769}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.66, "meanLuma": 0.56, "dominantTone": "cool", "subjectBucket": "temple"},
+    {"id": "s2c", "type": "image", "takenAt": "2025-05-03T11:00:00Z", "geo": {"lat": 35.013, "lon": 135.770}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.67, "meanLuma": 0.57, "dominantTone": "cool", "subjectBucket": "temple"},
+    {"id": "s2d", "type": "image", "takenAt": "2025-05-03T12:00:00Z", "geo": {"lat": 35.014, "lon": 135.771}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.68, "meanLuma": 0.58, "dominantTone": "cool", "subjectBucket": "temple"},
+    {"id": "s2e", "type": "image", "takenAt": "2025-05-03T13:00:00Z", "geo": {"lat": 35.015, "lon": 135.772}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.69, "meanLuma": 0.59, "dominantTone": "cool", "subjectBucket": "temple"},
+    {"id": "s2f", "type": "image", "takenAt": "2025-05-03T14:00:00Z", "geo": {"lat": 35.016, "lon": 135.773}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.7, "meanLuma": 0.6, "dominantTone": "cool", "subjectBucket": "temple"},
+    {"id": "s3a", "type": "image", "takenAt": "2025-05-05T09:00:00Z", "geo": {"lat": 34.693, "lon": 135.502}, "place": {"city": "大阪"}, "width": 1600, "height": 900, "sharpness": 0.55, "meanLuma": 0.62, "dominantTone": "warm", "subjectBucket": "street"},
+    {"id": "s3b", "type": "image", "takenAt": "2025-05-05T10:00:00Z", "geo": {"lat": 34.694, "lon": 135.503}, "place": {"city": "大阪"}, "width": 1600, "height": 900, "sharpness": 0.56, "meanLuma": 0.63, "dominantTone": "warm", "subjectBucket": "street"},
+    {"id": "s3c", "type": "image", "takenAt": "2025-05-05T11:00:00Z", "geo": {"lat": 34.695, "lon": 135.504}, "place": {"city": "大阪"}, "width": 1600, "height": 900, "sharpness": 0.57, "meanLuma": 0.64, "dominantTone": "warm", "subjectBucket": "street"},
+    {"id": "s3d", "type": "image", "takenAt": "2025-05-05T12:00:00Z", "geo": {"lat": 34.696, "lon": 135.505}, "place": {"city": "大阪"}, "width": 1600, "height": 900, "sharpness": 0.58, "meanLuma": 0.65, "dominantTone": "warm", "subjectBucket": "street"},
+    {"id": "s3e", "type": "image", "takenAt": "2025-05-05T13:00:00Z", "geo": {"lat": 34.697, "lon": 135.506}, "place": {"city": "大阪"}, "width": 1600, "height": 900, "sharpness": 0.59, "meanLuma": 0.66, "dominantTone": "warm", "subjectBucket": "street"},
+    {"id": "s3f", "type": "image", "takenAt": "2025-05-05T14:00:00Z", "geo": {"lat": 34.698, "lon": 135.507}, "place": {"city": "大阪"}, "width": 1600, "height": 900, "sharpness": 0.6, "meanLuma": 0.67, "dominantTone": "warm", "subjectBucket": "street"},
+    {"id": "n0", "type": "image", "takenAt": "2025-05-06T09:00:00Z", "width": 900, "height": 1100, "sharpness": 0.45, "meanLuma": 0.52, "dominantTone": "#888888", "subjectBucket": "mixed"},
+    {"id": "n1", "type": "image", "takenAt": "2025-05-06T09:30:00Z", "width": 920, "height": 1100, "sharpness": 0.47, "meanLuma": 0.53, "dominantTone": "#888888", "subjectBucket": "mixed"},
+    {"id": "n2", "type": "image", "takenAt": "2025-05-06T10:00:00Z", "width": 940, "height": 1100, "sharpness": 0.49, "meanLuma": 0.54, "dominantTone": "#888888", "subjectBucket": "mixed"},
+    {"id": "n3", "type": "image", "takenAt": "2025-05-06T10:30:00Z", "width": 960, "height": 1100, "sharpness": 0.51, "meanLuma": 0.55, "dominantTone": "#888888", "subjectBucket": "mixed"},
+    {"id": "n4", "type": "image", "takenAt": "2025-05-06T11:00:00Z", "width": 980, "height": 1100, "sharpness": 0.53, "meanLuma": 0.56, "dominantTone": "#888888", "subjectBucket": "mixed"}
+  ]
+}

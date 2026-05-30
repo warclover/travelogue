@@ -6,6 +6,8 @@
 | `golden-no-gps` | `golden-no-gps/` | ❌ | date_fallback |
 | `golden-mixed-scenes` | `golden-mixed-scenes/` | ✅ | SP-C01 + SP-C02 |
 | `synthetic-gps` | `synthetic-gps/` | ✅ | 同日双城 smoke |
+| `golden-gap-edge` | `golden-gap-edge/` | ✅ | AC-P6-03 午餐间隔 / auto gap |
+| `golden-cluster-noise` | `golden-cluster-noise/` | ❌ | AC-P6-02 DBSCAN vs HDBSCAN 噪声 |
 
 ## 从本地 trip 导出
 

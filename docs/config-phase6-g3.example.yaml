@@ -1,0 +1,11 @@
+# Phase 6 · G3 全量配置片段
+# 合并到项目根 config.yaml，或通过：
+#   python scripts/phase6_apply_g3_rollout.py --write
+
+phase6:
+  rollout:
+    stage: G3
+    trafficPercent: 100
+    cohortSalt: p6-g1-2026-05
+    allowlistTripIds: []
+    blocklistTripIds: []

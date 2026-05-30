@@ -19,7 +19,7 @@ MANIFEST_FILE = "manifest.json"
 INCREMENTAL_MAX_CHANGE_RATIO = 0.10
 FULL_RECLUSTER_MIN_RATIO = 0.30
 
-CacheMode = Literal["full", "incremental", "reuse"]
+CacheMode = Literal["full", "incremental", "prune", "reuse"]
 
 
 @dataclass
@@ -255,6 +255,9 @@ def plan_embedding_refresh(
     if change_ratio == 0.0:
         return EmbeddingCachePlan("reuse", current_ids, [], [], 0.0)
 
+    if not new_ids and removed_ids:
+        return EmbeddingCachePlan("prune", current_ids, [], removed_ids, change_ratio)
+
     if change_ratio >= FULL_RECLUSTER_MIN_RATIO:
         return EmbeddingCachePlan("full", current_ids, list(current_ids), removed_ids, change_ratio)
 
@@ -341,6 +344,50 @@ def prepare_scene_embeddings(
             str(cached.get("source") or "heuristic"),
             str(cached.get("model") or "") or None,
         )
+        return embed, plan
+
+    if plan.mode == "prune":
+        cached = load_embedding_cache(trip_dir)
+        if cached is None:
+            embed = encoder.embed_assets(assets, trip_dir=trip_dir, deterministic=deterministic)
+            if embed.asset_ids:
+                save_embedding_cache(
+                    trip_dir,
+                    asset_ids=embed.asset_ids,
+                    vectors=embed.vectors,
+                    source=embed.source,
+                    model=embed.model,
+                )
+            return embed, plan
+        import numpy as np
+
+        id_to_row = {aid: idx for idx, aid in enumerate(cached["asset_ids"])}
+        rows = [cached["vectors"][id_to_row[aid]] for aid in current_ids if aid in id_to_row]
+        if len(rows) != len(current_ids):
+            _log.warning("prune missing rows; falling back to full refresh")
+            clear_cluster_cache(trip_dir)
+            embed = encoder.embed_assets(assets, trip_dir=trip_dir, deterministic=deterministic)
+            if embed.asset_ids:
+                save_embedding_cache(
+                    trip_dir,
+                    asset_ids=embed.asset_ids,
+                    vectors=embed.vectors,
+                    source=embed.source,
+                    model=embed.model,
+                )
+            full_plan = EmbeddingCachePlan("full", current_ids, list(current_ids), plan.removed_ids, 1.0)
+            return embed, full_plan
+        vectors = np.vstack(rows)
+        source = str(cached.get("source") or "heuristic")
+        model = str(cached.get("model") or "") or None
+        save_embedding_cache(
+            trip_dir,
+            asset_ids=current_ids,
+            vectors=vectors,
+            source=source,
+            model=model,
+        )
+        embed = EmbedResult(current_ids, vectors, source, model)
         return embed, plan
 
     # incremental · F-CLU-CACHE-02

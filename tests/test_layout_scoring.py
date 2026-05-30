@@ -7,6 +7,7 @@ import pytest
 from travelogue.curation.layout_scoring import (
     PHASE3_WEIGHTS,
     PHASE3B_WEIGHTS,
+    PHASE6_WEIGHTS,
     ScoringWeights,
     resolve_scoring_weights,
     score_aspect_match,
@@ -164,12 +165,23 @@ def test_featured_beam_halves_hero_separation_when_hero_reused() -> None:
     assert feat.total > mat.total
 
 
-def test_resolve_scoring_weights_zero_fallback_phase3b() -> None:
+def test_resolve_scoring_weights_zero_fallback_phase6_default() -> None:
     zero = ScoringWeights()
     resolved = resolve_scoring_weights(
         zero,
         scoring_enabled=True,
         has_color_metrics=True,
+    )
+    assert resolved == PHASE6_WEIGHTS
+
+
+def test_resolve_scoring_weights_zero_fallback_phase3b_when_gravity_off() -> None:
+    zero = ScoringWeights()
+    resolved = resolve_scoring_weights(
+        zero,
+        scoring_enabled=True,
+        has_color_metrics=True,
+        enable_gravity_balance=False,
     )
     assert resolved == PHASE3B_WEIGHTS
 
@@ -180,6 +192,7 @@ def test_resolve_scoring_weights_zero_fallback_phase3_without_tone() -> None:
         zero,
         scoring_enabled=True,
         has_color_metrics=False,
+        enable_gravity_balance=False,
     )
     assert resolved == PHASE3_WEIGHTS
 
@@ -192,7 +205,12 @@ def test_resolve_scoring_weights_disabled_keeps_zero() -> None:
 def test_resolve_scoring_weights_custom_unchanged() -> None:
     custom = ScoringWeights(aspect_match=0.5, sharpness=0.5)
     assert (
-        resolve_scoring_weights(custom, scoring_enabled=True, has_color_metrics=True)
+        resolve_scoring_weights(
+            custom,
+            scoring_enabled=True,
+            has_color_metrics=True,
+            enable_gravity_balance=False,
+        )
         == custom
     )
 

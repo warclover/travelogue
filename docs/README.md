@@ -3,14 +3,14 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
-| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2 Studio** + **Phase 3 Curate 聚类** + **Phase 4 编辑意图** + **Phase 5 整体优化** |
+| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2 Studio** + **Phase 3 Curate 聚类** + **Phase 4 编辑意图** + **Phase 5 整体优化** + **Phase 6 稳态与艺术优化** |
 | **更新日期** | 2026-05-30 |
 
 ---
 
 ## 阅读顺序（新人）
 
-1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · 已冻结）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（Curate 聚类）→ [PRD-PHASE4.md](./PRD-PHASE4.md)（编辑意图 · 杂志心智）→ [PRD-PHASE5.md](./PRD-PHASE5.md)（整体优化 · 做深做透）  
+1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · 已冻结）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（Curate 聚类）→ [PRD-PHASE4.md](./PRD-PHASE4.md)（编辑意图 · 杂志心智）→ [PRD-PHASE5.md](./PRD-PHASE5.md)（整体优化 · 做深做透）→ [PRD-PHASE6.md](./PRD-PHASE6.md)（稳态与治理）→ [PRD-PHASE6-ART-OPTIMIZATION.md](./PRD-PHASE6-ART-OPTIMIZATION.md)（艺术专项）  
 2. [AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md)  
 2b. [PRD-LAYOUT.md](./PRD-LAYOUT.md)（排版布局子系统 · Agent 1.5）  
 3. [DATA-MODEL.md](./DATA-MODEL.md) + [schemas/trip.schema.json](../schemas/trip.schema.json)  
@@ -77,6 +77,22 @@
 **前置**：Phase 4 M15–M19 代码主线已收口。**代号**：P5-Polish。**决策**：D1–D6 见 PRD §2.2（D4/D5 暂缓）。
 
 阅读顺序：**PRD-PHASE5** →（启动实施时）**IMPLEMENTATION-PHASE5** → **ACCEPTANCE-PHASE5**。
+
+---
+
+## Phase 6 · 稳态与艺术优化（Stability + Art）
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE6.md](./PRD-PHASE6.md) | **Phase 6 主 PRD**（质量闭环 · 业务指标 · 灰度回滚 · 合规治理） |
+| [PRD-PHASE6-ART-OPTIMIZATION.md](./PRD-PHASE6-ART-OPTIMIZATION.md) | **艺术卷轴子 PRD**（叙事分段/节奏/审美/多样性） |
+| [IMPLEMENTATION-PHASE6.md](./IMPLEMENTATION-PHASE6.md) | 实施任务清单（M24–M26 + M25-ART） |
+| [ACCEPTANCE-PHASE6.md](./ACCEPTANCE-PHASE6.md) | 验收标准（AC-P6 + BR-P6 + ART-AC） |
+| [reports/phase6-week1-execution-plan.md](./reports/phase6-week1-execution-plan.md) | Week 1 到天执行计划（M24） |
+| [reports/phase6-ab-eval.md](./reports/phase6-ab-eval.md) | A/B 评测报告模板 |
+| [reports/phase6-art-rubric.md](./reports/phase6-art-rubric.md) | 艺术主观评分模板 |
+
+开发准备建议顺序：**PRD-PHASE6** → **IMPLEMENTATION-PHASE6** → **ACCEPTANCE-PHASE6** → `scripts/phase6_*.py`。
 
 ---
 
@@ -171,6 +187,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-05-30 | 新增 Phase 6 与艺术专项文档索引 |
 | 2026-05-19 | P0 文档包 |
 | 2026-05-19 | P0.5 工程执行文档 + validate 脚本 + fixtures |
 | 2026-05-19 | ADR-001：交付/媒体/标签/状态机/封面 |

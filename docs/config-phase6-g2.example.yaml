@@ -1,0 +1,13 @@
+# Phase 6 · G2 50% 灰度配置片段
+# 合并到项目根 config.yaml，或通过：
+#   python scripts/phase6_apply_g2_rollout.py --write
+#
+# 注意：cohortSalt 应与 G1 相同，以便在原有 10% cohort 上扩展至 50%。
+
+phase6:
+  rollout:
+    stage: G2
+    trafficPercent: 50
+    cohortSalt: p6-g1-2026-05
+    allowlistTripIds: []
+    blocklistTripIds: []

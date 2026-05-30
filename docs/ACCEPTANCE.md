@@ -3,9 +3,9 @@
 | 属性 | 内容 |
 |------|------|
 | **文档版本** | v1.0 |
-| **适用范围** | MVP 基线 + Phase 2–5 累计验收 |
-| **当前发布闸门** | **[Phase 5](./ACCEPTANCE-PHASE5.md)**（P5-Polish · 双路径） |
-| **关联** | [IMPLEMENTATION-PHASE5.md](./IMPLEMENTATION-PHASE5.md) · [PRD-PHASE5.md](./PRD-PHASE5.md) |
+| **适用范围** | MVP 基线 + Phase 2–6 累计验收 |
+| **当前发布闸门** | **[Phase 5](./ACCEPTANCE-PHASE5.md)**（生产） / **[Phase 6](./ACCEPTANCE-PHASE6.md)**（开发准备） |
+| **关联** | [IMPLEMENTATION-PHASE5.md](./IMPLEMENTATION-PHASE5.md) · [PRD-PHASE5.md](./PRD-PHASE5.md) · [IMPLEMENTATION-PHASE6.md](./IMPLEMENTATION-PHASE6.md) · [PRD-PHASE6.md](./PRD-PHASE6.md) |
 | **更新日期** | 2026-05-30 |
 
 > **P5-12.2 单轨合并**：本文档为验收入口；各 Phase 细则仍保留在分册中，**不再**以 MVP v0.1 清单单独作为发布闸门。
@@ -53,6 +53,7 @@ python scripts/e2e_studio_smoke.ps1
 | **3 · 聚类** | [ACCEPTANCE-PHASE3.md](./ACCEPTANCE-PHASE3.md) | [IMPLEMENTATION-PHASE3.md](./IMPLEMENTATION-PHASE3.md) | 已并入 P5 | I-G2 · cache |
 | **4 · 意图** | [ACCEPTANCE-PHASE4.md](./ACCEPTANCE-PHASE4.md) | [IMPLEMENTATION-PHASE4.md](./IMPLEMENTATION-PHASE4.md) | 代码 ☑ · 手测并行 | P-EVAL · HP/A11Y |
 | **5 · Polish** | **[ACCEPTANCE-PHASE5.md](./ACCEPTANCE-PHASE5.md)** | [IMPLEMENTATION-PHASE5.md](./IMPLEMENTATION-PHASE5.md) | **当前闸门** | UX-P5-80-01 · SCROLL-01 |
+| **6 · Stability** | [ACCEPTANCE-PHASE6.md](./ACCEPTANCE-PHASE6.md) | [IMPLEMENTATION-PHASE6.md](./IMPLEMENTATION-PHASE6.md) | 开发准备中 | AC-P6-01~08 · BR-P6 |
 
 ---
 
@@ -193,5 +194,6 @@ python scripts/e2e_studio_smoke.ps1
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.1 | 2026-05-30 | 补充 Phase 6 验收入口与开发准备链接 |
 | v1.0 | 2026-05-30 | **P5-12.2 单轨合并** · Phase 5 发布闸门 · MVP 降为附录 A |
 | v0.1 | 2026-05-19 | P0 验收清单，对齐 visual-journal v0.2 |

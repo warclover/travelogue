@@ -1,0 +1,11 @@
+{
+  "description": "CI golden · same-day lunch gap (6h) · expect single stay event",
+  "assets": [
+    {"id": "a1", "type": "image", "takenAt": "2025-06-01T09:00:00Z", "geo": {"lat": 35.011, "lon": 135.768}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.62, "meanLuma": 0.55, "dominantTone": "cool", "subjectBucket": "temple"},
+    {"id": "a2", "type": "image", "takenAt": "2025-06-01T10:00:00Z", "geo": {"lat": 35.012, "lon": 135.769}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.63, "meanLuma": 0.56, "dominantTone": "cool", "subjectBucket": "temple"},
+    {"id": "a3", "type": "image", "takenAt": "2025-06-01T11:00:00Z", "geo": {"lat": 35.013, "lon": 135.770}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.64, "meanLuma": 0.57, "dominantTone": "cool", "subjectBucket": "temple"},
+    {"id": "a4", "type": "image", "takenAt": "2025-06-01T17:00:00Z", "geo": {"lat": 35.014, "lon": 135.771}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.65, "meanLuma": 0.58, "dominantTone": "cool", "subjectBucket": "street"},
+    {"id": "a5", "type": "image", "takenAt": "2025-06-01T18:00:00Z", "geo": {"lat": 35.015, "lon": 135.772}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.66, "meanLuma": 0.59, "dominantTone": "cool", "subjectBucket": "street"},
+    {"id": "a6", "type": "image", "takenAt": "2025-06-01T19:00:00Z", "geo": {"lat": 35.016, "lon": 135.773}, "place": {"city": "京都"}, "width": 1200, "height": 1600, "sharpness": 0.67, "meanLuma": 0.60, "dominantTone": "cool", "subjectBucket": "street"}
+  ]
+}

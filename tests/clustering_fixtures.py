@@ -13,7 +13,20 @@ GOLDEN_TRIP_IDS = (
     "golden-no-gps",
     "golden-mixed-scenes",
     "synthetic-gps",
+    "golden-gap-edge",
+    "golden-cluster-noise",
 )
+
+EVENT_BOUNDARY_FIXTURES = (
+    "golden-kyoto-gps",
+    "golden-mixed-scenes",
+    "synthetic-gps",
+    "golden-gap-edge",
+)
+
+CLUSTER_NOISE_PRIMARY = "golden-cluster-noise"
+CLUSTER_NOISE_EPS = 0.05
+CLUSTER_NOISE_MIN_SAMPLES = 5
 
 
 def fixture_dir(trip_id: str) -> Path:

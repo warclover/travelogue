@@ -24,6 +24,7 @@ class ScoringWeights:
     subject_run: float = 0.0
     tone_continuity: float = 0.0
     layout_rhythm: float = 0.0
+    gravity_balance: float = 0.0
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, Any] | None) -> ScoringWeights:
@@ -42,6 +43,7 @@ class ScoringWeights:
             subject_run=float(raw.get("subject_run", defaults.subject_run)),
             tone_continuity=float(raw.get("tone_continuity", defaults.tone_continuity)),
             layout_rhythm=float(raw.get("layout_rhythm", defaults.layout_rhythm)),
+            gravity_balance=float(raw.get("gravity_balance", defaults.gravity_balance)),
         )
 
     def normalized(self) -> ScoringWeights:
@@ -57,6 +59,7 @@ class ScoringWeights:
             + self.subject_run
             + self.tone_continuity
             + self.layout_rhythm
+            + self.gravity_balance
         )
         if total <= 1e-9:
             return self
@@ -72,6 +75,7 @@ class ScoringWeights:
             subject_run=self.subject_run / total,
             tone_continuity=self.tone_continuity / total,
             layout_rhythm=self.layout_rhythm / total,
+            gravity_balance=self.gravity_balance / total,
         )
 
     def is_aspect_only(self) -> bool:
@@ -86,6 +90,7 @@ class ScoringWeights:
             self.subject_run,
             self.tone_continuity,
             self.layout_rhythm,
+            self.gravity_balance,
         )
         return self.aspect_match >= 1.0 - 1e-9 and sum(others) < 1e-9
 
@@ -128,6 +133,22 @@ PHASE3B_WEIGHTS = ScoringWeights(
     layout_rhythm=0.05,
 ).normalized()
 
+# Phase-6: cross-screen focal gravity continuity (M25-B)
+PHASE6_WEIGHTS = ScoringWeights(
+    aspect_match=0.11,
+    sharpness=0.05,
+    temporal_coherence=0.08,
+    burst_integrity=0.08,
+    diversity=0.07,
+    arc_fit=0.08,
+    hero_separation=0.06,
+    luminance_continuity=0.06,
+    tone_continuity=0.07,
+    subject_run=0.05,
+    layout_rhythm=0.05,
+    gravity_balance=0.05,
+).normalized()
+
 
 def _weights_raw_sum(weights: ScoringWeights) -> float:
     return (
@@ -142,6 +163,7 @@ def _weights_raw_sum(weights: ScoringWeights) -> float:
         + weights.subject_run
         + weights.tone_continuity
         + weights.layout_rhythm
+        + weights.gravity_balance
     )
 
 
@@ -150,12 +172,18 @@ def resolve_scoring_weights(
     *,
     scoring_enabled: bool,
     has_color_metrics: bool,
+    enable_gravity_balance: bool = True,
 ) -> ScoringWeights:
-    """P5-C1 / D7: when beam scoring is on but config weights are all zero, use PHASE3(B)."""
+    """P5-C1 / D7 / P6-D1: default weight presets when config weights are all zero."""
     if not scoring_enabled:
         return weights
     if _weights_raw_sum(weights) <= 1e-9:
+        if enable_gravity_balance:
+            return PHASE6_WEIGHTS
         return PHASE3B_WEIGHTS if has_color_metrics else PHASE3_WEIGHTS
+    if enable_gravity_balance and weights.gravity_balance <= 1e-9:
+        patched = ScoringWeights(**{**weights.__dict__, "gravity_balance": 0.05})
+        return patched.normalized()
     return weights
 
 
@@ -173,6 +201,7 @@ class ScoreBreakdown:
     subject_run: float = 0.0
     tone_continuity: float = 0.0
     layout_rhythm: float = 0.0
+    gravity_balance: float = 0.0
 
     def to_dict(self) -> dict[str, float]:
         return {
@@ -188,6 +217,7 @@ class ScoreBreakdown:
             "subject_run": round(self.subject_run, 6),
             "tone_continuity": round(self.tone_continuity, 6),
             "layout_rhythm": round(self.layout_rhythm, 6),
+            "gravity_balance": round(self.gravity_balance, 6),
         }
 
 
@@ -419,6 +449,63 @@ def _asset_order_from_screens(screens: list[dict]) -> list[str]:
     return order
 
 
+def _asset_visual_center(asset: dict) -> tuple[float, float]:
+    box = asset.get("salientBox")
+    if isinstance(box, dict):
+        x = float(box.get("x", 0.5))
+        y = float(box.get("y", 0.5))
+        w = float(box.get("w", 0.0))
+        h = float(box.get("h", 0.0))
+        return (
+            min(1.0, max(0.0, x + w / 2.0)),
+            min(1.0, max(0.0, y + h / 2.0)),
+        )
+    fp = asset.get("focalPoint") or {}
+    return float(fp.get("x", 0.5)), float(fp.get("y", 0.45))
+
+
+def screen_visual_center(screen: dict, assets_by_id: Mapping[str, dict]) -> tuple[float, float]:
+    xs: list[float] = []
+    ys: list[float] = []
+    for slot in screen.get("slots") or []:
+        aid = slot.get("assetId")
+        if not aid:
+            continue
+        cx, cy = _asset_visual_center(assets_by_id.get(aid) or {})
+        xs.append(cx)
+        ys.append(cy)
+    if not xs:
+        return 0.5, 0.45
+    return sum(xs) / len(xs), sum(ys) / len(ys)
+
+
+def score_gravity_balance(
+    screens: list[dict],
+    assets_by_id: Mapping[str, dict],
+    *,
+    max_delta: float = 0.35,
+) -> float:
+    """P6-D1 · adjacent-screen focal center continuity (higher = smoother flow)."""
+    from travelogue.curation.longshot_filter import _is_breath_screen
+
+    centers: list[tuple[float, float]] = []
+    for screen in screens:
+        if _is_breath_screen(screen):
+            continue
+        if not any(s.get("assetId") for s in (screen.get("slots") or [])):
+            continue
+        centers.append(screen_visual_center(screen, assets_by_id))
+    if len(centers) < 2:
+        return 1.0
+    penalties: list[float] = []
+    for i in range(len(centers) - 1):
+        dx = centers[i + 1][0] - centers[i][0]
+        dy = centers[i + 1][1] - centers[i][1]
+        delta = (dx * dx + dy * dy) ** 0.5
+        penalties.append(min(1.0, max(0.0, delta / max_delta)))
+    return 1.0 - sum(penalties) / len(penalties)
+
+
 def score_layout_rhythm(screens: list[dict]) -> float:
     """P5-R1 · penalize consecutive same layout; reward hero/grid alternation."""
     from travelogue.curation.longshot_filter import _is_breath_screen, _screen_kind
@@ -522,6 +609,7 @@ def score_screen_plan(
     subject_run_tolerance: int = 1,
     featured_beam: bool = False,
     intent_arc_boost: float = 0.0,
+    enable_gravity_balance: bool = True,
 ) -> ScoreBreakdown:
     """Aggregate score for a full screen sequence in one day bucket / chapter."""
     if not screens:
@@ -554,6 +642,7 @@ def score_screen_plan(
         tolerance=subject_run_tolerance,
     )
     rhythm = score_layout_rhythm(screens)
+    gravity = score_gravity_balance(screens, assets_by_id) if enable_gravity_balance else 1.0
     avg = ScoreBreakdown()
     n = len(parts)
     for bd in parts:
@@ -568,6 +657,7 @@ def score_screen_plan(
     avg.tone_continuity = tone
     avg.subject_run = subject
     avg.layout_rhythm = rhythm
+    avg.gravity_balance = gravity
     avg.total = (
         weights.aspect_match * avg.aspect_match
         + weights.sharpness * avg.sharpness
@@ -580,6 +670,7 @@ def score_screen_plan(
         + weights.tone_continuity * avg.tone_continuity
         + weights.subject_run * avg.subject_run
         + weights.layout_rhythm * avg.layout_rhythm
+        + weights.gravity_balance * avg.gravity_balance
     )
     if featured_beam:
         featured_n = 0

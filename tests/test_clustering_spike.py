@@ -49,7 +49,7 @@ def test_sp_c01_geo_agreement(trip_id: str) -> None:
     golden = load_fixture_golden_segments(trip_id)
     if not golden:
         pytest.skip(f"{trip_id}: no segments-golden.json")
-    detected = detect_geo_events(assets)
+    detected, _ = detect_geo_events(assets)
     rate = geo_segment_agreement_rate(
         golden,
         segments_to_eval_dict(detected),
@@ -61,7 +61,7 @@ def test_sp_c01_geo_agreement(trip_id: str) -> None:
 def test_sp_c01_kyoto_gps_records_rate_for_matrix() -> None:
     assets = load_fixture_assets("golden-kyoto-gps")
     golden = load_fixture_golden_segments("golden-kyoto-gps")
-    detected = detect_geo_events(assets)
+    detected, _ = detect_geo_events(assets)
     rate = geo_segment_agreement_rate(golden, segments_to_eval_dict(detected))
     assert rate >= SP_C01_MIN_RATE
     # Keep explicit trip for matrix audit trail
@@ -103,7 +103,7 @@ def test_sp_c03_no_gps_date_fallback(tmp_path: Path) -> None:
     trip_dir.mkdir()
     result = run_clustering_layer(trip, trip_dir=trip_dir, cfg=cfg)
     assert result.segment_mode == "date_fallback"
-    assert detect_geo_events(assets) == []
+    assert detect_geo_events(assets)[0] == []
 
 
 @pytest.mark.parametrize("trip_id", ("golden-kyoto-gps", "golden-mixed-scenes"))
@@ -123,12 +123,13 @@ def test_sp_c02_scene_cluster_sane() -> None:
     assets = load_fixture_assets("golden-mixed-scenes")
     enc = ClipEncoder()
     embed = enc.embed_assets(assets)
-    clusters = compute_scene_clusters(
+    result = compute_scene_clusters(
         embed.asset_ids,
         embed.vectors,
         eps=0.08,
         min_samples=3,
     )
+    clusters = result.clusters
     assert 1 <= len(clusters) <= 40
     total = len(embed.asset_ids)
     if len(clusters) >= 2:

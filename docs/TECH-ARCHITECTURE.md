@@ -268,3 +268,65 @@ Agent 2 失败：L1/L2 错误列表 → 自动重试 prompt（≤2 次）。
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v0.1 | 2026-05-19 | P0 技术架构初稿 |
+| v0.2 | 2026-05-30 | Phase 6：场景聚类默认策略与自适应事件分段 |
+
+---
+
+## 16. Phase 6 · 聚类与分段默认策略（M24）
+
+> 关联 PRD：[PRD-PHASE6.md](./PRD-PHASE6.md) §6.1 §6.2 · 配置：`config.yaml` → `curation.scene` / `curation.geo`
+
+### 16.1 场景聚类（Scene Clustering）
+
+| 项 | 默认 | 回退 |
+|----|------|------|
+| 算法 | **HDBSCAN**（`sklearn.cluster.HDBSCAN`） | `curation.scene.algorithm: dbscan` |
+| 输出 | `sceneClusterId` + `sceneClusterConfidence`（membership probability） | DBSCAN 模式下 confidence 省略 |
+| 噪声 | label `-1` 表示 outlier | 同左 |
+| 元数据 | `trip.curation.clustering.sceneAlgorithm` | 记录实际算法 |
+
+**回退触发条件（运维/灰度）**：
+
+1. 配置显式设为 `dbscan`（一键回滚至 P5 行为）。
+2. HDBSCAN 依赖不可用或运行时异常 → 代码层 fallback 到 DBSCAN（同 eps/min_samples）。
+3. 灰度验收未达 AC-P6-02（噪声率未下降）→ 按 rollout 计划切回 DBSCAN。
+
+**参数**：沿用 `scene.eps`、`scene.min_samples`；HDBSCAN 使用 `min_cluster_size=min_samples`。
+
+### 16.2 地理事件分段（Geo Event Segmentation）
+
+| 项 | 默认 | 回退 |
+|----|------|------|
+| 间隔模式 | **`auto`**（自适应 gap） | `curation.geo.eventGapMode: fixed` |
+| 固定阈值 | `eventTimeGapHours`（默认 4h） | fixed 模式或 auto fail-open |
+| 元数据 | `trip.curation.clustering.eventSegmentation` | 含 `gapMode`、`thresholdHours` |
+
+**自适应算法（`auto`）**：
+
+- 对相邻照片时间间隔分布取 p75–p90 区间作为候选阈值（「膝盖点」）。
+- 结果 clamp 到 `[0.5h, 24h]`，并 respect `min_photos_per_event`。
+- **fail-open**：样本不足、间隔全零或计算异常 → 回退 `eventTimeGapHours` 固定值，并在 meta 中标记 `gapMode=fixed`。
+
+### 16.3 Heuristic 向量（无 CLIP 路径）
+
+| 特征 | P5 | P6 |
+|------|----|----|
+| tone | hash 离散桶 | H/S 连续值（`colorsys.rgb_to_hls`） |
+| subject | hash 离散桶 | 有序 subject index |
+
+用于 embedding 缺失时的 scene clustering；详见 `travelogue/vision/clip_encoder.py`。
+
+### 16.4 观测与验收脚本
+
+| 脚本 | 用途 |
+|------|------|
+| `scripts/phase6_metrics_baseline.py` | KPI 汇总与 AC 阈值检查 |
+| `scripts/phase6_event_boundary_eval.py` | 事件边界 F1 对比 |
+| `docs/acceptance-records/phase6-quality-eval.json` | 质量评测记录 |
+
+### 16.5 回滚
+
+```bash
+python scripts/phase6_apply_p5_rollback.py --dry-run
+python scripts/phase6_apply_p5_rollback.py
+```

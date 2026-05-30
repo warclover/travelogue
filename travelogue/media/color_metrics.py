@@ -99,3 +99,16 @@ def dominant_tone_chroma_score(hex_color: str | None) -> float:
     L, a, b = _rgb_to_lab(*_hex_to_rgb(str(hex_color)))
     chroma = math.sqrt(a * a + b * b)
     return triangular_score(chroma, low=8, peak=35, high=85)
+
+
+def color_richness_multiplier(
+    *,
+    hex_color: str | None,
+    mean_luma: float | None = None,
+) -> float:
+    """P6-C2 · penalize flat gray/dark covers while rewarding chroma."""
+    chroma = dominant_tone_chroma_score(hex_color)
+    luma = 0.5 if mean_luma is None else float(mean_luma)
+    luma_factor = triangular_score(luma, low=0.18, peak=0.55, high=0.9)
+    dull_penalty = 0.84 + 0.16 * chroma if luma < 0.32 else 1.0
+    return (0.86 + 0.22 * chroma) * (0.88 + 0.12 * luma_factor) * dull_penalty

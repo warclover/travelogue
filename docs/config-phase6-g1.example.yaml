@@ -1,0 +1,14 @@
+# Phase 6 · G1 10% 灰度配置片段
+# 合并到项目根 config.yaml 的 phase6.rollout 段，或通过：
+#   python scripts/phase6_apply_g1_rollout.py --write
+#
+# 分桶规则：SHA256(cohortSalt:tripId) % 100 < trafficPercent → Phase 6；
+# allowlist / blocklist 优先于分桶。
+
+phase6:
+  rollout:
+    stage: G1
+    trafficPercent: 10
+    cohortSalt: p6-g1-2026-05
+    allowlistTripIds: []
+    blocklistTripIds: []

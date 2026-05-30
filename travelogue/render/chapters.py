@@ -107,9 +107,18 @@ def build_chapters_render_context(
 
     raw_chapters = trip.get("chapters") or []
     if is_longshot_surface:
+        from travelogue.config import get_config
         from travelogue.curation.longshot_filter import chapters_for_longshot_render
 
-        raw_chapters = chapters_for_longshot_render(raw_chapters)
+        cfg = get_config()
+        assets_by_id = {a["id"]: a for a in (trip.get("assets") or []) if a.get("id")}
+        raw_chapters = chapters_for_longshot_render(
+            raw_chapters,
+            assets_by_id=assets_by_id,
+            enable_mmr=cfg.curate.enable_mmr_diversity,
+            mmr_lambda=cfg.curate.longshot_mmr_lambda,
+            max_consecutive_same_pattern=cfg.curate.max_consecutive_same_pattern,
+        )
 
     for i, ch in enumerate(raw_chapters):
         idx = ch.get("index", i + 1)

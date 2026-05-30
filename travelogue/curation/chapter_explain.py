@@ -18,6 +18,7 @@ _SCORE_LABELS: dict[str, str] = {
     "subject_run": "主题连贯",
     "tone_continuity": "色调连贯",
     "layout_rhythm": "版面节奏",
+    "gravity_balance": "重心连贯",
 }
 
 _DEGRADATION_LABELS: dict[str, str] = {
@@ -196,6 +197,19 @@ def build_chapter_explain(trip: dict, *, trip_dir: Path | None = None) -> dict[s
     clusters = clustering.get("clusters") or []
     if isinstance(clusters, list) and clusters:
         details.append("场景分析已用于段内照片排序")
+
+    sub_seg = clustering.get("sceneSubSegmentation") or {}
+    breakpoints = sub_seg.get("breakpoints") or []
+    if isinstance(breakpoints, list) and breakpoints:
+        split_count = sub_seg.get("parentSplitCount") or len({b.get("parentEventId") for b in breakpoints if isinstance(b, dict)})
+        if split_count:
+            details.append(f"同一停留内按场景变化拆分为 {split_count} 段")
+
+    cover_explain = (trip.get("curation") or {}).get("coverExplain") or []
+    if isinstance(cover_explain, list) and cover_explain:
+        top = cover_explain[0]
+        if isinstance(top, dict) and top.get("reason"):
+            details.append(f"封面选择：{top['reason']}")
 
     if trip_dir is not None:
         from travelogue.curation.cluster_decision_log import cluster_decision_log_path

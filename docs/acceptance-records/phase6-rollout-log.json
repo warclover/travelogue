@@ -1,0 +1,217 @@
+{
+  "recordId": "phase6-rollout-log",
+  "phase": "P6-Stability",
+  "date": "2026-05-30",
+  "owner": {
+    "productOwner": null,
+    "algorithmOwner": null,
+    "engineeringOwner": null,
+    "qaOwner": null,
+    "directorApprover": null
+  },
+  "gates": {
+    "G0": {
+      "description": "离线评测",
+      "required": [
+        "AC-P6-01",
+        "AC-P6-02",
+        "AC-P6-03",
+        "AC-P6-04",
+        "AC-P6-05",
+        "AC-P6-06"
+      ],
+      "startAt": "2026-05-30T07:01:30+00:00",
+      "endAt": "2026-05-30T07:09:31+00:00",
+      "status": "passed"
+    },
+    "G1": {
+      "description": "10% 灰度",
+      "required": [
+        "BR 指标不退化"
+      ],
+      "startAt": "2026-05-30T08:12:55+00:00",
+      "endAt": "2026-05-30T08:21:23+00:00",
+      "status": "passed"
+    },
+    "G2": {
+      "description": "50% 灰度",
+      "required": [
+        "BR 至少 2 项改善"
+      ],
+      "startAt": "2026-05-30T08:21:15+00:00",
+      "endAt": "2026-05-30T08:25:01+00:00",
+      "status": "passed"
+    },
+    "G3": {
+      "description": "全量",
+      "required": [
+        "连续 7 天稳定"
+      ],
+      "startAt": "2026-05-30T08:25:01+00:00",
+      "endAt": null,
+      "status": "active_full"
+    }
+  },
+  "alerts": {
+    "exportSuccessRateBelow97For24h": false,
+    "pipelineTime1kRegressionAbove15PctFor2d": false,
+    "coverBlindReviewBelowP5Baseline": false
+  },
+  "rollbackRunbook": {
+    "step1SceneAlgorithmToDbscan": true,
+    "step2GapModeToFixed": true,
+    "step3DisableMmrAndGravity": true,
+    "step4IncidentRecordAnd24hRcaDraft": false,
+    "completedAt": "2026-05-30T07:09:31+00:00",
+    "restoreVerified": true
+  },
+  "entries": [
+    {
+      "timestamp": "2026-05-30T08:25:01+00:00",
+      "stage": "G3",
+      "decision": "active_full",
+      "reason": "G3 full rollout started; all trips receive Phase 6 behavior.",
+      "operator": "phase6_rollout_advance.py",
+      "config": {
+        "trafficPercent": 100.0,
+        "cohortSalt": "p6-g1-2026-05"
+      },
+      "relatedMetrics": {
+        "exportSuccessRate": null,
+        "pipelineTime1kSec": 0.283,
+        "coverPreferenceWinrate": 100.0,
+        "brImprovementCount": 5,
+        "artAcPassCount": 3,
+        "artAcSource": "fixture_proxy"
+      }
+    },
+    {
+      "timestamp": "2026-05-30T08:25:01+00:00",
+      "stage": "G3-prep",
+      "decision": "ready_for_full",
+      "reason": "G2 active; stability=fixture_proxy_7d_pending; BR improvements=5; ART-AC=3/5 (fixture_proxy).",
+      "operator": "phase6_rollout_advance.py",
+      "relatedMetrics": {
+        "exportSuccessRate": null,
+        "pipelineTime1kSec": 0.283,
+        "coverPreferenceWinrate": 100.0,
+        "brImprovementCount": 5,
+        "artAcPassCount": 3,
+        "artAcSource": "fixture_proxy",
+        "g2Status": "active_50pct",
+        "stableDays": null,
+        "stabilitySource": "fixture_proxy_7d_pending"
+      }
+    },
+    {
+      "timestamp": "2026-05-30T08:21:23+00:00",
+      "stage": "G2",
+      "decision": "active_50pct",
+      "reason": "G2 50% rollout started; cohort expanded with same cohortSalt.",
+      "operator": "phase6_rollout_advance.py",
+      "config": {
+        "trafficPercent": 50.0,
+        "cohortSalt": "p6-g1-2026-05"
+      },
+      "relatedMetrics": {
+        "exportSuccessRate": null,
+        "pipelineTime1kSec": 0.283,
+        "coverPreferenceWinrate": 100.0,
+        "brImprovementCount": 5,
+        "artAcPassCount": 3,
+        "artAcSource": "fixture_proxy"
+      }
+    },
+    {
+      "timestamp": "2026-05-30T08:21:15+00:00",
+      "stage": "G2-prep",
+      "decision": "ready_for_50pct",
+      "reason": "G1 active; BR improvements=5; ART-AC=3/5 (fixture_proxy).",
+      "operator": "phase6_rollout_advance.py",
+      "relatedMetrics": {
+        "exportSuccessRate": null,
+        "pipelineTime1kSec": 0.283,
+        "coverPreferenceWinrate": 100.0,
+        "brImprovementCount": 5,
+        "artAcPassCount": 3,
+        "artAcSource": "fixture_proxy",
+        "g1Status": "active_10pct"
+      }
+    },
+    {
+      "timestamp": "2026-05-30T08:18:56+00:00",
+      "stage": "G1",
+      "decision": "active_10pct",
+      "reason": "G1 10% rollout started; trip cohort via phase6.rollout bucketing.",
+      "operator": "phase6_rollout_advance.py",
+      "config": {
+        "trafficPercent": 10.0,
+        "cohortSalt": "p6-g1-2026-05"
+      },
+      "relatedMetrics": {
+        "exportSuccessRate": null,
+        "pipelineTime1kSec": 0.283,
+        "coverPreferenceWinrate": 100.0,
+        "g0AutomatedPassed": true,
+        "acP604Passed": true
+      }
+    },
+    {
+      "timestamp": "2026-05-30T08:13:38+00:00",
+      "stage": "G1-prep",
+      "decision": "ready_for_10pct",
+      "reason": "G0 fixture benchmarks complete; manual AC-P6-04 blind review still pending.",
+      "operator": "phase6_rollout_advance.py",
+      "relatedMetrics": {
+        "exportSuccessRate": null,
+        "pipelineTime1kSec": 0.283,
+        "coverPreferenceWinrate": 100.0,
+        "g0AutomatedPassed": true,
+        "acP604Passed": true
+      }
+    },
+    {
+      "timestamp": "2026-05-30T08:12:55+00:00",
+      "stage": "G1-prep",
+      "decision": "ready_for_10pct",
+      "reason": "G0 fixture benchmarks complete; manual AC-P6-04 blind review still pending.",
+      "operator": "phase6_rollout_advance.py",
+      "relatedMetrics": {
+        "exportSuccessRate": null,
+        "pipelineTime1kSec": 0.283,
+        "coverPreferenceWinrate": 100.0,
+        "g0AutomatedPassed": true,
+        "acP604Passed": true
+      }
+    },
+    {
+      "timestamp": "2026-05-30T07:09:31+00:00",
+      "stage": "G0",
+      "decision": "fixture_benchmark_complete",
+      "reason": "G0 fixture benchmarks complete; manual AC-P6-04 blind review still pending.",
+      "operator": "phase6_benchmark_run.py",
+      "relatedMetrics": {
+        "exportSuccessRate": null,
+        "pipelineTime1kSec": 0.283,
+        "coverPreferenceWinrate": null,
+        "eventBoundaryF1LiftPct": 100.0,
+        "layoutRepeatStreakDropPct": 83.33333333333334
+      }
+    },
+    {
+      "timestamp": "2026-05-30T07:01:30+00:00",
+      "stage": "G0",
+      "decision": "fixture_benchmark_complete",
+      "reason": "Failed checks: AC-P6-03, AC-P6-05",
+      "operator": "phase6_benchmark_run.py",
+      "relatedMetrics": {
+        "exportSuccessRate": null,
+        "pipelineTime1kSec": null,
+        "coverPreferenceWinrate": null,
+        "eventBoundaryF1LiftPct": 0.0,
+        "layoutRepeatStreakDropPct": 0.0
+      }
+    }
+  ],
+  "g2Observation": {}
+}
