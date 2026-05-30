@@ -69,8 +69,8 @@ def _cluster_labels(
     algorithm: ClusterAlgorithm,
     eps: float,
     min_samples_eff: int,
-) -> tuple[Any, Any | None]:
-    """Return (labels, probabilities_) where probabilities may be None for DBSCAN."""
+) -> tuple[Any, Any | None, ClusterAlgorithm]:
+    """Return (labels, probabilities_, effective_algorithm)."""
     if algorithm == "hdbscan":
         try:
             from sklearn.cluster import HDBSCAN
@@ -83,7 +83,7 @@ def _cluster_labels(
             )
             labels = clusterer.fit_predict(mat)
             probs = getattr(clusterer, "probabilities_", None)
-            return labels, probs
+            return labels, probs, "hdbscan"
         except Exception as exc:
             _log.warning("HDBSCAN failed, falling back to DBSCAN: %s", exc)
 
@@ -91,13 +91,14 @@ def _cluster_labels(
 
     db = DBSCAN(eps=eps, min_samples=min_samples_eff, metric="cosine")
     labels = db.fit_predict(mat)
-    return labels, None
+    return labels, None, "dbscan"
 
 
 @dataclass
 class SceneClusterResult:
     clusters: list[SceneCluster]
     probabilities_by_id: dict[str, float]
+    algorithm_used: ClusterAlgorithm = "dbscan"
 
 
 def compute_scene_clusters(
@@ -117,14 +118,14 @@ def compute_scene_clusters(
     import numpy as np
 
     if len(asset_ids) == 0:
-        return SceneClusterResult(clusters=[], probabilities_by_id={})
+        return SceneClusterResult(clusters=[], probabilities_by_id={}, algorithm_used=algorithm)
     mat = np.asarray(embeddings, dtype=np.float32)
     if mat.shape[0] != len(asset_ids):
         raise ValueError("embeddings row count must match asset_ids")
 
     mat = _normalize_embedding_matrix(mat)
     min_samples_eff = min(min_samples, max(2, len(asset_ids) // 5))
-    labels, probabilities = _cluster_labels(
+    labels, probabilities, algorithm_used = _cluster_labels(
         mat,
         algorithm=algorithm,
         eps=eps,
@@ -164,7 +165,11 @@ def compute_scene_clusters(
                 confidence=avg_conf,
             )
         )
-    return SceneClusterResult(clusters=clusters, probabilities_by_id=prob_by_id)
+    return SceneClusterResult(
+        clusters=clusters,
+        probabilities_by_id=prob_by_id,
+        algorithm_used=algorithm_used,
+    )
 
 
 def cluster_noise_ratio(asset_ids: list[str], labels: Any) -> float:

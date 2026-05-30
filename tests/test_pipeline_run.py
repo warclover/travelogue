@@ -28,3 +28,8 @@ def test_run_until_structure(tmp_path: Path) -> None:
     trip = json.loads(trip_json.read_text(encoding="utf-8"))
     assert trip["pipeline"]["status"] == "structure_draft"
     assert len(trip["chapters"]) >= 3
+    timings = (trip.get("pipeline") or {}).get("timings") or {}
+    assert "ingestMs" in timings
+    assert "curateMs" in timings
+    assert timings["ingestMs"] >= 0
+    assert timings["curateMs"] >= 0

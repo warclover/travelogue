@@ -1,9 +1,15 @@
-"""Optional CLIP / heuristic embeddings for scene clustering (Phase 3 M13)."""
+"""Optional CLIP / heuristic embeddings for scene clustering (Phase 3 M13 · P7 batch)."""
 
 from __future__ import annotations
 
+import json
 import logging
+import os
+import threading
+import time
+from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -20,8 +26,11 @@ SUBJECT_CLASSES = (
     "mixed",
 )
 DEFAULT_SUBJECT_PROMPTS = tuple(f"a photo of {label}" for label in SUBJECT_CLASSES)
-# Backwards-compatible alias; existing tests imported this name.
 SUBJECT_PROMPTS = DEFAULT_SUBJECT_PROMPTS
+
+_encoder_lock = threading.Lock()
+_encoder_singleton: ClipEncoder | None = None
+_prefetch_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="clip-prefetch")
 
 
 class VisionMissingError(Exception):
@@ -57,20 +66,12 @@ def clip_weights_likely_cached(
     model_name: str = "ViT-B-32",
     pretrained: str = "openai",
 ) -> bool:
-    """Best-effort check whether CLIP weights are already on disk (M13-5a stage hint).
-
-    Strategy:
-    1. Ask open_clip for its expected local filename and probe the standard
-       cache roots; this is the most accurate signal when open_clip is present.
-    2. Fall back to a heuristic file-name match across known cache roots so
-       fresh installs without open_clip importable still get a useful hint.
-    """
+    """Best-effort check whether CLIP weights are already on disk (M13-5a stage hint)."""
     if not clip_torch_available():
         return True
 
     cache_roots = _clip_cache_roots()
 
-    # Preferred signal: open_clip's own filename resolver.
     try:
         import open_clip  # type: ignore
 
@@ -92,7 +93,7 @@ def clip_weights_likely_cached(
                     candidate = root / filename
                     if candidate.is_file() and candidate.stat().st_size > 500_000:
                         return True
-        _ = download  # keep reference; some open_clip versions only expose helpers
+        _ = download
     except Exception:  # pragma: no cover - open_clip API drift
         pass
 
@@ -172,8 +173,44 @@ class EmbedResult:
     model: str | None = None
 
 
+@dataclass
+class EmbedStats:
+    """P7 telemetry for CLIP embedding runs."""
+
+    elapsed_ms: float = 0.0
+    batch_size: int = 0
+    batches: int = 0
+    prefetch_enabled: bool = False
+    web_derivative_hits: int = 0
+    web_derivative_fallbacks: int = 0
+    web_derivative_gated: bool = False
+    cache_hit_ratio: float | None = None
+    fallback_single: int = 0
+    oom_halves: int = 0
+    auto_batch_tuned: bool = False
+    recommended_batch_size: int | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        out: dict[str, Any] = {
+            "elapsedMs": round(self.elapsed_ms, 2),
+            "batchSize": self.batch_size,
+            "batches": self.batches,
+            "prefetchEnabled": self.prefetch_enabled,
+            "webDerivativeHits": self.web_derivative_hits,
+            "webDerivativeFallbacks": self.web_derivative_fallbacks,
+            "webDerivativeGated": self.web_derivative_gated,
+            "fallbackSingle": self.fallback_single,
+            "oomHalves": self.oom_halves,
+            "autoBatchTuned": self.auto_batch_tuned,
+        }
+        if self.cache_hit_ratio is not None:
+            out["cacheHitRatio"] = round(self.cache_hit_ratio, 4)
+        if self.recommended_batch_size is not None:
+            out["recommendedBatchSize"] = self.recommended_batch_size
+        return out
+
+
 def _labels_from_prompts(prompts: tuple[str, ...]) -> tuple[str, ...]:
-    """Best-effort: turn "a photo of <label>" prompts back into bare labels."""
     out: list[str] = []
     for prompt in prompts:
         text = prompt.strip()
@@ -186,6 +223,89 @@ def _labels_from_prompts(prompts: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(out)
 
 
+def get_clip_encoder(cfg: Any | None = None) -> ClipEncoder:
+    """Process-level ClipEncoder singleton when session_singleton is enabled (P7-A2)."""
+    from travelogue.config import VisionConfig, get_config
+
+    vis = (cfg.vision if cfg is not None and hasattr(cfg, "vision") else None) or get_config().vision
+    if not isinstance(vis, VisionConfig):
+        vis = get_config().vision
+
+    global _encoder_singleton
+    if vis.session_singleton:
+        with _encoder_lock:
+            if _encoder_singleton is None:
+                _encoder_singleton = ClipEncoder.from_vision_config(vis)
+            return _encoder_singleton
+    return ClipEncoder.from_vision_config(vis)
+
+
+def preload_clip_encoder(cfg: Any | None = None) -> None:
+    """Warm CLIP weights asynchronously (P7-C2); failures are silent."""
+    def _warm() -> None:
+        try:
+            enc = get_clip_encoder(cfg)
+            enc._ensure_clip()
+        except Exception as exc:  # pragma: no cover - best effort
+            _log.debug("CLIP preload skipped: %s", exc)
+
+    threading.Thread(target=_warm, name="clip-preload", daemon=True).start()
+
+
+def reset_clip_encoder_singleton() -> None:
+    """Clear process singleton (tests)."""
+    global _encoder_singleton
+    with _encoder_lock:
+        _encoder_singleton = None
+
+
+def _clip_tune_path(trips_dir: Path) -> Path:
+    return trips_dir / ".cache" / "clip-tune.json"
+
+
+def load_persisted_batch_size(
+    *,
+    trip_dir: Path | None = None,
+    trips_dir: Path | None = None,
+) -> int | None:
+    """P7-G1 · load recommended batch from trip manifest or trips-level tune file."""
+    if trip_dir is not None:
+        from travelogue.vision.cache import load_cache_manifest
+
+        manifest = load_cache_manifest(trip_dir)
+        if manifest and manifest.get("recommendedBatchSize") is not None:
+            return int(manifest["recommendedBatchSize"])
+    if trips_dir is not None:
+        path = _clip_tune_path(trips_dir)
+        if path.is_file():
+            try:
+                raw = json.loads(path.read_text(encoding="utf-8"))
+                if isinstance(raw, dict) and raw.get("recommendedBatchSize") is not None:
+                    return int(raw["recommendedBatchSize"])
+            except (OSError, json.JSONDecodeError, TypeError, ValueError):
+                pass
+    return None
+
+
+def persist_recommended_batch_size(
+    size: int,
+    *,
+    trips_dir: Path,
+    trip_dir: Path | None = None,
+) -> None:
+    """P7-G1 · persist auto-tuned batch size for subsequent sessions."""
+    _ = trip_dir
+    payload = {
+        "recommendedBatchSize": int(size),
+        "updatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+    }
+    tune_path = _clip_tune_path(trips_dir)
+    tune_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = tune_path.with_suffix(".json.tmp")
+    tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    os.replace(tmp_path, tune_path)
+
+
 class ClipEncoder:
     """Lazy CLIP encoder; falls back to heuristic vectors when torch/open_clip absent."""
 
@@ -195,6 +315,13 @@ class ClipEncoder:
         model_name: str = "ViT-B-32",
         pretrained: str = "openai",
         subject_prompts: tuple[str, ...] | None = None,
+        batch_size: int = 16,
+        prefer_web_derivative: bool = True,
+        prefetch: bool = True,
+        dynamic_backoff: bool = True,
+        batch_auto_tune: bool = False,
+        batch_auto_tune_samples: int = 8,
+        web_derivative_cosine_max: float = 0.02,
     ) -> None:
         self.model_name = model_name
         self.pretrained = pretrained
@@ -208,6 +335,104 @@ class ClipEncoder:
         self._preprocess = None
         self._device = None
         self._text_features = None
+        self.batch_size = max(0, int(batch_size))
+        self.prefer_web_derivative = prefer_web_derivative
+        self.prefetch = prefetch
+        self.dynamic_backoff = dynamic_backoff
+        self.batch_auto_tune = batch_auto_tune
+        self.batch_auto_tune_samples = max(1, int(batch_auto_tune_samples))
+        self.web_derivative_cosine_max = float(web_derivative_cosine_max)
+        self._tuned_batch_size: int | None = None
+        self._prefetch_disabled = False
+        self._web_derivative_disabled = False
+        self.last_embed_stats: EmbedStats | None = None
+        self.decision_log: list[str] = []
+        self._infer_lock = threading.RLock()
+
+    @classmethod
+    def from_vision_config(cls, vis: Any) -> ClipEncoder:
+        return cls(
+            model_name=str(vis.model).replace("/", "-"),
+            subject_prompts=vis.subject_prompts or None,
+            batch_size=int(getattr(vis, "batch_size", 16)),
+            prefer_web_derivative=bool(getattr(vis, "prefer_web_derivative", True)),
+            prefetch=bool(getattr(vis, "prefetch", True)),
+            dynamic_backoff=bool(getattr(vis, "dynamic_backoff", True)),
+            batch_auto_tune=bool(getattr(vis, "batch_auto_tune", False)),
+            batch_auto_tune_samples=int(getattr(vis, "batch_auto_tune_samples", 8)),
+            web_derivative_cosine_max=float(getattr(vis, "web_derivative_cosine_max", 0.02)),
+        )
+
+    def _effective_prefer_web(self) -> bool:
+        return bool(self.prefer_web_derivative and not self._web_derivative_disabled)
+
+    def _load_persisted_batch_if_needed(self, trip_dir: Path) -> None:
+        if self._tuned_batch_size is not None:
+            return
+        persisted = load_persisted_batch_size(
+            trip_dir=trip_dir,
+            trips_dir=trip_dir.parent,
+        )
+        if persisted is not None and persisted > 0:
+            self._tuned_batch_size = persisted
+            self.decision_log.append(f"loaded persisted batch={persisted}")
+
+    def _encode_path_vector(self, path: Path) -> list[float]:
+        import torch
+
+        tensor = self._load_image_tensor(path).unsqueeze(0).to(self._device)
+        with torch.no_grad():
+            feat = self._model.encode_image(tensor)
+            feat = feat / feat.norm(dim=-1, keepdim=True)
+        return feat.cpu().numpy()[0].tolist()
+
+    @staticmethod
+    def _cosine_distance(a: list[float], b: list[float]) -> float:
+        import numpy as np
+
+        va = np.array(a, dtype=np.float32)
+        vb = np.array(b, dtype=np.float32)
+        denom = float(np.linalg.norm(va) * np.linalg.norm(vb))
+        if denom < 1e-8:
+            return 0.0
+        return float(1.0 - np.dot(va, vb) / denom)
+
+    def _maybe_gate_web_derivative(self, photos: list[dict], trip_dir: Path) -> None:
+        """P7-A4 · disable web derivative when drift exceeds cosine threshold."""
+        if not self._effective_prefer_web() or self.web_derivative_cosine_max <= 0:
+            return
+        sample = photos[: min(len(photos), 3)]
+        distances: list[float] = []
+        for asset in sample:
+            web_path, used_web = _resolve_asset_path(
+                asset, trip_dir, prefer_web_derivative=True
+            )
+            orig_path, _ = _resolve_asset_path(
+                asset, trip_dir, prefer_web_derivative=False
+            )
+            if not used_web or web_path is None or orig_path is None:
+                continue
+            if web_path.resolve() == orig_path.resolve():
+                continue
+            try:
+                web_vec = self._encode_path_vector(web_path)
+                orig_vec = self._encode_path_vector(orig_path)
+                distances.append(self._cosine_distance(web_vec, orig_vec))
+            except Exception as exc:
+                _log.debug("web derivative gate sample failed: %s", exc)
+        if not distances:
+            return
+        mean_dist = sum(distances) / len(distances)
+        if mean_dist > self.web_derivative_cosine_max:
+            self._web_derivative_disabled = True
+            self.decision_log.append(
+                f"web derivative gated off (mean cosine drift {mean_dist:.4f} > {self.web_derivative_cosine_max})"
+            )
+            _log.info(
+                "CLIP web derivative disabled: mean drift %.4f > %.4f",
+                mean_dist,
+                self.web_derivative_cosine_max,
+            )
 
     def _ensure_subject_text_features(self) -> None:
         if self._text_features is not None:
@@ -222,7 +447,6 @@ class ClipEncoder:
         self._text_features = feats
 
     def _subject_class_for(self, image_feat: Any) -> tuple[str, float] | None:
-        """Return (label, confidence); None when text features unavailable."""
         if self._text_features is None:
             return None
         sim = (image_feat @ self._text_features.T).squeeze(0)
@@ -258,6 +482,7 @@ class ClipEncoder:
         *,
         trip_dir: Path | None = None,
         deterministic: bool = True,
+        apply_subject_class: bool = True,
     ) -> EmbedResult:
         import numpy as np
 
@@ -267,7 +492,12 @@ class ClipEncoder:
 
         if self._ensure_clip() and trip_dir is not None:
             try:
-                return self._embed_clip(photos, trip_dir=trip_dir, deterministic=deterministic)
+                return self._embed_clip(
+                    photos,
+                    trip_dir=trip_dir,
+                    deterministic=deterministic,
+                    apply_subject_class=apply_subject_class,
+                )
             except Exception as exc:
                 _log.warning("CLIP embed failed, heuristic fallback: %s", exc)
 
@@ -278,66 +508,310 @@ class ClipEncoder:
         mat = mat / norms
         return EmbedResult(ids, mat, "heuristic", model="heuristic-v1")
 
+    def _effective_batch_size(self, photos: list[dict], trip_dir: Path) -> int:
+        if self.batch_size == 0:
+            return 1
+        if self._tuned_batch_size is not None:
+            return self._tuned_batch_size
+        if not self.batch_auto_tune:
+            return self.batch_size
+        tuned = self._auto_tune_batch_size(photos, trip_dir)
+        self._tuned_batch_size = tuned
+        return tuned
+
+    def _auto_tune_batch_size(self, photos: list[dict], trip_dir: Path) -> int:
+        """P7-G1 · probe batch sizes on a small sample."""
+        import torch
+
+        sample = photos[: min(len(photos), self.batch_auto_tune_samples)]
+        if not sample:
+            return max(1, self.batch_size)
+        candidates = [b for b in (32, 16, 8, 4, 2, 1) if b <= max(1, self.batch_size)] or [1]
+        best = 1
+        for bs in candidates:
+            try:
+                tensors = self._load_batch_tensors(sample[:bs], trip_dir)
+                if not tensors:
+                    continue
+                batch = torch.stack(tensors).to(self._device)
+                t0 = time.monotonic()
+                with torch.no_grad():
+                    _ = self._model.encode_image(batch)
+                elapsed = time.monotonic() - t0
+                if elapsed < 2.0 or bs == 1:
+                    best = bs
+                    break
+            except RuntimeError as exc:
+                if "out of memory" in str(exc).lower():
+                    if self._device == "cuda":
+                        torch.cuda.empty_cache()
+                    continue
+                break
+        _log.info("CLIP auto batch tune → %d (requested %d)", best, self.batch_size)
+        return best
+
+    def _load_image_tensor(self, path: Path) -> Any:
+        from PIL import Image
+
+        img = Image.open(path).convert("RGB")
+        return self._preprocess(img)
+
+    def _load_batch_tensors(
+        self,
+        batch_assets: list[dict],
+        trip_dir: Path,
+        *,
+        stats: EmbedStats | None = None,
+    ) -> list[Any]:
+        tensors: list[Any] = []
+        for asset in batch_assets:
+            path, used_web = _resolve_asset_path(
+                asset, trip_dir, prefer_web_derivative=self._effective_prefer_web()
+            )
+            if path is None or not path.is_file():
+                continue
+            if stats and used_web:
+                stats.web_derivative_hits += 1
+            tensors.append(self._load_image_tensor(path))
+        return tensors
+
+    def _encode_batch_tensors(
+        self,
+        tensors: list[Any],
+        batch_assets: list[dict],
+        *,
+        stats: EmbedStats,
+    ) -> tuple[list[list[float]], list[tuple[dict, str, float]]]:
+        import torch
+
+        if not tensors:
+            return [], []
+
+        with self._infer_lock:
+            batch = torch.stack(tensors).to(self._device)
+            t0 = time.monotonic()
+            try:
+                with torch.no_grad():
+                    feats = self._model.encode_image(batch)
+                    feats = feats / feats.norm(dim=-1, keepdim=True)
+            except RuntimeError as exc:
+                if "out of memory" not in str(exc).lower() or len(tensors) <= 1:
+                    raise
+                stats.oom_halves += 1
+                if self.dynamic_backoff and self._tuned_batch_size is None:
+                    half = max(1, len(tensors) // 2)
+                    self._tuned_batch_size = half
+                mid = len(tensors) // 2
+                left_v, left_s = self._encode_batch_tensors(
+                    tensors[:mid], batch_assets[:mid], stats=stats
+                )
+                right_v, right_s = self._encode_batch_tensors(
+                    tensors[mid:], batch_assets[mid:], stats=stats
+                )
+                return left_v + right_v, left_s + right_s
+
+            elapsed = time.monotonic() - t0
+            if self.dynamic_backoff and elapsed > 1.5 and len(tensors) > 1:
+                self._prefetch_disabled = True
+                _log.info("CLIP dynamic backoff: disabling prefetch (batch took %.2fs)", elapsed)
+
+            vectors: list[list[float]] = []
+            proposals: list[tuple[dict, str, float]] = []
+            for i, asset in enumerate(batch_assets[: len(tensors)]):
+                feat = feats[i : i + 1]
+                subject = self._subject_class_for(feat)
+                if subject is not None:
+                    proposals.append((asset, subject[0], subject[1]))
+                vectors.append(feat.cpu().numpy()[0].tolist())
+            return vectors, proposals
+
     def _embed_clip(
         self,
         photos: list[dict],
         *,
         trip_dir: Path,
         deterministic: bool,
+        apply_subject_class: bool = True,
     ) -> EmbedResult:
         import numpy as np
         import torch
-        from PIL import Image
+
+        if not self._ensure_clip():
+            raise RuntimeError("CLIP model unavailable")
 
         if deterministic:
             torch.manual_seed(0)
 
+        self._load_persisted_batch_if_needed(trip_dir)
+        self._maybe_gate_web_derivative(photos, trip_dir)
+
+        stats = EmbedStats(prefetch_enabled=self.prefetch and not self._prefetch_disabled)
+        t_start = time.monotonic()
+        batch_size = self._effective_batch_size(photos, trip_dir)
+        stats.batch_size = batch_size
+        stats.auto_batch_tuned = self._tuned_batch_size is not None
+
         vectors: list[list[float]] = []
         ids: list[str] = []
-        # Collect subject class proposals; only commit them once the whole batch
-        # finishes so that a mid-batch failure does not leave half the trip with
-        # CLIP labels and the other half without.
         subject_proposals: list[tuple[dict, str, float]] = []
-        for asset in photos:
-            path = _resolve_asset_path(asset, trip_dir)
-            if path is None or not path.is_file():
-                vectors.append(_heuristic_vector(asset))
-                ids.append(asset["id"])
-                continue
-            img = Image.open(path).convert("RGB")
-            tensor = self._preprocess(img).unsqueeze(0).to(self._device)
-            with torch.no_grad():
-                feat = self._model.encode_image(tensor)
-                feat = feat / feat.norm(dim=-1, keepdim=True)
-            subject = self._subject_class_for(feat)
-            if subject is not None:
-                subject_proposals.append((asset, subject[0], subject[1]))
-            vectors.append(feat.cpu().numpy()[0].tolist())
-            ids.append(asset["id"])
+        prefetch_future: Future[list[Any]] | None = None
+        prefetch_assets: list[dict] = []
+
+        i = 0
+        while i < len(photos):
+            batch_assets = photos[i : i + batch_size]
+            ready: list[tuple[dict, Path]] = []
+            for asset in batch_assets:
+                path, used_web = _resolve_asset_path(
+                    asset, trip_dir, prefer_web_derivative=self._effective_prefer_web()
+                )
+                if path is None or not path.is_file():
+                    vectors.append(_heuristic_vector(asset))
+                    ids.append(asset["id"])
+                    continue
+                if used_web:
+                    stats.web_derivative_hits += 1
+                ready.append((asset, path))
+
+            if ready:
+                if (
+                    stats.prefetch_enabled
+                    and prefetch_future is not None
+                    and prefetch_assets
+                    and len(ready) == len(batch_assets)
+                ):
+                    try:
+                        tensors = prefetch_future.result(timeout=30)
+                        if len(tensors) != len(ready):
+                            tensors = [self._load_image_tensor(p) for _, p in ready]
+                    except Exception:
+                        tensors = [self._load_image_tensor(p) for _, p in ready]
+                else:
+                    tensors = [self._load_image_tensor(p) for _, p in ready]
+
+                encode_assets = [a for a, _ in ready]
+                try:
+                    batch_vectors, batch_proposals = self._encode_batch_tensors(
+                        tensors, encode_assets, stats=stats
+                    )
+                except RuntimeError:
+                    stats.fallback_single += len(encode_assets)
+                    for asset, path in ready:
+                        with self._infer_lock:
+                            tensor = self._load_image_tensor(path).unsqueeze(0).to(self._device)
+                            with torch.no_grad():
+                                feat = self._model.encode_image(tensor)
+                                feat = feat / feat.norm(dim=-1, keepdim=True)
+                        subject = self._subject_class_for(feat)
+                        if subject is not None:
+                            subject_proposals.append((asset, subject[0], subject[1]))
+                        vectors.append(feat.cpu().numpy()[0].tolist())
+                        ids.append(asset["id"])
+                else:
+                    vectors.extend(batch_vectors)
+                    ids.extend(a["id"] for a in encode_assets[: len(batch_vectors)])
+                    if len(batch_vectors) < len(encode_assets):
+                        for asset, path in ready[len(batch_vectors) :]:
+                            tensor = self._load_image_tensor(path).unsqueeze(0).to(self._device)
+                            with self._infer_lock:
+                                with torch.no_grad():
+                                    feat = self._model.encode_image(tensor)
+                                    feat = feat / feat.norm(dim=-1, keepdim=True)
+                            subject = self._subject_class_for(feat)
+                            if subject is not None:
+                                subject_proposals.append((asset, subject[0], subject[1]))
+                            vectors.append(feat.cpu().numpy()[0].tolist())
+                            ids.append(asset["id"])
+                            stats.fallback_single += 1
+                    subject_proposals.extend(batch_proposals)
+
+            stats.batches += 1
+            i += len(batch_assets)
+
+            next_i = i
+            if stats.prefetch_enabled and next_i < len(photos):
+                prefetch_assets = photos[next_i : next_i + batch_size]
+
+                def _prefetch_load(
+                    assets: list[dict] = prefetch_assets,
+                    td: Path = trip_dir,
+                ) -> list[Any]:
+                    out: list[Any] = []
+                    for a in assets:
+                        p, _ = _resolve_asset_path(
+                            a, td, prefer_web_derivative=self._effective_prefer_web()
+                        )
+                        if p is not None and p.is_file():
+                            out.append(self._load_image_tensor(p))
+                    return out
+
+                prefetch_future = _prefetch_pool.submit(_prefetch_load)
 
         for asset, label, confidence in subject_proposals:
-            asset["subjectClass"] = label
-            asset["subjectConfidence"] = confidence
+            if apply_subject_class:
+                asset["subjectClass"] = label
+                asset["subjectConfidence"] = confidence
 
+        stats.elapsed_ms = (time.monotonic() - t_start) * 1000.0
+        stats.recommended_batch_size = self._tuned_batch_size or batch_size
+        stats.web_derivative_gated = self._web_derivative_disabled
+        self.last_embed_stats = stats
         mat = np.array(vectors, dtype=np.float32)
         return EmbedResult(ids, mat, "clip", model=f"{self.model_name}/{self.pretrained}")
 
 
-def _resolve_asset_path(asset: dict, trip_dir: Path) -> Path | None:
+def _path_within_trip(candidate: Path, trip_dir: Path) -> bool:
+    try:
+        candidate.resolve().relative_to(trip_dir.resolve())
+        return True
+    except (ValueError, OSError):
+        return False
+
+
+def _resolve_asset_path(
+    asset: dict,
+    trip_dir: Path,
+    *,
+    prefer_web_derivative: bool = False,
+) -> tuple[Path | None, bool]:
+    """Return (path, used_web_derivative). P7-A4 prefers 800px WebP."""
+    used_web = False
+    aid = asset.get("id")
+    trip_resolved = trip_dir.resolve()
+
+    if prefer_web_derivative and aid:
+        web_candidates: list[Path] = [
+            trip_dir / "assets" / f"{aid}-w800.webp",
+            trip_dir / "assets" / "web" / f"{aid}.webp",
+            trip_dir / "assets" / "web" / f"{aid}-w800.webp",
+        ]
+        srcset = asset.get("srcset") or []
+        for entry in srcset:
+            if not isinstance(entry, dict):
+                continue
+            w = entry.get("width")
+            rel = entry.get("file")
+            if w == 800 and isinstance(rel, str) and rel.strip():
+                candidate = (trip_dir / rel.lstrip("/\\")).resolve()
+                if _path_within_trip(candidate, trip_resolved):
+                    web_candidates.insert(0, candidate)
+        for candidate in web_candidates:
+            if candidate.is_file() and _path_within_trip(candidate, trip_resolved):
+                return candidate, True
+
     rel = asset.get("path") or asset.get("file") or asset.get("src")
     if isinstance(rel, str) and rel.strip():
         p = Path(rel)
         if p.is_file():
-            return p
-        candidate = trip_dir / rel.lstrip("/\\")
-        if candidate.is_file():
-            return candidate
-    aid = asset.get("id")
+            return p, used_web
+        candidate = (trip_dir / rel.lstrip("/\\")).resolve()
+        if candidate.is_file() and _path_within_trip(candidate, trip_resolved):
+            return candidate, used_web
     if not aid:
-        return None
+        return None, used_web
     for sub in ("assets/web", "assets/original", "assets"):
         for ext in (".webp", ".jpg", ".jpeg", ".png"):
             candidate = trip_dir / sub / f"{aid}{ext}"
             if candidate.is_file():
-                return candidate
-    return None
+                return candidate, sub == "assets/web"
+    return None, used_web

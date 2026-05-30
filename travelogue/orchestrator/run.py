@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from travelogue.config import AppConfig, app_config_scope
+from travelogue.config import AppConfig, app_config_scope, get_config
 from travelogue.curation.curate import CurateError, run_curate
 from travelogue.export.packager import ExportError, export_trip
 from travelogue.media.ingest import IngestError, ingest_into_trip
@@ -110,6 +111,8 @@ def _run_trip_stages(
         "render": 4,
         "export": 4,
     }
+    pipeline_timings: dict[str, float] = dict((trip.get("pipeline") or {}).get("timings") or {})
+    pipeline_t0 = time.monotonic()
 
     for stage in stages_order[start_idx:]:
         if stages_order.index(stage) > stages_order.index(stop_stage):
@@ -121,6 +124,7 @@ def _run_trip_stages(
             if album_dir is None:
                 raise IngestError("E_RUN_NO_ALBUM", "run --from ingest requires album path via --from-dir")
             assert_stage_allowed(trip, "ingest")
+            ingest_t0 = time.monotonic()
             ingest_into_trip(
                 trip,
                 trip_root,
@@ -128,23 +132,31 @@ def _run_trip_stages(
                 generate_crops=False,
                 dedupe=dedupe,
             )
+            pipeline_timings["ingestMs"] = round((time.monotonic() - ingest_t0) * 1000.0, 2)
+            trip.setdefault("pipeline", {})["timings"] = pipeline_timings
             result.stages.append("ingest")
             save()
 
         elif stage == "curate":
             assert_stage_allowed(trip, "curate")
+            curate_t0 = time.monotonic()
             run_curate(
                 trip,
                 export_layout=export_layout,
                 apply_layout=True,
                 trip_dir=trip_root,
             )
+            pipeline_timings["curateMs"] = round((time.monotonic() - curate_t0) * 1000.0, 2)
+            trip.setdefault("pipeline", {})["timings"] = pipeline_timings
             result.stages.append("curate")
             save()
 
         elif stage == "layout":
             assert_stage_allowed(trip, "layout")
+            layout_t0 = time.monotonic()
             apply_layout_to_trip(trip, export_layout=export_layout, cfg=get_config())
+            pipeline_timings["layoutMs"] = round((time.monotonic() - layout_t0) * 1000.0, 2)
+            trip.setdefault("pipeline", {})["timings"] = pipeline_timings
             result.stages.append("layout")
             save()
 
@@ -164,12 +176,15 @@ def _run_trip_stages(
                 continue
             assert_stage_allowed(trip, "narrate")
             cache_dir = trip_root / ".cache" / "narrate"
+            narrate_t0 = time.monotonic()
             run_narrate(
                 trip,
                 provider=narrate_provider,
                 regenerate=regenerate,
                 cache_dir=cache_dir,
             )
+            pipeline_timings["narrateMs"] = round((time.monotonic() - narrate_t0) * 1000.0, 2)
+            trip.setdefault("pipeline", {})["timings"] = pipeline_timings
             result.stages.append("narrate")
             save()
 
@@ -187,6 +202,7 @@ def _run_trip_stages(
             if status == "rendered" and skip_locked:
                 continue
             trip = svc.load(trip_path)
+            render_t0 = time.monotonic()
             if trip.get("exportLayout") == "auto":
                 render_trip_surfaces(
                     trip_path,
@@ -203,18 +219,31 @@ def _run_trip_stages(
                     validate=validate,
                     update_pipeline=True,
                 )
+            pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
             trip = svc.load(trip_path)
+            trip.setdefault("pipeline", {})["timings"] = pipeline_timings
+            svc.save(trip, trip_path)
+
             result.stages.append("render")
-            save()
 
         elif stage == "export":
+            export_t0 = time.monotonic()
             pub = publish_trip(
                 trip_path,
                 confirm_privacy=confirm_privacy,
                 no_preview=no_preview,
                 validate=validate,
             )
+            pipeline_timings["exportMs"] = round((time.monotonic() - export_t0) * 1000.0, 2)
+            trip = svc.load(trip_path)
+            trip.setdefault("pipeline", {})["timings"] = pipeline_timings
+            svc.save(trip, trip_path)
             result.publish = pub
             result.stages.append("export")
+
+    pipeline_timings["totalMs"] = round((time.monotonic() - pipeline_t0) * 1000.0, 2)
+    trip = svc.load(trip_path)
+    trip.setdefault("pipeline", {})["timings"] = pipeline_timings
+    svc.save(trip, trip_path)
 
     return result

@@ -3,14 +3,14 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
-| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2 Studio** + **Phase 3 Curate 聚类** + **Phase 4 编辑意图** + **Phase 5 整体优化** + **Phase 6 稳态与艺术优化** |
+| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2 Studio** + **Phase 3 Curate 聚类** + **Phase 4 编辑意图** + **Phase 5 整体优化** + **Phase 6 稳态与艺术优化** + **Phase 7 管线性能** |
 | **更新日期** | 2026-05-30 |
 
 ---
 
 ## 阅读顺序（新人）
 
-1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · 已冻结）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（Curate 聚类）→ [PRD-PHASE4.md](./PRD-PHASE4.md)（编辑意图 · 杂志心智）→ [PRD-PHASE5.md](./PRD-PHASE5.md)（整体优化 · 做深做透）→ [PRD-PHASE6.md](./PRD-PHASE6.md)（稳态与治理）→ [PRD-PHASE6-ART-OPTIMIZATION.md](./PRD-PHASE6-ART-OPTIMIZATION.md)（艺术专项）  
+1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · 已冻结）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（Curate 聚类）→ [PRD-PHASE4.md](./PRD-PHASE4.md)（编辑意图 · 杂志心智）→ [PRD-PHASE5.md](./PRD-PHASE5.md)（整体优化 · 做深做透）→ [PRD-PHASE6.md](./PRD-PHASE6.md)（稳态与治理）→ [PRD-PHASE6-ART-OPTIMIZATION.md](./PRD-PHASE6-ART-OPTIMIZATION.md)（艺术专项）→ [PRD-PHASE7.md](./PRD-PHASE7.md)（管线性能）  
 2. [AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md)  
 2b. [PRD-LAYOUT.md](./PRD-LAYOUT.md)（排版布局子系统 · Agent 1.5）  
 3. [DATA-MODEL.md](./DATA-MODEL.md) + [schemas/trip.schema.json](../schemas/trip.schema.json)  
@@ -93,6 +93,34 @@
 | [reports/phase6-art-rubric.md](./reports/phase6-art-rubric.md) | 艺术主观评分模板 |
 
 开发准备建议顺序：**PRD-PHASE6** → **IMPLEMENTATION-PHASE6** → **ACCEPTANCE-PHASE6** → `scripts/phase6_*.py`。
+
+---
+
+## Phase 7 · 管线性能（Performance）
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE7.md](./PRD-PHASE7.md) | **Phase 7 产品需求**（ingest/CLIP/流水线/layout 等价加速 · NR-P7） |
+| [IMPLEMENTATION-PHASE7.md](./IMPLEMENTATION-PHASE7.md) | 实施任务清单（M27–M29 · 3 周波次） |
+| [ACCEPTANCE-PHASE7.md](./ACCEPTANCE-PHASE7.md) | 验收标准（AC-P7 · NR-P7 · G0–G3） |
+| [config-phase7.example.yaml](./config-phase7.example.yaml) | P7 benchmark / 验收 config 快照 |
+| [reports/phase7-g0-preflight-checklist.md](./reports/phase7-g0-preflight-checklist.md) | G0 离线预检 |
+| [reports/phase7-perf-baseline.md](./reports/phase7-perf-baseline.md) | P6 vs P7 性能对比报告模板 |
+
+**前置**：Phase 6 G0 离线 AC 通过；`phase6-quality-eval.json` 基线已登记。**代号**：P7-Perf · 极速管线。
+
+阅读顺序：**PRD-PHASE7** → **IMPLEMENTATION-PHASE7** → **ACCEPTANCE-PHASE7** → `scripts/phase7_*.py`（W1 编码）。
+
+---
+
+## Phase 7 子专项 · RAW 拦截
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE7-RAW-GATE.md](./PRD-PHASE7-RAW-GATE.md) | RAW 不支持策略：检测即拦截、提示先转 JPG 后重试 |
+| [IMPLEMENTATION-PHASE7-RAW-GATE.md](./IMPLEMENTATION-PHASE7-RAW-GATE.md) | 实施任务清单（RG-M1~M3） |
+| [ACCEPTANCE-PHASE7-RAW-GATE.md](./ACCEPTANCE-PHASE7-RAW-GATE.md) | 验收标准（AC-RAW-01~05） |
+| [FAQ-RAW-IMPORT.md](./FAQ-RAW-IMPORT.md) | RAW 导入 FAQ 与用户指引 |
 
 ---
 
@@ -187,6 +215,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-05-30 | 新增 Phase 7 管线性能 PRD 索引 |
 | 2026-05-30 | 新增 Phase 6 与艺术专项文档索引 |
 | 2026-05-19 | P0 文档包 |
 | 2026-05-19 | P0.5 工程执行文档 + validate 脚本 + fixtures |

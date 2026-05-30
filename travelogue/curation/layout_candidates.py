@@ -68,8 +68,8 @@ def generate_day_bucket_candidates(
     layout_state: ScreenLayoutPlannerState | None,
     beam_width: int = 3,
     budget: SearchBudget | None = None,
-) -> list[list[dict]]:
-    """Return up to beam_width distinct screen plans for one day bucket."""
+) -> list[tuple[str, list[dict]]]:
+    """Return up to beam_width distinct (variant_name, screen_plan) pairs for one day bucket."""
     cap = beam_width
     if budget is not None:
         cap = min(cap, budget.max_candidates_per_bucket)
@@ -126,31 +126,30 @@ def generate_day_bucket_candidates(
         )
 
     seen: set[tuple[tuple[str, tuple[str, ...]], ...]] = set()
-    candidates: list[list[dict]] = []
-    for _name, extra in variants:
+    candidates: list[tuple[str, list[dict]]] = []
+    for name, extra in variants:
         if len(candidates) >= cap:
             break
-        if budget is not None and not budget.can_evaluate():
+        if budget is not None and not budget.can_generate():
             break
         state = _clone_layout_state(layout_state)
         plan = plan_screens_for_chapter(bucket, layout_state=state, **common, **extra)
         if budget is not None:
-            budget.note_evaluation()
+            budget.note_generation()
         sig = _plan_signature(plan)
         if sig in seen or not plan:
             continue
         seen.add(sig)
-        candidates.append(plan)
-    if not candidates and (budget is None or budget.can_evaluate()):
+        candidates.append((name, plan))
+    if not candidates and (budget is None or budget.can_generate()):
         if budget is not None:
-            budget.note_evaluation()
-        candidates.append(
-            plan_screens_for_chapter(
-                bucket,
-                layout_state=_clone_layout_state(layout_state),
-                **common,
-                include_chapter_hero=True,
-                preferred_hero_id=preferred_hero_id,
-            )
+            budget.note_generation()
+        fallback = plan_screens_for_chapter(
+            bucket,
+            layout_state=_clone_layout_state(layout_state),
+            **common,
+            include_chapter_hero=True,
+            preferred_hero_id=preferred_hero_id,
         )
+        candidates.append(("with_hero", fallback))
     return candidates[:cap]

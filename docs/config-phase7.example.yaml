@@ -1,0 +1,26 @@
+# Phase 7 · 极速管线推荐 config 快照（验收 / G0 benchmark 用）
+# 用法：复制为 config.yaml 或与现有 config merge 测试
+
+vision:
+  enabled: auto
+  batch_size: 16
+  session_singleton: true
+  prefer_web_derivative: true
+  web_derivative_cosine_max: 0.02
+  preload_on_folder_pick: true
+
+ingest:
+  webp_method: 4
+  shared_color_thumb_px: 32
+  face_detect_max_edge: 0
+
+pipeline:
+  parallel_embed: false
+  parallel_embed_chunk: 32
+
+layout_scoring:
+  skip_duplicate_signatures: true
+  incremental: false
+
+clustering:
+  deterministic: true

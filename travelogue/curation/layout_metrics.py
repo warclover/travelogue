@@ -191,6 +191,13 @@ def compute_layout_quality_metrics(
     }
 
 
+def _all_screens(chapters: list[dict]) -> list[dict]:
+    screens: list[dict] = []
+    for ch in chapters:
+        screens.extend(ch.get("screens") or [])
+    return screens
+
+
 def compute_layout_metrics(
     chapters: list[dict],
     assets: list[dict] | None = None,
@@ -210,7 +217,9 @@ def compute_layout_metrics(
     if assets_by_id:
         from travelogue.curation.layout_scoring import score_gravity_balance
 
-        out["gravityBalance"] = round(score_gravity_balance(chapters, assets_by_id), 4)
+        out["gravityBalance"] = round(
+            score_gravity_balance(_all_screens(chapters), assets_by_id), 4
+        )
         out["longshotVisualVariety"] = longshot_visual_variety(chapters, assets_by_id)
     if assets:
         out.update(

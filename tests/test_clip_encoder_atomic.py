@@ -60,16 +60,10 @@ def test_subject_class_not_written_when_clip_fails_midbatch(tmp_path: Path) -> N
     assert encoder._ensure_clip(), "open_clip + torch must be importable for this test"
     real_encode = encoder._model.encode_image
 
-    feature_dim = encoder._text_features.shape[1]  # type: ignore[union-attr]
-    call_counter = {"n": 0}
-
-    def flaky_encode(_tensor):
-        call_counter["n"] += 1
-        if call_counter["n"] == 1:
-            return torch.ones((1, feature_dim), dtype=torch.float32)
+    def always_fail(_tensor):
         raise RuntimeError("simulated CLIP mid-batch failure")
 
-    encoder._model.encode_image = flaky_encode  # type: ignore[assignment]
+    encoder._model.encode_image = always_fail  # type: ignore[assignment]
     try:
         with pytest.raises(RuntimeError):
             encoder._embed_clip(assets, trip_dir=tmp_path, deterministic=True)

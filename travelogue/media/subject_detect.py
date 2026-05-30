@@ -25,6 +25,30 @@ def _opencv_available() -> bool:
         return False
 
 
+_cascade_classifier = None
+
+
+def _get_cascade_classifier():
+    """P7-B1 · lazy singleton Haar cascade."""
+    global _cascade_classifier
+    if _cascade_classifier is not None:
+        return _cascade_classifier
+    import cv2
+
+    cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+    classifier = cv2.CascadeClassifier(cascade_path)
+    if classifier.empty():
+        return None
+    _cascade_classifier = classifier
+    return _cascade_classifier
+
+
+def reset_cascade_classifier() -> None:
+    """Clear cached classifier (tests)."""
+    global _cascade_classifier
+    _cascade_classifier = None
+
+
 def detect_faces_in_image(
     img: Image.Image,
     *,
@@ -42,9 +66,8 @@ def detect_faces_in_image(
     rgb = img.convert("RGB")
     arr = np.array(rgb)
     gray = cv2.cvtColor(arr, cv2.COLOR_RGB2GRAY)
-    cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-    classifier = cv2.CascadeClassifier(cascade_path)
-    if classifier.empty():
+    classifier = _get_cascade_classifier()
+    if classifier is None:
         return []
     faces = classifier.detectMultiScale(
         gray,

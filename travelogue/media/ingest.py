@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import time
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -20,7 +21,7 @@ from travelogue.curation.media_classify import (
     summarize_media_classes,
 )
 from travelogue.media import ingest_checkpoint as icp
-from travelogue.media.color_metrics import dominant_tone_hex, mean_luma
+from travelogue.media.color_metrics import color_metrics_from_thumb, dominant_tone_hex, mean_luma
 from travelogue.media.heuristic_tags import build_heuristic_tags
 from travelogue.media.ingest_preview import preview_multi_journey
 from travelogue.media.subject_detect import analyze_subject
@@ -41,6 +42,75 @@ HEIC_SUFFIXES = {".heic", ".heif"}
 MIN_EDGE_PX = 320
 INGEST_PROGRESS_EVERY_N = 5
 INGEST_MIN_ASSETS_DEFAULT = 4
+
+RAW_UNSUPPORTED_MESSAGE = (
+    "检测到 RAW 原片格式（如 .CR3/.NEF/.ARW）。当前版本不支持 RAW，请先转换为 JPG 后重试。"
+)
+
+
+def _normalize_raw_suffix(suffix: str) -> str:
+    s = suffix.lower().strip()
+    return s if s.startswith(".") else f".{s}"
+
+
+def find_raw_files_in_directory(
+    directory: Path,
+    *,
+    blocklist: tuple[str, ...],
+    recursive: bool = True,
+) -> list[Path]:
+    """Return RAW paths under *directory* matching *blocklist* (P7-RAW-GATE)."""
+    normalized = frozenset(_normalize_raw_suffix(s) for s in blocklist)
+    root = directory.resolve()
+    hits: list[Path] = []
+    iterator = directory.rglob("*") if recursive else directory.iterdir()
+    for path in iterator:
+        if path.is_symlink():
+            continue
+        if not path.is_file():
+            continue
+        try:
+            path.resolve().relative_to(root)
+        except (ValueError, OSError):
+            continue
+        if _normalize_raw_suffix(path.suffix) in normalized:
+            hits.append(path)
+    return hits
+
+
+def _raise_raw_unsupported(raw_files: list[Path], *, sample_limit: int = 5) -> None:
+    samples = [p.name for p in raw_files[: max(1, sample_limit)]]
+    suffixes = sorted({p.suffix.lower() for p in raw_files})
+    detail = f"发现 {len(raw_files)} 个 RAW 文件"
+    if suffixes:
+        detail += f"（{', '.join(suffixes)}）"
+    if samples:
+        detail += f"；示例：{', '.join(samples)}"
+    raise IngestError("E_INGEST_RAW_UNSUPPORTED", f"{RAW_UNSUPPORTED_MESSAGE} {detail}")
+
+
+def guard_raw_in_directory(
+    directory: Path,
+    cfg: IngestConfig,
+    *,
+    recursive: bool = True,
+) -> dict[str, Any]:
+    """Scan for RAW files and raise when reject_raw is enabled."""
+    stats: dict[str, Any] = {"rawRejectedCount": 0, "rawRejectedSuffixes": []}
+    if not cfg.reject_raw:
+        return stats
+    raw_files = find_raw_files_in_directory(
+        directory,
+        blocklist=cfg.raw_blocklist_suffixes,
+        recursive=recursive,
+    )
+    if not raw_files:
+        return stats
+    stats["rawRejectedCount"] = len(raw_files)
+    stats["rawRejectedSuffixes"] = sorted({p.suffix.lower() for p in raw_files})
+    stats["rawRejectedSamples"] = [p.name for p in raw_files[: cfg.raw_detect_sample_limit]]
+    _raise_raw_unsupported(raw_files, sample_limit=cfg.raw_detect_sample_limit)
+    return stats
 
 
 class IngestError(Exception):
@@ -63,6 +133,7 @@ class IngestAssetBuildContext:
     max_tags: int
     geocode_enabled: bool
     dual_ingest: bool = False
+    elapsed_acc: dict[str, float] | None = None
 
 
 @dataclass
@@ -131,9 +202,21 @@ def scan_image_paths(
     max_photos: int = 250,
     recursive: bool = True,
     min_edge_px: int = MIN_EDGE_PX,
+    reject_raw: bool = True,
+    raw_blocklist_suffixes: tuple[str, ...] | None = None,
+    raw_detect_sample_limit: int = 5,
 ) -> tuple[list[Path], dict]:
     if not directory.is_dir():
         raise IngestError("E_INGEST_NOT_DIR", f"not a directory: {directory}")
+
+    from travelogue.config import IngestConfig
+
+    raw_cfg = IngestConfig(
+        reject_raw=reject_raw,
+        raw_blocklist_suffixes=raw_blocklist_suffixes or IngestConfig().raw_blocklist_suffixes,
+        raw_detect_sample_limit=raw_detect_sample_limit,
+    )
+    raw_stats = guard_raw_in_directory(directory, raw_cfg, recursive=recursive)
 
     candidates: list[Path] = []
     iterator = directory.rglob("*") if recursive else directory.iterdir()
@@ -147,7 +230,7 @@ def scan_image_paths(
     if not candidates:
         raise IngestError("E_INGEST_EMPTY", f"no images in {directory}")
 
-    stats = {"skipped_small": 0, "skipped_open": 0}
+    stats = {"skipped_small": 0, "skipped_open": 0, **raw_stats}
     accepted: list[tuple[datetime, str, Path]] = []
 
     for path in candidates:
@@ -272,9 +355,13 @@ def _resolve_place_city(
 
 def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) -> dict:
     cfg = ctx.cfg
+    acc = ctx.elapsed_acc
     aspect_kind = classify_aspect(photo.img.width, photo.img.height)
     focal = (0.5, 0.45)
+    t_faces = time.monotonic()
     subj = analyze_subject(photo.img, min_face_size=cfg.face_min_size_px, enabled=cfg.detect_faces)
+    if acc is not None:
+        acc["faces"] = acc.get("faces", 0.0) + (time.monotonic() - t_faces) * 1000.0
     if subj.has_face:
         focal = subj.focal
         ctx.ingest_stats["faces_detected"] = ctx.ingest_stats.get("faces_detected", 0) + 1
@@ -283,15 +370,21 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
     if photo.photo.resolve() != dest_source.resolve() or not dest_source.is_file():
         save_jpeg_without_exif(photo.img, dest_source)
 
+    t_webp = time.monotonic()
     display_rel, srcset_rel, out_w, out_h, crop_m, crop_w = export_webp_variants(
         photo.img,
         ctx.assets_dir,
         photo.asset_id,
         widths=cfg.webp_widths,
         quality=cfg.webp_quality,
+        webp_method=cfg.webp_method,
         generate_crops=ctx.generate_crops,
         focal=focal,
     )
+    if acc is not None:
+        acc["webp"] = acc.get("webp", 0.0) + (time.monotonic() - t_webp) * 1000.0
+
+    luma_val, tone_hex = color_metrics_from_thumb(photo.img, thumb_px=cfg.shared_color_thumb_px)
 
     geo_obj, place = _resolve_place_city(
         photo.loaded, trip_dir=ctx.trip_dir, geocode_enabled=ctx.geocode_enabled
@@ -326,9 +419,9 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
         "focalPoint": {"x": focal[0], "y": focal[1]},
         "quality": {
             "sharpness": round(photo.sharpness, 2),
-            "meanLuma": round(mean_luma(photo.img), 4),
+            "meanLuma": round(luma_val, 4),
         },
-        "dominantTone": dominant_tone_hex(photo.img),
+        "dominantTone": tone_hex,
         "layoutEligible": True,
     }
     if photo.content_sig:
@@ -558,6 +651,7 @@ class _IngestLoopState:
     added: int
     skipped: int
     checkpoint_keys: set[str]
+    elapsed_acc: dict[str, float]
 
 
 def _process_one_ingest_photo(
@@ -575,6 +669,7 @@ def _process_one_ingest_photo(
     processed: int,
     total_photos: int,
     on_persist: Callable[[], None] | None,
+    on_asset_added: Callable[[dict], None] | None,
     emit_progress: Callable[[], None],
 ) -> None:
     # ADR-011: user_tier imports ingest symbols — keep lazy here.
@@ -585,7 +680,11 @@ def _process_one_ingest_photo(
     )
 
     sig = _file_signature(photo)
+    t_dedupe = time.monotonic()
     if dedupe and sig in state.known_md5:
+        state.elapsed_acc["dedupe"] = state.elapsed_acc.get("dedupe", 0.0) + (
+            time.monotonic() - t_dedupe
+        ) * 1000.0
         if upgrade_asset_tier(state.assets, sig, tier=user_tier):
             state.ingest_stats["tier_upgraded"] = state.ingest_stats.get("tier_upgraded", 0) + 1
         state.ingest_stats["deduped"] += 1
@@ -594,13 +693,21 @@ def _process_one_ingest_photo(
             emit_progress()
         return
 
+    t_decode = time.monotonic()
     try:
         loaded = _load_photo(photo)
     except IngestError:
+        state.elapsed_acc["decode"] = state.elapsed_acc.get("decode", 0.0) + (
+            time.monotonic() - t_decode
+        ) * 1000.0
         state.skipped += 1
         if _ingest_progress_tick(processed, total_photos):
             emit_progress()
         return
+
+    state.elapsed_acc["decode"] = state.elapsed_acc.get("decode", 0.0) + (
+        time.monotonic() - t_decode
+    ) * 1000.0
 
     img = loaded.image
     sharp = sharpness_score(img)
@@ -704,6 +811,8 @@ def _process_one_ingest_photo(
         state.ingest_stats.setdefault("suspected_thumbnail_ids", []).append(asset_id)
     if replace_index is None:
         state.added += 1
+    if on_asset_added is not None:
+        on_asset_added(entry)
     state.ingest_stats[f"{loaded.date_source}_dates"] = (
         state.ingest_stats.get(f"{loaded.date_source}_dates", 0) + 1
     )
@@ -804,6 +913,7 @@ def ingest_into_trip(
     on_progress: Callable[[int, int], None] | None = None,
     resume_ingest: bool = True,
     on_persist: Callable[[], None] | None = None,
+    on_asset_added: Callable[[dict], None] | None = None,
     min_assets: int = INGEST_MIN_ASSETS_DEFAULT,
 ) -> IngestResult:
     """
@@ -835,6 +945,10 @@ def ingest_into_trip(
     assets_dir.mkdir(parents=True, exist_ok=True)
 
     scan_root = from_dir or source_dir
+    if from_dir:
+        raw_stats = guard_raw_in_directory(from_dir, cfg, recursive=recursive)
+    else:
+        raw_stats = guard_raw_in_directory(scan_root, cfg, recursive=recursive)
     scan = _scan_photos_for_ingest(
         trip=trip,
         trip_dir=trip_dir,
@@ -868,7 +982,10 @@ def ingest_into_trip(
         "deduped_burst": 0,
         "deduped_phash_replaced": 0,
         "deduped_burst_replaced": 0,
+        **raw_stats,
     }
+    ingest_t0 = time.monotonic()
+    elapsed_ms: dict[str, float] = {}
     if checkpoint_keys and from_dir:
         before = len(photo_tiers)
         photo_tiers = [
@@ -890,6 +1007,7 @@ def ingest_into_trip(
         added=0,
         skipped=0,
         checkpoint_keys=checkpoint_keys,
+        elapsed_acc={},
     )
 
     build_ctx = IngestAssetBuildContext(
@@ -903,6 +1021,7 @@ def ingest_into_trip(
         max_tags=max_tags,
         geocode_enabled=geocode_enabled,
         dual_ingest=dual_ingest,
+        elapsed_acc=loop_state.elapsed_acc,
     )
 
     total_photos = len(photo_tiers)
@@ -928,6 +1047,7 @@ def ingest_into_trip(
             processed=processed,
             total_photos=total_photos,
             on_persist=on_persist,
+            on_asset_added=on_asset_added,
             emit_progress=_emit_progress,
         )
 
@@ -944,6 +1064,10 @@ def ingest_into_trip(
         cfg=cfg,
         min_assets=min_assets,
     )
+    elapsed_ms["total"] = round((time.monotonic() - ingest_t0) * 1000.0, 2)
+    for key, val in loop_state.elapsed_acc.items():
+        elapsed_ms[key] = round(val, 2)
+    ingest_stats["elapsedMs"] = elapsed_ms
     _apply_ingest_pipeline_state(
         trip=trip,
         batch=batch,

@@ -14,6 +14,20 @@ def test_budget_exhausts_on_max_evaluations():
     b.note_evaluation()
     assert not b.can_evaluate()
     assert b.exhausted
+    assert b.can_generate()
+
+
+def test_generation_vs_evaluation_split():
+    b = SearchBudget(max_evaluations_per_trip=1, search_timeout_ms=60_000)
+    assert b.can_generate()
+    b.note_generation(3)
+    assert b.generations == 3
+    assert b.evaluations == 0
+    assert b.can_generate()
+    assert b.can_evaluate()
+    b.note_evaluation()
+    assert not b.can_evaluate()
+    assert b.can_generate()
 
 
 def test_budget_times_out():

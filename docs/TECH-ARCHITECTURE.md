@@ -330,3 +330,73 @@ Agent 2 失败：L1/L2 错误列表 → 自动重试 prompt（≤2 次）。
 python scripts/phase6_apply_p5_rollback.py --dry-run
 python scripts/phase6_apply_p5_rollback.py
 ```
+
+---
+
+## 17. Phase 7 · 管线性能架构（P7-Perf）
+
+> 关联：[PRD-PHASE7.md](./PRD-PHASE7.md) · [IMPLEMENTATION-PHASE7.md](./IMPLEMENTATION-PHASE7.md)
+
+Phase 7 在不改变编排语义的前提下，对 **ingest → CLIP embed → clustering → layout beam** 主链路做推理与 I/O 加速，并通过 NR 双门槛与 perf eval 记录保证等价性。
+
+### 17.1 CLIP 推理层
+
+| 能力 | 默认 | 配置键 |
+|------|------|--------|
+| Batch 推理 | 开启 | `vision.batch_size` |
+| 进程单例 | 开启 | `vision.session_singleton` |
+| I/O 预取 | 开启 | （内置于 `clip_encoder.py`） |
+| Web 800px 优先 | 开启 | `vision.prefer_web_derivative` |
+| 选文件夹预热 | 开启 | `vision.preload_on_folder_pick` |
+| Auto batch 探测 | 可选 | `vision.auto_tune` |
+| OOM/慢批降级 | 开启 | `vision.dynamic_backoff` |
+
+**降级路径**：batch → 半批 → 逐张 fallback；决策写入 `embedStats.decisionLog`。
+
+### 17.2 Ingest 微优化
+
+| 优化 | 模块 |
+|------|------|
+| Haar 懒加载单例 | `media/subject_detect.py` |
+| 共享色彩缩略图 | `color_metrics.py` · `ingest.py` |
+| 可配置 WebP method | `image_ops.py` · `ingest.webp_method` |
+| RAW 前置拦截 | `ingest.reject_raw` → `E_INGEST_RAW_UNSUPPORTED` |
+| 分阶段计时 | `ingestStats.elapsedMs`（decode / webp / faces / dedupe / total） |
+
+### 17.3 Embedding Cache 与并行
+
+| 机制 | 说明 |
+|------|------|
+| ABI 版本 + config 指纹 | `clustering.cache_abi_version`；失配触发 full rebuild |
+| 原子写入 | tmp + `os.replace` + 写入锁 |
+| 增量模式 | `reuse` / `append` / `prune` / `full` |
+| 并行 embed | `pipeline.parallel_embed` + `ParallelEmbedCoordinator` |
+| Cache 复用遥测 | `curation.clustering.embedSkipped=true` |
+
+### 17.4 Layout Beam 加速
+
+| 优化 | 配置 |
+|------|------|
+| 签名相同跳过评分 | `layout.scoring.skip_duplicate_signatures` |
+| SearchBudget 分账 | `generations`（超时门禁）vs `evaluations`（次数门禁） |
+| 浅拷贝 chapters | `_shallow_copy_chapters`（gallery 仍 deepcopy screens） |
+| 强确定性排序 | `clustering.deterministic_strict` → 候选稳定排序 |
+
+### 17.5 观测与验收
+
+| 字段 / 脚本 | 用途 |
+|-------------|------|
+| `trip.pipeline.timings` | `ingestMs` · `embedMs` · `clusterMs` · `curateMs` · `renderMs` · `totalMs` |
+| `curation.clustering.embedStats` | batch 大小、web derivative 命中率、降级次数、`cacheHitRatio` |
+| `scripts/phase7_benchmark_run.py` | 分阶段 timed benchmark（写 perf-eval） |
+| `scripts/phase7_pipeline_perf.py` | 分项 benchmark + p95 AC 校验 |
+| `scripts/phase7_equivalence_check.py` | NR 双门槛（fixed=100%，real≥95%） |
+| `scripts/phase7_gate_run.py` | perf + NR 一键门禁 |
+| `docs/acceptance-records/phase7-perf-eval.json` | G0/G1 perf 记录模板 |
+
+### 17.6 回滚
+
+```bash
+python scripts/phase7_verify_rollback.py
+# 逐项关闭 fast-path：见 docs/config-phase7.example.yaml 注释与 tests/test_phase7_rollback_flags.py
+```

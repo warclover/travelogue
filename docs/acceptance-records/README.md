@@ -9,6 +9,15 @@
 
 ---
 
+## Phase 7（性能专项 · 开发准备）
+
+| 文件 | 用途 | 命令 / 说明 |
+|------|------|-------------|
+| [phase7-perf-eval.json](./phase7-perf-eval.json) | AC-P7 分阶段性能 + NR-P7 | `python scripts/phase7_pipeline_perf.py --write` |
+| [phase7-rollout-log.json](./phase7-rollout-log.json) | G0-G3 灰度与回滚 | 手动记录 + 发布值班更新 |
+
+---
+
 ## Phase 6（开发准备）
 
 | 文件 | 用途 | 命令 / 说明 |

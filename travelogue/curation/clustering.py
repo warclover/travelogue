@@ -14,7 +14,12 @@ from travelogue.curation.curate import layout_eligible_assets
 from travelogue.curation.geo_events import GeoSegment, detect_geo_events, gps_coverage_ratio
 from travelogue.curation.scene_clusters import assign_scene_cluster_fields, compute_scene_clusters
 from travelogue.vision.cache import prepare_scene_embeddings, embedding_cache_is_corrupt
-from travelogue.vision.clip_encoder import ClipEncoder, clip_torch_available, clip_weights_likely_cached, vision_stack_available
+from travelogue.vision.clip_encoder import (
+    get_clip_encoder,
+    clip_torch_available,
+    clip_weights_likely_cached,
+    vision_stack_available,
+)
 
 _log = logging.getLogger(__name__)
 
@@ -266,18 +271,54 @@ class ClusteringLayer:
         scene_cfg = cfg.clustering.scene
         timeout = max(_MIN_SCENE_TIMEOUT_SEC, int(scene_cfg.timeout_sec))
 
+        from travelogue.vision.embed_cancel import (
+            clear_embedding_cancelled,
+            embedding_cancelled,
+            set_embedding_cancelled,
+        )
+
+        clear_embedding_cancelled(trip_dir)
+
         def _work() -> tuple[int, str]:
-            encoder = ClipEncoder(
-                model_name=cfg.vision.model.replace("/", "-"),
-                subject_prompts=cfg.vision.subject_prompts or None,
-            )
+            if embedding_cancelled(trip_dir):
+                return 0, ""
+            if cfg.clustering.deterministic_strict:
+                import os
+                import random
+
+                os.environ.setdefault("PYTHONHASHSEED", "0")
+                random.seed(0)
+                try:
+                    import numpy as np
+
+                    np.random.seed(0)
+                except ImportError:
+                    pass
+                try:
+                    import torch
+
+                    torch.manual_seed(0)
+                except ImportError:
+                    pass
+
+            encoder = get_clip_encoder(cfg)
+            deterministic = cfg.clustering.deterministic or cfg.clustering.deterministic_strict
             embed, cache_plan = prepare_scene_embeddings(
                 trip_dir,
                 assets,
                 encoder,
                 force_recluster=cfg.clustering.force_recluster,
-                deterministic=cfg.clustering.deterministic,
+                deterministic=deterministic,
+                cfg=cfg,
             )
+            if embedding_cancelled(trip_dir):
+                return 0, ""
+            if encoder.last_embed_stats is not None:
+                embed_stats = encoder.last_embed_stats.to_dict()
+            else:
+                embed_stats = {}
+            embed_stats["cacheHitRatio"] = round(cache_plan.cache_hit_ratio(), 4)
+            trip.setdefault("curation", {}).setdefault("clustering", {})["embedStats"] = embed_stats
             log.add(
                 "cache_plan",
                 f"mode={cache_plan.mode}",
@@ -286,6 +327,12 @@ class ClusteringLayer:
                     f"new={len(cache_plan.new_ids)} removed={len(cache_plan.removed_ids)}"
                 ),
             )
+            cluster_meta = trip.setdefault("curation", {}).setdefault("clustering", {})
+            if cache_plan.mode == "reuse":
+                cluster_meta["embedSkipped"] = True
+                log.add("embed_skip", "reused embedding cache; CLIP embed skipped")
+            elif "embedSkipped" in cluster_meta:
+                cluster_meta.pop("embedSkipped", None)
             if not embed.asset_ids:
                 return 0, ""
             scene_result = compute_scene_clusters(
@@ -296,6 +343,13 @@ class ClusteringLayer:
                 algorithm=scene_cfg.algorithm,
                 deterministic=cfg.clustering.deterministic,
             )
+            if scene_result.algorithm_used != scene_cfg.algorithm:
+                log.add(
+                    "fallback",
+                    f"scene algorithm fallback: {scene_cfg.algorithm} -> {scene_result.algorithm_used}",
+                )
+            if embedding_cancelled(trip_dir):
+                return 0, ""
             assign_scene_cluster_fields(
                 trip,
                 embed.asset_ids,
@@ -303,12 +357,12 @@ class ClusteringLayer:
                 scene_result.clusters,
                 cluster_source=embed.source,
                 model=embed.model,
-                algorithm=scene_cfg.algorithm,
+                algorithm=scene_result.algorithm_used,
                 probabilities_by_id=scene_result.probabilities_by_id,
             )
             log.add(
                 "cluster_assign",
-                f"scene clusters via {embed.source} ({scene_cfg.algorithm})",
+                f"scene clusters via {embed.source} ({scene_result.algorithm_used})",
                 input_summary=f"clusterCount={len(scene_result.clusters)}",
             )
             return len(scene_result.clusters), hints[-1] if hints else "正在分析场景与行程…"
@@ -322,6 +376,7 @@ class ClusteringLayer:
             count, work_hint = future.result(timeout=timeout)
             return count, hints[0] if hints else work_hint
         except FuturesTimeoutError:
+            set_embedding_cancelled(trip_dir)
             log.add("fallback", "E_CLUSTER_VISION_TIMEOUT: scene analysis skipped")
             return 0, ""
         except Exception as exc:

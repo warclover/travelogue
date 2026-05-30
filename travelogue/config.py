@@ -34,11 +34,34 @@ except ImportError:  # pragma: no cover
 from travelogue.llm.presets import PROVIDER_PRESETS
 
 
+DEFAULT_RAW_BLOCKLIST_SUFFIXES: tuple[str, ...] = (
+    ".cr2",
+    ".cr3",
+    ".nef",
+    ".nrw",
+    ".arw",
+    ".srf",
+    ".sr2",
+    ".dng",
+    ".rw2",
+    ".orf",
+    ".raf",
+    ".pef",
+    ".x3f",
+    ".kdc",
+    ".erf",
+    ".3fr",
+    ".iiq",
+)
+
+
 @dataclass
 class IngestConfig:
     max_photos: int = 250
     webp_widths: tuple[int, ...] = (800, 1600, 2400)
     webp_quality: int = 82
+    webp_method: int = 4
+    shared_color_thumb_px: int = 32
     generate_crops: bool = False
     min_edge_px: int = 320
     phash_threshold: int = 8
@@ -55,6 +78,9 @@ class IngestConfig:
     material_dir_names: tuple[str, ...] = ("素材上传", "素材", "material", "extras")
     featured_priority_on_truncation: bool = True
     warn_featured_count_above: int = 30
+    reject_raw: bool = True
+    raw_blocklist_suffixes: tuple[str, ...] = DEFAULT_RAW_BLOCKLIST_SUFFIXES
+    raw_detect_sample_limit: int = 5
 
 
 @dataclass
@@ -104,7 +130,10 @@ class ClusteringConfig:
     segment_curate_mode: Literal["event_first", "date_fallback"] = "event_first"
     scene_cluster_mode: Literal["run_aware", "off"] = "run_aware"
     deterministic: bool = True
+    deterministic_strict: bool = False
     force_recluster: bool = False
+    cache_abi_version: str = "v1"
+    cache_config_fingerprint: str = "auto"
     geo: GeoClusterConfig = field(default_factory=GeoClusterConfig)
     scene: SceneClusterConfig = field(default_factory=SceneClusterConfig)
     enable_scene_sub_segments: bool = True
@@ -120,6 +149,15 @@ class VisionConfig:
     model: str = "ViT-B/32"
     max_tags_per_asset: int = 5
     subject_prompts: tuple[str, ...] = ()
+    batch_size: int = 16
+    session_singleton: bool = True
+    prefer_web_derivative: bool = True
+    preload_on_folder_pick: bool = True
+    batch_auto_tune: bool = True
+    batch_auto_tune_samples: int = 8
+    dynamic_backoff: bool = True
+    prefetch: bool = True
+    web_derivative_cosine_max: float = 0.02
 
 
 @dataclass
@@ -159,6 +197,12 @@ class LlmConfig:
 
 
 @dataclass
+class PipelineConfig:
+    parallel_embed: bool = False
+    parallel_embed_chunk: int = 32
+
+
+@dataclass
 class LayoutScoringConfig:
     """V2 layout search (ADR-002); disabled by default = legacy behavior."""
     enabled: bool = False
@@ -171,6 +215,8 @@ class LayoutScoringConfig:
     max_evaluations_per_trip: int = 500
     allow_burst_split: bool = False
     subject_run_tolerance: int = 1
+    skip_duplicate_signatures: bool = True
+    incremental: bool = False
     weights: dict[str, float] = field(
         default_factory=lambda: {
             "aspect_match": 0.0,
@@ -255,6 +301,7 @@ class Phase6ObservabilityConfig:
 class AppConfig:
     trips_dir: Path = field(default_factory=_default_trips_dir)
     ingest: IngestConfig = field(default_factory=IngestConfig)
+    pipeline: PipelineConfig = field(default_factory=PipelineConfig)
     layout: LayoutConfig = field(default_factory=LayoutConfig)
     clustering: ClusteringConfig = field(default_factory=ClusteringConfig)
     vision: VisionConfig = field(default_factory=VisionConfig)
@@ -340,10 +387,17 @@ def _phase6_from_dict(raw: dict[str, Any]) -> Phase6ObservabilityConfig:
 
 def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
     widths = raw.get("webp_widths") or [800, 1600, 2400]
+    raw_suffixes = raw.get("raw_blocklist_suffixes") or raw.get("rawBlocklistSuffixes")
+    if isinstance(raw_suffixes, list) and raw_suffixes:
+        suffixes = tuple(str(s).lower() if str(s).startswith(".") else f".{str(s).lower()}" for s in raw_suffixes)
+    else:
+        suffixes = DEFAULT_RAW_BLOCKLIST_SUFFIXES
     return IngestConfig(
         max_photos=int(raw.get("max_photos", 250)),
         webp_widths=tuple(int(w) for w in widths),
         webp_quality=int(raw.get("webp_quality", 82)),
+        webp_method=int(raw.get("webp_method", 4)),
+        shared_color_thumb_px=int(raw.get("shared_color_thumb_px", raw.get("sharedColorThumbPx", 32))),
         generate_crops=bool(raw.get("generate_crops", False)),
         min_edge_px=int(raw.get("min_edge_px", 320)),
         phash_threshold=int(raw.get("phash_threshold", 8)),
@@ -360,6 +414,9 @@ def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
         material_dir_names=tuple(str(x) for x in (raw.get("material_dir_names") or ["素材上传", "素材", "material", "extras"])),
         featured_priority_on_truncation=bool(raw.get("featured_priority_on_truncation", True)),
         warn_featured_count_above=int(raw.get("warn_featured_count_above", 30)),
+        reject_raw=bool(raw.get("reject_raw", raw.get("rejectRaw", True))),
+        raw_blocklist_suffixes=suffixes,
+        raw_detect_sample_limit=int(raw.get("raw_detect_sample_limit", raw.get("rawDetectSampleLimit", 5))),
     )
 
 
@@ -378,6 +435,10 @@ def _layout_scoring_from_dict(raw: dict[str, Any]) -> LayoutScoringConfig:
         max_evaluations_per_trip=int(raw.get("max_evaluations_per_trip", 500)),
         allow_burst_split=bool(raw.get("allow_burst_split", False)),
         subject_run_tolerance=int(raw.get("subject_run_tolerance", 1)),
+        skip_duplicate_signatures=bool(
+            raw.get("skip_duplicate_signatures", raw.get("skipDuplicateSignatures", True))
+        ),
+        incremental=bool(raw.get("incremental", False)),
         weights=weights,
     )
 
@@ -478,7 +539,14 @@ def _clustering_from_dict(raw: dict[str, Any]) -> ClusteringConfig:
         segment_curate_mode=segment_mode,
         scene_cluster_mode=scene_mode,
         deterministic=bool(raw.get("deterministic", True)),
+        deterministic_strict=bool(
+            raw.get("deterministicStrict", raw.get("deterministic_strict", False))
+        ),
         force_recluster=bool(raw.get("forceRecluster", raw.get("force_recluster", False))),
+        cache_abi_version=str(raw.get("cacheAbiVersion", raw.get("cache_abi_version", "v1"))),
+        cache_config_fingerprint=str(
+            raw.get("cacheConfigFingerprint", raw.get("cache_config_fingerprint", "auto"))
+        ),
         geo=_geo_cluster_from_dict(geo_raw),
         scene=_scene_cluster_from_dict(scene_raw),
         enable_scene_sub_segments=bool(
@@ -508,6 +576,32 @@ def _vision_from_dict(raw: dict[str, Any]) -> VisionConfig:
         model=str(raw.get("model", "ViT-B/32")),
         max_tags_per_asset=int(raw.get("max_tags_per_asset", 5)),
         subject_prompts=prompts,
+        batch_size=int(raw.get("batch_size", raw.get("batchSize", 16))),
+        session_singleton=bool(raw.get("session_singleton", raw.get("sessionSingleton", True))),
+        prefer_web_derivative=bool(
+            raw.get("prefer_web_derivative", raw.get("preferWebDerivative", True))
+        ),
+        preload_on_folder_pick=bool(
+            raw.get("preload_on_folder_pick", raw.get("preloadOnFolderPick", True))
+        ),
+        batch_auto_tune=bool(raw.get("batch_auto_tune", raw.get("batchAutoTune", True))),
+        batch_auto_tune_samples=int(
+            raw.get("batch_auto_tune_samples", raw.get("batchAutoTuneSamples", 8))
+        ),
+        dynamic_backoff=bool(raw.get("dynamic_backoff", raw.get("dynamicBackoff", True))),
+        prefetch=bool(raw.get("prefetch", True)),
+        web_derivative_cosine_max=float(
+            raw.get("web_derivative_cosine_max", raw.get("webDerivativeCosineMax", 0.02))
+        ),
+    )
+
+
+def _pipeline_from_dict(raw: dict[str, Any]) -> PipelineConfig:
+    return PipelineConfig(
+        parallel_embed=bool(raw.get("parallel_embed", raw.get("parallelEmbed", False))),
+        parallel_embed_chunk=int(
+            raw.get("parallel_embed_chunk", raw.get("parallelEmbedChunk", 32))
+        ),
     )
 
 
@@ -638,6 +732,7 @@ def load_config(path: Path | None = None) -> AppConfig:
     curate_layout_raw = curate_raw.get("layout") if isinstance(curate_raw.get("layout"), dict) else {}
     render_raw = data.get("render") if isinstance(data.get("render"), dict) else {}
     clustering_raw = data.get("clustering") if isinstance(data.get("clustering"), dict) else {}
+    pipeline_raw = data.get("pipeline") if isinstance(data.get("pipeline"), dict) else {}
     studio_raw = data.get("studio") if isinstance(data.get("studio"), dict) else {}
     phase6_raw = data.get("phase6") if isinstance(data.get("phase6"), dict) else {}
     banned_raw = narrative_raw.get("banned_phrases") or []
@@ -651,6 +746,7 @@ def load_config(path: Path | None = None) -> AppConfig:
     return AppConfig(
         trips_dir=trips_dir,
         ingest=_ingest_from_dict(ingest_raw),
+        pipeline=_pipeline_from_dict(pipeline_raw),
         export=ExportConfig(max_zip_mb=int(export_raw.get("max_zip_mb", 25))),
         render=_render_from_dict(render_raw),
         layout=LayoutConfig(

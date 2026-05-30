@@ -46,7 +46,7 @@ class _SleepyEncoder:
         self._sleep_sec = sleep_sec
         self.called = False
 
-    def embed_assets(self, assets, *, trip_dir=None, deterministic=True):  # noqa: D401, ANN001
+    def embed_assets(self, assets, *, trip_dir=None, deterministic=True, **kwargs):  # noqa: D401, ANN001
         self.called = True
         time.sleep(self._sleep_sec)
         raise AssertionError("Sleepy encoder should have been cut off by timeout")
@@ -78,7 +78,11 @@ def test_scene_clustering_timeout_returns_before_clip_finishes(
         clustering_mod, "embedding_cache_is_corrupt", lambda _trip_dir: False
     )
     sleepy = _SleepyEncoder(sleep_sec=30)
-    monkeypatch.setattr(clustering_mod, "ClipEncoder", lambda **_: sleepy)
+
+    def _fake_encoder(_cfg=None):
+        return sleepy
+
+    monkeypatch.setattr(clustering_mod, "get_clip_encoder", _fake_encoder)
 
     started = time.perf_counter()
     result = ClusteringLayer().run(trip, trip_dir=tmp_path, cfg=cfg)

@@ -23,6 +23,15 @@ def _iter_rgb_pixels(img: Image.Image):
     yield from rgb.getdata()
 
 
+def color_metrics_from_thumb(img: Image.Image, *, thumb_px: int = 32) -> tuple[float, str]:
+    """P7-B2 · single resize for meanLuma + dominantTone."""
+    thumb_luma = img.convert("RGB").resize((thumb_px, thumb_px))
+    luma = mean_luma(thumb_luma)
+    tone_thumb = thumb_luma.resize((16, 16))
+    tone = dominant_tone_hex(tone_thumb)
+    return luma, tone
+
+
 def mean_luma(img: Image.Image) -> float:
     """Relative luminance in [0, 1] (sRGB)."""
     thumb = img.convert("RGB").resize((32, 32))

@@ -75,6 +75,36 @@ def _segment_dates(asset_ids: list[str], assets_by_id: dict[str, dict]) -> tuple
     return min(dates), max(dates)
 
 
+def _coalesce_small_scene_groups(
+    groups: list[tuple[int | None, list[str]]],
+    *,
+    min_photos_per_sub: int,
+) -> list[tuple[int | None, list[str]]]:
+    """Merge sub-threshold runs into adjacent groups so no asset_ids are dropped."""
+    if not groups:
+        return []
+    coalesced: list[tuple[int | None, list[str]]] = []
+    pending: list[str] = []
+    pending_cluster: int | None = None
+    for cluster_id, ids in groups:
+        bucket_ids = pending + ids
+        bucket_cluster = cluster_id if cluster_id is not None else pending_cluster
+        if len(bucket_ids) >= min_photos_per_sub:
+            coalesced.append((bucket_cluster, bucket_ids))
+            pending = []
+            pending_cluster = None
+        else:
+            pending = bucket_ids
+            pending_cluster = bucket_cluster if bucket_cluster is not None else cluster_id
+    if pending:
+        if coalesced:
+            last_cluster, last_ids = coalesced[-1]
+            coalesced[-1] = (last_cluster, last_ids + pending)
+        else:
+            coalesced.append((pending_cluster, pending))
+    return coalesced
+
+
 def split_geo_segment_by_scene(
     segment: GeoSegment,
     assets_by_id: dict[str, dict],
@@ -83,8 +113,13 @@ def split_geo_segment_by_scene(
 ) -> tuple[list[GeoSegment], list[SceneSplitExplain]]:
     """Split one geo segment when scene clusters change along the timeline."""
     groups = _group_assets_by_scene_run(segment.asset_ids, assets_by_id)
+    groups = _coalesce_small_scene_groups(groups, min_photos_per_sub=min_photos_per_sub)
     valid_groups = [(cid, ids) for cid, ids in groups if len(ids) >= min_photos_per_sub]
     if len(valid_groups) <= 1:
+        return [segment], []
+
+    assigned = {aid for _, ids in valid_groups for aid in ids}
+    if assigned != set(segment.asset_ids):
         return [segment], []
 
     explains: list[SceneSplitExplain] = []

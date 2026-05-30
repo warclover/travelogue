@@ -9,7 +9,7 @@ from pathlib import Path
 from travelogue.config import AppConfig, app_config_scope, get_config
 from travelogue.curation.curate import CurateError, run_curate
 from travelogue.demo.build import DemoError, resolve_demo_config
-from travelogue.media.ingest import IngestError, ingest_into_trip, scan_image_paths
+from travelogue.media.ingest import IngestError, RAW_UNSUPPORTED_MESSAGE, ingest_into_trip, scan_image_paths
 from travelogue.orchestrator.run import run_trip
 from travelogue.orchestrator.studio_hooks import StudioHooks
 from travelogue.runtime import AppContext
@@ -197,6 +197,22 @@ def run_studio_pipeline(
     photo_count = count_album_photos(album_dir, max_photos=cfg.ingest.max_photos)
     ingest_hint = ingest_stage_hint(photo_count)
 
+    if cfg.vision.preload_on_folder_pick and cfg.vision.enabled != "false":
+        if progress:
+            progress("ingest", 0, "正在预加载视觉模型…")
+        from travelogue.vision.clip_encoder import preload_clip_encoder
+
+        preload_clip_encoder(cfg)
+
+    pipeline_timings: dict[str, float] = {}
+    pipeline_t0 = time.monotonic()
+
+    def _flush_pipeline_timings(extra: dict[str, float] | None = None) -> None:
+        if extra:
+            pipeline_timings.update(extra)
+        pipeline_timings["totalMs"] = round((time.monotonic() - pipeline_t0) * 1000.0, 2)
+        trip.setdefault("pipeline", {})["timings"] = dict(pipeline_timings)
+
     def report(stage: str, index: int, hint: str | None = None) -> None:
         resolved = hint or (ingest_hint if stage == "ingest" else stage_hint(stage))
         if progress:
@@ -220,6 +236,11 @@ def run_studio_pipeline(
         app_ctx = AppContext(cfg=cfg, trips_root=trips_root.resolve())
         svc = app_ctx.trip_service()
         trip = svc.load(trip_json)
+        trip_rollout_id = str(trip.get("tripId") or slug).strip()
+        if trip_rollout_id:
+            from travelogue.curation.phase6_rollout import resolve_app_config_for_trip
+
+            cfg = resolve_app_config_for_trip(cfg, trip_rollout_id)
         # F-P4 M15: single-writer intent — mirrors meta.title/places + trip.userNotes
         # (never meta.userNotes, which is not in schema).
         place_raw = str(place or "").strip()
@@ -248,9 +269,24 @@ def run_studio_pipeline(
             )
 
         try:
+            parallel_embed = None
+            if cfg.pipeline.parallel_embed and cfg.vision.enabled != "false":
+                from travelogue.vision.parallel_embed import ParallelEmbedCoordinator
+
+                parallel_embed = ParallelEmbedCoordinator(
+                    trip_root,
+                    cfg=cfg,
+                    chunk_size=cfg.pipeline.parallel_embed_chunk,
+                )
+
             def persist_partial_ingest() -> None:
                 svc.save(trip, trip_json)
 
+            def on_asset_added(entry: dict) -> None:
+                if parallel_embed is not None:
+                    parallel_embed.offer(entry)
+
+            ingest_t0 = time.monotonic()
             ingest_result = ingest_into_trip(
                 trip,
                 trip_root,
@@ -260,9 +296,15 @@ def run_studio_pipeline(
                 app_cfg=cfg,
                 on_progress=ingest_progress if progress else None,
                 on_persist=persist_partial_ingest,
+                on_asset_added=on_asset_added if parallel_embed else None,
                 resume_ingest=True,
             )
+            if parallel_embed is not None:
+                parallel_embed.finish()
+            pipeline_timings["ingestMs"] = round((time.monotonic() - ingest_t0) * 1000.0, 2)
         except IngestError as exc:
+            if exc.code == "E_INGEST_RAW_UNSUPPORTED":
+                raise DemoError(exc.code, RAW_UNSUPPORTED_MESSAGE) from exc
             if exc.code in ("E_INGEST_TOO_FEW", "E_INGEST_EMPTY"):
                 raise DemoError("E_DEMO_TOO_FEW", str(exc)) from exc
             raise DemoError(exc.code, str(exc)) from exc
@@ -281,7 +323,16 @@ def run_studio_pipeline(
 
         # Emit clustering hint as part of the *curate* stage (the next user-facing
         # step) so the ingest hint stays semantically tied to ingest only.
+        cluster_t0 = time.monotonic()
         cluster_result = run_clustering_layer(trip, trip_dir=trip_root, cfg=cfg)
+        pipeline_timings["clusterMs"] = round((time.monotonic() - cluster_t0) * 1000.0, 2)
+        cluster_meta = (trip.get("curation") or {}).get("clustering") or {}
+        embed_stats = cluster_meta.get("embedStats") or {}
+        if cluster_meta.get("embedSkipped"):
+            pipeline_timings["embedMs"] = 0.0
+        else:
+            pipeline_timings["embedMs"] = float(embed_stats.get("elapsedMs") or 0.0)
+        _flush_pipeline_timings()
         cluster_notice = cluster_result.user_notice
         svc.save(trip, trip_json)
 
@@ -290,6 +341,7 @@ def run_studio_pipeline(
         else:
             report("curate", 2)
         try:
+            curate_t0 = time.monotonic()
             run_curate(
                 trip,
                 export_layout="auto",
@@ -297,6 +349,8 @@ def run_studio_pipeline(
                 trip_dir=trip_root,
                 cfg=cfg,
             )
+            pipeline_timings["curateMs"] = round((time.monotonic() - curate_t0) * 1000.0, 2)
+            _flush_pipeline_timings()
         except CurateError as exc:
             raise DemoError(exc.code, str(exc)) from exc
         svc.save(trip, trip_json)
@@ -306,6 +360,7 @@ def run_studio_pipeline(
             from travelogue.render.engine import render_trip_surfaces
             from travelogue.services.pipeline_state import trip_status
 
+            render_t0 = time.monotonic()
             render_trip_surfaces(
                 trip_json,
                 trip_root,
@@ -314,6 +369,9 @@ def run_studio_pipeline(
                 update_pipeline=False,
                 cfg=cfg,
             )
+            pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
+            _flush_pipeline_timings()
+            svc.save(trip, trip_json)
             report("render", 4)
             trip_final = svc.load(trip_json)
             if trip_status(trip_final) != "structure_draft":
@@ -351,6 +409,7 @@ def run_studio_pipeline(
 
         report("render", 4)
         try:
+            render_t0 = time.monotonic()
             run_trip(
                 trip_json,
                 from_stage="render",
@@ -363,6 +422,9 @@ def run_studio_pipeline(
             from travelogue.render.preview import render_preview_jpg
 
             render_preview_jpg(trip_json, trip_root=trip_root)
+            pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
+            _flush_pipeline_timings()
+            svc.save(trip, trip_json)
         except Exception as exc:
             code = getattr(exc, "code", "E_STUDIO_PIPELINE")
             raise DemoError(code, str(exc)) from exc

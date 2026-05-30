@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from travelogue.config import AppConfig
 from travelogue.curation.screen_tone import enrich_screen_tones
 from travelogue.render.context_types import (
     BreathPauseItemContext,
@@ -51,6 +52,7 @@ def build_chapters_render_context(
     trip_root: Path | None,
     meta_title: str,
     hook: str,
+    cfg: AppConfig | None = None,
 ) -> ChaptersRenderBundle:
     from travelogue.curation.chapter_items import resolve_chapter_items_for_render
     from travelogue.curation.layout_planner import aspect_kind_for_asset
@@ -109,15 +111,20 @@ def build_chapters_render_context(
     if is_longshot_surface:
         from travelogue.config import get_config
         from travelogue.curation.longshot_filter import chapters_for_longshot_render
+        from travelogue.curation.phase6_rollout import resolve_app_config_for_trip
 
-        cfg = get_config()
+        base_cfg = cfg or get_config()
+        trip_id = str(trip.get("tripId") or "").strip()
+        effective_cfg = (
+            resolve_app_config_for_trip(base_cfg, trip_id) if trip_id else base_cfg
+        )
         assets_by_id = {a["id"]: a for a in (trip.get("assets") or []) if a.get("id")}
         raw_chapters = chapters_for_longshot_render(
             raw_chapters,
             assets_by_id=assets_by_id,
-            enable_mmr=cfg.curate.enable_mmr_diversity,
-            mmr_lambda=cfg.curate.longshot_mmr_lambda,
-            max_consecutive_same_pattern=cfg.curate.max_consecutive_same_pattern,
+            enable_mmr=effective_cfg.curate.enable_mmr_diversity,
+            mmr_lambda=effective_cfg.curate.longshot_mmr_lambda,
+            max_consecutive_same_pattern=effective_cfg.curate.max_consecutive_same_pattern,
         )
 
     for i, ch in enumerate(raw_chapters):

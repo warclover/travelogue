@@ -1,9 +1,12 @@
-"""Trip-level CLIP embedding cache (Phase 3 · F-CLU-CACHE-*)."""
+"""Trip-level CLIP embedding cache (Phase 3 · F-CLU-CACHE-* · P7 ABI + transactional writes)."""
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
+import os
+import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -13,13 +16,16 @@ _log = logging.getLogger(__name__)
 
 CACHE_DIR_NAME = ".cluster-cache"
 EMBEDDINGS_FILE = "embeddings.npz"
+EMBEDDINGS_TMP = "embeddings.tmp.npz"
 MANIFEST_FILE = "manifest.json"
+MANIFEST_TMP = "manifest.tmp.json"
 
-# F-CLU-CACHE-02 / 03 thresholds (PRD §7.4)
 INCREMENTAL_MAX_CHANGE_RATIO = 0.10
 FULL_RECLUSTER_MIN_RATIO = 0.30
 
 CacheMode = Literal["full", "incremental", "prune", "reuse"]
+
+_cache_write_lock = threading.Lock()
 
 
 @dataclass
@@ -30,20 +36,19 @@ class EmbeddingCachePlan:
     removed_ids: list[str]
     change_ratio: float
 
+    def cache_hit_ratio(self) -> float:
+        total = len(self.current_ids)
+        if total == 0:
+            return 0.0
+        if self.mode == "reuse":
+            return 1.0
+        if self.mode == "full":
+            return 0.0
+        return max(0.0, min(1.0, (total - len(self.new_ids)) / total))
+
 
 def cache_dir_for_trip(trip_dir: Path) -> Path:
     return trip_dir / CACHE_DIR_NAME
-
-
-def embedding_cache_is_corrupt(trip_dir: Path) -> bool:
-    """True when cache files exist but cannot be loaded (F-CLU-CACHE-05)."""
-    cache_path = cache_path_for_trip(trip_dir)
-    manifest_path = manifest_path_for_trip(trip_dir)
-    if cache_path.is_file() and load_embedding_cache(trip_dir) is None:
-        return True
-    if manifest_path.is_file() and load_cache_manifest(trip_dir) is None:
-        return True
-    return False
 
 
 def cache_path_for_trip(trip_dir: Path) -> Path:
@@ -52,6 +57,58 @@ def cache_path_for_trip(trip_dir: Path) -> Path:
 
 def manifest_path_for_trip(trip_dir: Path) -> Path:
     return cache_dir_for_trip(trip_dir) / MANIFEST_FILE
+
+
+def compute_cache_config_fingerprint(cfg: Any) -> str:
+    """P7-G3 · stable fingerprint for cache invalidation."""
+    vis = cfg.vision
+    clu = cfg.clustering
+    scene = clu.scene
+    payload = {
+        "abi": clu.cache_abi_version,
+        "model": vis.model,
+        "pretrained": getattr(vis, "pretrained", "openai"),
+        "batch_size": vis.batch_size,
+        "prefer_web": vis.prefer_web_derivative,
+        "web_cosine_max": getattr(vis, "web_derivative_cosine_max", 0.02),
+        "scene_algorithm": scene.algorithm,
+        "scene_eps": scene.cluster_eps,
+        "scene_min_samples": scene.cluster_min_samples,
+    }
+    digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+    return digest[:16]
+
+
+def resolve_cache_fingerprint(cfg: Any) -> str:
+    fp = str(cfg.clustering.cache_config_fingerprint or "auto")
+    if fp == "auto":
+        return compute_cache_config_fingerprint(cfg)
+    return fp
+
+
+def cache_abi_matches(manifest: dict[str, Any] | None, cfg: Any) -> bool:
+    """Return False when manifest ABI/fingerprint drift requires rebuild (P7-G3)."""
+    if manifest is None:
+        return False
+    expected_abi = str(cfg.clustering.cache_abi_version or "v1")
+    manifest_abi = str(manifest.get("algoVersion") or manifest.get("cacheAbiVersion") or "")
+    if manifest_abi and manifest_abi != expected_abi:
+        return False
+    expected_fp = resolve_cache_fingerprint(cfg)
+    manifest_fp = str(manifest.get("configFingerprint") or "")
+    if manifest_fp and manifest_fp != expected_fp:
+        return False
+    return True
+
+
+def embedding_cache_is_corrupt(trip_dir: Path) -> bool:
+    cache_path = cache_path_for_trip(trip_dir)
+    manifest_path = manifest_path_for_trip(trip_dir)
+    if cache_path.is_file() and load_embedding_cache(trip_dir) is None:
+        return True
+    if manifest_path.is_file() and load_cache_manifest(trip_dir) is None:
+        return True
+    return False
 
 
 def image_asset_ids(assets: list[dict]) -> list[str]:
@@ -80,12 +137,16 @@ def save_cache_manifest(
     asset_ids: list[str],
     source: str,
     model: str | None,
+    cfg: Any | None = None,
+    version: int | None = None,
+    recommended_batch_size: int | None = None,
 ) -> Path:
     out_dir = cache_dir_for_trip(trip_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / MANIFEST_FILE
-    payload = {
-        "version": 1,
+    prev = load_cache_manifest(trip_dir) or {}
+    next_version = (int(prev.get("version") or 0) + 1) if version is None else version
+    payload: dict[str, Any] = {
+        "version": next_version,
         "assetIds": asset_ids,
         "assetCount": len(asset_ids),
         "source": source,
@@ -95,8 +156,18 @@ def save_cache_manifest(
         .isoformat()
         .replace("+00:00", "Z"),
     }
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return path
+    if cfg is not None:
+        payload["algoVersion"] = str(cfg.clustering.cache_abi_version or "v1")
+        payload["configFingerprint"] = resolve_cache_fingerprint(cfg)
+    if recommended_batch_size is not None:
+        payload["recommendedBatchSize"] = int(recommended_batch_size)
+    elif prev.get("recommendedBatchSize") is not None:
+        payload["recommendedBatchSize"] = prev["recommendedBatchSize"]
+    tmp_path = out_dir / MANIFEST_TMP
+    final_path = out_dir / MANIFEST_FILE
+    tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    os.replace(tmp_path, final_path)
+    return final_path
 
 
 def load_embedding_cache(trip_dir: Path) -> dict[str, Any] | None:
@@ -124,21 +195,39 @@ def save_embedding_cache(
     vectors: Any,
     source: str,
     model: str | None = None,
+    cfg: Any | None = None,
+    recommended_batch_size: int | None = None,
 ) -> Path:
+    """P7-G4 · tmp + atomic rename under write lock."""
+    from travelogue.vision.embed_cancel import embedding_cancelled
+
+    if embedding_cancelled(trip_dir):
+        _log.info("skip embedding cache write: trip embed cancelled")
+        return cache_path_for_trip(trip_dir)
     import numpy as np
 
-    out_dir = cache_dir_for_trip(trip_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / EMBEDDINGS_FILE
-    np.savez_compressed(
-        path,
-        asset_ids=np.array(asset_ids, dtype=object),
-        vectors=vectors,
-        source=np.array(source),
-        model=np.array(model or ""),
-    )
-    save_cache_manifest(trip_dir, asset_ids=asset_ids, source=source, model=model)
-    return path
+    with _cache_write_lock:
+        out_dir = cache_dir_for_trip(trip_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        tmp_path = out_dir / EMBEDDINGS_TMP
+        final_path = out_dir / EMBEDDINGS_FILE
+        np.savez_compressed(
+            tmp_path,
+            asset_ids=np.array(asset_ids, dtype=object),
+            vectors=vectors,
+            source=np.array(source),
+            model=np.array(model or ""),
+        )
+        os.replace(tmp_path, final_path)
+        save_cache_manifest(
+            trip_dir,
+            asset_ids=asset_ids,
+            source=source,
+            model=model,
+            cfg=cfg,
+            recommended_batch_size=recommended_batch_size,
+        )
+        return final_path
 
 
 def invalidate_embedding_cache(trip_dir: Path) -> None:
@@ -146,32 +235,29 @@ def invalidate_embedding_cache(trip_dir: Path) -> None:
 
 
 def clear_cluster_cache(trip_dir: Path) -> bool:
-    """Remove entire `.cluster-cache` directory. Returns True if anything removed."""
     cache_root = cache_dir_for_trip(trip_dir)
     if not cache_root.is_dir():
         return False
     import shutil
 
-    shutil.rmtree(cache_root)
+    with _cache_write_lock:
+        shutil.rmtree(cache_root)
     return True
 
 
 def list_pending_assets(trip: dict) -> list[str]:
-    """Assets listed in pipeline.pendingAssets (F-CLU-CACHE-04 · structure_locked append)."""
     pending = (trip.get("pipeline") or {}).get("pendingAssets") or []
     if not isinstance(pending, list):
         return []
     return [str(x) for x in pending if x]
 
 
-# F-CLU-CACHE-04 · post-lock statuses where new assets must NOT auto-update chapters
 PIPELINE_LOCKED_STATUSES: frozenset[str] = frozenset(
     {"structure_locked", "copy_draft", "copy_locked", "rendered", "exported"}
 )
 
 
 def is_pipeline_locked(trip: dict) -> bool:
-    """True when ingest must defer asset ids to pendingAssets (F-CLU-CACHE-04)."""
     pipe = trip.get("pipeline") or {}
     status = str(pipe.get("status") or "")
     if status in PIPELINE_LOCKED_STATUSES:
@@ -181,10 +267,6 @@ def is_pipeline_locked(trip: dict) -> bool:
 
 
 def append_pending_assets(trip: dict, asset_ids: list[str]) -> list[str]:
-    """Merge ``asset_ids`` into ``pipeline.pendingAssets`` preserving insertion order.
-
-    Returns the updated pendingAssets list. No-op for empty input.
-    """
     pipe = trip.setdefault("pipeline", {})
     existing = pipe.get("pendingAssets")
     if not isinstance(existing, list):
@@ -201,7 +283,6 @@ def append_pending_assets(trip: dict, asset_ids: list[str]) -> list[str]:
 
 
 def clear_pending_assets(trip: dict) -> list[str]:
-    """Empty ``pipeline.pendingAssets`` and return the previous list."""
     pipe = trip.setdefault("pipeline", {})
     previous = pipe.get("pendingAssets") or []
     pipe["pendingAssets"] = []
@@ -223,8 +304,8 @@ def plan_embedding_refresh(
     current_ids: list[str],
     *,
     force_recluster: bool = False,
+    cfg: Any | None = None,
 ) -> EmbeddingCachePlan:
-    """F-CLU-CACHE-01～03 · decide full vs incremental vs reuse."""
     if force_recluster:
         return EmbeddingCachePlan(
             mode="full",
@@ -245,10 +326,19 @@ def plan_embedding_refresh(
             change_ratio=1.0 if current_ids else 0.0,
         )
 
+    if cfg is not None and not cache_abi_matches(manifest, cfg):
+        _log.info("cluster cache ABI mismatch; forcing full refresh")
+        return EmbeddingCachePlan(
+            mode="full",
+            current_ids=current_ids,
+            new_ids=list(current_ids),
+            removed_ids=[],
+            change_ratio=1.0,
+        )
+
     cached_ids = cached["asset_ids"]
     change_ratio, new_ids, removed_ids = compute_change_ratio(current_ids, cached_ids)
 
-    # F-CLU-CACHE-01 · manifest asset count drift
     if int(manifest.get("assetCount") or -1) != len(cached_ids):
         return EmbeddingCachePlan("full", current_ids, list(current_ids), removed_ids, 1.0)
 
@@ -277,7 +367,6 @@ def merge_embedding_vectors(
     new_ids: list[str],
     new_vectors: Any,
 ) -> Any:
-    """Merge cached vectors with newly embedded rows in current_ids order."""
     import numpy as np
 
     id_to_row = {aid: idx for idx, aid in enumerate(cached["asset_ids"])}
@@ -300,38 +389,63 @@ def prepare_scene_embeddings(
     *,
     force_recluster: bool = False,
     deterministic: bool = True,
+    cfg: Any | None = None,
+    apply_subject_class: bool = True,
 ) -> tuple[Any, EmbeddingCachePlan]:
-    """Load / incrementally refresh embeddings per cache plan; always returns full-trip matrix."""
     from travelogue.vision.clip_encoder import EmbedResult
+    from travelogue.vision.embed_cancel import embedding_cancelled
 
     current_ids = image_asset_ids(assets)
-    plan = plan_embedding_refresh(trip_dir, current_ids, force_recluster=force_recluster)
+    plan = plan_embedding_refresh(
+        trip_dir, current_ids, force_recluster=force_recluster, cfg=cfg
+    )
 
-    if plan.mode == "full":
-        clear_cluster_cache(trip_dir)
-        embed = encoder.embed_assets(assets, trip_dir=trip_dir, deterministic=deterministic)
+    def _save(embed: EmbedResult) -> None:
+        if embedding_cancelled(trip_dir):
+            return
         if embed.asset_ids:
+            rec_batch = None
+            if getattr(encoder, "last_embed_stats", None) is not None:
+                stats = encoder.last_embed_stats
+                rec_batch = stats.recommended_batch_size or stats.batch_size
+            elif getattr(encoder, "_tuned_batch_size", None) is not None:
+                rec_batch = encoder._tuned_batch_size
             save_embedding_cache(
                 trip_dir,
                 asset_ids=embed.asset_ids,
                 vectors=embed.vectors,
                 source=embed.source,
                 model=embed.model,
+                cfg=cfg,
+                recommended_batch_size=rec_batch,
             )
+            if rec_batch and cfg is not None:
+                from travelogue.vision.clip_encoder import persist_recommended_batch_size
+
+                persist_recommended_batch_size(
+                    int(rec_batch),
+                    trips_dir=cfg.trips_dir,
+                    trip_dir=trip_dir,
+                )
+
+    if plan.mode == "full":
+        clear_cluster_cache(trip_dir)
+        embed = encoder.embed_assets(
+            assets, trip_dir=trip_dir, deterministic=deterministic, apply_subject_class=apply_subject_class
+        )
+        _save(embed)
         return embed, plan
 
     if plan.mode == "reuse":
         cached = load_embedding_cache(trip_dir)
         if cached is None:
-            embed = encoder.embed_assets(assets, trip_dir=trip_dir, deterministic=deterministic)
-            if embed.asset_ids:
-                save_embedding_cache(
-                    trip_dir,
-                    asset_ids=embed.asset_ids,
-                    vectors=embed.vectors,
-                    source=embed.source,
-                    model=embed.model,
-                )
+            embed = encoder.embed_assets(
+                assets,
+                trip_dir=trip_dir,
+                deterministic=deterministic,
+                apply_subject_class=apply_subject_class,
+            )
+            _save(embed)
             return embed, plan
         import numpy as np
 
@@ -349,15 +463,13 @@ def prepare_scene_embeddings(
     if plan.mode == "prune":
         cached = load_embedding_cache(trip_dir)
         if cached is None:
-            embed = encoder.embed_assets(assets, trip_dir=trip_dir, deterministic=deterministic)
-            if embed.asset_ids:
-                save_embedding_cache(
-                    trip_dir,
-                    asset_ids=embed.asset_ids,
-                    vectors=embed.vectors,
-                    source=embed.source,
-                    model=embed.model,
-                )
+            embed = encoder.embed_assets(
+                assets,
+                trip_dir=trip_dir,
+                deterministic=deterministic,
+                apply_subject_class=apply_subject_class,
+            )
+            _save(embed)
             return embed, plan
         import numpy as np
 
@@ -366,15 +478,13 @@ def prepare_scene_embeddings(
         if len(rows) != len(current_ids):
             _log.warning("prune missing rows; falling back to full refresh")
             clear_cluster_cache(trip_dir)
-            embed = encoder.embed_assets(assets, trip_dir=trip_dir, deterministic=deterministic)
-            if embed.asset_ids:
-                save_embedding_cache(
-                    trip_dir,
-                    asset_ids=embed.asset_ids,
-                    vectors=embed.vectors,
-                    source=embed.source,
-                    model=embed.model,
-                )
+            embed = encoder.embed_assets(
+                assets,
+                trip_dir=trip_dir,
+                deterministic=deterministic,
+                apply_subject_class=apply_subject_class,
+            )
+            _save(embed)
             full_plan = EmbeddingCachePlan("full", current_ids, list(current_ids), plan.removed_ids, 1.0)
             return embed, full_plan
         vectors = np.vstack(rows)
@@ -386,38 +496,33 @@ def prepare_scene_embeddings(
             vectors=vectors,
             source=source,
             model=model,
+            cfg=cfg,
         )
         embed = EmbedResult(current_ids, vectors, source, model)
         return embed, plan
 
-    # incremental · F-CLU-CACHE-02
     cached = load_embedding_cache(trip_dir)
     if cached is None:
-        embed = encoder.embed_assets(assets, trip_dir=trip_dir, deterministic=deterministic)
-        if embed.asset_ids:
-            save_embedding_cache(
-                trip_dir,
-                asset_ids=embed.asset_ids,
-                vectors=embed.vectors,
-                source=embed.source,
-                model=embed.model,
-            )
+        embed = encoder.embed_assets(
+            assets, trip_dir=trip_dir, deterministic=deterministic, apply_subject_class=apply_subject_class
+        )
+        _save(embed)
         return embed, plan
 
     new_assets = [a for a in assets if str(a.get("id")) in set(plan.new_ids)]
-    new_embed = encoder.embed_assets(new_assets, trip_dir=trip_dir, deterministic=deterministic)
+    new_embed = encoder.embed_assets(
+        new_assets,
+        trip_dir=trip_dir,
+        deterministic=deterministic,
+        apply_subject_class=apply_subject_class,
+    )
     if len(new_embed.asset_ids) != len(plan.new_ids):
         _log.warning("incremental embed count mismatch; falling back to full refresh")
         clear_cluster_cache(trip_dir)
-        embed = encoder.embed_assets(assets, trip_dir=trip_dir, deterministic=deterministic)
-        if embed.asset_ids:
-            save_embedding_cache(
-                trip_dir,
-                asset_ids=embed.asset_ids,
-                vectors=embed.vectors,
-                source=embed.source,
-                model=embed.model,
-            )
+        embed = encoder.embed_assets(
+            assets, trip_dir=trip_dir, deterministic=deterministic, apply_subject_class=apply_subject_class
+        )
+        _save(embed)
         full_plan = EmbeddingCachePlan("full", current_ids, list(current_ids), plan.removed_ids, 1.0)
         return embed, full_plan
 
@@ -430,6 +535,7 @@ def prepare_scene_embeddings(
         vectors=merged,
         source=source,
         model=model,
+        cfg=cfg,
     )
     embed = EmbedResult(current_ids, merged, source, model)
     return embed, plan

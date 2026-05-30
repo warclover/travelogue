@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "1",
+  "benchmarkId": "benchmark-p7-v0.1",
+  "commit": "34b34a6d4cbba17886fb0480ecb2f29be691e162",
+  "deviceTier": "S2",
+  "deviceNote": "",
+  "configSnapshot": "docs/config-phase7.example.yaml",
+  "baseline": {
+    "phase": "P6",
+    "recordedAt": "",
+    "studio_e2e_250_ms": null,
+    "studio_e2e_250_p95_ms": null,
+    "ingest_time_250_ms": null,
+    "clip_embed_time_250_ms": null,
+    "clip_embed_time_250_p95_ms": null,
+    "pipeline_time_1k_sec": null,
+    "peak_memory_1k_mb": null
+  },
+  "candidate": {
+    "phase": "P7",
+    "recordedAt": "2026-05-30T11:01:54+00:00",
+    "studio_e2e_250_ms": 11940.137100027641,
+    "studio_e2e_250_p95_ms": 12048.992600030033,
+    "ingest_time_250_ms": 11916.520450016833,
+    "clip_embed_time_250_ms": 1.7170000064652413,
+    "clip_embed_time_250_p95_ms": 1.9299999985378236,
+    "clip_embed_time_incr_10pct_ms": null,
+    "clip_embed_time_incr_append_10pct_ms": null,
+    "clip_embed_time_incr_delete_10pct_ms": null,
+    "clip_embed_time_incr_replace_10pct_ms": null,
+    "curate_beam_time_250_ms": 21.89965000434313,
+    "auto_batch_win_rate": null,
+    "cache_rebuild_success_rate": 1.0,
+    "rollback_recovery_success": 1.0,
+    "pipeline_time_1k_sec": 0.155,
+    "peak_memory_1k_mb": 7.9
+  },
+  "qualityGuard": {
+    "cluster_noise_ratio_p6": null,
+    "cluster_noise_ratio_p7": null,
+    "event_boundary_f1_p6": null,
+    "event_boundary_f1_p7": null,
+    "layout_repeat_streak_p6": null,
+    "layout_repeat_streak_p7": null
+  },
+  "nr_p7": {
+    "curate_hash_rate_fixed": null,
+    "cluster_hash_rate_fixed": null,
+    "curate_hash_rate_real": null,
+    "cluster_hash_rate_real": null,
+    "subject_class_agreement": null,
+    "passed": null
+  },
+  "ac_p7": {
+    "AC-P7-01": null,
+    "AC-P7-02": null,
+    "AC-P7-03": null,
+    "AC-P7-04": null,
+    "AC-P7-05": null,
+    "AC-P7-06": null,
+    "AC-P7-07": null,
+    "AC-P7-08": null,
+    "AC-P7-09": null,
+    "AC-P7-10": null,
+    "AC-P7-11": null,
+    "AC-P7-12": null
+  },
+  "notes": "Fill via scripts/phase7_pipeline_perf.py --write and phase7_equivalence_check.py --write",
+  "benchmarkMeta": {
+    "photoCount": 12,
+    "repeats": 2
+  }
+}

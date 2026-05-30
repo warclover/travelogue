@@ -436,6 +436,7 @@ def cover_candidates(
     limit: int = 5,
     featured_weight: float = 1.35,
     featured_min: int = 2,
+    enable_phase6_cover_factors: bool = True,
 ) -> list[str]:
     """Top covers with diverse aspect / day when possible."""
     pool = cover_asset_pool(assets, export_layout=export_layout)

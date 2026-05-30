@@ -1,8 +1,8 @@
-"""Beam search wrapper around legacy screen planner (V2 PRD §7)."""
+"""Beam search wrapper around legacy screen planner (V2 PRD §7 · P7 signature skip)."""
 
 from __future__ import annotations
 
-from copy import deepcopy
+import copy
 from typing import Any
 
 from travelogue.curation.degradation import DegradationAssessment
@@ -16,6 +16,21 @@ from travelogue.curation.search_budget import SearchBudget
 
 def _arc_scoring_active(arc_mode: str) -> bool:
     return arc_mode in ("v2_adaptive", "v2_five_beat")
+
+
+def _shallow_copy_chapters(chapters: list[dict]) -> list[dict]:
+    """P7-D3 · local copy instead of full deepcopy where safe."""
+    out: list[dict] = []
+    for ch in chapters:
+        nc = dict(ch)
+        if "screens" in ch:
+            nc["screens"] = list(ch.get("screens") or [])
+        if "items" in ch:
+            nc["items"] = [dict(it) if isinstance(it, dict) else it for it in (ch.get("items") or [])]
+        if "curation" in ch and isinstance(ch.get("curation"), dict):
+            nc["curation"] = dict(ch["curation"])
+        out.append(nc)
+    return out
 
 
 def _screens_signature(chapters: list[dict]) -> list[list[str]]:
@@ -84,10 +99,12 @@ def _replan_day_buckets_beam(
     intent_peak_chapters: set[int] | None = None,
     enable_gravity_balance: bool = True,
     max_consecutive_same_pattern: int = 2,
+    skip_duplicate_signatures: bool = True,
+    deterministic_strict: bool = False,
 ) -> tuple[list[dict], list[dict], SearchBudget]:
     from travelogue.curation.intent_hints import INTENT_PEAK_ARC_BOOST, arc_segment_for_chapter_with_intent
 
-    out = deepcopy(chapters)
+    out = _shallow_copy_chapters(chapters)
     asset_to_ch: dict[str, str] = {}
     for ch in out:
         for aid in _collect_asset_ids_from_chapter(ch):
@@ -104,7 +121,7 @@ def _replan_day_buckets_beam(
     for ch in out:
         if ch.get("patternId") == "gallery":
             orig = orig_by_id.get(ch.get("id"), ch)
-            ch["screens"] = deepcopy(orig.get("screens") or [])
+            ch["screens"] = copy.deepcopy(orig.get("screens") or [])
             gallery_asset_ids.update(_collect_asset_ids_from_chapter(ch))
         else:
             ch["screens"] = []
@@ -150,22 +167,34 @@ def _replan_day_buckets_beam(
                     max_streak=max_consecutive_same_pattern,
                 )
             ] or candidates
-        legacy_plan = candidates[0] if candidates else []
+        legacy_plan = candidates[0][1] if candidates else []
         legacy_sig = _screens_signature([{"screens": legacy_plan}])
-        legacy_score = score_screen_plan(
-            legacy_plan,
-            aspects=aspects,
-            assets_by_id=assets_by_id,
-            weights=weights,
-            arc_profile=arc_profile,
-            subject_run_tolerance=subject_run_tolerance,
-            featured_beam=True,
-            enable_gravity_balance=enable_gravity_balance,
-        )
+        if budget.can_evaluate():
+            budget.note_evaluation()
+            legacy_score = score_screen_plan(
+                legacy_plan,
+                aspects=aspects,
+                assets_by_id=assets_by_id,
+                weights=weights,
+                arc_profile=arc_profile,
+                subject_run_tolerance=subject_run_tolerance,
+                featured_beam=True,
+                enable_gravity_balance=enable_gravity_balance,
+            )
+        else:
+            from travelogue.curation.layout_scoring import ScoreBreakdown
+
+            legacy_score = ScoreBreakdown(total=0.0)
         best_plan = legacy_plan
         best_score = legacy_score
         best_variant = "legacy"
-        for vi, plan in enumerate(candidates):
+        eval_candidates = list(candidates)
+        if deterministic_strict:
+            eval_candidates.sort(key=lambda item: str(_screens_signature([{"screens": item[1]}])))
+        for variant_name, plan in eval_candidates:
+            plan_sig = _screens_signature([{"screens": plan}])
+            if skip_duplicate_signatures and plan_sig == legacy_sig:
+                continue
             if not budget.can_evaluate():
                 break
             budget.note_evaluation()
@@ -204,9 +233,7 @@ def _replan_day_buckets_beam(
             if bd.total > best_score.total + 1e-6:
                 best_plan = plan
                 best_score = bd
-                best_variant = ("with_hero", "no_mosaic", "no_hero", "hero_no_pref", "no_hero_no_mosaic")[
-            min(vi, 4)
-        ]
+                best_variant = variant_name
 
         log = LayoutDecisionLog(chapter_id=f"day-bucket-{bucket_idx + 1}")
         log.add(
@@ -263,6 +290,8 @@ def maybe_replan_chapters(
     intent_peak_chapters: set[int] | None = None,
     enable_gravity_balance: bool = True,
     max_consecutive_same_pattern: int = 2,
+    skip_duplicate_signatures: bool = True,
+    deterministic_strict: bool = False,
 ) -> tuple[list[dict], dict[str, Any]]:
     """Return chapters unchanged when scoring off, degraded, or aspect-only."""
     meta: dict[str, Any] = {"replanApplied": False, "decisionLogs": []}
@@ -304,6 +333,8 @@ def maybe_replan_chapters(
         intent_peak_chapters=intent_peak_chapters,
         enable_gravity_balance=enable_gravity_balance,
         max_consecutive_same_pattern=max_consecutive_same_pattern,
+        skip_duplicate_signatures=skip_duplicate_signatures,
+        deterministic_strict=deterministic_strict,
     )
     meta["decisionLogs"] = logs
     meta["searchBudget"] = budget.to_dict()

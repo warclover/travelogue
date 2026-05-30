@@ -52,6 +52,7 @@ layout:
     max_evaluations_per_trip: 500
     allow_burst_split: false
     subject_run_tolerance: 1
+    skip_duplicate_signatures: true
     weights:
       aspect_match: 0.0
       sharpness: 0.0
@@ -118,6 +119,15 @@ ingest:
   featured_dir_names: ["主图上传", "精选", "featured", "hero"]
   material_dir_names: ["素材上传", "素材", "material", "extras"]
   warn_featured_count_above: 30
+  # Phase 7 · ingest 微优化 + RAW 拦截
+  webp_method: 4
+  shared_color_thumb_px: 32
+  reject_raw: true
+
+# Phase 7 · 流水线并行（见 docs/PRD-PHASE7.md）
+pipeline:
+  parallel_embed: false
+  parallel_embed_chunk: 32
 
 curate:
   featured_weight: 1.35
@@ -137,6 +147,13 @@ vision:
   provider: none                   # none | heuristic | clip
   model: ViT-B/32
   max_tags_per_asset: 5
+  # Phase 7 · CLIP 加速
+  batch_size: 16
+  session_singleton: true
+  prefer_web_derivative: true
+  preload_on_folder_pick: true
+  batch_auto_tune: true
+  dynamic_backoff: true
 
 # Phase 3 · Curate 聚类 (M12 P3-Lite / M13 P3-Full)
 clustering:
@@ -145,6 +162,8 @@ clustering:
   segmentCurateMode: event_first   # event_first | date_fallback
   sceneClusterMode: run_aware      # run_aware | off
   deterministic: true
+  deterministic_strict: false      # Phase 7 · 强确定性（测试/fixture）
+  cache_abi_version: v1            # Phase 7 · cache ABI
   forceRecluster: false            # true → 删 cache 全量重算 (F-CLU-CACHE-03)
   geo:
     eventGapMode: auto              # auto | fixed (Phase 6)

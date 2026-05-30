@@ -100,6 +100,7 @@ def build_render_context(
         trip_root=trip_root,
         meta_title=meta_title,
         hook=hook,
+        cfg=cfg,
     )
 
     use_epilogue_stats = (

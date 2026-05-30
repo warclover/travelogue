@@ -16,7 +16,7 @@ from travelogue.demo.verify import run_demo_verify
 from travelogue.paths import GOLDEN_HTML, TEMPLATE_VISUAL_JOURNAL
 from travelogue.export.packager import ExportError, export_trip
 from travelogue.config import get_config
-from travelogue.media.ingest import IngestError, ingest_into_trip
+from travelogue.media.ingest import IngestError, RAW_UNSUPPORTED_MESSAGE, ingest_into_trip
 from travelogue.media.ingest_report import format_g1_status, format_ingest_report
 from travelogue.media.reexport import reexport_trip_assets
 from travelogue.orchestrator.pipeline import PublishResult, publish_trip
@@ -397,6 +397,7 @@ def cmd_ingest(
     config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
     featured_dir: Optional[Path] = typer.Option(None, "--featured-dir", help="精选文件夹（双源 ingest）"),
     material_dir: Optional[Path] = typer.Option(None, "--material-dir", help="素材文件夹（双源 ingest）"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="show RAW rejection details"),
 ) -> None:
     """Agent 0: import photos into trip (ingest_ready)."""
     _load_cfg(config)
@@ -417,7 +418,12 @@ def cmd_ingest(
             material_dir=material_dir,
         )
     except IngestError as exc:
-        typer.echo(str(exc), err=True)
+        if exc.code == "E_INGEST_RAW_UNSUPPORTED":
+            typer.echo(f"{exc.code}: {RAW_UNSUPPORTED_MESSAGE}", err=True)
+            if verbose:
+                typer.echo(str(exc), err=True)
+        else:
+            typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
     _trip_svc(trip_path).save(trip, trip_path)
     typer.echo("OK ingest")

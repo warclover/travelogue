@@ -237,6 +237,7 @@ def sync_trip_covers(
     assets: list[dict] | None = None,
     featured_weight: float = 1.35,
     featured_min_for_cover_pool: int = 2,
+    enable_phase6_cover_factors: bool = True,
 ) -> str:
     """Write coverAssetId (+ coverByLayout when exportLayout=auto). Returns primary cover id."""
     assets = assets if assets is not None else layout_eligible_assets(trip)
@@ -245,9 +246,17 @@ def sync_trip_covers(
 
     if layout == "auto":
         mobile_id = _pick_cover_asset_id(
-            assets, export_layout="mobile", featured_weight=featured_weight
+            assets,
+            export_layout="mobile",
+            featured_weight=featured_weight,
+            enable_phase6_cover_factors=enable_phase6_cover_factors,
         )
-        web_id = _pick_cover_asset_id(assets, export_layout="web", featured_weight=featured_weight)
+        web_id = _pick_cover_asset_id(
+            assets,
+            export_layout="web",
+            featured_weight=featured_weight,
+            enable_phase6_cover_factors=enable_phase6_cover_factors,
+        )
         curation["coverByLayout"] = {"mobile": mobile_id, "web": web_id}
         trip["coverAssetId"] = mobile_id
         trip["coverCandidates"] = _cover_candidates(
@@ -288,7 +297,12 @@ def sync_trip_covers(
             curation.pop("coverExplainByLayout", None)
         return mobile_id
 
-    cover_id = _pick_cover_asset_id(assets, export_layout=layout, featured_weight=featured_weight)
+    cover_id = _pick_cover_asset_id(
+        assets,
+        export_layout=layout,
+        featured_weight=featured_weight,
+        enable_phase6_cover_factors=enable_phase6_cover_factors,
+    )
     trip["coverAssetId"] = cover_id
     trip["coverCandidates"] = _cover_candidates(
         assets,
@@ -383,10 +397,15 @@ def run_curate(
 
     app_cfg = cfg or get_config()
     trip_id = str(trip.get("tripId") or (trip_dir.name if trip_dir else "")).strip()
+    cover_p6 = True
     if trip_id:
-        from travelogue.curation.phase6_rollout import resolve_curate_config_for_trip
+        from travelogue.curation.phase6_rollout import (
+            phase6_in_rollout_cohort,
+            resolve_app_config_for_trip,
+        )
 
-        app_cfg = resolve_curate_config_for_trip(app_cfg, trip_id)
+        cover_p6 = phase6_in_rollout_cohort(trip_id, app_cfg)
+        app_cfg = resolve_app_config_for_trip(app_cfg, trip_id)
     res_warn = apply_low_resolution_exclusion(trip, trip_dir=trip_dir, app_cfg=app_cfg)
     layout_assets = layout_eligible_assets(trip)
     if len(layout_assets) < MIN_CURATE_ASSETS:
@@ -416,6 +435,7 @@ def run_curate(
         assets=layout_assets,
         featured_weight=cur_cfg.featured_weight,
         featured_min_for_cover_pool=cur_cfg.featured_min_for_cover_pool,
+        enable_phase6_cover_factors=cover_p6,
     )
     curation = trip.get("curation") or {}
     by_layout = curation.get("coverByLayout") or {}
@@ -638,6 +658,8 @@ def run_curate(
         intent_peak_chapters=intent_peak,
         enable_gravity_balance=cur_cfg.enable_gravity_balance,
         max_consecutive_same_pattern=cur_cfg.max_consecutive_same_pattern,
+        skip_duplicate_signatures=layout_cfg.scoring.skip_duplicate_signatures,
+        deterministic_strict=app_cfg.clustering.deterministic_strict,
     )
     layout_metrics = compute_layout_metrics(
         chapters,

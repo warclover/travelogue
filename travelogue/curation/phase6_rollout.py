@@ -53,7 +53,7 @@ def g1_rollout_patch(
 def g2_rollout_patch(
     *,
     traffic_percent: float = 50.0,
-    cohort_salt: str = "p6-g1-2026-05",
+    cohort_salt: str = "p6-g2-2026-05",
     allowlist_trip_ids: list[str] | None = None,
 ) -> dict[str, Any]:
     """Config patch for G2 50% gray rollout (PRD §14.1)."""
@@ -68,7 +68,7 @@ def g2_rollout_patch(
 def g3_rollout_patch(
     *,
     traffic_percent: float = 100.0,
-    cohort_salt: str = "p6-g1-2026-05",
+    cohort_salt: str = "p6-g3-2026-05",
     allowlist_trip_ids: list[str] | None = None,
 ) -> dict[str, Any]:
     """Config patch for G3 full rollout (PRD §14.1)."""
@@ -94,7 +94,6 @@ def rollout_stage_patch(
                 "trafficPercent": traffic_percent,
                 "cohortSalt": cohort_salt,
                 "allowlistTripIds": list(allowlist_trip_ids or []),
-                "blocklistTripIds": [],
             },
         },
     }
@@ -103,6 +102,8 @@ def rollout_stage_patch(
 
 def apply_config_patch(config_path: Path | None, patch: dict[str, Any]) -> Path:
     """Deep-merge patch into config.yaml."""
+    import os
+
     if config_path is None:
         cfg = load_config()
         config_path = cfg.config_path or Path.cwd() / "config.yaml"
@@ -130,8 +131,10 @@ def apply_config_patch(config_path: Path | None, patch: dict[str, Any]) -> Path:
 
     merged = _deep_merge(data, patch)
     config_path.parent.mkdir(parents=True, exist_ok=True)
-    with config_path.open("w", encoding="utf-8") as f:
+    tmp_path = config_path.with_suffix(".yaml.tmp")
+    with tmp_path.open("w", encoding="utf-8") as f:
         yaml.safe_dump(merged, f, allow_unicode=True, sort_keys=False)
+    os.replace(tmp_path, config_path)
     return config_path
 
 
@@ -160,7 +163,7 @@ def apply_g2_rollout_config(
     config_path: Path | None = None,
     *,
     traffic_percent: float = 50.0,
-    cohort_salt: str = "p6-g1-2026-05",
+    cohort_salt: str = "p6-g2-2026-05",
     allowlist_trip_ids: list[str] | None = None,
 ) -> Path:
     """Merge G2 rollout gate into config.yaml."""
@@ -176,7 +179,7 @@ def apply_g3_rollout_config(
     config_path: Path | None = None,
     *,
     traffic_percent: float = 100.0,
-    cohort_salt: str = "p6-g1-2026-05",
+    cohort_salt: str = "p6-g3-2026-05",
     allowlist_trip_ids: list[str] | None = None,
 ) -> Path:
     """Merge G3 full rollout gate into config.yaml."""
@@ -220,7 +223,7 @@ def phase6_in_rollout_cohort(trip_id: str, cfg: AppConfig) -> bool:
     return bucket < int(round(rollout.traffic_percent))
 
 
-def resolve_curate_config_for_trip(cfg: AppConfig, trip_id: str) -> AppConfig:
+def resolve_app_config_for_trip(cfg: AppConfig, trip_id: str) -> AppConfig:
     """Return cfg with P5-stable overrides when trip is outside the rollout cohort."""
     if phase6_in_rollout_cohort(trip_id, cfg):
         return cfg
@@ -242,6 +245,11 @@ def resolve_curate_config_for_trip(cfg: AppConfig, trip_id: str) -> AppConfig:
             max_consecutive_same_pattern=99,
         ),
     )
+
+
+def resolve_curate_config_for_trip(cfg: AppConfig, trip_id: str) -> AppConfig:
+    """Alias for resolve_app_config_for_trip (clustering + curate rollout)."""
+    return resolve_app_config_for_trip(cfg, trip_id)
 
 
 def phase6_rollout_snapshot(cfg: AppConfig) -> dict[str, Any]:

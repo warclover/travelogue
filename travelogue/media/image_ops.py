@@ -318,19 +318,21 @@ def export_layout_crops(
     asset_id: str,
     *,
     quality: int = 82,
+    webp_method: int = 4,
     focal: tuple[float, float] = (0.5, 0.45),
     max_width: int = 1600,
 ) -> tuple[str, str]:
     """Write 9:16 (-m) and 16:9 (-w) profile crops; return relative paths."""
     assets_dir.mkdir(parents=True, exist_ok=True)
+    method = max(0, min(6, int(webp_method)))
     mobile = crop_aspect_focal(img, PORTRAIT_ASPECT, focal=focal)
     web = crop_aspect_focal(img, LANDSCAPE_ASPECT, focal=focal)
     mobile = resize_to_width(mobile, max_width)
     web = resize_to_width(web, max_width)
     rel_m = f"assets/{asset_id}-m.webp"
     rel_w = f"assets/{asset_id}-w.webp"
-    mobile.save(assets_dir / f"{asset_id}-m.webp", "WEBP", quality=quality, method=6)
-    web.save(assets_dir / f"{asset_id}-w.webp", "WEBP", quality=quality, method=6)
+    mobile.save(assets_dir / f"{asset_id}-m.webp", "WEBP", quality=quality, method=method)
+    web.save(assets_dir / f"{asset_id}-w.webp", "WEBP", quality=quality, method=method)
     return rel_m, rel_w
 
 
@@ -341,10 +343,12 @@ def export_webp_variants(
     *,
     widths: tuple[int, ...] = (800, 1600),
     quality: int = 82,
+    webp_method: int = 4,
     generate_crops: bool = False,
     focal: tuple[float, float] = (0.5, 0.45),
 ) -> tuple[str, list[dict], int, int, str | None, str | None]:
     assets_dir.mkdir(parents=True, exist_ok=True)
+    method = max(0, min(6, int(webp_method)))
     srcset: list[dict] = []
     largest = img
 
@@ -352,7 +356,7 @@ def export_webp_variants(
         variant = resize_to_width(img, w)
         rel = f"assets/{asset_id}-w{w}.webp"
         out = assets_dir / f"{asset_id}-w{w}.webp"
-        variant.save(out, "WEBP", quality=quality, method=6)
+        variant.save(out, "WEBP", quality=quality, method=method)
         srcset.append({"file": rel, "width": w})
         if w == max(widths):
             largest = variant
@@ -363,7 +367,7 @@ def export_webp_variants(
     if generate_crops:
         max_w = max(widths)
         crop_m, crop_w = export_layout_crops(
-            img, assets_dir, asset_id, quality=quality, focal=focal, max_width=max_w
+            img, assets_dir, asset_id, quality=quality, focal=focal, max_width=max_w, webp_method=method
         )
     return display, srcset, largest.width, largest.height, crop_m, crop_w
 

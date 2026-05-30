@@ -53,6 +53,8 @@ def test_no_mosaic_variant_differs_when_eligible():
         beam_width=5,
         budget=budget,
     )
-    sigs = [tuple(s.get("patternId") for s in plan) for plan in cands]
+    sigs = [tuple(s.get("patternId") for s in plan) for _name, plan in cands]
     assert len(cands) >= 2
     assert sigs[0] != sigs[1] or len(cands) >= 2
+    assert budget.generations >= len(cands)
+    assert budget.evaluations == 0
