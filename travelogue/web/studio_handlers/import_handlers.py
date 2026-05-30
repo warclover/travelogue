@@ -15,7 +15,7 @@ from travelogue.web.studio_errors import demo_error_payload, user_message
 from travelogue.web.studio_handlers.common import resolve_import_album_path, studio_ctx
 from travelogue.web.studio_jobs import get_job_store, run_import_job_subprocess
 from travelogue.web.studio_multipart import parse_multipart_form
-from travelogue.web.studio_pipeline import assert_album_importable
+from travelogue.web.studio_pipeline import assert_album_importable, sample_album_preview_thumbs
 from travelogue.web.studio_constants import (
     STUDIO_IMPORT_JOB_WATCH_SEC,
     STUDIO_MAX_MULTIPART_BODY_BYTES,
@@ -250,3 +250,41 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     if upload_dir:
         sweep_upload()
     handler._json_response(202, {"ok": True, "jobId": job.job_id})
+
+
+def handle_album_preview(handler: StudioHandlerProtocol) -> None:
+    payload = handler._read_json_body()
+    if not payload:
+        handler._json_response(400, {"ok": False, "error": "empty body"})
+        return
+
+    album_raw = str(payload.get("albumPath") or "").strip()
+    use_demo_album = bool(payload.get("useDemoAlbum"))
+    if not album_raw and not use_demo_album:
+        handler._json_response(400, {"ok": False, "error": "albumPath required"})
+        return
+
+    try:
+        album_path = resolve_import_album_path(album_raw, use_demo=use_demo_album)
+    except DemoError as exc:
+        handler._json_response(400, {"ok": False, "error": exc.code, "message": str(exc)})
+        return
+
+    ctx = studio_ctx(handler)
+    trips_root = ctx.trips_root
+    if not use_demo_album and not album_path_allowed(handler, album_path, trips_root=trips_root):
+        handler._json_response(
+            403,
+            {
+                "ok": False,
+                "error": "E_STUDIO_ALBUM_DENIED",
+                "message": user_message("E_STUDIO_ALBUM_DENIED"),
+            },
+        )
+        return
+
+    thumbs, photo_count = sample_album_preview_thumbs(album_path)
+    handler._json_response(
+        200,
+        {"ok": True, "thumbs": thumbs, "photoCount": photo_count},
+    )

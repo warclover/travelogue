@@ -15,7 +15,7 @@ import { hideFailure, loadPipelineEstimates } from "./js/errors.js";
 import { transitionTo } from "./js/navigation.js";
 import "./js/render.js";
 import { loadTrips, startHealthCheck, cancelActiveJob } from "./js/api.js";
-import { renderSampleCards, initSampleModal } from "./js/samples.js";
+import { renderSampleCards, renderHeroSampleStrip, initSampleModal, openSamplePreview } from "./js/samples.js";
 import {
   initImportSheet, closeImportSheet, replayCoachMarks, renderRecentPaths, loadIntent,
 } from "./js/sheet.js";
@@ -37,9 +37,14 @@ document.addEventListener("DOMContentLoaded", function () {
   initPathToggle();
   initScrollHint();
   initTripsMore();
+  var openSamplesBtn = $("studio-open-samples");
+  if (openSamplesBtn) openSamplesBtn.addEventListener("click", function () {
+    openSamplePreview("kyoto");
+  });
   initAdvancedOptions();
   loadPipelineEstimates();
   renderSampleCards();
+  renderHeroSampleStrip();
   initSampleModal();
   initImportSheet();
   renderRecentPaths();

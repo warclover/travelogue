@@ -6,10 +6,18 @@ import { LS, UPLOAD_BYTES_SOFT_LIMIT, isGenericPlace } from "./constants.js";
 import { S } from "./state.js";
 import {
   $, show, formatBytes, basenameTitleFromPath,
-  trapSheetFocus, releaseSheetFocusTrap, cssBackgroundImage,
+  trapSheetFocus, releaseSheetFocusTrap, cssBackgroundImage, setStudioBackgroundInert,
 } from "./dom.js";
-import { setError } from "./errors.js";
+import { setError, setImportEstimate } from "./errors.js";
+import { postJson } from "./http.js";
 import { startImport, requestNativeFolder } from "./import-bridge.js";
+
+function setSheetTriggersExpanded(expanded) {
+  ["studio-open-sheet", "studio-open-sheet-returning", "studio-path-toggle"].forEach(function (id) {
+    var el = $(id);
+    if (el) el.setAttribute("aria-expanded", expanded ? "true" : "false");
+  });
+}
 
 export function saveIntent() {
   try {
@@ -39,7 +47,9 @@ export function loadIntent() {
 export function validateTitleField() {
   var input = $("trip-title");
   var err = $("trip-title-error");
+  var counter = $("trip-title-counter");
   if (!input || !err) return true;
+  if (counter) counter.textContent = String((input.value || "").length) + "/20";
   var v = (input.value || "").trim();
   if (v.length > 20) {
     err.textContent = "杂志名最多 20 个字";
@@ -54,6 +64,7 @@ export function resetSheetConfirm() {
   S._pendingAlbumPath = null;
   show($("studio-sheet-confirm"), false);
   show($("studio-sheet-picked"), false);
+  show($("studio-sheet-repick"), false);
   var picked = $("studio-sheet-picked");
   if (picked) picked.textContent = "";
   var pickBtn = $("studio-sheet-pick");
@@ -70,6 +81,7 @@ export function showSheetConfirm(albumPath) {
     picked.textContent = "已选择：" + albumPath;
     show(picked, true);
   }
+  show($("studio-sheet-repick"), true);
   var pickBtn = $("studio-sheet-pick");
   if (pickBtn) {
     pickBtn.disabled = true;
@@ -83,7 +95,15 @@ export function showSheetConfirm(albumPath) {
   show($("studio-sheet-confirm"), true);
   validateTitleField();
   if (titleInput) titleInput.focus();
+  fetchImportThumbsFromAlbumPath(albumPath, { notifyPick: true });
 }
+
+var DEMO_THUMB_URLS = [
+  "/__studio/assets/demo-album/demo-01.jpg",
+  "/__studio/assets/demo-album/demo-02.jpg",
+  "/__studio/assets/demo-album/demo-03.jpg",
+  "/__studio/assets/demo-album/demo-04.jpg",
+];
 
 export function isSheetOpen() { return S._sheetOpen; }
 
@@ -100,6 +120,8 @@ export function openImportSheet() {
   var sheet = $("studio-import-sheet");
   if (root) show(root, true);
   S._sheetOpen = true;
+  setSheetTriggersExpanded(true);
+  setStudioBackgroundInert(true);
   document.body.classList.add("studio-sheet-open");
   setError("");
   S._sheetPreviousFocus = document.activeElement;
@@ -115,6 +137,8 @@ export function closeImportSheet() {
   var root = $("studio-sheet-root");
   if (root) show(root, false);
   S._sheetOpen = false;
+  setSheetTriggersExpanded(false);
+  setStudioBackgroundInert(false);
   document.body.classList.remove("studio-sheet-open");
   releaseSheetFocusTrap(true);
 }
@@ -240,17 +264,46 @@ export function setImportThumbs(urls) {
   var c = $("studio-import-thumbs");
   if (!c) return;
   var spans = c.querySelectorAll("span");
-  var defaults = [
-    "/__studio/assets/demo-album/demo-01.jpg",
-    "/__studio/assets/demo-album/demo-02.jpg",
-    "/__studio/assets/demo-album/demo-03.jpg",
-    "/__studio/assets/demo-album/demo-04.jpg",
-  ];
+  var hasReal = !!(urls && urls.length);
+  c.classList.toggle("studio-import__thumbs--real", hasReal);
   for (var i = 0; i < spans.length; i++) {
-    var u = (urls && urls[i]) || defaults[i];
+    var u = (urls && urls[i]) || DEMO_THUMB_URLS[i];
     var bg = cssBackgroundImage(u);
     spans[i].style.backgroundImage = bg || "";
   }
+}
+
+export function fetchImportThumbsFromAlbumPath(albumPath, options) {
+  options = options || {};
+  if (!albumPath) {
+    setImportThumbs(null);
+    return Promise.resolve();
+  }
+  return postJson("/__travelogue/album-preview", { albumPath: albumPath })
+    .then(function (res) {
+      var data = res.body || {};
+      if (res.status !== 200 || !data.ok) {
+        if (!options.keepExisting) setImportThumbs(null);
+        return;
+      }
+      if (data.thumbs && data.thumbs.length) setImportThumbs(data.thumbs);
+      else if (!options.keepExisting) setImportThumbs(null);
+      if (data.photoCount) {
+        S._importPhotoCount = data.photoCount;
+        if (S.pendingImport && !S.pendingImport.uploadForm) {
+          setImportEstimate({ photoCount: data.photoCount });
+        }
+        if (options.notifyPick && typeof studioToast === "function") {
+          studioToast(
+            "将新建一篇杂志 · 已扫描 " + data.photoCount + " 张照片",
+            { duration: 2800 }
+          );
+        }
+      }
+    })
+    .catch(function () {
+      if (!options.keepExisting) setImportThumbs(null);
+    });
 }
 export function readImportThumbsFromFiles(files) {
   if (!files || !files.length || !window.URL || !URL.createObjectURL) return;
@@ -296,6 +349,7 @@ export function confirmLargeUpload(files) {
 }
 
 export function initImportSheet() {
+  setSheetTriggersExpanded(false);
   ["studio-open-sheet", "studio-open-sheet-returning", "studio-path-toggle"].forEach(function (id) {
     var el = $(id);
     if (el) el.addEventListener("click", function () { openImportSheet(); });
@@ -310,6 +364,10 @@ export function initImportSheet() {
   if (pick) pick.addEventListener("click", function () {
     requestNativeFolder(null, null, { autoStart: false });
   });
+  var repick = $("studio-sheet-repick");
+  if (repick) repick.addEventListener("click", function () {
+    requestNativeFolder(null, null, { autoStart: false });
+  });
   var startBtn = $("studio-sheet-start");
   if (startBtn) startBtn.addEventListener("click", function () { submitSheetImport(false); });
   var skipBtn = $("studio-sheet-skip");
@@ -318,6 +376,7 @@ export function initImportSheet() {
   if (titleInput) {
     titleInput.addEventListener("blur", saveIntent);
     titleInput.addEventListener("input", validateTitleField);
+    validateTitleField();
   }
   ["trip-place", "trip-feeling"].forEach(function (id) {
     var el = $(id);
@@ -325,9 +384,15 @@ export function initImportSheet() {
   });
   var help = $("studio-sheet-help");
   if (help) help.addEventListener("click", function () {
+    var prep = $("studio-sheet-prep");
+    if (prep) {
+      prep.open = true;
+      prep.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return;
+    }
     if (typeof studioToast === "function") {
       studioToast(
-        "同一次旅行的照片放一个文件夹（50–100 张最佳）。可建「精选」「素材」子文件夹。照片不会被移动或修改。",
+        "同一次旅行的照片放一个文件夹（50–100 张最佳）。分 Day1/Day2 可合并或分两次导入。照片不会被移动或修改。",
         { duration: 6000 }
       );
     }

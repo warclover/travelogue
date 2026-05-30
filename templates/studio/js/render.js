@@ -73,7 +73,7 @@ export function render() {
   show($("studio-success"), isSuccess);
 
   var quietOverlay = isImporting || isFailed || isSuccess || isLoading;
-  show($("studio-hero-secondary"), !quietOverlay);
+  show($("studio-hero-secondary"), !quietOverlay && !hasTrips);
   var secondaryLabel = $("studio-secondary-label");
   if (secondaryLabel) {
     secondaryLabel.textContent = hasTrips ? "或者" : "还没自己的照片？";
@@ -107,9 +107,17 @@ export function render() {
     renderContinueCard();
     renderHybridHero();
     renderRecentPathHint();
+    updateReturningActionsLayout();
   } else {
     show($("studio-continue-card"), false);
     show($("studio-recent-path-hint"), false);
+    var stack = $("studio-returning-actions");
+    if (stack) {
+      stack.classList.remove(
+        "studio-returning-actions--has-resume",
+        "studio-returning-actions--has-continue"
+      );
+    }
     var h1 = document.querySelector(".studio-hero__title--after-card");
     if (h1) show(h1, true);
   }
@@ -125,7 +133,7 @@ export function render() {
   }
 
   renderFooterStats();
-  renderCancelNotice();
+  renderResumeImportCard();
 }
 
 export function renderContinueCard() {
@@ -137,9 +145,11 @@ export function renderContinueCard() {
   var trip = S.tripsData[0];
   host.innerHTML = "";
   show(host, true);
-  var titleAfter = $("studio-hero-returning");
-  var h1 = titleAfter && titleAfter.querySelector(".studio-hero__title--after-card");
-  if (h1) show(h1, false);
+
+  var eyebrow = document.createElement("p");
+  eyebrow.className = "studio-continue-card__eyebrow";
+  eyebrow.textContent = "继续上次";
+  host.appendChild(eyebrow);
 
   var thumb = document.createElement("div");
   thumb.className = "studio-continue-card__thumb";
@@ -159,7 +169,10 @@ export function renderContinueCard() {
 
   var sub = document.createElement("p");
   sub.className = "studio-continue-card__sub";
-  sub.textContent = formatUpdatedAt(trip.updatedAt) || "继续上次的杂志";
+  var subParts = [];
+  if (trip.longshotStale) subParts.push("长图待更新");
+  if (trip.updatedAt) subParts.push(formatUpdatedAt(trip.updatedAt));
+  sub.textContent = subParts.join(" · ") || "继续上次的杂志";
   host.appendChild(sub);
 
   var actions = document.createElement("div");
@@ -179,6 +192,30 @@ export function renderContinueCard() {
     actions.appendChild(lng);
   }
   host.appendChild(actions);
+}
+
+export function updateReturningActionsLayout() {
+  var stack = $("studio-returning-actions");
+  var resume = $("studio-resume-card-returning");
+  var continueCard = $("studio-continue-card");
+  var newBlock = $("studio-returning-new");
+  if (!stack || !newBlock) return;
+
+  var hasResume = !!(resume && !resume.hidden);
+  var hasContinue = !!(continueCard && !continueCard.hidden);
+  stack.classList.toggle("studio-returning-actions--has-resume", hasResume);
+  stack.classList.toggle("studio-returning-actions--has-continue", hasContinue);
+
+  var h1 = newBlock.querySelector(".studio-hero__title--after-card");
+  var lead = newBlock.querySelector(".studio-hero__lead");
+  if (h1) show(h1, !hasContinue);
+  if (lead) show(lead, !hasContinue);
+
+  var newBtn = $("studio-open-sheet-returning");
+  if (newBtn) {
+    newBtn.classList.toggle("studio-btn--gold", !hasContinue);
+    newBtn.classList.toggle("studio-btn--ghost-soft", hasContinue);
+  }
 }
 
 // ── Returning hero: left text + right 3 recent cards ──
@@ -414,42 +451,61 @@ export function renderFooterStats() {
   el.textContent = "已生成 " + total + " 篇 · 累计 " + photos + " 张照片 · 全部保存在本机";
 }
 
-export function renderCancelNotice() {
+export function renderResumeImportCard() {
+  if (S.currentState === "Importing" || S.currentState === "Loading" ||
+      S.currentState === "Failed" || S.currentState === "Success") {
+    show($("studio-resume-card"), false);
+    show($("studio-resume-card-returning"), false);
+    return;
+  }
   var raw = "";
   try { raw = localStorage.getItem(LS.lastCancelled) || ""; } catch (e) {}
   var data = null;
   if (raw) { try { data = JSON.parse(raw); } catch (e) { data = null; } }
 
-  function applyTo(el) {
-    if (!el) return;
-    if (!data || !data.echo) { show(el, false); return; }
-    el.innerHTML = "";
-    var label = document.createElement("span");
-    label.textContent = "上次取消：" + data.echo;
-    var btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "studio-cancel-notice__action";
-    btn.textContent = "重新开始";
-    btn.addEventListener("click", function () {
-      if (data.body) startImport(data.body);
+  function paint(host) {
+    if (!host) return;
+    if (!data || !data.echo || !data.body) {
+      show(host, false);
+      host.innerHTML = "";
+      return;
+    }
+    host.innerHTML = "";
+    var eyebrow = document.createElement("p");
+    eyebrow.className = "studio-resume-card__eyebrow";
+    eyebrow.textContent = "未完成的导入";
+    var echo = document.createElement("p");
+    echo.className = "studio-resume-card__echo";
+    echo.textContent = data.echo;
+    echo.title = data.echo;
+    var actions = document.createElement("div");
+    actions.className = "studio-resume-card__actions";
+    var resume = document.createElement("button");
+    resume.type = "button";
+    resume.className = "studio-btn studio-btn--gold studio-btn--sm";
+    resume.textContent = "继续导入";
+    resume.addEventListener("click", function () {
+      startImport(data.body);
       try { localStorage.removeItem(LS.lastCancelled); } catch (e) {}
     });
     var dismiss = document.createElement("button");
     dismiss.type = "button";
-    dismiss.className = "studio-cancel-notice__action";
+    dismiss.className = "studio-resume-card__dismiss";
     dismiss.textContent = "忽略";
-    dismiss.style.opacity = ".6";
     dismiss.addEventListener("click", function () {
       try { localStorage.removeItem(LS.lastCancelled); } catch (e) {}
-      show(el, false);
+      show(host, false);
     });
-    el.appendChild(label);
-    el.appendChild(btn);
-    el.appendChild(dismiss);
-    show(el, true);
+    actions.appendChild(resume);
+    actions.appendChild(dismiss);
+    host.appendChild(eyebrow);
+    host.appendChild(echo);
+    host.appendChild(actions);
+    show(host, true);
   }
-  applyTo($("studio-cancel-notice"));
-  applyTo($("studio-cancel-notice-returning"));
+  paint($("studio-resume-card"));
+  paint($("studio-resume-card-returning"));
+  if (S.currentState === "IdleReturning") updateReturningActionsLayout();
 }
 
 registerRender(render);

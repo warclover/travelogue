@@ -12,9 +12,11 @@ from travelogue.web.studio_constants import STUDIO_MAX_MULTIPART_BODY_BYTES
 from travelogue.web.studio_handlers.export_handlers import handle_export, handle_reveal
 from travelogue.web.studio_handlers.import_handlers import (
     album_path_allowed,
+    handle_album_preview,
     handle_import,
     read_import_request,
 )
+from travelogue.web.studio_pipeline import sample_album_preview_thumbs
 from travelogue.web.studio_handlers.job_handlers import handle_cancel, handle_status
 from travelogue.web.studio_jobs import get_job_store, reset_job_store
 from tests.studio_test_helpers import MockStudioHandler
@@ -260,3 +262,45 @@ def test_read_import_request_json_body(tmp_path: Path) -> None:
     assert payload["albumPath"] == "/tmp/album"
     assert payload["title"] == "JSON导入"
     assert upload_dir is None
+
+
+def test_sample_album_preview_thumbs(tmp_path: Path) -> None:
+    from tests.studio_test_helpers import make_test_album
+
+    album = make_test_album(tmp_path, n=8)
+    thumbs, count = sample_album_preview_thumbs(album)
+    assert count == 8
+    assert len(thumbs) == 4
+    assert all(t.startswith("data:image/jpeg;base64,") for t in thumbs)
+
+
+def test_handle_album_preview_success(tmp_path: Path) -> None:
+    from tests.studio_test_helpers import make_test_album
+
+    trips_dir = tmp_path / "trips"
+    album = make_test_album(tmp_path, n=5)
+    handler = MockStudioHandler(trips_dir, json_body={"albumPath": str(album)})
+    handle_album_preview(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 200
+    assert body["ok"] is True
+    assert body["photoCount"] == 5
+    assert len(body["thumbs"]) == 4
+
+
+def test_handle_album_preview_denies_untrusted_album(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    outside = tmp_path / "outside-album"
+    outside.mkdir()
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={"albumPath": str(outside)},
+        studio_host="0.0.0.0",
+        studio_allow_lan=True,
+    )
+    handle_album_preview(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 403
+    assert body["error"] == "E_STUDIO_ALBUM_DENIED"

@@ -111,6 +111,54 @@ def count_album_photos(album_dir: Path, *, max_photos: int = 250) -> int:
     return len(paths)
 
 
+def _even_sample_indices(total: int, count: int) -> list[int]:
+    if total <= 0:
+        return []
+    if total <= count:
+        return list(range(total))
+    if count <= 1:
+        return [0]
+    step = (total - 1) / (count - 1)
+    return [min(total - 1, round(i * step)) for i in range(count)]
+
+
+def sample_album_preview_thumbs(
+    album_dir: Path,
+    *,
+    count: int = 4,
+    thumb_px: int = 112,
+    max_photos: int = 250,
+) -> tuple[list[str], int]:
+    """Return JPEG data-URL thumbs evenly sampled from *album_dir*."""
+    import base64
+    from io import BytesIO
+
+    from travelogue.media.image_ops import load_image_normalized
+
+    try:
+        paths, _stats = scan_image_paths(album_dir, max_photos=max_photos)
+    except IngestError:
+        return [], 0
+
+    photo_count = len(paths)
+    if not paths:
+        return [], 0
+
+    thumbs: list[str] = []
+    for idx in _even_sample_indices(len(paths), count):
+        try:
+            loaded = load_image_normalized(paths[idx])
+            img = loaded.image
+            img.thumbnail((thumb_px, thumb_px))
+            buf = BytesIO()
+            img.save(buf, format="JPEG", quality=78)
+            b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+            thumbs.append(f"data:image/jpeg;base64,{b64}")
+        except Exception:
+            continue
+    return thumbs, photo_count
+
+
 def resolve_studio_trip_dir(
     album_dir: Path,
     *,

@@ -2,11 +2,12 @@
  * Travelogue Studio · sample longshot cards + preview modal.
  */
 import { SAMPLE_LONGSHOTS, LS } from "./constants.js";
-import { $, show, trapSheetFocus } from "./dom.js";
+import { $, show, trapSheetFocus, setStudioBackgroundInert } from "./dom.js";
 import { openImportSheet } from "./sheet.js";
 
 var _modalFocusRelease = null;
 var _modalPreviousFocus = null;
+var _openSampleFn = null;
 
 function releaseModalFocusTrap(restoreFocus) {
   if (_modalFocusRelease) {
@@ -20,6 +21,10 @@ function releaseModalFocusTrap(restoreFocus) {
 }
 
 function _pad2(n) { return (n < 10 ? "0" : "") + n; }
+
+export function openSamplePreview(key) {
+  if (_openSampleFn) _openSampleFn(key);
+}
 
 export function buildSampleThumb(key) {
   var s = SAMPLE_LONGSHOTS[key];
@@ -153,6 +158,45 @@ export function renderSampleCards() {
   });
 }
 
+export function renderHeroSampleStrip() {
+  var host = $("studio-hero-samples");
+  if (!host) return;
+  host.innerHTML = "";
+  Object.keys(SAMPLE_LONGSHOTS).forEach(function (key) {
+    var s = SAMPLE_LONGSHOTS[key];
+    if (!s || !s.thumbSrc) return;
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "studio-hero__sample-chip";
+    btn.setAttribute("data-sample-open", key);
+    btn.setAttribute("aria-label", "查看 " + s.title + " 样张");
+    var img = document.createElement("img");
+    img.src = s.thumbSrc;
+    img.alt = "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    var label = document.createElement("span");
+    label.textContent = s.title;
+    btn.appendChild(img);
+    btn.appendChild(label);
+    host.appendChild(btn);
+  });
+}
+
+function bindSampleOpenTriggers(open) {
+  document.querySelectorAll("[data-sample-open]").forEach(function (el) {
+    if (el._sampleBound) return;
+    el._sampleBound = true;
+    var key = el.getAttribute("data-sample-open");
+    el.addEventListener("click", function () { open(key); });
+    el.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      open(key);
+    });
+  });
+}
+
 // ── Sample longshot modal ──
 export function initSampleModal() {
   var modal = $("studio-sample-modal");
@@ -167,6 +211,7 @@ export function initSampleModal() {
     titleEl.textContent = sample.title;
     pages.innerHTML = buildSampleFull(key);
     show(modal, true);
+    setStudioBackgroundInert(true);
     document.body.style.overflow = "hidden";
     _modalPreviousFocus = document.activeElement;
     _modalFocusRelease = trapSheetFocus(modal);
@@ -178,8 +223,12 @@ export function initSampleModal() {
   function close() {
     releaseModalFocusTrap(true);
     show(modal, false);
+    setStudioBackgroundInert(false);
     document.body.style.overflow = "";
   }
+
+  _openSampleFn = open;
+  bindSampleOpenTriggers(open);
 
   var samplesHost = $("studio-samples");
   if (samplesHost) {

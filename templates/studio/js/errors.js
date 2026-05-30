@@ -5,6 +5,13 @@ import { STUDIO_ERROR_MESSAGES, DEFAULT_PIPELINE_ESTIMATES } from "./constants.j
 import { S } from "./state.js";
 import { $, show, setTitle } from "./dom.js";
 
+function setSlowHero(level) {
+  var hero = $("studio-hero");
+  if (!hero) return;
+  hero.classList.remove("studio-hero--slow1", "studio-hero--slow2", "studio-hero--slow3");
+  if (level) hero.classList.add("studio-hero--slow" + String(level));
+}
+
 export function setError(msg) {
   var progressEl = $("studio-error");
   var idleEl = $("studio-import-error");
@@ -98,6 +105,7 @@ export function hideFailure() {
 }
 
 export function showSlowHint(level) {
+  setSlowHero(level);
   if (level === 3) {
     setWarning("仍可继续等待，或在「高级 · 分析选项」中关闭场景分析以加快速度");
     return;
@@ -109,4 +117,7 @@ export function showSlowHint(level) {
   setWarning("比预期久一些，请耐心等待…");
 }
 
-export function hideSlowHint() { setWarning(""); }
+export function hideSlowHint() {
+  setWarning("");
+  setSlowHero(0);
+}

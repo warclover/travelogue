@@ -35,6 +35,7 @@ from travelogue.web.studio_handlers.paths import (
     LONGSHOT_PATH,
     NARRATE_PATH,
     PICK_FOLDER_PATH,
+    ALBUM_PREVIEW_PATH,
     PIPELINE_SUFFIX,
     PROMOTE_TIER_SUFFIX,
     REVEAL_PATH,
@@ -57,6 +58,7 @@ __all__ = [
     "CANCEL_PATH",
     "EXPORT_PATH",
     "PICK_FOLDER_PATH",
+    "ALBUM_PREVIEW_PATH",
     "CHAPTER_LAYOUT_PATH",
     "STUDIO_ASSET_PREFIX",
     "SAVE_COPY_SUFFIX",
@@ -160,6 +162,9 @@ class StudioMixin:
             return True
         if path == PICK_FOLDER_PATH:
             config_handlers.handle_pick_folder(self)
+            return True
+        if path == ALBUM_PREVIEW_PATH:
+            import_handlers.handle_album_preview(self)
             return True
         curate_trip_id = match_trip_curate(path)
         if curate_trip_id is not None:

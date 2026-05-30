@@ -1,7 +1,7 @@
 /**
  * Travelogue Studio · import orchestration, success page, uploads, resume.
  */
-import { LS, SS, IMPORT_PHOTO_CAP, SUCCESS_LONGSHOT_SCALE, SUCCESS_SLOW_MS } from "./constants.js";
+import { LS, SS, SUCCESS_LONGSHOT_SCALE, SUCCESS_SLOW_MS } from "./constants.js";
 import { S } from "./state.js";
 import { $, show, syncImportUiDisabled, setBusy } from "./dom.js";
 import { isGenericPlace } from "./constants.js";
@@ -18,8 +18,12 @@ import { postImport, postMultipartImport, waitJob, loadTrips } from "./api.js";
 import {
   openImportSheet, showSheetConfirm, submitSheetImport, pushRecentPath,
   appendPlanFileToForm, revokeThumbUrls, setImportThumbs, readImportThumbsFromFiles,
-  confirmLargeUpload, maybeShowCoach, dismissCoach,
+  confirmLargeUpload, maybeShowCoach, dismissCoach, fetchImportThumbsFromAlbumPath,
 } from "./sheet.js";
+import {
+  updateImportStages, playSuccessCoverTransition, applySuccessCover,
+  resetSuccessCover, resolveSuccessCoverUrl,
+} from "./progress.js";
 
 // ── Import flows ──
 export function focusPathImport(message) {
@@ -251,14 +255,29 @@ export function markFirstPreviewDone(tripId) {
   if (tripId) localStorage.setItem("travelogue.studio.firstTripId", tripId);
 }
 
-export function handleImportSuccess(job) {
+function finishImportSuccessTransition(job, ui) {
+  ui = ui || {};
+  var result = job.result || {};
+  var tripId = result.tripId;
+  var title = ui.title || result.title || "我的旅途";
+  var coverUrl = resolveSuccessCoverUrl(tripId);
+
+  playSuccessCoverTransition(coverUrl, function () {
+    applySuccessCover(coverUrl, title);
+    transitionTo("Success");
+    var countdownP = document.querySelector(".studio-success__countdown");
+    if (countdownP) show(countdownP, false);
+    clearSuccessTimer();
+  });
+}
+
+function populateImportSuccessUi(job) {
   job = normalizeCompletedImportJob(job);
   if (!job || typeof job !== "object") {
     throw new Error("导入已完成，请刷新页面后在首页查看");
   }
   var result = job.result || {};
   var url = result.previewUrl;
-  var openUrl = url;
   var tripId = result.tripId;
   _successTripId = tripId || null;
   setSuccessLongshotStatus("", false);
@@ -277,43 +296,53 @@ export function handleImportSuccess(job) {
 
   var openLink = $("studio-success-open");
   var msg = $("studio-success-msg");
+  var longshotBtn = $("studio-success-longshot");
+  var pathsHint = $("studio-success-paths-hint");
   if (openLink && url) openLink.href = url;
 
-  // F-P4-PRV-06: upgrade to the "peak" deep link when available.
-  // Graceful: if this resolves after auto-open fires, the base URL is used.
   if (tripId) {
     fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry")
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) {
-        if (data && data.ok && data.previewUrl) {
-          openUrl = data.scrollShareUrl || data.previewUrl;
-          if (openLink) openLink.href = openUrl;
+        if (data && data.ok && data.previewUrl && openLink) {
+          openLink.href = data.scrollShareUrl || data.previewUrl;
         }
       })
       .catch(function () {});
   }
+
   var title = result.title || ($("trip-title") && $("trip-title").value) || "我的旅途";
   var featured = result.featuredCount;
   var segments = result.segmentCount;
   var photoCount = result.photoCount || 0;
   if (msg) {
     if (result.g1Pending) {
-      msg.textContent =
-        "《" + title + "》章节结构已排好 · 请在预览中确认后继续生成文案";
-      if (segments > 0) msg.textContent += " · " + segments + " 段行程";
-    } else if (featured > 0) {
-      msg.textContent = "《" + title + "》已生成 · " + featured + " 张精选已用于封面与章首";
-      if (segments > 0) msg.textContent += " · " + segments + " 段行程";
-      if (photoCount >= IMPORT_PHOTO_CAP) {
-        msg.textContent += " · 已优先保留精选与前 " + IMPORT_PHOTO_CAP + " 张";
-      }
+      msg.textContent = "《" + title + "》章节结构已就绪，请先在预览中确认。";
     } else {
-      msg.textContent = "《" + title + "》已生成 · 可在预览中标记精选照片";
-      if (segments > 0) msg.textContent += " · " + segments + " 段行程";
-      if (photoCount >= IMPORT_PHOTO_CAP) {
-        msg.textContent += " · 已优先保留精选与前 " + IMPORT_PHOTO_CAP + " 张";
-      }
+      var summary = featured > 0 ? ("精选 " + featured + " 张") : ("照片 " + photoCount + " 张");
+      if (segments > 0) summary += "，行程 " + segments + " 段";
+      msg.textContent = "《" + title + "》已生成 · " + summary;
     }
+  }
+
+  if (result.g1Pending) {
+    if (longshotBtn) show(longshotBtn, false);
+    if (openLink) {
+      openLink.classList.remove("studio-btn--outline-inverse");
+      openLink.classList.add("studio-btn--gold");
+      var openLabel = openLink.querySelector(".studio-btn__label");
+      if (openLabel) openLabel.textContent = "去预览确认章节";
+    }
+    if (pathsHint) pathsHint.textContent = "先确认章节结构 · 再继续生成文案";
+  } else {
+    if (longshotBtn) show(longshotBtn, true);
+    if (openLink) {
+      openLink.classList.remove("studio-btn--gold");
+      openLink.classList.add("studio-btn--outline-inverse");
+      var normalLabel = openLink.querySelector(".studio-btn__label");
+      if (normalLabel) normalLabel.textContent = "打开卷轴预览";
+    }
+    if (pathsHint) pathsHint.textContent = "群聊发长图 · 沉浸读卷轴";
   }
 
   var chipsHost = $("studio-success-chips");
@@ -325,33 +354,15 @@ export function handleImportSuccess(job) {
       g1Chip.textContent = "待确认章节结构";
       chipsHost.appendChild(g1Chip);
     }
-    if (featured > 0) {
-      var c1 = document.createElement("span");
-      c1.className = "studio-success__chip";
-      c1.textContent = "精选 " + featured + " 张";
-      chipsHost.appendChild(c1);
-    }
-    if (segments > 0) {
-      var c2 = document.createElement("span");
-      c2.className = "studio-success__chip";
-      c2.textContent = "行程 " + segments + " 段";
-      chipsHost.appendChild(c2);
-    }
-    if (photoCount >= IMPORT_PHOTO_CAP) {
-      var c3 = document.createElement("span");
-      c3.className = "studio-success__chip";
-      c3.textContent = "优先精选 · 前 " + IMPORT_PHOTO_CAP + " 张";
-      chipsHost.appendChild(c3);
-    }
     show(chipsHost, chipsHost.childElementCount > 0);
   }
 
-  transitionTo("Success");
+  return { title: title, tripId: tripId };
+}
 
-  // P5-2.5: no auto-open preview; primary action is longshot on success page.
-  var countdownP = document.querySelector(".studio-success__countdown");
-  if (countdownP) show(countdownP, false);
-  clearSuccessTimer();
+export function handleImportSuccess(job) {
+  var ui = populateImportSuccessUi(job);
+  finishImportSuccessTransition(job, ui);
 }
 
 export function startImport(body) {
@@ -368,11 +379,31 @@ export function startImport(body) {
   setError("");
   hideFailure();
   transitionTo("Importing");
-  revokeThumbUrls();
-  setImportThumbs(null);
-  setImportEstimate(body);
+  if (body && body.uploadForm) {
+    /* thumbs set in uploadAndImportCore */
+  } else if (body && body.useDemoAlbum) {
+    revokeThumbUrls();
+    setImportThumbs(null);
+  } else if (body && body.albumPath) {
+    revokeThumbUrls();
+    fetchImportThumbsFromAlbumPath(body.albumPath, { keepExisting: true });
+  } else {
+    revokeThumbUrls();
+    setImportThumbs(null);
+  }
+  var estimateBody = body || {};
+  if (S._importPhotoCount) {
+    estimateBody = Object.assign({}, estimateBody, { photoCount: S._importPhotoCount });
+  }
+  setImportEstimate(estimateBody);
   var stage = $("studio-stage"); if (stage) stage.textContent = "准备导入…";
+  updateImportStages({ stage: "ingest", stageIndex: 1 });
   var bar = $("studio-bar-fill"); if (bar) bar.style.width = "0%";
+  var barWrap = $("studio-progress-bar");
+  if (barWrap) {
+    barWrap.setAttribute("aria-valuenow", "0");
+    barWrap.setAttribute("aria-valuetext", "准备导入…");
+  }
   var pctEl = $("studio-pct"); if (pctEl) show(pctEl, false);
 
   return withJobBusyRetry(function () { return postImport(body); }).then(function (result) {
@@ -470,7 +501,13 @@ export function uploadAndImportCore(files, titleVal, placeVal) {
   readImportThumbsFromFiles(files);
   setImportEstimate({ fileCount: files.length });
   var stage = $("studio-stage"); if (stage) stage.textContent = "上传照片中…";
+  updateImportStages({ stage: "ingest", stageIndex: 1 });
   var bar = $("studio-bar-fill"); if (bar) bar.style.width = "0%";
+  var barWrap = $("studio-progress-bar");
+  if (barWrap) {
+    barWrap.setAttribute("aria-valuenow", "0");
+    barWrap.setAttribute("aria-valuetext", "上传照片中…");
+  }
   var progress = $("upload-progress");
   show(progress, true);
   if (progress) progress.value = 0;
@@ -587,8 +624,18 @@ export function resumeActiveJobIfAny() {
   }
   var gen = ++S._importGen;
   transitionTo("Importing");
-  setImportThumbs(null);
+  if (S.pendingImport && S.pendingImport.albumPath) {
+    fetchImportThumbsFromAlbumPath(S.pendingImport.albumPath, { keepExisting: true });
+  } else {
+    setImportThumbs(null);
+  }
   var stage = $("studio-stage"); if (stage) stage.textContent = "恢复上次导入…";
+  updateImportStages({ stage: "ingest", stageIndex: 1 });
+  var barWrap = $("studio-progress-bar");
+  if (barWrap) {
+    barWrap.setAttribute("aria-valuenow", "0");
+    barWrap.setAttribute("aria-valuetext", "恢复上次导入…");
+  }
   waitJob(jobId, gen).then(function (job) {
     if (!job) return;
     try { sessionStorage.removeItem(SS.activeJobId); sessionStorage.removeItem(SS.activePending); } catch (e) {}
@@ -609,4 +656,7 @@ export function resumeActiveJobIfAny() {
 }
 
 registerImportHandlers({ startImport: startImport, requestNativeFolder: requestNativeFolder });
-registerLeaveSuccessHandler(clearSuccessLongshotPoll);
+registerLeaveSuccessHandler(function () {
+  clearSuccessLongshotPoll();
+  resetSuccessCover();
+});
