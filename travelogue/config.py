@@ -72,7 +72,11 @@ class IngestConfig:
     min_long_edge_layout_px: int = 800
     min_short_edge_layout_px: int = 600
     low_res_median_ratio: float = 0.55
-    low_res_peak_ratio: float = 0.42
+    low_res_peak_ratio: float = 0.42  # deprecated · unused; kept for config compat
+    low_res_min_megapixels: float = 0.8
+    low_res_mp_ratio: float = 0.45
+    low_res_circuit_breaker_ratio: float = 0.25
+    low_res_circuit_breaker_median_short_px: int = 1200
     detect_faces: bool = True
     face_min_size_px: int = 48
     featured_dir_names: tuple[str, ...] = ("主图上传", "精选", "featured", "hero")
@@ -409,6 +413,12 @@ def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
         min_short_edge_layout_px=int(raw.get("min_short_edge_layout_px", 600)),
         low_res_median_ratio=float(raw.get("low_res_median_ratio", 0.55)),
         low_res_peak_ratio=float(raw.get("low_res_peak_ratio", 0.42)),
+        low_res_min_megapixels=float(raw.get("low_res_min_megapixels", 0.8)),
+        low_res_mp_ratio=float(raw.get("low_res_mp_ratio", 0.45)),
+        low_res_circuit_breaker_ratio=float(raw.get("low_res_circuit_breaker_ratio", 0.25)),
+        low_res_circuit_breaker_median_short_px=int(
+            raw.get("low_res_circuit_breaker_median_short_px", 1200)
+        ),
         detect_faces=bool(raw.get("detect_faces", True)),
         face_min_size_px=int(raw.get("face_min_size_px", 48)),
         featured_dir_names=tuple(str(x) for x in (raw.get("featured_dir_names") or ["主图上传", "精选", "featured", "hero"])),

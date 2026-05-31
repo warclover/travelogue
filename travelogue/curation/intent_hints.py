@@ -6,8 +6,6 @@ import re
 import unicodedata
 from typing import Any
 
-from travelogue.curation.arc_patterns import ARC_PEAK
-
 _STOPWORDS = frozenset(
     {
         "我们",
@@ -142,12 +140,15 @@ def arc_segment_for_chapter_with_intent(
     profile: str = "dynamic",
     peak_chapters: set[int] | None = None,
 ) -> str:
-    """Prefer intent peak chapters when userNotes names a highlight day."""
+    """Chapter-level arc beat from profile; intent peak is applied at screen stamp time."""
     from travelogue.curation.arc_patterns import arc_segment_for_chapter
 
-    if peak_chapters and index in peak_chapters:
-        return ARC_PEAK
+    _ = peak_chapters  # layout callers pass peak_chapters separately for scoring boost
     return arc_segment_for_chapter(index, total, profile=profile)  # type: ignore[arg-type]
+
+
+def is_intent_peak_chapter(index: int, peak_chapters: set[int] | None) -> bool:
+    return bool(peak_chapters and index in peak_chapters)
 
 
 def build_intent_hints(trip: dict) -> dict[str, Any]:

@@ -14,7 +14,7 @@ from travelogue.curation.intent_hints import (
     extract_user_notes_keywords,
     peak_chapter_hints,
 )
-from travelogue.curation.arc_patterns import ARC_PEAK
+from travelogue.curation.arc_patterns import ARC_RISE
 
 
 def test_extract_user_notes_keywords() -> None:
@@ -44,9 +44,9 @@ def test_apply_editorial_intent_hints() -> None:
     assert hints["featuredBoost"] is True
 
 
-def test_arc_segment_for_chapter_with_intent_peak() -> None:
+def test_arc_segment_for_chapter_with_intent_uses_profile_not_intent_override() -> None:
     seg = arc_segment_for_chapter_with_intent(2, 4, profile="dynamic", peak_chapters={2})
-    assert seg == ARC_PEAK
+    assert seg == ARC_RISE
 
 
 def test_anchor_match_multiplier() -> None:

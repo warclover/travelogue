@@ -28,6 +28,26 @@ def test_longshot_filter_caps_screens():
     assert picked[0]["screenId"] == "s0"
 
 
+def test_longshot_filter_many_peak_screens_does_not_hang():
+    """Gallery chapters may mark every screen as peak; must not trigger 2^n search."""
+    import time
+
+    screens = [
+        {
+            "screenId": f"s{i}",
+            "patternId": "screen-portrait-1",
+            "arcSegment": "peak",
+            "slots": [{"assetId": f"a{i}"}],
+        }
+        for i in range(67)
+    ]
+    t0 = time.perf_counter()
+    picked = select_longshot_screens(screens, max_screens=12, enable_mmr=False)
+    elapsed = time.perf_counter() - t0
+    assert len(picked) <= 12
+    assert elapsed < 2.0
+
+
 def test_longshot_filter_strips_breath_from_render():
     chapters = [
         {

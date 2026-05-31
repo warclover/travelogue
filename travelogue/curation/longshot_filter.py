@@ -8,6 +8,8 @@ from typing import Mapping
 DEFAULT_MAX_SCREENS = 12
 BREATH_PATTERN = "screen-breath-pause"
 DEFAULT_MMR_LAMBDA = 0.72
+# Exhaustive consecutive-pattern search is OK for longshot picks (≤12); not for |must|.
+_MAX_EXACT_CONSECUTIVE_SEARCH = 18
 
 
 def _is_breath_screen(screen: dict) -> bool:
@@ -125,11 +127,18 @@ def select_longshot_screens(
 
     indexed = list(enumerate(content))
     must = {0}
+    if len(indexed) > 1:
+        must.add(1)
+    peak_idx: int | None = None
+    peak_score = float("-inf")
     for i, sc in indexed:
         if sc.get("arcSegment") == "peak":
-            must.add(i)
-        if i < 2:
-            must.add(i)
+            score = _screen_score(i, sc)
+            if score > peak_score:
+                peak_score = score
+                peak_idx = i
+    if peak_idx is not None:
+        must.add(peak_idx)
 
     if enable_mmr and assets_by_id:
         mmr_indices = set(
@@ -173,34 +182,47 @@ def select_longshot_screens(
 
         ordered = sorted(chosen)
         required = sorted(must & set(ordered))
-        seed: list[int] = []
-        if required:
-            req_screens = [content[i] for i in required]
-            if not plan_violates_consecutive_pattern(
-                req_screens,
-                max_streak=max_consecutive_same_pattern,
-            ):
-                seed = required
-        best: list[int] = []
+        if len(ordered) <= _MAX_EXACT_CONSECUTIVE_SEARCH:
+            seed: list[int] = []
+            if required:
+                req_screens = [content[i] for i in required]
+                if not plan_violates_consecutive_pattern(
+                    req_screens,
+                    max_streak=max_consecutive_same_pattern,
+                ):
+                    seed = required
+            best: list[int] = []
 
-        def _search(pos: int, current: list[int]) -> None:
-            nonlocal best
-            if len(current) > len(best):
-                best = list(current)
-            if pos >= len(ordered):
-                return
-            _search(pos + 1, current)
-            trial = current + [ordered[pos]]
-            trial_screens = [content[i] for i in trial]
-            if not plan_violates_consecutive_pattern(
-                trial_screens,
-                max_streak=max_consecutive_same_pattern,
-            ):
-                _search(pos + 1, trial)
+            def _search(pos: int, current: list[int]) -> None:
+                nonlocal best
+                if len(current) > len(best):
+                    best = list(current)
+                if pos >= len(ordered):
+                    return
+                _search(pos + 1, current)
+                trial = current + [ordered[pos]]
+                trial_screens = [content[i] for i in trial]
+                if not plan_violates_consecutive_pattern(
+                    trial_screens,
+                    max_streak=max_consecutive_same_pattern,
+                ):
+                    _search(pos + 1, trial)
 
-        _search(0, seed)
-        if best:
-            chosen = set(best)
+            _search(0, seed)
+            if best:
+                chosen = set(best)
+        else:
+            # Greedy pass when chosen set exceeds exact consecutive-pattern search budget.
+            trial: list[int] = []
+            for idx in ordered:
+                candidate = trial + [idx]
+                if not plan_violates_consecutive_pattern(
+                    [content[i] for i in candidate],
+                    max_streak=max_consecutive_same_pattern,
+                ):
+                    trial.append(idx)
+            if trial:
+                chosen = set(trial)
 
     keep = chosen
     out: list[dict] = []

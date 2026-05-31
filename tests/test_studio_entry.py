@@ -27,6 +27,17 @@ def _trip_with_screens(*chapters_screens: list[dict]) -> dict:
     }
 
 
+def test_peak_prefers_best_scored_peak_screen():
+    trip = _trip_with_screens(
+        [
+            _screen("s1", ["a1"], arc_segment="peak"),
+            _screen("grid-peak", ["a2", "a3"], arc_segment="peak"),
+            _screen("hero-peak", ["a4"], arc_segment="peak"),
+        ],
+    )
+    assert resolve_peak_screen_id(trip) == "hero-peak"
+
+
 def test_peak_prefers_arc_segment_over_scene_cluster():
     trip = _trip_with_screens(
         [_screen("s1", ["a1"]), _screen("peak", ["a2"], arc_segment="peak")],

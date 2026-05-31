@@ -218,6 +218,8 @@ def _replan_day_buckets_beam(
             arc_seg = None
             arc_boost = 0.0
             if _arc_scoring_active(arc_mode):
+                from travelogue.curation.arc_patterns import ARC_PEAK
+
                 arc_seg = arc_segment_for_chapter_with_intent(
                     ch_index,
                     total_ch,
@@ -225,6 +227,7 @@ def _replan_day_buckets_beam(
                     peak_chapters=intent_peak_chapters,
                 )
                 if intent_peak_chapters and ch_index in intent_peak_chapters:
+                    arc_seg = ARC_PEAK
                     arc_boost = INTENT_PEAK_ARC_BOOST
             hero_ids = {hero_by_ch[ch_id]} if ch_id and hero_by_ch.get(ch_id) else set()
             bd = score_screen_plan(

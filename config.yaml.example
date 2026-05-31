@@ -110,8 +110,12 @@ ingest:
   # 策展时剔除明显低于本批中位分辨率的照片（仍保留在 trip.json，不参与版面/封面）
   min_long_edge_layout_px: 800
   min_short_edge_layout_px: 600
-  low_res_median_ratio: 0.55
-  low_res_peak_ratio: 0.42
+  low_res_median_ratio: 0.55      # 相对阈值：短边 ≥ 中位短边 × 此比例
+  low_res_min_megapixels: 0.8     # 相对阈值：百万像素下限（与 mp_ratio 取较大）
+  low_res_mp_ratio: 0.45         # 相对阈值：像素面积 ≥ 中位 MP × 此比例
+  low_res_circuit_breaker_ratio: 0.25
+  low_res_circuit_breaker_median_short_px: 1200
+  low_res_peak_ratio: 0.42       # 已废弃（长边 peak 易误伤）；保留键以兼容旧配置
   max_video_clip_mb: 1.5
   max_zip_mb: 25
   # 人脸检测（需 pip install -e ".[vision]"）；用于人物竖图免拼图、焦点

@@ -32,11 +32,20 @@ def _ordered_screens(trip: dict) -> list[tuple[str, list[str], str | None]]:
     return screens
 
 
+def _peak_screen_score(screen: dict) -> float:
+    slots = screen.get("slots") or []
+    aids = [s.get("assetId") for s in slots if s.get("assetId")]
+    score = 1.0
+    if len(aids) <= 1:
+        score += 0.5
+    return score
+
+
 def resolve_peak_screen_id(trip: dict) -> str | None:
     """Peak screen for the preview deep link (PRD-PHASE4 §8.5 fallback chain).
 
     Guaranteed non-None when any screen exists:
-      1. first screen with arcSegment == \"peak\" and assets
+      1. best-scored screen with arcSegment == \"peak\" and assets
       2. first screen with arcSegment == \"peak\"
       3. largest scene cluster -> first matching screen
       4. first content screen (has >=1 asset slot)
@@ -46,9 +55,26 @@ def resolve_peak_screen_id(trip: dict) -> str | None:
     if not screens:
         return None
 
+    best_sid: str | None = None
+    best_score = float("-inf")
+    screen_by_id: dict[str, dict] = {}
+    for chapter in trip.get("chapters") or []:
+        for screen in chapter.get("screens") or []:
+            sid = screen.get("screenId")
+            if sid:
+                screen_by_id[str(sid)] = screen
+
     for sid, aids, arc in screens:
         if arc == "peak" and aids:
-            return sid
+            score = _peak_screen_score(screen_by_id.get(sid, {}))
+            if score > best_score:
+                best_score = score
+                best_sid = sid
+            elif score == best_score and best_sid is not None:
+                best_sid = sid
+    if best_sid:
+        return best_sid
+
     for sid, _aids, arc in screens:
         if arc == "peak":
             return sid
