@@ -11,6 +11,12 @@ from travelogue.web.studio_handlers.common import studio_ctx
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 
+def studio_capabilities(*, client_host: str = "") -> dict[str, bool]:
+    """Expose client-side feature gates (not UA sniffing on the browser)."""
+    host = (client_host or "").strip()
+    pick_folder = sys.platform == "win32" and (not host or is_loopback_host(host))
+    return {"pickFolder": pick_folder}
+
 def handle_config(handler: StudioHandlerProtocol) -> None:
     from travelogue.web.studio_narrate import studio_llm_status
     from travelogue.web.studio_stages import pipeline_estimate_tiers
@@ -37,7 +43,14 @@ def handle_config(handler: StudioHandlerProtocol) -> None:
             )
             return
         cfg = load_config(target if target.is_file() else None)
-        body = {"ok": True, **studio_config_expose(cfg), **studio_llm_status(cfg=cfg)}
+        body = {
+            "ok": True,
+            **studio_config_expose(cfg),
+            **studio_llm_status(cfg=cfg),
+            "capabilities": studio_capabilities(
+                client_host=handler.client_address[0] if handler.client_address else ""
+            ),
+        }
         handler._json_response(200, body)
         return
 
@@ -46,6 +59,7 @@ def handle_config(handler: StudioHandlerProtocol) -> None:
     if handler.studio_config_path and handler.studio_config_path.is_file():
         cfg = load_config(handler.studio_config_path)
     status = studio_llm_status(cfg=cfg)
+    client_host = handler.client_address[0] if handler.client_address else ""
     handler._json_response(
         200,
         {
@@ -53,6 +67,7 @@ def handle_config(handler: StudioHandlerProtocol) -> None:
             **studio_config_expose(cfg),
             **status,
             "pipelineEstimates": pipeline_estimate_tiers(),
+            "capabilities": studio_capabilities(client_host=client_host),
         },
     )
 

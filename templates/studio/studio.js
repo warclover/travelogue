@@ -28,9 +28,13 @@ import {
   rememberCancelled, resumeActiveJobIfAny, clearSuccessLongshotPoll, startSuccessLongshot,
 } from "./js/import-flow.js";
 import { trackStudioEvent } from "./js/analytics.js";
+import { initViewport } from "./js/viewport.js";
+import { initStudioCapabilities } from "./js/capabilities.js";
 
 // ── Main init ──
 document.addEventListener("DOMContentLoaded", function () {
+  initViewport();
+  initStudioCapabilities();
   initFooter();
   initCopyAddr();
   var helpReplay = $("studio-help-replay");

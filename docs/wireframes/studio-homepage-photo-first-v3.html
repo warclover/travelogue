@@ -98,6 +98,7 @@
       transition: max-width .25s ease;
     }
     .preview-frame--mobile { max-width: 390px; }
+    .preview-frame--tablet { max-width: 834px; }
 
     .wf-state { display: none; }
     .wf-state.is-active { display: block; }
@@ -741,9 +742,10 @@
     <button data-state="empty" class="is-active">① 空态（首次）</button>
     <button data-state="returning">② 回访态</button>
     <button data-state="importing">③ 导入中</button>
-    <button data-state="mobile">④ 窄屏 390</button>
+    <button data-state="mobile">④ 窄屏 compact · 390</button>
+    <button data-state="tablet">⑤ 平板 tablet · 834</button>
   </div>
-  <div class="bp-badge" id="bp-indicator">preview: desktop · 1440</div>
+  <div class="bp-badge" id="bp-indicator">P10 · wide · 1440</div>
 </div>
 
 <div class="stage">
@@ -1091,6 +1093,14 @@
       <li>暗色 vs 亮色：现在 Hero 暗、画廊亮，是否统一</li>
     </ul>
 
+    <h3>P10 布局档位（2026-05-31）</h3>
+    <ul>
+      <li><code>wide</code> &gt;980px — 导入 panel 宽、status 单行</li>
+      <li><code>tablet</code> 769–980px — hybrid 单列（④⑤ 预览宽度）</li>
+      <li><code>compact</code> ≤768px — 导入 eyebrow + body 两行</li>
+    </ul>
+    <p>能力轴 <code>data-cap-pick-folder</code> 与布局独立 · 详见 <code>docs/PRD-STUDIO-DUAL-LAYOUT.md</code></p>
+
     <h3>下一步</h3>
     <ul>
       <li>你审核线框后选定方向</li>
@@ -1115,8 +1125,16 @@
       el.classList.toggle("is-active", el.id === "state-" + id);
     });
     var mobile = id === "mobile";
+    var tablet = id === "tablet";
     frame.classList.toggle("preview-frame--mobile", mobile);
-    bp.textContent = mobile ? "preview: mobile · 390" : "preview: desktop · 1440";
+    frame.classList.toggle("preview-frame--tablet", tablet);
+    if (mobile) {
+      bp.textContent = "P10 · compact · 390";
+    } else if (tablet) {
+      bp.textContent = "P10 · tablet · 834";
+    } else {
+      bp.textContent = "P10 · wide · 1440";
+    }
   }
 
   tabs.forEach(function (btn) {

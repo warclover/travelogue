@@ -19,10 +19,18 @@ def test_should_inject_allowlist() -> None:
     assert not should_inject_studio_chrome("longshot.css")
 
 
-def test_share_query_skips_chrome_injection() -> None:
-    assert not should_inject_studio_chrome("index.html", "share=1")
-    assert not should_inject_studio_chrome("index.html", "mode=share&foo=1")
+def test_share_query_still_injects_minimal_chrome() -> None:
+    assert should_inject_studio_chrome("index.html", "share=1")
+    assert should_inject_studio_chrome("index.html", "mode=share&foo=1")
     assert should_inject_studio_chrome("index.html", "focus=longshot")
+
+
+def test_inject_studio_chrome_share_mode() -> None:
+    html = "<html><body><main>hi</main></body></html>"
+    out = inject_studio_chrome(html, share_mode=True)
+    assert 'data-preview-share="on"' in out
+    assert 'data-preview-toolbar="on"' not in out
+    assert "/__studio/preview-toolbar.js" in out
 
 
 def test_inject_studio_chrome_adds_script() -> None:
@@ -92,13 +100,17 @@ def test_studio_chrome_on_index_not_longshot(tmp_path: Path) -> None:
         assert "studio-api.js" not in index_html
         assert 'data-preview-toolbar="on"' in index_html
         assert "preview-toolbar.js" not in longshot_html
+        assert 'data-block="surface-nav"' in longshot_html
+        assert "← 返回卷轴" in longshot_html
 
         with urllib.request.urlopen(
             f"{base}/{result.trip_id}/index.html?share=1", timeout=10
         ) as resp:
             share_html = resp.read().decode("utf-8")
-        assert "preview-toolbar.js" not in share_html
+        assert "preview-toolbar.js" in share_html
+        assert 'data-preview-share="on"' in share_html
         assert 'data-preview-toolbar="on"' not in share_html
+        assert "footer-cta__studio-home" in share_html
     finally:
         server.shutdown()
         server.server_close()

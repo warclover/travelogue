@@ -34,6 +34,9 @@
   <script>window.__TRAVELOGUE_READING__ = {{{readingJson}}};</script>
 </head>
 <body>
+  {{#if showSurfaceNav}}
+  {{> surface-nav}}
+  {{/if}}
   <main>
     <article itemscope itemtype="https://schema.org/Trip">
       {{> cover-hero}}

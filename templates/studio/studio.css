@@ -1092,6 +1092,107 @@ body {
   margin-bottom: 8px;
 }
 
+/* ── P10 · Studio layout tiers (see docs/PRD-STUDIO-DUAL-LAYOUT.md) ── */
+.studio-import__step-eyebrow {
+  display: none;
+  margin: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+html[data-studio-layout="compact"] .studio-import__step-eyebrow {
+  display: block;
+}
+
+html[data-studio-layout="compact"] .studio-import__step {
+  font-size: clamp(18px, 5vw, 22px);
+  margin-bottom: 16px;
+  white-space: normal;
+}
+
+html[data-studio-layout="wide"] #studio-hero-importing.studio-hero__content--center {
+  max-width: min(920px, 92vw);
+}
+
+html[data-studio-layout="wide"] .studio-import__panel {
+  width: 100%;
+  max-width: none;
+  padding: 20px clamp(16px, 3vw, 28px) 18px;
+}
+
+html[data-studio-layout="wide"] .studio-import__panel .studio-import__step {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html[data-studio-layout="tablet"] .studio-import__panel {
+  width: 100%;
+  max-width: min(100%, 560px);
+}
+
+/* Success / Failure / Loading overlays */
+html[data-studio-layout="wide"] #studio-success.studio-hero__content--center,
+html[data-studio-layout="wide"] #studio-failure.studio-hero__content--center,
+html[data-studio-layout="wide"] #studio-hero-loading.studio-hero__content--center {
+  max-width: min(720px, 92vw);
+}
+
+html[data-studio-layout="wide"] .studio-failure__hint {
+  max-width: 36em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+html[data-studio-layout="compact"] #studio-success.studio-hero__content--center,
+html[data-studio-layout="compact"] #studio-failure.studio-hero__content--center {
+  max-width: 100%;
+  padding-left: clamp(16px, 4vw, 24px);
+  padding-right: clamp(16px, 4vw, 24px);
+}
+
+html[data-studio-layout="compact"] .studio-success__actions,
+html[data-studio-layout="compact"] .studio-failure__actions {
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+html[data-studio-layout="compact"] .studio-success__actions .studio-btn,
+html[data-studio-layout="compact"] .studio-failure__actions .studio-btn,
+html[data-studio-layout="compact"] .studio-failure__actions a.studio-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+html[data-studio-layout="compact"] .studio-success__msg {
+  font-size: clamp(20px, 5.5vw, 26px);
+}
+
+html[data-studio-layout="compact"] .studio-failure__msg {
+  font-size: clamp(18px, 5vw, 22px);
+}
+
+html[data-studio-layout="compact"] #studio-hero-loading.studio-hero__content--center {
+  max-width: 100%;
+  padding-left: clamp(16px, 4vw, 24px);
+  padding-right: clamp(16px, 4vw, 24px);
+}
+
+html[data-cap-pick-folder="off"] #studio-browse-folder,
+html[data-cap-pick-folder="off"] #studio-sheet-pick,
+html[data-cap-pick-folder="off"] #studio-sheet-repick {
+  display: none !important;
+}
+
+@media (max-width: 480px) {
+  html[data-studio-layout="compact"] .studio-import__stages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .studio-loading__label {
   font-family: var(--font-display);
   font-size: 22px;

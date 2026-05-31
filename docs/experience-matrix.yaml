@@ -107,6 +107,25 @@ surfaces:
     modes: [scroll, longshot]
     force_profile: performance
 
+  studio.homepage:
+    layout: responsive
+    modes: [import]
+    layout_tiers:
+      wide:
+        min_width: 981
+        import_panel: full_width
+        stage_copy: single_line
+      tablet:
+        min_width: 769
+        max_width: 980
+        import_panel: max_560px
+      compact:
+        max_width: 768
+        import_panel: full_bleed
+        stage_copy: eyebrow_plus_body
+    capabilities:
+      pick_folder: server_config
+
 conflicts:
   - id: lenis_vs_present
     when: { active_mode: present }

@@ -11,21 +11,42 @@ export { isJobBusyResponse, withJobBusyRetry, postJsonBusyRetry } from "./http.j
 export function $(id) { return document.getElementById(id); }
 export function show(el, visible) { if (el) el.hidden = !visible; }
 
-var STUDIO_BG_REGIONS = ["studio-hero", "studio-below"];
+var HERO_SHEET_INTERACTIVE_IDS = new Set(["studio-sheet-root", "studio-coach"]);
 
 /** When a modal/sheet is open, keep keyboard and AT out of main page chrome. */
 export function setStudioBackgroundInert(inert) {
-  STUDIO_BG_REGIONS.forEach(function (id) {
-    var el = $(id);
-    if (!el) return;
+  var hero = $("studio-hero");
+  if (hero) {
     if (inert) {
-      el.setAttribute("inert", "");
-      el.setAttribute("aria-hidden", "true");
+      hero.removeAttribute("inert");
+      hero.removeAttribute("aria-hidden");
+      Array.prototype.forEach.call(hero.children, function (child) {
+        if (HERO_SHEET_INTERACTIVE_IDS.has(child.id)) {
+          child.removeAttribute("inert");
+          child.removeAttribute("aria-hidden");
+          return;
+        }
+        child.setAttribute("inert", "");
+        child.setAttribute("aria-hidden", "true");
+      });
     } else {
-      el.removeAttribute("inert");
-      el.removeAttribute("aria-hidden");
+      hero.removeAttribute("inert");
+      hero.removeAttribute("aria-hidden");
+      Array.prototype.forEach.call(hero.children, function (child) {
+        child.removeAttribute("inert");
+        child.removeAttribute("aria-hidden");
+      });
     }
-  });
+  }
+  var below = $("studio-below");
+  if (!below) return;
+  if (inert) {
+    below.setAttribute("inert", "");
+    below.setAttribute("aria-hidden", "true");
+  } else {
+    below.removeAttribute("inert");
+    below.removeAttribute("aria-hidden");
+  }
 }
 
 /** Safe value for element.style.backgroundImage (blocks CSS-breaking quotes). */

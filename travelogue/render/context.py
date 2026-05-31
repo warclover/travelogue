@@ -134,8 +134,8 @@ _WEB_IMAGE_SIZES: dict[str, str] = {
     "row_third": "(min-width: 1920px) 720px, (min-width: 1200px) 600px, 33vw",
     "row_half": "(min-width: 1920px) 1100px, (min-width: 1200px) 900px, 50vw",
     "screen_full": (
-        "(min-width: 1920px) 2200px, (min-width: 1200px) 1800px, "
-        "(min-width: 768px) 1400px, 100vw"
+        "(min-width: 1920px) 3200px, (min-width: 1200px) 2400px, "
+        "(min-width: 768px) 1800px, 100vw"
     ),
     "scroll": (
         "(min-width: 1920px) 1000px, (min-width: 1200px) 760px, "
@@ -145,7 +145,7 @@ _WEB_IMAGE_SIZES: dict[str, str] = {
 
 
 def pick_image_sizes(export_layout: str, slot: str) -> str:
-    """Responsive `sizes` for srcset; web/auto use desktop tiers up to bleed 1920px."""
+    """Responsive `sizes` for srcset; web/auto use desktop tiers (screen_full up to 3200px)."""
     if export_layout in ("mobile", "longshot"):
         return _MOBILE_IMAGE_SIZES[slot]
     return _WEB_IMAGE_SIZES[slot]

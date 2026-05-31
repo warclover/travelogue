@@ -24,6 +24,15 @@ def test_webp_method_config_default() -> None:
     cfg = IngestConfig()
     assert cfg.webp_method == 4
     assert cfg.shared_color_thumb_px == 32
+    assert cfg.webp_widths == (800, 1600, 2400, 3200)
+
+
+def test_screen_full_sizes_requests_hd_tier() -> None:
+    from travelogue.render.context import pick_image_sizes
+
+    sizes = pick_image_sizes("web", "screen_full")
+    assert "3200px" in sizes
+    assert "2400px" in sizes
 
 
 def test_cascade_singleton_reset() -> None:

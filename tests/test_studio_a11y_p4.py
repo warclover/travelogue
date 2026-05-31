@@ -61,6 +61,7 @@ def test_ac_p4_a11y_05_sheet_background_inert() -> None:
     assert 'setAttribute("aria-hidden", "true")' in js
     assert "studio-hero" in js
     assert "studio-below" in js
+    assert "studio-sheet-root" in js
     assert "setStudioBackgroundInert(true)" in js
     assert "setStudioBackgroundInert(false)" in js
 

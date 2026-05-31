@@ -243,6 +243,7 @@ body.longshot-capturing {
 }
 
 body.longshot-capturing .longshot-toolbar,
+body.longshot-capturing .surface-nav,
 body.longshot-capturing .golden-banner,
 body.longshot-capturing .footer-cta {
   display: none !important;

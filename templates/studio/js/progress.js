@@ -3,17 +3,70 @@
  */
 import { STAGE_LABELS } from "./constants.js";
 import { $, show, cssBackgroundImage } from "./dom.js";
-import { hideFailure } from "./errors.js";
+import { hideFailure, setImportEstimate } from "./errors.js";
+import { getStudioLayout } from "./viewport.js";
 
 var STAGE_ORDER = ["ingest", "curate", "narrate", "render"];
 var COVER_TRANSITION_MS = 620;
+var lastImportProgressJob = null;
+
+function stageHintForDisplay(stageHint) {
+  if (!stageHint) return "";
+  var trimmed = stageHint.trim();
+  if (/^约\s/.test(trimmed)) return "";
+  return trimmed;
+}
 
 export function stageText(job) {
   var label = STAGE_LABELS[job.stage] || "正在制作中…";
   var idx = job.stageIndex || 1;
   var total = job.stageCount || 4;
-  var hint = job.stageHint ? "（" + job.stageHint + "）" : "";
+  var hintText = stageHintForDisplay(job.stageHint || "");
+  var hint = hintText ? "（" + hintText + "）" : "";
   return "第 " + idx + " 步，共 " + total + " 步 · " + label + hint;
+}
+
+function importStageBody(job) {
+  var label = STAGE_LABELS[job.stage] || "正在制作中…";
+  var hintText = stageHintForDisplay(job.stageHint || "");
+  var body = label + (hintText ? "（" + hintText + "）" : "");
+  if (job.result && job.result.intentLine && (job.stageIndex || 0) >= 2) {
+    body += "\n" + job.result.intentLine;
+  }
+  return body;
+}
+
+/** P10 · wide 单行 / compact 两行 */
+export function applyImportStageCopy(job) {
+  var eyebrow = $("studio-stage-eyebrow");
+  var stage = $("studio-stage");
+  var idx = job.stageIndex || 1;
+  var total = job.stageCount || 4;
+  var stepPrefix = "第 " + idx + " 步，共 " + total + " 步";
+  var body = importStageBody(job);
+  var layout = getStudioLayout();
+  var fullLine = stageText(job);
+  if (job.result && job.result.intentLine && idx >= 2) {
+    fullLine = fullLine + "\n" + job.result.intentLine;
+  }
+
+  if (layout === "compact") {
+    if (eyebrow) {
+      eyebrow.textContent = stepPrefix;
+      eyebrow.hidden = false;
+      eyebrow.removeAttribute("aria-hidden");
+    }
+    if (stage) stage.textContent = body;
+    return fullLine.replace(/\n/g, " · ");
+  }
+
+  if (eyebrow) {
+    eyebrow.textContent = "";
+    eyebrow.hidden = true;
+    eyebrow.setAttribute("aria-hidden", "true");
+  }
+  if (stage) stage.textContent = fullLine;
+  return fullLine.replace(/\n/g, " · ");
 }
 
 export function updateImportStages(job) {
@@ -58,6 +111,9 @@ export function updateImportThumbs(job) {
   if (m) {
     ingestCur = parseInt(m[1], 10) || 0;
     ingestTotal = parseInt(m[2], 10) || 0;
+    if (ingestTotal > 0) {
+      setImportEstimate({ photoCount: ingestTotal });
+    }
   }
 
   var activeIdx = stageIdx;
@@ -83,14 +139,20 @@ export function updateImportThumbs(job) {
   });
 }
 
+function refreshImportStageOnLayoutChange() {
+  var importing = $("studio-hero-importing");
+  if (!importing || importing.hidden || !lastImportProgressJob) return;
+  var line = applyImportStageCopy(lastImportProgressJob);
+  var barWrap = $("studio-progress-bar");
+  if (barWrap) barWrap.setAttribute("aria-valuetext", line);
+}
+
 export function updateProgress(job) {
   hideFailure();
-  var stage = $("studio-stage");
-  var line = stageText(job);
-  if (job.result && job.result.intentLine && (job.stageIndex || 0) >= 2) {
-    line = line + "\n" + job.result.intentLine;
+  if (job.status === "running" || job.status === "queued") {
+    lastImportProgressJob = job;
   }
-  if (stage) stage.textContent = line;
+  var line = applyImportStageCopy(job);
   updateImportStages(job);
   updateImportThumbs(job);
   var pct = Math.round(((job.stageIndex || 0) / (job.stageCount || 4)) * 100);
@@ -98,12 +160,14 @@ export function updateProgress(job) {
   var barWrap = $("studio-progress-bar");
   if (barWrap) {
     barWrap.setAttribute("aria-valuenow", String(pct));
-    barWrap.setAttribute("aria-valuetext", line.replace(/\n/g, " · "));
+    barWrap.setAttribute("aria-valuetext", line);
   }
   var pctEl = $("studio-pct");
   if (pctEl) { pctEl.textContent = pct + "%"; show(pctEl, true); }
   show($("studio-cancel"), job.status === "running" || job.status === "queued");
 }
+
+window.addEventListener("travelogue:studio-layout", refreshImportStageOnLayoutChange);
 
 function prefersReducedMotion() {
   return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);

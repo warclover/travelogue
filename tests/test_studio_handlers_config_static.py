@@ -53,6 +53,17 @@ def test_handle_config_get_returns_exposed_config(tmp_path: Path) -> None:
     assert body["ok"] is True
     assert "studio" in body
     assert "pipelineEstimates" in body
+    assert "capabilities" in body
+    assert "pickFolder" in body["capabilities"]
+
+
+def test_studio_capabilities_win32_loopback() -> None:
+    from travelogue.web.studio_handlers.config_handlers import studio_capabilities
+
+    caps = studio_capabilities(client_host="127.0.0.1")
+    assert "pickFolder" in caps
+    assert caps["pickFolder"] is ( __import__("sys").platform == "win32")
+    assert studio_capabilities(client_host="203.0.113.1")["pickFolder"] is False
 
 
 def test_handle_config_patch_empty_body(tmp_path: Path) -> None:

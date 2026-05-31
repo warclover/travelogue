@@ -66,10 +66,10 @@ export const STUDIO_ERROR_MESSAGES = {
 };
 
 export const DEFAULT_PIPELINE_ESTIMATES = [
-  { maxPhotos: 50, hint: "约 2–3 分钟" },
-  { maxPhotos: 100, hint: "约 3–5 分钟" },
-  { maxPhotos: 200, hint: "约 4–8 分钟" },
-  { maxPhotos: 999999, hint: "约 5–15 分钟" },
+  { maxPhotos: 50, hint: "约 3–5 分钟" },
+  { maxPhotos: 100, hint: "约 5–8 分钟" },
+  { maxPhotos: 200, hint: "约 8–15 分钟" },
+  { maxPhotos: 999999, hint: "约 12–25 分钟" },
 ];
 
 // ── localStorage keys (§9.3) ──

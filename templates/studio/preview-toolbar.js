@@ -149,11 +149,11 @@ var narrateJobId = null;
 
   function syncToolbarHeight(root) {
     var collapsed = root.classList.contains("preview-toolbar--collapsed");
-    var handle = root.querySelector(".preview-toolbar__handle");
+    var strip = root.querySelector(".preview-toolbar__collapsed-strip");
     if (collapsed) {
-      var hh = (handle && handle.offsetHeight) || 32;
-      root.style.height = hh + "px";
-      document.documentElement.style.setProperty("--preview-toolbar-h", hh + "px");
+      var sh = (strip && strip.offsetHeight) || 32;
+      root.style.height = sh + "px";
+      document.documentElement.style.setProperty("--preview-toolbar-h", sh + "px");
       return;
     }
     root.style.height = "";
@@ -1265,12 +1265,42 @@ var narrateJobId = null;
     });
   }
 
+  function isSharePreview() {
+    var q = window.location.search || "";
+    return q.indexOf("share=1") >= 0 || q.indexOf("mode=share") >= 0;
+  }
+
+  function initShareMinimal() {
+    document.documentElement.setAttribute("data-preview-share", "on");
+
+    var root = document.createElement("div");
+    root.className = "preview-toolbar preview-toolbar--share-minimal";
+    root.innerHTML =
+      '<div class="preview-toolbar__body">' +
+      '<div class="preview-toolbar__bar preview-toolbar__bar--minimal">' +
+      '<a class="preview-toolbar__back" href="/">← 返回首页</a>' +
+      "</div>" +
+      "</div>";
+    document.body.insertBefore(root, document.body.firstChild);
+
+    var footerHome = document.querySelector(".footer-cta__studio-home");
+    if (footerHome) {
+      footerHome.hidden = false;
+    } else {
+      var footer = document.querySelector(".footer-cta");
+      if (footer) {
+        var homeRow = document.createElement("p");
+        homeRow.className = "footer-cta__studio-home";
+        homeRow.innerHTML =
+          '<a class="footer-cta__studio-home-link" href="/">← 返回 Studio 首页</a>';
+        footer.insertBefore(homeRow, footer.firstChild);
+      }
+    }
+  }
+
   function init() {
-    if (
-      window.location.search.indexOf("share=1") >= 0 ||
-      window.location.search.indexOf("mode=share") >= 0
-    ) {
-      document.documentElement.setAttribute("data-preview-share", "on");
+    if (isSharePreview()) {
+      initShareMinimal();
       return;
     }
 
@@ -1279,13 +1309,16 @@ var narrateJobId = null;
     var root = document.createElement("div");
     root.className = "preview-toolbar";
     root.innerHTML =
+      '<div class="preview-toolbar__collapsed-strip">' +
+      '<a class="preview-toolbar__back preview-toolbar__back--strip" href="/">← 返回首页</a>' +
       '<button type="button" class="preview-toolbar__handle" aria-expanded="false">' +
       '<span class="preview-toolbar__handle-icon" aria-hidden="true">▾</span>' +
       '<span class="preview-toolbar__handle-label">显示工具栏</span>' +
       "</button>" +
+      "</div>" +
       '<div class="preview-toolbar__body">' +
       '<div class="preview-toolbar__bar preview-toolbar__bar--minimal">' +
-      '<a class="preview-toolbar__back" href="/">← 返回</a>' +
+      '<a class="preview-toolbar__back" href="/">← 返回首页</a>' +
       '<div class="preview-toolbar__actions"></div>' +
       '<button type="button" class="preview-toolbar__reveal-folder">在文件夹中显示</button>' +
       '<button type="button" class="preview-toolbar__menu-btn" aria-haspopup="true" aria-expanded="false">更多编辑…</button>' +

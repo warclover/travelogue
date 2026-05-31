@@ -11,6 +11,7 @@ const ALLOWED = new Set([
   "success_primary_click",
   "prep_open",
   "demo_try",
+  "layout_tier",
 ]);
 
 export function trackStudioEvent(event, meta) {

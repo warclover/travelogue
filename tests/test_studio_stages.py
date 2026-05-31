@@ -15,10 +15,10 @@ def test_ingest_stage_hint_tiers() -> None:
 
 
 def test_pipeline_estimate_hint_by_photo_count() -> None:
-    assert pipeline_estimate_hint(30) == "约 2–3 分钟"
-    assert pipeline_estimate_hint(80) == "约 3–5 分钟"
-    assert pipeline_estimate_hint(150) == "约 4–8 分钟"
-    assert pipeline_estimate_hint(300) == "约 5–15 分钟"
+    assert pipeline_estimate_hint(30) == "约 3–5 分钟"
+    assert pipeline_estimate_hint(80) == "约 5–8 分钟"
+    assert pipeline_estimate_hint(150) == "约 8–15 分钟"
+    assert pipeline_estimate_hint(300) == "约 12–25 分钟"
 
 
 def test_pipeline_estimate_tiers_shape() -> None:

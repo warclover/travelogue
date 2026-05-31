@@ -59,7 +59,7 @@ DEFAULT_RAW_BLOCKLIST_SUFFIXES: tuple[str, ...] = (
 @dataclass
 class IngestConfig:
     max_photos: int = 250
-    webp_widths: tuple[int, ...] = (800, 1600, 2400)
+    webp_widths: tuple[int, ...] = (800, 1600, 2400, 3200)
     webp_quality: int = 82
     webp_method: int = 4
     shared_color_thumb_px: int = 32
@@ -387,7 +387,7 @@ def _phase6_from_dict(raw: dict[str, Any]) -> Phase6ObservabilityConfig:
 
 
 def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
-    widths = raw.get("webp_widths") or [800, 1600, 2400]
+    widths = raw.get("webp_widths") or [800, 1600, 2400, 3200]
     raw_suffixes = raw.get("raw_blocklist_suffixes") or raw.get("rawBlocklistSuffixes")
     if isinstance(raw_suffixes, list) and raw_suffixes:
         suffixes = tuple(str(s).lower() if str(s).startswith(".") else f".{str(s).lower()}" for s in raw_suffixes)

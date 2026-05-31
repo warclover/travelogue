@@ -44,6 +44,10 @@ def test_render_trip_surfaces_writes_both_indexes(trip_workspace: Path) -> None:
     assert 'data-export="draft"' in web_html
     assert 'data-export="present-preview"' in present_html
     assert 'data-screenplay="on"' in present_html
+    assert 'data-block="surface-nav"' in present_html
+    assert "← 返回卷轴" in present_html
+    assert "← 返回首页" in present_html
+    assert 'data-block="surface-nav"' not in web_html
     assert "screenplay.js" in present_html
     assert "inline-edit.js" not in present_html
     assert 'data-export="draft"' not in present_html or present_html.count('data-export=') == 1

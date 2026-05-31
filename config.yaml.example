@@ -98,7 +98,8 @@ ingest:
   max_photos: 250
   max_videos: 3
   max_video_source_sec: 15
-  webp_widths: [800, 1600, 2400]
+  # WebP 多档（长边）；3200 供 screens 全屏大图 + Retina。回退：改回 [800, 1600, 2400] 并 re-export。
+  webp_widths: [800, 1600, 2400, 3200]
   webp_quality: 82
   generate_crops: false
   min_edge_px: 320

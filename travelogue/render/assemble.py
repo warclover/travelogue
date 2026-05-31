@@ -197,6 +197,8 @@ def build_render_context(
         "hasForewordSpread": chapters_bundle.has_foreword_spread,
         "forewordSpread": chapters_bundle.foreword_spread or {},
         "isLongshotSurface": surface.is_longshot_surface,
+        "showSurfaceNav": surface.is_longshot_surface
+        or surface.export_mode == "present-preview",
         "epilogueStats": epilogue_stats,
         "useEpilogueStats": use_epilogue_stats,
         "useEpilogueScreen": (surface.folio_lite and bool(epilogue)) or use_epilogue_stats,

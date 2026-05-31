@@ -18,8 +18,6 @@ from travelogue.services.trip import TripService, apply_intent
 from travelogue.services.trip_factory import create_trip
 from travelogue.util.trip_slug import demo_trip_id_from_album
 from travelogue.web.studio_jobs import ProgressCallback
-from travelogue.web.studio_stages import ingest_stage_hint, stage_hint
-
 
 @dataclass
 class StudioPipelineResult:
@@ -243,7 +241,6 @@ def run_studio_pipeline(
         shutil.rmtree(trip_dir)
 
     photo_count = count_album_photos(album_dir, max_photos=cfg.ingest.max_photos)
-    ingest_hint = ingest_stage_hint(photo_count)
 
     if cfg.vision.preload_on_folder_pick and cfg.vision.enabled != "false":
         if progress:
@@ -262,13 +259,12 @@ def run_studio_pipeline(
         trip.setdefault("pipeline", {})["timings"] = dict(pipeline_timings)
 
     def report(stage: str, index: int, hint: str | None = None) -> None:
-        resolved = hint or (ingest_hint if stage == "ingest" else stage_hint(stage))
         if progress:
-            progress(stage, index, resolved)
+            progress(stage, index, hint or "")
         time.sleep(0)
 
     def ingest_progress(cur: int, total: int) -> None:
-        report("ingest", 1, f"已处理 {cur}/{total} 张 · {ingest_hint}")
+        report("ingest", 1, f"已处理 {cur}/{total} 张")
 
     with app_config_scope(cfg):
         report("ingest", 1)

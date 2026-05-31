@@ -3,6 +3,37 @@ html[data-preview-toolbar="on"] {
   scroll-padding-top: var(--preview-toolbar-h);
 }
 
+html[data-preview-share="on"] {
+  --preview-toolbar-h: 48px;
+  scroll-padding-top: var(--preview-toolbar-h);
+}
+
+.preview-toolbar--share-minimal .preview-toolbar__body {
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.preview-toolbar--share-minimal .preview-toolbar__handle,
+.preview-toolbar--share-minimal .preview-toolbar__collapse {
+  display: none !important;
+}
+
+html[data-preview-share="on"] .footer-cta__studio-home-link {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgba(26, 47, 40, 0.92);
+  color: #f5fbf8;
+  text-decoration: none;
+  font-size: 14px;
+}
+html[data-preview-share="on"] .footer-cta__studio-home-link:hover {
+  color: #fff;
+  background: rgba(26, 47, 40, 1);
+}
+
 .preview-toolbar {
   position: fixed;
   top: 0;
@@ -32,34 +63,56 @@ html[data-preview-toolbar="on"] {
   pointer-events: none;
 }
 
-.preview-toolbar__handle {
+.preview-toolbar__collapsed-strip {
   display: none;
+  pointer-events: auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 12px 6px 16px;
+  border-bottom: 1px solid rgba(61, 107, 90, 0.22);
+  background: rgba(232, 245, 239, 0.96);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.preview-toolbar--collapsed .preview-toolbar__collapsed-strip {
+  display: flex;
+}
+
+.preview-toolbar__back--strip {
+  color: #2d4a3e;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.preview-toolbar__back--strip:hover {
+  color: #1a2f28;
+}
+
+.preview-toolbar__handle {
+  display: flex;
   pointer-events: auto;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  width: 100%;
-  min-height: 32px;
-  padding: 6px 12px;
+  margin-left: auto;
+  min-height: 28px;
+  padding: 4px 10px;
   border: none;
-  border-bottom: 1px solid rgba(61, 107, 90, 0.22);
-  background: rgba(232, 245, 239, 0.96);
+  border-radius: 999px;
+  background: rgba(61, 107, 90, 0.12);
   color: #3d6b5a;
   font-size: 12px;
   font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 .preview-toolbar__handle:hover {
-  background: rgba(220, 236, 228, 0.98);
+  background: rgba(61, 107, 90, 0.2);
 }
 .preview-toolbar__handle-icon {
   font-size: 10px;
   line-height: 1;
-}
-
-.preview-toolbar--collapsed .preview-toolbar__handle {
-  display: flex;
 }
 
 .preview-toolbar__collapse {

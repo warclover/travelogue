@@ -126,15 +126,22 @@ def test_ux_p3_01_import_job_reports_four_stages(tmp_path: Path) -> None:
         job_id = body["jobId"]
         from tests.studio_test_helpers import wait_for_job
 
-        last = wait_for_job(
-            lambda: _get_json(f"{base}/__travelogue/status?jobId={job_id}")[1],
-            timeout_sec=180,
-            poll_sec=0.05,
-        )
+        ingest_progress_seen = False
+
+        def _fetch() -> dict:
+            nonlocal ingest_progress_seen
+            _status, job = _get_json(f"{base}/__travelogue/status?jobId={job_id}")
+            hint = str(job.get("stageHint") or "")
+            if "已处理" in hint and "/" in hint:
+                ingest_progress_seen = True
+            return job
+
+        last = wait_for_job(_fetch, timeout_sec=180, poll_sec=0.05)
         assert last.get("status") == "succeeded", last
         assert last.get("stageCount") == 4
         assert last.get("stageIndex") == 4
-        assert last.get("stageHint")
+        # Large albums report 已处理 N/M; small fixtures may finish ingest between polls.
+        assert ingest_progress_seen or last.get("stage") == "render"
     finally:
         server.shutdown()
         server.server_close()

@@ -813,6 +813,7 @@ flowchart TD
 | **M12b** | health · **carousel 瀑布流** · 纸张纹理 · 微交互 | **部分** / 样张形态变更 |
 | **M13** | trip 删除 · Display Web Font · 主色占位 · 主色提取 | 待排 |
 | **M15-HP · Phase 4** | 导入 panel · 自动 import · 路径折叠 · 回访大卡 · coach | 见 [PRD-PHASE4](./PRD-PHASE4.md) §6 · **待交付** |
+| **M16 · P10-Layout** | Studio wide/compact 双形态 · 导入 panel 加宽 · viewport 三档 | 见 [PRD-STUDIO-DUAL-LAYOUT](./PRD-STUDIO-DUAL-LAYOUT.md) · **已交付 2026-05-31** |
 
 ---
 

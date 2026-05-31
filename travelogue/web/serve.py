@@ -150,8 +150,14 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             should_inject_studio_chrome(rel_path, query)
             and target.suffix.lower() in {".html", ".htm"}
         ):
+            from travelogue.web.studio_chrome import is_share_preview_query
+
             html = target.read_text(encoding="utf-8", errors="replace")
-            html = inject_studio_chrome(html, studio_token=self.studio_token)
+            html = inject_studio_chrome(
+                html,
+                studio_token=self.studio_token,
+                share_mode=is_share_preview_query(query),
+            )
             data = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")

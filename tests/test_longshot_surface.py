@@ -55,6 +55,9 @@ def test_longshot_surface_contract(screens_trip: dict) -> None:
     assert 'data-block="media-card"' in html
     assert "longshot-save" in html
     assert "screenplay-start" not in html
+    assert 'data-block="surface-nav"' in html
+    assert "← 返回卷轴" in html
+    assert "← 返回首页" in html
 
 
 def _expected_longshot_cards(trip: dict) -> int:

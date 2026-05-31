@@ -95,14 +95,17 @@ def test_p9_qa_playwright_empty_keyboard_and_sheet(studio_server) -> None:
         page.locator("#studio-open-sheet").click()
         page.wait_for_selector("#studio-import-sheet", state="visible")
         assert page.locator("#studio-import-sheet").get_attribute("role") == "dialog"
-        assert page.locator("#studio-hero").evaluate("el => el.hasAttribute('inert')")
+        assert page.locator("#studio-hero-empty").evaluate("el => el.hasAttribute('inert')")
+        assert page.locator("#studio-import-sheet").evaluate(
+            "el => !el.closest('[inert]')"
+        )
 
         page.keyboard.press("Escape")
         page.wait_for_function(
             "() => document.getElementById('studio-sheet-root').hidden",
             timeout=5_000,
         )
-        assert page.locator("#studio-hero").evaluate("el => !el.hasAttribute('inert')")
+        assert page.locator("#studio-hero-empty").evaluate("el => !el.hasAttribute('inert')")
 
         browser.close()
 
@@ -166,4 +169,32 @@ def test_p9_qa_playwright_no_horizontal_overflow_returning(studio_server, width:
         assert not overflow, f"horizontal overflow at {width}px returning @ {width}"
         assert page.locator("#studio-open-sheet-returning").is_visible()
 
+        browser.close()
+
+
+def test_p9_qa_playwright_sheet_pick_button_clickable(studio_server, monkeypatch) -> None:
+    """Regression: sheet must stay outside hero inert subtree (P8 a11y fix)."""
+    import travelogue.desktop.folder_picker_service as picker_service
+    from travelogue.desktop.folder_picker_service import FolderPickResult
+
+    album = studio_server["trips_dir"].parent / "pick-album"
+    album.mkdir(exist_ok=True)
+    monkeypatch.setattr(
+        picker_service,
+        "request_folder",
+        lambda **_: FolderPickResult(path=album),
+    )
+    base = studio_server["base"]
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1280, "height": 900})
+        page.goto(base, wait_until="networkidle")
+        _wait_empty_hero(page)
+        page.locator("#studio-open-sheet").click()
+        page.wait_for_selector("#studio-import-sheet", state="visible")
+        with page.expect_response(lambda r: "/pick-folder" in r.url) as resp_info:
+            page.locator("#studio-sheet-pick").click()
+        assert resp_info.value.status == 200
+        page.wait_for_selector("#studio-sheet-picked", state="visible")
+        assert "pick-album" in (page.locator("#studio-sheet-picked").text_content() or "")
         browser.close()

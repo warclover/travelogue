@@ -74,11 +74,15 @@ export function failureNextHint(code) {
 export function pipelineEstimateHint(photoCount) {
   var tiers = S._pipelineEstimateTiers || DEFAULT_PIPELINE_ESTIMATES;
   var count = photoCount || 0;
-  if (count <= 0) return "预计 2–5 分钟";
+  if (count <= 0) return "约 3–5 分钟";
   for (var i = 0; i < tiers.length; i++) {
     if (count <= tiers[i].maxPhotos) return tiers[i].hint;
   }
   return tiers[tiers.length - 1].hint;
+}
+
+export function formatPipelineEstimate(photoCount) {
+  return "预计整体 " + pipelineEstimateHint(photoCount);
 }
 
 export function setImportEstimate(body) {
@@ -89,7 +93,7 @@ export function setImportEstimate(body) {
     count = body.fileCount || body.photoCount || 0;
     if (!count && body.useDemoAlbum) count = 12;
   }
-  el.textContent = pipelineEstimateHint(count);
+  el.textContent = formatPipelineEstimate(count);
   show(el, true);
 }
 

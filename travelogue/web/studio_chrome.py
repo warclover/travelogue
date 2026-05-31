@@ -15,15 +15,24 @@ CHROME_INJECT = (
 )
 
 
+def is_share_preview_query(query: str) -> bool:
+    q = (query or "").lower()
+    return any(marker in q for marker in SHARE_QUERY_MARKERS)
+
+
 def should_inject_studio_chrome(rel_path: str, query: str = "") -> bool:
     if Path(rel_path).name.lower() not in CHROME_ALLOWLIST:
         return False
-    q = (query or "").lower()
-    return not any(marker in q for marker in SHARE_QUERY_MARKERS)
+    return True
 
 
-def inject_studio_chrome(html: str, *, studio_token: str | None = None) -> str:
-    if 'data-preview-toolbar="on"' in html:
+def inject_studio_chrome(
+    html: str,
+    *,
+    studio_token: str | None = None,
+    share_mode: bool = False,
+) -> str:
+    if 'data-preview-toolbar="on"' in html or 'data-preview-share="on"' in html:
         return html
     lower = html.lower()
     if studio_token and "<head" in lower:
@@ -32,11 +41,13 @@ def inject_studio_chrome(html: str, *, studio_token: str | None = None) -> str:
             head_end = lower.index("<head")
             insert_at = html.index(">", head_end) + 1
             html = html[:insert_at] + "\n  " + meta + html[insert_at:]
+    preview_attr = 'data-preview-share="on"' if share_mode else 'data-preview-toolbar="on"'
     if "<body" in lower:
         idx = lower.index("<body")
         end = html.index(">", idx) + 1
-        if "data-preview-toolbar" not in html[idx:end]:
-            html = html[: end - 1] + ' data-preview-toolbar="on"' + html[end - 1 :]
+        tag = html[idx:end]
+        if "data-preview-toolbar" not in tag and "data-preview-share" not in tag:
+            html = html[: end - 1] + f" {preview_attr}" + html[end - 1 :]
     lower = html.lower()
     if "</body>" in lower:
         pos = lower.rindex("</body>")

@@ -6,6 +6,7 @@ stages:
   longshot: "约 20–40 秒"
   llm_narrate: "约 30–60 秒"
 
+# Per-step ingest duration (legacy · not shown in import UI)
 ingest:
   - max_photos: 50
     hint: "约 30 秒"
@@ -13,3 +14,14 @@ ingest:
     hint: "约 1 分钟"
   - max_photos: 250
     hint: "约 2 分钟"
+
+# Full pipeline (ingest → curate → narrate → render) · single UI estimate
+pipeline_estimates:
+  - max_photos: 50
+    hint: "约 3–5 分钟"
+  - max_photos: 100
+    hint: "约 5–8 分钟"
+  - max_photos: 200
+    hint: "约 8–15 分钟"
+  - max_photos: 999999
+    hint: "约 12–25 分钟"
