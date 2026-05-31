@@ -1,7 +1,7 @@
 /**
  * Travelogue Studio · sample longshot cards + preview modal.
  */
-import { SAMPLE_LONGSHOTS, LS } from "./constants.js";
+import { SAMPLE_LONGSHOTS, LS, markSampleEngaged } from "./constants.js";
 import { $, show, trapSheetFocus, setStudioBackgroundInert } from "./dom.js";
 import { openImportSheet } from "./sheet.js";
 
@@ -158,31 +158,6 @@ export function renderSampleCards() {
   });
 }
 
-export function renderHeroSampleStrip() {
-  var host = $("studio-hero-samples");
-  if (!host) return;
-  host.innerHTML = "";
-  Object.keys(SAMPLE_LONGSHOTS).forEach(function (key) {
-    var s = SAMPLE_LONGSHOTS[key];
-    if (!s || !s.thumbSrc) return;
-    var btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "studio-hero__sample-chip";
-    btn.setAttribute("data-sample-open", key);
-    btn.setAttribute("aria-label", "查看 " + s.title + " 样张");
-    var img = document.createElement("img");
-    img.src = s.thumbSrc;
-    img.alt = "";
-    img.loading = "lazy";
-    img.decoding = "async";
-    var label = document.createElement("span");
-    label.textContent = s.title;
-    btn.appendChild(img);
-    btn.appendChild(label);
-    host.appendChild(btn);
-  });
-}
-
 function bindSampleOpenTriggers(open) {
   document.querySelectorAll("[data-sample-open]").forEach(function (el) {
     if (el._sampleBound) return;
@@ -208,6 +183,7 @@ export function initSampleModal() {
   function open(key) {
     var sample = SAMPLE_LONGSHOTS[key];
     if (!sample) return;
+    markSampleEngaged();
     titleEl.textContent = sample.title;
     pages.innerHTML = buildSampleFull(key);
     show(modal, true);
@@ -252,5 +228,6 @@ export function initSampleModal() {
     close();
     openImportSheet();
     localStorage.setItem(LS.demoTried, "1");
+    markSampleEngaged();
   });
 }

@@ -14,6 +14,7 @@ from travelogue.web.studio_handlers import (
     import_handlers,
     job_handlers,
     static_handlers,
+    telemetry_handlers,
     trip_handlers,
 )
 from travelogue.web.studio_handlers.common import (
@@ -36,6 +37,7 @@ from travelogue.web.studio_handlers.paths import (
     NARRATE_PATH,
     PICK_FOLDER_PATH,
     ALBUM_PREVIEW_PATH,
+    STUDIO_EVENT_PATH,
     PIPELINE_SUFFIX,
     PROMOTE_TIER_SUFFIX,
     REVEAL_PATH,
@@ -59,6 +61,7 @@ __all__ = [
     "EXPORT_PATH",
     "PICK_FOLDER_PATH",
     "ALBUM_PREVIEW_PATH",
+    "STUDIO_EVENT_PATH",
     "CHAPTER_LAYOUT_PATH",
     "STUDIO_ASSET_PREFIX",
     "SAVE_COPY_SUFFIX",
@@ -165,6 +168,9 @@ class StudioMixin:
             return True
         if path == ALBUM_PREVIEW_PATH:
             import_handlers.handle_album_preview(self)
+            return True
+        if path == STUDIO_EVENT_PATH:
+            telemetry_handlers.handle_studio_event(self)
             return True
         curate_trip_id = match_trip_curate(path)
         if curate_trip_id is not None:

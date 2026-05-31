@@ -52,6 +52,25 @@ export function humanizeStudioError(code, message) {
   return message || code || "导入失败";
 }
 
+const FAILURE_NEXT_HINTS = {
+  E_INGEST_EMPTY: "请确认文件夹里有 JPG/PNG/WebP/HEIC 照片，然后重试。",
+  E_INGEST_TOO_FEW: "换一个包含至少 4 张照片的文件夹，或合并子文件夹后再试。",
+  E_DEMO_TOO_FEW: "示例相册需要至少 4 张照片；请改用「制作我的杂志」选自己的文件夹。",
+  E_DEMO_NOT_DIR: "请粘贴或选择本机上的文件夹路径，而不是单个文件。",
+  E_STUDIO_ALBUM_DENIED: "请改用 Sheet 内的「浏览文件夹」，或检查路径是否在本机允许范围内。",
+  E_STUDIO_UPLOAD_EMPTY: "请重新选择包含照片的文件夹后再上传。",
+  E_STUDIO_BODY_TOO_LARGE: "文件夹过大：请改用「制作我的杂志」选文件夹，或合并后分批导入。",
+  E_PICK_FOLDER_UNSUPPORTED: "请粘贴路径，或使用 Sheet 底部的小文件夹上传（≤200MB）。",
+  E_PICK_FOLDER_DENIED: "仅允许访问本机文件夹；请确认 Studio 有权限访问该路径。",
+  E_PICK_FOLDER_FAILED: "请粘贴完整路径，或安装 desktop 依赖后重试浏览文件夹。",
+  E_STUDIO_PIPELINE: "通常是临时问题：检查文件夹仍可访问后点「重试」。",
+  E_LLM_AUTH: "在 config.yaml 配置 LLM API Key 后重试，或关闭需要文案的高级选项。",
+};
+
+export function failureNextHint(code) {
+  return (code && FAILURE_NEXT_HINTS[code]) || "检查文件夹路径与照片数量后，点「重试」或换文件夹再试。";
+}
+
 export function pipelineEstimateHint(photoCount) {
   var tiers = S._pipelineEstimateTiers || DEFAULT_PIPELINE_ESTIMATES;
   var count = photoCount || 0;
@@ -89,6 +108,12 @@ export function showFailure(msg, echoPath, code) {
   show($("studio-failure"), true);
   var msgEl = $("studio-failure-msg");
   if (msgEl) msgEl.textContent = humanizeStudioError(code, msg) || "导入失败";
+  var hintEl = $("studio-failure-hint");
+  if (hintEl) {
+    var hint = failureNextHint(code);
+    hintEl.textContent = hint;
+    show(hintEl, !!hint);
+  }
   var echoEl = $("studio-failure-echo");
   if (echoEl) {
     if (echoPath) { echoEl.textContent = echoPath; show(echoEl, true); }
@@ -100,6 +125,8 @@ export function showFailure(msg, echoPath, code) {
 export function hideFailure() {
   show($("studio-failure"), false);
   var msg = $("studio-failure-msg"); if (msg) msg.textContent = "";
+  var hint = $("studio-failure-hint");
+  if (hint) { hint.textContent = ""; show(hint, false); }
   show($("studio-failure-echo"), false);
   setTitle();
 }

@@ -1,12 +1,57 @@
 /**
  * Travelogue Studio · state machine + homepage rendering.
  */
-import { LS } from "./constants.js";
+import { LS, isDemoTrip } from "./constants.js";
 import { S } from "./state.js";
 import { $, show, setTitle, formatUpdatedAt, syncImportUiDisabled, cssBackgroundImage } from "./dom.js";
-import { buildImportPayload, closeImportSheet, getRecentPaths } from "./sheet.js";
+import { buildImportPayload, closeImportSheet, getRecentPaths, openImportSheet } from "./sheet.js";
 import { requestNativeFolder, startImport } from "./import-bridge.js";
 import { registerRender } from "./navigation.js";
+
+function updateSkipLinkTarget() {
+  var skip = document.querySelector(".studio-skip-link");
+  if (!skip) return;
+  var targetId = "studio-open-sheet";
+  if (S.currentState === "Failed") {
+    targetId = "studio-retry";
+  } else if (S.currentState === "Success") {
+    var longshotBtn = $("studio-success-longshot");
+    targetId = (longshotBtn && !longshotBtn.hidden)
+      ? "studio-success-longshot"
+      : "studio-success-open";
+  } else if (S.currentState === "Importing") {
+    targetId = "studio-cancel";
+  } else if (S.currentState === "IdleReturning" && S.tripsData.length > 0) {
+    targetId = "studio-open-sheet-returning";
+  }
+  skip.setAttribute("href", "#" + targetId);
+}
+
+function hasUserTrips() {
+  return S.tripsData.some(function (trip) { return !isDemoTrip(trip); });
+}
+
+export function shouldShowDemoConvert() {
+  if (hasUserTrips()) return false;
+  try {
+    if (localStorage.getItem(LS.demoTried) === "1") return true;
+    if (localStorage.getItem(LS.sampleViewed) === "1") return true;
+  } catch (e) { /* ignore */ }
+  return S.tripsData.length > 0 && S.tripsData.every(isDemoTrip);
+}
+
+function renderDemoConvert() {
+  var showConvert = shouldShowDemoConvert();
+  var heroBanner = $("studio-demo-convert");
+  var galleryBanner = $("studio-gallery-convert");
+  var isQuiet = S.currentState === "Importing" || S.currentState === "Failed" ||
+    S.currentState === "Success" || S.currentState === "Loading";
+  var emptyVisible = !S.tripsData.length && !isQuiet;
+  var returningVisible = S.tripsData.length > 0 && !isQuiet;
+
+  if (heroBanner) show(heroBanner, showConvert && (emptyVisible || returningVisible));
+  if (galleryBanner) show(galleryBanner, showConvert && emptyVisible);
+}
 
 // ── Hero background (LCP-friendly: try small variant first when available) ──
 export function updateHeroBackground() {
@@ -75,9 +120,7 @@ export function render() {
   var quietOverlay = isImporting || isFailed || isSuccess || isLoading;
   show($("studio-hero-secondary"), !quietOverlay && !hasTrips);
   var secondaryLabel = $("studio-secondary-label");
-  if (secondaryLabel) {
-    secondaryLabel.textContent = hasTrips ? "或者" : "还没自己的照片？";
-  }
+  if (secondaryLabel) secondaryLabel.textContent = "还没自己的照片？";
 
   if (quietOverlay) closeImportSheet();
   show($("studio-import-form"), false);
@@ -98,9 +141,15 @@ export function render() {
   var statusText = $("studio-status-text");
   if (dot && statusText) {
     dot.classList.remove("studio-topbar__dot--offline", "studio-topbar__dot--importing");
-    if (S.isOffline) { dot.classList.add("studio-topbar__dot--offline"); statusText.textContent = "未连接"; }
-    else if (isImporting) { dot.classList.add("studio-topbar__dot--importing"); statusText.textContent = "正在装帧中…"; }
-    else { statusText.textContent = "本地运行中"; }
+    if (isImporting) {
+      dot.classList.add("studio-topbar__dot--importing");
+      statusText.textContent = S.isOffline ? "正在装帧中 · 连接不稳" : "正在装帧中…";
+    } else if (S.isOffline) {
+      dot.classList.add("studio-topbar__dot--offline");
+      statusText.textContent = "未连接";
+    } else {
+      statusText.textContent = "本地运行中";
+    }
   }
 
   if (hasTrips && !isImporting && !isFailed && !isSuccess) {
@@ -134,6 +183,8 @@ export function render() {
 
   renderFooterStats();
   renderResumeImportCard();
+  renderDemoConvert();
+  updateSkipLinkTarget();
 }
 
 export function renderContinueCard() {
@@ -145,6 +196,20 @@ export function renderContinueCard() {
   var trip = S.tripsData[0];
   host.innerHTML = "";
   show(host, true);
+
+  var needsHighlight = false;
+  try {
+    needsHighlight = localStorage.getItem(LS.firstPreviewDone) === "1" &&
+      !localStorage.getItem(LS.firstReturnHighlight) &&
+      S.currentState === "IdleReturning";
+  } catch (e) { /* ignore */ }
+  if (needsHighlight) {
+    try { localStorage.setItem(LS.firstReturnHighlight, "1"); } catch (e) { /* ignore */ }
+    host.classList.add("studio-continue-card--highlight");
+    setTimeout(function () {
+      host.classList.remove("studio-continue-card--highlight");
+    }, 5000);
+  }
 
   var eyebrow = document.createElement("p");
   eyebrow.className = "studio-continue-card__eyebrow";
@@ -180,6 +245,7 @@ export function renderContinueCard() {
 
   var cont = document.createElement("a");
   cont.className = "studio-btn studio-btn--gold";
+  cont.setAttribute("data-entry-tier", "primary");
   cont.href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
   cont.textContent = "继续编辑";
   actions.appendChild(cont);
@@ -208,8 +274,10 @@ export function updateReturningActionsLayout() {
 
   var h1 = newBlock.querySelector(".studio-hero__title--after-card");
   var lead = newBlock.querySelector(".studio-hero__lead");
+  var note = newBlock.querySelector(".studio-hero__new-import-note");
   if (h1) show(h1, !hasContinue);
   if (lead) show(lead, !hasContinue);
+  if (note) note.classList.toggle("studio-hero__new-import-note--compact", hasContinue || hasResume);
 
   var newBtn = $("studio-open-sheet-returning");
   if (newBtn) {
@@ -239,17 +307,6 @@ export function renderHybridHero() {
     if (trip.longshotStale) href = "/" + trip.tripId + "/index.html?focus=longshot";
     card.href = href;
     card.title = (trip.title || trip.tripId) + (trip.longshotStale ? " · 长图待更新" : "");
-
-    if (idx === 0 &&
-        localStorage.getItem(LS.firstPreviewDone) === "1" &&
-        !localStorage.getItem(LS.firstReturnHighlight) &&
-        S.currentState === "IdleReturning") {
-      card.classList.add("studio-hero__recent-card--highlight");
-      setTimeout(function () {
-        card.classList.remove("studio-hero__recent-card--highlight");
-        localStorage.setItem(LS.firstReturnHighlight, "1");
-      }, 5000);
-    }
 
     if (trip.previewRelPath) {
       var img = document.createElement("img");
@@ -329,7 +386,7 @@ export function renderRecentPathHint() {
 // ── Trip cards (all trips grid) ──
 export function renderTripCard(trip, options) {
   options = options || {};
-  var isDemo = trip.tripId && trip.tripId.indexOf("demo") >= 0;
+  var isDemo = isDemoTrip(trip);
   var href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
   if (trip.longshotStale) {
     href = "/" + trip.tripId + "/index.html?focus=longshot";
@@ -339,22 +396,6 @@ export function renderTripCard(trip, options) {
   card.className = "studio-trip-card";
   card.href = href;
   card.title = trip.title || trip.tripId;
-
-  // Highlight first return (only on the latest trip)
-  var needsHighlight = false;
-  if (options.highlight &&
-      localStorage.getItem(LS.firstPreviewDone) === "1" &&
-      !localStorage.getItem(LS.firstReturnHighlight) &&
-      S.currentState === "IdleReturning") {
-    needsHighlight = true;
-  }
-  if (needsHighlight) {
-    card.classList.add("studio-trip-card--highlight");
-    setTimeout(function () {
-      card.classList.remove("studio-trip-card--highlight");
-      localStorage.setItem(LS.firstReturnHighlight, "1");
-    }, 5000);
-  }
 
   if (trip.previewRelPath) {
     var img = document.createElement("img");
@@ -448,7 +489,11 @@ export function renderFooterStats() {
   }
   var total = S.tripsTotalCount || S.tripsData.length;
   var photos = S.tripsData.reduce(function (s, t) { return s + (t.photoCount || 0); }, 0);
-  el.textContent = "已生成 " + total + " 篇 · 累计 " + photos + " 张照片 · 全部保存在本机";
+  if (S.tripsData.length < total) {
+    el.textContent = "已生成 " + total + " 篇 · 全部保存在本机";
+  } else {
+    el.textContent = "已生成 " + total + " 篇 · 累计 " + photos + " 张照片 · 全部保存在本机";
+  }
 }
 
 export function renderResumeImportCard() {

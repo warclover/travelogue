@@ -24,6 +24,7 @@ import {
   updateImportStages, playSuccessCoverTransition, applySuccessCover,
   resetSuccessCover, resolveSuccessCoverUrl,
 } from "./progress.js";
+import { trackStudioEvent } from "./analytics.js";
 
 // ── Import flows ──
 export function focusPathImport(message) {
@@ -81,6 +82,7 @@ export function requestNativeFolder(titleVal, placeVal, options) {
       return;
     }
     if (result.status === 200 && result.data && result.data.albumPath) {
+      trackStudioEvent("pick_folder", { via: "native" });
       var pathInput = $("album-path");
       if (pathInput) pathInput.value = result.data.albumPath;
       if (titleVal && $("trip-title")) $("trip-title").value = titleVal;
@@ -107,14 +109,9 @@ export function requestNativeFolder(titleVal, placeVal, options) {
 }
 
 // ── Success page · longshot ──
-let _successTimer = null;
 let _successTripId = null;
 let _successLongshotPoll = null;
 var _successLongshotAbort = false;
-
-export function clearSuccessTimer() {
-  if (_successTimer) { clearInterval(_successTimer); _successTimer = null; }
-}
 
 export function clearSuccessLongshotPoll() {
   _successLongshotAbort = true;
@@ -166,10 +163,10 @@ export function onSuccessLongshotDone(job) {
     setSuccessLongshotStatus("长图已保存 " + outputs[0] + seg + " · 点击再次导出可更新", false);
   }
   revealSuccessLongshot(outputs[0]);
-  var wechat = $("studio-success-wechat");
-  if (wechat) {
-    wechat.open = true;
-    show(wechat, true);
+  var extras = $("studio-success-extras");
+  if (extras) {
+    extras.open = false;
+    show(extras, true);
   }
 }
 
@@ -265,9 +262,6 @@ function finishImportSuccessTransition(job, ui) {
   playSuccessCoverTransition(coverUrl, function () {
     applySuccessCover(coverUrl, title);
     transitionTo("Success");
-    var countdownP = document.querySelector(".studio-success__countdown");
-    if (countdownP) show(countdownP, false);
-    clearSuccessTimer();
   });
 }
 
@@ -282,10 +276,10 @@ function populateImportSuccessUi(job) {
   _successTripId = tripId || null;
   setSuccessLongshotStatus("", false);
   clearSuccessLongshotPoll();
-  var wechatGuide = $("studio-success-wechat");
-  if (wechatGuide) {
-    wechatGuide.open = false;
-    show(wechatGuide, false);
+  var successExtras = $("studio-success-extras");
+  if (successExtras) {
+    successExtras.open = false;
+    show(successExtras, false);
   }
   var notice = result.clusterNotice;
   if (notice && typeof studioToast === "function") {
@@ -333,7 +327,11 @@ function populateImportSuccessUi(job) {
       var openLabel = openLink.querySelector(".studio-btn__label");
       if (openLabel) openLabel.textContent = "去预览确认章节";
     }
-    if (pathsHint) pathsHint.textContent = "先确认章节结构 · 再继续生成文案";
+    if (pathsHint) {
+      pathsHint.textContent = "先确认章节结构 · 再继续生成文案";
+      show(pathsHint, true);
+    }
+    if (successExtras) show(successExtras, false);
   } else {
     if (longshotBtn) show(longshotBtn, true);
     if (openLink) {
@@ -342,7 +340,11 @@ function populateImportSuccessUi(job) {
       var normalLabel = openLink.querySelector(".studio-btn__label");
       if (normalLabel) normalLabel.textContent = "打开卷轴预览";
     }
-    if (pathsHint) pathsHint.textContent = "群聊发长图 · 沉浸读卷轴";
+    if (pathsHint) show(pathsHint, false);
+    if (successExtras) {
+      successExtras.open = false;
+      show(successExtras, false);
+    }
   }
 
   var chipsHost = $("studio-success-chips");
@@ -362,12 +364,17 @@ function populateImportSuccessUi(job) {
 
 export function handleImportSuccess(job) {
   var ui = populateImportSuccessUi(job);
+  trackStudioEvent("import_success", { tripId: ui.tripId || null, g1: !!(job.result && job.result.g1Pending) });
   finishImportSuccessTransition(job, ui);
 }
 
 export function startImport(body) {
   var gen = ++S._importGen;
   S.pendingImport = body;
+  trackStudioEvent("import_start", {
+    via: body && body.useDemoAlbum ? "demo" : (body && body.uploadForm ? "upload" : "path"),
+  });
+  if (body && body.useDemoAlbum) trackStudioEvent("demo_try", { via: "demo_album" });
   try {
     if (!body.uploadForm) {
       sessionStorage.setItem(SS.activePending, JSON.stringify(body));
@@ -456,11 +463,15 @@ export function startImport(body) {
 
 export function rememberCancelled() {
   if (!S.pendingImport) return;
+  if (S.pendingImport.uploadForm) {
+    try { localStorage.removeItem(LS.lastCancelled); } catch (e) {}
+    return;
+  }
   var echo = "";
   if (S.pendingImport.albumPath) echo = S.pendingImport.albumPath;
   else if (S.pendingImport.fileCount) echo = "浏览器上传（" + S.pendingImport.fileCount + " 张照片）";
   else if (S.pendingImport.useDemoAlbum) echo = "示例相册";
-  var data = { echo: echo, body: S.pendingImport.uploadForm ? null : S.pendingImport };
+  var data = { echo: echo, body: S.pendingImport };
   try { localStorage.setItem(LS.lastCancelled, JSON.stringify(data)); } catch (e) {}
 }
 
@@ -495,6 +506,7 @@ export function uploadAndImportCore(files, titleVal, placeVal) {
 
   S.pendingImport = { uploadForm: true, files: files, fileCount: files.length };
   try { sessionStorage.removeItem(SS.activePending); } catch (e) {}
+  trackStudioEvent("import_start", { via: "upload" });
   setError("");
   hideFailure();
   transitionTo("Importing");

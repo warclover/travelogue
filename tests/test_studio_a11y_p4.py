@@ -30,8 +30,10 @@ def test_ac_p4_a11y_02_sheet_focus_trap_and_escape() -> None:
 
 def test_ac_p4_a11y_03_skip_link_and_progressbar_semantics() -> None:
     html = STUDIO_HTML.read_text(encoding="utf-8")
+    js = read_studio_js()
     assert 'class="studio-skip-link"' in html
     assert 'href="#studio-open-sheet"' in html
+    assert "updateSkipLinkTarget" in js
     assert 'id="studio-progress-bar"' in html
     assert 'role="progressbar"' in html
     assert 'aria-valuemin="0"' in html

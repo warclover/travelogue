@@ -9,15 +9,15 @@
  * ./js/state.js (the S object).
  */
 import { S } from "./js/state.js";
-import { LS, SS } from "./js/constants.js";
+import { LS, SS, markSampleEngaged } from "./js/constants.js";
 import { $ } from "./js/dom.js";
 import { hideFailure, loadPipelineEstimates } from "./js/errors.js";
 import { transitionTo } from "./js/navigation.js";
 import "./js/render.js";
 import { loadTrips, startHealthCheck, cancelActiveJob } from "./js/api.js";
-import { renderSampleCards, renderHeroSampleStrip, initSampleModal, openSamplePreview } from "./js/samples.js";
+import { renderSampleCards, initSampleModal, openSamplePreview } from "./js/samples.js";
 import {
-  initImportSheet, closeImportSheet, replayCoachMarks, renderRecentPaths, loadIntent,
+  initImportSheet, closeImportSheet, replayCoachMarks, renderRecentPaths, loadIntent, openImportSheet,
 } from "./js/sheet.js";
 import { initAdvancedOptions } from "./js/advanced.js";
 import {
@@ -25,8 +25,9 @@ import {
 } from "./js/init.js";
 import {
   requestNativeFolder, submitPathImport, startImport, uploadAndImport,
-  rememberCancelled, resumeActiveJobIfAny, clearSuccessTimer, clearSuccessLongshotPoll, startSuccessLongshot,
+  rememberCancelled, resumeActiveJobIfAny, clearSuccessLongshotPoll, startSuccessLongshot,
 } from "./js/import-flow.js";
+import { trackStudioEvent } from "./js/analytics.js";
 
 // ── Main init ──
 document.addEventListener("DOMContentLoaded", function () {
@@ -39,12 +40,26 @@ document.addEventListener("DOMContentLoaded", function () {
   initTripsMore();
   var openSamplesBtn = $("studio-open-samples");
   if (openSamplesBtn) openSamplesBtn.addEventListener("click", function () {
-    openSamplePreview("kyoto");
+    markSampleEngaged();
+    var gallery = $("studio-gallery");
+    if (gallery) {
+      gallery.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    var below = $("studio-below");
+    if (below) below.scrollIntoView({ behavior: "smooth", block: "start" });
   });
+  function bindDemoConvert(btn) {
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      openImportSheet();
+    });
+  }
+  bindDemoConvert($("studio-demo-convert-btn"));
+  bindDemoConvert($("studio-gallery-convert-btn"));
   initAdvancedOptions();
   loadPipelineEstimates();
   renderSampleCards();
-  renderHeroSampleStrip();
   initSampleModal();
   initImportSheet();
   renderRecentPaths();
@@ -131,18 +146,20 @@ document.addEventListener("DOMContentLoaded", function () {
   // Success: stay on home
   var stayBtn = $("studio-success-stay");
   if (stayBtn) stayBtn.addEventListener("click", function () {
-    clearSuccessTimer();
     clearSuccessLongshotPoll();
     transitionTo(S.tripsData.length > 0 ? "IdleReturning" : "IdleEmpty");
   });
   var openBtn = $("studio-success-open");
   if (openBtn) openBtn.addEventListener("click", function () {
-    clearSuccessTimer();
     clearSuccessLongshotPoll();
+    var longshotBtn = $("studio-success-longshot");
+    trackStudioEvent("success_primary_click", {
+      action: (longshotBtn && longshotBtn.hidden) ? "open_preview_primary" : "open_preview",
+    });
   });
   var longshotBtn = $("studio-success-longshot");
   if (longshotBtn) longshotBtn.addEventListener("click", function () {
-    clearSuccessTimer();
+    trackStudioEvent("success_primary_click", { action: "longshot" });
     startSuccessLongshot();
   });
 });

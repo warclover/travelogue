@@ -116,7 +116,9 @@ export function waitJob(jobId, gen) {
     }
     if (job.status === "cancelled") throw new Error("已取消");
     var err = job.error || {};
-    throw new Error(humanizeStudioError(err.code, err.message || err.code));
+    var fail = new Error(humanizeStudioError(err.code, err.message || err.code));
+    fail.code = err.code;
+    throw fail;
   }).catch(function (err) {
     S.activeJobId = null;
     show($("studio-cancel"), false);

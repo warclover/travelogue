@@ -14,12 +14,27 @@ export function isGenericPlace(name) {
   return !s || GENERIC_PLACES.has(s);
 }
 
+/** Bundled / trial demo trips (not user folder slugs that happen to contain "demo"). */
+export function isDemoTrip(trip) {
+  if (!trip) return false;
+  var id = String(trip.tripId || "");
+  if (id === "demo-album") return true;
+  var title = String(trip.title || "").trim();
+  if (title === "示例旅途" || title === "示例") return true;
+  if (/^demo-[a-f0-9]{10}$/.test(id)) return true;
+  return false;
+}
+
+export function markSampleEngaged() {
+  try { localStorage.setItem(LS.sampleViewed, "1"); } catch (e) { /* ignore */ }
+}
+
 // ── Stage labels (§8.2) ──
 export const STAGE_LABELS = {
-  ingest: "正在准备你的照片…",
-  curate: "正在智能排版…",
-  narrate: "正在撰写游记文字…",
-  render: "正在生成游记预览…",
+  ingest: "正在读取你的照片",
+  curate: "正在挑选与排版",
+  narrate: "正在撰写游记文字",
+  render: "正在生成杂志预览",
 };
 
 // P5-10.1 · mirror travelogue/web/studio_errors.py USER_MESSAGES
@@ -62,6 +77,7 @@ export const LS = {
   firstPreviewDone: "travelogue.studio.firstPreviewDone",
   firstReturnHighlight: "travelogue.studio.firstReturnHighlight",
   demoTried: "travelogue.studio.demoTried",
+  sampleViewed: "travelogue.studio.sampleViewed",
   recentPaths: "travelogue.studio.recentPaths",
   lastCancelled: "travelogue.studio.lastCancelled",
   studioIntent: "travelogue.studio.intent",

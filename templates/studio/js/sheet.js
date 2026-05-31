@@ -11,6 +11,7 @@ import {
 import { setError, setImportEstimate } from "./errors.js";
 import { postJson } from "./http.js";
 import { startImport, requestNativeFolder } from "./import-bridge.js";
+import { trackStudioEvent } from "./analytics.js";
 
 function setSheetTriggersExpanded(expanded) {
   ["studio-open-sheet", "studio-open-sheet-returning", "studio-path-toggle"].forEach(function (id) {
@@ -74,7 +75,8 @@ export function resetSheetConfirm() {
   }
 }
 
-export function showSheetConfirm(albumPath) {
+export function showSheetConfirm(albumPath, options) {
+  options = options || {};
   S._pendingAlbumPath = albumPath;
   var picked = $("studio-sheet-picked");
   if (picked) {
@@ -95,7 +97,9 @@ export function showSheetConfirm(albumPath) {
   show($("studio-sheet-confirm"), true);
   validateTitleField();
   if (titleInput) titleInput.focus();
-  fetchImportThumbsFromAlbumPath(albumPath, { notifyPick: true });
+  fetchImportThumbsFromAlbumPath(albumPath, {
+    notifyPick: options.announcePick !== false,
+  });
 }
 
 var DEMO_THUMB_URLS = [
@@ -114,8 +118,11 @@ export function openImportSheet() {
     }
     return;
   }
+  var wasOpen = S._sheetOpen;
+  var pendingPath = S._pendingAlbumPath;
   loadIntent();
   resetSheetConfirm();
+  if (pendingPath) showSheetConfirm(pendingPath, { announcePick: false });
   var root = $("studio-sheet-root");
   var sheet = $("studio-import-sheet");
   if (root) show(root, true);
@@ -130,6 +137,7 @@ export function openImportSheet() {
   var pick = $("studio-sheet-pick");
   if (pick) pick.focus();
   maybeShowCoach(1);
+  if (!wasOpen) trackStudioEvent("open_sheet", { state: S.currentState });
 }
 
 export function closeImportSheet() {
@@ -387,6 +395,7 @@ export function initImportSheet() {
     var prep = $("studio-sheet-prep");
     if (prep) {
       prep.open = true;
+      trackStudioEvent("prep_open", { via: "help" });
       prep.scrollIntoView({ behavior: "smooth", block: "nearest" });
       return;
     }
@@ -399,6 +408,12 @@ export function initImportSheet() {
   });
   var coachSkip = $("studio-coach-skip");
   if (coachSkip) coachSkip.addEventListener("click", dismissCoach);
+  var prepDetails = $("studio-sheet-prep");
+  if (prepDetails) {
+    prepDetails.addEventListener("toggle", function () {
+      if (prepDetails.open) trackStudioEvent("prep_open", { via: "details" });
+    });
+  }
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && S._sheetOpen && S.currentState !== "Importing") closeImportSheet();
   });

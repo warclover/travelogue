@@ -9,11 +9,11 @@ var STAGE_ORDER = ["ingest", "curate", "narrate", "render"];
 var COVER_TRANSITION_MS = 620;
 
 export function stageText(job) {
-  var label = STAGE_LABELS[job.stage] || "处理中…";
-  var idx = job.stageIndex || 0;
+  var label = STAGE_LABELS[job.stage] || "正在制作中…";
+  var idx = job.stageIndex || 1;
   var total = job.stageCount || 4;
   var hint = job.stageHint ? "（" + job.stageHint + "）" : "";
-  return idx + "/" + total + " · " + label + hint;
+  return "第 " + idx + " 步，共 " + total + " 步 · " + label + hint;
 }
 
 export function updateImportStages(job) {

@@ -58,35 +58,32 @@
       你的照片<br/><span class="studio-hero__title-accent">是一本<em>还没装帧</em>的杂志</span>
     </h1>
     <p class="studio-hero__lead">
-      选一次旅行的文件夹，几分钟排成<strong>可发微信的竖版长图</strong>——<br/>
+      选一次旅行的文件夹，几分钟排成<strong>可发微信的竖版长图</strong>——
       像编辑部一样分章、选图、留白，而不是九宫格相册。
     </p>
-    <div class="studio-hero__journey" aria-label="三步完成">
-      <div class="studio-hero__journey-step">
-        <span class="studio-hero__journey-num">01</span>
-        <span class="studio-hero__journey-text">选择一次旅行照片</span>
+    <details class="studio-hero__journey-details">
+      <summary>怎么完成？三步</summary>
+      <div class="studio-hero__journey" aria-label="三步完成">
+        <div class="studio-hero__journey-step">
+          <span class="studio-hero__journey-num">01</span>
+          <span class="studio-hero__journey-text">选择一次旅行照片</span>
+        </div>
+        <div class="studio-hero__journey-step">
+          <span class="studio-hero__journey-num">02</span>
+          <span class="studio-hero__journey-text">智能编排与成文</span>
+        </div>
+        <div class="studio-hero__journey-step">
+          <span class="studio-hero__journey-num">03</span>
+          <span class="studio-hero__journey-text">导出长图分享微信</span>
+        </div>
       </div>
-      <div class="studio-hero__journey-step">
-        <span class="studio-hero__journey-num">02</span>
-        <span class="studio-hero__journey-text">智能编排与成文</span>
-      </div>
-      <div class="studio-hero__journey-step">
-        <span class="studio-hero__journey-num">03</span>
-        <span class="studio-hero__journey-text">导出长图分享微信</span>
-      </div>
-    </div>
-    <div class="studio-hero__meta-row" aria-label="产品承诺">
-      <span class="studio-hero__pill">照片留在本机</span>
-      <span class="studio-hero__meta-dot" aria-hidden="true">·</span>
-      <span class="studio-hero__pill">杂志风排版</span>
-      <span class="studio-hero__meta-dot" aria-hidden="true">·</span>
-      <span class="studio-hero__pill">2–5 分钟成稿</span>
-    </div>
+    </details>
     <div class="studio-hero__cta-row">
       <button
         type="button"
         id="studio-open-sheet"
         class="studio-btn studio-btn--gold"
+        data-entry-tier="primary"
         aria-controls="studio-import-sheet"
         aria-expanded="false"
       >
@@ -97,12 +94,13 @@
         type="button"
         id="studio-open-samples"
         class="studio-btn studio-btn--ghost-soft"
+        data-entry-tier="secondary"
         aria-controls="studio-gallery"
       >
         <span class="studio-btn__label">先看成品样张</span>
       </button>
     </div>
-    <p class="studio-hero__cta-meta">无需注册 · 不上传云端 · 支持 JPG/PNG/WebP/HEIC</p>
+    <p class="studio-hero__cta-meta">照片留在本机 · 无需注册 · 支持 JPG/PNG/WebP/HEIC</p>
     <details class="studio-prep-guide">
       <summary>不知道选哪个文件夹？</summary>
       <ul class="studio-prep-guide__list">
@@ -112,7 +110,7 @@
         <li><strong>手机照片</strong>需先传到电脑（复制到「图片」或用数据线导入）</li>
       </ul>
     </details>
-    <div class="studio-hero__proof studio-hero__proof--inline" aria-hidden="true">
+    <div class="studio-hero__proof studio-hero__proof--inline studio-hero__proof--deferred" aria-hidden="true">
       <figure class="studio-hero__proof-item">
         <img src="/__studio/assets/demo-album/demo-01.jpg" alt="" loading="lazy" decoding="async" />
         <figcaption>旅行相册</figcaption>
@@ -129,7 +127,14 @@
         <figcaption>杂志长图</figcaption>
       </figure>
     </div>
-    <div class="studio-hero__sample-strip" id="studio-hero-samples" aria-label="浏览成品样张"></div>
+    <div class="studio-hero__sample-strip studio-hero__sample-strip--deferred" id="studio-hero-samples" aria-label="浏览成品样张" hidden></div>
+    <div id="studio-demo-convert" class="studio-demo-convert" hidden>
+      <p class="studio-demo-convert__text">示例看完了？</p>
+      <button type="button" id="studio-demo-convert-btn" class="studio-btn studio-btn--gold studio-btn--sm" data-entry-tier="primary">
+        <span class="studio-btn__label">现在用你自己的照片做一篇</span>
+        <span class="studio-btn__arrow" aria-hidden="true">→</span>
+      </button>
+    </div>
     <div id="studio-resume-card" class="studio-resume-card" hidden></div>
     <p id="studio-import-error" class="studio-error studio-error--inline" role="alert" hidden></p>
   </div>
@@ -149,6 +154,7 @@
               type="button"
               id="studio-open-sheet-returning"
               class="studio-btn studio-btn--gold"
+              data-entry-tier="primary"
               aria-controls="studio-import-sheet"
               aria-expanded="false"
             >
@@ -157,15 +163,6 @@
             </button>
           </div>
           <p class="studio-hero__new-import-note">每个文件夹会生成一篇<strong>新的</strong>杂志，不会覆盖已有游记。</p>
-          <details class="studio-prep-guide">
-            <summary>不知道选哪个文件夹？</summary>
-            <ul class="studio-prep-guide__list">
-              <li>把<strong>同一次旅行</strong>的照片放到一个文件夹里（50–100 张最佳）</li>
-              <li>若分散在 Day1 / Day2 等子文件夹：先<strong>合并</strong>到一个文件夹，或<strong>分两次导入</strong>（每次一篇新杂志）</li>
-              <li>支持 JPG / PNG / WebP / HEIC；照片<strong>不会被移动或修改</strong></li>
-              <li><strong>手机照片</strong>需先传到电脑（复制到「图片」或用数据线导入）</li>
-            </ul>
-          </details>
         </div>
       </div>
     </div>
@@ -200,8 +197,8 @@
     </div>
     <div class="studio-import__panel">
       <ol class="studio-import__stages" id="studio-import-stages" aria-label="导入阶段">
-        <li class="studio-import__stage" data-stage="ingest">准备照片</li>
-        <li class="studio-import__stage" data-stage="curate">智能排版</li>
+        <li class="studio-import__stage" data-stage="ingest">读取照片</li>
+        <li class="studio-import__stage" data-stage="curate">挑选排版</li>
         <li class="studio-import__stage" data-stage="narrate">撰写文案</li>
         <li class="studio-import__stage" data-stage="render">生成预览</li>
       </ol>
@@ -229,6 +226,7 @@
     <p class="studio-failure__eyebrow">导入失败</p>
     <p class="studio-failure__echo" id="studio-failure-echo"></p>
     <p class="studio-failure__msg" id="studio-failure-msg"></p>
+    <p class="studio-failure__hint" id="studio-failure-hint" hidden></p>
     <div class="studio-failure__actions">
       <button type="button" id="studio-retry" class="studio-btn studio-btn--primary">重试</button>
       <a href="/" class="studio-btn studio-btn--ghost-inverse">返回</a>
@@ -245,7 +243,19 @@
     <p class="studio-success__eyebrow">✓ 生成完成</p>
     <p class="studio-success__msg" id="studio-success-msg">你的第一篇游记已生成</p>
     <div class="studio-success__chips" id="studio-success-chips" hidden></div>
-    <p class="studio-success__paths-hint" id="studio-success-paths-hint">群聊发长图 · 沉浸读卷轴</p>
+    <p class="studio-success__paths-hint" id="studio-success-paths-hint" hidden>群聊发长图 · 沉浸读卷轴</p>
+    <details class="studio-success__extras" id="studio-success-extras" hidden>
+      <summary>分享说明与更多选项</summary>
+      <p class="studio-success__paths-hint studio-success__paths-hint--inline" id="studio-success-share-hint">生成长图后可发到微信；卷轴预览适合沉浸阅读。</p>
+      <div class="studio-success__wechat" id="studio-success-wechat">
+        <p class="studio-success__wechat-label">如何发到微信</p>
+        <ol class="studio-success__wechat-steps">
+          <li>长图已保存到本机 trips 文件夹（已尝试在资源管理器中打开）</li>
+          <li>打开微信，将 PNG 拖入对话框（或从手机相册发送）</li>
+          <li>多张长图按文件名编号顺序发送即可</li>
+        </ol>
+      </div>
+    </details>
     <div class="studio-failure__actions studio-success__actions">
       <button type="button" id="studio-success-longshot" class="studio-btn studio-btn--gold">
         <span class="studio-btn__label">生成长图</span>
@@ -258,15 +268,6 @@
       <button type="button" id="studio-success-stay" class="studio-success__stay-link">留在首页</button>
     </div>
     <p class="studio-success__longshot-status" id="studio-success-longshot-status" hidden role="status"></p>
-    <details class="studio-success__wechat" id="studio-success-wechat" hidden>
-      <summary>如何发到微信</summary>
-      <ol>
-        <li>长图已保存到本机 trips 文件夹（已尝试在资源管理器中打开）</li>
-        <li>打开微信，将 PNG 拖入对话框（或从手机相册发送）</li>
-        <li>多张长图按文件名编号顺序发送即可</li>
-      </ol>
-    </details>
-    <p class="studio-success__countdown" hidden aria-hidden="true"><span id="studio-success-sec">5</span> 秒后自动打开</p>
   </div>
 
   <!-- Import sheet (Phase 4) -->
@@ -417,11 +418,11 @@
   </details>
 
   <!-- Secondary actions -->
-  <nav class="studio-hero__secondary" id="studio-hero-secondary" hidden>
+  <nav class="studio-hero__secondary" id="studio-hero-secondary" hidden data-entry-zone="tertiary">
     <span class="studio-link__label" id="studio-secondary-label">还没自己的照片？</span>
-    <button type="button" class="studio-link" id="studio-demo-album">试用示例</button>
+    <button type="button" class="studio-link" id="studio-demo-album" data-entry-tier="tertiary">试用示例</button>
     <span class="studio-link__sep" aria-hidden="true">·</span>
-    <label class="studio-link studio-link--warn" for="album-upload" title="仅适合极小文件夹，超过约 200MB 会失败">
+    <label class="studio-link studio-link--warn" for="album-upload" data-entry-tier="tertiary" title="仅适合极小文件夹，超过约 200MB 会失败">
       小文件夹试用（≤200MB）
     </label>
     <span class="studio-link__sep" aria-hidden="true">·</span>
@@ -429,6 +430,7 @@
       type="button"
       class="studio-link"
       id="studio-path-toggle"
+      data-entry-tier="tertiary"
       aria-controls="studio-import-sheet"
       aria-expanded="false"
     >制作杂志</button>
@@ -453,6 +455,13 @@
 
   <!-- Empty state · "长图样张" gallery -->
   <section class="studio-second" id="studio-gallery" hidden>
+    <div id="studio-gallery-convert" class="studio-demo-convert studio-demo-convert--gallery" hidden>
+      <p class="studio-demo-convert__text">看完成品了？用你自己的照片做一篇杂志。</p>
+      <button type="button" id="studio-gallery-convert-btn" class="studio-btn studio-btn--gold studio-btn--sm" data-entry-tier="primary">
+        <span class="studio-btn__label">现在用你自己的照片做一篇</span>
+        <span class="studio-btn__arrow" aria-hidden="true">→</span>
+      </button>
+    </div>
     <div class="studio-second__head">
       <h2 class="studio-second__title">成品长图，长这样</h2>
       <span class="studio-second__hint">点开看完整样张 · 这就是你会得到的杂志形态</span>
