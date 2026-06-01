@@ -111,6 +111,55 @@ def test_perf_ac_computation_passes() -> None:
     assert ac["AC-P7-12"] is True
 
 
+def test_incremental_cache_respects_scoring_context() -> None:
+    """Incremental cache keys include intent/arc context (separate entries per eval)."""
+    from travelogue.curation.arc_patterns import ARC_PEAK
+    from travelogue.curation.layout_scoring import (
+        IncrementalScoreState,
+        PHASE6_WEIGHTS,
+        score_screen_plan,
+    )
+    from tests._golden.helpers import build_mixed_aspects_trip, plan_legacy_screens
+
+    buckets, aspects, assets = build_mixed_aspects_trip()
+    plan = plan_legacy_screens(buckets, aspects, assets)
+    assets_by_id = {a["id"]: a for a in assets}
+    weights = PHASE6_WEIGHTS
+    state = IncrementalScoreState()
+    base = score_screen_plan(
+        plan,
+        aspects=aspects,
+        assets_by_id=assets_by_id,
+        weights=weights,
+        arc_segment=ARC_PEAK,
+        intent_arc_boost=0.0,
+        incremental=True,
+        incremental_state=state,
+    )
+    boosted_cached = score_screen_plan(
+        plan,
+        aspects=aspects,
+        assets_by_id=assets_by_id,
+        weights=weights,
+        arc_segment=ARC_PEAK,
+        intent_arc_boost=0.25,
+        incremental=True,
+        incremental_state=state,
+    )
+    boosted_full = score_screen_plan(
+        plan,
+        aspects=aspects,
+        assets_by_id=assets_by_id,
+        weights=weights,
+        arc_segment=ARC_PEAK,
+        intent_arc_boost=0.25,
+        incremental=False,
+    )
+    assert len(state.prefix_parts) == 2
+    assert abs(boosted_cached.total - boosted_full.total) < 1e-6
+    assert boosted_cached.total > base.total
+
+
 def test_incremental_scoring_matches_full_plan_score() -> None:
     """P7-D2 · incremental path must match full scoring within 1e-6."""
     from travelogue.curation.layout_scoring import (

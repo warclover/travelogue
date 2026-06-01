@@ -38,6 +38,9 @@ Thumbs.db
 # Export artifacts (optional local)
 *.zip
 
+# Local acceptance scan output (machine-specific trip paths)
+docs/acceptance-records/*.local.json
+
 # Local debug / screenshots
 _debug/
 _tmp_homepage_audit/

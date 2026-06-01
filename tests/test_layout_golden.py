@@ -85,7 +85,7 @@ def _p6_equivalent_config() -> AppConfig:
     )
 
 
-def _p7_fast_path_config() -> AppConfig:
+def _p7_fast_path_config(*, incremental: bool = False) -> AppConfig:
     cfg = AppConfig()
     cfg.vision.enabled = "true"
     cfg.vision.batch_size = 16
@@ -93,6 +93,7 @@ def _p7_fast_path_config() -> AppConfig:
     cfg.vision.prefer_web_derivative = True
     cfg.clustering.deterministic = True
     cfg.layout.scoring.skip_duplicate_signatures = True
+    cfg.layout.scoring.incremental = incremental
     return cfg
 
 
@@ -113,6 +114,18 @@ def test_nr_p7_ci_fixture_layout_matches_p6_and_p7_fast_path(tmp_path: Path) -> 
         trip, tmp_path / "p7", _p7_fast_path_config()
     )
     assert snap_p6 == snap_p7
+
+
+def test_nr_p7_incremental_scoring_preserves_layout(tmp_path: Path) -> None:
+    """P7-D2 on: beam layout must match fast-path with incremental off (CI fixture)."""
+    trip = load_fixture_trip(CI_FIXTURE)
+    snap_off = _curate_chapters_snapshot(
+        trip, tmp_path / "p7-off", _p7_fast_path_config(incremental=False)
+    )
+    snap_on = _curate_chapters_snapshot(
+        trip, tmp_path / "p7-on", _p7_fast_path_config(incremental=True)
+    )
+    assert snap_off == snap_on
 
 
 def test_ig2_ci_fixture_p3_full_meets_guards(tmp_path: Path) -> None:

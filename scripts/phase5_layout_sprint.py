@@ -17,17 +17,24 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 SPRINT_JSON = ROOT / "docs" / "acceptance-records" / "phase5-layout-sprint.json"
+SPRINT_LOCAL_JSON = ROOT / "docs" / "acceptance-records" / "phase5-layout-sprint.local.json"
 
 
-def _load_sprint() -> dict:
-    if SPRINT_JSON.is_file():
-        return json.loads(SPRINT_JSON.read_text(encoding="utf-8"))
+def _load_sprint(*, local: bool = False) -> dict:
+    path = SPRINT_LOCAL_JSON if local else SPRINT_JSON
+    if path.is_file():
+        return json.loads(path.read_text(encoding="utf-8"))
+    if local and SPRINT_JSON.is_file():
+        base = json.loads(SPRINT_JSON.read_text(encoding="utf-8"))
+        base["runs"] = []
+        return base
     return {"recordId": "phase5-layout-sprint", "albums": [], "runs": []}
 
 
-def _save_sprint(data: dict) -> None:
-    SPRINT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    SPRINT_JSON.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+def _save_sprint(data: dict, *, local: bool = True) -> None:
+    path = SPRINT_LOCAL_JSON if local else SPRINT_JSON
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def _trip_metrics(trip: dict) -> dict:
@@ -78,7 +85,7 @@ def record_trip(trip_path: Path, *, winner: str | None = None, notes: str = "") 
         "winner": winner,
         "notes": notes,
     }
-    data = _load_sprint()
+    data = _load_sprint(local=True)
     data.setdefault("runs", []).append(entry)
     wins = sum(1 for r in data["runs"] if r.get("winner") == "tuned")
     total = sum(1 for r in data["runs"] if r.get("winner") in ("tuned", "legacy", "baseline"))
@@ -87,12 +94,12 @@ def record_trip(trip_path: Path, *, winner: str | None = None, notes: str = "") 
         "judged": total,
         "passesTarget": wins >= 8 if total >= 10 else None,
     }
-    _save_sprint(data)
+    _save_sprint(data, local=True)
     return entry
 
 
 def print_summary() -> int:
-    data = _load_sprint()
+    data = _load_sprint(local=True)
     summary = data.get("summary") or {}
     print(json.dumps({"runs": len(data.get("runs", [])), **summary}, indent=2, ensure_ascii=False))
     judged = int(summary.get("judged") or 0)
@@ -108,6 +115,11 @@ def main() -> int:
     parser.add_argument("--winner", choices=("tuned", "legacy", "baseline", "tie"))
     parser.add_argument("--notes", default="")
     parser.add_argument("--scan-trips", type=Path, help="record metrics for each trip.json under directory")
+    parser.add_argument(
+        "--commit-record",
+        action="store_true",
+        help="write to phase5-layout-sprint.json (default: .local.json only)",
+    )
     parser.add_argument("--summary", action="store_true")
     args = parser.parse_args()
 
@@ -126,6 +138,9 @@ def main() -> int:
         print(f"trip not found: {args.record}", file=sys.stderr)
         return 2
     entry = record_trip(args.record, winner=args.winner, notes=args.notes)
+    if args.commit_record:
+        data = _load_sprint(local=True)
+        _save_sprint(data, local=False)
     print(json.dumps(entry, indent=2, ensure_ascii=False))
     return 0
 

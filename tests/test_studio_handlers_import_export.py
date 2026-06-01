@@ -156,6 +156,25 @@ def test_album_path_allowed_accepts_upload_dir(tmp_path: Path) -> None:
     assert album_path_allowed(handler, upload_dir, trips_root=trips_dir) is True
 
 
+def test_album_path_allowed_denies_local_when_trust_disabled(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    trips_dir = tmp_path / "trips"
+    outside = tmp_path / "outside-album"
+    outside.mkdir()
+    handler = MockStudioHandler(trips_dir)
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "0")
+    assert album_path_allowed(handler, outside, trips_root=trips_dir) is False
+
+
+def test_album_path_allowed_accepts_trip_source_dir(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    source = trips_dir / "demo-trip" / "source"
+    source.mkdir(parents=True)
+    handler = MockStudioHandler(trips_dir)
+    assert album_path_allowed(handler, source, trips_root=trips_dir) is True
+
+
 def test_album_path_allowed_denies_outside_uploads_on_lan(tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     outside = tmp_path / "outside-album"

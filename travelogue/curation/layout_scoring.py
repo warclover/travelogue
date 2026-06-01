@@ -245,6 +245,50 @@ def _plan_screen_key(screens: list[dict]) -> tuple[Any, ...]:
     )
 
 
+def _weights_cache_fingerprint(weights: ScoringWeights) -> tuple[float, ...]:
+    w = weights.normalized()
+    return (
+        round(w.aspect_match, 6),
+        round(w.sharpness, 6),
+        round(w.hero_separation, 6),
+        round(w.temporal_coherence, 6),
+        round(w.diversity, 6),
+        round(w.arc_fit, 6),
+        round(w.burst_integrity, 6),
+        round(w.luminance_continuity, 6),
+        round(w.subject_run, 6),
+        round(w.tone_continuity, 6),
+        round(w.layout_rhythm, 6),
+        round(w.gravity_balance, 6),
+    )
+
+
+def _incremental_cache_key(
+    screens: list[dict],
+    *,
+    weights: ScoringWeights,
+    arc_segment: str | None,
+    arc_profile: str,
+    hero_asset_ids: set[str] | None,
+    intent_arc_boost: float,
+    featured_beam: bool,
+    subject_run_tolerance: int,
+    enable_gravity_balance: bool,
+) -> tuple[Any, ...]:
+    """P7-D2 cache key: screen plan + scoring context (beam may vary arc/hero per eval)."""
+    return (
+        _plan_screen_key(screens),
+        _weights_cache_fingerprint(weights),
+        arc_segment,
+        arc_profile,
+        frozenset(hero_asset_ids) if hero_asset_ids else None,
+        round(intent_arc_boost, 6),
+        featured_beam,
+        subject_run_tolerance,
+        enable_gravity_balance,
+    )
+
+
 def _aspect_kind_for_slot(slot: dict, aspects: Mapping[str, AspectKind]) -> AspectKind | None:
     aid = slot.get("assetId")
     if not aid:
@@ -741,7 +785,17 @@ def score_screen_plan(
         return ScoreBreakdown()
     if incremental:
         state = incremental_state or IncrementalScoreState()
-        plan_key = _plan_screen_key(screens)
+        ctx_kwargs = dict(
+            weights=weights,
+            arc_segment=arc_segment,
+            arc_profile=arc_profile,
+            hero_asset_ids=hero_asset_ids,
+            intent_arc_boost=intent_arc_boost,
+            featured_beam=featured_beam,
+            subject_run_tolerance=subject_run_tolerance,
+            enable_gravity_balance=enable_gravity_balance,
+        )
+        plan_key = _incremental_cache_key(screens, **ctx_kwargs)
         cached = state.prefix_parts.get(plan_key)
         if cached is not None:
             parts, prior = cached
@@ -758,7 +812,7 @@ def score_screen_plan(
         parts: list[ScoreBreakdown] = []
         prior: list[str] = []
         for length in range(len(screens) - 1, 0, -1):
-            prefix_key = _plan_screen_key(screens[:length])
+            prefix_key = _incremental_cache_key(screens[:length], **ctx_kwargs)
             hit = state.prefix_parts.get(prefix_key)
             if hit is not None:
                 parts, prior = list(hit[0]), list(hit[1])
@@ -778,7 +832,7 @@ def score_screen_plan(
             initial_parts=parts,
             initial_prior=prior,
         )
-        state.prefix_parts[plan_key] = (parts, prior)
+        state.prefix_parts[plan_key] = (list(parts), list(prior))
         return _finalize_plan_score(
             parts,
             screens,

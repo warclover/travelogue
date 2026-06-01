@@ -1,3 +1,5 @@
+# PR job (test-pr) skips playwright_serial / e2e markers for speed.
+# Merge to master/main requires test-e2e green (browser + longshot regression).
 name: CI
 
 on:

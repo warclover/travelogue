@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import gc
 import json
+import logging
 import shutil
 import threading
 from copy import deepcopy
@@ -12,6 +13,7 @@ from pathlib import Path
 import pytest
 
 _playwright_gate = threading.Lock()
+_log = logging.getLogger(__name__)
 
 from travelogue.media.ingest import ingest_into_trip
 from travelogue.services.trip_factory import create_trip
@@ -50,8 +52,8 @@ def _release_resources_before_playwright(request: pytest.FixtureRequest):
             from travelogue.export.longshot import reset_browser_pool_for_tests
 
             reset_browser_pool_for_tests()
-        except Exception:
-            pass
+        except Exception as exc:
+            _log.debug("playwright pool reset (setup) failed: %s", exc, exc_info=True)
         if _is_studio_ui_playwright(request.node):
             gc.collect()
 
@@ -60,8 +62,8 @@ def _release_resources_before_playwright(request: pytest.FixtureRequest):
 
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
-        except Exception:
-            pass
+        except Exception as exc:
+            _log.debug("torch cuda cache clear (setup) failed: %s", exc, exc_info=True)
 
         gc.collect()
         yield
@@ -70,8 +72,8 @@ def _release_resources_before_playwright(request: pytest.FixtureRequest):
             from travelogue.export.longshot import reset_browser_pool_for_tests
 
             reset_browser_pool_for_tests()
-        except Exception:
-            pass
+        except Exception as exc:
+            _log.debug("playwright pool reset (teardown) failed: %s", exc, exc_info=True)
 
 
 @pytest.fixture(autouse=True)
@@ -82,8 +84,8 @@ def _reset_clip_encoder_singleton() -> None:
         from travelogue.vision.clip_encoder import reset_clip_encoder_singleton
 
         reset_clip_encoder_singleton()
-    except Exception:
-        pass
+    except Exception as exc:
+        _log.debug("clip encoder singleton reset failed: %s", exc, exc_info=True)
 
 
 @pytest.fixture(scope="session")

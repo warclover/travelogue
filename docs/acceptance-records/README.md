@@ -33,7 +33,7 @@
 |------|------|-------------|
 | [phase5-zero-edit.json](./phase5-zero-edit.json) | UX-P5-80-01 零编辑计时 | 手测填写 |
 | [phase5-scroll-qualitative.json](./phase5-scroll-qualitative.json) | UX-P5-SCROLL-01 卷轴定性 | 3–5 人手测 |
-| [phase5-layout-sprint.json](./phase5-layout-sprint.json) | P5-QS-01 排版冲刺 | `python scripts/phase5_layout_sprint.py --summary` |
+| [phase5-layout-sprint.json](./phase5-layout-sprint.json) | P5-QS-01 排版冲刺（模板） | `python scripts/phase5_layout_sprint.py --record …` 写入 `phase5-layout-sprint.local.json`（gitignore） |
 | [phase5-peval.json](./phase5-peval.json) | P5-8.1 排版盲评 | `python scripts/phase5_blind_review.py <tripId>` |
 | [phase5-webview-manual.json](./phase5-webview-manual.json) | P5-MP-2 本地 web-view 手测 | 见 [API-MINIAPP.md](../API-MINIAPP.md) §11 |
 

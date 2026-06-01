@@ -1,7 +1,16 @@
-"""Studio album import (JSON and multipart)."""
+"""Studio album import (JSON and multipart).
+
+Loopback album paths (folder picker / JSON ``albumPath``):
+  - Always allowed: Studio uploads dir, demo album, paths under ``trips_root``.
+  - Other local directories: allowed when ``TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM`` is not
+    ``0``/``false`` (default on loopback). Set to ``0`` to restrict imports to uploads only.
+  - LAN (``--allow-lan``): uploads and demo only; requires ``X-Studio-Token``.
+"""
 
 from __future__ import annotations
 
+import logging
+import os
 import threading
 import time
 from pathlib import Path
@@ -27,6 +36,21 @@ from travelogue.web.studio_uploads import (
     upload_dir_for_job,
     uploads_root,
 )
+
+_log = logging.getLogger(__name__)
+
+
+def _studio_trust_local_album_paths() -> bool:
+    raw = os.environ.get("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "1").strip().lower()
+    return raw not in ("0", "false", "no", "off")
+
+
+def _album_under_trips_root(album_path: Path, trips_root: Path) -> bool:
+    try:
+        album_path.resolve().relative_to(trips_root.resolve())
+        return True
+    except ValueError:
+        return False
 
 
 def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | None]:
@@ -87,6 +111,8 @@ def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | No
 
 def album_path_allowed(handler: StudioHandlerProtocol, album_path: Path, *, trips_root: Path) -> bool:
     album_path = album_path.resolve()
+    if not album_path.is_dir():
+        return False
     if is_demo_album_path(str(album_path)):
         return True
     try:
@@ -94,8 +120,13 @@ def album_path_allowed(handler: StudioHandlerProtocol, album_path: Path, *, trip
         return True
     except ValueError:
         pass
+    if _album_under_trips_root(album_path, trips_root):
+        return True
     if is_loopback_host(handler.studio_host) and not handler.studio_allow_lan:
-        return album_path.is_dir()
+        if _studio_trust_local_album_paths():
+            _log.debug("studio import: trusted local album %s", album_path)
+            return True
+        return False
     return False
 
 
