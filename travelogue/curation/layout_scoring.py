@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 from travelogue.curation.layout_planner import AspectKind
@@ -221,6 +221,28 @@ class ScoreBreakdown:
             "layout_rhythm": round(self.layout_rhythm, 6),
             "gravity_balance": round(self.gravity_balance, 6),
         }
+
+
+@dataclass
+class IncrementalScoreState:
+    """P7-D2 · cache per-screen scores for shared beam plan prefixes."""
+
+    prefix_parts: dict[tuple[Any, ...], tuple[list[ScoreBreakdown], list[str]]] = field(
+        default_factory=dict
+    )
+
+
+def _plan_screen_key(screens: list[dict]) -> tuple[Any, ...]:
+    return tuple(
+        (
+            screen.get("patternId"),
+            tuple(
+                (slot.get("assetId"), slot.get("role"))
+                for slot in (screen.get("slots") or [])
+            ),
+        )
+        for screen in screens
+    )
 
 
 def _aspect_kind_for_slot(slot: dict, aspects: Mapping[str, AspectKind]) -> AspectKind | None:
@@ -599,42 +621,19 @@ def score_screen(
     return bd
 
 
-def score_screen_plan(
+def _finalize_plan_score(
+    parts: list[ScoreBreakdown],
     screens: list[dict],
     *,
-    aspects: Mapping[str, AspectKind],
     assets_by_id: Mapping[str, dict],
     weights: ScoringWeights,
-    arc_segment: str | None = None,
-    arc_profile: str = "dynamic",
-    hero_asset_ids: set[str] | None = None,
-    subject_run_tolerance: int = 1,
-    featured_beam: bool = False,
-    intent_arc_boost: float = 0.0,
-    enable_gravity_balance: bool = True,
+    subject_run_tolerance: int,
+    featured_beam: bool,
+    enable_gravity_balance: bool,
 ) -> ScoreBreakdown:
-    """Aggregate score for a full screen sequence in one day bucket / chapter."""
-    if not screens:
+    if not parts:
         return ScoreBreakdown()
     weights = weights.normalized()
-    prior: list[str] = []
-    parts: list[ScoreBreakdown] = []
-    for screen in screens:
-        bd = score_screen(
-            screen,
-            aspects=aspects,
-            assets_by_id=assets_by_id,
-            weights=weights,
-            arc_segment=arc_segment,
-            arc_profile=arc_profile,
-            hero_asset_ids=hero_asset_ids,
-            prior_pattern_ids=prior,
-            featured_beam=featured_beam,
-            intent_arc_boost=intent_arc_boost,
-        )
-        parts.append(bd)
-        prior.append(screen.get("patternId") or "")
-
     burst = score_burst_integrity(screens, assets_by_id)
     luma = score_luminance_continuity(screens, assets_by_id)
     tone = score_tone_continuity(screens, assets_by_id)
@@ -683,6 +682,133 @@ def score_screen_plan(
                     featured_n += 1
         avg.total += featured_n * FEATURED_BEAM_BONUS_PER_ASSET
     return avg
+
+
+def _build_plan_screen_parts(
+    screens: list[dict],
+    *,
+    aspects: Mapping[str, AspectKind],
+    assets_by_id: Mapping[str, dict],
+    weights: ScoringWeights,
+    arc_segment: str | None,
+    arc_profile: str,
+    hero_asset_ids: set[str] | None,
+    featured_beam: bool,
+    intent_arc_boost: float,
+    start_index: int = 0,
+    initial_parts: list[ScoreBreakdown] | None = None,
+    initial_prior: list[str] | None = None,
+) -> tuple[list[ScoreBreakdown], list[str]]:
+    weights = weights.normalized()
+    parts = list(initial_parts or [])
+    prior = list(initial_prior or [])
+    for screen in screens[start_index:]:
+        bd = score_screen(
+            screen,
+            aspects=aspects,
+            assets_by_id=assets_by_id,
+            weights=weights,
+            arc_segment=arc_segment,
+            arc_profile=arc_profile,
+            hero_asset_ids=hero_asset_ids,
+            prior_pattern_ids=prior,
+            featured_beam=featured_beam,
+            intent_arc_boost=intent_arc_boost,
+        )
+        parts.append(bd)
+        prior.append(screen.get("patternId") or "")
+    return parts, prior
+
+
+def score_screen_plan(
+    screens: list[dict],
+    *,
+    aspects: Mapping[str, AspectKind],
+    assets_by_id: Mapping[str, dict],
+    weights: ScoringWeights,
+    arc_segment: str | None = None,
+    arc_profile: str = "dynamic",
+    hero_asset_ids: set[str] | None = None,
+    subject_run_tolerance: int = 1,
+    featured_beam: bool = False,
+    intent_arc_boost: float = 0.0,
+    enable_gravity_balance: bool = True,
+    incremental: bool = False,
+    incremental_state: IncrementalScoreState | None = None,
+) -> ScoreBreakdown:
+    """Aggregate score for a full screen sequence in one day bucket / chapter."""
+    if not screens:
+        return ScoreBreakdown()
+    if incremental:
+        state = incremental_state or IncrementalScoreState()
+        plan_key = _plan_screen_key(screens)
+        cached = state.prefix_parts.get(plan_key)
+        if cached is not None:
+            parts, prior = cached
+            return _finalize_plan_score(
+                parts,
+                screens,
+                assets_by_id=assets_by_id,
+                weights=weights,
+                subject_run_tolerance=subject_run_tolerance,
+                featured_beam=featured_beam,
+                enable_gravity_balance=enable_gravity_balance,
+            )
+        start_index = 0
+        parts: list[ScoreBreakdown] = []
+        prior: list[str] = []
+        for length in range(len(screens) - 1, 0, -1):
+            prefix_key = _plan_screen_key(screens[:length])
+            hit = state.prefix_parts.get(prefix_key)
+            if hit is not None:
+                parts, prior = list(hit[0]), list(hit[1])
+                start_index = length
+                break
+        parts, prior = _build_plan_screen_parts(
+            screens,
+            aspects=aspects,
+            assets_by_id=assets_by_id,
+            weights=weights,
+            arc_segment=arc_segment,
+            arc_profile=arc_profile,
+            hero_asset_ids=hero_asset_ids,
+            featured_beam=featured_beam,
+            intent_arc_boost=intent_arc_boost,
+            start_index=start_index,
+            initial_parts=parts,
+            initial_prior=prior,
+        )
+        state.prefix_parts[plan_key] = (parts, prior)
+        return _finalize_plan_score(
+            parts,
+            screens,
+            assets_by_id=assets_by_id,
+            weights=weights,
+            subject_run_tolerance=subject_run_tolerance,
+            featured_beam=featured_beam,
+            enable_gravity_balance=enable_gravity_balance,
+        )
+
+    parts, prior = _build_plan_screen_parts(
+        screens,
+        aspects=aspects,
+        assets_by_id=assets_by_id,
+        weights=weights,
+        arc_segment=arc_segment,
+        arc_profile=arc_profile,
+        hero_asset_ids=hero_asset_ids,
+        featured_beam=featured_beam,
+        intent_arc_boost=intent_arc_boost,
+    )
+    return _finalize_plan_score(
+        parts,
+        screens,
+        assets_by_id=assets_by_id,
+        weights=weights,
+        subject_run_tolerance=subject_run_tolerance,
+        featured_beam=featured_beam,
+        enable_gravity_balance=enable_gravity_balance,
+    )
 
 
 def rank_screens(

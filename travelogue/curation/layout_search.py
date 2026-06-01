@@ -12,7 +12,11 @@ from travelogue.curation.degradation import DegradationAssessment
 from travelogue.curation.decision_log import LayoutDecisionLog
 from travelogue.curation.layout_candidates import generate_day_bucket_candidates
 from travelogue.curation.layout_planner import AspectKind
-from travelogue.curation.layout_scoring import ScoringWeights, score_screen_plan
+from travelogue.curation.layout_scoring import (
+    IncrementalScoreState,
+    ScoringWeights,
+    score_screen_plan,
+)
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.curation.search_budget import SearchBudget
 
@@ -104,6 +108,7 @@ def _replan_day_buckets_beam(
     max_consecutive_same_pattern: int = 2,
     skip_duplicate_signatures: bool = True,
     deterministic_strict: bool = False,
+    incremental_scoring: bool = False,
 ) -> tuple[list[dict], list[dict], SearchBudget]:
     from travelogue.curation.intent_hints import INTENT_PEAK_ARC_BOOST, arc_segment_for_chapter_with_intent
 
@@ -137,6 +142,7 @@ def _replan_day_buckets_beam(
     from travelogue.curation.curate_scoring import median_sharpness
 
     med_sharp = median_sharpness(list(assets_by_id.values())) if assets_by_id else 0.0
+    incr_state = IncrementalScoreState() if incremental_scoring else None
     from travelogue.curation.layout_constraints import plan_violates_consecutive_pattern
 
     for bucket_idx, bucket in enumerate(day_buckets):
@@ -190,6 +196,8 @@ def _replan_day_buckets_beam(
                 subject_run_tolerance=subject_run_tolerance,
                 featured_beam=True,
                 enable_gravity_balance=enable_gravity_balance,
+                incremental=incremental_scoring,
+                incremental_state=incr_state,
             )
         else:
             from travelogue.curation.layout_scoring import ScoreBreakdown
@@ -242,6 +250,8 @@ def _replan_day_buckets_beam(
                 featured_beam=True,
                 intent_arc_boost=arc_boost,
                 enable_gravity_balance=enable_gravity_balance,
+                incremental=incremental_scoring,
+                incremental_state=incr_state,
             )
             if bd.total > best_score.total + 1e-6:
                 best_plan = plan
@@ -305,6 +315,7 @@ def maybe_replan_chapters(
     max_consecutive_same_pattern: int = 2,
     skip_duplicate_signatures: bool = True,
     deterministic_strict: bool = False,
+    incremental_scoring: bool = False,
 ) -> tuple[list[dict], dict[str, Any]]:
     """Return chapters unchanged when scoring off, degraded, or aspect-only."""
     meta: dict[str, Any] = {"replanApplied": False, "decisionLogs": []}
@@ -348,6 +359,7 @@ def maybe_replan_chapters(
         max_consecutive_same_pattern=max_consecutive_same_pattern,
         skip_duplicate_signatures=skip_duplicate_signatures,
         deterministic_strict=deterministic_strict,
+        incremental_scoring=incremental_scoring,
     )
     meta["decisionLogs"] = logs
     meta["searchBudget"] = budget.to_dict()

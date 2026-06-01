@@ -42,6 +42,20 @@ def test_color_richness_demotes_flat_dark() -> None:
     assert vivid > dull_dark
 
 
+def test_face_bbox_boost_when_sharp_and_salient_box() -> None:
+    from travelogue.curation.curate_scoring import _cover_face_bbox_multiplier
+
+    plain = _asset(id="plain", tags=["landscape"], quality={"sharpness": 100.0})
+    faced = _asset(
+        id="faced",
+        tags=["face", "person"],
+        quality={"sharpness": 100.0},
+        salientBox={"x": 0.3, "y": 0.25, "w": 0.2, "h": 0.22},
+    )
+    assert _cover_face_bbox_multiplier(faced, median_sharp=80.0) > 1.0
+    assert _cover_face_bbox_multiplier(plain, median_sharp=80.0) == 1.0
+
+
 def test_dull_dark_cover_scores_below_vivid() -> None:
     vivid = _asset(id="vivid", dominantTone="#4488cc", meanLuma=0.55)
     dull = _asset(id="dull", dominantTone="#666666", meanLuma=0.18)

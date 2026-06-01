@@ -16,6 +16,8 @@ pytest.importorskip("playwright")
 
 from travelogue.web.longshot_smoke import run_longshot_smoke  # noqa: E402
 
+pytestmark = pytest.mark.playwright_serial
+
 
 @pytest.fixture
 def longshot_workspace(tmp_path: Path) -> Path:

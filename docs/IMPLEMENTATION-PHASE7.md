@@ -100,9 +100,9 @@
 |---------|-----|------|-----------|------|
 | M29-A-01 | P7-D1 | 签名相同跳过 `score_screen_plan` | `layout_search.py` | ☑ |
 | M29-A-02 | P7-D4 | SearchBudget 生成 vs 评分离账 | `layout_candidates.py` · `search_budget.py` | ☑ |
-| M29-A-03 | P7-D2 | 增量评分（config 默认 off） | `layout_scoring.py` · `layout_search.py` | ☐ |
+| M29-A-03 | P7-D2 | 增量评分（config 默认 off） | `layout_scoring.py` · `layout_search.py` | ☑ |
 | M29-A-04 | P7-D3 | 局部 copy 替代全量 `deepcopy(chapters)` | `layout_search.py` | ☑ |
-| M29-A-05 | NR-P7 | layout golden 双跑一致 | `tests/test_layout_golden.py` 扩展 | ◑ |
+| M29-A-05 | NR-P7 | layout golden 双跑一致 | `tests/test_layout_golden.py` 扩展 | ☑ |
 
 ---
 

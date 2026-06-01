@@ -1,0 +1,33 @@
+/**
+ * Render-time & client-toggle: hide narrative copy and/or captions.
+ */
+html[data-copy-display="photos"] [data-block="hook-line"],
+html[data-copy-display="photos"] [data-block="chapter-lead"],
+html[data-copy-display="photos"] [data-block="epilogue"],
+html[data-copy-display="photos"] [data-block="epilogue-screen"],
+html[data-copy-display="photos"] [data-block="foreword-spread"],
+html[data-copy-display="photos"] [data-block="screen-spread"] {
+  display: none !important;
+}
+
+/* Web legacy: photos export mode still hides overlay captions */
+html[data-copy-display="photos"] .media-card__overlay-text,
+html[data-copy-display="photos"] .media-card__caption,
+html[data-copy-display="photos"] .media-row__caption,
+html[data-copy-display="photos"] .media-scroll__footer .media-card__caption {
+  display: none !important;
+}
+
+/* 纯照片：导语 + 图注一键隐藏（mobile / longshot） */
+html[data-photos-only="on"] [data-block="hook-line"],
+html[data-photos-only="on"] [data-block="chapter-lead"],
+html[data-photos-only="on"] [data-block="epilogue"],
+html[data-photos-only="on"] [data-block="epilogue-screen"],
+html[data-photos-only="on"] [data-block="foreword-spread"],
+html[data-photos-only="on"] [data-block="screen-spread"],
+html[data-photos-only="on"] .media-card__overlay-text,
+html[data-photos-only="on"] .media-card__caption,
+html[data-photos-only="on"] .media-row__caption,
+html[data-photos-only="on"] .media-scroll__footer .media-card__caption {
+  display: none !important;
+}

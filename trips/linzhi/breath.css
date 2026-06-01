@@ -1,0 +1,112 @@
+/**
+ * Travelogue · breath reveal (PRD-EXPERIENCE appendix B · E2 soft)
+ */
+@media (prefers-reduced-motion: reduce) {
+  .breath-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+@media (scripting: none) {
+  .breath-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+html.no-js .breath-reveal {
+  opacity: 1;
+  transform: none;
+}
+
+.breath-reveal {
+  opacity: 0;
+  transform: translateY(1.5rem);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.breath-reveal.breath-reveal--featured {
+  transition-duration: 0.8s;
+}
+
+html[data-breath="flow"] .breath-reveal.breath-reveal--featured {
+  transition-duration: 0.92s;
+}
+
+html.lenis-flow {
+  scroll-behavior: auto !important;
+}
+
+html.lenis-flow body {
+  overscroll-behavior-y: none;
+}
+
+html.breath-scrub-active .cover-hero__media img {
+  will-change: transform;
+}
+
+html[data-breath="cinematic"] .chapter-header[data-block="chapter-header"],
+html[data-breath="cinematic"] .hook-line[data-block="hook-line"] {
+  will-change: transform, opacity;
+}
+
+html[data-breath="gallery"] .media-scroll.breath-gallery-pin-root {
+  overflow: hidden;
+  z-index: 1;
+}
+
+html[data-breath="gallery"] .media-scroll__track.breath-gallery-pin-track {
+  will-change: transform;
+  display: flex;
+}
+
+html[data-breath="gallery"] .breath-gallery-screens-rail {
+  overflow: hidden;
+  z-index: 1;
+  width: 100%;
+}
+
+html[data-breath="gallery"] .breath-gallery-screens-track {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  will-change: transform;
+}
+
+html[data-breath="gallery"] .breath-gallery-screens-panel {
+  flex: 0 0 min(92vw, 1100px);
+  scroll-snap-align: none;
+}
+
+.breath-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+html[data-breath="soft"] .cover-hero.breath-reveal {
+  transform: translateY(2rem) scale(1.04);
+}
+
+html[data-breath="flow"] .cover-hero.breath-reveal,
+html[data-breath="cinematic"] .cover-hero.breath-reveal {
+  transform: translateY(2.5rem) scale(1.08);
+  opacity: 0.72;
+}
+
+html[data-breath="flow"] .cover-hero.breath-reveal.is-visible,
+html[data-breath="cinematic"] .cover-hero.breath-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 1.1s ease, transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html[data-breath="cinematic"] .cover-hero__media img {
+  will-change: transform;
+}
+
+html[data-breath="soft"] .chapter-header.breath-reveal {
+  transform: translateY(1rem);
+}

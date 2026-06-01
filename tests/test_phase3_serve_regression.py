@@ -51,6 +51,7 @@ def test_phase3_trip_renders_with_clustering_disabled(tmp_path: Path) -> None:
     assert (out / "index.html").is_file()
 
 
+@pytest.mark.playwright_serial
 def test_phase3_trip_export_longshot_with_clustering_off(tmp_path: Path) -> None:
     pytest.importorskip("playwright")
     demo = TEMPLATE_VISUAL_JOURNAL / "assets"

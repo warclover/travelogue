@@ -9,10 +9,25 @@ from unittest.mock import patch
 
 import pytest
 
-from scripts.phase3_ig2_report import evaluate_trip, load_fixture_trip, run_trip_variant
-from travelogue.config import AppConfig, ClusteringConfig, VisionConfig
+from scripts.phase3_ig2_report import (
+    _prepare_trip,
+    evaluate_trip,
+    load_fixture_trip,
+    run_trip_variant,
+)
+from travelogue.config import (
+    AppConfig,
+    ClusteringConfig,
+    IngestConfig,
+    LayoutConfig,
+    LayoutScoringConfig,
+    PipelineConfig,
+    VisionConfig,
+)
 from travelogue.curation.clustering import run_clustering_layer
+from travelogue.curation.curate import run_curate
 from travelogue.vision.clip_encoder import clip_torch_available
+from tests._golden.helpers import layout_snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCAL_GOLDEN_TRIPS = ("mao", "maomi", "linzhi")
@@ -44,6 +59,60 @@ def _trip_with_burst_groups() -> dict:
         "curation": {},
         "chapters": [],
     }
+
+
+def _p6_equivalent_config() -> AppConfig:
+    """P7 rollback / P6 baseline flags (fast-path off)."""
+    p7 = AppConfig()
+    return AppConfig(
+        vision=VisionConfig(
+            enabled=p7.vision.enabled,
+            batch_size=0,
+            session_singleton=False,
+            prefer_web_derivative=False,
+            batch_auto_tune=False,
+        ),
+        pipeline=PipelineConfig(parallel_embed=False),
+        ingest=IngestConfig(webp_method=6),
+        clustering=ClusteringConfig(enabled="true", deterministic=True),
+        layout=LayoutConfig(
+            scoring=LayoutScoringConfig(
+                incremental=False,
+                skip_duplicate_signatures=False,
+            )
+        ),
+        curate=p7.curate,
+    )
+
+
+def _p7_fast_path_config() -> AppConfig:
+    cfg = AppConfig()
+    cfg.vision.enabled = "true"
+    cfg.vision.batch_size = 16
+    cfg.vision.session_singleton = True
+    cfg.vision.prefer_web_derivative = True
+    cfg.clustering.deterministic = True
+    cfg.layout.scoring.skip_duplicate_signatures = True
+    return cfg
+
+
+def _curate_chapters_snapshot(trip: dict, work_dir: Path, cfg: AppConfig) -> dict:
+    body = _prepare_trip(trip)
+    run_clustering_layer(body, trip_dir=work_dir, cfg=cfg)
+    run_curate(body, apply_layout=True, trip_dir=work_dir, cfg=cfg)
+    return layout_snapshot(body.get("chapters") or [])
+
+
+def test_nr_p7_ci_fixture_layout_matches_p6_and_p7_fast_path(tmp_path: Path) -> None:
+    """NR-P7 / M29-A-05 · CI fixture layout identical under P6 flags vs P7 fast-path."""
+    trip = load_fixture_trip(CI_FIXTURE)
+    snap_p6 = _curate_chapters_snapshot(
+        trip, tmp_path / "p6", _p6_equivalent_config()
+    )
+    snap_p7 = _curate_chapters_snapshot(
+        trip, tmp_path / "p7", _p7_fast_path_config()
+    )
+    assert snap_p6 == snap_p7
 
 
 def test_ig2_ci_fixture_p3_full_meets_guards(tmp_path: Path) -> None:

@@ -82,7 +82,7 @@ def test_studio_homepage_js_strings() -> None:
     assert "浏览器上传" in js
     assert "\ufffd" not in js
     assert "updateHeroBackground" in js
-    assert "options.highlight" in js
+    assert "renderTripCard" in js and "highlight:" in js
     assert "tripsListLimit" in js
     assert "renderHybridHero" in js
     assert "focusPathImport" in js

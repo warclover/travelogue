@@ -5,14 +5,37 @@ from __future__ import annotations
 import gc
 import json
 import shutil
+import threading
 from copy import deepcopy
 from pathlib import Path
 
 import pytest
 
+_playwright_gate = threading.Lock()
+
 from travelogue.media.ingest import ingest_into_trip
 from travelogue.services.trip_factory import create_trip
 from tests.studio_test_helpers import IngestedTripWorkspace, make_test_album
+
+
+def _is_studio_ui_playwright(item: pytest.Item) -> bool:
+    nodeid = item.nodeid.replace("\\", "/")
+    return "test_studio_p9_qa_playwright" in nodeid or "test_studio_p10_layout_playwright" in nodeid
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Run Studio homepage Playwright last; other serial Playwright before them."""
+    studio_ui: list[pytest.Item] = []
+    serial: list[pytest.Item] = []
+    other: list[pytest.Item] = []
+    for item in items:
+        if _is_studio_ui_playwright(item):
+            studio_ui.append(item)
+        elif item.get_closest_marker("playwright_serial"):
+            serial.append(item)
+        else:
+            other.append(item)
+    items[:] = other + serial + studio_ui
 
 
 @pytest.fixture(autouse=True)
@@ -22,17 +45,33 @@ def _release_resources_before_playwright(request: pytest.FixtureRequest):
         yield
         return
 
-    try:
-        import torch  # type: ignore
+    with _playwright_gate:
+        try:
+            from travelogue.export.longshot import reset_browser_pool_for_tests
 
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-    except Exception:
-        pass
+            reset_browser_pool_for_tests()
+        except Exception:
+            pass
+        if _is_studio_ui_playwright(request.node):
+            gc.collect()
 
-    gc.collect()
-    yield
-    gc.collect()
+        try:
+            import torch  # type: ignore
+
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:
+            pass
+
+        gc.collect()
+        yield
+        gc.collect()
+        try:
+            from travelogue.export.longshot import reset_browser_pool_for_tests
+
+            reset_browser_pool_for_tests()
+        except Exception:
+            pass
 
 
 @pytest.fixture(autouse=True)

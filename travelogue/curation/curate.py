@@ -743,6 +743,7 @@ def run_curate(
         max_consecutive_same_pattern=cur_cfg.max_consecutive_same_pattern,
         skip_duplicate_signatures=layout_cfg.scoring.skip_duplicate_signatures,
         deterministic_strict=app_cfg.clustering.deterministic_strict,
+        incremental_scoring=layout_cfg.scoring.incremental,
     )
     layout_metrics = compute_layout_metrics(
         chapters,

@@ -111,6 +111,37 @@ def test_perf_ac_computation_passes() -> None:
     assert ac["AC-P7-12"] is True
 
 
+def test_incremental_scoring_matches_full_plan_score() -> None:
+    """P7-D2 · incremental path must match full scoring within 1e-6."""
+    from travelogue.curation.layout_scoring import (
+        IncrementalScoreState,
+        ScoringWeights,
+        score_screen_plan,
+    )
+    from tests._golden.helpers import build_mixed_aspects_trip, plan_legacy_screens
+
+    buckets, aspects, assets = build_mixed_aspects_trip()
+    plan = plan_legacy_screens(buckets, aspects, assets)
+    assets_by_id = {a["id"]: a for a in assets}
+    weights = ScoringWeights(aspect_match=1.0)
+    full = score_screen_plan(
+        plan,
+        aspects=aspects,
+        assets_by_id=assets_by_id,
+        weights=weights,
+        incremental=False,
+    )
+    inc = score_screen_plan(
+        plan,
+        aspects=aspects,
+        assets_by_id=assets_by_id,
+        weights=weights,
+        incremental=True,
+        incremental_state=IncrementalScoreState(),
+    )
+    assert abs(full.total - inc.total) < 1e-6
+
+
 def test_skip_duplicate_signatures_preserves_golden_layout() -> None:
     """P7-D1 · signature skip must not change beam output on aspect-only weights."""
     from travelogue.curation.degradation import DegradationAssessment

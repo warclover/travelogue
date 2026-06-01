@@ -670,6 +670,7 @@ def _process_one_ingest_photo(
 ) -> None:
     # ADR-011: user_tier imports ingest symbols — keep lazy here.
     from travelogue.media.user_tier import (
+        preserve_material_import_source_on_dedupe,
         preserve_user_tier_on_replace,
         preserve_user_tier_source_on_replace,
         upgrade_asset_tier,
@@ -683,6 +684,12 @@ def _process_one_ingest_photo(
         ) * 1000.0
         if upgrade_asset_tier(state.assets, sig, tier=user_tier):
             state.ingest_stats["tier_upgraded"] = state.ingest_stats.get("tier_upgraded", 0) + 1
+        elif preserve_material_import_source_on_dedupe(
+            state.assets, sig, tier=user_tier
+        ):
+            state.ingest_stats["import_source_material_preserved"] = (
+                state.ingest_stats.get("import_source_material_preserved", 0) + 1
+            )
         state.ingest_stats["deduped"] += 1
         state.skipped += 1
         if _ingest_progress_tick(processed, total_photos):

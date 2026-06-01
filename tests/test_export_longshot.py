@@ -28,6 +28,8 @@ from travelogue.render.engine import LONGSHOT_INDEX_NAME, render_trip
 
 pytest.importorskip("playwright")
 
+pytestmark = pytest.mark.playwright_serial
+
 
 @pytest.fixture
 def longshot_workspace(tmp_path: Path) -> Path:

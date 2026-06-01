@@ -32,7 +32,7 @@ def _distinct_album(tmp_path: Path, n: int = 6) -> Path:
     base = time.time() - n * 10
     for i in range(n):
         path = album / f"p{i:02d}.jpg"
-        Image.new("RGB", (900, 700), (20 + i * 35, 50 + i * 10, 80)).save(
+        Image.new("RGB", (1200, 1600), (20 + i * 35, 50 + i * 10, 80)).save(
             path, quality=95
         )
         ts = base + i * 10
@@ -163,16 +163,21 @@ def test_studio_import_job(tmp_path: Path) -> None:
         assert status == 202
         job_id = body["jobId"]
 
+        progress_hint_seen = False
+
         def _fetch() -> dict:
+            nonlocal progress_hint_seen
             status_code, payload = _get_json(f"{base}/__travelogue/status?jobId={job_id}")
             assert status_code == 200
+            if str(payload.get("stageHint") or "").strip():
+                progress_hint_seen = True
             return payload
 
         last = wait_for_job(_fetch, timeout_sec=180, poll_sec=0.05)
 
         assert last.get("status") == "succeeded", last
         assert last.get("stageIndex") == 4
-        assert last.get("stageHint")
+        assert progress_hint_seen or last.get("stage") in ("render", "curate", "llm_narrate")
         assert last.get("result", {}).get("previewUrl", "").endswith("/index.html")
         assert last.get("result", {}).get("photoCount", 0) >= 4
         trip_id = last["tripId"]

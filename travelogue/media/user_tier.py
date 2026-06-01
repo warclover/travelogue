@@ -241,6 +241,22 @@ def upgrade_asset_tier(assets: list[dict], content_sig: str, *, tier: str) -> bo
     return True
 
 
+def preserve_material_import_source_on_dedupe(
+    assets: list[dict], content_sig: str, *, tier: str
+) -> bool:
+    """Cross-folder dedupe: 素材 duplicate after 精选 keeps importSource=material (AC-DF)."""
+    if tier != TIER_MATERIAL:
+        return False
+    idx = build_content_sig_index(assets).get(content_sig)
+    if idx is None:
+        return False
+    asset = assets[idx]
+    if asset.get("importSource") == IMPORT_SOURCE_MATERIAL:
+        return False
+    asset["importSource"] = IMPORT_SOURCE_MATERIAL
+    return True
+
+
 def count_user_tiers(assets: list[dict]) -> dict[str, int]:
     featured = material = 0
     for asset in assets:

@@ -179,6 +179,16 @@ epic_map:
   E7: folio_full
   E8: breath_cinematic_gallery_pin
 
+studio_surfaces:
+  p10_layout:
+    tiers: [wide, tablet, compact]
+    breakpoints_px: { compact_max: 768, tablet_max: 980 }
+    modules: [templates/studio/js/viewport.js, templates/studio/js/progress.js, templates/studio/js/capabilities.js]
+    ac: [AC-P10-01, AC-P10-02, AC-P10-03, AC-P10-04]
+  reading_profiles:
+    maps_to: profiles
+    default_studio: default_hybrid
+
 acceptance_crosswalk:
   AC-EXP-01: [AC-RM-01, screen_order]
   AC-EXP-02: [AC-RM-07, default_hybrid]

@@ -16,6 +16,7 @@ _THIRD_LINES = (1.0 / 3.0, 2.0 / 3.0)
 
 _COVER_FACTOR_LABELS: dict[str, str] = {
     "aspect": "画幅比例",
+    "face_bbox": "人脸构图",
     "sharpness": "清晰度",
     "saturation": "色彩饱和度",
     "color_richness": "色彩丰富度",
@@ -94,6 +95,25 @@ def _cover_person_multiplier(asset: dict) -> float:
     if tags.intersection({"face", "person", "selfie", "portrait"}):
         return 0.72
     return 1.0
+
+
+def _cover_face_bbox_multiplier(asset: dict, *, median_sharp: float = 0.0) -> float:
+    """M12-2d · modest boost when ingest face bbox + sharpness support cover quality."""
+    tags = set(asset.get("tags") or [])
+    if not tags.intersection({"face", "person"}):
+        return 1.0
+    if tags.intersection({"selfie", "portrait"}):
+        return 1.0
+    box = asset.get("salientBox")
+    if not isinstance(box, dict):
+        return 1.0
+    area = float(box.get("w", 0)) * float(box.get("h", 0))
+    if area < 0.02 or area > 0.38:
+        return 1.0
+    sharp = asset_sharpness(asset)
+    if median_sharp > 0 and sharp < median_sharp * 0.85:
+        return 1.0
+    return 1.06
 
 
 def _cover_saturation_multiplier(asset: dict) -> float:
@@ -213,6 +233,7 @@ def cover_score(
         * _cover_media_weight(asset, export_layout)
         * _quality_multiplier(asset, export_layout=export_layout, median_sharp=median_sharp)
         * _cover_person_multiplier(asset)
+        * _cover_face_bbox_multiplier(asset, median_sharp=median_sharp)
         * _cover_saturation_multiplier(asset)
         * _cover_composition_multiplier(asset, export_layout)
         * thirds_mult
@@ -238,6 +259,9 @@ def _cover_score_factors(
     person_w = _cover_person_multiplier(asset)
     if abs(person_w - 1.0) > 0.01:
         factors.append(("person_demote", person_w))
+    face_w = _cover_face_bbox_multiplier(asset, median_sharp=median_sharp)
+    if abs(face_w - 1.0) > 0.01:
+        factors.append(("face_bbox", face_w))
     sat_w = _cover_saturation_multiplier(asset)
     if abs(sat_w - 1.0) > 0.01:
         factors.append(("color_richness", sat_w))

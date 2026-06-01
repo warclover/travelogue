@@ -1,39 +1,39 @@
 {
   "schemaVersion": "1",
   "benchmarkId": "benchmark-p7-v0.1",
-  "commit": "34b34a6d4cbba17886fb0480ecb2f29be691e162",
+  "commit": "fd2206ad0bc71af6ba39a42ccd01446f7b62b250",
   "deviceTier": "S2",
   "deviceNote": "",
   "configSnapshot": "docs/config-phase7.example.yaml",
   "baseline": {
     "phase": "P6",
-    "recordedAt": "",
-    "studio_e2e_250_ms": null,
-    "studio_e2e_250_p95_ms": null,
-    "ingest_time_250_ms": null,
-    "clip_embed_time_250_ms": null,
-    "clip_embed_time_250_p95_ms": null,
-    "pipeline_time_1k_sec": null,
-    "peak_memory_1k_mb": null
+    "recordedAt": "2026-06-01T06:18:19+00:00",
+    "studio_e2e_250_ms": 32503.647299992735,
+    "studio_e2e_250_p95_ms": 32503.647299992735,
+    "ingest_time_250_ms": 32469.567799998913,
+    "clip_embed_time_250_ms": 1.2051999947289005,
+    "clip_embed_time_250_p95_ms": 1.2051999947289005,
+    "pipeline_time_1k_sec": 0.203,
+    "peak_memory_1k_mb": 7.91
   },
   "candidate": {
     "phase": "P7",
-    "recordedAt": "2026-05-30T11:01:54+00:00",
-    "studio_e2e_250_ms": 11940.137100027641,
-    "studio_e2e_250_p95_ms": 12048.992600030033,
-    "ingest_time_250_ms": 11916.520450016833,
-    "clip_embed_time_250_ms": 1.7170000064652413,
-    "clip_embed_time_250_p95_ms": 1.9299999985378236,
+    "recordedAt": "2026-06-01T06:18:19+00:00",
+    "studio_e2e_250_ms": 50847.99740000744,
+    "studio_e2e_250_p95_ms": 50847.99740000744,
+    "ingest_time_250_ms": 50832.26830000058,
+    "clip_embed_time_250_ms": 2.075600001262501,
+    "clip_embed_time_250_p95_ms": 2.075600001262501,
     "clip_embed_time_incr_10pct_ms": null,
     "clip_embed_time_incr_append_10pct_ms": null,
     "clip_embed_time_incr_delete_10pct_ms": null,
     "clip_embed_time_incr_replace_10pct_ms": null,
-    "curate_beam_time_250_ms": 21.89965000434313,
+    "curate_beam_time_250_ms": 13.653500005602837,
     "auto_batch_win_rate": null,
     "cache_rebuild_success_rate": 1.0,
     "rollback_recovery_success": 1.0,
-    "pipeline_time_1k_sec": 0.155,
-    "peak_memory_1k_mb": 7.9
+    "pipeline_time_1k_sec": 0.257,
+    "peak_memory_1k_mb": 7.88
   },
   "qualityGuard": {
     "cluster_noise_ratio_p6": null,
@@ -67,7 +67,8 @@
   },
   "notes": "Fill via scripts/phase7_pipeline_perf.py --write and phase7_equivalence_check.py --write",
   "benchmarkMeta": {
-    "photoCount": 12,
-    "repeats": 2
+    "photoCount": 15,
+    "repeats": 1,
+    "baselinePhase": "P6"
   }
 }

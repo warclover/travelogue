@@ -276,6 +276,38 @@ def test_p10_playwright_compact_failure_overlay(studio_server) -> None:
         browser.close()
 
 
+def test_p10_playwright_loading_compact_masthead(studio_server) -> None:
+    """Loading 态 compact 下 masthead 可见且无横向溢出。"""
+    base = studio_server["base"]
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 390, "height": 900})
+        page.goto(base, wait_until="networkidle")
+        _wait_empty_hero(page)
+        page.evaluate(
+            """
+            () => {
+              [
+                'studio-hero-empty', 'studio-hero-returning', 'studio-hero-importing',
+                'studio-success', 'studio-failure',
+              ].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.hidden = true;
+              });
+              var loading = document.getElementById('studio-hero-loading');
+              if (loading) loading.hidden = false;
+            }
+            """
+        )
+        page.wait_for_timeout(100)
+        masthead_visible = page.locator("#studio-hero-loading .studio-hero__masthead").evaluate(
+            "el => el && el.offsetParent !== null"
+        )
+        assert masthead_visible
+        _assert_no_horizontal_overflow(page, "loading @ 390px")
+        browser.close()
+
+
 def test_p10_playwright_resize_import_stage_copy(studio_server) -> None:
     """AC-P10-03 · wide → compact 时导入文案形态切换。"""
     base = studio_server["base"]

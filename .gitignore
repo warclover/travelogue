@@ -16,8 +16,16 @@ dist/
 build/
 *.egg-info/
 
-# Runtime trip data
-trips/
+# Runtime trip data (local albums); track linzhi experience overrides only
+trips/*
+!trips/linzhi/
+trips/linzhi/*
+!trips/linzhi/*.js
+!trips/linzhi/*.css
+!trips/linzhi/index.html
+!trips/linzhi/index-mobile.html
+!trips/linzhi/index-longshot.html
+!trips/linzhi/README.md
 
 # OS
 .DS_Store

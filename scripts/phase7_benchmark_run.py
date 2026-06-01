@@ -78,6 +78,43 @@ def _p7_config():
     return cfg
 
 
+def _p6_baseline_config():
+    """P6-equivalent flags (P7 fast-path off) for NR-P7 / perf-eval baseline."""
+    sys.path.insert(0, str(ROOT))
+    from dataclasses import replace
+
+    from travelogue.config import (
+        AppConfig,
+        IngestConfig,
+        LayoutConfig,
+        LayoutScoringConfig,
+        PipelineConfig,
+        VisionConfig,
+    )
+
+    p7 = AppConfig()
+    return replace(
+        p7,
+        vision=replace(
+            p7.vision,
+            batch_size=0,
+            session_singleton=False,
+            prefer_web_derivative=False,
+            batch_auto_tune=False,
+        ),
+        pipeline=replace(p7.pipeline, parallel_embed=False),
+        ingest=replace(p7.ingest, webp_method=6),
+        layout=replace(
+            p7.layout,
+            scoring=replace(
+                p7.layout.scoring,
+                incremental=False,
+                skip_duplicate_signatures=False,
+            ),
+        ),
+    )
+
+
 def _run_once(
     *,
     album_dir: Path,
@@ -139,8 +176,9 @@ def run_benchmark(
     photos: int,
     repeats: int,
     work_dir: Path,
+    phase: str = "p7",
 ) -> dict[str, Any]:
-    cfg = _p7_config()
+    cfg = _p6_baseline_config() if phase == "p6" else _p7_config()
     if album_dir is None:
         album_dir = _make_album(work_dir, photos)
     else:
@@ -196,6 +234,23 @@ def run_benchmark(
     }
 
 
+def _update_baseline_record(record: dict[str, Any], stats: dict[str, Any]) -> None:
+    base = record.setdefault("baseline", {})
+    base["phase"] = "P6"
+    base["recordedAt"] = _now()
+    base["studio_e2e_250_ms"] = stats["studio_e2e_ms"]
+    base["studio_e2e_250_p95_ms"] = stats["studio_e2e_p95_ms"]
+    base["ingest_time_250_ms"] = stats["ingest_time_ms"]
+    base["clip_embed_time_250_ms"] = stats["clip_embed_time_ms"]
+    base["clip_embed_time_250_p95_ms"] = stats["clip_embed_time_p95_ms"]
+    base["pipeline_time_1k_sec"] = stats.get("pipeline_time_1k_sec")
+    base["peak_memory_1k_mb"] = stats.get("peak_memory_1k_mb")
+    record["commit"] = _git_commit() or record.get("commit") or ""
+    record.setdefault("benchmarkMeta", {})["photoCount"] = stats["photoCount"]
+    record["benchmarkMeta"]["repeats"] = stats["repeats"]
+    record["benchmarkMeta"]["baselinePhase"] = "P6"
+
+
 def _update_record(record: dict[str, Any], stats: dict[str, Any]) -> None:
     cand = record.setdefault("candidate", {})
     cand["phase"] = "P7"
@@ -247,17 +302,58 @@ def main() -> int:
     parser.add_argument("--album-dir", type=Path, default=None)
     parser.add_argument("--work-dir", type=Path, default=ROOT / ".cache" / "phase7-bench")
     parser.add_argument("--write", action="store_true")
+    parser.add_argument(
+        "--write-baseline",
+        action="store_true",
+        help="run with P6-equivalent config and fill baseline.* in perf-eval",
+    )
+    parser.add_argument(
+        "--write-candidate",
+        action="store_true",
+        help="run with P7 config and fill candidate.* (default with --write)",
+    )
     parser.add_argument("--record", type=Path, default=RECORD_PATH)
     parser.add_argument("--update-report", action="store_true")
     args = parser.parse_args()
 
     args.work_dir.mkdir(parents=True, exist_ok=True)
-    stats = run_benchmark(
-        album_dir=args.album_dir,
-        photos=args.photos,
-        repeats=args.repeats,
-        work_dir=args.work_dir,
-    )
+    stats_p6 = None
+    if args.write:
+        write_baseline = True
+        write_candidate = True
+    else:
+        write_baseline = args.write_baseline
+        write_candidate = args.write_candidate
+
+    if write_baseline:
+        stats_p6 = run_benchmark(
+            album_dir=args.album_dir,
+            photos=args.photos,
+            repeats=args.repeats,
+            work_dir=args.work_dir / "p6",
+            phase="p6",
+        )
+        print("--- P6 baseline ---")
+        print(json.dumps(stats_p6, indent=2, ensure_ascii=False))
+
+    if write_candidate:
+        stats = run_benchmark(
+            album_dir=args.album_dir,
+            photos=args.photos,
+            repeats=args.repeats,
+            work_dir=args.work_dir / "p7",
+            phase="p7",
+        )
+    elif write_baseline:
+        stats = stats_p6
+    else:
+        stats = run_benchmark(
+            album_dir=args.album_dir,
+            photos=args.photos,
+            repeats=args.repeats,
+            work_dir=args.work_dir,
+            phase="p7",
+        )
     print(json.dumps(stats, indent=2, ensure_ascii=False))
     from travelogue.web.studio_telemetry import format_telemetry_lines
 
@@ -275,11 +371,14 @@ def main() -> int:
     for line in format_telemetry_lines(summary):
         print(line)
 
-    if args.write:
+    if args.write or write_baseline or write_candidate:
         record = _load_json(args.record) if args.record.is_file() else {"schemaVersion": "1"}
-        _update_record(record, stats)
+        if write_baseline and stats_p6 is not None:
+            _update_baseline_record(record, stats_p6)
+        if write_candidate:
+            _update_record(record, stats)
         _save_json(args.record, record)
-        if args.update_report:
+        if args.update_report and write_candidate:
             _update_baseline_report(stats)
         print(json.dumps({"written": str(args.record.resolve())}, indent=2))
 

@@ -1,0 +1,1020 @@
+/**
+ * Travelogue · 保存长图（渐进增强，可选 bundle）
+ * 与 journal.css 并列交付；P0 默认随 zip 分发（见 trip.export.longShot、SHARING.md）。
+ */
+
+.longshot-toolbar {
+  position: fixed;
+  z-index: 150;
+  right: max(12px, env(safe-area-inset-right, 0px));
+  bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.longshot-toolbar__btn {
+  pointer-events: auto;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: 999px;
+  background: #2d4a3e;
+  color: #f0f7f4;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+}
+
+.longshot-toolbar__btn:hover:not(:disabled) {
+  background: #3d6b5a;
+}
+
+.longshot-toolbar__btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.longshot-toolbar__btn--secondary {
+  background: rgba(245, 242, 235, 0.96);
+  color: #2d4a3e;
+  border: 1px solid rgba(45, 74, 62, 0.35);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.longshot-toolbar__btn--secondary:hover:not(:disabled):not([aria-pressed="true"]):not(.longshot-toolbar__btn--active) {
+  background: #fff;
+}
+
+.longshot-toolbar__btn--secondary.longshot-toolbar__btn--active,
+.longshot-toolbar__btn--secondary[aria-pressed="true"] {
+  background: #2d4a3e;
+  color: #f0f7f4;
+  border-color: #2d4a3e;
+}
+
+.longshot-toolbar__btn--secondary.longshot-toolbar__btn--active:hover:not(:disabled),
+.longshot-toolbar__btn--secondary[aria-pressed="true"]:hover:not(:disabled) {
+  background: #3d6b5a;
+  color: #f0f7f4;
+  border-color: #3d6b5a;
+}
+
+.longshot-toolbar__controls {
+  margin-bottom: 2px;
+}
+
+/* 仅隐藏图注，保留 hook / 章导语 / epilogue */
+html[data-caption-display="off"] .media-card__caption,
+html[data-caption-display="off"] .media-row__caption,
+html[data-caption-display="off"] .media-scroll__footer .media-card__caption {
+  display: none !important;
+}
+
+.longshot-export-sheet__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #2a2826;
+  cursor: pointer;
+}
+
+.longshot-export-sheet__check input {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.longshot-toolbar__hint {
+  pointer-events: none;
+  margin: 0;
+  padding: 4px 10px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #6a6560;
+  background: rgba(245, 242, 235, 0.92);
+  border-radius: 8px;
+  max-width: 14rem;
+  text-align: right;
+}
+
+.longshot-toolbar__scale {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+}
+
+.longshot-toolbar__scale-btn {
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(45, 74, 62, 0.35);
+  border-radius: 999px;
+  background: rgba(245, 242, 235, 0.96);
+  color: #2d4a3e;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.longshot-toolbar__scale-btn:hover {
+  background: #fff;
+}
+
+.longshot-toolbar__scale-btn--active,
+.longshot-toolbar__scale-btn[aria-pressed="true"] {
+  background: #2d4a3e;
+  color: #f0f7f4;
+  border-color: #2d4a3e;
+}
+
+.share-toolbar__panel {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 6px;
+  min-width: 9.5rem;
+  margin-bottom: 4px;
+  background: rgba(245, 242, 235, 0.96);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22);
+}
+
+.share-toolbar__fab-row {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.share-toolbar__panel[hidden] {
+  display: none !important;
+}
+
+.share-toolbar__item {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #2a2826;
+  cursor: pointer;
+}
+
+.share-toolbar__item:hover:not(:disabled) {
+  background: rgba(45, 74, 62, 0.1);
+}
+
+.share-toolbar__item--primary {
+  background: #2d4a3e;
+  color: #f0f7f4;
+}
+
+.share-toolbar__item--primary:hover:not(:disabled) {
+  background: #3d6b5a;
+}
+
+.share-toolbar__item:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.share-toolbar__toggle[aria-expanded="true"] {
+  background: #3d6b5a;
+}
+
+.longshot-toast {
+  position: fixed;
+  z-index: 160;
+  left: 50%;
+  bottom: max(72px, calc(16px + env(safe-area-inset-bottom, 0px)));
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #f0f7f4;
+  background: rgba(28, 27, 26, 0.88);
+  border-radius: 8px;
+  max-width: min(90vw, 320px);
+  text-align: center;
+}
+
+.longshot-toast--error {
+  background: rgba(90, 40, 32, 0.92);
+}
+
+.longshot-toast[hidden] {
+  display: none !important;
+}
+
+/* —— 截图态：428px 宽、展开横滑、强化可读性 —— */
+html.longshot-capturing-root {
+  background: var(--bg-page, #111110);
+  width: 428px;
+  max-width: 428px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body.longshot-capturing {
+  overflow: visible;
+  background: var(--bg-page, #111110);
+  width: 428px;
+  max-width: 428px;
+  margin-left: auto;
+  margin-right: auto;
+  /* 截屏视口固定 428px，避免 100vw / dvh 按真机视口算导致比例失真 */
+  --bleed-width: 428px;
+  --page-width: 428px;
+  --cover-max-h: none;
+  --media-max-h: none;
+}
+
+body.longshot-capturing .longshot-toolbar,
+body.longshot-capturing .surface-nav,
+body.longshot-capturing .golden-banner,
+body.longshot-capturing .footer-cta {
+  display: none !important;
+}
+
+body.longshot-capturing main {
+  width: 428px;
+  max-width: 428px;
+  margin-left: auto;
+  margin-right: auto;
+  background: var(--bg-page, #111110);
+  overflow: visible;
+}
+
+body.longshot-capturing .page {
+  padding-bottom: 24px;
+  width: 100%;
+  max-width: 100%;
+}
+
+body.longshot-capturing .chapter {
+  margin-bottom: 0;
+}
+
+/* 封面：取消 100vw 与固定 9:16 盒，按原图比例 */
+body.longshot-capturing .cover-hero {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  aspect-ratio: auto;
+  max-height: none;
+  height: auto;
+  min-height: 0;
+  display: block;
+  overflow: hidden;
+}
+
+body.longshot-capturing .cover-hero__media {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  background: var(--surface, #1a1918);
+}
+
+body.longshot-capturing .cover-hero__media img {
+  position: static;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none !important;
+  min-height: 0;
+  object-fit: fill;
+  object-position: center;
+}
+
+body.longshot-capturing canvas[data-longshot-raster] {
+  display: block;
+  max-width: none !important;
+  max-height: none !important;
+  min-height: 0;
+}
+
+body.longshot-capturing .cover-hero__overlay {
+  display: none;
+}
+
+body.longshot-capturing .cover-hero__text {
+  position: relative;
+}
+
+body.longshot-capturing .trip-meta {
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  padding: 14px 16px 8px;
+}
+
+body.longshot-capturing .hook-line {
+  font-size: 16px;
+  line-height: 1.55;
+  max-width: 22em;
+  margin-bottom: 16px;
+}
+
+body.longshot-capturing .chapter-header {
+  padding: 12px 16px 6px;
+}
+
+body.longshot-capturing .chapter-header h2 {
+  font-size: 20px;
+}
+
+body.longshot-capturing .chapter-lead {
+  font-size: 15px;
+  line-height: 1.5;
+  padding-bottom: 8px;
+}
+
+body.longshot-capturing .epilogue {
+  font-size: 15px;
+  line-height: 1.55;
+  padding: 16px 20px 8px;
+  text-align: center;
+}
+
+/* 单卡：长图按 428px 宽自然比例，不用 dvh 限高（与屏上预览的紧凑横图区分） */
+body.longshot-capturing .media-card--bleed {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+body.longshot-capturing .media-card--fill .media-card__frame,
+body.longshot-capturing .media-card__frame {
+  max-height: none !important;
+  height: auto;
+  display: block;
+  aspect-ratio: auto;
+}
+
+body.longshot-capturing .media-card__visual,
+body.longshot-capturing .media-card__visual img,
+body.longshot-capturing img.media-card__visual {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none !important;
+  min-height: 0;
+  aspect-ratio: unset;
+  object-fit: fill;
+  object-position: center;
+}
+
+body.longshot-capturing .media-card__frame,
+body.longshot-capturing .cover-hero__media,
+body.longshot-capturing .media-scroll__item {
+  display: block !important;
+  position: relative !important;
+  overflow: visible !important;
+  height: auto;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+}
+
+body.longshot-capturing .media-card,
+body.longshot-capturing figure.media-card {
+  display: block !important;
+  overflow: visible !important;
+}
+
+body.longshot-capturing .media-card--landscape + .media-card--landscape {
+  margin-top: 4px;
+}
+
+/* 横滑章纵向展开：按原比例完整显示，不强制 9:16 裁切 */
+body.longshot-capturing .media-scroll__track {
+  flex-direction: column;
+  overflow: visible;
+  scroll-snap-type: none;
+  gap: 4px;
+}
+
+body.longshot-capturing .media-scroll__item {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: auto;
+  max-height: none;
+  height: auto;
+  background: var(--surface, #1a1918);
+}
+
+body.longshot-capturing .media-scroll__item .media-card__frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: auto;
+}
+
+body.longshot-capturing .media-scroll__item .media-card__visual,
+body.longshot-capturing .media-scroll__item img.media-card__visual {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  aspect-ratio: unset;
+  object-fit: contain;
+  object-position: center;
+}
+
+body.longshot-capturing .media-scroll__footer {
+  padding: 8px 16px 12px;
+}
+
+/* 组图 / 旧 row：长图单列自然比例 */
+body.longshot-capturing .media-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  max-width: 100%;
+}
+
+body.longshot-capturing .media-row--landscape-triple,
+body.longshot-capturing .media-row--landscape-pair,
+body.longshot-capturing .media-row--portrait-triple,
+body.longshot-capturing .media-row--portrait-pair,
+body.longshot-capturing .media-row--square-triple,
+body.longshot-capturing .media-row--square-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+body.longshot-capturing .media-row .media-card__frame {
+  height: auto;
+  max-height: none !important;
+}
+
+body.longshot-capturing .media-row .media-card__visual,
+body.longshot-capturing .media-row img.media-card__visual {
+  width: 100%;
+  height: auto;
+  max-height: none !important;
+  object-fit: contain;
+}
+
+@media print {
+  .longshot-toolbar {
+    display: none !important;
+  }
+}
+
+/* 生成进度 */
+.longshot-progress {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17, 17, 16, 0.55);
+  pointer-events: none;
+}
+
+.longshot-progress[hidden] {
+  display: none !important;
+}
+
+.longshot-progress__panel {
+  width: min(320px, 88vw);
+  padding: 20px 18px;
+  border-radius: 14px;
+  background: rgba(245, 242, 235, 0.98);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+}
+
+.longshot-progress__title {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a2f28;
+}
+
+.longshot-progress__bar-wrap {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(26, 47, 40, 0.12);
+  overflow: hidden;
+}
+
+.longshot-progress__bar {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3d6b5a, #5a9a7a);
+  transition: width 0.2s ease;
+}
+
+.longshot-progress__detail {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #6a6560;
+}
+
+/* 首次保存提示 */
+.longshot-disclaimer {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(17, 17, 16, 0.5);
+}
+
+.longshot-disclaimer[hidden] {
+  display: none !important;
+}
+
+.longshot-disclaimer__panel {
+  width: min(360px, 92vw);
+  padding: 20px 18px;
+  border-radius: 14px;
+  background: #f5f2eb;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.longshot-disclaimer__title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a2f28;
+}
+
+.longshot-disclaimer__body,
+.longshot-disclaimer__note {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #4a4540;
+}
+
+.longshot-disclaimer__note {
+  font-size: 12px;
+  color: #6a6560;
+}
+
+.longshot-disclaimer__note[hidden] {
+  display: none !important;
+}
+
+.longshot-disclaimer__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.longshot-disclaimer__btn {
+  padding: 8px 14px;
+  font-size: 13px;
+  border: none;
+  border-radius: 999px;
+  background: #e8e4df;
+  color: #1a2f28;
+  cursor: pointer;
+}
+
+.longshot-disclaimer__btn--primary {
+  background: #2d4a3e;
+  color: #f0f7f4;
+}
+
+.longshot-disclaimer__btn--primary:hover {
+  background: #3d6b5a;
+}
+
+/* 导出范围 */
+.longshot-toolbar__mode {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.longshot-toolbar__mode-btn {
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(45, 74, 62, 0.35);
+  border-radius: 999px;
+  background: rgba(245, 242, 235, 0.96);
+  color: #2d4a3e;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.longshot-toolbar__mode-btn:hover {
+  background: #fff;
+}
+
+.longshot-toolbar__mode-btn--active,
+.longshot-toolbar__mode-btn[aria-pressed="true"] {
+  background: #2d4a3e;
+  color: #f0f7f4;
+  border-color: #2d4a3e;
+}
+
+/* 微信内提示 */
+.longshot-wechat-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 160;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  padding-top: max(10px, env(safe-area-inset-top, 0px));
+  background: rgba(45, 74, 62, 0.94);
+  color: #f0f7f4;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.longshot-wechat-banner[hidden] {
+  display: none !important;
+}
+
+.longshot-wechat-banner__text {
+  margin: 0;
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.longshot-wechat-banner__close {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #f0f7f4;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* 生成后预览（微信长按保存） */
+.longshot-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(17, 17, 16, 0.72);
+}
+
+.longshot-preview[hidden] {
+  display: none !important;
+}
+
+.longshot-preview__panel {
+  width: min(420px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+  padding: 16px;
+  border-radius: 14px;
+  background: #f5f2eb;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+}
+
+.longshot-preview__title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a2f28;
+}
+
+.longshot-preview__hint,
+.longshot-preview__filename {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #6a6560;
+}
+
+.longshot-preview__frame {
+  margin: 8px 0;
+  border-radius: 8px;
+  overflow: auto;
+  max-height: 58vh;
+  background: #111110;
+}
+
+.longshot-preview__img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.longshot-preview__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.longshot-preview__btn {
+  padding: 8px 14px;
+  font-size: 13px;
+  border: none;
+  border-radius: 999px;
+  background: #e8e4df;
+  color: #1a2f28;
+  cursor: pointer;
+}
+
+.longshot-preview__btn--primary {
+  background: #2d4a3e;
+  color: #f0f7f4;
+}
+
+.longshot-preview__btn[hidden] {
+  display: none !important;
+}
+
+body.longshot-capturing .longshot-wechat-banner {
+  display: none !important;
+}
+
+/* file:// 不可用提示 */
+.longshot-file-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 165;
+  padding: 12px 14px;
+  padding-top: max(12px, env(safe-area-inset-top, 0px));
+  background: rgba(180, 120, 20, 0.96);
+  color: #fffef8;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+}
+
+.longshot-file-banner__text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.longshot-toolbar__hint--warn {
+  color: #8a5a10;
+  background: rgba(255, 244, 220, 0.96);
+}
+
+.longshot-toolbar__btn--blocked:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* 导出选项面板（点击「保存长图」） */
+.longshot-export-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 215;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 12px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  background: rgba(17, 17, 16, 0.52);
+}
+
+.longshot-export-sheet[hidden] {
+  display: none !important;
+}
+
+.longshot-export-sheet__panel {
+  width: min(400px, 100%);
+  max-height: min(88vh, 640px);
+  overflow: auto;
+  padding: 18px 16px 16px;
+  border-radius: 16px 16px 14px 14px;
+  background: #f5f2eb;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.28);
+}
+
+.longshot-export-sheet__title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #1a2f28;
+}
+
+.longshot-export-sheet__body,
+.longshot-export-sheet__note,
+.longshot-export-sheet__field-note,
+.longshot-export-sheet__warn {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #6a6560;
+}
+
+.longshot-export-sheet__warn {
+  color: #8a5a10;
+}
+
+.longshot-export-sheet__field {
+  margin-bottom: 14px;
+}
+
+.longshot-export-sheet__label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a4540;
+}
+
+.longshot-segment {
+  display: flex;
+  gap: 8px;
+}
+
+.longshot-segment__btn {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid rgba(45, 74, 62, 0.28);
+  border-radius: 10px;
+  background: #fff;
+  color: #2d4a3e;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.longshot-segment__btn:hover:not(:disabled):not([aria-pressed="true"]) {
+  background: #faf8f4;
+}
+
+.longshot-segment__btn:focus-visible {
+  outline: 2px solid rgba(45, 74, 62, 0.45);
+  outline-offset: 2px;
+}
+
+.longshot-segment__btn:disabled {
+  background: #eeebe6;
+  color: #9a9590;
+  border-color: rgba(45, 74, 62, 0.12);
+  cursor: not-allowed;
+}
+
+.longshot-segment__btn--active,
+.longshot-segment__btn[aria-pressed="true"] {
+  background: #2d4a3e;
+  color: #f0f7f4;
+  border-color: #2d4a3e;
+}
+
+.longshot-segment__btn--active:hover:not(:disabled),
+.longshot-segment__btn[aria-pressed="true"]:hover:not(:disabled) {
+  background: #3d6b5a;
+  color: #f0f7f4;
+  border-color: #3d6b5a;
+}
+
+.longshot-segment__btn--active:focus-visible,
+.longshot-segment__btn[aria-pressed="true"]:focus-visible {
+  outline-color: rgba(61, 107, 90, 0.65);
+}
+
+.longshot-export-sheet__badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 999px;
+  background: rgba(240, 247, 244, 0.22);
+  vertical-align: middle;
+}
+
+.longshot-segment__btn--active .longshot-export-sheet__badge,
+.longshot-segment__btn[aria-pressed="true"] .longshot-export-sheet__badge {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.longshot-export-sheet__summary {
+  margin: 4px 0 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 500;
+  color: #1a2f28;
+  background: rgba(45, 74, 62, 0.08);
+  border-radius: 10px;
+}
+
+.longshot-export-sheet__note[hidden],
+.longshot-export-sheet__body[hidden],
+.longshot-export-sheet__badge[hidden] {
+  display: none !important;
+}
+
+.longshot-export-sheet__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.longshot-export-sheet__btn {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  border-radius: 999px;
+  background: #e8e4df;
+  color: #1a2f28;
+  cursor: pointer;
+}
+
+.longshot-export-sheet__btn--primary {
+  background: #2d4a3e;
+  color: #f0f7f4;
+}
+
+.longshot-export-sheet__btn--primary:hover {
+  background: #3d6b5a;
+}
+
+body.longshot-capturing .longshot-export-sheet {
+  display: none !important;
+}
+
+/* P5-T2 · longshot breath pause card */
+.breath-pause-card[data-block="breath-pause-card"] {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--breath-tone, #1e1d1b);
+  margin: 0;
+}
+
+.breath-pause-card__label {
+  font-size: 1rem;
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+body.longshot-capturing .breath-pause-card[data-block="breath-pause-card"] {
+  min-height: 96px;
+}
+
+/* P5-L5 · longshot footer boundary */
+.longshot-boundary-footer[data-block="longshot-boundary-footer"] {
+  padding: 32px 16px 40px;
+  text-align: center;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.35));
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.longshot-boundary-footer__stats {
+  margin: 0 0 8px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+
+.longshot-boundary-footer__brand {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+body.longshot-capturing .longshot-boundary-footer[data-block="longshot-boundary-footer"] {
+  padding-bottom: 48px;
+}

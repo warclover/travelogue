@@ -79,7 +79,7 @@
 | M12-2a | `detect_geo_events(assets, cfg) -> list[GeoSegment]` | `curation/geo_events.py` | ☑ |
 | M12-2b | 时间窗切分 + GPS 跳变 + stay 合并 | 同上 | ☑ |
 | M12-2c | 段命名（location + date span） | 同上 | ☑ |
-| M12-2d | 封面候选启发式（sharpness + face bbox） | 同上 | ☐ |
+| M12-2d | 封面候选启发式（sharpness + face bbox） | `curate_scoring.py` `_cover_face_bbox_multiplier` | ☑ |
 | M12-2e | 无 GPS → 返回空 + `segmentMode=date_fallback` | 同上 | ☑ |
 | M12-2f | 单元测试 + golden | `tests/test_geo_events.py` | ☑ |
 
