@@ -5,16 +5,18 @@ TRAVELOGUE_STUDIO_HOMEPAGE_V2：
   - on（M20-j 100%）→ GET / → v2；GET /classic → v3
   - auto → holdback：按稳定分桶 + percent 决定 / 是否 302 → /v2
 
-分桶：Cookie `travelogue.studio.hp_bucket`（0–99），无则 UA+盐 hash 写入。
+分桶：Cookie `travelogue.studio.hp_bucket`（HMAC 签名 bucket.sig），无则 UA+盐 hash 写入。
 percent：环境变量 TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT，或 config.yaml
   `studio.homepage.v2_bento.percent`（0–100）。
 
-Query 覆盖（dev/测试）：`?homepageVariant=v2|v3` 强制 variant（仅 /）。
+Query 覆盖（仅 loopback）：`?homepageVariant=v2|v3` 强制 variant（仅 /）。
 """
 
 from __future__ import annotations
 
 import hashlib
+import hmac
+import html as html_module
 import os
 from typing import Any, Literal
 from urllib.parse import parse_qs
@@ -23,9 +25,11 @@ from travelogue.web.studio_handlers.paths import HOME_CLASSIC_PATH, HOME_V2_PATH
 
 ENV_MODE = "TRAVELOGUE_STUDIO_HOMEPAGE_V2"
 ENV_PERCENT = "TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT"
+ENV_BUCKET_SECRET = "TRAVELOGUE_STUDIO_HP_BUCKET_SECRET"
 COOKIE_BUCKET = "travelogue.studio.hp_bucket"
 COOKIE_MAX_AGE = 365 * 24 * 3600
 BUCKET_SALT = "travelogue-studio-homepage-v2"
+LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
 
 HomepageGateMode = Literal["off", "on", "auto"]
 
@@ -37,6 +41,23 @@ def resolve_mode(raw: str | None = None) -> HomepageGateMode:
     if val == "auto":
         return "auto"
     return "off"
+
+
+def is_loopback_host(host: str | None) -> bool:
+    """Studio 绑定地址是否为 loopback（dev harness / query override 门控）。"""
+    if not host:
+        return True
+    h = host.strip().lower()
+    if h in LOOPBACK_HOSTS:
+        return True
+    if h.startswith("127."):
+        return True
+    return False
+
+
+def allow_variant_override(host: str | None) -> bool:
+    """?homepageVariant= 仅 loopback 生效，防止生产 holdback  bypass。"""
+    return is_loopback_host(host)
 
 
 def _parse_percent(raw: Any) -> float | None:
@@ -80,7 +101,7 @@ def _cookie_map(cookie_header: str | None) -> dict[str, str]:
 
 
 def stable_bucket(user_agent: str, existing: int | None = None) -> int:
-    """0–99 稳定分桶。existing 来自 cookie 时直接复用。"""
+    """0–99 稳定分桶。existing 来自已验证 cookie 时直接复用。"""
     if existing is not None and 0 <= existing <= 99:
         return existing
     ua = user_agent or "unknown"
@@ -95,6 +116,42 @@ def bucket_in_treatment(bucket: int, percent: float) -> bool:
     if percent >= 100:
         return True
     return bucket < percent
+
+
+def _bucket_secret(handler: Any) -> str:
+    token = getattr(handler, "studio_token", None) or ""
+    if token:
+        return token
+    env = os.environ.get(ENV_BUCKET_SECRET, "").strip()
+    if env:
+        return env
+    return BUCKET_SALT
+
+
+def sign_bucket_value(bucket: int, secret: str) -> str:
+    """Cookie 值：{bucket}.{hmac16}。"""
+    sig = hmac.new(
+        secret.encode("utf-8"),
+        str(bucket).encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()[:16]
+    return f"{bucket}.{sig}"
+
+
+def verify_bucket_cookie(raw: str, secret: str) -> int | None:
+    """验证签名 cookie；篡改返回 None。"""
+    if not raw or "." not in raw:
+        return None
+    bucket_part, sig = raw.split(".", 1)
+    if not bucket_part.isdigit() or not sig:
+        return None
+    bucket = int(bucket_part)
+    if not 0 <= bucket <= 99:
+        return None
+    expected = sign_bucket_value(bucket, secret).split(".", 1)[1]
+    if not hmac.compare_digest(sig, expected):
+        return None
+    return bucket
 
 
 def query_variant_override(query: dict[str, list[str]]) -> str | None:
@@ -114,13 +171,15 @@ def decide_root_variant(
     percent: float,
     bucket: int,
     query: dict[str, list[str]] | None = None,
+    allow_override: bool = False,
 ) -> Literal["v2", "v3"]:
     """GET / 应展示的 variant（不含 redirect 细节）。"""
-    override = query_variant_override(query or {})
-    if override == "v2":
-        return "v2"
-    if override == "v3":
-        return "v3"
+    if allow_override:
+        override = query_variant_override(query or {})
+        if override == "v2":
+            return "v2"
+        if override == "v3":
+            return "v3"
     if mode == "on":
         return "v2"
     if mode == "auto":
@@ -144,23 +203,37 @@ def parse_request_query(path_with_query: str) -> dict[str, list[str]]:
     return parse_qs(qs, keep_blank_values=False)
 
 
+def inject_home_placeholders(html: str, handler: Any, bucket: int) -> str:
+    """替换 __STUDIO_*__ 占位符（token escape + bucket + dev 标志）。"""
+    token = html_module.escape(getattr(handler, "studio_token", None) or "", quote=True)
+    host = getattr(handler, "studio_host", "127.0.0.1") or "127.0.0.1"
+    dev_flag = "1" if is_loopback_host(host) else ""
+    return (
+        html.replace("__STUDIO_TOKEN__", token)
+        .replace("__STUDIO_BUCKET_ID__", str(bucket))
+        .replace("__STUDIO_DEV__", dev_flag)
+    )
+
 
 def set_bucket_cookie(handler: Any, bucket: int) -> None:
-    """写入分桶 cookie（HttpOnly）。"""
+    """写入 HMAC 签名分桶 cookie（HttpOnly）。"""
+    secret = _bucket_secret(handler)
+    value = sign_bucket_value(bucket, secret)
     handler.send_header(
         "Set-Cookie",
-        f"{COOKIE_BUCKET}={bucket}; Path=/; Max-Age={COOKIE_MAX_AGE}; HttpOnly; SameSite=Lax",
+        f"{COOKIE_BUCKET}={value}; Path=/; Max-Age={COOKIE_MAX_AGE}; HttpOnly; SameSite=Lax",
     )
 
 
 def read_or_assign_bucket(handler: Any) -> tuple[int, bool]:
-    """→ (bucket, is_new)。新分桶时需 Set-Cookie。"""
+    """→ (bucket, is_new)。新分桶或 cookie 无效时需 Set-Cookie。"""
+    secret = _bucket_secret(handler)
     cookies = _cookie_map(handler.headers.get("Cookie"))
     raw = cookies.get(COOKIE_BUCKET)
-    if raw is not None and raw.isdigit():
-        b = int(raw)
-        if 0 <= b <= 99:
-            return b, False
+    if raw is not None:
+        verified = verify_bucket_cookie(raw, secret)
+        if verified is not None:
+            return verified, False
     ua = handler.headers.get("User-Agent", "")
     b = stable_bucket(ua)
     return b, True

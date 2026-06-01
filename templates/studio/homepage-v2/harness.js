@@ -6,7 +6,7 @@
  *  - studioAssetsFail=1                                       → manifest 失败（降级）
  *  - studioState=…                                            → 跳过正常 bootstrap 路由
  *  - studioJob=running|succeeded                              → mock GET /status + POST /import
- * dev 门控：仅 127.0.0.1 / ?dev=1（与 feature flag dev override 一致）。
+ * dev 门控：仅 loopback + 服务端 data-studio-dev=1（LAN 上 ?dev=1 无效）。
  * 生产 build 不应打包（调用方负责 tree-shake）。
  */
 import { SS, isDemoTrip } from "../js/constants.js";
@@ -29,7 +29,12 @@ function params() {
 }
 
 export function harnessEnabled() {
-  return isLoopback() || params().get("dev") === "1";
+  if (!isLoopback()) return false;
+  try {
+    var body = document.body;
+    if (body && body.getAttribute("data-studio-dev") === "1") return true;
+  } catch (e) { /* ignore */ }
+  return params().get("dev") === "1";
 }
 
 const NOW = Math.floor(Date.now() / 1000);

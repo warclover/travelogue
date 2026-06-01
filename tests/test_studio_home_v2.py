@@ -212,12 +212,13 @@ def test_studio_home_v2_layout_tier_and_failed_modules() -> None:
     """L2 懒加载层级 + Import Failed 专屏 + bucket_id。"""
     tier = (STUDIO_DIR / "homepage-v2" / "layout-tier.js").read_text(encoding="utf-8")
     failed = (STUDIO_DIR / "homepage-v2" / "import-failed.js").read_text(encoding="utf-8")
-    bucket = (STUDIO_DIR / "homepage-v2" / "bucket.js").read_text(encoding="utf-8")
+    bucket = (STUDIO_DIR / "js" / "bucket.js").read_text(encoding="utf-8")
     analytics = (STUDIO_DIR / "js" / "analytics.js").read_text(encoding="utf-8")
     carousel = (STUDIO_DIR / "homepage-v2" / "carousel.js").read_text(encoding="utf-8")
 
     assert "resolveLayoutTier" in tier and "shouldEagerCarouselPage" in tier
     assert "showImportFailed" in failed and "failureNextHint" in failed
+    assert "readServerBucketId" in bucket
     assert "resolveBucketId" in bucket
     assert "travelogue.studio.eventRing" in analytics
     assert "bucket_id" in (STUDIO_DIR / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
@@ -409,6 +410,8 @@ def test_studio_v3_experiment_exposure_wired() -> None:
     """M20-j · v3 对照组 holdback 曝光（TELEMETRY §2 experiment_exposure）。"""
     studio_js = (STUDIO_DIR / "studio.js").read_text(encoding="utf-8")
     assert "resolveBucketId" in studio_js
+    assert "./js/bucket.js" in studio_js
+    assert "homepage-v2/bucket" not in studio_js
     assert "experiment_exposure" in studio_js
     assert 'variant: "v3"' in studio_js
 

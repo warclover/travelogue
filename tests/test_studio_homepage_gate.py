@@ -10,13 +10,17 @@ import pytest
 import yaml
 
 from travelogue.web.studio_homepage_gate import (
+    allow_variant_override,
     bucket_in_treatment,
     decide_root_variant,
+    is_loopback_host,
     query_variant_override,
     resolve_mode,
     resolve_percent,
     should_redirect_root_to_v2,
+    sign_bucket_value,
     stable_bucket,
+    verify_bucket_cookie,
 )
 
 
@@ -67,8 +71,36 @@ def test_decide_root_variant_modes() -> None:
 def test_query_override() -> None:
     assert query_variant_override({"homepageVariant": ["v2"]}) == "v2"
     assert decide_root_variant(
-        mode="off", percent=0, bucket=0, query={"homepageVariant": ["v2"]}
+        mode="off",
+        percent=0,
+        bucket=0,
+        query={"homepageVariant": ["v2"]},
+        allow_override=True,
     ) == "v2"
+
+
+def test_query_override_ignored_without_allow() -> None:
+    assert decide_root_variant(
+        mode="on",
+        percent=100,
+        bucket=0,
+        query={"homepageVariant": ["v3"]},
+        allow_override=False,
+    ) == "v2"
+    assert decide_root_variant(
+        mode="off",
+        percent=0,
+        bucket=0,
+        query={"homepageVariant": ["v2"]},
+        allow_override=False,
+    ) == "v3"
+
+
+def test_is_loopback_host() -> None:
+    assert is_loopback_host("127.0.0.1") is True
+    assert is_loopback_host("localhost") is True
+    assert allow_variant_override("127.0.0.1") is True
+    assert allow_variant_override("0.0.0.0") is False
 
 
 def test_should_redirect_only_auto() -> None:
@@ -92,23 +124,37 @@ def test_stable_bucket_sha256_contract() -> None:
 
 
 def test_read_or_assign_bucket_cookie(monkeypatch) -> None:
-    """read_or_assign_bucket 复用 cookie 分桶。"""
+    """read_or_assign_bucket 复用 HMAC 签名 cookie。"""
 
     class _Hdr:
-        def __init__(self, cookie: str | None, ua: str = "Test") -> None:
+        def __init__(self, cookie: str | None, ua: str = "Test", token: str = "test-secret") -> None:
             self.headers = {"Cookie": cookie or "", "User-Agent": ua}
+            self.studio_token = token
 
     from travelogue.web.studio_homepage_gate import read_or_assign_bucket
 
-    h = _Hdr("travelogue.studio.hp_bucket=55; other=1")
+    signed = sign_bucket_value(55, "test-secret")
+    h = _Hdr(f"travelogue.studio.hp_bucket={signed}")
     b, is_new = read_or_assign_bucket(h)
     assert b == 55
     assert is_new is False
+
+    h_bad = _Hdr("travelogue.studio.hp_bucket=55; other=1")
+    b_bad, is_new_bad = read_or_assign_bucket(h_bad)
+    assert b_bad == stable_bucket("Test")
+    assert is_new_bad is True
 
     h2 = _Hdr(None, "M20jTest/5")
     b2, is_new2 = read_or_assign_bucket(h2)
     assert b2 == stable_bucket("M20jTest/5")
     assert is_new2 is True
+
+
+def test_verify_bucket_cookie_tamper() -> None:
+    assert verify_bucket_cookie("3." + "0" * 16, "secret") is None
+    val = sign_bucket_value(42, "my-token")
+    assert verify_bucket_cookie(val, "my-token") == 42
+    assert verify_bucket_cookie(val, "wrong") is None
 
 
 def test_gate_status_script(monkeypatch) -> None:

@@ -52,13 +52,14 @@ def _start_studio_server(
     port: int,
     *,
     config_path: Path | None = None,
+    studio_host: str = "127.0.0.1",
 ) -> ThreadingHTTPServer:
     handler_kwargs: dict = {
         "directory": str(trips_dir),
         "trip_json": trips_dir / ".placeholder" / "trip.json",
         "studio_mode": True,
         "trips_dir": trips_dir,
-        "studio_host": "127.0.0.1",
+        "studio_host": studio_host,
         "studio_port": port,
     }
     if config_path is not None:

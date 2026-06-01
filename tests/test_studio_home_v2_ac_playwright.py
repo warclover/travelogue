@@ -756,7 +756,9 @@ def test_m20j_holdback_redirect_experiment_exposure(tmp_path: Path, monkeypatch)
                 None,
             )
             assert bucket_cookie is not None
-            assert int(bucket_cookie["value"]) == expected_bucket
+            raw_cookie = str(bucket_cookie["value"])
+            cookie_bucket = int(raw_cookie.split(".")[0])
+            assert cookie_bucket == expected_bucket
 
             exposures = [e for e in events if e.get("event") == "experiment_exposure"]
             assert exposures, f"未捕获 experiment_exposure，captured={[e.get('event') for e in events]}"

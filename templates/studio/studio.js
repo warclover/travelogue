@@ -30,12 +30,14 @@ import {
 import { trackStudioEvent } from "./js/analytics.js";
 import { initViewport } from "./js/viewport.js";
 import { initStudioCapabilities } from "./js/capabilities.js";
-import { resolveBucketId } from "./homepage-v2/bucket.js";
+import { resolveBucketId } from "./js/bucket.js";
 
 // ── Main init ──
 document.addEventListener("DOMContentLoaded", function () {
   resolveBucketId().then(function (bucketId) {
-    trackStudioEvent("experiment_exposure", { variant: "v3", bucket_id: bucketId });
+    var meta = { variant: "v3" };
+    if (bucketId !== null && bucketId !== undefined) meta.bucket_id = bucketId;
+    trackStudioEvent("experiment_exposure", meta);
   }).catch(function () {
     trackStudioEvent("experiment_exposure", { variant: "v3" });
   });

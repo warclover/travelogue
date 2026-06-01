@@ -146,13 +146,18 @@ class StudioMixin:
         percent = gate.resolve_percent(config)
         query = gate.parse_request_query(self.path)
         bucket, is_new = gate.read_or_assign_bucket(self)
+        allow_override = gate.allow_variant_override(self.studio_host)
         variant = gate.decide_root_variant(
-            mode=mode, percent=percent, bucket=bucket, query=query
+            mode=mode,
+            percent=percent,
+            bucket=bucket,
+            query=query,
+            allow_override=allow_override,
         )
 
         if gate.should_redirect_root_to_v2(mode=mode, variant=variant):
             self.send_response(302)
-            if is_new and mode == "auto":
+            if is_new:
                 gate.set_bucket_cookie(self, bucket)
             self.send_header("Location", HOME_V2_PATH)
             self.end_headers()
@@ -160,10 +165,10 @@ class StudioMixin:
 
         template = "studio-home-v2.html" if variant == "v2" else "studio.html"
         html = (STUDIO_TEMPLATE_DIR / template).read_text(encoding="utf-8")
-        html = html.replace("__STUDIO_TOKEN__", self.studio_token or "")
+        html = gate.inject_home_placeholders(html, self, bucket)
         data = html.encode("utf-8")
         self.send_response(200)
-        if is_new and mode == "auto":
+        if is_new:
             gate.set_bucket_cookie(self, bucket)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(data)))
