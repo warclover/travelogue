@@ -148,7 +148,6 @@ export function isFirstSuccessVisible() {
 export function dismissFirstSuccess() {
   clearCountdown();
   show($("v2-first-success"), false);
-  V2.state = V2.importShell === "shelf" ? "IdleReturning" : "IdleEmpty";
   syncVariantGuard();
   if (typeof V2.reroute === "function") V2.reroute();
 }

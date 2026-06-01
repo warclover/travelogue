@@ -16,7 +16,9 @@ import {
 import { postJson, withJobBusyRetry, isJobBusyResponse } from "../js/http.js";
 import { pollJobUntilDone } from "../js/job-poll.js";
 import { trackStudioEvent } from "../js/analytics.js";
+import { isDemoTrip } from "../js/constants.js";
 import { V2, $, show } from "./store.js";
+import { fetchTripsFirstPage } from "./trips-client.js";
 import { renderColdStartBackground } from "./bento.js";
 import {
   captureImportShell, showFirstSuccess,
@@ -148,6 +150,22 @@ export function cancelImport() {
   }
 }
 
+function refreshTripsForImportSuccess(result) {
+  return fetchTripsFirstPage().then(function (data) {
+    V2.trips = data.trips || [];
+    V2.tripsTotal = typeof data.total === "number" ? data.total : V2.trips.length;
+    V2.isOffline = false;
+    var hasUser = V2.trips.some(function (t) { return !isDemoTrip(t); });
+    if (hasUser || (result && result.tripId && !isDemoTrip({ tripId: result.tripId, title: result.title }))) {
+      V2.importShell = "shelf";
+    }
+  }).catch(function () {
+    if (result && result.tripId && !isDemoTrip({ tripId: result.tripId, title: result.title })) {
+      V2.importShell = "shelf";
+    }
+  });
+}
+
 function pollImport(jobId, gen, source) {
   _activeJobId = jobId;
   try {
@@ -177,8 +195,10 @@ function pollImport(jobId, gen, source) {
       setStage("完成", 100);
       var result = job.result || {};
       trackStudioEvent("import_success", { tripId: result.tripId || null });
-      showFirstSuccess({ result: result });
-      return job;
+      return refreshTripsForImportSuccess(result).then(function () {
+        showFirstSuccess({ result: result });
+        return job;
+      });
     }
     if (job.status === "cancelled") {
       if (typeof V2.reroute === "function") V2.reroute();

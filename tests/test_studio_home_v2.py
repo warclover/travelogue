@@ -162,6 +162,7 @@ def test_studio_home_v2_import_sheet_modules() -> None:
     """M20-d · Import Sheet + 导入编排，复用 v3 共享原语（非复制视图）。"""
     sheet = (STUDIO_DIR / "homepage-v2" / "import-sheet.js").read_text(encoding="utf-8")
     run = (STUDIO_DIR / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
+    assert "refreshTripsForImportSuccess" in run
 
     for js in (sheet, run):
         assert "\ufffd" not in js
@@ -465,6 +466,13 @@ def test_studio_home_v2_harness_and_ac_hooks() -> None:
     assert "display: none !important" in css
     # CTA 触控目标 ≥44px（AC-HP2-21）
     assert "min-height: 44px" in css
+
+
+def test_is_demo_trip_distinguishes_user_slug_hash() -> None:
+    """CJK 文件夹导入的 demo-{hash} slug 是用户画册，不是 bundled demo。"""
+    js = (STUDIO_DIR / "js" / "constants.js").read_text(encoding="utf-8")
+    assert "/^demo-[a-f0-9]{10}$/" not in js
+    assert 'id === "demo-album"' in js
 
 
 def test_studio_home_v2_review_followups() -> None:

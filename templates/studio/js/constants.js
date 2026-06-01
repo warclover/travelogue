@@ -14,14 +14,13 @@ export function isGenericPlace(name) {
   return !s || GENERIC_PLACES.has(s);
 }
 
-/** Bundled / trial demo trips (not user folder slugs that happen to contain "demo"). */
+/** Bundled / trial demo trips only — not user imports whose slug is demo-{hash} (CJK folder names). */
 export function isDemoTrip(trip) {
   if (!trip) return false;
   var id = String(trip.tripId || "");
   if (id === "demo-album") return true;
   var title = String(trip.title || "").trim();
   if (title === "示例旅途" || title === "示例") return true;
-  if (/^demo-[a-f0-9]{10}$/.test(id)) return true;
   return false;
 }
 
