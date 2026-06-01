@@ -1,0 +1,68 @@
+# M20-i/j · nightly holdback 演练（漏斗门禁 + LCP 审计）
+# PR 仍走 ci.yml test-e2e；本 workflow 每日跑完整 drill 并上传报告 artifact。
+name: Nightly Holdback
+
+on:
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+jobs:
+  holdback-funnel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package + Playwright
+        run: |
+          pip install -e ".[dev,playwright]"
+          playwright install chromium
+
+      - name: M20-i funnel drill（synthetic · 必过）
+        run: |
+          python scripts/studio_homepage_m20i_drill.py \
+            --spawn --synthetic --skip-lcp \
+            --out holdback-funnel.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: holdback-funnel-report
+          path: holdback-funnel.json
+
+  holdback-lcp:
+    runs-on: ubuntu-latest
+    needs: holdback-funnel
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package + Playwright
+        run: |
+          pip install -e ".[dev,playwright]"
+          playwright install chromium
+
+      - name: M20-i LCP drill（10 runs · 审计）
+        continue-on-error: true
+        run: |
+          python scripts/studio_homepage_m20i_drill.py \
+            --spawn --synthetic --lcp-runs 10 --settle-ms 1200 \
+            --out holdback-lcp.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: holdback-lcp-report
+          path: holdback-lcp.json
+
+      - name: Studio homepage v2 AC e2e
+        run: |
+          python -m pytest tests/test_studio_home_v2_ac_playwright.py -q
+
+      - name: Rollback drill（§3.2）
+        run: python scripts/studio_homepage_rollback_drill.py

@@ -12,10 +12,48 @@ const ALLOWED = new Set([
   "prep_open",
   "demo_try",
   "layout_tier",
+  // 首页 v2（M20-h · TELEMETRY §2）
+  "experiment_exposure",
+  "homepage_view",
+  "cta_click",
+  "sheet_close",
+  "sheet_abandon",
+  "lightbox_open",
+  "spread_page_view",
+  "shelf_resume_click",
+  "js_error",
 ]);
+
+const EVENT_RING_KEY = "travelogue.studio.eventRing";
+const EVENT_RING_MAX = 200;
+
+function devRingEnabled() {
+  try {
+    var h = location.hostname;
+    if (h === "127.0.0.1" || h === "localhost" || h === "::1") return true;
+    return new URLSearchParams(location.search).get("dev") === "1";
+  } catch (e) {
+    return false;
+  }
+}
+
+function pushEventRing(event, meta) {
+  if (!devRingEnabled()) return;
+  try {
+    var ring = JSON.parse(localStorage.getItem(EVENT_RING_KEY) || "[]");
+    if (!Array.isArray(ring)) ring = [];
+    ring.push({ t: Date.now(), event: event, meta: meta || {} });
+    if (ring.length > EVENT_RING_MAX) ring = ring.slice(-EVENT_RING_MAX);
+    localStorage.setItem(EVENT_RING_KEY, JSON.stringify(ring));
+    if (typeof console !== "undefined" && console.debug) {
+      console.debug("[studio]", event, meta || {});
+    }
+  } catch (e) { /* ignore */ }
+}
 
 export function trackStudioEvent(event, meta) {
   if (!ALLOWED.has(event)) return;
+  pushEventRing(event, meta);
   try {
     fetch("/__travelogue/studio-event", {
       method: "POST",

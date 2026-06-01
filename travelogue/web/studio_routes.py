@@ -31,6 +31,8 @@ from travelogue.web.studio_handlers.paths import (
     CONFIG_PATH,
     CURATE_SUFFIX,
     EXPORT_PATH,
+    HOME_CLASSIC_PATH,
+    HOME_V2_PATH,
     IMPORT_PATH,
     INTENT_SUFFIX,
     LONGSHOT_PATH,
@@ -50,6 +52,8 @@ from travelogue.web.studio_handlers.paths import (
 # Re-export path constants for serve.py and tests.
 __all__ = [
     "StudioMixin",
+    "HOME_V2_PATH",
+    "HOME_CLASSIC_PATH",
     "IMPORT_PATH",
     "STATUS_PATH",
     "CONFIG_PATH",
@@ -103,8 +107,14 @@ class StudioMixin:
         return False
 
     def studio_dispatch_GET(self, path: str) -> bool:
-        if path == "/":
+        if path == HOME_CLASSIC_PATH:
             static_handlers.handle_home(self)
+            return True
+        if path == "/":
+            if self._dispatch_home_root():
+                return True
+        if path == HOME_V2_PATH:
+            static_handlers.handle_home_v2(self)
             return True
         if path == STATUS_PATH:
             job_handlers.handle_status(self)
@@ -125,6 +135,41 @@ class StudioMixin:
         if path.startswith(STUDIO_ASSET_PREFIX):
             return static_handlers.handle_studio_asset(self, path)
         return False
+
+    def _dispatch_home_root(self) -> bool:
+        """GET / · homepage v2 门控（FEATURE-FLAG §3 / M20-j）。"""
+        from travelogue.web import studio_homepage_gate as gate
+        from travelogue.paths import STUDIO_TEMPLATE_DIR
+
+        mode = gate.resolve_mode()
+        config = gate.load_config_dict(self)
+        percent = gate.resolve_percent(config)
+        query = gate.parse_request_query(self.path)
+        bucket, is_new = gate.read_or_assign_bucket(self)
+        variant = gate.decide_root_variant(
+            mode=mode, percent=percent, bucket=bucket, query=query
+        )
+
+        if gate.should_redirect_root_to_v2(mode=mode, variant=variant):
+            self.send_response(302)
+            if is_new and mode == "auto":
+                gate.set_bucket_cookie(self, bucket)
+            self.send_header("Location", HOME_V2_PATH)
+            self.end_headers()
+            return True
+
+        template = "studio-home-v2.html" if variant == "v2" else "studio.html"
+        html = (STUDIO_TEMPLATE_DIR / template).read_text(encoding="utf-8")
+        html = html.replace("__STUDIO_TOKEN__", self.studio_token or "")
+        data = html.encode("utf-8")
+        self.send_response(200)
+        if is_new and mode == "auto":
+            gate.set_bucket_cookie(self, bucket)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+        return True
 
     def studio_dispatch_PATCH(self, path: str) -> bool:
         if not self._studio_require_post_auth():

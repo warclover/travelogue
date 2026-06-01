@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://travelogue.local/studio/demo-showcase/manifest.schema.json",
+  "title": "Studio demo-showcase manifest",
+  "description": "Homepage v2 Bento carousel + longshot assets. See docs/studio-homepage-v2/DATA-CONTRACT.md",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "title", "assets", "pages"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Bump when replacing any asset (cache-bust)."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "photoCount": { "type": "integer", "minimum": 0 },
+        "chapterCount": { "type": "integer", "minimum": 0 },
+        "subtitle": { "type": "string" }
+      }
+    },
+    "assets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["background", "longshot"],
+      "properties": {
+        "background": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative WebP for Ken Burns / cold-start Importing still."
+        },
+        "longshot": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative WebP for 9:16 phone preview."
+        }
+      }
+    },
+    "pages": {
+      "type": "array",
+      "minItems": 3,
+      "description": "Ordered scroll half-pages: cover, chapter(s), epilogue.",
+      "items": { "$ref": "#/$defs/page" }
+    }
+  },
+  "$defs": {
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "label", "webp"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_-]+$"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["cover", "chapter", "epilogue"]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "chapterIndex": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "webp": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "role": { "const": "chapter" } } },
+          "then": { "required": ["chapterIndex"] }
+        }
+      ]
+    }
+  }
+}

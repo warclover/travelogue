@@ -1,0 +1,48 @@
+{
+  "version": "2026.06.01-kyoto-draft",
+  "title": "京都·雨后",
+  "meta": {
+    "photoCount": 86,
+    "chapterCount": 3,
+    "subtitle": "86 PHOTOS · SPRING 2024"
+  },
+  "assets": {
+    "background": "background-PLACEHOLDER.webp",
+    "longshot": "longshot-PLACEHOLDER.webp"
+  },
+  "pages": [
+    {
+      "id": "cover",
+      "role": "cover",
+      "label": "封面",
+      "webp": "scroll/cover-PLACEHOLDER.webp"
+    },
+    {
+      "id": "ch01",
+      "role": "chapter",
+      "label": "第一章",
+      "chapterIndex": 1,
+      "webp": "scroll/ch01-PLACEHOLDER.webp"
+    },
+    {
+      "id": "ch02",
+      "role": "chapter",
+      "label": "第二章",
+      "chapterIndex": 2,
+      "webp": "scroll/ch02-PLACEHOLDER.webp"
+    },
+    {
+      "id": "ch03",
+      "role": "chapter",
+      "label": "第三章",
+      "chapterIndex": 3,
+      "webp": "scroll/ch03-PLACEHOLDER.webp"
+    },
+    {
+      "id": "epilogue",
+      "role": "epilogue",
+      "label": "尾声",
+      "webp": "scroll/epilogue-PLACEHOLDER.webp"
+    }
+  ]
+}

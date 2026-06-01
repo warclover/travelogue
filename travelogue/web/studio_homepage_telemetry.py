@@ -16,6 +16,17 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "success_primary_click",
         "prep_open",
         "demo_try",
+        "layout_tier",
+        # Studio homepage v2 funnel (M20-h · TELEMETRY §2)
+        "experiment_exposure",
+        "homepage_view",
+        "cta_click",
+        "sheet_close",
+        "sheet_abandon",
+        "lightbox_open",
+        "spread_page_view",
+        "shelf_resume_click",
+        "js_error",
     }
 )
 

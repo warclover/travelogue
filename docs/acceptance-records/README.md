@@ -18,6 +18,16 @@
 
 ---
 
+## Studio 首页 v2（M20）
+
+| 文件 | 用途 | 命令 / 说明 |
+|------|------|-------------|
+| [studio-homepage-v2-rollout-log.json](./studio-homepage-v2-rollout-log.json) | G0–G2 holdback / 切主站 | [SIGNOFF-M20J.md](../studio-homepage-v2/SIGNOFF-M20J.md) |
+| [studio-homepage-v2-visual/](./studio-homepage-v2-visual/) | 视觉 sign-off PNG（gitignore 生成物） | `python scripts/studio_ac_visual_capture.py` |
+| `studio-homepage-v2-rollback-drill.json` | 回滚演练报告（按需生成） | `python scripts/studio_homepage_rollback_drill.py --out …` |
+
+---
+
 ## Phase 6（开发准备）
 
 | 文件 | 用途 | 命令 / 说明 |

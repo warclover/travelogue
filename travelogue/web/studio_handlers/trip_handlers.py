@@ -28,8 +28,13 @@ def handle_trips(handler: StudioHandlerProtocol) -> None:
     except ValueError:
         limit = 20
     limit = max(1, min(limit, 100))
+    try:
+        offset = int((query.get("offset") or ["0"])[0])
+    except ValueError:
+        offset = 0
+    offset = max(0, offset)
     ctx = studio_ctx(handler)
-    trips = list_studio_trips(ctx.trips_root, limit=limit)
+    trips = list_studio_trips(ctx.trips_root, limit=limit, offset=offset)
     total = studio_trips_total(ctx.trips_root)
     handler._json_response(200, {"ok": True, "trips": trips, "total": total})
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+HOME_V2_PATH = "/v2"
+HOME_CLASSIC_PATH = "/classic"
 IMPORT_PATH = "/__travelogue/import"
 STATUS_PATH = "/__travelogue/status"
 CONFIG_PATH = "/__travelogue/config"

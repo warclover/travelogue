@@ -47,16 +47,23 @@ def _free_port() -> int:
     return port
 
 
-def _start_studio_server(trips_dir: Path, port: int) -> ThreadingHTTPServer:
-    handler = partial(
-        TripPreviewHandler,
-        directory=str(trips_dir),
-        trip_json=trips_dir / ".placeholder" / "trip.json",
-        studio_mode=True,
-        trips_dir=trips_dir,
-        studio_host="127.0.0.1",
-        studio_port=port,
-    )
+def _start_studio_server(
+    trips_dir: Path,
+    port: int,
+    *,
+    config_path: Path | None = None,
+) -> ThreadingHTTPServer:
+    handler_kwargs: dict = {
+        "directory": str(trips_dir),
+        "trip_json": trips_dir / ".placeholder" / "trip.json",
+        "studio_mode": True,
+        "trips_dir": trips_dir,
+        "studio_host": "127.0.0.1",
+        "studio_port": port,
+    }
+    if config_path is not None:
+        handler_kwargs["studio_config_path"] = config_path
+    handler = partial(TripPreviewHandler, **handler_kwargs)
     server = ThreadingHTTPServer(("127.0.0.1", port), handler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()

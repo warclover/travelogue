@@ -11,8 +11,8 @@ from travelogue.paths import STUDIO_TEMPLATE_DIR
 from travelogue.web.studio_handlers.paths import STUDIO_ASSET_PREFIX
 
 
-def handle_home(handler: StudioHandlerProtocol) -> None:
-    html_path = STUDIO_TEMPLATE_DIR / "studio.html"
+def _serve_studio_home(handler: StudioHandlerProtocol, template_name: str) -> None:
+    html_path = STUDIO_TEMPLATE_DIR / template_name
     html = html_path.read_text(encoding="utf-8")
     token = handler.studio_token or ""
     html = html.replace("__STUDIO_TOKEN__", token)
@@ -22,6 +22,22 @@ def handle_home(handler: StudioHandlerProtocol) -> None:
     handler.send_header("Content-Length", str(len(data)))
     handler.end_headers()
     handler.wfile.write(data)
+
+
+def send_redirect(handler: StudioHandlerProtocol, location: str, code: int = 302) -> None:
+    handler.send_response(code)
+    handler.send_header("Location", location)
+    handler.end_headers()
+
+
+def handle_home(handler: StudioHandlerProtocol) -> None:
+    """Serve v3 (image-first) homepage — frozen, GET /."""
+    _serve_studio_home(handler, "studio.html")
+
+
+def handle_home_v2(handler: StudioHandlerProtocol) -> None:
+    """Serve v2 (output-first Bento) homepage — GET /v2 (parallel dev route)."""
+    _serve_studio_home(handler, "studio-home-v2.html")
 
 
 def handle_studio_asset(handler: StudioHandlerProtocol, path: str) -> bool:

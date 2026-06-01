@@ -1,0 +1,22 @@
+{
+  "schema": "studio-homepage-lcp-baseline/v1",
+  "captured_at": "2026-06-01",
+  "environment": "loopback · headless Chromium · CI reference",
+  "min_runs_required": 10,
+  "note": "参考基线，非硬门禁；nightly 实量 P95 偏离 >30% 时人工复核。更新：python scripts/studio_lcp_measure.py --spawn --runs 10 --out docs/studio-homepage-v2/lcp-baseline-snapshot.json",
+  "reference": {
+    "v2": {
+      "metric": "lcp",
+      "n": 10,
+      "p50": 520.0,
+      "p95": 850.0
+    },
+    "v3": {
+      "metric": "lcp",
+      "n": 10,
+      "p50": 480.0,
+      "p95": 720.0
+    }
+  },
+  "rollback_ratio": 1.30
+}

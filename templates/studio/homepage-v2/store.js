@@ -1,0 +1,62 @@
+/**
+ * Travelogue Studio 首页 v2 · 运行时状态 + variant 解析 + DOM 工具。
+ *
+ * 状态语义对齐 v3 js/state.js（五主态 + Failed/Offline），但 v2 使用独立
+ * 视图层（GET /v2 专用 DOM），不复用 v3 navigation.js 的渲染分支。
+ */
+import { SS } from "../js/constants.js";
+
+export const STUDIO_DEMO_SHOWCASE_BASE = "/__studio/assets/demo-showcase/";
+
+/** v2 新增 sessionStorage 键（加法，不改 v3 既有键形状）。 */
+export const V2_VARIANT_KEY = "travelogue.studio.homepageVariant";
+
+/** v2 首页运行时状态（单一可变源，勿重新赋值绑定）。 */
+export const V2 = {
+  state: "Loading", // Loading | IdleEmpty | IdleReturning | Importing | FirstSuccess | Failed
+  manifest: null,
+  manifestError: false,
+  trips: [],
+  tripsTotal: 0,
+  isOffline: false,
+  activeJobId: null,
+  layout: "wide", // wide | tablet_landscape | unsupported_*
+  layoutTier: "L0", // L0 | L1 | L2 | L3（§12.4）
+  _started: false, // 一次性启动门（首次进入支持态加载数据）
+  _viewTracked: false, // homepage_view 仅最终态首帧一次（§4.4）
+  importShell: "bento", // Import 前壳层：bento | shelf（FirstSuccess 背景 §9.3）
+  reroute: null, // bootstrap 注入：重新拉 trips 并路由最终态（import 结束/取消后调用）
+  onExpand: null, // Lightbox 钩子（M20-c 注入）；carousel/phone ⤢ 调用
+};
+
+export function $(id) {
+  return document.getElementById(id);
+}
+
+export function show(el, visible) {
+  if (!el) return;
+  el.hidden = !visible;
+}
+
+export function isLoopback() {
+  var h = location.hostname;
+  return h === "127.0.0.1" || h === "localhost" || h === "::1";
+}
+
+/** 读取 sessionStorage.activeJobId（v3 共享键，只读）。 */
+export function readActiveJobId() {
+  try {
+    return sessionStorage.getItem(SS.activeJobId) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/** 持久化 v2 分桶（加法键），供 holdback 一致性使用。 */
+export function persistVariant(variant) {
+  try {
+    sessionStorage.setItem(V2_VARIANT_KEY, variant || "v2");
+  } catch (e) {
+    /* ignore */
+  }
+}

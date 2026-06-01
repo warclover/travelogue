@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="studio-token" content="__STUDIO_TOKEN__" />
+  <title>Travelogue Studio · 工作台</title>
+  <link rel="icon" href="/__studio/assets/favicon.ico" />
+  <link rel="stylesheet" href="/__studio/studio-home-v2.css" />
+</head>
+<body data-studio-v="v2" data-homepage-variant="v2">
+<a href="#v2-cta" class="v2-skip-link">跳到主要操作</a>
+
+<div id="v2-offline" class="v2-offline-banner" hidden>
+  服务已停止，请重新启动 Studio
+</div>
+
+<!-- Unsupported viewport（M20-f 完整实现；此处壳层占位） -->
+<section id="v2-unsupported" class="v2-unsupported" hidden>
+  <div class="v2-unsupported__card">
+    <p class="v2-unsupported__brand">TRAVELOGUE · STUDIO</p>
+    <h1 class="v2-unsupported__title" id="v2-unsupported-title">请在电脑浏览器打开 Studio</h1>
+    <p class="v2-unsupported__lead" id="v2-unsupported-lead">
+      Studio 工作台为桌面与 iPad 横屏设计。手机端的阅读与分享请使用微信小程序。
+    </p>
+  </div>
+</section>
+
+<main class="v2-bento" id="v2-bento-main" hidden>
+  <div class="v2-shared__bg" id="v2-bento-bg" aria-hidden="true"></div>
+  <div class="v2-bento__veil" aria-hidden="true"></div>
+  <div class="v2-grain" aria-hidden="true"></div>
+  <div class="v2-vignette" aria-hidden="true"></div>
+
+  <header class="v2-topbar" id="v2-topbar">
+    <span class="v2-topbar__brand">TRAVELOGUE · STUDIO</span>
+    <div class="v2-topbar__status">
+      <span class="v2-topbar__dot" id="v2-status-dot"></span>
+      <span class="v2-topbar__addr" id="v2-copy-addr" title="点击复制" role="button" tabindex="0">127.0.0.1:8766 · 本地</span>
+      <a href="/" class="v2-topbar__classic" id="v2-classic-link" hidden>经典首页 →</a>
+    </div>
+  </header>
+
+  <!-- ⓪ Loading skeleton（§4.4：trips resolve 前仅 skeleton） -->
+  <div class="v2-loading" id="v2-loading">
+    <p class="v2-loading__brand">Travelogue · 本地杂志工坊</p>
+    <p class="v2-loading__label">正在加载工作台…</p>
+    <div class="v2-loading__skeleton" aria-hidden="true">
+      <span class="v2-loading__bar"></span>
+      <span class="v2-loading__bar v2-loading__bar--short"></span>
+      <span class="v2-loading__frame"></span>
+    </div>
+  </div>
+
+  <!-- ① IdleEmpty · Bento -->
+  <div class="v2-bento__headline" id="v2-headline" hidden>
+    <span class="v2-bento__eyebrow">TRAVELOGUE · 自动游记画册</span>
+    <h1 class="v2-bento__title">照片导进来，<em>画册自动出来</em></h1>
+    <p class="v2-bento__lead">
+      选一次旅行的照片，<b>自动分章 · 配文 · 排版</b>，生成大屏卷轴 + 微信长图。
+    </p>
+    <div class="v2-auto-tags">
+      <span class="v2-auto-tag">自动分章成文</span>
+      <span class="v2-auto-tag">自动配文选封面</span>
+      <span class="v2-auto-tag">本地处理 · 免注册</span>
+    </div>
+  </div>
+
+  <div class="v2-bento__frame" id="v2-frame" hidden>
+    <div class="v2-bento__grid">
+      <!-- 16:9 大屏卷轴 carousel（M20-b 接入 clamp/spread；此处 M20-a 骨架） -->
+      <section class="v2-bento__web" id="v2-web-cell" aria-label="大屏卷轴预览 · 方向键翻页 · 回车放大" tabindex="0">
+        <p class="v2-cell-label">
+          <span>大屏卷轴 · 16:9 · 横滑浏览</span>
+          <span class="v2-demo-flag" data-demo-flag="scroll">示例作品</span>
+        </p>
+        <div class="v2-carousel" id="v2-carousel">
+          <div class="v2-carousel__viewport">
+            <button type="button" class="v2-carousel__arrow v2-carousel__arrow--prev" id="v2-carousel-prev" aria-label="上一屏" disabled>‹</button>
+            <div class="v2-carousel__track" id="v2-carousel-track"></div>
+            <button type="button" class="v2-carousel__arrow v2-carousel__arrow--next" id="v2-carousel-next" aria-label="下一屏">›</button>
+          </div>
+          <div class="v2-carousel__footer">
+            <div class="v2-carousel__dots" id="v2-carousel-dots" role="tablist" aria-label="卷轴页面"></div>
+            <div class="v2-carousel__footer-meta">
+              <span class="v2-carousel__hint" id="v2-carousel-hint">← 横滑 · 一屏两页 · 到头停止 →</span>
+              <button type="button" class="v2-expand-btn" id="v2-expand-scroll" aria-label="放大卷轴预览">
+                <span class="v2-expand-btn__icon" aria-hidden="true">⤢</span> 放大
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9:16 微信长图样张 -->
+      <section class="v2-bento__mobile" aria-label="微信长图预览">
+        <p class="v2-cell-label">
+          <span>微信长图 · 9:16</span>
+          <span class="v2-demo-flag" data-demo-flag="longshot">示例作品</span>
+        </p>
+        <div class="v2-phone" id="v2-phone">
+          <div class="v2-phone__shell">
+            <div class="v2-phone__notch" aria-hidden="true"></div>
+            <div class="v2-phone__screen" id="v2-phone-screen" tabindex="0" aria-label="长图可上下滚动 · 仅浏览"></div>
+          </div>
+          <div class="v2-phone__footer">
+            <p class="v2-phone__scroll-hint">↕ 上下滚动预览</p>
+            <button type="button" class="v2-expand-btn" id="v2-expand-phone" aria-label="放大长图预览">
+              <span class="v2-expand-btn__icon" aria-hidden="true">⤢</span> 放大
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 工作台 bench -->
+      <section class="v2-bento__bench" aria-label="工作台">
+        <div class="v2-bench">
+          <div class="v2-bench__sample">
+            <span class="v2-demo-flag">示例作品</span>
+            <div class="v2-bench__sample-thumb" id="v2-bench-thumb" aria-hidden="true"></div>
+            <div class="v2-bench__sample-text">
+              <strong id="v2-bench-title">京都 · 雨后</strong>
+              <span id="v2-bench-meta">自动生成 · 86 张 · 3 章</span>
+            </div>
+          </div>
+          <div class="v2-bench__main">
+            <button type="button" class="v2-bench__cta" id="v2-cta">开始制作我的游记 →</button>
+            <p class="v2-bench__meta">照片留在本机 · 无需注册 · 下一步选择本次旅行的照片文件夹</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ② IdleReturning · Web 书架（M20-e） -->
+  <div class="v2-shelf" id="v2-shelf" hidden></div>
+
+  <!-- ③ Importing 占位（M20-g 接冷启动静帧 + 续 poll） -->
+  <div class="v2-importing" id="v2-importing" hidden></div>
+
+  <!-- ④ FirstSuccess · Import 前壳层背景 + overlay（§9.3） -->
+  <div class="v2-first-success" id="v2-first-success" hidden role="dialog" aria-modal="true"
+       aria-labelledby="v2-success-msg">
+    <div class="v2-first-success__scrim" aria-hidden="true"></div>
+    <div class="v2-first-success__panel">
+      <figure class="v2-first-success__cover" id="v2-success-cover" hidden>
+        <img id="v2-success-cover-img" alt="" decoding="async" />
+      </figure>
+      <p class="v2-first-success__eyebrow">✓ 生成完成</p>
+      <p class="v2-first-success__msg" id="v2-success-msg">你的第一篇游记已生成</p>
+      <p class="v2-first-success__countdown" id="v2-success-countdown" hidden></p>
+      <div class="v2-first-success__actions">
+        <a id="v2-success-open" href="#" class="v2-first-success__cta">打开卷轴预览 →</a>
+        <button type="button" class="v2-first-success__stay" id="v2-success-stay">留在首页</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ Import Failed · Import 前壳层背景 + overlay -->
+  <div class="v2-failure" id="v2-failure" hidden role="alertdialog" aria-modal="true"
+       aria-labelledby="v2-failure-msg">
+    <div class="v2-failure__scrim" aria-hidden="true"></div>
+    <div class="v2-failure__panel">
+      <p class="v2-failure__eyebrow">导入失败</p>
+      <p class="v2-failure__echo" id="v2-failure-echo" hidden></p>
+      <p class="v2-failure__msg" id="v2-failure-msg"></p>
+      <p class="v2-failure__hint" id="v2-failure-hint"></p>
+      <div class="v2-failure__actions">
+        <button type="button" class="v2-failure__cta" id="v2-failure-retry">重试</button>
+        <button type="button" class="v2-failure__stay" id="v2-failure-stay">留在首页</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Import Sheet（M20-d · §7 / §7.1 a11y）。CTA 弹出，路径仅在 Sheet 内。 -->
+<div class="v2-sheet-root" id="v2-sheet-root" hidden>
+  <div class="v2-sheet-scrim" id="v2-sheet-scrim"></div>
+  <div class="v2-sheet" id="v2-import-sheet" role="dialog" aria-modal="true" aria-labelledby="v2-sheet-title">
+    <div class="v2-sheet__handle" aria-hidden="true"></div>
+    <div class="v2-sheet__head">
+      <h2 class="v2-sheet__title" id="v2-sheet-title">制作我的游记画册</h2>
+      <button type="button" class="v2-sheet__close" id="v2-sheet-close" aria-label="关闭">×</button>
+    </div>
+    <span class="v2-sheet__badge" id="v2-sheet-badge">步骤 1 / 2 · 选择照片</span>
+
+    <button type="button" class="v2-sheet__primary" id="v2-sheet-pick">选择本次旅行的照片文件夹</button>
+    <p class="v2-sheet__hint">
+      相册里若有「精选」和「素材」两个子文件夹，封面会优先用精选（建议 8–20 张）。
+    </p>
+
+    <div class="v2-sheet__confirm" id="v2-sheet-confirm" hidden>
+      <p class="v2-sheet__picked" id="v2-sheet-picked"></p>
+      <label class="v2-sheet__field">
+        <span class="v2-sheet__field-label">杂志名</span>
+        <input type="text" id="v2-trip-title" maxlength="20" autocomplete="off"
+               placeholder="给这本画册起个名字" />
+      </label>
+      <div class="v2-sheet__actions">
+        <button type="button" class="v2-sheet__primary" id="v2-sheet-start">开始制作 →</button>
+        <button type="button" class="v2-sheet__repick" id="v2-sheet-repick">重新选择文件夹</button>
+      </div>
+    </div>
+
+    <details class="v2-sheet__details">
+      <summary>文件夹怎么选？</summary>
+      <p class="v2-sheet__hint">
+        一次旅行一个文件夹 · 子目录可放精选 / 素材 · 支持 JPG / PNG / WebP / HEIC · 照片留在本机。
+      </p>
+    </details>
+    <details class="v2-sheet__details">
+      <summary>其他导入方式</summary>
+      <div class="v2-sheet__path">
+        <input type="text" id="v2-album-path" placeholder="粘贴文件夹路径…" aria-label="文件夹路径" />
+        <button type="button" id="v2-path-submit">使用此路径</button>
+      </div>
+    </details>
+
+    <p class="v2-sheet__hint">
+      每个文件夹会生成一本新的游记画册，<strong>不会覆盖</strong>已有作品。
+    </p>
+    <p class="v2-sheet__error" id="v2-sheet-error" role="alert" hidden></p>
+  </div>
+</div>
+
+<!-- Lightbox（M20-c · §6.7）：只读验货，不进 editor preview -->
+<div class="v2-lightbox" id="v2-lightbox" hidden role="dialog" aria-modal="true"
+     aria-label="放大预览">
+  <div class="v2-lightbox__scrim" data-close></div>
+  <div class="v2-lightbox__inner" id="v2-lightbox-inner">
+    <button type="button" class="v2-lightbox__close" id="v2-lightbox-close" data-close
+            aria-label="关闭">×</button>
+    <div class="v2-lightbox__scroll" id="v2-lightbox-scroll"></div>
+    <p class="v2-lightbox__caption" id="v2-lightbox-caption"></p>
+  </div>
+</div>
+
+<div id="v2-toast-container" class="studio-toast-container"></div>
+
+<script src="/__studio/studio-toast.js" defer></script>
+<script src="/__studio/studio-modal.js" defer></script>
+<script type="module" src="/__studio/homepage-v2/bootstrap.js"></script>
+</body>
+</html>

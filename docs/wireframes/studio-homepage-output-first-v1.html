@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio 首页 · 输出优先探索线框 v1.0</title>
+  <style>
+    :root {
+      --ink: #141210;
+      --ink-soft: #3d3830;
+      --muted: #7a7468;
+      --paper: #f5f1ea;
+      --paper-deep: #e8e2d6;
+      --line: rgba(20, 18, 16, .1);
+      --line-light: rgba(255, 255, 255, .18);
+      --accent: #2f5c4a;
+      --accent-hover: #244a3b;
+      --accent-soft: rgba(47, 92, 74, .12);
+      --gold: #b8923a;
+      --font-sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      --font-display: Georgia, "Times New Roman", "Songti SC", serif;
+      --anno: #c45c26;
+      --slot: #6b5b95;
+      --dock-h: 132px;
+      --topbar-h: 52px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      background: #121110;
+      color: #e8e4dc;
+      line-height: 1.55;
+    }
+
+    /* ── Review chrome ── */
+    .review-bar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      min-height: 56px;
+      background: #0d0c0b;
+      color: #e8e4dc;
+      padding: 10px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 14px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .35);
+    }
+    .review-bar__title { font-size: 13px; font-weight: 600; margin-right: auto; }
+    .review-bar__title em { font-style: normal; color: var(--gold); font-weight: 400; }
+    .review-note {
+      width: 100%;
+      margin: 0;
+      font-size: 11px;
+      color: #8a8278;
+    }
+    .state-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+    .state-tabs button {
+      border: 1px solid #3a3834;
+      background: transparent;
+      color: #e8e4dc;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .state-tabs button:hover { background: #252320; }
+    .state-tabs button.is-active {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: #141210;
+    }
+    .bp-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #252320;
+      color: var(--gold);
+      font-family: Consolas, monospace;
+    }
+
+    /* ── Stage ── */
+    .stage {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 0;
+      min-height: calc(100vh - 56px);
+    }
+    .preview-col {
+      background: #2a2824;
+      padding: 28px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      overflow-x: auto;
+    }
+    .preview-frame {
+      width: 100%;
+      max-width: 1280px;
+      background: var(--paper);
+      box-shadow: 0 16px 56px rgba(0, 0, 0, .45);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: max-width .25s ease;
+    }
+    .preview-frame--mobile { max-width: 390px; }
+
+    .wf-state { display: none; }
+    .wf-state.is-active { display: block; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      background: #0d0c0b;
+      padding: 22px 20px;
+      border-left: 1px solid #252320;
+      overflow-y: auto;
+      max-height: calc(100vh - 56px);
+      position: sticky;
+      top: 56px;
+      font-size: 13px;
+    }
+    .sidebar h3 {
+      margin: 18px 0 8px;
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .sidebar h3:first-child { margin-top: 0; }
+    .sidebar .principle {
+      padding: 10px 12px;
+      background: #1a1816;
+      border-left: 2px solid var(--gold);
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    .sidebar .principle strong {
+      display: block;
+      color: #e8e4dc;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .sidebar .principle span {
+      color: #999;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .sidebar ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #b8b0a4;
+      font-size: 12px;
+    }
+    .sidebar li { margin-bottom: 6px; line-height: 1.5; }
+    .sidebar .tag {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #252320;
+      color: var(--gold);
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .bp-table {
+      width: 100%;
+      font-size: 11px;
+      color: #b8b0a4;
+      border-collapse: collapse;
+    }
+    .bp-table th, .bp-table td {
+      padding: 6px 8px;
+      text-align: left;
+      border-bottom: 1px solid #252320;
+    }
+    .bp-table th { color: var(--gold); font-weight: 500; }
+
+    /* ── Annotations ── */
+    .anno {
+      position: absolute;
+      z-index: 50;
+      font-size: 10px;
+      line-height: 1.35;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(196, 92, 38, .92);
+      color: #fff;
+      max-width: 180px;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,.25);
+    }
+    .anno--slot {
+      background: rgba(107, 91, 149, .92);
+    }
+
+    /* ============================================================
+       Shared page chrome
+       ============================================================ */
+    .page {
+      position: relative;
+      min-height: 720px;
+      background: var(--paper);
+      color: var(--ink);
+    }
+    .preview-frame--mobile .page { min-height: 680px; }
+
+    .topbar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      height: var(--topbar-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      background: linear-gradient(to bottom, rgba(245,241,234,.92), rgba(245,241,234,0));
+      backdrop-filter: blur(6px);
+    }
+    .topbar--dark {
+      color: #fff;
+      background: linear-gradient(to bottom, rgba(0,0,0,.45), transparent);
+    }
+    .topbar__brand {
+      font-size: 11px;
+      letter-spacing: .18em;
+      font-weight: 600;
+    }
+    .topbar__status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .topbar--dark .topbar__status { color: rgba(255,255,255,.75); }
+    .topbar__dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4caf7a;
+      box-shadow: 0 0 0 3px rgba(76,175,122,.25);
+    }
+
+    .dock {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 30;
+      padding: 16px 20px 20px;
+      background: linear-gradient(to top, rgba(245,241,234,.98) 70%, rgba(245,241,234,0));
+      border-top: 1px solid var(--line);
+    }
+    .dock__context {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .dock__chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+      font-size: 11px;
+    }
+    .dock__chip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .dock__cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 8px 28px rgba(47, 92, 74, .28);
+    }
+    .dock__cta:hover { background: var(--accent-hover); }
+    .dock__meta {
+      margin: 10px 0 0;
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .dock__meta a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(47,92,74,.25);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink-soft);
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    /* ── Longshot mock (shared SVG scroll) ── */
+    .longshot-viewport {
+      position: absolute;
+      top: var(--topbar-h);
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: var(--dock-h);
+      width: min(340px, 42vw);
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 12px 0 24px;
+      scroll-behavior: smooth;
+    }
+    .preview-frame--mobile .longshot-viewport {
+      width: min(300px, 78vw);
+      bottom: 148px;
+    }
+    .longshot-viewport::-webkit-scrollbar { width: 4px; }
+    .longshot-viewport::-webkit-scrollbar-thumb {
+      background: rgba(20,18,16,.15);
+      border-radius: 4px;
+    }
+    .longshot-scroll {
+      width: 100%;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(20,18,16,.08),
+        0 24px 64px rgba(20,18,16,.18);
+    }
+    .longshot-scroll img,
+    .longshot-scroll svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* ============================================================
+       ① 空态 · 样张即首页 (Direction A)
+       ============================================================ */
+    .state-sample .page {
+      background: #ebe6dc;
+    }
+    .state-sample .longshot-fade-top,
+    .state-sample .longshot-fade-bottom {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(340px, 42vw);
+      height: 48px;
+      pointer-events: none;
+      z-index: 15;
+    }
+    .preview-frame--mobile .state-sample .longshot-fade-top,
+    .preview-frame--mobile .state-sample .longshot-fade-bottom {
+      width: min(300px, 78vw);
+    }
+    .state-sample .longshot-fade-top {
+      top: var(--topbar-h);
+      background: linear-gradient(to bottom, #ebe6dc, transparent);
+    }
+    .state-sample .longshot-fade-bottom {
+      bottom: var(--dock-h);
+      background: linear-gradient(to top, rgba(245,241,234,.95), transparent);
+    }
+    .scroll-hint {
+      position: absolute;
+      right: calc(50% - min(170px, 21vw) - 36px);
+      top: 50%;
+      transform: translateY(-50%);
+      writing-mode: vertical-rl;
+      font-size: 10px;
+      letter-spacing: .2em;
+      color: var(--muted);
+      opacity: .7;
+    }
+    .preview-frame--mobile .scroll-hint { display: none; }
+
+    /* ============================================================
+       ② 空态 · 转化分屏 (Direction C)
+       ============================================================ */
+    .state-split .page {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 760px;
+      padding-top: var(--topbar-h);
+    }
+    .preview-frame--mobile .state-split .page {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr auto 1fr;
+      min-height: 820px;
+    }
+    .split-pane {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px 140px;
+    }
+    .split-pane--before {
+      background: #ece8e0;
+      border-right: 1px solid var(--line);
+    }
+    .preview-frame--mobile .split-pane--before {
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 24px;
+    }
+    .split-pane--after {
+      background: var(--paper);
+    }
+    .split-label {
+      font-size: 10px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .roll-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 72px);
+      gap: 6px;
+      transform: rotate(-2deg);
+    }
+    .preview-frame--mobile .roll-grid {
+      grid-template-columns: repeat(3, 64px);
+    }
+    .roll-grid span {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    }
+    .split-arrow {
+      position: absolute;
+      right: -18px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      color: var(--accent);
+      z-index: 5;
+      box-shadow: 0 4px 16px rgba(0,0,0,.08);
+    }
+    .preview-frame--mobile .split-arrow {
+      right: auto;
+      left: 50%;
+      top: auto;
+      bottom: -18px;
+      transform: translateX(-50%) rotate(90deg);
+    }
+    .split-mini-longshot {
+      width: 160px;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,.15);
+    }
+    .state-split .dock {
+      position: absolute;
+    }
+    .state-split .split-headline {
+      position: absolute;
+      top: calc(var(--topbar-h) + 12px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      text-align: center;
+      max-width: 520px;
+      padding: 0 20px;
+    }
+    .state-split .split-headline h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 400;
+      line-height: 1.25;
+    }
+    .state-split .split-headline p {
+      margin: 8px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ============================================================
+       ③ 空态 · 场景入口 (Direction D)
+       ============================================================ */
+    .state-scenes .page {
+      padding: calc(var(--topbar-h) + 24px) 24px 140px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .scenes-intro {
+      text-align: center;
+      max-width: 480px;
+      margin: 0 auto 28px;
+    }
+    .scenes-intro h1 {
+      margin: 0 0 8px;
+      font-family: var(--font-display);
+      font-size: clamp(26px, 4vw, 36px);
+      font-weight: 400;
+      line-height: 1.2;
+    }
+    .scenes-intro p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .scene-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .preview-frame--mobile .scene-grid {
+      grid-template-columns: 1fr;
+    }
+    .scene-card {
+      position: relative;
+      border: none;
+      padding: 0;
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      text-align: left;
+      background: #fff;
+      box-shadow: 0 4px 24px rgba(20,18,16,.08);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .scene-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(20,18,16,.14);
+    }
+    .scene-card.is-selected {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .scene-card__img {
+      aspect-ratio: 4/3;
+      background-size: cover;
+      background-position: center;
+    }
+    .scene-card__body {
+      padding: 14px 16px 16px;
+    }
+    .scene-card__tag {
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .scene-card__title {
+      margin: 4px 0 2px;
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 400;
+    }
+    .scene-card__sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .state-scenes .dock__cta-row {
+      display: flex;
+      gap: 10px;
+    }
+    .state-scenes .dock__cta-row .dock__cta { flex: 1; }
+    .state-scenes .dock__cta-row .btn-ghost { flex-shrink: 0; }
+
+    /* ============================================================
+       ④ 回访 · 书架 (Direction B)
+       ============================================================ */
+    .state-shelf .page {
+      padding: calc(var(--topbar-h) + 8px) 28px 48px;
+      min-height: 760px;
+    }
+    .preview-frame--mobile .state-shelf .page {
+      padding: calc(var(--topbar-h) + 8px) 16px 80px;
+    }
+    .shelf-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-top: 8px;
+    }
+    .shelf-header h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 400;
+      line-height: 1.1;
+    }
+    .shelf-header p {
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .shelf-new {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 6px 20px rgba(47,92,74,.22);
+    }
+    .shelf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .preview-frame--mobile .shelf-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .book-card {
+      border: none;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+    }
+    .book-card__cover {
+      aspect-ratio: 3/4;
+      border-radius: 8px;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+      box-shadow:
+        0 0 0 1px rgba(20,18,16,.06),
+        0 8px 28px rgba(20,18,16,.12);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .book-card:hover .book-card__cover {
+      transform: translateY(-4px);
+      box-shadow:
+        0 0 0 1px rgba(20,18,16,.08),
+        0 16px 40px rgba(20,18,16,.18);
+    }
+    .book-card__cover--new {
+      display: grid;
+      place-items: center;
+      background: #fff;
+      border: 2px dashed rgba(47,92,74,.35);
+      color: var(--accent);
+      font-size: 32px;
+      font-weight: 300;
+      box-shadow: none;
+    }
+    .book-card__meta {
+      padding: 10px 2px 0;
+    }
+    .book-card__title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .book-card__sub {
+      margin: 2px 0 0;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .book-card__badge {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      background: rgba(201,139,50,.15);
+      color: #9a6b1a;
+    }
+    .shelf-resume {
+      margin-bottom: 24px;
+      padding: 16px 18px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .shelf-resume__thumb {
+      width: 56px;
+      height: 72px;
+      border-radius: 6px;
+      background-size: cover;
+      background-position: center;
+      flex-shrink: 0;
+    }
+    .shelf-resume__text { flex: 1; min-width: 0; }
+    .shelf-resume__text strong {
+      display: block;
+      font-size: 14px;
+    }
+    .shelf-resume__text span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .shelf-resume__btn {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: none;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* ============================================================
+       ⑤ 导入中
+       ============================================================ */
+    .state-import .page {
+      background: #ebe6dc;
+    }
+    .state-import .longshot-viewport {
+      filter: blur(3px) saturate(.7);
+      opacity: .45;
+      pointer-events: none;
+    }
+    .import-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(20,18,16,.35);
+      backdrop-filter: blur(4px);
+    }
+    .import-panel {
+      width: min(420px, 100%);
+      padding: 28px 24px;
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: 0 24px 64px rgba(0,0,0,.2);
+    }
+    .import-thumbs {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .import-thumbs span {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background-size: cover;
+      background-position: center;
+      animation: float 2.4s ease-in-out infinite;
+    }
+    .import-thumbs span:nth-child(2) { animation-delay: .3s; }
+    .import-thumbs span:nth-child(3) { animation-delay: .6s; }
+    .import-thumbs span:nth-child(4) { animation-delay: .9s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .import-stages {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+    .import-stages li {
+      flex: 1;
+      list-style: none;
+      font-size: 10px;
+      text-align: center;
+      padding: 6px 4px;
+      border-radius: 6px;
+      color: var(--muted);
+      background: var(--paper);
+    }
+    .import-stages li.is-done { color: var(--accent); background: var(--accent-soft); }
+    .import-stages li.is-active {
+      color: #fff;
+      background: var(--accent);
+      font-weight: 600;
+    }
+    .import-panel h2 {
+      margin: 0 0 4px;
+      font-size: 18px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .import-panel .estimate {
+      margin: 0 0 16px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .import-bar {
+      height: 6px;
+      border-radius: 999px;
+      background: var(--paper-deep);
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .import-bar__fill {
+      width: 58%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), #4a8a6e);
+    }
+    .import-pct {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .import-cancel {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="review-bar">
+  <div class="review-bar__title">
+    Studio 首页探索 · <em>输出优先 v1.0</em>
+  </div>
+  <div class="state-tabs">
+    <button type="button" class="is-active" data-state="sample">① 样张即首页</button>
+    <button type="button" data-state="split">② 转化分屏</button>
+    <button type="button" data-state="scenes">③ 场景入口</button>
+    <button type="button" data-state="shelf">④ 书架回访</button>
+    <button type="button" data-state="import">⑤ 导入中</button>
+    <button type="button" data-state="mobile">⑥ 窄屏 390</button>
+  </div>
+  <span class="bp-badge" id="bp-indicator">1280 · desktop</span>
+  <p class="review-note">设计探索稿 · 不受 PRD-STUDIO-HOMEPAGE 约束 · 双击 HTML 或浏览器打开 · 不涉及代码落地</p>
+</div>
+
+<div class="stage">
+  <div class="preview-col">
+    <div class="preview-frame" id="preview-frame">
+
+      <!-- ① 样张即首页 · Direction A -->
+      <div class="wf-state is-active" id="state-sample">
+        <div class="page state-sample">
+          <span class="anno" style="top:72px;left:24px">A · 顶栏极薄，不抢样张</span>
+          <span class="anno anno--slot" style="top:50%;right:24px;transform:translateY(-50%)">B · 可滚动真实长图占 60–70% 视口<br/>（线框用 SVG 模拟）</span>
+          <span class="anno" style="bottom:148px;left:24px">C · 底部 Dock：上下文 + 单一主 CTA</span>
+
+          <header class="topbar">
+            <span class="topbar__brand">TRAVELOGUE · STUDIO</span>
+            <span class="topbar__status">
+              <span class="topbar__dot"></span> 本地运行中
+            </span>
+          </header>
+
+          <div class="longshot-fade-top"></div>
+          <div class="longshot-fade-bottom"></div>
+          <span class="scroll-hint">向下滚动 · 预览成品</span>
+
+          <div class="longshot-viewport" aria-label="示例长图预览">
+            <div class="longshot-scroll">
+              <!-- SVG 模拟竖版杂志长图 -->
+              <svg viewBox="0 0 360 2400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="京都·雨后 示例长图">
+                <rect width="360" height="2400" fill="#faf8f4"/>
+                <!-- Cover -->
+                <rect y="0" width="360" height="480" fill="#2a3530"/>
+                <text x="180" y="200" text-anchor="middle" fill="#e8e4dc" font-family="Georgia, serif" font-size="14" letter-spacing="4">KYOTO</text>
+                <text x="180" y="240" text-anchor="middle" fill="#c9b896" font-family="Georgia, serif" font-size="28">雨后</text>
+                <text x="180" y="420" text-anchor="middle" fill="rgba(255,255,255,.5)" font-size="11">86 张 · 2024 春</text>
+                <!-- Ch1 hero -->
+                <rect y="500" width="360" height="28" fill="#f0ebe3"/>
+                <text x="24" y="520" fill="#7a7468" font-size="11" letter-spacing="2">第一章 · 抵达</text>
+                <rect y="540" width="360" height="220" fill="#8a9a8e"/>
+                <rect y="772" width="360" height="80" fill="#faf8f4"/>
+                <text x="24" y="810" fill="#3d3830" font-size="13" font-family="Georgia, serif">清水寺台阶上，雨刚停。</text>
+                <!-- Grid -->
+                <rect y="864" width="176" height="176" fill="#a8b4a0"/>
+                <rect x="184" y="864" width="176" height="176" fill="#9aab9e"/>
+                <rect y="1052" width="176" height="176" fill="#b0b8a8"/>
+                <rect x="184" y="1052" width="176" height="176" fill="#98a898"/>
+                <!-- Ch2 -->
+                <rect y="1248" width="360" height="28" fill="#f0ebe3"/>
+                <text x="24" y="1268" fill="#7a7468" font-size="11" letter-spacing="2">第二章 · 巷弄</text>
+                <rect y="1288" width="360" height="280" fill="#7a8a7e"/>
+                <rect y="1580" width="360" height="60" fill="#faf8f4"/>
+                <text x="24" y="1616" fill="#3d3830" font-size="12" font-family="Georgia, serif">祇园的小径，灯笼还没点亮。</text>
+                <!-- Ch3 -->
+                <rect y="1656" width="360" height="28" fill="#f0ebe3"/>
+                <text x="24" y="1676" fill="#7a7468" font-size="11" letter-spacing="2">第三章 · 告别</text>
+                <rect y="1696" width="360" height="200" fill="#6a7a6e"/>
+                <rect y="1908" width="176" height="120" fill="#889878"/>
+                <rect x="184" y="1908" width="176" height="120" fill="#788868"/>
+                <rect y="2040" width="360" height="360" fill="#2a3530"/>
+                <text x="180" y="2220" text-anchor="middle" fill="#c9b896" font-size="16" font-family="Georgia, serif">— fin —</text>
+              </svg>
+            </div>
+          </div>
+
+          <footer class="dock">
+            <div class="dock__context">
+              <span class="dock__chip"><span class="dock__chip-dot"></span> 京都·雨后 · 示例样张</span>
+              <span>86 张 · 竖版长图</span>
+            </div>
+            <button type="button" class="dock__cta">用我的照片做一本 →</button>
+            <p class="dock__meta">照片留在本机 · 无需注册 · <a href="#">换一张样张</a></p>
+          </footer>
+        </div>
+      </div>
+
+      <!-- ② 转化分屏 · Direction C -->
+      <div class="wf-state" id="state-split">
+        <div class="page state-split">
+          <span class="anno" style="top:68px;left:20px">D · 一句话价值 + 分屏证明</span>
+          <span class="anno anno--slot" style="top:42%;left:18%">E · 左：相册混乱感<br/>右：杂志输出感</span>
+
+          <div class="split-headline">
+            <h1>一次旅行的文件夹，<br/>几分钟变成可发微信的长图</h1>
+            <p>不是九宫格，是编辑部式的分章、选图与留白</p>
+          </div>
+
+          <header class="topbar">
+            <span class="topbar__brand">TRAVELOGUE · STUDIO</span>
+            <span class="topbar__status">
+              <span class="topbar__dot"></span> 本地
+            </span>
+          </header>
+
+          <div class="split-pane split-pane--before">
+            <span class="split-label">你的相册</span>
+            <div class="roll-grid" aria-hidden="true">
+              <span style="background-image:url('https://images.unsplash.com/photo-1493976040374-85c8e912ba09?w=200')"></span>
+              <span style="background-image:url('https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=200')"></span>
+              <span style="background-image:url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=200')"></span>
+              <span style="background-image:url('https://images.unsplash.com/photo-1478436127897-769e1b3f0f36?w=200')"></span>
+              <span style="background-image:url('https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?w=200')"></span>
+              <span style="background-image:url('https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=200')"></span>
+              <span style="background-image:url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=200')"></span>
+              <span style="background-image:url('https://images.unsplash.com/photo-1513407030342-c168a47ad3fb?w=200')"></span>
+              <span style="background-image:url('https://images.unsplash.com/photo-1558868834-869abae71605?w=200')"></span>
+            </div>
+            <span class="split-arrow" aria-hidden="true">→</span>
+          </div>
+
+          <div class="split-pane split-pane--after">
+            <span class="split-label">杂志长图</span>
+            <div class="split-mini-longshot">
+              <svg viewBox="0 0 160 480" xmlns="http://www.w3.org/2000/svg">
+                <rect width="160" height="480" fill="#faf8f4"/>
+                <rect width="160" height="100" fill="#2a3530"/>
+                <text x="80" y="58" text-anchor="middle" fill="#e8e4dc" font-family="Georgia,serif" font-size="12">KYOTO</text>
+                <rect y="108" width="160" height="80" fill="#8a9a8e"/>
+                <rect y="196" width="76" height="76" fill="#a8b4a0"/>
+                <rect x="84" y="196" width="76" height="76" fill="#9aab9e"/>
+                <rect y="280" width="160" height="100" fill="#7a8a7e"/>
+                <rect y="388" width="160" height="92" fill="#6a7a6e"/>
+              </svg>
+            </div>
+          </div>
+
+          <footer class="dock">
+            <button type="button" class="dock__cta">选择照片文件夹 →</button>
+            <p class="dock__meta">支持 JPG/PNG/WebP/HEIC · <a href="#">先看完整样张</a> · <a href="#">文件夹怎么选？</a></p>
+          </footer>
+        </div>
+      </div>
+
+      <!-- ③ 场景入口 · Direction D -->
+      <div class="wf-state" id="state-scenes">
+        <div class="page state-scenes">
+          <span class="anno" style="top:80px;left:20px">F · 降低空白画布焦虑</span>
+          <span class="anno anno--slot" style="bottom:160px;right:20px">G · 选中场景后 CTA 才激活</span>
+
+          <header class="topbar">
+            <span class="topbar__brand">TRAVELOGUE · STUDIO</span>
+            <span class="topbar__status">
+              <span class="topbar__dot"></span> 本地
+            </span>
+          </header>
+
+          <div class="scenes-intro">
+            <h1>你想做哪一类旅行杂志？</h1>
+            <p>点一张接近你行程的样张，看看成品长什么样</p>
+          </div>
+
+          <div class="scene-grid">
+            <button type="button" class="scene-card is-selected">
+              <div class="scene-card__img" style="background-image:url('https://images.unsplash.com/photo-1493976040374-85c8e912ba09?w=800')"></div>
+              <div class="scene-card__body">
+                <span class="scene-card__tag">城市漫步</span>
+                <h3 class="scene-card__title">京都·雨后</h3>
+                <p class="scene-card__sub">86 张 · 静谧 · 竖版长图</p>
+              </div>
+            </button>
+            <button type="button" class="scene-card">
+              <div class="scene-card__img" style="background-image:url('https://images.unsplash.com/photo-1504829857797-ddff29c27927?w=800')"></div>
+              <div class="scene-card__body">
+                <span class="scene-card__tag">自然壮阔</span>
+                <h3 class="scene-card__title">冰岛·极光</h3>
+                <p class="scene-card__sub">120 张 · 横竖混排</p>
+              </div>
+            </button>
+            <button type="button" class="scene-card">
+              <div class="scene-card__img" style="background-image:url('https://images.unsplash.com/photo-1519451241324-20b4ea2c7899?w=800')"></div>
+              <div class="scene-card__body">
+                <span class="scene-card__tag">亲子假日</span>
+                <h3 class="scene-card__title">冲绳·亲子</h3>
+                <p class="scene-card__sub">64 张 · 明快 · 多图组屏</p>
+              </div>
+            </button>
+            <button type="button" class="scene-card">
+              <div class="scene-card__img" style="background-image:url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800')"></div>
+              <div class="scene-card__body">
+                <span class="scene-card__tag">公路旅行</span>
+                <h3 class="scene-card__title">川西·环线</h3>
+                <p class="scene-card__sub">200+ 张 · 分章叙事</p>
+              </div>
+            </button>
+          </div>
+
+          <footer class="dock">
+            <div class="dock__context">
+              <span class="dock__chip"><span class="dock__chip-dot"></span> 已选：京都·雨后</span>
+            </div>
+            <div class="dock__cta-row">
+              <button type="button" class="btn-ghost">预览样张</button>
+              <button type="button" class="dock__cta">做类似的一本 →</button>
+            </div>
+            <p class="dock__meta">或用 <a href="#">自己的文件夹</a> 直接开始</p>
+          </footer>
+        </div>
+      </div>
+
+      <!-- ④ 书架回访 · Direction B -->
+      <div class="wf-state" id="state-shelf">
+        <div class="page state-shelf">
+          <span class="anno" style="top:64px;left:20px">H · 回访态：无 Hero，书架即首页</span>
+          <span class="anno anno--slot" style="top:180px;right:20px">I · 进行中任务置顶条</span>
+
+          <header class="topbar" style="position:relative;background:transparent;backdrop-filter:none;">
+            <span class="topbar__brand">TRAVELOGUE · STUDIO</span>
+            <span class="topbar__status">
+              <span class="topbar__dot"></span> 本地运行中
+            </span>
+          </header>
+
+          <div class="shelf-header">
+            <div>
+              <h1>你的杂志</h1>
+              <p>3 篇游记 · 上次编辑 2 小时前</p>
+            </div>
+            <button type="button" class="shelf-new">+ 新建</button>
+          </div>
+
+          <div class="shelf-resume">
+            <div class="shelf-resume__thumb" style="background-image:url('https://images.unsplash.com/photo-1493976040374-85c8e912ba09?w=200')"></div>
+            <div class="shelf-resume__text">
+              <strong>继续编辑 · 京都·雨后</strong>
+              <span>上次停在第二章 · 长图待更新</span>
+            </div>
+            <button type="button" class="shelf-resume__btn">打开预览</button>
+          </div>
+
+          <div class="shelf-grid">
+            <button type="button" class="book-card">
+              <div class="book-card__cover" style="background-image:url('https://images.unsplash.com/photo-1493976040374-85c8e912ba09?w=400')"></div>
+              <div class="book-card__meta">
+                <h3 class="book-card__title">京都·雨后</h3>
+                <p class="book-card__sub">86 张 · 3 天前</p>
+                <span class="book-card__badge">长图待更新</span>
+              </div>
+            </button>
+            <button type="button" class="book-card">
+              <div class="book-card__cover" style="background-image:url('https://images.unsplash.com/photo-1504829857797-ddff29c27927?w=400')"></div>
+              <div class="book-card__meta">
+                <h3 class="book-card__title">冰岛·极光</h3>
+                <p class="book-card__sub">120 张 · 2 周前</p>
+              </div>
+            </button>
+            <button type="button" class="book-card">
+              <div class="book-card__cover" style="background-image:url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400')"></div>
+              <div class="book-card__meta">
+                <h3 class="book-card__title">川西·环线</h3>
+                <p class="book-card__sub">214 张 · 1 月前</p>
+              </div>
+            </button>
+            <button type="button" class="book-card">
+              <div class="book-card__cover book-card__cover--new" aria-label="新建杂志">+</div>
+              <div class="book-card__meta">
+                <h3 class="book-card__title">新建杂志</h3>
+                <p class="book-card__sub">选择新的照片文件夹</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑤ 导入中 -->
+      <div class="wf-state" id="state-import">
+        <div class="page state-import">
+          <span class="anno" style="top:50%;left:50%;transform:translate(-50%,-80px)">J · 背景保留样张上下文 · 前景专注进度</span>
+
+          <header class="topbar">
+            <span class="topbar__brand">TRAVELOGUE · STUDIO</span>
+            <span class="topbar__status">
+              <span class="topbar__dot"></span> 本地
+            </span>
+          </header>
+
+          <div class="longshot-viewport" aria-hidden="true">
+            <div class="longshot-scroll">
+              <svg viewBox="0 0 360 1200" xmlns="http://www.w3.org/2000/svg">
+                <rect width="360" height="1200" fill="#faf8f4"/>
+                <rect width="360" height="400" fill="#2a3530"/>
+                <rect y="420" width="360" height="200" fill="#8a9a8e"/>
+                <rect y="640" width="176" height="176" fill="#a8b4a0"/>
+                <rect x="184" y="640" width="176" height="176" fill="#9aab9e"/>
+                <rect y="832" width="360" height="368" fill="#7a8a7e"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="import-overlay">
+            <div class="import-panel">
+              <div class="import-thumbs">
+                <span style="background-image:url('https://images.unsplash.com/photo-1493976040374-85c8e912ba09?w=100')"></span>
+                <span style="background-image:url('https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=100')"></span>
+                <span style="background-image:url('https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=100')"></span>
+                <span style="background-image:url('https://images.unsplash.com/photo-1478436127897-769e1b3f0f36?w=100')"></span>
+              </div>
+              <ol class="import-stages">
+                <li class="is-done">读取</li>
+                <li class="is-active">排版</li>
+                <li>成文</li>
+                <li>渲染</li>
+              </ol>
+              <h2>正在编排你的杂志…</h2>
+              <p class="estimate">预计还需约 50 秒 · 林芝文件夹 · 142 张</p>
+              <div class="import-bar"><div class="import-bar__fill"></div></div>
+              <p class="import-pct">58%</p>
+              <button type="button" class="import-cancel">取消导入</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑥ 窄屏 · 样张即首页 mobile -->
+      <div class="wf-state" id="state-mobile">
+        <div class="page state-sample">
+          <header class="topbar">
+            <span class="topbar__brand">STUDIO</span>
+            <span class="topbar__status"><span class="topbar__dot"></span></span>
+          </header>
+
+          <div class="longshot-fade-top"></div>
+          <div class="longshot-fade-bottom"></div>
+
+          <div class="longshot-viewport">
+            <div class="longshot-scroll">
+              <svg viewBox="0 0 360 1800" xmlns="http://www.w3.org/2000/svg">
+                <rect width="360" height="1800" fill="#faf8f4"/>
+                <rect width="360" height="420" fill="#2a3530"/>
+                <text x="180" y="190" text-anchor="middle" fill="#e8e4dc" font-family="Georgia,serif" font-size="26">雨后</text>
+                <rect y="440" width="360" height="200" fill="#8a9a8e"/>
+                <rect y="656" width="176" height="176" fill="#a8b4a0"/>
+                <rect x="184" y="656" width="176" height="176" fill="#9aab9e"/>
+                <rect y="848" width="360" height="240" fill="#7a8a7e"/>
+                <rect y="1100" width="360" height="700" fill="#6a7a6e"/>
+              </svg>
+            </div>
+          </div>
+
+          <footer class="dock">
+            <div class="dock__context">
+              <span class="dock__chip"><span class="dock__chip-dot"></span> 京都·雨后</span>
+            </div>
+            <button type="button" class="dock__cta">用我的照片做一本 →</button>
+            <p class="dock__meta"><a href="#">换样张</a> · 本地 · 无需注册</p>
+          </footer>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <h3>探索目标</h3>
+    <div class="principle">
+      <strong>不受现有 PRD 约束</strong>
+      <span>重新假设首页角色：证明输出美感 &gt; 解释产品功能。教程、路径栏、页脚 checklist 均后置到导入 sheet。</span>
+    </div>
+    <div class="principle">
+      <strong>推荐主方向</strong>
+      <span><span class="tag">①</span> 样张即首页 — 真实长图占主视觉，Dock 单一 CTA。适合首次来访者。</span>
+    </div>
+
+    <h3>四个方向对照</h3>
+    <table class="bp-table">
+      <tr><th>Tab</th><th>模式</th><th>借鉴</th></tr>
+      <tr><td>① 样张</td><td>Output-first</td><td>Journi / Unsplash</td></tr>
+      <tr><td>② 分屏</td><td>Before→After</td><td>产品管线可视化</td></tr>
+      <tr><td>③ 场景</td><td>Scene templates</td><td>TripMemo 场景卡</td></tr>
+      <tr><td>④ 书架</td><td>Project shelf</td><td>Notion / Day One</td></tr>
+    </table>
+
+    <h3>与 v3 的关键差异</h3>
+    <ul>
+      <li><strong>去掉全幅暗色 Hero + 大标题</strong>：文案压到 Dock 或分屏顶栏一行</li>
+      <li><strong>样张可滚动</strong>：用户首屏就在「看成品」，不是「读介绍」</li>
+      <li><strong>回访态独立布局</strong>：④ 书架无 Hero，不再 hybrid 左右分栏</li>
+      <li><strong>认知支架后置</strong>：「文件夹怎么选」进 sheet / 链接，不进首屏</li>
+      <li><strong>主色改为森林绿</strong>：区别于 v3 金色 SaaS 感（可再调）</li>
+    </ul>
+
+    <h3>状态策略（建议）</h3>
+    <ul>
+      <li>首次打开 → 默认 ① 或 ③（取决于是否强调场景）</li>
+      <li>有历史游记 → 直接 ④ 书架</li>
+      <li>导入中 → ⑤ 叠加在上一屏之上</li>
+      <li>① 与 ② 可 A/B：一个偏「审美冲击」，一个偏「功能理解」</li>
+    </ul>
+
+    <h3>待你拍板</h3>
+    <ul>
+      <li>主推荐：① 样张 vs ② 分屏 vs ③ 场景 — 哪个作默认空态？</li>
+      <li>样张来源：固定 3–4 套 demo trip vs 随机轮换</li>
+      <li>④ 书架：是否需要置顶「继续编辑」条，还是卡片 badge 就够</li>
+      <li>Dock CTA 文案：「做一本」vs「选择文件夹」vs「制作我的杂志」</li>
+      <li>色调：森林绿（本稿）vs 回归金色 vs 纯纸感无 accent</li>
+      <li>① + ③ 能否合并：首屏样张 + 底部横滑换场景</li>
+    </ul>
+
+    <h3>下一步（仍属设计阶段）</h3>
+    <ul>
+      <li>你选定方向后，可深化单态高保真</li>
+      <li>替换 SVG 为真实 pipeline 输出的长图 PNG</li>
+      <li>补导入 sheet 线框（与 Dock CTA 衔接）</li>
+      <li>确认后再考虑是否回写 PRD / 落地代码</li>
+    </ul>
+  </aside>
+</div>
+
+<script>
+(function () {
+  var tabs = document.querySelectorAll(".state-tabs button");
+  var states = document.querySelectorAll(".wf-state");
+  var frame = document.getElementById("preview-frame");
+  var bp = document.getElementById("bp-indicator");
+
+  function setState(id) {
+    tabs.forEach(function (btn) {
+      btn.classList.toggle("is-active", btn.getAttribute("data-state") === id);
+    });
+    states.forEach(function (el) {
+      el.classList.toggle("is-active", el.id === "state-" + id);
+    });
+    var mobile = id === "mobile";
+    frame.classList.toggle("preview-frame--mobile", mobile);
+    bp.textContent = mobile ? "390 · mobile" : "1280 · desktop";
+  }
+
+  tabs.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      setState(btn.getAttribute("data-state"));
+    });
+  });
+
+  /* Scene card selection demo */
+  document.querySelectorAll(".scene-card").forEach(function (card) {
+    card.addEventListener("click", function () {
+      document.querySelectorAll(".scene-card").forEach(function (c) {
+        c.classList.remove("is-selected");
+      });
+      card.classList.add("is-selected");
+    });
+  });
+})();
+</script>
+</body>
+</html>

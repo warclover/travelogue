@@ -144,6 +144,7 @@ def test_p9_analytics_events() -> None:
     assert "/__travelogue/studio-event" in js
     assert 'trackStudioEvent("open_sheet"' in js
     assert 'trackStudioEvent("import_success"' in js
+    assert 'trackStudioEvent("experiment_exposure"' in js
 
 
 # ── P10 · Studio dual-layout contract (see docs/PRD-STUDIO-DUAL-LAYOUT.md) ──

@@ -5,6 +5,7 @@
 | **产品代号** | Travelogue Studio |
 | **文档版本** | v1.4.0-HOMEPAGE |
 | **状态** | **Implemented · v3 影像优先**（代码已落地，PRD 反向同步 2026-05-28） |
+| **下一版 PRD** | **[PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md) v2.0.3** · 契约 [studio-homepage-v2/](./studio-homepage-v2/README.md) · 线框 [v1.6 Web/iPad](./wireframes/studio-homepage-output-first-v1.6.html) · **待落地** |
 | **页面路由** | `GET /` → `templates/studio/studio.html`（Phase 4 起 `data-studio-v="4"`） |
 | **权威线框** | [wireframes/studio-homepage-photo-first-v3.html](./wireframes/studio-homepage-photo-first-v3.html) |
 | **前置条件** | [PRD-PHASE2.md](./PRD-PHASE2.md) M8–M10 已交付；`travelogue studio` 单端口 8766 |

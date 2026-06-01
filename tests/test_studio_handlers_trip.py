@@ -55,6 +55,21 @@ def test_handle_trips_clamps_limit(tmp_path: Path) -> None:
     assert len(body["trips"]) == 1
 
 
+def test_handle_trips_offset_and_limit(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    for i in range(3):
+        create_trip(f"demo-{i:02d}", trips_dir, title=f"T{i}", place="京都")
+    handler0 = MockStudioHandler(trips_dir, path="/__travelogue/trips?limit=2&offset=0")
+    handle_trips(handler0)
+    assert handler0.response is not None
+    assert handler0.response[1]["total"] == 3
+    assert len(handler0.response[1]["trips"]) == 2
+    handler1 = MockStudioHandler(trips_dir, path="/__travelogue/trips?limit=2&offset=2")
+    handle_trips(handler1)
+    assert handler1.response is not None
+    assert len(handler1.response[1]["trips"]) == 1
+
+
 def test_handle_entry_not_found(tmp_path: Path) -> None:
     handler = MockStudioHandler(tmp_path / "trips")
     handle_entry(handler, "missing-trip")

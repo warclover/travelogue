@@ -1,0 +1,72 @@
+{
+  "recordId": "studio-homepage-v2-rollout-log",
+  "phase": "M20-Studio-Homepage-v2",
+  "date": "2026-06-01",
+  "owner": {
+    "productOwner": "待指派",
+    "designOwner": "待指派",
+    "engineeringOwner": "待指派",
+    "qaOwner": "待指派",
+    "onCallOwner": "待指派",
+    "directorApprover": null
+  },
+  "gates": {
+    "G0-dev": {
+      "description": "M20-a–h 工程 + AC 自动化",
+      "required": [
+        "test_studio_home_v2_ac_playwright.py 全绿",
+        "gate e2e 全绿",
+        "demo manifest schema 合法"
+      ],
+      "startAt": null,
+      "endAt": null,
+      "status": "passed"
+    },
+    "G1-holdback-10": {
+      "description": "10% holdback 观察窗（建议 ≥14 天）",
+      "required": [
+        "TRAVELOGUE_STUDIO_HOMEPAGE_V2=auto",
+        "percent=10",
+        "should_rollback=false 连续 3 nightly",
+        "experiment_exposure v2/v3 同期 jsonl",
+        "设计切图包非 PLACEHOLDER"
+      ],
+      "startAt": null,
+      "endAt": null,
+      "status": "pending"
+    },
+    "G2-cutover-100": {
+      "description": "M20-j 切主站 TRAVELOGUE_STUDIO_HOMEPAGE_V2=on",
+      "required": [
+        "PM sign-off",
+        "AC-01 可用性 5/5",
+        "视觉 sign-off AC-03/08/12/17/18",
+        "回滚演练 PASS",
+        "Slack/邮件告警已接"
+      ],
+      "startAt": null,
+      "endAt": null,
+      "status": "pending"
+    }
+  },
+  "observationWindow": {
+    "holdbackPercent": 10,
+    "minDays": 14,
+    "startedAt": null,
+    "endsAt": null,
+    "nightlyArtifact": ".github/workflows/nightly-holdback.yml"
+  },
+  "alerts": {
+    "importConversionDrop15Pct": false,
+    "ctaClickDrop20Pct": false,
+    "lcpP95Up30Pct": false,
+    "jsErrorRate2x": false
+  },
+  "rollbackRunbook": {
+    "lastDrillAt": null,
+    "lastDrillPassed": null,
+    "script": "scripts/studio_homepage_rollback_drill.py",
+    "restoreVerified": null
+  },
+  "entries": []
+}
