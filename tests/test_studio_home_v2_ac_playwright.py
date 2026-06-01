@@ -845,3 +845,34 @@ def test_ac_hp2_23_rollback_ignores_homepage_variant(tmp_path: Path, monkeypatch
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_js_error_pipeline_posts_event(studio_server) -> None:
+    """P2 · window.error → js_error POST 端到端。"""
+    events: list[dict] = []
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+
+        def _on_request(req):
+            if req.method == "POST" and req.url.endswith("/__travelogue/studio-event"):
+                try:
+                    events.append(json.loads(req.post_data or "{}"))
+                except (ValueError, TypeError):
+                    pass
+
+        page.on("request", _on_request)
+        _goto_v2(page, studio_server["base"], "dev=1&studioFixture=empty")
+        _wait_visible(page, "v2-headline")
+        page.evaluate(
+            "() => window.dispatchEvent(new ErrorEvent('error', "
+            "{ message: 'harness-js-error-probe', filename: 'harness.js' }))"
+        )
+        page.wait_for_timeout(500)
+
+        js_errors = [e for e in events if e.get("event") == "js_error"]
+        assert js_errors, f"未捕获 js_error，captured={[e.get('event') for e in events]}"
+        meta = js_errors[0].get("meta", {})
+        assert meta.get("variant") == "v2"
+        assert "harness-js-error-probe" in (meta.get("message") or "")
+        browser.close()

@@ -7,6 +7,7 @@
  * 素材未齐时全部走 placeholder，不白屏（AC-HP2-22）。
  */
 import { V2, $, show } from "./store.js";
+import { cssBackgroundImage } from "../js/dom.js";
 import { assetUrl } from "./manifest.js";
 import { initCarousel } from "./carousel.js";
 import { resolveLayoutTier } from "./layout-tier.js";
@@ -28,7 +29,8 @@ export function renderBackground(manifest, tier) {
   if (!url) return;
   var img = new Image();
   img.onload = function () {
-    bg.style.backgroundImage = "url('" + url + "')";
+    var bgImg = cssBackgroundImage(url);
+    if (bgImg) bg.style.backgroundImage = bgImg;
     var motionOk = tier !== "L1" && tier !== "L3";
     if (motionOk && !prefersReducedMotion()) bg.classList.add("is-kenburns");
   };
@@ -52,7 +54,8 @@ export function renderColdStartBackground(manifest) {
   if (!url) return;
   var img = new Image();
   img.onload = function () {
-    bg.style.backgroundImage = "url('" + url + "')";
+    var bgImg = cssBackgroundImage(url);
+    if (bgImg) bg.style.backgroundImage = bgImg;
     bg.classList.remove("is-kenburns"); // 静帧：明确禁动效
   };
   img.src = url;
@@ -101,7 +104,8 @@ export function renderBench(manifest) {
     var url = assetUrl(manifest.assets.background);
     var probe = new Image();
     probe.onload = function () {
-      thumb.style.backgroundImage = "url('" + url + "')";
+      var bgImg = cssBackgroundImage(url);
+      if (bgImg) thumb.style.backgroundImage = bgImg;
     };
     probe.src = url;
   }

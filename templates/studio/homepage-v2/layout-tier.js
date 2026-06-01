@@ -6,11 +6,9 @@
 
 function harnessSlowNetOverride() {
   try {
-    var h = location.hostname;
-    var params = new URLSearchParams(location.search);
-    var dev = params.get("dev") === "1";
-    var loopback = h === "127.0.0.1" || h === "localhost" || h === "::1";
-    return (loopback || dev) && params.get("studioSlowNet") === "1";
+    var body = document.body;
+    if (!body || body.getAttribute("data-studio-dev") !== "1") return false;
+    return new URLSearchParams(location.search).get("studioSlowNet") === "1";
   } catch (e) {
     return false;
   }

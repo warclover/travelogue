@@ -67,20 +67,52 @@ export function renderImportingPanel(source) {
   // §9.2 冷启动：无 Import 前壳层背景时铺 demo 静帧（幂等，暖启动不覆盖）。
   renderColdStartBackground(V2.manifest);
   if (!host) return;
-  host.innerHTML =
-    '<div class="v2-import-panel">' +
-    '<p class="v2-import-panel__source">来源 · ' + (source || "本机文件夹") + "</p>" +
-    '<h2 class="v2-import-panel__title">正在生成你的游记画册…</h2>' +
-    '<p class="v2-import-panel__estimate">自动分章 · 配文 · 排版 · 可离开稍后回来</p>' +
-    '<div class="v2-import-panel__bar"><div class="v2-import-panel__bar-fill" id="v2-import-fill"></div></div>' +
-    '<p class="v2-import-panel__stage" id="v2-import-stage">准备导入…</p>' +
-    '<button type="button" class="v2-import-panel__cancel" id="v2-import-cancel">取消</button>' +
-    "</div>";
+  host.replaceChildren();
+
+  var panel = document.createElement("div");
+  panel.className = "v2-import-panel";
+
+  var sourceP = document.createElement("p");
+  sourceP.className = "v2-import-panel__source";
+  sourceP.textContent = "来源 · " + (source || "本机文件夹");
+  panel.appendChild(sourceP);
+
+  var title = document.createElement("h2");
+  title.className = "v2-import-panel__title";
+  title.textContent = "正在生成你的游记画册…";
+  panel.appendChild(title);
+
+  var estimate = document.createElement("p");
+  estimate.className = "v2-import-panel__estimate";
+  estimate.textContent = "自动分章 · 配文 · 排版 · 可离开稍后回来";
+  panel.appendChild(estimate);
+
+  var bar = document.createElement("div");
+  bar.className = "v2-import-panel__bar";
+  var fill = document.createElement("div");
+  fill.className = "v2-import-panel__bar-fill";
+  fill.id = "v2-import-fill";
+  bar.appendChild(fill);
+  panel.appendChild(bar);
+
+  var stage = document.createElement("p");
+  stage.className = "v2-import-panel__stage";
+  stage.id = "v2-import-stage";
+  stage.textContent = "准备导入…";
+  panel.appendChild(stage);
+
+  var cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "v2-import-panel__cancel";
+  cancelBtn.id = "v2-import-cancel";
+  cancelBtn.textContent = "取消";
+  panel.appendChild(cancelBtn);
+
+  host.appendChild(panel);
   show(host, true);
   V2.state = "Importing";
   syncVariantGuard();
-  var cancelBtn = $("v2-import-cancel");
-  if (cancelBtn) cancelBtn.addEventListener("click", cancelImport);
+  cancelBtn.addEventListener("click", cancelImport);
 }
 
 function performCancelImport() {

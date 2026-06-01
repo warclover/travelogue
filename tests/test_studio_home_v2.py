@@ -97,8 +97,9 @@ def test_studio_home_v2_route(tmp_path: Path) -> None:
 
 
 @pytest.mark.e2e
-def test_studio_home_v3_unchanged(tmp_path: Path) -> None:
+def test_studio_home_v3_unchanged(tmp_path: Path, monkeypatch) -> None:
     """v2 引入后，v3 `/` 路径零回归。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "off")
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
     port = _free_port()
@@ -179,6 +180,10 @@ def test_studio_home_v2_import_sheet_modules() -> None:
     assert "../js/job-poll.js" in run
     assert "../js/http.js" in run
     assert "pollJobUntilDone" in run
+    # P2 · source 路径用 textContent，不用 innerHTML 拼接
+    assert "textContent" in run
+    assert "v2-import-panel__source" in run
+    assert "replaceChildren" in run
     # sessionStorage 形状对齐 v3（跨页续跑）
     assert "SS.activeJobId" in run and "SS.activePending" in run
     assert "studioModal" in run
@@ -462,6 +467,32 @@ def test_studio_home_v2_harness_and_ac_hooks() -> None:
     assert "min-height: 44px" in css
 
 
+def test_studio_home_v2_review_followups() -> None:
+    """代码审查 P1/P2 后续修复断言。"""
+    manifest_js = (STUDIO_DIR / "homepage-v2" / "manifest.js").read_text(encoding="utf-8")
+    assert 'cache: "no-cache"' not in manifest_js
+
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+    assert 'rel="modulepreload"' in html
+
+    carousel = (STUDIO_DIR / "homepage-v2" / "carousel.js").read_text(encoding="utf-8")
+    assert 'fetchpriority' in carousel
+
+    bootstrap = (STUDIO_DIR / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
+    assert "_reroutePromise" in bootstrap
+    assert 'import("./shelf.js")' in bootstrap
+    assert 'from "./shelf.js"' not in bootstrap
+
+    shelf = (STUDIO_DIR / "homepage-v2" / "shelf.js").read_text(encoding="utf-8")
+    assert "cssBackgroundImage" in shelf
+
+    static = (
+        REPO_ROOT / "travelogue" / "web" / "studio_handlers" / "static_handlers.py"
+    ).read_text(encoding="utf-8")
+    assert "Cache-Control" in static
+    assert "ETag" in static
+
+
 def test_demo_showcase_manifest_valid() -> None:
     manifest_path = (
         STUDIO_DIR / "assets" / "demo-showcase" / "manifest.json"
@@ -714,9 +745,14 @@ def test_studio_home_gate_query_override_v2(tmp_path: Path, monkeypatch) -> None
 
 
 def test_studio_homepage_gate_wired() -> None:
-    """门控模块已接入 studio_routes。"""
+    """门控模块已接入 studio_routes + static_handlers。"""
     routes = (REPO_ROOT / "travelogue" / "web" / "studio_routes.py").read_text(encoding="utf-8")
+    static = (
+        REPO_ROOT / "travelogue" / "web" / "studio_handlers" / "static_handlers.py"
+    ).read_text(encoding="utf-8")
     assert "_dispatch_home_root" in routes
+    assert "handle_home_root" in routes
+    assert "handle_home_root" in static
     assert "HOME_CLASSIC_PATH" in routes
     gate = (REPO_ROOT / "travelogue" / "web" / "studio_homepage_gate.py").read_text(encoding="utf-8")
     assert "TRAVELOGUE_STUDIO_HOMEPAGE_V2" in gate

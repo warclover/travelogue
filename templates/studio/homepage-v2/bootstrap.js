@@ -11,7 +11,6 @@ import { loadManifest } from "./manifest.js";
 import { renderBentoEmpty } from "./bento.js";
 import { initImportSheet } from "./import-sheet.js";
 import { resumeV2ImportIfAny } from "./import-run.js";
-import { renderShelf } from "./shelf.js";
 import { initViewportWatch } from "./unsupported.js";
 import { initErrorPipeline } from "./error-pipeline.js";
 import {
@@ -109,8 +108,10 @@ function routeFinalState() {
   }
   if (hasUserTrips()) {
     V2.state = "IdleReturning";
-    renderShelf(V2.trips, V2.tripsTotal);
-    trackHomepageView();
+    import("./shelf.js").then(function (m) {
+      m.renderShelf(V2.trips, V2.tripsTotal);
+      trackHomepageView();
+    });
     return;
   }
   V2.state = "IdleEmpty";
@@ -122,11 +123,24 @@ function routeFinalState() {
 
 function initDeferredModules() {
   return Promise.all([
+    import("./shelf.js"),
     import("./lightbox.js").then(function (m) { m.initLightbox(); }),
     import("./first-success.js").then(function (m) { m.initFirstSuccess(); }),
     import("./import-failed.js").then(function (m) { m.initImportFailed(); }),
     import("./dev-panel.js").then(function (m) { m.initDevPanel(); }),
   ]);
+}
+
+var _reroutePromise = null;
+
+function rerouteFromTrips() {
+  if (_reroutePromise) return _reroutePromise;
+  _reroutePromise = fetchTrips().then(function () {
+    routeFinalState();
+  }).finally(function () {
+    _reroutePromise = null;
+  });
+  return _reroutePromise;
 }
 
 function startApp() {
@@ -135,9 +149,7 @@ function startApp() {
   initImportSheet();
 
   initDeferredModules().then(function () {
-    V2.reroute = function () {
-      fetchTrips().then(function () { routeFinalState(); });
-    };
+    V2.reroute = rerouteFromTrips;
 
     var manifestP = harnessAssetsFail() ? Promise.resolve(null) : loadManifest();
     Promise.all([manifestP, fetchTrips()]).then(function (results) {

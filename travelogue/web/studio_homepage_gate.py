@@ -215,13 +215,25 @@ def inject_home_placeholders(html: str, handler: Any, bucket: int) -> str:
     )
 
 
+def _cookie_secure_flag(handler: Any) -> str:
+    """HTTPS 或反向代理 X-Forwarded-Proto=https 时追加 Secure。"""
+    headers = getattr(handler, "headers", None)
+    if headers is None:
+        return ""
+    proto = (headers.get("X-Forwarded-Proto") or "").split(",")[0].strip().lower()
+    if proto == "https":
+        return "; Secure"
+    return ""
+
+
 def set_bucket_cookie(handler: Any, bucket: int) -> None:
     """写入 HMAC 签名分桶 cookie（HttpOnly）。"""
     secret = _bucket_secret(handler)
     value = sign_bucket_value(bucket, secret)
+    secure = _cookie_secure_flag(handler)
     handler.send_header(
         "Set-Cookie",
-        f"{COOKIE_BUCKET}={value}; Path=/; Max-Age={COOKIE_MAX_AGE}; HttpOnly; SameSite=Lax",
+        f"{COOKIE_BUCKET}={value}; Path=/; Max-Age={COOKIE_MAX_AGE}; HttpOnly; SameSite=Lax{secure}",
     )
 
 

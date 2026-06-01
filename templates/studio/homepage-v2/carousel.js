@@ -45,6 +45,7 @@ function buildSlide(page, index, tier) {
       img.style.width = "100%";
       img.style.height = "100%";
       img.style.objectFit = "cover";
+      if (eager && index === 0) img.setAttribute("fetchpriority", "high");
       if (!eager) img.loading = "lazy";
       img.onload = function () {
         slide.innerHTML = "";

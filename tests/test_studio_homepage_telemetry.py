@@ -64,3 +64,16 @@ def test_handle_studio_event_rejects_invalid_event(tmp_path) -> None:
 def test_studio_homepage_events_default_path_under_travelogue() -> None:
     assert studio_homepage_events_path().name == "studio-homepage-events.jsonl"
     assert ".travelogue" in str(studio_homepage_events_path())
+
+
+def test_append_trims_oversized_meta(tmp_path, monkeypatch) -> None:
+    path = tmp_path / "studio-homepage-events.jsonl"
+    monkeypatch.setattr(
+        "travelogue.web.studio_homepage_telemetry.studio_homepage_events_path",
+        lambda: path,
+    )
+    huge = {"payload": "x" * 5000}
+    append_studio_homepage_event("js_error", huge)
+    record = json.loads(path.read_text(encoding="utf-8").strip())
+    assert record["meta"].get("_truncated") is True
+    assert len(json.dumps(record["meta"], ensure_ascii=False).encode("utf-8")) <= 4096

@@ -11,6 +11,7 @@ import pytest
 from travelogue.web.studio_homepage_gate import (
     decide_root_variant,
     inject_home_placeholders,
+    set_bucket_cookie,
     sign_bucket_value,
     stable_bucket,
 )
@@ -138,6 +139,38 @@ def test_studio_home_injects_data_bucket_id(tmp_path: Path) -> None:
         assert 'data-bucket-id="' in html
         assert "__STUDIO_BUCKET_ID__" not in html
         assert 'data-studio-dev="1"' in html
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_set_bucket_cookie_secure_on_https() -> None:
+    class _Hdr:
+        studio_token = "secret"
+        headers = {"X-Forwarded-Proto": "https"}
+        sent: list[tuple[str, str]] = []
+
+        def send_header(self, key: str, value: str) -> None:
+            self.sent.append((key, value))
+
+    h = _Hdr()
+    set_bucket_cookie(h, 42)
+    cookie = next(v for k, v in h.sent if k == "Set-Cookie")
+    assert "; Secure" in cookie
+    assert "42." in cookie
+
+
+@pytest.mark.e2e
+def test_studio_home_gate_lan_dev_flag_empty(tmp_path: Path) -> None:
+    """LAN studio_host 时 HTML 不注入 data-studio-dev=1（harness 不可用）。"""
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port, studio_host="10.0.0.5")
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/v2", timeout=10) as resp:
+            html = resp.read().decode("utf-8")
+        assert 'data-studio-dev=""' in html
     finally:
         server.shutdown()
         server.server_close()

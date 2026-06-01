@@ -7,6 +7,26 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+MAX_META_BYTES = 4096
+
+
+def _trim_meta(meta: dict[str, Any]) -> dict[str, Any]:
+    """限制 meta 序列化体积，防止 jsonl 被异常 payload 撑爆。"""
+    encoded = json.dumps(meta, ensure_ascii=False).encode("utf-8")
+    if len(encoded) <= MAX_META_BYTES:
+        return meta
+    trimmed: dict[str, Any] = {}
+    for key, value in meta.items():
+        candidate = dict(trimmed)
+        candidate[key] = value
+        if len(json.dumps(candidate, ensure_ascii=False).encode("utf-8")) <= MAX_META_BYTES:
+            trimmed[key] = value
+        else:
+            break
+    trimmed["_truncated"] = True
+    return trimmed
+
+
 ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
     {
         "open_sheet",
@@ -45,7 +65,7 @@ def append_studio_homepage_event(event: str, meta: dict[str, Any] | None = None)
         "event": event,
     }
     if meta:
-        record["meta"] = meta
+        record["meta"] = _trim_meta(meta)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(record, ensure_ascii=False) + "\n")
     return path

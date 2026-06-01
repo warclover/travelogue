@@ -9,7 +9,11 @@ from unittest.mock import patch
 import pytest
 
 from travelogue.web.studio_handlers.config_handlers import handle_config, handle_pick_folder
-from travelogue.web.studio_handlers.static_handlers import handle_home, handle_studio_asset
+from travelogue.web.studio_handlers.static_handlers import (
+    handle_home,
+    handle_home_root,
+    handle_studio_asset,
+)
 from travelogue.web.studio_handlers.paths import STUDIO_ASSET_PREFIX
 from tests.studio_test_helpers import MockStudioHandler
 
@@ -19,12 +23,21 @@ pytestmark = pytest.mark.unit
 class MockStaticHandler:
     """Minimal handler stub for static asset/home handlers."""
 
-    def __init__(self, *, studio_token: str = "test-token") -> None:
+    def __init__(
+        self,
+        *,
+        studio_token: str = "test-token",
+        studio_host: str = "127.0.0.1",
+        request_headers: dict[str, str] | None = None,
+    ) -> None:
         self.studio_token = studio_token
+        self.studio_host = studio_host
+        self.request_headers = request_headers or {}
         self.status: int | None = None
         self.headers: dict[str, str] = {}
         self.body = io.BytesIO()
         self.error_code: int | None = None
+        self.path = "/"
 
     def send_response(self, code: int) -> None:
         self.status = code
@@ -189,3 +202,46 @@ def test_handle_studio_asset_missing_file() -> None:
     handled = handle_studio_asset(handler, path)
     assert handled is True
     assert handler.error_code == 404
+
+
+def test_handle_studio_asset_cache_headers_loopback() -> None:
+    handler = MockStaticHandler(studio_host="127.0.0.1")
+    path = f"{STUDIO_ASSET_PREFIX}studio.css"
+    handled = handle_studio_asset(handler, path)
+    assert handled is True
+    assert handler.status == 200
+    assert handler.headers.get("Cache-Control") == "no-cache"
+    assert handler.headers.get("ETag", "").startswith('W/"')
+
+
+def test_handle_studio_asset_cache_headers_lan() -> None:
+    handler = MockStaticHandler(studio_host="192.168.1.5")
+    path = f"{STUDIO_ASSET_PREFIX}studio.css"
+    handled = handle_studio_asset(handler, path)
+    assert handled is True
+    assert handler.headers.get("Cache-Control") == "public, max-age=3600"
+
+
+def test_handle_studio_asset_not_modified() -> None:
+    handler = MockStaticHandler(studio_host="127.0.0.1")
+    path = f"{STUDIO_ASSET_PREFIX}studio.css"
+    handle_studio_asset(handler, path)
+    etag = handler.headers.get("ETag")
+    assert etag
+
+    handler2 = MockStaticHandler(
+        studio_host="127.0.0.1",
+        request_headers={"If-None-Match": etag},
+    )
+    handled = handle_studio_asset(handler2, path)
+    assert handled is True
+    assert handler2.status == 304
+
+
+def test_handle_home_root_delegates_gate(monkeypatch) -> None:
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "off")
+    handler = MockStaticHandler()
+    handler.path = "/"
+    assert handle_home_root(handler) is True
+    assert handler.status == 200
+    assert "studio.js" in handler.body.getvalue().decode("utf-8")

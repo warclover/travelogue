@@ -28,7 +28,7 @@ export function isValidManifest(m) {
  * （Slogan + CTA + 占位，不白屏）。
  */
 export function loadManifest() {
-  return fetch(MANIFEST_URL, { cache: "no-cache" })
+  return fetch(MANIFEST_URL)
     .then(function (r) {
       if (!r.ok) throw new Error("manifest unavailable");
       return r.json();

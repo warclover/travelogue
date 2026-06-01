@@ -8,6 +8,7 @@
  * - §8.2 / §4.1：total > 20 → limit/offset 分页 +「加载更多」
  */
 import { isDemoTrip } from "../js/constants.js";
+import { cssBackgroundImage } from "../js/dom.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { $, show } from "./store.js";
 import { openImportSheet } from "./import-sheet.js";
@@ -58,7 +59,8 @@ function buildCover(trip, host) {
   var cover = el("div", "v2-shelf__cover");
   var url = coverUrl(trip);
   if (url) {
-    cover.style.backgroundImage = "url('" + url + "')";
+    var bg = cssBackgroundImage(url);
+    if (bg) cover.style.backgroundImage = bg;
   } else {
     cover.classList.add("v2-shelf__cover--blank");
     cover.appendChild(el("span", "v2-shelf__cover-initials", titleInitials(trip.title)));
@@ -70,8 +72,10 @@ function buildResume(trip) {
   var card = el("div", "v2-shelf__resume");
   var thumb = el("div", "v2-shelf__resume-thumb");
   var url = coverUrl(trip);
-  if (url) thumb.style.backgroundImage = "url('" + url + "')";
-  else thumb.classList.add("v2-shelf__cover--blank");
+  if (url) {
+    var bg = cssBackgroundImage(url);
+    if (bg) thumb.style.backgroundImage = bg;
+  } else thumb.classList.add("v2-shelf__cover--blank");
   card.appendChild(thumb);
 
   var textWrap = el("div", "v2-shelf__resume-text");

@@ -52,7 +52,7 @@ export function readActiveJobId() {
   }
 }
 
-/** 持久化 v2 分桶（加法键），供 holdback 一致性使用。 */
+/** 持久化 v2 variant 偏好（非路由依据；holdback 以服务端 cookie/redirect 为准）。 */
 export function persistVariant(variant) {
   try {
     sessionStorage.setItem(V2_VARIANT_KEY, variant || "v2");
