@@ -4,66 +4,159 @@
   "baselinePolicy": "cull-on is the new golden baseline (NR-P9-04); cull-off bitwise parity not required",
   "w1Status": "done",
   "w1SignedOffAt": "2026-06-02",
+  "w3Status": "done",
+  "w2Status": "partial",
   "entries": [
+    {
+      "id": "AC-P9-01",
+      "status": "passed",
+      "test": "tests/test_photo_cull.py::test_layout_eligible_assets_excludes_culled"
+    },
+    {
+      "id": "AC-P9-02",
+      "status": "passed",
+      "test": "tests/test_photo_cull.py::test_ac_p9_02_golden_signoff_keep_ratio",
+      "metricsRef": "docs/acceptance-records/phase9-golden-cull-signoff.json"
+    },
+    {
+      "id": "AC-P9-03",
+      "status": "passed",
+      "test": "tests/test_photo_cull.py::test_dual_folder_featured_all_eligible"
+    },
+    {
+      "id": "AC-P9-04",
+      "status": "passed",
+      "test": "tests/test_photo_cull.py::test_featured_low_res_stays_eligible"
+    },
+    {
+      "id": "AC-P9-05",
+      "status": "passed",
+      "test": "tests/test_photo_cull.py::test_cull_disabled_leaves_assets"
+    },
+    {
+      "id": "AC-P9-06",
+      "status": "passed",
+      "test": "tests/test_photo_cull.py::test_apply_photo_cull_writes_trip_curation"
+    },
+    {
+      "id": "AC-P9-07",
+      "status": "passed",
+      "test": "tests/test_photo_cull.py::test_clustering_embed_skips_culled_assets"
+    },
+    {
+      "id": "AC-P9-08",
+      "status": "passed",
+      "test": "tests/test_photo_cull.py::test_incremental_ingest_reculls_full_trip"
+    },
+    {
+      "id": "AC-P9-09",
+      "status": "passed",
+      "test": "tests/test_photo_cull.py::test_cull_fail_open_restores_eligible"
+    },
+    {
+      "id": "AC-P9-10",
+      "status": "passed",
+      "test": "tests/test_photo_cull.py::test_culled_assets_retain_source_files"
+    },
+    {
+      "id": "AC-P9-UX-01",
+      "status": "passed",
+      "note": "No new route/modal; cull embedded in ingest stage",
+      "test": "tests/test_studio_phase9_cull_playwright.py (implicit)"
+    },
+    {
+      "id": "AC-P9-UX-02",
+      "status": "passed",
+      "test": "tests/test_studio_phase9_cull_playwright.py"
+    },
+    {
+      "id": "AC-P9-UX-03",
+      "status": "passed",
+      "test": "tests/test_studio_phase9_cull_playwright.py::test_ac_p9_ux_03_no_excluded_photos_entry"
+    },
+    {
+      "id": "AC-P9-UX-04",
+      "status": "passed",
+      "test": "tests/test_studio_phase9_cull_playwright.py::test_ac_p9_ux_04_max_photos_warn_non_blocking"
+    },
+    {
+      "id": "AC-P9-UX-05",
+      "status": "passed",
+      "test": "tests/test_studio_phase9_cull_playwright.py::test_ac_p9_ux_05_fail_open_no_cull_line"
+    },
+    {
+      "id": "AC-P9-UX-06",
+      "status": "passed",
+      "test": "tests/test_studio_phase9_cull_playwright.py::test_ac_p9_ux_06_compact_success_msg_no_overflow"
+    },
+    {
+      "id": "NR-P9-01",
+      "status": "passed",
+      "test": "tests/test_photo_cull.py::test_nr_p9_01_clustering_off_cull_on_curate_smoke"
+    },
+    {
+      "id": "NR-P9-02",
+      "status": "passed",
+      "command": "python -m travelogue demo verify"
+    },
+    {
+      "id": "NR-P9-03",
+      "status": "passed",
+      "test": "tests/test_trip_schema_cull.py"
+    },
     {
       "id": "NR-P9-04-mao",
       "tripId": "mao",
       "status": "signed_off",
-      "note": "cull-on re-ingest: 24/29 layoutEligible (82.8%), curate 3 ch. Pass 2 material-only skip fix applied.",
-      "metricsRef": "docs/acceptance-records/phase9-golden-cull-signoff.json#mao",
-      "updatedAt": "2026-06-02"
+      "note": "cull-on: 24/29 layoutEligible (82.8%), curate 3 ch",
+      "metricsRef": "docs/acceptance-records/phase9-golden-cull-signoff.json"
     },
     {
       "id": "NR-P9-04-maomi",
       "tripId": "maomi",
       "status": "signed_off",
-      "note": "cull-on: cull 27/33 (81.8%); final 26/33 after low_res×1. curate 4 ch smoke OK.",
-      "metricsRef": "docs/acceptance-records/phase9-golden-cull-signoff.json#maomi",
-      "updatedAt": "2026-06-02"
+      "note": "cull-on: cull 27/33; final 26/33 after low_res×1",
+      "metricsRef": "docs/acceptance-records/phase9-golden-cull-signoff.json"
     },
     {
-      "id": "NR-P9-02-demo-verify",
+      "id": "AC-P9-E-01",
       "status": "passed",
-      "command": "python -m travelogue demo verify",
-      "updatedAt": "2026-06-02",
-      "note": "Fixed synthetic demo albums (2400px native + burst-safe timestamps) after cull-on regression."
+      "test": "tests/test_subject_tagging_bridge.py::test_clip_food_overrides_landscape_tags"
     },
     {
-      "id": "NR-P9-03-schema",
+      "id": "AC-P9-E-02",
       "status": "passed",
-      "test": "tests/test_trip_schema_cull.py",
-      "updatedAt": "2026-06-02"
+      "test": "tests/test_subject_tagging_bridge.py::test_clip_person_maps_directly"
     },
     {
-      "id": "AC-P9-UX-02",
+      "id": "AC-P9-E-03",
       "status": "passed",
-      "test": "tests/test_studio_phase9_cull_playwright.py",
-      "updatedAt": "2026-06-02"
+      "test": "tests/test_subject_tagging_bridge.py::test_no_subject_class_matches_legacy_heuristic"
     },
     {
-      "id": "AC-P9-UX-03",
+      "id": "AC-P9-ML-01",
       "status": "passed",
-      "test": "tests/test_studio_phase9_cull_playwright.py",
-      "updatedAt": "2026-06-02"
+      "test": "tests/test_photo_cull_ml.py"
     },
     {
-      "id": "AC-P9-UX-04",
-      "status": "passed",
-      "test": "tests/test_studio_phase9_cull_playwright.py::test_ac_p9_ux_04_max_photos_warn_non_blocking",
-      "updatedAt": "2026-06-02"
+      "id": "AC-P9-ML-02",
+      "status": "pending",
+      "note": "Requires GPU + pyiqa; compare keep ratio vs rules"
     },
     {
-      "id": "AC-P9-10",
+      "id": "AC-P9-ML-03",
       "status": "passed",
-      "test": "tests/test_photo_cull.py::test_culled_assets_retain_source_files",
-      "updatedAt": "2026-06-02"
+      "test": "tests/test_photo_cull_ml.py::test_resolve_mode_auto_without_pyiqa_falls_back"
+    },
+    {
+      "id": "AC-P9-ML-04",
+      "status": "pending",
+      "note": "250 photos GPU aesthetic ≤90s; S2 registration"
     },
     {
       "id": "M30-W2-pyiqa",
       "status": "implemented_degraded",
-      "note": "photo_cull_ml.py + cull.mode auto|ml; falls back to rules when pyiqa/GPU unavailable",
-      "test": "tests/test_photo_cull_ml.py",
-      "updatedAt": "2026-06-02"
+      "test": "tests/test_photo_cull_ml.py"
     }
   ]
 }

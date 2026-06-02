@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -276,6 +277,31 @@ def test_incremental_ingest_reculls_full_trip(tmp_path: Path) -> None:
     second_summary = (trip.get("curation") or {}).get("cullSummary") or {}
     assert len(trip["assets"]) == 5
     assert second_summary.get("scanned") == len(trip["assets"])
+
+
+def test_ac_p9_02_golden_signoff_keep_ratio() -> None:
+    """AC-P9-02 · golden signoff 登记：cull 层保留率 ≥ floor 或 pass3 跳过。"""
+    path = Path(__file__).resolve().parents[1] / "docs/acceptance-records/phase9-golden-cull-signoff.json"
+    if not path.is_file():
+        pytest.skip("phase9-golden-cull-signoff.json missing")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    floor = 0.80
+    for run in data.get("runs") or []:
+        trip_id = str(run.get("tripId") or "")
+        metrics = run.get("metrics") or {}
+        scanned = int(metrics.get("scanned") or 0)
+        assert scanned > 0, trip_id
+        assert metrics.get("curateSmokeOk") is True, trip_id
+        if metrics.get("floorMet") or metrics.get("pass3Skipped"):
+            continue
+        line = str(metrics.get("cullUserLine") or "")
+        match = re.search(r"经挑选\s*(\d+)", line)
+        if match:
+            cull_ratio = int(match.group(1)) / scanned
+            assert cull_ratio >= floor, f"{trip_id} cull layer {cull_ratio:.4f}"
+            continue
+        ratio = float(metrics.get("nonFeaturedKeepRatio") or 0)
+        assert ratio >= floor, f"{trip_id} final ratio {ratio:.4f}"
 
 
 def test_cull_fail_open_restores_eligible(monkeypatch: pytest.MonkeyPatch) -> None:

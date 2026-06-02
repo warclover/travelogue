@@ -147,11 +147,11 @@ def _format_low_res_warning(
     if relative_count:
         parts.append(f"批内相对偏低 {relative_count} 张（短边/像素面积低于本批阈值）")
     if circuit_breaker:
-        parts.append("相对阈值已熔断（剔除比例异常），仅保留绝对规则")
+        parts.append("相对阈值已熔断（不参与排版比例异常），仅保留绝对规则")
     total = absolute_count + relative_count
     if not parts:
-        return f"已剔除 {total} 张分辨率明显偏低的照片"
-    return f"已剔除 {total} 张分辨率明显偏低的照片（{'；'.join(parts)}）"
+        return f"{total} 张分辨率明显偏低，不参与排版"
+    return f"{total} 张分辨率明显偏低，不参与排版（{'；'.join(parts)}）"
 
 
 def partition_low_resolution_assets(

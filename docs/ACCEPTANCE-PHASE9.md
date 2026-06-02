@@ -58,7 +58,9 @@
 | **AC-P9-UX-02** | Job 成功 toast **第二行**展示 `cullUserLine` | Playwright |
 | **AC-P9-UX-03** | DOM 无被筛图入口 | Playwright |
 | **AC-P9-UX-04** | `maxPhotosExceeded` WARN 非阻断 | pytest + Playwright |
-| **AC-P9-UX-05** | 文案用「挑选」不用「删除/剔除」 | 人工 · CLI 已改「挑选合计」 |
+| **AC-P9-UX-05** | cull 失败 Job 仍 success + 无 cullUserLine | Playwright · pytest |
+| **AC-P9-UX-06** | compact 390px toast 不溢出 | Playwright |
+| **AC-P9-UX-文案** | 用户可见文案用「挑选/不参与排版」 | ingest_report · asset_quality |
 
 ---
 

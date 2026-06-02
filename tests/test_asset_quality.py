@@ -46,7 +46,7 @@ def test_partition_drops_clear_outliers() -> None:
     assert len(dropped) == 1
     assert dropped[0]["id"] == "a6"
     assert len(kept) == 5
-    assert warn and "剔除" in warn
+    assert warn and "不参与排版" in warn
 
 
 def test_partition_drops_short_edge_thumbnail() -> None:

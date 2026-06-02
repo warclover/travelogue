@@ -149,3 +149,70 @@ def test_ac_p9_ux_04_max_photos_warn_non_blocking(studio_server) -> None:
         assert "超过建议上限" in warn
         assert "经挑选" in page.locator("#studio-success-msg").inner_text()
         browser.close()
+
+
+def test_ac_p9_ux_05_fail_open_no_cull_line(studio_server) -> None:
+    """AC-P9-UX-05 · cull 失败/fail-open 时成功态无 cullUserLine 第二行。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 390, "height": 844})
+        page.goto(studio_server["base"], wait_until="networkidle")
+        page.evaluate(
+            """
+            async () => {
+              window.studioToast = function() {};
+              const mod = await import('/__studio/js/import-flow.js');
+              mod.handleImportSuccess({
+                result: {
+                  title: '测试',
+                  photoCount: 12,
+                  cullUserLine: '',
+                },
+              });
+            }
+            """
+        )
+        page.wait_for_selector("#studio-success-msg", timeout=10_000)
+        text = page.locator("#studio-success-msg").inner_text()
+        assert "已生成" in text
+        assert "经挑选" not in text
+        assert "\n" not in text.strip() or text.count("\n") == 0
+        browser.close()
+
+
+def test_ac_p9_ux_06_compact_success_msg_no_overflow(studio_server) -> None:
+    """AC-P9-UX-06 · 390px 成功 toast 文案不横向溢出。"""
+    long_line = "经挑选 120 张进入排版（精选 15 张已为您保留）"
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 390, "height": 844})
+        page.goto(studio_server["base"], wait_until="networkidle")
+        page.evaluate(
+            """
+            async (line) => {
+              window.studioToast = function() {};
+              const mod = await import('/__studio/js/import-flow.js');
+              mod.handleImportSuccess({
+                result: {
+                  title: '京都 · 雨后初晴的慢旅行',
+                  photoCount: 120,
+                  featuredCount: 15,
+                  cullUserLine: line,
+                },
+              });
+            }
+            """,
+            long_line,
+        )
+        page.wait_for_selector("#studio-success-msg", timeout=10_000)
+        overflow = page.evaluate(
+            """
+            () => {
+              const el = document.getElementById('studio-success-msg');
+              if (!el) return true;
+              return el.scrollWidth <= el.clientWidth + 2;
+            }
+            """
+        )
+        assert overflow is True
+        browser.close()
