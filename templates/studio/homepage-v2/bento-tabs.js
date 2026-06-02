@@ -6,6 +6,7 @@ import { V2, $, show } from "./store.js";
 import { renderBentoSurface } from "./bento.js";
 
 var _wired = false;
+var _userTabInteracted = false;
 
 function syncTabUi() {
   var demoBtn = $("v2-tab-demo");
@@ -53,10 +54,16 @@ export function initBentoTabs() {
   var demoBtn = $("v2-tab-demo");
   var mineBtn = $("v2-tab-mine");
   if (demoBtn) {
-    demoBtn.addEventListener("click", function () { setBentoTab("demo"); });
+    demoBtn.addEventListener("click", function () {
+      _userTabInteracted = true;
+      setBentoTab("demo");
+    });
   }
   if (mineBtn) {
-    mineBtn.addEventListener("click", function () { setBentoTab("mine"); });
+    mineBtn.addEventListener("click", function () {
+      _userTabInteracted = true;
+      setBentoTab("mine");
+    });
   }
 }
 
@@ -66,7 +73,9 @@ export function refreshUserBentoPreview(trips) {
     var candidates = mod.pickRecentUserTrips(trips);
     if (!candidates.length) {
       V2.userManifest = null;
-      if (V2.bentoTab === "mine") V2.bentoTab = "demo";
+      if (!_userTabInteracted || V2.bentoTab === "mine") {
+        V2.bentoTab = "demo";
+      }
       syncTabUi();
       return null;
     }
@@ -82,7 +91,11 @@ export function refreshUserBentoPreview(trips) {
 
     return tryAt(0).then(function (manifest) {
       V2.userManifest = manifest || null;
-      if (!V2.userManifest && V2.bentoTab === "mine") V2.bentoTab = "demo";
+      if (!_userTabInteracted) {
+        V2.bentoTab = V2.userManifest ? "mine" : "demo";
+      } else if (!V2.userManifest && V2.bentoTab === "mine") {
+        V2.bentoTab = "demo";
+      }
       V2.manifest = activeBentoManifest();
       syncTabUi();
       if (V2.bentoTab === "mine" && V2.userManifest) {
