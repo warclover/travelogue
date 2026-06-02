@@ -159,3 +159,27 @@ python -m travelogue render maomi --dual
 
 # 若希望拆成多本游记：在 G1 按时间段拆分后再 curate
 ```
+
+---
+
+## Phase 9 · Quality Gate（cull-on 基线 · 2026-06-02）
+
+| 项 | cull-off（2026-05-26） | cull-on（NR-P9-04） |
+|----|------------------------|---------------------|
+| 扫描 assets | 33 | 33 |
+| layoutEligible | **33** | **26** |
+| cull 层 eligible | — | **27**（Pass 3 剔 6 · `cull_quota`） |
+| 非 featured 保留率（cull 层） | — | **81.8%**（27/33，≥ 80%） |
+| 最终保留率 | — | 78.8%（26/33，low_res 再剔 1） |
+| curate smoke | 4 章 | **4 章** ✅ |
+| cullUserLine | — | 经挑选 27 张进入排版 |
+
+命令：
+
+```powershell
+python scripts/phase9_golden_cull_signoff.py --trip maomi --write docs/acceptance-records/phase9-golden-cull-signoff.json
+```
+
+**说明**：AC-P9-02 地板按 **cull 层**计量（27/33）；最终 26 张因 cull 后 `asset_quality` 低分辨率剔除 `asset-023`，与 cull 职责分离，无需调 Pass 3。
+
+记录：`docs/acceptance-records/phase9-golden-cull-signoff.json` · `phase9-quality-gate.json`

@@ -38,13 +38,11 @@ def test_ingest_marks_low_resolution(tmp_path: Path) -> None:
     trip_dir = trips / "low-res-ingest"
     trip = json.loads(trip_json.read_text(encoding="utf-8"))
     album = _album_base(tmp_path, 5, size=(2400, 3200))
-    Image.new("RGB", (640, 480), (200, 100, 50)).save(album / "tiny.jpg", quality=95)
+    Image.new("RGB", (2000, 1500), (200, 100, 50)).save(album / "tiny.jpg", quality=95)
 
     ingest_into_trip(trip, trip_dir, from_dir=album, dedupe=False)
 
-    tiny = next(a for a in trip["assets"] if a["id"].endswith("006") or "tiny" in a["sourceFile"])
-    # last asset is tiny - find by native size
-    tiny = next(a for a in trip["assets"] if a.get("nativeWidth") == 640)
+    tiny = next(a for a in trip["assets"] if a.get("nativeWidth") == 2000 and a.get("nativeHeight") == 1500)
     assert tiny["layoutEligible"] is False
     assert tiny["excludeReason"] == "low_resolution"
     assert tiny["id"] in trip["curation"]["excludedLowResAssetIds"]

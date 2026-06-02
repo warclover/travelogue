@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "1",
+  "phase": "P9-QualityGate",
+  "baselinePolicy": "cull-on is the new golden baseline (NR-P9-04); cull-off bitwise parity not required",
+  "w1Status": "done",
+  "w1SignedOffAt": "2026-06-02",
+  "entries": [
+    {
+      "id": "NR-P9-04-mao",
+      "tripId": "mao",
+      "status": "signed_off",
+      "note": "cull-on re-ingest: 24/29 layoutEligible (82.8%), curate 3 ch. Pass 2 material-only skip fix applied.",
+      "metricsRef": "docs/acceptance-records/phase9-golden-cull-signoff.json#mao",
+      "updatedAt": "2026-06-02"
+    },
+    {
+      "id": "NR-P9-04-maomi",
+      "tripId": "maomi",
+      "status": "signed_off",
+      "note": "cull-on: cull 27/33 (81.8%); final 26/33 after low_res×1. curate 4 ch smoke OK.",
+      "metricsRef": "docs/acceptance-records/phase9-golden-cull-signoff.json#maomi",
+      "updatedAt": "2026-06-02"
+    },
+    {
+      "id": "NR-P9-02-demo-verify",
+      "status": "passed",
+      "command": "python -m travelogue demo verify",
+      "updatedAt": "2026-06-02",
+      "note": "Fixed synthetic demo albums (2400px native + burst-safe timestamps) after cull-on regression."
+    },
+    {
+      "id": "NR-P9-03-schema",
+      "status": "passed",
+      "test": "tests/test_trip_schema_cull.py",
+      "updatedAt": "2026-06-02"
+    },
+    {
+      "id": "AC-P9-UX-02",
+      "status": "passed",
+      "test": "tests/test_studio_phase9_cull_playwright.py",
+      "updatedAt": "2026-06-02"
+    },
+    {
+      "id": "AC-P9-UX-03",
+      "status": "passed",
+      "test": "tests/test_studio_phase9_cull_playwright.py",
+      "updatedAt": "2026-06-02"
+    },
+    {
+      "id": "M30-W2-pyiqa",
+      "status": "implemented_degraded",
+      "note": "photo_cull_ml.py + cull.mode auto|ml; falls back to rules when pyiqa/GPU unavailable",
+      "test": "tests/test_photo_cull_ml.py",
+      "updatedAt": "2026-06-02"
+    }
+  ]
+}

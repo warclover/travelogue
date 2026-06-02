@@ -354,11 +354,12 @@ body { overflow-x: clip; overflow-y: visible; }
 .v2-bento__bench { grid-column: 1; grid-row: 3; min-width: 0; }
 .v2-bento__mobile {
   grid-column: 2;
-  grid-row: 1 / -1;
+  grid-row: 1 / 3;
   min-height: 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
+  align-items: center;
   align-self: stretch;
 }
 
@@ -480,10 +481,18 @@ body { overflow-x: clip; overflow-y: visible; }
   text-align: right;
 }
 
-/* ── 9:16 phone preview（右列通高） ── */
+/* ── Phone preview（右列通高 · 底部对齐） ── */
 .v2-phone {
-  flex: 1;
-  min-height: 0;
+  /* 回退到稳定尺寸：9:16 */
+  --v2-phone-ratio: calc(9 / 16);
+  flex: 0 0 auto;
+  margin-top: auto;
+  /* 高度主导：跨内屏/外接屏视觉更稳定 */
+  height: clamp(560px, 62vh, 700px);
+  width: min(100%, calc(clamp(560px, 62vh, 700px) * var(--v2-phone-ratio)));
+  aspect-ratio: var(--v2-phone-ratio);
+  max-height: 700px;
+  min-height: 560px;
   display: flex;
   flex-direction: column;
 }
@@ -511,15 +520,148 @@ body { overflow-x: clip; overflow-y: visible; }
   overflow: hidden;
   border-radius: 9px;
   min-height: 0;
-  background: #faf7f2;
+  background: #14110d;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.v2-phone-strip {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   position: relative;
 }
-.v2-phone__screen img {
+.v2-phone-strip__viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  isolation: isolate;
+}
+.v2-phone-strip__track {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  overflow-y: hidden;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+.v2-phone-strip__track::-webkit-scrollbar { display: none; }
+.v2-phone-strip__slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #14110d;
+  pointer-events: auto;
+}
+.v2-phone-strip__slide img,
+.v2-phone-strip__slide-img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: top center;
+  object-position: 50% 38%;
+}
+
+/* 显示器分档：避免跨设备观感跳变 */
+@media (max-height: 850px), (max-width: 1600px) {
+  .v2-phone {
+    height: clamp(520px, 60vh, 640px);
+    width: min(100%, calc(clamp(520px, 60vh, 640px) * var(--v2-phone-ratio)));
+    min-height: 520px;
+    max-height: 640px;
+  }
+}
+
+@media (min-width: 2500px) and (min-height: 1300px) {
+  .v2-phone {
+    height: clamp(600px, 64vh, 760px);
+    width: min(100%, calc(clamp(600px, 64vh, 760px) * var(--v2-phone-ratio)));
+    min-height: 600px;
+    max-height: 760px;
+  }
+}
+.v2-phone-strip__slide-ph {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  font-size: 10px;
+  letter-spacing: .08em;
+  color: rgba(0, 0, 0, .35);
+  background: linear-gradient(180deg, #f5f2ec, #ebe6de);
+}
+.v2-phone-strip__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, .25);
+  background: rgba(8, 7, 6, .65);
+  color: rgba(255, 255, 255, .85);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  backdrop-filter: blur(4px);
+  z-index: 5;
+  pointer-events: auto;
+}
+.v2-phone-strip__arrow--prev { left: 6px; }
+.v2-phone-strip__arrow--next { right: 6px; }
+.v2-phone-strip__arrow:disabled {
+  opacity: .25;
+  cursor: not-allowed;
+}
+.v2-phone-strip__arrow[hidden] {
+  display: none;
+}
+.v2-phone-strip__footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4px;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+.v2-phone-strip__footer[hidden] {
+  display: none;
+}
+.v2-phone-strip__dots {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  align-items: center;
+  pointer-events: auto;
+}
+.v2-phone-strip__dots button {
+  width: 5px;
+  height: 5px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .25);
+  cursor: pointer;
+}
+.v2-phone-strip__dots button.is-active {
+  background: var(--v2-gold, #c9a84c);
+  transform: scale(1.15);
 }
 
 /* ── Bench ── */
@@ -1167,6 +1309,7 @@ body { overflow-x: clip; overflow-y: visible; }
   font-size: 20px;
   font-weight: 400;
   line-height: 1.35;
+  white-space: pre-line;
 }
 .v2-first-success__countdown {
   margin: 0 0 14px;

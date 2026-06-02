@@ -32,7 +32,7 @@ def _distinct_album(tmp_path: Path, n: int = 6) -> Path:
     base = time.time() - n * 10
     for i in range(n):
         path = album / f"p{i:02d}.jpg"
-        Image.new("RGB", (1200, 1600), (20 + i * 35, 50 + i * 10, 80)).save(
+        Image.new("RGB", (2400, 3200), (20 + i * 35, 50 + i * 10, 80)).save(
             path, quality=95
         )
         ts = base + i * 10

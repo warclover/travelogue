@@ -89,6 +89,25 @@ class IngestConfig:
 
 
 @dataclass
+class CullConfig:
+    enabled: bool = True
+    mode: str = "rules"
+    keep_ratio_floor: float = 0.80
+    min_keep: int = 15
+    featured_exempt: bool = True
+    featured_hard_exclude: bool = False
+    featured_exempt_low_res: bool = True
+    max_photos_warn_only: bool = True
+    sharpness_absolute_min: float = 0.0
+    blur_percentile: float = 2.0
+    hard_exclude_media_classes: tuple[str, ...] = ("screenshot", "thumbnail", "reupload")
+    aesthetic_metric: str = "topiq_nr"
+    portrait_face_aesthetic: bool = True
+    allow_cpu_ml: bool = False
+    ml_device: str = "auto"
+
+
+@dataclass
 class CurateConfig:
     segment_gap_days: int = 14
     city_gap_days: int = 3
@@ -306,6 +325,7 @@ class Phase6ObservabilityConfig:
 class AppConfig:
     trips_dir: Path = field(default_factory=_default_trips_dir)
     ingest: IngestConfig = field(default_factory=IngestConfig)
+    cull: CullConfig = field(default_factory=CullConfig)
     pipeline: PipelineConfig = field(default_factory=PipelineConfig)
     layout: LayoutConfig = field(default_factory=LayoutConfig)
     clustering: ClusteringConfig = field(default_factory=ClusteringConfig)
@@ -428,6 +448,36 @@ def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
         reject_raw=bool(raw.get("reject_raw", raw.get("rejectRaw", True))),
         raw_blocklist_suffixes=suffixes,
         raw_detect_sample_limit=int(raw.get("raw_detect_sample_limit", raw.get("rawDetectSampleLimit", 5))),
+    )
+
+
+def _cull_from_dict(raw: dict[str, Any]) -> CullConfig:
+    ml_raw = raw.get("ml") if isinstance(raw.get("ml"), dict) else {}
+    hard_raw = raw.get("hard_exclude_media_classes") or raw.get("hardExcludeMediaClasses") or [
+        "screenshot",
+        "thumbnail",
+        "reupload",
+    ]
+    return CullConfig(
+        enabled=bool(raw.get("enabled", True)),
+        mode=str(raw.get("mode", "rules")),
+        keep_ratio_floor=float(raw.get("keep_ratio_floor", raw.get("keepRatioFloor", 0.80))),
+        min_keep=int(raw.get("min_keep", raw.get("minKeep", 15))),
+        featured_exempt=bool(raw.get("featured_exempt", raw.get("featuredExempt", True))),
+        featured_hard_exclude=bool(raw.get("featured_hard_exclude", raw.get("featuredHardExclude", False))),
+        featured_exempt_low_res=bool(
+            raw.get("featured_exempt_low_res", raw.get("featuredExemptLowRes", True))
+        ),
+        max_photos_warn_only=bool(raw.get("max_photos_warn_only", raw.get("maxPhotosWarnOnly", True))),
+        sharpness_absolute_min=float(raw.get("sharpness_absolute_min", raw.get("sharpnessAbsoluteMin", 0.0))),
+        blur_percentile=float(raw.get("blur_percentile", raw.get("blurPercentile", 2.0))),
+        hard_exclude_media_classes=tuple(str(x) for x in hard_raw if x),
+        aesthetic_metric=str(ml_raw.get("aesthetic_metric", ml_raw.get("aestheticMetric", "topiq_nr"))),
+        portrait_face_aesthetic=bool(
+            ml_raw.get("portrait_face_aesthetic", ml_raw.get("portraitFaceAesthetic", True))
+        ),
+        allow_cpu_ml=bool(ml_raw.get("allow_cpu_ml", ml_raw.get("allowCpuMl", False))),
+        ml_device=str(ml_raw.get("device", "auto")),
     )
 
 
@@ -726,6 +776,7 @@ def load_config(path: Path | None = None) -> AppConfig:
     render_raw = data.get("render") if isinstance(data.get("render"), dict) else {}
     clustering_raw = data.get("clustering") if isinstance(data.get("clustering"), dict) else {}
     pipeline_raw = data.get("pipeline") if isinstance(data.get("pipeline"), dict) else {}
+    cull_raw = data.get("cull") if isinstance(data.get("cull"), dict) else {}
     studio_raw = data.get("studio") if isinstance(data.get("studio"), dict) else {}
     phase6_raw = data.get("phase6") if isinstance(data.get("phase6"), dict) else {}
     banned_raw = narrative_raw.get("banned_phrases") or []
@@ -739,6 +790,7 @@ def load_config(path: Path | None = None) -> AppConfig:
     return AppConfig(
         trips_dir=trips_dir,
         ingest=_ingest_from_dict(ingest_raw),
+        cull=_cull_from_dict(cull_raw),
         pipeline=_pipeline_from_dict(pipeline_raw),
         export=ExportConfig(max_zip_mb=int(export_raw.get("max_zip_mb", 25))),
         render=_render_from_dict(render_raw),

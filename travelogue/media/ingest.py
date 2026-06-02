@@ -847,7 +847,9 @@ def _finalize_ingest_assets(
     ingest_stats: dict,
     cfg: IngestConfig,
     min_assets: int,
+    app_cfg: AppConfig | None = None,
 ) -> None:
+    resolved_app = app_cfg or get_config()
     if min_assets and len(assets) < min_assets:
         raise IngestError(
             "E_INGEST_TOO_FEW",
@@ -889,7 +891,11 @@ def _finalize_ingest_assets(
             f"精选照片 {featured_n} 张，超过建议上限 {cfg.warn_featured_count_above}（仍已导入）"
         )
 
-    low_res_warn = apply_layout_eligibility_marks(trip, assets, cfg=cfg)
+    from travelogue.curation.photo_cull import apply_photo_cull
+
+    apply_photo_cull(trip, assets, cfg=resolved_app, ingest_stats=ingest_stats, trip_dir=trip_dir)
+
+    low_res_warn = apply_layout_eligibility_marks(trip, assets, cfg=cfg, app_cfg=resolved_app)
     excluded = (trip.get("curation") or {}).get("excludedLowResAssetIds") or []
     if excluded:
         ingest_stats["low_res_excluded_ids"] = list(excluded)
@@ -1066,6 +1072,7 @@ def ingest_into_trip(
         ingest_stats=ingest_stats,
         cfg=cfg,
         min_assets=min_assets,
+        app_cfg=resolved_app,
     )
     elapsed_ms["total"] = round((time.monotonic() - ingest_t0) * 1000.0, 2)
     for key, val in loop_state.elapsed_acc.items():

@@ -315,8 +315,12 @@ function populateImportSuccessUi(job) {
     } else {
       var summary = featured > 0 ? ("精选 " + featured + " 张") : ("照片 " + photoCount + " 张");
       if (segments > 0) summary += "，行程 " + segments + " 段";
-      msg.textContent = "《" + title + "》已生成 · " + summary;
+      var line1 = "《" + title + "》已生成 · " + summary;
+      msg.textContent = result.cullUserLine ? (line1 + "\n" + result.cullUserLine) : line1;
     }
+  }
+  if (result.cullWarn && typeof studioToast === "function") {
+    studioToast(result.cullWarn, { duration: 5000 });
   }
 
   if (result.g1Pending) {

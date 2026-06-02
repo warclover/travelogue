@@ -1,0 +1,343 @@
+"""Phase 9 · photo cull (Quality Gate)."""
+
+from __future__ import annotations
+
+import json
+import os
+import time
+from pathlib import Path
+from unittest.mock import MagicMock
+
+import pytest
+from PIL import Image
+
+from travelogue.config import AppConfig, ClusteringConfig, CullConfig, IngestConfig, VisionConfig
+from travelogue.curation.asset_quality import apply_layout_eligibility_marks
+from travelogue.curation.clustering import run_clustering_layer
+from travelogue.curation.curate import layout_eligible_assets, run_curate
+from travelogue.curation.photo_cull import apply_photo_cull, run_photo_cull
+from travelogue.media.ingest import ingest_into_trip
+from travelogue.services.trip_factory import create_trip
+
+def _asset(
+    aid: str,
+    *,
+    sharp: float = 100.0,
+    media_class: str = "photo",
+    user_tier: str = "material",
+    dedupe_group: str | None = None,
+    burst_group: str | None = None,
+) -> dict:
+    a: dict = {
+        "id": aid,
+        "type": "image",
+        "mediaClass": media_class,
+        "userTier": user_tier,
+        "quality": {"sharpness": sharp},
+        "layoutEligible": True,
+    }
+    if dedupe_group:
+        a["dedupeGroupId"] = dedupe_group
+    if burst_group:
+        a["burstGroupId"] = burst_group
+    return a
+
+
+def test_pass1_excludes_screenshot_and_blur() -> None:
+    cfg = CullConfig(enabled=True, blur_percentile=50.0, sharpness_absolute_min=0.0)
+    assets = [
+        _asset("sharp", sharp=200.0),
+        _asset("blur", sharp=1.0),
+        _asset("shot", sharp=100.0, media_class="screenshot"),
+    ]
+    summary = run_photo_cull(assets, cfg=cfg)
+    by_id = {a["id"]: a for a in assets}
+    assert by_id["sharp"]["layoutEligible"] is True
+    assert by_id["blur"]["layoutEligible"] is False
+    assert by_id["blur"]["excludeReason"] == "blur"
+    assert by_id["shot"]["layoutEligible"] is False
+    assert by_id["shot"]["excludeReason"] == "media_class"
+    assert summary["excludedByReason"]["blur"] == 1
+    assert summary["excludedByReason"]["media_class"] == 1
+
+
+def test_featured_exempt_from_cull() -> None:
+    cfg = CullConfig(enabled=True, blur_percentile=50.0)
+    assets = [
+        _asset("feat", sharp=1.0, user_tier="featured", media_class="screenshot"),
+        _asset("mat", sharp=200.0),
+    ]
+    run_photo_cull(assets, cfg=cfg)
+    feat = next(a for a in assets if a["id"] == "feat")
+    assert feat["layoutEligible"] is True
+    assert "excludeReason" not in feat
+
+
+def test_pass2_skips_material_only_groups() -> None:
+    cfg = CullConfig(
+        enabled=True,
+        min_keep=15,
+        keep_ratio_floor=0.80,
+        blur_percentile=0.0,
+    )
+    assets = [
+        _asset("m1", sharp=120.0, dedupe_group="g1"),
+        _asset("m2", sharp=200.0, dedupe_group="g1"),
+        _asset("m3", sharp=180.0, dedupe_group="g1"),
+    ]
+    run_photo_cull(assets, cfg=cfg)
+    assert all(a.get("layoutEligible", True) for a in assets)
+    assert not any(a.get("excludeReason") == "duplicate_group" for a in assets)
+
+
+def test_pass2_group_keeps_one_material_and_all_featured() -> None:
+    cfg = CullConfig(enabled=True, min_keep=1, keep_ratio_floor=0.0)
+    assets = [
+        _asset("f1", sharp=150.0, user_tier="featured", dedupe_group="g1"),
+        _asset("m1", sharp=120.0, dedupe_group="g1"),
+        _asset("m2", sharp=200.0, dedupe_group="g1"),
+    ]
+    run_photo_cull(assets, cfg=cfg)
+    by_id = {a["id"]: a for a in assets}
+    assert by_id["f1"]["layoutEligible"] is True
+    assert by_id["m2"]["layoutEligible"] is True
+    assert by_id["m1"]["layoutEligible"] is False
+    assert by_id["m1"]["excludeReason"] == "duplicate_group"
+
+
+def test_pass3_skipped_when_pool_at_floor() -> None:
+    cfg = CullConfig(enabled=True, min_keep=15, keep_ratio_floor=0.80)
+    assets = [_asset(f"a{i}", sharp=100.0 + float(i)) for i in range(10)]
+    summary = run_photo_cull(assets, cfg=cfg)
+    assert summary["pass3Skipped"] == "pool_at_or_below_floor"
+    assert summary["layoutEligibleCount"] == 10
+
+
+def test_apply_photo_cull_writes_trip_curation() -> None:
+    cfg = CullConfig(enabled=True, min_keep=1, keep_ratio_floor=0.0)
+    trip: dict = {"curation": {}}
+    assets = [
+        _asset("a1", sharp=200.0),
+        _asset("a2", sharp=1.0, media_class="screenshot"),
+    ]
+    summary = apply_photo_cull(trip, assets, cfg=AppConfig(cull=cfg))
+    assert trip["curation"]["cullUserLine"].startswith("经挑选")
+    assert "cullSummary" in trip["curation"]
+    assert summary["cullUserLine"] == trip["curation"]["cullUserLine"]
+    assert "a2" in trip["curation"]["excludedByCullAssetIds"]
+
+
+def test_cull_disabled_leaves_assets() -> None:
+    cfg = CullConfig(enabled=False)
+    trip: dict = {"curation": {}}
+    assets = [_asset("a1", sharp=1.0, media_class="screenshot")]
+    summary = apply_photo_cull(trip, assets, cfg=AppConfig(cull=cfg))
+    assert summary["enabled"] is False
+    assert assets[0]["layoutEligible"] is True
+
+
+def test_layout_eligible_assets_excludes_culled() -> None:
+    trip = {
+        "assets": [
+            {"id": "in", "type": "image", "layoutEligible": True},
+            {"id": "out", "type": "image", "layoutEligible": False, "excludeReason": "blur"},
+        ]
+    }
+    ids = [a["id"] for a in layout_eligible_assets(trip)]
+    assert ids == ["in"]
+
+
+def test_dual_folder_featured_all_eligible(tmp_path: Path) -> None:
+    root = tmp_path / "album"
+    feat = root / "精选"
+    mat = root / "素材上传"
+    feat.mkdir(parents=True)
+    mat.mkdir(parents=True)
+    stamp = time.time()
+    for i in range(2):
+        path = feat / f"f{i}.jpg"
+        Image.new("RGB", (2400, 3200), (200, 100 + i * 10, 50)).save(path, quality=95)
+        os.utime(path, (stamp + i, stamp + i))
+    for i in range(6):
+        path = mat / f"m{i}.jpg"
+        Image.new("RGB", (2400, 3200), (80, 120 + i * 5, 160)).save(path, quality=95)
+        os.utime(path, (stamp + 10 + i, stamp + 10 + i))
+    trips = tmp_path / "trips"
+    trip_json = create_trip("dual-cull", trips)
+    trip_dir = trips / "dual-cull"
+    trip = json.loads(trip_json.read_text(encoding="utf-8"))
+    ingest_into_trip(trip, trip_dir, from_dir=root, dedupe=False)
+    featured = [a for a in trip["assets"] if a.get("userTier") == "featured"]
+    assert len(featured) == 2
+    assert all(a.get("layoutEligible", True) for a in featured)
+
+
+def test_featured_low_res_stays_eligible() -> None:
+    trip: dict = {"curation": {}}
+    assets = [
+        {
+            "id": "feat",
+            "type": "image",
+            "userTier": "featured",
+            "nativeWidth": 900,
+            "nativeHeight": 700,
+            "width": 900,
+            "height": 700,
+            "layoutEligible": True,
+        },
+    ] + [
+        {
+            "id": f"ok{i}",
+            "type": "image",
+            "nativeWidth": 3200,
+            "nativeHeight": 2400,
+            "width": 3200,
+            "height": 2400,
+            "layoutEligible": True,
+        }
+        for i in range(5)
+    ]
+    apply_layout_eligibility_marks(
+        trip,
+        assets,
+        cfg=IngestConfig(min_long_edge_layout_px=800),
+        app_cfg=AppConfig(cull=CullConfig(featured_exempt_low_res=True)),
+    )
+    feat = next(a for a in assets if a["id"] == "feat")
+    assert feat["layoutEligible"] is True
+    assert feat.get("quality", {}).get("lowResSuspected") is True
+    assert "feat" not in (trip.get("curation") or {}).get("excludedLowResAssetIds", [])
+
+
+def test_incremental_ingest_reculls_full_trip(tmp_path: Path) -> None:
+    album = tmp_path / "album"
+    album.mkdir()
+    stamp = time.time()
+    for i in range(4):
+        path = album / f"p{i}.jpg"
+        Image.new("RGB", (2400, 3200), (30 + i * 20, 50, 70)).save(path, quality=95)
+        os.utime(path, (stamp + i * 10, stamp + i * 10))
+    trips = tmp_path / "trips"
+    trip_json = create_trip("recull", trips)
+    trip_dir = trips / "recull"
+    trip = json.loads(trip_json.read_text(encoding="utf-8"))
+    ingest_into_trip(trip, trip_dir, from_dir=album, dedupe=False)
+    first_summary = dict((trip.get("curation") or {}).get("cullSummary") or {})
+    assert first_summary.get("scanned") == 4
+
+    path = album / "p4.jpg"
+    Image.new("RGB", (2400, 3200), (200, 80, 40)).save(path, quality=95)
+    os.utime(path, (stamp + 50, stamp + 50))
+    ingest_into_trip(trip, trip_dir, from_dir=album, dedupe=True, incremental=True)
+    second_summary = (trip.get("curation") or {}).get("cullSummary") or {}
+    assert len(trip["assets"]) == 5
+    assert second_summary.get("scanned") == len(trip["assets"])
+
+
+def test_cull_fail_open_restores_eligible(monkeypatch: pytest.MonkeyPatch) -> None:
+    def _boom(*_args, **_kwargs):
+        raise RuntimeError("cull exploded")
+
+    monkeypatch.setattr("travelogue.curation.photo_cull.run_photo_cull", _boom)
+    trip: dict = {"curation": {}}
+    assets = [
+        _asset("a1", sharp=1.0, media_class="screenshot"),
+        _asset("a2", sharp=200.0),
+    ]
+    summary = apply_photo_cull(trip, assets, cfg=AppConfig(cull=CullConfig(enabled=True)))
+    assert all(a.get("layoutEligible", True) for a in assets)
+    assert summary.get("error")
+    assert trip["curation"]["cullSummary"].get("error")
+
+
+def test_keep_ratio_floor_or_pass3_skip() -> None:
+    cfg = CullConfig(enabled=True, min_keep=15, keep_ratio_floor=0.80)
+    assets = [_asset(f"a{i:03d}", sharp=50.0 + float(i)) for i in range(100)]
+    summary = run_photo_cull(assets, cfg=cfg)
+    n_scan = 100
+    non_feat = sum(
+        1 for a in assets if a.get("layoutEligible", True) and a.get("userTier") != "featured"
+    )
+    floor = int(summary.get("floorTargetNonFeatured") or 0)
+    if summary.get("pass3Skipped"):
+        assert non_feat >= len(assets) or summary["pass3Skipped"] == "pool_at_or_below_floor"
+    else:
+        assert non_feat >= max(floor, int(cfg.keep_ratio_floor * n_scan))
+
+
+def test_max_photos_exceeded_warn_only() -> None:
+    cfg = CullConfig(enabled=True, min_keep=1, keep_ratio_floor=0.0, max_photos_warn_only=True)
+    assets = [_asset(f"f{i}", sharp=100.0, user_tier="featured") for i in range(260)]
+    summary = run_photo_cull(assets, cfg=cfg, max_photos=250)
+    assert summary["maxPhotosExceeded"] is True
+    assert summary["layoutEligibleCount"] == 260
+    assert "warnMessage" in summary
+
+
+def test_clustering_embed_skips_culled_assets(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    captured: list[str] = []
+
+    def _fake_prepare(_trip_dir, assets, _encoder, **_kwargs):
+        captured.extend(str(a.get("id")) for a in assets)
+        plan = MagicMock()
+        plan.cache_hit_ratio.return_value = 1.0
+        plan.mode = "reuse"
+        plan.change_ratio = 0.0
+        plan.new_ids = []
+        plan.removed_ids = []
+        bundle = MagicMock()
+        bundle.asset_ids = []
+        bundle.vectors = []
+        bundle.source = "clip"
+        bundle.model = "test"
+        return bundle, plan
+
+    monkeypatch.setattr(
+        "travelogue.curation.clustering.prepare_scene_embeddings",
+        _fake_prepare,
+    )
+    monkeypatch.setattr("travelogue.curation.clustering.vision_stack_available", lambda: True)
+    monkeypatch.setattr("travelogue.curation.clustering.clip_torch_available", lambda: True)
+    monkeypatch.setattr("travelogue.curation.clustering.clip_weights_likely_cached", lambda **_k: True)
+    monkeypatch.setattr(
+        "travelogue.curation.clustering.get_clip_encoder",
+        lambda _cfg: MagicMock(last_embed_stats=None),
+    )
+    monkeypatch.setattr(
+        "travelogue.curation.clustering.embedding_cache_is_corrupt",
+        lambda _d: False,
+    )
+
+    trip = {
+        "assets": [
+            {
+                "id": "culled",
+                "type": "image",
+                "layoutEligible": False,
+                "takenAt": "2025-04-01T10:00:00Z",
+            },
+            {
+                "id": "keep",
+                "type": "image",
+                "layoutEligible": True,
+                "takenAt": "2025-04-01T11:00:00Z",
+                "geo": {"lat": 35.0, "lon": 139.0},
+            },
+        ],
+        "curation": {},
+        "meta": {"title": "t", "dateStart": "2025-04-01", "dateEnd": "2025-04-02"},
+    }
+    cfg = AppConfig(
+        clustering=ClusteringConfig(enabled="true"),
+        vision=VisionConfig(enabled="true", auto_min_photos=1, auto_min_eligible_ratio=0.0),
+    )
+    run_clustering_layer(trip, trip_dir=tmp_path / "trip", cfg=cfg)
+    assert captured == ["keep"]
+
+
+@pytest.mark.integration
+def test_nr_p9_01_clustering_off_cull_on_curate_smoke(ingested_trip) -> None:
+    _ws, trip = ingested_trip
+    cfg = AppConfig(clustering=ClusteringConfig(enabled="false"), cull=CullConfig(enabled=True))
+    run_curate(trip, export_layout="mobile", cfg=cfg)
+    assert len(trip.get("chapters") or []) >= 3

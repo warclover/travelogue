@@ -6,7 +6,7 @@
 | **域** | L0 素材意图 · Agent 0 ingest · Agent 1 curate |
 | **Epic** | E5（依赖 E2 Hybrid 最小包可选并行） |
 | **ADR** | [003-experience-reading-modes.md](./adr/003-experience-reading-modes.md) · D4-1 去重 |
-| **更新** | 2026-05-27 |
+| **更新** | 2026-06-02（§3.2 Phase 9 cull 豁免） |
 
 > 权威 **profile / 三模式 / 组合矩阵** 见主 PRD 与 [experience-matrix.yaml](./experience-matrix.yaml)。本文档只描述 `userTier` 与 ingest/curate。
 
@@ -50,10 +50,10 @@ ingest:
 
 ## 3. Ingest 规则（Agent 0）
 
-1. 两源 **同一管线**：dedupe · WebP · layoutEligible  
+1. 两源 **同一管线**：dedupe · WebP · **Quality Gate（Phase 9）** · layoutEligible  
 2. 合并后按 `takenAt` 排序  
 3. 同 `contentSig` 两文件夹都有 → **保留一条**，`userTier: featured`  
-4. `max_photos`：先 featured 后 material 填充  
+4. `max_photos`：scan 阶段限制解码候选；layout 池超 cap → **WARN 不硬删**（Phase 9 方案 B）  
 5. featured >30 张 → WARN（不硬拒）
 
 ### 3.1 Asset 字段
@@ -64,11 +64,20 @@ ingest:
 | `importSource` | `featured` \| `material` \| `legacy` |
 | `userTierSource` | `ingest` \| `user`（G2 serve 升格） |
 
+### 3.2 Phase 9 · Quality Gate 与 featured（2026-06-02）
+
+| 规则 | 说明 |
+|------|------|
+| **cull 豁免** | `userTier=featured` → **永不**因 cull 设 `layoutEligible=false`（含 screenshot/blur/quota） |
+| **低清豁免** | `cull.featured_exempt_low_res=true` 时 featured 不因低分辨率剔除 |
+| **curate 加权** | 仍仅对 **eligible** 资产加权；featured 若 eligible 则 `W_feat=1.35` 不变 |
+| **与旧文案** | 原 §4「不 bypass layoutEligible」指 **curate 不忽略 material 的 false**；featured cull 豁免见 [PRD-PHASE9.md](./PRD-PHASE9.md) D-P9-03 |
+
 ---
 
 ## 4. Curate 加权（Agent 1）
 
-**原则**：乘性加权 `W_feat=1.35`；**不 bypass** layoutEligible / mediaClass。
+**原则**：乘性加权 `W_feat=1.35`；curate **仅消费** `layoutEligible=true` 的资产（material 与 featured 均适用；featured 由 Phase 9 cull **保证** eligible，见 §3.2）。
 
 | 决策点 | 规则 |
 |--------|------|

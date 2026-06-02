@@ -184,6 +184,29 @@ python -m travelogue serve trips/mao
 
 ---
 
+## Phase 9 · Quality Gate（cull-on 基线 · 2026-06-02）
+
+| 项 | cull-off（2026-05-26） | cull-on（NR-P9-04） |
+|----|------------------------|---------------------|
+| 扫描 assets | 29 | 29 |
+| layoutEligible | **20**（9 低分辨率） | **24** |
+| 非 featured 保留率 | — | **82.8%**（≥ 80% 地板） |
+| cull 剔除 | — | 5（`cull_quota`） |
+| curate smoke | 3 章 | **3 章** ✅ |
+| cullUserLine | — | 经挑选 24 张进入排版 |
+
+命令：
+
+```powershell
+python scripts/phase9_golden_cull_signoff.py --trip mao --write docs/acceptance-records/phase9-golden-cull-signoff.json
+```
+
+**说明**：初版 cull-on 因 Pass 2 对 material-only 大组误杀仅留 1 张；修复 PRD §4.1（ingest 已去重的纯 material 组 skip Pass 2）后重跑通过。cull-on 比 cull-off 多 4 张 eligible（低分辨率仍由 `asset_quality` 独立处理，不在 cull Pass 1–4 内）。
+
+记录：`docs/acceptance-records/phase9-golden-cull-signoff.json` · `phase9-quality-gate.json`
+
+---
+
 ## 下一步（可选）
 
 ```powershell

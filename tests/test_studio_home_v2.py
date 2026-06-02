@@ -158,7 +158,9 @@ def test_studio_home_v2_js_modules_present() -> None:
     assert "renderBentoEmpty" in bento
     assert "renderBackground" in bento
     assert "initCarousel" in bento  # M20-b：carousel 由独立模块渲染
-    assert "loadManifest" in manifest_js
+    assert "initPhoneStrip" in bento
+    assert "initPhoneStrip" in (STUDIO_DIR / "homepage-v2" / "phone-strip.js").read_text(encoding="utf-8")
+    assert "longshotPages" in manifest_js
     # 复用 v3 共享模块（最小 diff）
     assert "../js/constants.js" in bootstrap
     assert "isDemoTrip" in bootstrap

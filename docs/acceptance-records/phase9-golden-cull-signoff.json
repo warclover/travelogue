@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "1",
+  "runs": [
+    {
+      "tripId": "mao",
+      "albumPath": "D:\\Photos\\mao",
+      "signedOffAt": "2026-06-02T08:51:03Z",
+      "phase": "P9-QualityGate",
+      "baseline": "cull-on",
+      "metrics": {
+        "scanned": 29,
+        "featuredCount": 0,
+        "layoutEligibleCount": 24,
+        "nonFeaturedEligibleCount": 24,
+        "nonFeaturedKeepRatio": 0.8276,
+        "keepRatioFloor": 0.8,
+        "floorMet": true,
+        "pass3Skipped": null,
+        "floorNotMet": false,
+        "excludedByCull": 5,
+        "excludedByReason": {
+          "cull_quota": 5
+        },
+        "cullUserLine": "经挑选 24 张进入排版",
+        "mode": "rules",
+        "ingestMs": 72264.0,
+        "ingestAdded": 29,
+        "ingestSkipped": 7,
+        "report": "导入 +29 张，跳过 7 张\n扫描 43 · 入选 43\ntrip 内共 29 张\n  相似图(phash): 1\n  连拍: 6\n  连拍替换为更清晰: 7\n  经挑选 24 张进入排版\n  筛选剔除: 5\n  日期来源: exif=0 filename=36 mtime=0\n  素材类型: photo=29\n  EXIF 旋转: 25\n  检测到人脸: 33 张（排版将避免人物竖拼/人景混排）\n  构图: 横17 竖12 方0 全景0 超长0",
+        "curateSmokeOk": true,
+        "curateChapters": 3
+      }
+    },
+    {
+      "tripId": "maomi",
+      "albumPath": "D:\\Photos\\maomi",
+      "signedOffAt": "2026-06-02T08:52:18Z",
+      "phase": "P9-QualityGate",
+      "baseline": "cull-on",
+      "metrics": {
+        "scanned": 33,
+        "featuredCount": 0,
+        "layoutEligibleCount": 26,
+        "nonFeaturedEligibleCount": 26,
+        "nonFeaturedKeepRatio": 0.7879,
+        "keepRatioFloor": 0.8,
+        "floorMet": false,
+        "pass3Skipped": null,
+        "floorNotMet": false,
+        "excludedByCull": 6,
+        "excludedByReason": {
+          "cull_quota": 6
+        },
+        "cullUserLine": "经挑选 27 张进入排版",
+        "mode": "rules",
+        "ingestMs": 75077.6,
+        "ingestAdded": 33,
+        "ingestSkipped": 0,
+        "report": "导入 +33 张，跳过 0 张\n扫描 33 · 入选 33\ntrip 内共 33 张\n  经挑选 27 张进入排版\n  筛选剔除: 6\n  日期来源: exif=33 filename=0 mtime=0\n  提示: 检测到可能包含 4 次旅行（11月–12月·maomi、12月28日·maomi、2月22日·maomi、3月–4月·maomi）；默认将合成一本游记（3–5 章），可在 G1 合并段或拆成多本\n  素材类型: photo=33\n  EXIF 旋转: 33\n  低分辨率（不参与排版）: asset-023\n  已剔除 1 张分辨率明显偏低的照片（批内相对偏低 1 张（短边/像素面积低于本批阈值））\n  检测到人脸: 33 张（排版将避免人物竖拼/人景混排）\n  含 GPS: 33 张\n  构图: 横21 竖12 方0 全景0 超长0",
+        "curateSmokeOk": true,
+        "curateChapters": 4
+      }
+    }
+  ]
+}

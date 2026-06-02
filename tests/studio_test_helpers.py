@@ -24,7 +24,7 @@ def make_test_album(base: Path, n: int = 6, *, name: str = "album") -> Path:
     stamp = time.time() - n * 10
     for i in range(n):
         path = album / f"p{i:02d}.jpg"
-        Image.new("RGB", (1200, 1600), (30 + i * 17, 50 + i * 11, 70 + i * 13)).save(
+        Image.new("RGB", (2400, 3200), (30 + i * 17, 50 + i * 11, 70 + i * 13)).save(
             path, quality=95
         )
         ts = stamp + i * 10

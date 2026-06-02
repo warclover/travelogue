@@ -9,6 +9,11 @@ export function pickRecentUserTrip(trips) {
   return (trips || []).find(function (t) { return !isDemoTrip(t); }) || null;
 }
 
+/** 最近编辑的非 demo 画册列表（updatedAt 降序）。 */
+export function pickRecentUserTrips(trips) {
+  return (trips || []).filter(function (t) { return !isDemoTrip(t); });
+}
+
 /**
  * @param {string} tripId
  * @returns {Promise<object|null>}

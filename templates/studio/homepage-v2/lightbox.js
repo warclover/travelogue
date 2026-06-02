@@ -10,7 +10,7 @@
 import { SHEET_FOCUSABLE } from "../js/constants.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
-import { pageImageUrl, manifestAssetUrl } from "./manifest.js";
+import { pageImageUrl, manifestAssetUrl, longshotPages, longshotPageUrl } from "./manifest.js";
 
 let _open = false;
 let _previousFocus = null;
@@ -45,8 +45,19 @@ function buildScrollContent(scroll, manifest) {
 }
 
 function buildLongshotContent(scroll, manifest) {
-  var url = manifest ? manifestAssetUrl(manifest, "longshot") : "";
-  appendImage(scroll, url, "微信长图样张", "长图样张加载中…");
+  var pages = longshotPages(manifest);
+  if (!pages.length) {
+    appendImage(scroll, "", "微信长图样张", "长图样张加载中…");
+    return;
+  }
+  pages.forEach(function (page) {
+    appendImage(
+      scroll,
+      longshotPageUrl(manifest, page),
+      page.label || "微信长图",
+      page.label || "长图加载中…"
+    );
+  });
 }
 
 function focusableEls(container) {

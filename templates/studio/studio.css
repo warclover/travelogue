@@ -1335,6 +1335,7 @@ html[data-cap-pick-folder="off"] #studio-sheet-repick {
   font-size: 26px;
   color: #fff;
   margin: 0 0 28px;
+  white-space: pre-line;
 }
 .studio-success__paths-hint {
   margin: -12px 0 20px;

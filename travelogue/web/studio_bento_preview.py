@@ -70,6 +70,14 @@ def _is_web_landscape_file(path: Path) -> bool:
     return ratio >= _WEB_LANDSCAPE_RATIO_MIN
 
 
+def _is_phone_vertical_file(path: Path) -> bool:
+    """手机长图可用：竖条 PNG（如 export 章节切图）。"""
+    ratio = _file_width_height_ratio(path)
+    if ratio is None:
+        return False
+    return ratio < _WEB_LANDSCAPE_RATIO_MIN
+
+
 def _pick_longshot(trip_dir: Path) -> Path | None:
     rows = sorted(trip_dir.glob("*-longshot.png"))
     return rows[0] if rows else None
@@ -252,6 +260,148 @@ def _best_epilogue_image_url(
     return fallback
 
 
+def _best_chapter_portrait_url(
+    trip: dict,
+    trip_id: str,
+    trip_dir: Path,
+    chapter: dict,
+    *,
+    fallback: str,
+) -> str:
+    url = _best_asset_url(
+        trip,
+        trip_id,
+        trip_dir,
+        _iter_chapter_asset_ids(chapter),
+        kind_scores=_PHONE_KIND_SCORE,
+        target_ratio=_TARGET_PHONE_RATIO,
+    )
+    return url or fallback
+
+
+def _best_cover_portrait_url(
+    trip: dict,
+    trip_id: str,
+    trip_dir: Path,
+    *,
+    fallback: str,
+) -> str:
+    assets = _asset_map(trip)
+    cover_id = trip.get("coverAssetId")
+    ordered_ids: list[str] = []
+    if cover_id:
+        ordered_ids.append(str(cover_id))
+    for aid in _eligible_asset_ids(trip):
+        if aid not in ordered_ids:
+            ordered_ids.append(aid)
+    url = _best_asset_url(
+        trip,
+        trip_id,
+        trip_dir,
+        ordered_ids,
+        kind_scores=_PHONE_KIND_SCORE,
+        target_ratio=_TARGET_PHONE_RATIO,
+    )
+    if url:
+        return url
+    if cover_id:
+        asset = assets.get(str(cover_id))
+        if _is_image_asset(asset):
+            direct = _asset_public_url(trip_id, trip_dir, asset)
+            if direct:
+                return direct
+    return fallback
+
+
+def _best_epilogue_portrait_url(
+    trip: dict,
+    trip_id: str,
+    trip_dir: Path,
+    *,
+    fallback: str,
+) -> str:
+    chapters = trip.get("chapters") or []
+    for chapter in reversed(chapters):
+        url = _best_asset_url(
+            trip,
+            trip_id,
+            trip_dir,
+            _iter_chapter_asset_ids(chapter),
+            kind_scores=_PHONE_KIND_SCORE,
+            target_ratio=_TARGET_PHONE_RATIO,
+        )
+        if url:
+            return url
+    assets = _asset_map(trip)
+    for aid in reversed(_eligible_asset_ids(trip)):
+        asset = assets.get(aid)
+        if not asset:
+            continue
+        url = _asset_public_url(trip_id, trip_dir, asset)
+        if url:
+            return url
+    return fallback
+
+
+def _portrait_url_for_carousel_page(
+    trip: dict,
+    trip_id: str,
+    trip_dir: Path,
+    page: dict[str, Any],
+    chapters: list[dict],
+    *,
+    cover_url: str,
+    preview_url: str,
+) -> str:
+    role = page.get("role")
+    if role == "cover":
+        # 手机框封面优先 trip preview（9:16），与章内竖图区分
+        return preview_url or _best_cover_portrait_url(
+            trip, trip_id, trip_dir, fallback=cover_url
+        )
+    if role == "chapter":
+        idx = int(page.get("chapterIndex") or 0)
+        if idx > 0 and idx <= len(chapters):
+            return _best_chapter_portrait_url(
+                trip, trip_id, trip_dir, chapters[idx - 1], fallback=cover_url
+            )
+    if role == "epilogue":
+        return _best_epilogue_portrait_url(trip, trip_id, trip_dir, fallback=cover_url)
+    return str(page.get("url") or cover_url)
+
+
+def _longshot_pages_from_carousel(
+    trip: dict,
+    trip_id: str,
+    trip_dir: Path,
+    carousel_pages: list[dict[str, Any]],
+    chapters: list[dict],
+    *,
+    cover_url: str,
+    preview_url: str,
+) -> list[dict[str, Any]]:
+    """与 Web carousel 同序 · 每页选竖版原图（无导出长图时的 fallback）。"""
+    pages: list[dict[str, Any]] = []
+    for page in carousel_pages:
+        entry: dict[str, Any] = {
+            "id": str(page.get("id") or "longshot"),
+            "label": str(page.get("label") or "微信长图"),
+            "url": _portrait_url_for_carousel_page(
+                trip,
+                trip_id,
+                trip_dir,
+                page,
+                chapters,
+                cover_url=cover_url,
+                preview_url=preview_url,
+            ),
+        }
+        if page.get("chapterIndex") is not None:
+            entry["chapterIndex"] = page["chapterIndex"]
+        pages.append(entry)
+    return pages
+
+
 def _best_longshot_url(
     trip: dict,
     trip_id: str,
@@ -272,6 +422,60 @@ def _best_longshot_url(
 
 def _chapter_label(chapter: dict, index: int) -> str:
     return str(chapter.get("title") or f"第{index}章").strip()[:20] or f"第{index}章"
+
+
+def _build_longshot_pages(
+    trip: dict,
+    trip_id: str,
+    trip_dir: Path,
+    chapters: list[dict],
+    ch_pngs: list[Path],
+    carousel_pages: list[dict[str, Any]],
+    *,
+    cover_url: str,
+    preview_url: str,
+) -> list[dict[str, Any]]:
+    """手机框切换序列：整卷 longshot → 竖条 *-ch*.png → 按 carousel 章序竖版原图。"""
+    longshot = _pick_longshot(trip_dir)
+    if longshot:
+        return [
+            {
+                "id": "longshot",
+                "label": "微信长图",
+                "url": f"/{trip_id}/{longshot.name}",
+            }
+        ]
+
+    vertical_strips = [png for png in ch_pngs if _is_phone_vertical_file(png)]
+    if vertical_strips:
+        pages: list[dict[str, Any]] = []
+        for i, png in enumerate(vertical_strips, 1):
+            ch = chapters[i - 1] if i - 1 < len(chapters) else {}
+            pages.append(
+                {
+                    "id": str(ch.get("id") or f"ch{i:02d}"),
+                    "label": _chapter_label(ch, i) if ch else f"第{i}章",
+                    "chapterIndex": i,
+                    "url": f"/{trip_id}/{png.name}",
+                }
+            )
+        return pages
+
+    if carousel_pages and chapters:
+        derived = _longshot_pages_from_carousel(
+            trip,
+            trip_id,
+            trip_dir,
+            carousel_pages,
+            chapters,
+            cover_url=cover_url,
+            preview_url=preview_url,
+        )
+        if derived:
+            return derived
+
+    fallback = _best_longshot_url(trip, trip_id, trip_dir, fallback=preview_url)
+    return [{"id": "longshot", "label": "微信长图", "url": fallback}]
 
 
 def _chapter_page_url(
@@ -360,11 +564,17 @@ def build_trip_bento_preview(trip_dir: Path, trip: dict, trip_id: str) -> dict[s
         {"id": "epilogue", "role": "epilogue", "label": "尾声", "url": epilogue_url},
     )
 
-    longshot = _pick_longshot(trip_dir)
-    if longshot:
-        longshot_url = f"/{trip_id}/{longshot.name}"
-    else:
-        longshot_url = _best_longshot_url(trip, trip_id, trip_dir, fallback=preview_url)
+    longshot_pages = _build_longshot_pages(
+        trip,
+        trip_id,
+        trip_dir,
+        chapters,
+        ch_pngs,
+        pages,
+        cover_url=cover_url,
+        preview_url=preview_url,
+    )
+    longshot_url = longshot_pages[0]["url"] if longshot_pages else preview_url
 
     return {
         "version": "1",
@@ -380,5 +590,6 @@ def build_trip_bento_preview(trip_dir: Path, trip: dict, trip_id: str) -> dict[s
             "background": cover_url,
             "longshot": longshot_url,
         },
+        "longshotPages": longshot_pages,
         "pages": pages,
     }

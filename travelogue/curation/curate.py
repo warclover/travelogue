@@ -149,12 +149,11 @@ def reading_experience_warnings(
 
 
 def layout_eligible_assets(trip: dict) -> list[dict]:
-    """Assets usable for cover, chapters, and screens (excludes low-res curation drops)."""
-    excluded = set((trip.get("curation") or {}).get("excludedLowResAssetIds") or [])
+    """Assets usable for cover, chapters, and screens."""
     return [
         a
         for a in trip.get("assets") or []
-        if a["id"] not in excluded and a.get("type", "image") != "video"
+        if a.get("type", "image") != "video" and a.get("layoutEligible", True) is not False
     ]
 
 

@@ -34,7 +34,7 @@ def assess_degradation(
     eligible = [
         a
         for a in layout_assets
-        if (a.get("curation") or {}).get("layoutEligible", True) is not False
+        if a.get("layoutEligible", True) is not False
     ]
     kinds = {aspects.get(a["id"]) for a in eligible if a.get("id") and aspects.get(a["id"])}
     kinds.discard(None)

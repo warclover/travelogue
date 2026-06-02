@@ -33,6 +33,8 @@ class StudioPipelineResult:
     segment_count: int = 0
     g1_pending: bool = False
     tier_mode: str = "single"
+    cull_user_line: str = ""
+    cull_warn: str = ""
 
 
 def _resolve_tier_mode(ingest_stats: dict) -> str:
@@ -61,6 +63,10 @@ def _finalize_pipeline_result(
     display_title = str(meta_final.get("title") or title).strip()[:20] or "我的旅途"
     featured_n, segment_n = _trip_import_stats(trip_final)
     intent_line = _format_intent_line(display_title, featured_n, segment_n)
+    curation = trip_final.get("curation") or {}
+    cull_user_line = str(curation.get("cullUserLine") or "")
+    cull_summary = curation.get("cullSummary") or {}
+    cull_warn = str(cull_summary.get("warnMessage") or "") if cull_summary.get("maxPhotosExceeded") else ""
     write_studio_intent_telemetry(
         trip_final,
         trip_root,
@@ -83,6 +89,8 @@ def _finalize_pipeline_result(
         segment_count=segment_n,
         g1_pending=g1_pending,
         tier_mode=tier_mode,
+        cull_user_line=cull_user_line,
+        cull_warn=cull_warn,
     )
 
 

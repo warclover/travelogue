@@ -129,6 +129,25 @@ ingest:
   shared_color_thumb_px: 32
   reject_raw: true
 
+# Phase 9 · 排版前照片筛选（见 docs/PRD-PHASE9.md）
+cull:
+  enabled: true
+  mode: rules                 # W1 默认 rules；W2 后可改 auto
+  keep_ratio_floor: 0.80
+  min_keep: 15
+  featured_exempt: true
+  featured_hard_exclude: false
+  featured_exempt_low_res: true
+  max_photos_warn_only: true
+  sharpness_absolute_min: 0.0
+  blur_percentile: 2
+  hard_exclude_media_classes: [screenshot, thumbnail, reupload]
+  ml:
+    aesthetic_metric: topiq_nr
+    portrait_face_aesthetic: true
+    allow_cpu_ml: false
+    device: auto
+
 # Phase 7 · 流水线并行（见 docs/PRD-PHASE7.md）
 pipeline:
   parallel_embed: false
@@ -137,6 +156,8 @@ pipeline:
 curate:
   featured_weight: 1.35
   featured_min_for_cover_pool: 2
+  # Phase 10 · food grid（见 docs/PRD-PHASE10-food-grid.md）
+  # enable_food_grid: true
   # Phase 6 · layout rhythm & diversity (M25-B)
   layout:
     enable_gravity_balance: true

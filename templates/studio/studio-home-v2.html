@@ -108,16 +108,29 @@
         </div>
       </section>
 
-      <!-- ③ 9:16 微信长图（右列跨行 · 顶对齐文案） -->
+      <!-- ③ 微信长图 · 竖屏预览（右列 · 与 Web 轮播行底对齐） -->
       <section class="v2-bento__mobile" aria-label="微信长图预览">
         <p class="v2-cell-label">
-          <span>微信长图 · 9:16</span>
-          <span class="v2-cell-label__hint">长图顶部预览</span>
+          <span>微信长图 · 竖屏预览</span>
+          <span class="v2-cell-label__hint">←→ 切换 · 一屏一章</span>
         </p>
         <div class="v2-phone" id="v2-phone">
           <div class="v2-phone__shell">
             <div class="v2-phone__notch" aria-hidden="true"></div>
-            <div class="v2-phone__screen" id="v2-phone-screen" tabindex="0" aria-label="微信长图顶部预览"></div>
+            <div class="v2-phone__screen" id="v2-phone-screen" tabindex="0" aria-label="微信长图预览">
+              <div class="v2-phone-strip" id="v2-phone-strip">
+                <div class="v2-phone-strip__viewport">
+                  <button type="button" class="v2-phone-strip__arrow v2-phone-strip__arrow--prev"
+                          id="v2-phone-prev" aria-label="上一段" disabled>‹</button>
+                  <div class="v2-phone-strip__track" id="v2-phone-track"></div>
+                  <button type="button" class="v2-phone-strip__arrow v2-phone-strip__arrow--next"
+                          id="v2-phone-next" aria-label="下一段">›</button>
+                </div>
+                <div class="v2-phone-strip__footer">
+                  <div class="v2-phone-strip__dots" id="v2-phone-dots" role="tablist" aria-label="长图章节"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import time
 from pathlib import Path
 
 from PIL import Image
@@ -12,10 +14,11 @@ from travelogue.demo.build import run_demo_from_album
 def _album(tmp_path: Path, n: int = 6) -> Path:
     album = tmp_path / "album"
     album.mkdir()
+    stamp = time.time() - n * 10
     for i in range(n):
-        Image.new("RGB", (1200, 1600), (30 + i * 17, 50, 70)).save(
-            album / f"p{i:02d}.jpg", quality=95
-        )
+        path = album / f"p{i:02d}.jpg"
+        Image.new("RGB", (2400, 3200), (30 + i * 17, 50, 70)).save(path, quality=95)
+        os.utime(path, (stamp + i * 10, stamp + i * 10))
     return album
 
 

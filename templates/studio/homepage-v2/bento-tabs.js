@@ -63,22 +63,32 @@ export function initBentoTabs() {
 /** trips 加载后拉取最近一本预览 manifest。 */
 export function refreshUserBentoPreview(trips) {
   return import("./trip-preview.js").then(function (mod) {
-    var recent = mod.pickRecentUserTrip(trips);
-    if (!recent) {
+    var candidates = mod.pickRecentUserTrips(trips);
+    if (!candidates.length) {
       V2.userManifest = null;
       if (V2.bentoTab === "mine") V2.bentoTab = "demo";
       syncTabUi();
       return null;
     }
-    return mod.loadTripBentoPreview(recent.tripId).then(function (manifest) {
-      V2.userManifest = manifest;
-      if (!manifest && V2.bentoTab === "mine") V2.bentoTab = "demo";
+
+    function tryAt(i) {
+      if (i >= candidates.length) return Promise.resolve(null);
+      var trip = candidates[i];
+      return mod.loadTripBentoPreview(trip.tripId).then(function (manifest) {
+        if (manifest) return manifest;
+        return tryAt(i + 1);
+      });
+    }
+
+    return tryAt(0).then(function (manifest) {
+      V2.userManifest = manifest || null;
+      if (!V2.userManifest && V2.bentoTab === "mine") V2.bentoTab = "demo";
       V2.manifest = activeBentoManifest();
       syncTabUi();
-      if (V2.bentoTab === "mine" && manifest) {
-        renderBentoSurface(manifest);
+      if (V2.bentoTab === "mine" && V2.userManifest) {
+        renderBentoSurface(V2.userManifest);
       }
-      return manifest;
+      return V2.userManifest;
     });
   });
 }

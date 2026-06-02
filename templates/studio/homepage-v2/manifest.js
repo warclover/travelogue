@@ -28,6 +28,25 @@ export function manifestAssetUrl(manifest, key) {
   return assetUrl(rel);
 }
 
+/** 手机框竖滚序列（longshotPages 或单张 assets.longshot）。 */
+export function longshotPages(manifest) {
+  if (!manifest) return [];
+  var rows = manifest.longshotPages;
+  if (Array.isArray(rows) && rows.length) {
+    return rows.filter(function (p) { return p && p.url; });
+  }
+  var url = manifestAssetUrl(manifest, "longshot");
+  if (!url) return [];
+  return [{ id: "longshot", label: "微信长图", url: url }];
+}
+
+/** longshotPages 条目 URL。 */
+export function longshotPageUrl(manifest, page) {
+  if (!page) return "";
+  if (page.url) return String(page.url);
+  return manifestAssetUrl(manifest, "longshot");
+}
+
 /** 基本结构校验（轻量；权威 schema 见 manifest.schema.json）。 */
 export function isValidManifest(m) {
   if (!m || typeof m !== "object") return false;

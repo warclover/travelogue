@@ -5,6 +5,7 @@ import { V2, $, show } from "./store.js";
 import { cssBackgroundImage } from "../js/dom.js";
 import { manifestAssetUrl } from "./manifest.js";
 import { initCarousel } from "./carousel.js";
+import { initPhoneStrip } from "./phone-strip.js";
 import { resolveLayoutTier } from "./layout-tier.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { initBentoTabs, syncTabUi } from "./bento-tabs.js";
@@ -61,21 +62,9 @@ export function renderColdStartBackground(manifest) {
   img.src = url;
 }
 
-/** 9:16 长图样张。 */
+/** 9:16 长图 · 竖向一屏一章（箭头 / 圆点 / ↑↓）。 */
 export function renderPhone(manifest, tier) {
-  var screen = $("v2-phone-screen");
-  if (!screen || !manifest || !manifest.assets) return;
-  screen.innerHTML = "";
-  var url = manifestAssetUrl(manifest, "longshot");
-  var img = new Image();
-  img.alt = manifest.source === "user" ? "微信长图" : "微信长图样张";
-  if (tier === "L2") img.loading = "lazy";
-  img.onerror = function () {
-    screen.innerHTML =
-      '<div class="v2-carousel__slide-ph" style="min-height:240px">长图加载中…</div>';
-  };
-  img.src = url;
-  screen.appendChild(img);
+  initPhoneStrip(manifest, { tier: tier });
 }
 
 /** 工作台 bench。 */

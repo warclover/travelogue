@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
-| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2 Studio** + **Phase 3 Curate 聚类** + **Phase 4 编辑意图** + **Phase 5 整体优化** + **Phase 6 稳态与艺术优化** + **Phase 7 管线性能** |
+| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2 Studio** + **Phase 3 Curate 聚类** + **Phase 4 编辑意图** + **Phase 5 整体优化** + **Phase 6 稳态与艺术优化** + **Phase 7 管线性能** + **Phase 8 语义聚类** + **Phase 9 排版前闸口** + **Phase 10 Food Grid** |
 | **更新日期** | 2026-05-30 |
 
 ---
@@ -110,6 +110,45 @@
 **前置**：Phase 6 G0 离线 AC 通过；`phase6-quality-eval.json` 基线已登记。**代号**：P7-Perf · 极速管线。
 
 阅读顺序：**PRD-PHASE7** → **IMPLEMENTATION-PHASE7** → **ACCEPTANCE-PHASE7** → `scripts/phase7_*.py`（W1 编码）。
+
+---
+
+## Phase 8 · 照片语义聚类（Semantic Tagging）
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE8-photo-semantic-clustering.md](./PRD-PHASE8-photo-semantic-clustering.md) | **11 大类 L1 + 类内 HDBSCAN L2** · 排版 category_coherence |
+
+**前置**：Phase 9 Quality Gate 已上线。**代号**：P8-Semantic。
+
+---
+
+## Phase 9 · 排版前闸口（Quality Gate）
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE9.md](./PRD-PHASE9.md) | **Phase 9 总览**（减噪+精选 · ≥80% · featured 豁免） |
+| [PRD-PHASE9-A-quality-gate-algorithm.md](./PRD-PHASE9-A-quality-gate-algorithm.md) | 算法规格 Pass 1–4 |
+| [PRD-PHASE9-B-pipeline-integration.md](./PRD-PHASE9-B-pipeline-integration.md) | 管线顺序 · config |
+| [PRD-PHASE9-C-data-model.md](./PRD-PHASE9-C-data-model.md) | trip.json · schema |
+| [PRD-PHASE9-D-studio-ux.md](./PRD-PHASE9-D-studio-ux.md) | Importing hint · 完成摘要（无被筛 UI） |
+| [PRD-PHASE9-E-subject-bridge.md](./PRD-PHASE9-E-subject-bridge.md) | Wave 3 · subjectClass 桥接 |
+| [IMPLEMENTATION-PHASE9.md](./IMPLEMENTATION-PHASE9.md) | 实施任务 M30 |
+| [ACCEPTANCE-PHASE9.md](./ACCEPTANCE-PHASE9.md) | W1/W2/W3 验收 |
+
+**前置**：Phase 7 ingest 基线。**代号**：P9-QualityGate · **W1 可独立发版**。
+
+阅读顺序：**PRD-PHASE9** → P9-A～E → **IMPLEMENTATION-PHASE9** → **ACCEPTANCE-PHASE9**。
+
+---
+
+## Phase 10 · Food Grid 组屏
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE10-food-grid.md](./PRD-PHASE10-food-grid.md) | mundane 食物/标识 **grid 屏** · screen_planner |
+
+**前置**：Phase 9 Wave 3（subject 桥接）。
 
 ---
 

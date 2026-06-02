@@ -309,6 +309,36 @@
           "type": "array",
           "items": { "type": "string" }
         },
+        "excludedByCullAssetIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "cullUserLine": { "type": "string" },
+        "cullSummary": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "mode": { "type": "string" },
+            "scanned": { "type": "integer", "minimum": 0 },
+            "featuredCount": { "type": "integer", "minimum": 0 },
+            "layoutEligibleCount": { "type": "integer", "minimum": 0 },
+            "nonFeaturedEligibleCount": { "type": "integer", "minimum": 0 },
+            "keepRatioFloor": { "type": "number", "minimum": 0, "maximum": 1 },
+            "excludedByCull": { "type": "integer", "minimum": 0 },
+            "excludedByReason": {
+              "type": "object",
+              "additionalProperties": { "type": "integer", "minimum": 0 }
+            },
+            "pass3Skipped": { "type": ["string", "null"] },
+            "floorNotMet": { "type": "boolean" },
+            "floorTargetNonFeatured": { "type": "integer", "minimum": 0 },
+            "maxPhotosExceeded": { "type": "boolean" },
+            "maxPhotosLimit": { "type": "integer", "minimum": 0 },
+            "warnMessage": { "type": "string" },
+            "error": { "type": "string" }
+          }
+        },
         "segments": {
           "type": "array",
           "items": { "$ref": "#/$defs/timeSegment" }
@@ -724,14 +754,26 @@
         },
         "excludeReason": {
           "type": "string",
-          "enum": ["low_resolution"]
+          "enum": [
+            "low_resolution",
+            "media_class",
+            "blur",
+            "duplicate_group",
+            "cull_quota",
+            "exposure_extreme"
+          ]
         },
         "quality": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "sharpness": { "type": "number", "minimum": 0 },
-            "meanLuma": { "type": "number", "minimum": 0, "maximum": 1 }
+            "meanLuma": { "type": "number", "minimum": 0, "maximum": 1 },
+            "cullScore": { "type": "number", "minimum": 0, "maximum": 1 },
+            "cullRank": { "type": "integer", "minimum": 1 },
+            "cullGroupId": { "type": "string" },
+            "aestheticScore": { "type": "number", "minimum": 0, "maximum": 1 },
+            "lowResSuspected": { "type": "boolean" }
           }
         },
         "dominantTone": {

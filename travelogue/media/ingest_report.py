@@ -51,6 +51,21 @@ def format_ingest_report(result, trip: dict | None = None) -> str:
         if stats.get(key):
             lines.append(f"  {label}: {stats[key]}")
 
+    cull_eligible = stats.get("cull_layout_eligible")
+    if cull_eligible is not None:
+        user_line = stats.get("cull_user_line") or f"经挑选 {cull_eligible} 张进入排版"
+        lines.append(f"  {user_line}")
+        for key, label in (
+            ("cull_duplicate_group", "连拍/相似组"),
+            ("cull_blur", "模糊"),
+            ("cull_quota", "质量筛选"),
+            ("cull_media_class", "截图/缩略图"),
+        ):
+            if stats.get(key):
+                lines.append(f"  {label}: {stats[key]}")
+        if stats.get("cull_excluded"):
+            lines.append(f"  筛选剔除: {stats['cull_excluded']}")
+
     if any(stats.get(k) for k in ("exif_dates", "filename_dates", "mtime_dates")):
         lines.append(
             f"  日期来源: exif={stats.get('exif_dates', 0)} "

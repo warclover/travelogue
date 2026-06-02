@@ -208,7 +208,144 @@ def test_build_trip_bento_preview_prefers_portrait_for_longshot(tmp_path: Path) 
 
     payload = build_trip_bento_preview(trip_dir, trip, trip_id)
     assert payload is not None
-    assert payload["assets"]["longshot"] == f"/{trip_id}/assets/portrait.webp"
+    assert payload["assets"]["longshot"] == f"/{trip_id}/preview.jpg"
+    assert len(payload["longshotPages"]) == 3
+    assert payload["longshotPages"][0]["url"] == f"/{trip_id}/preview.jpg"
+
+
+def test_build_trip_bento_preview_longshot_pages_from_vertical_ch_pngs(tmp_path: Path) -> None:
+    """手机框 · 竖条 *-ch*.png 按章堆叠为 longshotPages。"""
+    trip_id = "mobile-strips"
+    trip_dir = tmp_path / trip_id
+    assets_dir = trip_dir / "assets"
+    assets_dir.mkdir(parents=True)
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    _write_png(trip_dir / "trip-ch01.png", 390, 8000)
+    _write_png(trip_dir / "trip-ch02.png", 390, 6000)
+    (assets_dir / "landscape.webp").write_bytes(b"webp")
+    trip = {
+        "meta": {"title": "竖条章节"},
+        "assets": [
+            {
+                "id": "l1",
+                "type": "image",
+                "displayFile": "assets/landscape.webp",
+                "aspectKind": "landscape",
+                "layoutEligible": True,
+            },
+        ],
+        "chapters": [
+            {"id": "c1", "title": "第一章"},
+            {"id": "c2", "title": "第二章"},
+        ],
+    }
+    (trip_dir / "trip.json").write_text(__import__("json").dumps(trip), encoding="utf-8")
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    assert len(payload["longshotPages"]) == 2
+    assert payload["longshotPages"][0]["url"] == f"/{trip_id}/trip-ch01.png"
+    assert payload["longshotPages"][1]["url"] == f"/{trip_id}/trip-ch02.png"
+    assert payload["longshotPages"][0]["label"] == "第一章"
+    chapter_urls = [p["url"] for p in payload["pages"] if p["role"] == "chapter"]
+    assert chapter_urls == [
+        f"/{trip_id}/assets/landscape.webp",
+        f"/{trip_id}/assets/landscape.webp",
+    ]
+
+
+def test_build_trip_bento_preview_longshot_pages_single_export_png(tmp_path: Path) -> None:
+    trip_id = "exported"
+    trip_dir = tmp_path / trip_id
+    trip_dir.mkdir()
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    _write_png(trip_dir / "trip-longshot.png", 1080, 12000)
+    (trip_dir / "trip.json").write_text('{"meta":{"title":"导出长图"}}', encoding="utf-8")
+    trip = __import__("json").loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    assert payload["longshotPages"] == [
+        {
+            "id": "longshot",
+            "label": "微信长图",
+            "url": f"/{trip_id}/trip-longshot.png",
+        }
+    ]
+
+
+def test_build_trip_bento_preview_longshot_pages_match_carousel_chapters(tmp_path: Path) -> None:
+    """无导出长图时 · longshotPages 与 carousel 同序，章内选竖版。"""
+    trip_id = "dongao-like"
+    trip_dir = tmp_path / trip_id
+    assets_dir = trip_dir / "assets"
+    assets_dir.mkdir(parents=True)
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    for name in ("p1.webp", "p2.webp", "l1.webp", "l2.webp"):
+        (assets_dir / name).write_bytes(b"webp")
+    trip = {
+        "meta": {"title": "东澳岛"},
+        "assets": [
+            {
+                "id": "p1",
+                "type": "image",
+                "displayFile": "assets/p1.webp",
+                "aspectKind": "portrait",
+                "width": 900,
+                "height": 1600,
+                "layoutEligible": True,
+            },
+            {
+                "id": "p2",
+                "type": "image",
+                "displayFile": "assets/p2.webp",
+                "aspectKind": "portrait",
+                "width": 900,
+                "height": 1500,
+                "layoutEligible": True,
+            },
+            {
+                "id": "l1",
+                "type": "image",
+                "displayFile": "assets/l1.webp",
+                "aspectKind": "landscape",
+                "width": 1600,
+                "height": 900,
+                "layoutEligible": True,
+            },
+            {
+                "id": "l2",
+                "type": "image",
+                "displayFile": "assets/l2.webp",
+                "aspectKind": "landscape",
+                "width": 1600,
+                "height": 900,
+                "layoutEligible": True,
+            },
+        ],
+        "chapters": [
+            {
+                "id": "c1",
+                "title": "第一章",
+                "screens": [{"screenId": "s1", "slots": [{"assetId": "l1"}, {"assetId": "p1"}]}],
+            },
+            {
+                "id": "c2",
+                "title": "第二章",
+                "screens": [{"screenId": "s2", "slots": [{"assetId": "l2"}, {"assetId": "p2"}]}],
+            },
+        ],
+    }
+    (trip_dir / "trip.json").write_text(__import__("json").dumps(trip), encoding="utf-8")
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    assert len(payload["longshotPages"]) == len(payload["pages"])
+    chapter_longshots = [p["url"] for p in payload["longshotPages"] if p.get("chapterIndex")]
+    assert chapter_longshots == [
+        f"/{trip_id}/assets/p1.webp",
+        f"/{trip_id}/assets/p2.webp",
+    ]
 
 
 def test_build_trip_bento_preview_keeps_landscape_chapter_pngs(tmp_path: Path) -> None:

@@ -80,6 +80,8 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     "tierMode": result.tier_mode,
                     "g1Pending": result.g1_pending,
                     "photoCount": result.photo_count,
+                    "cullUserLine": result.cull_user_line or "",
+                    "cullWarn": result.cull_warn or "",
                 },
             }
         )

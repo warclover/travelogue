@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import time
 from pathlib import Path
 
 import pytest
@@ -13,9 +15,11 @@ from travelogue.demo.from_album import DemoError, demo_from_album, scan_album
 def _make_album(tmp_path: Path, count: int = 6) -> Path:
     album = tmp_path / "album"
     album.mkdir()
+    stamp = time.time() - count * 10
     for i in range(count):
-        img = Image.new("RGB", (1200, 1600), color=(40 + i * 10, 60, 80))
-        img.save(album / f"img_{i:02d}.jpg", quality=90)
+        path = album / f"img_{i:02d}.jpg"
+        Image.new("RGB", (2400, 3200), color=(40 + i * 10, 60, 80)).save(path, quality=90)
+        os.utime(path, (stamp + i * 10, stamp + i * 10))
     return album
 
 
@@ -71,12 +75,15 @@ def _dual_album(tmp_path: Path, featured_n: int = 2, material_n: int = 4) -> Pat
     mat = root / "素材上传"
     feat.mkdir(parents=True)
     mat.mkdir(parents=True)
+    stamp = time.time()
     for i in range(featured_n):
-        img = Image.new("RGB", (1600, 900), color=(200, 90 + i * 10, 50))
-        img.save(feat / f"feat-{i:02d}.jpg", quality=90)
+        path = feat / f"feat-{i:02d}.jpg"
+        Image.new("RGB", (2400, 1800), color=(200, 90 + i * 10, 50)).save(path, quality=90)
+        os.utime(path, (stamp + i * 60, stamp + i * 60))
     for i in range(material_n):
-        img = Image.new("RGB", (1600, 900), color=(60, 100 + i * 5, 140))
-        img.save(mat / f"mat-{i:02d}.jpg", quality=90)
+        path = mat / f"mat-{i:02d}.jpg"
+        Image.new("RGB", (2400, 1800), color=(60, 100 + i * 5, 140)).save(path, quality=90)
+        os.utime(path, (stamp + (featured_n + i) * 60, stamp + (featured_n + i) * 60))
     return root
 
 
@@ -109,10 +116,15 @@ def test_demo_from_album_explicit_tier_dirs(tmp_path: Path) -> None:
     material = tmp_path / "my-material"
     featured.mkdir(parents=True)
     material.mkdir(parents=True)
+    base = time.time()
     for i in range(2):
-        Image.new("RGB", (1600, 900), color=(220, 80, 40)).save(featured / f"f-{i}.jpg", quality=90)
+        path = featured / f"f-{i}.jpg"
+        Image.new("RGB", (2400, 1800), color=(220, 80 + i * 15, 40)).save(path, quality=90)
+        os.utime(path, (base + i * 60, base + i * 60))
     for i in range(4):
-        Image.new("RGB", (1600, 900), color=(50, 90, 160)).save(material / f"m-{i}.jpg", quality=90)
+        path = material / f"m-{i}.jpg"
+        Image.new("RGB", (2400, 1800), color=(50 + i * 20, 90 + i * 10, 160)).save(path, quality=90)
+        os.utime(path, (base + (2 + i) * 60, base + (2 + i) * 60))
 
     from travelogue.demo.build import run_demo_from_album
 

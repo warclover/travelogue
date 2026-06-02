@@ -235,19 +235,14 @@ def apply_layout_eligibility_marks(
     app_cfg: AppConfig | None = None,
 ) -> str | None:
     """
-    Mark layoutEligible on each image asset and write curation.excludedLowResAssetIds.
+    Mark layoutEligible for low-resolution assets; write curation.excludedLowResAssetIds.
 
-    Low-resolution assets stay in assets[] but are excluded from cover/chapters/screens.
+    Does not reset cull exclusions (Phase 9). Featured may exempt low-res when configured.
     """
     assets = assets if assets is not None else trip.get("assets") or []
     resolved = app_cfg or get_config()
     cfg = cfg or resolved.ingest
-
-    for a in assets:
-        if a.get("type", "image") == "video":
-            continue
-        a["layoutEligible"] = True
-        a.pop("excludeReason", None)
+    cull_cfg = resolved.cull
 
     _, dropped, warn = partition_low_resolution_assets(
         assets,
@@ -261,14 +256,24 @@ def apply_layout_eligibility_marks(
         circuit_breaker_median_short_px=cfg.low_res_circuit_breaker_median_short_px,
     )
     dropped_ids = {a["id"] for a in dropped}
+    low_res_ids: list[str] = []
     for a in assets:
-        if a["id"] in dropped_ids:
-            a["layoutEligible"] = False
-            a["excludeReason"] = "low_resolution"
+        if a["id"] not in dropped_ids:
+            continue
+        if cull_cfg.featured_exempt_low_res and str(a.get("userTier") or "") == "featured":
+            q = a.setdefault("quality", {})
+            if isinstance(q, dict):
+                q["lowResSuspected"] = True
+            continue
+        if not a.get("layoutEligible", True):
+            continue
+        a["layoutEligible"] = False
+        a["excludeReason"] = "low_resolution"
+        low_res_ids.append(a["id"])
 
     curation = trip.setdefault("curation", {})
-    if dropped:
-        curation["excludedLowResAssetIds"] = [a["id"] for a in dropped]
+    if low_res_ids:
+        curation["excludedLowResAssetIds"] = low_res_ids
     else:
         curation.pop("excludedLowResAssetIds", None)
     return warn
