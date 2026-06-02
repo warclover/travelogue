@@ -2,6 +2,7 @@
  * 首页 v2 · Bento 首屏渲染（示例 + 用户 Tab · 方案 A/B′）。
  */
 import { V2, $, show } from "./store.js";
+import { isDemoTrip } from "../js/constants.js";
 import { cssBackgroundImage } from "../js/dom.js";
 import { manifestAssetUrl } from "./manifest.js";
 import { initCarousel } from "./carousel.js";
@@ -141,6 +142,11 @@ export function renderBench(manifest) {
   var metaEl = $("v2-bench-meta");
   var thumb = $("v2-bench-thumb");
   var sampleFlag = $("v2-bench-sample-flag");
+  var statPhotosEl = $("v2-bench-stat-photos");
+  var statChaptersEl = $("v2-bench-stat-chapters");
+  var statEstimateEl = $("v2-bench-stat-estimate");
+  var resumeBtn = $("v2-bench-resume");
+  var recentBtn = $("v2-bench-recent");
   if (titleEl && manifest.title) titleEl.textContent = manifest.title;
   if (sampleFlag) {
     show(sampleFlag, manifest.source !== "user");
@@ -151,6 +157,48 @@ export function renderBench(manifest) {
     if (meta.photoCount) parts.push(meta.photoCount + " 张");
     if (meta.chapterCount) parts.push(meta.chapterCount + " 章");
     metaEl.textContent = parts.join(" · ");
+  }
+  var meta = manifest.meta || {};
+  if (statPhotosEl) {
+    statPhotosEl.textContent = (meta.photoCount || 0) + " 张照片";
+  }
+  if (statChaptersEl) {
+    statChaptersEl.textContent = (meta.chapterCount || 0) + " 章";
+  }
+  if (statEstimateEl) {
+    var count = Number(meta.photoCount) || 0;
+    var estimate = count > 140 ? "约 5 分钟" : count > 90 ? "约 4 分钟" : "约 3 分钟";
+    statEstimateEl.textContent = estimate;
+  }
+  var resumeTrip = V2.trips.find(function (t) {
+    return !isDemoTrip(t);
+  });
+  if (resumeBtn) {
+    resumeBtn.disabled = !resumeTrip;
+    resumeBtn.dataset.tripId = resumeTrip ? resumeTrip.tripId : "";
+    if (!resumeBtn.dataset.wired) {
+      resumeBtn.dataset.wired = "1";
+      resumeBtn.addEventListener("click", function () {
+        var tripId = resumeBtn.dataset.tripId;
+        if (!tripId) return;
+        var trip = V2.trips.find(function (t) { return t.tripId === tripId; });
+        if (!trip) return;
+        window.location.href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
+      });
+    }
+  }
+  if (recentBtn && !recentBtn.dataset.wired) {
+    recentBtn.dataset.wired = "1";
+    recentBtn.addEventListener("click", function () {
+      var shelf = $("v2-shelf");
+      if (shelf && !shelf.hidden) {
+        shelf.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      if (typeof studioToast === "function") {
+        studioToast("暂无最近作品", { duration: 1800 });
+      }
+    });
   }
   if (thumb && manifest.assets && manifest.assets.background) {
     var url = manifestAssetUrl(manifest, "background");

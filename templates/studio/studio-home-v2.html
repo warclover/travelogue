@@ -103,17 +103,30 @@
       <!-- ④ 工作台 bench（左列第 3 行） -->
       <section class="v2-bento__bench" aria-label="工作台">
         <div class="v2-bench">
-          <div class="v2-bench__sample">
-            <span class="v2-demo-flag" id="v2-bench-sample-flag">示例作品</span>
-            <div class="v2-bench__sample-thumb" id="v2-bench-thumb" aria-hidden="true"></div>
-            <div class="v2-bench__sample-text">
-              <strong id="v2-bench-title">京都 · 雨后</strong>
-              <span id="v2-bench-meta">自动生成 · 86 张 · 3 章</span>
+          <div class="v2-bench__left">
+            <div class="v2-bench__sample">
+              <span class="v2-demo-flag" id="v2-bench-sample-flag">示例作品</span>
+              <div class="v2-bench__sample-thumb" id="v2-bench-thumb" aria-hidden="true"></div>
+              <div class="v2-bench__sample-text">
+                <strong id="v2-bench-title">京都 · 雨后</strong>
+                <span id="v2-bench-meta">自动生成 · 86 张 · 3 章</span>
+              </div>
             </div>
           </div>
           <div class="v2-bench__main">
             <button type="button" class="v2-bench__cta" id="v2-cta">开始制作我的游记 →</button>
             <p class="v2-bench__meta">照片留在本机 · 无需注册 · 下一步选择本次旅行的照片文件夹</p>
+          </div>
+          <div class="v2-bench__quick" aria-label="快捷操作">
+            <div class="v2-bench__quick-actions">
+              <button type="button" class="v2-bench__ghost-btn" id="v2-bench-resume">继续上次</button>
+              <button type="button" class="v2-bench__ghost-btn" id="v2-bench-recent">查看最近</button>
+            </div>
+            <div class="v2-bench__stats" aria-label="预估信息">
+              <span class="v2-bench__stat" id="v2-bench-stat-photos">109 张照片</span>
+              <span class="v2-bench__stat" id="v2-bench-stat-chapters">4 章</span>
+              <span class="v2-bench__stat" id="v2-bench-stat-estimate">约 3 分钟</span>
+            </div>
           </div>
         </div>
       </section>
