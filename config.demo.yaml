@@ -31,3 +31,9 @@ cull:
   min_keep: 15
   featured_exempt: true
   max_photos_warn_only: true
+
+curate:
+  # Phase 10 · food grid（默认开启，可一键关闭回退）
+  enable_food_grid: true
+  # Phase 10.1 · 默认仍只启用 food 桶
+  mundane_grid_buckets: [food]

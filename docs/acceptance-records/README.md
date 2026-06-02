@@ -9,6 +9,14 @@
 
 ---
 
+## Phase 10（Food Grid）
+
+| 文件 | 用途 | 命令 / 说明 |
+|------|------|-------------|
+| [phase10-food-grid.json](./phase10-food-grid.json) | AC-P10 自动验收 + AC-P10-03 人工 fixture 规格（可附带 demo verify） | `python scripts/phase10_food_grid_acceptance.py --write docs/acceptance-records/phase10-food-grid.json`（可加 `--include-demo-verify`） |
+
+---
+
 ## Phase 7（性能专项 · 开发准备）
 
 | 文件 | 用途 | 命令 / 说明 |

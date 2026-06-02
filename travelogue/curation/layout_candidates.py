@@ -66,6 +66,8 @@ def generate_day_bucket_candidates(
     trip_photo_total: int,
     preferred_hero_id: str | None,
     layout_state: ScreenLayoutPlannerState | None,
+    enable_food_grid: bool = True,
+    mundane_grid_buckets: tuple[str, ...] = ("food",),
     beam_width: int = 3,
     budget: SearchBudget | None = None,
 ) -> list[tuple[str, list[dict]]]:
@@ -82,6 +84,8 @@ def generate_day_bucket_candidates(
         orientation_summary=orientation_summary,
         skip_screen_asset_ids=skip_screen_asset_ids,
         trip_photo_total=trip_photo_total,
+        enable_food_grid=enable_food_grid,
+        mundane_grid_buckets=mundane_grid_buckets,
     )
     has_mosaic = bucket_has_mosaic_window(
         bucket,

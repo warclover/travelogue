@@ -141,7 +141,26 @@ cull:
   max_photos_warn_only: true
   sharpness_absolute_min: 0.0
   blur_percentile: 2
+  # M4 · 分桶 blur 阈值（按 mediaClass 计算阈值，减少单阈值误伤）
+  bucketed_blur_thresholds: false
+  bucketed_blur_min_samples: 3
   hard_exclude_media_classes: [screenshot, thumbnail, reupload]
+  # P9.2 · material-only 组在重算场景可启严格收敛（默认 false 保持现有行为）
+  recalc_strict_groups: false
+  # M6 · 为被剔除资产写质量闸口解释字段 quality.cullExplain
+  enable_cull_explain: true
+  # P9.2 · Pass3 score 权重（默认值与当前基线等价）
+  score:
+    rules:
+      sharpness_weight: 0.55
+      media_weight: 0.25
+    ml:
+      sharpness_weight: 0.35
+      aesthetic_weight: 0.35
+      media_weight: 0.20
+      bias: 0.10
+    # M5 · 同组非代表的轻惩罚（0=关闭）
+    duplicate_group_penalty: 0.0
   ml:
     aesthetic_metric: topiq_nr
     portrait_face_aesthetic: true
@@ -157,7 +176,9 @@ curate:
   featured_weight: 1.35
   featured_min_for_cover_pool: 2
   # Phase 10 · food grid（见 docs/PRD-PHASE10-food-grid.md）
-  # enable_food_grid: true
+  enable_food_grid: true
+  # Phase 10.1 · 可配置 mundane 组屏桶（默认仅 food）
+  mundane_grid_buckets: [food]
   # Phase 6 · layout rhythm & diversity (M25-B)
   layout:
     enable_gravity_balance: true

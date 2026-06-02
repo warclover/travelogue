@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "1",
+  "phase": "P10-FoodGrid",
+  "recordedAt": "2026-06-02T11:44:50Z",
+  "status": "passed",
+  "checks": [
+    {
+      "id": "ac-p10-auto-01",
+      "name": "3 food -> square-4 food-grid",
+      "passed": true,
+      "actualPatterns": [
+        "screen-square-4"
+      ],
+      "foodGridCount": 1
+    },
+    {
+      "id": "ac-p10-auto-02",
+      "name": "6 food -> square-6",
+      "passed": true,
+      "actualPatterns": [
+        "screen-square-6"
+      ],
+      "foodGridCount": 1
+    },
+    {
+      "id": "ac-p10-auto-03",
+      "name": "9+ food -> split multiple food grids",
+      "passed": true,
+      "actualPatterns": [
+        "screen-square-9",
+        "screen-square-4"
+      ],
+      "foodGridCount": 2
+    },
+    {
+      "id": "ac-p10-auto-04",
+      "name": "enable_food_grid=false fallback",
+      "passed": true,
+      "actualPatterns": [
+        "screen-square-4"
+      ],
+      "foodGridCount": 0
+    },
+    {
+      "id": "ac-p10-auto-05",
+      "name": "portrait-grid + food-grid coexist",
+      "passed": true,
+      "actualPatterns": [
+        "screen-portrait-grid-8",
+        "screen-square-4"
+      ],
+      "foodGridCount": 1
+    },
+    {
+      "id": "ac-p10-auto-06",
+      "name": "demo verify no regression",
+      "passed": true,
+      "command": "C:\\Users\\xiafe\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe -m travelogue demo verify",
+      "returnCode": 0
+    }
+  ],
+  "manualFixtureSpec": {
+    "tripId": "phase10-food-grid-manual-fixture",
+    "fixturePath": "schemas/fixtures/trip.phase10_food_grid.json",
+    "description": "用于 AC-P10-03 人工抽检（章内 >=3 food，含 portrait run 共存）",
+    "orderedAssetIds": [
+      "p0",
+      "p1",
+      "p2",
+      "p3",
+      "p4",
+      "p5",
+      "p6",
+      "p7",
+      "f1",
+      "f2",
+      "l1",
+      "f3",
+      "f4",
+      "f5"
+    ],
+    "expected": {
+      "mustContainLayoutHint": "food-grid",
+      "mustContainPatterns": [
+        "screen-portrait-grid-8",
+        "screen-square-4"
+      ]
+    }
+  }
+}

@@ -931,3 +931,30 @@ html[data-folio="full"] .featured-grid__img {
   color: color-mix(in srgb, var(--folio-ink, #222) 70%, transparent);
 }
 
+/* Phase 10 debug badge (maintainer-only): default hidden unless enabled. */
+html[data-layout-hint-debug="1"] .layout-screen[data-layout-hint="food-grid"],
+html[data-layout-hint-debug="1"] .layout-screen[data-layout-hint="sign-grid"],
+html[data-layout-hint-debug="1"] .layout-screen[data-layout-hint="ticket-grid"],
+html[data-layout-hint-debug="1"] .layout-screen[data-layout-hint="shop-grid"] {
+  position: relative;
+}
+
+html[data-layout-hint-debug="1"] .layout-screen[data-layout-hint="food-grid"]::after,
+html[data-layout-hint-debug="1"] .layout-screen[data-layout-hint="sign-grid"]::after,
+html[data-layout-hint-debug="1"] .layout-screen[data-layout-hint="ticket-grid"]::after,
+html[data-layout-hint-debug="1"] .layout-screen[data-layout-hint="shop-grid"]::after {
+  content: attr(data-layout-hint);
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font: 11px/1.2 ui-monospace, "SF Mono", Consolas, monospace;
+  letter-spacing: 0.02em;
+  color: #eef6f2;
+  background: rgba(20, 40, 32, 0.78);
+  border: 1px solid rgba(190, 220, 206, 0.5);
+  pointer-events: none;
+}
+

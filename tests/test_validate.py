@@ -28,6 +28,11 @@ def test_fixture_structure_locked_manifest():
         assert any("duplicate" in e or "VR-" in e for e in errs)
 
 
+def test_fixture_phase10_food_grid_schema():
+    errs = [e for e in run_validate("trip.phase10_food_grid.json", "schema") if not e.startswith("WARN:")]
+    assert not errs, errs
+
+
 def test_cover_video_fails():
     trip = json.loads((FIXTURES / "trip.copy_locked.json").read_text(encoding="utf-8"))
     trip["coverAssetId"] = trip["assets"][0]["id"]

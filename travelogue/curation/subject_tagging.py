@@ -23,6 +23,15 @@ _FOOD_MUNDANE_TAGS: set[str] = {
     "dessert",
     "drink",
 }
+_SIGN_MUNDANE_TAGS: set[str] = {"sign", "signage"}
+_TICKET_MUNDANE_TAGS: set[str] = {"ticket"}
+_SHOP_MUNDANE_TAGS: set[str] = {"shop"}
+_MUNDANE_TAG_GROUPS: tuple[tuple[str, set[str]], ...] = (
+    ("food", _FOOD_MUNDANE_TAGS),
+    ("sign", _SIGN_MUNDANE_TAGS),
+    ("ticket", _TICKET_MUNDANE_TAGS),
+    ("shop", _SHOP_MUNDANE_TAGS),
+)
 
 
 def _map_clip_to_bucket(subject_class: str) -> str:
@@ -86,7 +95,7 @@ def subject_tags_for_asset(asset: dict) -> list[str]:
 
 
 def is_mundane_clusterable(asset: dict) -> str | None:
-    """Return 'food' if asset is clusterable mundane, else None."""
+    """Return mundane bucket key if asset is clusterable mundane, else None."""
     if subject_class_for_asset(asset) == "food":
         return "food"
 
@@ -107,8 +116,9 @@ def is_mundane_clusterable(asset: dict) -> str | None:
         if category:
             tags.add(category)
 
-    if tags & _FOOD_MUNDANE_TAGS:
-        return "food"
+    for bucket, tag_set in _MUNDANE_TAG_GROUPS:
+        if tags & tag_set:
+            return bucket
     return None
 
 
@@ -118,17 +128,19 @@ def mundane_run_length(
     start: int,
     *,
     tolerance: int = 1,
+    allowed_buckets: tuple[str, ...] = ("food",),
 ) -> int:
-    """Count consecutive clusterable mundane from start; allow tolerance non-mundane inserts."""
+    """Count consecutive allowed mundane from start; allow tolerance non-mundane inserts."""
     if start < 0 or start >= len(ids):
         return 0
     run = 0
     misses = 0
     i = start
+    allowed = set(allowed_buckets)
     while i < len(ids):
         aid = ids[i]
         bucket = is_mundane_clusterable(assets_map.get(aid, {}))
-        if bucket is not None:
+        if bucket in allowed:
             run += 1
             i += 1
             continue

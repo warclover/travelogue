@@ -101,6 +101,17 @@ class CullConfig:
     sharpness_absolute_min: float = 0.0
     blur_percentile: float = 2.0
     hard_exclude_media_classes: tuple[str, ...] = ("screenshot", "thumbnail", "reupload")
+    recalc_strict_groups: bool = False
+    bucketed_blur_thresholds: bool = False
+    bucketed_blur_min_samples: int = 3
+    score_sharpness_weight_rules: float = 0.55
+    score_media_weight_rules: float = 0.25
+    score_sharpness_weight_ml: float = 0.35
+    score_media_weight_ml: float = 0.20
+    score_aesthetic_weight_ml: float = 0.35
+    score_bias_ml: float = 0.10
+    score_duplicate_group_penalty: float = 0.0
+    enable_cull_explain: bool = True
     aesthetic_metric: str = "topiq_nr"
     portrait_face_aesthetic: bool = True
     allow_cpu_ml: bool = False
@@ -121,6 +132,8 @@ class CurateConfig:
     max_consecutive_same_pattern: int = 2
     longshot_mmr_lambda: float = 0.72
     enable_arc_breath: bool = True
+    enable_food_grid: bool = True
+    mundane_grid_buckets: tuple[str, ...] = ("food",)
 
 
 @dataclass
@@ -453,6 +466,17 @@ def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
 
 def _cull_from_dict(raw: dict[str, Any]) -> CullConfig:
     ml_raw = raw.get("ml") if isinstance(raw.get("ml"), dict) else {}
+    score_raw = raw.get("score") if isinstance(raw.get("score"), dict) else {}
+    score_rules_raw = (
+        score_raw.get("rules")
+        if isinstance(score_raw.get("rules"), dict)
+        else {}
+    )
+    score_ml_raw = (
+        score_raw.get("ml")
+        if isinstance(score_raw.get("ml"), dict)
+        else {}
+    )
     hard_raw = raw.get("hard_exclude_media_classes") or raw.get("hardExcludeMediaClasses") or [
         "screenshot",
         "thumbnail",
@@ -472,6 +496,39 @@ def _cull_from_dict(raw: dict[str, Any]) -> CullConfig:
         sharpness_absolute_min=float(raw.get("sharpness_absolute_min", raw.get("sharpnessAbsoluteMin", 0.0))),
         blur_percentile=float(raw.get("blur_percentile", raw.get("blurPercentile", 2.0))),
         hard_exclude_media_classes=tuple(str(x) for x in hard_raw if x),
+        recalc_strict_groups=cfg_bool(
+            raw, "recalc_strict_groups", "recalcStrictGroups", False
+        ),
+        bucketed_blur_thresholds=cfg_bool(
+            raw, "bucketed_blur_thresholds", "bucketedBlurThresholds", False
+        ),
+        bucketed_blur_min_samples=cfg_int(
+            raw, "bucketed_blur_min_samples", "bucketedBlurMinSamples", 3
+        ),
+        score_sharpness_weight_rules=float(
+            score_rules_raw.get("sharpness_weight", score_rules_raw.get("sharpnessWeight", 0.55))
+        ),
+        score_media_weight_rules=float(
+            score_rules_raw.get("media_weight", score_rules_raw.get("mediaWeight", 0.25))
+        ),
+        score_sharpness_weight_ml=float(
+            score_ml_raw.get("sharpness_weight", score_ml_raw.get("sharpnessWeight", 0.35))
+        ),
+        score_media_weight_ml=float(
+            score_ml_raw.get("media_weight", score_ml_raw.get("mediaWeight", 0.20))
+        ),
+        score_aesthetic_weight_ml=float(
+            score_ml_raw.get("aesthetic_weight", score_ml_raw.get("aestheticWeight", 0.35))
+        ),
+        score_bias_ml=float(
+            score_ml_raw.get("bias", 0.10)
+        ),
+        score_duplicate_group_penalty=float(
+            score_raw.get("duplicate_group_penalty", score_raw.get("duplicateGroupPenalty", 0.0))
+        ),
+        enable_cull_explain=cfg_bool(
+            raw, "enable_cull_explain", "enableCullExplain", True
+        ),
         aesthetic_metric=str(ml_raw.get("aesthetic_metric", ml_raw.get("aestheticMetric", "topiq_nr"))),
         portrait_face_aesthetic=bool(
             ml_raw.get("portrait_face_aesthetic", ml_raw.get("portraitFaceAesthetic", True))
@@ -845,6 +902,23 @@ def load_config(path: Path | None = None) -> AppConfig:
                     curate_raw.get("enable_arc_breath", True),
                 )
             ),
+            enable_food_grid=bool(
+                curate_layout_raw.get(
+                    "enable_food_grid",
+                    curate_raw.get("enable_food_grid", True),
+                )
+            ),
+            mundane_grid_buckets=tuple(
+                str(x).strip().lower()
+                for x in (
+                    curate_layout_raw.get(
+                        "mundane_grid_buckets",
+                        curate_raw.get("mundane_grid_buckets", ["food"]),
+                    )
+                    or ["food"]
+                )
+                if str(x).strip()
+            ),
         ),
         narrative=NarrativeConfig(
             tone_default=str(narrative_raw.get("tone_default", "relaxed")),
@@ -884,6 +958,15 @@ def default_screen_plan_scope(*, cfg: AppConfig | None = None) -> str:
 
 def default_mixed_proximity_seconds(*, cfg: AppConfig | None = None) -> float:
     return (cfg or get_config()).layout.mixed_proximity_seconds
+
+
+def default_enable_food_grid(*, cfg: AppConfig | None = None) -> bool:
+    return (cfg or get_config()).curate.enable_food_grid
+
+
+def default_mundane_grid_buckets(*, cfg: AppConfig | None = None) -> tuple[str, ...]:
+    buckets = (cfg or get_config()).curate.mundane_grid_buckets
+    return buckets or ("food",)
 
 
 def reading_profile_defaults(cfg: AppConfig | None = None) -> dict[str, str]:

@@ -58,3 +58,67 @@ def test_no_mosaic_variant_differs_when_eligible():
     assert sigs[0] != sigs[1] or len(cands) >= 2
     assert budget.generations >= len(cands)
     assert budget.evaluations == 0
+
+
+def test_generate_candidates_passes_enable_food_grid_flag(monkeypatch) -> None:
+    ids = ["f1", "f2", "f3"]
+    aspects = {i: "square" for i in ids}
+    assets = {i: _asset(i, "landscape", idx) for idx, i in enumerate(ids)}
+    captured: list[bool] = []
+
+    def _fake_plan(_bucket, **kwargs):
+        captured.append(bool(kwargs.get("enable_food_grid", True)))
+        return [{"patternId": "screen-square-4", "slots": [{"assetId": "f1"}]}]
+
+    monkeypatch.setattr(
+        "travelogue.curation.layout_candidates.plan_screens_for_chapter",
+        _fake_plan,
+    )
+    cands = generate_day_bucket_candidates(
+        ids,
+        aspects,  # type: ignore[arg-type]
+        assets_by_id=assets,
+        orientation_summary={"landscape": 3, "portrait": 0},
+        skip_screen_asset_ids=set(),
+        mixed_proximity_seconds=12,
+        trip_photo_total=40,
+        preferred_hero_id=None,
+        layout_state=None,
+        enable_food_grid=False,
+        beam_width=3,
+    )
+    assert cands
+    assert captured
+    assert all(flag is False for flag in captured)
+
+
+def test_generate_candidates_passes_mundane_grid_buckets(monkeypatch) -> None:
+    ids = ["f1", "f2", "f3"]
+    aspects = {i: "square" for i in ids}
+    assets = {i: _asset(i, "landscape", idx) for idx, i in enumerate(ids)}
+    captured: list[tuple[str, ...]] = []
+
+    def _fake_plan(_bucket, **kwargs):
+        captured.append(tuple(kwargs.get("mundane_grid_buckets", ("food",))))
+        return [{"patternId": "screen-square-4", "slots": [{"assetId": "f1"}]}]
+
+    monkeypatch.setattr(
+        "travelogue.curation.layout_candidates.plan_screens_for_chapter",
+        _fake_plan,
+    )
+    cands = generate_day_bucket_candidates(
+        ids,
+        aspects,  # type: ignore[arg-type]
+        assets_by_id=assets,
+        orientation_summary={"landscape": 3, "portrait": 0},
+        skip_screen_asset_ids=set(),
+        mixed_proximity_seconds=12,
+        trip_photo_total=40,
+        preferred_hero_id=None,
+        layout_state=None,
+        mundane_grid_buckets=("food", "sign"),
+        beam_width=3,
+    )
+    assert cands
+    assert captured
+    assert all(b == ("food", "sign") for b in captured)

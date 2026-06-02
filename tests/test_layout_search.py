@@ -96,3 +96,63 @@ def test_phase2_beam_runs_without_error():
     )
     assert replanned
     assert meta.get("decisionLogs")
+
+
+def test_replan_forwards_enable_food_grid_to_candidates(monkeypatch) -> None:
+    buckets, aspects, assets = build_portrait_heavy_trip()
+    legacy = plan_legacy_screens(buckets, aspects, assets)
+    seen_flags: list[bool] = []
+
+    def _fake_candidates(*_args, **kwargs):
+        seen_flags.append(bool(kwargs.get("enable_food_grid", True)))
+        return [("legacy", legacy[0].get("screens") or [])]
+
+    monkeypatch.setattr(
+        "travelogue.curation.layout_search.generate_day_bucket_candidates",
+        _fake_candidates,
+    )
+    maybe_replan_chapters(
+        legacy,
+        buckets=buckets,
+        aspects=aspects,  # type: ignore[arg-type]
+        assets=assets,
+        scoring_enabled=True,
+        weights=PHASE2_WEIGHTS,
+        beam_width=3,
+        degradation=assess_degradation(assets, aspects, min_layout_eligible=3),
+        orientation_summary={"portrait": 6, "landscape": 0},
+        trip_photo_total=len(assets),
+        enable_food_grid=False,
+    )
+    assert seen_flags
+    assert all(flag is False for flag in seen_flags)
+
+
+def test_replan_forwards_mundane_grid_buckets_to_candidates(monkeypatch) -> None:
+    buckets, aspects, assets = build_portrait_heavy_trip()
+    legacy = plan_legacy_screens(buckets, aspects, assets)
+    seen_buckets: list[tuple[str, ...]] = []
+
+    def _fake_candidates(*_args, **kwargs):
+        seen_buckets.append(tuple(kwargs.get("mundane_grid_buckets", ("food",))))
+        return [("legacy", legacy[0].get("screens") or [])]
+
+    monkeypatch.setattr(
+        "travelogue.curation.layout_search.generate_day_bucket_candidates",
+        _fake_candidates,
+    )
+    maybe_replan_chapters(
+        legacy,
+        buckets=buckets,
+        aspects=aspects,  # type: ignore[arg-type]
+        assets=assets,
+        scoring_enabled=True,
+        weights=PHASE2_WEIGHTS,
+        beam_width=3,
+        degradation=assess_degradation(assets, aspects, min_layout_eligible=3),
+        orientation_summary={"portrait": 6, "landscape": 0},
+        trip_photo_total=len(assets),
+        mundane_grid_buckets=("food", "sign", "ticket"),
+    )
+    assert seen_buckets
+    assert all(v == ("food", "sign", "ticket") for v in seen_buckets)

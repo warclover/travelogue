@@ -49,6 +49,13 @@ PATTERN_PORTRAIT_1_LANDSCAPE_2 = "screen-portrait-1-landscape-2"
 PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND = "screen-mosaic-5-main-portrait-3land"
 PATTERN_PORTRAIT_GRID_8 = "screen-portrait-grid-8"
 PERSON_LAYOUT_GRID_8 = "person-grid-8"
+FOOD_GRID_LAYOUT_HINT = "food-grid"
+_MUNDANE_GRID_LAYOUT_HINTS: dict[str, str] = {
+    "food": FOOD_GRID_LAYOUT_HINT,
+    "sign": "sign-grid",
+    "ticket": "ticket-grid",
+    "shop": "shop-grid",
+}
 
 _GRID_SIZES = (9, 6, 4, 3, 2, 1)
 
@@ -343,6 +350,60 @@ def _make_portrait_grid8_screen(
     if any_asset_has_person(portrait_ids, assets_map):
         screen["layoutHint"] = PERSON_LAYOUT_GRID_8
     return screen
+
+
+def _layout_hint_for_mundane_bucket(bucket: str) -> str:
+    return _MUNDANE_GRID_LAYOUT_HINTS.get(bucket, f"{bucket}-grid")
+
+
+def _make_mundane_grid_screen(
+    asset_ids: list[str],
+    *,
+    bucket: str = "food",
+    screen_id: str = "",
+    assets_map: dict[str, dict] | None = None,
+) -> dict:
+    assets_map = assets_map or {}
+    count = len(asset_ids)
+    if count >= 9:
+        pattern = "screen-square-9"
+        use_ids = asset_ids[:9]
+    elif count >= 6:
+        pattern = "screen-square-6"
+        use_ids = asset_ids[:6]
+    else:
+        pattern = "screen-square-4"
+        use_ids = asset_ids[:4]
+    slots = [
+        {
+            "assetId": aid,
+            "slot": idx,
+            "fit": "cover",
+            "role": bucket,
+        }
+        for idx, aid in enumerate(use_ids)
+    ]
+    screen = _make_screen(
+        pattern,
+        screen_id=screen_id,
+        slots=slots,
+    )
+    screen["layoutHint"] = _layout_hint_for_mundane_bucket(bucket)
+    return screen
+
+
+def _make_food_grid_screen(
+    asset_ids: list[str],
+    *,
+    screen_id: str = "",
+    assets_map: dict[str, dict] | None = None,
+) -> dict:
+    return _make_mundane_grid_screen(
+        asset_ids,
+        bucket="food",
+        screen_id=screen_id,
+        assets_map=assets_map,
+    )
 
 
 def _make_mixed_portrait_landscape_screen(
@@ -887,6 +948,8 @@ def plan_screens_for_chapter(
     enable_mosaic: bool = True,
     featured_weight: float = DEFAULT_FEATURED_WEIGHT,
     enable_portrait_grid8: bool = True,
+    enable_food_grid: bool = True,
+    mundane_grid_buckets: tuple[str, ...] = ("food",),
     median_sharp: float | None = None,
 ) -> list[dict]:
     """
@@ -914,6 +977,8 @@ def plan_screens_for_chapter(
         enable_mosaic=enable_mosaic,
         featured_weight=featured_weight,
         enable_portrait_grid8=enable_portrait_grid8,
+        enable_food_grid=enable_food_grid,
+        mundane_grid_buckets=mundane_grid_buckets,
         median_sharp=median_sharp,
     ).plan()
 
@@ -964,6 +1029,8 @@ def attach_screens_day_buckets(
     skip_screen_asset_ids: set[str] | None = None,
     trip_photo_total: int | None = None,
     featured_weight: float = DEFAULT_FEATURED_WEIGHT,
+    enable_food_grid: bool = True,
+    mundane_grid_buckets: tuple[str, ...] = ("food",),
 ) -> list[dict]:
     """
     Plan screens on each day bucket (full takenAt sequence), assign to chapters
@@ -1026,6 +1093,8 @@ def attach_screens_day_buckets(
             skip_screen_asset_ids=skip,
             layout_state=layout_state,
             trip_photo_total=trip_photo_total,
+            enable_food_grid=enable_food_grid,
+            mundane_grid_buckets=mundane_grid_buckets,
         )
         ch["screens"] = gal_screens
 
@@ -1058,6 +1127,8 @@ def attach_screens_day_buckets(
             preferred_hero_id=preferred_hero,
             median_sharp=med_sharp,
             featured_weight=featured_weight,
+            enable_food_grid=enable_food_grid,
+            mundane_grid_buckets=mundane_grid_buckets,
         )
         for sc in bucket_screens:
             slots = sc.get("slots") or []
@@ -1088,11 +1159,27 @@ def attach_screens_to_chapters(
     trip_photo_total: int | None = None,
     featured_weight: float = DEFAULT_FEATURED_WEIGHT,
     cfg: AppConfig | None = None,
+    enable_food_grid: bool | None = None,
+    mundane_grid_buckets: tuple[str, ...] | None = None,
 ) -> list[dict]:
     """Add screens[] to each chapter (per-chapter or per-day bucket scope)."""
-    from travelogue.config import default_screen_plan_scope
+    from travelogue.config import (
+        default_enable_food_grid,
+        default_mundane_grid_buckets,
+        default_screen_plan_scope,
+    )
 
     scope = (plan_scope or default_screen_plan_scope(cfg=cfg)).strip().lower()
+    food_grid_enabled = (
+        default_enable_food_grid(cfg=cfg)
+        if enable_food_grid is None
+        else enable_food_grid
+    )
+    grid_buckets = (
+        default_mundane_grid_buckets(cfg=cfg)
+        if mundane_grid_buckets is None
+        else (mundane_grid_buckets or ("food",))
+    )
     if scope == "day" and day_buckets:
         return attach_screens_day_buckets(
             chapters,
@@ -1105,6 +1192,8 @@ def attach_screens_to_chapters(
             skip_screen_asset_ids=skip_screen_asset_ids,
             trip_photo_total=trip_photo_total,
             featured_weight=featured_weight,
+            enable_food_grid=food_grid_enabled,
+            mundane_grid_buckets=tuple(str(x).strip().lower() for x in grid_buckets if str(x).strip()),
         )
 
     assets_by_id: dict[str, dict] = {}
@@ -1139,6 +1228,8 @@ def attach_screens_to_chapters(
                 trip_photo_total=trip_photo_total,
                 preferred_hero_id=hero_id,
                 featured_weight=featured_weight,
+                enable_food_grid=food_grid_enabled,
+                mundane_grid_buckets=tuple(str(x).strip().lower() for x in grid_buckets if str(x).strip()),
             )
         else:
             ch["screens"] = []

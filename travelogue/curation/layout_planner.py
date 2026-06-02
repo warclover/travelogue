@@ -548,7 +548,11 @@ def build_chapters_from_plan(
     if layout_engine == LAYOUT_ENGINE_SCREENS and (
         _effective_profile(export_layout) == "web" or export_layout == "auto"
     ):
-        from travelogue.config import default_mixed_proximity_seconds
+        from travelogue.config import (
+            default_enable_food_grid,
+            default_mixed_proximity_seconds,
+            default_mundane_grid_buckets,
+        )
 
         chapters = attach_screens_to_chapters(
             chapters,
@@ -558,6 +562,8 @@ def build_chapters_from_plan(
             day_buckets=[asset_ids],
             mixed_proximity_seconds=default_mixed_proximity_seconds(),
             trip_photo_total=len(asset_ids),
+            enable_food_grid=default_enable_food_grid(),
+            mundane_grid_buckets=default_mundane_grid_buckets(),
         )
         from travelogue.curation.chapter_items import compact_chapter_items_for_screens
 
@@ -577,6 +583,8 @@ def build_chapters_from_buckets(
     skip_screen_asset_ids: set[str] | None = None,
     trip_photo_total: int | None = None,
     pattern_hints: list[str] | None = None,
+    enable_food_grid: bool = True,
+    mundane_grid_buckets: tuple[str, ...] = ("food",),
 ) -> list[dict]:
     """Plan items per chapter bucket (Agent 1 day groups → Agent 1.5 layout)."""
     from travelogue.curation.curate_patterns import resolve_chapter_pattern
@@ -628,7 +636,11 @@ def build_chapters_from_buckets(
     if layout_engine == LAYOUT_ENGINE_SCREENS and (
         _effective_profile(export_layout) == "web" or export_layout == "auto"
     ):
-        from travelogue.config import default_mixed_proximity_seconds
+        from travelogue.config import (
+            default_enable_food_grid,
+            default_mixed_proximity_seconds,
+            default_mundane_grid_buckets,
+        )
 
         if trip_photo_total is None and assets:
             trip_photo_total = len(assets)
@@ -643,6 +655,12 @@ def build_chapters_from_buckets(
             mixed_proximity_seconds=default_mixed_proximity_seconds(),
             skip_screen_asset_ids=skip_screen_asset_ids,
             trip_photo_total=trip_photo_total,
+            enable_food_grid=enable_food_grid and default_enable_food_grid(),
+            mundane_grid_buckets=(
+                mundane_grid_buckets
+                if mundane_grid_buckets
+                else default_mundane_grid_buckets()
+            ),
         )
         from travelogue.curation.chapter_items import compact_chapter_items_for_screens
 

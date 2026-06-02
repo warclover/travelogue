@@ -1,0 +1,199 @@
+{
+  "version": "0.2",
+  "tripId": "phase10-food-grid-manual-fixture",
+  "templateId": "visual-journal",
+  "exportLayout": "auto",
+  "meta": {
+    "title": "P10 Food Grid",
+    "subtitle": "manual acceptance",
+    "hook": "portrait run then food run with one interference",
+    "dateStart": "2025-06-01",
+    "dateEnd": "2025-06-01",
+    "places": ["fixture-city"],
+    "tone": "relaxed"
+  },
+  "coverAssetId": "p0",
+  "assets": [
+    {
+      "id": "p0",
+      "type": "image",
+      "sourceFile": "source/p0.jpg",
+      "displayFile": "assets/p0.webp",
+      "width": 900,
+      "height": 1600,
+      "takenAt": "2025-06-01T10:00:00Z",
+      "tags": ["portrait"]
+    },
+    {
+      "id": "p1",
+      "type": "image",
+      "sourceFile": "source/p1.jpg",
+      "displayFile": "assets/p1.webp",
+      "width": 900,
+      "height": 1600,
+      "takenAt": "2025-06-01T10:00:01Z",
+      "tags": ["portrait"]
+    },
+    {
+      "id": "p2",
+      "type": "image",
+      "sourceFile": "source/p2.jpg",
+      "displayFile": "assets/p2.webp",
+      "width": 900,
+      "height": 1600,
+      "takenAt": "2025-06-01T10:00:02Z",
+      "tags": ["portrait"]
+    },
+    {
+      "id": "p3",
+      "type": "image",
+      "sourceFile": "source/p3.jpg",
+      "displayFile": "assets/p3.webp",
+      "width": 900,
+      "height": 1600,
+      "takenAt": "2025-06-01T10:00:03Z",
+      "tags": ["portrait"]
+    },
+    {
+      "id": "p4",
+      "type": "image",
+      "sourceFile": "source/p4.jpg",
+      "displayFile": "assets/p4.webp",
+      "width": 900,
+      "height": 1600,
+      "takenAt": "2025-06-01T10:00:04Z",
+      "tags": ["portrait"]
+    },
+    {
+      "id": "p5",
+      "type": "image",
+      "sourceFile": "source/p5.jpg",
+      "displayFile": "assets/p5.webp",
+      "width": 900,
+      "height": 1600,
+      "takenAt": "2025-06-01T10:00:05Z",
+      "tags": ["portrait"]
+    },
+    {
+      "id": "p6",
+      "type": "image",
+      "sourceFile": "source/p6.jpg",
+      "displayFile": "assets/p6.webp",
+      "width": 900,
+      "height": 1600,
+      "takenAt": "2025-06-01T10:00:06Z",
+      "tags": ["portrait"]
+    },
+    {
+      "id": "p7",
+      "type": "image",
+      "sourceFile": "source/p7.jpg",
+      "displayFile": "assets/p7.webp",
+      "width": 900,
+      "height": 1600,
+      "takenAt": "2025-06-01T10:00:07Z",
+      "tags": ["portrait"]
+    },
+    {
+      "id": "f1",
+      "type": "image",
+      "sourceFile": "source/f1.jpg",
+      "displayFile": "assets/f1.webp",
+      "width": 1200,
+      "height": 1200,
+      "takenAt": "2025-06-01T10:00:08Z",
+      "tags": ["food"]
+    },
+    {
+      "id": "f2",
+      "type": "image",
+      "sourceFile": "source/f2.jpg",
+      "displayFile": "assets/f2.webp",
+      "width": 1200,
+      "height": 1200,
+      "takenAt": "2025-06-01T10:00:09Z",
+      "tags": ["meal"]
+    },
+    {
+      "id": "l1",
+      "type": "image",
+      "sourceFile": "source/l1.jpg",
+      "displayFile": "assets/l1.webp",
+      "width": 2000,
+      "height": 1200,
+      "takenAt": "2025-06-01T10:00:10Z",
+      "tags": ["landscape"]
+    },
+    {
+      "id": "f3",
+      "type": "image",
+      "sourceFile": "source/f3.jpg",
+      "displayFile": "assets/f3.webp",
+      "width": 1200,
+      "height": 1200,
+      "takenAt": "2025-06-01T10:00:11Z",
+      "tags": ["restaurant"]
+    },
+    {
+      "id": "f4",
+      "type": "image",
+      "sourceFile": "source/f4.jpg",
+      "displayFile": "assets/f4.webp",
+      "width": 1200,
+      "height": 1200,
+      "takenAt": "2025-06-01T10:00:12Z",
+      "tags": ["dessert"]
+    },
+    {
+      "id": "f5",
+      "type": "image",
+      "sourceFile": "source/f5.jpg",
+      "displayFile": "assets/f5.webp",
+      "width": 1200,
+      "height": 1200,
+      "takenAt": "2025-06-01T10:00:13Z",
+      "subjectClass": "food",
+      "subjectConfidence": 0.91
+    }
+  ],
+  "chapters": [
+    {
+      "id": "ch-01",
+      "index": 1,
+      "patternId": "gallery",
+      "title": "fixture",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-row",
+          "assetIds": ["p0", "p1", "p2", "p3", "p4", "p5", "p6", "p7"],
+          "rowLayout": "mobile-landscape-grid-8"
+        },
+        {
+          "type": "media-row",
+          "assetIds": ["f1", "f2", "l1", "f3", "f4", "f5"],
+          "rowLayout": "landscape-triple"
+        }
+      ],
+      "curation": {}
+    }
+  ],
+  "epilogue": "",
+  "privacy": {
+    "level": "private",
+    "stripExifOnExport": true,
+    "confirmedAt": null
+  },
+  "pipeline": {
+    "status": "structure_draft",
+    "lastBatchId": "batch-fixture",
+    "pendingAssets": [],
+    "locks": {
+      "structure": false,
+      "copy": false
+    },
+    "runs": []
+  },
+  "createdAt": "2026-06-02T00:00:00Z",
+  "updatedAt": "2026-06-02T00:00:00Z"
+}

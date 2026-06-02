@@ -230,6 +230,7 @@
 | [trip.structure_locked.json](../schemas/fixtures/trip.structure_locked.json) | Agent 2 输入 |
 | [trip.copy_locked.json](../schemas/fixtures/trip.copy_locked.json) | Agent 3 输入 |
 | [trip.example.json](../schemas/fixtures/trip.example.json) | 综合样例 |
+| [trip.phase10_food_grid.json](../schemas/fixtures/trip.phase10_food_grid.json) | Phase 10 食物组屏人工验收 fixture |
 
 校验：
 

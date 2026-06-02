@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from travelogue.curation.subject_tagging import is_mundane_clusterable, mundane_run_length
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.media.image_ops import AspectKind
 
@@ -24,6 +25,8 @@ class ChapterPlanContext:
     layout_state: ScreenLayoutPlannerState | None
     enable_mosaic: bool
     enable_portrait_grid8: bool
+    enable_food_grid: bool
+    mundane_grid_buckets: tuple[str, ...]
     use_portrait_grid8: bool
     max_per_screen: int
     portrait_heavy: bool
@@ -57,6 +60,8 @@ def build_chapter_plan_context(
     enable_mosaic: bool = True,
     featured_weight: float = 1.35,
     enable_portrait_grid8: bool = True,
+    enable_food_grid: bool = True,
+    mundane_grid_buckets: tuple[str, ...] = ("food",),
     median_sharp: float | None = None,
 ) -> ChapterPlanContext:
     from travelogue.curation.screen_planner import (
@@ -97,6 +102,8 @@ def build_chapter_plan_context(
         layout_state=layout_state,
         enable_mosaic=enable_mosaic,
         enable_portrait_grid8=enable_portrait_grid8,
+        enable_food_grid=enable_food_grid,
+        mundane_grid_buckets=mundane_grid_buckets,
         use_portrait_grid8=use_portrait_grid8,
         max_per_screen=max_per_screen or MAX_SLOTS_PER_SCREEN,
         portrait_heavy=portrait_heavy,
@@ -189,6 +196,11 @@ def run_planning_loop(ctx: ChapterPlanContext) -> None:
             ctx.i += advance
             continue
 
+        advance = try_mundane_grid(ctx)
+        if advance is not None:
+            ctx.i += advance
+            continue
+
         fam = _family_kind(ctx.aspects.get(ctx.ids[ctx.i], "square"))
 
         if fam == "portrait":
@@ -228,6 +240,7 @@ class ChapterScreenPlanner:
         run_planning_loop(self.ctx)
         if self.ctx.pending_portraits:
             stage_flush_remaining_portraits(self.ctx)
+        stage_flush_remaining_food(self.ctx)
         return finalize_with_hero(self.ctx)
 
 
@@ -380,6 +393,119 @@ def try_landscape_run(ctx: ChapterPlanContext) -> int | None:
             ),
         )
     return run_len
+
+
+def _collect_mundane_ids_for_grid(
+    ids: list[str],
+    assets_map: dict[str, dict],
+    start: int,
+    *,
+    target_bucket: str,
+    allowed_buckets: tuple[str, ...],
+    max_items: int = 9,
+    tolerance: int = 1,
+) -> list[str]:
+    if start < 0 or start >= len(ids):
+        return []
+    out: list[str] = []
+    misses = 0
+    i = start
+    allowed = set(allowed_buckets)
+    while i < len(ids) and len(out) < max_items:
+        aid = ids[i]
+        bucket = is_mundane_clusterable(assets_map.get(aid, {}))
+        if bucket == target_bucket and bucket in allowed:
+            out.append(aid)
+            i += 1
+            continue
+        misses += 1
+        if misses > tolerance:
+            break
+        i += 1
+    return out
+
+
+def _remove_ids_once(ids: list[str], remove_ids: list[str], *, start: int) -> None:
+    if not remove_ids:
+        return
+    remove_set = set(remove_ids)
+    seen: set[str] = set()
+    i = start
+    while i < len(ids):
+        aid = ids[i]
+        if aid in remove_set and aid not in seen:
+            ids.pop(i)
+            seen.add(aid)
+            if len(seen) == len(remove_set):
+                break
+            continue
+        i += 1
+
+
+def _pick_mundane_bucket_at_cursor(ctx: ChapterPlanContext, *, tolerance: int = 1) -> str | None:
+    """Pick a bucket that can actually form a grid at cursor.
+
+    In multi-bucket mode, a simple "first bucket hit" can disagree with
+    mundane_run_length(allowed_buckets=...), causing run>=3 but chosen bucket<3.
+    Prefer the bucket that can collect the most ids (and at least 3).
+    """
+    best_bucket: str | None = None
+    best_count = 0
+    for bucket in ctx.mundane_grid_buckets:
+        target_ids = _collect_mundane_ids_for_grid(
+            ctx.ids,
+            ctx.assets_map,
+            ctx.i,
+            target_bucket=bucket,
+            allowed_buckets=ctx.mundane_grid_buckets,
+            max_items=9,
+            tolerance=tolerance,
+        )
+        count = len(target_ids)
+        if count >= 3 and count > best_count:
+            best_bucket = bucket
+            best_count = count
+    if best_bucket:
+        return best_bucket
+    return None
+
+
+def try_mundane_grid(ctx: ChapterPlanContext) -> int | None:
+    from travelogue.curation.screen_planner import _make_mundane_grid_screen
+
+    if not ctx.enable_food_grid or ctx.pending_portraits:
+        return None
+    run = mundane_run_length(
+        ctx.ids,
+        ctx.assets_map,
+        ctx.i,
+        allowed_buckets=ctx.mundane_grid_buckets,
+    )
+    if run < 3:
+        return None
+    bucket = _pick_mundane_bucket_at_cursor(ctx)
+    if not bucket:
+        return None
+    target_ids = _collect_mundane_ids_for_grid(
+        ctx.ids,
+        ctx.assets_map,
+        ctx.i,
+        target_bucket=bucket,
+        allowed_buckets=ctx.mundane_grid_buckets,
+        max_items=min(run, 9),
+    )
+    if len(target_ids) < 3:
+        return None
+    append_screen(
+        ctx,
+        _make_mundane_grid_screen(target_ids, bucket=bucket, assets_map=ctx.assets_map),
+    )
+    _remove_ids_once(ctx.ids, target_ids, start=ctx.i)
+    return 0
+
+
+def try_food_grid(ctx: ChapterPlanContext) -> int | None:
+    return try_mundane_grid(ctx)
 
 
 def _drain_portrait_triple_batches(ctx: ChapterPlanContext) -> None:
@@ -536,7 +662,7 @@ def stage_flush_pending_for_other_family(ctx: ChapterPlanContext, fam: str) -> i
         layout_state=ctx.layout_state,
     ):
         append_screen(ctx, sc)
-    return None
+    return 0
 
 
 def stage_tall_single(ctx: ChapterPlanContext, fam: str) -> bool:
@@ -583,6 +709,38 @@ def stage_flush_remaining_portraits(ctx: ChapterPlanContext) -> None:
         layout_state=ctx.layout_state,
     ):
         append_screen(ctx, sc)
+
+
+def stage_flush_remaining_food(ctx: ChapterPlanContext) -> None:
+    if not ctx.enable_food_grid:
+        return
+    # Flush should only inspect assets that haven't been consumed by prior screens.
+    # Otherwise we may duplicate ids already emitted by stage_generic_chunk.
+    consumed_ids = {
+        str(slot.get("assetId"))
+        for sc in ctx.screens
+        for slot in (sc.get("slots") or [])
+        if slot.get("assetId")
+    }
+    if consumed_ids:
+        ctx.ids = [aid for aid in ctx.ids if aid not in consumed_ids]
+    i = 0
+    while i < len(ctx.ids):
+        run = mundane_run_length(
+            ctx.ids,
+            ctx.assets_map,
+            i,
+            allowed_buckets=ctx.mundane_grid_buckets,
+        )
+        if run < 3:
+            i += 1
+            continue
+        ctx.i = i
+        placed = try_mundane_grid(ctx)
+        if placed is None:
+            i += 1
+            continue
+        i += placed
 
 
 def finalize_with_hero(ctx: ChapterPlanContext) -> list[dict]:

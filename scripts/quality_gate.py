@@ -16,6 +16,7 @@ FIXTURES = [
     "schemas/fixtures/trip.copy_locked.json",
     "schemas/fixtures/trip.render_golden.json",
     "schemas/fixtures/trip.linzhi_screens.json",
+    "schemas/fixtures/trip.phase10_food_grid.json",
 ]
 
 REGRESSION_TESTS = [

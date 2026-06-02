@@ -659,6 +659,8 @@ def run_curate(
         skip_screen_asset_ids=skip_screen_ids,
         trip_photo_total=len(layout_assets),
         pattern_hints=pattern_hints,
+        enable_food_grid=cur_cfg.enable_food_grid,
+        mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
     )
     for ch_idx, (ch, bucket, seg_id, seg_ids, hint) in enumerate(
         zip(
@@ -737,6 +739,8 @@ def run_curate(
         max_evaluations_per_trip=layout_cfg.scoring.max_evaluations_per_trip,
         allow_burst_split=layout_cfg.scoring.allow_burst_split,
         subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
+        enable_food_grid=cur_cfg.enable_food_grid,
+        mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
         intent_peak_chapters=intent_peak,
         enable_gravity_balance=cur_cfg.enable_gravity_balance,
         max_consecutive_same_pattern=cur_cfg.max_consecutive_same_pattern,

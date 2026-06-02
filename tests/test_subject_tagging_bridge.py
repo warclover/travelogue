@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from travelogue.curation.subject_tagging import (
     is_mundane_clusterable,
+    mundane_run_length,
     subject_class_for_asset,
     subject_tags_for_asset,
 )
@@ -83,3 +84,37 @@ def test_is_mundane_clusterable_accepts_semantic_category_food() -> None:
 def test_is_mundane_clusterable_accepts_curation_subject_tags_clip_food() -> None:
     asset = {"curation": {"subjectTags": ["clip:food"]}}
     assert is_mundane_clusterable(asset) == "food"
+
+
+def test_is_mundane_clusterable_phase10_1_sign_ticket_shop() -> None:
+    assert is_mundane_clusterable({"tags": ["sign"]}) == "sign"
+    assert is_mundane_clusterable({"tags": ["ticket"]}) == "ticket"
+    assert is_mundane_clusterable({"tags": ["shop"]}) == "shop"
+
+
+def test_mundane_run_length_defaults_to_food_only() -> None:
+    ids = ["a1", "a2", "a3", "a4"]
+    assets_map = {
+        "a1": {"tags": ["food"]},
+        "a2": {"tags": ["sign"]},
+        "a3": {"tags": ["food"]},
+        "a4": {"tags": ["food"]},
+    }
+    # 默认只统计 food，所以 sign 会算作一次 tolerance 干扰。
+    assert mundane_run_length(ids, assets_map, 0) == 3
+
+
+def test_mundane_run_length_supports_custom_allowed_buckets() -> None:
+    ids = ["a1", "a2", "a3", "a4"]
+    assets_map = {
+        "a1": {"tags": ["food"]},
+        "a2": {"tags": ["sign"]},
+        "a3": {"tags": ["ticket"]},
+        "a4": {"tags": ["shop"]},
+    }
+    assert mundane_run_length(
+        ids,
+        assets_map,
+        0,
+        allowed_buckets=("food", "sign", "ticket", "shop"),
+    ) == 4
