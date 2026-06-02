@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 _CLIP_TO_BUCKET: dict[str, str] = {
     "person": "person",
     "landscape": "landscape",
@@ -16,6 +14,15 @@ _CLIP_TO_BUCKET: dict[str, str] = {
 }
 
 _CLIP_CONFIDENCE_FLOOR = 0.35
+_FOOD_MUNDANE_TAGS: set[str] = {
+    "food",
+    "meal",
+    "restaurant",
+    "coffee",
+    "cafe",
+    "dessert",
+    "drink",
+}
 
 
 def _map_clip_to_bucket(subject_class: str) -> str:
@@ -51,7 +58,13 @@ def subject_class_for_asset(asset: dict) -> str:
     clip = str(asset.get("subjectClass") or "").lower().strip()
     if clip:
         conf = asset.get("subjectConfidence")
-        if conf is None or float(conf) >= _CLIP_CONFIDENCE_FLOOR:
+        conf_ok = conf is None
+        if not conf_ok:
+            try:
+                conf_ok = float(conf) >= _CLIP_CONFIDENCE_FLOOR
+            except (TypeError, ValueError):
+                conf_ok = False
+        if conf_ok:
             return _map_clip_to_bucket(clip)
     return _heuristic_subject_class(asset)
 
@@ -70,6 +83,60 @@ def subject_tags_for_asset(asset: dict) -> list[str]:
         if isinstance(t, str) and t.startswith("person"):
             tags.append(t)
     return tags
+
+
+def is_mundane_clusterable(asset: dict) -> str | None:
+    """Return 'food' if asset is clusterable mundane, else None."""
+    if subject_class_for_asset(asset) == "food":
+        return "food"
+
+    tags = {str(t).lower().strip() for t in (asset.get("tags") or []) if t}
+    cur = asset.get("curation") or {}
+    for t in cur.get("subjectTags") or []:
+        if isinstance(t, str):
+            norm = t.lower().strip()
+            if norm.startswith("clip:"):
+                norm = norm.split(":", 1)[1]
+            if norm:
+                tags.add(norm)
+
+    # Phase 8 兼容预留：读取 semanticTag.category（当前不作为必需信号）。
+    semantic = asset.get("semanticTag")
+    if isinstance(semantic, dict):
+        category = str(semantic.get("category") or "").lower().strip()
+        if category:
+            tags.add(category)
+
+    if tags & _FOOD_MUNDANE_TAGS:
+        return "food"
+    return None
+
+
+def mundane_run_length(
+    ids: list[str],
+    assets_map: dict[str, dict],
+    start: int,
+    *,
+    tolerance: int = 1,
+) -> int:
+    """Count consecutive clusterable mundane from start; allow tolerance non-mundane inserts."""
+    if start < 0 or start >= len(ids):
+        return 0
+    run = 0
+    misses = 0
+    i = start
+    while i < len(ids):
+        aid = ids[i]
+        bucket = is_mundane_clusterable(assets_map.get(aid, {}))
+        if bucket is not None:
+            run += 1
+            i += 1
+            continue
+        misses += 1
+        if misses > tolerance:
+            break
+        i += 1
+    return run
 
 
 def enrich_assets_subject_tags(assets: list[dict]) -> list[dict]:
