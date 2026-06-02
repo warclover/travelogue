@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "1",
+  "phase": "P9-QualityGate-W2",
+  "recordedAt": "2026-06-02T09:50:38Z",
+  "pyiqaAvailable": false,
+  "status": "skipped",
+  "reason": "pyiqa not installed; pip install -e '.[cull-ml]'"
+}

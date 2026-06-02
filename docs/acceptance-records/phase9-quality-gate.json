@@ -141,7 +141,8 @@
     {
       "id": "AC-P9-ML-02",
       "status": "pending",
-      "note": "Requires GPU + pyiqa; compare keep ratio vs rules"
+      "note": "Requires GPU + pyiqa; run scripts/phase9_ml_acceptance.py",
+      "metricsRef": "docs/acceptance-records/phase9-ml-acceptance.json"
     },
     {
       "id": "AC-P9-ML-03",
@@ -151,7 +152,8 @@
     {
       "id": "AC-P9-ML-04",
       "status": "pending",
-      "note": "250 photos GPU aesthetic ≤90s; S2 registration"
+      "note": "250 photos GPU aesthetic ≤90s; same script as ML-02",
+      "metricsRef": "docs/acceptance-records/phase9-ml-acceptance.json"
     },
     {
       "id": "M30-W2-pyiqa",

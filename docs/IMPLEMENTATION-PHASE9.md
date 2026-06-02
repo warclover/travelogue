@@ -79,7 +79,12 @@
 
 ## W2 待办（不阻塞 W1）
 
-- AC-P9-ML-02～04：需 GPU + `pip install -e ".[cull-ml]"` 环境登记
+- AC-P9-ML-02～04：需 GPU + `pip install -e ".[cull-ml]"` 后运行：
+  ```bash
+  python scripts/phase9_ml_acceptance.py --write docs/acceptance-records/phase9-ml-acceptance.json
+  pytest tests/test_photo_cull_ml.py::test_ac_p9_ml_02_keep_ratio_within_rules_delta
+  ```
+- InsightFace / `portrait_face_aesthetic`：PRD W2 规划，config 键未消费（Phase 10 前评估）
 - M30-2c 细粒度 ingest 内 per-photo cull 进度（可选；当前为 finalize 阶段 hint）
 
 ---
