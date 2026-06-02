@@ -89,10 +89,14 @@
       "featuredCount": 15,
       "layoutEligibleCount": 97,
       "nonFeaturedEligibleCount": 82,
+      "finalLayoutEligibleCount": 96,
+      "finalNonFeaturedEligibleCount": 81,
+      "finalNonFeaturedKeepRatio": 0.81,
       "keepRatioFloor": 0.8,
       "floorTargetNonFeatured": 80,
       "pass3Skipped": null,
       "floorNotMet": false,
+      "finalFloorNotMet": false,
       "error": null,
       "excludedByCull": 31,
       "excludedByReason": {
@@ -117,6 +121,10 @@
 | `floorTargetNonFeatured` | `ceil(keep_ratio_floor × N_scan)` |
 | `pass3Skipped` | 输入池 ≤ N_min 时原因 |
 | `floorNotMet` | 最终 non-feat 率仍 &lt; floor |
+| `finalLayoutEligibleCount` | low-res 后最终 eligible（用户实际入排版口径） |
+| `finalNonFeaturedEligibleCount` | low-res 后最终 non-featured eligible |
+| `finalNonFeaturedKeepRatio` | `finalNonFeaturedEligibleCount / scanned` |
+| `finalFloorNotMet` | low-res 后最终 non-feat 率仍 &lt; floor |
 | `error` | fail-open 异常信息 |
 | `maxPhotosExceeded` | 方案 B WARN 标志 |
 
@@ -155,7 +163,9 @@
 | `cull_duplicate_group` | Pass 2 |
 | `cull_blur` | Pass 1 |
 | `cull_quota` | Pass 3 |
-| `cull_layout_eligible` | 最终 eligible 数 |
+| `cull_layout_eligible` | cull 阶段 eligible 数（low-res 前） |
+| `cull_layout_eligible_final` | low-res 后最终 eligible 数 |
+| `cull_non_featured_eligible_final` | low-res 后最终 non-featured eligible 数 |
 | `cull_user_line` | 人话一行 |
 
 ---

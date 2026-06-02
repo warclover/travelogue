@@ -316,6 +316,7 @@ def test_cull_fail_open_restores_eligible(monkeypatch: pytest.MonkeyPatch) -> No
     ]
     summary = apply_photo_cull(trip, assets, cfg=AppConfig(cull=CullConfig(enabled=True)))
     assert all(a.get("layoutEligible", True) for a in assets)
+    assert all("excludeReason" not in a for a in assets)
     assert summary.get("error")
     assert trip["curation"]["cullSummary"].get("error")
 
@@ -333,6 +334,35 @@ def test_keep_ratio_floor_or_pass3_skip() -> None:
         assert non_feat >= len(assets) or summary["pass3Skipped"] == "pool_at_or_below_floor"
     else:
         assert non_feat >= max(floor, int(cfg.keep_ratio_floor * n_scan))
+
+
+def test_ingest_cull_summary_includes_post_low_res_counts(tmp_path: Path) -> None:
+    album = tmp_path / "album-lowres"
+    album.mkdir()
+    stamp = time.time()
+    for i in range(5):
+        path = album / f"ok{i}.jpg"
+        Image.new("RGB", (2400, 3200), (40 + i * 20, 60, 80)).save(path, quality=95)
+        os.utime(path, (stamp + i * 10, stamp + i * 10))
+    low = album / "low.jpg"
+    Image.new("RGB", (700, 700), (30, 30, 30)).save(low, quality=95)
+    os.utime(low, (stamp + 60, stamp + 60))
+
+    trips = tmp_path / "trips"
+    trip_json = create_trip("lowres-metrics", trips)
+    trip_dir = trips / "lowres-metrics"
+    trip = json.loads(trip_json.read_text(encoding="utf-8"))
+    ingest_into_trip(trip, trip_dir, from_dir=album, dedupe=False)
+
+    cull = (trip.get("curation") or {}).get("cullSummary") or {}
+    pre = int(cull.get("layoutEligibleCount") or 0)
+    final = int(cull.get("finalLayoutEligibleCount") or 0)
+    assert pre >= final >= 0
+    assert "finalNonFeaturedEligibleCount" in cull
+    assert "finalNonFeaturedKeepRatio" in cull
+    low_res_ids = (trip.get("curation") or {}).get("excludedLowResAssetIds") or []
+    if low_res_ids:
+        assert final < pre
 
 
 def test_max_photos_exceeded_warn_only() -> None:

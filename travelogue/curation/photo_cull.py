@@ -111,6 +111,12 @@ def _exclude(asset: dict, reason: str, stats: CullStats) -> None:
         stats.bump(reason, aid)
 
 
+def _clear_cull_exclude_reason(asset: dict) -> None:
+    reason = str(asset.get("excludeReason") or "")
+    if reason in CULL_EXCLUDE_REASONS:
+        asset.pop("excludeReason", None)
+
+
 def _reset_for_recull(assets: list[dict], cfg: CullConfig) -> None:
     for a in assets:
         if a.get("type", "image") == "video":
@@ -396,6 +402,7 @@ def apply_photo_cull(
         for a in body:
             if a.get("type", "image") != "video":
                 a["layoutEligible"] = True
+                _clear_cull_exclude_reason(a)
         summary = {
             "enabled": True,
             "error": str(exc),

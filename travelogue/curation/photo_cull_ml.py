@@ -12,6 +12,7 @@ _log = logging.getLogger(__name__)
 
 _PYIQA_METRIC: Any | None = None
 _PYIQA_METRIC_KEY: str | None = None
+_ML_BATCH_SIZE = 16
 
 
 def pyiqa_available() -> bool:
@@ -94,29 +95,60 @@ def apply_aesthetic_scores(
         _log.warning("pyiqa init failed; fallback to rules scoring: %s", exc)
         return False
 
-    scored = 0
+    import torch
+    import torchvision.transforms as T
+
+    metric_name = str(cfg.aesthetic_metric or "topiq_nr")
+    device = _resolve_device(cfg)
+    to_tensor = T.ToTensor()
+    pending: list[tuple[dict, Path]] = []
     for asset in assets:
         if asset.get("type", "image") == "video":
             continue
+        q = asset.get("quality")
+        if isinstance(q, dict) and q.get("aestheticScore") is not None:
+            if str(q.get("aestheticMetric") or "") == metric_name:
+                continue
         rel = str(asset.get("displayFile") or asset.get("sourceFile") or "")
         if not rel:
             continue
         path = trip_dir / rel
         if not path.is_file():
             continue
-        try:
-            with Image.open(path) as im:
-                rgb = im.convert("RGB")
-            import torch
-            import torchvision.transforms as T
+        pending.append((asset, path))
 
-            tensor = T.ToTensor()(rgb).unsqueeze(0).to(_resolve_device(cfg))
-            with torch.no_grad():
-                raw = float(metric(tensor).item())
+    def _score_batch(batch_assets: list[dict], batch_tensors: list[Any]) -> None:
+        if not batch_assets:
+            return
+        tensor = torch.stack(batch_tensors, dim=0).to(device)
+        with torch.no_grad():
+            out = metric(tensor)
+        if hasattr(out, "detach"):
+            values = out.detach().flatten().tolist()
+            raw_scores = [float(v) for v in values]
+        else:
+            raw_scores = [float(out)]
+        if len(raw_scores) == 1 and len(batch_assets) > 1:
+            raw_scores = raw_scores * len(batch_assets)
+        for asset, raw in zip(batch_assets, raw_scores, strict=False):
             q = asset.setdefault("quality", {})
             if isinstance(q, dict):
                 q["aestheticScore"] = round(_norm_aesthetic(raw), 4)
-                scored += 1
+                q["aestheticMetric"] = metric_name
+
+    batch_assets: list[dict] = []
+    batch_tensors: list[Any] = []
+    for asset, path in pending:
+        try:
+            with Image.open(path) as im:
+                rgb = im.convert("RGB")
+            batch_assets.append(asset)
+            batch_tensors.append(to_tensor(rgb))
+            if len(batch_assets) >= _ML_BATCH_SIZE:
+                _score_batch(batch_assets, batch_tensors)
+                batch_assets = []
+                batch_tensors = []
         except Exception as exc:
             _log.debug("aesthetic score skip %s: %s", asset.get("id"), exc)
-    return scored > 0
+    _score_batch(batch_assets, batch_tensors)
+    return any(_aesthetic_score(a) is not None for a in assets)

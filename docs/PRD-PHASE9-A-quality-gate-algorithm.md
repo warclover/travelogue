@@ -168,9 +168,10 @@ CLI 可展示 `non-feat 82/85`（85 = N_mat）。
 `apply_photo_cull` 捕获异常时：
 
 1. 所有 image `layoutEligible=true`  
-2. `cullSummary.error = str(exc)`  
-3. **不**写 cull 类 `excludeReason`  
-4. ingest / Job **继续**（不 raise）
+2. 清理 cull 类历史 `excludeReason`（`media_class/blur/duplicate_group/cull_quota/exposure_extreme`）  
+3. `cullSummary.error = str(exc)`  
+4. **不**写新的 cull 类 `excludeReason`  
+5. ingest / Job **继续**（不 raise）
 
 ---
 

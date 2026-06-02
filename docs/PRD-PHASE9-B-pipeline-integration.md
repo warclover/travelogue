@@ -23,6 +23,13 @@
 6.  clustering / curate               ← 仅 layoutEligible=true
 ```
 
+step 4 结束后需在 `cullSummary` 回写低清后的最终口径：
+
+- `finalLayoutEligibleCount`
+- `finalNonFeaturedEligibleCount`
+- `finalNonFeaturedKeepRatio`
+- `finalFloorNotMet`
+
 ### 1.2 增量 ingest
 
 每次 `_finalize_ingest_assets` 对 **`trip["assets"]` 全量** 执行 step 3–4（D-P9-10）。  
@@ -120,7 +127,7 @@ cull:
 | 条件 | 行为 |
 |------|------|
 | `cull.enabled=false` | skip |
-| 任意异常 in `apply_photo_cull` | D-P9-14 |
+| 任意异常 in `apply_photo_cull` | D-P9-14（fail-open + 清理 cull 历史 excludeReason） |
 | pyiqa 缺失（W2） | P0 公式 |
 
 ---

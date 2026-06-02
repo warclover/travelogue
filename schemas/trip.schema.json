@@ -324,6 +324,9 @@
             "featuredCount": { "type": "integer", "minimum": 0 },
             "layoutEligibleCount": { "type": "integer", "minimum": 0 },
             "nonFeaturedEligibleCount": { "type": "integer", "minimum": 0 },
+            "finalLayoutEligibleCount": { "type": "integer", "minimum": 0 },
+            "finalNonFeaturedEligibleCount": { "type": "integer", "minimum": 0 },
+            "finalNonFeaturedKeepRatio": { "type": "number", "minimum": 0, "maximum": 1 },
             "keepRatioFloor": { "type": "number", "minimum": 0, "maximum": 1 },
             "excludedByCull": { "type": "integer", "minimum": 0 },
             "excludedByReason": {
@@ -332,6 +335,7 @@
             },
             "pass3Skipped": { "type": ["string", "null"] },
             "floorNotMet": { "type": "boolean" },
+            "finalFloorNotMet": { "type": "boolean" },
             "floorTargetNonFeatured": { "type": "integer", "minimum": 0 },
             "maxPhotosExceeded": { "type": "boolean" },
             "maxPhotosLimit": { "type": "integer", "minimum": 0 },
