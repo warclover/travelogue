@@ -353,6 +353,7 @@ body { overflow-x: clip; overflow-y: visible; }
   grid-row: 1;
   min-width: 0;
   font-family: var(--v2-font-display);
+  margin-top: -16px;
 }
 .v2-bento__headline-row {
   display: flex;
@@ -457,9 +458,9 @@ body { overflow-x: clip; overflow-y: visible; }
   gap: 10px;
 }
 .v2-bento__frame-head {
-  display: grid;
-  grid-template-columns: minmax(0, 2.1fr) minmax(148px, 1fr);
-  gap: 0 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0;
   flex-shrink: 0;
 }
 .v2-bento__scroll-meta {
@@ -471,8 +472,6 @@ body { overflow-x: clip; overflow-y: visible; }
   color: rgba(51, 65, 85, .62);
 }
 .v2-theme-settings {
-  grid-column: 2;
-  justify-self: end;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -2056,8 +2055,7 @@ body { overflow-x: clip; overflow-y: visible; }
 @media (max-width: 1100px) {
   .v2-bento__hero { padding: 24px 20px 20px; }
   .v2-bento__title { font-size: 24px; }
-  .v2-bento__grid,
-  .v2-bento__frame-head { grid-template-columns: minmax(0, 1.85fr) minmax(132px, 1fr); }
+  .v2-bento__grid { grid-template-columns: minmax(0, 1.85fr) minmax(132px, 1fr); }
   .v2-bench {
     flex-wrap: wrap;
     align-items: flex-start;
@@ -2087,8 +2085,7 @@ body { overflow-x: clip; overflow-y: visible; }
   .v2-bento__hero { padding: 22px 18px 18px; }
   .v2-bento__title { font-size: 22px; }
   .v2-bento__lead { font-size: 12px; max-width: 100%; }
-  .v2-bento__grid,
-  .v2-bento__frame-head {
+  .v2-bento__grid {
     grid-template-columns: minmax(0, 1.75fr) minmax(120px, 1fr);
     gap: 8px 10px;
   }
