@@ -12,7 +12,8 @@
 
   function getContainer() {
     if (!container) {
-      container = document.getElementById("studio-toast-container");
+      container = document.getElementById("studio-toast-container")
+        || document.getElementById("v2-toast-container");
     }
     return container;
   }

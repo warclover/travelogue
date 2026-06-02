@@ -15,35 +15,11 @@ import { initViewportWatch } from "./unsupported.js";
 import { initErrorPipeline } from "./error-pipeline.js";
 import {
   harnessTripsOverride, harnessAssetsFail, harnessPreseedSession,
-  harnessInstallFetchMocks, harnessApplyStartup, harnessEnabled,
+  harnessInstallFetchMocks, harnessInstallBentoPreviewMock,
+  harnessApplyStartup, harnessEnabled,
 } from "./harness.js";
 import { fetchTripsFirstPage } from "./trips-client.js";
 import { initVariantGuard, syncVariantGuard } from "./variant-guard.js";
-
-function wireTopbar() {
-  initVariantGuard();
-  var addr = $("v2-copy-addr");
-  if (addr) {
-    var copy = function () {
-      var text = "127.0.0.1:8766";
-      var done = function () {
-        if (typeof studioToast === "function") {
-          studioToast("已复制本地地址", { duration: 1800 });
-        }
-      };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(done, function () {});
-      }
-    };
-    addr.addEventListener("click", copy);
-    addr.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        copy();
-      }
-    });
-  }
-}
 
 function applyTripsData(data) {
   V2.trips = (data && data.trips) || [];
@@ -97,6 +73,20 @@ function trackHomepageView() {
   });
 }
 
+function finishRoute() {
+  if (hasUserTrips()) {
+    import("./shelf.js").then(function (m) {
+      m.renderShelf(V2.trips, V2.tripsTotal);
+      trackHomepageView();
+    });
+    return;
+  }
+  import("./shelf.js").then(function (m) {
+    m.hideShelf();
+    trackHomepageView();
+  });
+}
+
 function routeFinalState() {
   if (V2.isOffline) show($("v2-offline"), true);
   else show($("v2-offline"), false);
@@ -106,19 +96,11 @@ function routeFinalState() {
     trackHomepageView();
     return;
   }
-  if (hasUserTrips()) {
-    V2.state = "IdleReturning";
-    import("./shelf.js").then(function (m) {
-      m.renderShelf(V2.trips, V2.tripsTotal);
-      trackHomepageView();
-    });
-    return;
-  }
-  V2.state = "IdleEmpty";
-  show($("v2-shelf"), false);
-  show($("v2-topbar"), true);
-  renderBentoEmpty(V2.manifest);
-  trackHomepageView();
+  V2.state = hasUserTrips() ? "IdleReturning" : "IdleEmpty";
+  renderBentoEmpty(V2.demoManifest);
+  import("./bento-tabs.js").then(function (tabs) {
+    tabs.refreshUserBentoPreview(V2.trips).finally(finishRoute);
+  });
 }
 
 function initDeferredModules() {
@@ -145,7 +127,7 @@ function rerouteFromTrips() {
 
 function startApp() {
   show($("v2-loading"), true);
-  wireTopbar();
+  initVariantGuard();
   initImportSheet();
 
   initDeferredModules().then(function () {
@@ -153,6 +135,7 @@ function startApp() {
 
     var manifestP = harnessAssetsFail() ? Promise.resolve(null) : loadManifest();
     Promise.all([manifestP, fetchTrips()]).then(function (results) {
+      V2.demoManifest = results[0];
       V2.manifest = results[0];
       V2.manifestError = !results[0];
       if (harnessApplyStartup()) return;
@@ -175,6 +158,7 @@ function init() {
   initErrorPipeline();
   if (harnessEnabled()) {
     harnessPreseedSession();
+    harnessInstallBentoPreviewMock();
     harnessInstallFetchMocks();
   }
   persistVariant("v2");

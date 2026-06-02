@@ -2,30 +2,31 @@
  * 首页 v2 · 16:9 Carousel DOM 控制器（M20-b）。
  *
  * 行为（PRD §6.4 / DATA-CONTRACT §1.3）：
- *  - spread：一屏两半页；每次滑 1 半页
+ *  - 一屏一页；每次滑 1 页
  *  - D-10：到头 clamp，不 wrap；首尾箭头 disabled
  *  - 奇数尾页：最后索引左对齐，右侧留白
- *  - 键盘 ←/→；dots `aria-current`
- *  - ⤢ / 轻点 → Lightbox（M20-c 通过 V2.onExpand 接入）
+ *  - 键盘 ←/→
+ *  - dots `aria-current`
  *
  * 纯逻辑见 carousel-logic.js（含 node 单测）。
  */
 import {
   clampIndex, scrollLeftFor, indexFromScrollLeft, canPrev, canNext,
 } from "./carousel-logic.js";
-import { assetUrl } from "./manifest.js";
+import { pageImageUrl } from "./manifest.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { shouldEagerCarouselPage } from "./layout-tier.js";
 import { V2, $ } from "./store.js";
 
 function pagePlaceholderText(page) {
   if (!page) return "";
-  if (page.role === "cover") return "雨后 · 封面";
+  if (page.label) return page.label;
+  if (page.role === "cover") return "封面";
   if (page.role === "epilogue") return "— 尾声 —";
-  return page.label || "";
+  return "";
 }
 
-function buildSlide(page, index, tier) {
+function buildSlide(manifest, page, index, tier) {
   var slide = document.createElement("div");
   slide.className = "v2-carousel__slide";
   slide.setAttribute("role", "group");
@@ -36,7 +37,7 @@ function buildSlide(page, index, tier) {
   ph.textContent = pagePlaceholderText(page);
   slide.appendChild(ph);
 
-  var url = page ? assetUrl(page.webp) : "";
+  var url = page ? pageImageUrl(manifest, page) : "";
   if (url) {
     var eager = shouldEagerCarouselPage(index, tier);
     var attachImg = function () {
@@ -99,6 +100,7 @@ export function initCarousel(manifest, opts) {
   var pageCount = pages.length;
   var index = 0;
   var syncing = false;
+  var syncReleaseTimer = null;
   var lastTracked = 0; // spread_page_view 仅在真正翻页时上报（首帧不报）
 
   function emitPage() {
@@ -110,7 +112,7 @@ export function initCarousel(manifest, opts) {
   track.innerHTML = "";
   dotsHost.innerHTML = "";
   var slideEls = pages.map(function (page, i) {
-    var slide = buildSlide(page, i, tier);
+    var slide = buildSlide(manifest, page, i, tier);
     track.appendChild(slide);
     return slide;
   });
@@ -126,10 +128,27 @@ export function initCarousel(manifest, opts) {
     return dot;
   });
 
-  if (hint) hint.textContent = "← 横滑 · 一屏两页 · 到头停止 · 共 " + pageCount + " 张 →";
+  if (hint) hint.textContent = "← 横滑 · 一屏一页 · 到头停止 · 共 " + pageCount + " 张 →";
 
   function viewportWidth() {
     return (viewport && viewport.clientWidth) || (track && track.clientWidth) || 0;
+  }
+
+  function domMaxScrollLeft() {
+    var vw = viewportWidth();
+    return Math.max(0, (track.scrollWidth || 0) - vw);
+  }
+
+  function scrollTargetFor(idx) {
+    var vw = viewportWidth();
+    if (idx === pageCount - 1) return domMaxScrollLeft();
+    return scrollLeftFor(idx, vw, pageCount);
+  }
+
+  function indexFromDomScrollLeft(scrollLeft) {
+    var max = domMaxScrollLeft();
+    if (pageCount > 0 && scrollLeft >= max - 2) return pageCount - 1;
+    return indexFromScrollLeft(scrollLeft, viewportWidth(), pageCount);
   }
 
   function syncUi() {
@@ -152,9 +171,16 @@ export function initCarousel(manifest, opts) {
     }
     if (!opts.fromScroll) {
       syncing = true;
-      track.scrollLeft = scrollLeftFor(index, viewportWidth());
-      // 释放同步锁（scroll 事件异步）
-      setTimeout(function () { syncing = false; }, 240);
+      if (scrollTimer) clearTimeout(scrollTimer);
+      if (syncReleaseTimer) clearTimeout(syncReleaseTimer);
+      var prevBehavior = track.style.scrollBehavior;
+      track.style.scrollBehavior = "auto";
+      track.scrollLeft = scrollTargetFor(index);
+      track.style.scrollBehavior = prevBehavior;
+      syncReleaseTimer = setTimeout(function () {
+        syncing = false;
+        syncReleaseTimer = null;
+      }, 280);
     }
     syncUi();
     emitPage();
@@ -169,7 +195,7 @@ export function initCarousel(manifest, opts) {
     if (syncing) return;
     if (scrollTimer) clearTimeout(scrollTimer);
     scrollTimer = setTimeout(function () {
-      var i = indexFromScrollLeft(track.scrollLeft, viewportWidth(), pageCount);
+      var i = indexFromDomScrollLeft(track.scrollLeft);
       if (i !== index) { index = i; syncUi(); emitPage(); }
     }, 120);
   });
@@ -180,20 +206,6 @@ export function initCarousel(manifest, opts) {
     webCell.addEventListener("keydown", function (e) {
       if (e.key === "ArrowLeft") { e.preventDefault(); go(index - 1); }
       else if (e.key === "ArrowRight") { e.preventDefault(); go(index + 1); }
-      else if (e.key === "Enter") {
-        e.preventDefault();
-        if (typeof V2.onExpand === "function") V2.onExpand({ type: "scroll", index: index });
-      }
-    });
-  }
-
-  // ⤢ 放大 → Lightbox（M20-c）。当前通过 V2.onExpand 钩子。
-  var expand = $("v2-expand-scroll");
-  if (expand) {
-    expand.addEventListener("click", function () {
-      if (typeof V2.onExpand === "function") {
-        V2.onExpand({ type: "scroll", index: index });
-      }
     });
   }
 

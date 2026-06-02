@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v2.0.3-HOMEPAGE** |
+| **文档版本** | **v2.0.5-HOMEPAGE** |
 | **状态** | **Draft · 开发前契约已冻结**（见 [studio-homepage-v2/](./studio-homepage-v2/README.md)；M20 双路由并行：`/` v3 冻结、`/v2` v2 开发中） |
 | **页面路由** | `GET /` → `templates/studio/studio.html`（v3 · 冻结）；`GET /v2` → `templates/studio/studio-home-v2.html`（v2 · Bento），见 [FEATURE-FLAG §1](./studio-homepage-v2/FEATURE-FLAG.md#1-门控点冻结--双路由模型) |
 | **权威线框** | [wireframes/studio-homepage-output-first-v1.6.html](./wireframes/studio-homepage-output-first-v1.6.html)（**Web·空态 / iPad·横屏 / 书架** Tab；Mobile Tab 见 §0.4） |
@@ -21,7 +21,7 @@
 |------|----------------------|---------------|
 | 首页范式 | 影像优先 · Hero + SVG 样张 | **输出优先 · Bento 双交付 + 编辑背景** |
 | 主 CTA | 选择照片文件夹 | **开始制作我的游记** → Import Sheet 内选文件夹 |
-| 回访态 | Hybrid Hero | **Web 书架**（网格） |
+| 回访态 | Hybrid Hero | **恒常 Bento 首页 + 下方书架区**（网格） |
 | 端范围 | wide + compact 浏览器 | **Web 桌面 + iPad 横屏**；**手机归小程序**（§0.4） |
 
 **继承不变**（详见 v1.4）：五主态 + 两异常态 · API · pick-folder · FirstSuccess · sessionStorage · Toast/Modal · 认知支架。
@@ -37,13 +37,18 @@
 | D-05 | **Import Sheet** | 主 CTA 打开 bottom sheet；路径仅在 Sheet 内 |
 | D-06 | **示例作品** | 人工精选 1 篇 · 统一 demo-flag |
 | D-07 | **响应式** | ≥1024 与 **iPad 横屏** Bento 双列；**拒绝 768 堆叠** |
-| D-08 | **回访** | Web 书架，非 Bento |
+| D-08 | **回访** | **恒常 Bento 首页**；有用户画册时在 Bento **下方**追加书架区（不整页替换） |
+| D-13 | **Bento 双 Tab** | **示例作品**（demo-showcase）与 **我的最近一本**（最近编辑的非 demo 画册）；切换重载 carousel / 长图 / 背景 |
 | D-09 | **用词** | In-product「自动」；禁止突出 AI；见 §3.2 |
 | D-10 | **Carousel 边界** | **到头 clamp，不循环 wrap**（spread 禁止尾声｜封面拼版） |
 | D-11 | **灰度** | 并发 holdback + 性能/错误护栏；见 §19.2 |
 | D-12 | **平台边界** | **M20 仅 Web + iPad 横屏**；手机 UI 由 **微信小程序** 承接；见 §0.4 |
 
 ### 0.3 修订摘要
+
+**v2.0.5**：**D-13 方案 B′** — Bento 双 Tab「示例作品 / 我的最近一本」；`GET /trips/{id}/bento-preview`；demo-flag 仅示例 Tab。
+
+**v2.0.4**：**D-08 方案 A** — 首页恒为 Bento；回访书架降为 Bento 下方区块；AC-HP2-11 / §8 / DATA-CONTRACT 路由修订。
 
 **v2.0.3**：冻结 `manifest.json` schema（`pages[]`）· 首页 API 只读子集 · feature flag 规格 · telemetry M20-i 前置 · dev harness · AC 验证方式 · 线框 reconcile · §8.2/§12.4 边界补充。
 
@@ -117,7 +122,7 @@ homepage_view(state 确定后)
 | Persona | M20 触点 |
 |---------|----------|
 | **A · 首次旅行者** | Web Bento → Sheet → pick-folder |
-| **B · 回访编辑者** | Web 书架 resume |
+| **B · 回访编辑者** | 同一 Bento 首页 · 下方书架 resume |
 | **C · 好奇试用者** | 示例 Lightbox → CTA |
 | **D · 审美敏感** | spread + 编辑背景 + 示例质量 |
 
@@ -177,8 +182,8 @@ Lead：选一次旅行的照片，**自动分章 · 配文 · 排版**，生成�
 | 状态 | UI |
 |------|-----|
 | **Loading** | **全页 skeleton**（§4.4）；不渲染 Bento/书架 |
-| **IdleEmpty** | Bento |
-| **IdleReturning** | Web 书架 |
+| **IdleEmpty** | Bento（无书架区） |
+| **IdleReturning** | **Bento + 下方书架区**（同一 URL `/v2`） |
 | **Importing** | Import 前壳层 blur **或** §10.1 冷启动静帧背景 |
 | **FirstSuccess / Failed / Offline** | 继承 v1.4 |
 
@@ -204,7 +209,7 @@ Lightbox = 只读验货；编辑 preview 仅 **书架 resume / FirstSuccess**。
 
 1. **`GET /trips` resolve 前**：仅 skeleton；**禁止**先渲染 Bento 再切书架（防闪屏）。
 2. **若 `sessionStorage.activeJobId`**：resolve 后直接 **Importing**（跳过 Idle）；背景用 §10.1 冷启动规则。
-3. **resolve 后**：一次性进入 IdleEmpty（trips=0）或 IdleReturning（trips≥1）。
+3. **resolve 后**：**始终**渲染 Bento 首页；若存在非 demo 用户画册，在 Bento 下方追加书架区（IdleReturning）；无用户画册则仅 Bento（IdleEmpty）。
 4. **`homepage_view`**：**仅**在最终态首帧触发，属性含 `state: empty|returning|importing`、`layout: wide|tablet_landscape|unsupported`、`variant: v2|v3`。
 
 ---
@@ -216,7 +221,7 @@ Lightbox = 只读验货；编辑 preview 仅 **书架 resume / FirstSuccess**。
 | 状态 | v2 UI |
 |------|-------|
 | IdleEmpty | Bento |
-| IdleReturning | Web 书架 |
+| IdleReturning | Bento + 下方书架区 |
 | Importing | blur 或冷启动静帧 + 进度面板 |
 | Import Sheet | 叠加 IdleEmpty Bento |
 
@@ -226,7 +231,9 @@ Lightbox = 只读验货；编辑 preview 仅 **书架 resume / FirstSuccess**。
 
 ### 6.1 顶栏
 
-`TRAVELOGUE · STUDIO` · 绿点 · `127.0.0.1:8766 · 本地`（复制 → Toast）
+**已移除**（v2.0.6）。首屏不再显示 `TRAVELOGUE · STUDIO` / 地址复制条；离线状态由 `#v2-offline` 横幅承担。
+
+loopback dev 下「经典首页 → /」链迁入 **Dev Panel**（`?dev=1` 或 `data-studio-dev=1`），Import 进行中仍隐藏（AC-HP2-23）。
 
 ### 6.2 Slogan 区
 
@@ -240,6 +247,9 @@ Eyebrow + H1 + lead + auto-tags。`layout-bento__frame` top 在 iPad 横屏/矮�
 
 | 项 | 规格 |
 |----|------|
+| **Tab（D-13）** | 默认 **示例作品**；有用户画册时可选 **我的最近一本**（`updatedAt` 最新非 demo） |
+| demo-flag | **仅**「示例作品」Tab 显示 |
+| 用户 Tab | 「我的画册」徽章 + 工作台标题为 trip 名；数据来自 `GET /trips/{id}/bento-preview` |
 | 屏数 | 封面 + N 章 + 尾声 |
 | spread | 50% 宽 · 每次滑 1 页 |
 | **边界（D-10）** | **到头 clamp，不 wrap**；禁止末页｜封面循环拼版 |
@@ -286,15 +296,17 @@ label + demo-flag · 内滚 · 轻点/⤢ → Lightbox（**非**真机小程序 
 
 ---
 
-## 8. Web 书架（回访态）
+## 8. Web 书架（首页内回访区 · 方案 A）
 
-标题 **你的游记画册** · resume 卡 · 网格 · + 新建 · stale → 更新长图。
+**位置**：`/v2` Bento 首屏 **下方**（滚动可见）；**不**再整页替换 Bento。
+
+内容：标题 **你的游记画册** · resume 卡 · 网格 · + 新建 · stale → 更新长图。
 
 ### 8.1 边界态
 
 | 条件 | UI |
 |------|-----|
-| trips Loading | 书架 skeleton；**不**显示 Bento |
+| trips Loading | 全页 skeleton；**不**显示 Bento / 书架 |
 | trips 失败 | 错误条 + 重试 |
 | Importing | 全局 Importing；**无**半导入卡 |
 | Failed import | 无 trip 入库 |
@@ -331,7 +343,7 @@ label + demo-flag · 内滚 · 轻点/⤢ → Lightbox（**非**真机小程序 
 | 关 tab 再开 | Studio 进程内 Job 续跑 → 恢复 Importing + 冷启动背景 |
 | 「可离开」 | **本机 Studio 服务续跑**；非跨设备 |
 | 取消 | 无半成品 trip → Import 前态 |
-| 成功 | FirstSuccess；背景 = Import **前**壳层（Bento 或书架） |
+| 成功 | FirstSuccess；背景 = Import **前** Bento 壳层（书架区若已有则同屏保留） |
 
 ---
 
@@ -392,9 +404,12 @@ templates/studio/assets/demo-showcase/
 
 **设计派单**：[DEMO-ASSETS-BRIEF](./studio-homepage-v2/DEMO-ASSETS-BRIEF.md) — **M20-a 前置 blocker**。
 
-### 11.3 useDemoAlbum
+### 11.3 useDemoAlbum · Bento 数据源
 
-Bento showcase **永不** import。试用示例仅 Sheet 三级入口；书架标 **示例**。
+- Bento **示例 Tab** 永不 import；数据仅 demo-showcase。
+- **我的最近一本 Tab**：只读最近用户 trip 的 `preview.jpg` / 章节 PNG / longshot；**不**替换示例素材包。
+- 试用示例仍走 Sheet 三级入口；书架 demo 标 **示例**。
+
 
 ### 11.4 加载失败
 
@@ -525,7 +540,7 @@ Carousel ←/→ · dots `aria-current` · Lightbox trap · Sheet §7.1 · 触�
 | AC-HP2-08 | 奇数尾页左对齐留白 |
 | AC-HP2-09 | carousel **首尾 clamp 不 wrap** |
 | AC-HP2-10 | 主 CTA → Sheet；路径仅在 Sheet |
-| AC-HP2-11 | trips≥1 → 书架；Loading 无 Bento 闪屏 |
+| AC-HP2-11 | trips≥1 → Bento **与**书架区同屏；Loading 无错误态闪屏 |
 | AC-HP2-12 | iPad 1024 横屏 Bento；无 768 堆叠 |
 | AC-HP2-13 | 手机访问 → Unsupported 提示（非 Mobile 空态） |
 | AC-HP2-14 | iPad 竖屏 → 旋转提示 |
@@ -598,6 +613,8 @@ Bento · Sheet · 双交付预览 · Lightbox · Web 书架 · 示例策略 · u
 
 | 版本 | 说明 |
 |------|------|
+| **v2.0.5** | D-13 Bento 双 Tab + bento-preview API |
+| **v2.0.4** | D-08 方案 A：恒常 Bento + 下方书架区 |
 | **v2.0.3** | 开发前契约包；manifest schema；flag/telemetry/harness；AC 验证方式；§8.2/§12.4；线框 reconcile |
 | **v2.0.2** | 收窄 Web+iPad 横屏；手机→小程序；Loading/冷启动；holdback；clamp；Sheet a11y；指标划界；删 Mobile M20 |
 | v2.0.1 | 审阅修订（Mobile 话术等，已由 v2.0.2 替代范围） |

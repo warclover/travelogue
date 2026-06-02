@@ -46,6 +46,11 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "lightbox_open",
         "spread_page_view",
         "shelf_resume_click",
+        "shelf_menu_open",
+        "shelf_delete_confirm",
+        "shelf_delete_success",
+        "shelf_delete_cancel",
+        "bento_tab_switch",
         "js_error",
     }
 )

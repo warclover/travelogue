@@ -180,6 +180,50 @@ function jobFixturePayload() {
 }
 
 /** Mock import/status/cancel，供 AC-15/16 等无需真实 pipeline。 */
+export function harnessInstallBentoPreviewMock() {
+  if (!harnessEnabled()) return;
+  if (window.__v2BentoPreviewMock) return;
+  window.__v2BentoPreviewMock = true;
+  var orig = window.fetch;
+  window.fetch = function (url, opts) {
+    var href = typeof url === "string" ? url : (url && url.url) || "";
+    if (href.indexOf("/bento-preview") >= 0) {
+      // 无 studioFixture 时走真实 /trips/{id}/bento-preview（本地 dogfood）
+      if (!params().get("studioFixture")) {
+        return orig.apply(this, arguments);
+      }
+      var parts = href.split("/trips/");
+      var tripId = parts[1] ? decodeURIComponent(parts[1].split("/")[0]) : "harness-trip";
+      var body = {
+        ok: true,
+        version: "1",
+        source: "user",
+        tripId: tripId,
+        title: "Harness · " + tripId,
+        previewUrl: "/" + tripId + "/index.html",
+        meta: { photoCount: 12, chapterCount: 3 },
+        assets: {
+          background: "/" + tripId + "/preview.jpg",
+          longshot: "/" + tripId + "/preview.jpg",
+        },
+        pages: [
+          { id: "cover", role: "cover", label: "封面", url: "/" + tripId + "/preview.jpg" },
+          { id: "ch01", role: "chapter", label: "第1章", chapterIndex: 1, url: "/" + tripId + "/scroll/ch01.webp" },
+          { id: "ch02", role: "chapter", label: "第2章", chapterIndex: 2, url: "/" + tripId + "/scroll/ch02.webp" },
+          { id: "ch03", role: "chapter", label: "第3章", chapterIndex: 3, url: "/" + tripId + "/scroll/ch03.webp" },
+          { id: "epilogue", role: "epilogue", label: "尾声", url: "/" + tripId + "/scroll/epilogue.webp" },
+        ],
+      };
+      return Promise.resolve(new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }));
+    }
+    return orig.apply(this, arguments);
+  };
+}
+
+/** Mock import/status/cancel，供 AC-15/16 等无需真实 pipeline。 */
 export function harnessInstallFetchMocks() {
   if (!harnessEnabled() || !harnessJobName()) return;
   var orig = window.fetch;
@@ -244,6 +288,7 @@ export function harnessApplyStartup() {
       return true;
     case "idle-returning":
       V2.state = "IdleReturning";
+      renderBentoEmpty(V2.manifest);
       renderShelf(V2.trips, V2.tripsTotal);
       trackHarnessView("returning");
       return true;
@@ -261,14 +306,8 @@ export function harnessApplyStartup() {
       harnessPreseedSession();
       return false; // 走 resumeV2ImportIfAny
     case "first-success": {
-      var hasUser = V2.trips.some(function (t) { return !isDemoTrip(t); });
-      if (hasUser) {
-        V2.importShell = "shelf";
-        renderShelf(V2.trips, V2.tripsTotal);
-      } else {
-        V2.importShell = "bento";
-        renderBentoEmpty(V2.manifest);
-      }
+      renderBentoEmpty(V2.manifest);
+      renderShelf(V2.trips, V2.tripsTotal);
       showFirstSuccess({
         result: {
           tripId: "harness-trip",

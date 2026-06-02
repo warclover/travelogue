@@ -1,0 +1,86 @@
+/**
+ * 首页 v2 · Bento 预览 Tab（示例作品 / 我的最近一本 · 方案 B′）。
+ */
+import { trackStudioEvent } from "../js/analytics.js";
+import { V2, $, show } from "./store.js";
+import { renderBentoSurface } from "./bento.js";
+
+var _wired = false;
+
+function syncTabUi() {
+  var demoBtn = $("v2-tab-demo");
+  var mineBtn = $("v2-tab-mine");
+  var tab = V2.bentoTab || "demo";
+  if (demoBtn) {
+    demoBtn.classList.toggle("is-active", tab === "demo");
+    demoBtn.setAttribute("aria-selected", tab === "demo" ? "true" : "false");
+  }
+  if (mineBtn) {
+    mineBtn.classList.toggle("is-active", tab === "mine");
+    mineBtn.setAttribute("aria-selected", tab === "mine" ? "true" : "false");
+    mineBtn.disabled = !V2.userManifest;
+  }
+
+  document.querySelectorAll("[data-demo-flag]").forEach(function (el) {
+    show(el, tab === "demo");
+  });
+}
+
+export function activeBentoManifest() {
+  if (V2.bentoTab === "mine" && V2.userManifest) return V2.userManifest;
+  return V2.demoManifest;
+}
+
+export function setBentoTab(tab, opts) {
+  opts = opts || {};
+  if (tab === "mine" && !V2.userManifest) return;
+  if (V2.bentoTab === tab && !opts.force) return;
+  V2.bentoTab = tab;
+  V2.manifest = activeBentoManifest();
+  syncTabUi();
+  renderBentoSurface(V2.manifest);
+  if (!opts.silent) {
+    trackStudioEvent("bento_tab_switch", {
+      tab: tab,
+      trip_id: tab === "mine" && V2.userManifest ? V2.userManifest.tripId : null,
+    });
+  }
+}
+
+export function initBentoTabs() {
+  if (_wired) return;
+  _wired = true;
+  var demoBtn = $("v2-tab-demo");
+  var mineBtn = $("v2-tab-mine");
+  if (demoBtn) {
+    demoBtn.addEventListener("click", function () { setBentoTab("demo"); });
+  }
+  if (mineBtn) {
+    mineBtn.addEventListener("click", function () { setBentoTab("mine"); });
+  }
+}
+
+/** trips 加载后拉取最近一本预览 manifest。 */
+export function refreshUserBentoPreview(trips) {
+  return import("./trip-preview.js").then(function (mod) {
+    var recent = mod.pickRecentUserTrip(trips);
+    if (!recent) {
+      V2.userManifest = null;
+      if (V2.bentoTab === "mine") V2.bentoTab = "demo";
+      syncTabUi();
+      return null;
+    }
+    return mod.loadTripBentoPreview(recent.tripId).then(function (manifest) {
+      V2.userManifest = manifest;
+      if (!manifest && V2.bentoTab === "mine") V2.bentoTab = "demo";
+      V2.manifest = activeBentoManifest();
+      syncTabUi();
+      if (V2.bentoTab === "mine" && manifest) {
+        renderBentoSurface(manifest);
+      }
+      return manifest;
+    });
+  });
+}
+
+export { syncTabUi };

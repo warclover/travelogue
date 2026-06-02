@@ -4,14 +4,13 @@
  * - scroll 模式：按 manifest.pages[] 顺序纵向拼接全部 webp（DATA-CONTRACT §1.3）
  * - longshot 模式：9:16 长图竖滚
  * - focus trap + Esc + 关闭归还焦点；不进 editor preview
- * - 触发：⤢ 按钮 / Enter（carousel）/ 轻点（位移 ≤ 阈值，lightbox-logic）
+ * - 打开入口已移除（Bento 内仅内联预览）；保留模块供后续复用
  * 复用：constants.js SHEET_FOCUSABLE、共享 analytics（lightbox_open 待 M20-h 入 ALLOWED）。
  */
 import { SHEET_FOCUSABLE } from "../js/constants.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
-import { assetUrl } from "./manifest.js";
-import { classifyGesture } from "./lightbox-logic.js";
+import { pageImageUrl, manifestAssetUrl } from "./manifest.js";
 
 let _open = false;
 let _previousFocus = null;
@@ -41,12 +40,12 @@ function appendImage(host, url, alt, phText, phClass) {
 function buildScrollContent(scroll, manifest) {
   var pages = (manifest && manifest.pages) || [];
   pages.forEach(function (page) {
-    appendImage(scroll, assetUrl(page.webp), page.label, pagePlaceholder(page));
+    appendImage(scroll, pageImageUrl(manifest, page), page.label, pagePlaceholder(page));
   });
 }
 
 function buildLongshotContent(scroll, manifest) {
-  var url = manifest && manifest.assets ? assetUrl(manifest.assets.longshot) : "";
+  var url = manifest ? manifestAssetUrl(manifest, "longshot") : "";
   appendImage(scroll, url, "微信长图样张", "长图样张加载中…");
 }
 
@@ -86,12 +85,17 @@ export function openLightbox(payload) {
   if (inner) inner.classList.toggle("v2-lightbox__inner--phone", type === "longshot");
 
   var title = (V2.manifest && V2.manifest.title) || "示例作品";
+  var isUser = V2.manifest && V2.manifest.source === "user";
   if (type === "longshot") {
     buildLongshotContent(scroll, V2.manifest);
-    if (caption) caption.textContent = "竖版长图 · 只读 · " + title;
+    if (caption) {
+      caption.textContent = (isUser ? "竖版长图 · " : "竖版长图 · 只读 · ") + title;
+    }
   } else {
     buildScrollContent(scroll, V2.manifest);
-    if (caption) caption.textContent = "完整卷轴 · 只读 · " + title;
+    if (caption) {
+      caption.textContent = (isUser ? "卷轴预览 · " : "完整卷轴 · 只读 · ") + title;
+    }
   }
 
   _previousFocus = document.activeElement;
@@ -118,26 +122,6 @@ export function closeLightbox() {
   }
 }
 
-/** 在元素上绑定「轻点开 Lightbox / 拖拽不误触」（AC-HP2-06/07）。 */
-function attachTapToOpen(el, payloadFn) {
-  if (!el) return;
-  var sx = 0, sy = 0, touch = false, down = false;
-  el.addEventListener("pointerdown", function (e) {
-    // 忽略落在按钮上的指针（箭头 / ⤢ 自有处理）
-    if (e.target && e.target.closest && e.target.closest("button")) { down = false; return; }
-    down = true;
-    touch = e.pointerType === "touch";
-    sx = e.clientX; sy = e.clientY;
-  });
-  el.addEventListener("pointerup", function (e) {
-    if (!down) return;
-    down = false;
-    if (e.target && e.target.closest && e.target.closest("button")) return;
-    var g = classifyGesture(e.clientX - sx, e.clientY - sy, touch);
-    if (g === "tap") openLightbox(payloadFn());
-  });
-}
-
 export function initLightbox() {
   var lb = $("v2-lightbox");
   if (lb) {
@@ -149,16 +133,5 @@ export function initLightbox() {
   }
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && _open) closeLightbox();
-  });
-
-  // ⤢ / Enter 经此钩子；覆盖 bootstrap 占位
-  V2.onExpand = openLightbox;
-
-  // 轻点放大（位移 ≤ 阈值）；横拖/内滚不误触
-  attachTapToOpen($("v2-carousel"), function () {
-    return { type: "scroll", index: 0 };
-  });
-  attachTapToOpen($("v2-phone-screen"), function () {
-    return { type: "longshot" };
   });
 }

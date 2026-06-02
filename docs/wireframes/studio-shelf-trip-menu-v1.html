@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio 书架 · TripCardMenu v1 · M13 交互稿</title>
+  <style>
+    :root {
+      --ink: #14110d;
+      --paper: #f7f2e9;
+      --cream: #e8dcc8;
+      --forest: #2d4a3e;
+      --muted: rgba(20, 17, 13, .5);
+      --line: rgba(20, 17, 13, .12);
+      --danger: #a33b36;
+      --danger-soft: rgba(163, 59, 54, .1);
+      --demo-bg: rgba(123, 107, 158, .18);
+      --demo-border: rgba(123, 107, 158, .4);
+      --demo-ink: #6b5a8a;
+      --wf-label: #e85d04;
+      --font-display: Georgia, "Times New Roman", "Songti SC", serif;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); font-size: 14px; color: var(--ink); background: #ddd8ce; }
+
+    /* ── Wireframe chrome ── */
+    .wf-meta { padding: 14px 22px; background: #fff; border-bottom: 2px solid var(--wf-label); }
+    .wf-meta h1 { margin: 0 0 4px; font-size: 17px; }
+    .wf-meta p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .wf-layout { display: grid; grid-template-columns: 1fr 340px; gap: 0; min-height: calc(100vh - 90px); }
+    @media (max-width: 1100px) { .wf-layout { grid-template-columns: 1fr; } }
+
+    .wf-main { padding: 16px 20px 32px; }
+    .wf-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; }
+    .wf-tabs button {
+      border: 1px solid var(--line); background: #fff; padding: 8px 14px; border-radius: 8px;
+      cursor: pointer; font-size: 12px;
+    }
+    .wf-tabs button[aria-selected="true"] { background: var(--paper); font-weight: 600; border-color: rgba(20,17,13,.25); }
+    .wf-panel { display: none; }
+    .wf-panel[data-active="true"] { display: block; }
+
+    .wf-stage-wrap { display: flex; justify-content: center; }
+    .wf-stage {
+      width: 100%; max-width: 960px; background: var(--paper); color: var(--ink);
+      border-radius: 4px; overflow: hidden; position: relative; min-height: 520px;
+    }
+    .wf-anno {
+      margin-top: 14px; padding: 12px 14px; background: #fff; border-left: 3px solid var(--wf-label);
+      font-size: 12px; line-height: 1.55; color: rgba(20,17,13,.75);
+    }
+    .wf-anno strong { color: var(--ink); }
+
+    /* ── Spec sidebar ── */
+    .wf-spec {
+      background: #fff; border-left: 1px solid var(--line); padding: 18px 20px 32px;
+      font-size: 12px; line-height: 1.55; overflow-y: auto;
+    }
+    .wf-spec h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--wf-label); }
+    .wf-spec h3 { margin: 18px 0 6px; font-size: 12px; font-weight: 700; }
+    .wf-spec ul, .wf-spec ol { margin: 0; padding-left: 18px; }
+    .wf-spec li { margin-bottom: 4px; }
+    .wf-spec code { font-size: 11px; background: var(--paper); padding: 1px 4px; border-radius: 3px; }
+    .wf-spec table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 11px; }
+    .wf-spec th, .wf-spec td { border: 1px solid var(--line); padding: 5px 7px; text-align: left; vertical-align: top; }
+    .wf-spec th { background: var(--paper); }
+
+    /* ── Shelf (matches v2-shelf) ── */
+    .shelf { padding: 36px 48px 48px; }
+    .shelf__head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 26px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+    .shelf__head h2 { margin: 0; font-family: var(--font-display); font-size: 42px; font-weight: 400; line-height: 1; }
+    .shelf__count { margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+    .shelf__new {
+      min-height: 44px; padding: 12px 22px; border: none; border-radius: 6px;
+      background: var(--ink); color: var(--paper); font-size: 13px; font-weight: 600; cursor: default;
+    }
+    .shelf__resume {
+      display: flex; align-items: center; gap: 20px; padding: 16px 20px; margin-bottom: 26px;
+      background: #fff; border: 1px solid rgba(20,17,13,.1); border-radius: 8px; position: relative;
+    }
+    .shelf__resume-thumb {
+      width: 60px; height: 80px; border-radius: 4px; background-size: cover; background-position: center; flex-shrink: 0;
+      background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200');
+    }
+    .shelf__resume-text { flex: 1; min-width: 0; }
+    .shelf__resume-text strong { display: block; font-size: 15px; }
+    .shelf__resume-text span { font-size: 12px; color: var(--muted); }
+    .shelf__resume-actions { display: flex; gap: 10px; flex-shrink: 0; }
+    .shelf__resume-actions button {
+      min-height: 40px; padding: 9px 16px; border: 1px solid rgba(20,17,13,.18); border-radius: 6px;
+      background: transparent; font-size: 12px; cursor: default;
+    }
+    .shelf__resume-actions button.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+    .shelf__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+    .shelf__card { position: relative; text-align: left; }
+    .shelf__card--dim { opacity: .35; pointer-events: none; }
+
+    .shelf__cover-wrap { position: relative; margin-bottom: 12px; }
+    .shelf__cover {
+      aspect-ratio: 3/4; border-radius: 4px; background-size: cover; background-position: center;
+      box-shadow: 0 8px 28px rgba(16,15,13,.12); transition: transform .25s, box-shadow .25s;
+    }
+    .shelf__card.is-hover .shelf__cover,
+    .shelf__card.is-menu-open .shelf__cover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 48px rgba(16,15,13,.18);
+    }
+    .shelf__cover--a { background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400'); }
+    .shelf__cover--b { background-image: url('https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400'); }
+    .shelf__cover--c { background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400'); }
+    .shelf__cover--d { background-image: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400'); }
+
+    .shelf__badge-demo {
+      position: absolute; top: 8px; left: 8px; z-index: 2;
+      padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;
+      background: var(--demo-bg); border: 1px solid var(--demo-border); color: var(--demo-ink);
+    }
+
+    /* ⋯ trigger — hover / focus / menu-open only */
+    .shelf__menu-btn {
+      position: absolute; top: 8px; right: 8px; z-index: 3;
+      width: 32px; height: 32px; border: none; border-radius: 6px;
+      background: rgba(255,255,255,.92); color: var(--ink);
+      font-size: 18px; line-height: 1; cursor: pointer;
+      display: none; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .shelf__menu-btn:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; }
+    .shelf__card.is-hover .shelf__menu-btn,
+    .shelf__card.is-menu-open .shelf__menu-btn,
+    .shelf__card.is-focus .shelf__menu-btn,
+    .shelf__resume.is-menu-open .shelf__menu-btn,
+    .shelf__resume.is-hover .shelf__menu-btn { display: flex; }
+    .shelf__menu-btn.is-active { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+
+    /* Dropdown menu */
+    .shelf__menu {
+      position: absolute; top: 44px; right: 8px; z-index: 4;
+      min-width: 148px; padding: 6px 0; background: #fff;
+      border: 1px solid rgba(20,17,13,.12); border-radius: 8px;
+      box-shadow: 0 12px 32px rgba(16,15,13,.14);
+      display: none;
+    }
+    .shelf__menu[data-open="true"] { display: block; }
+    .shelf__menu-item {
+      display: block; width: 100%; padding: 9px 14px; border: none; background: none;
+      text-align: left; font-size: 13px; cursor: pointer; color: var(--ink);
+    }
+    .shelf__menu-item:hover { background: rgba(20,17,13,.04); }
+    .shelf__menu-item--danger { color: var(--danger); }
+    .shelf__menu-item--danger:hover { background: var(--danger-soft); }
+    .shelf__menu-item:disabled { color: rgba(20,17,13,.35); cursor: not-allowed; }
+    .shelf__menu-item:disabled:hover { background: none; }
+
+    .shelf__title { margin: 0; font-size: 14px; font-weight: 600; }
+    .shelf__sub { margin: 3px 0 0; font-size: 11px; color: var(--muted); }
+
+    .shelf__resume .shelf__menu-btn { top: 12px; right: 12px; }
+    .shelf__resume .shelf__menu { top: 48px; right: 12px; }
+
+    /* Modal */
+    .wf-scrim {
+      position: absolute; inset: 0; background: rgba(6,5,4,.45); z-index: 20;
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .wf-modal {
+      width: 100%; max-width: 400px; background: #fff; border-radius: 10px; padding: 22px 24px 20px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.22);
+    }
+    .wf-modal h3 { margin: 0 0 8px; font-size: 17px; font-weight: 600; }
+    .wf-modal p { margin: 0 0 18px; font-size: 13px; line-height: 1.55; color: rgba(20,17,13,.72); }
+    .wf-modal__trip { font-weight: 600; color: var(--ink); }
+    .wf-modal__note {
+      margin: -10px 0 18px; padding: 10px 12px; background: rgba(45,74,62,.06);
+      border-radius: 6px; font-size: 12px; line-height: 1.5; color: rgba(20,17,13,.65);
+    }
+    .wf-modal__actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .wf-modal__actions button {
+      min-height: 40px; padding: 9px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: default;
+    }
+    .wf-btn-cancel { border: 1px solid var(--line); background: #fff; color: var(--ink); }
+    .wf-btn-danger { border: none; background: var(--danger); color: #fff; }
+
+    /* Toast */
+    .wf-toast {
+      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 30;
+      padding: 12px 20px; background: var(--ink); color: var(--paper);
+      border-radius: 8px; font-size: 13px; white-space: nowrap;
+    }
+
+    /* Callout arrows (wireframe only) */
+    .wf-callout {
+      position: absolute; z-index: 10; font-size: 11px; font-weight: 600; color: var(--wf-label);
+      background: #fff; border: 1px dashed var(--wf-label); padding: 4px 8px; border-radius: 4px;
+      white-space: nowrap;
+    }
+    .wf-callout--menu { top: 52px; right: 48px; }
+    .wf-callout--hover { top: 280px; left: 200px; }
+
+    /* Flow diagram */
+    .flow {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 16px; padding: 12px 14px; background: #fff; border-radius: 8px; font-size: 11px;
+    }
+    .flow span { padding: 4px 10px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); }
+    .flow span.is-current { background: var(--forest); color: #fff; border-color: var(--forest); font-weight: 600; }
+    .flow em { font-style: normal; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wf-meta">
+    <h1>M13 · 书架 TripCardMenu v1 · 交互稿</h1>
+    <p>
+      范围：首页 v2 书架区（<code>#v2-shelf</code>）· 网格卡 + Resume 条 · Web Desktop<br/>
+      原则：删除为低频补救操作 · 默认隐藏 · hover/focus 出现 <code>⋯</code> · 二次确认 · 示例画册不可删<br/>
+      关联：<code>shelf.js</code> · PRD v1 §6.4 M13 · Token 对齐 <code>studio-home-v2.css</code>
+    </p>
+  </div>
+
+  <div class="wf-layout">
+    <div class="wf-main">
+      <div class="wf-tabs" role="tablist">
+        <button type="button" role="tab" aria-selected="true" data-tab="t1">① 默认态</button>
+        <button type="button" role="tab" aria-selected="false" data-tab="t2">② Hover · ⋯ 出现</button>
+        <button type="button" role="tab" aria-selected="false" data-tab="t3">③ 菜单展开</button>
+        <button type="button" role="tab" aria-selected="false" data-tab="t4">④ 删除确认</button>
+        <button type="button" role="tab" aria-selected="false" data-tab="t5">⑤ 删除成功</button>
+        <button type="button" role="tab" aria-selected="false" data-tab="t6">⑥ 示例画册</button>
+        <button type="button" role="tab" aria-selected="false" data-tab="t7">⑦ Resume 条</button>
+      </div>
+
+      <!-- ① 默认态 -->
+      <div id="t1" class="wf-panel" data-active="true" role="tabpanel">
+        <div class="flow">
+          <span class="is-current">① 默认</span><em>→</em><span>② Hover</span><em>→</em><span>③ 菜单</span><em>→</em><span>④ 确认</span><em>→</em><span>⑤ 成功</span>
+        </div>
+        <div class="wf-stage-wrap">
+          <div class="wf-stage">
+            <section class="shelf">
+              <div class="shelf__head">
+                <div>
+                  <h2>你的游记画册</h2>
+                  <p class="shelf__count">4 本作品 · 上次编辑 9 小时前</p>
+                </div>
+                <button type="button" class="shelf__new">+ 选择文件夹新建</button>
+              </div>
+              <div class="shelf__grid">
+                <article class="shelf__card">
+                  <div class="shelf__cover-wrap">
+                    <div class="shelf__cover shelf__cover--a"></div>
+                  </div>
+                  <h3 class="shelf__title">东澳岛</h3>
+                  <p class="shelf__sub">120 张 · 9 小时前</p>
+                </article>
+                <article class="shelf__card">
+                  <div class="shelf__cover-wrap">
+                    <div class="shelf__cover shelf__cover--b"></div>
+                  </div>
+                  <h3 class="shelf__title">klx</h3>
+                  <p class="shelf__sub">206 张 · 1 天前</p>
+                </article>
+                <article class="shelf__card">
+                  <div class="shelf__cover-wrap">
+                    <div class="shelf__cover shelf__cover--c"></div>
+                  </div>
+                  <h3 class="shelf__title">318沿途好风光</h3>
+                  <p class="shelf__sub">89 张 · 3 天前</p>
+                </article>
+                <article class="shelf__card">
+                  <div class="shelf__cover-wrap">
+                    <div class="shelf__cover shelf__cover--d"></div>
+                  </div>
+                  <h3 class="shelf__title">川藏线的行走记录</h3>
+                  <p class="shelf__sub">156 张 · 1 周前</p>
+                </article>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div class="wf-anno">
+          <strong>默认态：</strong>无 <code>⋯</code> 按钮 · 整卡可点击打开预览 · 视觉保持「画册浏览」气质 · 点击封面/标题区域 → 打开 trip preview（与现有一致）
+        </div>
+      </div>
+
+      <!-- ② Hover -->
+      <div id="t2" class="wf-panel" role="tabpanel">
+        <div class="flow">
+          <span>① 默认</span><em>→</em><span class="is-current">② Hover</span><em>→</em><span>③ 菜单</span><em>→</em><span>④ 确认</span><em>→</em><span>⑤ 成功</span>
+        </div>
+        <div class="wf-stage-wrap">
+          <div class="wf-stage">
+            <section class="shelf">
+              <div class="shelf__head">
+                <div><h2>你的游记画册</h2><p class="shelf__count">4 本作品</p></div>
+                <button type="button" class="shelf__new">+ 选择文件夹新建</button>
+              </div>
+              <div class="shelf__grid">
+                <article class="shelf__card is-hover">
+                  <div class="shelf__cover-wrap">
+                    <div class="shelf__cover shelf__cover--a"></div>
+                    <button type="button" class="shelf__menu-btn" aria-label="更多操作">⋯</button>
+                  </div>
+                  <h3 class="shelf__title">东澳岛</h3>
+                  <p class="shelf__sub">120 张 · 9 小时前</p>
+                </article>
+                <article class="shelf__card shelf__card--dim">
+                  <div class="shelf__cover-wrap"><div class="shelf__cover shelf__cover--b"></div></div>
+                  <h3 class="shelf__title">klx</h3><p class="shelf__sub">206 张 · 1 天前</p>
+                </article>
+                <article class="shelf__card shelf__card--dim">
+                  <div class="shelf__cover-wrap"><div class="shelf__cover shelf__cover--c"></div></div>
+                  <h3 class="shelf__title">318沿途好风光</h3><p class="shelf__sub">89 张 · 3 天前</p>
+                </article>
+                <article class="shelf__card shelf__card--dim">
+                  <div class="shelf__cover-wrap"><div class="shelf__cover shelf__cover--d"></div></div>
+                  <h3 class="shelf__title">川藏线的行走记录</h3><p class="shelf__sub">156 张 · 1 周前</p>
+                </article>
+              </div>
+            </section>
+            <span class="wf-callout wf-callout--hover">鼠标悬停封面 → 右上角出现 ⋯</span>
+          </div>
+        </div>
+        <div class="wf-anno">
+          <strong>触发条件：</strong><code>mouseenter</code> 封面区 · 或卡片 <code>:focus-within</code>（Tab 导航）· <code>⋯</code> 32×32px · 半透明白底 · 与左上角「示例」角标对称<br/>
+          <strong>离开：</strong>鼠标移出卡片且菜单未展开 → 隐藏 <code>⋯</code> · 封面上浮动画与现有一致
+        </div>
+      </div>
+
+      <!-- ③ 菜单展开 -->
+      <div id="t3" class="wf-panel" role="tabpanel">
+        <div class="flow">
+          <span>① 默认</span><em>→</em><span>② Hover</span><em>→</em><span class="is-current">③ 菜单</span><em>→</em><span>④ 确认</span><em>→</em><span>⑤ 成功</span>
+        </div>
+        <div class="wf-stage-wrap">
+          <div class="wf-stage">
+            <section class="shelf">
+              <div class="shelf__head">
+                <div><h2>你的游记画册</h2><p class="shelf__count">4 本作品</p></div>
+                <button type="button" class="shelf__new">+ 选择文件夹新建</button>
+              </div>
+              <div class="shelf__grid">
+                <article class="shelf__card is-menu-open">
+                  <div class="shelf__cover-wrap">
+                    <div class="shelf__cover shelf__cover--a"></div>
+                    <button type="button" class="shelf__menu-btn is-active" aria-expanded="true" aria-haspopup="menu">⋯</button>
+                    <div class="shelf__menu" data-open="true" role="menu">
+                      <button type="button" class="shelf__menu-item shelf__menu-item--danger" role="menuitem">删除画册</button>
+                    </div>
+                  </div>
+                  <h3 class="shelf__title">东澳岛</h3>
+                  <p class="shelf__sub">120 张 · 9 小时前</p>
+                </article>
+                <article class="shelf__card shelf__card--dim">
+                  <div class="shelf__cover-wrap"><div class="shelf__cover shelf__cover--b"></div></div>
+                  <h3 class="shelf__title">klx</h3><p class="shelf__sub">206 张 · 1 天前</p>
+                </article>
+                <article class="shelf__card shelf__card--dim">
+                  <div class="shelf__cover-wrap"><div class="shelf__cover shelf__cover--c"></div></div>
+                  <h3 class="shelf__title">318沿途好风光</h3><p class="shelf__sub">89 张 · 3 天前</p>
+                </article>
+                <article class="shelf__card shelf__card--dim">
+                  <div class="shelf__cover-wrap"><div class="shelf__cover shelf__cover--d"></div></div>
+                  <h3 class="shelf__title">川藏线的行走记录</h3><p class="shelf__sub">156 张 · 1 周前</p>
+                </article>
+              </div>
+            </section>
+            <span class="wf-callout wf-callout--menu">点击 ⋯ → 下拉菜单</span>
+          </div>
+        </div>
+        <div class="wf-anno">
+          <strong>菜单 v1 仅一项：</strong>「删除画册」（destructive 红色）· v2 不放入「重命名」以免 scope 膨胀<br/>
+          <strong>关闭：</strong>Esc · 点击菜单外 · 再次点击 <code>⋯</code> · 同时只允一张卡菜单打开<br/>
+          <strong>点击封面（非 ⋯）：</strong>菜单展开时点击封面空白 → 关闭菜单，<strong>不</strong>打开预览
+        </div>
+      </div>
+
+      <!-- ④ 删除确认 -->
+      <div id="t4" class="wf-panel" role="tabpanel">
+        <div class="flow">
+          <span>① 默认</span><em>→</em><span>② Hover</span><em>→</em><span>③ 菜单</span><em>→</em><span class="is-current">④ 确认</span><em>→</em><span>⑤ 成功</span>
+        </div>
+        <div class="wf-stage-wrap">
+          <div class="wf-stage">
+            <section class="shelf" style="filter: blur(1px); opacity: .6; pointer-events: none;">
+              <div class="shelf__head"><div><h2>你的游记画册</h2></div></div>
+              <div class="shelf__grid">
+                <article class="shelf__card is-menu-open">
+                  <div class="shelf__cover-wrap"><div class="shelf__cover shelf__cover--a"></div></div>
+                  <h3 class="shelf__title">东澳岛</h3><p class="shelf__sub">120 张 · 9 小时前</p>
+                </article>
+              </div>
+            </section>
+            <div class="wf-scrim" role="presentation">
+              <div class="wf-modal" role="alertdialog" aria-labelledby="modal-title" aria-describedby="modal-desc">
+                <h3 id="modal-title">删除这本画册？</h3>
+                <p id="modal-desc">
+                  将移除画册「<span class="wf-modal__trip">东澳岛</span>」及其排版与预览记录。
+                </p>
+                <div class="wf-modal__note">
+                  你电脑上的原始照片<strong>不会被删除</strong>。之后可以用同一文件夹重新导入。
+                </div>
+                <div class="wf-modal__actions">
+                  <button type="button" class="wf-btn-cancel">取消</button>
+                  <button type="button" class="wf-btn-danger">删除</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="wf-anno">
+          <strong>Modal 规格：</strong>复用 Studio 现有 modal 模式（与「覆盖游记」「取消导入」同级）· 默认焦点在「取消」· Enter 不触发删除<br/>
+          <strong>主按钮：</strong>「删除」destructive · 请求进行中 disabled + 「删除中…」
+        </div>
+      </div>
+
+      <!-- ⑤ 删除成功 -->
+      <div id="t5" class="wf-panel" role="tabpanel">
+        <div class="flow">
+          <span>① 默认</span><em>→</em><span>② Hover</span><em>→</em><span>③ 菜单</span><em>→</em><span>④ 确认</span><em>→</em><span class="is-current">⑤ 成功</span>
+        </div>
+        <div class="wf-stage-wrap">
+          <div class="wf-stage">
+            <section class="shelf">
+              <div class="shelf__head">
+                <div>
+                  <h2>你的游记画册</h2>
+                  <p class="shelf__count">3 本作品 · 上次编辑 1 天前</p>
+                </div>
+                <button type="button" class="shelf__new">+ 选择文件夹新建</button>
+              </div>
+              <div class="shelf__grid">
+                <article class="shelf__card">
+                  <div class="shelf__cover-wrap"><div class="shelf__cover shelf__cover--b"></div></div>
+                  <h3 class="shelf__title">klx</h3><p class="shelf__sub">206 张 · 1 天前</p>
+                </article>
+                <article class="shelf__card">
+                  <div class="shelf__cover-wrap"><div class="shelf__cover shelf__cover--c"></div></div>
+                  <h3 class="shelf__title">318沿途好风光</h3><p class="shelf__sub">89 张 · 3 天前</p>
+                </article>
+                <article class="shelf__card">
+                  <div class="shelf__cover-wrap"><div class="shelf__cover shelf__cover--d"></div></div>
+                  <h3 class="shelf__title">川藏线的行走记录</h3><p class="shelf__sub">156 张 · 1 周前</p>
+                </article>
+                <article class="shelf__card">
+                  <div class="shelf__cover-wrap">
+                    <div class="shelf__cover" style="display:grid;place-items:center;background:#fff;border:1px dashed rgba(20,17,13,.25);box-shadow:none;font-size:28px;color:var(--muted);">+</div>
+                  </div>
+                  <h3 class="shelf__title">新建画册</h3><p class="shelf__sub">选择新的照片文件夹</p>
+                </article>
+              </div>
+            </section>
+            <div class="wf-toast" role="status">已删除「东澳岛」</div>
+          </div>
+        </div>
+        <div class="wf-anno">
+          <strong>成功后：</strong>卡片从 DOM 移除（带 200ms fade-out）· 头部计数 −1 · Toast 3s 自动消失 · 若删的是 Resume 对应 trip → Resume 条切换为下一本<br/>
+          <strong>删至 0 本：</strong>隐藏整个 <code>#v2-shelf</code>，回到 Bento 空态/首屏（与现逻辑一致）
+        </div>
+      </div>
+
+      <!-- ⑥ 示例画册 -->
+      <div id="t6" class="wf-panel" role="tabpanel">
+        <div class="wf-stage-wrap">
+          <div class="wf-stage">
+            <section class="shelf">
+              <div class="shelf__head"><div><h2>你的游记画册</h2><p class="shelf__count">2 本作品</p></div></div>
+              <div class="shelf__grid">
+                <article class="shelf__card is-menu-open">
+                  <div class="shelf__cover-wrap">
+                    <div class="shelf__cover shelf__cover--a"></div>
+                    <span class="shelf__badge-demo">示例</span>
+                    <button type="button" class="shelf__menu-btn is-active" aria-expanded="true">⋯</button>
+                    <div class="shelf__menu" data-open="true" role="menu">
+                      <button type="button" class="shelf__menu-item shelf__menu-item--danger" disabled role="menuitem" title="示例画册无法删除">删除画册</button>
+                    </div>
+                  </div>
+                  <h3 class="shelf__title">京都·雨后（示例）</h3>
+                  <p class="shelf__sub">86 张 · 示例</p>
+                </article>
+                <article class="shelf__card shelf__card--dim">
+                  <div class="shelf__cover-wrap"><div class="shelf__cover shelf__cover--b"></div></div>
+                  <h3 class="shelf__title">klx</h3><p class="shelf__sub">206 张 · 1 天前</p>
+                </article>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div class="wf-anno">
+          <strong>示例画册（<code>isDemoTrip</code>）：</strong>菜单可展开但「删除画册」disabled · hover tooltip「示例画册无法删除」· 不提供「隐藏示例」等替代操作（v1）
+        </div>
+      </div>
+
+      <!-- ⑦ Resume 条 -->
+      <div id="t7" class="wf-panel" role="tabpanel">
+        <div class="wf-stage-wrap">
+          <div class="wf-stage">
+            <section class="shelf">
+              <div class="shelf__head"><div><h2>你的游记画册</h2><p class="shelf__count">4 本作品</p></div></div>
+              <div class="shelf__resume is-menu-open">
+                <div class="shelf__resume-thumb"></div>
+                <div class="shelf__resume-text">
+                  <strong>继续编辑 · 东澳岛</strong>
+                  <span>120 张 · 9 小时前</span>
+                </div>
+                <div class="shelf__resume-actions">
+                  <button type="button">更新长图</button>
+                  <button type="button" class="primary">打开预览</button>
+                </div>
+                <button type="button" class="shelf__menu-btn is-active" aria-label="更多操作" aria-expanded="true">⋯</button>
+                <div class="shelf__menu" data-open="true" role="menu">
+                  <button type="button" class="shelf__menu-item shelf__menu-item--danger" role="menuitem">删除画册</button>
+                </div>
+              </div>
+              <div class="shelf__grid">
+                <article class="shelf__card shelf__card--dim">
+                  <div class="shelf__cover-wrap"><div class="shelf__cover shelf__cover--a"></div></div>
+                  <h3 class="shelf__title">东澳岛</h3><p class="shelf__sub">120 张 · 9 小时前</p>
+                </article>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div class="wf-anno">
+          <strong>Resume 条：</strong>右上角同样提供 <code>⋯</code> · 删除逻辑与网格卡一致 · 删除后 Resume 条消失或指向下一本非示例 trip · 「打开预览」「更新长图」按钮不受影响
+        </div>
+      </div>
+    </div>
+
+    <!-- Spec sidebar -->
+    <aside class="wf-spec">
+      <h2>交互规格</h2>
+
+      <h3>DOM 结构调整（实现前置）</h3>
+      <ul>
+        <li>网格卡从单一 <code>&lt;button&gt;</code> 改为 <code>&lt;article class="v2-shelf__card"&gt;</code></li>
+        <li>封面 + 标题区：<code>&lt;button class="v2-shelf__open"&gt;</code> → 打开预览</li>
+        <li><code>⋯</code> + 菜单：独立 <code>&lt;button&gt;</code> + <code>role="menu"</code>，阻止冒泡</li>
+        <li>新建卡：无菜单 · 保持现有行为</li>
+      </ul>
+
+      <h3>状态机</h3>
+      <table>
+        <tr><th>状态</th><th>进入</th><th>退出</th></tr>
+        <tr><td>idle</td><td>默认</td><td>hover / focus-within</td></tr>
+        <tr><td>menu-visible</td><td>hover 封面</td><td>mouseleave 且 menu 关闭</td></tr>
+        <tr><td>menu-open</td><td>点击 ⋯</td><td>Esc / 外部点击 / 选菜单项</td></tr>
+        <tr><td>confirm</td><td>点「删除画册」</td><td>取消 / 确认完成</td></tr>
+        <tr><td>deleting</td><td>点 Modal「删除」</td><td>API 返回</td></tr>
+      </table>
+
+      <h3>文案（冻结 v1）</h3>
+      <table>
+        <tr><th>位置</th><th>文案</th></tr>
+        <tr><td>菜单项</td><td>删除画册</td></tr>
+        <tr><td>Modal 标题</td><td>删除这本画册？</td></tr>
+        <tr><td>Modal 正文</td><td>将移除画册「{title}」及其排版与预览记录。</td></tr>
+        <tr><td>Modal 说明</td><td>你电脑上的原始照片不会被删除。之后可以用同一文件夹重新导入。</td></tr>
+        <tr><td>主按钮</td><td>删除 / 删除中…</td></tr>
+        <tr><td>次按钮</td><td>取消</td></tr>
+        <tr><td>Toast</td><td>已删除「{title}」</td></tr>
+        <tr><td>示例 disabled</td><td>示例画册无法删除</td></tr>
+      </table>
+
+      <h3>键盘 / a11y</h3>
+      <ul>
+        <li><code>⋯</code>：<code>aria-label="更多操作"</code> · <code>aria-haspopup="menu"</code></li>
+        <li>菜单：<code>role="menu"</code> · 项 <code>role="menuitem"</code></li>
+        <li>↑↓ 在菜单项间移动 · Enter 选中 · Esc 关闭</li>
+        <li>Modal：<code>role="alertdialog"</code> · 焦点陷阱 · 默认焦点「取消」</li>
+        <li>Toast：<code>role="status"</code> · <code>aria-live="polite"</code></li>
+      </ul>
+
+      <h3>Telemetry（建议）</h3>
+      <table>
+        <tr><th>事件</th><th>触发</th><th>属性</th></tr>
+        <tr><td><code>shelf_menu_open</code></td><td>点击 ⋯</td><td><code>trip_id</code>, <code>surface</code> (grid|resume)</td></tr>
+        <tr><td><code>shelf_delete_confirm</code></td><td>Modal 点删除</td><td><code>trip_id</code></td></tr>
+        <tr><td><code>shelf_delete_success</code></td><td>删除成功</td><td><code>trip_id</code>, <code>remaining_count</code></td></tr>
+        <tr><td><code>shelf_delete_cancel</code></td><td>Modal 取消 / Esc</td><td><code>trip_id</code></td></tr>
+      </table>
+
+      <h3>API（待实现 · M13）</h3>
+      <ul>
+        <li><code>DELETE /__travelogue/trips/{tripId}</code></li>
+        <li>成功 → 204 · 前端移除卡片 + 刷新 <code>total</code></li>
+        <li>失败 → Toast「删除失败，请重试」· Modal 保持可关</li>
+        <li>仅删 <code>trips/{id}/</code> 工作区 · 不删用户源照片目录</li>
+      </ul>
+
+      <h3>边界情况</h3>
+      <ul>
+        <li>删至 0 本 → <code>hideShelf()</code> · Bento 占满</li>
+        <li>删 Resume 对应 trip → 重建 Resume 为下一本</li>
+        <li>网格与 Resume 同一 trip 重复展示 → 删一次两处同步消失</li>
+        <li>导入进行中（activeJob）→ 该 trip 菜单 disabled「导入进行中」</li>
+        <li>Touch / 无 hover 设备 → <code>⋯</code> 常显（低透明度），或 long-press 备选（v1.1）</li>
+      </ul>
+
+      <h3>明确不做（v1）</h3>
+      <ul>
+        <li>右下角常驻垃圾桶</li>
+        <li>批量删除</li>
+        <li>撤销（Undo）</li>
+        <li>重命名（留 v2 scope）</li>
+        <li>Mobile / 小程序（归各自 PRD）</li>
+      </ul>
+    </aside>
+  </div>
+
+  <script>
+    document.querySelectorAll('.wf-tabs button').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-tab');
+        document.querySelectorAll('.wf-tabs button').forEach(function (b) {
+          b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+        });
+        document.querySelectorAll('.wf-panel').forEach(function (p) {
+          p.dataset.active = p.id === id ? 'true' : 'false';
+        });
+      });
+    });
+  </script>
+</body>
+</html>

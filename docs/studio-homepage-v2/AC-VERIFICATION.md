@@ -14,14 +14,14 @@
 | AC-HP2-08 | 奇数尾页左对齐留白 | **自动 + 人工** | 末 index 右槽 empty；截图 |
 | AC-HP2-09 | carousel 首尾 clamp 不 wrap | **自动** | index 边界单测；prev/next disabled |
 | AC-HP2-10 | 主 CTA → Sheet；路径仅在 Sheet | **自动** | e2e click CTA → sheet visible；无 path 在 Bento |
-| AC-HP2-11 | trips≥1 → 书架；Loading 无 Bento 闪屏 | **自动** | harness loading→returning；无 bento class |
+| AC-HP2-11 | trips≥1 → Bento **与**书架区同屏；Loading 无错误态闪屏 | **自动** | harness multi；`#v2-frame` visible + `#v2-shelf` visible |
 | AC-HP2-12 | iPad 1024 横屏 Bento；无 768 堆叠 | **人工 + 自动** | viewport 1024×768；grid 2-col |
 | AC-HP2-13 | 手机访问 → Unsupported | **自动** | viewport 390；CMP-HP2-15 visible |
 | AC-HP2-14 | iPad 竖屏 → 旋转提示 | **自动** | viewport 768×1024 portrait |
 | AC-HP2-15 | Importing 取消无半成品 | **自动** | cancel → trips 无新 slug |
 | AC-HP2-16 | 刷新 activeJobId 续 poll | **自动** | reload harness + sessionStorage |
 | AC-HP2-17 | 冷启动 Importing 静帧背景 | **自动 + 人工** | harness `importing-cold`；bg 无 Ken Burns |
-| AC-HP2-18 | FirstSuccess 背景 = Import 前壳层 | **自动 + 人工** | harness first-success + multi；shelf 壳层可见 |
+| AC-HP2-18 | FirstSuccess 背景 = Bento + 书架区 | **自动 + 人工** | harness first-success + multi；frame + shelf visible |
 | AC-HP2-19 | carousel 键盘 ←/→ | **自动** | a11y keyboard test |
 | AC-HP2-20 | 对比度 AA | **自动** | axe-core 或 computed contrast |
 | AC-HP2-21 | 触控 ≥44px | **自动** | bounding box min dimension |

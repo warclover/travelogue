@@ -1,10 +1,9 @@
 /**
- * 首页 v2 · FirstSuccess 专屏（§9.3 / AC-HP2-18）。
+ * 首页 v2 · FirstSuccess 专屏（§9.3 / AC-HP2-18 · 方案 A）。
  *
- * 背景 = Import 前壳层（Bento 或书架）；5s 倒计时后自动打开预览
- * （localStorage.firstPreviewDone 后仅手动）。继承 v3 §6.11 语义。
+ * 背景 = 恒常 Bento 首屏；有画册时同屏保留下方书架区。
  */
-import { LS } from "../js/constants.js";
+import { LS, isDemoTrip } from "../js/constants.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
 import { syncVariantGuard } from "./variant-guard.js";
@@ -48,20 +47,22 @@ function updateCountdownLabel() {
   el.textContent = _countdownLeft + " 秒后打开卷轴预览…";
 }
 
+function hasUserTrips() {
+  return V2.trips.some(function (t) { return !isDemoTrip(t); });
+}
+
 function restoreImportShell() {
   show($("v2-loading"), false);
   show($("v2-importing"), false);
-  if (V2.importShell === "shelf") {
-    show($("v2-headline"), false);
-    show($("v2-frame"), false);
-    show($("v2-shelf"), true);
-    show($("v2-topbar"), false);
-  } else {
-    show($("v2-shelf"), false);
-    show($("v2-headline"), true);
-    show($("v2-frame"), true);
-    show($("v2-topbar"), true);
-  }
+  show($("v2-headline"), true);
+  show($("v2-frame"), true);
+  import("./shelf.js").then(function (m) {
+    if (hasUserTrips()) {
+      m.renderShelf(V2.trips, V2.tripsTotal);
+    } else {
+      m.hideShelf();
+    }
+  });
 }
 
 function resolvePreviewUrl(result) {
@@ -130,13 +131,8 @@ function startCountdown() {
   }, 1000);
 }
 
-/** Import 开始前记录壳层（Bento vs 书架）。 */
+/** Import 开始前记录壳层（方案 A：恒 Bento 首页）。 */
 export function captureImportShell() {
-  var shelf = $("v2-shelf");
-  if (shelf && !shelf.hidden) {
-    V2.importShell = "shelf";
-    return;
-  }
   V2.importShell = "bento";
 }
 

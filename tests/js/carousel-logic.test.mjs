@@ -1,6 +1,6 @@
 /**
  * 首页 v2 · carousel-logic 单测（node --test）。
- * 覆盖 DATA-CONTRACT §1.3：clamp 不 wrap、spread 映射、奇数尾页留白、scrollLeft。
+ * 覆盖 DATA-CONTRACT §1.3：clamp 不 wrap、单页映射、scrollLeft。
  */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -9,6 +9,7 @@ import {
   clampIndex,
   spreadFor,
   scrollLeftFor,
+  maxScrollLeft,
   indexFromScrollLeft,
   canPrev,
   canNext,
@@ -34,25 +35,26 @@ test("clampIndex 不 wrap，clamp 到 [0, pageCount-1]", () => {
   assert.equal(clampIndex(0, 0), 0); // 空集兜底
 });
 
-test("spreadFor 左右半页映射（含奇数尾页留白）", () => {
-  assert.deepEqual(spreadFor(PAGES, 0), { left: PAGES[0], right: PAGES[1] });
-  assert.deepEqual(spreadFor(PAGES, 3), { left: PAGES[3], right: PAGES[4] });
-  // 尾页：右半留白
+test("spreadFor 单页映射（right 恒为 null）", () => {
+  assert.deepEqual(spreadFor(PAGES, 0), { left: PAGES[0], right: null });
+  assert.deepEqual(spreadFor(PAGES, 3), { left: PAGES[3], right: null });
   assert.deepEqual(spreadFor(PAGES, 4), { left: PAGES[4], right: null });
-  // 越界请求被 clamp 到尾页
   assert.deepEqual(spreadFor(PAGES, 9), { left: PAGES[4], right: null });
 });
 
-test("scrollLeft = i × (viewportWidth/2)", () => {
-  assert.equal(scrollLeftFor(0, 1000), 0);
-  assert.equal(scrollLeftFor(1, 1000), 500);
-  assert.equal(scrollLeftFor(4, 1000), 2000);
+test("scrollLeft = i × viewportWidth；末页对齐 maxScroll", () => {
+  assert.equal(scrollLeftFor(0, 1000, 5), 0);
+  assert.equal(scrollLeftFor(1, 1000, 5), 1000);
+  assert.equal(scrollLeftFor(3, 1000, 5), 3000);
+  assert.equal(scrollLeftFor(4, 1000, 5), maxScrollLeft(1000, 5));
+  assert.equal(maxScrollLeft(1000, 5), 4000);
 });
 
-test("indexFromScrollLeft 反推并 clamp", () => {
+test("indexFromScrollLeft 反推并 clamp（含末页 maxScroll）", () => {
   assert.equal(indexFromScrollLeft(0, 1000, 5), 0);
-  assert.equal(indexFromScrollLeft(500, 1000, 5), 1);
-  assert.equal(indexFromScrollLeft(2500, 1000, 5), 4); // 越界 clamp
+  assert.equal(indexFromScrollLeft(1000, 1000, 5), 1);
+  assert.equal(indexFromScrollLeft(4000, 1000, 5), 4);
+  assert.equal(indexFromScrollLeft(5000, 1000, 5), 4);
   assert.equal(indexFromScrollLeft(-100, 1000, 5), 0);
 });
 

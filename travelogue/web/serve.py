@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Iterator
+from urllib.parse import unquote
 
 from travelogue.config import AppConfig, app_config_scope, get_config
 from travelogue.services.trip import TripService
@@ -123,6 +123,15 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
     def do_PATCH(self) -> None:  # noqa: N802
         path = self.path.split("?", 1)[0]
         if self.studio_mode and self.studio_dispatch_PATCH(path):
+            return
+        if self.studio_mode:
+            self.send_error(405)
+            return
+        self.send_error(405)
+
+    def do_DELETE(self) -> None:  # noqa: N802
+        path = unquote(self.path.split("?", 1)[0])
+        if self.studio_mode and self.studio_dispatch_DELETE(path):
             return
         if self.studio_mode:
             self.send_error(405)

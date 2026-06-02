@@ -10,8 +10,10 @@ from travelogue.config import get_config
 from travelogue.runtime import AppContext
 from travelogue.services.trip_factory import create_trip
 from travelogue.web.studio_handlers.common import (
+    match_bento_preview,
     match_entry,
     match_trip_curate,
+    match_trip_delete,
     match_trip_intent,
     match_trip_pipeline,
     match_trip_suffix,
@@ -40,9 +42,11 @@ def test_match_trip_suffix_rejects_nested_trip_id() -> None:
 def test_match_wrappers_align_with_suffix() -> None:
     tid = "demo-01"
     assert match_entry(f"{TRIPS_PATH}/{tid}/entry") == tid
+    assert match_bento_preview(f"{TRIPS_PATH}/{tid}/bento-preview") == tid
     assert match_trip_intent(f"{TRIPS_PATH}/{tid}{INTENT_SUFFIX}") == tid
     assert match_trip_pipeline(f"{TRIPS_PATH}/{tid}{PIPELINE_SUFFIX}") == tid
     assert match_trip_curate(f"{TRIPS_PATH}/{tid}{CURATE_SUFFIX}") == tid
+    assert match_trip_delete(f"{TRIPS_PATH}/{tid}") == tid
 
 
 def test_resolve_trip_dir_rejects_invalid_id(tmp_path: Path) -> None:

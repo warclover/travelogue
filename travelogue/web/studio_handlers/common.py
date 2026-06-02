@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from travelogue.desktop.demo_album import is_demo_album_path, resolve_demo_album_dir
 from travelogue.demo.build import DemoError
@@ -71,6 +71,37 @@ def match_trip_suffix(path: str, suffix: str) -> str | None:
 
 def match_entry(path: str) -> str | None:
     return match_trip_suffix(path, "/entry")
+
+
+def match_bento_preview(path: str) -> str | None:
+    return match_trip_suffix(path, "/bento-preview")
+
+
+def match_trip_delete(path: str) -> str | None:
+    """DELETE /__travelogue/trips/{tripId} — M13 shelf delete."""
+    prefix = TRIPS_PATH + "/"
+    if not path.startswith(prefix):
+        return None
+    trip_id = unquote(path[len(prefix) :].strip("/"))
+    if not trip_id or "/" in trip_id or "\\" in trip_id:
+        return None
+    return trip_id
+
+
+def resolve_trip_dir_listed(ctx: AppContext, trip_id: str) -> Path | None:
+    """按磁盘目录名解析 trip（与 list_studio_trips 一致，不做 slug 正则限制）。"""
+    raw = unquote((trip_id or "").strip())
+    if not raw or raw in {".", ".."} or "/" in raw or "\\" in raw or raw.startswith("_"):
+        return None
+    trips_dir = ctx.trips_root.resolve()
+    trip_dir = (trips_dir / raw).resolve()
+    try:
+        trip_dir.relative_to(trips_dir)
+    except ValueError:
+        return None
+    if not trip_dir.is_dir() or not (trip_dir / "trip.json").is_file():
+        return None
+    return trip_dir
 
 
 def match_trip_intent(path: str) -> str | None:

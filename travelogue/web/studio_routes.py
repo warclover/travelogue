@@ -19,9 +19,11 @@ from travelogue.web.studio_handlers import (
 )
 from travelogue.web.studio_handlers.common import (
     bind_studio_trip,
+    match_bento_preview,
     match_entry,
     match_trip_api,
     match_trip_curate,
+    match_trip_delete,
     match_trip_intent,
     match_trip_pipeline,
 )
@@ -132,6 +134,10 @@ class StudioMixin:
         if entry_trip_id is not None:
             trip_handlers.handle_entry(self, entry_trip_id)
             return True
+        bento_trip_id = match_bento_preview(path)
+        if bento_trip_id is not None:
+            trip_handlers.handle_bento_preview(self, bento_trip_id)
+            return True
         if path.startswith(STUDIO_ASSET_PREFIX):
             return static_handlers.handle_studio_asset(self, path)
         return False
@@ -153,6 +159,15 @@ class StudioMixin:
         trip_id = match_trip_pipeline(path)
         if trip_id is not None:
             trip_handlers.handle_patch_pipeline(self, trip_id)
+            return True
+        return False
+
+    def studio_dispatch_DELETE(self, path: str) -> bool:
+        if not self._studio_require_post_auth():
+            return True
+        trip_id = match_trip_delete(path)
+        if trip_id is not None:
+            trip_handlers.handle_delete_trip(self, trip_id)
             return True
         return False
 

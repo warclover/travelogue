@@ -15,6 +15,9 @@ export const V2_VARIANT_KEY = "travelogue.studio.homepageVariant";
 export const V2 = {
   state: "Loading", // Loading | IdleEmpty | IdleReturning | Importing | FirstSuccess | Failed
   manifest: null,
+  demoManifest: null,
+  userManifest: null,
+  bentoTab: "demo", // demo | mine（方案 B′）
   manifestError: false,
   trips: [],
   tripsTotal: 0,
@@ -24,9 +27,9 @@ export const V2 = {
   layoutTier: "L0", // L0 | L1 | L2 | L3（§12.4）
   _started: false, // 一次性启动门（首次进入支持态加载数据）
   _viewTracked: false, // homepage_view 仅最终态首帧一次（§4.4）
-  importShell: "bento", // Import 前壳层：bento | shelf（FirstSuccess 背景 §9.3）
+  importShell: "bento", // 方案 A：Import 前壳层恒为 Bento 首屏
   reroute: null, // bootstrap 注入：重新拉 trips 并路由最终态（import 结束/取消后调用）
-  onExpand: null, // Lightbox 钩子（M20-c 注入）；carousel/phone ⤢ 调用
+  onExpand: null, // Lightbox 打开钩子（当前 Bento 未接入）
 };
 
 export function $(id) {

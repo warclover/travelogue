@@ -4,6 +4,7 @@
  * loopback 或 ?dev=1 时注入浮动面板：state / fixture / job 下拉 + Copy repro URL。
  */
 import { harnessEnabled } from "./harness.js";
+import { initVariantGuard, syncVariantGuard } from "./variant-guard.js";
 
 var STATES = [
   { v: "", label: "（正常路由）" },
@@ -94,6 +95,7 @@ export function initDevPanel() {
     '<label class="v2-dev-panel__check"><input type="checkbox" id="v2-dev-assets-fail" /> studioAssetsFail</label>' +
     '<label class="v2-dev-panel__check"><input type="checkbox" id="v2-dev-slow-net" /> studioSlowNet</label>' +
     '<button type="button" class="v2-dev-panel__copy" id="v2-dev-copy">Copy repro URL</button>' +
+    '<a href="/" class="v2-dev-panel__classic" id="v2-classic-link" hidden>经典首页 →</a>' +
     "</div>";
 
   document.body.appendChild(panel);
@@ -143,4 +145,7 @@ export function initDevPanel() {
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
     });
   }
+
+  initVariantGuard();
+  syncVariantGuard();
 }

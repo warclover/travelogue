@@ -9,6 +9,7 @@
   <link rel="preload" as="image" href="/__studio/assets/demo-showcase/background-PLACEHOLDER.webp" fetchpriority="high" />
   <link rel="modulepreload" href="/__studio/homepage-v2/bootstrap.js" />
   <link rel="stylesheet" href="/__studio/studio-home-v2.css" />
+  <link rel="stylesheet" href="/__studio/studio-modal.css" />
 </head>
 <body data-studio-v="v2" data-homepage-variant="v2" data-bucket-id="__STUDIO_BUCKET_ID__" data-studio-dev="__STUDIO_DEV__">
 <a href="#v2-cta" class="v2-skip-link">跳到主要操作</a>
@@ -34,15 +35,6 @@
   <div class="v2-grain" aria-hidden="true"></div>
   <div class="v2-vignette" aria-hidden="true"></div>
 
-  <header class="v2-topbar" id="v2-topbar">
-    <span class="v2-topbar__brand">TRAVELOGUE · STUDIO</span>
-    <div class="v2-topbar__status">
-      <span class="v2-topbar__dot" id="v2-status-dot"></span>
-      <span class="v2-topbar__addr" id="v2-copy-addr" title="点击复制" role="button" tabindex="0">127.0.0.1:8766 · 本地</span>
-      <a href="/" class="v2-topbar__classic" id="v2-classic-link" hidden>经典首页 →</a>
-    </div>
-  </header>
-
   <!-- ⓪ Loading skeleton（§4.4：trips resolve 前仅 skeleton） -->
   <div class="v2-loading" id="v2-loading">
     <p class="v2-loading__brand">Travelogue · 本地杂志工坊</p>
@@ -54,28 +46,37 @@
     </div>
   </div>
 
-  <!-- ① IdleEmpty · Bento -->
-  <div class="v2-bento__headline" id="v2-headline" hidden>
-    <span class="v2-bento__eyebrow">TRAVELOGUE · 自动游记画册</span>
-    <h1 class="v2-bento__title">照片导进来，<em>画册自动出来</em></h1>
-    <p class="v2-bento__lead">
-      选一次旅行的照片，<b>自动分章 · 配文 · 排版</b>，生成大屏卷轴 + 微信长图。
-    </p>
-    <div class="v2-auto-tags">
-      <span class="v2-auto-tag">自动分章成文</span>
-      <span class="v2-auto-tag">自动配文选封面</span>
-      <span class="v2-auto-tag">本地处理 · 免注册</span>
-    </div>
-  </div>
-
+  <!-- ① Bento 首屏（恒常首页 · 方案 A） -->
+  <div class="v2-bento__hero" id="v2-bento-hero">
   <div class="v2-bento__frame" id="v2-frame" hidden>
-    <div class="v2-bento__grid">
-      <!-- 16:9 大屏卷轴 carousel（M20-b 接入 clamp/spread；此处 M20-a 骨架） -->
-      <section class="v2-bento__web" id="v2-web-cell" aria-label="大屏卷轴预览 · 方向键翻页 · 回车放大" tabindex="0">
-        <p class="v2-cell-label">
-          <span>大屏卷轴 · 16:9 · 横滑浏览</span>
-          <span class="v2-demo-flag" data-demo-flag="scroll">示例作品</span>
+    <div class="v2-bento__frame-head">
+      <p class="v2-bento__scroll-meta" id="v2-scroll-meta">大屏卷轴 · 16:9 · 横滑浏览</p>
+    </div>
+    <div class="v2-bento__grid" id="v2-bento-grid">
+      <!-- ① 文案区（左列第 1 行） -->
+      <div class="v2-bento__headline" id="v2-headline" hidden>
+        <span class="v2-bento__eyebrow">TRAVELOGUE · 自动游记画册</span>
+        <div class="v2-bento__headline-row">
+          <h1 class="v2-bento__title">照片导进来，<em>画册自动出来</em></h1>
+          <div class="v2-auto-tags">
+            <span class="v2-auto-tag">自动分章成文</span>
+            <span class="v2-auto-tag">自动配文选封面</span>
+            <span class="v2-auto-tag">本地处理 · 免注册</span>
+          </div>
+        </div>
+        <p class="v2-bento__lead">
+          选一次旅行的照片，<b>自动分章 · 配文 · 排版</b>，生成大屏卷轴 + 微信长图。
         </p>
+      </div>
+
+      <!-- ② 16:9 大屏卷轴 carousel -->
+      <section class="v2-bento__web" id="v2-web-cell" aria-label="大屏卷轴预览 · 方向键翻页" tabindex="0">
+        <div class="v2-bento-tabs" role="tablist" aria-label="预览来源">
+          <button type="button" class="v2-bento-tabs__btn is-active" role="tab"
+                  id="v2-tab-demo" aria-selected="true" aria-controls="v2-bento-grid">示例作品</button>
+          <button type="button" class="v2-bento-tabs__btn" role="tab"
+                  id="v2-tab-mine" aria-selected="false" aria-controls="v2-bento-grid" disabled>我的最近一本</button>
+        </div>
         <div class="v2-carousel" id="v2-carousel">
           <div class="v2-carousel__viewport">
             <button type="button" class="v2-carousel__arrow v2-carousel__arrow--prev" id="v2-carousel-prev" aria-label="上一屏" disabled>‹</button>
@@ -84,41 +85,16 @@
           </div>
           <div class="v2-carousel__footer">
             <div class="v2-carousel__dots" id="v2-carousel-dots" role="tablist" aria-label="卷轴页面"></div>
-            <div class="v2-carousel__footer-meta">
-              <span class="v2-carousel__hint" id="v2-carousel-hint">← 横滑 · 一屏两页 · 到头停止 →</span>
-              <button type="button" class="v2-expand-btn" id="v2-expand-scroll" aria-label="放大卷轴预览">
-                <span class="v2-expand-btn__icon" aria-hidden="true">⤢</span> 放大
-              </button>
-            </div>
+            <span class="v2-carousel__hint" id="v2-carousel-hint">← 横滑 · 一屏一页 · 到头停止 →</span>
           </div>
         </div>
       </section>
 
-      <!-- 9:16 微信长图样张 -->
-      <section class="v2-bento__mobile" aria-label="微信长图预览">
-        <p class="v2-cell-label">
-          <span>微信长图 · 9:16</span>
-          <span class="v2-demo-flag" data-demo-flag="longshot">示例作品</span>
-        </p>
-        <div class="v2-phone" id="v2-phone">
-          <div class="v2-phone__shell">
-            <div class="v2-phone__notch" aria-hidden="true"></div>
-            <div class="v2-phone__screen" id="v2-phone-screen" tabindex="0" aria-label="长图可上下滚动 · 仅浏览"></div>
-          </div>
-          <div class="v2-phone__footer">
-            <p class="v2-phone__scroll-hint">↕ 上下滚动预览</p>
-            <button type="button" class="v2-expand-btn" id="v2-expand-phone" aria-label="放大长图预览">
-              <span class="v2-expand-btn__icon" aria-hidden="true">⤢</span> 放大
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- 工作台 bench -->
+      <!-- ④ 工作台 bench（左列第 3 行） -->
       <section class="v2-bento__bench" aria-label="工作台">
         <div class="v2-bench">
           <div class="v2-bench__sample">
-            <span class="v2-demo-flag">示例作品</span>
+            <span class="v2-demo-flag" id="v2-bench-sample-flag">示例作品</span>
             <div class="v2-bench__sample-thumb" id="v2-bench-thumb" aria-hidden="true"></div>
             <div class="v2-bench__sample-text">
               <strong id="v2-bench-title">京都 · 雨后</strong>
@@ -131,10 +107,25 @@
           </div>
         </div>
       </section>
+
+      <!-- ③ 9:16 微信长图（右列跨行 · 顶对齐文案） -->
+      <section class="v2-bento__mobile" aria-label="微信长图预览">
+        <p class="v2-cell-label">
+          <span>微信长图 · 9:16</span>
+          <span class="v2-cell-label__hint">长图顶部预览</span>
+        </p>
+        <div class="v2-phone" id="v2-phone">
+          <div class="v2-phone__shell">
+            <div class="v2-phone__notch" aria-hidden="true"></div>
+            <div class="v2-phone__screen" id="v2-phone-screen" tabindex="0" aria-label="微信长图顶部预览"></div>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
+  </div><!-- /v2-bento-hero -->
 
-  <!-- ② IdleReturning · Web 书架（M20-e） -->
+  <!-- ② 回访书架区（Bento 下方 · 有用户画册时显示） -->
   <div class="v2-shelf" id="v2-shelf" hidden></div>
 
   <!-- ③ Importing 占位（M20-g 接冷启动静帧 + 续 poll） -->

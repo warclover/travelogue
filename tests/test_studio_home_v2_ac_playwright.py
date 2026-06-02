@@ -143,15 +143,16 @@ def _contrast_ratio(page, selector: str) -> float:
 
 
 def test_ac_hp2_02_demo_flags(studio_server) -> None:
-    """AC-HP2-02 · 16:9 与 9:16 各有 demo-flag。"""
+    """AC-HP2-02 · 卷轴说明 + 预览 Tab（示例 / 我的）。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
         _goto_v2(page, studio_server["base"])
         _wait_visible(page, "v2-frame")
-        assert page.locator('[data-demo-flag="scroll"]').is_visible()
-        assert page.locator('[data-demo-flag="longshot"]').is_visible()
-        assert page.locator("[data-demo-flag]").count() >= 2
+        assert "横滑浏览" in page.locator("#v2-scroll-meta").inner_text()
+        assert page.locator("#v2-tab-demo").is_visible()
+        assert page.locator("#v2-tab-demo").evaluate("el => el.classList.contains('is-active')")
+        assert page.locator("#v2-web-cell .v2-bento-tabs").is_visible()
         browser.close()
 
 
@@ -288,20 +289,38 @@ def test_ac_hp2_13_unsupported_phone(studio_server) -> None:
 
 
 def test_ac_hp2_11_idle_returning_shelf(studio_server) -> None:
-    """AC-HP2-11 · trips≥1 → 书架；Loading→Returning 全程无 Bento frame 闪屏。"""
+    """AC-HP2-11 · trips≥1 → Bento 与书架区同屏。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
-        _install_frame_flash_tracker(page)
         _goto_v2(page, studio_server["base"], "studioFixture=multi")
+        _wait_visible(page, "v2-frame")
         _wait_visible(page, "v2-shelf")
-        # 书架态 Bento frame 不可见
-        frame_hidden = page.evaluate(
-            "() => { const f = document.getElementById('v2-frame'); return !f || f.hidden; }"
-        )
-        assert frame_hidden
-        assert page.evaluate("() => window.__v2FrameFlash === false")
         assert "你的游记画册" in page.locator("#v2-shelf").inner_text()
+        assert page.locator("#v2-scroll-meta").is_visible()
+        browser.close()
+
+
+def test_ac_hp2_bento_tab_mine(studio_server) -> None:
+    """D-13 · 有用户画册时可切「我的最近一本」Tab。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=multi")
+        _wait_visible(page, "v2-frame")
+        mine = page.locator("#v2-tab-mine")
+        page.wait_for_function(
+            "() => !document.getElementById('v2-tab-mine').disabled",
+            timeout=10_000,
+        )
+        mine.click()
+        page.wait_for_function(
+            "() => document.getElementById('v2-tab-mine').classList.contains('is-active')",
+            timeout=5_000,
+        )
+        assert page.locator("#v2-tab-mine").evaluate("el => el.classList.contains('is-active')")
+        assert not page.locator("#v2-tab-demo").evaluate("el => el.classList.contains('is-active')")
+        assert "Harness" in page.locator("#v2-bench-title").inner_text()
         browser.close()
 
 
@@ -449,31 +468,14 @@ def test_ac_hp2_shelf_load_more(studio_server) -> None:
 
 
 def test_ac_hp2_06_expand_opens_lightbox(studio_server) -> None:
-    """AC-HP2-06 · ⤢ 按钮 → Lightbox；无 editor /index.html 导航。"""
+    """AC-HP2-06 · Bento 放大入口已移除，无 ⤢ 按钮。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
         _goto_v2(page, studio_server["base"])
         _wait_visible(page, "v2-frame")
-
-        url_before = page.url
-        page.locator("#v2-expand-scroll").click()
-        page.wait_for_function(
-            "() => document.getElementById('v2-lightbox').classList.contains('is-open')",
-            timeout=5_000,
-        )
-        assert page.locator("#v2-lightbox.is-open").is_visible()
-        page.wait_for_function(
-            """
-            (n) => document.querySelectorAll(
-              '#v2-lightbox-scroll img, #v2-lightbox-scroll .v2-lightbox__page-ph'
-            ).length >= n
-            """,
-            arg=MANIFEST_PAGES,
-            timeout=5_000,
-        )
-        assert page.url == url_before
-        assert "index.html" not in page.url
+        assert page.locator("#v2-expand-scroll").count() == 0
+        assert page.locator("#v2-expand-phone").count() == 0
         browser.close()
 
 
@@ -512,11 +514,20 @@ def test_ac_hp2_08_odd_tail_left_align(studio_server) -> None:
         _wait_visible(page, "v2-frame")
 
         nxt = page.locator("#v2-carousel-next")
-        for _ in range(MANIFEST_PAGES):
+        for target in range(1, MANIFEST_PAGES):
             if nxt.is_disabled():
                 break
             nxt.click()
-            page.wait_for_timeout(150)
+            page.wait_for_function(
+                """
+                (idx) => {
+                  const dot = document.querySelector('#v2-carousel-dots [aria-current="true"]');
+                  return dot && Number(dot.dataset.index) === idx;
+                }
+                """,
+                arg=target,
+                timeout=5_000,
+            )
 
         last_idx = MANIFEST_PAGES - 1
         page.wait_for_function(
@@ -629,7 +640,7 @@ def test_ac_hp2_demo_assets_serve_200(studio_server) -> None:
 
 
 def test_ac_hp2_06_tap_opens_lightbox(studio_server) -> None:
-    """AC-HP2-06 · 轻点 carousel → Lightbox（非仅 ⤢ 按钮）。"""
+    """AC-HP2-06 · 轻点 carousel 不再打开 Lightbox。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -640,11 +651,11 @@ def test_ac_hp2_06_tap_opens_lightbox(studio_server) -> None:
         box = track.bounding_box()
         assert box
         page.mouse.click(box["x"] + box["width"] * 0.5, box["y"] + box["height"] * 0.5)
-        page.wait_for_function(
-            "() => document.getElementById('v2-lightbox').classList.contains('is-open')",
-            timeout=5_000,
+        page.wait_for_timeout(400)
+        lb_open = page.evaluate(
+            "() => document.getElementById('v2-lightbox').classList.contains('is-open')"
         )
-        assert "index.html" not in page.url
+        assert not lb_open
         browser.close()
 
 
@@ -672,7 +683,7 @@ def test_ac_hp2_17_importing_cold_static_bg(studio_server) -> None:
 
 
 def test_ac_hp2_18_first_success_shelf_shell(studio_server) -> None:
-    """AC-HP2-18 · FirstSuccess 背景 = Import 前壳层（书架态 overlay 后仍见 shelf）。"""
+    """AC-HP2-18 · FirstSuccess 背景 = Bento 首屏 + 下方书架区同屏。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -683,10 +694,10 @@ def test_ac_hp2_18_first_success_shelf_shell(studio_server) -> None:
         )
         _wait_visible(page, "v2-success-open")
         assert page.locator("#v2-shelf").is_visible()
-        frame_hidden = page.evaluate(
-            "() => document.getElementById('v2-frame').hidden"
+        frame_visible = page.evaluate(
+            "() => !document.getElementById('v2-frame').hidden"
         )
-        assert frame_hidden
+        assert frame_visible
         assert "你的游记画册" in page.locator("#v2-shelf").inner_text()
         browser.close()
 

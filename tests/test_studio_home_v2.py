@@ -33,6 +33,7 @@ def _reset_jobs() -> None:
 V2_HOME_MARKERS = (
     'data-homepage-variant="v2"',
     "studio-home-v2.css",
+    "studio-modal.css",
     "homepage-v2/bootstrap.js",
     "v2-bento",
     "v2-carousel",
@@ -91,6 +92,13 @@ def test_studio_home_v2_route(tmp_path: Path) -> None:
         # token 占位符已被替换（test server token=None → "")
         assert "__STUDIO_TOKEN__" not in html
         assert "\ufffd" not in html
+        with urllib.request.urlopen(
+            f"http://127.0.0.1:{port}/__studio/studio-modal.css", timeout=10
+        ) as css_resp:
+            css = css_resp.read().decode("utf-8")
+            assert css_resp.status == 200
+            assert ".studio__modal-backdrop" in css
+            assert "position: fixed" in css
     finally:
         server.shutdown()
         server.server_close()
@@ -297,8 +305,6 @@ def test_studio_home_v2_lightbox_modules() -> None:
     assert "initLightbox" in lightbox
     assert "trapFocus" in lightbox          # focus trap
     assert "Escape" in lightbox             # Esc 关闭
-    assert "attachTapToOpen" in lightbox    # 轻点开 / 拖拽不误触
-    assert "classifyGesture" in lightbox    # 复用阈值逻辑
     # 不进 editor preview（只读验货）：不嵌 iframe
     assert "iframe" not in lightbox.lower()
 
@@ -323,6 +329,30 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "fetchTripsPage" in shelf
     assert "加载更多" in shelf
     assert "即将上线" not in shelf
+    assert "shelf-menu.js" in shelf
+    assert "v2-shelf__card" in shelf
+    assert "v2-shelf__menu-btn" in (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+    assert "studio-modal.css" in html
+    modal_css = (STUDIO_DIR / "studio-modal.css").read_text(encoding="utf-8")
+    assert ".studio__modal-backdrop" in modal_css
+    assert "position: fixed" in modal_css
+    assert "z-index: 6000" in modal_css
+
+    modal_js = (STUDIO_DIR / "studio-modal.js").read_text(encoding="utf-8")
+    assert "studio-modal-open" in modal_js
+    assert "preventScroll" in modal_js
+
+    menu = (STUDIO_DIR / "homepage-v2" / "shelf-menu.js").read_text(encoding="utf-8")
+    assert "删除画册" in menu
+    assert "shelf_menu_open" in menu
+    assert "deleteTrip" in menu
+
+    trips_client = (STUDIO_DIR / "homepage-v2" / "trips-client.js").read_text(encoding="utf-8")
+    assert "deleteTrip" in trips_client
+    assert "studioAuthHeaders" in trips_client
+    assert 'method: "DELETE"' in trips_client
 
     css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
     assert ".v2-shelf" in css
@@ -384,6 +414,7 @@ def test_studio_home_v2_telemetry_wired() -> None:
         "experiment_exposure", "homepage_view", "cta_click",
         "sheet_close", "sheet_abandon", "lightbox_open",
         "spread_page_view", "shelf_resume_click",
+        "shelf_menu_open", "shelf_delete_confirm", "shelf_delete_success",
     ):
         assert ev in ALLOWED_STUDIO_HOMEPAGE_EVENTS
 
@@ -457,8 +488,9 @@ def test_studio_home_v2_harness_and_ac_hooks() -> None:
     assert "harnessAssetsFail" in bootstrap
 
     html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
-    assert 'data-demo-flag="scroll"' in html
-    assert 'data-demo-flag="longshot"' in html
+    assert 'id="v2-scroll-meta"' in html
+    assert 'id="v2-tab-demo"' in html
+    assert "#v2-web-cell" in html or 'id="v2-web-cell"' in html
 
     css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
     # 隐藏的 fixed 覆盖层不得拦截点击

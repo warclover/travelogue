@@ -1,7 +1,7 @@
 /**
- * 首页 v2 · Import Failed 专屏（继承 v1.4 §6 · 背景 = Import 前壳层）。
+ * 首页 v2 · Import Failed 专屏（继承 v1.4 · 背景 = 恒常 Bento 壳层 · 方案 A）。
  */
-import { SS } from "../js/constants.js";
+import { SS, isDemoTrip } from "../js/constants.js";
 import { humanizeStudioError, failureNextHint } from "../js/errors.js";
 import { V2, $, show } from "./store.js";
 import { captureImportShell } from "./first-success.js";
@@ -11,20 +11,22 @@ import { syncVariantGuard } from "./variant-guard.js";
 var _wired = false;
 var _lastErr = null;
 
+function hasUserTrips() {
+  return V2.trips.some(function (t) { return !isDemoTrip(t); });
+}
+
 function restoreImportShell() {
   show($("v2-loading"), false);
   show($("v2-importing"), false);
-  if (V2.importShell === "shelf") {
-    show($("v2-headline"), false);
-    show($("v2-frame"), false);
-    show($("v2-shelf"), true);
-    show($("v2-topbar"), false);
-  } else {
-    show($("v2-shelf"), false);
-    show($("v2-headline"), true);
-    show($("v2-frame"), true);
-    show($("v2-topbar"), true);
-  }
+  show($("v2-headline"), true);
+  show($("v2-frame"), true);
+  import("./shelf.js").then(function (m) {
+    if (hasUserTrips()) {
+      m.renderShelf(V2.trips, V2.tripsTotal);
+    } else {
+      m.hideShelf();
+    }
+  });
 }
 
 function readPendingImport() {
@@ -79,7 +81,7 @@ export function dismissImportFailed() {
 export function showImportFailed(err) {
   _lastErr = err || {};
   V2.state = "Failed";
-  if (!V2.importShell) captureImportShell();
+  captureImportShell();
   restoreImportShell();
   populateFailedUi(_lastErr, readPendingImport());
   show($("v2-failure"), true);

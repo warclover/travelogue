@@ -67,6 +67,13 @@ class StudioJobStore:
         with self._lock:
             return self._jobs.get(job_id)
 
+    def is_trip_busy(self, trip_id: str) -> bool:
+        with self._lock:
+            for job in self._jobs.values():
+                if job.trip_id == trip_id and job.status in ("queued", "running"):
+                    return True
+            return False
+
     def is_cancelled(self, job: StudioJob) -> bool:
         with self._lock:
             return job.status == "cancelled"

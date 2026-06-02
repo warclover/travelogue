@@ -16,7 +16,6 @@ import {
 import { postJson, withJobBusyRetry, isJobBusyResponse } from "../js/http.js";
 import { pollJobUntilDone } from "../js/job-poll.js";
 import { trackStudioEvent } from "../js/analytics.js";
-import { isDemoTrip } from "../js/constants.js";
 import { V2, $, show } from "./store.js";
 import { fetchTripsFirstPage } from "./trips-client.js";
 import { renderColdStartBackground } from "./bento.js";
@@ -67,7 +66,7 @@ export function renderImportingPanel(source) {
   show($("v2-frame"), false);
   show($("v2-shelf"), false);
   // §9.2 冷启动：无 Import 前壳层背景时铺 demo 静帧（幂等，暖启动不覆盖）。
-  renderColdStartBackground(V2.manifest);
+  renderColdStartBackground(V2.demoManifest || V2.manifest);
   if (!host) return;
   host.replaceChildren();
 
@@ -155,14 +154,8 @@ function refreshTripsForImportSuccess(result) {
     V2.trips = data.trips || [];
     V2.tripsTotal = typeof data.total === "number" ? data.total : V2.trips.length;
     V2.isOffline = false;
-    var hasUser = V2.trips.some(function (t) { return !isDemoTrip(t); });
-    if (hasUser || (result && result.tripId && !isDemoTrip({ tripId: result.tripId, title: result.title }))) {
-      V2.importShell = "shelf";
-    }
   }).catch(function () {
-    if (result && result.tripId && !isDemoTrip({ tripId: result.tripId, title: result.title })) {
-      V2.importShell = "shelf";
-    }
+    /* 保留已有 trips；FirstSuccess 后 reroute 会再拉 */
   });
 }
 

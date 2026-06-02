@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import shutil
 import threading
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from urllib.parse import parse_qs, urlparse
@@ -11,6 +12,7 @@ from travelogue.demo.build import DemoError
 from travelogue.web.studio_errors import internal_error_payload
 from travelogue.web.studio_handlers.common import (
     load_trip_or_404,
+    resolve_trip_dir_listed,
     studio_ctx,
     trip_id_from_query,
 )
@@ -19,6 +21,13 @@ from travelogue.web.studio_trips import list_studio_trips, studio_trips_total
 from travelogue.web.studio_trip_id import is_valid_studio_trip_id
 
 _log = logging.getLogger(__name__)
+
+
+def _is_protected_demo_trip(trip_id: str, trip: dict) -> bool:
+    if trip_id == "demo-album":
+        return True
+    title = str((trip.get("meta") or {}).get("title") or "").strip()
+    return title in ("示例旅途", "示例")
 
 
 def handle_trips(handler: StudioHandlerProtocol) -> None:
@@ -39,6 +48,54 @@ def handle_trips(handler: StudioHandlerProtocol) -> None:
     handler._json_response(200, {"ok": True, "trips": trips, "total": total})
 
 
+def handle_delete_trip(handler: StudioHandlerProtocol, trip_id: str) -> None:
+    ctx = studio_ctx(handler)
+    trip_dir = resolve_trip_dir_listed(ctx, trip_id)
+    if trip_dir is None:
+        handler._json_response(
+            404,
+            {"ok": False, "error": "E_TRIP_NOT_FOUND", "message": "游记不存在"},
+        )
+        return
+    disk_id = trip_dir.name
+    trip_json = trip_dir / "trip.json"
+    try:
+        trip = ctx.trip_service().load(trip_json)
+    except Exception:
+        _log.exception("load trip before delete failed for %s", trip_dir)
+        handler._json_response(500, internal_error_payload())
+        return
+    if _is_protected_demo_trip(disk_id, trip):
+        handler._json_response(
+            403,
+            {
+                "ok": False,
+                "error": "E_TRIP_DELETE_DENIED",
+                "message": "示例画册无法删除",
+            },
+        )
+        return
+    store = get_job_store()
+    if store.is_trip_busy(disk_id):
+        handler._json_response(
+            409,
+            {
+                "ok": False,
+                "error": "E_STUDIO_JOB_BUSY",
+                "message": "导入进行中，请稍后再试",
+            },
+        )
+        return
+    try:
+        shutil.rmtree(trip_dir)
+    except OSError:
+        _log.exception("delete trip failed for %s", trip_dir)
+        handler._json_response(500, internal_error_payload())
+        return
+    handler.send_response(204)
+    handler.end_headers()
+
+
 def handle_entry(handler: StudioHandlerProtocol, trip_id: str) -> None:
     from travelogue.web.studio_entry import build_entry
 
@@ -47,6 +104,23 @@ def handle_entry(handler: StudioHandlerProtocol, trip_id: str) -> None:
         return
     _trip_dir, trip = loaded
     handler._json_response(200, {"ok": True, **build_entry(trip, trip_id)})
+
+
+def handle_bento_preview(handler: StudioHandlerProtocol, trip_id: str) -> None:
+    from travelogue.web.studio_bento_preview import build_trip_bento_preview
+
+    loaded = load_trip_or_404(handler, trip_id)
+    if loaded is None:
+        return
+    trip_dir, trip = loaded
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    if payload is None:
+        handler._json_response(
+            404,
+            {"ok": False, "error": "E_BENTO_PREVIEW_UNAVAILABLE", "message": "暂无预览图"},
+        )
+        return
+    handler._json_response(200, {"ok": True, **payload})
 
 
 def handle_chapter_layout(handler: StudioHandlerProtocol) -> None:

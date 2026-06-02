@@ -105,11 +105,21 @@ Lightbox scroll 模式：按 `pages[]` 顺序纵向拼接全部 `webp`（或单�
 | `coverUrl` | `previewRelPath ? \`/${tripId}/${previewRelPath}\` : null` |
 | `isDemo` | `isDemoTrip(trip)`（`constants.js` 已有） |
 | `hasUserTrips` | 存在 `trips` 且至少 1 条 **非** demo |
-| `route` | `hasUserTrips → IdleReturning` else `IdleEmpty` |
+| `route` | **始终 Bento**；`hasUserTrips →` 追加下方书架区（IdleReturning），否则仅 Bento（IdleEmpty） |
 
 **首页不读**：trip.json 全文、assets 列表、editor 配置。
 
 **分页**：当前 `limit=20, offset=0`；书架规模化见 PRD §8.2 / 本文 §4。
+
+### 2.5 `GET /__travelogue/trips/{tripId}/bento-preview`
+
+**用途**：Bento Tab「我的最近一本」· manifest 形只读 payload。
+
+**响应**（200）：`ok` + 与 §1.1 同形字段；`source: "user"`；`pages[].url` 为 `/{tripId}/…` 绝对路径（非 demo `webp`）。
+
+**404**：无 `preview.jpg` → `E_BENTO_PREVIEW_UNAVAILABLE`。
+
+**选取规则**：客户端对 `GET /trips` 取 **第一条非 demo**（`updatedAt` 降序）。
 
 ### 2.2 `GET /__travelogue/status?jobId=`
 
