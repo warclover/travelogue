@@ -10,6 +10,72 @@ import { resolveLayoutTier } from "./layout-tier.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { initBentoTabs, syncTabUi } from "./bento-tabs.js";
 
+var _phoneStripApi = null;
+var _phoneFrameObserver = null;
+var _phoneFrameWired = false;
+
+function clampPhoneHeight(px) {
+  var v = Number(px) || 0;
+  if (v <= 0) return 0;
+  if (v < 520) return 520;
+  if (v > 980) return 980;
+  return Math.round(v);
+}
+
+function webPhoneAnchor() {
+  return document.querySelector(".v2-carousel");
+}
+
+/** 以 Web 轮播整体块（含 dots/hint）为锚定，保证底缘观感一致。 */
+function syncPhoneFrameFromWeb() {
+  var phone = $("v2-phone");
+  if (!phone) return;
+  var webViewport = webPhoneAnchor();
+  var mobileCell = document.querySelector(".v2-bento__mobile");
+  if (!webViewport || !webViewport.getBoundingClientRect) return;
+  var h = webViewport.getBoundingClientRect().height || 0;
+  var target = clampPhoneHeight(h);
+  if (mobileCell) {
+    var cellW = mobileCell.clientWidth || 0;
+    if (cellW > 0) {
+      // 宽度约束：手机框比例固定 9:16，避免溢出右列。
+      var byWidth = Math.floor((cellW * 16) / 9);
+      target = Math.min(target, byWidth);
+    }
+  }
+  if (target <= 0) return;
+  phone.style.setProperty("--v2-phone-height", target + "px");
+  // 第二阶段：底边硬对齐，抵消不同显示器下的行内偏移。
+  var wr = webViewport.getBoundingClientRect();
+  var pr = phone.getBoundingClientRect();
+  var delta = Math.round(pr.bottom - wr.bottom);
+  if (Math.abs(delta) > 1) {
+    phone.style.transform = "translateY(" + String(-delta) + "px)";
+  } else {
+    phone.style.transform = "";
+  }
+  if (_phoneStripApi && _phoneStripApi.relayout) _phoneStripApi.relayout();
+}
+
+function schedulePhoneFrameSync() {
+  requestAnimationFrame(function () {
+    syncPhoneFrameFromWeb();
+  });
+}
+
+function ensurePhoneFrameSync() {
+  if (_phoneFrameWired) return;
+  _phoneFrameWired = true;
+  var webViewport = webPhoneAnchor();
+  if (typeof ResizeObserver === "function" && webViewport) {
+    _phoneFrameObserver = new ResizeObserver(function () {
+      schedulePhoneFrameSync();
+    });
+    _phoneFrameObserver.observe(webViewport);
+  }
+  window.addEventListener("resize", schedulePhoneFrameSync);
+}
+
 function prefersReducedMotion() {
   try {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -64,7 +130,8 @@ export function renderColdStartBackground(manifest) {
 
 /** 9:16 长图 · 竖向一屏一章（箭头 / 圆点 / ↑↓）。 */
 export function renderPhone(manifest, tier) {
-  initPhoneStrip(manifest, { tier: tier });
+  _phoneStripApi = initPhoneStrip(manifest, { tier: tier });
+  schedulePhoneFrameSync();
 }
 
 /** 工作台 bench。 */
@@ -106,6 +173,8 @@ export function renderBentoSurface(manifest) {
   initCarousel(manifest, { tier: tier });
   renderPhone(manifest, tier);
   renderBench(manifest);
+  ensurePhoneFrameSync();
+  schedulePhoneFrameSync();
 }
 
 /** 渲染 Bento 首屏壳层 + 当前 manifest 面。 */
