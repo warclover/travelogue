@@ -47,6 +47,18 @@
       "updatedAt": "2026-06-02"
     },
     {
+      "id": "AC-P9-UX-04",
+      "status": "passed",
+      "test": "tests/test_studio_phase9_cull_playwright.py::test_ac_p9_ux_04_max_photos_warn_non_blocking",
+      "updatedAt": "2026-06-02"
+    },
+    {
+      "id": "AC-P9-10",
+      "status": "passed",
+      "test": "tests/test_photo_cull.py::test_culled_assets_retain_source_files",
+      "updatedAt": "2026-06-02"
+    },
+    {
       "id": "M30-W2-pyiqa",
       "status": "implemented_degraded",
       "note": "photo_cull_ml.py + cull.mode auto|ml; falls back to rules when pyiqa/GPU unavailable",

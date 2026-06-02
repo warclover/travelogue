@@ -114,3 +114,38 @@ def test_ac_p9_ux_02_v3_success_msg_cull_line(studio_server) -> None:
         assert "已生成" in text
         assert "经挑选" in text
         browser.close()
+
+
+def test_ac_p9_ux_04_max_photos_warn_non_blocking(studio_server) -> None:
+    """AC-P9-UX-04 · maxPhotos WARN 非阻断 toast（v1 import-flow）。"""
+    warn = "共 297 张进入排版，超过建议上限 250 张，生成可能较慢"
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 390, "height": 844})
+        page.goto(studio_server["base"], wait_until="networkidle")
+        page.evaluate(
+            """
+            async (payload) => {
+              window.studioToast = function(msg) {
+                var el = document.createElement('div');
+                el.className = 'studio__toast';
+                el.id = 'ux-cull-warn-toast';
+                el.textContent = msg;
+                document.body.appendChild(el);
+              };
+              const mod = await import('/__studio/js/import-flow.js');
+              mod.handleImportSuccess({ result: payload });
+            }
+            """,
+            {
+                "title": "测试",
+                "photoCount": 297,
+                "cullUserLine": "经挑选 297 张进入排版",
+                "cullWarn": warn,
+            },
+        )
+        page.wait_for_selector("#ux-cull-warn-toast", timeout=10_000)
+        assert page.locator("#ux-cull-warn-toast").inner_text() == warn
+        assert "超过建议上限" in warn
+        assert "经挑选" in page.locator("#studio-success-msg").inner_text()
+        browser.close()

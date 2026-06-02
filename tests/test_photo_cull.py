@@ -15,7 +15,12 @@ from travelogue.config import AppConfig, ClusteringConfig, CullConfig, IngestCon
 from travelogue.curation.asset_quality import apply_layout_eligibility_marks
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.curate import layout_eligible_assets, run_curate
-from travelogue.curation.photo_cull import apply_photo_cull, run_photo_cull
+from travelogue.curation.photo_cull import (
+    apply_photo_cull,
+    cull_stage_hint,
+    format_ingest_progress_hint,
+    run_photo_cull,
+)
 from travelogue.media.ingest import ingest_into_trip
 from travelogue.services.trip_factory import create_trip
 
@@ -71,6 +76,45 @@ def test_featured_exempt_from_cull() -> None:
     feat = next(a for a in assets if a["id"] == "feat")
     assert feat["layoutEligible"] is True
     assert "excludeReason" not in feat
+
+
+def test_format_ingest_progress_hint_merges_cull() -> None:
+    assert format_ingest_progress_hint(45, 120, cull_enabled=True) == (
+        "正在导入并挑选照片（已处理 45/120 张）"
+    )
+    assert format_ingest_progress_hint(45, 120, cull_enabled=False) == "已处理 45/120 张"
+
+
+def test_cull_stage_hint_rules_vs_ml() -> None:
+    assert cull_stage_hint(CullConfig(enabled=False)) == ""
+    assert cull_stage_hint(CullConfig(enabled=True, mode="rules")) == "正在挑选照片…"
+    assert cull_stage_hint(CullConfig(enabled=True, mode="ml")) in (
+        "正在挑选照片…",
+        "正在评估照片质量…",
+    )
+
+
+def test_culled_assets_retain_source_files(tmp_path: Path) -> None:
+    trip_dir = tmp_path / "trip"
+    source_dir = trip_dir / "source"
+    source_dir.mkdir(parents=True)
+    img_path = source_dir / "shot.jpg"
+    Image.new("RGB", (2400, 3200), (40, 40, 40)).save(img_path, quality=95)
+    trip: dict = {"curation": {}}
+    assets = [
+        {
+            "id": "a1",
+            "type": "image",
+            "mediaClass": "screenshot",
+            "sourceFile": "source/shot.jpg",
+            "displayFile": "assets/a1-w800.webp",
+            "quality": {"sharpness": 200.0},
+            "layoutEligible": True,
+        }
+    ]
+    apply_photo_cull(trip, assets, cfg=AppConfig(cull=CullConfig(enabled=True)))
+    assert assets[0]["layoutEligible"] is False
+    assert img_path.is_file()
 
 
 def test_pass2_skips_material_only_groups() -> None:

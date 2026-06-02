@@ -23,3 +23,11 @@ ingest:
 
 vision:
   enabled: true
+
+cull:
+  enabled: true
+  mode: rules
+  keep_ratio_floor: 0.80
+  min_keep: 15
+  featured_exempt: true
+  max_photos_warn_only: true

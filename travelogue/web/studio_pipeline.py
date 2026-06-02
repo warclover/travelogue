@@ -271,8 +271,21 @@ def run_studio_pipeline(
             progress(stage, index, hint or "")
         time.sleep(0)
 
+    from travelogue.curation.photo_cull import format_ingest_progress_hint
+
     def ingest_progress(cur: int, total: int) -> None:
-        report("ingest", 1, f"已处理 {cur}/{total} 张")
+        report(
+            "ingest",
+            1,
+            format_ingest_progress_hint(
+                cur,
+                total,
+                cull_enabled=bool(getattr(cfg.cull, "enabled", True)),
+            ),
+        )
+
+    def cull_progress_hint(hint: str) -> None:
+        report("ingest", 1, hint)
 
     with app_config_scope(cfg):
         report("ingest", 1)
@@ -347,6 +360,7 @@ def run_studio_pipeline(
                 dedupe=dedupe,
                 app_cfg=cfg,
                 on_progress=ingest_progress if progress else None,
+                on_cull_hint=cull_progress_hint if progress else None,
                 on_persist=persist_partial_ingest,
                 on_asset_added=on_asset_added if parallel_embed else None,
                 resume_ingest=True,

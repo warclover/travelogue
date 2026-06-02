@@ -64,7 +64,7 @@ def format_ingest_report(result, trip: dict | None = None) -> str:
             if stats.get(key):
                 lines.append(f"  {label}: {stats[key]}")
         if stats.get("cull_excluded"):
-            lines.append(f"  筛选剔除: {stats['cull_excluded']}")
+            lines.append(f"  挑选合计: {stats['cull_excluded']}")
 
     if any(stats.get(k) for k in ("exif_dates", "filename_dates", "mtime_dates")):
         lines.append(

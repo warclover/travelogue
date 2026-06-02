@@ -46,7 +46,7 @@
 | **AC-P9-07** | clustering 不对 culled 资产 embed | pytest / mock |
 | **AC-P9-08** | 增量 ingest：**全 trip re-cull** | pytest |
 | **AC-P9-09** | cull 异常 fail-open：Job 成功 + 全员 eligible + `cullSummary.error` | pytest |
-| **AC-P9-10** | 被筛 asset 仍保留 source/WebP 文件 | 人工 spot-check |
+| **AC-P9-10** | 被筛 asset 仍保留 source/WebP 文件 | `tests/test_photo_cull.py::test_culled_assets_retain_source_files` |
 
 ---
 
@@ -57,8 +57,8 @@
 | **AC-P9-UX-01** | Importing 无新 route/modal | 人工 / Playwright |
 | **AC-P9-UX-02** | Job 成功 toast **第二行**展示 `cullUserLine` | Playwright |
 | **AC-P9-UX-03** | DOM 无被筛图入口 | Playwright |
-| **AC-P9-UX-04** | `maxPhotosExceeded` WARN 非阻断 | pytest + 人工 |
-| **AC-P9-UX-05** | 文案用「挑选」不用「删除/剔除」 | 人工 |
+| **AC-P9-UX-04** | `maxPhotosExceeded` WARN 非阻断 | pytest + Playwright |
+| **AC-P9-UX-05** | 文案用「挑选」不用「删除/剔除」 | 人工 · CLI 已改「挑选合计」 |
 
 ---
 

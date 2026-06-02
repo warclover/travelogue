@@ -6,6 +6,7 @@
 | **验收** | [ACCEPTANCE-PHASE9.md](./ACCEPTANCE-PHASE9.md) |
 | **里程碑** | M30 · Quality Gate |
 | **W1 状态** | **Done**（2026-06-02） |
+| **W2 状态** | **Partial**（P1 ML 降级已落地；完整 GPU 验收待 S2） |
 | **更新** | 2026-06-02 |
 
 ---
@@ -15,7 +16,7 @@
 | 波次 | 目标 | 出口 |
 |------|------|------|
 | **M30-W1** | P0 cull + **M30-0a** + UX 第二行 toast | **独立发版** ✅ |
-| **M30-W2** | P1 ml（不阻塞 W1） | 可选发版 |
+| **M30-W2** | P1 ml（不阻塞 W1） | 可选发版 · 部分完成 |
 | **M30-W3** | subject 桥接 | Phase 10 解锁 ✅ |
 
 ---
@@ -57,9 +58,9 @@
 |----|------|------|------|
 | M30-2a | pyiqa 集成 + 降级 | `photo_cull_ml.py` | ☑ |
 | M30-2b | `cull.mode=auto` | `config.py` | ☑ |
-| M30-2c | stageHint ML 变体 | `studio_pipeline.py` | ☐ |
-| M30-2d | maxPhotos WARN toast | `studio.js` | ☐ |
-| M30-2e | exposure_extreme Spike | PRD 回填 | ☐ |
+| M30-2c | stageHint ML 变体 | `studio_pipeline.py`, `photo_cull.py`, `ingest.py` | ☑ |
+| M30-2d | maxPhotos WARN toast | `import-flow.js`, `first-success.js` + Playwright | ☑ |
+| M30-2e | exposure_extreme Spike | [PHASE9-SPIKE-exposure-extreme.md](./PHASE9-SPIKE-exposure-extreme.md) | ☑ deferred |
 
 ---
 
@@ -75,6 +76,11 @@
 ## W1 发布闸门
 
 见 [ACCEPTANCE-PHASE9.md](./ACCEPTANCE-PHASE9.md) §5 **G-P9-W1** — **已全部满足**（2026-06-02）。
+
+## W2 待办（不阻塞 W1）
+
+- AC-P9-ML-02～04：需 GPU + `pip install -e ".[cull-ml]"` 环境登记
+- M30-2c 细粒度 ingest 内 per-photo cull 进度（可选；当前为 finalize 阶段 hint）
 
 ---
 
@@ -93,6 +99,7 @@ python -m travelogue demo verify
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.9.3 | 2026-06-02 | W2 部分：stageHint · maxPhotos WARN · exposure spike · AC-P9-10 |
 | v0.9.2 | 2026-06-02 | W1 Done：NR-P9-04 签 off · Pass 2 material-only skip |
 | v0.9.1 | 2026-06-02 | Kickoff：M30-0a · W1 范围 · ACCEPTANCE 链接 |
 | v0.9.0 | 2026-06-02 | 初稿 |

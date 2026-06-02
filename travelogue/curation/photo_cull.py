@@ -284,6 +284,23 @@ def _build_user_line(summary: dict[str, Any]) -> str:
     return f"经挑选 {n} 张进入排版"
 
 
+def format_ingest_progress_hint(cur: int, total: int, *, cull_enabled: bool) -> str:
+    """P9-D §3.2 · merged ingest+cull progress hint for Studio."""
+    core = f"已处理 {cur}/{total} 张"
+    if cull_enabled and total > 0:
+        return f"正在导入并挑选照片（{core}）"
+    return core
+
+
+def cull_stage_hint(cfg: CullConfig) -> str:
+    """P9-D §3.2 · sub-hint while Pass 1–4 runs (W2 ML variant)."""
+    if not cfg.enabled:
+        return ""
+    if resolve_effective_mode(cfg) == "ml":
+        return "正在评估照片质量…"
+    return "正在挑选照片…"
+
+
 def run_photo_cull(
     assets: list[dict],
     *,

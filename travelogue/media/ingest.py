@@ -848,6 +848,7 @@ def _finalize_ingest_assets(
     cfg: IngestConfig,
     min_assets: int,
     app_cfg: AppConfig | None = None,
+    on_cull_hint: Callable[[str], None] | None = None,
 ) -> None:
     resolved_app = app_cfg or get_config()
     if min_assets and len(assets) < min_assets:
@@ -891,8 +892,13 @@ def _finalize_ingest_assets(
             f"精选照片 {featured_n} 张，超过建议上限 {cfg.warn_featured_count_above}（仍已导入）"
         )
 
-    from travelogue.curation.photo_cull import apply_photo_cull
+    from travelogue.curation.photo_cull import apply_photo_cull, cull_stage_hint
 
+    cull_cfg = resolved_app.cull
+    if on_cull_hint and cull_cfg.enabled:
+        hint = cull_stage_hint(cull_cfg)
+        if hint:
+            on_cull_hint(hint)
     apply_photo_cull(trip, assets, cfg=resolved_app, ingest_stats=ingest_stats, trip_dir=trip_dir)
 
     low_res_warn = apply_layout_eligibility_marks(trip, assets, cfg=cfg, app_cfg=resolved_app)
@@ -920,6 +926,7 @@ def ingest_into_trip(
     featured_dir: Path | None = None,
     material_dir: Path | None = None,
     on_progress: Callable[[int, int], None] | None = None,
+    on_cull_hint: Callable[[str], None] | None = None,
     resume_ingest: bool = True,
     on_persist: Callable[[], None] | None = None,
     on_asset_added: Callable[[dict], None] | None = None,
@@ -1073,6 +1080,7 @@ def ingest_into_trip(
         cfg=cfg,
         min_assets=min_assets,
         app_cfg=resolved_app,
+        on_cull_hint=on_cull_hint,
     )
     elapsed_ms["total"] = round((time.monotonic() - ingest_t0) * 1000.0, 2)
     for key, val in loop_state.elapsed_acc.items():
