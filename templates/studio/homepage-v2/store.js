@@ -10,6 +10,8 @@ export const STUDIO_DEMO_SHOWCASE_BASE = "/__studio/assets/demo-showcase/";
 
 /** v2 新增 sessionStorage 键（加法，不改 v3 既有键形状）。 */
 export const V2_VARIANT_KEY = "travelogue.studio.homepageVariant";
+export const V2_THEME_KEY = "travelogue.studio.v2.theme";
+export const V2_THEME_DEFAULT = "sky";
 
 /** v2 首页运行时状态（单一可变源，勿重新赋值绑定）。 */
 export const V2 = {
@@ -30,7 +32,13 @@ export const V2 = {
   importShell: "bento", // 方案 A：Import 前壳层恒为 Bento 首屏
   reroute: null, // bootstrap 注入：重新拉 trips 并路由最终态（import 结束/取消后调用）
   onExpand: null, // Lightbox 打开钩子（当前 Bento 未接入）
+  theme: V2_THEME_DEFAULT, // sky | classic | dawn | mint | navy
 };
+
+function normalizeTheme(theme) {
+  if (theme === "classic" || theme === "dawn" || theme === "mint" || theme === "navy") return theme;
+  return "sky";
+}
 
 export function $(id) {
   return document.getElementById(id);
@@ -62,4 +70,33 @@ export function persistVariant(variant) {
   } catch (e) {
     /* ignore */
   }
+}
+
+export function readThemePreference() {
+  try {
+    return normalizeTheme(localStorage.getItem(V2_THEME_KEY));
+  } catch (e) {
+    return V2_THEME_DEFAULT;
+  }
+}
+
+export function applyTheme(theme) {
+  var next = normalizeTheme(theme);
+  V2.theme = next;
+  try {
+    document.documentElement.setAttribute("data-v2-theme", next);
+  } catch (e) {
+    /* ignore */
+  }
+  return next;
+}
+
+export function persistTheme(theme) {
+  var next = normalizeTheme(theme);
+  try {
+    localStorage.setItem(V2_THEME_KEY, next);
+  } catch (e) {
+    /* ignore */
+  }
+  return next;
 }

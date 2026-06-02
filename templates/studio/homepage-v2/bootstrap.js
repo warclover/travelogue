@@ -20,6 +20,7 @@ import {
 } from "./harness.js";
 import { fetchTripsFirstPage } from "./trips-client.js";
 import { initVariantGuard, syncVariantGuard } from "./variant-guard.js";
+import { initThemeSettings } from "./theme.js";
 
 function applyTripsData(data) {
   V2.trips = (data && data.trips) || [];
@@ -156,6 +157,7 @@ function trackExperimentExposure() {
 
 function init() {
   initErrorPipeline();
+  initThemeSettings();
   if (harnessEnabled()) {
     harnessPreseedSession();
     harnessInstallBentoPreviewMock();
