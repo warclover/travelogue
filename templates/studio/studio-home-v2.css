@@ -620,6 +620,9 @@ body { overflow-x: clip; overflow-y: visible; }
   color: var(--v2-text-secondary);
   font-family: var(--v2-font-sans);
 }
+.v2-bento__lead--script {
+  font-family: "Microsoft YaHei", "微软雅黑", var(--v2-font-sans);
+}
 [data-headline-layout="d"] .v2-bento__lead {
   grid-area: lead;
 }
@@ -2243,6 +2246,26 @@ body { overflow-x: clip; overflow-y: visible; }
 .v2-sheet__details summary::-webkit-details-marker { display: none; }
 .v2-sheet__details summary::before { content: "▸ "; color: var(--v2-gold); }
 .v2-sheet__details[open] summary::before { content: "▾ "; }
+.v2-sheet__upload {
+  margin-top: 10px;
+}
+.v2-sheet__upload-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px dashed rgba(255, 255, 255, .24);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .04);
+  color: rgba(255, 255, 255, .74);
+  font-size: 12px;
+  cursor: pointer;
+}
+.v2-sheet__upload-btn:hover {
+  border-color: rgba(255, 255, 255, .35);
+  color: rgba(255, 255, 255, .9);
+  background: rgba(255, 255, 255, .08);
+}
 .v2-sheet__path { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .v2-sheet__path input {
   flex: 1;

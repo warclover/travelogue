@@ -54,8 +54,8 @@ TRAVELOGUE_STUDIO_HOMEPAGE_V2=auto TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT=10 \\
 # 根路径：应对照组 200 v3 / 进组 302（curl -I）
 curl -sI -A "M20jTest/5" http://HOST:8766/ | head -5
 
-# v2 直达
-curl -sI http://HOST:8766/v2 | head -3
+# 兼容入口（M21-c 后应 302 到 /）
+curl -sI http://HOST:8766/v2 | head -5
 
 # 回滚演练
 python scripts/studio_homepage_rollback_drill.py
@@ -75,10 +75,10 @@ python scripts/studio_homepage_rollback_drill.py
 
 | URL | 用途 |
 |-----|------|
-| `/` | holdback 分桶（10%→v2） |
-| `/v2` | 全员直达 v2 对比 |
-| `/classic` | v3 经典首页（`on` 模式主入口） |
-| `/v2?dev=1&studioFixture=multi` | loopback 状态切换 |
+| `/` | holdback 分桶（10%→v2，M21-c 后 v2 直接在根路径呈现） |
+| `/v2` | 兼容入口（M21-c 后仅用于重定向到 `/`） |
+| `/classic` | v3 经典首页（deprecated 应急入口） |
+| `/?dev=1&studioFixture=multi` | loopback 状态切换 |
 
 ---
 

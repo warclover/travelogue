@@ -11,12 +11,12 @@
  * 冷启动静帧 + 四阶段精修在 M20-g。
  */
 import {
-  SS, STAGE_LABELS, STUDIO_ERROR_MESSAGES,
+  SS, STAGE_LABELS, STUDIO_ERROR_MESSAGES, IMPORT_PHOTO_CAP,
 } from "../js/constants.js";
 import { postJson, withJobBusyRetry, isJobBusyResponse } from "../js/http.js";
 import { pollJobUntilDone } from "../js/job-poll.js";
 import { trackStudioEvent } from "../js/analytics.js";
-import { V2, $, show } from "./store.js";
+import { V2, $, show, setV2SkipLinkTarget } from "./store.js";
 import { fetchTripsFirstPage } from "./trips-client.js";
 import { renderColdStartBackground } from "./bento.js";
 import {
@@ -33,11 +33,60 @@ function humanizeError(code, fallback) {
   return STUDIO_ERROR_MESSAGES[code] || fallback || "导入失败，请重试";
 }
 
+function postMultipartImportV2(formData, options) {
+  options = options || {};
+  return new Promise(function (resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/__travelogue/import");
+    var token = (document.querySelector('meta[name="studio-token"]') || {}).content;
+    if (token) xhr.setRequestHeader("X-Studio-Token", token);
+    if (options.onUploadProgress) xhr.upload.onprogress = options.onUploadProgress;
+    xhr.onload = function () {
+      var body = {};
+      try { body = JSON.parse(xhr.responseText || "{}"); } catch (e) {}
+      resolve({ status: xhr.status, body: body });
+    };
+    xhr.onerror = function () {
+      reject(new Error(
+        "上传失败：网络中断或照片总量过大。建议改用「选择本次旅行的照片文件夹」。"
+      ));
+    };
+    xhr.send(formData);
+  });
+}
+
 function basenameTitle(path) {
   if (!path) return "我的旅途";
   var parts = String(path).replace(/[\\/]+$/, "").split(/[\\/]/);
   var name = parts[parts.length - 1] || "我的旅途";
   return name.slice(0, 20);
+}
+
+function basenameFromRelativePath(rel) {
+  if (!rel) return "";
+  var parts = String(rel).split(/[\\/]/);
+  return (parts[0] || "").trim();
+}
+
+function guessUploadTitle(files) {
+  if (!files || !files.length) return "我的旅途";
+  var title = basenameFromRelativePath(files[0].webkitRelativePath);
+  if (!title) return "我的旅途";
+  return title.slice(0, 20);
+}
+
+function buildUploadForm(files, opts) {
+  opts = opts || {};
+  var form = new FormData();
+  var title = (opts.title || guessUploadTitle(files) || "我的旅途").slice(0, 20);
+  form.append("title", title);
+  form.append("place", "旅途");
+  form.append("placeUserSet", "false");
+  if (opts.force) form.append("force", "true");
+  for (var i = 0; i < files.length; i++) {
+    form.append("files[]", files[i], files[i].webkitRelativePath || files[i].name);
+  }
+  return form;
 }
 
 export function buildImportPayload(albumPath, title) {
@@ -53,9 +102,15 @@ export function buildImportPayload(albumPath, title) {
 function setStage(text, fillPct) {
   var stage = $("v2-import-stage");
   if (stage && text) stage.textContent = text;
+  var progress = $("v2-import-progress");
   var fill = $("v2-import-fill");
   if (fill && typeof fillPct === "number") {
-    fill.style.width = Math.max(0, Math.min(100, fillPct)) + "%";
+    var pct = Math.max(0, Math.min(100, fillPct));
+    fill.style.width = pct + "%";
+    if (progress) progress.setAttribute("aria-valuenow", String(Math.round(pct)));
+  }
+  if (progress && text) {
+    progress.setAttribute("aria-valuetext", text);
   }
 }
 
@@ -91,6 +146,13 @@ export function renderImportingPanel(source) {
 
   var bar = document.createElement("div");
   bar.className = "v2-import-panel__bar";
+  bar.id = "v2-import-progress";
+  bar.setAttribute("role", "progressbar");
+  bar.setAttribute("aria-label", "导入进度");
+  bar.setAttribute("aria-valuemin", "0");
+  bar.setAttribute("aria-valuemax", "100");
+  bar.setAttribute("aria-valuenow", "0");
+  bar.setAttribute("aria-valuetext", "准备导入…");
   var fill = document.createElement("div");
   fill.className = "v2-import-panel__bar-fill";
   fill.id = "v2-import-fill";
@@ -113,6 +175,7 @@ export function renderImportingPanel(source) {
   host.appendChild(panel);
   show(host, true);
   V2.state = "Importing";
+  setV2SkipLinkTarget("v2-import-cancel");
   syncVariantGuard();
   syncAdvancedOptionsLock();
   cancelBtn.addEventListener("click", cancelImport);
@@ -259,24 +322,118 @@ export function startV2Import(body, opts) {
 }
 
 /**
+ * 浏览器目录上传导入（建议 ≤200MB，非硬限制）。
+ * 仅保存上传元信息到 sessionStorage；文件对象本身不可跨刷新持久化。
+ * @param {FileList|File[]} files
+ * @param {{title?:string, source?:string}} [opts]
+ */
+export function startV2UploadImport(files, opts) {
+  opts = opts || {};
+  var list = files ? Array.prototype.slice.call(files) : [];
+  if (!list.length) return Promise.resolve();
+  if (list.length > IMPORT_PHOTO_CAP) {
+    var capErr = {
+      code: "E_IMPORT_PHOTO_CAP",
+      message: "照片过多（最多 " + IMPORT_PHOTO_CAP + " 张），建议先精选后再试。",
+    };
+    showImportFailed(capErr);
+    return Promise.reject(capErr);
+  }
+
+  var gen = ++_gen;
+  var source = opts.source || "浏览器上传";
+  trackStudioEvent("import_start", { via: "upload", surface: "v2_sheet" });
+  try {
+    sessionStorage.setItem(SS.activePending, JSON.stringify({
+      uploadForm: true,
+      fileCount: list.length,
+      title: (opts.title || guessUploadTitle(list) || "我的旅途").slice(0, 20),
+    }));
+  } catch (e) { /* ignore */ }
+
+  renderImportingPanel(source);
+  setStage("上传照片中…", 0);
+
+  var submit = function (force) {
+    var form = buildUploadForm(list, { title: opts.title, force: !!force });
+    return withJobBusyRetry(function () {
+      return postMultipartImportV2(form, {
+        onUploadProgress: function (ev) {
+          if (!ev || !ev.lengthComputable) return;
+          var pct = Math.max(0, Math.min(22, Math.round((ev.loaded / ev.total) * 22)));
+          setStage("上传照片中…", pct);
+        },
+      });
+    });
+  };
+
+  return submit(false).then(function (res) {
+    var data = res.body || {};
+    if (res.status === 409 && data.error === "E_DEMO_EXISTS") {
+      var confirmOverwrite = typeof studioModal === "function"
+        ? studioModal({
+            title: "该游记已存在",
+            body: "是否覆盖已有内容？覆盖后无法撤销。",
+            confirmText: "覆盖并重新导入",
+            cancelText: "取消",
+          })
+        : Promise.resolve(window.confirm(data.message || "该游记已存在。是否覆盖？"));
+      return confirmOverwrite.then(function (ok) {
+        if (!ok) {
+          if (typeof V2.reroute === "function") V2.reroute();
+          return null;
+        }
+        return submit(true).then(function (retryRes) {
+          var retryData = retryRes.body || {};
+          if (retryRes.status !== 202 || !retryData.jobId) {
+            throw { code: retryData.error, message: humanizeError(retryData.error, retryData.message) };
+          }
+          return pollImport(retryData.jobId, gen, source);
+        });
+      });
+    }
+    if (isJobBusyResponse(res)) {
+      throw { code: "E_STUDIO_JOB_BUSY", message: humanizeError("E_STUDIO_JOB_BUSY") };
+    }
+    if (res.status !== 202 || !data.jobId) {
+      throw { code: data.error, message: humanizeError(data.error, data.message) };
+    }
+    return pollImport(data.jobId, gen, source);
+  }).catch(function (err) {
+    if (gen !== _gen) return;
+    try { sessionStorage.removeItem(SS.activeJobId); } catch (e) { /* ignore */ }
+    _activeJobId = null;
+    showImportFailed(err);
+    throw err;
+  });
+}
+
+/**
  * 跨页恢复：若存在 activeJobId，渲染 Importing 并续 poll（不闪 Idle）。
  * 返回是否恢复了一次导入。
  */
 export function resumeV2ImportIfAny() {
   var jobId = null;
   var pendingRaw = null;
+  var pending = null;
   try {
     jobId = sessionStorage.getItem(SS.activeJobId);
     pendingRaw = sessionStorage.getItem(SS.activePending);
   } catch (e) { /* ignore */ }
-  if (!jobId) return false;
-  var source = "本机文件夹";
   try {
-    if (pendingRaw) {
-      var pending = JSON.parse(pendingRaw);
-      if (pending && pending.albumPath) source = "本机文件夹";
+    if (pendingRaw) pending = JSON.parse(pendingRaw);
+  } catch (e) {
+    pending = null;
+  }
+  if (!jobId) {
+    if (pending && pending.uploadForm) {
+      try { sessionStorage.removeItem(SS.activePending); } catch (e) { /* ignore */ }
     }
-  } catch (e) { /* ignore */ }
+    return false;
+  }
+  var source = "本机文件夹";
+  if (pending && pending.uploadForm) source = "浏览器上传";
+  else if (pending && pending.albumPath) source = "本机文件夹";
   var gen = ++_gen;
   renderImportingPanel(source);
   setStage("恢复上次导入…", 0);

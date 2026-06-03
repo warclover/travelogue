@@ -30,7 +30,7 @@ def test_resolve_mode(monkeypatch) -> None:
     assert resolve_mode("on") == "on"
     assert resolve_mode("auto") == "auto"
     assert resolve_mode("1") == "on"
-    assert resolve_mode(None) == "off"  # default when env unset in test
+    assert resolve_mode(None) == "on"  # M21-a default when env unset
 
 
 def test_resolve_percent_env_and_yaml(monkeypatch) -> None:
@@ -103,8 +103,8 @@ def test_is_loopback_host() -> None:
     assert allow_variant_override("0.0.0.0") is False
 
 
-def test_should_redirect_only_auto() -> None:
-    assert should_redirect_root_to_v2(mode="auto", variant="v2") is True
+def test_should_redirect_disabled_after_m21c() -> None:
+    assert should_redirect_root_to_v2(mode="auto", variant="v2") is False
     assert should_redirect_root_to_v2(mode="on", variant="v2") is False
     assert should_redirect_root_to_v2(mode="auto", variant="v3") is False
 

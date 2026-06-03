@@ -81,14 +81,14 @@ def handle_home_root(handler: StudioHandlerProtocol) -> bool:
         handler.end_headers()
         return True
 
-    template = "studio-home-v2.html" if variant == "v2" else "studio.html"
+    template = "studio-home-v2.html" if variant == "v2" else "legacy-freeze/studio.classic.html"
     _serve_studio_home_html(handler, template, bucket=bucket, is_new=is_new)
     return True
 
 
 def handle_home(handler: StudioHandlerProtocol) -> None:
     """Serve v3 (image-first) homepage — frozen, GET /classic."""
-    _serve_studio_home(handler, "studio.html")
+    _serve_studio_home(handler, "legacy-freeze/studio.classic.html")
 
 
 def handle_home_v2(handler: StudioHandlerProtocol) -> None:

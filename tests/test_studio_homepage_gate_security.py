@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -108,20 +107,14 @@ def test_studio_home_gate_tampered_cookie_reassigned(tmp_path: Path, monkeypatch
             },
         )
 
-        class _NoRedirect(urllib.request.HTTPRedirectHandler):
-            def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ARG002
-                return None
-
-        opener = urllib.request.build_opener(_NoRedirect)
-        try:
-            opener.open(req, timeout=10)
-            pytest.fail("expected redirect for treatment bucket")
-        except urllib.error.HTTPError as exc:
-            assert exc.code == 302
-            cookie = exc.headers.get("Set-Cookie") or ""
-            assert "travelogue.studio.hp_bucket=" in cookie
-            assert str(expected) in cookie
-            assert "." in cookie.split("hp_bucket=")[1]
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+            cookie = resp.headers.get("Set-Cookie") or ""
+        assert 'data-homepage-variant="v2"' in html
+        assert "travelogue.studio.hp_bucket=" in cookie
+        assert str(expected) in cookie
+        assert "." in cookie.split("hp_bucket=")[1]
     finally:
         server.shutdown()
         server.server_close()
@@ -134,7 +127,7 @@ def test_studio_home_injects_data_bucket_id(tmp_path: Path) -> None:
     port = _free_port()
     server = _start_studio_server(trips_dir, port)
     try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/v2", timeout=10) as resp:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=10) as resp:
             html = resp.read().decode("utf-8")
         assert 'data-bucket-id="' in html
         assert "__STUDIO_BUCKET_ID__" not in html
@@ -168,7 +161,7 @@ def test_studio_home_gate_lan_dev_flag_empty(tmp_path: Path) -> None:
     port = _free_port()
     server = _start_studio_server(trips_dir, port, studio_host="10.0.0.5")
     try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/v2", timeout=10) as resp:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=10) as resp:
             html = resp.read().decode("utf-8")
         assert 'data-studio-dev=""' in html
     finally:

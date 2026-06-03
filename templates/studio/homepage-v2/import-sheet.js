@@ -6,18 +6,34 @@
  * - 主按钮 pick-folder（autoStart）；路径导入仅在 Sheet details 内
  * 复用：http.js postJson（pick-folder）、constants.js SHEET_FOCUSABLE、共享 analytics。
  */
-import { SHEET_FOCUSABLE } from "../js/constants.js";
+import { SHEET_FOCUSABLE, UPLOAD_BYTES_SOFT_LIMIT } from "../js/constants.js";
 import { postJson } from "../js/http.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
-import { startV2Import, buildImportPayload } from "./import-run.js";
+import { startV2Import, startV2UploadImport, buildImportPayload } from "./import-run.js";
 
 let _open = false;
 let _previousFocus = null;
 let _trapHandler = null;
 let _pickInFlight = false;
+let _uploadInFlight = false;
 let _pendingAlbumPath = null;
 let _importStarted = false; // 本次 Sheet 会话是否已发起 import（区分 abandon）
+
+function setV2BackgroundInert(inert) {
+  var ids = ["v2-bento-hero", "v2-shelf"];
+  ids.forEach(function (id) {
+    var el = $(id);
+    if (!el) return;
+    if (inert) {
+      el.setAttribute("inert", "");
+      el.setAttribute("aria-hidden", "true");
+    } else {
+      el.removeAttribute("inert");
+      el.removeAttribute("aria-hidden");
+    }
+  });
+}
 
 function setError(msg) {
   var el = $("v2-sheet-error");
@@ -90,6 +106,7 @@ export function openImportSheet() {
     if (typeof studioToast === "function") studioToast("正在制作中", { duration: 2200 });
     return;
   }
+  if (_open) return;
   var root = $("v2-sheet-root");
   var sheet = $("v2-import-sheet");
   if (!root || !sheet) return;
@@ -97,6 +114,7 @@ export function openImportSheet() {
   _importStarted = false;
   show(root, true);
   document.body.classList.add("v2-sheet-open");
+  setV2BackgroundInert(true);
   _open = true;
   setError("");
   trapFocus(sheet);
@@ -111,6 +129,7 @@ export function closeImportSheet(reason) {
   var sheet = $("v2-import-sheet");
   if (root) show(root, false);
   document.body.classList.remove("v2-sheet-open");
+  setV2BackgroundInert(false);
   _open = false;
   releaseTrap(sheet);
   trackStudioEvent("sheet_close", { reason: reason || "dismiss" });
@@ -171,6 +190,65 @@ function submitWithPath() {
   showConfirm(path);
 }
 
+function estimateUploadBytes(files) {
+  var total = 0;
+  for (var i = 0; i < files.length; i++) total += files[i].size || 0;
+  return total;
+}
+
+function formatBytes(bytes) {
+  if (!bytes || bytes <= 0) return "0B";
+  var units = ["B", "KB", "MB", "GB"];
+  var val = bytes;
+  var idx = 0;
+  while (val >= 1024 && idx < units.length - 1) {
+    val /= 1024;
+    idx += 1;
+  }
+  var fixed = val >= 10 || idx === 0 ? Math.round(val) : Math.round(val * 10) / 10;
+  return fixed + units[idx];
+}
+
+function confirmLargeUpload(files) {
+  var bytes = estimateUploadBytes(files);
+  if (bytes <= UPLOAD_BYTES_SOFT_LIMIT) return Promise.resolve(true);
+  var body =
+    "已选约 " + formatBytes(bytes) + "（" + files.length + " 个文件）。" +
+    " 建议总量≤200MB，超过后可能变慢或失败。";
+  if (typeof studioModal === "function") {
+    return studioModal({
+      title: "照片总量较大",
+      body: body,
+      confirmText: "仍要上传",
+      cancelText: "改用文件夹",
+    });
+  }
+  return Promise.resolve(window.confirm(body + "\n\n仍要上传？"));
+}
+
+function handleUploadInput() {
+  if (_uploadInFlight) return;
+  var input = $("v2-album-upload");
+  var files = input && input.files ? Array.prototype.slice.call(input.files) : [];
+  if (!files.length) return;
+  _uploadInFlight = true;
+  setError("");
+  confirmLargeUpload(files).then(function (proceed) {
+    if (!proceed) return;
+    _importStarted = true;
+    closeImportSheet("start_upload");
+    if (typeof studioToast === "function") {
+      studioToast("已选择 " + files.length + " 张照片，开始上传…", { duration: 2200 });
+    }
+    return startV2UploadImport(files, { source: "浏览器上传" });
+  }).catch(function () {
+    /* 错误由 import-run 内部展示 */
+  }).finally(function () {
+    if (input) input.value = "";
+    _uploadInFlight = false;
+  });
+}
+
 function startFromConfirm() {
   if (!_pendingAlbumPath) {
     setError("请先选择照片文件夹");
@@ -218,6 +296,8 @@ export function initImportSheet() {
   if (pathInput) pathInput.addEventListener("keydown", function (e) {
     if (e.key === "Enter") { e.preventDefault(); submitWithPath(); }
   });
+  var uploadInput = $("v2-album-upload");
+  if (uploadInput) uploadInput.addEventListener("change", handleUploadInput);
 
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && _open && V2.state !== "Importing") closeImportSheet("esc");

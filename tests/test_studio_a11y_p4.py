@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from tests._studio_js import read_studio_js
 
 ROOT = Path(__file__).resolve().parents[1]
 STUDIO_HTML = ROOT / "templates" / "studio" / "studio.html"
+pytestmark = pytest.mark.legacy_homepage
 
 
 def test_ac_p4_a11y_02_sheet_dialog_semantics() -> None:

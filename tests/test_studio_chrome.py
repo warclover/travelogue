@@ -61,7 +61,8 @@ def test_studio_home_html(tmp_path: Path) -> None:
         with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=10) as resp:
             html = resp.read().decode("utf-8")
         assert "Travelogue Studio" in html
-        assert "/__studio/studio.js" in html
+        assert 'data-homepage-variant="v2"' in html
+        assert "/__studio/homepage-v2/bootstrap.js" in html
     finally:
         server.shutdown()
         server.server_close()

@@ -12,6 +12,8 @@ from travelogue.web.studio_trips import list_studio_trips, studio_trips_total
 from tests._studio_js import read_studio_js
 from tests.test_studio_server import _distinct_album, _free_port, _get_json, _start_studio_server
 
+pytestmark = pytest.mark.legacy_homepage
+
 
 @pytest.fixture(autouse=True)
 def _reset_jobs() -> None:
@@ -54,7 +56,7 @@ def test_studio_homepage_m12_html(tmp_path: Path) -> None:
     try:
         import urllib.request
 
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=10) as resp:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/classic", timeout=10) as resp:
             html = resp.read().decode("utf-8")
         for marker in M12_HOME_MARKERS:
             assert marker in html, marker

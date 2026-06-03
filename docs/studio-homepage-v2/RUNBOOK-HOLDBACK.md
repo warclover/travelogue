@@ -54,13 +54,13 @@ python scripts/studio_holdback_report.py --telemetry ~/.travelogue/telemetry/stu
 1. 设置环境变量 **`TRAVELOGUE_STUDIO_HOMEPAGE_V2=off`**（或 yaml `percent: 0`）。
    yaml 片段见 [`config-holdback.example.yaml`](./config-holdback.example.yaml)。
 2. 重启 Studio 进程（`serve --studio` 或等价部署单元）。
-3. 验证 **`GET /` → v3**（`studio.html`），**不** 302 到 `/v2`：
+3. 验证 **`GET /` → v3**（`studio.html`）：
 
    ```bash
    curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" http://127.0.0.1:8766/
    ```
 
-4. `GET /v2` 仍可 200（开发对照），但生产流量应仅命中 `/`。
+4. `GET /v2` 应 302 到 `/`（兼容旧书签入口）。
 
 ### 3.2 用户态验证（< 15 min）
 
@@ -75,7 +75,7 @@ python scripts/studio_homepage_rollback_drill.py --out docs/acceptance-records/s
 | 检查项 | 命令 / 路径 |
 |--------|-------------|
 | v3 首页 DOM 回归 | `pytest tests/test_studio_home_v2.py::test_studio_home_gate_off_serves_v3_at_root -q` |
-| Import 续 poll | `/v2?dev=1&studioState=importing-resume&studioJob=running` → 刷新后 `#v2-import-cancel` 可见 |
+| Import 续 poll | `/?dev=1&studioState=importing-resume&studioJob=running` → 刷新后 `#v2-import-cancel` 可见 |
 | sessionStorage 未清 | `activeJobId` / `activePending` **不得** bulk 清除 |
 | 书架 / FirstSuccess | harness `idle-returning` / `first-success` 走查 |
 

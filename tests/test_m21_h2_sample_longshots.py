@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from tests._studio_js import read_studio_js
+
+pytestmark = pytest.mark.legacy_homepage
 
 
 def test_sample_longshot_thumb_assets_exist() -> None:

@@ -2,7 +2,7 @@
 
 | 属性 | 内容 |
 |------|------|
-| **PRD** | [PRD-STUDIO-HOMEPAGE-v2.md](../PRD-STUDIO-HOMEPAGE-v2.md) **v2.0.3** |
+| **PRD** | [PRD-STUDIO-HOMEPAGE-v2.md](../PRD-STUDIO-HOMEPAGE-v2.md) **v2.0.3** · 退役 v3：[PRD-M21-studio-homepage-v3-retirement.md](../PRD-M21-studio-homepage-v3-retirement.md) |
 | **线框** | [studio-homepage-output-first-v1.6.html](../wireframes/studio-homepage-output-first-v1.6.html)（Web/iPad/书架；Mobile Tab = 小程序参考） |
 | **状态** | **开工前冻结** — M20-a 起工程以本目录为 API/素材/开关权威 |
 
@@ -27,6 +27,17 @@
 | [USABILITY-AC01.md](./USABILITY-AC01.md) | AC-01 五被试协议 | **M20-j** |
 | [DEVICE-MATRIX-IPAD.md](./DEVICE-MATRIX-IPAD.md) | iPad Safari 实机清单 | **M20-j** |
 | [EDITOR-LINKS-M20J.md](./EDITOR-LINKS-M20J.md) | 切主站后 editor 链评估 | **M20-j** |
+| [PRD-M21-studio-homepage-v3-retirement.md](../PRD-M21-studio-homepage-v3-retirement.md) | **v3 退役 · v2 唯一入口 · 浏览器上传** | **M21** |
+| [M21-CUTOVER-CHECKLIST.md](./M21-CUTOVER-CHECKLIST.md) | M21 分阶段切换检查单（开发/QA/发布） | **M21** |
+| [M21-ROLLBACK-CARD.md](./M21-ROLLBACK-CARD.md) | M21 值班回滚速查卡（5 分钟恢复） | **M21** |
+| [M21-TEST-MATRIX.md](./M21-TEST-MATRIX.md) | M21 自动化 + 手工门禁矩阵 | **M21** |
+| [M21-V3-FREEZE.md](./M21-V3-FREEZE.md) | M21-e1 v3 冻结规则与 `/classic` smoke 护栏 | **M21-e1** |
+| [M21-E2-DEPENDENCY-AUDIT.md](./M21-E2-DEPENDENCY-AUDIT.md) | M21-e2 删除前依赖审计与 Go/No-Go 门禁 | **M21-e2** |
+| [M21-E2-EXECUTION-CARD.md](./M21-E2-EXECUTION-CARD.md) | M21-e2 执行步骤、验证与回退卡 | **M21-e2** |
+| [M21-E2-SNAPSHOT-SWITCH-PLAN.md](./M21-E2-SNAPSHOT-SWITCH-PLAN.md) | `/classic` 冻结快照切换与阻塞消解映射 | **M21-e2** |
+| [M21-E2-CHANGESET-DRAFT.md](./M21-E2-CHANGESET-DRAFT.md) | M21-e2 分批删除草稿（不执行） | **M21-e2** |
+| [M21-E2-COMMIT-DRAFT.md](./M21-E2-COMMIT-DRAFT.md) | M21-e2 提交级草案（commit 顺序与验证） | **M21-e2** |
+| `scripts/studio_m21e2_delete_plan.py` | M21-e2 删除命令生成器（默认 dry-run） | **M21-e2** |
 | [RELEASE-CHECKLIST.md](./RELEASE-CHECKLIST.md) | PR / 合入自检 | 合入前 |
 
 ## 机器可读契约

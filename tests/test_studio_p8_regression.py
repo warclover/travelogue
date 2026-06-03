@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from tests._studio_js import read_studio_js
 
 ROOT = Path(__file__).resolve().parents[1]
 STUDIO_HTML = ROOT / "templates" / "studio" / "studio.html"
 STUDIO_CSS = ROOT / "templates" / "studio" / "studio.css"
+pytestmark = pytest.mark.legacy_homepage
 
 ENTRY_PATHS = {
     "path": ["studio-submit-path", "album-path", "submitPathImport"],

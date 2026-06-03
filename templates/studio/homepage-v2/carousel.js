@@ -18,6 +18,8 @@ import { trackStudioEvent } from "../js/analytics.js";
 import { shouldEagerCarouselPage } from "./layout-tier.js";
 import { V2, $ } from "./store.js";
 
+var _disposeActive = function () {};
+
 function pagePlaceholderText(page) {
   if (!page) return "";
   if (page.label) return page.label;
@@ -86,6 +88,7 @@ function ensureSlideLoaded(slide) {
  * @param {{ tier?: string }} [opts]
  */
 export function initCarousel(manifest, opts) {
+  _disposeActive();
   opts = opts || {};
   var tier = opts.tier || "L0";
   var track = $("v2-carousel-track");
@@ -102,6 +105,17 @@ export function initCarousel(manifest, opts) {
   var syncing = false;
   var syncReleaseTimer = null;
   var lastTracked = 0; // spread_page_view 仅在真正翻页时上报（首帧不报）
+  var scrollTimer = null;
+  var disposed = false;
+  var cleanup = [];
+
+  function bind(el, eventName, handler, bindOpts) {
+    if (!el) return;
+    el.addEventListener(eventName, handler, bindOpts);
+    cleanup.push(function () {
+      el.removeEventListener(eventName, handler, bindOpts);
+    });
+  }
 
   function emitPage() {
     if (index === lastTracked) return;
@@ -121,9 +135,10 @@ export function initCarousel(manifest, opts) {
     var dot = document.createElement("button");
     dot.type = "button";
     dot.setAttribute("role", "tab");
+    dot.setAttribute("aria-selected", "false");
     dot.setAttribute("aria-label", page.label || "第 " + (i + 1) + " 页");
     dot.dataset.index = String(i);
-    dot.addEventListener("click", function () { go(i); });
+    bind(dot, "click", function () { go(i); });
     dotsHost.appendChild(dot);
     return dot;
   });
@@ -155,6 +170,7 @@ export function initCarousel(manifest, opts) {
     dotEls.forEach(function (d, i) {
       var active = i === index;
       d.classList.toggle("is-active", active);
+      d.setAttribute("aria-selected", active ? "true" : "false");
       if (active) d.setAttribute("aria-current", "true");
       else d.removeAttribute("aria-current");
     });
@@ -186,12 +202,11 @@ export function initCarousel(manifest, opts) {
     emitPage();
   }
 
-  if (prevBtn) prevBtn.addEventListener("click", function () { go(index - 1); });
-  if (nextBtn) nextBtn.addEventListener("click", function () { go(index + 1); });
+  bind(prevBtn, "click", function () { go(index - 1); });
+  bind(nextBtn, "click", function () { go(index + 1); });
 
   // 原生滚动 / 触控滑动 → 同步索引（clamp）
-  var scrollTimer = null;
-  track.addEventListener("scroll", function () {
+  bind(track, "scroll", function () {
     if (syncing) return;
     if (scrollTimer) clearTimeout(scrollTimer);
     scrollTimer = setTimeout(function () {
@@ -203,16 +218,30 @@ export function initCarousel(manifest, opts) {
   // 键盘 ←/→（AC-HP2-19）
   var webCell = $("v2-web-cell");
   if (webCell) {
-    webCell.addEventListener("keydown", function (e) {
+    bind(webCell, "keydown", function (e) {
       if (e.key === "ArrowLeft") { e.preventDefault(); go(index - 1); }
       else if (e.key === "ArrowRight") { e.preventDefault(); go(index + 1); }
     });
   }
+
+  function dispose() {
+    if (disposed) return;
+    disposed = true;
+    cleanup.forEach(function (fn) { fn(); });
+    cleanup = [];
+    if (scrollTimer) clearTimeout(scrollTimer);
+    if (syncReleaseTimer) clearTimeout(syncReleaseTimer);
+    scrollTimer = null;
+    syncReleaseTimer = null;
+    if (_disposeActive === dispose) _disposeActive = function () {};
+  }
+  _disposeActive = dispose;
 
   go(0);
   return {
     go: go,
     current: function () { return index; },
     count: pageCount,
+    destroy: dispose,
   };
 }

@@ -116,7 +116,8 @@ class StudioMixin:
             if self._dispatch_home_root():
                 return True
         if path == HOME_V2_PATH:
-            static_handlers.handle_home_v2(self)
+            # M21-c：收敛旧并行入口 /v2 → /
+            static_handlers.send_redirect(self, "/")
             return True
         if path == STATUS_PATH:
             job_handlers.handle_status(self)

@@ -74,8 +74,8 @@ def test_rollback_flag_metric_mismatch() -> None:
 
 
 def test_variant_paths() -> None:
-    assert lcp_mod.VARIANT_PATHS["v2"] == "/v2"
-    assert lcp_mod.VARIANT_PATHS["v3"] == "/"
+    assert lcp_mod.VARIANT_PATHS["v2"] == "/"
+    assert lcp_mod.VARIANT_PATHS["v3"] == "/classic"
 
 
 def test_lcp_baseline_fixture_valid() -> None:

@@ -2,8 +2,8 @@
  * 首页 v2 · Import 进行中禁止切换 variant（FEATURE-FLAG §2 #1 · AC-HP2-23）。
  *
  * activeJobId 非空或 V2.state === Importing 时：
- *  - 隐藏「经典首页 → /」链
- *  - 拦截点击并 toast（防止误切 v3）
+ *  - 隐藏「经典首页 → /classic」链
+ *  - 拦截点击并 toast（防止误切 legacy 首页）
  */
 import { V2, $, show, isLoopback, readActiveJobId } from "./store.js";
 

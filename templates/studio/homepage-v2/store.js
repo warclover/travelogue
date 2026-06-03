@@ -2,7 +2,7 @@
  * Travelogue Studio 首页 v2 · 运行时状态 + variant 解析 + DOM 工具。
  *
  * 状态语义对齐 v3 js/state.js（五主态 + Failed/Offline），但 v2 使用独立
- * 视图层（GET /v2 专用 DOM），不复用 v3 navigation.js 的渲染分支。
+ * 视图层（M21-c 后主入口 GET /），不复用 v3 navigation.js 的渲染分支。
  */
 import { SS } from "../js/constants.js";
 
@@ -60,6 +60,12 @@ export function $(id) {
 export function show(el, visible) {
   if (!el) return;
   el.hidden = !visible;
+}
+
+export function setV2SkipLinkTarget(targetId) {
+  var skip = document.querySelector(".v2-skip-link");
+  if (!skip || !targetId) return;
+  skip.setAttribute("href", "#" + targetId);
 }
 
 export function isLoopback() {

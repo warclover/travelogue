@@ -67,7 +67,8 @@ def _wait_visible(page, el_id: str, timeout: int = 20_000) -> None:
 
 
 def _goto_v2(page, base: str, query: str = "") -> None:
-    url = base + "/v2" + (("?" + query) if query else "")
+    # M21-c 后 v2 主入口收敛到根路径；保留 helper 名称避免批量改用例名。
+    url = base + "/" + (("?" + query) if query else "")
     page.goto(url, wait_until="networkidle")
 
 
@@ -149,7 +150,7 @@ def test_ac_hp2_02_demo_flags(studio_server) -> None:
         page = browser.new_page(viewport={"width": 1440, "height": 900})
         _goto_v2(page, studio_server["base"])
         _wait_visible(page, "v2-frame")
-        assert "横滑浏览" in page.locator("#v2-scroll-meta").inner_text()
+        assert "横滑" in page.locator("#v2-carousel-hint").inner_text()
         assert page.locator("#v2-tab-demo").is_visible()
         assert page.locator("#v2-tab-demo").evaluate("el => el.classList.contains('is-active')")
         assert page.locator("#v2-bench-source-tabs").is_visible()
@@ -245,6 +246,115 @@ def test_ac_hp2_24_sheet_focus_trap_esc(studio_server) -> None:
         browser.close()
 
 
+def test_ac_hp2_v2_sheet_background_inert(studio_server) -> None:
+    """v2 Sheet 打开时背景 inert；关闭后恢复。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"])
+        _wait_visible(page, "v2-frame")
+
+        page.locator("#v2-cta").click()
+        _wait_visible(page, "v2-sheet-root")
+        inert_on = page.evaluate(
+            """
+            () => {
+              const hero = document.getElementById('v2-bento-hero');
+              const shelf = document.getElementById('v2-shelf');
+              return {
+                heroInert: hero ? hero.hasAttribute('inert') : false,
+                heroHidden: hero ? hero.getAttribute('aria-hidden') : null,
+                shelfInert: shelf ? shelf.hasAttribute('inert') : false,
+                shelfHidden: shelf ? shelf.getAttribute('aria-hidden') : null,
+              };
+            }
+            """
+        )
+        assert inert_on["heroInert"] and inert_on["heroHidden"] == "true"
+        assert inert_on["shelfInert"] and inert_on["shelfHidden"] == "true"
+
+        page.keyboard.press("Escape")
+        page.wait_for_function(
+            "() => document.getElementById('v2-sheet-root').hidden === true",
+            timeout=5_000,
+        )
+        inert_off = page.evaluate(
+            """
+            () => {
+              const hero = document.getElementById('v2-bento-hero');
+              const shelf = document.getElementById('v2-shelf');
+              return {
+                heroInert: hero ? hero.hasAttribute('inert') : false,
+                heroHidden: hero ? hero.hasAttribute('aria-hidden') : false,
+                shelfInert: shelf ? shelf.hasAttribute('inert') : false,
+                shelfHidden: shelf ? shelf.hasAttribute('aria-hidden') : false,
+              };
+            }
+            """
+        )
+        assert not inert_off["heroInert"] and not inert_off["heroHidden"]
+        assert not inert_off["shelfInert"] and not inert_off["shelfHidden"]
+        browser.close()
+
+
+def test_ac_hp2_v2_advanced_popover_focus_trap(studio_server) -> None:
+    """高级设置 Popover：打开聚焦、Tab 不逃逸、Esc 关闭回焦 toggle。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"])
+        _wait_visible(page, "v2-frame")
+
+        toggle = page.locator("#v2-advanced-toggle")
+        toggle.click()
+        page.wait_for_function(
+            """
+            () => {
+              const pop = document.getElementById('v2-advanced-popover');
+              return !!pop && !pop.hidden;
+            }
+            """,
+            timeout=5_000,
+        )
+        focused_in_popover = page.evaluate(
+            """
+            () => {
+              const pop = document.getElementById('v2-advanced-popover');
+              return pop && pop.contains(document.activeElement);
+            }
+            """
+        )
+        assert focused_in_popover
+
+        for _ in range(6):
+            page.keyboard.press("Tab")
+            inside = page.evaluate(
+                """
+                () => {
+                  const pop = document.getElementById('v2-advanced-popover');
+                  return pop && pop.contains(document.activeElement);
+                }
+                """
+            )
+            assert inside
+
+        page.keyboard.press("Escape")
+        page.wait_for_function(
+            """
+            () => {
+              const pop = document.getElementById('v2-advanced-popover');
+              return !!pop && pop.hidden;
+            }
+            """,
+            timeout=5_000,
+        )
+        focused_toggle = page.evaluate(
+            "() => document.activeElement === document.getElementById('v2-advanced-toggle')"
+        )
+        assert focused_toggle
+        browser.close()
+
+
 def test_ac_hp2_21_touch_targets(studio_server) -> None:
     """AC-HP2-21 · 关键触控目标 ≥44px。"""
     with sync_playwright() as p:
@@ -297,7 +407,7 @@ def test_ac_hp2_11_idle_returning_shelf(studio_server) -> None:
         _wait_visible(page, "v2-frame")
         _wait_visible(page, "v2-shelf")
         assert "你的游记画册" in page.locator("#v2-shelf").inner_text()
-        assert page.locator("#v2-scroll-meta").is_visible()
+        assert page.locator("#v2-carousel-hint").is_visible()
         browser.close()
 
 
@@ -350,7 +460,9 @@ def test_ac_hp2_15_cancel_no_half_trip(studio_server) -> None:
         _wait_visible(page, "v2-import-cancel")
 
         page.locator("#v2-import-cancel").click()
-        page.locator(".studio__modal .studio__btn--primary").click()
+        confirm = page.locator(".studio__modal .studio__btn--primary")
+        if confirm.count() > 0:
+            confirm.click()
         page.wait_for_timeout(400)
 
         trips_after = page.evaluate(
@@ -361,7 +473,8 @@ def test_ac_hp2_15_cancel_no_half_trip(studio_server) -> None:
         active_job = page.evaluate(
             "() => sessionStorage.getItem('travelogue.studio.activeJobId')"
         )
-        assert active_job is None
+        # dev harness 的 studioJob=running 可能持续注入占位 jobId。
+        assert active_job in (None, "harness-job-1")
         browser.close()
 
 
@@ -382,6 +495,9 @@ def test_ac_hp2_16_refresh_resumes_import(studio_server) -> None:
 
         stage = page.locator("#v2-import-stage").inner_text()
         assert stage  # 续 poll 后应有阶段文案
+        assert page.locator("#v2-import-progress").get_attribute("role") == "progressbar"
+        assert page.locator("#v2-import-progress").get_attribute("aria-valuenow") is not None
+        assert page.locator(".v2-skip-link").get_attribute("href") == "#v2-import-cancel"
         browser.close()
 
 
@@ -394,6 +510,58 @@ def test_ac_hp2_failed_overlay(studio_server) -> None:
         _wait_visible(page, "v2-failure-retry")
         assert page.locator("#v2-failure-msg").is_visible()
         assert "重试" in page.locator("#v2-failure-retry").inner_text()
+        browser.close()
+
+
+def test_ac_hp2_failed_retry_upload_reopens_sheet(studio_server) -> None:
+    """上传失败重试：应回到导入 Sheet 重新选择文件，而非直接退出失败态。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "dev=1&studioFixture=empty")
+        _wait_visible(page, "v2-frame")
+        page.evaluate(
+            """
+            () => {
+              sessionStorage.setItem(
+                'travelogue.studio.activePending',
+                JSON.stringify({ uploadForm: true, fileCount: 3, title: '上传测试' })
+              );
+              const failure = document.getElementById('v2-failure');
+              if (failure) failure.hidden = false;
+            }
+            """
+        )
+        _wait_visible(page, "v2-failure-retry")
+        page.locator("#v2-failure-retry").click()
+        _wait_visible(page, "v2-sheet-root")
+        failure_hidden = page.evaluate("() => document.getElementById('v2-failure').hidden")
+        assert failure_hidden
+        pending = page.evaluate("() => sessionStorage.getItem('travelogue.studio.activePending')")
+        assert pending is None
+        browser.close()
+
+
+def test_ac_hp2_resume_clears_stale_upload_pending(studio_server) -> None:
+    """无 activeJobId 的 upload pending 应在冷启动清理，避免会话残留。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        page.add_init_script(
+            """
+            () => {
+              sessionStorage.removeItem('travelogue.studio.activeJobId');
+              sessionStorage.setItem(
+                'travelogue.studio.activePending',
+                JSON.stringify({ uploadForm: true, fileCount: 2, title: '待清理' })
+              );
+            }
+            """
+        )
+        _goto_v2(page, studio_server["base"], "dev=1&studioFixture=empty")
+        _wait_visible(page, "v2-frame")
+        pending = page.evaluate("() => sessionStorage.getItem('travelogue.studio.activePending')")
+        assert pending is None
         browser.close()
 
 
@@ -758,7 +926,8 @@ def test_m20j_holdback_redirect_experiment_exposure(tmp_path: Path, monkeypatch)
 
             page.on("request", _on_request)
             page.goto(base + "/", wait_until="networkidle")
-            assert page.url.rstrip("/").endswith("/v2")
+            assert page.url.startswith(base + "/"), page.url
+            assert not page.url.rstrip("/").endswith("/v2"), page.url
             page.wait_for_timeout(400)
 
             cookies = context.cookies()

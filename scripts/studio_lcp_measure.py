@@ -1,6 +1,6 @@
 """Studio 首页 LCP P95 采集（M20-i · TELEMETRY §3 / §17.2）。
 
-用 Playwright 在 loopback 多次加载 v2(/v2) 与 v3(/) 首页，读取
+用 Playwright 在 loopback 多次加载 v2(/) 与 v3(/classic) 首页，读取
 `largest-contentful-paint` 性能条目，分 variant 汇总 P50/P75/P95，并对照
 §17.2「LCP P95 ↑>30%」判据（v2 vs v3 同环境）输出回滚提示。
 
@@ -24,8 +24,8 @@ from typing import Any, Sequence
 # §17.2：v2 LCP P95 相对 v3 上升超过 30% → 回滚
 LCP_P95_ROLLBACK_RATIO = 1.30
 
-# variant → 路径（v2 并行路由，v3 根路由）
-VARIANT_PATHS = {"v2": "/v2", "v3": "/"}
+# variant → 路径（M21-c 收敛后：v2 根路由，v3 仅 classic 应急入口）
+VARIANT_PATHS = {"v2": "/", "v3": "/classic"}
 
 
 def percentile(values: Sequence[float], p: float) -> float:

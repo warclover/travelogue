@@ -16,6 +16,7 @@ from travelogue.web.studio_jobs import reset_job_store
 ROOT = Path(__file__).resolve().parents[1]
 STUDIO_HTML = ROOT / "templates" / "studio" / "studio.html"
 STUDIO_CSS = ROOT / "templates" / "studio" / "studio.css"
+pytestmark = pytest.mark.legacy_homepage
 
 QA_BREAKPOINTS_PX = (980, 1100, 1280, 1440)
 

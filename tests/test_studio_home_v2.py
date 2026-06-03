@@ -53,6 +53,8 @@ V2_HOME_MARKERS = (
     "选择本次旅行的照片文件夹",
     "步骤 1 / 2",
     "v2-album-path",
+    "v2-album-upload",
+    "小文件夹试用（建议 ≤200MB）",
     "v2-sheet-close",
     # M20-c · Lightbox
     "v2-lightbox",
@@ -80,7 +82,6 @@ V3_HOME_MARKERS = (
     'data-studio-v="4"',
     "studio-hero",
     "studio-hero-empty",
-    "studio.js",
 )
 
 
@@ -106,6 +107,30 @@ def test_studio_home_v2_route(tmp_path: Path) -> None:
             assert css_resp.status == 200
             assert ".studio__modal-backdrop" in css
             assert "position: fixed" in css
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_studio_home_v2_route_redirects_to_root(tmp_path: Path) -> None:
+    """M21-c · GET /v2 收敛到 /（302）。"""
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/v2", method="GET")
+
+        class _NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ARG002
+                return None
+
+        opener = urllib.request.build_opener(_NoRedirect)
+        with pytest.raises(urllib.error.HTTPError) as excinfo:
+            opener.open(req, timeout=10)
+        assert excinfo.value.code == 302
+        assert excinfo.value.headers.get("Location") == "/"
     finally:
         server.shutdown()
         server.server_close()
@@ -195,9 +220,18 @@ def test_studio_home_v2_import_sheet_modules() -> None:
     # pick-folder + 路径仅在 Sheet 内
     assert "/__travelogue/pick-folder" in sheet
     assert "submitWithPath" in sheet
+    assert "v2-album-upload" in sheet
+    assert "confirmLargeUpload" in sheet
+    assert "UPLOAD_BYTES_SOFT_LIMIT" in sheet
+    assert "仍要上传" in sheet
+    assert "建议总量≤200MB" in sheet
+    assert "startV2UploadImport" in sheet
 
     # 导入编排复用共享原语
     assert "startV2Import" in run and "resumeV2ImportIfAny" in run
+    assert "startV2UploadImport" in run
+    assert "postMultipartImportV2" in run
+    assert "来源 · 浏览器上传" in run or "浏览器上传" in run
     assert "../js/job-poll.js" in run
     assert "../js/http.js" in run
     assert "pollJobUntilDone" in run
@@ -469,6 +503,7 @@ def test_studio_home_v2_telemetry_wired() -> None:
     assert "lightbox_open" in lightbox
 
 
+@pytest.mark.legacy_homepage
 def test_studio_v3_experiment_exposure_wired() -> None:
     """M20-j · v3 对照组 holdback 曝光（TELEMETRY §2 experiment_exposure）。"""
     studio_js = (STUDIO_DIR / "studio.js").read_text(encoding="utf-8")
@@ -514,7 +549,7 @@ def test_studio_home_v2_harness_and_ac_hooks() -> None:
     assert "harnessAssetsFail" in bootstrap
 
     html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
-    assert 'id="v2-scroll-meta"' in html
+    assert 'id="v2-carousel-hint"' in html
     assert 'id="v2-tab-demo"' in html
     assert "#v2-web-cell" in html or 'id="v2-web-cell"' in html
 
@@ -524,6 +559,9 @@ def test_studio_home_v2_harness_and_ac_hooks() -> None:
     assert "display: none !important" in css
     # CTA 触控目标 ≥44px（AC-HP2-21）
     assert "min-height: 44px" in css
+
+    dev_panel = (STUDIO_DIR / "homepage-v2" / "dev-panel.js").read_text(encoding="utf-8")
+    assert 'href="/classic"' in dev_panel
 
 
 def test_is_demo_trip_distinguishes_user_slug_hash() -> None:
@@ -666,7 +704,7 @@ def test_studio_home_gate_classic_serves_v3(tmp_path: Path, monkeypatch) -> None
 
 @pytest.mark.e2e
 def test_studio_home_gate_auto_redirects_to_v2(tmp_path: Path, monkeypatch) -> None:
-    """M20-i holdback · auto + 100% → GET / 302 /v2。"""
+    """M21-c · auto + 100% 直接在根路径返回 v2（无 /v2 重定向）。"""
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "auto")
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", "100")
     trips_dir = tmp_path / "trips"
@@ -675,19 +713,13 @@ def test_studio_home_gate_auto_redirects_to_v2(tmp_path: Path, monkeypatch) -> N
     server = _start_studio_server(trips_dir, port)
     try:
         req = urllib.request.Request(f"http://127.0.0.1:{port}/", method="GET")
-        class _NoRedirect(urllib.request.HTTPRedirectHandler):
-            def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ARG002
-                return None
-
-        opener = urllib.request.build_opener(_NoRedirect)
-        try:
-            opener.open(req, timeout=10)
-            pytest.fail("expected redirect")
-        except urllib.error.HTTPError as exc:
-            assert exc.code == 302
-            assert exc.headers.get("Location") == "/v2"
-            cookie = exc.headers.get("Set-Cookie") or ""
-            assert "travelogue.studio.hp_bucket=" in cookie
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+            cookie = resp.headers.get("Set-Cookie") or ""
+        assert 'data-homepage-variant="v2"' in html
+        assert "studio-home-v2.css" in html
+        assert "travelogue.studio.hp_bucket=" in cookie
     finally:
         server.shutdown()
         server.server_close()
@@ -695,7 +727,7 @@ def test_studio_home_gate_auto_redirects_to_v2(tmp_path: Path, monkeypatch) -> N
 
 @pytest.mark.e2e
 def test_studio_home_gate_auto_treatment_redirects(tmp_path: Path, monkeypatch) -> None:
-    """M20-j · auto 10% · 进组 UA → 302 /v2。"""
+    """M21-c · auto 10% 进组 UA 在根路径直接返回 v2。"""
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "auto")
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", "10")
     trips_dir = tmp_path / "trips"
@@ -710,17 +742,11 @@ def test_studio_home_gate_auto_treatment_redirects(tmp_path: Path, monkeypatch) 
             headers={"User-Agent": ua},
         )
 
-        class _NoRedirect(urllib.request.HTTPRedirectHandler):
-            def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ARG002
-                return None
-
-        opener = urllib.request.build_opener(_NoRedirect)
-        try:
-            opener.open(req, timeout=10)
-            pytest.fail("expected redirect")
-        except urllib.error.HTTPError as exc:
-            assert exc.code == 302
-            assert exc.headers.get("Location") == "/v2"
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+        assert 'data-homepage-variant="v2"' in html
+        assert "studio-home-v2.css" in html
     finally:
         server.shutdown()
         server.server_close()
@@ -754,7 +780,7 @@ def test_studio_home_gate_auto_control_stays_v3(tmp_path: Path, monkeypatch) -> 
 
 @pytest.mark.e2e
 def test_studio_home_gate_auto_yaml_percent_redirects(tmp_path: Path, monkeypatch) -> None:
-    """M20-j · auto 无 env percent 时读 yaml percent · 进组 UA → 302 /v2。"""
+    """M21-c · auto 无 env percent 时读 yaml；进组 UA 在根路径返回 v2。"""
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "auto")
     monkeypatch.delenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", raising=False)
     config_path = tmp_path / "config.yaml"
@@ -774,17 +800,10 @@ def test_studio_home_gate_auto_yaml_percent_redirects(tmp_path: Path, monkeypatc
             headers={"User-Agent": ua},
         )
 
-        class _NoRedirect(urllib.request.HTTPRedirectHandler):
-            def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ARG002
-                return None
-
-        opener = urllib.request.build_opener(_NoRedirect)
-        try:
-            opener.open(req, timeout=10)
-            pytest.fail("expected redirect")
-        except urllib.error.HTTPError as exc:
-            assert exc.code == 302
-            assert exc.headers.get("Location") == "/v2"
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+        assert 'data-homepage-variant="v2"' in html
     finally:
         server.shutdown()
         server.server_close()

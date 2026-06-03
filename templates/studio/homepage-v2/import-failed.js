@@ -3,9 +3,10 @@
  */
 import { SS, isDemoTrip } from "../js/constants.js";
 import { humanizeStudioError, failureNextHint } from "../js/errors.js";
-import { V2, $, show } from "./store.js";
+import { V2, $, show, setV2SkipLinkTarget } from "./store.js";
 import { captureImportShell } from "./first-success.js";
 import { startV2Import } from "./import-run.js";
+import { openImportSheet } from "./import-sheet.js";
 import { syncVariantGuard } from "./variant-guard.js";
 
 var _wired = false;
@@ -85,11 +86,22 @@ export function showImportFailed(err) {
   restoreImportShell();
   populateFailedUi(_lastErr, readPendingImport());
   show($("v2-failure"), true);
+  setV2SkipLinkTarget("v2-failure-retry");
   if (!_wired) wireImportFailed();
 }
 
 function retryImportFailed() {
   var pending = readPendingImport();
+  if (pending && pending.uploadForm) {
+    try { sessionStorage.removeItem(SS.activePending); } catch (e) { /* ignore */ }
+    hideImportFailed();
+    syncVariantGuard();
+    openImportSheet();
+    if (typeof studioToast === "function") {
+      studioToast("请重新选择要上传的照片后重试", { duration: 2200 });
+    }
+    return;
+  }
   if (!pending || !pending.albumPath) {
     dismissImportFailed();
     return;

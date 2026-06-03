@@ -1,7 +1,7 @@
 """Studio 首页 LCP 采集 e2e（M20-i）。
 
 用 scripts/studio_lcp_measure.py 的 measure_lcp / run_measurements 对真实
-loopback 服务器实量 v2(/v2) 与 v3(/)，校验能采到 >0 的 LCP 并产出可比 P95。
+loopback 服务器实量 v2(/) 与 v3(/classic)，校验能采到 >0 的 LCP 并产出可比 P95。
 """
 
 from __future__ import annotations
@@ -52,7 +52,7 @@ def test_measure_lcp_v2_positive(studio_server) -> None:
         browser = p.chromium.launch()
         context = browser.new_context(viewport={"width": 1440, "height": 900})
         page = context.new_page()
-        lcp = lcp_mod.measure_lcp(page, studio_server + "/v2", settle_ms=1500)
+        lcp = lcp_mod.measure_lcp(page, studio_server + "/", settle_ms=1500)
         context.close()
         browser.close()
     assert lcp > 0, "未采到 v2 LCP"

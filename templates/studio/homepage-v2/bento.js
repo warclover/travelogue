@@ -1,7 +1,7 @@
 /**
  * 首页 v2 · Bento 首屏渲染（示例 + 用户 Tab · 方案 A/B′）。
  */
-import { V2, $, show } from "./store.js";
+import { V2, $, show, setV2SkipLinkTarget } from "./store.js";
 import { isDemoTrip } from "../js/constants.js";
 import { cssBackgroundImage, formatUpdatedAt } from "../js/dom.js";
 import { manifestAssetUrl } from "./manifest.js";
@@ -315,6 +315,7 @@ export function renderBentoEmpty(manifest) {
   show($("v2-headline"), true);
   show($("v2-frame"), true);
   show($("v2-importing"), false);
+  setV2SkipLinkTarget("v2-cta");
 
   initBentoTabs();
   syncTabUi();

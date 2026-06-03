@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="studio-token" content="__STUDIO_TOKEN__" />
+  <title>Travelogue Studio Classic (Deprecated)</title>
+  <link rel="stylesheet" href="/__studio/legacy-freeze/studio.classic.css" />
+</head>
+<body data-studio-v="4" data-bucket-id="__STUDIO_BUCKET_ID__" data-studio-dev="__STUDIO_DEV__">
+<a href="#classic-start" class="studio-skip-link">跳到主要操作</a>
+
+<section class="studio-hero" id="studio-hero">
+  <div class="studio-hero-empty" id="studio-hero-empty">
+    <h1>Classic 首页（Deprecated）</h1>
+    <p>该入口仅用于应急。建议使用主入口 `/`。</p>
+  </div>
+
+  <div class="classic-panel">
+    <label for="classic-album-path">照片文件夹路径</label>
+    <input id="classic-album-path" type="text" placeholder="例如 C:\Photos\Trip" />
+    <div class="classic-actions">
+      <button id="classic-pick" type="button">选择文件夹</button>
+      <button id="classic-start" type="button">开始导入</button>
+    </div>
+    <p id="classic-status" role="status"></p>
+  </div>
+</section>
+
+<script type="module" src="/__studio/legacy-freeze/studio.classic.js"></script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 /**
- * 首页 v2 · DOMContentLoaded 入口（GET /v2）。
+ * 首页 v2 · DOMContentLoaded 入口（M21-c 后主入口 GET /）。
  */
 import { isDemoTrip } from "../js/constants.js";
 import { trackStudioEvent } from "../js/analytics.js";

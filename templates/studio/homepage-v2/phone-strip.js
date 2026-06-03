@@ -10,6 +10,8 @@ import { longshotPages, longshotPageUrl } from "./manifest.js";
 import { shouldEagerCarouselPage } from "./layout-tier.js";
 import { $ } from "./store.js";
 
+var _disposeActive = function () {};
+
 /** 竖条/整卷长图：章内竖滚；竖版样张仍 cover 铺满（避免 object-fit 裁切）。 */
 function useScrollPreview(page) {
   return !!(page && page.scrollPreview);
@@ -91,6 +93,7 @@ function ensureSlideLoaded(slide, onSlideReady) {
  * @param {{ tier?: string }} [opts]
  */
 export function initPhoneStrip(manifest, opts) {
+  _disposeActive();
   opts = opts || {};
   var tier = opts.tier || "L0";
   var track = $("v2-phone-track");
@@ -108,6 +111,16 @@ export function initPhoneStrip(manifest, opts) {
   var syncing = false;
   var syncReleaseTimer = null;
   var scrollTimer = null;
+  var disposed = false;
+  var cleanup = [];
+
+  function bind(el, eventName, handler, bindOpts) {
+    if (!el) return;
+    el.addEventListener(eventName, handler, bindOpts);
+    cleanup.push(function () {
+      el.removeEventListener(eventName, handler, bindOpts);
+    });
+  }
 
   track.innerHTML = "";
   dotsHost.innerHTML = "";
@@ -130,9 +143,10 @@ export function initPhoneStrip(manifest, opts) {
     var dot = document.createElement("button");
     dot.type = "button";
     dot.setAttribute("role", "tab");
+    dot.setAttribute("aria-selected", "false");
     dot.setAttribute("aria-label", page.label || "第 " + (i + 1) + " 段");
     dot.dataset.index = String(i);
-    dot.addEventListener("click", function () { go(i); });
+    bind(dot, "click", function () { go(i); });
     dotsHost.appendChild(dot);
     return dot;
   });
@@ -176,6 +190,7 @@ export function initPhoneStrip(manifest, opts) {
     dotEls.forEach(function (d, i) {
       var active = i === index;
       d.classList.toggle("is-active", active);
+      d.setAttribute("aria-selected", active ? "true" : "false");
       if (active) d.setAttribute("aria-current", "true");
       else d.removeAttribute("aria-current");
     });
@@ -213,21 +228,21 @@ export function initPhoneStrip(manifest, opts) {
   }
 
   if (prevBtn) {
-    prevBtn.addEventListener("click", function (e) {
+    bind(prevBtn, "click", function (e) {
       e.preventDefault();
       e.stopPropagation();
       go(index - 1);
     });
   }
   if (nextBtn) {
-    nextBtn.addEventListener("click", function (e) {
+    bind(nextBtn, "click", function (e) {
       e.preventDefault();
       e.stopPropagation();
       go(index + 1);
     });
   }
 
-  track.addEventListener("scroll", function () {
+  bind(track, "scroll", function () {
     if (syncing) return;
     if (scrollTimer) clearTimeout(scrollTimer);
     scrollTimer = setTimeout(function () {
@@ -237,10 +252,10 @@ export function initPhoneStrip(manifest, opts) {
   });
 
   if (screen) {
-    screen.onkeydown = function (e) {
+    bind(screen, "keydown", function (e) {
       if (e.key === "ArrowLeft") { e.preventDefault(); go(index - 1); }
       else if (e.key === "ArrowRight") { e.preventDefault(); go(index + 1); }
-    };
+    });
     screen.setAttribute(
       "aria-label",
       pageCount > 1
@@ -259,5 +274,24 @@ export function initPhoneStrip(manifest, opts) {
     go(index, { fromScroll: false });
   }
 
-  return { go: go, current: function () { return index; }, count: pageCount, relayout: relayout };
+  function dispose() {
+    if (disposed) return;
+    disposed = true;
+    cleanup.forEach(function (fn) { fn(); });
+    cleanup = [];
+    if (scrollTimer) clearTimeout(scrollTimer);
+    if (syncReleaseTimer) clearTimeout(syncReleaseTimer);
+    scrollTimer = null;
+    syncReleaseTimer = null;
+    if (_disposeActive === dispose) _disposeActive = function () {};
+  }
+  _disposeActive = dispose;
+
+  return {
+    go: go,
+    current: function () { return index; },
+    count: pageCount,
+    relayout: relayout,
+    destroy: dispose,
+  };
 }

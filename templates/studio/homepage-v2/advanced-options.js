@@ -8,6 +8,53 @@ var _open = false;
 var _bound = null;
 var _anchor = null;
 var _scrim = null;
+var _focusTrapHandler = null;
+var _focusRestoreEl = null;
+var POPOVER_FOCUSABLE = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "[tabindex]:not([tabindex='-1'])",
+].join(",");
+
+function focusableEls(container) {
+  if (!container) return [];
+  return Array.prototype.filter.call(container.querySelectorAll(POPOVER_FOCUSABLE), function (el) {
+    if (el.getAttribute("aria-hidden") === "true") return false;
+    if (el.closest("[hidden]")) return false;
+    return true;
+  });
+}
+
+function trapFocus(popover) {
+  releaseFocusTrap(popover);
+  _focusTrapHandler = function (e) {
+    if (e.key !== "Tab") return;
+    var els = focusableEls(popover);
+    if (!els.length) return;
+    var first = els[0];
+    var last = els[els.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+      return;
+    }
+    if (document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+  popover.addEventListener("keydown", _focusTrapHandler);
+}
+
+function releaseFocusTrap(popover) {
+  if (_focusTrapHandler && popover) popover.removeEventListener("keydown", _focusTrapHandler);
+  _focusTrapHandler = null;
+}
 
 function ensureScrim() {
   if (_scrim) return _scrim;
@@ -55,8 +102,12 @@ function closePopover() {
   if (!popover || !toggle) return;
   _open = false;
   popover.hidden = true;
+  releaseFocusTrap(popover);
   toggle.setAttribute("aria-expanded", "false");
   if (_scrim) _scrim.hidden = true;
+  var restore = _focusRestoreEl;
+  _focusRestoreEl = null;
+  if (restore && typeof restore.focus === "function") restore.focus();
 }
 
 function openPopover(fetchConfig) {
@@ -65,11 +116,19 @@ function openPopover(fetchConfig) {
   if (!popover || !toggle || V2.state === "Importing") return;
   ensurePopoverPortaled(popover);
   if (fetchConfig) fetchConfig();
+  _focusRestoreEl = document.activeElement;
   _open = true;
   positionPopover(popover, toggle);
   var scrim = ensureScrim();
   scrim.hidden = false;
   toggle.setAttribute("aria-expanded", "true");
+  trapFocus(popover);
+  var first = focusableEls(popover)[0];
+  if (first && typeof first.focus === "function") first.focus();
+  else {
+    popover.tabIndex = -1;
+    popover.focus();
+  }
 }
 
 export function syncAdvancedOptionsLock() {

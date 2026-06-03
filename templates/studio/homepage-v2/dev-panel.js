@@ -95,7 +95,7 @@ export function initDevPanel() {
     '<label class="v2-dev-panel__check"><input type="checkbox" id="v2-dev-assets-fail" /> studioAssetsFail</label>' +
     '<label class="v2-dev-panel__check"><input type="checkbox" id="v2-dev-slow-net" /> studioSlowNet</label>' +
     '<button type="button" class="v2-dev-panel__copy" id="v2-dev-copy">Copy repro URL</button>' +
-    '<a href="/" class="v2-dev-panel__classic" id="v2-classic-link" hidden>经典首页 →</a>' +
+    '<a href="/classic" class="v2-dev-panel__classic" id="v2-classic-link" hidden>经典首页 →</a>' +
     "</div>";
 
   document.body.appendChild(panel);

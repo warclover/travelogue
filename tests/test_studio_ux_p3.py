@@ -47,6 +47,7 @@ def test_ux_p3_03_advanced_options_bind_export() -> None:
     assert "bindAdvancedConfigControls" in advanced_js
 
 
+@pytest.mark.legacy_homepage
 def test_ux_p3_03_advanced_options_and_config_api(tmp_path: Path) -> None:
     html = STUDIO_HTML.read_text(encoding="utf-8")
     # Required DOM markers for the M12-7 "high-end · 分析选项" UX (UX-P3-03).

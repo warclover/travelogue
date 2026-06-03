@@ -1,5 +1,7 @@
 /**
  * Travelogue Studio · v3 Photo-First Homepage Controller (ESM entry · P5-A1)
+ * DEPRECATED (M21-e1 freeze): served by /classic emergency entry only.
+ * Freeze policy: no new features; bugfixes limited to minimal smoke path.
  * State machine: Loading → IdleEmpty / IdleReturning → Importing → FirstSuccess
  *                                                            → Failed → ...
  *                                                            → Offline

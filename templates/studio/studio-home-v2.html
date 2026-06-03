@@ -61,7 +61,7 @@
           <span class="v2-auto-tag">本地处理 · 免注册</span>
         </div>
         <h1 class="v2-bento__title">每一个瞬间，<em>都值得再次相遇</em></h1>
-        <p class="v2-bento__lead">
+        <p class="v2-bento__lead v2-bento__lead--script">
           选一次旅行的照片，<b>自动分章 · 配文 · 排版</b>，生成大屏卷轴 + 微信长图。
         </p>
       </div>
@@ -306,6 +306,14 @@
     </details>
     <details class="v2-sheet__details">
       <summary>其他导入方式</summary>
+      <div class="v2-sheet__upload">
+        <label class="v2-sheet__upload-btn" for="v2-album-upload"
+               title="建议总量 ≤200MB，过大可能失败或较慢">
+          小文件夹试用（建议 ≤200MB）
+        </label>
+        <input id="v2-album-upload" type="file" webkitdirectory directory multiple hidden
+               aria-label="小文件夹试用上传" />
+      </div>
       <div class="v2-sheet__path">
         <input type="text" id="v2-album-path" placeholder="粘贴文件夹路径…" aria-label="文件夹路径" />
         <button type="button" id="v2-path-submit">使用此路径</button>

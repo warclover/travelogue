@@ -1,9 +1,9 @@
 """Studio 首页 v2 服务端门控（M20-i/j · FEATURE-FLAG §3）。
 
 TRAVELOGUE_STUDIO_HOMEPAGE_V2：
-  - off（默认）→ GET / 仍 v3；GET /v2 → v2
+  - off（回滚）→ GET / 仍 v3；GET /v2 → 302 /
   - on（M20-j 100%）→ GET / → v2；GET /classic → v3
-  - auto → holdback：按稳定分桶 + percent 决定 / 是否 302 → /v2
+  - auto → holdback：按稳定分桶 + percent 决定 / 返回 v2 或 v3（不再跳转 /v2）
 
 分桶：Cookie `travelogue.studio.hp_bucket`（HMAC 签名 bucket.sig），无则 UA+盐 hash 写入。
 percent：环境变量 TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT，或 config.yaml
@@ -21,7 +21,7 @@ import os
 from typing import Any, Literal
 from urllib.parse import parse_qs
 
-from travelogue.web.studio_handlers.paths import HOME_CLASSIC_PATH, HOME_V2_PATH
+from travelogue.web.studio_handlers.paths import HOME_CLASSIC_PATH
 
 ENV_MODE = "TRAVELOGUE_STUDIO_HOMEPAGE_V2"
 ENV_PERCENT = "TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT"
@@ -35,7 +35,7 @@ HomepageGateMode = Literal["off", "on", "auto"]
 
 
 def resolve_mode(raw: str | None = None) -> HomepageGateMode:
-    val = (raw if raw is not None else os.environ.get(ENV_MODE, "off")).strip().lower()
+    val = (raw if raw is not None else os.environ.get(ENV_MODE, "on")).strip().lower()
     if val in ("on", "1", "true", "yes"):
         return "on"
     if val == "auto":
@@ -192,8 +192,8 @@ def should_redirect_root_to_v2(
     mode: HomepageGateMode,
     variant: Literal["v2", "v3"],
 ) -> bool:
-    """auto holdback 用 302 → /v2；on 模式直接在 / serve v2（URL 不变）。"""
-    return mode == "auto" and variant == "v2"
+    """M21-c 后统一在根路径渲染，不再从 / 跳转到 /v2。"""
+    return False
 
 
 def parse_request_query(path_with_query: str) -> dict[str, list[str]]:

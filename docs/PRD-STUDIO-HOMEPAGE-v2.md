@@ -4,8 +4,8 @@
 |------|------|
 | **产品代号** | Travelogue Studio |
 | **文档版本** | **v2.0.5-HOMEPAGE** |
-| **状态** | **Draft · 开发前契约已冻结**（见 [studio-homepage-v2/](./studio-homepage-v2/README.md)；M20 双路由并行：`/` v3 冻结、`/v2` v2 开发中） |
-| **页面路由** | `GET /` → `templates/studio/studio.html`（v3 · 冻结）；`GET /v2` → `templates/studio/studio-home-v2.html`（v2 · Bento），见 [FEATURE-FLAG §1](./studio-homepage-v2/FEATURE-FLAG.md#1-门控点冻结--双路由模型) |
+| **状态** | **Implemented · dogfood**（退役 v3 见 [PRD-M21-studio-homepage-v3-retirement.md](./PRD-M21-studio-homepage-v3-retirement.md)） |
+| **页面路由** | **目标态（M21）**：`GET /` → `studio-home-v2.html`；过渡期见 [FEATURE-FLAG §1](./studio-homepage-v2/FEATURE-FLAG.md#1-门控点冻结--双路由模型) |
 | **权威线框** | [wireframes/studio-homepage-output-first-v1.6.html](./wireframes/studio-homepage-output-first-v1.6.html)（**Web·空态 / iPad·横屏 / 书架** Tab；Mobile Tab 见 §0.4） |
 | **关联文档** | [PRD-PHASE4.md](./PRD-PHASE4.md) · [PRD-PHASE5.md](./PRD-PHASE5.md) · [PRD-STUDIO-DUAL-LAYOUT.md](./PRD-STUDIO-DUAL-LAYOUT.md) · [API-MINIAPP.md](./API-MINIAPP.md) · [SHARING.md](./SHARING.md) |
 | **开发前契约** | [DATA-CONTRACT](./studio-homepage-v2/DATA-CONTRACT.md) · [FEATURE-FLAG](./studio-homepage-v2/FEATURE-FLAG.md) · [PRE-DEV](./studio-homepage-v2/PRE-DEV.md) |

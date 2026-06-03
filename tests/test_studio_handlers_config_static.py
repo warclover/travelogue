@@ -180,7 +180,7 @@ def test_handle_home_injects_token() -> None:
 
 def test_handle_studio_asset_serves_existing_file() -> None:
     handler = MockStaticHandler()
-    path = f"{STUDIO_ASSET_PREFIX}studio.css"
+    path = f"{STUDIO_ASSET_PREFIX}studio-home-v2.css"
     handled = handle_studio_asset(handler, path)
     assert handled is True
     assert handler.status == 200
@@ -190,7 +190,7 @@ def test_handle_studio_asset_serves_existing_file() -> None:
 
 def test_handle_studio_asset_rejects_traversal() -> None:
     handler = MockStaticHandler()
-    path = f"{STUDIO_ASSET_PREFIX}../studio.html"
+    path = f"{STUDIO_ASSET_PREFIX}../studio-home-v2.html"
     handled = handle_studio_asset(handler, path)
     assert handled is True
     assert handler.error_code == 404
@@ -206,7 +206,7 @@ def test_handle_studio_asset_missing_file() -> None:
 
 def test_handle_studio_asset_cache_headers_loopback() -> None:
     handler = MockStaticHandler(studio_host="127.0.0.1")
-    path = f"{STUDIO_ASSET_PREFIX}studio.css"
+    path = f"{STUDIO_ASSET_PREFIX}studio-home-v2.css"
     handled = handle_studio_asset(handler, path)
     assert handled is True
     assert handler.status == 200
@@ -216,7 +216,7 @@ def test_handle_studio_asset_cache_headers_loopback() -> None:
 
 def test_handle_studio_asset_cache_headers_lan() -> None:
     handler = MockStaticHandler(studio_host="192.168.1.5")
-    path = f"{STUDIO_ASSET_PREFIX}studio.css"
+    path = f"{STUDIO_ASSET_PREFIX}studio-home-v2.css"
     handled = handle_studio_asset(handler, path)
     assert handled is True
     assert handler.headers.get("Cache-Control") == "public, max-age=3600"
@@ -224,7 +224,7 @@ def test_handle_studio_asset_cache_headers_lan() -> None:
 
 def test_handle_studio_asset_not_modified() -> None:
     handler = MockStaticHandler(studio_host="127.0.0.1")
-    path = f"{STUDIO_ASSET_PREFIX}studio.css"
+    path = f"{STUDIO_ASSET_PREFIX}studio-home-v2.css"
     handle_studio_asset(handler, path)
     etag = handler.headers.get("ETag")
     assert etag
@@ -244,4 +244,5 @@ def test_handle_home_root_delegates_gate(monkeypatch) -> None:
     handler.path = "/"
     assert handle_home_root(handler) is True
     assert handler.status == 200
-    assert "studio.js" in handler.body.getvalue().decode("utf-8")
+    html = handler.body.getvalue().decode("utf-8")
+    assert 'data-studio-v="4"' in html

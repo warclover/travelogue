@@ -5,11 +5,14 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 from tests._studio_js import read_studio_js
 
 ROOT = Path(__file__).resolve().parents[1]
 STUDIO_HTML = ROOT / "templates" / "studio" / "studio.html"
 PREVIEW_JS = ROOT / "templates" / "studio" / "preview-toolbar.js"
+pytestmark = pytest.mark.legacy_homepage
 
 
 def test_p5_16_single_album_upload_input() -> None:
