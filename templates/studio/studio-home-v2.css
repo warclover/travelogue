@@ -622,7 +622,7 @@ body { overflow-x: clip; overflow-y: visible; }
 .v2-bento__mobile .v2-cell-label {
   grid-row: 2;
   justify-self: center;
-  width: min(100%, calc(var(--v2-phone-height) * var(--v2-phone-ratio) * var(--v2-phone-scale, 1.15)));
+  width: min(100%, calc(var(--v2-phone-height) * var(--v2-phone-ratio) * var(--v2-phone-scale, 1.10)));
   margin-top: 6px;
   padding: 0 2px;
   font-size: 10px;
@@ -772,10 +772,10 @@ body { overflow-x: clip; overflow-y: visible; }
   text-align: right;
 }
 
-/* ── Phone preview（右列通高 · 底部对齐 · 视觉放大 15% 自底向上） ── */
+/* ── Phone preview（右列填满 · 底边 grid 锚定 · 视觉放大 10% 自底向上） ── */
 .v2-phone {
   --v2-phone-ratio: calc(9 / 16);
-  --v2-phone-scale: 1.15;
+  --v2-phone-scale: 1.10;
   --v2-phone-height: clamp(560px, 62vh, 700px);
   grid-row: 1;
   align-self: end;

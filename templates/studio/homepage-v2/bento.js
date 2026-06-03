@@ -24,50 +24,63 @@ function clampPhoneHeight(px) {
   return Math.round(v);
 }
 
-var PHONE_VISUAL_SCALE = 1.15;
+var PHONE_VISUAL_SCALE = 1.10;
+var PHONE_VISUAL_SCALE_MAX = 1.22;
+var PHONE_CAPTION_GAP = 6;
 
-function webPhoneAnchor() {
-  return document.querySelector(".v2-carousel");
+function phoneCaptionReserve() {
+  var caption = document.querySelector(".v2-bento__mobile .v2-cell-label");
+  if (!caption) return 20;
+  return Math.ceil(caption.getBoundingClientRect().height) + PHONE_CAPTION_GAP;
 }
 
-/** 以 Web 轮播 viewport 定手机高度（两侧 footer 行由 CSS Grid 底边对齐）。 */
+/** 按右列可用宽高放大手机框；底边由 grid 锚定，左侧 web 预览不受影响。 */
 function syncPhoneFrameFromWeb() {
   var phone = $("v2-phone");
   if (!phone) return;
-  var carousel = webPhoneAnchor();
-  var viewport = carousel && carousel.querySelector(".v2-carousel__viewport");
   var mobileCell = document.querySelector(".v2-bento__mobile");
-  if (!viewport || !viewport.getBoundingClientRect) return;
-  var h = viewport.getBoundingClientRect().height || 0;
-  var target = clampPhoneHeight(h);
-  if (mobileCell) {
-    var cellW = mobileCell.clientWidth || 0;
-    if (cellW > 0) {
-      var byWidth = Math.floor((cellW * 16) / 9 / PHONE_VISUAL_SCALE);
-      target = Math.min(target, byWidth);
-    }
-  }
+  if (!mobileCell) return;
+
+  var cellW = mobileCell.clientWidth || 0;
+  var cellH = mobileCell.clientHeight || 0;
+  if (cellW <= 0 || cellH <= 0) return;
+
+  var availableH = Math.max(0, cellH - phoneCaptionReserve());
+  var byWidth = Math.floor((cellW * 16) / (9 * PHONE_VISUAL_SCALE));
+  var byHeight = Math.floor(availableH / PHONE_VISUAL_SCALE);
+  var target = clampPhoneHeight(Math.min(byWidth, byHeight));
   if (target <= 0) return;
+
+  var scale = PHONE_VISUAL_SCALE;
+  var maxScale = Math.min(
+    availableH / target,
+    (cellW * 16) / (9 * target)
+  );
+  if (maxScale > scale) {
+    scale = Math.min(maxScale, PHONE_VISUAL_SCALE_MAX);
+  }
+
   phone.style.setProperty("--v2-phone-height", target + "px");
-  phone.style.setProperty("--v2-phone-scale", String(PHONE_VISUAL_SCALE));
+  phone.style.setProperty("--v2-phone-scale", String(scale));
   if (_phoneStripApi && _phoneStripApi.relayout) _phoneStripApi.relayout();
 }
 
 function schedulePhoneFrameSync() {
   requestAnimationFrame(function () {
     syncPhoneFrameFromWeb();
+    requestAnimationFrame(syncPhoneFrameFromWeb);
   });
 }
 
 function ensurePhoneFrameSync() {
   if (_phoneFrameWired) return;
   _phoneFrameWired = true;
-  var viewport = document.querySelector(".v2-carousel__viewport");
-  if (typeof ResizeObserver === "function" && viewport) {
+  var mobileCell = document.querySelector(".v2-bento__mobile");
+  if (typeof ResizeObserver === "function" && mobileCell) {
     _phoneFrameObserver = new ResizeObserver(function () {
       schedulePhoneFrameSync();
     });
-    _phoneFrameObserver.observe(viewport);
+    _phoneFrameObserver.observe(mobileCell);
   }
   window.addEventListener("resize", schedulePhoneFrameSync);
 }
