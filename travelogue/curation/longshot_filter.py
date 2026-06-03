@@ -259,54 +259,9 @@ def chapters_for_longshot_render(
     mmr_lambda: float = DEFAULT_MMR_LAMBDA,
     max_consecutive_same_pattern: int = 2,
 ) -> list[dict]:
-    """Allocate screen budget across chapters proportionally."""
+    """Apply longshot screen cap per chapter (supports chapter-wise export)."""
     if not chapters:
         return []
-
-    per_chapter: list[list[dict]] = []
-    counts: list[int] = []
-    for ch in chapters:
-        screens = [
-            sc
-            for sc in ch.get("screens") or []
-            if not _is_breath_screen(sc)
-            and any(s.get("assetId") for s in sc.get("slots") or [])
-        ]
-        per_chapter.append(screens)
-        counts.append(len(screens))
-
-    total = sum(counts)
-    if total <= max_screens:
-        out: list[dict] = []
-        for ch in chapters:
-            ch_copy = copy.deepcopy(ch)
-            ch_copy["screens"] = [
-                sc for sc in ch.get("screens") or [] if not _is_breath_screen(sc)
-            ]
-            out.append(ch_copy)
-        return out
-
-    budget = max_screens
-    alloc = [0] * len(chapters)
-    for i, n in enumerate(counts):
-        if n == 0:
-            continue
-        share = max(1, round(budget * n / total))
-        alloc[i] = min(n, share)
-
-    while sum(alloc) > max_screens:
-        i = max(range(len(alloc)), key=lambda j: alloc[j])
-        if alloc[i] > 1:
-            alloc[i] -= 1
-        else:
-            break
-
-    while sum(alloc) < max_screens:
-        candidates = [i for i, n in enumerate(counts) if alloc[i] < n]
-        if not candidates:
-            break
-        i = max(candidates, key=lambda j: counts[j] - alloc[j])
-        alloc[i] += 1
 
     pick_kwargs = {
         "assets_by_id": assets_by_id or {},
@@ -315,17 +270,24 @@ def chapters_for_longshot_render(
         "max_consecutive_same_pattern": max_consecutive_same_pattern,
     }
     out: list[dict] = []
-    for ch, screens, cap in zip(chapters, per_chapter, alloc, strict=True):
+    for ch in chapters:
         ch_copy = copy.deepcopy(ch)
-        if not screens:
+        content_screens = [
+            sc
+            for sc in ch.get("screens") or []
+            if not _is_breath_screen(sc)
+            and any(s.get("assetId") for s in sc.get("slots") or [])
+        ]
+        if not content_screens:
             out.append(ch_copy)
             continue
-        if len(screens) <= cap:
-            ch_copy["screens"] = [
-                sc for sc in ch.get("screens") or [] if not _is_breath_screen(sc)
-            ]
+        if len(content_screens) <= max_screens:
+            ch_copy["screens"] = content_screens
         else:
-            picked = select_longshot_screens(screens, max_screens=cap, **pick_kwargs)
-            ch_copy["screens"] = picked
+            ch_copy["screens"] = select_longshot_screens(
+                ch.get("screens") or [],
+                max_screens=max_screens,
+                **pick_kwargs,
+            )
         out.append(ch_copy)
     return out

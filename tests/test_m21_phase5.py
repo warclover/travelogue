@@ -61,6 +61,35 @@ def test_longshot_filter_strips_breath_from_render():
     assert "screen-breath-pause" not in patterns
 
 
+def test_longshot_filter_uses_per_chapter_budget_not_global():
+    """Short chapters must not be starved when another chapter has many screens."""
+
+    def chapter(ch_id: str, n_content: int) -> dict:
+        return {
+            "id": ch_id,
+            "screens": [
+                {
+                    "screenId": f"{ch_id}-s{i}",
+                    "patternId": "screen-landscape-1",
+                    "slots": [{"assetId": f"{ch_id}-a{i}"}],
+                }
+                for i in range(n_content)
+            ],
+        }
+
+    chapters = [chapter("c1", 22), chapter("c2", 6), chapter("c3", 14), chapter("c4", 29)]
+    filtered = chapters_for_longshot_render(
+        chapters,
+        max_screens=12,
+        enable_mmr=False,
+        max_consecutive_same_pattern=99,
+    )
+    assert len(filtered[0]["screens"]) <= 12
+    assert len(filtered[1]["screens"]) == 6
+    assert len(filtered[2]["screens"]) <= 12
+    assert len(filtered[3]["screens"]) <= 12
+
+
 def test_insert_breath_screens_in_chapters():
     chapters = [{"id": "ch-1", "screens": _sample_screens(9)}]
     n = insert_breath_screens_in_chapters(chapters, interval=4)
