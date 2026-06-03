@@ -10,12 +10,12 @@ import {
   isJobBusyResponse,
 } from "./js/http.js";
 import { startJobPollInterval, pollJobUntilDone } from "./js/job-poll.js";
+import { buildLongshotRequest } from "./js/longshot-client.js";
 import { STUDIO_USER_NOTES_MAX_LEN } from "./js/constants.js";
 
 var isJobBusy409 = isJobBusyResponse;
 var HINT_KEY = "travelogue.studio.editHint.dismissed";
 var COLLAPSE_KEY = "travelogue.studio.previewToolbar.collapsed";
-var LONGSHOT_SCALE = 2;
 var SLOW_JOB_MS = 30000;
 var pollCancel = null;
 var longshotJobId = null;
@@ -353,11 +353,9 @@ var narrateJobId = null;
     setLongshotStatus(root, "正在生成长图…", true);
     setSlowHint(root, "", false);
 
-    postJsonBusyRetry("/__travelogue/longshot", {
-      tripId: tripId,
-      scale: LONGSHOT_SCALE,
-      format: "png",
-    }, { onBusy: function () { showToolbarToast("排队中，请稍候…"); } })
+    postJsonBusyRetry("/__travelogue/longshot", buildLongshotRequest(tripId, "preview"), {
+      onBusy: function () { showToolbarToast("排队中，请稍候…"); },
+    })
       .then(function (res) {
         if (isJobBusy409(res)) {
           setLongshotStatus(root, "排队中，请稍候…", true);

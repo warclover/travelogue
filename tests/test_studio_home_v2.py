@@ -347,9 +347,22 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "preventScroll" in modal_js
 
     menu = (STUDIO_DIR / "homepage-v2" / "shelf-menu.js").read_text(encoding="utf-8")
+    assert "保存长图" in menu
     assert "删除画册" in menu
     assert "shelf_menu_open" in menu
     assert "deleteTrip" in menu
+    assert "runShelfLongshot" in menu
+    assert "shelf-longshot.js" in menu
+
+    longshot_client = (STUDIO_DIR / "js" / "longshot-client.js").read_text(encoding="utf-8")
+    assert "LONGSHOT_PRESETS" in longshot_client
+    assert "copyDisplay" in longshot_client
+    assert '"photos"' in longshot_client
+    assert "scale: 3" in longshot_client
+
+    shelf_longshot = (STUDIO_DIR / "homepage-v2" / "shelf-longshot.js").read_text(encoding="utf-8")
+    assert "shelf_longshot_start" in shelf_longshot
+    assert "V2.reroute" in shelf_longshot
 
     trips_client = (STUDIO_DIR / "homepage-v2" / "trips-client.js").read_text(encoding="utf-8")
     assert "deleteTrip" in trips_client
@@ -417,6 +430,7 @@ def test_studio_home_v2_telemetry_wired() -> None:
         "sheet_close", "sheet_abandon", "lightbox_open",
         "spread_page_view", "shelf_resume_click",
         "shelf_menu_open", "shelf_delete_confirm", "shelf_delete_success",
+        "shelf_longshot_start", "shelf_longshot_success",
     ):
         assert ev in ALLOWED_STUDIO_HOMEPAGE_EVENTS
 

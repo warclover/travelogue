@@ -80,6 +80,16 @@ blur_threshold = max(
 
 **原则（D-P9-13）**：Pass 1 目标 **明显废片**；80% 地板主要由 **Pass 3** 保障。
 
+### 3.2.1 P9.2 分桶阈值（可选）
+
+当 `cull.bucketed_blur_thresholds=true` 时，Pass 1 按 `mediaClass` 分桶计算 blur 阈值：
+
+```text
+bucket_threshold(mediaClass) = max(sharpness_absolute_min, P2(bucket) * 0.85)
+```
+
+仅当桶内样本数 `>= bucketed_blur_min_samples` 时生效；否则回退全局阈值。
+
 ### 3.3 Pass 1 后统计
 
 写入 `cullSummary.excludedByReason` 分项。
@@ -94,7 +104,8 @@ blur_threshold = max(
 |------|------|
 | 组内 **全非 featured** 且 ingest 已留 1 张 | **通常 skip**（与 ingest 一致） |
 | 组内含 **≥1 featured** | **全部 featured** + **最多 1** 张非 featured（`cullScore` 最高） |
-| `cull --recalc` | 对仍共享 `cullGroupId` 的多张 **强制** 择优 |
+| `cull.recalc_strict_groups=true`（P9.2） | material-only 组启用 1 留 N 删的强制择优 |
+| `cull --recalc` | 对仍共享 `cullGroupId` 的多张可配合 strict 模式强制择优 |
 
 ### 4.2 分组键
 
@@ -119,6 +130,28 @@ cullScore = 0.55 × norm(sharpness)
 ### 5.2 评分 · P1（W2 · 可选）
 
 见 v0.9.0 公式；`cull.mode=rules` 强制 P0。
+
+### 5.2.1 P9.2 配置化权重
+
+Pass 3 权重由 `cull.score` 配置驱动，默认值保持现网基线：
+
+```yaml
+cull:
+  score:
+    rules:
+      sharpness_weight: 0.55
+      media_weight: 0.25
+    ml:
+      sharpness_weight: 0.35
+      aesthetic_weight: 0.35
+      media_weight: 0.20
+      bias: 0.10
+```
+
+并支持 `cull.score.duplicate_group_penalty`（默认 0.0）：
+
+- 对同 `cullGroupId` 的非代表样本施加轻惩罚（用于减少同质化）
+- 设为 0 时关闭，不改变当前策略
 
 ### 5.3 80% 地板（修订口径）
 

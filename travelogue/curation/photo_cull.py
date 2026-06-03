@@ -80,17 +80,45 @@ def _aesthetic_score(asset: dict) -> float | None:
     return None
 
 
-def _cull_score(asset: dict, *, sharp_lo: float, sharp_hi: float, use_ml: bool) -> float:
+def _cull_score(
+    asset: dict,
+    *,
+    sharp_lo: float,
+    sharp_hi: float,
+    use_ml: bool,
+    cfg: CullConfig,
+) -> float:
     sharp_part = _norm_sharpness(asset_sharpness(asset), lo=sharp_lo, hi=sharp_hi)
     media = _media_weight(asset)
     aesthetic = _aesthetic_score(asset) if use_ml else None
     if aesthetic is not None:
-        return 0.35 * sharp_part + 0.35 * aesthetic + 0.20 * media + 0.10
-    return 0.55 * sharp_part + 0.25 * media
+        return (
+            cfg.score_sharpness_weight_ml * sharp_part
+            + cfg.score_aesthetic_weight_ml * aesthetic
+            + cfg.score_media_weight_ml * media
+            + cfg.score_bias_ml
+        )
+    return (
+        cfg.score_sharpness_weight_rules * sharp_part
+        + cfg.score_media_weight_rules * media
+    )
 
 
-def _preliminary_score(asset: dict, *, sharp_lo: float, sharp_hi: float, use_ml: bool = False) -> float:
-    return _cull_score(asset, sharp_lo=sharp_lo, sharp_hi=sharp_hi, use_ml=use_ml)
+def _preliminary_score(
+    asset: dict,
+    *,
+    sharp_lo: float,
+    sharp_hi: float,
+    use_ml: bool = False,
+    cfg: CullConfig,
+) -> float:
+    return _cull_score(
+        asset,
+        sharp_lo=sharp_lo,
+        sharp_hi=sharp_hi,
+        use_ml=use_ml,
+        cfg=cfg,
+    )
 
 
 def _cull_group_id(asset: dict) -> str | None:
@@ -103,9 +131,25 @@ def _cull_group_id(asset: dict) -> str | None:
     return None
 
 
-def _exclude(asset: dict, reason: str, stats: CullStats) -> None:
+def _set_cull_explain(asset: dict, detail: str | None, *, cfg: CullConfig) -> None:
+    if not cfg.enable_cull_explain or not detail:
+        return
+    q = asset.setdefault("quality", {})
+    if isinstance(q, dict):
+        q["cullExplain"] = detail
+
+
+def _exclude(
+    asset: dict,
+    reason: str,
+    stats: CullStats,
+    *,
+    cfg: CullConfig,
+    detail: str | None = None,
+) -> None:
     asset["layoutEligible"] = False
     asset["excludeReason"] = reason
+    _set_cull_explain(asset, detail, cfg=cfg)
     aid = str(asset.get("id") or "")
     if aid:
         stats.bump(reason, aid)
@@ -126,7 +170,7 @@ def _reset_for_recull(assets: list[dict], cfg: CullConfig) -> None:
             a.pop("excludeReason", None)
         if _is_featured(a, cfg):
             a["layoutEligible"] = True
-        elif reason in CULL_EXCLUDE_REASONS or a.get("layoutEligible") is False:
+        elif reason in CULL_EXCLUDE_REASONS:
             a["layoutEligible"] = True
 
 
@@ -141,16 +185,41 @@ def _pass1_hard_exclude(
     sharp_vals = [asset_sharpness(a) for a in non_feat]
     p2 = _percentile(sharp_vals, cfg.blur_percentile) if sharp_vals else 0.0
     blur_threshold = max(cfg.sharpness_absolute_min, p2 * 0.85)
+    bucket_thresholds: dict[str, float] = {}
+    if cfg.bucketed_blur_thresholds:
+        by_bucket: dict[str, list[float]] = {}
+        for a in non_feat:
+            bucket = str(a.get("mediaClass") or "photo")
+            by_bucket.setdefault(bucket, []).append(asset_sharpness(a))
+        for bucket, values in by_bucket.items():
+            if len(values) < max(1, cfg.bucketed_blur_min_samples):
+                continue
+            bp = _percentile(values, cfg.blur_percentile)
+            bucket_thresholds[bucket] = max(cfg.sharpness_absolute_min, bp * 0.85)
 
     for a in assets:
         if _is_featured(a, cfg):
             continue
         mc = str(a.get("mediaClass") or "")
         if mc in hard_classes:
-            _exclude(a, "media_class", stats)
+            _exclude(
+                a,
+                "media_class",
+                stats,
+                cfg=cfg,
+                detail=f"mediaClass={mc} in hard_exclude_media_classes",
+            )
             continue
-        if asset_sharpness(a) < blur_threshold:
-            _exclude(a, "blur", stats)
+        threshold = bucket_thresholds.get(mc, blur_threshold)
+        sharp = asset_sharpness(a)
+        if sharp < threshold:
+            _exclude(
+                a,
+                "blur",
+                stats,
+                cfg=cfg,
+                detail=f"sharpness={sharp:.2f} < blur_threshold={threshold:.2f} (bucket={mc})",
+            )
 
 
 def _pass2_group_winners(
@@ -184,7 +253,13 @@ def _pass2_group_winners(
             for a in group:
                 if _is_featured(a, cfg):
                     continue
-                sc = _preliminary_score(a, sharp_lo=sharp_lo, sharp_hi=sharp_hi, use_ml=use_ml)
+                sc = _preliminary_score(
+                    a,
+                    sharp_lo=sharp_lo,
+                    sharp_hi=sharp_hi,
+                    use_ml=use_ml,
+                    cfg=cfg,
+                )
                 if sc > best_score:
                     best_score = sc
                     keep_material = a
@@ -192,22 +267,93 @@ def _pass2_group_winners(
                 if _is_featured(a, cfg):
                     continue
                 if a is not keep_material:
-                    _exclude(a, "duplicate_group", stats)
-        # PRD §4.1: material-only groups skip Pass 2 (ingest dedupe is authoritative).
+                    _exclude(
+                        a,
+                        "duplicate_group",
+                        stats,
+                        cfg=cfg,
+                        detail=f"group={_cull_group_id(a) or ''} lost_to={str((keep_material or {}).get('id') or '')}",
+                    )
+            continue
+        if not cfg.recalc_strict_groups:
+            # Default path: material-only groups skip Pass 2; ingest dedupe stays authoritative.
+            continue
+        keep: dict | None = None
+        best_score = -1.0
+        for a in group:
+            sc = _preliminary_score(
+                a,
+                sharp_lo=sharp_lo,
+                sharp_hi=sharp_hi,
+                use_ml=use_ml,
+                cfg=cfg,
+            )
+            if sc > best_score:
+                best_score = sc
+                keep = a
+        for a in group:
+            if keep is not None and a is not keep:
+                _exclude(
+                    a,
+                    "duplicate_group",
+                    stats,
+                    cfg=cfg,
+                    detail=f"group={_cull_group_id(a) or ''} lost_to={str((keep or {}).get('id') or '')}",
+                )
 
 
 def _assign_scores_and_ranks(
     assets: list[dict],
     *,
+    cfg: CullConfig,
     sharp_lo: float,
     sharp_hi: float,
     use_ml: bool = False,
 ) -> list[tuple[dict, float]]:
+    group_members: dict[str, list[dict]] = {}
+    for a in assets:
+        gid = _cull_group_id(a)
+        if gid:
+            group_members.setdefault(gid, []).append(a)
+    group_best_id: dict[str, str] = {}
+    for gid, members in group_members.items():
+        if len(members) <= 1:
+            continue
+        best = max(
+            members,
+            key=lambda item: _preliminary_score(
+                item,
+                sharp_lo=sharp_lo,
+                sharp_hi=sharp_hi,
+                use_ml=use_ml,
+                cfg=cfg,
+            ),
+        )
+        best_id = str(best.get("id") or "")
+        if best_id:
+            group_best_id[gid] = best_id
+
     scored: list[tuple[dict, float]] = []
     for a in assets:
         if not a.get("layoutEligible", True):
             continue
-        sc = _preliminary_score(a, sharp_lo=sharp_lo, sharp_hi=sharp_hi, use_ml=use_ml)
+        sc = _preliminary_score(
+            a,
+            sharp_lo=sharp_lo,
+            sharp_hi=sharp_hi,
+            use_ml=use_ml,
+            cfg=cfg,
+        )
+        gid = _cull_group_id(a)
+        aid = str(a.get("id") or "")
+        if (
+            gid
+            and gid in group_best_id
+            and aid
+            and aid != group_best_id[gid]
+            and cfg.score_duplicate_group_penalty > 0
+        ):
+            sc = max(0.0, sc - cfg.score_duplicate_group_penalty)
         q = a.setdefault("quality", {})
         if isinstance(q, dict):
             q["cullScore"] = round(sc, 4)
@@ -244,14 +390,25 @@ def _pass3_quota(
     sharp_vals = [asset_sharpness(a) for a in pool]
     sharp_lo = min(sharp_vals) if sharp_vals else 0.0
     sharp_hi = max(sharp_vals) if sharp_vals else 1.0
-    scored = _assign_scores_and_ranks(pool, sharp_lo=sharp_lo, sharp_hi=sharp_hi, use_ml=use_ml)
+    scored = _assign_scores_and_ranks(
+        pool,
+        cfg=cfg,
+        sharp_lo=sharp_lo,
+        sharp_hi=sharp_hi,
+        use_ml=use_ml,
+    )
     if len(scored) <= n_min:
         meta["pass3Skipped"] = "pool_at_or_below_floor"
         return meta
 
-    keep_ids = {str(t[0].get("id")) for t in scored[:n_min]}
     for a, _ in scored[n_min:]:
-        _exclude(a, "cull_quota", stats)
+        _exclude(
+            a,
+            "cull_quota",
+            stats,
+            cfg=cfg,
+            detail=f"rank={int((a.get('quality') or {}).get('cullRank') or 0)} > keep_top={n_min}",
+        )
 
     eligible_non_feat = sum(
         1 for a in assets if a.get("layoutEligible", True) and not _is_featured(a, cfg)
@@ -346,7 +503,13 @@ def run_photo_cull(
 
     for a in eligible:
         if _is_featured(a, cfg):
-            sc = _preliminary_score(a, sharp_lo=sharp_lo, sharp_hi=sharp_hi, use_ml=use_ml)
+            sc = _preliminary_score(
+                a,
+                sharp_lo=sharp_lo,
+                sharp_hi=sharp_hi,
+                use_ml=use_ml,
+                cfg=cfg,
+            )
             q = a.setdefault("quality", {})
             if isinstance(q, dict):
                 q["cullScore"] = round(sc, 4)
@@ -355,6 +518,7 @@ def run_photo_cull(
 
     summary: dict[str, Any] = {
         "enabled": True,
+        "failOpen": False,
         "mode": runtime_mode,
         "scanned": n_scan,
         "featuredCount": n_feat,
@@ -405,6 +569,7 @@ def apply_photo_cull(
                 _clear_cull_exclude_reason(a)
         summary = {
             "enabled": True,
+            "failOpen": True,
             "error": str(exc),
             "layoutEligibleCount": len(_image_assets(body)),
         }
@@ -414,6 +579,7 @@ def apply_photo_cull(
         curation.pop("excludedByCullAssetIds", None)
         if ingest_stats is not None:
             ingest_stats["cull_error"] = str(exc)
+            ingest_stats["cull_fail_open"] = True
         return summary
 
     curation = trip.setdefault("curation", {})
@@ -435,6 +601,7 @@ def apply_photo_cull(
         ingest_stats["cull_excluded"] = summary.get("excludedByCull", 0)
         ingest_stats["cull_layout_eligible"] = summary.get("layoutEligibleCount", 0)
         ingest_stats["cull_user_line"] = summary.get("cullUserLine")
+        ingest_stats["cull_fail_open"] = bool(summary.get("failOpen"))
         for reason, count in (summary.get("excludedByReason") or {}).items():
             ingest_stats[f"cull_{reason}"] = count
 

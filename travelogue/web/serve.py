@@ -70,8 +70,12 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             with app_config_scope(cfg) as active:
                 yield active
 
+    def _request_path(self) -> str:
+        """Percent-decode path so trip assets with non-ASCII names resolve on disk."""
+        return unquote(self.path.split("?", 1)[0])
+
     def do_GET(self) -> None:  # noqa: N802
-        path = self.path.split("?", 1)[0]
+        path = self._request_path()
         if path in FAVICON_SILENT_PATHS:
             self.send_response(204)
             self.end_headers()
@@ -82,6 +86,7 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             parts = self.studio_trip_parts(path)
             if parts is not None:
                 trip_id, rel_path = parts
+                rel_path = unquote(rel_path)
                 if self._serve_trip_static(trip_id, rel_path):
                     return
             self.send_error(404)

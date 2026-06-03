@@ -67,6 +67,39 @@ def test_pass1_excludes_screenshot_and_blur() -> None:
     assert summary["excludedByReason"]["media_class"] == 1
 
 
+def test_bucketed_blur_thresholds_reduce_cross_bucket_over_kill() -> None:
+    assets = [
+        _asset("l1", sharp=120.0, media_class="photo"),
+        _asset("l2", sharp=110.0, media_class="photo"),
+        _asset("p1", sharp=22.0, media_class="archive"),
+        _asset("p2", sharp=21.0, media_class="archive"),
+    ]
+    cfg_global = CullConfig(
+        enabled=True,
+        blur_percentile=50.0,
+        bucketed_blur_thresholds=False,
+        sharpness_absolute_min=0.0,
+        min_keep=10,
+        keep_ratio_floor=0.0,
+    )
+    global_assets = [dict(a) for a in assets]
+    run_photo_cull(global_assets, cfg=cfg_global)
+    assert any(a["id"].startswith("p") and not a.get("layoutEligible", True) for a in global_assets)
+
+    cfg_bucketed = CullConfig(
+        enabled=True,
+        blur_percentile=50.0,
+        bucketed_blur_thresholds=True,
+        bucketed_blur_min_samples=2,
+        sharpness_absolute_min=0.0,
+        min_keep=10,
+        keep_ratio_floor=0.0,
+    )
+    bucketed_assets = [dict(a) for a in assets]
+    run_photo_cull(bucketed_assets, cfg=cfg_bucketed)
+    assert all(a.get("layoutEligible", True) for a in bucketed_assets if a["id"].startswith("p"))
+
+
 def test_featured_exempt_from_cull() -> None:
     cfg = CullConfig(enabled=True, blur_percentile=50.0)
     assets = [
@@ -135,6 +168,26 @@ def test_pass2_skips_material_only_groups() -> None:
     assert not any(a.get("excludeReason") == "duplicate_group" for a in assets)
 
 
+def test_pass2_material_only_groups_collapse_when_strict_enabled() -> None:
+    cfg = CullConfig(
+        enabled=True,
+        min_keep=1,
+        keep_ratio_floor=0.0,
+        recalc_strict_groups=True,
+    )
+    assets = [
+        _asset("m1", sharp=120.0, dedupe_group="g1"),
+        _asset("m2", sharp=200.0, dedupe_group="g1"),
+        _asset("m3", sharp=180.0, dedupe_group="g1"),
+    ]
+    run_photo_cull(assets, cfg=cfg)
+    kept = [a for a in assets if a.get("layoutEligible", True)]
+    assert len(kept) == 1
+    assert kept[0]["id"] == "m2"
+    dropped = [a for a in assets if not a.get("layoutEligible", True)]
+    assert all(a.get("excludeReason") == "duplicate_group" for a in dropped)
+
+
 def test_pass2_group_keeps_one_material_and_all_featured() -> None:
     cfg = CullConfig(enabled=True, min_keep=1, keep_ratio_floor=0.0)
     assets = [
@@ -161,14 +214,17 @@ def test_pass3_skipped_when_pool_at_floor() -> None:
 def test_apply_photo_cull_writes_trip_curation() -> None:
     cfg = CullConfig(enabled=True, min_keep=1, keep_ratio_floor=0.0)
     trip: dict = {"curation": {}}
+    ingest_stats: dict = {}
     assets = [
         _asset("a1", sharp=200.0),
         _asset("a2", sharp=1.0, media_class="screenshot"),
     ]
-    summary = apply_photo_cull(trip, assets, cfg=AppConfig(cull=cfg))
+    summary = apply_photo_cull(trip, assets, cfg=AppConfig(cull=cfg), ingest_stats=ingest_stats)
     assert trip["curation"]["cullUserLine"].startswith("经挑选")
     assert "cullSummary" in trip["curation"]
     assert summary["cullUserLine"] == trip["curation"]["cullUserLine"]
+    assert summary["failOpen"] is False
+    assert ingest_stats.get("cull_fail_open") is False
     assert "a2" in trip["curation"]["excludedByCullAssetIds"]
 
 
@@ -279,6 +335,26 @@ def test_incremental_ingest_reculls_full_trip(tmp_path: Path) -> None:
     assert second_summary.get("scanned") == len(trip["assets"])
 
 
+def test_recull_preserves_non_cull_exclusions() -> None:
+    cfg = CullConfig(enabled=True, min_keep=1, keep_ratio_floor=0.0)
+    assets = [
+        {
+            "id": "lowres",
+            "type": "image",
+            "mediaClass": "photo",
+            "layoutEligible": False,
+            "excludeReason": "low_resolution",
+            "quality": {"sharpness": 180.0},
+        },
+        _asset("ok", sharp=200.0),
+    ]
+    run_photo_cull(assets, cfg=cfg)
+    by_id = {a["id"]: a for a in assets}
+    assert by_id["lowres"]["layoutEligible"] is False
+    assert by_id["lowres"]["excludeReason"] == "low_resolution"
+    assert by_id["ok"]["layoutEligible"] is True
+
+
 def test_ac_p9_02_golden_signoff_keep_ratio() -> None:
     """AC-P9-02 · golden signoff 登记：cull 层保留率 ≥ floor 或 pass3 跳过。"""
     path = Path(__file__).resolve().parents[1] / "docs/acceptance-records/phase9-golden-cull-signoff.json"
@@ -314,10 +390,18 @@ def test_cull_fail_open_restores_eligible(monkeypatch: pytest.MonkeyPatch) -> No
         _asset("a1", sharp=1.0, media_class="screenshot"),
         _asset("a2", sharp=200.0),
     ]
-    summary = apply_photo_cull(trip, assets, cfg=AppConfig(cull=CullConfig(enabled=True)))
+    ingest_stats: dict = {}
+    summary = apply_photo_cull(
+        trip,
+        assets,
+        cfg=AppConfig(cull=CullConfig(enabled=True)),
+        ingest_stats=ingest_stats,
+    )
     assert all(a.get("layoutEligible", True) for a in assets)
     assert all("excludeReason" not in a for a in assets)
+    assert summary.get("failOpen") is True
     assert summary.get("error")
+    assert ingest_stats.get("cull_fail_open") is True
     assert trip["curation"]["cullSummary"].get("error")
 
 
@@ -334,6 +418,46 @@ def test_keep_ratio_floor_or_pass3_skip() -> None:
         assert non_feat >= len(assets) or summary["pass3Skipped"] == "pool_at_or_below_floor"
     else:
         assert non_feat >= max(floor, int(cfg.keep_ratio_floor * n_scan))
+
+
+def test_pass3_weights_from_config_affect_rank() -> None:
+    cfg = CullConfig(
+        enabled=True,
+        min_keep=1,
+        keep_ratio_floor=0.0,
+        score_sharpness_weight_rules=1.0,
+        score_media_weight_rules=0.0,
+    )
+    assets = [
+        _asset("a-sharp", sharp=200.0, media_class="archive"),
+        _asset("a-media", sharp=30.0, media_class="photo"),
+    ]
+    run_photo_cull(assets, cfg=cfg)
+    by_id = {a["id"]: a for a in assets}
+    assert by_id["a-sharp"]["layoutEligible"] is True
+    assert by_id["a-media"]["layoutEligible"] is False
+    assert by_id["a-media"]["excludeReason"] == "cull_quota"
+
+
+def test_duplicate_group_penalty_changes_rank() -> None:
+    cfg = CullConfig(
+        enabled=True,
+        min_keep=1,
+        keep_ratio_floor=0.0,
+        score_sharpness_weight_rules=0.8,
+        score_media_weight_rules=0.2,
+        score_duplicate_group_penalty=0.2,
+    )
+    assets = [
+        _asset("a1", sharp=100.0, media_class="photo", dedupe_group="g1"),
+        _asset("a2", sharp=98.0, media_class="photo", dedupe_group="g1"),
+        _asset("b1", sharp=98.0, media_class="photo"),
+    ]
+    run_photo_cull(assets, cfg=cfg)
+    by_id = {a["id"]: a for a in assets}
+    assert by_id["a2"]["layoutEligible"] is False
+    assert by_id["a2"]["excludeReason"] == "cull_quota"
+    assert by_id["a2"].get("quality", {}).get("cullScore", 1.0) < by_id["b1"].get("quality", {}).get("cullScore", 0.0)
 
 
 def test_ingest_cull_summary_includes_post_low_res_counts(tmp_path: Path) -> None:
@@ -363,6 +487,18 @@ def test_ingest_cull_summary_includes_post_low_res_counts(tmp_path: Path) -> Non
     low_res_ids = (trip.get("curation") or {}).get("excludedLowResAssetIds") or []
     if low_res_ids:
         assert final < pre
+
+
+def test_cull_explain_written_for_excluded_assets() -> None:
+    cfg = CullConfig(enabled=True, blur_percentile=50.0, enable_cull_explain=True)
+    assets = [
+        _asset("sharp", sharp=200.0),
+        _asset("blur", sharp=1.0),
+    ]
+    run_photo_cull(assets, cfg=cfg)
+    blur = next(a for a in assets if a["id"] == "blur")
+    assert blur.get("excludeReason") == "blur"
+    assert "cullExplain" in (blur.get("quality") or {})
 
 
 def test_max_photos_exceeded_warn_only() -> None:

@@ -6,6 +6,22 @@ import { STUDIO_DEMO_SHOWCASE_BASE } from "./store.js";
 
 const MANIFEST_URL = STUDIO_DEMO_SHOWCASE_BASE + "manifest.json";
 
+/** 编码 trip 静态资源 URL（中文文件名等 · 与 serve.py unquote 对称）。 */
+export function encodeTripAssetUrl(url) {
+  if (!url) return "";
+  var s = String(url);
+  if (/^https?:\/\//i.test(s)) return s;
+  if (s.charAt(0) !== "/") return s;
+  var slash = s.indexOf("/", 1);
+  if (slash < 0) return s;
+  var base = s.slice(0, slash);
+  var tail = s.slice(slash + 1);
+  if (!tail) return s;
+  return base + "/" + tail.split("/").map(function (seg) {
+    return encodeURIComponent(seg);
+  }).join("/");
+}
+
 /** 将 demo manifest 相对路径拼成可访问的静态 URL。 */
 export function assetUrl(relPath) {
   if (!relPath) return "";
@@ -15,7 +31,7 @@ export function assetUrl(relPath) {
 /** 单页图片 URL（demo webp 或 user trip 绝对 url）。 */
 export function pageImageUrl(manifest, page) {
   if (!page) return "";
-  if (page.url) return String(page.url);
+  if (page.url) return encodeTripAssetUrl(page.url);
   return assetUrl(page.webp);
 }
 
@@ -43,7 +59,7 @@ export function longshotPages(manifest) {
 /** longshotPages 条目 URL。 */
 export function longshotPageUrl(manifest, page) {
   if (!page) return "";
-  if (page.url) return String(page.url);
+  if (page.url) return encodeTripAssetUrl(page.url);
   return manifestAssetUrl(manifest, "longshot");
 }
 

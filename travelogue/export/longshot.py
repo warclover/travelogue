@@ -61,12 +61,39 @@ class _PlaywrightBrowserPool:
         self._playwright: Any = None
         self._browser: Any = None
         self._idle_timer: threading.Timer | None = None
+        self._owner_thread_id: int | None = None
+
+    def _close_unlocked(self) -> None:
+        if self._idle_timer:
+            self._idle_timer.cancel()
+            self._idle_timer = None
+        if self._browser:
+            try:
+                self._browser.close()
+            except Exception:
+                _log.debug("browser close failed during pool cleanup", exc_info=True)
+            self._browser = None
+        if self._playwright:
+            try:
+                self._playwright.stop()
+            except Exception:
+                _log.debug("playwright stop failed during pool cleanup", exc_info=True)
+            self._playwright = None
+        self._owner_thread_id = None
 
     def acquire(self) -> Any:
         with self._lock:
             if self._idle_timer:
                 self._idle_timer.cancel()
                 self._idle_timer = None
+            tid = threading.get_ident()
+            if self._browser is not None and self._owner_thread_id != tid:
+                _log.debug(
+                    "playwright browser thread mismatch (%s vs %s); recreating",
+                    self._owner_thread_id,
+                    tid,
+                )
+                self._close_unlocked()
             if self._browser is None:
                 try:
                     from playwright.sync_api import sync_playwright
@@ -78,23 +105,12 @@ class _PlaywrightBrowserPool:
                     ) from exc
                 self._playwright = sync_playwright().start()
                 self._browser = self._playwright.chromium.launch(headless=True)
+                self._owner_thread_id = tid
             return self._browser
 
     def _close(self) -> None:
         with self._lock:
-            if self._browser:
-                try:
-                    self._browser.close()
-                except Exception:
-                    _log.debug("browser close failed during idle cleanup", exc_info=True)
-                self._browser = None
-            if self._playwright:
-                try:
-                    self._playwright.stop()
-                except Exception:
-                    _log.debug("playwright stop failed during idle cleanup", exc_info=True)
-                self._playwright = None
-            self._idle_timer = None
+            self._close_unlocked()
 
     def release(self) -> None:
         with self._lock:
@@ -102,7 +118,8 @@ class _PlaywrightBrowserPool:
                 self._idle_timer.cancel()
 
             def _idle_close() -> None:
-                self._close()
+                with self._lock:
+                    self._close_unlocked()
 
             self._idle_timer = threading.Timer(self.IDLE_SECONDS, _idle_close)
             self._idle_timer.daemon = True
@@ -181,6 +198,18 @@ def _trip_title(trip_dir: Path) -> str:
         return "travelogue"
     meta = (json.loads(trip_json.read_text(encoding="utf-8")).get("meta") or {})
     return str(meta.get("title") or "travelogue").strip() or "travelogue"
+
+
+_APPLY_PHOTOS_MODE_JS = """() => {
+  document.documentElement.setAttribute('data-photos-only', 'on');
+  document.documentElement.setAttribute('data-copy-display', 'photos');
+}"""
+
+
+def _apply_copy_display(page, copy_display: str) -> None:
+    if str(copy_display).strip().lower() != "photos":
+        return
+    page.evaluate(_APPLY_PHOTOS_MODE_JS)
 
 
 def _resolve_longshot_url(
@@ -425,6 +454,7 @@ def export_trip_longshot(
     timeout_ms: int = 180_000,
     watermark: bool = True,
     progress: ProgressFn | None = None,
+    copy_display: str = "full",
 ) -> LongshotExportResult:
     trip_dir = trip_dir.resolve()
     longshot_html = trip_dir / LONGSHOT_INDEX_NAME
@@ -462,6 +492,7 @@ def export_trip_longshot(
             "() => window.TravelogueLongshot && document.documentElement.dataset.longshot === 'on'",
             timeout=30_000,
         )
+        _apply_copy_display(page, copy_display)
 
         metrics = _page_metrics(page)
         chapter_count = max(int(metrics.get("chapterCount") or 0), 1)

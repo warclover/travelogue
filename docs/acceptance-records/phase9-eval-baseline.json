@@ -1,0 +1,91 @@
+{
+  "cull_keep_ratio_non_featured": {
+    "avg": 0.8229,
+    "max": 0.8276,
+    "min": 0.8182
+  },
+  "excluded_by_reason": {
+    "cull_quota": 11
+  },
+  "fail_open_rate": 0.0,
+  "final_keep_ratio_non_featured": {
+    "avg": 0.8077,
+    "max": 0.8276,
+    "min": 0.7879
+  },
+  "generatedAt": "2026-06-02T12:01:16.336806Z",
+  "ingest_elapsed_ms": {
+    "avg": 73670.8,
+    "max": 75077.6,
+    "min": 72264.0
+  },
+  "perTrip": [
+    {
+      "cull_keep_ratio_non_featured": 0.8276,
+      "fail_open": false,
+      "final_keep_ratio_non_featured": 0.8276,
+      "ingest_elapsed_ms": 72264.0,
+      "scanned": 29,
+      "tripId": "mao"
+    },
+    {
+      "cull_keep_ratio_non_featured": 0.8182,
+      "fail_open": false,
+      "final_keep_ratio_non_featured": 0.7879,
+      "ingest_elapsed_ms": 75077.6,
+      "scanned": 33,
+      "tripId": "maomi"
+    }
+  ],
+  "phase": "P9.2-offline-baseline",
+  "phase92Recommendations": {
+    "m4_bucketed_blur_thresholds": {
+      "bucketed_blur_min_samples": 3,
+      "enabled": false,
+      "reason": "blur 占比低，先保持关闭，待样本规模增大后再灰度"
+    },
+    "m5_duplicate_group_penalty": {
+      "reason": "cull_quota 占比较高，建议启用轻度重复惩罚提升多样性",
+      "value": 0.08
+    },
+    "m6_cull_explain": {
+      "enabled": true,
+      "reason": "建议默认开启 explain，便于验收复盘与线上定位"
+    },
+    "m7_ml_cache": {
+      "enabled": true,
+      "reason": "ML 验收仍部分 pending，建议保留缓存并在回归集预热",
+      "warmupRecommended": true
+    },
+    "recommendedConfig": {
+      "cull": {
+        "bucketed_blur_min_samples": 3,
+        "bucketed_blur_thresholds": false,
+        "enable_cull_explain": true,
+        "score": {
+          "duplicate_group_penalty": 0.08
+        }
+      }
+    },
+    "signals": {
+      "avgCullRatio": 0.8229,
+      "avgFinalRatio": 0.8077,
+      "blurRatio": 0.0,
+      "cullQuotaRatio": 1.0,
+      "excludedTotal": 11,
+      "failOpenRate": 0.0,
+      "lowResDrop": 0.0151
+    }
+  },
+  "qualityGateStatus": {
+    "w1Status": "done",
+    "w2Status": "partial",
+    "w3Status": "done"
+  },
+  "schemaVersion": "1",
+  "source": {
+    "goldenSignoff": "docs\\acceptance-records\\phase9-golden-cull-signoff.json",
+    "qualityGate": "docs\\acceptance-records\\phase9-quality-gate.json"
+  },
+  "tripCount": 2
+}

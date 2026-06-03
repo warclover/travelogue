@@ -776,7 +776,9 @@
             "cullScore": { "type": "number", "minimum": 0, "maximum": 1 },
             "cullRank": { "type": "integer", "minimum": 1 },
             "cullGroupId": { "type": "string" },
+            "cullExplain": { "type": "string" },
             "aestheticScore": { "type": "number", "minimum": 0, "maximum": 1 },
+            "aestheticMetric": { "type": "string" },
             "lowResSuspected": { "type": "boolean" }
           }
         },

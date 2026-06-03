@@ -79,6 +79,7 @@ def handle_narrate(handler: StudioHandlerProtocol) -> None:
 
 def handle_longshot(handler: StudioHandlerProtocol) -> None:
     from travelogue.export.longshot import DEFAULT_EXPORT_SCALE, export_trip_longshot
+    from travelogue.render.copy_display import COPY_DISPLAY_FULL, VALID_COPY_DISPLAY
 
     payload = handler._read_json_body()
     if not payload:
@@ -87,25 +88,6 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     trip_id = str(payload.get("tripId") or "").strip()
     if not trip_id:
         handler._json_response(400, {"ok": False, "error": "tripId required"})
-        return
-
-    ctx = studio_ctx(handler)
-    trip_dir = resolve_trip_dir(ctx, trip_id)
-    if trip_dir is None:
-        handler._json_response(404, {"ok": False, "error": "trip not found"})
-        return
-
-    store = get_job_store()
-    job = store.create_longshot_job()
-    if job is None:
-        handler._json_response(
-            409,
-            {
-                "ok": False,
-                "error": "E_STUDIO_JOB_BUSY",
-                "message": "已有长图任务进行中，请稍候",
-            },
-        )
         return
 
     try:
@@ -126,6 +108,41 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     if fmt == "jpg":
         fmt = "jpeg"
 
+    copy_display_raw = payload.get("copyDisplay")
+    if copy_display_raw is None or copy_display_raw == "":
+        copy_display = COPY_DISPLAY_FULL
+    else:
+        copy_display = str(copy_display_raw).strip().lower()
+        if copy_display not in VALID_COPY_DISPLAY:
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "invalid copyDisplay",
+                    "message": "copyDisplay 须为 full 或 photos",
+                },
+            )
+            return
+
+    ctx = studio_ctx(handler)
+    trip_dir = resolve_trip_dir(ctx, trip_id)
+    if trip_dir is None:
+        handler._json_response(404, {"ok": False, "error": "trip not found"})
+        return
+
+    store = get_job_store()
+    job = store.create_longshot_job()
+    if job is None:
+        handler._json_response(
+            409,
+            {
+                "ok": False,
+                "error": "E_STUDIO_JOB_BUSY",
+                "message": "已有长图任务进行中，请稍候",
+            },
+        )
+        return
+
     def runner() -> dict:
         def on_progress(cur: int, total: int, hint: str) -> None:
             store.update(
@@ -140,6 +157,7 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             scale=scale,
             fmt=fmt,
             progress=on_progress,
+            copy_display=copy_display,
         )
         rel_outputs = [rel_to_trip(trip_dir, item.path) for item in result.outputs]
         return {

@@ -15,6 +15,10 @@ import { pickRecentUserTrips } from "./trip-preview.js";
 var _phoneStripApi = null;
 var _phoneFrameObserver = null;
 var _phoneFrameWired = false;
+var _phoneSyncAttempts = 0;
+var PHONE_SYNC_MAX_ATTEMPTS = 16;
+var _pendingPhoneManifest = null;
+var _pendingPhoneTier = "L0";
 
 function clampPhoneHeight(px) {
   var v = Number(px) || 0;
@@ -43,7 +47,14 @@ function syncPhoneFrameFromWeb() {
 
   var cellW = mobileCell.clientWidth || 0;
   var cellH = mobileCell.clientHeight || 0;
-  if (cellW <= 0 || cellH <= 0) return;
+  if (cellW <= 0 || cellH <= 0) {
+    if (_phoneSyncAttempts < PHONE_SYNC_MAX_ATTEMPTS) {
+      _phoneSyncAttempts += 1;
+      requestAnimationFrame(syncPhoneFrameFromWeb);
+    }
+    return;
+  }
+  _phoneSyncAttempts = 0;
 
   var availableH = Math.max(0, cellH - phoneCaptionReserve());
   var byWidth = Math.floor((cellW * 16) / (9 * PHONE_VISUAL_SCALE));
@@ -137,10 +148,27 @@ export function renderColdStartBackground(manifest) {
   img.src = url;
 }
 
+function mountPhoneStrip(manifest, tier) {
+  _phoneStripApi = initPhoneStrip(manifest, {
+    tier: tier,
+    onSlideReady: function () {
+      if (_phoneStripApi && _phoneStripApi.relayout) _phoneStripApi.relayout();
+    },
+  });
+  if (_phoneStripApi && _phoneStripApi.relayout) _phoneStripApi.relayout();
+}
+
 /** 9:16 长图 · 竖向一屏一章（箭头 / 圆点 / ↑↓）。 */
 export function renderPhone(manifest, tier) {
-  _phoneStripApi = initPhoneStrip(manifest, { tier: tier });
+  _pendingPhoneManifest = manifest;
+  _pendingPhoneTier = tier || "L0";
   schedulePhoneFrameSync();
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      if (!_pendingPhoneManifest) return;
+      mountPhoneStrip(_pendingPhoneManifest, _pendingPhoneTier);
+    });
+  });
 }
 
 /** 工作台左栏 · 最近 3 本画册卡（无「最近编辑」标 / 无张数，仅标题）。 */
@@ -214,7 +242,7 @@ export function renderBench(manifest) {
   var thumb = $("v2-bench-thumb");
   var sampleFlag = $("v2-bench-sample-flag");
   var resumeBtn = $("v2-bench-resume");
-  var recentBtn = $("v2-bench-recent");
+  var recentBtn = $("v2-bench-recent-btn");
   if (titleEl && manifest.title) titleEl.textContent = manifest.title;
   if (sampleFlag) {
     show(sampleFlag, manifest.source !== "user");

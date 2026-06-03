@@ -31,3 +31,11 @@ html[data-photos-only="on"] .media-row__caption,
 html[data-photos-only="on"] .media-scroll__footer .media-card__caption {
   display: none !important;
 }
+
+/* Phase 11 decorLine · photos export (AC-P11-04 / M14) */
+html[data-copy-display="photos"] [data-block="decor-line"],
+html[data-photos-only="on"] [data-block="decor-line"],
+html[data-copy-display="photos"] .chapter-decor-line,
+html[data-photos-only="on"] .chapter-decor-line {
+  display: none !important;
+}

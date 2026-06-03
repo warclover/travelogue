@@ -10,7 +10,18 @@ import { longshotPages, longshotPageUrl } from "./manifest.js";
 import { shouldEagerCarouselPage } from "./layout-tier.js";
 import { $ } from "./store.js";
 
-function buildSlide(manifest, page, index, tier) {
+/** 竖条/整卷长图：章内竖滚；竖版样张仍 cover 铺满（避免 object-fit 裁切）。 */
+function useScrollPreview(page) {
+  return !!(page && page.scrollPreview);
+}
+
+function mountSlideImage(slide, img, onSlideReady) {
+  slide.innerHTML = "";
+  slide.appendChild(img);
+  if (typeof onSlideReady === "function") onSlideReady();
+}
+
+function buildSlide(manifest, page, index, tier, onSlideReady) {
   var slide = document.createElement("div");
   slide.className = "v2-phone-strip__slide";
   slide.setAttribute("role", "group");
@@ -24,6 +35,11 @@ function buildSlide(manifest, page, index, tier) {
   var url = longshotPageUrl(manifest, page);
   if (!url) return slide;
 
+  if (useScrollPreview(page)) {
+    slide.classList.add("v2-phone-strip__slide--scroll");
+    slide.dataset.scrollPreview = "1";
+  }
+
   var attachImg = function () {
     var img = document.createElement("img");
     img.className = "v2-phone-strip__slide-img";
@@ -31,11 +47,19 @@ function buildSlide(manifest, page, index, tier) {
     if (index === 0) img.setAttribute("fetchpriority", "high");
     if (tier === "L2" && index > 0) img.loading = "lazy";
     img.onload = function () {
-      slide.innerHTML = "";
-      slide.appendChild(img);
+      if (!useScrollPreview(page) && img.naturalWidth > 0 && img.naturalHeight / img.naturalWidth > 2.8) {
+        slide.classList.add("v2-phone-strip__slide--scroll");
+      }
+      mountSlideImage(slide, img, onSlideReady);
     };
     img.onerror = function () { /* 保留 placeholder */ };
     img.src = url;
+    if (img.complete && img.naturalWidth > 0) {
+      if (!useScrollPreview(page) && img.naturalHeight / img.naturalWidth > 2.8) {
+        slide.classList.add("v2-phone-strip__slide--scroll");
+      }
+      mountSlideImage(slide, img, onSlideReady);
+    }
   };
 
   if (shouldEagerCarouselPage(index, tier)) attachImg();
@@ -45,7 +69,7 @@ function buildSlide(manifest, page, index, tier) {
   return slide;
 }
 
-function ensureSlideLoaded(slide) {
+function ensureSlideLoaded(slide, onSlideReady) {
   if (!slide || !slide.dataset.lazySrc) return;
   var url = slide.dataset.lazySrc;
   delete slide.dataset.lazySrc;
@@ -55,11 +79,11 @@ function ensureSlideLoaded(slide) {
   img.alt = label;
   img.loading = "lazy";
   img.onload = function () {
-    slide.innerHTML = "";
-    slide.appendChild(img);
+    mountSlideImage(slide, img, onSlideReady);
   };
   img.onerror = function () { /* 保留 placeholder */ };
   img.src = url;
+  if (img.complete && img.naturalWidth > 0) mountSlideImage(slide, img, onSlideReady);
 }
 
 /**
@@ -95,8 +119,9 @@ export function initPhoneStrip(manifest, opts) {
     return null;
   }
 
+  var onSlideReady = opts.onSlideReady;
   var slideEls = pages.map(function (page, i) {
-    var slide = buildSlide(manifest, page, i, tier);
+    var slide = buildSlide(manifest, page, i, tier, onSlideReady);
     track.appendChild(slide);
     return slide;
   });
@@ -161,10 +186,8 @@ export function initPhoneStrip(manifest, opts) {
   function go(requested, goOpts) {
     goOpts = goOpts || {};
     index = clampIndex(requested, pageCount);
-    if (tier === "L2") {
-      ensureSlideLoaded(slideEls[index]);
-      if (index + 1 < slideEls.length) ensureSlideLoaded(slideEls[index + 1]);
-    }
+    ensureSlideLoaded(slideEls[index], onSlideReady);
+    if (index + 1 < slideEls.length) ensureSlideLoaded(slideEls[index + 1], onSlideReady);
     if (!goOpts.fromScroll) {
       syncing = true;
       if (scrollTimer) clearTimeout(scrollTimer);
@@ -184,6 +207,8 @@ export function initPhoneStrip(manifest, opts) {
         syncReleaseTimer = null;
       }, 280);
     }
+    var active = slideEls[index];
+    if (active && active.classList.contains("v2-phone-strip__slide--scroll")) active.scrollTop = 0;
     syncUi();
   }
 
@@ -219,8 +244,8 @@ export function initPhoneStrip(manifest, opts) {
     screen.setAttribute(
       "aria-label",
       pageCount > 1
-        ? "微信长图 · " + pageCount + " 段 · 左右键或按钮切换"
-        : "微信长图预览"
+        ? "微信长图 · " + pageCount + " 段 · 左右切换章节 · 章内可上下滚动"
+        : "微信长图预览 · 可上下滚动"
     );
   }
 

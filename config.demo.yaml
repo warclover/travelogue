@@ -31,6 +31,12 @@ cull:
   min_keep: 15
   featured_exempt: true
   max_photos_warn_only: true
+  # Phase 9.2 推荐参数（基于当前 acceptance baseline）
+  bucketed_blur_thresholds: false
+  bucketed_blur_min_samples: 3
+  enable_cull_explain: true
+  score:
+    duplicate_group_penalty: 0.08
 
 curate:
   # Phase 10 · food grid（默认开启，可一键关闭回退）

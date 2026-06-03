@@ -110,7 +110,21 @@ cull:
   max_photos_warn_only: true
   sharpness_absolute_min: 0.0
   blur_percentile: 2            # W1 Pass 1 · P2 分位
+  bucketed_blur_thresholds: false
+  bucketed_blur_min_samples: 3
   hard_exclude_media_classes: [screenshot, thumbnail, reupload]
+  recalc_strict_groups: false   # P9.2：material-only 组严格择优开关
+  enable_cull_explain: true
+  score:                        # P9.2：Pass3 配置化权重
+    rules:
+      sharpness_weight: 0.55
+      media_weight: 0.25
+    ml:
+      sharpness_weight: 0.35
+      aesthetic_weight: 0.35
+      media_weight: 0.20
+      bias: 0.10
+    duplicate_group_penalty: 0.0
   ml:                           # W2
     aesthetic_metric: topiq_nr
     portrait_face_aesthetic: true
@@ -129,6 +143,7 @@ cull:
 | `cull.enabled=false` | skip |
 | 任意异常 in `apply_photo_cull` | D-P9-14（fail-open + 清理 cull 历史 excludeReason） |
 | pyiqa 缺失（W2） | P0 公式 |
+| ML 缓存可读写失败 | 忽略缓存，继续当前批次评分（不阻断 ingest） |
 
 ---
 

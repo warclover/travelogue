@@ -5,6 +5,7 @@ import { isDemoTrip } from "../js/constants.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { V2 } from "./store.js";
 import { deleteTrip } from "./trips-client.js";
+import { runShelfLongshot } from "./shelf-longshot.js";
 
 var _openMenuEl = null;
 var _docBound = false;
@@ -125,6 +126,12 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
   menu.dataset.open = "false";
   menu.hidden = true;
 
+  var longshotItem = document.createElement("button");
+  longshotItem.type = "button";
+  longshotItem.className = "v2-shelf__menu-item";
+  longshotItem.setAttribute("role", "menuitem");
+  longshotItem.textContent = "保存长图";
+
   var deleteItem = document.createElement("button");
   deleteItem.type = "button";
   deleteItem.className = "v2-shelf__menu-item v2-shelf__menu-item--danger";
@@ -135,6 +142,7 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
     deleteItem.title = "示例画册无法删除";
   }
 
+  menu.appendChild(longshotItem);
   menu.appendChild(deleteItem);
   coverWrap.appendChild(menuBtn);
   coverWrap.appendChild(menu);
@@ -148,6 +156,13 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
     }
     trackStudioEvent("shelf_menu_open", { trip_id: trip.tripId, surface: surface });
     openMenu(menu, menuBtn);
+  });
+
+  longshotItem.addEventListener("click", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeMenu(menu);
+    runShelfLongshot(trip, { surface: surface });
   });
 
   deleteItem.addEventListener("click", function (e) {

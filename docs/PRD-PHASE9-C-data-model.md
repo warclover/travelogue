@@ -60,8 +60,10 @@
 | `cullScore` | number | W1 | [0,1] 综合分 |
 | `cullRank` | int | W1 | 批内排名，1=最高 |
 | `aestheticScore` | number | P1 | pyiqa 原始归一化 |
+| `aestheticMetric` | string | P9.2 | 评分模型标识（用于缓存命中判断） |
 | `cullRoute` | string | P1 | portrait / landscape / general |
 | `cullGroupId` | string | W1 | Pass 2 分组键（调试） |
+| `cullExplain` | string | P9.2 | 被剔除时的人类可读解释 |
 
 ### 2.3 既有字段（消费，不修改）
 
@@ -167,6 +169,12 @@
 | `cull_layout_eligible_final` | low-res 后最终 eligible 数 |
 | `cull_non_featured_eligible_final` | low-res 后最终 non-featured eligible 数 |
 | `cull_user_line` | 人话一行 |
+
+### 5.1 ML 评分缓存（P9.2）
+
+- 路径：`trip/cache/phase9_aesthetic.json`
+- key：优先 `contentSig`，无签名时回退到 `display/source + mtime + size`
+- value：`aestheticScore`（按 `aestheticMetric` 版本隔离）
 
 ---
 

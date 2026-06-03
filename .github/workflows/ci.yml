@@ -101,5 +101,62 @@ jobs:
         run: |
           python -c "from travelogue.demo.verify import run_demo_verify; import sys; r=run_demo_verify(skip_pytest=True); print('\n'.join(r.messages)); sys.exit(0 if r.ok else 1)"
 
+      - name: Phase9 eval baseline drift (warn-only)
+        continue-on-error: true
+        run: |
+          python scripts/phase9_eval_baseline.py --write /tmp/phase9-eval-baseline-current.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          ref = Path("docs/acceptance-records/phase9-eval-baseline.json")
+          cur = Path("/tmp/phase9-eval-baseline-current.json")
+          if not cur.is_file():
+              print("::warning::phase9 baseline check skipped: current baseline not generated")
+              raise SystemExit(0)
+          if not ref.is_file():
+              print("::warning::phase9 baseline reference missing: docs/acceptance-records/phase9-eval-baseline.json")
+              raise SystemExit(0)
+
+          current = json.loads(cur.read_text(encoding="utf-8"))
+          reference = json.loads(ref.read_text(encoding="utf-8"))
+          checks = [
+              ("cull_keep_ratio_non_featured.avg", 0.01),
+              ("final_keep_ratio_non_featured.avg", 0.01),
+              ("fail_open_rate", 0.0),
+          ]
+
+          def get_path(data, path):
+              cur = data
+              for part in path.split("."):
+                  if not isinstance(cur, dict):
+                      return None
+                  cur = cur.get(part)
+              return cur
+
+          warnings = []
+          for key, threshold in checks:
+              cur_v = get_path(current, key)
+              ref_v = get_path(reference, key)
+              if cur_v is None or ref_v is None:
+                  warnings.append(f"{key}: missing value (current={cur_v}, reference={ref_v})")
+                  continue
+              delta = float(cur_v) - float(ref_v)
+              if key == "fail_open_rate":
+                  if delta > threshold:
+                      warnings.append(
+                          f"{key}: increased by {delta:+.4f} (current={cur_v:.4f}, reference={ref_v:.4f})"
+                      )
+              elif abs(delta) > threshold:
+                  warnings.append(
+                      f"{key}: drift {delta:+.4f} > {threshold:.4f} (current={cur_v:.4f}, reference={ref_v:.4f})"
+                  )
+
+          if warnings:
+              print("::warning::Phase9 baseline drift detected (warn-only): " + " | ".join(warnings))
+          else:
+              print("Phase9 baseline stable within warn-only thresholds")
+          PY
+
       - name: Quality gate (layout + studio regression)
         run: python scripts/quality_gate.py

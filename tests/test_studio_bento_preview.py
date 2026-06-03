@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from urllib.parse import quote
 
 from PIL import Image
 
@@ -246,6 +247,7 @@ def test_build_trip_bento_preview_longshot_pages_from_vertical_ch_pngs(tmp_path:
     assert len(payload["longshotPages"]) == 2
     assert payload["longshotPages"][0]["url"] == f"/{trip_id}/trip-ch01.png"
     assert payload["longshotPages"][1]["url"] == f"/{trip_id}/trip-ch02.png"
+    assert payload["longshotPages"][0]["scrollPreview"] is True
     assert payload["longshotPages"][0]["label"] == "第一章"
     chapter_urls = [p["url"] for p in payload["pages"] if p["role"] == "chapter"]
     assert chapter_urls == [
@@ -270,6 +272,7 @@ def test_build_trip_bento_preview_longshot_pages_single_export_png(tmp_path: Pat
             "id": "longshot",
             "label": "微信长图",
             "url": f"/{trip_id}/trip-longshot.png",
+            "scrollPreview": True,
         }
     ]
 
@@ -425,3 +428,23 @@ def test_build_trip_bento_preview_skips_vertical_chapter_pngs(tmp_path: Path) ->
     assert payload is not None
     chapter_urls = [p["url"] for p in payload["pages"] if p["role"] == "chapter"]
     assert chapter_urls == [f"/{trip_id}/assets/landscape.webp"]
+
+
+def test_build_trip_bento_preview_encodes_unicode_longshot_urls(tmp_path: Path) -> None:
+    """M14 分段长图中文文件名 · longshotPages URL 须 percent-encode。"""
+    trip_id = "unicode-title"
+    trip_dir = tmp_path / trip_id
+    trip_dir.mkdir()
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    filename = "东澳岛-ch01.png"
+    _write_png(trip_dir / filename, 390, 800)
+    (trip_dir / "trip.json").write_text(
+        '{"meta":{"title":"东澳岛"},"chapters":[{"id":"c1","title":"4月20-23日"}]}',
+        encoding="utf-8",
+    )
+    trip = __import__("json").loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    expected = f"/{trip_id}/{quote(filename)}"
+    assert payload["longshotPages"][0]["url"] == expected

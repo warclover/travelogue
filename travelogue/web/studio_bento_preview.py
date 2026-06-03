@@ -4,8 +4,18 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Iterator
+from urllib.parse import quote
 
 from travelogue.render.context import asset_aspect_kind, pick_image_src
+
+
+def _trip_static_url(trip_id: str, rel: str | Path) -> str:
+    """Public URL for a file under trip root (encode non-ASCII path segments)."""
+    rel_posix = Path(rel).as_posix().lstrip("/")
+    if not rel_posix:
+        return f"/{trip_id}"
+    encoded = "/".join(quote(seg, safe="") for seg in rel_posix.split("/"))
+    return f"/{trip_id}/{encoded}"
 
 # Web 16:9 carousel · 优先横图
 _WEB_KIND_SCORE: dict[str, int] = {
@@ -119,7 +129,7 @@ def _asset_public_url(trip_id: str, trip_dir: Path, asset: dict) -> str | None:
         return None
     if not (trip_dir / rel).is_file():
         return None
-    return f"/{trip_id}/{Path(rel).as_posix()}"
+    return _trip_static_url(trip_id, rel)
 
 
 def _asset_width_height_ratio(asset: dict) -> float:
@@ -442,7 +452,8 @@ def _build_longshot_pages(
             {
                 "id": "longshot",
                 "label": "微信长图",
-                "url": f"/{trip_id}/{longshot.name}",
+                "url": _trip_static_url(trip_id, longshot.name),
+                "scrollPreview": True,
             }
         ]
 
@@ -456,7 +467,8 @@ def _build_longshot_pages(
                     "id": str(ch.get("id") or f"ch{i:02d}"),
                     "label": _chapter_label(ch, i) if ch else f"第{i}章",
                     "chapterIndex": i,
-                    "url": f"/{trip_id}/{png.name}",
+                    "url": _trip_static_url(trip_id, png.name),
+                    "scrollPreview": True,
                 }
             )
         return pages
@@ -492,7 +504,7 @@ def _chapter_page_url(
     if index <= len(ch_pngs):
         png = ch_pngs[index - 1]
         if _is_web_landscape_file(png):
-            return f"/{trip_id}/{png.name}"
+            return _trip_static_url(trip_id, png.name)
     if chapter:
         return _best_chapter_image_url(trip, trip_id, trip_dir, chapter, fallback=fallback)
     return fallback
@@ -535,7 +547,7 @@ def build_trip_bento_preview(trip_dir: Path, trip: dict, trip_id: str) -> dict[s
     elif ch_pngs:
         for i, png in enumerate(ch_pngs, 1):
             url = (
-                f"/{trip_id}/{png.name}"
+                _trip_static_url(trip_id, png.name)
                 if _is_web_landscape_file(png)
                 else cover_url
             )

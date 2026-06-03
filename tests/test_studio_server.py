@@ -9,6 +9,7 @@ from functools import partial
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from urllib import error, request
+from urllib.parse import quote
 
 import pytest
 
@@ -92,6 +93,11 @@ def _get_json(url: str) -> tuple[int, dict]:
     with request.urlopen(url, timeout=30) as resp:
         body = resp.read().decode("utf-8")
         return resp.status, json.loads(body) if body else {}
+
+
+def _get_status(url: str) -> int:
+    with request.urlopen(url, timeout=30) as resp:
+        return resp.status
 
 
 @pytest.fixture(autouse=True)
@@ -349,6 +355,26 @@ def test_studio_chapter_layout_api(tmp_path: Path) -> None:
         assert status == 200
         assert body.get("ok") is True
         assert "东京" in body.get("summary", "")
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_studio_serves_trip_static_with_unicode_filename(tmp_path: Path) -> None:
+    """GET trip assets must unquote path (bento phone strip · M14 分段长图中文文件名)."""
+    trips_dir = tmp_path / "trips"
+    trip_id = "unicode-trip"
+    trip_dir = trips_dir / trip_id
+    trip_dir.mkdir(parents=True)
+    filename = "东澳岛-ch01.png"
+    (trip_dir / filename).write_bytes(b"\x89PNG\r\n\x1a\n")
+    (trip_dir / "trip.json").write_text('{"meta":{"title":"东澳岛"}}', encoding="utf-8")
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        encoded = quote(filename)
+        url = f"http://127.0.0.1:{port}/{trip_id}/{encoded}"
+        assert _get_status(url) == 200
     finally:
         server.shutdown()
         server.server_close()

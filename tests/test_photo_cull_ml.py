@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
+from PIL import Image
 
 from travelogue.config import CullConfig
 from travelogue.curation.photo_cull import run_photo_cull
-from travelogue.curation.photo_cull_ml import pyiqa_available, resolve_effective_mode
+from travelogue.curation.photo_cull_ml import (
+    apply_aesthetic_scores,
+    pyiqa_available,
+    resolve_effective_mode,
+)
 
 
 def test_resolve_mode_rules_default() -> None:
@@ -70,8 +77,71 @@ def test_ac_p9_ml_02_keep_ratio_within_rules_delta() -> None:
 def test_cull_score_prefers_aesthetic_when_ml() -> None:
     from travelogue.curation.photo_cull import _cull_score
 
+    cfg = CullConfig(mode="ml")
     low = {"quality": {"sharpness": 200.0, "aestheticScore": 0.1}, "mediaClass": "photo"}
     high = {"quality": {"sharpness": 50.0, "aestheticScore": 0.95}, "mediaClass": "photo"}
-    assert _cull_score(high, sharp_lo=0.0, sharp_hi=300.0, use_ml=True) > _cull_score(
-        low, sharp_lo=0.0, sharp_hi=300.0, use_ml=True
+    assert _cull_score(high, sharp_lo=0.0, sharp_hi=300.0, use_ml=True, cfg=cfg) > _cull_score(
+        low, sharp_lo=0.0, sharp_hi=300.0, use_ml=True, cfg=cfg
     )
+
+
+def test_apply_aesthetic_scores_uses_persistent_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    img_rel = "assets/a1-w800.webp"
+    img_path = tmp_path / img_rel
+    img_path.parent.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (64, 64), (120, 120, 120)).save(img_path)
+    asset = {
+        "id": "a1",
+        "type": "image",
+        "displayFile": img_rel,
+        "contentSig": "sig-a1",
+        "quality": {},
+    }
+    cfg = CullConfig(mode="ml", allow_cpu_ml=True)
+    calls = {"n": 0}
+
+    class _FakeOut:
+        def __init__(self, values):
+            self._values = values
+
+        def detach(self):
+            return self
+
+        def flatten(self):
+            return self
+
+        def tolist(self):
+            return self._values
+
+    class _FakeMetric:
+        def __call__(self, tensor):  # noqa: ANN001
+            calls["n"] += 1
+            batch = int(getattr(tensor, "shape", [1])[0])
+            return _FakeOut([0.66] * batch)
+
+    monkeypatch.setattr(
+        "travelogue.curation.photo_cull_ml.resolve_effective_mode",
+        lambda _cfg: "ml",
+    )
+    monkeypatch.setattr(
+        "travelogue.curation.photo_cull_ml._get_metric",
+        lambda _cfg: _FakeMetric(),
+    )
+    ok1 = apply_aesthetic_scores([asset], trip_dir=tmp_path, cfg=cfg)
+    assert ok1
+    assert calls["n"] == 1
+    assert asset.get("quality", {}).get("aestheticScore") == pytest.approx(0.66, abs=1e-4)
+
+    asset2 = {
+        "id": "a1",
+        "type": "image",
+        "displayFile": img_rel,
+        "contentSig": "sig-a1",
+        "quality": {},
+    }
+    ok2 = apply_aesthetic_scores([asset2], trip_dir=tmp_path, cfg=cfg)
+    assert ok2
+    assert calls["n"] == 1
+    assert asset2.get("quality", {}).get("aestheticScore") == pytest.approx(0.66, abs=1e-4)
