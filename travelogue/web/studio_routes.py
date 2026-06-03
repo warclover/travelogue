@@ -15,6 +15,8 @@ from travelogue.web.studio_handlers import (
     job_handlers,
     static_handlers,
     telemetry_handlers,
+    template_admin_handlers,
+    template_handlers,
     trip_handlers,
 )
 from travelogue.web.studio_handlers.common import (
@@ -26,6 +28,7 @@ from travelogue.web.studio_handlers.common import (
     match_trip_delete,
     match_trip_intent,
     match_trip_pipeline,
+    match_trip_template,
 )
 from travelogue.web.studio_handlers.paths import (
     CANCEL_PATH,
@@ -35,6 +38,7 @@ from travelogue.web.studio_handlers.paths import (
     EXPORT_PATH,
     HOME_CLASSIC_PATH,
     HOME_V2_PATH,
+    TEMPLATES_ADMIN_UI_PATH,
     IMPORT_PATH,
     INTENT_SUFFIX,
     LONGSHOT_PATH,
@@ -42,6 +46,24 @@ from travelogue.web.studio_handlers.paths import (
     PICK_FOLDER_PATH,
     ALBUM_PREVIEW_PATH,
     STUDIO_EVENT_PATH,
+    TEMPLATES_PATH,
+    TEMPLATE_REPLAY_PATH,
+    TEMPLATE_RECOMPUTE_PATH,
+    TEMPLATE_DECISIONS_PATH,
+    TEMPLATE_PREVIEW_PATH,
+    TEMPLATES_ADMIN_PATH,
+    TEMPLATES_ADMIN_AUDIT_PATH,
+    TEMPLATES_ADMIN_DASHBOARD_PATH,
+    TEMPLATES_ADMIN_ADMISSION_PATH,
+    TEMPLATES_ADMIN_DECISIONS_PATH,
+    TEMPLATES_ADMIN_RUNTIME_PATH,
+    TEMPLATES_ADMIN_ROLLBACK_PATH,
+    TEMPLATES_ADMIN_REGISTER_PATH,
+    TEMPLATES_ADMIN_DELETE_PATH,
+    TEMPLATES_ADMIN_REVIEW_PATH,
+    match_template_admin_patch,
+    match_template_admin_version,
+    match_template_admin_metadata,
     PIPELINE_SUFFIX,
     PROMOTE_TIER_SUFFIX,
     REVEAL_PATH,
@@ -125,6 +147,31 @@ class StudioMixin:
         if path == CONFIG_PATH:
             config_handlers.handle_config(self)
             return True
+        if path == TEMPLATES_ADMIN_UI_PATH:
+            static_handlers.handle_templates_admin_page(self)
+            return True
+        if path == TEMPLATES_PATH:
+            template_handlers.handle_templates_list(self)
+            return True
+        if path.startswith(TEMPLATE_DECISIONS_PATH):
+            template_handlers.handle_template_decisions(self)
+            return True
+        if path == TEMPLATES_ADMIN_PATH:
+            template_admin_handlers.handle_templates_admin_list(self)
+            return True
+        if path == TEMPLATES_ADMIN_AUDIT_PATH:
+            template_admin_handlers.handle_templates_admin_audit(self)
+            return True
+        if path == TEMPLATES_ADMIN_DASHBOARD_PATH:
+            template_admin_handlers.handle_templates_admin_dashboard(self)
+            return True
+        if path == TEMPLATES_ADMIN_DECISIONS_PATH:
+            template_admin_handlers.handle_templates_admin_decisions(self)
+            return True
+        ver_tid = match_template_admin_version(path)
+        if ver_tid is not None:
+            template_admin_handlers.handle_templates_admin_version_diff(self, ver_tid)
+            return True
         if path == TRIPS_PATH:
             trip_handlers.handle_trips(self)
             return True
@@ -153,9 +200,21 @@ class StudioMixin:
         if path == CONFIG_PATH:
             config_handlers.handle_config(self)
             return True
+        admin_tid = match_template_admin_patch(path)
+        if admin_tid is not None:
+            template_admin_handlers.handle_templates_admin_patch(self, admin_tid)
+            return True
+        meta_tid = match_template_admin_metadata(path)
+        if meta_tid is not None:
+            template_admin_handlers.handle_templates_admin_metadata(self, meta_tid)
+            return True
         trip_id = match_trip_intent(path)
         if trip_id is not None:
             trip_handlers.handle_patch_intent(self, trip_id)
+            return True
+        trip_id = match_trip_template(path)
+        if trip_id is not None:
+            trip_handlers.handle_patch_template(self, trip_id)
             return True
         trip_id = match_trip_pipeline(path)
         if trip_id is not None:
@@ -198,6 +257,33 @@ class StudioMixin:
             return True
         if path == ALBUM_PREVIEW_PATH:
             import_handlers.handle_album_preview(self)
+            return True
+        if path == TEMPLATE_REPLAY_PATH:
+            template_handlers.handle_template_replay(self)
+            return True
+        if path == TEMPLATE_RECOMPUTE_PATH:
+            template_handlers.handle_template_recompute(self)
+            return True
+        if path == TEMPLATE_PREVIEW_PATH:
+            template_handlers.handle_template_preview(self)
+            return True
+        if path == TEMPLATES_ADMIN_ROLLBACK_PATH:
+            template_admin_handlers.handle_templates_admin_rollback(self)
+            return True
+        if path == TEMPLATES_ADMIN_ADMISSION_PATH:
+            template_admin_handlers.handle_templates_admin_admission(self)
+            return True
+        if path == TEMPLATES_ADMIN_RUNTIME_PATH:
+            template_admin_handlers.handle_templates_admin_runtime(self)
+            return True
+        if path == TEMPLATES_ADMIN_REGISTER_PATH:
+            template_admin_handlers.handle_templates_admin_register(self)
+            return True
+        if path == TEMPLATES_ADMIN_DELETE_PATH:
+            template_admin_handlers.handle_templates_admin_delete(self)
+            return True
+        if path == TEMPLATES_ADMIN_REVIEW_PATH:
+            template_admin_handlers.handle_templates_admin_review(self)
             return True
         if path == STUDIO_EVENT_PATH:
             telemetry_handlers.handle_studio_event(self)

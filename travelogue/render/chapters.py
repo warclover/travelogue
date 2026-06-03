@@ -15,7 +15,7 @@ from travelogue.render.context_types import (
     ScreenSpreadContext,
     TripIndexEntryContext,
 )
-from travelogue.render.screen_tone import DEFAULT_SCREEN_TONE, screen_tone_css
+from travelogue.render.screen_tone import chapter_separator_style
 from travelogue.render.surface import SurfaceContext
 
 
@@ -108,6 +108,7 @@ def build_chapters_render_context(
         assets_by_id = {a["id"]: a for a in (trip.get("assets") or []) if a.get("id")}
         raw_chapters = chapters_for_longshot_render(
             raw_chapters,
+            max_screens=effective_cfg.layout.scoring.max_screens_per_chapter,
             assets_by_id=assets_by_id,
             enable_mmr=effective_cfg.curate.enable_mmr_diversity,
             mmr_lambda=effective_cfg.curate.longshot_mmr_lambda,
@@ -251,9 +252,6 @@ def build_chapters_render_context(
             and surface.include_breath
             and int(idx) > 1
         )
-        chapter_tone = None
-        if use_chapter_separator and raw_screens_for_spread:
-            chapter_tone = screen_tone_css((raw_screens_for_spread[0] or {}).get("tone"))
 
         lead = (ch.get("lead") or "").strip()
         if strip_narrative_copy:
@@ -278,7 +276,13 @@ def build_chapters_render_context(
             "items": items_out,
             "useChapterSeparator": use_chapter_separator,
             "chapterSeparatorStyle": (
-                f"background: {chapter_tone or DEFAULT_SCREEN_TONE};" if use_chapter_separator else ""
+                chapter_separator_style(
+                    (raw_screens_for_spread[0] or {}).get("tone")
+                    if raw_screens_for_spread
+                    else None
+                )
+                if use_chapter_separator
+                else ""
             ),
             **chapter_divider(
                 ch,

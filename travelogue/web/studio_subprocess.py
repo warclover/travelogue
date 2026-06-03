@@ -64,6 +64,8 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             plan_bytes=plan_bytes,
             plan_text=payload.get("planText"),
             plan_filename=str(payload.get("planFilename") or "plan.txt"),
+            template_mode=str(payload.get("template_mode") or payload.get("templateMode") or "smart"),
+            template_id=payload.get("template_id") or payload.get("templateId"),
         )
         progress_queue.put(
             {
@@ -82,6 +84,9 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     "photoCount": result.photo_count,
                     "cullUserLine": result.cull_user_line or "",
                     "cullWarn": result.cull_warn or "",
+                    "templateFeedbackKind": result.template_feedback_kind or "",
+                    "templateFeedbackMessage": result.template_feedback_message or "",
+                    "resolvedTemplateId": result.resolved_template_id or "visual-journal",
                 },
             }
         )

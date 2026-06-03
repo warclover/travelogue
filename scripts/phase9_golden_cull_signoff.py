@@ -61,6 +61,14 @@ def _cull_metrics(trip: dict) -> dict:
         "excludedByReason": cull.get("excludedByReason") or {},
         "cullUserLine": (trip.get("curation") or {}).get("cullUserLine"),
         "mode": cull.get("mode"),
+        "mlFallbackRateL1": float(cull.get("mlFallbackRateL1") or 0.0),
+        "branchFallbackRateL2": float(cull.get("branchFallbackRateL2") or 0.0),
+        "branchFallbackByReasonL2": cull.get("branchFallbackByReasonL2") or {},
+        "failOpenRateL3": float(cull.get("failOpenRateL3") or 0.0),
+        "branchPortraitRatio": cull.get("branchPortraitRatio"),
+        "branchLandscapeRatio": cull.get("branchLandscapeRatio"),
+        "branchGrayRatio": cull.get("branchGrayRatio"),
+        "cpuMs": cull.get("cpuMs"),
     }
 
 

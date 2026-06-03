@@ -71,6 +71,8 @@ function buildCover(trip, host) {
 
 function tripSubLine(trip) {
   var sub = [];
+  if (trip.templateSourceLabel) sub.push(trip.templateSourceLabel);
+  if (trip.templateLocked) sub.push("模板已锁定");
   if (trip.photoCount) sub.push(trip.photoCount + " 张");
   var rel = relativeTime(trip.updatedAt);
   if (rel) sub.push(rel);

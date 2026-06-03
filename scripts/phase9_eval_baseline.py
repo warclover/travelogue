@@ -146,7 +146,11 @@ def build_phase9_eval_baseline(
     final_ratios: list[float] = []
     ingest_ms: list[float] = []
     excluded_by_reason: dict[str, int] = {}
+    branch_fallback_by_reason_l2: dict[str, int] = {}
     fail_open_count = 0
+    l1_fallback_rates: list[float] = []
+    l2_fallback_rates: list[float] = []
+    l3_fail_open_rates: list[float] = []
 
     for run in runs:
         metrics = run.get("metrics") or {}
@@ -167,6 +171,16 @@ def build_phase9_eval_baseline(
                 excluded_by_reason[str(reason)] = (
                     excluded_by_reason.get(str(reason), 0) + _safe_int(count, 0)
                 )
+        l2_by_reason = metrics.get("branchFallbackByReasonL2") or {}
+        if isinstance(l2_by_reason, dict):
+            for reason, count in l2_by_reason.items():
+                branch_fallback_by_reason_l2[str(reason)] = (
+                    branch_fallback_by_reason_l2.get(str(reason), 0) + _safe_int(count, 0)
+                )
+
+        l1_fallback_rates.append(_safe_float(metrics.get("mlFallbackRateL1"), 0.0))
+        l2_fallback_rates.append(_safe_float(metrics.get("branchFallbackRateL2"), 0.0))
+        l3_fail_open_rates.append(_safe_float(metrics.get("failOpenRateL3"), 0.0))
 
         fail_open = (
             bool(metrics.get("failOpen"))
@@ -207,6 +221,19 @@ def build_phase9_eval_baseline(
             "max": round(max(final_ratios), 4) if final_ratios else 0.0,
         },
         "excluded_by_reason": dict(sorted(excluded_by_reason.items())),
+        "l1_ml_fallback_rate": {
+            "avg": round(mean(l1_fallback_rates), 4) if l1_fallback_rates else 0.0,
+            "max": round(max(l1_fallback_rates), 4) if l1_fallback_rates else 0.0,
+        },
+        "l2_branch_fallback_rate": {
+            "avg": round(mean(l2_fallback_rates), 4) if l2_fallback_rates else 0.0,
+            "max": round(max(l2_fallback_rates), 4) if l2_fallback_rates else 0.0,
+        },
+        "l2_branch_fallback_by_reason": dict(sorted(branch_fallback_by_reason_l2.items())),
+        "l3_fail_open_rate": {
+            "avg": round(mean(l3_fail_open_rates), 4) if l3_fail_open_rates else 0.0,
+            "max": round(max(l3_fail_open_rates), 4) if l3_fail_open_rates else 0.0,
+        },
         "fail_open_rate": round((fail_open_count / len(per_trip)), 4) if per_trip else 0.0,
         "ingest_elapsed_ms": {
             "avg": round(mean(ingest_ms), 2) if ingest_ms else 0.0,

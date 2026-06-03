@@ -96,6 +96,11 @@ def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | No
         notes = str(fields.get("userNotes") or "").strip()
         if notes:
             payload["userNotes"] = notes[:STUDIO_USER_NOTES_MAX_LEN]
+        tm = str(fields.get("template_mode") or fields.get("templateMode") or "smart").strip().lower()
+        payload["template_mode"] = tm if tm in ("smart", "manual") else "smart"
+        tid = str(fields.get("template_id") or fields.get("templateId") or "").strip()
+        if tid:
+            payload["template_id"] = tid
         if plan_bytes is not None:
             import base64
 
@@ -195,6 +200,11 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     trip_id = payload.get("tripId")
     trip_id_str = str(trip_id).strip() if trip_id else None
     force = bool(payload.get("force"))
+    template_mode = str(payload.get("template_mode") or payload.get("templateMode") or "smart").strip().lower()
+    if template_mode not in ("smart", "manual"):
+        template_mode = "smart"
+    template_id_raw = payload.get("template_id") or payload.get("templateId")
+    template_id_str = str(template_id_raw).strip() if template_id_raw else None
 
     try:
         assert_album_importable(
@@ -246,7 +256,10 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         "dedupe": not (use_demo_album or is_demo_album_path(str(album_path))),
         "host": host,
         "port": port,
+        "template_mode": template_mode,
     }
+    if template_id_str:
+        worker_payload["template_id"] = template_id_str
     if user_notes:
         worker_payload["userNotes"] = user_notes
     if plan_text:

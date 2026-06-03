@@ -1,6 +1,21 @@
-"""screen_tone should not emit Pillow getdata deprecation."""
+from travelogue.render.screen_tone import chapter_separator_style
 
-from __future__ import annotations
+
+def test_chapter_separator_style_uses_dark_ink_on_light_tone() -> None:
+    style = chapter_separator_style({"r": 232, "g": 228, "b": 223})
+    assert "background: #e8e4df;" in style
+    assert "--chapter-separator-ink: #1f1d1a;" in style
+    assert "--chapter-separator-overlay-end: rgba(14, 18, 24, 0.08);" in style
+    assert "--chapter-separator-title-shadow: none;" in style
+
+
+def test_chapter_separator_style_uses_light_ink_on_dark_tone() -> None:
+    style = chapter_separator_style({"r": 34, "g": 40, "b": 50})
+    assert "background: #222832;" in style
+    assert "--chapter-separator-ink: #f5f2ea;" in style
+    assert "--chapter-separator-overlay-end: rgba(14, 18, 24, 0.28);" in style
+    assert "--chapter-separator-title-shadow: 0 1px 12px rgba(0, 0, 0, 0.22);" in style
+"""screen_tone should not emit Pillow getdata deprecation."""
 
 import warnings
 from pathlib import Path

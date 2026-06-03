@@ -144,5 +144,38 @@
   "adaptive": {
     "doc": "docs/ADAPTIVE-LAYOUT.md",
     "layers": ["viewport-safe-area", "fluid-css", "srcset-crop", "export-layout"]
+  },
+  "templateMeta": {
+    "category": "travel",
+    "tags": ["multi-day", "map", "travel"],
+    "style": "editorial",
+    "complexity": "medium",
+    "bestFor": ["多日旅途", "地理轨迹叙事"],
+    "editableScopes": [
+      "meta.title",
+      "meta.subtitle",
+      "meta.hook",
+      "meta.places",
+      "epilogue",
+      "chapters.*.title",
+      "chapters.*.lead",
+      "chapters.*.curation.memoryAnchors",
+      "chapters.*.items.*.caption",
+      "chapters.*.items.*.voice.transcript",
+      "assets.*.caption",
+      "assets.*.voice.transcript",
+      "items.*.caption",
+      "items.*.title"
+    ],
+    "lockedScopes": [
+      "chapters.*.screens",
+      "pipeline",
+      "templateSelection",
+      "templateId"
+    ],
+    "placeholders": {
+      "meta.title": "给杂志起个名字",
+      "epilogue": "写下旅途尾声"
+    }
   }
 }

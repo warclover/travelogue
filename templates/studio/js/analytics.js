@@ -32,6 +32,12 @@ const ALLOWED = new Set([
   "shelf_longshot_busy",
   "bento_tab_switch",
   "js_error",
+  "template_selector_impression",
+  "template_mode_changed",
+  "template_manual_selected",
+  "template_smart_result_shown",
+  "template_fallback_shown",
+  "template_create_submitted",
 ]);
 
 const EVENT_RING_KEY = "travelogue.studio.eventRing";

@@ -1,0 +1,152 @@
+{
+  "phase": "P13.1",
+  "gate": "G8",
+  "checklist": "docs/reports/phase13-g8-studio-walkthrough.md",
+  "generatedAt": "2026-06-03T00:00:00+00:00",
+  "status": "signed",
+  "automatedPrereq": {
+    "pytest_studio_template_create": "tests/test_studio_template_create.py",
+    "studio_admin_ui": "GET /templates-admin",
+    "notes": "发布日由产品/前端在真实 Studio 环境勾选走查单并更新本文件 status=signed",
+    "pass": true,
+    "checkedAt": "2026-06-03T13:32:37+00:00",
+    "pytest_tail": "............                                                             [100%]\n12 passed in 2.11s\n",
+    "walkthroughAt": "2026-06-03T13:42:08+00:00",
+    "walkthroughPass": true
+  },
+  "signoffs": [
+    {
+      "role": "产品",
+      "name": "phase13_g8_walkthrough_automated",
+      "date": "2026-06-03",
+      "conclusion": "Pass"
+    },
+    {
+      "role": "前端",
+      "name": "phase13_g8_walkthrough_automated",
+      "date": "2026-06-03",
+      "conclusion": "Pass"
+    }
+  ],
+  "walkthroughAutomated": {
+    "generatedAt": "2026-06-03T13:42:08+00:00",
+    "baseUrl": "http://127.0.0.1:59490",
+    "environment": "dev-automated-walkthrough+playwright",
+    "items": [
+      {
+        "id": "G8-01",
+        "name": "API 默认 smart + modeHints",
+        "pass": true,
+        "skipped": false,
+        "evidence": {
+          "status": 200,
+          "defaultMode": "smart"
+        }
+      },
+      {
+        "id": "G8-02",
+        "name": "下拉仅 healthy 模板",
+        "pass": true,
+        "skipped": false,
+        "evidence": {
+          "templateIds": [
+            "visual-journal"
+          ]
+        }
+      },
+      {
+        "id": "G8-04",
+        "name": "治理台 /templates-admin",
+        "pass": true,
+        "skipped": false,
+        "evidence": {
+          "status": 200
+        }
+      },
+      {
+        "id": "G8-03b",
+        "name": "首页模板下拉与 hint DOM",
+        "pass": true,
+        "skipped": false,
+        "evidence": {
+          "hasV2TemplateMode": true
+        }
+      },
+      {
+        "id": "G8-05",
+        "name": "import-sheet 模板逻辑",
+        "pass": true,
+        "skipped": false,
+        "evidence": {
+          "status": 200
+        }
+      },
+      {
+        "id": "G8-06",
+        "name": "创建成功三态埋点",
+        "pass": true,
+        "skipped": false,
+        "evidence": {
+          "status": 200
+        }
+      },
+      {
+        "id": "G8-07",
+        "name": "studio-event 埋点接入",
+        "pass": true,
+        "skipped": false,
+        "evidence": {}
+      },
+      {
+        "id": "G8-08",
+        "name": "浏览器切换 hint 文案",
+        "pass": true,
+        "skipped": false,
+        "evidence": {
+          "smartHintLen": 30,
+          "manualHintLen": 30
+        }
+      },
+      {
+        "id": "G8-09",
+        "name": "真实导入 toast templateFeedbackMessage",
+        "pass": true,
+        "skipped": false,
+        "evidence": {
+          "snippet": "《G8 测试》已生成 · 照片 8 张，行程 2 段\n已为你匹配：视觉游记"
+        }
+      },
+      {
+        "id": "G8-10",
+        "name": "LAN 权限拒绝 UI",
+        "pass": true,
+        "skipped": false,
+        "evidence": {
+          "logSnippet": "{\n  \"status\": 403,\n  \"body\": {\n    \"ok\": false,\n    \"error\": \"E_TEMPLATE_PERMISSION_DENIED\",\n    \"message\": \"模板管理权限不足\",\n    \"role\": \"viewer\"\n  }\n}"
+        }
+      },
+      {
+        "id": "G8-11",
+        "name": "书架 templateSourceLabel / 预览栏",
+        "pass": true,
+        "skipped": false,
+        "evidence": {
+          "shelf": {
+            "cardSnippet": "京都\n京都 · 雨后\n\n智能匹配 · 24 张 · 1 天前"
+          },
+          "preview": {
+            "tripId": "g8-preview"
+          }
+        }
+      }
+    ],
+    "automatedPass": true,
+    "playwrightIncluded": true,
+    "summary": "自动化走查 11/11 通过"
+  },
+  "signedAt": "2026-06-03T13:42:08+00:00",
+  "signoffMode": "dev-automated",
+  "notes": [
+    "自动化 HTTP+Playwright 走查通过。"
+  ]
+}

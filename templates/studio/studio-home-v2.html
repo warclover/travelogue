@@ -292,6 +292,16 @@
         <input type="text" id="v2-trip-title" maxlength="20" autocomplete="off"
                placeholder="给这本画册起个名字" />
       </label>
+      <label class="v2-sheet__field">
+        <span class="v2-sheet__field-label">模板</span>
+        <select id="v2-template-mode" aria-label="模板选择">
+          <option value="smart" selected>智能匹配（推荐）</option>
+          <option value="manual:visual-journal">视觉游记（手动指定）</option>
+        </select>
+        <p class="v2-sheet__hint" id="v2-template-hint" role="note">
+          智能匹配会根据行程天数、地点与视频占比推荐模板；不确定时自动使用视觉游记。
+        </p>
+      </label>
       <div class="v2-sheet__actions">
         <button type="button" class="v2-sheet__primary" id="v2-sheet-start">开始制作 →</button>
         <button type="button" class="v2-sheet__repick" id="v2-sheet-repick">重新选择文件夹</button>

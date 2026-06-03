@@ -1,0 +1,38 @@
+{
+  "generatedAt": "2026-06-03T13:34:45+00:00",
+  "releaseReady": true,
+  "items": [
+    {
+      "id": "REL-01",
+      "name": "G8 走查",
+      "pass": true,
+      "partial": false,
+      "detail": "signed"
+    },
+    {
+      "id": "REL-02",
+      "name": "G6 72h 指标",
+      "pass": true,
+      "partial": true,
+      "detail": "phase13-metrics-72h.json pass=True route_total=None",
+      "note": "生产须真实流量窗口；dev 在 drill 后需 metrics_reset 再采 72h"
+    },
+    {
+      "id": "REL-03",
+      "name": "开发 Gate signoff",
+      "pass": true,
+      "detail": "go=True"
+    },
+    {
+      "id": "REL-14",
+      "name": "预发 rollback 归档",
+      "pass": true,
+      "detail": "自动化演练 6/6 通过"
+    }
+  ],
+  "notes": [
+    "开发 P0 已归档；一键重跑: python scripts/phase13_p0_release_finalize.py",
+    "生产 REL-02: 真实流量 72h，勿用 reset；顺序: drill 前先采指标或 drill 后 reset 再采",
+    "生产 REL-01: 若不接受 dev-automated 签字，走查后改 signoffMode 与 signoffs 真人字段"
+  ]
+}

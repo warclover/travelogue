@@ -181,12 +181,75 @@ def handle_patch_intent(handler: StudioHandlerProtocol, trip_id: str) -> None:
         if not kwargs:
             handler._json_response(400, {"ok": False, "error": "no intent fields"})
             return
+        from travelogue.templating.guardrails import validate_edit_payload
+        from travelogue.templating.resolver import resolve_effective_template
+
+        fields: dict[str, str] = {}
+        if "title" in kwargs:
+            fields["meta.title"] = "meta.title"
+        if "places" in kwargs:
+            fields["meta.places"] = "meta.places"
+        gerrs = validate_edit_payload(resolve_effective_template(trip), fields)
+        if gerrs:
+            handler._json_response(
+                403,
+                {"ok": False, "error": "E_TEMPLATE_GUARDRAIL", "message": gerrs[0]},
+            )
+            return
         intent = apply_intent(trip, **kwargs)
         svc.save(trip, trip_json)
     except (ValueError, TypeError) as exc:
         handler._json_response(400, {"ok": False, "error": str(exc)})
         return
     handler._json_response(200, {"ok": True, "intent": intent})
+
+
+def handle_patch_template(handler: StudioHandlerProtocol, trip_id: str) -> None:
+    """受控调整模板策略（PRD §5.10.2）；锁定态拒绝。"""
+    from travelogue.templating.resolver import is_template_locked
+    from travelogue.templating.router import apply_template_selection
+    from travelogue.templating.summary import build_template_summary
+
+    payload = handler._read_json_body()
+    if not payload:
+        return
+    loaded = load_trip_or_404(handler, trip_id)
+    if loaded is None:
+        return
+    trip_dir, trip = loaded
+    if is_template_locked(trip):
+        handler._json_response(
+            409,
+            {
+                "ok": False,
+                "error": "E_TEMPLATE_LOCKED",
+                "message": "模板已锁定，无法调整",
+            },
+        )
+        return
+    mode_raw = str(payload.get("mode") or payload.get("templateMode") or "smart").strip().lower()
+    mode = "manual" if mode_raw == "manual" else "smart"
+    template_id = payload.get("templateId") or payload.get("template_id")
+    template_id_str = str(template_id).strip() if template_id else None
+    if mode == "manual" and not template_id_str:
+        handler._json_response(400, {"ok": False, "error": "templateId required for manual mode"})
+        return
+    ctx = studio_ctx(handler)
+    selection = apply_template_selection(
+        trip,
+        mode=mode,  # type: ignore[arg-type]
+        requested_template_id=template_id_str,
+        cfg=ctx.cfg,
+        recompute=True,
+        trip_dir=trip_dir,
+        log_action="user_adjust",
+    )
+    trip_json = trip_dir / "trip.json"
+    ctx.trip_service().save(trip, trip_json)
+    handler._json_response(
+        200,
+        {"ok": True, "template": build_template_summary(trip), "templateSelection": selection},
+    )
 
 
 def handle_patch_pipeline(handler: StudioHandlerProtocol, trip_id: str) -> None:

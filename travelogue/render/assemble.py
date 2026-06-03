@@ -141,6 +141,24 @@ def build_render_context(
     zip_name = share_zip_filename(trip)
     zip_ready = has_share_zip(trip, trip_root)
 
+    placeholder_script = ""
+    if surface.is_draft:
+        try:
+            import json
+
+            from travelogue.templating.guardrails import guardrails_for
+            from travelogue.templating.resolver import resolve_effective_template
+
+            ph = guardrails_for(resolve_effective_template(trip)).get("placeholders") or {}
+            if ph:
+                placeholder_script = (
+                    "<script>window.TRAVELOGUE_PLACEHOLDERS="
+                    + json.dumps(ph, ensure_ascii=False)
+                    + ";</script>"
+                )
+        except Exception:
+            placeholder_script = ""
+
     ctx: TripRenderContext = {
         "lang": "zh-CN",
         "htmlExtraAttrs": " ".join(html_attrs),
@@ -157,6 +175,7 @@ def build_render_context(
         "layoutEngine": surface.layout_engine,
         "exportMode": surface.export_mode,
         "isDraft": surface.is_draft,
+        "placeholderScript": placeholder_script,
         "isShare": surface.is_share,
         "title": meta_title,
         "subtitle": (meta.get("subtitle") or "").strip(),

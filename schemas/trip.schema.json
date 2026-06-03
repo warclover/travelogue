@@ -25,7 +25,12 @@
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$"
     },
-    "templateId": { "const": "visual-journal" },
+    "templateId": {
+      "type": "string",
+      "enum": ["visual-journal", "event-recap"],
+      "default": "visual-journal"
+    },
+    "templateSelection": { "$ref": "#/$defs/templateSelection" },
     "exportLayout": {
       "type": "string",
       "enum": ["auto", "mobile", "web"],
@@ -72,6 +77,29 @@
     "intent": { "$ref": "#/$defs/intent" }
   },
   "$defs": {
+    "templateSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Phase 13 template routing decision (optional on legacy trips).",
+      "properties": {
+        "mode": { "type": "string", "enum": ["smart", "manual"] },
+        "requestedTemplateId": { "type": ["string", "null"] },
+        "resolvedTemplateId": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reasonCodes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "fallbackUsed": { "type": "boolean" },
+        "routerVersion": { "type": "string" },
+        "routerConfigVersion": { "type": "string" },
+        "featureSnapshotVersion": { "type": "string" },
+        "registryVersion": { "type": "string" },
+        "locked": { "type": "boolean" },
+        "lockedAt": { "type": ["string", "null"], "format": "date-time" },
+        "decisionHash": { "type": "string" }
+      }
+    },
     "intent": {
       "type": "object",
       "additionalProperties": false,

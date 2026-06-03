@@ -422,6 +422,15 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
     }
     if photo.content_sig:
         entry["contentSig"] = photo.content_sig
+    if subj.face_count > 0:
+        q = entry.get("quality")
+        if isinstance(q, dict):
+            q["faceCount"] = int(subj.face_count)
+            if subj.salient_box:
+                face_ratio = float(subj.salient_box.get("w", 0.0)) * float(
+                    subj.salient_box.get("h", 0.0)
+                )
+                q["faceRatio"] = round(max(0.0, min(1.0, face_ratio)), 4)
     entry["mediaClass"] = classify_media_class(
         path=photo.photo,
         img=photo.img,
@@ -431,6 +440,9 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
     if tags:
         entry["tags"] = tags
         entry["tagsSource"] = "heuristic"
+    from travelogue.curation.subject_tagging import semantic_category_for_asset
+
+    entry["semanticTag"] = {"category": semantic_category_for_asset(entry)}
     if crop_m:
         entry["cropMobile"] = crop_m
     if crop_w:

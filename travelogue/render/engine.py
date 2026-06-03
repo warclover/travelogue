@@ -30,8 +30,16 @@ from travelogue.paths import (
     SCROLL_NAV_JS,
     SHARE_JS,
     TEMPLATE_VISUAL_JOURNAL,
+    template_dir_for,
 )
 from travelogue.errors import CodeError
+from travelogue.templates.registry import (
+    DEFAULT_TEMPLATE_ID,
+    EVENT_RECAP_TEMPLATE_ID,
+    check_template_health,
+    get_registry,
+)
+from travelogue.templating.resolver import resolve_effective_template
 from travelogue.render.context import build_render_context, collect_asset_paths
 from travelogue.services.validate import validate_trip
 
@@ -370,10 +378,26 @@ def copy_inline_edit_bundle(out_dir: Path) -> None:
 
 def _load_partials(compiler: Compiler, partials_dir: Path) -> dict[str, object]:
     partials: dict = {}
+    if not partials_dir.is_dir():
+        return partials
     for path in sorted(partials_dir.glob("*.hbs")):
         name = path.stem
         partials[name] = compiler.compile(path.read_text(encoding="utf-8"))
     return partials
+
+
+def _load_partials_for_template(template_id: str, compiler: Compiler) -> dict[str, object]:
+    rec = get_registry().get(template_id)
+    merged: dict[str, object] = {}
+    if rec.shared_partials_from:
+        shared_dir = template_dir_for(rec.shared_partials_from) / "partials"
+        merged.update(_load_partials(compiler, shared_dir))
+    local_dir = rec.template_dir / "partials"
+    merged.update(_load_partials(compiler, local_dir))
+    return merged
+
+
+RENDERABLE_TEMPLATE_IDS = frozenset({DEFAULT_TEMPLATE_ID, EVENT_RECAP_TEMPLATE_ID})
 
 
 def _compile_template(compiler: Compiler, template_dir: Path) -> object:
@@ -398,13 +422,19 @@ def render_html(
     reading_profile_override: str | None = None,
     cfg: AppConfig | None = None,
 ) -> str:
-    if template_id != "visual-journal":
-        raise RenderError("E_RENDER_TEMPLATE", f"unsupported templateId: {template_id}")
+    effective = template_id or DEFAULT_TEMPLATE_ID
+    healthy, health_errs = check_template_health(effective)
+    if not healthy:
+        raise RenderError(
+            "E_RENDER_TEMPLATE",
+            f"template not healthy: {effective}: {'; '.join(health_errs)}",
+        )
+    if effective not in RENDERABLE_TEMPLATE_IDS:
+        raise RenderError("E_RENDER_TEMPLATE", f"unsupported templateId: {effective}")
 
-    tdir = template_dir or TEMPLATE_VISUAL_JOURNAL
-    partials_dir = tdir / "partials"
+    tdir = template_dir or template_dir_for(effective)
     compiler = Compiler()
-    partials = _load_partials(compiler, partials_dir)
+    partials = _load_partials_for_template(effective, compiler)
     template = _compile_template(compiler, tdir)
     ctx = build_render_context(
         trip,
@@ -462,10 +492,70 @@ def render_trip(
         if not abs_path.is_file():
             raise RenderError("E_RENDER_ASSET_MISSING", rel)
 
+    from travelogue.templating.metrics import record_render_outcome
+
+    effective_template = resolve_effective_template(trip)
+    trip_id = str(trip.get("tripId") or trip_path.parent.name)
+    try:
+        return _render_trip_body(
+            trip,
+            trip_path=trip_path,
+            trip_root=trip_root,
+            out_dir=out_dir,
+            effective_template=effective_template,
+            export_mode=export_mode,
+            copy_css=copy_css,
+            write_index=write_index,
+            index_name=index_name,
+            layout_engine=layout_engine,
+            export_layout_override=export_layout_override,
+            font_theme=font_theme,
+            copy_display_override=copy_display_override,
+            reading_profile_override=reading_profile_override,
+            include_longshot=include_longshot,
+            update_pipeline=update_pipeline,
+            cfg=cfg,
+        )
+    except RenderError as exc:
+        record_render_outcome(
+            trip_id=trip_id,
+            template_id=effective_template,
+            ok=False,
+            error_code=getattr(exc, "code", None),
+        )
+        raise
+
+
+def _render_trip_body(
+    trip: dict,
+    *,
+    trip_path: Path,
+    trip_root: Path,
+    out_dir: Path,
+    effective_template: str,
+    export_mode: str,
+    copy_css: bool,
+    write_index: bool,
+    index_name: str,
+    layout_engine: str | None,
+    export_layout_override: str | None,
+    font_theme: str | None,
+    copy_display_override: str | None,
+    reading_profile_override: str | None,
+    include_longshot: bool | None,
+    update_pipeline: bool,
+    cfg: AppConfig | None,
+) -> Path:
+    from travelogue.templating.metrics import record_render_outcome
+    from travelogue.services.trip import TripService
+
+    trip_id = str(trip.get("tripId") or trip_path.parent.name)
     html = render_html(
         trip,
+        template_id=effective_template,
         export_mode=export_mode,
         trip_root=trip_root,
+        template_dir=template_dir_for(effective_template),
         layout_engine_override=layout_engine,
         export_layout_override=export_layout_override,
         font_theme=font_theme,
@@ -578,6 +668,7 @@ def render_trip(
         )
         TripService().save(trip, trip_path)
 
+    record_render_outcome(trip_id=trip_id, template_id=effective_template, ok=True)
     return out_dir
 
 

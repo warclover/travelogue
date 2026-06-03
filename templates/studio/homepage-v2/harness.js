@@ -2,7 +2,7 @@
  * 首页 v2 · Dev Harness（DEV-HARNESS.md §2/§3）。
  *
  * URL 参数强制态，供 Playwright 跑 AC 自动化与人工走查：
- *  - studioFixture=empty|single-stale|multi|demo-only|error  → mock GET /trips
+ *  - studioFixture=empty|single-stale|multi|multi-templates|demo-only|error  → mock GET /trips
  *  - studioAssetsFail=1                                       → manifest 失败（降级）
  *  - studioState=…                                            → 跳过正常 bootstrap 路由
  *  - studioJob=running|succeeded                              → mock GET /status + POST /import
@@ -70,6 +70,21 @@ const FIXTURES = {
       trip("lisbon", "里斯本 · 电车", { updatedAt: NOW - 9 * DAY }),
       trip("yunnan", "滇西 · 茶马", { updatedAt: NOW - 20 * DAY }),
       trip("demo-album", "示例 · 旅途", { isDemo: true, updatedAt: NOW - 40 * DAY }),
+    ],
+  },
+  "multi-templates": {
+    ok: true,
+    total: 2,
+    trips: [
+      Object.assign(trip("kyoto-rain", "京都 · 雨后", { updatedAt: NOW - DAY }), {
+        templateSourceLabel: "智能匹配",
+        resolvedTemplateId: "visual-journal",
+        templateLocked: false,
+      }),
+      Object.assign(trip("hokkaido", "北海道 · 初雪", { updatedAt: NOW - 2 * DAY }), {
+        templateSourceLabel: "手动指定",
+        templateLocked: true,
+      }),
     ],
   },
   "demo-only": {

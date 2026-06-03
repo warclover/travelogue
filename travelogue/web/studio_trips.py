@@ -67,6 +67,11 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
             )
         except (OSError, json.JSONDecodeError):
             data = {}
+        template_meta: dict = {}
+        if data:
+            from travelogue.templating.summary import build_template_summary
+
+            template_meta = build_template_summary(data)
         preview_rel = _pick_preview(child)
         rows.append(
             (
@@ -79,6 +84,10 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
                     "photoCount": photo_count,
                     "longshotStale": longshot_outputs_stale(child, trip_mtime=updated_at),
                     "previewRelPath": preview_rel,
+                    "resolvedTemplateId": template_meta.get("resolvedTemplateId", "visual-journal"),
+                    "templateSource": template_meta.get("source", "legacy"),
+                    "templateSourceLabel": template_meta.get("sourceLabel", "默认模板"),
+                    "templateLocked": bool(template_meta.get("locked")),
                 },
             )
         )

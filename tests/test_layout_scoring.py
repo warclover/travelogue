@@ -13,6 +13,7 @@ from travelogue.curation.layout_scoring import (
     score_aspect_match,
     PHASE2_WEIGHTS,
     score_screen,
+    score_category_coherence,
 )
 
 
@@ -61,6 +62,7 @@ def test_phase2_weights_sum_to_one():
         + w.burst_integrity
         + w.luminance_continuity
         + w.subject_run
+        + w.category_coherence
     )
     assert abs(total - 1.0) < 1e-6
 
@@ -79,6 +81,7 @@ def test_phase3_weights_sum_to_one():
         + w.burst_integrity
         + w.luminance_continuity
         + w.subject_run
+        + w.category_coherence
     )
     assert abs(total - 1.0) < 1e-6
 
@@ -110,6 +113,26 @@ def test_subject_run_soft_allows_one_outlier():
         ["a1", "a2", "a3", "a4"], assets, target_run=3, tolerance=1
     )
     assert score >= 0.5
+
+
+def test_category_coherence_rewards_same_semantic_category() -> None:
+    ids = ["a1", "a2", "a3"]
+    assets = {
+        "a1": {"semanticTag": {"category": "food"}},
+        "a2": {"semanticTag": {"category": "food"}},
+        "a3": {"semanticTag": {"category": "food"}},
+    }
+    assert score_category_coherence(ids, assets) == 1.0
+
+
+def test_category_coherence_penalizes_switches() -> None:
+    ids = ["a1", "a2", "a3"]
+    assets = {
+        "a1": {"semanticTag": {"category": "food"}},
+        "a2": {"semanticTag": {"category": "landscape"}},
+        "a3": {"semanticTag": {"category": "person"}},
+    }
+    assert score_category_coherence(ids, assets) == 0.0
 
 
 def test_featured_beam_bonus_per_asset_in_plan() -> None:

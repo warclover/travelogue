@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-06-03T13:19:43+00:00",
+  "windowHours": 72,
+  "metrics": {
+    "windowHours": 72,
+    "counts": {},
+    "rates": {
+      "route_total": 0
+    }
+  },
+  "manual_override_rate": 0.0,
+  "checks": {
+    "fallback_rate": {
+      "value": 0,
+      "max": 0.08,
+      "pass": true
+    },
+    "render_error_rate": {
+      "value": 0,
+      "max": 1,
+      "pass": true
+    },
+    "manual_override_rate": {
+      "value": 0.0,
+      "max": 0.25,
+      "pass": true
+    }
+  },
+  "pass": true,
+  "devRelaxed": false,
+  "emptyWindow": true,
+  "note": "empty_window：GA 闸门字段归档模板（无样本，阈值跳过）"
+}

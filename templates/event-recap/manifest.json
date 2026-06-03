@@ -1,0 +1,112 @@
+{
+  "id": "event-recap",
+  "version": "0.1.0",
+  "name": "Event Recap",
+  "description": "活动回顾模板试点：单日/高视频占比场景（P13 与 visual-journal 共享渲染适配器）。",
+  "page": {
+    "type": "share-page",
+    "breakpointWeb": "48rem",
+    "breakpointWebPx": 768,
+    "layoutProfiles": {
+      "mobile": {
+        "label": "手机分享",
+        "aspectCover": "9/16",
+        "aspectMedia": "9/16",
+        "aspectScroll": "9/16",
+        "captionOverlay": true,
+        "pagePadding": "0"
+      },
+      "web": {
+        "label": "Web 浏览",
+        "aspectCover": "16/9",
+        "aspectMedia": "16/9",
+        "aspectScroll": "16/9",
+        "captionOverlay": false,
+        "pageWidth": "min(1100px, 96vw)",
+        "bleedWidth": "min(1400px, 100vw)"
+      }
+    }
+  },
+  "limits": {
+    "tripTitleMaxChars": 20,
+    "tripSubtitleMaxChars": 32,
+    "hookMaxChars": 56,
+    "chapterTitleMaxChars": 12,
+    "chapterLeadMaxChars": 80,
+    "mediaTitleMaxChars": 14,
+    "captionMaxChars": 60,
+    "transcriptPreviewMaxChars": 40,
+    "epilogueMaxChars": 80,
+    "minChapters": 1,
+    "maxChapters": 5,
+    "maxPhotosPerTrip": 250,
+    "maxVideosPerTrip": 10,
+    "maxVoicePerTrip": 15,
+    "maxVoicePerChapter": 5,
+    "maxVideosPerChapter": 3,
+    "maxMediaCardsPerChapter": 12
+  },
+  "blocks": [
+    "cover-hero",
+    "trip-meta",
+    "hook-line",
+    "chapter-header",
+    "chapter-lead",
+    "media-card",
+    "media-row",
+    "media-scroll",
+    "layout-screen",
+    "footer-cta"
+  ],
+  "patterns": [
+    {
+      "id": "event-open",
+      "label": "活动开篇",
+      "sequence": ["chapter-header", "chapter-lead", "media-card"]
+    },
+    {
+      "id": "event-highlight",
+      "label": "高光集锦",
+      "sequence": ["chapter-header", "media-scroll"]
+    }
+  ],
+  "narrativeRules": [
+    "优先视频高光与短章节结构",
+    "单日活动默认可 1 章"
+  ],
+  "rules": [
+    "试点阶段与 visual-journal 共用 screens 引擎与样式资源"
+  ],
+  "exportLayout": {
+    "values": ["auto", "mobile", "web"],
+    "default": "auto",
+    "htmlAttr": "data-layout"
+  },
+  "layoutEngine": {
+    "values": ["legacy", "screens"],
+    "default": "screens",
+    "version": "screens-2"
+  },
+  "templateMeta": {
+    "category": "event",
+    "tags": ["single-day", "event", "video-heavy"],
+    "style": "highlight",
+    "complexity": "low",
+    "bestFor": ["单日活动", "视频高光回顾"],
+    "editableScopes": [
+      "meta.title",
+      "meta.subtitle",
+      "chapters.*.title",
+      "chapters.*.lead",
+      "assets.*.caption"
+    ],
+    "lockedScopes": [
+      "chapters.*.screens",
+      "pipeline",
+      "templateSelection"
+    ],
+    "placeholders": {
+      "meta.title": "活动名称"
+    }
+  }
+}

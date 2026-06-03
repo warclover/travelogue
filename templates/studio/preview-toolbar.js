@@ -12,6 +12,7 @@ import {
 import { startJobPollInterval, pollJobUntilDone } from "./js/job-poll.js";
 import { buildLongshotRequest } from "./js/longshot-client.js";
 import { STUDIO_USER_NOTES_MAX_LEN } from "./js/constants.js";
+import { trackStudioEvent } from "./js/analytics.js";
 
 var isJobBusy409 = isJobBusyResponse;
 var HINT_KEY = "travelogue.studio.editHint.dismissed";
@@ -1126,6 +1127,68 @@ var narrateJobId = null;
       });
   }
 
+  function initTemplateBadge(root, tripId) {
+    var bar = root.querySelector(".preview-toolbar__bar");
+    if (!bar || bar.querySelector(".preview-toolbar__template")) return;
+    fetchEntry(tripId).then(function (data) {
+      var t = data && data.template;
+      if (!t) return;
+      var pill = document.createElement("span");
+      pill.className = "preview-toolbar__template";
+      pill.setAttribute("title", t.feedbackMessage || "");
+      var label = t.sourceLabel || "模板";
+      if (t.locked) label += " · 已锁定";
+      pill.textContent = label + " · " + (t.resolvedTemplateId || "visual-journal");
+      bar.insertBefore(pill, bar.firstChild);
+      trackStudioEvent("template_selector_impression", { surface: "preview", tripId: tripId });
+      if (!t.locked) {
+        var wrap = document.createElement("span");
+        wrap.className = "preview-toolbar__template-adjust";
+        var sel = document.createElement("select");
+        sel.setAttribute("aria-label", "调整模板");
+        ["smart", "manual:visual-journal", "manual:event-recap"].forEach(function (v) {
+          var o = document.createElement("option");
+          o.value = v;
+          o.textContent = v === "smart" ? "智能匹配" : v.slice(7);
+          sel.appendChild(o);
+        });
+        if (t.mode === "manual" && t.resolvedTemplateId) {
+          sel.value = "manual:" + t.resolvedTemplateId;
+        } else {
+          sel.value = "smart";
+        }
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = "应用";
+        btn.addEventListener("click", function () {
+          var v = String(sel.value || "smart");
+          var body = { mode: v.indexOf("manual:") === 0 ? "manual" : "smart" };
+          if (body.mode === "manual") body.templateId = v.slice(7);
+          fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/template", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+              if (!res.ok) {
+                showToolbarToast((res.j && res.j.message) || "模板调整失败", { error: true });
+                return;
+              }
+              showToolbarToast("模板策略已更新", { duration: 2000 });
+              pill.textContent = (res.j.template && res.j.template.sourceLabel) || "已更新";
+            })
+            .catch(function () {
+              showToolbarToast("模板调整失败", { error: true });
+            });
+        });
+        wrap.appendChild(sel);
+        wrap.appendChild(btn);
+        bar.insertBefore(wrap, pill.nextSibling);
+      }
+    }).catch(function () { /* ignore */ });
+  }
+
   function initToolbar(root) {
     var tripId = tripIdFromPath();
     if (!tripId) return;
@@ -1136,6 +1199,7 @@ var narrateJobId = null;
     var menu = root.querySelector(".preview-toolbar__more-menu");
     var revealBtn = root.querySelector(".preview-toolbar__reveal-folder");
 
+    initTemplateBadge(root, tripId);
     var drawers = initPreviewDrawers(root, tripId);
     initG1Banner(root, tripId, drawers);
 

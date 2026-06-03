@@ -131,9 +131,26 @@
     el.setAttribute("data-edit-initial", (el.textContent || "").trim());
   }
 
+  function applyPlaceholderHints(fields) {
+    var ph = global.TRAVELOGUE_PLACEHOLDERS || {};
+    for (var i = 0; i < fields.length; i++) {
+      var el = fields[i];
+      var path = el.getAttribute("data-edit-path");
+      if (!path || !ph[path]) continue;
+      var hint = ph[path];
+      var title = "点击编辑 · " + hint;
+      el.setAttribute("title", title);
+      el.setAttribute("aria-label", title);
+      if (!(el.textContent || "").trim()) {
+        el.setAttribute("data-placeholder-hint", hint);
+      }
+    }
+  }
+
   function init() {
     if (!isDraft() || !isEditableEnabled()) return;
     var fields = document.querySelectorAll("[data-editable][data-edit-path]");
+    applyPlaceholderHints(fields);
     for (var i = 0; i < fields.length; i++) {
       bindField(fields[i]);
     }

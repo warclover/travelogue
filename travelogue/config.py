@@ -111,11 +111,19 @@ class CullConfig:
     score_aesthetic_weight_ml: float = 0.35
     score_bias_ml: float = 0.10
     score_duplicate_group_penalty: float = 0.0
+    score_threshold: float = 0.0
+    score_topk_ratio: float = 1.0
     enable_cull_explain: bool = True
     aesthetic_metric: str = "topiq_nr"
     portrait_face_aesthetic: bool = True
     allow_cpu_ml: bool = False
     ml_device: str = "auto"
+    portrait_quality_enabled: bool = True
+    face_ratio_portrait_min: float = 0.15
+    face_ratio_gray_low: float = 0.10
+    face_ratio_gray_high: float = 0.20
+    score_branch_weight_portrait: float = 0.15
+    score_branch_weight_landscape: float = 0.15
 
 
 @dataclass
@@ -268,6 +276,7 @@ class LayoutScoringConfig:
             "tone_continuity": 0.0,
             "layout_rhythm": 0.0,
             "gravity_balance": 0.0,
+            "category_coherence": 0.0,
         }
     )
 
@@ -293,6 +302,29 @@ class StudioConfig:
     """Studio workbench (Phase 4 M17 · G1)."""
 
     g1_confirm_structure: bool = False
+
+
+@dataclass
+class TemplateRouterConfig:
+    """Phase 13 template routing (PRD §9)."""
+
+    enabled: bool = True
+    default_template: str = "visual-journal"
+    confidence_threshold: float = 0.65
+    allow_manual_override: bool = True
+    allowed_templates: tuple[str, ...] = ("visual-journal", "event-recap")
+    beta_allowlist_trip_ids: tuple[str, ...] = ()
+    display_order: tuple[str, ...] = ("visual-journal", "event-recap")
+    shadow_mode: bool = False
+    discovery_sort_mode: str = "recommended"
+
+
+@dataclass
+class TemplateAdminConfig:
+    """Template governance admin API (Phase 13)."""
+
+    default_role_loopback: str = "template_admin"
+    require_role_on_lan: bool = True
 
 
 @dataclass
@@ -352,6 +384,8 @@ class AppConfig:
     narrative: NarrativeConfig = field(default_factory=NarrativeConfig)
     llm: LlmConfig = field(default_factory=LlmConfig)
     phase6: Phase6ObservabilityConfig = field(default_factory=Phase6ObservabilityConfig)
+    template_router: TemplateRouterConfig = field(default_factory=TemplateRouterConfig)
+    template_admin: TemplateAdminConfig = field(default_factory=TemplateAdminConfig)
 
 
 def _phase6_ac_from_dict(raw: dict[str, Any]) -> Phase6AcThresholds:
@@ -526,6 +560,12 @@ def _cull_from_dict(raw: dict[str, Any]) -> CullConfig:
         score_duplicate_group_penalty=float(
             score_raw.get("duplicate_group_penalty", score_raw.get("duplicateGroupPenalty", 0.0))
         ),
+        score_threshold=float(
+            score_raw.get("threshold", score_raw.get("scoreThreshold", 0.0))
+        ),
+        score_topk_ratio=float(
+            score_raw.get("topk_ratio", score_raw.get("topkRatio", 1.0))
+        ),
         enable_cull_explain=cfg_bool(
             raw, "enable_cull_explain", "enableCullExplain", True
         ),
@@ -535,6 +575,24 @@ def _cull_from_dict(raw: dict[str, Any]) -> CullConfig:
         ),
         allow_cpu_ml=bool(ml_raw.get("allow_cpu_ml", ml_raw.get("allowCpuMl", False))),
         ml_device=str(ml_raw.get("device", "auto")),
+        portrait_quality_enabled=cfg_bool(
+            raw, "portrait_quality_enabled", "portraitQualityEnabled", True
+        ),
+        face_ratio_portrait_min=cfg_float(
+            raw, "face_ratio_portrait_min", "faceRatioPortraitMin", 0.15
+        ),
+        face_ratio_gray_low=cfg_float(
+            raw, "face_ratio_gray_low", "faceRatioGrayLow", 0.10
+        ),
+        face_ratio_gray_high=cfg_float(
+            raw, "face_ratio_gray_high", "faceRatioGrayHigh", 0.20
+        ),
+        score_branch_weight_portrait=cfg_float(
+            raw, "score_branch_weight_portrait", "scoreBranchWeightPortrait", 0.15
+        ),
+        score_branch_weight_landscape=cfg_float(
+            raw, "score_branch_weight_landscape", "scoreBranchWeightLandscape", 0.15
+        ),
     )
 
 
@@ -836,6 +894,8 @@ def load_config(path: Path | None = None) -> AppConfig:
     cull_raw = data.get("cull") if isinstance(data.get("cull"), dict) else {}
     studio_raw = data.get("studio") if isinstance(data.get("studio"), dict) else {}
     phase6_raw = data.get("phase6") if isinstance(data.get("phase6"), dict) else {}
+    template_router_raw = data.get("template_router") if isinstance(data.get("template_router"), dict) else {}
+    template_admin_raw = data.get("template_admin") if isinstance(data.get("template_admin"), dict) else {}
     banned_raw = narrative_raw.get("banned_phrases") or []
     banned = tuple(str(p) for p in banned_raw if p) if isinstance(banned_raw, list) else ()
     llm_provider = str(llm_raw.get("provider", "stub")).strip().lower()
@@ -939,6 +999,65 @@ def load_config(path: Path | None = None) -> AppConfig:
             ),
         ),
         phase6=_phase6_from_dict(phase6_raw),
+        template_router=TemplateRouterConfig(
+            enabled=bool(template_router_raw.get("enabled", True)),
+            default_template=str(
+                template_router_raw.get("default_template", template_router_raw.get("defaultTemplate", "visual-journal"))
+            ),
+            confidence_threshold=float(
+                template_router_raw.get(
+                    "confidence_threshold",
+                    template_router_raw.get("confidenceThreshold", 0.65),
+                )
+            ),
+            allow_manual_override=bool(
+                template_router_raw.get(
+                    "allow_manual_override",
+                    template_router_raw.get("allowManualOverride", True),
+                )
+            ),
+            allowed_templates=tuple(
+                str(x)
+                for x in (
+                    template_router_raw.get("allowed_templates")
+                    or template_router_raw.get("allowedTemplates")
+                    or ["visual-journal"]
+                )
+            ),
+            beta_allowlist_trip_ids=tuple(
+                str(x)
+                for x in (
+                    template_router_raw.get("beta_allowlist_trip_ids")
+                    or template_router_raw.get("betaAllowlistTripIds")
+                    or []
+                )
+            ),
+            display_order=tuple(
+                str(x)
+                for x in (
+                    template_router_raw.get("display_order")
+                    or template_router_raw.get("displayOrder")
+                    or ["visual-journal", "event-recap"]
+                )
+            ),
+            shadow_mode=bool(
+                template_router_raw.get("shadow_mode", template_router_raw.get("shadowMode", False))
+            ),
+            discovery_sort_mode=str(
+                template_router_raw.get(
+                    "discovery_sort_mode",
+                    template_router_raw.get("discoverySortMode", "recommended"),
+                )
+            ),
+        ),
+        template_admin=TemplateAdminConfig(
+            default_role_loopback=str(
+                template_admin_raw.get("default_role_loopback", template_admin_raw.get("defaultRoleLoopback", "template_admin"))
+            ),
+            require_role_on_lan=bool(
+                template_admin_raw.get("require_role_on_lan", template_admin_raw.get("requireRoleOnLan", True))
+            ),
+        ),
     )
 
 

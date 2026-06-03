@@ -7,8 +7,21 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schemas" / "trip.schema.json"
 FIXTURES_DIR = ROOT / "schemas" / "fixtures"
-MANIFEST_PATH = ROOT / "templates" / "visual-journal" / "manifest.json"
-TEMPLATE_VISUAL_JOURNAL = ROOT / "templates" / "visual-journal"
+TEMPLATES_ROOT = ROOT / "templates"
+MANIFEST_PATH = TEMPLATES_ROOT / "visual-journal" / "manifest.json"
+TEMPLATE_VISUAL_JOURNAL = TEMPLATES_ROOT / "visual-journal"
+
+
+def template_dir_for(template_id: str) -> Path:
+    from travelogue.templates.registry import get_registry
+
+    return get_registry().get(template_id).template_dir
+
+
+def manifest_path_for(template_id: str) -> Path:
+    from travelogue.templates.registry import get_registry
+
+    return get_registry().get(template_id).manifest_path
 GOLDEN_HTML = TEMPLATE_VISUAL_JOURNAL / "golden.html"
 GOLDEN_TRIP_FIXTURE = FIXTURES_DIR / "trip.render_golden.json"
 GOLDEN_REFERENCE_DIR_NAME = "_golden-reference"

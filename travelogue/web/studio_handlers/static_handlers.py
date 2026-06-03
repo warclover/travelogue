@@ -86,6 +86,21 @@ def handle_home_root(handler: StudioHandlerProtocol) -> bool:
     return True
 
 
+def handle_templates_admin_page(handler: StudioHandlerProtocol) -> None:
+    """GET /templates-admin — Phase 13 治理控制台（静态页 + Admin API）。"""
+    html_path = STUDIO_TEMPLATE_DIR / "templates-admin.html"
+    if not html_path.is_file():
+        handler.send_error(404)
+        return
+    data = html_path.read_text(encoding="utf-8").encode("utf-8")
+    handler.send_response(200)
+    handler.send_header("Content-Type", "text/html; charset=utf-8")
+    handler.send_header("Content-Length", str(len(data)))
+    handler.send_header("Cache-Control", "no-cache")
+    handler.end_headers()
+    handler.wfile.write(data)
+
+
 def handle_home(handler: StudioHandlerProtocol) -> None:
     """Serve v3 (image-first) homepage — frozen, GET /classic."""
     _serve_studio_home(handler, "legacy-freeze/studio.classic.html")

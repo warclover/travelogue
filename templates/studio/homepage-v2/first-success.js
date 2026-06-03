@@ -86,7 +86,22 @@ function populateSuccessUi(result) {
       var summary = featured > 0 ? ("精选 " + featured + " 张") : ("照片 " + photoCount + " 张");
       if (segments > 0) summary += "，行程 " + segments + " 段";
       var line1 = "《" + title + "》已生成 · " + summary;
-      msg.textContent = result.cullUserLine ? (line1 + "\n" + result.cullUserLine) : line1;
+      var tplLine = result.templateFeedbackMessage || "";
+      var body = line1;
+      if (tplLine) body += "\n" + tplLine;
+      if (result.cullUserLine) body += "\n" + result.cullUserLine;
+      msg.textContent = body;
+      if (result.templateFeedbackKind) {
+        var ev = result.templateFeedbackKind === "fallback"
+          ? "template_fallback_shown"
+          : (result.templateFeedbackKind === "manual"
+            ? "template_manual_selected"
+            : "template_smart_result_shown");
+        trackStudioEvent(ev, {
+          tripId: result.tripId || null,
+          templateId: result.resolvedTemplateId || null,
+        });
+      }
     }
   }
   if (result.cullWarn && typeof studioToast === "function") {

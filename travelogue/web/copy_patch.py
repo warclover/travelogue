@@ -175,6 +175,15 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
 
 
 def apply_copy_patches(trip: dict, patches: list[dict]) -> list[str]:
+    paths = [str(p.get("path") or "") for p in patches if p.get("path")]
+    from travelogue.templating.guardrails import enforce_copy_paths
+
+    try:
+        enforce_copy_paths(trip, paths)
+    except ValueError as exc:
+        if str(exc).startswith("E_TEMPLATE_GUARDRAIL"):
+            raise CopyPatchError("E_TEMPLATE_GUARDRAIL", str(exc).split(": ", 1)[-1]) from exc
+        raise
     updated: list[str] = []
     for patch in patches:
         path = patch.get("path")

@@ -49,6 +49,14 @@ def _asset(
     return a
 
 
+def _asset_with_face_ratio(aid: str, *, face_ratio: float, sharp: float = 100.0) -> dict:
+    a = _asset(aid, sharp=sharp, media_class="photo")
+    q = a.setdefault("quality", {})
+    if isinstance(q, dict):
+        q["faceRatio"] = face_ratio
+    return a
+
+
 def test_pass1_excludes_screenshot_and_blur() -> None:
     cfg = CullConfig(enabled=True, blur_percentile=50.0, sharpness_absolute_min=0.0)
     assets = [
@@ -225,6 +233,9 @@ def test_apply_photo_cull_writes_trip_curation() -> None:
     assert summary["cullUserLine"] == trip["curation"]["cullUserLine"]
     assert summary["failOpen"] is False
     assert ingest_stats.get("cull_fail_open") is False
+    assert ingest_stats.get("cull_l1_ml_fallback_rate") in (0.0, 1.0)
+    assert 0.0 <= float(ingest_stats.get("cull_l2_branch_fallback_rate") or 0.0) <= 1.0
+    assert ingest_stats.get("cull_l3_fail_open_rate") == 0.0
     assert "a2" in trip["curation"]["excludedByCullAssetIds"]
 
 
@@ -401,8 +412,13 @@ def test_cull_fail_open_restores_eligible(monkeypatch: pytest.MonkeyPatch) -> No
     assert all("excludeReason" not in a for a in assets)
     assert summary.get("failOpen") is True
     assert summary.get("error")
+    assert summary.get("failOpenRateL3") == 1.0
     assert ingest_stats.get("cull_fail_open") is True
+    assert ingest_stats.get("cull_l1_ml_fallback_rate") == 0.0
+    assert ingest_stats.get("cull_l2_branch_fallback_rate") == 0.0
+    assert ingest_stats.get("cull_l3_fail_open_rate") == 1.0
     assert trip["curation"]["cullSummary"].get("error")
+    assert trip["curation"]["cullSummary"].get("failOpenRateL3") == 1.0
 
 
 def test_keep_ratio_floor_or_pass3_skip() -> None:
@@ -437,6 +453,137 @@ def test_pass3_weights_from_config_affect_rank() -> None:
     assert by_id["a-sharp"]["layoutEligible"] is True
     assert by_id["a-media"]["layoutEligible"] is False
     assert by_id["a-media"]["excludeReason"] == "cull_quota"
+
+
+def test_branch_score_prefers_portrait_when_face_ratio_high() -> None:
+    cfg = CullConfig(
+        enabled=True,
+        min_keep=1,
+        keep_ratio_floor=0.0,
+        score_sharpness_weight_rules=0.0,
+        score_media_weight_rules=0.0,
+        score_branch_weight_portrait=1.0,
+        score_branch_weight_landscape=0.0,
+    )
+    assets = [
+        _asset_with_face_ratio("portrait", face_ratio=0.35, sharp=90.0),
+        _asset_with_face_ratio("landscape", face_ratio=0.01, sharp=90.0),
+    ]
+    run_photo_cull(assets, cfg=cfg)
+    by_id = {a["id"]: a for a in assets}
+    assert by_id["portrait"]["layoutEligible"] is True
+    assert by_id["landscape"]["layoutEligible"] is False
+    assert by_id["portrait"]["quality"]["cullBranch"] == "portrait"
+
+
+def test_summary_includes_branch_ratios() -> None:
+    cfg = CullConfig(enabled=True, min_keep=1, keep_ratio_floor=0.0)
+    assets = [
+        _asset_with_face_ratio("p", face_ratio=0.3, sharp=120.0),
+        _asset_with_face_ratio("g", face_ratio=0.12, sharp=120.0),
+        _asset_with_face_ratio("l", face_ratio=0.01, sharp=120.0),
+    ]
+    summary = run_photo_cull(assets, cfg=cfg)
+    assert "branchPortraitRatio" in summary
+    assert "branchLandscapeRatio" in summary
+    assert "branchGrayRatio" in summary
+    assert float(summary.get("cpuMs", 0.0)) >= 0.0
+    assert "branchFallbackRateL2" in summary
+    assert "branchFallbackByReasonL2" in summary
+    assert summary.get("failOpenRateL3") == 0.0
+
+
+def test_pass3_applies_threshold_without_breaking_floor() -> None:
+    cfg = CullConfig(
+        enabled=True,
+        min_keep=3,
+        keep_ratio_floor=0.0,
+        score_sharpness_weight_rules=1.0,
+        score_media_weight_rules=0.0,
+        score_threshold=0.95,
+    )
+    assets = [_asset(f"a{i}", sharp=10.0 + i) for i in range(6)]
+    summary = run_photo_cull(assets, cfg=cfg)
+    kept = [a for a in assets if a.get("layoutEligible", True)]
+    assert len(kept) == 3
+    assert summary.get("scoreThreshold") == 0.95
+
+
+def test_pass3_applies_topk_ratio_without_breaking_floor() -> None:
+    cfg = CullConfig(
+        enabled=True,
+        min_keep=2,
+        keep_ratio_floor=0.0,
+        score_sharpness_weight_rules=1.0,
+        score_media_weight_rules=0.0,
+        score_topk_ratio=0.4,
+    )
+    assets = [_asset(f"a{i}", sharp=10.0 + i) for i in range(10)]
+    summary = run_photo_cull(assets, cfg=cfg)
+    kept = [a for a in assets if a.get("layoutEligible", True)]
+    assert len(kept) == 4
+    assert summary.get("scoreTopkRatio") == 0.4
+
+
+def test_rank_tie_break_uses_sharpness_before_id() -> None:
+    cfg = CullConfig(
+        enabled=True,
+        min_keep=1,
+        keep_ratio_floor=0.0,
+        score_sharpness_weight_rules=0.0,
+        score_media_weight_rules=0.0,
+        score_topk_ratio=0.5,
+    )
+    assets = [
+        _asset("b", sharp=200.0),
+        _asset("a", sharp=10.0),
+    ]
+    run_photo_cull(assets, cfg=cfg)
+    by_id = {a["id"]: a for a in assets}
+    assert by_id["b"]["layoutEligible"] is True
+    assert by_id["a"]["layoutEligible"] is False
+
+
+def test_branch_fallback_l2_face_signal_missing_counted() -> None:
+    cfg = CullConfig(enabled=True, min_keep=1, keep_ratio_floor=0.0, portrait_quality_enabled=True)
+    assets = [
+        _asset_with_face_ratio("p", face_ratio=0.3, sharp=120.0),
+        _asset("x", sharp=120.0),
+    ]
+    summary = run_photo_cull(assets, cfg=cfg)
+    assert summary.get("branchFallbackRateL2") == 0.5
+    by_reason = summary.get("branchFallbackByReasonL2") or {}
+    assert by_reason.get("face_signal_missing") == 1
+
+
+def test_branch_fallback_l2_gray_zone_counted() -> None:
+    cfg = CullConfig(enabled=True, min_keep=1, keep_ratio_floor=0.0, portrait_quality_enabled=True)
+    assets = [
+        _asset_with_face_ratio("g", face_ratio=0.12, sharp=120.0),
+        _asset_with_face_ratio("p", face_ratio=0.3, sharp=120.0),
+    ]
+    summary = run_photo_cull(assets, cfg=cfg)
+    assert summary.get("branchFallbackRateL2") == 0.5
+    by_reason = summary.get("branchFallbackByReasonL2") or {}
+    assert by_reason.get("gray_zone") == 1
+
+
+def test_branch_fallback_l2_branch_disabled_is_full_ratio() -> None:
+    cfg = CullConfig(
+        enabled=True,
+        min_keep=1,
+        keep_ratio_floor=0.0,
+        portrait_quality_enabled=False,
+    )
+    assets = [
+        _asset_with_face_ratio("a", face_ratio=0.3, sharp=120.0),
+        _asset("b", sharp=120.0),
+        _asset("c", sharp=120.0),
+    ]
+    summary = run_photo_cull(assets, cfg=cfg)
+    assert summary.get("branchFallbackRateL2") == 1.0
+    by_reason = summary.get("branchFallbackByReasonL2") or {}
+    assert by_reason.get("branch_disabled") == 3
 
 
 def test_duplicate_group_penalty_changes_rank() -> None:

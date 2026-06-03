@@ -35,6 +35,9 @@ class StudioPipelineResult:
     tier_mode: str = "single"
     cull_user_line: str = ""
     cull_warn: str = ""
+    template_feedback_kind: str = ""
+    template_feedback_message: str = ""
+    resolved_template_id: str = "visual-journal"
 
 
 def _resolve_tier_mode(ingest_stats: dict) -> str:
@@ -67,6 +70,10 @@ def _finalize_pipeline_result(
     cull_user_line = str(curation.get("cullUserLine") or "")
     cull_summary = curation.get("cullSummary") or {}
     cull_warn = str(cull_summary.get("warnMessage") or "") if cull_summary.get("maxPhotosExceeded") else ""
+    from travelogue.templating.router import template_user_feedback
+
+    sel = trip_final.get("templateSelection") or {}
+    tfb = template_user_feedback(sel)
     write_studio_intent_telemetry(
         trip_final,
         trip_root,
@@ -91,6 +98,9 @@ def _finalize_pipeline_result(
         tier_mode=tier_mode,
         cull_user_line=cull_user_line,
         cull_warn=cull_warn,
+        template_feedback_kind=tfb.get("kind", ""),
+        template_feedback_message=tfb.get("message", ""),
+        resolved_template_id=str(sel.get("resolvedTemplateId") or "visual-journal"),
     )
 
 
@@ -225,6 +235,8 @@ def run_studio_pipeline(
     plan_bytes: bytes | None = None,
     plan_text: str | None = None,
     plan_filename: str = "plan.txt",
+    template_mode: str = "smart",
+    template_id: str | None = None,
 ) -> StudioPipelineResult:
     album_dir = album_dir.resolve()
     cfg_path = resolve_demo_config(config)
@@ -290,12 +302,16 @@ def run_studio_pipeline(
     with app_config_scope(cfg):
         report("ingest", 1)
         cluster_notice = ""
+        mode = "manual" if str(template_mode).strip().lower() == "manual" else "smart"
         trip_json = create_trip(
             slug,
             trips_root,
             title=title,
             place=place,
             export_layout="auto",
+            template_mode=mode,  # type: ignore[arg-type]
+            template_id=template_id,
+            cfg=cfg,
         )
         trip_root = trip_json.parent
         app_ctx = AppContext(cfg=cfg, trips_root=trips_root.resolve())

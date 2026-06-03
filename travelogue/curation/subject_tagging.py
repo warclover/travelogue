@@ -13,6 +13,39 @@ _CLIP_TO_BUCKET: dict[str, str] = {
     "mixed": "general",
 }
 
+_L1_CATEGORY_FROM_CLIP: dict[str, str] = {
+    "person": "person",
+    "portrait": "person",
+    "landscape": "landscape",
+    "nature": "landscape",
+    "sunset": "landscape",
+    "mountain": "landscape",
+    "sea": "landscape",
+    "architecture": "architecture",
+    "temple": "temple",
+    "street": "street",
+    "food": "food",
+    "meal": "food",
+    "cafe": "food",
+    "coffee": "food",
+    "dessert": "food",
+    "drink": "food",
+    "sign": "document",
+    "signage": "document",
+    "ticket": "document",
+    "receipt": "document",
+    "document": "document",
+    "shop": "shop",
+    "store": "shop",
+    "vehicle": "transport",
+    "train": "transport",
+    "plane": "transport",
+    "airport": "transport",
+    "night": "night",
+    "indoor": "general",
+    "mixed": "general",
+}
+
 _CLIP_CONFIDENCE_FLOOR = 0.35
 _FOOD_MUNDANE_TAGS: set[str] = {
     "food",
@@ -92,6 +125,36 @@ def subject_tags_for_asset(asset: dict) -> list[str]:
         if isinstance(t, str) and t.startswith("person"):
             tags.append(t)
     return tags
+
+
+def semantic_category_for_asset(asset: dict) -> str:
+    """Phase 12 L1 semantic category (11-way, conservative fallback)."""
+    semantic = asset.get("semanticTag")
+    if isinstance(semantic, dict):
+        cat = str(semantic.get("category") or "").lower().strip()
+        if cat:
+            return cat
+
+    clip = str(asset.get("subjectClass") or "").lower().strip()
+    if clip:
+        mapped = _L1_CATEGORY_FROM_CLIP.get(clip)
+        if mapped:
+            return mapped
+
+    tags = {str(t).lower().strip() for t in (asset.get("tags") or []) if t}
+    tags.update(str(t).lower().strip() for t in (asset.get("curation") or {}).get("subjectTags") or [] if t)
+    for tag in list(tags):
+        norm = tag.split(":", 1)[-1] if tag.startswith("clip:") else tag
+        mapped = _L1_CATEGORY_FROM_CLIP.get(norm)
+        if mapped:
+            return mapped
+
+    bucket = str(asset.get("subjectBucket") or "").lower().strip()
+    if bucket:
+        mapped = _L1_CATEGORY_FROM_CLIP.get(bucket)
+        if mapped:
+            return mapped
+    return "general"
 
 
 def is_mundane_clusterable(asset: dict) -> str | None:

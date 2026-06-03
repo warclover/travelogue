@@ -1,0 +1,34 @@
+{
+  "generatedAt": "2026-06-03T12:57:26+00:00",
+  "windowHours": 24,
+  "metrics": {
+    "windowHours": 24,
+    "counts": {
+      "template.route.decision": 38,
+      "template.render.success": 15,
+      "template.route.manual_override": 6,
+      "template.render.error": 1,
+      "template.route.fallback": 30
+    },
+    "rates": {
+      "fallback_rate": 0.7895,
+      "render_error_rate": 0.0625,
+      "route_total": 38
+    }
+  },
+  "manual_override_rate": 0.1579,
+  "checks": {
+    "fallback_rate": {
+      "value": 0.7895,
+      "max": 0.12,
+      "pass": false
+    },
+    "render_error_rate": {
+      "value": 0.0625,
+      "max": 0.005,
+      "pass": false
+    }
+  },
+  "pass": false,
+  "note": ""
+}

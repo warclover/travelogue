@@ -62,6 +62,14 @@ export const STUDIO_ERROR_MESSAGES = {
   E_NARRATE_API: "文案生成失败，请重试",
   E_TRIP_NOT_FOUND: "游记不存在",
   E_EXPORT_PRIVACY: "导出 zip 需要确认隐私设置",
+  E_TEMPLATE_LOCKED: "模板已锁定，无法更改",
+  E_TEMPLATE_PERMISSION_DENIED: "模板管理权限不足",
+  E_TEMPLATE_DISABLED: "该模板暂不可用，已回退默认模板",
+  E_TEMPLATE_NOT_FOUND: "模板不存在",
+  E_TEMPLATE_REVISION_CONFLICT: "配置已被更新，请刷新后重试",
+  E_TEMPLATE_CONFIRM_REQUIRED: "需要二次确认后才能执行",
+  E_TEMPLATE_GUARDRAIL: "该字段受模板护栏保护，不可编辑",
+  E_TEMPLATE_LIFECYCLE: "模板状态不允许此操作",
 };
 
 export const DEFAULT_PIPELINE_ESTIMATES = [

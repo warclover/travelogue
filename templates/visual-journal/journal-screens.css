@@ -874,53 +874,85 @@ html[data-folio="full"] .featured-grid__img {
 
 /* P5-S2 · full-bleed chapter separator */
 .chapter-separator[data-block="chapter-separator"] {
-  min-height: min(72vh, 640px);
+  min-height: clamp(140px, 20vh, 260px);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: flex-start;
-  padding: 48px 24px;
+  align-items: center;
+  text-align: center;
+  gap: 0.35rem;
+  padding: clamp(24px, 4vh, 44px) 24px;
   margin: 0 0 var(--chapter-gap, 2rem);
-  color: #f5f2ea;
+  color: var(--chapter-separator-ink, #f5f2ea);
   background: var(--screen-tone, #2a2826);
+  position: relative;
+  overflow: hidden;
+}
+
+.chapter-separator[data-block="chapter-separator"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    var(--chapter-separator-overlay-start, rgba(14, 18, 24, 0.08)) 0%,
+    var(--chapter-separator-overlay-end, rgba(14, 18, 24, 0.18)) 100%
+  );
+  pointer-events: none;
+}
+
+.chapter-separator[data-block="chapter-separator"] > * {
+  position: relative;
+  z-index: 1;
 }
 
 .chapter-separator__index {
   font-size: 12px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  opacity: 0.72;
+  opacity: 0.78;
+  color: color-mix(in srgb, var(--chapter-separator-ink, #f5f2ea) 78%, transparent);
 }
 
 .chapter-separator__title {
-  margin: 8px 0 0;
+  margin: 0;
   font-family: var(--font-brush);
-  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-size: clamp(1.65rem, 4.6vw, 3.2rem);
   font-weight: 400;
-  line-height: 1.05;
+  line-height: 1.12;
+  letter-spacing: var(--chapter-separator-title-tracking, 0.012em);
+  text-shadow: var(--chapter-separator-title-shadow, none);
 }
 
 .chapter-separator__lead {
-  margin: 12px 0 0;
+  margin: 0.4rem 0 0;
   max-width: 20em;
-  font-size: 1rem;
-  opacity: 0.82;
+  font-size: 0.95rem;
+  opacity: 0.9;
+  color: color-mix(in srgb, var(--chapter-separator-ink, #f5f2ea) 90%, transparent);
 }
 
 /* P5-S5 · breath pause screen (web scroll) */
 .breath-pause-screen[data-block="breath-pause-screen"] {
-  min-height: min(40vh, 360px);
+  min-height: clamp(56px, 10vh, 120px);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--breath-tone, #1e1d1b);
-  margin: 0 0 1rem;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--breath-tone, #1e1d1b) 62%, transparent) 0%,
+      color-mix(in srgb, var(--breath-tone, #1e1d1b) 38%, transparent) 100%
+    );
+  border-top: 1px solid color-mix(in srgb, var(--breath-tone, #1e1d1b) 28%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--breath-tone, #1e1d1b) 28%, transparent);
+  margin: 0 0 0.5rem;
 }
 
 .breath-pause-screen__label {
-  font-size: 1.25rem;
-  letter-spacing: 0.35em;
-  color: color-mix(in srgb, #fff 55%, transparent);
+  font-size: 0.92rem;
+  letter-spacing: 0.5em;
+  color: color-mix(in srgb, var(--text, #fff) 38%, transparent);
 }
 
 .epilogue-screen__stats {

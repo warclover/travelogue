@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>模板治理 · Travelogue Studio</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; max-width: 960px; color: #1a2f28; }
+    h1 { font-size: 1.35rem; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th, td { border: 1px solid #d8e5df; padding: 8px 10px; text-align: left; }
+    th { background: #eef5f1; }
+    .ok { color: #1b6b4a; } .bad { color: #a33; }
+    button { margin-right: 8px; padding: 6px 12px; cursor: pointer; }
+    pre { background: #f4f8f6; padding: 12px; overflow: auto; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>模板治理控制台（P13）</h1>
+  <p>需 Studio 鉴权；loopback 默认 <code>template_admin</code>。LAN 模式请设置请求头 <code>X-Template-Role</code>。</p>
+  <p>
+    <label>筛选 lifecycle <input id="filter-lc" placeholder="ga/beta/..." /></label>
+    <label>分类 <input id="filter-cat" placeholder="travel/event" /></label>
+    <label>搜索 <input id="filter-q" placeholder="templateId" /></label>
+    <button type="button" id="btn-refresh">刷新</button>
+    <button type="button" id="btn-dashboard">效果看板 24h</button>
+    <button type="button" id="btn-dashboard-72">效果看板 72h</button>
+    <button type="button" id="btn-register">注册磁盘模板</button>
+    <button type="button" id="btn-l1">L1 关闭路由</button>
+    <button type="button" id="btn-audit">查看审计</button>
+    <button type="button" id="btn-all-decisions">全局决策日志</button>
+  </p>
+  <p>
+    灰度流量% <input id="traffic-pct" type="number" min="0" max="100" value="100" style="width:4em" />
+    推荐集 <input id="rec-templates" placeholder="visual-journal,event-recap" style="min-width:220px" />
+    <button type="button" id="btn-runtime-propose">提交运行时变更（需双人审批）</button>
+  </p>
+  <p>Store revision: <strong id="rev">—</strong></p>
+  <div id="pending-config" hidden>
+    <h2>待审批配置变更（双人复核 §9.1）</h2>
+    <ul id="pending-list"></ul>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>模板</th><th>生命周期</th><th>健康</th><th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <h2>路由回放</h2>
+  <p>
+    <input type="text" id="replay-trip" placeholder="tripId" style="min-width:200px" />
+    <button type="button" id="btn-replay">回放</button>
+    <button type="button" id="btn-decisions">决策日志</button>
+  </p>
+  <pre id="log" hidden></pre>
+  <script type="module">
+    const token = document.querySelector('meta[name="studio-token"]')?.content;
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["X-Studio-Token"] = token;
+    const simulateLanDeny = new URLSearchParams(location.search).get("simulateLanDeny") === "1";
+    headers["X-Template-Role"] = simulateLanDeny ? "viewer" : "template_admin";
+
+    const revEl = document.getElementById("rev");
+    const rowsEl = document.getElementById("rows");
+    const logEl = document.getElementById("log");
+
+    function log(obj) {
+      logEl.hidden = false;
+      logEl.textContent = JSON.stringify(obj, null, 2);
+    }
+
+    async function api(path, opts) {
+      const res = await fetch(path, { ...opts, headers: { ...headers, ...(opts?.headers || {}) } });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw { status: res.status, body };
+      return body;
+    }
+
+    function adminQuery() {
+      const q = new URLSearchParams();
+      const lc = document.getElementById("filter-lc").value.trim();
+      const cat = document.getElementById("filter-cat").value.trim();
+      const fq = document.getElementById("filter-q").value.trim();
+      if (lc) q.set("lifecycle", lc);
+      if (cat) q.set("category", cat);
+      if (fq) q.set("q", fq);
+      const s = q.toString();
+      return s ? "?" + s : "";
+    }
+
+    function renderPending(runtime) {
+      const box = document.getElementById("pending-config");
+      const ul = document.getElementById("pending-list");
+      const pending = (runtime && runtime.pendingConfigChanges) || [];
+      if (!pending.length) {
+        box.hidden = true;
+        return;
+      }
+      box.hidden = false;
+      ul.innerHTML = "";
+      pending.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent =
+          item.id +
+          " · " +
+          (item.operator || "?") +
+          " · approvals:" +
+          (item.approvals || []).length +
+          "/2 · " +
+          JSON.stringify(item.patch || {});
+        const btn = document.createElement("button");
+        btn.textContent = "审批";
+        btn.onclick = () => {
+          const approver = window.prompt("审批人 ID", "admin-2");
+          if (!approver) return;
+          api("/__travelogue/templates/admin/runtime", {
+            method: "POST",
+            body: JSON.stringify({ action: "approve", changeId: item.id, approver: approver.trim() }),
+          })
+            .then(log)
+            .then(refresh)
+            .catch((e) => log(e));
+        };
+        li.appendChild(btn);
+        ul.appendChild(li);
+      });
+    }
+
+    async function refresh() {
+      const data = await api("/__travelogue/templates/admin" + adminQuery());
+      revEl.textContent = String(data.revision);
+      renderPending(data.runtime);
+      rowsEl.innerHTML = "";
+      (data.templates || []).forEach((t) => {
+        const tr = document.createElement("tr");
+        const health = t.healthy
+          ? '<span class="ok">OK</span>'
+          : '<span class="bad">' + (t.healthErrors || []).join("; ") + "</span>";
+        tr.innerHTML =
+          "<td>" + t.templateId + "</td><td>" + t.lifecycle + "</td><td>" + health + "</td><td></td>";
+        const td = tr.lastElementChild;
+        if (t.lifecycle !== "ga") {
+          const b = document.createElement("button");
+          b.textContent = "晋升 GA";
+          b.onclick = () => patchLifecycle(t.templateId, "ga", data.revision);
+          td.appendChild(b);
+        }
+        if (t.lifecycle !== "disabled") {
+          const b2 = document.createElement("button");
+          b2.textContent = "下线";
+          b2.onclick = () => patchLifecycle(t.templateId, "disabled", data.revision, true);
+          td.appendChild(b2);
+        }
+        const b3 = document.createElement("button");
+        b3.textContent = "准入";
+        b3.onclick = () =>
+          api("/__travelogue/templates/admin/admission", {
+            method: "POST",
+            body: JSON.stringify({ templateId: t.templateId }),
+          }).then(log).catch((e) => log(e));
+        td.appendChild(b3);
+        const b4 = document.createElement("button");
+        b4.textContent = "版本";
+        b4.onclick = () =>
+          api("/__travelogue/templates/admin/" + encodeURIComponent(t.templateId) + "/version")
+            .then(log)
+            .catch((e) => log(e));
+        td.appendChild(b4);
+        const meta = t.adminMetadata || {};
+        if (meta.displayName) {
+          tr.children[0].textContent = t.templateId + " · " + meta.displayName;
+        }
+        const bRev = document.createElement("button");
+        bRev.textContent = "提交评审";
+        bRev.onclick = () =>
+          api("/__travelogue/templates/admin/review", {
+            method: "POST",
+            body: JSON.stringify({ templateId: t.templateId, action: "submit" }),
+          })
+            .then(log)
+            .then(refresh)
+            .catch((e) => log(e));
+        td.appendChild(bRev);
+        if ((t.reviewStatus || "") === "pending") {
+          const bAp = document.createElement("button");
+          bAp.textContent = "批准评审";
+          bAp.onclick = () =>
+            api("/__travelogue/templates/admin/review", {
+              method: "POST",
+              body: JSON.stringify({ templateId: t.templateId, action: "approve", operator: "admin-ui" }),
+            })
+              .then(log)
+              .then(refresh)
+              .catch((e) => log(e));
+          td.appendChild(bAp);
+        }
+        const bMeta = document.createElement("button");
+        bMeta.textContent = "元信息";
+        bMeta.onclick = () => editMetadata(t.templateId, meta);
+        td.appendChild(bMeta);
+        const bDel = document.createElement("button");
+        bDel.textContent = "逻辑删除";
+        bDel.onclick = () => logicalDelete(t.templateId);
+        td.appendChild(bDel);
+        const b5 = document.createElement("button");
+        b5.textContent = "预览渲染";
+        b5.onclick = () => {
+          const tripId = document.getElementById("replay-trip").value.trim();
+          if (!tripId) return alert("请先填写 tripId");
+          api("/__travelogue/templates/preview", {
+            method: "POST",
+            body: JSON.stringify({ tripId, templateId: t.templateId, render: true }),
+          })
+            .then(log)
+            .catch((e) => log(e));
+        };
+        td.appendChild(b5);
+        rowsEl.appendChild(tr);
+      });
+      log(data);
+    }
+
+    async function editMetadata(id, current) {
+      const displayName = window.prompt("displayName", current.displayName || "");
+      if (displayName === null) return;
+      const category = window.prompt("category (travel/event/family/general)", current.category || "travel");
+      if (category === null) return;
+      const tagsRaw = window.prompt("tags 逗号分隔", (current.tags || []).join(","));
+      if (tagsRaw === null) return;
+      const body = { displayName: displayName.trim() };
+      if (category.trim()) body.category = category.trim().toLowerCase();
+      if (tagsRaw.trim()) body.tags = tagsRaw.split(",").map((s) => s.trim()).filter(Boolean);
+      try {
+        const out = await api(
+          "/__travelogue/templates/admin/" + encodeURIComponent(id) + "/metadata",
+          { method: "PATCH", body: JSON.stringify(body) }
+        );
+        log(out);
+        refresh();
+      } catch (e) {
+        log(e);
+        alert((e.body && e.body.error) || "元信息更新失败");
+      }
+    }
+
+    async function logicalDelete(id) {
+      if (!window.confirm("逻辑删除 " + id + "？需无 trip 引用且 confirmHighRisk")) return;
+      try {
+        const out = await api("/__travelogue/templates/admin/delete", {
+          method: "POST",
+          body: JSON.stringify({ templateId: id, confirmHighRisk: true }),
+        });
+        log(out);
+        refresh();
+      } catch (e) {
+        log(e);
+        alert((e.body && (e.body.message || e.body.error)) || "删除失败");
+      }
+    }
+
+    async function patchLifecycle(id, lc, rev, confirm) {
+      if (confirm && !window.confirm("确认下线模板 " + id + "？")) return;
+      try {
+        const body = await api("/__travelogue/templates/admin/" + encodeURIComponent(id), {
+          method: "PATCH",
+          headers: { "If-Match": String(rev) },
+          body: JSON.stringify({
+            lifecycle: lc,
+            revision: rev,
+            confirmHighRisk: !!confirm,
+          }),
+        });
+        log(body);
+        refresh();
+      } catch (e) {
+        log(e);
+        alert((e.body && e.body.message) || "操作失败");
+      }
+    }
+
+    document.getElementById("btn-refresh").onclick = () => refresh().catch((e) => log(e));
+    document.getElementById("btn-audit").onclick = () =>
+      api("/__travelogue/templates/admin/audit?limit=30").then(log).catch((e) => log(e));
+    document.getElementById("btn-l1").onclick = () => {
+      if (!window.confirm("L1：关闭智能路由？")) return;
+      api("/__travelogue/templates/admin/rollback", {
+        method: "POST",
+        body: JSON.stringify({ level: "L1", confirmHighRisk: true }),
+      })
+        .then(log)
+        .then(refresh)
+        .catch((e) => log(e));
+    };
+
+    document.getElementById("btn-replay").onclick = () => {
+      const tripId = document.getElementById("replay-trip").value.trim();
+      if (!tripId) return alert("请输入 tripId");
+      api("/__travelogue/templates/replay", {
+        method: "POST",
+        body: JSON.stringify({ tripId }),
+      })
+        .then(log)
+        .catch((e) => log(e));
+    };
+    document.getElementById("btn-decisions").onclick = () => {
+      const tripId = document.getElementById("replay-trip").value.trim();
+      if (!tripId) return alert("请输入 tripId");
+      api("/__travelogue/templates/admin/decisions?tripId=" + encodeURIComponent(tripId) + "&limit=30")
+        .then(log)
+        .catch((e) => log(e));
+    };
+    document.getElementById("btn-all-decisions").onclick = () =>
+      api("/__travelogue/templates/admin/decisions?limit=40").then(log).catch((e) => log(e));
+    document.getElementById("btn-dashboard").onclick = () =>
+      api("/__travelogue/templates/admin/dashboard?hours=24").then(log).catch((e) => log(e));
+    document.getElementById("btn-dashboard-72").onclick = () =>
+      api("/__travelogue/templates/admin/dashboard?hours=72").then(log).catch((e) => log(e));
+    document.getElementById("btn-register").onclick = () => {
+      const tid = window.prompt("templateId（templates/<id> 目录已存在）", "event-recap");
+      if (!tid) return;
+      api("/__travelogue/templates/admin/register", {
+        method: "POST",
+        body: JSON.stringify({ templateId: tid.trim() }),
+      })
+        .then(log)
+        .then(refresh)
+        .catch((e) => log(e));
+    };
+    document.getElementById("btn-runtime-propose").onclick = () => {
+      const pct = Number(document.getElementById("traffic-pct").value);
+      const rec = document.getElementById("rec-templates").value.split(",").map((s) => s.trim()).filter(Boolean);
+      api("/__travelogue/templates/admin/runtime", {
+        method: "POST",
+        body: JSON.stringify({
+          patch: { traffic_percent: pct, recommended_templates: rec },
+          operator: "admin-ui",
+          reason: "gray rollout",
+        }),
+      })
+        .then(log)
+        .catch((e) => log(e));
+    };
+
+    refresh().catch((e) => log(e));
+  </script>
+</body>
+</html>

@@ -5,6 +5,7 @@ from __future__ import annotations
 from travelogue.curation.subject_tagging import (
     is_mundane_clusterable,
     mundane_run_length,
+    semantic_category_for_asset,
     subject_class_for_asset,
     subject_tags_for_asset,
 )
@@ -90,6 +91,16 @@ def test_is_mundane_clusterable_phase10_1_sign_ticket_shop() -> None:
     assert is_mundane_clusterable({"tags": ["sign"]}) == "sign"
     assert is_mundane_clusterable({"tags": ["ticket"]}) == "ticket"
     assert is_mundane_clusterable({"tags": ["shop"]}) == "shop"
+
+
+def test_semantic_category_prefers_existing_semantic_tag() -> None:
+    asset = {"semanticTag": {"category": "food"}, "subjectClass": "person"}
+    assert semantic_category_for_asset(asset) == "food"
+
+
+def test_semantic_category_maps_clip_architecture() -> None:
+    asset = {"subjectClass": "architecture"}
+    assert semantic_category_for_asset(asset) == "architecture"
 
 
 def test_mundane_run_length_defaults_to_food_only() -> None:

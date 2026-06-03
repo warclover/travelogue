@@ -267,7 +267,63 @@ function startFromConfirm() {
   });
 }
 
+function loadTemplateSelectOptions() {
+  var sel = $("v2-template-mode");
+  if (!sel) return;
+  fetch("/__travelogue/templates")
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (!data || !data.ok) return;
+      var smart = document.createElement("option");
+      smart.value = "smart";
+      smart.textContent = data.smartLabel || "智能匹配（推荐）";
+      sel.innerHTML = "";
+      sel.appendChild(smart);
+      (data.templates || []).forEach(function (t) {
+        var opt = document.createElement("option");
+        opt.value = "manual:" + (t.templateId || "");
+        opt.textContent = (t.label || t.templateId) + "（手动指定）";
+        sel.appendChild(opt);
+      });
+      sel.value = "smart";
+      updateTemplateModeHint(data, sel.value);
+    })
+    .catch(function () { /* keep static HTML options */ });
+}
+
+function updateTemplateModeHint(data, value) {
+  var hint = $("v2-template-hint");
+  if (!hint) return;
+  var hints = (data && data.modeHints) || {};
+  var v = String(value || "smart");
+  if (v.indexOf("manual:") === 0) {
+    hint.textContent = hints.manual || "全程使用你指定的模板。";
+    return;
+  }
+  hint.textContent = hints.smart || hint.textContent;
+}
+
+function wireTemplateSelect() {
+  var sel = $("v2-template-mode");
+  if (!sel || sel.dataset.wired === "1") return;
+  sel.dataset.wired = "1";
+  trackStudioEvent("template_selector_impression", { surface: "v2_sheet" });
+  sel.addEventListener("change", function () {
+    var v = String(sel.value || "smart");
+    trackStudioEvent("template_mode_changed", { value: v });
+    if (v.indexOf("manual:") === 0) {
+      trackStudioEvent("template_manual_selected", { template_id: v.slice(7) });
+    }
+    fetch("/__travelogue/templates")
+      .then(function (r) { return r.json(); })
+      .then(function (data) { updateTemplateModeHint(data, v); })
+      .catch(function () {});
+  });
+}
+
 export function initImportSheet() {
+  loadTemplateSelectOptions();
+  wireTemplateSelect();
   var cta = $("v2-cta");
   if (cta) cta.addEventListener("click", function () {
     trackStudioEvent("cta_click", { surface: "bench" });

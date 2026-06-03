@@ -1,0 +1,260 @@
+{
+  "generatedAt": "2026-06-03T13:34:26+00:00",
+  "phase": "P13.1",
+  "go": true,
+  "gates": {
+    "G1_G2_registry": {
+      "pass": true,
+      "registryVersion": "registry-v2"
+    },
+    "G3_replay": {
+      "pass": true,
+      "decisionHash": "sha256:066a1e842ed5f966b793a449cf991cddce26a2a54f3efe889a398278e9815c67",
+      "replay_match": true
+    },
+    "pytest_p13_suite": {
+      "ok": true,
+      "returncode": 0,
+      "tail": "........................................................................ [ 86%]\n...........                                                              [100%]\n83 passed in 29.75s\n"
+    },
+    "G7_audit": {
+      "pass": true,
+      "audit_entry_count": 12,
+      "audit_coverage": 1.0
+    },
+    "G6_rollback_drill": {
+      "pass": true,
+      "summary": "自动化演练 6/6 通过"
+    },
+    "G6_metrics_24h": {
+      "pass": true,
+      "checks": {
+        "fallback_rate": {
+          "value": 0.9697,
+          "max": 0.12,
+          "pass": false
+        },
+        "render_error_rate": {
+          "value": 0.0,
+          "max": 0.005,
+          "pass": true
+        },
+        "route_duration_p95_ms": {
+          "value": 0.22,
+          "max": 120.0,
+          "pass": true
+        }
+      },
+      "note": "dev_relaxed：仅校验脚本与字段，不阻断开发 Smoke"
+    },
+    "G6_metrics_72h": {
+      "pass": true,
+      "checks": {
+        "fallback_rate": {
+          "value": 0,
+          "max": 0.08,
+          "pass": true
+        },
+        "render_error_rate": {
+          "value": 0,
+          "max": 1,
+          "pass": true
+        },
+        "manual_override_rate": {
+          "value": 0.0,
+          "max": 0.25,
+          "pass": true
+        }
+      },
+      "source": "docs\\acceptance-records\\phase13-metrics-72h.json",
+      "devRelaxed": false
+    },
+    "G8_walkthrough": {
+      "pass": true,
+      "status": "signed"
+    }
+  },
+  "routeEval": {
+    "generatedAt": "2026-06-03T13:33:54+00:00",
+    "registryVersion": "registry-v2",
+    "routerConfigVersion": "cfg-2026-06-03-01",
+    "templates": [
+      {
+        "templateId": "event-recap",
+        "healthy": true,
+        "errors": []
+      },
+      {
+        "templateId": "visual-journal",
+        "healthy": true,
+        "errors": []
+      }
+    ],
+    "tripId": "render-golden-demo",
+    "featureSnapshotVersion": "feat-v1",
+    "decisionHash": "sha256:066a1e842ed5f966b793a449cf991cddce26a2a54f3efe889a398278e9815c67",
+    "replay_match": true,
+    "storedHash": "sha256:066a1e842ed5f966b793a449cf991cddce26a2a54f3efe889a398278e9815c67",
+    "replayedHash": "sha256:066a1e842ed5f966b793a449cf991cddce26a2a54f3efe889a398278e9815c67",
+    "fallback_rate": 0.0,
+    "manual_override_rate": 0.0,
+    "error_rate": 0.0
+  },
+  "registryEval": {
+    "generatedAt": "2026-06-03T13:33:54+00:00",
+    "registryVersion": "registry-v2",
+    "routerConfigVersion": "cfg-2026-06-03-01",
+    "templates": [
+      {
+        "templateId": "event-recap",
+        "healthy": true,
+        "errors": []
+      },
+      {
+        "templateId": "visual-journal",
+        "healthy": true,
+        "errors": []
+      }
+    ],
+    "registryHealthOk": true
+  },
+  "audit": {
+    "generatedAt": "2026-06-03T13:34:26+00:00",
+    "revision": 4,
+    "audit_coverage": 1.0,
+    "audit_entry_count": 12,
+    "high_risk_confirm_count": 4,
+    "permission_denied_count": 0,
+    "audit_missing_rate": 0.0,
+    "lifecycle_audit_with_registryVersion": 2,
+    "runtime": {}
+  },
+  "rollbackDrill": {
+    "phase": "P13.1",
+    "generatedAt": "2026-06-03T13:34:26+00:00",
+    "environment": "dev-automated",
+    "operator": "phase13_rollback_drill.py",
+    "drills": [
+      {
+        "id": "R1",
+        "name": "L1 关闭路由器",
+        "automated": true,
+        "pass": true,
+        "evidence": {
+          "resolvedTemplateId": "visual-journal",
+          "fallbackUsed": true
+        }
+      },
+      {
+        "id": "R2",
+        "name": "L2 单模板下线",
+        "automated": true,
+        "pass": true,
+        "evidence": {
+          "consumerTemplates": [
+            "visual-journal"
+          ]
+        }
+      },
+      {
+        "id": "R3",
+        "name": "L3 平台应急",
+        "automated": true,
+        "pass": true,
+        "evidence": {
+          "template_router_enabled": false,
+          "allowed_templates": [
+            "visual-journal"
+          ]
+        }
+      },
+      {
+        "id": "R4",
+        "name": "自动回滚触发模拟",
+        "automated": true,
+        "pass": true,
+        "evidence": {
+          "fallback_rate_1h": 0.9677,
+          "threshold": 0.2
+        },
+        "note": "开发环境注入 metrics；生产由监控告警触发 L1"
+      },
+      {
+        "id": "R5",
+        "name": "高风险未确认拦截",
+        "automated": true,
+        "pass": true
+      },
+      {
+        "id": "R6",
+        "name": "回放一致性抽检",
+        "automated": true,
+        "pass": true,
+        "evidence": {
+          "decisionHash": "sha256:e13c3704be6d94c64098c0cf6913720bf72189492a83a2e1ef7101df33b9d4b4",
+          "replay_match": true
+        }
+      }
+    ],
+    "summary": "自动化演练 6/6 通过",
+    "allPass": true
+  },
+  "metrics24h": {
+    "generatedAt": "2026-06-03T13:34:26+00:00",
+    "windowHours": 24,
+    "metrics": {
+      "windowHours": 24,
+      "counts": {
+        "template.route.decision": 33,
+        "template.route.count": 28,
+        "template.route.manual_override": 3,
+        "template.route.fallback": 32,
+        "template.admin.rollback_count": 3,
+        "template.guardrail.violation_block_count": 1,
+        "template.admin.crud_count": 2,
+        "template.review.event": 2,
+        "template.render.success": 5,
+        "template.admin.high_risk_action_count": 1
+      },
+      "rates": {
+        "fallback_rate": 0.9697,
+        "render_error_rate": 0.0,
+        "manual_override_rate": 0.0909,
+        "route_total": 33,
+        "confidence_p50": 0.55,
+        "confidence_p90": 1.0,
+        "route_duration_p95_ms": 0.22,
+        "route_p95_slo_ms": 120.0,
+        "route_p95_within_slo": true,
+        "review_pass_rate": 1.0
+      }
+    },
+    "manual_override_rate": 0.0909,
+    "checks": {
+      "fallback_rate": {
+        "value": 0.9697,
+        "max": 0.12,
+        "pass": false
+      },
+      "render_error_rate": {
+        "value": 0.0,
+        "max": 0.005,
+        "pass": true
+      },
+      "route_duration_p95_ms": {
+        "value": 0.22,
+        "max": 120.0,
+        "pass": true
+      }
+    },
+    "pass": true,
+    "devRelaxed": true,
+    "emptyWindow": false,
+    "note": "dev_relaxed：仅校验脚本与字段，不阻断开发 Smoke"
+  },
+  "notes": [
+    "G6 线上 72h 窗口: python scripts/phase13_metrics_window.py --hours 72 --write docs/acceptance-records/phase13-metrics-72h.json",
+    "G8 人工走查: docs/reports/phase13-g8-studio-walkthrough.md",
+    "发布日 Gate §5 值班签字见 phase13-1-release-gate-checklist.md"
+  ]
+}

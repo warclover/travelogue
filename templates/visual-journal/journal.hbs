@@ -111,6 +111,7 @@
   <script src="longshot-bridge.js?v={{assetVersion}}" defer></script>
   {{/if}}
   {{#if isDraft}}
+  {{#if placeholderScript}}{{{placeholderScript}}}{{/if}}
   <script src="inline-edit.js?v={{assetVersion}}" defer></script>
   {{/if}}
 </body>

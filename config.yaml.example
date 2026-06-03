@@ -63,6 +63,8 @@ layout:
       burst_integrity: 0.0
       luminance_continuity: 0.0
       subject_run: 0.0
+      # Phase 12 · 语义连续性（默认关闭，灰度后启用）
+      category_coherence: 0.0
   feedback:
     enabled: false
     log_path: null
@@ -135,6 +137,13 @@ cull:
   mode: rules                 # W1 默认 rules；W2 后可改 auto
   keep_ratio_floor: 0.80
   min_keep: 15
+  # Phase 12 · 分支化评分（默认保守）
+  portrait_quality_enabled: true
+  face_ratio_portrait_min: 0.15
+  face_ratio_gray_low: 0.10
+  face_ratio_gray_high: 0.20
+  score_branch_weight_portrait: 0.15
+  score_branch_weight_landscape: 0.15
   featured_exempt: true
   featured_hard_exclude: false
   featured_exempt_low_res: true
@@ -159,6 +168,9 @@ cull:
       aesthetic_weight: 0.35
       media_weight: 0.20
       bias: 0.10
+    # Phase 12 · 阈值/Top-K（默认关闭，不改变 P9 floor 语义）
+    threshold: 0.0
+    topk_ratio: 1.0
     # M5 · 同组非代表的轻惩罚（0=关闭）
     duplicate_group_penalty: 0.0
   ml:
@@ -283,3 +295,27 @@ phase6:
     cohortSalt: travelogue-p6   # tripId + salt 稳定分桶 0..99
     allowlistTripIds: []        # 强制纳入 Phase 6 行为
     blocklistTripIds: []        # 强制回退 P5-stable 行为
+
+# Phase 13 · 模板路由（PRD-PHASE13 §9）
+template_router:
+  enabled: true
+  default_template: visual-journal
+  confidence_threshold: 0.65
+  allow_manual_override: true
+  allowed_templates:
+    - visual-journal
+    # - event-recap   # W4 试点上线后取消注释
+  beta_allowlist_trip_ids: []
+  # 创建页下拉排序（AC-P13-11）
+  display_order:
+    - visual-journal
+    - event-recap
+  # 迁移 Shadow：仅记录路由、不改渲染（默认 false）
+  shadow_mode: false
+  # 发现排序：recommended | alphabetical | category | latest | popular | team
+  discovery_sort_mode: recommended
+
+# Phase 13 · 模板管理后台 API 权限（loopback 默认 template_admin）
+template_admin:
+  default_role_loopback: template_admin
+  require_role_on_lan: true

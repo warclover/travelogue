@@ -27,6 +27,15 @@ def handle_studio_event(handler: StudioHandlerProtocol) -> None:
         return
     try:
         path = append_studio_homepage_event(event, meta if isinstance(meta, dict) else None)
+        if event in ("template_selector_impression", "template_mode_changed"):
+            from travelogue.templating.metrics import record_discovery_event
+
+            record_discovery_event(template_id="*", kind="impression")
+        elif event == "template_manual_selected":
+            from travelogue.templating.metrics import record_discovery_event
+
+            tid = str((meta or {}).get("template_id") or (meta or {}).get("templateId") or "*")
+            record_discovery_event(template_id=tid, kind="select")
     except ValueError as exc:
         handler._json_response(400, {"ok": False, "error": str(exc)})
         return

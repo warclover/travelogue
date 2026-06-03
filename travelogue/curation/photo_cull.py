@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import logging
 import math
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from travelogue.config import AppConfig, CullConfig, get_config
 from travelogue.curation.asset_quality import asset_sharpness
@@ -80,6 +81,90 @@ def _aesthetic_score(asset: dict) -> float | None:
     return None
 
 
+def _face_ratio(asset: dict) -> float:
+    q = asset.get("quality")
+    if isinstance(q, dict) and q.get("faceRatio") is not None:
+        try:
+            return max(0.0, min(1.0, float(q["faceRatio"])))
+        except (TypeError, ValueError):
+            pass
+    box = asset.get("salientBox")
+    if isinstance(box, dict):
+        try:
+            ratio = float(box.get("w", 0.0)) * float(box.get("h", 0.0))
+            return max(0.0, min(1.0, ratio))
+        except (TypeError, ValueError):
+            return 0.0
+    return 0.0
+
+
+def _has_face_signal(asset: dict) -> bool:
+    q = asset.get("quality")
+    if isinstance(q, dict):
+        if q.get("faceRatio") is not None:
+            return True
+        if q.get("faceCount") is not None:
+            try:
+                return int(q.get("faceCount") or 0) > 0
+            except (TypeError, ValueError):
+                return False
+    box = asset.get("salientBox")
+    if isinstance(box, dict):
+        try:
+            return float(box.get("w", 0.0)) > 0.0 and float(box.get("h", 0.0)) > 0.0
+        except (TypeError, ValueError):
+            return False
+    return False
+
+
+def _branch_for_asset(asset: dict, *, cfg: CullConfig) -> Literal["portrait", "landscape", "gray"]:
+    ratio = _face_ratio(asset)
+    if ratio >= cfg.face_ratio_portrait_min:
+        return "portrait"
+    if cfg.face_ratio_gray_low <= ratio <= cfg.face_ratio_gray_high:
+        return "gray"
+    return "landscape"
+
+
+def _l2_branch_fallback_reason(asset: dict, *, cfg: CullConfig) -> str | None:
+    if not cfg.portrait_quality_enabled:
+        return "branch_disabled"
+    ratio = _face_ratio(asset)
+    if cfg.face_ratio_gray_low <= ratio <= cfg.face_ratio_gray_high:
+        return "gray_zone"
+    if not _has_face_signal(asset):
+        return "face_signal_missing"
+    return None
+
+
+def _portrait_quality_score(asset: dict, *, sharp_part: float) -> float:
+    ratio = _face_ratio(asset)
+    q = asset.get("quality")
+    mean_luma = 0.5
+    if isinstance(q, dict) and q.get("meanLuma") is not None:
+        try:
+            mean_luma = max(0.0, min(1.0, float(q["meanLuma"])))
+        except (TypeError, ValueError):
+            mean_luma = 0.5
+    exposure_center = 1.0 - min(1.0, abs(mean_luma - 0.5) * 2.0)
+    # Favor clear face-dominant portraits with balanced exposure.
+    return min(1.0, max(0.0, ratio * 0.55 + sharp_part * 0.30 + exposure_center * 0.15))
+
+
+def _landscape_quality_score(
+    asset: dict,
+    *,
+    sharp_part: float,
+    aesthetic: float | None,
+) -> float:
+    aspect = str(asset.get("aspectKind") or "")
+    aspect_boost = 0.0 if aspect == "portrait" else 0.12
+    base = sharp_part * 0.70 + _media_weight(asset) * 0.30 + aspect_boost
+    if aesthetic is not None:
+        base = base * 0.7 + aesthetic * 0.3
+    return min(1.0, max(0.0, base))
+
+
 def _cull_score(
     asset: dict,
     *,
@@ -92,16 +177,47 @@ def _cull_score(
     media = _media_weight(asset)
     aesthetic = _aesthetic_score(asset) if use_ml else None
     if aesthetic is not None:
-        return (
+        base_score = (
             cfg.score_sharpness_weight_ml * sharp_part
             + cfg.score_aesthetic_weight_ml * aesthetic
             + cfg.score_media_weight_ml * media
             + cfg.score_bias_ml
         )
-    return (
-        cfg.score_sharpness_weight_rules * sharp_part
-        + cfg.score_media_weight_rules * media
-    )
+    else:
+        base_score = (
+            cfg.score_sharpness_weight_rules * sharp_part
+            + cfg.score_media_weight_rules * media
+        )
+
+    if not cfg.portrait_quality_enabled:
+        return base_score
+
+    branch = _branch_for_asset(asset, cfg=cfg)
+    if branch == "portrait":
+        branch_score = _portrait_quality_score(asset, sharp_part=sharp_part)
+        w = cfg.score_branch_weight_portrait
+    elif branch == "landscape":
+        branch_score = _landscape_quality_score(
+            asset,
+            sharp_part=sharp_part,
+            aesthetic=aesthetic,
+        )
+        w = cfg.score_branch_weight_landscape
+    else:
+        portrait_s = _portrait_quality_score(asset, sharp_part=sharp_part)
+        landscape_s = _landscape_quality_score(
+            asset,
+            sharp_part=sharp_part,
+            aesthetic=aesthetic,
+        )
+        branch_score = max(portrait_s, landscape_s)
+        w = max(cfg.score_branch_weight_portrait, cfg.score_branch_weight_landscape)
+
+    q = asset.setdefault("quality", {})
+    if isinstance(q, dict):
+        q["cullBranch"] = branch
+        q["cullBranchScore"] = round(float(branch_score), 4)
+    return (1.0 - w) * base_score + w * branch_score
 
 
 def _preliminary_score(
@@ -358,7 +474,15 @@ def _assign_scores_and_ranks(
         if isinstance(q, dict):
             q["cullScore"] = round(sc, 4)
         scored.append((a, sc))
-    scored.sort(key=lambda t: (-t[1], str(t[0].get("id") or "")))
+    def _sort_key(item: tuple[dict, float]) -> tuple[float, float, str, str]:
+        a, sc = item
+        sharp = asset_sharpness(a)
+        taken = str(a.get("takenAt") or "")
+        aid = str(a.get("id") or "")
+        # deterministic: score -> sharpness -> takenAt -> assetId
+        return (-sc, -sharp, taken, aid)
+
+    scored.sort(key=_sort_key)
     for rank, (a, _) in enumerate(scored, start=1):
         q = a.get("quality")
         if isinstance(q, dict):
@@ -401,13 +525,35 @@ def _pass3_quota(
         meta["pass3Skipped"] = "pool_at_or_below_floor"
         return meta
 
-    for a, _ in scored[n_min:]:
+    threshold = max(0.0, min(1.0, float(cfg.score_threshold)))
+    topk_ratio = max(0.0, min(1.0, float(cfg.score_topk_ratio)))
+    if threshold <= 0.0 and topk_ratio >= 1.0:
+        threshold_keep = len(scored)
+        ratio_keep = len(scored)
+        keep_n = n_min
+    else:
+        threshold_keep = len(scored)
+        if threshold > 0.0:
+            threshold_keep = sum(1 for _a, sc in scored if sc >= threshold)
+        ratio_keep = len(scored)
+        if topk_ratio < 1.0:
+            ratio_keep = max(1, math.ceil(len(scored) * topk_ratio))
+        tuned_keep = min(len(scored), threshold_keep, ratio_keep)
+        keep_n = max(n_min, tuned_keep)
+    keep_n = min(len(scored), keep_n)
+    meta["scoreThreshold"] = round(threshold, 4)
+    meta["scoreTopkRatio"] = round(topk_ratio, 4)
+    meta["scoreThresholdKeep"] = threshold_keep
+    meta["scoreTopkKeep"] = ratio_keep
+    meta["scoreKeepApplied"] = keep_n
+
+    for a, _ in scored[keep_n:]:
         _exclude(
             a,
             "cull_quota",
             stats,
             cfg=cfg,
-            detail=f"rank={int((a.get('quality') or {}).get('cullRank') or 0)} > keep_top={n_min}",
+            detail=f"rank={int((a.get('quality') or {}).get('cullRank') or 0)} > keep_top={keep_n}",
         )
 
     eligible_non_feat = sum(
@@ -472,18 +618,43 @@ def run_photo_cull(
     trip_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Pure cull passes; mutates assets in place."""
+    t0 = time.perf_counter()
     images = _image_assets(assets)
     n_scan = len(images)
     n_feat = sum(1 for a in images if _is_featured(a, cfg))
+    branch_counts: dict[str, int] = {"portrait": 0, "landscape": 0, "gray": 0}
+    branch_fallback_counts: dict[str, int] = {
+        "branch_disabled": 0,
+        "gray_zone": 0,
+        "face_signal_missing": 0,
+    }
+    l2_fallback_count = 0
+    if cfg.portrait_quality_enabled:
+        for a in images:
+            branch_counts[_branch_for_asset(a, cfg=cfg)] += 1
+    for a in images:
+        reason = _l2_branch_fallback_reason(a, cfg=cfg)
+        if not reason:
+            continue
+        l2_fallback_count += 1
+        branch_fallback_counts[reason] = branch_fallback_counts.get(reason, 0) + 1
+        q = a.setdefault("quality", {})
+        if isinstance(q, dict):
+            q["cullBranchFallbackReason"] = reason
     stats = CullStats()
     runtime_mode = resolve_effective_mode(cfg)
+    requested_mode = str(cfg.mode or "rules").lower().strip()
     use_ml = False
+    l1_ml_fallback = False
     if runtime_mode == "ml":
         if trip_dir is not None:
             apply_aesthetic_scores(images, trip_dir=trip_dir, cfg=cfg)
         use_ml = any(_aesthetic_score(a) is not None for a in images)
         if not use_ml:
             runtime_mode = "rules"
+            l1_ml_fallback = True
+    elif requested_mode in ("ml", "auto"):
+        l1_ml_fallback = runtime_mode == "rules"
 
     _reset_for_recull(images, cfg)
     _pass1_hard_exclude(images, cfg=cfg, stats=stats)
@@ -531,9 +702,21 @@ def run_photo_cull(
         "floorNotMet": pass3_meta.get("floorNotMet", False),
         "floorTargetNonFeatured": pass3_meta.get("floorTargetNonFeatured")
         or math.ceil(cfg.keep_ratio_floor * n_scan),
+        "scoreThreshold": pass3_meta.get("scoreThreshold"),
+        "scoreTopkRatio": pass3_meta.get("scoreTopkRatio"),
+        "scoreKeepApplied": pass3_meta.get("scoreKeepApplied"),
+        "mlFallbackRateL1": 1.0 if l1_ml_fallback else 0.0,
+        "branchFallbackRateL2": round(l2_fallback_count / n_scan, 4) if n_scan > 0 else 0.0,
+        "branchFallbackByReasonL2": dict(branch_fallback_counts),
+        "failOpenRateL3": 0.0,
         **pass4,
     }
+    if n_scan > 0:
+        summary["branchPortraitRatio"] = round(branch_counts["portrait"] / n_scan, 4)
+        summary["branchLandscapeRatio"] = round(branch_counts["landscape"] / n_scan, 4)
+        summary["branchGrayRatio"] = round(branch_counts["gray"] / n_scan, 4)
     summary["cullUserLine"] = _build_user_line(summary)
+    summary["cpuMs"] = round((time.perf_counter() - t0) * 1000.0, 3)
     return summary
 
 
@@ -572,6 +755,8 @@ def apply_photo_cull(
             "failOpen": True,
             "error": str(exc),
             "layoutEligibleCount": len(_image_assets(body)),
+            "failOpenRateL3": 1.0,
+            "cpuMs": 0.0,
         }
         curation = trip.setdefault("curation", {})
         curation["cullSummary"] = dict(summary)
@@ -580,6 +765,9 @@ def apply_photo_cull(
         if ingest_stats is not None:
             ingest_stats["cull_error"] = str(exc)
             ingest_stats["cull_fail_open"] = True
+            ingest_stats["cull_l1_ml_fallback_rate"] = 0.0
+            ingest_stats["cull_l2_branch_fallback_rate"] = 0.0
+            ingest_stats["cull_l3_fail_open_rate"] = 1.0
         return summary
 
     curation = trip.setdefault("curation", {})
@@ -602,7 +790,14 @@ def apply_photo_cull(
         ingest_stats["cull_layout_eligible"] = summary.get("layoutEligibleCount", 0)
         ingest_stats["cull_user_line"] = summary.get("cullUserLine")
         ingest_stats["cull_fail_open"] = bool(summary.get("failOpen"))
+        ingest_stats["cull_l1_ml_fallback_rate"] = float(summary.get("mlFallbackRateL1") or 0.0)
+        ingest_stats["cull_l2_branch_fallback_rate"] = float(
+            summary.get("branchFallbackRateL2") or 0.0
+        )
+        ingest_stats["cull_l3_fail_open_rate"] = float(summary.get("failOpenRateL3") or 0.0)
         for reason, count in (summary.get("excludedByReason") or {}).items():
             ingest_stats[f"cull_{reason}"] = count
+        for reason, count in (summary.get("branchFallbackByReasonL2") or {}).items():
+            ingest_stats[f"cull_l2_{reason}"] = int(count)
 
     return summary

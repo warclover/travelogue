@@ -82,6 +82,9 @@ function buildUploadForm(files, opts) {
   form.append("title", title);
   form.append("place", "旅途");
   form.append("placeUserSet", "false");
+  var tpl = readTemplateParams();
+  form.append("template_mode", tpl.template_mode || "smart");
+  if (tpl.template_id) form.append("template_id", tpl.template_id);
   if (opts.force) form.append("force", "true");
   for (var i = 0; i < files.length; i++) {
     form.append("files[]", files[i], files[i].webkitRelativePath || files[i].name);
@@ -89,14 +92,27 @@ function buildUploadForm(files, opts) {
   return form;
 }
 
+function readTemplateParams() {
+  var sel = $("v2-template-mode");
+  if (!sel) return { template_mode: "smart" };
+  var v = String(sel.value || "smart");
+  if (v.indexOf("manual:") === 0) {
+    return { template_mode: "manual", template_id: v.slice(7) || "visual-journal" };
+  }
+  return { template_mode: "smart" };
+}
+
 export function buildImportPayload(albumPath, title) {
-  return {
-    albumPath: albumPath,
-    title: (title || basenameTitle(albumPath)).slice(0, 20) || "我的旅途",
-    place: "旅途",
-    placeUserSet: false,
-    force: false,
-  };
+  return Object.assign(
+    {
+      albumPath: albumPath,
+      title: (title || basenameTitle(albumPath)).slice(0, 20) || "我的旅途",
+      place: "旅途",
+      placeUserSet: false,
+      force: false,
+    },
+    readTemplateParams()
+  );
 }
 
 function setStage(text, fillPct) {
@@ -252,7 +268,10 @@ function pollImport(jobId, gen, source) {
     if (job.status === "succeeded") {
       setStage("完成", 100);
       var result = job.result || {};
-      trackStudioEvent("import_success", { tripId: result.tripId || null });
+      trackStudioEvent("import_success", {
+        tripId: result.tripId || null,
+        templateId: result.resolvedTemplateId || null,
+      });
       return refreshTripsForImportSuccess(result).then(function () {
         showFirstSuccess({ result: result });
         return job;
@@ -276,7 +295,12 @@ export function startV2Import(body, opts) {
   opts = opts || {};
   var gen = ++_gen;
   var source = opts.source || "本机文件夹";
-  trackStudioEvent("import_start", { via: "path", surface: "v2_sheet" });
+  var tpl = readTemplateParams();
+  trackStudioEvent("import_start", { via: "path", surface: "v2_sheet", template_mode: tpl.template_mode });
+  trackStudioEvent("template_create_submitted", {
+    template_mode: tpl.template_mode,
+    template_id: tpl.template_id || null,
+  });
   try {
     sessionStorage.setItem(SS.activePending, JSON.stringify(body));
   } catch (e) { /* ignore */ }

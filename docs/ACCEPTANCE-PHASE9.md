@@ -89,6 +89,42 @@
 
 ---
 
+## 5.1 P12 指标扩展（兼容口径）
+
+> Phase 12 在不改变 P9 发布闸门的前提下，扩展了 cull telemetry 字段。  
+> 本节用于固定「实现字段名 ↔ 验收产物字段名」映射，避免口径漂移。
+
+### 运行时字段（trip / ingest）
+
+| 维度 | 运行时字段 |
+|------|------------|
+| L1 回退率 | `trip.curation.cullSummary.mlFallbackRateL1` |
+| L2 回退率 | `trip.curation.cullSummary.branchFallbackRateL2` |
+| L2 回退分因 | `trip.curation.cullSummary.branchFallbackByReasonL2` |
+| L3 回退率 | `trip.curation.cullSummary.failOpenRateL3` |
+| 分支覆盖率 | `trip.curation.cullSummary.branchPortraitRatio` / `branchLandscapeRatio` / `branchGrayRatio` |
+| cull CPU 时延 | `trip.curation.cullSummary.cpuMs` |
+| ingest 透传（L1/L2/L3） | `ingest_stats.cull_l1_ml_fallback_rate` / `cull_l2_branch_fallback_rate` / `cull_l3_fail_open_rate` |
+| ingest 透传（L2 分因） | `ingest_stats.cull_l2_<reason>`（如 `cull_l2_gray_zone`） |
+
+### 验收汇总字段（baseline）
+
+| 聚合维度 | `docs/acceptance-records/phase9-eval-baseline.json` |
+|----------|-----------------------------------------------------|
+| L1 回退 | `l1_ml_fallback_rate.avg/max` |
+| L2 回退 | `l2_branch_fallback_rate.avg/max` |
+| L2 分因 | `l2_branch_fallback_by_reason` |
+| L3 回退 | `l3_fail_open_rate.avg/max` |
+
+### 生成命令（P12 兼容）
+
+```bash
+python scripts/phase9_golden_cull_signoff.py --all --write docs/acceptance-records/phase9-golden-cull-signoff.json
+python scripts/phase9_eval_baseline.py --golden docs/acceptance-records/phase9-golden-cull-signoff.json --quality docs/acceptance-records/phase9-quality-gate.json --write docs/acceptance-records/phase9-eval-baseline.json
+```
+
+---
+
 ## 6. W2 追加验收（P1 ML · 可选）
 
 | ID | 条件 |
@@ -114,5 +150,6 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.9.3 | 2026-06-03 | 新增 P12 指标扩展口径：L1/L2/L3 telemetry 字段映射与 baseline 聚合字段 |
 | v0.9.2 | 2026-06-02 | G-P9-W1 闭合 · NR-P9-04 mao/maomi signed_off |
 | v0.9.1 | 2026-06-02 | Kickoff 修订：W1 独立发版 · NR-P9-04 golden |

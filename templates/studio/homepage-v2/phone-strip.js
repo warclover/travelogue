@@ -17,6 +17,19 @@ function useScrollPreview(page) {
   return !!(page && page.scrollPreview);
 }
 
+/** 竖图（高>宽）在章内应完整展示并可上下滚，而非 cover 裁切。 */
+function shouldScrollPortraitImage(img) {
+  if (!img || img.naturalWidth <= 0) return false;
+  return img.naturalHeight / img.naturalWidth > 1.05;
+}
+
+function applyScrollSlideClass(slide, page, img) {
+  if (useScrollPreview(page) || (img && shouldScrollPortraitImage(img))) {
+    slide.classList.add("v2-phone-strip__slide--scroll");
+    slide.dataset.scrollPreview = "1";
+  }
+}
+
 function mountSlideImage(slide, img, onSlideReady) {
   slide.innerHTML = "";
   slide.appendChild(img);

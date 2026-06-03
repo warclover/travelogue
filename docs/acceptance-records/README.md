@@ -3,9 +3,45 @@
 | 属性 | 内容 |
 |------|------|
 | **权威入口** | [ACCEPTANCE.md](../ACCEPTANCE.md)（单轨） |
-| **更新日期** | 2026-05-30 |
+| **更新日期** | 2026-06-03 |
 
 > JSON / Markdown 记录供 Phase 验收签字与脚本写入；**发布闸门以各 Phase ACCEPTANCE 文档为准**。
+
+---
+
+## Phase 13（模板系统化 · P13.1）
+
+| 文件 | 用途 | 命令 / 说明 |
+|------|------|-------------|
+| [phase13-gate-signoff.json](./phase13-gate-signoff.json) | G1–G9 开发环境 Smoke 汇总（`go` 字段） | `python scripts/phase13_gate_signoff.py --write docs/acceptance-records/phase13-gate-signoff.json` |
+| [phase13-route-eval.json](./phase13-route-eval.json) | 注册表健康 + 回放快照字段 | `python scripts/phase13_template_route_eval.py --check-registry-health --trip-json schemas/fixtures/trip.render_golden.json --seed-selection --write …` |
+| [phase13-admin-audit.json](./phase13-admin-audit.json) | 审计覆盖检查 | `python scripts/phase13_admin_audit_check.py --write …` |
+| [phase13-rollback-drill.json](./phase13-rollback-drill.json) | 回滚演练记录（R1–R6） | `python scripts/phase13_rollback_drill.py --write …` |
+| [phase13-metrics-24h.json](./phase13-metrics-24h.json) | G6 24h 指标窗口（可 `--dev-relaxed`） | `python scripts/phase13_metrics_window.py --hours 24 --write …` |
+| [phase13-metrics-72h.json](./phase13-metrics-72h.json) | G6 GA 前置 72h（生产勿 `--dev-relaxed`） | `python scripts/phase13_metrics_window.py --hours 72 --write …` |
+| [phase13-metrics-72h-gate-template.json](./phase13-metrics-72h-gate-template.json) | 72h 字段归档模板（`--empty-window`，非生产数据） | `… --hours 72 --empty-window --write …` |
+| [phase13-g8-signoff.json](./phase13-g8-signoff.json) | G8 走查 + 自动化 prereq | `python scripts/phase13_g8_walkthrough_automated.py --playwright --sign-if-pass --write …` |
+| [phase13-release-day-gate-section5.json](./phase13-release-day-gate-section5.json) | REL-03 发布日 Gate §5 | `python scripts/phase13_release_day_gate_section5.py --write …` |
+| [phase13-rollback-drill-prod-staging.json](./phase13-rollback-drill-prod-staging.json) | REL-15 预发 state 演练 | `phase13_rollback_drill.py --use-project-state --write …` |
+| [phase13-release-day-checklist.json](./phase13-release-day-checklist.json) | P0 汇总 | `python scripts/phase13_p0_release_finalize.py` |
+| [phase13-rollback-drill-staging.json](./phase13-rollback-drill-staging.json) | 预发演练（可选） | `phase13_rollback_drill.py --use-project-state --write …` |
+
+文档入口：[ACCEPTANCE-PHASE13.md](../ACCEPTANCE-PHASE13.md) · [phase13-pilot-retro.md](../reports/phase13-pilot-retro.md) · [phase13-template-dashboard.md](../reports/phase13-template-dashboard.md)
+
+---
+
+## Phase 12（静默自治选片增强 · 指标链路）
+
+| 文件 | 用途 | 命令 / 说明 |
+|------|------|-------------|
+| [phase9-golden-cull-signoff.json](./phase9-golden-cull-signoff.json) | golden 运行记录（单 trip 级）：含 `mlFallbackRateL1`、`branchFallbackRateL2`、`branchFallbackByReasonL2`、`failOpenRateL3`、分支覆盖率、`cpuMs` | `python scripts/phase9_golden_cull_signoff.py --all --write docs/acceptance-records/phase9-golden-cull-signoff.json` |
+| [phase9-eval-baseline.json](./phase9-eval-baseline.json) | 离线汇总基线（跨 trip 聚合）：含 `l1_ml_fallback_rate`、`l2_branch_fallback_rate`、`l2_branch_fallback_by_reason`、`l3_fail_open_rate` | `python scripts/phase9_eval_baseline.py --golden docs/acceptance-records/phase9-golden-cull-signoff.json --quality docs/acceptance-records/phase9-quality-gate.json --write docs/acceptance-records/phase9-eval-baseline.json` |
+
+字段对照入口：
+
+- 运行时字段：[`../ACCEPTANCE-PHASE9.md` §5.1](../ACCEPTANCE-PHASE9.md)
+- 实施口径：[`../IMPLEMENTATION-PHASE12.md`](../IMPLEMENTATION-PHASE12.md)
+- PRD 口径：[`../PRD-PHASE12.md`](../PRD-PHASE12.md)
 
 ---
 

@@ -2370,9 +2370,9 @@ body { overflow-x: clip; overflow-y: visible; }
 /* ── FirstSuccess overlay（§9.3 · Import 前壳层可见） ── */
 #v2-first-success[hidden] { display: none !important; }
 .v2-first-success {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 12;
+  z-index: 2500;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -54,6 +54,7 @@ def _start_studio_server(
     *,
     config_path: Path | None = None,
     studio_host: str = "127.0.0.1",
+    studio_allow_lan: bool = False,
 ) -> ThreadingHTTPServer:
     handler_kwargs: dict = {
         "directory": str(trips_dir),
@@ -62,6 +63,7 @@ def _start_studio_server(
         "trips_dir": trips_dir,
         "studio_host": studio_host,
         "studio_port": port,
+        "studio_allow_lan": studio_allow_lan,
     }
     if config_path is not None:
         handler_kwargs["studio_config_path"] = config_path

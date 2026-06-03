@@ -1,0 +1,70 @@
+{
+  "phase": "P13.1",
+  "generatedAt": "2026-06-03T13:32:21+00:00",
+  "environment": "dev-automated",
+  "operator": "phase13_rollback_drill.py",
+  "drills": [
+    {
+      "id": "R1",
+      "name": "L1 关闭路由器",
+      "automated": true,
+      "pass": true,
+      "evidence": {
+        "resolvedTemplateId": "visual-journal",
+        "fallbackUsed": true
+      }
+    },
+    {
+      "id": "R2",
+      "name": "L2 单模板下线",
+      "automated": true,
+      "pass": true,
+      "evidence": {
+        "consumerTemplates": [
+          "visual-journal"
+        ]
+      }
+    },
+    {
+      "id": "R3",
+      "name": "L3 平台应急",
+      "automated": true,
+      "pass": true,
+      "evidence": {
+        "template_router_enabled": false,
+        "allowed_templates": [
+          "visual-journal"
+        ]
+      }
+    },
+    {
+      "id": "R4",
+      "name": "自动回滚触发模拟",
+      "automated": true,
+      "pass": true,
+      "evidence": {
+        "fallback_rate_1h": 4.3333,
+        "threshold": 0.2
+      },
+      "note": "开发环境注入 metrics；生产由监控告警触发 L1"
+    },
+    {
+      "id": "R5",
+      "name": "高风险未确认拦截",
+      "automated": true,
+      "pass": true
+    },
+    {
+      "id": "R6",
+      "name": "回放一致性抽检",
+      "automated": true,
+      "pass": true,
+      "evidence": {
+        "decisionHash": "sha256:e13c3704be6d94c64098c0cf6913720bf72189492a83a2e1ef7101df33b9d4b4",
+        "replay_match": true
+      }
+    }
+  ],
+  "summary": "自动化演练 6/6 通过",
+  "allPass": true
+}

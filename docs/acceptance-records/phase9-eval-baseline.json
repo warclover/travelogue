@@ -13,11 +13,24 @@
     "max": 0.8276,
     "min": 0.7879
   },
-  "generatedAt": "2026-06-02T12:01:16.336806Z",
+  "generatedAt": "2026-06-03T10:58:56.549359Z",
   "ingest_elapsed_ms": {
     "avg": 73670.8,
     "max": 75077.6,
     "min": 72264.0
+  },
+  "l1_ml_fallback_rate": {
+    "avg": 0.0,
+    "max": 0.0
+  },
+  "l2_branch_fallback_by_reason": {},
+  "l2_branch_fallback_rate": {
+    "avg": 0.0,
+    "max": 0.0
+  },
+  "l3_fail_open_rate": {
+    "avg": 0.0,
+    "max": 0.0
   },
   "perTrip": [
     {
