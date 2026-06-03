@@ -7,6 +7,7 @@
   <title>Travelogue Studio · 工作台</title>
   <link rel="icon" href="/__studio/assets/favicon.ico" />
   <link rel="preload" as="image" href="/__studio/assets/demo-showcase/background-PLACEHOLDER.webp" fetchpriority="high" />
+  <link rel="preload" as="font" href="/__studio/assets/fonts/hetangyuese-headline.woff2" type="font/woff2" crossorigin />
   <link rel="modulepreload" href="/__studio/homepage-v2/bootstrap.js" />
   <link rel="stylesheet" href="/__studio/studio-home-v2.css" />
   <link rel="stylesheet" href="/__studio/studio-modal.css" />
@@ -53,22 +54,22 @@
       <!-- ① 文案区（左列第 1 行 · layout D：Eyebrow+Tags 顶行，H1 独占行）
            ROLLBACK legacy：body data-headline-layout="legacy"，并恢复下方注释中的 DOM -->
       <div class="v2-bento__headline" id="v2-headline" hidden>
-        <span class="v2-bento__eyebrow">TRAVELOGUE · 自动游记画册</span>
+        <span class="v2-bento__eyebrow">TRAVELOGUE · 智能游记画册</span>
         <div class="v2-auto-tags">
           <span class="v2-auto-tag">自动分章成文</span>
           <span class="v2-auto-tag">自动配文选封面</span>
           <span class="v2-auto-tag">本地处理 · 免注册</span>
         </div>
-        <h1 class="v2-bento__title">照片导进来，<em>画册自动出来</em></h1>
+        <h1 class="v2-bento__title">每一个瞬间，<em>都值得再次相遇</em></h1>
         <p class="v2-bento__lead">
           选一次旅行的照片，<b>自动分章 · 配文 · 排版</b>，生成大屏卷轴 + 微信长图。
         </p>
       </div>
       <!-- ROLLBACK legacy DOM（配合 data-headline-layout="legacy"）：
       <div class="v2-bento__headline" id="v2-headline" hidden>
-        <span class="v2-bento__eyebrow">TRAVELOGUE · 自动游记画册</span>
+        <span class="v2-bento__eyebrow">TRAVELOGUE · 智能游记画册</span>
         <div class="v2-bento__headline-row">
-          <h1 class="v2-bento__title">照片导进来，<em>画册自动出来</em></h1>
+          <h1 class="v2-bento__title">每一个瞬间，<em>都值得再次相遇</em></h1>
           <div class="v2-auto-tags">…</div>
         </div>
         <p class="v2-bento__lead">…</p>
