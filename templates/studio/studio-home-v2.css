@@ -48,6 +48,9 @@
   --v2-frame-outer-line: rgba(0, 0, 0, .68);
   --v2-frame-inner-line: rgba(0, 0, 0, .52);
   --v2-frame-corner-line: rgba(0, 0, 0, .78);
+  --v2-bench-bg: rgba(255, 255, 255, .92);
+  --v2-frame-bg: rgba(255, 255, 255, .58);
+  --v2-vignette: rgba(15, 23, 42, .14);
   --v2-font-display: Georgia, "Times New Roman", "Songti SC", "SimSun", serif;
   --v2-font-handwriting: "HetangYuese", "荷塘月色手写体", "STXingkai", "KaiTi", cursive;
   --v2-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
@@ -206,6 +209,210 @@
   --v2-frame-corner-line: rgba(0, 0, 0, .88);
 }
 
+/* 用户定制三色板 · 深林橄榄 #202A2A / #BEC8AA / #505D43 */
+:root[data-v2-theme="olive"] {
+  --v2-ink: #202a2a;
+  --v2-paper: #e8edd8;
+  --v2-cream: #bec8aa;
+  --v2-gold: #505d43;
+  --v2-gold-soft: rgba(80, 93, 67, .28);
+  --v2-forest: #3d4a34;
+  --v2-demo-flag-bg: #e2e8d4;
+  --v2-demo-flag-border: #c5cfb5;
+  --v2-demo-flag-ink: #364530;
+  --v2-text-secondary: #2e3a2e;
+  --v2-text-muted: #5a6554;
+  --v2-border: #c8d2b8;
+  --v2-border-strong: #a8b595;
+  --v2-surface: #ffffff;
+  --v2-surface-soft: #f4f7ee;
+  --v2-primary: #505d43;
+  --v2-primary-hover: #3d4a34;
+  --v2-focus-ring: rgba(80, 93, 67, .35);
+  --v2-hero-end: #eef2e6;
+  --v2-veil-a: rgba(190, 200, 170, .78);
+  --v2-veil-b: rgba(232, 237, 216, .72);
+  --v2-title-ink: #1a221c;
+  --v2-tab-active-bg: #dfe8d2;
+  --v2-carousel-ph-start: #f4f7ee;
+  --v2-carousel-ph-end: #e8edd8;
+  --v2-phone-shell-a: #2a3328;
+  --v2-phone-shell-b: #202a2a;
+  --v2-shadow-soft: rgba(32, 42, 42, .08);
+  --v2-shadow-mid: rgba(32, 42, 42, .12);
+  --v2-shadow-strong: rgba(32, 42, 42, .17);
+  --v2-shadow-frame: rgba(32, 42, 42, .13);
+  --v2-shadow-carousel: rgba(32, 42, 42, .14);
+  --v2-frame-outer-line: rgba(0, 0, 0, .68);
+  --v2-frame-inner-line: rgba(0, 0, 0, .52);
+  --v2-frame-corner-line: rgba(0, 0, 0, .8);
+}
+
+/* 用户定制三色板 · 北欧雾蓝 #2B313F / #EAE4D0 / #547D8E */
+:root[data-v2-theme="fjord"] {
+  --v2-ink: #2b313f;
+  --v2-paper: #f5f2e8;
+  --v2-cream: #eae4d0;
+  --v2-gold: #547d8e;
+  --v2-gold-soft: rgba(84, 125, 142, .28);
+  --v2-forest: #3f6574;
+  --v2-demo-flag-bg: #e8e4d8;
+  --v2-demo-flag-border: #d4cfc0;
+  --v2-demo-flag-ink: #2f4a56;
+  --v2-text-secondary: #3a4252;
+  --v2-text-muted: #5c6a78;
+  --v2-border: #d8d2c4;
+  --v2-border-strong: #b8b0a0;
+  --v2-surface: #ffffff;
+  --v2-surface-soft: #faf8f4;
+  --v2-primary: #547d8e;
+  --v2-primary-hover: #3f6574;
+  --v2-focus-ring: rgba(84, 125, 142, .35);
+  --v2-hero-end: #f8f6f0;
+  --v2-veil-a: rgba(234, 228, 208, .78);
+  --v2-veil-b: rgba(245, 242, 232, .72);
+  --v2-title-ink: #232a36;
+  --v2-tab-active-bg: #e8e4d8;
+  --v2-carousel-ph-start: #faf8f4;
+  --v2-carousel-ph-end: #f0ece2;
+  --v2-phone-shell-a: #343c4a;
+  --v2-phone-shell-b: #2b313f;
+  --v2-shadow-soft: rgba(43, 49, 63, .08);
+  --v2-shadow-mid: rgba(43, 49, 63, .12);
+  --v2-shadow-strong: rgba(43, 49, 63, .17);
+  --v2-shadow-frame: rgba(43, 49, 63, .13);
+  --v2-shadow-carousel: rgba(43, 49, 63, .14);
+  --v2-frame-outer-line: rgba(0, 0, 0, .68);
+  --v2-frame-inner-line: rgba(0, 0, 0, .52);
+  --v2-frame-corner-line: rgba(0, 0, 0, .8);
+}
+
+/* 用户定制三色板 · 雾炭鼠尾草 #2F302E / #E3E3DC / #5A8073 */
+:root[data-v2-theme="sage"] {
+  --v2-ink: #2f302e;
+  --v2-paper: #e3e3dc;
+  --v2-cream: #c8cdc4;
+  --v2-gold: #5a8073;
+  --v2-gold-soft: rgba(90, 128, 115, .32);
+  --v2-forest: #456658;
+  --v2-demo-flag-bg: #d8e0da;
+  --v2-demo-flag-border: #a8bdb2;
+  --v2-demo-flag-ink: #2f4a42;
+  --v2-text-secondary: #3a3c38;
+  --v2-text-muted: #5c6862;
+  --v2-border: #b8c4bc;
+  --v2-border-strong: #8ea89c;
+  --v2-surface: #f8f8f4;
+  --v2-surface-soft: #eeeee8;
+  --v2-primary: #5a8073;
+  --v2-primary-hover: #456658;
+  --v2-focus-ring: rgba(90, 128, 115, .4);
+  --v2-hero-end: #ebebe4;
+  --v2-veil-a: rgba(200, 205, 196, .62);
+  --v2-veil-b: rgba(227, 227, 220, .48);
+  --v2-title-ink: #2f302e;
+  --v2-tab-active-bg: #d4ddd6;
+  --v2-carousel-ph-start: #eeeee8;
+  --v2-carousel-ph-end: #d8ded4;
+  --v2-phone-shell-a: #3a3c38;
+  --v2-phone-shell-b: #2f302e;
+  --v2-bench-bg: rgba(227, 227, 220, .94);
+  --v2-frame-bg: rgba(232, 232, 226, .78);
+  --v2-vignette: rgba(47, 48, 46, .2);
+  --v2-shadow-soft: rgba(47, 48, 46, .1);
+  --v2-shadow-mid: rgba(47, 48, 46, .14);
+  --v2-shadow-strong: rgba(47, 48, 46, .2);
+  --v2-shadow-frame: rgba(47, 48, 46, .15);
+  --v2-shadow-carousel: rgba(47, 48, 46, .16);
+  --v2-frame-outer-line: rgba(0, 0, 0, .68);
+  --v2-frame-inner-line: rgba(0, 0, 0, .52);
+  --v2-frame-corner-line: rgba(0, 0, 0, .8);
+}
+
+/* 用户定制三色板 · 板岩暖灰 #505D66 / #F2EFE5 / #80786F */
+:root[data-v2-theme="taupe"] {
+  --v2-ink: #505d66;
+  --v2-paper: #f2efe5;
+  --v2-cream: #ddd6c8;
+  --v2-gold: #80786f;
+  --v2-gold-soft: rgba(128, 120, 111, .34);
+  --v2-forest: #5e584f;
+  --v2-demo-flag-bg: #ebe6dc;
+  --v2-demo-flag-border: #cfc4b4;
+  --v2-demo-flag-ink: #4a443c;
+  --v2-text-secondary: #4a525c;
+  --v2-text-muted: #6e6860;
+  --v2-border: #d4ccc0;
+  --v2-border-strong: #b0a498;
+  --v2-surface: #faf8f4;
+  --v2-surface-soft: #f4f0e8;
+  --v2-primary: #80786f;
+  --v2-primary-hover: #5e584f;
+  --v2-focus-ring: rgba(128, 120, 111, .4);
+  --v2-hero-end: #ece8de;
+  --v2-veil-a: rgba(221, 214, 200, .58);
+  --v2-veil-b: rgba(242, 239, 229, .45);
+  --v2-title-ink: #505d66;
+  --v2-tab-active-bg: #e6e0d4;
+  --v2-carousel-ph-start: #f4f0e8;
+  --v2-carousel-ph-end: #e4ddd0;
+  --v2-phone-shell-a: #5a646e;
+  --v2-phone-shell-b: #505d66;
+  --v2-bench-bg: rgba(242, 239, 229, .94);
+  --v2-frame-bg: rgba(248, 244, 236, .8);
+  --v2-vignette: rgba(80, 93, 102, .22);
+  --v2-shadow-soft: rgba(80, 93, 102, .1);
+  --v2-shadow-mid: rgba(80, 93, 102, .14);
+  --v2-shadow-strong: rgba(80, 93, 102, .2);
+  --v2-shadow-frame: rgba(80, 93, 102, .15);
+  --v2-shadow-carousel: rgba(80, 93, 102, .16);
+  --v2-frame-outer-line: rgba(0, 0, 0, .68);
+  --v2-frame-inner-line: rgba(0, 0, 0, .52);
+  --v2-frame-corner-line: rgba(0, 0, 0, .8);
+}
+
+/* 用户定制三色板 · 午夜桉树 #1F3235 / #E6EAD7 / #5E8779 */
+:root[data-v2-theme="grove"] {
+  --v2-ink: #1f3235;
+  --v2-paper: #e6ead7;
+  --v2-cream: #c5d4c4;
+  --v2-gold: #5e8779;
+  --v2-gold-soft: rgba(94, 135, 121, .32);
+  --v2-forest: #3d6a5c;
+  --v2-demo-flag-bg: #d6e4dc;
+  --v2-demo-flag-border: #9eb8ac;
+  --v2-demo-flag-ink: #1f4a42;
+  --v2-text-secondary: #2a4044;
+  --v2-text-muted: #4a6864;
+  --v2-border: #b4ccc2;
+  --v2-border-strong: #7ea898;
+  --v2-surface: #f4f8f2;
+  --v2-surface-soft: #e8eee2;
+  --v2-primary: #5e8779;
+  --v2-primary-hover: #3d6a5c;
+  --v2-focus-ring: rgba(94, 135, 121, .4);
+  --v2-hero-end: #dce6d4;
+  --v2-veil-a: rgba(31, 50, 53, .42);
+  --v2-veil-b: rgba(230, 234, 215, .46);
+  --v2-title-ink: #1f3235;
+  --v2-tab-active-bg: #cce0d6;
+  --v2-carousel-ph-start: #e8eee2;
+  --v2-carousel-ph-end: #c8d8cc;
+  --v2-phone-shell-a: #2a3e42;
+  --v2-phone-shell-b: #1f3235;
+  --v2-bench-bg: rgba(230, 234, 215, .94);
+  --v2-frame-bg: rgba(236, 240, 226, .78);
+  --v2-vignette: rgba(31, 50, 53, .24);
+  --v2-shadow-soft: rgba(31, 50, 53, .1);
+  --v2-shadow-mid: rgba(31, 50, 53, .14);
+  --v2-shadow-strong: rgba(31, 50, 53, .2);
+  --v2-shadow-frame: rgba(31, 50, 53, .15);
+  --v2-shadow-carousel: rgba(31, 50, 53, .16);
+  --v2-frame-outer-line: rgba(0, 0, 0, .68);
+  --v2-frame-inner-line: rgba(0, 0, 0, .52);
+  --v2-frame-corner-line: rgba(0, 0, 0, .8);
+}
+
 * { box-sizing: border-box; }
 
 html {
@@ -273,7 +480,8 @@ body { overflow-x: clip; overflow-y: visible; }
   min-height: 100vh;
   padding: 28px 32px 24px;
   box-sizing: border-box;
-  overflow: clip;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .v2-shared__bg {
@@ -311,7 +519,7 @@ body { overflow-x: clip; overflow-y: visible; }
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  box-shadow: inset 0 0 200px rgba(15, 23, 42, .14);
+  box-shadow: inset 0 0 200px var(--v2-vignette);
 }
 
 /* ── Loading skeleton ── */
@@ -328,13 +536,13 @@ body { overflow-x: clip; overflow-y: visible; }
   margin: 0 0 6px;
   font-family: var(--v2-font-display);
   font-size: 14px;
-  color: rgba(15, 23, 42, .55);
+  color: var(--v2-text-muted);
 }
 .v2-loading__label {
   margin: 0 0 18px;
   font-size: 12px;
   letter-spacing: .08em;
-  color: rgba(51, 65, 85, .62);
+  color: var(--v2-text-secondary);
 }
 .v2-loading__skeleton {
   display: flex;
@@ -418,7 +626,7 @@ body { overflow-x: clip; overflow-y: visible; }
 .v2-bento__lead b {
   color: var(--v2-ink);
   font-weight: 600;
-  border-bottom: 1px solid rgba(0, 119, 182, .22);
+  border-bottom: 1px solid var(--v2-gold-soft);
 }
 
 .v2-auto-tags {
@@ -501,7 +709,7 @@ body { overflow-x: clip; overflow-y: visible; }
   padding: 14px 16px 16px;
   border: 1px solid var(--v2-border);
   border-radius: 10px;
-  background: rgba(255, 255, 255, .58);
+  background: var(--v2-frame-bg);
   backdrop-filter: blur(10px);
   box-shadow: 0 24px 64px var(--v2-shadow-frame);
   display: flex;
@@ -520,7 +728,7 @@ body { overflow-x: clip; overflow-y: visible; }
   font-size: 10px;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: rgba(51, 65, 85, .62);
+  color: var(--v2-text-muted);
 }
 .v2-bench__ghost-btn,
 .v2-bento-tabs__btn,
@@ -630,7 +838,7 @@ body { overflow-x: clip; overflow-y: visible; }
   font-size: 10px;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: rgba(51, 65, 85, .66);
+  color: var(--v2-text-muted);
   margin: 0;
   flex-shrink: 0;
 }
@@ -881,6 +1089,24 @@ body { overflow-x: clip; overflow-y: visible; }
   object-position: 50% 38%;
 }
 
+/* 竖条/整卷长图：章内竖滚完整展示，避免 cover 裁成「截断」 */
+.v2-phone-strip__slide--scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding-bottom: 28px;
+  box-sizing: border-box;
+  background: #14110d;
+}
+.v2-phone-strip__slide--scroll .v2-phone-strip__slide-img {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: unset;
+  object-position: unset;
+}
+
 .v2-phone-strip__slide-ph {
   width: 100%;
   height: 100%;
@@ -963,7 +1189,7 @@ body { overflow-x: clip; overflow-y: visible; }
   gap: 18px;
   height: 100%;
   padding: 14px 18px;
-  background: rgba(255, 255, 255, .92);
+  background: var(--v2-bench-bg);
   backdrop-filter: blur(14px);
   border: 1px solid var(--v2-border);
 }
@@ -1349,6 +1575,8 @@ body { overflow-x: clip; overflow-y: visible; }
   border: 1px solid rgba(20, 17, 13, .12);
   border-radius: 8px;
   box-shadow: 0 12px 32px rgba(16, 15, 13, .14);
+  /* 弹层恒为白底，勿用 --v2-ink（navy 等主题为浅色字） */
+  --v2-shelf-menu-ink: #14110d;
 }
 .v2-shelf__menu[hidden] { display: none !important; }
 .v2-shelf__menu-item {
@@ -1360,7 +1588,7 @@ body { overflow-x: clip; overflow-y: visible; }
   text-align: left;
   font-size: 13px;
   cursor: pointer;
-  color: var(--v2-ink);
+  color: var(--v2-shelf-menu-ink);
 }
 .v2-shelf__menu-item:hover { background: rgba(20, 17, 13, .04); }
 .v2-shelf__menu-item--danger { color: #a33b36; }
@@ -1370,6 +1598,13 @@ body { overflow-x: clip; overflow-y: visible; }
   cursor: not-allowed;
 }
 .v2-shelf__menu-item:disabled:hover { background: none; }
+
+.v2-shelf-longshot__body p {
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+.v2-shelf-longshot__body p:last-child { margin-bottom: 0; }
+
 @media (hover: none) {
   .v2-shelf__menu-btn {
     display: flex;
@@ -1620,6 +1855,34 @@ body { overflow-x: clip; overflow-y: visible; }
 :root[data-v2-theme="navy"] .v2-bench__cta {
   color: #1f2f3a;
 }
+
+/* 用户定制浅色板 · 强化雾炭 / 板岩 / 桉树 可辨差异 */
+:root[data-v2-theme="sage"] .v2-bench__ghost-select option,
+:root[data-v2-theme="grove"] .v2-bench__ghost-select option {
+  color: var(--v2-ink);
+  background: var(--v2-paper);
+}
+:root[data-v2-theme="taupe"] .v2-bench__ghost-select option {
+  color: #505d66;
+  background: #f2efe5;
+}
+:root[data-v2-theme="sage"] .v2-bench__cta,
+:root[data-v2-theme="grove"] .v2-bench__cta {
+  color: #fff;
+}
+:root[data-v2-theme="taupe"] .v2-bench__cta {
+  color: #fff;
+}
+:root[data-v2-theme="taupe"] .v2-shelf {
+  background: var(--v2-paper);
+}
+:root[data-v2-theme="sage"] .v2-shelf {
+  background: var(--v2-paper);
+}
+:root[data-v2-theme="grove"] .v2-shelf {
+  background: var(--v2-paper);
+}
+
 .v2-shelf__cover--blank {
   display: grid;
   place-items: center;

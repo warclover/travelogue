@@ -32,11 +32,24 @@ export const V2 = {
   importShell: "bento", // 方案 A：Import 前壳层恒为 Bento 首屏
   reroute: null, // bootstrap 注入：重新拉 trips 并路由最终态（import 结束/取消后调用）
   onExpand: null, // Lightbox 打开钩子（当前 Bento 未接入）
-  theme: V2_THEME_DEFAULT, // sky | classic | dawn | mint | navy
+  theme: V2_THEME_DEFAULT, // sky | classic | dawn | mint | navy | olive | fjord | sage | taupe | grove
 };
 
+const V2_THEME_IDS = new Set([
+  "classic",
+  "dawn",
+  "mint",
+  "navy",
+  "olive",
+  "fjord",
+  "sage",
+  "taupe",
+  "grove",
+]);
+
 function normalizeTheme(theme) {
-  if (theme === "classic" || theme === "dawn" || theme === "mint" || theme === "navy") return theme;
+  if (theme === "sky") return "sky";
+  if (V2_THEME_IDS.has(theme)) return theme;
   return "sky";
 }
 
@@ -84,7 +97,11 @@ export function applyTheme(theme) {
   var next = normalizeTheme(theme);
   V2.theme = next;
   try {
-    document.documentElement.setAttribute("data-v2-theme", next);
+    if (next === "sky") {
+      document.documentElement.removeAttribute("data-v2-theme");
+    } else {
+      document.documentElement.setAttribute("data-v2-theme", next);
+    }
   } catch (e) {
     /* ignore */
   }

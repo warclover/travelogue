@@ -17,6 +17,11 @@ export function initThemeSettings() {
     dawn: "暖阳珊瑚",
     mint: "森系薄荷",
     navy: "夜航蓝调",
+    olive: "深林橄榄",
+    fjord: "北欧雾蓝",
+    sage: "雾炭鼠尾草",
+    taupe: "板岩暖灰",
+    grove: "午夜桉树",
   };
   if (!select) return;
 
