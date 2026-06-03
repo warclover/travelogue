@@ -15,7 +15,6 @@ from travelogue.web.studio_homepage_gate import (
     decide_root_variant,
     is_loopback_host,
     query_variant_override,
-    resolve_classic_source,
     resolve_mode,
     resolve_percent,
     should_redirect_root_to_v2,
@@ -46,14 +45,6 @@ def test_resolve_percent_env_and_yaml(monkeypatch) -> None:
 def test_resolve_percent_env_override(monkeypatch) -> None:
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", "15")
     assert resolve_percent({"studio": {"homepage": {"v2_bento": {"percent": 99}}}}) == 15.0
-
-
-def test_resolve_classic_source(monkeypatch) -> None:
-    monkeypatch.delenv("TRAVELOGUE_STUDIO_CLASSIC_SOURCE", raising=False)
-    assert resolve_classic_source(None) == "legacy"
-    assert resolve_classic_source("full") == "full"
-    assert resolve_classic_source("legacy") == "legacy"
-    assert resolve_classic_source("invalid") == "legacy"
 
 
 def test_stable_bucket_deterministic() -> None:

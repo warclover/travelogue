@@ -952,7 +952,7 @@ def test_m20j_holdback_redirect_experiment_exposure(tmp_path: Path, monkeypatch)
 
 
 def test_m20j_holdback_control_experiment_exposure(tmp_path: Path, monkeypatch) -> None:
-    """M20-j · auto 10% 对照组留 v3 → experiment_exposure variant=v3 + bucket_id。"""
+    """M21-e2 · auto 10% 对照组留 legacy classic，默认不再要求 v3 exposure。"""
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "auto")
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", "10")
     trips_dir = tmp_path / "trips"
@@ -986,10 +986,7 @@ def test_m20j_holdback_control_experiment_exposure(tmp_path: Path, monkeypatch) 
             page.wait_for_timeout(400)
 
             exposures = [e for e in events if e.get("event") == "experiment_exposure"]
-            assert exposures, f"未捕获 experiment_exposure，captured={[e.get('event') for e in events]}"
-            meta = exposures[0].get("meta", {})
-            assert meta.get("variant") == "v3"
-            assert meta.get("bucket_id") == expected_bucket
+            assert not exposures, f"legacy classic 不应上报 v3 exposure，captured={exposures}"
             browser.close()
     finally:
         server.shutdown()

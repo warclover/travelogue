@@ -32,15 +32,12 @@ _ROLLBACK_TESTS = [
     "tests/test_studio_home_v2.py::test_studio_home_gate_auto_zero_percent_no_redirect",
     "tests/test_studio_home_v2.py::test_studio_classic_contract_smoke_config_capabilities",
     "tests/test_studio_home_v2_ac_playwright.py::test_ac_hp2_23_rollback_ignores_homepage_variant",
-    "tests/test_studio_home_v2_ac_playwright.py::test_m20j_holdback_control_experiment_exposure",
 ]
 
 
 def _run_pytest(tests: list[str]) -> tuple[bool, str]:
     env = os.environ.copy()
     env["TRAVELOGUE_STUDIO_HOMEPAGE_V2"] = "off"
-    # 一级回滚演练验证完整 v3 能力链路，而非冻结应急页。
-    env["TRAVELOGUE_STUDIO_CLASSIC_SOURCE"] = "full"
     env.pop("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", None)
     cmd = [sys.executable, "-m", "pytest", *tests, "-q", "--tb=line"]
     proc = subprocess.run(
@@ -69,7 +66,6 @@ def run_drill(*, write_out: Path | None = None) -> tuple[dict, int]:
             "stop_redirect": passed,
             "v3_dom_regression": passed,
             "session_homepage_variant_ignored": passed,
-            "v3_experiment_exposure": passed,
         },
         "next_steps_manual": [
             "验证 staging GET / 无 302",

@@ -94,7 +94,7 @@
 ### M21-e2（物理删除）
 
 - [x] 删除 v3 文件前完成依赖审计（防共享模块误删）
-- [ ] 删除后全量回归通过
+- [x] 删除后全量回归通过（本地）
 - [ ] 发布说明明确：主入口 `/`，`/classic` 为 deprecated 应急入口
 
 ---
@@ -301,4 +301,32 @@
 
 - 新增 `M21-E2-COMMIT-DRAFT.md`，将删除草案细化到 commit 粒度（标题、范围、验证、回退）
 - 在 README 增加 commit 草案索引，补齐“执行包 → 提交包”链路
+
+### 2026-06-03（M21-d 稳定性修正：holdback 暴露用例）
+
+已落地：
+
+- 修复 `tests/test_studio_home_v2_ac_playwright.py::test_m20j_holdback_control_experiment_exposure` 语义漂移
+- 用例语义收敛到 legacy classic（默认不要求 v3 exposure）
+- 同步 PRD 当前评估结论与遗留阻塞项（e2 改为发布门禁收尾）
+
+本地自动化结果：
+
+- `python -m pytest tests/test_studio_home_v2_ac_playwright.py -q --tb=short` → **35 passed**
+- `python scripts/studio_m21e2_preflight.py --observed-release --json` → **ready=true**
+
+### 2026-06-03（M21-e2 方案 2 执行：删除完整 v3）
+
+已落地：
+
+- 根路由 v3 分支固定为 `legacy-freeze/studio.classic.html`，移除 `full` 回滚分支
+- 物理删除 v3 入口文件与 v3-only 模块（9 文件）
+- 回滚演练改为 legacy classic 语义，holdback 控制组用例不再要求 v3 exposure
+
+本地自动化结果：
+
+- `python scripts/studio_m21e2_preflight.py --observed-release --json` → **ready=true**
+- `python -m pytest tests/test_studio_home_v2.py -q --tb=short` → **33 passed, 1 skipped**
+- `python -m pytest tests/test_studio_home_v2_ac_playwright.py -q --tb=short` → **35 passed**
+- `python scripts/studio_homepage_rollback_drill.py --json` → **passed=true**
 

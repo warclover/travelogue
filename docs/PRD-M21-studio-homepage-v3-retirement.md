@@ -15,8 +15,7 @@
 >
 > - 本 PRD **不**重复描述 v2 Bento 首页功能（见 [PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md)）。
 > - 本 PRD 定义：**如何稳妥退役 v3 影像优先首页**（`studio.html` + `studio.js`），使 v2 成为唯一主入口，且 **不破坏** 导入、预览、长图、配置 API 等已有能力。
-> - 实施原则：**先切流量、再补缺口、再删文件**；任何阶段均可通过 `/classic` + `TRAVELOGUE_STUDIO_HOMEPAGE_V2=off` 回滚。  
-> - 回滚语义显式化：`TRAVELOGUE_STUDIO_CLASSIC_SOURCE=full|legacy`，其中 `full` 为完整旧首页，`legacy` 为冻结应急页。
+> - 实施原则：**先切流量、再补缺口、再删文件**；任何阶段均可通过 `/classic` + `TRAVELOGUE_STUDIO_HOMEPAGE_V2=off` 回滚。
 
 ---
 
@@ -137,7 +136,7 @@ M21-e2 物理退役（删 v3 文件）           ← 观察通过后执行
 |------|--------------------------------|--------------|
 | 本地 dev | `on`（或文档约定默认 on） | 直接 serve `studio-home-v2.html` |
 | dogfood / 生产 | `on` | 同上 |
-| 紧急回滚 | `off` + `TRAVELOGUE_STUDIO_CLASSIC_SOURCE=full` | 完整 v3 @ `/`；v2 仍可通过 `/v2` |
+| 紧急回滚 | `off` | 冻结 classic @ `/`；v2 仍可通过 `/v2` |
 
 **代码默认值（建议）**：
 
@@ -256,7 +255,7 @@ M21-e2 物理退役（删 v3 文件）           ← 观察通过后执行
 ```text
 GET /              → studio-home-v2.html（唯一主入口）
 GET /v2            → 302 /（在 M21-c 执行收敛）
-GET /classic       → studio.html（长期保留 · deprecated · 应急入口）
+GET /classic       → legacy-freeze/studio.classic.html（长期保留 · deprecated · 应急入口）
 GET /{tripId}/...  → 不变
 /__studio/*        → 不变（v2 CSS/JS + preview-toolbar + 共享 js）
 /__travelogue/*    → 不变
@@ -342,6 +341,49 @@ TRAVELOGUE_STUDIO_HOMEPAGE_V2=on   # 主路径
 |------|------|------|
 | v0.1.0-M21 | 2026-06-03 | 初稿：分阶段退役 v3 · M21-0 浏览器上传 · 路由目标态 · AC/风险/排期 |
 | v0.1.1-M21 | 2026-06-03 | 决议固化：`/classic` 长期保留；`/v2` 在 M21-c 后 302；200MB 改建议上限；M21-e 拆为冻结一版再删除 |
+| v0.1.2-M21 | 2026-06-03 | 补充现状评估：当前功能验证结论与遗留工作清单 |
+| v0.1.3-M21 | 2026-06-03 | 方案 2 落地：移除 `full` 回滚分支并执行 v3 物理删除（保留 `/classic` 冻结应急入口） |
+
+---
+
+## 12. 当前评估（2026-06-03）
+
+### 12.1 首页功能现状（评估结论）
+
+| 维度 | 结果 | 证据 |
+|------|------|------|
+| v2 主入口可用性 | ✅ 正常 | `pytest tests/test_studio_home_v2.py -q` → **33 passed, 1 skipped** |
+| 门控与安全 | ✅ 正常 | `pytest tests/test_studio_homepage_gate.py tests/test_studio_homepage_gate_security.py -q` → **23 passed** |
+| AC Playwright | ✅ 正常 | `pytest tests/test_studio_home_v2_ac_playwright.py -q` → **35 passed** |
+| 回滚语义 | ✅ 已收敛 | `off` 统一回退到冻结 classic（无 `full` 分支） |
+| `/classic` 应急入口 | ✅ 正常 | `/classic` 固定走 `legacy-freeze/studio.classic.html`，nightly 保留 smoke |
+
+### 12.2 发现的问题（需处理）
+
+1. **M21-e2 发布门禁待收口（P0）**  
+   `python scripts/studio_m21e2_preflight.py --observed-release --json` 已返回：`ready=true`；  
+   当前待完成项为远端 CI 与发布签字流程。
+
+> 已处置（2026-06-03）：  
+> - 运行时 `studio.html` 引用已移除，preflight `runtime_blockers=0`。  
+> - `test_m20j_holdback_control_experiment_exposure` 已改为 legacy 语义（默认不要求 v3 exposure），并完成 Playwright 回归（35 passed）。
+
+### 12.3 移除旧首页遗留工作（按优先级）
+
+| 优先级 | 遗留项 | 完成标准 |
+|--------|--------|----------|
+| P0 | 完成 M21-b/M21-e1 观察窗口 | 至少一个发布版本、无 P0/P1、nightly 稳定 |
+| P0 | 远端门禁收口 | 远端 CI 全绿、nightly 无新增波动、发布说明完成 |
+| P1 | 完成 telemetry 收口 | 文档与查询口径统一到 `/` + v2 主路径，明确 `/classic` 仅应急 |
+| P1 | M21-d 门禁收尾 | 将本地回归结果与远端流水线记录对齐归档 |
+| P2 | e2 删除后清理 | legacy 测试/文档引用分批清理，完成发布说明与回滚卡更新 |
+
+### 12.4 Go / No-Go 建议
+
+- **当前建议：Go（可进入发布收尾）**  
+  原因：e2 技术门禁（preflight + 本地回归）已满足，旧首页物理删除已完成。  
+- **可继续推进：M21-d 发布收尾**  
+  建议完成远端 CI、nightly 观察与发布说明后签字关闭。
 
 ---
 
@@ -363,5 +405,5 @@ TRAVELOGUE_STUDIO_HOMEPAGE_V2=on   # 主路径
 | v2 入口 | `templates/studio/homepage-v2/bootstrap.js` |
 | v2 Import Sheet | `templates/studio/homepage-v2/import-sheet.js` |
 | 上传逻辑（复用） | `templates/studio/js/import-flow.js` |
-| v3 入口（退役） | `templates/studio/studio.js` · `studio.html` |
+| v3 入口（已删除） | `templates/studio/studio.js` · `studio.html` |
 | 返回首页链 | `templates/studio/preview-toolbar.js` |

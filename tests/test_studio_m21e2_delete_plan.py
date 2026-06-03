@@ -21,10 +21,14 @@ def test_build_delete_commands_count() -> None:
 
 
 def test_verify_files_exist_current_repo() -> None:
-    # 当前阶段仍保留 v3 文件，验证应全存在。
+    # 兼容 e2 执行前后：缺失列表只能来自候选删除集。
     missing = mod.verify_files_exist()
-    assert missing == []
+    candidates = {rel for _group, files in mod.DELETE_GROUPS for rel in files}
+    assert set(missing).issubset(candidates)
 
 
 def test_main_dry_run_success() -> None:
-    assert mod.main([]) == 0
+    # 候选文件已删除时返回 1；未删除时返回 0。
+    missing = mod.verify_files_exist()
+    expected = 1 if missing else 0
+    assert mod.main([]) == expected

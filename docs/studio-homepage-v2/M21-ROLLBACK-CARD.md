@@ -18,17 +18,11 @@
 
 ## 2) 一级回滚（配置回滚，最快）
 
-将首页入口切回 v3（完整模式）：
+将首页入口切到 classic 应急页：
 
 ```bash
 set TRAVELOGUE_STUDIO_HOMEPAGE_V2=off
-set TRAVELOGUE_STUDIO_CLASSIC_SOURCE=full
 ```
-
-说明：
-
-- `TRAVELOGUE_STUDIO_CLASSIC_SOURCE=full`：`/` 使用完整旧首页 `studio.html`（推荐用于一级回滚）
-- `TRAVELOGUE_STUDIO_CLASSIC_SOURCE=legacy`：`/` 使用冻结应急页（降级模式，默认）
 
 在部署环境写入等价配置后重启 Studio 进程。
 
@@ -83,9 +77,8 @@ curl -s http://127.0.0.1:8766/ | findstr /C:"data-studio-v=\"4\""
 $env:TRAVELOGUE_STUDIO_HOMEPAGE_V2 = "on"
 python -m pytest tests/test_studio_home_v2.py -q --tb=short -k "gate_on_serves_v2_at_root"
 
-# 2) off（完整回滚）
+# 2) off（应急回滚）
 $env:TRAVELOGUE_STUDIO_HOMEPAGE_V2 = "off"
-$env:TRAVELOGUE_STUDIO_CLASSIC_SOURCE = "full"
 python -m pytest tests/test_studio_home_v2.py -q --tb=short -k "gate_off_serves_v3_at_root"
 
 # 3) on（恢复）

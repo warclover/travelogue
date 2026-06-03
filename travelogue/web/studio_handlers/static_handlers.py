@@ -81,11 +81,7 @@ def handle_home_root(handler: StudioHandlerProtocol) -> bool:
         handler.end_headers()
         return True
 
-    if variant == "v2":
-        template = "studio-home-v2.html"
-    else:
-        classic_source = gate.resolve_classic_source()
-        template = "studio.html" if classic_source == "full" else "legacy-freeze/studio.classic.html"
+    template = "studio-home-v2.html" if variant == "v2" else "legacy-freeze/studio.classic.html"
     _serve_studio_home_html(handler, template, bucket=bucket, is_new=is_new)
     return True
 

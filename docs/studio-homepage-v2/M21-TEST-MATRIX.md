@@ -34,7 +34,7 @@ pytest tests/test_studio_homepage_gate_security.py -q
 
 - [ ] 每日 smoke 通过（首页、导入、预览）
 - [ ] 至少一次回滚演练通过并记录（`on -> off -> on`）
-- [x] Nightly 增加 `off + full` 回滚合同 smoke（`gate_off_serves_v3_at_root`）
+- [x] Nightly 增加 `off` 回滚合同 smoke（`gate_off_serves_v3_at_root`）
 - [ ] 无 P0/P1 事故
 
 ### M21-b 指标阈值（建议）
