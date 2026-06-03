@@ -68,5 +68,9 @@ jobs:
         run: |
           python -m pytest tests/test_studio_home_v2.py -q --tb=short -k "gate_classic_serves_v3"
 
+      - name: Rollback contract smoke（off + full classic）
+        run: |
+          python -m pytest tests/test_studio_home_v2.py -q --tb=short -k "gate_off_serves_v3_at_root"
+
       - name: Rollback drill（§3.2）
         run: python scripts/studio_homepage_rollback_drill.py

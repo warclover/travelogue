@@ -15,7 +15,8 @@
 >
 > - 本 PRD **不**重复描述 v2 Bento 首页功能（见 [PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md)）。
 > - 本 PRD 定义：**如何稳妥退役 v3 影像优先首页**（`studio.html` + `studio.js`），使 v2 成为唯一主入口，且 **不破坏** 导入、预览、长图、配置 API 等已有能力。
-> - 实施原则：**先切流量、再补缺口、再删文件**；任何阶段均可通过 `/classic` + `TRAVELOGUE_STUDIO_HOMEPAGE_V2=off` 回滚。
+> - 实施原则：**先切流量、再补缺口、再删文件**；任何阶段均可通过 `/classic` + `TRAVELOGUE_STUDIO_HOMEPAGE_V2=off` 回滚。  
+> - 回滚语义显式化：`TRAVELOGUE_STUDIO_CLASSIC_SOURCE=full|legacy`，其中 `full` 为完整旧首页，`legacy` 为冻结应急页。
 
 ---
 
@@ -136,7 +137,7 @@ M21-e2 物理退役（删 v3 文件）           ← 观察通过后执行
 |------|--------------------------------|--------------|
 | 本地 dev | `on`（或文档约定默认 on） | 直接 serve `studio-home-v2.html` |
 | dogfood / 生产 | `on` | 同上 |
-| 紧急回滚 | `off` | v3 @ `/`；v2 仍可通过 `/v2` |
+| 紧急回滚 | `off` + `TRAVELOGUE_STUDIO_CLASSIC_SOURCE=full` | 完整 v3 @ `/`；v2 仍可通过 `/v2` |
 
 **代码默认值（建议）**：
 

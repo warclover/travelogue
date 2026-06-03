@@ -630,6 +630,7 @@ def test_demo_showcase_manifest_valid() -> None:
 def test_studio_home_gate_off_serves_v3_at_root(tmp_path: Path, monkeypatch) -> None:
     """AC-HP2-23 回滚 · TRAVELOGUE_STUDIO_HOMEPAGE_V2=off → GET / 仍 v3。"""
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "off")
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_CLASSIC_SOURCE", "full")
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
     port = _free_port()
@@ -641,6 +642,26 @@ def test_studio_home_gate_off_serves_v3_at_root(tmp_path: Path, monkeypatch) -> 
         for marker in V3_HOME_MARKERS:
             assert marker in html, marker
         assert "studio-home-v2.css" not in html
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_studio_home_gate_off_legacy_root_uses_frozen_classic(tmp_path: Path, monkeypatch) -> None:
+    """M21 · off + classic_source=legacy 时，根路径回退到冻结 classic。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "off")
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_CLASSIC_SOURCE", "legacy")
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+        assert "Travelogue Studio Classic (Deprecated)" in html
+        assert "/__studio/legacy-freeze/studio.classic.js" in html
     finally:
         server.shutdown()
         server.server_close()
@@ -660,6 +681,31 @@ def test_studio_home_gate_auto_zero_percent_no_redirect(tmp_path: Path, monkeypa
             assert resp.status == 200
             html = resp.read().decode("utf-8")
         assert 'data-studio-v="4"' in html
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_studio_classic_contract_smoke_config_capabilities(tmp_path: Path, monkeypatch) -> None:
+    """M21 · classic 合同 smoke：页面与导入能力配置可达。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "off")
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_CLASSIC_SOURCE", "legacy")
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/classic", timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+        assert "classic-pick" in html
+
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/__travelogue/config", timeout=10) as resp:
+            assert resp.status == 200
+            body = json.loads(resp.read().decode("utf-8"))
+        caps = body.get("capabilities") or {}
+        assert "pickFolder" in caps
     finally:
         server.shutdown()
         server.server_close()

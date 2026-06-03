@@ -26,6 +26,7 @@ from travelogue.web.studio_handlers.paths import HOME_CLASSIC_PATH
 ENV_MODE = "TRAVELOGUE_STUDIO_HOMEPAGE_V2"
 ENV_PERCENT = "TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT"
 ENV_BUCKET_SECRET = "TRAVELOGUE_STUDIO_HP_BUCKET_SECRET"
+ENV_CLASSIC_SOURCE = "TRAVELOGUE_STUDIO_CLASSIC_SOURCE"
 COOKIE_BUCKET = "travelogue.studio.hp_bucket"
 COOKIE_MAX_AGE = 365 * 24 * 3600
 BUCKET_SALT = "travelogue-studio-homepage-v2"
@@ -194,6 +195,18 @@ def should_redirect_root_to_v2(
 ) -> bool:
     """M21-c 后统一在根路径渲染，不再从 / 跳转到 /v2。"""
     return False
+
+
+def resolve_classic_source(raw: str | None = None) -> Literal["legacy", "full"]:
+    """off/auto 命中 v3 变体时根路径应使用的 classic 来源。
+
+    - legacy: 冻结应急页（默认）
+    - full: 旧版完整 studio.html（仅观察/回滚演练使用）
+    """
+    val = (raw if raw is not None else os.environ.get(ENV_CLASSIC_SOURCE, "legacy")).strip().lower()
+    if val == "full":
+        return "full"
+    return "legacy"
 
 
 def parse_request_query(path_with_query: str) -> dict[str, list[str]]:
