@@ -152,7 +152,7 @@ def test_ac_hp2_02_demo_flags(studio_server) -> None:
         assert "横滑浏览" in page.locator("#v2-scroll-meta").inner_text()
         assert page.locator("#v2-tab-demo").is_visible()
         assert page.locator("#v2-tab-demo").evaluate("el => el.classList.contains('is-active')")
-        assert page.locator("#v2-web-cell .v2-bento-tabs").is_visible()
+        assert page.locator("#v2-bench-source-tabs").is_visible()
         browser.close()
 
 

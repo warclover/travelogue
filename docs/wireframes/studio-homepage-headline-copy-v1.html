@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio 首页 · 文案区内部重排线框 v2</title>
+  <style>
+    :root {
+      --paper: #f0ebe3;
+      --ink: #1a1814;
+      --muted: #6b6560;
+      --line: rgba(26, 24, 20, .14);
+      --anno: #c45c26;
+      --slot: #7b5ea7;
+      --ok: #2a6b4a;
+      --warn: #b45309;
+      --review-bar-h: 52px;
+      --frame-w: 1280px;
+      /* 文案区冻结尺寸（与现网 CSS 栈计算值对齐） */
+      --copy-w: 100%;
+      --copy-h: 88px;
+      --classic-bg: #14110d;
+      --classic-ink: #f5f0e8;
+      --classic-gold: #c4a574;
+      --classic-muted: rgba(255,255,255,.72);
+      --classic-tag-bg: rgba(123,107,158,.18);
+      --classic-tag-border: rgba(123,107,158,.4);
+      --classic-tag-ink: #c5b6de;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    .review-bar {
+      position: sticky; top: 0; z-index: 100;
+      min-height: var(--review-bar-h);
+      background: #1a1814; color: #e8e2d8;
+      padding: 8px 20px;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.25);
+    }
+    .review-bar__title { font-size: 13px; font-weight: 600; margin-right: auto; }
+    .review-bar__title em { color: #c9a962; font-style: normal; font-weight: 400; }
+    .review-bar__note { font-size: 11px; color: rgba(255,255,255,.55); max-width: 560px; }
+
+    .page { max-width: 1400px; margin: 0 auto; padding: 24px 20px 64px; }
+
+    h2.section {
+      font-size: 15px; font-weight: 600; margin: 32px 0 8px;
+      padding-bottom: 8px; border-bottom: 2px solid var(--ink);
+    }
+    h2.section:first-of-type { margin-top: 0; }
+    .section-lead { font-size: 13px; color: var(--muted); margin: 0 0 20px; max-width: 920px; }
+
+    .constraint-box {
+      border: 2px dashed var(--slot);
+      background: rgba(123, 94, 167, .06);
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      font-size: 12px;
+    }
+    .constraint-box strong { color: var(--slot); }
+    .constraint-box ul { margin: 8px 0 0; padding-left: 18px; }
+    .constraint-box li { margin: 4px 0; }
+
+    .compare-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 1200px) { .compare-3 { grid-template-columns: 1fr; } }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .panel__head {
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      border-bottom: 1px solid var(--line);
+    }
+    .panel__head--current { background: #fde8e8; color: #991b1b; }
+    .panel__head--proposed { background: #dcfce7; color: #166534; }
+    .panel__head--alt { background: #fef3c7; color: #92400e; }
+    .panel__body { padding: 14px; }
+
+    .bento-shell {
+      width: 100%;
+      max-width: var(--frame-w);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 10px;
+      background: var(--classic-bg);
+      padding: 14px 16px 16px;
+    }
+    .bento-shell__theme {
+      display: flex; justify-content: flex-end; margin-bottom: 10px;
+      font-size: 10px; color: rgba(255,255,255,.45);
+    }
+    .bento-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2.1fr) minmax(148px, 1fr);
+      grid-template-rows: auto minmax(100px, 1fr) auto;
+      gap: 10px 14px;
+    }
+    .cell-other {
+      border: 1px dashed rgba(255,255,255,.12);
+      border-radius: 4px;
+      background: rgba(255,255,255,.03);
+      min-height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: rgba(255,255,255,.25);
+    }
+    .cell-other--right { grid-column: 2; grid-row: 1 / 3; min-height: 140px; }
+    .cell-other--web { grid-column: 1; grid-row: 2; min-height: 100px; }
+    .cell-other--bench { grid-column: 1 / -1; grid-row: 3; min-height: 56px; }
+
+    /* ── 冻结文案区容器：宽高锁定 ── */
+    .copy-slot {
+      grid-column: 1;
+      grid-row: 1;
+      min-width: 0;
+      position: relative;
+    }
+    .copy-slot__dim {
+      position: absolute;
+      top: -18px; left: 0;
+      font-size: 9px;
+      letter-spacing: .06em;
+      color: var(--slot);
+    }
+    .copy-box {
+      width: var(--copy-w);
+      height: var(--copy-h);
+      overflow: hidden;
+      outline: 2px solid var(--slot);
+      outline-offset: -1px;
+      background: rgba(123, 94, 167, .06);
+      position: relative;
+    }
+    .copy-box::after {
+      content: attr(data-size);
+      position: absolute;
+      bottom: 2px; right: 4px;
+      font-size: 8px;
+      color: var(--slot);
+      background: rgba(20,17,13,.9);
+      padding: 1px 5px;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    /* ── 共享 typography（与现网完全一致 · 不改） ── */
+    .eyebrow {
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 11px;
+      letter-spacing: .22em;
+      color: var(--classic-gold);
+      margin: 0;
+    }
+    .title {
+      margin: 0;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 28px;
+      font-weight: 400;
+      line-height: 1.05;
+      color: var(--classic-ink);
+    }
+    .title em { font-style: italic; color: var(--classic-gold); }
+    .lead {
+      margin: 0;
+      max-width: 520px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--classic-muted);
+      font-family: "Segoe UI", "PingFang SC", sans-serif;
+    }
+    .lead b { color: var(--classic-ink); font-weight: 600; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+    .tag {
+      font-size: 11px;
+      letter-spacing: .04em;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--classic-tag-bg);
+      border: 1px solid var(--classic-tag-border);
+      color: var(--classic-tag-ink);
+      white-space: nowrap;
+    }
+    .tag::before {
+      content: "• ";
+      opacity: .7;
+    }
+
+    /* ── As-Is 内部布局 ── */
+    .layout-current {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .layout-current .eyebrow { margin-bottom: 6px; }
+    .layout-current .headline-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px 20px;
+      flex: 1;
+      min-height: 0;
+    }
+    .layout-current .title {
+      flex: 1 1 240px;
+      min-width: 0;
+    }
+    .layout-current .tags {
+      margin-top: 4px;
+      justify-content: flex-end;
+      flex: 0 1 auto;
+    }
+    .layout-current .lead { margin-top: 8px; }
+
+    .void-zone {
+      flex: 1 1 auto;
+      min-width: 24px;
+      border: 1px dashed rgba(248,113,113,.45);
+      background: repeating-linear-gradient(-45deg, rgba(248,113,113,.07), rgba(248,113,113,.07) 3px, transparent 3px, transparent 6px);
+      align-self: stretch;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 8px; color: #f87171;
+    }
+
+    /* ── 方案 D（推荐）：顶行 Eyebrow + Tags，H1 独占行 ── */
+    .layout-d {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto 1fr;
+      grid-template-areas:
+        "eyebrow tags"
+        "title   title"
+        "lead    lead";
+      height: 100%;
+      column-gap: 12px;
+      row-gap: 0;
+    }
+    .layout-d .eyebrow {
+      grid-area: eyebrow;
+      margin-bottom: 6px;
+      align-self: end;
+    }
+    .layout-d .tags {
+      grid-area: tags;
+      justify-content: flex-end;
+      align-self: end;
+      margin-bottom: 6px;
+    }
+    .layout-d .title {
+      grid-area: title;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .layout-d .lead {
+      grid-area: lead;
+      margin-top: 8px;
+      align-self: start;
+    }
+
+    /* ── 方案 C：Title | Tags 定列 Grid，Lead 通栏 ── */
+    .layout-c {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-rows: auto auto 1fr;
+      grid-template-areas:
+        "eyebrow eyebrow"
+        "title   tags"
+        "lead    lead";
+      height: 100%;
+      column-gap: 16px;
+      row-gap: 0;
+    }
+    .layout-c .eyebrow {
+      grid-area: eyebrow;
+      margin-bottom: 6px;
+    }
+    .layout-c .title {
+      grid-area: title;
+      max-width: 100%;
+    }
+    .layout-c .tags {
+      grid-area: tags;
+      justify-content: flex-end;
+      align-self: center;
+      max-width: 240px;
+    }
+    .layout-c .lead {
+      grid-area: lead;
+      margin-top: 8px;
+    }
+
+    /* ── 方案 E：主文左栏 + Tags 右栏纵排（同高） ── */
+    .layout-e {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      height: 100%;
+      column-gap: 14px;
+    }
+    .layout-e .main {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .layout-e .main .eyebrow { margin-bottom: 6px; }
+    .layout-e .main .title { flex: 0 0 auto; }
+    .layout-e .main .lead { margin-top: 8px; }
+    .layout-e .tags-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .layout-e .tags-col .tag {
+      font-size: 10px;
+      padding: 2px 7px;
+    }
+
+    pre.ascii {
+      font-family: "Cascadia Code", "Consolas", monospace;
+      font-size: 11px;
+      line-height: 1.35;
+      background: #1a1814;
+      color: #c9c4bc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+    pre.ascii .hl { color: #c9a962; }
+    pre.ascii .slot { color: #b8a0e8; }
+    pre.ascii .bad { color: #f87171; }
+    pre.ascii .good { color: #86efac; }
+
+    .anno-list { margin: 12px 0 0; padding: 0; list-style: none; }
+    .anno-list li {
+      font-size: 11px;
+      padding: 6px 8px;
+      margin: 4px 0;
+      border-left: 3px solid var(--anno);
+      background: rgba(196, 92, 38, .06);
+    }
+    .anno-list li.ok { border-color: var(--ok); background: rgba(42,107,74,.06); }
+
+    table.spec {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    table.spec th, table.spec td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    table.spec th { background: rgba(0,0,0,.04); }
+
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+    }
+    .badge--rec { background: #dcfce7; color: #166534; }
+
+    .dom-block {
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 11px;
+      background: #f8f6f2;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      overflow-x: auto;
+      white-space: pre;
+      margin: 8px 0;
+    }
+    .dom-block .new { color: var(--ok); font-weight: 600; }
+    .dom-block .mv { color: var(--warn); font-weight: 600; }
+
+    .review-checklist { font-size: 12px; }
+    .review-checklist li { margin: 6px 0; }
+  </style>
+</head>
+<body>
+
+<header class="review-bar">
+  <div class="review-bar__title">Studio 首页 · <em>文案区内部重排</em> 线框 v2</div>
+  <div class="review-bar__note">约束升级：文案区 <strong>宽 100% × 高 88px 冻结</strong> · 字号/外边距不变 · 仅 DOM 顺序 + 内部 Grid/Flex 重排</div>
+</header>
+
+<main class="page">
+
+  <div class="constraint-box">
+    <strong>冻结边界（不可改动）</strong>
+    <ul>
+      <li>外框：<code>.v2-bento__headline</code> 占位不变 · 内容区锁定 <strong>88px 高 × 列宽 100%</strong></li>
+      <li>Typography 不变：Eyebrow 11px · H1 28px/1.05 · Lead 13px/1.55 · Tag 11px</li>
+      <li>间距不变：Eyebrow mb 6px · Lead mt 8px · Tag gap 6px</li>
+      <li>Lead <code>max-width: 520px</code> 不变</li>
+      <li>允许：元素 DOM 顺序调整 · 内部 Grid/Flex 分区 · 对齐方式变更</li>
+    </ul>
+  </div>
+
+  <h2 class="section">① 当前问题 · 同尺寸下的 As-Is</h2>
+  <p class="section-lead">紫色实线框 = 88×100% 冻结区域。红色虚线 = 「真空带」—— 标题 flex 撑满导致 Tags 被推到最右。</p>
+
+  <div class="bento-shell" style="max-width:900px;margin-bottom:24px">
+    <div class="bento-shell__theme">配色 · 经典深色</div>
+    <div class="copy-slot">
+      <span class="copy-slot__dim">grid R1C1 · 文案区</span>
+      <div class="copy-box" data-size="88px × 100%">
+        <div class="layout-current">
+          <span class="eyebrow">TRAVELOGUE · 自动游记画册</span>
+          <div class="headline-row">
+            <h1 class="title">照片导进来，<em>画册自动出来</em></h1>
+            <div class="void-zone">真空</div>
+            <div class="tags">
+              <span class="tag">自动分章成文</span>
+              <span class="tag">自动配文选封面</span>
+              <span class="tag">本地处理 · 免注册</span>
+            </div>
+          </div>
+          <p class="lead">选一次旅行的照片，<b>自动分章 · 配文 · 排版</b>，生成大屏卷轴 + 微信长图。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <pre class="ascii">As-Is 内部结构（<span class="bad">问题</span>）：
+┌─ 88px ─────────────────────────────────────────────────────────────┐
+│ EYEBROW                                                            │
+│ ┌ Title（flex:1 撑满）──────────────┐ <span class="bad">真空</span> ┌ Tags ────────┐ │
+│ └───────────────────────────────────┘       └──────────────┘ │
+│ Lead                                                             │
+└──────────────────────────────────────────────────────────────────┘</pre>
+
+
+  <h2 class="section">② 三种内部重排方案 · 同尺寸对比</h2>
+  <p class="section-lead">三种方案均不改变外框 88×100%，不调整字号。请对比内部信息流。</p>
+
+  <div class="compare-3">
+
+    <!-- 方案 D -->
+    <div class="panel">
+      <div class="panel__head panel__head--proposed">
+        <span class="badge badge--rec">推荐 D</span> 顶行分流 · Eyebrow + Tags
+      </div>
+      <div class="panel__body">
+        <div class="copy-box" data-size="88px × 100%">
+          <div class="layout-d">
+            <span class="eyebrow">TRAVELOGUE · 自动游记画册</span>
+            <div class="tags">
+              <span class="tag">自动分章成文</span>
+              <span class="tag">自动配文选封面</span>
+              <span class="tag">本地处理 · 免注册</span>
+            </div>
+            <h1 class="title">照片导进来，<em>画册自动出来</em></h1>
+            <p class="lead">选一次旅行的照片，<b>自动分章 · 配文 · 排版</b>，生成大屏卷轴 + 微信长图。</p>
+          </div>
+        </div>
+        <ul class="anno-list">
+          <li class="ok">Tags 上移到 Eyebrow 同行右端 · 品牌行 + 能力行合并</li>
+          <li class="ok">H1 独占第二行 · 全宽 · 无横向竞争</li>
+          <li class="ok">Lead 第三行通栏 · 阅读路径：品牌→价值→说明</li>
+          <li class="ok">DOM 调整最小 · 去掉 headline-row 即可</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 方案 C -->
+    <div class="panel">
+      <div class="panel__head panel__head--alt">备选 C · 定列 Grid：Title | Tags</div>
+      <div class="panel__body">
+        <div class="copy-box" data-size="88px × 100%">
+          <div class="layout-c">
+            <span class="eyebrow">TRAVELOGUE · 自动游记画册</span>
+            <h1 class="title">照片导进来，<em>画册自动出来</em></h1>
+            <div class="tags">
+              <span class="tag">自动分章成文</span>
+              <span class="tag">自动配文选封面</span>
+              <span class="tag">本地处理 · 免注册</span>
+            </div>
+            <p class="lead">选一次旅行的照片，<b>自动分章 · 配文 · 排版</b>，生成大屏卷轴 + 微信长图。</p>
+          </div>
+        </div>
+        <ul class="anno-list">
+          <li>保持 Tags 与 H1 同行 · 用 Grid 定列替代 space-between</li>
+          <li>Tags <code>max-width: 240px</code> + 右对齐 · 消除真空</li>
+          <li>Tags <code>align-self: center</code> · 垂直居中于标题</li>
+          <li>DOM 顺序可不变 · 仅 CSS Grid 重排</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 方案 E -->
+    <div class="panel">
+      <div class="panel__head panel__head--alt">备选 E · 左主文 + 右 Tags 纵排</div>
+      <div class="panel__body">
+        <div class="copy-box" data-size="88px × 100%">
+          <div class="layout-e">
+            <div class="main">
+              <span class="eyebrow">TRAVELOGUE · 自动游记画册</span>
+              <h1 class="title">照片导进来，<em>画册自动出来</em></h1>
+              <p class="lead">选一次旅行的照片，<b>自动分章 · 配文 · 排版</b>，生成大屏卷轴 + 微信长图。</p>
+            </div>
+            <div class="tags-col">
+              <span class="tag">自动分章成文</span>
+              <span class="tag">自动配文选封面</span>
+              <span class="tag">本地处理 · 免注册</span>
+            </div>
+          </div>
+        </div>
+        <ul class="anno-list">
+          <li>⚠ Tag 需缩至 10px/2×7 padding 才能纵排塞入 88px</li>
+          <li>违反「字号不变」约束 · 仅作极端备选</li>
+          <li>不推荐，除非接受 Tag 字号微调</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+  <h2 class="section">③ 推荐方案 D · 放大线框</h2>
+
+  <pre class="ascii">方案 D · 内部 Grid（<span class="good">88px × 100% 不变</span>）：
+
+┌─ 88px ─────────────────────────────────────────────────────────────┐
+│ Row1  <span class="hl">TRAVELOGUE · 自动游记画册</span>          [分章][配文][本地·免注册] │
+│       ↑ grid-area: eyebrow              ↑ grid-area: tags（右对齐）  │
+│ Row2  照片导进来，<span class="hl">画册自动出来</span>                              │
+│       ↑ grid-area: title（col 1 / -1 通栏）                        │
+│ Row3  选一次旅行的照片，自动分章·配文·排版，生成大屏卷轴 + 微信长图。    │
+│       ↑ grid-area: lead（col 1 / -1 通栏 · mt 8px）                │
+└──────────────────────────────────────────────────────────────────┘
+
+阅读路径：品牌标识 + 能力标签（同一扫视带）→ 价值主张 → 功能说明</pre>
+
+
+  <h2 class="section">④ 推荐 DOM 结构（方案 D）</h2>
+  <p class="section-lead">去掉 <code>.v2-bento__headline-row</code> 包裹层，Tags 提到 Eyebrow 之后、Title 之前。</p>
+
+  <div class="dom-block">&lt;div class="v2-bento__headline" id="v2-headline"&gt;
+  <span class="v2-bento__eyebrow"&gt;TRAVELOGUE · 自动游记画册&lt;/span&gt;
+  <span class="mv v2-auto-tags"&gt;…三个 tag…&lt;/span&gt;   <span class="new">&lt;!-- 从 headline-row 内移出 --&gt;</span>
+  <h1 class="v2-bento__title"&gt;照片导进来，&lt;em&gt;画册自动出来&lt;/em&gt;&lt;/h1&gt;
+  <span class="new">&lt;!-- 删除 .v2-bento__headline-row --&gt;</span>
+  &lt;p class="v2-bento__lead"&gt;…&lt;/p&gt;
+&lt;/div&gt;</div>
+
+
+  <h2 class="section">⑤ CSS 变更规格（方案 D · 仅内部）</h2>
+  <table class="spec">
+    <thead>
+      <tr><th>选择器</th><th>变更</th><th>说明</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>.v2-bento__headline</code></td>
+        <td>+ <code>display: grid</code><br>
+            <code>grid-template-columns: 1fr auto</code><br>
+            <code>grid-template-areas: "eyebrow tags" "title title" "lead lead"</code><br>
+            <code>height: 88px</code>（或 min-height 锁定现网计算值）</td>
+        <td>外框尺寸锁定；内部三分区</td>
+      </tr>
+      <tr>
+        <td><code>.v2-bento__eyebrow</code></td>
+        <td><code>grid-area: eyebrow</code> · mb 6px 不变</td>
+        <td>左顶</td>
+      </tr>
+      <tr>
+        <td><code>.v2-auto-tags</code></td>
+        <td><code>grid-area: tags</code><br>
+            <code>justify-content: flex-end</code><br>
+            <code>align-self: end</code> · mb 6px（与 eyebrow 底对齐）</td>
+        <td>右顶 · 与品牌行同带</td>
+      </tr>
+      <tr>
+        <td><code>.v2-bento__title</code></td>
+        <td><code>grid-area: title</code> · 去掉 flex 属性</td>
+        <td>独占一行 · 全宽</td>
+      </tr>
+      <tr>
+        <td><code>.v2-bento__lead</code></td>
+        <td><code>grid-area: lead</code> · mt 8px · max-width 520px 不变</td>
+        <td>通栏底行</td>
+      </tr>
+      <tr>
+        <td><code>.v2-bento__headline-row</code></td>
+        <td>删除</td>
+        <td>不再需要</td>
+      </tr>
+    </tbody>
+  </table>
+
+
+  <h2 class="section">⑥ 备选方案 C · 若希望 Tags 仍与 H1 同行</h2>
+  <p class="section-lead">不改 DOM 顺序，仅把 headline-row 换成 Grid 定列 — 同样 88×100%。</p>
+
+  <pre class="ascii">grid-template-areas:
+  "eyebrow eyebrow"
+  "title   tags"
+  "lead    lead";
+grid-template-columns: minmax(0, 1fr) auto;
+
+.title  → grid-area: title;  去掉 flex: 1 1 240px
+.tags   → grid-area: tags;   max-width: 240px; align-self: center</pre>
+
+
+  <h2 class="section">⑦ Bento 上下文 · 方案 D 嵌入效果</h2>
+
+  <div class="bento-shell">
+    <div class="bento-shell__theme">配色 · 经典深色</div>
+    <div class="bento-grid">
+      <div class="copy-slot">
+        <span class="copy-slot__dim">R1C1 · 88px 冻结</span>
+        <div class="copy-box" data-size="88px × 100%">
+          <div class="layout-d">
+            <span class="eyebrow">TRAVELOGUE · 自动游记画册</span>
+            <div class="tags">
+              <span class="tag">自动分章成文</span>
+              <span class="tag">自动配文选封面</span>
+              <span class="tag">本地处理 · 免注册</span>
+            </div>
+            <h1 class="title">照片导进来，<em>画册自动出来</em></h1>
+            <p class="lead">选一次旅行的照片，<b>自动分章 · 配文 · 排版</b>，生成大屏卷轴 + 微信长图。</p>
+          </div>
+        </div>
+      </div>
+      <div class="cell-other cell-other--right">R1–2 C2 · 手机预览</div>
+      <div class="cell-other cell-other--web">R2 C1 · Tabs + Carousel</div>
+      <div class="cell-other cell-other--bench">R3 · Bench</div>
+    </div>
+  </div>
+
+
+  <h2 class="section">⑧ 审核清单</h2>
+  <ul class="review-checklist">
+    <li>☐ 88×100% 外框尺寸是否可接受为冻结基准？</li>
+    <li>☐ <strong>方案 D</strong>（Tags 上移到 Eyebrow 行）vs <strong>方案 C</strong>（Tags 仍与 H1 同行）— 请择一</li>
+    <li>☐ 方案 D 下 Tags 与 Eyebrow 同带是否显得「头重」？</li>
+    <li>☐ 确认后可在 <code>studio-home-v2.html</code> + <code>studio-home-v2.css</code> 落地</li>
+  </ul>
+
+</main>
+</body>
+</html>

@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="/__studio/studio-home-v2.css" />
   <link rel="stylesheet" href="/__studio/studio-modal.css" />
 </head>
-<body data-studio-v="v2" data-homepage-variant="v2" data-bucket-id="__STUDIO_BUCKET_ID__" data-studio-dev="__STUDIO_DEV__">
+<body data-studio-v="v2" data-homepage-variant="v2" data-headline-layout="d" data-bucket-id="__STUDIO_BUCKET_ID__" data-studio-dev="__STUDIO_DEV__">
 <a href="#v2-cta" class="v2-skip-link">跳到主要操作</a>
 
 <div id="v2-offline" class="v2-offline-banner" hidden>
@@ -49,43 +49,34 @@
   <!-- ① Bento 首屏（恒常首页 · 方案 A） -->
   <div class="v2-bento__hero" id="v2-bento-hero">
   <div class="v2-bento__frame" id="v2-frame" hidden>
-    <div class="v2-bento__frame-head">
-      <div class="v2-theme-settings" id="v2-theme-settings">
-        <label for="v2-theme-select">配色</label>
-        <select id="v2-theme-select" aria-label="首页配色">
-          <option value="sky">清新浅蓝</option>
-          <option value="classic">经典深色</option>
-          <option value="dawn">暖阳珊瑚</option>
-          <option value="mint">森系薄荷</option>
-          <option value="navy">夜航蓝调</option>
-        </select>
-      </div>
-    </div>
     <div class="v2-bento__grid" id="v2-bento-grid">
-      <!-- ① 文案区（左列第 1 行） -->
+      <!-- ① 文案区（左列第 1 行 · layout D：Eyebrow+Tags 顶行，H1 独占行）
+           ROLLBACK legacy：body data-headline-layout="legacy"，并恢复下方注释中的 DOM -->
       <div class="v2-bento__headline" id="v2-headline" hidden>
         <span class="v2-bento__eyebrow">TRAVELOGUE · 自动游记画册</span>
-        <div class="v2-bento__headline-row">
-          <h1 class="v2-bento__title">照片导进来，<em>画册自动出来</em></h1>
-          <div class="v2-auto-tags">
-            <span class="v2-auto-tag">自动分章成文</span>
-            <span class="v2-auto-tag">自动配文选封面</span>
-            <span class="v2-auto-tag">本地处理 · 免注册</span>
-          </div>
+        <div class="v2-auto-tags">
+          <span class="v2-auto-tag">自动分章成文</span>
+          <span class="v2-auto-tag">自动配文选封面</span>
+          <span class="v2-auto-tag">本地处理 · 免注册</span>
         </div>
+        <h1 class="v2-bento__title">照片导进来，<em>画册自动出来</em></h1>
         <p class="v2-bento__lead">
           选一次旅行的照片，<b>自动分章 · 配文 · 排版</b>，生成大屏卷轴 + 微信长图。
         </p>
       </div>
+      <!-- ROLLBACK legacy DOM（配合 data-headline-layout="legacy"）：
+      <div class="v2-bento__headline" id="v2-headline" hidden>
+        <span class="v2-bento__eyebrow">TRAVELOGUE · 自动游记画册</span>
+        <div class="v2-bento__headline-row">
+          <h1 class="v2-bento__title">照片导进来，<em>画册自动出来</em></h1>
+          <div class="v2-auto-tags">…</div>
+        </div>
+        <p class="v2-bento__lead">…</p>
+      </div>
+      -->
 
       <!-- ② 16:9 大屏卷轴 carousel -->
       <section class="v2-bento__web" id="v2-web-cell" aria-label="大屏卷轴预览 · 方向键翻页" tabindex="0">
-        <div class="v2-bento-tabs" role="tablist" aria-label="预览来源">
-          <button type="button" class="v2-bento-tabs__btn is-active" role="tab"
-                  id="v2-tab-demo" aria-selected="true" aria-controls="v2-bento-grid">示例作品</button>
-          <button type="button" class="v2-bento-tabs__btn" role="tab"
-                  id="v2-tab-mine" aria-selected="false" aria-controls="v2-bento-grid" disabled>我的最近一本</button>
-        </div>
         <div class="v2-carousel" id="v2-carousel">
           <div class="v2-carousel__viewport">
             <button type="button" class="v2-carousel__arrow v2-carousel__arrow--prev" id="v2-carousel-prev" aria-label="上一屏" disabled>‹</button>
@@ -116,15 +107,39 @@
             <button type="button" class="v2-bench__cta" id="v2-cta">开始制作我的游记 →</button>
             <p class="v2-bench__meta">照片留在本机 · 无需注册 · 下一步选择本次旅行的照片文件夹</p>
           </div>
-          <div class="v2-bench__quick" aria-label="快捷操作">
-            <div class="v2-bench__quick-actions">
-              <button type="button" class="v2-bench__ghost-btn" id="v2-bench-resume">继续上次</button>
-              <button type="button" class="v2-bench__ghost-btn" id="v2-bench-recent">查看最近</button>
+          <div class="v2-bench__quick" aria-label="预览切换与快捷操作">
+            <div class="v2-bench__side">
+              <p class="v2-bench__side-label">预览来源</p>
+              <div class="v2-bento-tabs" id="v2-bench-source-tabs" role="tablist" aria-label="预览来源">
+                <button type="button" class="v2-bento-tabs__btn is-active" role="tab"
+                        id="v2-tab-demo" aria-selected="true" aria-controls="v2-bento-grid">示例作品</button>
+                <button type="button" class="v2-bento-tabs__btn" role="tab"
+                        id="v2-tab-mine" aria-selected="false" aria-controls="v2-bento-grid" disabled>我的最近一本</button>
+              </div>
             </div>
-            <div class="v2-bench__stats" aria-label="预估信息">
-              <span class="v2-bench__stat" id="v2-bench-stat-photos">109 张照片</span>
-              <span class="v2-bench__stat" id="v2-bench-stat-chapters">4 章</span>
-              <span class="v2-bench__stat" id="v2-bench-stat-estimate">约 3 分钟</span>
+            <div class="v2-bench__side">
+              <p class="v2-bench__side-label">快捷操作</p>
+              <div class="v2-bench__quick-actions">
+                <button type="button" class="v2-bench__ghost-btn" id="v2-bench-resume">继续上次</button>
+                <button type="button" class="v2-bench__ghost-btn" id="v2-bench-recent">查看最近</button>
+              </div>
+              <div class="v2-bench__stats" aria-label="预估信息">
+                <span class="v2-bench__stat" id="v2-bench-stat-photos">109 张照片</span>
+                <span class="v2-bench__stat" id="v2-bench-stat-chapters">4 章</span>
+                <span class="v2-bench__stat" id="v2-bench-stat-estimate">约 3 分钟</span>
+              </div>
+            </div>
+            <div class="v2-bench__side v2-bench__side--prefs">
+              <div class="v2-theme-settings" id="v2-theme-settings">
+                <label for="v2-theme-select">配色</label>
+                <select id="v2-theme-select" aria-label="首页配色">
+                  <option value="sky">清新浅蓝</option>
+                  <option value="classic">经典深色</option>
+                  <option value="dawn">暖阳珊瑚</option>
+                  <option value="mint">森系薄荷</option>
+                  <option value="navy">夜航蓝调</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>

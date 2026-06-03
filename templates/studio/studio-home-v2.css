@@ -347,20 +347,24 @@ body { overflow-x: clip; overflow-y: visible; }
   100% { background-position: -200% 0; }
 }
 
-/* ── Headline / Slogan（Bento 网格内 · 左列第 1 行） ── */
+/* ── Headline / Slogan（Bento 网格内 · 左列第 1 行） ──
+   layout D（默认 · body data-headline-layout="d"）：Eyebrow+Tags 顶行，H1 独占行。
+   ROLLBACK legacy：body data-headline-layout="legacy" + 恢复 studio-home-v2.html 注释 DOM。 ── */
+[data-headline-layout="d"] .v2-bento__headline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "eyebrow tags"
+    "title   title"
+    "lead    lead";
+  align-items: start;
+}
 .v2-bento__headline {
   grid-column: 1;
   grid-row: 1;
   min-width: 0;
   font-family: var(--v2-font-display);
   margin-top: -16px;
-}
-.v2-bento__headline-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px 20px;
-  flex-wrap: wrap;
 }
 .v2-bento__eyebrow {
   display: block;
@@ -369,14 +373,20 @@ body { overflow-x: clip; overflow-y: visible; }
   color: var(--v2-primary);
   margin-bottom: 6px;
 }
+[data-headline-layout="d"] .v2-bento__eyebrow {
+  grid-area: eyebrow;
+  align-self: end;
+}
 .v2-bento__title {
   margin: 0;
-  flex: 1 1 240px;
-  min-width: 0;
   font-size: 28px;
   font-weight: 400;
   line-height: 1.05;
   color: var(--v2-title-ink);
+}
+[data-headline-layout="d"] .v2-bento__title {
+  grid-area: title;
+  min-width: 0;
 }
 .v2-bento__title em { font-style: italic; color: var(--v2-primary); }
 .v2-bento__lead {
@@ -386,6 +396,9 @@ body { overflow-x: clip; overflow-y: visible; }
   line-height: 1.55;
   color: var(--v2-text-secondary);
   font-family: var(--v2-font-sans);
+}
+[data-headline-layout="d"] .v2-bento__lead {
+  grid-area: lead;
 }
 .v2-bento__lead b {
   color: var(--v2-ink);
@@ -397,9 +410,32 @@ body { overflow-x: clip; overflow-y: visible; }
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin: 0 0 6px;
+  justify-content: flex-end;
+}
+[data-headline-layout="d"] .v2-auto-tags {
+  grid-area: tags;
+  align-self: end;
+}
+
+/* ROLLBACK legacy headline（body data-headline-layout="legacy"） */
+[data-headline-layout="legacy"] .v2-bento__headline {
+  display: block;
+}
+[data-headline-layout="legacy"] .v2-bento__headline-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 20px;
+  flex-wrap: wrap;
+}
+[data-headline-layout="legacy"] .v2-bento__title {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+[data-headline-layout="legacy"] .v2-auto-tags {
   margin: 4px 0 0;
   flex: 0 1 auto;
-  justify-content: flex-end;
 }
 .v2-auto-tag {
   display: inline-flex;
@@ -504,7 +540,10 @@ body { overflow-x: clip; overflow-y: visible; }
   display: flex;
   gap: 8px;
   flex-shrink: 0;
-  margin-bottom: 6px;
+}
+.v2-bench__quick .v2-bento-tabs {
+  gap: 6px;
+  width: 100%;
 }
 .v2-bento-tabs__btn {
   min-height: 36px;
@@ -526,6 +565,14 @@ body { overflow-x: clip; overflow-y: visible; }
 .v2-bento-tabs__btn:disabled {
   opacity: .45;
   cursor: not-allowed;
+}
+.v2-bench__quick .v2-bento-tabs__btn {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 10px;
+  text-align: center;
 }
 .v2-user-flag {
   display: inline-flex;
@@ -947,15 +994,41 @@ body { overflow-x: clip; overflow-y: visible; }
   line-height: 1.45;
 }
 .v2-bench__quick {
-  flex: 0 0 30%;
-  min-width: 280px;
+  flex: 0 0 32%;
+  min-width: 300px;
   align-self: stretch;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 10px;
-  padding-left: 16px;
+  gap: 12px;
+  padding-left: 18px;
   border-left: 1px solid var(--v2-border);
+}
+.v2-bench__side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.v2-bench__side-label {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--v2-text-muted);
+}
+.v2-bench__side--prefs {
+  padding-top: 10px;
+  border-top: 1px solid var(--v2-border);
+}
+.v2-bench__side--prefs .v2-theme-settings {
+  width: 100%;
+  justify-content: space-between;
+}
+.v2-bench__side--prefs .v2-theme-settings select {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 160px;
 }
 .v2-bench__quick-actions {
   display: flex;
@@ -2074,7 +2147,23 @@ body { overflow-x: clip; overflow-y: visible; }
     border-left: none;
     border-top: 1px solid var(--v2-border);
     padding-left: 0;
-    padding-top: 10px;
+    padding-top: 12px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 14px 18px;
+  }
+  .v2-bench__side {
+    flex: 1 1 200px;
+    min-width: 180px;
+  }
+  .v2-bench__side--prefs {
+    flex: 1 1 100%;
+    border-top: none;
+    padding-top: 0;
+  }
+  .v2-bench__side--prefs .v2-theme-settings select {
+    max-width: none;
   }
   .v2-theme-settings label { display: none; }
   .v2-theme-settings select { min-height: 28px; padding: 3px 8px; }
