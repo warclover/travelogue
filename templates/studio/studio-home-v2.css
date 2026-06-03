@@ -1397,6 +1397,146 @@ body { overflow-x: clip; overflow-y: visible; }
   padding-top: 10px;
   border-top: 1px solid var(--v2-border);
 }
+.v2-bench__side--analysis {
+  position: relative;
+}
+/* fixed + portaled to body：独立浅色面板，不继承 classic/navy 工作台字色 */
+.v2-advanced-popover {
+  --v2-adv-ink: #0f172a;
+  --v2-adv-muted: #475569;
+  --v2-adv-border: #cbd5e1;
+  --v2-adv-surface: #f1f5f9;
+  --v2-adv-focus: rgba(0, 119, 182, .4);
+  position: fixed;
+  z-index: 1600;
+  margin: 0;
+  max-height: min(70vh, 420px);
+  overflow: auto;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #94a3b8;
+  background: #ffffff;
+  color: var(--v2-adv-ink);
+  color-scheme: light;
+  isolation: isolate;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, .06),
+    0 18px 48px rgba(15, 23, 42, .28);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+}
+.v2-advanced-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1599;
+  background: rgba(15, 23, 42, .28);
+  pointer-events: auto;
+}
+.v2-advanced-scrim[hidden] {
+  display: none !important;
+}
+.v2-advanced-popover[hidden] {
+  display: none !important;
+}
+.v2-advanced-popover__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--v2-adv-ink);
+}
+.v2-advanced-popover__note {
+  margin: -6px 0 2px;
+  font-size: 10px;
+  color: var(--v2-adv-muted);
+}
+.v2-advanced-popover__row {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 4px 10px;
+  align-items: center;
+}
+.v2-advanced-popover__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--v2-adv-ink);
+}
+.v2-advanced-popover__select {
+  grid-column: 2;
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 32px 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--v2-adv-border);
+  background-color: var(--v2-adv-surface);
+  color: var(--v2-adv-ink);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--v2-font-sans);
+  cursor: pointer;
+  appearance: auto;
+  -webkit-appearance: menulist;
+}
+.v2-advanced-popover__select:hover {
+  border-color: #94a3b8;
+  background-color: #ffffff;
+}
+.v2-advanced-popover__select:focus-visible {
+  outline: 3px solid var(--v2-adv-focus);
+  outline-offset: 1px;
+  border-color: #0077b6;
+  background-color: #ffffff;
+}
+.v2-advanced-popover__select option {
+  color: #0f172a;
+  background: #ffffff;
+  font-weight: 500;
+}
+.v2-advanced-popover__hint {
+  grid-column: 2;
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.45;
+  color: var(--v2-adv-muted);
+}
+:root[data-v2-theme="classic"] .v2-advanced-popover,
+:root[data-v2-theme="navy"] .v2-advanced-popover,
+:root[data-v2-theme="grove"] .v2-advanced-popover {
+  background: #ffffff;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+:root[data-v2-theme="classic"] .v2-advanced-popover__title,
+:root[data-v2-theme="classic"] .v2-advanced-popover__label,
+:root[data-v2-theme="navy"] .v2-advanced-popover__title,
+:root[data-v2-theme="navy"] .v2-advanced-popover__label,
+:root[data-v2-theme="grove"] .v2-advanced-popover__title,
+:root[data-v2-theme="grove"] .v2-advanced-popover__label {
+  color: #0f172a;
+}
+:root[data-v2-theme="classic"] .v2-advanced-popover__note,
+:root[data-v2-theme="classic"] .v2-advanced-popover__hint,
+:root[data-v2-theme="navy"] .v2-advanced-popover__note,
+:root[data-v2-theme="navy"] .v2-advanced-popover__hint,
+:root[data-v2-theme="grove"] .v2-advanced-popover__note,
+:root[data-v2-theme="grove"] .v2-advanced-popover__hint {
+  color: #475569;
+}
+:root[data-v2-theme="classic"] .v2-advanced-popover__select,
+:root[data-v2-theme="navy"] .v2-advanced-popover__select,
+:root[data-v2-theme="grove"] .v2-advanced-popover__select {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+:root[data-v2-theme="classic"] .v2-advanced-popover__select:hover,
+:root[data-v2-theme="navy"] .v2-advanced-popover__select:hover,
+:root[data-v2-theme="grove"] .v2-advanced-popover__select:hover {
+  background-color: #ffffff;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
 .v2-bench__quick-actions {
   display: flex;
   align-items: center;

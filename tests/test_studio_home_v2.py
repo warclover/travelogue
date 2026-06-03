@@ -63,6 +63,13 @@ V2_HOME_MARKERS = (
     "v2-success-open",
     "v2-success-stay",
     "打开卷轴预览",
+    # M20 · 高级分析选项（工作台 Popover）
+    "v2-advanced-toggle",
+    "v2-advanced-popover",
+    'id="studio-cfg-clustering"',
+    'id="studio-cfg-vision"',
+    "高级 · 分析选项",
+    "智能排版",
     # Import Failed overlay
     "v2-failure",
     "v2-failure-retry",
@@ -155,6 +162,9 @@ def test_studio_home_v2_js_modules_present() -> None:
     assert "IdleEmpty" in bootstrap and "IdleReturning" in bootstrap
     assert "Importing" in bootstrap
     assert "initViewportWatch" in bootstrap  # 视口闸（M20-f 抽到 viewport-logic）
+    assert "initAdvancedOptionsPanel" in bootstrap
+    advanced = (STUDIO_DIR / "homepage-v2" / "advanced-options.js").read_text(encoding="utf-8")
+    assert "bindAdvancedConfigControls" in advanced
     assert "renderBentoEmpty" in bento
     assert "renderBackground" in bento
     assert "initCarousel" in bento  # M20-b：carousel 由独立模块渲染

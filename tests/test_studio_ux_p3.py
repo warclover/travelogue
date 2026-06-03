@@ -42,6 +42,11 @@ def test_ux_p3_02_stage_hints_cover_p3_lite_and_full(tmp_path: Path) -> None:
     )
 
 
+def test_ux_p3_03_advanced_options_bind_export() -> None:
+    advanced_js = (ROOT / "templates" / "studio" / "js" / "advanced.js").read_text(encoding="utf-8")
+    assert "bindAdvancedConfigControls" in advanced_js
+
+
 def test_ux_p3_03_advanced_options_and_config_api(tmp_path: Path) -> None:
     html = STUDIO_HTML.read_text(encoding="utf-8")
     # Required DOM markers for the M12-7 "high-end · 分析选项" UX (UX-P3-03).
@@ -82,6 +87,20 @@ def test_ux_p3_04_cluster_notice_non_blocking_string() -> None:
     js = read_studio_js()
     assert "clusterNotice" in js
     assert "studio-toast" in js or "showToast" in js or "setWarning" in js
+
+
+def test_ux_p3_03_v2_advanced_options_markers() -> None:
+    html = (ROOT / "templates" / "studio" / "studio-home-v2.html").read_text(encoding="utf-8")
+    for expected in (
+        'id="v2-advanced-toggle"',
+        'id="v2-advanced-popover"',
+        'id="studio-cfg-clustering"',
+        'id="studio-cfg-vision"',
+        'id="studio-cfg-layout-scoring"',
+        "高级 · 分析选项",
+        "智能排版",
+    ):
+        assert expected in html, f"missing v2 UX marker: {expected}"
 
 
 def test_ux_p3_05_06_slow_hint_thresholds_and_copy() -> None:

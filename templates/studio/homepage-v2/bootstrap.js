@@ -21,6 +21,7 @@ import {
 import { fetchTripsFirstPage } from "./trips-client.js";
 import { initVariantGuard, syncVariantGuard } from "./variant-guard.js";
 import { initThemeSettings } from "./theme.js";
+import { initAdvancedOptionsPanel, syncAdvancedOptionsLock } from "./advanced-options.js";
 
 function applyTripsData(data) {
   V2.trips = (data && data.trips) || [];
@@ -98,6 +99,7 @@ function routeFinalState() {
     return;
   }
   V2.state = hasUserTrips() ? "IdleReturning" : "IdleEmpty";
+  syncAdvancedOptionsLock();
   renderBentoEmpty(V2.demoManifest);
   import("./bento-tabs.js").then(function (tabs) {
     tabs.refreshUserBentoPreview(V2.trips).finally(finishRoute);
@@ -158,6 +160,7 @@ function trackExperimentExposure() {
 function init() {
   initErrorPipeline();
   initThemeSettings();
+  initAdvancedOptionsPanel();
   if (harnessEnabled()) {
     harnessPreseedSession();
     harnessInstallBentoPreviewMock();

@@ -24,6 +24,7 @@ import {
 } from "./first-success.js";
 import { showImportFailed } from "./import-failed.js";
 import { syncVariantGuard } from "./variant-guard.js";
+import { syncAdvancedOptionsLock } from "./advanced-options.js";
 
 let _gen = 0;
 let _activeJobId = null;
@@ -113,6 +114,7 @@ export function renderImportingPanel(source) {
   show(host, true);
   V2.state = "Importing";
   syncVariantGuard();
+  syncAdvancedOptionsLock();
   cancelBtn.addEventListener("click", cancelImport);
 }
 

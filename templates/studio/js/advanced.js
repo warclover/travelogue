@@ -1,15 +1,18 @@
 /**
- * Travelogue Studio · advanced analysis options drawer (Phase 3 M12-7).
+ * Travelogue Studio · advanced analysis options (Phase 3 M12-7).
  */
 import { $, studioAuthHeaders } from "./dom.js";
 
-export function initAdvancedOptions() {
-  var details = $("studio-advanced-options");
+/**
+ * Bind GET/PATCH /__travelogue/config to clustering/vision/g1/layout selects.
+ * @returns {{ fetchConfig: function(): Promise<void> } | null}
+ */
+export function bindAdvancedConfigControls() {
   var cluSelect = $("studio-cfg-clustering");
   var visSelect = $("studio-cfg-vision");
   var g1Select = $("studio-cfg-g1");
   var layoutScoringSelect = $("studio-cfg-layout-scoring");
-  if (!details || !cluSelect || !visSelect) return;
+  if (!cluSelect || !visSelect) return null;
 
   var _patchPending = false;
 
@@ -36,9 +39,12 @@ export function initAdvancedOptions() {
       .catch(function () { /* silent — defaults in HTML */ });
   }
 
-  details.addEventListener("toggle", function () {
-    if (details.open) fetchConfig();
-  });
+  var details = $("studio-advanced-options");
+  if (details) {
+    details.addEventListener("toggle", function () {
+      if (details.open) fetchConfig();
+    });
+  }
 
   function patchConfig() {
     if (_patchPending) return;
@@ -79,4 +85,10 @@ export function initAdvancedOptions() {
   visSelect.addEventListener("change", patchConfig);
   if (g1Select) g1Select.addEventListener("change", patchConfig);
   if (layoutScoringSelect) layoutScoringSelect.addEventListener("change", patchConfig);
+
+  return { fetchConfig: fetchConfig };
+}
+
+export function initAdvancedOptions() {
+  bindAdvancedConfigControls();
 }

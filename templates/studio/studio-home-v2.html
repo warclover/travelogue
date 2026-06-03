@@ -143,6 +143,55 @@
                   <option value="grove">午夜桉树</option>
                 </select>
             </div>
+            <div class="v2-bench__side v2-bench__side--analysis">
+              <p class="v2-bench__side-label">分析</p>
+              <button type="button" class="v2-bench__ghost-btn" id="v2-advanced-toggle"
+                      aria-expanded="false" aria-controls="v2-advanced-popover"
+                      aria-haspopup="dialog">高级选项</button>
+              <div id="v2-advanced-popover" class="v2-advanced-popover" hidden role="dialog"
+                   aria-labelledby="v2-advanced-title">
+                <p id="v2-advanced-title" class="v2-advanced-popover__title">高级 · 分析选项</p>
+                <p class="v2-advanced-popover__note">一般无需修改</p>
+                <div class="v2-advanced-popover__row">
+                  <label class="v2-advanced-popover__label" for="studio-cfg-clustering">行程识别</label>
+                  <select id="studio-cfg-clustering" class="v2-advanced-popover__select"
+                          aria-describedby="studio-cfg-clustering-hint">
+                    <option value="auto">自动（推荐）</option>
+                    <option value="true">开</option>
+                    <option value="false">关</option>
+                  </select>
+                  <p class="v2-advanced-popover__hint" id="studio-cfg-clustering-hint">默认自动：有 GPS 的照片会按行程分段（推荐）</p>
+                </div>
+                <div class="v2-advanced-popover__row">
+                  <label class="v2-advanced-popover__label" for="studio-cfg-vision">场景分析</label>
+                  <select id="studio-cfg-vision" class="v2-advanced-popover__select"
+                          aria-describedby="studio-cfg-vision-hint">
+                    <option value="false">关（默认）</option>
+                    <option value="auto">自动</option>
+                    <option value="true">开</option>
+                  </select>
+                  <p class="v2-advanced-popover__hint" id="studio-cfg-vision-hint">默认关闭；大相册可开启以合并同场景照片（较慢，首次需下载组件）</p>
+                </div>
+                <div class="v2-advanced-popover__row">
+                  <label class="v2-advanced-popover__label" for="studio-cfg-g1">结构确认（G1）</label>
+                  <select id="studio-cfg-g1" class="v2-advanced-popover__select"
+                          aria-describedby="studio-cfg-g1-hint">
+                    <option value="false">自动继续（推荐）</option>
+                    <option value="true">导入后先确认章节</option>
+                  </select>
+                  <p class="v2-advanced-popover__hint" id="studio-cfg-g1-hint">开启后需预览内确认章节顺序再生成文案</p>
+                </div>
+                <div class="v2-advanced-popover__row">
+                  <label class="v2-advanced-popover__label" for="studio-cfg-layout-scoring">智能排版</label>
+                  <select id="studio-cfg-layout-scoring" class="v2-advanced-popover__select"
+                          aria-describedby="studio-cfg-layout-scoring-hint">
+                    <option value="false">经典（默认）</option>
+                    <option value="true">实验 · beam 评分</option>
+                  </select>
+                  <p class="v2-advanced-popover__hint" id="studio-cfg-layout-scoring-hint">实验模式启用多信号 beam 搜索；内测 A/B 用，一般保持默认</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
