@@ -62,17 +62,13 @@ function buildSlide(manifest, page, index, tier, onSlideReady) {
     if (index === 0) img.setAttribute("fetchpriority", "high");
     if (tier === "L2" && index > 0) img.loading = "lazy";
     img.onload = function () {
-      if (!useScrollPreview(page) && img.naturalWidth > 0 && img.naturalHeight / img.naturalWidth > 2.8) {
-        slide.classList.add("v2-phone-strip__slide--scroll");
-      }
+      applyScrollSlideClass(slide, page, img);
       mountSlideImage(slide, img, onSlideReady);
     };
     img.onerror = function () { /* 保留 placeholder */ };
     img.src = url;
     if (img.complete && img.naturalWidth > 0) {
-      if (!useScrollPreview(page) && img.naturalHeight / img.naturalWidth > 2.8) {
-        slide.classList.add("v2-phone-strip__slide--scroll");
-      }
+      applyScrollSlideClass(slide, page, img);
       mountSlideImage(slide, img, onSlideReady);
     }
   };
@@ -94,11 +90,19 @@ function ensureSlideLoaded(slide, onSlideReady) {
   img.alt = label;
   img.loading = "lazy";
   img.onload = function () {
+    if (slide.dataset.scrollPreview === "1" || shouldScrollPortraitImage(img)) {
+      slide.classList.add("v2-phone-strip__slide--scroll");
+    }
     mountSlideImage(slide, img, onSlideReady);
   };
   img.onerror = function () { /* 保留 placeholder */ };
   img.src = url;
-  if (img.complete && img.naturalWidth > 0) mountSlideImage(slide, img, onSlideReady);
+  if (img.complete && img.naturalWidth > 0) {
+    if (slide.dataset.scrollPreview === "1" || shouldScrollPortraitImage(img)) {
+      slide.classList.add("v2-phone-strip__slide--scroll");
+    }
+    mountSlideImage(slide, img, onSlideReady);
+  }
 }
 
 /**

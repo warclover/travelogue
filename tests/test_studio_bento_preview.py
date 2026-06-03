@@ -212,6 +212,7 @@ def test_build_trip_bento_preview_prefers_portrait_for_longshot(tmp_path: Path) 
     assert payload["assets"]["longshot"] == f"/{trip_id}/preview.jpg"
     assert len(payload["longshotPages"]) == 3
     assert payload["longshotPages"][0]["url"] == f"/{trip_id}/preview.jpg"
+    assert payload["longshotPages"][0]["scrollPreview"] is True
 
 
 def test_build_trip_bento_preview_longshot_pages_from_vertical_ch_pngs(tmp_path: Path) -> None:
@@ -344,6 +345,7 @@ def test_build_trip_bento_preview_longshot_pages_match_carousel_chapters(tmp_pat
     payload = build_trip_bento_preview(trip_dir, trip, trip_id)
     assert payload is not None
     assert len(payload["longshotPages"]) == len(payload["pages"])
+    assert all(p.get("scrollPreview") is True for p in payload["longshotPages"])
     chapter_longshots = [p["url"] for p in payload["longshotPages"] if p.get("chapterIndex")]
     assert chapter_longshots == [
         f"/{trip_id}/assets/p1.webp",
@@ -448,3 +450,4 @@ def test_build_trip_bento_preview_encodes_unicode_longshot_urls(tmp_path: Path) 
     assert payload is not None
     expected = f"/{trip_id}/{quote(filename)}"
     assert payload["longshotPages"][0]["url"] == expected
+    assert payload["longshotPages"][0]["scrollPreview"] is True

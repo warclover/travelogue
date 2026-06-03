@@ -70,8 +70,8 @@ export function initBentoTabs() {
 /** trips 加载后拉取最近一本预览 manifest。 */
 export function refreshUserBentoPreview(trips) {
   return import("./trip-preview.js").then(function (mod) {
-    var candidates = mod.pickRecentUserTrips(trips);
-    if (!candidates.length) {
+    var primary = mod.pickBentoPreviewTrip(trips);
+    if (!primary) {
       V2.userManifest = null;
       if (!_userTabInteracted || V2.bentoTab === "mine") {
         V2.bentoTab = "demo";
@@ -80,11 +80,19 @@ export function refreshUserBentoPreview(trips) {
       return null;
     }
 
+    var candidates = mod.pickRecentUserTrips(trips);
+    var ordered = [primary].concat(
+      candidates.filter(function (t) { return t.tripId !== primary.tripId; })
+    );
+
     function tryAt(i) {
-      if (i >= candidates.length) return Promise.resolve(null);
-      var trip = candidates[i];
+      if (i >= ordered.length) return Promise.resolve(null);
+      var trip = ordered[i];
       return mod.loadTripBentoPreview(trip.tripId).then(function (manifest) {
-        if (manifest) return manifest;
+        if (manifest) {
+          manifest.tripId = manifest.tripId || trip.tripId;
+          return manifest;
+        }
         return tryAt(i + 1);
       });
     }

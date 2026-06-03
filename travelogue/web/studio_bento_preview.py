@@ -405,6 +405,7 @@ def _longshot_pages_from_carousel(
                 cover_url=cover_url,
                 preview_url=preview_url,
             ),
+            "scrollPreview": True,
         }
         if page.get("chapterIndex") is not None:
             entry["chapterIndex"] = page["chapterIndex"]
@@ -487,7 +488,7 @@ def _build_longshot_pages(
             return derived
 
     fallback = _best_longshot_url(trip, trip_id, trip_dir, fallback=preview_url)
-    return [{"id": "longshot", "label": "微信长图", "url": fallback}]
+    return [{"id": "longshot", "label": "微信长图", "url": fallback, "scrollPreview": True}]
 
 
 def _chapter_page_url(

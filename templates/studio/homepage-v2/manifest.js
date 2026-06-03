@@ -53,7 +53,7 @@ export function longshotPages(manifest) {
   }
   var url = manifestAssetUrl(manifest, "longshot");
   if (!url) return [];
-  return [{ id: "longshot", label: "微信长图", url: url }];
+  return [{ id: "longshot", label: "微信长图", url: url, scrollPreview: true }];
 }
 
 /** longshotPages 条目 URL。 */

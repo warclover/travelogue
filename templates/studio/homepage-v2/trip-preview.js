@@ -6,12 +6,23 @@ import { isValidManifest } from "./manifest.js";
 
 /** 最近编辑的非 demo 画册（trips 已按 updatedAt 降序）。 */
 export function pickRecentUserTrip(trips) {
-  return (trips || []).find(function (t) { return !isDemoTrip(t); }) || null;
+  return pickBentoPreviewTrip(trips);
 }
 
 /** 最近编辑的非 demo 画册列表（updatedAt 降序）。 */
 export function pickRecentUserTrips(trips) {
   return (trips || []).filter(function (t) { return !isDemoTrip(t); });
+}
+
+/**
+ * Bento「最近一本」：优先选已有服务端长图 PNG 的 trip（手机框可读 *-ch*.png），
+ * 否则退回 updatedAt 最新的一本。
+ */
+export function pickBentoPreviewTrip(trips) {
+  var userTrips = pickRecentUserTrips(trips);
+  if (!userTrips.length) return null;
+  var withExport = userTrips.filter(function (t) { return t.hasLongshotExport; });
+  return (withExport[0] || userTrips[0]);
 }
 
 /**

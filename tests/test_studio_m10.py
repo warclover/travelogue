@@ -8,7 +8,7 @@ import pytest
 
 from travelogue.web.studio_jobs import get_job_store, reset_job_store
 from travelogue.web.studio_pipeline import run_studio_pipeline
-from travelogue.web.studio_trips import list_studio_trips, longshot_outputs_stale
+from travelogue.web.studio_trips import has_longshot_exports, list_studio_trips, longshot_outputs_stale
 from tests.studio_test_helpers import wait_for_job
 from tests.test_studio_server import (
     _distinct_album,
@@ -37,6 +37,15 @@ def test_studio_trips_includes_preview_path(tmp_path: Path) -> None:
     assert row["tripId"] == result.trip_id
     assert row.get("previewRelPath") == "preview.jpg"
     assert (trips_dir / result.trip_id / "preview.jpg").is_file()
+    assert row.get("hasLongshotExport") is False
+
+
+def test_has_longshot_exports_detects_chapter_pngs(tmp_path: Path) -> None:
+    trip_dir = tmp_path / "demo-trip"
+    trip_dir.mkdir()
+    assert has_longshot_exports(trip_dir) is False
+    (trip_dir / "trip-ch01.png").write_bytes(b"png")
+    assert has_longshot_exports(trip_dir) is True
 
 
 def test_longshot_stale_when_trip_newer(tmp_path: Path) -> None:

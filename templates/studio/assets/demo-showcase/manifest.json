@@ -10,6 +10,14 @@
     "background": "background-PLACEHOLDER.webp",
     "longshot": "longshot-PLACEHOLDER.webp"
   },
+  "longshotPages": [
+    {
+      "id": "longshot",
+      "label": "微信长图",
+      "url": "longshot-PLACEHOLDER.webp",
+      "scrollPreview": true
+    }
+  ],
   "pages": [
     {
       "id": "cover",

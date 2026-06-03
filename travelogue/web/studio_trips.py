@@ -43,6 +43,11 @@ def longshot_outputs_stale(trip_dir: Path, *, trip_mtime: float) -> bool:
     return trip_mtime > latest_png + 0.5
 
 
+def has_longshot_exports(trip_dir: Path) -> bool:
+    """True when trip folder contains server-exported longshot PNG(s)."""
+    return bool(list(trip_dir.glob("*-longshot.png")) or list(trip_dir.glob("*-ch*.png")))
+
+
 def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
     trips_dir = trips_dir.resolve()
     if not trips_dir.is_dir():
@@ -83,6 +88,7 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
                     "updatedAt": updated_at,
                     "photoCount": photo_count,
                     "longshotStale": longshot_outputs_stale(child, trip_mtime=updated_at),
+                    "hasLongshotExport": has_longshot_exports(child),
                     "previewRelPath": preview_rel,
                     "resolvedTemplateId": template_meta.get("resolvedTemplateId", "visual-journal"),
                     "templateSource": template_meta.get("source", "legacy"),
