@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio v2 · 工作台左侧「最近编辑」移植线框 v1</title>
+  <style>
+    :root {
+      --paper: #f0ebe3;
+      --ink: #1a1814;
+      --muted: #6b6560;
+      --line: rgba(26, 24, 20, .14);
+      --anno: #c45c26;
+      --slot: #7b5ea7;
+      --ok: #2a6b4a;
+      --warn: #b45309;
+      --bad: #991b1b;
+      --classic-bg: #14110d;
+      --classic-surface: rgba(255,255,255,.06);
+      --classic-border: rgba(255,255,255,.18);
+      --classic-ink: #f5f0e8;
+      --classic-muted: rgba(255,255,255,.55);
+      --classic-gold: #c4a574;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.55;
+    }
+    .review-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: #1a1814; color: #e8e2d8;
+      padding: 10px 20px;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.25);
+    }
+    .review-bar__title { font-size: 13px; font-weight: 600; margin-right: auto; }
+    .review-bar__title em { color: #c9a962; font-style: normal; }
+    .review-bar__note { font-size: 11px; color: rgba(255,255,255,.55); max-width: 640px; }
+    .page { max-width: 1320px; margin: 0 auto; padding: 24px 20px 64px; }
+
+    h2.section {
+      font-size: 15px; font-weight: 600; margin: 32px 0 10px;
+      padding-bottom: 8px; border-bottom: 2px solid var(--ink);
+    }
+    h2.section:first-of-type { margin-top: 0; }
+    .section-lead { font-size: 13px; color: var(--muted); margin: 0 0 18px; max-width: 920px; }
+
+    .verdict {
+      border: 2px solid var(--ok);
+      background: rgba(42,107,74,.08);
+      padding: 14px 16px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      font-size: 13px;
+    }
+    .verdict strong { color: var(--ok); font-size: 14px; }
+
+    table.feas {
+      width: 100%; border-collapse: collapse; font-size: 12px; margin: 12px 0 20px;
+    }
+    table.feas th, table.feas td {
+      border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top;
+    }
+    table.feas th { background: rgba(0,0,0,.04); width: 120px; }
+
+    .compare-2 {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;
+    }
+    @media (max-width: 960px) { .compare-2 { grid-template-columns: 1fr; } }
+
+    .panel { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+    .panel__head {
+      padding: 10px 14px; font-size: 11px; font-weight: 600; border-bottom: 1px solid var(--line);
+    }
+    .panel__head--old { background: #fef3c7; color: #92400e; }
+    .panel__head--new { background: #dcfce7; color: #166534; }
+    .panel__body { padding: 14px; }
+
+    /* ── Bench mock ── */
+    .bench-shell {
+      background: var(--classic-bg);
+      border: 1px solid var(--classic-border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .bench {
+      display: flex;
+      align-items: stretch;
+      gap: 16px;
+      min-height: 96px;
+      padding: 14px 18px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--classic-border);
+      border-radius: 6px;
+    }
+    .bench__left {
+      flex: 0 0 23%;
+      min-width: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      outline: 2px dashed var(--slot);
+      outline-offset: 2px;
+      padding: 4px;
+    }
+    .bench__left-label {
+      margin: 0;
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--classic-muted);
+    }
+    .bench__main {
+      flex: 1 1 47%;
+      min-width: 260px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .bench__cta {
+      display: inline-flex; align-items: center;
+      min-height: 44px; padding: 10px 18px;
+      background: var(--classic-gold); color: #14110d;
+      border-radius: 4px; font-size: 12px; font-weight: 600; width: fit-content;
+    }
+    .bench__meta { margin: 6px 0 0; font-size: 10px; color: var(--classic-muted); }
+    .bench__quick {
+      flex: 0 0 32%; min-width: 240px;
+      border-left: 1px solid var(--classic-border);
+      padding-left: 16px;
+      font-size: 10px; color: var(--classic-muted);
+      display: flex; flex-direction: column; justify-content: center; gap: 6px;
+    }
+
+    /* current sample */
+    .bench__sample {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .bench__sample-thumb {
+      width: 44px; height: 44px; border-radius: 6px;
+      background: linear-gradient(135deg,#4a6741,#2d4a3e);
+      border: 1px solid var(--classic-border); flex-shrink: 0;
+    }
+    .bench__sample-text strong { display: block; font-size: 11px; color: var(--classic-ink); }
+    .bench__sample-text span { font-size: 9px; color: var(--classic-muted); }
+
+    /* recent cards rail */
+    .bench__recent-list {
+      display: flex;
+      gap: 8px;
+      height: 72px;
+      align-items: stretch;
+    }
+    .bench__recent-card {
+      position: relative;
+      flex: 1 1 0;
+      min-width: 0;
+      height: 100%;
+      aspect-ratio: 3 / 4;
+      max-width: calc(72px * 3 / 4);
+      border-radius: 6px;
+      overflow: hidden;
+      background: #2a2826;
+      box-shadow: 0 4px 12px rgba(0,0,0,.35);
+      text-decoration: none;
+      color: #fff;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .bench__recent-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(0,0,0,.45);
+    }
+    .bench__recent-card img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .bench__recent-card__meta {
+      position: absolute; inset: auto 0 0 0;
+      padding: 12px 6px 6px;
+      background: linear-gradient(transparent, rgba(0,0,0,.88));
+    }
+    .bench__recent-card__title {
+      margin: 0; font-size: 9px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .bench__recent-card__sub {
+      margin: 1px 0 0; font-size: 8px; opacity: .82;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .bench__recent-card--empty {
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.04);
+      border: 1px dashed rgba(255,255,255,.15);
+      box-shadow: none; color: var(--classic-muted); font-size: 8px;
+    }
+
+    .dim-tag {
+      display: inline-block;
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: rgba(123,94,167,.15);
+      color: var(--slot);
+      margin-left: 6px;
+    }
+
+    pre.ascii {
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 10px; line-height: 1.35;
+      background: #1a1814; color: #c9c4bc;
+      padding: 14px; border-radius: 8px; overflow-x: auto; margin: 12px 0;
+    }
+    pre.ascii .hl { color: #c9a962; }
+    pre.ascii .slot { color: #b8a0e8; }
+    pre.ascii .good { color: #86efac; }
+    pre.ascii .warn { color: #fbbf24; }
+
+    .states { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 16px; }
+    @media (max-width: 1000px) { .states { grid-template-columns: 1fr; } }
+    .state-card {
+      border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fff;
+    }
+    .state-card h3 { margin: 0 0 8px; font-size: 12px; }
+    .state-card p { margin: 0 0 10px; font-size: 11px; color: var(--muted); }
+
+    .anno-list { margin: 10px 0 0; padding: 0; list-style: none; }
+    .anno-list li {
+      font-size: 11px; padding: 6px 8px; margin: 4px 0;
+      border-left: 3px solid var(--anno); background: rgba(196,92,38,.06);
+    }
+    .anno-list li.ok { border-color: var(--ok); background: rgba(42,107,74,.06); }
+    .anno-list li.warn { border-color: var(--warn); background: rgba(180,83,9,.06); }
+
+    .review-checklist { font-size: 12px; }
+    .review-checklist li { margin: 6px 0; }
+  </style>
+</head>
+<body>
+
+<header class="review-bar">
+  <div class="review-bar__title">Studio v2 · <em>工作台左侧「最近编辑」</em> 移植评估 v1</div>
+  <div class="review-bar__note">目标：旧首页 3 张悬浮卡片 → v2 工作台 bench 左栏 · 高度适配 · 数据复用</div>
+</header>
+
+<main class="page">
+
+  <div class="verdict">
+    <strong>可行性结论：✅ 高（推荐实施）</strong><br>
+    数据层、渲染逻辑、交互模式在代码库中均已存在，主要工作是 UI 移植与 bench 左栏尺寸适配。预估工作量 <strong>1–1.5 人日</strong>。
+  </div>
+
+  <h2 class="section">① 可行性评估</h2>
+  <table class="feas">
+    <tr>
+      <th>维度</th>
+      <th>现状</th>
+      <th>评估</th>
+    </tr>
+    <tr>
+      <td>数据来源</td>
+      <td><code>V2.trips</code> 已按 updatedAt 降序；<code>pickRecentUserTrips()</code> 已用于 Tab「我的最近一本」</td>
+      <td class="good">✅ 直接复用，无需新 API</td>
+    </tr>
+    <tr>
+      <td>渲染参考</td>
+      <td>旧首页 <code>renderHybridHero()</code> · 封面 <code>previewRelPath</code> · 相对时间 · 长图待更新 badge</td>
+      <td class="good">✅ 逻辑可抽成 <code>renderBenchRecent()</code></td>
+    </tr>
+    <tr>
+      <td>空间约束</td>
+      <td>左栏 <code>23%</code> · min 220px · bench 内高约 <strong>72–88px</strong></td>
+      <td class="warn">⚠ 3 卡需压缩为「迷你版」3:4 · 标题 ellipsis · 可行但偏紧</td>
+    </tr>
+    <tr>
+      <td>空态</td>
+      <td>无用户画册时 Tab disabled · 当前左栏显示 demo 缩略图</td>
+      <td>建议：0 本 → 保留现有 sample；≥1 本 → 切换为 recent 卡</td>
+    </tr>
+    <tr>
+      <td>功能重叠</td>
+      <td>右侧「继续上次 / 查看最近」+ 下方 v2-shelf 书架</td>
+      <td class="warn">⚠ 需分工：bench 卡 = 快开最近 3 本 · shelf = 完整列表</td>
+    </tr>
+    <tr>
+      <td>响应式</td>
+      <td>≤1100px bench 折行 · iPad 横屏双列</td>
+      <td class="good">✅ 左栏可保持 3 卡横排或降为 2+1</td>
+    </tr>
+  </table>
+
+  <h2 class="section">② 尺寸推导 · 卡片适配 bench 高度</h2>
+  <pre class="ascii">bench 行高（现网估算）
+  padding 14×2 + CTA 44 + meta ~20 ≈ <span class="hl">92px</span>
+
+左栏可用（含「最近编辑」微标 14px + gap 6px）
+  卡片区高度 ≈ <span class="hl">72px</span>
+
+3:4 竖卡（高度驱动）
+  卡高 72px → 卡宽 54px
+  3 卡 + 2×gap 8px = 54×3 + 16 = <span class="hl">178px</span>  ≤ min-width 220px  ✅
+
+可读性
+  标题 9px · 副文 8px · 1 行 ellipsis（与旧卡 12/10px 同比缩小 ~25%）</pre>
+
+  <h2 class="section">③ As-Is vs To-Be · 工作台全貌</h2>
+  <div class="compare-2">
+    <div class="panel">
+      <div class="panel__head panel__head--old">当前 v2 · As-Is</div>
+      <div class="panel__body">
+        <div class="bench-shell">
+          <div class="bench">
+            <div class="bench__left">
+              <div class="bench__sample">
+                <div class="bench__sample-thumb"></div>
+                <div class="bench__sample-text">
+                  <strong>京都 · 雨后</strong>
+                  <span>示例作品 · 86 张 · 3 章</span>
+                </div>
+              </div>
+            </div>
+            <div class="bench__main">
+              <span class="bench__cta">开始制作我的游记 →</span>
+              <p class="bench__meta">照片留在本机 · 无需注册 · …</p>
+            </div>
+            <div class="bench__quick">预览来源 · 快捷操作 · 配色</div>
+          </div>
+        </div>
+        <ul class="anno-list">
+          <li>左栏为 demo 缩略图 + 文本，与用户「最近编辑」无关</li>
+          <li>回访用户需点 Tab 或滚到 shelf 才能看到历史作品</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__head panel__head--new">推荐 To-Be · 有用户画册时</div>
+      <div class="panel__body">
+        <div class="bench-shell">
+          <div class="bench">
+            <div class="bench__left">
+              <p class="bench__left-label">最近编辑</p>
+              <div class="bench__recent-list">
+                <a class="bench__recent-card" href="#">
+                  <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=120&h=160&fit=crop" alt="" />
+                  <div class="bench__recent-card__meta">
+                    <p class="bench__recent-card__title">东澳岛</p>
+                    <p class="bench__recent-card__sub">120 张 · 1 天前</p>
+                  </div>
+                </a>
+                <a class="bench__recent-card" href="#">
+                  <img src="https://images.unsplash.com/photo-1441974231530-cae7a6a01a2?w=120&h=160&fit=crop" alt="" />
+                  <div class="bench__recent-card__meta">
+                    <p class="bench__recent-card__title">klx</p>
+                    <p class="bench__recent-card__sub">31 张 · 1 天前</p>
+                  </div>
+                </a>
+                <a class="bench__recent-card" href="#">
+                  <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=120&h=160&fit=crop" alt="" />
+                  <div class="bench__recent-card__meta">
+                    <p class="bench__recent-card__title">318沿途好风光</p>
+                    <p class="bench__recent-card__sub">206 张 · 2 天前</p>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <div class="bench__main">
+              <span class="bench__cta">开始制作我的游记 →</span>
+              <p class="bench__meta">照片留在本机 · 无需注册 · …</p>
+            </div>
+            <div class="bench__quick">预览来源 · 快捷操作 · 配色</div>
+          </div>
+        </div>
+        <ul class="anno-list">
+          <li class="ok">替换 <code>.v2-bench__sample</code> · 复用旧卡视觉语言（封面 + 底部渐变 + 标题）</li>
+          <li class="ok">卡高 = bench 内高 · 3:4 · hover 微抬升（限 2px 防裁剪）</li>
+          <li class="ok">点击 → 打开 previewUrl（同旧首页）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section">④ 左栏放大线框 · 尺寸标注</h2>
+  <pre class="ascii">┌─ .v2-bench__left ──────────────── 23% · min 220px ─────────────────┐
+│ <span class="hl">最近编辑</span>  ← 9px uppercase · mb 6px（可选，可去掉省 14px）          │
+│ ┌────────┐  ┌────────┐  ┌────────┐                                  │
+│ │ 封面   │  │ 封面   │  │ 封面   │  ← 高 72px · 宽 54px · 3:4       │
+│ │        │  │        │  │        │    gap 8px                         │
+│ │ ▓▓标题 │  │ ▓▓标题 │  │ ▓▓标题 │  ← 底部渐变 meta                   │
+│ │ 张·时间│  │ 张·时间│  │ 张·时间│                                    │
+│ └────────┘  └────────┘  └────────┘                                  │
+└─────────────────────────────────────────────────────────────────────┘
+                         ↑ 与 bench 行垂直居中 · 不撑高 bench 行</pre>
+
+  <h2 class="section">⑤ 三态方案</h2>
+  <div class="states">
+    <div class="state-card">
+      <h3>A · 无用户画册（0 本）</h3>
+      <p>保持现有 demo sample 缩略图，不显示 recent 卡。</p>
+      <div class="bench__recent-list" style="height:44px">
+        <div class="bench__sample" style="width:100%">
+          <div class="bench__sample-thumb"></div>
+          <div class="bench__sample-text"><strong>京都 · 雨后</strong><span>示例作品</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="state-card">
+      <h3>B · 1–2 本</h3>
+      <p>显示实际卡片 + 右侧虚线占位（或仅 2 卡左对齐）。</p>
+      <div class="bench__recent-list">
+        <a class="bench__recent-card" href="#"><img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=80&h=107&fit=crop" alt="" /><div class="bench__recent-card__meta"><p class="bench__recent-card__title">东澳岛</p><p class="bench__recent-card__sub">120 张</p></div></a>
+        <a class="bench__recent-card" href="#"><img src="https://images.unsplash.com/photo-1441974231530-cae7a6a01a2?w=80&h=107&fit=crop" alt="" /><div class="bench__recent-card__meta"><p class="bench__recent-card__title">klx</p><p class="bench__recent-card__sub">31 张</p></div></a>
+        <span class="bench__recent-card bench__recent-card--empty">—</span>
+      </div>
+    </div>
+    <div class="state-card">
+      <h3>C · ≥3 本（默认）</h3>
+      <p>最近 3 本横排，与旧首页一致。</p>
+      <div class="bench__recent-list">
+        <a class="bench__recent-card" href="#"><img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=80&h=107&fit=crop" alt="" /><div class="bench__recent-card__meta"><p class="bench__recent-card__title">东澳岛</p><p class="bench__recent-card__sub">120 张 · 1 天前</p></div></a>
+        <a class="bench__recent-card" href="#"><img src="https://images.unsplash.com/photo-1441974231530-cae7a6a01a2?w=80&h=107&fit=crop" alt="" /><div class="bench__recent-card__meta"><p class="bench__recent-card__title">klx</p><p class="bench__recent-card__sub">31 张 · 1 天前</p></div></a>
+        <a class="bench__recent-card" href="#"><img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=80&h=107&fit=crop" alt="" /><div class="bench__recent-card__meta"><p class="bench__recent-card__title">318沿途</p><p class="bench__recent-card__sub">206 张 · 2 天前</p></div></a>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section">⑥ 实现路径（确认后）</h2>
+  <table class="feas">
+    <tr><th>文件</th><th>改动</th></tr>
+    <tr><td><code>studio-home-v2.html</code></td><td>左栏增加 <code>.v2-bench__recent</code> 容器；sample / recent 互斥显示</td></tr>
+    <tr><td><code>studio-home-v2.css</code></td><td>迷你 recent 卡样式 · height: 72px · aspect-ratio 3/4</td></tr>
+    <tr><td><code>bento.js</code></td><td><code>renderBenchRecent(trips)</code> · 抽旧卡 DOM 构建 · trips 变更时刷新</td></tr>
+    <tr><td><code>shelf.js</code></td><td>复用 <code>relativeTime()</code> · 或抽到 util</td></tr>
+    <tr><td>测试</td><td>有用户 trip 时左栏 3 卡可见 · 0 本时 sample 可见</td></tr>
+  </table>
+
+  <h2 class="section">⑦ 需你确认的设计决策</h2>
+  <ul class="review-checklist">
+    <li>☐ <strong>空态</strong>：0 本时保留 demo sample（推荐 A）还是显示「+ 新建」占位卡？</li>
+    <li>☐ <strong>「最近编辑」微标</strong>：左栏顶部是否保留 9px 标题行？（去掉可多 14px 给卡片）</li>
+    <li>☐ <strong>1–2 本</strong>：不足 3 本时显示虚线占位 vs 仅显示已有卡？</li>
+    <li>☐ <strong>示例 Tab 激活时</strong>：左栏仍显示用户 recent 卡，还是切回 demo sample？</li>
+    <li>☐ <strong>长图待更新</strong> badge 是否保留在迷你卡上？</li>
+    <li>☐ 确认后可进入开发</li>
+  </ul>
+
+</main>
+</body>
+</html>

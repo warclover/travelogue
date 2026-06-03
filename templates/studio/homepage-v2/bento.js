@@ -3,13 +3,14 @@
  */
 import { V2, $, show } from "./store.js";
 import { isDemoTrip } from "../js/constants.js";
-import { cssBackgroundImage } from "../js/dom.js";
+import { cssBackgroundImage, formatUpdatedAt } from "../js/dom.js";
 import { manifestAssetUrl } from "./manifest.js";
 import { initCarousel } from "./carousel.js";
 import { initPhoneStrip } from "./phone-strip.js";
 import { resolveLayoutTier } from "./layout-tier.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { initBentoTabs, syncTabUi } from "./bento-tabs.js";
+import { pickRecentUserTrips } from "./trip-preview.js";
 
 var _phoneStripApi = null;
 var _phoneFrameObserver = null;
@@ -23,38 +24,32 @@ function clampPhoneHeight(px) {
   return Math.round(v);
 }
 
+var PHONE_VISUAL_SCALE = 1.15;
+
 function webPhoneAnchor() {
   return document.querySelector(".v2-carousel");
 }
 
-/** 以 Web 轮播整体块（含 dots/hint）为锚定，保证底缘观感一致。 */
+/** 以 Web 轮播 viewport 定手机高度（两侧 footer 行由 CSS Grid 底边对齐）。 */
 function syncPhoneFrameFromWeb() {
   var phone = $("v2-phone");
   if (!phone) return;
-  var webViewport = webPhoneAnchor();
+  var carousel = webPhoneAnchor();
+  var viewport = carousel && carousel.querySelector(".v2-carousel__viewport");
   var mobileCell = document.querySelector(".v2-bento__mobile");
-  if (!webViewport || !webViewport.getBoundingClientRect) return;
-  var h = webViewport.getBoundingClientRect().height || 0;
+  if (!viewport || !viewport.getBoundingClientRect) return;
+  var h = viewport.getBoundingClientRect().height || 0;
   var target = clampPhoneHeight(h);
   if (mobileCell) {
     var cellW = mobileCell.clientWidth || 0;
     if (cellW > 0) {
-      // 宽度约束：手机框比例固定 9:16，避免溢出右列。
-      var byWidth = Math.floor((cellW * 16) / 9);
+      var byWidth = Math.floor((cellW * 16) / 9 / PHONE_VISUAL_SCALE);
       target = Math.min(target, byWidth);
     }
   }
   if (target <= 0) return;
   phone.style.setProperty("--v2-phone-height", target + "px");
-  // 第二阶段：底边硬对齐，抵消不同显示器下的行内偏移。
-  var wr = webViewport.getBoundingClientRect();
-  var pr = phone.getBoundingClientRect();
-  var delta = Math.round(pr.bottom - wr.bottom);
-  if (Math.abs(delta) > 1) {
-    phone.style.transform = "translateY(" + String(-delta) + "px)";
-  } else {
-    phone.style.transform = "";
-  }
+  phone.style.setProperty("--v2-phone-scale", String(PHONE_VISUAL_SCALE));
   if (_phoneStripApi && _phoneStripApi.relayout) _phoneStripApi.relayout();
 }
 
@@ -67,12 +62,12 @@ function schedulePhoneFrameSync() {
 function ensurePhoneFrameSync() {
   if (_phoneFrameWired) return;
   _phoneFrameWired = true;
-  var webViewport = webPhoneAnchor();
-  if (typeof ResizeObserver === "function" && webViewport) {
+  var viewport = document.querySelector(".v2-carousel__viewport");
+  if (typeof ResizeObserver === "function" && viewport) {
     _phoneFrameObserver = new ResizeObserver(function () {
       schedulePhoneFrameSync();
     });
-    _phoneFrameObserver.observe(webViewport);
+    _phoneFrameObserver.observe(viewport);
   }
   window.addEventListener("resize", schedulePhoneFrameSync);
 }
@@ -135,16 +130,76 @@ export function renderPhone(manifest, tier) {
   schedulePhoneFrameSync();
 }
 
+/** 工作台左栏 · 最近 3 本画册卡（无「最近编辑」标 / 无张数，仅标题）。 */
+export function renderBenchRecent() {
+  var sample = $("v2-bench-sample");
+  var recentHost = $("v2-bench-recent");
+  var list = $("v2-bench-recent-list");
+  var left = document.querySelector(".v2-bench__left");
+  var bench = document.querySelector(".v2-bench");
+  if (!sample || !recentHost || !list) return;
+
+  var recent = pickRecentUserTrips(V2.trips).slice(0, 3);
+  list.innerHTML = "";
+
+  if (!recent.length) {
+    show(sample, true);
+    show(recentHost, false);
+    if (left) left.classList.remove("v2-bench__left--recent");
+    if (bench) bench.classList.remove("v2-bench--recent");
+    return;
+  }
+
+  recent.forEach(function (trip, idx) {
+    var card = document.createElement("a");
+    card.className = "v2-bench__recent-card";
+    var href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
+    if (trip.longshotStale) href = "/" + trip.tripId + "/index.html?focus=longshot";
+    card.href = href;
+    card.title = (trip.title || trip.tripId)
+      + (trip.updatedAt ? " · " + formatUpdatedAt(trip.updatedAt) : "")
+      + (trip.longshotStale ? " · 长图待更新" : "");
+
+    if (trip.previewRelPath) {
+      var img = document.createElement("img");
+      img.alt = trip.title || "游记封面";
+      img.loading = idx === 0 ? "eager" : "lazy";
+      img.src = "/" + trip.tripId + "/" + trip.previewRelPath;
+      img.onerror = function () { img.remove(); };
+      card.appendChild(img);
+    }
+
+    if (trip.longshotStale) {
+      var stale = document.createElement("span");
+      stale.className = "v2-bench__recent-card__stale";
+      stale.textContent = "长图待更新";
+      card.appendChild(stale);
+    }
+
+    var meta = document.createElement("div");
+    meta.className = "v2-bench__recent-card__meta";
+    var title = document.createElement("p");
+    title.className = "v2-bench__recent-card__title";
+    title.textContent = trip.title || trip.tripId;
+    meta.appendChild(title);
+    card.appendChild(meta);
+    list.appendChild(card);
+  });
+
+  show(sample, false);
+  show(recentHost, true);
+  if (left) left.classList.add("v2-bench__left--recent");
+  if (bench) bench.classList.add("v2-bench--recent");
+}
+
 /** 工作台 bench。 */
 export function renderBench(manifest) {
+  renderBenchRecent();
   if (!manifest) return;
   var titleEl = $("v2-bench-title");
   var metaEl = $("v2-bench-meta");
   var thumb = $("v2-bench-thumb");
   var sampleFlag = $("v2-bench-sample-flag");
-  var statPhotosEl = $("v2-bench-stat-photos");
-  var statChaptersEl = $("v2-bench-stat-chapters");
-  var statEstimateEl = $("v2-bench-stat-estimate");
   var resumeBtn = $("v2-bench-resume");
   var recentBtn = $("v2-bench-recent");
   if (titleEl && manifest.title) titleEl.textContent = manifest.title;
@@ -157,18 +212,6 @@ export function renderBench(manifest) {
     if (meta.photoCount) parts.push(meta.photoCount + " 张");
     if (meta.chapterCount) parts.push(meta.chapterCount + " 章");
     metaEl.textContent = parts.join(" · ");
-  }
-  var meta = manifest.meta || {};
-  if (statPhotosEl) {
-    statPhotosEl.textContent = (meta.photoCount || 0) + " 张照片";
-  }
-  if (statChaptersEl) {
-    statChaptersEl.textContent = (meta.chapterCount || 0) + " 章";
-  }
-  if (statEstimateEl) {
-    var count = Number(meta.photoCount) || 0;
-    var estimate = count > 140 ? "约 5 分钟" : count > 90 ? "约 4 分钟" : "约 3 分钟";
-    statEstimateEl.textContent = estimate;
   }
   var resumeTrip = V2.trips.find(function (t) {
     return !isDemoTrip(t);

@@ -1,5 +1,5 @@
 /**
- * 首页 v2 · Bento 预览 Tab（示例作品 / 我的最近一本 · 方案 B′）。
+ * 首页 v2 · Bento 预览 Tab（示例作品 / 最近一本 · 方案 B′）。
  */
 import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";

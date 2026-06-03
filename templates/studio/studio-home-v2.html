@@ -94,13 +94,16 @@
       <section class="v2-bento__bench" aria-label="工作台">
         <div class="v2-bench">
           <div class="v2-bench__left">
-            <div class="v2-bench__sample">
+            <div class="v2-bench__sample" id="v2-bench-sample">
               <span class="v2-demo-flag" id="v2-bench-sample-flag">示例作品</span>
               <div class="v2-bench__sample-thumb" id="v2-bench-thumb" aria-hidden="true"></div>
               <div class="v2-bench__sample-text">
                 <strong id="v2-bench-title">京都 · 雨后</strong>
                 <span id="v2-bench-meta">自动生成 · 86 张 · 3 章</span>
               </div>
+            </div>
+            <div class="v2-bench__recent" id="v2-bench-recent" hidden aria-label="最近画册">
+              <div class="v2-bench__recent-list" id="v2-bench-recent-list"></div>
             </div>
           </div>
           <div class="v2-bench__main">
@@ -114,7 +117,7 @@
                 <button type="button" class="v2-bento-tabs__btn is-active" role="tab"
                         id="v2-tab-demo" aria-selected="true" aria-controls="v2-bento-grid">示例作品</button>
                 <button type="button" class="v2-bento-tabs__btn" role="tab"
-                        id="v2-tab-mine" aria-selected="false" aria-controls="v2-bento-grid" disabled>我的最近一本</button>
+                        id="v2-tab-mine" aria-selected="false" aria-controls="v2-bento-grid" disabled>最近一本</button>
               </div>
             </div>
             <div class="v2-bench__side">
@@ -123,34 +126,24 @@
                 <button type="button" class="v2-bench__ghost-btn" id="v2-bench-resume">继续上次</button>
                 <button type="button" class="v2-bench__ghost-btn" id="v2-bench-recent">查看最近</button>
               </div>
-              <div class="v2-bench__stats" aria-label="预估信息">
-                <span class="v2-bench__stat" id="v2-bench-stat-photos">109 张照片</span>
-                <span class="v2-bench__stat" id="v2-bench-stat-chapters">4 章</span>
-                <span class="v2-bench__stat" id="v2-bench-stat-estimate">约 3 分钟</span>
-              </div>
             </div>
             <div class="v2-bench__side v2-bench__side--prefs">
-              <div class="v2-theme-settings" id="v2-theme-settings">
-                <label for="v2-theme-select">配色</label>
-                <select id="v2-theme-select" aria-label="首页配色">
+              <p class="v2-bench__side-label">配色</p>
+              <select id="v2-theme-select" class="v2-bench__ghost-select" aria-label="首页配色">
                   <option value="sky">清新浅蓝</option>
                   <option value="classic">经典深色</option>
                   <option value="dawn">暖阳珊瑚</option>
                   <option value="mint">森系薄荷</option>
                   <option value="navy">夜航蓝调</option>
                 </select>
-              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ③ 微信长图 · 竖屏预览（右列 · 与 Web 轮播行底对齐） -->
+      <!-- ③ 微信长图 · 竖屏预览（右列 · caption 底边对齐 carousel hint） -->
       <section class="v2-bento__mobile" aria-label="微信长图预览">
-        <p class="v2-cell-label">
-          <span>微信长图 · 竖屏预览</span>
-          <span class="v2-cell-label__hint">←→ 切换 · 一屏一章</span>
-        </p>
+        <div class="v2-mobile-stack" id="v2-mobile-stack">
         <div class="v2-phone" id="v2-phone">
           <div class="v2-phone__shell">
             <div class="v2-phone__notch" aria-hidden="true"></div>
@@ -169,6 +162,11 @@
               </div>
             </div>
           </div>
+        </div>
+        <p class="v2-cell-label">
+          <span>微信长图 · 竖屏预览</span>
+          <span class="v2-cell-label__hint">←→ 切换 · 一屏一章</span>
+        </p>
         </div>
       </section>
     </div>
