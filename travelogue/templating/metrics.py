@@ -156,8 +156,12 @@ def aggregate_metrics(*, window_hours: int = 24) -> dict[str, Any]:
     route_durations_ms: list[float] = []
     review_submitted = 0
     review_approved = 0
+    max_lines = 20_000
     try:
-        for line in path.read_text(encoding="utf-8").splitlines():
+        lines = path.read_text(encoding="utf-8").splitlines()
+        if len(lines) > max_lines:
+            lines = lines[-max_lines:]
+        for line in lines:
             line = line.strip()
             if not line:
                 continue

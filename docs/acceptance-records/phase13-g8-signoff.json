@@ -147,6 +147,7 @@
   "signedAt": "2026-06-03T13:42:08+00:00",
   "signoffMode": "dev-automated",
   "notes": [
-    "自动化 HTTP+Playwright 走查通过。"
+    "自动化 HTTP+Playwright 走查通过。",
+    "environment: dev-only — 非生产人工签字。"
   ]
 }

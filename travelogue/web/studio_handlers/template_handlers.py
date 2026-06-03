@@ -1,14 +1,8 @@
 """Phase 13 template list + route replay (admin/Studio API)."""
 
-
-
 from __future__ import annotations
 
-
-
 from urllib.parse import parse_qs, urlparse
-
-
 
 from travelogue.templates.registry import check_template_health, get_registry
 
@@ -19,6 +13,7 @@ from travelogue.templating.decision_log import list_decisions
 from travelogue.templating.resolver import is_template_locked, resolve_effective_template
 
 from travelogue.templating.roles import require_template_role
+from travelogue.web.studio_admin_auth import studio_authenticated
 
 from travelogue.templating.router import (
 
@@ -36,8 +31,6 @@ from travelogue.web.studio_handlers.common import resolve_trip_dir_listed, studi
 
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
-
-
 _MODE_HINTS = {
 
     "smart": "根据天数、地点与视频占比自动匹配模板；不确定时回退视觉游记。",
@@ -45,10 +38,6 @@ _MODE_HINTS = {
     "manual": "全程使用你指定的模板，适合已知体裁（活动回顾、多日游记等）。",
 
 }
-
-
-
-
 
 def _template_labels() -> dict[str, str]:
 
@@ -60,15 +49,9 @@ def _template_labels() -> dict[str, str]:
 
     }
 
-
-
-
-
 def _sort_templates(items: list[dict], order: tuple[str, ...]) -> list[dict]:
 
     rank = {tid: i for i, tid in enumerate(order)}
-
-
 
     def key(row: dict) -> tuple[int, str]:
 
@@ -76,13 +59,7 @@ def _sort_templates(items: list[dict], order: tuple[str, ...]) -> list[dict]:
 
         return (rank.get(tid, 999), tid)
 
-
-
     return sorted(items, key=key)
-
-
-
-
 
 def handle_templates_list(handler: StudioHandlerProtocol) -> None:
 
@@ -93,8 +70,6 @@ def handle_templates_list(handler: StudioHandlerProtocol) -> None:
     tr = ctx.cfg.template_router
 
     from travelogue.templating.admin_store import get_effective_lifecycle
-
-
 
     allow_beta = frozenset(tr.beta_allowlist_trip_ids)
 
@@ -162,10 +137,6 @@ def handle_templates_list(handler: StudioHandlerProtocol) -> None:
 
     )
 
-
-
-
-
 def _load_trip(handler: StudioHandlerProtocol, trip_id: str):
 
     ctx = studio_ctx(handler)
@@ -182,33 +153,20 @@ def _load_trip(handler: StudioHandlerProtocol, trip_id: str):
 
         return None
 
-
-
-
-
 def _template_operator_role(handler: StudioHandlerProtocol) -> str | None:
 
     ctx = studio_ctx(handler)
 
     ok, role, _code = require_template_role(
-
         handler.headers,
-
         host=handler.studio_host,
-
         allow_lan=handler.studio_allow_lan,
-
         minimum="template_operator",
-
         cfg=ctx.cfg,
-
+        studio_authenticated=studio_authenticated(handler),
     )
 
     return role if ok else None
-
-
-
-
 
 def handle_template_replay(handler: StudioHandlerProtocol) -> None:
 
@@ -221,8 +179,6 @@ def handle_template_replay(handler: StudioHandlerProtocol) -> None:
         handler._json_response(400, {"ok": False, "error": "tripId required"})
 
         return
-
-
 
     loaded = _load_trip(handler, trip_id)
 
@@ -251,10 +207,6 @@ def handle_template_replay(handler: StudioHandlerProtocol) -> None:
         record_admin_replay(operator=role, template_id=tid, trip_id=trip_id)
 
     handler._json_response(200, {"ok": True, "tripId": trip_id, **replay})
-
-
-
-
 
 def handle_template_recompute(handler: StudioHandlerProtocol) -> None:
 
@@ -384,10 +336,6 @@ def handle_template_recompute(handler: StudioHandlerProtocol) -> None:
 
     handler._json_response(200, {"ok": True, "tripId": trip_id, "selection": selection, "changed": before.get("decisionHash") != selection.get("decisionHash")})
 
-
-
-
-
 def handle_template_decisions(handler: StudioHandlerProtocol) -> None:
 
     """List per-trip template decision log (AC-P13-07)."""
@@ -427,10 +375,6 @@ def handle_template_decisions(handler: StudioHandlerProtocol) -> None:
         {"ok": True, "tripId": trip_id, "decisions": list_decisions(trip_dir, limit=limit)},
 
     )
-
-
-
-
 
 def handle_template_preview(handler: StudioHandlerProtocol) -> None:
 
@@ -522,5 +466,4 @@ def handle_template_preview(handler: StudioHandlerProtocol) -> None:
     else:
         body["note"] = "传 render=true 触发一次性预览渲染（不落库）"
     handler._json_response(200, body)
-
 

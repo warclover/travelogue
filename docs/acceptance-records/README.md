@@ -20,7 +20,7 @@
 | [phase13-metrics-24h.json](./phase13-metrics-24h.json) | G6 24h 指标窗口（可 `--dev-relaxed`） | `python scripts/phase13_metrics_window.py --hours 24 --write …` |
 | [phase13-metrics-72h.json](./phase13-metrics-72h.json) | G6 GA 前置 72h（生产勿 `--dev-relaxed`） | `python scripts/phase13_metrics_window.py --hours 72 --write …` |
 | [phase13-metrics-72h-gate-template.json](./phase13-metrics-72h-gate-template.json) | 72h 字段归档模板（`--empty-window`，非生产数据） | `… --hours 72 --empty-window --write …` |
-| [phase13-g8-signoff.json](./phase13-g8-signoff.json) | G8 走查 + 自动化 prereq | `python scripts/phase13_g8_walkthrough_automated.py --playwright --sign-if-pass --write …` |
+| [phase13-g8-signoff.json](./phase13-g8-signoff.json) | G8 走查 + 自动化 prereq（**dev-only**，非生产签字） | `python scripts/phase13_g8_walkthrough_automated.py --playwright --sign-if-pass --write …` |
 | [phase13-release-day-gate-section5.json](./phase13-release-day-gate-section5.json) | REL-03 发布日 Gate §5 | `python scripts/phase13_release_day_gate_section5.py --write …` |
 | [phase13-rollback-drill-prod-staging.json](./phase13-rollback-drill-prod-staging.json) | REL-15 预发 state 演练 | `phase13_rollback_drill.py --use-project-state --write …` |
 | [phase13-release-day-checklist.json](./phase13-release-day-checklist.json) | P0 汇总 | `python scripts/phase13_p0_release_finalize.py` |

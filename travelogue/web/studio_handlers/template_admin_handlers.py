@@ -14,6 +14,7 @@ from travelogue.templating.admin_store import (
 )
 from travelogue.templating.lifecycle import LifecycleTransitionError
 from travelogue.templating.roles import require_template_role
+from travelogue.web.studio_admin_auth import require_admin_api_access, studio_authenticated
 from travelogue.web.studio_handlers.common import studio_ctx
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
@@ -24,12 +25,15 @@ def _auth(
     minimum: str,
 ) -> bool:
     ctx = studio_ctx(handler)
+    if not require_admin_api_access(handler, ctx.cfg):
+        return False
     ok, role, code = require_template_role(
         handler.headers,
         host=handler.studio_host,
         allow_lan=handler.studio_allow_lan,
         minimum=minimum,  # type: ignore[arg-type]
         cfg=ctx.cfg,
+        studio_authenticated=studio_authenticated(handler),
     )
     if ok:
         return True

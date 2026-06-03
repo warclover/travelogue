@@ -92,7 +92,14 @@ def handle_templates_admin_page(handler: StudioHandlerProtocol) -> None:
     if not html_path.is_file():
         handler.send_error(404)
         return
-    data = html_path.read_text(encoding="utf-8").encode("utf-8")
+    html = html_path.read_text(encoding="utf-8")
+    if handler.studio_token:
+        meta = f'<meta name="studio-token" content="{handler.studio_token}" />'
+        if "<meta name=\"studio-token\"" not in html:
+            html = html.replace("<head>", "<head>\n  " + meta, 1)
+    if handler.studio_allow_lan:
+        html = html.replace("<body>", '<body data-admin-config-role-only="1">', 1)
+    data = html.encode("utf-8")
     handler.send_response(200)
     handler.send_header("Content-Type", "text/html; charset=utf-8")
     handler.send_header("Content-Length", str(len(data)))

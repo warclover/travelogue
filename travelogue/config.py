@@ -325,6 +325,12 @@ class TemplateAdminConfig:
 
     default_role_loopback: str = "template_admin"
     require_role_on_lan: bool = True
+    # LAN：忽略客户端 X-Template-Role，仅使用 lan_role（需有效 X-Studio-Token）
+    lan_role: str = "template_operator"
+    # loopback 上 Admin 写操作也要求 X-Studio-Token（生产建议 true）
+    require_token_on_loopback: bool = False
+    # 仅 loopback 且未启用 require_token_on_loopback 时信任 X-Template-Role
+    trust_client_role_header: bool = True
 
 
 @dataclass
@@ -1056,6 +1062,21 @@ def load_config(path: Path | None = None) -> AppConfig:
             ),
             require_role_on_lan=bool(
                 template_admin_raw.get("require_role_on_lan", template_admin_raw.get("requireRoleOnLan", True))
+            ),
+            lan_role=str(
+                template_admin_raw.get("lan_role", template_admin_raw.get("lanRole", "template_operator"))
+            ),
+            require_token_on_loopback=bool(
+                template_admin_raw.get(
+                    "require_token_on_loopback",
+                    template_admin_raw.get("requireTokenOnLoopback", False),
+                )
+            ),
+            trust_client_role_header=bool(
+                template_admin_raw.get(
+                    "trust_client_role_header",
+                    template_admin_raw.get("trustClientRoleHeader", True),
+                )
             ),
         ),
     )

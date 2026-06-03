@@ -54,6 +54,8 @@ def approve_router_change(
                 break
         if target is None:
             raise ValueError("E_CONFIG_CHANGE_NOT_FOUND")
+        if approver == str(target.get("operator") or "").strip():
+            raise ValueError("E_CONFIG_APPROVER_SAME_AS_OPERATOR")
         approvals = list(target.get("approvals") or [])
         if approver in approvals:
             raise ValueError("E_CONFIG_APPROVER_DUPLICATE")

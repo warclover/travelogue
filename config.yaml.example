@@ -315,7 +315,12 @@ template_router:
   # 发现排序：recommended | alphabetical | category | latest | popular | team
   discovery_sort_mode: recommended
 
-# Phase 13 · 模板管理后台 API 权限（loopback 默认 template_admin）
+# Phase 13 · 模板管理后台 API 权限
 template_admin:
   default_role_loopback: template_admin
   require_role_on_lan: true
+  # LAN：忽略 X-Template-Role，仅认 config 中 lan_role + X-Studio-Token
+  lan_role: template_operator
+  # 生产 / --allow-lan 建议 true
+  require_token_on_loopback: false
+  trust_client_role_header: true

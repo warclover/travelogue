@@ -60,7 +60,18 @@
     const headers = { "Content-Type": "application/json" };
     if (token) headers["X-Studio-Token"] = token;
     const simulateLanDeny = new URLSearchParams(location.search).get("simulateLanDeny") === "1";
-    headers["X-Template-Role"] = simulateLanDeny ? "viewer" : "template_admin";
+    const configRoleOnly = document.body.dataset.adminConfigRoleOnly === "1";
+    if (!configRoleOnly) {
+      headers["X-Template-Role"] = simulateLanDeny ? "viewer" : "template_admin";
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
 
     const revEl = document.getElementById("rev");
     const rowsEl = document.getElementById("rows");
@@ -137,9 +148,12 @@
         const tr = document.createElement("tr");
         const health = t.healthy
           ? '<span class="ok">OK</span>'
-          : '<span class="bad">' + (t.healthErrors || []).join("; ") + "</span>";
+          : '<span class="bad">' + escapeHtml((t.healthErrors || []).join("; ")) + "</span>";
+        const label = (t.adminMetadata && t.adminMetadata.displayName)
+          ? escapeHtml(t.templateId) + " · " + escapeHtml(t.adminMetadata.displayName)
+          : escapeHtml(t.templateId);
         tr.innerHTML =
-          "<td>" + t.templateId + "</td><td>" + t.lifecycle + "</td><td>" + health + "</td><td></td>";
+          "<td>" + label + "</td><td>" + escapeHtml(t.lifecycle) + "</td><td>" + health + "</td><td></td>";
         const td = tr.lastElementChild;
         if (t.lifecycle !== "ga") {
           const b = document.createElement("button");
@@ -168,10 +182,6 @@
             .then(log)
             .catch((e) => log(e));
         td.appendChild(b4);
-        const meta = t.adminMetadata || {};
-        if (meta.displayName) {
-          tr.children[0].textContent = t.templateId + " · " + meta.displayName;
-        }
         const bRev = document.createElement("button");
         bRev.textContent = "提交评审";
         bRev.onclick = () =>

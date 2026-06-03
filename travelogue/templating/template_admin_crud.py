@@ -17,6 +17,23 @@ from travelogue.templates.registry import (
 )
 from travelogue.templating.admin_store import append_audit, get_effective_lifecycle
 
+_TEMPLATES_ROOT = (ROOT / "templates").resolve()
+
+
+def validate_template_id(template_id: str) -> str:
+    """Reject path traversal and ids outside templates/."""
+    tid = (template_id or "").strip()
+    if not tid or tid in (".", ".."):
+        raise ValueError("invalid templateId")
+    if "/" in tid or "\\" in tid or ".." in Path(tid).parts:
+        raise ValueError("invalid templateId")
+    tdir = (ROOT / "templates" / tid).resolve()
+    try:
+        tdir.relative_to(_TEMPLATES_ROOT)
+    except ValueError as exc:
+        raise ValueError("invalid templateId") from exc
+    return tid
+
 
 def count_trips_referencing_template(trips_root: Path, template_id: str) -> int:
     if not trips_root.is_dir():
@@ -36,9 +53,7 @@ def count_trips_referencing_template(trips_root: Path, template_id: str) -> int:
 
 def register_template_from_disk(template_id: str, *, operator: str = "studio") -> dict[str, Any]:
     """Register an on-disk templates/<id> directory into runtime registry."""
-    tid = template_id.strip()
-    if not tid or "/" in tid or "\\" in tid:
-        raise ValueError("invalid templateId")
+    tid = validate_template_id(template_id)
     tdir = ROOT / "templates" / tid
     if not tdir.is_dir():
         raise TemplateRegistryError(f"missing template directory: {tdir}")
