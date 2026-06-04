@@ -50,5 +50,5 @@ python scripts/phase15_curate_replay.py mao maomi linzhi \
 ## 5. 有用户后再考虑
 
 - 分档灰度、`unified_mode` 渐进、`min_candidate_score` 校准
-- 监控自动回滚、Studio 接 `replan_screen`（后端 API 已就绪）
+- 监控自动回滚；Studio `PATCH /__travelogue/trips/{id}/screens/{screenId}/replan` 已接（含 items 同步）
 - mobile MCS

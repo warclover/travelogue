@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
+# Canonical telemetry key; snake_case and dotted aliases are written for backward compatibility.
+CANONICAL_ELIGIBLE_COVERAGE_KEY = "eligible_to_screen_coverage"
+
 
 def compute_coverage_metrics(
     *,
@@ -34,8 +37,8 @@ def compute_coverage_metrics(
     dropped = [d for d in (dropped_asset_ids or []) if d in eligible]
     drop_rate = round(len(dropped) / len(eligible), 6) if eligible else 0.0
     return {
+        CANONICAL_ELIGIBLE_COVERAGE_KEY: coverage,
         "eligibleToScreenCoverage": coverage,
-        "eligible_to_screen_coverage": coverage,
         "layout.eligible_to_screen_coverage": coverage,
         "mosaicDropRate": drop_rate,
         "layout.mosaic_v2.drop_rate": drop_rate,

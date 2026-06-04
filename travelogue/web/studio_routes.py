@@ -30,6 +30,7 @@ from travelogue.web.studio_handlers.common import (
     match_trip_delete,
     match_trip_intent,
     match_trip_pipeline,
+    match_trip_screen_replan,
     match_trip_template,
 )
 from travelogue.web.studio_handlers.paths import (
@@ -229,6 +230,11 @@ class StudioMixin:
         trip_id = match_trip_pipeline(path)
         if trip_id is not None:
             trip_handlers.handle_patch_pipeline(self, trip_id)
+            return True
+        replan_match = match_trip_screen_replan(path)
+        if replan_match is not None:
+            replan_trip_id, screen_id = replan_match
+            trip_handlers.handle_patch_screen_replan(self, replan_trip_id, screen_id)
             return True
         return False
 

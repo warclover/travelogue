@@ -136,6 +136,22 @@ def match_trip_template(path: str) -> str | None:
     return match_trip_suffix(path, TEMPLATE_SUFFIX)
 
 
+def match_trip_screen_replan(path: str) -> tuple[str, str] | None:
+    """PATCH /__travelogue/trips/{tripId}/screens/{screenId}/replan"""
+    prefix = TRIPS_PATH + "/"
+    suffix = "/replan"
+    if not path.startswith(prefix) or not path.endswith(suffix):
+        return None
+    mid = path[len(prefix) : -len(suffix)]
+    parts = mid.split("/")
+    if len(parts) != 3 or parts[1] != "screens":
+        return None
+    trip_id, screen_id = parts[0], parts[2]
+    if not trip_id or not screen_id:
+        return None
+    return trip_id, screen_id
+
+
 def match_trip_api(path: str) -> tuple[str, str] | None:
     if path.endswith(SAVE_COPY_SUFFIX):
         trip_id = path[: -len(SAVE_COPY_SUFFIX)].strip("/")

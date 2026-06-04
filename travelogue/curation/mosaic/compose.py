@@ -20,6 +20,42 @@ class WindowPickResult:
     used_legacy: bool
 
 
+def score_window_candidates(
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    *,
+    cfg: MosaicConfig,
+    layout_state: ScreenLayoutPlannerState | None = None,
+    trip_photo_total: int = 0,
+    burst_seconds: float = 12.0,
+    median_sharp: float | None = None,
+) -> list[tuple[ScreenCandidate, float, list[str]]]:
+    """Score all MCS window candidates (shared by compose + replan)."""
+    candidates = generate_window_candidates(
+        asset_ids,
+        aspects,
+        assets_map,
+        cfg=cfg,
+        burst_seconds=burst_seconds,
+        median_sharp=median_sharp,
+    )
+    scored: list[tuple[ScreenCandidate, float, list[str]]] = []
+    for cand in candidates:
+        sr = score_candidate(
+            cand.screen,
+            aspects=aspects,
+            assets_by_id=assets_map,
+            cfg=cfg,
+            layout_state=layout_state,
+            trip_photo_total=trip_photo_total,
+            burst_seconds=burst_seconds,
+        )
+        scored.append((cand, sr.total, sr.reason_codes))
+    scored.sort(key=lambda t: (-t[1], t[0].pattern_id))
+    return scored
+
+
 def pick_best_window(
     asset_ids: list[str],
     aspects: dict[str, AspectKind],
@@ -48,35 +84,23 @@ def pick_best_window(
         log.planner_path = "legacy"
         return WindowPickResult(screen=None, log=log, used_legacy=True)
 
-    candidates = generate_window_candidates(
+    scored = score_window_candidates(
         asset_ids,
         aspects,
         assets_map,
         cfg=cfg,
+        layout_state=layout_state,
+        trip_photo_total=trip_photo_total,
         burst_seconds=burst_seconds,
         median_sharp=median_sharp,
     )
-    log.candidates_count = len(candidates)
-    if not candidates:
+    log.candidates_count = len(scored)
+    if not scored:
         log.fallback_used = True
         log.fallback_reason = "no_candidates"
         log.planner_path = "legacy"
         return WindowPickResult(screen=None, log=log, used_legacy=True)
 
-    scored: list[tuple[ScreenCandidate, float, list[str]]] = []
-    for cand in candidates:
-        sr = score_candidate(
-            cand.screen,
-            aspects=aspects,
-            assets_by_id=assets_map,
-            cfg=cfg,
-            layout_state=layout_state,
-            trip_photo_total=trip_photo_total,
-            burst_seconds=burst_seconds,
-        )
-        scored.append((cand, sr.total, sr.reason_codes))
-
-    scored.sort(key=lambda t: (-t[1], t[0].pattern_id))
     top = scored[: min(3, cfg.candidate_top_k)]
     log.top3_patterns = [t[0].pattern_id for t in top]
     log.top3_scores = [t[1] for t in top]

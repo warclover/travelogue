@@ -9,6 +9,7 @@ from travelogue.curation.cohort_faces import (
     featured_subjects_from_trip,
     score_cohort_coherence,
     _match_present_subjects,
+    _resolve_asset_image_path,
 )
 from travelogue.curation.cohort_faces import SubjectTemplate
 from travelogue.curation.layout_scoring import ScoringWeights, score_cohort_coherence as layout_cohort_score
@@ -79,3 +80,12 @@ def test_mean_embedding() -> None:
     m = mean_embedding([v1, v2])
     assert m is not None
     assert cosine_similarity(m, v1) > 0.95
+
+
+def test_resolve_asset_image_path_rejects_escape(tmp_path) -> None:
+    trip_dir = tmp_path / "trip"
+    trip_dir.mkdir()
+    outside = tmp_path / "secret.jpg"
+    outside.write_bytes(b"x")
+    asset = {"sourceFile": "../secret.jpg"}
+    assert _resolve_asset_image_path(asset, trip_dir) is None

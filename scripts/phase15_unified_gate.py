@@ -17,8 +17,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# Calibrated on synthetic replay; tighten for production 24h windows.
-GATE = {
+# CI / offline replay (synthetic fixtures).
+CI_GATE = {
     "max_fallback_rate": 0.15,
     "max_render_error_rate": 0.0,
     "min_mosaic5_exposure_lift": 0.0,
@@ -26,6 +26,14 @@ GATE = {
     "min_mcs_unified_on_mixed_aspects": 1.0,
     "min_eligible_to_screen_coverage": 0.99,
 }
+
+# Production rollout — tighten after real-trip replay meets CI bar.
+PROD_GATE = {
+    **CI_GATE,
+    "min_eligible_to_screen_coverage": 0.99,
+}
+
+GATE = CI_GATE
 
 # CI fixture：分母为 bucket 计划资产；允许 1 张章内未上屏余量（breath/组屏边界）
 _FIXTURE_COVERAGE_MIN: dict[str, float] = {

@@ -670,6 +670,10 @@ def run_curate(
     mosaic_override = cohort_mosaic_override(app_cfg) if cohort_summary else None
     if mosaic_override is not None:
         set_mosaic_config_override(mosaic_override)
+    if app_cfg.mosaic.enabled:
+        from travelogue.curation.mosaic.hook import begin_mosaic_capture
+
+        begin_mosaic_capture()
     try:
         chapters = build_chapters_from_buckets(
             buckets,

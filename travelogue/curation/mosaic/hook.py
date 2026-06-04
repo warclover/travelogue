@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextvars import ContextVar
 from typing import TYPE_CHECKING
 
 from travelogue.config import MosaicConfig
@@ -12,15 +13,32 @@ from travelogue.curation.mosaic.runtime import effective_mosaic_window_sizes
 if TYPE_CHECKING:
     from travelogue.curation.screen_planner_stages import ChapterPlanContext
 
-
-_mosaic_logs: list[dict] = []
-_mosaic_dropped: list[str] = []
+_mosaic_logs_var: ContextVar[list[dict] | None] = ContextVar("mosaic_logs", default=None)
+_mosaic_dropped_var: ContextVar[list[str] | None] = ContextVar("mosaic_dropped", default=None)
+_fallback_logs: list[dict] = []
+_fallback_dropped: list[str] = []
 
 
 def _mosaic_cfg() -> MosaicConfig:
     from travelogue.curation.mosaic.runtime import get_effective_mosaic_config
 
     return get_effective_mosaic_config()
+
+
+def begin_mosaic_capture() -> None:
+    """Start a fresh log buffer for the current curate/plan run (thread-safe)."""
+    _mosaic_logs_var.set([])
+    _mosaic_dropped_var.set([])
+
+
+def _logs_buf() -> list[dict]:
+    buf = _mosaic_logs_var.get()
+    return buf if buf is not None else _fallback_logs
+
+
+def _dropped_buf() -> list[str]:
+    buf = _mosaic_dropped_var.get()
+    return buf if buf is not None else _fallback_dropped
 
 
 def window_has_candidates(
@@ -90,20 +108,26 @@ def chapter_has_mosaic_five_candidates(ctx: ChapterPlanContext) -> bool:
 
 
 def drain_mosaic_logs() -> list[dict]:
-    global _mosaic_logs
     from travelogue.config import get_config
     from travelogue.curation.mosaic.log import format_log_entry
 
     level = get_config().mosaic.log_level
-    out = [format_log_entry(entry, level) for entry in _mosaic_logs]
-    _mosaic_logs = []
+    buf = _logs_buf()
+    out = [format_log_entry(entry, level) for entry in buf]
+    if _mosaic_logs_var.get() is not None:
+        _mosaic_logs_var.set([])
+    else:
+        buf.clear()
     return out
 
 
 def drain_mosaic_dropped() -> list[str]:
-    global _mosaic_dropped
-    out = list(_mosaic_dropped)
-    _mosaic_dropped = []
+    buf = _dropped_buf()
+    out = list(buf)
+    if _mosaic_dropped_var.get() is not None:
+        _mosaic_dropped_var.set([])
+    else:
+        buf.clear()
     return out
 
 
@@ -128,9 +152,9 @@ def try_mosaic_window_mcs(
         window_start=start,
         segment_id=ctx.chapter_id or "",
     )
-    _mosaic_logs.append(pick.log.to_dict())
+    _logs_buf().append(pick.log.to_dict())
     if pick.log.dropped_asset_ids:
-        _mosaic_dropped.extend(pick.log.dropped_asset_ids)
+        _dropped_buf().extend(pick.log.dropped_asset_ids)
 
     if pick.used_legacy:
         return append_legacy_window(ctx, window, size)

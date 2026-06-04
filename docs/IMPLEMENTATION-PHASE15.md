@@ -370,7 +370,7 @@ python scripts/phase15_curate_replay.py golden-mixed-scenes --fixture \
 | `SelfHeal` + `allow_drop` | DESIGN S3 | S3 |
 | `unified_mode` 在线 7 天/200 trip 自动回滚 | 离线 gate ☑；运维 telemetry 待接 | 上线前 |
 | mobile `MobileMosaicAdapter` | scope.mobile=false | S4 |
-| Studio 接 `replan_screen` | API 已实装 | Studio PATCH 屏重选 |
+| Studio 接 `replan_screen` | `handle_patch_screen_replan` · items 同步 | Studio PATCH 屏重选 |
 | 真实 trip mao/maomi curate 记录 | `phase15_curate_replay.py` 待本地数据 | 有 trips/ 时跑 |
 
 ---

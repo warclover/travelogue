@@ -7,8 +7,13 @@ from travelogue.curation.mosaic.compose import (
     pick_best_candidate,
     pick_best_five_window,
     pick_best_window,
+    score_window_candidates,
 )
-from travelogue.curation.mosaic.replan import ReplanError, replan_screen
+from travelogue.curation.mosaic.replan import (
+    ReplanError,
+    refresh_trip_displayed_assets,
+    replan_screen,
+)
 from travelogue.curation.mosaic.hook import try_mosaic_five_mcs, try_mosaic_window
 from travelogue.curation.mosaic.search import replan_day_buckets_beam
 from travelogue.curation.mosaic.trip import compose_trip
@@ -22,6 +27,8 @@ __all__ = [
     "pick_best_window",
     "pick_best_five_window",
     "pick_best_candidate",
+    "score_window_candidates",
+    "refresh_trip_displayed_assets",
     "try_mosaic_window",
     "try_mosaic_five_mcs",
     "replan_day_buckets_beam",

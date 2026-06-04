@@ -44,11 +44,16 @@ def featured_subjects_from_trip(trip: dict) -> list[dict]:
 
 
 def _resolve_asset_image_path(asset: dict, trip_dir: Path) -> Path | None:
+    root = trip_dir.resolve()
     for key in ("sourceFile", "displayFile"):
         rel = asset.get(key)
         if not rel:
             continue
-        path = trip_dir / str(rel).replace("\\", "/")
+        path = (root / str(rel).replace("\\", "/")).resolve()
+        try:
+            path.relative_to(root)
+        except ValueError:
+            continue
         if path.is_file():
             return path
     return None

@@ -41,6 +41,10 @@ Thumbs.db
 # Local acceptance scan output (machine-specific trip paths)
 docs/acceptance-records/*.local.json
 
+# Local run state / agent config
+runs/
+.claude/
+
 # Local debug / screenshots
 _debug/
 _tmp_homepage_audit/

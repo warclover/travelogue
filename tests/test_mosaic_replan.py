@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import copy
-
 import pytest
 
-from travelogue.curation.layout_planner import aspect_kind_for_asset
 from travelogue.curation.longshot_filter import BREATH_PATTERN
+from travelogue.curation.mosaic.candidates import ScreenCandidate
 from travelogue.curation.mosaic.replan import ReplanError, replan_screen
 from travelogue.config import get_config
+from travelogue.curation.chapter_items import collect_screen_asset_ids
 
 from tests._golden.helpers import (
     build_mosaic_eligible_trip,
@@ -42,10 +41,79 @@ def test_replan_screen_alt_topk_changes_pattern() -> None:
         cfg=get_config().mosaic,
     )
     assert result["applied"] is True
+    assert result["itemsSynced"] is True
     assert result["screenId"] == sid
     assert chapters[0]["screens"][0]["screenId"] == sid
     if result["reason"] == "alt_topk":
         assert result["newPatternId"] != before_pid
+
+
+def test_replan_alt_topk_picks_second_rank_when_best_matches_current(monkeypatch) -> None:
+    chapters, aspects, assets_map = _chapters_with_aspects()
+    screen = chapters[0]["screens"][0]
+    sid = screen["screenId"]
+    asset_ids = [sl["assetId"] for sl in screen["slots"]]
+    current = str(screen["patternId"])
+
+    def _fake_scored(*_args, **_kwargs):
+        slots = [{"assetId": aid, "role": "main", "fit": "cover"} for aid in asset_ids]
+        return [
+            (
+                ScreenCandidate(
+                    current,
+                    asset_ids,
+                    {"patternId": current, "slots": slots},
+                ),
+                10.0,
+                [],
+            ),
+            (
+                ScreenCandidate(
+                    "screen-mosaic-5-main-portrait-3land",
+                    asset_ids,
+                    {
+                        "patternId": "screen-mosaic-5-main-portrait-3land",
+                        "slots": slots,
+                    },
+                ),
+                9.0,
+                [],
+            ),
+        ]
+
+    monkeypatch.setattr(
+        "travelogue.curation.mosaic.replan.score_window_candidates",
+        _fake_scored,
+    )
+    result = replan_screen(
+        chapters,
+        sid,
+        strategy="alt_topk",
+        top_k=3,
+        aspects=aspects,
+        assets_map=assets_map,
+    )
+    assert result["applied"] is True
+    assert result["reason"] == "alt_topk"
+    assert result["newPatternId"] == "screen-mosaic-5-main-portrait-3land"
+    assert result["rank"] == 2
+
+
+def test_replan_screen_syncs_chapter_items() -> None:
+    from travelogue.curation.chapter_items import items_from_screens
+
+    chapters, aspects, assets_map = _chapters_with_aspects()
+    sid = chapters[0]["screens"][0]["screenId"]
+    replan_screen(
+        chapters,
+        sid,
+        strategy="legacy",
+        aspects=aspects,
+        assets_map=assets_map,
+    )
+    expected_items = items_from_screens(chapters[0])
+    assert chapters[0].get("items") == expected_items
+    assert collect_screen_asset_ids(chapters[0])
 
 
 def test_replan_screen_legacy_builds_screen() -> None:
