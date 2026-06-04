@@ -26,6 +26,7 @@ class ScoringWeights:
     layout_rhythm: float = 0.0
     gravity_balance: float = 0.0
     category_coherence: float = 0.0
+    cohort_coherence: float = 0.0
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, Any] | None) -> ScoringWeights:
@@ -46,6 +47,7 @@ class ScoringWeights:
             layout_rhythm=float(raw.get("layout_rhythm", defaults.layout_rhythm)),
             gravity_balance=float(raw.get("gravity_balance", defaults.gravity_balance)),
             category_coherence=float(raw.get("category_coherence", defaults.category_coherence)),
+            cohort_coherence=float(raw.get("cohort_coherence", defaults.cohort_coherence)),
         )
 
     def normalized(self) -> ScoringWeights:
@@ -63,6 +65,7 @@ class ScoringWeights:
             + self.layout_rhythm
             + self.gravity_balance
             + self.category_coherence
+            + self.cohort_coherence
         )
         if total <= 1e-9:
             return self
@@ -80,6 +83,7 @@ class ScoringWeights:
             layout_rhythm=self.layout_rhythm / total,
             gravity_balance=self.gravity_balance / total,
             category_coherence=self.category_coherence / total,
+            cohort_coherence=self.cohort_coherence / total,
         )
 
     def is_aspect_only(self) -> bool:
@@ -96,6 +100,7 @@ class ScoringWeights:
             self.layout_rhythm,
             self.gravity_balance,
             self.category_coherence,
+            self.cohort_coherence,
         )
         return self.aspect_match >= 1.0 - 1e-9 and sum(others) < 1e-9
 
@@ -170,6 +175,7 @@ def _weights_raw_sum(weights: ScoringWeights) -> float:
         + weights.layout_rhythm
         + weights.gravity_balance
         + weights.category_coherence
+        + weights.cohort_coherence
     )
 
 
@@ -211,6 +217,7 @@ class ScoreBreakdown:
     layout_rhythm: float = 0.0
     gravity_balance: float = 0.0
     category_coherence: float = 0.0
+    cohort_coherence: float = 0.0
 
     def to_dict(self) -> dict[str, float]:
         return {
@@ -228,6 +235,7 @@ class ScoreBreakdown:
             "layout_rhythm": round(self.layout_rhythm, 6),
             "gravity_balance": round(self.gravity_balance, 6),
             "category_coherence": round(self.category_coherence, 6),
+            "cohort_coherence": round(self.cohort_coherence, 6),
         }
 
 
@@ -269,6 +277,7 @@ def _weights_cache_fingerprint(weights: ScoringWeights) -> tuple[float, ...]:
         round(w.layout_rhythm, 6),
         round(w.gravity_balance, 6),
         round(w.category_coherence, 6),
+        round(w.cohort_coherence, 6),
     )
 
 
@@ -538,6 +547,15 @@ def score_category_coherence(
     return sum(scores) / len(scores) if scores else 0.5
 
 
+def score_cohort_coherence(
+    asset_ids: list[str],
+    assets_by_id: Mapping[str, dict],
+) -> float:
+    from travelogue.curation.cohort_faces import score_cohort_coherence as _score
+
+    return _score(asset_ids, assets_by_id)
+
+
 def _asset_order_from_screens(screens: list[dict]) -> list[str]:
     order: list[str] = []
     for screen in screens:
@@ -718,6 +736,7 @@ def _finalize_plan_score(
         tolerance=subject_run_tolerance,
     )
     coherence = score_category_coherence(_asset_order_from_screens(screens), assets_by_id)
+    cohort = score_cohort_coherence(_asset_order_from_screens(screens), assets_by_id)
     rhythm = score_layout_rhythm(screens)
     gravity = score_gravity_balance(screens, assets_by_id) if enable_gravity_balance else 1.0
     avg = ScoreBreakdown()
@@ -734,6 +753,7 @@ def _finalize_plan_score(
     avg.tone_continuity = tone
     avg.subject_run = subject
     avg.category_coherence = coherence
+    avg.cohort_coherence = cohort
     avg.layout_rhythm = rhythm
     avg.gravity_balance = gravity
     avg.total = (
@@ -750,6 +770,7 @@ def _finalize_plan_score(
         + weights.layout_rhythm * avg.layout_rhythm
         + weights.gravity_balance * avg.gravity_balance
         + weights.category_coherence * avg.category_coherence
+        + weights.cohort_coherence * avg.cohort_coherence
     )
     if featured_beam:
         featured_n = 0

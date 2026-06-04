@@ -1,0 +1,153 @@
+{
+  "scenarios": {
+    "mosaic5_eligible": {
+      "patternsOff": {
+        "screen-landscape-1": 24,
+        "screen-portrait-2": 8
+      },
+      "patternsOn": {
+        "screen-mosaic-5-2portrait-3land-balanced": 8
+      },
+      "mcsUnifiedExposureRateOn": 1.0,
+      "metricsOn": {
+        "mosaic5ExposureRate": 1.0,
+        "layout.mosaic5.exposure_rate": 1.0,
+        "mcsUnifiedExposureRate": 1.0,
+        "layout.mosaic_v2.unified_exposure_rate": 1.0,
+        "layout.render.error_rate": 0.0,
+        "layoutRenderChecked": 8,
+        "layoutRenderErrors": 0,
+        "layout.mosaic5.win_score_p50": 0.9325,
+        "layout.mosaic5.win_score_p90": 0.9325,
+        "mosaicWindowDecisions": 8,
+        "mosaicFallbackRate": 0.0,
+        "layout.mosaic_v2.fallback_rate": 0.0,
+        "layout.mosaic_v2.low_score_fallback_rate": 0.0,
+        "mosaic5WinnerPatterns": [
+          "screen-mosaic-5-2portrait-3land-balanced",
+          "screen-mosaic-5-2portrait-3land-balanced",
+          "screen-mosaic-5-2portrait-3land-balanced",
+          "screen-mosaic-5-2portrait-3land-balanced",
+          "screen-mosaic-5-2portrait-3land-balanced",
+          "screen-mosaic-5-2portrait-3land-balanced",
+          "screen-mosaic-5-2portrait-3land-balanced",
+          "screen-mosaic-5-2portrait-3land-balanced"
+        ]
+      }
+    },
+    "portrait_heavy": {
+      "patternsOff": {
+        "screen-portrait-3": 1,
+        "screen-portrait-2": 1,
+        "screen-portrait-1": 1
+      },
+      "patternsOn": {
+        "screen-portrait-3": 2
+      },
+      "mcsUnifiedExposureRateOn": 1.0,
+      "metricsOn": {
+        "mosaic5ExposureRate": 0.0,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "mcsUnifiedExposureRate": 1.0,
+        "layout.mosaic_v2.unified_exposure_rate": 1.0,
+        "layout.render.error_rate": 0.0,
+        "layoutRenderChecked": 2,
+        "layoutRenderErrors": 0,
+        "layout.mosaic5.win_score_p50": 0.3655,
+        "layout.mosaic5.win_score_p90": 0.731,
+        "mosaicWindowDecisions": 2,
+        "mosaicFallbackRate": 0.0,
+        "layout.mosaic_v2.fallback_rate": 0.0,
+        "layout.mosaic_v2.low_score_fallback_rate": 0.0,
+        "mosaic5WinnerPatterns": [
+          "screen-portrait-3",
+          "screen-portrait-3"
+        ]
+      }
+    },
+    "mixed_aspects": {
+      "patternsOff": {
+        "screen-portrait-1": 4,
+        "screen-landscape-1": 4
+      },
+      "patternsOn": {
+        "screen-portrait-2-landscape-2": 2
+      },
+      "mcsUnifiedExposureRateOn": 1.0,
+      "metricsOn": {
+        "mosaic5ExposureRate": 0.0,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "mcsUnifiedExposureRate": 1.0,
+        "layout.mosaic_v2.unified_exposure_rate": 1.0,
+        "layout.render.error_rate": 0.0,
+        "layoutRenderChecked": 2,
+        "layoutRenderErrors": 0,
+        "layout.mosaic5.win_score_p50": 0.731,
+        "layout.mosaic5.win_score_p90": 0.731,
+        "mosaicWindowDecisions": 2,
+        "mosaicFallbackRate": 0.0,
+        "layout.mosaic_v2.fallback_rate": 0.0,
+        "layout.mosaic_v2.low_score_fallback_rate": 0.0,
+        "mosaic5WinnerPatterns": [
+          "screen-portrait-2-landscape-2",
+          "screen-portrait-2-landscape-2"
+        ]
+      }
+    },
+    "portrait_grid8": {
+      "patternsOff": {
+        "screen-portrait-grid-8": 1
+      },
+      "patternsOn": {
+        "screen-portrait-grid-8": 1
+      },
+      "mcsUnifiedExposureRateOn": 1.0,
+      "metricsOn": {
+        "mosaic5ExposureRate": 0.0,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "mcsUnifiedExposureRate": 1.0,
+        "layout.mosaic_v2.unified_exposure_rate": 1.0,
+        "layout.render.error_rate": 0.0,
+        "layoutRenderChecked": 1,
+        "layoutRenderErrors": 0,
+        "layout.mosaic5.win_score_p50": 0.925,
+        "layout.mosaic5.win_score_p90": 0.925,
+        "mosaicWindowDecisions": 1,
+        "mosaicFallbackRate": 0.0,
+        "layout.mosaic_v2.fallback_rate": 0.0,
+        "layout.mosaic_v2.low_score_fallback_rate": 0.0,
+        "mosaic5WinnerPatterns": [
+          "screen-portrait-grid-8"
+        ]
+      }
+    },
+    "landscape_nine": {
+      "patternsOff": {
+        "screen-landscape-1": 3,
+        "screen-landscape-6": 1
+      },
+      "patternsOn": {
+        "screen-landscape-9": 1
+      },
+      "mcsUnifiedExposureRateOn": 1.0,
+      "metricsOn": {
+        "mosaic5ExposureRate": 0.0,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "mcsUnifiedExposureRate": 1.0,
+        "layout.mosaic_v2.unified_exposure_rate": 1.0,
+        "layout.render.error_rate": 0.0,
+        "layoutRenderChecked": 1,
+        "layoutRenderErrors": 0,
+        "layout.mosaic5.win_score_p50": 0.895,
+        "layout.mosaic5.win_score_p90": 0.895,
+        "mosaicWindowDecisions": 1,
+        "mosaicFallbackRate": 0.0,
+        "layout.mosaic_v2.fallback_rate": 0.0,
+        "layout.mosaic_v2.low_score_fallback_rate": 0.0,
+        "mosaic5WinnerPatterns": [
+          "screen-landscape-9"
+        ]
+      }
+    }
+  }
+}

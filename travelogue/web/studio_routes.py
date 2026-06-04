@@ -24,6 +24,8 @@ from travelogue.web.studio_handlers.common import (
     match_bento_preview,
     match_entry,
     match_trip_api,
+    match_trip_cohort,
+    match_trip_cohort_refresh,
     match_trip_curate,
     match_trip_delete,
     match_trip_intent,
@@ -182,6 +184,10 @@ class StudioMixin:
         if entry_trip_id is not None:
             trip_handlers.handle_entry(self, entry_trip_id)
             return True
+        cohort_trip_id = match_trip_cohort(path)
+        if cohort_trip_id is not None:
+            trip_handlers.handle_get_cohort(self, cohort_trip_id)
+            return True
         bento_trip_id = match_bento_preview(path)
         if bento_trip_id is not None:
             trip_handlers.handle_bento_preview(self, bento_trip_id)
@@ -211,6 +217,10 @@ class StudioMixin:
         trip_id = match_trip_intent(path)
         if trip_id is not None:
             trip_handlers.handle_patch_intent(self, trip_id)
+            return True
+        trip_id = match_trip_cohort(path)
+        if trip_id is not None:
+            trip_handlers.handle_patch_cohort(self, trip_id)
             return True
         trip_id = match_trip_template(path)
         if trip_id is not None:
@@ -291,6 +301,10 @@ class StudioMixin:
         curate_trip_id = match_trip_curate(path)
         if curate_trip_id is not None:
             trip_handlers.handle_trip_curate(self, curate_trip_id)
+            return True
+        cohort_refresh_id = match_trip_cohort_refresh(path)
+        if cohort_refresh_id is not None:
+            trip_handlers.handle_post_cohort_refresh(self, cohort_refresh_id)
             return True
         return False
 

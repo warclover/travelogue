@@ -502,11 +502,21 @@ def build_epilogue_stats(trip: dict) -> EpilogueStatsContext:
         suppress_chapter_geo_places,
     )
 
-    assets = [
-        a
-        for a in trip.get("assets") or []
-        if a.get("layoutEligible", True) and a.get("type") != "video"
-    ]
+    curation = trip.get("curation") or {}
+    displayed_ids = curation.get("displayedAssetIds")
+    if displayed_ids:
+        id_set = {str(x) for x in displayed_ids if x}
+        assets = [
+            a
+            for a in trip.get("assets") or []
+            if a.get("id") in id_set and a.get("type") != "video"
+        ]
+    else:
+        assets = [
+            a
+            for a in trip.get("assets") or []
+            if a.get("layoutEligible", True) and a.get("type") != "video"
+        ]
     meta = trip.get("meta") or {}
     intent = trip.get("intent")
     asset_list = trip.get("assets") or []

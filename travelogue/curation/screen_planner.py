@@ -46,6 +46,7 @@ MIN_TRIP_PHOTOS_FOR_MOSAIC = 35
 DEFAULT_FEATURED_WEIGHT = 1.35
 
 PATTERN_PORTRAIT_1_LANDSCAPE_2 = "screen-portrait-1-landscape-2"
+PATTERN_PORTRAIT_2_LANDSCAPE_2 = "screen-portrait-2-landscape-2"
 PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND = "screen-mosaic-5-main-portrait-3land"
 PATTERN_PORTRAIT_GRID_8 = "screen-portrait-grid-8"
 PERSON_LAYOUT_GRID_8 = "person-grid-8"
@@ -68,7 +69,12 @@ PATTERN_GRID_CLASS: dict[str, str] = {
     "screen-portrait-9": "layout-screen__grid--3x3",
     PATTERN_PORTRAIT_GRID_8: "layout-screen__grid--portrait-2x4",
     PATTERN_PORTRAIT_1_LANDSCAPE_2: "layout-screen__grid--portrait-left-2landscape",
+    PATTERN_PORTRAIT_2_LANDSCAPE_2: "layout-screen__grid--2x2",
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND: "layout-screen__grid--mosaic-5-main-portrait-3land",
+    "screen-mosaic-5-main-landscape-2portrait-2land": "layout-screen__grid--mosaic-5-main-landscape-2portrait-2land",
+    "screen-mosaic-5-2portrait-3land-balanced": "layout-screen__grid--mosaic-5-2portrait-3land-balanced",
+    "screen-mosaic-5-3portrait-2land-balanced": "layout-screen__grid--mosaic-5-3portrait-2land-balanced",
+    "screen-mosaic-5-main-hero-plus-4": "layout-screen__grid--mosaic-5-main-hero-plus-4",
     "screen-landscape-1": "layout-screen__grid--1col",
     "screen-landscape-2": "layout-screen__grid--landscape-stack-2",
     "screen-landscape-3": "layout-screen__grid--landscape-stack-3",
@@ -153,6 +159,12 @@ def _fits_for_screen(
             else:
                 fits.append("cover")
         return fits
+    if pattern_id.startswith("screen-mosaic-5-"):
+        fits_m: list[LayoutFit] = []
+        for aid in asset_ids:
+            role_portrait = portrait_fit_for_asset(assets_map.get(aid), default="cover")
+            fits_m.append(role_portrait)
+        return fits_m
     return ["cover"] * n
 
 

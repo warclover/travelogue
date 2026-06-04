@@ -1,0 +1,156 @@
+"""Mosaic unified scorer (M5) — multiplicative penalties."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from dataclasses import dataclass
+
+from travelogue.config import MosaicConfig
+from travelogue.curation.layout_constraints import FOCAL_EDGE_MARGIN
+from travelogue.curation.layout_planner import AspectKind
+from travelogue.curation.layout_scoring import ScoringWeights, score_screen_plan
+from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+
+
+@dataclass
+class MosaicScoreResult:
+    total: float
+    base: float
+    penalties: dict[str, float]
+    reason_codes: list[str]
+
+
+def weights_hash(cfg: MosaicConfig) -> str:
+    payload = {
+        "v": cfg.scorer_version,
+        "w": cfg.weights,
+        "p": cfg.penalties,
+    }
+    raw = json.dumps(payload, sort_keys=True).encode("utf-8")
+    return "sha256:" + hashlib.sha256(raw).hexdigest()[:16]
+
+
+def _mosaic_weights(cfg: MosaicConfig) -> ScoringWeights:
+    return ScoringWeights.from_dict(cfg.weights).normalized()
+
+
+def _clamp01(x: float) -> float:
+    return max(0.0, min(1.0, x))
+
+
+def _focal_near_edge(asset: dict, margin: float = FOCAL_EDGE_MARGIN) -> bool:
+    fp = asset.get("focalPoint") or {}
+    x, y = fp.get("x"), fp.get("y")
+    if x is None or y is None:
+        return False
+    return bool(x < margin or x > 1.0 - margin or y < margin or y > 1.0 - margin)
+
+
+def _face_crop_penalty(screen: dict, assets_by_id: dict[str, dict]) -> float:
+    pen = 0.0
+    for sl in screen.get("slots") or []:
+        aid = sl.get("assetId")
+        if not aid:
+            continue
+        asset = assets_by_id.get(aid) or {}
+        tags = asset.get("tags") or []
+        has_person = any(str(t).lower() in ("person", "people", "face") for t in tags)
+        if not has_person:
+            continue
+        if sl.get("fit") == "cover" and _focal_near_edge(asset):
+            pen = max(pen, 0.85)
+    return pen
+
+
+def _main_quality_penalty(screen: dict, assets_by_id: dict[str, dict]) -> float:
+    for sl in screen.get("slots") or []:
+        if sl.get("role") != "main":
+            continue
+        aid = sl.get("assetId")
+        asset = assets_by_id.get(aid) or {}
+        q = asset.get("quality") or {}
+        sharp = float(q.get("sharpness") or 0.0)
+        if sharp < 0.25:
+            return 0.9
+        if sharp < 0.4:
+            return 0.5
+    return 0.0
+
+
+def _duplicate_density_penalty(asset_ids: list[str], assets_by_id: dict[str, dict]) -> float:
+    groups: dict[str, int] = {}
+    for aid in asset_ids:
+        bg = (assets_by_id.get(aid) or {}).get("burstGroupId")
+        if bg:
+            groups[str(bg)] = groups.get(str(bg), 0) + 1
+    if not groups:
+        return 0.0
+    max_run = max(groups.values())
+    if max_run >= 4:
+        return 0.8
+    if max_run >= 3:
+        return 0.4
+    return 0.0
+
+
+def score_candidate(
+    screen: dict,
+    *,
+    aspects: dict[str, AspectKind],
+    assets_by_id: dict[str, dict],
+    cfg: MosaicConfig,
+    layout_state: ScreenLayoutPlannerState | None = None,
+    trip_photo_total: int = 0,
+    burst_seconds: float = 12.0,
+) -> MosaicScoreResult:
+    weights = _mosaic_weights(cfg)
+    plan = [screen]
+    bd = score_screen_plan(
+        plan,
+        aspects=aspects,
+        assets_by_id=assets_by_id,
+        weights=weights,
+        featured_beam=False,
+    )
+    base = _clamp01(bd.total)
+    asset_ids = [sl.get("assetId") for sl in screen.get("slots") or [] if sl.get("assetId")]
+    penalties: dict[str, float] = {
+        "face_crop": _face_crop_penalty(screen, assets_by_id),
+        "main_quality": _main_quality_penalty(screen, assets_by_id),
+        "duplicate_density": _duplicate_density_penalty(asset_ids, assets_by_id),
+    }
+    # Soft trip_total prior (was hard MIN_TRIP_PHOTOS_FOR_MOSAIC)
+    if trip_photo_total > 0 and trip_photo_total < 20:
+        penalties["trip_small"] = 0.7
+    elif trip_photo_total < 35:
+        penalties["trip_small"] = 0.25
+
+    total = base
+    reasons: list[str] = []
+    for key, pen in penalties.items():
+        weight = cfg.penalties.get(key, 0.15 if key != "trip_small" else 0.0)
+        if key == "trip_small":
+            weight = 0.2
+        if pen <= 0 or weight <= 0:
+            continue
+        total *= 1.0 - _clamp01(weight) * _clamp01(pen)
+        if pen >= 0.5:
+            reasons.append(f"R_{key.upper()}")
+
+    if bd.temporal_coherence >= 0.7:
+        reasons.append("R_TIME_COHESION")
+    if bd.sharpness >= 0.6:
+        reasons.append("R_SHARP")
+    if layout_state and layout_state.can_emit_pattern(screen.get("patternId", "")):
+        reasons.append("R_RHYTHM_OK")
+    else:
+        total *= 0.5
+        reasons.append("R_RHYTHM_BLOCK")
+
+    return MosaicScoreResult(
+        total=_clamp01(total),
+        base=base,
+        penalties=penalties,
+        reason_codes=reasons,
+    )

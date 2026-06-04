@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from travelogue.config import get_config
 from travelogue.curation.layout_planner import build_chapters_from_buckets, summarize_orientations
 from travelogue.curation.curate_patterns import pattern_hint_for_bucket
 from travelogue.media.image_ops import classify_aspect
@@ -53,6 +55,74 @@ def build_portrait_heavy_trip() -> tuple[list[list[str]], dict[str, str], list[d
     return buckets, aspects, assets
 
 
+def build_mosaic_portrait3_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
+    """Single bucket of 3 portraits — MCS golden for screen-portrait-3."""
+    assets = [_asset(f"p{i}", 900, 1600, offset_hours=i * 0.01) for i in range(1, 4)]
+    buckets = [[a["id"] for a in assets]]
+    aspects = {a["id"]: a["aspectKind"] for a in assets}
+    return buckets, aspects, assets
+
+
+def build_mosaic_portrait4_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
+    """Single bucket of 4 portraits — MCS golden for screen-portrait-4."""
+    assets = [_asset(f"p{i}", 900, 1600, offset_hours=i * 0.01) for i in range(1, 5)]
+    buckets = [[a["id"] for a in assets]]
+    aspects = {a["id"]: a["aspectKind"] for a in assets}
+    return buckets, aspects, assets
+
+
+def build_mosaic_portrait8_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
+    """Eight portraits in one bucket — MCS golden for screen-portrait-grid-8."""
+    assets = [
+        _asset(f"p{i}", 900, 1600, offset_hours=(i * 8.0) / 3600.0) for i in range(1, 9)
+    ]
+    buckets = [[a["id"] for a in assets]]
+    aspects = {a["id"]: a["aspectKind"] for a in assets}
+    return buckets, aspects, assets
+
+
+def build_mosaic_landscape9_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
+    """Nine landscapes — MCS golden for screen-landscape-9 (trip_total>50 for nine quota)."""
+    assets = [_asset(f"l{i}", 2000, 1200, offset_hours=i * 0.01) for i in range(1, 10)]
+    buckets = [[a["id"] for a in assets]]
+    aspects = {a["id"]: a["aspectKind"] for a in assets}
+    return buckets, aspects, assets
+
+
+def build_mosaic_landscape6_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
+    """Single bucket of 6 landscapes — MCS golden for screen-landscape-6."""
+    assets = [_asset(f"l{i}", 2000, 1200, offset_hours=i * 0.01) for i in range(1, 7)]
+    buckets = [[a["id"] for a in assets]]
+    aspects = {a["id"]: a["aspectKind"] for a in assets}
+    return buckets, aspects, assets
+
+
+def build_mosaic_eligible_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
+    """40 assets (8×5) — trip_total≥35, each window has 2P+3L for mosaic-5 candidates."""
+    assets: list[dict] = []
+    aspects: dict[str, str] = {}
+    buckets: list[list[str]] = []
+    for b in range(8):
+        bucket: list[str] = []
+        for i in range(5):
+            idx = b * 5 + i
+            aid = f"m{idx:02d}"
+            kind = "portrait" if i < 2 else "landscape"
+            assets.append(
+                _asset(
+                    aid,
+                    900 if kind == "portrait" else 2000,
+                    1600 if kind == "portrait" else 1200,
+                    offset_hours=float(idx) * 0.1,
+                    sharpness=0.75,
+                )
+            )
+            aspects[aid] = assets[-1]["aspectKind"]
+            bucket.append(aid)
+        buckets.append(bucket)
+    return buckets, aspects, assets
+
+
 def build_mixed_aspects_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
     """8 assets mixed portrait/landscape in 2 buckets."""
     assets = [
@@ -93,17 +163,80 @@ def layout_snapshot(chapters: list[dict]) -> dict[str, Any]:
     }
 
 
+def _mosaic_cfg_for_golden():
+    base = get_config()
+    return replace(
+        base,
+        mosaic=replace(
+            base.mosaic,
+            enabled=True,
+            enabled_window_sizes=(3, 4, 5, 6, 8, 9),
+            unified_mode=True,
+            scorer_version="p15-s2",
+            min_candidate_score=0.0,
+        ),
+    )
+
+
+def plan_mosaic_screens(
+    buckets: list[list[str]],
+    aspects: dict[str, str],
+    assets: list[dict],
+    *,
+    trip_photo_total: int | None = None,
+    orientation_summary: dict[str, int] | None = None,
+) -> list[dict]:
+    """Plan with Phase 15 MCS enabled (S2 unified windows)."""
+    import travelogue.config as config_mod
+
+    cfg = _mosaic_cfg_for_golden()
+    orig = config_mod.get_config
+    config_mod.get_config = lambda: cfg  # type: ignore[assignment]
+    try:
+        return plan_legacy_screens(
+            buckets,
+            aspects,
+            assets,
+            trip_photo_total=trip_photo_total,
+            orientation_summary=orientation_summary,
+        )
+    finally:
+        config_mod.get_config = orig
+
+
 def plan_legacy_screens(
     buckets: list[list[str]],
     aspects: dict[str, str],
     assets: list[dict],
+    *,
+    mosaic_enabled: bool | None = None,
+    trip_photo_total: int | None = None,
+    orientation_summary: dict[str, int] | None = None,
 ) -> list[dict]:
+    if mosaic_enabled is not None:
+        import travelogue.config as config_mod
+
+        base = get_config()
+        patched = replace(
+            base,
+            mosaic=replace(base.mosaic, enabled=mosaic_enabled),
+        )
+        orig = config_mod.get_config
+        config_mod.get_config = lambda: patched  # type: ignore[assignment]
+        try:
+            return plan_legacy_screens(buckets, aspects, assets)
+        finally:
+            config_mod.get_config = orig
+
     non_empty = [b for b in buckets if b]
     hints = [
         pattern_hint_for_bucket(i + 1, len(non_empty), b, aspects)  # type: ignore[arg-type]
         for i, b in enumerate(non_empty)
     ]
-    summary = summarize_orientations(assets, export_layout="web").to_dict()
+    summary = orientation_summary or summarize_orientations(
+        assets, export_layout="web"
+    ).to_dict()
+    total = trip_photo_total if trip_photo_total is not None else len(assets)
     return build_chapters_from_buckets(
         buckets,
         aspects,  # type: ignore[arg-type]
@@ -111,7 +244,7 @@ def plan_legacy_screens(
         layout_engine="screens",
         assets=assets,
         orientation_summary=summary,
-        trip_photo_total=len(assets),
+        trip_photo_total=total,
         pattern_hints=hints,
     )
 

@@ -11,9 +11,11 @@ class SearchBudget:
     search_timeout_ms: int = 2000
     max_candidates_per_bucket: int = 12
     max_evaluations_per_trip: int = 500
+    max_evaluations_per_segment: int = 0
     allow_burst_split: bool = False
     generations: int = 0
     evaluations: int = 0
+    segment_evaluations: int = 0
     started_at: float = field(default_factory=time.monotonic)
     timed_out: bool = False
     exhausted: bool = False
@@ -37,18 +39,30 @@ class SearchBudget:
         self.generations += count
         self._check_timeout()
 
-    def can_evaluate(self) -> bool:
+    def begin_segment(self) -> None:
+        """Reset per day-bucket evaluation quota (Phase 15 · D-MCS-10)."""
+        self.segment_evaluations = 0
+
+    def trip_evaluations_remaining(self) -> bool:
         if self.timed_out or self.exhausted:
             return False
         if self._check_timeout():
             return False
-        if self.evaluations >= self.max_evaluations_per_trip:
-            self.exhausted = True
+        return self.evaluations < self.max_evaluations_per_trip
+
+    def segment_evaluations_remaining(self) -> bool:
+        if not self.trip_evaluations_remaining():
             return False
-        return True
+        if self.max_evaluations_per_segment <= 0:
+            return True
+        return self.segment_evaluations < self.max_evaluations_per_segment
+
+    def can_evaluate(self) -> bool:
+        return self.segment_evaluations_remaining()
 
     def note_evaluation(self, count: int = 1) -> None:
         self.evaluations += count
+        self.segment_evaluations += count
         if self.evaluations >= self.max_evaluations_per_trip:
             self.exhausted = True
         self._check_timeout()
@@ -57,6 +71,8 @@ class SearchBudget:
         return {
             "generations": self.generations,
             "evaluations": self.evaluations,
+            "segmentEvaluations": self.segment_evaluations,
+            "maxEvaluationsPerSegment": self.max_evaluations_per_segment,
             "elapsedMs": round(self.elapsed_ms(), 2),
             "timedOut": self.timed_out,
             "exhausted": self.exhausted,

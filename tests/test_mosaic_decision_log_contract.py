@@ -1,0 +1,46 @@
+"""AC-P15-07 · mosaicDecisionLog field contract."""
+
+from __future__ import annotations
+
+from travelogue.config import MosaicConfig
+from travelogue.curation.mosaic.candidates import generate_five_candidates
+from travelogue.curation.mosaic.compose import pick_best_candidate
+from travelogue.curation.mosaic.runtime import MOSAIC_ROUTER_VERSION
+
+from tests._golden.helpers import build_mosaic_eligible_trip
+
+
+def test_pick_best_logs_top3_reason_codes_router_version() -> None:
+    buckets, aspects, assets = build_mosaic_eligible_trip()
+    assets_map = {a["id"]: a for a in assets}
+    cfg = MosaicConfig(
+        enabled=True,
+        enabled_window_sizes=(5,),
+        min_candidate_score=0.0,
+        deterministic_strict=True,
+    )
+    ids = buckets[0]
+    cands = generate_five_candidates(
+        ids, aspects, assets_map, cfg=cfg, burst_seconds=3600.0
+    )
+    assert len(cands) >= 2
+    assert all(c.hard_valid for c in cands)
+    assert all(c.feature_summary.get("windowSize") == 5 for c in cands)
+
+    pick = pick_best_candidate(
+        ids,
+        aspects,
+        assets_map,
+        cfg=cfg,
+        window_size=5,
+        trip_photo_total=40,
+        burst_seconds=3600.0,
+    )
+    raw = pick.log.to_dict()
+    assert raw["routerVersion"] == MOSAIC_ROUTER_VERSION
+    assert raw["scorerVersion"]
+    assert raw["winnerPatternId"]
+    assert raw["winnerReasonCodes"]
+    assert len(raw.get("top3Patterns") or []) >= 2
+    assert raw["candidatesCount"] >= 2
+    assert pick.screen is not None

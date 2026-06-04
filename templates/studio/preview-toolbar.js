@@ -13,6 +13,7 @@ import { startJobPollInterval, pollJobUntilDone } from "./js/job-poll.js";
 import { buildLongshotRequest } from "./js/longshot-client.js";
 import { STUDIO_USER_NOTES_MAX_LEN } from "./js/constants.js";
 import { trackStudioEvent } from "./js/analytics.js";
+import { mountCohortDrawer } from "./cohort-drawer.js";
 
 var isJobBusy409 = isJobBusyResponse;
 var HINT_KEY = "travelogue.studio.editHint.dismissed";
@@ -922,6 +923,27 @@ var narrateJobId = null;
         return;
       }
 
+      if (mode === "cohort") {
+        titleEl.textContent = "旅行主角 · 同框";
+        bodyEl.innerHTML = "";
+        mountCohortDrawer({
+          tripId: tripId,
+          bodyEl: bodyEl,
+          showToast: showToolbarToast,
+          onClose: closeDrawer,
+          onEntryRefresh: function () {
+            return fetchEntry(tripId).then(function (data) {
+              entryCache = data || {};
+              return entryCache;
+            });
+          },
+          onApplyLayout: function () {
+            return applyLayoutRerender(tripId, root);
+          },
+        });
+        return;
+      }
+
       titleEl.textContent = "结构";
       bodyEl.innerHTML = structTpl;
       var g1 = bodyEl.querySelector(".preview-drawer__g1");
@@ -999,6 +1021,7 @@ var narrateJobId = null;
     return {
       openEdit: function () { openDrawer("edit"); },
       openStructure: function () { openDrawer("structure"); },
+      openCohort: function () { openDrawer("cohort"); },
       confirmStructure: function () { return runG1Confirm(null); },
       close: closeDrawer,
       refreshEntry: function () {
@@ -1242,6 +1265,7 @@ var narrateJobId = null;
     if (menu && menuBtn) {
       var applyBtn = menu.querySelector(".preview-toolbar__apply-layout");
       var editBtn = menu.querySelector(".preview-toolbar__open-edit");
+      var cohortBtn = menu.querySelector(".preview-toolbar__open-cohort");
       var structBtn = menu.querySelector(".preview-toolbar__open-structure");
       var presentBtn = menu.querySelector(".preview-toolbar__present-featured");
       var llmSlot = menu.querySelector(".preview-toolbar__llm-slot");
@@ -1270,6 +1294,20 @@ var narrateJobId = null;
         editBtn.addEventListener("click", function () {
           closeMenu();
           drawers.openEdit();
+        });
+      }
+      if (cohortBtn) {
+        fetch("/__travelogue/config")
+          .then(function (r) {
+            return r.ok ? r.json() : null;
+          })
+          .then(function (cfg) {
+            if (cfg && cfg.cohort && cfg.cohort.enabled) cohortBtn.hidden = false;
+          })
+          .catch(function () {});
+        cohortBtn.addEventListener("click", function () {
+          closeMenu();
+          drawers.openCohort();
         });
       }
       if (structBtn) {
@@ -1386,6 +1424,7 @@ var narrateJobId = null;
       '<button type="button" class="preview-toolbar__menu-btn" aria-haspopup="true" aria-expanded="false">更多编辑…</button>' +
       '<div class="preview-toolbar__more-menu" hidden role="menu">' +
       '<button type="button" class="preview-toolbar__open-edit" role="menuitem">编辑感受与锚点</button>' +
+      '<button type="button" class="preview-toolbar__open-cohort" role="menuitem" hidden>旅行主角 · 同框</button>' +
       '<button type="button" class="preview-toolbar__open-structure" role="menuitem">结构与分章</button>' +
       '<button type="button" class="preview-toolbar__apply-layout" role="menuitem">应用排版</button>' +
       '<button type="button" class="preview-toolbar__present-featured" role="menuitem">放映精选</button>' +

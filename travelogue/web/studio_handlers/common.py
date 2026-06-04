@@ -108,6 +108,20 @@ def match_trip_intent(path: str) -> str | None:
     return match_trip_suffix(path, INTENT_SUFFIX)
 
 
+def match_trip_cohort_refresh(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import COHORT_REFRESH_SUFFIX
+
+    return match_trip_suffix(path, COHORT_REFRESH_SUFFIX)
+
+
+def match_trip_cohort(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import COHORT_REFRESH_SUFFIX, COHORT_SUFFIX
+
+    if path.endswith(COHORT_REFRESH_SUFFIX):
+        return None
+    return match_trip_suffix(path, COHORT_SUFFIX)
+
+
 def match_trip_pipeline(path: str) -> str | None:
     return match_trip_suffix(path, PIPELINE_SUFFIX)
 

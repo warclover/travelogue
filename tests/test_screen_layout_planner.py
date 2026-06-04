@@ -2,7 +2,24 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+
+import pytest
+
+from travelogue.config import get_config
+
+
+@pytest.fixture(autouse=True)
+def _planner_tests_disable_mosaic(monkeypatch, request):
+    """Legacy planner unit tests expect pre-MCS behavior."""
+    if request.node.get_closest_marker("mosaic"):
+        return
+    cfg = get_config()
+    monkeypatch.setattr(
+        "travelogue.config.get_config",
+        lambda: replace(cfg, mosaic=replace(cfg.mosaic, enabled=False)),
+    )
 
 from travelogue.curation.screen_planner import (
     MIN_TRIP_PHOTOS_FOR_MOSAIC,
@@ -78,6 +95,7 @@ def test_plan_mixed_two_landscapes_then_portrait():
     assert screens[0]["slots"][0]["assetId"] == "p1"
 
 
+@pytest.mark.mosaic
 def test_plan_mosaic_5_main_portrait_3land():
     ids = ["l-main", "p1", "b1", "b2", "b3"]
     aspects = {
@@ -114,6 +132,7 @@ def test_plan_mosaic_5_main_portrait_3land():
     assert layout_kind_from_pattern(PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND) == "other"
 
 
+@pytest.mark.mosaic
 def test_plan_mosaic_5_prefers_cover_score_for_main():
     ids = ["l-low", "p1", "l-high", "b2", "b3"]
     aspects = {aid: ("portrait" if aid == "p1" else "landscape") for aid in ids}
@@ -140,6 +159,7 @@ def test_plan_mosaic_5_prefers_cover_score_for_main():
     assert screens[0]["slots"][0]["assetId"] == "l-high"
 
 
+@pytest.mark.mosaic
 def test_plan_mosaic_5_requires_time_proximity():
     base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
     assets = {
@@ -169,6 +189,7 @@ def test_plan_mosaic_5_requires_time_proximity():
     assert all(sc["patternId"] != PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND for sc in screens)
 
 
+@pytest.mark.mosaic
 def test_plan_mosaic_5_skips_chapter_hero_when_chapter_is_exactly_five():
     """章首 Hero 与五图拼版互斥：整章恰好 5 张且符合拼版时不拆出 landscape-1。"""
     ids = ["l-low", "p1", "l-high", "b2", "b3"]
@@ -320,6 +341,7 @@ def test_plan_portrait_grid8_ten_yields_grid_plus_remainder():
     assert sum(len(sc.get("slots") or []) for sc in screens) == 10
 
 
+@pytest.mark.mosaic
 def test_plan_mosaic_5_beats_mixed_p1_l2_when_five_fit():
     ids = ["p1", "l1", "l2", "l3", "l4"]
     aspects = {aid: ("portrait" if aid == "p1" else "landscape") for aid in ids}

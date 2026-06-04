@@ -19,6 +19,10 @@ FIVE_BEAT_SEQUENCE = (ARC_OPEN, ARC_RISE, ARC_PEAK, ARC_FALL, ARC_CLOSE)
 _PEAK_PATTERNS = frozenset(
     {
         "screen-mosaic-5-main-portrait-3land",
+        "screen-mosaic-5-main-landscape-2portrait-2land",
+        "screen-mosaic-5-2portrait-3land-balanced",
+        "screen-mosaic-5-3portrait-2land-balanced",
+        "screen-mosaic-5-main-hero-plus-4",
         "screen-portrait-grid-8",
         "screen-landscape-4",
     }

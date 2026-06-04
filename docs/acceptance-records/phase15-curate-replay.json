@@ -1,0 +1,189 @@
+{
+  "recordId": "phase15-curate-replay",
+  "phase": "P15",
+  "config": {
+    "mode": "p3_full",
+    "mosaic.enabled": true,
+    "mosaic.unifiedMode": true,
+    "mosaic.scorerVersion": "p15-s2"
+  },
+  "trips": [
+    {
+      "tripId": "golden-mixed-scenes",
+      "assetCount": 18,
+      "mosaicOff": {
+        "mosaicEnabled": false,
+        "chapterCount": 3,
+        "screenPatterns": {
+          "screen-mosaic-5-2portrait-3land-balanced": 1,
+          "screen-mosaic-5-main-hero-plus-4": 2,
+          "screen-portrait-1": 1,
+          "screen-breath-pause": 1
+        },
+        "mosaic5ExposureRate": 0.6,
+        "mcsUnifiedExposureRate": 0.6,
+        "mosaicMetrics": null,
+        "mosaicDecisionCount": 0,
+        "displayedAssetCount": 16,
+        "layoutMetrics": {
+          "screenCount": 4,
+          "chapterCount": 3,
+          "patternDiversity": 0.75,
+          "patternRepeatRate": 0.25,
+          "layout.pattern.repeat_rate": 0.25,
+          "layoutRepeatStreak": 1,
+          "patternIds": [
+            "screen-mosaic-5-2portrait-3land-balanced",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-portrait-1",
+            "screen-mosaic-5-main-hero-plus-4"
+          ],
+          "screensPerChapter": {
+            "ch-01": 1,
+            "ch-02": 2,
+            "ch-03": 1
+          },
+          "gravityBalance": 1.0,
+          "longshotVisualVariety": 100.0,
+          "timeInversionRate": 0.05,
+          "subjectRunScore": 0.8889,
+          "aspectPatternMatchRate": 0.4,
+          "burstIntegrityViolations": 0,
+          "mosaic5ExposureRate": 0.75,
+          "layout.mosaic5.exposure_rate": 0.75,
+          "mcsUnifiedExposureRate": 0.75,
+          "layout.mosaic_v2.unified_exposure_rate": 0.75,
+          "layout.render.error_rate": 0.0,
+          "layoutRenderChecked": 3,
+          "layoutRenderErrors": 0,
+          "eligibleToScreenCoverage": 0.888889,
+          "eligible_to_screen_coverage": 0.888889,
+          "layout.eligible_to_screen_coverage": 0.888889,
+          "mosaicDropRate": 0.0,
+          "layout.mosaic_v2.drop_rate": 0.0,
+          "layoutEligibleCount": 18,
+          "displayedOnScreenCount": 16
+        }
+      },
+      "mosaicOn": {
+        "mosaicEnabled": true,
+        "chapterCount": 3,
+        "screenPatterns": {
+          "screen-mosaic-5-2portrait-3land-balanced": 1,
+          "screen-mosaic-5-main-hero-plus-4": 2,
+          "screen-portrait-1": 1,
+          "screen-breath-pause": 1
+        },
+        "mosaic5ExposureRate": 0.6,
+        "mcsUnifiedExposureRate": 0.6,
+        "mosaicMetrics": {
+          "mosaic5ExposureRate": 0.6,
+          "layout.mosaic5.exposure_rate": 0.6,
+          "mcsUnifiedExposureRate": 0.6,
+          "layout.mosaic_v2.unified_exposure_rate": 0.6,
+          "layout.render.error_rate": 0.0,
+          "layoutRenderChecked": 3,
+          "layoutRenderErrors": 0,
+          "layout.mosaic5.win_score_p50": 0.4332,
+          "layout.mosaic5.win_score_p90": 0.6808,
+          "mosaicWindowDecisions": 15,
+          "mosaicFallbackRate": 0.0,
+          "layout.mosaic_v2.fallback_rate": 0.0,
+          "layout.mosaic_v2.low_score_fallback_rate": 0.0,
+          "mosaic5WinnerPatterns": [
+            "screen-mosaic-5-2portrait-3land-balanced",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-2portrait-3land-balanced",
+            "screen-mosaic-5-2portrait-3land-balanced",
+            "screen-mosaic-5-2portrait-3land-balanced",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-2portrait-3land-balanced",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-main-hero-plus-4"
+          ]
+        },
+        "mosaicDecisionCount": 15,
+        "displayedAssetCount": 16,
+        "layoutMetrics": {
+          "screenCount": 4,
+          "chapterCount": 3,
+          "patternDiversity": 0.75,
+          "patternRepeatRate": 0.25,
+          "layout.pattern.repeat_rate": 0.25,
+          "layoutRepeatStreak": 1,
+          "patternIds": [
+            "screen-mosaic-5-2portrait-3land-balanced",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-portrait-1",
+            "screen-mosaic-5-main-hero-plus-4"
+          ],
+          "screensPerChapter": {
+            "ch-01": 1,
+            "ch-02": 2,
+            "ch-03": 1
+          },
+          "gravityBalance": 1.0,
+          "longshotVisualVariety": 100.0,
+          "timeInversionRate": 0.05,
+          "subjectRunScore": 0.8889,
+          "aspectPatternMatchRate": 0.4,
+          "burstIntegrityViolations": 0,
+          "mosaic5ExposureRate": 0.75,
+          "layout.mosaic5.exposure_rate": 0.75,
+          "mcsUnifiedExposureRate": 0.75,
+          "layout.mosaic_v2.unified_exposure_rate": 0.75,
+          "layout.render.error_rate": 0.0,
+          "layoutRenderChecked": 3,
+          "layoutRenderErrors": 0,
+          "layout.mosaic5.win_score_p50": 0.4332,
+          "layout.mosaic5.win_score_p90": 0.6808,
+          "mosaicWindowDecisions": 15,
+          "mosaicFallbackRate": 0.0,
+          "layout.mosaic_v2.fallback_rate": 0.0,
+          "layout.mosaic_v2.low_score_fallback_rate": 0.0,
+          "mosaic5WinnerPatterns": [
+            "screen-mosaic-5-2portrait-3land-balanced",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-2portrait-3land-balanced",
+            "screen-mosaic-5-2portrait-3land-balanced",
+            "screen-mosaic-5-2portrait-3land-balanced",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-2portrait-3land-balanced",
+            "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-main-hero-plus-4"
+          ],
+          "eligibleToScreenCoverage": 0.888889,
+          "eligible_to_screen_coverage": 0.888889,
+          "layout.eligible_to_screen_coverage": 0.888889,
+          "mosaicDropRate": 0.0,
+          "layout.mosaic_v2.drop_rate": 0.0,
+          "layoutEligibleCount": 18,
+          "displayedOnScreenCount": 16
+        }
+      },
+      "lift": {
+        "mosaic5ExposureRate": 0.0,
+        "mcsUnifiedExposureRate": 0.0,
+        "mosaic5LiftRatio": 1.0
+      },
+      "passesExposureLift": true,
+      "passesUnifiedLift": true,
+      "passesCoverage": true,
+      "passesMosaic5LiftWhenBaseline": false,
+      "mosaicFallbackRateOn": 0.0,
+      "eligibleToScreenCoverageOn": 0.888889
+    }
+  ]
+}

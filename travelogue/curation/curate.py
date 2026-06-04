@@ -551,6 +551,12 @@ def run_curate(
     apply_editorial_intent_hints(trip)
     saved_memory_anchors = prior_chapter_memory_anchors(trip)
 
+    cohort_summary = None
+    if trip_dir is not None:
+        from travelogue.curation.cohort_faces import apply_cohort_tags
+
+        cohort_summary = apply_cohort_tags(trip, trip_dir=trip_dir, cfg=cfg)
+
     preflight = _curate_preflight(
         trip,
         export_layout=export_layout,
@@ -585,6 +591,9 @@ def run_curate(
     meta_places = bucket_plan.meta_places
     meta = trip.get("meta", {})
     curation = trip.get("curation") or {}
+    if cohort_summary:
+        curation["cohort"] = cohort_summary
+        trip["curation"] = curation
 
     aspects = {a["id"]: aspect_kind_for_asset(a) for a in layout_assets}
     non_empty_buckets = [b for b in buckets if b]
@@ -652,20 +661,43 @@ def run_curate(
     )
     summary = summarize_orientations(layout_assets, export_layout=layout)  # type: ignore[arg-type]
     summary_dict = summary.to_dict()
-    chapters = build_chapters_from_buckets(
-        buckets,
-        aspects,
-        export_layout=layout,  # type: ignore[arg-type]
-        titles=titles,
-        layout_engine=engine,
-        assets=layout_assets,
-        orientation_summary=summary_dict,
-        skip_screen_asset_ids=skip_screen_ids,
-        trip_photo_total=len(layout_assets),
-        pattern_hints=pattern_hints,
-        enable_food_grid=cur_cfg.enable_food_grid,
-        mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
+    from travelogue.curation.mosaic.runtime import (
+        cohort_mosaic_override,
+        reset_mosaic_config_override,
+        set_mosaic_config_override,
     )
+
+    mosaic_override = cohort_mosaic_override(app_cfg) if cohort_summary else None
+    if mosaic_override is not None:
+        set_mosaic_config_override(mosaic_override)
+    try:
+        chapters = build_chapters_from_buckets(
+            buckets,
+            aspects,
+            export_layout=layout,  # type: ignore[arg-type]
+            titles=titles,
+            layout_engine=engine,
+            assets=layout_assets,
+            orientation_summary=summary_dict,
+            skip_screen_asset_ids=skip_screen_ids,
+            trip_photo_total=len(layout_assets),
+            pattern_hints=pattern_hints,
+            enable_food_grid=cur_cfg.enable_food_grid,
+            mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
+        )
+    finally:
+        if mosaic_override is not None:
+            reset_mosaic_config_override()
+    if app_cfg.mosaic.enabled:
+        from travelogue.curation.mosaic.hook import drain_mosaic_dropped, drain_mosaic_logs
+
+        mosaic_logs = drain_mosaic_logs()
+        dropped = drain_mosaic_dropped()
+        curation = trip.setdefault("curation", {})
+        if mosaic_logs:
+            curation["mosaicDecisionLog"] = mosaic_logs
+        if dropped:
+            curation["mosaicDroppedAssetIds"] = list(dict.fromkeys(dropped))
     for ch_idx, (ch, bucket, seg_id, seg_ids, hint) in enumerate(
         zip(
             chapters,
@@ -721,41 +753,90 @@ def run_curate(
         has_color_metrics=has_color_metrics,
         enable_gravity_balance=cur_cfg.enable_gravity_balance,
     )
+    if cohort_summary and app_cfg.cohort.enabled:
+        from travelogue.curation.cohort_faces import merge_cohort_weight
+
+        scoring_weights = merge_cohort_weight(scoring_weights, app_cfg.cohort)
     intent_peak = peak_chapter_hints_for_trip(trip, len(non_empty_buckets))
-    chapters, replan_meta = maybe_replan_chapters(
-        chapters,
-        buckets=non_empty_buckets,
-        aspects=aspects,
-        assets=layout_assets,
-        scoring_enabled=layout_cfg.scoring.enabled,
-        weights=scoring_weights,
-        beam_width=layout_cfg.scoring.beam_width,
-        degradation=degradation,
-        arc_mode=cur_cfg.arc_mode,
-        arc_profile=arc_profile,
-        chapter_heroes=chapter_heroes,
-        orientation_summary=summary_dict,
-        skip_screen_asset_ids=skip_screen_ids,
-        mixed_proximity_seconds=layout_cfg.mixed_proximity_seconds,
-        trip_photo_total=len(layout_assets),
-        search_timeout_ms=layout_cfg.scoring.search_timeout_ms,
-        max_candidates_per_bucket=layout_cfg.scoring.max_candidates_per_bucket,
-        max_evaluations_per_trip=layout_cfg.scoring.max_evaluations_per_trip,
-        allow_burst_split=layout_cfg.scoring.allow_burst_split,
-        subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
-        enable_food_grid=cur_cfg.enable_food_grid,
-        mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
-        intent_peak_chapters=intent_peak,
-        enable_gravity_balance=cur_cfg.enable_gravity_balance,
-        max_consecutive_same_pattern=cur_cfg.max_consecutive_same_pattern,
-        skip_duplicate_signatures=layout_cfg.scoring.skip_duplicate_signatures,
-        deterministic_strict=app_cfg.clustering.deterministic_strict,
-        incremental_scoring=layout_cfg.scoring.incremental,
-    )
+    if app_cfg.mosaic.enabled:
+        from travelogue.curation.mosaic.trip import compose_trip
+
+        chapters, replan_meta = compose_trip(
+            chapters,
+            buckets=non_empty_buckets,
+            aspects=aspects,
+            assets=layout_assets,
+            app_cfg=app_cfg,
+            scoring_enabled=layout_cfg.scoring.enabled,
+            weights=scoring_weights,
+            beam_width=layout_cfg.scoring.beam_width,
+            degradation=degradation,
+            arc_mode=cur_cfg.arc_mode,
+            arc_profile=arc_profile,
+            chapter_heroes=chapter_heroes,
+            orientation_summary=summary_dict,
+            skip_screen_asset_ids=skip_screen_ids,
+            mixed_proximity_seconds=layout_cfg.mixed_proximity_seconds,
+            trip_photo_total=len(layout_assets),
+            search_timeout_ms=layout_cfg.scoring.search_timeout_ms,
+            max_candidates_per_bucket=layout_cfg.scoring.max_candidates_per_bucket,
+            max_evaluations_per_trip=layout_cfg.scoring.max_evaluations_per_trip,
+            allow_burst_split=layout_cfg.scoring.allow_burst_split,
+            subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
+            enable_food_grid=cur_cfg.enable_food_grid,
+            mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
+            intent_peak_chapters=intent_peak,
+            enable_gravity_balance=cur_cfg.enable_gravity_balance,
+            max_consecutive_same_pattern=cur_cfg.max_consecutive_same_pattern,
+            skip_duplicate_signatures=layout_cfg.scoring.skip_duplicate_signatures,
+            incremental_scoring=layout_cfg.scoring.incremental,
+            max_evaluations_per_segment=layout_cfg.scoring.max_evaluations_per_segment,
+        )
+    else:
+        chapters, replan_meta = maybe_replan_chapters(
+            chapters,
+            buckets=non_empty_buckets,
+            aspects=aspects,
+            assets=layout_assets,
+            scoring_enabled=layout_cfg.scoring.enabled,
+            weights=scoring_weights,
+            beam_width=layout_cfg.scoring.beam_width,
+            degradation=degradation,
+            arc_mode=cur_cfg.arc_mode,
+            arc_profile=arc_profile,
+            chapter_heroes=chapter_heroes,
+            orientation_summary=summary_dict,
+            skip_screen_asset_ids=skip_screen_ids,
+            mixed_proximity_seconds=layout_cfg.mixed_proximity_seconds,
+            trip_photo_total=len(layout_assets),
+            search_timeout_ms=layout_cfg.scoring.search_timeout_ms,
+            max_candidates_per_bucket=layout_cfg.scoring.max_candidates_per_bucket,
+            max_evaluations_per_trip=layout_cfg.scoring.max_evaluations_per_trip,
+            allow_burst_split=layout_cfg.scoring.allow_burst_split,
+            subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
+            enable_food_grid=cur_cfg.enable_food_grid,
+            mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
+            intent_peak_chapters=intent_peak,
+            enable_gravity_balance=cur_cfg.enable_gravity_balance,
+            max_consecutive_same_pattern=cur_cfg.max_consecutive_same_pattern,
+            skip_duplicate_signatures=layout_cfg.scoring.skip_duplicate_signatures,
+            deterministic_strict=app_cfg.clustering.deterministic_strict,
+            incremental_scoring=layout_cfg.scoring.incremental,
+            max_evaluations_per_segment=layout_cfg.scoring.max_evaluations_per_segment,
+        )
+    if engine == LAYOUT_ENGINE_SCREENS:
+        from travelogue.curation.chapter_items import (
+            collect_displayed_asset_ids,
+            compact_chapter_items_for_screens,
+        )
+
+        compact_chapter_items_for_screens(chapters)
+    mosaic_logs_for_metrics = (trip.get("curation") or {}).get("mosaicDecisionLog")
     layout_metrics = compute_layout_metrics(
         chapters,
         layout_assets,
         subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
+        mosaic_logs=mosaic_logs_for_metrics,
     )
     degradation_reason = degradation.reason if degradation.force_legacy and layout_cfg.scoring.enabled else None
     decision_logs = replan_meta.get("decisionLogs") or None
@@ -772,11 +853,35 @@ def run_curate(
         curation["layoutDecisionLog"] = decision_logs
     if replan_meta.get("searchBudget"):
         curation["layoutSearchBudget"] = replan_meta["searchBudget"]
+    if engine == LAYOUT_ENGINE_SCREENS:
+        from travelogue.curation.chapter_items import collect_displayed_asset_ids
+
+        hero_extra = [h for h in (chapter_heroes or {}).values() if h]
+        curation["displayedAssetIds"] = collect_displayed_asset_ids(
+            chapters, extra_asset_ids=hero_extra
+        )
+        from travelogue.curation.mosaic.coverage import compute_coverage_metrics
+
+        layout_metrics.update(
+            compute_coverage_metrics(
+                displayed_asset_ids=curation.get("displayedAssetIds"),
+                layout_eligible_assets=layout_assets,
+                dropped_asset_ids=curation.get("mosaicDroppedAssetIds"),
+            )
+        )
     if use_arc:
         from travelogue.curation.arc_patterns import arc_profile_to_dict
 
         curation["arcProfile"] = arc_profile_to_dict(arc_profile)
     curation["layoutMetrics"] = layout_metrics
+    if engine == LAYOUT_ENGINE_SCREENS:
+        from travelogue.curation.mosaic.telemetry import record_mosaic_layout_metrics
+
+        record_mosaic_layout_metrics(
+            trip_id=trip.get("tripId"),
+            layout_metrics=layout_metrics,
+            mosaic_enabled=app_cfg.mosaic.enabled,
+        )
     curation["curatePlanVersion"] = "1.1"
     curation["orientationSummary"] = summary_dict
     curation["layoutPlanVersion"] = LAYOUT_PLAN_VERSION

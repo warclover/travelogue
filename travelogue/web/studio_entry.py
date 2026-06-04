@@ -107,12 +107,16 @@ def build_intent_summary(trip: dict) -> dict[str, Any]:
     clustering = (trip.get("curation") or {}).get("clustering") or {}
     segments = clustering.get("segments") or []
     user_notes = str(intent.get("userNotes") or trip.get("userNotes") or "").strip()
+    subjects = intent.get("featuredSubjects") or []
+    cohort = (trip.get("curation") or {}).get("cohort") or {}
     return {
         "title": title or "我的旅途",
         "featuredCount": featured,
         "segmentCount": len(segments),
         "hasUserNotes": bool(user_notes),
         "userNotes": user_notes[:STUDIO_USER_NOTES_MAX_LEN] if user_notes else "",
+        "featuredSubjectCount": len(subjects) if isinstance(subjects, list) else 0,
+        "cohortDuoCount": int(cohort.get("duoCount") or 0) if cohort else 0,
     }
 
 

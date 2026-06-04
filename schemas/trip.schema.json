@@ -151,7 +151,31 @@
             "materialDir": { "type": "string" }
           }
         },
-        "submittedAt": { "type": "string", "format": "date-time" }
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "featuredSubjects": {
+          "type": "array",
+          "maxItems": 4,
+          "description": "Travel party members to recognize (seed photos per subject); duo = all listed subjects present",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "seedAssetIds"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,31}$",
+                "description": "Stable subject id (e.g. alice, bob)"
+              },
+              "label": { "type": "string", "maxLength": 16 },
+              "seedAssetIds": {
+                "type": "array",
+                "items": { "type": "string" },
+                "minItems": 1,
+                "maxItems": 12
+              }
+            }
+          }
+        }
       }
     },
     "exportOptions": {
@@ -337,6 +361,22 @@
                 "required": ["code", "label", "reason"]
               }
             }
+          }
+        },
+        "cohort": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Featured-subject cohort tagging summary (curate)",
+          "properties": {
+            "version": { "const": "1" },
+            "subjectIds": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "templatesBuilt": { "type": "integer", "minimum": 0 },
+            "tagged": { "type": "integer", "minimum": 0 },
+            "duoCount": { "type": "integer", "minimum": 0 },
+            "method": { "type": "string" }
           }
         },
         "warnings": {
@@ -817,7 +857,9 @@
             "cullExplain": { "type": "string" },
             "aestheticScore": { "type": "number", "minimum": 0, "maximum": 1 },
             "aestheticMetric": { "type": "string" },
-            "lowResSuspected": { "type": "boolean" }
+            "lowResSuspected": { "type": "boolean" },
+            "faceCount": { "type": "integer", "minimum": 0 },
+            "faceRatio": { "type": "number", "minimum": 0, "maximum": 1 }
           }
         },
         "dominantTone": {
@@ -881,7 +923,8 @@
             "lat": { "type": "number", "minimum": -90, "maximum": 90 },
             "lon": { "type": "number", "minimum": -180, "maximum": 180 }
           }
-        }
+        },
+        "curation": { "$ref": "#/$defs/assetCuration" }
       },
       "allOf": [
         {
@@ -975,6 +1018,40 @@
         { "$ref": "#/$defs/mediaScrollItem" }
       ]
     },
+    "assetCohort": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": { "const": "1" },
+        "subjectIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "subjectsPresent": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "duo": { "type": "boolean" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "method": {
+          "type": "string",
+          "enum": ["face_embed_v1", "face_count_proxy", "none"]
+        },
+        "faceCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "assetCuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "subjectTags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 12
+        },
+        "cohort": { "$ref": "#/$defs/assetCohort" }
+      }
+    },
     "chapterCuration": {
       "type": "object",
       "additionalProperties": false,
@@ -1067,7 +1144,12 @@
             "screen-portrait-3",
             "screen-portrait-1-landscape-2",
             "screen-mosaic-5-main-portrait-3land",
+            "screen-mosaic-5-main-landscape-2portrait-2land",
+            "screen-mosaic-5-2portrait-3land-balanced",
+            "screen-mosaic-5-3portrait-2land-balanced",
+            "screen-mosaic-5-main-hero-plus-4",
             "screen-portrait-grid-8",
+            "screen-portrait-2-landscape-2",
             "screen-portrait-4",
             "screen-portrait-6",
             "screen-portrait-9",

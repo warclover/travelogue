@@ -1,0 +1,262 @@
+"""Build screen dicts for mosaic patterns."""
+
+from __future__ import annotations
+
+from travelogue.curation.asset_subject import asset_has_person, portrait_fit_for_asset
+from travelogue.curation.layout_planner import AspectKind, aspect_kind_for_asset
+from travelogue.curation.mosaic.constants import (
+    PATTERN_LANDSCAPE_3,
+    PATTERN_LANDSCAPE_4,
+    PATTERN_LANDSCAPE_6,
+    PATTERN_MOSAIC_5_2P_3L_BALANCED,
+    PATTERN_MOSAIC_5_3P_2L_BALANCED,
+    PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+    PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
+    PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
+    PATTERN_PORTRAIT_1_LANDSCAPE_2,
+    PATTERN_PORTRAIT_2_LANDSCAPE_2,
+    PATTERN_PORTRAIT_3,
+    PATTERN_PORTRAIT_4,
+    PATTERN_PORTRAIT_6,
+    PATTERN_PORTRAIT_9,
+    PATTERN_LANDSCAPE_9,
+    PATTERN_PORTRAIT_GRID_8,
+)
+from travelogue.curation.mosaic.registry import MosaicPattern
+from travelogue.curation.screen_planner import (
+    _can_mosaic_5_main_portrait_3land,
+    _can_mixed_p1_l2,
+    _can_portrait_grid8_window,
+    _time_near_chain,
+    _is_landscape_id,
+    _is_std_portrait_id,
+    _make_mixed_portrait_landscape_screen,
+    _make_mosaic_5_main_portrait_3land_screen,
+    _make_portrait_grid8_screen,
+    _make_screen,
+    _pick_main_landscape_id,
+    _sort_asset_ids_by_taken,
+)
+
+
+def _portrait_fit(aid: str, assets_map: dict[str, dict]) -> str:
+    return portrait_fit_for_asset(assets_map.get(aid), default="cover")
+
+
+def _split_portrait_landscape(
+    asset_ids: list[str], aspects: dict[str, AspectKind]
+) -> tuple[list[str], list[str]]:
+    portraits = [a for a in asset_ids if _is_std_portrait_id(a, aspects)]
+    landscapes = [a for a in asset_ids if _is_landscape_id(a, aspects)]
+    return portraits, landscapes
+
+
+def _order_mixed_p1_l2(
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    *,
+    burst_seconds: float,
+) -> list[str] | None:
+    portraits, landscapes = _split_portrait_landscape(asset_ids, aspects)
+    if len(portraits) < 1 or len(landscapes) < 2:
+        return None
+    for p_id in portraits:
+        for pair in (
+            landscapes[:2],
+            landscapes[-2:],
+            [landscapes[0], landscapes[-1]],
+        ):
+            if len(pair) < 2:
+                continue
+            if _can_mixed_p1_l2(
+                p_id, pair, aspects, assets_map, burst_seconds=burst_seconds
+            ):
+                return [p_id, pair[0], pair[1]]
+    # Soft MCS path: allow without strict time chain
+    p_sorted = _sort_asset_ids_by_taken(portraits, assets_map)
+    l_sorted = _sort_asset_ids_by_taken(landscapes, assets_map)
+    return [p_sorted[0], l_sorted[0], l_sorted[1]]
+
+
+def _order_mixed_p2_l2(
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    *,
+    burst_seconds: float,
+) -> list[str] | None:
+    portraits, landscapes = _split_portrait_landscape(asset_ids, aspects)
+    if len(portraits) < 2 or len(landscapes) < 2:
+        return None
+    p_sorted = _sort_asset_ids_by_taken(portraits, assets_map)[:2]
+    l_sorted = _sort_asset_ids_by_taken(landscapes, assets_map)[:2]
+    if any(asset_has_person(assets_map.get(aid, {})) for aid in p_sorted):
+        return None
+    orders = [
+        [p_sorted[0], l_sorted[0], l_sorted[1], p_sorted[1]],
+        [l_sorted[0], p_sorted[0], p_sorted[1], l_sorted[1]],
+    ]
+    for order in orders:
+        if _time_near_chain(order, assets_map, burst_seconds=burst_seconds):
+            return order
+    return orders[0]
+
+
+def try_order_for_pattern(
+    pattern_id: str,
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    *,
+    burst_seconds: float,
+    median_sharp: float | None,
+) -> list[str] | None:
+    n = len(asset_ids)
+    portraits, landscapes = _split_portrait_landscape(asset_ids, aspects)
+
+    if pattern_id == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND:
+        return _can_mosaic_5_main_portrait_3land(
+            asset_ids,
+            aspects,
+            assets_map,
+            burst_seconds=burst_seconds,
+            median_sharp=median_sharp,
+        )
+
+    if n == 3:
+        if pattern_id == PATTERN_PORTRAIT_3 and len(portraits) >= 3:
+            return _sort_asset_ids_by_taken(portraits[:3], assets_map)
+        if pattern_id == PATTERN_LANDSCAPE_3 and len(landscapes) >= 3:
+            return _sort_asset_ids_by_taken(landscapes[:3], assets_map)
+        if pattern_id == PATTERN_PORTRAIT_1_LANDSCAPE_2:
+            return _order_mixed_p1_l2(
+                asset_ids, aspects, assets_map, burst_seconds=burst_seconds
+            )
+        return None
+
+    if n == 4:
+        if pattern_id == PATTERN_PORTRAIT_2_LANDSCAPE_2:
+            return _order_mixed_p2_l2(
+                asset_ids, aspects, assets_map, burst_seconds=burst_seconds
+            )
+        if pattern_id == PATTERN_PORTRAIT_4 and len(portraits) >= 4:
+            return _sort_asset_ids_by_taken(portraits[:4], assets_map)
+        if pattern_id == PATTERN_LANDSCAPE_4 and len(landscapes) >= 4:
+            return _sort_asset_ids_by_taken(landscapes[:4], assets_map)
+        return None
+
+    if n == 6:
+        if pattern_id == PATTERN_PORTRAIT_6 and len(portraits) >= 6:
+            return _sort_asset_ids_by_taken(portraits[:6], assets_map)
+        if pattern_id == PATTERN_LANDSCAPE_6 and len(landscapes) >= 6:
+            return _sort_asset_ids_by_taken(landscapes[:6], assets_map)
+        return None
+
+    if n == 8 and pattern_id == PATTERN_PORTRAIT_GRID_8:
+        if _can_portrait_grid8_window(
+            asset_ids, aspects, assets_map, burst_seconds=burst_seconds
+        ):
+            return _sort_asset_ids_by_taken(portraits[:8], assets_map)
+        return None
+
+    if n == 9:
+        if pattern_id == PATTERN_PORTRAIT_9 and len(portraits) >= 9:
+            return _sort_asset_ids_by_taken(portraits[:9], assets_map)
+        if pattern_id == PATTERN_LANDSCAPE_9 and len(landscapes) >= 9:
+            return _sort_asset_ids_by_taken(landscapes[:9], assets_map)
+        return None
+
+    if n != 5:
+        return None
+
+    if pattern_id == PATTERN_MOSAIC_5_MAIN_LAND_2P_2L:
+        if len(portraits) < 2 or len(landscapes) < 3:
+            return None
+        from travelogue.curation.mosaic.hero import pick_main_for_pattern
+
+        main = pick_main_for_pattern(
+            pattern_id,
+            asset_ids,
+            aspects,
+            assets_map,
+            median_sharp=median_sharp,
+        ) or _pick_main_landscape_id(landscapes, assets_map, median_sharp=median_sharp)
+        rest_l = _sort_asset_ids_by_taken([a for a in landscapes if a != main], assets_map)
+        p_sorted = _sort_asset_ids_by_taken(portraits[:2], assets_map)
+        return [main, p_sorted[0], p_sorted[1], rest_l[0], rest_l[1] if len(rest_l) > 1 else rest_l[0]]
+    if pattern_id == PATTERN_MOSAIC_5_2P_3L_BALANCED:
+        if len(portraits) < 2 or len(landscapes) < 3:
+            return None
+        p_sorted = _sort_asset_ids_by_taken(portraits[:2], assets_map)
+        l_sorted = _sort_asset_ids_by_taken(landscapes[:3], assets_map)
+        return [p_sorted[0], p_sorted[1], l_sorted[0], l_sorted[1], l_sorted[2]]
+    if pattern_id == PATTERN_MOSAIC_5_3P_2L_BALANCED:
+        if len(portraits) < 3 or len(landscapes) < 2:
+            return None
+        p_sorted = _sort_asset_ids_by_taken(portraits[:3], assets_map)
+        l_sorted = _sort_asset_ids_by_taken(landscapes[:2], assets_map)
+        return [p_sorted[0], p_sorted[1], p_sorted[2], l_sorted[0], l_sorted[1]]
+    if pattern_id == PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4:
+        pool = landscapes or portraits or asset_ids
+        main = (
+            _pick_main_landscape_id(pool, assets_map, median_sharp=median_sharp)
+            if landscapes
+            else pool[0]
+        )
+        tiles = [a for a in asset_ids if a != main][:4]
+        if len(tiles) < 4:
+            return None
+        return [main, tiles[0], tiles[1], tiles[2], tiles[3]]
+    return None
+
+
+def build_screen(
+    pattern: MosaicPattern,
+    ordered_ids: list[str],
+    *,
+    assets_map: dict[str, dict],
+    screen_id: str = "",
+) -> dict:
+    if pattern.pattern_id == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND:
+        return _make_mosaic_5_main_portrait_3land_screen(
+            ordered_ids, screen_id=screen_id, assets_map=assets_map
+        )
+    if pattern.pattern_id == PATTERN_PORTRAIT_1_LANDSCAPE_2:
+        return _make_mixed_portrait_landscape_screen(
+            ordered_ids[0],
+            ordered_ids[1:3],
+            screen_id=screen_id,
+            assets_map=assets_map,
+        )
+    if pattern.pattern_id == PATTERN_PORTRAIT_2_LANDSCAPE_2:
+        slots = []
+        for idx, aid in enumerate(ordered_ids):
+            kind = aspect_kind_for_asset(assets_map.get(aid, {}))
+            role = (
+                "portrait"
+                if _is_std_portrait_id(aid, {aid: kind})
+                else "landscape"
+            )
+            fit = _portrait_fit(aid, assets_map) if role == "portrait" else "cover"
+            slots.append({"assetId": aid, "slot": idx, "fit": fit, "role": role})
+        return _make_screen(
+            PATTERN_PORTRAIT_2_LANDSCAPE_2,
+            screen_id=screen_id,
+            slots=slots,
+        )
+    if pattern.pattern_id == PATTERN_PORTRAIT_GRID_8:
+        return _make_portrait_grid8_screen(
+            ordered_ids, screen_id=screen_id, assets_map=assets_map
+        )
+    roles = pattern.roles
+    slots = []
+    for idx, (aid, role) in enumerate(zip(ordered_ids, roles, strict=False)):
+        if role == "portrait":
+            fit = _portrait_fit(aid, assets_map)
+        elif role == "main":
+            fit = "cover"
+        else:
+            fit = "cover"
+        slots.append({"assetId": aid, "slot": idx, "fit": fit, "role": role})
+    return _make_screen(pattern.pattern_id, screen_id=screen_id, slots=slots)

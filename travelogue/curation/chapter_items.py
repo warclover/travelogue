@@ -213,6 +213,26 @@ def compact_chapter_items_for_screens(chapters: list[dict]) -> None:
             ch.setdefault("curation", {})["layoutStub"] = True
 
 
+def collect_displayed_asset_ids(
+    chapters: list[dict],
+    *,
+    extra_asset_ids: list[str] | None = None,
+) -> list[str]:
+    """Ordered unique ids on screens plus optional cover/extra heroes (Phase 15 · D-MCS-09)."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for aid in extra_asset_ids or []:
+        if aid and aid not in seen:
+            seen.add(aid)
+            out.append(aid)
+    for ch in chapters:
+        for aid in collect_screen_asset_ids(ch):
+            if aid not in seen:
+                seen.add(aid)
+                out.append(aid)
+    return out
+
+
 def summarize_screen_patterns(chapters: list[dict]) -> dict[str, int]:
     """Count screen patternId usage across chapters (layout observability)."""
     counts: dict[str, int] = {}

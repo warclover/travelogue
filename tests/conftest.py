@@ -25,6 +25,13 @@ def _is_studio_ui_playwright(item: pytest.Item) -> bool:
     return "test_studio_p9_qa_playwright" in nodeid or "test_studio_p10_layout_playwright" in nodeid
 
 
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line(
+        "markers",
+        "mosaic: planner tests that require mosaic.enabled (Phase 15 MCS)",
+    )
+
+
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     """Run Studio homepage Playwright last; other serial Playwright before them."""
     studio_ui: list[pytest.Item] = []

@@ -35,3 +35,13 @@ def test_budget_times_out():
     time.sleep(0.002)
     assert not b.can_evaluate()
     assert b.timed_out
+
+
+def test_segment_evaluations_reset():
+    b = SearchBudget(max_evaluations_per_trip=10, max_evaluations_per_segment=2)
+    b.begin_segment()
+    b.note_evaluation()
+    b.note_evaluation()
+    assert not b.can_evaluate()
+    b.begin_segment()
+    assert b.can_evaluate()

@@ -178,6 +178,8 @@ def handle_patch_intent(handler: StudioHandlerProtocol, trip_id: str) -> None:
             kwargs["user_notes"] = payload.get("userNotes")
         if "travelPlan" in payload:
             kwargs["travel_plan"] = payload.get("travelPlan")
+        if "featuredSubjects" in payload:
+            kwargs["featured_subjects"] = payload.get("featuredSubjects")
         if not kwargs:
             handler._json_response(400, {"ok": False, "error": "no intent fields"})
             return
@@ -202,6 +204,85 @@ def handle_patch_intent(handler: StudioHandlerProtocol, trip_id: str) -> None:
         handler._json_response(400, {"ok": False, "error": str(exc)})
         return
     handler._json_response(200, {"ok": True, "intent": intent})
+
+
+def handle_get_cohort(handler: StudioHandlerProtocol, trip_id: str) -> None:
+    from travelogue.services.cohort import build_cohort_studio_payload
+
+    loaded = load_trip_or_404(handler, trip_id)
+    if loaded is None:
+        return
+    _trip_dir, trip = loaded
+    ctx = studio_ctx(handler)
+    enabled = bool(ctx.app_config.cohort.enabled)
+    payload = build_cohort_studio_payload(trip, cohort_enabled=enabled)
+    handler._json_response(200, {"ok": True, **payload})
+
+
+def handle_patch_cohort(handler: StudioHandlerProtocol, trip_id: str) -> None:
+    from travelogue.services.trip import apply_intent
+    from travelogue.curation.cohort_faces import apply_cohort_tags
+
+    payload = handler._read_json_body()
+    if not payload:
+        return
+    loaded = load_trip_or_404(handler, trip_id)
+    if loaded is None:
+        return
+    trip_dir, trip = loaded
+    trip_json = trip_dir / "trip.json"
+    ctx = studio_ctx(handler)
+    svc = ctx.trip_service()
+    if not ctx.app_config.cohort.enabled:
+        handler._json_response(
+            400,
+            {"ok": False, "error": "E_COHORT_DISABLED", "message": "cohort.enabled is false in config"},
+        )
+        return
+    try:
+        if "featuredSubjects" in payload:
+            apply_intent(trip, featured_subjects=payload.get("featuredSubjects"))
+        refresh = bool(payload.get("refresh"))
+        summary = None
+        if refresh or "featuredSubjects" in payload:
+            summary = apply_cohort_tags(trip, trip_dir=trip_dir, cfg=ctx.app_config)
+            if summary:
+                cur = trip.setdefault("curation", {})
+                cur["cohort"] = summary
+        if not ("featuredSubjects" in payload) and not refresh:
+            handler._json_response(400, {"ok": False, "error": "no cohort fields"})
+            return
+        svc.save(trip, trip_json)
+    except (ValueError, TypeError) as exc:
+        handler._json_response(400, {"ok": False, "error": str(exc)})
+        return
+    from travelogue.services.cohort import build_cohort_studio_payload
+
+    body = build_cohort_studio_payload(trip, cohort_enabled=True)
+    body["summary"] = (trip.get("curation") or {}).get("cohort") or summary
+    handler._json_response(200, {"ok": True, **body})
+
+
+def handle_post_cohort_refresh(handler: StudioHandlerProtocol, trip_id: str) -> None:
+    from travelogue.curation.cohort_faces import apply_cohort_tags
+
+    loaded = load_trip_or_404(handler, trip_id)
+    if loaded is None:
+        return
+    trip_dir, trip = loaded
+    trip_json = trip_dir / "trip.json"
+    ctx = studio_ctx(handler)
+    if not ctx.app_config.cohort.enabled:
+        handler._json_response(
+            400,
+            {"ok": False, "error": "E_COHORT_DISABLED", "message": "cohort.enabled is false in config"},
+        )
+        return
+    summary = apply_cohort_tags(trip, trip_dir=trip_dir, cfg=ctx.app_config)
+    if summary:
+        trip.setdefault("curation", {})["cohort"] = summary
+    ctx.trip_service().save(trip, trip_json)
+    handler._json_response(200, {"ok": True, "summary": summary})
 
 
 def handle_patch_template(handler: StudioHandlerProtocol, trip_id: str) -> None:

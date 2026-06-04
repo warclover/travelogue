@@ -45,6 +45,7 @@ def apply_intent(
     date_range: Any = _UNSET,
     travel_plan: Any = _UNSET,
     folders: Any = _UNSET,
+    featured_subjects: Any = _UNSET,
     submitted_at: str | None = None,
 ) -> dict:
     """Single writer for Phase 4 ``trip.intent`` (PRD-PHASE4 §4.1/§14).
@@ -148,6 +149,19 @@ def apply_intent(
             intent["folders"] = folders
         else:
             intent.pop("folders", None)
+
+    if featured_subjects is not _UNSET:
+        from travelogue.services.cohort import normalize_featured_subjects, validate_seeds_exist
+
+        if not featured_subjects:
+            intent.pop("featuredSubjects", None)
+        else:
+            normalized = normalize_featured_subjects(featured_subjects)
+            assets_by_id = {
+                a["id"]: a for a in (trip.get("assets") or []) if a.get("id")
+            }
+            validate_seeds_exist(normalized, assets_by_id)
+            intent["featuredSubjects"] = normalized
 
     intent["submittedAt"] = submitted_at or datetime.now(timezone.utc).isoformat(
         timespec="seconds"

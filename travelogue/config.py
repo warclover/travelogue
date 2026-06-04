@@ -127,6 +127,18 @@ class CullConfig:
 
 
 @dataclass
+class CohortConfig:
+    """Featured-subject duo tagging (face embed + layout coherence)."""
+
+    enabled: bool = False
+    match_threshold: float = 0.78
+    min_face_area_ratio: float = 0.012
+    l0_face_count_fallback: bool = True
+    layout_weight: float = 0.06
+    mosaic_weight: float = 0.05
+
+
+@dataclass
 class CurateConfig:
     segment_gap_days: int = 14
     city_gap_days: int = 3
@@ -258,6 +270,7 @@ class LayoutScoringConfig:
     search_timeout_ms: int = 2000
     max_candidates_per_bucket: int = 12
     max_evaluations_per_trip: int = 500
+    max_evaluations_per_segment: int = 0
     allow_burst_split: bool = False
     subject_run_tolerance: int = 1
     skip_duplicate_signatures: bool = True
@@ -285,6 +298,44 @@ class LayoutScoringConfig:
 class LayoutFeedbackConfig:
     enabled: bool = False
     log_path: str | None = None
+
+
+@dataclass
+class MosaicConfig:
+    """Phase 15 mosaic composition (DESIGN-PHASE15 · S1)."""
+
+    enabled: bool = True
+    scorer_version: str = "p15-s2"
+    deterministic_strict: bool = True
+    min_candidate_score: float = 0.35
+    enabled_window_sizes: tuple[int, ...] = (3, 4, 5, 6, 8, 9)
+    unified_mode: bool = True
+    fallback_to_legacy: bool = True
+    self_heal_enabled: bool = True
+    allow_drop: bool = False
+    max_drop_ratio: float = 0.5
+    candidate_top_k: int = 4
+    log_level: str = "window"
+    weights: dict[str, float] = field(
+        default_factory=lambda: {
+            "aspect_match": 0.20,
+            "sharpness": 0.15,
+            "hero_separation": 0.10,
+            "temporal_coherence": 0.15,
+            "subject_run": 0.10,
+            "layout_rhythm": 0.10,
+            "diversity": 0.10,
+            "category_coherence": 0.10,
+            "cohort_coherence": 0.0,
+        }
+    )
+    penalties: dict[str, float] = field(
+        default_factory=lambda: {
+            "face_crop": 0.30,
+            "main_quality": 0.25,
+            "duplicate_density": 0.20,
+        }
+    )
 
 
 @dataclass
@@ -395,6 +446,8 @@ class AppConfig:
     phase6: Phase6ObservabilityConfig = field(default_factory=Phase6ObservabilityConfig)
     template_router: TemplateRouterConfig = field(default_factory=TemplateRouterConfig)
     template_admin: TemplateAdminConfig = field(default_factory=TemplateAdminConfig)
+    mosaic: MosaicConfig = field(default_factory=MosaicConfig)
+    cohort: CohortConfig = field(default_factory=CohortConfig)
 
 
 def _phase6_ac_from_dict(raw: dict[str, Any]) -> Phase6AcThresholds:
@@ -618,6 +671,9 @@ def _layout_scoring_from_dict(raw: dict[str, Any]) -> LayoutScoringConfig:
         search_timeout_ms=int(raw.get("search_timeout_ms", 2000)),
         max_candidates_per_bucket=int(raw.get("max_candidates_per_bucket", 12)),
         max_evaluations_per_trip=int(raw.get("max_evaluations_per_trip", 500)),
+        max_evaluations_per_segment=int(
+            raw.get("max_evaluations_per_segment", raw.get("maxEvaluationsPerSegment", 0))
+        ),
         allow_burst_split=bool(raw.get("allow_burst_split", False)),
         subject_run_tolerance=int(raw.get("subject_run_tolerance", 1)),
         skip_duplicate_signatures=cfg_bool(
@@ -640,6 +696,49 @@ def _render_reading_from_dict(raw: dict[str, Any]) -> RenderReadingConfig:
 def _render_from_dict(raw: dict[str, Any]) -> RenderConfig:
     reading_raw = raw.get("reading") if isinstance(raw.get("reading"), dict) else {}
     return RenderConfig(reading=_render_reading_from_dict(reading_raw))
+
+
+def _mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
+    defaults = MosaicConfig()
+    sizes_raw = raw.get("enabled_window_sizes", raw.get("enabledWindowSizes", [5]))
+    if isinstance(sizes_raw, (list, tuple)):
+        sizes = tuple(int(x) for x in sizes_raw)
+    else:
+        sizes = defaults.enabled_window_sizes
+    weights_raw = raw.get("weights") if isinstance(raw.get("weights"), dict) else {}
+    penalties_raw = raw.get("penalties") if isinstance(raw.get("penalties"), dict) else {}
+    self_heal = raw.get("self_heal") if isinstance(raw.get("self_heal"), dict) else {}
+    if isinstance(raw.get("selfHeal"), dict):
+        self_heal = raw["selfHeal"]
+    allow_drop = bool(self_heal.get("allow_drop", self_heal.get("allowDrop", defaults.allow_drop)))
+    self_heal_enabled = bool(
+        self_heal.get("enabled", raw.get("self_heal_enabled", defaults.self_heal_enabled))
+    )
+    max_drop = self_heal.get("max_drop_ratio", self_heal.get("maxDropRatio", defaults.max_drop_ratio))
+    return MosaicConfig(
+        enabled=bool(raw.get("enabled", defaults.enabled)),
+        scorer_version=str(raw.get("scorer_version", raw.get("scorerVersion", defaults.scorer_version))),
+        deterministic_strict=cfg_bool(
+            raw, "deterministic_strict", "deterministicStrict", defaults.deterministic_strict
+        ),
+        min_candidate_score=cfg_float(
+            raw, "min_candidate_score", "minCandidateScore", defaults.min_candidate_score
+        ),
+        enabled_window_sizes=sizes or defaults.enabled_window_sizes,
+        unified_mode=bool(raw.get("unified_mode", raw.get("unifiedMode", defaults.unified_mode))),
+        fallback_to_legacy=bool(
+            raw.get("fallback_to_legacy", raw.get("fallbackToLegacy", defaults.fallback_to_legacy))
+        ),
+        self_heal_enabled=self_heal_enabled,
+        allow_drop=allow_drop,
+        max_drop_ratio=float(max_drop) if max_drop is not None else defaults.max_drop_ratio,
+        candidate_top_k=int(raw.get("candidate_top_k", raw.get("candidateTopK", defaults.candidate_top_k))),
+        log_level=str(raw.get("log_level", raw.get("logLevel", defaults.log_level))),
+        weights={k: float(weights_raw.get(k, defaults.weights.get(k, 0.0))) for k in defaults.weights},
+        penalties={
+            k: float(penalties_raw.get(k, defaults.penalties.get(k, 0.0))) for k in defaults.penalties
+        },
+    )
 
 
 def _layout_feedback_from_dict(raw: dict[str, Any]) -> LayoutFeedbackConfig:
@@ -794,6 +893,9 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
             "successRefinedDefaultEnabled": cfg.studio.success_refined_default_enabled,
             "importSheetLargeEnabled": cfg.studio.import_sheet_large_enabled,
         },
+        "cohort": {
+            "enabled": cfg.cohort.enabled,
+        },
     }
 
 
@@ -923,6 +1025,12 @@ def load_config(path: Path | None = None) -> AppConfig:
     phase6_raw = data.get("phase6") if isinstance(data.get("phase6"), dict) else {}
     template_router_raw = data.get("template_router") if isinstance(data.get("template_router"), dict) else {}
     template_admin_raw = data.get("template_admin") if isinstance(data.get("template_admin"), dict) else {}
+    cohort_raw = data.get("cohort") if isinstance(data.get("cohort"), dict) else {}
+    mosaic_raw = data.get("mosaic") if isinstance(data.get("mosaic"), dict) else {}
+    layout_top = data.get("layout") if isinstance(data.get("layout"), dict) else {}
+    mosaic_v2 = layout_top.get("mosaic_v2") if isinstance(layout_top.get("mosaic_v2"), dict) else {}
+    if mosaic_v2:
+        mosaic_raw = {**mosaic_v2, **mosaic_raw}
     banned_raw = narrative_raw.get("banned_phrases") or []
     banned = tuple(str(p) for p in banned_raw if p) if isinstance(banned_raw, list) else ()
     llm_provider = str(llm_raw.get("provider", "stub")).strip().lower()
@@ -1108,6 +1216,19 @@ def load_config(path: Path | None = None) -> AppConfig:
                     template_admin_raw.get("trustClientRoleHeader", True),
                 )
             ),
+        ),
+        mosaic=_mosaic_from_dict(mosaic_raw),
+        cohort=CohortConfig(
+            enabled=bool(cohort_raw.get("enabled", False)),
+            match_threshold=float(cohort_raw.get("match_threshold", cohort_raw.get("matchThreshold", 0.78))),
+            min_face_area_ratio=float(
+                cohort_raw.get("min_face_area_ratio", cohort_raw.get("minFaceAreaRatio", 0.012))
+            ),
+            l0_face_count_fallback=bool(
+                cohort_raw.get("l0_face_count_fallback", cohort_raw.get("l0FaceCountFallback", True))
+            ),
+            layout_weight=float(cohort_raw.get("layout_weight", cohort_raw.get("layoutWeight", 0.06))),
+            mosaic_weight=float(cohort_raw.get("mosaic_weight", cohort_raw.get("mosaicWeight", 0.05))),
         ),
     )
 

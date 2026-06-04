@@ -1,0 +1,14 @@
+{
+  "chapters": [
+    {
+      "id": "ch-01",
+      "patternId": "open",
+      "screens": [
+        {
+          "patternId": "screen-portrait-grid-8",
+          "slotAssetIds": ["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+"""Hook into screen_planner_stages planning loop."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from travelogue.config import MosaicConfig
+from travelogue.curation.mosaic.compose import pick_best_window
+from travelogue.curation.mosaic.legacy import append_legacy_window
+from travelogue.curation.mosaic.runtime import effective_mosaic_window_sizes
+
+if TYPE_CHECKING:
+    from travelogue.curation.screen_planner_stages import ChapterPlanContext
+
+
+_mosaic_logs: list[dict] = []
+_mosaic_dropped: list[str] = []
+
+
+def _mosaic_cfg() -> MosaicConfig:
+    from travelogue.curation.mosaic.runtime import get_effective_mosaic_config
+
+    return get_effective_mosaic_config()
+
+
+def window_has_candidates(
+    window: list[str],
+    aspects,
+    assets_map: dict[str, dict],
+    *,
+    size: int,
+    cfg: MosaicConfig,
+    burst_seconds: float,
+    median_sharp: float | None,
+) -> bool:
+    from travelogue.curation.mosaic.candidates import generate_window_candidates
+
+    return bool(
+        generate_window_candidates(
+            window,
+            aspects,
+            assets_map,
+            cfg=cfg,
+            burst_seconds=burst_seconds,
+            median_sharp=median_sharp,
+        )
+    )
+
+
+def chapter_should_skip_hero_for_mosaic(ctx: ChapterPlanContext) -> bool:
+    """Skip chapter hero when the full chapter is one MCS window with candidates."""
+    from travelogue.curation.screen_planner import MIN_TRIP_PHOTOS_FOR_MOSAIC
+
+    cfg = _mosaic_cfg()
+    sizes = effective_mosaic_window_sizes(cfg) if cfg.enabled else (5,)
+    if len(ctx.ids) not in sizes:
+        return False
+    size = len(ctx.ids)
+    if not cfg.enabled and size == 5:
+        return (
+            ctx.trip_total >= MIN_TRIP_PHOTOS_FOR_MOSAIC
+            and window_has_candidates(
+                ctx.ids,
+                ctx.aspects,
+                ctx.assets_map,
+                size=5,
+                cfg=cfg,
+                burst_seconds=ctx.mix_gap,
+                median_sharp=ctx.med_sharp,
+            )
+        )
+    if size == 5 and ctx.trip_total < MIN_TRIP_PHOTOS_FOR_MOSAIC and not cfg.enabled:
+        return False
+    if not cfg.enabled:
+        return False
+    return window_has_candidates(
+        ctx.ids,
+        ctx.aspects,
+        ctx.assets_map,
+        size=size,
+        cfg=cfg,
+        burst_seconds=ctx.mix_gap,
+        median_sharp=ctx.med_sharp,
+    )
+
+
+def chapter_has_mosaic_five_candidates(ctx: ChapterPlanContext) -> bool:
+    """Backward-compatible alias."""
+    return chapter_should_skip_hero_for_mosaic(ctx)
+
+
+def drain_mosaic_logs() -> list[dict]:
+    global _mosaic_logs
+    from travelogue.config import get_config
+    from travelogue.curation.mosaic.log import format_log_entry
+
+    level = get_config().mosaic.log_level
+    out = [format_log_entry(entry, level) for entry in _mosaic_logs]
+    _mosaic_logs = []
+    return out
+
+
+def drain_mosaic_dropped() -> list[str]:
+    global _mosaic_dropped
+    out = list(_mosaic_dropped)
+    _mosaic_dropped = []
+    return out
+
+
+def try_mosaic_window_mcs(
+    ctx: ChapterPlanContext, start: int, size: int, cfg: MosaicConfig
+) -> bool:
+    from travelogue.curation.screen_planner_stages import append_screen
+
+    if start + size > len(ctx.ids):
+        return False
+    window = ctx.ids[start : start + size]
+    pick = pick_best_window(
+        window,
+        ctx.aspects,
+        ctx.assets_map,
+        cfg=cfg,
+        window_size=size,
+        layout_state=ctx.layout_state,
+        trip_photo_total=ctx.trip_total,
+        burst_seconds=ctx.mix_gap,
+        median_sharp=ctx.med_sharp,
+        window_start=start,
+        segment_id=ctx.chapter_id or "",
+    )
+    _mosaic_logs.append(pick.log.to_dict())
+    if pick.log.dropped_asset_ids:
+        _mosaic_dropped.extend(pick.log.dropped_asset_ids)
+
+    if pick.used_legacy:
+        return append_legacy_window(ctx, window, size)
+    if pick.screen:
+        append_screen(ctx, pick.screen)
+        return True
+    return False
+
+
+def _defer_portrait_grid8(ctx: ChapterPlanContext, start: int) -> bool:
+    """Let portrait-grid-8 stage handle eight portraits when MCS 8-window is off."""
+    cfg = _mosaic_cfg()
+    if cfg.enabled and 8 in cfg.enabled_window_sizes:
+        return False
+    if not ctx.use_portrait_grid8 or start != 0:
+        return False
+    remaining = ctx.ids[start:]
+    if len(remaining) != 8:
+        return False
+    from travelogue.curation.screen_planner import _can_portrait_grid8_window
+
+    return _can_portrait_grid8_window(
+        remaining,
+        ctx.aspects,
+        ctx.assets_map,
+        burst_seconds=ctx.burst_seconds,
+    )
+
+
+def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
+    """Try enabled window sizes (largest first). Returns advance count or None."""
+    cfg = _mosaic_cfg()
+    if not cfg.enabled or not ctx.enable_mosaic:
+        return None
+    if _defer_portrait_grid8(ctx, start):
+        return None
+    for size in sorted(effective_mosaic_window_sizes(cfg), reverse=True):
+        if size not in (3, 4, 5, 6, 8, 9):
+            continue
+        if start + size > len(ctx.ids):
+            continue
+        window = ctx.ids[start : start + size]
+        if not window_has_candidates(
+            window,
+            ctx.aspects,
+            ctx.assets_map,
+            size=size,
+            cfg=cfg,
+            burst_seconds=ctx.mix_gap,
+            median_sharp=ctx.med_sharp,
+        ):
+            continue
+        if try_mosaic_window_mcs(ctx, start, size, cfg):
+            return size
+    return None
+
+
+def try_mosaic_five_mcs(ctx: ChapterPlanContext, start: int, cfg: MosaicConfig) -> bool:
+    return try_mosaic_window_mcs(ctx, start, 5, cfg)

@@ -1,0 +1,103 @@
+"""Phase 15 S3 · self-heal before legacy fallback."""
+
+from __future__ import annotations
+
+from dataclasses import replace
+
+import pytest
+
+from travelogue.config import get_config
+from travelogue.curation.mosaic.compose import pick_best_window
+from travelogue.curation.mosaic.scorer import MosaicScoreResult
+
+from tests._golden.helpers import build_mosaic_eligible_trip
+
+
+def _window5():
+    buckets, aspects, assets = build_mosaic_eligible_trip()
+    ids = buckets[0]
+    assets_map = {a["id"]: a for a in assets}
+    return ids, aspects, assets_map
+
+
+def test_self_heal_tightened_rescore(monkeypatch):
+    ids, aspects, assets_map = _window5()
+    cfg = replace(get_config().mosaic, self_heal_enabled=True, min_candidate_score=0.6)
+
+    def fake_score(screen, **kwargs):
+        cfg_kw = kwargs.get("cfg") or cfg
+        boosted = (cfg_kw.penalties or {}).get("face_crop", 0) > 0.38
+        total = 0.72 if boosted else 0.4
+        return MosaicScoreResult(total=total, base=total, penalties={}, reason_codes=[])
+
+    monkeypatch.setattr("travelogue.curation.mosaic.compose.score_candidate", fake_score)
+    monkeypatch.setattr("travelogue.curation.mosaic.selfheal.score_candidate", fake_score)
+    pick = pick_best_window(
+        ids,
+        aspects,
+        assets_map,
+        cfg=cfg,
+        window_size=5,
+        trip_photo_total=40,
+    )
+    assert not pick.used_legacy
+    assert pick.log.self_heal_applied
+    assert pick.log.self_heal_step == "tightened_rescore"
+    assert pick.screen is not None
+
+
+def test_self_heal_disabled_uses_legacy(monkeypatch):
+    ids, aspects, assets_map = _window5()
+    cfg = replace(
+        get_config().mosaic,
+        self_heal_enabled=False,
+        min_candidate_score=0.9,
+        fallback_to_legacy=True,
+    )
+
+    def fake_score(screen, **kwargs):
+        return MosaicScoreResult(total=0.1, base=0.1, penalties={}, reason_codes=[])
+
+    monkeypatch.setattr(
+        "travelogue.curation.mosaic.compose.score_candidate",
+        fake_score,
+    )
+    pick = pick_best_window(
+        ids,
+        aspects,
+        assets_map,
+        cfg=cfg,
+        window_size=5,
+        trip_photo_total=40,
+    )
+    assert pick.used_legacy
+    assert pick.log.fallback_reason == "low_score"
+    assert not pick.log.self_heal_applied
+
+
+def test_allow_drop_false_never_sets_dropped_ids(monkeypatch):
+    ids, aspects, assets_map = _window5()
+    cfg = replace(
+        get_config().mosaic,
+        self_heal_enabled=True,
+        allow_drop=False,
+        min_candidate_score=0.99,
+    )
+
+    def fake_score(screen, **kwargs):
+        return MosaicScoreResult(total=0.05, base=0.05, penalties={}, reason_codes=[])
+
+    monkeypatch.setattr(
+        "travelogue.curation.mosaic.compose.score_candidate",
+        fake_score,
+    )
+    pick = pick_best_window(
+        ids,
+        aspects,
+        assets_map,
+        cfg=cfg,
+        window_size=5,
+        trip_photo_total=40,
+    )
+    assert pick.used_legacy
+    assert pick.log.dropped_asset_ids == []

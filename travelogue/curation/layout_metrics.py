@@ -26,6 +26,11 @@ def pattern_diversity(chapters: list[dict]) -> float:
     return len(set(pids)) / len(pids)
 
 
+def pattern_repeat_rate(chapters: list[dict]) -> float:
+    """PRD §7.1 · share of screens in repeated-pattern runs (1 − diversity)."""
+    return round(1.0 - pattern_diversity(chapters), 6)
+
+
 def max_pattern_repeat_streak(chapters: list[dict]) -> int:
     """Longest run of identical patternId across reading order (P6-D3 metric)."""
     streak = 0
@@ -203,13 +208,17 @@ def compute_layout_metrics(
     assets: list[dict] | None = None,
     *,
     subject_run_tolerance: int = 1,
+    mosaic_logs: list[dict] | None = None,
 ) -> dict[str, Any]:
     pids = _screen_pattern_ids(chapters)
     assets_by_id = {a["id"]: a for a in (assets or []) if a.get("id")}
+    repeat_rate = pattern_repeat_rate(chapters)
     out: dict[str, Any] = {
         "screenCount": len(pids),
         "chapterCount": len(chapters),
         "patternDiversity": round(pattern_diversity(chapters), 4),
+        "patternRepeatRate": repeat_rate,
+        "layout.pattern.repeat_rate": repeat_rate,
         "layoutRepeatStreak": max_pattern_repeat_streak(chapters),
         "patternIds": pids,
         "screensPerChapter": screens_per_chapter(chapters),
@@ -229,4 +238,11 @@ def compute_layout_metrics(
                 subject_run_tolerance=subject_run_tolerance,
             )
         )
+    from travelogue.curation.mosaic.constants import MOSAIC_UNIFIED_PATTERN_IDS
+    from travelogue.curation.mosaic.metrics import compute_mosaic_metrics
+
+    if mosaic_logs is not None or any("mosaic-5" in pid for pid in pids):
+        out.update(compute_mosaic_metrics(chapters, mosaic_logs=mosaic_logs))
+    elif any(p in MOSAIC_UNIFIED_PATTERN_IDS for p in pids):
+        out.update(compute_mosaic_metrics(chapters, mosaic_logs=None))
     return out

@@ -119,25 +119,14 @@ def stage_chapter_hero(ctx: ChapterPlanContext) -> None:
     """Opening hero screen; removes hero asset id from ctx.ids when placed."""
     from travelogue.curation.screen_planner import (
         CHAPTER_HERO_MIN_ASSETS,
-        MIN_TRIP_PHOTOS_FOR_MOSAIC,
-        _can_mosaic_5_main_portrait_3land,
         _can_portrait_grid8_window,
         _make_screen,
         _pick_chapter_hero,
     )
 
-    skip_hero_for_mosaic_5 = (
-        len(ctx.ids) == 5
-        and ctx.trip_total >= MIN_TRIP_PHOTOS_FOR_MOSAIC
-        and _can_mosaic_5_main_portrait_3land(
-            ctx.ids,
-            ctx.aspects,
-            ctx.assets_map,
-            burst_seconds=ctx.mix_gap,
-            median_sharp=ctx.med_sharp,
-        )
-        is not None
-    )
+    from travelogue.curation.mosaic.hook import chapter_should_skip_hero_for_mosaic
+
+    skip_hero_for_mosaic_5 = chapter_should_skip_hero_for_mosaic(ctx)
     skip_hero_for_portrait_grid8 = (
         len(ctx.ids) == 8
         and ctx.use_portrait_grid8
@@ -174,6 +163,7 @@ def stage_chapter_hero(ctx: ChapterPlanContext) -> None:
 
 def run_planning_loop(ctx: ChapterPlanContext) -> None:
     """Main cursor loop over ctx.ids."""
+    from travelogue.curation.mosaic.hook import try_mosaic_window
     from travelogue.curation.screen_planner import _family_kind
 
     while ctx.i < len(ctx.ids):
@@ -182,8 +172,9 @@ def run_planning_loop(ctx: ChapterPlanContext) -> None:
             ctx.i += advance
             continue
 
-        if try_mosaic_five(ctx, ctx.i):
-            ctx.i += 5
+        mosaic_advance = try_mosaic_window(ctx, ctx.i)
+        if mosaic_advance is not None:
+            ctx.i += mosaic_advance
             continue
 
         advance = try_mixed_triple_at_cursor(ctx)
@@ -278,6 +269,8 @@ def try_mixed_portrait_landscape(
 
 
 def try_mosaic_five(ctx: ChapterPlanContext, start: int) -> bool:
+    from travelogue.config import get_config
+    from travelogue.curation.mosaic.hook import try_mosaic_window
     from travelogue.curation.screen_planner import (
         MIN_TRIP_PHOTOS_FOR_MOSAIC,
         _can_mosaic_5_main_portrait_3land,
@@ -286,6 +279,9 @@ def try_mosaic_five(ctx: ChapterPlanContext, start: int) -> bool:
 
     if not ctx.enable_mosaic:
         return False
+    mosaic_cfg = get_config().mosaic
+    if mosaic_cfg.enabled and 5 in mosaic_cfg.enabled_window_sizes:
+        return try_mosaic_window(ctx, start) == 5
     if ctx.trip_total < MIN_TRIP_PHOTOS_FOR_MOSAIC:
         return False
     if ctx.pending_portraits or start + 4 >= len(ctx.ids):
