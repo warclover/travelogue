@@ -313,7 +313,7 @@ python scripts/phase15_curate_replay.py golden-mixed-scenes --fixture \
 | P15-G4 | `mosaic.enabled` 时 legacy 5 窗去掉 `trip_total` 硬门槛 | `mosaic/legacy.py` | ☑ |
 | P15-G5 | `feature_summary_for_window` 接入候选 | `mosaic/features.py` | ☑ |
 | P15-G6 | `pick_main_for_pattern` 接入 5 窗横主位 | `mosaic/hero.py` · `builders.py` | ☑ |
-| P15-G7 | `replan_screen` API 桩 | `mosaic/replan.py` | ☑（桩） |
+| P15-G7 | `replan_screen`（alt_topk / legacy） | `mosaic/replan.py` · `legacy.build_legacy_screen` | ☑ |
 | P15-G8 | `layout.pattern.repeat_rate` | `layout_metrics.py` | ☑ |
 | P15-G12 | 同上（G8） | — | ☑ |
 | P15-G13 | `eligible_to_screen_coverage` | `mosaic/coverage.py` · `curate.py` | ☑ |
@@ -370,7 +370,7 @@ python scripts/phase15_curate_replay.py golden-mixed-scenes --fixture \
 | `SelfHeal` + `allow_drop` | DESIGN S3 | S3 |
 | `unified_mode` 在线 7 天/200 trip 自动回滚 | 离线 gate ☑；运维 telemetry 待接 | 上线前 |
 | mobile `MobileMosaicAdapter` | scope.mobile=false | S4 |
-| `replan_screen` 实装 | 桩 `mosaic/replan.py` | Studio 迭代 |
+| Studio 接 `replan_screen` | API 已实装 | Studio PATCH 屏重选 |
 | 真实 trip mao/maomi curate 记录 | `phase15_curate_replay.py` 待本地数据 | 有 trips/ 时跑 |
 
 ---

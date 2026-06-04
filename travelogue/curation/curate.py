@@ -862,11 +862,18 @@ def run_curate(
         )
         from travelogue.curation.mosaic.coverage import compute_coverage_metrics
 
+        planned_ids = {aid for bucket in non_empty_buckets for aid in bucket}
+        displayed_for_cov = list(curation.get("displayedAssetIds") or [])
+        for ch in chapters:
+            hero_id = (ch.get("curation") or {}).get("heroAssetId")
+            if hero_id and hero_id not in displayed_for_cov:
+                displayed_for_cov.append(hero_id)
         layout_metrics.update(
             compute_coverage_metrics(
-                displayed_asset_ids=curation.get("displayedAssetIds"),
+                displayed_asset_ids=displayed_for_cov,
                 layout_eligible_assets=layout_assets,
                 dropped_asset_ids=curation.get("mosaicDroppedAssetIds"),
+                planned_asset_ids=planned_ids or None,
             )
         )
     if use_arc:

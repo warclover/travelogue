@@ -30,6 +30,20 @@ def test_coverage_metrics_from_displayed_and_eligible() -> None:
         ],
     )
     assert cov["eligible_to_screen_coverage"] == round(2 / 3, 6)
+
+
+def test_coverage_planned_asset_ids_excludes_unbucketed() -> None:
+    cov = compute_coverage_metrics(
+        displayed_asset_ids=["a1", "a2"],
+        layout_eligible_assets=[
+            {"id": "a1", "layoutEligible": True},
+            {"id": "a2", "layoutEligible": True},
+            {"id": "cover-only", "layoutEligible": True},
+        ],
+        planned_asset_ids={"a1", "a2"},
+    )
+    assert cov["eligible_to_screen_coverage"] == 1.0
+    assert cov["layoutEligibleCount"] == 2
     assert cov["layout.eligible_to_screen_coverage"] == cov["eligible_to_screen_coverage"]
 
 

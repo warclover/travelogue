@@ -56,12 +56,12 @@
           "layout.render.error_rate": 0.0,
           "layoutRenderChecked": 3,
           "layoutRenderErrors": 0,
-          "eligibleToScreenCoverage": 0.888889,
-          "eligible_to_screen_coverage": 0.888889,
-          "layout.eligible_to_screen_coverage": 0.888889,
+          "eligibleToScreenCoverage": 0.941176,
+          "eligible_to_screen_coverage": 0.941176,
+          "layout.eligible_to_screen_coverage": 0.941176,
           "mosaicDropRate": 0.0,
           "layout.mosaic_v2.drop_rate": 0.0,
-          "layoutEligibleCount": 18,
+          "layoutEligibleCount": 17,
           "displayedOnScreenCount": 16
         }
       },
@@ -164,12 +164,12 @@
             "screen-mosaic-5-main-hero-plus-4",
             "screen-mosaic-5-main-hero-plus-4"
           ],
-          "eligibleToScreenCoverage": 0.888889,
-          "eligible_to_screen_coverage": 0.888889,
-          "layout.eligible_to_screen_coverage": 0.888889,
+          "eligibleToScreenCoverage": 0.941176,
+          "eligible_to_screen_coverage": 0.941176,
+          "layout.eligible_to_screen_coverage": 0.941176,
           "mosaicDropRate": 0.0,
           "layout.mosaic_v2.drop_rate": 0.0,
-          "layoutEligibleCount": 18,
+          "layoutEligibleCount": 17,
           "displayedOnScreenCount": 16
         }
       },
@@ -183,7 +183,7 @@
       "passesCoverage": true,
       "passesMosaic5LiftWhenBaseline": false,
       "mosaicFallbackRateOn": 0.0,
-      "eligibleToScreenCoverageOn": 0.888889
+      "eligibleToScreenCoverageOn": 0.941176
     }
   ]
 }

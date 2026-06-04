@@ -27,9 +27,9 @@ GATE = {
     "min_eligible_to_screen_coverage": 0.99,
 }
 
-# CI fixture：含 breath-pause / 章首 hero，eligible 略多于 displayed
-_FIXTURE_COVERAGE_MIN = {
-    "golden-mixed-scenes": 0.85,
+# CI fixture：分母为 bucket 计划资产；允许 1 张章内未上屏余量（breath/组屏边界）
+_FIXTURE_COVERAGE_MIN: dict[str, float] = {
+    "golden-mixed-scenes": 0.94,
 }
 
 

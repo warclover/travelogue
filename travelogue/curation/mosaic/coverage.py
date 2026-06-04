@@ -10,8 +10,13 @@ def compute_coverage_metrics(
     displayed_asset_ids: list[str] | None,
     layout_eligible_assets: list[dict] | None,
     dropped_asset_ids: list[str] | None = None,
+    planned_asset_ids: set[str] | None = None,
 ) -> dict[str, Any]:
-    """Ratio of layout-eligible assets that appear on screens (via displayedAssetIds)."""
+    """Ratio of layout-eligible assets that appear on screens (via displayedAssetIds).
+
+    When ``planned_asset_ids`` is set (bucket union from curate), the denominator
+    excludes layout-eligible assets never assigned to a chapter bucket (e.g. cover-only).
+    """
     if not layout_eligible_assets:
         return {}
     eligible = {
@@ -19,6 +24,8 @@ def compute_coverage_metrics(
         for a in layout_eligible_assets
         if a.get("id") and a.get("layoutEligible", True) is not False
     }
+    if planned_asset_ids is not None:
+        eligible &= planned_asset_ids
     if not eligible:
         return {}
     displayed = set(displayed_asset_ids or [])

@@ -89,4 +89,4 @@ CI：`tests/test_phase15_curate_replay.py`（`golden-mixed-scenes` · P3-Full ·
 | 在线 `layout.render.error_rate` 与渲染引擎聚合 | curate 已写 `template-metrics.jsonl` |
 | mobile MCS | P15+ |
 | 灰度 / `unified_mode` 在线自动回滚 | **无用户期跳过**；默认全开见 [PHASE15-ROLLOUT.md](./PHASE15-ROLLOUT.md) |
-| `replan_screen` 实装 | API 桩已导出，Studio 未接 |
+| Studio 接 `replan_screen` | `mosaic/replan.py` ☑ · `test_mosaic_replan.py` |

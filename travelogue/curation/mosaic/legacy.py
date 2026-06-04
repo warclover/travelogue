@@ -10,11 +10,17 @@ if TYPE_CHECKING:
     from travelogue.curation.screen_planner_stages import ChapterPlanContext
 
 
-def append_legacy_window(
-    ctx: ChapterPlanContext,
+def build_legacy_screen(
     window: list[str],
     size: int,
-) -> bool:
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    *,
+    burst_seconds: float = 12.0,
+    median_sharp: float | None = None,
+    trip_total: int = 0,
+) -> dict | None:
+    """Build one legacy planner screen for a fixed asset window (no chapter mutation)."""
     from travelogue.curation.screen_planner import (
         MIN_TRIP_PHOTOS_FOR_MOSAIC,
         _can_mosaic_5_main_portrait_3land,
@@ -27,28 +33,21 @@ def append_legacy_window(
         _make_portrait_grid8_screen,
         _make_screen,
     )
-    from travelogue.curation.screen_planner_stages import append_screen
 
-    aspects = ctx.aspects
-    assets_map = ctx.assets_map
-    burst = ctx.mix_gap
+    burst = burst_seconds
 
     if size == 5:
         from travelogue.curation.mosaic.runtime import get_effective_mosaic_config
 
         mosaic_on = get_effective_mosaic_config().enabled
-        if not mosaic_on and ctx.trip_total < MIN_TRIP_PHOTOS_FOR_MOSAIC:
-            return False
+        if not mosaic_on and trip_total < MIN_TRIP_PHOTOS_FOR_MOSAIC:
+            return None
         ordered = _can_mosaic_5_main_portrait_3land(
-            window, aspects, assets_map, burst_seconds=burst, median_sharp=ctx.med_sharp
+            window, aspects, assets_map, burst_seconds=burst, median_sharp=median_sharp
         )
         if not ordered:
-            return False
-        append_screen(
-            ctx,
-            _make_mosaic_5_main_portrait_3land_screen(ordered, assets_map=assets_map),
-        )
-        return True
+            return None
+        return _make_mosaic_5_main_portrait_3land_screen(ordered, assets_map=assets_map)
 
     if size == 3 and len(window) == 3:
         a, b, c = window
@@ -61,121 +60,111 @@ def append_legacy_window(
         ]
         for p_id, lands in trials:
             if _can_mixed_p1_l2(p_id, lands, aspects, assets_map, burst_seconds=burst):
-                append_screen(
-                    ctx,
-                    _make_mixed_portrait_landscape_screen(
-                        p_id, lands, assets_map=assets_map
-                    ),
+                return _make_mixed_portrait_landscape_screen(
+                    p_id, lands, assets_map=assets_map
                 )
-                return True
         if all(_is_std_portrait_id(x, aspects) for x in window):
-            append_screen(
-                ctx,
-                _make_screen(
-                    "screen-portrait-3",
-                    window,
-                    aspects=aspects,
-                    assets_map=assets_map,
-                ),
+            return _make_screen(
+                "screen-portrait-3",
+                window,
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
             )
-            return True
         if all(_is_landscape_id(x, aspects) for x in window):
-            append_screen(
-                ctx,
-                _make_screen(
-                    "screen-landscape-3",
-                    window,
-                    aspects=aspects,
-                    assets_map=assets_map,
-                ),
+            return _make_screen(
+                "screen-landscape-3",
+                window,
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
             )
-            return True
-        return False
+        return None
 
     if size == 4 and len(window) == 4:
         if all(_is_std_portrait_id(x, aspects) for x in window):
-            append_screen(
-                ctx,
-                _make_screen(
-                    "screen-portrait-4",
-                    window,
-                    aspects=aspects,
-                    assets_map=assets_map,
-                ),
+            return _make_screen(
+                "screen-portrait-4",
+                window,
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
             )
-            return True
         if all(_is_landscape_id(x, aspects) for x in window):
-            append_screen(
-                ctx,
-                _make_screen(
-                    "screen-landscape-4",
-                    window,
-                    aspects=aspects,
-                    assets_map=assets_map,
-                ),
+            return _make_screen(
+                "screen-landscape-4",
+                window,
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
             )
-            return True
-        return False
+        return None
 
     if size == 8 and len(window) == 8:
         if _can_portrait_grid8_window(
             window, aspects, assets_map, burst_seconds=burst
         ):
-            append_screen(
-                ctx,
-                _make_portrait_grid8_screen(window, assets_map=assets_map),
-            )
-            return True
-        return False
+            return _make_portrait_grid8_screen(window, assets_map=assets_map)
+        return None
 
     if size == 9 and len(window) == 9:
         if all(_is_std_portrait_id(x, aspects) for x in window):
-            append_screen(
-                ctx,
-                _make_screen(
-                    "screen-portrait-9",
-                    window,
-                    aspects=aspects,
-                    assets_map=assets_map,
-                ),
+            return _make_screen(
+                "screen-portrait-9",
+                window,
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
             )
-            return True
         if all(_is_landscape_id(x, aspects) for x in window):
-            append_screen(
-                ctx,
-                _make_screen(
-                    "screen-landscape-9",
-                    window,
-                    aspects=aspects,
-                    assets_map=assets_map,
-                ),
+            return _make_screen(
+                "screen-landscape-9",
+                window,
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
             )
-            return True
-        return False
+        return None
 
     if size == 6 and len(window) == 6:
         if all(_is_std_portrait_id(x, aspects) for x in window):
-            append_screen(
-                ctx,
-                _make_screen(
-                    "screen-portrait-6",
-                    window,
-                    aspects=aspects,
-                    assets_map=assets_map,
-                ),
+            return _make_screen(
+                "screen-portrait-6",
+                window,
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
             )
-            return True
         if all(_is_landscape_id(x, aspects) for x in window):
-            append_screen(
-                ctx,
-                _make_screen(
-                    "screen-landscape-6",
-                    window,
-                    aspects=aspects,
-                    assets_map=assets_map,
-                ),
+            return _make_screen(
+                "screen-landscape-6",
+                window,
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
             )
-            return True
-        return False
+        return None
 
-    return False
+    return None
+
+
+def append_legacy_window(
+    ctx: ChapterPlanContext,
+    window: list[str],
+    size: int,
+) -> bool:
+    from travelogue.curation.screen_planner_stages import append_screen
+
+    screen = build_legacy_screen(
+        window,
+        size,
+        ctx.aspects,
+        ctx.assets_map,
+        burst_seconds=ctx.mix_gap,
+        median_sharp=ctx.med_sharp,
+        trip_total=ctx.trip_total,
+    )
+    if not screen:
+        return False
+    append_screen(ctx, screen)
+    return True
