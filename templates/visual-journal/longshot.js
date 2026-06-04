@@ -1879,19 +1879,25 @@
     }
   }
 
+  function isStudioServerExport() {
+    return document.documentElement.getAttribute("data-preview-toolbar") === "on";
+  }
+
   function init() {
     if (guardFileProtocol()) return;
     applyQueryPrefs();
     initCaptionDisplay();
     ensureWeChatBanner();
-    document
-      .querySelectorAll("[data-longshot-trigger]")
-      .forEach(function (el) {
-        bindButton(el);
-      });
+    if (!isStudioServerExport()) {
+      document
+        .querySelectorAll("[data-longshot-trigger]")
+        .forEach(function (el) {
+          bindButton(el);
+        });
 
-    var fab = document.getElementById("longshot-save");
-    if (fab) bindButton(fab);
+      var fab = document.getElementById("longshot-save");
+      if (fab) bindButton(fab);
+    }
 
     maybeAutoCapture();
   }

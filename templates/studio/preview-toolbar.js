@@ -249,6 +249,11 @@ var narrateJobId = null;
     okEl.textContent = "长图已保存";
     panel.appendChild(okEl);
 
+    var homeHint = document.createElement("p");
+    homeHint.className = "preview-toolbar__longshot-compat";
+    homeHint.textContent = "已写入画册目录；返回 Studio 首页即可在手机框预览。";
+    panel.appendChild(homeHint);
+
     if (segmented && outputs.length > 1) {
       var segEl = document.createElement("p");
       segEl.className = "preview-toolbar__longshot-compat";
@@ -345,6 +350,22 @@ var narrateJobId = null;
     }).catch(function () {
       toolbarAlert("导出失败", { error: true });
     });
+  }
+
+  function bindPageLongshotTriggers(root, tripId) {
+    document.addEventListener(
+      "click",
+      function (e) {
+        if (document.documentElement.getAttribute("data-preview-toolbar") !== "on") return;
+        var btn = e.target.closest("[data-longshot-trigger], #longshot-save");
+        if (!btn || btn.closest(".preview-toolbar") || btn.disabled) return;
+        e.preventDefault();
+        e.stopPropagation();
+        showToolbarToast("保存到画册目录，首页手机框可预览", { duration: 3200 });
+        startLongshot(root, tripId);
+      },
+      true
+    );
   }
 
   function startLongshot(root, tripId) {
@@ -1246,6 +1267,7 @@ var narrateJobId = null;
     longshotBtn.addEventListener("click", function () {
       startLongshot(root, tripId);
     });
+    bindPageLongshotTriggers(root, tripId);
 
     if (revealBtn) {
       revealBtn.addEventListener("click", function () {

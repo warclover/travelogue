@@ -117,8 +117,8 @@ export function refreshUserBentoPreview(trips) {
       }
       V2.manifest = activeBentoManifest();
       syncTabUi();
-      if (V2.bentoTab === "mine" && V2.userManifest) {
-        renderBentoSurface(V2.userManifest);
+      if (V2.manifest) {
+        renderBentoSurface(V2.manifest);
       }
       return V2.userManifest;
     });

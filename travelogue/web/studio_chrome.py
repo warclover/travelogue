@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-CHROME_ALLOWLIST = frozenset({"index.html", "index-mobile.html"})
+CHROME_ALLOWLIST = frozenset(
+    {"index.html", "index-mobile.html", "index-longshot.html"}
+)
 
 SHARE_QUERY_MARKERS = ("share=1", "mode=share")
 

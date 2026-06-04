@@ -209,10 +209,10 @@ def test_build_trip_bento_preview_prefers_portrait_for_longshot(tmp_path: Path) 
 
     payload = build_trip_bento_preview(trip_dir, trip, trip_id)
     assert payload is not None
-    assert payload["assets"]["longshot"] == f"/{trip_id}/preview.jpg"
-    assert len(payload["longshotPages"]) == 3
-    assert payload["longshotPages"][0]["url"] == f"/{trip_id}/preview.jpg"
+    assert len(payload["longshotPages"]) == 1
+    assert payload["longshotPages"][0]["url"] == f"/{trip_id}/assets/landscape.webp"
     assert payload["longshotPages"][0]["scrollPreview"] is True
+    assert payload["assets"]["longshot"] == payload["longshotPages"][0]["url"]
 
 
 def test_build_trip_bento_preview_longshot_pages_from_vertical_ch_pngs(tmp_path: Path) -> None:
@@ -320,7 +320,7 @@ def test_build_trip_bento_preview_longshot_pages_from_vertical_ch_jpgs(tmp_path:
 
 
 def test_build_trip_bento_preview_longshot_pages_match_carousel_chapters(tmp_path: Path) -> None:
-    """无导出长图时 · longshotPages 与 carousel 同序，章内选竖版。"""
+    """无导出长图时 · longshotPages 仅含各章竖版（不含封面/尾声 preview）。"""
     trip_id = "dongao-like"
     trip_dir = tmp_path / trip_id
     assets_dir = trip_dir / "assets"
@@ -385,7 +385,7 @@ def test_build_trip_bento_preview_longshot_pages_match_carousel_chapters(tmp_pat
 
     payload = build_trip_bento_preview(trip_dir, trip, trip_id)
     assert payload is not None
-    assert len(payload["longshotPages"]) == len(payload["pages"])
+    assert len(payload["longshotPages"]) == 2
     assert all(p.get("scrollPreview") is True for p in payload["longshotPages"])
     chapter_longshots = [p["url"] for p in payload["longshotPages"] if p.get("chapterIndex")]
     assert chapter_longshots == [

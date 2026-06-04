@@ -18,7 +18,12 @@ export function encodeTripAssetUrl(url) {
   var tail = s.slice(slash + 1);
   if (!tail) return s;
   return base + "/" + tail.split("/").map(function (seg) {
-    return encodeURIComponent(seg);
+    if (!seg) return seg;
+    try {
+      return encodeURIComponent(decodeURIComponent(seg));
+    } catch (_e) {
+      return encodeURIComponent(seg);
+    }
   }).join("/");
 }
 

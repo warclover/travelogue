@@ -15,7 +15,7 @@ from tests.test_studio_server import _distinct_album, _free_port, _get_json, _st
 def test_should_inject_allowlist() -> None:
     assert should_inject_studio_chrome("index.html")
     assert should_inject_studio_chrome("index-mobile.html")
-    assert not should_inject_studio_chrome("index-longshot.html")
+    assert should_inject_studio_chrome("index-longshot.html")
     assert not should_inject_studio_chrome("longshot.css")
 
 
@@ -69,7 +69,7 @@ def test_studio_home_html(tmp_path: Path) -> None:
 
 
 @pytest.mark.e2e
-def test_studio_chrome_on_index_not_longshot(tmp_path: Path) -> None:
+def test_studio_chrome_on_index_and_longshot(tmp_path: Path) -> None:
     album = _distinct_album(tmp_path, 6)
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
@@ -100,7 +100,8 @@ def test_studio_chrome_on_index_not_longshot(tmp_path: Path) -> None:
         assert 'type="module" src="/__studio/preview-toolbar.js"' in index_html
         assert "studio-api.js" not in index_html
         assert 'data-preview-toolbar="on"' in index_html
-        assert "preview-toolbar.js" not in longshot_html
+        assert "preview-toolbar.js" in longshot_html
+        assert 'data-preview-toolbar="on"' in longshot_html
         assert 'data-block="surface-nav"' in longshot_html
         assert "← 返回卷轴" in longshot_html
 

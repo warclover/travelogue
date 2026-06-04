@@ -502,6 +502,9 @@ def _build_longshot_pages(
             preview_url=preview_url,
         )
         if derived:
+            chapter_pages = [p for p in derived if p.get("chapterIndex")]
+            if chapter_pages:
+                return chapter_pages
             return derived
 
     fallback = _best_longshot_url(trip, trip_id, trip_dir, fallback=preview_url)

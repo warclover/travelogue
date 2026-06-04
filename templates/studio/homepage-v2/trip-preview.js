@@ -34,7 +34,7 @@ export function pickBentoPreviewTrip(trips) {
  */
 export function loadTripBentoPreview(tripId) {
   if (!tripId) return Promise.resolve(null);
-  return fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/bento-preview")
+  return fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/bento-preview?t=" + String(Date.now()))
     .then(function (r) {
       if (!r.ok) return null;
       return r.json();
