@@ -274,6 +274,12 @@ studio:
   # false（默认）= 模式 A：导入后自动 structure_locked 并继续 narrate/render
   # true = 模式 B：curate 后停 structure_draft，预览内确认后再继续
   g1_confirm_structure: false
+  # Phase 14 · 双模式导入（开发联调开关）
+  import_dual_mode_enabled: true
+  # Phase 14 · 成功页分层默认动作（开发联调开关）
+  success_refined_default_enabled: true
+  # Phase 14 · 放大导入弹窗（开发联调开关）
+  import_sheet_large_enabled: true
 
 # Phase 6 · 验收阈值与运营告警（PRD-PHASE6 §18）
 phase6:

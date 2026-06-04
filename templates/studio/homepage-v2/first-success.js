@@ -7,19 +7,28 @@ import { LS, isDemoTrip } from "../js/constants.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
 import { syncVariantGuard } from "./variant-guard.js";
+import { runShelfLongshot } from "./shelf-longshot.js";
 
 var _countdownTimer = null;
 var _countdownLeft = 5;
 var _successResult = null;
 var _autoOpenEnabled = true;
 var _wired = false;
+var _successMode = "quick_share";
+var _successRefinedEnabled = true;
 
-function isFirstTime() {
-  try {
-    return !localStorage.getItem(LS.firstPreviewDone);
-  } catch (e) {
-    return true;
-  }
+function loadSuccessFeatureFlag() {
+  return fetch("/__travelogue/config")
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var studio = (data && data.studio) || {};
+      if (typeof studio.successRefinedDefaultEnabled === "boolean") {
+        _successRefinedEnabled = studio.successRefinedDefaultEnabled;
+      }
+    })
+    .catch(function () {
+      _successRefinedEnabled = true;
+    });
 }
 
 function markFirstPreviewDone(tripId) {
@@ -74,6 +83,9 @@ function resolvePreviewUrl(result) {
 
 function populateSuccessUi(result) {
   result = result || {};
+  _successMode = String(result.mode || "quick_share").toLowerCase();
+  if (_successMode !== "fine_craft") _successMode = "quick_share";
+  if (!_successRefinedEnabled) _successMode = "fine_craft";
   var title = result.title || "我的旅途";
   var msg = $("v2-success-msg");
   if (msg) {
@@ -107,9 +119,21 @@ function populateSuccessUi(result) {
   if (result.cullWarn && typeof studioToast === "function") {
     studioToast(result.cullWarn, { duration: 5000 });
   }
+  if (result.dateRangeWarn && typeof studioToast === "function") {
+    studioToast(result.dateRangeWarn, { duration: 4200 });
+  }
   var open = $("v2-success-open");
+  var secondary = $("v2-success-secondary");
   var url = resolvePreviewUrl(result);
   if (open && url) open.href = url;
+  if (secondary && url) secondary.href = url;
+  if (open) {
+    open.textContent = _successMode === "fine_craft" ? "打开卷轴预览 →" : "保存长图";
+  }
+  if (secondary) {
+    secondary.textContent = "打开卷轴预览";
+    show(secondary, _successRefinedEnabled && _successMode === "quick_share");
+  }
 
   var cover = $("v2-success-cover");
   var coverImg = $("v2-success-cover-img");
@@ -126,8 +150,26 @@ function populateSuccessUi(result) {
 function openPreview(action) {
   clearCountdown();
   var url = resolvePreviewUrl(_successResult);
-  if (!url) return;
+  if (!url) {
+    if (_successResult && _successResult.tripId) {
+      if (typeof studioToast === "function") {
+        studioToast("预览暂不可用，已为你切换到保存长图。", { duration: 2800 });
+      }
+      trackStudioEvent("success_preview_unavailable_fallback_longshot", {
+        tripId: _successResult.tripId,
+      });
+      runShelfLongshot(
+        { tripId: _successResult.tripId, title: _successResult.title || "我的旅途" },
+        { surface: "first_success_fallback" },
+      );
+    }
+    return;
+  }
   trackStudioEvent("success_primary_click", { action: action || "open_preview" });
+  trackStudioEvent("preview_open_from_success", {
+    mode: _successMode,
+    tripId: _successResult && _successResult.tripId ? _successResult.tripId : null,
+  });
   if (_successResult && _successResult.tripId) {
     markFirstPreviewDone(_successResult.tripId);
   }
@@ -136,7 +178,7 @@ function openPreview(action) {
 
 function startCountdown() {
   clearCountdown();
-  _autoOpenEnabled = isFirstTime();
+  _autoOpenEnabled = false;
   _countdownLeft = 5;
   updateCountdownLabel();
   if (!_autoOpenEnabled) return;
@@ -200,11 +242,26 @@ function wireFirstSuccess() {
   if (open) {
     open.addEventListener("click", function (e) {
       e.preventDefault();
+      if (_successRefinedEnabled && _successMode === "quick_share" && _successResult && _successResult.tripId) {
+        trackStudioEvent("success_primary_click", { action: "save_longshot" });
+        runShelfLongshot({ tripId: _successResult.tripId, title: _successResult.title || "我的旅途" }, {
+          surface: "first_success",
+        });
+        return;
+      }
       openPreview("open_preview");
+    });
+  }
+  var secondary = $("v2-success-secondary");
+  if (secondary) {
+    secondary.addEventListener("click", function (e) {
+      e.preventDefault();
+      openPreview("open_preview_secondary");
     });
   }
 }
 
 export function initFirstSuccess() {
+  loadSuccessFeatureFlag();
   wireFirstSuccess();
 }

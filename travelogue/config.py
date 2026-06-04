@@ -302,6 +302,9 @@ class StudioConfig:
     """Studio workbench (Phase 4 M17 · G1)."""
 
     g1_confirm_structure: bool = False
+    import_dual_mode_enabled: bool = True
+    success_refined_default_enabled: bool = True
+    import_sheet_large_enabled: bool = True
 
 
 @dataclass
@@ -787,6 +790,9 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
         },
         "studio": {
             "g1ConfirmStructure": cfg.studio.g1_confirm_structure,
+            "importDualModeEnabled": cfg.studio.import_dual_mode_enabled,
+            "successRefinedDefaultEnabled": cfg.studio.success_refined_default_enabled,
+            "importSheetLargeEnabled": cfg.studio.import_sheet_large_enabled,
         },
     }
 
@@ -804,7 +810,16 @@ def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
     allowed_clustering = {"enabled", "segmentCurateMode", "sceneClusterMode"}
     allowed_vision = {"enabled"}
     allowed_layout_scoring = {"enabled"}
-    allowed_studio = {"g1ConfirmStructure", "g1_confirm_structure"}
+    allowed_studio = {
+        "g1ConfirmStructure",
+        "g1_confirm_structure",
+        "importDualModeEnabled",
+        "import_dual_mode_enabled",
+        "successRefinedDefaultEnabled",
+        "success_refined_default_enabled",
+        "importSheetLargeEnabled",
+        "import_sheet_large_enabled",
+    }
     clu_patch = patch.get("clustering") if isinstance(patch.get("clustering"), dict) else {}
     vis_patch = patch.get("vision") if isinstance(patch.get("vision"), dict) else {}
     layout_patch = patch.get("layout") if isinstance(patch.get("layout"), dict) else {}
@@ -847,7 +862,13 @@ def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
             data["studio"] = target
         for key, val in studio_patch.items():
             if key in allowed_studio:
-                norm_key = "g1_confirm_structure" if key == "g1ConfirmStructure" else key
+                mapping = {
+                    "g1ConfirmStructure": "g1_confirm_structure",
+                    "importDualModeEnabled": "import_dual_mode_enabled",
+                    "successRefinedDefaultEnabled": "success_refined_default_enabled",
+                    "importSheetLargeEnabled": "import_sheet_large_enabled",
+                }
+                norm_key = mapping.get(key, key)
                 target[norm_key] = val
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
@@ -1002,6 +1023,15 @@ def load_config(path: Path | None = None) -> AppConfig:
         studio=StudioConfig(
             g1_confirm_structure=bool(
                 studio_raw.get("g1_confirm_structure", studio_raw.get("g1ConfirmStructure", False))
+            ),
+            import_dual_mode_enabled=cfg_bool(
+                studio_raw, "import_dual_mode_enabled", "importDualModeEnabled", True
+            ),
+            success_refined_default_enabled=cfg_bool(
+                studio_raw, "success_refined_default_enabled", "successRefinedDefaultEnabled", True
+            ),
+            import_sheet_large_enabled=cfg_bool(
+                studio_raw, "import_sheet_large_enabled", "importSheetLargeEnabled", True
             ),
         ),
         phase6=_phase6_from_dict(phase6_raw),

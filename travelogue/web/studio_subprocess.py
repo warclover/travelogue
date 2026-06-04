@@ -60,12 +60,17 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             config=Path(cfg_path) if cfg_path else None,
             app_config=cfg,
             progress=progress,
+            mode=str(payload.get("mode") or payload.get("importMode") or "quick_share"),
             user_notes=payload.get("userNotes"),
+            travel_notes=payload.get("travelNotes"),
+            date_range=payload.get("dateRange") if isinstance(payload.get("dateRange"), dict) else None,
             plan_bytes=plan_bytes,
             plan_text=payload.get("planText"),
             plan_filename=str(payload.get("planFilename") or "plan.txt"),
             template_mode=str(payload.get("template_mode") or payload.get("templateMode") or "smart"),
             template_id=payload.get("template_id") or payload.get("templateId"),
+            featured_dir=payload.get("featuredDir"),
+            material_dir=payload.get("materialDir"),
         )
         progress_queue.put(
             {
@@ -87,6 +92,8 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     "templateFeedbackKind": result.template_feedback_kind or "",
                     "templateFeedbackMessage": result.template_feedback_message or "",
                     "resolvedTemplateId": result.resolved_template_id or "visual-journal",
+                    "mode": result.import_mode or "quick_share",
+                    "dateRangeWarn": result.date_range_warn or "",
                 },
             }
         )

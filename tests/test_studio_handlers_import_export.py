@@ -221,6 +221,82 @@ def test_handle_import_accepts_loopback_local_album(tmp_path: Path) -> None:
     assert body.get("jobId")
 
 
+def test_handle_import_rejects_invalid_date_range_order(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    album = tmp_path / "album"
+    album.mkdir()
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={
+            "albumPath": str(album),
+            "title": "测试",
+            "dateRange": {"start": "2025-04-09", "end": "2025-04-06"},
+        },
+    )
+    handle_import(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 400
+    assert body["error"] == "E_STUDIO_DATE_RANGE_INVALID"
+    assert "开始日期不能晚于结束日期" in body["message"]
+
+
+def test_handle_import_rejects_invalid_date_format(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    album = tmp_path / "album"
+    album.mkdir()
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={"albumPath": str(album), "dateRangeStart": "2025/04/02"},
+    )
+    handle_import(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 400
+    assert body["error"] == "E_STUDIO_DATE_RANGE_INVALID"
+    assert "YYYY-MM-DD" in body["message"]
+
+
+def test_handle_import_passes_phase14_fields_to_worker(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    album = tmp_path / "album"
+    album.mkdir()
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={
+            "albumPath": str(album),
+            "title": "测试",
+            "mode": "fine_craft",
+            "travelNotes": "雨后散步",
+            "userNotes": "慢走慢看",
+            "dateRange": {"start": "2025-04-02", "end": "2025-04-06"},
+            "featuredDir": "精选",
+            "materialDir": "素材",
+        },
+    )
+    with patch("travelogue.web.studio_handlers.import_handlers.run_import_job_subprocess") as run_job:
+        with patch(
+            "travelogue.web.studio_handlers.import_handlers.assert_album_importable",
+        ):
+            handle_import(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 202
+    assert body["ok"] is True
+    assert run_job.call_count == 1
+    worker_payload = run_job.call_args.args[1]
+    assert worker_payload["mode"] == "fine_craft"
+    assert worker_payload["travelNotes"] == "雨后散步"
+    assert worker_payload["userNotes"] == "慢走慢看"
+    assert worker_payload["dateRange"] == {
+        "source": "user",
+        "start": "2025-04-02",
+        "end": "2025-04-06",
+    }
+    assert worker_payload["featuredDir"] == "精选"
+    assert worker_payload["materialDir"] == "素材"
+
+
 def test_handle_reveal_denies_path_outside_trip(tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     create_trip("demo-reveal", trips_dir)

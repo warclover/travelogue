@@ -118,6 +118,16 @@
           "description": "True when Studio user explicitly filled 主地点; false when default/blank so copy prefers magazine title over EXIF city"
         },
         "userNotes": { "type": "string", "maxLength": 200 },
+        "travelNotes": { "type": "string", "maxLength": 500 },
+        "dateRange": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "start": { "type": "string", "format": "date" },
+            "end": { "type": "string", "format": "date" },
+            "source": { "type": "string", "enum": ["user", "exif", "mixed"] }
+          }
+        },
         "travelPlan": {
           "type": "object",
           "additionalProperties": false,

@@ -82,6 +82,7 @@ function buildUploadForm(files, opts) {
   form.append("title", title);
   form.append("place", "旅途");
   form.append("placeUserSet", "false");
+  form.append("mode", String(opts.mode || "quick_share"));
   var tpl = readTemplateParams();
   form.append("template_mode", tpl.template_mode || "smart");
   if (tpl.template_id) form.append("template_id", tpl.template_id);
@@ -109,6 +110,7 @@ export function buildImportPayload(albumPath, title) {
       title: (title || basenameTitle(albumPath)).slice(0, 20) || "我的旅途",
       place: "旅途",
       placeUserSet: false,
+      mode: "quick_share",
       force: false,
     },
     readTemplateParams()
@@ -296,7 +298,12 @@ export function startV2Import(body, opts) {
   var gen = ++_gen;
   var source = opts.source || "本机文件夹";
   var tpl = readTemplateParams();
-  trackStudioEvent("import_start", { via: "path", surface: "v2_sheet", template_mode: tpl.template_mode });
+  trackStudioEvent("import_start", {
+    via: "path",
+    surface: "v2_sheet",
+    template_mode: tpl.template_mode,
+    mode: String((body && body.mode) || "quick_share"),
+  });
   trackStudioEvent("template_create_submitted", {
     template_mode: tpl.template_mode,
     template_id: tpl.template_id || null,

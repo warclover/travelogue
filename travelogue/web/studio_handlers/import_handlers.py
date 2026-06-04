@@ -9,8 +9,10 @@ Loopback album paths (folder picker / JSON ``albumPath``):
 
 from __future__ import annotations
 
+import datetime as _dt
 import logging
 import os
+import re
 import threading
 import time
 from pathlib import Path
@@ -38,6 +40,7 @@ from travelogue.web.studio_uploads import (
 )
 
 _log = logging.getLogger(__name__)
+_ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def _studio_trust_local_album_paths() -> bool:
@@ -51,6 +54,35 @@ def _album_under_trips_root(album_path: Path, trips_root: Path) -> bool:
         return True
     except ValueError:
         return False
+
+
+def _is_valid_iso_date(value: str) -> bool:
+    if not value or not _ISO_DATE_RE.match(value):
+        return False
+    try:
+        _dt.date.fromisoformat(value)
+        return True
+    except ValueError:
+        return False
+
+
+def _normalize_user_date_range(start: str, end: str) -> tuple[dict | None, str | None]:
+    start = str(start or "").strip()
+    end = str(end or "").strip()
+    if not start and not end:
+        return None, None
+    if start and not _is_valid_iso_date(start):
+        return None, "开始日期格式无效，请使用 YYYY-MM-DD"
+    if end and not _is_valid_iso_date(end):
+        return None, "结束日期格式无效，请使用 YYYY-MM-DD"
+    if start and end and start > end:
+        return None, "开始日期不能晚于结束日期"
+    payload: dict[str, str] = {"source": "user"}
+    if start:
+        payload["start"] = start
+    if end:
+        payload["end"] = end
+    return payload, None
 
 
 def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | None]:
@@ -93,9 +125,28 @@ def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | No
             "force": fields.get("force", "").lower() in ("1", "true", "yes"),
             "_job": job,
         }
+        import_mode = str(fields.get("mode") or fields.get("importMode") or "quick_share").strip().lower()
+        payload["mode"] = import_mode
         notes = str(fields.get("userNotes") or "").strip()
         if notes:
             payload["userNotes"] = notes[:STUDIO_USER_NOTES_MAX_LEN]
+        travel_notes = str(fields.get("travelNotes") or "").strip()
+        if travel_notes:
+            payload["travelNotes"] = travel_notes[:500]
+        date_start = str(fields.get("dateRangeStart") or fields.get("dateStart") or "").strip()
+        date_end = str(fields.get("dateRangeEnd") or fields.get("dateEnd") or "").strip()
+        if date_start or date_end:
+            payload["dateRange"] = {
+                "start": date_start,
+                "end": date_end,
+                "source": "user",
+            }
+        featured_dir = str(fields.get("featuredDir") or "").strip()
+        if featured_dir:
+            payload["featuredDir"] = featured_dir
+        material_dir = str(fields.get("materialDir") or "").strip()
+        if material_dir:
+            payload["materialDir"] = material_dir
         tm = str(fields.get("template_mode") or fields.get("templateMode") or "smart").strip().lower()
         payload["template_mode"] = tm if tm in ("smart", "manual") else "smart"
         tid = str(fields.get("template_id") or fields.get("templateId") or "").strip()
@@ -192,6 +243,40 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     user_notes = (
         str(payload.get("userNotes") or "").strip()[:STUDIO_USER_NOTES_MAX_LEN] or None
     )
+    travel_notes = str(payload.get("travelNotes") or "").strip()[:500] or None
+    import_mode = str(payload.get("mode") or payload.get("importMode") or "quick_share").strip().lower()
+    if import_mode not in ("quick_share", "fine_craft"):
+        import_mode = "quick_share"
+    date_range_raw = payload.get("dateRange") if isinstance(payload.get("dateRange"), dict) else {}
+    date_start = str(
+        date_range_raw.get("start")
+        or payload.get("dateRangeStart")
+        or payload.get("dateStart")
+        or ""
+    ).strip()
+    date_end = str(
+        date_range_raw.get("end")
+        or payload.get("dateRangeEnd")
+        or payload.get("dateEnd")
+        or ""
+    ).strip()
+    date_range, date_err = _normalize_user_date_range(date_start, date_end)
+    if date_err:
+        if upload_dir:
+            delete_upload_dir(upload_dir, trips_dir=trips_root)
+        if precreated_job:
+            get_job_store().finish_import()
+        handler._json_response(
+            400,
+            {
+                "ok": False,
+                "error": "E_STUDIO_DATE_RANGE_INVALID",
+                "message": date_err,
+            },
+        )
+        return
+    featured_dir = str(payload.get("featuredDir") or "").strip() or None
+    material_dir = str(payload.get("materialDir") or "").strip() or None
     plan_text = str(payload.get("planText") or "").strip() or None
     if plan_text and len(plan_text.encode("utf-8")) > 32 * 1024:
         plan_text = None
@@ -256,12 +341,21 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         "dedupe": not (use_demo_album or is_demo_album_path(str(album_path))),
         "host": host,
         "port": port,
+        "mode": import_mode,
         "template_mode": template_mode,
     }
     if template_id_str:
         worker_payload["template_id"] = template_id_str
     if user_notes:
         worker_payload["userNotes"] = user_notes
+    if travel_notes:
+        worker_payload["travelNotes"] = travel_notes
+    if date_range:
+        worker_payload["dateRange"] = date_range
+    if featured_dir:
+        worker_payload["featuredDir"] = featured_dir
+    if material_dir:
+        worker_payload["materialDir"] = material_dir
     if plan_text:
         worker_payload["planText"] = plan_text
     if plan_bytes_b64:

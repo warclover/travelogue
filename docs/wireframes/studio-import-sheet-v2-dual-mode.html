@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio Import Sheet v2 · 懒人版 / 专业版 双 Tab 线框</title>
+  <style>
+    :root {
+      --ink: #0d0d0d;
+      --paper: #f7f4ee;
+      --accent: #d2a657;
+      --accent-dim: rgba(210, 166, 87, .15);
+      --muted: rgba(13, 13, 13, .55);
+      --line: rgba(13, 13, 13, .12);
+      --danger: #c25450;
+      --wf-label: #e85d04;
+      --pro: #3d6b8e;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); font-size: 14px; color: var(--ink); background: #e8e4dc; }
+    .wf-meta { padding: 16px 24px; background: #fff; border-bottom: 2px solid var(--wf-label); }
+    .wf-meta h1 { margin: 0 0 6px; font-size: 18px; }
+    .wf-meta p { margin: 0 0 8px; font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .wf-meta ul { margin: 8px 0 0; padding-left: 20px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .wf-scenario-tabs { display: flex; gap: 6px; padding: 16px 24px 0; flex-wrap: wrap; }
+    .wf-scenario-tabs button {
+      border: 1px solid var(--line); background: #fff; padding: 8px 14px; border-radius: 8px 8px 0 0;
+      cursor: pointer; font-size: 12px;
+    }
+    .wf-scenario-tabs button[aria-selected="true"] { background: var(--paper); border-bottom-color: var(--paper); font-weight: 600; }
+    .wf-panel { display: none; padding: 20px 24px 40px; }
+    .wf-panel[data-active="true"] { display: block; }
+    .wf-stage {
+      max-width: 440px; margin: 0 auto; min-height: 680px; position: relative;
+      border-radius: 12px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,.18);
+      background: #1a1814; color: #fff;
+    }
+    .wf-hero-bg {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #1a1814 0%, #2a2520 50%, #1f2a26 100%);
+    }
+    .wf-scrim { position: absolute; inset: 0; background: rgba(0,0,0,.5); z-index: 2; }
+    .wf-sheet {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+      background: var(--paper); color: var(--ink); border-radius: 16px 16px 0 0;
+      padding: 10px 18px 22px; max-height: 78%; overflow-y: auto;
+    }
+    .wf-sheet-handle { width: 40px; height: 4px; background: var(--line); border-radius: 2px; margin: 0 auto 10px; }
+    .wf-sheet-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .wf-sheet-head h3 { margin: 0; font-size: 17px; line-height: 1.3; }
+    .wf-sheet-head .sub { font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 4px; }
+    .wf-close { border: none; background: none; font-size: 22px; cursor: pointer; color: var(--muted); line-height: 1; padding: 0; }
+    .wf-mode-tabs {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 14px;
+      border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff;
+    }
+    .wf-mode-tabs button {
+      border: none; background: transparent; padding: 11px 8px; font-size: 13px; cursor: pointer;
+      color: var(--muted); position: relative;
+    }
+    .wf-mode-tabs button[aria-selected="true"] { background: var(--accent-dim); color: var(--ink); font-weight: 600; }
+    .wf-mode-tabs button[aria-selected="true"]::after {
+      content: ""; position: absolute; left: 20%; right: 20%; bottom: 0; height: 2px; background: var(--accent);
+    }
+    .wf-mode-tabs .badge {
+      display: block; font-size: 10px; font-weight: 400; color: var(--muted); margin-top: 2px;
+    }
+    .wf-mode-panel { display: none; }
+    .wf-mode-panel[data-active="true"] { display: block; }
+    .wf-btn-primary {
+      display: block; width: 100%; padding: 14px; border: none; border-radius: 10px;
+      background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    .wf-btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+    .wf-btn-ghost {
+      display: block; width: 100%; margin-top: 8px; padding: 11px; border-radius: 10px;
+      border: 1px solid var(--line); background: #fff; font-size: 13px; cursor: pointer; color: var(--muted);
+    }
+    .wf-picked {
+      display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; margin-bottom: 12px;
+      background: #fff; border: 1px solid var(--accent); border-radius: 8px; font-size: 12px;
+    }
+    .wf-picked .icon { color: var(--accent); font-weight: 700; flex-shrink: 0; }
+    .wf-picked .path { word-break: break-all; color: var(--ink); }
+    .wf-picked .change { margin-left: auto; flex-shrink: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font-size: 11px; }
+    .wf-field { margin-bottom: 12px; }
+    .wf-field label { display: flex; align-items: baseline; gap: 6px; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--muted); }
+    .wf-field label .opt { font-weight: 400; font-size: 11px; }
+    .wf-field label .help {
+      margin-left: auto; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--line);
+      background: #fff; font-size: 11px; color: var(--muted); cursor: help; text-align: center; line-height: 16px;
+    }
+    .wf-field input, .wf-field textarea, .wf-field select {
+      width: 100%; padding: 10px 11px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;
+      font-family: inherit;
+    }
+    .wf-field textarea { min-height: 64px; resize: vertical; line-height: 1.45; }
+    .wf-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .wf-hint { font-size: 11px; color: var(--muted); margin: 6px 0 0; line-height: 1.5; }
+    .wf-hint strong { color: var(--ink); font-weight: 600; }
+    .wf-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .wf-chip {
+      padding: 5px 10px; border-radius: 999px; border: 1px dashed var(--line); background: #fff;
+      font-size: 11px; color: var(--muted); cursor: pointer;
+    }
+    .wf-chip:hover { border-color: var(--accent); color: var(--ink); }
+    .wf-tree {
+      font-family: ui-monospace, "Cascadia Code", monospace; font-size: 11px; background: #fff;
+      padding: 10px; border-radius: 8px; margin-top: 6px; border: 1px solid var(--line); line-height: 1.5;
+    }
+    .wf-section {
+      margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line);
+    }
+    .wf-section-title { font-size: 12px; font-weight: 700; margin-bottom: 10px; color: var(--ink); }
+    .wf-upload {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px dashed var(--line);
+      border-radius: 8px; background: #fff; font-size: 12px; cursor: pointer;
+    }
+    .wf-upload .plus { font-size: 18px; color: var(--accent); }
+    .wf-trust {
+      margin-top: 14px; padding: 10px 12px; border-radius: 8px; background: rgba(13,13,13,.04);
+      font-size: 11px; color: var(--muted); line-height: 1.5;
+    }
+    .wf-label-tag {
+      display: inline-block; font-size: 10px; font-weight: 700; color: var(--wf-label);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px;
+    }
+    .wf-callout {
+      max-width: 440px; margin: 16px auto 0; padding: 12px 14px; background: #fff;
+      border-left: 3px solid var(--pro); border-radius: 0 8px 8px 0; font-size: 12px; line-height: 1.55;
+    }
+    .wf-callout h4 { margin: 0 0 6px; font-size: 13px; }
+    .wf-callout p { margin: 0; color: var(--muted); }
+    .wf-flow {
+      max-width: 900px; margin: 24px auto; padding: 16px 20px; background: #fff; border-radius: 10px;
+      font-size: 12px; line-height: 1.6;
+    }
+    .wf-flow h3 { margin: 0 0 10px; font-size: 14px; }
+    .wf-flow pre { background: #f5f2ec; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 11px; }
+    .wf-anno { font-size: 10px; color: var(--wf-label); font-weight: 700; letter-spacing: .04em; }
+  </style>
+</head>
+<body>
+
+<div class="wf-meta">
+  <h1>Import Sheet v2 · 懒人版 / 专业版 双 Tab</h1>
+  <p>
+    <strong>需求理解：</strong>用户点「开始制作我的游记」→ 弹出本 Sheet（可与系统选文件夹并行或紧接）。
+    默认 <strong>懒人版</strong>（80% · 长图快享）；<strong>专业版</strong>（20% · 高质量卷轴/旅伴分享）收纳全部 Intent 字段。
+  </p>
+  <ul>
+    <li>线框仅交互与信息架构；视觉对齐 <code>studio-home-v2</code> 深色 Sheet。</li>
+    <li>字段映射见各场景下方「设计说明」callout。</li>
+    <li>Windows 原生文件夹选择器会<strong>阻塞浏览器</strong>——实际实现建议：先开 Sheet → 用户点选夹 → 系统对话框 → 返回后填充路径（见流程图）。</li>
+  </ul>
+</div>
+
+<div class="wf-flow">
+  <h3>建议交互时序（讨论稿）</h3>
+  <pre>
+用户点首页 CTA「开始制作我的游记」
+    │
+    ├─→ ① 立即弹出 Import Sheet（默认 Tab = 懒人版）
+    │
+    └─→ ② 用户点「选择照片文件夹」→ 系统 pick-folder（Sheet 保持打开，按钮 disabled）
+            │
+            ├─ 取消 → 回到 Sheet，可改 Tab / 关闭
+            └─ 选定 → 路径写入 Sheet 顶栏「已选文件夹」→ 懒人版可直接「开始制作」
+                      专业版可继续填表 → 「开始制作（专业）」
+
+Import 进行中：Sheet 强制关闭 · Hero 进入 Importing
+  </pre>
+</div>
+
+<div class="wf-scenario-tabs" role="tablist" aria-label="线框场景">
+  <button type="button" data-tab="s1" aria-selected="true">S1 · 懒人版 · 未选夹</button>
+  <button type="button" data-tab="s2">S2 · 懒人版 · 已选夹</button>
+  <button type="button" data-tab="s3">S3 · 专业版 · 完整表单</button>
+  <button type="button" data-tab="s4">S4 · Tab 切换态</button>
+</div>
+
+<!-- ═══ S1 懒人版 · 未选夹 ═══ -->
+<div id="s1" class="wf-panel" data-active="true">
+  <span class="wf-label-tag">Scenario 1 · 默认首屏</span>
+  <div class="wf-stage">
+    <div class="wf-hero-bg"></div>
+    <div class="wf-scrim"></div>
+    <div class="wf-sheet" role="dialog" aria-labelledby="sheet-title-s1">
+      <div class="wf-sheet-handle"></div>
+      <div class="wf-sheet-head">
+        <div>
+          <h3 id="sheet-title-s1">制作我的游记</h3>
+          <p class="sub">选文件夹 · 自动出稿 · 照片留在本机</p>
+        </div>
+        <button type="button" class="wf-close" aria-label="关闭">×</button>
+      </div>
+
+      <div class="wf-mode-tabs" role="tablist">
+        <button type="button" role="tab" aria-selected="true" data-mode="easy">
+          懒人版
+          <span class="badge">快速长图 · 推荐</span>
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-mode="pro">
+          专业版
+          <span class="badge">精细游记 · 旅伴共读</span>
+        </button>
+      </div>
+
+      <div class="wf-mode-panel" data-active="true" data-mode="easy">
+        <p class="wf-hint" style="margin-top:0;margin-bottom:14px;">
+          <strong>只需选一个文件夹</strong>，分章、排版、配文全自动。适合微信群发长图。
+        </p>
+        <button type="button" class="wf-btn-primary">选择本次旅行的照片文件夹</button>
+        <p class="wf-hint">
+          相册里若有「<strong>精选</strong>」和「<strong>素材</strong>」子文件夹，封面会优先用精选（建议 8–20 张）。
+        </p>
+        <div class="wf-trust">
+          🔒 照片仅在本地处理 · 无需注册 · 不会上传云端
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="wf-callout">
+    <h4>S1 设计要点</h4>
+    <p>
+      懒人版<strong>不出现任何输入框</strong>，降低 80% 用户认知负担。
+      主按钮即 pick-folder。精选/素材说明保留一行常显 hint（Phase 5 唯一值得教的准备动作）。
+    </p>
+  </div>
+</div>
+
+<!-- ═══ S2 懒人版 · 已选夹 ═══ -->
+<div id="s2" class="wf-panel">
+  <span class="wf-label-tag">Scenario 2 · 选夹后 · 一键开跑</span>
+  <div class="wf-stage">
+    <div class="wf-hero-bg"></div>
+    <div class="wf-scrim"></div>
+    <div class="wf-sheet">
+      <div class="wf-sheet-handle"></div>
+      <div class="wf-sheet-head">
+        <div><h3>制作我的游记</h3><p class="sub">懒人版 · 已选文件夹</p></div>
+        <button type="button" class="wf-close">×</button>
+      </div>
+
+      <div class="wf-mode-tabs">
+        <button type="button" aria-selected="true">懒人版<span class="badge">快速长图 · 推荐</span></button>
+        <button type="button" aria-selected="false">专业版<span class="badge">精细游记</span></button>
+      </div>
+
+      <div class="wf-picked">
+        <span class="icon">✓</span>
+        <span class="path">D:\Photos\Kyoto2025</span>
+        <span class="change">更换</span>
+      </div>
+
+      <div class="wf-mode-panel" data-active="true">
+        <p class="wf-hint" style="margin-top:0;">
+          杂志名将使用文件夹名「<strong>Kyoto2025</strong>」。想改名？切换到专业版。
+        </p>
+        <button type="button" class="wf-btn-primary">开始制作 →</button>
+        <button type="button" class="wf-btn-ghost">重新选择文件夹</button>
+      </div>
+    </div>
+  </div>
+  <div class="wf-callout">
+    <h4>S2 设计要点</h4>
+    <p>
+      懒人路径目标 <strong>≤2 次点击</strong>（选夹 + 开始制作）。
+      杂志名默认 basename，不在懒人版暴露输入框；提供「切换到专业版改名」的轻提示即可。
+    </p>
+  </div>
+</div>
+
+<!-- ═══ S3 专业版 · 完整表单 ═══ -->
+<div id="s3" class="wf-panel">
+  <span class="wf-label-tag">Scenario 3 · 专业版 · 已选夹</span>
+  <div class="wf-stage">
+    <div class="wf-hero-bg"></div>
+    <div class="wf-scrim"></div>
+    <div class="wf-sheet">
+      <div class="wf-sheet-handle"></div>
+      <div class="wf-sheet-head">
+        <div><h3>制作我的游记</h3><p class="sub">专业版 · 填写越多，成稿越贴你的旅程</p></div>
+        <button type="button" class="wf-close">×</button>
+      </div>
+
+      <div class="wf-mode-tabs">
+        <button type="button" aria-selected="false">懒人版<span class="badge">快速长图</span></button>
+        <button type="button" aria-selected="true">专业版<span class="badge">精细游记 · 旅伴共读</span></button>
+      </div>
+
+      <div class="wf-picked">
+        <span class="icon">✓</span>
+        <span class="path">D:\Photos\Kyoto2025</span>
+        <span class="change">更换</span>
+      </div>
+
+      <div class="wf-mode-panel" data-active="true">
+
+        <div class="wf-section" style="margin-top:0;padding-top:0;border-top:none;">
+          <div class="wf-section-title">① 基本信息</div>
+          <div class="wf-field">
+            <label for="pro-title">游记名称 <span class="opt">（封面与长图标题 · ≤20 字）</span></label>
+            <input id="pro-title" type="text" value="雨后京都" maxlength="20" />
+          </div>
+          <div class="wf-field-row">
+            <div class="wf-field">
+              <label for="pro-date-start">出发日期 <span class="opt">（可选）</span></label>
+              <input id="pro-date-start" type="date" value="2025-04-02" />
+            </div>
+            <div class="wf-field">
+              <label for="pro-date-end">结束日期 <span class="opt">（可选）</span></label>
+              <input id="pro-date-end" type="date" value="2025-04-06" />
+            </div>
+          </div>
+          <p class="wf-hint">不填日期时，从照片拍摄时间自动推断。</p>
+          <div class="wf-field">
+            <label for="pro-place">主要地点 <span class="opt">（可选 · 帮助分章与文案）</span></label>
+            <input id="pro-place" type="text" placeholder="例如：京都、大阪" value="京都" />
+          </div>
+        </div>
+
+        <div class="wf-section">
+          <div class="wf-section-title">② 照片组织</div>
+          <p class="wf-hint" style="margin-top:0;">
+            若相册内已有子文件夹，会自动识别；也可手动指定路径（覆盖自动检测）。
+          </p>
+          <div class="wf-tree">
+            Kyoto2025/<br>
+            ├── <strong>精选/</strong> ← 封面与章首优先<br>
+            ├── <strong>素材/</strong> ← 补充叙事<br>
+            └── …其他照片
+          </div>
+          <div class="wf-field" style="margin-top:10px;">
+            <label>精选文件夹 <span class="opt">（可选 · 默认自动找「精选/featured」）</span></label>
+            <input type="text" placeholder="留空 = 自动检测" value="精选" />
+          </div>
+          <div class="wf-field">
+            <label>素材文件夹 <span class="opt">（可选）</span></label>
+            <input type="text" placeholder="留空 = 自动检测" value="素材" />
+          </div>
+        </div>
+
+        <div class="wf-section">
+          <div class="wf-section-title">③ 告诉编辑你的偏好</div>
+          <div class="wf-field">
+            <label for="pro-notes">
+              写给编辑的一句话
+              <span class="opt">（可选 · ≤200 字）</span>
+              <span class="help" title="语气、节奏、高潮章节">?</span>
+            </label>
+            <textarea id="pro-notes" maxlength="200" placeholder="例如：带娃慢走，别写成导游词">带娃慢走，第3天岚山最难忘，想突出雨后的感觉</textarea>
+            <div class="wf-chips">
+              <span class="wf-chip">带娃慢走，别写成导游词</span>
+              <span class="wf-chip">想表达静谧</span>
+              <span class="wf-chip">第3天最难忘</span>
+            </div>
+            <p class="wf-hint">影响文案语气与章节重点，<strong>不是</strong>写完整游记正文。</p>
+          </div>
+          <div class="wf-field">
+            <label for="pro-highlights">旅途见闻与感悟 <span class="opt">（可选 · ≤500 字）</span></label>
+            <textarea id="pro-highlights" rows="3" placeholder="例如：在祇园避雨闯进一家小酒馆；老人教我们在鸭川边喂鱼…">在祇园避雨时闯进一家小酒馆，老板推荐了本地清酒；第3天岚山竹林人最少。</textarea>
+            <p class="wf-hint">会写入叙事 brief，帮助图说更贴你的真实经历。（<span class="wf-anno">NEW FIELD · 需后端扩展或合并入 planText</span>）</p>
+          </div>
+          <div class="wf-field">
+            <label>行程计划文件 <span class="opt">（可选 · .txt / .md ≤32KB）</span></label>
+            <div class="wf-upload"><span class="plus">+</span> 上传 plan.txt · 帮助按你的安排分章</div>
+            <p class="wf-hint">行程单仅用于本地分章，<strong>不会公开发布</strong>。</p>
+          </div>
+        </div>
+
+        <div class="wf-section">
+          <div class="wf-section-title">④ 成稿偏好 <span style="font-weight:400;color:var(--muted);font-size:11px;">（可选）</span></div>
+          <div class="wf-field">
+            <label for="pro-template">模板</label>
+            <select id="pro-template">
+              <option selected>智能匹配（推荐）</option>
+              <option>视觉游记（手动指定）</option>
+            </select>
+          </div>
+          <div class="wf-field">
+            <label><input type="checkbox" checked style="width:auto;margin-right:6px;" /> 生成后打开预览验货（卷轴）</label>
+            <p class="wf-hint">懒人版默认直奔长图；专业版用户更常需要验货卷轴。</p>
+          </div>
+        </div>
+
+        <button type="button" class="wf-btn-primary" style="margin-top:8px;">开始制作（专业） →</button>
+        <p class="wf-hint" style="text-align:center;margin-top:8px;">
+          预计 3–8 分钟 · 可关闭 Sheet，制作在后台继续
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="wf-callout">
+    <h4>S3 字段映射（与现有 trip.json）</h4>
+    <p>
+      游记名称 → <code>intent.title</code> · 地点 → <code>intent.places</code> ·
+      写给编辑 → <code>userNotes</code> · plan 文件 → <code>intent.travelPlan</code> ·
+      精选/素材 → <code>intent.folders</code> + ingest 双源。
+      <strong>日期范围、旅途见闻</strong>为线框新增，需 PRD/ schema 扩展或暂映射到 planText。
+    </p>
+  </div>
+</div>
+
+<!-- ═══ S4 Tab 切换说明 ═══ -->
+<div id="s4" class="wf-panel">
+  <span class="wf-label-tag">Scenario 4 · Tab 切换规则</span>
+  <div class="wf-flow" style="max-width:440px;margin:0 auto;">
+    <h3>懒人版 ⇄ 专业版</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <tr style="border-bottom:1px solid var(--line);">
+        <th style="text-align:left;padding:8px 4px;">规则</th>
+        <th style="text-align:left;padding:8px 4px;">行为</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--line);">
+        <td style="padding:8px 4px;vertical-align:top;">默认 Tab</td>
+        <td style="padding:8px 4px;">懒人版；<code>sessionStorage</code> 记住上次选择（专业用户回访）</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--line);">
+        <td style="padding:8px 4px;vertical-align:top;">已填专业字段后切懒人</td>
+        <td style="padding:8px 4px;">保留已填数据不丢失；懒人版「开始制作」仍携带 Intent</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--line);">
+        <td style="padding:8px 4px;vertical-align:top;">未选夹切 Tab</td>
+        <td style="padding:8px 4px;">允许；专业版字段可预填，但「开始制作」disabled 直到选夹</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--line);">
+        <td style="padding:8px 4px;vertical-align:top;">Import 中</td>
+        <td style="padding:8px 4px;">Sheet 不可打开；与现 v2 状态机一致</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 4px;vertical-align:top;">文案调性</td>
+        <td style="padding:8px 4px;">懒人版强调「快 · 长图 · 微信」；专业版强调「贴旅程 · 卷轴 · 旅伴」；均避免突出「AI」</td>
+      </tr>
+    </table>
+
+    <h3 style="margin-top:20px;">与 80/20 用户模型对齐</h3>
+    <pre>
+懒人版（80%）                    专业版（20%）
+─────────────────────────────────────────────────
+选文件夹                         选文件夹 + 基本信息
+  ↓                                ↓
+开始制作（0 表单）               照片组织 + 编辑偏好 + plan
+  ↓                                ↓
+等待 → 长图 CTA 为主             等待 → 卷轴预览 + 长图
+    </pre>
+
+    <h3 style="margin-top:20px;">待你拍板的问题</h3>
+    <ol style="padding-left:18px;color:var(--muted);line-height:1.7;">
+      <li><strong>「旅途见闻与感悟」</strong>：独立字段（≤500 字）还是合并进「写给编辑的一句话」？</li>
+      <li><strong>日期范围</strong>：用户手填 vs 仅从 EXIF 只读展示？</li>
+      <li><strong>CTA 文案</strong>：两 Tab 共用「开始制作」还是专业版用「开始制作（专业）」？</li>
+      <li><strong>Sheet 与 pick-folder 时序</strong>：先 Sheet 再选夹（推荐）vs 先选夹再 Sheet？</li>
+      <li><strong>专业版默认勾选</strong>：是否默认「导入后打开卷轴预览」？</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll(".wf-scenario-tabs button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".wf-scenario-tabs button").forEach(function (b) {
+        b.setAttribute("aria-selected", "false");
+      });
+      document.querySelectorAll(".wf-panel").forEach(function (p) {
+        p.dataset.active = "false";
+      });
+      btn.setAttribute("aria-selected", "true");
+      var panel = document.getElementById(btn.getAttribute("data-tab"));
+      if (panel) panel.dataset.active = "true";
+    });
+  });
+</script>
+</body>
+</html>

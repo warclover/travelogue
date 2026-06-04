@@ -248,6 +248,52 @@ def test_studio_home_v2_import_sheet_modules() -> None:
     assert "AI 自动生成" not in sheet and "AI 自动生成" not in run
 
 
+def test_studio_home_v2_phase14_dual_mode_smoke() -> None:
+    """Phase 14 最小前端冒烟：双模式 DOM + 行为挂钩均已接线。"""
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+    sheet = (STUDIO_DIR / "homepage-v2" / "import-sheet.js").read_text(encoding="utf-8")
+    first_success = (STUDIO_DIR / "homepage-v2" / "first-success.js").read_text(encoding="utf-8")
+
+    for marker in (
+        "v2-sheet-mode-quick",
+        "v2-sheet-mode-fine",
+        "快速分享",
+        "精细制作",
+        'id="v2-sheet-panel-fine" data-mode="fine_craft" hidden',
+        "v2-travel-notes",
+        "v2-date-start",
+        "v2-date-end",
+        "v2-featured-dir",
+        "v2-material-dir",
+        "开始制作（专业）",
+        "v2-success-secondary",
+    ):
+        assert marker in html, marker
+
+    for marker in (
+        "switchMode(",
+        "saveSheetDraft(",
+        "restoreModeAndDraft(",
+        "validateFineFields(",
+        "body.travelNotes",
+        "body.dateRange",
+        "body.featuredDir",
+        "body.materialDir",
+    ):
+        assert marker in sheet, marker
+
+    css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    assert ".v2-sheet__mode-panel[hidden]" in css
+    assert "display: none !important;" in css
+
+    for marker in (
+        "runShelfLongshot",
+        "v2-success-secondary",
+        "success_preview_unavailable_fallback_longshot",
+    ):
+        assert marker in first_success, marker
+
+
 def test_studio_home_v2_first_success_module() -> None:
     """FirstSuccess 专屏 + harness studioState / studioJob。"""
     fs = (STUDIO_DIR / "homepage-v2" / "first-success.js").read_text(encoding="utf-8")

@@ -1,0 +1,39 @@
+{
+  "phase": "phase14",
+  "status": "in_progress",
+  "updatedAt": "2026-06-04",
+  "source": "cursor-agent",
+  "automated": {
+    "targetedSuites": [
+      {
+        "command": "python -m pytest tests/test_studio_intent.py -k \"travel_notes or date_range or brief\"",
+        "result": "pass"
+      },
+      {
+        "command": "python -m pytest tests/test_studio_handlers_import_export.py -k \"date_range or phase14_fields\"",
+        "result": "pass"
+      },
+      {
+        "command": "python -m pytest tests/test_studio_home_v2.py -k \"home_v2_route or import_sheet_modules or phase14_dual_mode_smoke\"",
+        "result": "pass"
+      },
+      {
+        "command": "python -m pytest tests/test_studio_home_v2.py -k \"first_success_module or phase14_dual_mode_smoke\"",
+        "result": "pass"
+      }
+    ],
+    "summary": {
+      "passedSuites": 4,
+      "failedSuites": 0
+    }
+  },
+  "manual": {
+    "signoffFile": "docs/acceptance-records/phase14-manual-signoff.md",
+    "status": "pending"
+  },
+  "notes": [
+    "当前为针对性回归结果，非全量回归。",
+    "建议按 docs/ACCEPTANCE-PHASE14.md 再执行一轮完整人工验收后转为 ready。"
+  ]
+}
+

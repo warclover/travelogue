@@ -2118,9 +2118,12 @@ body { overflow-x: clip; overflow-y: visible; }
 }
 .v2-sheet {
   position: relative;
-  width: min(560px, 100%);
-  max-height: 58vh;
-  overflow-y: auto;
+  width: clamp(560px, 64vw, 860px);
+  max-width: 100%;
+  max-height: min(86dvh, 920px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   padding: 10px 26px 28px;
   background: rgba(20, 18, 16, .96);
   border: 1px solid rgba(255, 255, 255, .1);
@@ -2128,6 +2131,12 @@ body { overflow-x: clip; overflow-y: visible; }
   box-shadow: 0 -24px 64px rgba(0, 0, 0, .5);
   color: #f5f0e8;
   animation: v2-sheet-up .26s cubic-bezier(.2, .8, .2, 1);
+}
+.v2-sheet.v2-sheet--legacy-size {
+  width: min(560px, 100%);
+  max-height: 58vh;
+  overflow-y: auto;
+  display: block;
 }
 @keyframes v2-sheet-up {
   from { transform: translateY(24px); opacity: .6; }
@@ -2145,6 +2154,16 @@ body { overflow-x: clip; overflow-y: visible; }
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: rgba(20, 18, 16, .98);
+  padding: 2px 0 6px;
+}
+.v2-sheet__body {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 .v2-sheet__title {
   margin: 0;
@@ -2197,6 +2216,42 @@ body { overflow-x: clip; overflow-y: visible; }
   padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, .08);
 }
+.v2-sheet__mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+.v2-sheet__mode-tab {
+  min-height: 42px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .04);
+  color: rgba(255, 255, 255, .75);
+  font-size: 13px;
+  cursor: pointer;
+}
+.v2-sheet__mode-tab[aria-selected="true"] {
+  background: rgba(255, 255, 255, .1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, .34);
+}
+.v2-sheet__mode-tab:focus-visible {
+  outline: 2px solid var(--v2-gold);
+  outline-offset: 2px;
+}
+.v2-sheet__mode-panel {
+  padding: 2px 0 0;
+}
+.v2-sheet__mode-panel[data-mode="fine_craft"] {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 12px;
+}
+/* 避免 display:grid 覆盖 hidden 的 UA 规则，确保精细面板默认收起。 */
+.v2-sheet__mode-panel[hidden] {
+  display: none !important;
+}
 .v2-sheet__picked {
   margin: 0 0 10px;
   font-size: 11px;
@@ -2204,13 +2259,24 @@ body { overflow-x: clip; overflow-y: visible; }
   word-break: break-all;
 }
 .v2-sheet__field { display: block; margin-bottom: 12px; }
+.v2-sheet__field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.v2-sheet__field-grid label { display: block; }
+.v2-sheet__field--full {
+  grid-column: 1 / -1;
+}
 .v2-sheet__field-label {
   display: block;
   margin-bottom: 5px;
   font-size: 11px;
   color: rgba(255, 255, 255, .55);
 }
-.v2-sheet__field input {
+.v2-sheet__field input,
+.v2-sheet__field select,
+.v2-sheet__field textarea {
   width: 100%;
   padding: 9px 11px;
   border: 1px solid rgba(255, 255, 255, .15);
@@ -2219,7 +2285,52 @@ body { overflow-x: clip; overflow-y: visible; }
   color: #f5f0e8;
   font-size: 13px;
 }
-.v2-sheet__actions { display: flex; gap: 10px; align-items: center; }
+.v2-sheet__field select {
+  color-scheme: dark;
+}
+/* Windows 下原生下拉弹层可能忽略父级配色，显式指定高对比度避免文字发灰。 */
+.v2-sheet__field select option {
+  color: #161616;
+  background: #ffffff;
+  font-weight: 500;
+}
+.v2-sheet__field select option:disabled {
+  color: #6c6c6c;
+}
+.v2-sheet__field textarea {
+  resize: vertical;
+  min-height: 64px;
+}
+.v2-sheet__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.v2-sheet__chip {
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  background: rgba(255, 255, 255, .04);
+  color: rgba(255, 255, 255, .74);
+  font-size: 11px;
+  cursor: pointer;
+}
+.v2-sheet__chip:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, .32);
+}
+.v2-sheet__actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding-top: 10px;
+  background: linear-gradient(to top, rgba(20, 18, 16, .98), rgba(20, 18, 16, .82) 55%, rgba(20, 18, 16, 0));
+}
 .v2-sheet__actions .v2-sheet__primary { flex: 1; }
 .v2-sheet__repick {
   min-height: 44px;
@@ -2465,6 +2576,45 @@ body { overflow-x: clip; overflow-y: visible; }
   text-underline-offset: 3px;
 }
 .v2-first-success__stay:hover { color: rgba(255, 255, 255, .85); }
+
+@media (min-width: 1280px) {
+  .v2-sheet__mode-panel[data-mode="fine_craft"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 14px;
+  }
+  .v2-sheet__actions--full {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 1439px) {
+  .v2-sheet__mode-panel[data-mode="fine_craft"] {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1023px) {
+  .v2-sheet {
+    padding: 10px 18px 24px;
+  }
+}
+
+@media (max-width: 760px) {
+  .v2-sheet {
+    width: min(100%, 680px);
+    padding: 10px 16px 24px;
+  }
+  .v2-sheet__field-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .v2-sheet {
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+  }
+}
 
 /* ── Import Failed overlay ── */
 #v2-failure[hidden] { display: none !important; }

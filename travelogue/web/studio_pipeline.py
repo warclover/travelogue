@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -38,6 +39,42 @@ class StudioPipelineResult:
     template_feedback_kind: str = ""
     template_feedback_message: str = ""
     resolved_template_id: str = "visual-journal"
+    import_mode: str = "quick_share"
+    date_range_warn: str = ""
+
+
+def _parse_iso_date(raw: object) -> date | None:
+    text = str(raw or "").strip()
+    if not text:
+        return None
+    try:
+        return date.fromisoformat(text)
+    except ValueError:
+        return None
+
+
+def _build_date_range_weak_hint(
+    *,
+    user_date_range: dict | None,
+    inferred_start: str | None,
+    inferred_end: str | None,
+) -> str:
+    if not isinstance(user_date_range, dict):
+        return ""
+    u_start = _parse_iso_date(user_date_range.get("start"))
+    u_end = _parse_iso_date(user_date_range.get("end"))
+    i_start = _parse_iso_date(inferred_start)
+    i_end = _parse_iso_date(inferred_end)
+    deltas: list[int] = []
+    if u_start and i_start:
+        deltas.append(abs((u_start - i_start).days))
+    if u_end and i_end:
+        deltas.append(abs((u_end - i_end).days))
+    if not deltas:
+        return ""
+    if max(deltas) <= 365:
+        return ""
+    return "你填写的日期与照片时间差异较大，仍将按你填写的日期生成"
 
 
 def _resolve_tier_mode(ingest_stats: dict) -> str:
@@ -57,12 +94,19 @@ def _finalize_pipeline_result(
     photo_count: int,
     cluster_notice: str,
     tier_mode: str,
+    user_date_range: dict | None = None,
+    import_mode: str = "quick_share",
     g1_pending: bool = False,
 ) -> StudioPipelineResult:
     from travelogue.web.studio_intent_telemetry import write_studio_intent_telemetry
 
     trip_final = svc.load(trip_json)
     meta_final = trip_final.get("meta") or {}
+    date_range_warn = _build_date_range_weak_hint(
+        user_date_range=user_date_range,
+        inferred_start=meta_final.get("dateStart"),
+        inferred_end=meta_final.get("dateEnd"),
+    )
     display_title = str(meta_final.get("title") or title).strip()[:20] or "我的旅途"
     featured_n, segment_n = _trip_import_stats(trip_final)
     intent_line = _format_intent_line(display_title, featured_n, segment_n)
@@ -101,6 +145,8 @@ def _finalize_pipeline_result(
         template_feedback_kind=tfb.get("kind", ""),
         template_feedback_message=tfb.get("message", ""),
         resolved_template_id=str(sel.get("resolvedTemplateId") or "visual-journal"),
+        import_mode=import_mode,
+        date_range_warn=date_range_warn,
     )
 
 
@@ -231,12 +277,17 @@ def run_studio_pipeline(
     config: Path | None = None,
     app_config: AppConfig | None = None,
     progress: ProgressCallback | None = None,
+    mode: str = "quick_share",
     user_notes: str | None = None,
+    travel_notes: str | None = None,
+    date_range: dict | None = None,
     plan_bytes: bytes | None = None,
     plan_text: str | None = None,
     plan_filename: str = "plan.txt",
     template_mode: str = "smart",
     template_id: str | None = None,
+    featured_dir: str | Path | None = None,
+    material_dir: str | Path | None = None,
 ) -> StudioPipelineResult:
     album_dir = album_dir.resolve()
     cfg_path = resolve_demo_config(config)
@@ -302,6 +353,9 @@ def run_studio_pipeline(
     with app_config_scope(cfg):
         report("ingest", 1)
         cluster_notice = ""
+        import_mode = str(mode or "quick_share").strip().lower()
+        if import_mode not in ("quick_share", "fine_craft"):
+            import_mode = "quick_share"
         mode = "manual" if str(template_mode).strip().lower() == "manual" else "smart"
         trip_json = create_trip(
             slug,
@@ -330,12 +384,25 @@ def run_studio_pipeline(
             if place_user_set is not None
             else bool(place_raw) and not is_generic_place(place_raw)
         )
+        folder_overrides: dict[str, str] = {}
+        if featured_dir:
+            raw = str(featured_dir).strip()
+            if raw:
+                folder_overrides["featuredDir"] = raw
+        if material_dir:
+            raw = str(material_dir).strip()
+            if raw:
+                folder_overrides["materialDir"] = raw
+        date_payload = date_range if isinstance(date_range, dict) else None
         apply_intent(
             trip,
             title=title,
             places=[place_raw] if resolved_place_user_set else [],
             places_user_set=resolved_place_user_set,
             user_notes=user_notes,
+            travel_notes=travel_notes,
+            date_range=date_payload,
+            folders=folder_overrides if folder_overrides else None,
         )
 
         if plan_bytes is not None or plan_text:
@@ -375,6 +442,22 @@ def run_studio_pipeline(
                 max_photos=cfg.ingest.max_photos,
                 dedupe=dedupe,
                 app_cfg=cfg,
+                featured_dir=(
+                    Path(folder_overrides["featuredDir"])
+                    if folder_overrides.get("featuredDir")
+                    and Path(folder_overrides["featuredDir"]).is_absolute()
+                    else (album_dir / folder_overrides["featuredDir"])
+                    if folder_overrides.get("featuredDir")
+                    else None
+                ),
+                material_dir=(
+                    Path(folder_overrides["materialDir"])
+                    if folder_overrides.get("materialDir")
+                    and Path(folder_overrides["materialDir"]).is_absolute()
+                    else (album_dir / folder_overrides["materialDir"])
+                    if folder_overrides.get("materialDir")
+                    else None
+                ),
                 on_progress=ingest_progress if progress else None,
                 on_cull_hint=cull_progress_hint if progress else None,
                 on_persist=persist_partial_ingest,
@@ -395,7 +478,9 @@ def run_studio_pipeline(
         ingest_stats = ingest_result.stats or {}
         tier_mode = _resolve_tier_mode(ingest_stats)
         featured_detected = tier_mode in ("auto", "explicit", "dual") or ingest_stats.get("mode") == "dual"
-        apply_intent(trip, folders={"featuredDetected": bool(featured_detected)})
+        existing_folders = dict(((trip.get("intent") or {}).get("folders") or {}))
+        existing_folders["featuredDetected"] = bool(featured_detected)
+        apply_intent(trip, folders=existing_folders)
 
         from travelogue.curation.intent_hints import apply_editorial_intent_hints
 
@@ -469,6 +554,8 @@ def run_studio_pipeline(
                 photo_count=photo_count,
                 cluster_notice=cluster_notice,
                 tier_mode=tier_mode,
+                user_date_range=date_payload,
+                import_mode=import_mode,
                 g1_pending=g1_pending,
             )
 
@@ -523,5 +610,7 @@ def run_studio_pipeline(
             photo_count=photo_count,
             cluster_notice=cluster_notice,
             tier_mode=tier_mode,
+            user_date_range=date_payload,
+            import_mode=import_mode,
             g1_pending=False,
         )

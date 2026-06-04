@@ -247,6 +247,7 @@
       <p class="v2-first-success__countdown" id="v2-success-countdown" hidden></p>
       <div class="v2-first-success__actions">
         <a id="v2-success-open" href="#" class="v2-first-success__cta">打开卷轴预览 →</a>
+        <a id="v2-success-secondary" href="#" class="v2-first-success__stay" hidden>保存长图</a>
         <button type="button" class="v2-first-success__stay" id="v2-success-stay">留在首页</button>
       </div>
     </div>
@@ -278,62 +279,128 @@
       <h2 class="v2-sheet__title" id="v2-sheet-title">制作我的游记画册</h2>
       <button type="button" class="v2-sheet__close" id="v2-sheet-close" aria-label="关闭">×</button>
     </div>
-    <span class="v2-sheet__badge" id="v2-sheet-badge">步骤 1 / 2 · 选择照片</span>
+    <div class="v2-sheet__body">
+      <span class="v2-sheet__badge" id="v2-sheet-badge">步骤 1 / 2 · 选择照片</span>
 
-    <button type="button" class="v2-sheet__primary" id="v2-sheet-pick">选择本次旅行的照片文件夹</button>
-    <p class="v2-sheet__hint">
-      相册里若有「精选」和「素材」两个子文件夹，封面会优先用精选（建议 8–20 张）。
-    </p>
-
-    <div class="v2-sheet__confirm" id="v2-sheet-confirm" hidden>
-      <p class="v2-sheet__picked" id="v2-sheet-picked"></p>
-      <label class="v2-sheet__field">
-        <span class="v2-sheet__field-label">杂志名</span>
-        <input type="text" id="v2-trip-title" maxlength="20" autocomplete="off"
-               placeholder="给这本画册起个名字" />
-      </label>
-      <label class="v2-sheet__field">
-        <span class="v2-sheet__field-label">模板</span>
-        <select id="v2-template-mode" aria-label="模板选择">
-          <option value="smart" selected>智能匹配（推荐）</option>
-          <option value="manual:visual-journal">视觉游记（手动指定）</option>
-        </select>
-        <p class="v2-sheet__hint" id="v2-template-hint" role="note">
-          智能匹配会根据行程天数、地点与视频占比推荐模板；不确定时自动使用视觉游记。
-        </p>
-      </label>
-      <div class="v2-sheet__actions">
-        <button type="button" class="v2-sheet__primary" id="v2-sheet-start">开始制作 →</button>
-        <button type="button" class="v2-sheet__repick" id="v2-sheet-repick">重新选择文件夹</button>
-      </div>
-    </div>
-
-    <details class="v2-sheet__details">
-      <summary>文件夹怎么选？</summary>
+      <button type="button" class="v2-sheet__primary" id="v2-sheet-pick">选择本次旅行的照片文件夹</button>
       <p class="v2-sheet__hint">
-        一次旅行一个文件夹 · 子目录可放精选 / 素材 · 支持 JPG / PNG / WebP / HEIC · 照片留在本机。
+        相册里若有「精选」和「素材」两个子文件夹，封面会优先用精选（建议 8–20 张）。
       </p>
-    </details>
-    <details class="v2-sheet__details">
-      <summary>其他导入方式</summary>
-      <div class="v2-sheet__upload">
-        <label class="v2-sheet__upload-btn" for="v2-album-upload"
-               title="建议总量 ≤200MB，过大可能失败或较慢">
-          小文件夹试用（建议 ≤200MB）
-        </label>
-        <input id="v2-album-upload" type="file" webkitdirectory directory multiple hidden
-               aria-label="小文件夹试用上传" />
-      </div>
-      <div class="v2-sheet__path">
-        <input type="text" id="v2-album-path" placeholder="粘贴文件夹路径…" aria-label="文件夹路径" />
-        <button type="button" id="v2-path-submit">使用此路径</button>
-      </div>
-    </details>
 
-    <p class="v2-sheet__hint">
-      每个文件夹会生成一本新的游记画册，<strong>不会覆盖</strong>已有作品。
-    </p>
-    <p class="v2-sheet__error" id="v2-sheet-error" role="alert" hidden></p>
+      <div class="v2-sheet__confirm" id="v2-sheet-confirm" hidden>
+        <p class="v2-sheet__picked" id="v2-sheet-picked"></p>
+        <div class="v2-sheet__mode-tabs" role="tablist" aria-label="导入模式">
+          <button type="button" class="v2-sheet__mode-tab" id="v2-sheet-mode-quick" role="tab"
+                  aria-selected="true" data-mode="quick_share">快速分享</button>
+          <button type="button" class="v2-sheet__mode-tab" id="v2-sheet-mode-fine" role="tab"
+                  aria-selected="false" data-mode="fine_craft">精细制作</button>
+        </div>
+
+        <div class="v2-sheet__mode-panel" id="v2-sheet-panel-quick" data-mode="quick_share">
+          <p class="v2-sheet__hint">仅需文件夹即可开始，默认生成适合分享的长图。</p>
+          <div class="v2-sheet__actions">
+            <button type="button" class="v2-sheet__primary" id="v2-sheet-start-quick">开始制作</button>
+            <button type="button" class="v2-sheet__repick" id="v2-sheet-repick">重新选择文件夹</button>
+          </div>
+        </div>
+
+        <div class="v2-sheet__mode-panel" id="v2-sheet-panel-fine" data-mode="fine_craft" hidden>
+          <label class="v2-sheet__field">
+            <span class="v2-sheet__field-label">游记名称</span>
+            <input type="text" id="v2-trip-title" maxlength="20" autocomplete="off"
+                   placeholder="给这本画册起个名字" />
+          </label>
+          <label class="v2-sheet__field">
+            <span class="v2-sheet__field-label">主要地点（可选）</span>
+            <input type="text" id="v2-trip-place" maxlength="40" autocomplete="off"
+                   placeholder="例如：京都、大阪" />
+          </label>
+          <div class="v2-sheet__field v2-sheet__field-grid">
+            <label>
+              <span class="v2-sheet__field-label">开始日期（可选）</span>
+              <input type="date" id="v2-date-start" />
+            </label>
+            <label>
+              <span class="v2-sheet__field-label">结束日期（可选）</span>
+              <input type="date" id="v2-date-end" />
+            </label>
+          </div>
+          <label class="v2-sheet__field">
+            <span class="v2-sheet__field-label">写给编辑的一句话（可选）</span>
+            <textarea id="v2-user-notes" maxlength="200" rows="2"
+                      placeholder="例如：带娃慢走，别写成导游词"></textarea>
+            <div class="v2-sheet__chips" role="list">
+              <button type="button" class="v2-sheet__chip" data-fill="v2-user-notes">带娃慢走，别写成导游词</button>
+              <button type="button" class="v2-sheet__chip" data-fill="v2-user-notes">想表达静谧，雨天的感觉</button>
+              <button type="button" class="v2-sheet__chip" data-fill="v2-user-notes">第3天最难忘</button>
+            </div>
+            <p class="v2-sheet__hint">不填也能正常出稿；这里写偏好，不是写完整游记。</p>
+          </label>
+          <label class="v2-sheet__field v2-sheet__field--full">
+            <span class="v2-sheet__field-label">旅途见闻与感悟（可选）</span>
+            <textarea id="v2-travel-notes" maxlength="500" rows="3"
+                      placeholder="可写旅途细节与感受，系统会优先用于文案语料。"></textarea>
+          </label>
+          <label class="v2-sheet__field v2-sheet__field--full">
+            <span class="v2-sheet__field-label">行程计划文件（可选）</span>
+            <input type="file" id="v2-plan-file" accept=".txt,.md,text/plain" />
+            <p class="v2-sheet__hint" id="v2-plan-file-name"></p>
+            <p class="v2-sheet__hint">支持 txt / md，最大 32KB；会作为叙事参考，不会原样照抄。</p>
+          </label>
+          <label class="v2-sheet__field">
+            <span class="v2-sheet__field-label">精选文件夹（可选）</span>
+            <input type="text" id="v2-featured-dir" maxlength="64" autocomplete="off"
+                   placeholder="例如：精选" />
+          </label>
+          <label class="v2-sheet__field">
+            <span class="v2-sheet__field-label">素材文件夹（可选）</span>
+            <input type="text" id="v2-material-dir" maxlength="64" autocomplete="off"
+                   placeholder="例如：素材" />
+          </label>
+          <label class="v2-sheet__field v2-sheet__field--full">
+            <span class="v2-sheet__field-label">模板</span>
+            <select id="v2-template-mode" aria-label="模板选择">
+              <option value="smart" selected>智能匹配（推荐）</option>
+              <option value="manual:visual-journal">视觉游记（手动指定）</option>
+            </select>
+            <p class="v2-sheet__hint" id="v2-template-hint" role="note">
+              智能匹配会根据行程天数、地点与视频占比推荐模板；不确定时自动使用视觉游记。
+            </p>
+          </label>
+          <div class="v2-sheet__actions v2-sheet__actions--full">
+            <button type="button" class="v2-sheet__primary" id="v2-sheet-start-fine">开始制作（专业）</button>
+            <button type="button" class="v2-sheet__repick" id="v2-sheet-repick-fine">重新选择文件夹</button>
+          </div>
+        </div>
+      </div>
+
+      <details class="v2-sheet__details">
+        <summary>文件夹怎么选？</summary>
+        <p class="v2-sheet__hint">
+          一次旅行一个文件夹 · 子目录可放精选 / 素材 · 支持 JPG / PNG / WebP / HEIC · 照片留在本机。
+        </p>
+      </details>
+      <details class="v2-sheet__details">
+        <summary>其他导入方式</summary>
+        <div class="v2-sheet__upload">
+          <label class="v2-sheet__upload-btn" for="v2-album-upload"
+                 title="建议总量 ≤200MB，过大可能失败或较慢">
+            小文件夹试用（建议 ≤200MB）
+          </label>
+          <input id="v2-album-upload" type="file" webkitdirectory directory multiple hidden
+                 aria-label="小文件夹试用上传" />
+        </div>
+        <div class="v2-sheet__path">
+          <input type="text" id="v2-album-path" placeholder="粘贴文件夹路径…" aria-label="文件夹路径" />
+          <button type="button" id="v2-path-submit">使用此路径</button>
+        </div>
+      </details>
+
+      <p class="v2-sheet__hint">
+        每个文件夹会生成一本新的游记画册，<strong>不会覆盖</strong>已有作品。
+      </p>
+      <p class="v2-sheet__error" id="v2-sheet-error" role="alert" hidden></p>
+    </div>
   </div>
 </div>
 

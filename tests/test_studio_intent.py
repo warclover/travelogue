@@ -19,11 +19,14 @@ import pytest
 from travelogue.services.narrative_brief import (
     build_chapter_brief,
     build_meta_brief,
+    resolve_date_range,
     resolve_plan_summary,
+    resolve_travel_notes,
     resolve_user_notes,
 )
 from travelogue.services.trip import TripService, apply_intent
 from travelogue.services.validate import validate_trip
+from travelogue.web.studio_pipeline import _build_date_range_weak_hint
 from travelogue.web.studio_pipeline import run_studio_pipeline
 from tests.test_studio_server import _distinct_album
 
@@ -72,6 +75,35 @@ def test_apply_intent_only_touches_passed_args() -> None:
     assert trip["intent"]["folders"] == {"featuredDetected": True}
 
 
+def test_apply_intent_accepts_travel_notes_and_date_range() -> None:
+    trip: dict = {}
+    apply_intent(
+        trip,
+        travel_notes="这次旅程最喜欢的是雨夜散步",
+        date_range={"start": "2025-04-02", "end": "2025-04-06", "source": "user"},
+    )
+    intent = trip.get("intent") or {}
+    assert intent.get("travelNotes") == "这次旅程最喜欢的是雨夜散步"
+    assert intent.get("dateRange") == {
+        "start": "2025-04-02",
+        "end": "2025-04-06",
+        "source": "user",
+    }
+
+
+def test_apply_intent_travel_notes_and_date_range_can_clear() -> None:
+    trip: dict = {}
+    apply_intent(
+        trip,
+        travel_notes="记录一下这次旅途见闻",
+        date_range={"start": "2025-04-02"},
+    )
+    apply_intent(trip, travel_notes=None, date_range=None)
+    intent = trip.get("intent") or {}
+    assert "travelNotes" not in intent
+    assert "dateRange" not in intent
+
+
 def test_apply_intent_empty_places_keeps_schema_meta_placeholder() -> None:
     trip: dict = {"meta": {"places": ["旅途"]}}
     apply_intent(trip, places=[], places_user_set=False)
@@ -102,6 +134,30 @@ def test_resolve_plan_summary() -> None:
     assert resolve_plan_summary({"intent": {"travelPlan": {}}}) is None
 
 
+def test_resolve_travel_notes_and_date_range() -> None:
+    trip = {
+        "intent": {
+            "travelNotes": "在鸭川边慢慢散步，雨停后风很轻。",
+            "dateRange": {"start": "2025-04-02", "end": "2025-04-06", "source": "user"},
+        }
+    }
+    assert resolve_travel_notes(trip) == "在鸭川边慢慢散步，雨停后风很轻。"
+    assert resolve_date_range(trip) == {
+        "start": "2025-04-02",
+        "end": "2025-04-06",
+        "source": "user",
+    }
+
+
+def test_resolve_date_range_fail_open_on_invalid() -> None:
+    trip = {
+        "intent": {
+            "dateRange": {"start": "2025-04-09", "end": "2025-04-06", "source": "user"}
+        }
+    }
+    assert resolve_date_range(trip) is None
+
+
 def test_meta_brief_injects_usernotes_and_plan() -> None:
     trip = {
         "meta": {"title": "T", "places": ["京都"]},
@@ -129,6 +185,53 @@ def test_chapter_brief_injects_usernotes() -> None:
     chapter = {"id": "ch-01", "index": 0, "patternId": "p", "title": "t", "items": []}
     brief = build_chapter_brief(trip, chapter, tone="relaxed")
     assert brief["trip"]["userNotes"] == "带娃"
+
+
+def test_meta_and_chapter_brief_inject_travel_notes_and_date_range() -> None:
+    trip = {
+        "meta": {"places": ["京都"]},
+        "intent": {
+            "travelNotes": "见闻：清晨市场很热闹，夜里小巷很安静。",
+            "dateRange": {"start": "2025-04-02", "end": "2025-04-06", "source": "user"},
+        },
+        "chapters": [],
+        "assets": [],
+    }
+    chapter = {"id": "ch-01", "index": 0, "patternId": "p", "title": "t", "items": []}
+    meta_brief = build_meta_brief(trip, tone="relaxed")
+    chapter_brief = build_chapter_brief(trip, chapter, tone="relaxed")
+    assert meta_brief["trip"]["travelNotes"] == "见闻：清晨市场很热闹，夜里小巷很安静。"
+    assert meta_brief["trip"]["dateRange"]["start"] == "2025-04-02"
+    assert chapter_brief["trip"]["travelNotes"] == "见闻：清晨市场很热闹，夜里小巷很安静。"
+    assert chapter_brief["trip"]["dateRange"]["end"] == "2025-04-06"
+
+
+def test_date_range_weak_hint_when_far_from_inferred_dates() -> None:
+    hint = _build_date_range_weak_hint(
+        user_date_range={"start": "2023-04-01", "end": "2023-04-03", "source": "user"},
+        inferred_start="2026-04-01",
+        inferred_end="2026-04-03",
+    )
+    assert "差异较大" in hint
+
+
+def test_date_range_weak_hint_empty_when_close_or_unavailable() -> None:
+    assert (
+        _build_date_range_weak_hint(
+            user_date_range={"start": "2026-04-01", "end": "2026-04-03", "source": "user"},
+            inferred_start="2026-04-05",
+            inferred_end="2026-04-07",
+        )
+        == ""
+    )
+    assert (
+        _build_date_range_weak_hint(
+            user_date_range={"source": "user"},
+            inferred_start="2026-04-05",
+            inferred_end="2026-04-07",
+        )
+        == ""
+    )
 
 
 # ── schema acceptance (M15-01) ────────────────────────────────────────────────
@@ -164,6 +267,11 @@ def _minimal_valid_trip() -> dict:
 def test_schema_accepts_intent_object() -> None:
     trip = _minimal_valid_trip()
     apply_intent(trip, title="雨后京都", places=["京都"], user_notes="带娃慢走")
+    apply_intent(
+        trip,
+        travel_notes="见闻：祇园避雨，鸭川散步。",
+        date_range={"start": "2025-04-02", "end": "2025-04-06", "source": "user"},
+    )
     trip["intent"]["travelPlan"] = {
         "format": "text",
         "filename": "plan.txt",

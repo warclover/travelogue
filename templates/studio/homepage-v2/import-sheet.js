@@ -19,6 +19,13 @@ let _pickInFlight = false;
 let _uploadInFlight = false;
 let _pendingAlbumPath = null;
 let _importStarted = false; // 本次 Sheet 会话是否已发起 import（区分 abandon）
+let _activeMode = "quick_share";
+const IMPORT_DRAFT_KEY = "travelogue.studio.importDraft";
+const IMPORT_MODE_KEY = "travelogue.studio.lastImportMode";
+const _featureFlags = {
+  importDualModeEnabled: true,
+  importSheetLargeEnabled: true,
+};
 
 function setV2BackgroundInert(inert) {
   var ids = ["v2-bento-hero", "v2-shelf"];
@@ -76,6 +83,7 @@ function releaseTrap(sheet) {
 function resetConfirm() {
   _pendingAlbumPath = null;
   show($("v2-sheet-confirm"), false);
+  switchMode("quick_share", { persist: false });
   var pick = $("v2-sheet-pick");
   if (pick) {
     pick.disabled = false;
@@ -98,7 +106,217 @@ function showConfirm(albumPath) {
     pick.textContent = "已选择文件夹";
   }
   show($("v2-sheet-confirm"), true);
-  if (titleInput) titleInput.focus();
+  restoreModeAndDraft();
+  var quickStart = $("v2-sheet-start-quick");
+  if (_activeMode === "fine_craft" && titleInput) titleInput.focus();
+  else if (quickStart) quickStart.focus();
+}
+
+function safeGet(id) {
+  var el = $(id);
+  if (!el) return "";
+  return String(el.value || "").trim();
+}
+
+function safeSet(id, val) {
+  var el = $(id);
+  if (!el) return;
+  el.value = val || "";
+}
+
+function readSheetDraft() {
+  try {
+    var raw = sessionStorage.getItem(IMPORT_DRAFT_KEY);
+    if (!raw) return {};
+    var parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (_e) {
+    return {};
+  }
+}
+
+function saveSheetDraft() {
+  var draft = {
+    mode: _activeMode,
+    title: safeGet("v2-trip-title"),
+    place: safeGet("v2-trip-place"),
+    dateStart: safeGet("v2-date-start"),
+    dateEnd: safeGet("v2-date-end"),
+    userNotes: safeGet("v2-user-notes"),
+    travelNotes: safeGet("v2-travel-notes"),
+    featuredDir: safeGet("v2-featured-dir"),
+    materialDir: safeGet("v2-material-dir"),
+    planFileName: (function () {
+      var input = $("v2-plan-file");
+      if (!input || !input.files || !input.files[0]) return "";
+      return String(input.files[0].name || "");
+    })(),
+  };
+  try {
+    sessionStorage.setItem(IMPORT_DRAFT_KEY, JSON.stringify(draft));
+    sessionStorage.setItem(IMPORT_MODE_KEY, _activeMode);
+  } catch (_e) {
+    /* ignore */
+  }
+}
+
+function restoreModeAndDraft() {
+  var draft = readSheetDraft();
+  var mode = String(draft.mode || "").trim();
+  if (!mode) {
+    try {
+      mode = String(sessionStorage.getItem(IMPORT_MODE_KEY) || "").trim();
+    } catch (_e) {
+      mode = "";
+    }
+  }
+  switchMode(mode === "fine_craft" ? "fine_craft" : "quick_share", { persist: false });
+  safeSet("v2-trip-title", draft.title || "");
+  safeSet("v2-trip-place", draft.place || "");
+  safeSet("v2-date-start", draft.dateStart || "");
+  safeSet("v2-date-end", draft.dateEnd || "");
+  safeSet("v2-user-notes", draft.userNotes || "");
+  safeSet("v2-travel-notes", draft.travelNotes || "");
+  safeSet("v2-featured-dir", draft.featuredDir || "");
+  safeSet("v2-material-dir", draft.materialDir || "");
+  var planName = $("v2-plan-file-name");
+  if (planName) {
+    planName.textContent = draft.planFileName
+      ? ("已选计划文件：" + draft.planFileName)
+      : "";
+  }
+}
+
+function switchMode(nextMode, opts) {
+  opts = opts || {};
+  if (!_featureFlags.importDualModeEnabled) {
+    _activeMode = "quick_share";
+  } else {
+    _activeMode = nextMode === "fine_craft" ? "fine_craft" : "quick_share";
+  }
+  var quickTab = $("v2-sheet-mode-quick");
+  var fineTab = $("v2-sheet-mode-fine");
+  var quickPanel = $("v2-sheet-panel-quick");
+  var finePanel = $("v2-sheet-panel-fine");
+  if (quickTab) {
+    quickTab.setAttribute("aria-selected", _activeMode === "quick_share" ? "true" : "false");
+    quickTab.setAttribute("tabindex", _activeMode === "quick_share" ? "0" : "-1");
+  }
+  if (fineTab) {
+    fineTab.setAttribute("aria-selected", _activeMode === "fine_craft" ? "true" : "false");
+    fineTab.setAttribute("tabindex", _activeMode === "fine_craft" ? "0" : "-1");
+  }
+  show(quickPanel, _activeMode === "quick_share");
+  show(finePanel, _activeMode === "fine_craft");
+  if (opts.persist !== false) saveSheetDraft();
+}
+
+function applyFeatureFlags() {
+  var sheet = $("v2-import-sheet");
+  if (sheet) {
+    sheet.classList.toggle("v2-sheet--legacy-size", !_featureFlags.importSheetLargeEnabled);
+  }
+  var tabs = document.querySelector(".v2-sheet__mode-tabs");
+  var finePanel = $("v2-sheet-panel-fine");
+  if (!_featureFlags.importDualModeEnabled) {
+    if (tabs) show(tabs, false);
+    if (finePanel) show(finePanel, false);
+    _activeMode = "quick_share";
+  } else if (tabs) {
+    show(tabs, true);
+  }
+}
+
+function loadFeatureFlags() {
+  return fetch("/__travelogue/config")
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var studio = (data && data.studio) || {};
+      if (typeof studio.importDualModeEnabled === "boolean") {
+        _featureFlags.importDualModeEnabled = studio.importDualModeEnabled;
+      }
+      if (typeof studio.importSheetLargeEnabled === "boolean") {
+        _featureFlags.importSheetLargeEnabled = studio.importSheetLargeEnabled;
+      }
+      applyFeatureFlags();
+    })
+    .catch(function () {
+      applyFeatureFlags();
+    });
+}
+
+function readPlanFileText() {
+  var input = $("v2-plan-file");
+  if (!input || !input.files || !input.files[0]) return Promise.resolve(null);
+  var file = input.files[0];
+  var name = String(file.name || "");
+  var lower = name.toLowerCase();
+  if (!(lower.endsWith(".txt") || lower.endsWith(".md"))) {
+    return Promise.reject(new Error("计划文件仅支持 .txt / .md"));
+  }
+  if ((file.size || 0) > 32 * 1024) {
+    return Promise.reject(new Error("计划文件不能超过 32KB"));
+  }
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var text = String(reader.result || "").trim();
+      resolve(text || null);
+    };
+    reader.onerror = function () {
+      reject(new Error("读取计划文件失败，请重试"));
+    };
+    reader.readAsText(file, "utf-8");
+  });
+}
+
+function maybeShowDateHint(start, end) {
+  if ((start && !end) || (!start && end)) {
+    if (typeof studioToast === "function") {
+      studioToast("另一侧将用照片时间自动推断", { duration: 2200 });
+    }
+  }
+}
+
+function validateFineFields() {
+  var start = safeGet("v2-date-start");
+  var end = safeGet("v2-date-end");
+  if (start && !/^\d{4}-\d{2}-\d{2}$/.test(start)) return "开始日期格式无效，请使用 YYYY-MM-DD";
+  if (end && !/^\d{4}-\d{2}-\d{2}$/.test(end)) return "结束日期格式无效，请使用 YYYY-MM-DD";
+  if (start && end && start > end) return "开始日期不能晚于结束日期";
+  return "";
+}
+
+function buildSheetPayload() {
+  var title = safeGet("v2-trip-title");
+  var body = buildImportPayload(_pendingAlbumPath, title);
+  body.mode = _activeMode;
+  var place = safeGet("v2-trip-place");
+  var userNotes = safeGet("v2-user-notes");
+  var travelNotes = safeGet("v2-travel-notes");
+  var dateStart = safeGet("v2-date-start");
+  var dateEnd = safeGet("v2-date-end");
+  var featuredDir = safeGet("v2-featured-dir");
+  var materialDir = safeGet("v2-material-dir");
+  if (_activeMode === "fine_craft") {
+    var err = validateFineFields();
+    if (err) {
+      setError(err);
+      return null;
+    }
+  }
+  maybeShowDateHint(dateStart, dateEnd);
+  if (place) body.place = place;
+  if (userNotes) body.userNotes = userNotes.slice(0, 200);
+  if (travelNotes) body.travelNotes = travelNotes.slice(0, 500);
+  if (dateStart || dateEnd) {
+    body.dateRange = { source: "user" };
+    if (dateStart) body.dateRange.start = dateStart;
+    if (dateEnd) body.dateRange.end = dateEnd;
+  }
+  if (featuredDir) body.featuredDir = featuredDir;
+  if (materialDir) body.materialDir = materialDir;
+  return body;
 }
 
 export function openImportSheet() {
@@ -121,6 +339,7 @@ export function openImportSheet() {
   var pick = $("v2-sheet-pick");
   if (pick && !pick.disabled) pick.focus();
   trackStudioEvent("open_sheet", { state: V2.state, surface: "bench" });
+  trackStudioEvent("import_mode_view", { mode: "quick_share" });
 }
 
 export function closeImportSheet(reason) {
@@ -254,16 +473,24 @@ function startFromConfirm() {
     setError("请先选择照片文件夹");
     return;
   }
-  var titleInput = $("v2-trip-title");
-  var title = titleInput ? (titleInput.value || "").trim() : "";
-  var body = buildImportPayload(_pendingAlbumPath, title);
-  _importStarted = true;
-  closeImportSheet("start");
-  if (typeof studioToast === "function") {
-    studioToast("将新建一篇画册 · 开始制作", { duration: 2000 });
-  }
-  startV2Import(body, { source: "本机文件夹" }).catch(function () {
-    /* 错误已在 import-run 内 toast + reroute */
+  var body = buildSheetPayload();
+  if (!body) return;
+  readPlanFileText().then(function (planText) {
+    if (planText) body.planText = planText;
+    saveSheetDraft();
+    _importStarted = true;
+    closeImportSheet("start");
+    if (typeof studioToast === "function") {
+      studioToast(
+        _activeMode === "fine_craft" ? "已按精细制作启动" : "将新建一篇画册 · 开始制作",
+        { duration: 2000 }
+      );
+    }
+    return startV2Import(body, { source: "本机文件夹" }).catch(function () {
+      /* 错误已在 import-run 内 toast + reroute */
+    });
+  }).catch(function (err) {
+    setError(err && err.message ? err.message : "读取计划文件失败，请重试");
   });
 }
 
@@ -322,6 +549,7 @@ function wireTemplateSelect() {
 }
 
 export function initImportSheet() {
+  loadFeatureFlags();
   loadTemplateSelectOptions();
   wireTemplateSelect();
   var cta = $("v2-cta");
@@ -344,8 +572,89 @@ export function initImportSheet() {
     resetConfirm();
     pickFolder();
   });
-  var start = $("v2-sheet-start");
-  if (start) start.addEventListener("click", startFromConfirm);
+  var repickFine = $("v2-sheet-repick-fine");
+  if (repickFine) repickFine.addEventListener("click", function () {
+    resetConfirm();
+    pickFolder();
+  });
+  var startQuick = $("v2-sheet-start-quick");
+  if (startQuick) startQuick.addEventListener("click", function () {
+    switchMode("quick_share");
+    startFromConfirm();
+  });
+  var startFine = $("v2-sheet-start-fine");
+  if (startFine) startFine.addEventListener("click", function () {
+    switchMode("fine_craft");
+    startFromConfirm();
+  });
+  var tabQuick = $("v2-sheet-mode-quick");
+  if (tabQuick) tabQuick.addEventListener("click", function () {
+    switchMode("quick_share");
+    trackStudioEvent("import_mode_switch", { mode: "quick_share", via: "click" });
+  });
+  var tabFine = $("v2-sheet-mode-fine");
+  if (tabFine) tabFine.addEventListener("click", function () {
+    switchMode("fine_craft");
+    trackStudioEvent("import_mode_switch", { mode: "fine_craft", via: "click" });
+  });
+  function onTabKeydown(e) {
+    if (!_featureFlags.importDualModeEnabled) return;
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight" && e.key !== "Home" && e.key !== "End") return;
+    e.preventDefault();
+    if (e.key === "ArrowLeft" || e.key === "Home") {
+      switchMode("quick_share");
+      if (tabQuick) tabQuick.focus();
+    } else {
+      switchMode("fine_craft");
+      if (tabFine) tabFine.focus();
+    }
+    trackStudioEvent("import_mode_switch", { mode: _activeMode, via: "keyboard" });
+  }
+  if (tabQuick) tabQuick.addEventListener("keydown", onTabKeydown);
+  if (tabFine) tabFine.addEventListener("keydown", onTabKeydown);
+
+  var draftIds = [
+    "v2-trip-title",
+    "v2-trip-place",
+    "v2-date-start",
+    "v2-date-end",
+    "v2-user-notes",
+    "v2-travel-notes",
+    "v2-plan-file",
+    "v2-featured-dir",
+    "v2-material-dir",
+  ];
+  draftIds.forEach(function (id) {
+    var el = $(id);
+    if (!el) return;
+    el.addEventListener("input", function () {
+      setError("");
+      saveSheetDraft();
+    });
+    el.addEventListener("change", saveSheetDraft);
+  });
+  var chips = document.querySelectorAll(".v2-sheet__chip[data-fill]");
+  if (chips && chips.length) {
+    Array.prototype.forEach.call(chips, function (chip) {
+      chip.addEventListener("click", function () {
+        var targetId = chip.getAttribute("data-fill") || "";
+        var target = $(targetId);
+        if (!target) return;
+        target.value = chip.textContent || "";
+        saveSheetDraft();
+        target.focus();
+      });
+    });
+  }
+  var planInput = $("v2-plan-file");
+  var planName = $("v2-plan-file-name");
+  if (planInput) {
+    planInput.addEventListener("change", function () {
+      var file = planInput.files && planInput.files[0] ? planInput.files[0] : null;
+      if (planName) planName.textContent = file ? ("已选计划文件：" + file.name) : "";
+      saveSheetDraft();
+    });
+  }
   var pathBtn = $("v2-path-submit");
   if (pathBtn) pathBtn.addEventListener("click", submitWithPath);
   var pathInput = $("v2-album-path");

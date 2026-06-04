@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import datetime as _dt
+import re
 from typing import Any
 
 from travelogue.curation.asset_caption import asset_skips_caption, chapter_caption_asset_ids, resolve_caption
 from travelogue.services.narrate import _manifest_limits
 from travelogue.services.narrative_scope import captions_allowed, chapter_lead_allowed
+
+_ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def _asset_brief(asset: dict, *, include_geo_city: bool = True) -> dict[str, Any]:
@@ -47,6 +51,44 @@ def resolve_plan_summary(trip: dict) -> str | None:
     return text or None
 
 
+def resolve_travel_notes(trip: dict) -> str | None:
+    """intent.travelNotes for prompt grounding (Phase 14)."""
+    notes = (trip.get("intent") or {}).get("travelNotes")
+    text = str(notes or "").strip()
+    if not text:
+        return None
+    return text[:500]
+
+
+def resolve_date_range(trip: dict) -> dict[str, str] | None:
+    """Best-effort user date range from intent; invalid payloads are ignored."""
+    raw = (trip.get("intent") or {}).get("dateRange")
+    if not isinstance(raw, dict):
+        return None
+    start = str(raw.get("start") or "").strip()
+    end = str(raw.get("end") or "").strip()
+    out: dict[str, str] = {}
+    if start and _ISO_DATE_RE.match(start):
+        try:
+            _dt.date.fromisoformat(start)
+            out["start"] = start
+        except ValueError:
+            pass
+    if end and _ISO_DATE_RE.match(end):
+        try:
+            _dt.date.fromisoformat(end)
+            out["end"] = end
+        except ValueError:
+            pass
+    source = str(raw.get("source") or "").strip().lower()
+    if source in ("user", "exif", "mixed"):
+        out["source"] = source
+    # fail-open: if both dates exist but reversed, drop range.
+    if out.get("start") and out.get("end") and out["start"] > out["end"]:
+        return None
+    return out or None
+
+
 def manifest_limits_brief() -> dict[str, int]:
     lim = _manifest_limits()
     return {
@@ -84,6 +126,12 @@ def build_meta_brief(trip: dict, *, tone: str, regenerate: bool = False) -> dict
         "segmentCount": len(segments),
         "segmentLabels": [s.get("label") for s in segments[:5] if s.get("label")],
     }
+    travel_notes = resolve_travel_notes(trip)
+    if travel_notes:
+        trip_brief["travelNotes"] = travel_notes
+    date_range = resolve_date_range(trip)
+    if date_range:
+        trip_brief["dateRange"] = date_range
     plan_summary = resolve_plan_summary(trip)
     if plan_summary:
         trip_brief["travelPlanSummary"] = plan_summary
@@ -159,6 +207,12 @@ def build_chapter_brief(
     user_notes = resolve_user_notes(trip)
     if user_notes:
         trip_brief["userNotes"] = user_notes
+    travel_notes = resolve_travel_notes(trip)
+    if travel_notes:
+        trip_brief["travelNotes"] = travel_notes
+    date_range = resolve_date_range(trip)
+    if date_range:
+        trip_brief["dateRange"] = date_range
     return {
         "task": "fill_chapter_copy",
         "trip": trip_brief,

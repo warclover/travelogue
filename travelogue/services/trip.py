@@ -41,6 +41,8 @@ def apply_intent(
     places: Any = _UNSET,
     places_user_set: Any = _UNSET,
     user_notes: Any = _UNSET,
+    travel_notes: Any = _UNSET,
+    date_range: Any = _UNSET,
     travel_plan: Any = _UNSET,
     folders: Any = _UNSET,
     submitted_at: str | None = None,
@@ -99,6 +101,34 @@ def apply_intent(
         else:
             intent.pop("userNotes", None)
             trip.pop("userNotes", None)
+
+    if travel_notes is not _UNSET:
+        cleaned = _clean_str(travel_notes, limit=500)
+        if cleaned:
+            intent["travelNotes"] = cleaned
+        else:
+            intent.pop("travelNotes", None)
+
+    if date_range is not _UNSET:
+        if not date_range:
+            intent.pop("dateRange", None)
+        else:
+            if not isinstance(date_range, dict):
+                raise ValueError("dateRange must be an object")
+            start = _clean_str(date_range.get("start"), limit=10)
+            end = _clean_str(date_range.get("end"), limit=10)
+            source = _clean_str(date_range.get("source"), limit=16)
+            payload: dict[str, str] = {}
+            if start:
+                payload["start"] = start
+            if end:
+                payload["end"] = end
+            if source in ("user", "exif", "mixed"):
+                payload["source"] = source
+            if payload:
+                intent["dateRange"] = payload
+            else:
+                intent.pop("dateRange", None)
 
     if travel_plan is not _UNSET:
         if travel_plan:
