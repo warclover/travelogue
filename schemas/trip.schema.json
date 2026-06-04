@@ -152,6 +152,11 @@
           }
         },
         "submittedAt": { "type": "string", "format": "date-time" },
+        "layoutDensity": {
+          "type": "string",
+          "enum": ["balanced", "hero_first", "collage_first"],
+          "description": "Fine-craft layout preference: single-hero vs collage-heavy (PRD-FINE-CRAFT-LAYOUT-DENSITY)"
+        },
         "featuredSubjects": {
           "type": "array",
           "maxItems": 4,
@@ -521,6 +526,16 @@
           "type": "array",
           "items": { "type": "string" }
         },
+        "displayedAssetIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Asset ids shown on screens (mosaic coverage / replan)"
+        },
+        "templateHints": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Phase 13 template router hints written during curate"
+        },
         "intentHints": {
           "type": "object",
           "additionalProperties": false,
@@ -536,7 +551,13 @@
               "items": { "type": "string" },
               "maxItems": 10
             },
-            "featuredBoost": { "type": "boolean" }
+            "featuredBoost": { "type": "boolean" },
+            "layoutDensity": {
+              "type": "string",
+              "enum": ["balanced", "hero_first", "collage_first"]
+            },
+            "preferMosaic": { "type": "boolean" },
+            "nineQuotaScale": { "type": "number", "minimum": 0, "maximum": 2 }
           }
         },
         "clustering": { "$ref": "#/$defs/tripClustering" }
@@ -859,7 +880,11 @@
             "aestheticMetric": { "type": "string" },
             "lowResSuspected": { "type": "boolean" },
             "faceCount": { "type": "integer", "minimum": 0 },
-            "faceRatio": { "type": "number", "minimum": 0, "maximum": 1 }
+            "faceRatio": { "type": "number", "minimum": 0, "maximum": 1 },
+            "cullBranchFallbackReason": {
+              "type": "string",
+              "description": "Why cull branch fell back (photo_cull pipeline)"
+            }
           }
         },
         "dominantTone": {
@@ -915,6 +940,18 @@
           "minimum": 0,
           "maximum": 1,
           "description": "CLIP subjectClass confidence"
+        },
+        "semanticTag": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Phase 8/12 L1 semantic category (ingest pipeline)",
+          "properties": {
+            "category": { "type": "string" },
+            "subClusterId": { "type": ["string", "integer", "null"] },
+            "label": { "type": "string" },
+            "timeContext": { "type": "string" },
+            "locationContext": { "type": "string" }
+          }
         },
         "geo": {
           "type": "object",
@@ -1148,6 +1185,7 @@
             "screen-mosaic-5-2portrait-3land-balanced",
             "screen-mosaic-5-3portrait-2land-balanced",
             "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-6-main-hero-plus-5",
             "screen-portrait-grid-8",
             "screen-portrait-2-landscape-2",
             "screen-portrait-4",

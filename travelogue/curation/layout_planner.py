@@ -585,6 +585,7 @@ def build_chapters_from_buckets(
     pattern_hints: list[str] | None = None,
     enable_food_grid: bool = True,
     mundane_grid_buckets: tuple[str, ...] = ("food",),
+    layout_density: str | None = None,
 ) -> list[dict]:
     """Plan items per chapter bucket (Agent 1 day groups → Agent 1.5 layout)."""
     from travelogue.curation.curate_patterns import resolve_chapter_pattern
@@ -656,6 +657,7 @@ def build_chapters_from_buckets(
             skip_screen_asset_ids=skip_screen_asset_ids,
             trip_photo_total=trip_photo_total,
             enable_food_grid=enable_food_grid and default_enable_food_grid(),
+            layout_density=layout_density,
             mundane_grid_buckets=(
                 mundane_grid_buckets
                 if mundane_grid_buckets

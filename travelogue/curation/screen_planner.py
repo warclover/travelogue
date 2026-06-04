@@ -74,7 +74,8 @@ PATTERN_GRID_CLASS: dict[str, str] = {
     "screen-mosaic-5-main-landscape-2portrait-2land": "layout-screen__grid--mosaic-5-main-landscape-2portrait-2land",
     "screen-mosaic-5-2portrait-3land-balanced": "layout-screen__grid--mosaic-5-2portrait-3land-balanced",
     "screen-mosaic-5-3portrait-2land-balanced": "layout-screen__grid--mosaic-5-3portrait-2land-balanced",
-    "screen-mosaic-5-main-hero-plus-4": "layout-screen__grid--mosaic-5-main-hero-plus-4",
+    "screen-mosaic-5-main-hero-plus-4": "layout-screen__grid--mosaic-6-main-hero-plus-5",
+    "screen-mosaic-6-main-hero-plus-5": "layout-screen__grid--mosaic-6-main-hero-plus-5",
     "screen-landscape-1": "layout-screen__grid--1col",
     "screen-landscape-2": "layout-screen__grid--landscape-stack-2",
     "screen-landscape-3": "layout-screen__grid--landscape-stack-3",
@@ -540,6 +541,22 @@ def _pick_largest_allowed_grid(
     for s in size_order:
         if s not in candidates:
             candidates.append(s)
+    if layout_state is not None and layout_state.layout_density == "hero_first":
+        hero_order = [1, 4, 6, 9] if family == "landscape" else [1, 3, 4, 6, 9]
+        seen = set(candidates)
+        candidates = list(hero_order) + [s for s in candidates if s not in hero_order]
+        for s in size_order:
+            if s not in seen and s not in candidates:
+                candidates.append(s)
+                seen.add(s)
+    elif layout_state is not None and layout_state.layout_density == "collage_first":
+        collage_order = [9, 6, 4, 1] if family == "landscape" else [9, 6, 4, 3, 1]
+        seen = set(candidates)
+        candidates = list(collage_order) + [s for s in candidates if s not in collage_order]
+        for s in size_order:
+            if s not in seen and s not in candidates:
+                candidates.append(s)
+                seen.add(s)
     for size in candidates:
         if size > cap:
             continue
@@ -677,7 +694,6 @@ def _emit_portrait_single_screens(
                 screen_id="",
                 aspects=aspects,
                 assets_map=assets_map,
-                fits=["cover"],
             )
         )
     return screens
@@ -823,11 +839,17 @@ def _plan_one_screen(
     if family == "landscape":
         land_run = remaining[:run_len]
         bucket_ids = prefix_same_bucket(land_run, assets_map)
-        if len(bucket_ids) <= 3:
+        can_nine_pool = (
+            layout_state is not None
+            and run_len >= 9
+            and layout_state.can_use_nine()
+        )
+        grid_pool = land_run if can_nine_pool else bucket_ids
+        if len(grid_pool) <= 3:
             return (
                 _make_screen(
                     "screen-landscape-1",
-                    [bucket_ids[0]],
+                    [grid_pool[0]],
                     screen_id="",
                     aspects=aspects,
                     assets_map=assets_map,
@@ -835,16 +857,16 @@ def _plan_one_screen(
                 1,
             )
         burst_groups = burst_groups or {}
-        probe = bucket_ids[: min(len(bucket_ids), MAX_SLOTS_PER_SCREEN)]
+        probe = grid_pool[: min(len(grid_pool), MAX_SLOTS_PER_SCREEN)]
         burst_run = _same_burst_group(probe, burst_groups) if len(probe) >= 4 else False
         n = _pick_grid_count(
-            len(bucket_ids),
+            len(grid_pool),
             family,
             burst_run=burst_run,
             portrait_heavy=portrait_heavy,
             layout_state=layout_state,
         )
-        ids = bucket_ids[:n]
+        ids = grid_pool[:n]
         pattern = _pattern_id(family, n)
         return _make_screen(
             pattern, ids, screen_id="", aspects=aspects, assets_map=assets_map
@@ -1043,6 +1065,7 @@ def attach_screens_day_buckets(
     featured_weight: float = DEFAULT_FEATURED_WEIGHT,
     enable_food_grid: bool = True,
     mundane_grid_buckets: tuple[str, ...] = ("food",),
+    layout_density: str | None = None,
 ) -> list[dict]:
     """
     Plan screens on each day bucket (full takenAt sequence), assign to chapters
@@ -1080,7 +1103,10 @@ def attach_screens_day_buckets(
         for ch in chapters:
             all_ids.update(_collect_asset_ids_from_chapter(ch))
         trip_photo_total = len(all_ids)
-    layout_state = ScreenLayoutPlannerState.from_trip_total(trip_photo_total)
+    layout_state = ScreenLayoutPlannerState.from_trip_total(
+        trip_photo_total,
+        density=layout_density or "balanced",
+    )
     seq_per_ch: dict[str, int] = {}
     gallery_asset_ids: set[str] = set()
     for ch in out:
@@ -1173,6 +1199,7 @@ def attach_screens_to_chapters(
     cfg: AppConfig | None = None,
     enable_food_grid: bool | None = None,
     mundane_grid_buckets: tuple[str, ...] | None = None,
+    layout_density: str | None = None,
 ) -> list[dict]:
     """Add screens[] to each chapter (per-chapter or per-day bucket scope)."""
     from travelogue.config import (
@@ -1206,6 +1233,7 @@ def attach_screens_to_chapters(
             featured_weight=featured_weight,
             enable_food_grid=food_grid_enabled,
             mundane_grid_buckets=tuple(str(x).strip().lower() for x in grid_buckets if str(x).strip()),
+            layout_density=layout_density,
         )
 
     assets_by_id: dict[str, dict] = {}
@@ -1218,7 +1246,10 @@ def attach_screens_to_chapters(
         trip_photo_total = len(assets_by_id) if assets_by_id else sum(
             len(_collect_asset_ids_from_chapter(ch)) for ch in chapters
         )
-    layout_state = ScreenLayoutPlannerState.from_trip_total(trip_photo_total)
+    layout_state = ScreenLayoutPlannerState.from_trip_total(
+        trip_photo_total,
+        density=layout_density or "balanced",
+    )
 
     out: list[dict] = []
     for ch in chapters:

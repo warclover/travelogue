@@ -172,6 +172,15 @@ def build_intent_hints(trip: dict) -> dict[str, Any]:
     else:
         hints.pop("featuredBoost", None)
 
+    from travelogue.curation.layout_density import intent_hints_for_density, layout_density_from_trip
+
+    density_hints = intent_hints_for_density(layout_density_from_trip(trip))
+    if density_hints:
+        hints.update(density_hints)
+    else:
+        for key in ("layoutDensity", "preferMosaic", "nineQuotaScale"):
+            hints.pop(key, None)
+
     return hints
 
 

@@ -592,44 +592,49 @@ def build_layout_screen(
     mixed_p1_l2 = pattern_id == "screen-portrait-1-landscape-2"
     for j, slot in enumerate(screen.get("slots") or []):
         aid = slot.get("assetId", "")
-        asset = _asset_lookup(assets, aid)
-        if not asset:
-            continue
+        asset = _asset_lookup(assets, aid) if aid else None
         fit = slot.get("fit", "cover")
         role = slot.get("role")
         if mixed_p1_l2:
             slot_sizes = "row_third" if role == "portrait" or slot.get("slot") == 0 else "row_half"
         else:
             slot_sizes = sizes_slot
-        srcset = compile_srcset(asset, mobile=export_layout == "mobile")
-        slot_aspect = _screen_aspect_ratio_css(asset)
-        style_parts_slot: list[str] = []
-        if slot_aspect:
-            style_parts_slot.append(f"--slot-aspect: {slot_aspect}")
-        fp = asset.get("focalPoint") or {}
-        try:
-            fx = float(fp.get("x", 0.5))
-            fy = float(fp.get("y", 0.45))
-            style_parts_slot.append(f"--focal-x: {fx}")
-            style_parts_slot.append(f"--focal-y: {fy}")
-        except (TypeError, ValueError):
-            pass
-        slot_style = "; ".join(style_parts_slot)
-        if slot_style:
-            slot_style += ";"
         entry: dict = {
             "slotIndex": slot.get("slot", j),
             "fit": fit,
-            "src": pick_image_src(asset, export_layout=export_layout),
-            "hasSrcset": bool(srcset),
-            "srcset": srcset,
+            "hasSrc": False,
+            "src": "",
+            "hasSrcset": False,
+            "srcset": "",
             "sizes": pick_image_sizes(export_layout, slot_sizes),
-            "alt": alt_text(None, asset, meta_title),
+            "alt": alt_text(None, asset, meta_title) if asset else "",
             "loading": "eager" if eager and j == 0 else "lazy",
-            "slotStyle": slot_style,
+            "slotStyle": "",
         }
         if role:
             entry["role"] = role
+        if asset:
+            srcset = compile_srcset(asset, mobile=export_layout == "mobile")
+            slot_aspect = _screen_aspect_ratio_css(asset)
+            style_parts_slot: list[str] = []
+            if slot_aspect:
+                style_parts_slot.append(f"--slot-aspect: {slot_aspect}")
+            fp = asset.get("focalPoint") or {}
+            try:
+                fx = float(fp.get("x", 0.5))
+                fy = float(fp.get("y", 0.45))
+                style_parts_slot.append(f"--focal-x: {fx}")
+                style_parts_slot.append(f"--focal-y: {fy}")
+            except (TypeError, ValueError):
+                pass
+            slot_style = "; ".join(style_parts_slot)
+            if slot_style:
+                slot_style += ";"
+            entry["hasSrc"] = True
+            entry["src"] = pick_image_src(asset, export_layout=export_layout)
+            entry["hasSrcset"] = bool(srcset)
+            entry["srcset"] = srcset
+            entry["slotStyle"] = slot_style
         slots_out.append(entry)
 
     layout_hint = screen.get("layoutHint")

@@ -204,6 +204,39 @@ def plan_mosaic_screens(
         config_mod.get_config = orig
 
 
+def build_layout_density_golden_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
+    """≥35 assets · demo-day-3 equivalent for layout-density CI (mixed mosaic windows)."""
+    buckets, aspects, assets = build_mosaic_eligible_trip()
+    for a in assets:
+        if aspects.get(a["id"]) == "portrait":
+            a["tags"] = ["person"]
+    return buckets, aspects, assets
+
+
+def build_chapter_hero_layout_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
+    """Single chapter · 10 landscapes — chapter hero (AC-LD-08) without mosaic skip."""
+    assets = [
+        _asset(f"l{i}", 2000, 1200, offset_hours=i * 0.05, sharpness=0.85)
+        for i in range(1, 11)
+    ]
+    buckets = [[a["id"] for a in assets]]
+    aspects = {a["id"]: a["aspectKind"] for a in assets}
+    return buckets, aspects, assets
+
+
+def build_person_portrait_layout_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
+    """Portraits tagged person — face contain contract (AC-LD-08)."""
+    assets = [
+        _asset(f"p{i}", 900, 1600, offset_hours=i * 0.1, sharpness=0.8)
+        for i in range(1, 7)
+    ]
+    for a in assets:
+        a["tags"] = ["person"]
+    buckets = [[a["id"] for a in assets]]
+    aspects = {a["id"]: a["aspectKind"] for a in assets}
+    return buckets, aspects, assets
+
+
 def plan_legacy_screens(
     buckets: list[list[str]],
     aspects: dict[str, str],
@@ -212,6 +245,7 @@ def plan_legacy_screens(
     mosaic_enabled: bool | None = None,
     trip_photo_total: int | None = None,
     orientation_summary: dict[str, int] | None = None,
+    layout_density: str | None = None,
 ) -> list[dict]:
     if mosaic_enabled is not None:
         import travelogue.config as config_mod
@@ -246,6 +280,7 @@ def plan_legacy_screens(
         orientation_summary=summary,
         trip_photo_total=total,
         pattern_hints=hints,
+        layout_density=layout_density,
     )
 
 

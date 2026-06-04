@@ -23,6 +23,7 @@ _PEAK_PATTERNS = frozenset(
         "screen-mosaic-5-2portrait-3land-balanced",
         "screen-mosaic-5-3portrait-2land-balanced",
         "screen-mosaic-5-main-hero-plus-4",
+        "screen-mosaic-6-main-hero-plus-5",
         "screen-portrait-grid-8",
         "screen-landscape-4",
     }

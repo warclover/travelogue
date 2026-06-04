@@ -71,6 +71,7 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             template_id=payload.get("template_id") or payload.get("templateId"),
             featured_dir=payload.get("featuredDir"),
             material_dir=payload.get("materialDir"),
+            layout_density=payload.get("layoutDensity"),
         )
         progress_queue.put(
             {
@@ -93,6 +94,8 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     "templateFeedbackMessage": result.template_feedback_message or "",
                     "resolvedTemplateId": result.resolved_template_id or "visual-journal",
                     "mode": result.import_mode or "quick_share",
+                    "layoutDensity": result.layout_density or "balanced",
+                    "layoutDensityEffect": result.layout_density_effect or "ignored_quick",
                     "dateRangeWarn": result.date_range_warn or "",
                 },
             }

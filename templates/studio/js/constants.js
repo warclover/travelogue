@@ -88,6 +88,7 @@ export const LS = {
   recentPaths: "travelogue.studio.recentPaths",
   lastCancelled: "travelogue.studio.lastCancelled",
   studioIntent: "travelogue.studio.intent",
+  layoutDensity: "travelogue.studio.layoutDensity",
   coachImportV1: "travelogue.studio.coachImportV1",
 };
 

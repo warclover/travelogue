@@ -5,6 +5,7 @@
   <div class="layout-screen__grid {{gridClass}}">
     {{#each slots}}
     <figure class="layout-slot" data-slot="{{slotIndex}}"{{#if role}} data-role="{{role}}"{{/if}}{{#if slotStyle}} style="{{slotStyle}}"{{/if}}>
+      {{#if hasSrc}}
       <img class="layout-slot__img layout-slot__img--{{fit}}"
         src="{{src}}"
         {{#if hasSrcset}}
@@ -14,6 +15,7 @@
         alt="{{alt}}"
         loading="{{loading}}"
         decoding="async" />
+      {{/if}}
     </figure>
     {{/each}}
   </div>

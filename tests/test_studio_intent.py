@@ -75,6 +75,14 @@ def test_apply_intent_only_touches_passed_args() -> None:
     assert trip["intent"]["folders"] == {"featuredDetected": True}
 
 
+def test_apply_intent_layout_density() -> None:
+    trip: dict = {"meta": {"places": ["旅途"]}}
+    apply_intent(trip, layout_density="hero_first")
+    assert trip["intent"]["layoutDensity"] == "hero_first"
+    apply_intent(trip, layout_density=None)
+    assert "layoutDensity" not in trip["intent"]
+
+
 def test_apply_intent_accepts_travel_notes_and_date_range() -> None:
     trip: dict = {}
     apply_intent(

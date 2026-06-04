@@ -334,6 +334,9 @@ class MosaicConfig:
             "face_crop": 0.30,
             "main_quality": 0.25,
             "duplicate_density": 0.20,
+            "hero_narrow_tiles": 0.35,
+            "hero_slot_aspect": 0.4,
+            "flat_six_grid": 0.35,
         }
     )
 
@@ -344,6 +347,7 @@ class LayoutConfig:
     web_layout_engine: str = "screens"  # legacy | screens
     screen_plan_scope: str = "day"  # chapter | day — day = 按策展日桶全序列组屏
     mixed_proximity_seconds: float = 12.0  # 1竖+2横混排 takenAt 跨度上限
+    layout_density_enabled: bool = True  # PRD-FINE-CRAFT-LAYOUT-DENSITY · false → balanced
     scoring: LayoutScoringConfig = field(default_factory=LayoutScoringConfig)
     feedback: LayoutFeedbackConfig = field(default_factory=LayoutFeedbackConfig)
 
@@ -1008,6 +1012,10 @@ def load_config(path: Path | None = None) -> AppConfig:
     if scope not in ("chapter", "day"):
         scope = "day"
     mixed_gap = float(layout_raw.get("mixed_proximity_seconds", 12.0))
+    layout_density_top = data.get("layoutDensity") if isinstance(data.get("layoutDensity"), dict) else {}
+    layout_density_enabled = bool(
+        layout_density_top.get("enabled", layout_raw.get("layout_density_enabled", True))
+    )
     scoring_raw = layout_raw.get("scoring") if isinstance(layout_raw.get("scoring"), dict) else {}
     feedback_raw = layout_raw.get("feedback") if isinstance(layout_raw.get("feedback"), dict) else {}
     export_raw = data.get("export") if isinstance(data.get("export"), dict) else {}
@@ -1050,6 +1058,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             web_layout_engine=web_engine,
             screen_plan_scope=scope,
             mixed_proximity_seconds=mixed_gap,
+            layout_density_enabled=layout_density_enabled,
             scoring=_layout_scoring_from_dict(scoring_raw),
             feedback=_layout_feedback_from_dict(feedback_raw),
         ),

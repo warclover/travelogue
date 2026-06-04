@@ -29,6 +29,9 @@ def test_build_studio_intent_telemetry_fields() -> None:
     assert payload["planUploaded"] is True
     assert payload["anchorCount"] == 2
     assert payload["g1Pending"] is False
+    assert payload["layoutDensity"] == "balanced"
+    assert payload["layoutDensityEffect"] == "ignored_quick"
+    assert payload["nineQuotaAdjusted"]["baseMin"] == 0
 
 
 def test_write_studio_intent_telemetry_file(tmp_path: Path) -> None:

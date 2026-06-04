@@ -33,6 +33,10 @@ curate:
   arc_mode: legacy
   arc_flat_variance_threshold: 0.08
 
+# 精细制作「版面密度」旋钮（false → 全体当智能平衡）
+layoutDensity:
+  enabled: true
+
 # Web 排版引擎：legacy（media-row）| screens（16:9 舞台）；exportLayout=web|auto 宽屏时生效
 layout:
   web_layout_engine: screens

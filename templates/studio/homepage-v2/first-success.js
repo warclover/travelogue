@@ -102,6 +102,9 @@ function populateSuccessUi(result) {
       var body = line1;
       if (tplLine) body += "\n" + tplLine;
       if (result.cullUserLine) body += "\n" + result.cullUserLine;
+      var density = String(result.layoutDensity || "").toLowerCase();
+      if (density === "hero_first") body += "\n版面：大图为主";
+      else if (density === "collage_first") body += "\n版面：拼图为主";
       msg.textContent = body;
       if (result.templateFeedbackKind) {
         var ev = result.templateFeedbackKind === "fallback"
@@ -165,7 +168,13 @@ function openPreview(action) {
     }
     return;
   }
-  trackStudioEvent("success_primary_click", { action: action || "open_preview" });
+  trackStudioEvent("success_primary_click", {
+    action: action || "open_preview",
+    mode: _successMode,
+    layoutDensity: _successResult && _successResult.layoutDensity
+      ? _successResult.layoutDensity
+      : null,
+  });
   trackStudioEvent("preview_open_from_success", {
     mode: _successMode,
     tripId: _successResult && _successResult.tripId ? _successResult.tripId : null,
@@ -243,7 +252,11 @@ function wireFirstSuccess() {
     open.addEventListener("click", function (e) {
       e.preventDefault();
       if (_successRefinedEnabled && _successMode === "quick_share" && _successResult && _successResult.tripId) {
-        trackStudioEvent("success_primary_click", { action: "save_longshot" });
+        trackStudioEvent("success_primary_click", {
+          action: "save_longshot",
+          mode: _successMode,
+          layoutDensity: _successResult.layoutDensity || null,
+        });
         runShelfLongshot({ tripId: _successResult.tripId, title: _successResult.title || "我的旅途" }, {
           surface: "first_success",
         });

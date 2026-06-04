@@ -14,6 +14,8 @@ def build_studio_intent_telemetry(
     tier_mode: str | None = None,
     g1_pending: bool = False,
     g1_confirmed: bool = False,
+    import_mode: str | None = None,
+    layout_density: str | None = None,
 ) -> dict[str, Any]:
     intent = trip.get("intent") or {}
     travel_plan = intent.get("travelPlan") or {}
@@ -26,6 +28,17 @@ def build_studio_intent_telemetry(
         anchor_count += len([a for a in anchors if str(a).strip()])
     plan_path = (trip.get("curation") or {}).get("intentHints") or {}
     has_plan_cities = bool(plan_path.get("planCities") or travel_plan.get("cities"))
+    from travelogue.curation.layout_density import (
+        layout_density_effect,
+        nine_quota_adjusted,
+        normalize_layout_density,
+    )
+
+    mode = str(import_mode or "quick_share").strip().lower()
+    density = normalize_layout_density(
+        layout_density or intent.get("layoutDensity"),
+    )
+    photo_total = len(assets)
     return {
         "recordedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "tripId": trip.get("tripId"),
@@ -37,6 +50,10 @@ def build_studio_intent_telemetry(
         "g1Confirmed": bool(g1_confirmed),
         "anchorCount": anchor_count,
         "intentTitle": str(intent.get("title") or (trip.get("meta") or {}).get("title") or "")[:20],
+        "importMode": mode,
+        "layoutDensity": density,
+        "layoutDensityEffect": layout_density_effect(photo_total, density, import_mode=mode),
+        "nineQuotaAdjusted": nine_quota_adjusted(photo_total, density),
     }
 
 
@@ -47,12 +64,16 @@ def write_studio_intent_telemetry(
     tier_mode: str | None = None,
     g1_pending: bool = False,
     g1_confirmed: bool = False,
+    import_mode: str | None = None,
+    layout_density: str | None = None,
 ) -> Path:
     payload = build_studio_intent_telemetry(
         trip,
         tier_mode=tier_mode,
         g1_pending=g1_pending,
         g1_confirmed=g1_confirmed,
+        import_mode=import_mode,
+        layout_density=layout_density,
     )
     runs_dir = trip_dir / "runs"
     runs_dir.mkdir(parents=True, exist_ok=True)

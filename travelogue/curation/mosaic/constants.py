@@ -8,13 +8,13 @@ PATTERN_MOSAIC_5_MAIN_LAND_2P_2L = "screen-mosaic-5-main-landscape-2portrait-2la
 PATTERN_MOSAIC_5_2P_3L_BALANCED = "screen-mosaic-5-2portrait-3land-balanced"
 PATTERN_MOSAIC_5_3P_2L_BALANCED = "screen-mosaic-5-3portrait-2land-balanced"
 PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4 = "screen-mosaic-5-main-hero-plus-4"
+PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5 = "screen-mosaic-6-main-hero-plus-5"
 
 MOSAIC_5_PATTERN_IDS: tuple[str, ...] = (
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
     PATTERN_MOSAIC_5_2P_3L_BALANCED,
     PATTERN_MOSAIC_5_3P_2L_BALANCED,
-    PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
 )
 
 # --- 3 / 4 / 6 · reuse existing grid patterns (S2) ---
@@ -37,7 +37,10 @@ MOSAIC_4_PATTERN_IDS: tuple[str, ...] = (
     PATTERN_PORTRAIT_4,
     PATTERN_LANDSCAPE_4,
 )
+
 MOSAIC_6_PATTERN_IDS: tuple[str, ...] = (
+    PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+    PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
     PATTERN_PORTRAIT_6,
     PATTERN_LANDSCAPE_6,
 )
@@ -67,7 +70,8 @@ PATTERN_GRID_CLASS: dict[str, str] = {
     PATTERN_MOSAIC_5_MAIN_LAND_2P_2L: "layout-screen__grid--mosaic-5-main-landscape-2portrait-2land",
     PATTERN_MOSAIC_5_2P_3L_BALANCED: "layout-screen__grid--mosaic-5-2portrait-3land-balanced",
     PATTERN_MOSAIC_5_3P_2L_BALANCED: "layout-screen__grid--mosaic-5-3portrait-2land-balanced",
-    PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4: "layout-screen__grid--mosaic-5-main-hero-plus-4",
+    PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4: "layout-screen__grid--mosaic-6-main-hero-plus-5",
+    PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5: "layout-screen__grid--mosaic-6-main-hero-plus-5",
     PATTERN_PORTRAIT_3: "layout-screen__grid--3col",
     PATTERN_LANDSCAPE_3: "layout-screen__grid--landscape-stack-3",
     PATTERN_PORTRAIT_1_LANDSCAPE_2: "layout-screen__grid--portrait-left-2landscape",

@@ -152,6 +152,12 @@ def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | No
         tid = str(fields.get("template_id") or fields.get("templateId") or "").strip()
         if tid:
             payload["template_id"] = tid
+        if import_mode == "fine_craft":
+            from travelogue.curation.layout_density import normalize_layout_density
+
+            payload["layoutDensity"] = normalize_layout_density(
+                fields.get("layoutDensity")
+            )
         if plan_bytes is not None:
             import base64
 
@@ -356,6 +362,12 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         worker_payload["featuredDir"] = featured_dir
     if material_dir:
         worker_payload["materialDir"] = material_dir
+    if import_mode == "fine_craft":
+        from travelogue.curation.layout_density import normalize_layout_density
+
+        worker_payload["layoutDensity"] = normalize_layout_density(
+            payload.get("layoutDensity")
+        )
     if plan_text:
         worker_payload["planText"] = plan_text
     if plan_bytes_b64:

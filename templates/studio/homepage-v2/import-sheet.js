@@ -18,6 +18,7 @@ let _trapHandler = null;
 let _pickInFlight = false;
 let _uploadInFlight = false;
 let _pendingAlbumPath = null;
+let _pendingPhotoCount = null;
 let _importStarted = false; // 本次 Sheet 会话是否已发起 import（区分 abandon）
 let _activeMode = "quick_share";
 const IMPORT_DRAFT_KEY = "travelogue.studio.importDraft";
@@ -93,6 +94,12 @@ function resetConfirm() {
 
 function showConfirm(albumPath) {
   _pendingAlbumPath = albumPath;
+  _pendingPhotoCount = null;
+  fetchAlbumPhotoCount(albumPath).then(function (count) {
+    _pendingPhotoCount = count;
+    updateLayoutDensityWarn();
+    saveSheetDraft();
+  });
   var picked = $("v2-sheet-picked");
   if (picked) picked.textContent = "已选择：" + albumPath;
   var titleInput = $("v2-trip-title");
@@ -124,6 +131,46 @@ function safeSet(id, val) {
   el.value = val || "";
 }
 
+var LAYOUT_DENSITY_VALUES = ["balanced", "hero_first", "collage_first"];
+
+function readLayoutDensity() {
+  var checked = document.querySelector('input[name="v2-layout-density"]:checked');
+  var v = checked ? String(checked.value || "").trim() : "balanced";
+  return LAYOUT_DENSITY_VALUES.indexOf(v) >= 0 ? v : "balanced";
+}
+
+function setLayoutDensity(value) {
+  var v = LAYOUT_DENSITY_VALUES.indexOf(String(value || "").trim()) >= 0
+    ? String(value).trim()
+    : "balanced";
+  var inputs = document.querySelectorAll('input[name="v2-layout-density"]');
+  inputs.forEach(function (input) {
+    input.checked = input.value === v;
+  });
+  updateLayoutDensityWarn();
+}
+
+function updateLayoutDensityWarn() {
+  var warn = $("v2-layout-density-warn");
+  if (!warn) return;
+  var collage = readLayoutDensity() === "collage_first";
+  var fewPhotos = _pendingPhotoCount != null && _pendingPhotoCount < 35;
+  show(warn, collage && fewPhotos);
+}
+
+function fetchAlbumPhotoCount(albumPath) {
+  return postJson("/__travelogue/album-preview", { albumPath: albumPath })
+    .then(function (res) {
+      var data = res.body || {};
+      if (res.status >= 400 || !data.ok) return null;
+      var n = Number(data.photoCount);
+      return Number.isFinite(n) && n >= 0 ? n : null;
+    })
+    .catch(function () {
+      return null;
+    });
+}
+
 function readSheetDraft() {
   try {
     var raw = sessionStorage.getItem(IMPORT_DRAFT_KEY);
@@ -146,6 +193,8 @@ function saveSheetDraft() {
     travelNotes: safeGet("v2-travel-notes"),
     featuredDir: safeGet("v2-featured-dir"),
     materialDir: safeGet("v2-material-dir"),
+    layoutDensity: readLayoutDensity(),
+    photoCount: _pendingPhotoCount,
     planFileName: (function () {
       var input = $("v2-plan-file");
       if (!input || !input.files || !input.files[0]) return "";
@@ -179,6 +228,9 @@ function restoreModeAndDraft() {
   safeSet("v2-travel-notes", draft.travelNotes || "");
   safeSet("v2-featured-dir", draft.featuredDir || "");
   safeSet("v2-material-dir", draft.materialDir || "");
+  setLayoutDensity(draft.layoutDensity || "balanced");
+  _pendingPhotoCount = typeof draft.photoCount === "number" ? draft.photoCount : null;
+  updateLayoutDensityWarn();
   var planName = $("v2-plan-file-name");
   if (planName) {
     planName.textContent = draft.planFileName
@@ -316,6 +368,10 @@ function buildSheetPayload() {
   }
   if (featuredDir) body.featuredDir = featuredDir;
   if (materialDir) body.materialDir = materialDir;
+  if (_activeMode === "fine_craft") {
+    body.layoutDensity = readLayoutDensity();
+  }
+  if (_pendingPhotoCount != null) body.eligibleCount = _pendingPhotoCount;
   return body;
 }
 
@@ -632,6 +688,17 @@ export function initImportSheet() {
       saveSheetDraft();
     });
     el.addEventListener("change", saveSheetDraft);
+  });
+  var densityInputs = document.querySelectorAll('input[name="v2-layout-density"]');
+  var _lastLayoutDensity = readLayoutDensity();
+  Array.prototype.forEach.call(densityInputs, function (input) {
+    input.addEventListener("change", function () {
+      var next = readLayoutDensity();
+      trackStudioEvent("layout_density_change", { from: _lastLayoutDensity, to: next });
+      _lastLayoutDensity = next;
+      saveSheetDraft();
+      updateLayoutDensityWarn();
+    });
   });
   var chips = document.querySelectorAll(".v2-sheet__chip[data-fill]");
   if (chips && chips.length) {

@@ -40,6 +40,8 @@ class StudioPipelineResult:
     template_feedback_message: str = ""
     resolved_template_id: str = "visual-journal"
     import_mode: str = "quick_share"
+    layout_density: str = "balanced"
+    layout_density_effect: str = "ignored_quick"
     date_range_warn: str = ""
 
 
@@ -96,6 +98,7 @@ def _finalize_pipeline_result(
     tier_mode: str,
     user_date_range: dict | None = None,
     import_mode: str = "quick_share",
+    layout_density: str = "balanced",
     g1_pending: bool = False,
 ) -> StudioPipelineResult:
     from travelogue.web.studio_intent_telemetry import write_studio_intent_telemetry
@@ -118,6 +121,14 @@ def _finalize_pipeline_result(
 
     sel = trip_final.get("templateSelection") or {}
     tfb = template_user_feedback(sel)
+    layout_density = _resolve_stored_layout_density(trip_final, import_mode=import_mode)
+    from travelogue.curation.layout_density import layout_density_effect as _layout_effect
+
+    density_effect = _layout_effect(
+        photo_count,
+        layout_density,
+        import_mode=import_mode,
+    )
     write_studio_intent_telemetry(
         trip_final,
         trip_root,
@@ -125,6 +136,8 @@ def _finalize_pipeline_result(
         g1_pending=g1_pending,
         g1_confirmed=not g1_pending and (trip_final.get("pipeline") or {}).get("status")
         not in (None, "structure_draft"),
+        import_mode=import_mode,
+        layout_density=layout_density,
     )
     preview_url = f"http://{host}:{port}/{slug}/index.html"
     return StudioPipelineResult(
@@ -146,8 +159,19 @@ def _finalize_pipeline_result(
         template_feedback_message=tfb.get("message", ""),
         resolved_template_id=str(sel.get("resolvedTemplateId") or "visual-journal"),
         import_mode=import_mode,
+        layout_density=layout_density,
+        layout_density_effect=density_effect,
         date_range_warn=date_range_warn,
     )
+
+
+def _resolve_stored_layout_density(trip: dict, *, import_mode: str) -> str:
+    from travelogue.curation.layout_density import normalize_layout_density
+
+    if str(import_mode or "quick_share").strip().lower() != "fine_craft":
+        return "balanced"
+    intent = trip.get("intent") or {}
+    return normalize_layout_density(intent.get("layoutDensity"))
 
 
 def _trip_import_stats(trip: dict) -> tuple[int, int]:
@@ -288,6 +312,7 @@ def run_studio_pipeline(
     template_id: str | None = None,
     featured_dir: str | Path | None = None,
     material_dir: str | Path | None = None,
+    layout_density: str | None = None,
 ) -> StudioPipelineResult:
     album_dir = album_dir.resolve()
     cfg_path = resolve_demo_config(config)
@@ -394,16 +419,23 @@ def run_studio_pipeline(
             if raw:
                 folder_overrides["materialDir"] = raw
         date_payload = date_range if isinstance(date_range, dict) else None
-        apply_intent(
-            trip,
-            title=title,
-            places=[place_raw] if resolved_place_user_set else [],
-            places_user_set=resolved_place_user_set,
-            user_notes=user_notes,
-            travel_notes=travel_notes,
-            date_range=date_payload,
-            folders=folder_overrides if folder_overrides else None,
+        intent_kwargs: dict = {
+            "title": title,
+            "places": [place_raw] if resolved_place_user_set else [],
+            "places_user_set": resolved_place_user_set,
+            "user_notes": user_notes,
+            "travel_notes": travel_notes,
+            "date_range": date_payload,
+            "folders": folder_overrides if folder_overrides else None,
+        }
+        from travelogue.curation.layout_density import resolve_import_layout_density
+
+        intent_kwargs["layout_density"] = resolve_import_layout_density(
+            layout_density,
+            import_mode=import_mode,
+            app_cfg=cfg,
         )
+        apply_intent(trip, **intent_kwargs)
 
         if plan_bytes is not None or plan_text:
             from travelogue.services.intent_plan import ingest_travel_plan

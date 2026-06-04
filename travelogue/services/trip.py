@@ -46,6 +46,7 @@ def apply_intent(
     travel_plan: Any = _UNSET,
     folders: Any = _UNSET,
     featured_subjects: Any = _UNSET,
+    layout_density: Any = _UNSET,
     submitted_at: str | None = None,
 ) -> dict:
     """Single writer for Phase 4 ``trip.intent`` (PRD-PHASE4 §4.1/§14).
@@ -149,6 +150,14 @@ def apply_intent(
             intent["folders"] = folders
         else:
             intent.pop("folders", None)
+
+    if layout_density is not _UNSET:
+        from travelogue.curation.layout_density import normalize_layout_density
+
+        if layout_density is None:
+            intent.pop("layoutDensity", None)
+        else:
+            intent["layoutDensity"] = normalize_layout_density(layout_density)
 
     if featured_subjects is not _UNSET:
         from travelogue.services.cohort import normalize_featured_subjects, validate_seeds_exist

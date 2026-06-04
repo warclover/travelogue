@@ -10,7 +10,15 @@ from travelogue.config import MosaicConfig
 from travelogue.curation.layout_constraints import FOCAL_EDGE_MARGIN
 from travelogue.curation.layout_planner import AspectKind
 from travelogue.curation.layout_scoring import ScoringWeights, score_screen_plan
+from travelogue.curation.mosaic.constants import (
+    PATTERN_LANDSCAPE_6,
+    PATTERN_LANDSCAPE_9,
+    PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+    PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+    PATTERN_PORTRAIT_6,
+)
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.curation.screen_planner import _is_landscape_id, _is_std_portrait_id
 
 
 @dataclass
@@ -94,6 +102,77 @@ def _duplicate_density_penalty(asset_ids: list[str], assets_by_id: dict[str, dic
     return 0.0
 
 
+def _hero_slot_aspect_penalty(
+    screen: dict,
+    aspects: dict[str, AspectKind],
+) -> float:
+    """Side tiles prefer portrait; bottom row prefers landscape."""
+    pattern_id = str(screen.get("patternId") or "")
+    if pattern_id not in (
+        PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+        PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+    ):
+        return 0.0
+    pen = 0.0
+    for slot in screen.get("slots") or []:
+        idx = int(slot.get("slot", -1))
+        aid = slot.get("assetId")
+        if not aid:
+            continue
+        kind = aspects.get(aid)
+        if kind is None:
+            continue
+        is_portrait = kind in ("portrait", "tall")
+        is_landscape = _is_landscape_id(aid, aspects)
+        if idx == 0 and is_portrait:
+            pen = max(pen, 0.75)
+        elif idx in (1, 2) and is_landscape:
+            pen = max(pen, 0.45)
+        elif idx >= 3 and is_portrait:
+            pen = max(pen, 0.9)
+    return pen
+
+
+def _hero_narrow_tile_penalty(
+    screen: dict,
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+) -> float:
+    """Penalize all-landscape hero+tile patterns where side tiles are narrow strips."""
+    pattern_id = str(screen.get("patternId") or "")
+    if pattern_id not in (
+        PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+        PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+    ):
+        return 0.0
+    if not asset_ids:
+        return 0.0
+    landscape_count = sum(
+        1 for aid in asset_ids if _is_landscape_id(aid, aspects)
+    )
+    if landscape_count < len(asset_ids):
+        return 0.0
+    if pattern_id == PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4:
+        return 0.55
+    return 0.0
+
+
+def _flat_six_grid_penalty(
+    pattern_id: str,
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+) -> float:
+    if pattern_id not in (PATTERN_LANDSCAPE_6, PATTERN_PORTRAIT_6):
+        return 0.0
+    if len(asset_ids) != 6:
+        return 0.0
+    all_land = all(_is_landscape_id(aid, aspects) for aid in asset_ids)
+    all_port = all(_is_std_portrait_id(aid, aspects) for aid in asset_ids)
+    if all_land or all_port:
+        return 0.5
+    return 0.0
+
+
 def score_candidate(
     screen: dict,
     *,
@@ -119,6 +198,11 @@ def score_candidate(
         "face_crop": _face_crop_penalty(screen, assets_by_id),
         "main_quality": _main_quality_penalty(screen, assets_by_id),
         "duplicate_density": _duplicate_density_penalty(asset_ids, assets_by_id),
+        "hero_narrow_tiles": _hero_narrow_tile_penalty(screen, asset_ids, aspects),
+        "hero_slot_aspect": _hero_slot_aspect_penalty(screen, aspects),
+        "flat_six_grid": _flat_six_grid_penalty(
+            str(screen.get("patternId") or ""), asset_ids, aspects
+        ),
     }
     # Soft trip_total prior (was hard MIN_TRIP_PHOTOS_FOR_MOSAIC)
     if trip_photo_total > 0 and trip_photo_total < 20:
@@ -142,6 +226,18 @@ def score_candidate(
         reasons.append("R_TIME_COHESION")
     if bd.sharpness >= 0.6:
         reasons.append("R_SHARP")
+    if screen.get("patternId") == PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5 and penalties.get(
+        "hero_narrow_tiles", 0.0
+    ) <= 0.0 and penalties.get("hero_slot_aspect", 0.0) <= 0.0:
+        total = min(1.0, total * 1.08)
+        reasons.append("R_HERO6_LAND")
+    if screen.get("patternId") == PATTERN_LANDSCAPE_9 and penalties.get(
+        "hero_slot_aspect", 0.0
+    ) <= 0.0:
+        all_land = asset_ids and all(_is_landscape_id(aid, aspects) for aid in asset_ids)
+        if all_land and len(asset_ids) == 9:
+            total = min(1.0, total * 1.06)
+            reasons.append("R_GRID9_LAND")
     if layout_state and layout_state.can_emit_pattern(screen.get("patternId", "")):
         reasons.append("R_RHYTHM_OK")
     else:

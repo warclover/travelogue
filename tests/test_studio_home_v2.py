@@ -274,8 +274,15 @@ def test_studio_home_v2_phase14_dual_mode_smoke() -> None:
         "v2-material-dir",
         "开始制作（专业）",
         "v2-success-secondary",
+        "v2-layout-density-field",
+        "版面密度（可选）",
+        'name="v2-layout-density"',
+        "拼图为主",
     ):
         assert marker in html, marker
+    assert "layoutDensity" in sheet
+    assert "readLayoutDensity" in sheet
+    assert "layoutDensity" in first_success or "大图为主" in first_success
 
     for marker in (
         "switchMode(",

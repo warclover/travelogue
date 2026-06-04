@@ -329,6 +329,8 @@ def score_aspect_match(screen: dict, aspects: Mapping[str, AspectKind]) -> float
             hits += 1
         elif role == "landscape" and kind in ("landscape", "panorama"):
             hits += 1
+        elif role == "main" and kind in ("landscape", "panorama"):
+            hits += 1
         elif role in ("", "any", "fill") or not role:
             hits += 1
         elif role == "square" and kind == "square":

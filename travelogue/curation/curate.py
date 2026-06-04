@@ -675,6 +675,8 @@ def run_curate(
 
         begin_mosaic_capture()
     try:
+        from travelogue.curation.layout_density import layout_density_params
+
         chapters = build_chapters_from_buckets(
             buckets,
             aspects,
@@ -688,6 +690,7 @@ def run_curate(
             pattern_hints=pattern_hints,
             enable_food_grid=cur_cfg.enable_food_grid,
             mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
+            layout_density=layout_density_params(trip, app_cfg=app_cfg).density,
         )
     finally:
         if mosaic_override is not None:

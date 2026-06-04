@@ -82,7 +82,11 @@ function buildUploadForm(files, opts) {
   form.append("title", title);
   form.append("place", "旅途");
   form.append("placeUserSet", "false");
-  form.append("mode", String(opts.mode || "quick_share"));
+  var mode = String(opts.mode || "quick_share");
+  form.append("mode", mode);
+  if (mode === "fine_craft" && opts.layoutDensity) {
+    form.append("layoutDensity", String(opts.layoutDensity));
+  }
   var tpl = readTemplateParams();
   form.append("template_mode", tpl.template_mode || "smart");
   if (tpl.template_id) form.append("template_id", tpl.template_id);
@@ -273,6 +277,8 @@ function pollImport(jobId, gen, source) {
       trackStudioEvent("import_success", {
         tripId: result.tripId || null,
         templateId: result.resolvedTemplateId || null,
+        layoutDensity: result.layoutDensity || null,
+        layoutDensityEffect: result.layoutDensityEffect || null,
       });
       return refreshTripsForImportSuccess(result).then(function () {
         showFirstSuccess({ result: result });
@@ -303,6 +309,8 @@ export function startV2Import(body, opts) {
     surface: "v2_sheet",
     template_mode: tpl.template_mode,
     mode: String((body && body.mode) || "quick_share"),
+    layoutDensity: body && body.layoutDensity ? body.layoutDensity : null,
+    eligibleCount: body && body.eligibleCount != null ? body.eligibleCount : null,
   });
   trackStudioEvent("template_create_submitted", {
     template_mode: tpl.template_mode,

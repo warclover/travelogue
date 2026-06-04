@@ -357,6 +357,32 @@
             <input type="text" id="v2-material-dir" maxlength="64" autocomplete="off"
                    placeholder="例如：素材" />
           </label>
+          <fieldset class="v2-sheet__field v2-sheet__field--full" id="v2-layout-density-field">
+            <legend class="v2-sheet__field-label" id="v2-layout-density-label">版面密度（可选）</legend>
+            <div class="v2-sheet__radio-group" role="radiogroup" aria-labelledby="v2-layout-density-label">
+              <label class="v2-sheet__radio">
+                <input type="radio" name="v2-layout-density" value="balanced" checked />
+                <span>智能平衡（推荐）</span>
+                <span class="v2-sheet__radio-hint">根据照片数量与横竖比自动排版</span>
+              </label>
+              <label class="v2-sheet__radio">
+                <input type="radio" name="v2-layout-density" value="hero_first" />
+                <span>大图为主</span>
+                <span class="v2-sheet__radio-hint">更多单张全幅画面，节奏更偏杂志感</span>
+              </label>
+              <label class="v2-sheet__radio">
+                <input type="radio" name="v2-layout-density" value="collage_first" />
+                <span>拼图为主</span>
+                <span class="v2-sheet__radio-hint">更多宫格与照片组合，连拍更易成组</span>
+              </label>
+            </div>
+            <p class="v2-sheet__hint" role="note">
+              仅影响卷轴游记排版，不影响快速分享长图。不保证每张照片单独占一页；章首重要画面与阅读节奏优先。
+            </p>
+            <p class="v2-sheet__hint v2-sheet__hint--warn" id="v2-layout-density-warn" role="note" hidden>
+              照片较少时，拼图为主的效果可能不明显，系统仍会以保证阅读节奏为先。
+            </p>
+          </fieldset>
           <label class="v2-sheet__field v2-sheet__field--full">
             <span class="v2-sheet__field-label">模板</span>
             <select id="v2-template-mode" aria-label="模板选择">

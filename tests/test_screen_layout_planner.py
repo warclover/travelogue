@@ -705,3 +705,35 @@ def test_attach_screens_day_scope_via_buckets_param():
     assert out[0]["screens"][0]["patternId"] == "screen-portrait-2"
     assert len(out[0]["screens"][0]["slots"]) == 2
     assert len(out[1]["screens"]) == 0
+
+
+def test_landscape_nine_across_mixed_aspect_buckets():
+    """Nine-grid must not be blocked by prefix_same_bucket (classic vs standard)."""
+    from travelogue.curation.screen_planner import _plan_one_screen
+
+    ids = [f"l{i}" for i in range(12)]
+    aspects = {aid: "landscape" for aid in ids}
+    assets = {}
+    for i, aid in enumerate(ids):
+        # Alternate buckets: classic (4:3) vs standard (16:9)
+        if i % 2 == 0:
+            w, h = 4000, 3000
+        else:
+            w, h = 4000, 2250
+        assets[aid] = {
+            "id": aid,
+            "nativeWidth": w,
+            "nativeHeight": h,
+            "width": w,
+            "height": h,
+        }
+    state = ScreenLayoutPlannerState.from_trip_total(120)
+    screen, consumed = _plan_one_screen(
+        ids,
+        aspects,
+        assets_map=assets,
+        layout_state=state,
+    )
+    assert consumed == 9
+    assert screen is not None
+    assert screen["patternId"] == "screen-landscape-9"
