@@ -48,6 +48,14 @@ def test_has_longshot_exports_detects_chapter_pngs(tmp_path: Path) -> None:
     assert has_longshot_exports(trip_dir) is True
 
 
+def test_has_longshot_exports_detects_chapter_jpgs(tmp_path: Path) -> None:
+    trip_dir = tmp_path / "demo-trip-jpg"
+    trip_dir.mkdir()
+    assert has_longshot_exports(trip_dir) is False
+    (trip_dir / "trip-ch01.jpg").write_bytes(b"jpg")
+    assert has_longshot_exports(trip_dir) is True
+
+
 def test_longshot_stale_when_trip_newer(tmp_path: Path) -> None:
     import os
     import time
@@ -58,6 +66,21 @@ def test_longshot_stale_when_trip_newer(tmp_path: Path) -> None:
     png.write_bytes(b"png")
     base = time.time() - 100
     os.utime(png, (base, base))
+    trip_json = trip_dir / "trip.json"
+    trip_json.write_text('{"meta":{"title":"demo"}}', encoding="utf-8")
+    assert longshot_outputs_stale(trip_dir, trip_mtime=trip_json.stat().st_mtime) is True
+
+
+def test_longshot_stale_when_trip_newer_jpg(tmp_path: Path) -> None:
+    import os
+    import time
+
+    trip_dir = tmp_path / "demo-jpg"
+    trip_dir.mkdir()
+    shot = trip_dir / "demo-longshot.jpg"
+    shot.write_bytes(b"jpg")
+    base = time.time() - 100
+    os.utime(shot, (base, base))
     trip_json = trip_dir / "trip.json"
     trip_json.write_text('{"meta":{"title":"demo"}}', encoding="utf-8")
     assert longshot_outputs_stale(trip_dir, trip_mtime=trip_json.stat().st_mtime) is True

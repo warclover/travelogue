@@ -15,14 +15,17 @@ export function pickRecentUserTrips(trips) {
 }
 
 /**
- * Bento「最近一本」：优先选已有服务端长图 PNG 的 trip（手机框可读 *-ch*.png），
- * 否则退回 updatedAt 最新的一本。
+ * Bento「最近一本」：严格取 updatedAt 最新的非 demo 画册。
+ *
+ * 说明：
+ * - 旧逻辑会优先 hasLongshotExport，可能把焦点固定在历史老画册，
+ *   导致新建游记后「最近一本」不更新。
+ * - 实际预览可用性由 refreshUserBentoPreview 的候选回退链保障。
  */
 export function pickBentoPreviewTrip(trips) {
   var userTrips = pickRecentUserTrips(trips);
   if (!userTrips.length) return null;
-  var withExport = userTrips.filter(function (t) { return t.hasLongshotExport; });
-  return (withExport[0] || userTrips[0]);
+  return userTrips[0];
 }
 
 /**

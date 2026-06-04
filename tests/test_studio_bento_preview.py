@@ -278,6 +278,47 @@ def test_build_trip_bento_preview_longshot_pages_single_export_png(tmp_path: Pat
     ]
 
 
+def test_build_trip_bento_preview_longshot_pages_single_export_jpg(tmp_path: Path) -> None:
+    trip_id = "exported-jpg"
+    trip_dir = tmp_path / trip_id
+    trip_dir.mkdir()
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    Image.new("RGB", (1080, 12000), color="#808080").save(trip_dir / "trip-longshot.jpg")
+    (trip_dir / "trip.json").write_text('{"meta":{"title":"导出长图"}}', encoding="utf-8")
+    trip = __import__("json").loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    assert payload["longshotPages"] == [
+        {
+            "id": "longshot",
+            "label": "微信长图",
+            "url": f"/{trip_id}/trip-longshot.jpg",
+            "scrollPreview": True,
+        }
+    ]
+
+
+def test_build_trip_bento_preview_longshot_pages_from_vertical_ch_jpgs(tmp_path: Path) -> None:
+    trip_id = "mobile-strips-jpg"
+    trip_dir = tmp_path / trip_id
+    trip_dir.mkdir()
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    Image.new("RGB", (390, 8000), color="#808080").save(trip_dir / "trip-ch01.jpg")
+    Image.new("RGB", (390, 6000), color="#808080").save(trip_dir / "trip-ch02.jpg")
+    (trip_dir / "trip.json").write_text(
+        '{"meta":{"title":"竖条章节"},"chapters":[{"id":"c1","title":"第一章"},{"id":"c2","title":"第二章"}]}',
+        encoding="utf-8",
+    )
+    trip = __import__("json").loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    assert len(payload["longshotPages"]) == 2
+    assert payload["longshotPages"][0]["url"] == f"/{trip_id}/trip-ch01.jpg"
+    assert payload["longshotPages"][1]["url"] == f"/{trip_id}/trip-ch02.jpg"
+
+
 def test_build_trip_bento_preview_longshot_pages_match_carousel_chapters(tmp_path: Path) -> None:
     """无导出长图时 · longshotPages 与 carousel 同序，章内选竖版。"""
     trip_id = "dongao-like"

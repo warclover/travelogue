@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Iterator
 from urllib.parse import quote
 
+from PIL import Image
 from travelogue.render.context import asset_aspect_kind, pick_image_src
 
 
@@ -48,24 +49,31 @@ _KIND_RATIO_HINT: dict[str, float] = {
 _WEB_LANDSCAPE_RATIO_MIN = 1.08
 
 
-def _png_pixel_size(path: Path) -> tuple[int, int] | None:
-    """读取 PNG IHDR 像素尺寸（不解码整图）。"""
+def _image_pixel_size(path: Path) -> tuple[int, int] | None:
+    """读取 PNG/JPEG 像素尺寸；PNG 走轻量头读取，其它格式回退 PIL。"""
     try:
-        with path.open("rb") as fh:
-            header = fh.read(24)
+        suffix = path.suffix.lower()
+        if suffix == ".png":
+            with path.open("rb") as fh:
+                header = fh.read(24)
+            if len(header) < 24 or header[:8] != b"\x89PNG\r\n\x1a\n":
+                return None
+            width = int.from_bytes(header[16:20], "big")
+            height = int.from_bytes(header[20:24], "big")
+            if width <= 0 or height <= 0:
+                return None
+            return width, height
+        with Image.open(path) as img:
+            width, height = img.size
+            if width <= 0 or height <= 0:
+                return None
+            return width, height
     except OSError:
         return None
-    if len(header) < 24 or header[:8] != b"\x89PNG\r\n\x1a\n":
-        return None
-    width = int.from_bytes(header[16:20], "big")
-    height = int.from_bytes(header[20:24], "big")
-    if width <= 0 or height <= 0:
-        return None
-    return width, height
 
 
 def _file_width_height_ratio(path: Path) -> float | None:
-    size = _png_pixel_size(path)
+    size = _image_pixel_size(path)
     if not size:
         return None
     width, height = size
@@ -89,12 +97,21 @@ def _is_phone_vertical_file(path: Path) -> bool:
 
 
 def _pick_longshot(trip_dir: Path) -> Path | None:
-    rows = sorted(trip_dir.glob("*-longshot.png"))
+    rows = sorted(
+        list(trip_dir.glob("*-longshot.png"))
+        + list(trip_dir.glob("*-longshot.jpg"))
+        + list(trip_dir.glob("*-longshot.jpeg"))
+    )
     return rows[0] if rows else None
 
 
 def _chapter_pngs(trip_dir: Path) -> list[Path]:
-    return sorted(trip_dir.glob("*-ch*.png"), key=lambda p: p.name.lower())
+    return sorted(
+        list(trip_dir.glob("*-ch*.png"))
+        + list(trip_dir.glob("*-ch*.jpg"))
+        + list(trip_dir.glob("*-ch*.jpeg")),
+        key=lambda p: p.name.lower(),
+    )
 
 
 def _asset_map(trip: dict) -> dict[str, dict]:

@@ -7,6 +7,20 @@ from datetime import datetime
 from pathlib import Path
 
 
+def _longshot_files(trip_dir: Path) -> list[Path]:
+    files: list[Path] = []
+    for pattern in (
+        "*-longshot.png",
+        "*-longshot.jpg",
+        "*-longshot.jpeg",
+        "*-ch*.png",
+        "*-ch*.jpg",
+        "*-ch*.jpeg",
+    ):
+        files.extend(trip_dir.glob(pattern))
+    return files
+
+
 def _trip_updated_at(trip_json: Path, data: dict) -> float:
     updated = data.get("updatedAt")
     if updated:
@@ -19,33 +33,41 @@ def _trip_updated_at(trip_json: Path, data: dict) -> float:
 
 
 def _pick_preview(trip_dir: Path) -> str | None:
-    """Return a relative cover image, falling back from preview.jpg → ch01 png → longshot png."""
+    """Return cover: preview.jpg → ch01 (png/jpg) → longshot (png/jpg)."""
     primary = trip_dir / "preview.jpg"
     if primary.is_file():
         return "preview.jpg"
-    ch01 = sorted(trip_dir.glob("*-ch01.png"))
+    ch01 = sorted(list(trip_dir.glob("*-ch01.png")) + list(trip_dir.glob("*-ch01.jpg")) + list(trip_dir.glob("*-ch01.jpeg")))
     if ch01:
         return ch01[0].name
-    longshots = sorted(trip_dir.glob("*-longshot.png"))
+    longshots = sorted(
+        list(trip_dir.glob("*-longshot.png"))
+        + list(trip_dir.glob("*-longshot.jpg"))
+        + list(trip_dir.glob("*-longshot.jpeg"))
+    )
     if longshots:
         return longshots[0].name
-    any_ch = sorted(trip_dir.glob("*-ch*.png"))
+    any_ch = sorted(
+        list(trip_dir.glob("*-ch*.png"))
+        + list(trip_dir.glob("*-ch*.jpg"))
+        + list(trip_dir.glob("*-ch*.jpeg"))
+    )
     if any_ch:
         return any_ch[0].name
     return None
 
 
 def longshot_outputs_stale(trip_dir: Path, *, trip_mtime: float) -> bool:
-    pngs = list(trip_dir.glob("*-longshot.png")) + list(trip_dir.glob("*-ch*.png"))
-    if not pngs:
+    files = _longshot_files(trip_dir)
+    if not files:
         return False
-    latest_png = max(p.stat().st_mtime for p in pngs)
+    latest_png = max(p.stat().st_mtime for p in files)
     return trip_mtime > latest_png + 0.5
 
 
 def has_longshot_exports(trip_dir: Path) -> bool:
-    """True when trip folder contains server-exported longshot PNG(s)."""
-    return bool(list(trip_dir.glob("*-longshot.png")) or list(trip_dir.glob("*-ch*.png")))
+    """True when trip folder contains server-exported longshot images (png/jpg)."""
+    return bool(_longshot_files(trip_dir))
 
 
 def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:

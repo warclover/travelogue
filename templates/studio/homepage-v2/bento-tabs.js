@@ -4,6 +4,7 @@
 import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
 import { renderBentoSurface } from "./bento.js";
+import { fetchTripsFirstPage } from "./trips-client.js";
 
 var _wired = false;
 var _userTabInteracted = false;
@@ -62,7 +63,17 @@ export function initBentoTabs() {
   if (mineBtn) {
     mineBtn.addEventListener("click", function () {
       _userTabInteracted = true;
-      setBentoTab("mine");
+      fetchTripsFirstPage()
+        .then(function (data) {
+          V2.trips = data.trips || [];
+          V2.tripsTotal = typeof data.total === "number" ? data.total : V2.trips.length;
+          V2.isOffline = false;
+          return refreshUserBentoPreview(V2.trips);
+        })
+        .catch(function () {})
+        .finally(function () {
+          setBentoTab("mine", { force: true });
+        });
     });
   }
 }

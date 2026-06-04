@@ -203,6 +203,13 @@ def test_studio_home_v2_js_modules_present() -> None:
     assert "homepageVariant" in store
 
 
+def test_trip_preview_prefers_latest_trip_not_export_flag() -> None:
+    """最近一本应按最新画册，而不是优先旧 longshot 导出。"""
+    trip_preview = (STUDIO_DIR / "homepage-v2" / "trip-preview.js").read_text(encoding="utf-8")
+    assert "return userTrips[0];" in trip_preview
+    assert "withExport" not in trip_preview
+
+
 def test_studio_home_v2_import_sheet_modules() -> None:
     """M20-d · Import Sheet + 导入编排，复用 v3 共享原语（非复制视图）。"""
     sheet = (STUDIO_DIR / "homepage-v2" / "import-sheet.js").read_text(encoding="utf-8")
