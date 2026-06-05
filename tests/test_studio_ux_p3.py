@@ -17,7 +17,7 @@ from tests.test_studio_server import _distinct_album, _free_port, _get_json, _po
 
 
 ROOT = Path(__file__).resolve().parents[1]
-STUDIO_HTML = ROOT / "templates" / "studio" / "studio.html"
+STUDIO_HTML = ROOT / "templates" / "studio" / "legacy-freeze" / "studio.classic.html"
 PREVIEW_JS = ROOT / "templates" / "studio" / "preview-toolbar.js"
 
 

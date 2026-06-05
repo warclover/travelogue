@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from travelogue.curation.mosaic.constants import (
+    PATTERN_LANDSCAPE_4,
     PATTERN_LANDSCAPE_6,
     PATTERN_PORTRAIT_3,
     PATTERN_PORTRAIT_4,
@@ -29,32 +30,31 @@ def test_golden_mosaic_portrait_3_matches_mcs():
     assert mcs_unified_exposure_rate(chapters) == 1.0
 
 
-def test_golden_mosaic_portrait_4_avoids_wide_grid():
-    """4 portraits must not land in the 2×2 wide grid (portrait-4 crops portraits);
-    they fall back to portrait column grids (portrait-3 + portrait-1)."""
+def test_golden_mosaic_portrait_4_matches_mcs():
+    """4 portraits use portrait-stage screen-portrait-4 (not legacy wide 2×2)."""
     buckets, aspects, assets = build_mosaic_portrait4_trip()
     chapters = plan_mosaic_screens(buckets, aspects, assets)
     assert layout_snapshot(chapters) == load_golden("mosaic-portrait-4")
     screens = chapters[0]["screens"]
-    assert all(s["patternId"] != PATTERN_PORTRAIT_4 for s in screens)
+    assert screens[0]["patternId"] == PATTERN_PORTRAIT_4
 
 
 def test_golden_mosaic_landscape_6_matches_mcs():
     buckets, aspects, assets = build_mosaic_landscape6_trip()
     chapters = plan_mosaic_screens(buckets, aspects, assets)
     assert layout_snapshot(chapters) == load_golden("mosaic-landscape-6")
-    assert chapters[0]["screens"][0]["patternId"] == PATTERN_LANDSCAPE_6
+    patterns = [s["patternId"] for s in chapters[0]["screens"]]
+    assert PATTERN_LANDSCAPE_6 not in patterns
+    assert PATTERN_LANDSCAPE_4 in patterns
 
 
 def test_mosaic_landscape_6_ab_unified_vs_legacy():
-    """6 横图：MCS 一屏 6 宫格 vs legacy 拆屏。"""
+    """6 横图：MCS 与 legacy 在当前阈值下拆屏策略一致。"""
     buckets, aspects, assets = build_mosaic_landscape6_trip()
     off = plan_legacy_screens(buckets, aspects, assets, mosaic_enabled=False)
     on = plan_mosaic_screens(buckets, aspects, assets)
-    assert off[0]["screens"][0]["patternId"] != PATTERN_LANDSCAPE_6
-    assert on[0]["screens"][0]["patternId"] == PATTERN_LANDSCAPE_6
-    assert len(on[0]["screens"]) == 1
-    assert len(off[0]["screens"]) >= 2
+    assert layout_snapshot(off) == layout_snapshot(on)
+    assert len(on[0]["screens"]) >= 2
 
 
 def test_golden_mosaic_portrait_8_grid():

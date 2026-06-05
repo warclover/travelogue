@@ -35,7 +35,9 @@ def test_handle_patch_screen_replan(mock_ctx, tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     trip_json = _trip_with_screens(trips_dir)
     trip = TripService(root=trips_dir.parent).load(trip_json)
-    screen_id = trip["chapters"][0]["screens"][0]["screenId"]
+    screens = trip["chapters"][0]["screens"]
+    screen = next(s for s in screens if len(s.get("slots") or []) >= 3)
+    screen_id = screen["screenId"]
     cfg = AppConfig(trips_dir=trips_dir, mosaic=AppConfig().mosaic)
     mock_ctx.return_value.app_config = cfg
     mock_ctx.return_value.trip_service.return_value = TripService(root=trips_dir.parent)

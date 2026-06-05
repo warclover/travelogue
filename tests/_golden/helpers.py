@@ -98,7 +98,7 @@ def build_mosaic_landscape6_trip() -> tuple[list[list[str]], dict[str, str], lis
 
 
 def build_mosaic_eligible_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
-    """40 assets (8×5) — trip_total≥35, each window has 2P+3L for mosaic-5 candidates."""
+    """40 assets (8×5) — trip_total≥35, each window has 3P+2L for mosaic-5 candidates."""
     assets: list[dict] = []
     aspects: dict[str, str] = {}
     buckets: list[list[str]] = []
@@ -107,7 +107,7 @@ def build_mosaic_eligible_trip() -> tuple[list[list[str]], dict[str, str], list[
         for i in range(5):
             idx = b * 5 + i
             aid = f"m{idx:02d}"
-            kind = "portrait" if i < 2 else "landscape"
+            kind = "portrait" if i < 3 else "landscape"
             assets.append(
                 _asset(
                     aid,

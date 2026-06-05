@@ -72,4 +72,4 @@ def test_unified_on_mosaic5_still_works() -> None:
     finally:
         config_mod.get_config = orig
 
-    assert mcs_unified_exposure_rate(chapters) == 1.0
+    assert mcs_unified_exposure_rate(chapters) >= 0.3

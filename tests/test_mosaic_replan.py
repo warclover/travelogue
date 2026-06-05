@@ -22,6 +22,12 @@ def _chapters_with_aspects():
     aspects = {aid: aspects_map[aid] for aid in buckets[0]}
     assets_map = {a["id"]: a for a in assets}
     chapters = plan_mosaic_screens(buckets[:1], aspects_map, assets)
+    screen = next(
+        s
+        for s in chapters[0]["screens"]
+        if len(s.get("slots") or []) >= 3
+    )
+    chapters[0]["screens"] = [screen]
     return chapters, aspects, assets_map
 
 

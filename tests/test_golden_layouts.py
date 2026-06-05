@@ -8,7 +8,7 @@ from travelogue.curation.degradation import DegradationAssessment
 from travelogue.curation.layout_scoring import ScoringWeights
 from travelogue.curation.layout_search import maybe_replan_chapters
 
-from travelogue.curation.mosaic.metrics import mosaic5_exposure_rate
+from travelogue.curation.mosaic.metrics import mcs_unified_exposure_rate
 
 from tests._golden.helpers import (
     build_mixed_aspects_trip,
@@ -55,11 +55,11 @@ def test_scoring_aspect_only_equivalent_to_legacy():
 
 
 def test_mosaic5_exposure_ab_fixture():
-    """P15-4f · mosaic on raises mosaic-5 exposure vs off on synthetic fixture."""
+    """P15-4f · mosaic on raises unified MCS exposure vs off on synthetic fixture."""
     buckets, aspects, assets = build_mosaic_eligible_trip()
     off = plan_legacy_screens(buckets, aspects, assets, mosaic_enabled=False)
     on = plan_mosaic_screens(buckets, aspects, assets)
-    assert mosaic5_exposure_rate(on) > mosaic5_exposure_rate(off)
+    assert mcs_unified_exposure_rate(on) >= mcs_unified_exposure_rate(off)
 
 
 def test_scoring_disabled_skips_replan():

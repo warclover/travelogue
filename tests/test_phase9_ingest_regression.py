@@ -136,6 +136,7 @@ def test_ingest_e2e_ml_cache_reused_between_rebuilds(
         "travelogue.curation.photo_cull.resolve_effective_mode",
         lambda _cfg: "ml",
     )
+    monkeypatch.setattr("travelogue.curation.photo_cull_ml.pyiqa_available", lambda: True)
     monkeypatch.setattr(
         "travelogue.curation.photo_cull_ml._get_metric",
         lambda _cfg: _FakeMetric(),

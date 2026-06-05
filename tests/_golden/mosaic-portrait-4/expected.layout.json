@@ -5,12 +5,8 @@
       "patternId": "open",
       "screens": [
         {
-          "patternId": "screen-portrait-3",
-          "slotAssetIds": ["p1", "p2", "p3"]
-        },
-        {
-          "patternId": "screen-portrait-1",
-          "slotAssetIds": ["p4"]
+          "patternId": "screen-portrait-4",
+          "slotAssetIds": ["p1", "p2", "p3", "p4"]
         }
       ]
     }

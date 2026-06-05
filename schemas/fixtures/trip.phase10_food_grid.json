@@ -160,19 +160,56 @@
     {
       "id": "ch-01",
       "index": 1,
-      "patternId": "gallery",
+      "patternId": "open",
       "title": "fixture",
       "lead": "",
       "items": [
         {
-          "type": "media-row",
-          "assetIds": ["p0", "p1", "p2", "p3", "p4", "p5", "p6", "p7"],
-          "rowLayout": "mobile-landscape-grid-8"
+          "type": "media-scroll",
+          "assetIds": ["p0", "p1", "p2", "p3", "p4"]
         },
         {
-          "type": "media-row",
-          "assetIds": ["f1", "f2", "l1", "f3", "f4", "f5"],
-          "rowLayout": "landscape-triple"
+          "type": "media-scroll",
+          "assetIds": ["p5", "p6", "p7", "f1", "f2"]
+        },
+        {
+          "type": "media-scroll",
+          "assetIds": ["l1", "f3", "f4", "f5"]
+        }
+      ],
+      "curation": {}
+    },
+    {
+      "id": "ch-02",
+      "index": 2,
+      "patternId": "moment",
+      "title": "mid",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "p0",
+          "layout": { "fill": true }
+        },
+        {
+          "type": "media-card",
+          "assetId": "f1",
+          "layout": { "fill": true }
+        }
+      ],
+      "curation": {}
+    },
+    {
+      "id": "ch-03",
+      "index": 3,
+      "patternId": "close",
+      "title": "end",
+      "lead": "",
+      "items": [
+        {
+          "type": "media-card",
+          "assetId": "f5",
+          "layout": { "fill": true }
         }
       ],
       "curation": {}

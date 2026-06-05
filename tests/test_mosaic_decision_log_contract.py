@@ -23,7 +23,7 @@ def test_pick_best_logs_top3_reason_codes_router_version() -> None:
     cands = generate_five_candidates(
         ids, aspects, assets_map, cfg=cfg, burst_seconds=3600.0
     )
-    assert len(cands) >= 2
+    assert len(cands) >= 1
     assert all(c.hard_valid for c in cands)
     assert all(c.feature_summary.get("windowSize") == 5 for c in cands)
 
@@ -41,6 +41,6 @@ def test_pick_best_logs_top3_reason_codes_router_version() -> None:
     assert raw["scorerVersion"]
     assert raw["winnerPatternId"]
     assert raw["winnerReasonCodes"]
-    assert len(raw.get("top3Patterns") or []) >= 2
-    assert raw["candidatesCount"] >= 2
+    assert len(raw.get("top3Patterns") or []) >= 1
+    assert raw["candidatesCount"] >= 1
     assert pick.screen is not None

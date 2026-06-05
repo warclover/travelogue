@@ -5,8 +5,20 @@
       "patternId": "open",
       "screens": [
         {
-          "patternId": "screen-landscape-9",
-          "slotAssetIds": ["l1", "l2", "l3", "l4", "l5", "l6", "l7", "l8", "l9"]
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": ["l1"]
+        },
+        {
+          "patternId": "screen-landscape-6",
+          "slotAssetIds": ["l2", "l3", "l4", "l5", "l6", "l7"]
+        },
+        {
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": ["l8"]
+        },
+        {
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": ["l9"]
         }
       ]
     }

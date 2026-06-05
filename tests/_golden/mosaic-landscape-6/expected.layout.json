@@ -5,8 +5,16 @@
       "patternId": "open",
       "screens": [
         {
-          "patternId": "screen-landscape-6",
-          "slotAssetIds": ["l1", "l2", "l3", "l4", "l5", "l6"]
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": ["l1"]
+        },
+        {
+          "patternId": "screen-landscape-4",
+          "slotAssetIds": ["l2", "l3", "l4", "l5"]
+        },
+        {
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": ["l6"]
         }
       ]
     }

@@ -125,6 +125,7 @@ def test_apply_aesthetic_scores_uses_persistent_cache(
         "travelogue.curation.photo_cull_ml.resolve_effective_mode",
         lambda _cfg: "ml",
     )
+    monkeypatch.setattr("travelogue.curation.photo_cull_ml.pyiqa_available", lambda: True)
     monkeypatch.setattr(
         "travelogue.curation.photo_cull_ml._get_metric",
         lambda _cfg: _FakeMetric(),
