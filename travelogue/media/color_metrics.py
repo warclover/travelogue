@@ -121,3 +121,83 @@ def color_richness_multiplier(
     luma_factor = triangular_score(luma, low=0.18, peak=0.55, high=0.9)
     dull_penalty = 0.84 + 0.16 * chroma if luma < 0.32 else 1.0
     return (0.86 + 0.22 * chroma) * (0.88 + 0.12 * luma_factor) * dull_penalty
+
+
+def dominant_colors(
+    img: Image.Image,
+    *,
+    k: int = 5,
+    thumb_px: int = 32,
+    min_weight: float = 0.05,
+) -> list[tuple[float, str]]:
+    """Deterministic palette extraction (PA-T03 colorHarmony helper).
+
+    Uses PIL's adaptive median-cut quantizer (no numpy / sklearn) to reduce the
+    thumbnail to at most *k* clusters, then returns ``(weight, "#rrggbb")``
+    pairs sorted by descending weight. Clusters below *min_weight* of the image
+    are dropped so a near-solid colour reports as monochrome.
+    """
+    k = max(1, int(k))
+    thumb = img.convert("RGB").resize((max(2, int(thumb_px)), max(2, int(thumb_px))))
+    quant = thumb.quantize(colors=k, method=Image.Quantize.MEDIANCUT)
+    palette = quant.getpalette() or []
+    counts = quant.getcolors() or []
+    total = sum(count for count, _ in counts) or 1
+    out: list[tuple[float, str]] = []
+    for count, index in counts:
+        weight = count / total
+        if weight < min_weight:
+            continue
+        base = index * 3
+        if base + 2 >= len(palette):
+            continue
+        r, g, b = palette[base], palette[base + 1], palette[base + 2]
+        out.append((round(weight, 4), f"#{r:02x}{g:02x}{b:02x}"))
+    if not out and counts:
+        count, index = max(counts, key=lambda c: c[0])
+        base = index * 3
+        if base + 2 < len(palette):
+            r, g, b = palette[base], palette[base + 1], palette[base + 2]
+            out.append((1.0, f"#{r:02x}{g:02x}{b:02x}"))
+    out.sort(key=lambda item: item[0], reverse=True)
+    return out
+
+
+def _pair_harmony(delta_e: float) -> float:
+    """Score one colour-pair distance against monochrome/analogous/complement windows."""
+    mono = max(0.0, 1.0 - delta_e / 25.0)
+    analogous = triangular_score(delta_e, low=15.0, peak=35.0, high=60.0)
+    complementary = triangular_score(delta_e, low=45.0, peak=75.0, high=130.0)
+    return max(mono, analogous, complementary)
+
+
+def color_harmony_score(
+    img: Image.Image,
+    *,
+    k: int = 5,
+    thumb_px: int = 32,
+) -> float:
+    """0–1 colour harmony via ΔE76 between dominant colours (PA-T03).
+
+    A single dominant colour (monochrome) scores high; complementary or
+    analogous palettes score high; scattered, mutually-distant palettes (the
+    typical "messy" frame) land in the dead zones and score low. Weighting each
+    pair by the product of its colours' coverage keeps tiny clusters from
+    dominating the result.
+    """
+    colors = dominant_colors(img, k=k, thumb_px=thumb_px)
+    if len(colors) <= 1:
+        return 0.9  # monochrome / near-solid frame reads as harmonious
+    weighted_sum = 0.0
+    weight_total = 0.0
+    for i in range(len(colors)):
+        for j in range(i + 1, len(colors)):
+            w = colors[i][0] * colors[j][0]
+            if w <= 0:
+                continue
+            score = _pair_harmony(delta_e_cie76(colors[i][1], colors[j][1]))
+            weighted_sum += w * score
+            weight_total += w
+    if weight_total <= 0:
+        return 0.9
+    return round(min(1.0, max(0.0, weighted_sum / weight_total)), 4)

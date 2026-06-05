@@ -28,6 +28,7 @@ class _FakePipelineResult:
     tier_mode: str = "none"
     g1_pending: bool = False
     photo_count: int = 6
+    cull_user_line: str = ""
 
 
 def _drain_queue(queue: mp.Queue) -> list[dict]:

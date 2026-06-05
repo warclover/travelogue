@@ -140,6 +140,39 @@ class CohortConfig:
 
 
 @dataclass
+class AestheticWeights:
+    """overall = Σ wᵢ·dimᵢ (PA Layer 1). Defaults from design §6."""
+
+    composition: float = 0.25
+    exposure: float = 0.20
+    color: float = 0.20
+    lighting: float = 0.15
+    subject_clarity: float = 0.20
+
+    def as_dim_map(self) -> dict[str, float]:
+        return {
+            "composition": self.composition,
+            "exposure": self.exposure,
+            "color": self.color,
+            "lighting": self.lighting,
+            "subjectClarity": self.subject_clarity,
+        }
+
+
+@dataclass
+class AestheticConfig:
+    """PA · photo aesthetic evaluation (Layer 1, path A · zero-dependency)."""
+
+    enabled: bool = True
+    source: str = "rules"  # rules | rules+ml | mllm
+    weights: AestheticWeights = field(default_factory=AestheticWeights)
+    ml_calibrate: bool = False
+    ml_calibrate_blend: float = 0.4
+    use_purpose_presets: bool = True
+    thumb_px: int = 32
+
+
+@dataclass
 class CurateConfig:
     segment_gap_days: int = 14
     city_gap_days: int = 3
@@ -454,6 +487,40 @@ class AppConfig:
     template_admin: TemplateAdminConfig = field(default_factory=TemplateAdminConfig)
     mosaic: MosaicConfig = field(default_factory=MosaicConfig)
     cohort: CohortConfig = field(default_factory=CohortConfig)
+    aesthetic: AestheticConfig = field(default_factory=AestheticConfig)
+
+
+def _aesthetic_from_dict(raw: dict[str, Any]) -> AestheticConfig:
+    defaults = AestheticConfig()
+    weights_raw = raw.get("weights") if isinstance(raw.get("weights"), dict) else {}
+    wd = AestheticWeights()
+    weights = AestheticWeights(
+        composition=float(weights_raw.get("composition", wd.composition)),
+        exposure=float(weights_raw.get("exposure", wd.exposure)),
+        color=float(weights_raw.get("color", wd.color)),
+        lighting=float(weights_raw.get("lighting", wd.lighting)),
+        subject_clarity=float(
+            weights_raw.get(
+                "subjectClarity", weights_raw.get("subject_clarity", wd.subject_clarity)
+            )
+        ),
+    )
+    source = str(raw.get("source", defaults.source)).strip().lower()
+    if source not in ("rules", "rules+ml", "mllm"):
+        source = defaults.source
+    return AestheticConfig(
+        enabled=bool(raw.get("enabled", defaults.enabled)),
+        source=source,
+        weights=weights,
+        ml_calibrate=bool(raw.get("ml_calibrate", raw.get("mlCalibrate", defaults.ml_calibrate))),
+        ml_calibrate_blend=float(
+            raw.get("ml_calibrate_blend", raw.get("mlCalibrateBlend", defaults.ml_calibrate_blend))
+        ),
+        use_purpose_presets=bool(
+            raw.get("use_purpose_presets", raw.get("usePurposePresets", defaults.use_purpose_presets))
+        ),
+        thumb_px=int(raw.get("thumb_px", raw.get("thumbPx", defaults.thumb_px))),
+    )
 
 
 def _phase6_ac_from_dict(raw: dict[str, Any]) -> Phase6AcThresholds:
@@ -1036,6 +1103,7 @@ def load_config(path: Path | None = None) -> AppConfig:
     template_router_raw = data.get("template_router") if isinstance(data.get("template_router"), dict) else {}
     template_admin_raw = data.get("template_admin") if isinstance(data.get("template_admin"), dict) else {}
     cohort_raw = data.get("cohort") if isinstance(data.get("cohort"), dict) else {}
+    aesthetic_raw = data.get("aesthetic") if isinstance(data.get("aesthetic"), dict) else {}
     mosaic_raw = data.get("mosaic") if isinstance(data.get("mosaic"), dict) else {}
     layout_top = data.get("layout") if isinstance(data.get("layout"), dict) else {}
     mosaic_v2 = layout_top.get("mosaic_v2") if isinstance(layout_top.get("mosaic_v2"), dict) else {}
@@ -1244,6 +1312,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             layout_weight=float(cohort_raw.get("layout_weight", cohort_raw.get("layoutWeight", 0.06))),
             mosaic_weight=float(cohort_raw.get("mosaic_weight", cohort_raw.get("mosaicWeight", 0.05))),
         ),
+        aesthetic=_aesthetic_from_dict(aesthetic_raw),
     )
 
 

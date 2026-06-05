@@ -878,9 +878,46 @@
             "cullExplain": { "type": "string" },
             "aestheticScore": { "type": "number", "minimum": 0, "maximum": 1 },
             "aestheticMetric": { "type": "string" },
+            "aesthetic": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "PA Layer 1 · CV aesthetic evaluation (quality.aesthetic)",
+              "properties": {
+                "version": { "type": "string" },
+                "source": { "type": "string", "enum": ["rules", "rules+ml", "mllm"] },
+                "overall": { "type": "number", "minimum": 0, "maximum": 1 },
+                "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+                "dims": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "composition": { "type": "number", "minimum": 0, "maximum": 1 },
+                    "exposure": { "type": "number", "minimum": 0, "maximum": 1 },
+                    "color": { "type": "number", "minimum": 0, "maximum": 1 },
+                    "lighting": { "type": "number", "minimum": 0, "maximum": 1 },
+                    "subjectClarity": { "type": "number", "minimum": 0, "maximum": 1 }
+                  }
+                },
+                "signals": {
+                  "type": "object",
+                  "additionalProperties": { "type": ["number", "null"] }
+                },
+                "critique": { "type": ["string", "null"] }
+              }
+            },
             "lowResSuspected": { "type": "boolean" },
             "faceCount": { "type": "integer", "minimum": 0 },
             "faceRatio": { "type": "number", "minimum": 0, "maximum": 1 },
+            "cullBranch": {
+              "type": "string",
+              "enum": ["portrait", "landscape", "gray"],
+              "description": "Branch chosen by photo_cull quality scoring"
+            },
+            "cullBranchScore": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Branch-specific quality score (photo_cull pipeline)"
+            },
             "cullBranchFallbackReason": {
               "type": "string",
               "description": "Why cull branch fell back (photo_cull pipeline)"

@@ -1,0 +1,23 @@
+# PA · 照片审美评价体系 — 配置示例（阶段 PA-1 · 路径 A · 零依赖）
+#
+# 把 aesthetic 段落合并进项目根目录的 config.yaml 即可生效。
+# 关闭总开关（enabled: false）后 ingest 回退到旧行为，不写 quality.aesthetic。
+
+aesthetic:
+  enabled: true              # Layer 1 总开关（路径 A）
+  source: rules              # rules | rules+ml | mllm（PA-1 仅 rules）
+
+  # overall = Σ wᵢ·dimᵢ（自动按权重和归一）
+  weights:
+    composition: 0.25
+    exposure: 0.20
+    color: 0.20
+    lighting: 0.15
+    subjectClarity: 0.20
+
+  thumb_px: 32              # 共享灰度缩略图边长（与 ingest 色彩缩略图一致）
+
+  # 以下为后续阶段预留开关（PA-1 不生效）
+  ml_calibrate: false        # PA-4 · 用 topiq 校准 overall
+  ml_calibrate_blend: 0.4
+  use_purpose_presets: true  # PA-2 · cover/hero/solo 各用不同权重预设

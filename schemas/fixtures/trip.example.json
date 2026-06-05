@@ -30,7 +30,40 @@
       "height": 3024,
       "takenAt": "2025-04-02T15:30:00+09:00",
       "place": { "city": "京都", "country": "JP" },
-      "ingestBatchId": "batch-001"
+      "ingestBatchId": "batch-001",
+      "quality": {
+        "sharpness": 412.5,
+        "meanLuma": 0.52,
+        "aesthetic": {
+          "version": "pa-v0.1",
+          "source": "rules",
+          "overall": 0.71,
+          "confidence": 0.8,
+          "dims": {
+            "composition": 0.74,
+            "exposure": 0.68,
+            "color": 0.81,
+            "lighting": 0.55,
+            "subjectClarity": 0.66
+          },
+          "signals": {
+            "dynamicRange": 0.72,
+            "clipHighRatio": 0.03,
+            "clipLowRatio": 0.01,
+            "midtoneCenter": 0.96,
+            "colorHarmony": 0.78,
+            "thirdsScore": 0.69,
+            "negativeSpace": 0.41,
+            "lumaGradient": 0.58,
+            "contrast": 0.52,
+            "balance": 0.83,
+            "richness": 0.6,
+            "normSharp": 0.73,
+            "subjectContrast": 0.64
+          },
+          "critique": null
+        }
+      }
     },
     {
       "id": "asset-002",

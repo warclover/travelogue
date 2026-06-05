@@ -12,7 +12,7 @@ from typing import Any, Callable
 
 from PIL import Image
 
-from travelogue.config import AppConfig, IngestConfig, get_config
+from travelogue.config import AestheticConfig, AppConfig, IngestConfig, get_config
 from travelogue.errors import CodeError
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 from travelogue.curation.asset_quality import apply_layout_eligibility_marks, asset_sharpness
@@ -134,6 +134,8 @@ class IngestAssetBuildContext:
     geocode_enabled: bool
     dual_ingest: bool = False
     elapsed_acc: dict[str, float] | None = None
+    aesthetic: AestheticConfig | None = None
+    aesthetic_cache: dict[str, dict] | None = None
 
 
 @dataclass
@@ -455,6 +457,7 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
         entry["burstGroupId"] = photo.burst_group_id
     if subj.salient_box:
         entry["salientBox"] = subj.salient_box
+    _attach_aesthetic(ctx, entry, photo)
     from travelogue.media.user_tier import apply_user_tier_fields
 
     apply_user_tier_fields(
@@ -464,6 +467,46 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
         import_source=photo.import_source,
     )
     return entry
+
+
+def _attach_aesthetic(
+    ctx: IngestAssetBuildContext,
+    entry: dict,
+    photo: IngestPhotoPayload,
+) -> None:
+    """PA-T05 · fill quality.aesthetic (fail-open, contentSig-cached)."""
+    ae_cfg = ctx.aesthetic
+    if ae_cfg is None or not ae_cfg.enabled:
+        return
+    try:
+        from travelogue.curation.aesthetic_score import (
+            AESTHETIC_VERSION,
+            compute_aesthetic,
+            compute_aesthetic_signals,
+        )
+
+        sig_key = photo.content_sig
+        signals: dict | None = None
+        cache = ctx.aesthetic_cache
+        if cache is not None and sig_key:
+            cached = cache.get(sig_key)
+            if isinstance(cached, dict) and cached.get("version") == AESTHETIC_VERSION:
+                cached_signals = cached.get("signals")
+                if isinstance(cached_signals, dict):
+                    signals = dict(cached_signals)
+        if signals is None:
+            signals = compute_aesthetic_signals(photo.img, entry, cfg=ae_cfg)
+            if cache is not None and sig_key:
+                cache[sig_key] = {"version": AESTHETIC_VERSION, "signals": signals}
+        block = compute_aesthetic(entry, signals=signals, cfg=ae_cfg)
+        quality = entry.get("quality")
+        if isinstance(quality, dict):
+            quality["aesthetic"] = block
+    except Exception as exc:  # fail-open: never break ingest
+        ctx.ingest_stats["aesthetic_errors"] = (
+            ctx.ingest_stats.get("aesthetic_errors", 0) + 1
+        )
+        ctx.ingest_stats.setdefault("aesthetic_error_sample", str(exc))
 
 
 def _upsert_asset(
@@ -1061,6 +1104,13 @@ def ingest_into_trip(
         elapsed_acc={},
     )
 
+    aesthetic_cfg = resolved_app.aesthetic
+    aesthetic_cache: dict[str, dict] = {}
+    if aesthetic_cfg.enabled:
+        from travelogue.curation.aesthetic_score import load_signal_cache
+
+        aesthetic_cache = load_signal_cache(trip_dir)
+
     build_ctx = IngestAssetBuildContext(
         cfg=cfg,
         assets_dir=assets_dir,
@@ -1073,6 +1123,8 @@ def ingest_into_trip(
         geocode_enabled=geocode_enabled,
         dual_ingest=dual_ingest,
         elapsed_acc=loop_state.elapsed_acc,
+        aesthetic=aesthetic_cfg if aesthetic_cfg.enabled else None,
+        aesthetic_cache=aesthetic_cache if aesthetic_cfg.enabled else None,
     )
 
     total_photos = len(photo_tiers)
@@ -1106,6 +1158,11 @@ def ingest_into_trip(
     skipped = loop_state.skipped
     assets = loop_state.assets
     ingest_stats = loop_state.ingest_stats
+
+    if aesthetic_cfg.enabled and aesthetic_cache:
+        from travelogue.curation.aesthetic_score import save_signal_cache
+
+        save_signal_cache(trip_dir, aesthetic_cache)
 
     _finalize_ingest_assets(
         trip=trip,

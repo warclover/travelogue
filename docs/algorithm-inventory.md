@@ -31,6 +31,10 @@
 | sRGB 亮度 / 主色 | native | ✅ | PIL | ingest 色彩回填 |
 | CIE Lab ΔE76 | native | ✅ | — | 排版打分用 |
 | 三角窗 / 色度偏好 | native | ✅ | — | 封面打分 |
+| 曝光直方图（动态范围/过欠曝/中间调） | native | ✅ | PIL | `aesthetic.enabled`，写 `quality.aesthetic.signals` |
+| 光影（亮度梯度/反差/象限平衡） | native | ✅ | PIL | 同上 |
+| 色彩和谐（主色 ΔE76 和谐窗） | native | ✅ | PIL | 同上 |
+| 审美 Layer 1 合成（五维 + overall/confidence） | native | ✅ | PIL | 写 `quality.aesthetic`，`aesthetic.weights` |
 | 中心裁切 / WebP 衍生 | native | ✅ | PIL | `image_ops` |
 | 媒体类型启发式 | native | ✅ | — | `media_classify` |
 | 归档日期离群标记 | native | ✅ | — | `refine_archive_media_class` |
@@ -124,6 +128,12 @@
 | | `delta_e_cie76` | CIE76 ΔE |
 | | `triangular_score` | 三角窗评分 |
 | | `dominant_tone_chroma_score` | Lab 色度偏好 |
+| | `dominant_colors` | 中位切分主色调色板 |
+| | `color_harmony_score` | 主色 ΔE76 和谐窗（PA-T03） |
+| `exposure_metrics.py` | `histogram_stats` | 动态范围/过欠曝/中间调（PA-T02） |
+| | `lighting_stats` | 亮度梯度 + 反差（PA-T03） |
+| | `quadrant_balance` | 象限亮度对称（构图平衡） |
+| | `subject_contrast_score` | 主体框/背景边缘能量比 |
 | `subject_detect.py` | `detect_faces_in_image` | Haar 多尺度 |
 | | `analyze_subject` | 人脸→焦点/显著框 |
 | `face_embed.py` | `l2_normalize` | L2 归一 |
@@ -204,6 +214,10 @@
 | `curate_scoring.py` | `cover_score` / `pick_cover_asset_id` | 封面打分选型 |
 | | `pick_chapter_hero` | 章英雄图 |
 | | `sort_bucket_asset_ids` | 桶内排序 |
+| `aesthetic_score.py` | `compute_aesthetic_signals` | 逐图 CV 信号（可 contentSig 缓存，PA-T05） |
+| | `compute_aesthetic` | 五维合成 + overall/confidence（PA-T04） |
+| | `build_aesthetic_explain` | 维度 top 因子解释 |
+| | `normalize_sharpness` | 单图清晰度饱和归一 |
 | `degradation.py` | `assess_degradation` | legacy 降级判定 |
 | `cohort_faces.py` | `build_subject_templates` | 种子脸模板 |
 | | `_match_present_subjects` | 1-NN 余弦匹配 |
@@ -268,3 +282,4 @@ run_curate                → curation/curate.py
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v1.0 | 2026-06-04 | 初版：§1 依赖对照 + §2 函数索引 |
+| v1.1 | 2026-06-05 | PA-1：登记审美 Layer 1（exposure_metrics / color_metrics 和谐 / aesthetic_score） |
