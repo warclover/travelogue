@@ -320,11 +320,15 @@ def score_aspect_match(screen: dict, aspects: Mapping[str, AspectKind]) -> float
     if not slots:
         return 0.0
     hits = 0
+    counted = 0
     for slot in slots:
-        role = (slot.get("role") or "").lower()
         kind = _aspect_kind_for_slot(slot, aspects)
         if kind is None:
+            # Slot has no assetId or unknown aspect: exclude from the denominator
+            # so empty/dangling slots don't drag the match rate toward 0.
             continue
+        counted += 1
+        role = (slot.get("role") or "").lower()
         if role == "portrait" and kind in ("portrait", "tall"):
             hits += 1
         elif role == "landscape" and kind in ("landscape", "panorama"):
@@ -335,7 +339,7 @@ def score_aspect_match(screen: dict, aspects: Mapping[str, AspectKind]) -> float
             hits += 1
         elif role == "square" and kind == "square":
             hits += 1
-    return hits / len(slots)
+    return hits / counted if counted else 0.0
 
 
 def score_sharpness(screen: dict, assets_by_id: Mapping[str, dict]) -> float:
@@ -443,6 +447,14 @@ def score_luminance_continuity(
     l_max: float = 0.35,
 ) -> float:
     """Adjacent-screen mean luminance smoothness (Phase 3a spread guard)."""
+    from travelogue.curation.longshot_filter import _is_breath_screen
+
+    screens = [
+        s
+        for s in screens
+        if not _is_breath_screen(s)
+        and any(slot.get("assetId") for slot in (s.get("slots") or []))
+    ]
     if len(screens) < 2:
         return 1.0
     lumas = [screen_mean_luma(s, assets_by_id) for s in screens]
@@ -472,8 +484,15 @@ def score_tone_continuity(
     assets_by_id: Mapping[str, dict],
 ) -> float:
     """Adjacent-screen ΔE (CIE76) triangular window [10, 40], peak 25."""
+    from travelogue.curation.longshot_filter import _is_breath_screen
     from travelogue.media.color_metrics import delta_e_cie76, triangular_score
 
+    screens = [
+        s
+        for s in screens
+        if not _is_breath_screen(s)
+        and any(slot.get("assetId") for slot in (s.get("slots") or []))
+    ]
     if len(screens) < 2:
         return 1.0
     scores: list[float] = []

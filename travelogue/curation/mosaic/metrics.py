@@ -5,12 +5,21 @@ from __future__ import annotations
 from typing import Any
 
 from travelogue.curation.chapter_items import summarize_screen_patterns
+from travelogue.curation.longshot_filter import BREATH_PATTERN
 from travelogue.curation.mosaic.constants import MOSAIC_UNIFIED_PATTERN_IDS
 from travelogue.curation.mosaic.render_check import compute_layout_render_error_rate
 
 
-def mosaic5_exposure_rate(chapters: list[dict]) -> float:
+def _image_screen_pattern_counts(chapters: list[dict]) -> dict[str, int]:
+    """Pattern counts excluding image-less transition screens (breath-pause),
+    so exposure rates are measured against content screens only."""
     counts = summarize_screen_patterns(chapters)
+    counts.pop(BREATH_PATTERN, None)
+    return counts
+
+
+def mosaic5_exposure_rate(chapters: list[dict]) -> float:
+    counts = _image_screen_pattern_counts(chapters)
     total = sum(counts.values())
     if not total:
         return 0.0
@@ -20,7 +29,7 @@ def mosaic5_exposure_rate(chapters: list[dict]) -> float:
 
 def mcs_unified_exposure_rate(chapters: list[dict]) -> float:
     """Share of screens using any MCS-managed pattern (3/4/5/6 family)."""
-    counts = summarize_screen_patterns(chapters)
+    counts = _image_screen_pattern_counts(chapters)
     total = sum(counts.values())
     if not total:
         return 0.0

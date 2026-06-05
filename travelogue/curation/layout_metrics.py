@@ -180,18 +180,9 @@ def compute_layout_quality_metrics(
 ) -> dict[str, Any]:
     assets_by_id = {a["id"]: a for a in assets if a.get("id")}
     if aspects is None:
-        from travelogue.media.image_ops import classify_aspect
+        from travelogue.curation.layout_planner import aspect_kind_for_asset
 
-        def _aspect_for(asset: dict) -> AspectKind:
-            kind = asset.get("aspectKind")
-            if kind:
-                return kind  # type: ignore[return-value]
-            w, h = asset.get("width"), asset.get("height")
-            if w and h:
-                return classify_aspect(int(w), int(h))
-            return "landscape"
-
-        aspects = {a["id"]: _aspect_for(a) for a in assets if a.get("id")}
+        aspects = {a["id"]: aspect_kind_for_asset(a) for a in assets if a.get("id")}
     return {
         "timeInversionRate": round(time_inversion_rate(chapters, assets_by_id), 6),
         "subjectRunScore": round(

@@ -11,6 +11,7 @@ from typing import Any, Literal
 
 from travelogue.config import AppConfig, CullConfig, get_config
 from travelogue.curation.asset_quality import asset_sharpness
+from travelogue.curation.layout_planner import aspect_kind_for_asset
 from travelogue.curation.photo_cull_ml import apply_aesthetic_scores, resolve_effective_mode
 
 _log = logging.getLogger(__name__)
@@ -157,8 +158,11 @@ def _landscape_quality_score(
     sharp_part: float,
     aesthetic: float | None,
 ) -> float:
-    aspect = str(asset.get("aspectKind") or "")
-    aspect_boost = 0.0 if aspect == "portrait" else 0.12
+    # Resolve aspect via the shared helper so assets missing the stored
+    # aspectKind field fall back to width/height instead of being treated as
+    # non-portrait (which would wrongly grant the landscape composition boost).
+    aspect = aspect_kind_for_asset(asset)
+    aspect_boost = 0.0 if aspect in ("portrait", "tall") else 0.12
     base = sharp_part * 0.70 + _media_weight(asset) * 0.30 + aspect_boost
     if aesthetic is not None:
         base = base * 0.7 + aesthetic * 0.3

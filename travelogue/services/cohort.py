@@ -63,6 +63,8 @@ def suggest_seed_asset_ids(
     limit: int = 8,
 ) -> list[str]:
     """Heuristic seed candidates: faces detected, not already used as seeds."""
+    from travelogue.curation.layout_planner import aspect_kind_for_asset
+
     subjects = (trip.get("intent") or {}).get("featuredSubjects") or []
     used: set[str] = set()
     for subj in subjects:
@@ -82,7 +84,8 @@ def suggest_seed_asset_ids(
         if int(q.get("faceCount") or 0) < 1:
             continue
         sharp = float(q.get("sharpness") or 0.0)
-        bonus = 0.1 if asset.get("aspectKind") == "portrait" else 0.0
+        kind = aspect_kind_for_asset(asset)
+        bonus = 0.1 if kind in ("portrait", "tall") else 0.0
         rows.append((sharp + bonus, str(aid)))
     rows.sort(key=lambda x: (-x[0], x[1]))
     return [aid for _s, aid in rows[:limit]]
