@@ -41,6 +41,7 @@ export function setBentoTab(tab, opts) {
   V2.manifest = activeBentoManifest();
   syncTabUi();
   renderBentoSurface(V2.manifest);
+  import("./bento-stale.js").then(function (stale) { stale.syncBentoStaleBar(); });
   if (!opts.silent) {
     trackStudioEvent("bento_tab_switch", {
       tab: tab,
@@ -79,16 +80,21 @@ export function initBentoTabs() {
 }
 
 /** trips 加载后拉取最近一本预览 manifest。 */
-export function refreshUserBentoPreview(trips) {
+export function refreshUserBentoPreview(trips, opts) {
+  opts = opts || {};
   return import("./trip-preview.js").then(function (mod) {
     var primary = mod.pickBentoPreviewTrip(trips);
     if (!primary) {
       V2.userManifest = null;
+      V2.userPreviewTrip = null;
       if (!_userTabInteracted || V2.bentoTab === "mine") {
         V2.bentoTab = "demo";
       }
       syncTabUi();
-      return null;
+      return import("./bento-stale.js").then(function (stale) {
+        stale.syncBentoStaleBar();
+        return null;
+      });
     }
 
     var candidates = mod.pickRecentUserTrips(trips);
@@ -96,12 +102,18 @@ export function refreshUserBentoPreview(trips) {
       candidates.filter(function (t) { return t.tripId !== primary.tripId; })
     );
 
+    var matchedTrip = null;
+
     function tryAt(i) {
       if (i >= ordered.length) return Promise.resolve(null);
       var trip = ordered[i];
-      return mod.loadTripBentoPreview(trip.tripId).then(function (manifest) {
+      return mod.loadTripBentoPreview(trip.tripId, {
+        updatedAt: trip.updatedAt,
+        force: !!opts.force,
+      }).then(function (manifest) {
         if (manifest) {
           manifest.tripId = manifest.tripId || trip.tripId;
+          matchedTrip = trip;
           return manifest;
         }
         return tryAt(i + 1);
@@ -110,6 +122,7 @@ export function refreshUserBentoPreview(trips) {
 
     return tryAt(0).then(function (manifest) {
       V2.userManifest = manifest || null;
+      V2.userPreviewTrip = manifest ? matchedTrip : null;
       if (!_userTabInteracted) {
         V2.bentoTab = V2.userManifest ? "mine" : "demo";
       } else if (!V2.userManifest && V2.bentoTab === "mine") {
@@ -120,7 +133,10 @@ export function refreshUserBentoPreview(trips) {
       if (V2.manifest) {
         renderBentoSurface(V2.manifest);
       }
-      return V2.userManifest;
+      return import("./bento-stale.js").then(function (stale) {
+        stale.syncBentoStaleBar();
+        return V2.userManifest;
+      });
     });
   });
 }

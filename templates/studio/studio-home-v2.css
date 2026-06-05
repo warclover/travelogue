@@ -816,6 +816,47 @@ body { overflow-x: clip; overflow-y: visible; }
   grid-template-rows: minmax(0, 1fr) auto;
   align-self: stretch;
   width: 100%;
+  position: relative;
+}
+.v2-bento__stale {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: rgba(18, 28, 24, .88);
+  border: 1px solid rgba(255, 216, 154, .35);
+  color: #ffd89a;
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: auto;
+}
+.v2-bento__stale-text {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+.v2-bento__stale-btn {
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 216, 154, .55);
+  background: rgba(255, 216, 154, .12);
+  color: #ffe8c2;
+  border-radius: 3px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.v2-bento__stale-btn:hover:not(:disabled) {
+  background: rgba(255, 216, 154, .22);
+}
+.v2-bento__stale-btn:disabled {
+  opacity: .6;
+  cursor: wait;
 }
 .v2-bento__bench { grid-column: 1 / -1; grid-row: 3; min-width: 0; }
 .v2-bento__mobile {

@@ -12,6 +12,8 @@ import { openImportSheet } from "./import-sheet.js";
 import { fetchTripsPage, SHELF_PAGE_SIZE } from "./trips-client.js";
 import { attachShelfTripMenu, closeAllShelfMenus } from "./shelf-menu.js";
 import { renderBenchRecent } from "./bento.js";
+import { shelfResumeActions } from "./shelf-actions-logic.js";
+import { triggerHomepageRecurate } from "./bento-stale.js";
 
 var _hostEl = null;
 var _gridEl = null;
@@ -177,33 +179,23 @@ function buildResume(trip) {
   card.appendChild(textWrap);
 
   var actions = el("div", "v2-shelf__resume-actions");
-  if (trip.longshotStale) {
-    var stale = el("button", null, "更新长图");
-    stale.type = "button";
-    stale.addEventListener("click", function () {
-      trackStudioEvent("shelf_resume_click", { trip_id: trip.tripId, stale: true, kind: "longshot" });
-      openTrip(trip, true);
+  shelfResumeActions(trip).forEach(function (action) {
+    var btn = el("button", action.primary ? "primary" : null, action.label);
+    btn.type = "button";
+    btn.addEventListener("click", function () {
+      trackStudioEvent("shelf_resume_click", {
+        trip_id: trip.tripId,
+        stale: action.kind !== "open",
+        kind: action.kind,
+      });
+      if (action.triggerCurate) {
+        triggerHomepageRecurate(trip.tripId, "shelf_resume");
+        return;
+      }
+      openTrip(trip, !!action.focusLongshot);
     });
-    actions.appendChild(stale);
-  } else if (trip.algorithmStale) {
-    var recurate = el("button", "primary", "重新排版");
-    recurate.type = "button";
-    recurate.addEventListener("click", function () {
-      trackStudioEvent("shelf_resume_click", { trip_id: trip.tripId, stale: true, kind: "algorithm" });
-      openTrip(trip, false);
-    });
-    actions.appendChild(recurate);
-  }
-  var open = el("button", trip.algorithmStale && !trip.longshotStale ? null : "primary", "打开预览");
-  open.type = "button";
-  open.addEventListener("click", function () {
-    trackStudioEvent("shelf_resume_click", {
-      trip_id: trip.tripId,
-      stale: !!(trip.longshotStale || trip.algorithmStale),
-    });
-    openTrip(trip, false);
+    actions.appendChild(btn);
   });
-  actions.appendChild(open);
   card.appendChild(actions);
   return card;
 }

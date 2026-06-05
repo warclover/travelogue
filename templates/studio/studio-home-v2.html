@@ -78,6 +78,10 @@
 
       <!-- ② 16:9 大屏卷轴 carousel -->
       <section class="v2-bento__web" id="v2-web-cell" aria-label="大屏卷轴预览 · 方向键翻页" tabindex="0">
+        <div class="v2-bento__stale" id="v2-bento-stale" hidden role="status" aria-live="polite">
+          <p class="v2-bento__stale-text" id="v2-bento-stale-text"></p>
+          <button type="button" class="v2-bento__stale-btn" id="v2-bento-stale-action">重新排版</button>
+        </div>
         <div class="v2-carousel" id="v2-carousel">
           <div class="v2-carousel__viewport">
             <button type="button" class="v2-carousel__arrow v2-carousel__arrow--prev" id="v2-carousel-prev" aria-label="上一屏" disabled>‹</button>

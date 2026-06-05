@@ -378,6 +378,7 @@ def test_v2_js_logic_node_units() -> None:
         str(js_dir / "lightbox-logic.test.mjs"),
         str(js_dir / "viewport-logic.test.mjs"),
         str(js_dir / "layout-tier.test.mjs"),
+        str(js_dir / "shelf-actions-logic.test.mjs"),
     ]
     try:
         result = subprocess.run(
@@ -420,17 +421,40 @@ def test_studio_home_v2_lightbox_modules() -> None:
     assert "M20-c" not in bootstrap  # 占位 toast 已移除
 
 
+def test_studio_home_v2_stale_recurate_modules() -> None:
+    """算法过期 · Bento 提示条 + curate 客户端 + 纯逻辑。"""
+    stale = (STUDIO_DIR / "homepage-v2" / "bento-stale.js").read_text(encoding="utf-8")
+    curate = (STUDIO_DIR / "homepage-v2" / "curate-client.js").read_text(encoding="utf-8")
+    logic = (STUDIO_DIR / "homepage-v2" / "shelf-actions-logic.js").read_text(encoding="utf-8")
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+    css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    bento = (STUDIO_DIR / "homepage-v2" / "bento.js").read_text(encoding="utf-8")
+
+    assert "syncBentoStaleBar" in stale and "triggerHomepageRecurate" in stale
+    assert "runTripCurateJob" in curate and "withJobBusyRetry" in curate
+    assert "shelfResumeActions" in logic and "shouldShowBentoStaleBar" in logic
+    assert "v2-bento-stale" in html and 'aria-live="polite"' in html
+    assert ".v2-bento__stale" in css
+    assert "syncBentoStaleBar" in bento
+    assert "clearBentoPreviewCache" in (
+        STUDIO_DIR / "homepage-v2" / "trip-preview.js"
+    ).read_text(encoding="utf-8")
+
+
 def test_studio_home_v2_shelf_module() -> None:
     """M20-e · Web 书架（§8）。"""
     shelf = (STUDIO_DIR / "homepage-v2" / "shelf.js").read_text(encoding="utf-8")
     assert "\ufffd" not in shelf
     assert "renderShelf" in shelf
     assert "你的游记画册" in shelf
-    assert "更新长图" in shelf            # stale → 更新长图
+    logic = (STUDIO_DIR / "homepage-v2" / "shelf-actions-logic.js").read_text(encoding="utf-8")
+    assert "更新长图" in logic            # stale → 更新长图
     assert "算法待更新" in shelf
-    assert "重新排版" in shelf
+    assert "重新排版" in logic
     assert "longshotStale" in shelf
     assert "algorithmStale" in shelf
+    assert "shelf-actions-logic.js" in shelf
+    assert "triggerHomepageRecurate" in shelf
     assert "isDemoTrip" in shelf          # demo → 示例徽章
     assert "openImportSheet" in shelf     # 新建 → Sheet
     assert "previewRelPath" in shelf      # 封面派生

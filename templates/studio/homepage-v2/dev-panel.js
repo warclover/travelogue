@@ -24,6 +24,7 @@ var FIXTURES = [
   { v: "", label: "（真实 /trips）" },
   { v: "empty", label: "empty" },
   { v: "single-stale", label: "single-stale" },
+  { v: "single-algorithm-stale", label: "single-algorithm-stale" },
   { v: "multi", label: "multi" },
   { v: "many", label: "many (25)" },
   { v: "demo-only", label: "demo-only" },

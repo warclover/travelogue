@@ -4,6 +4,20 @@
 import { isDemoTrip } from "../js/constants.js";
 import { isValidManifest } from "./manifest.js";
 
+/** @typedef {import("./trips-client.js").ShelfTrip} ShelfTrip */
+
+var _previewCache = {
+  tripId: null,
+  updatedAt: null,
+  manifest: null,
+};
+
+export function clearBentoPreviewCache() {
+  _previewCache.tripId = null;
+  _previewCache.updatedAt = null;
+  _previewCache.manifest = null;
+}
+
 /** 最近编辑的非 demo 画册（trips 已按 updatedAt 降序）。 */
 export function pickRecentUserTrip(trips) {
   return pickBentoPreviewTrip(trips);
@@ -30,10 +44,22 @@ export function pickBentoPreviewTrip(trips) {
 
 /**
  * @param {string} tripId
+ * @param {{ updatedAt?: number, force?: boolean }} [opts]
  * @returns {Promise<object|null>}
  */
-export function loadTripBentoPreview(tripId) {
+export function loadTripBentoPreview(tripId, opts) {
+  opts = opts || {};
   if (!tripId) return Promise.resolve(null);
+  if (
+    !opts.force
+    && _previewCache.tripId === tripId
+    && _previewCache.updatedAt != null
+    && opts.updatedAt != null
+    && _previewCache.updatedAt === opts.updatedAt
+    && _previewCache.manifest
+  ) {
+    return Promise.resolve(_previewCache.manifest);
+  }
   return fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/bento-preview?t=" + String(Date.now()))
     .then(function (r) {
       if (!r.ok) return null;
@@ -44,7 +70,11 @@ export function loadTripBentoPreview(tripId) {
       var m = Object.assign({}, data);
       delete m.ok;
       m.source = "user";
-      return isValidManifest(m) ? m : null;
+      if (!isValidManifest(m)) return null;
+      _previewCache.tripId = tripId;
+      _previewCache.updatedAt = opts.updatedAt != null ? opts.updatedAt : null;
+      _previewCache.manifest = m;
+      return m;
     })
     .catch(function () { return null; });
 }

@@ -50,6 +50,13 @@ function trip(id, title, opts) {
     previewRelPath: opts.previewRelPath || null,
     previewUrl: opts.previewUrl || null,
     longshotStale: !!opts.longshotStale,
+    algorithmStale: !!opts.algorithmStale,
+    aestheticStale: !!opts.aestheticStale,
+    cullStale: !!opts.cullStale,
+    layoutStale: !!opts.layoutStale,
+    previewStale: !!opts.previewStale,
+    staleHints: opts.staleHints || (opts.algorithmStale ? ["选片配置已更新，请重新挑选（重新排版将自动重跑选片）"] : []),
+    staleHint: opts.staleHint || (opts.algorithmStale ? "选片配置已更新，请重新挑选（重新排版将自动重跑选片）" : null),
     isDemo: !!opts.isDemo,
   };
 }
@@ -60,6 +67,17 @@ const FIXTURES = {
     ok: true,
     total: 1,
     trips: [trip("kyoto-rain", "京都 · 雨后", { longshotStale: true, updatedAt: NOW - 3 * DAY })],
+  },
+  "single-algorithm-stale": {
+    ok: true,
+    total: 1,
+    trips: [trip("kyoto-rain", "京都 · 雨后", {
+      algorithmStale: true,
+      cullStale: true,
+      layoutStale: true,
+      updatedAt: NOW - 2 * DAY,
+      previewRelPath: "preview.jpg",
+    })],
   },
   multi: {
     ok: true,

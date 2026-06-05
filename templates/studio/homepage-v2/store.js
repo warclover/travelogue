@@ -19,6 +19,8 @@ export const V2 = {
   manifest: null,
   demoManifest: null,
   userManifest: null,
+  /** GET /trips 行：当前 userManifest 对应的画册（stale / curate CTA）。 */
+  userPreviewTrip: null,
   bentoTab: "demo", // demo | mine（方案 B′）
   manifestError: false,
   trips: [],

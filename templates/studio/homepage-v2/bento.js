@@ -10,6 +10,7 @@ import { initPhoneStrip } from "./phone-strip.js";
 import { resolveLayoutTier } from "./layout-tier.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { initBentoTabs, syncTabUi } from "./bento-tabs.js";
+import { syncBentoStaleBar } from "./bento-stale.js";
 import { pickRecentUserTrips } from "./trip-preview.js";
 
 var _phoneStripApi = null;
@@ -303,11 +304,15 @@ export function renderBentoSurface(manifest) {
   resetBackgroundLayer();
   var tier = resolveLayoutTier({ manifestError: !manifest });
   V2.layoutTier = tier;
-  if (!manifest) return;
+  if (!manifest) {
+    syncBentoStaleBar();
+    return;
+  }
   renderBackground(manifest, tier);
   initCarousel(manifest, { tier: tier });
   renderPhone(manifest, tier);
   renderBench(manifest);
+  syncBentoStaleBar();
   ensurePhoneFrameSync();
   schedulePhoneFrameSync();
 }
