@@ -37,15 +37,26 @@ def test_three_portraits_with_person_triple_row():
     assert all(s["fit"] == "contain" for s in screens[0]["slots"])
 
 
-def test_one_person_portrait_uses_cover_single_screen():
+def test_one_nonperson_portrait_uses_cover_single_screen():
+    ids = ["p1"]
+    aspects = {"p1": "portrait"}
+    screens = plan_screens_for_chapter(ids, aspects, chapter_id="ch-1p")
+    assert len(screens) == 1
+    assert screens[0]["patternId"] == "screen-portrait-1"
+    assert "layoutHint" not in screens[0]
+    # Non-person single portrait fills the portrait-aspect screen edge-to-edge.
+    assert screens[0]["slots"][0]["fit"] == "cover"
+
+
+def test_one_person_portrait_uses_contain_single_screen():
     ids = ["p1"]
     aspects = {"p1": "portrait"}
     assets = _assets_with_tags(ids, {"p1": ["person", "face"]})
     screens = plan_screens_for_chapter(ids, aspects, chapter_id="ch-1p", assets=assets)
     assert len(screens) == 1
     assert screens[0]["patternId"] == "screen-portrait-1"
-    assert "layoutHint" not in screens[0]
-    assert screens[0]["slots"][0]["fit"] == "cover"
+    # Face safety: a lone person portrait is never cropped, even full-screen.
+    assert screens[0]["slots"][0]["fit"] == "contain"
 
 
 def test_two_person_portraits_one_pair_screen():
@@ -97,7 +108,8 @@ def test_mixed_p1_l2_blocked_when_portrait_has_person():
     assert not any(sc["patternId"] == PATTERN_PORTRAIT_1_LANDSCAPE_2 for sc in screens)
     assert screens[0]["patternId"] == "screen-portrait-1"
     assert "layoutHint" not in screens[0]
-    assert screens[0]["slots"][0]["fit"] == "cover"
+    # Person portrait stays face-safe (contain) when it falls back to a single.
+    assert screens[0]["slots"][0]["fit"] == "contain"
 
 
 def test_landscape_bucket_prefix_splits_ratios():
