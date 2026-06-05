@@ -134,8 +134,13 @@ def _fits_for_screen(
         return ["cover"] * n
     if pattern_id in ("screen-tall-1", "screen-square-1"):
         return ["contain"] * n
+    if pattern_id == "screen-portrait-1":
+        # Single full-screen portrait: the container is portrait-aspect, so cover
+        # fills edge-to-edge with negligible cropping (and avoids the letterbox
+        # that contain would add even for a person shot). Multi-portrait grids
+        # below keep contain for person assets, where cells may crop faces.
+        return ["cover"] * n
     if pattern_id in (
-        "screen-portrait-1",
         "screen-portrait-2",
         "screen-portrait-3",
         PATTERN_PORTRAIT_GRID_8,

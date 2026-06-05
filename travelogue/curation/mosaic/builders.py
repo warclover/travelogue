@@ -25,6 +25,7 @@ from travelogue.curation.mosaic.constants import (
 )
 from travelogue.curation.mosaic.registry import MosaicPattern
 from travelogue.curation.screen_planner import (
+    PERSON_LAYOUT_TRIPLE,
     _can_mosaic_5_main_portrait_3land,
     _can_mixed_p1_l2,
     _can_portrait_grid8_window,
@@ -74,8 +75,15 @@ def _order_mixed_p1_l2(
                 p_id, pair, aspects, assets_map, burst_seconds=burst_seconds
             ):
                 return [p_id, pair[0], pair[1]]
-    # Soft MCS path: allow without strict time chain
-    p_sorted = _sort_asset_ids_by_taken(portraits, assets_map)
+    # Soft MCS path: allow without strict time chain, but never pull a person
+    # portrait into a wide mixed cell (the face would be cropped) — mirrors the
+    # _can_mixed_p1_l2 person guard so the strict and soft paths agree.
+    non_person_portraits = [
+        p for p in portraits if not asset_has_person(assets_map.get(p, {}))
+    ]
+    if not non_person_portraits:
+        return None
+    p_sorted = _sort_asset_ids_by_taken(non_person_portraits, assets_map)
     l_sorted = _sort_asset_ids_by_taken(landscapes, assets_map)
     return [p_sorted[0], l_sorted[0], l_sorted[1]]
 
@@ -316,4 +324,12 @@ def build_screen(
         else:
             fit = "cover"
         slots.append({"assetId": aid, "slot": idx, "fit": fit, "role": role})
-    return _make_screen(pattern.pattern_id, screen_id=screen_id, slots=slots)
+    screen = _make_screen(pattern.pattern_id, screen_id=screen_id, slots=slots)
+    # Preserve the person-triple semantic when the MCS unified planner emits a
+    # portrait-3 window for an all-person run (the legacy person-aware path sets
+    # this hint; the MCS path must match so CSS/render treat it the same).
+    if pattern.pattern_id == PATTERN_PORTRAIT_3 and ordered_ids and all(
+        asset_has_person(assets_map.get(aid, {})) for aid in ordered_ids
+    ):
+        screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
+    return screen
