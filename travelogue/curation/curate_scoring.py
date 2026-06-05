@@ -37,7 +37,22 @@ _COVER_FACTOR_LABELS: dict[str, str] = {
     "featured": "精选加权",
     "anchor": "行程锚点",
     "date_confidence": "日期置信",
+    "aesthetic": "审美评分",
 }
+
+_AESTHETIC_MULT_LO = 0.7
+_AESTHETIC_MULT_HI = 1.3
+
+
+def _resolve_aesthetic_enabled(enabled: bool | None) -> bool:
+    if enabled is not None:
+        return enabled
+    try:
+        from travelogue.config import get_config
+
+        return get_config().aesthetic.enabled
+    except Exception:
+        return False
 
 
 def median_sharpness(assets: list[dict]) -> float:
@@ -206,6 +221,8 @@ def _quality_multiplier(
     export_layout: str,
     median_sharp: float,
     params: CoverScoringParams,
+    median_overall: float = 0.0,
+    aesthetic_enabled: bool | None = None,
 ) -> float:
     _ = export_layout
     mult = 1.0
@@ -215,6 +232,16 @@ def _quality_multiplier(
     if median_sharp > 0 and sharp > 0:
         ratio = sharp / median_sharp
         mult *= min(params.sharp_ratio_cap, max(params.sharp_ratio_floor, ratio))
+    if _resolve_aesthetic_enabled(aesthetic_enabled):
+        from travelogue.curation.aesthetic_score import aesthetic_multiplier
+
+        mult *= aesthetic_multiplier(
+            asset,
+            median_overall=median_overall,
+            enabled=True,
+            lo=_AESTHETIC_MULT_LO,
+            hi=_AESTHETIC_MULT_HI,
+        )
     return mult
 
 
@@ -223,6 +250,8 @@ def cover_score(
     export_layout: str,
     *,
     median_sharp: float = 0.0,
+    median_overall: float = 0.0,
+    aesthetic_enabled: bool | None = None,
     enable_phase6_cover_factors: bool = True,
     cover_scoring: CoverScoringParams | None = None,
     person_demote_mult: float | None = None,
@@ -266,7 +295,12 @@ def cover_score(
         base
         * _cover_media_weight(asset, export_layout)
         * _quality_multiplier(
-            asset, export_layout=export_layout, median_sharp=median_sharp, params=params
+            asset,
+            export_layout=export_layout,
+            median_sharp=median_sharp,
+            params=params,
+            median_overall=median_overall,
+            aesthetic_enabled=aesthetic_enabled,
         )
         * _cover_person_multiplier(asset, demote=demote)
         * _cover_face_bbox_multiplier(
@@ -283,6 +317,8 @@ def _cover_score_factors(
     export_layout: str,
     *,
     median_sharp: float = 0.0,
+    median_overall: float = 0.0,
+    aesthetic_enabled: bool | None = None,
     cover_scoring: CoverScoringParams | None = None,
     person_demote_mult: float | None = None,
     enable_phase6_cover_factors: bool = True,
@@ -299,6 +335,8 @@ def _cover_score_factors(
             asset,
             export_layout,
             median_sharp=median_sharp,
+            median_overall=median_overall,
+            aesthetic_enabled=aesthetic_enabled,
             enable_phase6_cover_factors=enable_phase6_cover_factors,
             cover_scoring=cover_scoring,
             person_demote_mult=demote,
@@ -310,11 +348,30 @@ def _cover_score_factors(
     media_w = _cover_media_weight(asset, export_layout)
     if abs(media_w - 1.0) > 0.01:
         factors.append(("aspect", media_w))
-    quality_w = _quality_multiplier(
-        asset, export_layout=export_layout, median_sharp=median_sharp, params=params
-    )
-    if abs(quality_w - 1.0) > 0.01:
-        factors.append(("sharpness" if median_sharp > 0 else "date_confidence", quality_w))
+    if asset.get("dateConfidence") == "low":
+        dc_w = params.date_confidence_low_mult
+        if abs(dc_w - 1.0) > 0.01:
+            factors.append(("date_confidence", dc_w))
+    sharp = asset_sharpness(asset)
+    if median_sharp > 0 and sharp > 0:
+        sharp_w = min(
+            params.sharp_ratio_cap,
+            max(params.sharp_ratio_floor, sharp / median_sharp),
+        )
+        if abs(sharp_w - 1.0) > 0.01:
+            factors.append(("sharpness", sharp_w))
+    if _resolve_aesthetic_enabled(aesthetic_enabled):
+        from travelogue.curation.aesthetic_score import aesthetic_multiplier
+
+        aest_w = aesthetic_multiplier(
+            asset,
+            median_overall=median_overall,
+            enabled=True,
+            lo=_AESTHETIC_MULT_LO,
+            hi=_AESTHETIC_MULT_HI,
+        )
+        if abs(aest_w - 1.0) > 0.01:
+            factors.append(("aesthetic", aest_w))
     person_w = _cover_person_multiplier(asset, demote=demote)
     if abs(person_w - 1.0) > 0.01:
         factors.append(("person_demote", person_w))
@@ -342,6 +399,8 @@ def build_cover_explain(
     export_layout: str,
     *,
     median_sharp: float = 0.0,
+    median_overall: float = 0.0,
+    aesthetic_enabled: bool | None = None,
     limit: int = 4,
     cover_scoring: CoverScoringParams | None = None,
     person_demote_mult: float | None = None,
@@ -352,6 +411,8 @@ def build_cover_explain(
         asset,
         export_layout,
         median_sharp=median_sharp,
+        median_overall=median_overall,
+        aesthetic_enabled=aesthetic_enabled,
         cover_scoring=cover_scoring,
         person_demote_mult=person_demote_mult,
         enable_phase6_cover_factors=enable_phase6_cover_factors,
@@ -372,7 +433,12 @@ def build_cover_explain(
     return out
 
 
-def hero_score(asset: dict, *, median_sharp: float = 0.0) -> float:
+def hero_score(
+    asset: dict,
+    *,
+    median_sharp: float = 0.0,
+    aesthetic_enabled: bool | None = None,
+) -> float:
     """Chapter hero: wide compositions, sharp, not screenshot."""
     if asset.get("mediaClass") in _HERO_EXCLUDED_CLASSES:
         return 0.0
@@ -386,11 +452,24 @@ def hero_score(asset: dict, *, median_sharp: float = 0.0) -> float:
     base = w / h
     if kind == "panorama":
         base *= 1.25
-    return base * cover_class_weight(asset.get("mediaClass")) * _quality_multiplier(
+    media = cover_class_weight(asset.get("mediaClass"))
+    if _resolve_aesthetic_enabled(aesthetic_enabled):
+        from travelogue.curation.aesthetic_score import aesthetic_dim, aesthetic_overall
+
+        overall = aesthetic_overall(asset)
+        if overall is not None:
+            comp = aesthetic_dim(asset, "composition")
+            subj = aesthetic_dim(asset, "subjectClarity")
+            ae_mult = overall * (comp if comp is not None else 1.0) * (
+                subj if subj is not None else 1.0
+            )
+            return base * media * ae_mult
+    return base * media * _quality_multiplier(
         asset,
         export_layout="web",
         median_sharp=median_sharp,
         params=_DEFAULT_COVER_SCORING,
+        aesthetic_enabled=False,
     )
 
 
@@ -433,11 +512,27 @@ def featured_eligible(assets: list[dict]) -> list[dict]:
     return [a for a in assets if a.get("userTier") == "featured"]
 
 
+def _cover_batch_medians(
+    pool: list[dict],
+    *,
+    aesthetic_enabled: bool | None,
+) -> tuple[float, float]:
+    median_sharp = median_sharpness(pool)
+    median_overall = 0.0
+    if _resolve_aesthetic_enabled(aesthetic_enabled):
+        from travelogue.curation.aesthetic_score import median_aesthetic_overall
+
+        median_overall = median_aesthetic_overall(pool)
+    return median_sharp, median_overall
+
+
 def effective_cover_score(
     asset: dict,
     export_layout: str,
     *,
     median_sharp: float = 0.0,
+    median_overall: float = 0.0,
+    aesthetic_enabled: bool | None = None,
     featured_weight: float = 1.35,
     memory_anchors: list[str] | None = None,
     meta_places: list[str] | None = None,
@@ -450,6 +545,8 @@ def effective_cover_score(
             asset,
             export_layout,
             median_sharp=median_sharp,
+            median_overall=median_overall,
+            aesthetic_enabled=aesthetic_enabled,
             enable_phase6_cover_factors=enable_phase6_cover_factors,
             cover_scoring=cover_scoring,
             person_demote_mult=person_demote_mult,
@@ -463,12 +560,17 @@ def effective_hero_score(
     asset: dict,
     *,
     median_sharp: float = 0.0,
+    aesthetic_enabled: bool | None = None,
     featured_weight: float = 1.35,
     memory_anchors: list[str] | None = None,
     meta_places: list[str] | None = None,
 ) -> float:
     return (
-        hero_score(asset, median_sharp=median_sharp)
+        hero_score(
+            asset,
+            median_sharp=median_sharp,
+            aesthetic_enabled=aesthetic_enabled,
+        )
         * featured_weight_multiplier(asset, weight=featured_weight)
         * anchor_match_multiplier(asset, memory_anchors, meta_places=meta_places)
     )
@@ -482,6 +584,7 @@ def pick_cover_asset_id(
     featured_weight: float = 1.35,
     enable_phase6_cover_factors: bool = True,
     cover_scoring: CoverScoringParams | None = None,
+    aesthetic_enabled: bool | None = None,
 ) -> str:
     exclude = exclude or set()
     params = _cover_params(cover_scoring)
@@ -494,7 +597,9 @@ def pick_cover_asset_id(
     ]
     search_pool = featured_pool if featured_pool else pool
     person_demote = resolve_person_demote(params, search_pool)
-    median_sharp = median_sharpness(search_pool)
+    median_sharp, median_overall = _cover_batch_medians(
+        search_pool, aesthetic_enabled=aesthetic_enabled
+    )
     best_id = ""
     best_score = 0.0
     for a in search_pool:
@@ -504,6 +609,8 @@ def pick_cover_asset_id(
             a,
             export_layout,
             median_sharp=median_sharp,
+            median_overall=median_overall,
+            aesthetic_enabled=aesthetic_enabled,
             featured_weight=featured_weight,
             enable_phase6_cover_factors=p6,
             cover_scoring=params,
@@ -516,7 +623,9 @@ def pick_cover_asset_id(
         material_pool = [a for a in pool if a.get("userTier") != "featured"]
         if material_pool:
             person_demote = resolve_person_demote(params, material_pool)
-            median_sharp = median_sharpness(material_pool)
+            median_sharp, median_overall = _cover_batch_medians(
+                material_pool, aesthetic_enabled=aesthetic_enabled
+            )
             for a in material_pool:
                 if a["id"] in exclude or a.get("type") == "video":
                     continue
@@ -524,6 +633,8 @@ def pick_cover_asset_id(
                     a,
                     export_layout,
                     median_sharp=median_sharp,
+                    median_overall=median_overall,
+                    aesthetic_enabled=aesthetic_enabled,
                     featured_weight=featured_weight,
                     enable_phase6_cover_factors=p6,
                     cover_scoring=params,
@@ -562,7 +673,9 @@ def score_ranked_cover_ids(
     ]
     search_pool = featured_pool if featured_pool else pool
     person_demote = resolve_person_demote(params, search_pool)
-    median_sharp = median_sharpness(search_pool)
+    median_sharp, median_overall = _cover_batch_medians(
+        search_pool, aesthetic_enabled=None
+    )
     rows: list[tuple[float, str]] = []
     for a in search_pool:
         aid = a.get("id")
@@ -572,6 +685,7 @@ def score_ranked_cover_ids(
             a,
             export_layout,
             median_sharp=median_sharp,
+            median_overall=median_overall,
             featured_weight=featured_weight,
             enable_phase6_cover_factors=p6,
             cover_scoring=params,
@@ -614,10 +728,14 @@ def build_cover_layout_review(
     )
     explain: list[dict[str, str | float]] = []
     if asset:
+        med_sharp, med_overall = _cover_batch_medians(
+            search_pool, aesthetic_enabled=None
+        )
         explain = build_cover_explain(
             asset,
             export_layout,
-            median_sharp=median_sharpness(search_pool),
+            median_sharp=med_sharp,
+            median_overall=med_overall,
             cover_scoring=cover_scoring,
             person_demote_mult=person_demote,
             enable_phase6_cover_factors=enable_phase6_cover_factors,
@@ -652,7 +770,7 @@ def cover_candidates(
     featured_pool = [a for a in pool if a.get("userTier") == "featured"]
     search_pool = featured_pool if featured_pool else pool
     person_demote = resolve_person_demote(params, search_pool)
-    median_sharp = median_sharpness(pool)
+    median_sharp, median_overall = _cover_batch_medians(pool, aesthetic_enabled=None)
     scored: list[tuple[float, dict]] = []
     for a in pool:
         if a["id"] == cover_id or a.get("type") == "video":
@@ -661,6 +779,7 @@ def cover_candidates(
             a,
             export_layout,
             median_sharp=median_sharp,
+            median_overall=median_overall,
             featured_weight=featured_weight,
             enable_phase6_cover_factors=p6,
             cover_scoring=params,
@@ -726,13 +845,14 @@ def pick_chapter_hero(
     *,
     exclude: set[str] | None = None,
     median_sharp: float = 0.0,
+    aesthetic_enabled: bool | None = None,
     featured_weight: float = 1.35,
     memory_anchors: list[str] | None = None,
     meta_places: list[str] | None = None,
 ) -> str | None:
     exclude = exclude or set()
     best_id: str | None = None
-    best = 0.0
+    best_key: tuple[float, float] = (-1.0, -1.0)
     for aid in bucket:
         if aid in exclude:
             continue
@@ -742,12 +862,14 @@ def pick_chapter_hero(
         score = effective_hero_score(
             a,
             median_sharp=median_sharp,
+            aesthetic_enabled=aesthetic_enabled,
             featured_weight=featured_weight,
             memory_anchors=memory_anchors,
             meta_places=meta_places,
         )
-        if score > best:
-            best = score
+        key = (score, asset_sharpness(a))
+        if key > best_key:
+            best_key = key
             best_id = aid
     return best_id
 

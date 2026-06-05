@@ -276,6 +276,65 @@ def asset_aesthetic(asset: dict) -> dict | None:
     return None
 
 
+def aesthetic_overall(asset: dict) -> float | None:
+    """``quality.aesthetic.overall`` or ``None`` when absent (fail-open)."""
+    ae = asset_aesthetic(asset)
+    if not ae:
+        return None
+    try:
+        val = ae.get("overall")
+        return None if val is None else float(val)
+    except (TypeError, ValueError):
+        return None
+
+
+def aesthetic_dim(asset: dict, dim: str) -> float | None:
+    ae = asset_aesthetic(asset)
+    if not ae:
+        return None
+    dims = ae.get("dims")
+    if not isinstance(dims, dict):
+        return None
+    try:
+        val = dims.get(dim)
+        return None if val is None else float(val)
+    except (TypeError, ValueError):
+        return None
+
+
+def median_aesthetic_overall(assets: list[dict]) -> float:
+    values: list[float] = []
+    for asset in assets:
+        val = aesthetic_overall(asset)
+        if val is not None and val > 0:
+            values.append(val)
+    if not values:
+        return 0.0
+    values.sort()
+    mid = len(values) // 2
+    if len(values) % 2:
+        return values[mid]
+    return (values[mid - 1] + values[mid]) / 2.0
+
+
+def aesthetic_multiplier(
+    asset: dict,
+    *,
+    median_overall: float,
+    enabled: bool = True,
+    lo: float = 0.7,
+    hi: float = 1.3,
+) -> float:
+    """Overall relative to batch median, clamped (PA-T07 · U-COVER)."""
+    if not enabled:
+        return 1.0
+    overall = aesthetic_overall(asset)
+    if overall is None or median_overall <= 0:
+        return 1.0
+    ratio = overall / median_overall
+    return min(hi, max(lo, ratio))
+
+
 def build_aesthetic_explain(asset: dict, *, limit: int = 3) -> list[dict[str, Any]]:
     """Top contributing dimensions (mirrors ``build_cover_explain``)."""
     ae = asset_aesthetic(asset)

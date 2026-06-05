@@ -214,10 +214,13 @@
 | `curate_scoring.py` | `cover_score` / `pick_cover_asset_id` | 封面打分选型 |
 | | `pick_chapter_hero` | 章英雄图 |
 | | `sort_bucket_asset_ids` | 桶内排序 |
+| | `_quality_multiplier` / `aesthetic_multiplier` | 清晰度比 + PA overall 中位数比（U-COVER） |
+| | `hero_score` / `effective_hero_score` | 章英雄 · PA overall×composition×subjectClarity（U-HERO） |
 | `aesthetic_score.py` | `compute_aesthetic_signals` | 逐图 CV 信号（可 contentSig 缓存，PA-T05） |
 | | `compute_aesthetic` | 五维合成 + overall/confidence（PA-T04） |
 | | `build_aesthetic_explain` | 维度 top 因子解释 |
-| | `normalize_sharpness` | 单图清晰度饱和归一 |
+| | `aesthetic_multiplier` | overall÷批中位数，clamp[0.7,1.3]（U-COVER） |
+| | `median_aesthetic_overall` | 批内 overall 中位数 |
 | `degradation.py` | `assess_degradation` | legacy 降级判定 |
 | `cohort_faces.py` | `build_subject_templates` | 种子脸模板 |
 | | `_match_present_subjects` | 1-NN 余弦匹配 |
@@ -283,3 +286,4 @@ run_curate                → curation/curate.py
 |------|------|------|
 | v1.0 | 2026-06-04 | 初版：§1 依赖对照 + §2 函数索引 |
 | v1.1 | 2026-06-05 | PA-1：登记审美 Layer 1（exposure_metrics / color_metrics 和谐 / aesthetic_score） |
+| v1.2 | 2026-06-05 | PA-2：U-COVER/U-HERO 接入 overall（封面乘子 + hero 排序） |

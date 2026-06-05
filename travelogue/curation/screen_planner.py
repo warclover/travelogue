@@ -255,7 +255,9 @@ def _pick_main_landscape_id(
     *,
     median_sharp: float | None = None,
     featured_weight: float = DEFAULT_FEATURED_WEIGHT,
+    aesthetic_enabled: bool | None = None,
 ) -> str:
+    from travelogue.curation.asset_quality import asset_sharpness
     from travelogue.curation.curate_scoring import effective_hero_score, median_sharpness
 
     med = (
@@ -265,8 +267,14 @@ def _pick_main_landscape_id(
     )
     return max(
         landscape_ids,
-        key=lambda aid: effective_hero_score(
-            assets_map.get(aid) or {}, median_sharp=med, featured_weight=featured_weight
+        key=lambda aid: (
+            effective_hero_score(
+                assets_map.get(aid) or {},
+                median_sharp=med,
+                featured_weight=featured_weight,
+                aesthetic_enabled=aesthetic_enabled,
+            ),
+            asset_sharpness(assets_map.get(aid) or {}),
         ),
     )
 

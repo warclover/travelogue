@@ -81,6 +81,18 @@ def _main_quality_penalty(screen: dict, assets_by_id: dict[str, dict]) -> float:
         aid = sl.get("assetId")
         asset = assets_by_id.get(aid) or {}
         q = asset.get("quality") or {}
+        try:
+            from travelogue.curation.aesthetic_score import aesthetic_overall
+
+            overall = aesthetic_overall(asset)
+        except Exception:
+            overall = None
+        if overall is not None:
+            if overall < 0.35:
+                return 0.9
+            if overall < 0.45:
+                return 0.5
+            return 0.0
         sharp = float(q.get("sharpness") or 0.0)
         if sharp < 0.25:
             return 0.9
