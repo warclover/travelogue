@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from travelogue.config import AppConfig, LayoutConfig
+from travelogue.config import AppConfig, LayoutConfig, get_config
 from travelogue.curation.intent_hints import apply_editorial_intent_hints
+from travelogue.curation.mosaic.runtime import (
+    reset_mosaic_config_override,
+    set_mosaic_config_override,
+)
 from travelogue.curation.layout_density import (
     MIN_PHOTOS_COLLAGE_FULL_EFFECT,
     layout_density_effect,
@@ -169,9 +173,21 @@ def _plan_density(density: str, n_assets: int = 50) -> list[dict]:
     )
 
 
+# Density preferences steer the legacy grid planner; the MCS unified planner
+# composes mosaics independently of density (wiring density into MCS scoring is
+# tracked separately), so these ACs disable MCS to exercise the density logic.
+def _plan_density_legacy(density: str, n_assets: int) -> list[dict]:
+    off = replace(get_config().mosaic, enabled=False)
+    set_mosaic_config_override(off)
+    try:
+        return _plan_density(density, n_assets)
+    finally:
+        reset_mosaic_config_override()
+
+
 def test_ac_ld_06_hero_first_single_slot_ratio_up_10pp() -> None:
-    balanced = _plan_density("balanced", 80)
-    hero = _plan_density("hero_first", 80)
+    balanced = _plan_density_legacy("balanced", 80)
+    hero = _plan_density_legacy("hero_first", 80)
     b_single, _, b_total = _screen_slot_ratios(balanced)
     h_single, _, h_total = _screen_slot_ratios(hero)
     assert b_total >= 4 and h_total >= 4
@@ -180,8 +196,8 @@ def test_ac_ld_06_hero_first_single_slot_ratio_up_10pp() -> None:
 
 def test_ac_ld_07_collage_first_dense_ratio_up_10pp() -> None:
     # 全横图 synthetic：80 张时 balanced 仅 1 单槽屏，密度差上限约 1/12<10pp；50 张可稳定 ≥10pp
-    balanced = _plan_density("balanced", 50)
-    collage = _plan_density("collage_first", 50)
+    balanced = _plan_density_legacy("balanced", 50)
+    collage = _plan_density_legacy("collage_first", 50)
     _, b_dense, b_total = _screen_slot_ratios(balanced)
     _, c_dense, c_total = _screen_slot_ratios(collage)
     assert b_total >= 4 and c_total >= 4

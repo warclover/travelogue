@@ -112,7 +112,12 @@ def test_landscape_bucket_prefix_splits_ratios():
     assert prefix == ["a", "b"]
 
 
-def test_landscape_four_mixed_buckets_yields_two_singles_via_planner():
+def test_landscape_four_mixed_buckets_compose_via_mcs():
+    # Behavior change (commit "restore 5/6 mosaics"): the MCS unified planner now
+    # composes 4 landscapes into a single screen-landscape-4 grid instead of
+    # splitting per aspect bucket into singles. All four are landscapes placed in
+    # wide cells, so this is geometry-safe. The per-bucket prefix split is still
+    # covered by test_landscape_bucket_prefix_splits_ratios.
     ids = [f"l{i}" for i in range(4)]
     aspects = {x: "landscape" for x in ids}
     assets = {
@@ -123,4 +128,6 @@ def test_landscape_four_mixed_buckets_yields_two_singles_via_planner():
     }
     screens = plan_screens_for_chapter(ids, aspects, assets=assets, chapter_id="ch-l")
     patterns = [sc["patternId"] for sc in screens]
-    assert patterns.count("screen-landscape-1") >= 2
+    assert patterns == ["screen-landscape-4"]
+    placed = [sl["assetId"] for sc in screens for sl in sc.get("slots") or []]
+    assert sorted(placed) == sorted(ids)

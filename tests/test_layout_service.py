@@ -95,13 +95,21 @@ def test_apply_layout_mobile_landscape_single_column():
     assert len(cards) >= 7
 
 
-def test_apply_layout_web_portrait_pair():
+def test_apply_layout_web_portrait_mosaic():
+    # Behavior change (MCS unified planner): web export now uses the screens
+    # engine, which composes 2 portraits + 3 landscapes into a single mosaic-5
+    # screen instead of a legacy portrait-pair row. Assert the screens-engine
+    # output places both portraits in the mosaic.
     specs = [(1200, 800), (900, 1600), (900, 1600), (1200, 800), (1200, 800), (1200, 800)]
     trip = _trip_with_assets(specs, export_layout="web", cover_index=0)
     result = apply_layout_to_trip(trip, export_layout="web")
     assert result.orientation_summary["export_layout"] == "web"
-    rows = [it for it in _all_items(trip) if it.get("type") == "media-row"]
-    assert rows and rows[0]["rowLayout"] == "portrait-pair"
+    screens = [sc for ch in trip["chapters"] for sc in ch.get("screens") or []]
+    assert any(
+        str(sc.get("patternId") or "").startswith("screen-mosaic-5") for sc in screens
+    )
+    placed = {sl.get("assetId") for sc in screens for sl in sc.get("slots") or []}
+    assert {"a1", "a2"} <= placed
 
 
 def test_apply_layout_panorama_not_in_triple():
