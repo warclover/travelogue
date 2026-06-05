@@ -647,6 +647,7 @@ def _emit_person_portrait_screens(
     layout_state: ScreenLayoutPlannerState | None = None,
     pending: list[str] | None = None,
     force: bool = False,
+    solo_exclude: set[str] | None = None,
 ) -> list[dict]:
     """人物竖图：仅三列(≥3) / 双列(2)；单张不单独成屏（见余片 cover portrait-1）。"""
     screens: list[dict] = []
@@ -705,6 +706,7 @@ def _emit_person_portrait_screens(
                 layout_state=layout_state,
                 pending=pending or defer,
                 force=force,
+                solo_exclude=solo_exclude,
             )
         )
     if pending is not None and defer:
@@ -720,6 +722,7 @@ def _emit_portrait_single_screens(
     layout_state: ScreenLayoutPlannerState | None,
     pending: list[str] | None = None,
     force: bool = False,
+    solo_exclude: set[str] | None = None,
 ) -> list[dict]:
     """Emit screen-portrait-1, or defer when consecutive singles are banned.
 
@@ -727,6 +730,15 @@ def _emit_portrait_single_screens(
     flush where there is no future portrait to batch with, so deferring would
     either drop the asset or stall the planning loop.
     """
+    if len(portrait_ids) > 1:
+        from travelogue.curation.solo_scoring import sort_ids_by_solo_score
+
+        portrait_ids = sort_ids_by_solo_score(
+            portrait_ids,
+            assets_map,
+            chapter_peer_ids=list(assets_map.keys()),
+            exclude=solo_exclude,
+        )
     screens: list[dict] = []
     for aid in portrait_ids:
         if (
@@ -813,6 +825,7 @@ def _flush_portrait_pending(
     assets_map: dict[str, dict] | None = None,
     layout_state: ScreenLayoutPlannerState | None = None,
     force: bool = False,
+    solo_exclude: set[str] | None = None,
 ) -> list[dict]:
     """Emit portrait-3 (风景竖图) or portrait-1 (含人物) for buffered std portraits.
 
@@ -840,6 +853,7 @@ def _flush_portrait_pending(
             layout_state=layout_state,
             pending=pending,
             force=force,
+            solo_exclude=solo_exclude,
         )
     )
 
@@ -876,9 +890,28 @@ def _flush_portrait_pending(
                 layout_state=layout_state,
                 pending=pending,
                 force=force,
+                solo_exclude=solo_exclude,
             )
         )
     return screens
+
+
+def _pick_solo_from_candidates(
+    candidate_ids: list[str],
+    assets_map: dict[str, dict],
+    *,
+    solo_exclude: set[str] | None = None,
+) -> str | None:
+    if len(candidate_ids) <= 1:
+        return candidate_ids[0] if candidate_ids else None
+    from travelogue.curation.solo_scoring import pick_solo_asset_id
+
+    return pick_solo_asset_id(
+        candidate_ids,
+        assets_map,
+        chapter_peer_ids=list(assets_map.keys()),
+        exclude=solo_exclude,
+    )
 
 
 def _plan_one_screen(
@@ -889,6 +922,7 @@ def _plan_one_screen(
     portrait_heavy: bool = False,
     assets_map: dict[str, dict] | None = None,
     layout_state: ScreenLayoutPlannerState | None = None,
+    solo_exclude: set[str] | None = None,
 ) -> tuple[dict | None, int]:
     if not remaining:
         return None, 0
@@ -906,10 +940,12 @@ def _plan_one_screen(
         )
         grid_pool = land_run if can_nine_pool else bucket_ids
         if len(grid_pool) <= 3:
+            pool = grid_pool[: min(len(grid_pool), 3)]
+            chosen = _pick_solo_from_candidates(pool, assets_map, solo_exclude=solo_exclude) or pool[0]
             return (
                 _make_screen(
                     "screen-landscape-1",
-                    [grid_pool[0]],
+                    [chosen],
                     screen_id="",
                     aspects=aspects,
                     assets_map=assets_map,

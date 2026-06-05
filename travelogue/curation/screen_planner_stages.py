@@ -535,6 +535,7 @@ def _drain_portrait_triple_batches(ctx: ChapterPlanContext) -> None:
                 assets_map=ctx.assets_map,
                 layout_state=ctx.layout_state,
                 pending=ctx.pending_portraits,
+                solo_exclude=ctx.skip_screen_asset_ids,
             ):
                 append_screen(ctx, sc)
             if len(scenery) >= 3:
@@ -567,6 +568,7 @@ def _drain_portrait_triple_batches(ctx: ChapterPlanContext) -> None:
                     assets_map=ctx.assets_map,
                     layout_state=ctx.layout_state,
                     pending=ctx.pending_portraits,
+                    solo_exclude=ctx.skip_screen_asset_ids,
                 ):
                     append_screen(ctx, sc)
         else:
@@ -664,6 +666,7 @@ def stage_flush_pending_for_other_family(ctx: ChapterPlanContext, fam: str) -> i
         assets_map=ctx.assets_map,
         layout_state=ctx.layout_state,
         force=True,
+        solo_exclude=ctx.skip_screen_asset_ids,
     ):
         append_screen(ctx, sc)
     return 0
@@ -693,6 +696,7 @@ def stage_generic_chunk(ctx: ChapterPlanContext) -> None:
         portrait_heavy=ctx.portrait_heavy,
         assets_map=ctx.assets_map,
         layout_state=ctx.layout_state,
+        solo_exclude=ctx.skip_screen_asset_ids,
     )
     if not screen or consumed < 1:
         ctx.i += 1
@@ -712,6 +716,7 @@ def stage_flush_remaining_portraits(ctx: ChapterPlanContext) -> None:
         assets_map=ctx.assets_map,
         layout_state=ctx.layout_state,
         force=True,
+        solo_exclude=ctx.skip_screen_asset_ids,
     ):
         append_screen(ctx, sc)
 

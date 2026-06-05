@@ -35,6 +35,7 @@
 | 光影（亮度梯度/反差/象限平衡） | native | ✅ | PIL | 同上 |
 | 色彩和谐（主色 ΔE76 和谐窗） | native | ✅ | PIL | 同上 |
 | 审美 Layer 1 合成（五维 + overall/confidence） | native | ✅ | PIL | 写 `quality.aesthetic`，`aesthetic.weights` |
+| U-SOLO 单张强调分 | native | ✅ | PIL | `solo_scoring.solo_score`，`aesthetic.enabled` |
 | 中心裁切 / WebP 衍生 | native | ✅ | PIL | `image_ops` |
 | 媒体类型启发式 | native | ✅ | — | `media_classify` |
 | 归档日期离群标记 | native | ✅ | — | `refine_archive_media_class` |
@@ -221,6 +222,10 @@
 | | `build_aesthetic_explain` | 维度 top 因子解释 |
 | | `aesthetic_multiplier` | overall÷批中位数，clamp[0.7,1.3]（U-COVER） |
 | | `median_aesthetic_overall` | 批内 overall 中位数 |
+| `solo_scoring.py` | `solo_score` | U-SOLO 单张强调分（PA-T09） |
+| | `pick_solo_asset_id` | 整屏大图候选择优 |
+| | `tone_uniqueness` | 章内 ΔE76 色调独特性 |
+| | `build_solo_explain` | 单张强调因子解释 |
 | `degradation.py` | `assess_degradation` | legacy 降级判定 |
 | `cohort_faces.py` | `build_subject_templates` | 种子脸模板 |
 | | `_match_present_subjects` | 1-NN 余弦匹配 |
@@ -287,3 +292,4 @@ run_curate                → curation/curate.py
 | v1.0 | 2026-06-04 | 初版：§1 依赖对照 + §2 函数索引 |
 | v1.1 | 2026-06-05 | PA-1：登记审美 Layer 1（exposure_metrics / color_metrics 和谐 / aesthetic_score） |
 | v1.2 | 2026-06-05 | PA-2：U-COVER/U-HERO 接入 overall（封面乘子 + hero 排序） |
+| v1.3 | 2026-06-05 | PA-3：U-SOLO 单张强调（solo_scoring + screen_planner 接线） |
