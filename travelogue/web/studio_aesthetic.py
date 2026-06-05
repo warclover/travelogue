@@ -55,6 +55,12 @@ def build_asset_aesthetic_studio_row(
     return row
 
 
+def _aesthetic_stale_hint(*, enabled: bool, image_count: int, scored_count: int) -> str | None:
+    if enabled and image_count > 0 and scored_count == 0:
+        return "审美评分未生成，请重新导入照片以应用封面/排版优化"
+    return None
+
+
 def build_aesthetic_entry_summary(trip: dict, *, enabled: bool) -> dict[str, Any]:
     """Compact counts for ``GET …/entry`` (no per-asset explain)."""
     assets = trip.get("assets") or []
@@ -67,11 +73,18 @@ def build_aesthetic_entry_summary(trip: dict, *, enabled: bool) -> dict[str, Any
         displayed_scored = sum(
             1 for aid in displayed if asset_aesthetic(by_id.get(aid) or {})
         )
+    stale = enabled and len(images) > 0 and scored == 0
     return {
         "enabled": enabled,
         "scoredCount": scored,
         "displayedCount": len(displayed),
         "displayedScoredCount": displayed_scored,
+        "stale": stale,
+        "staleHint": _aesthetic_stale_hint(
+            enabled=enabled,
+            image_count=len(images),
+            scored_count=scored,
+        ),
     }
 
 
@@ -99,12 +112,17 @@ def build_aesthetic_studio_payload(
             rows.append(row)
 
     cover_explain = (trip.get("curation") or {}).get("coverExplain") or []
+    images = [a for a in assets if a.get("type", "image") != "video" and a.get("id")]
+    scored_count = sum(1 for a in images if asset_aesthetic(a))
+    stale = enabled and len(images) > 0 and scored_count == 0
     return {
         "enabled": enabled,
-        "scoredCount": sum(
-            1
-            for a in assets
-            if a.get("type", "image") != "video" and asset_aesthetic(a)
+        "scoredCount": scored_count,
+        "stale": stale,
+        "staleHint": _aesthetic_stale_hint(
+            enabled=enabled,
+            image_count=len(images),
+            scored_count=scored_count,
         ),
         "assets": rows,
         "coverExplain": cover_explain if isinstance(cover_explain, list) else [],

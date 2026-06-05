@@ -292,3 +292,34 @@ def test_handle_trip_curate_starts_job(tmp_path: Path) -> None:
     assert status == 202
     assert body["ok"] is True
     assert body.get("jobId")
+
+
+def test_handle_trip_curate_runner_regenerates_preview_jpg(tmp_path: Path) -> None:
+    from travelogue.web.studio_handlers.trip_handlers import handle_trip_curate
+
+    trips_dir = tmp_path / "trips"
+    trip_json = create_trip("demo-curate-preview", trips_dir)
+    handler = MockStudioHandler(trips_dir, json_body={})
+    captured: list = []
+
+    def _sync_job(_job, *, runner=None):
+        if runner is not None:
+            captured.append(runner)
+        return {}
+
+    with patch(
+        "travelogue.web.studio_handlers.trip_handlers.run_g1_continue_job",
+        side_effect=_sync_job,
+    ):
+        with patch("travelogue.curation.curate.run_curate"):
+            with patch("travelogue.render.engine.render_trip_surfaces"):
+                with patch(
+                    "travelogue.render.preview.render_preview_jpg"
+                ) as mock_preview:
+                    handle_trip_curate(handler, "demo-curate-preview")
+                    assert captured
+                    captured[0]()
+                    mock_preview.assert_called_once()
+                    args, kwargs = mock_preview.call_args
+                    assert args[0] == trip_json
+                    assert kwargs.get("trip_root") == trip_json.parent

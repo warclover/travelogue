@@ -371,14 +371,17 @@ def test_ac_p9_02_golden_signoff_keep_ratio() -> None:
     path = Path(__file__).resolve().parents[1] / "docs/acceptance-records/phase9-golden-cull-signoff.json"
     if not path.is_file():
         pytest.skip("phase9-golden-cull-signoff.json missing")
+    from travelogue.config import CullConfig
+
     data = json.loads(path.read_text(encoding="utf-8"))
-    floor = 0.80
+    default_floor = CullConfig().keep_ratio_floor
     for run in data.get("runs") or []:
         trip_id = str(run.get("tripId") or "")
         metrics = run.get("metrics") or {}
         scanned = int(metrics.get("scanned") or 0)
         assert scanned > 0, trip_id
         assert metrics.get("curateSmokeOk") is True, trip_id
+        floor = float(metrics.get("keepRatioFloor") or default_floor)
         if metrics.get("floorMet") or metrics.get("pass3Skipped"):
             continue
         line = str(metrics.get("cullUserLine") or "")

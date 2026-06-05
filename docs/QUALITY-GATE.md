@@ -44,3 +44,11 @@ Studio 读取摘要：`GET /__travelogue/trips/{id}/entry` → `telemetry`、`ae
 审美分项（PA-T10）：`GET /__travelogue/trips/{id}/aesthetic` → 成册各图 top-3 维度（见 `studio_aesthetic.py`）。
 
 PA 验收（SRCC / 盲评导出）：`python scripts/pa_aesthetic_acceptance.py --trip-dir trips/{id}`。
+
+离线诊断（封面 / 选片 / 版式，需 `trips/{id}/trip.json`）：
+
+```bash
+python scripts/_audit_cover_pick.py demo-1506104ebf
+python scripts/_audit_cull_gap.py demo-1506104ebf
+python scripts/_audit_trip_patterns.py demo-1506104ebf
+```

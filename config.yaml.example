@@ -198,7 +198,7 @@ ingest:
 cull:
   enabled: true
   mode: rules                 # W1 默认 rules；W2 后可改 auto
-  keep_ratio_floor: 0.80
+  keep_ratio_floor: 0.90
   min_keep: 15
   # Phase 12 · 分支化评分（默认保守）
   portrait_quality_enabled: true

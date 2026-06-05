@@ -46,7 +46,7 @@ def _cull_metrics(trip: dict) -> dict:
     ]
     cull = (trip.get("curation") or {}).get("cullSummary") or {}
     ratio = (len(non_feat_eligible) / n_scan) if n_scan else 1.0
-    floor = float(cull.get("keepRatioFloor") or 0.80)
+    floor = float(cull.get("keepRatioFloor") or 0.90)
     return {
         "scanned": n_scan,
         "featuredCount": len(featured),

@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from travelogue.curation.asset_quality import asset_sharpness
+from travelogue.curation.composition_signals import (
+    mean_thirds_score,
+    subject_center_norm as _subject_center_norm,
+)
 from travelogue.curation.cover_scoring_params import (
     CoverScoringParams,
     resolve_person_demote,
@@ -22,8 +26,6 @@ _COVER_EXCLUDED_CLASSES = frozenset({"screenshot", "thumbnail", "reupload"})
 _HERO_EXCLUDED_CLASSES = frozenset({"screenshot", "thumbnail", "reupload"})
 _MOBILE_COVER_MIN_SHORT_EDGE = 600
 _MOBILE_VERTICAL_KINDS = frozenset({"portrait", "tall"})
-_THIRD_LINES = (1.0 / 3.0, 2.0 / 3.0)
-
 _COVER_FACTOR_LABELS: dict[str, str] = {
     "aspect": "画幅比例",
     "face_bbox": "人脸构图",
@@ -160,34 +162,10 @@ def _cover_saturation_multiplier(asset: dict) -> float:
     )
 
 
-def _subject_center_norm(asset: dict) -> tuple[float, float]:
-    box = asset.get("salientBox")
-    if isinstance(box, dict):
-        x = float(box.get("x", 0.5))
-        y = float(box.get("y", 0.5))
-        w = float(box.get("w", 0.0))
-        h = float(box.get("h", 0.0))
-        return (
-            min(1.0, max(0.0, x + w / 2.0)),
-            min(1.0, max(0.0, y + h / 2.0)),
-        )
-    fp = asset.get("focalPoint") or {}
-    return float(fp.get("x", 0.5)), float(fp.get("y", 0.45))
-
-
-def _nearest_third_distance(coord: float) -> float:
-    return min(abs(coord - line) for line in _THIRD_LINES)
-
-
-def _axis_rule_of_thirds_score(coord: float) -> float:
-    dist = _nearest_third_distance(coord)
-    return max(0.0, 1.0 - dist / 0.25)
-
-
 def _cover_rule_of_thirds_multiplier(asset: dict, *, params: CoverScoringParams) -> float:
     """P6-C1 · reward subject near third lines; demote dead-center framing."""
     cx, cy = _subject_center_norm(asset)
-    axis = (_axis_rule_of_thirds_score(cx) + _axis_rule_of_thirds_score(cy)) / 2.0
+    axis = mean_thirds_score(asset)
     center_dist = ((cx - 0.5) ** 2 + (cy - 0.5) ** 2) ** 0.5
     off_center = min(1.0, center_dist / 0.22)
     blend = params.thirds_axis_weight * axis + params.thirds_off_center_weight * off_center

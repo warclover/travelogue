@@ -537,6 +537,9 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
             update_pipeline=False,
             cfg=ctx.cfg,
         )
+        from travelogue.render.preview import render_preview_jpg
+
+        render_preview_jpg(trip_json, trip_root=trip_dir)
         return {"tripId": trip_id, "pipelineStatus": "structure_draft"}
 
     store = get_job_store()

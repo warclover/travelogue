@@ -156,7 +156,7 @@ cull:
 ### 5.3 80% 地板（修订口径）
 
 ```text
-floorTargetNonFeatured = ceil(cull.keep_ratio_floor × N_scan)   # 默认 ceil(0.80 × N_scan)
+floorTargetNonFeatured = ceil(cull.keep_ratio_floor × N_scan)   # 默认 ceil(0.90 × N_scan)
 N_min = max(floorTargetNonFeatured, cull.min_keep)              # min_keep 默认 15
 
 Pass 3 输入池 = 非 featured 且 Pass 1–2 后仍 eligible
@@ -212,7 +212,7 @@ CLI 可展示 `non-feat 82/85`（85 = N_mat）。
 
 | ID | 条件 |
 |----|------|
-| **AC-P9-A-01** | mao：eligible_non_feat / N_scan ≥ 0.80 **或** `floorNotMet` 且 Pass 1–2 已保守 |
+| **AC-P9-A-01** | mao：eligible_non_feat / N_scan ≥ 配置 floor（默认 0.90）**或** `floorNotMet` 且 Pass 1–2 已保守 |
 | **AC-P9-A-02** | 双文件夹 featured 100% eligible |
 | **AC-P9-A-03** | featured+material 同 dedupe 组 → featured 全留 + ≤1 material |
 | **AC-P9-A-04** | `cull.enabled=false` → Phase 7 等价 |

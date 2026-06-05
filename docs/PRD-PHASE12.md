@@ -278,7 +278,7 @@ layout:
 | `face_ratio_gray_high` | `0.20` | 灰区上界 |
 | `score_threshold` | `0.00` | 全局阈值（默认关闭，按地板语义兜底） |
 | `score_topk_ratio` | `1.00` | Top-K 比例（默认关闭，按地板语义兜底） |
-| `keep_ratio_floor` | `0.80` | 继承 P9 地板语义 |
+| `keep_ratio_floor` | `0.90` | 继承 P9 地板语义 |
 | `min_keep` | `15` | 继承 P9 语义 |
 | `score_branch_weight_portrait` | `0.15` | portrait 分支融合权重（其余由 rules 承担） |
 | `score_branch_weight_landscape` | `0.15` | landscape 分支融合权重 |

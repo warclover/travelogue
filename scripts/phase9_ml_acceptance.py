@@ -67,8 +67,8 @@ def run_ml_acceptance(*, n_assets: int = 100, bench_n: int = 250) -> dict:
     except ImportError:
         out["cudaAvailable"] = False
 
-    ml_cfg = CullConfig(mode="ml", min_keep=15, keep_ratio_floor=0.80)
-    rules_cfg = CullConfig(mode="rules", min_keep=15, keep_ratio_floor=0.80)
+    ml_cfg = CullConfig(mode="ml", min_keep=15, keep_ratio_floor=0.90)
+    rules_cfg = CullConfig(mode="rules", min_keep=15, keep_ratio_floor=0.90)
     effective = resolve_effective_mode(ml_cfg)
     out["effectiveMode"] = effective
 

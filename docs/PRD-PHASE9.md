@@ -167,7 +167,7 @@ Curate / Layout（Phase 1 / 1.5 / 10）
 cull:
   enabled: true
   mode: auto              # rules | ml | auto
-  keep_ratio_floor: 0.80  # 相对 N_scan
+  keep_ratio_floor: 0.90  # 相对 N_scan
   min_keep: 15
   featured_exempt: true
   max_photos_warn_only: true   # 方案 B

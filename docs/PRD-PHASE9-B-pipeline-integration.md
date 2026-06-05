@@ -102,7 +102,7 @@ def apply_photo_cull(
 cull:
   enabled: true
   mode: rules                 # W1 默认 rules；W2 再开 auto
-  keep_ratio_floor: 0.80
+  keep_ratio_floor: 0.90
   min_keep: 15
   featured_exempt: true
   featured_hard_exclude: false

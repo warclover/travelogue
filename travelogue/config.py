@@ -93,7 +93,7 @@ class IngestConfig:
 class CullConfig:
     enabled: bool = True
     mode: str = "rules"
-    keep_ratio_floor: float = 0.80
+    keep_ratio_floor: float = 0.90
     min_keep: int = 15
     featured_exempt: bool = True
     featured_hard_exclude: bool = False
@@ -713,7 +713,7 @@ def _cull_from_dict(raw: dict[str, Any]) -> CullConfig:
     return CullConfig(
         enabled=bool(raw.get("enabled", True)),
         mode=str(raw.get("mode", "rules")),
-        keep_ratio_floor=float(raw.get("keep_ratio_floor", raw.get("keepRatioFloor", 0.80))),
+        keep_ratio_floor=float(raw.get("keep_ratio_floor", raw.get("keepRatioFloor", 0.90))),
         min_keep=int(raw.get("min_keep", raw.get("minKeep", 15))),
         featured_exempt=bool(raw.get("featured_exempt", raw.get("featuredExempt", True))),
         featured_hard_exclude=bool(raw.get("featured_hard_exclude", raw.get("featuredHardExclude", False))),

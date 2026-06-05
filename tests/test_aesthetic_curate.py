@@ -10,6 +10,7 @@ from travelogue.curation.curate_scoring import (
     hero_score,
     pick_chapter_hero,
     pick_cover_asset_id,
+    score_ranked_cover_ids,
 )
 from travelogue.curation.screen_planner import _pick_main_landscape_id
 
@@ -174,6 +175,28 @@ def test_pick_main_landscape_prefers_aesthetic_overall() -> None:
         ["wide-weak", "wide-strong"], assets, aesthetic_enabled=True
     )
     assert main == "wide-strong"
+
+
+def test_score_ranked_cover_top_matches_pick_cover_asset_id() -> None:
+    web_assets = [
+        _asset("weak", overall=0.35, width=3000, height=2000, aspect="landscape"),
+        _asset("strong", overall=0.88, width=3200, height=1800, aspect="landscape"),
+        _asset("mid", overall=0.55, width=2800, height=1600, aspect="landscape"),
+    ]
+    mobile_assets = [
+        _asset("weak-p", overall=0.35, width=1200, height=2000, aspect="portrait"),
+        _asset("strong-p", overall=0.88, width=1080, height=1920, aspect="portrait"),
+        _asset("mid-p", overall=0.55, width=900, height=1600, aspect="portrait"),
+    ]
+    for layout, assets in (("web", web_assets), ("mobile", mobile_assets)):
+        picked = pick_cover_asset_id(assets, export_layout=layout, aesthetic_enabled=True)
+        ranked = score_ranked_cover_ids(
+            assets,
+            export_layout=layout,
+            limit=3,
+        )
+        assert ranked
+        assert ranked[0]["assetId"] == picked
 
 
 def test_effective_hero_score_anchor_still_applies_with_aesthetic() -> None:

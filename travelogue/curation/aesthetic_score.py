@@ -20,10 +20,7 @@ from PIL import Image
 
 from travelogue.config import AestheticConfig, AestheticWeights
 from travelogue.curation.asset_quality import asset_sharpness
-from travelogue.curation.curate_scoring import (
-    _axis_rule_of_thirds_score,
-    _subject_center_norm,
-)
+from travelogue.curation.composition_signals import mean_thirds_score
 from travelogue.media.color_metrics import (
     color_harmony_score,
     dominant_tone_chroma_score,
@@ -203,8 +200,7 @@ def _negative_space_score(asset: dict) -> float | None:
 
 
 def _thirds_score(asset: dict) -> float:
-    cx, cy = _subject_center_norm(asset)
-    return round((_axis_rule_of_thirds_score(cx) + _axis_rule_of_thirds_score(cy)) / 2.0, 4)
+    return round(mean_thirds_score(asset), 4)
 
 
 def _blend(parts: list[tuple[float, float | None]]) -> tuple[float, float]:

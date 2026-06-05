@@ -130,7 +130,7 @@
 | `error` | fail-open 异常信息 |
 | `maxPhotosExceeded` | 方案 B WARN 标志 |
 
-**口径**：`floorTargetNonFeatured = ceil(keep_ratio_floor × N_scan)`（例：100 张 → 80）。
+**口径**：`floorTargetNonFeatured = ceil(keep_ratio_floor × N_scan)`（例：100 张 → 90）。
 
 ### 3.2 用户可见摘要字符串（冗余，便于 Job）
 

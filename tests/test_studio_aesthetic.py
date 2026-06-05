@@ -88,6 +88,21 @@ def test_build_aesthetic_entry_summary_counts():
     assert summary["scoredCount"] == 2
     assert summary["displayedCount"] == 1
     assert summary["displayedScoredCount"] == 1
+    assert summary["stale"] is False
+    assert summary["staleHint"] is None
+
+
+def test_build_aesthetic_entry_summary_flags_stale_trip():
+    trip = {
+        "assets": [{"id": "plain", "type": "image"}],
+        "chapters": [],
+    }
+    summary = build_aesthetic_entry_summary(trip, enabled=True)
+    assert summary["stale"] is True
+    assert summary["staleHint"]
+    payload = build_aesthetic_studio_payload(trip, enabled=True)
+    assert payload["stale"] is True
+    assert payload["staleHint"] == summary["staleHint"]
 
 
 def test_build_aesthetic_studio_payload_fail_open_without_blocks():
