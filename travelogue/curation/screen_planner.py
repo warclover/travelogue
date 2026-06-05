@@ -136,10 +136,14 @@ def _fits_for_screen(
         return ["contain"] * n
     if pattern_id == "screen-portrait-1":
         # Single full-screen portrait: the container is portrait-aspect, so cover
-        # fills edge-to-edge with negligible cropping (and avoids the letterbox
-        # that contain would add even for a person shot). Multi-portrait grids
-        # below keep contain for person assets, where cells may crop faces.
-        return ["cover"] * n
+        # fills edge-to-edge with negligible cropping. Person/face shots still use
+        # contain so faces are never cropped (face safety wins over full-bleed),
+        # which also keeps person portraits face-safe when a hero-first plan
+        # strands one as a trailing single rather than a multi-portrait grid.
+        return [
+            portrait_fit_for_asset(assets_map.get(aid), default="cover")
+            for aid in asset_ids
+        ]
     if pattern_id in (
         "screen-portrait-2",
         "screen-portrait-3",

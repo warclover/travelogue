@@ -29,11 +29,19 @@ def collect_screen_asset_ids(chapter: dict) -> list[str]:
 
 def _row_layout_for_screen(pattern_id: str, slot_count: int) -> str:
     pid = pattern_id or ""
-    if "portrait" in pid:
-        return "portrait-triple" if slot_count >= 3 else "portrait-pair"
-    if "square" in pid:
-        return "square-triple" if slot_count >= 3 else "square-pair"
-    return "landscape-triple" if slot_count >= 3 else "landscape-pair"
+    suffix = "triple" if slot_count >= 3 else "pair"
+    # Mixed (e.g. screen-portrait-1-landscape-2) and mosaic screens are
+    # landscape-dominant rows: a naive "portrait in pid" substring test would
+    # mislabel them portrait-* and render the mobile/legacy stub fallback with
+    # the wrong row family. Only label portrait/square when the pattern is a
+    # pure single-family grid.
+    has_landscape = "landscape" in pid
+    is_mosaic = "mosaic" in pid
+    if "portrait" in pid and not has_landscape and not is_mosaic:
+        return f"portrait-{suffix}"
+    if "square" in pid and not has_landscape and not is_mosaic:
+        return f"square-{suffix}"
+    return f"landscape-{suffix}"
 
 
 def item_stub_for_screen(screen: dict) -> dict | None:

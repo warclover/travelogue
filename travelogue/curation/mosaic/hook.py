@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextvars import ContextVar
+from functools import lru_cache
 from typing import TYPE_CHECKING
 
 from travelogue.config import MosaicConfig
@@ -184,16 +185,67 @@ def _defer_portrait_grid8(ctx: ChapterPlanContext, start: int) -> bool:
     )
 
 
+_DENSE_PACK_SIZES = (4, 6, 9)
+
+
+def _cleanly_packable(remaining: int, pack: tuple[int, ...]) -> bool:
+    """Can `remaining` photos be split exactly into dense (≥4) windows?"""
+    if not pack:
+        return False
+
+    @lru_cache(maxsize=None)
+    def reachable(r: int) -> bool:
+        if r == 0:
+            return True
+        if r < 0:
+            return False
+        return any(reachable(r - p) for p in pack)
+
+    return reachable(remaining)
+
+
+def _collage_size_order(
+    sizes: list[int], remaining: int, *, fit_limit: int
+) -> list[int]:
+    """Collage-first: prefer windows that leave a cleanly dense-packable tail.
+
+    Keeps balanced/hero output untouched; only reorders MCS window attempts so a
+    dense layout does not strand a trailing 1–2 photo single. Falls back to the
+    greedy (largest-first) order when no size yields a packable remainder.
+    """
+    pack = tuple(s for s in _DENSE_PACK_SIZES if s in sizes)
+    preferred = [
+        s
+        for s in sizes
+        if s <= fit_limit and _cleanly_packable(remaining - s, pack)
+    ]
+    rest = [s for s in sizes if s not in preferred]
+    return preferred + rest
+
+
 def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
     """Try enabled window sizes (largest first). Returns advance count or None."""
     cfg = _mosaic_cfg()
     if not cfg.enabled or not ctx.enable_mosaic:
         return None
+    density = getattr(ctx.layout_state, "layout_density", "balanced")
+    if density == "hero_first":
+        # Hero-first prefers sparse single-hero screens over dense collages
+        # (intent preferMosaic=False). Defer to the legacy single/grid emitters,
+        # which already honor density, instead of greedily packing MCS windows.
+        return None
     if _defer_portrait_grid8(ctx, start):
         return None
-    for size in sorted(effective_mosaic_window_sizes(cfg), reverse=True):
-        if size not in (3, 4, 5, 6, 8, 9):
-            continue
+    sizes = [
+        s
+        for s in sorted(effective_mosaic_window_sizes(cfg), reverse=True)
+        if s in (3, 4, 5, 6, 8, 9)
+    ]
+    if density == "collage_first":
+        sizes = _collage_size_order(
+            sizes, len(ctx.ids) - start, fit_limit=len(ctx.ids) - start
+        )
+    for size in sizes:
         if start + size > len(ctx.ids):
             continue
         window = ctx.ids[start : start + size]
