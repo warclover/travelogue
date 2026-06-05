@@ -1,0 +1,10 @@
+{
+  "version": "1",
+  "targets": {
+    "m1": { "aRateMin": 6, "abRateMin": 9, "totalAlbums": 10 },
+    "m2": { "aRateMin": 7, "abRateMin": 9, "totalAlbums": 10 },
+    "portraitSubset": { "aRateMin": 5, "totalAlbums": 6 }
+  },
+  "albums": [],
+  "notes": "每本相册：judgeVerdict=A|B|C，judgeReasonTags，以 scoreRankedTop3 为准（非 coverCandidates 顺序）。"
+}
