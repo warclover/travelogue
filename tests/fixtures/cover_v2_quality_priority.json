@@ -1,0 +1,153 @@
+{
+  "description": "Algorithm V2 cover scoring quality-priority fixtures (CV2-01..06)",
+  "cases": [
+    {
+      "id": "CV2-01",
+      "export_layout": "web",
+      "winner_id": "landscape_16_9",
+      "assets": [
+        {
+          "id": "landscape_16_9",
+          "type": "image",
+          "width": 1920,
+          "height": 1080,
+          "quality": {"sharpness": 420.0},
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "dominantTone": "#4488cc",
+          "meanLuma": 0.55,
+          "focalPoint": {"x": 0.33, "y": 0.33}
+        },
+        {
+          "id": "panorama_dull",
+          "type": "image",
+          "width": 3000,
+          "height": 1000,
+          "quality": {"sharpness": 180.0},
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "dominantTone": "#888888",
+          "meanLuma": 0.45,
+          "focalPoint": {"x": 0.5, "y": 0.5}
+        }
+      ]
+    },
+    {
+      "id": "CV2-02",
+      "export_layout": "mobile",
+      "winner_id": "sharp_portrait",
+      "assets": [
+        {
+          "id": "sharp_portrait",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {"sharpness": 500.0},
+          "mediaClass": "photo",
+          "dateConfidence": "high"
+        },
+        {
+          "id": "dull_portrait",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {"sharpness": 80.0},
+          "mediaClass": "photo",
+          "dateConfidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "CV2-03",
+      "export_layout": "mobile",
+      "winner_id": "person_shot",
+      "assert_equal_ids": ["person_shot", "land_fallback"],
+      "assets": [
+        {"id": "person_shot", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 150.0}, "mediaClass": "photo", "dateConfidence": "high", "tags": ["person", "face"]},
+        {"id": "p2", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 140.0}, "mediaClass": "photo", "dateConfidence": "high", "tags": ["person"]},
+        {"id": "p3", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 130.0}, "mediaClass": "photo", "dateConfidence": "high", "tags": ["face"]},
+        {"id": "p4", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 120.0}, "mediaClass": "photo", "dateConfidence": "high", "tags": ["portrait"]},
+        {"id": "land_fallback", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 300.0}, "mediaClass": "photo", "dateConfidence": "high", "tags": ["landscape"]}
+      ]
+    },
+    {
+      "id": "CV2-04",
+      "export_layout": "mobile",
+      "winner_id": "sharp_high_date",
+      "assets": [
+        {
+          "id": "sharp_high_date",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {"sharpness": 200.0},
+          "mediaClass": "photo",
+          "dateConfidence": "high"
+        },
+        {
+          "id": "low_date_sharp",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {"sharpness": 400.0},
+          "mediaClass": "photo",
+          "dateConfidence": "low"
+        }
+      ]
+    },
+    {
+      "id": "CV2-05",
+      "export_layout": "mobile",
+      "winner_id": "featured_ok",
+      "assets": [
+        {
+          "id": "material",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {"sharpness": 205.0},
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "userTier": "material"
+        },
+        {
+          "id": "featured_ok",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {"sharpness": 200.0},
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "userTier": "featured"
+        }
+      ]
+    },
+    {
+      "id": "CV2-06",
+      "export_layout": "mobile",
+      "winner_in_top3": "featured_top30",
+      "assets": [
+        {
+          "id": "material_best",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {"sharpness": 500.0},
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "userTier": "material"
+        },
+        {
+          "id": "featured_top30",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {"sharpness": 350.0},
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "userTier": "featured"
+        }
+      ]
+    }
+  ]
+}

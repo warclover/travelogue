@@ -37,8 +37,9 @@ def test_cover_excludes_screenshot_when_alternative() -> None:
 def test_sharpness_boosts_cover_score() -> None:
     dull = _asset("dull", sharp=50.0)
     sharp = _asset("sharp", sharp=500.0)
-    assert cover_score(sharp, "mobile", median_sharp=200.0) > cover_score(
-        dull, "mobile", median_sharp=200.0
+    pool = [dull, sharp]
+    assert cover_score(sharp, "mobile", median_sharp=200.0, pool=pool) > cover_score(
+        dull, "mobile", median_sharp=200.0, pool=pool
     )
 
 

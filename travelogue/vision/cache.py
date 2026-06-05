@@ -80,6 +80,8 @@ def compute_cache_config_fingerprint(cfg: Any) -> str:
     vis = cfg.vision
     clu = cfg.clustering
     scene = clu.scene
+    from travelogue.vision.clip_encoder import HEURISTIC_MODEL_V2
+
     payload = {
         "abi": clu.cache_abi_version,
         "model": vis.model,
@@ -90,6 +92,7 @@ def compute_cache_config_fingerprint(cfg: Any) -> str:
         "scene_algorithm": scene.algorithm,
         "scene_eps": scene.cluster_eps,
         "scene_min_samples": scene.cluster_min_samples,
+        "heuristic_model": HEURISTIC_MODEL_V2,
     }
     digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
     return digest[:16]
@@ -100,6 +103,31 @@ def resolve_cache_fingerprint(cfg: Any) -> str:
     if fp == "auto":
         return compute_cache_config_fingerprint(cfg)
     return fp
+
+
+def embedding_cache_vector_stale(
+    cached: dict[str, Any] | None,
+    manifest: dict[str, Any] | None,
+) -> bool:
+    """True when cached heuristic vectors use pre-v2 schema (dim / model mismatch)."""
+    if cached is None:
+        return False
+    vectors = cached.get("vectors")
+    if vectors is None:
+        return False
+    try:
+        dim = int(vectors.shape[1]) if getattr(vectors, "ndim", 0) == 2 else len(vectors[0])
+    except (IndexError, TypeError, AttributeError):
+        return True
+    source = str(cached.get("source") or (manifest or {}).get("source") or "")
+    model = str(cached.get("model") or (manifest or {}).get("model") or "")
+    if source != "heuristic":
+        return False
+    from travelogue.vision.clip_encoder import HEURISTIC_MODEL_V2, HEURISTIC_V2_DIM
+
+    if model and model != HEURISTIC_MODEL_V2:
+        return True
+    return dim != HEURISTIC_V2_DIM
 
 
 def cache_abi_matches(manifest: dict[str, Any] | None, cfg: Any) -> bool:
@@ -369,6 +397,16 @@ def plan_embedding_refresh(
             change_ratio=1.0,
         )
 
+    if embedding_cache_vector_stale(cached, manifest):
+        _log.info("heuristic embedding schema drift; forcing full refresh")
+        return EmbeddingCachePlan(
+            mode="full",
+            current_ids=current_ids,
+            new_ids=list(current_ids),
+            removed_ids=[],
+            change_ratio=1.0,
+        )
+
     cached_ids = cached["asset_ids"]
     change_ratio, new_ids, removed_ids = compute_change_ratio(current_ids, cached_ids)
 
@@ -559,7 +597,27 @@ def prepare_scene_embeddings(
         full_plan = EmbeddingCachePlan("full", current_ids, list(current_ids), plan.removed_ids, 1.0)
         return embed, full_plan
 
-    merged = merge_embedding_vectors(cached, current_ids, new_embed.asset_ids, new_embed.vectors)
+    if embedding_cache_vector_stale(cached, load_cache_manifest(trip_dir)):
+        _log.warning("incremental merge blocked by vector schema drift; full refresh")
+        clear_cluster_cache(trip_dir)
+        embed = encoder.embed_assets(
+            assets, trip_dir=trip_dir, deterministic=deterministic, apply_subject_class=apply_subject_class
+        )
+        _save(embed)
+        full_plan = EmbeddingCachePlan("full", current_ids, list(current_ids), plan.removed_ids, 1.0)
+        return embed, full_plan
+
+    try:
+        merged = merge_embedding_vectors(cached, current_ids, new_embed.asset_ids, new_embed.vectors)
+    except ValueError:
+        _log.warning("incremental vector dim mismatch; full refresh")
+        clear_cluster_cache(trip_dir)
+        embed = encoder.embed_assets(
+            assets, trip_dir=trip_dir, deterministic=deterministic, apply_subject_class=apply_subject_class
+        )
+        _save(embed)
+        full_plan = EmbeddingCachePlan("full", current_ids, list(current_ids), plan.removed_ids, 1.0)
+        return embed, full_plan
     source = new_embed.source if plan.new_ids else str(cached.get("source") or "heuristic")
     model = new_embed.model or str(cached.get("model") or "") or None
     save_embedding_cache(

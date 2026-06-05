@@ -11,6 +11,14 @@ from travelogue.curation.cover_scoring_params import (
     CoverScoringParams,
     resolve_person_demote,
 )
+from travelogue.curation.cover_scoring_v2 import (
+    CoverScoringParamsV2,
+    build_cover_explain_v2,
+    cover_score_v2,
+    hero_score_v2,
+    resolve_cover_scoring_version,
+    resolve_person_demote_v2,
+)
 from travelogue.curation.layout_planner import aspect_kind_for_asset
 from travelogue.curation.media_classify import cover_class_weight
 from travelogue.curation.time_segments import parse_asset_date
@@ -21,6 +29,22 @@ _DEFAULT_COVER_SCORING = CoverScoringParams()
 
 def _cover_params(cover_scoring: CoverScoringParams | None) -> CoverScoringParams:
     return cover_scoring if cover_scoring is not None else _DEFAULT_COVER_SCORING
+
+
+_DEFAULT_COVER_SCORING_V2 = CoverScoringParamsV2()
+
+
+def _cover_params_v2(cover_scoring_v2: CoverScoringParamsV2 | None) -> CoverScoringParamsV2:
+    return cover_scoring_v2 if cover_scoring_v2 is not None else _DEFAULT_COVER_SCORING_V2
+
+
+def _resolve_scoring_version(
+    *,
+    scoring_version: str | None = None,
+    cover_scoring_v2: CoverScoringParamsV2 | None = None,
+) -> tuple[str, CoverScoringParamsV2]:
+    ver = resolve_cover_scoring_version(scoring_version)
+    return ver, _cover_params_v2(cover_scoring_v2)
 
 _COVER_EXCLUDED_CLASSES = frozenset({"screenshot", "thumbnail", "reupload"})
 _HERO_EXCLUDED_CLASSES = frozenset({"screenshot", "thumbnail", "reupload"})
@@ -232,9 +256,29 @@ def cover_score(
     aesthetic_enabled: bool | None = None,
     enable_phase6_cover_factors: bool = True,
     cover_scoring: CoverScoringParams | None = None,
+    cover_scoring_v2: CoverScoringParamsV2 | None = None,
+    scoring_version: str | None = None,
+    pool: list[dict] | None = None,
     person_demote_mult: float | None = None,
 ) -> float:
     """Mobile: tall/portrait. Web: landscape/panorama. Uses ingest quality signals."""
+    ver, params_v2 = _resolve_scoring_version(
+        scoring_version=scoring_version,
+        cover_scoring_v2=cover_scoring_v2,
+    )
+    if ver == "v2":
+        search_pool = pool if pool else [asset]
+        return cover_score_v2(
+            asset,
+            export_layout,
+            pool=search_pool,
+            median_sharp=median_sharp,
+            median_overall=median_overall,
+            aesthetic_enabled=aesthetic_enabled,
+            cover_scoring_v2=params_v2,
+            person_demote_mult=person_demote_mult,
+        )
+
     kind = aspect_kind_for_asset(asset)
     if kind == "square":
         return 0.0
@@ -381,10 +425,29 @@ def build_cover_explain(
     aesthetic_enabled: bool | None = None,
     limit: int = 4,
     cover_scoring: CoverScoringParams | None = None,
+    cover_scoring_v2: CoverScoringParamsV2 | None = None,
+    scoring_version: str | None = None,
+    pool: list[dict] | None = None,
     person_demote_mult: float | None = None,
     enable_phase6_cover_factors: bool = True,
 ) -> list[dict[str, str | float]]:
     """P6-C3 · top readable reasons for cover score."""
+    ver, params_v2 = _resolve_scoring_version(
+        scoring_version=scoring_version,
+        cover_scoring_v2=cover_scoring_v2,
+    )
+    if ver == "v2":
+        search_pool = pool if pool else [asset]
+        return build_cover_explain_v2(
+            asset,
+            export_layout,
+            search_pool,
+            params=params_v2,
+            person_demote_mult=person_demote_mult,
+            aesthetic_enabled=aesthetic_enabled,
+            limit=limit,
+        )
+
     factors = _cover_score_factors(
         asset,
         export_layout,
@@ -416,8 +479,24 @@ def hero_score(
     *,
     median_sharp: float = 0.0,
     aesthetic_enabled: bool | None = None,
+    cover_scoring_v2: CoverScoringParamsV2 | None = None,
+    scoring_version: str | None = None,
+    pool: list[dict] | None = None,
 ) -> float:
     """Chapter hero: wide compositions, sharp, not screenshot."""
+    ver, params_v2 = _resolve_scoring_version(
+        scoring_version=scoring_version,
+        cover_scoring_v2=cover_scoring_v2,
+    )
+    if ver == "v2":
+        return hero_score_v2(
+            asset,
+            pool=pool if pool else [asset],
+            median_sharp=median_sharp,
+            aesthetic_enabled=aesthetic_enabled,
+            cover_scoring_v2=params_v2,
+        )
+
     if asset.get("mediaClass") in _HERO_EXCLUDED_CLASSES:
         return 0.0
     kind = aspect_kind_for_asset(asset)
@@ -516,6 +595,9 @@ def effective_cover_score(
     meta_places: list[str] | None = None,
     enable_phase6_cover_factors: bool = True,
     cover_scoring: CoverScoringParams | None = None,
+    cover_scoring_v2: CoverScoringParamsV2 | None = None,
+    scoring_version: str | None = None,
+    pool: list[dict] | None = None,
     person_demote_mult: float | None = None,
 ) -> float:
     return (
@@ -527,6 +609,9 @@ def effective_cover_score(
             aesthetic_enabled=aesthetic_enabled,
             enable_phase6_cover_factors=enable_phase6_cover_factors,
             cover_scoring=cover_scoring,
+            cover_scoring_v2=cover_scoring_v2,
+            scoring_version=scoring_version,
+            pool=pool,
             person_demote_mult=person_demote_mult,
         )
         * featured_weight_multiplier(asset, weight=featured_weight)
@@ -542,16 +627,34 @@ def effective_hero_score(
     featured_weight: float = 1.35,
     memory_anchors: list[str] | None = None,
     meta_places: list[str] | None = None,
+    cover_scoring_v2: CoverScoringParamsV2 | None = None,
+    scoring_version: str | None = None,
+    pool: list[dict] | None = None,
 ) -> float:
     return (
         hero_score(
             asset,
             median_sharp=median_sharp,
             aesthetic_enabled=aesthetic_enabled,
+            cover_scoring_v2=cover_scoring_v2,
+            scoring_version=scoring_version,
+            pool=pool,
         )
         * featured_weight_multiplier(asset, weight=featured_weight)
         * anchor_match_multiplier(asset, memory_anchors, meta_places=meta_places)
     )
+
+
+def _curate_scoring_context(
+    cover_scoring: CoverScoringParams | None = None,
+    cover_scoring_v2: CoverScoringParamsV2 | None = None,
+    scoring_version: str | None = None,
+) -> tuple[str, CoverScoringParams, CoverScoringParamsV2]:
+    ver, params_v2 = _resolve_scoring_version(
+        scoring_version=scoring_version,
+        cover_scoring_v2=cover_scoring_v2,
+    )
+    return ver, _cover_params(cover_scoring), params_v2
 
 
 def pick_cover_asset_id(
@@ -562,10 +665,14 @@ def pick_cover_asset_id(
     featured_weight: float = 1.35,
     enable_phase6_cover_factors: bool = True,
     cover_scoring: CoverScoringParams | None = None,
+    cover_scoring_v2: CoverScoringParamsV2 | None = None,
+    scoring_version: str | None = None,
     aesthetic_enabled: bool | None = None,
 ) -> str:
     exclude = exclude or set()
-    params = _cover_params(cover_scoring)
+    ver, params, params_v2 = _curate_scoring_context(
+        cover_scoring, cover_scoring_v2, scoring_version
+    )
     p6 = enable_phase6_cover_factors and params.enable_phase6_factors
     pool = cover_asset_pool(assets, export_layout=export_layout)
     featured_pool = [
@@ -574,7 +681,11 @@ def pick_cover_asset_id(
         if a.get("userTier") == "featured" and a["id"] not in exclude and a.get("type") != "video"
     ]
     search_pool = featured_pool if featured_pool else pool
-    person_demote = resolve_person_demote(params, search_pool)
+    person_demote = (
+        resolve_person_demote_v2(params_v2, search_pool)
+        if ver == "v2"
+        else resolve_person_demote(params, search_pool)
+    )
     median_sharp, median_overall = _cover_batch_medians(
         search_pool, aesthetic_enabled=aesthetic_enabled
     )
@@ -592,6 +703,9 @@ def pick_cover_asset_id(
             featured_weight=featured_weight,
             enable_phase6_cover_factors=p6,
             cover_scoring=params,
+            cover_scoring_v2=params_v2,
+            scoring_version=ver,
+            pool=search_pool,
             person_demote_mult=person_demote,
         )
         if score > best_score:
@@ -600,7 +714,11 @@ def pick_cover_asset_id(
     if not best_id and featured_pool and export_layout == "web":
         material_pool = [a for a in pool if a.get("userTier") != "featured"]
         if material_pool:
-            person_demote = resolve_person_demote(params, material_pool)
+            person_demote = (
+                resolve_person_demote_v2(params_v2, material_pool)
+                if ver == "v2"
+                else resolve_person_demote(params, material_pool)
+            )
             median_sharp, median_overall = _cover_batch_medians(
                 material_pool, aesthetic_enabled=aesthetic_enabled
             )
@@ -616,6 +734,9 @@ def pick_cover_asset_id(
                     featured_weight=featured_weight,
                     enable_phase6_cover_factors=p6,
                     cover_scoring=params,
+                    cover_scoring_v2=params_v2,
+                    scoring_version=ver,
+                    pool=material_pool,
                     person_demote_mult=person_demote,
                 )
                 if score > best_score:
@@ -637,11 +758,15 @@ def score_ranked_cover_ids(
     featured_weight: float = 1.35,
     enable_phase6_cover_factors: bool = True,
     cover_scoring: CoverScoringParams | None = None,
+    cover_scoring_v2: CoverScoringParamsV2 | None = None,
+    scoring_version: str | None = None,
     limit: int = 10,
 ) -> list[dict[str, object]]:
     """Score-ranked cover list for blind review (PRD scoreRankedTop3)."""
     exclude = exclude or set()
-    params = _cover_params(cover_scoring)
+    ver, params, params_v2 = _curate_scoring_context(
+        cover_scoring, cover_scoring_v2, scoring_version
+    )
     p6 = enable_phase6_cover_factors and params.enable_phase6_factors
     pool = cover_asset_pool(assets, export_layout=export_layout)
     featured_pool = [
@@ -650,7 +775,11 @@ def score_ranked_cover_ids(
         if a.get("userTier") == "featured" and a["id"] not in exclude and a.get("type") != "video"
     ]
     search_pool = featured_pool if featured_pool else pool
-    person_demote = resolve_person_demote(params, search_pool)
+    person_demote = (
+        resolve_person_demote_v2(params_v2, search_pool)
+        if ver == "v2"
+        else resolve_person_demote(params, search_pool)
+    )
     median_sharp, median_overall = _cover_batch_medians(
         search_pool, aesthetic_enabled=None
     )
@@ -667,6 +796,9 @@ def score_ranked_cover_ids(
             featured_weight=featured_weight,
             enable_phase6_cover_factors=p6,
             cover_scoring=params,
+            cover_scoring_v2=params_v2,
+            scoring_version=ver,
+            pool=search_pool,
             person_demote_mult=person_demote,
         )
         if score > 0:
@@ -674,7 +806,14 @@ def score_ranked_cover_ids(
     rows.sort(key=lambda item: (-item[0], item[1]))
     out: list[dict[str, object]] = []
     for rank, (score, aid) in enumerate(rows[:limit], start=1):
-        out.append({"rank": rank, "assetId": aid, "score": round(score, 6)})
+        out.append(
+            {
+                "rank": rank,
+                "assetId": aid,
+                "score": round(score, 6),
+                "scoringVersion": ver,
+            }
+        )
     return out
 
 
@@ -686,15 +825,23 @@ def build_cover_layout_review(
     featured_weight: float = 1.35,
     enable_phase6_cover_factors: bool = True,
     cover_scoring: CoverScoringParams | None = None,
+    cover_scoring_v2: CoverScoringParamsV2 | None = None,
+    scoring_version: str | None = None,
 ) -> dict[str, object]:
     """Snapshot for acceptance: ranked top-N, explain, person-dominant flag."""
     from travelogue.curation.cover_scoring_params import person_tag_ratio
 
-    params = _cover_params(cover_scoring)
+    ver, params, params_v2 = _curate_scoring_context(
+        cover_scoring, cover_scoring_v2, scoring_version
+    )
     pool = cover_asset_pool(assets, export_layout=export_layout)
     featured_pool = [a for a in pool if a.get("userTier") == "featured"]
     search_pool = featured_pool if featured_pool else pool
-    person_demote = resolve_person_demote(params, search_pool)
+    person_demote = (
+        resolve_person_demote_v2(params_v2, search_pool)
+        if ver == "v2"
+        else resolve_person_demote(params, search_pool)
+    )
     asset = next((a for a in assets if a.get("id") == cover_id), None)
     ranked = score_ranked_cover_ids(
         assets,
@@ -702,6 +849,8 @@ def build_cover_layout_review(
         featured_weight=featured_weight,
         enable_phase6_cover_factors=enable_phase6_cover_factors,
         cover_scoring=cover_scoring,
+        cover_scoring_v2=cover_scoring_v2,
+        scoring_version=ver,
         limit=10,
     )
     explain: list[dict[str, str | float]] = []
@@ -715,11 +864,15 @@ def build_cover_layout_review(
             median_sharp=med_sharp,
             median_overall=med_overall,
             cover_scoring=cover_scoring,
+            cover_scoring_v2=params_v2,
+            scoring_version=ver,
+            pool=search_pool,
             person_demote_mult=person_demote,
             enable_phase6_cover_factors=enable_phase6_cover_factors,
         )
     return {
         "exportLayout": export_layout,
+        "scoringVersion": ver,
         "coverAssetId": cover_id,
         "scoreRankedTop3": ranked[:3],
         "scoreRankedTop10": ranked,
@@ -740,14 +893,22 @@ def cover_candidates(
     featured_min: int = 2,
     enable_phase6_cover_factors: bool = True,
     cover_scoring: CoverScoringParams | None = None,
+    cover_scoring_v2: CoverScoringParamsV2 | None = None,
+    scoring_version: str | None = None,
 ) -> list[str]:
     """Top covers with diverse aspect / day when possible."""
-    params = _cover_params(cover_scoring)
+    ver, params, params_v2 = _curate_scoring_context(
+        cover_scoring, cover_scoring_v2, scoring_version
+    )
     p6 = enable_phase6_cover_factors and params.enable_phase6_factors
     pool = cover_asset_pool(assets, export_layout=export_layout)
     featured_pool = [a for a in pool if a.get("userTier") == "featured"]
     search_pool = featured_pool if featured_pool else pool
-    person_demote = resolve_person_demote(params, search_pool)
+    person_demote = (
+        resolve_person_demote_v2(params_v2, search_pool)
+        if ver == "v2"
+        else resolve_person_demote(params, search_pool)
+    )
     median_sharp, median_overall = _cover_batch_medians(pool, aesthetic_enabled=None)
     scored: list[tuple[float, dict]] = []
     for a in pool:
@@ -761,6 +922,9 @@ def cover_candidates(
             featured_weight=featured_weight,
             enable_phase6_cover_factors=p6,
             cover_scoring=params,
+            cover_scoring_v2=params_v2,
+            scoring_version=ver,
+            pool=pool,
             person_demote_mult=person_demote,
         )
         if score > 0:
@@ -834,8 +998,12 @@ def pick_chapter_hero(
     featured_weight: float = 1.35,
     memory_anchors: list[str] | None = None,
     meta_places: list[str] | None = None,
+    cover_scoring_v2: CoverScoringParamsV2 | None = None,
+    scoring_version: str | None = None,
 ) -> str | None:
     exclude = exclude or set()
+    ver, _, params_v2 = _curate_scoring_context(None, cover_scoring_v2, scoring_version)
+    hero_pool = [assets_by_id[aid] for aid in bucket if aid in assets_by_id]
     best_id: str | None = None
     best_key: tuple[float, float] = (-1.0, -1.0)
     for aid in bucket:
@@ -851,6 +1019,9 @@ def pick_chapter_hero(
             featured_weight=featured_weight,
             memory_anchors=memory_anchors,
             meta_places=meta_places,
+            cover_scoring_v2=params_v2,
+            scoring_version=ver,
+            pool=hero_pool,
         )
         key = (score, asset_sharpness(a))
         if key > best_key:

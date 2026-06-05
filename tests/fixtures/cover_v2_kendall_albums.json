@@ -1,0 +1,88 @@
+{
+  "description": "Synthetic albums for Kendall tau + delta coverId gates (A-M1 / A-M7)",
+  "albums": [
+    {
+      "albumId": "kendall-mobile-sharp",
+      "exportLayout": "mobile",
+      "assets": [
+        {"id": "m1", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 400}, "mediaClass": "photo", "dateConfidence": "high", "dominantTone": "#4488cc", "meanLuma": 0.55, "focalPoint": {"x": 0.33, "y": 0.33}},
+        {"id": "m2", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 200}, "mediaClass": "photo", "dateConfidence": "high", "dominantTone": "#888888", "meanLuma": 0.45, "focalPoint": {"x": 0.5, "y": 0.5}}
+      ]
+    },
+    {
+      "albumId": "kendall-mobile-color",
+      "exportLayout": "mobile",
+      "assets": [
+        {"id": "vivid", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 220}, "mediaClass": "photo", "dateConfidence": "high", "dominantTone": "#22aacc", "meanLuma": 0.58, "focalPoint": {"x": 0.33, "y": 0.66}},
+        {"id": "dull", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 210}, "mediaClass": "photo", "dateConfidence": "high", "dominantTone": "#666666", "meanLuma": 0.18, "focalPoint": {"x": 0.5, "y": 0.5}}
+      ]
+    },
+    {
+      "albumId": "kendall-mobile-thirds",
+      "exportLayout": "mobile",
+      "assets": [
+        {"id": "thirds", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 180}, "mediaClass": "photo", "dateConfidence": "high", "focalPoint": {"x": 0.33, "y": 0.33}},
+        {"id": "center", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 175}, "mediaClass": "photo", "dateConfidence": "high", "focalPoint": {"x": 0.5, "y": 0.5}}
+      ]
+    },
+    {
+      "albumId": "kendall-mobile-tall",
+      "exportLayout": "mobile",
+      "assets": [
+        {"id": "tall", "type": "image", "width": 900, "height": 2000, "quality": {"sharpness": 250}, "mediaClass": "photo", "dateConfidence": "high"},
+        {"id": "port", "type": "image", "width": 1200, "height": 1600, "quality": {"sharpness": 240}, "mediaClass": "photo", "dateConfidence": "high"}
+      ]
+    },
+    {
+      "albumId": "kendall-mobile-landscape-excluded",
+      "exportLayout": "mobile",
+      "assets": [
+        {"id": "p1", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 300}, "mediaClass": "photo", "dateConfidence": "high"},
+        {"id": "land", "type": "image", "width": 2400, "height": 1350, "quality": {"sharpness": 500}, "mediaClass": "photo", "dateConfidence": "high"}
+      ]
+    },
+    {
+      "albumId": "kendall-web-landscape",
+      "exportLayout": "web",
+      "assets": [
+        {"id": "wide", "type": "image", "width": 1920, "height": 1080, "quality": {"sharpness": 350}, "mediaClass": "photo", "dateConfidence": "high", "dominantTone": "#4488cc", "focalPoint": {"x": 0.33, "y": 0.33}},
+        {"id": "pano", "type": "image", "width": 3000, "height": 1000, "quality": {"sharpness": 280}, "mediaClass": "photo", "dateConfidence": "high", "dominantTone": "#888888", "focalPoint": {"x": 0.5, "y": 0.5}}
+      ]
+    },
+    {
+      "albumId": "kendall-web-sharp",
+      "exportLayout": "web",
+      "assets": [
+        {"id": "sharp16", "type": "image", "width": 1920, "height": 1080, "quality": {"sharpness": 420}, "mediaClass": "photo", "dateConfidence": "high"},
+        {"id": "soft16", "type": "image", "width": 1920, "height": 1080, "quality": {"sharpness": 150}, "mediaClass": "photo", "dateConfidence": "high"}
+      ]
+    },
+    {
+      "albumId": "kendall-mobile-mixed5",
+      "exportLayout": "mobile",
+      "assets": [
+        {"id": "a", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 300}, "mediaClass": "photo", "dateConfidence": "high", "focalPoint": {"x": 0.33, "y": 0.33}},
+        {"id": "b", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 280}, "mediaClass": "photo", "dateConfidence": "high", "focalPoint": {"x": 0.5, "y": 0.5}},
+        {"id": "c", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 260}, "mediaClass": "photo", "dateConfidence": "high"},
+        {"id": "d", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 240}, "mediaClass": "photo", "dateConfidence": "high"},
+        {"id": "e", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 220}, "mediaClass": "photo", "dateConfidence": "high"}
+      ]
+    },
+    {
+      "albumId": "kendall-mobile-featured",
+      "exportLayout": "mobile",
+      "assets": [
+        {"id": "mat", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 310}, "mediaClass": "photo", "dateConfidence": "high", "userTier": "material"},
+        {"id": "feat", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 300}, "mediaClass": "photo", "dateConfidence": "high", "userTier": "featured"}
+      ]
+    },
+    {
+      "albumId": "kendall-mobile-balanced",
+      "exportLayout": "mobile",
+      "assets": [
+        {"id": "x1", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 295}, "mediaClass": "photo", "dateConfidence": "high", "focalPoint": {"x": 0.33, "y": 0.33}},
+        {"id": "x2", "type": "image", "width": 1200, "height": 1800, "quality": {"sharpness": 290}, "mediaClass": "photo", "dateConfidence": "high", "focalPoint": {"x": 0.5, "y": 0.5}}
+      ]
+    }
+  ]
+}

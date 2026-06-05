@@ -12,7 +12,7 @@ from travelogue.vision.cache import (
     prepare_scene_embeddings,
     save_embedding_cache,
 )
-from travelogue.vision.clip_encoder import ClipEncoder
+from travelogue.vision.clip_encoder import HEURISTIC_MODEL_V2, HEURISTIC_V2_DIM, ClipEncoder
 
 
 def _assets(n: int, *, prefix: str = "a") -> list[dict]:
@@ -29,11 +29,20 @@ def _assets(n: int, *, prefix: str = "a") -> list[dict]:
     ]
 
 
-def test_incremental_append_mode(tmp_path: Path) -> None:
+def test_incremental_append_mode(tmp_path: Path, monkeypatch) -> None:
+    from travelogue.vision import clip_encoder as mod
+
+    monkeypatch.setattr(mod, "clip_torch_available", lambda: False)
     base = _assets(100)
     ids = [a["id"] for a in base]
-    vectors = np.random.RandomState(0).rand(len(ids), 8).astype(np.float32)
-    save_embedding_cache(tmp_path, asset_ids=ids, vectors=vectors, source="heuristic", model="h1")
+    vectors = np.random.RandomState(0).rand(len(ids), HEURISTIC_V2_DIM).astype(np.float32)
+    save_embedding_cache(
+        tmp_path,
+        asset_ids=ids,
+        vectors=vectors,
+        source="heuristic",
+        model=HEURISTIC_MODEL_V2,
+    )
 
     appended = base + _assets(5, prefix="n")
     new_ids = [a["id"] for a in appended]
@@ -50,8 +59,14 @@ def test_incremental_append_mode(tmp_path: Path) -> None:
 def test_incremental_delete_prune_mode(tmp_path: Path) -> None:
     base = _assets(100)
     ids = [a["id"] for a in base]
-    vectors = np.random.RandomState(1).rand(len(ids), 8).astype(np.float32)
-    save_embedding_cache(tmp_path, asset_ids=ids, vectors=vectors, source="heuristic", model="h1")
+    vectors = np.random.RandomState(1).rand(len(ids), HEURISTIC_V2_DIM).astype(np.float32)
+    save_embedding_cache(
+        tmp_path,
+        asset_ids=ids,
+        vectors=vectors,
+        source="heuristic",
+        model=HEURISTIC_MODEL_V2,
+    )
 
     kept = base[:90]
     kept_ids = [a["id"] for a in kept]
@@ -87,8 +102,14 @@ def test_incremental_replace_triggers_full_when_large_delta(tmp_path: Path) -> N
 def test_incremental_replace_small_swap_stays_incremental(tmp_path: Path) -> None:
     base = _assets(100)
     ids = [a["id"] for a in base]
-    vectors = np.random.RandomState(3).rand(len(ids), 8).astype(np.float32)
-    save_embedding_cache(tmp_path, asset_ids=ids, vectors=vectors, source="heuristic", model="h1")
+    vectors = np.random.RandomState(3).rand(len(ids), HEURISTIC_V2_DIM).astype(np.float32)
+    save_embedding_cache(
+        tmp_path,
+        asset_ids=ids,
+        vectors=vectors,
+        source="heuristic",
+        model=HEURISTIC_MODEL_V2,
+    )
 
     kept = base[:96]
     swapped = _assets(4, prefix="s")

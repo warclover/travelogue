@@ -21,9 +21,14 @@ def _asset(aid: str, *, w: int = 1200, h: int = 1600, **extra) -> dict:
 
 
 def test_face_tag_lowers_mobile_cover_score() -> None:
+    """Non portrait-dominant pool (1/5 tagged) — person demote applies under v2."""
+    landscape = [_asset(f"land{i}", w=2400, h=1350, tags=["landscape"]) for i in range(4)]
     portrait_clean = _asset("clean", w=1200, h=1800)
     portrait_face = _asset("face", w=1200, h=1800, tags=["face", "person"])
-    assert cover_score(portrait_clean, "mobile") > cover_score(portrait_face, "mobile")
+    pool = landscape + [portrait_clean, portrait_face]
+    assert cover_score(portrait_clean, "mobile", pool=pool) > cover_score(
+        portrait_face, "mobile", pool=pool
+    )
 
 
 def test_dominant_tone_saturation_boosts_cover() -> None:

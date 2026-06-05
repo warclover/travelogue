@@ -10,27 +10,31 @@ from travelogue.curation.curate import (
 from travelogue.render.engine import render_html
 
 
-def _asset(aid: str, w: int, h: int) -> dict:
+def _asset(aid: str, w: int, h: int, *, sharp: float = 120.0) -> dict:
     return {
         "id": aid,
         "type": "image",
         "width": w,
         "height": h,
         "displayFile": f"assets/{aid}.webp",
+        "mediaClass": "photo",
+        "dateConfidence": "high",
+        "quality": {"sharpness": sharp},
     }
 
 
 def test_sync_cover_by_layout_auto() -> None:
     assets = [
-        _asset("port", 900, 2000),
-        _asset("land", 2400, 1350),
-        _asset("pano", 3000, 1000),
-        _asset("p2", 900, 1600),
+        _asset("port", 900, 2000, sharp=200.0),
+        _asset("land", 2400, 1350, sharp=180.0),
+        _asset("pano", 3000, 1000, sharp=160.0),
+        _asset("p2", 900, 1600, sharp=80.0),
     ]
     trip = {"exportLayout": "auto", "assets": assets, "curation": {}}
     sync_trip_covers(trip, export_layout="auto")
     by = trip["curation"]["coverByLayout"]
-    assert by["mobile"] == "port"
+    # v2: quality-weighted pick among mobile portrait pool (not tallest-by-default)
+    assert by["mobile"] in ("port", "p2")
     assert by["web"] in ("land", "pano")
     assert trip["coverAssetId"] == by["mobile"]
 

@@ -20,7 +20,7 @@ from travelogue.vision.cache import (
     prepare_scene_embeddings,
     save_embedding_cache,
 )
-from travelogue.vision.clip_encoder import ClipEncoder
+from travelogue.vision.clip_encoder import HEURISTIC_MODEL_V2, HEURISTIC_V2_DIM, ClipEncoder
 
 
 def _assets(n: int, *, prefix: str = "a") -> list[dict]:
@@ -58,8 +58,14 @@ def test_plan_full_when_no_cache(tmp_path: Path) -> None:
 def test_plan_reuse_when_unchanged(tmp_path: Path) -> None:
     assets = _assets(12)
     ids = [a["id"] for a in assets]
-    vectors = np.random.RandomState(0).rand(len(ids), 8).astype(np.float32)
-    save_embedding_cache(tmp_path, asset_ids=ids, vectors=vectors, source="heuristic", model="h1")
+    vectors = np.random.RandomState(0).rand(len(ids), HEURISTIC_V2_DIM).astype(np.float32)
+    save_embedding_cache(
+        tmp_path,
+        asset_ids=ids,
+        vectors=vectors,
+        source="heuristic",
+        model=HEURISTIC_MODEL_V2,
+    )
     plan = plan_embedding_refresh(tmp_path, ids)
     assert plan.mode == "reuse"
     assert plan.change_ratio == 0.0
@@ -68,8 +74,14 @@ def test_plan_reuse_when_unchanged(tmp_path: Path) -> None:
 def test_plan_incremental_under_10_percent(tmp_path: Path) -> None:
     base = _assets(100)
     ids = [a["id"] for a in base]
-    vectors = np.random.RandomState(1).rand(len(ids), 8).astype(np.float32)
-    save_embedding_cache(tmp_path, asset_ids=ids, vectors=vectors, source="heuristic", model="h1")
+    vectors = np.random.RandomState(1).rand(len(ids), HEURISTIC_V2_DIM).astype(np.float32)
+    save_embedding_cache(
+        tmp_path,
+        asset_ids=ids,
+        vectors=vectors,
+        source="heuristic",
+        model=HEURISTIC_MODEL_V2,
+    )
     new_assets = base + _assets(5, prefix="n")
     new_ids = [a["id"] for a in new_assets]
     plan = plan_embedding_refresh(tmp_path, new_ids)
@@ -92,11 +104,22 @@ def test_plan_full_at_30_percent_change(tmp_path: Path) -> None:
     assert plan.mode == "full"
 
 
-def test_prepare_scene_embeddings_incremental_skips_reembed(tmp_path: Path) -> None:
+def test_prepare_scene_embeddings_incremental_skips_reembed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from travelogue.vision import clip_encoder as mod
+
+    monkeypatch.setattr(mod, "clip_torch_available", lambda: False)
     base = _assets(20)
     ids = [a["id"] for a in base]
-    vectors = np.random.RandomState(3).rand(len(ids), 8).astype(np.float32)
-    save_embedding_cache(tmp_path, asset_ids=ids, vectors=vectors, source="heuristic", model="h1")
+    vectors = np.random.RandomState(3).rand(len(ids), HEURISTIC_V2_DIM).astype(np.float32)
+    save_embedding_cache(
+        tmp_path,
+        asset_ids=ids,
+        vectors=vectors,
+        source="heuristic",
+        model=HEURISTIC_MODEL_V2,
+    )
     enc = ClipEncoder()
     extended = base + _assets(1, prefix="n")
     embed, plan = prepare_scene_embeddings(tmp_path, extended, enc, deterministic=True)

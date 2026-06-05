@@ -36,6 +36,21 @@ from travelogue.curation.cover_scoring_params import CoverScoringParams
 from travelogue.llm.presets import PROVIDER_PRESETS
 
 
+def _default_cover_scoring_v2() -> Any:
+    from travelogue.curation.cover_scoring_v2 import CoverScoringParamsV2
+
+    return CoverScoringParamsV2()
+
+
+def _cover_scoring_v2_from_dict(curate_raw: dict[str, Any]) -> Any:
+    raw = curate_raw.get("cover_scoring_v2") or curate_raw.get("coverScoringV2")
+    if not raw:
+        return _default_cover_scoring_v2()
+    from travelogue.curation.cover_scoring_v2 import CoverScoringParamsV2
+
+    return CoverScoringParamsV2.from_mapping(raw)
+
+
 DEFAULT_RAW_BLOCKLIST_SUFFIXES: tuple[str, ...] = (
     ".cr2",
     ".cr3",
@@ -87,6 +102,7 @@ class IngestConfig:
     reject_raw: bool = True
     raw_blocklist_suffixes: tuple[str, ...] = DEFAULT_RAW_BLOCKLIST_SUFFIXES
     raw_detect_sample_limit: int = 5
+    sharpness_version: str = "v2"  # v1 | v2
 
 
 @dataclass
@@ -216,6 +232,8 @@ class CurateConfig:
     featured_weight: float = 1.35
     featured_min_for_cover_pool: int = 2
     cover_scoring: CoverScoringParams = field(default_factory=CoverScoringParams)
+    cover_scoring_version: str = "v2"  # v1 | v2
+    cover_scoring_v2: Any = field(default_factory=lambda: _default_cover_scoring_v2())
     enable_gravity_balance: bool = True
     enable_mmr_diversity: bool = True
     max_consecutive_same_pattern: int = 2
@@ -689,6 +707,9 @@ def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
         reject_raw=bool(raw.get("reject_raw", raw.get("rejectRaw", True))),
         raw_blocklist_suffixes=suffixes,
         raw_detect_sample_limit=int(raw.get("raw_detect_sample_limit", raw.get("rawDetectSampleLimit", 5))),
+        sharpness_version=str(
+            raw.get("sharpness_version", raw.get("sharpnessVersion", "v2"))
+        ).lower(),
     )
 
 
@@ -1208,6 +1229,13 @@ def load_config(path: Path | None = None) -> AppConfig:
             cover_scoring=CoverScoringParams.from_mapping(
                 curate_raw.get("cover_scoring") or curate_raw.get("coverScoring")
             ),
+            cover_scoring_version=str(
+                curate_raw.get(
+                    "cover_scoring_version",
+                    curate_raw.get("coverScoringVersion", "v2"),
+                )
+            ).lower(),
+            cover_scoring_v2=_cover_scoring_v2_from_dict(curate_raw),
             enable_gravity_balance=bool(
                 curate_layout_raw.get(
                     "enable_gravity_balance",

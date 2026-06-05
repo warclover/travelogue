@@ -61,6 +61,9 @@ def test_ingest_writes_quality_and_tags(tmp_path: Path) -> None:
     a0 = trip["assets"][0]
     assert "quality" in a0
     assert a0["quality"]["sharpness"] > 0
+    assert a0["quality"].get("sharpnessVersion") == "v2"
+    assert "sharpnessLegacy" in a0["quality"]
+    assert a0["quality"]["sharpnessLegacy"] > 0
     assert "meanLuma" in a0["quality"]
     assert 0.0 <= a0["quality"]["meanLuma"] <= 1.0
     assert a0.get("dominantTone", "").startswith("#")

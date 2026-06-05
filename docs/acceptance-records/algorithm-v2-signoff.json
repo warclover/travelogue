@@ -1,0 +1,757 @@
+{
+  "recordId": "algorithm-v2-signoff",
+  "version": "1",
+  "scoringVersion": "v2",
+  "instructions": "Blind review: compare v2 cover (candidate) vs v1 cover (baseline) per album. Verdict A=v2 better, B=tie, C=v1 better. Automated gates in `automated`.",
+  "targets": {
+    "aM1": {
+      "kendallTauMin": 0.85,
+      "albumCount": 10
+    },
+    "aM3": {
+      "aRateMin": 6,
+      "abRateMin": 9,
+      "totalAlbums": 10
+    },
+    "aM7": {
+      "maxCoverChanges": 3,
+      "totalAlbums": 10
+    }
+  },
+  "automated": {
+    "source": "tests\\fixtures\\cover_v2_kendall_albums.json",
+    "albumCount": 10,
+    "meanKendallTau": 1.0,
+    "coverChanges": 0,
+    "gates": {
+      "aM1": true,
+      "aM7": true
+    },
+    "rows": [
+      {
+        "exportLayout": "mobile",
+        "kendallTau": 1.0,
+        "v1Top3": [
+          "m1",
+          "m2"
+        ],
+        "v2Top3": [
+          "m1",
+          "m2"
+        ],
+        "coverChanged": false,
+        "albumId": "kendall-mobile-sharp"
+      },
+      {
+        "exportLayout": "mobile",
+        "kendallTau": 1.0,
+        "v1Top3": [
+          "vivid",
+          "dull"
+        ],
+        "v2Top3": [
+          "vivid",
+          "dull"
+        ],
+        "coverChanged": false,
+        "albumId": "kendall-mobile-color"
+      },
+      {
+        "exportLayout": "mobile",
+        "kendallTau": 1.0,
+        "v1Top3": [
+          "thirds",
+          "center"
+        ],
+        "v2Top3": [
+          "thirds",
+          "center"
+        ],
+        "coverChanged": false,
+        "albumId": "kendall-mobile-thirds"
+      },
+      {
+        "exportLayout": "mobile",
+        "kendallTau": 1.0,
+        "v1Top3": [
+          "tall",
+          "port"
+        ],
+        "v2Top3": [
+          "tall",
+          "port"
+        ],
+        "coverChanged": false,
+        "albumId": "kendall-mobile-tall"
+      },
+      {
+        "exportLayout": "mobile",
+        "kendallTau": 1.0,
+        "v1Top3": [
+          "p1"
+        ],
+        "v2Top3": [
+          "p1"
+        ],
+        "coverChanged": false,
+        "albumId": "kendall-mobile-landscape-excluded"
+      },
+      {
+        "exportLayout": "web",
+        "kendallTau": 1.0,
+        "v1Top3": [
+          "wide",
+          "pano"
+        ],
+        "v2Top3": [
+          "wide",
+          "pano"
+        ],
+        "coverChanged": false,
+        "albumId": "kendall-web-landscape"
+      },
+      {
+        "exportLayout": "web",
+        "kendallTau": 1.0,
+        "v1Top3": [
+          "sharp16",
+          "soft16"
+        ],
+        "v2Top3": [
+          "sharp16",
+          "soft16"
+        ],
+        "coverChanged": false,
+        "albumId": "kendall-web-sharp"
+      },
+      {
+        "exportLayout": "mobile",
+        "kendallTau": 1.0,
+        "v1Top3": [
+          "a",
+          "b",
+          "c"
+        ],
+        "v2Top3": [
+          "a",
+          "b",
+          "c"
+        ],
+        "coverChanged": false,
+        "albumId": "kendall-mobile-mixed5"
+      },
+      {
+        "exportLayout": "mobile",
+        "kendallTau": 1.0,
+        "v1Top3": [
+          "feat"
+        ],
+        "v2Top3": [
+          "feat"
+        ],
+        "coverChanged": false,
+        "albumId": "kendall-mobile-featured"
+      },
+      {
+        "exportLayout": "mobile",
+        "kendallTau": 1.0,
+        "v1Top3": [
+          "x1",
+          "x2"
+        ],
+        "v2Top3": [
+          "x1",
+          "x2"
+        ],
+        "coverChanged": false,
+        "albumId": "kendall-mobile-balanced"
+      }
+    ]
+  },
+  "albums": [
+    {
+      "albumId": "kendall-mobile-sharp",
+      "exportLayout": "mobile",
+      "tags": [],
+      "assetCount": 2,
+      "v1CoverAssetId": "m1",
+      "v2CoverAssetId": "m1",
+      "coverChanged": false,
+      "kendallTau": 1.0,
+      "v1Top3": [
+        "m1",
+        "m2"
+      ],
+      "v2Top3": [
+        "m1",
+        "m2"
+      ],
+      "judgeVerdict": null,
+      "judgeReasonTags": [],
+      "notes": "Fill judgeVerdict=A|B|C after blind human review (v2 vs v1 cover)."
+    },
+    {
+      "albumId": "kendall-mobile-color",
+      "exportLayout": "mobile",
+      "tags": [],
+      "assetCount": 2,
+      "v1CoverAssetId": "vivid",
+      "v2CoverAssetId": "vivid",
+      "coverChanged": false,
+      "kendallTau": 1.0,
+      "v1Top3": [
+        "vivid",
+        "dull"
+      ],
+      "v2Top3": [
+        "vivid",
+        "dull"
+      ],
+      "judgeVerdict": null,
+      "judgeReasonTags": [],
+      "notes": "Fill judgeVerdict=A|B|C after blind human review (v2 vs v1 cover)."
+    },
+    {
+      "albumId": "kendall-mobile-thirds",
+      "exportLayout": "mobile",
+      "tags": [],
+      "assetCount": 2,
+      "v1CoverAssetId": "thirds",
+      "v2CoverAssetId": "thirds",
+      "coverChanged": false,
+      "kendallTau": 1.0,
+      "v1Top3": [
+        "thirds",
+        "center"
+      ],
+      "v2Top3": [
+        "thirds",
+        "center"
+      ],
+      "judgeVerdict": null,
+      "judgeReasonTags": [],
+      "notes": "Fill judgeVerdict=A|B|C after blind human review (v2 vs v1 cover)."
+    },
+    {
+      "albumId": "kendall-mobile-tall",
+      "exportLayout": "mobile",
+      "tags": [],
+      "assetCount": 2,
+      "v1CoverAssetId": "tall",
+      "v2CoverAssetId": "tall",
+      "coverChanged": false,
+      "kendallTau": 1.0,
+      "v1Top3": [
+        "tall",
+        "port"
+      ],
+      "v2Top3": [
+        "tall",
+        "port"
+      ],
+      "judgeVerdict": null,
+      "judgeReasonTags": [],
+      "notes": "Fill judgeVerdict=A|B|C after blind human review (v2 vs v1 cover)."
+    },
+    {
+      "albumId": "kendall-mobile-landscape-excluded",
+      "exportLayout": "mobile",
+      "tags": [],
+      "assetCount": 2,
+      "v1CoverAssetId": "p1",
+      "v2CoverAssetId": "p1",
+      "coverChanged": false,
+      "kendallTau": 1.0,
+      "v1Top3": [
+        "p1"
+      ],
+      "v2Top3": [
+        "p1"
+      ],
+      "judgeVerdict": null,
+      "judgeReasonTags": [],
+      "notes": "Fill judgeVerdict=A|B|C after blind human review (v2 vs v1 cover)."
+    },
+    {
+      "albumId": "kendall-web-landscape",
+      "exportLayout": "web",
+      "tags": [],
+      "assetCount": 2,
+      "v1CoverAssetId": "wide",
+      "v2CoverAssetId": "wide",
+      "coverChanged": false,
+      "kendallTau": 1.0,
+      "v1Top3": [
+        "wide",
+        "pano"
+      ],
+      "v2Top3": [
+        "wide",
+        "pano"
+      ],
+      "judgeVerdict": null,
+      "judgeReasonTags": [],
+      "notes": "Fill judgeVerdict=A|B|C after blind human review (v2 vs v1 cover)."
+    },
+    {
+      "albumId": "kendall-web-sharp",
+      "exportLayout": "web",
+      "tags": [],
+      "assetCount": 2,
+      "v1CoverAssetId": "sharp16",
+      "v2CoverAssetId": "sharp16",
+      "coverChanged": false,
+      "kendallTau": 1.0,
+      "v1Top3": [
+        "sharp16",
+        "soft16"
+      ],
+      "v2Top3": [
+        "sharp16",
+        "soft16"
+      ],
+      "judgeVerdict": null,
+      "judgeReasonTags": [],
+      "notes": "Fill judgeVerdict=A|B|C after blind human review (v2 vs v1 cover)."
+    },
+    {
+      "albumId": "kendall-mobile-mixed5",
+      "exportLayout": "mobile",
+      "tags": [],
+      "assetCount": 5,
+      "v1CoverAssetId": "a",
+      "v2CoverAssetId": "a",
+      "coverChanged": false,
+      "kendallTau": 1.0,
+      "v1Top3": [
+        "a",
+        "b",
+        "c"
+      ],
+      "v2Top3": [
+        "a",
+        "b",
+        "c"
+      ],
+      "judgeVerdict": null,
+      "judgeReasonTags": [],
+      "notes": "Fill judgeVerdict=A|B|C after blind human review (v2 vs v1 cover)."
+    },
+    {
+      "albumId": "kendall-mobile-featured",
+      "exportLayout": "mobile",
+      "tags": [],
+      "assetCount": 2,
+      "v1CoverAssetId": "feat",
+      "v2CoverAssetId": "feat",
+      "coverChanged": false,
+      "kendallTau": 1.0,
+      "v1Top3": [
+        "feat"
+      ],
+      "v2Top3": [
+        "feat"
+      ],
+      "judgeVerdict": null,
+      "judgeReasonTags": [],
+      "notes": "Fill judgeVerdict=A|B|C after blind human review (v2 vs v1 cover)."
+    },
+    {
+      "albumId": "kendall-mobile-balanced",
+      "exportLayout": "mobile",
+      "tags": [],
+      "assetCount": 2,
+      "v1CoverAssetId": "x1",
+      "v2CoverAssetId": "x1",
+      "coverChanged": false,
+      "kendallTau": 1.0,
+      "v1Top3": [
+        "x1",
+        "x2"
+      ],
+      "v2Top3": [
+        "x1",
+        "x2"
+      ],
+      "judgeVerdict": null,
+      "judgeReasonTags": [],
+      "notes": "Fill judgeVerdict=A|B|C after blind human review (v2 vs v1 cover)."
+    }
+  ],
+  "pairs": [
+    {
+      "albumId": "kendall-mobile-sharp",
+      "exportLayout": "mobile",
+      "assets": [
+        {
+          "id": "m1",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 400
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "dominantTone": "#4488cc",
+          "meanLuma": 0.55,
+          "focalPoint": {
+            "x": 0.33,
+            "y": 0.33
+          }
+        },
+        {
+          "id": "m2",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 200
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "dominantTone": "#888888",
+          "meanLuma": 0.45,
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "albumId": "kendall-mobile-color",
+      "exportLayout": "mobile",
+      "assets": [
+        {
+          "id": "vivid",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 220
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "dominantTone": "#22aacc",
+          "meanLuma": 0.58,
+          "focalPoint": {
+            "x": 0.33,
+            "y": 0.66
+          }
+        },
+        {
+          "id": "dull",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 210
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "dominantTone": "#666666",
+          "meanLuma": 0.18,
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "albumId": "kendall-mobile-thirds",
+      "exportLayout": "mobile",
+      "assets": [
+        {
+          "id": "thirds",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 180
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "focalPoint": {
+            "x": 0.33,
+            "y": 0.33
+          }
+        },
+        {
+          "id": "center",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 175
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "albumId": "kendall-mobile-tall",
+      "exportLayout": "mobile",
+      "assets": [
+        {
+          "id": "tall",
+          "type": "image",
+          "width": 900,
+          "height": 2000,
+          "quality": {
+            "sharpness": 250
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high"
+        },
+        {
+          "id": "port",
+          "type": "image",
+          "width": 1200,
+          "height": 1600,
+          "quality": {
+            "sharpness": 240
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high"
+        }
+      ]
+    },
+    {
+      "albumId": "kendall-mobile-landscape-excluded",
+      "exportLayout": "mobile",
+      "assets": [
+        {
+          "id": "p1",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 300
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high"
+        },
+        {
+          "id": "land",
+          "type": "image",
+          "width": 2400,
+          "height": 1350,
+          "quality": {
+            "sharpness": 500
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high"
+        }
+      ]
+    },
+    {
+      "albumId": "kendall-web-landscape",
+      "exportLayout": "web",
+      "assets": [
+        {
+          "id": "wide",
+          "type": "image",
+          "width": 1920,
+          "height": 1080,
+          "quality": {
+            "sharpness": 350
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "dominantTone": "#4488cc",
+          "focalPoint": {
+            "x": 0.33,
+            "y": 0.33
+          }
+        },
+        {
+          "id": "pano",
+          "type": "image",
+          "width": 3000,
+          "height": 1000,
+          "quality": {
+            "sharpness": 280
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "dominantTone": "#888888",
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "albumId": "kendall-web-sharp",
+      "exportLayout": "web",
+      "assets": [
+        {
+          "id": "sharp16",
+          "type": "image",
+          "width": 1920,
+          "height": 1080,
+          "quality": {
+            "sharpness": 420
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high"
+        },
+        {
+          "id": "soft16",
+          "type": "image",
+          "width": 1920,
+          "height": 1080,
+          "quality": {
+            "sharpness": 150
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high"
+        }
+      ]
+    },
+    {
+      "albumId": "kendall-mobile-mixed5",
+      "exportLayout": "mobile",
+      "assets": [
+        {
+          "id": "a",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 300
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "focalPoint": {
+            "x": 0.33,
+            "y": 0.33
+          }
+        },
+        {
+          "id": "b",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 280
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        },
+        {
+          "id": "c",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 260
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high"
+        },
+        {
+          "id": "d",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 240
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high"
+        },
+        {
+          "id": "e",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 220
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high"
+        }
+      ]
+    },
+    {
+      "albumId": "kendall-mobile-featured",
+      "exportLayout": "mobile",
+      "assets": [
+        {
+          "id": "mat",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 310
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "userTier": "material"
+        },
+        {
+          "id": "feat",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 300
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "userTier": "featured"
+        }
+      ]
+    },
+    {
+      "albumId": "kendall-mobile-balanced",
+      "exportLayout": "mobile",
+      "assets": [
+        {
+          "id": "x1",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 295
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "focalPoint": {
+            "x": 0.33,
+            "y": 0.33
+          }
+        },
+        {
+          "id": "x2",
+          "type": "image",
+          "width": 1200,
+          "height": 1800,
+          "quality": {
+            "sharpness": 290
+          },
+          "mediaClass": "photo",
+          "dateConfidence": "high",
+          "focalPoint": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Synthetic albums from cover_v2_kendall_albums.json until trips/mao land. Replace albums[] with real tripDir entries from cover-selection-albums.json."
+}

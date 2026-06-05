@@ -74,8 +74,19 @@ def test_pick_cover_prefers_thirds_with_phase6_factors() -> None:
         _asset(id="center", focalPoint={"x": 0.5, "y": 0.5}),
         _asset(id="thirds", focalPoint={"x": 0.33, "y": 0.66}),
     ]
-    p5 = pick_cover_asset_id(assets, export_layout="mobile", enable_phase6_cover_factors=False)
-    p6 = pick_cover_asset_id(assets, export_layout="mobile", enable_phase6_cover_factors=True)
+    # phase6 toggle is v1-only; default scoring is v2 (thirds always on)
+    p5 = pick_cover_asset_id(
+        assets,
+        export_layout="mobile",
+        enable_phase6_cover_factors=False,
+        scoring_version="v1",
+    )
+    p6 = pick_cover_asset_id(
+        assets,
+        export_layout="mobile",
+        enable_phase6_cover_factors=True,
+        scoring_version="v1",
+    )
     assert p5 == "center"
     assert p6 == "thirds"
 

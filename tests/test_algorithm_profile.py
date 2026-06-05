@@ -45,6 +45,9 @@ def test_expected_profile_includes_version_keys():
     assert profile["profileVersion"] == PROFILE_VERSION
     assert "aestheticVersion" in profile
     assert "coverScoringHash" in profile
+    assert profile["coverScoringVersion"] == "v2"
+    assert "coverScoringV2Hash" in profile
+    assert profile["sharpnessVersion"] == "v2"
     assert "cullKeepRatioFloor" in profile
 
 

@@ -126,9 +126,10 @@ def test_hero_score_uses_aesthetic_dims_when_enabled() -> None:
 def test_hero_falls_back_to_sharpness_without_aesthetic_block() -> None:
     sharp = _asset("sharp", overall=None, sharpness=400.0, width=1600, height=900, aspect="landscape")
     soft = _asset("soft", overall=None, sharpness=80.0, width=1600, height=900, aspect="landscape")
-    assert hero_score(sharp, median_sharp=200.0, aesthetic_enabled=True) > hero_score(
-        soft, median_sharp=200.0, aesthetic_enabled=True
-    )
+    pool = [sharp, soft]
+    assert hero_score(
+        sharp, median_sharp=200.0, aesthetic_enabled=True, pool=pool
+    ) > hero_score(soft, median_sharp=200.0, aesthetic_enabled=True, pool=pool)
 
 
 def test_pick_chapter_hero_prefers_aesthetic_with_sharpness_tiebreak() -> None:

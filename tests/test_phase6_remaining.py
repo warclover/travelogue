@@ -44,9 +44,17 @@ def test_apply_scene_subsegments_splits_by_cluster() -> None:
 
 
 def test_plan_prune_on_delete_only(tmp_path: Path) -> None:
+    from travelogue.vision.clip_encoder import HEURISTIC_MODEL_V2, HEURISTIC_V2_DIM
+
     ids = [f"a{i:02d}" for i in range(10)]
-    vectors = np.random.RandomState(0).rand(len(ids), 8).astype(np.float32)
-    save_embedding_cache(tmp_path, asset_ids=ids, vectors=vectors, source="heuristic", model="h1")
+    vectors = np.random.RandomState(0).rand(len(ids), HEURISTIC_V2_DIM).astype(np.float32)
+    save_embedding_cache(
+        tmp_path,
+        asset_ids=ids,
+        vectors=vectors,
+        source="heuristic",
+        model=HEURISTIC_MODEL_V2,
+    )
     kept = ids[:8]
     plan = plan_embedding_refresh(tmp_path, kept)
     assert plan.mode == "prune"
@@ -67,8 +75,16 @@ def test_prepare_scene_embeddings_prune_without_reembed(tmp_path: Path, monkeypa
         for i in range(6)
     ]
     ids = [a["id"] for a in base_assets]
-    vectors = np.random.RandomState(1).rand(len(ids), 8).astype(np.float32)
-    save_embedding_cache(tmp_path, asset_ids=ids, vectors=vectors, source="heuristic", model="h1")
+    from travelogue.vision.clip_encoder import HEURISTIC_MODEL_V2, HEURISTIC_V2_DIM
+
+    vectors = np.random.RandomState(1).rand(len(ids), HEURISTIC_V2_DIM).astype(np.float32)
+    save_embedding_cache(
+        tmp_path,
+        asset_ids=ids,
+        vectors=vectors,
+        source="heuristic",
+        model=HEURISTIC_MODEL_V2,
+    )
 
     calls = {"n": 0}
     real_embed = ClipEncoder.embed_assets

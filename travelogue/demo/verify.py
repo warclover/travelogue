@@ -24,6 +24,12 @@ QUICK_TEST_PATHS = [
     "tests/test_dom_regression.py",
     "tests/test_demo_verify.py",
     "tests/test_golden_reference.py",
+    "tests/test_cover_scoring_v2.py",
+    "tests/test_cover_scoring_v2_gates.py",
+    "tests/test_sharpness_v2.py",
+    "tests/test_algorithm_profile.py",
+    "tests/test_heuristic_v2_gates.py",
+    "tests/test_phase6_heuristic_vector.py",
 ]
 
 FIXTURE_NAMES = [

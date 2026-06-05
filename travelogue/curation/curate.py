@@ -196,32 +196,57 @@ def resolve_cover_asset_id(
     return _pick_cover_asset_id(assets, export_layout=profile)
 
 
+def _cover_scoring_runtime(
+    cover_scoring=None,
+    cover_scoring_v2=None,
+    scoring_version: str | None = None,
+):
+    from travelogue.config import get_config
+    from travelogue.curation.cover_scoring_params import CoverScoringParams
+
+    cur = get_config().curate
+    cs = cover_scoring if cover_scoring is not None else cur.cover_scoring
+    cs_v2 = cover_scoring_v2 if cover_scoring_v2 is not None else cur.cover_scoring_v2
+    ver = scoring_version or cur.cover_scoring_version
+    return cs, cs_v2, ver
+
+
 def _cover_explain_for(
     assets: list[dict],
     cover_id: str,
     export_layout: str,
     *,
     cover_scoring=None,
+    cover_scoring_v2=None,
+    scoring_version: str | None = None,
     enable_phase6_cover_factors: bool = True,
 ) -> list[dict]:
-    from travelogue.curation.cover_scoring_params import (
-        CoverScoringParams,
-        resolve_person_demote,
-    )
+    from travelogue.curation.cover_scoring_params import resolve_person_demote
+    from travelogue.curation.cover_scoring_v2 import resolve_person_demote_v2
 
     asset = next((a for a in assets if a.get("id") == cover_id), None)
     if not asset:
         return []
-    params = cover_scoring if cover_scoring is not None else CoverScoringParams()
+    params, params_v2, ver = _cover_scoring_runtime(
+        cover_scoring, cover_scoring_v2, scoring_version
+    )
     pool = cover_asset_pool(assets, export_layout=export_layout)
     featured = [a for a in pool if a.get("userTier") == "featured"]
     search = featured if featured else pool
+    person_demote = (
+        resolve_person_demote_v2(params_v2, search)
+        if ver == "v2"
+        else resolve_person_demote(params, search)
+    )
     return build_cover_explain(
         asset,
         export_layout,
         median_sharp=median_sharpness(search),
         cover_scoring=params,
-        person_demote_mult=resolve_person_demote(params, search),
+        cover_scoring_v2=params_v2,
+        scoring_version=ver,
+        pool=search,
+        person_demote_mult=person_demote,
         enable_phase6_cover_factors=enable_phase6_cover_factors,
     )
 
@@ -248,15 +273,20 @@ def sync_trip_covers(
     featured_min_for_cover_pool: int = 2,
     enable_phase6_cover_factors: bool = True,
     cover_scoring=None,
+    cover_scoring_v2=None,
+    scoring_version: str | None = None,
 ) -> str:
     """Write coverAssetId (+ coverByLayout when exportLayout=auto). Returns primary cover id."""
-    from travelogue.curation.cover_scoring_params import CoverScoringParams
-
     assets = assets if assets is not None else layout_eligible_assets(trip)
     layout = export_layout or trip.get("exportLayout") or "auto"
     curation = trip.setdefault("curation", {})
-    cs = cover_scoring if cover_scoring is not None else CoverScoringParams()
+    cs, cs_v2, ver = _cover_scoring_runtime(cover_scoring, cover_scoring_v2, scoring_version)
     p6 = bool(enable_phase6_cover_factors and cs.enable_phase6_factors)
+    scoring_kwargs = {
+        "cover_scoring": cs,
+        "cover_scoring_v2": cs_v2,
+        "scoring_version": ver,
+    }
 
     def _write_blind_review(cover_id: str, profile: str) -> None:
         curation.setdefault("coverBlindReview", {})[profile] = build_cover_layout_review(
@@ -265,7 +295,7 @@ def sync_trip_covers(
             export_layout=profile,
             featured_weight=featured_weight,
             enable_phase6_cover_factors=p6,
-            cover_scoring=cs,
+            **scoring_kwargs,
         )
 
     if layout == "auto":
@@ -274,14 +304,14 @@ def sync_trip_covers(
             export_layout="mobile",
             featured_weight=featured_weight,
             enable_phase6_cover_factors=p6,
-            cover_scoring=cs,
+            **scoring_kwargs,
         )
         web_id = _pick_cover_asset_id(
             assets,
             export_layout="web",
             featured_weight=featured_weight,
             enable_phase6_cover_factors=p6,
-            cover_scoring=cs,
+            **scoring_kwargs,
         )
         curation["coverByLayout"] = {"mobile": mobile_id, "web": web_id}
         trip["coverAssetId"] = mobile_id
@@ -292,7 +322,7 @@ def sync_trip_covers(
             featured_weight=featured_weight,
             featured_min=featured_min_for_cover_pool,
             enable_phase6_cover_factors=p6,
-            cover_scoring=cs,
+            **scoring_kwargs,
         )
         curation["coverCandidatesByLayout"] = {
             "mobile": _cover_candidates(
@@ -302,7 +332,7 @@ def sync_trip_covers(
                 featured_weight=featured_weight,
                 featured_min=featured_min_for_cover_pool,
                 enable_phase6_cover_factors=p6,
-                cover_scoring=cs,
+                **scoring_kwargs,
             ),
             "web": _cover_candidates(
                 assets,
@@ -311,22 +341,22 @@ def sync_trip_covers(
                 featured_weight=featured_weight,
                 featured_min=featured_min_for_cover_pool,
                 enable_phase6_cover_factors=p6,
-                cover_scoring=cs,
+                **scoring_kwargs,
             ),
         }
         mobile_explain = _cover_explain_for(
             assets,
             mobile_id,
             "mobile",
-            cover_scoring=cs,
             enable_phase6_cover_factors=p6,
+            **scoring_kwargs,
         )
         web_explain = _cover_explain_for(
             assets,
             web_id,
             "web",
-            cover_scoring=cs,
             enable_phase6_cover_factors=p6,
+            **scoring_kwargs,
         )
         if mobile_explain:
             curation["coverExplain"] = mobile_explain
@@ -348,7 +378,7 @@ def sync_trip_covers(
         export_layout=layout,
         featured_weight=featured_weight,
         enable_phase6_cover_factors=p6,
-        cover_scoring=cs,
+        **scoring_kwargs,
     )
     trip["coverAssetId"] = cover_id
     trip["coverCandidates"] = _cover_candidates(
@@ -358,7 +388,7 @@ def sync_trip_covers(
         featured_weight=featured_weight,
         featured_min=featured_min_for_cover_pool,
         enable_phase6_cover_factors=p6,
-        cover_scoring=cs,
+        **scoring_kwargs,
     )
     curation.pop("coverByLayout", None)
     curation.pop("coverCandidatesByLayout", None)
@@ -367,8 +397,8 @@ def sync_trip_covers(
         assets,
         cover_id,
         layout,
-        cover_scoring=cs,
         enable_phase6_cover_factors=p6,
+        **scoring_kwargs,
     )
     if explain:
         curation["coverExplain"] = explain
@@ -504,6 +534,8 @@ def _curate_preflight(
         featured_min_for_cover_pool=cur_cfg.featured_min_for_cover_pool,
         enable_phase6_cover_factors=cover_p6,
         cover_scoring=cur_cfg.cover_scoring,
+        cover_scoring_v2=cur_cfg.cover_scoring_v2,
+        scoring_version=cur_cfg.cover_scoring_version,
     )
     curation = trip.get("curation") or {}
     by_layout = curation.get("coverByLayout") or {}

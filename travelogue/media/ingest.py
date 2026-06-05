@@ -37,7 +37,7 @@ from travelogue.media.image_ops import (
     save_jpeg_without_exif,
 )
 from travelogue.media.phash import dhash_hex, is_near_duplicate
-from travelogue.media.sharpness import sharpness_score
+from travelogue.media.sharpness import sharpness_score, sharpness_score_v2
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"}
 HEIC_SUFFIXES = {".heic", ".heif"}
@@ -457,6 +457,16 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
         entry["burstGroupId"] = photo.burst_group_id
     if subj.salient_box:
         entry["salientBox"] = subj.salient_box
+    q = entry.get("quality")
+    if isinstance(q, dict):
+        sharp_ver = str(getattr(ctx.cfg, "sharpness_version", "v2") or "v2").lower()
+        if sharp_ver == "v2":
+            roi = subj.salient_box if subj.salient_box else None
+            q["sharpness"] = round(sharpness_score_v2(photo.img, roi=roi), 2)
+            q["sharpnessVersion"] = "v2"
+            q["sharpnessLegacy"] = round(photo.sharpness, 2)
+        else:
+            q["sharpnessVersion"] = "v1"
     _attach_aesthetic(ctx, entry, photo)
     from travelogue.media.user_tier import apply_user_tier_fields
 

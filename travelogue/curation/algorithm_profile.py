@@ -26,6 +26,14 @@ def _cover_scoring_hash(app_cfg: AppConfig) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
+def _cover_scoring_v2_hash(app_cfg: AppConfig) -> str:
+    from dataclasses import asdict as dc_asdict
+
+    params = app_cfg.curate.cover_scoring_v2
+    payload = json.dumps(dc_asdict(params), sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
 def expected_profile(app_cfg: AppConfig | None = None, *, layout_engine: str | None = None) -> dict[str, Any]:
     """Snapshot of algorithm knobs the running app would apply."""
     cfg = app_cfg or get_config()
@@ -38,6 +46,9 @@ def expected_profile(app_cfg: AppConfig | None = None, *, layout_engine: str | N
         "cullEnabled": bool(cfg.cull.enabled),
         "cullKeepRatioFloor": float(cfg.cull.keep_ratio_floor),
         "coverScoringHash": _cover_scoring_hash(cfg),
+        "coverScoringVersion": str(getattr(cfg.curate, "cover_scoring_version", "v2")),
+        "coverScoringV2Hash": _cover_scoring_v2_hash(cfg),
+        "sharpnessVersion": str(getattr(cfg.ingest, "sharpness_version", "v2")),
     }
     if layout_engine:
         out["layoutEngine"] = layout_engine
@@ -158,6 +169,12 @@ def layout_config_stale(trip: dict, *, app_cfg: AppConfig | None = None) -> bool
         return bool(trip.get("chapters"))
     expected = expected_profile(cfg)
     if stored.get("coverScoringHash") != expected.get("coverScoringHash"):
+        return True
+    if stored.get("coverScoringVersion") != expected.get("coverScoringVersion"):
+        return True
+    if stored.get("coverScoringV2Hash") != expected.get("coverScoringV2Hash"):
+        return True
+    if stored.get("sharpnessVersion") != expected.get("sharpnessVersion"):
         return True
     engine = trip.get("layoutEngine")
     if engine and stored.get("layoutEngine") and stored.get("layoutEngine") != engine:

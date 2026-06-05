@@ -89,7 +89,9 @@ def test_clip_batch_no_heuristic_dim_mix(tmp_path: Path, monkeypatch) -> None:
     assert result.vectors.dtype == np.float32
     assert result.vectors.ndim == 2
     assert result.vectors.shape == (2, result.vectors.shape[1])
-    assert result.vectors.shape[1] in (8, 512)
+    from travelogue.vision.clip_encoder import HEURISTIC_V2_DIM
+
+    assert result.vectors.shape[1] in (HEURISTIC_V2_DIM, 512)
     assert len(result.asset_ids) == 2
     row_norms = np.linalg.norm(result.vectors, axis=1)
     assert np.all(row_norms > 0.9)

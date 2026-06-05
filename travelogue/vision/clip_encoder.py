@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import threading
 import time
@@ -134,13 +135,78 @@ def _clip_cache_roots() -> list[Path]:
     return roots
 
 
-def _heuristic_vector(asset: dict) -> list[float]:
+HEURISTIC_V2_DIM = 18
+HEURISTIC_MODEL_V2 = "heuristic-v2"
+
+
+def _z_score(value: float, values: list[float]) -> float:
+    if len(values) < 2:
+        return 0.0
+    mean = sum(values) / len(values)
+    var = sum((x - mean) ** 2 for x in values) / len(values)
+    std = var**0.5
+    if std < 1e-8:
+        return 0.0
+    return (value - mean) / std
+
+
+def _p95(values: list[float]) -> float:
+    if not values:
+        return 1.0
+    ordered = sorted(values)
+    idx = min(len(ordered) - 1, int(0.95 * (len(ordered) - 1)))
+    return max(float(ordered[idx]), 1.0)
+
+
+def _trip_heuristic_stats(pool: list[dict]) -> dict[str, Any]:
+    log_ratios: list[float] = []
+    widths: list[float] = []
+    heights: list[float] = []
+    areas: list[float] = []
+    for item in pool:
+        w = float(item.get("width") or 1000)
+        h = float(item.get("height") or 1000)
+        widths.append(w)
+        heights.append(h)
+        areas.append((w * h) ** 0.5)
+        log_ratios.append(math.log(max(w / max(h, 1.0), 0.01)))
+    return {
+        "log_ratios": log_ratios,
+        "p95_width": _p95(widths),
+        "p95_height": _p95(heights),
+        "p95_area": _p95(areas),
+    }
+
+
+def _heuristic_vector(
+    asset: dict,
+    *,
+    pool: list[dict] | None = None,
+    sharp_pct: float | None = None,
+    stats: dict[str, Any] | None = None,
+) -> list[float]:
+    """18-dim quality-aware heuristic embedding (Phase C-B · PRD §6.2)."""
     from colorsys import rgb_to_hls
+
+    from travelogue.curation.asset_quality import asset_sharpness, normalized_sharpness
+
+    search_pool = pool if pool else [asset]
+    trip_stats = stats or _trip_heuristic_stats(search_pool)
 
     w = float(asset.get("width") or 1000)
     h = float(asset.get("height") or 1000)
     ratio = w / max(h, 1.0)
-    sharp = float(asset.get("sharpness") or 0.0)
+    log_ratio = math.log(max(ratio, 0.01))
+    ratio_norm = _z_score(log_ratio, trip_stats["log_ratios"])
+
+    if sharp_pct is not None:
+        sharp = sharp_pct
+    else:
+        q = asset.get("quality") or {}
+        if isinstance(q, dict) and q.get("sharpness") is not None:
+            sharp = normalized_sharpness(asset, search_pool, bucket_by="mediaClass")
+        else:
+            sharp = float(asset.get("sharpness") or asset_sharpness(asset) or 0.0) / 4000.0
     luma = float(asset.get("meanLuma") or 0.5)
 
     tone_raw = str(asset.get("dominantTone") or "")
@@ -155,13 +221,28 @@ def _heuristic_vector(asset: dict) -> list[float]:
             pass
 
     subj = str(asset.get("subjectClass") or asset.get("subjectBucket") or "")
+    subject_one_hot = [0.0] * len(SUBJECT_CLASSES)
     if subj in SUBJECT_CLASSES:
-        subject_idx = SUBJECT_CLASSES.index(subj) / max(len(SUBJECT_CLASSES) - 1, 1)
-    else:
-        subject_idx = 0.5
+        subject_one_hot[SUBJECT_CLASSES.index(subj)] = 1.0
 
     face = 1.0 if asset.get("faceCount") else 0.0
-    return [ratio, sharp, luma, hue, saturation, subject_idx, face, w / 4000.0]
+    width_norm = w / trip_stats["p95_width"]
+    height_norm = h / trip_stats["p95_height"]
+    area_norm = (w * h) ** 0.5 / trip_stats["p95_area"]
+
+    return [
+        ratio_norm,
+        sharp,
+        luma,
+        math.sin(2.0 * math.pi * hue),
+        math.cos(2.0 * math.pi * hue),
+        saturation,
+        *subject_one_hot,
+        face,
+        width_norm,
+        height_norm,
+        area_norm,
+    ]
 
 
 @dataclass
@@ -488,7 +569,7 @@ class ClipEncoder:
 
         photos = [a for a in assets if a.get("type", "image") != "video" and a.get("id")]
         if not photos:
-            return EmbedResult([], np.zeros((0, 8), dtype=np.float32), "heuristic")
+            return EmbedResult([], np.zeros((0, HEURISTIC_V2_DIM), dtype=np.float32), "heuristic")
 
         if self._ensure_clip() and trip_dir is not None:
             try:
@@ -502,11 +583,28 @@ class ClipEncoder:
                 _log.warning("CLIP embed failed, heuristic fallback: %s", exc)
 
         ids = [a["id"] for a in photos]
-        mat = np.array([_heuristic_vector(a) for a in photos], dtype=np.float32)
+        from travelogue.curation.asset_quality import normalized_sharpness
+
+        sharp_map = {
+            a["id"]: normalized_sharpness(a, photos, bucket_by="mediaClass") for a in photos
+        }
+        trip_stats = _trip_heuristic_stats(photos)
+        mat = np.array(
+            [
+                _heuristic_vector(
+                    a,
+                    pool=photos,
+                    sharp_pct=sharp_map.get(a["id"], 0.5),
+                    stats=trip_stats,
+                )
+                for a in photos
+            ],
+            dtype=np.float32,
+        )
         norms = np.linalg.norm(mat, axis=1, keepdims=True)
         norms = np.where(norms < 1e-8, 1.0, norms)
         mat = mat / norms
-        return EmbedResult(ids, mat, "heuristic", model="heuristic-v1")
+        return EmbedResult(ids, mat, "heuristic", model=HEURISTIC_MODEL_V2)
 
     def _effective_batch_size(self, photos: list[dict], trip_dir: Path) -> int:
         if self.batch_size == 0:
@@ -707,16 +805,18 @@ class ClipEncoder:
                             subject_proposals.append((asset, subject[0], subject[1]))
                         vectors.append(feat.cpu().numpy()[0].tolist())
                         ids.append(asset["id"])
+                trip_stats = _trip_heuristic_stats(photos)
                 for asset in missing:
-                    vectors.append(_heuristic_vector(asset))
+                    vectors.append(_heuristic_vector(asset, pool=photos, stats=trip_stats))
                     ids.append(asset["id"])
                 stats.batches += 1
                 i += len(batch_assets)
                 continue
 
             if missing and not ready:
+                trip_stats = _trip_heuristic_stats(photos)
                 for asset in missing:
-                    vectors.append(_heuristic_vector(asset))
+                    vectors.append(_heuristic_vector(asset, pool=photos, stats=trip_stats))
                     ids.append(asset["id"])
                 stats.batches += 1
                 i += len(batch_assets)
@@ -815,11 +915,29 @@ class ClipEncoder:
             if any(len(row) != dim for row in vectors):
                 _log.warning("CLIP embed mixed dimensions; falling back to heuristic")
                 ids = [a["id"] for a in photos]
-                mat = np.array([_heuristic_vector(a) for a in photos], dtype=np.float32)
+                from travelogue.curation.asset_quality import normalized_sharpness
+
+                sharp_map = {
+                    a["id"]: normalized_sharpness(a, photos, bucket_by="mediaClass")
+                    for a in photos
+                }
+                trip_stats = _trip_heuristic_stats(photos)
+                mat = np.array(
+                    [
+                        _heuristic_vector(
+                            a,
+                            pool=photos,
+                            sharp_pct=sharp_map.get(a["id"], 0.5),
+                            stats=trip_stats,
+                        )
+                        for a in photos
+                    ],
+                    dtype=np.float32,
+                )
                 norms = np.linalg.norm(mat, axis=1, keepdims=True)
                 norms = np.where(norms < 1e-8, 1.0, norms)
                 mat = mat / norms
-                return EmbedResult(ids, mat, "heuristic", model="heuristic-v1")
+                return EmbedResult(ids, mat, "heuristic", model=HEURISTIC_MODEL_V2)
         mat = np.array(vectors, dtype=np.float32)
         return EmbedResult(ids, mat, "clip", model=f"{self.model_name}/{self.pretrained}")
 
