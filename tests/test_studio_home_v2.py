@@ -427,7 +427,10 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "renderShelf" in shelf
     assert "你的游记画册" in shelf
     assert "更新长图" in shelf            # stale → 更新长图
+    assert "算法待更新" in shelf
+    assert "重新排版" in shelf
     assert "longshotStale" in shelf
+    assert "algorithmStale" in shelf
     assert "isDemoTrip" in shelf          # demo → 示例徽章
     assert "openImportSheet" in shelf     # 新建 → Sheet
     assert "previewRelPath" in shelf      # 封面派生

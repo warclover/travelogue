@@ -95,10 +95,13 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
         except (OSError, json.JSONDecodeError):
             data = {}
         template_meta: dict = {}
+        freshness: dict = {}
         if data:
+            from travelogue.curation.algorithm_profile import assess_algorithm_freshness
             from travelogue.templating.summary import build_template_summary
 
             template_meta = build_template_summary(data)
+            freshness = assess_algorithm_freshness(data, child)
         preview_rel = _pick_preview(child)
         rows.append(
             (
@@ -116,6 +119,13 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
                     "templateSource": template_meta.get("source", "legacy"),
                     "templateSourceLabel": template_meta.get("sourceLabel", "默认模板"),
                     "templateLocked": bool(template_meta.get("locked")),
+                    "algorithmStale": bool(freshness.get("algorithmStale")),
+                    "aestheticStale": bool(freshness.get("aestheticStale")),
+                    "cullStale": bool(freshness.get("cullStale")),
+                    "layoutStale": bool(freshness.get("layoutStale")),
+                    "previewStale": bool(freshness.get("previewStale")),
+                    "staleHints": freshness.get("staleHints") or [],
+                    "staleHint": freshness.get("staleHint"),
                 },
             )
         )

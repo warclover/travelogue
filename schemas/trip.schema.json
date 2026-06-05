@@ -450,6 +450,23 @@
           "items": { "type": "string" }
         },
         "cullUserLine": { "type": "string" },
+        "algorithmProfile": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Algorithm freshness snapshot written after ingest/curate",
+          "properties": {
+            "profileVersion": { "type": "string" },
+            "aestheticVersion": { "type": "string" },
+            "aestheticEnabled": { "type": "boolean" },
+            "cullEnabled": { "type": "boolean" },
+            "cullKeepRatioFloor": { "type": "number", "minimum": 0, "maximum": 1 },
+            "coverScoringHash": { "type": "string" },
+            "layoutEngine": { "type": "string" },
+            "exportLayout": { "type": "string" },
+            "ingestedAt": { "type": "string", "format": "date-time" },
+            "curatedAt": { "type": "string", "format": "date-time" }
+          }
+        },
         "cullSummary": {
           "type": "object",
           "additionalProperties": true,

@@ -25,6 +25,8 @@ REGRESSION_TESTS = [
     "tests/test_studio_handlers_trip.py",
     "tests/test_studio_subprocess.py",
     "tests/test_studio_telemetry.py",
+    "tests/test_algorithm_profile.py",
+    "tests/test_studio_aesthetic.py",
 ]
 
 
@@ -54,6 +56,15 @@ def main() -> int:
         label="regression pytest",
     )
     failed |= code
+
+    replay_script = ROOT / "scripts" / "replay_curate_baseline.py"
+    golden = ROOT / "schemas" / "fixtures" / "curate_baseline.golden.json"
+    if replay_script.is_file() and golden.is_file():
+        code = _run(
+            [sys.executable, str(replay_script), "--check", str(golden)],
+            label="curate baseline replay",
+        )
+        failed |= code
 
     if failed:
         print("\nQUALITY GATE FAILED", file=sys.stderr)

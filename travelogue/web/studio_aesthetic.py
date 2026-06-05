@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Any
 
 from travelogue.curation.aesthetic_score import asset_aesthetic, build_aesthetic_explain
+from travelogue.curation.algorithm_profile import assess_algorithm_freshness
 
 
 def displayed_asset_ids(trip: dict) -> list[str]:
@@ -61,7 +62,12 @@ def _aesthetic_stale_hint(*, enabled: bool, image_count: int, scored_count: int)
     return None
 
 
-def build_aesthetic_entry_summary(trip: dict, *, enabled: bool) -> dict[str, Any]:
+def build_aesthetic_entry_summary(
+    trip: dict,
+    *,
+    enabled: bool,
+    trip_dir: Any = None,
+) -> dict[str, Any]:
     """Compact counts for ``GET …/entry`` (no per-asset explain)."""
     assets = trip.get("assets") or []
     images = [a for a in assets if a.get("type", "image") != "video" and a.get("id")]
@@ -73,18 +79,30 @@ def build_aesthetic_entry_summary(trip: dict, *, enabled: bool) -> dict[str, Any
         displayed_scored = sum(
             1 for aid in displayed if asset_aesthetic(by_id.get(aid) or {})
         )
-    stale = enabled and len(images) > 0 and scored == 0
+    freshness = assess_algorithm_freshness(trip, trip_dir)
+    aesthetic_stale = enabled and len(images) > 0 and scored == 0
+    stale = aesthetic_stale or bool(freshness.get("algorithmStale"))
+    if aesthetic_stale:
+        stale_hint = _aesthetic_stale_hint(
+            enabled=enabled,
+            image_count=len(images),
+            scored_count=scored,
+        )
+    else:
+        stale_hint = freshness.get("staleHint")
     return {
         "enabled": enabled,
         "scoredCount": scored,
         "displayedCount": len(displayed),
         "displayedScoredCount": displayed_scored,
         "stale": stale,
-        "staleHint": _aesthetic_stale_hint(
-            enabled=enabled,
-            image_count=len(images),
-            scored_count=scored,
-        ),
+        "staleHint": stale_hint,
+        "algorithmStale": bool(freshness.get("algorithmStale")),
+        "aestheticStale": bool(freshness.get("aestheticStale")),
+        "cullStale": bool(freshness.get("cullStale")),
+        "layoutStale": bool(freshness.get("layoutStale")),
+        "previewStale": bool(freshness.get("previewStale")),
+        "staleHints": freshness.get("staleHints") or [],
     }
 
 

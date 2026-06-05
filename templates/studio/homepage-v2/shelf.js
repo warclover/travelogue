@@ -77,6 +77,7 @@ function tripSubLine(trip) {
   var rel = relativeTime(trip.updatedAt);
   if (rel) sub.push(rel);
   if (trip.longshotStale) sub.push("长图待更新");
+  if (trip.algorithmStale) sub.push("算法待更新");
   return sub.join(" · ");
 }
 
@@ -140,7 +141,11 @@ function buildCoverWrap(trip, surface) {
   var wrap = el("div", "v2-shelf__cover-wrap");
   var openCover = el("button", "v2-shelf__open v2-shelf__open--cover");
   openCover.type = "button";
-  openCover.title = (trip.title || trip.tripId) + (trip.longshotStale ? " · 长图待更新" : "");
+  var staleBits = [];
+  if (trip.longshotStale) staleBits.push("长图待更新");
+  if (trip.algorithmStale) staleBits.push("算法待更新");
+  openCover.title = (trip.title || trip.tripId)
+    + (staleBits.length ? " · " + staleBits.join(" · ") : "");
   buildCover(trip, openCover);
   openCover.addEventListener("click", function () { openTrip(trip, false); });
   wrap.appendChild(openCover);
@@ -176,15 +181,26 @@ function buildResume(trip) {
     var stale = el("button", null, "更新长图");
     stale.type = "button";
     stale.addEventListener("click", function () {
-      trackStudioEvent("shelf_resume_click", { trip_id: trip.tripId, stale: true });
+      trackStudioEvent("shelf_resume_click", { trip_id: trip.tripId, stale: true, kind: "longshot" });
       openTrip(trip, true);
     });
     actions.appendChild(stale);
+  } else if (trip.algorithmStale) {
+    var recurate = el("button", "primary", "重新排版");
+    recurate.type = "button";
+    recurate.addEventListener("click", function () {
+      trackStudioEvent("shelf_resume_click", { trip_id: trip.tripId, stale: true, kind: "algorithm" });
+      openTrip(trip, false);
+    });
+    actions.appendChild(recurate);
   }
-  var open = el("button", "primary", "打开预览");
+  var open = el("button", trip.algorithmStale && !trip.longshotStale ? null : "primary", "打开预览");
   open.type = "button";
   open.addEventListener("click", function () {
-    trackStudioEvent("shelf_resume_click", { trip_id: trip.tripId, stale: !!trip.longshotStale });
+    trackStudioEvent("shelf_resume_click", {
+      trip_id: trip.tripId,
+      stale: !!(trip.longshotStale || trip.algorithmStale),
+    });
     openTrip(trip, false);
   });
   actions.appendChild(open);

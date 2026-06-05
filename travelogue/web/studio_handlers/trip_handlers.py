@@ -105,7 +105,10 @@ def handle_entry(handler: StudioHandlerProtocol, trip_id: str) -> None:
     _trip_dir, trip = loaded
     ctx = studio_ctx(handler)
     enabled = bool(ctx.cfg.aesthetic.enabled)
-    handler._json_response(200, {"ok": True, **build_entry(trip, trip_id, aesthetic_enabled=enabled)})
+    handler._json_response(
+        200,
+        {"ok": True, **build_entry(trip, trip_id, aesthetic_enabled=enabled, trip_dir=_trip_dir)},
+    )
 
 
 def handle_aesthetic(handler: StudioHandlerProtocol, trip_id: str) -> None:
@@ -512,6 +515,7 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
                 apply_layout=True,
                 trip_dir=trip_dir,
                 cfg=ctx.cfg,
+                refresh_algorithms=True,
             )
         except CurateError as exc:
             raise DemoError(exc.code, str(exc)) from exc

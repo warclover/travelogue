@@ -1,0 +1,16 @@
+{
+  "algorithmProfile": {
+    "aestheticEnabled": true,
+    "coverScoringHash": "8affa2d956cf6062",
+    "cullKeepRatioFloor": 0.9,
+    "profileVersion": "1"
+  },
+  "chapterCount": 3,
+  "chapterIds": [
+    "ch-01",
+    "ch-02",
+    "ch-03"
+  ],
+  "coverAssetId": "asset-001",
+  "exportLayout": "mobile"
+}

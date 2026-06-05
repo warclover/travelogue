@@ -497,10 +497,24 @@ def cmd_curate(
     path: str = typer.Argument(..., help="trip.json path or tripId"),
     layout: str = typer.Option("mobile", "--layout", "-l"),
     no_layout: bool = typer.Option(False, "--no-layout", help="structure only, layoutStatus=pending"),
+    refresh_algorithms: bool = typer.Option(
+        False,
+        "--refresh-algorithms",
+        help="force re-cull and refresh algorithm profile before curate",
+    ),
+    no_refresh_algorithms: bool = typer.Option(
+        False,
+        "--no-refresh-algorithms",
+        help="skip auto re-cull even when cull config is stale",
+    ),
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
 ) -> None:
     """Agent 1+1.5: day chapters, cover, row layout (structure_draft)."""
     _require_export_layout(layout)
+    if refresh_algorithms and no_refresh_algorithms:
+        typer.echo("E_CLI: use only one of --refresh-algorithms / --no-refresh-algorithms", err=True)
+        raise typer.Exit(1)
+    refresh_flag: bool | None = True if refresh_algorithms else False if no_refresh_algorithms else None
     trip_path = _resolve(path, trips_dir=trips_dir)
     trip = _trip_svc(trip_path).load(trip_path)
     try:
@@ -509,6 +523,7 @@ def cmd_curate(
             export_layout=layout,
             apply_layout=not no_layout,
             trip_dir=trip_path.parent,
+            refresh_algorithms=refresh_flag,
         )
     except CurateError as exc:
         typer.echo(str(exc), err=True)

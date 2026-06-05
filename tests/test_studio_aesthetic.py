@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from travelogue.curation.aesthetic_score import compute_aesthetic
+from travelogue.curation.algorithm_profile import write_curate_profile
 from travelogue.web.studio_aesthetic import (
     build_aesthetic_entry_summary,
     build_aesthetic_studio_payload,
@@ -83,6 +84,7 @@ def test_build_aesthetic_entry_summary_counts():
         "assets": [_asset("a1"), _asset("a2"), {"id": "v1", "type": "video"}],
         "chapters": [{"screens": [{"slots": [{"assetId": "a1"}]}]}],
     }
+    write_curate_profile(trip)
     summary = build_aesthetic_entry_summary(trip, enabled=True)
     assert summary["enabled"] is True
     assert summary["scoredCount"] == 2
@@ -102,7 +104,8 @@ def test_build_aesthetic_entry_summary_flags_stale_trip():
     assert summary["staleHint"]
     payload = build_aesthetic_studio_payload(trip, enabled=True)
     assert payload["stale"] is True
-    assert payload["staleHint"] == summary["staleHint"]
+    assert summary["staleHint"]
+    assert payload["staleHint"]
 
 
 def test_build_aesthetic_studio_payload_fail_open_without_blocks():

@@ -139,7 +139,13 @@ def build_chapter_summaries(trip: dict) -> list[dict[str, Any]]:
     return rows
 
 
-def build_entry(trip: dict, trip_id: str, *, aesthetic_enabled: bool = True) -> dict[str, Any]:
+def build_entry(
+    trip: dict,
+    trip_id: str,
+    *,
+    aesthetic_enabled: bool = True,
+    trip_dir: Any = None,
+) -> dict[str, Any]:
     """Assemble the entry payload (previewUrl, peakScreenId, intentSummary)."""
     peak = resolve_peak_screen_id(trip)
     preview_url = f"/{trip_id}/index.html"
@@ -158,6 +164,10 @@ def build_entry(trip: dict, trip_id: str, *, aesthetic_enabled: bool = True) -> 
         "g1Pending": pipeline.get("status") == "structure_draft",
         "chapters": build_chapter_summaries(trip),
         "telemetry": telemetry,
-        "aesthetic": build_aesthetic_entry_summary(trip, enabled=aesthetic_enabled),
+        "aesthetic": build_aesthetic_entry_summary(
+            trip,
+            enabled=aesthetic_enabled,
+            trip_dir=trip_dir,
+        ),
         "template": build_template_summary(trip),
     }

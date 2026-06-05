@@ -992,6 +992,10 @@ def _finalize_ingest_assets(
         ingest_stats["cull_layout_eligible_final"] = final_layout_eligible
         ingest_stats["cull_non_featured_eligible_final"] = final_non_featured
 
+    from travelogue.curation.algorithm_profile import write_ingest_profile
+
+    write_ingest_profile(trip, app_cfg=resolved_app)
+
 
 def ingest_into_trip(
     trip: dict,

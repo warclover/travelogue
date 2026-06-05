@@ -598,6 +598,7 @@ def run_curate(
     apply_layout: bool = True,
     trip_dir: Path | None = None,
     cfg: AppConfig | None = None,
+    refresh_algorithms: bool | None = None,
 ) -> CurateResult:
     if len(trip.get("assets") or []) < MIN_CURATE_ASSETS:
         raise CurateError(
@@ -617,6 +618,15 @@ def run_curate(
 
     apply_editorial_intent_hints(trip)
     saved_memory_anchors = prior_chapter_memory_anchors(trip)
+
+    from travelogue.curation.algorithm_profile import maybe_refresh_cull
+
+    maybe_refresh_cull(
+        trip,
+        trip_dir=trip_dir,
+        app_cfg=cfg,
+        refresh_algorithms=refresh_algorithms,
+    )
 
     cohort_summary = None
     if trip_dir is not None:
@@ -1139,6 +1149,15 @@ def run_curate(
 
     if trip_dir is not None:
         attach_chapter_explain(trip, trip_dir=trip_dir)
+
+    from travelogue.curation.algorithm_profile import write_curate_profile
+
+    write_curate_profile(
+        trip,
+        app_cfg=app_cfg,
+        export_layout=layout,
+        layout_engine=engine,
+    )
 
     return CurateResult(
         chapter_count=len(trip.get("chapters", [])),

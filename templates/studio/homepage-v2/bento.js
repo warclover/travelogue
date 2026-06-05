@@ -197,9 +197,12 @@ export function renderBenchRecent() {
     var href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
     if (trip.longshotStale) href = "/" + trip.tripId + "/index.html?focus=longshot";
     card.href = href;
+    var benchStale = [];
+    if (trip.longshotStale) benchStale.push("长图待更新");
+    if (trip.algorithmStale) benchStale.push("算法待更新");
     card.title = (trip.title || trip.tripId)
       + (trip.updatedAt ? " · " + formatUpdatedAt(trip.updatedAt) : "")
-      + (trip.longshotStale ? " · 长图待更新" : "");
+      + (benchStale.length ? " · " + benchStale.join(" · ") : "");
 
     if (trip.previewRelPath) {
       var img = document.createElement("img");
@@ -210,10 +213,10 @@ export function renderBenchRecent() {
       card.appendChild(img);
     }
 
-    if (trip.longshotStale) {
+    if (trip.longshotStale || trip.algorithmStale) {
       var stale = document.createElement("span");
       stale.className = "v2-bench__recent-card__stale";
-      stale.textContent = "长图待更新";
+      stale.textContent = trip.longshotStale ? "长图待更新" : "算法待更新";
       card.appendChild(stale);
     }
 
