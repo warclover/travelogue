@@ -29,10 +29,27 @@ class _FakePipelineResult:
     g1_pending: bool = False
     photo_count: int = 6
     cull_user_line: str = ""
+    cull_warn: str = ""
+    template_feedback_kind: str = ""
+    template_feedback_message: str = ""
+    resolved_template_id: str = "visual-journal"
+    import_mode: str = "quick_share"
+    layout_density: str = "balanced"
+    layout_density_effect: str = "ignored_quick"
+    date_range_warn: str = ""
 
 
-def _drain_queue(queue: mp.Queue) -> list[dict]:
+def _drain_queue(queue: mp.Queue, *, timeout: float = 2.0) -> list[dict]:
+    import time
+
     events: list[dict] = []
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            remaining = max(0.01, deadline - time.monotonic())
+            events.append(queue.get(timeout=remaining))
+        except Exception:
+            break
     while True:
         try:
             events.append(queue.get_nowait())
