@@ -28,7 +28,7 @@ from travelogue.render.engine import LONGSHOT_INDEX_NAME, render_trip
 
 pytest.importorskip("playwright")
 
-pytestmark = pytest.mark.playwright_serial
+pytestmark = [pytest.mark.e2e, pytest.mark.playwright_serial]
 
 
 @pytest.fixture

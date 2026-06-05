@@ -188,6 +188,75 @@ def _split_segments_by_day(
     return out if out else segments
 
 
+def _date_distance_to_segment(asset_date: date, seg: dict[str, Any]) -> int:
+    start, end = _parse_segment_dates(seg)
+    if start <= asset_date <= end:
+        return 0
+    if asset_date < start:
+        return (start - asset_date).days
+    return (asset_date - end).days
+
+
+def recover_uncovered_geo_bucket_assets(
+    segments: list[dict[str, Any]],
+    buckets: list[list[str]],
+    bucket_segment_ids: list[str],
+    layout_assets: list[dict],
+    cover_id: str,
+) -> tuple[list[dict[str, Any]], list[list[str]], list[str], list[str]]:
+    """Assign layout assets missing from geo buckets to the nearest segment by date."""
+    if not buckets:
+        return segments, buckets, bucket_segment_ids, []
+
+    by_id = {a["id"]: a for a in layout_assets}
+    planned = {aid for bucket in buckets for aid in bucket}
+    uncovered = [
+        a
+        for a in layout_assets
+        if a.get("id")
+        and a["id"] != cover_id
+        and a["id"] not in planned
+        and a.get("layoutEligible", True) is not False
+    ]
+    if not uncovered:
+        return segments, buckets, bucket_segment_ids, []
+
+    seg_by_id = {str(seg.get("id") or ""): seg for seg in segments}
+    recovered: list[str] = []
+
+    for asset in sorted(uncovered, key=lambda a: a.get("takenAt") or ""):
+        aid = str(asset["id"])
+        asset_date = parse_asset_date(asset)
+        best_bucket = 0
+        if asset_date is not None and bucket_segment_ids:
+            best_dist: int | None = None
+            for i, seg_id in enumerate(bucket_segment_ids):
+                seg = seg_by_id.get(seg_id)
+                if not seg:
+                    continue
+                dist = _date_distance_to_segment(asset_date, seg)
+                if best_dist is None or dist < best_dist:
+                    best_dist = dist
+                    best_bucket = i
+        else:
+            best_bucket = len(buckets) - 1
+
+        buckets[best_bucket].append(aid)
+        buckets[best_bucket].sort(key=lambda x: by_id[x].get("takenAt") or "")
+        recovered.append(aid)
+
+        seg_id = bucket_segment_ids[best_bucket]
+        seg = seg_by_id.get(seg_id)
+        if seg is not None:
+            seg["assetIds"] = list(dict.fromkeys((seg.get("assetIds") or []) + [aid]))
+            if asset_date is not None:
+                start, end = _parse_segment_dates(seg)
+                seg["startDate"] = min(start, asset_date).isoformat()
+                seg["endDate"] = max(end, asset_date).isoformat()
+
+    return segments, buckets, bucket_segment_ids, recovered
+
+
 def segments_to_buckets(
     segments: list[dict[str, Any]],
     assets: list[dict],
@@ -220,6 +289,15 @@ def build_buckets_from_clustering(
     segments = merge_small_geo_events(raw_segments)
     segments = cap_geo_segments(segments)
     buckets, bucket_segment_ids = segments_to_buckets(segments, layout_assets, cover_id)
+    segments, buckets, bucket_segment_ids, recovered = recover_uncovered_geo_bucket_assets(
+        segments,
+        buckets,
+        bucket_segment_ids,
+        layout_assets,
+        cover_id,
+    )
+    if recovered:
+        meta.setdefault("geoBucketRecovery", {})["recoveredAssetIds"] = recovered
 
     if not buckets:
         return group_assets_by_segments(

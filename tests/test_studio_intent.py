@@ -300,6 +300,7 @@ def test_schema_old_trip_without_intent_still_valid() -> None:
 # ── pipeline integration (M15-05 · AC-P4-01/09) ───────────────────────────────
 
 
+@pytest.mark.integration
 def test_pipeline_default_place_passes_schema(tmp_path: Path) -> None:
     """Default generic place must keep meta.places valid for export/validate."""
     album = _distinct_album(tmp_path, 6)
@@ -312,6 +313,7 @@ def test_pipeline_default_place_passes_schema(tmp_path: Path) -> None:
     assert errors == [], errors
 
 
+@pytest.mark.integration
 def test_pipeline_persists_intent_and_passes_schema(tmp_path: Path) -> None:
     album = _distinct_album(tmp_path, 6)
     trips_dir = tmp_path / "trips"

@@ -503,6 +503,8 @@ def _pass3_quota(
     use_ml: bool = False,
 ) -> dict[str, Any]:
     meta: dict[str, Any] = {"pass3Skipped": None, "floorNotMet": False}
+    # keep_ratio_floor uses n_scan (all scanned assets, featured included) so the
+    # album-wide keep target reflects total volume; pass3 only culls non-featured.
     floor_target = math.ceil(cfg.keep_ratio_floor * n_scan)
     n_min = max(floor_target, cfg.min_keep)
 
@@ -563,6 +565,7 @@ def _pass3_quota(
     eligible_non_feat = sum(
         1 for a in assets if a.get("layoutEligible", True) and not _is_featured(a, cfg)
     )
+    # floorNotMet compares non-featured survivors to n_scan (featured in denominator).
     if n_scan > 0 and eligible_non_feat / n_scan < cfg.keep_ratio_floor:
         meta["floorNotMet"] = True
     meta["floorTargetNonFeatured"] = n_min

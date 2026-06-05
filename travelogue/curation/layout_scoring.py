@@ -950,8 +950,20 @@ def rank_screens(
     **kwargs: Any,
 ) -> list[tuple[dict, ScoreBreakdown]]:
     """Return screens sorted by total score descending (stable tie-break by input order)."""
-    scored = [
-        (s, score_screen(s, aspects=aspects, assets_by_id=assets_by_id, weights=weights, **kwargs))
-        for s in screens
-    ]
-    return sorted(scored, key=lambda x: (-x[1].total, screens.index(x[0])))
+    scored: list[tuple[int, dict, ScoreBreakdown]] = []
+    for i, screen in enumerate(screens):
+        scored.append(
+            (
+                i,
+                screen,
+                score_screen(
+                    screen,
+                    aspects=aspects,
+                    assets_by_id=assets_by_id,
+                    weights=weights,
+                    **kwargs,
+                ),
+            )
+        )
+    scored.sort(key=lambda row: (-row[2].total, row[0]))
+    return [(screen, breakdown) for _i, screen, breakdown in scored]

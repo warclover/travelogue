@@ -66,8 +66,40 @@ def window_has_candidates(
     )
 
 
+def _mosaic_winner_has_main_role(
+    window: list[str],
+    aspects,
+    assets_map: dict[str, dict],
+    *,
+    size: int,
+    cfg: MosaicConfig,
+    layout_state,
+    trip_total: int,
+    burst_seconds: float,
+    median_sharp: float | None,
+) -> bool:
+    """True when MCS would consume the window with a pattern that inlines a main hero slot."""
+    from travelogue.curation.mosaic.registry import default_registry
+
+    pick = pick_best_window(
+        window,
+        aspects,
+        assets_map,
+        cfg=cfg,
+        window_size=size,
+        layout_state=layout_state,
+        trip_photo_total=trip_total,
+        burst_seconds=burst_seconds,
+        median_sharp=median_sharp,
+    )
+    if pick.used_legacy or not pick.screen:
+        return False
+    pat = default_registry().get(str(pick.screen.get("patternId") or ""))
+    return bool(pat and "main" in pat.roles)
+
+
 def chapter_should_skip_hero_for_mosaic(ctx: ChapterPlanContext) -> bool:
-    """Skip chapter hero when the full chapter is one MCS window with candidates."""
+    """Skip chapter hero when the full chapter packs as one MCS window with a main hero slot."""
     from travelogue.curation.screen_planner import MIN_TRIP_PHOTOS_FOR_MOSAIC
 
     cfg = _mosaic_cfg()
@@ -92,12 +124,14 @@ def chapter_should_skip_hero_for_mosaic(ctx: ChapterPlanContext) -> bool:
         return False
     if not cfg.enabled:
         return False
-    return window_has_candidates(
+    return _mosaic_winner_has_main_role(
         ctx.ids,
         ctx.aspects,
         ctx.assets_map,
         size=size,
         cfg=cfg,
+        layout_state=ctx.layout_state,
+        trip_total=ctx.trip_total,
         burst_seconds=ctx.mix_gap,
         median_sharp=ctx.med_sharp,
     )

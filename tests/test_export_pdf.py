@@ -40,6 +40,7 @@ def test_export_trip_pdf_missing_index(tmp_path: Path) -> None:
         export_trip_pdf(tmp_path)
 
 
+@pytest.mark.e2e
 @pytest.mark.playwright_serial
 def test_export_trip_pdf_writes_file(pdf_workspace: Path) -> None:
     out = pdf_workspace / "out.pdf"

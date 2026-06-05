@@ -16,6 +16,8 @@ from travelogue.web.copy_patch import apply_copy_patches
 from travelogue.web.serve import TripPreviewHandler
 from travelogue.web.studio_entry import build_intent_summary
 
+pytestmark = pytest.mark.e2e
+
 
 def _patch_json(url: str, payload: dict) -> tuple[int, dict]:
     data = json.dumps(payload).encode("utf-8")

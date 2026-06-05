@@ -26,6 +26,44 @@ def _is_studio_ui_playwright(item: pytest.Item) -> bool:
     return "test_studio_p9_qa_playwright" in nodeid or "test_studio_p10_layout_playwright" in nodeid
 
 
+_FAST_SKIP_MARKERS = frozenset(
+    {"e2e", "playwright_serial", "integration", "vision", "legacy_homepage"}
+)
+
+
+def _module_basename(item: pytest.Item) -> str:
+    nodeid = item.nodeid.replace("\\", "/")
+    return nodeid.split("/")[-1].split("::")[0]
+
+
+def _apply_auto_markers(item: pytest.Item) -> None:
+    """Ensure Playwright / browser tests are tagged for CI tier selection."""
+    if item.get_closest_marker("unit"):
+        return
+    names = {m.name for m in item.iter_markers()}
+    if "playwright_serial" in names and "e2e" not in names:
+        item.add_marker(pytest.mark.e2e)
+        names.add("e2e")
+    basename = _module_basename(item)
+    if "playwright" in basename:
+        if "e2e" not in names:
+            item.add_marker(pytest.mark.e2e)
+        if "playwright_serial" not in names:
+            item.add_marker(pytest.mark.playwright_serial)
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--fast",
+        action="store_true",
+        default=False,
+        help=(
+            "Skip e2e, playwright_serial, integration, vision, and legacy_homepage "
+            "(same tiers as CI test-pr fast job)."
+        ),
+    )
+
+
 def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line(
         "markers",
@@ -34,7 +72,22 @@ def pytest_configure(config: pytest.Config) -> None:
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Run Studio homepage Playwright last; other serial Playwright before them."""
+    """Auto-mark browser tests; optional --fast; run Studio UI Playwright last."""
+    if config.getoption("--fast"):
+        deselected: list[pytest.Item] = []
+        selected: list[pytest.Item] = []
+        for item in items:
+            if any(item.get_closest_marker(name) for name in _FAST_SKIP_MARKERS):
+                deselected.append(item)
+            else:
+                selected.append(item)
+        if deselected:
+            config.hook.pytest_deselected(items=deselected)
+        items[:] = selected
+
+    for item in items:
+        _apply_auto_markers(item)
+
     studio_ui: list[pytest.Item] = []
     serial: list[pytest.Item] = []
     other: list[pytest.Item] = []

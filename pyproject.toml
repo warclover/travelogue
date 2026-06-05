@@ -42,7 +42,12 @@ markers = [
     "integration: partial pipeline or module boundaries; may take seconds",
     "e2e: HTTP server and/or full studio pipeline end-to-end",
     "legacy_homepage: static assertions bound to frozen v3 homepage assets",
+    "mosaic: planner tests that require mosaic.enabled (Phase 15 MCS)",
 ]
+# Fast local / PR subset (matches .github/workflows/ci.yml test-pr):
+#   pytest --fast -q
+# Equivalent explicit filter:
+#   pytest -m "not integration and not e2e and not vision and not playwright_serial and not legacy_homepage" -q
 
 [tool.coverage.run]
 source = ["travelogue"]

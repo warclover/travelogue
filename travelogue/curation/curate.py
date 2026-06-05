@@ -942,12 +942,16 @@ def run_curate(
             hero_id = (ch.get("curation") or {}).get("heroAssetId")
             if hero_id and hero_id not in displayed_for_cov:
                 displayed_for_cov.append(hero_id)
+        geo_recovered = (
+            (trip.get("meta") or {}).get("geoBucketRecovery") or {}
+        ).get("recoveredAssetIds")
         layout_metrics.update(
             compute_coverage_metrics(
                 displayed_asset_ids=displayed_for_cov,
                 layout_eligible_assets=layout_assets,
                 dropped_asset_ids=curation.get("mosaicDroppedAssetIds"),
                 planned_asset_ids=planned_ids or None,
+                geo_recovered_asset_ids=geo_recovered,
             )
         )
     if use_arc:

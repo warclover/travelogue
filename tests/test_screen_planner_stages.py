@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
+from travelogue.curation.mosaic.compose import WindowPickResult
+from travelogue.curation.mosaic.hook import chapter_should_skip_hero_for_mosaic
+from travelogue.curation.mosaic.log import MosaicWindowLog
 from travelogue.curation.screen_planner_stages import (
     ChapterScreenPlanner,
     build_chapter_plan_context,
@@ -32,6 +35,58 @@ def test_build_chapter_plan_context_sorts_by_taken_at() -> None:
     ctx = build_chapter_plan_context(ids, aspects, assets=assets, chapter_id="ch-01")
     taken_order = sorted(ids, key=lambda x: assets[x]["takenAt"])
     assert ctx.ids == taken_order
+
+
+def test_chapter_hero_not_skipped_when_mosaic_winner_lacks_main_role() -> None:
+    ids = [f"a{i}" for i in range(1, 7)]
+    aspects = {aid: "landscape" for aid in ids}
+    assets = _assets(ids)
+    ctx = build_chapter_plan_context(
+        ids,
+        aspects,
+        assets=assets,
+        chapter_id="ch-hero",
+        include_chapter_hero=True,
+        trip_photo_total=20,
+    )
+    assert chapter_should_skip_hero_for_mosaic(ctx) is False
+
+
+def test_chapter_hero_skipped_when_mosaic_winner_has_main_role(monkeypatch) -> None:
+    ids = [f"a{i}" for i in range(1, 7)]
+    aspects = {aid: "landscape" for aid in ids}
+    assets = _assets(ids)
+    ctx = build_chapter_plan_context(
+        ids,
+        aspects,
+        assets=assets,
+        chapter_id="ch-hero",
+        include_chapter_hero=True,
+        trip_photo_total=20,
+    )
+    hero_screen = {
+        "patternId": "screen-mosaic-6-main-hero-plus-5",
+        "slots": [
+            {"assetId": "a1", "slot": 0, "fit": "cover", "role": "main"},
+            {"assetId": "a2", "slot": 1, "fit": "cover", "role": "tile"},
+        ],
+    }
+
+    def _fake_pick(*_args, **_kwargs):
+        return WindowPickResult(
+            screen=hero_screen,
+            log=MosaicWindowLog(segment_id="ch-hero", window_size=6, window_start=0),
+            used_legacy=False,
+        )
+
+    monkeypatch.setattr(
+        "travelogue.curation.mosaic.hook.pick_best_window",
+        _fake_pick,
+    )
+    assert chapter_should_skip_hero_for_mosaic(ctx) is True
+    stage_chapter_hero(ctx)
+    assert ctx.hero_preface == []
+    assert len(ctx.ids) == 6
 
 
 def test_stage_chapter_hero_prepends_hero_screen() -> None:

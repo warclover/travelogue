@@ -12,8 +12,20 @@ from travelogue.curation.mosaic.grid_specs import AUTO_FLOW_GRIDS, EXPLICIT_GRID
 from travelogue.curation.screen_planner import _is_landscape_id, _is_std_portrait_id
 
 _STAGE_ASPECT = 16 / 9
+_PORTRAIT_STAGE_ASPECT = 9 / 16
 _WIDE_CELL_AR = 1.25
 _TALL_CELL_AR = 0.92
+
+# Pure portrait auto-flow grids are laid out on a portrait stage, not 16:9 landscape.
+_PORTRAIT_DOMINANT_AUTO_FLOW: frozenset[str] = frozenset(
+    {
+        "screen-portrait-3",
+        "screen-portrait-4",
+        "screen-portrait-6",
+        "screen-portrait-9",
+        "screen-portrait-grid-8",
+    }
+)
 
 # Slots where portrait-in-wide was the user-visible defect (top row of 2P+3L, main tile, etc.)
 _PORTRAIT_FORBIDDEN_WIDE: dict[str, frozenset[int]] = {
@@ -90,14 +102,22 @@ def _explicit_geometry_ok(
     return True
 
 
+def _stage_aspect_for_auto_flow(pattern_id: str) -> float:
+    if pattern_id in _PORTRAIT_DOMINANT_AUTO_FLOW:
+        return _PORTRAIT_STAGE_ASPECT
+    return _STAGE_ASPECT
+
+
 def _auto_flow_geometry_ok(
     cols: int,
     rows: int,
     screen: dict,
     aspects: dict[str, AspectKind],
+    *,
+    stage_aspect: float = _STAGE_ASPECT,
 ) -> bool:
     """Uniform auto-flow grids: reject portrait in wide cells / landscape in tall cells."""
-    cell_ar = auto_flow_cell_aspect_ratio(cols, rows)
+    cell_ar = auto_flow_cell_aspect_ratio(cols, rows, stage_aspect=stage_aspect)
     for slot in screen.get("slots") or []:
         aid = slot.get("assetId")
         if not aid:
@@ -121,5 +141,11 @@ def screen_slots_geometry_ok(
     auto = AUTO_FLOW_GRIDS.get(pattern_id)
     if auto:
         cols, rows, _n = auto
-        return _auto_flow_geometry_ok(cols, rows, screen, aspects)
+        return _auto_flow_geometry_ok(
+            cols,
+            rows,
+            screen,
+            aspects,
+            stage_aspect=_stage_aspect_for_auto_flow(pattern_id),
+        )
     return True

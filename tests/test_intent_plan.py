@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from travelogue.curation.chapter_explain import build_chapter_explain
 from travelogue.curation.chapter_titles import chapter_titles
 from travelogue.services.intent_plan import (
@@ -134,6 +136,7 @@ def test_ingest_travel_plan_saves_file(tmp_path: Path) -> None:
     assert (tmp_path / "source" / "intent" / "plan.txt").is_file()
 
 
+@pytest.mark.integration
 def test_pipeline_with_plan_text_persists_intent(tmp_path: Path) -> None:
     album = _distinct_album(tmp_path, 6)
     trips_dir = tmp_path / "trips"
@@ -160,6 +163,7 @@ def test_pipeline_with_plan_text_persists_intent(tmp_path: Path) -> None:
     assert errors == [], errors
 
 
+@pytest.mark.integration
 def test_pipeline_with_bad_plan_still_succeeds(tmp_path: Path) -> None:
     album = _distinct_album(tmp_path, 6)
     trips_dir = tmp_path / "trips"

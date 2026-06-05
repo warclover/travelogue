@@ -14,6 +14,7 @@ def compute_coverage_metrics(
     layout_eligible_assets: list[dict] | None,
     dropped_asset_ids: list[str] | None = None,
     planned_asset_ids: set[str] | None = None,
+    geo_recovered_asset_ids: list[str] | None = None,
 ) -> dict[str, Any]:
     """Ratio of layout-eligible assets that appear on screens (via displayedAssetIds).
 
@@ -36,7 +37,7 @@ def compute_coverage_metrics(
     coverage = round(len(shown) / len(eligible), 6)
     dropped = [d for d in (dropped_asset_ids or []) if d in eligible]
     drop_rate = round(len(dropped) / len(eligible), 6) if eligible else 0.0
-    return {
+    out: dict[str, Any] = {
         CANONICAL_ELIGIBLE_COVERAGE_KEY: coverage,
         "eligibleToScreenCoverage": coverage,
         "layout.eligible_to_screen_coverage": coverage,
@@ -45,3 +46,8 @@ def compute_coverage_metrics(
         "layoutEligibleCount": len(eligible),
         "displayedOnScreenCount": len(shown),
     }
+    recovered = [str(aid) for aid in (geo_recovered_asset_ids or []) if aid]
+    if recovered:
+        out["geoRecoveredAssetIds"] = recovered
+        out["geoRecoveredCount"] = len(recovered)
+    return out

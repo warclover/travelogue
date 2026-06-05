@@ -1,4 +1,4 @@
-"""Auto-flow grids (2x2 etc.): portrait must not land in wide cells on the 16:9 stage."""
+"""Auto-flow grids: portrait-dominant patterns use portrait stage; mixed grids keep 16:9."""
 
 from __future__ import annotations
 
@@ -21,10 +21,16 @@ def test_auto_flow_cell_aspect_ratio_values():
     assert auto_flow_cell_aspect_ratio(4, 2) < 0.92  # grid-8 → ~0.89 tall
 
 
-def test_portrait_4_all_portrait_rejected():
+def test_portrait_4_all_portrait_ok_on_portrait_stage():
     aspects = {"p0": "portrait", "p1": "portrait", "p2": "portrait", "p3": "portrait"}
     screen = _screen("screen-portrait-4", aspects)
-    assert screen_slots_geometry_ok(screen, aspects) is False
+    assert screen_slots_geometry_ok(screen, aspects) is True
+
+
+def test_portrait_9_all_portrait_ok_on_portrait_stage():
+    aspects = {f"p{i}": "portrait" for i in range(9)}
+    screen = _screen("screen-portrait-9", aspects)
+    assert screen_slots_geometry_ok(screen, aspects) is True
 
 
 def test_landscape_4_all_landscape_ok():

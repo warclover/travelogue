@@ -827,15 +827,22 @@ def cover_candidates(
     if featured_min > 0:
         featured_ids = [a["id"] for _, a in scored if a.get("userTier") == "featured"]
         need = featured_min - featured_in_out
+        out_set = set(out)
         for fid in featured_ids:
-            if need <= 0 or len(out) >= limit:
+            if need <= 0:
                 break
-            if fid not in out and fid != cover_id:
-                if len(out) >= limit:
-                    out[-1] = fid
-                else:
-                    out.append(fid)
-                need -= 1
+            if fid in out_set or fid == cover_id:
+                continue
+            if len(out) >= limit:
+                # Swap out the lowest-priority tail slot so featured quota is met
+                # without leaving the replaced id in the dedup set.
+                out_set.discard(out[-1])
+                out[-1] = fid
+            else:
+                out.append(fid)
+            out_set.add(fid)
+            featured_in_out += 1
+            need -= 1
     return out[:limit]
 
 

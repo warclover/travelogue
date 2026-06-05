@@ -38,5 +38,7 @@ def test_schema_accepts_cull_summary_and_asset_fields() -> None:
     for asset in assets[:-1]:
         asset.setdefault("quality", {})["cullScore"] = 0.75
         asset.setdefault("quality", {})["cullRank"] = 1
+        asset["quality"]["cullBranch"] = "portrait"
+        asset["quality"]["cullBranchScore"] = 0.8123
     trip["curation"]["excludedByCullAssetIds"] = [dropped["id"]]
     assert not _schema_errors(trip), _schema_errors(trip)

@@ -272,6 +272,50 @@
         "folio": { "type": "string", "enum": ["off"] }
       }
     },
+    "coverBlindReviewRankedItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rank", "assetId", "score"],
+      "properties": {
+        "rank": { "type": "integer", "minimum": 1 },
+        "assetId": { "type": "string" },
+        "score": { "type": "number", "minimum": 0 }
+      }
+    },
+    "coverBlindReviewEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Cover blind-review snapshot for one export layout",
+      "properties": {
+        "exportLayout": { "type": "string", "enum": ["mobile", "web"] },
+        "coverAssetId": { "type": "string" },
+        "scoreRankedTop3": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/coverBlindReviewRankedItem" }
+        },
+        "scoreRankedTop10": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/coverBlindReviewRankedItem" }
+        },
+        "personTagRatio": { "type": "number", "minimum": 0, "maximum": 1 },
+        "personDemoteApplied": { "type": "number" },
+        "featuredPoolOnly": { "type": "boolean" },
+        "coverExplain": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "code": { "type": "string" },
+              "label": { "type": "string" },
+              "multiplier": { "type": "number" },
+              "reason": { "type": "string" }
+            },
+            "required": ["code", "label", "reason"]
+          }
+        }
+      }
+    },
     "orientationSummary": {
       "type": "object",
       "additionalProperties": false,
@@ -318,6 +362,15 @@
           "properties": {
             "mobile": { "type": "array", "items": { "type": "string" }, "maxItems": 5 },
             "web": { "type": "array", "items": { "type": "string" }, "maxItems": 5 }
+          }
+        },
+        "coverBlindReview": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per-layout blind-review snapshot written by curate (cover selection v0.2.1)",
+          "properties": {
+            "mobile": { "$ref": "#/$defs/coverBlindReviewEntry" },
+            "web": { "$ref": "#/$defs/coverBlindReviewEntry" }
           }
         },
         "coverExplain": {

@@ -9,7 +9,11 @@ from __future__ import annotations
 from dataclasses import replace
 
 from travelogue.config import get_config
-from travelogue.curation.mosaic.constants import MOSAIC_5_PATTERN_IDS
+from travelogue.curation.mosaic.constants import (
+    MOSAIC_5_PATTERN_IDS,
+    PATTERN_MOSAIC_5_2P_3L_BALANCED,
+    PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
+)
 from travelogue.curation.mosaic.runtime import (
     reset_mosaic_config_override,
     set_mosaic_config_override,
@@ -76,3 +80,5 @@ def test_mosaic_pattern_policy_blocks_five_and_six_ids():
         assert not mosaic_pattern_disabled(pid, cfg=on)
     for pid in MOSAIC_5_PATTERN_IDS:
         assert not mosaic_pattern_disabled(pid, cfg=on)
+    for pid in (PATTERN_MOSAIC_5_2P_3L_BALANCED, PATTERN_MOSAIC_5_MAIN_LAND_2P_2L):
+        assert mosaic_pattern_disabled(pid, cfg=on)
