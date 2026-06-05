@@ -663,6 +663,7 @@ def stage_flush_pending_for_other_family(ctx: ChapterPlanContext, fam: str) -> i
         ctx.aspects,
         assets_map=ctx.assets_map,
         layout_state=ctx.layout_state,
+        force=True,
     ):
         append_screen(ctx, sc)
     return 0
@@ -710,6 +711,7 @@ def stage_flush_remaining_portraits(ctx: ChapterPlanContext) -> None:
         ctx.aspects,
         assets_map=ctx.assets_map,
         layout_state=ctx.layout_state,
+        force=True,
     ):
         append_screen(ctx, sc)
 

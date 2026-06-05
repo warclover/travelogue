@@ -5,10 +5,35 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from travelogue.curation.aspect_buckets import landscape_aspect_bucket, prefix_same_bucket
+from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.curation.screen_planner import (
     PATTERN_PORTRAIT_1_LANDSCAPE_2,
+    _flush_portrait_pending,
     plan_screens_for_chapter,
 )
+
+
+def test_flush_portrait_pending_defers_single_under_consecutive_ban():
+    """Without force, a lone portrait is deferred when singles are banned."""
+    state = ScreenLayoutPlannerState.from_trip_total(80)
+    state.last_kind = "portrait_single"
+    pending = ["p1"]
+    screens = _flush_portrait_pending(pending, {"p1": "portrait"}, layout_state=state)
+    assert screens == []
+    assert pending == ["p1"]
+
+
+def test_flush_portrait_pending_force_emits_under_consecutive_ban():
+    """force=True must always make progress (no infinite flush loop / dropped asset)."""
+    state = ScreenLayoutPlannerState.from_trip_total(80)
+    state.last_kind = "portrait_single"
+    pending = ["p1"]
+    screens = _flush_portrait_pending(
+        pending, {"p1": "portrait"}, layout_state=state, force=True
+    )
+    assert len(screens) == 1
+    assert screens[0]["patternId"] == "screen-portrait-1"
+    assert pending == []
 
 
 def _assets_with_tags(ids: list[str], tag_map: dict[str, list[str]]) -> dict[str, dict]:

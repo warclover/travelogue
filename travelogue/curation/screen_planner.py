@@ -638,6 +638,7 @@ def _emit_person_portrait_screens(
     assets_map: dict[str, dict],
     layout_state: ScreenLayoutPlannerState | None = None,
     pending: list[str] | None = None,
+    force: bool = False,
 ) -> list[dict]:
     """人物竖图：仅三列(≥3) / 双列(2)；单张不单独成屏（见余片 cover portrait-1）。"""
     screens: list[dict] = []
@@ -645,7 +646,11 @@ def _emit_person_portrait_screens(
     defer: list[str] = []
     while len(buf) >= 3:
         trio = buf[:3]
-        if layout_state is not None and not layout_state.can_emit_pattern("screen-portrait-3"):
+        if (
+            not force
+            and layout_state is not None
+            and not layout_state.can_emit_pattern("screen-portrait-3")
+        ):
             if layout_state.can_emit_pattern("screen-portrait-2"):
                 screen = _make_screen(
                     "screen-portrait-2",
@@ -691,6 +696,7 @@ def _emit_person_portrait_screens(
                 assets_map=assets_map,
                 layout_state=layout_state,
                 pending=pending or defer,
+                force=force,
             )
         )
     if pending is not None and defer:
@@ -705,11 +711,21 @@ def _emit_portrait_single_screens(
     assets_map: dict[str, dict],
     layout_state: ScreenLayoutPlannerState | None,
     pending: list[str] | None = None,
+    force: bool = False,
 ) -> list[dict]:
-    """Emit screen-portrait-1, or defer when consecutive singles are banned."""
+    """Emit screen-portrait-1, or defer when consecutive singles are banned.
+
+    `force` bypasses the consecutive-single ban: used by the final/boundary
+    flush where there is no future portrait to batch with, so deferring would
+    either drop the asset or stall the planning loop.
+    """
     screens: list[dict] = []
     for aid in portrait_ids:
-        if layout_state is not None and not layout_state.can_emit_pattern("screen-portrait-1"):
+        if (
+            not force
+            and layout_state is not None
+            and not layout_state.can_emit_pattern("screen-portrait-1")
+        ):
             if pending is not None:
                 pending.append(aid)
             continue
@@ -732,9 +748,10 @@ def _plan_portrait_triple_row(
     assets_map: dict[str, dict],
     layout_state: ScreenLayoutPlannerState | None,
     pending: list[str],
+    force: bool = False,
 ) -> list[dict]:
     """三张一排；若与上一屏冲突则降为双列并回退余片。"""
-    if layout_state is None or layout_state.can_emit_pattern("screen-portrait-3"):
+    if force or layout_state is None or layout_state.can_emit_pattern("screen-portrait-3"):
         return [
             _make_screen(
                 "screen-portrait-3",
@@ -787,8 +804,14 @@ def _flush_portrait_pending(
     *,
     assets_map: dict[str, dict] | None = None,
     layout_state: ScreenLayoutPlannerState | None = None,
+    force: bool = False,
 ) -> list[dict]:
-    """Emit portrait-3 (风景竖图) or portrait-1 (含人物) for buffered std portraits."""
+    """Emit portrait-3 (风景竖图) or portrait-1 (含人物) for buffered std portraits.
+
+    `force` bypasses consecutive-pattern bans so a boundary/final flush always
+    makes progress: deferring the last buffered portrait back to `pending` would
+    otherwise stall the planning loop or silently drop the asset.
+    """
     assets_map = assets_map or {}
     screens: list[dict] = []
     buf = [a for a in pending if _is_std_portrait_id(a, aspects)]
@@ -808,6 +831,7 @@ def _flush_portrait_pending(
             assets_map=assets_map,
             layout_state=layout_state,
             pending=pending,
+            force=force,
         )
     )
 
@@ -819,6 +843,7 @@ def _flush_portrait_pending(
             assets_map=assets_map,
             layout_state=layout_state,
             pending=pending,
+            force=force,
         )
         if not placed:
             break
@@ -842,6 +867,7 @@ def _flush_portrait_pending(
                 assets_map=assets_map,
                 layout_state=layout_state,
                 pending=pending,
+                force=force,
             )
         )
     return screens
