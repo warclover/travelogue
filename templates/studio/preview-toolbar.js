@@ -631,6 +631,85 @@ var narrateJobId = null;
     });
   }
 
+  function loadAestheticExplain(tripId, container) {
+    if (!container) return;
+    fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/aesthetic")
+      .then(function (resp) { return resp.ok ? resp.json() : null; })
+      .then(function (data) {
+        if (!data || !data.ok || !data.enabled) {
+          container.hidden = true;
+          return;
+        }
+        var assets = data.assets || [];
+        if (!assets.length) {
+          container.hidden = true;
+          return;
+        }
+        container.hidden = false;
+        container.innerHTML = "";
+        renderExplainBlock(container, "照片审美分项", {
+          summary:
+            "已评分 " +
+            (data.scoredCount != null ? data.scoredCount : assets.length) +
+            " 张 · 成册中各图 top-3 维度",
+          details: [],
+        });
+        assets.forEach(function (row) {
+          var block = document.createElement("div");
+          block.className = "preview-drawer__aesthetic-asset";
+          var head = document.createElement("p");
+          head.className = "preview-drawer__aesthetic-head";
+          var overall =
+            row.overall != null ? Math.round(Number(row.overall) * 100) + " 分" : "—";
+          head.textContent = (row.id || "?") + " · overall " + overall;
+          block.appendChild(head);
+          var list = document.createElement("ul");
+          list.className = "preview-drawer__explain-list";
+          (row.explain || []).forEach(function (item) {
+            var li = document.createElement("li");
+            li.textContent = item.reason || item.label || item.code || "";
+            list.appendChild(li);
+          });
+          block.appendChild(list);
+          container.appendChild(block);
+        });
+      })
+      .catch(function () {
+        container.hidden = true;
+      });
+  }
+
+  function initDisplayedAestheticTitles(tripId) {
+    fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/aesthetic")
+      .then(function (resp) { return resp.ok ? resp.json() : null; })
+      .then(function (data) {
+        if (!data || !data.ok || !data.enabled) return;
+        var byId = {};
+        (data.assets || []).forEach(function (row) {
+          if (row && row.id) byId[row.id] = row;
+        });
+        document
+          .querySelectorAll('.layout-screen[data-block="layout-screen"][data-asset-ids]')
+          .forEach(function (screen) {
+            var aid = (screen.getAttribute("data-asset-ids") || "").split(",")[0];
+            var row = byId[aid];
+            if (!row || !row.explain || !row.explain.length) return;
+            var img = screen.querySelector("img");
+            if (!img) return;
+            var tips = row.explain
+              .map(function (item) { return item.reason || item.label; })
+              .filter(Boolean)
+              .join("；");
+            var pct = row.overall != null ? Math.round(Number(row.overall) * 100) : null;
+            img.setAttribute(
+              "title",
+              (pct != null ? "审美 " + pct + " · " : "") + tips
+            );
+          });
+      })
+      .catch(function () { /* fail-open */ });
+  }
+
   function fetchEntry(tripId) {
     return fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry")
       .then(function (r) { return r.ok ? r.json() : null; })
@@ -748,6 +827,7 @@ var narrateJobId = null;
       '<button type="button" class="preview-drawer__g1-regenerate">重新生成结构</button>' +
       "</div>" +
       '<div class="preview-drawer__explain"></div>' +
+      '<div class="preview-drawer__aesthetic" hidden></div>' +
       '<button type="button" class="preview-drawer__primary preview-drawer__apply-layout">应用排版</button>';
 
     function pollStudioJob(jobId, onDone) {
@@ -1021,6 +1101,7 @@ var narrateJobId = null;
         if (g1Actions) g1Actions.hidden = true;
       }
       loadChapterExplain(tripId, bodyEl.querySelector(".preview-drawer__explain"));
+      loadAestheticExplain(tripId, bodyEl.querySelector(".preview-drawer__aesthetic"));
       var applyBtn = bodyEl.querySelector(".preview-drawer__apply-layout");
       applyBtn.hidden = !_layoutPending;
       applyBtn.addEventListener("click", function () {
@@ -1246,6 +1327,7 @@ var narrateJobId = null;
     initTemplateBadge(root, tripId);
     var drawers = initPreviewDrawers(root, tripId);
     initG1Banner(root, tripId, drawers);
+    initDisplayedAestheticTitles(tripId);
 
     var longshotBtn = document.createElement("button");
     longshotBtn.type = "button";

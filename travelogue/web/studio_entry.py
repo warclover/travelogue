@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from travelogue.web.studio_aesthetic import build_aesthetic_entry_summary
 from travelogue.web.studio_constants import STUDIO_USER_NOTES_MAX_LEN
 from travelogue.templating.summary import build_template_summary
 from travelogue.web.studio_telemetry import build_pipeline_telemetry_summary
@@ -138,7 +139,7 @@ def build_chapter_summaries(trip: dict) -> list[dict[str, Any]]:
     return rows
 
 
-def build_entry(trip: dict, trip_id: str) -> dict[str, Any]:
+def build_entry(trip: dict, trip_id: str, *, aesthetic_enabled: bool = True) -> dict[str, Any]:
     """Assemble the entry payload (previewUrl, peakScreenId, intentSummary)."""
     peak = resolve_peak_screen_id(trip)
     preview_url = f"/{trip_id}/index.html"
@@ -157,5 +158,6 @@ def build_entry(trip: dict, trip_id: str) -> dict[str, Any]:
         "g1Pending": pipeline.get("status") == "structure_draft",
         "chapters": build_chapter_summaries(trip),
         "telemetry": telemetry,
+        "aesthetic": build_aesthetic_entry_summary(trip, enabled=aesthetic_enabled),
         "template": build_template_summary(trip),
     }

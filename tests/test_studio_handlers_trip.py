@@ -11,6 +11,7 @@ import pytest
 from travelogue.services.trip import TripService
 from travelogue.services.trip_factory import create_trip
 from travelogue.web.studio_handlers.trip_handlers import (
+    handle_aesthetic,
     handle_chapter_layout,
     handle_entry,
     handle_patch_intent,
@@ -86,6 +87,57 @@ def test_handle_entry_success(tmp_path: Path) -> None:
     assert status == 200
     assert body["ok"] is True
     assert body.get("previewUrl") == "/demo-entry/index.html"
+    assert "aesthetic" in body
+    assert body["aesthetic"]["enabled"] is True
+
+
+def test_handle_aesthetic_not_found(tmp_path: Path) -> None:
+    handler = MockStudioHandler(tmp_path / "trips")
+    handle_aesthetic(handler, "missing-trip")
+    assert handler.response == (404, {"ok": False, "error": "trip not found"})
+
+
+def test_handle_aesthetic_success(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trip_json = create_trip("demo-ae", trips_dir, title="审美", place="京都")
+    trip = TripService(root=trips_dir.parent).load(trip_json)
+    trip["assets"] = [
+        {
+            "id": "img-1",
+            "type": "image",
+            "displayFile": "media/img-1.webp",
+            "quality": {
+                "aesthetic": {
+                    "version": "pa-v0.1",
+                    "source": "rules",
+                    "overall": 0.6,
+                    "confidence": 0.8,
+                    "dims": {
+                        "composition": 0.7,
+                        "exposure": 0.5,
+                        "color": 0.6,
+                        "lighting": 0.4,
+                        "subjectClarity": 0.55,
+                    },
+                    "signals": {},
+                    "critique": None,
+                }
+            },
+        }
+    ]
+    trip["chapters"] = [{"screens": [{"slots": [{"assetId": "img-1"}]}]}]
+    TripService(root=trips_dir.parent).save(trip, trip_json)
+
+    handler = MockStudioHandler(trips_dir, path="/__travelogue/trips/demo-ae/aesthetic")
+    handle_aesthetic(handler, "demo-ae")
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 200
+    assert body["ok"] is True
+    assert body["scoredCount"] == 1
+    assert len(body["assets"]) == 1
+    assert body["assets"][0]["id"] == "img-1"
+    assert len(body["assets"][0]["explain"]) == 3
 
 
 def test_handle_chapter_layout_requires_trip_id(tmp_path: Path) -> None:

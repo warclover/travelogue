@@ -14,11 +14,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from PIL import Image
 
-from travelogue.config import AestheticConfig
+from travelogue.config import AestheticConfig, AestheticWeights
 from travelogue.curation.asset_quality import asset_sharpness
 from travelogue.curation.curate_scoring import (
     _axis_rule_of_thirds_score,
@@ -38,6 +38,7 @@ from travelogue.media.exposure_metrics import (
 
 AESTHETIC_VERSION = "pa-v0.1"
 SIGNAL_CACHE_FILE = "phase_pa_aesthetic.json"
+AestheticPurpose = Literal["default", "cover", "hero", "solo"]
 _SHARP_NORM_K = 150.0
 _LOW_CONF_MEDIA = frozenset({"screenshot", "thumbnail", "reupload"})
 
@@ -74,6 +75,93 @@ def _read_mean_luma(asset: dict) -> float | None:
         except (TypeError, ValueError):
             pass
     return None
+
+
+def _read_topiq_score(asset: dict) -> float | None:
+    """``quality.aestheticScore`` from pyiqa (topiq), or ``None`` when absent."""
+    q = asset.get("quality")
+    if isinstance(q, dict) and q.get("aestheticScore") is not None:
+        try:
+            return _clamp01(float(q["aestheticScore"]))
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def _rules_overall_from_weights(dims: dict[str, float], weights: AestheticWeights) -> float:
+    w_map = weights.as_dim_map()
+    w_total = sum(w_map.values()) or 1.0
+    return sum(w_map[k] * float(dims[k]) for k in dims if k in w_map) / w_total
+
+
+def _rules_overall_from_dims(dims: dict[str, float], cfg: AestheticConfig) -> float:
+    return _rules_overall_from_weights(dims, cfg.weights)
+
+
+def resolve_aesthetic_weights(
+    cfg: AestheticConfig,
+    purpose: AestheticPurpose = "default",
+) -> AestheticWeights:
+    """Purpose-specific Layer 1 weights when ``use_purpose_presets`` is on."""
+    if not cfg.use_purpose_presets or purpose == "default":
+        return cfg.weights
+    if purpose == "cover":
+        return cfg.presets.cover
+    if purpose == "hero":
+        return cfg.presets.hero
+    if purpose == "solo":
+        return cfg.presets.solo
+    return cfg.weights
+
+
+def purpose_overall(
+    asset: dict,
+    purpose: AestheticPurpose,
+    *,
+    cfg: AestheticConfig | None = None,
+) -> float | None:
+    """Recompute overall from stored dims with purpose weights (+ optional ML blend)."""
+    if purpose == "default":
+        return aesthetic_overall(asset)
+    cfg = cfg or AestheticConfig()
+    if not cfg.use_purpose_presets:
+        return aesthetic_overall(asset)
+    ae = asset_aesthetic(asset)
+    if not ae:
+        return None
+    dims = ae.get("dims")
+    if not isinstance(dims, dict) or not dims:
+        return aesthetic_overall(asset)
+    required = frozenset(
+        {"composition", "exposure", "color", "lighting", "subjectClarity"}
+    )
+    if not required.issubset(dims.keys()):
+        return aesthetic_overall(asset)
+    rules = _rules_overall_from_weights(dims, resolve_aesthetic_weights(cfg, purpose))
+    blended, _, _ = _blend_ml_overall(rules, asset, cfg=cfg)
+    return blended
+
+
+def _blend_ml_overall(
+    rules_overall: float,
+    asset: dict,
+    *,
+    cfg: AestheticConfig,
+) -> tuple[float, str, dict[str, float]]:
+    """Blend rules overall with topiq when ``ml_calibrate`` is enabled."""
+    base_source = str(cfg.source or "rules")
+    if not cfg.ml_calibrate:
+        return rules_overall, base_source, {}
+    ml = _read_topiq_score(asset)
+    if ml is None:
+        return rules_overall, base_source, {}
+    blend = _clamp01(cfg.ml_calibrate_blend)
+    blended = (1.0 - blend) * rules_overall + blend * ml
+    extra = {
+        "rulesOverall": round(rules_overall, 4),
+        "mlScore": round(ml, 4),
+    }
+    return round(_clamp01(blended), 4), "rules+ml", extra
 
 
 def _read_dominant_tone(asset: dict) -> str | None:
@@ -256,15 +344,74 @@ def compute_aesthetic(
         if val is not None:
             out_signals[key] = round(val, 4)
 
+    overall, final_source, ml_signals = _blend_ml_overall(overall, asset, cfg=cfg)
+    out_signals.update(ml_signals)
+
     return {
         "version": AESTHETIC_VERSION,
-        "source": str(source or cfg.source or "rules"),
+        "source": str(source or final_source),
         "overall": round(_clamp01(overall), 4),
         "confidence": round(_clamp01(confidence), 4),
         "dims": dims,
         "signals": out_signals,
         "critique": None,
     }
+
+
+def refresh_aesthetic_ml_blend(asset: dict, *, cfg: AestheticConfig | None = None) -> bool:
+    """Re-blend ``quality.aesthetic.overall`` after topiq scores are written (PA-4)."""
+    cfg = cfg or AestheticConfig()
+    if not cfg.ml_calibrate:
+        return False
+    ml = _read_topiq_score(asset)
+    if ml is None:
+        return False
+    q = asset.get("quality")
+    if not isinstance(q, dict):
+        return False
+    ae = q.get("aesthetic")
+    if not isinstance(ae, dict):
+        return False
+    dims = ae.get("dims")
+    if not isinstance(dims, dict) or not dims:
+        return False
+    rules = _rules_overall_from_dims(dims, cfg)
+    overall, final_source, ml_signals = _blend_ml_overall(rules, asset, cfg=cfg)
+    ae["overall"] = overall
+    ae["source"] = final_source
+    sig = ae.setdefault("signals", {})
+    if isinstance(sig, dict):
+        sig.update(ml_signals)
+    return True
+
+
+def apply_aesthetic_ml_calibration(
+    assets: list[dict],
+    *,
+    trip_dir: Path,
+    cfg: Any | None = None,
+) -> bool:
+    """Run topiq scoring + refresh ``quality.aesthetic.overall`` (curate hook, PA-4).
+
+    Fail-open: returns False when ``ml_calibrate`` is off, pyiqa/torch unavailable,
+    or no assets were scored — existing rules-only overall values are kept.
+    """
+    from travelogue.config import AppConfig
+
+    app_cfg = cfg if cfg is not None else AppConfig()
+    ae_cfg = app_cfg.aesthetic
+    if not ae_cfg.enabled or not ae_cfg.ml_calibrate:
+        return False
+    from travelogue.curation.photo_cull_ml import apply_aesthetic_scores
+
+    scored = apply_aesthetic_scores(
+        assets,
+        trip_dir=trip_dir,
+        cfg=app_cfg.cull,
+        force_ml=True,
+    )
+    refreshed = sum(1 for a in assets if refresh_aesthetic_ml_blend(a, cfg=ae_cfg))
+    return scored or refreshed > 0
 
 
 def asset_aesthetic(asset: dict) -> dict | None:
@@ -302,10 +449,19 @@ def aesthetic_dim(asset: dict, dim: str) -> float | None:
         return None
 
 
-def median_aesthetic_overall(assets: list[dict]) -> float:
+def median_aesthetic_overall(
+    assets: list[dict],
+    *,
+    purpose: AestheticPurpose = "default",
+    cfg: AestheticConfig | None = None,
+) -> float:
+    cfg = cfg or AestheticConfig()
     values: list[float] = []
     for asset in assets:
-        val = aesthetic_overall(asset)
+        if purpose == "default" and not cfg.use_purpose_presets:
+            val = aesthetic_overall(asset)
+        else:
+            val = purpose_overall(asset, purpose, cfg=cfg)
         if val is not None and val > 0:
             values.append(val)
     if not values:
@@ -324,11 +480,14 @@ def aesthetic_multiplier(
     enabled: bool = True,
     lo: float = 0.7,
     hi: float = 1.3,
+    purpose: AestheticPurpose = "cover",
+    cfg: AestheticConfig | None = None,
 ) -> float:
     """Overall relative to batch median, clamped (PA-T07 · U-COVER)."""
     if not enabled:
         return 1.0
-    overall = aesthetic_overall(asset)
+    cfg = cfg or AestheticConfig()
+    overall = purpose_overall(asset, purpose, cfg=cfg)
     if overall is None or median_overall <= 0:
         return 1.0
     ratio = overall / median_overall

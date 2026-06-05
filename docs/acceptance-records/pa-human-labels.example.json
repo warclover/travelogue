@@ -1,0 +1,21 @@
+{
+  "version": "1",
+  "notes": "humanScore ∈ [0,1] or 1–10 (normalized in script); predictedOverall from quality.aesthetic.overall",
+  "rows": [
+    {
+      "assetId": "asset-001",
+      "humanScore": 0.8,
+      "predictedOverall": 0.71
+    },
+    {
+      "assetId": "asset-002",
+      "humanScore": 0.5,
+      "predictedOverall": 0.55
+    },
+    {
+      "assetId": "asset-003",
+      "humanScore": 0.9,
+      "predictedOverall": 0.62
+    }
+  ]
+}

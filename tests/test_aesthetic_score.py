@@ -7,11 +7,13 @@ from PIL import Image
 from travelogue.config import AestheticConfig
 from travelogue.curation.aesthetic_score import (
     AESTHETIC_VERSION,
+    apply_aesthetic_ml_calibration,
     build_aesthetic_explain,
     compute_aesthetic,
     compute_aesthetic_signals,
     load_signal_cache,
     normalize_sharpness,
+    refresh_aesthetic_ml_blend,
     save_signal_cache,
 )
 
@@ -140,3 +142,68 @@ def test_mean_luma_compat_reading():
     signals = compute_aesthetic_signals(img, asset)
     # midtoneCenter computed from the fallback meanLuma=0.5 → fully centred.
     assert signals["midtoneCenter"] == 1.0
+
+
+def test_ml_calibrate_blends_topiq():
+    cfg = AestheticConfig(ml_calibrate=True, ml_calibrate_blend=0.4)
+    asset = _asset(
+        quality={"sharpness": 300.0, "meanLuma": 0.5, "aestheticScore": 1.0}
+    )
+    rules_block = compute_aesthetic(asset, signals=_full_signals())
+    block = compute_aesthetic(asset, signals=_full_signals(), cfg=cfg)
+    expected = 0.6 * rules_block["overall"] + 0.4 * 1.0
+    assert block["source"] == "rules+ml"
+    assert abs(block["overall"] - round(expected, 4)) < 1e-6
+    assert block["signals"]["rulesOverall"] == rules_block["overall"]
+    assert block["signals"]["mlScore"] == 1.0
+
+
+def test_ml_calibrate_disabled_ignores_topiq():
+    asset = _asset(
+        quality={"sharpness": 300.0, "meanLuma": 0.5, "aestheticScore": 0.2}
+    )
+    block = compute_aesthetic(asset, signals=_full_signals(), cfg=AestheticConfig())
+    assert block["source"] == "rules"
+    assert "mlScore" not in block.get("signals", {})
+
+
+def test_ml_calibrate_no_score_stays_rules():
+    cfg = AestheticConfig(ml_calibrate=True, ml_calibrate_blend=0.4)
+    block = compute_aesthetic(_asset(), signals=_full_signals(), cfg=cfg)
+    assert block["source"] == "rules"
+    assert "mlScore" not in block.get("signals", {})
+
+
+def test_refresh_aesthetic_ml_blend_updates_existing_block():
+    cfg = AestheticConfig(ml_calibrate=True, ml_calibrate_blend=0.4)
+    asset = _asset(
+        quality={
+            "sharpness": 300.0,
+            "meanLuma": 0.5,
+            "aestheticScore": 0.9,
+            "aesthetic": compute_aesthetic(_asset(), signals=_full_signals()),
+        }
+    )
+    rules_overall = asset["quality"]["aesthetic"]["overall"]
+    assert refresh_aesthetic_ml_blend(asset, cfg=cfg)
+    blended = asset["quality"]["aesthetic"]
+    assert blended["source"] == "rules+ml"
+    assert blended["overall"] == round(0.6 * rules_overall + 0.4 * 0.9, 4)
+
+
+def test_apply_ml_calibration_fail_open_without_torch(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "travelogue.curation.photo_cull_ml.apply_aesthetic_scores",
+        lambda *a, **k: False,
+    )
+    from travelogue.config import AppConfig
+
+    app_cfg = AppConfig()
+    app_cfg.aesthetic.ml_calibrate = True
+    asset = _asset()
+    asset.setdefault("quality", {})["aesthetic"] = compute_aesthetic(
+        asset, signals=_full_signals()
+    )
+    before = asset["quality"]["aesthetic"]["overall"]
+    assert not apply_aesthetic_ml_calibration([asset], trip_dir=tmp_path, cfg=app_cfg)
+    assert asset["quality"]["aesthetic"]["overall"] == before

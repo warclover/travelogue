@@ -21,6 +21,7 @@ from travelogue.web.studio_handlers import (
 )
 from travelogue.web.studio_handlers.common import (
     bind_studio_trip,
+    match_aesthetic,
     match_bento_preview,
     match_entry,
     match_trip_api,
@@ -188,6 +189,10 @@ class StudioMixin:
         cohort_trip_id = match_trip_cohort(path)
         if cohort_trip_id is not None:
             trip_handlers.handle_get_cohort(self, cohort_trip_id)
+            return True
+        aesthetic_trip_id = match_aesthetic(path)
+        if aesthetic_trip_id is not None:
+            trip_handlers.handle_aesthetic(self, aesthetic_trip_id)
             return True
         bento_trip_id = match_bento_preview(path)
         if bento_trip_id is not None:

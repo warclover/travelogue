@@ -2,8 +2,8 @@
 
 | 属性 | 内容 |
 |------|------|
-| **版本** | v1.0 |
-| **日期** | 2026-06-04 |
+| **版本** | v1.6 |
+| **日期** | 2026-06-05 |
 | **关联** | [ARCHITECTURE-OVERVIEW.md](./ARCHITECTURE-OVERVIEW.md) · [ADR-007](./adr/007-native-clustering.md) |
 
 本文档为算法清单的**可检索附录**：§1 为自研启发式与可选依赖对照；§2 为「文件路径 → 公开/核心函数」索引（`_` 前缀内部函数仅列关键入口相关项）。
@@ -69,6 +69,9 @@
 |------|------|----------|----------|-----------|
 | 五拍叙事弧 / CV 推断 profile | native | ✅ | — | `curation.arc_mode` |
 | 封面·英雄多因子打分 | native | ✅ | — | `curate_scoring` |
+| 封面美感比 U-COVER | native | ✅ | — | `aesthetic_multiplier` · `aesthetic.enabled` |
+| 章英雄/拼图主图 U-HERO | native | ✅ | — | `hero_score` · `aesthetic.overall` |
+| 单张强调 U-SOLO | native | ✅ | — | `solo_scoring` · `screen_planner` |
 | 三分法 / 饱和度封面加成 | native | ✅ | — | `curate_scoring` |
 | 桶内排序（burst·scene run·时间） | native | ✅ | — | `cluster_run_sort` |
 | 贪心逐屏规划 legacy | native | ✅ | — | `screen_planner` |
@@ -81,14 +84,18 @@
 | 人脸模板 1-NN 余弦 | hybrid | ✅ | OpenCV 提脸；无则 face_count 代理 | `cohort` / featured subjects |
 | 轻量 face_crop_embedding v1 | native | ✅ | numpy | `face_embed` |
 
-### 1.4 质量闸口（Phase 9）
+### 1.4 质量闸口与审美（Phase 9 · PA）
 
 | 能力 | 实现 | 默认可用 | 可选依赖 | 配置/开关 |
 |------|------|----------|----------|-----------|
 | 分位数模糊阈值 P2 | native | ✅ | — | `photo_cull` |
 | 规则 cullScore + 配额 | native | ✅ | — | `cull.mode=rules` |
 | 重复组 / 曝光极端规则 | native | ✅ | — | `photo_cull` |
-| ToPIQ-NR 美学分 | external | ❌ | `pyiqa` · torch（建议 GPU） | `cull.mode=ml/auto` |
+| ToPIQ-NR 美学分（cull 打分） | external | ❌ | `pyiqa` · torch（建议 GPU） | `cull.mode=ml/auto` |
+| topiq 校准 overall（curate·PA-4） | external | ❌ | 同上 | `aesthetic.ml_calibrate` · `force_ml` |
+| 审美信号缓存（ingest） | native | ✅ | PIL | `cache/phase_pa_aesthetic.json` |
+| topiq 分缓存（cull/校准） | native | ✅ | — | `cache/phase9_aesthetic.json` |
+| Studio 审美 explain（PA-T10） | native | ✅ | — | `GET …/trips/{id}/aesthetic` |
 
 ### 1.5 叙事与其它
 
@@ -107,6 +114,8 @@
 | **P3-Lite 聚类** | 基座（无需 torch） |
 | **P3-Full 场景簇** | `.[clip]` + sklearn + numpy |
 | **Phase 9 ML 筛图** | pyiqa + torch（CUDA 可选） |
+| **PA 路径 B 校准** | 同上 + `aesthetic.ml_calibrate: true` |
+| **PA 路径 A（默认）** | 基座即可（Layer 1 零依赖） |
 | **人脸 / cohort** | opencv-python |
 | **含视频 trip** | ffmpeg + ffprobe |
 
@@ -114,7 +123,7 @@
 
 ## §2 文件路径 → 函数索引
 
-仅列**算法相关**模块；编排类（`curate.py` 管线粘合、`clustering.py` 层调度）见 §2.8。
+仅列**算法相关**模块；编排类（`curate.py` 管线粘合、`clustering.py` 层调度）见 §2.10。
 
 ### 2.1 `travelogue/media/`
 
@@ -145,6 +154,7 @@
 | `ingest.py` | `content_signature` | MD5 文件摘要 |
 | | `_find_phash_asset_index` | phash 去重索引 |
 | | `_is_burst_duplicate` | 连拍时间去重 |
+| | `_attach_aesthetic` | PA-T05 · signals + `quality.aesthetic`（contentSig 缓存） |
 | | `ingest_into_trip` | 摄取主入口 |
 
 ### 2.2 `travelogue/curation/` · 分段与聚类
@@ -212,19 +222,31 @@
 | `screen_planner.py` | `_plan_one_screen` | 贪心单屏 |
 | | `plan_screens_for_chapter` | **章内组屏主入口** |
 | | `attach_screens_day_buckets` | 日桶附屏 |
+| | `_pick_main_landscape_id` | 拼图主槽 · U-HERO（overall + sharpness tiebreak） |
+| | `_pick_solo_from_candidates` | 整屏大图 · U-SOLO 候选择优 |
 | `curate_scoring.py` | `cover_score` / `pick_cover_asset_id` | 封面打分选型 |
+| | `effective_cover_score` | 封面有效分（含 U-COVER 美感比） |
+| | `build_cover_explain` | 封面因子解释（含 `aesthetic` 标签） |
 | | `pick_chapter_hero` | 章英雄图 |
 | | `sort_bucket_asset_ids` | 桶内排序 |
 | | `_quality_multiplier` / `aesthetic_multiplier` | 清晰度比 + PA overall 中位数比（U-COVER） |
 | | `hero_score` / `effective_hero_score` | 章英雄 · PA overall×composition×subjectClarity（U-HERO） |
 | `aesthetic_score.py` | `compute_aesthetic_signals` | 逐图 CV 信号（可 contentSig 缓存，PA-T05） |
-| | `compute_aesthetic` | 五维合成 + overall/confidence（PA-T04） |
-| | `build_aesthetic_explain` | 维度 top 因子解释 |
+| | `compute_aesthetic` | 五维合成 + overall/confidence（PA-T04）；可选 topiq 校准（PA-T12） |
+| | `normalize_sharpness` | 单图 sharpness→[0,1] 饱和曲线 |
+| | `asset_aesthetic` / `aesthetic_overall` / `aesthetic_dim` | 读 `quality.aesthetic`（fail-open） |
+| | `refresh_aesthetic_ml_blend` | curate 后重算 overall = (1−blend)·rules + blend·topiq |
+| | `apply_aesthetic_ml_calibration` | curate 入口：topiq 打分 + 刷新 overall（fail-open） |
+| | `build_aesthetic_explain` | 维度 top 因子解释（PA-T04/T10） |
 | | `aesthetic_multiplier` | overall÷批中位数，clamp[0.7,1.3]（U-COVER） |
+| | `purpose_overall` / `resolve_aesthetic_weights` | 用途预设权重重算 overall（use_purpose_presets） |
 | | `median_aesthetic_overall` | 批内 overall 中位数 |
+| `pa_acceptance.py` | `spearman_srcc` / `export_pa_blind_review` | PA §8 验收 · SRCC + 盲评导出 |
 | `solo_scoring.py` | `solo_score` | U-SOLO 单张强调分（PA-T09） |
 | | `pick_solo_asset_id` | 整屏大图候选择优 |
+| | `sort_ids_by_solo_score` | 竖图 flush 排序 |
 | | `tone_uniqueness` | 章内 ΔE76 色调独特性 |
+| | `duplicate_penalty` | cover/hero/burst 重复惩罚 |
 | | `build_solo_explain` | 单张强调因子解释 |
 | `degradation.py` | `assess_degradation` | legacy 降级判定 |
 | `cohort_faces.py` | `build_subject_templates` | 种子脸模板 |
@@ -232,7 +254,9 @@
 | | `apply_cohort_tags` | 写 cohort 元数据 |
 | `media_classify.py` | `classify_media_class` | 截图/缩略图启发式 |
 | `photo_cull.py` | `run_photo_cull` | **质量闸口主入口** |
-| `photo_cull_ml.py` | `apply_aesthetic_scores` | pyiqa 美学回填 |
+| `photo_cull_ml.py` | `apply_aesthetic_scores` | pyiqa 美学回填（cull ML 或 PA-4 `force_ml`） |
+| | `_ml_runtime_available` | pyiqa/torch 可用性（含 PA 校准强制路径） |
+| | `pyiqa_available` / `resolve_effective_mode` | ML 路径探测 |
 
 ### 2.5 `travelogue/curation/mosaic/`
 
@@ -243,6 +267,8 @@
 | `compose.py` | `score_window_candidates` | 窗内打分 |
 | | `pick_best_window` | 最优窗 |
 | `scorer.py` | `score_candidate` | Mosaic 多维惩罚/加分 |
+| | `_main_quality_penalty` | 主槽 overall 阈值惩罚（U-HERO 回退 sharpness） |
+| `hero.py` | `pick_main_for_pattern` | 版式主槽 → `_pick_main_landscape_id` |
 | `search.py` | `replan_day_buckets_beam` | **Beam Search 主入口** |
 | `builders.py` | `build_screen` | 候选→screen 结构 |
 | | `try_order_for_pattern` | 槽位排列 |
@@ -251,7 +277,18 @@
 | `replan.py` | `replan_screen` | 单屏局部重排 |
 | `selfheal.py` | `try_self_heal_pick` | 失败收紧重试 |
 
-### 2.6 评估与其它
+### 2.7 `travelogue/web/` · Studio
+
+| 文件 | 函数 | 算法摘要 |
+|------|------|----------|
+| `studio_aesthetic.py` | `build_aesthetic_studio_payload` | PA-T10 · 成册图审美 explain API |
+| | `build_asset_aesthetic_studio_row` | 单资产 overall + top-3 维度 |
+| | `build_aesthetic_entry_summary` | entry 摘要（scoredCount / displayedCount） |
+| | `displayed_asset_ids` | 成册 assetId 顺序（dedupe） |
+| `studio_entry.py` | `build_entry` | 预览入口（含 `aesthetic` 摘要） |
+| `studio_telemetry.py` | `build_pipeline_telemetry_summary` | pipeline.timings 摘要 |
+
+### 2.8 评估与其它
 
 | 文件 | 函数 | 算法摘要 |
 |------|------|----------|
@@ -261,7 +298,7 @@
 | `clustering.py` | `run_clustering_layer` | **聚类层主入口** |
 | `curate.py` | `run_curate` | **策展主入口** |
 
-### 2.7 服务层（非排版核心）
+### 2.9 服务层（非排版核心）
 
 | 文件 | 函数 | 说明 |
 |------|------|------|
@@ -270,17 +307,21 @@
 | `render/golden_regression.py` | — | 布局 golden 对比 |
 | `render/dom_compare.py` | — | DOM 结构对比 |
 
-### 2.8 管线入口速查
+### 2.10 管线入口速查
 
 ```
 ingest_into_trip          → media/ingest.py
+  └ _attach_aesthetic     → aesthetic_score.py（PA Layer 1 + 缓存）
 run_clustering_layer      → curation/clustering.py
   ├ detect_geo_events     → geo_events.py
   └ compute_scene_clusters→ scene_clusters.py (+ vision/cache.py)
 run_curate                → curation/curate.py
-  ├ run_photo_cull        → photo_cull.py
-  ├ plan_screens_*        → screen_planner.py
+  ├ apply_aesthetic_ml_calibration → aesthetic_score.py（可选 PA-4）
+  ├ run_photo_cull        → photo_cull.py (+ photo_cull_ml.py)
+  ├ pick_cover / hero     → curate_scoring.py（U-COVER / U-HERO）
+  ├ plan_screens_*        → screen_planner.py（U-SOLO 整屏大图）
   └ maybe_replan_chapters → layout_search.py → mosaic/search.py
+Studio GET …/aesthetic    → web/studio_aesthetic.py（PA-T10 explain）
 ```
 
 ---
@@ -293,3 +334,7 @@ run_curate                → curation/curate.py
 | v1.1 | 2026-06-05 | PA-1：登记审美 Layer 1（exposure_metrics / color_metrics 和谐 / aesthetic_score） |
 | v1.2 | 2026-06-05 | PA-2：U-COVER/U-HERO 接入 overall（封面乘子 + hero 排序） |
 | v1.3 | 2026-06-05 | PA-3：U-SOLO 单张强调（solo_scoring + screen_planner 接线） |
+| v1.4 | 2026-06-05 | PA-4：topiq 校准 overall（ml_calibrate + curate 接线） |
+| v1.5 | 2026-06-05 | PA-T10：Studio 审美 explain API + 预览抽屉展示 |
+| v1.6 | 2026-06-05 | PA-T11：清单补全（§1.4 审美闸口 · §2.1 ingest · §2.4/2.5/2.7 全 PA 函数 · 管线速查） |
+| v1.7 | 2026-06-05 | 验收脚本 + purpose presets + ingest aestheticMs + mosaic U-SOLO |

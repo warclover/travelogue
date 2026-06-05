@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from travelogue.curation.aesthetic_score import aesthetic_dim, aesthetic_overall, asset_aesthetic
+from travelogue.curation.aesthetic_score import aesthetic_dim, aesthetic_overall, asset_aesthetic, purpose_overall
 from travelogue.curation.asset_quality import asset_sharpness
 from travelogue.media.color_metrics import delta_e_cie76, triangular_score
 
@@ -129,7 +129,9 @@ def solo_score(
     if not _resolve_solo_enabled(aesthetic_enabled):
         return aesthetic_overall(asset) or 0.5
 
-    overall = aesthetic_overall(asset)
+    overall = purpose_overall(asset, "solo")
+    if overall is None:
+        overall = aesthetic_overall(asset)
     base = overall if overall is not None else 0.5
 
     peers = list(peer_assets or [])

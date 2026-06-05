@@ -17,7 +17,18 @@ aesthetic:
 
   thumb_px: 32              # 共享灰度缩略图边长（与 ingest 色彩缩略图一致）
 
-  # 以下为后续阶段预留开关（PA-1 不生效）
-  ml_calibrate: false        # PA-4 · 用 topiq 校准 overall
-  ml_calibrate_blend: 0.4
-  use_purpose_presets: true  # PA-2 · cover/hero/solo 各用不同权重预设
+  # PA-4 · 路径 B：curate 阶段用 topiq 校准 overall（需 pyiqa+torch；默认关）
+  ml_calibrate: false        # true → overall = (1-blend)·rules + blend·topiq
+  ml_calibrate_blend: 0.4    # 默认 0.6·rules + 0.4·topiq；设备/指标沿用 cull.*
+  use_purpose_presets: true  # cover/hero/solo 各用不同 weights 预设
+
+  presets:                   # 可选 · 覆盖默认用途权重
+    cover:
+      composition: 0.30
+      color: 0.25
+    hero:
+      composition: 0.28
+      subjectClarity: 0.25
+    solo:
+      lighting: 0.28
+      composition: 0.22

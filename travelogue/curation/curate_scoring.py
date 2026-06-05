@@ -454,9 +454,9 @@ def hero_score(
         base *= 1.25
     media = cover_class_weight(asset.get("mediaClass"))
     if _resolve_aesthetic_enabled(aesthetic_enabled):
-        from travelogue.curation.aesthetic_score import aesthetic_dim, aesthetic_overall
+        from travelogue.curation.aesthetic_score import aesthetic_dim, purpose_overall
 
-        overall = aesthetic_overall(asset)
+        overall = purpose_overall(asset, "hero")
         if overall is not None:
             comp = aesthetic_dim(asset, "composition")
             subj = aesthetic_dim(asset, "subjectClarity")
@@ -522,7 +522,7 @@ def _cover_batch_medians(
     if _resolve_aesthetic_enabled(aesthetic_enabled):
         from travelogue.curation.aesthetic_score import median_aesthetic_overall
 
-        median_overall = median_aesthetic_overall(pool)
+        median_overall = median_aesthetic_overall(pool, purpose="cover")
     return median_sharp, median_overall
 
 

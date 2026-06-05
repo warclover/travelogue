@@ -642,6 +642,15 @@ def run_curate(
     res_warn = preflight.res_warn
     saved_memory_anchors = preflight.saved_memory_anchors
 
+    if trip_dir is not None and app_cfg.aesthetic.enabled and app_cfg.aesthetic.ml_calibrate:
+        from travelogue.curation.aesthetic_score import apply_aesthetic_ml_calibration
+
+        apply_aesthetic_ml_calibration(
+            trip.get("assets") or [],
+            trip_dir=trip_dir,
+            cfg=app_cfg,
+        )
+
     from travelogue.curation.screen_planner import (
         LAYOUT_ENGINE_LEGACY,
         LAYOUT_ENGINE_SCREENS,

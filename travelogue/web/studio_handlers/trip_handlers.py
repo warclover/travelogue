@@ -103,7 +103,36 @@ def handle_entry(handler: StudioHandlerProtocol, trip_id: str) -> None:
     if loaded is None:
         return
     _trip_dir, trip = loaded
-    handler._json_response(200, {"ok": True, **build_entry(trip, trip_id)})
+    ctx = studio_ctx(handler)
+    enabled = bool(ctx.cfg.aesthetic.enabled)
+    handler._json_response(200, {"ok": True, **build_entry(trip, trip_id, aesthetic_enabled=enabled)})
+
+
+def handle_aesthetic(handler: StudioHandlerProtocol, trip_id: str) -> None:
+    from travelogue.web.studio_aesthetic import build_aesthetic_studio_payload
+
+    query = parse_qs(urlparse(handler.path).query)
+    asset_id = (query.get("assetId") or query.get("asset_id") or [None])[0]
+    try:
+        limit = int((query.get("limit") or ["3"])[0])
+    except ValueError:
+        limit = 3
+    limit = max(1, min(limit, 5))
+
+    loaded = load_trip_or_404(handler, trip_id)
+    if loaded is None:
+        return
+    _trip_dir, trip = loaded
+    ctx = studio_ctx(handler)
+    enabled = bool(ctx.cfg.aesthetic.enabled)
+    asset_ids = [str(asset_id)] if asset_id else None
+    payload = build_aesthetic_studio_payload(
+        trip,
+        enabled=enabled,
+        asset_ids=asset_ids,
+        limit=limit,
+    )
+    handler._json_response(200, {"ok": True, **payload})
 
 
 def handle_bento_preview(handler: StudioHandlerProtocol, trip_id: str) -> None:

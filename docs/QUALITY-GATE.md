@@ -39,4 +39,8 @@ python scripts/e2e_trip_acceptance.py linzhi mao
 | `curation.clustering.embedStats` | `#/$defs/tripClustering.properties.embedStats` | `clustering.py` / CLIP encoder |
 | `curation.clustering.embedSkipped` | `#/$defs/tripClustering.properties.embedSkipped` | `clustering.py` |
 
-Studio 读取摘要：`GET /__travelogue/trips/{id}/entry` → `telemetry` 字段（见 `build_entry`）。
+Studio 读取摘要：`GET /__travelogue/trips/{id}/entry` → `telemetry`、`aesthetic` 字段（见 `build_entry`）。
+
+审美分项（PA-T10）：`GET /__travelogue/trips/{id}/aesthetic` → 成册各图 top-3 维度（见 `studio_aesthetic.py`）。
+
+PA 验收（SRCC / 盲评导出）：`python scripts/pa_aesthetic_acceptance.py --trip-dir trips/{id}`。

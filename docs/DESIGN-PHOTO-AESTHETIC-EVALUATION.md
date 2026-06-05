@@ -6,7 +6,7 @@
 | **日期** | 2026-06-05 |
 | **代号** | PA（Photo Aesthetic） |
 | **关联** | [algorithm-inventory.md](./algorithm-inventory.md) · [QUALITY-GATE.md](./QUALITY-GATE.md) · [cover-selection-plan.md](./cover-selection-plan.md) · [DESIGN-PHASE15-mosaic-system.md](./DESIGN-PHASE15-mosaic-system.md) |
-| **状态** | 设计评审中 · 未排期实现 |
+| **状态** | PA-1～PA-4 + T10/T11 已落地 · PA-5（MLLM）未排期 |
 
 ---
 

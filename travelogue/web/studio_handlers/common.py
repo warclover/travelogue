@@ -73,6 +73,12 @@ def match_entry(path: str) -> str | None:
     return match_trip_suffix(path, "/entry")
 
 
+def match_aesthetic(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import AESTHETIC_SUFFIX
+
+    return match_trip_suffix(path, AESTHETIC_SUFFIX)
+
+
 def match_bento_preview(path: str) -> str | None:
     return match_trip_suffix(path, "/bento-preview")
 

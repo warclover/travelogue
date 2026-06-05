@@ -134,6 +134,7 @@ def test_build_entry_includes_pipeline_and_chapters():
     assert entry["pipelineStatus"] == "structure_draft"
     assert entry["g1Pending"] is True
     assert entry["chapters"][0]["memoryAnchors"] == ["寺", "雨"]
+    assert entry["aesthetic"]["enabled"] is True
 
 
 def test_chapter_summaries_empty_without_chapters():

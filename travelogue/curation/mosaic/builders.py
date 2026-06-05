@@ -53,6 +53,25 @@ def _split_portrait_landscape(
     return portraits, landscapes
 
 
+def _pick_solo_portrait_for_mosaic(
+    portrait_ids: list[str],
+    assets_map: dict[str, dict],
+) -> str | None:
+    """U-SOLO · prefer aesthetic solo score when choosing the portrait tile."""
+    if not portrait_ids:
+        return None
+    if len(portrait_ids) == 1:
+        return portrait_ids[0]
+    from travelogue.curation.solo_scoring import pick_solo_asset_id
+
+    picked = pick_solo_asset_id(
+        portrait_ids,
+        assets_map,
+        chapter_peer_ids=list(assets_map.keys()),
+    )
+    return picked or portrait_ids[0]
+
+
 def _order_mixed_p1_l2(
     asset_ids: list[str],
     aspects: dict[str, AspectKind],
@@ -63,7 +82,15 @@ def _order_mixed_p1_l2(
     portraits, landscapes = _split_portrait_landscape(asset_ids, aspects)
     if len(portraits) < 1 or len(landscapes) < 2:
         return None
-    for p_id in portraits:
+    non_person_portraits = [
+        p for p in portraits if not asset_has_person(assets_map.get(p, {}))
+    ]
+    if not non_person_portraits:
+        return None
+    preferred = _pick_solo_portrait_for_mosaic(non_person_portraits, assets_map)
+    portrait_order = [preferred] if preferred else []
+    portrait_order.extend(p for p in non_person_portraits if p != preferred)
+    for p_id in portrait_order:
         for pair in (
             landscapes[:2],
             landscapes[-2:],
@@ -83,9 +110,12 @@ def _order_mixed_p1_l2(
     ]
     if not non_person_portraits:
         return None
-    p_sorted = _sort_asset_ids_by_taken(non_person_portraits, assets_map)
+    p0 = _pick_solo_portrait_for_mosaic(
+        _sort_asset_ids_by_taken(non_person_portraits, assets_map),
+        assets_map,
+    ) or _sort_asset_ids_by_taken(non_person_portraits, assets_map)[0]
     l_sorted = _sort_asset_ids_by_taken(landscapes, assets_map)
-    return [p_sorted[0], l_sorted[0], l_sorted[1]]
+    return [p0, l_sorted[0], l_sorted[1]]
 
 
 def _order_mixed_p2_l2(

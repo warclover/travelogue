@@ -478,6 +478,8 @@ def _attach_aesthetic(
     ae_cfg = ctx.aesthetic
     if ae_cfg is None or not ae_cfg.enabled:
         return
+    acc = ctx.elapsed_acc
+    t0 = time.monotonic()
     try:
         from travelogue.curation.aesthetic_score import (
             AESTHETIC_VERSION,
@@ -507,6 +509,9 @@ def _attach_aesthetic(
             ctx.ingest_stats.get("aesthetic_errors", 0) + 1
         )
         ctx.ingest_stats.setdefault("aesthetic_error_sample", str(exc))
+    finally:
+        if acc is not None:
+            acc["aesthetic"] = acc.get("aesthetic", 0.0) + (time.monotonic() - t0) * 1000.0
 
 
 def _upsert_asset(

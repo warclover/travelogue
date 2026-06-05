@@ -124,17 +124,32 @@ def _aesthetic_score(asset: dict) -> float | None:
     return None
 
 
+def _ml_runtime_available(cfg: CullConfig, *, force_ml: bool = False) -> bool:
+    """Whether pyiqa scoring can run (cull ML mode or PA calibration force)."""
+    if not pyiqa_available():
+        return False
+    if not force_ml and resolve_effective_mode(cfg) != "ml":
+        return False
+    if _cuda_available():
+        return True
+    return bool(cfg.allow_cpu_ml or str(cfg.ml_device).lower() == "cpu")
+
+
 def apply_aesthetic_scores(
     assets: list[dict],
     *,
     trip_dir: Path | None,
     cfg: CullConfig,
+    force_ml: bool = False,
 ) -> bool:
     """
     Write quality.aestheticScore for image assets when pyiqa is available.
     Returns True if at least one asset was scored.
+
+    When *force_ml* is True (PA-4 calibration), scoring runs even if cull mode is
+    ``rules``, subject to the same device / pyiqa availability checks.
     """
-    if resolve_effective_mode(cfg) != "ml" or trip_dir is None:
+    if trip_dir is None or not _ml_runtime_available(cfg, force_ml=force_ml):
         return False
     try:
         from PIL import Image

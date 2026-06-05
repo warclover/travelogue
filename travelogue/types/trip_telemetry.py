@@ -34,6 +34,7 @@ class IngestElapsedDict(TypedDict, total=False):
     decode: float
     webp: float
     faces: float
+    aesthetic: float
     dedupe: float
     total: float
 
