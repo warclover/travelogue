@@ -8,6 +8,7 @@ from travelogue.config import MosaicConfig
 from travelogue.curation.layout_planner import AspectKind
 from travelogue.curation.mosaic.candidates import ScreenCandidate, generate_window_candidates
 from travelogue.curation.mosaic.log import MosaicWindowLog
+from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
 from travelogue.curation.mosaic.scorer import score_candidate, weights_hash
 from travelogue.curation.mosaic.selfheal import try_self_heal_pick
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
@@ -42,6 +43,8 @@ def score_window_candidates(
     )
     scored: list[tuple[ScreenCandidate, float, list[str]]] = []
     for cand in candidates:
+        if mosaic_pattern_disabled(cand.pattern_id, cfg=cfg) or not cand.hard_valid:
+            continue
         sr = score_candidate(
             cand.screen,
             aspects=aspects,
@@ -105,6 +108,11 @@ def pick_best_window(
     log.top3_patterns = [t[0].pattern_id for t in top]
     log.top3_scores = [t[1] for t in top]
     winner_cand, winner_score, reasons = scored[0]
+    if mosaic_pattern_disabled(winner_cand.pattern_id, cfg=cfg):
+        log.fallback_used = True
+        log.fallback_reason = "pattern_disabled"
+        log.planner_path = "legacy"
+        return WindowPickResult(screen=None, log=log, used_legacy=True)
     log.winner_pattern_id = winner_cand.pattern_id
     log.winner_score = winner_score
     log.winner_reason_codes = reasons

@@ -10,21 +10,28 @@ from travelogue.curation.mosaic.scorer import MosaicScoreResult
 
 
 def test_low_score_fallback_reason(monkeypatch):
-    aspects = {f"a{i}": "landscape" for i in range(5)}
+    aspects = {
+        "p0": "portrait",
+        "p1": "portrait",
+        "l0": "landscape",
+        "l1": "landscape",
+        "l2": "landscape",
+    }
     assets_map = {
-        f"a{i}": {
-            "id": f"a{i}",
-            "width": 2000,
-            "height": 1200,
-            "takenAt": "2024-06-01T10:00:00Z",
-        }
-        for i in range(5)
+        "p0": {"id": "p0", "width": 1200, "height": 1800, "takenAt": "2024-06-01T10:00:00Z"},
+        "p1": {"id": "p1", "width": 1200, "height": 1800, "takenAt": "2024-06-01T10:01:00Z"},
+        "l0": {"id": "l0", "width": 2000, "height": 1200, "takenAt": "2024-06-01T10:02:00Z"},
+        "l1": {"id": "l1", "width": 2000, "height": 1200, "takenAt": "2024-06-01T10:03:00Z"},
+        "l2": {"id": "l2", "width": 2000, "height": 1200, "takenAt": "2024-06-01T10:04:00Z"},
     }
     cfg = replace(
         get_config().mosaic,
         self_heal_enabled=False,
         min_candidate_score=0.99,
         fallback_to_legacy=True,
+        # Keep 5-slot enabled so this test exercises the low_score path rather than
+        # the disabled-window guard (no_candidates).
+        enabled_window_sizes=(3, 4, 5, 8, 9),
     )
 
     def fake_score(screen, **kwargs):

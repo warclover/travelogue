@@ -29,10 +29,10 @@ EXPLICIT_GRID_SPECS: dict[str, list[tuple[int, int, int, int]]] = {
     ],
     "screen-mosaic-5-main-landscape-2portrait-2land": [
         (1, 2, 1, 2),
-        (3, 3, 1, 1),
-        (3, 3, 2, 2),
+        (3, 3, 1, 2),
         (1, 1, 3, 3),
-        (2, 3, 3, 3),
+        (2, 2, 3, 3),
+        (3, 3, 3, 3),
     ],
     "screen-mosaic-5-2portrait-3land-balanced": [
         (1, 1, 1, 1),

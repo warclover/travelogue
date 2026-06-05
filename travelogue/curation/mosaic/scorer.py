@@ -13,11 +13,14 @@ from travelogue.curation.layout_scoring import ScoringWeights, score_screen_plan
 from travelogue.curation.mosaic.constants import (
     PATTERN_LANDSCAPE_6,
     PATTERN_LANDSCAPE_9,
+    PATTERN_MOSAIC_5_2P_3L_BALANCED,
+    PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
     PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
     PATTERN_PORTRAIT_6,
 )
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
 from travelogue.curation.screen_planner import _is_landscape_id, _is_std_portrait_id
 
 
@@ -99,6 +102,26 @@ def _duplicate_density_penalty(asset_ids: list[str], assets_by_id: dict[str, dic
         return 0.8
     if max_run >= 3:
         return 0.4
+    return 0.0
+
+
+def _slot_geometry_penalty(
+    screen: dict,
+    aspects: dict[str, AspectKind],
+) -> float:
+    if not screen_slots_geometry_ok(screen, aspects):
+        return 0.95
+    pattern_id = str(screen.get("patternId") or "")
+    if pattern_id == PATTERN_MOSAIC_5_2P_3L_BALANCED:
+        for slot in screen.get("slots") or []:
+            if int(slot.get("slot", -1)) == 3 and slot.get("assetId"):
+                if _is_std_portrait_id(slot["assetId"], aspects):
+                    return 0.35
+    if pattern_id == PATTERN_MOSAIC_5_MAIN_LAND_2P_2L:
+        for slot in screen.get("slots") or []:
+            if int(slot.get("slot", -1)) == 3 and slot.get("assetId"):
+                if _is_std_portrait_id(slot["assetId"], aspects):
+                    return 0.4
     return 0.0
 
 
@@ -200,6 +223,7 @@ def score_candidate(
         "duplicate_density": _duplicate_density_penalty(asset_ids, assets_by_id),
         "hero_narrow_tiles": _hero_narrow_tile_penalty(screen, asset_ids, aspects),
         "hero_slot_aspect": _hero_slot_aspect_penalty(screen, aspects),
+        "slot_geometry": _slot_geometry_penalty(screen, aspects),
         "flat_six_grid": _flat_six_grid_penalty(
             str(screen.get("patternId") or ""), asset_ids, aspects
         ),

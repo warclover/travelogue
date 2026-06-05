@@ -32,6 +32,7 @@ try:
 except ImportError:  # pragma: no cover
     yaml = None  # type: ignore
 
+from travelogue.curation.cover_scoring_params import CoverScoringParams
 from travelogue.llm.presets import PROVIDER_PRESETS
 
 
@@ -147,6 +148,7 @@ class CurateConfig:
     arc_flat_variance_threshold: float = 0.08
     featured_weight: float = 1.35
     featured_min_for_cover_pool: int = 2
+    cover_scoring: CoverScoringParams = field(default_factory=CoverScoringParams)
     enable_gravity_balance: bool = True
     enable_mmr_diversity: bool = True
     max_consecutive_same_pattern: int = 2
@@ -1076,6 +1078,9 @@ def load_config(path: Path | None = None) -> AppConfig:
             ),
             featured_weight=float(curate_raw.get("featured_weight", 1.35)),
             featured_min_for_cover_pool=int(curate_raw.get("featured_min_for_cover_pool", 2)),
+            cover_scoring=CoverScoringParams.from_mapping(
+                curate_raw.get("cover_scoring") or curate_raw.get("coverScoring")
+            ),
             enable_gravity_balance=bool(
                 curate_layout_raw.get(
                     "enable_gravity_balance",

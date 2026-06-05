@@ -32,6 +32,17 @@ curate:
   # legacy | v2_adaptive | v2_five_beat — 叙事弧（ADR-002 Phase 3a，默认 legacy）
   arc_mode: legacy
   arc_flat_variance_threshold: 0.08
+  featured_weight: 1.35
+  featured_min_for_cover_pool: 2
+  # 封面选型 · cover-selection-plan v0.2（默认=当前代码行为）
+  cover_scoring:
+    person_demote: 0.72
+    person_demote_portrait_trip: 1.0
+    person_dominant_tag_ratio: 0.40
+    face_bbox_boost: 1.06
+    sharp_ratio_cap: 1.25
+    sharp_ratio_floor: 0.35
+    enable_phase6_factors: true
 
 # 精细制作「版面密度」旋钮（false → 全体当智能平衡）
 layoutDensity:

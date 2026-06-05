@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from travelogue.curation.cover_scoring_params import CoverScoringParams
 from travelogue.curation.curate_scoring import (
     build_cover_explain,
     cover_score,
     _cover_rule_of_thirds_multiplier,
 )
+
+_PARAMS = CoverScoringParams()
 from travelogue.media.color_metrics import color_richness_multiplier
 
 
@@ -27,7 +30,9 @@ def _asset(**extra) -> dict:
 def test_rule_of_thirds_prefers_off_center_subject() -> None:
     centered = _asset(focalPoint={"x": 0.5, "y": 0.5})
     thirds = _asset(focalPoint={"x": 0.33, "y": 0.33})
-    assert _cover_rule_of_thirds_multiplier(thirds) > _cover_rule_of_thirds_multiplier(centered)
+    assert _cover_rule_of_thirds_multiplier(thirds, params=_PARAMS) > _cover_rule_of_thirds_multiplier(
+        centered, params=_PARAMS
+    )
 
 
 def test_rule_of_thirds_boosts_cover_score() -> None:
@@ -52,8 +57,8 @@ def test_face_bbox_boost_when_sharp_and_salient_box() -> None:
         quality={"sharpness": 100.0},
         salientBox={"x": 0.3, "y": 0.25, "w": 0.2, "h": 0.22},
     )
-    assert _cover_face_bbox_multiplier(faced, median_sharp=80.0) > 1.0
-    assert _cover_face_bbox_multiplier(plain, median_sharp=80.0) == 1.0
+    assert _cover_face_bbox_multiplier(faced, median_sharp=80.0, params=_PARAMS) > 1.0
+    assert _cover_face_bbox_multiplier(plain, median_sharp=80.0, params=_PARAMS) == 1.0
 
 
 def test_dull_dark_cover_scores_below_vivid() -> None:

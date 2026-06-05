@@ -520,6 +520,9 @@ def _pick_largest_allowed_grid(
     layout_state: ScreenLayoutPlannerState | None = None,
 ) -> int:
     """Pick largest grid size that satisfies layout_state and pattern emit rules."""
+    from travelogue.curation.mosaic.runtime import six_slot_layout_enabled
+
+    allow_six = six_slot_layout_enabled()
     cap = min(run_len, MAX_SLOTS_PER_SCREEN)
     if family == "landscape":
         size_order = (9, 6, 4)
@@ -532,17 +535,24 @@ def _pick_largest_allowed_grid(
         candidates.append(9)
     if burst_run and cap >= 4:
         for s in (9, 6, 4, 3):
+            if s == 6 and not allow_six:
+                continue
             if s not in candidates and s in size_order:
                 candidates.append(s)
     if portrait_heavy and family == "portrait":
         for s in (9, 6, 3):
+            if s == 6 and not allow_six:
+                continue
             if s not in candidates:
                 candidates.append(s)
     for s in size_order:
         if s not in candidates:
             candidates.append(s)
     if layout_state is not None and layout_state.layout_density == "hero_first":
-        hero_order = [1, 4, 6, 9] if family == "landscape" else [1, 3, 4, 6, 9]
+        hero_six = (6,) if allow_six else ()
+        hero_order = (
+            (1, 4, *hero_six, 9) if family == "landscape" else (1, 3, 4, *hero_six, 9)
+        )
         seen = set(candidates)
         candidates = list(hero_order) + [s for s in candidates if s not in hero_order]
         for s in size_order:
@@ -550,7 +560,12 @@ def _pick_largest_allowed_grid(
                 candidates.append(s)
                 seen.add(s)
     elif layout_state is not None and layout_state.layout_density == "collage_first":
-        collage_order = [9, 6, 4, 1] if family == "landscape" else [9, 6, 4, 3, 1]
+        collage_six = [6] if allow_six else []
+        collage_order = (
+            [9, *collage_six, 4, 1]
+            if family == "landscape"
+            else [9, *collage_six, 4, 3, 1]
+        )
         seen = set(candidates)
         candidates = list(collage_order) + [s for s in candidates if s not in collage_order]
         for s in size_order:
@@ -558,6 +573,8 @@ def _pick_largest_allowed_grid(
                 candidates.append(s)
                 seen.add(s)
     for size in candidates:
+        if size == 6 and not allow_six:
+            continue
         if size > cap:
             continue
         if layout_state is not None:

@@ -29,12 +29,14 @@ def test_golden_mosaic_portrait_3_matches_mcs():
     assert mcs_unified_exposure_rate(chapters) == 1.0
 
 
-def test_golden_mosaic_portrait_4_matches_mcs():
+def test_golden_mosaic_portrait_4_avoids_wide_grid():
+    """4 portraits must not land in the 2×2 wide grid (portrait-4 crops portraits);
+    they fall back to portrait column grids (portrait-3 + portrait-1)."""
     buckets, aspects, assets = build_mosaic_portrait4_trip()
     chapters = plan_mosaic_screens(buckets, aspects, assets)
     assert layout_snapshot(chapters) == load_golden("mosaic-portrait-4")
-    pid = chapters[0]["screens"][0]["patternId"]
-    assert pid == PATTERN_PORTRAIT_4
+    screens = chapters[0]["screens"]
+    assert all(s["patternId"] != PATTERN_PORTRAIT_4 for s in screens)
 
 
 def test_golden_mosaic_landscape_6_matches_mcs():

@@ -25,7 +25,7 @@ def _five_assets():
 
 def test_pick_best_deterministic():
     aspects, assets_map = _five_assets()
-    cfg = MosaicConfig(enabled=True, deterministic_strict=True)
+    cfg = MosaicConfig(enabled=True, enabled_window_sizes=(5,), deterministic_strict=True)
     ids = list(aspects.keys())
     r1 = pick_best_five_window(ids, aspects, assets_map, cfg=cfg, trip_photo_total=40)
     r2 = pick_best_five_window(ids, aspects, assets_map, cfg=cfg, trip_photo_total=40)

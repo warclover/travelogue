@@ -486,6 +486,19 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
             )
         except CurateError as exc:
             raise DemoError(exc.code, str(exc)) from exc
+        # Web preview (index.html) needs chapters[].screens; mobile-only curate leaves screens empty
+        # while an older render can still show disabled mosaic patterns.
+        from travelogue.curation.screen_planner import LAYOUT_ENGINE_SCREENS, resolve_layout_engine
+        from travelogue.services.layout import apply_layout_to_trip
+
+        if resolve_layout_engine(trip) == LAYOUT_ENGINE_SCREENS and not any(
+            ch.get("screens") for ch in (trip.get("chapters") or [])
+        ):
+            apply_layout_to_trip(
+                trip,
+                export_layout="web",
+                layout_engine="screens",
+            )
         svc.save(trip, trip_json)
         render_trip_surfaces(
             trip_json,

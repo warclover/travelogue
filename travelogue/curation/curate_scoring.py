@@ -3,10 +3,20 @@
 from __future__ import annotations
 
 from travelogue.curation.asset_quality import asset_sharpness
+from travelogue.curation.cover_scoring_params import (
+    CoverScoringParams,
+    resolve_person_demote,
+)
 from travelogue.curation.layout_planner import aspect_kind_for_asset
 from travelogue.curation.media_classify import cover_class_weight
 from travelogue.curation.time_segments import parse_asset_date
 from travelogue.media.color_metrics import color_richness_multiplier, dominant_tone_chroma_score
+
+_DEFAULT_COVER_SCORING = CoverScoringParams()
+
+
+def _cover_params(cover_scoring: CoverScoringParams | None) -> CoverScoringParams:
+    return cover_scoring if cover_scoring is not None else _DEFAULT_COVER_SCORING
 
 _COVER_EXCLUDED_CLASSES = frozenset({"screenshot", "thumbnail", "reupload"})
 _HERO_EXCLUDED_CLASSES = frozenset({"screenshot", "thumbnail", "reupload"})
@@ -89,15 +99,20 @@ def _cover_media_weight(asset: dict, export_layout: str) -> float:
     return weight
 
 
-def _cover_person_multiplier(asset: dict) -> float:
+def _cover_person_multiplier(asset: dict, *, demote: float) -> float:
     """P5-C2: demote portrait/face-heavy assets for cover."""
     tags = set(asset.get("tags") or [])
     if tags.intersection({"face", "person", "selfie", "portrait"}):
-        return 0.72
+        return demote
     return 1.0
 
 
-def _cover_face_bbox_multiplier(asset: dict, *, median_sharp: float = 0.0) -> float:
+def _cover_face_bbox_multiplier(
+    asset: dict,
+    *,
+    median_sharp: float = 0.0,
+    params: CoverScoringParams,
+) -> float:
     """M12-2d · modest boost when ingest face bbox + sharpness support cover quality."""
     tags = set(asset.get("tags") or [])
     if not tags.intersection({"face", "person"}):
@@ -108,12 +123,12 @@ def _cover_face_bbox_multiplier(asset: dict, *, median_sharp: float = 0.0) -> fl
     if not isinstance(box, dict):
         return 1.0
     area = float(box.get("w", 0)) * float(box.get("h", 0))
-    if area < 0.02 or area > 0.38:
+    if area < params.face_bbox_min_area or area > params.face_bbox_max_area:
         return 1.0
     sharp = asset_sharpness(asset)
-    if median_sharp > 0 and sharp < median_sharp * 0.85:
+    if median_sharp > 0 and sharp < median_sharp * params.face_bbox_sharp_ratio_min:
         return 1.0
-    return 1.06
+    return params.face_bbox_boost
 
 
 def _cover_saturation_multiplier(asset: dict) -> float:
@@ -154,40 +169,52 @@ def _axis_rule_of_thirds_score(coord: float) -> float:
     return max(0.0, 1.0 - dist / 0.25)
 
 
-def _cover_rule_of_thirds_multiplier(asset: dict) -> float:
+def _cover_rule_of_thirds_multiplier(asset: dict, *, params: CoverScoringParams) -> float:
     """P6-C1 · reward subject near third lines; demote dead-center framing."""
     cx, cy = _subject_center_norm(asset)
     axis = (_axis_rule_of_thirds_score(cx) + _axis_rule_of_thirds_score(cy)) / 2.0
     center_dist = ((cx - 0.5) ** 2 + (cy - 0.5) ** 2) ** 0.5
     off_center = min(1.0, center_dist / 0.22)
-    blend = 0.55 * axis + 0.45 * off_center
-    return 0.88 + 0.12 * blend
+    blend = params.thirds_axis_weight * axis + params.thirds_off_center_weight * off_center
+    return params.thirds_base + params.thirds_span * blend
 
 
-def _cover_composition_multiplier(asset: dict, export_layout: str) -> float:
+def _cover_composition_multiplier(
+    asset: dict,
+    export_layout: str,
+    *,
+    params: CoverScoringParams,
+) -> float:
     """P5-C2: landscape/panorama preference (composition proxy)."""
     kind = aspect_kind_for_asset(asset)
     if export_layout == "web":
         if kind == "panorama":
-            return 1.1
+            return params.web_panorama_mult
         if kind == "landscape":
-            return 1.06
+            return params.web_landscape_mult
         return 1.0
     if kind == "tall":
-        return 0.92
+        return params.mobile_tall_mult
     if kind == "portrait":
-        return 0.96
+        return params.mobile_portrait_mult
     return 1.0
 
 
-def _quality_multiplier(asset: dict, *, export_layout: str, median_sharp: float) -> float:
+def _quality_multiplier(
+    asset: dict,
+    *,
+    export_layout: str,
+    median_sharp: float,
+    params: CoverScoringParams,
+) -> float:
+    _ = export_layout
     mult = 1.0
     if asset.get("dateConfidence") == "low":
-        mult *= 0.65
+        mult *= params.date_confidence_low_mult
     sharp = asset_sharpness(asset)
     if median_sharp > 0 and sharp > 0:
         ratio = sharp / median_sharp
-        mult *= min(1.25, max(0.35, ratio))
+        mult *= min(params.sharp_ratio_cap, max(params.sharp_ratio_floor, ratio))
     return mult
 
 
@@ -197,6 +224,8 @@ def cover_score(
     *,
     median_sharp: float = 0.0,
     enable_phase6_cover_factors: bool = True,
+    cover_scoring: CoverScoringParams | None = None,
+    person_demote_mult: float | None = None,
 ) -> float:
     """Mobile: tall/portrait. Web: landscape/panorama. Uses ingest quality signals."""
     kind = aspect_kind_for_asset(asset)
@@ -225,17 +254,26 @@ def cover_score(
         if kind == "tall":
             base *= 1.1
 
-    thirds_mult = (
-        _cover_rule_of_thirds_multiplier(asset) if enable_phase6_cover_factors else 1.0
+    params = _cover_params(cover_scoring)
+    p6 = enable_phase6_cover_factors and params.enable_phase6_factors
+    demote = (
+        person_demote_mult
+        if person_demote_mult is not None
+        else params.person_demote
     )
+    thirds_mult = _cover_rule_of_thirds_multiplier(asset, params=params) if p6 else 1.0
     return (
         base
         * _cover_media_weight(asset, export_layout)
-        * _quality_multiplier(asset, export_layout=export_layout, median_sharp=median_sharp)
-        * _cover_person_multiplier(asset)
-        * _cover_face_bbox_multiplier(asset, median_sharp=median_sharp)
+        * _quality_multiplier(
+            asset, export_layout=export_layout, median_sharp=median_sharp, params=params
+        )
+        * _cover_person_multiplier(asset, demote=demote)
+        * _cover_face_bbox_multiplier(
+            asset, median_sharp=median_sharp, params=params
+        )
         * _cover_saturation_multiplier(asset)
-        * _cover_composition_multiplier(asset, export_layout)
+        * _cover_composition_multiplier(asset, export_layout, params=params)
         * thirds_mult
     )
 
@@ -245,33 +283,57 @@ def _cover_score_factors(
     export_layout: str,
     *,
     median_sharp: float = 0.0,
+    cover_scoring: CoverScoringParams | None = None,
+    person_demote_mult: float | None = None,
+    enable_phase6_cover_factors: bool = True,
 ) -> list[tuple[str, float]]:
     """Return (factor_code, multiplier) for explain output."""
-    if cover_score(asset, export_layout, median_sharp=median_sharp) <= 0:
+    params = _cover_params(cover_scoring)
+    demote = (
+        person_demote_mult
+        if person_demote_mult is not None
+        else params.person_demote
+    )
+    if (
+        cover_score(
+            asset,
+            export_layout,
+            median_sharp=median_sharp,
+            enable_phase6_cover_factors=enable_phase6_cover_factors,
+            cover_scoring=cover_scoring,
+            person_demote_mult=demote,
+        )
+        <= 0
+    ):
         return []
     factors: list[tuple[str, float]] = []
     media_w = _cover_media_weight(asset, export_layout)
     if abs(media_w - 1.0) > 0.01:
         factors.append(("aspect", media_w))
-    quality_w = _quality_multiplier(asset, export_layout=export_layout, median_sharp=median_sharp)
+    quality_w = _quality_multiplier(
+        asset, export_layout=export_layout, median_sharp=median_sharp, params=params
+    )
     if abs(quality_w - 1.0) > 0.01:
         factors.append(("sharpness" if median_sharp > 0 else "date_confidence", quality_w))
-    person_w = _cover_person_multiplier(asset)
+    person_w = _cover_person_multiplier(asset, demote=demote)
     if abs(person_w - 1.0) > 0.01:
         factors.append(("person_demote", person_w))
-    face_w = _cover_face_bbox_multiplier(asset, median_sharp=median_sharp)
+    face_w = _cover_face_bbox_multiplier(
+        asset, median_sharp=median_sharp, params=params
+    )
     if abs(face_w - 1.0) > 0.01:
         factors.append(("face_bbox", face_w))
     sat_w = _cover_saturation_multiplier(asset)
     if abs(sat_w - 1.0) > 0.01:
         factors.append(("color_richness", sat_w))
-    comp_w = _cover_composition_multiplier(asset, export_layout)
+    comp_w = _cover_composition_multiplier(asset, export_layout, params=params)
     if abs(comp_w - 1.0) > 0.01:
         code = "landscape_bias" if export_layout == "web" else "portrait_bias"
         factors.append((code, comp_w))
-    thirds_w = _cover_rule_of_thirds_multiplier(asset)
-    if abs(thirds_w - 1.0) > 0.01:
-        factors.append(("composition_thirds", thirds_w))
+    if enable_phase6_cover_factors and params.enable_phase6_factors:
+        thirds_w = _cover_rule_of_thirds_multiplier(asset, params=params)
+        if abs(thirds_w - 1.0) > 0.01:
+            factors.append(("composition_thirds", thirds_w))
     return factors
 
 
@@ -281,9 +343,19 @@ def build_cover_explain(
     *,
     median_sharp: float = 0.0,
     limit: int = 4,
+    cover_scoring: CoverScoringParams | None = None,
+    person_demote_mult: float | None = None,
+    enable_phase6_cover_factors: bool = True,
 ) -> list[dict[str, str | float]]:
     """P6-C3 · top readable reasons for cover score."""
-    factors = _cover_score_factors(asset, export_layout, median_sharp=median_sharp)
+    factors = _cover_score_factors(
+        asset,
+        export_layout,
+        median_sharp=median_sharp,
+        cover_scoring=cover_scoring,
+        person_demote_mult=person_demote_mult,
+        enable_phase6_cover_factors=enable_phase6_cover_factors,
+    )
     ranked = sorted(factors, key=lambda item: abs(item[1] - 1.0), reverse=True)
     out: list[dict[str, str | float]] = []
     for code, mult in ranked[:limit]:
@@ -315,7 +387,10 @@ def hero_score(asset: dict, *, median_sharp: float = 0.0) -> float:
     if kind == "panorama":
         base *= 1.25
     return base * cover_class_weight(asset.get("mediaClass")) * _quality_multiplier(
-        asset, export_layout="web", median_sharp=median_sharp
+        asset,
+        export_layout="web",
+        median_sharp=median_sharp,
+        params=_DEFAULT_COVER_SCORING,
     )
 
 
@@ -367,6 +442,8 @@ def effective_cover_score(
     memory_anchors: list[str] | None = None,
     meta_places: list[str] | None = None,
     enable_phase6_cover_factors: bool = True,
+    cover_scoring: CoverScoringParams | None = None,
+    person_demote_mult: float | None = None,
 ) -> float:
     return (
         cover_score(
@@ -374,6 +451,8 @@ def effective_cover_score(
             export_layout,
             median_sharp=median_sharp,
             enable_phase6_cover_factors=enable_phase6_cover_factors,
+            cover_scoring=cover_scoring,
+            person_demote_mult=person_demote_mult,
         )
         * featured_weight_multiplier(asset, weight=featured_weight)
         * anchor_match_multiplier(asset, memory_anchors, meta_places=meta_places)
@@ -402,8 +481,11 @@ def pick_cover_asset_id(
     exclude: set[str] | None = None,
     featured_weight: float = 1.35,
     enable_phase6_cover_factors: bool = True,
+    cover_scoring: CoverScoringParams | None = None,
 ) -> str:
     exclude = exclude or set()
+    params = _cover_params(cover_scoring)
+    p6 = enable_phase6_cover_factors and params.enable_phase6_factors
     pool = cover_asset_pool(assets, export_layout=export_layout)
     featured_pool = [
         a
@@ -411,6 +493,7 @@ def pick_cover_asset_id(
         if a.get("userTier") == "featured" and a["id"] not in exclude and a.get("type") != "video"
     ]
     search_pool = featured_pool if featured_pool else pool
+    person_demote = resolve_person_demote(params, search_pool)
     median_sharp = median_sharpness(search_pool)
     best_id = ""
     best_score = 0.0
@@ -422,7 +505,9 @@ def pick_cover_asset_id(
             export_layout,
             median_sharp=median_sharp,
             featured_weight=featured_weight,
-            enable_phase6_cover_factors=enable_phase6_cover_factors,
+            enable_phase6_cover_factors=p6,
+            cover_scoring=params,
+            person_demote_mult=person_demote,
         )
         if score > best_score:
             best_score = score
@@ -430,6 +515,7 @@ def pick_cover_asset_id(
     if not best_id and featured_pool and export_layout == "web":
         material_pool = [a for a in pool if a.get("userTier") != "featured"]
         if material_pool:
+            person_demote = resolve_person_demote(params, material_pool)
             median_sharp = median_sharpness(material_pool)
             for a in material_pool:
                 if a["id"] in exclude or a.get("type") == "video":
@@ -439,7 +525,9 @@ def pick_cover_asset_id(
                     export_layout,
                     median_sharp=median_sharp,
                     featured_weight=featured_weight,
-                    enable_phase6_cover_factors=enable_phase6_cover_factors,
+                    enable_phase6_cover_factors=p6,
+                    cover_scoring=params,
+                    person_demote_mult=person_demote,
                 )
                 if score > best_score:
                     best_score = score
@@ -452,6 +540,100 @@ def pick_cover_asset_id(
     return assets[0]["id"]
 
 
+def score_ranked_cover_ids(
+    assets: list[dict],
+    *,
+    export_layout: str = "mobile",
+    exclude: set[str] | None = None,
+    featured_weight: float = 1.35,
+    enable_phase6_cover_factors: bool = True,
+    cover_scoring: CoverScoringParams | None = None,
+    limit: int = 10,
+) -> list[dict[str, object]]:
+    """Score-ranked cover list for blind review (PRD scoreRankedTop3)."""
+    exclude = exclude or set()
+    params = _cover_params(cover_scoring)
+    p6 = enable_phase6_cover_factors and params.enable_phase6_factors
+    pool = cover_asset_pool(assets, export_layout=export_layout)
+    featured_pool = [
+        a
+        for a in pool
+        if a.get("userTier") == "featured" and a["id"] not in exclude and a.get("type") != "video"
+    ]
+    search_pool = featured_pool if featured_pool else pool
+    person_demote = resolve_person_demote(params, search_pool)
+    median_sharp = median_sharpness(search_pool)
+    rows: list[tuple[float, str]] = []
+    for a in search_pool:
+        aid = a.get("id")
+        if not aid or aid in exclude or a.get("type") == "video":
+            continue
+        score = effective_cover_score(
+            a,
+            export_layout,
+            median_sharp=median_sharp,
+            featured_weight=featured_weight,
+            enable_phase6_cover_factors=p6,
+            cover_scoring=params,
+            person_demote_mult=person_demote,
+        )
+        if score > 0:
+            rows.append((score, str(aid)))
+    rows.sort(key=lambda item: (-item[0], item[1]))
+    out: list[dict[str, object]] = []
+    for rank, (score, aid) in enumerate(rows[:limit], start=1):
+        out.append({"rank": rank, "assetId": aid, "score": round(score, 6)})
+    return out
+
+
+def build_cover_layout_review(
+    assets: list[dict],
+    cover_id: str,
+    *,
+    export_layout: str = "mobile",
+    featured_weight: float = 1.35,
+    enable_phase6_cover_factors: bool = True,
+    cover_scoring: CoverScoringParams | None = None,
+) -> dict[str, object]:
+    """Snapshot for acceptance: ranked top-N, explain, person-dominant flag."""
+    from travelogue.curation.cover_scoring_params import person_tag_ratio
+
+    params = _cover_params(cover_scoring)
+    pool = cover_asset_pool(assets, export_layout=export_layout)
+    featured_pool = [a for a in pool if a.get("userTier") == "featured"]
+    search_pool = featured_pool if featured_pool else pool
+    person_demote = resolve_person_demote(params, search_pool)
+    asset = next((a for a in assets if a.get("id") == cover_id), None)
+    ranked = score_ranked_cover_ids(
+        assets,
+        export_layout=export_layout,
+        featured_weight=featured_weight,
+        enable_phase6_cover_factors=enable_phase6_cover_factors,
+        cover_scoring=cover_scoring,
+        limit=10,
+    )
+    explain: list[dict[str, str | float]] = []
+    if asset:
+        explain = build_cover_explain(
+            asset,
+            export_layout,
+            median_sharp=median_sharpness(search_pool),
+            cover_scoring=cover_scoring,
+            person_demote_mult=person_demote,
+            enable_phase6_cover_factors=enable_phase6_cover_factors,
+        )
+    return {
+        "exportLayout": export_layout,
+        "coverAssetId": cover_id,
+        "scoreRankedTop3": ranked[:3],
+        "scoreRankedTop10": ranked,
+        "personTagRatio": round(person_tag_ratio(search_pool), 4),
+        "personDemoteApplied": person_demote,
+        "featuredPoolOnly": bool(featured_pool),
+        "coverExplain": explain,
+    }
+
+
 def cover_candidates(
     assets: list[dict],
     cover_id: str,
@@ -461,9 +643,15 @@ def cover_candidates(
     featured_weight: float = 1.35,
     featured_min: int = 2,
     enable_phase6_cover_factors: bool = True,
+    cover_scoring: CoverScoringParams | None = None,
 ) -> list[str]:
     """Top covers with diverse aspect / day when possible."""
+    params = _cover_params(cover_scoring)
+    p6 = enable_phase6_cover_factors and params.enable_phase6_factors
     pool = cover_asset_pool(assets, export_layout=export_layout)
+    featured_pool = [a for a in pool if a.get("userTier") == "featured"]
+    search_pool = featured_pool if featured_pool else pool
+    person_demote = resolve_person_demote(params, search_pool)
     median_sharp = median_sharpness(pool)
     scored: list[tuple[float, dict]] = []
     for a in pool:
@@ -474,7 +662,9 @@ def cover_candidates(
             export_layout,
             median_sharp=median_sharp,
             featured_weight=featured_weight,
-            enable_phase6_cover_factors=enable_phase6_cover_factors,
+            enable_phase6_cover_factors=p6,
+            cover_scoring=params,
+            person_demote_mult=person_demote,
         )
         if score > 0:
             scored.append((score, a))

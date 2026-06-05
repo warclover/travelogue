@@ -192,14 +192,24 @@ def try_order_for_pattern(
                 median_sharp=median_sharp,
             ) or _pick_main_landscape_id(landscapes, assets_map, median_sharp=median_sharp)
             rest_l = _sort_asset_ids_by_taken([a for a in landscapes if a != main], assets_map)
+            if len(rest_l) < 2:
+                return None
             p_sorted = _sort_asset_ids_by_taken(portraits[:2], assets_map)
-            return [main, p_sorted[0], p_sorted[1], rest_l[0], rest_l[1] if len(rest_l) > 1 else rest_l[0]]
+            # slot 1 = right tall portrait; slot 2–4 = bottom landscapes + one portrait tile
+            return [main, p_sorted[0], rest_l[0], p_sorted[1], rest_l[1]]
         if pattern_id == PATTERN_MOSAIC_5_2P_3L_BALANCED:
             if len(portraits) < 2 or len(landscapes) < 3:
                 return None
             p_sorted = _sort_asset_ids_by_taken(portraits[:2], assets_map)
             l_sorted = _sort_asset_ids_by_taken(landscapes[:3], assets_map)
-            return [p_sorted[0], p_sorted[1], l_sorted[0], l_sorted[1], l_sorted[2]]
+            # Top row cells are wide; tall cell (slot 2) holds portrait — see journal-screens.css
+            return [
+                l_sorted[0],
+                l_sorted[1],
+                p_sorted[0],
+                p_sorted[1],
+                l_sorted[2],
+            ]
         if pattern_id == PATTERN_MOSAIC_5_3P_2L_BALANCED:
             if len(portraits) < 3 or len(landscapes) < 2:
                 return None

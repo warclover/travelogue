@@ -18,8 +18,12 @@ def pick_main_for_pattern(
 
     from travelogue.curation.mosaic.registry import default_registry
 
+    from travelogue.curation.screen_planner import _is_landscape_id
+
     pat = default_registry().get(pattern_id)
-    landscapes = [aid for aid in ordered_asset_ids if aspects.get(aid) == "landscape"]
+    landscapes = [
+        aid for aid in ordered_asset_ids if _is_landscape_id(aid, aspects)
+    ]
     if pat and "main" in pat.roles and landscapes:
         return _pick_main_landscape_id(landscapes, assets_map, median_sharp=median_sharp)
     if ordered_asset_ids:

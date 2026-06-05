@@ -34,32 +34,3 @@ def test_mosaic6_keeps_all_slot_figures_when_one_asset_missing():
     assert ctx["slots"][4]["slotIndex"] == 4
     assert ctx["slots"][4].get("hasSrc") is False
     assert ctx["slots"][5].get("hasSrc") is True
-
-
-def test_six_landscape_window_prefers_mosaic6():
-    from travelogue.config import MosaicConfig
-    from travelogue.curation.mosaic.compose import pick_best_window
-
-    aspects = {}
-    assets_map = {}
-    for i in range(6):
-        aid = f"a{i}"
-        aspects[aid] = "landscape"
-        assets_map[aid] = {
-            "id": aid,
-            "width": 3000,
-            "height": 1687,
-            "takenAt": f"2024-06-01T10:0{i}:00Z",
-            "quality": {"sharpness": 0.8},
-        }
-    pick = pick_best_window(
-        list(aspects.keys()),
-        aspects,
-        assets_map,
-        cfg=MosaicConfig(enabled=True, deterministic_strict=True),
-        window_size=6,
-        trip_photo_total=50,
-    )
-    assert pick.screen is not None
-    assert pick.screen["patternId"] == PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
-    assert len(pick.screen["slots"]) == 6

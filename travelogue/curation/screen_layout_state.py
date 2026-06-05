@@ -165,6 +165,10 @@ class ScreenLayoutPlannerState:
         return True
 
     def can_emit_pattern(self, pattern_id: str) -> bool:
+        from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
+
+        if mosaic_pattern_disabled(pattern_id):
+            return False
         kind = layout_kind_from_pattern(pattern_id)
         if kind == "nine":
             return self.can_use_nine()

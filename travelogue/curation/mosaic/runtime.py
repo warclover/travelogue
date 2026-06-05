@@ -42,6 +42,22 @@ def cohort_mosaic_override(app_cfg) -> MosaicConfig | None:
     return replace(app_cfg.mosaic, weights=mw)
 
 
+def mosaic_window_size_enabled(size: int, cfg: MosaicConfig | None = None) -> bool:
+    """True when MCS or legacy may emit mosaic screens for this window size."""
+    cfg = cfg or get_effective_mosaic_config()
+    return size in cfg.enabled_window_sizes
+
+
+def five_slot_mosaic_enabled(cfg: MosaicConfig | None = None) -> bool:
+    """True when MCS or legacy may emit 5-photo mosaic screens."""
+    return mosaic_window_size_enabled(5, cfg)
+
+
+def six_slot_layout_enabled(cfg: MosaicConfig | None = None) -> bool:
+    """True when MCS or legacy homogeneous / hero grids may use six slots."""
+    return mosaic_window_size_enabled(6, cfg)
+
+
 def effective_mosaic_window_sizes(cfg: MosaicConfig) -> tuple[int, ...]:
     """DESIGN §12.1 · unified_mode=false limits MCS to 5-slot windows only."""
     if not cfg.enabled:
@@ -49,4 +65,4 @@ def effective_mosaic_window_sizes(cfg: MosaicConfig) -> tuple[int, ...]:
     sizes = tuple(s for s in cfg.enabled_window_sizes if s in _ALLOWED_SIZES)
     if cfg.unified_mode:
         return sizes
-    return tuple(s for s in sizes if s == 5) or (5,)
+    return tuple(s for s in sizes if s == 5)

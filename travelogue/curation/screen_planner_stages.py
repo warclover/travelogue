@@ -241,6 +241,11 @@ def assign_screen_id(ctx: ChapterPlanContext, screen: dict) -> None:
 
 
 def append_screen(ctx: ChapterPlanContext, screen: dict) -> None:
+    from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
+
+    pid = str(screen.get("patternId") or "")
+    if pid and mosaic_pattern_disabled(pid):
+        raise RuntimeError(f"disabled mosaic pattern must not be appended: {pid}")
     if ctx.layout_state:
         ctx.layout_state.note_screen(screen.get("patternId", ""))
     assign_screen_id(ctx, screen)
@@ -280,7 +285,9 @@ def try_mosaic_five(ctx: ChapterPlanContext, start: int) -> bool:
     if not ctx.enable_mosaic:
         return False
     mosaic_cfg = get_config().mosaic
-    if mosaic_cfg.enabled and 5 in mosaic_cfg.enabled_window_sizes:
+    if 5 not in mosaic_cfg.enabled_window_sizes:
+        return False
+    if mosaic_cfg.enabled:
         return try_mosaic_window(ctx, start) == 5
     if ctx.trip_total < MIN_TRIP_PHOTOS_FOR_MOSAIC:
         return False

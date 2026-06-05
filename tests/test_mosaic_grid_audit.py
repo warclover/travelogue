@@ -29,6 +29,7 @@ def test_full_coverage_explicit_3x3_mosaic_patterns():
         "screen-mosaic-5-main-portrait-3land",
         "screen-mosaic-5-main-landscape-2portrait-2land",
         "screen-mosaic-5-3portrait-2land-balanced",
+        # main-land-2p2l: 3×3 full after right column tall-portrait fix
         "screen-mosaic-5-main-hero-plus-4",
         "screen-mosaic-6-main-hero-plus-5",
     }

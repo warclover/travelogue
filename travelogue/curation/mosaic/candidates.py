@@ -9,7 +9,9 @@ from travelogue.config import MosaicConfig
 from travelogue.curation.layout_planner import AspectKind
 from travelogue.curation.mosaic.builders import build_screen, try_order_for_pattern
 from travelogue.curation.mosaic.registry import MosaicPattern, default_registry, patterns_for_window_size
+from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
 from travelogue.curation.mosaic.features import feature_summary_for_window
+from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
 from travelogue.curation.mosaic.runtime import effective_mosaic_window_sizes
 
 
@@ -39,6 +41,8 @@ def generate_window_candidates(
     summary = feature_summary_for_window(asset_ids, assets_map)
     out: list[ScreenCandidate] = []
     for pat in patterns:
+        if mosaic_pattern_disabled(pat.pattern_id, cfg=cfg):
+            continue
         ordered = try_order_for_pattern(
             pat.pattern_id,
             asset_ids,
@@ -50,13 +54,14 @@ def generate_window_candidates(
         if not ordered:
             continue
         screen = build_screen(pat, ordered, assets_map=assets_map)
+        geom_ok = screen_slots_geometry_ok(screen, aspects)
         out.append(
             ScreenCandidate(
                 pattern_id=pat.pattern_id,
                 ordered_asset_ids=ordered,
                 screen=screen,
                 feature_summary={**summary, "patternId": pat.pattern_id},
-                hard_valid=True,
+                hard_valid=geom_ok,
             )
         )
     if cfg.deterministic_strict:

@@ -19,15 +19,10 @@
       "patternId": "close",
       "screens": [
         {
-          "patternId": "screen-portrait-2",
+          "patternId": "screen-portrait-3",
           "slotAssetIds": [
             "p4",
-            "p5"
-          ]
-        },
-        {
-          "patternId": "screen-portrait-1",
-          "slotAssetIds": [
+            "p5",
             "p6"
           ]
         }

@@ -37,9 +37,15 @@ def build_legacy_screen(
     burst = burst_seconds
 
     if size == 5:
-        from travelogue.curation.mosaic.runtime import get_effective_mosaic_config
+        from travelogue.curation.mosaic.runtime import (
+            five_slot_mosaic_enabled,
+            get_effective_mosaic_config,
+        )
 
-        mosaic_on = get_effective_mosaic_config().enabled
+        mosaic_cfg = get_effective_mosaic_config()
+        if not five_slot_mosaic_enabled(mosaic_cfg):
+            return None
+        mosaic_on = mosaic_cfg.enabled
         if not mosaic_on and trip_total < MIN_TRIP_PHOTOS_FOR_MOSAIC:
             return None
         ordered = _can_mosaic_5_main_portrait_3land(
@@ -127,6 +133,13 @@ def build_legacy_screen(
         return None
 
     if size == 6 and len(window) == 6:
+        from travelogue.curation.mosaic.runtime import (
+            get_effective_mosaic_config,
+            mosaic_window_size_enabled,
+        )
+
+        if not mosaic_window_size_enabled(6, get_effective_mosaic_config()):
+            return None
         if all(_is_std_portrait_id(x, aspects) for x in window):
             return _make_screen(
                 "screen-portrait-6",
@@ -165,6 +178,18 @@ def append_legacy_window(
         trip_total=ctx.trip_total,
     )
     if not screen:
+        return False
+    from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
+    from travelogue.curation.mosaic.runtime import get_effective_mosaic_config
+    from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
+
+    pid = str(screen.get("patternId") or "")
+    if pid and mosaic_pattern_disabled(pid, cfg=get_effective_mosaic_config()):
+        return False
+    # Legacy size==4 emits portrait-4 (2×2) for all-portrait windows, which on the
+    # 16:9 web stage puts portraits into wide cells. Reject so planning falls back
+    # to portrait column grids (portrait-3 + portrait-1).
+    if not screen_slots_geometry_ok(screen, ctx.aspects):
         return False
     append_screen(ctx, screen)
     return True

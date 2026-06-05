@@ -21,6 +21,7 @@ from travelogue.curation.bucket_planning import (
 from travelogue.curation.curate_patterns import pattern_hint_for_bucket
 from travelogue.curation.curate_scoring import (
     build_cover_explain,
+    build_cover_layout_review,
     cover_asset_pool,
     cover_candidates as _cover_candidates,
     cover_score as _cover_score,
@@ -199,15 +200,29 @@ def _cover_explain_for(
     assets: list[dict],
     cover_id: str,
     export_layout: str,
+    *,
+    cover_scoring=None,
+    enable_phase6_cover_factors: bool = True,
 ) -> list[dict]:
+    from travelogue.curation.cover_scoring_params import (
+        CoverScoringParams,
+        resolve_person_demote,
+    )
+
     asset = next((a for a in assets if a.get("id") == cover_id), None)
     if not asset:
         return []
+    params = cover_scoring if cover_scoring is not None else CoverScoringParams()
     pool = cover_asset_pool(assets, export_layout=export_layout)
+    featured = [a for a in pool if a.get("userTier") == "featured"]
+    search = featured if featured else pool
     return build_cover_explain(
         asset,
         export_layout,
-        median_sharp=median_sharpness(pool),
+        median_sharp=median_sharpness(search),
+        cover_scoring=params,
+        person_demote_mult=resolve_person_demote(params, search),
+        enable_phase6_cover_factors=enable_phase6_cover_factors,
     )
 
 
@@ -232,24 +247,41 @@ def sync_trip_covers(
     featured_weight: float = 1.35,
     featured_min_for_cover_pool: int = 2,
     enable_phase6_cover_factors: bool = True,
+    cover_scoring=None,
 ) -> str:
     """Write coverAssetId (+ coverByLayout when exportLayout=auto). Returns primary cover id."""
+    from travelogue.curation.cover_scoring_params import CoverScoringParams
+
     assets = assets if assets is not None else layout_eligible_assets(trip)
     layout = export_layout or trip.get("exportLayout") or "auto"
     curation = trip.setdefault("curation", {})
+    cs = cover_scoring if cover_scoring is not None else CoverScoringParams()
+    p6 = bool(enable_phase6_cover_factors and cs.enable_phase6_factors)
+
+    def _write_blind_review(cover_id: str, profile: str) -> None:
+        curation.setdefault("coverBlindReview", {})[profile] = build_cover_layout_review(
+            assets,
+            cover_id,
+            export_layout=profile,
+            featured_weight=featured_weight,
+            enable_phase6_cover_factors=p6,
+            cover_scoring=cs,
+        )
 
     if layout == "auto":
         mobile_id = _pick_cover_asset_id(
             assets,
             export_layout="mobile",
             featured_weight=featured_weight,
-            enable_phase6_cover_factors=enable_phase6_cover_factors,
+            enable_phase6_cover_factors=p6,
+            cover_scoring=cs,
         )
         web_id = _pick_cover_asset_id(
             assets,
             export_layout="web",
             featured_weight=featured_weight,
-            enable_phase6_cover_factors=enable_phase6_cover_factors,
+            enable_phase6_cover_factors=p6,
+            cover_scoring=cs,
         )
         curation["coverByLayout"] = {"mobile": mobile_id, "web": web_id}
         trip["coverAssetId"] = mobile_id
@@ -259,6 +291,8 @@ def sync_trip_covers(
             export_layout="mobile",
             featured_weight=featured_weight,
             featured_min=featured_min_for_cover_pool,
+            enable_phase6_cover_factors=p6,
+            cover_scoring=cs,
         )
         curation["coverCandidatesByLayout"] = {
             "mobile": _cover_candidates(
@@ -267,6 +301,8 @@ def sync_trip_covers(
                 export_layout="mobile",
                 featured_weight=featured_weight,
                 featured_min=featured_min_for_cover_pool,
+                enable_phase6_cover_factors=p6,
+                cover_scoring=cs,
             ),
             "web": _cover_candidates(
                 assets,
@@ -274,10 +310,24 @@ def sync_trip_covers(
                 export_layout="web",
                 featured_weight=featured_weight,
                 featured_min=featured_min_for_cover_pool,
+                enable_phase6_cover_factors=p6,
+                cover_scoring=cs,
             ),
         }
-        mobile_explain = _cover_explain_for(assets, mobile_id, "mobile")
-        web_explain = _cover_explain_for(assets, web_id, "web")
+        mobile_explain = _cover_explain_for(
+            assets,
+            mobile_id,
+            "mobile",
+            cover_scoring=cs,
+            enable_phase6_cover_factors=p6,
+        )
+        web_explain = _cover_explain_for(
+            assets,
+            web_id,
+            "web",
+            cover_scoring=cs,
+            enable_phase6_cover_factors=p6,
+        )
         if mobile_explain:
             curation["coverExplain"] = mobile_explain
         else:
@@ -289,13 +339,16 @@ def sync_trip_covers(
             }
         else:
             curation.pop("coverExplainByLayout", None)
+        _write_blind_review(mobile_id, "mobile")
+        _write_blind_review(web_id, "web")
         return mobile_id
 
     cover_id = _pick_cover_asset_id(
         assets,
         export_layout=layout,
         featured_weight=featured_weight,
-        enable_phase6_cover_factors=enable_phase6_cover_factors,
+        enable_phase6_cover_factors=p6,
+        cover_scoring=cs,
     )
     trip["coverAssetId"] = cover_id
     trip["coverCandidates"] = _cover_candidates(
@@ -304,11 +357,24 @@ def sync_trip_covers(
         export_layout=layout,
         featured_weight=featured_weight,
         featured_min=featured_min_for_cover_pool,
+        enable_phase6_cover_factors=p6,
+        cover_scoring=cs,
     )
     curation.pop("coverByLayout", None)
     curation.pop("coverCandidatesByLayout", None)
     curation.pop("coverExplainByLayout", None)
-    _attach_cover_explain(curation, assets, cover_id, layout)
+    explain = _cover_explain_for(
+        assets,
+        cover_id,
+        layout,
+        cover_scoring=cs,
+        enable_phase6_cover_factors=p6,
+    )
+    if explain:
+        curation["coverExplain"] = explain
+    else:
+        curation.pop("coverExplain", None)
+    _write_blind_review(cover_id, layout)
     return cover_id
 
 
@@ -437,6 +503,7 @@ def _curate_preflight(
         featured_weight=cur_cfg.featured_weight,
         featured_min_for_cover_pool=cur_cfg.featured_min_for_cover_pool,
         enable_phase6_cover_factors=cover_p6,
+        cover_scoring=cur_cfg.cover_scoring,
     )
     curation = trip.get("curation") or {}
     by_layout = curation.get("coverByLayout") or {}

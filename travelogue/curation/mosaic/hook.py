@@ -70,7 +70,7 @@ def chapter_should_skip_hero_for_mosaic(ctx: ChapterPlanContext) -> bool:
     from travelogue.curation.screen_planner import MIN_TRIP_PHOTOS_FOR_MOSAIC
 
     cfg = _mosaic_cfg()
-    sizes = effective_mosaic_window_sizes(cfg) if cfg.enabled else (5,)
+    sizes = effective_mosaic_window_sizes(cfg) if cfg.enabled else ()
     if len(ctx.ids) not in sizes:
         return False
     size = len(ctx.ids)

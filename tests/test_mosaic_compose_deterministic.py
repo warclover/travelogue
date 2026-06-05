@@ -12,7 +12,12 @@ from tests._golden.helpers import build_mosaic_eligible_trip, plan_mosaic_screen
 def test_pick_best_five_stable_signature():
     buckets, aspects, assets = build_mosaic_eligible_trip()
     assets_map = {a["id"]: a for a in assets}
-    cfg = MosaicConfig(enabled=True, deterministic_strict=True, min_candidate_score=0.0)
+    cfg = MosaicConfig(
+        enabled=True,
+        enabled_window_sizes=(5,),
+        deterministic_strict=True,
+        min_candidate_score=0.0,
+    )
     ids = buckets[0]
     r1 = pick_best_five_window(ids, aspects, assets_map, cfg=cfg, trip_photo_total=40)
     r2 = pick_best_five_window(ids, aspects, assets_map, cfg=cfg, trip_photo_total=40)

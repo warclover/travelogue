@@ -41,7 +41,9 @@ def bucket_has_mosaic_window(
     mixed_proximity_seconds: float,
     trip_photo_total: int,
 ) -> bool:
-    if trip_photo_total < MIN_TRIP_PHOTOS_FOR_MOSAIC or len(bucket) < 5:
+    from travelogue.curation.mosaic.runtime import five_slot_mosaic_enabled
+
+    if not five_slot_mosaic_enabled() or trip_photo_total < MIN_TRIP_PHOTOS_FOR_MOSAIC or len(bucket) < 5:
         return False
     ordered = _sort_asset_ids_by_taken(list(bucket), assets_by_id)
     for i in range(len(ordered) - 4):

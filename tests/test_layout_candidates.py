@@ -21,7 +21,20 @@ def _asset(aid: str, kind: str, secs: float = 0) -> dict:
     }
 
 
-def test_bucket_has_mosaic_window_detects_five_mix():
+def test_bucket_has_mosaic_window_detects_five_mix(monkeypatch):
+    from dataclasses import replace
+
+    from travelogue import config as config_mod
+
+    base = config_mod.get_config()
+    monkeypatch.setattr(
+        config_mod,
+        "get_config",
+        lambda: replace(
+            base,
+            mosaic=replace(base.mosaic, enabled_window_sizes=(3, 4, 5, 6, 8, 9)),
+        ),
+    )
     # 4 land + 1 portrait, time-near
     ids = ["l1", "l2", "l3", "l4", "p1"]
     aspects = {i: ("portrait" if i == "p1" else "landscape") for i in ids}

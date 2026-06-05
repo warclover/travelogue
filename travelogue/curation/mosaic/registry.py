@@ -63,14 +63,15 @@ def default_registry() -> dict[str, MosaicPattern]:
             pattern_id=PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
             slot_count=5,
             grid_class=PATTERN_GRID_CLASS[PATTERN_MOSAIC_5_MAIN_LAND_2P_2L],
-            roles=("main", "portrait", "portrait", "landscape", "landscape"),
+            roles=("main", "portrait", "landscape", "portrait", "landscape"),
             accepts=AspectProfile(min_portrait=2, min_landscape=3),
         ),
         PATTERN_MOSAIC_5_2P_3L_BALANCED: MosaicPattern(
             pattern_id=PATTERN_MOSAIC_5_2P_3L_BALANCED,
             slot_count=5,
             grid_class=PATTERN_GRID_CLASS[PATTERN_MOSAIC_5_2P_3L_BALANCED],
-            roles=("portrait", "portrait", "landscape", "landscape", "landscape"),
+            # Slot order follows CSS: top row = 2 landscape tiles, tall + square = portraits
+            roles=("landscape", "landscape", "portrait", "portrait", "landscape"),
             accepts=AspectProfile(min_portrait=2, min_landscape=3),
         ),
         PATTERN_MOSAIC_5_3P_2L_BALANCED: MosaicPattern(

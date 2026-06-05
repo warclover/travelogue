@@ -8,6 +8,7 @@ import logging
 import shutil
 import threading
 from copy import deepcopy
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -81,6 +82,23 @@ def _release_resources_before_playwright(request: pytest.FixtureRequest):
             reset_browser_pool_for_tests()
         except Exception as exc:
             _log.debug("playwright pool reset (teardown) failed: %s", exc, exc_info=True)
+
+
+@pytest.fixture(autouse=True)
+def _enable_five_slot_for_mosaic_marked_tests(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Five-slot mosaics are off by default in app config; @pytest.mark.mosaic tests opt in."""
+    if request.node.get_closest_marker("mosaic") is None:
+        yield
+        return
+    from travelogue import config as config_mod
+
+    base = config_mod.get_config()
+    sizes = tuple(sorted(set(base.mosaic.enabled_window_sizes) | {5}))
+    patched = replace(base, mosaic=replace(base.mosaic, enabled_window_sizes=sizes))
+    monkeypatch.setattr(config_mod, "get_config", lambda: patched)
+    yield
 
 
 @pytest.fixture(autouse=True)

@@ -5,20 +5,10 @@
       "patternId": "open",
       "screens": [
         {
-          "patternId": "screen-portrait-1",
+          "patternId": "screen-portrait-1-landscape-2",
           "slotAssetIds": [
-            "p1"
-          ]
-        },
-        {
-          "patternId": "screen-landscape-1",
-          "slotAssetIds": [
-            "l1"
-          ]
-        },
-        {
-          "patternId": "screen-landscape-1",
-          "slotAssetIds": [
+            "p1",
+            "l1",
             "l2"
           ]
         },
@@ -35,20 +25,10 @@
       "patternId": "close",
       "screens": [
         {
-          "patternId": "screen-landscape-1",
+          "patternId": "screen-portrait-1-landscape-2",
           "slotAssetIds": [
-            "l3"
-          ]
-        },
-        {
-          "patternId": "screen-portrait-1",
-          "slotAssetIds": [
-            "p3"
-          ]
-        },
-        {
-          "patternId": "screen-landscape-1",
-          "slotAssetIds": [
+            "p3",
+            "l3",
             "l4"
           ]
         },
