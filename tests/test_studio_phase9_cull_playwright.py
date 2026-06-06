@@ -105,6 +105,40 @@ def test_ac_p9_ux_03_no_excluded_photos_entry(studio_server) -> None:
         browser.close()
 
 
+def test_ac_p9_ux_cluster_notice_non_blocking(studio_server) -> None:
+    """UX-P3-04 · clusterNotice 非阻断 toast（v2 first-success）。"""
+    notice = "部分照片缺少位置信息，已按时间顺序排版"
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "dev=1&studioFixture=multi")
+        page.evaluate(
+            """
+            async (payload) => {
+              window.studioToast = function(msg) {
+                var el = document.createElement('div');
+                el.className = 'studio__toast';
+                el.id = 'ux-cluster-notice-toast';
+                el.textContent = msg;
+                document.body.appendChild(el);
+              };
+              const mod = await import('/__studio/homepage-v2/first-success.js');
+              mod.showFirstSuccess({ result: payload });
+            }
+            """,
+            {
+                "tripId": "ux-trip",
+                "title": "测试",
+                "photoCount": 12,
+                "clusterNotice": notice,
+            },
+        )
+        page.wait_for_selector("#ux-cluster-notice-toast", timeout=10_000)
+        assert page.locator("#ux-cluster-notice-toast").inner_text() == notice
+        _wait_visible(page, "v2-success-open")
+        browser.close()
+
+
 def test_ac_p9_ux_04_max_photos_warn_non_blocking(studio_server) -> None:
     """AC-P9-UX-04 · maxPhotos WARN 非阻断 toast（v2 first-success）。"""
     warn = "共 297 张进入排版，超过建议上限 250 张，生成可能较慢"

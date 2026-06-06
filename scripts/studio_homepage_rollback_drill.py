@@ -2,9 +2,9 @@
 """Studio 首页 v2 · 生产级回滚演练（M20-j · RUNBOOK §3）。
 
 模拟「TRAVELOGUE_STUDIO_HOMEPAGE_V2=off」后用户态仍可用：
-  1. gate off → GET / 仍 v3
-  2. sessionStorage homepageVariant=v2 不破坏 v3
-  3. v3 关键 pytest 子集
+  1. gate off → GET / 仍 classic 冻结页
+  2. sessionStorage homepageVariant=v2 不破坏 classic
+  3. classic 关键 pytest 子集
   4. 可选写 rollout log 片段
 
 退出码：全部通过 → 0；任一失败 → 1。
@@ -27,7 +27,7 @@ _REPO = Path(__file__).resolve().parents[1]
 
 # RUNBOOK §3.2 最小自动化子集
 _ROLLBACK_TESTS = [
-    "tests/test_studio_home_v2.py::test_studio_home_gate_off_serves_v3_at_root",
+    "tests/test_studio_home_v2.py::test_studio_home_gate_off_serves_classic_at_root",
     "tests/test_studio_home_v2.py::test_studio_home_gate_auto_zero_percent_no_redirect",
     "tests/test_studio_home_v2.py::test_studio_classic_contract_smoke_config_capabilities",
     "tests/test_studio_home_v2_ac_playwright.py::test_ac_hp2_23_rollback_ignores_homepage_variant",

@@ -9,7 +9,7 @@
 
 | 频率 | 动作 | 命令 |
 |------|------|------|
-| **每次发版前** | AC + v3 回归 | `pytest tests/test_studio_home_v2*.py tests/test_studio_p8_regression.py -q` |
+| **每次发版前** | v2 AC + classic 应急 smoke | `pytest tests/test_studio_home_v2*.py tests/test_studio_home_v2_ac_playwright.py tests/test_studio_classic_freeze_smoke.py -q` |
 | **Nightly** | 合并 holdback 报告 | GitHub Actions [`.github/workflows/nightly-holdback.yml`](../../.github/workflows/nightly-holdback.yml)（funnel 必过 + LCP×10 审计 artifact） |
 | **Nightly（本地）** | 同上 | `python scripts/studio_homepage_m20i_drill.py --spawn --synthetic --lcp-runs 10 --out reports/holdback.json` |
 | **10% 灰度期** | 读真实 jsonl + LCP | `python scripts/studio_homepage_m20i_drill.py --telemetry ~/.travelogue/telemetry/studio-homepage-events.jsonl --lcp-base http://127.0.0.1:8766 --out holdback.json` |
@@ -54,10 +54,10 @@ python scripts/studio_holdback_report.py --telemetry ~/.travelogue/telemetry/stu
 1. 设置环境变量 **`TRAVELOGUE_STUDIO_HOMEPAGE_V2=off`**（或 yaml `percent: 0`）。
    yaml 片段见 [`config-holdback.example.yaml`](./config-holdback.example.yaml)。
 2. 重启 Studio 进程（`serve --studio` 或等价部署单元）。
-3. 验证 **`GET /` → v3**（`studio.html`）：
+3. 验证 **`GET /` → classic 冻结页**（`legacy-freeze/studio.classic.html`）：
 
    ```bash
-   curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" http://127.0.0.1:8766/
+   curl -s http://127.0.0.1:8766/ | findstr /C:"Classic"
    ```
 
 4. `GET /v2` 应 302 到 `/`（兼容旧书签入口）。
@@ -74,7 +74,7 @@ python scripts/studio_homepage_rollback_drill.py --out docs/acceptance-records/s
 
 | 检查项 | 命令 / 路径 |
 |--------|-------------|
-| v3 首页 DOM 回归 | `pytest tests/test_studio_home_v2.py::test_studio_home_gate_off_serves_v3_at_root -q` |
+| v3 首页 DOM 回归 | `pytest tests/test_studio_home_v2.py::test_studio_home_gate_off_serves_classic_at_root -q` |
 | Import 续 poll | `/?dev=1&studioState=importing-resume&studioJob=running` → 刷新后 `#v2-import-cancel` 可见 |
 | sessionStorage 未清 | `activeJobId` / `activePending` **不得** bulk 清除 |
 | 书架 / FirstSuccess | harness `idle-returning` / `first-success` 走查 |

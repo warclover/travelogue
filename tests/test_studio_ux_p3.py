@@ -88,6 +88,7 @@ def test_ux_p3_04_cluster_notice_non_blocking_string() -> None:
     assert "studioToast" in first_success
     assert "cullWarn" in first_success
     assert "dateRangeWarn" in first_success
+    assert "clusterNotice" in first_success
 
 
 def test_ux_p3_03_v2_advanced_options_markers() -> None:

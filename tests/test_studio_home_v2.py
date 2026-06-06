@@ -79,10 +79,11 @@ V2_HOME_MARKERS = (
     "v2-failure-stay",
 )
 
-V3_HOME_MARKERS = (
+CLASSIC_FREEZE_MARKERS = (
     'data-studio-v="4"',
     "studio-hero",
     "studio-hero-empty",
+    "Classic 首页（Deprecated）",
 )
 
 
@@ -138,8 +139,8 @@ def test_studio_home_v2_route_redirects_to_root(tmp_path: Path) -> None:
 
 
 @pytest.mark.e2e
-def test_studio_home_v3_unchanged(tmp_path: Path, monkeypatch) -> None:
-    """v2 引入后，v3 `/` 路径零回归。"""
+def test_studio_home_classic_unchanged_on_gate_off(tmp_path: Path, monkeypatch) -> None:
+    """gate off 时 GET / 仍为 classic 冻结页，且不加载 v2 bundle。"""
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "off")
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
@@ -149,9 +150,8 @@ def test_studio_home_v3_unchanged(tmp_path: Path, monkeypatch) -> None:
         with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=10) as resp:
             assert resp.status == 200
             html = resp.read().decode("utf-8")
-        for marker in V3_HOME_MARKERS:
+        for marker in CLASSIC_FREEZE_MARKERS:
             assert marker in html, marker
-        # v3 不应引用 v2 资源（Bundle 隔离 · LCP 护栏）
         assert "studio-home-v2.css" not in html
         assert "homepage-v2/bootstrap.js" not in html
     finally:
@@ -730,8 +730,8 @@ def test_demo_showcase_manifest_valid() -> None:
 
 
 @pytest.mark.e2e
-def test_studio_home_gate_off_serves_v3_at_root(tmp_path: Path, monkeypatch) -> None:
-    """AC-HP2-23 回滚 · TRAVELOGUE_STUDIO_HOMEPAGE_V2=off → GET / 仍 v3。"""
+def test_studio_home_gate_off_serves_classic_at_root(tmp_path: Path, monkeypatch) -> None:
+    """AC-HP2-23 回滚 · TRAVELOGUE_STUDIO_HOMEPAGE_V2=off → GET / 为 classic 冻结页。"""
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "off")
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
@@ -741,27 +741,9 @@ def test_studio_home_gate_off_serves_v3_at_root(tmp_path: Path, monkeypatch) -> 
         with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=10) as resp:
             assert resp.status == 200
             html = resp.read().decode("utf-8")
-        for marker in V3_HOME_MARKERS:
+        for marker in CLASSIC_FREEZE_MARKERS:
             assert marker in html, marker
         assert "studio-home-v2.css" not in html
-    finally:
-        server.shutdown()
-        server.server_close()
-
-
-@pytest.mark.e2e
-def test_studio_home_gate_off_legacy_root_uses_frozen_classic(tmp_path: Path, monkeypatch) -> None:
-    """M21-e2 · off 模式根路径回退到冻结 classic。"""
-    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "off")
-    trips_dir = tmp_path / "trips"
-    trips_dir.mkdir()
-    port = _free_port()
-    server = _start_studio_server(trips_dir, port)
-    try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=10) as resp:
-            assert resp.status == 200
-            html = resp.read().decode("utf-8")
-        assert "Travelogue Studio Classic (Deprecated)" in html
         assert "/__studio/legacy-freeze/studio.classic.js" in html
     finally:
         server.shutdown()
@@ -831,8 +813,8 @@ def test_studio_home_gate_on_serves_v2_at_root(tmp_path: Path, monkeypatch) -> N
 
 
 @pytest.mark.e2e
-def test_studio_home_gate_classic_serves_v3(tmp_path: Path, monkeypatch) -> None:
-    """M20-j · GET /classic 始终 v3（on 模式下 v3 迁 classic）。"""
+def test_studio_home_gate_classic_serves_frozen_page(tmp_path: Path, monkeypatch) -> None:
+    """M21-e2 · GET /classic 始终返回 legacy-freeze classic 页（与 gate 模式无关）。"""
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "on")
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
@@ -841,8 +823,9 @@ def test_studio_home_gate_classic_serves_v3(tmp_path: Path, monkeypatch) -> None
     try:
         with urllib.request.urlopen(f"http://127.0.0.1:{port}/classic", timeout=10) as resp:
             html = resp.read().decode("utf-8")
-        for marker in V3_HOME_MARKERS:
+        for marker in CLASSIC_FREEZE_MARKERS:
             assert marker in html, marker
+        assert "/__studio/legacy-freeze/studio.classic.js" in html
     finally:
         server.shutdown()
         server.server_close()

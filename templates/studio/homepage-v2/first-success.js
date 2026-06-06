@@ -125,6 +125,9 @@ function populateSuccessUi(result) {
   if (result.dateRangeWarn && typeof studioToast === "function") {
     studioToast(result.dateRangeWarn, { duration: 4200 });
   }
+  if (result.clusterNotice && typeof studioToast === "function") {
+    studioToast(result.clusterNotice, { duration: 4200 });
+  }
   var open = $("v2-success-open");
   var secondary = $("v2-success-secondary");
   var url = resolvePreviewUrl(result);
