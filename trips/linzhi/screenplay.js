@@ -47,6 +47,28 @@
     return presentConfig().featuredOnly === true;
   }
 
+  function autoAdvanceEnabled() {
+    return presentConfig().autoAdvance !== false;
+  }
+
+  function manualControlsEnabled() {
+    return presentConfig().manualControls !== false;
+  }
+
+  function tapZoneNavEnabled() {
+    return presentConfig().tapZoneNav !== false;
+  }
+
+  function loopEnabled() {
+    return presentConfig().loop === true;
+  }
+
+  function clickStageMode() {
+    var mode = presentConfig().clickStage;
+    if (mode === "stop" || mode === "pause" || mode === "none") return mode;
+    return "pause";
+  }
+
   function featuredAssetIds() {
     var ids = readingConfig().featuredAssetIds;
     return Array.isArray(ids) ? ids : [];
@@ -58,6 +80,12 @@
 
   function isLayoutScreen(el) {
     return el.matches && el.matches(SELECTOR);
+  }
+
+  function isTypingTarget(el) {
+    if (!el || !el.tagName) return false;
+    var tag = el.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable;
   }
 
   function presentSlideSelector() {
@@ -149,6 +177,8 @@
     this.layerB = root.querySelector('[data-screenplay-layer="b"]');
     this.progressBar = root.querySelector(".screenplay-progress__bar");
     this.counter = root.querySelector(".screenplay-counter");
+    this.pauseBtn = root.querySelector('[data-screenplay-action="pause"]');
+    this.navWrap = root.querySelector(".screenplay-chrome__nav");
     this.sources = sources;
     this.trigger = trigger;
     this.index = 0;
@@ -156,6 +186,7 @@
     this.activeLayer = this.layerA;
     this.idleLayer = this.layerB;
     this.running = false;
+    this.autoAdvancePaused = false;
     this.fadeMs = prefersReducedMotion() ? 0 : FADE_MS;
     this.dwellMs = prefersReducedMotion() ? 1500 : resolveDwellMs();
   }
@@ -170,6 +201,33 @@
   ScreenplayPlayer.prototype.schedule = function (fn, ms) {
     this.clearTimer();
     this.timer = setTimeout(fn, ms);
+  };
+
+  ScreenplayPlayer.prototype.scheduleAdvance = function () {
+    if (!this.running || !autoAdvanceEnabled() || this.autoAdvancePaused) return;
+    var self = this;
+    this.schedule(function () {
+      self.advance();
+    }, this.dwellMs);
+  };
+
+  ScreenplayPlayer.prototype.updatePauseButton = function () {
+    if (!this.pauseBtn) return;
+    var paused = this.autoAdvancePaused;
+    this.pauseBtn.setAttribute("aria-pressed", paused ? "true" : "false");
+    this.pauseBtn.textContent = paused
+      ? this.pauseBtn.getAttribute("data-label-play") || "继续"
+      : this.pauseBtn.getAttribute("data-label-pause") || "暂停";
+  };
+
+  ScreenplayPlayer.prototype.updateChrome = function () {
+    if (this.navWrap) {
+      this.navWrap.hidden = !manualControlsEnabled();
+    }
+    if (this.pauseBtn) {
+      this.pauseBtn.hidden = !autoAdvanceEnabled();
+      this.updatePauseButton();
+    }
   };
 
   ScreenplayPlayer.prototype.setTriggerLabel = function (playing) {
@@ -218,54 +276,90 @@
     this.activeLayer = layer;
   };
 
+  ScreenplayPlayer.prototype.goToIndex = function (nextIndex, animate) {
+    if (!this.running || nextIndex < 0 || nextIndex >= this.sources.length) return;
+    this.clearTimer();
+    var self = this;
+
+    var finish = function () {
+      self.index = nextIndex;
+      self.updateProgress();
+      if (presentHash.set) presentHash.set(self.index);
+      self.scheduleAdvance();
+    };
+
+    if (nextIndex === this.index) {
+      finish();
+      return;
+    }
+
+    if (animate === false || this.fadeMs === 0) {
+      this.mountSlide(this.activeLayer, this.sources[nextIndex]);
+      this.activeLayer.classList.add("is-visible");
+      this.idleLayer.classList.remove("is-visible");
+      finish();
+      return;
+    }
+
+    this.mountSlide(this.idleLayer, this.sources[nextIndex]);
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        self.showLayer(self.idleLayer);
+        self.schedule(finish, self.fadeMs);
+      });
+    });
+  };
+
   ScreenplayPlayer.prototype.advance = function () {
     if (!this.running) return;
 
     var nextIndex = this.index + 1;
     if (nextIndex >= this.sources.length) {
-      this.stop(false);
-      return;
+      if (loopEnabled()) {
+        nextIndex = 0;
+      } else {
+        this.stop(false);
+        return;
+      }
     }
 
-    var self = this;
-    this.mountSlide(this.idleLayer, this.sources[nextIndex]);
+    this.goToIndex(nextIndex, true);
+  };
 
-    var afterTransition = function () {
-      self.index = nextIndex;
-      self.updateProgress();
-      if (presentHash.set) presentHash.set(self.index);
-      self.schedule(function () {
-        self.advance();
-      }, self.dwellMs);
-    };
-
-    if (this.fadeMs === 0) {
-      this.showLayer(this.idleLayer);
-      afterTransition();
-      return;
+  ScreenplayPlayer.prototype.next = function () {
+    if (!this.running || !manualControlsEnabled()) return;
+    var nextIndex = this.index + 1;
+    if (nextIndex >= this.sources.length) {
+      if (loopEnabled()) nextIndex = 0;
+      else return;
     }
+    this.goToIndex(nextIndex, true);
+  };
 
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        self.showLayer(self.idleLayer);
-        self.schedule(afterTransition, self.fadeMs);
-      });
-    });
+  ScreenplayPlayer.prototype.prev = function () {
+    if (!this.running || !manualControlsEnabled()) return;
+    var prevIndex = this.index - 1;
+    if (prevIndex < 0) {
+      if (loopEnabled()) prevIndex = this.sources.length - 1;
+      else return;
+    }
+    this.goToIndex(prevIndex, true);
+  };
+
+  ScreenplayPlayer.prototype.togglePause = function () {
+    if (!this.running || !autoAdvanceEnabled()) return;
+    this.autoAdvancePaused = !this.autoAdvancePaused;
+    this.updatePauseButton();
+    if (this.autoAdvancePaused) {
+      this.clearTimer();
+    } else {
+      this.scheduleAdvance();
+    }
   };
 
   ScreenplayPlayer.prototype.goTo = function (index) {
     if (!this.running || index < 0 || index >= this.sources.length) return;
-    this.clearTimer();
-    this.index = index;
-    this.mountSlide(this.activeLayer, this.sources[index]);
-    this.activeLayer.classList.add("is-visible");
-    this.idleLayer.classList.remove("is-visible");
-    this.updateProgress();
-    if (presentHash.set) presentHash.set(this.index);
-    var self = this;
-    this.schedule(function () {
-      self.advance();
-    }, this.dwellMs);
+    this.goToIndex(index, false);
   };
 
   function pauseBreath() {
@@ -333,11 +427,13 @@
       initialIndex = Math.min(startIndex, this.sources.length - 1);
     }
     this.running = true;
+    this.autoAdvancePaused = false;
     this.index = initialIndex;
     this.mountSlide(this.activeLayer, this.sources[initialIndex]);
     this.activeLayer.classList.add("is-visible");
     this.idleLayer.classList.remove("is-visible");
     this.updateProgress();
+    this.updateChrome();
     if (presentHash.set) presentHash.set(this.index);
     this.root.hidden = false;
     document.body.classList.add("screenplay-active");
@@ -348,9 +444,7 @@
         /* 用户拒绝或环境不支持时仍可在页面内播放 */
       })
       .then(function () {
-        self.schedule(function () {
-          self.advance();
-        }, self.dwellMs);
+        self.scheduleAdvance();
       });
   };
 
@@ -358,6 +452,7 @@
     if (!this.running && this.root.hidden) return;
     var slideIndex = this.index;
     this.running = false;
+    this.autoAdvancePaused = false;
     this.clearTimer();
     document.body.classList.remove("screenplay-active");
     this.root.hidden = true;
@@ -423,6 +518,7 @@
     }
 
     var player = new ScreenplayPlayer(root, sources, primaryTrigger);
+    player.updateChrome();
     if (presentBookmarks.wire) {
       presentBookmarks.wire(root, player);
     }
@@ -437,21 +533,68 @@
       });
     }
 
-    var stopBtn = root.querySelector("[data-screenplay-action=stop]");
-    if (stopBtn) {
-      stopBtn.addEventListener("click", function () {
-        player.stop(true);
+    root.querySelectorAll("[data-screenplay-action]").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var action = btn.getAttribute("data-screenplay-action");
+        if (action === "stop") player.stop(true);
+        else if (action === "prev") player.prev();
+        else if (action === "next") player.next();
+        else if (action === "pause") player.togglePause();
       });
-    }
+    });
 
     root.addEventListener("click", function (e) {
-      if (e.target.closest("[data-screenplay-action=stop]")) return;
-      if (player.running) player.stop(true);
+      if (e.target.closest("[data-screenplay-action]")) return;
+      if (!player.running) return;
+
+      if (tapZoneNavEnabled() && e.target.closest(".screenplay-stage")) {
+        var stage = root.querySelector(".screenplay-stage");
+        if (stage) {
+          var rect = stage.getBoundingClientRect();
+          var x = e.clientX - rect.left;
+          var third = rect.width / 3;
+          if (x < third) {
+            player.prev();
+            return;
+          }
+          if (x > third * 2) {
+            player.next();
+            return;
+          }
+        }
+      }
+
+      var mode = clickStageMode();
+      if (mode === "stop") {
+        player.stop(true);
+      } else if (mode === "pause") {
+        player.togglePause();
+      }
     });
 
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && player.running) {
+      if (!player.running) return;
+      if (e.key === "Escape") {
         player.stop(true);
+        return;
+      }
+      if (!manualControlsEnabled() || isTypingTarget(e.target)) return;
+
+      if (
+        e.key === "ArrowRight" ||
+        e.key === "ArrowDown" ||
+        e.key === " " ||
+        e.key === "PageDown"
+      ) {
+        e.preventDefault();
+        player.next();
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "PageUp") {
+        e.preventDefault();
+        player.prev();
+      } else if ((e.key === "p" || e.key === "P") && autoAdvanceEnabled()) {
+        e.preventDefault();
+        player.togglePause();
       }
     });
 
