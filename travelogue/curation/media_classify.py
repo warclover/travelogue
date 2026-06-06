@@ -44,17 +44,19 @@ def classify_media_class(
     if nw <= 0 or nh <= 0:
         return "unknown"
 
-    probe = {
+    # Classify from source pixels only — ingest may set width/height to the largest
+    # responsive WebP variant, which upscales small sources for srcset (not reupload).
+    native_probe = {
         "id": "x",
         "type": "image",
         "nativeWidth": nw,
         "nativeHeight": nh,
-        "width": int(asset.get("width") or nw),
-        "height": int(asset.get("height") or nh),
+        "width": nw,
+        "height": nh,
     }
-    if is_suspected_thumbnail_asset(probe):
+    if is_suspected_thumbnail_asset(native_probe):
         return "thumbnail"
-    if is_upscaled_thumbnail(probe):
+    if is_upscaled_thumbnail(native_probe):
         return "reupload"
 
     ratio = nw / nh if nh else 1.0
