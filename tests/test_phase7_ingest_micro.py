@@ -35,5 +35,19 @@ def test_screen_full_sizes_requests_hd_tier() -> None:
     assert "2400px" in sizes
 
 
+def test_face_detect_max_edge_config_default() -> None:
+    cfg = IngestConfig()
+    assert cfg.face_detect_max_edge == 0
+
+
+def test_downscale_for_detect_preserves_aspect() -> None:
+    from travelogue.media.subject_detect import _downscale_for_detect
+
+    img = Image.new("RGB", (2400, 1600), (80, 90, 100))
+    work, scale = _downscale_for_detect(img, 640)
+    assert scale < 1.0
+    assert max(work.size) <= 640
+
+
 def test_cascade_singleton_reset() -> None:
     reset_cascade_classifier()

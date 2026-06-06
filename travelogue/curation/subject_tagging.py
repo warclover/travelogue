@@ -157,6 +157,14 @@ def semantic_category_for_asset(asset: dict) -> str:
     return "general"
 
 
+def refresh_semantic_tag_for_asset(asset: dict) -> str:
+    """Recompute L1 category after CLIP subjectClass or tags change (Phase 12)."""
+    asset.pop("semanticTag", None)
+    category = semantic_category_for_asset(asset)
+    asset["semanticTag"] = {"category": category}
+    return category
+
+
 def is_mundane_clusterable(asset: dict) -> str | None:
     """Return mundane bucket key if asset is clusterable mundane, else None."""
     if subject_class_for_asset(asset) == "food":

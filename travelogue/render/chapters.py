@@ -258,6 +258,9 @@ def build_chapters_render_context(
             lead = ""
         if i == 0 and has_foreword_spread:
             lead = ""
+        decor_line = (ch.get("decorLine") or "").strip()
+        if strip_narrative_copy:
+            decor_line = ""
         ch_ctx: ChapterRenderContext = {
             "id": ch["id"],
             "patternId": ch.get("patternId", ""),
@@ -265,6 +268,8 @@ def build_chapters_render_context(
             "title": ch.get("title", ""),
             "lead": lead,
             "hasLead": bool(lead),
+            "decorLine": decor_line,
+            "hasDecorLine": bool(decor_line),
             "editableLead": is_draft and bool(lead),
             "editLeadPath": f"chapters.{ch['id']}.lead" if is_draft else None,
             "hasMemoryAnchors": bool(anchors),

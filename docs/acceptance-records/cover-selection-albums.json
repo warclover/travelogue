@@ -1,17 +1,11 @@
 {
   "version": "1",
-  "notes": "R0 前冻结。填写 tripDir（相对仓库根）或 assetsJson；tags 用于分层统计。",
+  "notes": "川藏线 211 张真实相册（2026-06-06）；原 mao/maomi 占位待落地后补回。",
   "albums": [
     {
-      "albumId": "mao",
-      "tripDir": "trips/mao",
-      "tags": ["portrait_heavy", "featured"],
-      "exportLayout": "mobile"
-    },
-    {
-      "albumId": "maomi",
-      "tripDir": "trips/maomi",
-      "tags": ["mixed"],
+      "albumId": "chuanzang",
+      "tripDir": "trips/chuanzang",
+      "tags": ["landscape", "travel", "real_album"],
       "exportLayout": "mobile"
     }
   ]

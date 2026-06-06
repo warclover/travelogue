@@ -357,7 +357,12 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
     aspect_kind = classify_aspect(photo.img.width, photo.img.height)
     focal = (0.5, 0.45)
     t_faces = time.monotonic()
-    subj = analyze_subject(photo.img, min_face_size=cfg.face_min_size_px, enabled=cfg.detect_faces)
+    subj = analyze_subject(
+        photo.img,
+        min_face_size=cfg.face_min_size_px,
+        face_detect_max_edge=cfg.face_detect_max_edge,
+        enabled=cfg.detect_faces,
+    )
     if acc is not None:
         acc["faces"] = acc.get("faces", 0.0) + (time.monotonic() - t_faces) * 1000.0
     if subj.has_face:

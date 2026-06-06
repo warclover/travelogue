@@ -134,7 +134,23 @@ def test_build_entry_includes_pipeline_and_chapters():
     assert entry["pipelineStatus"] == "structure_draft"
     assert entry["g1Pending"] is True
     assert entry["chapters"][0]["memoryAnchors"] == ["寺", "雨"]
+    assert entry["chapters"][0]["copyIntent"] == {}
     assert entry["aesthetic"]["enabled"] is True
+
+
+def test_chapter_summaries_includes_copy_intent() -> None:
+    trip = {
+        "chapters": [{
+            "id": "ch-01",
+            "title": "京都",
+            "curation": {
+                "memoryAnchors": ["寺"],
+                "copyIntent": {"mood": "平静", "focus": "地方", "note": "雨后"},
+            },
+        }],
+    }
+    rows = build_chapter_summaries(trip)
+    assert rows[0]["copyIntent"] == {"mood": "平静", "focus": "地方", "note": "雨后"}
 
 
 def test_chapter_summaries_empty_without_chapters():

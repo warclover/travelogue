@@ -52,10 +52,24 @@ def reset_cascade_classifier() -> None:
     _cascade_classifier = None
 
 
+def _downscale_for_detect(img: Image.Image, max_edge: int) -> tuple[Image.Image, float]:
+    """P7-B4 · optional downscale before Haar detect; returns (work image, scale to original)."""
+    if max_edge <= 0:
+        return img, 1.0
+    w, h = img.size
+    long_edge = max(w, h)
+    if long_edge <= max_edge:
+        return img, 1.0
+    scale = max_edge / long_edge
+    new_size = (max(1, int(w * scale)), max(1, int(h * scale)))
+    return img.resize(new_size, Image.Resampling.BILINEAR), scale
+
+
 def detect_faces_in_image(
     img: Image.Image,
     *,
     min_size: int = 48,
+    max_edge: int = 0,
 ) -> list[tuple[int, int, int, int]]:
     """
     Return face boxes (x, y, w, h) in pixel coords.
@@ -66,21 +80,29 @@ def detect_faces_in_image(
     import cv2
     import numpy as np
 
-    rgb = img.convert("RGB")
+    work, scale = _downscale_for_detect(img, max_edge)
+    rgb = work.convert("RGB")
     arr = np.array(rgb)
     gray = cv2.cvtColor(arr, cv2.COLOR_RGB2GRAY)
     classifier = _get_cascade_classifier()
     if classifier is None:
         return []
+    scaled_min = max(1, int(min_size * scale)) if scale < 1.0 else min_size
     faces = classifier.detectMultiScale(
         gray,
         scaleFactor=1.1,
         minNeighbors=4,
-        minSize=(min_size, min_size),
+        minSize=(scaled_min, scaled_min),
     )
     if len(faces) == 0:
         return []
-    return [(int(x), int(y), int(w), int(h)) for x, y, w, h in faces]
+    if scale >= 1.0:
+        return [(int(x), int(y), int(w), int(h)) for x, y, w, h in faces]
+    inv = 1.0 / scale
+    return [
+        (int(x * inv), int(y * inv), int(w * inv), int(h * inv))
+        for x, y, w, h in faces
+    ]
 
 
 def focal_from_faces(
@@ -121,6 +143,7 @@ def analyze_subject(
     img: Image.Image,
     *,
     min_face_size: int = 48,
+    face_detect_max_edge: int = 0,
     enabled: bool = True,
 ) -> FaceDetectionResult:
     """Run face detection; safe no-op when disabled or OpenCV missing."""
@@ -128,7 +151,11 @@ def analyze_subject(
     if not enabled:
         return FaceDetectionResult(False, default_focal, (), 0, None)
 
-    faces = detect_faces_in_image(img, min_size=min_face_size)
+    faces = detect_faces_in_image(
+        img,
+        min_size=min_face_size,
+        max_edge=face_detect_max_edge,
+    )
     if not faces:
         return FaceDetectionResult(False, default_focal, (), 0, None)
 

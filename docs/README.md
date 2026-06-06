@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
-| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2 Studio** + **Phase 3 Curate 聚类** + **Phase 4 编辑意图** + **Phase 5 整体优化** + **Phase 6 稳态与艺术优化** + **Phase 7 管线性能** + **Phase 8 语义聚类** + **Phase 9 排版前闸口** + **Phase 10 Food Grid** |
-| **更新日期** | 2026-05-30 |
+| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–15** + Studio 首页 v2/M21 + 算法 V2 |
+| **更新日期** | 2026-06-06 |
 
 ---
 
@@ -113,13 +113,13 @@
 
 ---
 
-## Phase 8 · 照片语义聚类（Semantic Tagging）
+## Phase 8 · 照片语义聚类（Semantic Tagging · 规划归档）
 
 | 文档 | 说明 |
 |------|------|
-| [PRD-PHASE8-photo-semantic-clustering.md](./PRD-PHASE8-photo-semantic-clustering.md) | **11 大类 L1 + 类内 HDBSCAN L2** · 排版 category_coherence |
+| [PRD-PHASE8-photo-semantic-clustering.md](./PRD-PHASE8-photo-semantic-clustering.md) | 11 大类 taxonomy · **Superseded → ADR-012 + Phase 12** |
 
-**前置**：Phase 9 Quality Gate 已上线。**代号**：P8-Semantic。
+**实施权威**：[PRD-PHASE12.md](./PRD-PHASE12.md) · [adr/012-semantic-tagging-p8-p12-split.md](./adr/012-semantic-tagging-p8-p12-split.md)
 
 ---
 
@@ -147,8 +147,84 @@
 | 文档 | 说明 |
 |------|------|
 | [PRD-PHASE10-food-grid.md](./PRD-PHASE10-food-grid.md) | mundane 食物/标识 **grid 屏** · screen_planner |
+| [IMPLEMENTATION-PHASE10.md](./IMPLEMENTATION-PHASE10.md) | 实施任务（**12/12 Done**） |
+| [ACCEPTANCE-PHASE10.md](./ACCEPTANCE-PHASE10.md) | 验收 |
 
 **前置**：Phase 9 Wave 3（subject 桥接）。
+
+---
+
+## Phase 11 · 轻文案（decorLine）
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE11-copy-optimization.md](./PRD-PHASE11-copy-optimization.md) | 章级单句点缀 · copyIntent 锚点 |
+| [IMPLEMENTATION-PHASE11.md](./IMPLEMENTATION-PHASE11.md) | M11-W1/W2 代码 · W3 观测骨架 |
+| [ACCEPTANCE-PHASE11.md](./ACCEPTANCE-PHASE11.md) | AC-P11-01～10 |
+
+**状态**：W1/W2 已合入 · 盲评 AC-P11-04 待人工。
+
+---
+
+## Phase 12 · 质量闸口增强
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE12.md](./PRD-PHASE12.md) | L1 语义 · category_coherence · 人像细粒度信号 |
+| [IMPLEMENTATION-PHASE12.md](./IMPLEMENTATION-PHASE12.md) | M40 任务清单 |
+
+**ADR**：[012-semantic-tagging-p8-p12-split.md](./adr/012-semantic-tagging-p8-p12-split.md)（L1 权威归 P12 · L2 暂缓）。
+
+---
+
+## Phase 13 · 模板系统化
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE13.md](./PRD-PHASE13.md) | 智能路由 · 模板治理 · event-recap 试点 |
+| [IMPLEMENTATION-PHASE13.md](./IMPLEMENTATION-PHASE13.md) | M50 · Gate Ready |
+
+---
+
+## Phase 14 · 双模式导入（快速分享 / 精细制作）
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE14.md](./PRD-PHASE14.md) | 双 Tab · travelNotes · 成功页分流 |
+| [IMPLEMENTATION-PHASE14.md](./IMPLEMENTATION-PHASE14.md) | M14.0–M14.4 |
+| [ACCEPTANCE-PHASE14.md](./ACCEPTANCE-PHASE14.md) | AC-P14-01～12 |
+| [PHASE14-PRD-COVERAGE.md](./PHASE14-PRD-COVERAGE.md) | PRD 对照完成度 |
+
+关联：[PRD-FINE-CRAFT-LAYOUT-DENSITY.md](./PRD-FINE-CRAFT-LAYOUT-DENSITY.md) · [PRD-M14-shelf-save-longshot.md](./PRD-M14-shelf-save-longshot.md)
+
+---
+
+## Phase 15 · Photo Mosaic 演进
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE15-photo-mosaic-evolution.md](./PRD-PHASE15-photo-mosaic-evolution.md) | 统一候选评分 · 多窗 mosaic |
+| [IMPLEMENTATION-PHASE15.md](./IMPLEMENTATION-PHASE15.md) | P15-S0～S3 |
+| [ACCEPTANCE-PHASE15.md](./ACCEPTANCE-PHASE15.md) | 离线闸门 |
+
+---
+
+## Studio 首页 v2 · M20 / M21
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md) | Bento 双交付 · Import Sheet · 书架 |
+| [PRD-M21-studio-homepage-v3-retirement.md](./PRD-M21-studio-homepage-v3-retirement.md) | v3 退役 · v2 唯一入口 |
+| [studio-homepage-v2/](./studio-homepage-v2/) | FEATURE-FLAG · RUNBOOK · OPEN-QUESTIONS |
+
+---
+
+## 算法优化 V2
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-ALGORITHM-OPTIMIZATION-V2.md](./PRD-ALGORITHM-OPTIMIZATION-V2.md) | 封面 logit · sharpness v2 |
+| [IMPLEMENTATION-ALGORITHM-V2.md](./IMPLEMENTATION-ALGORITHM-V2.md) | Sprint 1/2 · R0' 盲评待素材 |
 
 ---
 
@@ -255,6 +331,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-06-06 | 索引补 Phase 11–15 · M21 · Algorithm V2 · ADR-012 |
 | 2026-05-30 | 新增 Phase 7 管线性能 PRD 索引 |
 | 2026-05-30 | 新增 Phase 6 与艺术专项文档索引 |
 | 2026-05-19 | P0 文档包 |

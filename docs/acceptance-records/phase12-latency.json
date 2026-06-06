@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1",
+  "phase": "P12-LatencyProfile",
+  "generatedAt": "2026-06-06T07:23:58.441388Z",
+  "mode": "rules",
+  "profile": {
+    "sizes": [
+      {
+        "assets": 30,
+        "repeats": 2,
+        "wallMs": {
+          "p50": 0.2,
+          "p95": 0.27,
+          "avg": 0.24
+        },
+        "reportedCpuMs": {
+          "p50": 0.2,
+          "p95": 0.27,
+          "avg": 0.23
+        }
+      },
+      {
+        "assets": 60,
+        "repeats": 2,
+        "wallMs": {
+          "p50": 0.35,
+          "p95": 0.38,
+          "avg": 0.36
+        },
+        "reportedCpuMs": {
+          "p50": 0.34,
+          "p95": 0.38,
+          "avg": 0.36
+        }
+      }
+    ]
+  }
+}

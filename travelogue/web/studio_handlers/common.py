@@ -139,6 +139,24 @@ def match_trip_template(path: str) -> str | None:
     return match_trip_suffix(path, TEMPLATE_SUFFIX)
 
 
+def match_trip_chapter_copy_intent(path: str) -> tuple[str, str] | None:
+    """PATCH /__travelogue/trips/{tripId}/chapters/{chapterId}/copy-intent"""
+    from travelogue.web.studio_handlers.paths import COPY_INTENT_SUFFIX
+
+    prefix = TRIPS_PATH + "/"
+    suffix = COPY_INTENT_SUFFIX
+    if not path.startswith(prefix) or not path.endswith(suffix):
+        return None
+    mid = path[len(prefix) : -len(suffix)]
+    parts = mid.split("/")
+    if len(parts) != 3 or parts[1] != "chapters":
+        return None
+    trip_id, chapter_id = parts[0], parts[2]
+    if not trip_id or not chapter_id:
+        return None
+    return trip_id, chapter_id
+
+
 def match_trip_screen_replan(path: str) -> tuple[str, str] | None:
     """PATCH /__travelogue/trips/{tripId}/screens/{screenId}/replan"""
     prefix = TRIPS_PATH + "/"

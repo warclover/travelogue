@@ -11,5 +11,6 @@
 | [007](./007-native-clustering.md) | 原生聚类 | 已采纳 | — |
 | [010](./010-tech-debt-sprint.md) | Phase 5 后架构还债：handlers、AppContext、render 分层 | 已采纳 | 2026-05-30 |
 | [011](./011-import-strategy.md) | 延迟 import 策略（循环依赖 / 热循环） | 已采纳 | 2026-05-30 |
+| [012](./012-semantic-tagging-p8-p12-split.md) | L1 语义：Phase 8 归档 · Phase 12 权威实施 | 已采纳 | 2026-06-06 |
 
 新建 ADR 请使用 `00N-简短英文名.md`，并在本表登记。

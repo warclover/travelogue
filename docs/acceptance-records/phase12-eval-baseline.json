@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1",
+  "phase": "P12-SilentCullEnhancement",
+  "generatedAt": "2026-06-06T07:31:44.384957Z",
+  "source": {
+    "goldenSignoff": "docs\\acceptance-records\\phase9-golden-cull-signoff.json"
+  },
+  "syntheticCullSmoke": {
+    "assets": 60,
+    "layoutEligible": 45,
+    "keepRatio": 0.75,
+    "mlFallbackRateL1": 0.0,
+    "branchFallbackRateL2": 0.3333,
+    "failOpenRateL3": 0.0,
+    "branchPortraitRatio": 0.3333,
+    "branchLandscapeRatio": 0.3333,
+    "branchGrayRatio": 0.3333,
+    "cpuMs": 0.417
+  },
+  "categoryCoherence": {
+    "sameCategoryScore": 1.0,
+    "mixedCategoryScore": 0.0,
+    "semanticCategoriesSample": [
+      "food",
+      "landscape",
+      "person"
+    ]
+  },
+  "gate": {
+    "ac_p12_03_semantic_stable": true,
+    "ac_p12_04_coherence_observable": true
+  },
+  "goldenSignoffAggregate": {
+    "tripCount": 2,
+    "l1_ml_fallback_rate_avg": 0.0,
+    "l2_branch_fallback_rate_avg": 0.0,
+    "l3_fail_open_rate_avg": 0.0,
+    "cpu_ms_avg": 73670.8
+  },
+  "passed": true
+}

@@ -24,6 +24,34 @@ var longshotJobId = null;
 var narrateJobId = null;
   var DRAWER_FOCUSABLE =
     'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex="0"]';
+  var COPY_INTENT_MOODS = ["松弛", "热闹", "赶路", "意外", "仪式感", "平静"];
+  var COPY_INTENT_FOCUSES = ["人", "地方", "食物", "关系", "自我感受"];
+
+  function copyIntentApiUrl(tripId, chapterId) {
+    return (
+      "/__travelogue/trips/" +
+      encodeURIComponent(tripId) +
+      "/chapters/" +
+      encodeURIComponent(chapterId) +
+      "/copy-intent"
+    );
+  }
+
+  function buildCopyIntentChipHtml(values, chipClass) {
+    return values
+      .map(function (value) {
+        return (
+          '<button type="button" class="preview-drawer__chip ' +
+          chipClass +
+          '" data-value="' +
+          value +
+          '" aria-pressed="false">' +
+          value +
+          "</button>"
+        );
+      })
+      .join("");
+  }
 
   function trapDrawerFocus(container) {
     function onKeydown(e) {
@@ -816,6 +844,18 @@ var narrateJobId = null;
       '<input type="text" class="preview-drawer__anchor" maxlength="24" placeholder="锚点 3">' +
       "</div>" +
       '<p class="preview-drawer__hint">短词即可，会写进图说，不会瞎编</p>' +
+      '<p class="preview-drawer__label">章级意图（可选）</p>' +
+      '<p class="preview-drawer__sublabel">这一章更像什么感觉？</p>' +
+      '<div class="preview-drawer__chips preview-drawer__chips--mood" role="group" aria-label="章级情绪">' +
+      buildCopyIntentChipHtml(COPY_INTENT_MOODS, "preview-drawer__chip-mood") +
+      "</div>" +
+      '<p class="preview-drawer__sublabel">更想突出什么？</p>' +
+      '<div class="preview-drawer__chips preview-drawer__chips--focus" role="group" aria-label="章级关注点">' +
+      buildCopyIntentChipHtml(COPY_INTENT_FOCUSES, "preview-drawer__chip-focus") +
+      "</div>" +
+      '<label class="preview-drawer__label" for="preview-drawer-copy-intent-note">短念头（≤30 字）</label>' +
+      '<input id="preview-drawer-copy-intent-note" class="preview-drawer__copy-intent-note" type="text" maxlength="30" autocomplete="off" placeholder="例如：雨停后风很轻">' +
+      '<p class="preview-drawer__hint">可选填，影响章级点缀句；不填也能正常出稿</p>' +
       '<p class="preview-drawer__featured-help">★ 在任意一屏右下角可将照片标为精选，之后点「应用排版」生效</p>' +
       '<button type="button" class="preview-drawer__ghost preview-drawer__narrate-anchors">保存并重新生成文案</button>' +
       '<button type="button" class="preview-drawer__primary preview-drawer__save-edit">保存编辑</button>';
@@ -862,6 +902,60 @@ var narrateJobId = null;
       }
       var nameEl = bodyEl.querySelector(".preview-drawer__chapter-name");
       if (nameEl) nameEl.textContent = (row && row.title) || chId || "—";
+    }
+
+    function wireChipGroup(container, chipClass) {
+      if (!container) return;
+      container.querySelectorAll("." + chipClass).forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var wasSelected = btn.classList.contains("is-selected");
+          container.querySelectorAll("." + chipClass).forEach(function (b) {
+            b.classList.remove("is-selected");
+            b.setAttribute("aria-pressed", "false");
+          });
+          if (!wasSelected) {
+            btn.classList.add("is-selected");
+            btn.setAttribute("aria-pressed", "true");
+          }
+        });
+      });
+    }
+
+    function fillCopyIntent(chId) {
+      var row = chapterRow(chId);
+      var intent = (row && row.copyIntent) || {};
+      bodyEl.querySelectorAll(".preview-drawer__chip-mood").forEach(function (btn) {
+        var on = btn.getAttribute("data-value") === intent.mood;
+        btn.classList.toggle("is-selected", on);
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      bodyEl.querySelectorAll(".preview-drawer__chip-focus").forEach(function (btn) {
+        var on = btn.getAttribute("data-value") === intent.focus;
+        btn.classList.toggle("is-selected", on);
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      var noteInp = bodyEl.querySelector(".preview-drawer__copy-intent-note");
+      if (noteInp) noteInp.value = intent.note || "";
+    }
+
+    function readCopyIntentPayload() {
+      var moodBtn = bodyEl.querySelector(".preview-drawer__chip-mood.is-selected");
+      var focusBtn = bodyEl.querySelector(".preview-drawer__chip-focus.is-selected");
+      var noteInp = bodyEl.querySelector(".preview-drawer__copy-intent-note");
+      var noteVal = noteInp ? (noteInp.value || "").trim() : "";
+      if (!moodBtn && !focusBtn && !noteVal) {
+        return { clear: true };
+      }
+      return {
+        mood: moodBtn ? moodBtn.getAttribute("data-value") : null,
+        focus: focusBtn ? focusBtn.getAttribute("data-value") : null,
+        note: noteVal || null,
+      };
+    }
+
+    function fillChapterFields(chId) {
+      fillAnchors(chId);
+      fillCopyIntent(chId);
     }
 
     function closeDrawer() {
@@ -937,7 +1031,9 @@ var narrateJobId = null;
         if (notes && entryCache.intentSummary) {
           notes.value = entryCache.intentSummary.userNotes || "";
         }
-        fillAnchors(currentChapterId());
+        fillChapterFields(currentChapterId());
+        wireChipGroup(bodyEl.querySelector(".preview-drawer__chips--mood"), "preview-drawer__chip-mood");
+        wireChipGroup(bodyEl.querySelector(".preview-drawer__chips--focus"), "preview-drawer__chip-focus");
 
         function persistEditDrawer(btn, opts) {
           opts = opts || {};
@@ -971,13 +1067,20 @@ var narrateJobId = null;
                 }],
               })
             );
+            tasks.push(patchJson(copyIntentApiUrl(tripId, chId), readCopyIntentPayload()));
           }
           return Promise.all(tasks)
             .then(function (results) {
               btn.disabled = false;
               var ok = results.every(function (r) { return r.status === 200 && r.body.ok; });
               if (!ok) {
-                showToolbarToast("保存失败", { error: true });
+                var errMsg = "保存失败";
+                results.forEach(function (r) {
+                  if (r.status !== 200 || !r.body.ok) {
+                    errMsg = (r.body && (r.body.message || r.body.error)) || errMsg;
+                  }
+                });
+                showToolbarToast(errMsg, { error: true });
                 return false;
               }
               if (entryCache.intentSummary) {
@@ -986,12 +1089,20 @@ var narrateJobId = null;
               }
               if (chId && entryCache.chapters) {
                 var row = chapterRow(chId);
-                if (row) row.memoryAnchors = anchors;
+                if (row) {
+                  row.memoryAnchors = anchors;
+                  var ciResult = results[results.length - 1];
+                  if (ciResult && ciResult.body && "copyIntent" in ciResult.body) {
+                    row.copyIntent = ciResult.body.copyIntent || null;
+                  }
+                }
               }
               if (!opts.skipToast) {
+                var hasIntent =
+                  readCopyIntentPayload().clear !== true;
                 showToolbarToast(
-                  anchors.length > 0
-                    ? "编辑已保存。可在 ⋯ 菜单中重新生成文案以写入锚点。"
+                  anchors.length > 0 || hasIntent
+                    ? "编辑已保存。可在 ⋯ 菜单中重新生成文案以写入锚点与点缀。"
                     : "编辑已保存"
                 );
               }

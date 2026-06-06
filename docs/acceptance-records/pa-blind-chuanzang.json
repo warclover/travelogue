@@ -1,0 +1,220 @@
+{
+  "exportLayout": "mobile",
+  "cover": {
+    "coverAssetId": "asset-162",
+    "scoreRankedTop3": [
+      {
+        "rank": 1,
+        "assetId": "asset-162",
+        "score": 1.833122,
+        "scoringVersion": "v2"
+      },
+      {
+        "rank": 2,
+        "assetId": "asset-166",
+        "score": 1.777269,
+        "scoringVersion": "v2"
+      },
+      {
+        "rank": 3,
+        "assetId": "asset-043",
+        "score": 1.770391,
+        "scoringVersion": "v2"
+      }
+    ],
+    "coverExplain": [
+      {
+        "code": "layout_fit",
+        "label": "画幅适配",
+        "feature": 0.7225,
+        "weight": 0.219,
+        "contribution": 0.1583,
+        "reason": "画幅适配提升封面优先级"
+      },
+      {
+        "code": "thirds",
+        "label": "三分法构图",
+        "feature": 0.8692,
+        "weight": 0.1429,
+        "contribution": 0.1242,
+        "reason": "三分法构图提升封面优先级"
+      },
+      {
+        "code": "sharpness",
+        "label": "清晰度",
+        "feature": 0.9722,
+        "weight": 0.1143,
+        "contribution": 0.1111,
+        "reason": "清晰度提升封面优先级"
+      },
+      {
+        "code": "person",
+        "label": "人像偏好",
+        "feature": 1.0,
+        "weight": 0.0952,
+        "contribution": 0.0952,
+        "reason": "人像偏好提升封面优先级"
+      }
+    ]
+  },
+  "hero": {
+    "heroAssetId": "asset-022",
+    "top3": [
+      {
+        "assetId": "asset-022",
+        "score": 2.3481,
+        "overall": 0.608,
+        "explainTop3": [
+          {
+            "code": "subjectClarity",
+            "label": "主体清晰",
+            "score": 0.94,
+            "reason": "主体清晰表现突出"
+          },
+          {
+            "code": "composition",
+            "label": "构图",
+            "score": 0.683,
+            "reason": "构图表现突出"
+          },
+          {
+            "code": "exposure",
+            "label": "曝光影调",
+            "score": 0.677,
+            "reason": "曝光影调表现突出"
+          }
+        ]
+      },
+      {
+        "assetId": "asset-020",
+        "score": 2.3051,
+        "overall": 0.5654,
+        "explainTop3": [
+          {
+            "code": "subjectClarity",
+            "label": "主体清晰",
+            "score": 0.772,
+            "reason": "主体清晰表现突出"
+          },
+          {
+            "code": "exposure",
+            "label": "曝光影调",
+            "score": 0.75,
+            "reason": "曝光影调表现突出"
+          },
+          {
+            "code": "composition",
+            "label": "构图",
+            "score": 0.54,
+            "reason": "构图表现中等"
+          }
+        ]
+      },
+      {
+        "assetId": "asset-027",
+        "score": 2.2744,
+        "overall": 0.5842,
+        "explainTop3": [
+          {
+            "code": "exposure",
+            "label": "曝光影调",
+            "score": 0.864,
+            "reason": "曝光影调表现突出"
+          },
+          {
+            "code": "subjectClarity",
+            "label": "主体清晰",
+            "score": 0.726,
+            "reason": "主体清晰表现突出"
+          },
+          {
+            "code": "lighting",
+            "label": "光影",
+            "score": 0.684,
+            "reason": "光影表现突出"
+          }
+        ]
+      }
+    ]
+  },
+  "solo": {
+    "soloAssetId": "asset-185",
+    "top3": [
+      {
+        "assetId": "asset-185",
+        "score": 0.1624,
+        "overall": 0.5,
+        "explainTop3": [
+          {
+            "code": "subjectClarity",
+            "label": "主体清晰",
+            "score": 0.88,
+            "reason": "主体清晰表现突出"
+          },
+          {
+            "code": "composition",
+            "label": "构图",
+            "score": 0.625,
+            "reason": "构图表现突出"
+          },
+          {
+            "code": "color",
+            "label": "色彩",
+            "score": 0.366,
+            "reason": "色彩表现偏弱"
+          }
+        ]
+      },
+      {
+        "assetId": "asset-120",
+        "score": 0.1328,
+        "overall": 0.4671,
+        "explainTop3": [
+          {
+            "code": "subjectClarity",
+            "label": "主体清晰",
+            "score": 0.742,
+            "reason": "主体清晰表现突出"
+          },
+          {
+            "code": "composition",
+            "label": "构图",
+            "score": 0.634,
+            "reason": "构图表现突出"
+          },
+          {
+            "code": "exposure",
+            "label": "曝光影调",
+            "score": 0.344,
+            "reason": "曝光影调表现偏弱"
+          }
+        ]
+      },
+      {
+        "assetId": "asset-200",
+        "score": 0.1255,
+        "overall": 0.5048,
+        "explainTop3": [
+          {
+            "code": "subjectClarity",
+            "label": "主体清晰",
+            "score": 0.635,
+            "reason": "主体清晰表现突出"
+          },
+          {
+            "code": "composition",
+            "label": "构图",
+            "score": 0.57,
+            "reason": "构图表现中等"
+          },
+          {
+            "code": "exposure",
+            "label": "曝光影调",
+            "score": 0.508,
+            "reason": "曝光影调表现中等"
+          }
+        ]
+      }
+    ]
+  }
+}

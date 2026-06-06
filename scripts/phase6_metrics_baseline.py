@@ -82,8 +82,8 @@ def compute_fixture_cluster_noise(manifest: Path = FIXTURE_MANIFEST) -> dict[str
     norms = np.where(norms < 1e-8, 1.0, norms)
     mat = mat / norms
 
-    db_labels, _ = _cluster_labels(mat, algorithm="dbscan", eps=0.08, min_samples_eff=3)
-    hdb_labels, _ = _cluster_labels(mat, algorithm="hdbscan", eps=0.08, min_samples_eff=3)
+    db_labels, _, _ = _cluster_labels(mat, algorithm="dbscan", eps=0.08, min_samples_eff=3)
+    hdb_labels, _, _ = _cluster_labels(mat, algorithm="hdbscan", eps=0.08, min_samples_eff=3)
     return {
         "fixture": manifest.parent.name,
         "assetCount": len(embed.asset_ids),

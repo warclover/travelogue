@@ -63,7 +63,7 @@ def _text_fields(trip: dict) -> list[tuple[str, str]]:
             path = f"meta.{key}" if key != "epilogue" else "epilogue"
             fields.append((path, val))
     for i, ch in enumerate(trip.get("chapters") or []):
-        for key in ("title", "lead"):
+        for key in ("title", "lead", "decorLine"):
             val = ch.get(key)
             if isinstance(val, str) and val.strip():
                 fields.append((f"chapters[{i}].{key}", val))
@@ -184,5 +184,15 @@ def validate_narrative(trip: dict, *, cfg: AppConfig | None = None) -> list[str]
                 issues.append(
                     f"WARN: caption overlaps transcript on chapters[{i}].items[{j}] (VR-N03)"
                 )
+        decor = ch.get("decorLine")
+        if isinstance(decor, str) and decor.strip():
+            from travelogue.services.decor_line import validate_decor_line
+
+            for err in validate_decor_line(decor.strip(), ch, cfg=cfg):
+                issues.append(f"E_VALIDATE_MANIFEST {err} in chapters[{i}]")
+        from travelogue.services.decor_line import validate_copy_intent
+
+        for err in validate_copy_intent(ch, chapter_index=i):
+            issues.append(f"E_VALIDATE_MANIFEST {err}")
 
     return issues

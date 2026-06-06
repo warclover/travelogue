@@ -6,8 +6,8 @@
 | **验收** | [ACCEPTANCE-PHASE9.md](./ACCEPTANCE-PHASE9.md) |
 | **里程碑** | M30 · Quality Gate |
 | **W1 状态** | **Done**（2026-06-02） |
-| **W2 状态** | **Partial**（P1 ML 降级已落地；完整 GPU 验收待 S2） |
-| **更新** | 2026-06-02 |
+| **W2 状态** | **Partial**（ML 验收脚本已跑 · pyiqa/GPU 环境 skipped） |
+| **更新** | 2026-06-06 |
 
 ---
 
@@ -84,6 +84,7 @@
   python scripts/phase9_ml_acceptance.py --write docs/acceptance-records/phase9-ml-acceptance.json
   pytest tests/test_photo_cull_ml.py::test_ac_p9_ml_02_keep_ratio_within_rules_delta
   ```
+  **2026-06-06**：脚本已执行，当前环境 `status=skipped`（无 pyiqa）；记录见 `phase9-ml-acceptance.json`。
 - InsightFace / `portrait_face_aesthetic`：PRD W2 规划，config 键未消费（Phase 10 前评估）
 - M30-2c 细粒度 ingest 内 per-photo cull 进度（可选；当前为 finalize 阶段 hint）
 

@@ -364,14 +364,17 @@ python scripts/phase15_curate_replay.py golden-mixed-scenes --fixture \
 
 ### 延后项（不阻塞 S1 编码）
 
-| 项 | 原因 | 建议阶段 |
-|----|------|----------|
-| `build_epilogue_stats` 改用 `displayedAssetIds` | 影响面跨 render/studio | S1.1 |
-| `SelfHeal` + `allow_drop` | DESIGN S3 | S3 |
-| `unified_mode` 在线 7 天/200 trip 自动回滚 | 离线 gate ☑；运维 telemetry 待接 | 上线前 |
-| mobile `MobileMosaicAdapter` | scope.mobile=false | S4 |
-| Studio 接 `replan_screen` | `handle_patch_screen_replan` · items 同步 | Studio PATCH 屏重选 |
-| 真实 trip mao/maomi curate 记录 | `phase15_curate_replay.py` 待本地数据 | 有 trips/ 时跑 |
+| 项 | 原因 | 建议阶段 | 状态 |
+|----|------|----------|------|
+| `SelfHeal` + `allow_drop` | DESIGN S3 | S3 | 待 S3 |
+| `unified_mode` 在线 7 天/200 trip 自动回滚 | 离线 gate ☑；运维 telemetry 待接 | 上线前 | 待 telemetry |
+| mobile `MobileMosaicAdapter` | scope.mobile=false | S4 | 待 S4 |
+| 真实 trip mao/maomi curate 记录 | 需本地 `trips/` 数据 | 有 trips/ 时跑 | `phase15-curate-replay.py` ☑（fixture）；真实 trip 待素材 |
+
+**已收口（自延后项移出）：**
+
+- `build_epilogue_stats` 改用 `displayedAssetIds` → `travelogue/render/context.py` + `tests/test_epilogue_displayed_assets.py`
+- Studio 接 `replan_screen` PATCH → `trip_handlers.py` + `tests/test_studio_handlers_replan.py`
 
 ---
 

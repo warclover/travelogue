@@ -103,6 +103,18 @@ def test_semantic_category_maps_clip_architecture() -> None:
     assert semantic_category_for_asset(asset) == "architecture"
 
 
+def test_refresh_semantic_tag_after_clip() -> None:
+    from travelogue.curation.subject_tagging import refresh_semantic_tag_for_asset
+
+    asset = {
+        "semanticTag": {"category": "general"},
+        "subjectClass": "food",
+        "subjectConfidence": 0.9,
+    }
+    refresh_semantic_tag_for_asset(asset)
+    assert asset["semanticTag"]["category"] == "food"
+
+
 def test_mundane_run_length_defaults_to_food_only() -> None:
     ids = ["a1", "a2", "a3", "a4"]
     assets_map = {

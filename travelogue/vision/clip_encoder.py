@@ -904,6 +904,9 @@ class ClipEncoder:
             if apply_subject_class:
                 asset["subjectClass"] = label
                 asset["subjectConfidence"] = confidence
+                from travelogue.curation.subject_tagging import refresh_semantic_tag_for_asset
+
+                refresh_semantic_tag_for_asset(asset)
 
         stats.elapsed_ms = (time.monotonic() - t_start) * 1000.0
         stats.recommended_batch_size = self._tuned_batch_size or batch_size

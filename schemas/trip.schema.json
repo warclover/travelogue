@@ -279,7 +279,8 @@
       "properties": {
         "rank": { "type": "integer", "minimum": 1 },
         "assetId": { "type": "string" },
-        "score": { "type": "number", "minimum": 0 }
+        "score": { "type": "number", "minimum": 0 },
+        "scoringVersion": { "type": "string" }
       }
     },
     "coverBlindReviewEntry": {
@@ -300,6 +301,7 @@
         "personTagRatio": { "type": "number", "minimum": 0, "maximum": 1 },
         "personDemoteApplied": { "type": "number" },
         "featuredPoolOnly": { "type": "boolean" },
+        "scoringVersion": { "type": "string" },
         "coverExplain": {
           "type": "array",
           "items": {
@@ -309,10 +311,50 @@
               "code": { "type": "string" },
               "label": { "type": "string" },
               "multiplier": { "type": "number" },
+              "feature": { "type": "number" },
+              "weight": { "type": "number" },
+              "contribution": { "type": "number" },
               "reason": { "type": "string" }
             },
             "required": ["code", "label", "reason"]
           }
+        }
+      }
+    },
+    "mosaicDecisionLogEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "One mosaic window pick (travelogue.curation.mosaic.log.MosaicWindowLog)",
+      "properties": {
+        "routerVersion": { "type": "string" },
+        "segmentId": { "type": "string" },
+        "windowSize": { "type": "integer", "minimum": 1 },
+        "windowStart": { "type": "integer", "minimum": 0 },
+        "candidatesCount": { "type": "integer", "minimum": 0 },
+        "winnerPatternId": { "type": "string" },
+        "winnerScore": { "type": "number" },
+        "winnerReasonCodes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "fallbackUsed": { "type": "boolean" },
+        "fallbackReason": { "type": ["string", "null"] },
+        "selfHealApplied": { "type": "boolean" },
+        "selfHealStep": { "type": ["string", "null"] },
+        "droppedAssetIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "plannerPath": { "type": "string" },
+        "scorerVersion": { "type": "string" },
+        "weightsHash": { "type": "string" },
+        "top3Patterns": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "top3Scores": {
+          "type": "array",
+          "items": { "type": "number" }
         }
       }
     },
@@ -382,6 +424,9 @@
               "code": { "type": "string" },
               "label": { "type": "string" },
               "multiplier": { "type": "number" },
+              "feature": { "type": "number" },
+              "weight": { "type": "number" },
+              "contribution": { "type": "number" },
               "reason": { "type": "string" }
             },
             "required": ["code", "label", "reason"]
@@ -400,6 +445,9 @@
                   "code": { "type": "string" },
                   "label": { "type": "string" },
                   "multiplier": { "type": "number" },
+                  "feature": { "type": "number" },
+                  "weight": { "type": "number" },
+                  "contribution": { "type": "number" },
                   "reason": { "type": "string" }
                 },
                 "required": ["code", "label", "reason"]
@@ -414,6 +462,9 @@
                   "code": { "type": "string" },
                   "label": { "type": "string" },
                   "multiplier": { "type": "number" },
+                  "feature": { "type": "number" },
+                  "weight": { "type": "number" },
+                  "contribution": { "type": "number" },
                   "reason": { "type": "string" }
                 },
                 "required": ["code", "label", "reason"]
@@ -548,6 +599,11 @@
           "type": "array",
           "items": { "type": "object", "additionalProperties": true }
         },
+        "mosaicDecisionLog": {
+          "type": "array",
+          "description": "Phase 15 mosaic window decisions (AC-P15-07)",
+          "items": { "$ref": "#/$defs/mosaicDecisionLogEntry" }
+        },
         "layoutSearchBudget": {
           "type": "object",
           "additionalProperties": true,
@@ -561,6 +617,16 @@
           "type": "string",
           "enum": ["frame", "frame_chapters", "full"],
           "description": "Copy generation scope used at last narrate run"
+        },
+        "copyStyle": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "phase": {
+              "type": "string",
+              "description": "Phase 11 copy strategy marker, e.g. p11-lite-line"
+            }
+          }
         },
         "folioPlan": {
           "type": "object",
@@ -941,6 +1007,8 @@
           "additionalProperties": false,
           "properties": {
             "sharpness": { "type": "number", "minimum": 0 },
+            "sharpnessVersion": { "type": "string", "enum": ["v1", "v2"] },
+            "sharpnessLegacy": { "type": "number", "minimum": 0 },
             "meanLuma": { "type": "number", "minimum": 0, "maximum": 1 },
             "cullScore": { "type": "number", "minimum": 0, "maximum": 1 },
             "cullRank": { "type": "integer", "minimum": 1 },
@@ -1215,6 +1283,22 @@
           "maxItems": 3,
           "description": "User memory hooks at G1; fed to Agent 2"
         },
+        "copyIntent": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Phase 11 · optional mood/focus/note anchors for decorLine",
+          "properties": {
+            "mood": {
+              "type": "string",
+              "enum": ["松弛", "热闹", "赶路", "意外", "仪式感", "平静"]
+            },
+            "focus": {
+              "type": "string",
+              "enum": ["人", "地方", "食物", "关系", "自我感受"]
+            },
+            "note": { "type": "string", "maxLength": 30 }
+          }
+        },
         "segmentId": {
           "type": "string",
           "description": "Primary travel time segment for this chapter (most assets)"
@@ -1249,6 +1333,11 @@
         },
         "title": { "type": "string", "maxLength": 12 },
         "lead": { "type": "string", "maxLength": 80 },
+        "decorLine": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Phase 11 · optional chapter accent line (<=30 chars)"
+        },
         "items": {
           "type": "array",
           "minItems": 1,

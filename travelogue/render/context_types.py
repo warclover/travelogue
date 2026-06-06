@@ -199,6 +199,8 @@ class ChapterRenderContext(TypedDict, total=False):
     title: str
     lead: str
     hasLead: bool
+    decorLine: str
+    hasDecorLine: bool
     editableLead: bool
     editLeadPath: str | None
     hasMemoryAnchors: bool

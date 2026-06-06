@@ -583,6 +583,42 @@ html[data-preview-share="on"] .footer-cta__studio-home-link:hover {
   color: #6b7f78;
   line-height: 1.5;
 }
+.preview-drawer__sublabel {
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: #6b7f78;
+}
+.preview-drawer__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+.preview-drawer__chip {
+  border: 1px solid rgba(61, 107, 90, 0.22);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.7);
+  color: #2a4a40;
+  cursor: pointer;
+}
+.preview-drawer__chip.is-selected {
+  background: #3d6b5a;
+  border-color: #3d6b5a;
+  color: #fff;
+}
+.preview-drawer__copy-intent-note {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(61, 107, 90, 0.25);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  margin-bottom: 8px;
+}
 .preview-drawer__subhead {
   margin: 12px 0 8px;
   font-size: 13px;

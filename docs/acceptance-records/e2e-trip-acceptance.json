@@ -1,26 +1,34 @@
 [
   {
-    "tripId": "linzhi",
+    "tripId": "chuanzang",
     "ok": true,
     "issues": [],
     "layoutEquivalent": true,
-    "pipelineStatus": "exported",
+    "pipelineStatus": "rendered",
     "telemetry": {
-      "pipelineStatus": "exported"
+      "pipelineStatus": "rendered"
     },
-    "assetCount": 232,
-    "chapterCount": 5
+    "assetCount": 211,
+    "chapterCount": 3
   },
   {
-    "tripId": "mao",
+    "tripId": "chuanzang-studio",
     "ok": true,
     "issues": [],
     "layoutEquivalent": true,
-    "pipelineStatus": "structure_draft",
+    "pipelineStatus": "rendered",
     "telemetry": {
-      "pipelineStatus": "structure_draft"
+      "pipelineStatus": "rendered",
+      "timingsMs": {
+        "ingestMs": 303388.11,
+        "clusterMs": 2.44,
+        "embedMs": 0.0,
+        "totalMs": 312129.8,
+        "curateMs": 267.46,
+        "renderMs": 8291.23
+      }
     },
-    "assetCount": 29,
+    "assetCount": 206,
     "chapterCount": 3
   }
 ]

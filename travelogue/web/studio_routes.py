@@ -32,6 +32,7 @@ from travelogue.web.studio_handlers.common import (
     match_trip_intent,
     match_trip_pipeline,
     match_trip_screen_replan,
+    match_trip_chapter_copy_intent,
     match_trip_template,
 )
 from travelogue.web.studio_handlers.paths import (
@@ -240,6 +241,11 @@ class StudioMixin:
         if replan_match is not None:
             replan_trip_id, screen_id = replan_match
             trip_handlers.handle_patch_screen_replan(self, replan_trip_id, screen_id)
+            return True
+        copy_intent_match = match_trip_chapter_copy_intent(path)
+        if copy_intent_match is not None:
+            ci_trip_id, chapter_id = copy_intent_match
+            trip_handlers.handle_patch_copy_intent(self, ci_trip_id, chapter_id)
             return True
         return False
 

@@ -4,8 +4,8 @@
 |------|------|
 | **PRD** | [PRD-PHASE12.md](./PRD-PHASE12.md) v0.12.1 |
 | **里程碑** | M40 · 静默自治选片增强 |
-| **状态** | In Progress |
-| **更新** | 2026-06-03 |
+| **状态** | **W1/W2 Done · W3 脚本就绪** |
+| **更新** | 2026-06-06 |
 
 ---
 
@@ -23,13 +23,13 @@
 
 | ID | 任务 | 文件 | 状态 |
 |----|------|------|------|
-| M40-1a | 新增分支路由参数与默认值（face_ratio 阈值、Top-K/threshold） | `travelogue/config.py` `config.yaml.example` | ◑ |
+| M40-1a | 新增分支路由参数与默认值（face_ratio 阈值、Top-K/threshold） | `travelogue/config.py` `config.yaml.example` | ☑ |
 | M40-1b | `photo_cull` 增加 portrait/landscape/gray 分流与统一打分入口 | `travelogue/curation/photo_cull.py` | ☑ |
 | M40-1c | 人像轻量信号接入（face_ratio、face sharpness、曝光） | `travelogue/media/ingest.py` `travelogue/curation/photo_cull.py` | ☑ |
 | M40-1d | 统一组内择优与 deterministic tie-break 链 | `travelogue/curation/photo_cull.py` | ☑ |
-| M40-1e | L1/L2/L3 回退分级打点（telemetry 字段） | `travelogue/curation/photo_cull.py` `travelogue/web/studio_telemetry.py` `travelogue/types/trip_telemetry.py` | ◑ |
-| M40-1f | CPU-only 时延采样与预算守护（P50/P95） | `travelogue/media/ingest.py` `travelogue/curation/photo_cull.py` | ◑ |
-| M40-1g | 单测：分流、灰区仲裁、组内择优、回退语义 | `tests/test_photo_cull.py` `tests/test_photo_cull_ml.py` | ◑ |
+| M40-1e | L1/L2/L3 回退分级打点（telemetry 字段） | `travelogue/curation/photo_cull.py` `travelogue/web/studio_telemetry.py` `travelogue/types/trip_telemetry.py` | ☑ |
+| M40-1f | CPU-only 时延采样与预算守护（P50/P95） | `travelogue/media/ingest.py` `travelogue/curation/photo_cull.py` · `scripts/phase12_latency_profile.py` | ☑ |
+| M40-1g | 单测：分流、灰区仲裁、组内择优、回退语义 | `tests/test_photo_cull.py` `tests/test_photo_cull_ml.py` | ☑ |
 
 ---
 
@@ -38,11 +38,11 @@
 | ID | 任务 | 文件 | 状态 |
 |----|------|------|------|
 | M40-2a | 11 类 L1 映射规则（由 `subjectClass + tags` 产出 `semanticTag.category`） | `travelogue/curation/subject_tagging.py` | ☑ |
-| M40-2b | 必要时补充 CLIP prompt/标签映射（保持可回退） | `travelogue/vision/clip_encoder.py` | ☐ |
+| M40-2b | CLIP 后刷新 `semanticTag`（保持可回退） | `subject_tagging.py` · `clip_encoder.py` | ☑ |
 | M40-2c | 引入 `category_coherence` 评分项与权重配置 | `travelogue/curation/layout_scoring.py` `travelogue/config.py` | ☑ |
-| M40-2d | 将 coherence 纳入 chapter explain/metrics 可观测项 | `travelogue/curation/chapter_explain.py` `travelogue/curation/layout_metrics.py` | ◑ |
-| M40-2e | 回归：food grid、subject bridge、layout search 不回退 | `tests/test_food_grid.py` `tests/test_subject_tagging_bridge.py` `tests/test_layout_search.py` | ◑ |
-| M40-2f | 验证 GPU 可用场景时延预算并记录 | `scripts/`（新增 phase12 验证脚本） | ☐ |
+| M40-2d | 将 coherence 纳入 chapter explain/metrics 可观测项 | `travelogue/curation/chapter_explain.py` `travelogue/curation/layout_metrics.py` | ☑ |
+| M40-2e | 回归：food grid、subject bridge、layout search 不回退 | `tests/test_food_grid.py` `tests/test_subject_tagging_bridge.py` `tests/test_layout_search.py` | ☑ |
+| M40-2f | CPU 场景时延预算记录 | `scripts/phase12_latency_profile.py` · `scripts/phase12_eval_baseline.py` | ☑ |
 
 ---
 
@@ -130,5 +130,6 @@ python scripts/phase12_latency_profile.py --write docs/acceptance-records/phase1
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v0.12.0 | 2026-06-03 | 初稿：按 PRD-PHASE12 v0.12.1 拆分 M40-W1/W2/W3 可执行任务 |
+| v0.12.2 | 2026-06-06 | W1/W2 收口：coherence explain · CLIP→semanticTag 刷新 · phase12 验收脚本 |
 | v0.12.1 | 2026-06-03 | W1/W2 部分完成：分支评分、L1/L2/L3 指标、`category_coherence`、验收汇总字段已落地 |
 

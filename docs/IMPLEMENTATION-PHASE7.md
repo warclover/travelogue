@@ -18,8 +18,8 @@
 | 里程碑 | 主题 | 对应 PRD | 完成标志 | 状态 |
 |--------|------|----------|----------|------|
 | **M27** | 波次 1：CLIP batch + Ingest 微优化 + Telemetry | §6.1 §6.2 §6.5 | AC-P7-02/07 + NR-P7 基线 CI | ☑ |
-| **M28** | 波次 2：流水线并行 + CLIP 预热 + 稳定性增强 | §6.3 §6.7 | AC-P7-01/03/08/10/11 | ◑ |
-| **M29** | 波次 3：Layout 等价加速 + 放量 | §6.4 §13 | AC-P7-04~06/09/12 + G1 就绪 | ◑ |
+| **M28** | 波次 2：流水线并行 + CLIP 预热 + 稳定性增强 | §6.3 §6.7 | AC-P7-01/03/08/10/11 | ☑ |
+| **M29** | 波次 3：Layout 等价加速 + 放量 | §6.4 §13 | AC-P7-04~06/09/12 + G1 就绪 | ☑ |
 | **M29-OPT** | 可选 Spike：ONNX | §6.6 | 报告完成；不阻塞 G3 | ☐ |
 
 ---
@@ -59,7 +59,7 @@
 | M27-C-03 | P7-E3 | NR-P7 CI 套件 | `tests/test_phase7_equivalence.py` | ☑ |
 | M27-C-04 | P7-E3 | 离线等价检查 CLI | `scripts/phase7_equivalence_check.py` | ☑ |
 | M27-C-05 | G-P7-07 | `trip.pipeline.timings` 写入 | `studio_pipeline.py` · `orchestrator/run.py` | ☑ |
-| M27-C-06 | §4.1 | P6 基线登记（同机同 config） | `docs/reports/phase7-perf-baseline.md` · `scripts/phase7_benchmark_run.py` | ◑ |
+| M27-C-06 | §4.1 | P6 基线登记（同机同 config） | `docs/reports/phase7-perf-baseline.md` · `scripts/phase7_benchmark_run.py` · `scripts/phase7_nr_collect.py` | ☑ |
 | M27-C-07 | §7.2 | `embedStats` 写入 clustering 层 | `clustering.py` | ☑ |
 | M27-C-08 | §4.1 | p95 指标采集与写入（e2e/clip） | `scripts/phase7_pipeline_perf.py` · `phase7-perf-eval.json` | ☑ |
 | M27-C-09 | §12 | NR 双门槛输出（fixed=100%，real>=95%） | `scripts/phase7_equivalence_check.py` | ☑ |
@@ -180,7 +180,7 @@ M29-OPT-*         # 并行 spike，不阻塞
 | `vision.preload_on_folder_pick` | `true` | `false` | M28-A-03 |
 | `ingest.webp_method` | `4` | `6` | M27-B-03 |
 | `ingest.shared_color_thumb_px` | `32` | — | M27-B-02 |
-| `pipeline.parallel_embed` | `false` → G2 `true` | `false` | M28-A-02 |
+| `pipeline.parallel_embed` | `true`（G2 已放量） | `false` | M28-A-02 |
 | `layout_scoring.skip_duplicate_signatures` | `true` | `false` | M29-A-01 |
 | `layout_scoring.incremental` | `false` | `false` | M29-A-03 |
 | `vision.batch_auto_tune` | `true` | `false` | M28-B-01 |
@@ -218,9 +218,11 @@ M29-OPT-*         # 并行 spike，不阻塞
 | `docs/reports/phase7-perf-baseline.md` | P6 vs P7 对比报告 |
 | `docs/reports/phase7-g0-preflight-checklist.md` | G0 离线预检 |
 | `docs/config-phase7.example.yaml` | P7 推荐 config 快照 |
-| `scripts/phase7_benchmark_run.py` | 分阶段 timed benchmark（ingest/embed/cluster/curate） |
+| `scripts/phase7_benchmark_run.py` | 分阶段 timed benchmark（ingest/embed/cluster/curate + 增量场景） |
+| `scripts/phase7_nr_collect.py` | fixture NR 指标自动采集 → perf-eval |
 | `scripts/phase7_pipeline_perf.py` | 分阶段 benchmark |
 | `scripts/phase7_equivalence_check.py` | NR-P7 离线检查 |
+| `scripts/phase7_gate_run.py` | 一键门禁（benchmark + NR + pytest + perf + equivalence） |
 
 ---
 

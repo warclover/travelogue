@@ -1,9 +1,9 @@
-"""One-command Phase 7 gate runner (perf + equivalence).
+"""One-command Phase 7 gate runner (benchmark + NR collect + perf + equivalence + pytest).
 
 Usage:
   python scripts/phase7_gate_run.py
   python scripts/phase7_gate_run.py --write --strict
-  python scripts/phase7_gate_run.py --write --skip-proxy --studio-e2e-ms 230000 --studio-e2e-p95-ms 320000
+  python scripts/phase7_gate_run.py --write --run-benchmark --photos 30 --repeats 2
   python scripts/phase7_gate_run.py --from-record --strict
 """
 
@@ -19,9 +19,22 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 PERF_SCRIPT = ROOT / "scripts" / "phase7_pipeline_perf.py"
 EQ_SCRIPT = ROOT / "scripts" / "phase7_equivalence_check.py"
+BENCH_SCRIPT = ROOT / "scripts" / "phase7_benchmark_run.py"
+NR_SCRIPT = ROOT / "scripts" / "phase7_nr_collect.py"
+ROLLBACK_SCRIPT = ROOT / "scripts" / "phase7_verify_rollback.py"
 DEFAULT_RECORD = ROOT / "docs" / "acceptance-records" / "phase7-perf-eval.json"
 DEFAULT_PHASE6_RECORD = ROOT / "docs" / "acceptance-records" / "phase6-quality-eval.json"
 REQUIRED_AC_KEYS = tuple(f"AC-P7-{i:02d}" for i in range(1, 13))
+PYTEST_TARGETS = (
+    "tests/test_phase7_equivalence.py",
+    "tests/test_phase7_ingest_micro.py",
+    "tests/test_phase7_parallel_embed.py",
+    "tests/test_phase7_incremental_modes.py",
+    "tests/test_phase7_cache_abi.py",
+    "tests/test_phase7_fault_recovery.py",
+    "tests/test_phase7_rollback_flags.py",
+    "tests/test_layout_golden.py",
+)
 
 
 def _append_opt(cmd: list[str], flag: str, value: Any) -> None:
@@ -82,11 +95,21 @@ def _from_record_summary(record: Path, strict: bool) -> tuple[dict[str, Any], in
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run Phase 7 perf+equivalence gate in one command")
+    parser = argparse.ArgumentParser(description="Run Phase 7 gate pipeline in one command")
     parser.add_argument("--write", action="store_true", help="persist results to record JSON")
-    parser.add_argument("--strict", action="store_true", help="pass --strict to equivalence checker")
+    parser.add_argument("--strict", action="store_true", help="fail on missing AC fields")
     parser.add_argument("--from-record", action="store_true", help="evaluate gate directly from record JSON")
     parser.add_argument("--skip-proxy", action="store_true", help="skip 1k proxy call in perf script")
+    parser.add_argument("--run-benchmark", action="store_true", help="run phase7_benchmark_run before checks")
+    parser.add_argument("--run-nr-collect", action="store_true", help="run phase7_nr_collect before checks")
+    parser.add_argument("--run-pytest", action="store_true", help="run Phase 7 pytest subset")
+    parser.add_argument("--run-rollback-verify", action="store_true", help="run phase7_verify_rollback.py")
+    parser.add_argument("--photos", type=int, default=30, help="benchmark album size")
+    parser.add_argument("--repeats", type=int, default=2, help="benchmark repeats")
+    parser.add_argument("--album-dir", type=Path, default=None, help="real photo folder for benchmark")
+    parser.add_argument("--work-dir", type=Path, default=None, help="benchmark cache directory")
+    parser.add_argument("--skip-pytest", action="store_true", help="skip pytest subset (faster real-album runs)")
+    parser.add_argument("--update-report", action="store_true", help="refresh phase7-perf-baseline.md after benchmark")
     parser.add_argument("--record", type=Path, default=DEFAULT_RECORD, help="phase7 perf-eval record path")
     parser.add_argument("--phase6-record", type=Path, default=DEFAULT_PHASE6_RECORD, help="phase6 quality record")
     parser.add_argument("--device-tier", default=None)
@@ -123,6 +146,60 @@ def main() -> int:
         summary, code = _from_record_summary(record, strict=args.strict)
         print(json.dumps(summary, indent=2, ensure_ascii=False))
         return code
+
+    if args.write:
+        args.run_benchmark = True
+        args.run_nr_collect = True
+        if not args.skip_pytest:
+            args.run_pytest = True
+        args.run_rollback_verify = True
+    if args.album_dir is not None:
+        args.run_benchmark = True
+
+    steps: list[dict[str, Any]] = []
+
+    if args.run_pytest:
+        pytest_cmd = [sys.executable, "-m", "pytest", *PYTEST_TARGETS, "-q"]
+        pytest_res = _run(pytest_cmd)
+        steps.append({"name": "pytest_phase7", "passed": pytest_res["exitCode"] == 0, "exitCode": pytest_res["exitCode"]})
+        if pytest_res["exitCode"] != 0:
+            print(json.dumps({"step": "pytest", "stderr": _tail(pytest_res["stderr"])}, indent=2))
+
+    if args.run_benchmark:
+        bench_cmd = [
+            sys.executable,
+            str(BENCH_SCRIPT),
+            "--photos",
+            str(args.photos),
+            "--repeats",
+            str(args.repeats),
+            "--record",
+            str(record),
+        ]
+        if args.write:
+            bench_cmd.append("--write")
+        if args.album_dir is not None:
+            bench_cmd.extend(["--album-dir", str(args.album_dir.resolve())])
+        if args.work_dir is not None:
+            bench_cmd.extend(["--work-dir", str(args.work_dir.resolve())])
+        if args.update_report:
+            bench_cmd.append("--update-report")
+        bench_res = _run(bench_cmd)
+        steps.append({"name": "phase7_benchmark_run", "passed": bench_res["exitCode"] == 0, "exitCode": bench_res["exitCode"]})
+
+    if args.run_nr_collect:
+        nr_cmd = [sys.executable, str(NR_SCRIPT), "--record", str(record), "--phase6-record", str(phase6_record)]
+        if args.write:
+            nr_cmd.append("--write")
+        if args.strict:
+            nr_cmd.append("--strict")
+        nr_res = _run(nr_cmd)
+        steps.append({"name": "phase7_nr_collect", "passed": nr_res["exitCode"] == 0, "exitCode": nr_res["exitCode"]})
+
+    if args.run_rollback_verify:
+        rb_cmd = [sys.executable, str(ROLLBACK_SCRIPT), "--dry-run"]
+        rb_res = _run(rb_cmd)
+        steps.append({"name": "phase7_verify_rollback", "passed": rb_res["exitCode"] == 0, "exitCode": rb_res["exitCode"]})
 
     perf_cmd: list[str] = [sys.executable, str(PERF_SCRIPT), "--record", str(record), "--phase6-record", str(phase6_record)]
     if args.write:
@@ -165,17 +242,23 @@ def main() -> int:
 
     perf = _run(perf_cmd)
     eq = _run(eq_cmd)
+    steps.extend(
+        [
+            {"name": "phase7_pipeline_perf", "passed": perf["exitCode"] == 0, "exitCode": perf["exitCode"]},
+            {"name": "phase7_equivalence_check", "passed": eq["exitCode"] == 0, "exitCode": eq["exitCode"]},
+        ]
+    )
 
-    perf_ok = perf["exitCode"] == 0
-    eq_ok = eq["exitCode"] == 0
-    overall_ok = perf_ok and eq_ok
-
+    critical = {
+        "pytest_phase7",
+        "phase7_benchmark_run",
+        "phase7_nr_collect",
+        "phase7_equivalence_check",
+    }
+    overall_ok = all(step["passed"] for step in steps if step["name"] in critical)
     summary = {
         "overallPassed": overall_ok,
-        "steps": [
-            {"name": "phase7_pipeline_perf", "passed": perf_ok, "exitCode": perf["exitCode"]},
-            {"name": "phase7_equivalence_check", "passed": eq_ok, "exitCode": eq["exitCode"]},
-        ],
+        "steps": steps,
         "record": str(record),
         "perfStdoutTail": _tail(perf["stdout"]),
         "equivalenceStdoutTail": _tail(eq["stdout"]),
@@ -188,11 +271,9 @@ def main() -> int:
 
     if overall_ok:
         return 0
-    if perf["exitCode"] >= 2 or eq["exitCode"] >= 2:
-        return 2
-    return 1
+    fatal = any(step["exitCode"] >= 2 for step in steps)
+    return 2 if fatal else 1
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

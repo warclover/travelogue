@@ -1,7 +1,7 @@
 {
   "mosaic5ExposureRateOff": 0.0,
-  "mosaic5ExposureRateOn": 1.0,
-  "mcsUnifiedExposureRateOn": 1.0,
+  "mosaic5ExposureRateOn": 0.0,
+  "mcsUnifiedExposureRateOn": 0.333333,
   "enabledWindowSizes": [
     3,
     4,
@@ -11,20 +11,21 @@
     9
   ],
   "scorerVersion": "p15-s2",
-  "lift": 1.0,
+  "lift": 0.0,
   "liftRatio": null,
   "patternsOff": {
-    "screen-landscape-1": 24,
-    "screen-portrait-2": 8
+    "screen-landscape-1": 16,
+    "screen-portrait-3": 8
   },
   "patternsOn": {
-    "screen-mosaic-5-2portrait-3land-balanced": 8
+    "screen-landscape-1": 16,
+    "screen-portrait-3": 8
   },
   "metricsOn": {
-    "mosaic5ExposureRate": 1.0,
-    "layout.mosaic5.exposure_rate": 1.0,
-    "mcsUnifiedExposureRate": 1.0,
-    "layout.mosaic_v2.unified_exposure_rate": 1.0,
+    "mosaic5ExposureRate": 0.0,
+    "layout.mosaic5.exposure_rate": 0.0,
+    "mcsUnifiedExposureRate": 0.333333,
+    "layout.mosaic_v2.unified_exposure_rate": 0.333333,
     "layout.render.error_rate": 0.0,
     "layoutRenderChecked": 8,
     "layoutRenderErrors": 0,
@@ -35,14 +36,14 @@
     "layout.mosaic_v2.fallback_rate": 0.0,
     "layout.mosaic_v2.low_score_fallback_rate": 0.0,
     "mosaic5WinnerPatterns": [
-      "screen-mosaic-5-2portrait-3land-balanced",
-      "screen-mosaic-5-2portrait-3land-balanced",
-      "screen-mosaic-5-2portrait-3land-balanced",
-      "screen-mosaic-5-2portrait-3land-balanced",
-      "screen-mosaic-5-2portrait-3land-balanced",
-      "screen-mosaic-5-2portrait-3land-balanced",
-      "screen-mosaic-5-2portrait-3land-balanced",
-      "screen-mosaic-5-2portrait-3land-balanced"
+      "screen-portrait-3",
+      "screen-portrait-3",
+      "screen-portrait-3",
+      "screen-portrait-3",
+      "screen-portrait-3",
+      "screen-portrait-3",
+      "screen-portrait-3",
+      "screen-portrait-3"
     ]
   }
 }

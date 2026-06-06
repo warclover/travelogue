@@ -1,39 +1,13 @@
 {
-  "phase": "phase14",
-  "status": "in_progress",
-  "updatedAt": "2026-06-04",
-  "source": "cursor-agent",
-  "automated": {
-    "targetedSuites": [
-      {
-        "command": "python -m pytest tests/test_studio_intent.py -k \"travel_notes or date_range or brief\"",
-        "result": "pass"
-      },
-      {
-        "command": "python -m pytest tests/test_studio_handlers_import_export.py -k \"date_range or phase14_fields\"",
-        "result": "pass"
-      },
-      {
-        "command": "python -m pytest tests/test_studio_home_v2.py -k \"home_v2_route or import_sheet_modules or phase14_dual_mode_smoke\"",
-        "result": "pass"
-      },
-      {
-        "command": "python -m pytest tests/test_studio_home_v2.py -k \"first_success_module or phase14_dual_mode_smoke\"",
-        "result": "pass"
-      }
-    ],
-    "summary": {
-      "passedSuites": 4,
-      "failedSuites": 0
-    }
-  },
-  "manual": {
-    "signoffFile": "docs/acceptance-records/phase14-manual-signoff.md",
-    "status": "pending"
-  },
-  "notes": [
-    "当前为针对性回归结果，非全量回归。",
-    "建议按 docs/ACCEPTANCE-PHASE14.md 再执行一轮完整人工验收后转为 ready。"
+  "generatedAt": "2026-06-06T07:12:05.501795+00:00",
+  "phase": "P14-DualMode",
+  "pytestCommand": "C:\\Users\\xiafe\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe -m pytest tests/test_studio_home_v2.py::test_studio_home_v2_phase14_dual_mode_smoke tests/test_studio_handlers_import_export.py tests/test_studio_intent.py tests/test_layout_density.py -q",
+  "exitCode": 0,
+  "passed": true,
+  "stdoutTail": "........................................................................ [ 98%]\n.                                                                        [100%]\n============================== warnings summary ===============================\ntests/test_studio_intent.py::test_pipeline_default_place_passes_schema\ntests/test_studio_intent.py::test_pipeline_persists_intent_and_passes_schema\n  C:\\Users\\xiafe\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\open_clip\\factory.py:450: UserWarning: QuickGELU mismatch between final model config (quick_gelu=False) and pretrained tag 'openai' (quick_gelu=True).\n    warnings.warn(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n73 passed, 2 warnings in 31.41s\n",
+  "stderrTail": "",
+  "manualRemaining": [
+    "AC-P14-08 full-chain manual soak",
+    "Four viewport screenshots for sign-off"
   ]
 }
-

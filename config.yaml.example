@@ -192,6 +192,7 @@ ingest:
   # 人脸检测（需 pip install -e ".[vision]"）；用于人物竖图免拼图、焦点
   detect_faces: true
   face_min_size_px: 48
+  face_detect_max_edge: 0   # 0=原图检测；640=检测前缩放到长边 640（P7-B4）
   featured_dir_names: ["主图上传", "精选", "featured", "hero"]
   material_dir_names: ["素材上传", "素材", "material", "extras"]
   warn_featured_count_above: 30
@@ -250,7 +251,7 @@ cull:
 
 # Phase 7 · 流水线并行（见 docs/PRD-PHASE7.md）
 pipeline:
-  parallel_embed: false
+  parallel_embed: true
   parallel_embed_chunk: 32
 
 curate:
@@ -337,6 +338,14 @@ narrative:
     - 值得一提的是
     - 美不胜收
     - 令人难忘
+  # Phase 11 · decorLine
+  decor_line_enabled: true
+  decor_line_max_chars: 30
+  decor_line_candidates: 3
+  decor_line_allow_empty: true
+  decor_line_intent_enabled: true
+  decor_line_intent_optional: true
+  decor_line_intent_note_max_chars: 30
 
 # Phase 4 · Studio 工作台（M17 G1）
 studio:

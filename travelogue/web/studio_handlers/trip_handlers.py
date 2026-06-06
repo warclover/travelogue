@@ -365,6 +365,73 @@ def handle_patch_screen_replan(
     handler._json_response(200, {"ok": True, **result})
 
 
+def handle_patch_copy_intent(
+    handler: StudioHandlerProtocol, trip_id: str, chapter_id: str
+) -> None:
+    import copy
+
+    from travelogue.services.decor_line import apply_chapter_copy_intent, validate_copy_intent
+
+    payload = handler._read_json_body()
+    if payload is None:
+        return
+    if not isinstance(payload, dict):
+        handler._json_response(400, {"ok": False, "error": "invalid JSON body"})
+        return
+    loaded = load_trip_or_404(handler, trip_id)
+    if loaded is None:
+        return
+    trip_dir, trip = loaded
+    chapters = trip.get("chapters") or []
+    chapter = next((ch for ch in chapters if ch.get("id") == chapter_id), None)
+    if chapter is None:
+        handler._json_response(
+            404,
+            {"ok": False, "error": "E_CHAPTER_NOT_FOUND", "message": "chapter not found"},
+        )
+        return
+    chapter_index = next(
+        (idx for idx, ch in enumerate(chapters) if ch.get("id") == chapter_id),
+        None,
+    )
+    if payload.get("clear"):
+        intent_payload: dict | None = {"mood": None, "focus": None, "note": None}
+    else:
+        intent_payload = {k: payload[k] for k in ("mood", "focus", "note") if k in payload}
+        if not intent_payload:
+            handler._json_response(400, {"ok": False, "error": "no copyIntent fields"})
+            return
+    staging = copy.deepcopy(chapter)
+    staging_curation = staging.setdefault("curation", {})
+    staging_existing = dict(staging_curation.get("copyIntent") or {})
+    for key in ("mood", "focus", "note"):
+        if intent_payload is None or key not in intent_payload:
+            continue
+        val = intent_payload[key]
+        if val is None or (isinstance(val, str) and not str(val).strip()):
+            staging_existing.pop(key, None)
+        else:
+            staging_existing[key] = str(val).strip()
+    if staging_existing:
+        staging_curation["copyIntent"] = staging_existing
+    else:
+        staging_curation.pop("copyIntent", None)
+    errs = validate_copy_intent(staging, chapter_index=chapter_index)
+    if errs:
+        handler._json_response(
+            400,
+            {"ok": False, "error": "E_COPY_INTENT_INVALID", "message": errs[0]},
+        )
+        return
+    intent = apply_chapter_copy_intent(chapter, intent_payload)
+    trip_json = trip_dir / "trip.json"
+    studio_ctx(handler).trip_service().save(trip, trip_json)
+    handler._json_response(
+        200,
+        {"ok": True, "chapterId": chapter_id, "copyIntent": intent or None},
+    )
+
+
 def handle_post_cohort_refresh(handler: StudioHandlerProtocol, trip_id: str) -> None:
     from travelogue.curation.cohort_faces import apply_cohort_tags
 

@@ -1,0 +1,131 @@
+{
+  "albums": [
+    {
+      "albumId": "chuanzang",
+      "exportLayout": "mobile",
+      "coverAssetId": "asset-162",
+      "scoreRankedTop3": [
+        {
+          "rank": 1,
+          "assetId": "asset-162",
+          "score": 1.833429,
+          "scoringVersion": "v2"
+        },
+        {
+          "rank": 2,
+          "assetId": "asset-166",
+          "score": 1.778754,
+          "scoringVersion": "v2"
+        },
+        {
+          "rank": 3,
+          "assetId": "asset-043",
+          "score": 1.775426,
+          "scoringVersion": "v2"
+        }
+      ],
+      "scoreRankedTop10": [
+        {
+          "rank": 1,
+          "assetId": "asset-162",
+          "score": 1.833429,
+          "scoringVersion": "v2"
+        },
+        {
+          "rank": 2,
+          "assetId": "asset-166",
+          "score": 1.778754,
+          "scoringVersion": "v2"
+        },
+        {
+          "rank": 3,
+          "assetId": "asset-043",
+          "score": 1.775426,
+          "scoringVersion": "v2"
+        },
+        {
+          "rank": 4,
+          "assetId": "asset-065",
+          "score": 1.772472,
+          "scoringVersion": "v2"
+        },
+        {
+          "rank": 5,
+          "assetId": "asset-129",
+          "score": 1.757631,
+          "scoringVersion": "v2"
+        },
+        {
+          "rank": 6,
+          "assetId": "asset-072",
+          "score": 1.755057,
+          "scoringVersion": "v2"
+        },
+        {
+          "rank": 7,
+          "assetId": "asset-048",
+          "score": 1.744466,
+          "scoringVersion": "v2"
+        },
+        {
+          "rank": 8,
+          "assetId": "asset-210",
+          "score": 1.721477,
+          "scoringVersion": "v2"
+        },
+        {
+          "rank": 9,
+          "assetId": "asset-174",
+          "score": 1.686917,
+          "scoringVersion": "v2"
+        },
+        {
+          "rank": 10,
+          "assetId": "asset-093",
+          "score": 1.657423,
+          "scoringVersion": "v2"
+        }
+      ],
+      "personTagRatio": 0.8947,
+      "personDemoteApplied": 1.0,
+      "featuredPoolOnly": false,
+      "coverExplain": [
+        {
+          "code": "layout_fit",
+          "label": "画幅适配",
+          "feature": 0.7225,
+          "weight": 0.219,
+          "contribution": 0.1583,
+          "reason": "画幅适配提升封面优先级"
+        },
+        {
+          "code": "thirds",
+          "label": "三分法构图",
+          "feature": 0.8692,
+          "weight": 0.1429,
+          "contribution": 0.1242,
+          "reason": "三分法构图提升封面优先级"
+        },
+        {
+          "code": "sharpness",
+          "label": "清晰度",
+          "feature": 0.9737,
+          "weight": 0.1143,
+          "contribution": 0.1113,
+          "reason": "清晰度提升封面优先级"
+        },
+        {
+          "code": "person",
+          "label": "人像偏好",
+          "feature": 1.0,
+          "weight": 0.0952,
+          "contribution": 0.0952,
+          "reason": "人像偏好提升封面优先级"
+        }
+      ],
+      "judgeVerdict": "A",
+      "judgeReasonTags": ["layout_fit", "thirds", "sharpness", "real_album_dogfood"],
+      "judgeNotes": "川藏线 211 张 dogfood 代理签收（非严格 v1/v2 盲评）"
+    }
+  ]
+}

@@ -25,7 +25,9 @@
     "coverChanges": 0,
     "gates": {
       "aM1": true,
-      "aM7": true
+      "aM7": true,
+      "aM4": false,
+      "dM1": true
     },
     "rows": [
       {
@@ -166,7 +168,30 @@
         "coverChanged": false,
         "albumId": "kendall-mobile-balanced"
       }
-    ]
+    ],
+    "extendedGates": true,
+    "aM4Explain": {
+      "albumsChecked": 10,
+      "albumsPassed": 8,
+      "passRate": 0.8,
+      "gate": false
+    },
+    "phaseDProxy": {
+      "source": "tests\\fixtures\\cover_v2_kendall_albums.json",
+      "looAccuracy": 1.0,
+      "looFolds": 8,
+      "gateD_M1": true,
+      "fitWeights": {
+        "layout_fit": 0.0,
+        "media": 0.0,
+        "sharpness": 0.3814,
+        "color": 0.1348,
+        "thirds": 0.4838,
+        "person": 0.0,
+        "face_bbox": 0.0,
+        "date_confidence": 0.0
+      }
+    }
   },
   "albums": [
     {

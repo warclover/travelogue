@@ -3,9 +3,30 @@
 | 属性 | 内容 |
 |------|------|
 | **权威入口** | [ACCEPTANCE.md](../ACCEPTANCE.md)（单轨） |
-| **更新日期** | 2026-06-03 |
+| **更新日期** | 2026-06-06 |
 
 > JSON / Markdown 记录供 Phase 验收签字与脚本写入；**发布闸门以各 Phase ACCEPTANCE 文档为准**。
+
+---
+
+## Algorithm V2（封面/heuristic 评分）
+
+| 文件 | 用途 | 命令 / 说明 |
+|------|------|-------------|
+| [algorithm-v2-signoff.json](./algorithm-v2-signoff.json) | A-M1/A-M7 自动化 + R0' 盲评模板 | `python scripts/algorithm_v2_signoff.py --score-automated --write --extended` |
+| [algorithm-v2-prd-review-2026-06-05.md](./algorithm-v2-prd-review-2026-06-05.md) | PRD 评审纪要 | — |
+
+门禁：`python scripts/algorithm_v2_signoff.py --from-json docs/acceptance-records/algorithm-v2-signoff.json` · A-M4 权威单测 `tests/test_cover_scoring_v2_gates.py` · Kendall 报告 [`../reports/algorithm-v2-kendall.md`](../reports/algorithm-v2-kendall.md)
+
+---
+
+## Phase 15（Mosaic v2 · S1）
+
+| 文件 | 用途 | 命令 / 说明 |
+|------|------|-------------|
+| [phase15-curate-replay.json](./phase15-curate-replay.json) | curate 回放记录（fixture trip） | `python scripts/phase15_curate_replay.py --write docs/acceptance-records/phase15-curate-replay.json` |
+
+文档入口：[IMPLEMENTATION-PHASE15.md](../IMPLEMENTATION-PHASE15.md) · [ACCEPTANCE-PHASE15.md](../ACCEPTANCE-PHASE15.md)
 
 ---
 
@@ -36,6 +57,9 @@
 |------|------|-------------|
 | [phase9-golden-cull-signoff.json](./phase9-golden-cull-signoff.json) | golden 运行记录（单 trip 级）：含 `mlFallbackRateL1`、`branchFallbackRateL2`、`branchFallbackByReasonL2`、`failOpenRateL3`、分支覆盖率、`cpuMs` | `python scripts/phase9_golden_cull_signoff.py --all --write docs/acceptance-records/phase9-golden-cull-signoff.json` |
 | [phase9-eval-baseline.json](./phase9-eval-baseline.json) | 离线汇总基线（跨 trip 聚合）：含 `l1_ml_fallback_rate`、`l2_branch_fallback_rate`、`l2_branch_fallback_by_reason`、`l3_fail_open_rate` | `python scripts/phase9_eval_baseline.py --golden docs/acceptance-records/phase9-golden-cull-signoff.json --quality docs/acceptance-records/phase9-quality-gate.json --write docs/acceptance-records/phase9-eval-baseline.json` |
+| [phase12-eval-baseline.json](./phase12-eval-baseline.json) | P12 合成 cull + `category_coherence` 门禁 | `python scripts/phase12_eval_baseline.py --write docs/acceptance-records/phase12-eval-baseline.json` |
+| [phase12-latency.json](./phase12-latency.json) | rules cull CPU 时延 P50/P95 | `python scripts/phase12_latency_profile.py --write docs/acceptance-records/phase12-latency.json` |
+| [phase9-ml-acceptance.json](./phase9-ml-acceptance.json) | P9 W2 ML 验收（pyiqa/GPU；无依赖时 skipped） | `python scripts/phase9_ml_acceptance.py --write docs/acceptance-records/phase9-ml-acceptance.json` |
 
 字段对照入口：
 

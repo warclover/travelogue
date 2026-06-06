@@ -48,7 +48,7 @@
 |---------|---------|----------|
 | **本机 pick-folder** | Import Sheet 主按钮 ✅ | 保持 |
 | **路径粘贴导入** | Sheet `details` 内 ✅ | 保持 |
-| **浏览器上传（≤200MB）** | ❌ 无 `album-upload` | **M21-0 · 必做** |
+| **浏览器上传（≤200MB）** | ✅ `v2-album-upload` + `import-run.js` | **M21-0 · 已交付**（验收见 `test_studio_home_v2_import_sheet_modules`） |
 | **高级 · 分析选项** | 工作台 Popover ✅ | 保持 |
 | **最近路径记忆**（`LS.recentPaths`） | 无列表，仅手输路径 | **M21-1 · 建议** |
 | **Coach 引导** | 无 | **非 M21**（可后置） |

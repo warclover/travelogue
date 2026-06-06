@@ -16,6 +16,7 @@ _SCORE_LABELS: dict[str, str] = {
     "burst_integrity": "连拍完整",
     "luminance_continuity": "亮度连贯",
     "subject_run": "主题连贯",
+    "category_coherence": "主题同类",
     "tone_continuity": "色调连贯",
     "layout_rhythm": "版面节奏",
     "gravity_balance": "重心连贯",

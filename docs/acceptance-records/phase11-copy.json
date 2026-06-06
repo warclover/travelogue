@@ -1,0 +1,10 @@
+{
+  "generatedAt": "2026-06-06T07:04:59.376810+00:00",
+  "phase": "P11-LiteCopy",
+  "metrics": {
+    "decor_line_fill_rate": 0.5,
+    "chapters_sampled": 2,
+    "chapters_with_decor_line": 1
+  },
+  "notes": "Synthetic fixture only; blind review (AC-P11-04) remains manual."
+}

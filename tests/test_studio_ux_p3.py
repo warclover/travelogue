@@ -125,6 +125,9 @@ def test_ux_p3_07_preview_toolbar_has_no_cluster_controls() -> None:
     assert "排版引擎" in js
     assert "preview-toolbar__g1-banner" in js
     assert "preview-drawer__narrate-anchors" in js
+    assert "copy-intent" in js
+    assert "章级意图" in js
+    assert "preview-drawer__chip-mood" in js
     assert "trapDrawerFocus" in js
     assert "toolbarConfirm" in js
     assert "window.alert(" not in js

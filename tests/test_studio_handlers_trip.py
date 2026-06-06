@@ -14,6 +14,7 @@ from travelogue.web.studio_handlers.trip_handlers import (
     handle_aesthetic,
     handle_chapter_layout,
     handle_entry,
+    handle_patch_copy_intent,
     handle_patch_intent,
     handle_patch_pipeline,
     handle_rerender,
@@ -323,3 +324,67 @@ def test_handle_trip_curate_runner_regenerates_preview_jpg(tmp_path: Path) -> No
                     args, kwargs = mock_preview.call_args
                     assert args[0] == trip_json
                     assert kwargs.get("trip_root") == trip_json.parent
+
+
+def _trip_with_chapter(trips_dir: Path, trip_id: str = "demo-copy-intent") -> Path:
+    trip_json = create_trip(trip_id, trips_dir, title="意图测试", place="京都")
+    svc = TripService(root=trips_dir.parent)
+    trip = svc.load(trip_json)
+    trip["chapters"] = [
+        {
+            "id": "ch-01",
+            "index": 1,
+            "patternId": "open",
+            "title": "雨后",
+            "items": [],
+        }
+    ]
+    svc.save(trip, trip_json)
+    return trip_json
+
+
+def test_handle_patch_copy_intent_success(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trip_json = _trip_with_chapter(trips_dir)
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={"mood": "松弛", "focus": "地方", "note": "鸭川边"},
+        path="/__travelogue/trips/demo-copy-intent/chapters/ch-01/copy-intent",
+    )
+    handle_patch_copy_intent(handler, "demo-copy-intent", "ch-01")
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 200
+    assert body["copyIntent"] == {"mood": "松弛", "focus": "地方", "note": "鸭川边"}
+    saved = TripService(root=trips_dir.parent).load(trip_json)
+    assert saved["chapters"][0]["curation"]["copyIntent"] == body["copyIntent"]
+
+
+def test_handle_patch_copy_intent_invalid_enum(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    _trip_with_chapter(trips_dir)
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={"mood": "不存在"},
+        path="/__travelogue/trips/demo-copy-intent/chapters/ch-01/copy-intent",
+    )
+    handle_patch_copy_intent(handler, "demo-copy-intent", "ch-01")
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 400
+    assert body["error"] == "E_COPY_INTENT_INVALID"
+
+
+def test_handle_patch_copy_intent_chapter_not_found(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    _trip_with_chapter(trips_dir)
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={"mood": "松弛"},
+        path="/__travelogue/trips/demo-copy-intent/chapters/missing/copy-intent",
+    )
+    handle_patch_copy_intent(handler, "demo-copy-intent", "missing")
+    assert handler.response == (
+        404,
+        {"ok": False, "error": "E_CHAPTER_NOT_FOUND", "message": "chapter not found"},
+    )

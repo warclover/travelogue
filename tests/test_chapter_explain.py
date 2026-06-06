@@ -95,6 +95,32 @@ def test_build_layout_explain_beam_pick() -> None:
     assert any("12" in line for line in out["details"])
 
 
+def test_build_layout_explain_includes_category_coherence() -> None:
+    curation = {
+        "layoutDecisionLog": [
+            {
+                "chapterId": "day-bucket-1",
+                "events": [
+                    {
+                        "type": "beam_pick",
+                        "variant": "legacy",
+                        "candidateCount": 2,
+                        "changed": False,
+                        "score": {
+                            "total": 0.75,
+                            "category_coherence": 0.88,
+                            "diversity": 0.4,
+                        },
+                    }
+                ],
+            }
+        ],
+    }
+    out = build_layout_explain(curation)
+    assert out is not None
+    assert any("主题同类" in line for line in out["details"])
+
+
 def test_build_layout_explain_none_for_legacy() -> None:
     assert build_layout_explain({}) is None
     assert build_layout_explain({"clustering": {}}) is None

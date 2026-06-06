@@ -134,6 +134,7 @@ def build_chapter_summaries(trip: dict) -> list[dict[str, Any]]:
                 "id": str(ch_id),
                 "title": str(ch.get("title") or ch_id)[:12],
                 "memoryAnchors": list(curation.get("memoryAnchors") or [])[:3],
+                "copyIntent": dict(curation.get("copyIntent") or {}),
             }
         )
     return rows

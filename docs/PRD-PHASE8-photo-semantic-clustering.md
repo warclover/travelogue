@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue |
 | **文档版本** | v0.8.0-PHASE8 |
-| **状态** | Draft · **Phase 9 完成后**启动 |
+| **状态** | Draft · **Superseded by [ADR-012](./adr/012-semantic-tagging-p8-p12-split.md) + Phase 12**（taxonomy 只读参考） |
 | **Phase 8 代号** | 「语义标签与类内聚类」— 11 大类 L1 + HDBSCAN L2 |
 | **前置条件** | [PRD-PHASE9.md](./PRD-PHASE9.md) Quality Gate 已上线；Phase 3 CLIP embed 可用 |
 | **规划来源** | `proud-dancing-haven.md` |

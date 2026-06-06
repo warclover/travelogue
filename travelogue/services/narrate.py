@@ -446,10 +446,11 @@ def run_narrate(
                 )
             )
     if prov == "stub":
-        return _run_narrate_stub(
+        result = _run_narrate_stub(
             trip, tone=tone, dry_run=dry_run, regenerate=regenerate, scope=scope_val
         )
-    return run_llm_narrate(
+        return result
+    result = run_llm_narrate(
         trip,
         provider=prov,
         tone=tone,
@@ -460,6 +461,18 @@ def run_narrate(
         scope=scope_val,
         cfg=app_cfg,
     )
+    if not dry_run:
+        from travelogue.services.decor_line import apply_decor_lines
+
+        decor_updates = apply_decor_lines(
+            trip,
+            regenerate=regenerate,
+            chapter_id=chapter_id,
+            cfg=app_cfg,
+        )
+        if decor_updates:
+            result.fields_updated.extend(decor_updates)
+    return result
 
 
 def _run_narrate_stub(
@@ -548,6 +561,18 @@ def _run_narrate_stub(
         intent=intent,
     )
     updated.extend(caption_updates)
+
+    from travelogue.services.decor_line import apply_decor_lines
+    from travelogue.config import get_config
+
+    updated.extend(
+        apply_decor_lines(
+            trip,
+            regenerate=regenerate,
+            dry_run=dry_run,
+            cfg=get_config(),
+        )
+    )
 
     if dry_run:
         return NarrateResult(fields_updated=updated)

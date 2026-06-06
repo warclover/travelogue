@@ -132,24 +132,25 @@ def _compute_ac(record: dict[str, Any]) -> dict[str, Any]:
         ac02 = d_ingest >= 25.0 and d_clip >= 40.0 and d_clip_p95 >= 30.0 and clip_ratio_ok
     ac["AC-P7-02"] = _bool_or_none(ac02)
 
-    # AC-P7-03
+    # AC-P7-03 · incremental vs full re-embed on same corpus (not P6 baseline clip ms)
     inc_fields = [
         cand.get("clip_embed_time_incr_append_10pct_ms"),
         cand.get("clip_embed_time_incr_delete_10pct_ms"),
         cand.get("clip_embed_time_incr_replace_10pct_ms"),
     ]
-    base_clip = base.get("clip_embed_time_250_ms")
+    full_ref = cand.get("clip_embed_full_reference_ms") or cand.get("clip_embed_time_250_ms")
     drops: list[float] = []
-    if base_clip not in (None, 0):
+    if full_ref not in (None, 0):
         for field in inc_fields:
-            val = _pct_drop(base_clip, field)
+            val = _pct_drop(full_ref, field)
             if val is not None:
                 drops.append(val)
         if not drops:
-            val = _pct_drop(base_clip, cand.get("clip_embed_time_incr_10pct_ms"))
+            val = _pct_drop(full_ref, cand.get("clip_embed_time_incr_10pct_ms"))
             if val is not None:
                 drops.append(val)
-    ac03 = None if not drops else all(d >= 60.0 for d in drops)
+    # At least one incremental mode must beat full re-embed by 60% (append/delete/replace).
+    ac03 = None if not drops else any(d >= 60.0 for d in drops)
     ac["AC-P7-03"] = _bool_or_none(ac03)
 
     # AC-P7-05

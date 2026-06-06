@@ -15,7 +15,7 @@ ingest:
   face_detect_max_edge: 0
 
 pipeline:
-  parallel_embed: false
+  parallel_embed: true
   parallel_embed_chunk: 32
 
 layout_scoring:

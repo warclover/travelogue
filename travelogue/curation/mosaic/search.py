@@ -65,7 +65,7 @@ def _preferred_hero_for_bucket(
     *,
     median_sharp: float | None = None,
 ) -> str | None:
-    from travelogue.curation.screen_planner import _preferred_hero_for_bucket as _pick
+    from travelogue.curation.screen_planner_attach import _preferred_hero_for_bucket as _pick
 
     return _pick(
         bucket, asset_to_ch, hero_by_ch, assets_by_id, median_sharp=median_sharp

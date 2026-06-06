@@ -97,6 +97,7 @@ class IngestConfig:
     low_res_circuit_breaker_median_short_px: int = 1200
     detect_faces: bool = True
     face_min_size_px: int = 48
+    face_detect_max_edge: int = 0
     featured_dir_names: tuple[str, ...] = ("主图上传", "精选", "featured", "hero")
     material_dir_names: tuple[str, ...] = ("素材上传", "素材", "material", "extras")
     featured_priority_on_truncation: bool = True
@@ -331,6 +332,14 @@ class NarrativeConfig:
     banned_phrases: tuple[str, ...] = ()
     # frame: hook+epilogue only | frame_chapters: +首末章 lead | full: +全章 lead + 图注
     scope: str = "frame"
+    # Phase 11 · decorLine
+    decor_line_enabled: bool = True
+    decor_line_max_chars: int = 30
+    decor_line_candidates: int = 3
+    decor_line_allow_empty: bool = True
+    decor_line_intent_enabled: bool = True
+    decor_line_intent_optional: bool = True
+    decor_line_intent_note_max_chars: int = 30
 
 
 @dataclass
@@ -344,7 +353,7 @@ class LlmConfig:
 
 @dataclass
 class PipelineConfig:
-    parallel_embed: bool = False
+    parallel_embed: bool = True
     parallel_embed_chunk: int = 32
 
 
@@ -701,6 +710,7 @@ def _ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
         ),
         detect_faces=bool(raw.get("detect_faces", True)),
         face_min_size_px=int(raw.get("face_min_size_px", 48)),
+        face_detect_max_edge=int(raw.get("face_detect_max_edge", raw.get("faceDetectMaxEdge", 0))),
         featured_dir_names=tuple(str(x) for x in (raw.get("featured_dir_names") or ["主图上传", "精选", "featured", "hero"])),
         material_dir_names=tuple(str(x) for x in (raw.get("material_dir_names") or ["素材上传", "素材", "material", "extras"])),
         featured_priority_on_truncation=bool(raw.get("featured_priority_on_truncation", True)),
@@ -1020,7 +1030,7 @@ def _vision_from_dict(raw: dict[str, Any]) -> VisionConfig:
 
 def _pipeline_from_dict(raw: dict[str, Any]) -> PipelineConfig:
     return PipelineConfig(
-        parallel_embed=cfg_bool(raw, "parallel_embed", "parallelEmbed", False),
+        parallel_embed=cfg_bool(raw, "parallel_embed", "parallelEmbed", True),
         parallel_embed_chunk=cfg_int(raw, "parallel_embed_chunk", "parallelEmbedChunk", 32),
     )
 
@@ -1290,6 +1300,15 @@ def load_config(path: Path | None = None) -> AppConfig:
             max_auto_fix_retries=int(narrative_raw.get("max_auto_fix_retries", 2)),
             banned_phrases=banned,
             scope=_normalize_narrative_scope(narrative_raw.get("scope", "frame")),
+            decor_line_enabled=bool(narrative_raw.get("decor_line_enabled", True)),
+            decor_line_max_chars=int(narrative_raw.get("decor_line_max_chars", 30)),
+            decor_line_candidates=int(narrative_raw.get("decor_line_candidates", 3)),
+            decor_line_allow_empty=bool(narrative_raw.get("decor_line_allow_empty", True)),
+            decor_line_intent_enabled=bool(narrative_raw.get("decor_line_intent_enabled", True)),
+            decor_line_intent_optional=bool(narrative_raw.get("decor_line_intent_optional", True)),
+            decor_line_intent_note_max_chars=int(
+                narrative_raw.get("decor_line_intent_note_max_chars", 30)
+            ),
         ),
         llm=LlmConfig(
             provider=llm_provider,

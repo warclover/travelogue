@@ -256,6 +256,22 @@ def test_studio_home_v2_import_sheet_modules() -> None:
     assert "AI 自动生成" not in sheet and "AI 自动生成" not in run
 
 
+def test_m21_0_browser_upload_contract() -> None:
+    """M21-0 · AC-M21-0 静态契约：upload 接线 + 软上限 + sessionStorage 续跑。"""
+    sheet = (STUDIO_DIR / "homepage-v2" / "import-sheet.js").read_text(encoding="utf-8")
+    run = (STUDIO_DIR / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+
+    assert 'id="v2-album-upload"' in html
+    assert 'webkitdirectory' in html
+    assert "handleUploadInput" in sheet
+    assert "_uploadInFlight" in sheet
+    assert "startV2UploadImport" in run
+    assert "postMultipartImportV2" in run
+    assert "SS.activeJobId" in run and "resumeV2ImportIfAny" in run
+    assert "200" in sheet or "UPLOAD_BYTES_SOFT_LIMIT" in sheet
+
+
 def test_studio_home_v2_phase14_dual_mode_smoke() -> None:
     """Phase 14 最小前端冒烟：双模式 DOM + 行为挂钩均已接线。"""
     html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")

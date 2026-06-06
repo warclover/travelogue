@@ -59,7 +59,7 @@ ingest:
 - [x] Phase D 骨架：Bradley-Terry proxy 标定 + feature export（`cover_scoring_calibrate.py`）
 - [ ] Phase D 发布：真实盲评样本标定权重并人工 approve
 - [x] `cover_candidates` 全量透传 `scoring_version`
-- [x] `algorithm-v2-signoff.json` 模板 + 自动化门禁（A-M1/A-M7）；人工 A-M3 待填
+- [x] `algorithm-v2-signoff.json` 模板 + 自动化门禁（A-M1/A-M7）；`--extended` 写入 A-M4 explain + D-M1 LOO；人工 A-M3 待填
 - [x] `demo verify` quick 套件纳入 V2 测试 + `algorithm_profile` v2 字段
 - [x] `docs/reports/algorithm-v2-kendall.md` 报告（合成 10 本；真实 trip 待素材）
 
@@ -87,13 +87,13 @@ ingest:
 ### Sprint 2（发布前）
 
 - [x] A-M1 Kendall τ ≥ 0.85（合成 10 本，mean=1.0）
-- [x] A-M4 explain top4 贡献 ≥ 0.65×logit
+- [x] A-M4 explain top4 贡献 ≥ 0.65×logit（`test_a_m4_explain_top4_reconstructs_logit`；合成 Kendall 相册 extended 记录 8/10，信息项）
 - [x] A-M7 ΔcoverId ≤ 3/10（合成 10 本，Δ=0）
 - [x] B-M5 burst 选最清晰 + 缩放后顺序稳定
 - [x] `test_v2_demotes_low_date_confidence_vs_v1`（CV2-04 预期反转，不计入 τ）
 - [x] Kendall 脚本默认读合成 fixture + `--write-report`
 - [x] `docs/reports/algorithm-v2-kendall.md`
 - [x] Phase C-B C-M1/C-M2 自动化门禁
-- [x] Phase D proxy LOO accuracy（合成相册，D-M1 骨架）
+- [x] Phase D proxy LOO accuracy（合成相册，D-M1 骨架；`algorithm_v2_signoff.py --extended`）
 - [ ] R0' 盲评 10 本真实相册（需 `trips/mao` 等素材落地 + 填 `judgeVerdict`）
 - [x] 默认 v2（开发期直切）

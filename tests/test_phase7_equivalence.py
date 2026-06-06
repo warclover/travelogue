@@ -47,6 +47,7 @@ def _passing_nr_record() -> dict:
             "clip_embed_time_incr_append_10pct_ms": 50_000,
             "clip_embed_time_incr_delete_10pct_ms": 45_000,
             "clip_embed_time_incr_replace_10pct_ms": 55_000,
+            "clip_embed_full_reference_ms": 180_000,
             "auto_batch_win_rate": 0.98,
             "cache_rebuild_success_rate": 1.0,
             "rollback_recovery_success": 1.0,
