@@ -209,6 +209,42 @@ def run_planning_loop(ctx: ChapterPlanContext) -> None:
         stage_generic_chunk(ctx)
 
 
+def stage_flush_remaining_cursor(ctx: ChapterPlanContext) -> None:
+    """Emit singles for bucket ids left after the main loop (S1 · no silent drop)."""
+    from travelogue.curation.screen_planner import (
+        _emit_portrait_single_screens,
+        _family_kind,
+        _make_screen,
+    )
+
+    while ctx.i < len(ctx.ids):
+        aid = ctx.ids[ctx.i]
+        fam = _family_kind(ctx.aspects.get(aid, "square"))
+        if fam == "portrait":
+            placed = _emit_portrait_single_screens(
+                [aid],
+                ctx.aspects,
+                assets_map=ctx.assets_map,
+                layout_state=ctx.layout_state,
+                pending=ctx.pending_portraits,
+                solo_exclude=ctx.skip_screen_asset_ids,
+            )
+            for sc in placed:
+                append_screen(ctx, sc)
+        else:
+            append_screen(
+                ctx,
+                _make_screen(
+                    "screen-landscape-1",
+                    [aid],
+                    screen_id="",
+                    aspects=ctx.aspects,
+                    assets_map=ctx.assets_map,
+                ),
+            )
+        ctx.i += 1
+
+
 class ChapterScreenPlanner:
     """Single entry point for chapter screen planning."""
 
@@ -227,6 +263,7 @@ class ChapterScreenPlanner:
     def plan(self) -> list[dict]:
         stage_chapter_hero(self.ctx)
         run_planning_loop(self.ctx)
+        stage_flush_remaining_cursor(self.ctx)
         if self.ctx.pending_portraits:
             stage_flush_remaining_portraits(self.ctx)
         stage_flush_remaining_food(self.ctx)
@@ -704,7 +741,10 @@ def stage_generic_chunk(ctx: ChapterPlanContext) -> None:
 
 
 def stage_flush_remaining_portraits(ctx: ChapterPlanContext) -> None:
-    from travelogue.curation.screen_planner import _flush_portrait_pending
+    from travelogue.curation.screen_planner import (
+        _emit_portrait_single_screens,
+        _flush_portrait_pending,
+    )
 
     while len(ctx.pending_portraits) >= 8 and try_drain_portrait_grid8(ctx):
         pass
@@ -717,6 +757,20 @@ def stage_flush_remaining_portraits(ctx: ChapterPlanContext) -> None:
         solo_exclude=ctx.skip_screen_asset_ids,
     ):
         append_screen(ctx, sc)
+    if ctx.pending_portraits:
+        for aid in list(ctx.pending_portraits):
+            for sc in _emit_portrait_single_screens(
+                [aid],
+                ctx.aspects,
+                assets_map=ctx.assets_map,
+                layout_state=ctx.layout_state,
+                pending=ctx.pending_portraits,
+                force=True,
+                solo_exclude=ctx.skip_screen_asset_ids,
+            ):
+                append_screen(ctx, sc)
+            if aid in ctx.pending_portraits:
+                ctx.pending_portraits.remove(aid)
 
 
 def stage_flush_remaining_food(ctx: ChapterPlanContext) -> None:

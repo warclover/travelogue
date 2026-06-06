@@ -9,7 +9,7 @@
 | **W2 状态** | **Partial**（ML 验收脚本已跑 · pyiqa/GPU 环境 skipped） |
 | **更新** | 2026-06-06 |
 
----
+> **Wave 5 对账**：W1 ☑；W2 ML 脚本 `phase9_ml_acceptance.py` 可跑（无 pyiqa/GPU 时 skipped 为预期）；golden 签核见 `phase9-golden-cull-signoff.json` · `phase9-eval-baseline.json`。
 
 ## 波次总览
 

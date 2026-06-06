@@ -347,3 +347,24 @@
 - §1 上传验证 · §2 发布后观察 · §7 签字
 - Release notes 实际粘贴到 GitHub Release
 
+---
+
+## 10. 执行记录（M21 dogfood · 2026-06-06）
+
+已落地：
+
+- 新增 `scripts/m21_deploy_smoke.py`（`/` · `/classic` · `/v2` · config HTTP 检查）
+- 新增 [M21-MANUAL-SMOKE.md](./M21-MANUAL-SMOKE.md)（P1-3/P1-4 手测签字）
+- Phase 4 integration gate 接入 CI `test-integration` job（87 passed，含 `test_user_tier.py`）
+- `studio-homepage-v2-rollout-log.json` 追加自动化条目
+
+本地自动化结果：
+
+- `python scripts/m21_deploy_smoke.py --spawn` → **PASS**（4/4 checks）
+- `python scripts/phase4_acceptance_gate.py` → **87 passed**
+
+仍须人工：
+
+- §1 真机小文件夹上传 → preview
+- §2 发布后 telemetry 漏斗观察（`studio_telemetry_aggregate.py`）
+

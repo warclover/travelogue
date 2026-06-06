@@ -11,6 +11,10 @@ pytest tests/test_studio_home_v2.py -q
 pytest tests/test_studio_home_v2_ac_playwright.py -q
 pytest tests/test_studio_homepage_gate.py -q
 pytest tests/test_studio_homepage_gate_security.py -q
+
+# 聚合（CI validate 用 --skip-e2e；本地发版前跑全量）
+python scripts/m21_dogfood_gate.py --skip-e2e
+python scripts/m21_dogfood_gate.py
 ```
 
 ---

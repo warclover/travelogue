@@ -15,8 +15,8 @@
 |----|------|------|------|
 | P1-1 | 门控单元测试 `test_studio_home_v2.py` | ☑ | 37 passed |
 | P1-2 | 上传/续跑 Playwright（HP2-16、retry upload、pending 清理） | ☑ | 3 passed |
-| P1-3 | 人工：小文件夹上传 → preview | ☐ | 见 `RUNBOOK-DOGFOOD.md` §M21-0 |
-| P1-4 | 人工：发布后 `/` v2、`/classic` 应急、漏斗指标 | ☐ | 见 `M21-CUTOVER-CHECKLIST.md` §1–2 |
+| P1-3 | 人工：小文件夹上传 → preview | ☐ | 手测：[M21-MANUAL-SMOKE.md](../studio-homepage-v2/M21-MANUAL-SMOKE.md) §1 |
+| P1-4 | 人工：发布后 `/` v2、`/classic` 应急、漏斗指标 | ◐ | 路由：`m21_deploy_smoke.py --base URL`；漏斗 telemetry 仍手测 · [M21-MANUAL-SMOKE.md](../studio-homepage-v2/M21-MANUAL-SMOKE.md) |
 | P1-5 | 更新 `studio-homepage-v2-rollout-log.json` | ☑ | 已写入自动化验证条目 |
 
 ## P1 · 算法 V2 盲评
@@ -72,3 +72,22 @@ python scripts/algorithm_v2_signoff.py --from-json docs/acceptance-records/algor
 | B3 | TELEMETRY / FEATURE-FLAG / Runbook 同步 | ☑ |
 | B4 | 根 README Studio 路由表 | ☑ |
 | B5 | gate_status · audit_v2_scroll 脚本口径 | ☑ |
+
+---
+
+## Wave 4–5 收口（2026-06-06）
+
+| 项 | 状态 | 命令 / 备注 |
+|----|------|-------------|
+| Algorithm V2 signoff `--extended` | ☑ | A-M1/A-M7/D-M1 LOO；A-M4 8/10 信息项 |
+| Phase 15 延后项文档 | ☑ | epilogue / replan 移出延后表 |
+| `phase15_unified_gate` | ☑ | `PASS unified_mode gate` |
+| Phase 6 基线 JSON | ☑ | `python scripts/phase6_metrics_baseline.py --summary --write` |
+| Phase 13 回滚演练 | ☑ | `docs/acceptance-records/phase13-rollback-drill.json` |
+| P5 layout sprint 合成记录 | ☑ | `docs/acceptance-records/phase5-layout-sprint.json` |
+| Phase 4 自动化 gate | ☑ | unit：`--skip-integration`（CI validate）；integration：全量（CI test-integration） |
+| M21 dogfood gate | ☑ | `--skip-e2e` 60 passed；全量 63 + rollback 4 |
+| Recasa 只读对比 | ☑ | `recasa_readonly_compare.py --fixture golden-mixed-scenes` → `not_integrated`（预期） |
+| IMPLEMENTATION 对账 | ☑ | Phase 4/7/15 头表 · 2026-06-06 |
+
+**Wave 5 剩余（可选）：** M21 手测签字（§1 上传→preview）、telemetry 漏斗 24h 观察。

@@ -70,6 +70,20 @@
   },
   "entries": [
     {
+      "at": "2026-06-06T08:45:00Z",
+      "kind": "automation",
+      "summary": "M21 dogfood gate 全量 PASS（unit 60 + M21-0 e2e 3 + rollback 4）；Phase 4 integration 87 passed",
+      "artifacts": [
+        "scripts/m21_dogfood_gate.py",
+        "scripts/phase4_acceptance_gate.py",
+        ".github/workflows/ci.yml validate + test-integration"
+      ],
+      "manualRemaining": [
+        "M21-CUTOVER-CHECKLIST §1 小文件夹上传 → preview（真机相册）",
+        "M21-CUTOVER-CHECKLIST §2 发布后漏斗 telemetry 观察"
+      ]
+    },
+    {
       "at": "2026-06-06T04:45:00Z",
       "kind": "automation",
       "summary": "M21 dogfood 自动化子集：home_v2 37 passed；upload/resume Playwright 3 passed",

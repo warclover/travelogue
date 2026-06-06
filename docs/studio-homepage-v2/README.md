@@ -25,6 +25,7 @@
 | [OPEN-QUESTIONS.md](./OPEN-QUESTIONS.md) | 未闭环项（owner + due） | 持续 |
 | [SIGNOFF-M20J.md](./SIGNOFF-M20J.md) | P2 观察窗 + PM/工程签字 + 切主站 | **M20-j** |
 | [RUNBOOK-DOGFOOD.md](./RUNBOOK-DOGFOOD.md) | dogfood holdback 部署与验证 | **M20-i/j** |
+| [M21-MANUAL-SMOKE.md](./M21-MANUAL-SMOKE.md) | P1-3/P1-4 手测签字清单 | **M21-b** |
 | [VISUAL-SIGNOFF.md](./VISUAL-SIGNOFF.md) | AC-03/08/12/17/18 截图签字 | **M20-j** |
 | [USABILITY-AC01.md](./USABILITY-AC01.md) | AC-01 五被试协议 | **M20-j** |
 | [DEVICE-MATRIX-IPAD.md](./DEVICE-MATRIX-IPAD.md) | iPad Safari 实机清单 | **M20-j** |

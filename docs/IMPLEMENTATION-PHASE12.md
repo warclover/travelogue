@@ -7,7 +7,7 @@
 | **状态** | **W1/W2 Done · W3 脚本就绪** |
 | **更新** | 2026-06-06 |
 
----
+> **Wave 5 对账**：W1/W2 ☑ · `phase12-eval-baseline.json` · `phase12-latency.json` 可 `--write` 刷新；W3 候选模型试点不阻塞。
 
 ## 波次总览
 

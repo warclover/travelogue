@@ -59,7 +59,7 @@ python scripts/phase15_replay_scenarios.py --write docs/acceptance-records/phase
 |------|------|
 | `mosaic5_eligible` | 8×5 竖横混合 · mosaic5 曝光 |
 | `portrait_heavy` | 竖图为主 |
-| `mixed_aspects` | 横竖混合 · 4 窗 `screen-portrait-2-landscape-2`（MCS 100%） |
+| `mixed_aspects` | 横竖混合 · 3 窗 `screen-portrait-1-landscape-2`（MCS 100%） |
 | `portrait_grid8` | 8 竖 · grid-8 |
 | `landscape_nine` | 9 横 · 九宫格 |
 

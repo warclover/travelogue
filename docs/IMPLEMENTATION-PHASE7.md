@@ -6,7 +6,9 @@
 | **关联验收** | [ACCEPTANCE-PHASE7.md](./ACCEPTANCE-PHASE7.md) |
 | **前置 Phase** | [IMPLEMENTATION-PHASE6.md](./IMPLEMENTATION-PHASE6.md) · G0 通过 |
 | **代号** | P7-Perf · 极速管线 |
-| **更新日期** | 2026-05-30 |
+| **更新日期** | 2026-06-06 |
+
+> **Wave 5 对账（2026-06-06）**：M27–M29 主线 ☑；`phase7-perf-eval.json` 由 `phase7_gate_run.py` / CI 维护。M29-OPT（ONNX spike）仍为可选 ☐。
 
 > **状态图例**：☑ 已落地 · ◑ 部分 · ☐ 未开始  
 > **优先级**：P0（性能必做 + NR 闸门） > P1（并行/预热） > P2（layout 增量 · ONNX spike）
@@ -230,4 +232,5 @@ M29-OPT-*         # 并行 spike，不阻塞
 
 | 日期 | 说明 |
 |------|------|
+| 2026-06-06 | Wave 5 对账：perf-eval 记录与 gate 脚本口径确认；ONNX spike 仍延后 |
 | 2026-05-30 | 初稿：M27–M29 对齐 PRD v0.7.0；3 周执行顺序与发布闸门 |

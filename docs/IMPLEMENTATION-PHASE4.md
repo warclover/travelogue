@@ -5,17 +5,17 @@
 | **关联 PRD** | [PRD-PHASE4.md](./PRD-PHASE4.md) v0.4.3 |
 | **UX 线框** | [wireframes/studio-import-sheet-v1.html](./wireframes/studio-import-sheet-v1.html) |
 | **代号** | P4-Intent |
-| **更新日期** | 2026-05-30 |
+| **更新日期** | 2026-06-06 |
 
 > **状态图例**：☑ 已落地（有代码证据）· ◑ 部分（多为前端已做、后端/测试缺）· ☐ 未开始
 >
 > ⚠️ **代码核查基线（2026-05-29，负责人审核）**
 > - 下表状态基于**源码存在性**核查，**不**代表已通过测试或端到端验证。
 >
-> ✅ **进度更新（2026-05-30 · Phase 4 代码收口）**
-> - **M15–M19 代码主线已完成**：intent / panel / toolbar / G1 / plan / hints 全链路 + 单测。
-> - **PRD 缺口补全（本轮）**：`runs/studio-intent.json` telemetry · G1 高级 UI · `arcSegment` 写入 + entry peak 链对齐 §8.5 · 锚点保存 narrate 提示 · `tierMode` job 字段 · plan 负向 fixture。
-> - **仍待人工**：P-EVAL 盲评（UX-P4-02）、AC-P4-HP/A11Y 手测、AC-P4-02/05 e2e 截图。
+> ✅ **进度更新（2026-06-06 · Phase 4 自动化 gate）**
+> - **`scripts/phase4_acceptance_gate.py`**：聚合 a11y + intent_ac + intent/entry/telemetry/plan/g1/user_tier（59 passed，`--skip-integration`）。
+> - **AC-P4-02/05/A11Y-03** 已由 `tests/test_studio_intent_ac_p4.py` · `tests/test_studio_a11y_p4.py` 覆盖。
+> - **仍待人工**：P-EVAL 盲评（UX-P4-02）、AC-P4-HP 手测。AC-P4-02 e2e：`test_studio_intent_ac_p4_playwright.py`；CI：`validate` 跑 gate `--skip-integration`，`test-integration` 跑全量 87 项。
 
 ---
 
@@ -50,7 +50,7 @@
 | M15-11 | `config.yaml` `g1_confirm_structure: false` 默认 | `config.py` · example | ☑ | M17-01 已合并 |
 | M15-12 | telemetry `runs/studio-intent.json` | `web/studio_intent_telemetry.py` | ☑ | AC-P4-TEL-01 · `tests/test_studio_intent_telemetry.py` |
 
-> **M15 状态**：✅ 代码完成。AC-P4-02 双文件夹成功页建议 e2e 截图验收。
+> **M15 状态**：✅ 代码完成。AC-P4-02 cull 第二行 + dual-folder resolver 单测 ☑；FirstSuccess chips e2e 可选手测。
 
 ---
 
@@ -150,8 +150,7 @@
 |----|------|
 | **UX-P4-02 / G-P4-07** | P-EVAL 盲评 6 对 · 填 `phase4-intent.json` |
 | **AC-P4-HP-01～06** | 极易用手测清单 |
-| **AC-P4-A11Y-02/03** | reduced-motion 走查（焦点陷阱已实现） |
-| **AC-P4-02 / AC-P4-05** | 双文件夹成功页截图 · user_tier 回归签字 |
+| **FirstSuccess chips e2e** | v2 成功页「精选 N 张」第一行 | ✅ `test_studio_intent_ac_p4_playwright.py` |
 | **G-P4-01 / UX-P4-03** | 访谈 · 20 分钟成稿计时 |
 
 ---
@@ -177,4 +176,5 @@
 | **P1** | M16-07 entry 测试 | 验收门禁 | ✅ |
 | **P1** | M15-HP-08 骨架屏 | HP-GAP-08 | ✅ |
 | **P2** | M17→M18→M19 | 按依赖推进 | ✅ |
-| **P3** | P-EVAL 盲评 + HP/A11Y 手测 | 发布闸门 | ☐ |
+| **P3** | P-EVAL 盲评 + HP 手测 | 发布闸门 | ☐ |
+| **P2** | Phase 4 自动化 gate | `phase4_acceptance_gate.py` | ✅ 2026-06-06 |

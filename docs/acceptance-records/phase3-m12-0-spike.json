@@ -85,5 +85,11 @@
   "openItems": [
     "Export real albums via scripts/export_clustering_fixture.py when trips/ available",
     "Recasa docker reference compare (matrix §3.4) — not run"
-  ]
+  ],
+  "recasaReadonly": {
+    "fixture": "golden-mixed-scenes",
+    "assetCount": 18,
+    "status": "not_integrated",
+    "note": "Recasa library not wired; use phase3 spike matrix for Go/No-Go."
+  }
 }

@@ -51,6 +51,9 @@ travelogue serve --studio ./trips --config config.yaml --host 0.0.0.0 --port 876
 TRAVELOGUE_STUDIO_HOMEPAGE_V2=auto TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT=10 \\
   python scripts/studio_homepage_gate_status.py --config config.yaml --ua "M20jTest/5" --json
 
+# M21 自动化子集（路由 + gate + M21-0 上传/续跑）
+python scripts/m21_dogfood_gate.py --skip-e2e
+
 # 根路径：200 serve v2 或 classic（M21-c 后无 302 → /v2）
 curl -s http://HOST:8766/ | findstr data-homepage-variant
 
@@ -59,6 +62,9 @@ curl -sI http://HOST:8766/v2 | findstr Location
 
 # 回滚演练
 python scripts/studio_homepage_rollback_drill.py
+
+# 手测签字（上传→preview · 发布后观察）
+# 见 docs/studio-homepage-v2/M21-MANUAL-SMOKE.md
 ```
 
 ---

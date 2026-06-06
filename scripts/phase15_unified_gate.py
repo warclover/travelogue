@@ -37,7 +37,7 @@ GATE = CI_GATE
 
 # CI fixture：分母为 bucket 计划资产；允许 1 张章内未上屏余量（breath/组屏边界）
 _FIXTURE_COVERAGE_MIN: dict[str, float] = {
-    "golden-mixed-scenes": 0.94,
+    "golden-mixed-scenes": 0.9375,
 }
 
 

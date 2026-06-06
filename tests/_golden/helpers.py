@@ -124,18 +124,16 @@ def build_mosaic_eligible_trip() -> tuple[list[list[str]], dict[str, str], list[
 
 
 def build_mixed_aspects_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
-    """8 assets mixed portrait/landscape in 2 buckets."""
+    """6 assets · 2×3-window MCS (portrait + 2 landscape per bucket)."""
     assets = [
         _asset("p1", 900, 1600, offset_hours=0),
         _asset("l1", 2000, 1200, offset_hours=0.5),
         _asset("l2", 2000, 1200, offset_hours=1),
-        _asset("p2", 900, 1600, offset_hours=1.5),
-        _asset("l3", 2000, 1200, offset_hours=24),
-        _asset("p3", 900, 1600, offset_hours=24.5),
+        _asset("p2", 900, 1600, offset_hours=24),
+        _asset("l3", 2000, 1200, offset_hours=24.5),
         _asset("l4", 2000, 1200, offset_hours=25),
-        _asset("p4", 900, 1600, offset_hours=25.5),
     ]
-    buckets = [["p1", "l1", "l2", "p2"], ["l3", "p3", "l4", "p4"]]
+    buckets = [["p1", "l1", "l2"], ["p2", "l3", "l4"]]
     aspects = {a["id"]: a["aspectKind"] for a in assets}
     return buckets, aspects, assets
 

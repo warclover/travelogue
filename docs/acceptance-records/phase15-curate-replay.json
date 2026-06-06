@@ -93,9 +93,9 @@
           "layoutRenderErrors": 0,
           "layout.mosaic5.win_score_p50": 0.731,
           "layout.mosaic5.win_score_p90": 0.731,
-          "mosaicWindowDecisions": 4,
-          "mosaicFallbackRate": 0.25,
-          "layout.mosaic_v2.fallback_rate": 0.25,
+          "mosaicWindowDecisions": 3,
+          "mosaicFallbackRate": 0.0,
+          "layout.mosaic_v2.fallback_rate": 0.0,
           "layout.mosaic_v2.low_score_fallback_rate": 0.0,
           "mosaic5WinnerPatterns": [
             "screen-portrait-1-landscape-2",
@@ -103,7 +103,7 @@
             "screen-landscape-4"
           ]
         },
-        "mosaicDecisionCount": 4,
+        "mosaicDecisionCount": 3,
         "displayedAssetCount": 15,
         "layoutMetrics": {
           "screenCount": 7,
@@ -141,9 +141,9 @@
           "layoutRenderErrors": 0,
           "layout.mosaic5.win_score_p50": 0.731,
           "layout.mosaic5.win_score_p90": 0.731,
-          "mosaicWindowDecisions": 4,
-          "mosaicFallbackRate": 0.25,
-          "layout.mosaic_v2.fallback_rate": 0.25,
+          "mosaicWindowDecisions": 3,
+          "mosaicFallbackRate": 0.0,
+          "layout.mosaic_v2.fallback_rate": 0.0,
           "layout.mosaic_v2.low_score_fallback_rate": 0.0,
           "mosaic5WinnerPatterns": [
             "screen-portrait-1-landscape-2",
@@ -168,7 +168,7 @@
       "passesUnifiedLift": true,
       "passesCoverage": true,
       "passesMosaic5LiftWhenBaseline": true,
-      "mosaicFallbackRateOn": 0.25,
+      "mosaicFallbackRateOn": 0.0,
       "eligibleToScreenCoverageOn": 0.9375
     }
   ]

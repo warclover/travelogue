@@ -5,8 +5,8 @@
 | **PRD** | [PRD-PHASE15-photo-mosaic-evolution.md](./PRD-PHASE15-photo-mosaic-evolution.md) v0.15.1 |
 | **设计** | [DESIGN-PHASE15-mosaic-system.md](./DESIGN-PHASE15-mosaic-system.md) v0.3.0 |
 | **里程碑** | P15-S1（5 窗 MCS）+ **P15-S2**（3/4/6 统一候选） |
-| **状态** | S1–S3 核心 ☑ · P0–P2 收口（见 [ACCEPTANCE-PHASE15.md](./ACCEPTANCE-PHASE15.md)） |
-| **更新** | 2026-06-04 |
+| **状态** | S1–S3 核心 ☑ · P0–P2 收口 · **unified gate PASS**（2026-06-06） |
+| **更新** | 2026-06-06 |
 
 > **S1 范围（DESIGN §10.1）**
 >
@@ -385,4 +385,4 @@ python scripts/phase15_curate_replay.py golden-mixed-scenes --fixture \
 | v0.1.0 | 2026-06-04 | 初稿：P15-S1 五波次任务清单，对齐 DESIGN v0.3 与 PRD AC-P15-01~08 |
 | v0.2.0 | 2026-06-04 | P15-S2：3/4/6 统一候选、开发默认全开、planner 测 mosaic 标记 |
 | v0.3.0 | 2026-06-04 | P15-S3 自愈骨架 + golden 3/4/6 fixture |
-| v0.4.0 | 2026-06-04 | P0–P2：beam 迁移、compose_trip、指标 p50/p90、验收测试与 ACCEPTANCE-PHASE15 |
+| v0.5.0 | 2026-06-06 | `phase15_unified_gate` PASS；mixed_aspects 6 图/3 窗；hook 仅认 hard_valid 候选 |

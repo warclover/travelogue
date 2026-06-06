@@ -24,7 +24,11 @@
 
 | 文件 | 用途 | 命令 / 说明 |
 |------|------|-------------|
-| [phase15-curate-replay.json](./phase15-curate-replay.json) | curate 回放记录（fixture trip） | `python scripts/phase15_curate_replay.py --write docs/acceptance-records/phase15-curate-replay.json` |
+| [phase15-curate-replay.json](./phase15-curate-replay.json) | curate 回放记录（fixture trip） | `python scripts/phase15_curate_replay.py golden-mixed-scenes --fixture --write …` |
+| [phase15-replay-scenarios.json](./phase15-replay-scenarios.json) | 多场景 MCS 回放 | `python scripts/phase15_replay_scenarios.py --write …` |
+| [phase15-mosaic-eval.json](./phase15-mosaic-eval.json) | mosaic5 A/B 曝光 | `python scripts/phase15_mosaic_eval.py --write …` |
+
+门禁：`python scripts/phase15_unified_gate.py` · bundle：`python scripts/phase15_acceptance_bundle.py --skip-pytest`
 
 文档入口：[IMPLEMENTATION-PHASE15.md](../IMPLEMENTATION-PHASE15.md) · [ACCEPTANCE-PHASE15.md](../ACCEPTANCE-PHASE15.md)
 
@@ -91,6 +95,8 @@
 | 文件 | 用途 | 命令 / 说明 |
 |------|------|-------------|
 | [studio-homepage-v2-rollout-log.json](./studio-homepage-v2-rollout-log.json) | G0–G2 holdback / 切主站 | [SIGNOFF-M20J.md](../studio-homepage-v2/SIGNOFF-M20J.md) |
+| — | M21 dogfood 自动化 | `python scripts/m21_dogfood_gate.py --skip-e2e`（CI validate）；全量含 rollback |
+| — | M21 发布后路由 smoke | `python scripts/m21_deploy_smoke.py --base http://HOST:8766` |
 | [studio-homepage-v2-visual/](./studio-homepage-v2-visual/) | 视觉 sign-off PNG（gitignore 生成物） | `python scripts/studio_ac_visual_capture.py` |
 | `studio-homepage-v2-rollback-drill.json` | 回滚演练报告（按需生成） | `python scripts/studio_homepage_rollback_drill.py --out …` |
 
@@ -119,9 +125,11 @@
 
 ## Phase 4
 
-| 文件 | 用途 |
-|------|------|
-| [phase4-intent.json](./phase4-intent.json) | P-EVAL · intent 盲评 + 关键词覆盖 |
+| 文件 | 用途 | 命令 / 说明 |
+|------|------|-------------|
+| [phase4-intent.json](./phase4-intent.json) | P-EVAL · intent 盲评 + 关键词覆盖 | 人工填写 |
+| — | AC-P4-02/05 · A11Y 静态守卫 | `python scripts/phase4_acceptance_gate.py --skip-integration` |
+| — | AC-P4-02 FirstSuccess e2e | `pytest tests/test_studio_intent_ac_p4_playwright.py -m e2e`（CI `test-e2e` job） |
 
 ---
 

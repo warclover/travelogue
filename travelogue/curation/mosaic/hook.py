@@ -54,16 +54,17 @@ def window_has_candidates(
 ) -> bool:
     from travelogue.curation.mosaic.candidates import generate_window_candidates
 
-    return bool(
-        generate_window_candidates(
-            window,
-            aspects,
-            assets_map,
-            cfg=cfg,
-            burst_seconds=burst_seconds,
-            median_sharp=median_sharp,
-        )
+    if len(window) != size:
+        return False
+    candidates = generate_window_candidates(
+        window,
+        aspects,
+        assets_map,
+        cfg=cfg,
+        burst_seconds=burst_seconds,
+        median_sharp=median_sharp,
     )
+    return any(c.hard_valid for c in candidates)
 
 
 def _mosaic_winner_has_main_role(
@@ -187,13 +188,16 @@ def try_mosaic_window_mcs(
         window_start=start,
         segment_id=ctx.chapter_id or "",
     )
-    _logs_buf().append(pick.log.to_dict())
     if pick.log.dropped_asset_ids:
         _dropped_buf().extend(pick.log.dropped_asset_ids)
 
     if pick.used_legacy:
-        return append_legacy_window(ctx, window, size)
+        if append_legacy_window(ctx, window, size):
+            _logs_buf().append(pick.log.to_dict())
+            return True
+        return False
     if pick.screen:
+        _logs_buf().append(pick.log.to_dict())
         append_screen(ctx, pick.screen)
         return True
     return False

@@ -7,7 +7,7 @@
 | **关联 PRD** | [PRD-PHASE4.md](./PRD-PHASE4.md) v0.4.3 |
 | **UX 线框** | [wireframes/studio-import-sheet-v1.html](./wireframes/studio-import-sheet-v1.html) |
 | **代号** | P4-Intent |
-| **更新日期** | 2026-05-30 |
+| **更新日期** | 2026-06-06 |
 
 ---
 
@@ -24,10 +24,10 @@
 | ID | 描述 | 步骤 | 通过 |
 |----|------|------|------|
 | **AC-P4-01** | Intent 带 | 首页填写杂志名 → 导入 → `trip.json` 中 `meta.title` 与输入一致 | ☑ 单测 + 预览 toolbar inline 保存 |
-| **AC-P4-02** | 精选反馈 | 使用含 `精选/`+`素材/` 的相册 → 成功页含「N 张精选」 | ☐ |
+| **AC-P4-02** | 精选反馈 | 使用含 `精选/`+`素材/` 的相册 → 成功页含「N 张精选」 | ☑ `test_studio_intent_ac_p4.py` + `test_studio_intent_ac_p4_playwright.py`（FirstSuccess 第一行） |
 | **AC-P4-03** | Peak 深链 | 导入完成点「打开预览」→ URL 含 `#screen-` 且首屏为内容屏 | ☑ 单测（`test_studio_entry.py`）；e2e 手测建议 |
 | **AC-P4-04** | userNotes 进叙事 | `userNotes` 含固定词「慢走」→ narrate 后 hook/lead 含「慢走」 | ☑ brief 单测（`test_studio_intent.py`）；预览 PATCH intent 已接 |
-| **AC-P4-05** | 附录 A 不回归 | `pytest tests/test_user_tier*.py -q` + AC-DF-02 | ☐ |
+| **AC-P4-05** | 附录 A 不回归 | `pytest tests/test_user_tier*.py -q` + AC-DF-02 | ☑ `phase4_acceptance_gate.py --skip-integration`（含 `test_user_tier.py` 非 integration） |
 | **AC-P4-06** | memoryAnchors | 预览为 ch-01 填 2 条锚点 → 保存 → 重载仍存在；schema 通过 | ☑ 编辑 drawer + copy_patch 单测 |
 | **AC-P4-07** | plan 城市 | 上传 plan.txt 列出「大阪」「京都」→ 章标题含两地（顺序一致）；golden 命中 ≥90% | ☑ |
 | **AC-P4-07b** | plan fail-open | 上传空/乱码/>32KB plan → WARN 且 `intentHints` 不写 city；导入仍成功 | ☑ |
@@ -54,7 +54,7 @@
 |----|------|------|
 | **AC-P4-A11Y-01** | 金钮前景/背景对比 ≥4.5:1（§6.12 定稿色，**不**用 `#d2a657`+白字 1.9:1）；sheet 正文 ≥4.5:1 | ☑ `--accent-ink: #1a1408`（≈9:1） |
 | **AC-P4-A11Y-02** | sheet 焦点陷阱 + `Esc` 关闭 + `aria-labelledby=#studio-sheet-title` | ☑ `trapSheetFocus` · Tab 环回手测建议 |
-| **AC-P4-A11Y-03** | `prefers-reduced-motion: reduce` 下无 coach 脉冲/bar 动画 | ☐ |
+| **AC-P4-A11Y-03** | `prefers-reduced-motion: reduce` 下无 coach 脉冲/bar 动画 | ☑ `test_studio_a11y_p4.py`（v2 loading bar `animation: none`） |
 
 ---
 
@@ -71,7 +71,9 @@
 ## 5. 自动化
 
 ```powershell
-pytest tests/test_studio_a11y_p4.py tests/test_studio_intent.py tests/test_studio_entry.py tests/test_studio_intent_telemetry.py tests/test_intent_plan.py tests/test_studio_g1.py tests/test_user_tier_curate.py -q
+python scripts/phase4_acceptance_gate.py --skip-integration
+python -m pytest tests/test_studio_intent_ac_p4_playwright.py -q -m "e2e and playwright_serial"
+pytest tests/test_studio_a11y_p4.py tests/test_studio_intent_ac_p4.py tests/test_studio_intent.py tests/test_studio_entry.py tests/test_studio_intent_telemetry.py tests/test_intent_plan.py tests/test_studio_g1.py tests/test_user_tier.py -q -m "not integration"
 python scripts/validate_trip.py trips\<fixture-trip-id>
 # telemetry 产物（导入完成后）：
 # type runs\studio-intent.json
@@ -82,7 +84,7 @@ python scripts/validate_trip.py trips\<fixture-trip-id>
 ## 6. 发布门禁
 
 - **M15–M19 代码主线** 已落地（含 telemetry · G1 UI · arcSegment peak 链）  
-- **自动化已绿**：AC-P4-01/03/04/06/07/07b/08/09 · AC-P4-TEL-01 · AC-P4-A11Y-01  
-- **发布前仍待人工**：AC-P4-02/05 · AC-P4-HP-01～06 · AC-P4-A11Y-03 · UX-P4-01～03（P-EVAL）
+- **自动化已绿**：AC-P4-01/02/03/04/05/06/07/07b/08/09 · AC-P4-TEL-01 · AC-P4-A11Y-01/02/03  
+- **发布前仍待人工**：AC-P4-HP-01～06 · UX-P4-01～03（P-EVAL）
 
-> **进度（2026-05-30 · 代码收口）**：M15–M19 全部任务 ☑；PRD 缺口（telemetry / G1 高级 UI / arcSegment / narrate 提示 / tierMode）已补。**单测可覆盖项均已标 ☑**；剩余 AC-P4-02（双文件夹成功页截图）、AC-P4-05（user_tier 回归签字）、HP/A11Y 手测、P-EVAL 盲评见 [IMPLEMENTATION-PHASE4.md](./IMPLEMENTATION-PHASE4.md)「发布前仍待人工」。
+> **进度（2026-06-06 · 自动化收口）**：`scripts/phase4_acceptance_gate.py` 聚合 59 项单测（CI `validate` job）；AC-P4-02 e2e 见 `test_studio_intent_ac_p4_playwright.py`（CI `test-e2e` job）。剩余 HP 手测、P-EVAL 盲评见 [IMPLEMENTATION-PHASE4.md](./IMPLEMENTATION-PHASE4.md)「发布前仍待人工」。

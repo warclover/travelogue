@@ -76,6 +76,9 @@ jobs:
           python -m pytest tests/ -q \
             -m "integration and not e2e and not vision and not playwright_serial and not legacy_homepage"
 
+      - name: Phase 4 acceptance gate (integration)
+        run: python scripts/phase4_acceptance_gate.py
+
   test-e2e:
     runs-on: ubuntu-latest
     steps:
@@ -180,3 +183,9 @@ jobs:
 
       - name: Quality gate (layout + studio regression)
         run: python scripts/quality_gate.py
+
+      - name: Phase 4 acceptance gate
+        run: python scripts/phase4_acceptance_gate.py --skip-integration
+
+      - name: M21 dogfood gate (unit)
+        run: python scripts/m21_dogfood_gate.py --skip-e2e

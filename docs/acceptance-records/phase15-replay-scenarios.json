@@ -68,27 +68,26 @@
     },
     "mixed_aspects": {
       "patternsOff": {
-        "screen-portrait-1": 4,
+        "screen-portrait-1": 2,
         "screen-landscape-1": 4
       },
       "patternsOn": {
-        "screen-portrait-1-landscape-2": 2,
-        "screen-portrait-1": 2
+        "screen-portrait-1-landscape-2": 2
       },
-      "mcsUnifiedExposureRateOn": 0.5,
+      "mcsUnifiedExposureRateOn": 1.0,
       "metricsOn": {
         "mosaic5ExposureRate": 0.0,
         "layout.mosaic5.exposure_rate": 0.0,
-        "mcsUnifiedExposureRate": 0.5,
-        "layout.mosaic_v2.unified_exposure_rate": 0.5,
+        "mcsUnifiedExposureRate": 1.0,
+        "layout.mosaic_v2.unified_exposure_rate": 1.0,
         "layout.render.error_rate": 0.0,
         "layoutRenderChecked": 2,
         "layoutRenderErrors": 0,
         "layout.mosaic5.win_score_p50": 0.7697,
         "layout.mosaic5.win_score_p90": 0.7697,
-        "mosaicWindowDecisions": 4,
-        "mosaicFallbackRate": 0.5,
-        "layout.mosaic_v2.fallback_rate": 0.5,
+        "mosaicWindowDecisions": 2,
+        "mosaicFallbackRate": 0.0,
+        "layout.mosaic_v2.fallback_rate": 0.0,
         "layout.mosaic_v2.low_score_fallback_rate": 0.0,
         "mosaic5WinnerPatterns": [
           "screen-portrait-1-landscape-2",

@@ -11,12 +11,6 @@
             "l1",
             "l2"
           ]
-        },
-        {
-          "patternId": "screen-portrait-1",
-          "slotAssetIds": [
-            "p2"
-          ]
         }
       ]
     },
@@ -27,15 +21,9 @@
         {
           "patternId": "screen-portrait-1-landscape-2",
           "slotAssetIds": [
-            "p3",
+            "p2",
             "l3",
             "l4"
-          ]
-        },
-        {
-          "patternId": "screen-portrait-1",
-          "slotAssetIds": [
-            "p4"
           ]
         }
       ]
