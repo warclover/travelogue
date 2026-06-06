@@ -17,7 +17,7 @@
 |----|------|--------|------|------|
 | P2-1 | `trip_handlers` 按域拆分 | P0 | ☑ 完成 | 各文件 <300 行；`test_studio_handlers_*` 全绿 |
 | P2-2 | `config.py` 按域拆包 | P1 | ☑ 完成 | `get_config()` API 不变；配置测试全绿 |
-| P2-3 | `cli.py` 子命令模块化 | P1 | ◐ 进行中 | `travelogue --help` 不变 |
+| P2-3 | `cli.py` 子命令模块化 | P1 | ☑ 完成 | `travelogue --help` 不变 |
 | P2-4 | `trips/linzhi` 缓存版本策略 | P2 | ☐ | export 后无时间戳脏 diff |
 | P2-5 | `ingest.py` / `curate.py` 减负 | P3 | ☐ | 算法 Phase 稳定后再动 |
 
@@ -59,14 +59,18 @@ travelogue/config/
 
 ---
 
-## P2-3 · cli 拆分（计划）
+## P2-3 · cli 拆分（已完成）
 
 ```
 travelogue/cli/
-  __init__.py    # typer app
-  trip.py
-  demo.py
-  studio.py
+  __init__.py    # main() + re-export app
+  _apps.py       # typer app instances
+  _helpers.py    # shared resolve/load helpers
+  trip.py        # trip new/list
+  demo.py        # demo + quick/from-album
+  pipeline.py    # ingest/curate/lock/narrate/run/...
+  render_cmds.py # render/serve/studio/export/...
+  cluster.py     # cluster subcommands
 ```
 
 ---
