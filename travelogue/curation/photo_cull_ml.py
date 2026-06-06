@@ -96,6 +96,7 @@ def _load_aesthetic_cache(cache_path: Path) -> dict[str, float]:
     try:
         raw = json.loads(cache_path.read_text(encoding="utf-8"))
     except Exception:
+        _log.debug("aesthetic cache read skipped for %s", cache_path, exc_info=True)
         return {}
     if not isinstance(raw, dict):
         return {}

@@ -9,7 +9,7 @@ from travelogue.config import AppConfig, app_config_scope
 from travelogue.export.packager import ExportError, export_trip
 from travelogue.render.engine import RenderError, render_trip
 from travelogue.render.preview import render_preview_jpg
-from travelogue.services.trip import TripService
+from travelogue.runtime import app_context_for_trip_json
 from travelogue.services.validate import validate_trip
 
 
@@ -53,7 +53,7 @@ def _publish_trip_stages(
     trip_root = trip_path.parent
 
     if validate:
-        trip = TripService().load(trip_path)
+        trip = app_context_for_trip_json(trip_path).trip_service().load(trip_path)
         errs = [e for e in validate_trip(trip) if not e.startswith("WARN:")]
         if errs:
             first = errs[0]

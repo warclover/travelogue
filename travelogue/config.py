@@ -23,6 +23,9 @@ def _default_trips_dir() -> Path:
 
         return default_trips_dir()
     except Exception:
+        logging.getLogger(__name__).debug(
+            "desktop default_trips_dir unavailable; using ROOT/trips", exc_info=True
+        )
         return ROOT / "trips"
 
 _log = logging.getLogger(__name__)

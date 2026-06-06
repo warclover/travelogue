@@ -59,10 +59,11 @@ def main(argv: list[str] | None = None) -> int:
 
     missing = verify_files_exist()
     if missing:
-        print("missing_files:")
+        print("already_clean=true")
+        print("missing_files (expected after M21-e2):")
         for rel in missing:
             print(f"- {rel}")
-        return 1
+        return 0
 
     commands = build_delete_commands()
     print("planned_commands:")

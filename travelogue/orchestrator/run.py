@@ -16,7 +16,7 @@ from travelogue.services.layout import LayoutError, apply_layout_to_trip
 from travelogue.services.narrate import run_narrate
 from travelogue.services.pipeline_state import PipelineError, Until, assert_stage_allowed
 from travelogue.orchestrator.studio_hooks import StudioHooks
-from travelogue.services.trip import TripService
+from travelogue.runtime import app_context_for_trip_json
 
 
 @dataclass
@@ -79,7 +79,7 @@ def _run_trip_stages(
 ) -> RunResult:
     trip_path = trip_path.resolve()
     trip_root = trip_path.parent
-    svc = TripService()
+    svc = app_context_for_trip_json(trip_path).trip_service()
     trip = svc.load(trip_path)
     result = RunResult(trip_path=trip_path)
     status = (trip.get("pipeline") or {}).get("status", "")

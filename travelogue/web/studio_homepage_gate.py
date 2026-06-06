@@ -17,6 +17,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import html as html_module
+import logging
 import os
 from typing import Any, Literal
 from urllib.parse import parse_qs
@@ -28,6 +29,7 @@ COOKIE_BUCKET = "travelogue.studio.hp_bucket"
 COOKIE_MAX_AGE = 365 * 24 * 3600
 BUCKET_SALT = "travelogue-studio-homepage-v2"
 LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
+_log = logging.getLogger(__name__)
 
 HomepageGateMode = Literal["off", "on", "auto"]
 
@@ -266,4 +268,5 @@ def load_config_dict(handler: Any) -> dict[str, Any] | None:
         data = yaml.safe_load(p.read_text(encoding="utf-8"))
         return data if isinstance(data, dict) else None
     except Exception:
+        _log.debug("studio homepage gate yaml load failed for %s", p, exc_info=True)
         return None

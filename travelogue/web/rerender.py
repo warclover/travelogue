@@ -9,11 +9,11 @@ from travelogue.render.engine import LONGSHOT_INDEX_NAME, render_trip
 
 def rerender_draft_trip(trip_json: Path) -> list[str]:
     """Render index.html and longshot sidecar (when applicable) after trip.json edits."""
-    from travelogue.services.trip import TripService
+    from travelogue.runtime import app_context_for_trip_json
 
     trip_json = trip_json.resolve()
     trip_root = trip_json.parent
-    trip = TripService().load(trip_json)
+    trip = app_context_for_trip_json(trip_json).trip_service().load(trip_json)
     layout_engine = trip.get("layoutEngine")
     render_trip(
         trip_json,

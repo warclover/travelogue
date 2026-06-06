@@ -7,7 +7,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 from travelogue.render.context import build_render_context
-from travelogue.services.trip import TripService
+from travelogue.runtime import app_context_for_trip_json
 
 
 def _load_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -27,7 +27,7 @@ def render_preview_jpg(
 ) -> Path:
     trip_path = trip_path.resolve()
     trip_root = trip_root or trip_path.parent
-    trip = TripService().load(trip_path)
+    trip = app_context_for_trip_json(trip_path).trip_service().load(trip_path)
     ctx = build_render_context(trip, export_mode="share", trip_root=trip_root)
 
     w, h = 1080, 1920

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from travelogue.render.engine import render_trip
 from travelogue.services.layout import apply_layout_to_trip
-from travelogue.services.trip import TripService
+from travelogue.runtime import app_context_for_trip_json
 
 
 @dataclass
@@ -33,7 +33,7 @@ def compare_web_layout(
     trip_dir = trip_file.parent if out_dir is None else Path(out_dir)
     trip_dir.mkdir(parents=True, exist_ok=True)
 
-    svc = TripService()
+    svc = app_context_for_trip_json(trip_file).trip_service()
     trip = svc.load(trip_file)
     apply_layout_to_trip(trip, export_layout="web", layout_engine="screens")
     svc.save(trip, trip_file)

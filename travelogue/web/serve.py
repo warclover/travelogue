@@ -12,7 +12,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from travelogue.config import AppConfig, app_config_scope, get_config
-from travelogue.services.trip import TripService
+from travelogue.runtime import app_context_for_trip_json
 from travelogue.web.copy_patch import CopyPatchError, apply_copy_patches
 from travelogue.web.studio_errors import internal_error_payload
 from travelogue.web.studio_chrome import inject_studio_chrome, should_inject_studio_chrome
@@ -219,7 +219,7 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
         if not isinstance(patches, list) or not patches:
             self._json_response(400, {"ok": False, "error": "patches required"})
             return
-        svc = TripService()
+        svc = app_context_for_trip_json(self.trip_json_path, cfg=self.app_config).trip_service()
         rendered: list[str] = []
         try:
             with self._app_config_scope():
@@ -250,7 +250,7 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             return
         ids = [str(aid).strip() for aid in asset_ids if str(aid).strip()]
         defer_rerender = payload.get("rerender") is False
-        svc = TripService()
+        svc = app_context_for_trip_json(self.trip_json_path, cfg=self.app_config).trip_service()
         rendered: list[str] = []
         try:
             with self._app_config_scope():
@@ -369,7 +369,7 @@ def serve_studio_directory(
             if warm_playwright_browser():
                 print("  playwright: warmed (longshot ready)")
         except Exception:
-            pass
+            _log.debug("playwright warm skipped (optional)", exc_info=True)
 
     threading.Thread(target=_warm_playwright, daemon=True, name="playwright-warm").start()
 

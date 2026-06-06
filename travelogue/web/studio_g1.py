@@ -8,7 +8,7 @@ from travelogue.config import AppConfig, get_config
 from travelogue.demo.build import DemoError
 from travelogue.orchestrator.run import run_trip
 from travelogue.services.pipeline_state import trip_status
-from travelogue.services.trip import TripService
+from travelogue.runtime import app_context_for_trip_json
 
 
 def lock_trip_structure(trip: dict) -> None:
@@ -28,7 +28,7 @@ def continue_after_g1_confirm(
 ) -> dict:
     """Run narrate (stub) + render + preview after user confirms G1."""
     cfg = cfg or get_config()
-    trip = TripService().load(trip_json)
+    trip = app_context_for_trip_json(trip_json, cfg=cfg).trip_service().load(trip_json)
     status = trip_status(trip)
     if status != "structure_locked":
         raise DemoError(

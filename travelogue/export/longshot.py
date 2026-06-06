@@ -571,7 +571,7 @@ def export_trip_longshot(
             try:
                 page.close()
             except Exception:
-                pass
+                _log.debug("playwright page.close skipped", exc_info=True)
         _BROWSER_POOL.release()
         if server is not None:
             server.shutdown()

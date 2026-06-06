@@ -33,6 +33,13 @@ jobs:
           name: holdback-funnel-report
           path: holdback-funnel.json
 
+      - name: Slack holdback alert（可选 · OQ-TELEMETRY）
+        if: ${{ secrets.TRAVELOGUE_STUDIO_TELEMETRY_SLACK_WEBHOOK != '' }}
+        continue-on-error: true
+        env:
+          TRAVELOGUE_STUDIO_TELEMETRY_SLACK_WEBHOOK: ${{ secrets.TRAVELOGUE_STUDIO_TELEMETRY_SLACK_WEBHOOK }}
+        run: python scripts/studio_telemetry_alert.py --report holdback-funnel.json --notify
+
   holdback-lcp:
     runs-on: ubuntu-latest
     needs: holdback-funnel

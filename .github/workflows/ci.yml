@@ -171,6 +171,9 @@ jobs:
 
           if warnings:
               print("::warning::Phase9 baseline drift detected (warn-only): " + " | ".join(warnings))
+              import os
+              if os.environ.get("PHASE9_BASELINE_STRICT") == "1":
+                  raise SystemExit(1)
           else:
               print("Phase9 baseline stable within warn-only thresholds")
           PY

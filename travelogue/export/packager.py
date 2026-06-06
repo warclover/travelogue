@@ -18,7 +18,6 @@ from travelogue.render.engine import (
     should_include_screenplay,
 )
 from travelogue.render.preview import render_preview_jpg
-from travelogue.services.trip import TripService
 from travelogue.errors import CodeError
 from travelogue.services.validate import validate_trip
 
@@ -92,7 +91,9 @@ def _export_trip_stages(
 
     trip_path = trip_path.resolve()
     trip_root = trip_path.parent
-    svc = TripService()
+    from travelogue.runtime import app_context_for_trip_json
+
+    svc = app_context_for_trip_json(trip_path).trip_service()
     trip = svc.load(trip_path)
 
     if validate:

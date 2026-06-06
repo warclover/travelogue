@@ -475,10 +475,11 @@ def render_trip(
     out_dir = (out_dir or trip_root).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    from travelogue.services.trip import TripService
+    from travelogue.runtime import app_context_for_trip_json
 
+    trip_svc = app_context_for_trip_json(trip_path, cfg=cfg).trip_service()
     if trip is None:
-        trip = TripService().load(trip_path)
+        trip = trip_svc.load(trip_path)
 
     if validate:
         errs = [e for e in validate_trip(trip) if not e.startswith("WARN:")]
@@ -546,8 +547,8 @@ def _render_trip_body(
     update_pipeline: bool,
     cfg: AppConfig | None,
 ) -> Path:
+    from travelogue.runtime import app_context_for_trip_json
     from travelogue.templating.metrics import record_render_outcome
-    from travelogue.services.trip import TripService
 
     trip_id = str(trip.get("tripId") or trip_path.parent.name)
     html = render_html(
@@ -666,7 +667,7 @@ def _render_trip_body(
         trip["updatedAt"] = (
             datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
         )
-        TripService().save(trip, trip_path)
+        app_context_for_trip_json(trip_path, cfg=cfg).trip_service().save(trip, trip_path)
 
     record_render_outcome(trip_id=trip_id, template_id=effective_template, ok=True)
     return out_dir
@@ -691,9 +692,9 @@ def render_trip_surfaces(
     trip_root = trip_path.parent
     out_dir = (out_dir or trip_root).resolve()
 
-    from travelogue.services.trip import TripService
+    from travelogue.runtime import app_context_for_trip_json
 
-    trip = TripService().load(trip_path)
+    trip = app_context_for_trip_json(trip_path, cfg=cfg).trip_service().load(trip_path)
     shared = {"trip": trip, "cfg": cfg}
 
     web_index = render_trip(
