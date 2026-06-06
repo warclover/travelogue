@@ -47,7 +47,6 @@ def test_ux_p3_03_advanced_options_bind_export() -> None:
     assert "bindAdvancedConfigControls" in advanced_js
 
 
-@pytest.mark.legacy_homepage
 def test_ux_p3_03_advanced_options_and_config_api(tmp_path: Path) -> None:
     # Classic freeze is deprecated minimal UI; advanced options live on studio-home-v2
     # (see test_ux_p3_03_v2_advanced_options_markers). This case only checks config API.
@@ -78,9 +77,17 @@ def test_ux_p3_03_advanced_options_and_config_api(tmp_path: Path) -> None:
 
 
 def test_ux_p3_04_cluster_notice_non_blocking_string() -> None:
-    js = read_studio_js()
-    assert "clusterNotice" in js
-    assert "studio-toast" in js or "showToast" in js or "setWarning" in js
+    """Vision/geo 降级 notice 经 job result 传递；v2 非阻断 warn 走 studioToast。"""
+    subprocess_js = (
+        ROOT / "travelogue" / "web" / "studio_subprocess.py"
+    ).read_text(encoding="utf-8")
+    assert "clusterNotice" in subprocess_js
+    first_success = (
+        ROOT / "templates" / "studio" / "homepage-v2" / "first-success.js"
+    ).read_text(encoding="utf-8")
+    assert "studioToast" in first_success
+    assert "cullWarn" in first_success
+    assert "dateRangeWarn" in first_success
 
 
 def test_ux_p3_03_v2_advanced_options_markers() -> None:

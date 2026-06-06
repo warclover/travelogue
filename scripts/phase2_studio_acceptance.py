@@ -33,7 +33,7 @@ def _check(name: str, ok: bool, detail: str = "") -> bool:
 
 def run_checks(*, trips_dir: Path | None) -> int:
     ok = True
-    ok &= _check("studio.html", (STUDIO_TEMPLATE_DIR / "studio.html").is_file())
+    ok &= _check("studio-home-v2.html", (STUDIO_TEMPLATE_DIR / "studio-home-v2.html").is_file())
     ok &= _check("preview-toolbar.js", (STUDIO_TEMPLATE_DIR / "preview-toolbar.js").is_file())
     ok &= _check("studio_stages.yaml", (STUDIO_TEMPLATE_DIR / "studio_stages.yaml").is_file())
     ok &= _check("stage hints loaded", bool(all_stage_hints().get("llm_narrate")))

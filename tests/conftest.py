@@ -21,11 +21,6 @@ from travelogue.services.trip_factory import create_trip
 from tests.studio_test_helpers import IngestedTripWorkspace, make_test_album
 
 
-def _is_studio_ui_playwright(item: pytest.Item) -> bool:
-    nodeid = item.nodeid.replace("\\", "/")
-    return "test_studio_p9_qa_playwright" in nodeid or "test_studio_p10_layout_playwright" in nodeid
-
-
 _FAST_SKIP_MARKERS = frozenset(
     {"e2e", "playwright_serial", "integration", "vision", "legacy_homepage"}
 )
@@ -88,17 +83,14 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     for item in items:
         _apply_auto_markers(item)
 
-    studio_ui: list[pytest.Item] = []
     serial: list[pytest.Item] = []
     other: list[pytest.Item] = []
     for item in items:
-        if _is_studio_ui_playwright(item):
-            studio_ui.append(item)
-        elif item.get_closest_marker("playwright_serial"):
+        if item.get_closest_marker("playwright_serial"):
             serial.append(item)
         else:
             other.append(item)
-    items[:] = other + serial + studio_ui
+    items[:] = other + serial
 
 
 @pytest.fixture(autouse=True)
@@ -115,8 +107,7 @@ def _release_resources_before_playwright(request: pytest.FixtureRequest):
             reset_browser_pool_for_tests()
         except Exception as exc:
             _log.debug("playwright pool reset (setup) failed: %s", exc, exc_info=True)
-        if _is_studio_ui_playwright(request.node):
-            gc.collect()
+        gc.collect()
 
         try:
             import torch  # type: ignore

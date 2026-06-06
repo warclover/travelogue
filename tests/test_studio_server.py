@@ -16,6 +16,7 @@ import pytest
 from travelogue.web.serve import TripPreviewHandler
 from travelogue.web.studio_jobs import reset_job_store
 from travelogue.web.studio_pipeline import run_studio_pipeline
+from travelogue.web.studio_trips import list_studio_trips, studio_trips_total
 from tests.studio_test_helpers import wait_for_job
 from tests.test_ingest import _album
 
@@ -377,6 +378,27 @@ def test_studio_serves_trip_static_with_unicode_filename(tmp_path: Path) -> None
         encoded = quote(filename)
         url = f"http://127.0.0.1:{port}/{trip_id}/{encoded}"
         assert _get_status(url) == 200
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_studio_trips_api_limit_and_total(tmp_path: Path) -> None:
+    album = _distinct_album(tmp_path, 6)
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    run_studio_pipeline(album, trips_dir=trips_dir, title="Limit test", dedupe=False)
+
+    assert studio_trips_total(trips_dir) == 1
+    assert len(list_studio_trips(trips_dir, limit=1)) == 1
+
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        status, body = _get_json(f"http://127.0.0.1:{port}/__travelogue/trips?limit=1")
+        assert status == 200
+        assert body.get("total") == 1
+        assert len(body.get("trips") or []) == 1
     finally:
         server.shutdown()
         server.server_close()

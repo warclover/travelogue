@@ -183,7 +183,10 @@ studio_surfaces:
   p10_layout:
     tiers: [wide, tablet, compact]
     breakpoints_px: { compact_max: 768, tablet_max: 980 }
-    modules: [templates/studio/js/viewport.js, templates/studio/js/progress.js, templates/studio/js/capabilities.js]
+    modules:
+      - templates/studio/homepage-v2/layout-tier.js
+      - templates/studio/homepage-v2/viewport-logic.js
+      - templates/studio/homepage-v2/import-run.js
     ac: [AC-P10-01, AC-P10-02, AC-P10-03, AC-P10-04]
   reading_profiles:
     maps_to: profiles

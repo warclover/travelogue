@@ -1,14 +1,8 @@
-"""P5-H2 · sample longshot thumbs on empty-state gallery."""
+"""P5-H2 · sample longshot thumb assets (shared by v2 demo constants)."""
 
 from __future__ import annotations
 
 from pathlib import Path
-
-import pytest
-
-from tests._studio_js import read_studio_js
-
-pytestmark = pytest.mark.legacy_homepage
 
 
 def test_sample_longshot_thumb_assets_exist() -> None:
@@ -20,8 +14,15 @@ def test_sample_longshot_thumb_assets_exist() -> None:
         assert thumb.stat().st_size > 1024
 
 
-def test_studio_js_uses_real_sample_thumbs() -> None:
-    js = read_studio_js()
+def test_constants_sample_thumbs_wired() -> None:
+    js = (
+        Path(__file__).resolve().parents[1]
+        / "templates"
+        / "studio"
+        / "js"
+        / "constants.js"
+    ).read_text(encoding="utf-8")
     assert "thumbSrc:" in js
-    assert "buildSampleThumb" in js
     assert "sample-longshots/kyoto-thumb.jpg" in js
+    assert "sample-longshots/iceland-thumb.jpg" in js
+    assert "sample-longshots/linzhi-thumb.jpg" in js

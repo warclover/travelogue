@@ -1,8 +1,8 @@
-"""Studio 首页 v2（GET /v2）路由 + 冒烟测试（Phase 0 / M20-a）。
+"""Studio 首页 v2（GET /）路由 + 冒烟测试（Phase 0 / M20-a · M21-c）。
 
 覆盖：
-- GET /v2 返回 200 且含 v2 Bento 标记
-- GET / 仍 200 且 v3 DOM 不变（回归护栏）
+- GET / 返回 200 且含 v2 Bento 标记
+- GET /classic 应急 classic 冻结页
 - v2 CSS / JS 模块存在且含关键符号
 - demo-showcase manifest.json 结构合法
 """
@@ -19,7 +19,8 @@ import pytest
 import yaml
 
 from travelogue.web.studio_jobs import reset_job_store
-from tests.test_studio_server import _free_port, _start_studio_server
+from tests.test_studio_server import _free_port, _post_json, _start_studio_server
+from travelogue.web.studio_handlers.paths import STUDIO_EVENT_PATH
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 STUDIO_DIR = REPO_ROOT / "templates" / "studio"
@@ -590,18 +591,30 @@ def test_studio_home_v2_telemetry_wired() -> None:
     assert "lightbox_open" in lightbox
 
 
-@pytest.mark.legacy_homepage
-def test_studio_v3_experiment_exposure_wired() -> None:
-    """M20-j · v3 对照组 holdback 曝光（TELEMETRY §2 experiment_exposure）。"""
-    studio_js_path = STUDIO_DIR / "studio.js"
-    if not studio_js_path.exists():
-        pytest.skip("M21-e2 之后已删除完整 v3 入口")
-    studio_js = studio_js_path.read_text(encoding="utf-8")
-    assert "resolveBucketId" in studio_js
-    assert "./js/bucket.js" in studio_js
-    assert "homepage-v2/bucket" not in studio_js
-    assert "experiment_exposure" in studio_js
-    assert 'variant: "v3"' in studio_js
+@pytest.mark.e2e
+def test_studio_home_v2_event_endpoint(tmp_path: Path) -> None:
+    """Studio telemetry POST /__travelogue/studio-event accepts allowlisted events."""
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    base = f"http://127.0.0.1:{port}"
+    try:
+        status, body = _post_json(
+            f"{base}{STUDIO_EVENT_PATH}",
+            {"event": "open_sheet", "meta": {"state": "IdleEmpty", "qa": True}},
+        )
+        assert status == 200
+        assert body == {"ok": True}
+        bad_status, bad_body = _post_json(
+            f"{base}{STUDIO_EVENT_PATH}",
+            {"event": "not_allowed"},
+        )
+        assert bad_status == 400
+        assert "allowed" in bad_body
+    finally:
+        server.shutdown()
+        server.server_close()
 
 
 def test_studio_home_v2_error_pipeline() -> None:

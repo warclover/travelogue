@@ -105,11 +105,6 @@ def test_ac_p9_ux_03_no_excluded_photos_entry(studio_server) -> None:
         browser.close()
 
 
-def test_ac_p9_ux_02_v3_success_msg_cull_line(studio_server) -> None:
-    """AC-P9-UX-02 · v3 studio-success 第二行 cullUserLine（M21-e2 已退役）。"""
-    pytest.skip("M21-e2 retired v3 success overlay; see test_ac_p9_ux_02_v2_first_success_shows_cull_line")
-
-
 def test_ac_p9_ux_04_max_photos_warn_non_blocking(studio_server) -> None:
     """AC-P9-UX-04 · maxPhotos WARN 非阻断 toast（v2 first-success）。"""
     warn = "共 297 张进入排版，超过建议上限 250 张，生成可能较慢"
