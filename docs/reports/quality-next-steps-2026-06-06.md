@@ -6,7 +6,7 @@
 
 | ID | 任务 | 状态 | 备注 |
 |----|------|------|------|
-| P0-1 | 确认 `6b2cdf4` CI 全绿（lint / test-pr / test-e2e） | ◐ | 本地 lint + 快套件已通过；需在 GitHub Actions 页面确认远端 |
+| P0-1 | 确认远端 CI 全绿 | ◐ | 仓库私有无法 API 拉取；推送后请在 GitHub Actions 确认 |
 | P0-2 | 处理 `trips/linzhi` 脏文件 | ☑ | 仅为 export 缓存版本号变更，已 `git restore` |
 
 ## P1 · M21 dogfood 验收
@@ -55,12 +55,10 @@ python scripts/algorithm_v2_signoff.py --from-json docs/acceptance-records/algor
 |----|------|------|------|
 | P3-1 | CI ruff 扩展至 `travelogue/web/studio_handlers` | ☑ | lint job 已更新 |
 | P3-2 | 全仓 ruff 门禁 | ☐ | 暂缓（~1100 E501 等） |
-| P3-3 | coverage `--cov-fail-under` 提至 65% | ☐ | 当前 69%，可择机提升 |
+| P3-3 | coverage `--cov-fail-under` 提至 65% | ☑ | CI 已改为 65（本地 ~69%） |
+| P3-4 | CI ruff 扩展至 `travelogue/curation` | ☑ | 50 处 auto-fix，lint 全绿 |
+| P3-5 | mosaic `state.py` / `selfheal` 补测 | ☑ | `test_mosaic_state.py` + self-heal 单元测试 |
 
----
+## P1 · M21 / 算法 V2（已暂缓）
 
-## 建议下一步（人工优先）
-
-1. **M21 dogfood**（P1-3/P1-4）：产品/QA 走 checklist，比继续删代码 ROI 更高。
-2. **算法 V2 盲评**（P1-V2/V3）：阻塞 R0' 正式签核；需 mao 等真实素材。
-3. **确认 GitHub CI**（P0-1）：打开 Actions 看 `6b2cdf4` 三路是否全绿。
+人工 dogfood 与盲评签核暂不推进；发布前再打开 `M21-CUTOVER-CHECKLIST` / `algorithm-v2-signoff.json`。

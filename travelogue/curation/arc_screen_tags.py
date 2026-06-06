@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from travelogue.curation.arc_patterns import (
-    ARC_CLOSE,
     ARC_FALL,
     ARC_MOMENT,
-    ARC_OPEN,
     ARC_PEAK,
     ARC_RISE,
 )

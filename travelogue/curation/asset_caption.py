@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.curation.chapter_items import collect_screen_asset_ids, item_asset_ids
+from travelogue.curation.chapter_items import collect_screen_asset_ids
 
 
 def chapter_caption_asset_ids(chapter: dict) -> list[str]:

@@ -5,14 +5,14 @@ from __future__ import annotations
 from typing import Any
 
 from travelogue.curation.degradation import DegradationAssessment
-from travelogue.curation.layout_candidates import generate_day_bucket_candidates
+from travelogue.curation.layout_candidates import generate_day_bucket_candidates  # noqa: F401
 from travelogue.curation.layout_planner import AspectKind
 from travelogue.curation.layout_scoring import ScoringWeights
-from travelogue.curation.mosaic.search import replan_day_buckets_beam as _replan_day_buckets_beam
-from travelogue.curation.search_budget import SearchBudget
 
 # Re-export beam entry for ADR / tests
 from travelogue.curation.mosaic.search import replan_day_buckets_beam  # noqa: F401
+from travelogue.curation.mosaic.search import replan_day_buckets_beam as _replan_day_buckets_beam
+from travelogue.curation.search_budget import SearchBudget
 
 
 def _screens_signature(chapters: list[dict]) -> list[list[str]]:

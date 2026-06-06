@@ -12,7 +12,7 @@ from travelogue.curation.bucket_planning import (
     normalize_bucket_counts,
 )
 from travelogue.curation.cluster_run_sort import sort_bucket_asset_ids_for_clustering
-from travelogue.curation.time_segments import TimeSegment, cluster_time_segments, parse_asset_date
+from travelogue.curation.time_segments import TimeSegment, parse_asset_date
 
 
 def should_use_clustering_buckets(trip: dict, cfg: AppConfig) -> bool:

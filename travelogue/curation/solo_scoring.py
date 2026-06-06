@@ -11,9 +11,15 @@ ids (cover / chapter hero) score 0.
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
-from travelogue.curation.aesthetic_score import aesthetic_dim, aesthetic_overall, asset_aesthetic, purpose_overall
+from travelogue.curation.aesthetic_score import (
+    aesthetic_dim,
+    aesthetic_overall,
+    asset_aesthetic,
+    purpose_overall,
+)
 from travelogue.curation.asset_quality import asset_sharpness
 from travelogue.media.color_metrics import delta_e_cie76, triangular_score
 

@@ -15,7 +15,6 @@ from travelogue.curation.mobile_layout_state import (
     MOBILE_GRID4_ROW_LAYOUT,
     MOBILE_GRID8_ROW_LAYOUT,
     MOBILE_PERSON_GRID4_HINT,
-    MOBILE_PUZZLE_MIN_PHOTOS,
     MobilePuzzlePlannerState,
     mobile_puzzle_enabled,
 )

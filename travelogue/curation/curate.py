@@ -6,9 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from travelogue.config import AppConfig, CurateConfig
-from travelogue.errors import CodeError
-from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
-
 from travelogue.curation.bucket_planning import (
     bucket_day_span,
     cap_book_buckets,
@@ -18,32 +15,37 @@ from travelogue.curation.bucket_planning import (
     merge_small_buckets_with_segments,
     normalize_bucket_counts,
 )
-from travelogue.curation.curate_patterns import pattern_hint_for_bucket
-from travelogue.curation.curate_scoring import (
-    build_cover_explain,
-    build_cover_layout_review,
-    cover_asset_pool,
-    cover_candidates as _cover_candidates,
-    cover_score as _cover_score,
-    median_sharpness,
-    pick_chapter_hero,
-    pick_cover_asset_id as _pick_cover_asset_id,
-)
 from travelogue.curation.chapter_titles import chapter_titles, title_for_bucket_span
-from travelogue.curation.layout_planner import (
-    aspect_kind_for_asset,
-    build_chapters_from_buckets,
-    summarize_orientations,
-)
-from travelogue.curation.time_segments import TimeSegment, parse_asset_date
 from travelogue.curation.curate_limits import (
     COMPACT_ALBUM_PHOTO_CAP,
     MIN_CURATE_ASSETS,
     SEGMENT_LABEL_PREVIEW_LIMIT,
     SMALL_ALBUM_PHOTO_CAP,
 )
+from travelogue.curation.curate_patterns import pattern_hint_for_bucket
+from travelogue.curation.curate_scoring import (
+    build_cover_explain,
+    build_cover_layout_review,
+    cover_asset_pool,
+    median_sharpness,
+    pick_chapter_hero,
+)
+from travelogue.curation.curate_scoring import (
+    cover_candidates as _cover_candidates,
+)
+from travelogue.curation.curate_scoring import (
+    pick_cover_asset_id as _pick_cover_asset_id,
+)
+from travelogue.curation.layout_planner import (
+    aspect_kind_for_asset,
+    build_chapters_from_buckets,
+    summarize_orientations,
+)
+from travelogue.curation.time_segments import TimeSegment, parse_asset_date
+from travelogue.errors import CodeError
 from travelogue.layout_contract import LAYOUT_PLAN_VERSION, format_layout_summary
 from travelogue.services.pipeline_state import set_layout_status
+from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 # Backward-compatible private aliases for tests and internal callers.
 _cap_book_buckets = cap_book_buckets
@@ -202,7 +204,6 @@ def _cover_scoring_runtime(
     scoring_version: str | None = None,
 ):
     from travelogue.config import get_config
-    from travelogue.curation.cover_scoring_params import CoverScoringParams
 
     cur = get_config().curate
     cs = cover_scoring if cover_scoring is not None else cur.cover_scoring
@@ -694,7 +695,6 @@ def run_curate(
         )
 
     from travelogue.curation.screen_planner import (
-        LAYOUT_ENGINE_LEGACY,
         LAYOUT_ENGINE_SCREENS,
         LAYOUT_ENGINE_VERSION_SCREENS,
     )
@@ -854,8 +854,7 @@ def run_curate(
 
     from travelogue.curation.degradation import assess_degradation
     from travelogue.curation.layout_metrics import compute_layout_metrics
-    from travelogue.curation.layout_scoring import ScoringWeights
-    from travelogue.curation.layout_scoring import resolve_scoring_weights
+    from travelogue.curation.layout_scoring import ScoringWeights, resolve_scoring_weights
     from travelogue.curation.layout_search import maybe_replan_chapters
 
     layout_cfg = app_cfg.layout

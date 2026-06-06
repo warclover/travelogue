@@ -20,7 +20,7 @@ from travelogue.curation.layout_planner import (
     _is_std_landscape,
     _is_std_portrait,
 )
-from travelogue.curation.screen_layout_state import (
+from travelogue.curation.screen_layout_state import (  # noqa: F401 — re-exported API
     NineGridPlannerState,
     ScreenLayoutPlannerState,
     is_nine_grid_pattern,

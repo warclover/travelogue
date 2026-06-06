@@ -5,6 +5,8 @@ from __future__ import annotations
 from travelogue.curation.asset_quality import asset_sharpness
 from travelogue.curation.composition_signals import (
     mean_thirds_score,
+)
+from travelogue.curation.composition_signals import (
     subject_center_norm as _subject_center_norm,
 )
 from travelogue.curation.cover_scoring_params import (
@@ -22,7 +24,7 @@ from travelogue.curation.cover_scoring_v2 import (
 from travelogue.curation.layout_planner import aspect_kind_for_asset
 from travelogue.curation.media_classify import cover_class_weight
 from travelogue.curation.time_segments import parse_asset_date
-from travelogue.media.color_metrics import color_richness_multiplier, dominant_tone_chroma_score
+from travelogue.media.color_metrics import color_richness_multiplier
 
 _DEFAULT_COVER_SCORING = CoverScoringParams()
 

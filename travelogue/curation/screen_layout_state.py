@@ -6,7 +6,11 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
-from travelogue.curation.layout_density import LayoutDensity, LayoutDensityParams, layout_density_params
+from travelogue.curation.layout_density import (
+    LayoutDensity,
+    LayoutDensityParams,
+    layout_density_params,
+)
 
 LayoutKind = Literal["none", "nine", "triple", "six", "portrait_single", "other"]
 

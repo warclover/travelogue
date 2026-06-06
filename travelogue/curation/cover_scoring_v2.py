@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import Any
 
 from travelogue.curation.asset_quality import normalized_sharpness
 from travelogue.curation.composition_signals import mean_thirds_score

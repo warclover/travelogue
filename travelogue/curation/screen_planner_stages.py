@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from travelogue.curation.subject_tagging import is_mundane_clusterable, mundane_run_length
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.curation.subject_tagging import is_mundane_clusterable, mundane_run_length
 from travelogue.media.image_ops import AspectKind
-
 
 
 @dataclass
@@ -117,14 +116,13 @@ def build_chapter_plan_context(
 
 def stage_chapter_hero(ctx: ChapterPlanContext) -> None:
     """Opening hero screen; removes hero asset id from ctx.ids when placed."""
+    from travelogue.curation.mosaic.hook import chapter_should_skip_hero_for_mosaic
     from travelogue.curation.screen_planner import (
         CHAPTER_HERO_MIN_ASSETS,
         _can_portrait_grid8_window,
         _make_screen,
         _pick_chapter_hero,
     )
-
-    from travelogue.curation.mosaic.hook import chapter_should_skip_hero_for_mosaic
 
     skip_hero_for_mosaic_5 = chapter_should_skip_hero_for_mosaic(ctx)
     skip_hero_for_portrait_grid8 = (

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeoutError
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -13,11 +14,11 @@ from travelogue.curation.cluster_decision_log import ClusterDecisionLog
 from travelogue.curation.curate import layout_eligible_assets
 from travelogue.curation.geo_events import GeoSegment, detect_geo_events, gps_coverage_ratio
 from travelogue.curation.scene_clusters import assign_scene_cluster_fields, compute_scene_clusters
-from travelogue.vision.cache import prepare_scene_embeddings, embedding_cache_is_corrupt
+from travelogue.vision.cache import embedding_cache_is_corrupt, prepare_scene_embeddings
 from travelogue.vision.clip_encoder import (
-    get_clip_encoder,
     clip_torch_available,
     clip_weights_likely_cached,
+    get_clip_encoder,
     vision_stack_available,
 )
 

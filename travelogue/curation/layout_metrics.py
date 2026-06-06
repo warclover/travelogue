@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from travelogue.curation.burst_utils import ingest_burst_group_id, parse_taken_ts
 from travelogue.curation.layout_planner import AspectKind

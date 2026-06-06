@@ -7,7 +7,7 @@ from datetime import date
 from typing import NamedTuple
 
 from travelogue.curation.curate_scoring import sort_bucket_asset_ids
-from travelogue.curation.time_segments import TimeSegment, cluster_time_segments, parse_asset_date
+from travelogue.curation.time_segments import cluster_time_segments, parse_asset_date
 from travelogue.services.copy_subject import narrative_copy_subject, user_place_explicit
 
 

@@ -111,7 +111,11 @@ def export_pa_blind_review(
         pick_cover_asset_id,
     )
     from travelogue.curation.layout_planner import aspect_kind_for_asset
-    from travelogue.curation.solo_scoring import pick_solo_asset_id, solo_score, sort_ids_by_solo_score
+    from travelogue.curation.solo_scoring import (
+        pick_solo_asset_id,
+        solo_score,
+        sort_ids_by_solo_score,
+    )
 
     cfg = get_config()
     cs = cfg.curate.cover_scoring

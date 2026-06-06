@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import copy
-from typing import Mapping
+from collections.abc import Mapping
 
 DEFAULT_MAX_SCREENS = 12
 BREATH_PATTERN = "screen-breath-pause"

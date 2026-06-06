@@ -108,6 +108,70 @@ def test_self_heal_degrade_stable_pattern() -> None:
     assert healed[0].pattern_id == PATTERN_PORTRAIT_3
 
 
+def test_self_heal_pick_disabled_returns_none() -> None:
+    from travelogue.curation.mosaic.candidates import ScreenCandidate
+    from travelogue.curation.mosaic.selfheal import try_self_heal_pick
+
+    cfg = replace(get_config().mosaic, self_heal_enabled=False)
+    cand = ScreenCandidate(
+        pattern_id="screen-portrait-3",
+        ordered_asset_ids=["a"],
+        screen={"patternId": "screen-portrait-3", "slots": []},
+    )
+    assert (
+        try_self_heal_pick(
+            [(cand, 0.1, [])],
+            asset_ids=["a"],
+            aspects={},
+            assets_map={},
+            cfg=cfg,
+            layout_state=None,
+            trip_photo_total=10,
+            burst_seconds=12.0,
+            min_score=0.9,
+        )
+        is None
+    )
+
+
+def test_self_heal_pick_winner_above_min_returns_none() -> None:
+    from travelogue.curation.mosaic.candidates import ScreenCandidate
+    from travelogue.curation.mosaic.selfheal import try_self_heal_pick
+
+    cfg = replace(get_config().mosaic, self_heal_enabled=True)
+    cand = ScreenCandidate(
+        pattern_id="screen-portrait-3",
+        ordered_asset_ids=["a"],
+        screen={"patternId": "screen-portrait-3", "slots": []},
+    )
+    assert (
+        try_self_heal_pick(
+            [(cand, 0.85, [])],
+            asset_ids=["a"],
+            aspects={},
+            assets_map={},
+            cfg=cfg,
+            layout_state=None,
+            trip_photo_total=10,
+            burst_seconds=12.0,
+            min_score=0.6,
+        )
+        is None
+    )
+
+
+def test_asset_drop_penalty_skips_featured() -> None:
+    from travelogue.curation.mosaic.selfheal import _asset_drop_penalty
+
+    penalty = _asset_drop_penalty(
+        "hero",
+        aspects={},
+        assets_map={"hero": {"id": "hero", "featured": True}},
+        cfg=get_config().mosaic,
+    )
+    assert penalty < 0
+
+
 def test_allow_drop_false_never_sets_dropped_ids(monkeypatch):
     ids, aspects, assets_map = _window5()
     cfg = replace(
