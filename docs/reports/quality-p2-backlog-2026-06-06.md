@@ -18,7 +18,7 @@
 | P2-1 | `trip_handlers` 按域拆分 | P0 | ☑ 完成 | 各文件 <300 行；`test_studio_handlers_*` 全绿 |
 | P2-2 | `config.py` 按域拆包 | P1 | ☑ 完成 | `get_config()` API 不变；配置测试全绿 |
 | P2-3 | `cli.py` 子命令模块化 | P1 | ☑ 完成 | `travelogue --help` 不变 |
-| P2-4 | `trips/linzhi` 缓存版本策略 | P2 | ☐ | export 后无时间戳脏 diff |
+| P2-4 | `trips/linzhi` 缓存版本策略 | P2 | ☑ 完成 | export 后无时间戳脏 diff |
 | P2-5 | `ingest.py` / `curate.py` 减负 | P3 | ☐ | 算法 Phase 稳定后再动 |
 
 ---
@@ -75,10 +75,11 @@ travelogue/cli/
 
 ---
 
-## P2-4 · linzhi 版本号（计划）
+## P2-4 · linzhi 版本号（已完成）
 
-- 方案 B：render 时用 `journal.css` 内容 hash 生成 `?v=`，替代时间戳
-- 或方案 C：文档化 `git restore trips/linzhi` 纪律
+- `_longshot_bundle_version()` 改为模板 bundle 文件 **内容 SHA256**（`ls` + 12 hex）
+- 同内容重复 render 不再因 mtime 变化产生 `?v=` 脏 diff
+- 下次 render `trips/linzhi` 会一次性更新 `?v=`（属预期）
 
 ---
 

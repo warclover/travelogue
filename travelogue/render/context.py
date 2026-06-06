@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import date
 from pathlib import Path
 
@@ -45,33 +46,41 @@ def _asset_lookup(assets: dict[str, dict], aid: str) -> dict | None:
     return assets.get(aid)
 
 
+_BUNDLE_VERSION_PATHS = (
+    JOURNAL_CSS,
+    JOURNAL_SCREENS_CSS,
+    BREATH_JS,
+    BREATH_CSS,
+    LONGSHOT_JS,
+    SHARE_JS,
+    SCREENPLAY_JS,
+    SCREENPLAY_CSS,
+    SCREENPLAY_HASH_JS,
+    SCREENPLAY_BOOKMARKS_JS,
+    COPY_TOGGLE_JS,
+    COPY_DISPLAY_CSS,
+    LONGSHOT_BRIDGE_JS,
+    INLINE_EDIT_JS,
+    INLINE_EDIT_CSS,
+)
+
+
 def _longshot_bundle_version(trip: dict) -> str:
-    """Pin asset cache-busting to bundle mtimes so template changes invalidate
-    even when trip.json is unchanged."""
-    stamps: list[int] = []
-    for path in (
-        JOURNAL_CSS,
-        JOURNAL_SCREENS_CSS,
-        BREATH_JS,
-        BREATH_CSS,
-        LONGSHOT_JS,
-        SHARE_JS,
-        SCREENPLAY_JS,
-        SCREENPLAY_CSS,
-        SCREENPLAY_HASH_JS,
-        SCREENPLAY_BOOKMARKS_JS,
-        COPY_TOGGLE_JS,
-        COPY_DISPLAY_CSS,
-        LONGSHOT_BRIDGE_JS,
-        INLINE_EDIT_JS,
-        INLINE_EDIT_CSS,
-    ):
+    """Pin asset cache-busting to template bundle content hashes (P2-4).
+
+    Content-stable across re-renders; changes only when shipped CSS/JS changes.
+    """
+    digest = hashlib.sha256()
+    found = False
+    for path in _BUNDLE_VERSION_PATHS:
         try:
-            stamps.append(int(path.stat().st_mtime))
+            digest.update(path.name.encode("utf-8"))
+            digest.update(path.read_bytes())
+            found = True
         except OSError:
-            pass
-    if stamps:
-        return f"ls{max(stamps)}"
+            continue
+    if found:
+        return f"ls{digest.hexdigest()[:12]}"
     updated = (trip.get("updatedAt") or trip.get("createdAt") or "0")
     return updated.replace(":", "").replace("-", "")[:15] or "0"
 
