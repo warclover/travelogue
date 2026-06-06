@@ -28,7 +28,5 @@ def test_verify_files_exist_current_repo() -> None:
 
 
 def test_main_dry_run_success() -> None:
-    # 候选文件已删除时返回 1；未删除时返回 0。
-    missing = mod.verify_files_exist()
-    expected = 1 if missing else 0
-    assert mod.main([]) == expected
+    # M21-e2 后 v3 文件已删：already_clean → 0；未删时仅打印计划 → 0。
+    assert mod.main([]) == 0

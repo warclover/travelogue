@@ -10,7 +10,6 @@ from travelogue.curation.burst_utils import (
     time_near_sequential,
 )
 from travelogue.curation.chapter_items import item_stub_for_screen, items_from_screens
-from travelogue.curation.screen_planner import _preferred_hero_for_bucket
 
 
 def test_shared_ingest_burst_group():
@@ -63,6 +62,8 @@ def test_items_from_screens_one_block_per_screen():
 
 
 def test_preferred_hero_for_day_bucket():
+    from travelogue.curation.screen_planner_attach import _preferred_hero_for_bucket
+
     bucket = ["h1", "a2", "a3"]
     asset_to_ch = {"h1": "ch-01", "a2": "ch-01", "a3": "ch-02"}
     hero_by_ch = {"ch-01": "h1", "ch-02": "a3"}

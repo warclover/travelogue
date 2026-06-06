@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import os
+import time
 from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from travelogue.curation.curate import run_curate
 from travelogue.curation.curate_scoring import effective_cover_score, pick_cover_asset_id
@@ -19,9 +21,30 @@ from travelogue.services.trip_factory import create_trip
 pytestmark = pytest.mark.integration
 
 
-def _write_photo(path: Path, size: tuple[int, int] = (1600, 900), color=(120, 80, 40)) -> None:
+def _write_photo(
+    path: Path,
+    size: tuple[int, int] = (1600, 900),
+    color=(120, 80, 40),
+    *,
+    idx: int = 0,
+) -> None:
+    """Distinct JPEG per idx (texture + mtime) to avoid cull duplicate_group in ingest."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    Image.new("RGB", size, color).save(path, format="JPEG")
+    img = Image.new("RGB", size, color)
+    draw = ImageDraw.Draw(img)
+    for x in range(0, size[0], 28):
+        draw.line(
+            [(x, 0), (x, size[1] - 1)],
+            fill=(
+                (color[0] + (x // 28 + idx * 13) % 200),
+                (color[1] + idx * 19) % 255,
+                (color[2] + idx * 11) % 255,
+            ),
+            width=2,
+        )
+    img.save(path, format="JPEG", quality=92)
+    ts = time.time() - 7200 + idx * 90
+    os.utime(path, (ts, ts))
 
 
 def _dual_album(tmp_path: Path, featured_n: int = 2, material_n: int = 4) -> Path:
@@ -29,9 +52,19 @@ def _dual_album(tmp_path: Path, featured_n: int = 2, material_n: int = 4) -> Pat
     feat = root / "精选"
     mat = root / "素材上传"
     for i in range(featured_n):
-        _write_photo(feat / f"feat-{i:02d}.jpg", color=(200, 100 + i * 10, 50))
+        _write_photo(
+            feat / f"feat-{i:02d}.jpg",
+            size=(2000 + i * 80, 1100 + i * 40),
+            color=(200 + i * 30, 100 + i * 25, 50 + i * 20),
+            idx=i,
+        )
     for i in range(material_n):
-        _write_photo(mat / f"mat-{i:02d}.jpg", color=(80, 120 + i * 5, 160))
+        _write_photo(
+            mat / f"mat-{i:02d}.jpg",
+            size=(1800 + i * 60, 1000 + i * 35),
+            color=(80 + i * 35, 120 + i * 20, 160 + i * 15),
+            idx=featured_n + i,
+        )
     return root
 
 
@@ -40,9 +73,19 @@ def _portrait_featured_album(tmp_path: Path, featured_n: int = 3, material_n: in
     feat = root / "精选"
     mat = root / "素材上传"
     for i in range(featured_n):
-        _write_photo(feat / f"feat-{i:02d}.jpg", size=(1200, 1600), color=(200, 90 + i * 8, 60))
+        _write_photo(
+            feat / f"feat-{i:02d}.jpg",
+            size=(1200, 1600),
+            color=(200, 90 + i * 8, 60),
+            idx=i,
+        )
     for i in range(material_n):
-        _write_photo(mat / f"mat-{i:02d}.jpg", size=(1600, 900), color=(50, 110 + i * 6, 150))
+        _write_photo(
+            mat / f"mat-{i:02d}.jpg",
+            size=(1600, 900),
+            color=(50, 110 + i * 6, 150),
+            idx=featured_n + i,
+        )
     return root
 
 

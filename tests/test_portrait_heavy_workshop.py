@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import os
+import time
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from travelogue.curation.curate import run_curate
 from travelogue.render.engine import render_trip_surfaces
@@ -20,10 +22,20 @@ pytestmark = pytest.mark.integration
 def _portrait_album(tmp_path: Path, n: int = 8) -> Path:
     album = tmp_path / "portrait-album"
     album.mkdir()
+    stamp = time.time() - n * 90
     for i in range(n):
-        Image.new("RGB", (900, 1400), (20 + i * 12, 60 + i * 8, 100)).save(
-            album / f"v{i:02d}.jpg", quality=92
-        )
+        path = album / f"v{i:02d}.jpg"
+        size = (1200 + i * 80, 1800 + i * 50)
+        img = Image.new("RGB", size, (20 + i * 35, 60 + i * 28, 100 + i * 18))
+        draw = ImageDraw.Draw(img)
+        for y in range(0, size[1], 36):
+            draw.line(
+                [(0, y), (size[0] - 1, y)],
+                fill=((y // 36 + i * 17) % 255, (i * 23) % 255, 140),
+                width=2,
+            )
+        img.save(path, quality=92)
+        os.utime(path, (stamp + i * 90, stamp + i * 90))
     return album
 
 
