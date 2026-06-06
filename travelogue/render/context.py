@@ -46,6 +46,11 @@ def _asset_lookup(assets: dict[str, dict], aid: str) -> dict | None:
     return assets.get(aid)
 
 
+ASSET_VERSION_PREFIX = "ls"
+ASSET_VERSION_HEX_CHARS = 12
+ASSET_VERSION_FALLBACK_TS_CHARS = 15
+
+
 _BUNDLE_VERSION_PATHS = (
     JOURNAL_CSS,
     JOURNAL_SCREENS_CSS,
@@ -80,9 +85,9 @@ def _longshot_bundle_version(trip: dict) -> str:
         except OSError:
             continue
     if found:
-        return f"ls{digest.hexdigest()[:12]}"
+        return f"{ASSET_VERSION_PREFIX}{digest.hexdigest()[:ASSET_VERSION_HEX_CHARS]}"
     updated = (trip.get("updatedAt") or trip.get("createdAt") or "0")
-    return updated.replace(":", "").replace("-", "")[:15] or "0"
+    return updated.replace(":", "").replace("-", "")[:ASSET_VERSION_FALLBACK_TS_CHARS] or "0"
 
 
 def share_zip_filename(trip: dict) -> str:

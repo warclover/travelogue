@@ -29,9 +29,9 @@ def test_cfg_typed_helpers() -> None:
 
 
 def test_vision_from_dict_accepts_camel_keys() -> None:
-    from travelogue.config import _vision_from_dict
+    from travelogue.config.vision import vision_from_dict
 
-    cfg = _vision_from_dict(
+    cfg = vision_from_dict(
         {
             "enabled": "auto",
             "autoMinPhotos": 120,
