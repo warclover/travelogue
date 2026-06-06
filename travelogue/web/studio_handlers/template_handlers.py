@@ -5,30 +5,17 @@ from __future__ import annotations
 from urllib.parse import parse_qs, urlparse
 
 from travelogue.templates.registry import check_template_health, get_registry
-
 from travelogue.templating.admin_store import append_audit, get_store_revision
-
 from travelogue.templating.decision_log import list_decisions
-
 from travelogue.templating.resolver import is_template_locked, resolve_effective_template
-
 from travelogue.templating.roles import require_template_role
-from travelogue.web.studio_admin_auth import studio_authenticated
-
 from travelogue.templating.router import (
-
-    RouterMode,
-
     apply_template_selection,
-
     replay_template_decision,
-
     route_template,
-
 )
-
+from travelogue.web.studio_admin_auth import studio_authenticated
 from travelogue.web.studio_handlers.common import resolve_trip_dir_listed, studio_ctx
-
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 _MODE_HINTS = {

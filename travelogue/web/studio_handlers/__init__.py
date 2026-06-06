@@ -9,6 +9,7 @@ from travelogue.web.studio_handlers import (
     trip_handlers,
 )
 from travelogue.web.studio_handlers.paths import (
+    ALBUM_PREVIEW_PATH,
     CANCEL_PATH,
     CHAPTER_LAYOUT_PATH,
     CONFIG_PATH,
@@ -19,11 +20,10 @@ from travelogue.web.studio_handlers.paths import (
     LONGSHOT_PATH,
     NARRATE_PATH,
     PICK_FOLDER_PATH,
-    ALBUM_PREVIEW_PATH,
     PIPELINE_SUFFIX,
     PROMOTE_TIER_SUFFIX,
-    REVEAL_PATH,
     RERENDER_SUFFIX,
+    REVEAL_PATH,
     SAVE_COPY_SUFFIX,
     STATUS_PATH,
     STUDIO_ASSET_PREFIX,

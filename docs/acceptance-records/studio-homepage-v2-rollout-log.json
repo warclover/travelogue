@@ -68,5 +68,21 @@
     "script": "scripts/studio_homepage_rollback_drill.py",
     "restoreVerified": null
   },
-  "entries": []
+  "entries": [
+    {
+      "at": "2026-06-06T04:45:00Z",
+      "kind": "automation",
+      "summary": "M21 dogfood 自动化子集：home_v2 37 passed；upload/resume Playwright 3 passed",
+      "artifacts": [
+        "tests/test_studio_home_v2.py",
+        "tests/test_studio_home_v2_ac_playwright.py::test_ac_hp2_16_refresh_resumes_import",
+        "tests/test_studio_home_v2_ac_playwright.py::test_ac_hp2_failed_retry_upload_reopens_sheet",
+        "tests/test_studio_home_v2_ac_playwright.py::test_ac_hp2_resume_clears_stale_upload_pending"
+      ],
+      "manualRemaining": [
+        "M21-CUTOVER-CHECKLIST §1 小文件夹上传 → preview",
+        "M21-CUTOVER-CHECKLIST §2 发布后 / 与 /classic 观察"
+      ]
+    }
+  ]
 }

@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import shutil
 import threading
-from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from urllib.parse import parse_qs, urlparse
 
 from travelogue.demo.build import DemoError
@@ -16,9 +15,10 @@ from travelogue.web.studio_handlers.common import (
     studio_ctx,
     trip_id_from_query,
 )
+from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_jobs import get_job_store, run_g1_continue_job
-from travelogue.web.studio_trips import list_studio_trips, studio_trips_total
 from travelogue.web.studio_trip_id import is_valid_studio_trip_id
+from travelogue.web.studio_trips import list_studio_trips, studio_trips_total
 
 _log = logging.getLogger(__name__)
 
@@ -252,8 +252,8 @@ def handle_get_cohort(handler: StudioHandlerProtocol, trip_id: str) -> None:
 
 
 def handle_patch_cohort(handler: StudioHandlerProtocol, trip_id: str) -> None:
-    from travelogue.services.trip import apply_intent
     from travelogue.curation.cohort_faces import apply_cohort_tags
+    from travelogue.services.trip import apply_intent
 
     payload = handler._read_json_body()
     if not payload:
@@ -281,7 +281,7 @@ def handle_patch_cohort(handler: StudioHandlerProtocol, trip_id: str) -> None:
             if summary:
                 cur = trip.setdefault("curation", {})
                 cur["cohort"] = summary
-        if not ("featuredSubjects" in payload) and not refresh:
+        if "featuredSubjects" not in payload and not refresh:
             handler._json_response(400, {"ok": False, "error": "no cohort fields"})
             return
         svc.save(trip, trip_json)
@@ -300,7 +300,11 @@ def handle_patch_screen_replan(
 ) -> None:
     """PATCH …/screens/{screenId}/replan — MCS alt_topk or legacy for one screen."""
     from travelogue.curation.layout_planner import aspect_kind_for_asset
-    from travelogue.curation.mosaic.replan import ReplanError, refresh_trip_displayed_assets, replan_screen
+    from travelogue.curation.mosaic.replan import (
+        ReplanError,
+        refresh_trip_displayed_assets,
+        replan_screen,
+    )
     from travelogue.curation.screen_planner import LAYOUT_ENGINE_SCREENS
 
     payload = handler._read_json_body() or {}

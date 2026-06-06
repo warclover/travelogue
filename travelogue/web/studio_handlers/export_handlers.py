@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import threading
 from pathlib import Path
-from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 from travelogue.web.studio_errors import user_message
 from travelogue.web.studio_handlers.common import rel_to_trip, resolve_trip_dir, studio_ctx
+from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_jobs import get_job_store, run_longshot_job, run_narrate_job
 
 

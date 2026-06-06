@@ -182,3 +182,30 @@ def test_build_legacy_screen_portrait_four() -> None:
     assert screen is not None
     assert screen["patternId"] == "screen-portrait-4"
     assert len(screen.get("slots") or []) == 4
+
+
+def test_legacy_append_rejects_retired_pattern(monkeypatch) -> None:
+    """append_legacy_window must not append screens blocked by pattern_policy."""
+    from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_2P_3L_BALANCED
+    from travelogue.curation.mosaic.legacy import append_legacy_window
+    from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
+
+    assert mosaic_pattern_disabled(PATTERN_MOSAIC_5_2P_3L_BALANCED)
+
+    retired_screen = {
+        "patternId": PATTERN_MOSAIC_5_2P_3L_BALANCED,
+        "slots": [{"assetId": "a", "role": "main", "fit": "cover"}],
+    }
+
+    class _Ctx:
+        aspects = {}
+        assets_map = {}
+        mix_gap = 12.0
+        med_sharp = None
+        trip_total = 40
+
+    monkeypatch.setattr(
+        "travelogue.curation.mosaic.legacy.build_legacy_screen",
+        lambda *a, **k: retired_screen,
+    )
+    assert append_legacy_window(_Ctx(), ["a", "b", "c", "d", "e"], 5) is False

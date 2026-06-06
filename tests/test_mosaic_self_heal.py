@@ -75,6 +75,39 @@ def test_self_heal_disabled_uses_legacy(monkeypatch):
     assert not pick.log.self_heal_applied
 
 
+def test_self_heal_degrade_stable_pattern() -> None:
+    from travelogue.curation.mosaic.candidates import ScreenCandidate
+    from travelogue.curation.mosaic.constants import PATTERN_PORTRAIT_3
+    from travelogue.curation.mosaic.selfheal import try_self_heal_pick
+
+    cfg = replace(get_config().mosaic, self_heal_enabled=True, min_candidate_score=0.6)
+    unstable = ScreenCandidate(
+        pattern_id="screen-experimental",
+        ordered_asset_ids=["a", "b", "c"],
+        screen={"patternId": "screen-experimental", "slots": []},
+    )
+    stable = ScreenCandidate(
+        pattern_id=PATTERN_PORTRAIT_3,
+        ordered_asset_ids=["a", "b", "c"],
+        screen={"patternId": PATTERN_PORTRAIT_3, "slots": []},
+    )
+    scored = [(unstable, 0.55, []), (stable, 0.52, [])]
+    healed = try_self_heal_pick(
+        scored,
+        asset_ids=["a", "b", "c"],
+        aspects={},
+        assets_map={},
+        cfg=cfg,
+        layout_state=None,
+        trip_photo_total=10,
+        burst_seconds=12.0,
+        min_score=0.6,
+    )
+    assert healed is not None
+    assert healed[3] == "degrade_stable_pattern"
+    assert healed[0].pattern_id == PATTERN_PORTRAIT_3
+
+
 def test_allow_drop_false_never_sets_dropped_ids(monkeypatch):
     ids, aspects, assets_map = _window5()
     cfg = replace(

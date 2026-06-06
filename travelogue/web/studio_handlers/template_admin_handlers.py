@@ -303,7 +303,6 @@ def handle_templates_admin_register(handler: StudioHandlerProtocol) -> None:
     if not template_id:
         handler._json_response(400, {"ok": False, "error": "templateId required"})
         return
-    ctx = studio_ctx(handler)
     try:
         from travelogue.templating.template_admin_crud import register_template_from_disk
 

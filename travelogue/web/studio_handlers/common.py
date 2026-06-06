@@ -3,13 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
-
-from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from urllib.parse import parse_qs, unquote, urlparse
 
 from travelogue.desktop.demo_album import is_demo_album_path, resolve_demo_album_dir
-from travelogue.demo.build import DemoError
 from travelogue.runtime import AppContext, app_context_from_handler
 from travelogue.web.studio_handlers.paths import (
     CURATE_SUFFIX,
@@ -20,6 +16,7 @@ from travelogue.web.studio_handlers.paths import (
     SAVE_COPY_SUFFIX,
     TRIPS_PATH,
 )
+from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_trip_id import is_valid_studio_trip_id
 
 

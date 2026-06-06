@@ -23,7 +23,7 @@ jobs:
 
       - name: Ruff (mosaic + studio web)
         run: |
-          python -m ruff check travelogue/curation/mosaic travelogue/web/studio_homepage_gate.py travelogue/curation/asset_quality.py
+          python -m ruff check travelogue/curation/mosaic travelogue/web/studio_homepage_gate.py travelogue/curation/asset_quality.py travelogue/web/studio_handlers
 
   test-pr:
     runs-on: ubuntu-latest

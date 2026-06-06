@@ -16,22 +16,22 @@ import re
 import threading
 import time
 from pathlib import Path
-from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 from travelogue.demo.build import DemoError
-from travelogue.services.copy_subject import is_generic_place
 from travelogue.desktop.demo_album import is_demo_album_path
+from travelogue.services.copy_subject import is_generic_place
 from travelogue.web.studio_auth import is_loopback_host
-from travelogue.web.studio_errors import demo_error_payload, user_message
-from travelogue.web.studio_handlers.common import resolve_import_album_path, studio_ctx
-from travelogue.web.studio_jobs import get_job_store, run_import_job_subprocess
-from travelogue.web.studio_multipart import parse_multipart_form
-from travelogue.web.studio_pipeline import assert_album_importable, sample_album_preview_thumbs
 from travelogue.web.studio_constants import (
     STUDIO_IMPORT_JOB_WATCH_SEC,
     STUDIO_MAX_MULTIPART_BODY_BYTES,
     STUDIO_USER_NOTES_MAX_LEN,
 )
+from travelogue.web.studio_errors import demo_error_payload, user_message
+from travelogue.web.studio_handlers.common import resolve_import_album_path, studio_ctx
+from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
+from travelogue.web.studio_jobs import get_job_store, run_import_job_subprocess
+from travelogue.web.studio_multipart import parse_multipart_form
+from travelogue.web.studio_pipeline import assert_album_importable, sample_album_preview_thumbs
 from travelogue.web.studio_uploads import (
     delete_upload_dir,
     save_upload_files,

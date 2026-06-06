@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from urllib.parse import parse_qs, urlparse
 
+from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_jobs import get_job_store
 
 

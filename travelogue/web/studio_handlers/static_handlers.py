@@ -5,11 +5,11 @@ from __future__ import annotations
 import mimetypes
 from pathlib import Path
 from typing import Literal
+from urllib.parse import unquote
 
 from travelogue.paths import STUDIO_TEMPLATE_DIR
 from travelogue.web.studio_handlers.paths import HOME_V2_PATH, STUDIO_ASSET_PREFIX
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
-from urllib.parse import unquote
 
 
 def _request_header(handler: StudioHandlerProtocol, key: str) -> str | None:

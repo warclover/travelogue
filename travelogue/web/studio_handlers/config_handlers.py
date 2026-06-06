@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 from travelogue.config import load_config, patch_config_file, studio_config_expose
 from travelogue.web.studio_auth import is_loopback_host
 from travelogue.web.studio_errors import user_message

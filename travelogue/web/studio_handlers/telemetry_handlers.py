@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_homepage_telemetry import (
     ALLOWED_STUDIO_HOMEPAGE_EVENTS,
     append_studio_homepage_event,
 )
-from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 
 def handle_studio_event(handler: StudioHandlerProtocol) -> None:
@@ -26,7 +26,7 @@ def handle_studio_event(handler: StudioHandlerProtocol) -> None:
         handler._json_response(400, {"ok": False, "error": "meta must be an object"})
         return
     try:
-        path = append_studio_homepage_event(event, meta if isinstance(meta, dict) else None)
+        append_studio_homepage_event(event, meta if isinstance(meta, dict) else None)
         if event in ("template_selector_impression", "template_mode_changed"):
             from travelogue.templating.metrics import record_discovery_event
 
