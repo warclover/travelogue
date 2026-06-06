@@ -51,11 +51,11 @@ travelogue serve --studio ./trips --config config.yaml --host 0.0.0.0 --port 876
 TRAVELOGUE_STUDIO_HOMEPAGE_V2=auto TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT=10 \\
   python scripts/studio_homepage_gate_status.py --config config.yaml --ua "M20jTest/5" --json
 
-# 根路径：应对照组 200 v3 / 进组 302（curl -I）
-curl -sI -A "M20jTest/5" http://HOST:8766/ | head -5
+# 根路径：200 serve v2 或 classic（M21-c 后无 302 → /v2）
+curl -s http://HOST:8766/ | findstr data-homepage-variant
 
-# 兼容入口（M21-c 后应 302 到 /）
-curl -sI http://HOST:8766/v2 | head -5
+# 兼容入口（302 → /）
+curl -sI http://HOST:8766/v2 | findstr Location
 
 # 回滚演练
 python scripts/studio_homepage_rollback_drill.py
@@ -75,9 +75,9 @@ python scripts/studio_homepage_rollback_drill.py
 
 | URL | 用途 |
 |-----|------|
-| `/` | holdback 分桶（10%→v2，M21-c 后 v2 直接在根路径呈现） |
-| `/v2` | 兼容入口（M21-c 后仅用于重定向到 `/`） |
-| `/classic` | v3 经典首页（deprecated 应急入口） |
+| `/` | 主入口（`on` → v2；`auto` → 分桶 v2/classic；`off` → classic） |
+| `/v2` | 302 → `/`（旧书签） |
+| `/classic` | deprecated 应急 classic |
 | `/?dev=1&studioFixture=multi` | loopback 状态切换 |
 
 ---

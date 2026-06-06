@@ -2,13 +2,27 @@
 
 > Flag ID：`studio.homepage.v2_bento`（PRD D-11 / CMP-HP2-14）
 >
-> **架构变更（M20 · 冻结）**：放弃「单模板同页 feature flag」，改为 **双路由并行**
-> （`/` = v3，`/v2` = v2）。M20-a–h 阶段两页独立演进、并排对比；灰度/切主站
-> （M20-i/j）以 **服务端 redirect** 实现，而非客户端在 `studio.js` 内 dynamic import。
+> **M21 目标态（当前）**：见 **[M21-ROUTING.md](./M21-ROUTING.md)** — `GET /` 直出 v2 或 classic（holdback），`/v2` 302 → `/`，应急 `/classic`。
+>
+> 下文 §1–§2 保留 **M20 双路由并行** 历史说明；实现已收敛为 **单根路径渲染**（M21-c）。
 
 ---
 
-## 1. 门控点（冻结 · 双路由模型）
+## 0. M21 门控摘要（现行）
+
+| 模式 | `GET /` | `GET /v2` | `GET /classic` |
+|------|---------|-----------|----------------|
+| `on`（默认） | v2 @ `/` | 302 `/` | classic 冻结 |
+| `auto` | 分桶 v2 或 classic @ `/` | 302 `/` | classic 冻结 |
+| `off` | classic @ `/` | 302 `/` | classic 冻结 |
+
+- 环境变量：`TRAVELOGUE_STUDIO_HOMEPAGE_V2=on|auto|off`（默认 **`on`**）
+- **不再** `302 / → /v2`（`should_redirect_root_to_v2` 恒 `false`）
+- Telemetry / LCP：`v2` → `/`，holdback 对照 `v3` → `/classic`（见 TELEMETRY §6）
+
+---
+
+## 1. 门控点（历史 · M20 双路由模型）
 
 | 层级 | 决策 |
 |------|------|
@@ -49,36 +63,34 @@ GET /v2   → handle_home_v2 → studio-home-v2.html  （v2 · homepage-v2/boots
 
 ---
 
-## 3. 各环境默认值（redirect 策略）
+## 3. 各环境默认值（redirect / 渲染策略）
 
 | 环境 | `/` 行为 | 说明 |
 |------|----------|------|
-| 本地 dev | `/` 留 v3；`/v2` 直达 v2 | 并排对比开发；v2 topbar 提供回 `/` 链 |
-| dogfood | `/` 留 v3（或团队按需直达 `/v2`） | 团队内测对比 |
-| 10% holdback | `/` 按 `bucket_id` redirect：命中桶 → `302 /v2`，否则留 v3 | 稳定 `bucket_id` hash(UA+首次日期) 或 server cookie；`experiment_exposure` 必报 |
-| 100%（M20-j） | `/` → v2（v3 迁 `/classic`） | 切主站 |
-| 紧急回滚 | `/` 全部留 v3；停止 redirect | **不清** session job 键 |
+| 本地 dev | 默认 `on` → v2 @ `/` | loopback 可用 `?homepageVariant=v3` 强制 classic |
+| dogfood holdback | `auto` + percent | v2/v3 **同期** @ `/`（非 redirect） |
+| 100%（M21-a） | `on` → v2 @ `/` | v3 应急 → `/classic` |
+| 紧急回滚 | `off` → classic @ `/` | 见 M21-ROLLBACK-CARD |
 
-**环境变量（建议）**：`TRAVELOGUE_STUDIO_HOMEPAGE_V2=auto|on|off`
+**环境变量**：`TRAVELOGUE_STUDIO_HOMEPAGE_V2=auto|on|off`（默认 **`on`**）
 
-- `on` → `/` 100% redirect 到 `/v2`
-- `off` → `/` 不 redirect（回滚到 v3）
-- `auto` → 读 yaml `studio.homepage.v2_bento.percent`（0–100）按桶 redirect
+- `on` → `/` 100% v2
+- `off` → `/` classic（回滚）
+- `auto` → 读 yaml `studio.homepage.v2_bento.percent` 或 `TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT`
 
-**yaml 示例**（合并到 `config.yaml`）：[`config-holdback.example.yaml`](./config-holdback.example.yaml)
+**yaml 示例**：[`config-holdback.example.yaml`](./config-holdback.example.yaml)
 
-> redirect 实现落在 M20-i；M20-a–h 阶段 `/` 与 `/v2` 均直达、互不影响。
+> M21-c 后：`/` 与 `/v2` **不再**并行 200；`/v2` 仅 302 兼容旧书签。
 
 ---
 
-## 4. v3 共存护栏（工程 CI）
+## 4. 共存护栏（M21 更新）
 
-1. **默认分支保护**：`main` 上 v3 路径集成测试 **必须** green（`tests/test_studio_p8_regression.py` 等）。
-2. **`/` 零回归**：v2 开发期 **不得**改动 `studio.js` 行为；仅当修复 v2 共享模块导致的明确 bug 时才动共享文件，并 **同时** 跑 v3 回归。
-3. **Storage 形状**：v2 仅 **新增** `homepageVariant`；不改 `activeJobId` / `activePending` schema。
-4. **Import 跨页**：两页共享 `sessionStorage.activeJobId`；v2 必须 `resumeActiveJobIfAny`（M20-g 完整接入），且 Importing 中不闪 Idle。
-5. **回滚演练**（M20-i）：v2 写入新键 → 停 redirect 回 v3 → 验证 Import 续 poll、书架、FirstSuccess。
-6. **Bundle 隔离**：v2 资源仅由 `/v2` 加载，v3 路径 **不**加载任何 v2 chunk（LCP 护栏）。
+1. **Classic smoke**：`tests/test_studio_classic_freeze_smoke.py` · `gate_classic_serves_v3` 必须 green。
+2. **Storage 形状**：v2 仅 **新增** `homepageVariant`；不改 `activeJobId` / `activePending` schema。
+3. **Import 续跑**：`sessionStorage.activeJobId` 跨刷新；Importing 中不切换 variant（AC-HP2-23）。
+4. **回滚演练**：`scripts/studio_homepage_rollback_drill.py` · `TRAVELOGUE_STUDIO_HOMEPAGE_V2=off`。
+5. **Bundle 隔离**：v2 资源由 `GET /`（v2 渲染）加载；classic @ `/classic` 不加载 v2 chunk。
 
 ---
 

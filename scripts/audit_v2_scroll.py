@@ -1,4 +1,4 @@
-"""Audit vertical scroll containers on Studio /v2."""
+"""Audit vertical scroll containers on Studio v2 homepage (GET /)."""
 from __future__ import annotations
 
 import json
@@ -78,7 +78,7 @@ def main() -> None:
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page(viewport={"width": 1440, "height": 900})
-            page.goto(f"{base}/v2", wait_until="networkidle")
+            page.goto(f"{base}/", wait_until="networkidle")
             page.wait_for_selector("#v2-frame", state="visible", timeout=15000)
             data = page.evaluate(AUDIT_JS)
             print(json.dumps(data, ensure_ascii=False, indent=2))

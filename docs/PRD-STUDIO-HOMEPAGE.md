@@ -1,12 +1,14 @@
 # Travelogue Studio · 首页（工作台）产品需求文档
 
+> **⚠ M21（2026-06）**：用户主入口 **`GET /` → v2**；classic 应急 **`GET /classic`**。本文档为 **v3 历史 PRD**；现行路由 [studio-homepage-v2/M21-ROUTING.md](./studio-homepage-v2/M21-ROUTING.md) · v2 PRD [PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md) · 退役 [PRD-M21-studio-homepage-v3-retirement.md](./PRD-M21-studio-homepage-v3-retirement.md)。
+
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
 | **文档版本** | v1.4.0-HOMEPAGE |
-| **状态** | **Implemented · v3 影像优先**（代码已落地，PRD 反向同步 2026-05-28） |
-| **下一版 PRD** | **[PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md) v2.0.3** · 契约 [studio-homepage-v2/](./studio-homepage-v2/README.md) · 线框 [v1.6 Web/iPad](./wireframes/studio-homepage-output-first-v1.6.html) · **待落地** |
-| **页面路由** | `GET /` → `templates/studio/studio.html`（Phase 4 起 `data-studio-v="4"`） |
+| **状态** | **Historical · v3 影像优先**（full v3 已删除；classic 快照 @ `/classic`） |
+| **下一版 PRD** | **[PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md) v2.0.3** · 契约 [studio-homepage-v2/](./studio-homepage-v2/README.md) |
+| **页面路由（历史）** | 曾 `GET /` → v3；**现行见 M21-ROUTING** |
 | **权威线框** | [wireframes/studio-homepage-photo-first-v3.html](./wireframes/studio-homepage-photo-first-v3.html) |
 | **前置条件** | [PRD-PHASE2.md](./PRD-PHASE2.md) M8–M10 已交付；`travelogue studio` 单端口 8766 |
 | **关联文档** | [PRD-PHASE2.md](./PRD-PHASE2.md) · [PRD-PHASE3.md](./PRD-PHASE3.md) · **[PRD-PHASE4.md](./PRD-PHASE4.md) §6（极易用 + 导入 panel）** · [IMPLEMENTATION-PHASE2.md](./IMPLEMENTATION-PHASE2.md) · [ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md) · [adr/004](./adr/004-studio-hub-server.md) · [SHARING.md](./SHARING.md) |

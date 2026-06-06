@@ -25,6 +25,7 @@
 | 本地跑起来 | [docs/WORKSHOP.md](docs/WORKSHOP.md) · [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) |
 | 了解项目为什么做 | [docs/CHARTER.md](docs/CHARTER.md) |
 | CLI / 校验规范 | [docs/CLI-SPEC.md](docs/CLI-SPEC.md) · `python scripts/validate_trip.py` |
+| **Studio 首页 M21 路由** | [docs/studio-homepage-v2/M21-ROUTING.md](docs/studio-homepage-v2/M21-ROUTING.md) |
 | 全部文档索引 | [docs/README.md](docs/README.md) |
 | 预览版式长什么样 | [templates/visual-journal/golden.html](templates/visual-journal/golden.html) |
 
@@ -47,6 +48,16 @@ python -m travelogue export-longshot trips\<tripId>
 ```
 
 相册默认 **≤250 张**；浏览器 **Chrome/Edge 90+（Windows）**。
+
+### Studio 首页（M21）
+
+| URL | 说明 |
+|-----|------|
+| **`http://127.0.0.1:8766/`** | 默认 **v2** Bento 首页 |
+| **`/classic`** | deprecated 应急 classic |
+| **`/v2`** | 302 → `/`（旧书签） |
+
+门控：`TRAVELOGUE_STUDIO_HOMEPAGE_V2=on|auto|off`（默认 `on`）。详见 [docs/studio-homepage-v2/M21-ROUTING.md](docs/studio-homepage-v2/M21-ROUTING.md)。
 
 ---
 

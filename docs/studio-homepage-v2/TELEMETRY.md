@@ -4,7 +4,21 @@
 
 ---
 
-## 1. 现状（v3 已有）
+## 1. 现状
+
+| 组件 | 路径 |
+|------|------|
+| v2 客户端 | `templates/studio/homepage-v2/**` · `templates/studio/js/analytics.js` |
+| classic 应急 | `templates/studio/legacy-freeze/studio.classic.*` @ **`GET /classic`** |
+| 服务端 | `travelogue/web/studio_handlers/telemetry_handlers.py` |
+| 落盘 | `~/.travelogue/telemetry/studio-homepage-events.jsonl` |
+| 允许事件 | `travelogue/web/studio_homepage_telemetry.py` `ALLOWED_STUDIO_HOMEPAGE_EVENTS` |
+
+**缺口**：无聚合看板、holdback 分 variant 对比需 jsonl 同期数据、Slack 告警待接线。
+
+---
+
+## 1.1 历史（v3 analytics 路径）
 
 | 组件 | 路径 |
 |------|------|
@@ -77,3 +91,17 @@
 
 - loopback 无 PII；`trip_id` 为 slug
 - jsonl 仅存本机 `~/.travelogue/telemetry/`
+
+---
+
+## 6. M21 采样路径（与 LCP 对齐）
+
+| `meta.variant` | 页面 URL | 用途 |
+|----------------|----------|------|
+| `v2` | **`GET /`**（v2 渲染） | 主路径 funnel · LCP |
+| `v3` | **`GET /`**（classic 渲染，holdback 对照）或 **`GET /classic`**（应急 smoke） | holdback 对照 · **非**切主站前历史 baseline |
+| — | `GET /v2` | 仅 302 → `/`；**不**单独采样 |
+
+脚本常量：`scripts/studio_lcp_measure.py` → `VARIANT_PATHS = {"v2": "/", "v3": "/classic"}`。
+
+聚合：`scripts/studio_telemetry_aggregate.py` · `scripts/studio_holdback_report.py` 须按 `meta.variant` 分桶，且 holdback 阶段 v2/v3 **同期** jsonl。

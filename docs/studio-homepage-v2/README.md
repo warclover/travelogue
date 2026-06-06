@@ -4,12 +4,14 @@
 |------|------|
 | **PRD** | [PRD-STUDIO-HOMEPAGE-v2.md](../PRD-STUDIO-HOMEPAGE-v2.md) **v2.0.3** · 退役 v3：[PRD-M21-studio-homepage-v3-retirement.md](../PRD-M21-studio-homepage-v3-retirement.md) |
 | **线框** | [studio-homepage-output-first-v1.6.html](../wireframes/studio-homepage-output-first-v1.6.html)（Web/iPad/书架；Mobile Tab = 小程序参考） |
-| **状态** | **开工前冻结** — M20-a 起工程以本目录为 API/素材/开关权威 |
+| **状态** | **M21 切主站完成** — 主入口 **`GET /`** = v2；路由见 [M21-ROUTING.md](./M21-ROUTING.md) |
 
 ## 文档索引
 
 | 文档 | 用途 | M20 阻塞 |
 |------|------|----------|
+| **[M21-ROUTING.md](./M21-ROUTING.md)** | **路由 / 门控 / Telemetry 口径（权威）** | **M21** |
+| [M21-RELEASE-NOTES.md](./M21-RELEASE-NOTES.md) | 发版说明模板 | **M21-e2** |
 | [DATA-CONTRACT.md](./DATA-CONTRACT.md) | `manifest.json` schema + 首页只读 API 字段 | **M20-a/b** |
 | [FEATURE-FLAG.md](./FEATURE-FLAG.md) | `studio.homepage.v2_bento` 门控与 v3 共存 | **M20-a** |
 | [config-holdback.example.yaml](./config-holdback.example.yaml) | holdback `percent` yaml 片段（dogfood 10%） | **M20-i/j** |

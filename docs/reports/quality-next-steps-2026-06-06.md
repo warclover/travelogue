@@ -62,3 +62,13 @@ python scripts/algorithm_v2_signoff.py --from-json docs/acceptance-records/algor
 ## P1 · M21 / 算法 V2（已暂缓）
 
 人工 dogfood 与盲评签核暂不推进；发布前再打开 `M21-CUTOVER-CHECKLIST` / `algorithm-v2-signoff.json`。
+
+## 方向 B · M21 文档债（2026-06-06）
+
+| ID | 任务 | 状态 |
+|----|------|------|
+| B1 | [M21-ROUTING.md](../studio-homepage-v2/M21-ROUTING.md) 路由权威 | ☑ |
+| B2 | [M21-RELEASE-NOTES.md](../studio-homepage-v2/M21-RELEASE-NOTES.md) 发版模板 | ☑ |
+| B3 | TELEMETRY / FEATURE-FLAG / Runbook 同步 | ☑ |
+| B4 | 根 README Studio 路由表 | ☑ |
+| B5 | gate_status · audit_v2_scroll 脚本口径 | ☑ |

@@ -100,18 +100,18 @@ python scripts/studio_homepage_rollback_drill.py --out docs/acceptance-records/s
 **门控冒烟**（不启动服务器）：
 
 ```bash
-# 默认 off → / serve v3
+# 默认 on → / serve v2
 python scripts/studio_homepage_gate_status.py
 
-# 10% holdback · 进组 UA
+# 10% holdback · 进组 UA（200 v2 @ /，非 302）
 TRAVELOGUE_STUDIO_HOMEPAGE_V2=auto TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT=10 \\
   python scripts/studio_homepage_gate_status.py --ua "M20jTest/5"
 
-# 100% on → / serve v2（无 redirect）
-TRAVELOGUE_STUDIO_HOMEPAGE_V2=on python scripts/studio_homepage_gate_status.py
+# off 回滚 → / serve classic
+TRAVELOGUE_STUDIO_HOMEPAGE_V2=off python scripts/studio_homepage_gate_status.py
 ```
 
-**100% 切主站**：`TRAVELOGUE_STUDIO_HOMEPAGE_V2=on` → `GET /` 直接 v2；v3 迁 `GET /classic`。
+**100% 切主站（现行默认）**：`TRAVELOGUE_STUDIO_HOMEPAGE_V2=on` → `GET /` 直接 v2；应急 `GET /classic`。路由见 [M21-ROUTING.md](./M21-ROUTING.md)。
 
 ---
 

@@ -66,16 +66,15 @@ def main(argv: list[str] | None = None) -> int:
         "bucket": bucket,
         "root_variant": variant,
         "redirect_root_to_v2": redirect,
-        "root_behavior": (
-            "302 → /v2" if redirect else f"200 serve {variant} at /"
-        ),
-        "classic_path": "GET /classic → v3（on 模式 v3 入口）",
+        "root_behavior": f"200 serve {variant} at /",
+        "v2_compat_path": "GET /v2 → 302 /",
+        "classic_path": "GET /classic → legacy-freeze classic (deprecated)",
     }
 
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
     else:
-        print("=== Studio 首页 v2 门控（M20-j）===")
+        print("=== Studio 首页 v2 门控（M21）===")
         for key, val in payload.items():
             print(f"  {key}: {val}")
     return 0

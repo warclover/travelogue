@@ -29,7 +29,7 @@
 - [ ] 小文件夹上传成功，能到 preview
 - [ ] 超建议阈值弹确认，取消后状态正确
 - [ ] Importing 中重复打开 Sheet 行为与 pick-folder 一致
-- [ ] 刷新后 `activeJobId` 续跑正常（`/` 与 `/v2`）
+- [ ] 刷新后 `activeJobId` 续跑正常（`/`；`/v2` 302 → `/`）
 
 ---
 
@@ -69,8 +69,8 @@
 ### 清理
 
 - [x] v2 dev panel “经典首页” 指向 `/classic` 或仅在 `off` 显示
-- [ ] telemetry 口径改为 v2 主路径
-- [ ] PRD/Runbook/README 路由说明同步
+- [x] telemetry 口径改为 v2 主路径（见 [TELEMETRY.md](./TELEMETRY.md) §6 · [M21-ROUTING.md](./M21-ROUTING.md) §4）
+- [x] PRD/Runbook/README 路由说明同步（2026-06-06 文档债收口）
 
 ---
 
@@ -95,7 +95,7 @@
 
 - [x] 删除 v3 文件前完成依赖审计（防共享模块误删）
 - [x] 删除后全量回归通过（本地）
-- [ ] 发布说明明确：主入口 `/`，`/classic` 为 deprecated 应急入口
+- [x] 发布说明模板：[M21-RELEASE-NOTES.md](./M21-RELEASE-NOTES.md)（发版时复制填写）
 
 ---
 
@@ -329,4 +329,21 @@
 - `python -m pytest tests/test_studio_home_v2.py -q --tb=short` → **33 passed, 1 skipped**
 - `python -m pytest tests/test_studio_home_v2_ac_playwright.py -q --tb=short` → **35 passed**
 - `python scripts/studio_homepage_rollback_drill.py --json` → **passed=true**
+
+---
+
+## 9. 执行记录（M21-c 文档债 · 2026-06-06）
+
+已落地：
+
+- 新增 [M21-ROUTING.md](./M21-ROUTING.md)（路由 / 门控 / telemetry 权威）
+- 新增 [M21-RELEASE-NOTES.md](./M21-RELEASE-NOTES.md)（发版说明模板）
+- 同步 [FEATURE-FLAG.md](./FEATURE-FLAG.md) · [TELEMETRY.md](./TELEMETRY.md) · [RUNBOOK-DOGFOOD.md](./RUNBOOK-DOGFOOD.md) · 根 [README.md](../../README.md)
+- `scripts/studio_homepage_gate_status.py` 输出 M21 口径（无 `302 → /v2`）
+- `scripts/audit_v2_scroll.py` 改采样 `GET /`
+
+未改（仍须人工 / 发布时填写）：
+
+- §1 上传验证 · §2 发布后观察 · §7 签字
+- Release notes 实际粘贴到 GitHub Release
 
