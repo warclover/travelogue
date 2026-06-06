@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from travelogue.curation.layout_candidates import (
     bucket_has_mosaic_window,
@@ -15,7 +15,7 @@ def _asset(aid: str, kind: str, secs: float = 0) -> dict:
     return {
         "id": aid,
         "aspectKind": kind,
-        "takenAt": (datetime(2025, 6, 1, 10, tzinfo=timezone.utc) + timedelta(seconds=secs)).isoformat(),
+        "takenAt": (datetime(2025, 6, 1, 10, tzinfo=UTC) + timedelta(seconds=secs)).isoformat(),
         "width": 2000 if kind == "landscape" else 900,
         "height": 1200 if kind == "landscape" else 1600,
     }

@@ -18,9 +18,10 @@ import csv
 import json
 import sys
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 # §17.2 回滚阈值（同期 v2 vs v3）
 ROLLBACK_THRESHOLDS = {

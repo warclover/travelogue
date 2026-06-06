@@ -43,7 +43,10 @@ def test_embedding_cache_plan_hit_ratio() -> None:
 
 
 def test_persist_recommended_batch_size(tmp_path: Path) -> None:
-    from travelogue.vision.clip_encoder import load_persisted_batch_size, persist_recommended_batch_size
+    from travelogue.vision.clip_encoder import (
+        load_persisted_batch_size,
+        persist_recommended_batch_size,
+    )
 
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()

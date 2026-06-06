@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from travelogue.curation.burst_utils import (
     burst_group_map,
     shared_ingest_burst_group,
     time_near_sequential,
 )
-from travelogue.curation.chapter_items import item_stub_for_screen, items_from_screens
+from travelogue.curation.chapter_items import items_from_screens
 
 
 def test_shared_ingest_burst_group():
@@ -31,7 +31,7 @@ def test_time_near_sequential_uses_burst_group_id():
 
 
 def test_burst_group_map_honors_ingest_ids():
-    base = datetime(2025, 5, 1, 12, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 5, 1, 12, 0, 0, tzinfo=UTC)
     assets = {}
     ids = ["a1", "a2", "b1"]
     for i, aid in enumerate(["a1", "a2"]):

@@ -16,14 +16,14 @@ import pytest
 _playwright_gate = threading.Lock()
 _log = logging.getLogger(__name__)
 
+from tests.studio_test_helpers import IngestedTripWorkspace, make_test_album
 from travelogue.media.ingest import ingest_into_trip
 from travelogue.services.trip_factory import create_trip
-from tests.studio_test_helpers import IngestedTripWorkspace, make_test_album
-
 
 _FAST_SKIP_MARKERS = frozenset(
     {"e2e", "playwright_serial", "integration", "vision", "legacy_homepage"}
 )
+_TIER_MARKERS = frozenset(_FAST_SKIP_MARKERS | {"unit", "mosaic"})
 
 
 def _module_basename(item: pytest.Item) -> str:
@@ -45,6 +45,9 @@ def _apply_auto_markers(item: pytest.Item) -> None:
             item.add_marker(pytest.mark.e2e)
         if "playwright_serial" not in names:
             item.add_marker(pytest.mark.playwright_serial)
+        names = {m.name for m in item.iter_markers()}
+    if not names.intersection(_TIER_MARKERS):
+        item.add_marker(pytest.mark.unit)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

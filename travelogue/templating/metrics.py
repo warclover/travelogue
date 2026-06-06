@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +19,7 @@ def record_template_metric(name: str, **labels: Any) -> None:
         path = metrics_path()
         path.parent.mkdir(parents=True, exist_ok=True)
         row = {
-            "at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+            "at": datetime.now(UTC).replace(microsecond=0).isoformat(),
             "name": name,
             **{k: v for k, v in labels.items() if v is not None},
         }
@@ -146,7 +146,7 @@ def aggregate_metrics(*, window_hours: int = 24) -> dict[str, Any]:
         return {"windowHours": window_hours, "counts": {}, "rates": {}}
     from datetime import timedelta
 
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=window_hours)
+    cutoff = datetime.now(UTC) - timedelta(hours=window_hours)
     counts: dict[str, int] = {}
     route_total = 0
     fallback = 0
@@ -174,7 +174,7 @@ def aggregate_metrics(*, window_hours: int = 24) -> dict[str, Any]:
                 try:
                     at = datetime.fromisoformat(str(at_raw).replace("Z", "+00:00"))
                     if at.tzinfo is None:
-                        at = at.replace(tzinfo=timezone.utc)
+                        at = at.replace(tzinfo=UTC)
                     if at < cutoff:
                         continue
                 except ValueError:

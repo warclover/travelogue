@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter
-from pathlib import Path
 
 from travelogue.paths import FIXTURES_DIR, GOLDEN_HTML
 from travelogue.render.dom_compare import dom_signature

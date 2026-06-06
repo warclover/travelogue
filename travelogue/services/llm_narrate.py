@@ -3,11 +3,18 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from travelogue.config import AppConfig, get_config
+from travelogue.curation.asset_caption import (
+    apply_caption_to_trip,
+    asset_skips_caption,
+    chapter_caption_asset_ids,
+    resolve_caption,
+)
 from travelogue.llm.client import chat_completion, parse_json_content
 from travelogue.llm.narrate_cache import read_cached, write_cached
 from travelogue.services.errors import NarrateError
@@ -16,12 +23,6 @@ from travelogue.services.narrate import (
     _finalize_copy,
     _manifest_limits,
     _utc_now_iso,
-)
-from travelogue.curation.asset_caption import (
-    apply_caption_to_trip,
-    asset_skips_caption,
-    chapter_caption_asset_ids,
-    resolve_caption,
 )
 from travelogue.services.narrative_brief import build_chapter_brief, build_meta_brief
 from travelogue.services.narrative_scope import (
@@ -465,7 +466,6 @@ def run_llm_narrate(
                 raise NarrateError("E_NARRATE_RETRY_EXHAUSTED", "; ".join(errs[:3]))
             fix_errors = errs
 
-    chapters = trip.get("chapters") or []
     for ch_idx in _chapter_indices(trip, chapter_id):
         chapter = trip["chapters"][ch_idx]
         if not _chapter_needs_copy(chapter, trip, regenerate=regenerate, scope=scope_val):

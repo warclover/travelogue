@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
+from tests.studio_test_helpers import MockStudioHandler
 from travelogue.config import AppConfig, CohortConfig
 from travelogue.services.trip import TripService
 from travelogue.services.trip_factory import create_trip
@@ -16,7 +17,6 @@ from travelogue.web.studio_handlers.trip_handlers import (
     handle_patch_cohort,
     handle_post_cohort_refresh,
 )
-from tests.studio_test_helpers import MockStudioHandler
 
 pytestmark = pytest.mark.unit
 

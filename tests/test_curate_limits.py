@@ -6,6 +6,7 @@ from datetime import date
 
 import pytest
 
+from travelogue.curation.bucket_planning import normalize_bucket_counts
 from travelogue.curation.curate import CurateError, _date_span_warning, run_curate
 from travelogue.curation.curate_limits import (
     COMPACT_ALBUM_PHOTO_CAP,
@@ -13,7 +14,6 @@ from travelogue.curation.curate_limits import (
     SEGMENT_LABEL_PREVIEW_LIMIT,
     SMALL_ALBUM_PHOTO_CAP,
 )
-from travelogue.curation.bucket_planning import normalize_bucket_counts
 
 
 def _asset(aid: str, day: int = 1) -> dict:

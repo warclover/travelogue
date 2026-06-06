@@ -19,8 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
@@ -68,7 +67,7 @@ def run_drill(*, write_out: Path | None = None) -> tuple[dict, int]:
     passed, output = _run_pytest(_ROLLBACK_TESTS)
     report = {
         "schema": "studio-homepage-rollback-drill/v1",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "gate_mode_simulated": "off",
         "tests": _ROLLBACK_TESTS,
         "passed": passed,

@@ -6,7 +6,6 @@ import pytest
 
 from travelogue.templating.admin_store import (
     AdminRevisionConflict,
-    _STATE_PATH,
     get_store_revision,
     update_template_lifecycle,
 )

@@ -7,7 +7,7 @@ import argparse
 import json
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from statistics import mean
 from typing import Any
@@ -90,7 +90,7 @@ def main() -> int:
     record = {
         "schemaVersion": "1",
         "phase": "P12-LatencyProfile",
-        "generatedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "generatedAt": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "mode": "rules",
         "profile": profile_cull(sizes=sizes, repeats=max(1, args.repeats)),
     }

@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import pytest
 
+from travelogue.paths import GOLDEN_HTML
+from travelogue.render.engine import render_html
 from travelogue.render.golden_regression import (
     check_golden_dom,
     check_golden_structure,
     load_golden_trip,
     pattern_sequence,
 )
-from travelogue.render.engine import render_html
-from travelogue.paths import GOLDEN_HTML
 
 
 @pytest.fixture

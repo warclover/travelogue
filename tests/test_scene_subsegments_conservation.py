@@ -5,7 +5,10 @@ from __future__ import annotations
 from datetime import date
 
 from travelogue.curation.geo_events import GeoSegment
-from travelogue.curation.scene_subsegments import apply_scene_subsegments, split_geo_segment_by_scene
+from travelogue.curation.scene_subsegments import (
+    apply_scene_subsegments,
+    split_geo_segment_by_scene,
+)
 
 
 def _asset(aid: str, cluster: int) -> dict:

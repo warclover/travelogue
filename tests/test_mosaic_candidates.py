@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
+from tests._golden.helpers import build_mixed_aspects_trip
 from travelogue.config import MosaicConfig
-from travelogue.curation.layout_planner import aspect_kind_for_asset
 from travelogue.curation.mosaic.candidates import generate_window_candidates
 from travelogue.curation.mosaic.constants import PATTERN_PORTRAIT_2_LANDSCAPE_2
-
-from tests._golden.helpers import build_mixed_aspects_trip
 
 
 def _five_assets():

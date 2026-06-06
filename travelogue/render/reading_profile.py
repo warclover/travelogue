@@ -333,8 +333,6 @@ def resolve_reading_payload(
         export_layout_override=export_layout_override,
     )
     export_reading = _normalize_export_reading(trip)
-    raw_export = trip.get("export") if isinstance(trip.get("export"), dict) else {}
-    reading_raw = raw_export.get("reading") if isinstance(raw_export.get("reading"), dict) else {}
     normalized_scroll = export_reading.get("scroll") if isinstance(export_reading.get("scroll"), dict) else {}
     scroll_explicit = normalized_scroll.get("breath") not in (None, "")
     profile_explicit = export_reading.get("profile") not in (None, "")

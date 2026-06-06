@@ -15,6 +15,7 @@ from scripts.phase3_ig2_report import (
     load_fixture_trip,
     run_trip_variant,
 )
+from tests._golden.helpers import layout_snapshot
 from travelogue.config import (
     AppConfig,
     ClusteringConfig,
@@ -27,7 +28,6 @@ from travelogue.config import (
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.curate import run_curate
 from travelogue.vision.clip_encoder import clip_torch_available
-from tests._golden.helpers import layout_snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCAL_GOLDEN_TRIPS = ("mao", "maomi", "linzhi")

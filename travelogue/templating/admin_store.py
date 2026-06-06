@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import json
 import threading
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 from travelogue.paths import ROOT
-from travelogue.templating.lifecycle import LifecycleTransitionError, assert_transition
+from travelogue.templating.lifecycle import assert_transition
 
 TemplateLifecycle = Literal["experimental", "beta", "ga", "deprecated", "disabled"]
 
@@ -23,7 +22,7 @@ class AdminRevisionConflict(Exception):
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 def _load_unlocked() -> dict[str, Any]:

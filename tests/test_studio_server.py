@@ -13,12 +13,11 @@ from urllib.parse import quote
 
 import pytest
 
+from tests.studio_test_helpers import wait_for_job
 from travelogue.web.serve import TripPreviewHandler
 from travelogue.web.studio_jobs import reset_job_store
 from travelogue.web.studio_pipeline import run_studio_pipeline
 from travelogue.web.studio_trips import list_studio_trips, studio_trips_total
-from tests.studio_test_helpers import wait_for_job
-from tests.test_ingest import _album
 
 pytestmark = pytest.mark.e2e
 

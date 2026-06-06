@@ -14,7 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,7 +31,7 @@ def _save(path: Path, data: dict) -> None:
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 def _ac_passed(quality: dict, ac_id: str) -> bool | None:
@@ -154,7 +154,7 @@ def prepare_g1(rollout: dict, quality: dict) -> dict:
     }
     entries = rollout.setdefault("entries", [])
     entries.insert(0, entry)
-    rollout["date"] = datetime.now(timezone.utc).date().isoformat()
+    rollout["date"] = datetime.now(UTC).date().isoformat()
     return rollout
 
 
@@ -198,7 +198,7 @@ def prepare_g2(rollout: dict, quality: dict) -> dict:
     }
     entries = rollout.setdefault("entries", [])
     entries.insert(0, entry)
-    rollout["date"] = datetime.now(timezone.utc).date().isoformat()
+    rollout["date"] = datetime.now(UTC).date().isoformat()
     return rollout
 
 
@@ -248,7 +248,7 @@ def prepare_g3(rollout: dict, quality: dict, *, stable_days: int | None = None) 
     }
     entries = rollout.setdefault("entries", [])
     entries.insert(0, entry)
-    rollout["date"] = datetime.now(timezone.utc).date().isoformat()
+    rollout["date"] = datetime.now(UTC).date().isoformat()
     return rollout
 
 
@@ -297,7 +297,7 @@ def start_g3(
     }
     entries = rollout.setdefault("entries", [])
     entries.insert(0, entry)
-    rollout["date"] = datetime.now(timezone.utc).date().isoformat()
+    rollout["date"] = datetime.now(UTC).date().isoformat()
     return rollout
 
 
@@ -346,7 +346,7 @@ def start_g2(
     }
     entries = rollout.setdefault("entries", [])
     entries.insert(0, entry)
-    rollout["date"] = datetime.now(timezone.utc).date().isoformat()
+    rollout["date"] = datetime.now(UTC).date().isoformat()
     return rollout
 
 
@@ -387,7 +387,7 @@ def start_g1(
     }
     entries = rollout.setdefault("entries", [])
     entries.insert(0, entry)
-    rollout["date"] = datetime.now(timezone.utc).date().isoformat()
+    rollout["date"] = datetime.now(UTC).date().isoformat()
     return rollout
 
 

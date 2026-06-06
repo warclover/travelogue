@@ -12,25 +12,23 @@ import copy
 import json
 import subprocess
 import sys
-from dataclasses import asdict, replace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from travelogue.config import LayoutScoringConfig, get_config
-from travelogue.curation.bucket_planning import group_assets_by_segments
-from travelogue.curation.curate import layout_eligible_assets, sync_trip_covers
-from travelogue.curation.layout_candidates import bucket_has_mosaic_window
-from travelogue.curation.layout_planner import aspect_kind_for_asset
-from travelogue.curation.layout_metrics import compute_layout_metrics
-from travelogue.curation.layout_scoring import PHASE3B_WEIGHTS, ScoringWeights
 from scripts.phase3_layout_acceptance import (
     _layout_snapshot,
     _run_curate,
     _weights_dict,
 )
-
+from travelogue.config import LayoutScoringConfig, get_config
+from travelogue.curation.bucket_planning import group_assets_by_segments
+from travelogue.curation.curate import layout_eligible_assets, sync_trip_covers
+from travelogue.curation.layout_candidates import bucket_has_mosaic_window
+from travelogue.curation.layout_metrics import compute_layout_metrics
+from travelogue.curation.layout_planner import aspect_kind_for_asset
+from travelogue.curation.layout_scoring import PHASE3B_WEIGHTS, ScoringWeights
 
 # Raw weights (normalized at runtime). Base: PHASE3B with diversity/burst tweaks.
 WEIGHT_PRESETS: dict[str, dict[str, float]] = {

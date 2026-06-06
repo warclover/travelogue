@@ -17,28 +17,27 @@ import random
 import secrets
 import shutil
 import sys
-from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from travelogue.config import LayoutScoringConfig
-from travelogue.curation.layout_metrics import compute_layout_metrics
-from travelogue.curation.layout_scoring import PHASE3B_WEIGHTS, PHASE3_WEIGHTS
-from travelogue.render.engine import (
-    LONGSHOT_INDEX_NAME,
-    render_trip_surfaces,
-    write_longshot_sidecar,
-)
-from travelogue.services.trip import TripService
 from scripts.phase3_layout_acceptance import (
     _has_color_metrics,
     _layout_snapshot,
     _run_curate,
     _weights_dict,
 )
+from travelogue.config import LayoutScoringConfig
+from travelogue.curation.layout_metrics import compute_layout_metrics
+from travelogue.curation.layout_scoring import PHASE3_WEIGHTS, PHASE3B_WEIGHTS
+from travelogue.render.engine import (
+    LONGSHOT_INDEX_NAME,
+    render_trip_surfaces,
+    write_longshot_sidecar,
+)
+from travelogue.services.trip import TripService
 
 REVIEW_DIR_NAME = "_blind-review"
 _PROTECTED_INDEX = ("index.html", "index-mobile.html", LONGSHOT_INDEX_NAME)
@@ -63,7 +62,7 @@ def _restore_index_files(trip_root: Path, backup: dict[str, bytes | None]) -> No
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _curate_variants(trip_path: Path, *, layout: str = "web") -> tuple[dict, dict, dict]:
@@ -257,7 +256,7 @@ def prepare_blind_review(
 
     objective = key["objective"]
     _write_landing_page(review_dir, trip_id=trip_id, pages=pages, objective=objective)
-    eval_path = _write_eval_template(review_dir, trip_id=trip_id)
+    _write_eval_template(review_dir, trip_id=trip_id)
 
     record = {
         "tripId": trip_id,

@@ -21,7 +21,7 @@ def test_save_removes_temp_file_on_replace_failure(tmp_path: Path, monkeypatch) 
     monkeypatch.setattr("travelogue.services.trip.os.replace", boom_replace)
     with pytest.raises(OSError):
         svc.save(trip, path)
-    leftovers = list(tmp_path.glob(f".trip-*.json"))
+    leftovers = list(tmp_path.glob(".trip-*.json"))
     assert leftovers == []
 
 

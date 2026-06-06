@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from travelogue.curation.aesthetic_score import purpose_overall
-from travelogue.curation.pa_acceptance import export_pa_blind_review, spearman_srcc, srcc_from_label_rows
 from travelogue.config import AestheticConfig
+from travelogue.curation.aesthetic_score import purpose_overall
+from travelogue.curation.pa_acceptance import (
+    export_pa_blind_review,
+    spearman_srcc,
+    srcc_from_label_rows,
+)
 
 
 def test_spearman_srcc_perfect_monotonic():

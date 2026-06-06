@@ -22,7 +22,6 @@ def build_album(album_dir: Path, count: int) -> None:
     from PIL import Image
 
     album_dir.mkdir(parents=True, exist_ok=True)
-    cities = [(35.681, 139.767), (35.011, 135.768), (34.693, 135.502)]
     for i in range(count):
         path = album_dir / f"photo_{i:04d}.jpg"
         if path.is_file():

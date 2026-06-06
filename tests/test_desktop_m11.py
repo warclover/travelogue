@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.desktop.bundle import bundle_root, default_trips_dir, is_frozen
+from travelogue.desktop.bundle import bundle_root, default_trips_dir
 from travelogue.desktop.demo_album import (
     DEMO_ALBUM_SENTINEL,
     is_demo_album_path,

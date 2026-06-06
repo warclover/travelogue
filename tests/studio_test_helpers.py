@@ -6,9 +6,9 @@ import io
 import json
 import os
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
 from urllib import error, request
 
 from PIL import Image

@@ -2,14 +2,6 @@
 
 from __future__ import annotations
 
-from travelogue.curation.mosaic.constants import (
-    PATTERN_LANDSCAPE_4,
-    PATTERN_LANDSCAPE_6,
-    PATTERN_PORTRAIT_3,
-    PATTERN_PORTRAIT_4,
-)
-from travelogue.curation.mosaic.metrics import mcs_unified_exposure_rate
-
 from tests._golden.helpers import (
     build_mosaic_landscape6_trip,
     build_mosaic_landscape9_trip,
@@ -21,6 +13,13 @@ from tests._golden.helpers import (
     plan_legacy_screens,
     plan_mosaic_screens,
 )
+from travelogue.curation.mosaic.constants import (
+    PATTERN_LANDSCAPE_4,
+    PATTERN_LANDSCAPE_6,
+    PATTERN_PORTRAIT_3,
+    PATTERN_PORTRAIT_4,
+)
+from travelogue.curation.mosaic.metrics import mcs_unified_exposure_rate
 
 
 def test_golden_mosaic_portrait_3_matches_mcs():

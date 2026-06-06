@@ -5,12 +5,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 import tempfile
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from functools import partial
 from http.server import ThreadingHTTPServer
 from pathlib import Path
@@ -23,7 +22,7 @@ if str(ROOT) not in sys.path:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 def _get(url: str) -> tuple[int, str]:
@@ -45,7 +44,6 @@ def _get_json(url: str) -> tuple[int, dict]:
 
 
 def _free_port() -> int:
-    from http.server import HTTPServer
     from travelogue.web.serve import TripPreviewHandler
 
     server = ThreadingHTTPServer(("127.0.0.1", 0), TripPreviewHandler)

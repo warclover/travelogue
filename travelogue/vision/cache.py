@@ -8,7 +8,7 @@ import logging
 import os
 import threading
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -195,7 +195,7 @@ def save_cache_manifest(
         "assetCount": len(asset_ids),
         "source": source,
         "model": model or "",
-        "updatedAt": datetime.now(timezone.utc)
+        "updatedAt": datetime.now(UTC)
         .replace(microsecond=0)
         .isoformat()
         .replace("+00:00", "Z"),

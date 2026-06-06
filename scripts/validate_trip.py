@@ -9,7 +9,7 @@ from pathlib import Path
 
 from travelogue.paths import MANIFEST_PATH
 from travelogue.services.trip import TripService
-from travelogue.services.validate import load_json, validate_trip
+from travelogue.services.validate import validate_trip
 
 
 def main() -> int:

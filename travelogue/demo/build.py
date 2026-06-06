@@ -7,16 +7,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from travelogue.config import AppConfig, app_config_scope, get_config
-from travelogue.util.trip_slug import demo_trip_id_from_album
-from travelogue.paths import DEMO_CONFIG_PATH
 from travelogue.curation.curate import CurateError, run_curate
-from travelogue.media.ingest import IngestError, ingest_into_trip, scan_image_paths
+from travelogue.errors import CodeError
+from travelogue.media.ingest import IngestError, ingest_into_trip
 from travelogue.orchestrator.pipeline import PublishResult
 from travelogue.orchestrator.run import RunResult, run_trip
+from travelogue.paths import DEMO_CONFIG_PATH
 from travelogue.render.engine import render_trip, render_trip_surfaces
 from travelogue.services.trip import TripService
-from travelogue.errors import CodeError
 from travelogue.services.trip_factory import create_trip
+from travelogue.util.trip_slug import demo_trip_id_from_album
 
 
 class DemoError(CodeError):

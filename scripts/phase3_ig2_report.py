@@ -11,13 +11,14 @@ import argparse
 import copy
 import json
 import sys
-from dataclasses import asdict, replace
+from dataclasses import replace
 from pathlib import Path
 from typing import Literal
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from scripts.phase3_layout_acceptance import _weights_dict
 from travelogue.config import (  # noqa: E402
     AppConfig,
     ClusteringConfig,
@@ -29,7 +30,6 @@ from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.curate import run_curate
 from travelogue.curation.layout_metrics import compute_layout_metrics
 from travelogue.curation.layout_scoring import PHASE3B_WEIGHTS
-from scripts.phase3_layout_acceptance import _weights_dict
 
 LayoutMode = Literal["baseline", "p3_lite", "p3_full"]
 

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from travelogue.config import AppConfig, TemplateRouterConfig
 from travelogue.templating.resolver import is_template_locked
 from travelogue.templating.router import (

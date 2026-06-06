@@ -12,9 +12,9 @@ from urllib import request
 import pytest
 import yaml
 
+from tests.test_studio_server import _free_port
 from travelogue.config import AppConfig
 from travelogue.web.serve import TripPreviewHandler
-from tests.test_studio_server import _free_port
 
 pytestmark = pytest.mark.e2e
 

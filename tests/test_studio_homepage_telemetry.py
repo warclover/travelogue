@@ -6,13 +6,13 @@ import json
 
 import pytest
 
+from tests.studio_test_helpers import MockStudioHandler
 from travelogue.web.studio_handlers.telemetry_handlers import handle_studio_event
 from travelogue.web.studio_homepage_telemetry import (
     ALLOWED_STUDIO_HOMEPAGE_EVENTS,
     append_studio_homepage_event,
     studio_homepage_events_path,
 )
-from tests.studio_test_helpers import MockStudioHandler
 
 pytestmark = pytest.mark.unit
 

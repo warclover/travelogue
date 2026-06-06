@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -78,7 +78,7 @@ def append_studio_homepage_event(event: str, meta: dict[str, Any] | None = None)
     path = studio_homepage_events_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     record: dict[str, Any] = {
-        "ts": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
+        "ts": datetime.now(UTC).isoformat(timespec="milliseconds"),
         "event": event,
     }
     if meta:

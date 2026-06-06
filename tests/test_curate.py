@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
 import pytest
 
+from tests.test_ingest import _album
 from travelogue.curation.curate import _date_span_warning, _pick_cover_asset_id, run_curate
 from travelogue.media.ingest import ingest_into_trip
 from travelogue.services.trip_factory import create_trip
-from tests.test_ingest import _album
 
 
 def _asset(aid: str, w: int, h: int, kind: str) -> dict:

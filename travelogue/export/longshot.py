@@ -9,7 +9,6 @@ import re
 import subprocess
 import sys
 import threading
-import time
 from dataclasses import dataclass, field
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path

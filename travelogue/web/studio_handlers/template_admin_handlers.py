@@ -15,6 +15,7 @@ from travelogue.templating.admin_store import (
 from travelogue.templating.lifecycle import LifecycleTransitionError
 from travelogue.templating.roles import require_template_role
 from travelogue.web.studio_admin_auth import require_admin_api_access, studio_authenticated
+from travelogue.web.studio_errors import client_error_payload, internal_error_payload
 from travelogue.web.studio_handlers.common import studio_ctx
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
@@ -138,9 +139,9 @@ def handle_templates_admin_rollback(handler: StudioHandlerProtocol) -> None:
             confirm_high_risk=confirm,
         )
     except ValueError as exc:
-        code = str(exc)
-        status = 428 if code == "E_TEMPLATE_CONFIRM_REQUIRED" else 400
-        handler._json_response(status, {"ok": False, "error": code, "message": str(exc)})
+        payload = client_error_payload(exc)
+        status = 428 if payload.get("error") == "E_TEMPLATE_CONFIRM_REQUIRED" else 400
+        handler._json_response(status, payload)
         return
     handler._json_response(200, {"ok": True, **result})
 
@@ -223,7 +224,10 @@ def handle_templates_admin_patch(handler: StudioHandlerProtocol, template_id: st
         )
         return
     except LifecycleTransitionError as exc:
-        handler._json_response(400, {"ok": False, "error": "E_TEMPLATE_LIFECYCLE", "message": str(exc)})
+        handler._json_response(
+            400,
+            client_error_payload(exc, default_code="E_TEMPLATE_LIFECYCLE"),
+        )
         return
     except ValueError as exc:
         code = str(exc)
@@ -290,7 +294,7 @@ def handle_templates_admin_review(handler: StudioHandlerProtocol) -> None:
             handler._json_response(400, {"ok": False, "error": "unknown action"})
             return
     except ValueError as exc:
-        handler._json_response(400, {"ok": False, "error": str(exc)})
+        handler._json_response(400, client_error_payload(exc))
         return
     handler._json_response(200, {"ok": True, "review": out})
 
@@ -307,8 +311,14 @@ def handle_templates_admin_register(handler: StudioHandlerProtocol) -> None:
         from travelogue.templating.template_admin_crud import register_template_from_disk
 
         out = register_template_from_disk(template_id, operator="studio")
-    except Exception as exc:
-        handler._json_response(400, {"ok": False, "error": str(exc)})
+    except ValueError as exc:
+        handler._json_response(400, client_error_payload(exc))
+        return
+    except Exception:
+        import logging
+
+        logging.getLogger(__name__).exception("template register failed: %s", template_id)
+        handler._json_response(500, internal_error_payload())
         return
     handler._json_response(201, {"ok": True, **out})
 
@@ -331,9 +341,16 @@ def handle_templates_admin_delete(handler: StudioHandlerProtocol) -> None:
             confirm_high_risk=bool(payload.get("confirmHighRisk")),
         )
     except ValueError as exc:
-        code = str(exc)
-        status = 428 if code == "E_TEMPLATE_CONFIRM_REQUIRED" else 409 if code.startswith("E_TEMPLATE_REFERENCED") else 400
-        handler._json_response(status, {"ok": False, "error": code, "message": str(exc)})
+        payload = client_error_payload(exc)
+        code = str(payload.get("error") or "")
+        status = (
+            428
+            if code == "E_TEMPLATE_CONFIRM_REQUIRED"
+            else 409
+            if code.startswith("E_TEMPLATE_REFERENCED")
+            else 400
+        )
+        handler._json_response(status, payload)
         return
     handler._json_response(200, {"ok": True, **out})
 
@@ -347,7 +364,7 @@ def handle_templates_admin_metadata(handler: StudioHandlerProtocol, template_id:
 
         out = update_template_metadata(template_id, payload, operator="studio")
     except ValueError as exc:
-        handler._json_response(400, {"ok": False, "error": str(exc)})
+        handler._json_response(400, client_error_payload(exc))
         return
     handler._json_response(200, {"ok": True, **out})
 
@@ -423,7 +440,7 @@ def handle_templates_admin_runtime(handler: StudioHandlerProtocol) -> None:
         try:
             out = approve_router_change(change_id, approver=approver)
         except ValueError as exc:
-            handler._json_response(400, {"ok": False, "error": str(exc)})
+            handler._json_response(400, client_error_payload(exc))
             return
         handler._json_response(200, {"ok": True, "change": out, "runtime": load_runtime()})
         return

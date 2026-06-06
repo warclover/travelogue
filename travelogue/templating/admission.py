@@ -9,8 +9,8 @@ from typing import Any
 from travelogue.paths import ROOT
 from travelogue.services.validate import validate_schema
 from travelogue.templates.registry import check_template_health, get_registry
-from travelogue.templating.guardrails import ga_guardrail_errors
 from travelogue.templating.admin_store import get_effective_lifecycle
+from travelogue.templating.guardrails import ga_guardrail_errors
 
 
 def run_admission_check(

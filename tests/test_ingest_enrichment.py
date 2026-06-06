@@ -7,9 +7,8 @@ import os
 import time
 from pathlib import Path
 
-from PIL import Image, ImageFilter
-
 import pytest
+from PIL import Image, ImageFilter
 
 from travelogue.config import IngestConfig
 from travelogue.media.ingest import ingest_into_trip

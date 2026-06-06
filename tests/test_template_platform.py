@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
@@ -10,13 +9,12 @@ import pytest
 from travelogue.config import AppConfig, TemplateRouterConfig
 from travelogue.templating.admission import run_admission_check
 from travelogue.templating.curation_adapter import apply_curation_adapter_hints
-from travelogue.templating.discovery import filter_admin_templates, sort_consumer_templates
+from travelogue.templating.discovery import sort_consumer_templates
 from travelogue.templating.guardrails import ga_guardrail_errors, guardrails_for, is_field_editable
 from travelogue.templating.l3_validate import validate_template_capabilities
 from travelogue.templating.metrics import aggregate_metrics, record_template_metric
-from travelogue.templating.router import apply_template_selection, route_template
+from travelogue.templating.router import route_template
 from travelogue.templating.shadow import apply_shadow_overlay
-from travelogue.templates.registry import get_registry
 
 
 def test_guardrails_visual_journal_ga() -> None:

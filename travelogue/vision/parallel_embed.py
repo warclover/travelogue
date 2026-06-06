@@ -69,8 +69,8 @@ class ParallelEmbedCoordinator:
 
     def _run_snapshot(self, trip_assets: list[dict]) -> None:
         try:
-            from travelogue.vision.clip_encoder import get_clip_encoder
             from travelogue.vision.cache import prepare_scene_embeddings
+            from travelogue.vision.clip_encoder import get_clip_encoder
 
             encoder = get_clip_encoder(self.cfg)
             deterministic = (

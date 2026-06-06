@@ -13,16 +13,15 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tests._golden.helpers import build_mosaic_eligible_trip, plan_legacy_screens
 from travelogue.config import get_config
 from travelogue.curation.chapter_items import summarize_screen_patterns
 from travelogue.curation.mosaic.hook import drain_mosaic_logs
 from travelogue.curation.mosaic.metrics import (
     compute_mosaic_metrics,
-    mosaic5_exposure_rate,
     mcs_unified_exposure_rate,
+    mosaic5_exposure_rate,
 )
-
-from tests._golden.helpers import build_mosaic_eligible_trip, plan_legacy_screens
 
 
 def _plan_with_mosaic(enabled: bool):

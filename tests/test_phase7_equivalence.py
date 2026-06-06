@@ -8,8 +8,6 @@ import sys
 from copy import deepcopy
 from pathlib import Path
 
-import pytest
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -114,13 +112,13 @@ def test_perf_ac_computation_passes() -> None:
 
 def test_incremental_cache_respects_scoring_context() -> None:
     """Incremental cache keys include intent/arc context (separate entries per eval)."""
+    from tests._golden.helpers import build_mixed_aspects_trip, plan_legacy_screens
     from travelogue.curation.arc_patterns import ARC_PEAK
     from travelogue.curation.layout_scoring import (
-        IncrementalScoreState,
         PHASE6_WEIGHTS,
+        IncrementalScoreState,
         score_screen_plan,
     )
-    from tests._golden.helpers import build_mixed_aspects_trip, plan_legacy_screens
 
     buckets, aspects, assets = build_mixed_aspects_trip()
     plan = plan_legacy_screens(buckets, aspects, assets)
@@ -163,12 +161,12 @@ def test_incremental_cache_respects_scoring_context() -> None:
 
 def test_incremental_scoring_matches_full_plan_score() -> None:
     """P7-D2 · incremental path must match full scoring within 1e-6."""
+    from tests._golden.helpers import build_mixed_aspects_trip, plan_legacy_screens
     from travelogue.curation.layout_scoring import (
         IncrementalScoreState,
         ScoringWeights,
         score_screen_plan,
     )
-    from tests._golden.helpers import build_mixed_aspects_trip, plan_legacy_screens
 
     buckets, aspects, assets = build_mixed_aspects_trip()
     plan = plan_legacy_screens(buckets, aspects, assets)
@@ -194,10 +192,10 @@ def test_incremental_scoring_matches_full_plan_score() -> None:
 
 def test_skip_duplicate_signatures_preserves_golden_layout() -> None:
     """P7-D1 · signature skip must not change beam output on aspect-only weights."""
+    from tests._golden.helpers import build_mixed_aspects_trip, layout_snapshot, plan_legacy_screens
     from travelogue.curation.degradation import DegradationAssessment
     from travelogue.curation.layout_scoring import ScoringWeights
     from travelogue.curation.layout_search import maybe_replan_chapters
-    from tests._golden.helpers import build_mixed_aspects_trip, layout_snapshot, plan_legacy_screens
 
     buckets, aspects, assets = build_mixed_aspects_trip()
     legacy = plan_legacy_screens(buckets, aspects, assets)

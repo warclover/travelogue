@@ -9,7 +9,6 @@ from travelogue.curation.cover_scoring_params import (
 )
 from travelogue.curation.curate_scoring import (
     cover_score,
-    pick_cover_asset_id,
     score_ranked_cover_ids,
 )
 

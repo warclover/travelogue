@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from travelogue.curation.arc_patterns import ARC_RISE
 from travelogue.curation.curate_scoring import (
     anchor_match_multiplier,
     effective_hero_score,
@@ -14,7 +15,6 @@ from travelogue.curation.intent_hints import (
     extract_user_notes_keywords,
     peak_chapter_hints,
 )
-from travelogue.curation.arc_patterns import ARC_RISE
 
 
 def test_extract_user_notes_keywords() -> None:

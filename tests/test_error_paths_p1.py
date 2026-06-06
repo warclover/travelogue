@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import io
 import json
+import urllib.error
 from unittest.mock import patch
 
 import pytest
-import urllib.error
 
 from travelogue.llm.client import LlmRuntime, _url_error_code, chat_completion
 from travelogue.llm.errors import LlmError

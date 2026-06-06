@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 from PIL import Image, ImageDraw
 
+from travelogue.config import get_config
 from travelogue.curation.curate import run_curate
 from travelogue.curation.curate_scoring import effective_cover_score, pick_cover_asset_id
-from travelogue.config import get_config
 from travelogue.media.ingest import ingest_into_trip
 from travelogue.media.user_tier import TIER_FEATURED, upgrade_asset_tier
 from travelogue.services.trip import TripService
@@ -559,7 +559,11 @@ def test_ac_df_ingest_warns_when_featured_count_above_limit(tmp_path: Path) -> N
 
 def test_g2_serve_promote_asset_to_featured() -> None:
     """P5 · G2 serve tier: material → featured with userTierSource=user."""
-    from travelogue.media.user_tier import TIER_MATERIAL, TIER_SOURCE_USER, promote_assets_to_featured
+    from travelogue.media.user_tier import (
+        TIER_MATERIAL,
+        TIER_SOURCE_USER,
+        promote_assets_to_featured,
+    )
 
     trip = {
         "assets": [

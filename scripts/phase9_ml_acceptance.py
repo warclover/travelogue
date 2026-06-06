@@ -14,7 +14,7 @@ import argparse
 import json
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,7 +50,7 @@ def run_ml_acceptance(*, n_assets: int = 100, bench_n: int = 250) -> dict:
     out: dict = {
         "schemaVersion": "1",
         "phase": "P9-QualityGate-W2",
-        "recordedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace(
+        "recordedAt": datetime.now(UTC).replace(microsecond=0).isoformat().replace(
             "+00:00", "Z"
         ),
         "pyiqaAvailable": pyiqa_available(),

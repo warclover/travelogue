@@ -10,7 +10,7 @@ import threading
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -377,7 +377,7 @@ def persist_recommended_batch_size(
     _ = trip_dir
     payload = {
         "recommendedBatchSize": int(size),
-        "updatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "updatedAt": datetime.now(UTC).replace(microsecond=0).isoformat(),
     }
     tune_path = _clip_tune_path(trips_dir)
     tune_path.parent.mkdir(parents=True, exist_ok=True)

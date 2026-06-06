@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from statistics import mean
 from typing import Any
@@ -18,7 +18,10 @@ if str(ROOT) not in sys.path:
 from travelogue.config import CullConfig
 from travelogue.curation.layout_scoring import score_category_coherence
 from travelogue.curation.photo_cull import run_photo_cull
-from travelogue.curation.subject_tagging import refresh_semantic_tag_for_asset, semantic_category_for_asset
+from travelogue.curation.subject_tagging import (
+    refresh_semantic_tag_for_asset,
+    semantic_category_for_asset,
+)
 
 DEFAULT_GOLDEN = ROOT / "docs" / "acceptance-records" / "phase9-golden-cull-signoff.json"
 
@@ -96,7 +99,7 @@ def build_phase12_eval_baseline(*, golden_path: Path, smoke_n: int) -> dict[str,
     record: dict[str, Any] = {
         "schemaVersion": "1",
         "phase": "P12-SilentCullEnhancement",
-        "generatedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "generatedAt": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "source": {
             "goldenSignoff": str(
                 golden_path.relative_to(ROOT) if golden_path.is_relative_to(ROOT) else golden_path

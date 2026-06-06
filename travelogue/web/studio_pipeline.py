@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
-from datetime import date
 import time
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 from travelogue.config import AppConfig, app_config_scope, get_config
 from travelogue.curation.curate import CurateError, run_curate
 from travelogue.demo.build import DemoError, resolve_demo_config
-from travelogue.media.ingest import IngestError, RAW_UNSUPPORTED_MESSAGE, ingest_into_trip, scan_image_paths
+from travelogue.media.ingest import (
+    RAW_UNSUPPORTED_MESSAGE,
+    IngestError,
+    ingest_into_trip,
+    scan_image_paths,
+)
 from travelogue.orchestrator.run import run_trip
 from travelogue.orchestrator.studio_hooks import StudioHooks
 from travelogue.runtime import AppContext
@@ -19,6 +24,7 @@ from travelogue.services.trip import TripService, apply_intent
 from travelogue.services.trip_factory import create_trip
 from travelogue.util.trip_slug import demo_trip_id_from_album
 from travelogue.web.studio_jobs import ProgressCallback
+
 
 @dataclass
 class StudioPipelineResult:
@@ -510,7 +516,7 @@ def run_studio_pipeline(
         ingest_stats = ingest_result.stats or {}
         tier_mode = _resolve_tier_mode(ingest_stats)
         featured_detected = tier_mode in ("auto", "explicit", "dual") or ingest_stats.get("mode") == "dual"
-        existing_folders = dict(((trip.get("intent") or {}).get("folders") or {}))
+        existing_folders = dict((trip.get("intent") or {}).get("folders") or {})
         existing_folders["featuredDetected"] = bool(featured_detected)
         apply_intent(trip, folders=existing_folders)
 

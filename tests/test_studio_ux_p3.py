@@ -7,14 +7,19 @@ from pathlib import Path
 
 import pytest
 
+from tests._studio_js import read_studio_js
+from tests.clustering_fixtures import load_fixture_assets
+from tests.test_studio_server import (
+    _distinct_album,
+    _free_port,
+    _get_json,
+    _post_json,
+    _start_studio_server,
+)
 from travelogue.config import AppConfig, ClusteringConfig, VisionConfig
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.web.studio_jobs import STAGE_COUNT
 from travelogue.web.studio_stages import ingest_stage_hint, stage_hint
-from tests._studio_js import read_studio_js
-from tests.clustering_fixtures import load_fixture_assets
-from tests.test_studio_server import _distinct_album, _free_port, _get_json, _post_json, _start_studio_server
-
 
 ROOT = Path(__file__).resolve().parents[1]
 STUDIO_HTML = ROOT / "templates" / "studio" / "legacy-freeze" / "studio.classic.html"
@@ -53,8 +58,9 @@ def test_ux_p3_03_advanced_options_and_config_api(tmp_path: Path) -> None:
     html = STUDIO_HTML.read_text(encoding="utf-8")
     assert "Classic 首页（Deprecated）" in html
 
-    from tests.test_studio_config_p3 import _start_studio_with_config
     import yaml
+
+    from tests.test_studio_config_p3 import _start_studio_with_config
 
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()

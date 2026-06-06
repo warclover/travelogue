@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
-from scripts.phase15_curate_replay import evaluate_trip_curate
 from scripts.phase3_ig2_report import load_fixture_trip
+from scripts.phase15_curate_replay import evaluate_trip_curate
 
 CI_FIXTURE = "golden-mixed-scenes"
 

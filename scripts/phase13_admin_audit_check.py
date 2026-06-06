@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +14,6 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def build_audit_report() -> dict[str, Any]:
     from travelogue.templating.admin_store import get_store_revision, list_audit, load_runtime
-
     from travelogue.templating.metrics import aggregate_metrics
 
     audit = list_audit(limit=200)
@@ -31,7 +30,7 @@ def build_audit_report() -> dict[str, Any]:
     missing_registry = max(0, lifecycle_total - lifecycle_with_registry)
     audit_missing_rate = round(missing_registry / lifecycle_total, 4) if lifecycle_total else 0.0
     return {
-        "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "generatedAt": datetime.now(UTC).replace(microsecond=0).isoformat(),
         "revision": get_store_revision(),
         "audit_coverage": 1.0 if audit else 0.0,
         "audit_entry_count": len(audit),

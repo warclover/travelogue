@@ -8,7 +8,7 @@ import threading
 from urllib.parse import parse_qs, urlparse
 
 from travelogue.demo.build import DemoError
-from travelogue.web.studio_errors import internal_error_payload
+from travelogue.web.studio_errors import client_error_payload, internal_error_payload
 from travelogue.web.studio_handlers.common import (
     load_trip_or_404,
     resolve_trip_dir_listed,
@@ -233,7 +233,7 @@ def handle_patch_intent(handler: StudioHandlerProtocol, trip_id: str) -> None:
         intent = apply_intent(trip, **kwargs)
         svc.save(trip, trip_json)
     except (ValueError, TypeError) as exc:
-        handler._json_response(400, {"ok": False, "error": str(exc)})
+        handler._json_response(400, client_error_payload(exc))
         return
     handler._json_response(200, {"ok": True, "intent": intent})
 
@@ -286,7 +286,7 @@ def handle_patch_cohort(handler: StudioHandlerProtocol, trip_id: str) -> None:
             return
         svc.save(trip, trip_json)
     except (ValueError, TypeError) as exc:
-        handler._json_response(400, {"ok": False, "error": str(exc)})
+        handler._json_response(400, client_error_payload(exc))
         return
     from travelogue.services.cohort import build_cohort_studio_payload
 
@@ -354,7 +354,7 @@ def handle_patch_screen_replan(
     except ReplanError as exc:
         handler._json_response(
             400,
-            {"ok": False, "error": "E_REPLAN_INVALID", "message": str(exc)},
+            client_error_payload(exc, default_code="E_REPLAN_INVALID"),
         )
         return
     if result.get("applied"):

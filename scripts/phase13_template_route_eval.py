@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -31,12 +31,12 @@ def build_eval(
     check_registry: bool = False,
     seed_template_selection: bool = False,
 ) -> dict[str, Any]:
-    from travelogue.templates.registry import get_registry, check_template_health
+    from travelogue.templates.registry import check_template_health, get_registry
     from travelogue.templating.router import ROUTER_CONFIG_VERSION, replay_template_decision
 
     reg = get_registry()
     out: dict[str, Any] = {
-        "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "generatedAt": datetime.now(UTC).replace(microsecond=0).isoformat(),
         "registryVersion": reg.version,
         "routerConfigVersion": ROUTER_CONFIG_VERSION,
         "templates": [],

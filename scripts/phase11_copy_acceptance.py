@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -76,7 +76,7 @@ def main() -> int:
             if (ch.get("decorLine") or "").strip():
                 filled += 1
     record = {
-        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "generatedAt": datetime.now(UTC).isoformat(),
         "phase": "P11-LiteCopy",
         "metrics": {
             "decor_line_fill_rate": round(filled / total, 3) if total else 0.0,

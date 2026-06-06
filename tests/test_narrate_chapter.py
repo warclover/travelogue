@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import json
 
-from travelogue.paths import FIXTURES_DIR
-from travelogue.render.dual_layout_regression import prepare_trip_web_screens
 import pytest
 
+from travelogue.paths import FIXTURES_DIR
+from travelogue.render.dual_layout_regression import prepare_trip_web_screens
 from travelogue.services.narrate import NarrateError, run_narrate
 
 

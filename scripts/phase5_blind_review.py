@@ -21,11 +21,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from travelogue.config import LayoutScoringConfig
-from travelogue.curation.layout_metrics import compute_layout_metrics
-from travelogue.curation.layout_scoring import PHASE3B_WEIGHTS, PHASE3_WEIGHTS
-from travelogue.eval.peval import append_peval_pair, build_layout_peval_objective
-
 from scripts.phase3_blind_review import (
     _render_variant,
     _utc_now,
@@ -38,6 +33,10 @@ from scripts.phase3_layout_acceptance import (
     _run_curate,
     _weights_dict,
 )
+from travelogue.config import LayoutScoringConfig
+from travelogue.curation.layout_metrics import compute_layout_metrics
+from travelogue.curation.layout_scoring import PHASE3_WEIGHTS, PHASE3B_WEIGHTS
+from travelogue.eval.peval import append_peval_pair, build_layout_peval_objective
 
 PEVAL_REVIEW_DIR = "_peval-review"
 

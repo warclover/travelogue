@@ -18,7 +18,7 @@ from PIL import Image, ImageOps
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from travelogue.media.subject_detect import analyze_subject, _opencv_available
+from travelogue.media.subject_detect import _opencv_available, analyze_subject
 
 
 def _resolve_source(trip_dir: Path, asset: dict) -> Path | None:

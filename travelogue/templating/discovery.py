@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import UTC
 from typing import Any
 
-from travelogue.config import AppConfig, get_config
 from travelogue.templates.registry import TemplateRecord
 
 
@@ -24,7 +24,6 @@ def discovery_row(rec: TemplateRecord, *, lifecycle: str) -> dict[str, Any]:
 
 def _popular_rank() -> dict[str, int]:
     """Lower rank = more popular (from discovery select metrics)."""
-    from travelogue.templating.metrics import aggregate_metrics
 
     from travelogue.templating.metrics import metrics_path
 
@@ -33,9 +32,9 @@ def _popular_rank() -> dict[str, int]:
     if not path.is_file():
         return scores
     import json
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=24 * 30)
+    cutoff = datetime.now(UTC) - timedelta(hours=24 * 30)
     try:
         for line in path.read_text(encoding="utf-8").splitlines():
             if not line.strip():
@@ -47,7 +46,7 @@ def _popular_rank() -> dict[str, int]:
             if at_raw:
                 at = datetime.fromisoformat(str(at_raw).replace("Z", "+00:00"))
                 if at.tzinfo is None:
-                    at = at.replace(tzinfo=timezone.utc)
+                    at = at.replace(tzinfo=UTC)
                 if at < cutoff:
                     continue
             tid = str(row.get("templateId") or "")

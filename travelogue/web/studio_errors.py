@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from travelogue.demo.build import DemoError
+from travelogue.errors import CodeError
 
 USER_MESSAGES: dict[str, str] = {
     "E_DEMO_EXISTS": "该游记已存在。是否覆盖？",
@@ -41,6 +42,31 @@ def internal_error_payload() -> dict[str, str | bool]:
         "error": "E_SERVER",
         "message": user_message("E_SERVER"),
     }
+
+
+def client_error_payload(
+    exc: Exception,
+    *,
+    default_code: str = "E_BAD_REQUEST",
+) -> dict[str, str | bool]:
+    """Map a client-facing exception to a stable error code + user message."""
+    if isinstance(exc, CodeError):
+        return {
+            "ok": False,
+            "error": exc.code,
+            "message": user_message(exc.code, exc.message),
+        }
+    if isinstance(exc, DemoError):
+        body = demo_error_payload(exc)
+        body["ok"] = False
+        return body
+    text = str(exc).strip()
+    code = default_code
+    if text.startswith("E_"):
+        candidate = text.split(":", 1)[0].strip()
+        if candidate and " " not in candidate:
+            code = candidate
+    return {"ok": False, "error": code, "message": user_message(code, text)}
 
 
 def user_message(code: str, fallback: str = "") -> str:

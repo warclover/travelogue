@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.test_studio_server import _distinct_album
 from travelogue.services.narrative_brief import (
     build_chapter_brief,
     build_meta_brief,
@@ -26,10 +27,7 @@ from travelogue.services.narrative_brief import (
 )
 from travelogue.services.trip import TripService, apply_intent
 from travelogue.services.validate import validate_trip
-from travelogue.web.studio_pipeline import _build_date_range_weak_hint
-from travelogue.web.studio_pipeline import run_studio_pipeline
-from tests.test_studio_server import _distinct_album
-
+from travelogue.web.studio_pipeline import _build_date_range_weak_hint, run_studio_pipeline
 
 # ── apply_intent · double-write invariant (AC-P4-09) ──────────────────────────
 

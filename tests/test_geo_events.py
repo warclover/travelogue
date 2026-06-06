@@ -6,13 +6,13 @@ import json
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
+from travelogue.config import GeoClusterConfig
 from travelogue.curation.geo_events import (
     _adaptive_gap_threshold_hours,
     detect_geo_events,
     gps_coverage_ratio,
     haversine_km,
 )
-from travelogue.config import GeoClusterConfig
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "clustering"
 
@@ -62,7 +62,7 @@ def test_orphan_inside_long_segment_not_short_neighbor() -> None:
         assets.append(
             _asset(
                 f"short{i}",
-                f"2025-05-01T20:00:00Z",
+                "2025-05-01T20:00:00Z",
                 35.01 + i * 0.001,
                 135.76,
                 city="京都",

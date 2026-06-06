@@ -7,7 +7,11 @@ import re
 from typing import Any
 
 from travelogue.config import AppConfig
-from travelogue.curation.asset_caption import asset_skips_caption, chapter_caption_asset_ids, resolve_caption
+from travelogue.curation.asset_caption import (
+    asset_skips_caption,
+    chapter_caption_asset_ids,
+    resolve_caption,
+)
 from travelogue.services.narrate import _manifest_limits
 from travelogue.services.narrative_scope import captions_allowed, chapter_lead_allowed
 
@@ -247,7 +251,7 @@ def build_chapter_decor_brief(
     cfg: AppConfig | None = None,
 ) -> dict[str, Any]:
     from travelogue.config import get_config
-    from travelogue.services.decor_line import extract_chapter_facts, _copy_intent
+    from travelogue.services.decor_line import _copy_intent, extract_chapter_facts
 
     app_cfg = cfg or get_config()
     ch_cur = chapter.get("curation") or {}

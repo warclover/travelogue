@@ -23,10 +23,18 @@ python scripts/quality_gate.py
 python scripts/e2e_trip_acceptance.py linzhi mao
 ```
 
+## Lint / pre-commit
+
+```bash
+python -m ruff check travelogue tests scripts
+pre-commit install   # 可选：提交前自动 ruff --fix
+```
+
 ## CI 对应
 
 | 步骤 | 工作流 job | 说明 |
 |------|------------|------|
+| `ruff check travelogue tests scripts` | `lint` | 全仓 Python 规范（含 tests/scripts） |
 | `scripts/quality_gate.py` | `validate` | layout/scoring/studio 回归 + fixture schema |
 | `scripts/validate_trip.py … --level all` | `validate` | 标准 fixture 校验 |
 | 全量 pytest | 本地 / nightly | PR fast 子集不含 vision/e2e |

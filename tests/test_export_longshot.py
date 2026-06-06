@@ -18,8 +18,8 @@ from travelogue.export.longshot import (
     _slug_title,
     apply_chapter_watermark,
     export_trip_longshot,
-    reveal_path_in_folder,
     reset_browser_pool_for_tests,
+    reveal_path_in_folder,
     warm_playwright_browser,
 )
 from travelogue.paths import FIXTURES_DIR

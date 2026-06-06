@@ -7,14 +7,14 @@ from dataclasses import replace
 from pathlib import Path
 from urllib import error, request
 
+import pytest
+
+from tests.test_studio_server import _distinct_album, _free_port, _start_studio_server
 from travelogue.config import StudioConfig, get_config
 from travelogue.services.pipeline_state import trip_status
 from travelogue.services.trip import TripService
 from travelogue.web.studio_g1 import lock_trip_structure
 from travelogue.web.studio_pipeline import run_studio_pipeline
-from tests.test_studio_server import _distinct_album, _free_port, _start_studio_server
-
-import pytest
 
 pytestmark = pytest.mark.e2e
 

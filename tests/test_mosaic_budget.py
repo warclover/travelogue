@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
+from tests._golden.helpers import build_portrait_heavy_trip, plan_legacy_screens
 from travelogue.curation.degradation import assess_degradation
 from travelogue.curation.layout_scoring import PHASE2_WEIGHTS
 from travelogue.curation.layout_search import maybe_replan_chapters
 from travelogue.curation.search_budget import SearchBudget
-
-from tests._golden.helpers import build_portrait_heavy_trip, plan_legacy_screens
 
 
 def test_search_budget_segment_cap():

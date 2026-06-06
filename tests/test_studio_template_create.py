@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from travelogue.config import AppConfig
 from travelogue.services.trip_factory import create_trip
 from travelogue.templating.resolver import resolve_effective_template

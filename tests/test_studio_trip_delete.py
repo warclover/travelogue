@@ -8,8 +8,8 @@ from urllib import error, request
 
 import pytest
 
-from travelogue.services.trip_factory import create_trip
 from tests.test_studio_server import _free_port, _get_json, _start_studio_server
+from travelogue.services.trip_factory import create_trip
 
 pytestmark = pytest.mark.e2e
 

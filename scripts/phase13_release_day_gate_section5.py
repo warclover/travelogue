@@ -5,8 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -84,7 +83,7 @@ def build() -> dict:
     release_ready = auto_ok and g8_signed and (m72_pass or m72_clean) and drill_pass
 
     return {
-        "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "generatedAt": datetime.now(UTC).replace(microsecond=0).isoformat(),
         "section": "phase13-1-release-gate-checklist §5",
         "releaseReady": release_ready,
         "goRecommendation": "Go" if release_ready else "No-Go",

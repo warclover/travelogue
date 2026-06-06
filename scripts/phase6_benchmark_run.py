@@ -13,7 +13,7 @@ import json
 import subprocess
 import sys
 import time
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -104,8 +104,9 @@ def _weighted_mean(pairs: list[tuple[float, int]]) -> float | None:
 
 def eval_hdbscan_stability() -> dict[str, Any]:
     sys.path.insert(0, str(ROOT))
-    from tests.clustering_fixtures import GOLDEN_TRIP_IDS, load_fixture_assets
+    import numpy as np
 
+    from tests.clustering_fixtures import GOLDEN_TRIP_IDS, load_fixture_assets
     from travelogue.curation.scene_clusters import (
         _cluster_labels,
         _normalize_embedding_matrix,
@@ -113,7 +114,6 @@ def eval_hdbscan_stability() -> dict[str, Any]:
         compute_scene_clusters,
     )
     from travelogue.vision.clip_encoder import ClipEncoder
-    import numpy as np
 
     enc = ClipEncoder()
     runs: list[dict[str, Any]] = []
@@ -162,9 +162,14 @@ def _cluster_noise_at(manifest: Path, *, eps: float, min_samples: int) -> dict[s
 
     payload = _load(manifest)
     assets = payload.get("assets") or []
-    from travelogue.curation.scene_clusters import _cluster_labels, _normalize_embedding_matrix, cluster_noise_ratio
-    from travelogue.vision.clip_encoder import ClipEncoder
     import numpy as np
+
+    from travelogue.curation.scene_clusters import (
+        _cluster_labels,
+        _normalize_embedding_matrix,
+        cluster_noise_ratio,
+    )
+    from travelogue.vision.clip_encoder import ClipEncoder
 
     embed = ClipEncoder().embed_assets(assets)
     mat = _normalize_embedding_matrix(np.asarray(embed.vectors, dtype=np.float32))
@@ -229,10 +234,10 @@ def eval_cluster_noise_all_fixtures() -> dict[str, Any]:
 
 def eval_event_boundaries() -> dict[str, Any]:
     sys.path.insert(0, str(ROOT))
+    from tests.clustering_fixtures import load_fixture_assets, load_fixture_golden_segments
     from travelogue.config import GeoClusterConfig
     from travelogue.curation.cluster_eval import geo_segment_agreement_rate, segments_to_eval_dict
     from travelogue.curation.geo_events import detect_geo_events
-    from tests.clustering_fixtures import load_fixture_assets, load_fixture_golden_segments
 
     rows: list[dict[str, Any]] = []
     base_pairs: list[tuple[float, int]] = []
@@ -389,8 +394,8 @@ def eval_pipeline_perf() -> dict[str, Any]:
     import tracemalloc
 
     sys.path.insert(0, str(ROOT))
-    from travelogue.curation.clustering import run_clustering_layer
     from tests.clustering_fixtures import load_fixture_assets
+    from travelogue.curation.clustering import run_clustering_layer
 
     assets = load_fixture_assets("golden-mixed-scenes")
     n = len(assets)
@@ -661,8 +666,8 @@ def update_rollout_log(record_path: Path = RECORD_PATH, rollout_path: Path = ROL
 
     rollout["date"] = date.today().isoformat()
     g0 = rollout.setdefault("gates", {}).setdefault("G0", {})
-    g0["startAt"] = g0.get("startAt") or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-    g0["endAt"] = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    g0["startAt"] = g0.get("startAt") or datetime.now(UTC).replace(microsecond=0).isoformat()
+    g0["endAt"] = datetime.now(UTC).replace(microsecond=0).isoformat()
     g0["status"] = "completed_fixture_suite" if rollup.get("l0Passed") else "partial_fixture_suite"
 
     rb = rollout.setdefault("rollbackRunbook", {})
@@ -670,7 +675,7 @@ def update_rollout_log(record_path: Path = RECORD_PATH, rollout_path: Path = ROL
     rb["step2GapModeToFixed"] = True
     rb["step3DisableMmrAndGravity"] = True
     rb["step4IncidentRecordAnd24hRcaDraft"] = False
-    rb["completedAt"] = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    rb["completedAt"] = datetime.now(UTC).replace(microsecond=0).isoformat()
     rb["restoreVerified"] = (ac.get("AC-P6-07") or {}).get("rollbackRestoredP5Behavior")
 
     entries = rollout.setdefault("entries", [])
@@ -679,7 +684,7 @@ def update_rollout_log(record_path: Path = RECORD_PATH, rollout_path: Path = ROL
     entries.insert(
         0,
         {
-            "timestamp": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+            "timestamp": datetime.now(UTC).replace(microsecond=0).isoformat(),
             "stage": "G0",
             "decision": "fixture_benchmark_complete",
             "reason": rollup.get("summary", ""),

@@ -7,7 +7,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,7 +25,7 @@ def _build_assets(
     tag_value: str = "food",
 ) -> tuple[dict[str, dict], dict[str, str]]:
     clip_ids = clip_ids or set()
-    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=UTC)
     assets: dict[str, dict] = {}
     aspects: dict[str, str] = {}
     for idx, aid in enumerate(ids):
@@ -267,7 +267,7 @@ def run_acceptance(
     return {
         "schemaVersion": "1",
         "phase": "P10-FoodGrid",
-        "recordedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "recordedAt": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "status": "passed" if passed else "failed",
         "checks": checks,
         "manualFixtureSpec": manual_fixture,

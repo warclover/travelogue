@@ -4,12 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PIL import Image
-
+from tests.test_ingest import _album
 from travelogue.media.ingest import ingest_into_trip
 from travelogue.media.reexport import reexport_trip_assets
 from travelogue.services.trip_factory import create_trip
-from tests.test_ingest import _album
 
 
 def test_reexport_updates_webp(tmp_path: Path) -> None:

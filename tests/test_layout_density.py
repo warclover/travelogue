@@ -14,7 +14,6 @@ from travelogue.curation.layout_density import (
     normalize_layout_density,
     resolve_import_layout_density,
 )
-from travelogue.web.studio_intent_telemetry import build_studio_intent_telemetry
 from travelogue.curation.screen_layout_state import (
     ScreenLayoutPlannerState,
     nine_grid_limits_for_trip,
@@ -23,6 +22,7 @@ from travelogue.curation.screen_layout_state import (
 from travelogue.curation.screen_planner import attach_screens_to_chapters
 from travelogue.services.trip import apply_intent
 from travelogue.services.validate import validate_trip
+from travelogue.web.studio_intent_telemetry import build_studio_intent_telemetry
 
 PP_THRESHOLD = 0.10
 
@@ -258,12 +258,12 @@ def test_ac_ld_09_telemetry_includes_nine_quota_adjusted() -> None:
 
 
 def test_ac_ld_08_chapter_hero_and_face_contain_three_densities() -> None:
-    from travelogue.curation.asset_subject import asset_has_person
     from tests._golden.helpers import (
         build_chapter_hero_layout_trip,
         build_person_portrait_layout_trip,
         plan_legacy_screens,
     )
+    from travelogue.curation.asset_subject import asset_has_person
 
     def chapter_openings(chapters: list[dict]) -> dict[str, str]:
         out: dict[str, str] = {}

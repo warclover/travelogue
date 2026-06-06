@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from urllib.parse import parse_qs, urlparse
 
 from travelogue.templates.registry import check_template_health, get_registry
@@ -15,8 +16,11 @@ from travelogue.templating.router import (
     route_template,
 )
 from travelogue.web.studio_admin_auth import studio_authenticated
+from travelogue.web.studio_errors import user_message
 from travelogue.web.studio_handlers.common import resolve_trip_dir_listed, studio_ctx
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
+
+_log = logging.getLogger(__name__)
 
 _MODE_HINTS = {
 
@@ -445,9 +449,10 @@ def handle_template_preview(handler: StudioHandlerProtocol) -> None:
             index = tmp / "index.html"
             body["rendered"] = index.is_file()
             body["previewBytes"] = index.stat().st_size if index.is_file() else 0
-        except Exception as exc:
+        except Exception:
+            _log.exception("template preview render failed: %s", template_id)
             body["rendered"] = False
-            body["renderError"] = str(exc)
+            body["renderError"] = user_message("E_STUDIO_RERENDER")
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
     else:

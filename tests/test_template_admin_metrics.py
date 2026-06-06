@@ -7,9 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.templating.admin_store import apply_rollback, update_template_lifecycle
-from travelogue.templating.metrics import metrics_path
 from travelogue.templates.registry import get_registry
+from travelogue.templating.admin_store import apply_rollback, update_template_lifecycle
 
 
 def test_rollback_records_metric(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

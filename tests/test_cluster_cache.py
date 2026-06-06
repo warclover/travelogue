@@ -13,7 +13,6 @@ from travelogue.curation.clustering import run_clustering_layer
 from travelogue.vision.cache import (
     FULL_RECLUSTER_MIN_RATIO,
     INCREMENTAL_MAX_CHANGE_RATIO,
-    clear_cluster_cache,
     compute_change_ratio,
     load_embedding_cache,
     plan_embedding_refresh,

@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
+from tests._golden.helpers import build_mosaic_eligible_trip, plan_mosaic_screens
 from travelogue.config import MosaicConfig
 from travelogue.curation.layout_search import _screens_signature
 from travelogue.curation.mosaic.compose import pick_best_five_window
-
-from tests._golden.helpers import build_mosaic_eligible_trip, plan_mosaic_screens
 
 
 def test_pick_best_five_stable_signature():

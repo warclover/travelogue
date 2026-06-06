@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from travelogue.config import AppConfig, app_config_scope
-from travelogue.export.packager import ExportError, export_trip
+from travelogue.export.packager import export_trip
 from travelogue.render.engine import RenderError, render_trip
 from travelogue.render.preview import render_preview_jpg
 from travelogue.runtime import app_context_for_trip_json

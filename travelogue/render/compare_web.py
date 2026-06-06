@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from travelogue.render.engine import render_trip
-from travelogue.services.layout import apply_layout_to_trip
 from travelogue.runtime import app_context_for_trip_json
+from travelogue.services.layout import apply_layout_to_trip
 
 
 @dataclass

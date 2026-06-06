@@ -5,16 +5,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from travelogue.config import AppConfig
-from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
-from travelogue.curation.layout_planner import build_chapters_from_plan, summarize_orientations
 from travelogue.curation.layout_planner import aspect_kind_for_asset as _aspect_kind_for_asset
+from travelogue.curation.layout_planner import build_chapters_from_plan, summarize_orientations
+from travelogue.errors import CodeError
 from travelogue.layout_contract import (
     LAYOUT_PLAN_VERSION,
     VALID_EXPORT_LAYOUTS,
     format_layout_summary,
 )
-from travelogue.errors import CodeError
 from travelogue.services.pipeline_state import set_layout_status
+from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 
 class LayoutError(CodeError):

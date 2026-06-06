@@ -7,11 +7,10 @@ import zipfile
 from pathlib import Path
 
 import pytest
-from PIL import Image
 
+from tests.test_ingest import _album
 from travelogue.demo.build import run_demo_from_album
 from travelogue.orchestrator.run import run_trip
-from tests.test_ingest import _album
 
 pytestmark = pytest.mark.integration
 

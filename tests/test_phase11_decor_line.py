@@ -5,8 +5,6 @@ from __future__ import annotations
 import copy
 from pathlib import Path
 
-import pytest
-
 from travelogue.config import AppConfig, NarrativeConfig
 from travelogue.services.decor_line import (
     apply_decor_lines,
@@ -139,10 +137,10 @@ def test_run_narrate_stub_writes_decor_line() -> None:
 
 def test_copy_intent_handler_to_narrate_integration(tmp_path: Path) -> None:
     """M11-2h: PATCH copyIntent -> narrate stub consumes intent."""
+    from tests.studio_test_helpers import MockStudioHandler
     from travelogue.services.trip import TripService
     from travelogue.services.trip_factory import create_trip
     from travelogue.web.studio_handlers.trip_handlers import handle_patch_copy_intent
-    from tests.studio_test_helpers import MockStudioHandler
 
     trips_dir = tmp_path / "trips"
     trip_json = create_trip("p11-intent", trips_dir, title="测试", place="京都")

@@ -30,8 +30,8 @@ def test_rerender_draft_after_copy_patch(tmp_path: Path) -> None:
     render_trip(ws / "trip.json", validate=False, layout_engine="screens")
 
     index = ws / "index.html"
-    from travelogue.web.copy_patch import apply_copy_patches
     from travelogue.services.trip import TripService
+    from travelogue.web.copy_patch import apply_copy_patches
     from travelogue.web.rerender import rerender_draft_trip
 
     apply_copy_patches(trip, [{"path": "meta.hook", "value": "改后的 hook"}])

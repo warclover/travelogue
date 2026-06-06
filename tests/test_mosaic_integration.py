@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from tests._golden.helpers import build_mosaic_eligible_trip, plan_legacy_screens
 from travelogue.config import get_config
 from travelogue.curation.chapter_items import summarize_screen_patterns
 from travelogue.curation.mosaic.hook import drain_mosaic_logs
 from travelogue.curation.mosaic.metrics import mcs_unified_exposure_rate, mosaic5_exposure_rate
-
-from tests._golden.helpers import build_mosaic_eligible_trip, plan_legacy_screens
 
 
 def test_mosaic_enabled_increases_mosaic5_exposure(monkeypatch) -> None:

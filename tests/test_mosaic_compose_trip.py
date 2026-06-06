@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from tests._golden.helpers import build_portrait_heavy_trip, plan_legacy_screens
 from travelogue.config import get_config
 from travelogue.curation.degradation import assess_degradation
 from travelogue.curation.layout_scoring import PHASE2_WEIGHTS
 from travelogue.curation.mosaic.trip import compose_trip
-
-from tests._golden.helpers import build_portrait_heavy_trip, plan_legacy_screens
 
 
 def test_compose_trip_forwards_mosaic_deterministic(monkeypatch):

@@ -7,8 +7,6 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
-
 _SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "studio_holdback_report.py"
 _spec = importlib.util.spec_from_file_location("studio_holdback_report", _SCRIPT)
 hb_mod = importlib.util.module_from_spec(_spec)

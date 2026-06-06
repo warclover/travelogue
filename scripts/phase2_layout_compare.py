@@ -18,7 +18,7 @@ sys.path.insert(0, str(ROOT))
 
 from travelogue.config import LayoutScoringConfig, config_override, get_config
 from travelogue.curation.curate import run_curate
-from travelogue.curation.layout_metrics import compute_layout_metrics, pattern_diversity
+from travelogue.curation.layout_metrics import compute_layout_metrics
 from travelogue.curation.layout_scoring import PHASE2_WEIGHTS, score_aspect_match
 
 

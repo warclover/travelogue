@@ -26,7 +26,7 @@ from travelogue.web.studio_constants import (
     STUDIO_MAX_MULTIPART_BODY_BYTES,
     STUDIO_USER_NOTES_MAX_LEN,
 )
-from travelogue.web.studio_errors import demo_error_payload, user_message
+from travelogue.web.studio_errors import client_error_payload, demo_error_payload, user_message
 from travelogue.web.studio_handlers.common import resolve_import_album_path, studio_ctx
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_jobs import get_job_store, run_import_job_subprocess
@@ -218,7 +218,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     try:
         album_path = resolve_import_album_path(album_raw, use_demo=use_demo_album)
     except DemoError as exc:
-        handler._json_response(400, {"ok": False, "error": exc.code, "message": str(exc)})
+        handler._json_response(400, client_error_payload(exc))
         return
 
     ctx = studio_ctx(handler)
@@ -417,7 +417,7 @@ def handle_album_preview(handler: StudioHandlerProtocol) -> None:
     try:
         album_path = resolve_import_album_path(album_raw, use_demo=use_demo_album)
     except DemoError as exc:
-        handler._json_response(400, {"ok": False, "error": exc.code, "message": str(exc)})
+        handler._json_response(400, client_error_payload(exc))
         return
 
     ctx = studio_ctx(handler)

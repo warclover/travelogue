@@ -18,9 +18,9 @@ from pathlib import Path
 
 import pytest
 
+from tests.test_studio_server import _free_port, _start_studio_server
 from travelogue.web.studio_homepage_gate import stable_bucket
 from travelogue.web.studio_jobs import reset_job_store
-from tests.test_studio_server import _free_port, _start_studio_server
 
 pytest.importorskip("playwright")
 from playwright.sync_api import sync_playwright
@@ -961,7 +961,6 @@ def test_m20j_holdback_control_experiment_exposure(tmp_path: Path, monkeypatch) 
     server = _start_studio_server(trips_dir, port)
     base = f"http://127.0.0.1:{port}"
     ua = "M20jTest/1"  # bucket=70 >= 10
-    expected_bucket = stable_bucket(ua)
     events: list[dict] = []
     try:
         with sync_playwright() as p:

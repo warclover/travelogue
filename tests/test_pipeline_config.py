@@ -37,10 +37,11 @@ def test_app_config_scope_pins_get_config():
 
 
 def test_run_trip_curate_stage_uses_pinned_cfg(tmp_path):
-    from travelogue.services.trip_factory import create_trip
-    from travelogue.media.ingest import ingest_into_trip
-    from tests.test_ingest import _album
     import json
+
+    from tests.test_ingest import _album
+    from travelogue.media.ingest import ingest_into_trip
+    from travelogue.services.trip_factory import create_trip
 
     trips = tmp_path / "trips"
     trip_json = create_trip("pipeline-cfg", trips)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from travelogue.curation.layout_planner import (
     _apply_gallery_layout,
@@ -158,7 +158,7 @@ def test_mobile_no_grid8_when_trip_at_most_30():
 def test_mobile_grid8_on_eight_landscape_burst():
     ids = [f"l{i}" for i in range(8)]
     aspects = {x: "landscape" for x in ids}
-    base = datetime(2025, 7, 1, 12, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 7, 1, 12, 0, 0, tzinfo=UTC)
     assets = {
         aid: {
             "id": aid,
@@ -182,7 +182,7 @@ def test_mobile_grid8_on_eight_landscape_burst():
 def test_mobile_grid8_ten_landscapes_yields_grid_plus_two_cards():
     ids = [f"l{i}" for i in range(10)]
     aspects = {x: "landscape" for x in ids}
-    base = datetime(2025, 7, 1, 12, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 7, 1, 12, 0, 0, tzinfo=UTC)
     assets = {
         aid: {
             "id": aid,
@@ -205,7 +205,7 @@ def test_mobile_grid8_ten_landscapes_yields_grid_plus_two_cards():
 def test_mobile_grid4_on_four_portrait_burst():
     ids = [f"p{i}" for i in range(4)]
     aspects = {x: "portrait" for x in ids}
-    base = datetime(2025, 8, 1, 9, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 8, 1, 9, 0, 0, tzinfo=UTC)
     assets = {
         aid: {
             "id": aid,
@@ -229,7 +229,7 @@ def test_mobile_grid4_on_four_portrait_burst():
 def test_mobile_grid4_person_hint_when_tagged():
     ids = [f"p{i}" for i in range(4)]
     aspects = {x: "portrait" for x in ids}
-    base = datetime(2025, 8, 1, 9, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 8, 1, 9, 0, 0, tzinfo=UTC)
     assets = {
         aid: {
             "id": aid,
@@ -251,7 +251,7 @@ def test_mobile_grid4_person_hint_when_tagged():
 def test_mobile_grid4_five_portraits_grid_plus_card():
     ids = [f"p{i}" for i in range(5)]
     aspects = {x: "portrait" for x in ids}
-    base = datetime(2025, 8, 1, 9, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 8, 1, 9, 0, 0, tzinfo=UTC)
     assets = {
         aid: {
             "id": aid,
@@ -285,7 +285,7 @@ def test_mobile_no_grid4_when_trip_at_most_30():
 def test_mobile_grid8_respects_trip_quota():
     ids = [f"l{i}" for i in range(24)]
     aspects = {x: "landscape" for x in ids}
-    base = datetime(2025, 7, 1, 12, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 7, 1, 12, 0, 0, tzinfo=UTC)
     assets = {
         aid: {
             "id": aid,
@@ -309,7 +309,7 @@ def test_mobile_grid8_per_chapter_then_trip_quota():
     ids_a = [f"a{i}" for i in range(8)]
     ids_b = [f"b{i}" for i in range(8)]
     aspects = {x: "landscape" for x in ids_a + ids_b}
-    base = datetime(2025, 7, 1, 12, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 7, 1, 12, 0, 0, tzinfo=UTC)
     assets = {}
     for i, aid in enumerate(ids_a + ids_b):
         assets[aid] = {

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 import pytest
 
-from travelogue.templates.registry import EVENT_RECAP_TEMPLATE_ID, check_template_health, get_registry
+from travelogue.templates.registry import (
+    EVENT_RECAP_TEMPLATE_ID,
+    check_template_health,
+)
 from travelogue.templating.router import route_template
 
 

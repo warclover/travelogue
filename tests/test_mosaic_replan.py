@@ -4,17 +4,16 @@ from __future__ import annotations
 
 import pytest
 
-from travelogue.curation.longshot_filter import BREATH_PATTERN
-from travelogue.curation.mosaic.candidates import ScreenCandidate
-from travelogue.curation.mosaic.replan import ReplanError, replan_screen
-from travelogue.config import get_config
-from travelogue.curation.chapter_items import collect_screen_asset_ids
-
 from tests._golden.helpers import (
     build_mosaic_eligible_trip,
     build_mosaic_portrait4_trip,
     plan_mosaic_screens,
 )
+from travelogue.config import get_config
+from travelogue.curation.chapter_items import collect_screen_asset_ids
+from travelogue.curation.longshot_filter import BREATH_PATTERN
+from travelogue.curation.mosaic.candidates import ScreenCandidate
+from travelogue.curation.mosaic.replan import ReplanError, replan_screen
 
 
 def _chapters_with_aspects():

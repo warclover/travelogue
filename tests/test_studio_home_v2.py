@@ -18,9 +18,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from travelogue.web.studio_jobs import reset_job_store
 from tests.test_studio_server import _free_port, _post_json, _start_studio_server
 from travelogue.web.studio_handlers.paths import STUDIO_EVENT_PATH
+from travelogue.web.studio_jobs import reset_job_store
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 STUDIO_DIR = REPO_ROOT / "templates" / "studio"

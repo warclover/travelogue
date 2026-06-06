@@ -7,7 +7,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,7 +26,7 @@ def run_checks() -> dict:
     ]
     proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
     return {
-        "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "generatedAt": datetime.now(UTC).replace(microsecond=0).isoformat(),
         "pytest_ok": proc.returncode == 0,
         "returncode": proc.returncode,
         "tail": (proc.stdout or proc.stderr or "")[-400:],

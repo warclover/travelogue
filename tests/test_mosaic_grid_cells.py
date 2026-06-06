@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from travelogue.curation.mosaic.constants import (
     MOSAIC_5_PATTERN_IDS,
-    PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
     PATTERN_GRID_CLASS,
+    PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
 )
 
 # (col_start, col_end, row_start, row_end) — 1-based inclusive, on 3×3 grid

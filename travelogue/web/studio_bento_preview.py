@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 from urllib.parse import quote
 
 from PIL import Image
+
 from travelogue.render.context import asset_aspect_kind, pick_image_src
 
 

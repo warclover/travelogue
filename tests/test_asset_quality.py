@@ -11,7 +11,6 @@ from travelogue.curation.asset_quality import (
     asset_long_edge,
     asset_megapixels,
     asset_short_edge,
-    backfill_native_dimensions,
     partition_low_resolution_assets,
 )
 from travelogue.curation.curate import apply_low_resolution_exclusion, layout_eligible_assets

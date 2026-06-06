@@ -4,13 +4,10 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-import pytest
-
+from tests._golden.helpers import build_mosaic_eligible_trip
 from travelogue.config import get_config
 from travelogue.curation.mosaic.compose import pick_best_window
 from travelogue.curation.mosaic.scorer import MosaicScoreResult
-
-from tests._golden.helpers import build_mosaic_eligible_trip
 
 
 def _window5():

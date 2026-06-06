@@ -5,7 +5,11 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from travelogue.curation.scene_clusters import NOISE_CLUSTER_ID, assign_scene_cluster_fields, compute_scene_clusters
+from travelogue.curation.scene_clusters import (
+    NOISE_CLUSTER_ID,
+    assign_scene_cluster_fields,
+    compute_scene_clusters,
+)
 
 
 def test_compute_scene_clusters_groups_similar_vectors() -> None:

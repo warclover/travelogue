@@ -23,7 +23,7 @@ import importlib.util
 import json
 import sys
 from dataclasses import is_dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -106,7 +106,7 @@ def build_holdback_report(
     should_rollback = bool(classified["rollback"])
 
     return {
-        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "funnel": funnel,
         "lcp": lcp_summary,
         "flags": {

@@ -7,8 +7,8 @@ from pathlib import Path
 from travelogue.config import AppConfig, get_config
 from travelogue.demo.build import DemoError
 from travelogue.orchestrator.run import run_trip
-from travelogue.services.pipeline_state import trip_status
 from travelogue.runtime import app_context_for_trip_json
+from travelogue.services.pipeline_state import trip_status
 
 
 def lock_trip_structure(trip: dict) -> None:

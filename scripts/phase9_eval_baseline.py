@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from statistics import mean
 from typing import Any
@@ -204,7 +204,7 @@ def build_phase9_eval_baseline(
     out: dict[str, Any] = {
         "schemaVersion": "1",
         "phase": "P9.2-offline-baseline",
-        "generatedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "generatedAt": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "source": {
             "goldenSignoff": str(golden_path.relative_to(ROOT) if golden_path.is_relative_to(ROOT) else golden_path),
             "qualityGate": str(quality_path.relative_to(ROOT) if quality_path and quality_path.is_relative_to(ROOT) else quality_path) if quality_path else None,

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from travelogue.config import get_config
 from travelogue.curation.photo_cull import _build_user_line
 from travelogue.media.user_tier import resolve_dual_folders

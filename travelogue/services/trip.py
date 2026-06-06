@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -172,7 +172,7 @@ def apply_intent(
             validate_seeds_exist(normalized, assets_by_id)
             intent["featuredSubjects"] = normalized
 
-    intent["submittedAt"] = submitted_at or datetime.now(timezone.utc).isoformat(
+    intent["submittedAt"] = submitted_at or datetime.now(UTC).isoformat(
         timespec="seconds"
     )
     trip["intent"] = intent

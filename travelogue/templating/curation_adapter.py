@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Protocol
 
 from travelogue.config import AppConfig, get_config
 from travelogue.templates.registry import DEFAULT_TEMPLATE_ID, EVENT_RECAP_TEMPLATE_ID, get_registry

@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
+from tests.studio_test_helpers import MockStudioHandler
 from travelogue.services.trip_factory import create_trip
 from travelogue.web.studio_constants import STUDIO_MAX_MULTIPART_BODY_BYTES
 from travelogue.web.studio_handlers.export_handlers import handle_export, handle_reveal
@@ -16,10 +17,9 @@ from travelogue.web.studio_handlers.import_handlers import (
     handle_import,
     read_import_request,
 )
-from travelogue.web.studio_pipeline import sample_album_preview_thumbs
 from travelogue.web.studio_handlers.job_handlers import handle_cancel, handle_status
 from travelogue.web.studio_jobs import get_job_store, reset_job_store
-from tests.studio_test_helpers import MockStudioHandler
+from travelogue.web.studio_pipeline import sample_album_preview_thumbs
 
 pytestmark = pytest.mark.unit
 
@@ -123,8 +123,8 @@ def test_read_import_request_rejects_oversized_multipart(tmp_path: Path) -> None
 
 def test_read_import_request_rejects_empty_upload(tmp_path: Path) -> None:
     boundary = b"----x"
-    title_field = "title".encode("utf-8")
-    title_value = "test".encode("utf-8")
+    title_field = b"title"
+    title_value = b"test"
     body = (
         b"--" + boundary + b"\r\n"
         b'Content-Disposition: form-data; name="' + title_field + b'"\r\n\r\n'

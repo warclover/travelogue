@@ -26,7 +26,7 @@ import sys
 import tempfile
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
@@ -124,7 +124,7 @@ def run_smoke(base: str, *, expect_v2_root: bool = True) -> dict:
         "base": base,
         "ok": ok,
         "expect_v2_root": expect_v2_root,
-        "checkedAt": datetime.now(timezone.utc).isoformat(),
+        "checkedAt": datetime.now(UTC).isoformat(),
         "checks": checks,
     }
 

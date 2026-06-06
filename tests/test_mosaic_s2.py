@@ -1,28 +1,6 @@
 """Phase 15 S2/S2+ · 3/4/6/8/9 window candidates and planning."""
 
-from __future__ import annotations
-
-from dataclasses import replace
-
-from travelogue.config import get_config
-from travelogue.curation.mosaic.candidates import generate_window_candidates
-from travelogue.curation.mosaic.constants import (
-    PATTERN_LANDSCAPE_9,
-    PATTERN_PORTRAIT_GRID_8,
-)
-from travelogue.curation.mosaic.hook import drain_mosaic_logs, try_mosaic_window
-from travelogue.curation.screen_planner_stages import build_chapter_plan_context, run_planning_loop
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-
-from tests._golden.helpers import (
-    build_mosaic_eligible_trip,
-    build_mosaic_landscape9_trip,
-    build_mosaic_portrait8_trip,
-    plan_legacy_screens,
-)
-
-
-def _s2_cfg():
+from __future__ import annotationsfrom dataclasses import replacefrom tests._golden.helpers import (    build_mosaic_eligible_trip,    build_mosaic_landscape9_trip,    build_mosaic_portrait8_trip,)from travelogue.config import get_configfrom travelogue.curation.mosaic.candidates import generate_window_candidatesfrom travelogue.curation.mosaic.constants import (    PATTERN_LANDSCAPE_9,    PATTERN_PORTRAIT_GRID_8,)from travelogue.curation.mosaic.hook import drain_mosaic_logs, try_mosaic_windowfrom travelogue.curation.screen_layout_state import ScreenLayoutPlannerStatefrom travelogue.curation.screen_planner_stages import build_chapter_plan_context, run_planning_loopdef _s2_cfg():
     return replace(
         get_config().mosaic,
         enabled=True,

@@ -18,7 +18,7 @@ import sys
 import time
 import tracemalloc
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,7 +28,7 @@ BASELINE_REPORT = ROOT / "docs" / "reports" / "phase7-perf-baseline.md"
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 def _git_commit() -> str | None:
@@ -253,17 +253,21 @@ def run_incremental_benchmark(
     cfg=None,
 ) -> dict[str, float]:
     """AC-P7-03 proxy: append/delete/replace embed vs full re-embed."""
+    from dataclasses import replace
+
+    import numpy as np
+
     from travelogue.vision.cache import (
-        clear_cluster_cache,
         plan_embedding_refresh,
         prepare_scene_embeddings,
         save_embedding_cache,
     )
-    from travelogue.vision.clip_encoder import ClipEncoder, HEURISTIC_MODEL_V2, HEURISTIC_V2_DIM, reset_clip_encoder_singleton
-
-    import numpy as np
-
-    from dataclasses import replace
+    from travelogue.vision.clip_encoder import (
+        HEURISTIC_MODEL_V2,
+        HEURISTIC_V2_DIM,
+        ClipEncoder,
+        reset_clip_encoder_singleton,
+    )
 
     cfg = cfg or _p7_config()
     # Heuristic-only for stable AC-P7-03 proxy (CLIP variance dominates small fixtures).

@@ -273,8 +273,8 @@ def validate_trip(
         errors.extend(validate_schema(trip, schema_path))
     if level in ("manifest", "all"):
         if manifest_path is None:
-            from travelogue.templating.resolver import resolve_effective_template
             from travelogue.paths import manifest_path_for
+            from travelogue.templating.resolver import resolve_effective_template
 
             manifest_path = manifest_path_for(resolve_effective_template(trip))
         manifest = load_json(manifest_path or MANIFEST_PATH)

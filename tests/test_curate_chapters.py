@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from travelogue.curation.curate import (
-    _cap_book_buckets,
     _chapter_titles,
     _group_assets_by_day,
     _merge_small_buckets,

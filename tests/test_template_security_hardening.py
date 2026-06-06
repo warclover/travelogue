@@ -10,7 +10,10 @@ import pytest
 from travelogue.config import AppConfig, TemplateAdminConfig
 from travelogue.templating.config_governance import approve_router_change, propose_router_change
 from travelogue.templating.roles import require_template_role, resolve_template_role
-from travelogue.templating.template_admin_crud import register_template_from_disk, validate_template_id
+from travelogue.templating.template_admin_crud import (
+    register_template_from_disk,
+    validate_template_id,
+)
 
 
 class _Headers(dict):

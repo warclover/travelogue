@@ -6,15 +6,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from travelogue.config import AppConfig, IngestConfig, get_config
-from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 from travelogue.media.asset_slots import asset_display_slots
 from travelogue.media.image_ops import (
     classify_aspect,
     export_webp_variants,
     focal_from_asset,
-    load_image_normalized,
 )
 from travelogue.media.ingest import IngestError, _load_photo
+from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 
 @dataclass

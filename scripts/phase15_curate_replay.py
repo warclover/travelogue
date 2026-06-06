@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from scripts.phase3_ig2_report import _cfg_for_mode, load_fixture_trip
 from travelogue.config import AppConfig
 from travelogue.curation.chapter_items import summarize_screen_patterns
 from travelogue.curation.clustering import run_clustering_layer
@@ -30,7 +31,6 @@ from travelogue.curation.mosaic.metrics import (
     mcs_unified_exposure_rate,
     mosaic5_exposure_rate,
 )
-from scripts.phase3_ig2_report import _cfg_for_mode, load_fixture_trip
 
 
 def _prepare_trip(trip: dict) -> dict:

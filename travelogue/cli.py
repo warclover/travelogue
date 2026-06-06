@@ -2,32 +2,30 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
-from typing import Optional
 
 import typer
 import typer.main
 
-import json
-
+from travelogue.config import get_config
 from travelogue.curation.curate import CurateError, run_curate
 from travelogue.demo.build import DemoError, resolve_demo_config, run_demo_from_album
 from travelogue.demo.verify import run_demo_verify
-from travelogue.paths import GOLDEN_HTML, TEMPLATE_VISUAL_JOURNAL
 from travelogue.export.packager import ExportError, export_trip
-from travelogue.config import get_config
-from travelogue.media.ingest import IngestError, RAW_UNSUPPORTED_MESSAGE, ingest_into_trip
+from travelogue.llm.errors import LlmError
+from travelogue.media.ingest import RAW_UNSUPPORTED_MESSAGE, IngestError, ingest_into_trip
 from travelogue.media.ingest_report import format_g1_status, format_ingest_report
 from travelogue.media.reexport import reexport_trip_assets
 from travelogue.orchestrator.pipeline import PublishResult, publish_trip
 from travelogue.orchestrator.run import RunResult, run_trip
+from travelogue.paths import GOLDEN_HTML, TEMPLATE_VISUAL_JOURNAL
 from travelogue.render.engine import RenderError, render_trip, render_trip_surfaces
 from travelogue.render.preview import render_preview_jpg
+from travelogue.runtime import app_context_for_trip_json, app_context_for_trips_dir
 from travelogue.services.layout import LayoutError, apply_layout_to_trip
-from travelogue.llm.errors import LlmError
 from travelogue.services.narrate import NarrateError, run_narrate
 from travelogue.services.pipeline_state import PipelineError
-from travelogue.runtime import app_context_for_trips_dir, app_context_for_trip_json
 from travelogue.services.trip import TripNotFoundError, TripService
 from travelogue.services.trip_factory import create_trip
 from travelogue.services.validate import validate_trip
@@ -137,19 +135,19 @@ def _run_demo_cmd(
     title: str,
     place: str,
     hook: str,
-    trip_id: Optional[str],
+    trip_id: str | None,
     trips_dir: Path,
     max_photos: int,
     layout: str,
     no_render: bool,
     force: bool,
     no_dedupe: bool,
-    config: Optional[Path],
+    config: Path | None,
     publish: bool = False,
     confirm_privacy: bool = True,
     no_preview: bool = False,
-    featured_dir: Optional[Path] = None,
-    material_dir: Optional[Path] = None,
+    featured_dir: Path | None = None,
+    material_dir: Path | None = None,
 ) -> None:
     cfg_path = resolve_demo_config(config)
     if cfg_path:
@@ -185,21 +183,21 @@ def _run_demo_cmd(
 @demo_app.callback(invoke_without_command=True)
 def demo_main(
     ctx: typer.Context,
-    album_dir: Optional[Path] = typer.Argument(
+    album_dir: Path | None = typer.Argument(
         None,
         help="folder with JPG/PNG/WebP/HEIC (omit when using demo verify / demo golden)",
     ),
     title: str = typer.Option("我的旅途", "--title", "-t"),
     place: str = typer.Option("旅途", "--place", "-p"),
     hook: str = typer.Option("", "--hook"),
-    trip_id: Optional[str] = typer.Option(None, "--trip-id"),
+    trip_id: str | None = typer.Option(None, "--trip-id"),
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
     max_photos: int = typer.Option(250, "--max-photos"),
     layout: str = typer.Option("mobile", "--layout", "-l"),
     no_render: bool = typer.Option(False, "--no-render"),
     force: bool = typer.Option(False, "--force", help="replace existing trip folder"),
     no_dedupe: bool = typer.Option(False, "--no-dedupe"),
-    config: Optional[Path] = typer.Option(None, "--config"),
+    config: Path | None = typer.Option(None, "--config"),
     publish: bool = typer.Option(
         False,
         "--publish",
@@ -211,10 +209,10 @@ def demo_main(
         help="required for --publish (sets privacy.confirmedAt, strips EXIF)",
     ),
     no_preview: bool = typer.Option(False, "--no-preview", help="skip preview.jpg in zip"),
-    featured_dir: Optional[Path] = typer.Option(
+    featured_dir: Path | None = typer.Option(
         None, "--featured-dir", help="精选文件夹（双源 ingest；默认识别 album 下 精选/featured 等）"
     ),
-    material_dir: Optional[Path] = typer.Option(
+    material_dir: Path | None = typer.Option(
         None, "--material-dir", help="素材文件夹（双源 ingest；默认识别 album 下 素材/material 等）"
     ),
 ) -> None:
@@ -263,7 +261,7 @@ def cmd_quick(
     max_photos: int = typer.Option(250, "--max-photos"),
     layout: str = typer.Option("auto", "--layout", "-l", help="default auto (web screens)"),
     force: bool = typer.Option(False, "--force", help="replace existing trip folder"),
-    config: Optional[Path] = typer.Option(None, "--config"),
+    config: Path | None = typer.Option(None, "--config"),
 ) -> None:
     """One-shot album → ingest → curate → render (shortcut for ``from-album --layout auto``)."""
     _run_demo_cmd(
@@ -288,14 +286,14 @@ def cmd_from_album(
     title: str = typer.Option("我的旅途", "--title", "-t"),
     place: str = typer.Option("旅途", "--place", "-p"),
     hook: str = typer.Option("", "--hook"),
-    trip_id: Optional[str] = typer.Option(None, "--trip-id"),
+    trip_id: str | None = typer.Option(None, "--trip-id"),
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
     max_photos: int = typer.Option(250, "--max-photos"),
     layout: str = typer.Option("mobile", "--layout", "-l"),
     no_render: bool = typer.Option(False, "--no-render"),
     force: bool = typer.Option(False, "--force", help="replace existing trip folder"),
     no_dedupe: bool = typer.Option(False, "--no-dedupe"),
-    config: Optional[Path] = typer.Option(None, "--config"),
+    config: Path | None = typer.Option(None, "--config"),
     publish: bool = typer.Option(
         False,
         "--publish",
@@ -307,10 +305,10 @@ def cmd_from_album(
         help="required for --publish (sets privacy.confirmedAt, strips EXIF)",
     ),
     no_preview: bool = typer.Option(False, "--no-preview", help="skip preview.jpg in zip"),
-    featured_dir: Optional[Path] = typer.Option(
+    featured_dir: Path | None = typer.Option(
         None, "--featured-dir", help="精选文件夹（双源 ingest）"
     ),
-    material_dir: Optional[Path] = typer.Option(
+    material_dir: Path | None = typer.Option(
         None, "--material-dir", help="素材文件夹（双源 ingest）"
     ),
 ) -> None:
@@ -359,7 +357,7 @@ def cmd_trip_new(
     trip_id: str = typer.Argument(..., help="trip folder name under trips/"),
     title: str = typer.Option("待命名旅程", "--title", "-t"),
     place: str = typer.Option("旅途", "--place", "-p"),
-    from_dir: Optional[Path] = typer.Option(None, "--from", help="photo folder; chains ingest"),
+    from_dir: Path | None = typer.Option(None, "--from", help="photo folder; chains ingest"),
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
     layout: str = typer.Option("mobile", "--layout", "-l", help="exportLayout for ingest/curate"),
     force: bool = typer.Option(False, "--force", help="allow non-empty trip dir"),
@@ -430,15 +428,15 @@ def cmd_trip_list(
 @app.command("ingest")
 def cmd_ingest(
     path: str = typer.Argument(..., help="trip.json path or tripId"),
-    from_dir: Optional[Path] = typer.Option(None, "--from", help="import from folder"),
-    batch_id: Optional[str] = typer.Option(None, "--batch-id"),
+    from_dir: Path | None = typer.Option(None, "--from", help="import from folder"),
+    batch_id: str | None = typer.Option(None, "--batch-id"),
     no_dedupe: bool = typer.Option(False, "--no-dedupe"),
     no_crop: bool = typer.Option(False, "--no-crop", help="skip -m/-w profile crops"),
     incremental: bool = typer.Option(False, "--incremental"),
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
-    config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
-    featured_dir: Optional[Path] = typer.Option(None, "--featured-dir", help="精选文件夹（双源 ingest）"),
-    material_dir: Optional[Path] = typer.Option(None, "--material-dir", help="素材文件夹（双源 ingest）"),
+    config: Path | None = typer.Option(None, "--config", help="config.yaml path"),
+    featured_dir: Path | None = typer.Option(None, "--featured-dir", help="精选文件夹（双源 ingest）"),
+    material_dir: Path | None = typer.Option(None, "--material-dir", help="素材文件夹（双源 ingest）"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="show RAW rejection details"),
 ) -> None:
     """Agent 0: import photos into trip (ingest_ready)."""
@@ -475,9 +473,9 @@ def cmd_ingest(
 @media_app.command("reexport")
 def cmd_media_reexport(
     path: str = typer.Argument(..., help="trip.json path or tripId"),
-    asset_id: Optional[list[str]] = typer.Option(None, "--asset", "-a", help="only these asset ids"),
+    asset_id: list[str] | None = typer.Option(None, "--asset", "-a", help="only these asset ids"),
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
-    config: Optional[Path] = typer.Option(None, "--config"),
+    config: Path | None = typer.Option(None, "--config"),
 ) -> None:
     """Re-export WebP from source/ (after layout or focalPoint change)."""
     _load_cfg(config)
@@ -538,7 +536,7 @@ def cmd_curate(
 def cmd_lock(
     path: str = typer.Argument(..., help="trip.json path or tripId"),
     target: str = typer.Argument(..., help="structure | copy"),
-    cover: Optional[str] = typer.Option(None, "--cover", help="cover asset id (structure lock)"),
+    cover: str | None = typer.Option(None, "--cover", help="cover asset id (structure lock)"),
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
 ) -> None:
     """Lock structure or copy gate."""
@@ -569,8 +567,8 @@ def cmd_lock(
 @app.command("narrate")
 def cmd_narrate(
     path: str = typer.Argument(..., help="trip.json path or tripId"),
-    tone: Optional[str] = typer.Option(None, "--tone"),
-    provider: Optional[str] = typer.Option(
+    tone: str | None = typer.Option(None, "--tone"),
+    provider: str | None = typer.Option(
         None,
         "--provider",
         help="stub | deepseek | dashscope (default: config llm.provider or stub)",
@@ -581,13 +579,13 @@ def cmd_narrate(
         "--regenerate",
         help="Rewrite non-edited hook, leads, captions, epilogue",
     ),
-    chapter_id: Optional[str] = typer.Option(
+    chapter_id: str | None = typer.Option(
         None,
         "--chapter-id",
         help="Only narrate this chapter (skips meta/epilogue); use with --regenerate",
     ),
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
-    config: Optional[Path] = typer.Option(None, "--config"),
+    config: Path | None = typer.Option(None, "--config"),
 ) -> None:
     """Agent 2: hook, leads, captions via LLM or rule stub."""
     _load_cfg(config)
@@ -629,12 +627,12 @@ def cmd_narrate(
 
 @llm_app.command("ping")
 def cmd_llm_ping(
-    provider: Optional[str] = typer.Option(
+    provider: str | None = typer.Option(
         None,
         "--provider",
         help="deepseek | dashscope (default: config llm.provider)",
     ),
-    config: Optional[Path] = typer.Option(None, "--config"),
+    config: Path | None = typer.Option(None, "--config"),
 ) -> None:
     """Verify LLM API key and connectivity."""
     from travelogue.llm.client import llm_ping
@@ -678,19 +676,19 @@ def cmd_run(
     path: str = typer.Argument(..., help="trip.json path or tripId"),
     from_stage: str = typer.Option("ingest", "--from", help="ingest|curate|layout|narrate|render|export"),
     until: str = typer.Option("rendered", "--until", help="ingest|structure|layout|copy|rendered|exported"),
-    from_dir: Optional[Path] = typer.Option(None, "--from-dir", help="album for ingest stage"),
+    from_dir: Path | None = typer.Option(None, "--from-dir", help="album for ingest stage"),
     layout: str = typer.Option("mobile", "--layout", "-l"),
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
     confirm_privacy: bool = typer.Option(False, "--confirm-privacy"),
     no_preview: bool = typer.Option(False, "--no-preview"),
     skip_locked: bool = typer.Option(True, "--skip-locked/--no-skip-locked"),
-    narrate_provider: Optional[str] = typer.Option(
+    narrate_provider: str | None = typer.Option(
         None,
         "--narrate-provider",
         help="stub | deepseek | dashscope for narrate stage",
     ),
     regenerate: bool = typer.Option(False, "--regenerate", help="Force rewrite copy on narrate stage"),
-    config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
+    config: Path | None = typer.Option(None, "--config", help="config.yaml path"),
 ) -> None:
     """Run pipeline stages in order up to --until."""
     _load_cfg(config)
@@ -740,7 +738,7 @@ def cmd_layout(
         "-l",
         help="exportLayout: mobile | web | auto",
     ),
-    web_layout: Optional[str] = typer.Option(
+    web_layout: str | None = typer.Option(
         None,
         "--web-layout",
         help="layoutEngine: legacy | screens (requires exportLayout web for screens DOM)",
@@ -804,14 +802,14 @@ def cmd_validate(
 @app.command("render")
 def cmd_render(
     path: str = typer.Argument(..., help="trip.json path or tripId"),
-    out: Optional[Path] = typer.Option(None, "--out", "-o", help="output directory"),
+    out: Path | None = typer.Option(None, "--out", "-o", help="output directory"),
     mode: str = typer.Option("draft", "--mode", "-m", help="draft | share"),
-    web_layout: Optional[str] = typer.Option(
+    web_layout: str | None = typer.Option(
         None,
         "--web-layout",
         help="layout engine override: legacy | screens (also sets index filename for screens)",
     ),
-    index_name: Optional[str] = typer.Option(
+    index_name: str | None = typer.Option(
         None,
         "--index-name",
         help="output HTML filename (default index.html)",
@@ -823,17 +821,17 @@ def cmd_render(
         "--dual",
         help="write index.html (web+screens) and index-mobile.html (mobile+legacy)",
     ),
-    font_theme: Optional[str] = typer.Option(
+    font_theme: str | None = typer.Option(
         None,
         "--font-theme",
         help="ui (default YaHei stack) | magazine (system KaiTi backup theme)",
     ),
-    copy_display: Optional[str] = typer.Option(
+    copy_display: str | None = typer.Option(
         None,
         "--copy-display",
         help="full | photos — hide hook/lead/captions at render (trip.json unchanged unless set in export.copyDisplay)",
     ),
-    reading_profile: Optional[str] = typer.Option(
+    reading_profile: str | None = typer.Option(
         None,
         "--reading-profile",
         help="legacy | performance | default_hybrid | magazine — override export.reading.profile",
@@ -918,7 +916,7 @@ def cmd_render(
 
 @app.command("studio")
 def cmd_studio(
-    pick_folder: Optional[Path] = typer.Option(
+    pick_folder: Path | None = typer.Option(
         None,
         "--pick-folder",
         help="album folder path; run pipeline before serving",
@@ -943,8 +941,8 @@ def cmd_studio(
     no_open: bool = typer.Option(False, "--no-open", help="do not open browser"),
     title: str = typer.Option("我的旅途", "--title", help="trip title"),
     place: str = typer.Option("旅途", "--place", help="default place name"),
-    trips_dir: Optional[Path] = typer.Option(None, "--trips-dir", help="trips root directory"),
-    config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
+    trips_dir: Path | None = typer.Option(None, "--trips-dir", help="trips root directory"),
+    config: Path | None = typer.Option(None, "--config", help="config.yaml path"),
 ) -> None:
     """Launch Studio workbench (serve --studio on trips directory)."""
     import webbrowser
@@ -1024,11 +1022,15 @@ def cmd_serve(
         "--allow-lan",
         help="allow non-loopback bind with X-Studio-Token auth",
     ),
-    config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
-    trips_dir: Optional[Path] = typer.Option(None, "--trips-dir", help="trips root when path is tripId"),
+    config: Path | None = typer.Option(None, "--config", help="config.yaml path"),
+    trips_dir: Path | None = typer.Option(None, "--trips-dir", help="trips root when path is tripId"),
 ) -> None:
     """Serve trip output with inline copy save API (draft editing)."""
-    from travelogue.web.serve import resolve_trip_serve_dir, serve_studio_directory, serve_trip_directory
+    from travelogue.web.serve import (
+        resolve_trip_serve_dir,
+        serve_studio_directory,
+        serve_trip_directory,
+    )
 
     _load_cfg(config)
     cfg = get_config()
@@ -1158,7 +1160,7 @@ def cmd_tier_promote(
 @app.command("export-pdf")
 def cmd_export_pdf(
     path: str = typer.Argument(..., help="trip directory, trip.json, or tripId"),
-    out: Optional[Path] = typer.Option(None, "--out", "-o", help="output PDF path"),
+    out: Path | None = typer.Option(None, "--out", "-o", help="output PDF path"),
     index: str = typer.Option("index.html", "--index", help="HTML entry (index.html | index-mobile.html)"),
     width: int = typer.Option(1200, "--width", help="PDF viewport width in px"),
     port: int = typer.Option(0, "--port", "-p", help="HTTP port (0 = random)"),
@@ -1186,10 +1188,10 @@ def cmd_export_pdf(
 @app.command("export-longshot")
 def cmd_export_longshot(
     path: str = typer.Argument(..., help="trip directory, trip.json, or tripId"),
-    out: Optional[Path] = typer.Option(None, "--out", "-o", help="output PNG path (single file only)"),
+    out: Path | None = typer.Option(None, "--out", "-o", help="output PNG path (single file only)"),
     scale: int = typer.Option(1, "--scale", help="capture scale (1–3)"),
     format: str = typer.Option("png", "--format", "-f", help="png | jpeg"),
-    chapter: Optional[int] = typer.Option(None, "--chapter", help="export one chapter (1-based)"),
+    chapter: int | None = typer.Option(None, "--chapter", help="export one chapter (1-based)"),
     port: int = typer.Option(0, "--port", "-p", help="HTTP port when no serve running (0 = random)"),
 ) -> None:
     """Export trip longshot PNG via Playwright (requires playwright + chromium)."""
@@ -1217,7 +1219,7 @@ def cmd_export_longshot(
 @app.command("preview")
 def cmd_preview(
     path: str = typer.Argument(..., help="trip.json path or tripId"),
-    out: Optional[Path] = typer.Option(None, "--out", "-o", help="preview.jpg path"),
+    out: Path | None = typer.Option(None, "--out", "-o", help="preview.jpg path"),
 ) -> None:
     """Generate preview.jpg (1080×1920) with Pillow."""
     trip_path = _resolve(path)
@@ -1232,7 +1234,7 @@ def cmd_preview(
 @app.command("export")
 def cmd_export(
     path: str = typer.Argument(..., help="trip.json path or tripId"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="zip output path"),
+    output: Path | None = typer.Option(None, "--output", "-o", help="zip output path"),
     confirm_privacy: bool = typer.Option(
         False,
         "--confirm-privacy",
@@ -1245,7 +1247,7 @@ def cmd_export(
         "--no-longshot",
         help="omit 保存长图 bundle from export (trip.export.longShot=false)",
     ),
-    config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
+    config: Path | None = typer.Option(None, "--config", help="config.yaml path"),
 ) -> None:
     """Package index.html + assets into trip-{id}.zip (share mode)."""
     _load_cfg(config)
@@ -1269,7 +1271,7 @@ def cmd_export(
 @app.command("publish")
 def cmd_publish(
     path: str = typer.Argument(..., help="trip.json path or tripId"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="zip output path"),
+    output: Path | None = typer.Option(None, "--output", "-o", help="zip output path"),
     confirm_privacy: bool = typer.Option(
         True,
         "--confirm-privacy/--no-confirm-privacy",
@@ -1277,7 +1279,7 @@ def cmd_publish(
     ),
     no_preview: bool = typer.Option(False, "--no-preview", help="skip preview.jpg"),
     no_validate: bool = typer.Option(False, "--no-validate", help="skip validation"),
-    config: Optional[Path] = typer.Option(None, "--config", help="config.yaml path"),
+    config: Path | None = typer.Option(None, "--config", help="config.yaml path"),
 ) -> None:
     """Validate → render (share) → preview → export zip."""
     _load_cfg(config)
@@ -1302,7 +1304,7 @@ def cmd_publish(
 
 @demo_app.command("verify")
 def cmd_demo_verify(
-    album_dir: Optional[Path] = typer.Option(
+    album_dir: Path | None = typer.Option(
         None,
         "--album",
         help="optional: run ingest→render smoke on a photo folder",
@@ -1398,7 +1400,7 @@ def cmd_demo_from_album_hidden(
     title: str = typer.Option("我的旅途", "--title", "-t", help="trip title / cover"),
     place: str = typer.Option("旅途", "--place", "-p", help="place label in meta"),
     hook: str = typer.Option("", "--hook", help="optional hook line"),
-    trip_id: Optional[str] = typer.Option(None, "--trip-id", help="output folder name under trips/"),
+    trip_id: str | None = typer.Option(None, "--trip-id", help="output folder name under trips/"),
     trips_dir: Path = typer.Option(Path("trips"), "--trips-dir", help="trips root directory"),
     max_photos: int = typer.Option(250, "--max-photos", help="max images to import"),
     layout: str = typer.Option(
@@ -1410,12 +1412,12 @@ def cmd_demo_from_album_hidden(
     no_render: bool = typer.Option(False, "--no-render", help="only build trip.json + assets"),
     force: bool = typer.Option(False, "--force"),
     no_dedupe: bool = typer.Option(False, "--no-dedupe"),
-    config: Optional[Path] = typer.Option(None, "--config"),
+    config: Path | None = typer.Option(None, "--config"),
     publish: bool = typer.Option(False, "--publish"),
     confirm_privacy: bool = typer.Option(True, "--confirm-privacy/--no-confirm-privacy"),
     no_preview: bool = typer.Option(False, "--no-preview"),
-    featured_dir: Optional[Path] = typer.Option(None, "--featured-dir"),
-    material_dir: Optional[Path] = typer.Option(None, "--material-dir"),
+    featured_dir: Path | None = typer.Option(None, "--featured-dir"),
+    material_dir: Path | None = typer.Option(None, "--material-dir"),
 ) -> None:
     """Alias for ``travelogue demo`` (same pipeline)."""
     _run_demo_cmd(

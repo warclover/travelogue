@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -16,14 +16,15 @@ if str(ROOT) not in sys.path:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 def run_drills(*, state_path: Path | None = None) -> dict[str, Any]:
+    from travelogue.templates.registry import (
+        EVENT_RECAP_TEMPLATE_ID,
+        get_registry,
+    )
     from travelogue.templating import admin_store
-    from travelogue.templating.router import route_template
-    from travelogue.templates.registry import EVENT_RECAP_TEMPLATE_ID, bootstrap_registry, get_registry
-    from travelogue.templating.lifecycle import LifecycleTransitionError
     from travelogue.templating.admin_store import (
         AdminRevisionConflict,
         apply_rollback,
@@ -31,6 +32,8 @@ def run_drills(*, state_path: Path | None = None) -> dict[str, Any]:
         get_store_revision,
         update_template_lifecycle,
     )
+    from travelogue.templating.lifecycle import LifecycleTransitionError
+    from travelogue.templating.router import route_template
 
     if state_path:
         admin_store._STATE_PATH = state_path  # type: ignore[attr-defined]

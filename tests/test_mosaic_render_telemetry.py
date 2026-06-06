@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
+from tests._golden.helpers import build_mixed_aspects_trip, plan_mosaic_screens
 from travelogue.curation.mosaic.metrics import compute_mosaic_metrics
 from travelogue.curation.mosaic.render_check import (
     compute_layout_render_error_rate,
     screen_pattern_render_ok,
 )
 from travelogue.curation.mosaic.runtime import MOSAIC_ROUTER_VERSION
-
-from tests._golden.helpers import build_mixed_aspects_trip, plan_mosaic_screens
 
 
 def test_mcs_patterns_render_chain_ok() -> None:

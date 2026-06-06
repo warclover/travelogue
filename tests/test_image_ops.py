@@ -15,7 +15,6 @@ from travelogue.media.image_ops import (
     export_webp_variants,
     filter_trip_dates,
     parse_datetime_from_filename,
-    resize_to_width,
 )
 
 

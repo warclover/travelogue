@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from travelogue.templating.admin_store import _LOCK, _load_unlocked, _save_unlocked, _utc_now, append_audit
+from travelogue.templating.admin_store import (
+    _LOCK,
+    _load_unlocked,
+    _save_unlocked,
+    _utc_now,
+    append_audit,
+)
 from travelogue.templating.admission import run_admission_check
 
 ReviewStatus = Literal["none", "pending", "approved", "rejected"]

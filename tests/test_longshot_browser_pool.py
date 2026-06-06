@@ -8,7 +8,6 @@ import pytest
 
 from travelogue.export.longshot import _PlaywrightBrowserPool
 
-
 pytestmark = pytest.mark.unit
 
 

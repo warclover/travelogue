@@ -7,7 +7,12 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from travelogue.media.ingest import IngestError, RAW_UNSUPPORTED_MESSAGE, ingest_into_trip, scan_image_paths
+from travelogue.media.ingest import (
+    RAW_UNSUPPORTED_MESSAGE,
+    IngestError,
+    ingest_into_trip,
+    scan_image_paths,
+)
 from travelogue.services.trip_factory import create_trip
 
 

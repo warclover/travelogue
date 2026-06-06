@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import shutil
+from datetime import UTC
 from pathlib import Path
 
 from pybars import Compiler
 
 from travelogue.config import AppConfig
+from travelogue.errors import CodeError
 from travelogue.paths import (
     BREATH_CSS,
+    BREATH_GSAP_JS,
     BREATH_JS,
     BREATH_LENIS_JS,
-    BREATH_GSAP_JS,
     COPY_DISPLAY_CSS,
     COPY_TOGGLE_JS,
     HTML2CANVAS_VENDOR,
@@ -20,19 +22,19 @@ from travelogue.paths import (
     INLINE_EDIT_JS,
     JOURNAL_CSS,
     JOURNAL_SCREENS_CSS,
+    LONGSHOT_BRIDGE_JS,
     LONGSHOT_CSS,
     LONGSHOT_JS,
-    LONGSHOT_BRIDGE_JS,
     SCREENPLAY_BOOKMARKS_JS,
     SCREENPLAY_CSS,
     SCREENPLAY_HASH_JS,
     SCREENPLAY_JS,
     SCROLL_NAV_JS,
     SHARE_JS,
-    TEMPLATE_VISUAL_JOURNAL,
     template_dir_for,
 )
-from travelogue.errors import CodeError
+from travelogue.render.context import build_render_context, collect_asset_paths
+from travelogue.services.validate import validate_trip
 from travelogue.templates.registry import (
     DEFAULT_TEMPLATE_ID,
     EVENT_RECAP_TEMPLATE_ID,
@@ -40,8 +42,6 @@ from travelogue.templates.registry import (
     get_registry,
 )
 from travelogue.templating.resolver import resolve_effective_template
-from travelogue.render.context import build_render_context, collect_asset_paths
-from travelogue.services.validate import validate_trip
 
 
 class RenderError(CodeError):
@@ -660,12 +660,12 @@ def _render_trip_body(
         copy_inline_edit_bundle(out_dir)
 
     if update_pipeline:
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         pipe = trip.setdefault("pipeline", {})
         pipe["status"] = "rendered"
         trip["updatedAt"] = (
-            datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+            datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
         )
         app_context_for_trip_json(trip_path, cfg=cfg).trip_service().save(trip, trip_path)
 

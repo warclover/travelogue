@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from travelogue.curation.arc_patterns import arc_segment_for_chapter, arc_pattern_bonus
-from travelogue.curation.layout_metrics import compute_layout_metrics, pattern_diversity
-
 from tests._golden.helpers import build_portrait_heavy_trip, plan_legacy_screens
+from travelogue.curation.arc_patterns import arc_pattern_bonus, arc_segment_for_chapter
+from travelogue.curation.layout_metrics import compute_layout_metrics, pattern_diversity
 
 
 def test_arc_segment_five_chapters():

@@ -7,7 +7,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -47,10 +47,9 @@ def build_report() -> dict:
             "name": "G6 72h 指标",
             "pass": m72_pass,
             "partial": m72_pass or m72_clean or bool(m72_template and m72_template.get("pass")),
-            "detail": "phase13-metrics-72h.json pass=%s route_total=%s"
-            % (
-                m72_pass,
-                (m72 or {}).get("metrics", {}).get("rates", {}).get("route_total"),
+            "detail": (
+                f"phase13-metrics-72h.json pass={m72_pass} route_total="
+                f"{(m72 or {}).get('metrics', {}).get('rates', {}).get('route_total')}"
             ),
             "note": "生产须真实流量窗口；dev 在 drill 后需 metrics_reset 再采 72h",
         }
@@ -62,7 +61,7 @@ def build_report() -> dict:
             "id": "REL-03",
             "name": "开发 Gate signoff",
             "pass": gate.get("go") is True,
-            "detail": "go=%s" % gate.get("go"),
+            "detail": f"go={gate.get('go')}",
         }
     )
 
@@ -78,7 +77,7 @@ def build_report() -> dict:
 
     release_ready = all(i["pass"] for i in items)
     return {
-        "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "generatedAt": datetime.now(UTC).replace(microsecond=0).isoformat(),
         "releaseReady": release_ready,
         "items": items,
         "notes": [

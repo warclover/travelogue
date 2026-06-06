@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from travelogue.curation.screen_planner import (
     FOOD_GRID_LAYOUT_HINT,
@@ -17,7 +17,7 @@ from travelogue.curation.screen_planner_stages import (
 
 def _assets_and_aspects(ids: list[str], *, food_ids: set[str], clip_only: set[str] | None = None) -> tuple[dict[str, dict], dict[str, str]]:
     clip_only = clip_only or set()
-    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=UTC)
     assets: dict[str, dict] = {}
     aspects: dict[str, str] = {}
     for i, aid in enumerate(ids):

@@ -4,14 +4,15 @@ from __future__ import annotations
 
 import logging
 import threading
+from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterator, Literal
+from typing import Any, Literal
 
-from travelogue.constants import VALID_ARC_MODES, VALID_NARRATIVE_SCOPES
 from travelogue.config_helpers import cfg_bool, cfg_dict, cfg_float, cfg_get, cfg_int, cfg_str
+from travelogue.constants import VALID_ARC_MODES, VALID_NARRATIVE_SCOPES
 from travelogue.paths import ROOT
 
 TriState = Literal["true", "false", "auto"]

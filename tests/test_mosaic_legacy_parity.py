@@ -4,15 +4,14 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from tests._golden.helpers import build_mosaic_eligible_trip
 from travelogue.config import get_config
 from travelogue.curation.mosaic.hook import try_mosaic_window
+from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.curation.screen_planner_stages import (
     build_chapter_plan_context,
     run_planning_loop,
 )
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-
-from tests._golden.helpers import build_mosaic_eligible_trip
 
 
 def test_try_mosaic_window_none_when_disabled(monkeypatch):

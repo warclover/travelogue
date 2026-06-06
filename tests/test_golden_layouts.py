@@ -4,12 +4,6 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-from travelogue.curation.degradation import DegradationAssessment
-from travelogue.curation.layout_scoring import ScoringWeights
-from travelogue.curation.layout_search import maybe_replan_chapters
-
-from travelogue.curation.mosaic.metrics import mcs_unified_exposure_rate
-
 from tests._golden.helpers import (
     build_mixed_aspects_trip,
     build_mosaic_eligible_trip,
@@ -19,6 +13,10 @@ from tests._golden.helpers import (
     plan_legacy_screens,
     plan_mosaic_screens,
 )
+from travelogue.curation.degradation import DegradationAssessment
+from travelogue.curation.layout_scoring import ScoringWeights
+from travelogue.curation.layout_search import maybe_replan_chapters
+from travelogue.curation.mosaic.metrics import mcs_unified_exposure_rate
 
 
 def test_golden_portrait_heavy_matches_legacy():

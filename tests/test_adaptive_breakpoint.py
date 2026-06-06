@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 
 from travelogue.paths import JOURNAL_CSS, MANIFEST_PATH
-from travelogue.render.golden_regression import load_golden_trip
 from travelogue.render.engine import render_html
+from travelogue.render.golden_regression import load_golden_trip
 
 
 def test_manifest_breakpoint_768() -> None:

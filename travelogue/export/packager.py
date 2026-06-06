@@ -6,20 +6,19 @@ import zipfile
 from pathlib import Path
 
 from travelogue.config import AppConfig, app_config_scope, get_config
-from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
+from travelogue.errors import CodeError
 from travelogue.export.exif import write_asset_to_zip
 from travelogue.render.context import collect_asset_paths
 from travelogue.render.engine import (
     LONGSHOT_INDEX_NAME,
-    RenderError,
     render_trip,
     should_include_long_shot,
     should_include_longshot_bridge,
     should_include_screenplay,
 )
 from travelogue.render.preview import render_preview_jpg
-from travelogue.errors import CodeError
 from travelogue.services.validate import validate_trip
+from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 
 class ExportError(CodeError):
@@ -125,8 +124,9 @@ def _export_trip_stages(
         raise ExportError("E_EXPORT_NOT_RENDERED", "index.html missing; run render first")
 
     if not css.is_file():
-        from travelogue.paths import JOURNAL_CSS, JOURNAL_SCREENS_CSS
         import shutil
+
+        from travelogue.paths import JOURNAL_CSS, JOURNAL_SCREENS_CSS
 
         shutil.copy2(JOURNAL_CSS, css)
         screens_css = trip_root / "journal-screens.css"

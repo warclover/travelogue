@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
-import pytest
 from PIL import Image
 
 from travelogue.config import AppConfig, ClusteringConfig, PipelineConfig, VisionConfig

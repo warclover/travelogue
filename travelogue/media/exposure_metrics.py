@@ -8,7 +8,7 @@ normalised to ``[0, 1]`` so the aesthetic synthesiser can blend them directly.
 
 from __future__ import annotations
 
-from PIL import Image, ImageFilter, ImageStat
+from PIL import Image, ImageFilter
 
 
 def _gray_values(gray: Image.Image) -> list[int]:

@@ -5,15 +5,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from tests.test_ingest import _album
 from travelogue.orchestrator.run import run_trip
 from travelogue.services.trip_factory import create_trip
-from tests.test_ingest import _album
 
 
 def test_run_until_structure(tmp_path: Path) -> None:
     trips = tmp_path / "trips"
     trip_json = create_trip("run-test", trips, title="运行测试")
-    trip_dir = trips / "run-test"
     album = _album(tmp_path, 6)
     result = run_trip(
         trip_json,

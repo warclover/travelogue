@@ -5,15 +5,15 @@ from __future__ import annotations
 import pytest
 
 from travelogue.curation.layout_scoring import (
+    PHASE2_WEIGHTS,
     PHASE3_WEIGHTS,
     PHASE3B_WEIGHTS,
     PHASE6_WEIGHTS,
     ScoringWeights,
     resolve_scoring_weights,
     score_aspect_match,
-    PHASE2_WEIGHTS,
-    score_screen,
     score_category_coherence,
+    score_screen,
 )
 
 

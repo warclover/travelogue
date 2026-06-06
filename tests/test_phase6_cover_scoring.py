@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from travelogue.curation.cover_scoring_params import CoverScoringParams
 from travelogue.curation.curate_scoring import (
+    _cover_rule_of_thirds_multiplier,
     build_cover_explain,
     cover_score,
-    _cover_rule_of_thirds_multiplier,
 )
 
 _PARAMS = CoverScoringParams()

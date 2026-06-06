@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
+from tests._golden.helpers import build_portrait_heavy_trip, plan_legacy_screens
 from travelogue.curation.chapter_items import collect_screen_asset_ids, item_asset_ids
 from travelogue.curation.degradation import assess_degradation
 from travelogue.curation.layout_scoring import PHASE2_WEIGHTS
 from travelogue.curation.layout_search import maybe_replan_chapters
-
-from tests._golden.helpers import build_portrait_heavy_trip, plan_legacy_screens
 
 
 def test_replan_then_compact_items_match_screens(monkeypatch) -> None:

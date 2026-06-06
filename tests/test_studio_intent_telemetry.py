@@ -5,12 +5,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from tests.test_studio_server import _distinct_album
 from travelogue.web.studio_intent_telemetry import (
     build_studio_intent_telemetry,
     write_studio_intent_telemetry,
 )
 from travelogue.web.studio_pipeline import run_studio_pipeline
-from tests.test_studio_server import _distinct_album
 
 
 def test_build_studio_intent_telemetry_fields() -> None:

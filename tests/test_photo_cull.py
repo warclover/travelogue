@@ -25,6 +25,7 @@ from travelogue.curation.photo_cull import (
 from travelogue.media.ingest import ingest_into_trip
 from travelogue.services.trip_factory import create_trip
 
+
 def _asset(
     aid: str,
     *,

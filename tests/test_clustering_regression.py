@@ -5,8 +5,8 @@ from __future__ import annotations
 import copy
 
 from travelogue.config import AppConfig, ClusteringConfig
-from travelogue.curation.curate import run_curate
 from travelogue.curation.clustering import run_clustering_layer
+from travelogue.curation.curate import run_curate
 
 
 def _sample_trip() -> dict:

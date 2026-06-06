@@ -18,8 +18,9 @@ import argparse
 import json
 import math
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 # §17.2：v2 LCP P95 相对 v3 上升超过 30% → 回滚
 LCP_P95_ROLLBACK_RATIO = 1.30

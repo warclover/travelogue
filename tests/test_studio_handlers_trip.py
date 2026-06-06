@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
+from tests.studio_test_helpers import MockStudioHandler
 from travelogue.services.trip import TripService
 from travelogue.services.trip_factory import create_trip
 from travelogue.web.studio_handlers.trip_handlers import (
@@ -20,8 +21,7 @@ from travelogue.web.studio_handlers.trip_handlers import (
     handle_rerender,
     handle_trips,
 )
-from travelogue.web.studio_jobs import get_job_store, reset_job_store
-from tests.studio_test_helpers import MockStudioHandler
+from travelogue.web.studio_jobs import reset_job_store
 
 pytestmark = pytest.mark.unit
 

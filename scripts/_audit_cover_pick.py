@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import sys
-from copy import deepcopy
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,13 +17,13 @@ def main() -> int:
     trip_path = ROOT / "trips" / trip_id / "trip.json"
     trip = json.loads(trip_path.read_text(encoding="utf-8"))
     from travelogue.config import get_config
+    from travelogue.curation.aesthetic_score import aesthetic_overall
     from travelogue.curation.curate_scoring import (
+        _cover_batch_medians,
+        cover_asset_pool,
         effective_cover_score,
         pick_cover_asset_id,
-        cover_asset_pool,
-        _cover_batch_medians,
     )
-    from travelogue.curation.aesthetic_score import aesthetic_overall, median_aesthetic_overall
     from travelogue.curation.layout_planner import aspect_kind_for_asset
 
     cfg = get_config()

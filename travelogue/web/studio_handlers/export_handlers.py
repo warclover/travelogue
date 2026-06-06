@@ -5,7 +5,7 @@ from __future__ import annotations
 import threading
 from pathlib import Path
 
-from travelogue.web.studio_errors import user_message
+from travelogue.web.studio_errors import client_error_payload, user_message
 from travelogue.web.studio_handlers.common import rel_to_trip, resolve_trip_dir, studio_ctx
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_jobs import get_job_store, run_longshot_job, run_narrate_job
@@ -216,14 +216,7 @@ def handle_reveal(handler: StudioHandlerProtocol) -> None:
     try:
         reveal_path_in_folder(Path(path_raw), allowed_root=ctx.trips_root)
     except LongshotExportError as exc:
-        handler._json_response(
-            403,
-            {
-                "ok": False,
-                "error": exc.code,
-                "message": str(exc).split(": ", 1)[-1],
-            },
-        )
+        handler._json_response(403, client_error_payload(exc))
         return
 
     handler._json_response(200, {"ok": True})
@@ -261,10 +254,7 @@ def handle_export(handler: StudioHandlerProtocol) -> None:
     try:
         zip_path = export_trip(trip_dir / "trip.json", confirm_privacy=True)
     except ExportError as exc:
-        handler._json_response(
-            400,
-            {"ok": False, "error": exc.code, "message": str(exc).split(": ", 1)[-1]},
-        )
+        handler._json_response(400, client_error_payload(exc))
         return
 
     rel_zip = rel_to_trip(trip_dir, zip_path)

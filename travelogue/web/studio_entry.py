@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from travelogue.templating.summary import build_template_summary
 from travelogue.web.studio_aesthetic import build_aesthetic_entry_summary
 from travelogue.web.studio_constants import STUDIO_USER_NOTES_MAX_LEN
-from travelogue.templating.summary import build_template_summary
 from travelogue.web.studio_telemetry import build_pipeline_telemetry_summary
 
 

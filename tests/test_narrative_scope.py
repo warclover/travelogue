@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import copy
-
 import pytest
 
+from travelogue.services.llm_narrate import run_llm_narrate
 from travelogue.services.narrate import run_narrate
 from travelogue.services.narrative_scope import (
     SCOPE_FRAME,
@@ -14,7 +13,6 @@ from travelogue.services.narrative_scope import (
     apply_scope_cleanup,
     chapter_lead_allowed,
 )
-from travelogue.services.llm_narrate import run_llm_narrate
 
 
 def _sample_trip() -> dict:
@@ -149,7 +147,6 @@ def test_llm_narrate_frame_skips_chapter_calls() -> None:
 
 def test_narrate_full_preserves_legacy_behavior() -> None:
     trip = _sample_trip()
-    before = copy.deepcopy(trip)
     for ch in trip["chapters"]:
         ch["lead"] = ""
     for asset in trip["assets"]:

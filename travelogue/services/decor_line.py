@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from typing import Any
 
 from travelogue.config import AppConfig, get_config
 from travelogue.services.narrate import BANNED_PHRASES, _finalize_copy

@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from travelogue.config import AppConfig, IngestConfig, PipelineConfig, VisionConfig, LayoutScoringConfig, LayoutConfig
+from travelogue.config import (
+    AppConfig,
+    IngestConfig,
+    LayoutConfig,
+    LayoutScoringConfig,
+    PipelineConfig,
+    VisionConfig,
+)
 
 
 def test_p6_rollback_values() -> None:

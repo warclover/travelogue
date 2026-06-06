@@ -10,9 +10,9 @@ from urllib import error, request
 
 import pytest
 
+from tests.test_studio_server import _distinct_album, _free_port
 from travelogue.web.serve import TripPreviewHandler
 from travelogue.web.studio_pipeline import run_studio_pipeline
-from tests.test_studio_server import _distinct_album, _free_port
 
 
 def _start_mvp_server(trip_dir: Path, port: int) -> ThreadingHTTPServer:

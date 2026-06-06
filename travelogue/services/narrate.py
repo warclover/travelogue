@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 
@@ -562,8 +562,8 @@ def _run_narrate_stub(
     )
     updated.extend(caption_updates)
 
-    from travelogue.services.decor_line import apply_decor_lines
     from travelogue.config import get_config
+    from travelogue.services.decor_line import apply_decor_lines
 
     updated.extend(
         apply_decor_lines(

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import threading
+from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -14,10 +15,9 @@ from urllib.parse import unquote
 from travelogue.config import AppConfig, app_config_scope, get_config
 from travelogue.runtime import app_context_for_trip_json
 from travelogue.web.copy_patch import CopyPatchError, apply_copy_patches
-from travelogue.web.studio_errors import internal_error_payload
 from travelogue.web.studio_chrome import inject_studio_chrome, should_inject_studio_chrome
+from travelogue.web.studio_errors import client_error_payload, internal_error_payload
 from travelogue.web.studio_routes import StudioMixin
-from travelogue.web.studio_routes import CONFIG_PATH
 from travelogue.web.studio_uploads import sweep_stale_uploads
 from travelogue.web.tier_patch import TierPatchError, apply_tier_promotions
 
@@ -232,7 +232,7 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
 
                         rendered = rerender_draft_trip(self.trip_json_path)
         except CopyPatchError as exc:
-            self._json_response(400, {"ok": False, "error": str(exc)})
+            self._json_response(400, client_error_payload(exc))
             return
         except Exception:
             _log.exception("copy patch failed for %s", self.trip_json_path)
@@ -263,7 +263,7 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
 
                         rendered = rerender_draft_trip(self.trip_json_path)
         except TierPatchError as exc:
-            self._json_response(400, {"ok": False, "error": str(exc)})
+            self._json_response(400, client_error_payload(exc))
             return
         except Exception:
             _log.exception("tier promotion failed for %s", self.trip_json_path)
@@ -335,7 +335,11 @@ def serve_studio_directory(
     allow_lan: bool = False,
     config_path: Path | None = None,
 ) -> None:
-    from travelogue.web.studio_auth import ensure_studio_bind_allowed, is_loopback_host, new_studio_token
+    from travelogue.web.studio_auth import (
+        ensure_studio_bind_allowed,
+        is_loopback_host,
+        new_studio_token,
+    )
 
     ensure_studio_bind_allowed(host, allow_lan=allow_lan)
     trips_dir = trips_dir.resolve()

@@ -35,7 +35,6 @@ def _load_script_module(name: str, rel_path: str):
 
 
 def _p6_equivalent_config():
-    from dataclasses import replace
 
     from travelogue.config import (
         AppConfig,
@@ -71,7 +70,6 @@ def _p6_equivalent_config():
 
 
 def _p7_fast_path_config():
-    from dataclasses import replace
 
     from travelogue.config import AppConfig
 
@@ -96,9 +94,9 @@ def _cluster_hash(trip: dict) -> str:
 
 def _collect_curate_hash_fixed(work_dir: Path) -> float:
     from scripts.phase3_ig2_report import _prepare_trip, load_fixture_trip
+    from tests._golden.helpers import layout_snapshot
     from travelogue.curation.clustering import run_clustering_layer
     from travelogue.curation.curate import run_curate
-    from tests._golden.helpers import layout_snapshot
 
     trip = load_fixture_trip(CI_FIXTURE)
 
@@ -135,7 +133,11 @@ def _collect_subject_class_agreement(work_dir: Path) -> float:
     """CLIP batch vs single subjectClass; heuristic-only path returns 1.0."""
     from PIL import Image
 
-    from travelogue.vision.clip_encoder import ClipEncoder, clip_torch_available, reset_clip_encoder_singleton
+    from travelogue.vision.clip_encoder import (
+        ClipEncoder,
+        clip_torch_available,
+        reset_clip_encoder_singleton,
+    )
 
     reset_clip_encoder_singleton()
     trip_dir = work_dir / "subject-class"
@@ -219,9 +221,9 @@ def _collect_event_boundary_p7() -> float | None:
 def _collect_rollback_layout_match(work_dir: Path) -> bool:
     """AC-P7-08 · rollback patch config must match P6-equivalent layout on CI fixture."""
     from scripts.phase3_ig2_report import _prepare_trip, load_fixture_trip
+    from tests._golden.helpers import layout_snapshot
     from travelogue.curation.clustering import run_clustering_layer
     from travelogue.curation.curate import run_curate
-    from tests._golden.helpers import layout_snapshot
 
     trip = load_fixture_trip(CI_FIXTURE)
     p6_cfg = _p6_equivalent_config()

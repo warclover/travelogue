@@ -8,14 +8,14 @@ from unittest.mock import patch
 
 import pytest
 
+from tests.studio_test_helpers import MockStudioHandler
 from travelogue.web.studio_handlers.config_handlers import handle_config, handle_pick_folder
+from travelogue.web.studio_handlers.paths import STUDIO_ASSET_PREFIX
 from travelogue.web.studio_handlers.static_handlers import (
     handle_home,
     handle_home_root,
     handle_studio_asset,
 )
-from travelogue.web.studio_handlers.paths import STUDIO_ASSET_PREFIX
-from tests.studio_test_helpers import MockStudioHandler
 
 pytestmark = pytest.mark.unit
 
@@ -97,7 +97,10 @@ def test_handle_config_patch_invalid_value(tmp_path: Path) -> None:
         side_effect=ValueError("invalid patch"),
     ):
         handle_config(handler)
-    assert handler.response == (400, {"ok": False, "error": "invalid patch"})
+    assert handler.response == (
+        400,
+        {"ok": False, "error": "E_BAD_REQUEST", "message": "invalid patch"},
+    )
 
 
 def test_handle_config_patch_write_error(tmp_path: Path) -> None:

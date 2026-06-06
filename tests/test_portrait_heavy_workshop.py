@@ -7,14 +7,13 @@ import os
 import time
 from pathlib import Path
 
+import pytest
 from PIL import Image, ImageDraw
 
 from travelogue.curation.curate import run_curate
 from travelogue.render.engine import render_trip_surfaces
 from travelogue.services.trip_factory import create_trip
 from travelogue.services.validate import validate_trip
-
-import pytest
 
 pytestmark = pytest.mark.integration
 

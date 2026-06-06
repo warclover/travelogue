@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
@@ -13,7 +12,6 @@ from travelogue.templates.registry import (
     TemplateRegistry,
     bootstrap_registry,
     check_template_health,
-    get_registry,
     reset_registry_for_tests,
 )
 from travelogue.templating.resolver import resolve_effective_template, sync_template_id_mirror

@@ -6,8 +6,6 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import pytest
-
 from travelogue.services.trip import TripSaveError, TripService
 
 

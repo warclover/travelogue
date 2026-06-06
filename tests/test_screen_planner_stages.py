@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from travelogue.curation.mosaic.compose import WindowPickResult
 from travelogue.curation.mosaic.hook import chapter_should_skip_hero_for_mosaic
@@ -15,7 +15,7 @@ from travelogue.curation.screen_planner_stages import (
 
 
 def _assets(ids: list[str], *, portrait: bool = False) -> dict[str, dict]:
-    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=UTC)
     out: dict[str, dict] = {}
     for i, aid in enumerate(ids):
         out[aid] = {

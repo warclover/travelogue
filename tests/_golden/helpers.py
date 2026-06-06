@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import json
 from dataclasses import replace
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 from travelogue.config import get_config
-from travelogue.curation.layout_planner import build_chapters_from_buckets, summarize_orientations
 from travelogue.curation.curate_patterns import pattern_hint_for_bucket
+from travelogue.curation.layout_planner import build_chapters_from_buckets, summarize_orientations
 from travelogue.media.image_ops import classify_aspect
 
 GOLDEN_DIR = Path(__file__).resolve().parent
@@ -24,7 +24,7 @@ def _asset(
     offset_hours: float = 0.0,
     sharpness: float | None = None,
 ) -> dict:
-    base = datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, tzinfo=UTC)
     taken = (base + timedelta(hours=offset_hours)).isoformat().replace("+00:00", "Z")
     a: dict[str, Any] = {
         "id": aid,

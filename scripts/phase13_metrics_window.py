@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -47,7 +47,6 @@ def build_report(
     counts = agg.get("counts") or {}
     route_total = int(rates.get("route_total") or 0)
     manual = int(counts.get("template.route.manual_override", 0))
-    fallback = int(counts.get("template.route.fallback", 0))
     manual_rate = round(manual / route_total, 4) if route_total else 0.0
 
     window_key = "72h" if hours >= 72 else "24h"
@@ -86,7 +85,7 @@ def build_report(
     if route_total == 0:
         all_pass = True
     return {
-        "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "generatedAt": datetime.now(UTC).replace(microsecond=0).isoformat(),
         "windowHours": hours,
         "metrics": agg,
         "manual_override_rate": manual_rate,

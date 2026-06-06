@@ -12,7 +12,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -22,7 +22,7 @@ PHASE6_RECORD_PATH = ROOT / "docs" / "acceptance-records" / "phase6-quality-eval
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 def _load_json(path: Path) -> dict[str, Any]:

@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
+from tests._golden.helpers import build_portrait_heavy_trip, plan_legacy_screens
 from travelogue.curation.degradation import assess_degradation
 from travelogue.curation.layout_scoring import PHASE2_WEIGHTS, ScoringWeights
 from travelogue.curation.layout_search import maybe_replan_chapters
-
-from tests._golden.helpers import build_portrait_heavy_trip, plan_legacy_screens
 
 
 def _screen(pid: str, aid: str) -> dict:

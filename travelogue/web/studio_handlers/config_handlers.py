@@ -7,7 +7,7 @@ from pathlib import Path
 
 from travelogue.config import load_config, patch_config_file, studio_config_expose
 from travelogue.web.studio_auth import is_loopback_host
-from travelogue.web.studio_errors import user_message
+from travelogue.web.studio_errors import client_error_payload, user_message
 from travelogue.web.studio_handlers.common import studio_ctx
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
@@ -31,7 +31,7 @@ def handle_config(handler: StudioHandlerProtocol) -> None:
         try:
             patch_config_file(target, payload)
         except (ValueError, TypeError) as exc:
-            handler._json_response(400, {"ok": False, "error": str(exc)})
+            handler._json_response(400, client_error_payload(exc))
             return
         except (OSError, PermissionError):
             handler._json_response(

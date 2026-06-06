@@ -6,7 +6,6 @@ import json
 from io import StringIO
 from pathlib import Path
 
-import pytest
 import yaml
 
 from travelogue.web.studio_homepage_gate import (

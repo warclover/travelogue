@@ -47,7 +47,7 @@ def test_allow_drop_records_dropped_asset(monkeypatch):
         window_size=5,
         trip_photo_total=40,
     )
-    logs = drain_mosaic_logs()
+    drain_mosaic_logs()
     dropped = drain_mosaic_dropped()
     assert pick.used_legacy or pick.log.dropped_asset_ids or dropped
     if pick.log.dropped_asset_ids:

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.test_studio_server import _distinct_album
 from travelogue.curation.chapter_explain import build_chapter_explain
 from travelogue.curation.chapter_titles import chapter_titles
 from travelogue.services.intent_plan import (
@@ -19,8 +20,6 @@ from travelogue.services.intent_plan import (
 )
 from travelogue.services.validate import validate_trip
 from travelogue.web.studio_pipeline import run_studio_pipeline
-from tests.test_studio_server import _distinct_album
-
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "intent"
 

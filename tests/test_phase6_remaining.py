@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
+from travelogue.config import AppConfig, Phase6ObservabilityConfig, Phase6RolloutConfig
 from travelogue.curation.breath_pauses import arc_breath_interval, insert_breath_screens_in_chapters
 from travelogue.curation.geo_events import GeoSegment
 from travelogue.curation.phase6_rollout import (
@@ -15,8 +16,11 @@ from travelogue.curation.phase6_rollout import (
     rollout_bucket,
 )
 from travelogue.curation.scene_subsegments import apply_scene_subsegments
-from travelogue.config import AppConfig, Phase6ObservabilityConfig, Phase6RolloutConfig
-from travelogue.vision.cache import plan_embedding_refresh, prepare_scene_embeddings, save_embedding_cache
+from travelogue.vision.cache import (
+    plan_embedding_refresh,
+    prepare_scene_embeddings,
+    save_embedding_cache,
+)
 from travelogue.vision.clip_encoder import ClipEncoder
 
 

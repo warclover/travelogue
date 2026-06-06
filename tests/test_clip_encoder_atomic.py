@@ -12,7 +12,6 @@ from pathlib import Path
 
 import pytest
 
-
 torch = pytest.importorskip("torch")
 pytest.importorskip("PIL.Image")
 pytest.importorskip("open_clip")
@@ -78,7 +77,7 @@ def test_subject_class_not_written_when_clip_fails_midbatch(tmp_path: Path) -> N
 
 
 def test_subject_class_written_for_whole_batch_when_clip_succeeds(tmp_path: Path) -> None:
-    from travelogue.vision.clip_encoder import ClipEncoder, SUBJECT_CLASSES
+    from travelogue.vision.clip_encoder import SUBJECT_CLASSES, ClipEncoder
 
     assets = _build_assets_dir(tmp_path)
 

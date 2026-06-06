@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -40,7 +40,7 @@ def build_studio_intent_telemetry(
     )
     photo_total = len(assets)
     return {
-        "recordedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "recordedAt": datetime.now(UTC).isoformat(timespec="seconds"),
         "tripId": trip.get("tripId"),
         "hasUserNotes": bool(user_notes),
         "featuredCount": featured_count,

@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -103,7 +103,7 @@ def _trip_day_span(trip: dict) -> int:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 def _person_ratio(trip: dict) -> float:
@@ -229,7 +229,11 @@ def route_template(
     cfg: AppConfig | None = None,
 ) -> dict[str, Any]:
     """Compute template decision without mutating trip."""
-    from travelogue.templating.metrics import RouteTimer, record_route_decision, record_template_metric
+    from travelogue.templating.metrics import (
+        RouteTimer,
+        record_route_decision,
+        record_template_metric,
+    )
 
     timer = RouteTimer()
     tr = _cfg_router(cfg)

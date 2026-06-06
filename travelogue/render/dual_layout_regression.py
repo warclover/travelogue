@@ -6,6 +6,7 @@ import copy
 import re
 from collections import Counter
 
+from travelogue.config import default_mixed_proximity_seconds
 from travelogue.curation.layout_planner import aspect_kind_for_asset
 from travelogue.curation.screen_planner import (
     LAYOUT_ENGINE_LEGACY,
@@ -13,7 +14,6 @@ from travelogue.curation.screen_planner import (
     _collect_asset_ids_from_chapter,
     attach_screens_to_chapters,
 )
-from travelogue.config import default_mixed_proximity_seconds
 from travelogue.render.engine import render_html
 from travelogue.services.layout import apply_layout_to_trip
 
@@ -111,7 +111,6 @@ def check_legacy_unchanged_vs_baseline(baseline_html: str, legacy_html: str) -> 
 def run_dual_engine_checks(trip: dict, *, trip_root=None) -> list[str]:
     """Run legacy + screens contracts on one trip dict."""
     errors: list[str] = []
-    baseline = render_html(trip, export_mode="draft", trip_root=trip_root)
 
     legacy_trip = prepare_trip_web_legacy(trip)
     legacy_html = render_html(legacy_trip, export_mode="draft", trip_root=trip_root)

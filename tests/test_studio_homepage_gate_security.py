@@ -7,14 +7,13 @@ from pathlib import Path
 
 import pytest
 
+from tests.test_studio_server import _free_port, _start_studio_server
 from travelogue.web.studio_homepage_gate import (
     decide_root_variant,
     inject_home_placeholders,
     set_bucket_cookie,
-    sign_bucket_value,
     stable_bucket,
 )
-from tests.test_studio_server import _free_port, _start_studio_server
 
 pytestmark = pytest.mark.e2e
 

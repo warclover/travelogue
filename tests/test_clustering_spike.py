@@ -8,7 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.config import AppConfig, ClusteringConfig, VisionConfig
+from tests.clustering_fixtures import (
+    GOLDEN_TRIP_IDS,
+    load_fixture_assets,
+    load_fixture_golden_segments,
+)
+from travelogue.config import AppConfig, ClusteringConfig
 from travelogue.curation.cluster_eval import geo_segment_agreement_rate, segments_to_eval_dict
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.clustering_buckets import cap_geo_segments, merge_small_geo_events
@@ -16,11 +21,6 @@ from travelogue.curation.curate import run_curate
 from travelogue.curation.geo_events import detect_geo_events
 from travelogue.curation.scene_clusters import compute_scene_clusters
 from travelogue.vision.clip_encoder import ClipEncoder
-from tests.clustering_fixtures import (
-    GOLDEN_TRIP_IDS,
-    load_fixture_assets,
-    load_fixture_golden_segments,
-)
 
 GPS_GOLDEN = ("golden-kyoto-gps", "golden-mixed-scenes", "synthetic-gps")
 SP_C01_MIN_RATE = 0.70

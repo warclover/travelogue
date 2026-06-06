@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.templating.metrics import aggregate_metrics, metrics_path
 from travelogue.templating.roles import require_template_role
 
 

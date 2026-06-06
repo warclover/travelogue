@@ -4,18 +4,23 @@ from __future__ import annotations
 
 import numpy as np
 
+from travelogue.config import CohortConfig
 from travelogue.curation.cohort_faces import (
-    asset_cohort_duo,
-    featured_subjects_from_trip,
-    score_cohort_coherence,
+    SubjectTemplate,
     _match_present_subjects,
     _resolve_asset_image_path,
+    asset_cohort_duo,
+    featured_subjects_from_trip,
+    merge_cohort_weight,
+    score_cohort_coherence,
 )
-from travelogue.curation.cohort_faces import SubjectTemplate
-from travelogue.curation.layout_scoring import ScoringWeights, score_cohort_coherence as layout_cohort_score
-from travelogue.curation.cohort_faces import merge_cohort_weight
-from travelogue.config import CohortConfig
-from travelogue.media.face_embed import cosine_similarity, face_crop_embedding, l2_normalize, mean_embedding
+from travelogue.curation.layout_scoring import ScoringWeights
+from travelogue.curation.layout_scoring import score_cohort_coherence as layout_cohort_score
+from travelogue.media.face_embed import (
+    cosine_similarity,
+    l2_normalize,
+    mean_embedding,
+)
 
 
 def test_featured_subjects_from_intent() -> None:

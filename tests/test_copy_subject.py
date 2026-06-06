@@ -4,26 +4,17 @@
 
 from __future__ import annotations
 
-
-
 from travelogue.curation.time_segments import cluster_time_segments
-
 from travelogue.render.context import build_epilogue_stats, chapter_divider
 from travelogue.services.copy_subject import (
-    filter_chapter_places_for_copy,
     narrative_copy_subject,
     place_conflicts_with_title,
     suppress_chapter_geo_places,
     user_place_explicit,
 )
-from travelogue.services.narrative_brief import build_chapter_brief
-
 from travelogue.services.narrate import run_narrate
-
+from travelogue.services.narrative_brief import build_chapter_brief
 from travelogue.services.narrative_scope import SCOPE_FRAME
-
-
-
 
 
 def test_narrative_copy_subject_prefers_title_when_place_generic() -> None:
@@ -335,8 +326,8 @@ def test_stub_caption_uses_title_not_exif_city() -> None:
 
 
 def test_geo_segment_name_uses_editorial_subject_not_exif() -> None:
-    from travelogue.curation.geo_events import detect_geo_events
     from travelogue.config import GeoClusterConfig
+    from travelogue.curation.geo_events import detect_geo_events
 
     assets = [
         {

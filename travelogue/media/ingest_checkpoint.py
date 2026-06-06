@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -47,7 +47,7 @@ def save_ingest_checkpoint(
         "sourceRoot": source_root,
         "processedRelPaths": sorted(set(processed_rel_paths)),
         "total": total,
-        "updatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "updatedAt": datetime.now(UTC).replace(microsecond=0).isoformat(),
     }
     checkpoint_path(trip_dir).write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n",

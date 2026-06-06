@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.web.studio_jobs import reset_job_store
 from tests.test_studio_home_v2_ac_playwright import _goto_v2, _wait_visible
 from tests.test_studio_server import _free_port, _start_studio_server
+from travelogue.web.studio_jobs import reset_job_store
 
 pytest.importorskip("playwright")
 from playwright.sync_api import sync_playwright

@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from PIL import Image
 
 from travelogue.config import IngestConfig
-from travelogue.media.color_metrics import color_metrics_from_thumb, mean_luma, dominant_tone_hex
+from travelogue.media.color_metrics import color_metrics_from_thumb, dominant_tone_hex, mean_luma
 from travelogue.media.subject_detect import reset_cascade_classifier
 
 

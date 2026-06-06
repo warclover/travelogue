@@ -11,7 +11,6 @@ sys.path.insert(0, str(ROOT))
 
 from tests.test_studio_server import _free_port, _start_studio_server  # noqa: E402
 
-
 AUDIT_JS = """
 () => {
   function info(el) {

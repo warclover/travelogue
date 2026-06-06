@@ -5,8 +5,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from PIL import Image, ImageDraw
+
 from travelogue.curation.cover_scoring_v2 import (
-    CoverScoringParamsV2,
     build_cover_explain_v2,
     cover_logit_v2,
     cover_score_v2,
@@ -15,12 +16,10 @@ from travelogue.curation.cover_scoring_v2 import (
 )
 from travelogue.curation.curate_scoring import (
     cover_score,
-    effective_cover_score,
     pick_cover_asset_id,
     score_ranked_cover_ids,
 )
 from travelogue.media.sharpness import sharpness_score, sharpness_score_v2
-from PIL import Image, ImageDraw
 
 _FIXTURE = Path(__file__).resolve().parent / "fixtures" / "cover_v2_quality_priority.json"
 
@@ -121,7 +120,6 @@ def test_featured_effective_in_top3_when_logit_close() -> None:
         quality={"sharpness": 200.0},
         userTier="featured",
     )
-    pool = [base, featured]
     ranked = score_ranked_cover_ids(
         [base, featured],
         export_layout="mobile",

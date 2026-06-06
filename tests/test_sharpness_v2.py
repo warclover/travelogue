@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from travelogue.curation.asset_quality import normalized_sharpness
-from travelogue.media.sharpness import sharpness_score, sharpness_score_v2
 from PIL import Image, ImageDraw
+
+from travelogue.curation.asset_quality import normalized_sharpness
+from travelogue.media.sharpness import sharpness_score_v2
 
 
 def _grid_image() -> Image.Image:

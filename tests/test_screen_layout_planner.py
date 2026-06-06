@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -21,6 +21,7 @@ def _planner_tests_disable_mosaic(monkeypatch, request):
         lambda: replace(cfg, mosaic=replace(cfg.mosaic, enabled=False)),
     )
 
+from travelogue.curation.screen_layout_state import portrait_grid8_max_for_trip
 from travelogue.curation.screen_planner import (
     MIN_TRIP_PHOTOS_FOR_MOSAIC,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
@@ -42,7 +43,6 @@ from travelogue.curation.screen_planner import (
     plan_screens_for_chapter,
     screens_layout_active,
 )
-from travelogue.curation.screen_layout_state import portrait_grid8_max_for_trip
 from travelogue.media.image_ops import classify_aspect
 
 
@@ -105,7 +105,7 @@ def test_plan_mosaic_5_main_portrait_3land():
         "b2": "landscape",
         "b3": "landscape",
     }
-    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=UTC)
     assets = {
         aid: {
             "id": aid,
@@ -136,7 +136,7 @@ def test_plan_mosaic_5_main_portrait_3land():
 def test_plan_mosaic_5_prefers_cover_score_for_main():
     ids = ["l-low", "p1", "l-high", "b2", "b3"]
     aspects = {aid: ("portrait" if aid == "p1" else "landscape") for aid in ids}
-    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=UTC)
     assets = {
         aid: {
             "id": aid,
@@ -161,7 +161,7 @@ def test_plan_mosaic_5_prefers_cover_score_for_main():
 
 @pytest.mark.mosaic
 def test_plan_mosaic_5_requires_time_proximity():
-    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=UTC)
     assets = {
         "l1": {"id": "l1", "takenAt": base.isoformat().replace("+00:00", "Z")},
         "p1": {
@@ -194,7 +194,7 @@ def test_plan_mosaic_5_skips_chapter_hero_when_chapter_is_exactly_five():
     """章首 Hero 与五图拼版互斥：整章恰好 5 张且符合拼版时不拆出 landscape-1。"""
     ids = ["l-low", "p1", "l-high", "b2", "b3"]
     aspects = {aid: ("portrait" if aid == "p1" else "landscape") for aid in ids}
-    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, 0, tzinfo=UTC)
     assets = {
         aid: {
             "id": aid,
@@ -228,7 +228,7 @@ def test_portrait_grid8_limits_by_trip_size():
 def test_plan_portrait_grid8_when_trip_over_50_and_portrait_heavy():
     ids = [f"p{i}" for i in range(8)]
     aspects = {x: "portrait" for x in ids}
-    base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=UTC)
     assets = {
         aid: {
             "id": aid,
@@ -258,7 +258,7 @@ def test_plan_portrait_grid8_when_trip_over_50_and_portrait_heavy():
 def test_plan_portrait_grid8_person_hint():
     ids = [f"p{i}" for i in range(8)]
     aspects = {x: "portrait" for x in ids}
-    base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=UTC)
     assets = {
         aid: {
             "id": aid,
@@ -296,7 +296,7 @@ def test_plan_no_portrait_grid8_when_trip_at_most_50():
 def test_plan_no_portrait_grid8_when_not_portrait_heavy():
     ids = [f"p{i}" for i in range(8)]
     aspects = {x: "portrait" for x in ids}
-    base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=UTC)
     assets = {
         aid: {
             "id": aid,
@@ -319,7 +319,7 @@ def test_plan_no_portrait_grid8_when_not_portrait_heavy():
 def test_plan_portrait_grid8_ten_yields_grid_plus_remainder():
     ids = [f"p{i}" for i in range(10)]
     aspects = {x: "portrait" for x in ids}
-    base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=UTC)
     assets = {
         aid: {
             "id": aid,
@@ -345,7 +345,7 @@ def test_plan_portrait_grid8_ten_yields_grid_plus_remainder():
 def test_plan_mosaic_5_beats_mixed_p1_l2_when_five_fit():
     ids = ["p1", "l1", "l2", "l3", "l4"]
     aspects = {aid: ("portrait" if aid == "p1" else "landscape") for aid in ids}
-    base = datetime(2025, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 12, 0, 0, tzinfo=UTC)
     assets = {
         aid: {
             "id": aid,
@@ -366,7 +366,7 @@ def test_plan_mosaic_5_beats_mixed_p1_l2_when_five_fit():
 
 
 def test_plan_mixed_requires_time_proximity_when_exif_present():
-    base = datetime(2025, 5, 1, 12, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 5, 1, 12, 0, 0, tzinfo=UTC)
     assets = {
         "p1": {
             "id": "p1",
@@ -450,7 +450,7 @@ def _assert_no_consecutive_pattern_pairs(
 
 
 def test_no_consecutive_triple_six_or_portrait_single():
-    base = datetime(2025, 5, 1, 12, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 5, 1, 12, 0, 0, tzinfo=UTC)
     ids = [f"p{i}" for i in range(24)]
     assets = {
         aid: {
@@ -481,7 +481,7 @@ def test_no_consecutive_triple_six_or_portrait_single():
 
 
 def test_trip_200_plus_caps_nine_and_no_consecutive():
-    base = datetime(2025, 5, 1, 12, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 5, 1, 12, 0, 0, tzinfo=UTC)
     ids = [f"l{i}" for i in range(72)]
     assets = {
         aid: {
@@ -571,7 +571,7 @@ def test_plan_four_landscapes_one_2x2_screen():
 
 
 def test_burst_group_prefers_four_grid():
-    base = datetime(2025, 5, 1, 12, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 5, 1, 12, 0, 0, tzinfo=UTC)
     assets = {}
     ids = [f"l{i}" for i in range(4)]
     for i, aid in enumerate(ids):

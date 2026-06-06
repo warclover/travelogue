@@ -4,11 +4,17 @@ from __future__ import annotations
 
 import copy
 
-from travelogue.curation.breath_pauses import insert_breath_screens_in_chapters, interleave_breath_items
-from travelogue.curation.longshot_filter import chapters_for_longshot_render, select_longshot_screens
+from travelogue.curation.breath_pauses import (
+    insert_breath_screens_in_chapters,
+    interleave_breath_items,
+)
+from travelogue.curation.longshot_filter import (
+    chapters_for_longshot_render,
+    select_longshot_screens,
+)
 from travelogue.render.context import build_epilogue_stats
-from travelogue.render.engine import render_html
 from travelogue.render.dual_layout_regression import prepare_trip_web_screens
+from travelogue.render.engine import render_html
 
 
 def _sample_screens(n: int) -> list[dict]:

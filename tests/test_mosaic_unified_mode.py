@@ -4,17 +4,16 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from travelogue.config import get_config
-from travelogue.curation.mosaic.hook import drain_mosaic_logs
-from travelogue.curation.mosaic.metrics import mcs_unified_exposure_rate
-from travelogue.curation.mosaic.runtime import effective_mosaic_window_sizes
-
 from tests._golden.helpers import (
     build_mixed_aspects_trip,
     build_mosaic_eligible_trip,
     plan_legacy_screens,
     plan_mosaic_screens,
 )
+from travelogue.config import get_config
+from travelogue.curation.mosaic.hook import drain_mosaic_logs
+from travelogue.curation.mosaic.metrics import mcs_unified_exposure_rate
+from travelogue.curation.mosaic.runtime import effective_mosaic_window_sizes
 
 
 def test_effective_sizes_unified_off_is_five_only() -> None:

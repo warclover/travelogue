@@ -8,7 +8,7 @@ import json
 import shutil
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,9 +19,8 @@ from travelogue.config import get_config
 from travelogue.curation.curate import layout_eligible_assets, run_curate
 from travelogue.media.ingest import ingest_into_trip
 from travelogue.media.ingest_report import format_ingest_report
-from travelogue.services.trip_factory import create_trip
 from travelogue.services.trip import TripService
-
+from travelogue.services.trip_factory import create_trip
 
 DEFAULT_ALBUMS: dict[str, str] = {
     "mao": r"D:\Photos\mao",
@@ -129,7 +128,7 @@ def run_signoff(
     return {
         "tripId": trip_id,
         "albumPath": str(album),
-        "signedOffAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "signedOffAt": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "phase": "P9-QualityGate",
         "baseline": "cull-on",
         "metrics": metrics,

@@ -13,20 +13,19 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from travelogue.config import get_config
-from travelogue.curation.chapter_items import summarize_screen_patterns
-from travelogue.curation.mosaic.hook import drain_mosaic_logs
-from travelogue.curation.mosaic.metrics import compute_mosaic_metrics, mcs_unified_exposure_rate
-
 from tests._golden.helpers import (
+    build_mixed_aspects_trip,
     build_mosaic_eligible_trip,
     build_mosaic_landscape9_trip,
     build_mosaic_portrait8_trip,
-    build_mixed_aspects_trip,
     build_portrait_heavy_trip,
     plan_legacy_screens,
     plan_mosaic_screens,
 )
+from travelogue.config import get_config
+from travelogue.curation.chapter_items import summarize_screen_patterns
+from travelogue.curation.mosaic.hook import drain_mosaic_logs
+from travelogue.curation.mosaic.metrics import compute_mosaic_metrics, mcs_unified_exposure_rate
 
 SCENARIOS = {
     "mosaic5_eligible": lambda: build_mosaic_eligible_trip(),

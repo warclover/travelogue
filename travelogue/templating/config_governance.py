@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import threading
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from travelogue.templating.admin_store import _LOCK, _load_unlocked, _save_unlocked, append_audit
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 def propose_router_change(

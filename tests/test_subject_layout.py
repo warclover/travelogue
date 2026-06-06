@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from travelogue.curation.aspect_buckets import landscape_aspect_bucket, prefix_same_bucket
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
@@ -103,7 +103,7 @@ def test_three_portraits_without_person_stays_triple():
 
 
 def test_mixed_p1_l2_blocked_when_portrait_has_person():
-    base = datetime(2025, 5, 1, 12, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 5, 1, 12, 0, 0, tzinfo=UTC)
     assets = {
         "p1": {
             "id": "p1",

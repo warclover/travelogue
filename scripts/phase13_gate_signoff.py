@@ -7,7 +7,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -162,7 +162,7 @@ def build_signoff(*, fixture_trip: Path) -> dict[str, Any]:
     )
 
     return {
-        "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "generatedAt": datetime.now(UTC).replace(microsecond=0).isoformat(),
         "phase": "P13.1",
         "go": all_pass,
         "gates": gates,

@@ -2,23 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
-
-from travelogue.render.context_types import (
-    BreathPauseItemContext,
-    ChapterDividerContext,
-    ChapterRenderContext,
-    EpilogueStatsContext,
-    FeaturedGridCardContext,
-    ForewordSpreadContext,
-    LayoutScreenContext,
-    MediaCardContext,
-    MediaRowContext,
-    MediaScrollContext,
-    ScreenSpreadContext,
-    TripIndexEntryContext,
-)
 
 from travelogue.curation.asset_caption import asset_caption, resolve_caption
 from travelogue.media.image_ops import classify_aspect, detect_orientation
@@ -33,11 +18,23 @@ from travelogue.paths import (
     JOURNAL_SCREENS_CSS,
     LONGSHOT_BRIDGE_JS,
     LONGSHOT_JS,
+    SCREENPLAY_BOOKMARKS_JS,
     SCREENPLAY_CSS,
     SCREENPLAY_HASH_JS,
-    SCREENPLAY_BOOKMARKS_JS,
     SCREENPLAY_JS,
     SHARE_JS,
+)
+from travelogue.render.context_types import (
+    ChapterDividerContext,
+    EpilogueStatsContext,
+    FeaturedGridCardContext,
+    ForewordSpreadContext,
+    LayoutScreenContext,
+    MediaCardContext,
+    MediaRowContext,
+    MediaScrollContext,
+    ScreenSpreadContext,
+    TripIndexEntryContext,
 )
 from travelogue.services.validate import asset_map
 
@@ -913,7 +910,10 @@ def collect_asset_paths(trip: dict, trip_root: Path) -> list[tuple[str, Path]]:
 
 
 from travelogue.render.assemble import build_render_context  # noqa: E402
-from travelogue.render.chapters import ChaptersRenderBundle, build_chapters_render_context  # noqa: E402
+from travelogue.render.chapters import (  # noqa: E402
+    ChaptersRenderBundle,
+    build_chapters_render_context,
+)
 
 __all__ = [
     "ChaptersRenderBundle",

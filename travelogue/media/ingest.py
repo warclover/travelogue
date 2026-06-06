@@ -5,16 +5,15 @@ from __future__ import annotations
 import hashlib
 import re
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from PIL import Image
 
 from travelogue.config import AestheticConfig, AppConfig, IngestConfig, get_config
-from travelogue.errors import CodeError
-from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 from travelogue.curation.asset_quality import apply_layout_eligibility_marks, asset_sharpness
 from travelogue.curation.media_classify import (
     classify_media_class,
@@ -22,13 +21,10 @@ from travelogue.curation.media_classify import (
     refine_archive_media_class,
     summarize_media_classes,
 )
+from travelogue.errors import CodeError
 from travelogue.media import ingest_checkpoint as icp
-from travelogue.media.color_metrics import color_metrics_from_thumb, dominant_tone_hex, mean_luma
+from travelogue.media.color_metrics import color_metrics_from_thumb
 from travelogue.media.heuristic_tags import build_heuristic_tags
-from travelogue.media.ingest_preview import preview_multi_journey
-from travelogue.media.subject_detect import analyze_subject
-from travelogue.media.trip_dates import apply_meta_dates_from_assets
-from travelogue.vision.cache import append_pending_assets, is_pipeline_locked
 from travelogue.media.image_ops import (
     classify_aspect,
     export_webp_variants,
@@ -36,8 +32,13 @@ from travelogue.media.image_ops import (
     min_dimension_ok,
     save_jpeg_without_exif,
 )
+from travelogue.media.ingest_preview import preview_multi_journey
 from travelogue.media.phash import dhash_hex, is_near_duplicate
 from travelogue.media.sharpness import sharpness_score, sharpness_score_v2
+from travelogue.media.subject_detect import analyze_subject
+from travelogue.media.trip_dates import apply_meta_dates_from_assets
+from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
+from travelogue.vision.cache import append_pending_assets, is_pipeline_locked
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"}
 HEIC_SUFFIXES = {".heic", ".heif"}
@@ -1178,8 +1179,6 @@ def ingest_into_trip(
             emit_progress=_emit_progress,
         )
 
-    added = loop_state.added
-    skipped = loop_state.skipped
     assets = loop_state.assets
     ingest_stats = loop_state.ingest_stats
 

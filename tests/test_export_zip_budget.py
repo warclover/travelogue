@@ -6,10 +6,10 @@ import json
 import zipfile
 from pathlib import Path
 
-from travelogue.demo.build import run_demo_from_album
-from tests.test_ingest import _album
-
 import pytest
+
+from tests.test_ingest import _album
+from travelogue.demo.build import run_demo_from_album
 
 pytestmark = pytest.mark.integration
 

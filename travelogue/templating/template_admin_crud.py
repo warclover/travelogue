@@ -13,7 +13,6 @@ from travelogue.templates.registry import (
     _record_from_dir,
     check_template_health,
     get_registry,
-    reset_registry_for_tests,
 )
 from travelogue.templating.admin_store import append_audit, get_effective_lifecycle
 

@@ -17,6 +17,6 @@ def test_meta_range_spans_years_not_single_day() -> None:
     assert d1.year >= 2024
 
     trip = {"meta": {"title": "t", "places": ["x"], "tone": "relaxed"}, "assets": assets}
-    warnings = apply_meta_dates_from_assets(trip)
+    apply_meta_dates_from_assets(trip)
     assert trip["meta"]["dateStart"] == "2010-03-01"
     assert trip["meta"]["dateEnd"] in ("2026-05-21", "2024-10-30")

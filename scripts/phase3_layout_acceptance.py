@@ -21,7 +21,7 @@ sys.path.insert(0, str(ROOT))
 from travelogue.config import LayoutScoringConfig, config_override, get_config
 from travelogue.curation.curate import run_curate
 from travelogue.curation.layout_metrics import compute_layout_metrics
-from travelogue.curation.layout_scoring import PHASE3B_WEIGHTS, PHASE3_WEIGHTS, score_aspect_match
+from travelogue.curation.layout_scoring import PHASE3_WEIGHTS, PHASE3B_WEIGHTS, score_aspect_match
 
 
 def _weights_dict(w) -> dict[str, float]:

@@ -33,10 +33,10 @@ def _lift_pct(base: float, cur: float) -> float | None:
 
 def _eval_fixture_agreement(trip_id: str) -> dict:
     sys.path.insert(0, str(ROOT))
+    from tests.clustering_fixtures import load_fixture_assets, load_fixture_golden_segments
     from travelogue.config import GeoClusterConfig
     from travelogue.curation.cluster_eval import geo_segment_agreement_rate, segments_to_eval_dict
     from travelogue.curation.geo_events import detect_geo_events
-    from tests.clustering_fixtures import load_fixture_assets, load_fixture_golden_segments
 
     assets = load_fixture_assets(trip_id)
     golden = load_fixture_golden_segments(trip_id)

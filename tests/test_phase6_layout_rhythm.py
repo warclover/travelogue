@@ -11,7 +11,6 @@ from travelogue.curation.layout_scoring import (
     PHASE6_WEIGHTS,
     score_gravity_balance,
     score_screen_plan,
-    ScoringWeights,
 )
 from travelogue.curation.longshot_filter import select_longshot_screens
 

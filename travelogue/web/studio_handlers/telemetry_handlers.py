@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from travelogue.web.studio_errors import client_error_payload
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_homepage_telemetry import (
     ALLOWED_STUDIO_HOMEPAGE_EVENTS,
@@ -37,6 +38,6 @@ def handle_studio_event(handler: StudioHandlerProtocol) -> None:
             tid = str((meta or {}).get("template_id") or (meta or {}).get("templateId") or "*")
             record_discovery_event(template_id=tid, kind="select")
     except ValueError as exc:
-        handler._json_response(400, {"ok": False, "error": str(exc)})
+        handler._json_response(400, client_error_payload(exc))
         return
     handler._json_response(200, {"ok": True})

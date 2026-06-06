@@ -9,13 +9,13 @@ import pytest
 
 from travelogue.config import AppConfig, TemplateRouterConfig
 from travelogue.services.trip_factory import create_trip
+from travelogue.templates.registry import get_registry
 from travelogue.templating.admin_store import (
     AdminRevisionConflict,
     get_store_revision,
     update_template_lifecycle,
 )
 from travelogue.templating.router import apply_template_selection, route_template
-from travelogue.templates.registry import get_registry
 
 
 def _cfg(**kwargs) -> AppConfig:
