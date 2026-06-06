@@ -30,7 +30,7 @@ def _trip_with_screens(trips_dir: Path, trip_id: str = "replan-demo") -> Path:
     return trip_json
 
 
-@patch("travelogue.web.studio_handlers.trip_handlers.studio_ctx")
+@patch("travelogue.web.studio_handlers.trip_replan_handlers.studio_ctx")
 def test_handle_patch_screen_replan(mock_ctx, tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     trip_json = _trip_with_screens(trips_dir)

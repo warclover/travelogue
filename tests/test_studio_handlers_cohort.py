@@ -50,7 +50,7 @@ def _trip_with_assets(trips_dir: Path, trip_id: str = "cohort-demo") -> Path:
     return trip_json
 
 
-@patch("travelogue.web.studio_handlers.trip_handlers.studio_ctx")
+@patch("travelogue.web.studio_handlers.trip_intent_handlers.studio_ctx")
 def test_handle_get_cohort(mock_ctx, tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     _trip_with_assets(trips_dir)
@@ -67,7 +67,7 @@ def test_handle_get_cohort(mock_ctx, tmp_path: Path) -> None:
     assert len(body["assets"]) == 3
 
 
-@patch("travelogue.web.studio_handlers.trip_handlers.studio_ctx")
+@patch("travelogue.web.studio_handlers.trip_intent_handlers.studio_ctx")
 @patch("travelogue.curation.cohort_faces.apply_cohort_tags")
 def test_handle_patch_cohort_refresh(mock_tags, mock_ctx, tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
@@ -94,7 +94,7 @@ def test_handle_patch_cohort_refresh(mock_tags, mock_ctx, tmp_path: Path) -> Non
     assert saved["curation"]["cohort"]["duoCount"] == 1
 
 
-@patch("travelogue.web.studio_handlers.trip_handlers.studio_ctx")
+@patch("travelogue.web.studio_handlers.trip_intent_handlers.studio_ctx")
 def test_handle_patch_cohort_disabled(mock_ctx, tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     _trip_with_assets(trips_dir)
@@ -113,7 +113,7 @@ def test_handle_patch_cohort_disabled(mock_ctx, tmp_path: Path) -> None:
     )
 
 
-@patch("travelogue.web.studio_handlers.trip_handlers.studio_ctx")
+@patch("travelogue.web.studio_handlers.trip_intent_handlers.studio_ctx")
 @patch("travelogue.curation.cohort_faces.apply_cohort_tags")
 def test_handle_post_cohort_refresh(mock_tags, mock_ctx, tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"

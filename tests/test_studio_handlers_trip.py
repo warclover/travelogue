@@ -234,7 +234,7 @@ def test_handle_patch_pipeline_starts_continue_job(tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     _structure_draft_trip(trips_dir, "demo-g1-go")
     handler = MockStudioHandler(trips_dir, json_body={"continuePipeline": True})
-    with patch("travelogue.web.studio_handlers.trip_handlers.run_g1_continue_job"):
+    with patch("travelogue.web.studio_handlers.trip_pipeline_handlers.run_g1_continue_job"):
         handle_patch_pipeline(handler, "demo-g1-go")
     assert handler.response is not None
     status, body = handler.response
@@ -286,7 +286,7 @@ def test_handle_trip_curate_starts_job(tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     create_trip("demo-curate", trips_dir)
     handler = MockStudioHandler(trips_dir, json_body={})
-    with patch("travelogue.web.studio_handlers.trip_handlers.run_g1_continue_job"):
+    with patch("travelogue.web.studio_handlers.trip_pipeline_handlers.run_g1_continue_job"):
         handle_trip_curate(handler, "demo-curate")
     assert handler.response is not None
     status, body = handler.response
@@ -309,7 +309,7 @@ def test_handle_trip_curate_runner_regenerates_preview_jpg(tmp_path: Path) -> No
         return {}
 
     with patch(
-        "travelogue.web.studio_handlers.trip_handlers.run_g1_continue_job",
+        "travelogue.web.studio_handlers.trip_pipeline_handlers.run_g1_continue_job",
         side_effect=_sync_job,
     ):
         with patch("travelogue.curation.curate.run_curate"):
