@@ -128,7 +128,7 @@ def capture_all(*, out_dir: Path, base_url: str | None = None) -> list[dict]:
             browser = p.chromium.launch()
             for ac_id, filename, viewport, query, wait_id in _SCENARIOS:
                 page = browser.new_page(viewport=viewport)
-                url = f"{base}/v2?{query}"
+                url = f"{base}/?{query}"
                 page.goto(url, wait_until="networkidle")
                 _wait_visible(page, wait_id)
                 if ac_id == "AC-HP2-08":

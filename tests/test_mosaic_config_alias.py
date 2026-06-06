@@ -2,7 +2,15 @@
 
 from __future__ import annotations
 
+import pytest
+
 from travelogue.config import get_config, reset_config_cache
+
+
+@pytest.fixture(autouse=True)
+def _restore_config_cache_after_alias_test() -> None:
+    yield
+    reset_config_cache()
 
 
 def test_layout_mosaic_v2_alias_overridden_by_top_level_mosaic(tmp_path) -> None:

@@ -14,7 +14,13 @@ from tests.test_studio_server import _free_port, _start_studio_server
 pytest.importorskip("playwright")
 from playwright.sync_api import sync_playwright
 
-pytestmark = [pytest.mark.e2e, pytest.mark.playwright_serial]
+pytestmark = [
+    pytest.mark.e2e,
+    pytest.mark.playwright_serial,
+    pytest.mark.skip(
+        reason="M21-e2 retired full v3 homepage (studio.html); QA covered by v2 AC suite",
+    ),
+]
 
 
 @pytest.fixture(autouse=True)

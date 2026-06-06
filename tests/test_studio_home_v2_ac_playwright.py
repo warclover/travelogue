@@ -456,7 +456,7 @@ def test_ac_hp2_15_cancel_no_half_trip(studio_server) -> None:
         page.locator("#v2-album-path").fill("/harness/album")
         page.locator("#v2-path-submit").click()
         _wait_visible(page, "v2-sheet-confirm")
-        page.locator("#v2-sheet-start").click()
+        page.locator("#v2-sheet-start-quick").click()
         _wait_visible(page, "v2-import-cancel")
 
         page.locator("#v2-import-cancel").click()

@@ -49,17 +49,10 @@ def test_ux_p3_03_advanced_options_bind_export() -> None:
 
 @pytest.mark.legacy_homepage
 def test_ux_p3_03_advanced_options_and_config_api(tmp_path: Path) -> None:
+    # Classic freeze is deprecated minimal UI; advanced options live on studio-home-v2
+    # (see test_ux_p3_03_v2_advanced_options_markers). This case only checks config API.
     html = STUDIO_HTML.read_text(encoding="utf-8")
-    # Required DOM markers for the M12-7 "high-end · 分析选项" UX (UX-P3-03).
-    for expected in (
-        'id="studio-advanced-options"',
-        'id="studio-cfg-clustering"',
-        'id="studio-cfg-vision"',
-        'id="studio-cfg-layout-scoring"',
-        "高级 · 分析选项",
-        "智能排版",
-    ):
-        assert expected in html, f"missing UX marker: {expected}"
+    assert "Classic 首页（Deprecated）" in html
 
     from tests.test_studio_config_p3 import _start_studio_with_config
     import yaml

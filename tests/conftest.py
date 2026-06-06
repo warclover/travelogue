@@ -166,6 +166,31 @@ def _reset_clip_encoder_singleton() -> None:
         _log.debug("clip encoder singleton reset failed: %s", exc, exc_info=True)
 
 
+@pytest.fixture(autouse=True)
+def _clear_homepage_gate_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Each test starts without holdback env so GET / defaults to v2 (mode=on)."""
+    monkeypatch.delenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", raising=False)
+    monkeypatch.delenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", raising=False)
+
+
+@pytest.fixture(autouse=True)
+def _reset_mosaic_and_config_process_state() -> None:
+    """Prevent mosaic override / get_config() cache leaking across tests."""
+    yield
+    try:
+        from travelogue.curation.mosaic.runtime import reset_mosaic_config_override
+
+        reset_mosaic_config_override()
+    except Exception as exc:
+        _log.debug("mosaic config override reset failed: %s", exc, exc_info=True)
+    try:
+        from travelogue.config import reset_config_cache
+
+        reset_config_cache()
+    except Exception as exc:
+        _log.debug("config cache reset failed: %s", exc, exc_info=True)
+
+
 @pytest.fixture(scope="session")
 def session_ingested_trip(tmp_path_factory: pytest.TempPathFactory) -> IngestedTripWorkspace:
     """One ingest per session — copy into per-test tmp dirs to skip re-ingest."""

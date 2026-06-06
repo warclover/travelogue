@@ -19,7 +19,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -36,21 +35,33 @@ _ROLLBACK_TESTS = [
 
 
 def _run_pytest(tests: list[str]) -> tuple[bool, str]:
-    env = os.environ.copy()
-    env["TRAVELOGUE_STUDIO_HOMEPAGE_V2"] = "off"
-    env.pop("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", None)
-    cmd = [sys.executable, "-m", "pytest", *tests, "-q", "--tb=line"]
-    proc = subprocess.run(
-        cmd,
-        cwd=_REPO,
-        env=env,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    combined = (proc.stdout or "") + (proc.stderr or "")
-    return proc.returncode == 0, combined.strip()
+    """Run rollback subset in-process (nested subprocess breaks on Windows under pytest)."""
+    import io
+    from contextlib import redirect_stderr, redirect_stdout
+
+    import pytest
+
+    out = io.StringIO()
+    err = io.StringIO()
+    prev_mode = os.environ.get("TRAVELOGUE_STUDIO_HOMEPAGE_V2")
+    prev_pct = os.environ.get("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT")
+    os.environ["TRAVELOGUE_STUDIO_HOMEPAGE_V2"] = "off"
+    os.environ.pop("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", None)
+    try:
+        os.chdir(_REPO)
+        with redirect_stdout(out), redirect_stderr(err):
+            code = pytest.main(["-q", "--tb=line", *tests])
+    finally:
+        if prev_mode is None:
+            os.environ.pop("TRAVELOGUE_STUDIO_HOMEPAGE_V2", None)
+        else:
+            os.environ["TRAVELOGUE_STUDIO_HOMEPAGE_V2"] = prev_mode
+        if prev_pct is None:
+            os.environ.pop("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", None)
+        else:
+            os.environ["TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT"] = prev_pct
+    combined = (out.getvalue() or "") + (err.getvalue() or "")
+    return code == 0, combined.strip()
 
 
 def run_drill(*, write_out: Path | None = None) -> tuple[dict, int]:
