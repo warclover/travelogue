@@ -13,14 +13,12 @@ from travelogue.curation.layout_scoring import ScoringWeights, score_screen_plan
 from travelogue.curation.mosaic.constants import (
     PATTERN_LANDSCAPE_6,
     PATTERN_LANDSCAPE_9,
-    PATTERN_MOSAIC_5_2P_3L_BALANCED,
-    PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
     PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
     PATTERN_PORTRAIT_6,
 )
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
+from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.curation.screen_planner import _is_landscape_id, _is_std_portrait_id
 
 
@@ -123,17 +121,6 @@ def _slot_geometry_penalty(
 ) -> float:
     if not screen_slots_geometry_ok(screen, aspects):
         return 0.95
-    pattern_id = str(screen.get("patternId") or "")
-    if pattern_id == PATTERN_MOSAIC_5_2P_3L_BALANCED:
-        for slot in screen.get("slots") or []:
-            if int(slot.get("slot", -1)) == 3 and slot.get("assetId"):
-                if _is_std_portrait_id(slot["assetId"], aspects):
-                    return 0.35
-    if pattern_id == PATTERN_MOSAIC_5_MAIN_LAND_2P_2L:
-        for slot in screen.get("slots") or []:
-            if int(slot.get("slot", -1)) == 3 and slot.get("assetId"):
-                if _is_std_portrait_id(slot["assetId"], aspects):
-                    return 0.4
     return 0.0
 
 

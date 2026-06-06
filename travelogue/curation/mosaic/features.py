@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from travelogue.curation.layout_planner import AspectKind, aspect_kind_for_asset
 

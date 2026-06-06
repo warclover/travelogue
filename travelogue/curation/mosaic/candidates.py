@@ -8,11 +8,15 @@ from typing import Any
 from travelogue.config import MosaicConfig
 from travelogue.curation.layout_planner import AspectKind
 from travelogue.curation.mosaic.builders import build_screen, try_order_for_pattern
-from travelogue.curation.mosaic.registry import MosaicPattern, default_registry, patterns_for_window_size
-from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
 from travelogue.curation.mosaic.features import feature_summary_for_window
 from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
+from travelogue.curation.mosaic.registry import (
+    MosaicPattern,
+    default_registry,
+    patterns_for_window_size,
+)
 from travelogue.curation.mosaic.runtime import effective_mosaic_window_sizes
+from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
 
 
 @dataclass

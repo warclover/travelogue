@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from travelogue.curation.layout_planner import AspectKind
 from travelogue.curation.mosaic.constants import (
-    PATTERN_MOSAIC_5_2P_3L_BALANCED,
-    PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
 )
 from travelogue.curation.mosaic.grid_specs import AUTO_FLOW_GRIDS, EXPLICIT_GRID_SPECS
@@ -27,16 +25,12 @@ _PORTRAIT_DOMINANT_AUTO_FLOW: frozenset[str] = frozenset(
     }
 )
 
-# Slots where portrait-in-wide was the user-visible defect (top row of 2P+3L, main tile, etc.)
+# Slots where portrait-in-wide was the user-visible defect (main tile, etc.)
 _PORTRAIT_FORBIDDEN_WIDE: dict[str, frozenset[int]] = {
-    PATTERN_MOSAIC_5_2P_3L_BALANCED: frozenset({0, 1}),
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND: frozenset({0}),
-    PATTERN_MOSAIC_5_MAIN_LAND_2P_2L: frozenset({0, 2, 4}),
 }
 _LANDSCAPE_FORBIDDEN_TALL: dict[str, frozenset[int]] = {
-    PATTERN_MOSAIC_5_2P_3L_BALANCED: frozenset({2}),
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND: frozenset({1}),
-    PATTERN_MOSAIC_5_MAIN_LAND_2P_2L: frozenset({1}),
 }
 
 

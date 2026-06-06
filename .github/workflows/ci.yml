@@ -9,6 +9,22 @@ on:
     branches: [master, main]
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: pip install -e ".[dev]"
+
+      - name: Ruff (mosaic + studio web)
+        run: |
+          python -m ruff check travelogue/curation/mosaic travelogue/web/studio_homepage_gate.py travelogue/curation/asset_quality.py
+
   test-pr:
     runs-on: ubuntu-latest
     strategy:
@@ -31,6 +47,7 @@ jobs:
             --cov=travelogue.web.studio_handlers \
             --cov=travelogue.web.studio_subprocess \
             --cov=travelogue.services.trip \
+            --cov=travelogue.curation.mosaic \
             --cov-report=term-missing:skip-covered \
             --cov-report=xml:coverage.xml \
             --cov-fail-under=60

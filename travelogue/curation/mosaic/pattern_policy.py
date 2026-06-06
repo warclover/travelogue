@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from travelogue.config import MosaicConfig
 from travelogue.curation.mosaic.constants import (
     MOSAIC_5_PATTERN_IDS,
     PATTERN_MOSAIC_5_2P_3L_BALANCED,
@@ -9,7 +10,6 @@ from travelogue.curation.mosaic.constants import (
     PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
 )
-from travelogue.config import MosaicConfig
 from travelogue.curation.mosaic.runtime import mosaic_window_size_enabled
 from travelogue.curation.screen_layout_state import pattern_slot_count
 

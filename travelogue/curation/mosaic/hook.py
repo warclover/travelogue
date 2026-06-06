@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from contextvars import ContextVar
-from functools import lru_cache
+from functools import cache
 from typing import TYPE_CHECKING
 
 from travelogue.config import MosaicConfig
@@ -227,7 +227,7 @@ def _cleanly_packable(remaining: int, pack: tuple[int, ...]) -> bool:
     if not pack:
         return False
 
-    @lru_cache(maxsize=None)
+    @cache
     def reachable(r: int) -> bool:
         if r == 0:
             return True

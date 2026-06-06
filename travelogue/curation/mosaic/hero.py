@@ -14,11 +14,8 @@ def pick_main_for_pattern(
     median_sharp: float | None = None,
 ) -> str | None:
     """Pick main/hero asset for patterns with a ``main`` role."""
-    from travelogue.curation.screen_planner import _pick_main_landscape_id
-
     from travelogue.curation.mosaic.registry import default_registry
-
-    from travelogue.curation.screen_planner import _is_landscape_id
+    from travelogue.curation.screen_planner import _is_landscape_id, _pick_main_landscape_id
 
     pat = default_registry().get(pattern_id)
     landscapes = [

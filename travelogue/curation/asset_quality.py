@@ -208,7 +208,6 @@ def partition_low_resolution_assets(
     min_long_edge_px: int = 800,
     min_short_edge_px: int = 600,
     median_ratio: float = 0.55,
-    peak_ratio: float = 0.42,
     min_megapixels: float = 0.8,
     mp_ratio: float = 0.45,
     circuit_breaker_ratio: float = 0.25,
@@ -221,8 +220,6 @@ def partition_low_resolution_assets(
     Uses nativeWidth/Height when set. Absolute rules catch thumbnails; relative
     rules compare short edge and megapixels to batch medians (not long-edge peak).
     """
-    del peak_ratio  # deprecated · kept for call-site compatibility
-
     images = [a for a in assets if a.get("type", "image") != "video"]
     if len(images) < min_trip_count:
         return assets, [], None
@@ -297,7 +294,6 @@ def apply_layout_eligibility_marks(
         min_long_edge_px=cfg.min_long_edge_layout_px,
         min_short_edge_px=cfg.min_short_edge_layout_px,
         median_ratio=cfg.low_res_median_ratio,
-        peak_ratio=cfg.low_res_peak_ratio,
         min_megapixels=cfg.low_res_min_megapixels,
         mp_ratio=cfg.low_res_mp_ratio,
         circuit_breaker_ratio=cfg.low_res_circuit_breaker_ratio,

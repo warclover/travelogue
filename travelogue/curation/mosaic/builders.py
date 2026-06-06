@@ -8,28 +8,25 @@ from travelogue.curation.mosaic.constants import (
     PATTERN_LANDSCAPE_3,
     PATTERN_LANDSCAPE_4,
     PATTERN_LANDSCAPE_6,
-    PATTERN_MOSAIC_5_2P_3L_BALANCED,
+    PATTERN_LANDSCAPE_9,
     PATTERN_MOSAIC_5_3P_2L_BALANCED,
     PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
-    PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
-    PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
+    PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
     PATTERN_PORTRAIT_1_LANDSCAPE_2,
     PATTERN_PORTRAIT_2_LANDSCAPE_2,
     PATTERN_PORTRAIT_3,
     PATTERN_PORTRAIT_4,
     PATTERN_PORTRAIT_6,
     PATTERN_PORTRAIT_9,
-    PATTERN_LANDSCAPE_9,
     PATTERN_PORTRAIT_GRID_8,
 )
 from travelogue.curation.mosaic.registry import MosaicPattern
 from travelogue.curation.screen_planner import (
     PERSON_LAYOUT_TRIPLE,
-    _can_mosaic_5_main_portrait_3land,
     _can_mixed_p1_l2,
+    _can_mosaic_5_main_portrait_3land,
     _can_portrait_grid8_window,
-    _time_near_chain,
     _is_landscape_id,
     _is_std_portrait_id,
     _make_mixed_portrait_landscape_screen,
@@ -38,6 +35,7 @@ from travelogue.curation.screen_planner import (
     _make_screen,
     _pick_main_landscape_id,
     _sort_asset_ids_by_taken,
+    _time_near_chain,
 )
 
 
@@ -217,37 +215,6 @@ def try_order_for_pattern(
         return None
 
     if n == 5:
-        if pattern_id == PATTERN_MOSAIC_5_MAIN_LAND_2P_2L:
-            if len(portraits) < 2 or len(landscapes) < 3:
-                return None
-            from travelogue.curation.mosaic.hero import pick_main_for_pattern
-
-            main = pick_main_for_pattern(
-                pattern_id,
-                asset_ids,
-                aspects,
-                assets_map,
-                median_sharp=median_sharp,
-            ) or _pick_main_landscape_id(landscapes, assets_map, median_sharp=median_sharp)
-            rest_l = _sort_asset_ids_by_taken([a for a in landscapes if a != main], assets_map)
-            if len(rest_l) < 2:
-                return None
-            p_sorted = _sort_asset_ids_by_taken(portraits[:2], assets_map)
-            # slot 1 = right tall portrait; slot 2–4 = bottom landscapes + one portrait tile
-            return [main, p_sorted[0], rest_l[0], p_sorted[1], rest_l[1]]
-        if pattern_id == PATTERN_MOSAIC_5_2P_3L_BALANCED:
-            if len(portraits) < 2 or len(landscapes) < 3:
-                return None
-            p_sorted = _sort_asset_ids_by_taken(portraits[:2], assets_map)
-            l_sorted = _sort_asset_ids_by_taken(landscapes[:3], assets_map)
-            # Top row cells are wide; tall cell (slot 2) holds portrait — see journal-screens.css
-            return [
-                l_sorted[0],
-                l_sorted[1],
-                p_sorted[0],
-                p_sorted[1],
-                l_sorted[2],
-            ]
         if pattern_id == PATTERN_MOSAIC_5_3P_2L_BALANCED:
             if len(portraits) < 3 or len(landscapes) < 2:
                 return None

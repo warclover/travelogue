@@ -23,8 +23,8 @@ def build_legacy_screen(
     """Build one legacy planner screen for a fixed asset window (no chapter mutation)."""
     from travelogue.curation.screen_planner import (
         MIN_TRIP_PHOTOS_FOR_MOSAIC,
-        _can_mosaic_5_main_portrait_3land,
         _can_mixed_p1_l2,
+        _can_mosaic_5_main_portrait_3land,
         _can_portrait_grid8_window,
         _is_landscape_id,
         _is_std_portrait_id,

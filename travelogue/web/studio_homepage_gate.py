@@ -21,8 +21,6 @@ import os
 from typing import Any, Literal
 from urllib.parse import parse_qs
 
-from travelogue.web.studio_handlers.paths import HOME_CLASSIC_PATH
-
 ENV_MODE = "TRAVELOGUE_STUDIO_HOMEPAGE_V2"
 ENV_PERCENT = "TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT"
 ENV_BUCKET_SECRET = "TRAVELOGUE_STUDIO_HP_BUCKET_SECRET"
@@ -105,7 +103,7 @@ def stable_bucket(user_agent: str, existing: int | None = None) -> int:
     if existing is not None and 0 <= existing <= 99:
         return existing
     ua = user_agent or "unknown"
-    digest = hashlib.sha256(f"{BUCKET_SALT}:{ua}".encode("utf-8")).hexdigest()
+    digest = hashlib.sha256(f"{BUCKET_SALT}:{ua}".encode()).hexdigest()
     return int(digest[:8], 16) % 100
 
 

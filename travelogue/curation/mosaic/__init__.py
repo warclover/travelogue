@@ -1,6 +1,9 @@
 """Mosaic Composition System (Phase 15)."""
 
-from travelogue.curation.mosaic.candidates import generate_five_candidates, generate_window_candidates
+from travelogue.curation.mosaic.candidates import (
+    generate_five_candidates,
+    generate_window_candidates,
+)
 from travelogue.curation.mosaic.compose import (
     compose_segment,
     compose_segment_s1,
@@ -9,12 +12,12 @@ from travelogue.curation.mosaic.compose import (
     pick_best_window,
     score_window_candidates,
 )
+from travelogue.curation.mosaic.hook import try_mosaic_five_mcs, try_mosaic_window
 from travelogue.curation.mosaic.replan import (
     ReplanError,
     refresh_trip_displayed_assets,
     replan_screen,
 )
-from travelogue.curation.mosaic.hook import try_mosaic_five_mcs, try_mosaic_window
 from travelogue.curation.mosaic.search import replan_day_buckets_beam
 from travelogue.curation.mosaic.trip import compose_trip
 

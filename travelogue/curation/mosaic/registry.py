@@ -11,17 +11,13 @@ from travelogue.curation.mosaic.constants import (
     MOSAIC_6_PATTERN_IDS,
     MOSAIC_8_PATTERN_IDS,
     MOSAIC_9_PATTERN_IDS,
-    PATTERN_LANDSCAPE_9,
-    PATTERN_PORTRAIT_9,
-    PATTERN_PORTRAIT_GRID_8,
     PATTERN_GRID_CLASS,
     PATTERN_LANDSCAPE_3,
     PATTERN_LANDSCAPE_4,
     PATTERN_LANDSCAPE_6,
-    PATTERN_MOSAIC_5_2P_3L_BALANCED,
+    PATTERN_LANDSCAPE_9,
     PATTERN_MOSAIC_5_3P_2L_BALANCED,
     PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
-    PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
     PATTERN_PORTRAIT_1_LANDSCAPE_2,
@@ -29,6 +25,8 @@ from travelogue.curation.mosaic.constants import (
     PATTERN_PORTRAIT_3,
     PATTERN_PORTRAIT_4,
     PATTERN_PORTRAIT_6,
+    PATTERN_PORTRAIT_9,
+    PATTERN_PORTRAIT_GRID_8,
 )
 
 
@@ -58,21 +56,6 @@ def default_registry() -> dict[str, MosaicPattern]:
             grid_class=PATTERN_GRID_CLASS[PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND],
             roles=("main", "portrait", "landscape", "landscape", "landscape"),
             accepts=AspectProfile(min_portrait=1, min_landscape=4),
-        ),
-        PATTERN_MOSAIC_5_MAIN_LAND_2P_2L: MosaicPattern(
-            pattern_id=PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
-            slot_count=5,
-            grid_class=PATTERN_GRID_CLASS[PATTERN_MOSAIC_5_MAIN_LAND_2P_2L],
-            roles=("main", "portrait", "landscape", "portrait", "landscape"),
-            accepts=AspectProfile(min_portrait=2, min_landscape=3),
-        ),
-        PATTERN_MOSAIC_5_2P_3L_BALANCED: MosaicPattern(
-            pattern_id=PATTERN_MOSAIC_5_2P_3L_BALANCED,
-            slot_count=5,
-            grid_class=PATTERN_GRID_CLASS[PATTERN_MOSAIC_5_2P_3L_BALANCED],
-            # Slot order follows CSS: top row = 2 landscape tiles, tall + square = portraits
-            roles=("landscape", "landscape", "portrait", "portrait", "landscape"),
-            accepts=AspectProfile(min_portrait=2, min_landscape=3),
         ),
         PATTERN_MOSAIC_5_3P_2L_BALANCED: MosaicPattern(
             pattern_id=PATTERN_MOSAIC_5_3P_2L_BALANCED,

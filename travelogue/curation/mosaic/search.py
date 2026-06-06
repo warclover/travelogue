@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import logging
+
 from travelogue.curation.decision_log import LayoutDecisionLog
 from travelogue.curation.layout_planner import AspectKind
 from travelogue.curation.layout_scoring import (
@@ -107,7 +108,10 @@ def replan_day_buckets_beam(
     deterministic_strict: bool = False,
     incremental_scoring: bool = False,
 ) -> tuple[list[dict], list[dict], SearchBudget]:
-    from travelogue.curation.intent_hints import INTENT_PEAK_ARC_BOOST, arc_segment_for_chapter_with_intent
+    from travelogue.curation.intent_hints import (
+        INTENT_PEAK_ARC_BOOST,
+        arc_segment_for_chapter_with_intent,
+    )
 
     out = _shallow_copy_chapters(chapters)
     asset_to_ch: dict[str, str] = {}
