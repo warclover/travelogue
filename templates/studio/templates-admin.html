@@ -281,13 +281,38 @@
       });
     }
 
+    // Role-aware worst fit distance — mirrors probe_regress._role_probe_aspects.
+    // A slot is only measured against the probe aspects it can actually hold,
+    // otherwise every slot is "bad" (worst-vs-all-aspects has a 0.4375 floor).
+    const PROBE_ASPECTS = {
+      "portrait-34": 3 / 4,
+      "portrait-916": 9 / 16,
+      "landscape-32": 3 / 2,
+      "landscape-169": 16 / 9,
+      "square-11": 1.0,
+    };
+    const ROLE_PROBE_KEYS = {
+      portrait: ["portrait-34", "portrait-916"],
+      landscape: ["landscape-32", "landscape-169"],
+      main: ["landscape-32", "landscape-169"],
+      hero: ["landscape-32", "landscape-169"],
+      tile: ["landscape-32", "landscape-169"],
+      square: ["square-11"],
+    };
+    const GEOMETRY_WARN_THRESHOLD = 0.8;
+
+    function roleProbeAspects(role) {
+      const keys = ROLE_PROBE_KEYS[String(role || "").toLowerCase()];
+      if (!keys) return Object.values(PROBE_ASPECTS);
+      return keys.map((k) => PROBE_ASPECTS[k]);
+    }
+
     function worstProbeDistance(slotAspects) {
-      const probes = [3 / 4, 9 / 16, 3 / 2, 16 / 9, 1.0];
       let worst = 0;
       (slotAspects || []).forEach((row) => {
         const ar = Number(row.displayAspect);
         if (!Number.isFinite(ar) || ar <= 0) return;
-        probes.forEach((p) => {
+        roleProbeAspects(row.role).forEach((p) => {
           const d = Math.abs(ar - p) / Math.max(ar, p, 1e-6);
           if (d > worst) worst = d;
         });
@@ -353,7 +378,7 @@
         const tr = document.createElement("tr");
         const worst = worstProbeDistance(p.slotAspects);
         const probeLabel =
-          worst > 0.35
+          worst > GEOMETRY_WARN_THRESHOLD
             ? '<span class="bad">' + worst.toFixed(3) + "</span>"
             : '<span class="ok">' + worst.toFixed(3) + "</span>";
         const slotSummary = (p.slotAspects || [])

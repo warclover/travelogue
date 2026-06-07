@@ -19,6 +19,31 @@ PROBE_ASPECTS: dict[str, float] = {
     "square-11": 1.0,
 }
 
+# Role → probe aspects the slot can actually receive. A slot only ever holds
+# assets whose orientation matches its role, so geometric fit must be measured
+# against the *compatible* probe subset — never against the opposite extreme.
+#
+# Measuring worst-fit against ALL aspects has a hard mathematical floor of
+# 0.4375 (a square slot is equidistant from 9:16 and 16:9), so the historical
+# warn_threshold of 0.35 was geometrically unreachable and flagged every slot
+# unconditionally (88/88), making ``--strict-geometry`` impossible to pass.
+ROLE_PROBE_KEYS: dict[str, tuple[str, ...]] = {
+    "portrait": ("portrait-34", "portrait-916"),
+    "landscape": ("landscape-32", "landscape-169"),
+    "main": ("landscape-32", "landscape-169"),
+    "hero": ("landscape-32", "landscape-169"),
+    "tile": ("landscape-32", "landscape-169"),
+    "square": ("square-11",),
+}
+
+
+def _role_probe_aspects(role: str) -> tuple[float, ...]:
+    """Probe aspects compatible with ``role`` (falls back to all if unknown)."""
+    keys = ROLE_PROBE_KEYS.get((role or "").lower())
+    if not keys:
+        return tuple(PROBE_ASPECTS.values())
+    return tuple(PROBE_ASPECTS[k] for k in keys)
+
 # Person/focal-aware saliency probes (PRD §8 · saliency-retention)
 PROBE_PROFILES: tuple[dict, ...] = (
     {"name": "neutral-center", "aspect": 16 / 9, "focal": (0.5, 0.45), "tags": []},
@@ -75,11 +100,20 @@ def _worst_saliency_for_slot(slot_ar: float) -> float:
     return min(_profile_saliency_retention(slot_ar, profile) for profile in PROBE_PROFILES)
 
 
+# Role-aware fit-distance ceiling. The GA corpus tops out at 0.75 (the legacy
+# reverse-migrated ``screen-portrait-3`` — three portraits crammed into a 9:16
+# stage, whose hard center crop is verified focal-safe: saliency retention 1.0).
+# 0.80 sits just above that baseline so the gate ratchets against genuinely new
+# geometry regressions (a slot grossly mismatched to its role) while accepting
+# the existing intentional dense grids.
+GEOMETRY_WARN_THRESHOLD = 0.80
+
+
 def run_probe_for_template(
     engine: LayoutTemplateEngine,
     template_id: str,
     *,
-    warn_threshold: float = 0.35,
+    warn_threshold: float = GEOMETRY_WARN_THRESHOLD,
     saliency_warn_threshold: float = 0.55,
 ) -> dict:
     """Geometry + saliency probe for one template (admission S5)."""
@@ -105,7 +139,8 @@ def run_probe_for_template(
     warnings: list[str] = []
     results: list[dict] = []
     for slot in slot_aspect_table(t):
-        worst = max(_probe_fit_distance(slot.display_aspect, ar) for ar in PROBE_ASPECTS.values())
+        probe_ars = _role_probe_aspects(slot.role)
+        worst = max(_probe_fit_distance(slot.display_aspect, ar) for ar in probe_ars)
         worst_retention = _worst_saliency_for_slot(slot.display_aspect)
         results.append(
             {
@@ -143,7 +178,7 @@ def run_probe_regress(
     engine: LayoutTemplateEngine,
     *,
     only_active: bool = True,
-    warn_threshold: float = 0.35,
+    warn_threshold: float = GEOMETRY_WARN_THRESHOLD,
     saliency_warn_threshold: float = 0.55,
 ) -> dict:
     results: list[dict] = []
