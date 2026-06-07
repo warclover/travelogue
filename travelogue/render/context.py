@@ -674,7 +674,9 @@ def build_layout_screen(
             screen_aspect = _screen_aspect_ratio_css(assets[first_aid])
 
     style_parts: list[str] = []
-    if layout_geo.get("stageAspect"):
+    # screen-portrait-3: intrinsic row height via overlay; skip fixed stage AR.
+    skip_stage_aspect = pattern_id == "screen-portrait-3"
+    if layout_geo.get("stageAspect") and not skip_stage_aspect:
         stage_aspect = str(layout_geo["stageAspect"]).replace(":", " / ")
         style_parts.append(f"--screen-aspect: {stage_aspect}")
     elif screen_aspect:
