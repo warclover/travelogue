@@ -785,9 +785,24 @@ def run_curate(
         set_mosaic_config_override,
     )
 
-    mosaic_override = cohort_mosaic_override(app_cfg) if cohort_summary else None
-    if mosaic_override is not None:
-        set_mosaic_config_override(mosaic_override)
+    mosaic_override_active = None
+    if app_cfg.layout.strategy_engine.enabled:
+        from dataclasses import replace as _dc_replace
+
+        from travelogue.layout_engine.adapter import mosaic_config_from_pack
+
+        mosaic_override_active = mosaic_config_from_pack(app_cfg)
+        cohort_ov = cohort_mosaic_override(app_cfg) if cohort_summary else None
+        if cohort_ov is not None:
+            mw = dict(mosaic_override_active.weights)
+            cw = float(cohort_ov.weights.get("cohort_coherence") or 0.0)
+            if cw > 0:
+                mw["cohort_coherence"] = cw
+            mosaic_override_active = _dc_replace(mosaic_override_active, weights=mw)
+    elif cohort_summary:
+        mosaic_override_active = cohort_mosaic_override(app_cfg)
+    if mosaic_override_active is not None:
+        set_mosaic_config_override(mosaic_override_active)
     if app_cfg.mosaic.enabled:
         from travelogue.curation.mosaic.hook import begin_mosaic_capture
 
@@ -811,7 +826,7 @@ def run_curate(
             layout_density=layout_density_params(trip, app_cfg=app_cfg).density,
         )
     finally:
-        if mosaic_override is not None:
+        if mosaic_override_active is not None:
             reset_mosaic_config_override()
     if app_cfg.mosaic.enabled:
         from travelogue.curation.mosaic.hook import drain_mosaic_dropped, drain_mosaic_logs
@@ -1015,6 +1030,15 @@ def run_curate(
 
         curation["arcProfile"] = arc_profile_to_dict(arc_profile)
     curation["layoutMetrics"] = layout_metrics
+    from travelogue.layout_engine.adapter import persist_layout_observability
+
+    persist_layout_observability(
+        curation,
+        trip_dir=trip_dir,
+        cfg=app_cfg,
+        mosaic_logs=curation.get("mosaicDecisionLog"),
+        beam_logs=decision_logs,
+    )
     if engine == LAYOUT_ENGINE_SCREENS:
         from travelogue.curation.mosaic.telemetry import (
             record_mosaic_layout_metrics,

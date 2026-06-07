@@ -43,6 +43,7 @@ markers = [
     "e2e: HTTP server and/or full studio pipeline end-to-end",
     "legacy_homepage: classic freeze emergency page smoke (GET /classic)",
     "mosaic: planner tests that require mosaic.enabled (Phase 15 MCS)",
+    "controlled_parity: P17 LSE controlled-environment screens parity (AC-P17-01)",
 ]
 # Fast local / PR subset (matches .github/workflows/ci.yml test-pr):
 #   pytest --fast -q

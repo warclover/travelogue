@@ -250,11 +250,11 @@ W1 开工前必须全部 ✅：
 | P0 | W1-01 | `LayoutStrategyEngineConfig` + `config.yaml.example` 接线 | `config/layout.py` | — | ✅ |
 | P0 | W1-02 | `registry.py` 加载 pack + policy + contentHash | `layout_engine/registry.py` | AC-P17-03 | ✅ |
 | P0 | W1-03 | `validator.py` schema 门禁 + default.yaml CI | `cli validate` | AC-P17-02 | ✅ |
-| P0 | W1-04 | `adapter.py` 防腐层 + §3 十五 kwargs 收束 | `screen_planner_attach.py` 3 处 | AC-P17-01/02 | 🟡 薄包装已接；kwargs 全量映射待补 |
+| P0 | W1-04 | `adapter.py` 防腐层 + §3 kwargs + mosaic/rhythm 注入 | `adapter.py` + `rhythm.py` | AC-P17-01/02 | ✅ |
 | P0 | W1-05 | `search_budget` 挂钟改 telemetry-only | `search_budget.py` + 测试改写 | 审计 B | ✅ |
-| P1 | W1-06 | `decision_log.py` sidecar + mosaic 投影 | `runs/layout-decisions.jsonl` | AC-P17-04/05 | 待办 |
-| P1 | W1-07 | 受控 parity CI `test_p17_controlled_parity.py` | golden 快照 | AC-P17-01 | 待办 |
-| P1 | W1-08 | `weights_hash` + `strategyId` 写入 trip 摘要 | `curation.layoutStrategy` | AC-P17-04 | 待办 |
+| P1 | W1-06 | `decision_log.py` sidecar + mosaic/beam 投影 | `runs/layout-decisions.jsonl` | AC-P17-04/05 | ✅ |
+| P1 | W1-07 | 受控 parity CI `test_p17_controlled_parity.py` | golden 快照 | AC-P17-01 | ✅ |
+| P1 | W1-08 | `layoutStrategy` 摘要 + sidecar digest | `curate.py` | AC-P17-04 | ✅ |
 | P2 | W1-09 | golden 人像/风景 fixture 各 ≥2 | `tests/fixtures/` | §10.3 | 待办 |
 | P2 | W1-10 | `enabled=false` 默认；文档与 Studio 开关说明 | — | AC-P17-01 | 待办 |
 
