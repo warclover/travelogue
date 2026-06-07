@@ -187,7 +187,7 @@ def test_legacy_append_rejects_retired_pattern(monkeypatch) -> None:
     """append_legacy_window must not append screens blocked by pattern_policy."""
     from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_2P_3L_BALANCED
     from travelogue.curation.mosaic.legacy import append_legacy_window
-    from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
+    from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
 
     assert mosaic_pattern_disabled(PATTERN_MOSAIC_5_2P_3L_BALANCED)
 

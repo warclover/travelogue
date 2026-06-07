@@ -1,4 +1,8 @@
-"""Pattern ids for mosaic / unified grid windows (Phase 15 · S2)."""
+"""Pattern ids for mosaic / unified grid windows (Phase 15 · S2).
+
+Semantic aliases below; authoritative tuples and grid classes live in
+``_legacy_generated.py`` (YAML export CI · R-P16-02).
+"""
 
 from __future__ import annotations
 

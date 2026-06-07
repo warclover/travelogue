@@ -14,7 +14,7 @@ from travelogue.curation.mosaic.diversity import apply_candidate_diversity
 from travelogue.curation.mosaic.log import MosaicWindowLog
 from travelogue.curation.mosaic.log_enrich import enrich_mosaic_log_from_screen
 from travelogue.curation.mosaic.lte_adapter import mcs_diversity_config
-from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
+from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
 from travelogue.curation.mosaic.scorer import score_candidate, weights_hash
 from travelogue.curation.mosaic.selfheal import try_self_heal_pick
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState

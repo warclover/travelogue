@@ -276,7 +276,7 @@ def assign_screen_id(ctx: ChapterPlanContext, screen: dict) -> None:
 
 
 def append_screen(ctx: ChapterPlanContext, screen: dict) -> None:
-    from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
+    from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
 
     pid = str(screen.get("patternId") or "")
     if pid and mosaic_pattern_disabled(pid):

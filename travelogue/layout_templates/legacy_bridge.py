@@ -312,10 +312,12 @@ def export_stack_patterns(templates: dict[str, Any]) -> frozenset[str]:
 
 
 def export_pattern_grid_class(templates: dict[str, Any]) -> dict[str, str]:
+    from travelogue.curation.mosaic.constants import PATTERN_GRID_CLASS
+
     return {
         tid: templates[tid].render_grid_class
-        for tid, t in templates.items()
-        if t.kind in ("composite", "primitive", "stack")
+        for tid in PATTERN_GRID_CLASS
+        if tid in templates
     }
 
 

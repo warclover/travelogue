@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
-from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled as policy_reexport
 from travelogue.layout_templates.registry import LayoutTemplateEngine, reset_engine_cache_for_tests
 from scripts.collage_detect_eval import evaluate_fixtures
 from scripts.lte_probe_regress import run_screenshot_probe
@@ -20,8 +19,9 @@ def _fresh() -> None:
 
 
 @pytest.mark.unit
-def test_pattern_policy_reexports_lte_adapter() -> None:
-    assert mosaic_pattern_disabled is policy_reexport
+def test_lte_adapter_mosaic_pattern_disabled_callable() -> None:
+    assert callable(mosaic_pattern_disabled)
+    assert mosaic_pattern_disabled("screen-mosaic-5-3portrait-2land-balanced") is True
 
 
 @pytest.mark.unit

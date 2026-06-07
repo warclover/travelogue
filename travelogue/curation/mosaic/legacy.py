@@ -179,7 +179,7 @@ def append_legacy_window(
     )
     if not screen:
         return False
-    from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
+    from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
     from travelogue.curation.mosaic.runtime import get_effective_mosaic_config
     from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
 
