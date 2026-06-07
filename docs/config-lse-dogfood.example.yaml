@@ -1,0 +1,18 @@
+# LSE W3a dogfood 灰度示例（全局 enabled 保持 false）
+#
+# 方式 A — policy allowlist（默认已写入 travelogue/layout_engine/lse_policy.yaml）：
+#   rollout.allowlist_trip_ids 命中即对该 trip 启用 LSE
+#
+# 方式 B — L3 runtime 覆盖（两人审批后写入 data/lse_runtime.json）：
+#   python scripts/lse_apply_dogfood_rollout.py --dry-run
+#   python scripts/lse_apply_dogfood_rollout.py --traffic-percent 10
+#
+# 方式 C — 全量切引擎（评审后，非 W3a 默认）：
+#   layout:
+#     strategy_engine:
+#       enabled: true
+
+layout:
+  strategy_engine:
+    enabled: false
+    default_strategy_id: lse-default-2026-06

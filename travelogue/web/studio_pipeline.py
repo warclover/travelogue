@@ -407,6 +407,9 @@ def run_studio_pipeline(
             from travelogue.curation.phase6_rollout import resolve_app_config_for_trip
 
             cfg = resolve_app_config_for_trip(cfg, trip_rollout_id)
+            from travelogue.layout_engine.rollout import resolve_lse_config_for_trip
+
+            cfg = resolve_lse_config_for_trip(cfg, trip_rollout_id)
         # F-P4 M15: single-writer intent — mirrors meta.title/places + trip.userNotes
         # (never meta.userNotes, which is not in schema).
         place_raw = str(place or "").strip()

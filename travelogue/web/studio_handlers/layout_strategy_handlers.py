@@ -78,6 +78,8 @@ def handle_layout_strategies_list(handler: StudioHandlerProtocol) -> None:
     rows = [strategy_pack_summary(p) for p in packs]
     lse_rt = load_lse_runtime(ctx.cfg.layout.strategy_engine.runtime_store)
     tpl_rt = load_runtime()
+    from travelogue.layout_engine.rollout import lse_rollout_snapshot
+
     handler._json_response(
         200,
         {
@@ -85,6 +87,7 @@ def handle_layout_strategies_list(handler: StudioHandlerProtocol) -> None:
             "strategies": rows,
             "runtime": {
                 "enabled": ctx.cfg.layout.strategy_engine.enabled,
+                "rollout": lse_rollout_snapshot(ctx.cfg),
                 "defaultStrategyId": ctx.cfg.layout.strategy_engine.default_strategy_id,
                 "overrides": {
                     "disableStages": list(ctx.cfg.layout.strategy_engine.overrides.disable_stages),

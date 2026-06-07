@@ -7,7 +7,15 @@ default_strategy_id: lse-default-2026-06
 strategies_dir: travelogue/layout_engine/strategies
 
 rollout:
-  default_traffic_percent: 100
+  # W3a dogfood: global enabled=false; only allowlist / traffic bucket gets LSE.
+  stage: dogfood
+  traffic_percent: 0
+  cohort_salt: travelogue-p17-w3a
+  allowlist_trip_ids:
+    - phase16-dogfood-portrait
+    - phase16-dogfood-landscape
+    - phase16-dogfood-mixed
+  blocklist_trip_ids: []
   shadow_enabled: false
 
 capabilities_defaults:

@@ -255,8 +255,8 @@ W1 开工前必须全部 ✅：
 | P1 | W1-06 | `decision_log.py` sidecar + mosaic/beam 投影 | `runs/layout-decisions.jsonl` | AC-P17-04/05 | ✅ |
 | P1 | W1-07 | 受控 parity CI `test_p17_controlled_parity.py` | golden 快照 | AC-P17-01 | ✅ |
 | P1 | W1-08 | `layoutStrategy` 摘要 + sidecar digest | `curate.py` | AC-P17-04 | ✅ |
-| P2 | W1-09 | golden 人像/风景 fixture 各 ≥2 | `tests/fixtures/` | §10.3 | 待办 |
-| P2 | W1-10 | `enabled=false` 默认；文档与 Studio 开关说明 | — | AC-P17-01 | 待办 |
+| P2 | W1-09 | golden 人像/风景 fixture 各 ≥2 | `tests/fixtures/` | §10.3 | ✅ |
+| P2 | W1-10 | `enabled=false` 默认；文档与 Studio 开关说明 | — | AC-P17-01 | ✅ |
 
 **执行顺序**：W1-01 → 02 → 03（可并行 02/03）→ 04 → 05 → 06 → 07 → 08；09/10 与 P0 并行。
 
@@ -264,9 +264,37 @@ W1 开工前必须全部 ✅：
 
 ---
 
+## 11. W2 任务清单（执行跟踪）
+
+| 优先级 | ID | 任务 | 产出 | AC | 状态 |
+|--------|-----|------|------|-----|------|
+| P0 | W2-01 | Studio Inspector API（列表/详情/decisions/runtime/sandbox/rollback） | `layout_strategy_handlers.py` | AC-P17-06/08 | ✅ |
+| P0 | W2-02 | L3 runtime 治理（approve/rollback/disable_stages/patterns） | `governance.py` + `runtime_store.py` | AC-P17-14 | ✅ |
+| P1 | W2-03 | `templates-admin.html` LSE 区块 | Studio UI 骨架 | AC-P17-06 | ✅（审批/沙箱 UI 留给 W3） |
+| P1 | W2-04 | sandbox off vs on diff API | `sandbox.py` | AC-P17-08 | ✅ |
+
+**W2 出口**：AC-P17-06/08/14 + L3 overrides 绿；完整 L2 审批 UI 与沙箱并排缩略图 UI 留给 W3。
+
+---
+
+## 12. W3a 任务清单（切引擎门禁 · 执行跟踪）
+
+| 优先级 | ID | 任务 | 产出 | AC | 状态 |
+|--------|-----|------|------|-----|------|
+| P0 | W3a-01 | quick_share LSE on/off layout 零 diff | `test_p17_w3a_gates.py` | AC-P17-27 | ✅ |
+| P0 | W3a-02 | 渲染输入隔离契约 | `render_contract.py` | AC-P17-31 | ✅ |
+| P0 | W3a-03 | quick_share 零步 intent 门禁 | `test_p17_w3a_gates.py` | AC-P17-23 | ✅ |
+| P1 | W3a-04 | dogfood `enabled=true` 灰度开关（非默认） | `rollout.py` + `lse_policy.yaml` | AC-P17-01 | ✅ |
+| P1 | W3a-05 | 零步 E2E（import→curate→preview） | `test_p17_w3a_zero_step_e2e.py` | AC-P17-23 | ✅ |
+
+**W3a 出口**：门禁测试绿；**不**默认翻 `enabled=true`（需评审后 W3a-04）。
+
+---
+
 ## 9. 修订记录
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.3 | 2026-06-07 | W1/W2 收口、§11–12 W2/W3a 任务清单与门禁 |
 | v0.2 | 2026-06-07 | W0 冻结：DoR 勾选、§10 W1 任务清单、状态更新 |
 | v0.1 | 2026-06-07 | W0 起草：融合设计、三项 W0 审计模板、adapter 参数收束、decision log 适配、切引擎/上 CAP 解耦的阶段分解、工作量、W1 DoR |

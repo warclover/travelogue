@@ -599,6 +599,22 @@
           "type": "array",
           "items": { "type": "object", "additionalProperties": true }
         },
+        "layoutStrategy": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "P17 LSE strategy trace summary (full log in runs/layout-decisions.jsonl)",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "strategyId": { "type": "string" },
+            "strategyVersion": { "type": "string" },
+            "strategyRevision": { "type": "integer", "minimum": 0 },
+            "weightsHash": { "type": "string" },
+            "algorithmVersion": { "type": "string" },
+            "contentHash": { "type": "string" },
+            "decisionLogDigest": { "type": "string" },
+            "eventCount": { "type": "integer", "minimum": 0 }
+          }
+        },
         "mosaicDecisionLog": {
           "type": "array",
           "description": "Phase 15 mosaic window decisions (AC-P15-07)",

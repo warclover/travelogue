@@ -510,6 +510,9 @@ def _curate_preflight(
 
         cover_p6 = phase6_in_rollout_cohort(trip_id, app_cfg)
         app_cfg = resolve_app_config_for_trip(app_cfg, trip_id)
+        from travelogue.layout_engine.rollout import resolve_lse_config_for_trip
+
+        app_cfg = resolve_lse_config_for_trip(app_cfg, trip_id)
     res_warn = apply_low_resolution_exclusion(trip, trip_dir=trip_dir, app_cfg=app_cfg)
     layout_assets = layout_eligible_assets(trip)
     if len(layout_assets) < MIN_CURATE_ASSETS:
