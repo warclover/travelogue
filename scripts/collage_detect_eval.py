@@ -43,6 +43,17 @@ def _build_image(spec: dict) -> Image.Image:
         panels = spec.get("panels")
         img = Image.new("RGB", (w, h), color=(40, 40, 40))
         px = img.load()
+        if isinstance(panels, list) and len(panels) >= 2 and panels[0] == 3 and panels[1] == 1:
+            third = w // 3
+            for x in range(w):
+                for y in range(h):
+                    if abs(x - third) < 4 or abs(x - 2 * third) < 4:
+                        px[x, y] = (240, 240, 240)
+                    else:
+                        panel = 0 if x < third - 3 else (1 if x < 2 * third - 3 else 2)
+                        base = [(180, 120, 90), (90, 140, 180), (140, 180, 90)][panel]
+                        px[x, y] = base
+            return img
         if isinstance(panels, list) and len(panels) >= 2 and panels[0] == 2 and panels[1] == 1:
             mid = w // 2
             for x in range(w):

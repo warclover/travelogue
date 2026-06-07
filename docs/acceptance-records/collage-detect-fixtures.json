@@ -131,7 +131,7 @@
     "id": "exif-snapseed-collage",
     "expect": "collage",
     "kind": "exif",
-    "software": "Snapseed"
+    "software": "Snapseed Collage"
   },
   {
     "id": "synthetic-3panel-collage",

@@ -75,3 +75,12 @@ def test_no_legacy_css_after_overlay_marker(journal_css: str) -> None:
     end = journal_css.index(OVERLAYS_MARKER_END) + len(OVERLAYS_MARKER_END)
     tail = journal_css[end:].strip()
     assert tail == ""
+
+
+@pytest.mark.unit
+def test_journal_css_handwritten_inventory_bounded() -> None:
+    from scripts.lte_journal_css_audit import audit_journal_css
+
+    report = audit_journal_css(Path(JOURNAL_SCREENS_CSS))
+    assert report["duplicateGridClassesOutsideMarker"] == []
+    assert report["outsideGeneratedGridClassCount"] <= 10

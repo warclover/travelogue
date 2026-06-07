@@ -27,6 +27,8 @@ _COLLAGE_SOFTWARE_KEYWORDS = (
     "photo grid",
     "grid maker",
     "diptic",
+    "unfold",
+    "snapseed collage",
 )
 
 _COVER_CLASS_WEIGHT: dict[str, float] = {
@@ -185,6 +187,9 @@ def _seam_grid_suggests_collage(img: Image.Image) -> bool:
     if ratio >= 1.35 and len(v_seams) == 1 and w >= 640:
         return True
     if ratio <= 0.74 and len(h_seams) == 1 and h >= 640:
+        return True
+    # Three-column (or more) horizontal collage
+    if ratio >= 1.12 and len(v_seams) >= 2 and w >= 600:
         return True
 
     if ratio < 0.88 or ratio > 1.18:

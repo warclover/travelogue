@@ -36,7 +36,7 @@ def test_list_active_respects_composite_quota() -> None:
 def test_collage_fixture_eval_expanded() -> None:
     report = evaluate_fixtures(Path("docs/acceptance-records/collage-detect-fixtures.json"))
     assert report["fixtureCount"] >= 18
-    assert report["recall"] >= 0.7
+    assert report["recall"] >= 0.85
 
 
 @pytest.mark.unit
