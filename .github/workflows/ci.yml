@@ -268,7 +268,7 @@ jobs:
           }
 
       - name: Collage detector fixture eval
-        run: python scripts/collage_detect_eval.py --strict --min-recall 0.5 --max-fp-rate 0.25
+        run: python scripts/collage_detect_eval.py --strict --min-recall 0.7 --max-fp-rate 0.25
 
       - name: Phase 16 template eval (AC-15 · PR warn)
         if: github.event_name == 'pull_request'

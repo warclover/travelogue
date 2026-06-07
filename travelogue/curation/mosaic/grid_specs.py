@@ -10,15 +10,13 @@ from travelogue.curation.mosaic._legacy_generated import (
     AUTO_FLOW_GRIDS,
     EXPLICIT_GRID_BOUNDS,
     EXPLICIT_GRID_SPECS,
-    STACK_PATTERNS,
-)
-from travelogue.curation.mosaic.constants import (
     MOSAIC_3_PATTERN_IDS,
     MOSAIC_4_PATTERN_IDS,
     MOSAIC_5_PATTERN_IDS,
     MOSAIC_6_PATTERN_IDS,
     MOSAIC_8_PATTERN_IDS,
     MOSAIC_9_PATTERN_IDS,
+    STACK_PATTERNS,
 )
 
 

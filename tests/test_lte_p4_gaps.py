@@ -15,7 +15,7 @@ from travelogue.layout_templates.promotion import apply_layout_template_yaml_pat
 from travelogue.layout_templates.registry import LayoutTemplateEngine, reset_engine_cache_for_tests
 from travelogue.render.context import build_layout_screen
 from scripts.collage_detect_eval import evaluate_fixtures
-from scripts.lte_probe_regress import PROBE_PROFILES, _worst_saliency_for_slot
+from travelogue.layout_templates.probe_regress import PROBE_PROFILES, _worst_saliency_for_slot
 
 
 @pytest.fixture(autouse=True)
@@ -49,7 +49,7 @@ def test_grid_specs_audit_uses_generated() -> None:
 @pytest.mark.unit
 def test_collage_fixture_eval_recall() -> None:
     report = evaluate_fixtures(Path("docs/acceptance-records/collage-detect-fixtures.json"))
-    assert report["recall"] >= 0.5
+    assert report["recall"] >= 0.7
     assert report["confusion"]["fp"] <= 1
 
 
