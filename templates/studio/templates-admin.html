@@ -41,6 +41,18 @@
     <h2>待审批配置变更（双人复核 §9.1）</h2>
     <ul id="pending-list"></ul>
   </div>
+  <div id="dashboard-metrics" hidden>
+    <h2>效果看板 · 布局模板遥测</h2>
+    <p id="dashboard-window" class="muted"></p>
+    <table>
+      <thead>
+        <tr>
+          <th>templateId</th><th>曝光</th><th>曝光占比</th><th>候选</th><th>fallback</th><th>win p50</th><th>face crop</th>
+        </tr>
+      </thead>
+      <tbody id="layout-metrics-rows"></tbody>
+    </table>
+  </div>
   <div id="exposure-debt" hidden>
     <h2>曝光负债调权提案（§9.4 · 需双人审批）</h2>
     <p class="muted">由 dogfood 曝光偏离比例控制器生成；审批后写入 runtime，不改 YAML。</p>
@@ -53,6 +65,7 @@
       <tbody id="exposure-rows"></tbody>
     </table>
     <button type="button" id="btn-exposure-propose">提交调权提案</button>
+    <p id="exposure-pending-status" class="muted" hidden></p>
   </div>
   <table>
     <thead>
@@ -115,6 +128,10 @@
     const layoutTableEl = layoutRowsEl?.closest("table");
     const exposureRowsEl = document.getElementById("exposure-rows");
     const exposureDebtBox = document.getElementById("exposure-debt");
+    const exposurePendingStatusEl = document.getElementById("exposure-pending-status");
+    const dashboardMetricsBox = document.getElementById("dashboard-metrics");
+    const dashboardWindowEl = document.getElementById("dashboard-window");
+    const layoutMetricsRowsEl = document.getElementById("layout-metrics-rows");
     let lastExposureProposals = [];
     let lastRegistryVersion = "";
     const logEl = document.getElementById("log");
@@ -143,26 +160,39 @@
       return s ? "?" + s : "";
     }
 
+    function isExposureWeightPatch(patch) {
+      return patch && typeof patch.layout_template_base_weights === "object";
+    }
+
     function renderPending(runtime) {
       const box = document.getElementById("pending-config");
       const ul = document.getElementById("pending-list");
       const pending = (runtime && runtime.pendingConfigChanges) || [];
       if (!pending.length) {
         box.hidden = true;
+        renderExposurePendingStatus(runtime);
         return;
       }
       box.hidden = false;
       ul.innerHTML = "";
       pending.forEach((item) => {
         const li = document.createElement("li");
+        const patch = item.patch || {};
+        const kind = isExposureWeightPatch(patch) ? "曝光调权" : "路由/运行时";
+        const weightCount = isExposureWeightPatch(patch)
+          ? Object.keys(patch.layout_template_base_weights || {}).length
+          : 0;
         li.textContent =
+          kind +
+          " · " +
           item.id +
           " · " +
           (item.operator || "?") +
           " · approvals:" +
           (item.approvals || []).length +
-          "/2 · " +
-          JSON.stringify(item.patch || {});
+          "/2" +
+          (weightCount ? " · " + weightCount + " templates" : "") +
+          (item.reason ? " · " + item.reason : "");
         const btn = document.createElement("button");
         btn.textContent = "审批";
         btn.onclick = () => {
@@ -178,6 +208,76 @@
         };
         li.appendChild(btn);
         ul.appendChild(li);
+      });
+      renderExposurePendingStatus(runtime);
+    }
+
+    function renderExposurePendingStatus(runtime) {
+      const pending = (runtime && runtime.pendingConfigChanges) || [];
+      const exposurePending = pending.filter((item) => isExposureWeightPatch(item.patch || {}));
+      if (!exposurePending.length) {
+        exposurePendingStatusEl.hidden = true;
+        exposurePendingStatusEl.textContent = "";
+        return;
+      }
+      exposurePendingStatusEl.hidden = false;
+      exposurePendingStatusEl.textContent =
+        "待审批曝光调权 " +
+        exposurePending.length +
+        " 项（" +
+        exposurePending.map((p) => p.id + " " + (p.approvals || []).length + "/2").join("；") +
+        "）";
+    }
+
+    function fmtRate(v) {
+      if (v == null || !Number.isFinite(Number(v))) return "—";
+      return (Number(v) * 100).toFixed(1) + "%";
+    }
+
+    function renderDashboardMetrics(metrics) {
+      const layout = (metrics && metrics.layoutTemplates) || {};
+      const rows = layout.templates || [];
+      const hours = layout.windowHours || metrics.windowHours || 24;
+      dashboardWindowEl.textContent =
+        "窗口 " +
+        hours +
+        "h · 模板数 " +
+        rows.length +
+        (metrics.rates && metrics.rates.route_total != null
+          ? " · 路由决策 " + metrics.rates.route_total
+          : "");
+      layoutMetricsRowsEl.innerHTML = "";
+      if (!rows.length) {
+        dashboardMetricsBox.hidden = false;
+        return;
+      }
+      dashboardMetricsBox.hidden = false;
+      rows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" +
+          escapeHtml(row.templateId || "") +
+          "</td><td>" +
+          escapeHtml(String(row.exposureCount != null ? row.exposureCount : "—")) +
+          "</td><td>" +
+          escapeHtml(fmtRate(row.exposureShareMean)) +
+          "</td><td>" +
+          escapeHtml(String(row.candidateCount != null ? row.candidateCount : "—")) +
+          "</td><td>" +
+          escapeHtml(fmtRate(row.fallbackRateMean)) +
+          "</td><td>" +
+          escapeHtml(row.winScoreP50 != null ? String(row.winScoreP50) : "—") +
+          "</td><td>" +
+          escapeHtml(fmtRate(row.faceCropProxyRateMean)) +
+          "</td>";
+        layoutMetricsRowsEl.appendChild(tr);
+      });
+    }
+
+    function loadDashboard(hours) {
+      return api("/__travelogue/templates/admin/dashboard?hours=" + hours).then((body) => {
+        renderDashboardMetrics(body.metrics || {});
+        log(body);
       });
     }
 
@@ -507,9 +607,9 @@
     document.getElementById("btn-all-decisions").onclick = () =>
       api("/__travelogue/templates/admin/decisions?limit=40").then(log).catch((e) => log(e));
     document.getElementById("btn-dashboard").onclick = () =>
-      api("/__travelogue/templates/admin/dashboard?hours=24").then(log).catch((e) => log(e));
+      loadDashboard(24).catch((e) => log(e));
     document.getElementById("btn-dashboard-72").onclick = () =>
-      api("/__travelogue/templates/admin/dashboard?hours=72").then(log).catch((e) => log(e));
+      loadDashboard(72).catch((e) => log(e));
     document.getElementById("btn-register").onclick = () => {
       const tid = window.prompt("templateId（templates/<id> 目录已存在）", "event-recap");
       if (!tid) return;

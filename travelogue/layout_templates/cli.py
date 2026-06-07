@@ -158,6 +158,16 @@ def cmd_solve_tracks(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_check_primitives(args: argparse.Namespace) -> int:
+    from travelogue.layout_templates.primitive_catalog import check_primitive_yaml_drift
+
+    root = Path(args.templates)
+    errors = check_primitive_yaml_drift(templates_dir=root)
+    payload = {"ok": not errors, "errors": errors}
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0 if payload["ok"] else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="travelogue.layout_templates.cli", description="LTE CLI")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -197,6 +207,13 @@ def build_parser() -> argparse.ArgumentParser:
     solve.add_argument("--templates", type=Path, default=DEFAULT_TEMPLATES_DIR)
     solve.add_argument("--json", action="store_true", help="Emit JSON payload")
     solve.set_defaults(func=cmd_solve_tracks)
+
+    check_prim = sub.add_parser(
+        "check-primitives",
+        help="Verify screen-planner primitive YAML matches parameterized catalog (W4)",
+    )
+    check_prim.add_argument("--templates", type=Path, default=DEFAULT_TEMPLATES_DIR)
+    check_prim.set_defaults(func=cmd_check_primitives)
 
     return parser
 

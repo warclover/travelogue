@@ -69,3 +69,140 @@ def uniform_grid_primitive(
         rollout={},
         raw={},
     )
+
+
+def single_slot_primitive(
+    *,
+    template_id: str,
+    stage_aspect: str,
+    role: str,
+    grid_class: str,
+    mix_portrait: int = 0,
+    mix_landscape: int = 0,
+    kind: str = "primitive",
+    status: str = "ga",
+    display_name: str,
+    description: str,
+    tags: tuple[str, ...] = (),
+) -> TemplateDef:
+    return TemplateDef(
+        id=template_id,
+        version=1,
+        status=status,
+        kind=kind,
+        display_name=display_name,
+        description=description,
+        aesthetic=None,
+        balance_policy=None,
+        stage=TemplateStage(aspect=stage_aspect, cols=(1.0,), rows=(1.0,), grid=(1, 1)),
+        photo_count_min=1,
+        photo_count_max=1,
+        mix_portrait=mix_portrait,
+        mix_landscape=mix_landscape,
+        slots=(TemplateSlot(index=0, rect=(1, 1, 1, 1), role=role, fit="cover"),),
+        constraints={},
+        compatibility_hints={},
+        scoring={"base_weight": 1.0, "tags": list(tags)},
+        render_grid_class=grid_class,
+        render_css_bundle="journal-screens.css",
+        render_fit_policy="auto_delegate",
+        rollout={},
+        raw={},
+    )
+
+
+def column_grid_primitive(
+    *,
+    template_id: str,
+    columns: int,
+    role: str,
+    grid_class: str,
+    mix_portrait: int,
+    mix_landscape: int,
+    display_name: str,
+    description: str,
+    status: str = "ga",
+) -> TemplateDef:
+    if columns < 2:
+        raise ValueError("columns must be >= 2")
+    slots = tuple(
+        TemplateSlot(index=i, rect=(i + 1, i + 1, 1, 1), role=role, fit="cover")
+        for i in range(columns)
+    )
+    return TemplateDef(
+        id=template_id,
+        version=1,
+        status=status,
+        kind="primitive",
+        display_name=display_name,
+        description=description,
+        aesthetic=None,
+        balance_policy=None,
+        stage=TemplateStage(
+            aspect="16:9",
+            cols=tuple([1.0] * columns),
+            rows=(1.0,),
+            grid=(columns, 1),
+        ),
+        photo_count_min=columns,
+        photo_count_max=columns,
+        mix_portrait=mix_portrait,
+        mix_landscape=mix_landscape,
+        slots=slots,
+        constraints={},
+        compatibility_hints={},
+        scoring={"base_weight": 1.0, "tags": [role]},
+        render_grid_class=grid_class,
+        render_css_bundle="journal-screens.css",
+        render_fit_policy="auto_delegate",
+        rollout={},
+        raw={},
+    )
+
+
+def vertical_stack_primitive(
+    *,
+    template_id: str,
+    slot_count: int,
+    grid_class: str,
+    mix_landscape: int,
+    display_name: str,
+    description: str,
+    status: str = "ga",
+    kind: str = "stack",
+) -> TemplateDef:
+    if slot_count < 2:
+        raise ValueError("slot_count must be >= 2")
+    slots = tuple(
+        TemplateSlot(index=i, rect=(1, 1, i + 1, i + 1), role="landscape", fit="cover")
+        for i in range(slot_count)
+    )
+    return TemplateDef(
+        id=template_id,
+        version=1,
+        status=status,
+        kind=kind,
+        display_name=display_name,
+        description=description,
+        aesthetic=None,
+        balance_policy=None,
+        stage=TemplateStage(
+            aspect="16:9",
+            cols=(1.0,),
+            rows=tuple([1.0] * slot_count),
+            grid=(1, slot_count),
+        ),
+        photo_count_min=slot_count,
+        photo_count_max=slot_count,
+        mix_portrait=0,
+        mix_landscape=mix_landscape,
+        slots=slots,
+        constraints={},
+        compatibility_hints={},
+        scoring={"base_weight": 1.0, "tags": []},
+        render_grid_class=grid_class,
+        render_css_bundle="journal-screens.css",
+        render_fit_policy="auto_delegate",
+        rollout={},
+        raw={},
+    )
