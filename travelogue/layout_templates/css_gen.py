@@ -38,9 +38,6 @@ def grid_template_rows(stage: TemplateStage) -> str:
     if stage.rows:
         weights = stage.rows
         if len(weights) > 1 and len(set(weights)) > 1:
-            unique = set(weights)
-            if unique == {1.0} or unique == {1}:
-                return f"repeat({len(weights)}, 1fr)"
             return " ".join(_format_weighted_track(w) for w in weights)
         if all(w == weights[0] for w in weights):
             return f"repeat({len(weights)}, 1fr)"
@@ -57,6 +54,30 @@ def grid_templates_for(template: TemplateDef) -> tuple[str, str]:
 
 def normalize_grid_template(value: str) -> str:
     return re.sub(r"\s+", " ", value.strip())
+
+
+_JOURNAL_CSS_CACHE: tuple[str, float, str] | None = None
+
+
+def _read_journal_css() -> str:
+    """Read journal-screens.css with an mtime-keyed cache.
+
+    validate_css_bundle is called once per template during a full CLI validate;
+    without caching this re-reads the same large stylesheet N times.
+    """
+    global _JOURNAL_CSS_CACHE
+    path = Path(JOURNAL_SCREENS_CSS)
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        return path.read_text(encoding="utf-8")
+    key = str(path)
+    cache = _JOURNAL_CSS_CACHE
+    if cache is not None and cache[0] == key and cache[1] == mtime:
+        return cache[2]
+    text = path.read_text(encoding="utf-8")
+    _JOURNAL_CSS_CACHE = (key, mtime, text)
+    return text
 
 
 def _track_dims(stage: TemplateStage) -> tuple[int, int]:
@@ -168,6 +189,21 @@ def _parse_journal_grid_css(css_text: str) -> dict[str, dict[str, str]]:
     return out
 
 
+def _marker_block_region(css_text: str) -> str:
+    """Authoritative LTE-generated region only.
+
+    Parity must compare YAML output against the generated marker block, not the
+    pattern-specific overlays (data-pattern/data-layout-hint), which legitimately
+    redefine the same grid class with variant tracks and would otherwise clobber
+    the canonical value (e.g. screen-portrait-2's person-pair overlay).
+    """
+    start = css_text.find(LTE_MARKER_START)
+    end = css_text.find(LTE_MARKER_END)
+    if start == -1 or end == -1 or end <= start:
+        return css_text
+    return css_text[start : end + len(LTE_MARKER_END)]
+
+
 def validate_css_bundle(template: TemplateDef, *, journal_css_text: str | None = None) -> list[str]:
     """V-P16-05/06: generated grid-template matches stage; optional journal CSS parity."""
     issues: list[str] = []
@@ -184,8 +220,8 @@ def validate_css_bundle(template: TemplateDef, *, journal_css_text: str | None =
             if overlap:
                 issues.append(f"slot {slot.index} placement overlaps {sorted(overlap)} (V-P16-06)")
             covered |= cells
-    css_text = journal_css_text or Path(JOURNAL_SCREENS_CSS).read_text(encoding="utf-8")
-    parsed = _parse_journal_grid_css(css_text)
+    css_text = journal_css_text or _read_journal_css()
+    parsed = _parse_journal_grid_css(_marker_block_region(css_text))
     expected = parsed.get(template.render_grid_class)
     if expected:
         if "gridTemplateColumns" in expected and normalize_grid_template(cols) != expected["gridTemplateColumns"]:
@@ -326,6 +362,10 @@ def _is_pattern_overlay_selector(selector: str) -> bool:
 
 
 def _should_prune_rule(selector: str, dupe_classes: set[str]) -> bool:
+    if "@" in selector:
+        # Never touch at-rule preludes (@media/@supports/...); the flat regex
+        # scanner cannot model their nested blocks safely.
+        return False
     if _is_pattern_overlay_selector(selector):
         return False
     classes = _grid_classes_in_selector(selector)

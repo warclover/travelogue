@@ -40,6 +40,21 @@ def test_cli_validate_ok() -> None:
 
 
 @pytest.mark.unit
+def test_cli_validate_semantic_passes_all_templates() -> None:
+    """Guards the CI 'LTE validate --semantic' gate (ci-mode V-P16-01~14).
+
+    A new/edited template that introduces an ci-level error/block would fail
+    CI; this catches it locally. Deprecated templates must pass in ci mode.
+    """
+    buf = StringIO()
+    with patch("sys.stdout", buf):
+        code = cli.main(["validate", "--semantic", "-v"])
+    payload = json.loads(buf.getvalue())
+    assert payload["ok"] is True, payload["errors"]
+    assert code == 0
+
+
+@pytest.mark.unit
 def test_cli_commands_exit_zero() -> None:
     buf = StringIO()
     with patch("sys.stdout", buf):
@@ -55,6 +70,8 @@ def test_cli_commands_exit_zero() -> None:
 
     buf = StringIO()
     with patch("sys.stdout", buf):
-        code = cli.main(["solve-tracks"])
+        code = cli.main(["solve-tracks", "screen-mosaic-5-hero-3-2-plus-4", "--json"])
     assert code == 0
-    assert "not implemented" in buf.getvalue()
+    payload = json.loads(buf.getvalue())
+    assert payload["templateId"] == "screen-mosaic-5-hero-3-2-plus-4"
+    assert payload["cols"] and payload["rows"]

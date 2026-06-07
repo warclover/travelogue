@@ -16,6 +16,11 @@ _STATE_PATH = ROOT / "runs" / "template_admin_state.json"
 _LOCK = threading.Lock()
 _HIGH_RISK_TARGETS = frozenset({"disabled", "deprecated"})
 
+# mtime-keyed cache for the read-only runtime overrides block. The curate
+# scoring hot path calls load_runtime() once per candidate; without this it
+# re-reads + re-parses the state JSON from disk on every call.
+_RUNTIME_CACHE: tuple[float, dict[str, Any]] | None = None
+
 
 class AdminRevisionConflict(Exception):
     code = "E_TEMPLATE_REVISION_CONFLICT"
@@ -42,15 +47,28 @@ def _load_unlocked() -> dict[str, Any]:
 
 
 def _save_unlocked(data: dict[str, Any]) -> None:
+    global _RUNTIME_CACHE
     _STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
     tmp = _STATE_PATH.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     tmp.replace(_STATE_PATH)
+    _RUNTIME_CACHE = None  # in-process writes invalidate the read cache
 
 
 def load_runtime() -> dict[str, Any]:
+    """Return runtime overrides, cached by state-file mtime (read-only)."""
+    global _RUNTIME_CACHE
     with _LOCK:
-        return dict(_load_unlocked().get("runtime") or {})
+        try:
+            mtime = _STATE_PATH.stat().st_mtime
+        except OSError:
+            mtime = -1.0
+        cache = _RUNTIME_CACHE
+        if cache is not None and cache[0] == mtime:
+            return dict(cache[1])
+        runtime = dict(_load_unlocked().get("runtime") or {})
+        _RUNTIME_CACHE = (mtime, runtime)
+        return dict(runtime)
 
 
 def list_audit(*, limit: int = 50) -> list[dict[str, Any]]:

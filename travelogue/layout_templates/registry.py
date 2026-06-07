@@ -190,44 +190,66 @@ def _load_policy_quotas_cached() -> dict[int, dict[str, int]]:
     return out
 
 
+def _active_by_photo_count(
+    active: list[TemplateDef],
+) -> dict[int, dict[str, TemplateDef]]:
+    """Group active templates by each photoCount they cover (id-deduped)."""
+    by_count: dict[int, dict[str, TemplateDef]] = {}
+    for tpl in active:
+        for n in range(tpl.photo_count_min, tpl.photo_count_max + 1):
+            by_count.setdefault(n, {})[tpl.id] = tpl
+    return by_count
+
+
+def _count_kind(group: dict[str, TemplateDef], kind: str | None) -> int:
+    if kind is None:
+        return len(group)
+    return sum(1 for t in group.values() if t.kind == kind)
+
+
+_QUOTA_LIMIT_KEYS: tuple[tuple[str | None, str], ...] = (
+    (None, "max_active_total"),
+    ("composite", "max_active_composite"),
+    ("primitive", "max_active_primitive"),
+)
+
+
 def check_active_quotas(engine: LayoutTemplateEngine) -> list[str]:
     """Return human-readable quota violations for active templates."""
     quotas = load_policy_quotas()
     if not quotas:
         return []
     warnings: list[str] = []
-    active = engine.list_active()
+    by_count = _active_by_photo_count(engine.list_active())
     for photo_count, limits in sorted(quotas.items()):
-        at_count = [
-            t
-            for t in active
-            if t.photo_count_min <= photo_count <= t.photo_count_max
-        ]
-        total_limit = limits.get("max_active_total")
-        if total_limit is not None and len(at_count) > total_limit:
-            warnings.append(
-                f"photoCount={photo_count}: active total {len(at_count)} > max_active_total={total_limit}"
-            )
-        composite_limit = limits.get("max_active_composite")
-        if composite_limit is not None:
-            composites = [t for t in at_count if t.kind == "composite"]
-            if len(composites) > composite_limit:
+        group = by_count.get(photo_count, {})
+        for kind, limit_key in _QUOTA_LIMIT_KEYS:
+            limit = limits.get(limit_key)
+            if limit is None:
+                continue
+            actual = _count_kind(group, kind)
+            if actual > int(limit):
+                label = kind or "total"
                 warnings.append(
-                    f"photoCount={photo_count}: active composite {len(composites)} "
-                    f"> max_active_composite={composite_limit}"
-                )
-        primitive_limit = limits.get("max_active_primitive")
-        if primitive_limit is not None:
-            primitives = [t for t in at_count if t.kind == "primitive"]
-            if len(primitives) > primitive_limit:
-                warnings.append(
-                    f"photoCount={photo_count}: active primitive {len(primitives)} "
-                    f"> max_active_primitive={primitive_limit}"
+                    f"photoCount={photo_count}: active {label} {actual} > {limit_key}={limit}"
                 )
     return warnings
 
 
 _STATUS_KEEP_PRIORITY = {"ga": 0, "beta": 1, "experimental": 2}
+
+
+def _quotas_would_trim(active: list[TemplateDef], quotas: dict[int, dict[str, int]]) -> bool:
+    by_count = _active_by_photo_count(active)
+    for photo_count, limits in quotas.items():
+        group = by_count.get(photo_count, {})
+        if not group:
+            continue
+        for kind, limit_key in _QUOTA_LIMIT_KEYS:
+            limit = limits.get(limit_key)
+            if limit is not None and _count_kind(group, kind) > int(limit):
+                return True
+    return False
 
 
 def _apply_active_quotas(
@@ -240,18 +262,14 @@ def _apply_active_quotas(
     if not _quotas_would_trim(active, quotas):
         return active
     kept_ids: set[str] = {t.id for t in active}
-    by_count: dict[int, list[TemplateDef]] = {}
-    for tpl in active:
-        for n in range(tpl.photo_count_min, tpl.photo_count_max + 1):
-            by_count.setdefault(n, []).append(tpl)
+    by_count = _active_by_photo_count(active)
 
     for photo_count, limits in sorted(quotas.items()):
-        group = by_count.get(photo_count, [])
+        group = by_count.get(photo_count, {})
         if not group:
             continue
-        uniq = {t.id: t for t in group}
         candidates = sorted(
-            uniq.values(),
+            group.values(),
             key=lambda t: (_STATUS_KEEP_PRIORITY.get(t.status, 9), t.id),
         )
 
@@ -268,37 +286,10 @@ def _apply_active_quotas(
             for drop in pool[limit:]:
                 kept_ids.discard(drop.id)
 
-        _trim(None, "max_active_total")
-        _trim("composite", "max_active_composite")
-        _trim("primitive", "max_active_primitive")
+        for kind, limit_key in _QUOTA_LIMIT_KEYS:
+            _trim(kind, limit_key)
 
     return [t for t in active if t.id in kept_ids]
-
-
-def _quotas_would_trim(active: list[TemplateDef], quotas: dict[int, dict[str, int]]) -> bool:
-    by_count: dict[int, list[TemplateDef]] = {}
-    for tpl in active:
-        for n in range(tpl.photo_count_min, tpl.photo_count_max + 1):
-            by_count.setdefault(n, []).append(tpl)
-    for photo_count, limits in quotas.items():
-        group = by_count.get(photo_count, [])
-        if not group:
-            continue
-        uniq = {t.id: t for t in group}
-        total = len(uniq)
-        if limits.get("max_active_total") is not None and total > int(limits["max_active_total"]):
-            return True
-        composites = {t.id: t for t in uniq.values() if t.kind == "composite"}
-        if limits.get("max_active_composite") is not None and len(composites) > int(
-            limits["max_active_composite"]
-        ):
-            return True
-        primitives = {t.id: t for t in uniq.values() if t.kind == "primitive"}
-        if limits.get("max_active_primitive") is not None and len(primitives) > int(
-            limits["max_active_primitive"]
-        ):
-            return True
-    return False
 
 
 class LayoutTemplateEngine:
@@ -332,13 +323,10 @@ class LayoutTemplateEngine:
         root = root or DEFAULT_TEMPLATES_DIR
         cache_path = cache_path or DEFAULT_CACHE_PATH
         digest = _content_hash(root)
-        if cache_path.is_file() and not rebuild_cache:
-            try:
-                cached = json.loads(cache_path.read_text(encoding="utf-8"))
-                if cached.get("contentHash") == digest:
-                    pass
-            except (OSError, json.JSONDecodeError):
-                pass
+        # registry.cache.json is a checked-in drift sentinel (contentHash +
+        # photoCount index) for CI, not a runtime load fast-path: full
+        # TemplateDefs are not serialized there, so YAML is always parsed and
+        # the in-memory _by_photo_count index satisfies the p99<1ms goal.
         templates = _load_yaml_documents(root)
         if rebuild_cache or not cache_path.is_file():
             _write_cache(templates, cache_path=cache_path, content_hash=digest)
@@ -358,7 +346,6 @@ class LayoutTemplateEngine:
         tags: set[str] | None = None,
         enforce_quotas: bool = True,
     ) -> list[TemplateDef]:
-        t0 = time.perf_counter()
         ids: list[str]
         if window_size is not None:
             ids = list(self._by_photo_count.get(window_size, ()))
@@ -376,7 +363,6 @@ class LayoutTemplateEngine:
             out.append(t)
         if enforce_quotas:
             out = _apply_active_quotas(out, load_policy_quotas())
-        _ = time.perf_counter() - t0
         return out
 
     def get(self, template_id: str, version: int | None = None) -> TemplateDef:
@@ -389,6 +375,7 @@ class LayoutTemplateEngine:
         return slot_aspect_table(self.get(template_id))
 
     def export_legacy_registry(self) -> dict[str, Any]:
+        from travelogue.curation.mosaic.constants import PATTERN_GRID_CLASS
         from travelogue.curation.mosaic.pattern_catalog import LEGACY_MOSAIC_REGISTRY_IDS
 
         mosaic_patterns = {
@@ -397,16 +384,15 @@ class LayoutTemplateEngine:
             if tid in LEGACY_MOSAIC_REGISTRY_IDS
         }
         wide, tall = export_forbidden_maps(self._templates)
-        grid_templates = {
-            tid: {
-                "gridTemplateColumns": grid_templates_for(t)[0],
-                "gridTemplateRows": grid_templates_for(t)[1],
+        grid_templates: dict[str, dict[str, str]] = {}
+        for tid, t in self._templates.items():
+            if tid not in PATTERN_GRID_CLASS:
+                continue
+            cols, rows = grid_templates_for(t)
+            grid_templates[tid] = {
+                "gridTemplateColumns": cols,
+                "gridTemplateRows": rows,
             }
-            for tid, t in self._templates.items()
-            if tid in __import__(
-                "travelogue.curation.mosaic.constants", fromlist=["PATTERN_GRID_CLASS"]
-            ).PATTERN_GRID_CLASS
-        }
         return {
             "mosaic_patterns": mosaic_patterns,
             "explicit_grid_specs": export_explicit_grid_specs(self._templates),

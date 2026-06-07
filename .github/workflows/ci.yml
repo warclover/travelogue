@@ -186,8 +186,12 @@ jobs:
       - name: Quality gate (layout + studio regression)
         run: python scripts/quality_gate.py
 
-      - name: LTE validate (Phase 16)
-        run: python -m travelogue.layout_templates.cli validate
+      - name: LTE validate (Phase 16 · schema + semantic CI gates)
+        # --semantic runs V-P16-01~14 in ci mode (errors/blocks fail, warns allowed).
+        # Bulk publish mode is intentionally NOT run here: deprecated templates
+        # (e.g. *-balanced) block in publish by design and are gated per-template
+        # at admission time instead.
+        run: python -m travelogue.layout_templates.cli validate --semantic
 
       - name: LTE primitive catalog drift (W4)
         run: python -m travelogue.layout_templates.cli check-primitives

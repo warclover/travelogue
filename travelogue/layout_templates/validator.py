@@ -176,10 +176,36 @@ def _is_portrait_stage(stage: TemplateStage) -> bool:
     return stage.aspect in ("9:16",)
 
 
+def _is_uniform_grid(template: TemplateDef) -> bool:
+    """Uniform-grid primitive: every cell shares one AR (no weighted tracks).
+
+    In such grids `role` denotes the accepted photo type, not the cell shape —
+    a portrait photo may sit in a wide cell via object-fit (legacy mixed grids
+    like screen-portrait-2-landscape-2). The role↔cell-AR orientation check is
+    therefore not actionable and must not hard-block (PRD §6: V-P16-04 is
+    error/warn). Composite weighted-track templates keep the hard block.
+    """
+    st = template.stage
+    return (
+        template.kind == "primitive"
+        and st.grid is not None
+        and st.cols is None
+        and st.rows is None
+    )
+
+
 def _check_role_aspect(template: TemplateDef, report: ValidationReport, *, mode: ValidateMode) -> None:
     if template.kind == "stack":
         return
     portrait_stage = _is_portrait_stage(template.stage)
+    uniform_grid = _is_uniform_grid(template)
+
+    def _lvl(desired: str) -> str:
+        # Orientation mismatch on a uniform grid is structurally unavoidable.
+        if uniform_grid and desired in ("block", "error"):
+            return "warn"
+        return desired
+
     for row in slot_aspect_table(template):
         ar = row.display_aspect
         role = row.role
@@ -188,13 +214,13 @@ def _check_role_aspect(template: TemplateDef, report: ValidationReport, *, mode:
                 report.add(
                     "V-P16-04",
                     f"slot {row.index} portrait on 9:16 stage displayAspect {ar:.3f} too wide",
-                    level="block",
+                    level=_lvl("block") if mode == "publish" else "warn",
                 )
             elif role in ("landscape", "tile") and ar < LANDSCAPE_AR_MIN:
                 report.add(
                     "V-P16-04",
                     f"slot {row.index} {role} on 9:16 stage displayAspect {ar:.3f} too tall",
-                    level="block" if mode == "publish" else "warn",
+                    level=_lvl("block") if mode == "publish" else "warn",
                 )
             continue
         if role == "portrait":
@@ -203,7 +229,7 @@ def _check_role_aspect(template: TemplateDef, report: ValidationReport, *, mode:
                     "V-P16-04",
                     f"slot {row.index} portrait displayAspect {ar:.3f} outside "
                     f"[{PORTRAIT_AR_BLOCK_LOW}, {PORTRAIT_AR_BLOCK_HIGH}]",
-                    level="block",
+                    level=_lvl("block") if mode == "publish" else "warn",
                 )
             elif ar < PORTRAIT_AR_MIN or ar > PORTRAIT_AR_MAX:
                 report.add(
@@ -214,7 +240,7 @@ def _check_role_aspect(template: TemplateDef, report: ValidationReport, *, mode:
                 )
         elif role in ("landscape", "tile", "square"):
             if ar > LANDSCAPE_AR_BLOCK_HIGH:
-                level = "block" if mode == "publish" else "warn"
+                level = _lvl("block") if mode == "publish" else "warn"
                 report.add(
                     "V-P16-04",
                     f"slot {row.index} {role} displayAspect {ar:.3f} > {LANDSCAPE_AR_BLOCK_HIGH}",
@@ -315,8 +341,7 @@ def _check_css(template: TemplateDef, report: ValidationReport) -> None:
     if template.kind == "stack":
         return
     cols, rows = grid_templates_for(template)
-    exp_cols, exp_rows = cols, rows
-    if not exp_cols or not exp_rows:
+    if not cols or not rows:
         report.add("V-P16-05", "failed to derive grid-template from stage")
         return
     for msg in validate_css_bundle(template):

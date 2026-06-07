@@ -59,7 +59,13 @@ slots:
 constraints:
   portrait_forbidden_in_wide_slots: []
   landscape_forbidden_in_tall_slots: []
-  intentionalGaps: []
+  # Documented top-right empty cells (col 3, rows 1-2) — the very flaw that
+  # deprecated this pattern (PRD §6.x; superseded by mosaic-5-2p3l-equal).
+  intentionalGaps:
+  - - 3
+    - 3
+    - 1
+    - 2
 scoring:
   base_weight: 1.0
   tags: []

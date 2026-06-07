@@ -131,10 +131,13 @@ def solve_tracks(
         if not improved:
             break
 
-    def _round_weight(w: float) -> float:
+    def _round_weight(w: float, *, tol: float = 0.05) -> float:
+        # Prefer the simplest fraction (smallest denominator) within tolerance.
         for denom in (1, 2, 3, 4, 5, 6, 8):
             num = max(1, round(w * denom))
-            return round(num / denom, 4)
+            cand = num / denom
+            if abs(w - cand) <= tol:
+                return round(cand, 4)
         return round(w, 4)
 
     return [_round_weight(w) for w in cols], [_round_weight(w) for w in rows]
@@ -148,10 +151,6 @@ def legacy_slot_cell_aspect_ratio(
     grid_rows: int = 3,
 ) -> float:
     """Match mosaic.slot_geometry.slot_cell_aspect_ratio for uniform grids."""
-    stage = TemplateStage(
-        aspect=f"{stage_aspect:.0f}:9" if stage_aspect == 16 / 9 else "9:16",
-        grid=(grid_cols, grid_rows),
-    )
     if stage_aspect == 9 / 16:
         stage = TemplateStage(aspect="9:16", grid=(grid_cols, grid_rows))
     elif abs(stage_aspect - 16 / 9) < 0.01:
