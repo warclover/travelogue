@@ -8,8 +8,20 @@ from travelogue.layout_templates.geometry import slot_display_aspect
 from travelogue.layout_templates.registry import get_engine
 
 
-def solidify_screen_geometry(screen: dict[str, Any], pattern_id: str) -> dict[str, Any]:
-    """Write layoutGeometry + per-slot rect/displayAspect from LTE YAML."""
+def solidify_screen_geometry(
+    screen: dict[str, Any],
+    pattern_id: str,
+    *,
+    assets_map: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Write layoutGeometry + per-slot rect/displayAspect from LTE YAML.
+
+    ``assets_map`` must be supplied so per-slot fit is re-resolved against the
+    real asset (tags/person/face). Without it, ``resolve_slot_fit`` only sees a
+    stub ``{"id": assetId}`` and silently downgrades person portraits from the
+    face-safe ``contain`` to ``cover``.
+    """
+    assets_map = assets_map or {}
     try:
         template = get_engine().get(pattern_id)
     except KeyError:
@@ -47,11 +59,15 @@ def solidify_screen_geometry(screen: dict[str, Any], pattern_id: str) -> dict[st
         slot["displayAspect"] = round(slot_display_aspect(meta.rect, stage), 4)
         from travelogue.curation.mosaic.lte_adapter import resolve_slot_fit
 
+        aid = slot.get("assetId")
+        asset = assets_map.get(aid) if aid else None
+        if asset is None and aid:
+            asset = {"id": aid}
         slot["fit"] = resolve_slot_fit(
             pattern_id,
             idx,
             meta.role,
-            {"id": slot.get("assetId")} if slot.get("assetId") else {},
+            asset or {},
         )
 
     return screen

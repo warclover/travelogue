@@ -21,8 +21,8 @@ from travelogue.curation.mosaic.constants import (
     PATTERN_PORTRAIT_9,
     PATTERN_PORTRAIT_GRID_8,
 )
-from travelogue.curation.mosaic.registry import MosaicPattern
 from travelogue.curation.mosaic.lte_adapter import read_templates_from_lte
+from travelogue.curation.mosaic.registry import MosaicPattern
 from travelogue.curation.screen_planner import (
     PERSON_LAYOUT_TRIPLE,
     _can_mixed_p1_l2,
@@ -211,11 +211,15 @@ def _order_by_roles(
     return ordered
 
 
-def _finalize_mosaic_screen(screen: dict, pattern_id: str) -> dict:
+def _finalize_mosaic_screen(
+    screen: dict,
+    pattern_id: str,
+    assets_map: dict[str, dict] | None = None,
+) -> dict:
     if read_templates_from_lte():
         from travelogue.layout_templates.geometry_solidify import solidify_screen_geometry
 
-        solidify_screen_geometry(screen, pattern_id)
+        solidify_screen_geometry(screen, pattern_id, assets_map=assets_map)
     return screen
 
 
@@ -315,6 +319,7 @@ def build_screen(
                 ordered_ids, screen_id=screen_id, assets_map=assets_map
             ),
             pattern.pattern_id,
+            assets_map,
         )
     if pattern.pattern_id == PATTERN_PORTRAIT_1_LANDSCAPE_2:
         return _finalize_mosaic_screen(
@@ -325,6 +330,7 @@ def build_screen(
                 assets_map=assets_map,
             ),
             pattern.pattern_id,
+            assets_map,
         )
     if pattern.pattern_id == PATTERN_PORTRAIT_2_LANDSCAPE_2:
         slots = []
@@ -344,6 +350,7 @@ def build_screen(
                 slots=slots,
             ),
             pattern.pattern_id,
+            assets_map,
         )
     if pattern.pattern_id == PATTERN_PORTRAIT_GRID_8:
         return _finalize_mosaic_screen(
@@ -351,6 +358,7 @@ def build_screen(
                 ordered_ids, screen_id=screen_id, assets_map=assets_map
             ),
             pattern.pattern_id,
+            assets_map,
         )
     if pattern.pattern_id in (
         PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
@@ -375,6 +383,7 @@ def build_screen(
         return _finalize_mosaic_screen(
             _make_screen(pattern.pattern_id, screen_id=screen_id, slots=slots),
             pattern.pattern_id,
+            assets_map,
         )
     roles = pattern.roles
     slots = []
@@ -396,4 +405,4 @@ def build_screen(
         asset_has_person(assets_map.get(aid, {})) for aid in ordered_ids
     ):
         screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
-    return _finalize_mosaic_screen(screen, pattern.pattern_id)
+    return _finalize_mosaic_screen(screen, pattern.pattern_id, assets_map)
