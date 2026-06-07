@@ -129,12 +129,24 @@ def test_submit_exposure_proposals_cli_flow(tmp_path: Path, monkeypatch: pytest.
 
 @pytest.mark.unit
 def test_evaluate_dogfood_fixture_trips() -> None:
-    from scripts.phase16_template_eval import evaluate_dogfood_trips
+    from scripts.phase16_template_eval import compare_ac15_thresholds, evaluate_dogfood_trips, evaluate_registry
 
     root = Path("tests/fixtures/phase16-dogfood")
     out = evaluate_dogfood_trips(root)
     assert out["tripCount"] >= 3
     assert out["aggregate"]["layout.chapter.pattern_diversity_p50"] is not None
+    ac15 = compare_ac15_thresholds({"dogfood": out})
+    assert ac15["ok"] is True
+
+
+@pytest.mark.unit
+def test_ac15_strict_on_dogfood_fixtures() -> None:
+    from scripts.phase16_template_eval import DEFAULT_DOGFOOD_DIR, compare_ac15_thresholds, evaluate_registry
+
+    report = evaluate_registry(trips_dir=DEFAULT_DOGFOOD_DIR)
+    ac15 = compare_ac15_thresholds(report)
+    assert report["dogfood"]["tripCount"] == 6
+    assert ac15["ok"] is True
 
 
 @pytest.mark.unit

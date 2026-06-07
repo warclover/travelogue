@@ -14,13 +14,14 @@ from travelogue.config import get_config
 from travelogue.curation.layout_metrics import pattern_diversity, pattern_diversity_p50
 from travelogue.curation.mosaic.lte_adapter import mosaic_registry, read_templates_from_lte
 from travelogue.curation.mosaic.metrics import (
+    mcs_unified_exposure_rate,
     mixed_layout_exposure_rate,
     mosaic5_exposure_rate,
-    mcs_unified_exposure_rate,
 )
 from travelogue.layout_templates.registry import LayoutTemplateEngine, reset_engine_cache_for_tests
 
 DEFAULT_BASELINE = Path("docs/acceptance-records/phase16-template-eval-baseline.json")
+DEFAULT_DOGFOOD_DIR = Path("tests/fixtures/phase16-dogfood")
 LTE_POLICY = Path("travelogue/layout_templates/lte_policy.yaml")
 
 
@@ -256,14 +257,27 @@ def compare_baseline(report: dict, baseline_path: Path) -> dict[str, Any]:
 
 def compare_ac15_thresholds(report: dict) -> dict[str, Any]:
     """AC-P16-15 hard gates on North Star metrics (dogfood aggregate)."""
-    agg = (report.get("dogfood") or {}).get("aggregate") or {}
+    dogfood = report.get("dogfood") or {}
+    agg = dogfood.get("aggregate") or {}
     failures: list[str] = []
+    trip_count = int(dogfood.get("tripCount") or 0)
+    if trip_count < 3:
+        failures.append(f"dogfood tripCount {trip_count} < 3")
     p50 = agg.get("layout.chapter.pattern_diversity_p50")
-    if p50 is not None and float(p50) < 1.5:
-        failures.append(f"pattern_diversity_p50 {p50} < 1.5")
+    if p50 is None:
+        failures.append("pattern_diversity_p50 missing")
+    elif float(p50) < 2.0:
+        failures.append(f"pattern_diversity_p50 {p50} < 2.0")
     m5 = agg.get("layout.mosaic5.exposure_rate_mean")
-    if m5 is not None and float(m5) <= 0.0:
+    if m5 is None:
+        failures.append("mosaic5 exposure missing")
+    elif float(m5) <= 0.0:
         failures.append(f"mosaic5 exposure {m5} <= 0")
+    unified = agg.get("layout.mosaic_v2.unified_exposure_rate_mean")
+    if unified is None:
+        failures.append("unified mosaic exposure missing")
+    elif float(unified) < 0.3:
+        failures.append(f"unified mosaic exposure {unified} < 0.3")
     mixed = agg.get("layout.mosaic.mixed_layout_exposure_rate_mean")
     if mixed is not None and float(mixed) < 0.0:
         failures.append(f"mixed_layout exposure {mixed} < 0")
@@ -273,7 +287,7 @@ def compare_ac15_thresholds(report: dict) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Phase 16 LTE template eval report")
     parser.add_argument("--trip", dest="trip_id", default=None)
-    parser.add_argument("--trips-dir", type=Path, default=None)
+    parser.add_argument("--trips-dir", type=Path, default=None, help="Trip root for exposure + dogfood (CI: phase16-dogfood fixtures)")
     parser.add_argument("--json-out", type=Path, default=None)
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
     parser.add_argument("--write-baseline", action="store_true")

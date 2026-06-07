@@ -95,8 +95,13 @@ def test_dpp_prefers_diverse_pattern() -> None:
 
 @pytest.mark.unit
 def test_compare_ac15_thresholds_passes_on_dogfood() -> None:
-    report = evaluate_registry()
+    from pathlib import Path
+
+    from scripts.phase16_template_eval import DEFAULT_DOGFOOD_DIR, compare_ac15_thresholds, evaluate_registry
+
+    report = evaluate_registry(trips_dir=DEFAULT_DOGFOOD_DIR)
     ac15 = compare_ac15_thresholds(report)
+    assert report["dogfood"]["tripCount"] >= 3
     assert ac15["ok"] is True
 
 
