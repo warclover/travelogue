@@ -20,7 +20,7 @@ from travelogue.curation.mosaic.slot_geometry import (
     _LANDSCAPE_FORBIDDEN_TALL,
     _PORTRAIT_FORBIDDEN_WIDE,
 )
-from travelogue.layout_templates.css_gen import normalize_grid_template
+from travelogue.layout_templates.css_gen import _marker_block_region, normalize_grid_template
 from travelogue.layout_templates.registry import LayoutTemplateEngine, reset_engine_cache_for_tests
 from travelogue.paths import JOURNAL_SCREENS_CSS
 
@@ -109,7 +109,10 @@ def test_forbidden_slot_maps_parity(lte_engine: LayoutTemplateEngine) -> None:
 
 @pytest.mark.unit
 def test_grid_template_strings_parity(lte_engine: LayoutTemplateEngine) -> None:
-    css_text = Path(JOURNAL_SCREENS_CSS).read_text(encoding="utf-8")
+    # Compare YAML export against the authoritative LTE-generated marker block only.
+    # Pattern overlays (e.g. screen-portrait-2's person-pair --2col) legitimately
+    # redefine the same grid class with variant tracks and must not be compared.
+    css_text = _marker_block_region(Path(JOURNAL_SCREENS_CSS).read_text(encoding="utf-8"))
     css_grids = _parse_journal_grid_css(css_text)
     exported = lte_engine.export_legacy_registry()["grid_templates"]
     for pid, grid_class in PATTERN_GRID_CLASS.items():

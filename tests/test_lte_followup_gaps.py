@@ -6,12 +6,15 @@ from pathlib import Path
 
 import pytest
 
+from scripts.collage_detect_eval import evaluate_fixtures
 from travelogue.curation.mosaic.lte_adapter import resolve_slot_fit
 from travelogue.curation.mosaic.pattern_catalog import LEGACY_MOSAIC_REGISTRY_IDS, default_registry
 from travelogue.layout_templates.geometry_solidify import solidify_screen_geometry
-from travelogue.layout_templates.p17_research import hungarian_slot_assignment
+from travelogue.layout_templates.p17_research import (
+    generative_composite_stage,
+    hungarian_slot_assignment,
+)
 from travelogue.layout_templates.registry import reset_engine_cache_for_tests
-from scripts.collage_detect_eval import evaluate_fixtures
 
 
 @pytest.fixture(autouse=True)
@@ -50,6 +53,15 @@ def test_collage_2panel_fixture_passes() -> None:
 
 
 @pytest.mark.unit
-def test_p17_stub_raises_not_implemented() -> None:
+def test_p17_hungarian_assignment_minimizes_ar_cost() -> None:
+    # Empty input is a no-op; min-cost matching pairs nearest aspect ratios.
+    assert hungarian_slot_assignment([], []) == []
+    # slots: [portrait, landscape]; assets: [landscape, portrait]
+    assignment = hungarian_slot_assignment([1.78, 0.56], [0.56, 1.78])
+    assert assignment == [1, 0]
+
+
+@pytest.mark.unit
+def test_p17_generative_stage_still_stubbed() -> None:
     with pytest.raises(NotImplementedError):
-        hungarian_slot_assignment([], [])
+        generative_composite_stage()

@@ -2,7 +2,7 @@
 
 Regenerate:
   python scripts/lte_export_legacy.py --sync-python
-Content hash: 4201256ba07877ed29025b7462802a7b74d9ded37ed41bf25aea4d2e913e4b63
+Content hash: 40700525561c6bcbd1e98a3fa8a5e9366a85e4ef591706359a2acf84cafdd451
 """
 
 from __future__ import annotations
@@ -49,6 +49,7 @@ STACK_PATTERNS = frozenset({"screen-landscape-2", "screen-landscape-3"})
 
 PATTERN_GRID_CLASS: dict[str, Any] = {
     "screen-full-frame": 'layout-screen__grid--1col',
+    "screen-landscape-1": 'layout-screen__grid--1col',
     "screen-landscape-2": 'layout-screen__grid--landscape-stack-2',
     "screen-landscape-3": 'layout-screen__grid--landscape-stack-3',
     "screen-landscape-4": 'layout-screen__grid--2x2',
@@ -63,7 +64,9 @@ PATTERN_GRID_CLASS: dict[str, Any] = {
     "screen-mosaic-5-main-portrait-3land": 'layout-screen__grid--mosaic-5-main-portrait-3land',
     "screen-mosaic-6-main-hero-plus-5": 'layout-screen__grid--mosaic-6-main-hero-plus-5',
     "screen-portrait-1-landscape-2": 'layout-screen__grid--portrait-left-2landscape',
+    "screen-portrait-1": 'layout-screen__grid--1col',
     "screen-portrait-2-landscape-2": 'layout-screen__grid--2x2',
+    "screen-portrait-2": 'layout-screen__grid--2col',
     "screen-portrait-3": 'layout-screen__grid--3col',
     "screen-portrait-4": 'layout-screen__grid--2x2',
     "screen-portrait-6": 'layout-screen__grid--3x2',
@@ -79,7 +82,7 @@ _LANDSCAPE_FORBIDDEN_TALL: dict[str, Any] = {
     "screen-mosaic-5-main-portrait-3land": frozenset({1}),
 }
 
-PORTRAIT_DOMINANT_AUTO_FLOW: frozenset[str] = frozenset({"screen-portrait-3", "screen-portrait-4", "screen-portrait-6", "screen-portrait-9", "screen-portrait-grid-8"})
+PORTRAIT_DOMINANT_AUTO_FLOW: frozenset[str] = frozenset({"screen-portrait-1", "screen-portrait-3", "screen-portrait-4", "screen-portrait-6", "screen-portrait-9", "screen-portrait-grid-8"})
 
 MOSAIC_3_PATTERN_IDS: tuple[str, ...] = ("screen-portrait-3", "screen-landscape-3", "screen-portrait-1-landscape-2",)
 
