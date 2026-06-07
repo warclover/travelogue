@@ -83,4 +83,4 @@ def test_journal_css_handwritten_inventory_bounded() -> None:
 
     report = audit_journal_css(Path(JOURNAL_SCREENS_CSS))
     assert report["duplicateGridClassesOutsideMarker"] == []
-    assert report["outsideGeneratedGridClassCount"] <= 10
+    assert report["outsideGeneratedGridClassCount"] == 0

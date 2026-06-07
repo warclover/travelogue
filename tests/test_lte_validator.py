@@ -48,6 +48,25 @@ def test_ga_template_passes_publish_gate(engine: LayoutTemplateEngine) -> None:
 
 
 @pytest.mark.unit
+def test_main_off_ladder_blocks_publish_without_sign_off(engine: LayoutTemplateEngine) -> None:
+    from dataclasses import replace
+
+    hero = engine.get("screen-mosaic-5-hero-3-2-plus-4")
+    unsigned = replace(hero, constraints={**hero.constraints, "arLadderSignOff": {}})
+    report = validate_template_def(unsigned, mode="publish")
+    assert not report.ok
+    assert any(i.code == "V-P16-13" and i.level == "block" for i in report.issues)
+
+
+@pytest.mark.unit
+def test_main_off_ladder_passes_publish_with_sign_off(engine: LayoutTemplateEngine) -> None:
+    hero = engine.get("screen-mosaic-5-hero-3-2-plus-4")
+    report = validate_template_def(hero, mode="publish")
+    blocking = [i for i in report.issues if i.level in ("error", "block")]
+    assert not blocking, blocking
+
+
+@pytest.mark.unit
 def test_validator_blocks_more_than_nine_slots(engine: LayoutTemplateEngine) -> None:
     from dataclasses import replace
 

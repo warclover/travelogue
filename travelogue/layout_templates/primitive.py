@@ -122,6 +122,7 @@ def column_grid_primitive(
     display_name: str,
     description: str,
     status: str = "ga",
+    stage_aspect: str = "16:9",
 ) -> TemplateDef:
     if columns < 2:
         raise ValueError("columns must be >= 2")
@@ -139,7 +140,7 @@ def column_grid_primitive(
         aesthetic=None,
         balance_policy=None,
         stage=TemplateStage(
-            aspect="16:9",
+            aspect=stage_aspect,
             cols=tuple([1.0] * columns),
             rows=(1.0,),
             grid=(columns, 1),
@@ -149,6 +150,63 @@ def column_grid_primitive(
         mix_portrait=mix_portrait,
         mix_landscape=mix_landscape,
         slots=slots,
+        constraints={},
+        compatibility_hints={},
+        scoring={"base_weight": 1.0, "tags": [role]},
+        render_grid_class=grid_class,
+        render_css_bundle="journal-screens.css",
+        render_fit_policy="auto_delegate",
+        rollout={},
+        raw={},
+    )
+
+
+def matrix_grid_primitive(
+    *,
+    template_id: str,
+    cols: int,
+    rows: int,
+    role: str,
+    grid_class: str,
+    mix_portrait: int,
+    mix_landscape: int,
+    display_name: str,
+    description: str,
+    status: str = "ga",
+    stage_aspect: str = "16:9",
+) -> TemplateDef:
+    """Uniform cols×rows grid with one slot per cell (portrait-4 / landscape-6)."""
+    if cols < 1 or rows < 1:
+        raise ValueError("cols and rows must be positive")
+    count = cols * rows
+    slots: list[TemplateSlot] = []
+    idx = 0
+    for r in range(1, rows + 1):
+        for c in range(1, cols + 1):
+            slots.append(
+                TemplateSlot(index=idx, rect=(c, c, r, r), role=role, fit="cover")
+            )
+            idx += 1
+    return TemplateDef(
+        id=template_id,
+        version=1,
+        status=status,
+        kind="primitive",
+        display_name=display_name,
+        description=description,
+        aesthetic=None,
+        balance_policy=None,
+        stage=TemplateStage(
+            aspect=stage_aspect,
+            cols=tuple([1.0] * cols),
+            rows=tuple([1.0] * rows),
+            grid=(cols, rows),
+        ),
+        photo_count_min=count,
+        photo_count_max=count,
+        mix_portrait=mix_portrait,
+        mix_landscape=mix_landscape,
+        slots=tuple(slots),
         constraints={},
         compatibility_hints={},
         scoring={"base_weight": 1.0, "tags": [role]},

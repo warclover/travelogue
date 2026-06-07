@@ -194,6 +194,28 @@
             }
           },
           "description": "Explicit empty grid cells (V-P16-02)"
+        },
+        "arLadderSignOff": {
+          "type": "object",
+          "description": "Manual AR ladder exemptions for main slots (V-P16-13)",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["signedBy", "signedAt"],
+            "properties": {
+              "signedBy": {
+                "type": "string",
+                "minLength": 1
+              },
+              "signedAt": {
+                "type": "string",
+                "minLength": 1
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          }
         }
       }
     },

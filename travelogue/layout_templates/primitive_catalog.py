@@ -9,6 +9,7 @@ import yaml
 from travelogue.layout_templates.models import TemplateDef, TemplateSlot
 from travelogue.layout_templates.primitive import (
     column_grid_primitive,
+    matrix_grid_primitive,
     single_slot_primitive,
     vertical_stack_primitive,
 )
@@ -19,6 +20,22 @@ PRIMITIVE_TEMPLATE_IDS: tuple[str, ...] = (
     "screen-landscape-1",
     "screen-portrait-2",
     "screen-landscape-2",
+    "screen-portrait-3",
+    "screen-portrait-4",
+    "screen-landscape-3",
+    "screen-landscape-6",
+)
+
+# screen-planner stack/simple grids outside @lte-generated (R-P16-14 W4)
+STACK_GRID_CLASS_IDS: tuple[str, ...] = (
+    "screen-portrait-1",
+    "screen-landscape-1",
+    "screen-portrait-2",
+    "screen-landscape-2",
+    "screen-portrait-3",
+    "screen-portrait-4",
+    "screen-landscape-3",
+    "screen-landscape-6",
 )
 
 
@@ -53,6 +70,7 @@ def generated_primitive_catalog() -> dict[str, TemplateDef]:
             mix_landscape=0,
             display_name="双竖",
             description="两张竖图 2 列栅格（screen_planner · AC-P16-02）。",
+            stage_aspect="16:9",
         ),
         "screen-landscape-2": vertical_stack_primitive(
             template_id="screen-landscape-2",
@@ -62,11 +80,62 @@ def generated_primitive_catalog() -> dict[str, TemplateDef]:
             display_name="landscape · 2",
             description="Reverse-migrated from legacy mosaic sources (Phase 16 W1).",
         ),
+        "screen-portrait-3": column_grid_primitive(
+            template_id="screen-portrait-3",
+            columns=3,
+            role="portrait",
+            grid_class="layout-screen__grid--3col",
+            mix_portrait=3,
+            mix_landscape=0,
+            display_name="portrait · 3",
+            description="Reverse-migrated from legacy mosaic sources (Phase 16 W1).",
+            stage_aspect="9:16",
+        ),
+        "screen-portrait-4": matrix_grid_primitive(
+            template_id="screen-portrait-4",
+            cols=2,
+            rows=2,
+            role="portrait",
+            grid_class="layout-screen__grid--2x2",
+            mix_portrait=4,
+            mix_landscape=0,
+            display_name="portrait · 4",
+            description="Reverse-migrated from legacy mosaic sources (Phase 16 W1).",
+            stage_aspect="9:16",
+        ),
+        "screen-landscape-3": vertical_stack_primitive(
+            template_id="screen-landscape-3",
+            slot_count=3,
+            grid_class="layout-screen__grid--landscape-stack-3",
+            mix_landscape=3,
+            display_name="landscape · 3",
+            description="Reverse-migrated from legacy mosaic sources (Phase 16 W1).",
+        ),
+        "screen-landscape-6": matrix_grid_primitive(
+            template_id="screen-landscape-6",
+            cols=3,
+            rows=2,
+            role="landscape",
+            grid_class="layout-screen__grid--3x2",
+            mix_portrait=0,
+            mix_landscape=6,
+            display_name="landscape · 6",
+            description="Reverse-migrated from legacy mosaic sources (Phase 16 W1).",
+            stage_aspect="16:9",
+        ),
     }
 
 
 def _slot_signature(slots: tuple[TemplateSlot, ...]) -> list[tuple[int, tuple[int, int, int, int], str]]:
     return [(s.index, s.rect, s.role) for s in slots]
+
+
+def _stage_shape(stage: TemplateStage) -> tuple[int, int] | None:
+    if stage.grid:
+        return stage.grid
+    if stage.cols and stage.rows:
+        return (len(stage.cols), len(stage.rows))
+    return None
 
 
 def primitive_drift_messages(expected: TemplateDef, actual: TemplateDef) -> list[str]:
@@ -80,10 +149,12 @@ def primitive_drift_messages(expected: TemplateDef, actual: TemplateDef) -> list
         )
     if actual.render_grid_class != expected.render_grid_class:
         msgs.append(f"gridClass {actual.render_grid_class} != {expected.render_grid_class}")
-    if list(actual.stage.cols or ()) != list(expected.stage.cols or ()):
-        msgs.append("stage.cols mismatch")
-    if list(actual.stage.rows or ()) != list(expected.stage.rows or ()):
-        msgs.append("stage.rows mismatch")
+    exp_shape = _stage_shape(expected.stage)
+    act_shape = _stage_shape(actual.stage)
+    if exp_shape != act_shape:
+        msgs.append(f"stage grid shape {act_shape} != {exp_shape}")
+    if actual.stage.aspect != expected.stage.aspect:
+        msgs.append(f"stage.aspect {actual.stage.aspect} != {expected.stage.aspect}")
     if _slot_signature(actual.slots) != _slot_signature(expected.slots):
         msgs.append("slots topology mismatch")
     return msgs

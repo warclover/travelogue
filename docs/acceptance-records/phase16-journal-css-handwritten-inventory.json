@@ -1,17 +1,9 @@
 {
   "auditAt": "2026-06-06",
   "path": "templates/visual-journal/journal-screens.css",
-  "outsideGeneratedGridClassCount": 7,
-  "outsideGeneratedGridClasses": [
-    "layout-screen__grid--1col",
-    "layout-screen__grid--2col",
-    "layout-screen__grid--2x2",
-    "layout-screen__grid--3col",
-    "layout-screen__grid--3x2",
-    "layout-screen__grid--landscape-stack-2",
-    "layout-screen__grid--landscape-stack-3"
-  ],
+  "outsideGeneratedGridClassCount": 0,
+  "outsideGeneratedGridClasses": [],
   "duplicateGridClassesOutsideMarker": [],
-  "migrationNote": "Screen-planner stack/simple grids remain outside @lte-generated until W4 primitive codegen; LTE mosaic patterns are authoritative inside the marker block.",
-  "auditCommand": "python scripts/lte_journal_css_audit.py"
+  "migrationNote": "Stack/simple grids are generated inside @lte-generated; pattern overlays may reference grid class names in selectors only.",
+  "auditCommand": "python scripts/lte_journal_css_audit.py --fail-on-duplicates"
 }

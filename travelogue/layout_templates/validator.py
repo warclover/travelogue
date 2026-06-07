@@ -85,6 +85,19 @@ def _nearest_ladder_delta(ar: float) -> float:
     return min(abs(ar - ladder) for ladder in AR_LADDER)
 
 
+def _ar_ladder_sign_off(template: TemplateDef, slot_index: int) -> bool:
+    """True when constraints.arLadderSignOff records manual approval (V-P16-13)."""
+    raw = (template.constraints or {}).get("arLadderSignOff") or {}
+    if not isinstance(raw, dict):
+        return False
+    entry = raw.get(str(slot_index), raw.get(slot_index))
+    if not isinstance(entry, dict):
+        return False
+    return bool(str(entry.get("signedBy") or "").strip()) and bool(
+        str(entry.get("signedAt") or "").strip()
+    )
+
+
 def _check_overlaps(template: TemplateDef, report: ValidationReport) -> None:
     for i, a in enumerate(template.slots):
         cells_a = _slot_cells(a.rect)
@@ -216,28 +229,39 @@ def _check_role_aspect(template: TemplateDef, report: ValidationReport, *, mode:
                 )
         elif role == "main":
             if ar > LANDSCAPE_AR_BLOCK_HIGH:
+                level = "warn"
+                if mode == "publish" and not _ar_ladder_sign_off(template, row.index):
+                    level = "block"
                 report.add(
                     "V-P16-04",
                     f"slot {row.index} main displayAspect {ar:.3f} extreme; needs sign-off",
-                    level="warn",
+                    level=level,
                 )
 
 
-def _check_ar_ladder(template: TemplateDef, report: ValidationReport) -> None:
+def _check_ar_ladder(template: TemplateDef, report: ValidationReport, *, mode: ValidateMode) -> None:
     if template.kind == "stack":
         report.add("V-P16-S04", "stack template skips 3×3 displayAspect ladder", level="warn")
         return
     for row in slot_aspect_table(template):
-        if row.role == "main":
-            continue
         delta = _nearest_ladder_delta(row.display_aspect)
-        if delta > AR_LADDER_TOL:
-            report.add(
-                "V-P16-13",
-                f"slot {row.index} displayAspect {row.display_aspect:.3f} "
-                f"not on AR ladder (Δ={delta:.3f})",
-                level="warn",
-            )
+        if delta <= AR_LADDER_TOL:
+            continue
+        if row.role == "main":
+            if mode == "publish" and not _ar_ladder_sign_off(template, row.index):
+                report.add(
+                    "V-P16-13",
+                    f"slot {row.index} main displayAspect {row.display_aspect:.3f} "
+                    f"off AR ladder (Δ={delta:.3f}); needs sign-off",
+                    level="block",
+                )
+            continue
+        report.add(
+            "V-P16-13",
+            f"slot {row.index} displayAspect {row.display_aspect:.3f} "
+            f"not on AR ladder (Δ={delta:.3f})",
+            level="warn",
+        )
 
 
 def _check_balance_policy(template: TemplateDef, report: ValidationReport) -> None:
@@ -326,7 +350,7 @@ def validate_template_def(
     _check_mix(template, report)
     _check_tracks_and_bounds(template, report)
     _check_role_aspect(template, report, mode=mode)
-    _check_ar_ladder(template, report)
+    _check_ar_ladder(template, report, mode=mode)
     _check_balance_policy(template, report)
     _check_stack(template, report)
     _check_css(template, report)

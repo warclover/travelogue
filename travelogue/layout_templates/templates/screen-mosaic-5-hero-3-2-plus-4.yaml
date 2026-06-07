@@ -29,6 +29,11 @@ constraints:
   portrait_forbidden_in_wide_slots: []
   landscape_forbidden_in_tall_slots: []
   intentionalGaps: []
+  arLadderSignOff:
+    "0":
+      signedBy: lte-design-review
+      signedAt: "2026-06-06"
+      note: Weighted-track hero main slot; displayAspect ~0.89 intentional (V-P16-13)
 
 compatibilityHints:
   prefers_burst: false
