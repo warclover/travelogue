@@ -21,12 +21,27 @@ def record_template_metric(name: str, **labels: Any) -> None:
         row = {
             "at": datetime.now(UTC).replace(microsecond=0).isoformat(),
             "name": name,
-            **{k: v for k, v in labels.items() if v is not None},
+            **_bound_metric_labels(labels),
         }
         with path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(row, ensure_ascii=False) + "\n")
     except OSError:
         pass
+
+
+def _bound_metric_labels(labels: dict[str, Any]) -> dict[str, Any]:
+    """§9.4-4: bound telemetry cardinality (registryVersion truncate, rollout bucket)."""
+    out: dict[str, Any] = {}
+    for key, val in labels.items():
+        if val is None:
+            continue
+        if key in ("templateRegistryVersion", "registryVersion") and isinstance(val, str):
+            out[key] = val[:16]
+        elif key in ("rolloutPercent", "rolloutBucket") and isinstance(val, (int, float)):
+            out["rolloutBucket"] = int(float(val) // 10 * 10)
+        else:
+            out[key] = val
+    return out
 
 
 def record_admin_crud(*, action: str, operator: str, template_id: str) -> None:
@@ -139,11 +154,132 @@ class RouteTimer:
         return round((time.monotonic() - self._t0) * 1000.0, 2)
 
 
+def _metric_window_lines(*, window_hours: int, max_lines: int = 20_000) -> list[dict[str, Any]]:
+    from datetime import timedelta
+
+    path = metrics_path()
+    if not path.is_file():
+        return []
+    cutoff = datetime.now(UTC) - timedelta(hours=window_hours)
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+        if len(lines) > max_lines:
+            lines = lines[-max_lines:]
+    except OSError:
+        return []
+    rows: list[dict[str, Any]] = []
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        at_raw = row.get("at")
+        if at_raw:
+            try:
+                at = datetime.fromisoformat(str(at_raw).replace("Z", "+00:00"))
+                if at.tzinfo is None:
+                    at = at.replace(tzinfo=UTC)
+                if at < cutoff:
+                    continue
+            except ValueError:
+                pass
+        rows.append(row)
+    return rows
+
+
+def _pct(vals: list[float], p: float) -> float | None:
+    if not vals:
+        return None
+    vals = sorted(vals)
+    idx = min(len(vals) - 1, max(0, int(round(p * (len(vals) - 1)))))
+    return round(vals[idx], 4)
+
+
+def aggregate_layout_template_metrics(*, window_hours: int = 24) -> dict[str, Any]:
+    """Roll up layout.template.* telemetry by templateId (PRD §9.1 · AC-P16-08)."""
+    by_template: dict[str, dict[str, Any]] = {}
+    for row in _metric_window_lines(window_hours=window_hours):
+        name = str(row.get("name") or "")
+        if not name.startswith("layout.template."):
+            continue
+        tid = str(row.get("templateId") or "").strip()
+        if not tid:
+            continue
+        val = row.get("value")
+        if val is None:
+            continue
+        try:
+            fval = float(val)
+        except (TypeError, ValueError):
+            continue
+        bucket = by_template.setdefault(
+            tid,
+            {
+                "templateId": tid,
+                "exposureCount": 0.0,
+                "exposureShareValues": [],
+                "candidateCount": 0.0,
+                "fallbackRateValues": [],
+                "slotArDistanceP50Values": [],
+                "winScoreP50Values": [],
+                "winScoreP90Values": [],
+                "faceCropProxyRateValues": [],
+            },
+        )
+        suffix = name.removeprefix("layout.template.")
+        if suffix == "exposure_count":
+            bucket["exposureCount"] += fval
+        elif suffix == "exposure_share":
+            bucket["exposureShareValues"].append(fval)
+        elif suffix == "candidate_count":
+            bucket["candidateCount"] += fval
+        elif suffix == "fallback_rate":
+            bucket["fallbackRateValues"].append(fval)
+        elif suffix == "slot_ar_distance_p50":
+            bucket["slotArDistanceP50Values"].append(fval)
+        elif suffix == "win_score_p50":
+            bucket["winScoreP50Values"].append(fval)
+        elif suffix == "win_score_p90":
+            bucket["winScoreP90Values"].append(fval)
+        elif suffix == "face_crop_proxy_rate":
+            bucket["faceCropProxyRateValues"].append(fval)
+
+    templates: list[dict[str, Any]] = []
+    for tid in sorted(by_template):
+        raw = by_template[tid]
+
+        def _mean(vals: list[float]) -> float | None:
+            return round(sum(vals) / len(vals), 4) if vals else None
+
+        templates.append(
+            {
+                "templateId": tid,
+                "exposureCount": int(raw["exposureCount"]) if raw["exposureCount"] else 0,
+                "exposureShareMean": _mean(raw["exposureShareValues"]),
+                "candidateCount": int(raw["candidateCount"]) if raw["candidateCount"] else 0,
+                "fallbackRateMean": _mean(raw["fallbackRateValues"]),
+                "slotArDistanceP50": _pct(raw["slotArDistanceP50Values"], 0.5),
+                "winScoreP50": _pct(raw["winScoreP50Values"], 0.5),
+                "winScoreP90": _pct(raw["winScoreP90Values"], 0.5),
+                "faceCropProxyRateMean": _mean(raw["faceCropProxyRateValues"]),
+            }
+        )
+    return {"windowHours": window_hours, "templates": templates}
+
+
 def aggregate_metrics(*, window_hours: int = 24) -> dict[str, Any]:
     """Best-effort rollup for admin dashboard."""
     path = metrics_path()
     if not path.is_file():
-        return {"windowHours": window_hours, "counts": {}, "rates": {}}
+        return {
+            "windowHours": window_hours,
+            "counts": {},
+            "rates": {},
+            "layoutTemplates": aggregate_layout_template_metrics(window_hours=window_hours),
+        }
     from datetime import timedelta
 
     cutoff = datetime.now(UTC) - timedelta(hours=window_hours)
@@ -243,4 +379,5 @@ def aggregate_metrics(*, window_hours: int = 24) -> dict[str, Any]:
             if review_submitted
             else None,
         },
+        "layoutTemplates": aggregate_layout_template_metrics(window_hours=window_hours),
     }

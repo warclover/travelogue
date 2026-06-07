@@ -1,0 +1,42 @@
+id: screen-full-frame
+version: 1
+status: ga
+kind: primitive
+displayName: 全幅单图
+description: >
+  Collage 及需整图完整展示的单图模板；fit 默认 contain，AR 不匹配处用 blurred fill。
+photoCount: { min: 1, max: 1 }
+
+stage:
+  aspect: "16:9"
+  cols: [1]
+  rows: [1]
+
+slots:
+  - { index: 0, rect: [1, 1, 1, 1], role: landscape, fit: contain }
+
+constraints:
+  portrait_forbidden_in_wide_slots: []
+  landscape_forbidden_in_tall_slots: []
+  intentionalGaps: []
+
+scoring:
+  base_weight: 1.0
+  tags: [collage, single]
+
+render:
+  gridClass: layout-screen__grid--1col
+  cssBundle: journal-screens.css
+  fitPolicy: auto_delegate
+
+rollout:
+  percent: 100
+  hash_key: tripId
+
+_legacy:
+  accepts:
+    min_portrait: 0
+    min_landscape: 0
+    max_portrait: 1
+    max_landscape: 1
+  css_verified: true

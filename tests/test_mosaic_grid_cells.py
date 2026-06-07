@@ -5,6 +5,7 @@ from __future__ import annotations
 from travelogue.curation.mosaic.constants import (
     MOSAIC_5_PATTERN_IDS,
     PATTERN_GRID_CLASS,
+    PATTERN_MOSAIC_5_2P3L_EQUAL,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
 )
 
@@ -36,6 +37,13 @@ MOSAIC_GRID_SPECS: dict[str, list[tuple[int, int, int, int]]] = {
         (2, 2, 1, 2),
         (3, 3, 1, 2),
         (1, 2, 3, 3),
+        (3, 3, 3, 3),
+    ],
+    PATTERN_MOSAIC_5_2P3L_EQUAL: [
+        (1, 1, 1, 3),
+        (2, 2, 1, 3),
+        (3, 3, 1, 1),
+        (3, 3, 2, 2),
         (3, 3, 3, 3),
     ],
     "screen-mosaic-5-main-hero-plus-4": [

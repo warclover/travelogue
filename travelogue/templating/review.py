@@ -31,8 +31,18 @@ def get_review_status(template_id: str) -> dict[str, Any]:
     }
 
 
+def _admission_for_review(template_id: str) -> dict[str, Any]:
+    from travelogue.layout_templates.layout_admin import is_layout_template_id
+
+    if is_layout_template_id(template_id):
+        from travelogue.layout_templates.admission import run_layout_template_admission
+
+        return run_layout_template_admission(template_id, target="beta")
+    return run_admission_check(template_id)
+
+
 def submit_for_review(template_id: str, *, operator: str = "studio") -> dict[str, Any]:
-    admission = run_admission_check(template_id)
+    admission = _admission_for_review(template_id)
     if not admission.get("ok"):
         raise ValueError("E_TEMPLATE_ADMISSION_FAILED")
     with _LOCK:

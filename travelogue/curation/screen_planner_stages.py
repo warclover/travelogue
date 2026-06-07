@@ -159,12 +159,41 @@ def stage_chapter_hero(ctx: ChapterPlanContext) -> None:
     ctx.ids = [aid for aid in ctx.ids if aid != hid]
 
 
+def try_collage_solo_at_cursor(ctx: ChapterPlanContext) -> int | None:
+    """Collage assets never share a multi-slot screen — route each to full-frame solo."""
+    from travelogue.curation.collage_routing import collage_routing_enabled
+    from travelogue.curation.media_classify import is_collage_asset
+    from travelogue.curation.screen_planner import _make_screen
+
+    if not collage_routing_enabled() or ctx.i >= len(ctx.ids):
+        return None
+    aid = ctx.ids[ctx.i]
+    if not is_collage_asset(ctx.assets_map.get(aid, {})):
+        return None
+    append_screen(
+        ctx,
+        _make_screen(
+            "screen-landscape-1",
+            [aid],
+            screen_id="",
+            aspects=ctx.aspects,
+            assets_map=ctx.assets_map,
+        ),
+    )
+    return 1
+
+
 def run_planning_loop(ctx: ChapterPlanContext) -> None:
     """Main cursor loop over ctx.ids."""
     from travelogue.curation.mosaic.hook import try_mosaic_window
     from travelogue.curation.screen_planner import _family_kind
 
     while ctx.i < len(ctx.ids):
+        advance = try_collage_solo_at_cursor(ctx)
+        if advance is not None:
+            ctx.i += advance
+            continue
+
         advance = try_mixed_with_pending(ctx)
         if advance is not None:
             ctx.i += advance
@@ -276,7 +305,7 @@ def assign_screen_id(ctx: ChapterPlanContext, screen: dict) -> None:
 
 
 def append_screen(ctx: ChapterPlanContext, screen: dict) -> None:
-    from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
+    from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
 
     pid = str(screen.get("patternId") or "")
     if pid and mosaic_pattern_disabled(pid):

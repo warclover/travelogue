@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from tests._golden.helpers import build_mosaic_eligible_trip
+from tests._golden.helpers import build_mosaic_five_2p3l_window
 from travelogue.config import MosaicConfig
 from travelogue.curation.mosaic.candidates import generate_five_candidates
 from travelogue.curation.mosaic.compose import pick_best_candidate
@@ -10,15 +10,13 @@ from travelogue.curation.mosaic.runtime import MOSAIC_ROUTER_VERSION
 
 
 def test_pick_best_logs_top3_reason_codes_router_version() -> None:
-    buckets, aspects, assets = build_mosaic_eligible_trip()
-    assets_map = {a["id"]: a for a in assets}
+    ids, aspects, assets_map = build_mosaic_five_2p3l_window()
     cfg = MosaicConfig(
         enabled=True,
         enabled_window_sizes=(5,),
         min_candidate_score=0.0,
         deterministic_strict=True,
     )
-    ids = buckets[0]
     cands = generate_five_candidates(
         ids, aspects, assets_map, cfg=cfg, burst_seconds=3600.0
     )

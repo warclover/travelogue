@@ -13,16 +13,16 @@ def test_low_score_fallback_reason(monkeypatch):
     aspects = {
         "p0": "portrait",
         "p1": "portrait",
-        "p2": "portrait",
         "l0": "landscape",
         "l1": "landscape",
+        "l2": "landscape",
     }
     assets_map = {
         "p0": {"id": "p0", "width": 1200, "height": 1800, "takenAt": "2024-06-01T10:00:00Z"},
         "p1": {"id": "p1", "width": 1200, "height": 1800, "takenAt": "2024-06-01T10:01:00Z"},
-        "p2": {"id": "p2", "width": 1200, "height": 1800, "takenAt": "2024-06-01T10:02:00Z"},
-        "l0": {"id": "l0", "width": 2000, "height": 1200, "takenAt": "2024-06-01T10:03:00Z"},
-        "l1": {"id": "l1", "width": 2000, "height": 1200, "takenAt": "2024-06-01T10:04:00Z"},
+        "l0": {"id": "l0", "width": 2000, "height": 1200, "takenAt": "2024-06-01T10:02:00Z"},
+        "l1": {"id": "l1", "width": 2000, "height": 1200, "takenAt": "2024-06-01T10:03:00Z"},
+        "l2": {"id": "l2", "width": 2000, "height": 1200, "takenAt": "2024-06-01T10:04:00Z"},
     }
     cfg = replace(
         get_config().mosaic,

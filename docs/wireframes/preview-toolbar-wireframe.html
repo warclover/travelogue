@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>预览页工具栏线框稿 · 设计评审 v1.0</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-border: #90a4ae;
+      --wf-border-dash: #b0bec5;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-anno: #e65100;
+      --wf-problem: #ffcdd2;
+      --wf-problem-border: #e57373;
+      --wf-good: #c8e6c9;
+      --wf-good-border: #66bb6a;
+      --prod-bar: #1a2f28;
+      --prod-bar-text: #f5fbf8;
+      --prod-gold: #d4a843;
+      --prod-gold-text: #1a1408;
+      --prod-accent: #3d6b5a;
+      --prod-subcard: #e8f5ef;
+      --max-w: 960px;
+      --radius: 12px;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--wf-bg);
+      color: var(--wf-text);
+      line-height: 1.5;
+    }
+
+    .review-bar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: #263238;
+      color: #eceff1;
+      padding: 12px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 16px;
+    }
+    .review-bar__title { font-size: 14px; font-weight: 600; margin-right: auto; }
+    .review-bar__title span { color: #80cbc4; font-weight: 400; }
+    .scheme-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+    .scheme-tabs button {
+      border: 1px solid #546e7a;
+      background: transparent;
+      color: #eceff1;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .scheme-tabs button:hover { background: #37474f; }
+    .scheme-tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+    .review-meta { width: 100%; font-size: 12px; color: #90a4ae; }
+
+    .canvas {
+      max-width: calc(var(--max-w) + 300px);
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+      display: grid;
+      grid-template-columns: var(--max-w) 280px;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 1100px) {
+      .canvas { grid-template-columns: 1fr; }
+      .sidebar { order: -1; }
+    }
+
+    .block-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--wf-anno);
+      margin-bottom: 6px;
+    }
+
+    .wf-section { margin-bottom: 32px; }
+    .wf-section h2 { font-size: 18px; margin: 0 0 8px; }
+    .wf-section p.lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+
+    .browser-chrome {
+      background: #dee1e6;
+      border: 2px solid var(--wf-border);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      padding: 8px 12px 0;
+    }
+    .browser-chrome__dots { display: flex; gap: 6px; margin-bottom: 8px; }
+    .browser-chrome__dots span { width: 10px; height: 10px; border-radius: 50%; background: #b0bec5; }
+    .browser-chrome__tabrow { display: flex; align-items: flex-end; gap: 4px; }
+    .browser-chrome__tab {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--wf-page);
+      border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      padding: 8px 14px; font-size: 12px; color: var(--wf-muted);
+    }
+    .browser-chrome__tab.is-active { color: var(--wf-text); font-weight: 600; }
+    .browser-chrome__favicon { width: 14px; height: 14px; background: var(--prod-accent); border-radius: 3px; }
+
+    .page-frame {
+      background: var(--wf-page);
+      border: 2px solid var(--wf-border);
+      border-top: none;
+      border-radius: 0 0 16px 16px;
+      overflow: hidden;
+      min-height: 420px;
+    }
+
+    .wf-state { display: none; }
+    .wf-state.is-visible { display: block; }
+
+    /* ── 现状工具栏模拟 ── */
+    .toolbar-current {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      min-height: 48px;
+      padding: 8px 12px 8px 16px;
+      background: var(--prod-bar);
+      color: var(--prod-bar-text);
+      position: relative;
+    }
+    .toolbar-current__back {
+      color: #c8e6d8;
+      font-size: 14px;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .toolbar-current__spacer { flex: 1; min-width: 40px; }
+    .toolbar-current__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .btn-gold {
+      border: none;
+      background: var(--prod-gold);
+      color: var(--prod-gold-text);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .btn-ghost {
+      border: 1px solid rgba(255,255,255,.22);
+      background: transparent;
+      color: #fff;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .btn-icon {
+      border: none;
+      background: rgba(255,255,255,.12);
+      color: #c8e6d8;
+      border-radius: 999px;
+      width: 32px; height: 32px;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .problem-zone {
+      position: absolute;
+      border: 2px dashed var(--wf-problem-border);
+      background: rgba(255, 205, 210, .15);
+      pointer-events: none;
+      border-radius: 6px;
+    }
+    .problem-zone--left { left: 8px; top: 4px; bottom: 4px; width: 110px; }
+    .problem-zone--right { right: 8px; top: 4px; bottom: 4px; width: 340px; }
+    .problem-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #b71c1c;
+      background: var(--wf-problem);
+      border-bottom: 1px dashed var(--wf-problem-border);
+    }
+    .problem-arrow__line {
+      flex: 1;
+      height: 2px;
+      background: repeating-linear-gradient(90deg, #e57373 0 8px, transparent 8px 16px);
+      max-width: 200px;
+    }
+
+    .preview-card-current {
+      padding: 10px 16px;
+      background: var(--prod-subcard);
+      border-bottom: 1px solid rgba(61,107,90,.18);
+      font-size: 13px;
+      color: #1a2f28;
+    }
+    .preview-card-current__title { margin: 0 0 4px; font-weight: 600; font-size: 12px; color: var(--prod-accent); }
+    .preview-card-current__path { margin: 0 0 8px; font-size: 12px; color: #4a5c55; }
+    .preview-card-current__dup {
+      display: inline-block;
+      border: 2px dashed var(--wf-problem-border);
+      background: rgba(255,205,210,.3);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: #b71c1c;
+    }
+
+    .content-mock {
+      padding: 24px;
+      background: #f4f7f5;
+      min-height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--wf-muted);
+      font-size: 13px;
+      border: 1.5px dashed var(--wf-border-dash);
+      margin: 16px;
+      border-radius: var(--radius);
+    }
+
+    /* ── 方案 A：全右对齐（左侧无控件）── */
+    .toolbar-a {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0;
+      min-height: 48px;
+      padding: 6px 16px 6px 12px;
+      background: var(--prod-bar);
+      color: var(--prod-bar-text);
+    }
+    .toolbar-a__spacer {
+      flex: 1;
+      min-width: 0;
+    }
+    .toolbar-a__cluster {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .toolbar-a__ops-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+    }
+    .toolbar-a__back {
+      color: #c8e6d8;
+      text-decoration: none;
+      font-size: 14px;
+      white-space: nowrap;
+      padding: 4px 2px 4px 4px;
+    }
+    .toolbar-a__back:hover { color: #fff; }
+    .toolbar-a__status {
+      font-size: 12px;
+      color: #c8e6d8;
+      white-space: nowrap;
+    }
+
+    /* ── 方案 B：情境居中 ── */
+    .toolbar-b {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      gap: 12px;
+      min-height: 48px;
+      padding: 6px 12px;
+      background: var(--prod-bar);
+      color: var(--prod-bar-text);
+    }
+    .toolbar-b__context {
+      text-align: center;
+      font-size: 13px;
+      color: #c8e6d8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .toolbar-b__context strong { color: #fff; font-weight: 600; }
+    .toolbar-b__ops {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── 方案 C：双行 ── */
+    .toolbar-c {
+      background: var(--prod-bar);
+      color: var(--prod-bar-text);
+    }
+    .toolbar-c__row1 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      font-size: 13px;
+    }
+    .toolbar-c__row2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      flex-wrap: wrap;
+    }
+    .toolbar-c__row2 .btn-gold { margin-right: 4px; }
+
+    /* ── 收起态 ── */
+    .toolbar-collapsed {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px 6px 16px;
+      background: var(--prod-subcard);
+      border-bottom: 1px solid rgba(61,107,90,.22);
+      font-size: 13px;
+      color: #2d4a3e;
+    }
+
+    /* ── 封面信息条（去重后）── */
+    .preview-card-new {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      background: var(--prod-subcard);
+      border-bottom: 1px solid rgba(61,107,90,.18);
+      font-size: 12px;
+      color: #4a5c55;
+    }
+    .preview-card-new__thumb {
+      width: 36px; height: 64px;
+      background: #cfd8dc;
+      border: 1px dashed var(--wf-border);
+      border-radius: 4px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: var(--wf-muted);
+    }
+    .preview-card-new__info { flex: 1; min-width: 0; }
+    .preview-card-new__info strong { display: block; color: var(--prod-accent); font-size: 12px; }
+    .preview-card-new__link {
+      color: var(--prod-accent);
+      text-decoration: underline;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .zone-label {
+      font-size: 9px;
+      color: var(--wf-anno);
+      text-align: center;
+      margin-top: 4px;
+      letter-spacing: .04em;
+    }
+    .zone-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      margin-top: 6px;
+      padding: 0 4px;
+    }
+    .zone-row--2 { grid-template-columns: 1fr auto; }
+    .zone-row--2 .zone-label:first-child { text-align: left; }
+    .zone-row--2 .zone-label:last-child { text-align: right; }
+
+    .good-zone {
+      outline: 2px solid var(--wf-good-border);
+      outline-offset: 2px;
+      border-radius: 8px;
+    }
+
+    .anno-box {
+      border: 1.5px solid var(--wf-border);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+    .anno-box h3 { margin: 0 0 8px; font-size: 14px; }
+    .anno-box ul { margin: 0; padding-left: 1.2em; }
+    .anno-box li { margin-bottom: 6px; }
+    .anno-box--rec { border-color: var(--wf-good-border); background: #f1f8e9; }
+    .anno-box--warn { border-color: var(--wf-problem-border); background: #fff8f8; }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      background: #fff;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--wf-border);
+    }
+    .compare-table th, .compare-table td {
+      border: 1px solid #cfd8dc;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .compare-table th { background: #eceff1; font-weight: 600; }
+    .tag-rec {
+      display: inline-block;
+      background: #2e7d32;
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .mobile-frame {
+      max-width: 390px;
+      margin: 0 auto;
+      border: 2px solid var(--wf-border);
+      border-radius: 20px;
+      overflow: hidden;
+      background: var(--wf-page);
+    }
+    .mobile-frame .toolbar-a { padding: 8px 10px; }
+    .mobile-frame .toolbar-a__cluster { gap: 6px; max-width: 100%; }
+    .mobile-frame .toolbar-a__ops-group { flex-wrap: wrap; justify-content: flex-end; }
+    .mobile-frame .toolbar-a__back { font-size: 13px; }
+
+    .toolbar-collapsed--a {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 6px 16px 6px 12px;
+      background: var(--prod-subcard);
+      border-bottom: 1px solid rgba(61,107,90,.22);
+      font-size: 13px;
+      color: #2d4a3e;
+    }
+    .toolbar-collapsed--a__handle {
+      border: none;
+      background: rgba(61,107,90,.12);
+      color: #3d6b5a;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .toolbar-collapsed--a__back {
+      color: #2d4a3e;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .menu-dropdown-mock {
+      position: absolute;
+      right: 48px;
+      top: 100%;
+      margin-top: 4px;
+      background: #fff;
+      border: 1px solid var(--wf-border);
+      border-radius: 8px;
+      padding: 6px 0;
+      min-width: 180px;
+      font-size: 12px;
+      color: var(--wf-text);
+      z-index: 10;
+    }
+    .menu-dropdown-mock button {
+      display: block;
+      width: 100%;
+      border: none;
+      background: none;
+      text-align: left;
+      padding: 8px 14px;
+      font: inherit;
+      cursor: pointer;
+    }
+    .menu-dropdown-mock button:hover { background: #eceff1; }
+    .toolbar-wrap { position: relative; }
+  </style>
+</head>
+<body>
+
+  <header class="review-bar">
+    <div class="review-bar__title">
+      预览页工具栏 · 线框评审 <span>v1.2 · 方案 A 全右对齐</span>
+    </div>
+    <div class="scheme-tabs" role="tablist">
+      <button type="button" class="is-active" data-scheme="current">现状问题</button>
+      <button type="button" data-scheme="a">方案 A 推荐</button>
+      <button type="button" data-scheme="b">方案 B</button>
+      <button type="button" data-scheme="c">方案 C</button>
+      <button type="button" data-scheme="states">状态变体</button>
+    </div>
+    <p class="review-meta">对应实现：<code>templates/studio/preview-toolbar.js</code> · 点击标签切换方案 · 仅供评审，非生产代码</p>
+  </header>
+
+  <div class="canvas">
+    <main>
+
+      <!-- 现状 -->
+      <section class="wf-state is-visible" id="scheme-current">
+        <div class="wf-section">
+          <h2>现状 · 左右割裂</h2>
+          <p class="lead">返回在极左，全部操作挤在极右。宽屏下鼠标行程长，且封面卡片重复「在文件夹中显示」。</p>
+        </div>
+
+        <div class="browser-chrome">
+          <div class="browser-chrome__dots"><span></span><span></span><span></span></div>
+          <div class="browser-chrome__tabrow">
+            <div class="browser-chrome__tab is-active">
+              <span class="browser-chrome__favicon"></span>
+              林芝游记 · 卷轴预览
+            </div>
+          </div>
+        </div>
+        <div class="page-frame">
+          <div class="problem-arrow">
+            <span>← 导航区</span>
+            <span class="problem-arrow__line" aria-hidden="true"></span>
+            <strong>视线 / 鼠标跨越整栏宽度</strong>
+            <span class="problem-arrow__line" aria-hidden="true"></span>
+            <span>操作区 →</span>
+          </div>
+
+          <div class="toolbar-wrap">
+            <div class="toolbar-current">
+              <div class="problem-zone problem-zone--left" title="导航孤立"></div>
+              <div class="problem-zone problem-zone--right" title="操作堆叠"></div>
+              <a class="toolbar-current__back" href="#">← 返回首页</a>
+              <div class="toolbar-current__spacer"></div>
+              <div class="toolbar-current__actions">
+                <button type="button" class="btn-gold">保存长图</button>
+                <button type="button" class="btn-ghost">在文件夹中显示</button>
+                <button type="button" class="btn-icon" title="更多编辑">⋯</button>
+                <button type="button" class="btn-icon" title="收起">▴</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="preview-card-current">
+            <p class="preview-card-current__title">封面引流图 preview.jpg（9:16）</p>
+            <p class="preview-card-current__path">preview.jpg</p>
+            <span class="preview-card-current__dup">在文件夹中显示 ← 与顶栏重复</span>
+          </div>
+
+          <div class="content-mock">卷轴预览内容区</div>
+        </div>
+
+        <div class="wf-section" style="margin-top:24px">
+          <div class="block-label">问题清单</div>
+          <div class="anno-box anno-box--warn">
+            <ul>
+              <li><strong>操作分散</strong>：唯一高频动作「保存长图」与返回相距最远，违反就近原则</li>
+              <li><strong>重复入口</strong>：顶栏 + 封面卡片各有一个「在文件夹中显示」</li>
+              <li><strong>无情境</strong>：宽屏中间大量空白，用户不知当前在看哪篇游记</li>
+              <li><strong>层级扁平</strong>：主 CTA 与次要按钮视觉权重接近（除金色外间距相同）</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 方案 A -->
+      <section class="wf-state" id="scheme-a">
+        <div class="wf-section">
+          <h2>方案 A · 全右对齐 <span class="tag-rec">推荐</span></h2>
+          <p class="lead">左侧完全留白，所有控件（含返回）集中在右侧；无封面预览条，卷轴内容顶格展示。</p>
+        </div>
+
+        <div class="browser-chrome">
+          <div class="browser-chrome__dots"><span></span><span></span><span></span></div>
+          <div class="browser-chrome__tabrow">
+            <div class="browser-chrome__tab is-active">
+              <span class="browser-chrome__favicon"></span>
+              林芝游记 · 卷轴预览
+            </div>
+          </div>
+        </div>
+        <div class="page-frame">
+          <div class="toolbar-a good-zone">
+            <div class="toolbar-a__spacer" aria-hidden="true"></div>
+            <div class="toolbar-a__cluster">
+              <div class="toolbar-a__ops-group">
+                <button type="button" class="btn-gold">保存长图</button>
+                <button type="button" class="btn-ghost">文件夹</button>
+                <button type="button" class="btn-icon" title="更多编辑">⋯</button>
+              </div>
+              <button type="button" class="btn-icon" title="收起工具栏">▴</button>
+              <a class="toolbar-a__back" href="#">← 返回</a>
+            </div>
+          </div>
+          <div class="zone-row zone-row--2">
+            <span class="zone-label">左侧无按钮</span>
+            <span class="zone-label">操作组 · 收起 · 返回（最右）</span>
+          </div>
+
+          <div class="content-mock" style="margin-top:0;border-radius:0;border-left:none;border-right:none">卷轴预览内容区 · 紧贴工具栏下方</div>
+        </div>
+
+        <div class="wf-section" style="margin-top:24px">
+          <div class="block-label">设计要点</div>
+          <div class="anno-box anno-box--rec">
+            <ul>
+              <li><strong>左侧空</strong>：不放任何可点击控件，预览区视觉更干净</li>
+              <li><strong>右侧聚组</strong>：保存长图 + 文件夹 + 更多 + 收起 + 返回，顺序自左向右，返回贴最右缘</li>
+              <li><strong>去掉封面预览条</strong>：移除 <code>preview-toolbar__preview-card</code>，封面路径收入「更多」或首页</li>
+              <li><strong>DOM</strong>：<code>.preview-toolbar__bar { justify-content: flex-end }</code>，back 链接移至 actions 末尾</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="wf-section">
+          <div class="block-label">窄屏 (&lt; 480px)</div>
+          <div class="mobile-frame">
+            <div class="toolbar-a">
+              <div class="toolbar-a__spacer" aria-hidden="true"></div>
+              <div class="toolbar-a__cluster">
+                <div class="toolbar-a__ops-group">
+                  <button type="button" class="btn-gold">保存长图</button>
+                  <button type="button" class="btn-ghost">文件夹</button>
+                  <button type="button" class="btn-icon">⋯</button>
+                </div>
+                <button type="button" class="btn-icon">▴</button>
+                <a class="toolbar-a__back" href="#">← 返回</a>
+              </div>
+            </div>
+            <div class="content-mock" style="margin:0;border-radius:0;min-height:200px">移动端 · 控件仍靠右，返回在最右</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 方案 B -->
+      <section class="wf-state" id="scheme-b">
+        <div class="wf-section">
+          <h2>方案 B · 情境居中</h2>
+          <p class="lead">中间展示游记标题，左右平衡；适合用户需要确认「当前在看哪篇」的场景。</p>
+        </div>
+
+        <div class="browser-chrome">
+          <div class="browser-chrome__dots"><span></span><span></span><span></span></div>
+          <div class="browser-chrome__tabrow">
+            <div class="browser-chrome__tab is-active">
+              <span class="browser-chrome__favicon"></span>
+              林芝游记 · 卷轴预览
+            </div>
+          </div>
+        </div>
+        <div class="page-frame">
+          <div class="toolbar-b">
+            <a class="toolbar-current__back" href="#">← 返回</a>
+            <div class="toolbar-b__context">
+              <strong>林芝</strong> · 卷轴预览
+            </div>
+            <div class="toolbar-b__ops">
+              <button type="button" class="btn-gold">保存长图</button>
+              <button type="button" class="btn-ghost">文件夹</button>
+              <button type="button" class="btn-icon">⋯</button>
+            </div>
+            <button type="button" class="btn-icon">▴</button>
+          </div>
+          <div class="zone-row">
+            <span class="zone-label">导航</span>
+            <span class="zone-label">情境</span>
+            <span class="zone-label">操作</span>
+            <span class="zone-label">收起</span>
+          </div>
+          <div class="content-mock">卷轴预览内容区</div>
+        </div>
+
+        <div class="anno-box" style="margin-top:16px">
+          <h3>权衡</h3>
+          <ul>
+            <li>优点：宽屏信息密度更好，减少「空白焦虑」</li>
+            <li>缺点：中间标题与右侧操作仍有一定距离；需从 trip.json 读取标题</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 方案 C -->
+      <section class="wf-state" id="scheme-c">
+        <div class="wf-section">
+          <h2>方案 C · 双行分层</h2>
+          <p class="lead">第一行导航+情境，第二行专放操作。适合后续扩展更多状态提示（stale、生成中）。</p>
+        </div>
+
+        <div class="browser-chrome">
+          <div class="browser-chrome__dots"><span></span><span></span><span></span></div>
+          <div class="browser-chrome__tabrow">
+            <div class="browser-chrome__tab is-active">
+              <span class="browser-chrome__favicon"></span>
+              林芝游记 · 卷轴预览
+            </div>
+          </div>
+        </div>
+        <div class="page-frame">
+          <div class="toolbar-c">
+            <div class="toolbar-c__row1">
+              <a class="toolbar-current__back" href="#">← 返回首页</a>
+              <span style="color:#c8e6d8">林芝 · 卷轴预览</span>
+              <button type="button" class="btn-icon">▴</button>
+            </div>
+            <div class="toolbar-c__row2">
+              <button type="button" class="btn-gold">保存长图</button>
+              <button type="button" class="btn-ghost">在文件夹中显示</button>
+              <button type="button" class="btn-ghost">更多编辑…</button>
+              <span style="font-size:12px;color:#c8e6d8;margin-left:8px">内容已更新，请重新生成长图</span>
+            </div>
+          </div>
+          <div class="content-mock">卷轴预览内容区 · 工具栏总高约 88px</div>
+        </div>
+
+        <div class="anno-box" style="margin-top:16px">
+          <h3>权衡</h3>
+          <ul>
+            <li>优点：状态行（stale / 进度）有专属空间，不挤占主栏</li>
+            <li>缺点：占用垂直空间更多，预览内容可视区域减少</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 状态变体 -->
+      <section class="wf-state" id="scheme-states">
+        <div class="wf-section">
+          <h2>状态变体（基于方案 A）</h2>
+          <p class="lead">收起态、更多菜单、长图进行中 — 交互不变，仅布局跟随。</p>
+        </div>
+
+        <div class="block-label">收起态</div>
+        <div class="page-frame" style="border-radius:12px; margin-bottom:24px">
+          <div class="toolbar-collapsed--a">
+            <button type="button" class="toolbar-collapsed--a__handle">▾ 显示工具栏</button>
+            <a href="#" class="toolbar-collapsed--a__back">← 返回</a>
+          </div>
+          <div class="content-mock">全屏沉浸 · 收起条同样右对齐，左侧无按钮</div>
+        </div>
+
+        <div class="block-label">更多菜单展开</div>
+        <div class="page-frame" style="border-radius:12px; margin-bottom:24px">
+          <div class="toolbar-wrap">
+            <div class="toolbar-a">
+              <div class="toolbar-a__spacer" aria-hidden="true"></div>
+              <div class="toolbar-a__cluster">
+                <div class="toolbar-a__ops-group">
+                  <button type="button" class="btn-gold">保存长图</button>
+                  <button type="button" class="btn-ghost">文件夹</button>
+                  <button type="button" class="btn-icon" style="background:rgba(255,255,255,.25)">⋯</button>
+                </div>
+                <button type="button" class="btn-icon">▴</button>
+                <a class="toolbar-a__back" href="#">← 返回</a>
+              </div>
+            </div>
+            <div class="menu-dropdown-mock">
+              <button type="button">编辑感受与锚点</button>
+              <button type="button">结构与分章</button>
+              <button type="button">应用排版</button>
+              <button type="button">放映精选</button>
+              <button type="button">导出 zip（自行托管）</button>
+            </div>
+          </div>
+          <div class="content-mock">菜单锚定在 ⋯ 按钮下方，不遮挡主 CTA</div>
+        </div>
+
+        <div class="block-label">长图生成中</div>
+        <div class="page-frame" style="border-radius:12px">
+          <div class="toolbar-a">
+            <div class="toolbar-a__spacer" aria-hidden="true"></div>
+            <div class="toolbar-a__cluster">
+              <span class="toolbar-a__status">第 2/5 段</span>
+              <div class="toolbar-a__ops-group">
+                <button type="button" class="btn-gold" disabled style="opacity:.6">保存中…</button>
+                <button type="button" class="btn-ghost" disabled style="opacity:.5">文件夹</button>
+                <button type="button" class="btn-icon">⋯</button>
+              </div>
+              <button type="button" class="btn-icon">▴</button>
+              <a class="toolbar-a__back" href="#">← 返回</a>
+            </div>
+          </div>
+          <div class="content-mock">进度文案紧贴右侧操作组</div>
+        </div>
+      </section>
+
+    </main>
+
+    <aside class="sidebar">
+      <div class="anno-box anno-box--rec">
+        <h3>推荐：方案 A</h3>
+        <p style="margin:0 0 8px;font-size:13px">最小改动、最大收益。功能清单不变：</p>
+        <ul>
+          <li>返回首页</li>
+          <li>保存长图（主 CTA）</li>
+          <li>在文件夹中显示</li>
+          <li>更多编辑…（下拉菜单全部保留）</li>
+          <li>收起 / 展开工具栏</li>
+        </ul>
+      </div>
+
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>维度</th>
+            <th>现状</th>
+            <th>方案 A</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>鼠标行程</td>
+            <td>整栏宽度</td>
+            <td>仅右侧 ~280px</td>
+          </tr>
+          <tr>
+            <td>操作成组</td>
+            <td>分散</td>
+            <td>全聚右侧，返回最右</td>
+          </tr>
+          <tr>
+            <td>封面预览条</td>
+            <td>有，且重复按钮</td>
+            <td>移除</td>
+          </tr>
+          <tr>
+            <td>垂直高度</td>
+            <td>48px</td>
+            <td>48px（不变）</td>
+          </tr>
+          <tr>
+            <td>实现成本</td>
+            <td>—</td>
+            <td>CSS + DOM 顺序小改</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="anno-box" style="margin-top:12px">
+        <h3>待你确认</h3>
+        <ul>
+          <li>是否采用<strong>方案 A</strong>，或更倾向 B / C？</li>
+          <li>「在文件夹中显示」缩短为「文件夹」可否？</li>
+          <li>返回在最右侧，收起在其左边，顺序是否 OK？</li>
+          <li>返回文案：「← 返回」还是「← 返回首页」？</li>
+        </ul>
+      </div>
+
+      <div class="anno-box" style="margin-top:12px">
+        <h3>实现映射</h3>
+        <ul style="font-size:12px">
+          <li><code>preview-toolbar.js</code> init() HTML 结构调整</li>
+          <li><code>preview-toolbar.css</code> 操作组样式</li>
+          <li><code>refreshPreviewCover()</code> 整段移除或改为不渲染 preview-card</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    document.querySelectorAll(".scheme-tabs button").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll(".scheme-tabs button").forEach(function (b) {
+          b.classList.remove("is-active");
+        });
+        btn.classList.add("is-active");
+        document.querySelectorAll(".wf-state").forEach(function (s) {
+          s.classList.remove("is-visible");
+        });
+        var id = "scheme-" + btn.getAttribute("data-scheme");
+        var el = document.getElementById(id);
+        if (el) el.classList.add("is-visible");
+      });
+    });
+  </script>
+</body>
+</html>

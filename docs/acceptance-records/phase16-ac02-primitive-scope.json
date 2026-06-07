@@ -1,0 +1,16 @@
+{
+  "scope": "AC-P16-02 supplemental primitive YAML",
+  "formalExemption": "docs/acceptance-records/phase16-ac02-parity-exemption.json",
+  "note": "screen-portrait-1, screen-landscape-1, screen-portrait-2 are registered in LTE for geometry/metadata audit; MCS mosaic parity export remains limited to legacy PATTERN_GRID_CLASS keys.",
+  "lteOnlyPatterns": [
+    "screen-portrait-1",
+    "screen-landscape-1",
+    "screen-portrait-2"
+  ],
+  "screenPlannerPatterns": [
+    "screen-portrait-1",
+    "screen-landscape-1",
+    "screen-portrait-2",
+    "screen-full-frame"
+  ]
+}

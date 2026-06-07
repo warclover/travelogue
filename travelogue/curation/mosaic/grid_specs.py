@@ -1,96 +1,22 @@
 """Expected grid cell placements for mosaic / composite layout patterns.
 
-Used by tests to detect slot overlap and unintended empty cells on fixed grids.
-Auto-flow grids (3col, 2x2, 3x2, 3x3, portrait-2x4) rely on DOM order; they
-fill completely when every slot renders (see build_layout_screen slot retention).
+LTE-generated data lives in ``_legacy_generated.py`` (PRD R-P16-02).
+Regenerate: ``python scripts/lte_export_legacy.py --sync-python``
 """
 
 from __future__ import annotations
 
-from travelogue.curation.mosaic.constants import (
+from travelogue.curation.mosaic._legacy_generated import (
+    AUTO_FLOW_GRIDS,
+    EXPLICIT_GRID_BOUNDS,
+    EXPLICIT_GRID_SPECS,
     MOSAIC_3_PATTERN_IDS,
     MOSAIC_4_PATTERN_IDS,
     MOSAIC_5_PATTERN_IDS,
     MOSAIC_6_PATTERN_IDS,
     MOSAIC_8_PATTERN_IDS,
     MOSAIC_9_PATTERN_IDS,
-    PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
-    PATTERN_PORTRAIT_1_LANDSCAPE_2,
-)
-
-# (col_start, col_end, row_start, row_end) — 1-based inclusive
-EXPLICIT_GRID_SPECS: dict[str, list[tuple[int, int, int, int]]] = {
-    "screen-mosaic-5-main-portrait-3land": [
-        (1, 2, 1, 2),
-        (3, 3, 1, 2),
-        (1, 1, 3, 3),
-        (2, 2, 3, 3),
-        (3, 3, 3, 3),
-    ],
-    "screen-mosaic-5-main-landscape-2portrait-2land": [
-        (1, 2, 1, 2),
-        (3, 3, 1, 2),
-        (1, 1, 3, 3),
-        (2, 2, 3, 3),
-        (3, 3, 3, 3),
-    ],
-    "screen-mosaic-5-2portrait-3land-balanced": [
-        (1, 1, 1, 1),
-        (2, 2, 1, 1),
-        (1, 1, 2, 3),
-        (2, 2, 2, 2),
-        (2, 3, 3, 3),
-    ],
-    "screen-mosaic-5-3portrait-2land-balanced": [
-        (1, 1, 1, 2),
-        (2, 2, 1, 2),
-        (3, 3, 1, 2),
-        (1, 2, 3, 3),
-        (3, 3, 3, 3),
-    ],
-    "screen-mosaic-5-main-hero-plus-4": [
-        (1, 2, 1, 2),
-        (3, 3, 1, 1),
-        (3, 3, 2, 2),
-        (1, 1, 3, 3),
-        (2, 2, 3, 3),
-        (3, 3, 3, 3),
-    ],
-    PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5: [
-        (1, 2, 1, 2),
-        (3, 3, 1, 1),
-        (3, 3, 2, 2),
-        (1, 1, 3, 3),
-        (2, 2, 3, 3),
-        (3, 3, 3, 3),
-    ],
-    PATTERN_PORTRAIT_1_LANDSCAPE_2: [
-        (1, 1, 1, 2),
-        (2, 2, 1, 1),
-        (2, 2, 2, 2),
-    ],
-}
-
-# cols × rows — slots fill left-to-right, top-to-bottom in DOM order
-AUTO_FLOW_GRIDS: dict[str, tuple[int, int, int]] = {
-    # pattern_id -> (cols, rows, slot_count)
-    "screen-portrait-3": (3, 1, 3),
-    "screen-portrait-4": (2, 2, 4),
-    "screen-portrait-6": (3, 2, 6),
-    "screen-portrait-9": (3, 3, 9),
-    "screen-landscape-4": (2, 2, 4),
-    "screen-landscape-6": (3, 2, 6),
-    "screen-landscape-9": (3, 3, 9),
-    "screen-portrait-2-landscape-2": (2, 2, 4),
-    "screen-portrait-grid-8": (4, 2, 8),
-}
-
-# Single-column stacks — no fixed cell grid; height follows aspect ratios
-STACK_PATTERNS: frozenset[str] = frozenset(
-    {
-        "screen-landscape-2",
-        "screen-landscape-3",
-    }
+    STACK_PATTERNS,
 )
 
 
@@ -132,8 +58,7 @@ def audit_all() -> dict[str, dict]:
     report: dict[str, dict] = {}
 
     for pid, specs in EXPLICIT_GRID_SPECS.items():
-        cols = 3 if "portrait-1-landscape" not in pid else 2
-        rows = 3 if "portrait-1-landscape" not in pid else 2
+        cols, rows = EXPLICIT_GRID_BOUNDS.get(pid, (3, 3))
         gaps = gap_cells(specs, cols=cols, rows=rows)
         report[pid] = {
             "kind": "explicit",

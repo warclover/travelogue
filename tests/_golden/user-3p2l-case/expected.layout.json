@@ -1,0 +1,22 @@
+{
+  "chapters": [
+    {
+      "id": "ch-01",
+      "patternId": "open",
+      "screens": [
+        {
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": ["u3"]
+        },
+        {
+          "patternId": "screen-portrait-3",
+          "slotAssetIds": ["u0", "u1", "u2"]
+        },
+        {
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": ["u4"]
+        }
+      ]
+    }
+  ]
+}

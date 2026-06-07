@@ -20,6 +20,29 @@ def test_window_log_omits_top3_scores():
     assert "top3Scores" not in slim
 
 
+def test_window_log_omits_rejected_templates():
+    raw = MosaicWindowLog(
+        rejected_templates=[{"templateId": "x", "reason": "hard_invalid"}]
+    ).to_dict()
+    assert "rejectedTemplates" not in format_log_entry(raw, "window")
+    assert "rejectedTemplates" in format_log_entry(raw, "debug")
+
+
+def test_window_log_keeps_geometry_rejections_summary():
+    hero_id = "screen-mosaic-5-hero-3-2-plus-4"
+    raw = MosaicWindowLog(
+        rejected_templates=[
+            {"templateId": hero_id, "reason": "geometry_invalid"},
+            {"templateId": "x", "reason": "ordering_failed"},
+        ]
+    ).to_dict()
+    window = format_log_entry(raw, "window")
+    assert "rejectedTemplates" not in window
+    assert window["geometryRejectedTemplates"] == [
+        {"templateId": hero_id, "reason": "geometry_invalid"}
+    ]
+
+
 def test_200_window_logs_under_ci_budget():
     logs = [
         format_log_entry(

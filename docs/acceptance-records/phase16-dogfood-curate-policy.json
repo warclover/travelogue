@@ -1,0 +1,24 @@
+{
+  "policyId": "phase16-dogfood-curate",
+  "updatedAt": "2026-06-06",
+  "summary": "Phase 16 AC-15 dogfood fixtures are exposure-oriented trip.json slices, not full curate artifacts.",
+  "equivalenceStrategy": {
+    "curateDerived": [
+      "portrait-heavy",
+      "landscape-heavy"
+    ],
+    "staticExposureMix": [
+      "portrait-grid",
+      "landscape-grid",
+      "mixed-layout",
+      "mixed-layout-alt"
+    ],
+    "regenerateCommand": "python scripts/phase16_curate_dogfood.py",
+    "evalCommand": "python scripts/phase16_template_eval.py --trips-dir tests/fixtures/phase16-dogfood --strict-ac15"
+  },
+  "notes": [
+    "Curate-derived folders run the same golden MCS planners as tests/_golden.",
+    "Static folders intentionally pin composite/primitive exposure mixes for North Star metrics.",
+    "Full ingest→curate golden albums remain in tests/_golden (family/landscape/portrait/user_3p2l_case)."
+  ]
+}

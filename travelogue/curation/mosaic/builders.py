@@ -21,6 +21,7 @@ from travelogue.curation.mosaic.constants import (
     PATTERN_PORTRAIT_9,
     PATTERN_PORTRAIT_GRID_8,
 )
+from travelogue.curation.mosaic.lte_adapter import read_templates_from_lte
 from travelogue.curation.mosaic.registry import MosaicPattern
 from travelogue.curation.screen_planner import (
     PERSON_LAYOUT_TRIPLE,
@@ -171,6 +172,57 @@ def _order_hero_six(
     return [main, side[0], side[1], bottom[0], bottom[1], bottom[2]]
 
 
+def _order_by_roles(
+    pattern_id: str,
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+) -> list[str] | None:
+    from travelogue.curation.mosaic.lte_adapter import mosaic_registry
+
+    pat = mosaic_registry().get(pattern_id)
+    if pat is None or len(pat.roles) != len(asset_ids):
+        return None
+    portraits = _sort_asset_ids_by_taken(
+        [a for a in asset_ids if not _is_landscape_id(a, aspects)],
+        assets_map,
+    )
+    landscapes = _sort_asset_ids_by_taken(
+        [a for a in asset_ids if _is_landscape_id(a, aspects)],
+        assets_map,
+    )
+    pools: dict[str, list[str]] = {
+        "portrait": portraits,
+        "landscape": landscapes,
+        "main": landscapes,
+        "tile": portraits,
+    }
+    used: set[str] = set()
+    ordered: list[str] = []
+    for role in pat.roles:
+        pool = pools.get(role)
+        if not pool:
+            return None
+        picked = next((aid for aid in pool if aid not in used), None)
+        if picked is None:
+            return None
+        used.add(picked)
+        ordered.append(picked)
+    return ordered
+
+
+def _finalize_mosaic_screen(
+    screen: dict,
+    pattern_id: str,
+    assets_map: dict[str, dict] | None = None,
+) -> dict:
+    if read_templates_from_lte():
+        from travelogue.layout_templates.geometry_solidify import solidify_screen_geometry
+
+        solidify_screen_geometry(screen, pattern_id, assets_map=assets_map)
+    return screen
+
+
 def try_order_for_pattern(
     pattern_id: str,
     asset_ids: list[str],
@@ -221,7 +273,6 @@ def try_order_for_pattern(
             p_sorted = _sort_asset_ids_by_taken(portraits[:3], assets_map)
             l_sorted = _sort_asset_ids_by_taken(landscapes[:2], assets_map)
             return [p_sorted[0], p_sorted[1], p_sorted[2], l_sorted[0], l_sorted[1]]
-        return None
 
     if n == 6:
         if pattern_id in (PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5, PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4):
@@ -249,6 +300,9 @@ def try_order_for_pattern(
             return _sort_asset_ids_by_taken(landscapes[:9], assets_map)
         return None
 
+    role_order = _order_by_roles(pattern_id, asset_ids, aspects, assets_map)
+    if role_order:
+        return role_order
     return None
 
 
@@ -260,15 +314,23 @@ def build_screen(
     screen_id: str = "",
 ) -> dict:
     if pattern.pattern_id == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND:
-        return _make_mosaic_5_main_portrait_3land_screen(
-            ordered_ids, screen_id=screen_id, assets_map=assets_map
+        return _finalize_mosaic_screen(
+            _make_mosaic_5_main_portrait_3land_screen(
+                ordered_ids, screen_id=screen_id, assets_map=assets_map
+            ),
+            pattern.pattern_id,
+            assets_map,
         )
     if pattern.pattern_id == PATTERN_PORTRAIT_1_LANDSCAPE_2:
-        return _make_mixed_portrait_landscape_screen(
-            ordered_ids[0],
-            ordered_ids[1:3],
-            screen_id=screen_id,
-            assets_map=assets_map,
+        return _finalize_mosaic_screen(
+            _make_mixed_portrait_landscape_screen(
+                ordered_ids[0],
+                ordered_ids[1:3],
+                screen_id=screen_id,
+                assets_map=assets_map,
+            ),
+            pattern.pattern_id,
+            assets_map,
         )
     if pattern.pattern_id == PATTERN_PORTRAIT_2_LANDSCAPE_2:
         slots = []
@@ -281,14 +343,22 @@ def build_screen(
             )
             fit = _portrait_fit(aid, assets_map) if role == "portrait" else "cover"
             slots.append({"assetId": aid, "slot": idx, "fit": fit, "role": role})
-        return _make_screen(
-            PATTERN_PORTRAIT_2_LANDSCAPE_2,
-            screen_id=screen_id,
-            slots=slots,
+        return _finalize_mosaic_screen(
+            _make_screen(
+                PATTERN_PORTRAIT_2_LANDSCAPE_2,
+                screen_id=screen_id,
+                slots=slots,
+            ),
+            pattern.pattern_id,
+            assets_map,
         )
     if pattern.pattern_id == PATTERN_PORTRAIT_GRID_8:
-        return _make_portrait_grid8_screen(
-            ordered_ids, screen_id=screen_id, assets_map=assets_map
+        return _finalize_mosaic_screen(
+            _make_portrait_grid8_screen(
+                ordered_ids, screen_id=screen_id, assets_map=assets_map
+            ),
+            pattern.pattern_id,
+            assets_map,
         )
     if pattern.pattern_id in (
         PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
@@ -310,16 +380,22 @@ def build_screen(
                 role = "landscape"
             fit = _portrait_fit(aid, assets_map) if role == "portrait" else "cover"
             slots.append({"assetId": aid, "slot": idx, "fit": fit, "role": role})
-        return _make_screen(pattern.pattern_id, screen_id=screen_id, slots=slots)
+        return _finalize_mosaic_screen(
+            _make_screen(pattern.pattern_id, screen_id=screen_id, slots=slots),
+            pattern.pattern_id,
+            assets_map,
+        )
     roles = pattern.roles
     slots = []
+    from travelogue.curation.mosaic.lte_adapter import resolve_slot_fit
+
     for idx, (aid, role) in enumerate(zip(ordered_ids, roles, strict=True)):
-        if role == "portrait":
-            fit = _portrait_fit(aid, assets_map)
-        elif role == "main":
-            fit = "cover"
-        else:
-            fit = "cover"
+        fit = resolve_slot_fit(
+            pattern.pattern_id,
+            idx,
+            role,
+            assets_map.get(aid, {}),
+        )
         slots.append({"assetId": aid, "slot": idx, "fit": fit, "role": role})
     screen = _make_screen(pattern.pattern_id, screen_id=screen_id, slots=slots)
     # Preserve the person-triple semantic when the MCS unified planner emits a
@@ -329,4 +405,4 @@ def build_screen(
         asset_has_person(assets_map.get(aid, {})) for aid in ordered_ids
     ):
         screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
-    return screen
+    return _finalize_mosaic_screen(screen, pattern.pattern_id, assets_map)

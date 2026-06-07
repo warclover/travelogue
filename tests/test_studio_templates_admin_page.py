@@ -36,4 +36,5 @@ def test_templates_admin_ui_route() -> None:
     assert probe.status_code == 200
     html = probe.body.decode("utf-8")
     assert "模板治理控制台" in html
+    assert "布局模板（LTE · internal）" in html
     assert (STUDIO_TEMPLATE_DIR / "templates-admin.html").is_file()

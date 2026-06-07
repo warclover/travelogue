@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
 from travelogue.curation.burst_utils import ingest_burst_group_id, parse_taken_ts
@@ -25,6 +26,32 @@ def pattern_diversity(chapters: list[dict]) -> float:
     if not pids:
         return 0.0
     return len(set(pids)) / len(pids)
+
+
+def chapter_distinct_pattern_counts(chapters: list[dict]) -> list[int]:
+    """Distinct patternId count per chapter (screens with a pattern only)."""
+    counts: list[int] = []
+    for ch in chapters:
+        pids = {
+            str(s.get("patternId"))
+            for s in ch.get("screens") or []
+            if s.get("patternId")
+        }
+        if pids:
+            counts.append(len(pids))
+    return counts
+
+
+def pattern_diversity_p50(chapters: list[dict]) -> float:
+    """PRD P16 · median distinct patternId count per chapter."""
+    counts = chapter_distinct_pattern_counts(chapters)
+    if not counts:
+        return 0.0
+    counts.sort()
+    mid = len(counts) // 2
+    if len(counts) % 2:
+        return float(counts[mid])
+    return (counts[mid - 1] + counts[mid]) / 2.0
 
 
 def pattern_repeat_rate(chapters: list[dict]) -> float:
@@ -249,3 +276,29 @@ def compute_layout_metrics(
     elif any(p in MOSAIC_UNIFIED_PATTERN_IDS for p in pids):
         out.update(compute_mosaic_metrics(chapters, mosaic_logs=None))
     return out
+
+
+def template_exposure_shares_from_trips(trips_root: Path | None = None) -> dict[str, float]:
+    """Share of screens per patternId across dogfood trips (AC-P16-14)."""
+    from travelogue.config import get_config
+
+    root = trips_root or get_config().trips_dir
+    counts: dict[str, int] = {}
+    if not root.is_dir():
+        return {}
+    for trip_json in root.glob("*/trip.json"):
+        try:
+            import json
+
+            data = json.loads(trip_json.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        for ch in data.get("chapters") or []:
+            for screen in ch.get("screens") or []:
+                pid = str(screen.get("patternId") or "").strip()
+                if pid:
+                    counts[pid] = counts.get(pid, 0) + 1
+    total = sum(counts.values())
+    if not total:
+        return {}
+    return {pid: round(n / total, 4) for pid, n in sorted(counts.items())}

@@ -23,10 +23,11 @@ def test_journal_css_bp_web_48rem() -> None:
     assert 'html[data-layout="auto"]' in css
 
 
-def test_auto_render_pins_no_layout_attr() -> None:
+def test_auto_render_pins_auto_layout_attr() -> None:
     trip = load_golden_trip()
     trip["exportLayout"] = "auto"
     html = render_html(trip, export_mode="draft")
+    assert 'data-layout="auto"' in html
     assert 'data-layout="web"' not in html
     assert 'data-layout="mobile"' not in html
 

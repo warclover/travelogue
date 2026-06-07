@@ -140,6 +140,16 @@ def build_chapter_summaries(trip: dict) -> list[dict[str, Any]]:
     return rows
 
 
+def build_asset_media_index(trip: dict) -> dict[str, str]:
+    """assetId → mediaClass for Studio collage override (PRD §3.4)."""
+    out: dict[str, str] = {}
+    for asset in trip.get("assets") or []:
+        aid = asset.get("id")
+        if aid:
+            out[str(aid)] = str(asset.get("mediaClass") or "photo")
+    return out
+
+
 def build_entry(
     trip: dict,
     trip_id: str,
@@ -171,4 +181,5 @@ def build_entry(
             trip_dir=trip_dir,
         ),
         "template": build_template_summary(trip),
+        "assetMediaById": build_asset_media_index(trip),
     }

@@ -9,7 +9,7 @@ from travelogue.curation.mosaic.constants import PATTERN_PORTRAIT_2_LANDSCAPE_2
 
 
 def _five_assets():
-    kinds = ["portrait", "portrait", "portrait", "landscape", "landscape"]
+    kinds = ["portrait", "portrait", "landscape", "landscape", "landscape"]
     aspects = {}
     assets_map = {}
     for i, kind in enumerate(kinds):

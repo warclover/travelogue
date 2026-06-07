@@ -12,7 +12,49 @@ from travelogue.curation.asset_quality import (
     is_upscaled_thumbnail,
 )
 
-MediaClass = str  # photo | screenshot | thumbnail | reupload | archive | unknown
+MediaClass = str  # photo | screenshot | thumbnail | reupload | archive | collage | unknown
+
+_COLLAGE_SOFTWARE_KEYWORDS = (
+    "pic collage",
+    "picsart",
+    "picsart photo",
+    "canva",
+    "layout",
+    "collage",
+    "拼图",
+    "拼贴",
+    "拼好照",
+    "美图秀秀",
+    "醒图",
+    "剪映",
+    "capcut",
+    "黄油相机",
+    "一甜相机",
+    "轻颜",
+    "inshot",
+    "photo grid",
+    "grid maker",
+    "diptic",
+    "unfold",
+    "snapseed collage",
+    "google photos",
+    "天天拼图",
+    "百度贴贴",
+    "九宫格",
+    "长图拼接",
+)
+
+_COLLAGE_FILENAME_KEYWORDS = (
+    "collage",
+    "pintu",
+    "pin_tu",
+    "拼图",
+    "拼贴",
+    "grid",
+    "九宫格",
+    "长图",
+    "jigsaw",
+)
 
 _COVER_CLASS_WEIGHT: dict[str, float] = {
     "photo": 1.0,
@@ -59,6 +101,16 @@ def classify_media_class(
     if is_upscaled_thumbnail(native_probe):
         return "reupload"
 
+    preset = str(asset.get("mediaClass") or "")
+    if preset == "collage":
+        return "collage"
+
+    # Collage before screenshot: wide multi-panel collages often exceed 2.4 AR.
+    if detect_collage_asset(path=path, img=img, asset=asset):
+        return "collage"
+    if _path_suggests_collage(path):
+        return "collage"
+
     ratio = nw / nh if nh else 1.0
     ext = path.suffix.lower()
     no_exif = date_source == "mtime"
@@ -103,6 +155,105 @@ def refine_archive_media_class(assets: list[dict]) -> None:
 
 def cover_class_weight(media_class: str | None) -> float:
     return _COVER_CLASS_WEIGHT.get(media_class or "unknown", 0.85)
+
+
+def _path_suggests_collage(path: Path) -> bool:
+    stem = path.stem.lower().replace("-", "_").replace(" ", "_")
+    return any(kw in stem for kw in _COLLAGE_FILENAME_KEYWORDS)
+
+
+def _exif_software_suggests_collage(img: Image.Image) -> bool:
+    try:
+        exif = img.getexif()
+        if not exif:
+            return False
+        from PIL.ExifTags import Base
+
+        software = exif.get(getattr(Base, "Software", 0x0131))
+        if not software:
+            return False
+        text = str(software).lower()
+        return any(kw in text for kw in _COLLAGE_SOFTWARE_KEYWORDS)
+    except (AttributeError, OSError, TypeError, ValueError):
+        return False
+
+
+def _seam_grid_suggests_collage(img: Image.Image) -> bool:
+    """Conservative v2: EXIF-first; seams for grid collages and 2-panel splits."""
+    w, h = img.size
+    if min(w, h) < 480:
+        return False
+
+    sample = img.convert("L").resize((96, 96))
+    px = sample.load()
+    sw, sh = sample.size
+
+    def _band_means(axis: str) -> list[float]:
+        if axis == "col":
+            return [sum(px[x, y] for y in range(sh)) / sh for x in range(sw)]
+        return [sum(px[x, y] for x in range(sw)) / sw for y in range(sh)]
+
+    def _seam_positions(means: list[float], *, min_gap: int = 8) -> list[int]:
+        if len(means) < 3:
+            return []
+        diffs = [abs(means[i + 1] - means[i]) for i in range(len(means) - 1)]
+        if not diffs:
+            return []
+        threshold = max(8.0, sum(diffs) / len(diffs) * 2.2)
+        peaks: list[int] = []
+        for i, d in enumerate(diffs):
+            if d < threshold:
+                continue
+            pos = i + 1
+            if peaks and pos - peaks[-1] < min_gap:
+                if d > diffs[peaks[-1] - 1]:
+                    peaks[-1] = pos
+                continue
+            peaks.append(pos)
+        return peaks
+
+    ratio = w / h if h else 1.0
+    v_seams = _seam_positions(_band_means("col"))
+    h_seams = _seam_positions(_band_means("row"))
+
+    # Two-panel landscape/portrait splits (e.g. 1600×800, 800×1600)
+    if ratio >= 1.35 and len(v_seams) == 1 and w >= 640:
+        return True
+    if ratio <= 0.74 and len(h_seams) == 1 and h >= 640:
+        return True
+    # Three-column (or more) horizontal collage
+    if ratio >= 1.12 and len(v_seams) >= 2 and w >= 600:
+        return True
+
+    if ratio < 0.88 or ratio > 1.18:
+        return False
+    if len(v_seams) < 1 or len(h_seams) < 1:
+        return False
+    if len(v_seams) >= 2 and len(h_seams) >= 2:
+        return True
+    return len(v_seams) == 1 and len(h_seams) == 1 and min(w, h) >= 720
+
+
+def detect_collage_asset(
+    *,
+    path: Path,
+    img: Image.Image,
+    asset: dict | None = None,
+) -> bool:
+    """PRD §3.4: EXIF whitelist first; conservative seam heuristic second."""
+    asset = asset or {}
+    if str(asset.get("mediaClass") or "") == "collage":
+        return True
+    if _path_suggests_collage(path):
+        return True
+    if _exif_software_suggests_collage(img):
+        return True
+    return _seam_grid_suggests_collage(img)
+
+
+def is_collage_asset(asset: dict | None) -> bool:
+    """True when asset is tagged collage (PRD §3.4 · AC-P16-18)."""
+    return str((asset or {}).get("mediaClass") or "") == "collage"
 
 
 def summarize_media_classes(assets: list[dict]) -> dict[str, int]:

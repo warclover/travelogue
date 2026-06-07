@@ -975,6 +975,12 @@ def run_curate(
         curation["degradationReason"] = degradation_reason
     if decision_logs:
         curation["layoutDecisionLog"] = decision_logs
+    if app_cfg.mosaic.enabled and app_cfg.mosaic.log_level == "debug":
+        mosaic_debug = curation.get("mosaicDecisionLog") or []
+        if mosaic_debug:
+            merged = list(curation.get("layoutDecisionLog") or [])
+            merged.extend(mosaic_debug)
+            curation["layoutDecisionLog"] = merged
     if replan_meta.get("searchBudget"):
         curation["layoutSearchBudget"] = replan_meta["searchBudget"]
     if engine == LAYOUT_ENGINE_SCREENS:
@@ -1010,12 +1016,20 @@ def run_curate(
         curation["arcProfile"] = arc_profile_to_dict(arc_profile)
     curation["layoutMetrics"] = layout_metrics
     if engine == LAYOUT_ENGINE_SCREENS:
-        from travelogue.curation.mosaic.telemetry import record_mosaic_layout_metrics
+        from travelogue.curation.mosaic.telemetry import (
+            record_mosaic_layout_metrics,
+            record_per_template_layout_metrics,
+        )
 
         record_mosaic_layout_metrics(
             trip_id=trip.get("tripId"),
             layout_metrics=layout_metrics,
             mosaic_enabled=app_cfg.mosaic.enabled,
+        )
+        record_per_template_layout_metrics(
+            trip_id=trip.get("tripId"),
+            chapters=chapters,
+            mosaic_logs=mosaic_logs_for_metrics,
         )
     curation["curatePlanVersion"] = "1.1"
     curation["orientationSummary"] = summary_dict

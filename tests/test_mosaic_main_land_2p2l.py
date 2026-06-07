@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_MAIN_LAND_2P_2L
-from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
+from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
 
 
 def test_main_land_2p2l_retired_from_mcs() -> None:

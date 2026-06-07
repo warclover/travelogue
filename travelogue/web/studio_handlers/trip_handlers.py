@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from travelogue.web.studio_handlers.asset_media_handlers import handle_asset_media_class
 from travelogue.web.studio_handlers.trip_intent_handlers import (
     handle_get_cohort,
     handle_patch_cohort,
@@ -26,6 +27,7 @@ from travelogue.web.studio_handlers.trip_pipeline_handlers import (
 from travelogue.web.studio_handlers.trip_replan_handlers import handle_patch_screen_replan
 
 __all__ = [
+    "handle_asset_media_class",
     "handle_aesthetic",
     "handle_bento_preview",
     "handle_chapter_layout",

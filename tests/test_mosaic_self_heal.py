@@ -4,16 +4,14 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from tests._golden.helpers import build_mosaic_eligible_trip
+from tests._golden.helpers import build_mosaic_five_2p3l_window
 from travelogue.config import get_config
 from travelogue.curation.mosaic.compose import pick_best_window
 from travelogue.curation.mosaic.scorer import MosaicScoreResult
 
 
 def _window5():
-    buckets, aspects, assets = build_mosaic_eligible_trip()
-    ids = buckets[0]
-    assets_map = {a["id"]: a for a in assets}
+    ids, aspects, assets_map = build_mosaic_five_2p3l_window()
     return ids, aspects, assets_map
 
 

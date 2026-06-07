@@ -98,7 +98,7 @@ def build_mosaic_landscape6_trip() -> tuple[list[list[str]], dict[str, str], lis
 
 
 def build_mosaic_eligible_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
-    """40 assets (8×5) — trip_total≥35, each window has 3P+2L for mosaic-5 candidates."""
+    """40 assets (8×5) — trip_total≥35, each window has 3P+2L for mosaic-family planning."""
     assets: list[dict] = []
     aspects: dict[str, str] = {}
     buckets: list[list[str]] = []
@@ -121,6 +121,51 @@ def build_mosaic_eligible_trip() -> tuple[list[list[str]], dict[str, str], list[
             bucket.append(aid)
         buckets.append(bucket)
     return buckets, aspects, assets
+
+
+def build_mosaic_five_2p3l_window() -> tuple[list[str], dict[str, str], dict[str, dict]]:
+    """Single 5-slot window · 2P+3L for direct MCS compose tests (LTE flagship)."""
+    ids: list[str] = []
+    aspects: dict[str, str] = {}
+    assets_map: dict[str, dict] = {}
+    kinds = ["portrait", "portrait", "landscape", "landscape", "landscape"]
+    for i, kind in enumerate(kinds):
+        aid = f"w{i}"
+        asset = _asset(
+            aid,
+            900 if kind == "portrait" else 2000,
+            1600 if kind == "portrait" else 1200,
+            offset_hours=i * 0.1,
+        )
+        assets_map[aid] = asset
+        aspects[aid] = asset["aspectKind"]
+        ids.append(aid)
+    return ids, aspects, assets_map
+
+
+def build_user_3p2l_case_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
+    """PRD §13.3 · user-reported 5-photo window (3 portrait + 2 landscape).
+
+    MCS must not pick deprecated ``screen-mosaic-5-3portrait-2land-balanced``; the
+    window is planned as smaller screens (landscape-1 + portrait-3 + landscape-1).
+    """
+    kinds = ["portrait", "portrait", "portrait", "landscape", "landscape"]
+    assets: list[dict] = []
+    aspects: dict[str, str] = {}
+    bucket: list[str] = []
+    for i, kind in enumerate(kinds):
+        aid = f"u{i}"
+        asset = _asset(
+            aid,
+            900 if kind == "portrait" else 2000,
+            1600 if kind == "portrait" else 1200,
+            offset_hours=i * 0.1,
+            sharpness=0.8,
+        )
+        assets.append(asset)
+        aspects[aid] = asset["aspectKind"]
+        bucket.append(aid)
+    return [bucket], aspects, assets
 
 
 def build_mixed_aspects_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:

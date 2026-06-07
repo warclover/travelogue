@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
 
 from travelogue.curation.layout_density import (
@@ -96,6 +96,7 @@ class ScreenLayoutPlannerState:
     portrait_grid8_used: int = 0
     last_kind: LayoutKind = "none"
     layout_density: LayoutDensity = "balanced"
+    pattern_counts: dict[str, int] = field(default_factory=dict)
 
     @classmethod
     def from_trip_total(
@@ -169,9 +170,13 @@ class ScreenLayoutPlannerState:
         return True
 
     def can_emit_pattern(self, pattern_id: str) -> bool:
-        from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
+        from travelogue.curation.mosaic.lte_adapter import template_rhythm_max_per_chapter
+        from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
 
         if mosaic_pattern_disabled(pattern_id):
+            return False
+        max_ch = template_rhythm_max_per_chapter(pattern_id)
+        if max_ch is not None and self.pattern_counts.get(pattern_id, 0) >= max_ch:
             return False
         kind = layout_kind_from_pattern(pattern_id)
         if kind == "nine":
@@ -185,6 +190,8 @@ class ScreenLayoutPlannerState:
         return True
 
     def note_screen(self, pattern_id: str) -> None:
+        if pattern_id:
+            self.pattern_counts[pattern_id] = self.pattern_counts.get(pattern_id, 0) + 1
         kind = layout_kind_from_pattern(pattern_id)
         if kind == "nine":
             self.nine_used += 1

@@ -4,7 +4,15 @@
   {{/if}}
   <div class="layout-screen__grid {{gridClass}}">
     {{#each slots}}
-    <figure class="layout-slot" data-slot="{{slotIndex}}"{{#if role}} data-role="{{role}}"{{/if}}{{#if slotStyle}} style="{{slotStyle}}"{{/if}}>
+    <figure class="layout-slot{{#if hasBlurFill}} layout-slot--blurred-fill{{/if}}" data-slot="{{slotIndex}}"{{#if role}} data-role="{{role}}"{{/if}}{{#if slotStyle}} style="{{slotStyle}}"{{/if}}>
+      {{#if hasBlurFill}}
+      <img class="layout-slot__blur"
+        src="{{blurSrc}}"
+        alt=""
+        aria-hidden="true"
+        loading="{{loading}}"
+        decoding="async" />
+      {{/if}}
       {{#if hasSrc}}
       <img class="layout-slot__img layout-slot__img--{{fit}}"
         src="{{src}}"

@@ -179,7 +179,7 @@ def append_legacy_window(
     )
     if not screen:
         return False
-    from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
+    from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
     from travelogue.curation.mosaic.runtime import get_effective_mosaic_config
     from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
 
@@ -191,5 +191,16 @@ def append_legacy_window(
     # to portrait column grids (portrait-3 + portrait-1).
     if not screen_slots_geometry_ok(screen, ctx.aspects):
         return False
+    # Legacy fallback emits raw screen_planner screens that never pass through
+    # ``_finalize_mosaic_screen``; solidify so they carry LTE geometry + role-aware
+    # fit like the MCS candidate path (no-op for non-LTE pattern ids).
+    from travelogue.curation.mosaic.lte_adapter import read_templates_from_lte
+
+    if read_templates_from_lte():
+        from travelogue.layout_templates.geometry_solidify import (
+            solidify_screen_geometry,
+        )
+
+        solidify_screen_geometry(screen, pid, assets_map=ctx.assets_map)
     append_screen(ctx, screen)
     return True

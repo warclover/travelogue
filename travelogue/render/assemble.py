@@ -115,8 +115,9 @@ def build_render_context(
     )
 
     html_attrs = [f'data-export="{surface.export_mode}"']
-    if surface.export_layout and surface.export_layout != "auto":
-        html_attrs.append(f'data-layout="{surface.export_layout}"')
+    if surface.export_layout:
+        layout_attr = "auto" if surface.export_layout == "auto" else surface.export_layout
+        html_attrs.append(f'data-layout="{layout_attr}"')
     if surface.use_screens_global and not surface.is_longshot_surface:
         html_attrs.append(f'data-layout-engine="{surface.layout_engine}"')
     if surface.include_long_shot:

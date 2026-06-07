@@ -1,0 +1,9 @@
+{
+  "auditAt": "2026-06-06",
+  "path": "templates/visual-journal/journal-screens.css",
+  "outsideGeneratedGridClassCount": 0,
+  "outsideGeneratedGridClasses": [],
+  "duplicateGridClassesOutsideMarker": [],
+  "migrationNote": "Stack/simple grids are generated inside @lte-generated; pattern overlays may reference grid class names in selectors only.",
+  "auditCommand": "python scripts/lte_journal_css_audit.py --fail-on-duplicates"
+}

@@ -1,0 +1,42 @@
+{
+  "phase": "P16",
+  "gate": "AC-P16-09",
+  "title": "Layout template lifecycle (experimental→beta→ga + review)",
+  "generatedAt": "2026-06-06T00:00:00Z",
+  "status": "signed",
+  "templates": [
+    {
+      "templateId": "screen-mosaic-5-2p3l-equal",
+      "lifecyclePath": ["experimental", "beta", "ga"],
+      "currentStatus": "ga",
+      "currentVersion": 2,
+      "reviewWorkflow": "templating.review submit→approve required before GA admission S7",
+      "admissionSteps": ["registry", "geometry_static", "geometry_publish", "review_gate"],
+      "gitOps": "travelogue/layout_templates/promotion.py + Studio promote_layout_template"
+    },
+    {
+      "templateId": "screen-mosaic-5-hero-3-2-plus-4",
+      "lifecyclePath": ["experimental", "beta", "ga"],
+      "currentStatus": "ga",
+      "currentVersion": 3,
+      "reviewWorkflow": "templating.review submit→approve required before GA admission S7",
+      "admissionSteps": ["registry", "geometry_static", "geometry_publish", "review_gate"],
+      "gitOps": "travelogue/layout_templates/promotion.py + Studio promote_layout_template"
+    }
+  ],
+  "automatedPrereq": {
+    "tests": [
+      "tests/test_lte_lifecycle.py",
+      "tests/test_lte_p0_gaps.py"
+    ],
+    "pass": true
+  },
+  "signoffs": [
+    {
+      "role": "engineering",
+      "name": "phase16_lifecycle_automated",
+      "date": "2026-06-06",
+      "conclusion": "Pass"
+    }
+  ]
+}
