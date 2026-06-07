@@ -1,0 +1,329 @@
+{
+  "description": "CI golden · 山地风景横图（3 日 × 6L）",
+  "assets": [
+    {
+      "id": "m1a",
+      "type": "image",
+      "takenAt": "2025-06-08T9:00:00Z",
+      "geo": {
+        "lat": 29.65,
+        "lon": 94.36
+      },
+      "place": {
+        "city": "林芝"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.58,
+      "meanLuma": 0.5,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m1b",
+      "type": "image",
+      "takenAt": "2025-06-08T10:00:00Z",
+      "geo": {
+        "lat": 29.651,
+        "lon": 94.361
+      },
+      "place": {
+        "city": "林芝"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.6,
+      "meanLuma": 0.52,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m1c",
+      "type": "image",
+      "takenAt": "2025-06-08T11:00:00Z",
+      "geo": {
+        "lat": 29.652,
+        "lon": 94.362
+      },
+      "place": {
+        "city": "林芝"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.62,
+      "meanLuma": 0.54,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m1d",
+      "type": "image",
+      "takenAt": "2025-06-08T12:00:00Z",
+      "geo": {
+        "lat": 29.653,
+        "lon": 94.363
+      },
+      "place": {
+        "city": "林芝"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.64,
+      "meanLuma": 0.56,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m1e",
+      "type": "image",
+      "takenAt": "2025-06-08T13:00:00Z",
+      "geo": {
+        "lat": 29.654,
+        "lon": 94.364
+      },
+      "place": {
+        "city": "林芝"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.66,
+      "meanLuma": 0.58,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m1f",
+      "type": "image",
+      "takenAt": "2025-06-08T14:00:00Z",
+      "geo": {
+        "lat": 29.655,
+        "lon": 94.365
+      },
+      "place": {
+        "city": "林芝"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.68,
+      "meanLuma": 0.6,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m2a",
+      "type": "image",
+      "takenAt": "2025-06-10T9:00:00Z",
+      "geo": {
+        "lat": 29.04,
+        "lon": 100.3
+      },
+      "place": {
+        "city": "稻城"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.58,
+      "meanLuma": 0.5,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m2b",
+      "type": "image",
+      "takenAt": "2025-06-10T10:00:00Z",
+      "geo": {
+        "lat": 29.041,
+        "lon": 100.301
+      },
+      "place": {
+        "city": "稻城"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.6,
+      "meanLuma": 0.52,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m2c",
+      "type": "image",
+      "takenAt": "2025-06-10T11:00:00Z",
+      "geo": {
+        "lat": 29.042,
+        "lon": 100.302
+      },
+      "place": {
+        "city": "稻城"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.62,
+      "meanLuma": 0.54,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m2d",
+      "type": "image",
+      "takenAt": "2025-06-10T12:00:00Z",
+      "geo": {
+        "lat": 29.043,
+        "lon": 100.303
+      },
+      "place": {
+        "city": "稻城"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.64,
+      "meanLuma": 0.56,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m2e",
+      "type": "image",
+      "takenAt": "2025-06-10T13:00:00Z",
+      "geo": {
+        "lat": 29.044,
+        "lon": 100.304
+      },
+      "place": {
+        "city": "稻城"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.66,
+      "meanLuma": 0.58,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m2f",
+      "type": "image",
+      "takenAt": "2025-06-10T14:00:00Z",
+      "geo": {
+        "lat": 29.045,
+        "lon": 100.305
+      },
+      "place": {
+        "city": "稻城"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.68,
+      "meanLuma": 0.6,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m3a",
+      "type": "image",
+      "takenAt": "2025-06-12T9:00:00Z",
+      "geo": {
+        "lat": 48.7,
+        "lon": 87.0
+      },
+      "place": {
+        "city": "喀纳斯"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.58,
+      "meanLuma": 0.5,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m3b",
+      "type": "image",
+      "takenAt": "2025-06-12T10:00:00Z",
+      "geo": {
+        "lat": 48.701,
+        "lon": 87.001
+      },
+      "place": {
+        "city": "喀纳斯"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.6,
+      "meanLuma": 0.52,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m3c",
+      "type": "image",
+      "takenAt": "2025-06-12T11:00:00Z",
+      "geo": {
+        "lat": 48.702,
+        "lon": 87.002
+      },
+      "place": {
+        "city": "喀纳斯"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.62,
+      "meanLuma": 0.54,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m3d",
+      "type": "image",
+      "takenAt": "2025-06-12T12:00:00Z",
+      "geo": {
+        "lat": 48.703,
+        "lon": 87.003
+      },
+      "place": {
+        "city": "喀纳斯"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.64,
+      "meanLuma": 0.56,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m3e",
+      "type": "image",
+      "takenAt": "2025-06-12T13:00:00Z",
+      "geo": {
+        "lat": 48.704,
+        "lon": 87.004
+      },
+      "place": {
+        "city": "喀纳斯"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.66,
+      "meanLuma": 0.58,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    },
+    {
+      "id": "m3f",
+      "type": "image",
+      "takenAt": "2025-06-12T14:00:00Z",
+      "geo": {
+        "lat": 48.705,
+        "lon": 87.005
+      },
+      "place": {
+        "city": "喀纳斯"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.68,
+      "meanLuma": 0.6,
+      "dominantTone": "cool",
+      "subjectBucket": "scenery"
+    }
+  ]
+}

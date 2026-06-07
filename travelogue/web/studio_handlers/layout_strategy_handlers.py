@@ -1,0 +1,337 @@
+"""LSE layout strategy Inspector API (Phase 17 · W2 · read-only)."""
+
+from __future__ import annotations
+
+from travelogue.layout_engine.policy import load_policy
+from travelogue.layout_engine.query import read_sidecar_events, strategy_pack_summary
+from travelogue.layout_engine.registry import get_strategy_pack, list_active_strategies
+from travelogue.layout_engine.governance import normalize_lse_patch, pending_lse_changes
+from travelogue.layout_engine.runtime_store import (
+    load_lse_runtime,
+    rollback_lse_runtime,
+    runtime_scoring_overlay,
+)
+from travelogue.layout_engine.sandbox import cfg_lse_sandbox_pair, sandbox_replay_trip
+from travelogue.templating.admin_store import load_runtime
+from travelogue.templating.config_governance import (
+    approve_router_change,
+    propose_layout_strategy_change,
+)
+from travelogue.web.studio_errors import client_error_payload
+from travelogue.templating.roles import require_template_role
+from travelogue.web.studio_admin_auth import require_admin_api_access, studio_authenticated
+from travelogue.web.studio_handlers.common import resolve_trip_dir_listed, studio_ctx
+from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
+
+
+def _auth(handler: StudioHandlerProtocol, *, minimum: str = "viewer") -> bool:
+    ctx = studio_ctx(handler)
+    if not require_admin_api_access(handler, ctx.cfg):
+        return False
+    ok, role, code = require_template_role(
+        handler.headers,
+        host=handler.studio_host,
+        allow_lan=handler.studio_allow_lan,
+        minimum=minimum,  # type: ignore[arg-type]
+        cfg=ctx.cfg,
+        studio_authenticated=studio_authenticated(handler),
+    )
+    if ok:
+        return True
+    handler._json_response(
+        403,
+        {
+            "ok": False,
+            "error": code or "E_TEMPLATE_PERMISSION_DENIED",
+            "message": "排版策略 Inspector 权限不足",
+            "role": role,
+        },
+    )
+    return False
+
+
+def _lse_internal(handler: StudioHandlerProtocol) -> bool:
+    """AC-P16-14 · LSE Inspector internal only (loopback or flag)."""
+    ctx = studio_ctx(handler)
+    if getattr(ctx.cfg.studio, "layout_templates_internal", False):
+        return True
+    host = str(getattr(handler, "studio_host", "") or "")
+    return host in ("127.0.0.1", "localhost", "::1")
+
+
+def handle_layout_strategies_list(handler: StudioHandlerProtocol) -> None:
+    if not _auth(handler):
+        return
+    if not _lse_internal(handler):
+        handler._json_response(
+            403,
+            {
+                "ok": False,
+                "error": "E_LSE_INTERNAL_ONLY",
+                "message": "排版策略 Inspector 仅 loopback 或 layout_templates_internal 可用",
+            },
+        )
+        return
+    ctx = studio_ctx(handler)
+    pol = load_policy(ctx.cfg.layout.strategy_engine.policy_path)
+    packs = list_active_strategies(policy=pol)
+    rows = [strategy_pack_summary(p) for p in packs]
+    lse_rt = load_lse_runtime(ctx.cfg.layout.strategy_engine.runtime_store)
+    tpl_rt = load_runtime()
+    handler._json_response(
+        200,
+        {
+            "ok": True,
+            "strategies": rows,
+            "runtime": {
+                "enabled": ctx.cfg.layout.strategy_engine.enabled,
+                "defaultStrategyId": ctx.cfg.layout.strategy_engine.default_strategy_id,
+                "overrides": {
+                    "disableStages": list(ctx.cfg.layout.strategy_engine.overrides.disable_stages),
+                    "disableProfiles": list(
+                        ctx.cfg.layout.strategy_engine.overrides.disable_profiles
+                    ),
+                },
+                "lseRuntime": lse_rt,
+                "pendingLseChanges": pending_lse_changes(tpl_rt),
+            },
+        },
+    )
+
+
+def handle_layout_strategy_detail(handler: StudioHandlerProtocol, strategy_id: str) -> None:
+    if not _auth(handler):
+        return
+    if not _lse_internal(handler):
+        handler._json_response(403, {"ok": False, "error": "E_LSE_INTERNAL_ONLY"})
+        return
+    ctx = studio_ctx(handler)
+    try:
+        pack = get_strategy_pack(strategy_id, ctx.cfg.layout.strategy_engine.policy_path)
+    except KeyError:
+        handler._json_response(404, {"ok": False, "error": "E_STRATEGY_NOT_FOUND"})
+        return
+    detail = strategy_pack_summary(pack)
+    detail["rawPath"] = str(pack.path)
+    caps = ctx.cfg.layout.strategy_engine.capabilities
+    detail["capabilities"] = {
+        "saliencyScoring": caps.saliency_scoring,
+        "beatProfile": caps.beat_profile,
+        "toneHarmony": caps.tone_harmony,
+        "hungarianAssignment": caps.hungarian_assignment,
+        "segmentOrderOptimizer": caps.segment_order_optimizer,
+        "implicitFeedbackExport": caps.implicit_feedback_export,
+        "paceProfile": caps.pace_profile,
+        "highlightWindows": caps.highlight_windows,
+        "editorialHints": caps.editorial_hints,
+    }
+    overlay = runtime_scoring_overlay(ctx.cfg)
+    pack_prof = detail.get("scoringProfile") or {}
+    eff_weights = dict(pack_prof.get("weights") or {})
+    eff_weights.update(overlay["weights"])
+    eff_penalties = dict(pack_prof.get("penalties") or {})
+    eff_penalties.update(overlay["penalties"])
+    detail["runtimeOverlay"] = overlay
+    detail["effectiveScoringProfile"] = {
+        "weights": eff_weights,
+        "penalties": eff_penalties,
+    }
+    detail["lseRuntime"] = load_lse_runtime(ctx.cfg.layout.strategy_engine.runtime_store)
+    handler._json_response(200, {"ok": True, "strategy": detail})
+
+
+def handle_layout_strategy_decisions(
+    handler: StudioHandlerProtocol, strategy_id: str
+) -> None:
+    if not _auth(handler):
+        return
+    if not _lse_internal(handler):
+        handler._json_response(403, {"ok": False, "error": "E_LSE_INTERNAL_ONLY"})
+        return
+    from urllib.parse import parse_qs, urlparse
+
+    ctx = studio_ctx(handler)
+    query = parse_qs(urlparse(handler.path).query)
+    trip_id = (query.get("tripId") or [""])[0].strip()
+    chapter_id = (query.get("chapterId") or [""])[0].strip() or None
+    try:
+        limit = int((query.get("limit") or ["50"])[0])
+    except ValueError:
+        limit = 50
+    try:
+        offset = int((query.get("offset") or ["0"])[0])
+    except ValueError:
+        offset = 0
+    limit = max(1, min(limit, 200))
+    offset = max(0, offset)
+
+    if not trip_id:
+        handler._json_response(400, {"ok": False, "error": "E_TRIP_ID_REQUIRED"})
+        return
+    trip_dir = resolve_trip_dir_listed(ctx, trip_id)
+    if trip_dir is None:
+        handler._json_response(404, {"ok": False, "error": "E_TRIP_NOT_FOUND"})
+        return
+
+    events, total = read_sidecar_events(
+        trip_dir,
+        limit=limit,
+        offset=offset,
+        chapter_id=chapter_id,
+        strategy_id=strategy_id or None,
+    )
+    handler._json_response(
+        200,
+        {
+            "ok": True,
+            "strategyId": strategy_id,
+            "tripId": trip_id,
+            "events": events,
+            "pagination": {"offset": offset, "limit": limit, "total": total},
+        },
+    )
+
+
+def handle_layout_strategy_runtime_propose(
+    handler: StudioHandlerProtocol, strategy_id: str
+) -> None:
+    if not _auth(handler, minimum="template_operator"):
+        return
+    if not _lse_internal(handler):
+        handler._json_response(403, {"ok": False, "error": "E_LSE_INTERNAL_ONLY"})
+        return
+    ctx = studio_ctx(handler)
+    try:
+        get_strategy_pack(strategy_id, ctx.cfg.layout.strategy_engine.policy_path)
+    except KeyError:
+        handler._json_response(404, {"ok": False, "error": "E_STRATEGY_NOT_FOUND"})
+        return
+
+    payload = handler._read_json_body() or {}
+    operator = str(payload.get("operator") or "studio").strip() or "studio"
+    reason = str(payload.get("reason") or "").strip()
+    try:
+        patch = normalize_lse_patch(payload)
+        change = propose_layout_strategy_change(patch, operator=operator, reason=reason)
+    except ValueError as exc:
+        handler._json_response(400, client_error_payload(exc))
+        return
+    handler._json_response(
+        200,
+        {
+            "ok": True,
+            "strategyId": strategy_id,
+            "change": change,
+            "runtime": load_runtime(),
+        },
+    )
+
+
+def handle_layout_strategy_runtime_approve(handler: StudioHandlerProtocol) -> None:
+    if not _auth(handler, minimum="template_operator"):
+        return
+    if not _lse_internal(handler):
+        handler._json_response(403, {"ok": False, "error": "E_LSE_INTERNAL_ONLY"})
+        return
+    payload = handler._read_json_body() or {}
+    change_id = str(payload.get("changeId") or "").strip()
+    approver = str(payload.get("approver") or "studio").strip() or "studio"
+    if not change_id:
+        handler._json_response(400, {"ok": False, "error": "E_CHANGE_ID_REQUIRED"})
+        return
+    try:
+        change = approve_router_change(change_id, approver=approver)
+    except ValueError as exc:
+        handler._json_response(400, client_error_payload(exc))
+        return
+    ctx = studio_ctx(handler)
+    handler._json_response(
+        200,
+        {
+            "ok": True,
+            "change": change,
+            "runtime": load_runtime(),
+            "lseRuntime": load_lse_runtime(ctx.cfg.layout.strategy_engine.runtime_store),
+        },
+    )
+
+
+def handle_layout_strategy_sandbox(handler: StudioHandlerProtocol) -> None:
+    if not _auth(handler, minimum="template_operator"):
+        return
+    if not _lse_internal(handler):
+        handler._json_response(403, {"ok": False, "error": "E_LSE_INTERNAL_ONLY"})
+        return
+    import json
+
+    ctx = studio_ctx(handler)
+    payload = handler._read_json_body() or {}
+    trip_id = str(payload.get("tripId") or "").strip()
+    if not trip_id:
+        handler._json_response(400, {"ok": False, "error": "E_TRIP_ID_REQUIRED"})
+        return
+    trip_dir = resolve_trip_dir_listed(ctx, trip_id)
+    if trip_dir is None:
+        handler._json_response(404, {"ok": False, "error": "E_TRIP_NOT_FOUND"})
+        return
+    trip_path = trip_dir / "trip.json"
+    if not trip_path.is_file():
+        handler._json_response(404, {"ok": False, "error": "E_TRIP_NOT_FOUND"})
+        return
+    trip = json.loads(trip_path.read_text(encoding="utf-8"))
+    baseline_cfg, candidate_cfg = cfg_lse_sandbox_pair(ctx.cfg)
+    work_dir = trip_dir / "runs" / "lse-sandbox"
+    work_dir.mkdir(parents=True, exist_ok=True)
+    report = sandbox_replay_trip(
+        trip,
+        baseline_cfg=baseline_cfg,
+        candidate_cfg=candidate_cfg,
+        work_dir=work_dir,
+    )
+    handler._json_response(
+        200,
+        {
+            "ok": True,
+            "tripId": trip_id,
+            "mode": "lse_off_vs_on",
+            **report,
+        },
+    )
+
+
+def handle_layout_strategy_rollback(
+    handler: StudioHandlerProtocol, strategy_id: str
+) -> None:
+    if not _auth(handler, minimum="template_admin"):
+        return
+    if not _lse_internal(handler):
+        handler._json_response(403, {"ok": False, "error": "E_LSE_INTERNAL_ONLY"})
+        return
+    ctx = studio_ctx(handler)
+    try:
+        get_strategy_pack(strategy_id, ctx.cfg.layout.strategy_engine.policy_path)
+    except KeyError:
+        handler._json_response(404, {"ok": False, "error": "E_STRATEGY_NOT_FOUND"})
+        return
+    payload = handler._read_json_body() or {}
+    try:
+        steps = int(payload.get("steps") or 1)
+    except (TypeError, ValueError):
+        steps = 1
+    try:
+        rt = rollback_lse_runtime(
+            steps=steps,
+            store_path=ctx.cfg.layout.strategy_engine.runtime_store,
+        )
+    except ValueError as exc:
+        handler._json_response(400, client_error_payload(exc))
+        return
+    handler._json_response(
+        200,
+        {
+            "ok": True,
+            "strategyId": strategy_id,
+            "lseRuntime": rt,
+            "revision": rt.get("revision"),
+        },
+    )

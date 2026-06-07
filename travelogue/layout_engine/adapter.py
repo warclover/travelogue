@@ -81,6 +81,9 @@ def mosaic_config_from_pack(
     if active is None:
         return base
     profile = (active.raw.get("scoring_profiles") or {}).get("default") or {}
+    from travelogue.layout_engine.runtime_store import runtime_scoring_overlay
+
+    overlay = runtime_scoring_overlay(cfg)
     search = active.raw.get("search") or {}
     mosaic_stage = (active.raw.get("planning") or {}).get("stages") or {}
     mosaic_stage = mosaic_stage.get("mosaic") if isinstance(mosaic_stage.get("mosaic"), dict) else {}
@@ -90,8 +93,12 @@ def mosaic_config_from_pack(
     weights = dict(base.weights)
     for k, v in (profile.get("weights") or {}).items():
         weights[str(k)] = float(v)
+    for k, v in overlay["weights"].items():
+        weights[str(k)] = float(v)
     penalties = dict(base.penalties)
     for k, v in (profile.get("penalties") or {}).items():
+        penalties[str(k)] = float(v)
+    for k, v in overlay["penalties"].items():
         penalties[str(k)] = float(v)
     return replace(
         base,
@@ -142,7 +149,9 @@ def plan_chapter_screens(
     if mix_gap is None:
         mix_gap = mixed_proximity_from_pack(active_pack, cfg=app)
 
-    disable_stages = app.layout.strategy_engine.overrides.disable_stages
+    from travelogue.layout_engine.runtime_store import effective_disable_stages
+
+    disable_stages = effective_disable_stages(app)
     mosaic_enabled = ctx.enable_mosaic and _stage_enabled(active_pack, "mosaic") and "mosaic" not in disable_stages
     portrait_grid8 = ctx.enable_portrait_grid8 and _stage_enabled(active_pack, "portrait")
     food_grid = ctx.enable_food_grid and _stage_enabled(active_pack, "mixed", default=True)
@@ -201,6 +210,8 @@ def persist_layout_observability(
 ) -> None:
     """Sidecar + trip summary (W1-06 / W1-08)."""
     curation["layoutStrategy"] = strategy_trace_meta(cfg)
+    if not lse_enabled(cfg):
+        return
 
     events: list[dict[str, Any]] = []
     trace = None

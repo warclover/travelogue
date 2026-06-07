@@ -1,0 +1,47 @@
+[
+  {
+    "id": "evt-cd-travel-d2",
+    "name": "成都",
+    "startDate": "2025-06-02",
+    "endDate": "2025-06-02",
+    "location": "成都",
+    "assetIds": [
+      "t1a",
+      "t1b",
+      "t1c",
+      "t1d",
+      "t1e",
+      "t1f"
+    ]
+  },
+  {
+    "id": "evt-lj-travel-d4",
+    "name": "丽江",
+    "startDate": "2025-06-04",
+    "endDate": "2025-06-04",
+    "location": "丽江",
+    "assetIds": [
+      "t2a",
+      "t2b",
+      "t2c",
+      "t2d",
+      "t2e",
+      "t2f"
+    ]
+  },
+  {
+    "id": "evt-dl-travel-d6",
+    "name": "大理",
+    "startDate": "2025-06-06",
+    "endDate": "2025-06-06",
+    "location": "大理",
+    "assetIds": [
+      "t3a",
+      "t3b",
+      "t3c",
+      "t3d",
+      "t3e",
+      "t3f"
+    ]
+  }
+]

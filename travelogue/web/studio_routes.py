@@ -15,6 +15,7 @@ from travelogue.web.studio_handlers import (
     job_handlers,
     static_handlers,
     telemetry_handlers,
+    layout_strategy_handlers,
     template_admin_handlers,
     template_handlers,
     trip_handlers,
@@ -75,6 +76,13 @@ from travelogue.web.studio_handlers.paths import (
     TEMPLATES_ADMIN_UI_PATH,
     TEMPLATES_PATH,
     TRIPS_PATH,
+    LAYOUT_STRATEGIES_PATH,
+    LAYOUT_STRATEGIES_RUNTIME_APPROVE_PATH,
+    LAYOUT_STRATEGIES_SANDBOX_PATH,
+    match_layout_strategy_decisions,
+    match_layout_strategy_detail,
+    match_layout_strategy_rollback,
+    match_layout_strategy_runtime,
     match_template_admin_metadata,
     match_template_admin_patch,
     match_template_admin_version,
@@ -174,6 +182,17 @@ class StudioMixin:
             return True
         if path == TEMPLATES_ADMIN_DECISIONS_PATH:
             template_admin_handlers.handle_templates_admin_decisions(self)
+            return True
+        if path == LAYOUT_STRATEGIES_PATH:
+            layout_strategy_handlers.handle_layout_strategies_list(self)
+            return True
+        lse_dec_sid = match_layout_strategy_decisions(path)
+        if lse_dec_sid is not None:
+            layout_strategy_handlers.handle_layout_strategy_decisions(self, lse_dec_sid)
+            return True
+        lse_sid = match_layout_strategy_detail(path)
+        if lse_sid is not None:
+            layout_strategy_handlers.handle_layout_strategy_detail(self, lse_sid)
             return True
         ver_tid = match_template_admin_version(path)
         if ver_tid is not None:
@@ -308,6 +327,20 @@ class StudioMixin:
             return True
         if path == TEMPLATES_ADMIN_RUNTIME_PATH:
             template_admin_handlers.handle_templates_admin_runtime(self)
+            return True
+        if path == LAYOUT_STRATEGIES_RUNTIME_APPROVE_PATH:
+            layout_strategy_handlers.handle_layout_strategy_runtime_approve(self)
+            return True
+        if path == LAYOUT_STRATEGIES_SANDBOX_PATH:
+            layout_strategy_handlers.handle_layout_strategy_sandbox(self)
+            return True
+        lse_rb_sid = match_layout_strategy_rollback(path)
+        if lse_rb_sid is not None:
+            layout_strategy_handlers.handle_layout_strategy_rollback(self, lse_rb_sid)
+            return True
+        lse_rt_sid = match_layout_strategy_runtime(path)
+        if lse_rt_sid is not None:
+            layout_strategy_handlers.handle_layout_strategy_runtime_propose(self, lse_rt_sid)
             return True
         if path == TEMPLATES_ADMIN_REGISTER_PATH:
             template_admin_handlers.handle_templates_admin_register(self)

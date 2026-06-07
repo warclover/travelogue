@@ -1,0 +1,329 @@
+{
+  "description": "CI golden · 旅行自拍竖图（3 日 × 6P）",
+  "assets": [
+    {
+      "id": "t1a",
+      "type": "image",
+      "takenAt": "2025-06-02T9:00:00Z",
+      "geo": {
+        "lat": 30.57,
+        "lon": 104.07
+      },
+      "place": {
+        "city": "成都"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.58,
+      "meanLuma": 0.5,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t1b",
+      "type": "image",
+      "takenAt": "2025-06-02T10:00:00Z",
+      "geo": {
+        "lat": 30.571,
+        "lon": 104.071
+      },
+      "place": {
+        "city": "成都"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.6,
+      "meanLuma": 0.52,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t1c",
+      "type": "image",
+      "takenAt": "2025-06-02T11:00:00Z",
+      "geo": {
+        "lat": 30.572,
+        "lon": 104.072
+      },
+      "place": {
+        "city": "成都"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.62,
+      "meanLuma": 0.54,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t1d",
+      "type": "image",
+      "takenAt": "2025-06-02T12:00:00Z",
+      "geo": {
+        "lat": 30.573,
+        "lon": 104.073
+      },
+      "place": {
+        "city": "成都"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.64,
+      "meanLuma": 0.56,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t1e",
+      "type": "image",
+      "takenAt": "2025-06-02T13:00:00Z",
+      "geo": {
+        "lat": 30.574,
+        "lon": 104.074
+      },
+      "place": {
+        "city": "成都"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.66,
+      "meanLuma": 0.58,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t1f",
+      "type": "image",
+      "takenAt": "2025-06-02T14:00:00Z",
+      "geo": {
+        "lat": 30.575,
+        "lon": 104.075
+      },
+      "place": {
+        "city": "成都"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.68,
+      "meanLuma": 0.6,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t2a",
+      "type": "image",
+      "takenAt": "2025-06-04T9:00:00Z",
+      "geo": {
+        "lat": 26.86,
+        "lon": 100.23
+      },
+      "place": {
+        "city": "丽江"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.58,
+      "meanLuma": 0.5,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t2b",
+      "type": "image",
+      "takenAt": "2025-06-04T10:00:00Z",
+      "geo": {
+        "lat": 26.861,
+        "lon": 100.231
+      },
+      "place": {
+        "city": "丽江"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.6,
+      "meanLuma": 0.52,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t2c",
+      "type": "image",
+      "takenAt": "2025-06-04T11:00:00Z",
+      "geo": {
+        "lat": 26.862,
+        "lon": 100.232
+      },
+      "place": {
+        "city": "丽江"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.62,
+      "meanLuma": 0.54,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t2d",
+      "type": "image",
+      "takenAt": "2025-06-04T12:00:00Z",
+      "geo": {
+        "lat": 26.863,
+        "lon": 100.233
+      },
+      "place": {
+        "city": "丽江"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.64,
+      "meanLuma": 0.56,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t2e",
+      "type": "image",
+      "takenAt": "2025-06-04T13:00:00Z",
+      "geo": {
+        "lat": 26.864,
+        "lon": 100.234
+      },
+      "place": {
+        "city": "丽江"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.66,
+      "meanLuma": 0.58,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t2f",
+      "type": "image",
+      "takenAt": "2025-06-04T14:00:00Z",
+      "geo": {
+        "lat": 26.865,
+        "lon": 100.235
+      },
+      "place": {
+        "city": "丽江"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.68,
+      "meanLuma": 0.6,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t3a",
+      "type": "image",
+      "takenAt": "2025-06-06T9:00:00Z",
+      "geo": {
+        "lat": 25.59,
+        "lon": 100.23
+      },
+      "place": {
+        "city": "大理"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.58,
+      "meanLuma": 0.5,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t3b",
+      "type": "image",
+      "takenAt": "2025-06-06T10:00:00Z",
+      "geo": {
+        "lat": 25.591,
+        "lon": 100.231
+      },
+      "place": {
+        "city": "大理"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.6,
+      "meanLuma": 0.52,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t3c",
+      "type": "image",
+      "takenAt": "2025-06-06T11:00:00Z",
+      "geo": {
+        "lat": 25.592,
+        "lon": 100.232
+      },
+      "place": {
+        "city": "大理"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.62,
+      "meanLuma": 0.54,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t3d",
+      "type": "image",
+      "takenAt": "2025-06-06T12:00:00Z",
+      "geo": {
+        "lat": 25.593,
+        "lon": 100.233
+      },
+      "place": {
+        "city": "大理"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.64,
+      "meanLuma": 0.56,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t3e",
+      "type": "image",
+      "takenAt": "2025-06-06T13:00:00Z",
+      "geo": {
+        "lat": 25.594,
+        "lon": 100.234
+      },
+      "place": {
+        "city": "大理"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.66,
+      "meanLuma": 0.58,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    },
+    {
+      "id": "t3f",
+      "type": "image",
+      "takenAt": "2025-06-06T14:00:00Z",
+      "geo": {
+        "lat": 25.595,
+        "lon": 100.235
+      },
+      "place": {
+        "city": "大理"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.68,
+      "meanLuma": 0.6,
+      "dominantTone": "warm",
+      "subjectBucket": "person"
+    }
+  ]
+}

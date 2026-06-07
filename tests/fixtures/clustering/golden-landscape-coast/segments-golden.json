@@ -1,0 +1,47 @@
+[
+  {
+    "id": "evt-sy-coast-d7",
+    "name": "三亚",
+    "startDate": "2025-06-07",
+    "endDate": "2025-06-07",
+    "location": "三亚",
+    "assetIds": [
+      "c1a",
+      "c1b",
+      "c1c",
+      "c1d",
+      "c1e",
+      "c1f"
+    ]
+  },
+  {
+    "id": "evt-xm-coast-d9",
+    "name": "厦门",
+    "startDate": "2025-06-09",
+    "endDate": "2025-06-09",
+    "location": "厦门",
+    "assetIds": [
+      "c2a",
+      "c2b",
+      "c2c",
+      "c2d",
+      "c2e",
+      "c2f"
+    ]
+  },
+  {
+    "id": "evt-qd-coast-d11",
+    "name": "青岛",
+    "startDate": "2025-06-11",
+    "endDate": "2025-06-11",
+    "location": "青岛",
+    "assetIds": [
+      "c3a",
+      "c3b",
+      "c3c",
+      "c3d",
+      "c3e",
+      "c3f"
+    ]
+  }
+]

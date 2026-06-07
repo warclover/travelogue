@@ -47,6 +47,10 @@ def mosaic_registry(cfg: AppConfig | None = None) -> dict[str, MosaicPattern]:
     if te is not None:
         for pid in getattr(te, "overrides_disable", ()) or ():
             patterns.pop(str(pid), None)
+    from travelogue.curation.mosaic.runtime import get_mosaic_disabled_patterns
+
+    for pid in get_mosaic_disabled_patterns():
+        patterns.pop(str(pid), None)
     return patterns
 
 

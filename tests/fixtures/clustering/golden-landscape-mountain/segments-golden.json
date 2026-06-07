@@ -1,0 +1,47 @@
+[
+  {
+    "id": "evt-lz-mountain-d8",
+    "name": "林芝",
+    "startDate": "2025-06-08",
+    "endDate": "2025-06-08",
+    "location": "林芝",
+    "assetIds": [
+      "m1a",
+      "m1b",
+      "m1c",
+      "m1d",
+      "m1e",
+      "m1f"
+    ]
+  },
+  {
+    "id": "evt-dc-mountain-d10",
+    "name": "稻城",
+    "startDate": "2025-06-10",
+    "endDate": "2025-06-10",
+    "location": "稻城",
+    "assetIds": [
+      "m2a",
+      "m2b",
+      "m2c",
+      "m2d",
+      "m2e",
+      "m2f"
+    ]
+  },
+  {
+    "id": "evt-kns-mountain-d12",
+    "name": "喀纳斯",
+    "startDate": "2025-06-12",
+    "endDate": "2025-06-12",
+    "location": "喀纳斯",
+    "assetIds": [
+      "m3a",
+      "m3b",
+      "m3c",
+      "m3d",
+      "m3e",
+      "m3f"
+    ]
+  }
+]

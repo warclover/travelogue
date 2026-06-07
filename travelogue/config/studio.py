@@ -35,6 +35,10 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
             "scoring": {
                 "enabled": cfg.layout.scoring.enabled,
             },
+            "strategyEngine": {
+                "enabled": cfg.layout.strategy_engine.enabled,
+                "defaultStrategyId": cfg.layout.strategy_engine.default_strategy_id,
+            },
         },
         "studio": {
             "g1ConfirmStructure": cfg.studio.g1_confirm_structure,

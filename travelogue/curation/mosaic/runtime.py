@@ -7,6 +7,7 @@ from travelogue.config import MosaicConfig
 MOSAIC_ROUTER_VERSION = "p15-mcs-1"
 
 _mosaic_cfg_override: MosaicConfig | None = None
+_disabled_pattern_ids: tuple[str, ...] = ()
 
 _ALLOWED_SIZES = frozenset({3, 4, 5, 6, 8, 9})
 
@@ -19,6 +20,19 @@ def set_mosaic_config_override(cfg: MosaicConfig | None) -> None:
 
 def reset_mosaic_config_override() -> None:
     set_mosaic_config_override(None)
+
+
+def set_mosaic_disabled_patterns(pattern_ids: tuple[str, ...] | list[str]) -> None:
+    global _disabled_pattern_ids
+    _disabled_pattern_ids = tuple(str(x) for x in pattern_ids if x)
+
+
+def reset_mosaic_disabled_patterns() -> None:
+    set_mosaic_disabled_patterns(())
+
+
+def get_mosaic_disabled_patterns() -> tuple[str, ...]:
+    return _disabled_pattern_ids
 
 
 def get_effective_mosaic_config() -> MosaicConfig:

@@ -58,6 +58,13 @@ def _apply_approved_patch(runtime: dict[str, Any], patch: dict[str, Any], *, cha
             "changeId": change_id,
             "templateRegistryVersion": patch.get("templateRegistryVersion"),
         }
+    from travelogue.layout_engine.runtime_store import LSE_PATCH_KEYS, merge_approved_patch
+
+    if LSE_PATCH_KEYS.intersection(patch.keys()):
+        from travelogue.config import get_config
+
+        store_path = get_config().layout.strategy_engine.runtime_store
+        merge_approved_patch(patch, change_id=change_id, store_path=store_path)
 
 
 def patch_from_exposure_debt_proposals(
@@ -77,6 +84,21 @@ def patch_from_exposure_debt_proposals(
     if template_registry_version:
         patch["templateRegistryVersion"] = template_registry_version
     return patch
+
+
+def propose_layout_strategy_change(
+    patch: dict[str, Any],
+    *,
+    operator: str,
+    reason: str = "",
+) -> dict[str, Any]:
+    from travelogue.layout_engine.governance import validate_lse_patch
+    from travelogue.layout_engine.runtime_store import LSE_PATCH_KEYS
+
+    if not LSE_PATCH_KEYS.intersection(patch.keys()):
+        raise ValueError("E_LSE_PATCH_EMPTY")
+    validate_lse_patch(patch)
+    return propose_router_change(patch, operator=operator, reason=reason or "lse runtime patch")
 
 
 def propose_layout_weight_changes(

@@ -1,0 +1,329 @@
+{
+  "description": "CI golden · 海岸风景横图（3 日 × 6L）",
+  "assets": [
+    {
+      "id": "c1a",
+      "type": "image",
+      "takenAt": "2025-06-07T9:00:00Z",
+      "geo": {
+        "lat": 18.25,
+        "lon": 109.51
+      },
+      "place": {
+        "city": "三亚"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.58,
+      "meanLuma": 0.5,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c1b",
+      "type": "image",
+      "takenAt": "2025-06-07T10:00:00Z",
+      "geo": {
+        "lat": 18.251,
+        "lon": 109.511
+      },
+      "place": {
+        "city": "三亚"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.6,
+      "meanLuma": 0.52,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c1c",
+      "type": "image",
+      "takenAt": "2025-06-07T11:00:00Z",
+      "geo": {
+        "lat": 18.252,
+        "lon": 109.512
+      },
+      "place": {
+        "city": "三亚"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.62,
+      "meanLuma": 0.54,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c1d",
+      "type": "image",
+      "takenAt": "2025-06-07T12:00:00Z",
+      "geo": {
+        "lat": 18.253,
+        "lon": 109.513
+      },
+      "place": {
+        "city": "三亚"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.64,
+      "meanLuma": 0.56,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c1e",
+      "type": "image",
+      "takenAt": "2025-06-07T13:00:00Z",
+      "geo": {
+        "lat": 18.254,
+        "lon": 109.514
+      },
+      "place": {
+        "city": "三亚"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.66,
+      "meanLuma": 0.58,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c1f",
+      "type": "image",
+      "takenAt": "2025-06-07T14:00:00Z",
+      "geo": {
+        "lat": 18.255,
+        "lon": 109.515
+      },
+      "place": {
+        "city": "三亚"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.68,
+      "meanLuma": 0.6,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c2a",
+      "type": "image",
+      "takenAt": "2025-06-09T9:00:00Z",
+      "geo": {
+        "lat": 24.48,
+        "lon": 118.09
+      },
+      "place": {
+        "city": "厦门"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.58,
+      "meanLuma": 0.5,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c2b",
+      "type": "image",
+      "takenAt": "2025-06-09T10:00:00Z",
+      "geo": {
+        "lat": 24.481,
+        "lon": 118.091
+      },
+      "place": {
+        "city": "厦门"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.6,
+      "meanLuma": 0.52,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c2c",
+      "type": "image",
+      "takenAt": "2025-06-09T11:00:00Z",
+      "geo": {
+        "lat": 24.482,
+        "lon": 118.092
+      },
+      "place": {
+        "city": "厦门"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.62,
+      "meanLuma": 0.54,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c2d",
+      "type": "image",
+      "takenAt": "2025-06-09T12:00:00Z",
+      "geo": {
+        "lat": 24.483,
+        "lon": 118.093
+      },
+      "place": {
+        "city": "厦门"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.64,
+      "meanLuma": 0.56,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c2e",
+      "type": "image",
+      "takenAt": "2025-06-09T13:00:00Z",
+      "geo": {
+        "lat": 24.484,
+        "lon": 118.094
+      },
+      "place": {
+        "city": "厦门"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.66,
+      "meanLuma": 0.58,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c2f",
+      "type": "image",
+      "takenAt": "2025-06-09T14:00:00Z",
+      "geo": {
+        "lat": 24.485,
+        "lon": 118.095
+      },
+      "place": {
+        "city": "厦门"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.68,
+      "meanLuma": 0.6,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c3a",
+      "type": "image",
+      "takenAt": "2025-06-11T9:00:00Z",
+      "geo": {
+        "lat": 36.07,
+        "lon": 120.38
+      },
+      "place": {
+        "city": "青岛"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.58,
+      "meanLuma": 0.5,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c3b",
+      "type": "image",
+      "takenAt": "2025-06-11T10:00:00Z",
+      "geo": {
+        "lat": 36.071,
+        "lon": 120.381
+      },
+      "place": {
+        "city": "青岛"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.6,
+      "meanLuma": 0.52,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c3c",
+      "type": "image",
+      "takenAt": "2025-06-11T11:00:00Z",
+      "geo": {
+        "lat": 36.072,
+        "lon": 120.382
+      },
+      "place": {
+        "city": "青岛"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.62,
+      "meanLuma": 0.54,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c3d",
+      "type": "image",
+      "takenAt": "2025-06-11T12:00:00Z",
+      "geo": {
+        "lat": 36.073,
+        "lon": 120.383
+      },
+      "place": {
+        "city": "青岛"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.64,
+      "meanLuma": 0.56,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c3e",
+      "type": "image",
+      "takenAt": "2025-06-11T13:00:00Z",
+      "geo": {
+        "lat": 36.074,
+        "lon": 120.384
+      },
+      "place": {
+        "city": "青岛"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.66,
+      "meanLuma": 0.58,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    },
+    {
+      "id": "c3f",
+      "type": "image",
+      "takenAt": "2025-06-11T14:00:00Z",
+      "geo": {
+        "lat": 36.075,
+        "lon": 120.385
+      },
+      "place": {
+        "city": "青岛"
+      },
+      "width": 2000,
+      "height": 1200,
+      "sharpness": 0.68,
+      "meanLuma": 0.6,
+      "dominantTone": "cool",
+      "subjectBucket": "landscape"
+    }
+  ]
+}

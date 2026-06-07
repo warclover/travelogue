@@ -108,6 +108,25 @@ def test_studio_config_get_exposes_layout_scoring(tmp_path: Path) -> None:
         server.server_close()
 
 
+def test_studio_config_get_exposes_strategy_engine_default_off(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("trips_dir: ./trips\n", encoding="utf-8")
+    port = _free_port()
+    server = _start_studio_with_config(trips_dir, port, config_path=config_path)
+    try:
+        with request.urlopen(f"http://127.0.0.1:{port}/__travelogue/config", timeout=5) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+        se = body.get("layout", {}).get("strategyEngine") or {}
+        assert body.get("ok") is True
+        assert se.get("enabled") is False
+        assert se.get("defaultStrategyId") == "lse-default-2026-06"
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
 def test_studio_config_patch_layout_scoring(tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()

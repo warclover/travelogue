@@ -92,6 +92,30 @@
     </thead>
     <tbody id="layout-rows"></tbody>
   </table>
+  <h2 id="lse-section">排版策略 LSE（Phase 17 · internal · 只读）</h2>
+  <div id="lse-access-notice" class="muted" hidden>
+    排版策略 Inspector 仅 loopback 或 <code>studio.layout_templates_internal=true</code> 时可用。
+    默认 <code>layout.strategy_engine.enabled=false</code>（与 P16 末态等价）；W3a 前勿在生产开启。
+  </div>
+  <p class="muted" id="lse-runtime-status"></p>
+  <table>
+    <thead>
+      <tr>
+        <th>strategyId</th><th>status</th><th>version</th><th>weightsHash</th><th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="lse-rows"></tbody>
+  </table>
+  <p>
+    <input type="text" id="lse-trip" placeholder="tripId（查 LSE sidecar）" style="min-width:200px" />
+    <input type="text" id="lse-strategy" placeholder="strategyId" style="min-width:180px" value="lse-default-2026-06" />
+    <button type="button" id="btn-lse-decisions">LSE 决策日志</button>
+    <button type="button" id="btn-lse-refresh">刷新策略列表</button>
+    <button type="button" id="btn-lse-propose-off">L3 提案：关闭 mosaic</button>
+    <button type="button" id="btn-lse-approve">审批 LSE 变更</button>
+    <button type="button" id="btn-lse-rollback">回滚 LSE runtime</button>
+    <button type="button" id="btn-lse-sandbox">Trip 沙箱 diff</button>
+  </p>
   <h2>路由回放</h2>
   <p>
     <input type="text" id="replay-trip" placeholder="tripId" style="min-width:200px" />
@@ -132,6 +156,11 @@
     const dashboardMetricsBox = document.getElementById("dashboard-metrics");
     const dashboardWindowEl = document.getElementById("dashboard-window");
     const layoutMetricsRowsEl = document.getElementById("layout-metrics-rows");
+    const lseRowsEl = document.getElementById("lse-rows");
+    const lseSectionEl = document.getElementById("lse-section");
+    const lseAccessNoticeEl = document.getElementById("lse-access-notice");
+    const lseRuntimeStatusEl = document.getElementById("lse-runtime-status");
+    const lseTableEl = lseRowsEl?.closest("table");
     let lastExposureProposals = [];
     let lastRegistryVersion = "";
     const logEl = document.getElementById("log");
@@ -443,6 +472,62 @@
       });
     }
 
+    function renderLseAccess(internal) {
+      const show = !!internal;
+      if (lseSectionEl) lseSectionEl.hidden = !show;
+      if (lseTableEl) lseTableEl.hidden = !show;
+      if (lseAccessNoticeEl) lseAccessNoticeEl.hidden = show;
+    }
+
+    function renderLseStrategies(data) {
+      const runtime = data.runtime || {};
+      const enabled = !!runtime.enabled;
+      const pending = runtime.pendingLseChanges || [];
+      if (lseRuntimeStatusEl) {
+        lseRuntimeStatusEl.textContent =
+          "runtime.enabled=" +
+          enabled +
+          " · default=" +
+          (runtime.defaultStrategyId || "—") +
+          (enabled ? "" : "（默认 false = P16 等价）") +
+          (pending.length ? " · 待审批 LSE " + pending.length + " 项" : "");
+      }
+      lseRowsEl.innerHTML = "";
+      (data.strategies || []).forEach((s) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td><code>" +
+          escapeHtml(s.strategyId || "") +
+          "</code></td><td>" +
+          escapeHtml(s.status || "") +
+          "</td><td>" +
+          escapeHtml(String(s.version != null ? s.version : "—")) +
+          "</td><td><code>" +
+          escapeHtml(s.weightsHash || "") +
+          "</code></td><td></td>";
+        const td = tr.lastElementChild;
+        const bDetail = document.createElement("button");
+        bDetail.textContent = "详情";
+        bDetail.onclick = () =>
+          api("/__travelogue/layout-strategies/" + encodeURIComponent(s.strategyId))
+            .then(log)
+            .catch((e) => log(e));
+        td.appendChild(bDetail);
+        lseRowsEl.appendChild(tr);
+      });
+    }
+
+    async function loadLseStrategies(internal) {
+      renderLseAccess(internal);
+      if (!internal) return;
+      try {
+        const data = await api("/__travelogue/layout-strategies");
+        renderLseStrategies(data);
+      } catch (e) {
+        log(e);
+      }
+    }
+
     async function refresh() {
       const data = await api("/__travelogue/templates/admin" + adminQuery());
       revEl.textContent = String(data.revision);
@@ -451,6 +536,7 @@
       renderLayoutAccess(data.layoutPatternsInternal);
       renderLayoutQuotaWarnings(data.layoutQuotaWarnings);
       renderLayoutPatterns(data.layoutPatterns || []);
+      await loadLseStrategies(data.layoutPatternsInternal);
       rowsEl.innerHTML = "";
       (data.templates || []).forEach((t) => {
         const tr = document.createElement("tr");
@@ -631,6 +717,70 @@
     };
     document.getElementById("btn-all-decisions").onclick = () =>
       api("/__travelogue/templates/admin/decisions?limit=40").then(log).catch((e) => log(e));
+    document.getElementById("btn-lse-refresh").onclick = () =>
+      api("/__travelogue/templates/admin" + adminQuery())
+        .then((d) => loadLseStrategies(d.layoutPatternsInternal))
+        .catch((e) => log(e));
+    document.getElementById("btn-lse-propose-off").onclick = () => {
+      const strategyId = document.getElementById("lse-strategy").value.trim() || "lse-default-2026-06";
+      api("/__travelogue/layout-strategies/" + encodeURIComponent(strategyId) + "/runtime", {
+        method: "POST",
+        body: JSON.stringify({
+          operator: "admin-ui",
+          reason: "L3 disable mosaic stage",
+          patch: { disableStages: ["mosaic"] },
+        }),
+      })
+        .then(log)
+        .then(() => api("/__travelogue/layout-strategies").then(renderLseStrategies))
+        .catch((e) => log(e));
+    };
+    document.getElementById("btn-lse-approve").onclick = () => {
+      const changeId = window.prompt("pending changeId（cfg-*）");
+      if (!changeId) return;
+      const approver = window.prompt("approver 名称", "approver-1");
+      if (!approver) return;
+      api("/__travelogue/layout-strategies/runtime/approve", {
+        method: "POST",
+        body: JSON.stringify({ changeId: changeId.trim(), approver: approver.trim() }),
+      })
+        .then(log)
+        .then(() => api("/__travelogue/layout-strategies").then(renderLseStrategies))
+        .catch((e) => log(e));
+    };
+    document.getElementById("btn-lse-rollback").onclick = () => {
+      const strategyId = document.getElementById("lse-strategy").value.trim() || "lse-default-2026-06";
+      if (!window.confirm("回滚最近 1 次已审批 LSE runtime 变更？")) return;
+      api("/__travelogue/layout-strategies/" + encodeURIComponent(strategyId) + "/rollback", {
+        method: "POST",
+        body: JSON.stringify({ steps: 1 }),
+      })
+        .then(log)
+        .then(() => api("/__travelogue/layout-strategies").then(renderLseStrategies))
+        .catch((e) => log(e));
+    };
+    document.getElementById("btn-lse-sandbox").onclick = () => {
+      const tripId = document.getElementById("lse-trip").value.trim();
+      if (!tripId) return alert("请输入 tripId");
+      api("/__travelogue/layout-strategies/sandbox", {
+        method: "POST",
+        body: JSON.stringify({ tripId }),
+      })
+        .then(log)
+        .catch((e) => log(e));
+    };
+    document.getElementById("btn-lse-decisions").onclick = () => {
+      const tripId = document.getElementById("lse-trip").value.trim();
+      const strategyId = document.getElementById("lse-strategy").value.trim();
+      if (!tripId || !strategyId) return alert("请输入 tripId 与 strategyId");
+      const q =
+        "?tripId=" +
+        encodeURIComponent(tripId) +
+        "&limit=50&offset=0";
+      api("/__travelogue/layout-strategies/" + encodeURIComponent(strategyId) + "/decisions" + q)
+        .then(log)
+        .catch((e) => log(e));
+    };
     document.getElementById("btn-dashboard").onclick = () =>
       loadDashboard(24).catch((e) => log(e));
     document.getElementById("btn-dashboard-72").onclick = () =>

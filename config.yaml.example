@@ -61,9 +61,12 @@ layout:
   screen_plan_scope: day
   # 1 竖 + 2 横混排时三张图 takenAt 最大跨度（秒）
   mixed_proximity_seconds: 12
-  # Phase 17 · 智能排版策略引擎（LSE）；enabled=false 时与 P16 末态等价
+  # Phase 17 · 智能排版策略引擎（LSE）
+  # 默认 enabled=false：行为与 P16 末态完全一致（现网主路径，AC-P17-01）。
+  # W3a 前请勿在生产打开；Studio GET /__travelogue/config 会暴露 strategyEngine.enabled 只读状态。
+  # 受控 parity：PYTHONHASHSEED=0 + strategy_engine.enabled=true 须与 false 逻辑等价（纯收敛，无 CAP）。
   strategy_engine:
-    enabled: false
+    enabled: false  # 保持 false 直至 W3a 切引擎评审通过
     default_strategy_id: lse-default-2026-06
     policy_path: travelogue/layout_engine/lse_policy.yaml
     runtime_store: data/lse_runtime.json

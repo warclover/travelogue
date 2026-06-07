@@ -801,6 +801,17 @@ def run_curate(
             mosaic_override_active = _dc_replace(mosaic_override_active, weights=mw)
     elif cohort_summary:
         mosaic_override_active = cohort_mosaic_override(app_cfg)
+    from travelogue.curation.mosaic.runtime import (
+        reset_mosaic_disabled_patterns,
+        set_mosaic_disabled_patterns,
+    )
+
+    pattern_blacklist_active = False
+    if app_cfg.layout.strategy_engine.enabled:
+        from travelogue.layout_engine.pattern_policy import effective_pattern_blacklist
+
+        set_mosaic_disabled_patterns(effective_pattern_blacklist(app_cfg))
+        pattern_blacklist_active = True
     if mosaic_override_active is not None:
         set_mosaic_config_override(mosaic_override_active)
     if app_cfg.mosaic.enabled:
@@ -824,10 +835,13 @@ def run_curate(
             enable_food_grid=cur_cfg.enable_food_grid,
             mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
             layout_density=layout_density_params(trip, app_cfg=app_cfg).density,
+            cfg=app_cfg,
         )
     finally:
         if mosaic_override_active is not None:
             reset_mosaic_config_override()
+        if pattern_blacklist_active:
+            reset_mosaic_disabled_patterns()
     if app_cfg.mosaic.enabled:
         from travelogue.curation.mosaic.hook import drain_mosaic_dropped, drain_mosaic_logs
 

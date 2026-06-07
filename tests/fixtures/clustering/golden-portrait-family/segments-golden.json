@@ -1,0 +1,47 @@
+[
+  {
+    "id": "evt-sh-family-d1",
+    "name": "上海",
+    "startDate": "2025-06-01",
+    "endDate": "2025-06-01",
+    "location": "上海",
+    "assetIds": [
+      "f1a",
+      "f1b",
+      "f1c",
+      "f1d",
+      "f1e",
+      "f1f"
+    ]
+  },
+  {
+    "id": "evt-hz-family-d3",
+    "name": "杭州",
+    "startDate": "2025-06-03",
+    "endDate": "2025-06-03",
+    "location": "杭州",
+    "assetIds": [
+      "f2a",
+      "f2b",
+      "f2c",
+      "f2d",
+      "f2e",
+      "f2f"
+    ]
+  },
+  {
+    "id": "evt-sz-family-d5",
+    "name": "苏州",
+    "startDate": "2025-06-05",
+    "endDate": "2025-06-05",
+    "location": "苏州",
+    "assetIds": [
+      "f3a",
+      "f3b",
+      "f3c",
+      "f3d",
+      "f3e",
+      "f3f"
+    ]
+  }
+]

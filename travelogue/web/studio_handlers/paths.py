@@ -29,6 +29,69 @@ TEMPLATES_ADMIN_ADMISSION_PATH = "/__travelogue/templates/admin/admission"
 TEMPLATES_ADMIN_DECISIONS_PATH = "/__travelogue/templates/admin/decisions"
 TEMPLATES_ADMIN_RUNTIME_PATH = "/__travelogue/templates/admin/runtime"
 TEMPLATES_ADMIN_ROLLBACK_PATH = "/__travelogue/templates/admin/rollback"
+LAYOUT_STRATEGIES_PATH = "/__travelogue/layout-strategies"
+LAYOUT_STRATEGIES_RUNTIME_APPROVE_PATH = "/__travelogue/layout-strategies/runtime/approve"
+LAYOUT_STRATEGIES_SANDBOX_PATH = "/__travelogue/layout-strategies/sandbox"
+
+
+def match_layout_strategy_rollback(path: str) -> str | None:
+    route = _route_path_only(path)
+    prefix = LAYOUT_STRATEGIES_PATH.rstrip("/") + "/"
+    suffix = "/rollback"
+    if not route.startswith(prefix) or not route.endswith(suffix):
+        return None
+    sid = route[len(prefix) : -len(suffix)].strip("/")
+    if not sid or "/" in sid:
+        return None
+    return sid
+
+
+def _route_path_only(path: str) -> str:
+    from urllib.parse import urlparse
+
+    return urlparse(path).path or path
+
+
+def match_layout_strategy_decisions(path: str) -> str | None:
+    route = _route_path_only(path)
+    prefix = LAYOUT_STRATEGIES_PATH.rstrip("/") + "/"
+    suffix = "/decisions"
+    if not route.startswith(prefix) or not route.endswith(suffix):
+        return None
+    sid = route[len(prefix) : -len(suffix)].strip("/")
+    if not sid or "/" in sid:
+        return None
+    return sid
+
+
+def match_layout_strategy_runtime(path: str) -> str | None:
+    route = _route_path_only(path)
+    prefix = LAYOUT_STRATEGIES_PATH.rstrip("/") + "/"
+    suffix = "/runtime"
+    if not route.startswith(prefix) or not route.endswith(suffix):
+        return None
+    sid = route[len(prefix) : -len(suffix)].strip("/")
+    if not sid or "/" in sid:
+        return None
+    return sid
+
+
+def match_layout_strategy_detail(path: str) -> str | None:
+    route = _route_path_only(path)
+    prefix = LAYOUT_STRATEGIES_PATH.rstrip("/") + "/"
+    if not route.startswith(prefix):
+        return None
+    rest = route[len(prefix) :].strip("/")
+    if (
+        not rest
+        or "/" in rest
+        or rest.endswith("decisions")
+        or rest.endswith("runtime")
+        or rest.endswith("rollback")
+        or rest == "runtime"
+    ):
+        return None
+    return rest
 
 
 def match_template_admin_metadata(path: str) -> str | None:
