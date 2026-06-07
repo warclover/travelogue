@@ -128,6 +128,16 @@ def test_submit_exposure_proposals_cli_flow(tmp_path: Path, monkeypatch: pytest.
 
 
 @pytest.mark.unit
+def test_evaluate_dogfood_fixture_trips() -> None:
+    from scripts.phase16_template_eval import evaluate_dogfood_trips
+
+    root = Path("tests/fixtures/phase16-dogfood")
+    out = evaluate_dogfood_trips(root)
+    assert out["tripCount"] == 3
+    assert out["aggregate"]["layout.chapter.pattern_diversity_p50"] is not None
+
+
+@pytest.mark.unit
 def test_propose_cli_empty_proposals(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from scripts.phase16_template_eval import compute_exposure_debt_proposals
     from travelogue.layout_templates.registry import LayoutTemplateEngine

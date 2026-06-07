@@ -62,6 +62,8 @@ def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
         "success_refined_default_enabled",
         "importSheetLargeEnabled",
         "import_sheet_large_enabled",
+        "layoutTemplatesInternal",
+        "layout_templates_internal",
     }
     clu_patch = patch.get("clustering") if isinstance(patch.get("clustering"), dict) else {}
     vis_patch = patch.get("vision") if isinstance(patch.get("vision"), dict) else {}
@@ -310,6 +312,9 @@ def load_config(path: Path | None = None) -> AppConfig:
             ),
             import_sheet_large_enabled=cfg_bool(
                 studio_raw, "import_sheet_large_enabled", "importSheetLargeEnabled", True
+            ),
+            layout_templates_internal=cfg_bool(
+                studio_raw, "layout_templates_internal", "layoutTemplatesInternal", False
             ),
         ),
         phase6=phase6_from_dict(phase6_raw),

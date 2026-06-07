@@ -1016,12 +1016,20 @@ def run_curate(
         curation["arcProfile"] = arc_profile_to_dict(arc_profile)
     curation["layoutMetrics"] = layout_metrics
     if engine == LAYOUT_ENGINE_SCREENS:
-        from travelogue.curation.mosaic.telemetry import record_mosaic_layout_metrics
+        from travelogue.curation.mosaic.telemetry import (
+            record_mosaic_layout_metrics,
+            record_per_template_layout_metrics,
+        )
 
         record_mosaic_layout_metrics(
             trip_id=trip.get("tripId"),
             layout_metrics=layout_metrics,
             mosaic_enabled=app_cfg.mosaic.enabled,
+        )
+        record_per_template_layout_metrics(
+            trip_id=trip.get("tripId"),
+            chapters=chapters,
+            mosaic_logs=mosaic_logs_for_metrics,
         )
     curation["curatePlanVersion"] = "1.1"
     curation["orientationSummary"] = summary_dict

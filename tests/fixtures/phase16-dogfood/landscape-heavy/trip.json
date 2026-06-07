@@ -1,0 +1,13 @@
+{
+  "tripId": "phase16-dogfood-landscape",
+  "chapters": [
+    {
+      "id": "ch-01",
+      "screens": [
+        {"patternId": "screen-landscape-1"},
+        {"patternId": "screen-landscape-1"},
+        {"patternId": "screen-landscape-4"}
+      ]
+    }
+  ]
+}

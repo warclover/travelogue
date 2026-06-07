@@ -21,12 +21,27 @@ def record_template_metric(name: str, **labels: Any) -> None:
         row = {
             "at": datetime.now(UTC).replace(microsecond=0).isoformat(),
             "name": name,
-            **{k: v for k, v in labels.items() if v is not None},
+            **_bound_metric_labels(labels),
         }
         with path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(row, ensure_ascii=False) + "\n")
     except OSError:
         pass
+
+
+def _bound_metric_labels(labels: dict[str, Any]) -> dict[str, Any]:
+    """§9.4-4: bound telemetry cardinality (registryVersion truncate, rollout bucket)."""
+    out: dict[str, Any] = {}
+    for key, val in labels.items():
+        if val is None:
+            continue
+        if key in ("templateRegistryVersion", "registryVersion") and isinstance(val, str):
+            out[key] = val[:16]
+        elif key in ("rolloutPercent", "rolloutBucket") and isinstance(val, (int, float)):
+            out["rolloutBucket"] = int(float(val) // 10 * 10)
+        else:
+            out[key] = val
+    return out
 
 
 def record_admin_crud(*, action: str, operator: str, template_id: str) -> None:

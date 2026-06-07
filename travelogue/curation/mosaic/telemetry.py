@@ -2,7 +2,30 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from typing import Any
+
+
+def _emit_per_template_enabled() -> bool:
+    try:
+        from travelogue.config import get_config
+
+        te = getattr(get_config().layout, "template_engine", None)
+        return te is not None and bool(getattr(te, "emit_per_template", True))
+    except Exception:
+        return False
+
+
+def _registry_version_label() -> str:
+    try:
+        from travelogue.config import get_config
+
+        te = getattr(get_config().layout, "template_engine", None)
+        ver = str(getattr(te, "registry_version", "") or "")
+        max_len = int(getattr(te, "telemetry_registry_versions_max", 8) or 8)
+        return ver[:max_len] if ver else ""
+    except Exception:
+        return ""
 
 
 def record_mosaic_layout_metrics(
@@ -42,4 +65,92 @@ def record_mosaic_layout_metrics(
             tripId=trip_id,
             ok=ok,
             errorRate=render_err,
+        )
+
+
+def record_per_template_layout_metrics(
+    *,
+    trip_id: str | None,
+    chapters: list[dict],
+    mosaic_logs: list[dict] | None = None,
+) -> None:
+    """Emit PRD §9.1 per-template counters from curated screens and mosaic window logs."""
+    if not _emit_per_template_enabled():
+        return
+    try:
+        from travelogue.templating.metrics import record_template_metric
+    except ImportError:
+        return
+
+    reg_ver = _registry_version_label()
+    base = {"tripId": trip_id}
+    if reg_ver:
+        base["templateRegistryVersion"] = reg_ver
+
+    wins = Counter[str]()
+    candidates = Counter[str]()
+    fallbacks = Counter[str]()
+    slot_ar: dict[str, list[float]] = {}
+
+    for ch in chapters:
+        for screen in ch.get("screens") or []:
+            pid = str(screen.get("patternId") or "").strip()
+            if not pid:
+                continue
+            wins[pid] += 1
+
+    for entry in mosaic_logs or []:
+        pid = str(entry.get("winnerPatternId") or "").strip()
+        if pid:
+            candidates[pid] += int(entry.get("candidatesCount") or 1)
+            if entry.get("fallbackUsed"):
+                fallbacks[pid] += 1
+            score = entry.get("slotArMatchScore")
+            if score is not None and pid:
+                try:
+                    slot_ar.setdefault(pid, []).append(float(score))
+                except (TypeError, ValueError):
+                    pass
+
+    for pid, count in wins.items():
+        record_template_metric(
+            "layout.template.exposure_count",
+            templateId=pid,
+            value=count,
+            **base,
+        )
+
+    total_wins = sum(wins.values()) or 1
+    for pid, count in wins.items():
+        record_template_metric(
+            "layout.template.exposure_share",
+            templateId=pid,
+            value=round(count / total_wins, 4),
+            **base,
+        )
+
+    for pid, count in candidates.items():
+        record_template_metric(
+            "layout.template.candidate_count",
+            templateId=pid,
+            value=count,
+            **base,
+        )
+
+    for pid, count in fallbacks.items():
+        record_template_metric(
+            "layout.template.fallback_rate",
+            templateId=pid,
+            value=round(count / max(1, wins.get(pid, 1)), 4),
+            **base,
+        )
+
+    for pid, scores in slot_ar.items():
+        scores.sort()
+        mid = scores[len(scores) // 2]
+        record_template_metric(
+            "layout.template.slot_ar_distance_p50",
+            templateId=pid,
+            value=round(mid, 4),
+            **base,
         )

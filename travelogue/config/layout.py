@@ -59,6 +59,8 @@ class LayoutTemplateEngineConfig:
     read_templates_from_lte: bool = True
     exclude_collage_from_mosaic: bool = True
     max_mosaic_slots: int = 9
+    emit_per_template: bool = True
+    telemetry_registry_versions_max: int = 8
     overrides_disable: tuple[str, ...] = ()
 
 
@@ -106,6 +108,7 @@ def layout_template_engine_from_dict(raw: dict[str, Any]) -> LayoutTemplateEngin
     disable_raw = overrides.get("disable") or raw.get("overrides_disable") or []
     disable = tuple(str(x) for x in disable_raw if x) if isinstance(disable_raw, list) else ()
     mcs = raw.get("mcs_integration") if isinstance(raw.get("mcs_integration"), dict) else {}
+    telemetry = raw.get("telemetry") if isinstance(raw.get("telemetry"), dict) else {}
     return LayoutTemplateEngineConfig(
         enabled=bool(raw.get("enabled", True)),
         registry_path=str(raw.get("registry_path", "travelogue/layout_templates/templates")),
@@ -116,6 +119,10 @@ def layout_template_engine_from_dict(raw: dict[str, Any]) -> LayoutTemplateEngin
             mcs.get("exclude_collage_from_mosaic", raw.get("exclude_collage_from_mosaic", True))
         ),
         max_mosaic_slots=int(raw.get("max_mosaic_slots", 9)),
+        emit_per_template=bool(telemetry.get("emit_per_template", raw.get("emit_per_template", True))),
+        telemetry_registry_versions_max=int(
+            telemetry.get("registry_versions_max", raw.get("telemetry_registry_versions_max", 8))
+        ),
         overrides_disable=disable,
     )
 

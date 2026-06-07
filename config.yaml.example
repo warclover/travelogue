@@ -95,6 +95,9 @@ layout:
     read_templates_from_lte: true
     max_mosaic_slots: 9
     exclude_collage_from_mosaic: true
+    telemetry:
+      emit_per_template: true
+      registry_versions_max: 8
     # 不改 YAML 即可零曝光某 pattern（AC-P16-13）
     overrides:
       disable: []
@@ -368,6 +371,8 @@ studio:
   success_refined_default_enabled: true
   # Phase 14 · 放大导入弹窗（开发联调开关）
   import_sheet_large_enabled: true
+  # Phase 16 · LTE internal 模板目录（AC-P16-14）；loopback 默认可见
+  layout_templates_internal: false
 
 # Phase 6 · 验收阈值与运营告警（PRD-PHASE6 §18）
 phase6:

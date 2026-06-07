@@ -254,6 +254,22 @@ def compare_baseline(report: dict, baseline_path: Path) -> dict[str, Any]:
     return {"ok": not warnings, "warnings": warnings, "baselinePath": str(baseline_path)}
 
 
+def compare_ac15_thresholds(report: dict) -> dict[str, Any]:
+    """AC-P16-15 hard gates on North Star metrics (dogfood aggregate)."""
+    agg = (report.get("dogfood") or {}).get("aggregate") or {}
+    failures: list[str] = []
+    p50 = agg.get("layout.chapter.pattern_diversity_p50")
+    if p50 is not None and float(p50) < 1.5:
+        failures.append(f"pattern_diversity_p50 {p50} < 1.5")
+    m5 = agg.get("layout.mosaic5.exposure_rate_mean")
+    if m5 is not None and float(m5) <= 0.0:
+        failures.append(f"mosaic5 exposure {m5} <= 0")
+    mixed = agg.get("layout.mosaic.mixed_layout_exposure_rate_mean")
+    if mixed is not None and float(mixed) < 0.0:
+        failures.append(f"mixed_layout exposure {mixed} < 0")
+    return {"ok": not failures, "failures": failures}
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Phase 16 LTE template eval report")
     parser.add_argument("--trip", dest="trip_id", default=None)
@@ -274,6 +290,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Approve pending change once; repeat with a second approver to apply",
     )
     parser.add_argument("--approver", default="phase16-approver", help="Approver id for --approve")
+    parser.add_argument(
+        "--strict-ac15",
+        action="store_true",
+        help="Exit 1 when baseline drift or AC-P16-15 North Star thresholds fail",
+    )
     args = parser.parse_args(argv)
 
     reset_engine_cache_for_tests()
@@ -313,13 +334,21 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     drift = compare_baseline(report, args.baseline)
+    ac15 = compare_ac15_thresholds(report)
     report["baselineCheck"] = drift
+    report["ac15Check"] = ac15
     text = json.dumps(report, indent=2, ensure_ascii=False)
     print(text)
     if args.json_out:
         args.json_out.write_text(text + "\n", encoding="utf-8")
     if drift.get("warnings"):
         print("::warning::Phase16 dogfood drift: " + " | ".join(drift["warnings"]))
+    if args.strict_ac15:
+        if not drift.get("ok") and not drift.get("skipped"):
+            return 1
+        if not ac15.get("ok"):
+            print("::error::AC-P16-15 thresholds: " + " | ".join(ac15.get("failures") or []))
+            return 1
     return 0
 
 

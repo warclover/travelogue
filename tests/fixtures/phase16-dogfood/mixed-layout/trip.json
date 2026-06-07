@@ -1,0 +1,20 @@
+{
+  "tripId": "phase16-dogfood-mixed",
+  "chapters": [
+    {
+      "id": "ch-01",
+      "screens": [
+        {"patternId": "screen-portrait-3"},
+        {"patternId": "screen-mosaic-5-2p3l-equal"},
+        {"patternId": "screen-portrait-1-landscape-2"}
+      ]
+    },
+    {
+      "id": "ch-02",
+      "screens": [
+        {"patternId": "screen-landscape-1"},
+        {"patternId": "screen-mosaic-5-hero-3-2-plus-4"}
+      ]
+    }
+  ]
+}

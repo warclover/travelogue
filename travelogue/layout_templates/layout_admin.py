@@ -65,6 +65,13 @@ def list_layout_templates_for_admin(*, active_only: bool = False) -> list[dict[s
     ]
 
 
+def layout_quota_warnings() -> list[str]:
+    """Active template quota violations for Studio (§4.2 · P2-6)."""
+    from travelogue.layout_templates.registry import check_active_quotas
+
+    return check_active_quotas(get_engine())
+
+
 def layout_template_geometry_detail(template_id: str) -> dict[str, Any]:
     """Extended geometry payload for Studio detail / probe panels."""
     template = get_engine().get(template_id)

@@ -50,6 +50,15 @@ def _auth(
     return False
 
 
+def _layout_templates_internal(handler: StudioHandlerProtocol) -> bool:
+    """AC-P16-14 · LTE internal catalog only in dev mode or loopback."""
+    ctx = studio_ctx(handler)
+    if getattr(ctx.cfg.studio, "layout_templates_internal", False):
+        return True
+    host = str(getattr(handler, "studio_host", "") or "")
+    return host in ("127.0.0.1", "localhost", "::1")
+
+
 def _parse_revision(handler: StudioHandlerProtocol) -> int | None:
     raw = handler.headers.get("If-Match") or handler.headers.get("X-Registry-Revision")
     if not raw:
@@ -93,23 +102,28 @@ def handle_templates_admin_list(handler: StudioHandlerProtocol) -> None:
 
         row["reviewStatus"] = get_review_status(tid).get("status")
 
-    from travelogue.layout_templates.layout_admin import list_layout_templates_for_admin
+    from travelogue.layout_templates.layout_admin import layout_quota_warnings, list_layout_templates_for_admin
 
-    layout_rows = list_layout_templates_for_admin()
+    layout_internal = _layout_templates_internal(handler)
+    layout_rows = list_layout_templates_for_admin() if layout_internal else []
+    quota_warnings = layout_quota_warnings() if layout_internal else []
     exposure_eval: dict = {}
-    try:
-        from scripts.phase16_template_eval import evaluate_registry
+    if layout_internal:
+        try:
+            from scripts.phase16_template_eval import evaluate_registry
 
-        exposure_eval = evaluate_registry()
-    except Exception:
-        exposure_eval = {}
+            exposure_eval = evaluate_registry()
+        except Exception:
+            exposure_eval = {}
     handler._json_response(
         200,
         {
             "ok": True,
             "revision": snap["revision"],
             "templates": rows,
+            "layoutPatternsInternal": layout_internal,
             "layoutPatterns": layout_rows,
+            "layoutQuotaWarnings": quota_warnings,
             "exposureDebtProposals": exposure_eval.get("exposureDebtProposals") or [],
             "templateExposureShare": exposure_eval.get("templateExposureShare") or {},
             "templateRegistryVersion": exposure_eval.get("templateRegistryVersion"),
