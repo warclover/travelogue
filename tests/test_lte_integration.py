@@ -14,8 +14,8 @@ from travelogue.curation.mosaic.constants import (
     PATTERN_MOSAIC_5_2P3L_EQUAL,
     PATTERN_MOSAIC_5_3P_2L_BALANCED,
 )
-from travelogue.curation.mosaic.lte_adapter import mosaic_registry
 from travelogue.curation.mosaic.log import MosaicWindowLog, format_log_entry
+from travelogue.curation.mosaic.lte_adapter import mosaic_registry
 from travelogue.layout_templates.admission import run_layout_template_admission
 from travelogue.layout_templates.promotion import apply_layout_template_yaml_patch
 from travelogue.layout_templates.registry import LayoutTemplateEngine, reset_engine_cache_for_tests

@@ -10,12 +10,12 @@ import pytest
 from scripts.phase16_template_eval import compare_ac15_thresholds, evaluate_registry
 from travelogue.curation.mosaic.diversity import rerank_scored_candidates_dpp
 from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
+from travelogue.layout_templates.css_stale import trip_layout_css_stale
 from travelogue.layout_templates.geometry_solidify import solidify_screen_geometry
 from travelogue.layout_templates.layout_admin import layout_quota_warnings
 from travelogue.layout_templates.p17_research import hungarian_slot_assignment
 from travelogue.layout_templates.primitive import uniform_grid_primitive
 from travelogue.layout_templates.registry import get_engine, reset_engine_cache_for_tests
-from travelogue.layout_templates.css_stale import trip_layout_css_stale
 from travelogue.templating.metrics import _bound_metric_labels
 
 
@@ -95,9 +95,8 @@ def test_dpp_prefers_diverse_pattern() -> None:
 
 @pytest.mark.unit
 def test_compare_ac15_thresholds_passes_on_dogfood() -> None:
-    from pathlib import Path
 
-    from scripts.phase16_template_eval import DEFAULT_DOGFOOD_DIR, compare_ac15_thresholds, evaluate_registry
+    from scripts.phase16_template_eval import DEFAULT_DOGFOOD_DIR
 
     report = evaluate_registry(trips_dir=DEFAULT_DOGFOOD_DIR)
     ac15 = compare_ac15_thresholds(report)

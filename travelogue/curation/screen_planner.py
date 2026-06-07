@@ -15,6 +15,7 @@ from travelogue.curation.asset_subject import (
     asset_has_person,
     portrait_fit_for_asset,
 )
+from travelogue.curation.collage_routing import single_asset_screen_pattern
 from travelogue.curation.layout_planner import (
     _effective_profile,
     _is_std_landscape,
@@ -32,7 +33,6 @@ from travelogue.curation.screen_layout_state import (  # noqa: F401 — re-expor
     pattern_slot_count,
     portrait_grid8_allowed,
 )
-from travelogue.curation.collage_routing import single_asset_screen_pattern
 from travelogue.media.image_ops import AspectKind
 
 LayoutEngine = Literal["legacy", "screens"]

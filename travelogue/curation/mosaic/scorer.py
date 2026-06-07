@@ -293,7 +293,10 @@ def score_candidate(
         reasons.append("R_RHYTHM_BLOCK")
 
     pattern_id = str(screen.get("patternId") or "")
-    from travelogue.curation.mosaic.lte_adapter import template_base_weight, template_diversity_bonus
+    from travelogue.curation.mosaic.lte_adapter import (
+        template_base_weight,
+        template_diversity_bonus,
+    )
 
     base_w = template_base_weight(pattern_id)
     if base_w != 1.0:

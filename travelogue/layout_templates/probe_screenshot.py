@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.layout_templates.css_gen import grid_templates_for, slot_cells
-from travelogue.layout_templates.geometry import parse_aspect_ratio
 from travelogue.layout_templates.models import TemplateDef
 from travelogue.layout_templates.registry import get_engine
 
@@ -33,7 +32,6 @@ def build_probe_html(template: TemplateDef) -> str:
     cols, rows = grid_templates_for(template)
     stage = template.stage
     gap = stage.gap or "3px"
-    aspect = parse_aspect_ratio(stage.aspect)
     grid_class = template.render_grid_class
     slot_rules: list[str] = []
     slot_nodes: list[str] = []

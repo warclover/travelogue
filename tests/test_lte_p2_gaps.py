@@ -7,16 +7,14 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.curation.mosaic.compose import score_window_candidates
 from travelogue.curation.mosaic.diversity import (
-    apply_candidate_diversity,
     pattern_similarity,
     rerank_scored_candidates_mmr,
 )
 from travelogue.curation.mosaic.lte_adapter import mcs_diversity_config, template_base_weight
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.layout_templates.css_gen import generate_grid_css
-from travelogue.layout_templates.geometry import solve_tracks, slot_aspect_table
+from travelogue.layout_templates.geometry import slot_aspect_table, solve_tracks
 from travelogue.layout_templates.models import TemplateStage
 from travelogue.layout_templates.registry import (
     LayoutTemplateEngine,
@@ -74,7 +72,10 @@ def test_runtime_base_weight_override_applied(tmp_path: Path, monkeypatch: pytes
 @pytest.mark.unit
 def test_exposure_debt_semi_closed_loop(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """eval → propose → dual approve → runtime template_base_weight (§9.4)."""
-    from scripts.phase16_template_eval import compute_exposure_debt_proposals, submit_exposure_proposals
+    from scripts.phase16_template_eval import (
+        compute_exposure_debt_proposals,
+        submit_exposure_proposals,
+    )
     from travelogue.templating import admin_store
 
     state_path = tmp_path / "template_admin_state.json"

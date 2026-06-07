@@ -99,7 +99,10 @@ def probe(
     from travelogue.config import MosaicConfig
     from travelogue.curation.mosaic.candidates import generate_window_candidates_with_rejections
     from travelogue.curation.mosaic.compose import pick_best_window
-    from travelogue.curation.mosaic.runtime import reset_mosaic_config_override, set_mosaic_config_override
+    from travelogue.curation.mosaic.runtime import (
+        reset_mosaic_config_override,
+        set_mosaic_config_override,
+    )
 
     cfg = MosaicConfig(log_level="debug")
     if hero_weighted_geometry_guard is not None:

@@ -15,7 +15,6 @@ from travelogue.web.studio_handlers.paths import ASSET_MEDIA_SUFFIX, TRIPS_PATH
 from travelogue.web.studio_handlers.trip_handlers import handle_asset_media_class
 from travelogue.web.studio_routes import StudioMixin
 
-
 pytestmark = pytest.mark.unit
 
 

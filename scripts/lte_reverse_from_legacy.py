@@ -8,7 +8,10 @@ from pathlib import Path
 
 import yaml
 
-from travelogue.layout_templates.legacy_bridge import all_legacy_pattern_ids, reverse_pattern_to_yaml_dict
+from travelogue.layout_templates.legacy_bridge import (
+    all_legacy_pattern_ids,
+    reverse_pattern_to_yaml_dict,
+)
 from travelogue.layout_templates.registry import DEFAULT_TEMPLATES_DIR
 
 

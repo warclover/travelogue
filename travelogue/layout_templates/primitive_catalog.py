@@ -6,7 +6,7 @@ from pathlib import Path
 
 import yaml
 
-from travelogue.layout_templates.models import TemplateDef, TemplateSlot
+from travelogue.layout_templates.models import TemplateDef, TemplateSlot, TemplateStage
 from travelogue.layout_templates.primitive import (
     column_grid_primitive,
     matrix_grid_primitive,

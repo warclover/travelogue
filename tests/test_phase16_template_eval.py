@@ -2,16 +2,10 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 
-from travelogue.curation.layout_metrics import (
-    chapter_distinct_pattern_counts,
-    pattern_diversity_p50,
-)
-from travelogue.curation.mosaic.metrics import mixed_layout_exposure_rate
 from scripts.phase16_template_eval import (
     approve_exposure_proposal,
     compare_baseline,
@@ -19,6 +13,11 @@ from scripts.phase16_template_eval import (
     evaluate_registry,
     submit_exposure_proposals,
 )
+from travelogue.curation.layout_metrics import (
+    chapter_distinct_pattern_counts,
+    pattern_diversity_p50,
+)
+from travelogue.curation.mosaic.metrics import mixed_layout_exposure_rate
 from travelogue.layout_templates.registry import reset_engine_cache_for_tests
 
 
@@ -129,7 +128,10 @@ def test_submit_exposure_proposals_cli_flow(tmp_path: Path, monkeypatch: pytest.
 
 @pytest.mark.unit
 def test_evaluate_dogfood_fixture_trips() -> None:
-    from scripts.phase16_template_eval import compare_ac15_thresholds, evaluate_dogfood_trips, evaluate_registry
+    from scripts.phase16_template_eval import (
+        compare_ac15_thresholds,
+        evaluate_dogfood_trips,
+    )
 
     root = Path("tests/fixtures/phase16-dogfood")
     out = evaluate_dogfood_trips(root)
@@ -141,7 +143,11 @@ def test_evaluate_dogfood_fixture_trips() -> None:
 
 @pytest.mark.unit
 def test_ac15_strict_on_dogfood_fixtures() -> None:
-    from scripts.phase16_template_eval import DEFAULT_DOGFOOD_DIR, compare_ac15_thresholds, evaluate_registry
+    from scripts.phase16_template_eval import (
+        DEFAULT_DOGFOOD_DIR,
+        compare_ac15_thresholds,
+        evaluate_registry,
+    )
 
     report = evaluate_registry(trips_dir=DEFAULT_DOGFOOD_DIR)
     ac15 = compare_ac15_thresholds(report)

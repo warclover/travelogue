@@ -24,8 +24,10 @@ _PORTRAIT_DOMINANT_AUTO_FLOW = PORTRAIT_DOMINANT_AUTO_FLOW
 
 # Slots where portrait-in-wide was the user-visible defect (main tile, etc.)
 from travelogue.curation.mosaic._legacy_generated import (
-    _LANDSCAPE_FORBIDDEN_TALL,
-    _PORTRAIT_FORBIDDEN_WIDE,
+    _LANDSCAPE_FORBIDDEN_TALL as _LANDSCAPE_FORBIDDEN_TALL,
+)
+from travelogue.curation.mosaic._legacy_generated import (
+    _PORTRAIT_FORBIDDEN_WIDE as _PORTRAIT_FORBIDDEN_WIDE,
 )
 
 

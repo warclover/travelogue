@@ -7,7 +7,10 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.curation.mosaic.constants import MOSAIC_UNIFIED_PATTERN_IDS
-from travelogue.curation.mosaic.lte_adapter import read_templates_from_lte, resolve_render_grid_class
+from travelogue.curation.mosaic.lte_adapter import (
+    read_templates_from_lte,
+    resolve_render_grid_class,
+)
 
 _SCREENS_CSS = (
     Path(__file__).resolve().parents[3] / "templates" / "visual-journal" / "journal-screens.css"
@@ -34,8 +37,8 @@ def _lte_validator_ok(pattern_id: str, css: str) -> bool | None:
     if not read_templates_from_lte():
         return None
     try:
-        from travelogue.layout_templates.registry import get_engine
         from travelogue.layout_templates.css_gen import validate_css_bundle
+        from travelogue.layout_templates.registry import get_engine
         from travelogue.layout_templates.validator import validate_template_def
 
         tpl = get_engine().get(pattern_id)

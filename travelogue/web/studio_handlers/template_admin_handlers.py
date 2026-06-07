@@ -102,7 +102,10 @@ def handle_templates_admin_list(handler: StudioHandlerProtocol) -> None:
 
         row["reviewStatus"] = get_review_status(tid).get("status")
 
-    from travelogue.layout_templates.layout_admin import layout_quota_warnings, list_layout_templates_for_admin
+    from travelogue.layout_templates.layout_admin import (
+        layout_quota_warnings,
+        list_layout_templates_for_admin,
+    )
 
     layout_internal = _layout_templates_internal(handler)
     layout_rows = list_layout_templates_for_admin() if layout_internal else []
@@ -530,7 +533,10 @@ def handle_templates_admin_runtime(handler: StudioHandlerProtocol) -> None:
         if target not in ("beta", "ga"):
             target = "beta"
         if target == "ga":
-            from travelogue.templating.review import get_review_status, require_review_approved_for_ga
+            from travelogue.templating.review import (
+                get_review_status,
+                require_review_approved_for_ga,
+            )
 
             try:
                 require_review_approved_for_ga(template_id)

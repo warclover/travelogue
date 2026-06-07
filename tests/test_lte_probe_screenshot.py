@@ -28,8 +28,9 @@ def test_build_probe_html_contains_grid_class() -> None:
 
 @pytest.mark.unit
 def test_compare_identical_pngs() -> None:
-    from PIL import Image
     from io import BytesIO
+
+    from PIL import Image
 
     img = Image.new("RGB", (64, 36), color=(10, 20, 30))
     buf = BytesIO()

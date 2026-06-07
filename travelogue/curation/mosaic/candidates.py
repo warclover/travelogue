@@ -10,8 +10,7 @@ from travelogue.curation.layout_planner import AspectKind
 from travelogue.curation.media_classify import is_collage_asset
 from travelogue.curation.mosaic.builders import build_screen, try_order_for_pattern
 from travelogue.curation.mosaic.features import feature_summary_for_window
-from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
-from travelogue.curation.mosaic.lte_adapter import mosaic_registry
+from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled, mosaic_registry
 from travelogue.curation.mosaic.pattern_catalog import (
     MosaicPattern,
     patterns_for_window_size,

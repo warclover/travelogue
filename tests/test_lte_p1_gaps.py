@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 
+from scripts.collage_detect_eval import evaluate_fixtures
 from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
 from travelogue.layout_templates.registry import LayoutTemplateEngine, reset_engine_cache_for_tests
-from scripts.collage_detect_eval import evaluate_fixtures
-from scripts.lte_probe_regress import run_screenshot_probe
 
 
 @pytest.fixture(autouse=True)
@@ -92,7 +90,7 @@ def test_user_3p2l_case_golden_matches_mcs() -> None:
 
 @pytest.mark.unit
 def test_phase16_curate_dogfood_script_writes_curate_specs(tmp_path: Path) -> None:
-    from scripts.phase16_curate_dogfood import build_dogfood_trip, DOGFOOD_SPECS
+    from scripts.phase16_curate_dogfood import DOGFOOD_SPECS, build_dogfood_trip
 
     trip = build_dogfood_trip("portrait-heavy", DOGFOOD_SPECS["portrait-heavy"])
     assert trip["tripId"] == "phase16-dogfood-portrait"

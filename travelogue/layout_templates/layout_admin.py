@@ -75,7 +75,6 @@ def layout_quota_warnings() -> list[str]:
 def layout_template_geometry_detail(template_id: str) -> dict[str, Any]:
     """Extended geometry payload for Studio detail / probe panels."""
     template = get_engine().get(template_id)
-    hook = LayoutTemplateGeometryHook()
     from travelogue.layout_templates.css_gen import grid_templates_for
 
     cols, rows = grid_templates_for(template)

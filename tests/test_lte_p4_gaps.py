@@ -2,25 +2,26 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
-from PIL import Image
 
+from scripts.collage_detect_eval import evaluate_fixtures
 from travelogue.curation.mosaic._legacy_generated import EXPLICIT_GRID_SPECS, PATTERN_GRID_CLASS
 from travelogue.curation.mosaic.grid_specs import audit_all
-from travelogue.layout_templates.legacy_codegen import export_legacy_data, render_legacy_python_module
-from travelogue.layout_templates.promotion import apply_layout_template_yaml_patch
-from travelogue.layout_templates.registry import LayoutTemplateEngine, reset_engine_cache_for_tests
-from travelogue.render.context import build_layout_screen
-from scripts.collage_detect_eval import evaluate_fixtures
+from travelogue.layout_templates.legacy_codegen import (
+    export_legacy_data,
+    render_legacy_python_module,
+)
 from travelogue.layout_templates.probe_regress import (
     PROBE_PROFILES,
     _cover_focal_retention,
     _profile_saliency_retention,
     _worst_saliency_for_slot,
 )
+from travelogue.layout_templates.promotion import apply_layout_template_yaml_patch
+from travelogue.layout_templates.registry import LayoutTemplateEngine, reset_engine_cache_for_tests
+from travelogue.render.context import build_layout_screen
 
 
 @pytest.fixture(autouse=True)

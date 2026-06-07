@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import Sequence
+from collections.abc import Sequence
 
 
 def _ar_distance(asset_ar: float, slot_ar: float) -> float:

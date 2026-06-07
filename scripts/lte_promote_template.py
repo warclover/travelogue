@@ -7,8 +7,8 @@ import argparse
 import json
 from pathlib import Path
 
-from travelogue.layout_templates.promotion import apply_layout_template_yaml_patch
 from travelogue.layout_templates.layout_admin import layout_template_promotion_plan
+from travelogue.layout_templates.promotion import apply_layout_template_yaml_patch
 from travelogue.layout_templates.registry import DEFAULT_TEMPLATES_DIR, reset_engine_cache_for_tests
 
 

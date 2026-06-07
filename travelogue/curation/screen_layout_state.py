@@ -170,8 +170,10 @@ class ScreenLayoutPlannerState:
         return True
 
     def can_emit_pattern(self, pattern_id: str) -> bool:
-        from travelogue.curation.mosaic.lte_adapter import template_rhythm_max_per_chapter
-        from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
+        from travelogue.curation.mosaic.lte_adapter import (
+            mosaic_pattern_disabled,
+            template_rhythm_max_per_chapter,
+        )
 
         if mosaic_pattern_disabled(pattern_id):
             return False

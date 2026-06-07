@@ -6,15 +6,29 @@ Semantic aliases below; authoritative tuples and grid classes live in
 
 from __future__ import annotations
 
-from travelogue.curation.mosaic._legacy_generated import PATTERN_GRID_CLASS as PATTERN_GRID_CLASS
 from travelogue.curation.mosaic._legacy_generated import (
-    MOSAIC_3_PATTERN_IDS,
-    MOSAIC_4_PATTERN_IDS,
-    MOSAIC_5_PATTERN_IDS,
-    MOSAIC_6_PATTERN_IDS,
-    MOSAIC_8_PATTERN_IDS,
-    MOSAIC_9_PATTERN_IDS,
-    MOSAIC_UNIFIED_PATTERN_IDS,
+    MOSAIC_3_PATTERN_IDS as MOSAIC_3_PATTERN_IDS,
+)
+from travelogue.curation.mosaic._legacy_generated import (
+    MOSAIC_4_PATTERN_IDS as MOSAIC_4_PATTERN_IDS,
+)
+from travelogue.curation.mosaic._legacy_generated import (
+    MOSAIC_5_PATTERN_IDS as MOSAIC_5_PATTERN_IDS,
+)
+from travelogue.curation.mosaic._legacy_generated import (
+    MOSAIC_6_PATTERN_IDS as MOSAIC_6_PATTERN_IDS,
+)
+from travelogue.curation.mosaic._legacy_generated import (
+    MOSAIC_8_PATTERN_IDS as MOSAIC_8_PATTERN_IDS,
+)
+from travelogue.curation.mosaic._legacy_generated import (
+    MOSAIC_9_PATTERN_IDS as MOSAIC_9_PATTERN_IDS,
+)
+from travelogue.curation.mosaic._legacy_generated import (
+    MOSAIC_UNIFIED_PATTERN_IDS as MOSAIC_UNIFIED_PATTERN_IDS,
+)
+from travelogue.curation.mosaic._legacy_generated import (
+    PATTERN_GRID_CLASS as PATTERN_GRID_CLASS,
 )
 
 # --- 5-slot mosaic family (S1) ---
