@@ -74,12 +74,17 @@ def _runtime_base_weight_override(pattern_id: str) -> float | None:
 
 
 def template_base_weight(pattern_id: str, *, cfg: AppConfig | None = None) -> float:
-    """LTE scoring.base_weight multiplier (1.0 when LTE off or unknown)."""
+    """LTE scoring.base_weight multiplier (1.0 when LTE off or unknown).
+
+    The LTE switch is checked first so that disabling read_templates_from_lte
+    fully restores P15 weighting — runtime governance overrides only apply
+    while the engine is enabled.
+    """
+    if not read_templates_from_lte(cfg):
+        return 1.0
     runtime_w = _runtime_base_weight_override(pattern_id)
     if runtime_w is not None:
         return runtime_w
-    if not read_templates_from_lte(cfg):
-        return 1.0
     try:
         tpl = _lte_template(pattern_id)
     except KeyError:
@@ -248,8 +253,10 @@ def mosaic_pattern_disabled(
     cfg: MosaicConfig | None = None,
 ) -> bool:
     """True when patternId must not be emitted (LTE status/overrides + window-size gates)."""
-    from travelogue.config import MosaicConfig
-    from travelogue.curation.mosaic.runtime import get_effective_mosaic_config, mosaic_window_size_enabled
+    from travelogue.curation.mosaic.runtime import (
+        get_effective_mosaic_config,
+        mosaic_window_size_enabled,
+    )
 
     app = get_config()
     mosaic_cfg = cfg or get_effective_mosaic_config()
