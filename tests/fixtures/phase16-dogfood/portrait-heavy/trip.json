@@ -4,16 +4,12 @@
     {
       "id": "ch-01",
       "screens": [
-        {"patternId": "screen-portrait-3"},
-        {"patternId": "screen-portrait-2"},
-        {"patternId": "screen-portrait-1"}
-      ]
-    },
-    {
-      "id": "ch-02",
-      "screens": [
-        {"patternId": "screen-portrait-3"},
-        {"patternId": "screen-portrait-4"}
+        {
+          "patternId": "screen-portrait-3"
+        },
+        {
+          "patternId": "screen-portrait-3"
+        }
       ]
     }
   ]

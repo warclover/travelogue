@@ -46,36 +46,28 @@
   "heroPresent": true,
   "deprecatedExcluded": true,
   "templateExposureCount": {
-    "screen-landscape-1": 3,
-    "screen-landscape-4": 1,
+    "screen-landscape-1": 2,
     "screen-landscape-6": 1,
     "screen-landscape-9": 1,
     "screen-mosaic-5-2p3l-equal": 2,
-    "screen-mosaic-5-hero-3-2-plus-4": 1,
-    "screen-portrait-1": 1,
+    "screen-mosaic-5-hero-3-2-plus-4": 2,
     "screen-portrait-1-landscape-2": 2,
-    "screen-portrait-2": 1,
     "screen-portrait-2-landscape-2": 1,
     "screen-portrait-3": 4,
-    "screen-portrait-4": 1,
     "screen-portrait-grid-8": 1
   },
   "templateExposureShare": {
-    "screen-landscape-1": 0.15,
-    "screen-landscape-4": 0.05,
-    "screen-landscape-6": 0.05,
-    "screen-landscape-9": 0.05,
-    "screen-mosaic-5-2p3l-equal": 0.1,
-    "screen-mosaic-5-hero-3-2-plus-4": 0.05,
-    "screen-portrait-1": 0.05,
-    "screen-portrait-1-landscape-2": 0.1,
-    "screen-portrait-2": 0.05,
-    "screen-portrait-2-landscape-2": 0.05,
-    "screen-portrait-3": 0.2,
-    "screen-portrait-4": 0.05,
-    "screen-portrait-grid-8": 0.05
+    "screen-landscape-1": 0.125,
+    "screen-landscape-6": 0.0625,
+    "screen-landscape-9": 0.0625,
+    "screen-mosaic-5-2p3l-equal": 0.125,
+    "screen-mosaic-5-hero-3-2-plus-4": 0.125,
+    "screen-portrait-1-landscape-2": 0.125,
+    "screen-portrait-2-landscape-2": 0.0625,
+    "screen-portrait-3": 0.25,
+    "screen-portrait-grid-8": 0.0625
   },
-  "screenSampleTotal": 20,
+  "screenSampleTotal": 16,
   "dogfood": {
     "tripCount": 6,
     "perTrip": [
@@ -90,9 +82,9 @@
       {
         "tripId": "landscape-heavy",
         "layout.chapter.pattern_diversity_p50": 2.0,
-        "layout.chapter.pattern_diversity": 0.6667,
-        "layout.mosaic5.exposure_rate": 0.0,
-        "layout.mosaic_v2.unified_exposure_rate": 0.333333,
+        "layout.chapter.pattern_diversity": 1.0,
+        "layout.mosaic5.exposure_rate": 0.5,
+        "layout.mosaic_v2.unified_exposure_rate": 0.0,
         "layout.mosaic.mixed_layout_exposure_rate": 0.0
       },
       {
@@ -121,18 +113,18 @@
       },
       {
         "tripId": "portrait-heavy",
-        "layout.chapter.pattern_diversity_p50": 2.5,
-        "layout.chapter.pattern_diversity": 0.8,
+        "layout.chapter.pattern_diversity_p50": 1.0,
+        "layout.chapter.pattern_diversity": 0.5,
         "layout.mosaic5.exposure_rate": 0.0,
-        "layout.mosaic_v2.unified_exposure_rate": 0.6,
+        "layout.mosaic_v2.unified_exposure_rate": 1.0,
         "layout.mosaic.mixed_layout_exposure_rate": 0.0
       }
     ],
     "aggregate": {
-      "layout.chapter.pattern_diversity_p50": 2.25,
-      "layout.chapter.pattern_diversity_mean": 0.9111,
-      "layout.mosaic5.exposure_rate_mean": 0.1222,
-      "layout.mosaic_v2.unified_exposure_rate_mean": 0.7556,
+      "layout.chapter.pattern_diversity_p50": 2.0,
+      "layout.chapter.pattern_diversity_mean": 0.9167,
+      "layout.mosaic5.exposure_rate_mean": 0.2056,
+      "layout.mosaic_v2.unified_exposure_rate_mean": 0.7667,
       "layout.mosaic.mixed_layout_exposure_rate_mean": 0.2333
     }
   },
@@ -153,8 +145,8 @@
       "currentBaseWeight": 1.0,
       "suggestedBaseWeight": 0.5,
       "targetExposureShare": 0.0476,
-      "actualExposureShare": 0.15,
-      "exposureDebt": -0.1024,
+      "actualExposureShare": 0.125,
+      "exposureDebt": -0.0774,
       "approvalRequired": true
     },
     {
@@ -181,30 +173,30 @@
       "templateId": "screen-landscape-4",
       "templateVersion": 1,
       "currentBaseWeight": 1.0,
-      "suggestedBaseWeight": 0.975,
+      "suggestedBaseWeight": 1.5,
       "targetExposureShare": 0.0476,
-      "actualExposureShare": 0.05,
-      "exposureDebt": -0.0024,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0476,
       "approvalRequired": true
     },
     {
       "templateId": "screen-landscape-6",
       "templateVersion": 1,
       "currentBaseWeight": 1.0,
-      "suggestedBaseWeight": 0.975,
+      "suggestedBaseWeight": 0.8438,
       "targetExposureShare": 0.0476,
-      "actualExposureShare": 0.05,
-      "exposureDebt": -0.0024,
+      "actualExposureShare": 0.0625,
+      "exposureDebt": -0.0149,
       "approvalRequired": true
     },
     {
       "templateId": "screen-landscape-9",
       "templateVersion": 1,
       "currentBaseWeight": 1.0,
-      "suggestedBaseWeight": 0.975,
+      "suggestedBaseWeight": 0.8438,
       "targetExposureShare": 0.0476,
-      "actualExposureShare": 0.05,
-      "exposureDebt": -0.0024,
+      "actualExposureShare": 0.0625,
+      "exposureDebt": -0.0149,
       "approvalRequired": true
     },
     {
@@ -213,18 +205,18 @@
       "currentBaseWeight": 1.05,
       "suggestedBaseWeight": 0.5,
       "targetExposureShare": 0.0476,
-      "actualExposureShare": 0.1,
-      "exposureDebt": -0.0524,
+      "actualExposureShare": 0.125,
+      "exposureDebt": -0.0774,
       "approvalRequired": true
     },
     {
       "templateId": "screen-mosaic-5-hero-3-2-plus-4",
       "templateVersion": 3,
       "currentBaseWeight": 1.02,
-      "suggestedBaseWeight": 0.9945,
+      "suggestedBaseWeight": 0.5,
       "targetExposureShare": 0.0476,
-      "actualExposureShare": 0.05,
-      "exposureDebt": -0.0024,
+      "actualExposureShare": 0.125,
+      "exposureDebt": -0.0774,
       "approvalRequired": true
     },
     {
@@ -261,10 +253,10 @@
       "templateId": "screen-portrait-1",
       "templateVersion": 1,
       "currentBaseWeight": 1.0,
-      "suggestedBaseWeight": 0.975,
+      "suggestedBaseWeight": 1.5,
       "targetExposureShare": 0.0476,
-      "actualExposureShare": 0.05,
-      "exposureDebt": -0.0024,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0476,
       "approvalRequired": true
     },
     {
@@ -273,28 +265,28 @@
       "currentBaseWeight": 1.0,
       "suggestedBaseWeight": 0.5,
       "targetExposureShare": 0.0476,
-      "actualExposureShare": 0.1,
-      "exposureDebt": -0.0524,
+      "actualExposureShare": 0.125,
+      "exposureDebt": -0.0774,
       "approvalRequired": true
     },
     {
       "templateId": "screen-portrait-2",
       "templateVersion": 1,
       "currentBaseWeight": 1.0,
-      "suggestedBaseWeight": 0.975,
+      "suggestedBaseWeight": 1.5,
       "targetExposureShare": 0.0476,
-      "actualExposureShare": 0.05,
-      "exposureDebt": -0.0024,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0476,
       "approvalRequired": true
     },
     {
       "templateId": "screen-portrait-2-landscape-2",
       "templateVersion": 1,
       "currentBaseWeight": 1.0,
-      "suggestedBaseWeight": 0.975,
+      "suggestedBaseWeight": 0.8438,
       "targetExposureShare": 0.0476,
-      "actualExposureShare": 0.05,
-      "exposureDebt": -0.0024,
+      "actualExposureShare": 0.0625,
+      "exposureDebt": -0.0149,
       "approvalRequired": true
     },
     {
@@ -303,18 +295,18 @@
       "currentBaseWeight": 1.0,
       "suggestedBaseWeight": 0.5,
       "targetExposureShare": 0.0476,
-      "actualExposureShare": 0.2,
-      "exposureDebt": -0.1524,
+      "actualExposureShare": 0.25,
+      "exposureDebt": -0.2024,
       "approvalRequired": true
     },
     {
       "templateId": "screen-portrait-4",
       "templateVersion": 1,
       "currentBaseWeight": 1.0,
-      "suggestedBaseWeight": 0.975,
+      "suggestedBaseWeight": 1.5,
       "targetExposureShare": 0.0476,
-      "actualExposureShare": 0.05,
-      "exposureDebt": -0.0024,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0476,
       "approvalRequired": true
     },
     {
@@ -341,12 +333,12 @@
       "templateId": "screen-portrait-grid-8",
       "templateVersion": 1,
       "currentBaseWeight": 1.0,
-      "suggestedBaseWeight": 0.975,
+      "suggestedBaseWeight": 0.8438,
       "targetExposureShare": 0.0476,
-      "actualExposureShare": 0.05,
-      "exposureDebt": -0.0024,
+      "actualExposureShare": 0.0625,
+      "exposureDebt": -0.0149,
       "approvalRequired": true
     }
   ],
-  "templateRegistryVersion": "3312399bc6debb00d03ec5688442c0a1fd0389a4f9e2d42a3b19da3bb96e2fc6"
+  "templateRegistryVersion": "e43c76eeb4b1878eae916bb7c0efb43092babb1f2945b36d3b171cc80bcdc780"
 }

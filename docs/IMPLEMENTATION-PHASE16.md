@@ -7,7 +7,7 @@
 | **配套 PRD** | [PRD-PHASE16-layout-template-engine.md](./PRD-PHASE16-layout-template-engine.md)（v0.16.4） |
 | **分支** | `phase16/layout-template-engine` |
 | **更新日期** | 2026-06-06 |
-| **状态** | W0–W4 核心已交付；P0–P2 第二轮闭合（AC-15 CI、dashboard templateId rollup、win_score/face_crop 指标、Studio 配额/门禁、几何探针 strict）；W4 研究项按需 |
+| **状态** | W0–W4 核心已交付；P0–P2 **第三轮**闭合（dogfood curate 脚本、user 3P+2L golden、stack grid primitive 扩展、V-P16-13 sign-off、CSS audit 去重）；W4 研究项按需 |
 
 > **本文定位**：把 PRD 的设计落成可执行的工程计划——**融合方式、改动文件清单、阶段交付、工作量估算、W1 开工清单**。PRD 讲"做什么/为什么"，本文讲"怎么接、改哪里、要多久、先干哪些"。
 
@@ -144,6 +144,19 @@ primitive 参数化、配额调优、删 legacy 手写常量、§9.4 多样性�
 | 几何探针 | push 跑 `lte_probe_regress.py --strict-geometry` |
 | diversity.mode | `config.yaml.example` · `layout.template_engine.mcs_integration` |
 
+**2026-06-06 第三轮闭合（P1–P2 审计跟进）**
+
+| 项 | 交付 |
+|----|------|
+| §13.3 user 3P+2L | `tests/_golden/user-3p2l-case/` + MCS 不选 deprecated balanced |
+| §13.3 dogfood | `scripts/phase16_curate_dogfood.py` + `phase16-dogfood-curate-policy.json` |
+| R-14 stack grid | `primitive_catalog` 扩展 7 类 gridClass；`export --sync-journal` 去重 |
+| V-P16-13 | `constraints.arLadderSignOff` schema + publish/admission block |
+| CSS audit | 排除 overlay 引用；以 `duplicateGridClassesOutsideMarker` 为门禁 |
+| Collage CI | `--min-recall 0.7` 与单测对齐 |
+| Playwright E2E | AC-11 stale hint + §13.2 deprecated lifecycle（`test_lte_studio_playwright.py`） |
+| Legacy import | `grid_specs.py` 直引 `_legacy_generated` 元组 |
+
 ### 2.x 工作量汇总
 
 | 口径 | 估算 |
@@ -219,3 +232,4 @@ primitive 参数化、配额调优、删 legacy 手写常量、§9.4 多样性�
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v1.0 | 2026-06-06 | W1 开工版：融合设计（9 融合点）、模块结构、W0–W4 阶段交付与工作量、MVP 切法、风险登记、W1 任务卡 + 触碰文件 + 验收门 |
+| v1.1 | 2026-06-06 | 第三轮闭合：§13.3 dogfood/user 3P+2L、primitive 扩展、V-P16-13 sign-off、CSS audit 口径 |
