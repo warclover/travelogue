@@ -249,13 +249,12 @@ jobs:
           print(f"legacy export ok: {len(data['mosaic_patterns'])} mosaic patterns")
           PY
 
-      - name: LTE legacy Python snapshot drift (warn-only)
-        continue-on-error: true
+      - name: LTE legacy Python snapshot drift
         run: |
           python scripts/lte_export_legacy.py --sync-python --out /tmp/lte_legacy_export.json
           git diff --exit-code travelogue/curation/mosaic/_legacy_generated.py || {
-            echo "::warning::_legacy_generated.py out of sync; run: python scripts/lte_export_legacy.py --sync-python"
-            if [ "${LTE_LEGACY_PYTHON_STRICT:-}" = "1" ]; then exit 1; fi
+            echo "_legacy_generated.py out of sync; run: python scripts/lte_export_legacy.py --sync-python"
+            exit 1
           }
 
       - name: Collage detector fixture eval (warn-only)

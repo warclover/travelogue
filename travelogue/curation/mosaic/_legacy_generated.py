@@ -2,7 +2,7 @@
 
 Regenerate:
   python scripts/lte_export_legacy.py --sync-python
-Content hash: 6f783eed6e4600c1b76297cd2b4c99125ef9b6ceade4c30d02388540864f8d2a
+Content hash: 4201256ba07877ed29025b7462802a7b74d9ded37ed41bf25aea4d2e913e4b63
 """
 
 from __future__ import annotations
