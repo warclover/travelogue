@@ -189,6 +189,12 @@ jobs:
       - name: LTE validate (Phase 16)
         run: python -m travelogue.layout_templates.cli validate
 
+      - name: LTE primitive catalog drift (W4)
+        run: python -m travelogue.layout_templates.cli check-primitives
+
+      - name: LTE journal CSS handwritten inventory
+        run: python scripts/lte_journal_css_audit.py --fail-on-duplicates
+
       - name: LTE journal CSS sync drift
         run: |
           python -m travelogue.layout_templates.cli export --sync-journal
@@ -267,11 +273,11 @@ jobs:
       - name: Phase 16 template eval (AC-15 · PR warn)
         if: github.event_name == 'pull_request'
         continue-on-error: true
-        run: python scripts/phase16_template_eval.py --trips-dir trips --strict-ac15
+        run: python scripts/phase16_template_eval.py --trips-dir tests/fixtures/phase16-dogfood --strict-ac15
 
       - name: Phase 16 template eval (AC-15 · release block)
         if: github.event_name != 'pull_request'
-        run: python scripts/phase16_template_eval.py --trips-dir trips --strict-ac15
+        run: python scripts/phase16_template_eval.py --trips-dir tests/fixtures/phase16-dogfood --strict-ac15
 
       - name: Phase 4 acceptance gate
         run: python scripts/phase4_acceptance_gate.py --skip-integration
