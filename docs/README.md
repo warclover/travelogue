@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
-| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–15** + Studio 首页 v2/M21 + 算法 V2 |
-| **更新日期** | 2026-06-06 |
+| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–17** + Studio 首页 v2/M21 + 算法 V2 |
+| **更新日期** | 2026-06-07 |
 
 ---
 
@@ -206,6 +206,31 @@
 | [PRD-PHASE15-photo-mosaic-evolution.md](./PRD-PHASE15-photo-mosaic-evolution.md) | 统一候选评分 · 多窗 mosaic |
 | [IMPLEMENTATION-PHASE15.md](./IMPLEMENTATION-PHASE15.md) | P15-S0～S3 |
 | [ACCEPTANCE-PHASE15.md](./ACCEPTANCE-PHASE15.md) | 离线闸门 |
+
+---
+
+## Phase 16 · 布局模板引擎（LTE）
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE16-layout-template-engine.md](./PRD-PHASE16-layout-template-engine.md) | pattern YAML 注册 · 几何治理 · MCS 消费 |
+| [DESIGN-PHASE16-layout-template-engine.md](./DESIGN-PHASE16-layout-template-engine.md) | 工程形态与模块边界 |
+| [GUIDE-PHASE16-layout-template-engine.md](./GUIDE-PHASE16-layout-template-engine.md) | 操作指南 |
+| [LTE-ADMISSION-LAYOUT-TEMPLATES.md](./LTE-ADMISSION-LAYOUT-TEMPLATES.md) | 轻量 admission · 复用 templating 平台 |
+
+---
+
+## Phase 17 · 智能排版引擎（LSE）
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PHASE17-layout-strategy-engine.md](./PRD-PHASE17-layout-strategy-engine.md) | **智能排版引擎 LSE** v0.17.6 · P17-Core/Plus/B · 跨职能 + CTO/算法 + 前端 + 开发负责人评审已纳入 |
+| [IMPLEMENTATION-PHASE17.md](./IMPLEMENTATION-PHASE17.md) | 实施清单：融合设计 · W0 三项审计 · adapter 参数收束 · 阶段交付（分支 `feature/phase17-lse`） |
+| [PRD-PHASE17-research-stub.md](./PRD-PHASE17-research-stub.md) | P17-B：生成式 composite · 7 张 4P+3L（LTE 扩展） |
+
+**前置**：Phase 16 LTE 默认路径稳定。**代号**：LSE。**原则**：最小用户干扰 · 后台自动出结果。**与 LTE 分工**：LSE 管组屏决策与调参；LTE 管 pattern 几何。
+
+阅读顺序：**PRD-PHASE17** v0.17.6 → `IMPLEMENTATION-PHASE17`（已建）→（W0 待补）`lse_strategy.schema.json` + `DESIGN-PHASE17`
 
 ---
 
