@@ -1,0 +1,26 @@
+# LSE global policy (PRD §7.1 · R-P17-02)
+# W0 skeleton — runtime merge + rollout enforced in W1 registry loader.
+
+policy_version: p17-2026-06
+
+default_strategy_id: lse-default-2026-06
+strategies_dir: travelogue/layout_engine/strategies
+
+rollout:
+  default_traffic_percent: 100
+  shadow_enabled: false
+
+capabilities_defaults:
+  saliency_scoring: false
+  beat_profile: flat
+  tone_harmony: false
+  hungarian_assignment: false
+  segment_order_optimizer: false
+  implicit_feedback_export: false
+  pace_profile: false
+  highlight_windows: false
+  editorial_hints: false
+
+telemetry:
+  emit_per_window: true
+  decision_log_max_events: 2000

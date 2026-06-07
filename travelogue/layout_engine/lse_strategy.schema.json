@@ -1,0 +1,367 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://travelogue.local/schemas/lse_strategy.schema.json",
+  "title": "LayoutStrategyPack",
+  "description": "Phase 17 LSE Strategy Pack authoritative YAML schema (PRD v0.17.7, W0 frozen). Values align with W0 audit A production-active parameters.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "version",
+    "status",
+    "algorithm_version",
+    "displayName",
+    "planning",
+    "rhythm",
+    "density_profiles",
+    "scoring_profiles",
+    "search",
+    "diversity",
+    "self_heal",
+    "rollout"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^lse-[a-z0-9][a-z0-9-]*$",
+      "description": "Stable strategy pack identifier"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": ["experimental", "beta", "ga", "deprecated", "disabled"]
+    },
+    "algorithm_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Bound to code release; not editable via runtime (L0)"
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "planning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["screen_plan_scope", "mixed_proximity_seconds", "stages"],
+      "properties": {
+        "screen_plan_scope": {
+          "type": "string",
+          "enum": ["day", "chapter"]
+        },
+        "mixed_proximity_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 120
+        },
+        "stages": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "hero",
+                  "mosaic",
+                  "mixed",
+                  "landscape",
+                  "portrait",
+                  "flush",
+                  "tall"
+                ]
+              }
+            },
+            "mosaic": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "min_trip_photos": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Code authority MIN_TRIP_PHOTOS_FOR_MOSAIC=35 (W0 audit A)"
+                },
+                "enabled_window_sizes": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "integer",
+                    "enum": [3, 4, 5, 6, 8, 9]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "rhythm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nine_grid_limits", "consecutive_bans"],
+      "properties": {
+        "beat_profile": {
+          "type": "string",
+          "enum": ["flat", "classic_magazine", "dense_mid"],
+          "description": "LSE-CAP-03 · W3b default flat until capability on"
+        },
+        "pace_profile": {
+          "type": "string",
+          "enum": ["flat", "memories_pace", "slow_open"],
+          "description": "LSE-CAP-13 · W5; W3 must stay flat"
+        },
+        "pace_curve": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["chapter_frac_max", "multiplier"],
+              "properties": {
+                "chapter_frac_max": { "type": "number", "minimum": 0, "maximum": 1 },
+                "multiplier": { "type": "number", "minimum": 0.7, "maximum": 1.3 }
+              }
+            }
+          }
+        },
+        "nine_grid_limits": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["max_photos", "min", "max"],
+            "properties": {
+              "max_photos": { "type": "integer", "minimum": 1 },
+              "min": { "type": "integer", "minimum": 0 },
+              "max": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "consecutive_bans": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kinds", "blocked"],
+            "properties": {
+              "kinds": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "string",
+                  "enum": ["none", "nine", "triple", "six", "portrait_single", "other"]
+                }
+              },
+              "blocked": { "type": "boolean" }
+            }
+          }
+        },
+        "portrait_grid8_min_photos": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 50
+        }
+      }
+    },
+    "slot_assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "type": "string", "enum": ["greedy", "hungarian"] },
+        "max_matrix_n": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 16,
+          "description": "Deterministic budget; no wall-clock (PRD §4.9)"
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "saliency_scoring": { "type": "boolean" },
+        "tone_harmony": { "type": "boolean" },
+        "quality_unified": { "type": "boolean" }
+      }
+    },
+    "density_profiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["balanced", "hero_first", "collage_first"],
+      "properties": {
+        "balanced": { "$ref": "#/$defs/densityProfile" },
+        "hero_first": { "$ref": "#/$defs/densityProfile" },
+        "collage_first": { "$ref": "#/$defs/densityProfile" }
+      }
+    },
+    "pattern_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blacklist": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "lte_overrides_disable": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "scoring_profiles": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/scoringProfile" },
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*$"
+      }
+    },
+    "search": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["beam_width", "max_evaluations_per_trip", "min_candidate_score"],
+      "properties": {
+        "beam_width": { "type": "integer", "minimum": 1, "maximum": 12 },
+        "max_evaluations_per_trip": { "type": "integer", "minimum": 1 },
+        "max_evaluations_per_segment": { "type": "integer", "minimum": 0 },
+        "max_candidates_per_bucket": { "type": "integer", "minimum": 1 },
+        "search_timeout_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Telemetry-only after W1; must not change screens (PRD §4.9)"
+        },
+        "min_candidate_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "max_screens_per_chapter": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "diversity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "lambda"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["off", "mmr", "dpp"] },
+        "lambda": { "type": "number", "minimum": 0, "maximum": 1 },
+        "chapter_entropy_target": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "self_heal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "allow_drop"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "allow_drop": { "type": "boolean" },
+        "max_drop_ratio": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "segment_order": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "max_segment_len": { "type": "integer", "minimum": 1 },
+        "weights": { "$ref": "#/$defs/weightMap" }
+      }
+    },
+    "feedback": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "export_pairwise": { "type": "boolean" }
+      }
+    },
+    "highlight_windows": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "window_sizes": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 3 }
+        },
+        "boost": { "type": "number", "minimum": 1, "maximum": 2 },
+        "max_windows_per_chapter": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "editorial_hints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "breath_gap_threshold": { "type": "integer", "minimum": 1 },
+        "folio_tone_delta_max": { "type": "number", "minimum": 0 }
+      }
+    },
+    "rollout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["traffic_percent", "allowed_profiles"],
+      "properties": {
+        "traffic_percent": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "allowed_profiles": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "densityProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nine_bias": { "type": "number", "minimum": -0.5, "maximum": 0.5 },
+        "prefer_single": { "type": "boolean" },
+        "prefer_mosaic": { "type": "boolean" }
+      }
+    },
+    "weightMap": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "penaltyMap": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "scoringProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "weights": { "$ref": "#/$defs/weightMap" },
+        "penalties": { "$ref": "#/$defs/penaltyMap" }
+      }
+    },
+    "layoutFeatureValue": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "LayoutFeatures value domain [0,1], higher is better (PRD §4.6)"
+    }
+  }
+}

@@ -51,6 +51,47 @@ class LayoutFeedbackConfig:
 
 
 @dataclass
+class LayoutStrategyCapabilitiesConfig:
+    saliency_scoring: bool = False
+    beat_profile: str = "flat"
+    tone_harmony: bool = False
+    hungarian_assignment: bool = False
+    segment_order_optimizer: bool = False
+    implicit_feedback_export: bool = False
+    pace_profile: bool = False
+    highlight_windows: bool = False
+    editorial_hints: bool = False
+
+
+@dataclass
+class LayoutStrategyTelemetryConfig:
+    emit_per_window: bool = True
+    decision_log_max_events: int = 2000
+
+
+@dataclass
+class LayoutStrategyOverridesConfig:
+    disable_stages: tuple[str, ...] = ()
+    disable_profiles: tuple[str, ...] = ()
+
+
+@dataclass
+class LayoutStrategyEngineConfig:
+    """Phase 17 LSE · default disabled = P16 behavior (R-P17-05)."""
+
+    enabled: bool = False
+    default_strategy_id: str = "lse-default-2026-06"
+    policy_path: str = "travelogue/layout_engine/lse_policy.yaml"
+    runtime_store: str = "data/lse_runtime.json"
+    overrides: LayoutStrategyOverridesConfig = field(default_factory=LayoutStrategyOverridesConfig)
+    telemetry: LayoutStrategyTelemetryConfig = field(default_factory=LayoutStrategyTelemetryConfig)
+    feedback: LayoutFeedbackConfig = field(default_factory=LayoutFeedbackConfig)
+    capabilities: LayoutStrategyCapabilitiesConfig = field(
+        default_factory=LayoutStrategyCapabilitiesConfig
+    )
+
+
+@dataclass
 class LayoutTemplateEngineConfig:
     enabled: bool = True
     registry_path: str = "travelogue/layout_templates/templates"
@@ -75,6 +116,7 @@ class LayoutConfig:
     mixed_proximity_seconds: float = 12.0  # 1竖+2横混排 takenAt 跨度上限
     layout_density_enabled: bool = True  # PRD-FINE-CRAFT-LAYOUT-DENSITY · false → balanced
     template_engine: LayoutTemplateEngineConfig = field(default_factory=LayoutTemplateEngineConfig)
+    strategy_engine: LayoutStrategyEngineConfig = field(default_factory=LayoutStrategyEngineConfig)
     scoring: LayoutScoringConfig = field(default_factory=LayoutScoringConfig)
     feedback: LayoutFeedbackConfig = field(default_factory=LayoutFeedbackConfig)
 
@@ -149,4 +191,73 @@ def layout_feedback_from_dict(raw: dict[str, Any]) -> LayoutFeedbackConfig:
     return LayoutFeedbackConfig(
         enabled=bool(raw.get("enabled", False)),
         log_path=str(log_path).strip() if log_path else None,
+    )
+
+
+def layout_strategy_engine_from_dict(raw: dict[str, Any]) -> LayoutStrategyEngineConfig:
+    defaults = LayoutStrategyEngineConfig()
+    overrides_raw = raw.get("overrides") if isinstance(raw.get("overrides"), dict) else {}
+    telemetry_raw = raw.get("telemetry") if isinstance(raw.get("telemetry"), dict) else {}
+    feedback_raw = raw.get("feedback") if isinstance(raw.get("feedback"), dict) else {}
+    caps_raw = raw.get("capabilities") if isinstance(raw.get("capabilities"), dict) else {}
+    disable_stages = overrides_raw.get("disable_stages") or []
+    disable_profiles = overrides_raw.get("disable_profiles") or []
+    beat_raw = caps_raw.get("beat_profile", defaults.capabilities.beat_profile)
+    beat_profile = str(beat_raw).strip() if beat_raw is not None else defaults.capabilities.beat_profile
+    return LayoutStrategyEngineConfig(
+        enabled=bool(raw.get("enabled", defaults.enabled)),
+        default_strategy_id=str(
+            raw.get("default_strategy_id", defaults.default_strategy_id)
+        ),
+        policy_path=str(raw.get("policy_path", defaults.policy_path)),
+        runtime_store=str(raw.get("runtime_store", defaults.runtime_store)),
+        overrides=LayoutStrategyOverridesConfig(
+            disable_stages=tuple(str(x) for x in disable_stages if x)
+            if isinstance(disable_stages, list)
+            else (),
+            disable_profiles=tuple(str(x) for x in disable_profiles if x)
+            if isinstance(disable_profiles, list)
+            else (),
+        ),
+        telemetry=LayoutStrategyTelemetryConfig(
+            emit_per_window=bool(
+                telemetry_raw.get("emit_per_window", defaults.telemetry.emit_per_window)
+            ),
+            decision_log_max_events=int(
+                telemetry_raw.get(
+                    "decision_log_max_events",
+                    defaults.telemetry.decision_log_max_events,
+                )
+            ),
+        ),
+        feedback=layout_feedback_from_dict(feedback_raw or {}),
+        capabilities=LayoutStrategyCapabilitiesConfig(
+            saliency_scoring=bool(
+                caps_raw.get("saliency_scoring", defaults.capabilities.saliency_scoring)
+            ),
+            beat_profile=beat_profile,
+            tone_harmony=bool(caps_raw.get("tone_harmony", defaults.capabilities.tone_harmony)),
+            hungarian_assignment=bool(
+                caps_raw.get("hungarian_assignment", defaults.capabilities.hungarian_assignment)
+            ),
+            segment_order_optimizer=bool(
+                caps_raw.get(
+                    "segment_order_optimizer",
+                    defaults.capabilities.segment_order_optimizer,
+                )
+            ),
+            implicit_feedback_export=bool(
+                caps_raw.get(
+                    "implicit_feedback_export",
+                    defaults.capabilities.implicit_feedback_export,
+                )
+            ),
+            pace_profile=bool(caps_raw.get("pace_profile", defaults.capabilities.pace_profile)),
+            highlight_windows=bool(
+                caps_raw.get("highlight_windows", defaults.capabilities.highlight_windows)
+            ),
+            editorial_hints=bool(
+                caps_raw.get("editorial_hints", defaults.capabilities.editorial_hints)
+            ),
+        ),
     )

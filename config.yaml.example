@@ -61,6 +61,31 @@ layout:
   screen_plan_scope: day
   # 1 竖 + 2 横混排时三张图 takenAt 最大跨度（秒）
   mixed_proximity_seconds: 12
+  # Phase 17 · 智能排版策略引擎（LSE）；enabled=false 时与 P16 末态等价
+  strategy_engine:
+    enabled: false
+    default_strategy_id: lse-default-2026-06
+    policy_path: travelogue/layout_engine/lse_policy.yaml
+    runtime_store: data/lse_runtime.json
+    overrides:
+      disable_stages: []
+      disable_profiles: []
+    telemetry:
+      emit_per_window: true
+      decision_log_max_events: 2000
+    feedback:
+      enabled: true
+      log_path: null
+    capabilities:
+      saliency_scoring: false
+      beat_profile: flat
+      tone_harmony: false
+      hungarian_assignment: false
+      segment_order_optimizer: false
+      implicit_feedback_export: false
+      pace_profile: false
+      highlight_windows: false
+      editorial_hints: false
   # 智能排版 V2（ADR-002）；enabled=false 时与 legacy 完全等价
   scoring:
     enabled: false

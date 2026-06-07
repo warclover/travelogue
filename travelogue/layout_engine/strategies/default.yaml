@@ -1,0 +1,137 @@
+# LSE default strategy pack · P16 末态 parity baseline (W0 audit A authority)
+# Schema: travelogue/layout_engine/lse_strategy.schema.json
+
+id: lse-default-2026-06
+version: 1
+status: ga
+algorithm_version: p15-s2
+displayName: 默认智能排版策略
+description: >
+  P17 默认策略包：收敛 mosaic.weights/penalties + 节奏配额 + 搜索预算。
+  W1 enabled=true 纯收敛目标与 P16 末态 screens parity（无 CAP）。
+
+planning:
+  screen_plan_scope: day
+  mixed_proximity_seconds: 12
+  stages:
+    enabled: [hero, mosaic, mixed, landscape, portrait, flush, tall]
+    mosaic:
+      min_trip_photos: 35
+      enabled_window_sizes: [3, 4, 5, 6, 8, 9]
+
+rhythm:
+  beat_profile: flat
+  pace_profile: flat
+  nine_grid_limits:
+    - { max_photos: 50, min: 0, max: 1 }
+    - { max_photos: 100, min: 2, max: 5 }
+    - { max_photos: 200, min: 4, max: 8 }
+    - { max_photos: 999999, min: 6, max: 10 }
+  consecutive_bans:
+    - { kinds: [nine, nine], blocked: true }
+    - { kinds: [triple, six], blocked: true }
+    - { kinds: [six, triple], blocked: true }
+    - { kinds: [portrait_single, portrait_single], blocked: true }
+  portrait_grid8_min_photos: 50
+
+slot_assignment:
+  mode: greedy
+  max_matrix_n: 16
+
+features:
+  saliency_scoring: false
+  tone_harmony: false
+  quality_unified: false
+
+density_profiles:
+  balanced:
+    nine_bias: 0.0
+    prefer_single: false
+    prefer_mosaic: false
+  hero_first:
+    nine_bias: -0.3
+    prefer_single: true
+  collage_first:
+    nine_bias: 0.3
+    prefer_mosaic: true
+
+pattern_policy:
+  blacklist: []
+  lte_overrides_disable: []
+
+scoring_profiles:
+  default:
+    weights:
+      aspect_match: 0.20
+      sharpness: 0.15
+      temporal_coherence: 0.15
+      hero_separation: 0.10
+      subject_run: 0.10
+      layout_rhythm: 0.10
+      diversity: 0.10
+      category_coherence: 0.10
+      cohort_coherence: 0.0
+    penalties:
+      face_crop: 0.30
+      main_quality: 0.25
+      duplicate_density: 0.20
+      hero_narrow_tiles: 0.35
+      hero_slot_aspect: 0.40
+      flat_six_grid: 0.35
+  # Studio 实验轨 · layout.scoring.enabled=true 时 PHASE6 预设（非默认 parity 基线）
+  beam:
+    weights:
+      aspect_match: 0.11
+      sharpness: 0.05
+      temporal_coherence: 0.08
+      burst_integrity: 0.08
+      diversity: 0.07
+      arc_fit: 0.08
+      hero_separation: 0.06
+      luminance_continuity: 0.06
+      tone_continuity: 0.07
+      subject_run: 0.05
+      layout_rhythm: 0.05
+      gravity_balance: 0.05
+    penalties: {}
+
+search:
+  beam_width: 3
+  max_evaluations_per_trip: 500
+  max_evaluations_per_segment: 0
+  max_candidates_per_bucket: 12
+  search_timeout_ms: 2000
+  min_candidate_score: 0.35
+  max_screens_per_chapter: 12
+
+diversity:
+  mode: mmr
+  lambda: 0.65
+
+self_heal:
+  enabled: true
+  allow_drop: false
+  max_drop_ratio: 0.05
+
+segment_order:
+  enabled: false
+  max_segment_len: 30
+
+feedback:
+  enabled: true
+  export_pairwise: false
+
+highlight_windows:
+  enabled: false
+  window_sizes: [5, 8, 12]
+  boost: 1.25
+  max_windows_per_chapter: 2
+
+editorial_hints:
+  enabled: false
+  breath_gap_threshold: 3
+  folio_tone_delta_max: 12.0
+
+rollout:
+  traffic_percent: 100
+  allowed_profiles: [default]

@@ -18,6 +18,7 @@ from travelogue.config.layout import (
     LayoutConfig,
     layout_feedback_from_dict,
     layout_scoring_from_dict,
+    layout_strategy_engine_from_dict,
     layout_template_engine_from_dict,
 )
 from travelogue.config.misc import (
@@ -157,6 +158,11 @@ def load_config(path: Path | None = None) -> AppConfig:
     )
     scoring_raw = layout_raw.get("scoring") if isinstance(layout_raw.get("scoring"), dict) else {}
     feedback_raw = layout_raw.get("feedback") if isinstance(layout_raw.get("feedback"), dict) else {}
+    strategy_engine_raw = (
+        layout_raw.get("strategy_engine")
+        if isinstance(layout_raw.get("strategy_engine"), dict)
+        else {}
+    )
     template_engine_raw = (
         layout_raw.get("template_engine") if isinstance(layout_raw.get("template_engine"), dict) else {}
     )
@@ -203,6 +209,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             mixed_proximity_seconds=mixed_gap,
             layout_density_enabled=layout_density_enabled,
             template_engine=layout_template_engine_from_dict(template_engine_raw),
+            strategy_engine=layout_strategy_engine_from_dict(strategy_engine_raw),
             scoring=layout_scoring_from_dict(scoring_raw),
             feedback=layout_feedback_from_dict(feedback_raw),
         ),

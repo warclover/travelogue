@@ -9,8 +9,8 @@ from travelogue.curation.screen_planner import (
     LAYOUT_ENGINE_SCREENS,
     _collect_asset_ids_from_chapter,
     _sort_asset_ids_by_taken,
-    plan_screens_for_chapter,
 )
+from travelogue.layout_engine.adapter import ChapterPlanContext, plan_chapter_screens
 from travelogue.media.image_ops import AspectKind
 
 
@@ -63,6 +63,7 @@ def attach_screens_day_buckets(
     enable_food_grid: bool = True,
     mundane_grid_buckets: tuple[str, ...] = ("food",),
     layout_density: str | None = None,
+    cfg: AppConfig | None = None,
 ) -> list[dict]:
     """
     Plan screens on each day bucket (full takenAt sequence), assign to chapters
@@ -117,19 +118,22 @@ def attach_screens_day_buckets(
         if not aids:
             continue
         sorted_aids = _sort_asset_ids_by_taken(aids, assets_by_id)
-        gal_screens = plan_screens_for_chapter(
-            sorted_aids,
-            aspects,
-            chapter_id=ch["id"],
-            assets=assets_by_id or None,
-            burst_seconds=burst_seconds,
-            mixed_proximity_seconds=mixed_proximity_seconds,
-            orientation_summary=orientation_summary,
-            skip_screen_asset_ids=skip,
-            layout_state=layout_state,
-            trip_photo_total=trip_photo_total,
-            enable_food_grid=enable_food_grid,
-            mundane_grid_buckets=mundane_grid_buckets,
+        gal_screens = plan_chapter_screens(
+            ChapterPlanContext(
+                sorted_aids,
+                aspects,
+                chapter_id=ch["id"],
+                assets=assets_by_id or None,
+                burst_seconds=burst_seconds,
+                mixed_proximity_seconds=mixed_proximity_seconds,
+                orientation_summary=orientation_summary,
+                skip_screen_asset_ids=skip,
+                layout_state=layout_state,
+                trip_photo_total=trip_photo_total,
+                enable_food_grid=enable_food_grid,
+                mundane_grid_buckets=mundane_grid_buckets,
+            ),
+            cfg=cfg,
         )
         ch["screens"] = gal_screens
 
@@ -148,22 +152,25 @@ def attach_screens_day_buckets(
             median_sharp=med_sharp,
             featured_weight=featured_weight,
         )
-        bucket_screens = plan_screens_for_chapter(
-            bucket,
-            aspects,
-            chapter_id="day",
-            assets=assets_by_id or None,
-            burst_seconds=burst_seconds,
-            mixed_proximity_seconds=mixed_proximity_seconds,
-            orientation_summary=orientation_summary,
-            skip_screen_asset_ids=skip,
-            layout_state=layout_state,
-            trip_photo_total=trip_photo_total,
-            preferred_hero_id=preferred_hero,
-            median_sharp=med_sharp,
-            featured_weight=featured_weight,
-            enable_food_grid=enable_food_grid,
-            mundane_grid_buckets=mundane_grid_buckets,
+        bucket_screens = plan_chapter_screens(
+            ChapterPlanContext(
+                bucket,
+                aspects,
+                chapter_id="day",
+                assets=assets_by_id or None,
+                burst_seconds=burst_seconds,
+                mixed_proximity_seconds=mixed_proximity_seconds,
+                orientation_summary=orientation_summary,
+                skip_screen_asset_ids=skip,
+                layout_state=layout_state,
+                trip_photo_total=trip_photo_total,
+                preferred_hero_id=preferred_hero,
+                median_sharp=med_sharp,
+                featured_weight=featured_weight,
+                enable_food_grid=enable_food_grid,
+                mundane_grid_buckets=mundane_grid_buckets,
+            ),
+            cfg=cfg,
         )
         for sc in bucket_screens:
             slots = sc.get("slots") or []
@@ -231,6 +238,7 @@ def attach_screens_to_chapters(
             enable_food_grid=food_grid_enabled,
             mundane_grid_buckets=tuple(str(x).strip().lower() for x in grid_buckets if str(x).strip()),
             layout_density=layout_density,
+            cfg=cfg,
         )
 
     assets_by_id: dict[str, dict] = {}
@@ -255,21 +263,26 @@ def attach_screens_to_chapters(
 
         if asset_ids:
             hero_id = (ch.get("curation") or {}).get("heroAssetId")
-            ch["screens"] = plan_screens_for_chapter(
-                asset_ids,
-                aspects,
-                chapter_id=ch.get("id", "ch"),
-                assets=assets_by_id or None,
-                burst_seconds=burst_seconds,
-                mixed_proximity_seconds=mixed_proximity_seconds,
-                orientation_summary=orientation_summary,
-                skip_screen_asset_ids=skip_screen_asset_ids,
-                layout_state=layout_state,
-                trip_photo_total=trip_photo_total,
-                preferred_hero_id=hero_id,
-                featured_weight=featured_weight,
-                enable_food_grid=food_grid_enabled,
-                mundane_grid_buckets=tuple(str(x).strip().lower() for x in grid_buckets if str(x).strip()),
+            ch["screens"] = plan_chapter_screens(
+                ChapterPlanContext(
+                    asset_ids,
+                    aspects,
+                    chapter_id=ch.get("id", "ch"),
+                    assets=assets_by_id or None,
+                    burst_seconds=burst_seconds,
+                    mixed_proximity_seconds=mixed_proximity_seconds,
+                    orientation_summary=orientation_summary,
+                    skip_screen_asset_ids=skip_screen_asset_ids,
+                    layout_state=layout_state,
+                    trip_photo_total=trip_photo_total,
+                    preferred_hero_id=hero_id,
+                    featured_weight=featured_weight,
+                    enable_food_grid=food_grid_enabled,
+                    mundane_grid_buckets=tuple(
+                        str(x).strip().lower() for x in grid_buckets if str(x).strip()
+                    ),
+                ),
+                cfg=cfg,
             )
         else:
             ch["screens"] = []

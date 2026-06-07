@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | v0.17.6-PHASE17 |
+| **文档版本** | v0.17.7-PHASE17 |
 | **状态** | **有条件通过** · 2026-06-07 跨职能 + CTO/算法 + 前端/页面评审已纳入 |
 | **评审纪要** | 本文 §16（产品/算法/架构/需求/UX/交互）；§17（CTO/算法专家 v0.17.4 + 前端/页面 v0.17.5） |
 | **Phase 17 代号** | 「智能排版引擎」（Layout Strategy Engine，**LSE**） |
@@ -850,7 +850,7 @@ W1 须 **parity CI**：`enabled=false` 与迁移前 screens 快照一致。
 
 | ID | 轨道 | 验收条件 |
 |----|------|----------|
-| **AC-P17-01** | Core | 存在 `layout.strategy_engine` 配置；`enabled=false` 时与 P16 末态 screens 快照一致。**parity 口径为「逻辑等价」**：在**受控环境**（固定时钟、禁用 `search_budget` 挂钟截断、单线程、固定 seed）下冻结基线比对；**不含**现网 wall-clock 截断这类负载相关的非确定行为（现网 `search_budget.py` 用 `time.monotonic` 门控会改变产出，见 §4.9 / IMPLEMENTATION-PHASE17 §受控 parity） |
+| **AC-P17-01** | Core | 存在 `layout.strategy_engine` 配置；`enabled=false` 时与 P16 末态 screens 快照一致。**parity 口径为「逻辑等价」**：在**受控环境**（固定时钟、禁用 `search_budget` 挂钟截断、单线程、固定 seed）下冻结基线比对；**不含**现网 wall-clock 截断这类负载相关的非确定行为（现网 `search_budget.py` 用 `time.monotonic` 门控会改变产出，见 §4.9 / IMPLEMENTATION-PHASE17 §受控 parity）。**分层说明（W0 审计 B）**：P16 末态 parity 默认指 `layout.scoring.enabled=false` 现网主路径（MCS+stages，不受挂钟影响）；`layout.scoring.enabled=true` 的 beam 实验路径须单独受控基线，不纳入 Core parity 门禁 |
 | **AC-P17-02** | Core | 默认 Strategy Pack YAML 覆盖现网全部活跃排版参数；parity CI 通过 |
 | **AC-P17-03** | Core | `LayoutStrategyEngine.load()` p99 \<1ms（内存索引，类比 AC-P16-12） |
 | **AC-P17-04** | Core | 每次 curate 写入 `weightsHash` + `strategyId`（**FR-P17-TRACE**） |
@@ -998,7 +998,7 @@ planning:
   stages:
     enabled: [hero, mosaic, mixed, landscape, portrait, flush, tall]
     mosaic:
-      min_trip_photos: 20
+      min_trip_photos: 35
       enabled_window_sizes: [3, 4, 5, 6, 8, 9]
 
 rhythm:
@@ -1053,11 +1053,10 @@ scoring_profiles:
       layout_rhythm: 0.10
       diversity: 0.10
       category_coherence: 0.10
-      tone_continuity: 0.08          # LSE-CAP-04 · R-P17-10
-      luminance_continuity: 0.06
+      # tone_continuity / luminance_continuity：W3b CAP-04 注入（现网 MCS default 无此项 · 审计 A）
     penalties:
       face_crop: 0.30
-      salient_crop: 0.28             # LSE-CAP-02 · 与 face_crop 合并计分口径
+      # salient_crop: W3b CAP-02 注入
       main_quality: 0.25
       duplicate_density: 0.20
       hero_narrow_tiles: 0.35
@@ -1145,6 +1144,7 @@ P15 MCS → P16 LTE → P17 LSE（Core/Plus） → P18（标定上线·构图角
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.17.7 | 2026-06-07 | W0 审计落地：`min_trip_photos` 35（对齐代码）；§13.1 default weights 剥离未生效 tone/salient；AC-P17-01 补默认路径 vs beam 分层脚注 |
 | v0.17.6 | 2026-06-07 | 开发负责人评审落地：AC-P17-01 parity 口径改为「受控环境逻辑等价」（剥离 `search_budget` 挂钟非确定行为）；R-P17-05 + §9「切引擎与上 CAP 解耦」（W3 拆 W3a 切引擎 / W3b 上算法）；配套 `docs/IMPLEMENTATION-PHASE17.md`（含与现有代码融合方案、三项 W0 审计、受控 parity 跑法、adapter 参数收束） |
 | v0.17.5 | 2026-06-07 | 前端/页面负责人评审落地：§4.10 渲染落地契约（focal/salient CSS 绑定 + object-position 硬编码收敛 + 渲染输入字段隔离 + viewport 适配）；§5.1.1 Inspector 前端实现规格（虚拟滚动/分布条/裁切告警/沙箱并排 diff/五态/RBAC）；§4.4 成功页文案表 + i18n；§4.5.12 `viewportScope` + 渲染消费占位；新增 AC-P17-30/31/32；§13.4 增补 2 项 W0/W3 阻断（渲染绑定、成功页归属）；§17.3 前端评审纪要 |
 | v0.17.4 | 2026-06-07 | CTO/算法专家技术评审落地：§4.6 LayoutFeatures 值域契约；§4.3 log-domain 因子归因口径；§4.5.1 匈牙利主指标改人脸/salient + τ 降护栏 + tie-break + 仅解 asset→slot 边界；§4.5.4 tone 改 look-back 后处理 + 边界豁免；§4.5.5 复用 feedback.py 去噪 + 有效 label 过滤；§4.9 确定性预算（移除 wall-clock 改产出）+ 性能 spike；§5.3 审批语义对齐 + 标注 L0 改动；AC-P17-13/17b/19 修订；§9 shadow 双轨 + dogfood 准入；§13.4 增补 5 项 W0 阻断；§17 技术评审纪要 |

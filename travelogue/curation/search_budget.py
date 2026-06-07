@@ -13,11 +13,14 @@ class SearchBudget:
     max_evaluations_per_trip: int = 500
     max_evaluations_per_segment: int = 0
     allow_burst_split: bool = False
+    # PRD §4.9 / P17 W1: wall-clock must not change screens[] by default.
+    wall_clock_limits_output: bool = False
     generations: int = 0
     evaluations: int = 0
     segment_evaluations: int = 0
     started_at: float = field(default_factory=time.monotonic)
     timed_out: bool = False
+    wall_clock_exceeded: bool = False
     exhausted: bool = False
 
     def elapsed_ms(self) -> float:
@@ -25,8 +28,10 @@ class SearchBudget:
 
     def _check_timeout(self) -> bool:
         if self.elapsed_ms() >= self.search_timeout_ms:
-            self.timed_out = True
-            return True
+            self.wall_clock_exceeded = True
+            if self.wall_clock_limits_output:
+                self.timed_out = True
+                return True
         return False
 
     def can_generate(self) -> bool:
@@ -75,6 +80,7 @@ class SearchBudget:
             "maxEvaluationsPerSegment": self.max_evaluations_per_segment,
             "elapsedMs": round(self.elapsed_ms(), 2),
             "timedOut": self.timed_out,
+            "wallClockExceeded": self.wall_clock_exceeded,
             "exhausted": self.exhausted,
             "allowBurstSplit": self.allow_burst_split,
         }

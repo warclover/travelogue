@@ -7,7 +7,7 @@
 | **配套 PRD** | [PRD-PHASE17-layout-strategy-engine.md](./PRD-PHASE17-layout-strategy-engine.md)（v0.17.6） |
 | **分支** | `feature/phase17-lse` |
 | **更新日期** | 2026-06-07 |
-| **状态** | **W0 起草中** — 三项审计待产出；W1 未开工 |
+| **状态** | **W0 已冻结** — 审计+schema+DESIGN+ADR 就绪；**W1 待开工** |
 
 > **本文定位**：把 PRD 的「做什么/为什么」落成「怎么接、改哪里、先干哪些、多久」。PRD 是契约，本文是施工图。**§13.4 W0 阻断交付物之一**。
 
@@ -216,14 +216,18 @@ PYTHONHASHSEED=0；单线程；search_budget 用 max_evaluations 上限（非 ti
 
 W1 开工前必须全部 ✅：
 
-- [ ] 审计 A 映射表评审通过（现网活跃参数权威值）
-- [ ] 审计 B 受控 parity runbook 评审通过 + AC-P17-01 口径确认
-- [ ] 审计 C 统一 decision log schema 冻结
-- [ ] `lse_strategy.schema.json` 草案就绪（W0 阻断）
-- [ ] `DESIGN-PHASE17-layout-strategy-engine.md` 就绪（W0 阻断）
-- [ ] 性能 spike 报告（各能力 × trip 规模增量）
-- [ ] golden trip 三类各 ≥2（家庭混排/风景横图/人像竖图）冻结快照
-- [ ] 分支 `feature/phase17-lse` 已建（✅ 已完成）
+- [x] 审计 A 映射表评审通过（现网活跃参数权威值）
+- [x] 审计 B 受控 parity runbook 评审通过 + AC-P17-01 口径确认
+- [x] 审计 C 统一 decision log schema 冻结
+- [x] `lse_strategy.schema.json` 草案就绪（W0 阻断）
+- [x] `DESIGN-PHASE17-layout-strategy-engine.md` 就绪（W0 阻断）
+- [x] ADR-013 审批语义对齐（W0 阻断）
+- [x] `strategies/default.yaml` + `lse_policy.yaml`（对齐审计 A）
+- [ ] 性能 spike 报告（各能力 × trip 规模增量）— **W3 能力开启前**，不阻断 W1
+- [ ] golden trip 三类各 ≥2（家庭混排/风景横图/人像竖图）冻结快照 — W1 并行补齐
+- [x] 分支 `feature/phase17-lse` 已建
+
+**W1 可开工判定**：上表除性能 spike / golden 扩充外均已 ✅。
 
 ---
 
@@ -239,8 +243,30 @@ W1 开工前必须全部 ✅：
 
 ---
 
+## 10. W1 任务清单（优先级序 · 执行跟踪）
+
+| 优先级 | ID | 任务 | 产出 | AC | 状态 |
+|--------|-----|------|------|-----|------|
+| P0 | W1-01 | `LayoutStrategyEngineConfig` + `config.yaml.example` 接线 | `config/layout.py` | — | ✅ |
+| P0 | W1-02 | `registry.py` 加载 pack + policy + contentHash | `layout_engine/registry.py` | AC-P17-03 | ✅ |
+| P0 | W1-03 | `validator.py` schema 门禁 + default.yaml CI | `cli validate` | AC-P17-02 | ✅ |
+| P0 | W1-04 | `adapter.py` 防腐层 + §3 十五 kwargs 收束 | `screen_planner_attach.py` 3 处 | AC-P17-01/02 | 🟡 薄包装已接；kwargs 全量映射待补 |
+| P0 | W1-05 | `search_budget` 挂钟改 telemetry-only | `search_budget.py` + 测试改写 | 审计 B | ✅ |
+| P1 | W1-06 | `decision_log.py` sidecar + mosaic 投影 | `runs/layout-decisions.jsonl` | AC-P17-04/05 | 待办 |
+| P1 | W1-07 | 受控 parity CI `test_p17_controlled_parity.py` | golden 快照 | AC-P17-01 | 待办 |
+| P1 | W1-08 | `weights_hash` + `strategyId` 写入 trip 摘要 | `curation.layoutStrategy` | AC-P17-04 | 待办 |
+| P2 | W1-09 | golden 人像/风景 fixture 各 ≥2 | `tests/fixtures/` | §10.3 | 待办 |
+| P2 | W1-10 | `enabled=false` 默认；文档与 Studio 开关说明 | — | AC-P17-01 | 待办 |
+
+**执行顺序**：W1-01 → 02 → 03（可并行 02/03）→ 04 → 05 → 06 → 07 → 08；09/10 与 P0 并行。
+
+**W1 出口**：AC-P17-01～05 通过；`enabled=false` 与 `enabled=true`（纯收敛）受控 parity 绿。
+
+---
+
 ## 9. 修订记录
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.2 | 2026-06-07 | W0 冻结：DoR 勾选、§10 W1 任务清单、状态更新 |
 | v0.1 | 2026-06-07 | W0 起草：融合设计、三项 W0 审计模板、adapter 参数收束、decision log 适配、切引擎/上 CAP 解耦的阶段分解、工作量、W1 DoR |
