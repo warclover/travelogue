@@ -84,3 +84,28 @@ def test_journal_css_handwritten_inventory_bounded() -> None:
     report = audit_journal_css(Path(JOURNAL_SCREENS_CSS))
     assert report["duplicateGridClassesOutsideMarker"] == []
     assert report["outsideGeneratedGridClassCount"] == 0
+
+
+@pytest.mark.unit
+def test_journal_has_base_slot_image_containment(journal_css: str) -> None:
+    """Regression: P16 sync must not drop universal slot img sizing (object-fit + 100%)."""
+    assert ".layout-slot__img--cover" in journal_css
+    assert "object-fit: cover" in journal_css
+    assert "width: 100%" in journal_css
+    assert "height: 100%" in journal_css
+    start = journal_css.index(LTE_MARKER_START)
+    preamble = journal_css[:start]
+    assert ".layout-slot__img" in preamble
+    assert "min-height: 0" in preamble
+    assert "layout-slot--blurred-fill" in preamble
+
+
+@pytest.mark.unit
+def test_journal_has_portrait_stage_tokens_and_dense_grid_overlays(journal_css: str) -> None:
+    """Regression: overlay block keeps portrait tokens + mosaic/2x2 slot fill rules."""
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert "--portrait-stage-vh:" in overlays
+    assert "layout-screen__grid--mosaic-" in overlays
+    assert "layout-screen__grid--2x2 .layout-slot__img--cover" in overlays

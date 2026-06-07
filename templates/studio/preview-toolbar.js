@@ -1289,6 +1289,9 @@ var narrateJobId = null;
       "/__travelogue/trips/" + encodeURIComponent(tripId) + "/asset-media-class";
 
     function shouldShowControl(screen, assetId) {
+      var raw = screen.getAttribute("data-asset-ids") || "";
+      var ids = raw.split(",").filter(function (id) { return !!id; });
+      if (ids.length === 1) return true;
       var mc = assetMediaById[assetId] || "photo";
       var pattern = screen.getAttribute("data-pattern") || "";
       var hint = screen.getAttribute("data-layout-hint") || "";

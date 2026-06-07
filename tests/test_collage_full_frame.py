@@ -93,3 +93,34 @@ def test_full_frame_render_blurred_fill() -> None:
 def test_full_frame_fits_contain() -> None:
     fits = _fits_for_screen(PATTERN_FULL_FRAME, ["a1"])
     assert fits == ["contain"]
+
+
+@pytest.mark.unit
+def test_collage_never_groups_with_photo_in_planner(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "travelogue.curation.collage_routing.get_config",
+        lambda: AppConfig(
+            layout=LayoutConfig(
+                template_engine=LayoutTemplateEngineConfig(exclude_collage_from_mosaic=True)
+            )
+        ),
+    )
+    from travelogue.curation.screen_planner import plan_screens_for_chapter
+
+    assets_map = {
+        "p1": {"id": "p1", "mediaClass": "photo", "width": 1200, "height": 1600},
+        "c1": {"id": "c1", "mediaClass": "collage", "width": 1600, "height": 800},
+    }
+    aspects = {"p1": "portrait", "c1": "landscape"}
+    screens = plan_screens_for_chapter(
+        ["c1", "p1"],
+        aspects,
+        assets=assets_map,
+        trip_photo_total=2,
+        chapter_id="ch-01",
+        enable_mosaic=False,
+    )
+    collage_screens = [s for s in screens if any(sl.get("assetId") == "c1" for sl in s.get("slots") or [])]
+    assert len(collage_screens) == 1
+    assert collage_screens[0]["patternId"] == PATTERN_FULL_FRAME
+    assert len(collage_screens[0]["slots"]) == 1

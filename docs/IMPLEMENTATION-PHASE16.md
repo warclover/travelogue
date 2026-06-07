@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **文档** | IMPLEMENTATION-PHASE16 |
-| **版本** | v1.0（W1 开工版） |
+| **版本** | v1.2 |
 | **配套 PRD** | [PRD-PHASE16-layout-template-engine.md](./PRD-PHASE16-layout-template-engine.md)（v0.16.4） |
 | **分支** | `phase16/layout-template-engine` |
 | **更新日期** | 2026-06-06 |
@@ -157,6 +157,37 @@ primitive 参数化、配额调优、删 legacy 手写常量、§9.4 多样性�
 | Playwright E2E | AC-11 stale hint + §13.2 deprecated lifecycle（`test_lte_studio_playwright.py`） |
 | Legacy import | `grid_specs.py` 直引 `_legacy_generated` 元组 |
 
+### 2.z P16 前端 residual 任务表（W3 验收后 · 非 blocking）
+
+> **背景**：对照 PRD W3 前端交付（R-P16-10、AC-P16-11/14/18、§9.4），**关键路径功能已落地**（`/templates-admin` internal 目录、preview stale 提示、collage 改判、曝光调权 UI）。下表为**体验 polish / 测试补全**，不阻塞 P16-Core 收口；PRD 明确 **NG** 项（拖拽拼版、C 端指定版式等）不在此列。
+
+**W3 前端 AC 收口结论**
+
+| AC / 规则 | 状态 | 说明 |
+|-----------|------|------|
+| AC-P16-11 | ✅ | `preview-toolbar.js` stale 条 + Playwright |
+| AC-P16-14 | ✅（简化） | internal 目录有 slot AR、probe 数值、exposure_share；无图形化探针条 |
+| AC-P16-18 | ✅ | collage 改判控件 + full-frame 路由（后端已测） |
+| R-P16-10 | ✅ | C 端「为何选此版式」= 读决策日志；后台 JSON 已通，预览页无专门面板（符合 PRD） |
+| §9.4 曝光调权 | ✅ | `/templates-admin` 提案 + 双人审批 UI |
+
+**Residual 任务（建议 W4+ / 独立 polish PR）**
+
+| ID | 优先级 | 任务 | PRD 依据 | 现状 | 建议交付 | 触碰文件 | 验收 |
+|----|--------|------|----------|------|----------|----------|------|
+| **FE-R01** | P2 | **可视化探针条 / 几何图示** | §6.2「publish 预览条」；§10 Studio「几何图示/探针条」；AC-P16-14 | 表格仅 `worstProbe` 数值 + tooltip；「几何」按钮 dump JSON 到 `<pre>` | 在 layout 行或侧栏渲染 slot AR 水平条（绿/黄/红阈值）；可选 stage 网格示意图 | `templates/studio/templates-admin.html`；可复用 `layoutPatterns[].slotAspects` | 人工：3 个 composite 模板探针条与 docgen 一致；可选 Playwright 截图 |
+| **FE-R02** | P3 | **预览页只读「版式决策摘要」** | R-P16-10（可选增强；PRD 未强制 C 端 UI） | `layoutDecisionLog` 仅在 `/templates-admin` 以 JSON 查看 | preview 抽屉或 per-screen 折叠：winner `patternId` + `reasonCodes` + `templateRegistryVersion` | `preview-toolbar.js`；读 `trip.json` curation 或 `GET /__travelogue/templates/decisions` | 单测或 Playwright：某 golden trip 展示与日志一致 |
+| **FE-R03** | P2 | **collage 改判 Playwright E2E** | AC-P16-18 配套 | API 单测有（`test_studio_asset_media_class.py`）；预览 UI 无 E2E | 种子 collage 屏 → 改判 photo → 应用排版 → DOM/class 变化 | `tests/test_lte_studio_playwright.py` 或新文件 | CI green；与 `test_collage_full_frame.py` 后端断言互补 |
+| **FE-R04** | P3 | **internal 目录「几何」面板 UX** | AC-P16-14 polish | `/version` 返回完整 `geometry` JSON，前端仅 `<pre>` | 结构化面板：stage cols/rows、gridClass、admission 摘要；保留「复制 JSON」 | `templates-admin.html` + 已有 `layout_template_geometry_detail` API | template_operator 可无需读 raw JSON 完成准入评审 |
+| **FE-R05** | P3 | **首页 trip 卡 layout stale 提示** | AC-P16-11 延伸（PRD 未单列） | `layoutCssStale` 仅在 preview-toolbar 消费；homepage v2 仅 `longshotStale` / `algorithmStale` | bento/shelf 卡增加「布局待更新」badge + 跳转预览 | `studio_trips.py`（已有字段）、`homepage-v2/bento.js`、`shelf.js` | Playwright homepage AC 或单测 JSON 字段 |
+| **—** | — | **不在 P16 范围** | NG-P16-01/05；Phase 4 线框 | `docs/wireframes/preview-*-wireframe.html` 未进主线 | 不纳入 P16 residual；另开 Phase 4/助手改版 | — | — |
+
+**认领建议**
+
+1. 若只做一项 polish：**FE-R01**（与 PRD「探针条」文案最贴近，数据已齐）。
+2. **FE-R02 / FE-R05** 属产品化增强，需 PM 确认是否超出 R-P16-10「读日志即可」。
+3. **FE-R03** 成本低，建议在下次改 preview E2E 时顺带合并。
+
 ### 2.x 工作量汇总
 
 | 口径 | 估算 |
@@ -224,6 +255,7 @@ primitive 参数化、配额调优、删 legacy 手写常量、§9.4 多样性�
 - 设计与契约：[PRD-PHASE16-layout-template-engine.md](./PRD-PHASE16-layout-template-engine.md)
 - 前置阶段：[PRD-PHASE15-photo-mosaic-evolution.md](./PRD-PHASE15-photo-mosaic-evolution.md)
 - 复用平台：`travelogue/templating/`（生命周期/审计/RBAC/审批）
+- 使用说明：[GUIDE-PHASE16-layout-template-engine.md](./GUIDE-PHASE16-layout-template-engine.md)
 
 ---
 
@@ -233,3 +265,4 @@ primitive 参数化、配额调优、删 legacy 手写常量、§9.4 多样性�
 |------|------|------|
 | v1.0 | 2026-06-06 | W1 开工版：融合设计（9 融合点）、模块结构、W0–W4 阶段交付与工作量、MVP 切法、风险登记、W1 任务卡 + 触碰文件 + 验收门 |
 | v1.1 | 2026-06-06 | 第三轮闭合：§13.3 dogfood/user 3P+2L、primitive 扩展、V-P16-13 sign-off、CSS audit 口径 |
+| v1.2 | 2026-06-06 | §2.z P16 前端 residual 任务表（W3 AC 收口结论 + FE-R01~R05）；关联 GUIDE 文档 |

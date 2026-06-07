@@ -17,18 +17,43 @@ MediaClass = str  # photo | screenshot | thumbnail | reupload | archive | collag
 _COLLAGE_SOFTWARE_KEYWORDS = (
     "pic collage",
     "picsart",
+    "picsart photo",
     "canva",
     "layout",
     "collage",
     "拼图",
     "拼贴",
+    "拼好照",
     "美图秀秀",
+    "醒图",
+    "剪映",
+    "capcut",
+    "黄油相机",
+    "一甜相机",
+    "轻颜",
     "inshot",
     "photo grid",
     "grid maker",
     "diptic",
     "unfold",
     "snapseed collage",
+    "google photos",
+    "天天拼图",
+    "百度贴贴",
+    "九宫格",
+    "长图拼接",
+)
+
+_COLLAGE_FILENAME_KEYWORDS = (
+    "collage",
+    "pintu",
+    "pin_tu",
+    "拼图",
+    "拼贴",
+    "grid",
+    "九宫格",
+    "长图",
+    "jigsaw",
 )
 
 _COVER_CLASS_WEIGHT: dict[str, float] = {
@@ -76,6 +101,16 @@ def classify_media_class(
     if is_upscaled_thumbnail(native_probe):
         return "reupload"
 
+    preset = str(asset.get("mediaClass") or "")
+    if preset == "collage":
+        return "collage"
+
+    # Collage before screenshot: wide multi-panel collages often exceed 2.4 AR.
+    if detect_collage_asset(path=path, img=img, asset=asset):
+        return "collage"
+    if _path_suggests_collage(path):
+        return "collage"
+
     ratio = nw / nh if nh else 1.0
     ext = path.suffix.lower()
     no_exif = date_source == "mtime"
@@ -83,13 +118,6 @@ def classify_media_class(
         return "screenshot"
     if no_exif and ext == ".png" and min(nw, nh) >= 400:
         return "screenshot"
-
-    preset = str(asset.get("mediaClass") or "")
-    if preset == "collage":
-        return "collage"
-
-    if detect_collage_asset(path=path, img=img, asset=asset):
-        return "collage"
 
     return "photo"
 
@@ -127,6 +155,11 @@ def refine_archive_media_class(assets: list[dict]) -> None:
 
 def cover_class_weight(media_class: str | None) -> float:
     return _COVER_CLASS_WEIGHT.get(media_class or "unknown", 0.85)
+
+
+def _path_suggests_collage(path: Path) -> bool:
+    stem = path.stem.lower().replace("-", "_").replace(" ", "_")
+    return any(kw in stem for kw in _COLLAGE_FILENAME_KEYWORDS)
 
 
 def _exif_software_suggests_collage(img: Image.Image) -> bool:
@@ -210,6 +243,8 @@ def detect_collage_asset(
     """PRD §3.4: EXIF whitelist first; conservative seam heuristic second."""
     asset = asset or {}
     if str(asset.get("mediaClass") or "") == "collage":
+        return True
+    if _path_suggests_collage(path):
         return True
     if _exif_software_suggests_collage(img):
         return True

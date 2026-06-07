@@ -253,7 +253,11 @@ OVERLAYS_MARKER_END = "/* @journal-overlays:end */"
 
 
 def _truncate_trailing_legacy_after_overlays(journal_text: str) -> str:
-    """Drop hand-written grid CSS after overlay marker (LTE is authoritative)."""
+    """Drop hand-written grid CSS after overlay marker (LTE is authoritative).
+
+    Universal slot/img containment lives in the preamble *before* LTE_MARKER_START;
+    do not move it into the truncated tail or export will drop mosaic image sizing.
+    """
     oend = journal_text.find(OVERLAYS_MARKER_END)
     if oend == -1:
         return journal_text
