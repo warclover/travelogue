@@ -72,6 +72,35 @@ def test_runtime_base_weight_override_applied(tmp_path: Path, monkeypatch: pytes
 
 
 @pytest.mark.unit
+def test_exposure_debt_semi_closed_loop(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """eval → propose → dual approve → runtime template_base_weight (§9.4)."""
+    from scripts.phase16_template_eval import compute_exposure_debt_proposals, submit_exposure_proposals
+    from travelogue.templating import admin_store
+
+    state_path = tmp_path / "template_admin_state.json"
+    monkeypatch.setattr(admin_store, "_STATE_PATH", state_path)
+
+    engine = LayoutTemplateEngine.load(rebuild_cache=True)
+    active_ids = {t.id for t in engine.list_active()}
+    exposure_share = {tid: (0.9 if tid == "screen-portrait-3" else 0.01) for tid in active_ids}
+    proposals = compute_exposure_debt_proposals(exposure_share, engine)
+    assert proposals
+
+    report = {
+        "exposureDebtProposals": proposals,
+        "templateRegistryVersion": engine._content_hash,
+    }
+    pending = submit_exposure_proposals(report, operator="eval-op")
+    assert pending["status"] == "pending"
+
+    boosted = next(p for p in proposals if p["suggestedBaseWeight"] > p["currentBaseWeight"])
+    approve_router_change(pending["id"], approver="approver-a")
+    approve_router_change(pending["id"], approver="approver-b")
+
+    assert template_base_weight(boosted["templateId"]) == pytest.approx(boosted["suggestedBaseWeight"])
+
+
+@pytest.mark.unit
 def test_propose_and_approve_layout_weights(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from travelogue.templating import admin_store
 

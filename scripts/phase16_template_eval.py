@@ -208,6 +208,31 @@ def evaluate_registry(*, trip_id: str | None = None, trips_dir: Path | None = No
     }
 
 
+def submit_exposure_proposals(
+    report: dict[str, Any],
+    *,
+    operator: str = "phase16-eval",
+    reason: str = "exposure debt rebalance (§9.4)",
+) -> dict[str, Any]:
+    """Propose runtime base_weight patch from evaluate_registry exposureDebtProposals."""
+    from travelogue.templating.config_governance import propose_layout_weight_changes
+
+    proposals = report.get("exposureDebtProposals") or []
+    return propose_layout_weight_changes(
+        proposals,
+        operator=operator,
+        reason=reason,
+        template_registry_version=str(report.get("templateRegistryVersion") or "").strip() or None,
+    )
+
+
+def approve_exposure_proposal(change_id: str, *, approver: str) -> dict[str, Any]:
+    """Single approval step for a pending exposure rebalance (needs two distinct approvers)."""
+    from travelogue.templating.config_governance import approve_router_change
+
+    return approve_router_change(change_id, approver=approver)
+
+
 def compare_baseline(report: dict, baseline_path: Path) -> dict[str, Any]:
     if not baseline_path.is_file():
         return {"ok": True, "skipped": True, "reason": "baseline missing"}
@@ -236,10 +261,50 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json-out", type=Path, default=None)
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
     parser.add_argument("--write-baseline", action="store_true")
+    parser.add_argument(
+        "--propose",
+        action="store_true",
+        help="Submit exposureDebtProposals for dual-approval (§9.4); prints pending change id",
+    )
+    parser.add_argument("--operator", default="phase16-eval", help="Operator id for --propose")
+    parser.add_argument(
+        "--approve",
+        metavar="CHANGE_ID",
+        default=None,
+        help="Approve pending change once; repeat with a second approver to apply",
+    )
+    parser.add_argument("--approver", default="phase16-approver", help="Approver id for --approve")
     args = parser.parse_args(argv)
 
     reset_engine_cache_for_tests()
+
+    if args.approve:
+        try:
+            result = approve_exposure_proposal(args.approve, approver=args.approver)
+        except ValueError as exc:
+            print(json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False))
+            return 1
+        print(json.dumps({"ok": True, "change": result}, indent=2, ensure_ascii=False))
+        return 0 if result.get("status") == "approved" else 0
+
     report = evaluate_registry(trip_id=args.trip_id, trips_dir=args.trips_dir)
+
+    if args.propose:
+        try:
+            pending = submit_exposure_proposals(report, operator=args.operator)
+        except ValueError as exc:
+            print(json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False))
+            return 1
+        out = {
+            "ok": True,
+            "proposalCount": len(report.get("exposureDebtProposals") or []),
+            "pendingChangeId": pending.get("id"),
+            "status": pending.get("status"),
+            "nextStep": f"python scripts/phase16_template_eval.py --approve {pending.get('id')} --approver <name>",
+        }
+        print(json.dumps(out, indent=2, ensure_ascii=False))
+        return 0
+
     if args.write_baseline:
         out = args.json_out or args.baseline
         out.parent.mkdir(parents=True, exist_ok=True)

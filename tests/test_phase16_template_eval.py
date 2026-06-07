@@ -13,9 +13,11 @@ from travelogue.curation.layout_metrics import (
 )
 from travelogue.curation.mosaic.metrics import mixed_layout_exposure_rate
 from scripts.phase16_template_eval import (
+    approve_exposure_proposal,
     compare_baseline,
     evaluate_dogfood_trips,
     evaluate_registry,
+    submit_exposure_proposals,
 )
 from travelogue.layout_templates.registry import reset_engine_cache_for_tests
 
@@ -98,3 +100,48 @@ def test_evaluate_dogfood_empty_dir(tmp_path: Path) -> None:
     out = evaluate_dogfood_trips(tmp_path)
     assert out["tripCount"] == 0
     assert out["aggregate"]["layout.chapter.pattern_diversity_p50"] is None
+
+
+@pytest.mark.unit
+def test_submit_exposure_proposals_cli_flow(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from travelogue.templating import admin_store
+
+    state_path = tmp_path / "template_admin_state.json"
+    monkeypatch.setattr(admin_store, "_STATE_PATH", state_path)
+
+    report = evaluate_registry()
+    proposals = report.get("exposureDebtProposals") or []
+    if not proposals:
+        pytest.skip("no exposure debt proposals in current dogfood data")
+
+    pending = submit_exposure_proposals(report, operator="cli-test")
+    assert pending["status"] == "pending"
+
+    approve_exposure_proposal(pending["id"], approver="cli-a")
+    result = approve_exposure_proposal(pending["id"], approver="cli-b")
+    assert result["status"] == "approved"
+
+    boosted = next(p for p in proposals if p["suggestedBaseWeight"] > p["currentBaseWeight"])
+    from travelogue.curation.mosaic.lte_adapter import template_base_weight
+
+    assert template_base_weight(boosted["templateId"]) == pytest.approx(boosted["suggestedBaseWeight"])
+
+
+@pytest.mark.unit
+def test_propose_cli_empty_proposals(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from scripts.phase16_template_eval import compute_exposure_debt_proposals
+    from travelogue.layout_templates.registry import LayoutTemplateEngine
+    from travelogue.templating import admin_store
+
+    state_path = tmp_path / "template_admin_state.json"
+    monkeypatch.setattr(admin_store, "_STATE_PATH", state_path)
+
+    engine = LayoutTemplateEngine.load(rebuild_cache=True)
+    target = 1.0 / len(engine.list_active())
+    balanced = {t.id: target for t in engine.list_active()}
+    flat = compute_exposure_debt_proposals(balanced, engine)
+    assert flat == []
+
+    report = {"exposureDebtProposals": flat, "templateRegistryVersion": engine._content_hash}
+    with pytest.raises(ValueError, match="E_EXPOSURE_PROPOSALS_EMPTY"):
+        submit_exposure_proposals(report)
