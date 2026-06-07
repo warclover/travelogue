@@ -221,6 +221,10 @@ jobs:
       - name: LTE probe regression (geometry warn)
         run: python scripts/lte_probe_regress.py
 
+      - name: LTE probe regression (geometry strict · release)
+        if: github.event_name != 'pull_request'
+        run: python scripts/lte_probe_regress.py --strict-geometry
+
       - name: Install Playwright browser (LTE probe screenshots)
         run: playwright install chromium
 
@@ -259,6 +263,15 @@ jobs:
 
       - name: Collage detector fixture eval
         run: python scripts/collage_detect_eval.py --strict --min-recall 0.5 --max-fp-rate 0.25
+
+      - name: Phase 16 template eval (AC-15 · PR warn)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: python scripts/phase16_template_eval.py --trips-dir trips --strict-ac15
+
+      - name: Phase 16 template eval (AC-15 · release block)
+        if: github.event_name != 'pull_request'
+        run: python scripts/phase16_template_eval.py --trips-dir trips --strict-ac15
 
       - name: Phase 4 acceptance gate
         run: python scripts/phase4_acceptance_gate.py --skip-integration

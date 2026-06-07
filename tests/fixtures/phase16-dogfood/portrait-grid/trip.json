@@ -1,0 +1,12 @@
+{
+  "tripId": "phase16-dogfood-portrait-grid",
+  "chapters": [
+    {
+      "id": "ch-01",
+      "screens": [
+        {"patternId": "screen-portrait-3"},
+        {"patternId": "screen-portrait-grid-8"}
+      ]
+    }
+  ]
+}

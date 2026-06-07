@@ -7,7 +7,7 @@
 | **配套 PRD** | [PRD-PHASE16-layout-template-engine.md](./PRD-PHASE16-layout-template-engine.md)（v0.16.4） |
 | **分支** | `phase16/layout-template-engine` |
 | **更新日期** | 2026-06-06 |
-| **状态** | W0–W4 核心已交付；探针 CI、admission S5、Studio collage 改判、layoutDecisionLog debug 汇入已闭合；W4 持续优化中 |
+| **状态** | W0–W4 核心已交付；P0–P2 第二轮闭合（AC-15 CI、dashboard templateId rollup、win_score/face_crop 指标、Studio 配额/门禁、几何探针 strict）；W4 研究项按需 |
 
 > **本文定位**：把 PRD 的设计落成可执行的工程计划——**融合方式、改动文件清单、阶段交付、工作量估算、W1 开工清单**。PRD 讲"做什么/为什么"，本文讲"怎么接、改哪里、要多久、先干哪些"。
 
@@ -132,6 +132,17 @@ travelogue/web/studio_handlers/template_admin_handlers.py   # 扩展几何展示
 ### W4 · 持续优化（不在关键路径，按需）
 
 primitive 参数化、配额调优、删 legacy 手写常量、§9.4 多样性闭环 + 自动调权（两人审批）、collage 检测精化、P17 预研（生成式合成 / 匈牙利匹配 / 移动端）。出口：AC-P16-15。
+
+**2026-06-06 第二轮闭合（P0–P2）**
+
+| 项 | 交付 |
+|----|------|
+| AC-15 CI | `phase16_template_eval.py --strict-ac15`（PR warn / push block） |
+| AC-08 dashboard | `aggregate_layout_template_metrics` → `metrics.layoutTemplates[]` |
+| 指标补全 | `win_score_p50/p90`、`face_crop_proxy_rate` per templateId |
+| Studio | 配额告警 + internal 门禁提示 |
+| 几何探针 | push 跑 `lte_probe_regress.py --strict-geometry` |
+| diversity.mode | `config.yaml.example` · `layout.template_engine.mcs_integration` |
 
 ### 2.x 工作量汇总
 

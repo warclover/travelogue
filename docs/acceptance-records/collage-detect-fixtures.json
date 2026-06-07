@@ -126,5 +126,31 @@
     "expect": "photo",
     "kind": "file",
     "path": "building-facade.jpg"
+  },
+  {
+    "id": "exif-snapseed-collage",
+    "expect": "collage",
+    "kind": "exif",
+    "software": "Snapseed"
+  },
+  {
+    "id": "synthetic-3panel-collage",
+    "expect": "collage",
+    "kind": "grid_collage",
+    "size": [1200, 900],
+    "panels": [3, 1]
+  },
+  {
+    "id": "plain-square-photo",
+    "expect": "photo",
+    "kind": "solid",
+    "size": [1200, 1200],
+    "color": [120, 125, 130]
+  },
+  {
+    "id": "exif-unfold-collage",
+    "expect": "collage",
+    "kind": "exif",
+    "software": "Unfold"
   }
 ]
