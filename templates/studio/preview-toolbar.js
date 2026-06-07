@@ -166,8 +166,8 @@ var narrateJobId = null;
       el = document.createElement("span");
       el.className = "preview-toolbar__slow-hint";
       el.hidden = true;
-      var bar = root.querySelector(".preview-toolbar__bar");
-      if (bar) bar.appendChild(el);
+      var actions = root.querySelector(".preview-toolbar__actions");
+      if (actions) actions.appendChild(el);
     }
     el.hidden = !visible;
     el.textContent = text || "";
@@ -338,7 +338,22 @@ var narrateJobId = null;
       .then(function (data) {
         var trips = data.trips || [];
         var trip = trips.filter(function (t) { return t.tripId === tripId; })[0];
-        if (trip && trip.longshotStale) {
+        if (!trip) return;
+        var el = staleHintEl(root);
+        if (!el) return;
+        if (trip.layoutCssStale) {
+          el.textContent = "布局 CSS 已过期，请应用排版重新渲染";
+          el.hidden = false;
+          el.onclick = function () {
+            applyLayoutRerender(tripId, root);
+          };
+          el.style.cursor = "pointer";
+          return;
+        }
+        el.onclick = null;
+        el.style.cursor = "";
+        if (trip.longshotStale) {
+          el.textContent = "内容已更新，请重新生成长图";
           showStaleHint(root);
         }
       })
@@ -499,44 +514,10 @@ var narrateJobId = null;
     });
   }
 
-  function refreshPreviewCover(root, tripId) {
-    fetch("/__travelogue/trips")
-      .then(function (resp) { return resp.json(); })
-      .then(function (data) {
-        var trips = data.trips || [];
-        var trip = trips.filter(function (t) { return t.tripId === tripId; })[0];
-        if (!trip || !trip.previewRelPath) return;
-
-        var body = toolbarBody(root);
-        var card = body.querySelector(".preview-toolbar__preview-card");
-        if (!card) {
-          card = document.createElement("div");
-          card.className = "preview-toolbar__preview-card";
-          body.appendChild(card);
-        }
-        card.hidden = false;
-        card.textContent = "";
-
-        var title = document.createElement("p");
-        title.className = "preview-toolbar__preview-title";
-        title.textContent = "封面引流图 preview.jpg（9:16）";
-        card.appendChild(title);
-
-        var pathEl = document.createElement("p");
-        pathEl.className = "preview-toolbar__preview-path";
-        pathEl.textContent = trip.previewRelPath;
-        card.appendChild(pathEl);
-
-        var revealBtn = document.createElement("button");
-        revealBtn.type = "button";
-        revealBtn.className = "preview-toolbar__reveal preview-toolbar__preview-reveal";
-        revealBtn.textContent = "在文件夹中显示";
-        revealBtn.addEventListener("click", function () {
-          revealTripPath(tripId, trip.previewRelPath);
-        });
-        card.appendChild(revealBtn);
-      })
-      .catch(function () {});
+  function refreshPreviewCover(root) {
+    var body = toolbarBody(root);
+    var card = body.querySelector(".preview-toolbar__preview-card");
+    if (card) card.remove();
   }
 
   function applyLayoutRerender(tripId, root) {
@@ -857,6 +838,7 @@ var narrateJobId = null;
       '<input id="preview-drawer-copy-intent-note" class="preview-drawer__copy-intent-note" type="text" maxlength="30" autocomplete="off" placeholder="例如：雨停后风很轻">' +
       '<p class="preview-drawer__hint">可选填，影响章级点缀句；不填也能正常出稿</p>' +
       '<p class="preview-drawer__featured-help">★ 在任意一屏右下角可将照片标为精选，之后点「应用排版」生效</p>' +
+      '<p class="preview-drawer__featured-help">拼图/整图屏左上角可改判媒资类型（普通照片 ↔ 拼图），改后请应用排版</p>' +
       '<button type="button" class="preview-drawer__ghost preview-drawer__narrate-anchors">保存并重新生成文案</button>' +
       '<button type="button" class="preview-drawer__primary preview-drawer__save-edit">保存编辑</button>';
 
@@ -1301,6 +1283,78 @@ var narrateJobId = null;
     showToolbarToast("精选放映已开始");
   }
 
+  function initCollageMediaControls(tripId, assetMediaById) {
+    assetMediaById = assetMediaById || {};
+    var apiUrl =
+      "/__travelogue/trips/" + encodeURIComponent(tripId) + "/asset-media-class";
+
+    function shouldShowControl(screen, assetId) {
+      var mc = assetMediaById[assetId] || "photo";
+      var pattern = screen.getAttribute("data-pattern") || "";
+      var hint = screen.getAttribute("data-layout-hint") || "";
+      return mc === "collage" || pattern === "screen-full-frame" || hint === "full-frame";
+    }
+
+    function applyMediaClass(assetId, mediaClass, selectEl) {
+      if (selectEl.disabled) return;
+      selectEl.disabled = true;
+      patchJson(apiUrl, { assetId: assetId, mediaClass: mediaClass })
+        .then(function (res) {
+          selectEl.disabled = false;
+          if (res.status !== 200 || !res.body.ok) {
+            showToolbarToast((res.body && res.body.error) || "改判失败", { error: true });
+            selectEl.value = assetMediaById[assetId] || "photo";
+            return;
+          }
+          assetMediaById[assetId] = mediaClass;
+          selectEl.value = mediaClass;
+          setLayoutPending(true);
+          showToolbarToast(
+            mediaClass === "collage"
+              ? "已标记为拼图 · 点应用排版后生效"
+              : "已标记为普通照片 · 点应用排版后生效"
+          );
+        })
+        .catch(function () {
+          selectEl.disabled = false;
+          showToolbarToast("改判失败", { error: true });
+        });
+    }
+
+    document
+      .querySelectorAll('.layout-screen[data-block="layout-screen"][data-asset-ids]')
+      .forEach(function (screen) {
+        if (screen.querySelector(".preview-toolbar__collage-ctrl")) return;
+        var raw = screen.getAttribute("data-asset-ids") || "";
+        var assetId = raw.split(",")[0];
+        if (!assetId || !shouldShowControl(screen, assetId)) return;
+
+        var wrap = document.createElement("div");
+        wrap.className = "preview-toolbar__collage-ctrl";
+        var label = document.createElement("span");
+        label.className = "preview-toolbar__collage-label";
+        label.textContent = "媒资";
+        var sel = document.createElement("select");
+        sel.className = "preview-toolbar__collage-select";
+        sel.setAttribute("aria-label", "拼图改判");
+        [["photo", "普通照片"], ["collage", "拼图"]].forEach(function (pair) {
+          var opt = document.createElement("option");
+          opt.value = pair[0];
+          opt.textContent = pair[1];
+          sel.appendChild(opt);
+        });
+        sel.value = assetMediaById[assetId] === "collage" ? "collage" : "photo";
+        sel.addEventListener("change", function (e) {
+          e.stopPropagation();
+          applyMediaClass(assetId, sel.value, sel);
+        });
+        wrap.appendChild(label);
+        wrap.appendChild(sel);
+        screen.style.position = screen.style.position || "relative";
+        screen.appendChild(wrap);
+      });
+  }
+
   function initFeaturedStars(tripId) {
     var screens = document.querySelectorAll('.layout-screen[data-block="layout-screen"][data-asset-ids]');
     screens.forEach(function (screen) {
@@ -1365,7 +1419,8 @@ var narrateJobId = null;
 
   function initTemplateBadge(root, tripId) {
     var bar = root.querySelector(".preview-toolbar__bar");
-    if (!bar || bar.querySelector(".preview-toolbar__template")) return;
+    var cluster = bar && bar.querySelector(".preview-toolbar__cluster");
+    if (!cluster || cluster.querySelector(".preview-toolbar__template")) return;
     fetchEntry(tripId).then(function (data) {
       var t = data && data.template;
       if (!t) return;
@@ -1375,7 +1430,7 @@ var narrateJobId = null;
       var label = t.sourceLabel || "模板";
       if (t.locked) label += " · 已锁定";
       pill.textContent = label + " · " + (t.resolvedTemplateId || "visual-journal");
-      bar.insertBefore(pill, bar.firstChild);
+      cluster.insertBefore(pill, cluster.firstChild);
       trackStudioEvent("template_selector_impression", { surface: "preview", tripId: tripId });
       if (!t.locked) {
         var wrap = document.createElement("span");
@@ -1420,7 +1475,7 @@ var narrateJobId = null;
         });
         wrap.appendChild(sel);
         wrap.appendChild(btn);
-        bar.insertBefore(wrap, pill.nextSibling);
+        cluster.insertBefore(wrap, pill.nextSibling);
       }
     }).catch(function () { /* ignore */ });
   }
@@ -1493,9 +1548,9 @@ var narrateJobId = null;
 
       menuBtn.addEventListener("click", function (e) {
         e.stopPropagation();
-        var open = !menu.hidden;
-        menu.hidden = open;
-        menuBtn.setAttribute("aria-expanded", open ? "false" : "true");
+        var willOpen = menu.hidden;
+        menu.hidden = !willOpen;
+        menuBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
       });
 
       if (applyBtn) {
@@ -1534,7 +1589,7 @@ var narrateJobId = null;
       if (presentBtn) {
         drawers.refreshEntry().then(function (data) {
           var count = (data && data.intentSummary && data.intentSummary.featuredCount) || 0;
-          if (count < 1) presentBtn.hidden = true;
+          presentBtn.hidden = count < 1;
         });
         presentBtn.addEventListener("click", function () {
           closeMenu();
@@ -1565,15 +1620,18 @@ var narrateJobId = null;
         .catch(function () {});
 
       document.addEventListener("click", function (ev) {
-        if (!menu.contains(ev.target) && ev.target !== menuBtn) {
+        if (!menu.contains(ev.target) && !menuBtn.contains(ev.target)) {
           closeMenu();
         }
       });
     }
 
     refreshStaleHint(root, tripId);
-    refreshPreviewCover(root, tripId);
-    initFeaturedStars(tripId);
+    refreshPreviewCover(root);
+    fetchEntry(tripId).then(function (data) {
+      initFeaturedStars(tripId);
+      initCollageMediaControls(tripId, (data && data.assetMediaById) || {});
+    });
 
     window.addEventListener("travelogue:copy-saved", function () {
       showStaleHint(root);
@@ -1593,7 +1651,10 @@ var narrateJobId = null;
     root.innerHTML =
       '<div class="preview-toolbar__body">' +
       '<div class="preview-toolbar__bar preview-toolbar__bar--minimal">' +
-      '<a class="preview-toolbar__back" href="/">← 返回首页</a>' +
+      '<div class="preview-toolbar__spacer" aria-hidden="true"></div>' +
+      '<div class="preview-toolbar__cluster">' +
+      '<a class="preview-toolbar__back" href="/" title="返回 Studio 首页">← 返回</a>' +
+      "</div>" +
       "</div>" +
       "</div>";
     document.body.insertBefore(root, document.body.firstChild);
@@ -1625,30 +1686,36 @@ var narrateJobId = null;
     root.className = "preview-toolbar";
     root.innerHTML =
       '<div class="preview-toolbar__collapsed-strip">' +
-      '<a class="preview-toolbar__back preview-toolbar__back--strip" href="/">← 返回首页</a>' +
+      '<div class="preview-toolbar__spacer preview-toolbar__spacer--strip" aria-hidden="true"></div>' +
       '<button type="button" class="preview-toolbar__handle" aria-expanded="false">' +
       '<span class="preview-toolbar__handle-icon" aria-hidden="true">▾</span>' +
       '<span class="preview-toolbar__handle-label">显示工具栏</span>' +
       "</button>" +
+      '<a class="preview-toolbar__back preview-toolbar__back--strip" href="/" title="返回 Studio 首页">← 返回</a>' +
       "</div>" +
       '<div class="preview-toolbar__body">' +
       '<div class="preview-toolbar__bar preview-toolbar__bar--minimal">' +
-      '<a class="preview-toolbar__back" href="/">← 返回首页</a>' +
+      '<div class="preview-toolbar__spacer" aria-hidden="true"></div>' +
+      '<div class="preview-toolbar__cluster">' +
+      '<div class="preview-toolbar__ops-group">' +
       '<div class="preview-toolbar__actions"></div>' +
-      '<button type="button" class="preview-toolbar__reveal-folder">在文件夹中显示</button>' +
-      '<button type="button" class="preview-toolbar__menu-btn" aria-haspopup="true" aria-expanded="false">更多编辑…</button>' +
+      '<button type="button" class="preview-toolbar__reveal-folder" title="在文件夹中显示">文件夹</button>' +
+      '<button type="button" class="preview-toolbar__menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="更多编辑" title="更多编辑">⋯</button>' +
       '<div class="preview-toolbar__more-menu" hidden role="menu">' +
       '<button type="button" class="preview-toolbar__open-edit" role="menuitem">编辑感受与锚点</button>' +
       '<button type="button" class="preview-toolbar__open-cohort" role="menuitem" hidden>旅行主角 · 同框</button>' +
       '<button type="button" class="preview-toolbar__open-structure" role="menuitem">结构与分章</button>' +
-      '<button type="button" class="preview-toolbar__apply-layout" role="menuitem">应用排版</button>' +
-      '<button type="button" class="preview-toolbar__present-featured" role="menuitem">放映精选</button>' +
+      '<button type="button" class="preview-toolbar__apply-layout" role="menuitem" hidden>应用排版</button>' +
+      '<button type="button" class="preview-toolbar__present-featured" role="menuitem" hidden>放映精选</button>' +
       '<span class="preview-toolbar__llm-slot" role="none"></span>' +
       '<button type="button" class="preview-toolbar__export-zip" role="menuitem">导出 zip（自行托管）</button>' +
+      "</div>" +
       "</div>" +
       '<button type="button" class="preview-toolbar__collapse" aria-expanded="true" aria-label="收起工具栏">' +
       '<span aria-hidden="true">▴</span>' +
       "</button>" +
+      '<a class="preview-toolbar__back" href="/" title="返回 Studio 首页">← 返回</a>' +
+      "</div>" +
       "</div>" +
       "</div>";
 

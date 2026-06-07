@@ -11,6 +11,7 @@
     th, td { border: 1px solid #d8e5df; padding: 8px 10px; text-align: left; }
     th { background: #eef5f1; }
     .ok { color: #1b6b4a; } .bad { color: #a33; }
+    .muted { color: #5a6b63; font-size: 13px; }
     button { margin-right: 8px; padding: 6px 12px; cursor: pointer; }
     pre { background: #f4f8f6; padding: 12px; overflow: auto; font-size: 12px; }
   </style>
@@ -40,6 +41,19 @@
     <h2>待审批配置变更（双人复核 §9.1）</h2>
     <ul id="pending-list"></ul>
   </div>
+  <div id="exposure-debt" hidden>
+    <h2>曝光负债调权提案（§9.4 · 需双人审批）</h2>
+    <p class="muted">由 dogfood 曝光偏离比例控制器生成；审批后写入 runtime，不改 YAML。</p>
+    <table>
+      <thead>
+        <tr>
+          <th>templateId</th><th>当前权重</th><th>建议权重</th><th>实际曝光</th><th>目标曝光</th>
+        </tr>
+      </thead>
+      <tbody id="exposure-rows"></tbody>
+    </table>
+    <button type="button" id="btn-exposure-propose">提交调权提案</button>
+  </div>
   <table>
     <thead>
       <tr>
@@ -47,6 +61,16 @@
       </tr>
     </thead>
     <tbody id="rows"></tbody>
+  </table>
+  <h2>布局模板（LTE · internal）</h2>
+  <p class="muted">Phase 16 拼图 pattern 目录：slot AR 探针、gridClass、YAML lifecycle（GitOps）。</p>
+  <table>
+    <thead>
+      <tr>
+        <th>patternId</th><th>lifecycle</th><th>槽位</th><th>exposure</th><th>gridClass</th><th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="layout-rows"></tbody>
   </table>
   <h2>路由回放</h2>
   <p>
@@ -75,6 +99,11 @@
 
     const revEl = document.getElementById("rev");
     const rowsEl = document.getElementById("rows");
+    const layoutRowsEl = document.getElementById("layout-rows");
+    const exposureRowsEl = document.getElementById("exposure-rows");
+    const exposureDebtBox = document.getElementById("exposure-debt");
+    let lastExposureProposals = [];
+    let lastRegistryVersion = "";
     const logEl = document.getElementById("log");
 
     function log(obj) {
@@ -139,10 +168,124 @@
       });
     }
 
+    function worstProbeDistance(slotAspects) {
+      const probes = [3 / 4, 9 / 16, 3 / 2, 16 / 9, 1.0];
+      let worst = 0;
+      (slotAspects || []).forEach((row) => {
+        const ar = Number(row.displayAspect);
+        if (!Number.isFinite(ar) || ar <= 0) return;
+        probes.forEach((p) => {
+          const d = Math.abs(ar - p) / Math.max(ar, p, 1e-6);
+          if (d > worst) worst = d;
+        });
+      });
+      return worst;
+    }
+
+    function renderExposureDebt(proposals, registryVersion) {
+      lastExposureProposals = proposals || [];
+      lastRegistryVersion = registryVersion || "";
+      exposureRowsEl.innerHTML = "";
+      if (!lastExposureProposals.length) {
+        exposureDebtBox.hidden = true;
+        return;
+      }
+      exposureDebtBox.hidden = false;
+      lastExposureProposals.forEach((p) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" +
+          escapeHtml(p.templateId) +
+          "</td><td>" +
+          escapeHtml(String(p.currentBaseWeight)) +
+          "</td><td>" +
+          escapeHtml(String(p.suggestedBaseWeight)) +
+          "</td><td>" +
+          escapeHtml(String((p.actualExposureShare * 100).toFixed(1) + "%")) +
+          "</td><td>" +
+          escapeHtml(String((p.targetExposureShare * 100).toFixed(1) + "%")) +
+          "</td>";
+        exposureRowsEl.appendChild(tr);
+      });
+    }
+
+    function renderLayoutPatterns(patterns) {
+      layoutRowsEl.innerHTML = "";
+      (patterns || []).forEach((p) => {
+        const tr = document.createElement("tr");
+        const worst = worstProbeDistance(p.slotAspects);
+        const probeLabel =
+          worst > 0.35
+            ? '<span class="bad">' + worst.toFixed(3) + "</span>"
+            : '<span class="ok">' + worst.toFixed(3) + "</span>";
+        const slotSummary = (p.slotAspects || [])
+          .map((s) => "#" + s.index + " " + (s.displayAspect || "?"))
+          .join("; ");
+        const expShare =
+          typeof p.exposureShare === "number" ? (p.exposureShare * 100).toFixed(1) + "%" : "—";
+        tr.innerHTML =
+          "<td>" +
+          escapeHtml(p.templateId) +
+          "</td><td>" +
+          escapeHtml(p.lifecycle || "") +
+          "</td><td title=\"" +
+          escapeHtml(slotSummary) +
+          "\">" +
+          escapeHtml(String((p.photoCount && p.photoCount.max) || "?")) +
+          " · probe " +
+          probeLabel +
+          "</td><td>" +
+          escapeHtml(expShare) +
+          "</td><td><code>" +
+          escapeHtml(p.gridClass || "") +
+          "</code></td><td></td>";
+        const td = tr.lastElementChild;
+        const bVer = document.createElement("button");
+        bVer.textContent = "几何";
+        bVer.onclick = () =>
+          api("/__travelogue/templates/admin/" + encodeURIComponent(p.templateId) + "/version")
+            .then(log)
+            .catch((e) => log(e));
+        td.appendChild(bVer);
+        const bAdm = document.createElement("button");
+        bAdm.textContent = "准入";
+        bAdm.onclick = () =>
+          api("/__travelogue/templates/admin/admission", {
+            method: "POST",
+            body: JSON.stringify({ templateId: p.templateId, target: "beta" }),
+          })
+            .then(log)
+            .catch((e) => log(e));
+        td.appendChild(bAdm);
+        const bPromote = document.createElement("button");
+        bPromote.textContent = "晋升 GA";
+        bPromote.onclick = () => {
+          if (!window.confirm("准入通过后写入 YAML status=ga？")) return;
+          api("/__travelogue/templates/admin/runtime", {
+            method: "POST",
+            body: JSON.stringify({
+              action: "promote_layout_template",
+              templateId: p.templateId,
+              target: "ga",
+              apply: true,
+              dryRun: false,
+            }),
+          })
+            .then(log)
+            .then(refresh)
+            .catch((e) => log(e));
+        };
+        td.appendChild(bPromote);
+        layoutRowsEl.appendChild(tr);
+      });
+    }
+
     async function refresh() {
       const data = await api("/__travelogue/templates/admin" + adminQuery());
       revEl.textContent = String(data.revision);
       renderPending(data.runtime);
+      renderExposureDebt(data.exposureDebtProposals, data.templateRegistryVersion);
+      renderLayoutPatterns(data.layoutPatterns || []);
       rowsEl.innerHTML = "";
       (data.templates || []).forEach((t) => {
         const tr = document.createElement("tr");
@@ -333,6 +476,22 @@
       api("/__travelogue/templates/admin/register", {
         method: "POST",
         body: JSON.stringify({ templateId: tid.trim() }),
+      })
+        .then(log)
+        .then(refresh)
+        .catch((e) => log(e));
+    };
+    document.getElementById("btn-exposure-propose").onclick = () => {
+      if (!lastExposureProposals.length) return alert("无调权提案");
+      api("/__travelogue/templates/admin/runtime", {
+        method: "POST",
+        body: JSON.stringify({
+          action: "propose_exposure_weights",
+          proposals: lastExposureProposals,
+          templateRegistryVersion: lastRegistryVersion,
+          operator: "admin-ui",
+          reason: "exposure debt rebalance",
+        }),
       })
         .then(log)
         .then(refresh)

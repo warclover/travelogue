@@ -1,0 +1,344 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://travelogue.local/schemas/layout_template.schema.json",
+  "title": "LayoutTemplate",
+  "description": "Phase 16 layout template (LTE) authoritative YAML schema (PRD v0.16.4, R-P16-11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "version",
+    "status",
+    "kind",
+    "displayName",
+    "stage",
+    "photoCount",
+    "slots",
+    "render"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Stable patternId written to trip.json screens[].patternId"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Template revision; topology changes bump version or new id"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["experimental", "beta", "ga", "deprecated", "disabled"],
+      "description": "Lifecycle aligned with travelogue.templating.lifecycle (R-P16-13)"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["primitive", "composite", "stack"],
+      "description": "Template taxonomy layer (PRD §4.2)"
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "aesthetic": {
+      "type": "string",
+      "enum": ["airy", "dense", "hero_first"]
+    },
+    "balancePolicy": {
+      "type": "string",
+      "enum": ["equal_width", "equal_height", "equal_area", "weighted_tracks"],
+      "description": "Composite balance hint (PRD §4.1, R-P16-05)"
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aspect"],
+      "properties": {
+        "aspect": {
+          "type": "string",
+          "pattern": "^\\d+:\\d+$",
+          "description": "Stage aspect ratio authority per template (D-P16-01)"
+        },
+        "grid": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "description": "Legacy uniform grid [cols, rows]; optional when cols/rows weights present"
+        },
+        "cols": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "description": "Weighted column tracks (fr); default [1]*N for uniform grid (§4.6)"
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "description": "Weighted row tracks (fr); default [1]*N for uniform grid (§4.6)"
+        },
+        "gap": {
+          "type": "string",
+          "description": "CSS gap between tracks (R-P16-15); e.g. 0, 4px, var(--screen-gap)"
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["layout", "aspect"],
+            "properties": {
+              "layout": {
+                "type": "string",
+                "enum": ["web", "mobile"]
+              },
+              "aspect": {
+                "type": "string",
+                "pattern": "^\\d+:\\d+$"
+              }
+            }
+          }
+        }
+      },
+      "anyOf": [
+        {
+          "required": ["grid"]
+        },
+        {
+          "required": ["cols", "rows"]
+        }
+      ]
+    },
+    "photoCount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9
+        }
+      }
+    },
+    "mix": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "portrait": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        },
+        "landscape": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        }
+      }
+    },
+    "slots": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 9,
+      "items": {
+        "$ref": "#/$defs/slot"
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "portrait_forbidden_in_wide_slots": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "landscape_forbidden_in_tall_slots": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "intentionalGaps": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "integer"
+            }
+          },
+          "description": "Explicit empty grid cells (V-P16-02)"
+        }
+      }
+    },
+    "compatibilityHints": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "prefers_burst": {
+          "type": "boolean"
+        },
+        "min_trip_photos": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "base_weight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rhythm": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max_per_chapter": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "diversity_bonus": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gridClass", "cssBundle"],
+      "properties": {
+        "gridClass": {
+          "type": "string",
+          "minLength": 1,
+          "description": "CSS class until W2 css_gen replaces handwritten classes (R-P16-14)"
+        },
+        "cssBundle": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Bundle file name, e.g. journal-screens.css"
+        },
+        "fitPolicy": {
+          "type": "string",
+          "enum": ["slot", "asset", "auto_delegate"],
+          "description": "Fit resolution policy (R-P16-06)"
+        }
+      }
+    },
+    "rollout": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "percent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "hash_key": {
+          "type": "string",
+          "enum": ["tripId"]
+        }
+      }
+    },
+    "generator": {
+      "type": "string",
+      "description": "Reserved P17: marks auto-generated composite source"
+    },
+    "_legacy": {
+      "type": "object",
+      "description": "W1 reverse-migration metadata (accepts/css_verified); optional",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "slotRect": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "description": "[c0, c1, r0, r1] 1-based closed interval over weighted tracks"
+    },
+    "slotRole": {
+      "type": "string",
+      "enum": ["main", "portrait", "landscape", "tile", "square"]
+    },
+    "slotFit": {
+      "type": "string",
+      "enum": ["cover", "contain", "auto"]
+    },
+    "slot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "rect", "role"],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "rect": {
+          "$ref": "#/$defs/slotRect"
+        },
+        "role": {
+          "$ref": "#/$defs/slotRole"
+        },
+        "fit": {
+          "$ref": "#/$defs/slotFit"
+        },
+        "visualWeight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "displayAspect": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Optional precomputed slot AR; geometry.py derives when absent (W1)"
+        },
+        "minHeight": {
+          "type": "string",
+          "description": "Stack templates only (V-P16-S02)"
+        }
+      }
+    }
+  }
+}

@@ -110,6 +110,7 @@ class LayoutScreenSlotContext(TypedDict, total=False):
     slotIndex: int
     fit: str
     src: str
+    hasSrc: bool
     hasSrcset: bool
     srcset: str
     sizes: str
@@ -117,6 +118,8 @@ class LayoutScreenSlotContext(TypedDict, total=False):
     loading: str
     slotStyle: str
     role: NotRequired[str]
+    hasBlurFill: NotRequired[bool]
+    blurSrc: NotRequired[str]
 
 
 class LayoutScreenContext(TypedDict, total=False):

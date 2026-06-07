@@ -103,6 +103,11 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
             template_meta = build_template_summary(data)
             freshness = assess_algorithm_freshness(data, child)
         preview_rel = _pick_preview(child)
+        layout_css_stale = False
+        if data:
+            from travelogue.layout_templates.css_stale import trip_layout_css_stale
+
+            layout_css_stale = trip_layout_css_stale(child, data)
         rows.append(
             (
                 updated_at,
@@ -113,6 +118,7 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
                     "updatedAt": updated_at,
                     "photoCount": photo_count,
                     "longshotStale": longshot_outputs_stale(child, trip_mtime=updated_at),
+                    "layoutCssStale": layout_css_stale,
                     "hasLongshotExport": has_longshot_exports(child),
                     "previewRelPath": preview_rel,
                     "resolvedTemplateId": template_meta.get("resolvedTemplateId", "visual-journal"),

@@ -51,6 +51,18 @@ class LayoutFeedbackConfig:
 
 
 @dataclass
+class LayoutTemplateEngineConfig:
+    enabled: bool = True
+    registry_path: str = "travelogue/layout_templates/templates"
+    registry_version: str = "p16-2026-06"
+    policy_path: str = "travelogue/layout_templates/lte_policy.yaml"
+    read_templates_from_lte: bool = True
+    exclude_collage_from_mosaic: bool = True
+    max_mosaic_slots: int = 9
+    overrides_disable: tuple[str, ...] = ()
+
+
+@dataclass
 class LayoutConfig:
     """Web layout engine default when exportLayout is web (see docs/web端模板升级计划.md)."""
 
@@ -58,6 +70,7 @@ class LayoutConfig:
     screen_plan_scope: str = "day"  # chapter | day — day = 按策展日桶全序列组屏
     mixed_proximity_seconds: float = 12.0  # 1竖+2横混排 takenAt 跨度上限
     layout_density_enabled: bool = True  # PRD-FINE-CRAFT-LAYOUT-DENSITY · false → balanced
+    template_engine: LayoutTemplateEngineConfig = field(default_factory=LayoutTemplateEngineConfig)
     scoring: LayoutScoringConfig = field(default_factory=LayoutScoringConfig)
     feedback: LayoutFeedbackConfig = field(default_factory=LayoutFeedbackConfig)
 
@@ -85,6 +98,25 @@ def layout_scoring_from_dict(raw: dict[str, Any]) -> LayoutScoringConfig:
         ),
         incremental=bool(raw.get("incremental", False)),
         weights=weights,
+    )
+
+
+def layout_template_engine_from_dict(raw: dict[str, Any]) -> LayoutTemplateEngineConfig:
+    overrides = raw.get("overrides") if isinstance(raw.get("overrides"), dict) else {}
+    disable_raw = overrides.get("disable") or raw.get("overrides_disable") or []
+    disable = tuple(str(x) for x in disable_raw if x) if isinstance(disable_raw, list) else ()
+    mcs = raw.get("mcs_integration") if isinstance(raw.get("mcs_integration"), dict) else {}
+    return LayoutTemplateEngineConfig(
+        enabled=bool(raw.get("enabled", True)),
+        registry_path=str(raw.get("registry_path", "travelogue/layout_templates/templates")),
+        registry_version=str(raw.get("registry_version", "p16-2026-06")),
+        policy_path=str(raw.get("policy_path", "travelogue/layout_templates/lte_policy.yaml")),
+        read_templates_from_lte=bool(mcs.get("read_templates_from_lte", raw.get("read_templates_from_lte", True))),
+        exclude_collage_from_mosaic=bool(
+            mcs.get("exclude_collage_from_mosaic", raw.get("exclude_collage_from_mosaic", True))
+        ),
+        max_mosaic_slots=int(raw.get("max_mosaic_slots", 9)),
+        overrides_disable=disable,
     )
 
 

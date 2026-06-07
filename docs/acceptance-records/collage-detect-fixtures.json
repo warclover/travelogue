@@ -1,0 +1,130 @@
+[
+  {
+    "id": "exif-pic-collage",
+    "expect": "collage",
+    "kind": "exif",
+    "software": "Pic Collage Maker 2.0"
+  },
+  {
+    "id": "exif-canva",
+    "expect": "collage",
+    "kind": "exif",
+    "software": "Canva"
+  },
+  {
+    "id": "plain-landscape",
+    "expect": "photo",
+    "kind": "solid",
+    "size": [1600, 900],
+    "color": [100, 120, 140]
+  },
+  {
+    "id": "plain-portrait",
+    "expect": "photo",
+    "kind": "solid",
+    "size": [900, 1600],
+    "color": [110, 100, 130]
+  },
+  {
+    "id": "synthetic-grid-collage",
+    "expect": "collage",
+    "kind": "grid_collage",
+    "size": [1000, 1000]
+  },
+  {
+    "id": "group-photo-square",
+    "expect": "photo",
+    "kind": "solid",
+    "size": [1200, 1180],
+    "color": [140, 130, 120]
+  },
+  {
+    "id": "exif-layout",
+    "expect": "collage",
+    "kind": "exif",
+    "software": "Layout from Instagram"
+  },
+  {
+    "id": "exif-diptic",
+    "expect": "collage",
+    "kind": "exif",
+    "software": "Diptic"
+  },
+  {
+    "id": "architecture-regular",
+    "expect": "photo",
+    "kind": "solid",
+    "size": [1920, 1080],
+    "color": [90, 95, 100]
+  },
+  {
+    "id": "multi-person-portrait",
+    "expect": "photo",
+    "kind": "solid",
+    "size": [1080, 1350],
+    "color": [150, 140, 135]
+  },
+  {
+    "id": "synthetic-2panel-collage",
+    "expect": "collage",
+    "kind": "grid_collage",
+    "size": [1600, 800],
+    "panels": [2, 1]
+  },
+  {
+    "id": "exif-picsart",
+    "expect": "collage",
+    "kind": "exif",
+    "software": "PicsArt Photo Studio"
+  },
+  {
+    "id": "exif-inshot",
+    "expect": "collage",
+    "kind": "exif",
+    "software": "InShot Video Editor"
+  },
+  {
+    "id": "exif-photo-grid",
+    "expect": "collage",
+    "kind": "exif",
+    "software": "Photo Grid Collage Maker"
+  },
+  {
+    "id": "symmetric-building-facade",
+    "expect": "photo",
+    "kind": "solid",
+    "size": [1600, 1200],
+    "color": [95, 98, 102]
+  },
+  {
+    "id": "group-photo-wide",
+    "expect": "photo",
+    "kind": "solid",
+    "size": [1800, 1200],
+    "color": [145, 138, 132]
+  },
+  {
+    "id": "file-collage-2x2",
+    "expect": "collage",
+    "kind": "file",
+    "path": "collage-app-2x2.jpg"
+  },
+  {
+    "id": "file-exif-picsart",
+    "expect": "collage",
+    "kind": "file",
+    "path": "exif-picsart-file.jpg"
+  },
+  {
+    "id": "file-photo-group",
+    "expect": "photo",
+    "kind": "file",
+    "path": "photo-group-wide.jpg"
+  },
+  {
+    "id": "file-building-facade",
+    "expect": "photo",
+    "kind": "file",
+    "path": "building-facade.jpg"
+  }
+]

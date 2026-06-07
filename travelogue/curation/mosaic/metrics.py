@@ -6,7 +6,12 @@ from typing import Any
 
 from travelogue.curation.chapter_items import summarize_screen_patterns
 from travelogue.curation.longshot_filter import BREATH_PATTERN
-from travelogue.curation.mosaic.constants import MOSAIC_UNIFIED_PATTERN_IDS
+from travelogue.curation.mosaic.constants import (
+    MOSAIC_UNIFIED_PATTERN_IDS,
+    PATTERN_MOSAIC_5_2P3L_EQUAL,
+    PATTERN_PORTRAIT_1_LANDSCAPE_2,
+    PATTERN_PORTRAIT_2_LANDSCAPE_2,
+)
 from travelogue.curation.mosaic.render_check import compute_layout_render_error_rate
 
 
@@ -35,6 +40,28 @@ def mcs_unified_exposure_rate(chapters: list[dict]) -> float:
         return 0.0
     unified = sum(v for pid, v in counts.items() if pid in MOSAIC_UNIFIED_PATTERN_IDS)
     return round(unified / total, 6)
+
+
+_MIXED_LAYOUT_PATTERNS: frozenset[str] = frozenset(
+    {
+        PATTERN_PORTRAIT_1_LANDSCAPE_2,
+        PATTERN_PORTRAIT_2_LANDSCAPE_2,
+        PATTERN_MOSAIC_5_2P3L_EQUAL,
+        "screen-mosaic-5-main-portrait-3land",
+        "screen-mosaic-5-main-landscape-2portrait-2land",
+        "screen-mosaic-5-2portrait-3land-balanced",
+    }
+)
+
+
+def mixed_layout_exposure_rate(chapters: list[dict]) -> float:
+    """Share of content screens using portrait+landscape composite layouts."""
+    counts = _image_screen_pattern_counts(chapters)
+    total = sum(counts.values())
+    if not total:
+        return 0.0
+    mixed = sum(v for pid, v in counts.items() if pid in _MIXED_LAYOUT_PATTERNS)
+    return round(mixed / total, 6)
 
 
 def mosaic_win_score_percentiles(mosaic_logs: list[dict]) -> dict[str, float | None]:

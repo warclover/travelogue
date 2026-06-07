@@ -1,0 +1,485 @@
+{
+  "tripId": null,
+  "readTemplatesFromLte": true,
+  "registrySize": 18,
+  "activeTemplateCount": 18,
+  "activeByPhotoCount": {
+    "1": [
+      "screen-full-frame"
+    ],
+    "2": [
+      "screen-landscape-2"
+    ],
+    "3": [
+      "screen-landscape-3",
+      "screen-portrait-1-landscape-2",
+      "screen-portrait-3"
+    ],
+    "4": [
+      "screen-landscape-4",
+      "screen-portrait-2-landscape-2",
+      "screen-portrait-4"
+    ],
+    "5": [
+      "screen-mosaic-5-2p3l-equal",
+      "screen-mosaic-5-hero-3-2-plus-4",
+      "screen-mosaic-5-main-portrait-3land"
+    ],
+    "6": [
+      "screen-landscape-6",
+      "screen-mosaic-5-main-hero-plus-4",
+      "screen-mosaic-6-main-hero-plus-5",
+      "screen-portrait-6"
+    ],
+    "8": [
+      "screen-portrait-grid-8"
+    ],
+    "9": [
+      "screen-landscape-9",
+      "screen-portrait-9"
+    ]
+  },
+  "flagshipPresent": true,
+  "heroPresent": true,
+  "deprecatedExcluded": true,
+  "templateExposureCount": {
+    "screen-breath-pause": 274,
+    "screen-landscape-1": 888,
+    "screen-landscape-4": 68,
+    "screen-landscape-6": 20,
+    "screen-landscape-9": 54,
+    "screen-mosaic-5-3portrait-2land-balanced": 21,
+    "screen-mosaic-5-main-portrait-3land": 4,
+    "screen-portrait-1": 193,
+    "screen-portrait-1-landscape-2": 4,
+    "screen-portrait-2": 66,
+    "screen-portrait-3": 47,
+    "screen-square-1": 17
+  },
+  "templateExposureShare": {
+    "screen-breath-pause": 0.1655,
+    "screen-landscape-1": 0.5362,
+    "screen-landscape-4": 0.0411,
+    "screen-landscape-6": 0.0121,
+    "screen-landscape-9": 0.0326,
+    "screen-mosaic-5-3portrait-2land-balanced": 0.0127,
+    "screen-mosaic-5-main-portrait-3land": 0.0024,
+    "screen-portrait-1": 0.1165,
+    "screen-portrait-1-landscape-2": 0.0024,
+    "screen-portrait-2": 0.0399,
+    "screen-portrait-3": 0.0284,
+    "screen-square-1": 0.0103
+  },
+  "screenSampleTotal": 1656,
+  "dogfood": {
+    "tripCount": 27,
+    "perTrip": [
+      {
+        "tripId": "_longshot-test",
+        "layout.chapter.pattern_diversity_p50": 0.0,
+        "layout.chapter.pattern_diversity": 0.0,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.0,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "chuanzang-studio",
+        "layout.chapter.pattern_diversity_p50": 6.0,
+        "layout.chapter.pattern_diversity": 0.0526,
+        "layout.mosaic5.exposure_rate": 0.008264,
+        "layout.mosaic_v2.unified_exposure_rate": 0.082645,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.008264
+      },
+      {
+        "tripId": "dalitest",
+        "layout.chapter.pattern_diversity_p50": 3.0,
+        "layout.chapter.pattern_diversity": 0.129,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.032258,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "demo-001",
+        "layout.chapter.pattern_diversity_p50": 4.0,
+        "layout.chapter.pattern_diversity": 0.1111,
+        "layout.mosaic5.exposure_rate": 0.169231,
+        "layout.mosaic_v2.unified_exposure_rate": 0.184615,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "demo-05acf4c579",
+        "layout.chapter.pattern_diversity_p50": 4.0,
+        "layout.chapter.pattern_diversity": 0.0854,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.268293,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.012195
+      },
+      {
+        "tripId": "demo-1506104ebf",
+        "layout.chapter.pattern_diversity_p50": 5.0,
+        "layout.chapter.pattern_diversity": 0.0569,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.111111,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "demo-318",
+        "layout.chapter.pattern_diversity_p50": 5.0,
+        "layout.chapter.pattern_diversity": 0.0326,
+        "layout.mosaic5.exposure_rate": 0.017442,
+        "layout.mosaic_v2.unified_exposure_rate": 0.052326,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.017442
+      },
+      {
+        "tripId": "demo-49551086fe",
+        "layout.chapter.pattern_diversity_p50": 4.0,
+        "layout.chapter.pattern_diversity": 0.3,
+        "layout.mosaic5.exposure_rate": 0.0625,
+        "layout.mosaic_v2.unified_exposure_rate": 0.125,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "demo-49e51324cc",
+        "layout.chapter.pattern_diversity_p50": 5.0,
+        "layout.chapter.pattern_diversity": 0.092,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.085714,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "demo-577d57e929",
+        "layout.chapter.pattern_diversity_p50": 5.5,
+        "layout.chapter.pattern_diversity": 0.0792,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.135802,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "demo-5968e66cc5",
+        "layout.chapter.pattern_diversity_p50": 5.5,
+        "layout.chapter.pattern_diversity": 0.0792,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.135802,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "demo-5a361350f8",
+        "layout.chapter.pattern_diversity_p50": 5.0,
+        "layout.chapter.pattern_diversity": 0.2941,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.285714,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "demo-5a7c161a12",
+        "layout.chapter.pattern_diversity_p50": 5.0,
+        "layout.chapter.pattern_diversity": 0.0959,
+        "layout.mosaic5.exposure_rate": 0.152542,
+        "layout.mosaic_v2.unified_exposure_rate": 0.135593,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "demo-86a0eb681b",
+        "layout.chapter.pattern_diversity_p50": 5.0,
+        "layout.chapter.pattern_diversity": 0.092,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.085714,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "demo-album",
+        "layout.chapter.pattern_diversity_p50": 1.0,
+        "layout.chapter.pattern_diversity": 1.0,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.0,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "demo-bf00903a9c",
+        "layout.chapter.pattern_diversity_p50": 5.0,
+        "layout.chapter.pattern_diversity": 0.2941,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.214286,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "demo-cd67df48d7",
+        "layout.chapter.pattern_diversity_p50": 3.0,
+        "layout.chapter.pattern_diversity": 0.1389,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.034483,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "demo-ecc41072d7",
+        "layout.chapter.pattern_diversity_p50": 5.0,
+        "layout.chapter.pattern_diversity": 0.0723,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.447761,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "demo-f48c2d01fa",
+        "layout.chapter.pattern_diversity_p50": 6.0,
+        "layout.chapter.pattern_diversity": 0.0816,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.139241,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "guilin",
+        "layout.chapter.pattern_diversity_p50": 3.0,
+        "layout.chapter.pattern_diversity": 0.24,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.1,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "job-335abe8ba065",
+        "layout.chapter.pattern_diversity_p50": 3.0,
+        "layout.chapter.pattern_diversity": 0.1379,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.034483,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.034483
+      },
+      {
+        "tripId": "job-4118e1425f51",
+        "layout.chapter.pattern_diversity_p50": 1.0,
+        "layout.chapter.pattern_diversity": 0.3846,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.230769,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.076923
+      },
+      {
+        "tripId": "job-e3375458e1fc",
+        "layout.chapter.pattern_diversity_p50": 2.0,
+        "layout.chapter.pattern_diversity": 0.2174,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.086957,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "jpg",
+        "layout.chapter.pattern_diversity_p50": 3.0,
+        "layout.chapter.pattern_diversity": 0.2,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.125,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "klx",
+        "layout.chapter.pattern_diversity_p50": 4.0,
+        "layout.chapter.pattern_diversity": 0.2609,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.210526,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      },
+      {
+        "tripId": "linzhi",
+        "layout.chapter.pattern_diversity_p50": 4.0,
+        "layout.chapter.pattern_diversity": 0.0854,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.268293,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.012195
+      },
+      {
+        "tripId": "maomi",
+        "layout.chapter.pattern_diversity_p50": 3.5,
+        "layout.chapter.pattern_diversity": 0.24,
+        "layout.mosaic5.exposure_rate": 0.0,
+        "layout.mosaic_v2.unified_exposure_rate": 0.1,
+        "layout.mosaic.mixed_layout_exposure_rate": 0.0
+      }
+    ],
+    "aggregate": {
+      "layout.chapter.pattern_diversity_p50": 4.0,
+      "layout.chapter.pattern_diversity_mean": 0.1797,
+      "layout.mosaic5.exposure_rate_mean": 0.0152,
+      "layout.mosaic_v2.unified_exposure_rate_mean": 0.1375,
+      "layout.mosaic.mixed_layout_exposure_rate_mean": 0.006
+    }
+  },
+  "exposureDebtProposals": [
+    {
+      "templateId": "screen-full-frame",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.5,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0556,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-landscape-2",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.5,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0556,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-landscape-3",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.5,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0556,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-landscape-4",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.1301,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0411,
+      "exposureDebt": 0.0145,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-landscape-6",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.3911,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0121,
+      "exposureDebt": 0.0435,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-landscape-9",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.2066,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0326,
+      "exposureDebt": 0.023,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-mosaic-5-2p3l-equal",
+      "templateVersion": 2,
+      "currentBaseWeight": 1.05,
+      "suggestedBaseWeight": 1.575,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0556,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-mosaic-5-hero-3-2-plus-4",
+      "templateVersion": 3,
+      "currentBaseWeight": 1.02,
+      "suggestedBaseWeight": 1.53,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0556,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-mosaic-5-main-hero-plus-4",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.5,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0556,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-mosaic-5-main-portrait-3land",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.4784,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0024,
+      "exposureDebt": 0.0532,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-mosaic-6-main-hero-plus-5",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.5,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0556,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-portrait-1-landscape-2",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.4784,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0024,
+      "exposureDebt": 0.0532,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-portrait-2-landscape-2",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.5,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0556,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-portrait-3",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.2444,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0284,
+      "exposureDebt": 0.0272,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-portrait-4",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.5,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0556,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-portrait-6",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.5,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0556,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-portrait-9",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.5,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0556,
+      "approvalRequired": true
+    },
+    {
+      "templateId": "screen-portrait-grid-8",
+      "templateVersion": 1,
+      "currentBaseWeight": 1.0,
+      "suggestedBaseWeight": 1.5,
+      "targetExposureShare": 0.0556,
+      "actualExposureShare": 0.0,
+      "exposureDebt": 0.0556,
+      "approvalRequired": true
+    }
+  ],
+  "templateRegistryVersion": "f3bef0dd91b8ef339e3d5ba0c1c684a81130cb815a3d9b63ef094f79c1e188ca"
+}

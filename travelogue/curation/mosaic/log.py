@@ -28,6 +28,10 @@ class MosaicWindowLog:
     scorer_version: str = "p15-s1"
     router_version: str = MOSAIC_ROUTER_VERSION
     weights_hash: str = ""
+    template_version: int | None = None
+    template_registry_version: str = ""
+    slot_ar_match_score: float | None = None
+    rejected_templates: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {
@@ -51,6 +55,14 @@ class MosaicWindowLog:
         if self.top3_patterns:
             out["top3Patterns"] = list(self.top3_patterns)
             out["top3Scores"] = [round(s, 4) for s in self.top3_scores]
+        if self.template_version is not None:
+            out["templateVersion"] = self.template_version
+        if self.template_registry_version:
+            out["templateRegistryVersion"] = self.template_registry_version
+        if self.slot_ar_match_score is not None:
+            out["slotArMatchScore"] = self.slot_ar_match_score
+        if self.rejected_templates:
+            out["rejectedTemplates"] = list(self.rejected_templates)
         return out
 
 
@@ -73,7 +85,8 @@ def format_log_entry(raw: dict[str, Any], log_level: str = "window") -> dict[str
     )
     if log_level == "summary":
         return {k: raw[k] for k in summary_keys if k in raw}
-    # window: drop top3 score arrays to limit volume
+    # window: drop top3 score arrays and debug-only rejectedTemplates
     out = dict(raw)
     out.pop("top3Scores", None)
+    out.pop("rejectedTemplates", None)
     return out

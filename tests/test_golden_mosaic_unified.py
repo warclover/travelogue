@@ -14,8 +14,8 @@ from tests._golden.helpers import (
     plan_mosaic_screens,
 )
 from travelogue.curation.mosaic.constants import (
-    PATTERN_LANDSCAPE_4,
     PATTERN_LANDSCAPE_6,
+    PATTERN_MOSAIC_5_HERO_3_2_PLUS_4,
     PATTERN_PORTRAIT_3,
     PATTERN_PORTRAIT_4,
 )
@@ -44,16 +44,17 @@ def test_golden_mosaic_landscape_6_matches_mcs():
     assert layout_snapshot(chapters) == load_golden("mosaic-landscape-6")
     patterns = [s["patternId"] for s in chapters[0]["screens"]]
     assert PATTERN_LANDSCAPE_6 not in patterns
-    assert PATTERN_LANDSCAPE_4 in patterns
+    assert PATTERN_MOSAIC_5_HERO_3_2_PLUS_4 in patterns
 
 
 def test_mosaic_landscape_6_ab_unified_vs_legacy():
-    """6 横图：MCS 与 legacy 在当前阈值下拆屏策略一致。"""
+    """6 横图：legacy 仍拆 4+1；启用 MCS + hero rollout 后合并为 5-slot hero。"""
     buckets, aspects, assets = build_mosaic_landscape6_trip()
     off = plan_legacy_screens(buckets, aspects, assets, mosaic_enabled=False)
     on = plan_mosaic_screens(buckets, aspects, assets)
-    assert layout_snapshot(off) == layout_snapshot(on)
-    assert len(on[0]["screens"]) >= 2
+    assert len(off[0]["screens"]) == 3
+    assert on[0]["screens"][-1]["patternId"] == PATTERN_MOSAIC_5_HERO_3_2_PLUS_4
+    assert len(on[0]["screens"]) == 2
 
 
 def test_golden_mosaic_portrait_8_grid():

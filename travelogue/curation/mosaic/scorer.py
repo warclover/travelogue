@@ -267,6 +267,22 @@ def score_candidate(
         total *= 0.5
         reasons.append("R_RHYTHM_BLOCK")
 
+    pattern_id = str(screen.get("patternId") or "")
+    from travelogue.curation.mosaic.lte_adapter import template_base_weight, template_diversity_bonus
+
+    base_w = template_base_weight(pattern_id)
+    if base_w != 1.0:
+        total = min(1.0, total * base_w)
+        if base_w > 1.0:
+            reasons.append("R_LTE_WEIGHT_UP")
+        elif base_w < 1.0:
+            reasons.append("R_LTE_WEIGHT_DOWN")
+
+    div_bonus = template_diversity_bonus(pattern_id)
+    if div_bonus > 0:
+        total = min(1.0, total * (1.0 + div_bonus))
+        reasons.append("R_LTE_DIVERSITY_BONUS")
+
     return MosaicScoreResult(
         total=_clamp01(total),
         base=base,

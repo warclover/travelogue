@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_HERO_3_2_PLUS_4
 from travelogue.curation.mosaic.grid_specs import (
     ALL_MOSAIC_PATTERN_IDS,
     EXPLICIT_GRID_SPECS,
@@ -28,13 +29,15 @@ def test_full_coverage_explicit_3x3_mosaic_patterns():
     full_cover = {
         "screen-mosaic-5-main-portrait-3land",
         "screen-mosaic-5-main-landscape-2portrait-2land",
-        "screen-mosaic-5-3portrait-2land-balanced",
+        "screen-mosaic-5-2p3l-equal",
         # main-land-2p2l: 3×3 full after right column tall-portrait fix
+        PATTERN_MOSAIC_5_HERO_3_2_PLUS_4,
         "screen-mosaic-5-main-hero-plus-4",
         "screen-mosaic-6-main-hero-plus-5",
     }
     for pid in full_cover:
-        gaps = gap_cells(EXPLICIT_GRID_SPECS[pid])
+        cols, rows = (3, 2) if pid == PATTERN_MOSAIC_5_HERO_3_2_PLUS_4 else (3, 3)
+        gaps = gap_cells(EXPLICIT_GRID_SPECS[pid], cols=cols, rows=rows)
         assert gaps == set(), f"{pid} has gap cells {sorted(gaps)}"
 
 

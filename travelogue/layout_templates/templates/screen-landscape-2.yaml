@@ -1,0 +1,54 @@
+id: screen-landscape-2
+version: 1
+status: ga
+kind: stack
+displayName: landscape · 2
+description: Reverse-migrated from legacy mosaic sources (Phase 16 W1).
+stage:
+  aspect: '16:9'
+  cols:
+  - 1
+  rows:
+  - 1
+  - 1
+photoCount:
+  min: 2
+  max: 2
+mix:
+  portrait: 0
+  landscape: 2
+slots:
+- index: 0
+  rect:
+  - 1
+  - 1
+  - 1
+  - 1
+  role: landscape
+  fit: cover
+- index: 1
+  rect:
+  - 1
+  - 1
+  - 2
+  - 2
+  role: landscape
+  fit: cover
+constraints:
+  portrait_forbidden_in_wide_slots: []
+  landscape_forbidden_in_tall_slots: []
+  intentionalGaps: []
+scoring:
+  base_weight: 1.0
+  tags: []
+render:
+  gridClass: layout-screen__grid--landscape-stack-2
+  cssBundle: journal-screens.css
+  fitPolicy: auto_delegate
+_legacy:
+  accepts:
+    min_portrait: 0
+    min_landscape: 2
+    max_portrait: 9
+    max_landscape: 9
+  css_verified: false

@@ -28,6 +28,7 @@ from travelogue.web.studio_handlers.common import (
     match_trip_chapter_copy_intent,
     match_trip_cohort,
     match_trip_cohort_refresh,
+    match_trip_asset_media,
     match_trip_curate,
     match_trip_delete,
     match_trip_intent,
@@ -248,6 +249,10 @@ class StudioMixin:
             ci_trip_id, chapter_id = copy_intent_match
             trip_handlers.handle_patch_copy_intent(self, ci_trip_id, chapter_id)
             return True
+        asset_media_trip_id = match_trip_asset_media(path)
+        if asset_media_trip_id is not None:
+            trip_handlers.handle_asset_media_class(self, asset_media_trip_id)
+            return True
         return False
 
     def studio_dispatch_DELETE(self, path: str) -> bool:
@@ -319,6 +324,10 @@ class StudioMixin:
         curate_trip_id = match_trip_curate(path)
         if curate_trip_id is not None:
             trip_handlers.handle_trip_curate(self, curate_trip_id)
+            return True
+        asset_media_trip_id = match_trip_asset_media(path)
+        if asset_media_trip_id is not None:
+            trip_handlers.handle_asset_media_class(self, asset_media_trip_id)
             return True
         cohort_refresh_id = match_trip_cohort_refresh(path)
         if cohort_refresh_id is not None:

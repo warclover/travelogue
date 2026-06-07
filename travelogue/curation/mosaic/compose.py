@@ -6,8 +6,14 @@ from dataclasses import dataclass
 
 from travelogue.config import MosaicConfig
 from travelogue.curation.layout_planner import AspectKind
-from travelogue.curation.mosaic.candidates import ScreenCandidate, generate_window_candidates
+from travelogue.curation.mosaic.candidates import (
+    ScreenCandidate,
+    generate_window_candidates_with_rejections,
+)
+from travelogue.curation.mosaic.diversity import apply_candidate_diversity
 from travelogue.curation.mosaic.log import MosaicWindowLog
+from travelogue.curation.mosaic.log_enrich import enrich_mosaic_log_from_screen
+from travelogue.curation.mosaic.lte_adapter import mcs_diversity_config
 from travelogue.curation.mosaic.pattern_policy import mosaic_pattern_disabled
 from travelogue.curation.mosaic.scorer import score_candidate, weights_hash
 from travelogue.curation.mosaic.selfheal import try_self_heal_pick
@@ -33,7 +39,32 @@ def score_window_candidates(
     median_sharp: float | None = None,
 ) -> list[tuple[ScreenCandidate, float, list[str]]]:
     """Score all MCS window candidates (shared by compose + replan)."""
-    candidates = generate_window_candidates(
+    scored, _rejected = _score_window_candidates_with_rejections(
+        asset_ids,
+        aspects,
+        assets_map,
+        cfg=cfg,
+        layout_state=layout_state,
+        trip_photo_total=trip_photo_total,
+        burst_seconds=burst_seconds,
+        median_sharp=median_sharp,
+    )
+    return scored
+
+
+def _score_window_candidates_with_rejections(
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    *,
+    cfg: MosaicConfig,
+    layout_state: ScreenLayoutPlannerState | None = None,
+    trip_photo_total: int = 0,
+    burst_seconds: float = 12.0,
+    median_sharp: float | None = None,
+) -> tuple[list[tuple[ScreenCandidate, float, list[str]]], list[dict]]:
+    """Score MCS window candidates and collect validator-level rejections."""
+    bundle = generate_window_candidates_with_rejections(
         asset_ids,
         aspects,
         assets_map,
@@ -41,9 +72,15 @@ def score_window_candidates(
         burst_seconds=burst_seconds,
         median_sharp=median_sharp,
     )
+    candidates = bundle.candidates
+    rejected = list(bundle.rejected)
     scored: list[tuple[ScreenCandidate, float, list[str]]] = []
     for cand in candidates:
         if mosaic_pattern_disabled(cand.pattern_id, cfg=cfg) or not cand.hard_valid:
+            if not cand.hard_valid and not any(
+                r.get("templateId") == cand.pattern_id for r in rejected
+            ):
+                rejected.append({"templateId": cand.pattern_id, "reason": "hard_invalid"})
             continue
         sr = score_candidate(
             cand.screen,
@@ -56,7 +93,14 @@ def score_window_candidates(
         )
         scored.append((cand, sr.total, sr.reason_codes))
     scored.sort(key=lambda t: (-t[1], t[0].pattern_id))
-    return scored
+    div_cfg = mcs_diversity_config()
+    scored = apply_candidate_diversity(
+        scored,
+        layout_state=layout_state,
+        mode=str(div_cfg.get("mode", "off")),
+        mmr_lambda=float(div_cfg.get("lambda", 0.65)),
+    )
+    return scored, rejected
 
 
 def pick_best_window(
@@ -87,7 +131,7 @@ def pick_best_window(
         log.planner_path = "legacy"
         return WindowPickResult(screen=None, log=log, used_legacy=True)
 
-    scored = score_window_candidates(
+    scored, rejected = _score_window_candidates_with_rejections(
         asset_ids,
         aspects,
         assets_map,
@@ -97,6 +141,7 @@ def pick_best_window(
         burst_seconds=burst_seconds,
         median_sharp=median_sharp,
     )
+    log.rejected_templates = rejected
     log.candidates_count = len(scored)
     if not scored:
         log.fallback_used = True
@@ -138,6 +183,7 @@ def pick_best_window(
             log.self_heal_step = step
             log.dropped_asset_ids = list(dropped)
             log.planner_path = "mosaic"
+            enrich_mosaic_log_from_screen(log, winner_cand.screen, assets_map=assets_map)
             return WindowPickResult(screen=winner_cand.screen, log=log, used_legacy=False)
         if cfg.fallback_to_legacy:
             log.fallback_used = True
@@ -146,6 +192,7 @@ def pick_best_window(
             return WindowPickResult(screen=None, log=log, used_legacy=True)
 
     log.planner_path = "mosaic"
+    enrich_mosaic_log_from_screen(log, winner_cand.screen, assets_map=assets_map)
     return WindowPickResult(screen=winner_cand.screen, log=log, used_legacy=False)
 
 

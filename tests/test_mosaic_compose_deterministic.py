@@ -2,22 +2,24 @@
 
 from __future__ import annotations
 
-from tests._golden.helpers import build_mosaic_eligible_trip, plan_mosaic_screens
+from tests._golden.helpers import (
+    build_mosaic_eligible_trip,
+    build_mosaic_five_2p3l_window,
+    plan_mosaic_screens,
+)
 from travelogue.config import MosaicConfig
 from travelogue.curation.layout_search import _screens_signature
 from travelogue.curation.mosaic.compose import pick_best_five_window
 
 
 def test_pick_best_five_stable_signature():
-    buckets, aspects, assets = build_mosaic_eligible_trip()
-    assets_map = {a["id"]: a for a in assets}
+    ids, aspects, assets_map = build_mosaic_five_2p3l_window()
     cfg = MosaicConfig(
         enabled=True,
         enabled_window_sizes=(5,),
         deterministic_strict=True,
         min_candidate_score=0.0,
     )
-    ids = buckets[0]
     r1 = pick_best_five_window(ids, aspects, assets_map, cfg=cfg, trip_photo_total=40)
     r2 = pick_best_five_window(ids, aspects, assets_map, cfg=cfg, trip_photo_total=40)
     assert r1.log.winner_pattern_id == r2.log.winner_pattern_id

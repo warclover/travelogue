@@ -18,6 +18,7 @@ from travelogue.config.layout import (
     LayoutConfig,
     layout_feedback_from_dict,
     layout_scoring_from_dict,
+    layout_template_engine_from_dict,
 )
 from travelogue.config.misc import (
     ExportConfig,
@@ -154,6 +155,9 @@ def load_config(path: Path | None = None) -> AppConfig:
     )
     scoring_raw = layout_raw.get("scoring") if isinstance(layout_raw.get("scoring"), dict) else {}
     feedback_raw = layout_raw.get("feedback") if isinstance(layout_raw.get("feedback"), dict) else {}
+    template_engine_raw = (
+        layout_raw.get("template_engine") if isinstance(layout_raw.get("template_engine"), dict) else {}
+    )
     export_raw = data.get("export") if isinstance(data.get("export"), dict) else {}
     vision_raw = data.get("vision") if isinstance(data.get("vision"), dict) else {}
     narrative_raw = data.get("narrative") if isinstance(data.get("narrative"), dict) else {}
@@ -196,6 +200,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             screen_plan_scope=scope,
             mixed_proximity_seconds=mixed_gap,
             layout_density_enabled=layout_density_enabled,
+            template_engine=layout_template_engine_from_dict(template_engine_raw),
             scoring=layout_scoring_from_dict(scoring_raw),
             feedback=layout_feedback_from_dict(feedback_raw),
         ),

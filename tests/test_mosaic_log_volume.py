@@ -20,6 +20,14 @@ def test_window_log_omits_top3_scores():
     assert "top3Scores" not in slim
 
 
+def test_window_log_omits_rejected_templates():
+    raw = MosaicWindowLog(
+        rejected_templates=[{"templateId": "x", "reason": "hard_invalid"}]
+    ).to_dict()
+    assert "rejectedTemplates" not in format_log_entry(raw, "window")
+    assert "rejectedTemplates" in format_log_entry(raw, "debug")
+
+
 def test_200_window_logs_under_ci_budget():
     logs = [
         format_log_entry(

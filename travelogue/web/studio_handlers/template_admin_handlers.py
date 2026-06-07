@@ -92,12 +92,27 @@ def handle_templates_admin_list(handler: StudioHandlerProtocol) -> None:
         from travelogue.templating.review import get_review_status
 
         row["reviewStatus"] = get_review_status(tid).get("status")
+
+    from travelogue.layout_templates.layout_admin import list_layout_templates_for_admin
+
+    layout_rows = list_layout_templates_for_admin()
+    exposure_eval: dict = {}
+    try:
+        from scripts.phase16_template_eval import evaluate_registry
+
+        exposure_eval = evaluate_registry()
+    except Exception:
+        exposure_eval = {}
     handler._json_response(
         200,
         {
             "ok": True,
             "revision": snap["revision"],
             "templates": rows,
+            "layoutPatterns": layout_rows,
+            "exposureDebtProposals": exposure_eval.get("exposureDebtProposals") or [],
+            "templateExposureShare": exposure_eval.get("templateExposureShare") or {},
+            "templateRegistryVersion": exposure_eval.get("templateRegistryVersion"),
             "runtime": load_runtime(),
             "etag": str(snap["revision"]),
         },
@@ -153,6 +168,33 @@ def handle_templates_admin_patch(handler: StudioHandlerProtocol, template_id: st
     target = str(payload.get("lifecycle") or "").strip().lower()
     if target not in ("experimental", "beta", "ga", "deprecated", "disabled"):
         handler._json_response(400, {"ok": False, "error": "invalid lifecycle"})
+        return
+
+    from travelogue.layout_templates.layout_admin import (
+        is_layout_template_id,
+        run_admission_for_template,
+    )
+
+    if is_layout_template_id(template_id):
+        from travelogue.layout_templates.registry import get_layout_template
+
+        try:
+            tpl = get_layout_template(template_id)
+        except Exception:
+            handler._json_response(404, {"ok": False, "error": "E_TEMPLATE_NOT_FOUND"})
+            return
+        admission = run_admission_for_template(template_id, target=target)
+        handler._json_response(
+            200,
+            {
+                "ok": True,
+                "layoutTemplate": True,
+                "message": "Layout template lifecycle is authoritative in YAML (GitOps); edit status in templates/*.yaml.",
+                "currentStatus": tpl.status,
+                "requestedLifecycle": target,
+                "admission": admission,
+            },
+        )
         return
 
     confirm = bool(payload.get("confirmHighRisk") or payload.get("confirm_high_risk"))
@@ -390,14 +432,24 @@ def handle_templates_admin_dashboard(handler: StudioHandlerProtocol) -> None:
 def handle_templates_admin_admission(handler: StudioHandlerProtocol) -> None:
     if not _auth(handler, minimum="template_operator"):
         return
-    from travelogue.templating.admission import run_admission_check
-
     payload = handler._read_json_body() or {}
+    from travelogue.layout_templates.layout_admin import (
+        is_layout_template_id,
+        layout_template_promotion_plan,
+        run_admission_for_template,
+    )
     template_id = str(payload.get("templateId") or "").strip()
     if not template_id:
         handler._json_response(400, {"ok": False, "error": "templateId required"})
         return
-    report = run_admission_check(template_id)
+    target = str(payload.get("target") or "beta").strip().lower()
+    if target not in ("beta", "ga"):
+        target = "beta"
+    report = run_admission_for_template(template_id, target=target)
+    if is_layout_template_id(template_id):
+        plan = layout_template_promotion_plan(template_id, target=target)
+        handler._json_response(200, {"ok": True, **report, "promotionPlan": plan})
+        return
     handler._json_response(200, {"ok": True, **report})
 
 
@@ -432,7 +484,15 @@ def handle_templates_admin_runtime(handler: StudioHandlerProtocol) -> None:
     if not _auth(handler, minimum="template_admin"):
         return
     payload = handler._read_json_body() or {}
-    from travelogue.templating.config_governance import approve_router_change, propose_router_change
+    from travelogue.layout_templates.layout_admin import (
+        is_layout_template_id,
+        layout_template_promotion_plan,
+    )
+    from travelogue.templating.config_governance import (
+        approve_router_change,
+        propose_layout_weight_changes,
+        propose_router_change,
+    )
 
     if payload.get("action") == "approve":
         change_id = str(payload.get("changeId") or "").strip()
@@ -444,6 +504,72 @@ def handle_templates_admin_runtime(handler: StudioHandlerProtocol) -> None:
             return
         handler._json_response(200, {"ok": True, "change": out, "runtime": load_runtime()})
         return
+    if payload.get("action") == "promote_layout_template":
+        template_id = str(payload.get("templateId") or "").strip()
+        if not template_id:
+            handler._json_response(400, {"ok": False, "error": "templateId required"})
+            return
+        if not is_layout_template_id(template_id):
+            handler._json_response(400, {"ok": False, "error": "E_NOT_LAYOUT_TEMPLATE"})
+            return
+        target = str(payload.get("target") or "beta").strip().lower()
+        if target not in ("beta", "ga"):
+            target = "beta"
+        if target == "ga":
+            from travelogue.templating.review import get_review_status, require_review_approved_for_ga
+
+            try:
+                require_review_approved_for_ga(template_id)
+            except ValueError as exc:
+                if str(exc) == "E_TEMPLATE_REVIEW_REQUIRED":
+                    handler._json_response(
+                        428,
+                        {
+                            "ok": False,
+                            "error": exc.args[0],
+                            "message": "布局模板晋升 GA 前需完成人工评审（先 submit_for_review 并 approve）",
+                            "review": get_review_status(template_id),
+                        },
+                    )
+                    return
+                raise
+        plan = layout_template_promotion_plan(template_id, target=target)
+        if not plan["canPromote"]:
+            handler._json_response(400, {"ok": False, "promotionPlan": plan, "error": "E_ADMISSION_FAILED"})
+            return
+        applied = None
+        if payload.get("apply"):
+            from travelogue.layout_templates.promotion import apply_layout_template_yaml_patch
+
+            dry_run = bool(payload.get("dryRun"))
+            try:
+                applied = apply_layout_template_yaml_patch(
+                    template_id,
+                    plan["yamlPatch"],
+                    dry_run=dry_run,
+                )
+            except (OSError, ValueError) as exc:
+                handler._json_response(400, {"ok": False, "error": str(exc)})
+                return
+        handler._json_response(200, {"ok": True, "promotionPlan": plan, "applied": applied})
+        return
+    if payload.get("action") == "propose_exposure_weights":
+        proposals = payload.get("proposals") or []
+        if not isinstance(proposals, list) or not proposals:
+            handler._json_response(400, {"ok": False, "error": "proposals array required"})
+            return
+        try:
+            req = propose_layout_weight_changes(
+                proposals,
+                operator=str(payload.get("operator") or "studio"),
+                reason=str(payload.get("reason") or "exposure debt rebalance"),
+                template_registry_version=str(payload.get("templateRegistryVersion") or "").strip() or None,
+            )
+        except ValueError as exc:
+            handler._json_response(400, client_error_payload(exc))
+            return
+        handler._json_response(202, {"ok": True, "pending": req, "message": "需第二名审批人 approve"})
+        return
     patch = payload.get("patch") or payload
     if not isinstance(patch, dict):
         handler._json_response(400, {"ok": False, "error": "patch object required"})
@@ -454,6 +580,42 @@ def handle_templates_admin_runtime(handler: StudioHandlerProtocol) -> None:
 
 def handle_templates_admin_version_diff(handler: StudioHandlerProtocol, template_id: str) -> None:
     if not _auth(handler, minimum="template_operator"):
+        return
+    from urllib.parse import parse_qs, urlparse
+
+    from travelogue.layout_templates.layout_admin import (
+        is_layout_template_id,
+        layout_template_geometry_detail,
+    )
+
+    query = parse_qs(urlparse(handler.path).query)
+    va_raw = (query.get("va") or query.get("fromVersion") or [None])[0]
+    vb_raw = (query.get("vb") or query.get("toVersion") or [None])[0]
+
+    if is_layout_template_id(template_id):
+        from travelogue.layout_templates.registry import get_engine
+
+        current_version = get_engine().get(template_id).version
+        va = int(va_raw) if va_raw is not None else max(1, current_version - 1)
+        vb = int(vb_raw) if vb_raw is not None else current_version
+        detail = layout_template_geometry_detail(template_id)
+        hook_diff = None
+        if va != vb:
+            from travelogue.layout_templates.validator import LayoutTemplateGeometryHook
+
+            hook_diff = LayoutTemplateGeometryHook().geometry_diff(template_id, va, vb)
+        handler._json_response(
+            200,
+            {
+                "ok": True,
+                "templateId": template_id,
+                "registryKind": "layout_pattern",
+                "geometry": detail,
+                "va": va,
+                "vb": vb,
+                "geometryDiff": hook_diff,
+            },
+        )
         return
     reg = get_registry()
     try:

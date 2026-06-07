@@ -32,6 +32,7 @@ from travelogue.curation.screen_layout_state import (  # noqa: F401 — re-expor
     pattern_slot_count,
     portrait_grid8_allowed,
 )
+from travelogue.curation.collage_routing import single_asset_screen_pattern
 from travelogue.media.image_ops import AspectKind
 
 LayoutEngine = Literal["legacy", "screens"]
@@ -71,10 +72,12 @@ PATTERN_GRID_CLASS: dict[str, str] = {
     PATTERN_PORTRAIT_1_LANDSCAPE_2: "layout-screen__grid--portrait-left-2landscape",
     PATTERN_PORTRAIT_2_LANDSCAPE_2: "layout-screen__grid--2x2",
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND: "layout-screen__grid--mosaic-5-main-portrait-3land",
+    "screen-mosaic-5-2p3l-equal": "layout-screen__grid--mosaic-5-2p3l-equal",
+    "screen-mosaic-5-hero-3-2-plus-4": "layout-screen__grid--mosaic-5-hero-3-2-plus-4",
     "screen-mosaic-5-main-landscape-2portrait-2land": "layout-screen__grid--mosaic-5-main-landscape-2portrait-2land",
     "screen-mosaic-5-2portrait-3land-balanced": "layout-screen__grid--mosaic-5-2portrait-3land-balanced",
     "screen-mosaic-5-3portrait-2land-balanced": "layout-screen__grid--mosaic-5-3portrait-2land-balanced",
-    "screen-mosaic-5-main-hero-plus-4": "layout-screen__grid--mosaic-6-main-hero-plus-5",
+    "screen-mosaic-5-main-hero-plus-4": "layout-screen__grid--mosaic-5-main-hero-plus-4",
     "screen-mosaic-6-main-hero-plus-5": "layout-screen__grid--mosaic-6-main-hero-plus-5",
     "screen-landscape-1": "layout-screen__grid--1col",
     "screen-landscape-2": "layout-screen__grid--landscape-stack-2",
@@ -90,6 +93,7 @@ PATTERN_GRID_CLASS: dict[str, str] = {
     "screen-square-9": "layout-screen__grid--3x3",
     "screen-panorama-1": "layout-screen__grid--1col",
     "screen-tall-1": "layout-screen__grid--1col",
+    "screen-full-frame": "layout-screen__grid--1col",
     "screen-plate": "layout-screen__grid--1col",
     "screen-spread": "layout-screen__grid--1col",
 }
@@ -132,7 +136,7 @@ def _fits_for_screen(
     n = len(asset_ids)
     if pattern_id in ("screen-panorama-1", "screen-plate"):
         return ["cover"] * n
-    if pattern_id in ("screen-tall-1", "screen-square-1"):
+    if pattern_id in ("screen-tall-1", "screen-square-1", "screen-full-frame"):
         return ["contain"] * n
     if pattern_id == "screen-portrait-1":
         # Single full-screen portrait: the container is portrait-aspect, so cover
@@ -227,6 +231,12 @@ def _make_screen(
     aspects: dict[str, AspectKind] | None = None,
     assets_map: dict[str, dict] | None = None,
 ) -> dict:
+    if slots is None and asset_ids and len(asset_ids) == 1:
+        pattern_id = single_asset_screen_pattern(
+            pattern_id,
+            asset_ids[0],
+            assets_map,
+        )
     if slots is None:
         ids = list(asset_ids or [])
         if aspects is not None:

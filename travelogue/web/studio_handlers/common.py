@@ -133,6 +133,12 @@ def match_trip_curate(path: str) -> str | None:
     return match_trip_suffix(path, CURATE_SUFFIX)
 
 
+def match_trip_asset_media(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import ASSET_MEDIA_SUFFIX
+
+    return match_trip_suffix(path, ASSET_MEDIA_SUFFIX)
+
+
 def match_trip_template(path: str) -> str | None:
     from travelogue.web.studio_handlers.paths import TEMPLATE_SUFFIX
 

@@ -1,0 +1,52 @@
+# LTE registry policy (PRD §4.2, R-P16-02)
+# W0 skeleton — quotas enforced in W1 registry loader.
+
+registry_version: p16-2026-06
+
+# MCS unified window families (exported to _legacy_generated.py · R-P16-02)
+mosaic_unified_groups:
+  MOSAIC_3_PATTERN_IDS:
+    - screen-portrait-3
+    - screen-landscape-3
+    - screen-portrait-1-landscape-2
+  MOSAIC_4_PATTERN_IDS:
+    - screen-portrait-2-landscape-2
+    - screen-portrait-4
+    - screen-landscape-4
+  MOSAIC_5_PATTERN_IDS:
+    - screen-mosaic-5-main-portrait-3land
+    - screen-mosaic-5-2p3l-equal
+  MOSAIC_6_PATTERN_IDS:
+    - screen-mosaic-5-main-hero-plus-4
+    - screen-mosaic-6-main-hero-plus-5
+    - screen-portrait-6
+    - screen-landscape-6
+  MOSAIC_8_PATTERN_IDS:
+    - screen-portrait-grid-8
+  MOSAIC_9_PATTERN_IDS:
+    - screen-portrait-9
+    - screen-landscape-9
+
+quotas:
+  5:
+    max_active_composite: 6
+    max_active_total: 10
+  9:
+    max_active_primitive: 2
+    max_active_total: 4
+
+# Emergency disable without editing template YAML (R-P16-08) — runtime config mirror:
+# layout.template_engine.overrides.disable: []
+
+# §9.4 exposure debt controller (proposal-only; requires config_governance approval)
+exposure_control:
+  damping: 0.5
+  min_weight: 0.5
+  max_weight: 2.0
+
+# MCS ↔ LTE integration (§9.4 candidate diversity)
+mcs_integration:
+  scoring:
+    diversity:
+      mode: mmr
+      lambda: 0.65

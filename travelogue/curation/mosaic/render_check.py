@@ -6,7 +6,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from travelogue.curation.mosaic.constants import MOSAIC_UNIFIED_PATTERN_IDS, PATTERN_GRID_CLASS
+from travelogue.curation.mosaic.constants import MOSAIC_UNIFIED_PATTERN_IDS
+from travelogue.curation.mosaic.lte_adapter import read_templates_from_lte, resolve_render_grid_class
 
 _SCREENS_CSS = (
     Path(__file__).resolve().parents[3] / "templates" / "visual-journal" / "journal-screens.css"
@@ -23,23 +24,44 @@ def _screen_pattern_ids(chapters: list[dict]) -> list[str]:
     for ch in chapters:
         for screen in ch.get("screens") or []:
             pid = screen.get("patternId")
-            if pid and pid.startswith("screen-"):
-                out.append(pid)
+            if pid and str(pid).startswith("screen-"):
+                out.append(str(pid))
     return out
 
 
-def screen_pattern_render_ok(pattern_id: str, *, css: str | None = None) -> bool:
-    """patternId maps to a grid class present in journal-screens.css."""
-    text = css if css is not None else _journal_screens_css()
-    grid_class = PATTERN_GRID_CLASS.get(pattern_id)
-    if not grid_class:
-        from travelogue.curation.screen_planner import PATTERN_GRID_CLASS as planner_classes
+def _lte_validator_ok(pattern_id: str, css: str) -> bool | None:
+    """Run LTE Validator (geometry + css bundle) when template exists."""
+    if not read_templates_from_lte():
+        return None
+    try:
+        from travelogue.layout_templates.registry import get_engine
+        from travelogue.layout_templates.css_gen import validate_css_bundle
+        from travelogue.layout_templates.validator import validate_template_def
 
-        grid_class = planner_classes.get(pattern_id)
+        tpl = get_engine().get(pattern_id)
+    except KeyError:
+        return None
+    geom = validate_template_def(tpl, mode="ci")
+    if not geom.ok:
+        return False
+    messages = validate_css_bundle(tpl, journal_css_text=css)
+    blocking = [m for m in messages if not str(m).startswith("WARN")]
+    return len(blocking) == 0
+
+
+def screen_pattern_render_ok(pattern_id: str, *, css: str | None = None) -> bool:
+    """patternId maps to grid CSS validated by LTE Validator + journal-screens.css."""
+    text = css if css is not None else _journal_screens_css()
+    lte_ok = _lte_validator_ok(pattern_id, text)
+    if lte_ok is False:
+        return False
+    grid_class = resolve_render_grid_class(pattern_id)
     if not grid_class:
         return False
     if grid_class not in text:
         return False
+    if lte_ok is True:
+        return True
     if f'data-pattern="{pattern_id}"' in text:
         return True
     return grid_class in text

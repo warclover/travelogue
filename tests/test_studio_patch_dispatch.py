@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from travelogue.web.studio_handlers.paths import (
+    ASSET_MEDIA_SUFFIX,
     CONFIG_PATH,
     INTENT_SUFFIX,
     PIPELINE_SUFFIX,
@@ -58,6 +59,10 @@ def test_studio_dispatch_patch_routes(monkeypatch) -> None:
         "travelogue.web.studio_handlers.trip_handlers.handle_patch_pipeline",
         lambda h, tid: probe.calls.append(f"pipeline_handler:{tid}"),
     )
+    monkeypatch.setattr(
+        "travelogue.web.studio_handlers.trip_handlers.handle_asset_media_class",
+        lambda h, tid: probe.calls.append(f"asset_media_handler:{tid}"),
+    )
 
     assert probe.studio_dispatch_PATCH(CONFIG_PATH) is True
     assert probe.calls == ["config_handler"]
@@ -70,5 +75,9 @@ def test_studio_dispatch_patch_routes(monkeypatch) -> None:
     probe.calls.clear()
     assert probe.studio_dispatch_PATCH(f"{TRIPS_PATH}/{trip}{PIPELINE_SUFFIX}") is True
     assert probe.calls == [f"pipeline_handler:{trip}"]
+
+    probe.calls.clear()
+    assert probe.studio_dispatch_PATCH(f"{TRIPS_PATH}/{trip}{ASSET_MEDIA_SUFFIX}") is True
+    assert probe.calls == [f"asset_media_handler:{trip}"]
 
     assert probe.studio_dispatch_PATCH("/unknown") is False

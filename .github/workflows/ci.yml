@@ -108,7 +108,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install package
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev,playwright]"
 
       - name: Validate fixtures
         run: |
@@ -185,6 +185,82 @@ jobs:
 
       - name: Quality gate (layout + studio regression)
         run: python scripts/quality_gate.py
+
+      - name: LTE validate (Phase 16)
+        run: python -m travelogue.layout_templates.cli validate
+
+      - name: LTE journal CSS sync drift (warn-only)
+        continue-on-error: true
+        run: |
+          python -m travelogue.layout_templates.cli export --sync-journal
+          git diff --exit-code templates/visual-journal/journal-screens.css || {
+            echo "::warning::journal-screens.css out of sync with LTE export; run: python -m travelogue.layout_templates.cli export --sync-journal"
+            if [ "${LTE_CSS_SYNC_STRICT:-}" = "1" ]; then exit 1; fi
+          }
+
+      - name: LTE slotAspect docgen drift (warn-only)
+        continue-on-error: true
+        run: |
+          python -m travelogue.layout_templates.cli docgen --out /tmp/lte-slot-aspect
+          python - <<'PY'
+          import filecmp
+          import os
+          from pathlib import Path
+
+          ref = Path("docs/templates/slot-aspect")
+          cur = Path("/tmp/lte-slot-aspect")
+          if not ref.is_dir() or not cur.is_dir():
+              print("::warning::LTE docgen drift check skipped: missing directories")
+              raise SystemExit(0)
+          diff = filecmp.dircmp(str(ref), str(cur))
+          if diff.left_only or diff.right_only or diff.diff_files:
+              print(
+                  "::warning::LTE slotAspect docs drift: "
+                  f"left_only={diff.left_only} right_only={diff.right_only} diff={diff.diff_files}"
+              )
+              if os.environ.get("LTE_DOCGEN_STRICT") == "1":
+                  raise SystemExit(1)
+          else:
+              print("LTE slotAspect docs in sync")
+          PY
+
+      - name: LTE probe regression (geometry warn)
+        run: python scripts/lte_probe_regress.py
+
+      - name: Install Playwright browser (LTE probe screenshots)
+        run: playwright install chromium
+
+      - name: LTE probe screenshot (release block)
+        run: python scripts/lte_probe_regress.py --screenshot --strict
+
+      - name: LTE registry parity
+        run: python -m pytest tests/test_lte_registry_parity.py -q --maxfail=1
+
+      - name: LTE legacy export smoke (warn-only)
+        continue-on-error: true
+        run: |
+          python scripts/lte_export_legacy.py --out /tmp/lte_legacy_export.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("/tmp/lte_legacy_export.json")
+          data = json.loads(p.read_text(encoding="utf-8"))
+          assert "mosaic_patterns" in data and data["mosaic_patterns"]
+          print(f"legacy export ok: {len(data['mosaic_patterns'])} mosaic patterns")
+          PY
+
+      - name: LTE legacy Python snapshot drift (warn-only)
+        continue-on-error: true
+        run: |
+          python scripts/lte_export_legacy.py --sync-python --out /tmp/lte_legacy_export.json
+          git diff --exit-code travelogue/curation/mosaic/_legacy_generated.py || {
+            echo "::warning::_legacy_generated.py out of sync; run: python scripts/lte_export_legacy.py --sync-python"
+            if [ "${LTE_LEGACY_PYTHON_STRICT:-}" = "1" ]; then exit 1; fi
+          }
+
+      - name: Collage detector fixture eval (warn-only)
+        continue-on-error: true
+        run: python scripts/collage_detect_eval.py
 
       - name: Phase 4 acceptance gate
         run: python scripts/phase4_acceptance_gate.py --skip-integration

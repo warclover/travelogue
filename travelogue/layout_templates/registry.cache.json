@@ -1,0 +1,66 @@
+{
+  "contentHash": "4201256ba07877ed29025b7462802a7b74d9ded37ed41bf25aea4d2e913e4b63",
+  "templateIds": [
+    "screen-full-frame",
+    "screen-landscape-2",
+    "screen-landscape-3",
+    "screen-landscape-4",
+    "screen-landscape-6",
+    "screen-landscape-9",
+    "screen-mosaic-5-2p3l-equal",
+    "screen-mosaic-5-2portrait-3land-balanced",
+    "screen-mosaic-5-3portrait-2land-balanced",
+    "screen-mosaic-5-hero-3-2-plus-4",
+    "screen-mosaic-5-main-hero-plus-4",
+    "screen-mosaic-5-main-landscape-2portrait-2land",
+    "screen-mosaic-5-main-portrait-3land",
+    "screen-mosaic-6-main-hero-plus-5",
+    "screen-portrait-1-landscape-2",
+    "screen-portrait-2-landscape-2",
+    "screen-portrait-3",
+    "screen-portrait-4",
+    "screen-portrait-6",
+    "screen-portrait-9",
+    "screen-portrait-grid-8"
+  ],
+  "byPhotoCount": {
+    "1": [
+      "screen-full-frame"
+    ],
+    "2": [
+      "screen-landscape-2"
+    ],
+    "3": [
+      "screen-landscape-3",
+      "screen-portrait-1-landscape-2",
+      "screen-portrait-3"
+    ],
+    "4": [
+      "screen-landscape-4",
+      "screen-portrait-2-landscape-2",
+      "screen-portrait-4"
+    ],
+    "5": [
+      "screen-mosaic-5-2p3l-equal",
+      "screen-mosaic-5-2portrait-3land-balanced",
+      "screen-mosaic-5-3portrait-2land-balanced",
+      "screen-mosaic-5-hero-3-2-plus-4",
+      "screen-mosaic-5-main-landscape-2portrait-2land",
+      "screen-mosaic-5-main-portrait-3land"
+    ],
+    "6": [
+      "screen-landscape-6",
+      "screen-mosaic-5-main-hero-plus-4",
+      "screen-mosaic-6-main-hero-plus-5",
+      "screen-portrait-6"
+    ],
+    "8": [
+      "screen-portrait-grid-8"
+    ],
+    "9": [
+      "screen-landscape-9",
+      "screen-portrait-9"
+    ]
+  },
+  "generatedAt": "2026-06-07T00:35:57Z"
+}

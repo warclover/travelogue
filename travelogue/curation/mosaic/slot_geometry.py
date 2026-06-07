@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from travelogue.curation.layout_planner import AspectKind
-from travelogue.curation.mosaic.constants import (
-    PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
+from travelogue.curation.mosaic.legacy_specs import (
+    auto_flow_grids,
+    explicit_grid_specs,
+    landscape_forbidden_tall,
+    portrait_forbidden_wide,
 )
-from travelogue.curation.mosaic.grid_specs import AUTO_FLOW_GRIDS, EXPLICIT_GRID_SPECS
 from travelogue.curation.screen_planner import _is_landscape_id, _is_std_portrait_id
 
 _STAGE_ASPECT = 16 / 9
@@ -15,23 +17,15 @@ _WIDE_CELL_AR = 1.25
 _TALL_CELL_AR = 0.92
 
 # Pure portrait auto-flow grids are laid out on a portrait stage, not 16:9 landscape.
-_PORTRAIT_DOMINANT_AUTO_FLOW: frozenset[str] = frozenset(
-    {
-        "screen-portrait-3",
-        "screen-portrait-4",
-        "screen-portrait-6",
-        "screen-portrait-9",
-        "screen-portrait-grid-8",
-    }
-)
+from travelogue.curation.mosaic._legacy_generated import PORTRAIT_DOMINANT_AUTO_FLOW
+
+_PORTRAIT_DOMINANT_AUTO_FLOW = PORTRAIT_DOMINANT_AUTO_FLOW
 
 # Slots where portrait-in-wide was the user-visible defect (main tile, etc.)
-_PORTRAIT_FORBIDDEN_WIDE: dict[str, frozenset[int]] = {
-    PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND: frozenset({0}),
-}
-_LANDSCAPE_FORBIDDEN_TALL: dict[str, frozenset[int]] = {
-    PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND: frozenset({1}),
-}
+from travelogue.curation.mosaic._legacy_generated import (
+    _LANDSCAPE_FORBIDDEN_TALL,
+    _PORTRAIT_FORBIDDEN_WIDE,
+)
 
 
 def slot_cell_aspect_ratio(
@@ -73,20 +67,48 @@ def auto_flow_cell_aspect_ratio(
     return (rows / cols) * stage_aspect
 
 
+def _cell_aspect_for_slot(
+    pattern_id: str,
+    slot: dict,
+    idx: int,
+    specs: list[tuple[int, int, int, int]],
+) -> float:
+    raw = slot.get("displayAspect")
+    if raw is not None:
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            pass
+    geo = slot.get("rect")
+    if isinstance(geo, (list, tuple)) and len(geo) == 4:
+        try:
+            from travelogue.layout_templates.geometry import slot_display_aspect
+            from travelogue.layout_templates.registry import get_engine
+
+            template = get_engine().get(pattern_id)
+            rect = (int(geo[0]), int(geo[1]), int(geo[2]), int(geo[3]))
+            return slot_display_aspect(rect, template.stage)
+        except (KeyError, TypeError, ValueError):
+            pass
+    if idx < len(specs):
+        return slot_cell_aspect_ratio(specs[idx])
+    return _STAGE_ASPECT
+
+
 def _explicit_geometry_ok(
     pattern_id: str,
     specs: list[tuple[int, int, int, int]],
     screen: dict,
     aspects: dict[str, AspectKind],
 ) -> bool:
-    forbid_wide = _PORTRAIT_FORBIDDEN_WIDE.get(pattern_id, frozenset())
-    forbid_tall = _LANDSCAPE_FORBIDDEN_TALL.get(pattern_id, frozenset())
+    forbid_wide = portrait_forbidden_wide().get(pattern_id, frozenset())
+    forbid_tall = landscape_forbidden_tall().get(pattern_id, frozenset())
     for slot in screen.get("slots") or []:
         idx = int(slot.get("slot", -1))
         aid = slot.get("assetId")
         if not aid or idx < 0 or idx >= len(specs):
             continue
-        cell_ar = slot_cell_aspect_ratio(specs[idx])
+        cell_ar = _cell_aspect_for_slot(pattern_id, slot, idx, specs)
         if idx in forbid_wide and cell_ar >= _WIDE_CELL_AR:
             if _is_std_portrait_id(aid, aspects):
                 return False
@@ -129,10 +151,10 @@ def screen_slots_geometry_ok(
 ) -> bool:
     """Reject layouts with portrait in clearly wide cells (or landscape in tall cells)."""
     pattern_id = str(screen.get("patternId") or "")
-    specs = EXPLICIT_GRID_SPECS.get(pattern_id)
+    specs = explicit_grid_specs().get(pattern_id)
     if specs:
         return _explicit_geometry_ok(pattern_id, specs, screen, aspects)
-    auto = AUTO_FLOW_GRIDS.get(pattern_id)
+    auto = auto_flow_grids().get(pattern_id)
     if auto:
         cols, rows, _n = auto
         return _auto_flow_geometry_ok(

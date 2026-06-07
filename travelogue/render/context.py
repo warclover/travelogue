@@ -125,6 +125,7 @@ _MOBILE_IMAGE_SIZES: dict[str, str] = {
     "card_page": "100vw",
     "row_third": "33vw",
     "row_half": "50vw",
+    "screen_full": "100vw",
     "scroll": "86vw",
 }
 
@@ -589,6 +590,9 @@ def build_layout_screen(
             chapter_index=chapter_index,
         )
     grid_class = grid_class_for_pattern(pattern_id)
+    layout_geo = screen.get("layoutGeometry") or {}
+    if layout_geo.get("gridClass"):
+        grid_class = str(layout_geo["gridClass"])
     n_slots = len(screen.get("slots") or [])
     if "1col" in grid_class and n_slots == 1:
         sizes_slot = "screen_full"
@@ -630,6 +634,12 @@ def build_layout_screen(
             style_parts_slot: list[str] = []
             if slot_aspect:
                 style_parts_slot.append(f"--slot-aspect: {slot_aspect}")
+            slot_da = slot.get("displayAspect")
+            if slot_da is not None:
+                try:
+                    style_parts_slot.append(f"--slot-display-aspect: {float(slot_da):.4f}")
+                except (TypeError, ValueError):
+                    pass
             fp = asset.get("focalPoint") or {}
             try:
                 fx = float(fp.get("x", 0.5))
@@ -646,19 +656,35 @@ def build_layout_screen(
             entry["hasSrcset"] = bool(srcset)
             entry["srcset"] = srcset
             entry["slotStyle"] = slot_style
+            if pattern_id == "screen-full-frame" and fit == "contain":
+                entry["hasBlurFill"] = True
+                entry["blurSrc"] = entry["src"]
         slots_out.append(entry)
 
     layout_hint = screen.get("layoutHint")
+    if pattern_id == "screen-full-frame":
+        layout_hint = "full-frame"
     screen_aspect: str | None = None
     # 人物竖屏用 layoutHint + 视口高度 CSS，勿再套整屏 --screen-aspect（否则大底色+小图）
-    if layout_hint not in ("person-pair", "person-triple") and n_slots == 1 and "1col" in grid_class:
+    if pattern_id == "screen-full-frame":
+        screen_aspect = "16 / 9"
+    elif layout_hint not in ("person-pair", "person-triple") and n_slots == 1 and "1col" in grid_class:
         first_aid = (screen.get("slots") or [{}])[0].get("assetId", "")
         if first_aid and first_aid in assets:
             screen_aspect = _screen_aspect_ratio_css(assets[first_aid])
 
     style_parts: list[str] = []
-    if screen_aspect:
+    if layout_geo.get("stageAspect"):
+        stage_aspect = str(layout_geo["stageAspect"]).replace(":", " / ")
+        style_parts.append(f"--screen-aspect: {stage_aspect}")
+    elif screen_aspect:
         style_parts.append(f"--screen-aspect: {screen_aspect}")
+    cols = layout_geo.get("cols")
+    rows = layout_geo.get("rows")
+    if isinstance(cols, list) and cols:
+        style_parts.append(f"--grid-cols: {','.join(str(c) for c in cols)}")
+    if isinstance(rows, list) and rows:
+        style_parts.append(f"--grid-rows: {','.join(str(r) for r in rows)}")
     tone = screen_tone_css(screen.get("tone"))
     if tone:
         style_parts.append(f"--screen-tone: {tone}")

@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>预览页 · 助理式交互重设计线框 · v2.0</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-border: #90a4ae;
+      --wf-border-dash: #b0bec5;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-anno: #e65100;
+      --wf-rec: #2e7d32;
+      --wf-rec-bg: #e8f5e9;
+      --prod-bg: #f4f7f5;
+      --prod-bar: #1a2f28;
+      --prod-gold: #d4a843;
+      --prod-gold-text: #1a1408;
+      --prod-accent: #3d6b5a;
+      --prod-sub: #e8f5ef;
+      --max-w: 920px;
+      --radius: 12px;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--wf-bg);
+      color: var(--wf-text);
+      line-height: 1.5;
+    }
+
+    .review-bar {
+      position: sticky; top: 0; z-index: 1000;
+      background: #263238; color: #eceff1;
+      padding: 12px 20px;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+    }
+    .review-bar__title { font-size: 14px; font-weight: 600; margin-right: auto; }
+    .review-bar__title em { font-style: normal; color: #80cbc4; font-weight: 400; }
+    .concept-tabs { display: flex; flex-wrap: wrap; gap: 5px; }
+    .concept-tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 5px 11px; border-radius: 999px; font-size: 11px; cursor: pointer;
+    }
+    .concept-tabs button:hover { background: #37474f; }
+    .concept-tabs button.is-active { background: #6a1b9a; border-color: #6a1b9a; }
+    .concept-tabs button.is-rec.is-active { background: #00897b; border-color: #00897b; }
+    .review-meta { width: 100%; font-size: 11px; color: #90a4ae; }
+
+    .layout {
+      max-width: calc(var(--max-w) + 300px);
+      margin: 0 auto;
+      padding: 20px 18px 72px;
+      display: grid;
+      grid-template-columns: var(--max-w) 270px;
+      gap: 20px;
+    }
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .aside { order: -1; }
+    }
+
+    .wf-state { display: none; }
+    .wf-state.is-visible { display: block; }
+
+    .sec-head { margin-bottom: 14px; }
+    .sec-head h2 { margin: 0 0 4px; font-size: 17px; }
+    .sec-head p { margin: 0; font-size: 13px; color: var(--wf-muted); }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle;
+    }
+    .tag--rec { background: var(--wf-rec); color: #fff; }
+    .tag--new { background: #6a1b9a; color: #fff; }
+
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border);
+      border-bottom: none; border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px;
+    }
+    .browser__ico { width: 12px; height: 12px; background: var(--prod-accent); border-radius: 2px; }
+
+    .frame {
+      background: var(--prod-bg);
+      border: 2px solid var(--wf-border); border-top: none;
+      border-radius: 0 0 14px 14px;
+      min-height: 460px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .scroll-content {
+      flex: 1;
+      padding: 20px 24px 100px;
+      overflow: hidden;
+    }
+    .scroll-mock {
+      background: #fff;
+      border: 1.5px dashed var(--wf-border-dash);
+      border-radius: var(--radius);
+      min-height: 320px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--wf-muted); font-size: 12px;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--wf-anno); margin: 14px 0 6px;
+    }
+    .note {
+      border: 1.5px solid var(--wf-border); border-radius: var(--radius);
+      background: #fff; padding: 12px 14px; font-size: 12px; margin-top: 12px;
+    }
+    .note--rec { border-color: #81c784; background: var(--wf-rec-bg); }
+    .note h3 { margin: 0 0 6px; font-size: 13px; }
+    .note ul { margin: 0; padding-left: 1.15em; }
+    .note li { margin-bottom: 4px; }
+
+    .aside .note { margin-bottom: 10px; }
+    .matrix {
+      width: 100%; border-collapse: collapse; font-size: 11px;
+      background: #fff; border: 1px solid var(--wf-border); border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .matrix th, .matrix td {
+      border: 1px solid #cfd8dc; padding: 6px 8px; text-align: left; vertical-align: top;
+    }
+    .matrix th { background: #eceff1; }
+
+    /* shared mock components */
+    .pill-back {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 5px 10px; border-radius: 999px;
+      background: rgba(26,47,40,.75); color: #e8f5ef;
+      font-size: 12px; text-decoration: none;
+      backdrop-filter: blur(4px);
+    }
+    .pill-back--light {
+      background: rgba(255,255,255,.92); color: #2d4a3e;
+      border: 1px solid rgba(61,107,90,.2);
+    }
+    .btn-primary {
+      border: none; background: var(--prod-gold); color: var(--prod-gold-text);
+      border-radius: 999px; padding: 10px 20px; font-size: 14px; font-weight: 600;
+      cursor: pointer; white-space: nowrap;
+    }
+    .btn-secondary {
+      border: 1px solid rgba(61,107,90,.35); background: #fff;
+      color: var(--prod-accent); border-radius: 999px;
+      padding: 8px 14px; font-size: 12px; cursor: pointer;
+    }
+    .btn-ghost-dark {
+      border: 1px solid rgba(255,255,255,.25); background: transparent;
+      color: #fff; border-radius: 999px; padding: 7px 12px; font-size: 12px;
+    }
+    .step-dots {
+      display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--wf-muted);
+    }
+    .step-dots span { width: 8px; height: 8px; border-radius: 50%; background: #cfd8dc; }
+    .step-dots span.done { background: var(--prod-accent); }
+    .step-dots span.now { background: var(--prod-gold); box-shadow: 0 0 0 3px rgba(212,168,67,.35); }
+
+    .callout-line {
+      position: absolute;
+      border: 1.5px dashed var(--wf-anno);
+      pointer-events: none;
+    }
+    .callout-label {
+      position: absolute;
+      font-size: 9px; font-weight: 700; color: var(--wf-anno);
+      background: #fff3e0; padding: 2px 6px; border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    /* ── 概念 1：底部任务坞 ── */
+    .c1-top {
+      position: absolute; top: 10px; left: 12px; right: 12px;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      pointer-events: none;
+    }
+    .c1-top > * { pointer-events: auto; }
+    .c1-trip {
+      padding: 5px 10px; border-radius: 8px;
+      background: rgba(255,255,255,.88); font-size: 11px; color: #4a5c55;
+      border: 1px solid rgba(61,107,90,.15);
+    }
+    .c1-dock {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(26,47,40,.96);
+      color: #f5fbf8;
+      padding: 10px 16px 14px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .c1-dock__steps {
+      display: flex; align-items: center; justify-content: center;
+      gap: 4px; margin-bottom: 10px; font-size: 11px; color: #a8dcc8;
+    }
+    .c1-dock__steps .sep { color: rgba(255,255,255,.2); }
+    .c1-dock__steps .cur { color: #fff; font-weight: 600; }
+    .c1-dock__row {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .c1-dock__hint {
+      flex: 1; min-width: 140px; font-size: 12px; color: #c8e6d8;
+    }
+    .c1-dock__actions { display: flex; gap: 8px; align-items: center; }
+
+    /* ── 概念 2：FAB 辐射 ── */
+    .c2-fab-wrap {
+      position: absolute; bottom: 20px; right: 20px;
+      width: 200px; height: 200px;
+    }
+    .c2-fab-main {
+      position: absolute; bottom: 0; right: 0;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--prod-gold); color: var(--prod-gold-text);
+      border: none; font-size: 11px; font-weight: 700;
+      cursor: pointer; z-index: 5;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; line-height: 1.2; padding: 4px;
+    }
+    .c2-fab-orbit {
+      position: absolute; bottom: 28px; right: 28px;
+      width: 140px; height: 140px;
+    }
+    .c2-orbit-item {
+      position: absolute;
+      font-size: 10px; padding: 5px 9px;
+      border-radius: 999px; white-space: nowrap;
+      background: rgba(26,47,40,.9); color: #e8f5ef;
+      border: 1px solid rgba(255,255,255,.15);
+    }
+    .c2-orbit-item:nth-child(1) { top: 0; left: 50%; transform: translateX(-50%); }
+    .c2-orbit-item:nth-child(2) { top: 35%; left: 0; }
+    .c2-orbit-item:nth-child(3) { top: 35%; right: 0; }
+    .c2-orbit-item:nth-child(4) { bottom: 10px; left: 50%; transform: translateX(-50%); }
+    .c2-back { position: absolute; top: 10px; left: 12px; }
+
+    /* ── 概念 3：三态模式 ── */
+    .c3-modebar {
+      position: absolute; top: 0; left: 0; right: 0;
+      background: rgba(26,47,40,.94);
+      padding: 8px 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .c3-seg {
+      display: flex; background: rgba(0,0,0,.25); border-radius: 999px; padding: 3px;
+      margin: 0 auto;
+    }
+    .c3-seg button {
+      border: none; background: transparent; color: #a8dcc8;
+      padding: 6px 16px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .c3-seg button.on {
+      background: #fff; color: var(--prod-bar); font-weight: 600;
+    }
+    .c3-panel {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: #fff;
+      border-top: 2px solid var(--prod-accent);
+      padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .c3-panel__text { flex: 1; font-size: 13px; }
+    .c3-panel__text strong { display: block; color: var(--prod-bar); }
+    .c3-panel__text span { font-size: 12px; color: var(--wf-muted); }
+
+    /* ── 概念 4：右侧助理条 ── */
+    .c4-split { display: flex; flex: 1; min-height: 0; }
+    .c4-preview { flex: 1; overflow: hidden; position: relative; }
+    .c4-rail {
+      width: 220px; flex-shrink: 0;
+      background: #fff;
+      border-left: 2px solid var(--prod-accent);
+      display: flex; flex-direction: column;
+      font-size: 12px;
+    }
+    .c4-rail__head {
+      padding: 10px 12px;
+      background: var(--prod-sub);
+      border-bottom: 1px solid rgba(61,107,90,.15);
+      font-weight: 600; color: var(--prod-accent);
+    }
+    .c4-rail__chat {
+      flex: 1; padding: 10px 12px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .c4-bubble {
+      background: #f5f5f5; border-radius: 10px 10px 10px 2px;
+      padding: 8px 10px; font-size: 11px; line-height: 1.45;
+      color: #37474f;
+    }
+    .c4-bubble--sys {
+      background: var(--prod-sub); border: 1px solid rgba(61,107,90,.2);
+    }
+    .c4-rail__actions {
+      padding: 10px 12px;
+      border-top: 1px solid #e0e0e0;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .c4-rail__actions .btn-primary { width: 100%; text-align: center; }
+    .c4-rail__actions .btn-secondary { width: 100%; text-align: center; }
+    .c4-rail__more {
+      text-align: center; font-size: 11px; color: var(--wf-muted);
+      padding: 4px; cursor: pointer;
+    }
+
+    /* ── 概念 5：滚动唤醒浮条 ── */
+    .c5-minimal-top {
+      position: absolute; top: 8px; left: 10px;
+    }
+    .c5-snack {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      width: calc(100% - 32px); max-width: 520px;
+      background: rgba(26,47,40,.95);
+      color: #f5fbf8;
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex; align-items: center; gap: 12px;
+      border: 1px solid rgba(255,255,255,.1);
+    }
+    .c5-snack__icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--prod-gold); color: var(--prod-gold-text);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .c5-snack__body { flex: 1; min-width: 0; }
+    .c5-snack__body strong { display: block; font-size: 13px; }
+    .c5-snack__body span { font-size: 11px; color: #a8dcc8; }
+    .c5-snack__dismiss {
+      border: none; background: none; color: #a8dcc8;
+      font-size: 18px; cursor: pointer; padding: 0 4px;
+    }
+    .c5-idle-hint {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-80%);
+      font-size: 11px; color: var(--wf-anno);
+      background: #fff3e0; padding: 4px 10px; border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    /* ── 概念 6：成果卡片 ── */
+    .c6-hero-overlay {
+      position: absolute; inset: 0;
+      background: rgba(244,247,245,.72);
+      display: flex; align-items: flex-end; justify-content: center;
+      padding: 20px;
+    }
+    .c6-cards {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px; width: 100%; max-width: 640px;
+    }
+    .c6-card {
+      background: #fff;
+      border: 2px solid var(--wf-border);
+      border-radius: var(--radius);
+      padding: 14px 12px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .c6-card--primary {
+      border-color: var(--prod-gold);
+      background: linear-gradient(180deg, #fffef8 0%, #fff 100%);
+    }
+    .c6-card__icon {
+      font-size: 22px; margin-bottom: 6px;
+      color: var(--prod-accent);
+    }
+    .c6-card--primary .c6-card__icon { color: #b8860b; }
+    .c6-card h4 { margin: 0 0 4px; font-size: 13px; }
+    .c6-card p { margin: 0; font-size: 10px; color: var(--wf-muted); line-height: 1.35; }
+    .c6-dismiss {
+      position: absolute; top: 10px; right: 12px;
+    }
+    .c6-trigger {
+      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+      background: rgba(26,47,40,.88); color: #fff;
+      border: none; border-radius: 999px;
+      padding: 8px 18px; font-size: 12px; cursor: pointer;
+    }
+
+    /* ── 概念 7：底部 Sheet 助理 ── */
+    .c7-sheet {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -8px 24px rgba(0,0,0,.12);
+      padding: 0 0 12px;
+    }
+    .c7-sheet__grab {
+      width: 36px; height: 4px; background: #cfd8dc;
+      border-radius: 2px; margin: 8px auto;
+    }
+    .c7-sheet__head {
+      padding: 0 16px 10px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .c7-sheet__head h3 { margin: 0; font-size: 14px; flex: 1; }
+    .c7-checklist {
+      margin: 0 16px 12px; padding: 10px 12px;
+      background: var(--prod-sub); border-radius: 10px;
+      list-style: none; font-size: 12px;
+    }
+    .c7-checklist li {
+      display: flex; align-items: center; gap: 8px;
+      padding: 4px 0; color: #4a5c55;
+    }
+    .c7-checklist li.done { color: var(--prod-accent); }
+    .c7-checklist li.cur { font-weight: 600; color: var(--prod-bar); }
+    .c7-check { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #b0bec5; flex-shrink: 0; }
+    .c7-checklist li.done .c7-check { background: var(--prod-accent); border-color: var(--prod-accent); }
+    .c7-checklist li.cur .c7-check { border-color: var(--prod-gold); box-shadow: 0 0 0 2px rgba(212,168,67,.3); }
+    .c7-sheet__cta {
+      padding: 0 16px;
+      display: flex; gap: 8px;
+    }
+    .c7-sheet__cta .btn-primary { flex: 1; }
+  </style>
+</head>
+<body>
+
+<header class="review-bar">
+  <div class="review-bar__title">
+    预览页 · 助理式交互重设计 <em>v2.0 · 不受顶栏制约</em>
+  </div>
+  <nav class="concept-tabs">
+    <button type="button" class="is-active is-rec" data-c="overview">总览</button>
+    <button type="button" data-c="c1">① 底部任务坞</button>
+    <button type="button" data-c="c2">② FAB 辐射</button>
+    <button type="button" data-c="c3">③ 看·改·发</button>
+    <button type="button" data-c="c4">④ 助理侧栏</button>
+    <button type="button" data-c="c5">⑤ 滚动唤醒</button>
+    <button type="button" data-c="c6">⑥ 成果卡片</button>
+    <button type="button" data-c="c7">⑦ 底部清单 Sheet</button>
+  </nav>
+  <p class="review-meta">
+    设计锚点：80% 用户路径 = 验货 → 长图 → 微信 · 预览 ≠ 编辑台 · 功能全集保留，交互范式可换
+  </p>
+</header>
+
+<div class="layout">
+  <main>
+
+    <!-- 总览 -->
+    <section class="wf-state is-visible" id="c-overview">
+      <div class="sec-head">
+        <h2>设计命题：从「工具栏」到「任务助理」</h2>
+        <p>顶栏是编辑器隐喻；分享者需要的是<strong>下一步引导</strong>，不是一排平权按钮。</p>
+      </div>
+
+      <div class="note note--rec">
+        <h3>助理操作习惯 · 5 条原则</h3>
+        <ul>
+          <li><strong>结果导向</strong>：说「发给微信好友」比「保存长图」更接近用户目标</li>
+          <li><strong>步骤可见</strong>：让用户知道「验货 → 导出 → 分享」走到哪一步</li>
+          <li><strong>沉浸优先</strong>：预览内容是主角；控件在需要时才出现</li>
+          <li><strong>单手可达</strong>：主 CTA 落在中下部（拇指热区），不是屏幕顶端两角</li>
+          <li><strong>专业折叠</strong>：改字/G1/锚点等 20% 能力收入二级，不占首屏</li>
+        </ul>
+      </div>
+
+      <table class="matrix" style="margin-top:14px">
+        <thead>
+          <tr>
+            <th>概念</th>
+            <th>核心隐喻</th>
+            <th>主 CTA 位置</th>
+            <th>适合谁</th>
+            <th>风险</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>① 底部任务坞</strong> <span class="tag tag--rec">首推</span></td>
+            <td>导航 App 底部 Tab</td>
+            <td>底栏居中偏右</td>
+            <td>80% 分享者</td>
+            <td>底栏占高 ~72px</td>
+          </tr>
+          <tr>
+            <td><strong>② FAB 辐射</strong></td>
+            <td>地图 App 悬浮钮</td>
+            <td>右下角 FAB</td>
+            <td>追求极简沉浸</td>
+            <td>次级功能发现性弱</td>
+          </tr>
+          <tr>
+            <td><strong>③ 看·改·发</strong></td>
+            <td>相机 App 模式切换</td>
+            <td>「发」模式底栏</td>
+            <td>看+改混合用户</td>
+            <td>多一步模式切换</td>
+          </tr>
+          <tr>
+            <td><strong>④ 助理侧栏</strong></td>
+            <td>Copilot / 微信客服</td>
+            <td>侧栏底部</td>
+            <td>需要引导的新手</td>
+            <td>挤占预览宽度</td>
+          </tr>
+          <tr>
+            <td><strong>⑤ 滚动唤醒</strong></td>
+            <td>YouTube 沉浸播放</td>
+            <td>底部浮条（延迟出现）</td>
+            <td>验货场景</td>
+            <td>首次可能找不到入口</td>
+          </tr>
+          <tr>
+            <td><strong>⑥ 成果卡片</strong></td>
+            <td>导出向导 / 分享面板</td>
+            <td>卡片中央</td>
+            <td>首次成功回访</td>
+            <td>遮挡预览；适合触发式</td>
+          </tr>
+          <tr>
+            <td><strong>⑦ 底部清单 Sheet</strong></td>
+            <td>外卖 App 订单进度</td>
+            <td>Sheet 内主按钮</td>
+            <td>全流程新手</td>
+            <td>与卷轴滚动可能冲突</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="anno">推荐组合策略</div>
+      <div class="note">
+        <p style="margin:0;font-size:13px">
+          <strong>默认态</strong>：① 底部任务坞（常显轻量）<br>
+          <strong>首次打开</strong>：叠加 ⑦ 清单 Sheet（半屏，可下滑收起）<br>
+          <strong>验货中</strong>：⑤ 滚动时隐藏底栏，停止 2s 后浮条提示「准备好了？发给朋友」<br>
+          <strong>专业编辑</strong>：③「改」模式 或现有 drawer，不污染分享路径
+        </p>
+      </div>
+    </section>
+
+    <!-- 概念 1 -->
+    <section class="wf-state" id="c-c1">
+      <div class="sec-head">
+        <h2>① 底部任务坞 <span class="tag tag--rec">首推</span></h2>
+        <p>取消顶栏。左上浮动返回，底部常驻「步骤条 + 情境文案 + 主操作」。</p>
+      </div>
+      <div class="browser">
+        <div class="browser__dots"><i></i><i></i><i></i></div>
+        <div class="browser__tab"><span class="browser__ico"></span>林芝游记 · 卷轴验货</div>
+      </div>
+      <div class="frame">
+        <div class="c1-top">
+          <a class="pill-back pill-back--light" href="#">← 首页</a>
+          <div class="c1-trip">林芝 · 41 张 · 卷轴预览</div>
+        </div>
+        <div class="scroll-content">
+          <div class="scroll-mock">卷轴正文全屏沉浸<br>（无顶栏遮挡 · 滚动区域最大化）</div>
+        </div>
+        <div class="c1-dock">
+          <div class="c1-dock__steps">
+            <span class="done">导入</span><span class="sep">›</span>
+            <span class="cur">验货</span><span class="sep">›</span>
+            <span>导出</span><span class="sep">›</span>
+            <span>分享</span>
+          </div>
+          <div class="c1-dock__row">
+            <div class="c1-dock__hint">看起来不错？导出长图可直接发微信群</div>
+            <div class="c1-dock__actions">
+              <button type="button" class="btn-ghost-dark">文件夹</button>
+              <button type="button" class="btn-primary">发给朋友</button>
+              <button type="button" class="btn-ghost-dark" title="更多编辑">⋯</button>
+            </div>
+          </div>
+        </div>
+        <span class="callout-label" style="bottom:78px;left:16px">拇指热区 · 主 CTA</span>
+      </div>
+      <div class="note note--rec">
+        <h3>功能映射（不变）</h3>
+        <ul>
+          <li>「发给朋友」= 保存长图（文案结果导向）</li>
+          <li>「文件夹」= 在文件夹中显示</li>
+          <li>「⋯」= 更多编辑菜单（drawer / G1 / zip）</li>
+          <li>步骤条可点击跳转（如已完成长图 → 高亮「分享」并展示微信指引）</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 概念 2 -->
+    <section class="wf-state" id="c-c2">
+      <div class="sec-head">
+        <h2>② FAB 辐射菜单</h2>
+        <p>极致沉浸：仅保留浮动返回 + 右下角金色 FAB，点击展开辐射次级操作。</p>
+      </div>
+      <div class="browser">
+        <div class="browser__dots"><i></i><i></i><i></i></div>
+        <div class="browser__tab"><span class="browser__ico"></span>沉浸预览</div>
+      </div>
+      <div class="frame">
+        <a class="pill-back c2-back" href="#">←</a>
+        <div class="scroll-content" style="padding-bottom:120px">
+          <div class="scroll-mock">100% 视野给内容<br>零固定顶栏</div>
+        </div>
+        <div class="c2-fab-wrap">
+          <div class="c2-fab-orbit">
+            <span class="c2-orbit-item">文件夹</span>
+            <span class="c2-orbit-item">更多编辑</span>
+            <span class="c2-orbit-item">返回首页</span>
+            <span class="c2-orbit-item">卷轴链接</span>
+          </div>
+          <button type="button" class="c2-fab-main">导出<br>长图</button>
+        </div>
+        <span class="callout-label" style="bottom:90px;right:90px">展开态示意</span>
+      </div>
+      <div class="note">
+        <h3>权衡</h3>
+        <ul>
+          <li>优点：视觉最干净，适合「验货扫一眼就走」</li>
+          <li>缺点：「更多编辑」发现性最差；需首次 FAB 脉冲动画引导</li>
+          <li>适合作为 ① 的「收起态」：底栏收起后只剩 FAB</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 概念 3 -->
+    <section class="wf-state" id="c-c3">
+      <div class="sec-head">
+        <h2>③ 看 · 改 · 发 三态模式</h2>
+        <p>顶部仅模式切换器；每种模式底部面板完全不同，避免按钮平权竞争。</p>
+      </div>
+      <div class="browser">
+        <div class="browser__dots"><i></i><i></i><i></i></div>
+        <div class="browser__tab"><span class="browser__ico"></span>模式：发</div>
+      </div>
+      <div class="frame">
+        <div class="c3-modebar">
+          <a class="pill-back" href="#" style="font-size:11px">←</a>
+          <div class="c3-seg">
+            <button type="button">看</button>
+            <button type="button">改</button>
+            <button type="button" class="on">发</button>
+          </div>
+          <span style="width:32px"></span>
+        </div>
+        <div class="scroll-content" style="padding-top:56px;padding-bottom:90px">
+          <div class="scroll-mock">「看」模式：纯沉浸，底栏隐藏<br>「改」模式：唤起现有编辑 drawer<br>「发」模式：见底部面板 ↓</div>
+        </div>
+        <div class="c3-panel">
+          <div class="c3-panel__text">
+            <strong>路径 A · 群聊长图</strong>
+            <span>竖版 PNG · 微信可直接发送 · 约 12MB</span>
+          </div>
+          <button type="button" class="btn-primary">生成并保存</button>
+          <button type="button" class="btn-secondary">打开文件夹</button>
+        </div>
+      </div>
+      <div class="note">
+        <h3>三态底栏差异</h3>
+        <ul>
+          <li><strong>看</strong>：无底栏 / 仅步骤点 · 适合验货</li>
+          <li><strong>改</strong>：「感受」「锚点」「结构」快捷入口 · 替代 ⋯ 菜单</li>
+          <li><strong>发</strong>：长图 + 文件夹 + 微信指引 · 分享闭环</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 概念 4 -->
+    <section class="wf-state" id="c-c4">
+      <div class="sec-head">
+        <h2>④ 右侧助理条</h2>
+        <p>像 Copilot：助理用对话气泡提示下一步，操作堆在侧栏底部。</p>
+      </div>
+      <div class="browser">
+        <div class="browser__dots"><i></i><i></i><i></i></div>
+        <div class="browser__tab"><span class="browser__ico"></span>助理引导模式</div>
+      </div>
+      <div class="frame" style="min-height:400px">
+        <div class="c4-split">
+          <div class="c4-preview">
+            <a class="pill-back" href="#" style="position:absolute;top:8px;left:8px;z-index:2">←</a>
+            <div class="scroll-content" style="padding:40px 12px 12px">
+              <div class="scroll-mock" style="min-height:280px">预览区收窄<br>仍可滚动阅读</div>
+            </div>
+          </div>
+          <aside class="c4-rail">
+            <div class="c4-rail__head">旅行助理</div>
+            <div class="c4-rail__chat">
+              <div class="c4-bubble c4-bubble--sys">
+                你的林芝游记已生成。快速浏览一遍，满意的话我帮你导出长图。
+              </div>
+              <div class="c4-bubble">
+                封面 preview.jpg 已写好，首页能看到缩略图。
+              </div>
+              <div class="c4-bubble c4-bubble--sys">
+                <strong>下一步：</strong>点下方「导出长图」，保存后在微信发送即可。
+              </div>
+            </div>
+            <div class="c4-rail__actions">
+              <button type="button" class="btn-primary">导出长图</button>
+              <button type="button" class="btn-secondary">在文件夹中显示</button>
+              <div class="c4-rail__more">更多编辑…</div>
+            </div>
+          </aside>
+        </div>
+      </div>
+      <div class="note">
+        <h3>权衡</h3>
+        <ul>
+          <li>优点：新手友好，可承载 stale/进度/微信指引等上下文</li>
+          <li>缺点：预览宽度 -220px；与「卷轴全幅美学」有冲突</li>
+          <li>变体：侧栏可折叠为 40px 细条，悬停展开</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 概念 5 -->
+    <section class="wf-state" id="c-c5">
+      <div class="sec-head">
+        <h2>⑤ 滚动唤醒浮条</h2>
+        <p>滚动验货时零 chrome；停止滚动 2 秒或滚到底部后，底部浮条滑出建议操作。</p>
+      </div>
+      <div class="browser">
+        <div class="browser__dots"><i></i><i></i><i></i></div>
+        <div class="browser__tab"><span class="browser__ico"></span>延迟出现 UI</div>
+      </div>
+      <div class="frame">
+        <div class="c5-minimal-top">
+          <a class="pill-back pill-back--light" href="#">←</a>
+        </div>
+        <div class="c5-idle-hint">↓ 用户停止滚动 2s 后</div>
+        <div class="scroll-content">
+          <div class="scroll-mock">滚动中：仅左上角返回<br>无底栏 · 无顶栏</div>
+        </div>
+        <div class="c5-snack">
+          <div class="c5-snack__icon">↑</div>
+          <div class="c5-snack__body">
+            <strong>准备好了？导出长图发给朋友</strong>
+            <span>保存后在微信拖拽 PNG 即可 · 约 12MB</span>
+          </div>
+          <button type="button" class="btn-primary" style="padding:8px 14px;font-size:12px">导出</button>
+          <button type="button" class="c5-snack__dismiss">×</button>
+        </div>
+      </div>
+      <div class="note">
+        <h3>状态机</h3>
+        <ul>
+          <li><strong>Scrolling</strong>：仅 pill 返回</li>
+          <li><strong>Idle 2s</strong>：浮条 slide-up（可 dismiss，当次预览不再打扰）</li>
+          <li><strong>Bottom reached</strong>：浮条常驻直到操作</li>
+          <li>「⋯」收入浮条左滑或长按导出钮</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 概念 6 -->
+    <section class="wf-state" id="c-c6">
+      <div class="sec-head">
+        <h2>⑥ 成果卡片（触发式）</h2>
+        <p>不说「工具」，说「你要哪个成品」— 三张卡片对应双交付路径 + 润色。</p>
+      </div>
+      <div class="browser">
+        <div class="browser__dots"><i></i><i></i><i></i></div>
+        <div class="browser__tab"><span class="browser__ico"></span>首次打开 / 点「分享」</div>
+      </div>
+      <div class="frame">
+        <div class="scroll-content" style="padding:16px">
+          <div class="scroll-mock" style="min-height:200px;opacity:.5">背景：卷轴预览（弱化）</div>
+        </div>
+        <div class="c6-hero-overlay">
+          <button type="button" class="btn-secondary c6-dismiss">先逛逛</button>
+          <div class="c6-cards">
+            <div class="c6-card c6-card--primary">
+              <div class="c6-card__icon">▮</div>
+              <h4>群聊长图</h4>
+              <p>竖版 PNG<br>微信直发 · 最常选</p>
+            </div>
+            <div class="c6-card">
+              <div class="c6-card__icon">◎</div>
+              <h4>卷轴链接</h4>
+              <p>沉浸阅读<br>小程序 / 浏览器</p>
+            </div>
+            <div class="c6-card">
+              <div class="c6-card__icon">✎</div>
+              <h4>再润色一下</h4>
+              <p>改标题感受<br>专业编辑入口</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="note">
+        <h3>触发时机（非常驻）</h3>
+        <ul>
+          <li>首次 preview 打开（`firstPreviewDone`）</li>
+          <li>用户点击底栏「分享」步骤</li>
+          <li>长图生成成功后「下一步：发微信」</li>
+          <li>日常浏览：仅底部小按钮「我要分享 ↑」唤起</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 概念 7 -->
+    <section class="wf-state" id="c-c7">
+      <div class="sec-head">
+        <h2>⑦ 底部清单 Sheet</h2>
+        <p>把微信发图 3 步 checklist 嵌进可拖拽半屏 Sheet，助理式带用户走完闭环。</p>
+      </div>
+      <div class="browser">
+        <div class="browser__dots"><i></i><i></i><i></i></div>
+        <div class="browser__tab"><span class="browser__ico"></span>首次引导 Sheet</div>
+      </div>
+      <div class="frame">
+        <a class="pill-back" href="#" style="position:absolute;top:8px;left:10px;z-index:2">←</a>
+        <div class="scroll-content" style="padding-top:36px;padding-bottom:200px">
+          <div class="scroll-mock" style="min-height:220px">上半：卷轴预览<br>下半：被 Sheet 遮挡约 40%</div>
+        </div>
+        <div class="c7-sheet">
+          <div class="c7-sheet__grab"></div>
+          <div class="c7-sheet__head">
+            <h3>发到微信 · 只需 3 步</h3>
+            <button type="button" class="btn-secondary" style="padding:4px 10px;font-size:11px">收起</button>
+          </div>
+          <ul class="c7-checklist">
+            <li class="done"><span class="c7-check"></span>游记已生成（当前步骤：验货）</li>
+            <li class="cur"><span class="c7-check"></span>点下方导出长图 PNG</li>
+            <li><span class="c7-check"></span>微信发送 · 多张按文件名顺序</li>
+          </ul>
+          <div class="c7-sheet__cta">
+            <button type="button" class="btn-primary">导出长图</button>
+            <button type="button" class="btn-secondary">文件夹</button>
+          </div>
+        </div>
+      </div>
+      <div class="note note--rec">
+        <h3>与首页协同</h3>
+        <ul>
+          <li>复用首页页脚「了解如何发微信」3 步内容，避免两处文案不一致</li>
+          <li>Sheet 默认半屏；拖至底部分辨率 &lt; 33% 时吸附为 ① 的迷你底栏</li>
+          <li>老用户：`localStorage` 记住收起，不再自动弹出</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="aside">
+    <div class="note note--rec">
+      <h3>我的推荐组合</h3>
+      <p style="margin:0 0 8px;font-size:12px">
+        若彻底抛弃顶栏，建议分<strong>默认 / 首次 / 沉浸</strong>三态：
+      </p>
+      <ul>
+        <li><strong>默认</strong> → ① 底部任务坞</li>
+        <li><strong>首次</strong> → ⑦ Sheet 叠加，完成后降为 ①</li>
+        <li><strong>沉浸滚动</strong> → ⑤ 浮条替换底栏</li>
+        <li><strong>编辑</strong> → ③「改」模式或现有 drawer</li>
+      </ul>
+    </div>
+
+    <div class="note">
+      <h3>待你选型</h3>
+      <ul>
+        <li>最吸引你的是哪个概念？（可多选组合）</li>
+        <li>主 CTA 文案：「发给朋友」还是「保存长图」？</li>
+        <li>能否接受<strong>无固定顶栏</strong>（返回改浮动 pill）？</li>
+        <li>侧栏助理 ④ 是否值得做，还是太挤？</li>
+        <li>成果卡片 ⑥ 仅首次弹出，是否 OK？</li>
+      </ul>
+    </div>
+
+    <div class="note">
+      <h3>与 v1 方案 A 关系</h3>
+      <p style="margin:0;font-size:12px">
+        v1 是在<strong>保留顶栏</strong>前提下的最小改动；本稿是<strong>范式升级</strong>。
+        若选中 ①，实现上需重构 <code>preview-toolbar</code> 为 <code>preview-assistant-dock</code>，
+        分享态（share=1）可更激进地只留 FAB。
+      </p>
+    </div>
+  </aside>
+</div>
+
+<script>
+  document.querySelectorAll(".concept-tabs button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".concept-tabs button").forEach(function (b) {
+        b.classList.remove("is-active");
+      });
+      btn.classList.add("is-active");
+      document.querySelectorAll(".wf-state").forEach(function (s) {
+        s.classList.remove("is-visible");
+      });
+      var el = document.getElementById("c-" + btn.getAttribute("data-c"));
+      if (el) el.classList.add("is-visible");
+    });
+  });
+</script>
+</body>
+</html>

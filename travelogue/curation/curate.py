@@ -975,6 +975,12 @@ def run_curate(
         curation["degradationReason"] = degradation_reason
     if decision_logs:
         curation["layoutDecisionLog"] = decision_logs
+    if app_cfg.mosaic.enabled and app_cfg.mosaic.log_level == "debug":
+        mosaic_debug = curation.get("mosaicDecisionLog") or []
+        if mosaic_debug:
+            merged = list(curation.get("layoutDecisionLog") or [])
+            merged.extend(mosaic_debug)
+            curation["layoutDecisionLog"] = merged
     if replan_meta.get("searchBudget"):
         curation["layoutSearchBudget"] = replan_meta["searchBudget"]
     if engine == LAYOUT_ENGINE_SCREENS:

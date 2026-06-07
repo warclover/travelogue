@@ -89,6 +89,16 @@ layout:
   feedback:
     enabled: false
     log_path: null
+  # Phase 16 · 布局模板引擎（LTE）
+  template_engine:
+    enabled: true
+    read_templates_from_lte: true
+    max_mosaic_slots: 9
+    exclude_collage_from_mosaic: true
+    # 不改 YAML 即可零曝光某 pattern（AC-P16-13）
+    overrides:
+      disable: []
+      # - screen-portrait-3
 
 # 旅行主角二人 · 同框识别（需 vision + trip.intent.featuredSubjects + seed 正脸照）
 # trip.json intent 示例：
