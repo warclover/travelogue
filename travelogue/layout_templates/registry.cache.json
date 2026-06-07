@@ -1,7 +1,8 @@
 {
-  "contentHash": "4201256ba07877ed29025b7462802a7b74d9ded37ed41bf25aea4d2e913e4b63",
+  "contentHash": "3312399bc6debb00d03ec5688442c0a1fd0389a4f9e2d42a3b19da3bb96e2fc6",
   "templateIds": [
     "screen-full-frame",
+    "screen-landscape-1",
     "screen-landscape-2",
     "screen-landscape-3",
     "screen-landscape-4",
@@ -15,7 +16,9 @@
     "screen-mosaic-5-main-landscape-2portrait-2land",
     "screen-mosaic-5-main-portrait-3land",
     "screen-mosaic-6-main-hero-plus-5",
+    "screen-portrait-1",
     "screen-portrait-1-landscape-2",
+    "screen-portrait-2",
     "screen-portrait-2-landscape-2",
     "screen-portrait-3",
     "screen-portrait-4",
@@ -25,10 +28,13 @@
   ],
   "byPhotoCount": {
     "1": [
-      "screen-full-frame"
+      "screen-full-frame",
+      "screen-landscape-1",
+      "screen-portrait-1"
     ],
     "2": [
-      "screen-landscape-2"
+      "screen-landscape-2",
+      "screen-portrait-2"
     ],
     "3": [
       "screen-landscape-3",
@@ -62,5 +68,5 @@
       "screen-portrait-9"
     ]
   },
-  "generatedAt": "2026-06-07T00:35:57Z"
+  "generatedAt": "2026-06-07T01:04:04Z"
 }

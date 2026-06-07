@@ -8,6 +8,14 @@ html[data-layout="auto"] .layout-screen__grid--1col {
   align-items: stretch;
 }
 
+/* screen-landscape-1 */
+html[data-layout="web"] .layout-screen__grid--1col,
+html[data-layout="auto"] .layout-screen__grid--1col {
+  grid-template-columns: repeat(1, 1fr);
+  grid-template-rows: repeat(1, 1fr);
+  align-items: stretch;
+}
+
 /* screen-landscape-2 */
 html[data-layout="web"] .layout-screen__grid--landscape-stack-2,
 html[data-layout="auto"] .layout-screen__grid--landscape-stack-2 {
@@ -419,6 +427,14 @@ html[data-layout="web"] .layout-screen__grid--mosaic-6-main-hero-plus-5 .layout-
   grid-row: 3;
 }
 
+/* screen-portrait-1 */
+html[data-layout="web"] .layout-screen__grid--1col,
+html[data-layout="auto"] .layout-screen__grid--1col {
+  grid-template-columns: repeat(1, 1fr);
+  grid-template-rows: repeat(1, 1fr);
+  align-items: stretch;
+}
+
 /* screen-portrait-1-landscape-2 */
 html[data-layout="web"] .layout-screen__grid--portrait-left-2landscape,
 html[data-layout="auto"] .layout-screen__grid--portrait-left-2landscape {
@@ -440,6 +456,24 @@ html[data-layout="web"] .layout-screen__grid--portrait-left-2landscape .layout-s
 html[data-layout="web"] .layout-screen__grid--portrait-left-2landscape .layout-slot[data-slot="2"], html[data-layout="auto"] .layout-screen__grid--portrait-left-2landscape .layout-slot[data-slot="2"] {
   grid-column: 2;
   grid-row: 2;
+}
+
+/* screen-portrait-2 */
+html[data-layout="web"] .layout-screen__grid--2col,
+html[data-layout="auto"] .layout-screen__grid--2col {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(1, 1fr);
+  align-items: stretch;
+}
+
+html[data-layout="web"] .layout-screen__grid--2col .layout-slot[data-slot="0"], html[data-layout="auto"] .layout-screen__grid--2col .layout-slot[data-slot="0"] {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+html[data-layout="web"] .layout-screen__grid--2col .layout-slot[data-slot="1"], html[data-layout="auto"] .layout-screen__grid--2col .layout-slot[data-slot="1"] {
+  grid-column: 2;
+  grid-row: 1;
 }
 
 /* screen-portrait-2-landscape-2 */

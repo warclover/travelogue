@@ -189,39 +189,33 @@ jobs:
       - name: LTE validate (Phase 16)
         run: python -m travelogue.layout_templates.cli validate
 
-      - name: LTE journal CSS sync drift (warn-only)
-        continue-on-error: true
+      - name: LTE journal CSS sync drift
         run: |
           python -m travelogue.layout_templates.cli export --sync-journal
           git diff --exit-code templates/visual-journal/journal-screens.css || {
-            echo "::warning::journal-screens.css out of sync with LTE export; run: python -m travelogue.layout_templates.cli export --sync-journal"
-            if [ "${LTE_CSS_SYNC_STRICT:-}" = "1" ]; then exit 1; fi
+            echo "journal-screens.css out of sync; run: python -m travelogue.layout_templates.cli export --sync-journal"
+            exit 1
           }
 
-      - name: LTE slotAspect docgen drift (warn-only)
-        continue-on-error: true
+      - name: LTE slotAspect docgen drift
         run: |
           python -m travelogue.layout_templates.cli docgen --out /tmp/lte-slot-aspect
           python - <<'PY'
           import filecmp
-          import os
           from pathlib import Path
 
           ref = Path("docs/templates/slot-aspect")
           cur = Path("/tmp/lte-slot-aspect")
           if not ref.is_dir() or not cur.is_dir():
-              print("::warning::LTE docgen drift check skipped: missing directories")
-              raise SystemExit(0)
+              raise SystemExit("LTE docgen drift check: missing directories")
           diff = filecmp.dircmp(str(ref), str(cur))
           if diff.left_only or diff.right_only or diff.diff_files:
               print(
-                  "::warning::LTE slotAspect docs drift: "
+                  "LTE slotAspect docs drift: "
                   f"left_only={diff.left_only} right_only={diff.right_only} diff={diff.diff_files}"
               )
-              if os.environ.get("LTE_DOCGEN_STRICT") == "1":
-                  raise SystemExit(1)
-          else:
-              print("LTE slotAspect docs in sync")
+              raise SystemExit(1)
+          print("LTE slotAspect docs in sync")
           PY
 
       - name: LTE probe regression (geometry warn)
@@ -230,7 +224,13 @@ jobs:
       - name: Install Playwright browser (LTE probe screenshots)
         run: playwright install chromium
 
+      - name: LTE probe screenshot (PR warn)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: python scripts/lte_probe_regress.py --screenshot
+
       - name: LTE probe screenshot (release block)
+        if: github.event_name != 'pull_request'
         run: python scripts/lte_probe_regress.py --screenshot --strict
 
       - name: LTE registry parity
@@ -257,9 +257,8 @@ jobs:
             exit 1
           }
 
-      - name: Collage detector fixture eval (warn-only)
-        continue-on-error: true
-        run: python scripts/collage_detect_eval.py
+      - name: Collage detector fixture eval
+        run: python scripts/collage_detect_eval.py --strict --min-recall 0.5 --max-fp-rate 0.25
 
       - name: Phase 4 acceptance gate
         run: python scripts/phase4_acceptance_gate.py --skip-integration

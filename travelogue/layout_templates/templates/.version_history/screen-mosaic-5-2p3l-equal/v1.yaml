@@ -14,12 +14,12 @@ stage:
   grid:
   - 3
   - 3
+  gap: 2px
   variants:
   - layout: web
     aspect: '16:9'
   - layout: mobile
     aspect: '9:16'
-  gap: 2px
 photoCount:
   min: 5
   max: 5

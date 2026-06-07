@@ -26,13 +26,16 @@ def solidify_screen_geometry(screen: dict[str, Any], pattern_id: str) -> dict[st
         cols = [1.0]
         rows = [1.0]
 
-    screen["layoutGeometry"] = {
+    geo: dict[str, Any] = {
         "stageAspect": stage.aspect,
         "cols": cols,
         "rows": rows,
         "gridClass": template.render_grid_class,
         "templateVersion": template.version,
     }
+    if stage.gap:
+        geo["gap"] = stage.gap
+    screen["layoutGeometry"] = geo
 
     slot_by_index = {slot.index: slot for slot in template.slots}
     for slot in screen.get("slots") or []:

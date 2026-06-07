@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from travelogue.layout_templates.registry import get_engine
+from travelogue.layout_templates.registry import check_active_quotas, get_engine
 from travelogue.layout_templates.validator import (
     LayoutTemplateGeometryHook,
     validate_template_def,
@@ -30,7 +30,6 @@ def _probe_regression_step(template_id: str, *, target: AdmissionTarget) -> tupl
         step["skipped"] = True
         step["reason"] = probe.get("reason")
 
-    # S3/S4 already gate geometry; S5 records synthetic probe drift (warn-only on promote).
     blocks = True
     if not probe["ok"]:
         step["warnOnly"] = True
@@ -46,10 +45,11 @@ def _probe_regression_step(template_id: str, *, target: AdmissionTarget) -> tupl
         }
         if shot.get("skipped"):
             step["screenshot"]["reason"] = shot.get("reason")
+            step["screenshot"]["warnOnly"] = True
         elif not shot.get("ok", True):
             missing = any(r.get("missingBaseline") for r in shot.get("rows") or [])
             if missing:
-                step["warnOnly"] = True
+                step["screenshot"]["warnOnly"] = True
             else:
                 step["ok"] = False
                 blocks = False
@@ -136,6 +136,19 @@ def run_layout_template_admission(
     probe_step, probe_ok = _probe_regression_step(template_id, target=target)
     steps.append(probe_step)
     ok = ok and probe_ok
+
+    quota_warnings = check_active_quotas(get_engine())
+    if quota_warnings:
+        steps.append(
+            {
+                "name": "quota_policy",
+                "ok": target != "ga",
+                "warnings": quota_warnings,
+                "warnOnly": target == "beta",
+            }
+        )
+        if target == "ga":
+            ok = False
 
     if target == "ga":
         from travelogue.templating.review import get_review_status

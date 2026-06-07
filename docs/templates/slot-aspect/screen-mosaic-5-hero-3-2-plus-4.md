@@ -1,7 +1,7 @@
 # screen-mosaic-5-hero-3-2-plus-4
 
 - displayName: 五图 · 加权轨道 hero + 四配图
-- status: beta
+- status: ga
 - stage: 16:9
 
 | slot | role | displayAspect |
