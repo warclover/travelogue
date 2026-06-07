@@ -13,11 +13,12 @@ from travelogue.curation.mosaic.candidates import (
 from travelogue.curation.mosaic.diversity import apply_candidate_diversity
 from travelogue.curation.mosaic.log import MosaicWindowLog
 from travelogue.curation.mosaic.log_enrich import enrich_mosaic_log_from_screen
-from travelogue.curation.mosaic.lte_adapter import mcs_diversity_config
-from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
+from travelogue.curation.mosaic.lte_adapter import mcs_diversity_config, mosaic_pattern_disabled
 from travelogue.curation.mosaic.scorer import score_candidate, weights_hash
 from travelogue.curation.mosaic.selfheal import try_self_heal_pick
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+
+_FACE_CROP_PROXY_THRESHOLD = 0.05
 
 
 @dataclass
@@ -161,6 +162,16 @@ def pick_best_window(
     log.winner_pattern_id = winner_cand.pattern_id
     log.winner_score = winner_score
     log.winner_reason_codes = reasons
+    _attach_face_crop_proxy(
+        log,
+        winner_cand.screen,
+        aspects=aspects,
+        assets_map=assets_map,
+        cfg=cfg,
+        layout_state=layout_state,
+        trip_photo_total=trip_photo_total,
+        burst_seconds=burst_seconds,
+    )
 
     if winner_score < cfg.min_candidate_score:
         healed = try_self_heal_pick(
@@ -179,6 +190,16 @@ def pick_best_window(
             log.winner_pattern_id = winner_cand.pattern_id
             log.winner_score = winner_score
             log.winner_reason_codes = reasons
+            _attach_face_crop_proxy(
+                log,
+                winner_cand.screen,
+                aspects=aspects,
+                assets_map=assets_map,
+                cfg=cfg,
+                layout_state=layout_state,
+                trip_photo_total=trip_photo_total,
+                burst_seconds=burst_seconds,
+            )
             log.self_heal_applied = True
             log.self_heal_step = step
             log.dropped_asset_ids = list(dropped)
@@ -194,6 +215,30 @@ def pick_best_window(
     log.planner_path = "mosaic"
     enrich_mosaic_log_from_screen(log, winner_cand.screen, assets_map=assets_map)
     return WindowPickResult(screen=winner_cand.screen, log=log, used_legacy=False)
+
+
+def _attach_face_crop_proxy(
+    log: MosaicWindowLog,
+    screen: dict,
+    *,
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    cfg: MosaicConfig,
+    layout_state: ScreenLayoutPlannerState | None,
+    trip_photo_total: int,
+    burst_seconds: float,
+) -> None:
+    sr = score_candidate(
+        screen,
+        aspects=aspects,
+        assets_by_id=assets_map,
+        cfg=cfg,
+        layout_state=layout_state,
+        trip_photo_total=trip_photo_total,
+        burst_seconds=burst_seconds,
+    )
+    pen = float(sr.penalties.get("face_crop") or 0.0)
+    log.face_crop_proxy = pen > _FACE_CROP_PROXY_THRESHOLD
 
 
 def compose_segment_s1(

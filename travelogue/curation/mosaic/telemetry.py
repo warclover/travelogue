@@ -91,6 +91,9 @@ def record_per_template_layout_metrics(
     candidates = Counter[str]()
     fallbacks = Counter[str]()
     slot_ar: dict[str, list[float]] = {}
+    win_scores: dict[str, list[float]] = {}
+    face_crop_hits: Counter[str] = Counter()
+    face_crop_wins: Counter[str] = Counter()
 
     for ch in chapters:
         for screen in ch.get("screens") or []:
@@ -111,6 +114,16 @@ def record_per_template_layout_metrics(
                     slot_ar.setdefault(pid, []).append(float(score))
                 except (TypeError, ValueError):
                     pass
+            ws = entry.get("winnerScore")
+            if ws is not None and pid and not entry.get("fallbackUsed"):
+                try:
+                    win_scores.setdefault(pid, []).append(float(ws))
+                except (TypeError, ValueError):
+                    pass
+            if pid and not entry.get("fallbackUsed"):
+                face_crop_wins[pid] += 1
+                if entry.get("faceCropProxy"):
+                    face_crop_hits[pid] += 1
 
     for pid, count in wins.items():
         record_template_metric(
@@ -152,5 +165,38 @@ def record_per_template_layout_metrics(
             "layout.template.slot_ar_distance_p50",
             templateId=pid,
             value=round(mid, 4),
+            **base,
+        )
+
+    def _pct(vals: list[float], p: float) -> float:
+        vals = sorted(vals)
+        idx = min(len(vals) - 1, max(0, int(round(p * (len(vals) - 1)))))
+        return round(vals[idx], 4)
+
+    for pid, scores in win_scores.items():
+        if not scores:
+            continue
+        record_template_metric(
+            "layout.template.win_score_p50",
+            templateId=pid,
+            value=_pct(scores, 0.5),
+            **base,
+        )
+        if len(scores) >= 2:
+            record_template_metric(
+                "layout.template.win_score_p90",
+                templateId=pid,
+                value=_pct(scores, 0.9),
+                **base,
+            )
+
+    for pid, win_count in face_crop_wins.items():
+        if win_count <= 0:
+            continue
+        rate = round(face_crop_hits.get(pid, 0) / win_count, 4)
+        record_template_metric(
+            "layout.template.face_crop_proxy_rate",
+            templateId=pid,
+            value=rate,
             **base,
         )

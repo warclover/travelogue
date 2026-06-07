@@ -162,10 +162,53 @@ def test_per_template_telemetry_emit(tmp_path: Path, monkeypatch: pytest.MonkeyP
                 "winnerPatternId": "screen-portrait-3",
                 "candidatesCount": 3,
                 "slotArMatchScore": 0.12,
-            }
+                "winnerScore": 0.78,
+                "faceCropProxy": True,
+            },
+            {
+                "winnerPatternId": "screen-portrait-3",
+                "candidatesCount": 2,
+                "winnerScore": 0.82,
+            },
         ],
     )
     lines = metrics_path.read_text(encoding="utf-8").strip().splitlines()
     names = {json.loads(line)["name"] for line in lines}
     assert "layout.template.exposure_count" in names
     assert "layout.template.slot_ar_distance_p50" in names
+    assert "layout.template.win_score_p50" in names
+    assert "layout.template.face_crop_proxy_rate" in names
+
+
+@pytest.mark.unit
+def test_aggregate_layout_template_metrics_rollup(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from travelogue.templating import metrics as metrics_mod
+
+    metrics_path = tmp_path / "metrics.jsonl"
+    monkeypatch.setattr(metrics_mod, "metrics_path", lambda: metrics_path)
+    from travelogue.templating.metrics import record_template_metric
+
+    record_template_metric(
+        "layout.template.exposure_count",
+        templateId="screen-portrait-3",
+        value=2,
+    )
+    record_template_metric(
+        "layout.template.exposure_share",
+        templateId="screen-portrait-3",
+        value=0.5,
+    )
+    record_template_metric(
+        "layout.template.win_score_p50",
+        templateId="screen-portrait-3",
+        value=0.8,
+    )
+    rollup = metrics_mod.aggregate_layout_template_metrics(window_hours=24)
+    assert rollup["templates"]
+    row = rollup["templates"][0]
+    assert row["templateId"] == "screen-portrait-3"
+    assert row["exposureCount"] == 2
+    assert row["winScoreP50"] == 0.8
+    dashboard = metrics_mod.aggregate_metrics(window_hours=24)
+    assert "layoutTemplates" in dashboard
+    assert dashboard["layoutTemplates"]["templates"][0]["templateId"] == "screen-portrait-3"

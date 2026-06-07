@@ -31,6 +31,7 @@ class MosaicWindowLog:
     template_version: int | None = None
     template_registry_version: str = ""
     slot_ar_match_score: float | None = None
+    face_crop_proxy: bool = False
     rejected_templates: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -61,6 +62,8 @@ class MosaicWindowLog:
             out["templateRegistryVersion"] = self.template_registry_version
         if self.slot_ar_match_score is not None:
             out["slotArMatchScore"] = self.slot_ar_match_score
+        if self.face_crop_proxy:
+            out["faceCropProxy"] = True
         if self.rejected_templates:
             out["rejectedTemplates"] = list(self.rejected_templates)
         return out
