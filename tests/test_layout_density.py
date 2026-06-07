@@ -182,9 +182,11 @@ def test_ac_ld_06_hero_first_single_slot_ratio_up_10pp() -> None:
 
 
 def test_ac_ld_07_collage_first_dense_ratio_up_10pp() -> None:
-    # 全横图 synthetic：50 张时 balanced 贪婪打包遗留 1 单槽屏，collage 重排尾窗补满
-    balanced = _plan_density("balanced", 50)
-    collage = _plan_density("collage_first", 50)
+    # 全横图 synthetic：44 张(≥MIN_PHOTOS_COLLAGE_FULL_EFFECT)时 balanced 贪婪打包遗留
+    # 2 个单槽屏(landscape-1)，collage 把尾窗补成 landscape-4 密集屏。50 张恰好 5×9+1×5
+    # 完美打包、balanced 已满密度，无法体现分化，故改用 44。
+    balanced = _plan_density("balanced", 44)
+    collage = _plan_density("collage_first", 44)
     _, b_dense, b_total = _screen_slot_ratios(balanced)
     _, c_dense, c_total = _screen_slot_ratios(collage)
     assert b_total >= 4 and c_total >= 4
@@ -193,9 +195,10 @@ def test_ac_ld_07_collage_first_dense_ratio_up_10pp() -> None:
 
 def test_ac_ld_mcs_density_divergence_three_way() -> None:
     """MCS path: hero_first ↑ singles, collage_first ↑ dense, balanced in between."""
-    b_single, b_dense, _ = _screen_slot_ratios(_plan_density("balanced", 50))
-    h_single, _h_dense, _ = _screen_slot_ratios(_plan_density("hero_first", 50))
-    _c_single, c_dense, _ = _screen_slot_ratios(_plan_density("collage_first", 50))
+    # 44 张：避开 50 张完美打包退化点（见 test_ac_ld_07）。
+    b_single, b_dense, _ = _screen_slot_ratios(_plan_density("balanced", 44))
+    h_single, _h_dense, _ = _screen_slot_ratios(_plan_density("hero_first", 44))
+    _c_single, c_dense, _ = _screen_slot_ratios(_plan_density("collage_first", 44))
     assert h_single - b_single >= PP_THRESHOLD
     assert round(c_dense - b_dense, 4) >= PP_THRESHOLD
 
