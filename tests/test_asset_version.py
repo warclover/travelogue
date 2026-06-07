@@ -13,7 +13,9 @@ from travelogue.render.context import (
 from travelogue.render.golden_regression import load_golden_trip
 
 # Bump only when templates/visual-journal bundle bytes change (same inputs as render).
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}1f0eb73b9935"
+# Bumped for Phase 16: LTE-generated grid CSS in journal-screens.css + restored
+# PRD-EXPERIENCE E2/E7 reading-experience overlay (clobbered by d51b144 sync).
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}7657f912dd71"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"
