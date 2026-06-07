@@ -88,8 +88,15 @@ def format_log_entry(raw: dict[str, Any], log_level: str = "window") -> dict[str
     )
     if log_level == "summary":
         return {k: raw[k] for k in summary_keys if k in raw}
-    # window: drop top3 score arrays and debug-only rejectedTemplates
+    # window: drop top3 score arrays; keep compact geometry rejections for guard verification
     out = dict(raw)
     out.pop("top3Scores", None)
+    geom_rejected = [
+        {"templateId": r["templateId"], "reason": r["reason"]}
+        for r in raw.get("rejectedTemplates") or []
+        if r.get("reason") == "geometry_invalid"
+    ]
+    if geom_rejected:
+        out["geometryRejectedTemplates"] = geom_rejected
     out.pop("rejectedTemplates", None)
     return out

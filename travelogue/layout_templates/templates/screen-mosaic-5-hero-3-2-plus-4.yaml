@@ -1,5 +1,5 @@
 id: screen-mosaic-5-hero-3-2-plus-4
-version: 3
+version: 4
 status: ga
 kind: composite
 displayName: 五图 · 加权轨道 hero + 四配图
@@ -27,21 +27,22 @@ slots:
 
 constraints:
   portrait_forbidden_in_wide_slots: []
-  landscape_forbidden_in_tall_slots: []
+  landscape_forbidden_in_tall_slots:
+    - 0
   intentionalGaps: []
   arLadderSignOff:
     "0":
       signedBy: lte-design-review
-      signedAt: "2026-06-06"
-      note: Weighted-track hero main slot; displayAspect ~0.89 intentional (V-P16-13)
+      signedAt: "2026-06-07"
+      note: Main hero slot displayAspect ~0.89; landscape forbidden (Plate 63 guard)
 
 compatibilityHints:
   prefers_burst: false
   min_trip_photos: 12
 
 scoring:
-  base_weight: 1.02
-  tags: [hero, landscape, weighted]
+  base_weight: 0.98
+  tags: [hero, mixed, weighted]
   rhythm:
     max_per_chapter: 2
     diversity_bonus: 0.06

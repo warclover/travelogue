@@ -13,6 +13,7 @@ from travelogue.curation.layout_scoring import ScoringWeights, score_screen_plan
 from travelogue.curation.mosaic.constants import (
     PATTERN_LANDSCAPE_6,
     PATTERN_LANDSCAPE_9,
+    PATTERN_MOSAIC_5_HERO_3_2_PLUS_4,
     PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
     PATTERN_PORTRAIT_6,
@@ -127,9 +128,23 @@ def _slot_geometry_penalty(
 def _hero_slot_aspect_penalty(
     screen: dict,
     aspects: dict[str, AspectKind],
+    *,
+    cfg: MosaicConfig,
 ) -> float:
     """Side tiles prefer portrait; bottom row prefers landscape."""
     pattern_id = str(screen.get("patternId") or "")
+    if pattern_id == PATTERN_MOSAIC_5_HERO_3_2_PLUS_4:
+        if not cfg.hero_weighted_geometry_guard:
+            return 0.0
+        pen = 0.0
+        for slot in screen.get("slots") or []:
+            idx = int(slot.get("slot", -1))
+            aid = slot.get("assetId")
+            if not aid or idx != 0:
+                continue
+            if _is_landscape_id(aid, aspects):
+                pen = max(pen, 0.9)
+        return pen
     if pattern_id not in (
         PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
         PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
@@ -159,9 +174,19 @@ def _hero_narrow_tile_penalty(
     screen: dict,
     asset_ids: list[str],
     aspects: dict[str, AspectKind],
+    *,
+    cfg: MosaicConfig,
 ) -> float:
     """Penalize all-landscape hero+tile patterns where side tiles are narrow strips."""
     pattern_id = str(screen.get("patternId") or "")
+    if pattern_id == PATTERN_MOSAIC_5_HERO_3_2_PLUS_4:
+        if not cfg.hero_weighted_geometry_guard:
+            return 0.0
+        if not asset_ids:
+            return 0.0
+        if all(_is_landscape_id(aid, aspects) for aid in asset_ids):
+            return 0.65
+        return 0.0
     if pattern_id not in (
         PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
         PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
@@ -220,8 +245,8 @@ def score_candidate(
         "face_crop": _face_crop_penalty(screen, assets_by_id),
         "main_quality": _main_quality_penalty(screen, assets_by_id),
         "duplicate_density": _duplicate_density_penalty(asset_ids, assets_by_id),
-        "hero_narrow_tiles": _hero_narrow_tile_penalty(screen, asset_ids, aspects),
-        "hero_slot_aspect": _hero_slot_aspect_penalty(screen, aspects),
+        "hero_narrow_tiles": _hero_narrow_tile_penalty(screen, asset_ids, aspects, cfg=cfg),
+        "hero_slot_aspect": _hero_slot_aspect_penalty(screen, aspects, cfg=cfg),
         "slot_geometry": _slot_geometry_penalty(screen, aspects),
         "flat_six_grid": _flat_six_grid_penalty(
             str(screen.get("patternId") or ""), asset_ids, aspects

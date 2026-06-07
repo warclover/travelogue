@@ -37,6 +37,9 @@ quotas:
 
 # Emergency disable without editing template YAML (R-P16-08) — runtime config mirror:
 # layout.template_engine.overrides.disable: []
+#
+# Roll back hero-3-2-plus-4 v4 geometry guard (Plate 63 fix) without reverting YAML:
+# mosaic.hero_weighted_geometry_guard: false
 
 # §9.4 exposure debt controller (proposal-only; requires config_governance approval)
 exposure_control:

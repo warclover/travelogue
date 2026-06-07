@@ -2,7 +2,7 @@
 
 Regenerate:
   python scripts/lte_export_legacy.py --sync-python
-Content hash: 40700525561c6bcbd1e98a3fa8a5e9366a85e4ef591706359a2acf84cafdd451
+Content hash: f98bc351cd559f568dcf1addaf03abad10c57cf2409b2afa1465f87527c0b0fa
 """
 
 from __future__ import annotations
@@ -79,6 +79,7 @@ _PORTRAIT_FORBIDDEN_WIDE: dict[str, Any] = {
 }
 
 _LANDSCAPE_FORBIDDEN_TALL: dict[str, Any] = {
+    "screen-mosaic-5-hero-3-2-plus-4": frozenset({0}),
     "screen-mosaic-5-main-portrait-3land": frozenset({1}),
 }
 

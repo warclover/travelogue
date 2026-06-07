@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from travelogue.curation.layout_planner import AspectKind
+from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_HERO_3_2_PLUS_4
 from travelogue.curation.mosaic.legacy_specs import (
     auto_flow_grids,
     explicit_grid_specs,
@@ -103,6 +104,11 @@ def _explicit_geometry_ok(
 ) -> bool:
     forbid_wide = portrait_forbidden_wide().get(pattern_id, frozenset())
     forbid_tall = landscape_forbidden_tall().get(pattern_id, frozenset())
+    if pattern_id == PATTERN_MOSAIC_5_HERO_3_2_PLUS_4:
+        from travelogue.curation.mosaic.runtime import get_effective_mosaic_config
+
+        if not get_effective_mosaic_config().hero_weighted_geometry_guard:
+            forbid_tall = frozenset()
     for slot in screen.get("slots") or []:
         idx = int(slot.get("slot", -1))
         aid = slot.get("assetId")

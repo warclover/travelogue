@@ -1,5 +1,5 @@
 {
-  "contentHash": "40700525561c6bcbd1e98a3fa8a5e9366a85e4ef591706359a2acf84cafdd451",
+  "contentHash": "f98bc351cd559f568dcf1addaf03abad10c57cf2409b2afa1465f87527c0b0fa",
   "templateIds": [
     "screen-full-frame",
     "screen-landscape-1",
@@ -68,5 +68,5 @@
       "screen-portrait-9"
     ]
   },
-  "generatedAt": "2026-06-07T06:08:49Z"
+  "generatedAt": "2026-06-07T08:45:48Z"
 }

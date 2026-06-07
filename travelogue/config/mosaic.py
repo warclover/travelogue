@@ -24,6 +24,8 @@ class MosaicConfig:
     max_drop_ratio: float = 0.5
     candidate_top_k: int = 4
     log_level: str = "window"
+    # When false, restores pre-v4 hero-3-2-plus-4 geometry/scorer guards (rollback).
+    hero_weighted_geometry_guard: bool = True
     weights: dict[str, float] = field(
         default_factory=lambda: {
             "aspect_match": 0.20,
@@ -85,6 +87,12 @@ def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
         max_drop_ratio=float(max_drop) if max_drop is not None else defaults.max_drop_ratio,
         candidate_top_k=int(raw.get("candidate_top_k", raw.get("candidateTopK", defaults.candidate_top_k))),
         log_level=str(raw.get("log_level", raw.get("logLevel", defaults.log_level))),
+        hero_weighted_geometry_guard=cfg_bool(
+            raw,
+            "hero_weighted_geometry_guard",
+            "heroWeightedGeometryGuard",
+            defaults.hero_weighted_geometry_guard,
+        ),
         weights={k: float(weights_raw.get(k, defaults.weights.get(k, 0.0))) for k in defaults.weights},
         penalties={
             k: float(penalties_raw.get(k, defaults.penalties.get(k, 0.0))) for k in defaults.penalties
