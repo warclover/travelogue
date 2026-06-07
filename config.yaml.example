@@ -98,6 +98,12 @@ layout:
     telemetry:
       emit_per_template: true
       registry_versions_max: 8
+    # MCS 章内候选多样性（覆盖 lte_policy.yaml 同路径 · PRD §9.4）
+    mcs_integration:
+      scoring:
+        diversity:
+          mode: mmr   # off | mmr | dpp
+          lambda: 0.65
     # 不改 YAML 即可零曝光某 pattern（AC-P16-13）
     overrides:
       disable: []

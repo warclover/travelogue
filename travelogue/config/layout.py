@@ -62,6 +62,8 @@ class LayoutTemplateEngineConfig:
     emit_per_template: bool = True
     telemetry_registry_versions_max: int = 8
     overrides_disable: tuple[str, ...] = ()
+    diversity_mode: str | None = None
+    diversity_lambda: float | None = None
 
 
 @dataclass
@@ -109,6 +111,19 @@ def layout_template_engine_from_dict(raw: dict[str, Any]) -> LayoutTemplateEngin
     disable = tuple(str(x) for x in disable_raw if x) if isinstance(disable_raw, list) else ()
     mcs = raw.get("mcs_integration") if isinstance(raw.get("mcs_integration"), dict) else {}
     telemetry = raw.get("telemetry") if isinstance(raw.get("telemetry"), dict) else {}
+    scoring = mcs.get("scoring") if isinstance(mcs.get("scoring"), dict) else {}
+    diversity = scoring.get("diversity") if isinstance(scoring.get("diversity"), dict) else {}
+    div_mode_raw = diversity.get("mode")
+    div_mode = str(div_mode_raw).strip().lower() if div_mode_raw is not None else None
+    if div_mode not in (None, "off", "mmr", "dpp"):
+        div_mode = None
+    div_lambda_raw = diversity.get("lambda")
+    div_lambda: float | None = None
+    if div_lambda_raw is not None:
+        try:
+            div_lambda = float(div_lambda_raw)
+        except (TypeError, ValueError):
+            div_lambda = None
     return LayoutTemplateEngineConfig(
         enabled=bool(raw.get("enabled", True)),
         registry_path=str(raw.get("registry_path", "travelogue/layout_templates/templates")),
@@ -124,6 +139,8 @@ def layout_template_engine_from_dict(raw: dict[str, Any]) -> LayoutTemplateEngin
             telemetry.get("registry_versions_max", raw.get("telemetry_registry_versions_max", 8))
         ),
         overrides_disable=disable,
+        diversity_mode=div_mode,
+        diversity_lambda=div_lambda,
     )
 
 

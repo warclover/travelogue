@@ -101,6 +101,19 @@ def mcs_diversity_config(*, cfg: AppConfig | None = None) -> dict[str, float | s
 
     app = cfg or get_config()
     te = getattr(app.layout, "template_engine", None)
+    if te is not None:
+        cfg_mode = getattr(te, "diversity_mode", None)
+        if cfg_mode in ("off", "mmr", "dpp"):
+            out: dict[str, float | str] = {"mode": str(cfg_mode)}
+            cfg_lambda = getattr(te, "diversity_lambda", None)
+            if cfg_lambda is not None:
+                try:
+                    out["lambda"] = float(cfg_lambda)
+                except (TypeError, ValueError):
+                    out["lambda"] = float(defaults["lambda"])
+            else:
+                out["lambda"] = float(defaults["lambda"])
+            return out
     policy_path = Path(getattr(te, "policy_path", "travelogue/layout_templates/lte_policy.yaml"))
     if not policy_path.is_file():
         return defaults

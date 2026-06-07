@@ -62,8 +62,15 @@
     </thead>
     <tbody id="rows"></tbody>
   </table>
-  <h2>布局模板（LTE · internal）</h2>
-  <p class="muted">Phase 16 拼图 pattern 目录：slot AR 探针、gridClass、YAML lifecycle（GitOps）。</p>
+  <h2 id="layout-section">布局模板（LTE · internal）</h2>
+  <div id="layout-access-notice" class="muted" hidden>
+    布局模板目录仅 loopback 或 <code>studio.layout_templates_internal=true</code> 时可见。
+  </div>
+  <div id="layout-quota-warnings" hidden>
+    <p class="bad"><strong>配额告警</strong></p>
+    <ul id="layout-quota-list"></ul>
+  </div>
+  <p class="muted" id="layout-section-desc">Phase 16 拼图 pattern 目录：slot AR 探针、gridClass、YAML lifecycle（GitOps）。</p>
   <table>
     <thead>
       <tr>
@@ -100,6 +107,12 @@
     const revEl = document.getElementById("rev");
     const rowsEl = document.getElementById("rows");
     const layoutRowsEl = document.getElementById("layout-rows");
+    const layoutSectionEl = document.getElementById("layout-section");
+    const layoutAccessNoticeEl = document.getElementById("layout-access-notice");
+    const layoutSectionDescEl = document.getElementById("layout-section-desc");
+    const layoutQuotaBoxEl = document.getElementById("layout-quota-warnings");
+    const layoutQuotaListEl = document.getElementById("layout-quota-list");
+    const layoutTableEl = layoutRowsEl?.closest("table");
     const exposureRowsEl = document.getElementById("exposure-rows");
     const exposureDebtBox = document.getElementById("exposure-debt");
     let lastExposureProposals = [];
@@ -209,6 +222,31 @@
       });
     }
 
+    function renderLayoutQuotaWarnings(warnings) {
+      const items = warnings || [];
+      if (!items.length) {
+        layoutQuotaBoxEl.hidden = true;
+        layoutQuotaListEl.innerHTML = "";
+        return;
+      }
+      layoutQuotaBoxEl.hidden = false;
+      layoutQuotaListEl.innerHTML = "";
+      items.forEach((msg) => {
+        const li = document.createElement("li");
+        li.textContent = msg;
+        layoutQuotaListEl.appendChild(li);
+      });
+    }
+
+    function renderLayoutAccess(internal) {
+      const show = !!internal;
+      if (layoutSectionEl) layoutSectionEl.hidden = !show;
+      if (layoutSectionDescEl) layoutSectionDescEl.hidden = !show;
+      if (layoutTableEl) layoutTableEl.hidden = !show;
+      if (layoutQuotaBoxEl && !show) layoutQuotaBoxEl.hidden = true;
+      if (layoutAccessNoticeEl) layoutAccessNoticeEl.hidden = show;
+    }
+
     function renderLayoutPatterns(patterns) {
       layoutRowsEl.innerHTML = "";
       (patterns || []).forEach((p) => {
@@ -285,6 +323,8 @@
       revEl.textContent = String(data.revision);
       renderPending(data.runtime);
       renderExposureDebt(data.exposureDebtProposals, data.templateRegistryVersion);
+      renderLayoutAccess(data.layoutPatternsInternal);
+      renderLayoutQuotaWarnings(data.layoutQuotaWarnings);
       renderLayoutPatterns(data.layoutPatterns || []);
       rowsEl.innerHTML = "";
       (data.templates || []).forEach((t) => {
