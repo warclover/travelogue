@@ -9,8 +9,12 @@
           "slotAssetIds": ["l1"]
         },
         {
-          "patternId": "screen-mosaic-5-hero-3-2-plus-4",
-          "slotAssetIds": ["l2", "l3", "l4", "l5", "l6"]
+          "patternId": "screen-landscape-4",
+          "slotAssetIds": ["l2", "l3", "l4", "l5"]
+        },
+        {
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": ["l6"]
         }
       ]
     }

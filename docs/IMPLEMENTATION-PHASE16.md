@@ -157,6 +157,40 @@ primitive 参数化、配额调优、删 legacy 手写常量、§9.4 多样性�
 | Playwright E2E | AC-11 stale hint + §13.2 deprecated lifecycle（`test_lte_studio_playwright.py`） |
 | Legacy import | `grid_specs.py` 直引 `_legacy_generated` 元组 |
 
+### 2.w 合并前 checklist（写进 PR 描述）
+
+合并到主干前逐条勾选。前 7 条为常规门禁；后 2 条（★）是本轮审计补强，直接防 `person→cover` 这类用户可见回归。
+
+- [ ] `read_templates_from_lte=true` 下全量 `pytest`
+- [ ] `lte validate --semantic`
+- [ ] `lte_probe_regress --strict-geometry`
+- [ ] `lte_export_legacy --sync-python` 无 drift
+- [ ] journal CSS audit 无 marker 外重复
+- [ ] `phase16_template_eval --strict-ac15`
+- [ ] 手测：Studio `/templates-admin` + 一条真实 trip 预览
+- [ ] ★ **几何 solidify 旁路审计**：确认所有写 `screens[]` 的路径都经 `solidify_screen_geometry`。已修两条旁路：`replan_screen(strategy="legacy")` 与 `append_legacy_window`（详见 2.v）。新增写屏路径（replan/patch/import）必须复用 `_finalize_mosaic_screen` 或显式 solidify。
+- [ ] ★ **saliency 门禁非 no-op 证明**：`tests/test_lte_p4_gaps.py::test_saliency_gate_is_not_a_noop` 须存在并通过（偏心 focal 能把 retention 压到 0.55 阈值以下）。
+
+> **改 scorer / 几何 / CSS bundle 时的纪律**：
+> 1. 改 `scorer.py` 惩罚项、`slot_geometry.py`/`_legacy_generated.py` 的 forbidden 槽、或 pattern YAML 几何 → **必须同步更新 `tests/_golden/`** 反向断言（`expected.layout.json` 与 `test_golden_mosaic_unified.py` 的「某 pattern 应/不应出现」断言）。
+> 2. 改 `templates/visual-journal/` 下任一 bundle 文件（`journal-screens.css`、`journal.css`、`*.js` 等，见 `_BUNDLE_VERSION_PATHS`）→ **必须 bump `tests/test_asset_version.py::_EXPECTED_BUNDLE_VERSION`**。
+> 教训（本轮三次撞到同一类陈旧 golden，均已修复）：Plate 63 guard（`1dedb8d`）漏更 landscape-6 golden；collage journal sync（`0ff0303`）+ portrait-3 行高（`4fabb39`）漏 bump bundle 版本 golden。两者都会让「全量 pytest」被无关的陈旧断言拦截。
+
+### 2.v 几何 solidify 旁路审计（2026-06-07）
+
+`solidify_screen_geometry` 是 LTE 几何 + role-aware fit 的唯一落盘点。审计 `screens[]` 全部写入路径后：
+
+| 路径 | 是否经 solidify | 处置 |
+| --- | --- | --- |
+| MCS 候选（`candidates.py` → `build_screen`/`try_order_for_pattern` → `_finalize_mosaic_screen`） | ✅ 是 | 无需改动 |
+| `replan_screen(strategy="alt_topk")` | ✅ 间接（候选已 solidify） | 写回前再 solidify（幂等）以统一保障 |
+| `replan_screen(strategy="legacy")` | ❌ **曾绕过** | 已修：写回 `screens[]` 前调用 solidify |
+| `append_legacy_window`（主规划 legacy 兜底） | ❌ **曾绕过** | 已修：`append_screen` 前调用 solidify |
+| `selfheal._asset_drop_penalty` 的 `fake_screen` | n/a | 仅用于打分，不落盘，无需处理 |
+| `render/context.py` plate 的 `patternId="screen-plate"` | n/a | render 层只读派生，不回写 `screens[]` |
+
+> solidify 对不在 LTE registry 的 pattern id 是 no-op（`get_engine().get` KeyError 直接返回原 screen），故纯 legacy pattern 不受影响。
+
 ### 2.z P16 前端 residual 任务表（W3 验收后 · 非 blocking）
 
 > **背景**：对照 PRD W3 前端交付（R-P16-10、AC-P16-11/14/18、§9.4），**关键路径功能已落地**（`/templates-admin` internal 目录、preview stale 提示、collage 改判、曝光调权 UI）。下表为**体验 polish / 测试补全**，不阻塞 P16-Core 收口；PRD 明确 **NG** 项（拖拽拼版、C 端指定版式等）不在此列。

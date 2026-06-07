@@ -169,6 +169,23 @@ def replan_screen(
 
     new_screen = dict(new_screen)
     new_screen["screenId"] = screen_id
+    # alt_topk candidates are already solidified in builders, but the ``legacy``
+    # strategy returns raw screen_planner output that bypasses
+    # ``_finalize_mosaic_screen``. Solidify here so every replan write carries
+    # LTE geometry + role-aware fit (idempotent on already-solidified screens;
+    # a no-op for pattern ids absent from the LTE registry).
+    from travelogue.curation.mosaic.lte_adapter import read_templates_from_lte
+
+    if read_templates_from_lte():
+        from travelogue.layout_templates.geometry_solidify import (
+            solidify_screen_geometry,
+        )
+
+        solidify_screen_geometry(
+            new_screen,
+            str(new_screen.get("patternId") or ""),
+            assets_map=assets_map,
+        )
     chapters[ch_i]["screens"][sc_i] = new_screen
     if sync_chapter_items:
         _sync_chapter_items(chapters)

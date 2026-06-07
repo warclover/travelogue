@@ -15,7 +15,12 @@ from travelogue.layout_templates.promotion import apply_layout_template_yaml_pat
 from travelogue.layout_templates.registry import LayoutTemplateEngine, reset_engine_cache_for_tests
 from travelogue.render.context import build_layout_screen
 from scripts.collage_detect_eval import evaluate_fixtures
-from travelogue.layout_templates.probe_regress import PROBE_PROFILES, _worst_saliency_for_slot
+from travelogue.layout_templates.probe_regress import (
+    PROBE_PROFILES,
+    _cover_focal_retention,
+    _profile_saliency_retention,
+    _worst_saliency_for_slot,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -57,6 +62,41 @@ def test_collage_fixture_eval_recall() -> None:
 def test_probe_profiles_include_person() -> None:
     assert any("person" in (p.get("tags") or []) for p in PROBE_PROFILES)
     assert _worst_saliency_for_slot(2.0) <= 1.0
+
+
+@pytest.mark.unit
+def test_saliency_gate_is_not_a_noop() -> None:
+    """Adversarial edge-focal proof the saliency metric can drop below the gate.
+
+    The shipped ``PROBE_PROFILES`` all use near-center focals, so every real slot
+    currently scores 1.0 and the 0.55 threshold never fires. That makes the gate
+    indistinguishable from a no-op. These asserts pin the *mechanism*: an
+    off-center focal on the crop axis must drive retention below 1.0 — and below
+    the 0.55 warn threshold — so a future edge-focal profile (or person-tag
+    corpus) will produce real signal rather than silent passes.
+    """
+    centered = _cover_focal_retention(4.0, 1.0, focal_x=0.5, focal_y=0.5)
+    assert centered == pytest.approx(1.0)
+
+    # Wide slot (4:1) cropping a square asset keeps only the vertical center band
+    # [0.375, 0.625]; a focal pinned to the bottom edge falls outside it.
+    edge = _cover_focal_retention(4.0, 1.0, focal_x=0.5, focal_y=0.95)
+    assert edge < 1.0
+    assert edge < 0.55
+
+    partial = _cover_focal_retention(4.0, 1.0, focal_x=0.5, focal_y=0.70)
+    assert 0.0 < partial < 1.0
+
+    # Person tag must amplify (not mask) a poor crop via the <0.75 penalty branch.
+    person_profile = {
+        "name": "edge-person",
+        "aspect": 1.0,
+        "focal": (0.5, 0.95),
+        "tags": ["person"],
+    }
+    person_retention = _profile_saliency_retention(4.0, person_profile)
+    assert person_retention <= edge
+    assert person_retention < 0.55
 
 
 @pytest.mark.unit

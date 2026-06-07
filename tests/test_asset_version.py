@@ -15,7 +15,9 @@ from travelogue.render.golden_regression import load_golden_trip
 # Bump only when templates/visual-journal bundle bytes change (same inputs as render).
 # Bumped for Phase 16: LTE-generated grid CSS in journal-screens.css + restored
 # PRD-EXPERIENCE E2/E7 reading-experience overlay (clobbered by d51b144 sync).
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}7657f912dd71"
+# Re-bumped 2026-06-07: journal-screens.css collage sync (0ff0303) + screen-portrait-3
+# intrinsic row height (4fabb39) changed the shipped bundle without updating this golden.
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}53919f6685fd"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

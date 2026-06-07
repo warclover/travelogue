@@ -296,6 +296,27 @@ python scripts/lte_probe_regress.py
 python scripts/lte_probe_regress.py --screenshot --strict
 ```
 
+#### 7.3.1 指标语义（务必先读，避免误判）
+
+探针有**两个互补指标**，分工不同，请勿混读。一句话：
+`worstProbeDistance` 看「槽形 vs 资产纵横比」，`worstSaliencyRetention` 看「cover 裁切是否丢焦点」。
+
+| 指标 | 含义 | 阈值 | 分工 |
+| --- | --- | --- | --- |
+| `worstProbeDistance` | 槽位 display aspect 与该槽**角色兼容**的探针纵横比中的最差几何距离 | `> 0.80` 告警 | 槽形与资产比是否匹配 |
+| `worstSaliencyRetention` | 资产在 `object-fit: cover` 中心裁切后焦点仍可见的比例 | `< 0.55` 告警 | cover 裁切是否丢焦点 |
+
+**为什么是 role-aware（关键，曾被误读为 88 个布局 bug）**：
+一个槽永远只装与其 role 同向的资产（portrait 槽不会收到 16:9），所以几何拟合**只能**对**角色兼容**的探针子集取 max——绝不能对相反极端取 max。
+若对**全部**纵横比取最差，存在硬数学下限 `0.4375`（正方形槽到 9:16 与 16:9 等距），因此历史 `0.35` 阈值**几何上不可达**，会无条件点亮每一个槽（88/88），让 `--strict-geometry` 永远无法通过。
+修复后的 `worstProbeDistance` 只对 role 兼容的探针取 max，这是**指标语义修正**，不代表「布局变好了」——别把告警数当成布局 bug 数。
+
+**`0.80` 阈值依据**：GA 语料的几何上限是 `0.75`（legacy 反向迁移的 `screen-portrait-3`，三张竖图塞进 9:16 stage，其硬中心裁切已验证焦点安全：saliency retention 1.0）。`0.80` 紧贴该基线之上，构成棘轮：拦截真正新出现的几何回归（槽与角色严重错配），同时接纳既有的有意密集网格。
+
+**saliency 现状与门禁价值**：当前所有出货 `PROBE_PROFILES` 的焦点都接近中心，因此每个真实槽的 retention 都是 `1.0`，`0.55` 阈值目前**不会触发**——它更像是为后续 person-tag / 极端 focal 语料预留的信号位，而非现役门禁。其机制本身有效（见 `tests/test_lte_p4_gaps.py::test_saliency_gate_is_not_a_noop`：偏心 focal 可将 retention 压到 0.55 以下）。**结论**：CI 暂不因 saliency fail，待真实 person/边缘 focal 用例补全后再启用阈值。
+
+> 实现见 `travelogue/layout_templates/probe_regress.py`（`ROLE_PROBE_KEYS`、`GEOMETRY_WARN_THRESHOLD`、`PROBE_PROFILES`）。
+
 ### 7.4 CSS 审计
 
 ```bash
