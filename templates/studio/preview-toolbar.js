@@ -247,12 +247,13 @@ var narrateJobId = null;
 
   function showLongshotPanel(root, job) {
     var tripId = tripIdFromPath();
-    var body = toolbarBody(root);
-    var panel = body.querySelector(".preview-toolbar__longshot-panel");
+    var panel = document.getElementById("preview-toolbar-longshot-panel");
     if (!panel) {
       panel = document.createElement("div");
+      panel.id = "preview-toolbar-longshot-panel";
       panel.className = "preview-toolbar__longshot-panel";
-      body.appendChild(panel);
+      panel.setAttribute("role", "status");
+      document.body.appendChild(panel);
     }
     setToolbarCollapsed(root, false, false);
     panel.hidden = false;
