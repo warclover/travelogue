@@ -423,6 +423,20 @@ def test_handle_longshot_rejects_invalid_copy_display(tmp_path: Path) -> None:
     assert body["error"] == "invalid copyDisplay"
 
 
+def test_handle_longshot_rejects_invalid_segment_mode(tmp_path: Path) -> None:
+    from travelogue.web.studio_handlers.export_handlers import handle_longshot
+
+    handler = MockStudioHandler(
+        tmp_path / "trips",
+        json_body={"tripId": "demo", "segmentMode": "bogus"},
+    )
+    handle_longshot(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 400
+    assert body["error"] == "invalid segmentMode"
+
+
 def test_read_import_request_json_body(tmp_path: Path) -> None:
     from travelogue.web.studio_handlers.import_handlers import read_import_request
 

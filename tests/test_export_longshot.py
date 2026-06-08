@@ -13,6 +13,7 @@ from travelogue.export.longshot import (
     MAX_WECHAT_BYTES,
     LongshotExportError,
     _estimate_output_bytes,
+    _resolve_segment_plan,
     _segment_user_hint,
     _should_segment,
     _slug_title,
@@ -87,6 +88,45 @@ def test_warm_playwright_browser_best_effort() -> None:
 
 def test_should_segment_by_chapter_cards() -> None:
     assert _should_segment({"scrollHeight": 1000, "perChapter": [61]}, scale=1) is True
+
+
+def test_resolve_segment_plan_full_skips_auto_segment() -> None:
+    metrics = {"scrollHeight": 3000, "perChapter": [10, 12, 8]}
+    do, reason = _resolve_segment_plan(
+        chapter=None,
+        segment_mode="full",
+        metrics=metrics,
+        scale=2,
+        fmt="png",
+    )
+    assert do is False
+    assert reason == ""
+
+
+def test_resolve_segment_plan_chapter_forces_split() -> None:
+    metrics = {"scrollHeight": 800, "perChapter": [5]}
+    do, reason = _resolve_segment_plan(
+        chapter=None,
+        segment_mode="chapter",
+        metrics=metrics,
+        scale=1,
+        fmt="png",
+    )
+    assert do is True
+    assert reason == "chapter"
+
+
+def test_resolve_segment_plan_auto_uses_heuristics() -> None:
+    metrics = {"scrollHeight": 3000, "perChapter": [10]}
+    do, reason = _resolve_segment_plan(
+        chapter=None,
+        segment_mode="auto",
+        metrics=metrics,
+        scale=2,
+        fmt="png",
+    )
+    assert do is True
+    assert reason == "height"
 
 
 def test_apply_chapter_watermark_adds_label() -> None:

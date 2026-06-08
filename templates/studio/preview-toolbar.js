@@ -227,12 +227,18 @@ var narrateJobId = null;
     setLongshotExportMeta(root, formatLongshotExportMetaLabel());
   }
 
+  function normalizeSegmentMode(mode) {
+    if (mode === "full" || mode === "chapter") return mode;
+    return "auto";
+  }
+
   function buildLongshotRequestFromPage(tripId) {
     var prefs = readLongshotExportPrefs();
     return buildLongshotRequest(tripId, {
       scale: prefs.scale,
       format: "png",
       copyDisplay: prefs.copyDisplay,
+      segmentMode: normalizeSegmentMode(prefs.mode),
     });
   }
 
@@ -552,6 +558,17 @@ var narrateJobId = null;
     return postJson("/__travelogue/reveal", { tripId: tripId, relPath: relPath });
   }
 
+  function longshotProgressPct(job) {
+    if (!job || job.status !== "running") return null;
+    var cur = Number(job.stageIndex);
+    var total = Number(job.stageCount);
+    if (!isFinite(cur) || !isFinite(total) || total < 1) return null;
+    var hint = String(job.stageHint || "");
+    var isChapter = /第\s*\d+\s*\/\s*\d+\s*段/.test(hint);
+    if (total === 1 && !isChapter) return 10;
+    return Math.min(100, Math.max(0, Math.round((cur / total) * 100)));
+  }
+
   function pollJob(jobId, root, onDone, onSlow) {
     if (pollCancel) {
       pollCancel();
@@ -563,8 +580,10 @@ var narrateJobId = null;
       onSlow: onSlow,
       onTick: function (job) {
         if (job.status === "running" && root && jobId === longshotJobId) {
+          var pct = longshotProgressPct(job);
           setLongshotExportState(root, "running", {
             hint: job.stageHint ? "正在保存… " + job.stageHint : "正在保存…",
+            pct: pct,
           });
         }
       },
@@ -598,9 +617,54 @@ var narrateJobId = null;
     if (caret) caret.disabled = !!disabled;
   }
 
-  function setLongshotExportMeta(root, text) {
+  function setLongshotExportMeta(root, text, opts) {
+    opts = opts || {};
     var meta = root.querySelector(".preview-toolbar__export-meta");
-    if (meta) meta.textContent = text || "写入画册目录";
+    if (!meta) return;
+    meta.textContent = text || "写入画册目录";
+    var actionable = !!opts.actionable;
+    meta.classList.toggle("preview-toolbar__export-meta--action", actionable);
+    if (actionable) {
+      meta.setAttribute("role", "button");
+      meta.setAttribute("tabindex", "0");
+      meta.title = opts.title || "展开保存结果";
+    } else {
+      meta.removeAttribute("role");
+      meta.removeAttribute("tabindex");
+      meta.removeAttribute("title");
+    }
+  }
+
+  function openLongshotResultDrawer(root) {
+    setToolbarCollapsed(root, false, false);
+    clearLongshotDrawerTimer();
+    var drawer = root.querySelector(".preview-toolbar__drawer");
+    if (!drawer) return;
+    if (root._lastLongshotJob && drawer.childElementCount === 0) {
+      showLongshotDrawer(root, root._lastLongshotJob, { autoHide: false });
+      return;
+    }
+    drawer.hidden = false;
+    requestAnimationFrame(function () {
+      syncToolbarHeight(root);
+    });
+  }
+
+  function bindLongshotExportMeta(root) {
+    var meta = root.querySelector(".preview-toolbar__export-meta");
+    if (!meta || meta.dataset.bound === "1") return;
+    meta.dataset.bound = "1";
+    meta.addEventListener("click", function () {
+      if (!meta.classList.contains("preview-toolbar__export-meta--action")) return;
+      openLongshotResultDrawer(root);
+    });
+    meta.addEventListener("keydown", function (e) {
+      if (!meta.classList.contains("preview-toolbar__export-meta--action")) return;
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openLongshotResultDrawer(root);
+      }
+    });
   }
 
   function setLongshotExportProgress(root, visible, pct) {
@@ -608,6 +672,25 @@ var narrateJobId = null;
     var fill = root.querySelector(".preview-toolbar__export-progress-fill");
     if (prog) prog.hidden = !visible;
     if (fill && typeof pct === "number") fill.style.width = pct + "%";
+  }
+
+  function longshotSplitEl(root) {
+    return root.querySelector(".preview-toolbar__longshot-split");
+  }
+
+  function setLongshotSplitState(root, state) {
+    var split = longshotSplitEl(root);
+    if (!split) return;
+    ["idle", "running", "done"].forEach(function (s) {
+      split.classList.remove("preview-toolbar__longshot-split--" + s);
+    });
+    if (state === "running") {
+      split.classList.add("preview-toolbar__longshot-split--running");
+    } else if (state === "done") {
+      split.classList.add("preview-toolbar__longshot-split--done");
+    } else {
+      split.classList.add("preview-toolbar__longshot-split--idle");
+    }
   }
 
   function setLongshotExportState(root, state, opts) {
@@ -627,44 +710,50 @@ var narrateJobId = null;
 
     if (state === "running") {
       btn.classList.add("preview-toolbar__longshot--running");
+      setLongshotSplitState(root, "running");
       if (zone) zone.classList.add("preview-toolbar__export-zone--running");
       setLongshotControlsDisabled(root, true);
       btn.innerHTML =
         '<span class="preview-toolbar__longshot__spinner" aria-hidden="true"></span> 正在保存…';
-      setLongshotExportMeta(root, opts.hint || "生成长图中");
-      setLongshotExportProgress(root, true, opts.pct || 35);
+      setLongshotExportMeta(root, opts.hint || "生成长图中", { actionable: false });
+      var pct = typeof opts.pct === "number" ? opts.pct : 8;
+      setLongshotExportProgress(root, true, pct);
       if (badge) badge.hidden = true;
       return;
     }
     if (state === "done") {
       btn.classList.add("preview-toolbar__longshot--done");
+      setLongshotSplitState(root, "done");
       setLongshotControlsDisabled(root, false);
       btn.textContent = "✓ 已保存";
-      setLongshotExportMeta(root, "点击查看详情");
+      setLongshotExportMeta(root, "点击查看详情", { actionable: true });
       setLongshotExportProgress(root, false);
       if (badge) badge.hidden = true;
       return;
     }
     if (state === "error") {
       btn.classList.add("preview-toolbar__longshot--idle");
+      setLongshotSplitState(root, "idle");
       setLongshotControlsDisabled(root, false);
       btn.textContent = "保存长图";
-      setLongshotExportMeta(root, opts.hint || "保存失败，请重试");
+      setLongshotExportMeta(root, opts.hint || "保存失败，请重试", { actionable: false });
       setLongshotExportProgress(root, false);
       if (badge) badge.hidden = true;
       return;
     }
     if (state === "stale") {
       btn.classList.add("preview-toolbar__longshot--idle");
+      setLongshotSplitState(root, "idle");
       setLongshotControlsDisabled(root, false);
       btn.textContent = "保存长图";
       if (zone) zone.classList.add("preview-toolbar__export-zone--stale");
       if (badge) badge.hidden = false;
-      setLongshotExportMeta(root, "内容已更新");
+      setLongshotExportMeta(root, "内容已更新", { actionable: false });
       setLongshotExportProgress(root, false);
       return;
     }
     btn.classList.add("preview-toolbar__longshot--idle");
+    setLongshotSplitState(root, "idle");
     setLongshotControlsDisabled(root, false);
     btn.textContent = "保存长图";
     if (badge) badge.hidden = true;
@@ -787,7 +876,9 @@ var narrateJobId = null;
     });
   }
 
-  function showLongshotDrawer(root, job) {
+  function showLongshotDrawer(root, job, opts) {
+    opts = opts || {};
+    root._lastLongshotJob = job;
     var tripId = tripIdFromPath();
     var drawer = getLongshotDrawer(root);
     setToolbarCollapsed(root, false, false);
@@ -884,7 +975,9 @@ var narrateJobId = null;
     drawer.appendChild(actions);
 
     hideStaleHint(root);
-    scheduleLongshotDrawerAutoHide(root);
+    if (opts.autoHide !== false) {
+      scheduleLongshotDrawerAutoHide(root);
+    }
     requestAnimationFrame(function () {
       syncToolbarHeight(root);
     });
@@ -2150,7 +2243,8 @@ var narrateJobId = null;
     exportZone.className = "preview-toolbar__export-zone";
 
     var longshotSplit = document.createElement("div");
-    longshotSplit.className = "preview-toolbar__longshot-split";
+    longshotSplit.className =
+      "preview-toolbar__longshot-split preview-toolbar__longshot-split--idle";
 
     var longshotBtn = document.createElement("button");
     longshotBtn.type = "button";
@@ -2163,7 +2257,8 @@ var narrateJobId = null;
     longshotCaret.className = "preview-toolbar__longshot-caret";
     longshotCaret.setAttribute("aria-label", "导出选项");
     longshotCaret.title = "导出选项";
-    longshotCaret.textContent = "▾";
+    longshotCaret.innerHTML =
+      '<span class="preview-toolbar__icon-btn__glyph" aria-hidden="true">▾</span>';
 
     longshotSplit.appendChild(longshotBtn);
     longshotSplit.appendChild(longshotCaret);
@@ -2191,16 +2286,12 @@ var narrateJobId = null;
     actions.appendChild(exportWrap);
     setLongshotExportState(root, "idle");
 
+    bindLongshotExportMeta(root);
+
     longshotBtn.addEventListener("click", function () {
       if (longshotBtn.classList.contains("preview-toolbar__longshot--done")) {
-        var drawer = root.querySelector(".preview-toolbar__drawer");
-        if (drawer && drawer.hidden) {
-          drawer.hidden = false;
-          requestAnimationFrame(function () {
-            syncToolbarHeight(root);
-          });
-          return;
-        }
+        openLongshotResultDrawer(root);
+        return;
       }
       startLongshot(root, tripId);
     });
@@ -2403,7 +2494,8 @@ var narrateJobId = null;
       '<span class="preview-toolbar__handle-icon" aria-hidden="true">▾</span>' +
       '<span class="preview-toolbar__handle-label">显示工具栏</span>' +
       "</button>" +
-      '<a class="preview-toolbar__back preview-toolbar__back--strip" href="/" title="返回 Studio 首页">← 返回</a>' +
+      '<a class="preview-toolbar__back preview-toolbar__back--strip preview-toolbar__ctl" href="/" title="返回 Studio 首页">' +
+      '<span class="preview-toolbar__ctl__glyph" aria-hidden="true">←</span>返回</a>' +
       "</div>" +
       '<div class="preview-toolbar__body">' +
       '<div class="preview-toolbar__bar preview-toolbar__bar--minimal">' +
@@ -2411,8 +2503,9 @@ var narrateJobId = null;
       '<div class="preview-toolbar__cluster">' +
       '<div class="preview-toolbar__ops-group">' +
       '<div class="preview-toolbar__actions"></div>' +
-      '<button type="button" class="preview-toolbar__reveal-folder" title="在文件夹中显示">文件夹</button>' +
-      '<button type="button" class="preview-toolbar__menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="更多编辑" title="更多编辑">⋯</button>' +
+      '<button type="button" class="preview-toolbar__reveal-folder preview-toolbar__ctl" title="在文件夹中显示">文件夹</button>' +
+      '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__icon-btn" aria-haspopup="true" aria-expanded="false" aria-label="更多编辑" title="更多编辑">' +
+      '<span class="preview-toolbar__icon-btn__glyph preview-toolbar__icon-btn__glyph--more" aria-hidden="true">⋯</span></button>' +
       '<div class="preview-toolbar__more-menu" hidden role="menu">' +
       '<button type="button" class="preview-toolbar__open-edit" role="menuitem">编辑感受与锚点</button>' +
       '<button type="button" class="preview-toolbar__open-cohort" role="menuitem" hidden>旅行主角 · 同框</button>' +
@@ -2423,10 +2516,11 @@ var narrateJobId = null;
       '<button type="button" class="preview-toolbar__export-zip" role="menuitem">导出 zip（自行托管）</button>' +
       "</div>" +
       "</div>" +
-      '<button type="button" class="preview-toolbar__collapse" aria-expanded="true" aria-label="收起工具栏">' +
-      '<span aria-hidden="true">▴</span>' +
+      '<button type="button" class="preview-toolbar__collapse preview-toolbar__icon-btn" aria-expanded="true" aria-label="收起工具栏">' +
+      '<span class="preview-toolbar__icon-btn__glyph" aria-hidden="true">▴</span>' +
       "</button>" +
-      '<a class="preview-toolbar__back" href="/" title="返回 Studio 首页">← 返回</a>' +
+      '<a class="preview-toolbar__back preview-toolbar__ctl" href="/" title="返回 Studio 首页">' +
+      '<span class="preview-toolbar__ctl__glyph" aria-hidden="true">←</span>返回</a>' +
       "</div>" +
       '<div class="preview-toolbar__longshot-preview-row" hidden>' +
       '<div class="preview-toolbar__longshot-preview-banner">' +

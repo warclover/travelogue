@@ -30,11 +30,16 @@ export const LONGSHOT_PRESETS = {
 export function buildLongshotRequest(tripId, preset) {
   var p = typeof preset === "string" ? LONGSHOT_PRESETS[preset] : preset;
   if (!p) p = LONGSHOT_PRESETS.preview;
+  var segmentMode = p.segmentMode || "auto";
+  if (segmentMode !== "full" && segmentMode !== "chapter" && segmentMode !== "auto") {
+    segmentMode = "auto";
+  }
   return {
     tripId: tripId,
     scale: p.scale,
     format: p.format || "png",
     copyDisplay: p.copyDisplay || "full",
+    segmentMode: segmentMode,
   };
 }
 

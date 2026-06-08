@@ -37,14 +37,22 @@ def test_preview_toolbar_longshot_integrated_to_top_bar() -> None:
         "openLongshotExportOptions",
         "openStudioLongshotExportPanel",
         "preview-toolbar__export-popover",
+        "preview-toolbar__icon-btn",
+        "preview-toolbar__ctl",
         "buildLongshotRequestFromPage",
         "resolveCopyDisplayFromDom",
         "syncLongshotPreviewChips",
+        "openLongshotResultDrawer",
+        "bindLongshotExportMeta",
+        "longshotProgressPct",
     ):
         assert token in js, f"missing preview toolbar longshot marker: {token}"
     assert 'html[data-preview-toolbar="on"] .longshot-toolbar' in css
     assert 'html[data-preview-toolbar="on"] .screenplay-toolbar' in css
+    assert "preview-toolbar__export-meta--action" in css
     assert "resolveCopyDisplayFromDom" in client
+    assert "segmentMode" in client
+    assert "normalizeSegmentMode" in js
 
 
 def test_p5_a4_shared_http_module() -> None:

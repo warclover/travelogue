@@ -157,6 +157,8 @@ def _segment_user_hint(total: int, reason: str) -> str:
         return base + "（单张过高，按章导出更稳）"
     if reason == "cards":
         return base + "（单章照片过多，按章导出更清晰）"
+    if reason == "chapter":
+        return base + "（按章导出）"
     return base + "，便于按序发微信"
 
 
@@ -174,6 +176,32 @@ def _segment_reason(metrics: dict[str, Any], *, scale: int, fmt: str) -> str:
 
 def _should_segment(metrics: dict[str, Any], scale: int, *, fmt: str = "png") -> bool:
     return bool(_segment_reason(metrics, scale=scale, fmt=fmt))
+
+
+VALID_SEGMENT_MODES = frozenset({"auto", "full", "chapter"})
+
+
+def _resolve_segment_plan(
+    *,
+    chapter: int | None,
+    segment_mode: str,
+    metrics: dict[str, Any],
+    scale: int,
+    fmt: str,
+) -> tuple[bool, str]:
+    """Return (do_segment, segment_reason) before capture."""
+    mode = str(segment_mode or "auto").strip().lower()
+    if mode not in VALID_SEGMENT_MODES:
+        mode = "auto"
+    if chapter is not None:
+        return False, ""
+    if mode == "full":
+        return False, ""
+    if mode == "chapter":
+        return True, "chapter"
+    if _should_segment(metrics, scale, fmt=fmt):
+        return True, _segment_reason(metrics, scale=scale, fmt=fmt) or "height"
+    return False, ""
 
 
 def _slug_title(title: str) -> str:
@@ -454,6 +482,7 @@ def export_trip_longshot(
     watermark: bool = True,
     progress: ProgressFn | None = None,
     copy_display: str = "full",
+    segment_mode: str = "auto",
 ) -> LongshotExportResult:
     trip_dir = trip_dir.resolve()
     longshot_html = trip_dir / LONGSHOT_INDEX_NAME
@@ -495,9 +524,13 @@ def export_trip_longshot(
 
         metrics = _page_metrics(page)
         chapter_count = max(int(metrics.get("chapterCount") or 0), 1)
-        do_segment = chapter is None and _should_segment(metrics, scale, fmt=fmt)
-        if do_segment:
-            segment_reason = _segment_reason(metrics, scale=scale, fmt=fmt) or "height"
+        do_segment, segment_reason = _resolve_segment_plan(
+            chapter=chapter,
+            segment_mode=segment_mode,
+            metrics=metrics,
+            scale=scale,
+            fmt=fmt,
+        )
 
         if chapter is not None:
             if chapter < 1 or chapter > chapter_count:
@@ -511,8 +544,8 @@ def export_trip_longshot(
             _write_output(out_path, data)
             outputs.append(LongshotOutput(path=out_path, capture_method=method))
         elif do_segment:
+            _report(0, chapter_count, "准备导出…")
             for idx in range(chapter_count):
-                _report(idx + 1, chapter_count, f"第 {idx + 1}/{chapter_count} 段")
                 data, method = _capture_bytes(
                     page, scale=scale, fmt=fmt, chapter_index=idx
                 )
@@ -532,6 +565,7 @@ def export_trip_longshot(
                 out_path = trip_dir / f"{title}-ch{idx + 1:02d}.{ext}"
                 _write_output(out_path, data)
                 outputs.append(LongshotOutput(path=out_path, capture_method=method))
+                _report(idx + 1, chapter_count, f"第 {idx + 1}/{chapter_count} 段")
             user_hint = _segment_user_hint(chapter_count, segment_reason)
         else:
             _report(1, 1, "正在合成长图…")
@@ -539,8 +573,8 @@ def export_trip_longshot(
             capture_method = method
             if len(data) > MAX_WECHAT_BYTES:
                 segment_reason = "size"
+                _report(0, chapter_count, "准备导出…")
                 for idx in range(chapter_count):
-                    _report(idx + 1, chapter_count, f"第 {idx + 1}/{chapter_count} 段")
                     data, method = _capture_bytes(
                         page, scale=scale, fmt=fmt, chapter_index=idx
                     )
@@ -560,6 +594,7 @@ def export_trip_longshot(
                     out_path = trip_dir / f"{title}-ch{idx + 1:02d}.{ext}"
                     _write_output(out_path, data)
                     outputs.append(LongshotOutput(path=out_path, capture_method=method))
+                    _report(idx + 1, chapter_count, f"第 {idx + 1}/{chapter_count} 段")
                 user_hint = _segment_user_hint(chapter_count, segment_reason)
             else:
                 out_path = output or trip_dir / f"{title}-longshot.{ext}"

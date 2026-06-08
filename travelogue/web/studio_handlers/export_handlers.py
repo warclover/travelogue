@@ -124,6 +124,20 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             )
             return
 
+    from travelogue.export.longshot import VALID_SEGMENT_MODES
+
+    segment_mode = str(payload.get("segmentMode") or "auto").strip().lower()
+    if segment_mode not in VALID_SEGMENT_MODES:
+        handler._json_response(
+            400,
+            {
+                "ok": False,
+                "error": "invalid segmentMode",
+                "message": "segmentMode 须为 auto、full 或 chapter",
+            },
+        )
+        return
+
     ctx = studio_ctx(handler)
     trip_dir = resolve_trip_dir(ctx, trip_id)
     if trip_dir is None:
@@ -158,6 +172,7 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             fmt=fmt,
             progress=on_progress,
             copy_display=copy_display,
+            segment_mode=segment_mode,
         )
         rel_outputs = [rel_to_trip(trip_dir, item.path) for item in result.outputs]
         return {
