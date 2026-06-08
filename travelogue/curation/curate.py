@@ -613,6 +613,25 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
         bucket_segment_ids = norm.primary_segment_ids
         bucket_segment_ids_all = norm.segment_ids_per_bucket
 
+    from travelogue.layout_engine.adapter import lse_enabled, resolve_pack
+    from travelogue.layout_engine.capabilities import effective_capabilities
+    from travelogue.layout_engine.segment_order import apply_segment_order_to_buckets
+
+    if lse_enabled(preflight.app_cfg):
+        pack = resolve_pack(preflight.app_cfg)
+        caps = effective_capabilities(preflight.app_cfg, pack)
+        seg_raw = (pack.raw.get("segment_order") if pack else {}) or {}
+        max_len = int(seg_raw.get("max_segment_len") or 30) if isinstance(seg_raw, dict) else 30
+        seg_on = bool(caps.segment_order_optimizer)
+        if isinstance(seg_raw, dict):
+            seg_on = seg_on or bool(seg_raw.get("enabled", False))
+        apply_segment_order_to_buckets(
+            buckets,
+            layout_assets,
+            enabled=seg_on,
+            max_segment_len=max_len,
+        )
+
     segment_labels = {s.id: s.label for s in segments}
     curation_segments = [s.to_dict() for s in segments]
     return _CurateBucketPlan(
@@ -1094,6 +1113,25 @@ def run_curate(
         mosaic_logs=curation.get("mosaicDecisionLog"),
         beam_logs=decision_logs,
     )
+    if app_cfg.layout.strategy_engine.enabled:
+        from travelogue.layout_engine.adapter import resolve_pack
+        from travelogue.layout_engine.capabilities import effective_capabilities
+        from travelogue.layout_engine.editorial_hints import (
+            build_editorial_hints,
+            editorial_hints_from_pack,
+        )
+
+        pack = resolve_pack(app_cfg)
+        caps = effective_capabilities(app_cfg, pack)
+        ed_cfg = editorial_hints_from_pack(pack.raw if pack else None)
+        if caps.editorial_hints or ed_cfg.get("enabled"):
+            assets_map = {str(a["id"]): a for a in (trip.get("assets") or []) if a.get("id")}
+            curation["editorialHints"] = build_editorial_hints(
+                chapters,
+                assets_map,
+                breath_gap_threshold=int(ed_cfg.get("breath_gap_threshold") or 3),
+                folio_tone_delta_max=float(ed_cfg.get("folio_tone_delta_max") or 12.0),
+            )
     if engine == LAYOUT_ENGINE_SCREENS:
         from travelogue.curation.mosaic.telemetry import (
             record_mosaic_layout_metrics,

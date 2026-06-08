@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-P17_MIXED_FIXTURES = ("golden-mixed-scenes",)
+P17_MIXED_FIXTURES = (
+    "golden-mixed-scenes",
+    "golden-p17-mixed-person",
+)
 
 P17_PORTRAIT_FIXTURES = (
     "golden-portrait-family",

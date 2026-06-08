@@ -56,6 +56,7 @@ class MosaicConfig:
     lse_hungarian_assignment: bool = False
     lse_quality_unified: bool = False
     lse_slot_max_matrix_n: int = 16
+    lse_highlight_boost: float = 1.0
 
 
 def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:

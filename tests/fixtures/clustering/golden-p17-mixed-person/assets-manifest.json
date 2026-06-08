@@ -1,0 +1,929 @@
+{
+  "description": "P17 golden · 混排+人像标签+hex tone+burst 可测 CAP-06/16/18",
+  "assets": [
+    {
+      "id": "d1b00",
+      "type": "image",
+      "takenAt": "2025-06-01T09:00:00Z",
+      "geo": {
+        "lat": 35.69,
+        "lon": 139.76999999999998
+      },
+      "place": {
+        "city": "东京"
+      },
+      "width": 1200,
+      "height": 1600,
+      "sharpness": 0.57,
+      "meanLuma": 0.45,
+      "dominantTone": "#E8A050",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "burstGroupId": "b1-0",
+      "focalPoint": {
+        "x": 0.12,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d1b01",
+      "type": "image",
+      "takenAt": "2025-06-01T09:10:00Z",
+      "geo": {
+        "lat": 35.69,
+        "lon": 139.76999999999998
+      },
+      "place": {
+        "city": "东京"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.59,
+      "meanLuma": 0.62,
+      "dominantTone": "#4080C8",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "burstGroupId": "b1-0",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d1b02",
+      "type": "image",
+      "takenAt": "2025-06-01T09:20:00Z",
+      "geo": {
+        "lat": 35.69,
+        "lon": 139.76999999999998
+      },
+      "place": {
+        "city": "东京"
+      },
+      "width": 1200,
+      "height": 1600,
+      "sharpness": 0.61,
+      "meanLuma": 0.45,
+      "dominantTone": "#E8A050",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "burstGroupId": "b1-0",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d1b03",
+      "type": "image",
+      "takenAt": "2025-06-01T09:30:00Z",
+      "geo": {
+        "lat": 35.69,
+        "lon": 139.76999999999998
+      },
+      "place": {
+        "city": "东京"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.63,
+      "meanLuma": 0.62,
+      "dominantTone": "#4080C8",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "burstGroupId": "b1-0",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d1b10",
+      "type": "image",
+      "takenAt": "2025-06-01T10:00:00Z",
+      "geo": {
+        "lat": 35.69,
+        "lon": 139.76999999999998
+      },
+      "place": {
+        "city": "东京"
+      },
+      "width": 1200,
+      "height": 1600,
+      "sharpness": 0.65,
+      "meanLuma": 0.45,
+      "dominantTone": "#E8A050",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "burstGroupId": "b1-1",
+      "focalPoint": {
+        "x": 0.12,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d1b11",
+      "type": "image",
+      "takenAt": "2025-06-01T10:10:00Z",
+      "geo": {
+        "lat": 35.69,
+        "lon": 139.76999999999998
+      },
+      "place": {
+        "city": "东京"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.67,
+      "meanLuma": 0.62,
+      "dominantTone": "#4080C8",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "burstGroupId": "b1-1",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d1b12",
+      "type": "image",
+      "takenAt": "2025-06-01T10:20:00Z",
+      "geo": {
+        "lat": 35.69,
+        "lon": 139.76999999999998
+      },
+      "place": {
+        "city": "东京"
+      },
+      "width": 1200,
+      "height": 1600,
+      "sharpness": 0.55,
+      "meanLuma": 0.45,
+      "dominantTone": "#E8A050",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "burstGroupId": "b1-1",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d1b13",
+      "type": "image",
+      "takenAt": "2025-06-01T10:30:00Z",
+      "geo": {
+        "lat": 35.69,
+        "lon": 139.76999999999998
+      },
+      "place": {
+        "city": "东京"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.57,
+      "meanLuma": 0.62,
+      "dominantTone": "#4080C8",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "burstGroupId": "b1-1",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d1x0",
+      "type": "image",
+      "takenAt": "2025-06-01T14:00:00Z",
+      "geo": {
+        "lat": 35.71,
+        "lon": 139.78
+      },
+      "place": {
+        "city": "东京"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.58,
+      "meanLuma": 0.5,
+      "dominantTone": "#D09040",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "focalPoint": {
+        "x": 0.88,
+        "y": 0.4
+      }
+    },
+    {
+      "id": "d1x1",
+      "type": "image",
+      "takenAt": "2025-06-01T14:12:00Z",
+      "geo": {
+        "lat": 35.71,
+        "lon": 139.78
+      },
+      "place": {
+        "city": "东京"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.61,
+      "meanLuma": 0.6,
+      "dominantTone": "#3070B0",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.4
+      }
+    },
+    {
+      "id": "d1x2",
+      "type": "image",
+      "takenAt": "2025-06-01T14:24:00Z",
+      "geo": {
+        "lat": 35.71,
+        "lon": 139.78
+      },
+      "place": {
+        "city": "东京"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.64,
+      "meanLuma": 0.5,
+      "dominantTone": "#D09040",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "focalPoint": {
+        "x": 0.88,
+        "y": 0.4
+      }
+    },
+    {
+      "id": "d1x3",
+      "type": "image",
+      "takenAt": "2025-06-01T14:36:00Z",
+      "geo": {
+        "lat": 35.71,
+        "lon": 139.78
+      },
+      "place": {
+        "city": "东京"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.67,
+      "meanLuma": 0.6,
+      "dominantTone": "#3070B0",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.4
+      }
+    },
+    {
+      "id": "d2b00",
+      "type": "image",
+      "takenAt": "2025-06-02T09:00:00Z",
+      "geo": {
+        "lat": 35.7,
+        "lon": 139.78
+      },
+      "place": {
+        "city": "京都"
+      },
+      "width": 1200,
+      "height": 1600,
+      "sharpness": 0.67,
+      "meanLuma": 0.45,
+      "dominantTone": "#E8A050",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "burstGroupId": "b2-0",
+      "focalPoint": {
+        "x": 0.12,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d2b01",
+      "type": "image",
+      "takenAt": "2025-06-02T09:10:00Z",
+      "geo": {
+        "lat": 35.7,
+        "lon": 139.78
+      },
+      "place": {
+        "city": "京都"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.55,
+      "meanLuma": 0.62,
+      "dominantTone": "#4080C8",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "burstGroupId": "b2-0",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d2b02",
+      "type": "image",
+      "takenAt": "2025-06-02T09:20:00Z",
+      "geo": {
+        "lat": 35.7,
+        "lon": 139.78
+      },
+      "place": {
+        "city": "京都"
+      },
+      "width": 1200,
+      "height": 1600,
+      "sharpness": 0.57,
+      "meanLuma": 0.45,
+      "dominantTone": "#E8A050",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "burstGroupId": "b2-0",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d2b03",
+      "type": "image",
+      "takenAt": "2025-06-02T09:30:00Z",
+      "geo": {
+        "lat": 35.7,
+        "lon": 139.78
+      },
+      "place": {
+        "city": "京都"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.59,
+      "meanLuma": 0.62,
+      "dominantTone": "#4080C8",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "burstGroupId": "b2-0",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d2b10",
+      "type": "image",
+      "takenAt": "2025-06-02T10:00:00Z",
+      "geo": {
+        "lat": 35.7,
+        "lon": 139.78
+      },
+      "place": {
+        "city": "京都"
+      },
+      "width": 1200,
+      "height": 1600,
+      "sharpness": 0.61,
+      "meanLuma": 0.45,
+      "dominantTone": "#E8A050",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "burstGroupId": "b2-1",
+      "focalPoint": {
+        "x": 0.12,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d2b11",
+      "type": "image",
+      "takenAt": "2025-06-02T10:10:00Z",
+      "geo": {
+        "lat": 35.7,
+        "lon": 139.78
+      },
+      "place": {
+        "city": "京都"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.63,
+      "meanLuma": 0.62,
+      "dominantTone": "#4080C8",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "burstGroupId": "b2-1",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d2b12",
+      "type": "image",
+      "takenAt": "2025-06-02T10:20:00Z",
+      "geo": {
+        "lat": 35.7,
+        "lon": 139.78
+      },
+      "place": {
+        "city": "京都"
+      },
+      "width": 1200,
+      "height": 1600,
+      "sharpness": 0.65,
+      "meanLuma": 0.45,
+      "dominantTone": "#E8A050",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "burstGroupId": "b2-1",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d2b13",
+      "type": "image",
+      "takenAt": "2025-06-02T10:30:00Z",
+      "geo": {
+        "lat": 35.7,
+        "lon": 139.78
+      },
+      "place": {
+        "city": "京都"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.67,
+      "meanLuma": 0.62,
+      "dominantTone": "#4080C8",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "burstGroupId": "b2-1",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d2x0",
+      "type": "image",
+      "takenAt": "2025-06-02T14:00:00Z",
+      "geo": {
+        "lat": 35.720000000000006,
+        "lon": 139.79000000000002
+      },
+      "place": {
+        "city": "京都"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.58,
+      "meanLuma": 0.5,
+      "dominantTone": "#D09040",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "focalPoint": {
+        "x": 0.88,
+        "y": 0.4
+      }
+    },
+    {
+      "id": "d2x1",
+      "type": "image",
+      "takenAt": "2025-06-02T14:12:00Z",
+      "geo": {
+        "lat": 35.720000000000006,
+        "lon": 139.79000000000002
+      },
+      "place": {
+        "city": "京都"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.61,
+      "meanLuma": 0.6,
+      "dominantTone": "#3070B0",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.4
+      }
+    },
+    {
+      "id": "d2x2",
+      "type": "image",
+      "takenAt": "2025-06-02T14:24:00Z",
+      "geo": {
+        "lat": 35.720000000000006,
+        "lon": 139.79000000000002
+      },
+      "place": {
+        "city": "京都"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.64,
+      "meanLuma": 0.5,
+      "dominantTone": "#D09040",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "focalPoint": {
+        "x": 0.88,
+        "y": 0.4
+      }
+    },
+    {
+      "id": "d2x3",
+      "type": "image",
+      "takenAt": "2025-06-02T14:36:00Z",
+      "geo": {
+        "lat": 35.720000000000006,
+        "lon": 139.79000000000002
+      },
+      "place": {
+        "city": "京都"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.67,
+      "meanLuma": 0.6,
+      "dominantTone": "#3070B0",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.4
+      }
+    },
+    {
+      "id": "d3b00",
+      "type": "image",
+      "takenAt": "2025-06-03T09:00:00Z",
+      "geo": {
+        "lat": 35.71,
+        "lon": 139.79
+      },
+      "place": {
+        "city": "大阪"
+      },
+      "width": 1200,
+      "height": 1600,
+      "sharpness": 0.63,
+      "meanLuma": 0.45,
+      "dominantTone": "#E8A050",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "burstGroupId": "b3-0",
+      "focalPoint": {
+        "x": 0.12,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d3b01",
+      "type": "image",
+      "takenAt": "2025-06-03T09:10:00Z",
+      "geo": {
+        "lat": 35.71,
+        "lon": 139.79
+      },
+      "place": {
+        "city": "大阪"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.65,
+      "meanLuma": 0.62,
+      "dominantTone": "#4080C8",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "burstGroupId": "b3-0",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d3b02",
+      "type": "image",
+      "takenAt": "2025-06-03T09:20:00Z",
+      "geo": {
+        "lat": 35.71,
+        "lon": 139.79
+      },
+      "place": {
+        "city": "大阪"
+      },
+      "width": 1200,
+      "height": 1600,
+      "sharpness": 0.67,
+      "meanLuma": 0.45,
+      "dominantTone": "#E8A050",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "burstGroupId": "b3-0",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d3b03",
+      "type": "image",
+      "takenAt": "2025-06-03T09:30:00Z",
+      "geo": {
+        "lat": 35.71,
+        "lon": 139.79
+      },
+      "place": {
+        "city": "大阪"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.55,
+      "meanLuma": 0.62,
+      "dominantTone": "#4080C8",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "burstGroupId": "b3-0",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d3b10",
+      "type": "image",
+      "takenAt": "2025-06-03T10:00:00Z",
+      "geo": {
+        "lat": 35.71,
+        "lon": 139.79
+      },
+      "place": {
+        "city": "大阪"
+      },
+      "width": 1200,
+      "height": 1600,
+      "sharpness": 0.57,
+      "meanLuma": 0.45,
+      "dominantTone": "#E8A050",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "burstGroupId": "b3-1",
+      "focalPoint": {
+        "x": 0.12,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d3b11",
+      "type": "image",
+      "takenAt": "2025-06-03T10:10:00Z",
+      "geo": {
+        "lat": 35.71,
+        "lon": 139.79
+      },
+      "place": {
+        "city": "大阪"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.59,
+      "meanLuma": 0.62,
+      "dominantTone": "#4080C8",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "burstGroupId": "b3-1",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d3b12",
+      "type": "image",
+      "takenAt": "2025-06-03T10:20:00Z",
+      "geo": {
+        "lat": 35.71,
+        "lon": 139.79
+      },
+      "place": {
+        "city": "大阪"
+      },
+      "width": 1200,
+      "height": 1600,
+      "sharpness": 0.61,
+      "meanLuma": 0.45,
+      "dominantTone": "#E8A050",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "burstGroupId": "b3-1",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d3b13",
+      "type": "image",
+      "takenAt": "2025-06-03T10:30:00Z",
+      "geo": {
+        "lat": 35.71,
+        "lon": 139.79
+      },
+      "place": {
+        "city": "大阪"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.63,
+      "meanLuma": 0.62,
+      "dominantTone": "#4080C8",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "burstGroupId": "b3-1",
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    },
+    {
+      "id": "d3x0",
+      "type": "image",
+      "takenAt": "2025-06-03T14:00:00Z",
+      "geo": {
+        "lat": 35.730000000000004,
+        "lon": 139.8
+      },
+      "place": {
+        "city": "大阪"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.58,
+      "meanLuma": 0.5,
+      "dominantTone": "#D09040",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "focalPoint": {
+        "x": 0.88,
+        "y": 0.4
+      }
+    },
+    {
+      "id": "d3x1",
+      "type": "image",
+      "takenAt": "2025-06-03T14:12:00Z",
+      "geo": {
+        "lat": 35.730000000000004,
+        "lon": 139.8
+      },
+      "place": {
+        "city": "大阪"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.61,
+      "meanLuma": 0.6,
+      "dominantTone": "#3070B0",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.4
+      }
+    },
+    {
+      "id": "d3x2",
+      "type": "image",
+      "takenAt": "2025-06-03T14:24:00Z",
+      "geo": {
+        "lat": 35.730000000000004,
+        "lon": 139.8
+      },
+      "place": {
+        "city": "大阪"
+      },
+      "width": 900,
+      "height": 1600,
+      "sharpness": 0.64,
+      "meanLuma": 0.5,
+      "dominantTone": "#D09040",
+      "subjectBucket": "portrait",
+      "tags": [
+        "person"
+      ],
+      "focalPoint": {
+        "x": 0.88,
+        "y": 0.4
+      }
+    },
+    {
+      "id": "d3x3",
+      "type": "image",
+      "takenAt": "2025-06-03T14:36:00Z",
+      "geo": {
+        "lat": 35.730000000000004,
+        "lon": 139.8
+      },
+      "place": {
+        "city": "大阪"
+      },
+      "width": 1600,
+      "height": 900,
+      "sharpness": 0.67,
+      "meanLuma": 0.6,
+      "dominantTone": "#3070B0",
+      "subjectBucket": "landscape",
+      "tags": [
+        "landscape"
+      ],
+      "focalPoint": {
+        "x": 0.5,
+        "y": 0.4
+      }
+    }
+  ]
+}

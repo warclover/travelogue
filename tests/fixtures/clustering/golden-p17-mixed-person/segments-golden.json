@@ -1,0 +1,65 @@
+[
+  {
+    "id": "evt-p17-day1",
+    "name": "东京",
+    "startDate": "2025-06-01",
+    "endDate": "2025-06-01",
+    "location": "东京",
+    "assetIds": [
+      "d1b00",
+      "d1b01",
+      "d1b02",
+      "d1b03",
+      "d1b10",
+      "d1b11",
+      "d1b12",
+      "d1b13",
+      "d1x0",
+      "d1x1",
+      "d1x2",
+      "d1x3"
+    ]
+  },
+  {
+    "id": "evt-p17-day2",
+    "name": "京都",
+    "startDate": "2025-06-02",
+    "endDate": "2025-06-02",
+    "location": "京都",
+    "assetIds": [
+      "d2b00",
+      "d2b01",
+      "d2b02",
+      "d2b03",
+      "d2b10",
+      "d2b11",
+      "d2b12",
+      "d2b13",
+      "d2x0",
+      "d2x1",
+      "d2x2",
+      "d2x3"
+    ]
+  },
+  {
+    "id": "evt-p17-day3",
+    "name": "大阪",
+    "startDate": "2025-06-03",
+    "endDate": "2025-06-03",
+    "location": "大阪",
+    "assetIds": [
+      "d3b00",
+      "d3b01",
+      "d3b02",
+      "d3b03",
+      "d3b10",
+      "d3b11",
+      "d3b12",
+      "d3b13",
+      "d3x0",
+      "d3x1",
+      "d3x2",
+      "d3x3"
+    ]
+  }
+]

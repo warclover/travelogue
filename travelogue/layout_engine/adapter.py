@@ -113,6 +113,10 @@ def mosaic_config_from_pack(
     slot_cfg = active.raw.get("slot_assignment") if isinstance(active.raw.get("slot_assignment"), dict) else {}
     max_matrix_n = int(slot_cfg.get("max_matrix_n") or 16)
     hungarian = bool(caps.hungarian_assignment or str(slot_cfg.get("mode") or "") == "hungarian")
+    highlight_raw = active.raw.get("highlight_windows") if isinstance(active.raw.get("highlight_windows"), dict) else {}
+    highlight_boost = 1.0
+    if caps.highlight_windows or bool(highlight_raw.get("enabled", False)):
+        highlight_boost = float(highlight_raw.get("boost", 1.25))
     return replace(
         base,
         scorer_version=str(active.algorithm_version),
@@ -129,6 +133,7 @@ def mosaic_config_from_pack(
         lse_hungarian_assignment=hungarian,
         lse_quality_unified=bool(getattr(caps, "quality_unified", False)),
         lse_slot_max_matrix_n=max(1, min(max_matrix_n, 16)),
+        lse_highlight_boost=highlight_boost,
     )
 
 
@@ -203,6 +208,8 @@ def plan_chapter_screens(
 
 def strategy_trace_meta(cfg: AppConfig | None = None) -> dict[str, Any]:
     """FR-P17-TRACE summary for trip.curation.layoutStrategy."""
+    from travelogue.layout_engine.capabilities import capability_flags_snapshot
+
     app = cfg or get_config()
     se = app.layout.strategy_engine
     if not se.enabled:
@@ -216,6 +223,7 @@ def strategy_trace_meta(cfg: AppConfig | None = None) -> dict[str, Any]:
         "weightsHash": pack.weights_hash("default"),
         "algorithmVersion": pack.algorithm_version,
         "contentHash": pack.content_hash,
+        "capabilityFlags": capability_flags_snapshot(app, pack),
     }
 
 

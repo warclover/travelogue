@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from travelogue.layout_engine.explain import build_explain
 from travelogue.util.datetime_ import utc_now_iso
 
 SCHEMA_VERSION = 1
@@ -100,6 +101,12 @@ def project_mosaic_window(
     )
 
     ch_id = chapter_id or str(raw.get("segmentId") or raw.get("chapterId") or "")
+    explain = build_explain(
+        raw.get("winnerPenalties"),
+        weights=raw.get("scoringWeights"),
+        penalty_weights=raw.get("scoringPenaltyWeights"),
+    )
+    slot_fallback = raw.get("slotAssignmentFallback")
     event: dict[str, Any] = {
         "chapterId": ch_id,
         "segmentId": str(raw.get("segmentId") or ch_id),
@@ -111,11 +118,12 @@ def project_mosaic_window(
         "rejected": rejected,
         "picked": picked,
         "layoutState": None,
-        "explain": {"topFactors": [], "penalties": []},
+        "explain": explain,
         "meta": {
             "source": "mosaic_window",
             "plannerPath": str(raw.get("plannerPath") or "mosaic"),
-            "fallbackReason": raw.get("fallbackReason"),
+            "fallbackReason": raw.get("fallbackReason") or slot_fallback,
+            "slotAssignmentFallback": slot_fallback,
             "emittedAt": utc_now_iso(),
         },
     }

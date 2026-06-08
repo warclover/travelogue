@@ -12,6 +12,7 @@ GOLDEN_TRIP_IDS = (
     "golden-kyoto-gps",
     "golden-no-gps",
     "golden-mixed-scenes",
+    "golden-p17-mixed-person",
     "golden-portrait-family",
     "golden-portrait-travel",
     "golden-landscape-coast",

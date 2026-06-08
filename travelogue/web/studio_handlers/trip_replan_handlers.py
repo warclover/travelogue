@@ -24,6 +24,9 @@ def handle_patch_screen_replan(
     if loaded is None:
         return
     trip_dir, trip = loaded
+    import copy
+
+    before_trip = copy.deepcopy(trip)
     if trip.get("layoutEngine") != LAYOUT_ENGINE_SCREENS:
         handler._json_response(
             400,
@@ -69,9 +72,22 @@ def handle_patch_screen_replan(
             client_error_payload(exc, default_code="E_REPLAN_INVALID"),
         )
         return
+    feedback_summary = None
     if result.get("applied"):
         trip["chapters"] = chapters
         refresh_trip_displayed_assets(trip, chapters)
+        from travelogue.layout_engine.studio_feedback import persist_studio_layout_feedback
+
+        feedback_summary = persist_studio_layout_feedback(
+            trip_id,
+            trip_dir,
+            before_trip,
+            trip,
+            cfg=ctx.app_config,
+        )
     trip_json = trip_dir / "trip.json"
     ctx.trip_service().save(trip, trip_json)
-    handler._json_response(200, {"ok": True, **result})
+    payload = {"ok": True, **result}
+    if feedback_summary:
+        payload["layoutFeedback"] = feedback_summary
+    handler._json_response(200, payload)

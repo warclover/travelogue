@@ -360,6 +360,14 @@ def score_candidate(
             total = min(1.0, total * beat_mul)
             reasons.append("R_BEAT_BIAS")
 
+    if cfg.lse_highlight_boost and cfg.lse_highlight_boost > 1.0:
+        from travelogue.layout_engine.highlight_windows import current_highlight_boost
+
+        hl_boost = current_highlight_boost(asset_ids, default_boost=cfg.lse_highlight_boost)
+        if hl_boost > 1.0:
+            total = min(1.0, total * hl_boost)
+            reasons.append("R_HIGHLIGHT_WINDOW")
+
     if cfg.lse_tone_harmony and prev_screen:
         from travelogue.layout_engine.tone_adjacency import adjacent_tone_penalty
 

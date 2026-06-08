@@ -1,4 +1,9 @@
-"""Phase 17 strategy eval probe · AC-P17-11 (extends phase16 template eval)."""
+"""Phase 17 strategy eval probe · AC-P17-11 + render error gate.
+
+Usage:
+  python scripts/phase17_strategy_eval.py tests/fixtures/clustering/golden-mixed-scenes
+  python scripts/phase17_strategy_eval.py --trips-dir tests/fixtures/phase16-dogfood --strict
+"""
 
 from __future__ import annotations
 
@@ -27,14 +32,31 @@ def eval_trip_dir(trip_dir: Path) -> dict:
     }
 
 
+def collect_trip_dirs(trips_dir: Path) -> list[Path]:
+    if not trips_dir.is_dir():
+        return []
+    return sorted(p.parent for p in trips_dir.glob("*/trip.json"))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Phase 17 LSE strategy eval probe")
-    parser.add_argument("trip_dirs", nargs="+", type=Path, help="Trip directories with trip.json")
+    parser.add_argument("trip_dirs", nargs="*", type=Path, help="Trip directories with trip.json")
+    parser.add_argument(
+        "--trips-dir",
+        type=Path,
+        help="Parent directory containing trip folders (alternative to positional dirs)",
+    )
     parser.add_argument("--strict", action="store_true", help="Exit 1 when render error rate > 0")
     parser.add_argument("--out", type=Path, default=ROOT / ".cache" / "phase17-strategy-eval.json")
     args = parser.parse_args()
 
-    results = [eval_trip_dir(Path(p)) for p in args.trip_dirs]
+    dirs: list[Path] = list(args.trip_dirs)
+    if args.trips_dir:
+        dirs.extend(collect_trip_dirs(args.trips_dir))
+    if not dirs:
+        parser.error("provide trip_dirs and/or --trips-dir")
+
+    results = [eval_trip_dir(Path(p)) for p in dirs]
     payload = {"results": results}
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

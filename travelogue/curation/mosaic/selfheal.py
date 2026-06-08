@@ -63,7 +63,7 @@ def _asset_drop_penalty(
 
 
 def try_self_heal_pick(
-    scored: list[tuple[ScreenCandidate, float, list[str]]],
+    scored: list[tuple[ScreenCandidate, float, list[str], dict[str, float]]],
     *,
     asset_ids: list[str],
     aspects: dict[str, AspectKind],
@@ -73,7 +73,7 @@ def try_self_heal_pick(
     trip_photo_total: int,
     burst_seconds: float,
     min_score: float,
-) -> tuple[ScreenCandidate, float, list[str], str, list[str]] | None:
+) -> tuple[ScreenCandidate, float, list[str], str, list[str], dict[str, float]] | None:
     """
     Return (winner, score, reasons, step, dropped_ids) when self-heal succeeds.
     """
@@ -85,14 +85,14 @@ def try_self_heal_pick(
         return None
 
     degrade_floor = min_score * 0.85
-    for cand, score, reasons in sorted(scored, key=lambda t: (-t[1], t[0].pattern_id)):
+    for cand, score, reasons, penalties in sorted(scored, key=lambda t: (-t[1], t[0].pattern_id)):
         if cand.pattern_id in _STABLE_PATTERN_IDS and score >= degrade_floor:
             if score < min_score or cand.pattern_id != scored[0][0].pattern_id:
-                return cand, score, reasons, "degrade_stable_pattern", []
+                return cand, score, reasons, "degrade_stable_pattern", [], dict(penalties)
 
     tight_cfg = _tightened_cfg(cfg)
-    best: tuple[ScreenCandidate, float, list[str]] | None = None
-    for cand, _, _ in scored:
+    best: tuple[ScreenCandidate, float, list[str], dict[str, float]] | None = None
+    for cand, _, _, _ in scored:
         sr = score_candidate(
             cand.screen,
             aspects=aspects,
@@ -103,9 +103,9 @@ def try_self_heal_pick(
             burst_seconds=burst_seconds,
         )
         if sr.total >= min_score and (best is None or sr.total > best[1]):
-            best = (cand, sr.total, sr.reason_codes)
+            best = (cand, sr.total, sr.reason_codes, dict(sr.penalties))
     if best is not None:
-        return best[0], best[1], best[2], "tightened_rescore", []
+        return best[0], best[1], best[2], "tightened_rescore", [], best[3]
 
     if cfg.allow_drop and len(asset_ids) > 2:
         penalties = [
@@ -132,24 +132,24 @@ def try_self_heal_pick(
                             burst_seconds=burst_seconds,
                         )
                         if sub:
-                            sub_scored = [
-                                (
-                                    c,
-                                    score_candidate(
-                                        c.screen,
-                                        aspects=aspects,
-                                        assets_by_id=assets_map,
-                                        cfg=cfg,
-                                        layout_state=layout_state,
-                                        trip_photo_total=trip_photo_total,
-                                        burst_seconds=burst_seconds,
-                                    ).total,
-                                    [],
+                            sub_scored: list[
+                                tuple[ScreenCandidate, float, list[str], dict[str, float]]
+                            ] = []
+                            for c in sub:
+                                sr = score_candidate(
+                                    c.screen,
+                                    aspects=aspects,
+                                    assets_by_id=assets_map,
+                                    cfg=cfg,
+                                    layout_state=layout_state,
+                                    trip_photo_total=trip_photo_total,
+                                    burst_seconds=burst_seconds,
                                 )
-                                for c in sub
-                            ]
+                                sub_scored.append(
+                                    (c, sr.total, sr.reason_codes, dict(sr.penalties))
+                                )
                             sub_scored.sort(key=lambda t: (-t[1], t[0].pattern_id))
-                            sub_winner, sub_score, _ = sub_scored[0]
+                            sub_winner, sub_score, _, sub_pen = sub_scored[0]
                             if sub_score >= min_score:
                                 return (
                                     sub_winner,
@@ -157,5 +157,6 @@ def try_self_heal_pick(
                                     ["R_SELF_HEAL_DROP"],
                                     "drop_worst_asset",
                                     [drop_id],
+                                    dict(sub_pen),
                                 )
     return None

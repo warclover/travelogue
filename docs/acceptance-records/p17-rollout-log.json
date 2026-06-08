@@ -2,17 +2,274 @@
   "schemaVersion": "1",
   "rolloutId": "p17-dogfood-lse",
   "status": "observing",
-  "startedAt": null,
+  "startedAt": "2026-06-08T01:08:04+00:00",
   "targetDurationDays": 14,
   "owner": null,
   "approver": null,
   "gates": {
-    "AC-P17-27": { "label": "quick_share zero diff", "passed": null },
-    "AC-P17-28": { "label": "curate perf ≤+15%", "passed": null },
-    "AC-P17-16": { "label": "salient retention", "passed": null },
-    "AC-P17-17": { "label": "beat profile", "passed": null },
-    "AC-P17-18": { "label": "tone adjacency", "passed": null }
+    "AC-P17-27": {
+      "label": "quick_share zero diff",
+      "passed": null
+    },
+    "AC-P17-28": {
+      "label": "curate perf ≤+15%",
+      "passed": null
+    },
+    "AC-P17-16": {
+      "label": "salient retention",
+      "passed": true
+    },
+    "AC-P17-17": {
+      "label": "beat profile",
+      "passed": true
+    },
+    "AC-P17-18": {
+      "label": "tone adjacency",
+      "passed": true
+    },
+    "dogfood_admission": {
+      "label": "shadow capability+diversity",
+      "passed": true
+    }
   },
-  "observations": [],
+  "observations": [
+    {
+      "recordedAt": "2026-06-08T01:08:04+00:00",
+      "commit": "50f51137f8e5271b270d1e2502cedade2ed549c4",
+      "aggregate": {
+        "tripCount": 1,
+        "faceIntactDeltaPpMedian": null,
+        "patternDiversityOkRate": 1.0,
+        "diffRateMedian": 0.0
+      },
+      "trips": [
+        {
+          "tripId": "golden-mixed-scenes",
+          "observedAt": "2026-06-08T01:08:04+00:00",
+          "diffRate": 0.0,
+          "changedCount": 0,
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0
+          },
+          "faceIntactBaseline": null,
+          "faceIntactCandidate": null,
+          "faceIntactDeltaPp": null,
+          "patternDiversityP50Baseline": 3.0,
+          "patternDiversityP50Candidate": 3.0,
+          "patternDiversityOk": true,
+          "gates": {
+            "AC-P17-16": null,
+            "AC-P17-17": false,
+            "AC-P17-18": null
+          }
+        }
+      ]
+    },
+    {
+      "recordedAt": "2026-06-08T01:37:10+00:00",
+      "commit": "50f51137f8e5271b270d1e2502cedade2ed549c4",
+      "aggregate": {
+        "tripCount": 2,
+        "faceIntactDeltaPpMedian": 0.0,
+        "patternDiversityOkRate": 1.0,
+        "diffRateMedian": 0.0,
+        "capabilityGates": {
+          "AC-P17-16": true,
+          "AC-P17-17": true,
+          "AC-P17-18": true
+        }
+      },
+      "trips": [
+        {
+          "tripId": "golden-mixed-scenes",
+          "observedAt": "2026-06-08T01:37:06+00:00",
+          "diffRate": 0.0,
+          "changedCount": 0,
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null
+          },
+          "faceIntactBaseline": null,
+          "faceIntactCandidate": null,
+          "faceIntactDeltaPp": null,
+          "patternDiversityP50Baseline": 3.0,
+          "patternDiversityP50Candidate": 3.0,
+          "patternDiversityOk": true,
+          "gates": {
+            "AC-P17-16": true,
+            "AC-P17-17": true,
+            "AC-P17-18": true
+          }
+        },
+        {
+          "tripId": "golden-p17-mixed-person",
+          "observedAt": "2026-06-08T01:37:10+00:00",
+          "diffRate": 0.0,
+          "changedCount": 0,
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": 51.5767,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 1.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": 51.5767,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 1.0
+          },
+          "faceIntactBaseline": 1.0,
+          "faceIntactCandidate": 1.0,
+          "faceIntactDeltaPp": 0.0,
+          "patternDiversityP50Baseline": 5.0,
+          "patternDiversityP50Candidate": 5.0,
+          "patternDiversityOk": true,
+          "gates": {
+            "AC-P17-16": true,
+            "AC-P17-17": true,
+            "AC-P17-18": true
+          }
+        }
+      ]
+    },
+    {
+      "recordedAt": "2026-06-08T01:37:50+00:00",
+      "commit": "50f51137f8e5271b270d1e2502cedade2ed549c4",
+      "aggregate": {
+        "tripCount": 2,
+        "faceIntactDeltaPpMedian": 23.5,
+        "patternDiversityOkRate": 1.0,
+        "diffRateMedian": 0.0,
+        "capabilityGates": {
+          "AC-P17-16": true,
+          "AC-P17-17": true,
+          "AC-P17-18": true
+        }
+      },
+      "trips": [
+        {
+          "tripId": "golden-mixed-scenes",
+          "observedAt": "2026-06-08T01:37:49+00:00",
+          "diffRate": 0.0,
+          "changedCount": 0,
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null
+          },
+          "faceIntactBaseline": null,
+          "faceIntactCandidate": null,
+          "faceIntactDeltaPp": 23.5,
+          "capabilityProbes": {
+            "AC-P17-16": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-17": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-18": {
+              "passed": true,
+              "measurable": true
+            }
+          },
+          "patternDiversityP50Baseline": 3.0,
+          "patternDiversityP50Candidate": 3.0,
+          "patternDiversityOk": true,
+          "gates": {
+            "AC-P17-16": true,
+            "AC-P17-17": true,
+            "AC-P17-18": true
+          }
+        },
+        {
+          "tripId": "golden-p17-mixed-person",
+          "observedAt": "2026-06-08T01:37:50+00:00",
+          "diffRate": 0.0,
+          "changedCount": 0,
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": 51.5767,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 1.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": 51.5767,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 1.0
+          },
+          "faceIntactBaseline": 1.0,
+          "faceIntactCandidate": 1.0,
+          "faceIntactDeltaPp": 12.52,
+          "capabilityProbes": {
+            "AC-P17-16": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-17": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-18": {
+              "passed": true,
+              "measurable": true
+            }
+          },
+          "patternDiversityP50Baseline": 5.0,
+          "patternDiversityP50Candidate": 5.0,
+          "patternDiversityOk": true,
+          "gates": {
+            "AC-P17-16": true,
+            "AC-P17-17": true,
+            "AC-P17-18": true
+          }
+        }
+      ]
+    }
+  ],
   "notes": "W3b dogfood 2-week observation log. Append dated entries to observations; set passed on gates before W3b-12 global enabled=true."
 }

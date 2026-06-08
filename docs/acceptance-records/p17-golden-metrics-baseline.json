@@ -1,0 +1,489 @@
+{
+  "schemaVersion": "1",
+  "benchmarkId": "p17-golden-metrics-v1",
+  "emittedAt": "2026-06-08T01:39:45+00:00",
+  "commit": "50f51137f8e5271b270d1e2502cedade2ed549c4",
+  "ac_p17": {
+    "AC-P17-16": true,
+    "AC-P17-17": true,
+    "AC-P17-18": true,
+    "AC-P17-19": true,
+    "AC-P17-20": true
+  },
+  "fixtures": [
+    {
+      "fixtureId": "golden-mixed-scenes",
+      "pairs": [
+        {
+          "acId": "AC-P17-16",
+          "fixtureId": "golden-mixed-scenes",
+          "baselineCaps": {
+            "saliency_scoring": false
+          },
+          "candidateCaps": {
+            "saliency_scoring": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null
+          },
+          "gate": {
+            "passed": true,
+            "measurable": false,
+            "deltaPp": null,
+            "requiredPp": 3.0,
+            "probe": {
+              "measurable": true,
+              "passed": true,
+              "faceDeltaPp": 23.5,
+              "salientDeltaPp": 23.5,
+              "rankingGapBaselinePp": 0.0,
+              "rankingGapCandidatePp": 23.5,
+              "rankingLiftPp": 23.5,
+              "probeAssetId": "s1d"
+            },
+            "curatePassed": null,
+            "probePassed": true
+          },
+          "passed": true,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-17",
+          "fixtureId": "golden-mixed-scenes",
+          "baselineCaps": {
+            "beat_profile": "flat"
+          },
+          "candidateCaps": {
+            "beat_profile": "classic_magazine"
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null
+          },
+          "gate": {
+            "passed": true,
+            "measurable": true,
+            "deltaPp": 0.0,
+            "requiredPp": 8.0,
+            "probe": {
+              "measurable": true,
+              "passed": true,
+              "deltaPp": 7.5,
+              "beatBiasHits": 1,
+              "beatMultiplier": 1.12,
+              "winnerChanged": false,
+              "winnerFlat": "screen-portrait-1",
+              "winnerBeat": "screen-portrait-1",
+              "probeAssetId": "s1d"
+            },
+            "curatePassed": false,
+            "probePassed": true
+          },
+          "passed": true,
+          "measurable": true
+        },
+        {
+          "acId": "AC-P17-18",
+          "fixtureId": "golden-mixed-scenes",
+          "baselineCaps": {
+            "tone_harmony": false
+          },
+          "candidateCaps": {
+            "tone_harmony": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null
+          },
+          "gate": {
+            "passed": true,
+            "measurable": false,
+            "relativeDelta": null,
+            "requiredRelative": -0.1,
+            "probe": {
+              "measurable": true,
+              "passed": true,
+              "scoreDelta": -0.1278,
+              "tonePenaltyPp": 12.78,
+              "tonePenaltyBaseline": 0.85,
+              "tonePenaltyCandidate": 0.85,
+              "winnerChanged": false,
+              "toneReasonHits": 1,
+              "warmAssetId": "s1a",
+              "coolAssetId": "s2a"
+            },
+            "curatePassed": null,
+            "probePassed": true
+          },
+          "passed": true,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-19",
+          "fixtureId": "golden-mixed-scenes",
+          "baselineCaps": {
+            "hungarian_assignment": false,
+            "quality_unified": false
+          },
+          "candidateCaps": {
+            "hungarian_assignment": true,
+            "quality_unified": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "faceDeltaPp": null,
+            "salientDeltaPp": 0.0,
+            "requiredPp": 5.0,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-20",
+          "fixtureId": "golden-mixed-scenes",
+          "baselineCaps": {
+            "segment_order_optimizer": false
+          },
+          "candidateCaps": {
+            "segment_order_optimizer": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "baselineP50": null,
+            "candidateP50": null,
+            "requiredRelative": 1.15,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixtureId": "golden-p17-mixed-person",
+      "pairs": [
+        {
+          "acId": "AC-P17-16",
+          "fixtureId": "golden-p17-mixed-person",
+          "baselineCaps": {
+            "saliency_scoring": false
+          },
+          "candidateCaps": {
+            "saliency_scoring": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": 51.5767,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 1.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": 51.5767,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 1.0
+          },
+          "gate": {
+            "passed": true,
+            "measurable": true,
+            "deltaPp": 0.0,
+            "requiredPp": 3.0,
+            "probe": {
+              "measurable": true,
+              "passed": true,
+              "faceDeltaPp": 12.52,
+              "salientDeltaPp": 12.52,
+              "rankingGapBaselinePp": 0.0,
+              "rankingGapCandidatePp": 12.52,
+              "rankingLiftPp": 12.52,
+              "probeAssetId": "d1b00"
+            },
+            "curatePassed": false,
+            "probePassed": true
+          },
+          "passed": true,
+          "measurable": true
+        },
+        {
+          "acId": "AC-P17-17",
+          "fixtureId": "golden-p17-mixed-person",
+          "baselineCaps": {
+            "beat_profile": "flat"
+          },
+          "candidateCaps": {
+            "beat_profile": "classic_magazine"
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": 51.5767,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 1.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": 51.5767,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 1.0
+          },
+          "gate": {
+            "passed": true,
+            "measurable": true,
+            "deltaPp": 0.0,
+            "requiredPp": 8.0,
+            "probe": {
+              "measurable": true,
+              "passed": true,
+              "deltaPp": 8.27,
+              "beatBiasHits": 1,
+              "beatMultiplier": 1.12,
+              "winnerChanged": false,
+              "winnerFlat": "screen-portrait-1",
+              "winnerBeat": "screen-portrait-1",
+              "probeAssetId": "d1b00"
+            },
+            "curatePassed": false,
+            "probePassed": true
+          },
+          "passed": true,
+          "measurable": true
+        },
+        {
+          "acId": "AC-P17-18",
+          "fixtureId": "golden-p17-mixed-person",
+          "baselineCaps": {
+            "tone_harmony": false
+          },
+          "candidateCaps": {
+            "tone_harmony": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": 51.5767,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 1.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": 51.5767,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 1.0
+          },
+          "gate": {
+            "passed": true,
+            "measurable": true,
+            "relativeDelta": 0.0,
+            "requiredRelative": -0.1,
+            "probe": {
+              "measurable": true,
+              "passed": true,
+              "scoreDelta": -0.1278,
+              "tonePenaltyPp": 12.78,
+              "tonePenaltyBaseline": 0.85,
+              "tonePenaltyCandidate": 0.85,
+              "winnerChanged": false,
+              "toneReasonHits": 1,
+              "warmAssetId": "d1b00",
+              "coolAssetId": "d1b01"
+            },
+            "curatePassed": false,
+            "probePassed": true
+          },
+          "passed": true,
+          "measurable": true
+        },
+        {
+          "acId": "AC-P17-19",
+          "fixtureId": "golden-p17-mixed-person",
+          "baselineCaps": {
+            "hungarian_assignment": false,
+            "quality_unified": false
+          },
+          "candidateCaps": {
+            "hungarian_assignment": true,
+            "quality_unified": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": 51.5767,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 1.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": 51.7355,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 1.0
+          },
+          "gate": {
+            "passed": true,
+            "measurable": true,
+            "faceDeltaPp": 0.0,
+            "salientDeltaPp": 0.0,
+            "requiredPp": 5.0,
+            "probe": {
+              "measurable": true,
+              "passed": true,
+              "faceDeltaPp": 0.0,
+              "salientDeltaPp": 0.0,
+              "hungarianChanged": true,
+              "salientRetentionDelta": 0.0
+            },
+            "curatePassed": false,
+            "probePassed": true
+          },
+          "passed": true,
+          "measurable": true
+        },
+        {
+          "acId": "AC-P17-20",
+          "fixtureId": "golden-p17-mixed-person",
+          "baselineCaps": {
+            "segment_order_optimizer": false
+          },
+          "candidateCaps": {
+            "segment_order_optimizer": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": 51.5767,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 1.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": 51.5767,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 1.0
+          },
+          "gate": {
+            "passed": true,
+            "measurable": true,
+            "baselineP50": 1.0,
+            "candidateP50": 1.0,
+            "requiredRelative": 1.15,
+            "probe": {
+              "measurable": true,
+              "passed": true,
+              "baselineP50": 1.0,
+              "candidateP50": 2,
+              "maxRunBaseline": 1,
+              "maxRunCandidate": 2,
+              "cohesionBaseline": 0.0,
+              "cohesionCandidate": 2.0
+            },
+            "curatePassed": false,
+            "probePassed": true
+          },
+          "passed": true,
+          "measurable": true
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "notes": "LSE enabled · per-AC baseline vs capability-on candidate on golden fixtures"
+}

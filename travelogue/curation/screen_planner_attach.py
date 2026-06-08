@@ -161,26 +161,55 @@ def attach_screens_day_buckets(
             median_sharp=med_sharp,
             featured_weight=featured_weight,
         )
-        bucket_screens = plan_chapter_screens(
-            ChapterPlanContext(
-                bucket,
-                aspects,
-                chapter_id="day",
-                assets=assets_by_id or None,
-                burst_seconds=burst_seconds,
-                mixed_proximity_seconds=mixed_proximity_seconds,
-                orientation_summary=orientation_summary,
-                skip_screen_asset_ids=skip,
-                layout_state=layout_state,
-                trip_photo_total=trip_photo_total,
-                preferred_hero_id=preferred_hero,
-                median_sharp=med_sharp,
-                featured_weight=featured_weight,
-                enable_food_grid=enable_food_grid,
-                mundane_grid_buckets=mundane_grid_buckets,
-            ),
-            cfg=cfg,
-        )
+        highlight_active = False
+        if cfg is not None and lse_enabled(cfg):
+            from travelogue.layout_engine.adapter import resolve_pack
+            from travelogue.layout_engine.capabilities import effective_capabilities
+            from travelogue.layout_engine.highlight_windows import (
+                begin_chapter_highlight_windows,
+                clear_chapter_highlight_windows,
+                detect_highlight_windows,
+                highlight_windows_from_pack,
+            )
+
+            pack = resolve_pack(cfg)
+            caps = effective_capabilities(cfg, pack)
+            hl_cfg = highlight_windows_from_pack(pack.raw if pack else None)
+            if caps.highlight_windows or hl_cfg.get("enabled"):
+                windows = detect_highlight_windows(
+                    bucket,
+                    assets_by_id,
+                    window_sizes=hl_cfg.get("window_sizes") or (5, 8, 12),
+                    max_windows=int(hl_cfg.get("max_windows") or 2),
+                )
+                begin_chapter_highlight_windows(windows)
+                highlight_active = True
+        try:
+            bucket_screens = plan_chapter_screens(
+                ChapterPlanContext(
+                    bucket,
+                    aspects,
+                    chapter_id="day",
+                    assets=assets_by_id or None,
+                    burst_seconds=burst_seconds,
+                    mixed_proximity_seconds=mixed_proximity_seconds,
+                    orientation_summary=orientation_summary,
+                    skip_screen_asset_ids=skip,
+                    layout_state=layout_state,
+                    trip_photo_total=trip_photo_total,
+                    preferred_hero_id=preferred_hero,
+                    median_sharp=med_sharp,
+                    featured_weight=featured_weight,
+                    enable_food_grid=enable_food_grid,
+                    mundane_grid_buckets=mundane_grid_buckets,
+                ),
+                cfg=cfg,
+            )
+        finally:
+            if highlight_active:
+                from travelogue.layout_engine.highlight_windows import clear_chapter_highlight_windows
+
+                clear_chapter_highlight_windows()
         for sc in bucket_screens:
             slots = sc.get("slots") or []
             if not slots:

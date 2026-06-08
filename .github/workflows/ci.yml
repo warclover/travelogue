@@ -283,6 +283,42 @@ jobs:
         if: github.event_name != 'pull_request'
         run: python scripts/phase16_template_eval.py --trips-dir tests/fixtures/phase16-dogfood --strict-ac15
 
+      - name: Phase 17 golden metrics (AC-16～20 · PR warn)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: python scripts/phase17_golden_metrics.py
+
+      - name: Phase 17 golden metrics (AC-16～20 · release block)
+        if: github.event_name != 'pull_request'
+        run: python scripts/phase17_golden_metrics.py --strict
+
+      - name: Phase 17 dogfood admission (PR warn)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: python scripts/phase17_dogfood_admission.py --strict
+
+      - name: Phase 17 dogfood admission (release block)
+        if: github.event_name != 'pull_request'
+        run: python scripts/phase17_dogfood_admission.py --strict
+
+      - name: Phase 17 curate bench (AC-28 · PR warn)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: python scripts/phase17_curate_bench.py --fixture golden-mixed-scenes --check
+
+      - name: Phase 17 curate bench (AC-28 · release block)
+        if: github.event_name != 'pull_request'
+        run: python scripts/phase17_curate_bench.py --fixture golden-mixed-scenes --check
+
+      - name: Phase 17 strategy eval (render · PR warn)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: python scripts/phase17_strategy_eval.py --trips-dir tests/fixtures/phase16-dogfood --strict
+
+      - name: Phase 17 strategy eval (render · release block)
+        if: github.event_name != 'pull_request'
+        run: python scripts/phase17_strategy_eval.py --trips-dir tests/fixtures/phase16-dogfood --strict
+
       - name: Phase 4 acceptance gate
         run: python scripts/phase4_acceptance_gate.py --skip-integration
 

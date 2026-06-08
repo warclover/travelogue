@@ -38,7 +38,7 @@ def score_window_candidates(
     trip_photo_total: int = 0,
     burst_seconds: float = 12.0,
     median_sharp: float | None = None,
-) -> list[tuple[ScreenCandidate, float, list[str]]]:
+) -> list[tuple[ScreenCandidate, float, list[str], dict[str, float]]]:
     """Score all MCS window candidates (shared by compose + replan)."""
     scored, _rejected = _score_window_candidates_with_rejections(
         asset_ids,
@@ -66,7 +66,7 @@ def _score_window_candidates_with_rejections(
     prev_screen: dict | None = None,
     chapter_screen_index: int = 0,
     chapter_screen_count: int = 12,
-) -> tuple[list[tuple[ScreenCandidate, float, list[str]]], list[dict]]:
+) -> tuple[list[tuple[ScreenCandidate, float, list[str], dict[str, float]]], list[dict]]:
     """Score MCS window candidates and collect validator-level rejections."""
     bundle = generate_window_candidates_with_rejections(
         asset_ids,
@@ -78,7 +78,7 @@ def _score_window_candidates_with_rejections(
     )
     candidates = bundle.candidates
     rejected = list(bundle.rejected)
-    scored: list[tuple[ScreenCandidate, float, list[str]]] = []
+    scored: list[tuple[ScreenCandidate, float, list[str], dict[str, float]]] = []
     for cand in candidates:
         if mosaic_pattern_disabled(cand.pattern_id, cfg=cfg) or not cand.hard_valid:
             if not cand.hard_valid and not any(
@@ -98,7 +98,7 @@ def _score_window_candidates_with_rejections(
             chapter_screen_index=chapter_screen_index,
             chapter_screen_count=chapter_screen_count,
         )
-        scored.append((cand, sr.total, sr.reason_codes))
+        scored.append((cand, sr.total, sr.reason_codes, dict(sr.penalties)))
     scored.sort(key=lambda t: (-t[1], t[0].pattern_id))
     div_cfg = mcs_diversity_config()
     scored = apply_candidate_diversity(
@@ -165,7 +165,7 @@ def pick_best_window(
     top = scored[: min(3, cfg.candidate_top_k)]
     log.top3_patterns = [t[0].pattern_id for t in top]
     log.top3_scores = [t[1] for t in top]
-    winner_cand, winner_score, reasons = scored[0]
+    winner_cand, winner_score, reasons, winner_penalties = scored[0]
     if mosaic_pattern_disabled(winner_cand.pattern_id, cfg=cfg):
         log.fallback_used = True
         log.fallback_reason = "pattern_disabled"
@@ -174,6 +174,12 @@ def pick_best_window(
     log.winner_pattern_id = winner_cand.pattern_id
     log.winner_score = winner_score
     log.winner_reason_codes = reasons
+    log.winner_penalties = dict(winner_penalties)
+    log.scoring_weights = dict(cfg.weights or {})
+    log.scoring_penalty_weights = dict(cfg.penalties or {})
+    fallback = (winner_cand.feature_summary or {}).get("slotAssignmentFallback")
+    if fallback:
+        log.slot_assignment_fallback = str(fallback)
     _attach_face_crop_proxy(
         log,
         winner_cand.screen,
@@ -198,10 +204,11 @@ def pick_best_window(
             min_score=cfg.min_candidate_score,
         )
         if healed is not None:
-            winner_cand, winner_score, reasons, step, dropped = healed
+            winner_cand, winner_score, reasons, step, dropped, healed_penalties = healed
             log.winner_pattern_id = winner_cand.pattern_id
             log.winner_score = winner_score
             log.winner_reason_codes = reasons
+            log.winner_penalties = dict(healed_penalties)
             _attach_face_crop_proxy(
                 log,
                 winner_cand.screen,
