@@ -626,6 +626,30 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
     )
 
 
+def _build_layout_only_bucket_plan(trip: dict, preflight: _CuratePreflight) -> _CurateBucketPlan | None:
+    from travelogue.layout_engine.replan import buckets_from_existing_chapters
+    from travelogue.services.copy_subject import effective_meta_places
+
+    raw = buckets_from_existing_chapters(trip)
+    if raw is None:
+        return None
+    meta = trip.get("meta", {})
+    meta_places = effective_meta_places(
+        meta,
+        intent=trip.get("intent"),
+        assets=trip.get("assets") or [],
+    )
+    return _CurateBucketPlan(
+        buckets=raw["buckets"],
+        bucket_segment_ids=raw["bucket_segment_ids"],
+        bucket_segment_ids_all=raw["bucket_segment_ids_all"],
+        segments=raw["segments"],
+        segment_labels=raw["segment_labels"],
+        curation_segments=raw["curation_segments"],
+        meta_places=meta_places,
+    )
+
+
 def run_curate(
     trip: dict,
     *,
@@ -702,7 +726,21 @@ def run_curate(
         LAYOUT_ENGINE_VERSION_SCREENS,
     )
 
-    bucket_plan = _build_curate_buckets(trip, preflight)
+    from travelogue.layout_engine.replan import (
+        mark_layout_replan,
+        record_applied_layout_density,
+        should_layout_only_replan,
+    )
+
+    replan_decision = should_layout_only_replan(trip, trip_dir=trip_dir, cfg=app_cfg)
+    if replan_decision.layout_only:
+        bucket_plan = _build_layout_only_bucket_plan(trip, preflight)
+        if bucket_plan is None:
+            bucket_plan = _build_curate_buckets(trip, preflight)
+        else:
+            mark_layout_replan(trip, reason=replan_decision.reason or "density_change")
+    else:
+        bucket_plan = _build_curate_buckets(trip, preflight)
     buckets = bucket_plan.buckets
     bucket_segment_ids = bucket_plan.bucket_segment_ids
     bucket_segment_ids_all = bucket_plan.bucket_segment_ids_all
@@ -1244,6 +1282,8 @@ def run_curate(
         export_layout=layout,
         layout_engine=engine,
     )
+    if apply_layout:
+        record_applied_layout_density(trip, cfg=app_cfg)
 
     return CurateResult(
         chapter_count=len(trip.get("chapters", [])),

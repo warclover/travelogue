@@ -56,6 +56,7 @@ class LayoutStrategyCapabilitiesConfig:
     beat_profile: str = "flat"
     tone_harmony: bool = False
     hungarian_assignment: bool = False
+    quality_unified: bool = False
     segment_order_optimizer: bool = False
     implicit_feedback_export: bool = False
     pace_profile: bool = False
@@ -239,6 +240,9 @@ def layout_strategy_engine_from_dict(raw: dict[str, Any]) -> LayoutStrategyEngin
             tone_harmony=bool(caps_raw.get("tone_harmony", defaults.capabilities.tone_harmony)),
             hungarian_assignment=bool(
                 caps_raw.get("hungarian_assignment", defaults.capabilities.hungarian_assignment)
+            ),
+            quality_unified=bool(
+                caps_raw.get("quality_unified", defaults.capabilities.quality_unified)
             ),
             segment_order_optimizer=bool(
                 caps_raw.get(

@@ -7,7 +7,7 @@
 | **配套 PRD** | [PRD-PHASE17-layout-strategy-engine.md](./PRD-PHASE17-layout-strategy-engine.md)（v0.17.6） |
 | **分支** | `feature/phase17-lse` |
 | **更新日期** | 2026-06-07 |
-| **状态** | **W0 已冻结** — 审计+schema+DESIGN+ADR 就绪；**W1 待开工** |
+| **状态** | **W4 核心进行中** — CAP-01/08/10 已接线；Plus 能力与 dogfood 待收口 |
 
 > **本文定位**：把 PRD 的「做什么/为什么」落成「怎么接、改哪里、先干哪些、多久」。PRD 是契约，本文是施工图。**§13.4 W0 阻断交付物之一**。
 
@@ -291,10 +291,51 @@ W1 开工前必须全部 ✅：
 
 ---
 
+## 13. W3b 任务清单（上 CAP · 执行跟踪）
+
+| 优先级 | ID | 任务 | 产出 | AC | 状态 |
+|--------|-----|------|------|-----|------|
+| P0 | W3b-01 | CAP-02 `salient_retention` 打分 | `features.py` + scorer | AC-P17-16 | ✅ |
+| P0 | W3b-02 | §4.10 渲染绑定 CSS 收敛 | `journal-screens.css` + `render_binding.py` | AC-P17-30 | ✅ |
+| P0 | W3b-03 | CAP-03 `beat_profile` bias | `beat.py` + scorer | AC-P17-17 | ✅ |
+| P0 | W3b-04 | CAP-04 tone look-back-1 | `tone_adjacency.py` + scorer | AC-P17-18 | ✅ |
+| P1 | W3b-05 | `phase17_strategy_eval.py` 探针 | `scripts/` | AC-P17-11 | ✅ |
+| P1 | W3b-06 | L2 审批完整 Studio UI | `templates-admin.html` pending 列表+行内审批 | AC-P17-07 | ✅ |
+| P1 | W3b-07 | 沙箱并排缩略图 UI | sandbox `changedPreviews` + 分布条 | AC-P17-09 | ✅ |
+| P1 | W3b-08 | Inspector 滚动/分布条/五态/裁切告警 | `templates-admin.html` | AC-P17-06 | ✅ |
+| P1 | W3b-09 | shadow 双轨对照 | `layout_engine/shadow.py` + `/shadow` API | §9 原则 2 | ✅ |
+| P1 | W3b-10 | dogfood 2 周观测 + 准入签字 | `p17-rollout-log.json` 模板 | R-P17-20 | 🟡（运营填表） |
+| P1 | W3b-11 | 性能预算 ≤+15% CI | `phase17_curate_bench.py` + 单测 | AC-P17-28 | ✅ |
+| P2 | W3b-12 | 全局 `enabled=true` 切换（评审后） | config rollout | AC-P17-01 | 待办 |
+
+**W3b 出口**：AC-P17-16～18/30 + golden probe；shadow/dogfood/全量切换未过线不发布。
+
+---
+
+## 14. W4 任务清单（匈牙利 + QualityFeatures · 执行跟踪）
+
+| 优先级 | ID | 任务 | 产出 | AC | 状态 |
+|--------|-----|------|------|-----|------|
+| P0 | W4-01 | CAP-01 匈牙利 slot 匹配 | `slot_assignment.py` + `candidates.py` | AC-P17-19 | ✅ |
+| P0 | W4-02 | CAP-08 QualityFeatures | `quality_features.py` + `scorer.py` | G-P17-16 | ✅ |
+| P1 | W4-03 | CAP-10 layout-only replan | `replan.py` + `curate.py` | AC-P17-22 | ✅ |
+| P1 | W4-04 | CAP-05 layoutFeedback 导出 | `layout_engine/feedback.py` | AC-P17-21 | ✅ |
+| P1 | W4-05 | golden 匈牙利收益探针 | `test_p17_w4_core.py` | AC-P17-19 | ✅ |
+| P2 | W4-06 | CAP-06 段内序优化器 | `segment_order.py` | AC-P17-20 | 待办 |
+| P2 | W4-07 | CAP-14/15 editorial + highlight | `editorial_hints.py` | Plus 24～26 | 待办 |
+| P2 | W4-08 | default pack `slot_assignment.mode=hungarian` | `default.yaml` | — | 待办（保持 greedy 至 dogfood 过线） |
+
+**W4 出口**：AC-P17-19/21/22 + 性能预算仍 ≤+15%；匈牙利默认开启留 dogfood 后。
+
+---
+
 ## 9. 修订记录
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.6 | 2026-06-07 | W4 核心：匈牙利、QualityFeatures、layout-only replan、feedback |
+| v0.5 | 2026-06-07 | W3b 后半：Studio UI、shadow、bench、AC-P17-29 文案 |
+| v0.4 | 2026-06-07 | W3b CAP-02/03/04 + 渲染绑定 + §13 清单 |
 | v0.3 | 2026-06-07 | W1/W2 收口、§11–12 W2/W3a 任务清单与门禁 |
 | v0.2 | 2026-06-07 | W0 冻结：DoR 勾选、§10 W1 任务清单、状态更新 |
 | v0.1 | 2026-06-07 | W0 起草：融合设计、三项 W0 审计模板、adapter 参数收束、decision log 适配、切引擎/上 CAP 解耦的阶段分解、工作量、W1 DoR |

@@ -111,16 +111,39 @@ def generate_window_candidates_with_rejections(
         if not ordered:
             _reject(rejected, pat.pattern_id, "ordering_failed")
             continue
+        slot_fallback: str | None = None
         screen = build_screen(pat, ordered, assets_map=assets_map)
+        if cfg.lse_hungarian_assignment:
+            from travelogue.layout_engine.quality_features import build_quality_pool
+            from travelogue.layout_engine.slot_assignment import refine_asset_order_hungarian
+
+            quality = (
+                build_quality_pool(list(assets_map.values()))
+                if cfg.lse_quality_unified
+                else None
+            )
+            refined, slot_fallback = refine_asset_order_hungarian(
+                ordered,
+                screen,
+                assets_map,
+                max_matrix_n=cfg.lse_slot_max_matrix_n,
+                quality=quality,
+            )
+            if refined is not None:
+                ordered = refined
+                screen = build_screen(pat, ordered, assets_map=assets_map)
         geom_ok = screen_slots_geometry_ok(screen, aspects)
         if not geom_ok:
             _reject(rejected, pat.pattern_id, "geometry_invalid")
+        feat = {**summary, "patternId": pat.pattern_id}
+        if slot_fallback:
+            feat["slotAssignmentFallback"] = slot_fallback
         out.append(
             ScreenCandidate(
                 pattern_id=pat.pattern_id,
                 ordered_asset_ids=ordered,
                 screen=screen,
-                feature_summary={**summary, "patternId": pat.pattern_id},
+                feature_summary=feat,
                 hard_valid=geom_ok,
             )
         )
