@@ -29,7 +29,7 @@
     },
     "AC-P17-17b": {
       "label": "beat hero quality guard",
-      "passed": true,
+      "passed": false,
       "syncedAt": "2026-06-08T02:25:36+00:00"
     },
     "AC-P17-18": {
@@ -275,6 +275,360 @@
           "gates": {
             "AC-P17-16": true,
             "AC-P17-17": true,
+            "AC-P17-18": true
+          }
+        }
+      ]
+    },
+    {
+      "recordedAt": "2026-06-08T03:21:10+00:00",
+      "commit": "bd96d1459e113213d815bad63887bce2ac4d5f64",
+      "aggregate": {
+        "tripCount": 6,
+        "faceIntactDeltaPpMedian": 6.89,
+        "patternDiversityOkRate": 1.0,
+        "diffRateMedian": 0.0,
+        "capabilityGates": {
+          "AC-P17-16": null,
+          "AC-P17-17": true,
+          "AC-P17-18": true,
+          "AC-P17-17b": false
+        }
+      },
+      "trips": [
+        {
+          "tripId": "demo-1506104ebf",
+          "observedAt": "2026-06-08T03:21:01+00:00",
+          "diffRate": 0.0,
+          "changedCount": 0,
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": 0.8519,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 11.7704,
+            "layout.chapter.pattern_diversity_p50": 8.0,
+            "layout.segment.same_person_run_p50": 3,
+            "layout.beat.first_hero_quality_p50": 0.7233,
+            "layout.highlight.main_quality_delta_pp": 68.22
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": 0.8519,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 11.7704,
+            "layout.chapter.pattern_diversity_p50": 8.0,
+            "layout.segment.same_person_run_p50": 3,
+            "layout.beat.first_hero_quality_p50": 0.7233,
+            "layout.highlight.main_quality_delta_pp": 68.22
+          },
+          "faceIntactBaseline": 0.8519,
+          "faceIntactCandidate": 0.8519,
+          "faceIntactDeltaPp": 6.89,
+          "capabilityProbes": {
+            "AC-P17-16": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-17": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-18": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-17b": {
+              "passed": true,
+              "measurable": true
+            }
+          },
+          "patternDiversityP50Baseline": 8.0,
+          "patternDiversityP50Candidate": 8.0,
+          "patternDiversityOk": true,
+          "gates": {
+            "AC-P17-16": true,
+            "AC-P17-17": true,
+            "AC-P17-17b": true,
+            "AC-P17-18": true
+          }
+        },
+        {
+          "tripId": "linzhi",
+          "observedAt": "2026-06-08T03:21:04+00:00",
+          "diffRate": 0.0,
+          "changedCount": 0,
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": 0.75,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 13.2409,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": 1,
+            "layout.beat.first_hero_quality_p50": 0.4321,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": 0.75,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 13.2409,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": 1,
+            "layout.beat.first_hero_quality_p50": 0.4321,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "faceIntactBaseline": 0.75,
+          "faceIntactCandidate": 0.75,
+          "faceIntactDeltaPp": 5.11,
+          "capabilityProbes": {
+            "AC-P17-16": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-17": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-18": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-17b": {
+              "passed": true,
+              "measurable": true
+            }
+          },
+          "patternDiversityP50Baseline": 4.0,
+          "patternDiversityP50Candidate": 4.0,
+          "patternDiversityOk": true,
+          "gates": {
+            "AC-P17-16": true,
+            "AC-P17-17": true,
+            "AC-P17-17b": true,
+            "AC-P17-18": true
+          }
+        },
+        {
+          "tripId": "demo-2025",
+          "observedAt": "2026-06-08T03:21:05+00:00",
+          "diffRate": 0.0,
+          "changedCount": 0,
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 12.1705,
+            "layout.chapter.pattern_diversity_p50": 5.5,
+            "layout.segment.same_person_run_p50": 4.5,
+            "layout.beat.first_hero_quality_p50": 0.6708,
+            "layout.highlight.main_quality_delta_pp": 52.03
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 12.1705,
+            "layout.chapter.pattern_diversity_p50": 5.5,
+            "layout.segment.same_person_run_p50": 4.5,
+            "layout.beat.first_hero_quality_p50": 0.6708,
+            "layout.highlight.main_quality_delta_pp": 52.03
+          },
+          "faceIntactBaseline": null,
+          "faceIntactCandidate": null,
+          "faceIntactDeltaPp": null,
+          "capabilityProbes": {
+            "AC-P17-16": {
+              "passed": false,
+              "measurable": true
+            },
+            "AC-P17-17": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-18": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-17b": {
+              "passed": true,
+              "measurable": true
+            }
+          },
+          "patternDiversityP50Baseline": 5.5,
+          "patternDiversityP50Candidate": 5.5,
+          "patternDiversityOk": true,
+          "gates": {
+            "AC-P17-16": false,
+            "AC-P17-17": true,
+            "AC-P17-17b": true,
+            "AC-P17-18": true
+          }
+        },
+        {
+          "tripId": "demo-2019",
+          "observedAt": "2026-06-08T03:21:08+00:00",
+          "diffRate": 0.0,
+          "changedCount": 0,
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 14.1027,
+            "layout.chapter.pattern_diversity_p50": 8.0,
+            "layout.segment.same_person_run_p50": 2,
+            "layout.beat.first_hero_quality_p50": 0.5022,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 14.1027,
+            "layout.chapter.pattern_diversity_p50": 8.0,
+            "layout.segment.same_person_run_p50": 2,
+            "layout.beat.first_hero_quality_p50": 0.5022,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "faceIntactBaseline": 1.0,
+          "faceIntactCandidate": 1.0,
+          "faceIntactDeltaPp": 6.49,
+          "capabilityProbes": {
+            "AC-P17-16": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-17": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-18": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-17b": {
+              "passed": false,
+              "measurable": true
+            }
+          },
+          "patternDiversityP50Baseline": 8.0,
+          "patternDiversityP50Candidate": 8.0,
+          "patternDiversityOk": true,
+          "gates": {
+            "AC-P17-16": true,
+            "AC-P17-17": true,
+            "AC-P17-17b": false,
+            "AC-P17-18": true
+          }
+        },
+        {
+          "tripId": "demo-80301df45c",
+          "observedAt": "2026-06-08T03:21:09+00:00",
+          "diffRate": 0.0,
+          "changedCount": 0,
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 15.0681,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 2,
+            "layout.beat.first_hero_quality_p50": 0.4085,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 15.0681,
+            "layout.chapter.pattern_diversity_p50": 5.0,
+            "layout.segment.same_person_run_p50": 2,
+            "layout.beat.first_hero_quality_p50": 0.4085,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "faceIntactBaseline": null,
+          "faceIntactCandidate": null,
+          "faceIntactDeltaPp": 15.41,
+          "capabilityProbes": {
+            "AC-P17-16": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-17": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-18": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-17b": {
+              "passed": false,
+              "measurable": true
+            }
+          },
+          "patternDiversityP50Baseline": 5.0,
+          "patternDiversityP50Candidate": 5.0,
+          "patternDiversityOk": true,
+          "gates": {
+            "AC-P17-16": true,
+            "AC-P17-17": true,
+            "AC-P17-17b": false,
+            "AC-P17-18": true
+          }
+        },
+        {
+          "tripId": "demo-151e7b488c",
+          "observedAt": "2026-06-08T03:21:10+00:00",
+          "diffRate": 0.0,
+          "changedCount": 0,
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 20.9469,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": 5,
+            "layout.beat.first_hero_quality_p50": 0.8334,
+            "layout.highlight.main_quality_delta_pp": 75.64
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": 1.0,
+            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 20.9469,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": 5,
+            "layout.beat.first_hero_quality_p50": 0.8334,
+            "layout.highlight.main_quality_delta_pp": 75.64
+          },
+          "faceIntactBaseline": 1.0,
+          "faceIntactCandidate": 1.0,
+          "faceIntactDeltaPp": 17.61,
+          "capabilityProbes": {
+            "AC-P17-16": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-17": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-18": {
+              "passed": true,
+              "measurable": true
+            },
+            "AC-P17-17b": {
+              "passed": true,
+              "measurable": true
+            }
+          },
+          "patternDiversityP50Baseline": 4.0,
+          "patternDiversityP50Candidate": 4.0,
+          "patternDiversityOk": true,
+          "gates": {
+            "AC-P17-16": true,
+            "AC-P17-17": true,
+            "AC-P17-17b": true,
             "AC-P17-18": true
           }
         }

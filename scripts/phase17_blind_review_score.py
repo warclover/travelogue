@@ -44,7 +44,7 @@ def score_review(doc: dict) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Score P17 dogfood blind review JSON")
     parser.add_argument("review", type=Path, nargs="?", help="Completed blind review JSON")
-    parser.add_argument("--strict", action="store_true", help="Exit 1 when below 90%")
+    parser.add_argument("--strict", action="store_true", help="Exit 1 when below 90 percent threshold")
     args = parser.parse_args()
 
     if args.review and args.review.is_file():

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "snapshots": {
+    "sha256:0b4e4a64bf19f74e": {
+      "weightsHash": "sha256:0b4e4a64bf19f74e",
+      "strategyId": "lse-default-2026-06",
+      "strategyVersion": 1,
+      "algorithmVersion": "p15-s2",
+      "contentHash": "sha256:3f7160e2623d1dd0",
+      "profileId": "default",
+      "weights": {
+        "aspect_match": 0.2,
+        "sharpness": 0.15,
+        "temporal_coherence": 0.15,
+        "hero_separation": 0.1,
+        "subject_run": 0.1,
+        "layout_rhythm": 0.1,
+        "diversity": 0.1,
+        "category_coherence": 0.1,
+        "cohort_coherence": 0.0
+      },
+      "penalties": {
+        "face_crop": 0.3,
+        "main_quality": 0.25,
+        "duplicate_density": 0.2,
+        "hero_narrow_tiles": 0.35,
+        "hero_slot_aspect": 0.4,
+        "flat_six_grid": 0.35
+      },
+      "recordedAt": "2026-06-08T02:01:28+00:00"
+    }
+  }
+}

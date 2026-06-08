@@ -1,0 +1,43 @@
+{
+  "schema": "travelogue.bsp-surface-report/v1",
+  "trips": {
+    "demo-d66fe642a9": {
+      "title": "仙本那精选全集",
+      "shots": {
+        "S1": {
+          "label": "Plate · asset-006",
+          "screenIndex": 1,
+          "viewports": ["1440x960@2x", "2560x1440"],
+          "checks": ["fillRatio>=0.98", "imgHeightVh>=0.62@P0"]
+        },
+        "S2": {
+          "label": "full-frame index 6-9",
+          "screenIndices": [6, 7, 8, 9],
+          "viewports": ["1440x960@2x", "2560x1440"],
+          "checks": ["noLetterbox", "imgHeightVh>=0.62@P0", "imgHeightVh>=0.58@P1"]
+        },
+        "S3": {
+          "label": "breath-pause index 5/10",
+          "screenIndices": [5, 10],
+          "checks": ["railWidthMatch"]
+        },
+        "S5": {
+          "label": "dual viewport weight",
+          "screenIndices": [6, 7, 8, 9],
+          "checks": ["P0>=P1"]
+        }
+      }
+    },
+    "linzhi": {
+      "title": "林芝",
+      "shots": {
+        "T3-026": {
+          "label": "asset-026 ultra-wide",
+          "assetId": "asset-026",
+          "viewport": "1920x1080",
+          "checks": ["imgHeightVh>=0.52", "tierUltra"]
+        }
+      }
+    }
+  }
+}

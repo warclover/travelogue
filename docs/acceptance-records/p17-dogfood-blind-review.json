@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "1",
+  "reviewId": "p17-dogfood-blind-review-real-trips-2026-06-08",
+  "rolloutId": "p17-dogfood-lse",
+  "reviewer": null,
+  "reviewedAt": null,
+  "batchSource": {
+    "compareScript": "scripts/lse_flags_curate_compare.py",
+    "dogfoodBatch": ".cache/p17-dogfood-real-batch.json",
+    "rolloutLog": "docs/acceptance-records/p17-rollout-log.json",
+    "recordedAt": "2026-06-08",
+    "tripCount": 6,
+    "notes": "Automated metrics collected; preference fields require human blind review."
+  },
+  "tripPairs": [
+    {
+      "tripId": "demo-1506104ebf",
+      "title": "川藏线",
+      "assetCount": 206,
+      "screensChangedPct": 1.39,
+      "previewPath": ".cache/lse-flags-compare/demo-1506104ebf/preview/compare.html",
+      "labelA": "baseline",
+      "labelB": "candidate",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "notes": "LSE off vs caps full; 1/72 screens changed (mosaic-6→mosaic-5)"
+    },
+    {
+      "tripId": "linzhi",
+      "title": "林芝",
+      "assetCount": 232,
+      "screensChangedPct": 0.0,
+      "previewPath": ".cache/lse-flags-compare/linzhi/preview/compare.html",
+      "labelA": "baseline",
+      "labelB": "candidate",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "notes": "最长相册之一；0% 屏差，重点看节奏/观感是否仍无差异"
+    },
+    {
+      "tripId": "demo-2025",
+      "title": "2025东澳岛",
+      "assetCount": 120,
+      "screensChangedPct": 0.0,
+      "previewPath": ".cache/lse-flags-compare/demo-2025/preview/compare.html",
+      "labelA": "baseline",
+      "labelB": "candidate",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "notes": "竖图/海岛为主；mosaic 曝光低"
+    },
+    {
+      "tripId": "demo-2019",
+      "title": "2019相册精选",
+      "assetCount": 231,
+      "screensChangedPct": 3.81,
+      "previewPath": ".cache/lse-flags-compare/demo-2019/preview/compare.html",
+      "labelA": "baseline",
+      "labelB": "candidate",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "notes": "横图年会集；4/105 屏 mosaic-6→mosaic-5"
+    },
+    {
+      "tripId": "demo-80301df45c",
+      "title": "6岁年度相册",
+      "assetCount": 164,
+      "screensChangedPct": 0.0,
+      "previewPath": ".cache/lse-flags-compare/demo-80301df45c/preview/compare.html",
+      "labelA": "baseline",
+      "labelB": "candidate",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "notes": "竖图家庭相册"
+    },
+    {
+      "tripId": "demo-151e7b488c",
+      "title": "凯哥拍摄精选",
+      "assetCount": 57,
+      "screensChangedPct": 0.0,
+      "previewPath": ".cache/lse-flags-compare/demo-151e7b488c/preview/compare.html",
+      "labelA": "baseline",
+      "labelB": "candidate",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "notes": "小集精选；快速 smoke"
+    }
+  ],
+  "aggregateScores": {
+    "layoutQuality": null,
+    "faceIntact": null,
+    "rhythm": null,
+    "diversity": null
+  },
+  "admissionDecision": {
+    "approved": null,
+    "blockers": [
+      "preference 未填：需人工盲评 ≥90% 偏好 candidate",
+      "14 天观测窗口未走完（本次为 Day-0 批量基线）",
+      "AC-P17-17b 在真实 trip 聚合未过（beat hero 质量护栏）"
+    ],
+    "signOffRequiredFor": "W3b-12 global enabled=true"
+  },
+  "instructions": {
+    "blindReview": "打开各 trip previewPath 并排页，随机左右顺序，填 preference 为 a|b|tie（b/candidate=偏好 LSE）",
+    "scoreCommand": "python scripts/phase17_blind_review_score.py docs/acceptance-records/p17-dogfood-blind-review.json --strict",
+    "repeatBatch": "python scripts/lse_flags_curate_compare.py demo-1506104ebf linzhi demo-2025 demo-2019 demo-80301df45c demo-151e7b488c"
+  }
+}
