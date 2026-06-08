@@ -6,6 +6,7 @@ from travelogue.web.studio_handlers.paths import (
     LAYOUT_STRATEGIES_PATH,
     LAYOUT_STRATEGIES_RUNTIME_APPROVE_PATH,
     LAYOUT_STRATEGIES_SANDBOX_PATH,
+    LAYOUT_STRATEGIES_SHADOW_PATH,
     match_layout_strategy_decisions,
     match_layout_strategy_detail,
     match_layout_strategy_rollback,
@@ -126,6 +127,16 @@ def test_studio_dispatch_post_layout_strategy_sandbox(monkeypatch) -> None:
     )
     assert probe.studio_dispatch_POST(LAYOUT_STRATEGIES_SANDBOX_PATH) is True
     assert probe.calls == ["sandbox"]
+
+
+def test_studio_dispatch_post_layout_strategy_shadow(monkeypatch) -> None:
+    probe = _Probe()
+    monkeypatch.setattr(
+        "travelogue.web.studio_handlers.layout_strategy_handlers.handle_layout_strategy_shadow",
+        lambda h: probe.calls.append("shadow"),
+    )
+    assert probe.studio_dispatch_POST(LAYOUT_STRATEGIES_SHADOW_PATH) is True
+    assert probe.calls == ["shadow"]
 
 
 def test_studio_dispatch_post_layout_strategy_rollback(monkeypatch) -> None:

@@ -32,6 +32,7 @@ TEMPLATES_ADMIN_ROLLBACK_PATH = "/__travelogue/templates/admin/rollback"
 LAYOUT_STRATEGIES_PATH = "/__travelogue/layout-strategies"
 LAYOUT_STRATEGIES_RUNTIME_APPROVE_PATH = "/__travelogue/layout-strategies/runtime/approve"
 LAYOUT_STRATEGIES_SANDBOX_PATH = "/__travelogue/layout-strategies/sandbox"
+LAYOUT_STRATEGIES_SHADOW_PATH = "/__travelogue/layout-strategies/shadow"
 
 
 def match_layout_strategy_rollback(path: str) -> str | None:

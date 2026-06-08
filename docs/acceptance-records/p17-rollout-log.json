@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1",
+  "rolloutId": "p17-dogfood-lse",
+  "status": "observing",
+  "startedAt": null,
+  "targetDurationDays": 14,
+  "owner": null,
+  "approver": null,
+  "gates": {
+    "AC-P17-27": { "label": "quick_share zero diff", "passed": null },
+    "AC-P17-28": { "label": "curate perf ≤+15%", "passed": null },
+    "AC-P17-16": { "label": "salient retention", "passed": null },
+    "AC-P17-17": { "label": "beat profile", "passed": null },
+    "AC-P17-18": { "label": "tone adjacency", "passed": null }
+  },
+  "observations": [],
+  "notes": "W3b dogfood 2-week observation log. Append dated entries to observations; set passed on gates before W3b-12 global enabled=true."
+}

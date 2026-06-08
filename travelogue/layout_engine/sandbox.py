@@ -142,6 +142,38 @@ def sandbox_replay_trip(
     }
 
 
+def enrich_changed_screen_previews(
+    trip: dict,
+    trip_id: str,
+    trip_dir: Path,
+    diff: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Attach first-slot preview URLs for changed screens (Studio sandbox UI)."""
+    from travelogue.render.context import pick_image_src
+    from travelogue.web.studio_bento_preview import _trip_static_url
+
+    assets = {
+        str(a.get("id")): a for a in (trip.get("assets") or []) if a.get("id")
+    }
+    enriched: list[dict[str, Any]] = []
+    for ch in diff.get("changedScreens") or []:
+        row = dict(ch)
+        for side in ("baseline", "candidate"):
+            scr = ch.get(side)
+            if not isinstance(scr, dict):
+                continue
+            aids = scr.get("slotAssetIds") or []
+            aid = aids[0] if aids else None
+            asset = assets.get(str(aid)) if aid else None
+            if not asset:
+                continue
+            rel = pick_image_src(asset)
+            if rel and (trip_dir / rel).is_file():
+                row[f"{side}Preview"] = _trip_static_url(trip_id, rel)
+        enriched.append(row)
+    return enriched
+
+
 def cfg_lse_sandbox_pair(base: AppConfig) -> tuple[AppConfig, AppConfig]:
     """Baseline = LSE off; candidate = LSE on (pure convergence default pack)."""
     se_off = replace(base.layout.strategy_engine, enabled=False)

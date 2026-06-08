@@ -79,6 +79,7 @@ from travelogue.web.studio_handlers.paths import (
     LAYOUT_STRATEGIES_PATH,
     LAYOUT_STRATEGIES_RUNTIME_APPROVE_PATH,
     LAYOUT_STRATEGIES_SANDBOX_PATH,
+    LAYOUT_STRATEGIES_SHADOW_PATH,
     match_layout_strategy_decisions,
     match_layout_strategy_detail,
     match_layout_strategy_rollback,
@@ -333,6 +334,9 @@ class StudioMixin:
             return True
         if path == LAYOUT_STRATEGIES_SANDBOX_PATH:
             layout_strategy_handlers.handle_layout_strategy_sandbox(self)
+            return True
+        if path == LAYOUT_STRATEGIES_SHADOW_PATH:
+            layout_strategy_handlers.handle_layout_strategy_shadow(self)
             return True
         lse_rb_sid = match_layout_strategy_rollback(path)
         if lse_rb_sid is not None:

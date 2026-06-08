@@ -11,7 +11,12 @@ from travelogue.layout_engine.runtime_store import (
     rollback_lse_runtime,
     runtime_scoring_overlay,
 )
-from travelogue.layout_engine.sandbox import cfg_lse_sandbox_pair, sandbox_replay_trip
+from travelogue.layout_engine.sandbox import (
+    cfg_lse_sandbox_pair,
+    enrich_changed_screen_previews,
+    sandbox_replay_trip,
+)
+from travelogue.layout_engine.shadow import shadow_lse_from_cfg
 from travelogue.templating.admin_store import load_runtime
 from travelogue.templating.config_governance import (
     approve_router_change,
@@ -291,6 +296,12 @@ def handle_layout_strategy_sandbox(handler: StudioHandlerProtocol) -> None:
         candidate_cfg=candidate_cfg,
         work_dir=work_dir,
     )
+    previews = enrich_changed_screen_previews(
+        trip,
+        trip_id,
+        trip_dir,
+        report.get("diff") or {},
+    )
     handler._json_response(
         200,
         {
@@ -298,6 +309,57 @@ def handle_layout_strategy_sandbox(handler: StudioHandlerProtocol) -> None:
             "tripId": trip_id,
             "mode": "lse_off_vs_on",
             **report,
+            "changedPreviews": previews,
+        },
+    )
+
+
+def handle_layout_strategy_shadow(handler: StudioHandlerProtocol) -> None:
+    if not _auth(handler, minimum="template_operator"):
+        return
+    if not _lse_internal(handler):
+        handler._json_response(403, {"ok": False, "error": "E_LSE_INTERNAL_ONLY"})
+        return
+    import json
+
+    ctx = studio_ctx(handler)
+    payload = handler._read_json_body() or {}
+    trip_id = str(payload.get("tripId") or "").strip()
+    if not trip_id:
+        handler._json_response(400, {"ok": False, "error": "E_TRIP_ID_REQUIRED"})
+        return
+    trip_dir = resolve_trip_dir_listed(ctx, trip_id)
+    if trip_dir is None:
+        handler._json_response(404, {"ok": False, "error": "E_TRIP_NOT_FOUND"})
+        return
+    trip_path = trip_dir / "trip.json"
+    if not trip_path.is_file():
+        handler._json_response(404, {"ok": False, "error": "E_TRIP_NOT_FOUND"})
+        return
+    trip = json.loads(trip_path.read_text(encoding="utf-8"))
+    work_dir = trip_dir / "runs" / "lse-shadow" / "replay"
+    work_dir.mkdir(parents=True, exist_ok=True)
+    report = shadow_lse_from_cfg(
+        trip,
+        trip_id=trip_id,
+        base_cfg=ctx.cfg,
+        work_dir=work_dir,
+        write_sidecar=True,
+    )
+    previews = enrich_changed_screen_previews(
+        trip,
+        trip_id,
+        trip_dir,
+        report.get("diff") or {},
+    )
+    handler._json_response(
+        200,
+        {
+            "ok": True,
+            "tripId": trip_id,
+            "mode": "lse_shadow_record_only",
+            **report,
+            "changedPreviews": previews,
         },
     )
 

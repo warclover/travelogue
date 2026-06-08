@@ -103,8 +103,11 @@ function populateSuccessUi(result) {
       if (tplLine) body += "\n" + tplLine;
       if (result.cullUserLine) body += "\n" + result.cullUserLine;
       var density = String(result.layoutDensity || "").toLowerCase();
-      if (density === "hero_first") body += "\n版面：大图为主";
-      else if (density === "collage_first") body += "\n版面：拼图为主";
+      if (density === "hero_first") {
+        body += "\n已为你突出大图、放大精彩瞬间";
+      } else if (density === "collage_first") {
+        body += "\n已为你多图拼贴、记录更多细节";
+      }
       msg.textContent = body;
       if (result.templateFeedbackKind) {
         var ev = result.templateFeedbackKind === "fallback"

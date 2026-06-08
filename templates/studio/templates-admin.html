@@ -14,6 +14,22 @@
     .muted { color: #5a6b63; font-size: 13px; }
     button { margin-right: 8px; padding: 6px 12px; cursor: pointer; }
     pre { background: #f4f8f6; padding: 12px; overflow: auto; font-size: 12px; }
+    .lse-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+    .lse-badge.experimental { background: #e8f0ff; color: #2a4a8a; }
+    .lse-badge.beta { background: #fff4e0; color: #8a5a10; }
+    .lse-badge.ga { background: #e6f5ec; color: #1b6b4a; }
+    .lse-badge.deprecated { background: #f0ece8; color: #6a5a4a; }
+    .lse-badge.disabled { background: #f5e8e8; color: #8a3030; }
+    .lse-pattern-bar { display: flex; height: 18px; border-radius: 4px; overflow: hidden; margin: 8px 0; border: 1px solid #d8e5df; }
+    .lse-pattern-seg { min-width: 2px; height: 100%; }
+    .lse-pattern-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12px; margin: 6px 0 12px; }
+    .lse-sandbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .lse-sandbox-card { border: 1px solid #d8e5df; border-radius: 6px; padding: 10px; background: #fafcfb; }
+    .lse-sandbox-card img { max-width: 100%; max-height: 140px; object-fit: contain; background: #eef5f1; border-radius: 4px; }
+    .lse-decisions-scroll { max-height: 360px; overflow-y: auto; border: 1px solid #d8e5df; border-radius: 6px; }
+    .lse-decisions-scroll table { margin: 0; }
+    .lse-crop-warn { color: #a33; font-size: 12px; }
+    #lse-pending-list li { margin: 6px 0; }
   </style>
 </head>
 <body>
@@ -115,7 +131,33 @@
     <button type="button" id="btn-lse-approve">审批 LSE 变更</button>
     <button type="button" id="btn-lse-rollback">回滚 LSE runtime</button>
     <button type="button" id="btn-lse-sandbox">Trip 沙箱 diff</button>
+    <button type="button" id="btn-lse-shadow">Shadow 双轨记录</button>
   </p>
+  <div id="lse-pending" hidden>
+    <h3>待审批 LSE 变更（L2 · 双人复核）</h3>
+    <ul id="lse-pending-list"></ul>
+  </div>
+  <div id="lse-sandbox-panel" hidden>
+    <h3>沙箱对比 · off vs on</h3>
+    <p id="lse-sandbox-summary" class="muted"></p>
+    <div id="lse-pattern-bars"></div>
+    <div id="lse-changed-screens"></div>
+  </div>
+  <div id="lse-decisions-panel" hidden>
+    <h3>LSE 决策日志</h3>
+    <p id="lse-decisions-meta" class="muted"></p>
+    <div id="lse-decisions-scroll" class="lse-decisions-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>章</th><th>选中 pattern</th><th>分数</th><th>来源</th><th>告警</th>
+          </tr>
+        </thead>
+        <tbody id="lse-decisions-rows"></tbody>
+      </table>
+    </div>
+    <button type="button" id="btn-lse-decisions-more">加载更多</button>
+  </div>
   <h2>路由回放</h2>
   <p>
     <input type="text" id="replay-trip" placeholder="tripId" style="min-width:200px" />
@@ -161,6 +203,20 @@
     const lseAccessNoticeEl = document.getElementById("lse-access-notice");
     const lseRuntimeStatusEl = document.getElementById("lse-runtime-status");
     const lseTableEl = lseRowsEl?.closest("table");
+    const lsePendingEl = document.getElementById("lse-pending");
+    const lsePendingListEl = document.getElementById("lse-pending-list");
+    const lseSandboxPanelEl = document.getElementById("lse-sandbox-panel");
+    const lseSandboxSummaryEl = document.getElementById("lse-sandbox-summary");
+    const lsePatternBarsEl = document.getElementById("lse-pattern-bars");
+    const lseChangedScreensEl = document.getElementById("lse-changed-screens");
+    const lseDecisionsPanelEl = document.getElementById("lse-decisions-panel");
+    const lseDecisionsMetaEl = document.getElementById("lse-decisions-meta");
+    const lseDecisionsRowsEl = document.getElementById("lse-decisions-rows");
+    let lseDecisionsState = { strategyId: "", tripId: "", offset: 0, total: 0, limit: 50 };
+    const LSE_PATTERN_COLORS = [
+      "#5b8def", "#3cb371", "#e6a23c", "#9b59b6", "#e74c3c",
+      "#1abc9c", "#f39c12", "#3498db", "#95a5a6", "#2ecc71",
+    ];
     let lastExposureProposals = [];
     let lastRegistryVersion = "";
     const logEl = document.getElementById("log");
@@ -477,6 +533,247 @@
       if (lseSectionEl) lseSectionEl.hidden = !show;
       if (lseTableEl) lseTableEl.hidden = !show;
       if (lseAccessNoticeEl) lseAccessNoticeEl.hidden = show;
+      if (!show) {
+        if (lsePendingEl) lsePendingEl.hidden = true;
+        if (lseSandboxPanelEl) lseSandboxPanelEl.hidden = true;
+        if (lseDecisionsPanelEl) lseDecisionsPanelEl.hidden = true;
+      }
+    }
+
+    function lseStatusBadge(status) {
+      const st = String(status || "experimental").toLowerCase();
+      const cls = ["experimental", "beta", "ga", "deprecated", "disabled"].includes(st)
+        ? st
+        : "experimental";
+      return '<span class="lse-badge ' + cls + '">' + escapeHtml(st) + "</span>";
+    }
+
+    function isLsePatch(patch) {
+      if (!patch || typeof patch !== "object") return false;
+      const keys = Object.keys(patch);
+      return keys.some((k) => k.startsWith("layout_strategy"));
+    }
+
+    function renderLsePending(pending) {
+      if (!lsePendingEl || !lsePendingListEl) return;
+      const items = pending || [];
+      if (!items.length) {
+        lsePendingEl.hidden = true;
+        lsePendingListEl.innerHTML = "";
+        return;
+      }
+      lsePendingEl.hidden = false;
+      lsePendingListEl.innerHTML = "";
+      items.forEach((item) => {
+        const li = document.createElement("li");
+        const patch = item.patch || {};
+        const stages = patch.layout_strategy_overrides_disable_stages || patch.disableStages;
+        const patterns = patch.layout_strategy_overrides_disable_patterns;
+        const detail = stages
+          ? "禁用 stages: " + JSON.stringify(stages)
+          : patterns
+            ? "禁用 patterns: " + JSON.stringify(patterns)
+            : JSON.stringify(patch);
+        li.innerHTML =
+          "<code>" +
+          escapeHtml(item.changeId || "—") +
+          "</code> · " +
+          escapeHtml(item.operator || "—") +
+          " · " +
+          escapeHtml(detail) +
+          (item.reason ? " · " + escapeHtml(item.reason) : "");
+        const btn = document.createElement("button");
+        btn.textContent = "审批";
+        btn.onclick = () => {
+          const approver = window.prompt("approver 名称", "approver-1");
+          if (!approver) return;
+          api("/__travelogue/layout-strategies/runtime/approve", {
+            method: "POST",
+            body: JSON.stringify({
+              changeId: String(item.changeId || "").trim(),
+              approver: approver.trim(),
+            }),
+          })
+            .then(() => api("/__travelogue/layout-strategies").then(renderLseStrategies))
+            .catch((e) => log(e));
+        };
+        li.appendChild(document.createTextNode(" "));
+        li.appendChild(btn);
+        lsePendingListEl.appendChild(li);
+      });
+    }
+
+    function renderPatternDistributionBar(dist, title) {
+      const entries = Object.entries(dist || {}).sort((a, b) => b[1] - a[1]);
+      if (!entries.length) return "";
+      let html = '<p class="muted"><strong>' + escapeHtml(title) + "</strong></p>";
+      html += '<div class="lse-pattern-bar">';
+      entries.forEach(([pid, frac], i) => {
+        const pct = Math.max(0.5, Math.round(frac * 1000) / 10);
+        const color = LSE_PATTERN_COLORS[i % LSE_PATTERN_COLORS.length];
+        html +=
+          '<div class="lse-pattern-seg" style="width:' +
+          pct +
+          "%;background:" +
+          color +
+          '" title="' +
+          escapeHtml(pid) +
+          " " +
+          pct +
+          '%"></div>';
+      });
+      html += "</div><div class=\"lse-pattern-legend\">";
+      entries.forEach(([pid, frac], i) => {
+        const color = LSE_PATTERN_COLORS[i % LSE_PATTERN_COLORS.length];
+        html +=
+          '<span><span style="display:inline-block;width:10px;height:10px;background:' +
+          color +
+          ';margin-right:4px;border-radius:2px"></span>' +
+          escapeHtml(pid) +
+          " " +
+          Math.round(frac * 1000) / 10 +
+          "%</span>";
+      });
+      html += "</div>";
+      return html;
+    }
+
+    function renderSandboxReport(data) {
+      if (!lseSandboxPanelEl) return;
+      lseSandboxPanelEl.hidden = false;
+      const diff = data.diff || {};
+      const rate = data.diffRate != null ? Math.round(data.diffRate * 1000) / 10 + "%" : "—";
+      if (lseSandboxSummaryEl) {
+        lseSandboxSummaryEl.textContent =
+          "trip=" +
+          (data.tripId || "—") +
+          " · 变更屏 " +
+          (diff.changedCount != null ? diff.changedCount : "—") +
+          "/" +
+          (diff.baselineScreenCount != null ? diff.baselineScreenCount : "—") +
+          " · diffRate=" +
+          rate +
+          (data.shadowActive ? " · shadow 已写入 sidecar" : "");
+      }
+      if (lsePatternBarsEl) {
+        lsePatternBarsEl.innerHTML =
+          renderPatternDistributionBar(data.baseline?.patternDistribution, "Baseline（LSE off）") +
+          renderPatternDistributionBar(data.candidate?.patternDistribution, "Candidate（LSE on）");
+      }
+      if (lseChangedScreensEl) {
+        const previews = data.changedPreviews || [];
+        if (!previews.length) {
+          lseChangedScreensEl.innerHTML =
+            '<p class="muted">' +
+            (diff.unchanged ? "布局完全一致，无变更屏预览。" : "无可用缩略图。") +
+            "</p>";
+        } else {
+          let html = "<p><strong>变更屏对比（首槽预览）</strong></p>";
+          previews.slice(0, 12).forEach((row) => {
+            const b = row.baseline || {};
+            const c = row.candidate || {};
+            html +=
+              '<div class="lse-sandbox-grid"><div class="lse-sandbox-card"><p class="muted">#' +
+              row.index +
+              " baseline · " +
+              escapeHtml(b.patternId || "—") +
+              "</p>";
+            if (row.baselinePreview) {
+              html +=
+                '<img src="' +
+                escapeHtml(row.baselinePreview) +
+                '" alt="baseline" loading="lazy" />';
+            } else {
+              html += "<p>—</p>";
+            }
+            html +=
+              '</div><div class="lse-sandbox-card"><p class="muted">#' +
+              row.index +
+              " candidate · " +
+              escapeHtml(c.patternId || "—") +
+              "</p>";
+            if (row.candidatePreview) {
+              html +=
+                '<img src="' +
+                escapeHtml(row.candidatePreview) +
+                '" alt="candidate" loading="lazy" />';
+            } else {
+              html += "<p>—</p>";
+            }
+            html += "</div></div>";
+          });
+          lseChangedScreensEl.innerHTML = html;
+        }
+      }
+      log(data);
+    }
+
+    function lseEventCropWarn(ev) {
+      const penalties = (ev.explain && ev.explain.penalties) || [];
+      const factors = (ev.explain && ev.explain.topFactors) || [];
+      const blob = JSON.stringify(penalties) + JSON.stringify(factors);
+      if (/salient|crop|focal/i.test(blob)) return "裁切风险";
+      const reasons = ((ev.picked && ev.picked.reasons) || []).join(" ");
+      if (/salient|crop/i.test(reasons)) return "裁切风险";
+      return "";
+    }
+
+    function appendLseDecisionRows(events, startIndex) {
+      (events || []).forEach((ev, i) => {
+        const tr = document.createElement("tr");
+        const picked = ev.picked || {};
+        const warn = lseEventCropWarn(ev);
+        tr.innerHTML =
+          "<td>" +
+          (startIndex + i + 1) +
+          "</td><td><code>" +
+          escapeHtml(ev.chapterId || "—") +
+          "</code></td><td><code>" +
+          escapeHtml(picked.patternId || "—") +
+          "</code></td><td>" +
+          escapeHtml(picked.score != null ? String(picked.score) : "—") +
+          "</td><td>" +
+          escapeHtml((ev.meta && ev.meta.source) || "—") +
+          "</td><td>" +
+          (warn ? '<span class="lse-crop-warn">' + escapeHtml(warn) + "</span>" : "—") +
+          "</td>";
+        lseDecisionsRowsEl.appendChild(tr);
+      });
+    }
+
+    async function loadLseDecisions(append) {
+      const tripId = lseDecisionsState.tripId;
+      const strategyId = lseDecisionsState.strategyId;
+      if (!tripId || !strategyId) return alert("请输入 tripId 与 strategyId");
+      const offset = append ? lseDecisionsState.offset : 0;
+      const q =
+        "?tripId=" +
+        encodeURIComponent(tripId) +
+        "&limit=" +
+        lseDecisionsState.limit +
+        "&offset=" +
+        offset;
+      const data = await api(
+        "/__travelogue/layout-strategies/" + encodeURIComponent(strategyId) + "/decisions" + q
+      );
+      if (!append) lseDecisionsRowsEl.innerHTML = "";
+      appendLseDecisionRows(data.events || [], offset);
+      const pag = data.pagination || {};
+      lseDecisionsState.offset = offset + (data.events || []).length;
+      lseDecisionsState.total = pag.total != null ? pag.total : lseDecisionsState.offset;
+      if (lseDecisionsPanelEl) lseDecisionsPanelEl.hidden = false;
+      if (lseDecisionsMetaEl) {
+        lseDecisionsMetaEl.textContent =
+          "已加载 " +
+          lseDecisionsState.offset +
+          " / " +
+          lseDecisionsState.total +
+          " 条 · strategy=" +
+          strategyId;
+      }
+      const moreBtn = document.getElementById("btn-lse-decisions-more");
+      if (moreBtn) moreBtn.hidden = lseDecisionsState.offset >= lseDecisionsState.total;
+      log(data);
     }
 
     function renderLseStrategies(data) {
@@ -492,6 +789,7 @@
           (enabled ? "" : "（默认 false = P16 等价）") +
           (pending.length ? " · 待审批 LSE " + pending.length + " 项" : "");
       }
+      renderLsePending(pending);
       lseRowsEl.innerHTML = "";
       (data.strategies || []).forEach((s) => {
         const tr = document.createElement("tr");
@@ -499,7 +797,7 @@
           "<td><code>" +
           escapeHtml(s.strategyId || "") +
           "</code></td><td>" +
-          escapeHtml(s.status || "") +
+          lseStatusBadge(s.status) +
           "</td><td>" +
           escapeHtml(String(s.version != null ? s.version : "—")) +
           "</td><td><code>" +
@@ -766,21 +1064,34 @@
         method: "POST",
         body: JSON.stringify({ tripId }),
       })
-        .then(log)
+        .then(renderSandboxReport)
+        .catch((e) => log(e));
+    };
+    document.getElementById("btn-lse-shadow").onclick = () => {
+      const tripId = document.getElementById("lse-trip").value.trim();
+      if (!tripId) return alert("请输入 tripId");
+      api("/__travelogue/layout-strategies/shadow", {
+        method: "POST",
+        body: JSON.stringify({ tripId }),
+      })
+        .then(renderSandboxReport)
         .catch((e) => log(e));
     };
     document.getElementById("btn-lse-decisions").onclick = () => {
       const tripId = document.getElementById("lse-trip").value.trim();
       const strategyId = document.getElementById("lse-strategy").value.trim();
       if (!tripId || !strategyId) return alert("请输入 tripId 与 strategyId");
-      const q =
-        "?tripId=" +
-        encodeURIComponent(tripId) +
-        "&limit=50&offset=0";
-      api("/__travelogue/layout-strategies/" + encodeURIComponent(strategyId) + "/decisions" + q)
-        .then(log)
-        .catch((e) => log(e));
+      lseDecisionsState = {
+        strategyId,
+        tripId,
+        offset: 0,
+        total: 0,
+        limit: 50,
+      };
+      loadLseDecisions(false).catch((e) => log(e));
     };
+    document.getElementById("btn-lse-decisions-more").onclick = () =>
+      loadLseDecisions(true).catch((e) => log(e));
     document.getElementById("btn-dashboard").onclick = () =>
       loadDashboard(24).catch((e) => log(e));
     document.getElementById("btn-dashboard-72").onclick = () =>
