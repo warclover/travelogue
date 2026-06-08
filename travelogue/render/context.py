@@ -492,6 +492,7 @@ def build_media_scroll(
     return ctx
 
 
+from travelogue.curation.asset_subject import full_frame_fit_for_asset, portrait_fit_for_asset
 from travelogue.curation.screen_planner import grid_class_for_pattern
 from travelogue.render.context_types import VoiceRenderContext, VoiceSourceContext
 from travelogue.render.screen_tone import screen_tone_css
@@ -504,6 +505,30 @@ def _screen_aspect_ratio_css(asset: dict) -> str | None:
     if w > 0 and h > 0:
         return f"{w} / {h}"
     return None
+
+
+def _asset_aspect_ratio_float(asset: dict) -> float:
+    w = int(asset.get("nativeWidth") or asset.get("width") or 0)
+    h = int(asset.get("nativeHeight") or asset.get("height") or 0)
+    if w > 0 and h > 0:
+        return w / h
+    return 16 / 9
+
+
+def _presentation_tier(ar: float) -> str:
+    if ar >= 2.8:
+        return "ultra"
+    if ar >= 2.0:
+        return "wide"
+    return "standard"
+
+
+def _screen_weight_for_tier(tier: str) -> float:
+    if tier == "ultra":
+        return 0.65
+    if tier == "wide":
+        return 0.60
+    return 0.62
 
 
 def build_epilogue_stats(trip: dict) -> EpilogueStatsContext:
@@ -609,6 +634,8 @@ def build_layout_screen(
         aid = slot.get("assetId", "")
         asset = _asset_lookup(assets, aid) if aid else None
         fit = slot.get("fit", "cover")
+        if pattern_id == "screen-full-frame" and asset:
+            fit = full_frame_fit_for_asset(asset, default="cover")
         role = slot.get("role")
         if mixed_p1_l2:
             slot_sizes = "row_third" if role == "portrait" or slot.get("slot") == 0 else "row_half"
@@ -664,22 +691,57 @@ def build_layout_screen(
     layout_hint = screen.get("layoutHint")
     if pattern_id == "screen-full-frame":
         layout_hint = "full-frame"
-    screen_aspect: str | None = None
-    # 人物竖屏用 layoutHint + 视口高度 CSS，勿再套整屏 --screen-aspect（否则大底色+小图）
-    if pattern_id == "screen-full-frame":
-        screen_aspect = "16 / 9"
-    elif layout_hint not in ("person-pair", "person-triple") and n_slots == 1 and "1col" in grid_class:
-        first_aid = (screen.get("slots") or [{}])[0].get("assetId", "")
-        if first_aid and first_aid in assets:
-            screen_aspect = _screen_aspect_ratio_css(assets[first_aid])
 
-    style_parts: list[str] = []
+    first_aid = (screen.get("slots") or [{}])[0].get("assetId", "")
+    first_asset = assets.get(first_aid) if first_aid else None
+
+    viewport_fit = False
+    tier_ultra = False
+    screen_aspect: str | None = None
+    if pattern_id == "screen-full-frame" and first_asset:
+        from travelogue.curation.media_classify import is_collage_asset
+
+        fit0 = full_frame_fit_for_asset(first_asset, default="cover")
+        ar = _asset_aspect_ratio_float(first_asset)
+        tier = _presentation_tier(ar)
+        if fit0 == "cover":
+            # Collage singles: full content-rail width (same weight as landscape-1).
+            if is_collage_asset(first_asset) and tier == "standard":
+                style_parts_vf = []
+                screen_aspect = _screen_aspect_ratio_css(first_asset)
+            else:
+                viewport_fit = True
+                style_parts_vf = [
+                    f"--screen-fit-ar: {ar:.6f}",
+                    f"--screen-weight: {_screen_weight_for_tier(tier):.3f}",
+                ]
+        else:
+            style_parts_vf = []
+            screen_aspect = _screen_aspect_ratio_css(first_asset)
+    elif layout_hint not in ("person-pair", "person-triple") and n_slots == 1 and "1col" in grid_class:
+        if first_asset:
+            ar = _asset_aspect_ratio_float(first_asset)
+            tier = _presentation_tier(ar)
+            style_parts_vf = []
+            if tier == "ultra":
+                tier_ultra = True
+                viewport_fit = True
+                style_parts_vf = [
+                    f"--screen-fit-ar: {ar:.6f}",
+                    f"--screen-weight: {_screen_weight_for_tier('ultra'):.3f}",
+                ]
+            else:
+                screen_aspect = _screen_aspect_ratio_css(first_asset)
+    else:
+        style_parts_vf = []
+
+    style_parts: list[str] = list(style_parts_vf)
     # screen-portrait-3: intrinsic row height via overlay; skip fixed stage AR.
-    skip_stage_aspect = pattern_id == "screen-portrait-3"
+    skip_stage_aspect = pattern_id == "screen-portrait-3" or viewport_fit
     if layout_geo.get("stageAspect") and not skip_stage_aspect:
         stage_aspect = str(layout_geo["stageAspect"]).replace(":", " / ")
         style_parts.append(f"--screen-aspect: {stage_aspect}")
-    elif screen_aspect:
+    elif screen_aspect and not viewport_fit:
         style_parts.append(f"--screen-aspect: {screen_aspect}")
     cols = layout_geo.get("cols")
     rows = layout_geo.get("rows")
@@ -718,6 +780,12 @@ def build_layout_screen(
     if joined_aids:
         out["assetIds"] = joined_aids
         out["hasAssetIds"] = True
+    if viewport_fit:
+        out["viewportFit"] = True
+        out["hasViewportFit"] = True
+    if tier_ultra:
+        out["tierUltra"] = True
+        out["hasTierUltra"] = True
     if folio_lite:
         out["folioLite"] = True
         if is_plate:

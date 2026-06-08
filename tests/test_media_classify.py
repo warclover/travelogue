@@ -103,6 +103,20 @@ def test_filename_hint_classifies_collage(tmp_path: Path) -> None:
     assert classify_media_class(path=p, img=img, date_source="exif") == "collage"
 
 
+def test_travel_landscape_not_false_positive_collage(tmp_path: Path) -> None:
+    """Scene edges must not trigger collage when gutters are not grid-aligned."""
+    img = Image.new("RGB", (6331, 3561), (90, 100, 110))
+    px = img.load()
+    for x in range(img.width):
+        for y in range(img.height):
+            if x % 900 < 3:
+                px[x, y] = (200, 200, 200)
+    p = tmp_path / "travel-landscape.jpg"
+    img.save(p, quality=85)
+    assert detect_collage_asset(path=p, img=img) is False
+    assert classify_media_class(path=p, img=img, date_source="exif") == "photo"
+
+
 def test_exif_software_hint_classifies_collage(tmp_path: Path) -> None:
     img = Image.new("RGB", (1200, 1200), (128, 128, 128))
     exif = img.getexif()

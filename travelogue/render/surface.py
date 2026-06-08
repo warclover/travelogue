@@ -107,7 +107,11 @@ def resolve_surface_context(
     folio_lite = folio_mode in ("lite", "full")
     folio_full = folio_mode == "full" and not is_longshot_surface
     include_breath = scroll_reading.get("breath", "off") not in ("off", "")
-    include_breath_flow = scroll_reading.get("breath") == "flow"
+    include_breath_flow = scroll_reading.get("breath") in (
+        "flow",
+        "cinematic",
+        "gallery",
+    )
     include_breath_scrub = scroll_reading.get("breath") in ("cinematic", "gallery")
     include_breath_gsap_runtime = (
         include_breath_scrub and scroll_reading.get("breathEngine") == "gsap"

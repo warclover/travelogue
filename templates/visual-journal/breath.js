@@ -7,13 +7,26 @@
 
   var SCREEN_SEL = '.layout-screen[data-block="layout-screen"]';
   var EXTRA_SEL =
-    '.cover-hero[data-block="cover-hero"], .chapter-header[data-block="chapter-header"], .chapter-separator[data-block="chapter-separator"], .breath-pause-screen[data-block="breath-pause-screen"], .foreword-spread[data-block="foreword-spread"], .trip-index[data-block="trip-index"], .featured-grid[data-block="featured-grid"], .screen-spread[data-block="screen-spread"]';
+    '.cover-hero[data-block="cover-hero"], .hook-line[data-block="hook-line"], .chapter-header[data-block="chapter-header"], .chapter-separator[data-block="chapter-separator"], .breath-pause-screen[data-block="breath-pause-screen"], .foreword-spread[data-block="foreword-spread"], .trip-index[data-block="trip-index"], .featured-grid[data-block="featured-grid"], .screen-spread[data-block="screen-spread"]';
   var observer = null;
   var paused = false;
   var lenisStarted = false;
   var scrubStarted = false;
 
-  var FLOW_OPTS = { lerp: 0.1, wheelMultiplier: 0.85 };
+  var FLOW_OPTS = {
+    lerp: 0.065,
+    settleLerp: 0.18,
+    wheelMultiplier: 0.82,
+    wheelIdleMs: 130,
+    tailMs: 420,
+  };
+
+  function flowOptsForLevel() {
+    if (breathLevel() === "cinematic" || breathLevel() === "gallery") {
+      return FLOW_OPTS;
+    }
+    return { lerp: 0.1, wheelMultiplier: 0.85 };
+  }
 
   function reading() {
     return global.__TRAVELOGUE_READING__ || {};
@@ -28,6 +41,14 @@
       global.matchMedia &&
       global.matchMedia("(prefers-reduced-motion: reduce)").matches
     );
+  }
+
+  function revealObserverOpts() {
+    var level = breathLevel();
+    if (level === "cinematic" || level === "gallery") {
+      return { threshold: 0.08, rootMargin: "0px 0px -4% 0px" };
+    }
+    return { threshold: 0.12, rootMargin: "0px 0px -8% 0px" };
   }
 
   function collectTargets() {
@@ -78,13 +99,36 @@
     scrubStarted = false;
   }
 
+  function usesFlowScroll() {
+    var level = breathLevel();
+    return level === "flow" || level === "cinematic" || level === "gallery";
+  }
+
   function initFlowScroll() {
-    if (lenisStarted || breathLevel() !== "flow") return;
+    if (lenisStarted || !usesFlowScroll()) return;
     if (prefersReducedMotion()) return;
     if (!global.TravelogueLenis || typeof global.TravelogueLenis.init !== "function") return;
-    global.TravelogueLenis.init(FLOW_OPTS);
+    global.TravelogueLenis.init(flowOptsForLevel());
     lenisStarted = true;
     if (paused) pauseLenis();
+  }
+
+  function initHighlight() {
+    if (
+      global.TravelogueHighlight &&
+      typeof global.TravelogueHighlight.init === "function"
+    ) {
+      global.TravelogueHighlight.init();
+    }
+  }
+
+  function destroyHighlight() {
+    if (
+      global.TravelogueHighlight &&
+      typeof global.TravelogueHighlight.destroy === "function"
+    ) {
+      global.TravelogueHighlight.destroy();
+    }
   }
 
   function initScrubMotion() {
@@ -104,6 +148,7 @@
     }
     destroyLenis();
     destroyScrub();
+    destroyHighlight();
     collectTargets().forEach(function (el) {
       el.classList.remove("breath-reveal", "is-visible", "breath-reveal--featured");
       el.style.opacity = "";
@@ -153,7 +198,7 @@
           }
         });
       },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+      revealObserverOpts()
     );
 
     targets.forEach(function (el) {
@@ -172,6 +217,7 @@
     initReveal();
     initFlowScroll();
     initScrubMotion();
+    initHighlight();
   }
 
   global.TravelogueBreath = {

@@ -136,8 +136,15 @@ def _fits_for_screen(
     n = len(asset_ids)
     if pattern_id in ("screen-panorama-1", "screen-plate"):
         return ["cover"] * n
-    if pattern_id in ("screen-tall-1", "screen-square-1", "screen-full-frame"):
+    if pattern_id in ("screen-tall-1", "screen-square-1"):
         return ["contain"] * n
+    if pattern_id == "screen-full-frame":
+        from travelogue.curation.asset_subject import full_frame_fit_for_asset
+
+        return [
+            full_frame_fit_for_asset(assets_map.get(aid), default="cover")
+            for aid in asset_ids
+        ]
     if pattern_id == "screen-portrait-1":
         # Single full-screen portrait: the container is portrait-aspect, so cover
         # fills edge-to-edge with negligible cropping. Person/face shots still use
@@ -480,6 +487,33 @@ def _family_kind(k: AspectKind) -> str:
     return "landscape"
 
 
+# Solo ultra-wide stage only when native w/h ≥ this (aligns with render ultra tier).
+ULTRA_WIDE_SOLO_AR = 2.8
+
+
+def _asset_native_aspect_ratio(asset: dict) -> float | None:
+    w = int(asset.get("nativeWidth") or asset.get("width") or 0)
+    h = int(asset.get("nativeHeight") or asset.get("height") or 0)
+    if w > 0 and h > 0:
+        return w / h
+    return None
+
+
+def _layout_family_for_asset(
+    aid: str,
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict] | None = None,
+) -> str:
+    """Map ingest panorama (≥2:1) to landscape unless truly ultra-wide."""
+    fam = _family_kind(aspects.get(aid, "square"))
+    if fam != "panorama" or not assets_map:
+        return fam
+    ar = _asset_native_aspect_ratio(assets_map.get(aid, {}))
+    if ar is not None and ar < ULTRA_WIDE_SOLO_AR:
+        return "landscape"
+    return "panorama"
+
+
 def _is_std_portrait_id(aid: str, aspects: dict[str, AspectKind]) -> bool:
     return _family_kind(aspects.get(aid, "square")) == "portrait"
 
@@ -631,12 +665,20 @@ def _pick_grid_count(
     )
 
 
-def _run_length(remaining: list[str], aspects: dict[str, AspectKind]) -> tuple[str, int]:
+def _run_length(
+    remaining: list[str],
+    aspects: dict[str, AspectKind],
+    *,
+    assets_map: dict[str, dict] | None = None,
+) -> tuple[str, int]:
     if not remaining:
         return "landscape", 0
-    fam = _family_kind(aspects.get(remaining[0], "square"))
+    fam = _layout_family_for_asset(remaining[0], aspects, assets_map)
     n = 1
-    while n < len(remaining) and _family_kind(aspects.get(remaining[n], "square")) == fam:
+    while (
+        n < len(remaining)
+        and _layout_family_for_asset(remaining[n], aspects, assets_map) == fam
+    ):
         n += 1
     return fam, n
 
@@ -938,7 +980,7 @@ def _plan_one_screen(
         return None, 0
 
     assets_map = assets_map or {}
-    family, run_len = _run_length(remaining, aspects)
+    family, run_len = _run_length(remaining, aspects, assets_map=assets_map)
 
     if family == "landscape":
         land_run = remaining[:run_len]

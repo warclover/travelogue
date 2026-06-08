@@ -534,6 +534,36 @@ def test_panorama_single_uses_landscape_screen_with_cover():
     assert screens[0]["slots"][0]["fit"] == "cover"
 
 
+def test_marginal_panorama_treated_as_landscape_family():
+    """2.0–2.8 ingest panorama must not use solo ultra-wide planning/render path."""
+    from travelogue.curation.screen_planner import _layout_family_for_asset, _run_length
+    from travelogue.render.context import build_layout_screen
+
+    aspects = {"p1": "panorama"}
+    assets = {
+        "p1": {
+            "id": "p1",
+            "nativeWidth": 2048,
+            "nativeHeight": 1000,
+            "width": 2048,
+            "height": 1000,
+            "aspectKind": "panorama",
+            "takenAt": "2025-05-01T12:00:00Z",
+        },
+    }
+    assert _layout_family_for_asset("p1", aspects, assets) == "landscape"
+    assert _run_length(["p1"], aspects, assets_map=assets) == ("landscape", 1)
+
+    screen = {
+        "patternId": "screen-landscape-1",
+        "slots": [{"assetId": "p1", "slot": 0, "fit": "cover"}],
+    }
+    ctx = build_layout_screen(screen, assets, meta_title="Test", export_layout="web")
+    assert ctx.get("hasViewportFit") is not True
+    assert ctx.get("hasTierUltra") is not True
+    assert "2048 / 1000" in ctx["screenStyle"]
+
+
 def test_skip_web_cover_skips_chapter_hero_screen():
     ids = ["cover", "l2", "l3", "l4", "l5"]
     aspects = {**{x: "landscape" for x in ids}, "cover": "panorama"}

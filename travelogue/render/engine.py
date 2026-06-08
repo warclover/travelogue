@@ -13,6 +13,8 @@ from travelogue.errors import CodeError
 from travelogue.paths import (
     BREATH_CSS,
     BREATH_GSAP_JS,
+    BREATH_HIGHLIGHT_JS,
+    BREATH_IMAGE_JS,
     BREATH_JS,
     BREATH_LENIS_JS,
     COPY_DISPLAY_CSS,
@@ -261,7 +263,8 @@ def should_include_breath_flow(
         index_name=index_name,
         reading_profile_override=reading_profile_override,
     )
-    return (payload.get("scroll") or {}).get("breath") == "flow"
+    breath = (payload.get("scroll") or {}).get("breath")
+    return breath in ("flow", "cinematic", "gallery")
 
 
 def should_include_breath_scrub(
@@ -302,6 +305,15 @@ def copy_breath_bundle(out_dir: Path, *, include_flow: bool = False, include_scr
         dest = out_dir / "breath-gsap.js"
         if dest.resolve() != BREATH_GSAP_JS.resolve():
             shutil.copy2(BREATH_GSAP_JS, dest)
+        for src, name in (
+            (BREATH_HIGHLIGHT_JS, "breath-highlight.js"),
+            (BREATH_IMAGE_JS, "breath-image.js"),
+        ):
+            if not src.is_file():
+                raise RenderError("E_RENDER_BREATH", f"missing {name}")
+            dest = out_dir / name
+            if dest.resolve() != src.resolve():
+                shutil.copy2(src, dest)
 
 
 def write_longshot_sidecar(

@@ -76,7 +76,9 @@ def test_reading_payload_accepts_cinematic_and_gallery() -> None:
 
 def test_cinematic_renders_scrub_bundle(screens_workspace: Path) -> None:
     trip = json.loads((screens_workspace / "trip.json").read_text(encoding="utf-8"))
-    trip.setdefault("export", {})["reading"] = {"scroll": {"breath": "cinematic", "folio": "lite"}}
+    trip.setdefault("export", {})["reading"] = {
+        "scroll": {"breath": "cinematic", "folio": "lite", "breathEngine": "gsap"},
+    }
     (screens_workspace / "trip.json").write_text(
         json.dumps(trip, ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -87,10 +89,15 @@ def test_cinematic_renders_scrub_bundle(screens_workspace: Path) -> None:
         export_layout_override="web",
     )
     assert (screens_workspace / "breath-gsap.js").is_file()
-    assert not (screens_workspace / "breath-lenis.js").exists()
+    assert (screens_workspace / "breath-lenis.js").is_file()
+    assert (screens_workspace / "breath-highlight.js").is_file()
+    assert (screens_workspace / "breath-image.js").is_file()
     html = (screens_workspace / "index.html").read_text(encoding="utf-8")
     assert 'data-breath="cinematic"' in html
     assert "breath-gsap.js" in html
+    assert "breath-lenis.js" in html
+    assert "breath-highlight.js" in html
+    assert "breath-image.js" in html
 
 
 def test_gallery_renders_scrub_bundle(screens_workspace: Path) -> None:

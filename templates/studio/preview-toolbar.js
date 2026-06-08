@@ -18,6 +18,7 @@ import { mountCohortDrawer } from "./cohort-drawer.js";
 var isJobBusy409 = isJobBusyResponse;
 var HINT_KEY = "travelogue.studio.editHint.dismissed";
 var COLLAPSE_KEY = "travelogue.studio.previewToolbar.collapsed";
+var READER_VIEW_KEY = "travelogue.studio.readerView";
 var SLOW_JOB_MS = 30000;
 var pollCancel = null;
 var longshotJobId = null;
@@ -1484,12 +1485,90 @@ var narrateJobId = null;
     }).catch(function () { /* ignore */ });
   }
 
+  function snapshotReadingPayload() {
+    var reading = window.__TRAVELOGUE_READING__;
+    if (!reading || typeof reading !== "object") return null;
+    try {
+      return JSON.parse(JSON.stringify(reading));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function applyReaderSurfaceMode(readerMode) {
+    var html = document.documentElement;
+    var reading = window.__TRAVELOGUE_READING__ || {};
+    if (readerMode) {
+      html.setAttribute("data-reading-profile", "reader_immersive");
+      html.setAttribute("data-surface-mode", "reader");
+      html.removeAttribute("data-folio");
+      reading.profile = "reader_immersive";
+      reading.scroll = reading.scroll || {};
+      reading.scroll.folio = "off";
+    } else {
+      html.setAttribute("data-reading-profile", "studio_preview");
+      html.removeAttribute("data-surface-mode");
+      html.setAttribute("data-folio", "lite");
+      reading.profile = "studio_preview";
+      reading.scroll = reading.scroll || {};
+      reading.scroll.folio = "lite";
+    }
+    window.__TRAVELOGUE_READING__ = reading;
+    if (window.TravelogueBreath && typeof window.TravelogueBreath.destroy === "function") {
+      window.TravelogueBreath.destroy();
+    }
+    if (window.TravelogueBreath && typeof window.TravelogueBreath.init === "function") {
+      window.TravelogueBreath.init();
+    }
+  }
+
+  function initReaderViewToggle(root, actions) {
+    var baseline = snapshotReadingPayload();
+    var readerBtn = document.createElement("button");
+    readerBtn.type = "button";
+    readerBtn.className = "preview-toolbar__reader-view";
+    readerBtn.setAttribute("aria-pressed", "false");
+    readerBtn.textContent = "阅读视图";
+    actions.insertBefore(readerBtn, actions.firstChild);
+
+    var readerOn = false;
+    try {
+      readerOn = localStorage.getItem(READER_VIEW_KEY) === "1";
+    } catch (e) {}
+
+    function syncButton() {
+      readerBtn.setAttribute("aria-pressed", readerOn ? "true" : "false");
+      readerBtn.textContent = readerOn ? "编辑预览" : "阅读视图";
+    }
+
+    function setReaderMode(on) {
+      readerOn = !!on;
+      applyReaderSurfaceMode(readerOn);
+      syncButton();
+      try {
+        localStorage.setItem(READER_VIEW_KEY, readerOn ? "1" : "0");
+      } catch (e2) {}
+    }
+
+    readerBtn.addEventListener("click", function () {
+      setReaderMode(!readerOn);
+    });
+
+    if (readerOn) {
+      setReaderMode(true);
+    } else if (baseline && baseline.profile === "reader_immersive") {
+      setReaderMode(true);
+    }
+    syncButton();
+  }
+
   function initToolbar(root) {
     var tripId = tripIdFromPath();
     if (!tripId) return;
 
     var bar = root.querySelector(".preview-toolbar__bar");
     var actions = root.querySelector(".preview-toolbar__actions") || bar;
+    initReaderViewToggle(root, actions);
     var menuBtn = root.querySelector(".preview-toolbar__menu-btn");
     var menu = root.querySelector(".preview-toolbar__more-menu");
     var revealBtn = root.querySelector(".preview-toolbar__reveal-folder");

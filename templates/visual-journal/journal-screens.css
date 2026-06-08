@@ -1,16 +1,46 @@
 /**
- * Web layoutEngine=screens — 16:9 舞台与槽位（见 docs/web端模板.prd）
+ * Web layoutEngine=screens — 舞台与槽位（见 docs/PRD-页面优化.md · BSP）
  */
+html[data-layout-engine="screens"] {
+  --content-rail: var(--bleed-width);
+  --screen-rhythm-gap: clamp(8px, 1vh, 16px);
+}
+
+html[data-layout-engine="screens"] .hook-line[data-block="hook-line"] {
+  width: 100%;
+  max-width: var(--content-rail, var(--bleed-width));
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
 html[data-layout="web"] .layout-screen,
 html[data-layout="auto"] .layout-screen {
   width: 100%;
-  max-width: var(--bleed-width);
-  margin: 0 auto 12px;
+  max-width: var(--content-rail, var(--bleed-width));
+  margin: 0 auto var(--screen-rhythm-gap, 12px);
   aspect-ratio: var(--screen-aspect, 16 / 9);
   height: auto;
   overflow: hidden;
   background: var(--screen-tone, var(--bg-page));
   box-sizing: border-box;
+}
+
+/* BSP-2 · viewport-fit: rail 同宽；vh 触顶时收窄宽度以保持 --screen-fit-ar（避免标准横图被拉成超宽槽） */
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen--viewport-fit {
+  aspect-ratio: var(--screen-fit-ar, 16 / 9);
+  width: min(
+    100%,
+    calc(100dvh * var(--screen-weight, 0.62) * var(--screen-fit-ar, 16 / 9))
+  );
+  max-width: var(--content-rail, var(--bleed-width));
+  max-height: calc(100dvh * var(--screen-weight, 0.62));
+  height: auto;
+  margin-inline: auto;
+}
+
+/* BSP-2b · T3 ultra-wide vh anchor (linzhi regression) */
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen--tier-ultra {
+  min-height: clamp(52dvh, 60dvh, 72dvh);
 }
 
 html[data-layout="web"] .layout-screen__grid,
@@ -1226,8 +1256,10 @@ html[data-folio="full"] .chapter-header__index {
   color: color-mix(in srgb, var(--folio-ink) 55%, transparent);
 }
 
-html[data-folio="lite"] .layout-screen[data-block="layout-screen"],
-html[data-folio="full"] .layout-screen[data-block="layout-screen"] {
+html[data-folio="lite"] .layout-screen--plate[data-block="layout-screen"],
+html[data-folio="full"] .layout-screen--plate[data-block="layout-screen"],
+html[data-folio="lite"] .layout-screen[data-block="layout-screen"][data-featured="true"],
+html[data-folio="full"] .layout-screen[data-block="layout-screen"][data-featured="true"] {
   position: relative;
   box-shadow: 0 1px 0 color-mix(in srgb, var(--folio-ink) 8%, transparent);
 }
@@ -1556,6 +1588,10 @@ html[data-folio="full"] .featured-grid__img {
 
 /* P5-S2 · full-bleed chapter separator */
 .chapter-separator[data-block="chapter-separator"] {
+  width: 100%;
+  max-width: var(--content-rail, var(--bleed-width));
+  margin-left: auto;
+  margin-right: auto;
   min-height: clamp(140px, 20vh, 260px);
   display: flex;
   flex-direction: column;
@@ -1564,7 +1600,7 @@ html[data-folio="full"] .featured-grid__img {
   text-align: center;
   gap: 0.35rem;
   padding: clamp(24px, 4vh, 44px) 24px;
-  margin: 0 0 var(--chapter-gap, 2rem);
+  margin-bottom: var(--chapter-gap, 2rem);
   color: var(--chapter-separator-ink, #f5f2ea);
   background: var(--screen-tone, #2a2826);
   position: relative;
@@ -1614,21 +1650,23 @@ html[data-folio="full"] .featured-grid__img {
   color: color-mix(in srgb, var(--chapter-separator-ink, #f5f2ea) 90%, transparent);
 }
 
-/* P5-S5 · breath pause screen (web scroll) — thin rhythm divider */
+/* P5-S5 · breath pause — content-rail gap (BSP-1, no full-bleed border) */
 .breath-pause-screen[data-block="breath-pause-screen"] {
-  min-height: clamp(6px, 1vh, 12px);
+  width: 100%;
+  max-width: var(--content-rail, var(--bleed-width));
+  margin-inline: auto;
+  margin-block: 0 var(--screen-rhythm-gap, clamp(8px, 1vh, 16px));
+  min-height: var(--screen-rhythm-gap, clamp(8px, 1vh, 16px));
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--breath-tone, #1e1d1b) 62%, transparent) 0%,
-      color-mix(in srgb, var(--breath-tone, #1e1d1b) 38%, transparent) 100%
-    );
-  border-top: 1px solid color-mix(in srgb, var(--breath-tone, #1e1d1b) 28%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--breath-tone, #1e1d1b) 28%, transparent);
-  margin: 0 0 0.25rem;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--screen-tone, var(--bg-page)) 0%, transparent) 0%,
+    color-mix(in srgb, var(--breath-tone, #1e1d1b) 32%, transparent) 50%,
+    color-mix(in srgb, var(--screen-tone, var(--bg-page)) 0%, transparent) 100%
+  );
+  border: none;
   overflow: hidden;
 }
 

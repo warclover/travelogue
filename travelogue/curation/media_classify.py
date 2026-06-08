@@ -178,8 +178,27 @@ def _exif_software_suggests_collage(img: Image.Image) -> bool:
         return False
 
 
+def _seam_near_fraction(pos: int, span: int, target: float, *, tol: float = 0.12) -> bool:
+    if span <= 0:
+        return False
+    return abs(pos / span - target) <= tol
+
+
+def _has_center_panel_seam(seams: list[int], span: int) -> bool:
+    """Single gutter near 50% (2-panel split)."""
+    return len(seams) == 1 and _seam_near_fraction(seams[0], span, 0.5)
+
+
+def _has_three_column_seams(seams: list[int], span: int) -> bool:
+    """Exactly two gutters near ⅓ and ⅔ (3-panel horizontal split)."""
+    if len(seams) != 2 or span <= 0:
+        return False
+    a, b = sorted(s / span for s in seams)
+    return abs(a - 1 / 3) <= 0.10 and abs(b - 2 / 3) <= 0.10
+
+
 def _seam_grid_suggests_collage(img: Image.Image) -> bool:
-    """Conservative v2: EXIF-first; seams for grid collages and 2-panel splits."""
+    """Conservative v3: seams must align with collage grid gutters, not scene edges."""
     w, h = img.size
     if min(w, h) < 480:
         return False
@@ -217,21 +236,18 @@ def _seam_grid_suggests_collage(img: Image.Image) -> bool:
     h_seams = _seam_positions(_band_means("row"))
 
     # Two-panel landscape/portrait splits (e.g. 1600×800, 800×1600)
-    if ratio >= 1.35 and len(v_seams) == 1 and w >= 640:
+    if ratio >= 1.35 and w >= 640 and _has_center_panel_seam(v_seams, sw):
         return True
-    if ratio <= 0.74 and len(h_seams) == 1 and h >= 640:
+    if ratio <= 0.74 and h >= 640 and _has_center_panel_seam(h_seams, sh):
         return True
-    # Three-column (or more) horizontal collage
-    if ratio >= 1.12 and len(v_seams) >= 2 and w >= 600:
+    # Three-column horizontal collage
+    if ratio >= 1.12 and w >= 600 and _has_three_column_seams(v_seams, sw):
         return True
 
-    if ratio < 0.88 or ratio > 1.18:
-        return False
-    if len(v_seams) < 1 or len(h_seams) < 1:
-        return False
-    if len(v_seams) >= 2 and len(h_seams) >= 2:
-        return True
-    return len(v_seams) == 1 and len(h_seams) == 1 and min(w, h) >= 720
+    # Near-square 2×2 grid
+    if 0.88 <= ratio <= 1.18 and min(w, h) >= 720:
+        return _has_center_panel_seam(v_seams, sw) and _has_center_panel_seam(h_seams, sh)
+    return False
 
 
 def detect_collage_asset(

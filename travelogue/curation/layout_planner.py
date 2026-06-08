@@ -65,12 +65,15 @@ class OrientationSummary:
 
 
 def aspect_kind_for_asset(asset: dict) -> AspectKind:
+    """Prefer native pixels so layout tier matches render-time aspect ratio."""
+    w = int(asset.get("nativeWidth") or asset.get("width") or 0)
+    h = int(asset.get("nativeHeight") or asset.get("height") or 0)
+    if w > 0 and h > 0:
+        return classify_aspect(w, h)
     stored = asset.get("aspectKind")
     if stored in ("portrait", "landscape", "square", "panorama", "tall"):
         return stored  # type: ignore[return-value]
-    w = int(asset.get("width") or 0)
-    h = int(asset.get("height") or 0)
-    return classify_aspect(w, h)
+    return "square"
 
 
 def summarize_orientations(

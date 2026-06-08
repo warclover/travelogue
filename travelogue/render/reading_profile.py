@@ -19,7 +19,14 @@ SURFACE_MOBILE = "index-mobile.html"
 SURFACE_PRESENT_PREVIEW = "index-present.html"
 SURFACE_LONGSHOT = "index-longshot.html"
 
-VALID_PROFILES = frozenset({"legacy", "performance", "default_hybrid", "magazine"})
+VALID_PROFILES = frozenset({
+    "legacy",
+    "performance",
+    "default_hybrid",
+    "magazine",
+    "studio_preview",
+    "reader_immersive",
+})
 
 _MATRIX_PATH = ROOT / "docs" / "experience-matrix.yaml"
 
@@ -77,6 +84,46 @@ _FALLBACK_MATRIX: dict[str, Any] = {
             "scroll": {"snap": "proximity", "breath": "flow", "folio": "full"},
             "present": {
                 "dwell_ms": 2500,
+                "featured_only": False,
+                "sync_scroll_on_exit": True,
+                "auto_advance": True,
+                "manual_controls": True,
+                "tap_zone_nav": True,
+                "click_stage": "pause",
+                "loop": False,
+            },
+            "longshot": {"breath": "off", "folio": "off"},
+        },
+        "studio_preview": {
+            "scroll": {
+                "snap": "proximity",
+                "breath": "cinematic",
+                "folio": "lite",
+                "breath_engine": "gsap",
+                "keyboard_nav": True,
+            },
+            "present": {
+                "dwell_ms": 2000,
+                "featured_only": False,
+                "sync_scroll_on_exit": True,
+                "auto_advance": True,
+                "manual_controls": True,
+                "tap_zone_nav": True,
+                "click_stage": "pause",
+                "loop": False,
+            },
+            "longshot": {"breath": "off", "folio": "off"},
+        },
+        "reader_immersive": {
+            "scroll": {
+                "snap": "proximity",
+                "breath": "cinematic",
+                "folio": "off",
+                "breath_engine": "gsap",
+                "keyboard_nav": True,
+            },
+            "present": {
+                "dwell_ms": 2000,
                 "featured_only": False,
                 "sync_scroll_on_exit": True,
                 "auto_advance": True,

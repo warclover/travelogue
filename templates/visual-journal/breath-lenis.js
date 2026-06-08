@@ -18,6 +18,7 @@
   var FLOW_FRAME_MS = 1000 / 60;
 
   function FlowScroll(options) {
+    options = options || {};
     this.lerp = typeof options.lerp === "number" ? options.lerp : 0.1;
     this.settleLerp =
       typeof options.settleLerp === "number" ? options.settleLerp : 0.28;
@@ -25,6 +26,8 @@
       typeof options.wheelMultiplier === "number" ? options.wheelMultiplier : 0.85;
     this.wheelIdleMs =
       typeof options.wheelIdleMs === "number" ? options.wheelIdleMs : 90;
+    this.tailMs =
+      typeof options.tailMs === "number" ? options.tailMs : FLOW_TAIL_MS;
     this.paused = false;
     this.current = 0;
     this.target = 0;
@@ -61,7 +64,7 @@
           if (!this.coastStartedAt) {
             this.coastStartedAt = this.lastWheelAt + this.wheelIdleMs;
           }
-          if (now - this.coastStartedAt >= FLOW_TAIL_MS - FLOW_FRAME_MS) {
+          if (now - this.coastStartedAt >= this.tailMs - FLOW_FRAME_MS) {
             this.current = this.target;
           } else {
             this.current += diff * this.settleLerp;
@@ -71,9 +74,21 @@
           this.current += diff * this.lerp;
         }
         global.scrollTo(0, this.current);
+        if (
+          global.ScrollTrigger &&
+          typeof global.ScrollTrigger.update === "function"
+        ) {
+          global.ScrollTrigger.update();
+        }
       } else if (Math.abs(diff) > 0.01) {
         this.current = this.target;
         global.scrollTo(0, this.current);
+        if (
+          global.ScrollTrigger &&
+          typeof global.ScrollTrigger.update === "function"
+        ) {
+          global.ScrollTrigger.update();
+        }
       }
     }
     this.rafId = global.requestAnimationFrame(this.loop);

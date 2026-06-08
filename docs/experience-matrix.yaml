@@ -83,6 +83,50 @@ profiles:
       click_stage: pause
       loop: false
 
+  studio_preview:
+    label: Studio 预览
+    description: BSP-3 · 编辑面；folio lite + plate meta 可见
+    scroll:
+      snap: proximity
+      breath: cinematic
+      folio: lite
+      breath_engine: gsap
+      keyboard_nav: true
+    present:
+      dwell_ms: 2000
+      featured_only: false
+      sync_scroll_on_exit: true
+      auto_advance: true
+      manual_controls: true
+      tap_zone_nav: true
+      click_stage: pause
+      loop: false
+    longshot:
+      breath: off
+      folio: off
+
+  reader_immersive:
+    label: 阅读视图
+    description: BSP-3 · 分享前终检；无 plate meta · folio off
+    scroll:
+      snap: proximity
+      breath: cinematic
+      folio: off
+      breath_engine: gsap
+      keyboard_nav: true
+    present:
+      dwell_ms: 2000
+      featured_only: false
+      sync_scroll_on_exit: true
+      auto_advance: true
+      manual_controls: true
+      tap_zone_nav: true
+      click_stage: pause
+      loop: false
+    longshot:
+      breath: off
+      folio: off
+
 defaults:
   draft_web_profile: default_hybrid
   share_zip_profile: performance

@@ -1,0 +1,183 @@
+/**
+ * Travelogue · breath flow smooth scroll (PRD-EXPERIENCE appendix B · E6)
+ * Lightweight lerp scroll — PRD params: lerp 0.1, wheelMultiplier 0.85, syncTouch false.
+ */
+(function (global) {
+  "use strict";
+
+  var instance = null;
+
+  function maxScrollY() {
+    return Math.max(
+      0,
+      (document.documentElement.scrollHeight || 0) - global.innerHeight
+    );
+  }
+
+  var FLOW_TAIL_MS = 300;
+  var FLOW_FRAME_MS = 1000 / 60;
+
+  function FlowScroll(options) {
+    options = options || {};
+    this.lerp = typeof options.lerp === "number" ? options.lerp : 0.1;
+    this.settleLerp =
+      typeof options.settleLerp === "number" ? options.settleLerp : 0.28;
+    this.wheelMultiplier =
+      typeof options.wheelMultiplier === "number" ? options.wheelMultiplier : 0.85;
+    this.wheelIdleMs =
+      typeof options.wheelIdleMs === "number" ? options.wheelIdleMs : 90;
+    this.tailMs =
+      typeof options.tailMs === "number" ? options.tailMs : FLOW_TAIL_MS;
+    this.paused = false;
+    this.current = 0;
+    this.target = 0;
+    this.rafId = null;
+    this.lastWheelAt = 0;
+    this.coastStartedAt = 0;
+    this.onWheel = this.onWheel.bind(this);
+    this.loop = this.loop.bind(this);
+  }
+
+  FlowScroll.prototype.syncFromViewport = function () {
+    this.current = global.scrollY || 0;
+    this.target = this.current;
+  };
+
+  FlowScroll.prototype.onWheel = function (e) {
+    if (this.paused) return;
+    e.preventDefault();
+    this.lastWheelAt = Date.now();
+    this.coastStartedAt = 0;
+    this.target += e.deltaY * this.wheelMultiplier;
+    if (this.target < 0) this.target = 0;
+    var max = maxScrollY();
+    if (this.target > max) this.target = max;
+  };
+
+  FlowScroll.prototype.loop = function () {
+    if (!this.paused) {
+      var diff = this.target - this.current;
+      if (Math.abs(diff) > 0.5) {
+        var now = Date.now();
+        var idle = now - this.lastWheelAt > this.wheelIdleMs;
+        if (idle) {
+          if (!this.coastStartedAt) {
+            this.coastStartedAt = this.lastWheelAt + this.wheelIdleMs;
+          }
+          if (now - this.coastStartedAt >= this.tailMs - FLOW_FRAME_MS) {
+            this.current = this.target;
+          } else {
+            this.current += diff * this.settleLerp;
+          }
+        } else {
+          this.coastStartedAt = 0;
+          this.current += diff * this.lerp;
+        }
+        global.scrollTo(0, this.current);
+        if (
+          global.ScrollTrigger &&
+          typeof global.ScrollTrigger.update === "function"
+        ) {
+          global.ScrollTrigger.update();
+        }
+      } else if (Math.abs(diff) > 0.01) {
+        this.current = this.target;
+        global.scrollTo(0, this.current);
+        if (
+          global.ScrollTrigger &&
+          typeof global.ScrollTrigger.update === "function"
+        ) {
+          global.ScrollTrigger.update();
+        }
+      }
+    }
+    this.rafId = global.requestAnimationFrame(this.loop);
+  };
+
+  FlowScroll.prototype.start = function () {
+    this.syncFromViewport();
+    global.addEventListener("wheel", this.onWheel, { passive: false });
+    this.rafId = global.requestAnimationFrame(this.loop);
+    document.documentElement.classList.add("lenis-flow");
+  };
+
+  FlowScroll.prototype.pause = function () {
+    this.paused = true;
+  };
+
+  FlowScroll.prototype.resume = function () {
+    this.paused = false;
+    this.syncFromViewport();
+  };
+
+  FlowScroll.prototype.scrollTo = function (y) {
+    var clamped = Math.max(0, Math.min(y, maxScrollY()));
+    this.target = clamped;
+  };
+
+  FlowScroll.prototype.destroy = function () {
+    if (this.rafId) {
+      global.cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+    global.removeEventListener("wheel", this.onWheel);
+    document.documentElement.classList.remove("lenis-flow");
+  };
+
+  global.TravelogueLenis = {
+    FLOW_TAIL_MS: FLOW_TAIL_MS,
+    FLOW_FRAME_MS: FLOW_FRAME_MS,
+    estimateSettleMs: function (delta, options) {
+      options = options || {};
+      var lerp = typeof options.lerp === "number" ? options.lerp : 0.1;
+      var settleLerp =
+        typeof options.settleLerp === "number" ? options.settleLerp : 0.28;
+      var wheelIdleMs =
+        typeof options.wheelIdleMs === "number" ? options.wheelIdleMs : 90;
+      var tailMs = typeof options.tailMs === "number" ? options.tailMs : FLOW_TAIL_MS;
+      var current = 0;
+      var target = Math.abs(delta);
+      var t = 0;
+      var coastStarted = null;
+      while (Math.abs(target - current) > 0.5 && t < 2000) {
+        if (t > wheelIdleMs) {
+          if (coastStarted === null) coastStarted = wheelIdleMs;
+          if (t - coastStarted >= tailMs - FLOW_FRAME_MS) {
+            current = target;
+            return Math.max(0, t - coastStarted);
+          } else {
+            current += (target - current) * settleLerp;
+          }
+        } else {
+          coastStarted = null;
+          current += (target - current) * lerp;
+        }
+        t += FLOW_FRAME_MS;
+      }
+      return coastStarted === null ? 0 : Math.max(0, t - coastStarted);
+    },
+    init: function (options) {
+      if (instance) {
+        instance.destroy();
+      }
+      instance = new FlowScroll(options || {});
+      instance.start();
+      return instance;
+    },
+    pause: function () {
+      if (instance) instance.pause();
+    },
+    resume: function () {
+      if (instance) instance.resume();
+    },
+    scrollTo: function (y) {
+      if (instance) instance.scrollTo(y);
+    },
+    destroy: function () {
+      if (instance) {
+        instance.destroy();
+        instance = null;
+      }
+    },
+  };
+})(window);

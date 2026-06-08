@@ -81,11 +81,11 @@
             trigger: cover,
             start: "top top",
             end: "bottom top",
-            scrub: true,
+            scrub: 0.75,
             onUpdate: function (self) {
               var p = self.progress;
               img.style.transform =
-                "translate3d(0," + p * 14 + "%,0) scale(" + (1 + p * 0.05) + ")";
+                "translate3d(0," + p * 24 + "%,0) scale(" + (1 + p * 0.1) + ")";
             },
           })
         );
@@ -98,13 +98,12 @@
         gsapTriggers.push(
           ScrollTrigger.create({
             trigger: el,
-            start: "top 85%",
-            end: "top 55%",
-            scrub: true,
+            start: "top 92%",
+            end: "top 48%",
+            scrub: 0.85,
             onUpdate: function (self) {
               var p = self.progress;
-              el.style.opacity = String(0.55 + p * 0.45);
-              el.style.transform = "translate3d(0," + (1 - p) * 12 + "px,0)";
+              el.style.transform = "translate3d(0," + (1 - p) * 28 + "px,0)";
             },
           })
         );
@@ -117,18 +116,24 @@
         gsapTriggers.push(
           ScrollTrigger.create({
             trigger: el,
-            start: "top 88%",
-            end: "top 60%",
-            scrub: true,
+            start: "top 92%",
+            end: "top 52%",
+            scrub: 0.85,
             onUpdate: function (self) {
               var p = self.progress;
-              el.style.opacity = String(0.7 + p * 0.3);
-              el.style.transform = "translate3d(0," + (1 - p) * 10 + "px,0)";
+              el.style.opacity = String(0.35 + p * 0.65);
+              el.style.transform = "translate3d(0," + (1 - p) * 26 + "px,0)";
             },
           })
         );
       }
     );
+
+    if (global.TravelogueImageBreath) {
+      global.TravelogueImageBreath.setup(gsap, ScrollTrigger, function (st) {
+        gsapTriggers.push(st);
+      });
+    }
   }
 
   function setupGalleryPinGsap(pin) {
@@ -382,6 +387,9 @@
   function destroy() {
     unbindScroll();
     killGsapTriggers();
+    if (global.TravelogueImageBreath) {
+      global.TravelogueImageBreath.clear();
+    }
     triggers.forEach(clearTriggerStyles);
     triggers = [];
     teardownPins();

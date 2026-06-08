@@ -544,10 +544,50 @@ flowchart TB
 
 ---
 
-## 16. 版本记录
+## 16. Book Surface Spec（BSP · Web screens）
+
+> 权威 PRD：[PRD-页面优化.md](./PRD-页面优化.md) · 工程记录：[acceptance-records/bsp-surface-engineering.md](./acceptance-records/bsp-surface-engineering.md)
+
+### 16.1 Content Rail
+
+- 变量：`--content-rail: var(--bleed-width)`
+- 同轨块：`layout-screen`、`breath-pause-screen`、`chapter-separator`、`hook-line`
+- 禁止节奏元素全宽 border / `100vw` 穿帮
+
+### 16.2 Viewport-fit 舞台
+
+- modifier：`layout-screen--viewport-fit`
+- 变量：`--screen-fit-ar`、`--screen-weight`（0.55–0.72）
+- full-frame 风景默认 `cover`；人物竖图 / 高 faceRatio 保留 `contain`
+
+### 16.3 阅读面
+
+| profile | 用途 | folio | plate meta |
+|---------|------|-------|------------|
+| `studio_preview` | Studio 编辑预览 | lite | 显示 |
+| `reader_immersive` | 分享前终检 | off | 隐藏 |
+
+Studio preview-toolbar 可切换「阅读视图」（客户端 `data-surface-mode`，无需重渲染）。
+
+### 16.4 动效预算（cinematic breath-image）
+
+| 场景 | lift | scale |
+|------|------|-------|
+| Studio Preview | ≤12px | ≤1.035 |
+| Reader | ≤8px | ≤1.02 |
+
+### 16.5 验收
+
+- 自动化：`pytest tests/test_bsp_surface_playwright.py`
+- 报告：`python scripts/bsp_surface_report.py`
+
+---
+
+## 17. 版本记录
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| **v0.2.3** | 2026-06-08 | §16 Book Surface Spec（BSP content-rail · viewport-fit · 阅读面） |
 | **v0.2.2** | 2026-05-19 | §13.5 保存长图（longshot bundle、FAB、横滑展开） |
 | **v0.2.1** | 2026-05-19 | 断点改 768px；自适应四层写入 PRD；安全区/dvh/超宽封顶；exportLayout/srcset 字段；开放问题收口 |
 | v0.2.0-draft | 2026-05-19 | 9:16/16:9 双形态；fill/bleed/overlay |

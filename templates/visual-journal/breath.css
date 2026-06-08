@@ -53,6 +53,14 @@ html[data-breath="cinematic"] .hook-line[data-block="hook-line"] {
   will-change: transform, opacity;
 }
 
+.breath-highlight__unit {
+  display: inline;
+}
+
+html.breath-scrub-active .breath-highlight {
+  will-change: opacity;
+}
+
 html[data-breath="gallery"] .media-scroll.breath-gallery-pin-root {
   overflow: hidden;
   z-index: 1;
@@ -90,17 +98,76 @@ html[data-breath="soft"] .cover-hero.breath-reveal {
   transform: translateY(2rem) scale(1.04);
 }
 
+html[data-breath="flow"] .breath-reveal,
+html[data-breath="cinematic"] .breath-reveal {
+  transform: translateY(2.25rem);
+  transition-duration: 0.85s;
+}
+
+html[data-breath="cinematic"] .breath-reveal {
+  transform: translateY(3rem);
+  transition-duration: 1s;
+}
+
+html[data-breath="cinematic"] .layout-screen.breath-reveal {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+html[data-breath="cinematic"] .layout-screen.breath-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+html.breath-scrub-active .breath-image-slot {
+  overflow: hidden;
+}
+
+html.breath-scrub-active .breath-image-slot img {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* BSP-3 · Reader immersive: hide plate chrome (AC-BSP-04) */
+html[data-reading-profile="reader_immersive"] .folio-plate-meta,
+html[data-surface-mode="reader"] .folio-plate-meta {
+  display: none !important;
+}
+
+html[data-reading-profile="reader_immersive"] .plate-caption,
+html[data-surface-mode="reader"] .plate-caption {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.breath-scrub-active .breath-image-slot img {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
 html[data-breath="flow"] .cover-hero.breath-reveal,
 html[data-breath="cinematic"] .cover-hero.breath-reveal {
-  transform: translateY(2.5rem) scale(1.08);
-  opacity: 0.72;
+  transform: translateY(3.5rem) scale(1.12);
+  opacity: 0.48;
 }
 
 html[data-breath="flow"] .cover-hero.breath-reveal.is-visible,
 html[data-breath="cinematic"] .cover-hero.breath-reveal.is-visible {
   opacity: 1;
   transform: translateY(0) scale(1);
-  transition: opacity 1.1s ease, transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 1.35s ease, transform 1.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html[data-breath="cinematic"] .chapter-header.breath-reveal {
+  transform: translateY(2rem);
+  transition-duration: 0.95s;
+}
+
+html[data-breath="cinematic"] .hook-line.breath-reveal {
+  transform: translateY(1.75rem);
+  transition-duration: 1.05s;
 }
 
 html[data-breath="cinematic"] .cover-hero__media img {

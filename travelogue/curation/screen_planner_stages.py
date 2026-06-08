@@ -445,7 +445,9 @@ def try_landscape_run(ctx: ChapterPlanContext) -> int | None:
     """2–3 consecutive landscapes → single landscape-1 screens each."""
     from travelogue.curation.screen_planner import _make_screen, _run_length
 
-    fam, run_len = _run_length(ctx.ids[ctx.i :], ctx.aspects)
+    fam, run_len = _run_length(
+        ctx.ids[ctx.i :], ctx.aspects, assets_map=ctx.assets_map
+    )
     if fam != "landscape" or run_len not in (2, 3) or ctx.pending_portraits:
         return None
     for j in range(run_len):

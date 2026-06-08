@@ -57,11 +57,12 @@ def test_make_screen_collage_single_uses_full_frame(monkeypatch) -> None:
         assets_map=assets,
     )
     assert screen["patternId"] == PATTERN_FULL_FRAME
-    assert screen["slots"][0]["fit"] == "contain"
+    assert screen["slots"][0]["fit"] == "cover"
 
 
 @pytest.mark.unit
-def test_full_frame_render_blurred_fill() -> None:
+def test_full_frame_render_collage_standard_uses_native_aspect() -> None:
+    """Standard-aspect collage singles match landscape-1 rail width, not viewport-fit shrink."""
     assets = {
         "c1": {
             "id": "c1",
@@ -83,16 +84,18 @@ def test_full_frame_render_blurred_fill() -> None:
     )
     assert ctx["layoutHint"] == "full-frame"
     assert ctx["hasLayoutHint"] is True
-    assert "16 / 9" in ctx["screenStyle"]
+    assert ctx.get("hasViewportFit") is not True
+    assert "1200 / 800" in ctx["screenStyle"]
+    assert "--screen-fit-ar:" not in ctx["screenStyle"]
     slot = ctx["slots"][0]
-    assert slot.get("hasBlurFill") is True
-    assert slot.get("blurSrc") == "assets/c1-w800.webp"
+    assert slot["fit"] == "cover"
+    assert slot.get("hasBlurFill") is not True
 
 
 @pytest.mark.unit
-def test_full_frame_fits_contain() -> None:
-    fits = _fits_for_screen(PATTERN_FULL_FRAME, ["a1"])
-    assert fits == ["contain"]
+def test_full_frame_fits_cover_default() -> None:
+    fits = _fits_for_screen(PATTERN_FULL_FRAME, ["a1"], assets_map={"a1": {"width": 1600, "height": 900}})
+    assert fits == ["cover"]
 
 
 @pytest.mark.unit

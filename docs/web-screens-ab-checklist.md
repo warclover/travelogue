@@ -29,6 +29,20 @@
 - [ ] 裁切可接受（人脸/主体未严重切掉）
 - [ ] 章标题与叙事节奏仍合理
 
+## BSP 页面优化（仙本那 `demo-d66fe642a9` · 必测双视口）
+
+| 视口 | 配置 | 检查 |
+|------|------|------|
+| **P0 笔记本 3:2** | Playwright `1440×960` · `deviceScaleFactor: 2` | AC-BSP-02a：full-frame 横图高度 ≥62vh · 无左右信箱 |
+| **P1 外接 16:9** | `2560×1440` 最大化 | AC-BSP-02b：同屏高度 ≥58vh · 全出血 |
+| **S3 节奏** | breath-pause index 5/10 | AC-BSP-01：与相邻 `layout-screen` 同宽（±1px）· 无穿帮线 |
+
+- [ ] 重跑 render（或应用排版）后打开 `trips/demo-d66fe642a9/index.html`
+- [x] 自动化：`pytest tests/test_bsp_surface_playwright.py`（AC-BSP-01～04 · S1 · 林芝 026–028）
+- [x] 报告脚本：`python scripts/bsp_surface_report.py`
+- [ ] 人工盲评：Surface 四维度 ≥4/5（见 ROADMAP §8.3）
+- [ ] Studio preview-toolbar **展开**状态下测 vh（分母 `window.innerHeight`）
+
 ## 结论
 
 | 项 | 填写 |
