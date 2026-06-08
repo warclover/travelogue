@@ -11,6 +11,7 @@ from travelogue.web.studio_handlers.paths import (
     match_layout_strategy_detail,
     match_layout_strategy_rollback,
     match_layout_strategy_runtime,
+    match_layout_strategy_weights,
 )
 from travelogue.web.studio_routes import StudioMixin
 
@@ -41,6 +42,10 @@ def test_match_layout_strategy_paths() -> None:
         == sid
     )
     assert match_layout_strategy_runtime(f"/__travelogue/layout-strategies/{sid}/runtime") == sid
+    assert (
+        match_layout_strategy_weights("/__travelogue/layout-strategies/weights/sha256:abc")
+        == "sha256:abc"
+    )
     assert match_layout_strategy_detail(LAYOUT_STRATEGIES_PATH) is None
     assert match_layout_strategy_detail(LAYOUT_STRATEGIES_RUNTIME_APPROVE_PATH) is None
     assert (
@@ -59,6 +64,24 @@ def test_studio_dispatch_get_layout_strategies_list(monkeypatch) -> None:
     )
     assert probe.studio_dispatch_GET(LAYOUT_STRATEGIES_PATH) is True
     assert probe.calls == ["list"]
+
+
+def test_studio_dispatch_get_layout_strategy_weights(monkeypatch) -> None:
+    called: list[str] = []
+
+    def _fake(handler, wh: str) -> None:
+        called.append(wh)
+
+    monkeypatch.setattr(
+        "travelogue.web.studio_handlers.layout_strategy_handlers.handle_layout_strategy_weights",
+        _fake,
+    )
+    probe = _Probe()
+    assert (
+        probe.studio_dispatch_GET("/__travelogue/layout-strategies/weights/sha256:abc123")
+        is True
+    )
+    assert called == ["sha256:abc123"]
 
 
 def test_studio_dispatch_get_layout_strategy_detail(monkeypatch) -> None:

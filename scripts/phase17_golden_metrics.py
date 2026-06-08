@@ -22,6 +22,8 @@ sys.path.insert(0, str(ROOT))
 from scripts.phase3_ig2_report import _cfg_for_mode, load_fixture_trip
 from travelogue.config import AppConfig
 from travelogue.layout_engine.golden_probe import merge_gates, run_ac_probe
+from tests.p17_golden_fixtures import P17_MIXED_FIXTURES
+
 from travelogue.layout_engine.metrics import (
     assets_map_from_trip,
     compute_layout_golden_metrics,
@@ -33,7 +35,16 @@ DEFAULT_BASELINE = ROOT / "docs" / "acceptance-records" / "p17-golden-metrics-ba
 DEFAULT_FIXTURES = (
     "golden-mixed-scenes",
     "golden-p17-mixed-person",
+    "golden-portrait-family",
+    "golden-portrait-travel",
+    "golden-landscape-coast",
+    "golden-landscape-mountain",
 )
+
+AC_FIXTURE_SCOPE: dict[str, tuple[str, ...] | None] = {
+    "AC-P17-16": P17_MIXED_FIXTURES,
+    "AC-P17-19": P17_MIXED_FIXTURES,
+}
 
 AC_SPECS: dict[str, tuple[dict[str, Any], dict[str, Any]]] = {
     "AC-P17-16": (
@@ -174,12 +185,20 @@ def evaluate_fixture(fixture_id: str, *, work_dir: Path) -> dict[str, Any]:
     }
 
 
+def _ac_applies_to_fixture(ac_id: str, fixture_id: str) -> bool:
+    scope = AC_FIXTURE_SCOPE.get(ac_id)
+    if scope is None:
+        return True
+    return fixture_id in scope
+
+
 def build_record(fixture_results: list[dict[str, Any]]) -> dict[str, Any]:
     ac_summary: dict[str, bool] = {}
     for fr in fixture_results:
+        fixture_id = str(fr.get("fixtureId") or "")
         for pair in fr.get("pairs") or []:
             ac_id = str(pair.get("acId") or "")
-            if not ac_id:
+            if not ac_id or not _ac_applies_to_fixture(ac_id, fixture_id):
                 continue
             prev = ac_summary.get(ac_id)
             cur = pair.get("passed")

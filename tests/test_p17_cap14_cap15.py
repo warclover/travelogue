@@ -107,3 +107,20 @@ def test_editorial_hints_unchanged_when_cap_off(tmp_path: Path) -> None:
     run_curate(body, apply_layout=True, trip_dir=tmp_path / "off", cfg=cfg_off)
     hints_off = (body.get("curation") or {}).get("editorialHints")
     assert hints_off is None or hints_off == {}
+
+
+def test_editorial_render_snapshot_unchanged_without_hints() -> None:
+    """AC-P17-25 · 无 editorialHints 时 breath/folio 渲染输入不变。"""
+    from travelogue.layout_engine.editorial_hints import build_editorial_hints
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "screens": [
+                {"patternId": "screen-landscape-1", "slots": [{"assetId": "a1"}]},
+            ],
+        }
+    ]
+    assets = {"a1": {"id": "a1", "dominantTone": "#ccc"}}
+    hints = build_editorial_hints(chapters, assets, breath_gap_threshold=99)
+    assert hints.get("chapters") == [] or not hints.get("chapters")

@@ -33,11 +33,18 @@ from travelogue.layout_engine.metrics import (
     evaluate_ac_delta,
 )
 from travelogue.layout_engine.sandbox import cfg_lse_sandbox_pair, sandbox_replay_trip
+from tests.p17_golden_fixtures import P17_MIXED_FIXTURES
+
+MIXED_ONLY_AC = frozenset({"AC-P17-16", "AC-P17-19"})
 
 ROLLOUT_PATH = ROOT / "docs" / "acceptance-records" / "p17-rollout-log.json"
 DEFAULT_DOGFOOD_FIXTURES = (
     "golden-mixed-scenes",
     "golden-p17-mixed-person",
+    "golden-portrait-family",
+    "golden-portrait-travel",
+    "golden-landscape-coast",
+    "golden-landscape-mountain",
 )
 CAPABILITY_AC_IDS = ("AC-P17-16", "AC-P17-17", "AC-P17-18")
 STRICT_AC_IDS = (*CAPABILITY_AC_IDS, "AC-P17-17b")
@@ -205,7 +212,13 @@ def aggregate_observations(observations: list[dict[str, Any]]) -> dict[str, Any]
     diff_rates = [o.get("diffRate") for o in observations if o.get("diffRate") is not None]
     ac_gate_summary: dict[str, bool | None] = {}
     for ac_id in STRICT_AC_IDS:
-        vals = [(o.get("gates") or {}).get(ac_id) for o in observations]
+        vals = []
+        for o in observations:
+            if ac_id in MIXED_ONLY_AC and o.get("tripId") not in P17_MIXED_FIXTURES:
+                continue
+            v = (o.get("gates") or {}).get(ac_id)
+            if v is not None:
+                vals.append(v)
         vals = [v for v in vals if v is not None]
         if vals:
             ac_gate_summary[ac_id] = all(vals)

@@ -108,6 +108,28 @@ def handle_templates_admin_page(handler: StudioHandlerProtocol) -> None:
     handler.wfile.write(data)
 
 
+def handle_lse_flags_admin_page(handler: StudioHandlerProtocol) -> None:
+    """GET /lse-flags-admin — LSE 能力开关页（静态页 + Capabilities API）。"""
+    html_path = STUDIO_TEMPLATE_DIR / "lse-flags-admin.html"
+    if not html_path.is_file():
+        handler.send_error(404)
+        return
+    html = html_path.read_text(encoding="utf-8")
+    if handler.studio_token:
+        meta = f'<meta name="studio-token" content="{handler.studio_token}" />'
+        if "<meta name=\"studio-token\"" not in html:
+            html = html.replace("<head>", "<head>\n  " + meta, 1)
+    if handler.studio_allow_lan:
+        html = html.replace("<body>", '<body data-admin-config-role-only="1">', 1)
+    data = html.encode("utf-8")
+    handler.send_response(200)
+    handler.send_header("Content-Type", "text/html; charset=utf-8")
+    handler.send_header("Content-Length", str(len(data)))
+    handler.send_header("Cache-Control", "no-cache")
+    handler.end_headers()
+    handler.wfile.write(data)
+
+
 def handle_home(handler: StudioHandlerProtocol) -> None:
     """Serve v3 (image-first) homepage — frozen, GET /classic."""
     _serve_studio_home(handler, "legacy-freeze/studio.classic.html")

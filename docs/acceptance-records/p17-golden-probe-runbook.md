@@ -15,6 +15,8 @@ python scripts/phase17_dogfood_admission.py --strict --append-rollout
 |---------|-------------|------|
 | `golden-mixed-scenes` | 16、18、19、20 | 风景/混合屏；色调探针用 warm/cool hex 映射 |
 | `golden-p17-mixed-person` | 16、17、17b、18 | 人像 mixed；beat/显著性探针可测 |
+| `golden-portrait-family` / `travel` | 16、20 | 竖图人像簇 |
+| `golden-landscape-coast` / `mountain` | 18、19 | 横图风景簇 |
 
 AC-P17-26（高光窗）在 `golden-p17-mixed-person` 上跑 curate 对比（`highlight_windows` cap）。
 

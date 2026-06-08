@@ -304,11 +304,15 @@ jobs:
       - name: Phase 17 curate bench (AC-28 · PR warn)
         if: github.event_name == 'pull_request'
         continue-on-error: true
-        run: python scripts/phase17_curate_bench.py --fixture golden-mixed-scenes --check
+        run: python scripts/phase17_curate_bench.py --fixture golden-mixed-scenes --fixture golden-p17-mixed-person --check
 
       - name: Phase 17 curate bench (AC-28 · release block)
         if: github.event_name != 'pull_request'
-        run: python scripts/phase17_curate_bench.py --fixture golden-mixed-scenes --check
+        run: python scripts/phase17_curate_bench.py --fixture golden-mixed-scenes --fixture golden-p17-mixed-person --check
+
+      - name: Phase 17 W3b-12 readiness (release block)
+        if: github.event_name != 'pull_request'
+        run: python scripts/phase17_w3b12_readiness.py --strict
 
       - name: Phase 17 strategy eval (render · PR warn)
         if: github.event_name == 'pull_request'

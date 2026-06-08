@@ -220,6 +220,7 @@ python -m travelogue studio --pick-folder "D:\Photos\某次旅行"
 浏览器打开：
 
 - **模板管理总页**：`/templates-admin`
+- **智能排版能力开关**：`/lse-flags-admin`（写 `config.yaml` 的 LSE capabilities；见 [PRD-智能排版开关页.md](./PRD-智能排版开关页.md)）
 - **布局模板区**：同页下方「布局模板（LTE · internal）」区块
 
 ### 6.2 访问控制

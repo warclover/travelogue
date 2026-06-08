@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>智能排版能力开关 · Travelogue Studio</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; max-width: 880px; color: #1a2f28; }
+    h1 { font-size: 1.35rem; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th, td { border: 1px solid #d8e5df; padding: 8px 10px; text-align: left; vertical-align: middle; }
+    th { background: #eef5f1; }
+    .ok { color: #1b6b4a; font-weight: 600; }
+    .bad { color: #a33; font-weight: 600; }
+    .muted { color: #5a6b63; font-size: 13px; }
+    .warn { background: #fff4e0; border: 1px solid #e8c878; padding: 12px 14px; border-radius: 6px; margin: 12px 0; }
+    .banner { background: #f4f8f6; border: 1px solid #d8e5df; padding: 14px 16px; border-radius: 6px; margin: 16px 0; }
+    button { margin-right: 8px; padding: 6px 14px; cursor: pointer; }
+    label.toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+    input[type="checkbox"] { width: 18px; height: 18px; }
+    select { padding: 4px 8px; }
+    .locked { opacity: 0.55; }
+    .source-pack { color: #8a5a10; font-size: 12px; }
+    #status { margin-top: 12px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>智能排版能力开关（LSE Capabilities）</h1>
+  <p class="muted">
+    仅 loopback 或 <code>studio.layout_templates_internal=true</code> 可用。
+    PATCH 需 <code>template_admin</code> 角色。写入 <code>config.yaml</code>，下次排版子进程重载生效。
+    <strong>变更对当前 Studio 实例下所有 trip 全局生效（dogfood）。</strong>
+    <a href="/templates-admin">← 模板治理控制台</a>
+  </p>
+  <p>
+    <button type="button" id="btn-refresh">刷新</button>
+    <button type="button" id="btn-save">保存变更</button>
+  </p>
+
+  <div id="engine-banner" class="banner">
+    <p><strong>LSE 引擎</strong>：<span id="engine-state">—</span></p>
+    <p class="muted">
+      rollout（只读）：stage=<span id="rollout-stage">—</span>
+      · traffic=<span id="rollout-traffic">—</span>%
+    </p>
+    <p class="muted" id="rollout-lists">
+      allowlist: <span id="rollout-allow">—</span>
+      · blocklist: <span id="rollout-block">—</span>
+    </p>
+    <label class="toggle">
+      <input type="checkbox" id="engine-enabled" />
+      开启 LSE 引擎（<code>layout.strategy_engine.enabled</code>）
+    </label>
+  </div>
+  <div id="warn-box" class="warn" hidden>
+    <strong>告警：</strong>引擎关闭时，下方已开启的能力不会在排版路径中生效。请先开启引擎。
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>能力</th><th>有效值</th><th>来源</th><th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="cap-rows"></tbody>
+  </table>
+
+  <p class="muted">
+    有效值 = config OR 策略包默认。来源标「策略包」且锁定的项无法在此关闭（OR 语义）。
+    保存后写入 config.yaml（注释可能丢失）。
+  </p>
+  <p id="status" class="muted"></p>
+
+  <script type="module">
+    const API = "/__travelogue/layout-strategies/capabilities";
+    const token = document.querySelector('meta[name="studio-token"]')?.content;
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["X-Studio-Token"] = token;
+    const configRoleOnly = document.body.dataset.adminConfigRoleOnly === "1";
+    if (!configRoleOnly) {
+      headers["X-Template-Role"] = "template_admin";
+    }
+
+    const CAP_ROWS = [
+      { key: "saliencyScoring", label: "显著性裁切打分" },
+      { key: "toneHarmony", label: "色调一致性" },
+      { key: "hungarianAssignment", label: "匈牙利槽位匹配" },
+      { key: "qualityUnified", label: "统一质量模型" },
+      { key: "segmentOrderOptimizer", label: "段内连贯重排" },
+      { key: "implicitFeedbackExport", label: "隐式反馈导出" },
+      { key: "highlightWindows", label: "高光选片窗口" },
+      { key: "editorialHints", label: "编辑/对开提示" },
+    ];
+
+    let snapshot = null;
+    const dirty = new Set();
+
+    function fmtEffective(key, meta) {
+      if (key === "beatProfile") return meta.effective || "flat";
+      return meta.effective ? "✓ 开" : "✗ 关";
+    }
+
+    function fmtSource(meta) {
+      if (meta.lockedOff) return `${meta.source || "—"}（不可在此关闭）`;
+      return meta.source || "—";
+    }
+
+    async function api(method, body) {
+      const res = await fetch(API, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || res.statusText);
+      return data;
+    }
+
+    function renderBanner(data) {
+      const on = !!data.engineEnabled;
+      document.getElementById("engine-state").textContent = on ? "● 已开启" : "● 关闭";
+      document.getElementById("engine-state").className = on ? "ok" : "bad";
+      document.getElementById("rollout-stage").textContent = data.rollout?.stage ?? "—";
+      document.getElementById("rollout-traffic").textContent = data.rollout?.trafficPercent ?? "—";
+      const allow = data.rollout?.allowlistTripIds;
+      const block = data.rollout?.blocklistTripIds;
+      document.getElementById("rollout-allow").textContent =
+        Array.isArray(allow) && allow.length ? allow.join(", ") : "（空）";
+      document.getElementById("rollout-block").textContent =
+        Array.isArray(block) && block.length ? block.join(", ") : "（空）";
+      document.getElementById("engine-enabled").checked = on;
+
+      const caps = data.capabilities || {};
+      const anyCapOn = CAP_ROWS.some(({ key }) => caps[key]?.effective);
+      const beatOn = (caps.beatProfile?.effective || "flat") !== "flat";
+      document.getElementById("warn-box").hidden = on || (!anyCapOn && !beatOn);
+    }
+
+    function renderRows(data) {
+      const caps = data.capabilities || {};
+      const tbody = document.getElementById("cap-rows");
+      const rows = [];
+
+      for (const { key, label } of CAP_ROWS) {
+        const meta = caps[key] || {};
+        const locked = !!meta.lockedOff;
+        const checked = !!meta.fromConfig;
+        rows.push(`
+          <tr class="${locked ? "locked" : ""}">
+            <td>${label}<br><code>${key}</code></td>
+            <td>${fmtEffective(key, meta)}</td>
+            <td class="${meta.source === "pack" || meta.source === "config+pack" ? "source-pack" : ""}">${fmtSource(meta)}</td>
+            <td>
+              <label class="toggle">
+                <input type="checkbox" data-cap="${key}" ${checked ? "checked" : ""} ${locked ? "disabled title='由策略包开启，无法在此关闭'" : ""} />
+              </label>
+            </td>
+          </tr>
+        `);
+      }
+
+      const beat = caps.beatProfile || {};
+      const beatLocked = !!beat.lockedOff;
+      const beatOpts = (beat.options || ["flat", "classic_magazine", "dense_mid"])
+        .map((v) => `<option value="${v}" ${v === (beat.fromConfig || "flat") ? "selected" : ""}>${v}</option>`)
+        .join("");
+      rows.push(`
+        <tr class="${beatLocked ? "locked" : ""}">
+          <td>叙事节拍<br><code>beatProfile</code></td>
+          <td>${beat.effective || "flat"}</td>
+          <td class="${beat.source === "pack" ? "source-pack" : ""}">${fmtSource(beat)}</td>
+          <td>
+            <select id="beat-profile" data-cap="beatProfile" ${beatLocked ? "disabled title='由策略包设定，无法在此关闭'" : ""}>${beatOpts}</select>
+          </td>
+        </tr>
+      `);
+
+      tbody.innerHTML = rows.join("");
+      tbody.querySelectorAll("input[data-cap]").forEach((el) => {
+        el.addEventListener("change", () => dirty.add(el.dataset.cap));
+      });
+      document.getElementById("beat-profile")?.addEventListener("change", () => dirty.add("beatProfile"));
+    }
+
+    async function refresh() {
+      document.getElementById("status").textContent = "加载中…";
+      try {
+        snapshot = await api("GET");
+        dirty.clear();
+        renderBanner(snapshot);
+        renderRows(snapshot);
+        document.getElementById("status").textContent = "已刷新";
+      } catch (e) {
+        document.getElementById("status").textContent = "加载失败：" + e.message;
+      }
+    }
+
+    async function save() {
+      if (!snapshot) return;
+      const body = { capabilities: {} };
+      if (dirty.has("engine")) {
+        body.engineEnabled = document.getElementById("engine-enabled").checked;
+      }
+      for (const { key } of CAP_ROWS) {
+        if (!dirty.has(key)) continue;
+        const el = document.querySelector(`input[data-cap="${key}"]`);
+        if (el) body.capabilities[key] = el.checked;
+      }
+      if (dirty.has("beatProfile")) {
+        body.capabilities.beatProfile = document.getElementById("beat-profile").value;
+      }
+      const hasEngine = dirty.has("engine");
+      const hasCaps = Object.keys(body.capabilities).length > 0;
+      if (!hasEngine && !hasCaps) {
+        document.getElementById("status").textContent = "没有变更";
+        return;
+      }
+      document.getElementById("status").textContent = "保存中…";
+      try {
+        snapshot = await api("PATCH", body);
+        dirty.clear();
+        renderBanner(snapshot);
+        renderRows(snapshot);
+        document.getElementById("status").textContent = "已保存";
+      } catch (e) {
+        document.getElementById("status").textContent = "保存失败：" + e.message;
+      }
+    }
+
+    document.getElementById("btn-refresh").addEventListener("click", refresh);
+    document.getElementById("btn-save").addEventListener("click", save);
+    document.getElementById("engine-enabled").addEventListener("change", () => dirty.add("engine"));
+    refresh();
+  </script>
+</body>
+</html>

@@ -74,6 +74,8 @@ from travelogue.web.studio_handlers.paths import (
     TEMPLATES_ADMIN_ROLLBACK_PATH,
     TEMPLATES_ADMIN_RUNTIME_PATH,
     TEMPLATES_ADMIN_UI_PATH,
+    LSE_FLAGS_UI_PATH,
+    LSE_CAPS_API_PATH,
     TEMPLATES_PATH,
     TRIPS_PATH,
     LAYOUT_STRATEGIES_PATH,
@@ -84,6 +86,7 @@ from travelogue.web.studio_handlers.paths import (
     match_layout_strategy_detail,
     match_layout_strategy_rollback,
     match_layout_strategy_runtime,
+    match_layout_strategy_weights,
     match_template_admin_metadata,
     match_template_admin_patch,
     match_template_admin_version,
@@ -166,6 +169,12 @@ class StudioMixin:
         if path == TEMPLATES_ADMIN_UI_PATH:
             static_handlers.handle_templates_admin_page(self)
             return True
+        if path == LSE_FLAGS_UI_PATH:
+            static_handlers.handle_lse_flags_admin_page(self)
+            return True
+        if path == LSE_CAPS_API_PATH:
+            layout_strategy_handlers.handle_lse_capabilities_get(self)
+            return True
         if path == TEMPLATES_PATH:
             template_handlers.handle_templates_list(self)
             return True
@@ -190,6 +199,10 @@ class StudioMixin:
         lse_dec_sid = match_layout_strategy_decisions(path)
         if lse_dec_sid is not None:
             layout_strategy_handlers.handle_layout_strategy_decisions(self, lse_dec_sid)
+            return True
+        lse_wh = match_layout_strategy_weights(path)
+        if lse_wh is not None:
+            layout_strategy_handlers.handle_layout_strategy_weights(self, lse_wh)
             return True
         lse_sid = match_layout_strategy_detail(path)
         if lse_sid is not None:
@@ -234,6 +247,9 @@ class StudioMixin:
             return True
         if path == CONFIG_PATH:
             config_handlers.handle_config(self)
+            return True
+        if path == LSE_CAPS_API_PATH:
+            layout_strategy_handlers.handle_lse_capabilities_patch(self)
             return True
         admin_tid = match_template_admin_patch(path)
         if admin_tid is not None:

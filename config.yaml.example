@@ -80,6 +80,7 @@ layout:
       enabled: true
       log_path: null
     capabilities:
+      # 也可在 Studio 可视化开关：http://127.0.0.1:8766/lse-flags-admin（见 docs/PRD-智能排版开关页.md）
       saliency_scoring: false
       beat_profile: flat
       tone_harmony: false

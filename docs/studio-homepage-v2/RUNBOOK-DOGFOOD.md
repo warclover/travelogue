@@ -65,6 +65,11 @@ python scripts/studio_homepage_rollback_drill.py
 
 # 手测签字（上传→preview · 发布后观察）
 # 见 docs/studio-homepage-v2/M21-MANUAL-SMOKE.md
+
+# LSE 能力开关（dogfood · 写 config.yaml，影响全局排版）
+# http://127.0.0.1:8766/lse-flags-admin
+# API: GET/PATCH /__travelogue/layout-strategies/capabilities
+# 详见 docs/PRD-智能排版开关页.md
 ```
 
 ---

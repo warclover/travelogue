@@ -1,0 +1,7 @@
+{
+  "strategyId": "lse-default-2026-06",
+  "strategyVersion": 1,
+  "algorithmVersion": "p15-s2",
+  "contentHash": "sha256:3f7160e2623d1dd0",
+  "notes": "Update algorithmVersion or strategyVersion when default pack content_hash changes (AC-P17-13)."
+}

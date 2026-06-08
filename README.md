@@ -56,8 +56,12 @@ python -m travelogue export-longshot trips\<tripId>
 | **`http://127.0.0.1:8766/`** | 默认 **v2** Bento 首页 |
 | **`/classic`** | deprecated 应急 classic |
 | **`/v2`** | 302 → `/`（旧书签） |
+| **`/templates-admin`** | 模板 / LTE / LSE 治理控制台（internal） |
+| **`/lse-flags-admin`** | 智能排版能力开关（LSE capabilities · 写 `config.yaml`） |
 
 门控：`TRAVELOGUE_STUDIO_HOMEPAGE_V2=on|auto|off`（默认 `on`）。详见 [docs/studio-homepage-v2/M21-ROUTING.md](docs/studio-homepage-v2/M21-ROUTING.md)。
+
+LSE 能力开关页 PRD：[docs/PRD-智能排版开关页.md](docs/PRD-智能排版开关页.md)。
 
 ---
 

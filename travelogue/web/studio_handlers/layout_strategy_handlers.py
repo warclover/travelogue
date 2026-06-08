@@ -2,9 +2,23 @@
 
 from __future__ import annotations
 
+import logging
+from pathlib import Path
+from typing import Any
+
+from travelogue.config import load_config, patch_config_file
+from travelogue.layout_engine.capabilities import (
+    capabilities_from_pack,
+    effective_capabilities,
+)
 from travelogue.layout_engine.policy import load_policy
-from travelogue.layout_engine.query import read_sidecar_events, strategy_pack_summary
+from travelogue.layout_engine.query import (
+    lookup_weights_by_hash,
+    read_sidecar_events,
+    strategy_pack_summary,
+)
 from travelogue.layout_engine.registry import get_strategy_pack, list_active_strategies
+from travelogue.layout_engine.rollout import lse_rollout_snapshot
 from travelogue.layout_engine.governance import normalize_lse_patch, pending_lse_changes
 from travelogue.layout_engine.runtime_store import (
     load_lse_runtime,
@@ -27,6 +41,21 @@ from travelogue.templating.roles import require_template_role
 from travelogue.web.studio_admin_auth import require_admin_api_access, studio_authenticated
 from travelogue.web.studio_handlers.common import resolve_trip_dir_listed, studio_ctx
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
+
+_log = logging.getLogger(__name__)
+
+LSE_CAPS_BOOL_FIELDS: tuple[tuple[str, str], ...] = (
+    ("saliencyScoring", "saliency_scoring"),
+    ("toneHarmony", "tone_harmony"),
+    ("hungarianAssignment", "hungarian_assignment"),
+    ("qualityUnified", "quality_unified"),
+    ("segmentOrderOptimizer", "segment_order_optimizer"),
+    ("implicitFeedbackExport", "implicit_feedback_export"),
+    ("highlightWindows", "highlight_windows"),
+    ("editorialHints", "editorial_hints"),
+)
+
+LSE_BEAT_PROFILE_OPTIONS = ("flat", "classic_magazine", "dense_mid")
 
 
 def _auth(handler: StudioHandlerProtocol, *, minimum: str = "viewer") -> bool:
@@ -146,6 +175,27 @@ def handle_layout_strategy_detail(handler: StudioHandlerProtocol, strategy_id: s
     }
     detail["lseRuntime"] = load_lse_runtime(ctx.cfg.layout.strategy_engine.runtime_store)
     handler._json_response(200, {"ok": True, "strategy": detail})
+
+
+def handle_layout_strategy_weights(handler: StudioHandlerProtocol, weights_hash: str) -> None:
+    """AC-P17-13 · lookup persisted weights snapshot by hash."""
+    if not _auth(handler):
+        return
+    if not _lse_internal(handler):
+        handler._json_response(403, {"ok": False, "error": "E_LSE_INTERNAL_ONLY"})
+        return
+    snap = lookup_weights_by_hash(weights_hash)
+    if not snap:
+        handler._json_response(
+            404,
+            {
+                "ok": False,
+                "error": "E_LSE_WEIGHTS_NOT_FOUND",
+                "weightsHash": weights_hash,
+            },
+        )
+        return
+    handler._json_response(200, {"ok": True, "weightsHash": weights_hash, "snapshot": snap})
 
 
 def handle_layout_strategy_decisions(
@@ -400,3 +450,166 @@ def handle_layout_strategy_rollback(
             "revision": rt.get("revision"),
         },
     )
+
+
+def _config_path(handler: StudioHandlerProtocol) -> Path:
+    return handler.studio_config_path or (Path.cwd() / "config.yaml")
+
+
+def _load_fresh_config(handler: StudioHandlerProtocol):
+    path = _config_path(handler)
+    return load_config(path if path.is_file() else None)
+
+
+def _default_strategy_pack(cfg):
+    se = cfg.layout.strategy_engine
+    try:
+        return get_strategy_pack(se.default_strategy_id, se.policy_path)
+    except KeyError:
+        packs = list_active_strategies(policy=load_policy(se.policy_path))
+        return packs[0] if packs else None
+
+
+def _cap_source_bool(from_config: bool, from_pack: bool) -> str:
+    if from_config and from_pack:
+        return "config+pack"
+    if from_config:
+        return "config"
+    if from_pack:
+        return "pack"
+    return "default"
+
+
+def _capabilities_payload(cfg, pack) -> dict[str, Any]:
+    base = cfg.layout.strategy_engine.capabilities
+    pack_caps = capabilities_from_pack(pack)
+    effective = effective_capabilities(cfg, pack)
+
+    caps: dict[str, Any] = {}
+    for api_key, cfg_key in LSE_CAPS_BOOL_FIELDS:
+        from_cfg = bool(getattr(base, cfg_key))
+        from_pack = bool(getattr(pack_caps, cfg_key))
+        caps[api_key] = {
+            "effective": bool(getattr(effective, cfg_key)),
+            "fromConfig": from_cfg,
+            "fromPack": from_pack,
+            "source": _cap_source_bool(from_cfg, from_pack),
+            "lockedOff": from_pack and not from_cfg,
+        }
+
+    beat_cfg = str(base.beat_profile or "flat")
+    beat_pack = str(pack_caps.beat_profile or "flat")
+    beat_eff = str(effective.beat_profile or "flat")
+    beat_from_cfg = beat_cfg not in ("", "flat")
+    beat_from_pack = beat_pack not in ("", "flat") and not beat_from_cfg
+    caps["beatProfile"] = {
+        "effective": beat_eff,
+        "fromConfig": beat_cfg,
+        "fromPack": beat_pack,
+        "source": _cap_source_bool(beat_from_cfg, beat_from_pack and beat_cfg in ("", "flat")),
+        "lockedOff": beat_from_pack and beat_cfg in ("", "flat"),
+        "options": list(LSE_BEAT_PROFILE_OPTIONS),
+    }
+    return caps
+
+
+def _capabilities_response_body(cfg, pack) -> dict[str, Any]:
+    return {
+        "ok": True,
+        "engineEnabled": bool(cfg.layout.strategy_engine.enabled),
+        "rollout": lse_rollout_snapshot(cfg),
+        "capabilities": _capabilities_payload(cfg, pack),
+    }
+
+
+def _lse_caps_gate(handler: StudioHandlerProtocol, *, minimum: str) -> bool:
+    if not _auth(handler, minimum=minimum):
+        return False
+    if not _lse_internal(handler):
+        handler._json_response(
+            403,
+            {
+                "ok": False,
+                "error": "E_LSE_INTERNAL_ONLY",
+                "message": "LSE 能力开关页仅 loopback 或 layout_templates_internal 可用",
+            },
+        )
+        return False
+    return True
+
+
+def handle_lse_capabilities_get(handler: StudioHandlerProtocol) -> None:
+    if not _lse_caps_gate(handler, minimum="viewer"):
+        return
+    cfg = _load_fresh_config(handler)
+    pack = _default_strategy_pack(cfg)
+    handler._json_response(200, _capabilities_response_body(cfg, pack))
+
+
+def _map_capabilities_patch(raw: dict[str, Any]) -> dict[str, Any]:
+    caps: dict[str, Any] = {}
+    for api_key, cfg_key in LSE_CAPS_BOOL_FIELDS:
+        if api_key in raw:
+            caps[cfg_key] = bool(raw[api_key])
+    if "beatProfile" in raw:
+        caps["beat_profile"] = str(raw["beatProfile"] or "flat").strip().lower()
+    return caps
+
+
+def handle_lse_capabilities_patch(handler: StudioHandlerProtocol) -> None:
+    if not _lse_caps_gate(handler, minimum="template_admin"):
+        return
+    payload = handler._read_json_body()
+    if not isinstance(payload, dict) or not payload:
+        handler._json_response(400, {"ok": False, "error": "empty body"})
+        return
+
+    before_cfg = _load_fresh_config(handler)
+    before_pack = _default_strategy_pack(before_cfg)
+    before_body = _capabilities_response_body(before_cfg, before_pack)
+
+    se_patch: dict[str, Any] = {}
+    if "engineEnabled" in payload:
+        se_patch["enabled"] = bool(payload["engineEnabled"])
+    caps_raw = payload.get("capabilities")
+    if isinstance(caps_raw, dict) and caps_raw:
+        se_patch["capabilities"] = _map_capabilities_patch(caps_raw)
+
+    if not se_patch:
+        handler._json_response(400, {"ok": False, "error": "no writable fields"})
+        return
+
+    target = _config_path(handler)
+    try:
+        patch_config_file(target, {"layout": {"strategy_engine": se_patch}})
+    except (ValueError, TypeError) as exc:
+        handler._json_response(400, client_error_payload(exc))
+        return
+    except (OSError, PermissionError):
+        handler._json_response(
+            500,
+            {"ok": False, "error": "E_STUDIO_CONFIG_WRITE", "message": "无法写入 config.yaml"},
+        )
+        return
+
+    after_cfg = _load_fresh_config(handler)
+    after_pack = _default_strategy_pack(after_cfg)
+    after_body = _capabilities_response_body(after_cfg, after_pack)
+
+    role = handler.headers.get("X-Template-Role") if handler.headers else None
+    host = str(getattr(handler, "studio_host", "") or "")
+    _log.info(
+        "[lse-flags-admin] capability change by role=%s host=%s: before=%s after=%s",
+        role or "unknown",
+        host or "unknown",
+        {
+            "engineEnabled": before_body.get("engineEnabled"),
+            "capabilities": before_body.get("capabilities"),
+        },
+        {
+            "engineEnabled": after_body.get("engineEnabled"),
+            "capabilities": after_body.get("capabilities"),
+        },
+    )
+
+    handler._json_response(200, after_body)

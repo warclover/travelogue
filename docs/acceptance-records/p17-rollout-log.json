@@ -9,27 +9,33 @@
   "gates": {
     "AC-P17-27": {
       "label": "quick_share zero diff",
-      "passed": null
+      "passed": true,
+      "syncedAt": "2026-06-08T02:25:36+00:00"
     },
     "AC-P17-28": {
       "label": "curate perf ≤+15%",
-      "passed": null
+      "passed": true,
+      "syncedAt": "2026-06-08T02:25:36+00:00"
     },
     "AC-P17-16": {
       "label": "salient retention",
-      "passed": true
+      "passed": true,
+      "syncedAt": "2026-06-08T02:25:36+00:00"
     },
     "AC-P17-17": {
       "label": "beat profile",
-      "passed": true
+      "passed": true,
+      "syncedAt": "2026-06-08T02:25:36+00:00"
     },
     "AC-P17-17b": {
       "label": "beat hero quality guard",
-      "passed": null
+      "passed": true,
+      "syncedAt": "2026-06-08T02:25:36+00:00"
     },
     "AC-P17-18": {
       "label": "tone adjacency",
-      "passed": true
+      "passed": true,
+      "syncedAt": "2026-06-08T02:25:36+00:00"
     },
     "dogfood_admission": {
       "label": "shadow capability+diversity",

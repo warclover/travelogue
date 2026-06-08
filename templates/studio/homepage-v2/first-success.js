@@ -17,6 +17,30 @@ var _wired = false;
 var _successMode = "quick_share";
 var _successRefinedEnabled = true;
 
+var DENSITY_COPY = {
+  zh: {
+    hero_first: "已为你突出大图、放大精彩瞬间",
+    collage_first: "已为你多图拼贴、记录更多细节",
+  },
+  en: {
+    hero_first: "Large photos emphasized to highlight key moments",
+    collage_first: "More collage layouts to capture extra detail",
+  },
+};
+
+function successUiLang() {
+  var lang = (typeof navigator !== "undefined" && navigator.language) || "zh";
+  return String(lang).toLowerCase().indexOf("en") === 0 ? "en" : "zh";
+}
+
+function densitySummaryLine(density) {
+  var key = String(density || "").toLowerCase();
+  var pack = DENSITY_COPY[successUiLang()] || DENSITY_COPY.zh;
+  if (key === "hero_first") return pack.hero_first;
+  if (key === "collage_first") return pack.collage_first;
+  return "";
+}
+
 function loadSuccessFeatureFlag() {
   return fetch("/__travelogue/config")
     .then(function (r) { return r.json(); })
@@ -103,12 +127,10 @@ function populateSuccessUi(result) {
       if (tplLine) body += "\n" + tplLine;
       if (result.cullUserLine) body += "\n" + result.cullUserLine;
       var density = String(result.layoutDensity || "").toLowerCase();
-      if (density === "hero_first") {
-        body += "\n已为你突出大图、放大精彩瞬间";
-      } else if (density === "collage_first") {
-        body += "\n已为你多图拼贴、记录更多细节";
-      }
+      var densityLine = densitySummaryLine(density);
+      if (densityLine) body += "\n" + densityLine;
       msg.textContent = body;
+      msg.setAttribute("aria-label", body.replace(/\n/g, "; "));
       if (result.templateFeedbackKind) {
         var ev = result.templateFeedbackKind === "fallback"
           ? "template_fallback_shown"

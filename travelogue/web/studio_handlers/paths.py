@@ -5,6 +5,8 @@ from __future__ import annotations
 HOME_V2_PATH = "/v2"
 HOME_CLASSIC_PATH = "/classic"
 TEMPLATES_ADMIN_UI_PATH = "/templates-admin"
+LSE_FLAGS_UI_PATH = "/lse-flags-admin"
+LSE_CAPS_API_PATH = "/__travelogue/layout-strategies/capabilities"
 IMPORT_PATH = "/__travelogue/import"
 STATUS_PATH = "/__travelogue/status"
 CONFIG_PATH = "/__travelogue/config"
@@ -77,6 +79,17 @@ def match_layout_strategy_runtime(path: str) -> str | None:
     return sid
 
 
+def match_layout_strategy_weights(path: str) -> str | None:
+    route = _route_path_only(path)
+    prefix = LAYOUT_STRATEGIES_PATH.rstrip("/") + "/weights/"
+    if not route.startswith(prefix):
+        return None
+    wh = route[len(prefix) :].strip("/")
+    if not wh or "/" in wh:
+        return None
+    return wh
+
+
 def match_layout_strategy_detail(path: str) -> str | None:
     route = _route_path_only(path)
     prefix = LAYOUT_STRATEGIES_PATH.rstrip("/") + "/"
@@ -86,6 +99,7 @@ def match_layout_strategy_detail(path: str) -> str | None:
     if (
         not rest
         or "/" in rest
+        or rest.startswith("weights/")
         or rest.endswith("decisions")
         or rest.endswith("runtime")
         or rest.endswith("rollback")

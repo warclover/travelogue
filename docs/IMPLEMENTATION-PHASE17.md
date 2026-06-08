@@ -7,7 +7,7 @@
 | **配套 PRD** | [PRD-PHASE17-layout-strategy-engine.md](./PRD-PHASE17-layout-strategy-engine.md)（v0.17.6） |
 | **分支** | `feature/phase17-lse` |
 | **更新日期** | 2026-06-07 |
-| **状态** | **W4 核心进行中** — CAP-01/08/10 已接线；Plus 能力与 dogfood 待收口 |
+| **状态** | **P17-Core 工程收口** — 门禁脚本/CI 已接线；dogfood 14d + W3b-12 产品签字待运营 |
 
 > **本文定位**：把 PRD 的「做什么/为什么」落成「怎么接、改哪里、先干哪些、多久」。PRD 是契约，本文是施工图。**§13.4 W0 阻断交付物之一**。
 
@@ -274,6 +274,16 @@ W1 开工前必须全部 ✅：
 | P1 | W2-04 | sandbox off vs on diff API | `sandbox.py` | AC-P17-08 | ✅ |
 
 **W2 出口**：AC-P17-06/08/14 + L3 overrides 绿；完整 L2 审批 UI 与沙箱并排缩略图 UI 留给 W3。
+
+### 11.1 LSE 能力开关页（PRD 独立 · 2026-06-08）
+
+| 优先级 | ID | 任务 | 产出 | 文档/AC | 状态 |
+|--------|-----|------|------|---------|------|
+| P1 | LSE-F01 | `/lse-flags-admin` 独立页 + Capabilities API | `lse-flags-admin.html`、`handle_lse_capabilities_*` | [PRD-智能排版开关页](./PRD-智能排版开关页.md) §7 AC-1–8 | ✅ |
+| P1 | LSE-F02 | 写 `config.yaml` `layout.strategy_engine.{enabled,capabilities}` | `patch_config_file` 白名单 | PRD §5.2 | ✅ |
+| P2 | LSE-F03 | 路线 B：runtime 写 capabilities + 双人审批 | `lse_runtime.json` | PRD §8 | 🔲 未来 |
+
+访问：`http://127.0.0.1:8766/lse-flags-admin` · API `GET/PATCH /__travelogue/layout-strategies/capabilities` · 测试 `tests/test_studio_lse_flags_admin.py`。
 
 ---
 

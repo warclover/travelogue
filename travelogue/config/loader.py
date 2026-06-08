@@ -40,6 +40,21 @@ from travelogue.paths import ROOT
 
 _log = logging.getLogger(__name__)
 
+LSE_BEAT_PROFILE_VALUES = frozenset({"flat", "classic_magazine", "dense_mid"})
+LSE_CAPABILITY_KEYS = frozenset(
+    {
+        "saliency_scoring",
+        "tone_harmony",
+        "hungarian_assignment",
+        "quality_unified",
+        "segment_order_optimizer",
+        "implicit_feedback_export",
+        "highlight_windows",
+        "editorial_hints",
+        "beat_profile",
+    }
+)
+
 
 def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
     """Merge whitelisted keys into config.yaml on disk."""
@@ -101,6 +116,44 @@ def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
         for key, val in scoring_patch.items():
             if key in allowed_layout_scoring:
                 scoring_target[key] = val
+    strategy_engine_patch = (
+        layout_patch.get("strategy_engine")
+        if isinstance(layout_patch.get("strategy_engine"), dict)
+        else {}
+    )
+    if strategy_engine_patch:
+        layout_target = data.setdefault("layout", {})
+        if not isinstance(layout_target, dict):
+            layout_target = {}
+            data["layout"] = layout_target
+        se_target = layout_target.setdefault("strategy_engine", {})
+        if not isinstance(se_target, dict):
+            se_target = {}
+            layout_target["strategy_engine"] = se_target
+        if "enabled" in strategy_engine_patch:
+            se_target["enabled"] = bool(strategy_engine_patch["enabled"])
+        caps_patch = (
+            strategy_engine_patch.get("capabilities")
+            if isinstance(strategy_engine_patch.get("capabilities"), dict)
+            else {}
+        )
+        if caps_patch:
+            caps_target = se_target.setdefault("capabilities", {})
+            if not isinstance(caps_target, dict):
+                caps_target = {}
+                se_target["capabilities"] = caps_target
+            for key, val in caps_patch.items():
+                if key not in LSE_CAPABILITY_KEYS:
+                    continue
+                if key == "beat_profile":
+                    beat = str(val or "flat").strip().lower()
+                    if beat not in LSE_BEAT_PROFILE_VALUES:
+                        raise ValueError(
+                            f"beat_profile must be one of {sorted(LSE_BEAT_PROFILE_VALUES)}"
+                        )
+                    caps_target[key] = beat
+                else:
+                    caps_target[key] = bool(val)
     if studio_patch:
         target = data.setdefault("studio", {})
         if not isinstance(target, dict):
