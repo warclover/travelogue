@@ -304,9 +304,9 @@ W1 开工前必须全部 ✅：
 | P1 | W3b-07 | 沙箱并排缩略图 UI | sandbox `changedPreviews` + 分布条 | AC-P17-09 | ✅ |
 | P1 | W3b-08 | Inspector 滚动/分布条/五态/裁切告警 | `templates-admin.html` | AC-P17-06 | ✅ |
 | P1 | W3b-09 | shadow 双轨对照 | `layout_engine/shadow.py` + `/shadow` API | §9 原则 2 | ✅ |
-| P1 | W3b-10 | dogfood 2 周观测 + 准入签字 | `p17-rollout-log.json` 模板 | R-P17-20 | 🟡（运营填表） |
-| P1 | W3b-11 | 性能预算 ≤+15% CI | `phase17_curate_bench.py` + 单测 | AC-P17-28 | ✅ |
-| P2 | W3b-12 | 全局 `enabled=true` 切换（评审后） | config rollout | AC-P17-01 | 待办 |
+| P1 | W3b-10 | dogfood 2 周观测 + 准入签字 | `p17-rollout-log.json` + 盲评模板 | R-P17-20 | 🟡（运营填表） |
+| P1 | W3b-11 | 性能预算 ≤+15% CI | `phase17_curate_bench.py` + `p17-perf-spike.json` | AC-P17-28 | ✅ |
+| P2 | W3b-12 | 全局 `enabled=true` 切换（评审后） | `phase17_w3b12_readiness.py` | AC-P17-01 | 🟡（就绪门禁，默认仍 false） |
 
 **W3b 出口**：AC-P17-16～18/30 + golden probe；shadow/dogfood/全量切换未过线不发布。
 
@@ -321,9 +321,9 @@ W1 开工前必须全部 ✅：
 | P1 | W4-03 | CAP-10 layout-only replan | `replan.py` + `curate.py` | AC-P17-22 | ✅ |
 | P1 | W4-04 | CAP-05 layoutFeedback 导出 | `layout_engine/feedback.py` | AC-P17-21 | ✅ |
 | P1 | W4-05 | golden 匈牙利收益探针 | `test_p17_w4_core.py` | AC-P17-19 | ✅ |
-| P2 | W4-06 | CAP-06 段内序优化器 | `segment_order.py` | AC-P17-20 | 待办 |
-| P2 | W4-07 | CAP-14/15 editorial + highlight | `editorial_hints.py` | Plus 24～26 | 待办 |
-| P2 | W4-08 | default pack `slot_assignment.mode=hungarian` | `default.yaml` | — | 待办（保持 greedy 至 dogfood 过线） |
+| P2 | W4-06 | CAP-06 段内序优化器 | `segment_order.py` | AC-P17-20 | ✅ |
+| P2 | W4-07 | CAP-14/15 editorial + highlight | `editorial_hints.py` + golden AC-26 | Plus 24～26 | ✅ |
+| P2 | W4-08 | default pack `slot_assignment.mode=hungarian` | `default.yaml` | — | 🟡（保持 greedy 至 dogfood 过线） |
 
 **W4 出口**：AC-P17-19/21/22 + 性能预算仍 ≤+15%；匈牙利默认开启留 dogfood 后。
 

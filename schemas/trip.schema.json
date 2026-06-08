@@ -599,6 +599,16 @@
           "type": "array",
           "items": { "type": "object", "additionalProperties": true }
         },
+        "appliedLayoutDensity": {
+          "type": "string",
+          "enum": ["compact", "balanced", "airy"],
+          "description": "P17 layout-only replan density target (CAP-10)"
+        },
+        "editorialHints": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "P17 CAP-14 editorial hints snapshot (render-neutral)"
+        },
         "layoutStrategy": {
           "type": "object",
           "additionalProperties": true,

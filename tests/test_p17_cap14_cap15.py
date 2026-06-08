@@ -85,3 +85,25 @@ def test_curate_writes_editorial_hints_when_cap_on(tmp_path: Path) -> None:
     hints = (body.get("curation") or {}).get("editorialHints")
     assert isinstance(hints, dict)
     assert hints.get("version") == 1
+
+
+def test_editorial_hints_unchanged_when_cap_off(tmp_path: Path) -> None:
+    """AC-P17-25 · cap off 时 editorial 快照与 baseline 一致。"""
+    trip = load_fixture_trip("golden-p17-mixed-person")
+    base = _cfg_for_mode("p3_full")
+    se_off = replace(base.layout.strategy_engine, enabled=True)
+    caps_off = replace(se_off.capabilities, editorial_hints=False, highlight_windows=False)
+    cfg_off = replace(
+        base,
+        layout=replace(base.layout, strategy_engine=replace(se_off, capabilities=caps_off)),
+    )
+    body = dict(trip)
+    body.setdefault("pipeline", {})["status"] = "structure_draft"
+    body.pop("chapters", None)
+    from travelogue.curation.clustering import run_clustering_layer
+    from travelogue.curation.curate import run_curate
+
+    run_clustering_layer(body, trip_dir=tmp_path / "cl-off", cfg=cfg_off)
+    run_curate(body, apply_layout=True, trip_dir=tmp_path / "off", cfg=cfg_off)
+    hints_off = (body.get("curation") or {}).get("editorialHints")
+    assert hints_off is None or hints_off == {}

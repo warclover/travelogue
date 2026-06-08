@@ -22,6 +22,23 @@ def journal_screens_css_path() -> Path:
     return _JOURNAL_SCREENS
 
 
+def focal_object_position_css(*, focal_x: float = 0.5, focal_y: float = 0.45) -> str:
+    """Expected cover object-position when journal-screens.css binds --focal-x/y."""
+    fx = max(0.0, min(1.0, float(focal_x)))
+    fy = max(0.0, min(1.0, float(focal_y)))
+    return f"calc({fx} * 100%) calc({fy} * 100%)"
+
+
+def slot_style_includes_focal(asset: dict) -> bool:
+    fp = asset.get("focalPoint") or {}
+    try:
+        float(fp.get("x", 0.5))
+        float(fp.get("y", 0.45))
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
 def cover_rules_use_focal_variables(css: str | None = None) -> list[str]:
     """Return cover selectors that still hardcode object-position (should be empty)."""
     text = css if css is not None else _JOURNAL_SCREENS.read_text(encoding="utf-8")

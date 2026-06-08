@@ -23,6 +23,10 @@
       "label": "beat profile",
       "passed": true
     },
+    "AC-P17-17b": {
+      "label": "beat hero quality guard",
+      "passed": null
+    },
     "AC-P17-18": {
       "label": "tone adjacency",
       "passed": true

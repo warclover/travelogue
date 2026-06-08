@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "1",
+  "reviewId": "p17-dogfood-blind-review",
+  "rolloutId": "p17-dogfood-lse",
+  "reviewer": null,
+  "reviewedAt": null,
+  "tripPairs": [
+    {
+      "tripId": null,
+      "labelA": "baseline",
+      "labelB": "candidate",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "notes": "Blind A/B on layout quality; candidate = LSE shadow on."
+    }
+  ],
+  "aggregateScores": {
+    "layoutQuality": null,
+    "faceIntact": null,
+    "rhythm": null,
+    "diversity": null
+  },
+  "admissionDecision": {
+    "approved": null,
+    "blockers": [],
+    "signOffRequiredFor": "W3b-12 global enabled=true"
+  },
+  "notes": "Complete after 14d dogfood observations in p17-rollout-log.json."
+}

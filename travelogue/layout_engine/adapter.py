@@ -215,6 +215,9 @@ def strategy_trace_meta(cfg: AppConfig | None = None) -> dict[str, Any]:
     if not se.enabled:
         return {"enabled": False}
     pack = get_strategy_pack(se.default_strategy_id, se.policy_path)
+    from travelogue.layout_engine.weights_audit import record_pack_weights_snapshot
+
+    record_pack_weights_snapshot(pack, profile_id="default")
     return {
         "enabled": True,
         "strategyId": pack.id,
@@ -245,6 +248,9 @@ def persist_layout_observability(
     if lse_enabled(cfg):
         pack = resolve_pack(cfg)
         if pack is not None:
+            from travelogue.layout_engine.weights_audit import record_pack_weights_snapshot
+
+            record_pack_weights_snapshot(pack, profile_id="default")
             trace = strategy_trace_from_pack(pack)
     if mosaic_logs:
         events.extend(ingest_mosaic_logs(mosaic_logs, trace=trace))

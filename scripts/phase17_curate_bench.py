@@ -19,7 +19,9 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 RECORD_PATH = ROOT / "docs" / "acceptance-records" / "p17-curate-perf.json"
+SPIKE_PATH = ROOT / "docs" / "acceptance-records" / "p17-perf-spike.json"
 PERF_BUDGET_PCT = 15.0
 
 
@@ -161,7 +163,7 @@ def main() -> int:
     parser.add_argument("--repeats", type=int, default=2)
     parser.add_argument("--work-dir", type=Path, default=ROOT / ".cache" / "p17-curate-bench")
     parser.add_argument("--write", action="store_true", help="Write acceptance record JSON")
-    parser.add_argument("--check", action="store_true", help="Exit 1 when over +15% budget")
+    parser.add_argument("--check", action="store_true", help="Exit 1 when over +15%% budget")
     args = parser.parse_args()
 
     args.work_dir.mkdir(parents=True, exist_ok=True)
@@ -174,10 +176,9 @@ def main() -> int:
 
     if args.write:
         RECORD_PATH.parent.mkdir(parents=True, exist_ok=True)
-        RECORD_PATH.write_text(
-            json.dumps(record, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
+        blob = json.dumps(record, ensure_ascii=False, indent=2) + "\n"
+        RECORD_PATH.write_text(blob, encoding="utf-8")
+        SPIKE_PATH.write_text(blob, encoding="utf-8")
 
     if args.check and not record["ac_p17"]["AC-P17-28"]:
         return 1

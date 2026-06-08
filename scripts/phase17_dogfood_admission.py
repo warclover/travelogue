@@ -40,6 +40,10 @@ DEFAULT_DOGFOOD_FIXTURES = (
     "golden-p17-mixed-person",
 )
 CAPABILITY_AC_IDS = ("AC-P17-16", "AC-P17-17", "AC-P17-18")
+STRICT_AC_IDS = (*CAPABILITY_AC_IDS, "AC-P17-17b")
+BLIND_REVIEW_TEMPLATE = (
+    ROOT / "docs" / "acceptance-records" / "p17-dogfood-blind-review.template.json"
+)
 
 
 def _now() -> str:
@@ -87,6 +91,20 @@ def _capability_probe_results(
         probes[ac_id] = probe
         merged = merge_gates(curate_gate, probe)
         gates[ac_id] = merged.get("passed")
+        if ac_id == "AC-P17-17":
+            sup = run_ac_probe(
+                trip,
+                "AC-P17-17b",
+                baseline_cfg=baseline_cfg,
+                candidate_cfg=candidate_cfg,
+            )
+            g17b = ac_eval.get("AC-P17-17b") or {}
+            if sup.get("passed") is False or g17b.get("passed") is False:
+                gates["AC-P17-17b"] = False
+            elif g17b.get("passed") is True or sup.get("passed") is True:
+                gates["AC-P17-17b"] = True
+            else:
+                gates["AC-P17-17b"] = None
     return gates, probes
 
 
@@ -153,7 +171,17 @@ def observe_trip(
                 "measurable": (probes.get(ac_id) or {}).get("measurable"),
             }
             for ac_id in CAPABILITY_AC_IDS
-        },
+        }
+        | (
+            {
+                "AC-P17-17b": {
+                    "passed": capability_gates.get("AC-P17-17b"),
+                    "measurable": capability_gates.get("AC-P17-17b") is not None,
+                }
+            }
+            if "AC-P17-17b" in capability_gates
+            else {}
+        ),
         "patternDiversityP50Baseline": dogfood.get("pattern_diversity_p50_baseline"),
         "patternDiversityP50Candidate": dogfood.get("pattern_diversity_p50_candidate"),
         "patternDiversityOk": dogfood.get("pattern_diversity_ok"),
@@ -176,7 +204,7 @@ def aggregate_observations(observations: list[dict[str, Any]]) -> dict[str, Any]
     diversity_ok = [o.get("patternDiversityOk") for o in observations if "patternDiversityOk" in o]
     diff_rates = [o.get("diffRate") for o in observations if o.get("diffRate") is not None]
     ac_gate_summary: dict[str, bool | None] = {}
-    for ac_id in CAPABILITY_AC_IDS:
+    for ac_id in STRICT_AC_IDS:
         vals = [(o.get("gates") or {}).get(ac_id) for o in observations]
         vals = [v for v in vals if v is not None]
         if vals:
@@ -220,7 +248,7 @@ def append_rollout_log(
     if not rollout.get("startedAt"):
         rollout["startedAt"] = _now()
 
-    for ac_id in CAPABILITY_AC_IDS:
+    for ac_id in STRICT_AC_IDS:
         passed = (aggregate.get("capabilityGates") or {}).get(ac_id)
         if passed is not None:
             rollout.setdefault("gates", {}).setdefault(ac_id, {"passed": None})
@@ -285,6 +313,8 @@ def main() -> int:
         "commit": _git_commit(),
         "aggregate": aggregate,
         "observations": observations,
+        "blindReviewTemplate": str(BLIND_REVIEW_TEMPLATE.relative_to(ROOT)),
+        "notes": "Append observations over 14d; complete blind review before W3b-12.",
     }
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 
@@ -292,7 +322,7 @@ def main() -> int:
         append_rollout_log(observations, aggregate=aggregate)
 
     if args.strict:
-        for ac_id in CAPABILITY_AC_IDS:
+        for ac_id in STRICT_AC_IDS:
             passed = (aggregate.get("capabilityGates") or {}).get(ac_id)
             if passed is False:
                 return 1

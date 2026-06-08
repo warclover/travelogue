@@ -316,6 +316,11 @@ def probe_ac_p17_17(
         chapter_screen_count=12,
         beat_profile="classic_magazine",
     )
+    from travelogue.layout_engine.quality_features import build_quality_pool
+
+    pool = build_quality_pool(list(assets_map.values()))
+    q = pool.for_asset(person_id)
+    hero_quality_p50 = round((q.aesthetic_pct + q.sharp_pct) / 2.0, 4)
     passed = score_lift >= 8.0 or beat_hits >= 1
     return {
         "measurable": True,
@@ -323,9 +328,56 @@ def probe_ac_p17_17(
         "deltaPp": score_lift,
         "beatBiasHits": beat_hits,
         "beatMultiplier": beat_mul,
+        "heroQualityP50": hero_quality_p50,
         "winnerChanged": False,
         "winnerFlat": hero_screen["patternId"],
         "winnerBeat": hero_screen["patternId"],
+        "probeAssetId": person_id,
+    }
+
+
+def probe_ac_p17_17b(
+    trip: dict,
+    *,
+    baseline_cfg: AppConfig,
+    candidate_cfg: AppConfig,
+) -> dict[str, Any]:
+    """AC-P17-17b · beat hero quality guard vs flat baseline."""
+    assets_map = _assets_map(trip)
+    aspects = _aspects(trip)
+    person_id = _hero_probe_asset_id(assets_map)
+    if not person_id:
+        return {"measurable": False, "passed": None}
+    pack = resolve_pack(candidate_cfg)
+    cfg_flat = replace(_mosaic_cfg(candidate_cfg, pack), lse_beat_profile="flat")
+    cfg_beat = replace(_mosaic_cfg(candidate_cfg, pack), lse_beat_profile="classic_magazine")
+    hero_screen = {
+        "patternId": "screen-portrait-1",
+        "slots": [{"assetId": person_id, "fit": "cover", "displayAspect": 0.75}],
+    }
+    score_kw = dict(
+        aspects=aspects,
+        assets_by_id=assets_map,
+        layout_state=_rhythm_state(),
+        trip_photo_total=40,
+        chapter_screen_index=0,
+        chapter_screen_count=12,
+    )
+    flat_score = score_candidate(hero_screen, cfg=cfg_flat, **score_kw).total
+    beat_score = score_candidate(hero_screen, cfg=cfg_beat, **score_kw).total
+    if beat_score <= flat_score:
+        return {"measurable": True, "passed": True, "skipped": True, "reason": "no_beat_lift"}
+    from travelogue.layout_engine.quality_features import build_quality_pool
+
+    pool = build_quality_pool(list(assets_map.values()))
+    q = pool.for_asset(person_id)
+    quality_p50 = round((q.aesthetic_pct + q.sharp_pct) / 2.0, 4)
+    passed = quality_p50 >= 0.35
+    return {
+        "measurable": True,
+        "passed": passed,
+        "heroQualityP50": quality_p50,
+        "requiredMin": 0.35,
         "probeAssetId": person_id,
     }
 
@@ -468,6 +520,7 @@ def probe_ac_p17_20(trip: dict, *, baseline_cfg: AppConfig, candidate_cfg: AppCo
 _PROBE_BY_AC: dict[str, Any] = {
     "AC-P17-16": probe_ac_p17_16,
     "AC-P17-17": probe_ac_p17_17,
+    "AC-P17-17b": probe_ac_p17_17b,
     "AC-P17-18": probe_ac_p17_18,
     "AC-P17-19": probe_ac_p17_19,
     "AC-P17-20": probe_ac_p17_20,
@@ -487,7 +540,12 @@ def run_ac_probe(
     return fn(trip, baseline_cfg=baseline_cfg, candidate_cfg=candidate_cfg)
 
 
-def merge_gates(curate_gate: dict[str, Any], probe: dict[str, Any]) -> dict[str, Any]:
+def merge_gates(
+    curate_gate: dict[str, Any],
+    probe: dict[str, Any],
+    *,
+    supplemental_probe: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Curate gate wins when passed; else accept window probe (capability proof)."""
     curate_passed = curate_gate.get("passed")
     probe_passed = probe.get("passed")
@@ -499,9 +557,13 @@ def merge_gates(curate_gate: dict[str, Any], probe: dict[str, Any]) -> dict[str,
         merged_passed = False
     else:
         merged_passed = probe_passed if curate_passed is None else curate_passed
+    if supplemental_probe and supplemental_probe.get("passed") is False:
+        merged_passed = False
     out = dict(curate_gate)
     out["passed"] = merged_passed
     out["probe"] = probe
+    if supplemental_probe is not None:
+        out["supplementalProbe"] = supplemental_probe
     out["curatePassed"] = curate_passed
     out["probePassed"] = probe_passed
     return out

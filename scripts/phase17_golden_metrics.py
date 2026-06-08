@@ -56,6 +56,10 @@ AC_SPECS: dict[str, tuple[dict[str, Any], dict[str, Any]]] = {
         {"segment_order_optimizer": False},
         {"segment_order_optimizer": True},
     ),
+    "AC-P17-26": (
+        {"highlight_windows": False},
+        {"highlight_windows": True},
+    ),
 }
 
 
@@ -123,7 +127,19 @@ def _run_capability_pair(
         baseline_cfg=baseline_cfg,
         candidate_cfg=candidate_cfg,
     )
-    gate = merge_gates(curate_gate, probe)
+    supplemental = None
+    if ac_id == "AC-P17-17":
+        supplemental = run_ac_probe(
+            trip,
+            "AC-P17-17b",
+            baseline_cfg=baseline_cfg,
+            candidate_cfg=candidate_cfg,
+        )
+    gate = merge_gates(curate_gate, probe, supplemental_probe=supplemental)
+    if ac_id == "AC-P17-17":
+        gate["AC-P17-17b"] = ac_eval.get("AC-P17-17b")
+        if (gate.get("AC-P17-17b") or {}).get("passed") is False:
+            gate["passed"] = False
     return {
         "acId": ac_id,
         "fixtureId": fixture_id,
@@ -173,6 +189,16 @@ def build_record(fixture_results: list[dict[str, Any]]) -> dict[str, Any]:
                 ac_summary[ac_id] = cur
             elif prev not in (False, None) and cur is not False:
                 ac_summary[ac_id] = prev and cur
+            if ac_id == "AC-P17-17":
+                g17b = (pair.get("gate") or {}).get("AC-P17-17b") or {}
+                b_prev = ac_summary.get("AC-P17-17b")
+                b_cur = g17b.get("passed")
+                if b_cur is False:
+                    ac_summary["AC-P17-17b"] = False
+                elif b_prev is None and b_cur is not False:
+                    ac_summary["AC-P17-17b"] = b_cur
+                elif b_prev not in (False, None) and b_cur is not False:
+                    ac_summary["AC-P17-17b"] = b_prev and b_cur
     return {
         "schemaVersion": "1",
         "benchmarkId": "p17-golden-metrics-v1",

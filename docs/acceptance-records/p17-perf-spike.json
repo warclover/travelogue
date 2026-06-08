@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "1",
+  "benchmarkId": "p17-curate-perf-v1",
+  "emittedAt": "2026-06-08T02:03:54+00:00",
+  "commit": "f2d9c0a51344c437747a534d864ddb5ca865a1b8",
+  "budgetPct": 15.0,
+  "ac_p17": {
+    "AC-P17-28": true
+  },
+  "results": [
+    {
+      "fixtureId": "golden-mixed-scenes",
+      "baselineMs": 61.2,
+      "candidateMs": 59.7,
+      "deltaPct": -2.45,
+      "budgetPct": 15.0,
+      "withinBudget": true,
+      "repeats": 2
+    },
+    {
+      "fixtureId": "golden-mixed-scenes",
+      "baselineMs": 54.8,
+      "candidateMs": 49.0,
+      "deltaPct": -10.58,
+      "budgetPct": 15.0,
+      "withinBudget": true,
+      "repeats": 2
+    },
+    {
+      "fixtureId": "golden-p17-mixed-person",
+      "baselineMs": 81.7,
+      "candidateMs": 78.6,
+      "deltaPct": -3.79,
+      "budgetPct": 15.0,
+      "withinBudget": true,
+      "repeats": 2
+    }
+  ],
+  "notes": "LSE off vs on · min-of-repeats curate+cluster wall time"
+}

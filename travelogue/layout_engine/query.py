@@ -45,6 +45,16 @@ def read_sidecar_events(
     return events[offset : offset + limit], total
 
 
+def lookup_weights_by_hash(
+    weights_hash: str,
+    *,
+    store_path: str | Path | None = None,
+) -> dict[str, Any] | None:
+    from travelogue.layout_engine.weights_audit import lookup_weights_snapshot
+
+    return lookup_weights_snapshot(weights_hash, store_path=store_path)
+
+
 def strategy_pack_summary(pack: Any) -> dict[str, Any]:
     profile = (pack.raw.get("scoring_profiles") or {}).get("default") or {}
     return {
