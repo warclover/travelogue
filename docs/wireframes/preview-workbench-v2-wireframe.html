@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>预览工作台 v2 · 状态与长图流程线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-border: #90a4ae;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-anno: #e65100;
+      --wf-problem: #ffcdd2;
+      --wf-problem-border: #e57373;
+      --wf-good: #c8e6c9;
+      --wf-good-border: #66bb6a;
+      --bar: #1a2f28;
+      --bar-text: #f5fbf8;
+      --accent: #3d6b5a;
+      --gold: #d4a843;
+      --gold-text: #1a1408;
+      --warn: #ffb74d;
+      --info: #81d4fa;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--wf-bg); color: var(--wf-text); line-height: 1.5; }
+
+    .review-bar {
+      position: sticky; top: 0; z-index: 1000;
+      background: #263238; color: #eceff1;
+      padding: 12px 20px;
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 80px; }
+    .panel { display: none; }
+    .panel.is-visible { display: block; }
+    .section { margin-bottom: 36px; }
+    .section h2 { margin: 0 0 6px; font-size: 18px; }
+    .section .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--wf-anno); margin-bottom: 8px; }
+
+    .frame {
+      background: var(--wf-page);
+      border: 2px solid var(--wf-border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .chrome { background: #dee1e6; padding: 8px 12px 0; border-bottom: 1px solid #b0bec5; }
+    .chrome__tab { display: inline-block; background: var(--wf-page); padding: 8px 14px; border-radius: 8px 8px 0 0; font-size: 12px; font-weight: 600; }
+
+    /* ── 现状问题示意 ── */
+    .toolbar-old {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+      padding: 8px 14px; background: var(--bar); color: var(--bar-text);
+      position: relative;
+    }
+    .btn { border: none; border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: default; white-space: nowrap; }
+    .btn--unstyled { background: ButtonFace; color: ButtonText; border: 1px solid #ccc; }
+    .btn--ghost { background: transparent; border: 1px solid rgba(255,255,255,.22); color: #fff; }
+    .btn--gold { background: linear-gradient(135deg, #e8c872, var(--gold)); color: var(--gold-text); font-weight: 600; }
+    .btn--gold-dim { background: linear-gradient(135deg, #e8c872, var(--gold)); color: var(--gold-text); opacity: .55; }
+    .btn--gold-ring { background: linear-gradient(135deg, #e8c872, var(--gold)); color: var(--gold-text); outline: 2px solid #ffd89a; outline-offset: 2px; box-shadow: 0 0 0 4px rgba(255,216,154,.35); }
+    .hint-inline { font-size: 12px; color: #c8e6d8; }
+    .hint-warn { font-size: 12px; color: #ffd89a; }
+    .spacer { flex: 1; min-width: 24px; }
+
+    .confusion-map {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;
+    }
+    .chip {
+      border: 1.5px solid var(--wf-border); border-radius: 10px; background: #fff;
+      padding: 10px 12px; font-size: 12px;
+    }
+    .chip strong { display: block; margin-bottom: 4px; }
+    .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
+    .swatch--gold { background: var(--gold); }
+    .swatch--warn { background: #ffd89a; }
+    .swatch--star { background: rgba(210,166,87,.92); }
+
+    .anno { border-radius: var(--radius); padding: 14px 16px; font-size: 13px; margin-bottom: 12px; }
+    .anno--warn { background: #fff8f8; border: 1.5px solid var(--wf-problem-border); }
+    .anno--good { background: #f1f8e9; border: 1.5px solid var(--wf-good-border); }
+    .anno ul { margin: 0; padding-left: 1.2em; }
+    .anno li { margin-bottom: 6px; }
+
+    .content-placeholder {
+      min-height: 220px; margin: 16px;
+      border: 1.5px dashed var(--wf-border);
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--wf-muted); font-size: 13px; background: #f4f7f5;
+    }
+
+    /* ── v2 推荐：分区 + 状态机 ── */
+    .toolbar-v2 {
+      background: var(--bar); color: var(--bar-text);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .toolbar-v2__row {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 6px 14px;
+    }
+    .toolbar-v2__row--secondary {
+      background: rgba(0,0,0,.12);
+      border-top: 1px solid rgba(255,255,255,.06);
+      min-height: 36px;
+    }
+    .toolbar-v2__title {
+      font-size: 13px; color: #c8e6d8; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; max-width: 200px;
+    }
+    .toolbar-v2__title strong { color: #fff; }
+
+    .seg {
+      display: inline-flex; padding: 3px; border-radius: 999px;
+      background: rgba(255,255,255,.1); gap: 2px;
+    }
+    .seg button {
+      border: none; border-radius: 999px; padding: 5px 12px;
+      font-size: 12px; background: transparent; color: #c8e6d8; cursor: default;
+    }
+    .seg button.is-selected {
+      background: #fff; color: var(--bar); font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+
+    .export-zone {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 4px 8px 4px 4px; border-radius: 999px;
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+    }
+    .export-zone__cta {
+      border: none; border-radius: 999px; padding: 6px 16px;
+      font-size: 13px; font-weight: 600; cursor: default;
+    }
+    .export-zone__cta--idle { background: var(--gold); color: var(--gold-text); }
+    .export-zone__cta--running {
+      background: #455a64; color: #eceff1;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .export-zone__cta--done { background: var(--accent); color: #fff; }
+    .spinner {
+      width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .export-zone__meta { font-size: 11px; color: #a8dcc8; max-width: 180px; }
+
+    .pending-banner {
+      display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
+      padding: 6px 12px; border-radius: 8px;
+      background: rgba(255,183,77,.18); border: 1px solid rgba(255,183,77,.45);
+      font-size: 12px; color: #ffe0b2;
+    }
+    .pending-banner button {
+      margin-left: auto; flex-shrink: 0;
+      border: none; border-radius: 999px; padding: 5px 14px;
+      background: var(--warn); color: #3e2723; font-weight: 600; font-size: 12px;
+    }
+
+    .sheet {
+      margin: 0 16px 16px; padding: 14px 16px;
+      border-radius: var(--radius);
+      border: 2px solid var(--accent);
+      background: #f5fbf8;
+      font-size: 13px;
+    }
+    .sheet h3 { margin: 0 0 8px; font-size: 14px; color: var(--accent); }
+    .sheet__steps { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .step {
+      font-size: 11px; padding: 4px 10px; border-radius: 999px;
+      background: #e0e0e0; color: #616161;
+    }
+    .step.is-done { background: #c8e6c9; color: #2e7d32; }
+    .step.is-active { background: #b3e5fc; color: #01579b; font-weight: 600; }
+    .sheet__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .sheet__actions .primary {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 8px; padding: 8px 16px; font-weight: 600;
+    }
+    .sheet__actions .secondary {
+      background: transparent; color: var(--accent);
+      border: 1px solid var(--accent); border-radius: 8px; padding: 8px 14px;
+    }
+
+    .float-card {
+      position: relative; margin: -8px 16px 16px; margin-left: auto;
+      width: min(360px, calc(100% - 32px));
+      padding: 14px 16px; border-radius: var(--radius);
+      background: #fff; border: 2px solid var(--wf-border);
+      box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      font-size: 13px;
+    }
+    .float-card--success { border-color: var(--good-border); }
+    .float-card__title { margin: 0 0 6px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .check { color: #2e7d32; font-weight: 700; }
+
+    .state-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 720px) { .state-grid { grid-template-columns: 1fr; } }
+
+    .legend-table { width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--wf-border); }
+    .legend-table th, .legend-table td { border: 1px solid #cfd8dc; padding: 8px 10px; text-align: left; vertical-align: top; }
+    .legend-table th { background: #eceff1; }
+    .tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+    .tag--rec { background: #2e7d32; color: #fff; }
+    .tag--new { background: #1565c0; color: #fff; }
+
+    .on-photo {
+      position: relative; margin: 16px; border: 1.5px dashed var(--wf-border);
+      border-radius: var(--radius); min-height: 120px; background: #37474f;
+    }
+    .on-photo__ctrl {
+      position: absolute; left: 10px; top: 10px;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 999px;
+      background: rgba(0,0,0,.55); color: #e8f5ef; font-size: 11px;
+    }
+    .on-photo__ctrl select {
+      border: 1px solid rgba(255,255,255,.25); border-radius: 6px;
+      background: rgba(255,255,255,.12); color: inherit; font: inherit; padding: 2px 4px;
+    }
+    .on-photo__star {
+      position: absolute; right: 10px; bottom: 10px;
+      width: 36px; height: 36px; border-radius: 999px; border: none;
+      background: rgba(210,166,87,.92); color: #1a1408; font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+<header class="review-bar">
+  <h1>预览工作台 v2 · 状态与长图流程线框</h1>
+  <p>聚焦：保存长图时按钮变色 / 文案切换让人无法确认「是否选对」· 对应 <code>preview-toolbar.js</code></p>
+  <div class="tabs" role="tablist">
+    <button type="button" class="is-active" data-panel="diag">① 现状诊断</button>
+    <button type="button" data-panel="d">② 方案 D 推荐</button>
+    <button type="button" data-panel="states">③ 长图状态机</button>
+    <button type="button" data-panel="rules">④ 交互规范</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ① 诊断 -->
+  <section class="panel is-visible" id="panel-diag">
+    <div class="section">
+      <h2>现状诊断 · 为什么「分不清选对了没有」</h2>
+      <p class="lead">同一套金色 / 半透明白被用于<strong>不同语义</strong>，且「选中态」与「进行中」「警告」缺乏固定位置与图标。</p>
+    </div>
+
+    <div class="label">顶栏实际会出现的控件（同屏叠加）</div>
+    <div class="frame">
+      <div class="chrome"><span class="chrome__tab">斯里兰卡人文精选 · 预览</span></div>
+      <div class="toolbar-old">
+        <button type="button" class="btn btn--unstyled">阅读视图</button>
+        <button type="button" class="btn btn--gold">保存长图</button>
+        <span class="hint-inline">正在生成长图…</span>
+        <span class="hint-warn">内容已更新，请重新生成长图</span>
+        <button type="button" class="btn btn--ghost">文件夹</button>
+        <button type="button" class="btn btn--ghost">⋯</button>
+        <span class="spacer"></span>
+        <a href="#" style="color:#c8e6d8;font-size:14px;text-decoration:none">← 返回</a>
+      </div>
+      <div class="content-placeholder">卷轴预览</div>
+    </div>
+
+    <div class="anno anno--warn">
+      <ul>
+        <li><strong>「阅读视图」无专属样式</strong>（<code>preview-toolbar__reader-view</code> 无 CSS）→ 系统默认灰按钮，与工具栏风格脱节；点击后文案变「编辑预览」，像切换了另一个模式但<strong>没有选中外观</strong>。</li>
+        <li><strong>金色 overload</strong>：主 CTA「保存长图」、stale 提示（#ffd89a）、精选星标（#d2a657）、focus 高亮（#ffd89a 描边）共用相近色相 → 用户以为「变黄 = 已选中」或「变黄 = 出错了」。</li>
+        <li><strong>保存长图三态外观接近</strong>：金色可点 → 金色半透明 disabled → 金色 + 外发光 focus；旁边再出现灰绿状态字，主按钮究竟处于 idle / running / done 不清晰。</li>
+        <li><strong>反馈分散三处</strong>：顶栏 inline 文案 + 底部居中 toast + 右下角成功卡片 → 眼睛要跳三个区域才能确认「保存成功」。</li>
+        <li><strong>「应用排版」藏在 ⋯ 菜单</strong>，改拼图/精选后只 toast 提示，主栏无持续可见的「待应用」状态。</li>
+      </ul>
+    </div>
+
+    <div class="label">颜色语义冲突图</div>
+    <div class="confusion-map">
+      <div class="chip"><span class="swatch swatch--gold"></span><strong>保存长图（主操作）</strong> 金色实心 = 可点击</div>
+      <div class="chip"><span class="swatch swatch--gold"></span><strong>保存中 disabled</strong> 仍是金色，仅 opacity .6</div>
+      <div class="chip"><span class="swatch swatch--warn"></span><strong>stale / focus</strong> 浅金描边或文字 = 需重新导出</div>
+      <div class="chip"><span class="swatch swatch--star"></span><strong>精选 ★</strong> 金色底 = 已标精选（在画面上，非顶栏）</div>
+      <div class="chip"><strong>阅读视图切换</strong> 无样式 → 与「文件夹」ghost 按钮不像一组</div>
+      <div class="chip"><strong>媒资下拉</strong> 画面上「普通照片/拼图」与顶栏无联动提示</div>
+    </div>
+
+    <div class="label" style="margin-top:20px">画面上额外的控件（分散注意力）</div>
+    <div class="on-photo">
+      <div class="on-photo__ctrl">
+        <span>媒资</span>
+        <select><option>普通照片</option><option>拼图</option></select>
+      </div>
+      <button type="button" class="on-photo__star" title="精选">★</button>
+    </div>
+  </section>
+
+  <!-- ② 方案 D -->
+  <section class="panel" id="panel-d">
+    <div class="section">
+      <h2>方案 D · 分区工作台 <span class="tag tag--rec">推荐</span></h2>
+      <p class="lead">把顶栏拆成<strong>导航 · 预览模式 · 导出任务 · 工具</strong>四区；金色<strong>只用于一个可点击主操作</strong>，状态用第二行任务条表达。</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="chrome__tab">斯里兰卡人文精选 · 预览</span></div>
+
+      <div class="toolbar-v2">
+        <div class="toolbar-v2__row">
+          <a href="#" style="color:#c8e6d8;font-size:13px;text-decoration:none;white-space:nowrap">← 返回</a>
+          <span class="toolbar-v2__title"><strong>斯里兰卡人文精选</strong></span>
+
+          <!-- 预览模式：分段控件，选中态明确 -->
+          <div class="seg" role="group" aria-label="预览模式">
+            <button type="button" class="is-selected">编辑预览</button>
+            <button type="button">阅读视图</button>
+          </div>
+
+          <span class="spacer"></span>
+
+          <!-- 导出区：与文件夹/更多分离 -->
+          <div class="export-zone" aria-label="长图导出">
+            <button type="button" class="export-zone__cta export-zone__cta--idle">导出长图</button>
+            <span class="export-zone__meta">写入画册目录 · 首页可预览</span>
+          </div>
+
+          <button type="button" class="btn btn--ghost" style="font-size:12px">文件夹</button>
+          <button type="button" class="btn btn--ghost" style="width:32px;padding:6px 0">⋯</button>
+          <button type="button" class="btn btn--ghost" style="width:32px;padding:6px 0" title="收起">▴</button>
+        </div>
+
+        <!-- 第二行：仅在有任务时出现，避免与主按钮抢金色 -->
+        <div class="toolbar-v2__row toolbar-v2__row--secondary">
+          <div class="pending-banner">
+            <span>⚠ 有 3 处编辑未应用排版（拼图改判 ×2、精选 ×1）</span>
+            <button type="button">应用排版</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-placeholder">卷轴预览 · 顶栏第二行仅在 pending 时出现</div>
+    </div>
+
+    <div class="anno anno--good">
+      <h3 style="margin:0 0 8px;font-size:14px">相对现状的改进</h3>
+      <ul>
+        <li><strong>分段控件</strong>替代「阅读视图 ↔ 编辑预览」单按钮换文案；白底选中块 = 当前模式，不会与金色混淆。</li>
+        <li><strong>导出长图</strong>独立成 <code>export-zone</code>，附一句静态说明；进行中时 CTA 变灰蓝 + spinner，<strong>不再用半透明金色</strong>。</li>
+        <li><strong>待应用排版</strong>升为第二行琥珀色 banner（与金色 CTA 色相分离），主按钮固定可见。</li>
+        <li><strong>返回</strong>回到左侧（F 型阅读起点），高频导出仍在右侧但成组。</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>窄屏折叠（&lt; 640px）</h2>
+      <p class="lead">第二行 banner 全宽；导出区 meta 文案收起到 ⋯ 菜单「导出说明」。</p>
+      <div class="frame" style="max-width:390px">
+        <div class="toolbar-v2">
+          <div class="toolbar-v2__row" style="flex-wrap:wrap">
+            <a href="#" style="color:#c8e6d8;font-size:12px">← 返回</a>
+            <div class="seg"><button class="is-selected">编辑</button><button>阅读</button></div>
+            <div class="export-zone" style="width:100%;justify-content:space-between">
+              <button class="export-zone__cta export-zone__cta--idle">导出长图</button>
+            </div>
+          </div>
+          <div class="toolbar-v2__row toolbar-v2__row--secondary">
+            <div class="pending-banner" style="width:100%"><span>待应用排版</span><button>应用</button></div>
+          </div>
+        </div>
+        <div class="content-placeholder" style="min-height:160px;margin:8px">移动端</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 状态机 -->
+  <section class="panel" id="panel-states">
+    <div class="section">
+      <h2>长图导出 · 四态线框（方案 D）</h2>
+      <p class="lead">每种状态<strong>只有一种主视觉锚点</strong>；禁止 idle/running 共用金色按钮样式。</p>
+    </div>
+
+    <div class="state-grid">
+      <div>
+        <div class="label">Idle · 可导出</div>
+        <div class="frame">
+          <div class="toolbar-v2__row" style="background:var(--bar);padding:10px 14px">
+            <div class="export-zone">
+              <button class="export-zone__cta export-zone__cta--idle">导出长图</button>
+              <span class="export-zone__meta">约 5 章 · 上次导出 2 小时前</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="label">Running · 生成中</div>
+        <div class="frame">
+          <div class="toolbar-v2__row" style="background:var(--bar);padding:10px 14px;flex-direction:column;align-items:stretch;gap:8px">
+            <div class="export-zone" style="width:100%;justify-content:space-between">
+              <button class="export-zone__cta export-zone__cta--running">
+                <span class="spinner"></span> 正在导出…
+              </button>
+              <span class="export-zone__meta">第 2/5 段 · 请勿关闭页面</span>
+            </div>
+            <div style="height:4px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden">
+              <div style="width:40%;height:100%;background:var(--info)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="label">Stale · 内容已变</div>
+        <div class="frame">
+          <div class="toolbar-v2__row" style="background:var(--bar);padding:10px 14px;flex-wrap:wrap;gap:8px">
+            <div class="export-zone">
+              <button class="export-zone__cta export-zone__cta--idle">重新导出</button>
+            </div>
+            <span style="font-size:12px;color:#ffcc80;padding:4px 10px;border-radius:6px;background:rgba(255,183,77,.2)">
+              内容与上次导出不一致
+            </span>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--wf-muted);margin:6px 0 0">注意：stale 用<strong>琥珀标签</strong>，不用金色描边按钮。</p>
+      </div>
+      <div>
+        <div class="label">Done · 成功（锚定抽屉，非换色按钮）</div>
+        <div class="frame" style="padding-bottom:8px">
+          <div class="toolbar-v2__row" style="background:var(--bar);padding:10px 14px">
+            <div class="export-zone">
+              <button class="export-zone__cta export-zone__cta--done">✓ 已导出</button>
+              <span class="export-zone__meta">点击查看文件</span>
+            </div>
+          </div>
+          <div class="float-card float-card--success">
+            <p class="float-card__title"><span class="check">✓</span> 长图已保存到画册目录</p>
+            <p style="margin:0 0 10px;color:var(--wf-muted);font-size:12px">5 个文件 · 含页码 1/5 … 5/5</p>
+            <div class="sheet__actions">
+              <button class="primary">在文件夹中显示</button>
+              <button class="secondary">返回 Studio 预览</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top:28px">
+      <h2>对比：现状 vs 方案 D（保存长图瞬间）</h2>
+      <div class="state-grid">
+        <div>
+          <div class="label">现状 · 用户困惑点</div>
+          <div class="toolbar-old" style="border-radius:8px">
+            <button class="btn btn--gold-dim">保存长图</button>
+            <span class="hint-inline">正在生成长图…</span>
+          </div>
+          <p style="font-size:12px;color:var(--wf-muted)">按钮仍是金色 family，只是变淡；用户不确定是「在加载」还是「已选中」。</p>
+        </div>
+        <div>
+          <div class="label">方案 D</div>
+          <div class="toolbar-v2__row" style="background:var(--bar);border-radius:8px;padding:10px">
+            <button class="export-zone__cta export-zone__cta--running"><span class="spinner"></span> 正在导出…</button>
+            <span class="export-zone__meta">第 2/5 段</span>
+          </div>
+          <p style="font-size:12px;color:var(--wf-muted)">色相从金→灰蓝；文案在按钮内；进度条辅助。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ④ 规范 -->
+  <section class="panel" id="panel-rules">
+    <div class="section">
+      <h2>交互规范摘要（实现前评审）</h2>
+      <p class="lead">供研发与你对齐「什么颜色代表什么」——避免再出现金色多义。</p>
+    </div>
+
+    <table class="legend-table">
+      <thead>
+        <tr><th>语义</th><th>颜色 / 组件</th><th>禁止</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>唯一主操作（导出长图 idle）</td>
+          <td>金色实心 <code>export-zone__cta--idle</code></td>
+          <td>不用于状态提示、选中、disabled</td>
+        </tr>
+        <tr>
+          <td>进行中</td>
+          <td>灰蓝底 + spinner + 按钮内文案</td>
+          <td>不用半透明金色</td>
+        </tr>
+        <tr>
+          <td>成功</td>
+          <td>绿色勾 + 抽屉；按钮变 <code>--done</code> 绿色</td>
+          <td>不用 toast 替代主确认</td>
+        </tr>
+        <tr>
+          <td>需用户行动（stale / pending）</td>
+          <td>琥珀 banner / 标签</td>
+          <td>不用 #ffd89a 与 CTA 金相邻</td>
+        </tr>
+        <tr>
+          <td>模式选中（编辑/阅读）</td>
+          <td>分段控件白底块</td>
+          <td>不用切换按钮文案</td>
+        </tr>
+        <tr>
+          <td>画面上精选 ★</td>
+          <td>保持金色，但加 <code>aria-pressed</code> + 标题提示</td>
+          <td>不与顶栏 CTA 同色相邻出现</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="anno anno--good" style="margin-top:16px">
+      <h3 style="margin:0 0 8px;font-size:14px">待你确认 <span class="tag tag--new">评审点</span></h3>
+      <ul>
+        <li>是否采纳<strong>方案 D</strong>（分区 + 第二行 pending + 导出状态机）？</li>
+        <li>「导出长图」文案是否比「保存长图」更准确？（实际是写入目录而非下载）</li>
+        <li>成功后面板：固定右下角 vs 顶栏下方展开抽屉？</li>
+        <li>阅读/编辑分段：默认「编辑预览」是否符合你日常流程？</li>
+        <li>第二行 pending banner：是否过于占高？可改为仅图标 + 数字角标。</li>
+      </ul>
+    </div>
+
+    <div class="anno" style="margin-top:12px">
+      <h3 style="margin:0 0 8px;font-size:14px">实现映射（评审通过后）</h3>
+      <ul style="font-size:12px">
+        <li><code>preview-toolbar.css</code>：新增 <code>seg</code>、<code>export-zone</code>、<code>pending-banner</code>；移除 running 态金色 disabled</li>
+        <li><code>preview-toolbar.js</code>：<code>initReaderViewToggle</code> → 分段控件；<code>startLongshot</code> 驱动四态 class；成功统一 <code>showLongshotPanel</code></li>
+        <li><code>setLayoutPending</code>：除菜单项外同步第二行 banner</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  document.querySelectorAll(".tabs button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".tabs button").forEach(function (b) { b.classList.remove("is-active"); });
+      btn.classList.add("is-active");
+      document.querySelectorAll(".panel").forEach(function (p) { p.classList.remove("is-visible"); });
+      var el = document.getElementById("panel-" + btn.getAttribute("data-panel"));
+      if (el) el.classList.add("is-visible");
+    });
+  });
+</script>
+</body>
+</html>

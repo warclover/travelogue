@@ -38,6 +38,16 @@ export function buildLongshotRequest(tripId, preset) {
   };
 }
 
+/** Resolve copyDisplay from live preview DOM (Studio toolbar chips). */
+export function resolveCopyDisplayFromDom(doc) {
+  doc = doc || (typeof document !== "undefined" ? document : null);
+  if (!doc || !doc.documentElement) return "full";
+  var html = doc.documentElement;
+  if (html.getAttribute("data-photos-only") === "on") return "photos";
+  if (html.getAttribute("data-copy-display") === "photos") return "photos";
+  return "full";
+}
+
 export function revealLongshotOutput(tripId, relPath) {
   return postJson("/__travelogue/reveal", { tripId: tripId, relPath: relPath });
 }

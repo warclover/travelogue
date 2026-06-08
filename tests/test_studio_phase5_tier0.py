@@ -25,6 +25,28 @@ def test_p5_32_preview_longshot_busy_retry() -> None:
     assert "排队中，请稍候" in js
 
 
+def test_preview_toolbar_longshot_integrated_to_top_bar() -> None:
+    js = PREVIEW_JS.read_text(encoding="utf-8")
+    css = (ROOT / "templates" / "studio" / "preview-toolbar.css").read_text(encoding="utf-8")
+    client = (ROOT / "templates" / "studio" / "js" / "longshot-client.js").read_text(
+        encoding="utf-8"
+    )
+    for token in (
+        "preview-toolbar__longshot-caret",
+        "preview-toolbar__longshot-preview-row",
+        "openLongshotExportOptions",
+        "openStudioLongshotExportPanel",
+        "preview-toolbar__export-popover",
+        "buildLongshotRequestFromPage",
+        "resolveCopyDisplayFromDom",
+        "syncLongshotPreviewChips",
+    ):
+        assert token in js, f"missing preview toolbar longshot marker: {token}"
+    assert 'html[data-preview-toolbar="on"] .longshot-toolbar' in css
+    assert 'html[data-preview-toolbar="on"] .screenplay-toolbar' in css
+    assert "resolveCopyDisplayFromDom" in client
+
+
 def test_p5_a4_shared_http_module() -> None:
     js = read_studio_js()
     assert "export function postJson" in js or "function postJson" in js

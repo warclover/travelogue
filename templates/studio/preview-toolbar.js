@@ -10,7 +10,10 @@ import {
   isJobBusyResponse,
 } from "./js/http.js";
 import { startJobPollInterval, pollJobUntilDone } from "./js/job-poll.js";
-import { buildLongshotRequest } from "./js/longshot-client.js";
+import {
+  buildLongshotRequest,
+  resolveCopyDisplayFromDom,
+} from "./js/longshot-client.js";
 import { STUDIO_USER_NOTES_MAX_LEN } from "./js/constants.js";
 import { trackStudioEvent } from "./js/analytics.js";
 import { mountCohortDrawer } from "./cohort-drawer.js";
@@ -19,6 +22,8 @@ var isJobBusy409 = isJobBusyResponse;
 var HINT_KEY = "travelogue.studio.editHint.dismissed";
 var COLLAPSE_KEY = "travelogue.studio.previewToolbar.collapsed";
 var READER_VIEW_KEY = "travelogue.studio.readerView";
+var LONGSHOT_MODE_KEY = "travelogue:longshotMode";
+var LONGSHOT_SCALE_KEY = "travelogue:longshotScale";
 var SLOW_JOB_MS = 30000;
 var pollCancel = null;
 var longshotJobId = null;
@@ -87,6 +92,23 @@ var narrateJobId = null;
   }
 
   var _toastTimer = null;
+  var _longshotDrawerTimer = null;
+  var LONGSHOT_DRAWER_AUTO_MS = 3000;
+
+  function clearLongshotDrawerTimer() {
+    if (_longshotDrawerTimer) {
+      clearTimeout(_longshotDrawerTimer);
+      _longshotDrawerTimer = null;
+    }
+  }
+
+  function scheduleLongshotDrawerAutoHide(root) {
+    clearLongshotDrawerTimer();
+    _longshotDrawerTimer = setTimeout(function () {
+      _longshotDrawerTimer = null;
+      hideLongshotDrawer(root);
+    }, LONGSHOT_DRAWER_AUTO_MS);
+  }
 
   function toolbarConfirm(opts) {
     if (typeof studioModal === "function") {
@@ -127,6 +149,403 @@ var narrateJobId = null;
     document.querySelectorAll(".preview-toolbar__apply-layout").forEach(function (btn) {
       btn.hidden = !_layoutPending;
     });
+    document.querySelectorAll(".preview-toolbar__pending-row").forEach(function (row) {
+      row.hidden = !_layoutPending;
+    });
+    var toolbar = document.querySelector(".preview-toolbar");
+    if (toolbar) {
+      syncLongshotPreviewRowVisibility(toolbar);
+      requestAnimationFrame(function () {
+        syncToolbarHeight(toolbar);
+      });
+    }
+  }
+
+  function longshotApi() {
+    return window.TravelogueLongshot || null;
+  }
+
+  function readStoredLongshotScale() {
+    try {
+      var s = parseInt(localStorage.getItem(LONGSHOT_SCALE_KEY), 10);
+      if (s === 2 || s === 3) return s;
+    } catch (e) {}
+    return 2;
+  }
+
+  function readStoredLongshotMode() {
+    try {
+      var m = localStorage.getItem(LONGSHOT_MODE_KEY);
+      if (m === "full" || m === "chapter") return m;
+    } catch (e2) {}
+    return "chapter";
+  }
+
+  function writeStoredLongshotPrefs(mode, scale) {
+    try {
+      localStorage.setItem(LONGSHOT_MODE_KEY, mode);
+      localStorage.setItem(LONGSHOT_SCALE_KEY, String(scale));
+    } catch (e) {}
+    var ls = longshotApi();
+    if (ls) {
+      if (typeof ls.setUserSelectedMode === "function") ls.setUserSelectedMode(mode);
+      if (typeof ls.setUserSelectedScale === "function") ls.setUserSelectedScale(scale);
+    }
+  }
+
+  function readLongshotExportPrefs() {
+    var ls = longshotApi();
+    var scale =
+      ls && typeof ls.getUserSelectedScale === "function"
+        ? ls.getUserSelectedScale()
+        : readStoredLongshotScale();
+    var mode =
+      ls && typeof ls.getUserSelectedMode === "function"
+        ? ls.getUserSelectedMode()
+        : readStoredLongshotMode();
+    var captions =
+      ls && typeof ls.areCaptionsVisible === "function"
+        ? ls.areCaptionsVisible()
+        : document.documentElement.getAttribute("data-caption-display") !== "off";
+    return {
+      scale: scale,
+      mode: mode,
+      captions: captions,
+      copyDisplay: resolveCopyDisplayFromDom(document),
+    };
+  }
+
+  function formatLongshotExportMetaLabel() {
+    var prefs = readLongshotExportPrefs();
+    var modeLabel = prefs.mode === "full" ? "完整" : "按章";
+    var copyLabel = prefs.copyDisplay === "photos" ? "纯照片" : "完整文案";
+    var capLabel = prefs.captions ? "" : " · 无图注";
+    return modeLabel + " · " + prefs.scale + "× · " + copyLabel + capLabel;
+  }
+
+  function refreshLongshotExportMeta(root) {
+    setLongshotExportMeta(root, formatLongshotExportMetaLabel());
+  }
+
+  function buildLongshotRequestFromPage(tripId) {
+    var prefs = readLongshotExportPrefs();
+    return buildLongshotRequest(tripId, {
+      scale: prefs.scale,
+      format: "png",
+      copyDisplay: prefs.copyDisplay,
+    });
+  }
+
+  function isReaderSurfaceMode() {
+    return document.documentElement.getAttribute("data-surface-mode") === "reader";
+  }
+
+  function syncLongshotPreviewRowVisibility(root) {
+    if (!root) return;
+    var row = root.querySelector(".preview-toolbar__longshot-preview-row");
+    if (!row) return;
+    row.hidden = isReaderSurfaceMode() || _layoutPending;
+    requestAnimationFrame(function () {
+      syncToolbarHeight(root);
+    });
+  }
+
+  function syncLongshotPreviewChips(root) {
+    if (!root) return;
+    var html = document.documentElement;
+    var photosOnly = html.getAttribute("data-photos-only") === "on";
+    var narrativeHidden = html.getAttribute("data-copy-display") === "photos";
+    var captionsOn = html.getAttribute("data-caption-display") !== "off";
+
+    root.querySelectorAll("[data-copy-preset]").forEach(function (btn) {
+      var on = photosOnly
+        ? btn.getAttribute("data-copy-preset") === "photos"
+        : btn.getAttribute("data-copy-preset") === "full";
+      btn.classList.toggle("is-selected", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+
+    var captionChip = root.querySelector('[data-preview-chip="caption"]');
+    if (captionChip) {
+      captionChip.setAttribute("aria-pressed", captionsOn ? "true" : "false");
+      captionChip.textContent = captionsOn ? "图注：开" : "图注：关";
+      captionChip.disabled = photosOnly;
+    }
+
+    var narrativeChip = root.querySelector('[data-preview-chip="narrative"]');
+    if (narrativeChip) {
+      var showNarrative = !narrativeHidden;
+      narrativeChip.setAttribute("aria-pressed", showNarrative ? "true" : "false");
+      narrativeChip.textContent = showNarrative ? "导语：显" : "导语：隐";
+      narrativeChip.disabled = photosOnly;
+    }
+
+    refreshLongshotExportMeta(root);
+  }
+
+  function applyToolbarCopyPreset(root, preset) {
+    var html = document.documentElement;
+    if (preset === "photos") {
+      if (typeof window.travelogueApplyPhotosOnly === "function") {
+        window.travelogueApplyPhotosOnly(true);
+      } else {
+        html.setAttribute("data-photos-only", "on");
+      }
+      var ls = longshotApi();
+      if (ls && typeof ls.applyCaptionDisplay === "function") {
+        ls.applyCaptionDisplay(false);
+      } else {
+        html.setAttribute("data-caption-display", "off");
+      }
+      try {
+        sessionStorage.setItem("travelogue:photosOnly", "on");
+      } catch (e) {}
+    } else {
+      if (typeof window.travelogueApplyPhotosOnly === "function") {
+        window.travelogueApplyPhotosOnly(false);
+      } else {
+        html.removeAttribute("data-photos-only");
+      }
+      html.removeAttribute("data-copy-display");
+      var lsFull = longshotApi();
+      if (lsFull && typeof lsFull.applyCaptionDisplay === "function") {
+        lsFull.applyCaptionDisplay(true);
+      } else {
+        html.removeAttribute("data-caption-display");
+      }
+      try {
+        sessionStorage.removeItem("travelogue:photosOnly");
+        sessionStorage.setItem("travelogue:copyDisplay", "full");
+      } catch (e2) {}
+    }
+    syncLongshotPreviewChips(root);
+  }
+
+  function toggleToolbarNarrative(root) {
+    if (document.documentElement.getAttribute("data-photos-only") === "on") return;
+    var html = document.documentElement;
+    var hidden = html.getAttribute("data-copy-display") === "photos";
+    if (hidden) {
+      html.removeAttribute("data-copy-display");
+      try {
+        sessionStorage.setItem("travelogue:copyDisplay", "full");
+      } catch (e) {}
+    } else {
+      html.setAttribute("data-copy-display", "photos");
+      try {
+        sessionStorage.setItem("travelogue:copyDisplay", "photos");
+      } catch (e2) {}
+    }
+    syncLongshotPreviewChips(root);
+  }
+
+  function toggleToolbarCaptions(root) {
+    if (document.documentElement.getAttribute("data-photos-only") === "on") return;
+    var ls = longshotApi();
+    var captionsOn = document.documentElement.getAttribute("data-caption-display") !== "off";
+    var next =
+      ls && typeof ls.areCaptionsVisible === "function"
+        ? !ls.areCaptionsVisible()
+        : !captionsOn;
+    if (ls && typeof ls.applyCaptionDisplay === "function") {
+      ls.applyCaptionDisplay(next);
+    } else {
+      if (next) document.documentElement.removeAttribute("data-caption-display");
+      else document.documentElement.setAttribute("data-caption-display", "off");
+    }
+    syncLongshotPreviewChips(root);
+  }
+
+  function initLongshotPreviewRow(root) {
+    var row = root.querySelector(".preview-toolbar__longshot-preview-row");
+    if (!row || row.dataset.bound === "1") return;
+    row.dataset.bound = "1";
+
+    row.querySelectorAll("[data-copy-preset]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        applyToolbarCopyPreset(root, btn.getAttribute("data-copy-preset"));
+      });
+    });
+
+    var captionChip = row.querySelector('[data-preview-chip="caption"]');
+    if (captionChip) {
+      captionChip.addEventListener("click", function () {
+        toggleToolbarCaptions(root);
+      });
+    }
+
+    var narrativeChip = row.querySelector('[data-preview-chip="narrative"]');
+    if (narrativeChip) {
+      narrativeChip.addEventListener("click", function () {
+        toggleToolbarNarrative(root);
+      });
+    }
+
+    syncLongshotPreviewChips(root);
+    syncLongshotPreviewRowVisibility(root);
+  }
+
+  var _studioExportPopoverClose = null;
+
+  function closeStudioExportPopover() {
+    document.querySelectorAll(".preview-toolbar__export-popover").forEach(function (pop) {
+      pop.hidden = true;
+    });
+    if (_studioExportPopoverClose) {
+      document.removeEventListener("click", _studioExportPopoverClose, true);
+      _studioExportPopoverClose = null;
+    }
+  }
+
+  function syncStudioExportPopoverUI(pop) {
+    var prefs = readLongshotExportPrefs();
+    pop.querySelectorAll("[data-studio-longshot-mode]").forEach(function (btn) {
+      var on = btn.getAttribute("data-studio-longshot-mode") === prefs.mode;
+      btn.classList.toggle("is-selected", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    pop.querySelectorAll("[data-studio-longshot-scale]").forEach(function (btn) {
+      var on = String(btn.getAttribute("data-studio-longshot-scale")) === String(prefs.scale);
+      btn.classList.toggle("is-selected", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+
+  function ensureStudioExportPopover(root) {
+    var wrap = root.querySelector(".preview-toolbar__export-zone-wrap");
+    if (!wrap) return null;
+    var pop = wrap.querySelector(".preview-toolbar__export-popover");
+    if (pop) return pop;
+
+    pop = document.createElement("div");
+    pop.className = "preview-toolbar__export-popover";
+    pop.hidden = true;
+    pop.setAttribute("role", "dialog");
+    pop.setAttribute("aria-label", "导出设置");
+    pop.innerHTML =
+      '<p class="preview-toolbar__export-popover-title">导出设置</p>' +
+      '<p class="preview-toolbar__export-popover-note">调整范围与清晰度；点左侧「保存长图」开始导出。</p>' +
+      '<div class="preview-toolbar__export-popover-field">' +
+      '<span class="preview-toolbar__export-popover-label">导出范围</span>' +
+      '<div class="preview-toolbar__export-popover-seg" role="group">' +
+      '<button type="button" data-studio-longshot-mode="chapter">按章导出</button>' +
+      '<button type="button" data-studio-longshot-mode="full">完整长图</button>' +
+      "</div></div>" +
+      '<div class="preview-toolbar__export-popover-field">' +
+      '<span class="preview-toolbar__export-popover-label">清晰度</span>' +
+      '<div class="preview-toolbar__export-popover-seg" role="group">' +
+      '<button type="button" data-studio-longshot-scale="2">标准 2×</button>' +
+      '<button type="button" data-studio-longshot-scale="3">高清 3×</button>' +
+      "</div></div>" +
+      '<div class="preview-toolbar__export-popover-actions">' +
+      '<button type="button" class="preview-toolbar__export-popover-ok" data-action="ok">确定</button>' +
+      '<button type="button" class="preview-toolbar__export-popover-cancel" data-action="cancel">取消</button>' +
+      "</div>";
+
+    var draftMode = "chapter";
+    var draftScale = 2;
+
+    pop.querySelectorAll("[data-studio-longshot-mode]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        draftMode = btn.getAttribute("data-studio-longshot-mode") || "chapter";
+        pop.querySelectorAll("[data-studio-longshot-mode]").forEach(function (b) {
+          var on = b === btn;
+          b.classList.toggle("is-selected", on);
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+      });
+    });
+    pop.querySelectorAll("[data-studio-longshot-scale]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        draftScale = parseInt(btn.getAttribute("data-studio-longshot-scale"), 10) || 2;
+        pop.querySelectorAll("[data-studio-longshot-scale]").forEach(function (b) {
+          var on = b === btn;
+          b.classList.toggle("is-selected", on);
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+      });
+    });
+
+    pop.addEventListener("click", function (e) {
+      e.stopPropagation();
+    });
+
+    pop._applyDraft = function () {
+      writeStoredLongshotPrefs(draftMode, draftScale);
+    };
+    pop._readDraftFromPrefs = function () {
+      var prefs = readLongshotExportPrefs();
+      draftMode = prefs.mode;
+      draftScale = prefs.scale;
+      syncStudioExportPopoverUI(pop);
+    };
+
+    wrap.appendChild(pop);
+    return pop;
+  }
+
+  function openStudioLongshotExportPanel(root) {
+    return new Promise(function (resolve, reject) {
+      var pop = ensureStudioExportPopover(root);
+      if (!pop) {
+        reject(new Error("no popover"));
+        return;
+      }
+      closeStudioExportPopover();
+      pop._readDraftFromPrefs();
+      pop.hidden = false;
+
+      function finish(ok) {
+        closeStudioExportPopover();
+        if (ok) resolve();
+        else reject(new Error("cancelled"));
+      }
+
+      var okBtn = pop.querySelector('[data-action="ok"]');
+      var cancelBtn = pop.querySelector('[data-action="cancel"]');
+
+      function onOk() {
+        pop._applyDraft();
+        finish(true);
+      }
+      function onCancel() {
+        finish(false);
+      }
+
+      okBtn.addEventListener("click", onOk, { once: true });
+      cancelBtn.addEventListener("click", onCancel, { once: true });
+
+      _studioExportPopoverClose = function (e) {
+        if (pop.contains(e.target)) return;
+        if (root.querySelector(".preview-toolbar__longshot-caret") === e.target) return;
+        okBtn.removeEventListener("click", onOk);
+        cancelBtn.removeEventListener("click", onCancel);
+        finish(false);
+      };
+      window.setTimeout(function () {
+        document.addEventListener("click", _studioExportPopoverClose, true);
+      }, 0);
+    });
+  }
+
+  function openLongshotExportOptions(root) {
+    var ls = longshotApi();
+    if (ls && typeof ls.openExportPanel === "function") {
+      ls
+        .openExportPanel()
+        .then(function () {
+          refreshLongshotExportMeta(root);
+          syncLongshotPreviewChips(root);
+        })
+        .catch(function () {});
+      return;
+    }
+    openStudioLongshotExportPanel(root)
+      .then(function () {
+        refreshLongshotExportMeta(root);
+        syncLongshotPreviewChips(root);
+      })
+      .catch(function () {});
   }
 
   function revealTripPath(tripId, relPath) {
@@ -143,22 +562,144 @@ var narrateJobId = null;
       slowMs: SLOW_JOB_MS,
       onSlow: onSlow,
       onTick: function (job) {
-        if (job.status === "running" && job.stageHint && root) {
-          setLongshotStatus(root, "正在生成长图… " + job.stageHint, true);
+        if (job.status === "running" && root && jobId === longshotJobId) {
+          setLongshotExportState(root, "running", {
+            hint: job.stageHint ? "正在保存… " + job.stageHint : "正在保存…",
+          });
         }
       },
       onDone: function (job) {
         pollCancel = null;
+        if (jobId === longshotJobId) longshotJobId = null;
         onDone(job);
       },
     });
   }
 
-  function setLongshotStatus(root, text, visible) {
-    var status = root.querySelector(".preview-toolbar__longshot-status");
-    if (!status) return;
-    status.hidden = !visible;
-    status.textContent = text || "";
+  function exportZoneEl(root) {
+    return root.querySelector(".preview-toolbar__export-zone");
+  }
+
+  function longshotBtnEl(root) {
+    return (
+      root.querySelector(".preview-toolbar__longshot--main") ||
+      root.querySelector(".preview-toolbar__longshot")
+    );
+  }
+
+  function longshotCaretEl(root) {
+    return root.querySelector(".preview-toolbar__longshot-caret");
+  }
+
+  function setLongshotControlsDisabled(root, disabled) {
+    var main = longshotBtnEl(root);
+    var caret = longshotCaretEl(root);
+    if (main) main.disabled = !!disabled;
+    if (caret) caret.disabled = !!disabled;
+  }
+
+  function setLongshotExportMeta(root, text) {
+    var meta = root.querySelector(".preview-toolbar__export-meta");
+    if (meta) meta.textContent = text || "写入画册目录";
+  }
+
+  function setLongshotExportProgress(root, visible, pct) {
+    var prog = root.querySelector(".preview-toolbar__export-progress");
+    var fill = root.querySelector(".preview-toolbar__export-progress-fill");
+    if (prog) prog.hidden = !visible;
+    if (fill && typeof pct === "number") fill.style.width = pct + "%";
+  }
+
+  function setLongshotExportState(root, state, opts) {
+    opts = opts || {};
+    var zone = exportZoneEl(root);
+    var btn = longshotBtnEl(root);
+    if (!btn) return;
+    ["idle", "running", "done", "error"].forEach(function (s) {
+      btn.classList.remove("preview-toolbar__longshot--" + s);
+    });
+    btn.classList.remove("preview-toolbar__longshot--primary");
+    if (zone) {
+      zone.classList.remove("preview-toolbar__export-zone--stale");
+      zone.classList.remove("preview-toolbar__export-zone--running");
+    }
+    var badge = root.querySelector(".preview-toolbar__export-stale");
+
+    if (state === "running") {
+      btn.classList.add("preview-toolbar__longshot--running");
+      if (zone) zone.classList.add("preview-toolbar__export-zone--running");
+      setLongshotControlsDisabled(root, true);
+      btn.innerHTML =
+        '<span class="preview-toolbar__longshot__spinner" aria-hidden="true"></span> 正在保存…';
+      setLongshotExportMeta(root, opts.hint || "生成长图中");
+      setLongshotExportProgress(root, true, opts.pct || 35);
+      if (badge) badge.hidden = true;
+      return;
+    }
+    if (state === "done") {
+      btn.classList.add("preview-toolbar__longshot--done");
+      setLongshotControlsDisabled(root, false);
+      btn.textContent = "✓ 已保存";
+      setLongshotExportMeta(root, "点击查看详情");
+      setLongshotExportProgress(root, false);
+      if (badge) badge.hidden = true;
+      return;
+    }
+    if (state === "error") {
+      btn.classList.add("preview-toolbar__longshot--idle");
+      setLongshotControlsDisabled(root, false);
+      btn.textContent = "保存长图";
+      setLongshotExportMeta(root, opts.hint || "保存失败，请重试");
+      setLongshotExportProgress(root, false);
+      if (badge) badge.hidden = true;
+      return;
+    }
+    if (state === "stale") {
+      btn.classList.add("preview-toolbar__longshot--idle");
+      setLongshotControlsDisabled(root, false);
+      btn.textContent = "保存长图";
+      if (zone) zone.classList.add("preview-toolbar__export-zone--stale");
+      if (badge) badge.hidden = false;
+      setLongshotExportMeta(root, "内容已更新");
+      setLongshotExportProgress(root, false);
+      return;
+    }
+    btn.classList.add("preview-toolbar__longshot--idle");
+    setLongshotControlsDisabled(root, false);
+    btn.textContent = "保存长图";
+    if (badge) badge.hidden = true;
+    refreshLongshotExportMeta(root);
+    setLongshotExportProgress(root, false);
+  }
+
+  function hideLongshotDrawer(root) {
+    clearLongshotDrawerTimer();
+    var drawer = root.querySelector(".preview-toolbar__drawer");
+    if (!drawer) return;
+    drawer.hidden = true;
+    requestAnimationFrame(function () {
+      syncToolbarHeight(root);
+    });
+  }
+
+  function getLongshotDrawer(root) {
+    var drawer = root.querySelector(".preview-toolbar__drawer");
+    if (drawer) return drawer;
+    drawer = document.createElement("div");
+    drawer.className = "preview-toolbar__drawer";
+    drawer.id = "preview-toolbar-longshot-drawer";
+    drawer.setAttribute("role", "status");
+    drawer.hidden = true;
+    var body = toolbarBody(root);
+    var pending = body.querySelector(".preview-toolbar__pending-row");
+    if (pending) {
+      body.insertBefore(drawer, pending.nextSibling);
+    } else {
+      var bar = body.querySelector(".preview-toolbar__bar");
+      if (bar) body.insertBefore(drawer, bar.nextSibling);
+      else body.appendChild(drawer);
+    }
+    return drawer;
   }
 
   function setSlowHint(root, text, visible) {
@@ -246,43 +787,53 @@ var narrateJobId = null;
     });
   }
 
-  function showLongshotPanel(root, job) {
+  function showLongshotDrawer(root, job) {
     var tripId = tripIdFromPath();
-    var panel = document.getElementById("preview-toolbar-longshot-panel");
-    if (!panel) {
-      panel = document.createElement("div");
-      panel.id = "preview-toolbar-longshot-panel";
-      panel.className = "preview-toolbar__longshot-panel";
-      panel.setAttribute("role", "status");
-      document.body.appendChild(panel);
-    }
+    var drawer = getLongshotDrawer(root);
     setToolbarCollapsed(root, false, false);
-    panel.hidden = false;
-    panel.textContent = "";
+    drawer.hidden = false;
+    drawer.textContent = "";
+
+    var head = document.createElement("div");
+    head.className = "preview-toolbar__drawer-head";
+    var title = document.createElement("p");
+    title.className = "preview-toolbar__drawer-title";
+    var closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "preview-toolbar__drawer-close";
+    closeBtn.setAttribute("aria-label", "关闭");
+    closeBtn.textContent = "×";
+    closeBtn.addEventListener("click", function () {
+      hideLongshotDrawer(root);
+    });
+    head.appendChild(title);
+    head.appendChild(closeBtn);
+    drawer.appendChild(head);
 
     if (job.status === "failed") {
+      title.textContent = "保存失败";
       var err = (job.error && (job.error.message || job.error.code)) || "导出失败";
       var errEl = document.createElement("p");
       errEl.className = "preview-toolbar__longshot-error";
       errEl.textContent = err;
-      panel.appendChild(errEl);
+      drawer.appendChild(errEl);
+      requestAnimationFrame(function () {
+        syncToolbarHeight(root);
+      });
       return;
     }
+
+    title.textContent = "✓ 长图已保存";
 
     var result = job.result || {};
     var outputs = result.outputs || [];
     var method = result.captureMethod || "p0";
     var segmented = result.segmented || outputs.length > 1;
 
-    var okEl = document.createElement("p");
-    okEl.className = "preview-toolbar__longshot-ok";
-    okEl.textContent = "长图已保存";
-    panel.appendChild(okEl);
-
     var homeHint = document.createElement("p");
     homeHint.className = "preview-toolbar__longshot-compat";
     homeHint.textContent = "已写入画册目录；返回 Studio 首页即可在手机框预览。";
-    panel.appendChild(homeHint);
+    drawer.appendChild(homeHint);
 
     if (segmented && outputs.length > 1) {
       var segEl = document.createElement("p");
@@ -290,14 +841,18 @@ var narrateJobId = null;
       segEl.textContent =
         result.userHint ||
         "已按章导出 " + outputs.length + " 张，底部含页码（如 2/5）便于微信按序发送。";
-      panel.appendChild(segEl);
+      drawer.appendChild(segEl);
     }
     if (method === "p1") {
       var compatEl = document.createElement("p");
       compatEl.className = "preview-toolbar__longshot-compat";
       compatEl.textContent = "已使用兼容模式导出，与预览可能有细微差异。";
-      panel.appendChild(compatEl);
+      drawer.appendChild(compatEl);
     }
+
+    var actions = document.createElement("div");
+    actions.className = "preview-toolbar__drawer-actions";
+
     if (outputs.length) {
       var list = document.createElement("ul");
       list.className = "preview-toolbar__longshot-paths";
@@ -306,7 +861,7 @@ var narrateJobId = null;
         li.textContent = rel;
         list.appendChild(li);
       });
-      panel.appendChild(list);
+      drawer.appendChild(list);
 
       var revealBtn = document.createElement("button");
       revealBtn.type = "button";
@@ -315,23 +870,34 @@ var narrateJobId = null;
       revealBtn.addEventListener("click", function () {
         revealTripPath(tripId, outputs[0]);
       });
-      panel.appendChild(revealBtn);
+      actions.appendChild(revealBtn);
     }
-    hideStaleHint(root);
-  }
 
-  function staleHintEl(root) {
-    return root.querySelector(".preview-toolbar__stale");
+    var dismissBtn = document.createElement("button");
+    dismissBtn.type = "button";
+    dismissBtn.className = "preview-toolbar__drawer-secondary";
+    dismissBtn.textContent = "收起";
+    dismissBtn.addEventListener("click", function () {
+      hideLongshotDrawer(root);
+    });
+    actions.appendChild(dismissBtn);
+    drawer.appendChild(actions);
+
+    hideStaleHint(root);
+    scheduleLongshotDrawerAutoHide(root);
+    requestAnimationFrame(function () {
+      syncToolbarHeight(root);
+    });
   }
 
   function showStaleHint(root) {
-    var el = staleHintEl(root);
-    if (el) el.hidden = false;
+    setLongshotExportState(root, "stale");
   }
 
   function hideStaleHint(root) {
-    var el = staleHintEl(root);
-    if (el) el.hidden = true;
+    var btn = longshotBtnEl(root);
+    if (btn && btn.classList.contains("preview-toolbar__longshot--done")) return;
+    setLongshotExportState(root, "idle");
   }
 
   function refreshStaleHint(root, tripId) {
@@ -341,21 +907,15 @@ var narrateJobId = null;
         var trips = data.trips || [];
         var trip = trips.filter(function (t) { return t.tripId === tripId; })[0];
         if (!trip) return;
-        var el = staleHintEl(root);
-        if (!el) return;
         if (trip.layoutCssStale) {
-          el.textContent = "布局 CSS 已过期，请应用排版重新渲染";
-          el.hidden = false;
-          el.onclick = function () {
-            applyLayoutRerender(tripId, root);
-          };
-          el.style.cursor = "pointer";
+          var pendingText = root.querySelector(".preview-toolbar__pending-text");
+          if (pendingText) {
+            pendingText.textContent = "布局 CSS 已过期，请应用排版重新渲染";
+          }
+          setLayoutPending(true);
           return;
         }
-        el.onclick = null;
-        el.style.cursor = "";
         if (trip.longshotStale) {
-          el.textContent = "内容已更新，请重新生成长图";
           showStaleHint(root);
         }
       })
@@ -397,47 +957,32 @@ var narrateJobId = null;
     });
   }
 
-  function bindPageLongshotTriggers(root, tripId) {
-    document.addEventListener(
-      "click",
-      function (e) {
-        if (document.documentElement.getAttribute("data-preview-toolbar") !== "on") return;
-        var btn = e.target.closest("[data-longshot-trigger], #longshot-save");
-        if (!btn || btn.closest(".preview-toolbar") || btn.disabled) return;
-        e.preventDefault();
-        e.stopPropagation();
-        showToolbarToast("保存到画册目录，首页手机框可预览", { duration: 3200 });
-        startLongshot(root, tripId);
-      },
-      true
-    );
-  }
-
   function startLongshot(root, tripId) {
-    var btn = root.querySelector(".preview-toolbar__longshot");
+    var btn = longshotBtnEl(root);
     if (!btn || btn.disabled) return;
     setToolbarCollapsed(root, false, false);
-    btn.disabled = true;
-    setLongshotStatus(root, "正在生成长图…", true);
+    hideLongshotDrawer(root);
+    setLongshotExportState(root, "running", { hint: "正在保存…" });
     setSlowHint(root, "", false);
 
-    postJsonBusyRetry("/__travelogue/longshot", buildLongshotRequest(tripId, "preview"), {
-      onBusy: function () { showToolbarToast("排队中，请稍候…"); },
+    postJsonBusyRetry("/__travelogue/longshot", buildLongshotRequestFromPage(tripId), {
+      onBusy: function () {
+        setLongshotExportState(root, "running", { hint: "排队中，请稍候…" });
+      },
     })
       .then(function (res) {
         if (isJobBusy409(res)) {
-          setLongshotStatus(root, "排队中，请稍候…", true);
-          btn.disabled = false;
+          setLongshotExportState(root, "running", { hint: "排队中，请稍候…" });
           return;
         }
         if (res.status === 409) {
-          setLongshotStatus(root, (res.body && res.body.message) || "请稍候再试", true);
-          btn.disabled = false;
+          setLongshotExportState(root, "error", {
+            hint: (res.body && res.body.message) || "请稍候再试",
+          });
           return;
         }
         if (res.status !== 202 || !res.body.jobId) {
-          setLongshotStatus(root, "无法开始导出", true);
-          btn.disabled = false;
+          setLongshotExportState(root, "error", { hint: "无法开始导出" });
           return;
         }
         longshotJobId = res.body.jobId;
@@ -445,13 +990,15 @@ var narrateJobId = null;
           res.body.jobId,
           root,
           function (job) {
-            btn.disabled = false;
-            setLongshotStatus(root, "", false);
             setSlowHint(root, "", false);
             if (job.status === "succeeded") {
-              showLongshotPanel(root, job);
+              setLongshotExportState(root, "done");
+              showLongshotDrawer(root, job);
             } else if (job.status === "failed") {
-              showLongshotPanel(root, job);
+              setLongshotExportState(root, "error");
+              showLongshotDrawer(root, job);
+            } else {
+              setLongshotExportState(root, "idle");
             }
           },
           function () {
@@ -460,8 +1007,7 @@ var narrateJobId = null;
         );
       })
       .catch(function () {
-        btn.disabled = false;
-        setLongshotStatus(root, "网络错误", true);
+        setLongshotExportState(root, "error", { hint: "网络错误" });
       });
   }
 
@@ -476,17 +1022,17 @@ var narrateJobId = null;
       setToolbarCollapsed(root, false, false);
       btn.disabled = true;
       setSlowHint(root, "", false);
-      setLongshotStatus(root, "正在生成杂志感文案…", true);
+      setSlowHint(root, "正在生成杂志感文案…", true);
       return postJson("/__travelogue/narrate", { tripId: tripId });
     }).then(function (res) {
       if (!res) return;
       if (res.status === 409 || res.status === 400) {
-        setLongshotStatus(root, (res.body && res.body.message) || "无法开始", true);
+        setSlowHint(root, (res.body && res.body.message) || "无法开始", true);
         btn.disabled = false;
         return;
       }
       if (res.status !== 202 || !res.body.jobId) {
-        setLongshotStatus(root, "无法开始文案生成", true);
+        setSlowHint(root, "无法开始文案生成", true);
         btn.disabled = false;
         return;
       }
@@ -497,7 +1043,6 @@ var narrateJobId = null;
         function (job) {
           btn.disabled = false;
           narrateJobId = null;
-          setLongshotStatus(root, "", false);
           setSlowHint(root, "", false);
           if (job.status === "succeeded") {
             window.location.reload();
@@ -512,7 +1057,7 @@ var narrateJobId = null;
       );
     }).catch(function () {
       btn.disabled = false;
-      setLongshotStatus(root, "网络错误", true);
+      setSlowHint(root, "网络错误", true);
     });
   }
 
@@ -524,10 +1069,13 @@ var narrateJobId = null;
 
   function applyLayoutRerender(tripId, root) {
     var btn = root.querySelector(".preview-toolbar__apply-layout");
+    var pendingBtn = root.querySelector(".preview-toolbar__pending-apply");
     if (btn) btn.disabled = true;
+    if (pendingBtn) pendingBtn.disabled = true;
     return postJson(tripApiBase(tripId) + "/rerender", {})
       .then(function (res) {
         if (btn) btn.disabled = false;
+        if (pendingBtn) pendingBtn.disabled = false;
         if (res.status !== 200 || !res.body.ok) {
           showToolbarToast((res.body && res.body.error) || "排版失败", { error: true });
           return;
@@ -538,6 +1086,7 @@ var narrateJobId = null;
       })
       .catch(function () {
         if (btn) btn.disabled = false;
+        if (pendingBtn) pendingBtn.disabled = false;
         showToolbarToast("排版失败", { error: true });
       });
   }
@@ -1522,44 +2071,60 @@ var narrateJobId = null;
     }
   }
 
-  function initReaderViewToggle(root, actions) {
+  function initPreviewModeSeg(root, actions) {
     var baseline = snapshotReadingPayload();
+    var seg = document.createElement("div");
+    seg.className = "preview-toolbar__mode-seg";
+    seg.setAttribute("role", "group");
+    seg.setAttribute("aria-label", "预览模式");
+
     var readerBtn = document.createElement("button");
     readerBtn.type = "button";
-    readerBtn.className = "preview-toolbar__reader-view";
-    readerBtn.setAttribute("aria-pressed", "false");
     readerBtn.textContent = "阅读视图";
-    actions.insertBefore(readerBtn, actions.firstChild);
+    var editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.textContent = "编辑预览";
+    seg.appendChild(readerBtn);
+    seg.appendChild(editBtn);
+    actions.insertBefore(seg, actions.firstChild);
 
-    var readerOn = false;
+    var readerOn = true;
     try {
-      readerOn = localStorage.getItem(READER_VIEW_KEY) === "1";
+      var stored = localStorage.getItem(READER_VIEW_KEY);
+      if (stored === "0") readerOn = false;
+      else if (stored === "1") readerOn = true;
     } catch (e) {}
 
-    function syncButton() {
+    function syncSeg() {
+      readerBtn.classList.toggle("is-selected", readerOn);
+      editBtn.classList.toggle("is-selected", !readerOn);
       readerBtn.setAttribute("aria-pressed", readerOn ? "true" : "false");
-      readerBtn.textContent = readerOn ? "编辑预览" : "阅读视图";
+      editBtn.setAttribute("aria-pressed", readerOn ? "false" : "true");
     }
 
     function setReaderMode(on) {
       readerOn = !!on;
       applyReaderSurfaceMode(readerOn);
-      syncButton();
+      syncSeg();
+      syncLongshotPreviewRowVisibility(root);
       try {
         localStorage.setItem(READER_VIEW_KEY, readerOn ? "1" : "0");
       } catch (e2) {}
     }
 
     readerBtn.addEventListener("click", function () {
-      setReaderMode(!readerOn);
+      setReaderMode(true);
+    });
+    editBtn.addEventListener("click", function () {
+      setReaderMode(false);
     });
 
-    if (readerOn) {
+    if (baseline && baseline.profile === "reader_immersive") {
       setReaderMode(true);
-    } else if (baseline && baseline.profile === "reader_immersive") {
-      setReaderMode(true);
+    } else {
+      setReaderMode(readerOn);
     }
-    syncButton();
+    syncSeg();
   }
 
   function initToolbar(root) {
@@ -1568,7 +2133,7 @@ var narrateJobId = null;
 
     var bar = root.querySelector(".preview-toolbar__bar");
     var actions = root.querySelector(".preview-toolbar__actions") || bar;
-    initReaderViewToggle(root, actions);
+    initPreviewModeSeg(root, actions);
     var menuBtn = root.querySelector(".preview-toolbar__menu-btn");
     var menu = root.querySelector(".preview-toolbar__more-menu");
     var revealBtn = root.querySelector(".preview-toolbar__reveal-folder");
@@ -1578,27 +2143,91 @@ var narrateJobId = null;
     initG1Banner(root, tripId, drawers);
     initDisplayedAestheticTitles(tripId);
 
+    var exportWrap = document.createElement("div");
+    exportWrap.className = "preview-toolbar__export-zone-wrap";
+
+    var exportZone = document.createElement("div");
+    exportZone.className = "preview-toolbar__export-zone";
+
+    var longshotSplit = document.createElement("div");
+    longshotSplit.className = "preview-toolbar__longshot-split";
+
     var longshotBtn = document.createElement("button");
     longshotBtn.type = "button";
-    longshotBtn.className = "preview-toolbar__longshot preview-toolbar__longshot--primary";
+    longshotBtn.className =
+      "preview-toolbar__longshot preview-toolbar__longshot--main preview-toolbar__longshot--idle";
     longshotBtn.textContent = "保存长图";
-    actions.appendChild(longshotBtn);
 
-    var status = document.createElement("span");
-    status.className = "preview-toolbar__longshot-status";
-    status.hidden = true;
-    actions.appendChild(status);
+    var longshotCaret = document.createElement("button");
+    longshotCaret.type = "button";
+    longshotCaret.className = "preview-toolbar__longshot-caret";
+    longshotCaret.setAttribute("aria-label", "导出选项");
+    longshotCaret.title = "导出选项";
+    longshotCaret.textContent = "▾";
 
-    var stale = document.createElement("span");
-    stale.className = "preview-toolbar__stale";
-    stale.hidden = true;
-    stale.textContent = "内容已更新，请重新生成长图";
-    actions.appendChild(stale);
+    longshotSplit.appendChild(longshotBtn);
+    longshotSplit.appendChild(longshotCaret);
+
+    var staleBadge = document.createElement("span");
+    staleBadge.className = "preview-toolbar__export-stale";
+    staleBadge.hidden = true;
+    staleBadge.textContent = "内容已更新";
+
+    var exportMeta = document.createElement("span");
+    exportMeta.className = "preview-toolbar__export-meta";
+    exportMeta.textContent = "按章 · 2× · 完整文案";
+
+    exportZone.appendChild(longshotSplit);
+    exportZone.appendChild(staleBadge);
+    exportZone.appendChild(exportMeta);
+
+    var progress = document.createElement("div");
+    progress.className = "preview-toolbar__export-progress";
+    progress.hidden = true;
+    progress.innerHTML = '<div class="preview-toolbar__export-progress-fill"></div>';
+
+    exportWrap.appendChild(exportZone);
+    exportWrap.appendChild(progress);
+    actions.appendChild(exportWrap);
+    setLongshotExportState(root, "idle");
 
     longshotBtn.addEventListener("click", function () {
+      if (longshotBtn.classList.contains("preview-toolbar__longshot--done")) {
+        var drawer = root.querySelector(".preview-toolbar__drawer");
+        if (drawer && drawer.hidden) {
+          drawer.hidden = false;
+          requestAnimationFrame(function () {
+            syncToolbarHeight(root);
+          });
+          return;
+        }
+      }
       startLongshot(root, tripId);
     });
-    bindPageLongshotTriggers(root, tripId);
+    longshotCaret.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (longshotCaret.disabled) return;
+      openLongshotExportOptions(root);
+    });
+
+    initLongshotPreviewRow(root);
+    (function waitLongshotApi(attempts) {
+      if (longshotApi() || attempts <= 0) {
+        syncLongshotPreviewChips(root);
+        return;
+      }
+      window.setTimeout(function () {
+        waitLongshotApi(attempts - 1);
+      }, 150);
+    })(24);
+
+    var pendingApply = root.querySelector(".preview-toolbar__pending-apply");
+    if (pendingApply) {
+      pendingApply.addEventListener("click", function () {
+        applyLayoutRerender(tripId, root);
+      });
+    }
 
     if (revealBtn) {
       revealBtn.addEventListener("click", function () {
@@ -1609,7 +2238,7 @@ var narrateJobId = null;
     if (window.location.search.indexOf("focus=longshot") >= 0) {
       setToolbarCollapsed(root, false, false);
       requestAnimationFrame(function () {
-        longshotBtn.scrollIntoView({ behavior: "smooth", block: "center" });
+        exportWrap.scrollIntoView({ behavior: "smooth", block: "center" });
         longshotBtn.focus();
         longshotBtn.classList.add("preview-toolbar__longshot--focus");
       });
@@ -1799,10 +2428,25 @@ var narrateJobId = null;
       "</button>" +
       '<a class="preview-toolbar__back" href="/" title="返回 Studio 首页">← 返回</a>' +
       "</div>" +
+      '<div class="preview-toolbar__longshot-preview-row" hidden>' +
+      '<div class="preview-toolbar__longshot-preview-banner">' +
+      '<div class="preview-toolbar__chip-seg" role="group" aria-label="文案范围">' +
+      '<button type="button" class="preview-toolbar__chip-seg-btn" data-copy-preset="photos" aria-pressed="false">纯照片</button>' +
+      '<button type="button" class="preview-toolbar__chip-seg-btn is-selected" data-copy-preset="full" aria-pressed="true">完整文案</button>' +
+      "</div>" +
+      '<button type="button" class="preview-toolbar__chip" data-preview-chip="caption" aria-pressed="true">图注：开</button>' +
+      '<button type="button" class="preview-toolbar__chip" data-preview-chip="narrative" aria-pressed="true">导语：显</button>' +
+      "</div>" +
+      "</div>" +
+      '<div class="preview-toolbar__pending-row" hidden>' +
+      '<div class="preview-toolbar__pending-banner">' +
+      '<span class="preview-toolbar__pending-text">有编辑尚未应用排版</span>' +
+      '<button type="button" class="preview-toolbar__pending-apply">应用排版</button>' +
+      "</div>" +
+      "</div>" +
+      '<div class="preview-toolbar__drawer" id="preview-toolbar-longshot-drawer" hidden></div>' +
       "</div>" +
       "</div>";
-
-    var body = root.querySelector(".preview-toolbar__body");
 
     document.body.insertBefore(root, document.body.firstChild);
     bindToolbarCollapse(root);

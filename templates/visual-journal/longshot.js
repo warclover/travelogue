@@ -525,7 +525,15 @@
       } catch (_eDisc) {
         seenDisclaimer = false;
       }
-      if (bodyNote) bodyNote.hidden = seenDisclaimer;
+      if (bodyNote) {
+        if (isStudioServerExport()) {
+          bodyNote.textContent =
+            "将保存到画册目录；返回 Studio 首页即可在手机框预览。";
+          bodyNote.hidden = false;
+        } else {
+          bodyNote.hidden = seenDisclaimer;
+        }
+      }
 
       var bridgeNote = sheet.querySelector(".longshot-export-sheet__note--bridge");
       if (bridgeNote) {
