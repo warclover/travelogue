@@ -71,6 +71,7 @@ def test_replan_alt_topk_picks_second_rank_when_best_matches_current(monkeypatch
                 ),
                 10.0,
                 [],
+                {},
             ),
             (
                 ScreenCandidate(
@@ -83,6 +84,7 @@ def test_replan_alt_topk_picks_second_rank_when_best_matches_current(monkeypatch
                 ),
                 9.0,
                 [],
+                {},
             ),
         ]
 

@@ -58,7 +58,7 @@ def _pick_alt_topk(
         return None, 0, "no_candidates"
 
     rank = 0
-    for cand, _score, _reasons in scored[: max(1, top_k)]:
+    for cand, _score, _reasons, _penalties in scored[: max(1, top_k)]:
         rank += 1
         if cand.pattern_id != current_pattern_id:
             return cand.screen, rank, "alt_topk"

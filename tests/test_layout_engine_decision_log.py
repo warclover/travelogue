@@ -28,7 +28,7 @@ def test_project_mosaic_window_maps_winner() -> None:
     assert ev["picked"]["patternId"] == "screen-portrait-3"
     assert ev["window"] == {"start": 3, "size": 5}
     assert ev["rejected"][0]["patternId"] == "screen-portrait-5"
-    assert ev["explain"] == {"topFactors": [], "penalties": []}
+    assert ev["explain"] == {"topFactors": [], "penalties": [], "contributions": []}
 
 
 def test_ingest_beam_logs() -> None:

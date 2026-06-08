@@ -39,7 +39,10 @@ def _popular_rank() -> dict[str, int]:
         for line in path.read_text(encoding="utf-8").splitlines():
             if not line.strip():
                 continue
-            row = json.loads(line)
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
             if str(row.get("name")) != "template.discovery.select_count":
                 continue
             at_raw = row.get("at")

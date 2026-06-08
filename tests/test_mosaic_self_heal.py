@@ -86,7 +86,7 @@ def test_self_heal_degrade_stable_pattern() -> None:
         ordered_asset_ids=["a", "b", "c"],
         screen={"patternId": PATTERN_PORTRAIT_3, "slots": []},
     )
-    scored = [(unstable, 0.55, []), (stable, 0.52, [])]
+    scored = [(unstable, 0.55, [], {}), (stable, 0.52, [], {})]
     healed = try_self_heal_pick(
         scored,
         asset_ids=["a", "b", "c"],
@@ -115,7 +115,7 @@ def test_self_heal_pick_disabled_returns_none() -> None:
     )
     assert (
         try_self_heal_pick(
-            [(cand, 0.1, [])],
+            [(cand, 0.1, [], {})],
             asset_ids=["a"],
             aspects={},
             assets_map={},
@@ -141,7 +141,7 @@ def test_self_heal_pick_winner_above_min_returns_none() -> None:
     )
     assert (
         try_self_heal_pick(
-            [(cand, 0.85, [])],
+            [(cand, 0.85, [], {})],
             asset_ids=["a"],
             aspects={},
             assets_map={},
