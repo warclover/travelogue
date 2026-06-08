@@ -25,7 +25,8 @@ var READER_VIEW_KEY = "travelogue.studio.readerView";
 var LONGSHOT_MODE_KEY = "travelogue:longshotMode";
 var LONGSHOT_SCALE_KEY = "travelogue:longshotScale";
 var SLOW_JOB_MS = 30000;
-var pollCancel = null;
+var longshotPollCancel = null;
+var narratePollCancel = null;
 var longshotJobId = null;
 var narrateJobId = null;
   var DRAWER_FOCUSABLE =
@@ -566,20 +567,32 @@ var narrateJobId = null;
     var hint = String(job.stageHint || "");
     var isChapter = /第\s*\d+\s*\/\s*\d+\s*段/.test(hint);
     if (total === 1 && !isChapter) return 10;
+    if (cur <= 0 && total > 1) return 5;
     return Math.min(100, Math.max(0, Math.round((cur / total) * 100)));
   }
 
-  function pollJob(jobId, root, onDone, onSlow) {
-    if (pollCancel) {
-      pollCancel();
-      pollCancel = null;
+  function pollJob(jobId, root, onDone, onSlow, kind) {
+    kind = kind || "longshot";
+    if (kind === "narrate") {
+      if (narratePollCancel) {
+        narratePollCancel();
+        narratePollCancel = null;
+      }
+    } else if (longshotPollCancel) {
+      longshotPollCancel();
+      longshotPollCancel = null;
     }
-    pollCancel = startJobPollInterval(jobId, {
+    var cancelFn = startJobPollInterval(jobId, {
       intervalMs: 800,
       slowMs: SLOW_JOB_MS,
       onSlow: onSlow,
       onTick: function (job) {
-        if (job.status === "running" && root && jobId === longshotJobId) {
+        if (
+          kind === "longshot" &&
+          job.status === "running" &&
+          root &&
+          jobId === longshotJobId
+        ) {
           var pct = longshotProgressPct(job);
           setLongshotExportState(root, "running", {
             hint: job.stageHint ? "正在保存… " + job.stageHint : "正在保存…",
@@ -588,11 +601,20 @@ var narrateJobId = null;
         }
       },
       onDone: function (job) {
-        pollCancel = null;
-        if (jobId === longshotJobId) longshotJobId = null;
+        if (kind === "narrate") {
+          narratePollCancel = null;
+        } else {
+          longshotPollCancel = null;
+          if (jobId === longshotJobId) longshotJobId = null;
+        }
         onDone(job);
       },
     });
+    if (kind === "narrate") {
+      narratePollCancel = cancelFn;
+    } else {
+      longshotPollCancel = cancelFn;
+    }
   }
 
   function exportZoneEl(root) {
@@ -1146,7 +1168,8 @@ var narrateJobId = null;
         },
         function () {
           setSlowHint(root, "比预期久一些，请耐心等待…", true);
-        }
+        },
+        "narrate"
       );
     }).catch(function () {
       btn.disabled = false;

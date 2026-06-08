@@ -28,6 +28,36 @@ class WindowPickResult:
     used_legacy: bool
 
 
+def score_window_candidates_with_rejections(
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    *,
+    cfg: MosaicConfig,
+    layout_state: ScreenLayoutPlannerState | None = None,
+    trip_photo_total: int = 0,
+    burst_seconds: float = 12.0,
+    median_sharp: float | None = None,
+    prev_screen: dict | None = None,
+    chapter_screen_index: int = 0,
+    chapter_screen_count: int = 12,
+) -> tuple[list[tuple[ScreenCandidate, float, list[str], dict[str, float]]], list[dict]]:
+    """Score MCS window candidates and return validator-level rejections (golden probe / tests)."""
+    return _score_window_candidates_with_rejections(
+        asset_ids,
+        aspects,
+        assets_map,
+        cfg=cfg,
+        layout_state=layout_state,
+        trip_photo_total=trip_photo_total,
+        burst_seconds=burst_seconds,
+        median_sharp=median_sharp,
+        prev_screen=prev_screen,
+        chapter_screen_index=chapter_screen_index,
+        chapter_screen_count=chapter_screen_count,
+    )
+
+
 def score_window_candidates(
     asset_ids: list[str],
     aspects: dict[str, AspectKind],

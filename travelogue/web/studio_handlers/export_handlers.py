@@ -162,7 +162,7 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             store.update(
                 job,
                 stage_hint=hint,
-                stage_index=max(cur, 1),
+                stage_index=max(cur, 0),
                 stage_count=max(total, 1),
             )
 

@@ -50,6 +50,7 @@ _debug/
 _tmp_homepage_audit/
 .tmp_prefix_tests.txt
 docs/reports/playwright-failures-*.log
+pytest-full.log
 docs/reports/pattern-audit-demo-*.md
 .cache/
 .playwright-mcp/

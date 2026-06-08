@@ -12,6 +12,7 @@ from travelogue.export.longshot import (
     CAPTURE_WIDTH,
     MAX_WECHAT_BYTES,
     LongshotExportError,
+    _capture_bytes,
     _estimate_output_bytes,
     _resolve_segment_plan,
     _segment_user_hint,
@@ -200,6 +201,34 @@ def test_reveal_path_allows_inside_trips(tmp_path: Path) -> None:
     target = trip / "demo-longshot.png"
     target.write_bytes(b"png")
     reveal_path_in_folder(target, allowed_root=allowed)
+
+
+def test_capture_bytes_p1_fallback_preserves_chapter_index(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """P1 fallback must not screenshot the full main when exporting by chapter."""
+    p1_chapters: list[int | None] = []
+
+    def _fail_p0(*_args: object, **_kwargs: object) -> tuple[bytes, str]:
+        raise RuntimeError("p0 unavailable")
+
+    def _stub_p1(
+        _page: object,
+        *,
+        scale: int,
+        fmt: str,
+        chapter_index: int | None = None,
+    ) -> tuple[bytes, str]:
+        p1_chapters.append(chapter_index)
+        return b"x" * 2048, "p1"
+
+    monkeypatch.setattr("travelogue.export.longshot._capture_p0", _fail_p0)
+    monkeypatch.setattr("travelogue.export.longshot._capture_p1", _stub_p1)
+
+    data, method = _capture_bytes(None, scale=1, fmt="png", chapter_index=2)
+    assert p1_chapters == [2]
+    assert method == "p1"
+    assert len(data) >= 1024
 
 
 def test_export_longshot_closes_page_when_goto_fails(

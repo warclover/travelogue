@@ -360,7 +360,58 @@ def _capture_p0(page, *, scale: int, fmt: str, chapter_index: int | None = None)
     return data, str(payload.get("method") or "p0")
 
 
-def _capture_p1(page, *, scale: int, fmt: str) -> tuple[bytes, str]:
+_CHAPTER_ISOLATE_JS = """
+(chapterIndex) => {
+  const main = document.querySelector("main");
+  const chapters = Array.from(main.querySelectorAll("section.chapter"));
+  const cover = main.querySelector(".cover-hero");
+  const pageEl = main.querySelector(".page");
+  const hook = pageEl && pageEl.querySelector(".hook-line");
+  const epilogue = pageEl && pageEl.querySelector(".epilogue");
+  const tripMeta = pageEl && pageEl.querySelector(".trip-meta");
+  function stash(el, show) {
+    if (!el) return;
+    el.hidden = !show;
+    el.style.display = show ? "" : "none";
+  }
+  chapters.forEach((ch, i) => stash(ch, i === chapterIndex));
+  stash(cover, chapterIndex === 0);
+  stash(hook, chapterIndex === 0);
+  stash(tripMeta, chapterIndex === 0);
+  stash(epilogue, false);
+}
+"""
+
+_CHAPTER_RESTORE_JS = """
+() => {
+  const main = document.querySelector("main");
+  const chapters = Array.from(main.querySelectorAll("section.chapter"));
+  const cover = main.querySelector(".cover-hero");
+  const pageEl = main.querySelector(".page");
+  const hook = pageEl && pageEl.querySelector(".hook-line");
+  const epilogue = pageEl && pageEl.querySelector(".epilogue");
+  const tripMeta = pageEl && pageEl.querySelector(".trip-meta");
+  function show(el) {
+    if (!el) return;
+    el.hidden = false;
+    el.style.display = "";
+  }
+  chapters.forEach(show);
+  show(cover);
+  show(hook);
+  show(tripMeta);
+  show(epilogue);
+}
+"""
+
+
+def _capture_p1(
+    page,
+    *,
+    scale: int,
+    fmt: str,
+    chapter_index: int | None = None,
+) -> tuple[bytes, str]:
     ext = "jpeg" if fmt == "jpeg" else "png"
     scale = max(1, min(int(scale), 3))
     cdp = None
@@ -376,9 +427,17 @@ def _capture_p1(page, *, scale: int, fmt: str) -> tuple[bytes, str]:
                 "deviceScaleFactor": scale,
             },
         )
+    isolated = chapter_index is not None
     try:
+        if isolated:
+            page.evaluate(_CHAPTER_ISOLATE_JS, chapter_index)
         data = page.locator("main").screenshot(type=ext)
     finally:
+        if isolated:
+            try:
+                page.evaluate(_CHAPTER_RESTORE_JS)
+            except Exception:
+                _log.debug("chapter restore after P1 capture failed", exc_info=True)
         if cdp is not None:
             try:
                 cdp.send("Emulation.clearDeviceMetricsOverride")
@@ -394,7 +453,7 @@ def _capture_bytes(page, *, scale: int, fmt: str, chapter_index: int | None = No
         return _capture_p0(page, scale=scale, fmt=fmt, chapter_index=chapter_index)
     except Exception:
         _log.warning("longshot P0 capture failed; falling back to P1", exc_info=True)
-        return _capture_p1(page, scale=scale, fmt=fmt)
+        return _capture_p1(page, scale=scale, fmt=fmt, chapter_index=chapter_index)
 
 
 def _write_output(path: Path, data: bytes) -> None:
