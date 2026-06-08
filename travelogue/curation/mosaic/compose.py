@@ -63,6 +63,9 @@ def _score_window_candidates_with_rejections(
     trip_photo_total: int = 0,
     burst_seconds: float = 12.0,
     median_sharp: float | None = None,
+    prev_screen: dict | None = None,
+    chapter_screen_index: int = 0,
+    chapter_screen_count: int = 12,
 ) -> tuple[list[tuple[ScreenCandidate, float, list[str]]], list[dict]]:
     """Score MCS window candidates and collect validator-level rejections."""
     bundle = generate_window_candidates_with_rejections(
@@ -91,6 +94,9 @@ def _score_window_candidates_with_rejections(
             layout_state=layout_state,
             trip_photo_total=trip_photo_total,
             burst_seconds=burst_seconds,
+            prev_screen=prev_screen,
+            chapter_screen_index=chapter_screen_index,
+            chapter_screen_count=chapter_screen_count,
         )
         scored.append((cand, sr.total, sr.reason_codes))
     scored.sort(key=lambda t: (-t[1], t[0].pattern_id))
@@ -117,6 +123,9 @@ def pick_best_window(
     median_sharp: float | None = None,
     window_start: int = 0,
     segment_id: str = "",
+    prev_screen: dict | None = None,
+    chapter_screen_index: int = 0,
+    chapter_screen_count: int = 12,
 ) -> WindowPickResult:
     wh = weights_hash(cfg)
     log = MosaicWindowLog(
@@ -141,6 +150,9 @@ def pick_best_window(
         trip_photo_total=trip_photo_total,
         burst_seconds=burst_seconds,
         median_sharp=median_sharp,
+        prev_screen=prev_screen,
+        chapter_screen_index=chapter_screen_index,
+        chapter_screen_count=chapter_screen_count,
     )
     log.rejected_templates = rejected
     log.candidates_count = len(scored)

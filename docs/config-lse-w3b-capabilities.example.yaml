@@ -1,0 +1,10 @@
+# LSE W3b · 开启 CAP-02/03/04（dogfood / 评审后）
+# 全局 strategy_engine.enabled 仍可由 rollout 控制；capabilities 可与 pack features OR 合并。
+
+layout:
+  strategy_engine:
+    enabled: false
+    capabilities:
+      saliency_scoring: true
+      tone_harmony: true
+      beat_profile: classic_magazine

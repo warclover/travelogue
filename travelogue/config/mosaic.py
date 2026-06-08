@@ -49,6 +49,13 @@ class MosaicConfig:
             "flat_six_grid": 0.35,
         }
     )
+    # LSE W3b capability flags (set via layout_engine.adapter mosaic_config_from_pack)
+    lse_saliency_scoring: bool = False
+    lse_tone_harmony: bool = False
+    lse_beat_profile: str = "flat"
+    lse_hungarian_assignment: bool = False
+    lse_quality_unified: bool = False
+    lse_slot_max_matrix_n: int = 16
 
 
 def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:

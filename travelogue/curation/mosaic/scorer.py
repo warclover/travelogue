@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
+from typing import Any
 
 from travelogue.config import MosaicConfig
 from travelogue.curation.layout_constraints import FOCAL_EDGE_MARGIN
@@ -73,12 +74,27 @@ def _face_crop_penalty(screen: dict, assets_by_id: dict[str, dict]) -> float:
     return pen
 
 
-def _main_quality_penalty(screen: dict, assets_by_id: dict[str, dict]) -> float:
+def _main_quality_penalty(
+    screen: dict,
+    assets_by_id: dict[str, dict],
+    *,
+    cfg: MosaicConfig | None = None,
+    quality_pool: Any | None = None,
+) -> float:
     for sl in screen.get("slots") or []:
         if sl.get("role") != "main":
             continue
         aid = sl.get("assetId")
         asset = assets_by_id.get(aid) or {}
+        if cfg is not None and cfg.lse_quality_unified and quality_pool is not None and aid:
+            sharp_pct = quality_pool.sharp_pct(str(aid))
+            aesthetic_pct = quality_pool.aesthetic_pct(str(aid))
+            combined = 0.55 * sharp_pct + 0.45 * aesthetic_pct
+            if combined < 0.2:
+                return 0.9
+            if combined < 0.35:
+                return 0.5
+            return 0.0
         q = asset.get("quality") or {}
         try:
             from travelogue.curation.aesthetic_score import aesthetic_overall
@@ -229,7 +245,15 @@ def score_candidate(
     layout_state: ScreenLayoutPlannerState | None = None,
     trip_photo_total: int = 0,
     burst_seconds: float = 12.0,
+    prev_screen: dict | None = None,
+    chapter_screen_index: int = 0,
+    chapter_screen_count: int = 12,
 ) -> MosaicScoreResult:
+    quality_pool = None
+    if cfg.lse_quality_unified:
+        from travelogue.layout_engine.quality_features import build_quality_pool
+
+        quality_pool = build_quality_pool(list(assets_by_id.values()))
     weights = _mosaic_weights(cfg)
     plan = [screen]
     bd = score_screen_plan(
@@ -241,9 +265,21 @@ def score_candidate(
     )
     base = _clamp01(bd.total)
     asset_ids = [sl.get("assetId") for sl in screen.get("slots") or [] if sl.get("assetId")]
+    face_pen = _face_crop_penalty(screen, assets_by_id)
+    salient_pen = 0.0
+    if cfg.lse_saliency_scoring:
+        from travelogue.layout_engine.features import salient_crop_penalty
+
+        salient_pen = salient_crop_penalty(screen, assets_by_id)
     penalties: dict[str, float] = {
-        "face_crop": _face_crop_penalty(screen, assets_by_id),
-        "main_quality": _main_quality_penalty(screen, assets_by_id),
+        "face_crop": max(face_pen, salient_pen),
+        "salient_crop": salient_pen,
+        "main_quality": _main_quality_penalty(
+            screen,
+            assets_by_id,
+            cfg=cfg,
+            quality_pool=quality_pool,
+        ),
         "duplicate_density": _duplicate_density_penalty(asset_ids, assets_by_id),
         "hero_narrow_tiles": _hero_narrow_tile_penalty(screen, asset_ids, aspects, cfg=cfg),
         "hero_slot_aspect": _hero_slot_aspect_penalty(screen, aspects, cfg=cfg),
@@ -310,6 +346,28 @@ def score_candidate(
     if div_bonus > 0:
         total = min(1.0, total * (1.0 + div_bonus))
         reasons.append("R_LTE_DIVERSITY_BONUS")
+
+    if cfg.lse_beat_profile and cfg.lse_beat_profile != "flat":
+        from travelogue.layout_engine.beat import beat_score_multiplier
+
+        beat_mul = beat_score_multiplier(
+            pattern_id,
+            screen_index=chapter_screen_index,
+            chapter_screen_count=chapter_screen_count,
+            beat_profile=cfg.lse_beat_profile,
+        )
+        if beat_mul != 1.0:
+            total = min(1.0, total * beat_mul)
+            reasons.append("R_BEAT_BIAS")
+
+    if cfg.lse_tone_harmony and prev_screen:
+        from travelogue.layout_engine.tone_adjacency import adjacent_tone_penalty
+
+        tone_pen = adjacent_tone_penalty(prev_screen, screen, assets_by_id)
+        if tone_pen > 0:
+            total *= 1.0 - 0.35 * tone_pen
+            if tone_pen >= 0.45:
+                reasons.append("R_TONE_JUMP")
 
     return MosaicScoreResult(
         total=_clamp01(total),

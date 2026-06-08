@@ -84,6 +84,9 @@ def mosaic_config_from_pack(
     from travelogue.layout_engine.runtime_store import runtime_scoring_overlay
 
     overlay = runtime_scoring_overlay(cfg)
+    from travelogue.layout_engine.capabilities import effective_capabilities
+
+    caps = effective_capabilities(cfg, active)
     search = active.raw.get("search") or {}
     mosaic_stage = (active.raw.get("planning") or {}).get("stages") or {}
     mosaic_stage = mosaic_stage.get("mosaic") if isinstance(mosaic_stage.get("mosaic"), dict) else {}
@@ -100,6 +103,16 @@ def mosaic_config_from_pack(
         penalties[str(k)] = float(v)
     for k, v in overlay["penalties"].items():
         penalties[str(k)] = float(v)
+    if caps.saliency_scoring:
+        penalties.setdefault("salient_crop", 0.28)
+    if caps.tone_harmony:
+        weights["tone_continuity"] = max(float(weights.get("tone_continuity") or 0.0), 0.07)
+        weights["luminance_continuity"] = max(
+            float(weights.get("luminance_continuity") or 0.0), 0.06
+        )
+    slot_cfg = active.raw.get("slot_assignment") if isinstance(active.raw.get("slot_assignment"), dict) else {}
+    max_matrix_n = int(slot_cfg.get("max_matrix_n") or 16)
+    hungarian = bool(caps.hungarian_assignment or str(slot_cfg.get("mode") or "") == "hungarian")
     return replace(
         base,
         scorer_version=str(active.algorithm_version),
@@ -110,6 +123,12 @@ def mosaic_config_from_pack(
         self_heal_enabled=bool(self_heal.get("enabled", base.self_heal_enabled)),
         allow_drop=bool(self_heal.get("allow_drop", base.allow_drop)),
         max_drop_ratio=float(self_heal.get("max_drop_ratio", base.max_drop_ratio)),
+        lse_saliency_scoring=caps.saliency_scoring,
+        lse_tone_harmony=caps.tone_harmony,
+        lse_beat_profile=str(caps.beat_profile or "flat"),
+        lse_hungarian_assignment=hungarian,
+        lse_quality_unified=bool(getattr(caps, "quality_unified", False)),
+        lse_slot_max_matrix_n=max(1, min(max_matrix_n, 16)),
     )
 
 

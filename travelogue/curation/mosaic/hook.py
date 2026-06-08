@@ -187,6 +187,9 @@ def try_mosaic_window_mcs(
         median_sharp=ctx.med_sharp,
         window_start=start,
         segment_id=ctx.chapter_id or "",
+        prev_screen=ctx.screens[-1] if ctx.screens else None,
+        chapter_screen_index=len(ctx.screens),
+        chapter_screen_count=max(12, len(ctx.screens) + 1),
     )
     if pick.log.dropped_asset_ids:
         _dropped_buf().extend(pick.log.dropped_asset_ids)

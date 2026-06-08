@@ -18,6 +18,7 @@ from travelogue.services.trip import apply_intent
 from travelogue.layout_engine.render_contract import (
     RENDER_ISOLATED_CURATION_KEYS,
     curation_for_render_contract,
+    trip_render_fingerprint_payload,
 )
 
 
@@ -75,6 +76,20 @@ def test_ac_p17_31_render_contract_strips_lse_observability() -> None:
     assert "mosaicDecisionLog" not in stripped
     assert stripped["displayedAssetIds"] == ["a1"]
     assert "layoutStrategy" in RENDER_ISOLATED_CURATION_KEYS
+
+
+@pytest.mark.w3a_gate
+def test_ac_p17_31_trip_render_fingerprint_omits_lse_fields() -> None:
+    trip = {
+        "assets": [{"id": "a1"}],
+        "chapters": [{"screens": []}],
+        "curation": {
+            "layoutStrategy": {"enabled": True},
+            "displayedAssetIds": ["a1"],
+        },
+    }
+    fp = trip_render_fingerprint_payload(trip)
+    assert "layoutStrategy" not in fp.get("curation", {})
 
 
 @pytest.mark.w3a_gate
