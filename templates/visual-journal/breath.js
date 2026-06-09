@@ -12,6 +12,8 @@
   var paused = false;
   var lenisStarted = false;
   var scrubStarted = false;
+  var coverMotionRaf = null;
+  var coverMotionState = null;
 
   var FLOW_OPTS = {
     lerp: 0.065,
@@ -52,9 +54,151 @@
   }
 
   function collectTargets() {
-    return Array.prototype.slice.call(
-      document.querySelectorAll(SCREEN_SEL + "," + EXTRA_SEL)
+    return Array.prototype.filter.call(
+      document.querySelectorAll(SCREEN_SEL + "," + EXTRA_SEL),
+      function (el) {
+        if (
+          el.matches('.cover-hero[data-block="cover-hero"]') &&
+          el.closest('.cover-opening[data-block="cover-opening"]')
+        ) {
+          return false;
+        }
+        if (
+          el.matches('.hook-line[data-block="hook-line"]') &&
+          el.closest('.cover-opening[data-block="cover-opening"]')
+        ) {
+          return false;
+        }
+        return true;
+      }
     );
+  }
+
+  function coverOpeningRoot() {
+    return document.querySelector('.cover-opening[data-block="cover-opening"]');
+  }
+
+  function coverOpeningImg(root) {
+    if (!root) return null;
+    return (
+      root.querySelector(".cover-hero__img--main") ||
+      root.querySelector(".cover-hero__media img") ||
+      root.querySelector("img")
+    );
+  }
+
+  function coverMotionIntensity() {
+    var level = breathLevel();
+    if (level === "soft") return { translate: 10, scale: 0.04 };
+    if (level === "flow") return { translate: 14, scale: 0.06 };
+    return { translate: 20, scale: 0.08 };
+  }
+
+  function coverScrollProgress(root) {
+    var rect = root.getBoundingClientRect();
+    var vh = global.innerHeight || 1;
+    var span = Math.max(rect.height, vh);
+    if (span <= 0) return 0;
+    return Math.max(0, Math.min(1, -rect.top / span));
+  }
+
+  function clearCoverMotionStyles() {
+    if (!coverMotionState) return;
+    var img = coverMotionState.img;
+    var panel = coverMotionState.panel;
+    if (img) {
+      img.style.transform = "";
+      img.style.willChange = "";
+    }
+    if (panel) {
+      panel.style.opacity = "";
+      panel.style.transform = "";
+    }
+    document.documentElement.classList.remove("cover-motion-active");
+  }
+
+  function applyCoverMotionStyles(p) {
+    if (!coverMotionState) return;
+    var img = coverMotionState.img;
+    var panel = coverMotionState.panel;
+    var motion = coverMotionState.motion;
+    if (!img) return;
+    if (p <= 0.001) {
+      clearCoverMotionStyles();
+      return;
+    }
+    document.documentElement.classList.add("cover-motion-active");
+    img.style.willChange = "transform";
+    img.style.transform =
+      "translate3d(0," + p * motion.translate + "%,0) scale(" + (1 + p * motion.scale) + ")";
+    if (panel) {
+      panel.style.opacity = String(Math.max(0, 1 - p * 0.35));
+      panel.style.transform = "translate3d(0," + p * 14 + "px,0)";
+    }
+  }
+
+  function coverMotionTick() {
+    if (paused || !coverMotionState) return;
+    applyCoverMotionStyles(coverScrollProgress(coverMotionState.root));
+  }
+
+  function stopCoverMotionLoop() {
+    if (coverMotionRaf) {
+      cancelAnimationFrame(coverMotionRaf);
+      coverMotionRaf = null;
+    }
+  }
+
+  function coverMotionLoop() {
+    coverMotionTick();
+    if (coverMotionState) {
+      coverMotionRaf = global.requestAnimationFrame(coverMotionLoop);
+    }
+  }
+
+  function destroyCoverMotion() {
+    stopCoverMotionLoop();
+    clearCoverMotionStyles();
+    coverMotionState = null;
+  }
+
+  function initCoverMotion() {
+    if (prefersReducedMotion() || breathLevel() === "off") return;
+    if (scrubStarted && (breathLevel() === "cinematic" || breathLevel() === "gallery")) {
+      return;
+    }
+    var root = coverOpeningRoot();
+    var img = coverOpeningImg(root);
+    if (!root || !img) return;
+
+    coverMotionState = {
+      root: root,
+      img: img,
+      panel: root.querySelector(".cover-opening__panel"),
+      motion: coverMotionIntensity(),
+    };
+    coverMotionLoop();
+  }
+
+  function initCoverOpeningReveal() {
+    var root = coverOpeningRoot();
+    if (!root || prefersReducedMotion() || breathLevel() === "off") return;
+
+    var hero = root.querySelector('.cover-hero[data-block="cover-hero"]');
+    var panel = root.querySelector(".cover-opening__panel");
+    var parts = [hero, panel].filter(Boolean);
+
+    parts.forEach(function (el) {
+      el.classList.add("breath-reveal", "cover-breath-reveal");
+    });
+
+    global.requestAnimationFrame(function () {
+      global.requestAnimationFrame(function () {
+        parts.forEach(function (el) {
+          el.classList.add("is-visible");
+        });
+      });
+    });
   }
 
   function markVisible(el) {
@@ -148,14 +292,32 @@
     }
     destroyLenis();
     destroyScrub();
+    destroyCoverMotion();
     destroyHighlight();
     collectTargets().forEach(function (el) {
       el.classList.remove("breath-reveal", "is-visible", "breath-reveal--featured");
       el.style.opacity = "";
       el.style.transform = "";
     });
-    var coverImg = document.querySelector('.cover-hero[data-block="cover-hero"] img');
-    if (coverImg) coverImg.style.transform = "";
+    var coverRoot = coverOpeningRoot();
+    if (coverRoot) {
+      coverRoot.querySelectorAll(".cover-breath-reveal").forEach(function (el) {
+        el.classList.remove("breath-reveal", "is-visible", "cover-breath-reveal");
+        el.style.opacity = "";
+        el.style.transform = "";
+      });
+      var panel = coverRoot.querySelector(".cover-opening__panel");
+      if (panel) {
+        panel.style.opacity = "";
+        panel.style.transform = "";
+      }
+    }
+    var coverImg = coverOpeningImg(coverRoot);
+    if (coverImg) {
+      coverImg.style.transform = "";
+      coverImg.style.willChange = "";
+    }
+    document.documentElement.classList.remove("cover-motion-active");
     paused = false;
   }
 
@@ -214,9 +376,11 @@
   function init() {
     if (breathLevel() === "off") return;
     if (document.documentElement.getAttribute("data-breath") === "off") return;
+    initCoverOpeningReveal();
     initReveal();
     initFlowScroll();
     initScrubMotion();
+    initCoverMotion();
     initHighlight();
   }
 

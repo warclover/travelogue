@@ -214,6 +214,21 @@ html[data-preview-share="on"] .footer-cta__studio-home-link:hover {
   border-color: rgba(255, 255, 255, 0.3);
   color: #fff;
 }
+
+.preview-toolbar__screenplay {
+  white-space: nowrap;
+}
+
+.preview-toolbar--share-minimal .preview-toolbar__screenplay {
+  margin-right: 8px;
+}
+
+.preview-toolbar__screenplay[aria-pressed="true"] {
+  background: rgba(127, 203, 179, 0.18);
+  border-color: rgba(127, 203, 179, 0.45);
+  color: #dff5ec;
+}
+
 .preview-toolbar__ctl:disabled,
 .preview-toolbar__icon-btn:disabled {
   opacity: 0.5;

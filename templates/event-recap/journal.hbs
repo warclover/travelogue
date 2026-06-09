@@ -39,12 +39,8 @@
   {{/if}}
   <main>
     <article itemscope itemtype="https://schema.org/Trip">
-      {{> cover-hero}}
+      {{> cover-opening}}
       <div class="page">
-        {{> trip-meta}}
-        {{#if hasHook}}
-        <p class="hook-line" data-block="hook-line"{{#if editableHook}} data-editable="hook" data-edit-path="meta.hook"{{/if}}>{{hook}}</p>
-        {{/if}}
         {{#if hasForewordSpread}}
         {{> foreword-spread forewordSpread}}
         {{/if}}

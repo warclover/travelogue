@@ -1204,8 +1204,10 @@ html[data-snap="mandatory"] main .page {
   scroll-snap-type: y mandatory;
 }
 
+html[data-snap="proximity"] .cover-opening[data-block="cover-opening"],
 html[data-snap="proximity"] .cover-hero[data-block="cover-hero"],
 html[data-snap="proximity"] .layout-screen[data-block="layout-screen"],
+html[data-snap="mandatory"] .cover-opening[data-block="cover-opening"],
 html[data-snap="mandatory"] .cover-hero[data-block="cover-hero"],
 html[data-snap="mandatory"] .layout-screen[data-block="layout-screen"] {
   scroll-snap-align: start;

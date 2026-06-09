@@ -302,11 +302,12 @@ _CHAPTER_CAPTURE_P0_JS = """
 async (opts) => {
   const main = document.querySelector("main");
   const chapters = Array.from(main.querySelectorAll("section.chapter"));
-  const cover = main.querySelector(".cover-hero");
+  const coverOpening = main.querySelector(".cover-opening");
+  const cover = coverOpening || main.querySelector(".cover-hero");
   const pageEl = main.querySelector(".page");
-  const hook = pageEl && pageEl.querySelector(".hook-line");
+  const hook = main.querySelector(".hook-line");
   const epilogue = pageEl && pageEl.querySelector(".epilogue");
-  const tripMeta = pageEl && pageEl.querySelector(".trip-meta");
+  const tripMeta = main.querySelector(".trip-meta");
   function stash(el, show) {
     if (!el) return;
     el.hidden = !show;
@@ -314,8 +315,10 @@ async (opts) => {
   }
   chapters.forEach((ch, i) => stash(ch, i === opts.chapterIndex));
   stash(cover, opts.chapterIndex === 0);
-  stash(hook, opts.chapterIndex === 0);
-  stash(tripMeta, opts.chapterIndex === 0);
+  if (!coverOpening) {
+    stash(hook, opts.chapterIndex === 0);
+    stash(tripMeta, opts.chapterIndex === 0);
+  }
   stash(epilogue, false);
   const out = await window.TravelogueLongshot.captureMainToBlob({
     scale: opts.scale,
@@ -364,11 +367,12 @@ _CHAPTER_ISOLATE_JS = """
 (chapterIndex) => {
   const main = document.querySelector("main");
   const chapters = Array.from(main.querySelectorAll("section.chapter"));
-  const cover = main.querySelector(".cover-hero");
+  const coverOpening = main.querySelector(".cover-opening");
+  const cover = coverOpening || main.querySelector(".cover-hero");
   const pageEl = main.querySelector(".page");
-  const hook = pageEl && pageEl.querySelector(".hook-line");
+  const hook = main.querySelector(".hook-line");
   const epilogue = pageEl && pageEl.querySelector(".epilogue");
-  const tripMeta = pageEl && pageEl.querySelector(".trip-meta");
+  const tripMeta = main.querySelector(".trip-meta");
   function stash(el, show) {
     if (!el) return;
     el.hidden = !show;
@@ -376,8 +380,10 @@ _CHAPTER_ISOLATE_JS = """
   }
   chapters.forEach((ch, i) => stash(ch, i === chapterIndex));
   stash(cover, chapterIndex === 0);
-  stash(hook, chapterIndex === 0);
-  stash(tripMeta, chapterIndex === 0);
+  if (!coverOpening) {
+    stash(hook, chapterIndex === 0);
+    stash(tripMeta, chapterIndex === 0);
+  }
   stash(epilogue, false);
 }
 """
@@ -386,11 +392,11 @@ _CHAPTER_RESTORE_JS = """
 () => {
   const main = document.querySelector("main");
   const chapters = Array.from(main.querySelectorAll("section.chapter"));
-  const cover = main.querySelector(".cover-hero");
-  const pageEl = main.querySelector(".page");
-  const hook = pageEl && pageEl.querySelector(".hook-line");
-  const epilogue = pageEl && pageEl.querySelector(".epilogue");
-  const tripMeta = pageEl && pageEl.querySelector(".trip-meta");
+  const coverOpening = main.querySelector(".cover-opening");
+  const cover = coverOpening || main.querySelector(".cover-hero");
+  const hook = main.querySelector(".hook-line");
+  const epilogue = main.querySelector(".epilogue");
+  const tripMeta = main.querySelector(".trip-meta");
   function show(el) {
     if (!el) return;
     el.hidden = false;
@@ -398,8 +404,10 @@ _CHAPTER_RESTORE_JS = """
   }
   chapters.forEach(show);
   show(cover);
-  show(hook);
-  show(tripMeta);
+  if (!coverOpening) {
+    show(hook);
+    show(tripMeta);
+  }
   show(epilogue);
 }
 """

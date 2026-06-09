@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Web 预览页封面 · 线框稿 v1.0 · 设计评审</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-paper: #f7f5f0;
+      --wf-border: #90a4ae;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-anno: #e65100;
+      --wf-rec: #00897b;
+      --wf-rec-bg: #e0f2f1;
+      --prod-bar: #1a2f28;
+      --prod-bar-text: #f5fbf8;
+      --prod-gold: #d4a843;
+      --prod-accent: #3d6b5a;
+      --prod-accent-light: #7cb89a;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --font-serif: Georgia, "Noto Serif SC", "Songti SC", serif;
+      --font-brush: "KaiTi", "STKaiti", "FangSong", serif;
+      --page-w: 1320px;
+      --bleed-w: 2200px;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--wf-bg); color: var(--wf-text); line-height: 1.5; }
+
+    .review-bar {
+      position: sticky; top: 0; z-index: 1000;
+      background: #263238; color: #eceff1;
+      padding: 12px 20px;
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button:hover { background: #37474f; }
+    .tabs button.is-active { background: var(--wf-rec); border-color: var(--wf-rec); color: #fff; }
+    .tabs button.is-rec::after { content: " ★"; }
+
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 20px 80px; }
+    .panel { display: none; }
+    .panel.is-visible { display: block; }
+
+    .section { margin-bottom: 40px; }
+    .section h2 { margin: 0 0 6px; font-size: 18px; }
+    .section .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; max-width: 72ch; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 300px; gap: 24px; align-items: start; }
+    @media (max-width: 960px) { .grid-2 { grid-template-columns: 1fr; } .sidebar { order: -1; } }
+
+    .sidebar {
+      background: #fff; border: 1px solid var(--wf-border); border-radius: var(--radius);
+      padding: 16px; font-size: 13px;
+    }
+    .sidebar h3 { margin: 0 0 10px; font-size: 13px; color: var(--wf-anno); text-transform: uppercase; letter-spacing: .06em; }
+    .sidebar ul { margin: 0; padding-left: 18px; }
+    .sidebar li { margin-bottom: 6px; color: var(--wf-muted); }
+    .sidebar .rec-badge {
+      display: inline-block; background: var(--wf-rec-bg); color: var(--wf-rec);
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-bottom: 8px;
+    }
+
+    .frame {
+      background: var(--wf-page);
+      border: 2px solid var(--wf-border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .frame--rec { border-color: var(--wf-rec); box-shadow: 0 0 0 3px rgba(0,137,123,.15); }
+
+    .chrome { background: #dee1e6; padding: 8px 12px 0; border-bottom: 1px solid #b0bec5; }
+    .chrome__dots { display: flex; gap: 6px; margin-bottom: 8px; }
+    .chrome__dots span { width: 10px; height: 10px; border-radius: 50%; background: #b0bec5; }
+    .chrome__tab { display: inline-block; background: var(--wf-page); padding: 8px 14px; border-radius: 8px 8px 0 0; font-size: 12px; font-weight: 600; }
+
+    /* ── Studio 预览工具栏（线框） ── */
+    .toolbar {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 8px 14px; background: var(--prod-bar); color: var(--prod-bar-text); font-size: 12px;
+    }
+    .toolbar__back { color: #c8e6d8; }
+    .toolbar__spacer { flex: 1; }
+    .toolbar__btn {
+      border: 1px solid rgba(255,255,255,.22); background: transparent; color: #fff;
+      padding: 4px 10px; border-radius: 999px; font-size: 11px;
+    }
+    .toolbar__btn--gold { background: var(--prod-gold); color: #1a1408; border: none; font-weight: 600; }
+
+    /* ── 通用线框元素 ── */
+    .block-tag {
+      position: absolute; top: 8px; left: 8px; z-index: 5;
+      font-size: 9px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      background: #263238; color: #fff; padding: 3px 7px; border-radius: 4px;
+    }
+    .block-tag--anno { background: var(--wf-anno); }
+    .wf-img {
+      background: repeating-linear-gradient(-45deg, #cfd8dc, #cfd8dc 8px, #eceff1 8px, #eceff1 16px);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--wf-muted); font-size: 12px; font-weight: 600; letter-spacing: .04em;
+      position: relative; overflow: hidden;
+    }
+    .wf-img small { font-weight: 400; font-size: 10px; opacity: .8; display: block; margin-top: 4px; text-align: center; }
+
+    .viewport-label {
+      text-align: center; font-size: 11px; color: var(--wf-muted); margin: 8px 0 0;
+    }
+
+    /* ── 方案共用：预览页主体 ── */
+    .preview-main { background: var(--wf-paper); min-height: 520px; position: relative; }
+
+    /* ═══ 现状 ═══ */
+    .current-cover {
+      aspect-ratio: 16/9; max-height: 340px; margin: 0 auto; max-width: 100%;
+    }
+    .current-page { max-width: 660px; margin: 0 auto; padding: 16px 20px 40px; text-align: center; }
+    .current-meta { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--wf-muted); padding: 12px 0 4px; }
+    .current-hook { font-family: var(--font-serif); font-size: 22px; line-height: 1.45; margin: 8px 0 0; color: var(--wf-text); }
+    .current-gap {
+      border: 2px dashed #e57373; background: rgba(255,205,210,.25);
+      margin: 12px 0; padding: 8px; font-size: 11px; color: #c62828; text-align: center;
+    }
+
+    /* ═══ 方案 B · 开场 spread（推荐）═══ */
+    .spread { display: flex; flex-direction: column; }
+    .spread__hero {
+      aspect-ratio: 16/9; max-height: min(52vh, 420px); width: 100%;
+    }
+    .spread__hero .block-tag { top: auto; bottom: 8px; left: auto; right: 8px; }
+    .spread__opening {
+      position: relative;
+      max-width: var(--page-w); margin: 0 auto;
+      padding: 28px 32px 36px;
+      text-align: center;
+    }
+    .spread__opening::before {
+      content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 48px; height: 2px; background: var(--prod-accent);
+    }
+    .spread__place {
+      font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--prod-accent); margin: 0 0 6px;
+    }
+    .spread__dates {
+      font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--wf-muted); margin: 0 0 16px;
+    }
+    .spread__title {
+      font-family: var(--font-brush); font-size: clamp(28px, 4vw, 42px);
+      font-weight: 400; letter-spacing: .04em; margin: 0 0 14px; line-height: 1.1;
+    }
+    .spread__hook {
+      font-family: var(--font-serif); font-size: 18px; line-height: 1.5;
+      color: #37474f; max-width: 22em; margin: 0 auto;
+    }
+    .spread__scroll {
+      margin-top: 20px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--wf-muted); display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .spread__scroll::after { content: "⌄"; font-size: 14px; }
+
+    /* ═══ 方案 A · 分栏杂志 ═══ */
+    .magazine {
+      display: grid; grid-template-columns: 1.15fr .85fr; min-height: 400px;
+    }
+    @media (max-width: 720px) { .magazine { grid-template-columns: 1fr; } }
+    .magazine__media { min-height: 280px; }
+    .magazine__text {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 32px 28px; background: #fff; border-left: 1px dashed var(--wf-border);
+    }
+    .magazine__text .spread__title { text-align: left; font-size: 32px; }
+    .magazine__text .spread__hook { text-align: left; margin: 0; max-width: none; }
+    .magazine__text .spread__place,
+    .magazine__text .spread__dates { text-align: left; }
+
+    /* ═══ 方案 C · 轻遮罩剧场 ═══ */
+    .theater {
+      position: relative; aspect-ratio: 16/9; max-height: min(72vh, 480px); width: 100%;
+    }
+    .theater__gradient {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(26,25,24,.78) 0%, rgba(26,25,24,.2) 45%, transparent 70%);
+      pointer-events: none;
+    }
+    .theater__content {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: 28px max(24px, 5vw) 32px;
+      color: #fff; max-width: var(--page-w); margin: 0 auto;
+    }
+    .theater__content .spread__place { color: var(--prod-accent-light); }
+    .theater__content .spread__dates { color: rgba(255,255,255,.72); }
+    .theater__content .spread__title { color: #fff; text-shadow: 0 2px 20px rgba(0,0,0,.35); }
+    .theater__content .spread__hook {
+      color: rgba(255,255,255,.88); text-align: left; max-width: 28em; font-size: 16px;
+    }
+    .theater__play {
+      position: absolute; top: 16px; right: 16px;
+      border: 1px solid rgba(255,255,255,.35); background: rgba(0,0,0,.35);
+      color: #fff; padding: 6px 14px; border-radius: 999px; font-size: 12px;
+    }
+    .theater__below {
+      max-width: var(--page-w); margin: 0 auto; padding: 12px 24px 24px;
+      text-align: center; font-size: 11px; color: var(--wf-muted);
+    }
+
+    /* ═══ 方案 D · 全视窗首屏 ═══ */
+    .fullbleed {
+      min-height: 480px; position: relative; display: flex; flex-direction: column;
+    }
+    .fullbleed__stage {
+      flex: 1; min-height: 420px; position: relative;
+    }
+    .fullbleed__stage .theater__gradient {
+      background: linear-gradient(to top, rgba(26,25,24,.85) 0%, rgba(26,25,24,.15) 55%, rgba(26,25,24,.05) 100%);
+    }
+    .fullbleed__content {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      justify-content: flex-end; align-items: center;
+      padding: 0 24px 48px; text-align: center;
+    }
+    .fullbleed__content .spread__title { font-size: 40px; color: #fff; }
+    .fullbleed__content .spread__hook { color: rgba(255,255,255,.9); font-size: 17px; }
+    .fullbleed__vh-tag {
+      position: absolute; top: 12px; right: 12px;
+      font-size: 10px; background: rgba(0,0,0,.5); color: #fff; padding: 4px 8px; border-radius: 4px;
+    }
+
+    /* ── 对比表 ── */
+    .compare { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 16px; }
+    .compare th, .compare td { border: 1px solid var(--wf-border); padding: 8px 10px; text-align: left; }
+    .compare th { background: #eceff1; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+    .compare .yes { color: var(--wf-rec); font-weight: 600; }
+    .compare .no { color: #c62828; }
+    .compare .mid { color: var(--wf-muted); }
+
+    /* ── 数据契约标注 ── */
+    .contract {
+      background: #fff3e0; border: 1px solid #ffb74d; border-radius: var(--radius);
+      padding: 14px 16px; font-size: 13px; margin-top: 24px;
+    }
+    .contract h3 { margin: 0 0 8px; font-size: 13px; color: var(--wf-anno); }
+    .contract code { background: #ffe0b2; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+
+    .bp-row { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+    .bp-card { flex: 1; min-width: 280px; }
+    .bp-card h4 { margin: 0 0 8px; font-size: 13px; color: var(--wf-muted); }
+  </style>
+</head>
+<body>
+
+  <header class="review-bar">
+    <h1>Web 预览页封面 · 线框稿 v1.0</h1>
+    <p>对象：<code>data-layout="web"</code> 游记预览 · 示例 trip「雨后京都」· 灰斜纹 = 封面图占位 · 黑标 = <code>data-block</code></p>
+    <nav class="tabs" aria-label="方案切换">
+      <button type="button" class="is-active" data-panel="overview">总览</button>
+      <button type="button" data-panel="current">现状</button>
+      <button type="button" data-panel="b" class="is-rec">B · 开场 spread ★</button>
+      <button type="button" data-panel="a">A · 分栏杂志</button>
+      <button type="button" data-panel="c">C · 轻遮罩剧场</button>
+      <button type="button" data-panel="d">D · 全视窗首屏</button>
+      <button type="button" data-panel="spec">规格 & 断点</button>
+    </nav>
+  </header>
+
+  <div class="wrap">
+
+    <!-- ── 总览 ── -->
+    <section class="panel is-visible" id="panel-overview">
+      <div class="section">
+        <h2>设计目标</h2>
+        <p class="lead">
+          Web 预览页的第一屏应像「翻开一本摄影集」——封面图建立情绪，文字层给出语境（去哪、何时、叫什么、为何值得读）。
+          现状将标题藏在 <code>cover-hero--photo-only</code>、元信息散落在 <code>trip-meta</code> / <code>hook-line</code>，首屏信息断裂。
+          以下四个方向均在 <strong>不新增 data-block</strong> 前提下，通过排版组合实现。
+        </p>
+      </div>
+
+      <table class="compare">
+        <thead>
+          <tr>
+            <th>方案</th>
+            <th>首屏完整度</th>
+            <th>与 manifest 契合</th>
+            <th>宽屏表现</th>
+            <th>实现成本</th>
+            <th>备注</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>现状</strong></td>
+            <td class="no">低 · 三截分离</td>
+            <td class="yes">是</td>
+            <td class="mid">图大文小</td>
+            <td class="yes">—</td>
+            <td>screens 模板默认 photo-only</td>
+          </tr>
+          <tr style="background: var(--wf-rec-bg);">
+            <td><strong>B · 开场 spread ★</strong></td>
+            <td class="yes">高 · 一屏读完</td>
+            <td class="yes">是</td>
+            <td class="yes">16:9 舞台 + 居中版心</td>
+            <td class="yes">低</td>
+            <td><strong>推荐</strong>：延续 Web「标题在图下」决策</td>
+          </tr>
+          <tr>
+            <td><strong>A · 分栏杂志</strong></td>
+            <td class="yes">高</td>
+            <td class="yes">是</td>
+            <td class="yes">≥1024 最佳</td>
+            <td class="mid">中</td>
+            <td>编辑感强；窄屏需回退为 B</td>
+          </tr>
+          <tr>
+            <td><strong>C · 轻遮罩剧场</strong></td>
+            <td class="yes">高 · 图内收字</td>
+            <td class="mid">部分叠字</td>
+            <td class="yes">电影感</td>
+            <td class="mid">中</td>
+            <td>接近 mobile 逻辑，Web 略破格</td>
+          </tr>
+          <tr>
+            <td><strong>D · 全视窗首屏</strong></td>
+            <td class="yes">最高</td>
+            <td class="mid">需定 100vh 规则</td>
+            <td class="mid">超高屏留白</td>
+            <td class="mid">中</td>
+            <td>分享态友好；Studio 预览需扣 toolbar 高</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="contract">
+        <h3>数据契约（不变）</h3>
+        <p style="margin:0">
+          <code>cover-hero</code> · 1 张 coverAsset · title ≤24 字 · 禁止正文/视频<br />
+          <code>trip-meta</code> · 日期 · 地点 · 天数 · 同行（可选）<br />
+          <code>hook-line</code> · ≤56 字 · 可空<br />
+          首屏视觉组合 = 上述三块的 CSS 编排；DOM 顺序保持渲染契约。
+        </p>
+      </div>
+    </section>
+
+    <!-- ── 现状 ── -->
+    <section class="panel" id="panel-current">
+      <div class="section">
+        <h2>现状 · screens 模板 Web 预览</h2>
+        <p class="lead">以林芝 trip 为代表：<code>cover-hero--photo-only</code> + 下方 trip-meta + hook，标题仅 screen-reader 可见。</p>
+      </div>
+      <div class="grid-2">
+        <div class="frame">
+          <div class="chrome"><div class="chrome__dots"><span></span><span></span><span></span></div><span class="chrome__tab">雨后京都 · 预览</span></div>
+          <div class="toolbar">
+            <span class="toolbar__back">← 书架</span>
+            <span class="toolbar__spacer"></span>
+            <span class="toolbar__btn">编辑</span>
+            <span class="toolbar__btn toolbar__btn--gold">保存长图</span>
+          </div>
+          <div class="preview-main">
+            <div class="wf-img current-cover">
+              <span class="block-tag">cover-hero</span>
+              COVER · 16:9 · object-fit: cover<br /><small>photo-only · 无可见标题</small>
+            </div>
+            <div class="current-page">
+              <div class="current-gap">⚠ 视觉断层：大图与文字区无过渡，用户不知道「读什么」</div>
+              <div class="current-meta"><span class="block-tag block-tag--anno" style="position:static;display:inline-block;margin-right:6px">trip-meta</span>2013.03.29 – 06.03 · 林芝 · 67 天</div>
+              <p class="current-hook"><span class="block-tag block-tag--anno" style="position:static;display:inline-block;margin-right:6px;vertical-align:middle">hook-line</span>在林芝，从桃花开到雨季来临。</p>
+              <div style="margin-top:24px;border:2px dashed var(--wf-border);padding:40px;color:var(--wf-muted);font-size:12px">↓ 第一章 layout-screen …</div>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <h3>问题清单</h3>
+          <ul>
+            <li>标题 <code>h1</code> 不可见，SEO/可访问性靠 sr-only</li>
+            <li>trip-meta 字号 13px，与 16:9 大图比例失调</li>
+            <li>hook 虽大，但与封面图无排版关联</li>
+            <li>首屏未完成「杂志封面」叙事闭环</li>
+            <li>向下滚动无 affordance</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ── 方案 B 推荐 ── -->
+    <section class="panel" id="panel-b">
+      <div class="section">
+        <h2>方案 B · 开场 Spread（推荐）</h2>
+        <p class="lead">
+          16:9 封面舞台（max 52vh）+ 下方「开场白」排版区：地点 → 日期 → 标题（Brush）→ 钩子（Serif）。
+          三块 DOM 不变，用 <code>.cover-opening</code> 视觉分组 + 绿色饰线衔接图与文。
+        </p>
+      </div>
+      <div class="grid-2">
+        <div class="frame frame--rec">
+          <div class="chrome"><div class="chrome__dots"><span></span><span></span><span></span></div><span class="chrome__tab">雨后京都 · 预览</span></div>
+          <div class="toolbar">
+            <span class="toolbar__back">← 书架</span>
+            <span class="toolbar__spacer"></span>
+            <span class="toolbar__btn">编辑</span>
+            <span class="toolbar__btn toolbar__btn--gold">保存长图</span>
+          </div>
+          <div class="preview-main spread">
+            <div class="wf-img spread__hero">
+              <span class="block-tag">cover-hero</span>
+              COVER IMAGE<br /><small>16:9 · max-height: min(52vh, 85dvh) · object-fit: cover</small>
+            </div>
+            <div class="spread__opening">
+              <span class="block-tag block-tag--anno" style="top:-36px;left:50%;transform:translateX(-50%)">trip-meta + title + hook · 视觉编组</span>
+              <p class="spread__place">京都</p>
+              <p class="spread__dates"><time>2025.04.02 – 04.06</time> · 5 天 · 两人</p>
+              <h1 class="spread__title">雨后京都</h1>
+              <p class="spread__hook">鸭川边那阵吹干雨衣的风。</p>
+              <div class="spread__scroll">进入正文</div>
+            </div>
+            <div style="border-top:2px dashed var(--wf-border);margin:0 24px;padding:16px;text-align:center;font-size:11px;color:var(--wf-muted)">↓ 第一章 · 01 抵达</div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <span class="rec-badge">★ 推荐方案</span>
+          <h3>设计要点</h3>
+          <ul>
+            <li><strong>信息层级</strong>：Place (accent) → Meta → Title → Hook</li>
+            <li><strong>封面高度</strong>：52vh，为文字区留足首屏空间</li>
+            <li><strong>饰线</strong>：48×2px accent，衔接图/文</li>
+            <li><strong>滚动提示</strong>：「进入正文 ⌄」替代空白</li>
+            <li><strong>编辑态</strong>：hook / title 仍走 inline-edit 路径</li>
+          </ul>
+          <h3 style="margin-top:16px">与 golden 对齐</h3>
+          <ul>
+            <li>延续 PRD：Web 标题在图下、浅色底</li>
+            <li>复用 <code>--font-brush</code> / <code>--font-serif</code></li>
+            <li>不破坏 <code>cover-hero--photo-only</code> 语义，仅 Web 显示标题层</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ── 方案 A ── -->
+    <section class="panel" id="panel-a">
+      <div class="section">
+        <h2>方案 A · 分栏杂志</h2>
+        <p class="lead">宽屏（≥1024px）左图右文，像杂志跨页。图片抵左出血，文字在右侧竖排居中。窄屏回退为方案 B。</p>
+      </div>
+      <div class="grid-2">
+        <div class="frame">
+          <div class="chrome"><div class="chrome__dots"><span></span><span></span><span></span></div><span class="chrome__tab">雨后京都 · 预览 · 1280px+</span></div>
+          <div class="toolbar"><span class="toolbar__back">← 书架</span><span class="toolbar__spacer"></span><span class="toolbar__btn toolbar__btn--gold">保存长图</span></div>
+          <div class="preview-main magazine">
+            <div class="wf-img magazine__media">
+              <span class="block-tag">cover-hero</span>
+              COVER<br /><small>左侧出血 · 约 58% 宽</small>
+            </div>
+            <div class="magazine__text">
+              <span class="block-tag block-tag--anno">opening column</span>
+              <p class="spread__place">京都</p>
+              <p class="spread__dates">2025.04.02 – 04.06 · 5 天</p>
+              <h1 class="spread__title">雨后京都</h1>
+              <p class="spread__hook">鸭川边那阵吹干雨衣的风。</p>
+              <div class="spread__scroll" style="align-items:flex-start;margin-top:24px">进入正文</div>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <h3>适用场景</h3>
+          <ul>
+            <li>Studio 宽屏预览、iPad 横屏</li>
+            <li>强调编辑/杂志调性</li>
+            <li>封面图偏竖或主体偏左时更平衡</li>
+          </ul>
+          <h3 style="margin-top:16px">风险</h3>
+          <ul>
+            <li>需新增 breakpoint 与回退逻辑</li>
+            <li>与 screens 章节 16:9 全宽节奏不一致</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ── 方案 C ── -->
+    <section class="panel" id="panel-c">
+      <div class="section">
+        <h2>方案 C · 轻遮罩剧场</h2>
+        <p class="lead">16:9 大图 + 底部渐变遮罩，标题/钩子在图上（Web 轻量版 mobile overlay）。trip-meta 可保留在图下作补充。</p>
+      </div>
+      <div class="grid-2">
+        <div class="frame">
+          <div class="chrome"><div class="chrome__dots"><span></span><span></span><span></span></div><span class="chrome__tab">雨后京都 · 预览</span></div>
+          <div class="toolbar"><span class="toolbar__back">← 书架</span><span class="toolbar__spacer"></span><span class="toolbar__btn toolbar__btn--gold">保存长图</span></div>
+          <div class="preview-main">
+            <div class="wf-img theater">
+              <span class="block-tag">cover-hero</span>
+              <span class="theater__play">▶ 放映</span>
+              <div class="theater__gradient"></div>
+              <div class="theater__content">
+                <p class="spread__place">京都</p>
+                <p class="spread__dates">2025.04.02 – 04.06 · 5 天</p>
+                <h1 class="spread__title">雨后京都</h1>
+                <p class="spread__hook">鸭川边那阵吹干雨衣的风。</p>
+              </div>
+            </div>
+            <div class="theater__below">
+              <span class="block-tag block-tag--anno" style="position:static;display:inline-block">trip-meta</span>
+              可选：图外重复 meta 行 · 或省略
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <h3>优势</h3>
+          <ul>
+            <li>一图收齐所有信息，冲击力强</li>
+            <li>与 <code>preview.jpg</code> / cover-share 语言一致</li>
+            <li>放映按钮自然落在右上角</li>
+          </ul>
+          <h3 style="margin-top:16px">顾虑</h3>
+          <ul>
+            <li>与 PRD「Web 标题在图下」决策冲突</li>
+            <li>浅底/深底封面需自适应遮罩强度</li>
+            <li>长标题 + 长 hook 易溢出</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ── 方案 D ── -->
+    <section class="panel" id="panel-d">
+      <div class="section">
+        <h2>方案 D · 全视窗首屏</h2>
+        <p class="lead">第一屏占满 <code>100dvh − toolbar</code>，封面图 + 渐变 + 居中文字。适合分享链接；Studio 预览需减去工具栏高度。</p>
+      </div>
+      <div class="grid-2">
+        <div class="frame">
+          <div class="chrome"><div class="chrome__dots"><span></span><span></span><span></span></div><span class="chrome__tab">雨后京都 · 分享态（无 toolbar）</span></div>
+          <div class="preview-main fullbleed">
+            <div class="wf-img fullbleed__stage">
+              <span class="block-tag">cover-hero</span>
+              <span class="fullbleed__vh-tag">100dvh · share 态</span>
+              <div class="theater__gradient"></div>
+              <div class="fullbleed__content">
+                <p class="spread__place">京都</p>
+                <p class="spread__dates">2025.04.02 – 04.06 · 5 天 · 两人</p>
+                <h1 class="spread__title">雨后京都</h1>
+                <p class="spread__hook">鸭川边那阵吹干雨衣的风。</p>
+                <div class="spread__scroll" style="color:rgba(255,255,255,.6)">向下滚动</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <h3>适用场景</h3>
+          <ul>
+            <li>微信 / 链接分享打开（无 Studio chrome）</li>
+            <li>强调「沉浸式开场」</li>
+          </ul>
+          <h3 style="margin-top:16px">实现注意</h3>
+          <ul>
+            <li>Studio 预览：<code>min-height: calc(100dvh - var(--toolbar-h))</code></li>
+            <li>超长 hook 需 clamp 2 行</li>
+            <li>与 scroll-snap 首屏需协调</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ── 规格 ── -->
+    <section class="panel" id="panel-spec">
+      <div class="section">
+        <h2>规格摘要 · 方案 B（推荐落地版）</h2>
+        <p class="lead">以下为高保真实现前的尺寸与 token 约定，可直接写入 <code>journal.css</code> 的 <code>html[data-layout="web"]</code> 段。</p>
+      </div>
+
+      <div class="bp-row">
+        <div class="bp-card">
+          <h4>≥ 1280px · 桌面宽屏</h4>
+          <div class="frame" style="font-size:12px;padding:12px">
+            <pre style="margin:0;white-space:pre-wrap;font-family:var(--font);font-size:11px">cover-hero
+  aspect-ratio: 16/9
+  max-height: min(52vh, 85dvh)
+  max-width: var(--bleed-width)  /* 2200px */
+  object-fit: cover
+
+.cover-opening
+  max-width: var(--page-width)   /* 1320px */
+  padding: 28px 32px 40px
+  text-align: center
+
+title: clamp(2rem, 3.5vw, 2.75rem) · --font-brush
+hook:  1.125rem · --font-serif · max-width 22em
+meta:  11px · letter-spacing .14em · uppercase</pre>
+          </div>
+        </div>
+        <div class="bp-card">
+          <h4>768 – 1279px · 平板 / 窄桌面</h4>
+          <div class="frame" style="font-size:12px;padding:12px">
+            <pre style="margin:0;white-space:pre-wrap;font-family:var(--font);font-size:11px">cover-hero max-height: 48vh
+.cover-opening padding: 24px 20px 32px
+title: clamp(1.75rem, 5vw, 2.25rem)
+hook: 1rem · max-width 18em</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="contract" style="margin-top:24px;background:#e0f2f1;border-color:#00897b">
+        <h3 style="color:#00695c">✓ 已拍板（2026-06-09）</h3>
+        <ul style="margin:8px 0 0;padding-left:20px;font-size:13px">
+          <li><strong>方案</strong>：B 开场 spread（Studio/草稿预览）+ D 全视窗（<code>data-export="share"</code>）</li>
+          <li><strong>Web 标题</strong>：始终显示于 <code>cover-opening__title</code></li>
+          <li><strong>地点</strong>：独立层级 <code>cover-opening__place</code>（accent 小字）</li>
+          <li><strong>Hook</strong>：首屏最后一行；「进入正文 ⌄」在其后作为与正文的视觉分界</li>
+          <li><strong>放映</strong>：移入 preview-toolbar（<code>data-screenplay-trigger</code>）</li>
+          <li><strong>Studio / 分享</strong>：共用 <code>cover-opening</code> 块，分享态 CSS 变体 D</li>
+        </ul>
+      </div>
+
+      <div class="contract">
+        <h3>待你拍板的问题</h3>
+        <p style="margin:0;font-size:13px;color:var(--wf-muted)">以上 6 项已于 2026-06-09 确认并进入实现。</p>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    document.querySelectorAll('.tabs button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('is-active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('is-visible'));
+        btn.classList.add('is-active');
+        document.getElementById('panel-' + btn.dataset.panel).classList.add('is-visible');
+      });
+    });
+  </script>
+</body>
+</html>

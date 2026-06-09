@@ -2,6 +2,7 @@
 
 | 文件 | 说明 |
 |------|------|
+| [preview-cover-web-v1-wireframe.html](./preview-cover-web-v1-wireframe.html) | **Web 预览页封面 v1** · 首屏线框 · 现状 + A/B/C/D 四方案 · **推荐 B 开场 spread** · 设计评审用 |
 | [studio-homepage-output-first-v1.6.html](./studio-homepage-output-first-v1.6.html) | **首页探索 v1.6** · PRD v2.0.3 reconcile · **Web/iPad Tab 为 M20 验收依据**；Mobile Tab = 小程序探索参考 |
 | [studio-homepage-output-first-v1.5.html](./studio-homepage-output-first-v1.5.html) | 首页探索 v1.5 · Bento 结构定稿 · iPad / Import Sheet · 设计评审用 |
 | [studio-homepage-output-first-v1.4.html](./studio-homepage-output-first-v1.4.html) | 首页探索 v1.4 · Bento 定稿候选 · 16:9 横滑 + 手机滚动 · 设计评审用（未落地） |

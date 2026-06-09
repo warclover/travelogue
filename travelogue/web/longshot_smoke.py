@@ -99,11 +99,12 @@ def run_longshot_smoke(
                     """async () => {
                       const main = document.querySelector('main');
                       const chapters = Array.from(main.querySelectorAll('section.chapter'));
-                      const cover = main.querySelector('.cover-hero');
+                      const coverOpening = main.querySelector('.cover-opening');
+                      const cover = coverOpening || main.querySelector('.cover-hero');
                       const pageEl = main.querySelector('.page');
-                      const hook = pageEl && pageEl.querySelector('.hook-line');
+                      const hook = main.querySelector('.hook-line');
                       const epilogue = pageEl && pageEl.querySelector('.epilogue');
-                      const tripMeta = pageEl && pageEl.querySelector('.trip-meta');
+                      const tripMeta = main.querySelector('.trip-meta');
                       function stash(el, show) {
                         if (!el) return;
                         el.hidden = !show;
@@ -111,8 +112,10 @@ def run_longshot_smoke(
                       }
                       chapters.forEach((ch, i) => stash(ch, i === 0));
                       stash(cover, true);
-                      stash(hook, true);
-                      stash(tripMeta, true);
+                      if (!coverOpening) {
+                        stash(hook, true);
+                        stash(tripMeta, true);
+                      }
                       stash(epilogue, false);
                       const out = await window.TravelogueLongshot.captureMainToBlob({
                         scale: 1,

@@ -525,7 +525,15 @@
       } catch (_eDisc) {
         seenDisclaimer = false;
       }
-      if (bodyNote) bodyNote.hidden = seenDisclaimer;
+      if (bodyNote) {
+        if (isStudioServerExport()) {
+          bodyNote.textContent =
+            "将保存到画册目录；返回 Studio 首页即可在手机框预览。";
+          bodyNote.hidden = false;
+        } else {
+          bodyNote.hidden = seenDisclaimer;
+        }
+      }
 
       var bridgeNote = sheet.querySelector(".longshot-export-sheet__note--bridge");
       if (bridgeNote) {
@@ -590,10 +598,11 @@
   function applyChapterVisibility(main, chapters, chapterIndex) {
     var saved = [];
     var page = main.querySelector(".page");
-    var cover = main.querySelector(".cover-hero");
-    var hook = page && page.querySelector(".hook-line");
+    var coverOpening = main.querySelector(".cover-opening");
+    var cover = coverOpening || main.querySelector(".cover-hero");
+    var hook = main.querySelector(".hook-line");
     var epilogue = page && page.querySelector(".epilogue");
-    var tripMeta = page && page.querySelector(".trip-meta");
+    var tripMeta = main.querySelector(".trip-meta");
     var isFirst = chapterIndex === 0;
     var isLast = chapterIndex === chapters.length - 1;
 
@@ -620,8 +629,10 @@
       stash(ch, i === chapterIndex);
     });
     stash(cover, isFirst);
-    stash(tripMeta, isFirst);
-    stash(hook, isFirst);
+    if (!coverOpening) {
+      stash(tripMeta, isFirst);
+      stash(hook, isFirst);
+    }
     stash(epilogue, isLast);
     return saved;
   }

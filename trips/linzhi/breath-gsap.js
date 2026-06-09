@@ -66,50 +66,120 @@
     return screens > 40 && coarse && lowMem;
   }
 
+  function coverParallaxRoot() {
+    return (
+      document.querySelector('.cover-opening[data-block="cover-opening"]') ||
+      document.querySelector('.cover-hero[data-block="cover-hero"]')
+    );
+  }
+
+  function coverParallaxImg(root) {
+    if (!root) return null;
+    return (
+      root.querySelector(".cover-hero__img--main") ||
+      root.querySelector(".cover-hero__media img:last-of-type") ||
+      root.querySelector("img")
+    );
+  }
+
+  function clearCoverParallax(img) {
+    if (!img) return;
+    img.style.transform = "";
+    img.style.willChange = "";
+  }
+
+  function coverPanel(root) {
+    return root && root.querySelector(".cover-opening__panel");
+  }
+
+  function setCoverMotionActive(active) {
+    document.documentElement.classList.toggle("cover-motion-active", !!active);
+  }
+
+  function clearCoverMotion(root, img) {
+    clearCoverParallax(img);
+    var panel = coverPanel(root);
+    if (panel) {
+      panel.style.opacity = "";
+      panel.style.transform = "";
+    }
+    setCoverMotionActive(false);
+  }
+
+  function applyCoverScrollMotion(img, panel, p) {
+    if (!img) return;
+    img.style.willChange = "transform";
+    img.style.transform =
+      "translate3d(0," + p * 20 + "%,0) scale(" + (1 + p * 0.08) + ")";
+    if (panel) {
+      panel.style.opacity = String(Math.max(0, 1 - p * 0.35));
+      panel.style.transform = "translate3d(0," + p * 14 + "px,0)";
+    }
+  }
+
+  function setupCoverParallaxGsap() {
+    var coverRoot = coverParallaxRoot();
+    if (!coverRoot) return;
+    var img = coverParallaxImg(coverRoot);
+    if (!img) return;
+    var panel = coverPanel(coverRoot);
+
+    gsapTriggers.push(
+      ScrollTrigger.create({
+        trigger: coverRoot,
+        start: "top top",
+        end: "bottom top",
+        scrub: 0.75,
+        onEnter: function () {
+          setCoverMotionActive(true);
+        },
+        onEnterBack: function () {
+          setCoverMotionActive(true);
+        },
+        onUpdate: function (self) {
+          applyCoverScrollMotion(img, panel, self.progress);
+        },
+        onLeave: function () {
+          clearCoverMotion(coverRoot, img);
+        },
+        onLeaveBack: function () {
+          clearCoverMotion(coverRoot, img);
+        },
+      })
+    );
+  }
+
+  function setupCoverParallaxNative() {
+    var coverRoot = coverParallaxRoot();
+    if (!coverRoot) return;
+    var img = coverParallaxImg(coverRoot);
+    if (!img) return;
+    var panel = coverPanel(coverRoot);
+
+    addTrigger(
+      coverRoot,
+      function (p) {
+        if (p >= 1) {
+          clearCoverMotion(coverRoot, img);
+          return;
+        }
+        if (p > 0.001) {
+          setCoverMotionActive(true);
+          applyCoverScrollMotion(img, panel, p);
+        } else {
+          clearCoverMotion(coverRoot, img);
+        }
+      },
+      { start: 0, end: 0.22 }
+    );
+  }
+
   function setupCinematicGsap() {
     var gsap = global.gsap;
     var ScrollTrigger = global.ScrollTrigger;
     gsap.registerPlugin(ScrollTrigger);
 
-    var cover = document.querySelector('.cover-hero[data-block="cover-hero"]');
-    if (cover) {
-      var img =
-        cover.querySelector(".cover-hero__media img") || cover.querySelector("img");
-      if (img) {
-        gsapTriggers.push(
-          ScrollTrigger.create({
-            trigger: cover,
-            start: "top top",
-            end: "bottom top",
-            scrub: 0.75,
-            onUpdate: function (self) {
-              var p = self.progress;
-              img.style.transform =
-                "translate3d(0," + p * 24 + "%,0) scale(" + (1 + p * 0.1) + ")";
-            },
-          })
-        );
-      }
-    }
-
-    Array.prototype.forEach.call(
-      document.querySelectorAll('.hook-line[data-block="hook-line"]'),
-      function (el) {
-        gsapTriggers.push(
-          ScrollTrigger.create({
-            trigger: el,
-            start: "top 92%",
-            end: "top 48%",
-            scrub: 0.85,
-            onUpdate: function (self) {
-              var p = self.progress;
-              el.style.transform = "translate3d(0," + (1 - p) * 28 + "px,0)";
-            },
-          })
-        );
-      }
-    );
-
+    setupCoverParallaxGsap();
     Array.prototype.forEach.call(
       document.querySelectorAll('.chapter-header[data-block="chapter-header"]'),
       function (el) {
@@ -163,34 +233,7 @@
   }
 
   function setupCinematic() {
-    var cover = document.querySelector('.cover-hero[data-block="cover-hero"]');
-    if (cover) {
-      var img =
-        cover.querySelector(".cover-hero__media img") || cover.querySelector("img");
-      addTrigger(
-        cover,
-        function (p) {
-          if (!img) return;
-          img.style.transform =
-            "translate3d(0," + p * 14 + "%,0) scale(" + (1 + p * 0.05) + ")";
-        },
-        { start: 0, end: 0.15 }
-      );
-    }
-
-    Array.prototype.forEach.call(
-      document.querySelectorAll('.hook-line[data-block="hook-line"]'),
-      function (el) {
-        addTrigger(
-          el,
-          function (p) {
-            el.style.opacity = String(0.55 + p * 0.45);
-            el.style.transform = "translate3d(0," + (1 - p) * 12 + "px,0)";
-          },
-          { start: 0.05, end: 0.2 }
-        );
-      }
-    );
+    setupCoverParallaxNative();
 
     Array.prototype.forEach.call(
       document.querySelectorAll('.chapter-header[data-block="chapter-header"]'),

@@ -2309,6 +2309,19 @@ var narrateJobId = null;
     actions.appendChild(exportWrap);
     setLongshotExportState(root, "idle");
 
+    if (document.documentElement.getAttribute("data-screenplay") === "on") {
+      var screenplayBtn = document.createElement("button");
+      screenplayBtn.type = "button";
+      screenplayBtn.className = "preview-toolbar__ctl preview-toolbar__screenplay";
+      screenplayBtn.setAttribute("data-screenplay-trigger", "start");
+      screenplayBtn.setAttribute("data-screenplay-label", "▶ 放映");
+      screenplayBtn.setAttribute("data-screenplay-busy", "退出放映");
+      screenplayBtn.setAttribute("aria-pressed", "false");
+      screenplayBtn.setAttribute("aria-label", "放映，全屏逐屏展示");
+      screenplayBtn.textContent = "▶ 放映";
+      actions.insertBefore(screenplayBtn, exportWrap);
+    }
+
     bindLongshotExportMeta(root);
 
     longshotBtn.addEventListener("click", function () {
@@ -2484,6 +2497,22 @@ var narrateJobId = null;
       "</div>" +
       "</div>";
     document.body.insertBefore(root, document.body.firstChild);
+
+    if (document.documentElement.getAttribute("data-screenplay") === "on") {
+      var cluster = root.querySelector(".preview-toolbar__cluster");
+      if (cluster) {
+        var screenplayBtn = document.createElement("button");
+        screenplayBtn.type = "button";
+        screenplayBtn.className = "preview-toolbar__ctl preview-toolbar__screenplay";
+        screenplayBtn.setAttribute("data-screenplay-trigger", "start");
+        screenplayBtn.setAttribute("data-screenplay-label", "▶ 放映");
+        screenplayBtn.setAttribute("data-screenplay-busy", "退出放映");
+        screenplayBtn.setAttribute("aria-pressed", "false");
+        screenplayBtn.setAttribute("aria-label", "放映，全屏逐屏展示");
+        screenplayBtn.textContent = "▶ 放映";
+        cluster.insertBefore(screenplayBtn, cluster.firstChild);
+      }
+    }
 
     var footerHome = document.querySelector(".footer-cta__studio-home");
     if (footerHome) {

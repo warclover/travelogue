@@ -231,6 +231,10 @@ class CoverRenderContext(TypedDict, total=False):
     srcset: str
     sizes: str
     alt: str
+    useContainFit: bool
+    focalX: float
+    focalY: float
+    hasFocal: bool
 
 
 class EpilogueStatsContext(TypedDict, total=False):
@@ -273,7 +277,12 @@ class TripRenderContext(TypedDict, total=False):
     coverShowTitle: bool
     cover: CoverRenderContext
     tripMetaLine: str
+    tripMetaSubline: str
     tripMetaDatetime: str | None
+    coverPlace: str
+    hasCoverPlace: bool
+    showCoverPlace: bool
+    showCoverHook: bool
     hook: str
     hasHook: bool
     editableHook: bool

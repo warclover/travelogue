@@ -264,8 +264,9 @@ def format_trip_meta(
     else:
         label = ""
         dt_attr = ""
+    subline = f"{label} · {days} 天" if label else f"{days} 天"
     line = f"{label} · {place} · {days} 天" if label else f"{place} · {days} 天"
-    return line, dt_attr
+    return line, dt_attr, place, subline
 
 
 def build_voice(

@@ -1,6 +1,7 @@
-<header class="cover-hero{{#unless coverShowTitle}} cover-hero--photo-only{{/unless}}" data-block="cover-hero" data-present-aux="true">
-  <div class="cover-hero__media">
-    <img src="{{cover.src}}"
+<header class="cover-hero{{#unless coverShowTitle}} cover-hero--photo-only{{/unless}}{{#if cover.useContainFit}} cover-hero--contain-fit{{/if}}" data-block="cover-hero" data-present-aux="true">
+  <div class="cover-hero__media" style="--focal-x: {{cover.focalX}}; --focal-y: {{cover.focalY}};">
+    <img class="cover-hero__img cover-hero__img--main"
+      src="{{cover.src}}"
       {{#if cover.hasSrcset}}
       srcset="{{cover.srcset}}"
       sizes="{{cover.sizes}}"
@@ -17,15 +18,5 @@
     <p class="subtitle">{{subtitle}}</p>
     {{/if}}
   </div>
-  {{else}}
-  <h1 class="cover-hero__title-sr" itemprop="name">{{title}}</h1>
-  {{/if}}
-  {{#if includeScreenplay}}
-  <button type="button" class="cover-hero__play" data-screenplay-trigger="start"
-    data-screenplay-label="▶ 放映"
-    data-screenplay-busy="退出放映"
-    aria-label="放映，全屏逐屏展示">
-    ▶ 放映
-  </button>
   {{/if}}
 </header>

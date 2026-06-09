@@ -95,7 +95,8 @@ def test_render_hides_cover_title_in_frame_mode(trip_workspace: Path) -> None:
     html = render_html(trip, export_mode="draft", trip_root=trip_workspace)
     assert "cover-hero--photo-only" in html
     assert 'class="cover-hero__text"' not in html
-    assert "cover-hero__title-sr" in html
+    assert 'class="cover-opening__title"' in html
+    assert "京都" in html
 
 
 def test_render_hides_cover_title_for_custom_title_in_frame_mode(trip_workspace: Path) -> None:

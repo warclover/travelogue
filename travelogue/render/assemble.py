@@ -43,6 +43,12 @@ def build_render_context(
     )
     from travelogue.render.engine import LONGSHOT_INDEX_NAME
     from travelogue.render.reading_profile import reading_html_attrs
+    from travelogue.render.cover_opening import (
+        cover_focal_point,
+        cover_place_is_distinct,
+        cover_use_contain_fit,
+        show_hook_on_cover,
+    )
     from travelogue.services.narrative_scope import resolve_cover_show_title
 
     surface = resolve_surface_context(
@@ -82,13 +88,17 @@ def build_render_context(
     cover_src = pick_image_src(cover_asset, export_layout=image_layout)
     cover_srcset = compile_srcset(cover_asset, mobile=image_layout == "mobile")
 
-    meta_line, meta_datetime = format_trip_meta(
+    meta_line, meta_datetime, cover_place, meta_subline = format_trip_meta(
         meta,
         intent=trip.get("intent"),
         assets=trip.get("assets") or [],
     )
     cover_show_title = resolve_cover_show_title(trip, cfg=cfg)
     hook = (meta.get("hook") or "").strip()
+    show_cover_hook = show_hook_on_cover(hook)
+    show_cover_place = cover_place_is_distinct(cover_place, meta_title)
+    fx, fy = cover_focal_point(cover_asset)
+    cover_contain = cover_use_contain_fit(cover_asset)
     epilogue = (trip.get("epilogue") or "").strip()
     if surface.strip_narrative_copy:
         hook = ""
@@ -188,9 +198,18 @@ def build_render_context(
             srcset=cover_srcset,
             sizes=pick_image_sizes(image_layout, "cover"),
             alt=alt_text(None, cover_asset, meta_title),
+            useContainFit=cover_contain,
+            focalX=fx,
+            focalY=fy,
+            hasFocal=True,
         ),
         "tripMetaLine": meta_line,
+        "tripMetaSubline": meta_subline,
         "tripMetaDatetime": meta_datetime,
+        "coverPlace": cover_place,
+        "hasCoverPlace": bool(cover_place),
+        "showCoverPlace": show_cover_place,
+        "showCoverHook": show_cover_hook,
         "hook": hook,
         "hasHook": bool(hook),
         "editableHook": surface.is_draft and bool(hook),
