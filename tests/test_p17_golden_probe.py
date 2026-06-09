@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from scripts.phase3_ig2_report import load_fixture_trip
+from scripts.phase3_ig2_report import _cfg_for_mode, load_fixture_trip
 from scripts.phase17_golden_metrics import _cfg_lse_enabled, _cfg_with_capabilities
-from scripts.phase3_ig2_report import _cfg_for_mode
 from travelogue.layout_engine.golden_probe import (
     merge_gates,
     probe_ac_p17_16,

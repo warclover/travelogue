@@ -493,7 +493,7 @@ def build_media_scroll(
     return ctx
 
 
-from travelogue.curation.asset_subject import full_frame_fit_for_asset, portrait_fit_for_asset
+from travelogue.curation.asset_subject import full_frame_fit_for_asset
 from travelogue.curation.screen_planner import grid_class_for_pattern
 from travelogue.render.context_types import VoiceRenderContext, VoiceSourceContext
 from travelogue.render.screen_tone import screen_tone_css

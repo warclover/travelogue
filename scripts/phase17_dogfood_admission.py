@@ -25,6 +25,7 @@ from scripts.phase17_golden_metrics import (
     _cfg_lse_enabled,
     _cfg_with_capabilities,
 )
+from tests.p17_golden_fixtures import P17_MIXED_FIXTURES
 from travelogue.layout_engine.golden_probe import merge_gates, run_ac_probe
 from travelogue.layout_engine.metrics import (
     assets_map_from_trip,
@@ -33,7 +34,6 @@ from travelogue.layout_engine.metrics import (
     evaluate_ac_delta,
 )
 from travelogue.layout_engine.sandbox import cfg_lse_sandbox_pair, sandbox_replay_trip
-from tests.p17_golden_fixtures import P17_MIXED_FIXTURES
 
 MIXED_ONLY_AC = frozenset({"AC-P17-16", "AC-P17-19"})
 

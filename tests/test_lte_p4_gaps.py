@@ -127,14 +127,18 @@ def test_promotion_apply_dry_run(tmp_path: Path, engine: LayoutTemplateEngine) -
 
 @pytest.mark.unit
 def test_full_frame_mobile_blurred_fill() -> None:
+    # Portrait person asset: full_frame_fit_for_asset resolves to "contain"
+    # (immersive cover is reserved for landscape scenery without people), which
+    # triggers the mobile blurred letterbox fill.
     assets = {
         "c1": {
             "id": "c1",
-            "mediaClass": "collage",
-            "width": 1200,
-            "height": 800,
-            "nativeWidth": 1200,
-            "nativeHeight": 800,
+            "mediaClass": "photo",
+            "tags": ["person"],
+            "width": 800,
+            "height": 1200,
+            "nativeWidth": 800,
+            "nativeHeight": 1200,
             "displayFile": "assets/c1-w800.webp",
         }
     }

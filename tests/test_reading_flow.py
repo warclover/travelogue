@@ -49,7 +49,10 @@ def test_breath_lenis_asset_exists() -> None:
 def test_breath_js_integrates_flow_and_lenis() -> None:
     js = BREATH_JS.read_text(encoding="utf-8")
     assert "TravelogueLenis" in js
-    assert 'breathLevel() !== "flow"' in js or 'breathLevel() === "flow"' in js
+    # Lenis init is gated on flow-level scrolling via the usesFlowScroll() helper,
+    # which keys off breathLevel() === "flow" (plus cinematic/gallery).
+    assert "usesFlowScroll" in js
+    assert 'level === "flow"' in js or '=== "flow"' in js
     assert "destroyLenis" in js
 
 

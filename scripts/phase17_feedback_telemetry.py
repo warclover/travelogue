@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from travelogue.layout_engine.feedback import read_layout_feedback_events, SIDECAR_NAME
+from travelogue.layout_engine.feedback import SIDECAR_NAME, read_layout_feedback_events
 
 
 def _now() -> str:

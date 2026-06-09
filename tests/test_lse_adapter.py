@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import replace
 
 import travelogue.curation.screen_planner  # noqa: F401 — complete adapter import cycle
-
 from travelogue.config import get_config
 from travelogue.layout_engine.adapter import (
     mixed_proximity_from_pack,

@@ -9,9 +9,9 @@ from typing import Any
 from travelogue.config import AppConfig, get_config
 from travelogue.llm.client import chat_completion, parse_json_content
 from travelogue.services.decor_line import (
+    _max_chars,
     decor_line_facts_sufficient,
     validate_decor_line,
-    _max_chars,
 )
 from travelogue.services.narrate import _finalize_copy
 from travelogue.services.narrative_brief import build_chapter_decor_brief

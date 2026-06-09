@@ -207,7 +207,9 @@ def attach_screens_day_buckets(
             )
         finally:
             if highlight_active:
-                from travelogue.layout_engine.highlight_windows import clear_chapter_highlight_windows
+                from travelogue.layout_engine.highlight_windows import (
+                    clear_chapter_highlight_windows,
+                )
 
                 clear_chapter_highlight_windows()
         for sc in bucket_screens:

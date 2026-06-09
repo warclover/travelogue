@@ -42,8 +42,6 @@ def build_render_context(
         pick_image_src,
         share_zip_filename,
     )
-    from travelogue.render.engine import LONGSHOT_INDEX_NAME
-    from travelogue.render.reading_profile import reading_html_attrs
     from travelogue.render.cover_closing import (
         closing_focal_point,
         closing_use_contain_fit,
@@ -56,6 +54,8 @@ def build_render_context(
         cover_use_contain_fit,
         show_hook_on_cover,
     )
+    from travelogue.render.engine import LONGSHOT_INDEX_NAME
+    from travelogue.render.reading_profile import reading_html_attrs
     from travelogue.services.narrative_scope import resolve_cover_show_title
 
     surface = resolve_surface_context(

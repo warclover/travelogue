@@ -21,7 +21,6 @@ class LsePolicy:
 
     @classmethod
     def from_dict(cls, doc: dict[str, Any], *, base_dir: Path | None = None) -> LsePolicy:
-        root = base_dir or PACKAGE_ROOT
         strategies_rel = str(doc.get("strategies_dir", "travelogue/layout_engine/strategies"))
         strategies_path = Path(strategies_rel)
         if not strategies_path.is_absolute():

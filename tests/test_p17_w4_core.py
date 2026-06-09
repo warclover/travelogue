@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import replace
 from pathlib import Path
 
+from scripts.phase3_ig2_report import load_fixture_trip
 from travelogue.config.mosaic import MosaicConfig
 from travelogue.curation.feedback import record_g1_edit
 from travelogue.curation.mosaic.candidates import generate_window_candidates_with_rejections
@@ -24,7 +24,6 @@ from travelogue.layout_engine.slot_assignment import (
     pair_assignment_cost,
     refine_asset_order_hungarian,
 )
-from scripts.phase3_ig2_report import load_fixture_trip
 
 
 def _mixed_assets():
@@ -52,9 +51,9 @@ def test_hungarian_refine_deterministic() -> None:
     asset_ids = list(assets_map.keys())[:3]
     if len(asset_ids) < 3:
         return
-    from travelogue.curation.mosaic.pattern_catalog import patterns_for_window_size
     from travelogue.curation.mosaic.builders import build_screen
     from travelogue.curation.mosaic.lte_adapter import mosaic_registry
+    from travelogue.curation.mosaic.pattern_catalog import patterns_for_window_size
 
     reg = mosaic_registry()
     pats = patterns_for_window_size(3, reg)

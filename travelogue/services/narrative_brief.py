@@ -251,7 +251,11 @@ def build_chapter_decor_brief(
     cfg: AppConfig | None = None,
 ) -> dict[str, Any]:
     from travelogue.config import get_config
-    from travelogue.services.decor_line import _chapter_voice_excerpts, _copy_intent, extract_chapter_facts
+    from travelogue.services.decor_line import (
+        _chapter_voice_excerpts,
+        _copy_intent,
+        extract_chapter_facts,
+    )
 
     app_cfg = cfg or get_config()
     ch_cur = chapter.get("curation") or {}

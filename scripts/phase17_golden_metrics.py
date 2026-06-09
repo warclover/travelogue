@@ -20,10 +20,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from scripts.phase3_ig2_report import _cfg_for_mode, load_fixture_trip
+from tests.p17_golden_fixtures import P17_MIXED_FIXTURES
 from travelogue.config import AppConfig
 from travelogue.layout_engine.golden_probe import merge_gates, run_ac_probe
-from tests.p17_golden_fixtures import P17_MIXED_FIXTURES
-
 from travelogue.layout_engine.metrics import (
     assets_map_from_trip,
     compute_layout_golden_metrics,

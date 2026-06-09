@@ -18,7 +18,9 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-06-07: journal-screens.css collage sync (0ff0303) + screen-portrait-3
 # intrinsic row height (4fabb39) changed the shipped bundle without updating this golden.
 # Re-bumped 2026-06-08: lse-flags-admin.html + first-success.js i18n in studio bundle.
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}9423f78c33cf"
+# Re-bumped 2026-06-09: Lite Copy v1.1 + Web cover-opening/closing breath bundle
+# (breath.js/breath-gsap.js/journal.css + copy-toggle/inline-edit) changed shipped bytes.
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}1459a1c7c59e"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

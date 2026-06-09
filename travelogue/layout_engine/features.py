@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 
 def cover_focal_retention(
     slot_ar: float,

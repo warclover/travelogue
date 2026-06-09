@@ -23,7 +23,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.phase3_layout_acceptance import _weights_dict
-from travelogue.config import AppConfig, LayoutScoringConfig, get_config
+from travelogue.config import LayoutScoringConfig, get_config
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.curate import run_curate
 from travelogue.curation.layout_scoring import PHASE3B_WEIGHTS

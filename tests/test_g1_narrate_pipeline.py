@@ -68,8 +68,12 @@ def test_g1_narrate_then_dual_render(g1_workspace: Path) -> None:
     result = run_narrate(trip, provider="stub", scope="full")
     assert "meta.hook" in result.fields_updated
     assert trip["meta"]["hook"] and trip["meta"]["hook"] != before_hook
-    assert all(ch.get("lead") for ch in trip["chapters"])
-    assert len({ch["lead"] for ch in trip["chapters"]}) == len(trip["chapters"])
+    # Lite Copy v1.1: each chapter carries either a decorLine (preferred) or a lead.
+    chapter_copy = [
+        (ch.get("decorLine") or ch.get("lead") or "").strip() for ch in trip["chapters"]
+    ]
+    assert all(chapter_copy)
+    assert len(set(chapter_copy)) == len(chapter_copy)
     assert trip["pipeline"]["status"] == "copy_draft"
     trip_path.write_text(json.dumps(trip, ensure_ascii=False, indent=2), encoding="utf-8")
 

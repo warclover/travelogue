@@ -5,9 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from travelogue.layout_engine.shadow import SHADOW_SIDECAR, shadow_lse_from_cfg, shadow_metrics
-from travelogue.layout_engine.sandbox import cfg_lse_sandbox_pair
 from scripts.phase3_ig2_report import _cfg_for_mode, load_fixture_trip
+from travelogue.layout_engine.shadow import SHADOW_SIDECAR, shadow_lse_from_cfg, shadow_metrics
 
 
 def test_shadow_metrics_shape() -> None:

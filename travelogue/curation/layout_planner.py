@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Literal
 
+from travelogue.config import AppConfig
 from travelogue.curation.asset_subject import any_asset_has_person
 from travelogue.curation.burst_utils import sort_ids_by_sharpness, time_near_sequential
 from travelogue.curation.mobile_layout_state import (
@@ -18,7 +19,6 @@ from travelogue.curation.mobile_layout_state import (
     MobilePuzzlePlannerState,
     mobile_puzzle_enabled,
 )
-from travelogue.config import AppConfig
 from travelogue.media.image_ops import AspectKind, classify_aspect
 
 ExportLayout = Literal["auto", "mobile", "web"]

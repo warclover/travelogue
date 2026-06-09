@@ -6,18 +6,17 @@ from dataclasses import replace
 from pathlib import Path
 
 import travelogue.curation.screen_planner  # noqa: F401
-
 from scripts.phase3_ig2_report import _cfg_for_mode, _prepare_trip, load_fixture_trip
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.curate import run_curate
+from travelogue.layout_engine.adapter import mosaic_config_from_pack
+from travelogue.layout_engine.governance import normalize_lse_patch
+from travelogue.layout_engine.registry import get_strategy_pack
 from travelogue.layout_engine.runtime_store import (
     effective_disable_stages,
     load_lse_runtime,
     merge_approved_patch,
 )
-from travelogue.layout_engine.adapter import mosaic_config_from_pack
-from travelogue.layout_engine.governance import normalize_lse_patch
-from travelogue.layout_engine.registry import get_strategy_pack
 from travelogue.templating.config_governance import (
     approve_router_change,
     propose_layout_strategy_change,

@@ -9,10 +9,10 @@ from pathlib import Path
 import pytest
 
 from scripts.phase3_ig2_report import _cfg_for_mode, _prepare_trip, load_fixture_trip
+from tests._golden.helpers import layout_snapshot
 from tests.p17_golden_fixtures import P17_CONTROLLED_PARITY_FIXTURES
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.curate import run_curate
-from tests._golden.helpers import layout_snapshot
 
 
 def _cfg_with_lse(*, enabled: bool):

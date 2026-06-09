@@ -21,14 +21,13 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+import travelogue.curation.screen_planner  # noqa: F401
 from travelogue.config import AppConfig
 from travelogue.config.layout import LayoutStrategyCapabilitiesConfig, LayoutStrategyEngineConfig
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.curate import run_curate
 from travelogue.curation.layout_metrics import compute_layout_metrics
 from travelogue.layout_engine.registry import get_strategy_pack
-
-import travelogue.curation.screen_planner  # noqa: F401
 
 
 def _prepare_trip(trip: dict) -> dict:

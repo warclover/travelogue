@@ -10,15 +10,18 @@ from typing import Any
 from travelogue.config import AppConfig
 from travelogue.curation.asset_subject import asset_has_person
 from travelogue.curation.layout_metrics import pattern_diversity_p50
+from travelogue.curation.layout_scoring import screen_dominant_tone
 from travelogue.curation.mosaic.metrics import _MIXED_LAYOUT_PATTERNS
 from travelogue.curation.screen_layout_state import is_portrait_single_pattern
 from travelogue.layout_engine.features import salient_retention_for_slot
-from travelogue.layout_engine.highlight_windows import detect_highlight_windows, highlight_window_score
+from travelogue.layout_engine.highlight_windows import (
+    detect_highlight_windows,
+    highlight_window_score,
+)
 from travelogue.layout_engine.quality_features import QualityPool, build_quality_pool
 from travelogue.layout_engine.segment_order import same_person_run_lengths
 from travelogue.layout_engine.tone_adjacency import _hard_cut_exempt
 from travelogue.media.color_metrics import delta_e_cie76
-from travelogue.curation.layout_scoring import screen_dominant_tone
 
 FACE_INTACT_THRESHOLD = 0.55
 

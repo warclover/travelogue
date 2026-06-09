@@ -11,6 +11,7 @@ from travelogue.layout_engine.capabilities import (
     capabilities_from_pack,
     effective_capabilities,
 )
+from travelogue.layout_engine.governance import normalize_lse_patch, pending_lse_changes
 from travelogue.layout_engine.policy import load_policy
 from travelogue.layout_engine.query import (
     lookup_weights_by_hash,
@@ -19,7 +20,6 @@ from travelogue.layout_engine.query import (
 )
 from travelogue.layout_engine.registry import get_strategy_pack, list_active_strategies
 from travelogue.layout_engine.rollout import lse_rollout_snapshot
-from travelogue.layout_engine.governance import normalize_lse_patch, pending_lse_changes
 from travelogue.layout_engine.runtime_store import (
     load_lse_runtime,
     rollback_lse_runtime,
@@ -36,9 +36,9 @@ from travelogue.templating.config_governance import (
     approve_router_change,
     propose_layout_strategy_change,
 )
-from travelogue.web.studio_errors import client_error_payload
 from travelogue.templating.roles import require_template_role
 from travelogue.web.studio_admin_auth import require_admin_api_access, studio_authenticated
+from travelogue.web.studio_errors import client_error_payload
 from travelogue.web.studio_handlers.common import resolve_trip_dir_listed, studio_ctx
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 

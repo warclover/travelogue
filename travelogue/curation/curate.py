@@ -744,7 +744,6 @@ def run_curate(
         LAYOUT_ENGINE_SCREENS,
         LAYOUT_ENGINE_VERSION_SCREENS,
     )
-
     from travelogue.layout_engine.replan import (
         mark_layout_replan,
         record_applied_layout_density,

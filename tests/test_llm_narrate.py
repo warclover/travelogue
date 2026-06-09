@@ -148,10 +148,13 @@ def test_llm_narrate_dry_run_lists_fields():
 def test_llm_narrate_regenerate_planned_fields():
     trip = _sample_trip()
     run_narrate(trip, provider="stub", scope="full")
-    before_lead = trip["chapters"][0]["lead"]
+    # Lite Copy v1.1: chapters with a decorLine no longer carry a lead; pick one
+    # that still has a lead to exercise the regenerate lead-planning path.
+    lead_ch = next(ch for ch in trip["chapters"] if (ch.get("lead") or "").strip())
+    before_lead = lead_ch["lead"]
     result = run_llm_narrate(trip, provider="deepseek", dry_run=True, regenerate=True, scope="full")
-    assert f"chapters[{trip['chapters'][0]['index']}].lead" in result.fields_updated
-    assert trip["chapters"][0]["lead"] == before_lead
+    assert f"chapters[{lead_ch['index']}].lead" in result.fields_updated
+    assert lead_ch["lead"] == before_lead
 
 
 def test_llm_narrate_meta_ignores_stale_chapter_vr04():

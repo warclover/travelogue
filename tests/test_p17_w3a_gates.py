@@ -2,24 +2,23 @@
 
 from __future__ import annotations
 
-import pytest
-
 from dataclasses import replace
 from pathlib import Path
 
-import travelogue.curation.screen_planner  # noqa: F401
+import pytest
 
+import travelogue.curation.screen_planner  # noqa: F401
 from scripts.phase3_ig2_report import _cfg_for_mode, _prepare_trip, load_fixture_trip
 from tests._golden.helpers import layout_snapshot
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.curate import run_curate
 from travelogue.curation.layout_density import resolve_import_layout_density
-from travelogue.services.trip import apply_intent
 from travelogue.layout_engine.render_contract import (
     RENDER_ISOLATED_CURATION_KEYS,
     curation_for_render_contract,
     trip_render_fingerprint_payload,
 )
+from travelogue.services.trip import apply_intent
 
 
 def _quick_share_cfg(base=None):

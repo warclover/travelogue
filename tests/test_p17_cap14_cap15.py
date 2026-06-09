@@ -5,16 +5,14 @@ from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
 
-from travelogue.config import get_config
+from scripts.phase3_ig2_report import _cfg_for_mode, load_fixture_trip
 from travelogue.layout_engine.editorial_hints import build_editorial_hints
 from travelogue.layout_engine.highlight_windows import (
-    current_highlight_boost,
-    detect_highlight_windows,
     begin_chapter_highlight_windows,
     clear_chapter_highlight_windows,
+    current_highlight_boost,
+    detect_highlight_windows,
 )
-from scripts.phase3_ig2_report import _cfg_for_mode, load_fixture_trip
-from travelogue.layout_engine.metrics import curate_trip_chapters
 
 
 def test_detect_highlight_windows_top_windows() -> None:

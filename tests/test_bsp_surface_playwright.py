@@ -101,8 +101,8 @@ def _start_trips_server(trips_dir: Path, port: int):
         studio_port=port,
         studio_allow_lan=False,
     )
-    from http.server import ThreadingHTTPServer
     import threading
+    from http.server import ThreadingHTTPServer
 
     server = ThreadingHTTPServer(("127.0.0.1", port), handler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)

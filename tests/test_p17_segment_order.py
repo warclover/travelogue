@@ -5,14 +5,13 @@ from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
 
+from scripts.phase3_ig2_report import _cfg_for_mode, load_fixture_trip
 from travelogue.config import get_config
+from travelogue.layout_engine.metrics import curate_trip_chapters, same_person_run_p50
 from travelogue.layout_engine.segment_order import (
-    apply_segment_order_to_buckets,
     optimize_bucket_asset_ids,
     same_person_run_lengths,
 )
-from scripts.phase3_ig2_report import _cfg_for_mode, load_fixture_trip
-from travelogue.layout_engine.metrics import curate_trip_chapters, same_person_run_p50
 
 
 def test_burst_reorder_improves_person_runs() -> None:

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
 
 from travelogue.layout_engine.registry import list_strategy_files, load_strategy_pack

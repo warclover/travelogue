@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from travelogue.curation.mosaic.constants import PATTERN_FULL_FRAME
 from travelogue.curation.asset_subject import full_frame_fit_for_asset
+from travelogue.curation.mosaic.constants import PATTERN_FULL_FRAME
 from travelogue.curation.screen_planner import _fits_for_screen
 from travelogue.render.context import (
     _asset_aspect_ratio_float,

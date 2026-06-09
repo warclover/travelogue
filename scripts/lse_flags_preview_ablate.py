@@ -28,12 +28,11 @@ from lse_flags_curate_compare import (
     _screen_signatures,
 )
 
+import travelogue.curation.screen_planner  # noqa: F401
 from travelogue.config import AppConfig, get_config
 from travelogue.config.layout import LayoutStrategyCapabilitiesConfig
 from travelogue.curation.screen_planner import LAYOUT_ENGINE_SCREENS
 from travelogue.render.engine import render_trip
-
-import travelogue.curation.screen_planner  # noqa: F401
 
 CAP_ABLATIONS: list[tuple[str, dict[str, Any]]] = [
     ("saliency_scoring", {"saliency_scoring": True}),

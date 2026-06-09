@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import json
+from dataclasses import replace
 from pathlib import Path
 
+from travelogue.config import get_config
 from travelogue.layout_engine.adapter import resolve_pack, strategy_trace_meta
 from travelogue.layout_engine.query import lookup_weights_by_hash
 from travelogue.layout_engine.weights_audit import (
@@ -12,9 +13,6 @@ from travelogue.layout_engine.weights_audit import (
     lookup_weights_snapshot,
     record_pack_weights_snapshot,
 )
-from dataclasses import replace
-
-from travelogue.config import get_config
 
 
 def _lse_enabled_cfg():
