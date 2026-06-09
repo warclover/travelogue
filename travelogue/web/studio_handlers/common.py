@@ -163,6 +163,13 @@ def match_trip_chapter_copy_intent(path: str) -> tuple[str, str] | None:
     return trip_id, chapter_id
 
 
+def match_trip_copy_telemetry(path: str) -> str | None:
+    """POST /__travelogue/trips/{tripId}/copy-telemetry"""
+    from travelogue.web.studio_handlers.paths import COPY_TELEMETRY_SUFFIX
+
+    return match_trip_suffix(path, COPY_TELEMETRY_SUFFIX)
+
+
 def match_trip_screen_replan(path: str) -> tuple[str, str] | None:
     """PATCH /__travelogue/trips/{tripId}/screens/{screenId}/replan"""
     prefix = TRIPS_PATH + "/"

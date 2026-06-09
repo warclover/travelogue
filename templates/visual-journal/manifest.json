@@ -162,6 +162,7 @@
       "epilogue",
       "chapters.*.title",
       "chapters.*.lead",
+      "chapters.*.decorLine",
       "chapters.*.curation.memoryAnchors",
       "chapters.*.items.*.caption",
       "chapters.*.items.*.voice.transcript",

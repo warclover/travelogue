@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from travelogue.services.decor_line import chapter_has_voice
 from travelogue.templating.summary import build_template_summary
 from travelogue.web.studio_aesthetic import build_aesthetic_entry_summary
 from travelogue.web.studio_constants import STUDIO_USER_NOTES_MAX_LEN
@@ -135,6 +136,7 @@ def build_chapter_summaries(trip: dict) -> list[dict[str, Any]]:
                 "title": str(ch.get("title") or ch_id)[:12],
                 "memoryAnchors": list(curation.get("memoryAnchors") or [])[:3],
                 "copyIntent": dict(curation.get("copyIntent") or {}),
+                "hasVoice": chapter_has_voice(ch, trip),
             }
         )
     return rows

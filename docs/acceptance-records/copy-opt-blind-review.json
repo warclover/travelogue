@@ -1,0 +1,167 @@
+{
+  "phase": "lite-copy-v1.1",
+  "reviewDate": null,
+  "reviewer": null,
+  "sampleSize": 30,
+  "criteria": [
+    "不抢镜、不画蛇添足",
+    "像我的旅行 / 走心",
+    "点到即止"
+  ],
+  "samples": [
+    {
+      "chapterId": "ch-01",
+      "decorLine": "雨太大了，先回酒店拿伞，鸭川",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-01",
+      "decorLine": "走到鸭川，风很轻，鸭川",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-02",
+      "decorLine": "寺庙，京都",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-03",
+      "decorLine": "拉面，京都",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-04",
+      "decorLine": "走到雨，风很轻，雨",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-05",
+      "decorLine": "京都，鸭川",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-06",
+      "decorLine": "河原町，京都",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-07",
+      "decorLine": "走到鸭川，风很轻，鸭川",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-08",
+      "decorLine": "寺庙，京都",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-09",
+      "decorLine": "拉面，京都",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-10",
+      "decorLine": "走到雨，风很轻，雨",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-11",
+      "decorLine": "京都，鸭川",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-12",
+      "decorLine": "河原町，京都",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-13",
+      "decorLine": "走到鸭川，风很轻，鸭川",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-14",
+      "decorLine": "寺庙，京都",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-15",
+      "decorLine": "拉面，京都",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-16",
+      "decorLine": "走到雨，风很轻，雨",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-17",
+      "decorLine": "京都，鸭川",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-18",
+      "decorLine": "河原町，京都",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-19",
+      "decorLine": "走到鸭川，风很轻，鸭川",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-20",
+      "decorLine": "寺庙，京都",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-21",
+      "decorLine": "拉面，京都",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-22",
+      "decorLine": "走到雨，风很轻，雨",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-23",
+      "decorLine": "京都，鸭川",
+      "verdict": null,
+      "tags": []
+    },
+    {
+      "chapterId": "ch-24",
+      "decorLine": "河原町，京都",
+      "verdict": null,
+      "tags": []
+    }
+  ],
+  "summary": {
+    "passRate": null,
+    "notes": "Auto-seeded 25 chapters; fill verdict manually for AC-COPY-17"
+  }
+}

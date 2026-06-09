@@ -388,3 +388,55 @@ def test_handle_patch_copy_intent_chapter_not_found(tmp_path: Path) -> None:
         404,
         {"ok": False, "error": "E_CHAPTER_NOT_FOUND", "message": "chapter not found"},
     )
+
+
+def test_handle_patch_copy_intent_apply_to_subsequent(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trip_json = _trip_with_chapter(trips_dir)
+    svc = TripService(root=trips_dir.parent)
+    trip = svc.load(trip_json)
+    trip["chapters"] = [
+        {"id": "ch-01", "index": 1, "patternId": "open", "title": "一", "items": []},
+        {"id": "ch-02", "index": 2, "patternId": "open", "title": "二", "items": []},
+        {"id": "ch-03", "index": 3, "patternId": "open", "title": "三", "items": []},
+    ]
+    svc.save(trip, trip_json)
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={
+            "mood": "松弛",
+            "focus": "地方",
+            "note": "鸭川",
+            "applyToSubsequent": True,
+        },
+        path="/__travelogue/trips/demo-copy-intent/chapters/ch-02/copy-intent",
+    )
+    handle_patch_copy_intent(handler, "demo-copy-intent", "ch-02")
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 200
+    assert body["chapterIds"] == ["ch-02", "ch-03"]
+    saved = svc.load(trip_json)
+    assert "copyIntent" not in saved["chapters"][0].get("curation", {})
+    assert saved["chapters"][1]["curation"]["copyIntent"]["note"] == "鸭川"
+    assert saved["chapters"][2]["curation"]["copyIntent"]["focus"] == "地方"
+
+
+def test_handle_post_copy_telemetry(tmp_path: Path) -> None:
+    from travelogue.web.studio_handlers.trip_intent_handlers import handle_post_copy_telemetry
+
+    trips_dir = tmp_path / "trips"
+    trip_json = _trip_with_chapter(trips_dir)
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={"event": "photos_only_on"},
+        path="/__travelogue/trips/demo-copy-intent/copy-telemetry",
+    )
+    handle_post_copy_telemetry(handler, "demo-copy-intent")
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 200
+    assert body["event"] == "photos_only_on"
+    saved = TripService(root=trips_dir.parent).load(trip_json)
+    metrics = saved["curation"]["copyMetrics"]
+    assert metrics["clientEventCounts"]["photos_only_on"] == 1

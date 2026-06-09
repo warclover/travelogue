@@ -51,6 +51,8 @@ def chapter_lead_allowed(
     chapters: list[dict],
     scope: str,
 ) -> bool:
+    if (str(chapter.get("decorLine") or "").strip()):
+        return False
     scope = normalize_scope(scope)
     if scope == SCOPE_FULL:
         return True

@@ -352,6 +352,12 @@ def load_config(path: Path | None = None) -> AppConfig:
             decor_line_intent_note_max_chars=int(
                 narrative_raw.get("decor_line_intent_note_max_chars", 30)
             ),
+            decor_line_min_fact_count=int(narrative_raw.get("decor_line_min_fact_count", 2)),
+            decor_line_voice_first=bool(narrative_raw.get("decor_line_voice_first", True)),
+            decor_line_llm_enabled=bool(narrative_raw.get("decor_line_llm_enabled", False)),
+            decor_line_visual_facts_enabled=bool(
+                narrative_raw.get("decor_line_visual_facts_enabled", True)
+            ),
         ),
         llm=LlmConfig(
             provider=llm_provider,

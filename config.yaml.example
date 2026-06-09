@@ -394,6 +394,10 @@ narrative:
   decor_line_intent_enabled: true
   decor_line_intent_optional: true
   decor_line_intent_note_max_chars: 30
+  decor_line_min_fact_count: 2
+  decor_line_voice_first: true
+  decor_line_llm_enabled: true
+  decor_line_visual_facts_enabled: true
 
 # Phase 4 · Studio 工作台（M17 G1）
 studio:

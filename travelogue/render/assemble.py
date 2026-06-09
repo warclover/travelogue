@@ -179,6 +179,9 @@ def build_render_context(
         html_attrs.append('data-copy-toggle="on"')
     if surface.is_draft:
         html_attrs.append('data-inline-edit="on"')
+    trip_id = str(trip.get("tripId") or "").strip()
+    if surface.is_draft and trip_id:
+        html_attrs.append(f'data-trip-id="{trip_id}"')
     if surface.photos_only:
         html_attrs.append('data-copy-display="photos"')
     theme = surface.font_theme or (trip.get("export") or {}).get("fontTheme") or ""

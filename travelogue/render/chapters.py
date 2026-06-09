@@ -272,6 +272,8 @@ def build_chapters_render_context(
             "hasDecorLine": bool(decor_line),
             "editableLead": is_draft and bool(lead),
             "editLeadPath": f"chapters.{ch['id']}.lead" if is_draft else None,
+            "editableDecorLine": is_draft and bool(decor_line),
+            "editDecorLinePath": f"chapters.{ch['id']}.decorLine" if is_draft and decor_line else None,
             "hasMemoryAnchors": bool(anchors),
             "memoryAnchors": ",".join(anchors) if anchors else None,
             "useScreensEngine": use_screens,

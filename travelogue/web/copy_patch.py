@@ -8,6 +8,7 @@ from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 HOOK_MAX = 56
 EPILOGUE_MAX = 80
 LEAD_MAX = 80
+DECOR_LINE_MAX = 30
 CAPTION_MAX = 60
 TITLE_MAX = 14
 META_TITLE_MAX = 20
@@ -35,7 +36,7 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
     """
     Apply one edit path. Returns a short label for logging.
 
-    Paths: meta.hook, epilogue, chapters.<id>.lead,
+    Paths: meta.hook, epilogue, chapters.<id>.lead, chapters.<id>.decorLine,
            chapters.<id>.items.<index>.caption|voice.transcript,
            items.<assetId>.caption|title, assets.<assetId>.caption|voice.transcript
     """
@@ -83,6 +84,15 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
         for ch in trip.get("chapters") or []:
             if ch.get("id") == ch_id:
                 ch["lead"] = value[:LEAD_MAX]
+                ch["edited"] = True
+                return path
+        raise CopyPatchError("E_COPY_PATCH", f"unknown chapter {ch_id!r}")
+
+    if path.startswith("chapters.") and path.endswith(".decorLine"):
+        ch_id = path[len("chapters.") : -len(".decorLine")]
+        for ch in trip.get("chapters") or []:
+            if ch.get("id") == ch_id:
+                ch["decorLine"] = value[:DECOR_LINE_MAX]
                 ch["edited"] = True
                 return path
         raise CopyPatchError("E_COPY_PATCH", f"unknown chapter {ch_id!r}")
@@ -197,4 +207,13 @@ def apply_copy_patches(trip: dict, patches: list[dict]) -> list[str]:
             pipe["status"] = "copy_draft"
             locks = pipe.setdefault("locks", {})
             locks["copy"] = False
+        copy_paths = {
+            p
+            for p in paths
+            if p in ("meta.hook", "epilogue") or p.endswith(".decorLine") or p.endswith(".lead")
+        }
+        if copy_paths:
+            from travelogue.services.copy_metrics import record_copy_metrics
+
+            record_copy_metrics(trip)
     return updated

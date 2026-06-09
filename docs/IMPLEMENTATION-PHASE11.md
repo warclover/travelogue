@@ -2,7 +2,8 @@
 
 | 属性 | 内容 |
 |------|------|
-| **PRD** | [PRD-PHASE11-copy-optimization.md](./PRD-PHASE11-copy-optimization.md) v0.11.0 |
+| **PRD** | [PRD-PHASE11-copy-optimization.md](./PRD-PHASE11-copy-optimization.md) v0.11.0 · 总纲 [PRD-COPY-OPTIMIZATION.md](./PRD-COPY-OPTIMIZATION.md) v1.1 |
+| **v1.1 增量** | [IMPLEMENTATION-COPY-OPTIMIZATION.md](./IMPLEMENTATION-COPY-OPTIMIZATION.md) |
 | **验收** | [ACCEPTANCE-PHASE11.md](./ACCEPTANCE-PHASE11.md) |
 | **里程碑** | M11 · Lite Copy |
 | **状态** | **W1/W2 Done · W3 部分**（盲评 AC-P11-04 待人工） |

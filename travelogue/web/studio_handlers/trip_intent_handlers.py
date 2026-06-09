@@ -130,7 +130,10 @@ def handle_patch_cohort(handler: StudioHandlerProtocol, trip_id: str) -> None:
 def handle_patch_copy_intent(
     handler: StudioHandlerProtocol, trip_id: str, chapter_id: str
 ) -> None:
-    from travelogue.services.decor_line import apply_chapter_copy_intent, validate_copy_intent
+    from travelogue.services.decor_line import (
+        apply_copy_intent_cascade,
+        validate_copy_intent,
+    )
 
     payload = handler._read_json_body()
     if payload is None:
@@ -154,6 +157,7 @@ def handle_patch_copy_intent(
         (idx for idx, ch in enumerate(chapters) if ch.get("id") == chapter_id),
         None,
     )
+    apply_to_subsequent = bool(payload.get("applyToSubsequent"))
     if payload.get("clear"):
         intent_payload: dict | None = {"mood": None, "focus": None, "note": None}
     else:
@@ -161,35 +165,106 @@ def handle_patch_copy_intent(
         if not intent_payload:
             handler._json_response(400, {"ok": False, "error": "no copyIntent fields"})
             return
-    staging = copy.deepcopy(chapter)
-    staging_curation = staging.setdefault("curation", {})
-    staging_existing = dict(staging_curation.get("copyIntent") or {})
-    for key in ("mood", "focus", "note"):
-        if intent_payload is None or key not in intent_payload:
-            continue
-        val = intent_payload[key]
-        if val is None or (isinstance(val, str) and not str(val).strip()):
-            staging_existing.pop(key, None)
-        else:
-            staging_existing[key] = str(val).strip()
-    if staging_existing:
-        staging_curation["copyIntent"] = staging_existing
-    else:
-        staging_curation.pop("copyIntent", None)
-    errs = validate_copy_intent(staging, chapter_index=chapter_index)
-    if errs:
+
+    start_idx = next(
+        (idx for idx, ch in enumerate(chapters) if ch.get("id") == chapter_id),
+        None,
+    )
+    if start_idx is None:
         handler._json_response(
-            400,
-            {"ok": False, "error": "E_COPY_INTENT_INVALID", "message": errs[0]},
+            404,
+            {"ok": False, "error": "E_CHAPTER_NOT_FOUND", "message": "chapter not found"},
         )
         return
-    intent = apply_chapter_copy_intent(chapter, intent_payload)
+    target_chapters = (
+        chapters[start_idx:] if apply_to_subsequent else [chapters[start_idx]]
+    )
+    for staging in target_chapters:
+        staging_copy = copy.deepcopy(staging)
+        staging_curation = staging_copy.setdefault("curation", {})
+        staging_existing = dict(staging_curation.get("copyIntent") or {})
+        for key in ("mood", "focus", "note"):
+            if intent_payload is None or key not in intent_payload:
+                continue
+            val = intent_payload[key]
+            if val is None or (isinstance(val, str) and not str(val).strip()):
+                staging_existing.pop(key, None)
+            else:
+                staging_existing[key] = str(val).strip()
+        if staging_existing:
+            staging_curation["copyIntent"] = staging_existing
+        else:
+            staging_curation.pop("copyIntent", None)
+        ch_index = next(
+            (idx for idx, ch in enumerate(chapters) if ch.get("id") == staging.get("id")),
+            chapter_index,
+        )
+        errs = validate_copy_intent(staging_copy, chapter_index=ch_index)
+        if errs:
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_COPY_INTENT_INVALID",
+                    "message": errs[0],
+                    "chapterId": staging.get("id"),
+                },
+            )
+            return
+
+    updated_ids = apply_copy_intent_cascade(
+        trip,
+        chapter_id,
+        intent_payload,
+        apply_to_subsequent=apply_to_subsequent,
+    )
+    from travelogue.services.decor_line import _copy_intent
+
+    intent = _copy_intent(chapter)
     trip_json = trip_dir / "trip.json"
     studio_ctx(handler).trip_service().save(trip, trip_json)
     handler._json_response(
         200,
-        {"ok": True, "chapterId": chapter_id, "copyIntent": intent or None},
+        {
+            "ok": True,
+            "chapterId": chapter_id,
+            "chapterIds": updated_ids,
+            "applyToSubsequent": apply_to_subsequent,
+            "copyIntent": intent or None,
+        },
     )
+
+
+def handle_post_copy_telemetry(handler: StudioHandlerProtocol, trip_id: str) -> None:
+    from travelogue.services.copy_metrics import ALLOWED_COPY_UI_EVENTS, record_copy_ui_event
+
+    payload = handler._read_json_body()
+    if not isinstance(payload, dict):
+        handler._json_response(400, {"ok": False, "error": "invalid JSON body"})
+        return
+    event = str(payload.get("event") or "").strip()
+    if event not in ALLOWED_COPY_UI_EVENTS:
+        handler._json_response(
+            400,
+            {
+                "ok": False,
+                "error": "invalid event",
+                "allowed": sorted(ALLOWED_COPY_UI_EVENTS),
+            },
+        )
+        return
+    loaded = load_trip_or_404(handler, trip_id)
+    if loaded is None:
+        return
+    trip_dir, trip = loaded
+    try:
+        metrics = record_copy_ui_event(trip, event)
+    except ValueError as exc:
+        handler._json_response(400, client_error_payload(exc))
+        return
+    trip_json = trip_dir / "trip.json"
+    studio_ctx(handler).trip_service().save(trip, trip_json)
+    handler._json_response(200, {"ok": True, "event": event, "copyMetrics": metrics})
 
 
 def handle_post_cohort_refresh(handler: StudioHandlerProtocol, trip_id: str) -> None:

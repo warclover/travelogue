@@ -15,7 +15,7 @@
   {{/if}}
   {{#unless useChapterSeparator}}
   {{#if hasDecorLine}}
-  <p class="chapter-decor-line" data-block="decor-line">{{decorLine}}</p>
+  <p class="chapter-decor-line" data-block="decor-line"{{#if editableDecorLine}} data-editable="decor-line" data-edit-path="{{editDecorLinePath}}"{{/if}}>{{decorLine}}</p>
   {{/if}}
   {{#if hasLead}}
   <p class="chapter-lead" data-block="chapter-lead"{{#if editableLead}} data-editable="lead" data-edit-path="{{editLeadPath}}"{{/if}}>{{lead}}</p>

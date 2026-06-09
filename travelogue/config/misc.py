@@ -39,6 +39,10 @@ class NarrativeConfig:
     decor_line_intent_enabled: bool = True
     decor_line_intent_optional: bool = True
     decor_line_intent_note_max_chars: int = 30
+    decor_line_min_fact_count: int = 2
+    decor_line_voice_first: bool = True
+    decor_line_llm_enabled: bool = False
+    decor_line_visual_facts_enabled: bool = True
 
 
 @dataclass

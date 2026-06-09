@@ -1,0 +1,26 @@
+{
+  "generatedAt": "2026-06-09T07:58:57.324303+00:00",
+  "phase": "lite-copy-v1.1",
+  "metrics": {
+    "decor_line_fill_rate": 0.962,
+    "decor_line_empty_rate": 0.038,
+    "generic_phrase_hits": 0,
+    "chapters_sampled": 26,
+    "chapters_with_decor_line": 25,
+    "copy_total_chars_median": 14,
+    "intent_adoption_rate": 0.0
+  },
+  "acceptance": {
+    "AC-COPY-01": {
+      "pass": true,
+      "median_chars": 14,
+      "max_median": 120
+    },
+    "AC-COPY-11": {
+      "pass": true,
+      "chapters_sampled": 26,
+      "min_samples": 20
+    }
+  },
+  "notes": "Synthetic fixtures; complete blind review in copy-opt-blind-review.json"
+}

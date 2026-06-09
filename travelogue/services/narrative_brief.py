@@ -251,11 +251,17 @@ def build_chapter_decor_brief(
     cfg: AppConfig | None = None,
 ) -> dict[str, Any]:
     from travelogue.config import get_config
-    from travelogue.services.decor_line import _copy_intent, extract_chapter_facts
+    from travelogue.services.decor_line import _chapter_voice_excerpts, _copy_intent, extract_chapter_facts
 
     app_cfg = cfg or get_config()
     ch_cur = chapter.get("curation") or {}
-    facts = extract_chapter_facts(chapter, trip)
+    facts = extract_chapter_facts(chapter, trip, cfg=app_cfg)
+    voice_excerpts = _chapter_voice_excerpts(chapter, trip)
+    visual_facts: list[str] = []
+    if app_cfg.narrative.decor_line_visual_facts_enabled:
+        from travelogue.services.visual_facts import extract_visual_facts
+
+        visual_facts = extract_visual_facts(chapter, trip)
     intent = _copy_intent(chapter) if app_cfg.narrative.decor_line_intent_enabled else {}
     limits = manifest_limits_brief()
     limits["decorLineMaxChars"] = app_cfg.narrative.decor_line_max_chars
@@ -267,6 +273,8 @@ def build_chapter_decor_brief(
             "index": chapter.get("index"),
             "title": chapter.get("title"),
             "facts": facts[:8],
+            "voiceExcerpts": voice_excerpts[:3],
+            "visualFacts": visual_facts[:4],
             "memoryAnchors": ch_cur.get("memoryAnchors") or [],
             "copyIntent": intent,
             "existingDecorLine": "" if regenerate else (chapter.get("decorLine") or ""),

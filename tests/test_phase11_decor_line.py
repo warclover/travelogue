@@ -132,7 +132,7 @@ def test_run_narrate_stub_writes_decor_line() -> None:
     trip = _sample_trip()
     run_narrate(trip, provider="stub")
     assert "decorLine" in trip["chapters"][0]
-    assert trip.setdefault("curation", {}).get("copyStyle", {}).get("phase") == "p11-lite-line"
+    assert trip.setdefault("curation", {}).get("copyStyle", {}).get("phase") == "lite-copy-v1.1"
 
 
 def test_copy_intent_handler_to_narrate_integration(tmp_path: Path) -> None:

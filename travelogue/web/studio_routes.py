@@ -28,6 +28,7 @@ from travelogue.web.studio_handlers.common import (
     match_trip_api,
     match_trip_asset_media,
     match_trip_chapter_copy_intent,
+    match_trip_copy_telemetry,
     match_trip_cohort,
     match_trip_cohort_refresh,
     match_trip_curate,
@@ -385,6 +386,10 @@ class StudioMixin:
         cohort_refresh_id = match_trip_cohort_refresh(path)
         if cohort_refresh_id is not None:
             trip_handlers.handle_post_cohort_refresh(self, cohort_refresh_id)
+            return True
+        copy_telemetry_trip_id = match_trip_copy_telemetry(path)
+        if copy_telemetry_trip_id is not None:
+            trip_handlers.handle_post_copy_telemetry(self, copy_telemetry_trip_id)
             return True
         return False
 

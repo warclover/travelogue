@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import copy
 
+from travelogue.config import AppConfig, NarrativeConfig
 from travelogue.services.narrate import BANNED_PHRASES, _manifest_limits, run_narrate
+
+
+def _lead_test_cfg() -> AppConfig:
+    """Lead-focused narrate tests opt out of decorLine (mutually exclusive)."""
+    return AppConfig(narrative=NarrativeConfig(decor_line_enabled=False))
 
 
 def _sample_trip() -> dict:
@@ -51,7 +57,7 @@ def _sample_trip() -> dict:
 
 def test_narrate_fills_hook_leads_epilogue() -> None:
     trip = _sample_trip()
-    result = run_narrate(trip, tone="relaxed", provider="stub", scope="full")
+    result = run_narrate(trip, tone="relaxed", provider="stub", scope="full", cfg=_lead_test_cfg())
     assert "meta.hook" in result.fields_updated
     assert trip["meta"]["hook"]
     assert "京都" in trip["meta"]["hook"]
@@ -64,16 +70,16 @@ def test_narrate_respects_edited_chapter() -> None:
     trip = _sample_trip()
     trip["chapters"][0]["edited"] = True
     trip["chapters"][0]["lead"] = "用户写的导语"
-    run_narrate(trip, provider="stub", scope="full")
+    run_narrate(trip, provider="stub", scope="full", cfg=_lead_test_cfg())
     assert trip["chapters"][0]["lead"] == "用户写的导语"
 
 
 def test_narrate_documentary_tone_differs() -> None:
     trip = _sample_trip()
-    run_narrate(trip, tone="documentary", provider="stub", scope="full")
+    run_narrate(trip, tone="documentary", provider="stub", scope="full", cfg=_lead_test_cfg())
     doc_hook = trip["meta"]["hook"]
     trip2 = _sample_trip()
-    run_narrate(trip2, tone="relaxed", provider="stub", scope="full")
+    run_narrate(trip2, tone="relaxed", provider="stub", scope="full", cfg=_lead_test_cfg())
     assert doc_hook != trip2["meta"]["hook"]
 
 
@@ -83,14 +89,14 @@ def test_narrate_uses_voice_excerpt() -> None:
         "transcriptPreview": "雨太大了先回酒店",
         "transcript": "雨太大了我们先回酒店。",
     }
-    run_narrate(trip, provider="stub", scope="full")
+    run_narrate(trip, provider="stub", scope="full", cfg=_lead_test_cfg())
     assert "雨太大了" in trip["chapters"][1]["lead"]
 
 
 def test_narrate_lead_day_format_f_nar_p2_01() -> None:
     trip = _sample_trip()
     trip["assets"][1]["takenAt"] = "2025-04-03T10:00:00Z"
-    run_narrate(trip, provider="stub", scope="full")
+    run_narrate(trip, provider="stub", scope="full", cfg=_lead_test_cfg())
     lead = trip["chapters"][1]["lead"]
     assert lead.startswith("Day 2 ·")
     assert "4月3日" in lead
@@ -102,7 +108,7 @@ def test_narrate_lead_does_not_repeat_title_place() -> None:
     trip["meta"]["places"] = ["林芝"]
     trip["chapters"][1]["title"] = "5月–6月·林芝·2"
     trip["chapters"][1]["lead"] = ""
-    run_narrate(trip, provider="stub", scope="full")
+    run_narrate(trip, provider="stub", scope="full", cfg=_lead_test_cfg())
     lead = trip["chapters"][1]["lead"]
     assert lead
     assert not lead.startswith(trip["chapters"][1]["title"])
@@ -113,7 +119,7 @@ def test_narrate_regenerate_overwrites_existing_lead() -> None:
     trip = _sample_trip()
     trip["chapters"][1]["title"] = "5月–6月·林芝·2"
     trip["chapters"][1]["lead"] = "5月–6月·林芝·2，林芝。"
-    run_narrate(trip, provider="stub", regenerate=True, scope="full")
+    run_narrate(trip, provider="stub", regenerate=True, scope="full", cfg=_lead_test_cfg())
     lead = trip["chapters"][1]["lead"]
     assert lead != "5月–6月·林芝·2，林芝。"
     assert not lead.startswith("5月–6月·林芝·2")
@@ -122,14 +128,14 @@ def test_narrate_regenerate_overwrites_existing_lead() -> None:
 def test_narrate_dry_run_no_mutation() -> None:
     trip = _sample_trip()
     before = copy.deepcopy(trip)
-    result = run_narrate(trip, dry_run=True, provider="stub", scope="full")
+    result = run_narrate(trip, dry_run=True, provider="stub", scope="full", cfg=_lead_test_cfg())
     assert result.fields_updated
     assert trip == before
 
 
 def test_narrate_respects_manifest_char_limits() -> None:
     trip = _sample_trip()
-    run_narrate(trip, provider="stub", scope="full")
+    run_narrate(trip, provider="stub", scope="full", cfg=_lead_test_cfg())
     lim = _manifest_limits()
     assert len(trip["meta"]["hook"]) <= lim["hookMaxChars"]
     for ch in trip["chapters"]:
@@ -152,6 +158,6 @@ def test_narrate_unique_leads_per_chapter() -> None:
     trip = _sample_trip()
     for ch in trip["chapters"]:
         ch["title"] = "4月2日"
-    run_narrate(trip, provider="stub", scope="full")
+    run_narrate(trip, provider="stub", scope="full", cfg=_lead_test_cfg())
     leads = [ch["lead"] for ch in trip["chapters"]]
     assert len(leads) == len(set(leads))

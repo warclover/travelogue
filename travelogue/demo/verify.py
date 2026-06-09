@@ -23,6 +23,8 @@ QUICK_TEST_PATHS = [
     "tests/test_demo_from_album.py",
     "tests/test_dom_regression.py",
     "tests/test_demo_verify.py",
+    "tests/test_copy_optimization.py",
+    "tests/test_phase11_decor_line.py",
     "tests/test_golden_reference.py",
     "tests/test_cover_scoring_v2.py",
     "tests/test_cover_scoring_v2_gates.py",

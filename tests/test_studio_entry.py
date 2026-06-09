@@ -153,6 +153,33 @@ def test_chapter_summaries_includes_copy_intent() -> None:
     assert rows[0]["copyIntent"] == {"mood": "平静", "focus": "地方", "note": "雨后"}
 
 
+def test_chapter_summaries_has_voice_flag() -> None:
+    trip = {
+        "assets": [
+            {
+                "id": "a1",
+                "type": "image",
+                "voice": {"transcriptPreview": "雨太大了"},
+            }
+        ],
+        "chapters": [
+            {
+                "id": "ch-01",
+                "title": "雨后",
+                "items": [{"type": "media-card", "assetId": "a1"}],
+            },
+            {
+                "id": "ch-02",
+                "title": "空白",
+                "items": [{"type": "media-card", "assetId": "missing"}],
+            },
+        ],
+    }
+    rows = build_chapter_summaries(trip)
+    assert rows[0]["hasVoice"] is True
+    assert rows[1]["hasVoice"] is False
+
+
 def test_chapter_summaries_empty_without_chapters():
     assert build_chapter_summaries({}) == []
     summary = build_intent_summary({})

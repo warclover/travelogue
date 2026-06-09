@@ -47,6 +47,8 @@ def copy_path_to_scope(path: str) -> str:
             return f"chapters.*.items.*.{field}"
     if p.startswith("chapters.") and p.endswith(".lead"):
         return "chapters.*.lead"
+    if p.startswith("chapters.") and p.endswith(".decorLine"):
+        return "chapters.*.decorLine"
     if p.endswith(".curation.memoryAnchors") and p.startswith("chapters."):
         return "chapters.*.curation.memoryAnchors"
     if p.startswith("assets.") and p.endswith(".caption"):

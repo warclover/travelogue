@@ -49,6 +49,21 @@ def _asset_valid_for_closing(asset_id: str | None, assets: dict[str, dict]) -> b
     return bool(asset.get("layoutEligible", True))
 
 
+def _cover_ids_to_exclude(trip: dict) -> set[str]:
+    """Cover asset ids that must not be reused on the closing hero."""
+    out: set[str] = set()
+    primary = str(trip.get("coverAssetId") or "").strip()
+    if primary:
+        out.add(primary)
+    by_layout = (trip.get("curation") or {}).get("coverByLayout") or {}
+    if isinstance(by_layout, dict):
+        for value in by_layout.values():
+            aid = str(value or "").strip()
+            if aid:
+                out.add(aid)
+    return out
+
+
 def asset_is_landscape(asset: dict) -> bool:
     ar = cover_asset_aspect(asset)
     return ar is not None and ar >= _LANDSCAPE_MIN_AR
@@ -122,15 +137,15 @@ def _unused_closing_asset_ids(
     assets: dict[str, dict],
     *,
     screen_used_ids: set[str],
+    exclude_ids: set[str],
 ) -> list[str]:
     """Layout-eligible assets not on any screen and not the cover (soft fresh pick)."""
-    cover_id = str(trip.get("coverAssetId") or "").strip()
     out: list[str] = []
     for asset in trip.get("assets") or []:
         aid = str(asset.get("id") or "").strip()
         if not _asset_valid_for_closing(aid, assets):
             continue
-        if aid in screen_used_ids or aid == cover_id:
+        if aid in screen_used_ids or aid in exclude_ids:
             continue
         out.append(aid)
     out.sort(key=lambda aid: _closing_curated_score(assets[aid]))
@@ -142,18 +157,22 @@ def _closing_candidate_ids(
     assets: dict[str, dict],
     *,
     screen_used_ids: set[str],
+    exclude_ids: set[str],
 ) -> list[str]:
     """Unused pool first, then screen assets newest-first (soft dedupe)."""
     ordered: list[str] = []
     seen: set[str] = set()
-    for aid in _unused_closing_asset_ids(trip, assets, screen_used_ids=screen_used_ids):
+    for aid in _unused_closing_asset_ids(
+        trip, assets, screen_used_ids=screen_used_ids, exclude_ids=exclude_ids
+    ):
         if aid not in seen:
             seen.add(aid)
             ordered.append(aid)
     for aid in _trip_screen_asset_ids_newest_first(trip):
-        if aid not in seen:
-            seen.add(aid)
-            ordered.append(aid)
+        if aid in exclude_ids or aid in seen:
+            continue
+        seen.add(aid)
+        ordered.append(aid)
     return ordered
 
 
@@ -163,9 +182,14 @@ def _pick_best_closing(
     *,
     prefer_landscape: bool,
     screen_used_ids: set[str],
+    exclude_ids: set[str],
 ) -> str | None:
     """Rank: (1) not on other pages (2) landscape if web (3) tone (4) recency."""
-    eligible = [aid for aid in ordered_aids if _asset_valid_for_closing(aid, assets)]
+    eligible = [
+        aid
+        for aid in ordered_aids
+        if _asset_valid_for_closing(aid, assets) and aid not in exclude_ids
+    ]
     if not eligible:
         return None
 
@@ -189,18 +213,21 @@ def last_chapter_curated_asset_id(
     *,
     prefer_landscape: bool = False,
     screen_used_ids: set[str] | None = None,
+    exclude_ids: set[str] | None = None,
 ) -> str | None:
     """S2 · pick from last chapter screens (low sat / evening bias)."""
     chapters = trip.get("chapters") or []
     if not chapters:
         return None
     used = screen_used_ids if screen_used_ids is not None else collect_layout_screen_asset_ids(trip)
-    candidates = _chapter_screen_asset_ids(chapters[-1])
+    excluded = exclude_ids if exclude_ids is not None else _cover_ids_to_exclude(trip)
+    candidates = [aid for aid in _chapter_screen_asset_ids(chapters[-1]) if aid not in excluded]
     return _pick_best_closing(
         candidates,
         assets,
         prefer_landscape=prefer_landscape,
         screen_used_ids=used,
+        exclude_ids=excluded,
     )
 
 
@@ -216,12 +243,16 @@ def resolve_closing_asset_id(
     allowed when no better candidate exists (soft dedupe, not enforced).
     """
     screen_used = collect_layout_screen_asset_ids(trip)
-    ordered = _closing_candidate_ids(trip, assets, screen_used_ids=screen_used)
+    exclude_ids = _cover_ids_to_exclude(trip)
+    ordered = _closing_candidate_ids(
+        trip, assets, screen_used_ids=screen_used, exclude_ids=exclude_ids
+    )
     picked = _pick_best_closing(
         ordered,
         assets,
         prefer_landscape=prefer_landscape,
         screen_used_ids=screen_used,
+        exclude_ids=exclude_ids,
     )
     if picked:
         return picked
@@ -230,6 +261,7 @@ def resolve_closing_asset_id(
         assets,
         prefer_landscape=prefer_landscape,
         screen_used_ids=screen_used,
+        exclude_ids=exclude_ids,
     )
 
 

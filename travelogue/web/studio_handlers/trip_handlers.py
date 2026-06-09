@@ -10,6 +10,7 @@ from travelogue.web.studio_handlers.trip_intent_handlers import (
     handle_patch_intent,
     handle_patch_template,
     handle_post_cohort_refresh,
+    handle_post_copy_telemetry,
 )
 from travelogue.web.studio_handlers.trip_list_handlers import (
     handle_aesthetic,
@@ -41,6 +42,7 @@ __all__ = [
     "handle_patch_screen_replan",
     "handle_patch_template",
     "handle_post_cohort_refresh",
+    "handle_post_copy_telemetry",
     "handle_rerender",
     "handle_trip_curate",
     "handle_trips",

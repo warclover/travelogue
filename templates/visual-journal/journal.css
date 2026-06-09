@@ -1198,6 +1198,14 @@ html[data-layout="mobile"] .media-card__overlay-text {
   height: 32px;
 }
 
+.voice-bar__source {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0.85;
+  letter-spacing: 0.02em;
+}
+
 .voice-bar__duration {
   font-size: 13px;
   color: var(--muted);

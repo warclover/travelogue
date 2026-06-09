@@ -39,10 +39,12 @@ SYSTEM_PROMPT = """你是旅行视觉游记的文案编辑。你只输出合法 
 2. 严格遵守 brief.limits 字数上限（按字符计）。
 3. 只写 brief 中 fieldsRequested 请求的字段；brief.existing 已有内容不要重复输出。
 4. 地点、人物、事件必须来自 brief；优先用 trip.editorialSubject 作为全书主语（杂志名/主题）。若 placesUserSet 为 false，不要用 trip.places 或 EXIF 城市覆盖 editorialSubject。
-5. 禁用词：综上所述、值得一提的是、不可否认、众所周知、总而言之、美不胜收、令人难忘。
+5. 禁用词：综上所述、值得一提的是、不可否认、众所周知、总而言之、美不胜收、令人难忘、值得、美好、精彩。
 6. relaxed 语气可感官细节；documentary 语气偏时间地点事实，少用感叹号。
 7. lead 不要复述 chapter.title，不要以 chapter.title 开头，也不要写成“标题，地点。”这种格式。
-8. 若 brief 中 items[].skipCaption 为 true（或 assets[].skipCaption），不要输出该图的 caption。"""
+8. 若 brief 中 items[].skipCaption 为 true（或 assets[].skipCaption），不要输出该图的 caption。
+9. 负向示例：不要写「这次旅行令人难忘」；可写「雨太大，先回酒店拿伞」。
+10. 禁止解释照片意义，禁止导游词；caption 优先精简 voiceExcerpt。"""
 
 
 def _meta_user_prompt(brief: dict[str, Any], *, fix_errors: list[str] | None = None) -> str:

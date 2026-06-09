@@ -30,6 +30,20 @@ BANNED_PHRASES: tuple[str, ...] = (
     "众所周知",
     "总而言之",
     "换句话说",
+    "美不胜收",
+    "令人难忘",
+)
+
+GENERIC_COPY_WORDS: tuple[str, ...] = (
+    "值得",
+    "难忘",
+    "美好",
+    "精彩",
+    "瞬间",
+    "回忆",
+    "旅程",
+    "风景",
+    "记录",
 )
 
 
@@ -56,6 +70,8 @@ def _strip_banned(text: str) -> str:
     out = text
     for phrase in BANNED_PHRASES:
         out = out.replace(phrase, "")
+    for word in GENERIC_COPY_WORDS:
+        out = out.replace(word, "")
     return re.sub(r"\s{2,}", " ", out).strip()
 
 
@@ -447,7 +463,12 @@ def run_narrate(
             )
     if prov == "stub":
         result = _run_narrate_stub(
-            trip, tone=tone, dry_run=dry_run, regenerate=regenerate, scope=scope_val
+            trip,
+            tone=tone,
+            dry_run=dry_run,
+            regenerate=regenerate,
+            scope=scope_val,
+            cfg=app_cfg,
         )
         return result
     result = run_llm_narrate(
@@ -482,6 +503,7 @@ def _run_narrate_stub(
     dry_run: bool = False,
     regenerate: bool = False,
     scope: str = "frame",
+    cfg: AppConfig | None = None,
 ) -> NarrateResult:
     """Rule-based hook and chapter leads (no LLM)."""
     from travelogue.services.narrative_scope import chapter_lead_allowed
@@ -517,6 +539,17 @@ def _run_narrate_stub(
                 lim["hookMaxChars"],
             )
         updated.append("meta.hook")
+
+    from travelogue.services.decor_line import apply_decor_lines
+
+    updated.extend(
+        apply_decor_lines(
+            trip,
+            regenerate=regenerate,
+            dry_run=dry_run,
+            cfg=cfg,
+        )
+    )
 
     for ch in chapters:
         if ch.get("edited"):
@@ -561,18 +594,6 @@ def _run_narrate_stub(
         intent=intent,
     )
     updated.extend(caption_updates)
-
-    from travelogue.config import get_config
-    from travelogue.services.decor_line import apply_decor_lines
-
-    updated.extend(
-        apply_decor_lines(
-            trip,
-            regenerate=regenerate,
-            dry_run=dry_run,
-            cfg=get_config(),
-        )
-    )
 
     if dry_run:
         return NarrateResult(fields_updated=updated)

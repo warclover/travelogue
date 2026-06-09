@@ -1492,7 +1492,8 @@ var narrateJobId = null;
       '<input type="text" class="preview-drawer__anchor" maxlength="24" placeholder="锚点 3">' +
       "</div>" +
       '<p class="preview-drawer__hint">短词即可，会写进图说，不会瞎编</p>' +
-      '<p class="preview-drawer__label">章级意图（可选）</p>' +
+      '<details class="preview-drawer__copy-intent">' +
+      '<summary class="preview-drawer__label">章级意图（可选）</summary>' +
       '<p class="preview-drawer__sublabel">这一章更像什么感觉？</p>' +
       '<div class="preview-drawer__chips preview-drawer__chips--mood" role="group" aria-label="章级情绪">' +
       buildCopyIntentChipHtml(COPY_INTENT_MOODS, "preview-drawer__chip-mood") +
@@ -1503,7 +1504,12 @@ var narrateJobId = null;
       "</div>" +
       '<label class="preview-drawer__label" for="preview-drawer-copy-intent-note">短念头（≤30 字）</label>' +
       '<input id="preview-drawer-copy-intent-note" class="preview-drawer__copy-intent-note" type="text" maxlength="30" autocomplete="off" placeholder="例如：雨停后风很轻">' +
-      '<p class="preview-drawer__hint">可选填，影响章级点缀句；不填也能正常出稿</p>' +
+      '<label class="preview-drawer__copy-intent-apply">' +
+      '<input type="checkbox" class="preview-drawer__copy-intent-subsequent" /> 应用到后续章节' +
+      "</label>" +
+      '<p class="preview-drawer__hint preview-drawer__copy-intent-hint">可选填；有语音素材时会优先用原声</p>' +
+      '<p class="preview-drawer__hint preview-drawer__copy-intent-voice-skip" hidden>本章有录音，已优先用原声，无需填写意图</p>' +
+      "</details>" +
       '<p class="preview-drawer__featured-help">★ 在任意一屏右下角可将照片标为精选，之后点「应用排版」生效</p>' +
       '<p class="preview-drawer__featured-help">拼图/整图屏左上角可改判媒资类型（普通照片 ↔ 拼图），改后请应用排版</p>' +
       '<button type="button" class="preview-drawer__ghost preview-drawer__narrate-anchors">保存并重新生成文案</button>' +
@@ -1585,21 +1591,51 @@ var narrateJobId = null;
       });
       var noteInp = bodyEl.querySelector(".preview-drawer__copy-intent-note");
       if (noteInp) noteInp.value = intent.note || "";
+      updateCopyIntentVisibility(chId);
+    }
+
+    function chapterHasVoice(chId) {
+      var row = chapterRow(chId);
+      return !!(row && row.hasVoice);
+    }
+
+    function updateCopyIntentVisibility(chId) {
+      var details = bodyEl.querySelector(".preview-drawer__copy-intent");
+      var skipNote = bodyEl.querySelector(".preview-drawer__copy-intent-voice-skip");
+      var hint = bodyEl.querySelector(".preview-drawer__copy-intent-hint");
+      var applyLabel = bodyEl.querySelector(".preview-drawer__copy-intent-apply");
+      if (!details) return;
+      var skip = chapterHasVoice(chId);
+      details.open = !skip && details.open;
+      details.hidden = skip;
+      if (skipNote) skipNote.hidden = !skip;
+      if (hint) hint.hidden = skip;
+      if (applyLabel) applyLabel.hidden = skip;
     }
 
     function readCopyIntentPayload() {
+      if (chapterHasVoice(currentChapterId())) {
+        return null;
+      }
       var moodBtn = bodyEl.querySelector(".preview-drawer__chip-mood.is-selected");
       var focusBtn = bodyEl.querySelector(".preview-drawer__chip-focus.is-selected");
       var noteInp = bodyEl.querySelector(".preview-drawer__copy-intent-note");
+      var subsequent = bodyEl.querySelector(".preview-drawer__copy-intent-subsequent");
       var noteVal = noteInp ? (noteInp.value || "").trim() : "";
+      var payload;
       if (!moodBtn && !focusBtn && !noteVal) {
-        return { clear: true };
+        payload = { clear: true };
+      } else {
+        payload = {
+          mood: moodBtn ? moodBtn.getAttribute("data-value") : null,
+          focus: focusBtn ? focusBtn.getAttribute("data-value") : null,
+          note: noteVal || null,
+        };
       }
-      return {
-        mood: moodBtn ? moodBtn.getAttribute("data-value") : null,
-        focus: focusBtn ? focusBtn.getAttribute("data-value") : null,
-        note: noteVal || null,
-      };
+      if (subsequent && subsequent.checked) {
+        payload.applyToSubsequent = true;
+      }
+      return payload;
     }
 
     function fillChapterFields(chId) {
@@ -1716,7 +1752,10 @@ var narrateJobId = null;
                 }],
               })
             );
-            tasks.push(patchJson(copyIntentApiUrl(tripId, chId), readCopyIntentPayload()));
+            var copyIntentPayload = readCopyIntentPayload();
+            if (copyIntentPayload) {
+              tasks.push(patchJson(copyIntentApiUrl(tripId, chId), copyIntentPayload));
+            }
           }
           return Promise.all(tasks)
             .then(function (results) {
@@ -1740,15 +1779,28 @@ var narrateJobId = null;
                 var row = chapterRow(chId);
                 if (row) {
                   row.memoryAnchors = anchors;
-                  var ciResult = results[results.length - 1];
-                  if (ciResult && ciResult.body && "copyIntent" in ciResult.body) {
+                  var ciResult = null;
+                  for (var ri = 0; ri < results.length; ri++) {
+                    if (results[ri].body && "copyIntent" in results[ri].body) {
+                      ciResult = results[ri];
+                      break;
+                    }
+                  }
+                  if (ciResult && ciResult.body) {
                     row.copyIntent = ciResult.body.copyIntent || null;
+                    var appliedIds = ciResult.body.chapterIds || [chId];
+                    appliedIds.forEach(function (appliedId) {
+                      var appliedRow = chapterRow(appliedId);
+                      if (appliedRow) {
+                        appliedRow.copyIntent = ciResult.body.copyIntent || null;
+                      }
+                    });
                   }
                 }
               }
               if (!opts.skipToast) {
-                var hasIntent =
-                  readCopyIntentPayload().clear !== true;
+                var copyIntentPayload = readCopyIntentPayload();
+                var hasIntent = copyIntentPayload && copyIntentPayload.clear !== true;
                 showToolbarToast(
                   anchors.length > 0 || hasIntent
                     ? "编辑已保存。可在 ⋯ 菜单中重新生成文案以写入锚点与点缀。"

@@ -210,6 +210,8 @@ class ChapterRenderContext(TypedDict, total=False):
     hasDecorLine: bool
     editableLead: bool
     editLeadPath: str | None
+    editableDecorLine: bool
+    editDecorLinePath: str | None
     hasMemoryAnchors: bool
     memoryAnchors: str | None
     useScreensEngine: bool

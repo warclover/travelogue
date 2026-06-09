@@ -86,6 +86,37 @@ def test_web_landscape_fallback_to_portrait_when_none() -> None:
     assert resolve_closing_asset_id(trip, assets, prefer_landscape=True) == "portrait"
 
 
+def test_resolve_closing_excludes_cover_even_when_last_screen() -> None:
+    trip = {
+        "coverAssetId": "cover",
+        "assets": [
+            {"id": "cover", "type": "image", "layoutEligible": True, "width": 1600, "height": 900},
+            {"id": "first", "type": "image", "layoutEligible": True, "width": 1600, "height": 900},
+        ],
+        "chapters": [
+            {"screens": [{"slots": [{"assetId": "first"}]}]},
+            {"screens": [{"slots": [{"assetId": "cover"}]}]},
+        ],
+    }
+    assets = {a["id"]: a for a in trip["assets"]}
+    assert resolve_closing_asset_id(trip, assets) == "first"
+
+
+def test_resolve_closing_excludes_cover_by_layout() -> None:
+    trip = {
+        "coverAssetId": "mobile-cover",
+        "curation": {"coverByLayout": {"mobile": "mobile-cover", "web": "web-cover"}},
+        "assets": [
+            {"id": "mobile-cover", "type": "image", "layoutEligible": True, "width": 1200, "height": 1600},
+            {"id": "web-cover", "type": "image", "layoutEligible": True, "width": 2048, "height": 1365},
+            {"id": "alt-wide", "type": "image", "layoutEligible": True, "width": 2048, "height": 1365},
+        ],
+        "chapters": [{"screens": [{"slots": [{"assetId": "web-cover"}]}]}],
+    }
+    assets = {a["id"]: a for a in trip["assets"]}
+    assert resolve_closing_asset_id(trip, assets, prefer_landscape=True) == "alt-wide"
+
+
 def test_prefers_unused_asset_over_screen_duplicate() -> None:
     trip = {
         "coverAssetId": "cover",

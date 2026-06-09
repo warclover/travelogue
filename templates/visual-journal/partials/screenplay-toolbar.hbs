@@ -21,14 +21,16 @@
       aria-pressed="false"
       data-label-on="纯照片"
       data-label-off="显示文案"
-      title="一键隐藏导语（Web 屏无图注）">
+      title="一键隐藏全部文案">
       纯照片
     </button>
-    <button type="button" id="copy-display-toggle" class="screenplay-toolbar__btn screenplay-toolbar__btn--secondary"
+    <button type="button" id="copy-display-toggle" class="screenplay-toolbar__btn screenplay-toolbar__btn--secondary copy-toggle-advanced"
       aria-pressed="false"
-      data-copy-label-hide="隐藏文案"
-      data-copy-label-show="显示文案">
-      隐藏文案
+      hidden
+      data-copy-label-hide="隐藏导语"
+      data-copy-label-show="显示导语"
+      title="隐藏 hook、章导语、结语（保留图注）">
+      隐藏导语
     </button>
     {{#if includeLongshotBridge}}
     <button type="button" id="longshot-bridge" class="screenplay-toolbar__btn screenplay-toolbar__btn--longshot"

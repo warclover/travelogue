@@ -8,7 +8,7 @@
 | **Phase 11 代号** | 「轻文案」— 章级一句话点缀（不喧宾夺主） |
 | **前置条件** | Phase 9 质量闸口稳定；Phase 10 组屏上线；现有 copy toggle 可用 |
 | **交付形态** | 每章自动生成 1 句点缀文案（<=30 字），默认展示；用户可一键隐藏文案或切换纯照片 |
-| **关联文档** | [PRD-PHASE9.md](./PRD-PHASE9.md)、[PRD-PHASE10-food-grid.md](./PRD-PHASE10-food-grid.md)、[IMPLEMENTATION-PHASE11.md](./IMPLEMENTATION-PHASE11.md)、[ACCEPTANCE-PHASE11.md](./ACCEPTANCE-PHASE11.md)、[NARRATIVE-PROMPTS.md](./NARRATIVE-PROMPTS.md)、`travelogue/services/llm_narrate.py`、`templates/visual-journal/copy-toggle.js` |
+| **关联文档** | [PRD-COPY-OPTIMIZATION.md](./PRD-COPY-OPTIMIZATION.md)（总纲 v1.1）、[PRD-PHASE9.md](./PRD-PHASE9.md)、[PRD-PHASE10-food-grid.md](./PRD-PHASE10-food-grid.md)、[IMPLEMENTATION-PHASE11.md](./IMPLEMENTATION-PHASE11.md)、[ACCEPTANCE-PHASE11.md](./ACCEPTANCE-PHASE11.md)、[NARRATIVE-PROMPTS.md](./NARRATIVE-PROMPTS.md)、`travelogue/services/llm_narrate.py`、`templates/visual-journal/copy-toggle.js` |
 | **更新日期** | 2026-06-02 |
 
 > **定位说明**

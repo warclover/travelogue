@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 
 from travelogue.config import AppConfig, get_config
 from travelogue.services.narrate import BANNED_PHRASES, _finalize_copy
@@ -46,20 +47,54 @@ def _chapter_assets(chapter: dict, trip: dict) -> list[dict]:
     return out
 
 
-def extract_chapter_facts(chapter: dict, trip: dict) -> list[str]:
+def _chapter_voice_excerpts(chapter: dict, trip: dict) -> list[str]:
+    out: list[str] = []
+    for asset in _chapter_assets(chapter, trip):
+        voice = asset.get("voice") or {}
+        excerpt = (voice.get("transcriptPreview") or voice.get("transcript") or "").strip()
+        if excerpt:
+            out.append(excerpt[:120])
+    return out
+
+
+def chapter_has_voice(chapter: dict, trip: dict) -> bool:
+    return bool(_chapter_voice_excerpts(chapter, trip))
+
+
+def extract_chapter_facts(
+    chapter: dict,
+    trip: dict,
+    *,
+    cfg: AppConfig | None = None,
+) -> list[str]:
+    """Event-oriented facts; voice and anchors precede visual tags."""
+    app_cfg = decor_line_config(cfg)
     facts: list[str] = []
-    title = str(chapter.get("title") or "").strip()
-    if title:
-        facts.append(title)
     curation = chapter.get("curation") or {}
+
+    for excerpt in _chapter_voice_excerpts(chapter, trip):
+        facts.append(excerpt)
+
     for anchor in curation.get("memoryAnchors") or []:
         text = str(anchor or "").strip()
         if text:
             facts.append(text)
+
+    intent = _copy_intent(chapter)
+    note = intent.get("note", "")
+    if note:
+        facts.append(note)
+
     for place in curation.get("places") or []:
         text = str(place or "").strip()
         if text:
             facts.append(text)
+
+    if app_cfg.narrative.decor_line_visual_facts_enabled:
+        from travelogue.services.visual_facts import extract_visual_facts
+
+        facts.extend(extract_visual_facts(chapter, trip))
+
     tag_counts: dict[str, int] = {}
     cities: set[str] = set()
     for asset in _chapter_assets(chapter, trip):
@@ -70,14 +105,21 @@ def extract_chapter_facts(chapter: dict, trip: dict) -> list[str]:
         city = (asset.get("place") or {}).get("city")
         if city:
             cities.add(str(city).strip())
+
     for tag, _ in sorted(tag_counts.items(), key=lambda x: (-x[1], x[0]))[:4]:
         facts.append(tag)
     facts.extend(sorted(cities)[:2])
+
+    title = str(chapter.get("title") or "").strip()
+    if title:
+        facts.append(title)
+
     notes = (trip.get("intent") or {}).get("travelNotes")
     if notes:
         snippet = str(notes).strip()[:40]
         if snippet:
             facts.append(snippet)
+
     deduped: list[str] = []
     seen: set[str] = set()
     for f in facts:
@@ -87,6 +129,22 @@ def extract_chapter_facts(chapter: dict, trip: dict) -> list[str]:
         seen.add(key)
         deduped.append(f)
     return deduped
+
+
+def decor_line_facts_sufficient(chapter: dict, trip: dict, *, cfg: AppConfig | None = None) -> bool:
+    """True when voice, anchor, intent note, or enough non-title facts exist."""
+    app_cfg = decor_line_config(cfg)
+    if chapter_has_voice(chapter, trip):
+        return True
+    curation = chapter.get("curation") or {}
+    if any(str(a or "").strip() for a in (curation.get("memoryAnchors") or [])):
+        return True
+    if _copy_intent(chapter).get("note"):
+        return True
+    title = str(chapter.get("title") or "").strip()
+    non_title = [f for f in extract_chapter_facts(chapter, trip, cfg=cfg) if f != title]
+    min_count = max(1, int(app_cfg.narrative.decor_line_min_fact_count or 2))
+    return len(non_title) >= min_count
 
 
 def _copy_intent(chapter: dict) -> dict[str, str]:
@@ -102,6 +160,32 @@ def _copy_intent(chapter: dict) -> dict[str, str]:
     if note:
         out["note"] = note[:30]
     return out
+
+
+def apply_copy_intent_cascade(
+    trip: dict,
+    chapter_id: str,
+    payload: dict | None,
+    *,
+    apply_to_subsequent: bool = False,
+) -> list[str]:
+    """Apply copyIntent to one chapter or from current through following chapters."""
+    chapters = trip.get("chapters") or []
+    start_idx: int | None = None
+    for idx, ch in enumerate(chapters):
+        if ch.get("id") == chapter_id:
+            start_idx = idx
+            break
+    if start_idx is None:
+        return []
+    targets = chapters[start_idx:] if apply_to_subsequent else [chapters[start_idx]]
+    updated: list[str] = []
+    for ch in targets:
+        apply_chapter_copy_intent(ch, payload)
+        ch_id = ch.get("id")
+        if ch_id:
+            updated.append(str(ch_id))
+    return updated
 
 
 def apply_chapter_copy_intent(chapter: dict, payload: dict | None) -> dict[str, str]:
@@ -199,6 +283,7 @@ def _score_candidate(
     intent: dict[str, str],
     *,
     use_intent: bool,
+    voice_snippets: list[str] | None = None,
 ) -> float:
     if not candidate:
         return -1.0
@@ -211,6 +296,13 @@ def _score_candidate(
         if fact and (fact in candidate or fact.lower() in lower):
             factual += 0.35
     factual = min(1.0, factual)
+    if voice_snippets:
+        for voice in voice_snippets:
+            snippet = voice[:12]
+            trimmed = voice.strip()
+            if snippet and (snippet in candidate or candidate in trimmed or trimmed in candidate):
+                factual = min(1.0, factual + 0.3)
+                break
     generic_hits = len(_GENERIC_RE.findall(candidate))
     anti_generic = max(0.0, 1.0 - generic_hits * 0.25)
     style_fit = 0.85 if "！" not in candidate and "!" not in candidate else 0.5
@@ -253,10 +345,6 @@ def _template_candidates(facts: list[str], intent: dict[str, str]) -> list[str]:
         cands.append(f"{primary}，{secondary}。".replace("。。", "。"))
     if primary and mood:
         cands.append(f"{primary}，{mood}。")
-    if primary:
-        cands.append(f"{primary}，留在这一章。")
-    if secondary:
-        cands.append(f"记住{secondary}。")
     if mood and not primary:
         cands.append(f"{mood}的一小段路。")
     deduped: list[str] = []
@@ -271,26 +359,95 @@ def _template_candidates(facts: list[str], intent: dict[str, str]) -> list[str]:
     return deduped
 
 
-def generate_decor_line_candidates(
+def voice_decor_candidates(
     chapter: dict,
     trip: dict,
     *,
     cfg: AppConfig | None = None,
 ) -> list[str]:
+    from travelogue.services.voice_excerpt import trim_voice_for_copy
+
+    app_cfg = decor_line_config(cfg)
+    if not app_cfg.narrative.decor_line_voice_first:
+        return []
+    max_chars = _max_chars(app_cfg)
+    out: list[str] = []
+    for excerpt in _chapter_voice_excerpts(chapter, trip):
+        trimmed = trim_voice_for_copy(excerpt, max_chars=max_chars)
+        if trimmed and trimmed not in out:
+            out.append(trimmed)
+    return out
+
+
+def _dedupe_candidates(candidates: list[str]) -> list[str]:
+    seen: set[str] = set()
+    out: list[str] = []
+    for text in candidates:
+        key = text.strip()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        out.append(key)
+    return out
+
+
+def _merge_decor_candidates(
+    chapter: dict,
+    trip: dict,
+    *,
+    cfg: AppConfig | None = None,
+    chat_fn: Callable[[list[dict[str, str]]], str] | None = None,
+) -> list[str]:
     app_cfg = decor_line_config(cfg)
     k = max(1, int(app_cfg.narrative.decor_line_candidates or 3))
-    facts = extract_chapter_facts(chapter, trip)
-    intent = _copy_intent(chapter) if app_cfg.narrative.decor_line_intent_enabled else {}
-    raw = _template_candidates(facts, intent)
     max_chars = _max_chars(app_cfg)
-    cleaned: list[str] = []
-    for text in raw:
+    facts = extract_chapter_facts(chapter, trip, cfg=app_cfg)
+    intent = _copy_intent(chapter) if app_cfg.narrative.decor_line_intent_enabled else {}
+    pool: list[str] = []
+
+    pool.extend(voice_decor_candidates(chapter, trip, cfg=app_cfg))
+
+    note = intent.get("note", "")
+    if note:
+        final = _finalize_copy(note[:30], max_chars)
+        if final:
+            pool.append(final)
+
+    for text in _template_candidates(facts, intent):
         final = _finalize_copy(text, max_chars)
-        if final and final not in cleaned:
-            cleaned.append(final)
-        if len(cleaned) >= k:
+        if final:
+            pool.append(final)
+
+    if app_cfg.narrative.decor_line_llm_enabled:
+        from travelogue.services.llm_decor_line import generate_llm_decor_line_candidates
+
+        pool.extend(
+            generate_llm_decor_line_candidates(
+                chapter, trip, cfg=app_cfg, chat_fn=chat_fn
+            )
+        )
+
+    cleaned: list[str] = []
+    for text in _dedupe_candidates(pool):
+        if validate_decor_line(text, chapter, cfg=app_cfg):
+            continue
+        cleaned.append(text)
+        if len(cleaned) >= k * 2:
             break
-    return cleaned[:k]
+    return cleaned[: max(k * 2, k)]
+
+
+def generate_decor_line_candidates(
+    chapter: dict,
+    trip: dict,
+    *,
+    cfg: AppConfig | None = None,
+    chat_fn: Callable[[list[dict[str, str]]], str] | None = None,
+) -> list[str]:
+    app_cfg = decor_line_config(cfg)
+    k = max(1, int(app_cfg.narrative.decor_line_candidates or 3))
+    merged = _merge_decor_candidates(chapter, trip, cfg=app_cfg, chat_fn=chat_fn)
+    return merged[:k]
 
 
 def pick_best_decor_line(
@@ -300,20 +457,32 @@ def pick_best_decor_line(
     *,
     cfg: AppConfig | None = None,
 ) -> str:
+    from travelogue.services.copy_intent_infer import resolve_copy_intent
+
     app_cfg = decor_line_config(cfg)
-    facts = extract_chapter_facts(chapter, trip)
-    intent = _copy_intent(chapter) if app_cfg.narrative.decor_line_intent_enabled else {}
+    facts = extract_chapter_facts(chapter, trip, cfg=app_cfg)
+    intent = resolve_copy_intent(chapter, trip) if app_cfg.narrative.decor_line_intent_enabled else {}
     use_intent = bool(intent) and app_cfg.narrative.decor_line_intent_enabled
+    voice_snippets = _chapter_voice_excerpts(chapter, trip)
     best = ""
     best_score = -1.0
     for cand in candidates:
         if validate_decor_line(cand, chapter, cfg=app_cfg):
             continue
-        score = _score_candidate(cand, chapter, facts, intent, use_intent=use_intent)
+        score = _score_candidate(
+            cand,
+            chapter,
+            facts,
+            intent,
+            use_intent=use_intent,
+            voice_snippets=voice_snippets,
+        )
         if score > best_score:
             best_score = score
             best = cand
-    min_score = 0.35 if not app_cfg.narrative.decor_line_allow_empty else 0.28
+    min_score = 0.32 if not app_cfg.narrative.decor_line_allow_empty else 0.26
+    if voice_snippets and best in voice_decor_candidates(chapter, trip, cfg=app_cfg):
+        min_score = max(0.22, min_score - 0.04)
     if best_score < min_score:
         return ""
     return best
@@ -340,6 +509,7 @@ def apply_decor_lines(
     dry_run: bool = False,
     chapter_id: str | None = None,
     cfg: AppConfig | None = None,
+    chat_fn: Callable[[list[dict[str, str]]], str] | None = None,
 ) -> list[str]:
     app_cfg = decor_line_config(cfg)
     if not app_cfg.narrative.decor_line_enabled:
@@ -356,12 +526,28 @@ def apply_decor_lines(
         if dry_run:
             updated.append(field)
             continue
-        candidates = generate_decor_line_candidates(ch, trip, cfg=app_cfg)
+        if not decor_line_facts_sufficient(ch, trip, cfg=app_cfg):
+            ch["decorLine"] = ""
+            updated.append(field)
+            continue
+        candidates = generate_decor_line_candidates(
+            ch, trip, cfg=app_cfg, chat_fn=chat_fn
+        )
         chosen = pick_best_decor_line(candidates, ch, trip, cfg=app_cfg)
         ch["decorLine"] = chosen
+        if (chosen or "").strip() and not ch.get("edited"):
+            ch.pop("lead", None)
         updated.append(field)
     if updated and not dry_run:
         curation = trip.setdefault("curation", {})
         copy_style = curation.setdefault("copyStyle", {})
-        copy_style["phase"] = "p11-lite-line"
+        copy_style["phase"] = "lite-copy-v1.1"
+        from travelogue.services.copy_metrics import merge_copy_run_note, record_copy_metrics
+
+        metrics = record_copy_metrics(trip)
+        merge_copy_run_note(
+            trip,
+            agent="storyteller-lite",
+            note=f"decorLine fill={metrics.get('decor_line_fill_rate')} empty={metrics.get('decor_line_empty_rate')}",
+        )
     return updated
