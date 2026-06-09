@@ -47,7 +47,10 @@
     "maxMediaCardsPerChapter": 8
   },
   "blocks": [
+    "cover-opening",
     "cover-hero",
+    "closing-hero",
+    "cover-closing",
     "trip-meta",
     "hook-line",
     "chapter-header",

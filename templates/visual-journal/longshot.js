@@ -599,9 +599,11 @@
     var saved = [];
     var page = main.querySelector(".page");
     var coverOpening = main.querySelector(".cover-opening");
+    var coverClosing = main.querySelector(".cover-closing");
     var cover = coverOpening || main.querySelector(".cover-hero");
     var hook = main.querySelector(".hook-line");
     var epilogue = page && page.querySelector(".epilogue");
+    var epilogueScreen = page && page.querySelector(".epilogue-screen");
     var tripMeta = main.querySelector(".trip-meta");
     var isFirst = chapterIndex === 0;
     var isLast = chapterIndex === chapters.length - 1;
@@ -633,7 +635,9 @@
       stash(tripMeta, isFirst);
       stash(hook, isFirst);
     }
-    stash(epilogue, isLast);
+    stash(coverClosing, isLast);
+    stash(epilogue, isLast && !coverClosing);
+    stash(epilogueScreen, isLast && !coverClosing);
     return saved;
   }
 

@@ -2514,9 +2514,11 @@ var narrateJobId = null;
       }
     }
 
-    var footerHome = document.querySelector(".footer-cta__studio-home");
-    if (footerHome) {
-      footerHome.hidden = false;
+    var footerHomes = document.querySelectorAll(".footer-cta__studio-home");
+    if (footerHomes.length) {
+      footerHomes.forEach(function (row) {
+        row.hidden = false;
+      });
     } else {
       var footer = document.querySelector(".footer-cta");
       if (footer) {

@@ -280,7 +280,8 @@ def test_magazine_renders_folio_full_blocks() -> None:
     assert 'data-block="featured-grid"' in html
     assert 'data-block="foreword-spread"' in html
     assert 'data-block="screen-spread"' in html
-    assert 'data-block="epilogue-screen"' in html
+    assert 'data-block="cover-closing"' in html
+    assert 'data-block="epilogue-screen"' not in html
     assert 'data-pattern="screen-plate"' in html
     foreword_idx = html.index('data-block="foreword-spread"')
     ch03_idx = html.index('id="ch-03"')
@@ -302,7 +303,9 @@ def test_folio_lite_renders_screen_plate_and_epilogue_screen() -> None:
     )
     assert 'data-folio="lite"' in html
     assert 'data-pattern="screen-plate"' in html
-    assert 'data-block="epilogue-screen"' in html
+    assert 'data-block="cover-closing"' in html
+    assert 'data-block="closing-hero"' in html
+    assert 'data-block="epilogue-screen"' not in html
     assert 'data-block="foreword-spread"' not in html
 
 

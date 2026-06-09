@@ -14,6 +14,8 @@
   var scrubStarted = false;
   var coverMotionRaf = null;
   var coverMotionState = null;
+  var closingMotionState = null;
+  var closingRevealObserver = null;
 
   var FLOW_OPTS = {
     lerp: 0.065,
@@ -69,8 +71,39 @@
         ) {
           return false;
         }
+        if (
+          el.matches('.epilogue[data-block="epilogue"]') &&
+          el.closest('.cover-closing[data-block="cover-closing"]')
+        ) {
+          return false;
+        }
+        if (
+          el.matches('.epilogue-screen[data-block="epilogue-screen"]') &&
+          coverClosingPresentationActive()
+        ) {
+          return false;
+        }
         return true;
       }
+    );
+  }
+
+  function coverClosingRoot() {
+    return document.querySelector('.cover-closing[data-block="cover-closing"]');
+  }
+
+  function coverClosingPresentationActive() {
+    if (!coverClosingRoot()) return false;
+    if (!global.matchMedia) return true;
+    return global.matchMedia("(min-width: 48rem)").matches;
+  }
+
+  function coverClosingImg(root) {
+    if (!root) return null;
+    return (
+      root.querySelector(".closing-hero__img--main") ||
+      root.querySelector(".closing-hero__media img") ||
+      root.querySelector("img")
     );
   }
 
@@ -102,32 +135,40 @@
     return Math.max(0, Math.min(1, -rect.top / span));
   }
 
-  function clearCoverMotionStyles() {
-    if (!coverMotionState) return;
-    var img = coverMotionState.img;
-    var panel = coverMotionState.panel;
-    if (img) {
-      img.style.transform = "";
-      img.style.willChange = "";
+  function clearBoundaryMotionStyles(state, activeClass) {
+    if (!state) return;
+    if (state.img) {
+      state.img.style.transform = "";
+      state.img.style.willChange = "";
     }
-    if (panel) {
-      panel.style.opacity = "";
-      panel.style.transform = "";
+    if (state.panel) {
+      state.panel.style.opacity = "";
+      state.panel.style.transform = "";
     }
-    document.documentElement.classList.remove("cover-motion-active");
+    if (activeClass) {
+      document.documentElement.classList.remove(activeClass);
+    }
   }
 
-  function applyCoverMotionStyles(p) {
-    if (!coverMotionState) return;
-    var img = coverMotionState.img;
-    var panel = coverMotionState.panel;
-    var motion = coverMotionState.motion;
+  function clearCoverMotionStyles() {
+    clearBoundaryMotionStyles(coverMotionState, "cover-motion-active");
+  }
+
+  function clearClosingMotionStyles() {
+    clearBoundaryMotionStyles(closingMotionState, "closing-motion-active");
+  }
+
+  function applyBoundaryMotionStyles(state, p, activeClass) {
+    if (!state) return;
+    var img = state.img;
+    var panel = state.panel;
+    var motion = state.motion;
     if (!img) return;
     if (p <= 0.001) {
-      clearCoverMotionStyles();
+      clearBoundaryMotionStyles(state, activeClass);
       return;
     }
-    document.documentElement.classList.add("cover-motion-active");
+    document.documentElement.classList.add(activeClass);
     img.style.willChange = "transform";
     img.style.transform =
       "translate3d(0," + p * motion.translate + "%,0) scale(" + (1 + p * motion.scale) + ")";
@@ -137,29 +178,44 @@
     }
   }
 
-  function coverMotionTick() {
-    if (paused || !coverMotionState) return;
-    applyCoverMotionStyles(coverScrollProgress(coverMotionState.root));
+  function applyCoverMotionStyles(p) {
+    applyBoundaryMotionStyles(coverMotionState, p, "cover-motion-active");
   }
 
-  function stopCoverMotionLoop() {
+  function applyClosingMotionStyles(p) {
+    applyBoundaryMotionStyles(closingMotionState, p, "closing-motion-active");
+  }
+
+  function coverMotionTick() {
+    if (paused) return;
+    if (coverMotionState) {
+      applyCoverMotionStyles(coverScrollProgress(coverMotionState.root));
+    }
+    if (closingMotionState) {
+      applyClosingMotionStyles(coverScrollProgress(closingMotionState.root));
+    }
+  }
+
+  function stopBoundaryMotionLoop() {
     if (coverMotionRaf) {
       cancelAnimationFrame(coverMotionRaf);
       coverMotionRaf = null;
     }
   }
 
-  function coverMotionLoop() {
+  function boundaryMotionLoop() {
     coverMotionTick();
-    if (coverMotionState) {
-      coverMotionRaf = global.requestAnimationFrame(coverMotionLoop);
+    if (coverMotionState || closingMotionState) {
+      coverMotionRaf = global.requestAnimationFrame(boundaryMotionLoop);
     }
   }
 
   function destroyCoverMotion() {
-    stopCoverMotionLoop();
+    stopBoundaryMotionLoop();
     clearCoverMotionStyles();
+    clearClosingMotionStyles();
     coverMotionState = null;
+    closingMotionState = null;
   }
 
   function initCoverMotion() {
@@ -167,17 +223,67 @@
     if (scrubStarted && (breathLevel() === "cinematic" || breathLevel() === "gallery")) {
       return;
     }
-    var root = coverOpeningRoot();
-    var img = coverOpeningImg(root);
-    if (!root || !img) return;
+    var needLoop = false;
+    var openingRoot = coverOpeningRoot();
+    var openingImg = coverOpeningImg(openingRoot);
+    if (openingRoot && openingImg) {
+      coverMotionState = {
+        root: openingRoot,
+        img: openingImg,
+        panel: openingRoot.querySelector(".cover-opening__panel"),
+        motion: coverMotionIntensity(),
+      };
+      needLoop = true;
+    }
+    var closingRoot = coverClosingRoot();
+    var closingImg = coverClosingImg(closingRoot);
+    if (closingRoot && closingImg && coverClosingPresentationActive()) {
+      closingMotionState = {
+        root: closingRoot,
+        img: closingImg,
+        panel: closingRoot.querySelector(".cover-closing__panel"),
+        motion: coverMotionIntensity(),
+      };
+      needLoop = true;
+    }
+    if (needLoop) boundaryMotionLoop();
+  }
 
-    coverMotionState = {
-      root: root,
-      img: img,
-      panel: root.querySelector(".cover-opening__panel"),
-      motion: coverMotionIntensity(),
-    };
-    coverMotionLoop();
+  function initCoverClosingReveal() {
+    var root = coverClosingRoot();
+    if (!root || breathLevel() === "off" || !coverClosingPresentationActive()) return;
+
+    var hero = root.querySelector('.closing-hero[data-block="closing-hero"]');
+    var panel = root.querySelector(".cover-closing__panel");
+    var parts = [hero, panel].filter(Boolean);
+    if (!parts.length) return;
+
+    parts.forEach(function (el) {
+      el.classList.add("breath-reveal", "closing-breath-reveal");
+    });
+
+    if (prefersReducedMotion()) {
+      parts.forEach(function (el) {
+        el.classList.add("is-visible");
+      });
+      return;
+    }
+
+    closingRevealObserver = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting && !paused) {
+            parts.forEach(markVisible);
+            if (closingRevealObserver) {
+              closingRevealObserver.disconnect();
+              closingRevealObserver = null;
+            }
+          }
+        });
+      },
+      revealObserverOpts()
+    );
+    closingRevealObserver.observe(root);
   }
 
   function initCoverOpeningReveal() {
@@ -290,6 +396,10 @@
       observer.disconnect();
       observer = null;
     }
+    if (closingRevealObserver) {
+      closingRevealObserver.disconnect();
+      closingRevealObserver = null;
+    }
     destroyLenis();
     destroyScrub();
     destroyCoverMotion();
@@ -317,7 +427,25 @@
       coverImg.style.transform = "";
       coverImg.style.willChange = "";
     }
-    document.documentElement.classList.remove("cover-motion-active");
+    var closingRoot = coverClosingRoot();
+    if (closingRoot) {
+      closingRoot.querySelectorAll(".closing-breath-reveal").forEach(function (el) {
+        el.classList.remove("breath-reveal", "is-visible", "closing-breath-reveal");
+        el.style.opacity = "";
+        el.style.transform = "";
+      });
+      var closingPanel = closingRoot.querySelector(".cover-closing__panel");
+      if (closingPanel) {
+        closingPanel.style.opacity = "";
+        closingPanel.style.transform = "";
+      }
+    }
+    var closingImg = coverClosingImg(closingRoot);
+    if (closingImg) {
+      closingImg.style.transform = "";
+      closingImg.style.willChange = "";
+    }
+    document.documentElement.classList.remove("cover-motion-active", "closing-motion-active");
     paused = false;
   }
 
@@ -377,6 +505,7 @@
     if (breathLevel() === "off") return;
     if (document.documentElement.getAttribute("data-breath") === "off") return;
     initCoverOpeningReveal();
+    initCoverClosingReveal();
     initReveal();
     initFlowScroll();
     initScrubMotion();

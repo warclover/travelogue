@@ -1,0 +1,13 @@
+<header class="closing-hero{{#if closing.useContainFit}} closing-hero--contain-fit{{/if}}" data-block="closing-hero" data-present-aux="true">
+  <div class="closing-hero__media" style="--focal-x: {{closing.focalX}}; --focal-y: {{closing.focalY}};">
+    <img class="closing-hero__img closing-hero__img--main"
+      src="{{closing.src}}"
+      {{#if closing.hasSrcset}}
+      srcset="{{closing.srcset}}"
+      sizes="{{closing.sizes}}"
+      {{/if}}
+      alt="{{closing.alt}}"
+      loading="lazy"
+      decoding="async" />
+  </div>
+</header>

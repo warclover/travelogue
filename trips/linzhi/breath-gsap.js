@@ -73,6 +73,40 @@
     );
   }
 
+  function closingParallaxRoot() {
+    return document.querySelector('.cover-closing[data-block="cover-closing"]');
+  }
+
+  function closingParallaxImg(root) {
+    if (!root) return null;
+    return (
+      root.querySelector(".closing-hero__img--main") ||
+      root.querySelector(".closing-hero__media img") ||
+      root.querySelector("img")
+    );
+  }
+
+  function closingPanel(root) {
+    return root && root.querySelector(".cover-closing__panel");
+  }
+
+  function setClosingMotionActive(active) {
+    document.documentElement.classList.toggle("closing-motion-active", !!active);
+  }
+
+  function clearClosingMotion(root, img) {
+    if (img) {
+      img.style.transform = "";
+      img.style.willChange = "";
+    }
+    var panel = closingPanel(root);
+    if (panel) {
+      panel.style.opacity = "";
+      panel.style.transform = "";
+    }
+    setClosingMotionActive(false);
+  }
+
   function coverParallaxImg(root) {
     if (!root) return null;
     return (
@@ -174,12 +208,70 @@
     );
   }
 
+  function setupClosingParallaxGsap() {
+    var closingRoot = closingParallaxRoot();
+    if (!closingRoot) return;
+    var img = closingParallaxImg(closingRoot);
+    if (!img) return;
+    var panel = closingPanel(closingRoot);
+
+    gsapTriggers.push(
+      ScrollTrigger.create({
+        trigger: closingRoot,
+        start: "top bottom",
+        end: "bottom top",
+        scrub: 0.75,
+        onEnter: function () {
+          setClosingMotionActive(true);
+        },
+        onEnterBack: function () {
+          setClosingMotionActive(true);
+        },
+        onUpdate: function (self) {
+          applyCoverScrollMotion(img, panel, self.progress);
+        },
+        onLeave: function () {
+          clearClosingMotion(closingRoot, img);
+        },
+        onLeaveBack: function () {
+          clearClosingMotion(closingRoot, img);
+        },
+      })
+    );
+  }
+
+  function setupClosingParallaxNative() {
+    var closingRoot = closingParallaxRoot();
+    if (!closingRoot) return;
+    var img = closingParallaxImg(closingRoot);
+    if (!img) return;
+    var panel = closingPanel(closingRoot);
+
+    addTrigger(
+      closingRoot,
+      function (p) {
+        if (p >= 1) {
+          clearClosingMotion(closingRoot, img);
+          return;
+        }
+        if (p > 0.001) {
+          setClosingMotionActive(true);
+          applyCoverScrollMotion(img, panel, p);
+        } else {
+          clearClosingMotion(closingRoot, img);
+        }
+      },
+      { start: 0.78, end: 1 }
+    );
+  }
+
   function setupCinematicGsap() {
     var gsap = global.gsap;
     var ScrollTrigger = global.ScrollTrigger;
     gsap.registerPlugin(ScrollTrigger);
 
     setupCoverParallaxGsap();
+    setupClosingParallaxGsap();
     Array.prototype.forEach.call(
       document.querySelectorAll('.chapter-header[data-block="chapter-header"]'),
       function (el) {
@@ -234,6 +326,7 @@
 
   function setupCinematic() {
     setupCoverParallaxNative();
+    setupClosingParallaxNative();
 
     Array.prototype.forEach.call(
       document.querySelectorAll('.chapter-header[data-block="chapter-header"]'),

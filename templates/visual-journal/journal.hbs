@@ -54,18 +54,25 @@
         {{> chapter}}
         {{/each}}
         {{#if hasEpilogue}}
+        {{#unless useCoverClosing}}
         {{#if useEpilogueScreen}}
         {{> epilogue-screen}}
         {{else}}
         <p class="epilogue" data-block="epilogue" data-present-aux="true"{{#if editableEpilogue}} data-editable="epilogue" data-edit-path="epilogue"{{/if}}>{{epilogue}}</p>
         {{/if}}
+        {{/unless}}
         {{/if}}
         {{#if isLongshotSurface}}
         {{> longshot-boundary-footer}}
         {{else}}
+        {{#unless useCoverClosing}}
         {{> footer-cta}}
+        {{/unless}}
         {{/if}}
       </div>
+      {{#if useCoverClosing}}
+      {{> cover-closing}}
+      {{/if}}
     </article>
   </main>
   {{#if includeLongShot}}

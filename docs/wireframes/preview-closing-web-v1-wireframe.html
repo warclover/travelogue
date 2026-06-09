@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Web 预览页封底 · 线框稿 v1.0 · 设计评审</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-paper: #f7f5f0;
+      --wf-border: #90a4ae;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-anno: #e65100;
+      --wf-rec: #00897b;
+      --wf-rec-bg: #e0f2f1;
+      --prod-bar: #1a2f28;
+      --prod-bar-text: #f5fbf8;
+      --prod-gold: #d4a843;
+      --prod-accent: #3d6b5a;
+      --prod-accent-light: #7cb89a;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --font-serif: Georgia, "Noto Serif SC", "Songti SC", serif;
+      --font-brush: "KaiTi", "STKaiti", "FangSong", serif;
+      --page-w: 1320px;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--wf-bg); color: var(--wf-text); line-height: 1.5; }
+
+    .review-bar {
+      position: sticky; top: 0; z-index: 1000;
+      background: #263238; color: #eceff1;
+      padding: 12px 20px;
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button:hover { background: #37474f; }
+    .tabs button.is-active { background: var(--wf-rec); border-color: var(--wf-rec); color: #fff; }
+    .tabs button.is-rec::after { content: " ★"; }
+
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 20px 80px; }
+    .panel { display: none; }
+    .panel.is-visible { display: block; }
+
+    .section { margin-bottom: 40px; }
+    .section h2 { margin: 0 0 6px; font-size: 18px; }
+    .section .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; max-width: 78ch; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 300px; gap: 24px; align-items: start; }
+    @media (max-width: 960px) { .grid-2 { grid-template-columns: 1fr; } .sidebar { order: -1; } }
+
+    .sidebar {
+      background: #fff; border: 1px solid var(--wf-border); border-radius: var(--radius);
+      padding: 16px; font-size: 13px;
+    }
+    .sidebar h3 { margin: 0 0 10px; font-size: 13px; color: var(--wf-anno); text-transform: uppercase; letter-spacing: .06em; }
+    .sidebar ul { margin: 0; padding-left: 18px; }
+    .sidebar li { margin-bottom: 6px; color: var(--wf-muted); }
+    .sidebar .rec-badge {
+      display: inline-block; background: var(--wf-rec-bg); color: var(--wf-rec);
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-bottom: 8px;
+    }
+
+    .frame {
+      background: var(--wf-page);
+      border: 2px solid var(--wf-border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .frame--rec { border-color: var(--wf-rec); box-shadow: 0 0 0 3px rgba(0,137,123,.15); }
+
+    .chrome { background: #dee1e6; padding: 8px 12px 0; border-bottom: 1px solid #b0bec5; }
+    .chrome__dots { display: flex; gap: 6px; margin-bottom: 8px; }
+    .chrome__dots span { width: 10px; height: 10px; border-radius: 50%; background: #b0bec5; }
+    .chrome__tab { display: inline-block; background: var(--wf-page); padding: 8px 14px; border-radius: 8px 8px 0 0; font-size: 12px; font-weight: 600; }
+
+    .toolbar {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 8px 14px; background: var(--prod-bar); color: var(--prod-bar-text); font-size: 12px;
+    }
+    .toolbar__back { color: #c8e6d8; }
+    .toolbar__spacer { flex: 1; }
+    .toolbar__btn {
+      border: 1px solid rgba(255,255,255,.22); background: transparent; color: #fff;
+      padding: 4px 10px; border-radius: 999px; font-size: 11px;
+    }
+    .toolbar__btn--gold { background: var(--prod-gold); color: #1a1408; border: none; font-weight: 600; }
+
+    .block-tag {
+      position: absolute; top: 8px; left: 8px; z-index: 5;
+      font-size: 9px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      background: #263238; color: #fff; padding: 3px 7px; border-radius: 4px;
+    }
+    .block-tag--anno { background: var(--wf-anno); }
+    .block-tag--new { background: #5e35b1; }
+    .wf-img {
+      background: repeating-linear-gradient(-45deg, #cfd8dc, #cfd8dc 8px, #eceff1 8px, #eceff1 16px);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--wf-muted); font-size: 12px; font-weight: 600; letter-spacing: .04em;
+      position: relative; overflow: hidden;
+    }
+    .wf-img small { font-weight: 400; font-size: 10px; opacity: .8; display: block; margin-top: 4px; text-align: center; }
+
+    .preview-main { background: var(--wf-paper); min-height: 520px; position: relative; }
+
+    /* ── 正文占位（封底前） ── */
+    .body-tail {
+      border-bottom: 2px dashed var(--wf-border);
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--wf-muted);
+      background: #fff;
+    }
+    .body-tail::before {
+      content: "↑ 最后一章 layout-screen · 正文结束";
+      display: block;
+      margin-bottom: 8px;
+      color: var(--wf-anno);
+      font-weight: 600;
+    }
+
+    /* ── 现状 ── */
+    .current-closing {
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 20px 24px 32px;
+      text-align: center;
+    }
+    .current-label {
+      font-size: 10px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--wf-muted);
+      margin: 0 0 10px;
+    }
+    .current-stats {
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--wf-muted);
+      margin: 0 0 14px;
+    }
+    .current-epilogue {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      line-height: 1.5;
+      margin: 0 0 20px;
+      padding-top: 14px;
+      border-top: 1px solid #cfd8dc;
+    }
+    .current-footer {
+      font-size: 11px;
+      color: var(--wf-muted);
+      padding-top: 12px;
+      border-top: 1px dashed var(--wf-border);
+    }
+    .current-gap {
+      border: 2px dashed #e57373;
+      background: rgba(255,205,210,.25);
+      margin: 12px 0;
+      padding: 8px;
+      font-size: 11px;
+      color: #c62828;
+      text-align: center;
+    }
+
+    /* ── 共用排版 token ── */
+    .closing__label {
+      font-size: 10px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--prod-accent-light);
+      margin: 0 0 8px;
+    }
+    .closing__stats {
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.72);
+      margin: 0 0 14px;
+    }
+    .closing__text {
+      font-family: var(--font-serif);
+      font-size: clamp(17px, 2.2vw, 22px);
+      line-height: 1.55;
+      color: rgba(255,255,255,.92);
+      margin: 0 0 12px;
+      max-width: 22em;
+    }
+    .closing__title {
+      font-family: var(--font-brush);
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 400;
+      letter-spacing: .04em;
+      color: rgba(255,255,255,.55);
+      margin: 0 0 16px;
+    }
+    .closing__brand {
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.45);
+      margin: 0;
+    }
+
+    /* ── 方案 B · spread ── */
+    .spread { display: flex; flex-direction: column; }
+    .spread__hero {
+      aspect-ratio: 16/9;
+      max-height: min(48vh, 380px);
+      width: 100%;
+    }
+    .spread__closing {
+      position: relative;
+      max-width: var(--page-w);
+      margin: 0 auto;
+      padding: 28px 32px 36px;
+      text-align: center;
+    }
+    .spread__closing::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 48px;
+      height: 2px;
+      background: var(--prod-accent);
+    }
+    .spread__closing .closing__label { color: var(--prod-accent); }
+    .spread__closing .closing__stats { color: var(--wf-muted); }
+    .spread__closing .closing__text { color: #37474f; margin: 0 auto 12px; }
+    .spread__closing .closing__title { color: rgba(38,50,56,.45); }
+    .spread__closing .closing__brand { color: var(--wf-muted); }
+
+    /* ── 方案 A · 分栏 ── */
+    .magazine {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      min-height: 400px;
+    }
+    @media (max-width: 720px) { .magazine { grid-template-columns: 1fr; } }
+    .magazine__media { min-height: 280px; }
+    .magazine__text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 32px 28px;
+      background: #fff;
+      border-left: 1px dashed var(--wf-border);
+      text-align: left;
+    }
+    .magazine__text .closing__text { color: #37474f; max-width: none; }
+    .magazine__text .closing__stats { color: var(--wf-muted); }
+    .magazine__text .closing__title { color: rgba(38,50,56,.45); }
+    .magazine__text .closing__brand { color: var(--wf-muted); }
+
+    /* ── 方案 C · 剧场遮罩 ── */
+    .theater {
+      position: relative;
+      aspect-ratio: 16/9;
+      max-height: min(68vh, 460px);
+      width: 100%;
+    }
+    .theater__gradient {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(26,25,24,.82) 0%, rgba(26,25,24,.25) 50%, transparent 72%);
+      pointer-events: none;
+    }
+    .theater__content {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 28px max(24px, 5vw) 32px;
+      color: #fff;
+      max-width: var(--page-w);
+      margin: 0 auto;
+      text-align: left;
+    }
+
+    /* ── 方案 D · 全视窗（推荐 · 与 cover-opening 对称） ── */
+    .fullbleed {
+      min-height: 480px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: #1a1918;
+    }
+    .fullbleed__stage {
+      flex: 1;
+      min-height: 420px;
+      position: relative;
+    }
+    .fullbleed__stage .theater__gradient {
+      background: linear-gradient(
+        to top,
+        rgba(26, 25, 24, 0.94) 0%,
+        rgba(26, 25, 24, 0.62) 52%,
+        rgba(26, 25, 24, 0.08) 100%
+      );
+    }
+    .fullbleed__content {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-start;
+      padding: 0 max(24px, 5vw) 48px;
+      text-align: left;
+    }
+    .fullbleed__vh-tag {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 10px;
+      background: rgba(0,0,0,.5);
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .fullbleed__end {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      font-size: 10px;
+      background: rgba(127,203,179,.2);
+      color: #dff5ec;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(127,203,179,.35);
+    }
+
+    /* ── 对比表 ── */
+    .compare { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 16px; }
+    .compare th, .compare td { border: 1px solid var(--wf-border); padding: 8px 10px; text-align: left; }
+    .compare th { background: #eceff1; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+    .compare .yes { color: var(--wf-rec); font-weight: 600; }
+    .compare .no { color: #c62828; }
+    .compare .mid { color: var(--wf-muted); }
+
+    .contract {
+      background: #fff3e0;
+      border: 1px solid #ffb74d;
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      font-size: 13px;
+      margin-top: 24px;
+    }
+    .contract h3 { margin: 0 0 8px; font-size: 13px; color: var(--wf-anno); }
+    .contract code { background: #ffe0b2; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+
+    .mirror-table { font-size: 13px; }
+    .mirror-table th { background: #263238; color: #fff; }
+    .mirror-table td:first-child { font-weight: 600; white-space: nowrap; }
+
+    .bp-row { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+    .bp-card { flex: 1; min-width: 280px; }
+    .bp-card h4 { margin: 0 0 8px; font-size: 13px; color: var(--wf-muted); }
+
+    .option-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 12px; }
+    .option-card {
+      border: 1px solid var(--wf-border);
+      border-radius: var(--radius);
+      padding: 12px;
+      background: #fff;
+      font-size: 12px;
+    }
+    .option-card strong { display: block; margin-bottom: 4px; font-size: 13px; }
+    .option-card.is-rec { border-color: var(--wf-rec); background: var(--wf-rec-bg); }
+  </style>
+</head>
+<body>
+
+  <header class="review-bar">
+    <h1>Web 预览页封底 · 线框稿 v1.0</h1>
+    <p>对象：<code>data-layout="web"</code> 游记预览末屏 · 示例 trip「林芝」· 与已落地 <code>cover-opening</code> 对称 · 灰斜纹 = 封底图占位</p>
+    <nav class="tabs" aria-label="方案切换">
+      <button type="button" class="is-active" data-panel="overview">总览</button>
+      <button type="button" data-panel="mirror">封面 ↔ 封底</button>
+      <button type="button" data-panel="current">现状</button>
+      <button type="button" data-panel="d" class="is-rec">D · 全视窗封底 ★</button>
+      <button type="button" data-panel="b">B · 收尾 spread</button>
+      <button type="button" data-panel="a">A · 分栏杂志</button>
+      <button type="button" data-panel="c">C · 轻遮罩剧场</button>
+      <button type="button" data-panel="spec">规格 & 待拍板</button>
+    </nav>
+  </header>
+
+  <div class="wrap">
+
+    <!-- ── 总览 ── -->
+    <section class="panel is-visible" id="panel-overview">
+      <div class="section">
+        <h2>设计目标</h2>
+        <p class="lead">
+          封底应与封面 <code>cover-opening</code> 形成<strong>书本闭合感</strong>：独立占满一屏（<code>100dvh − toolbar</code>），
+          用一张「收尾图」+ 叠字层完成旅途总结，而不是在浅色正文流里突然结束。
+          现状 <code>epilogue-screen</code> 仅 inline 排版 + 下方 <code>footer-cta</code>，缺少与首屏对等的仪式感。
+        </p>
+      </div>
+
+      <table class="compare">
+        <thead>
+          <tr>
+            <th>方案</th>
+            <th>独立一屏</th>
+            <th>与 cover-opening 对称</th>
+            <th>复用现有 data-block</th>
+            <th>实现成本</th>
+            <th>备注</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>现状</strong></td>
+            <td class="no">否 · 夹在 .page 流内</td>
+            <td class="no">否</td>
+            <td class="yes">是</td>
+            <td class="yes">—</td>
+            <td>folio lite 居中 colophon，无封底图</td>
+          </tr>
+          <tr style="background: var(--wf-rec-bg);">
+            <td><strong>D · 全视窗封底 ★</strong></td>
+            <td class="yes">是 · 100dvh</td>
+            <td class="yes">高 · 同 DOM 壳层</td>
+            <td class="mid">+1 视觉分组</td>
+            <td class="mid">中</td>
+            <td><strong>推荐</strong>：与已落地封面 D 同一语言</td>
+          </tr>
+          <tr>
+            <td><strong>B · 收尾 spread</strong></td>
+            <td class="mid">部分 · 图+文分两截</td>
+            <td class="mid">中</td>
+            <td class="yes">是</td>
+            <td class="yes">低</td>
+            <td>若认为封底不必全屏时的轻量备选</td>
+          </tr>
+          <tr>
+            <td><strong>A · 分栏杂志</strong></td>
+            <td class="mid">中</td>
+            <td class="mid">中</td>
+            <td class="yes">是</td>
+            <td class="mid">中</td>
+            <td>编辑感强；窄屏需回退 B/D</td>
+          </tr>
+          <tr>
+            <td><strong>C · 轻遮罩剧场</strong></td>
+            <td class="mid">图区非全屏</td>
+            <td class="mid">中</td>
+            <td class="yes">是</td>
+            <td class="mid">中</td>
+            <td>16:9 舞台 · 非 100dvh</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="contract">
+        <h3>推荐结构 · <code>cover-closing</code>（对称 <code>cover-opening</code>）</h3>
+        <pre style="margin:8px 0 0;font-size:12px;white-space:pre-wrap;font-family:var(--font)">&lt;section class="cover-closing" data-block="cover-closing"&gt;
+  &lt;div class="closing-hero" data-block="closing-hero"&gt;…&lt;/div&gt;   &lt;!-- 封底图 · 复用 cover-hero 样式 --&gt;
+  &lt;div class="cover-closing__panel"&gt;
+    &lt;span class="cover-closing__label"&gt;Colophon&lt;/span&gt;     &lt;!-- epilogue-screen__label --&gt;
+    &lt;p class="cover-closing__stats"&gt;…&lt;/p&gt;                  &lt;!-- epilogueStats --&gt;
+    &lt;p class="cover-closing__text"&gt;…&lt;/p&gt;                   &lt;!-- epilogue ≤80 字 --&gt;
+    &lt;p class="cover-closing__title"&gt;林芝&lt;/p&gt;               &lt;!-- 标题回响 · 可选 --&gt;
+    &lt;p class="cover-closing__brand"&gt;Travelogue …&lt;/p&gt;       &lt;!-- 吸收 footer-cta 品牌行 --&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</pre>
+      </div>
+    </section>
+
+    <!-- ── 封面 ↔ 封底 对称表 ── -->
+    <section class="panel" id="panel-mirror">
+      <div class="section">
+        <h2>封面 ↔ 封底 · 信息对称</h2>
+        <p class="lead">封底不是封面的简单复制，而是<strong>叙事收束</strong>：开场给「为何读」，封底给「读完了什么」。</p>
+      </div>
+      <table class="compare mirror-table">
+        <thead>
+          <tr>
+            <th>层级</th>
+            <th>封面 <code>cover-opening</code></th>
+            <th>封底 <code>cover-closing</code>（推荐）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>容器</td>
+            <td><code>cover-opening</code> · 100dvh</td>
+            <td><code>cover-closing</code> · 100dvh</td>
+          </tr>
+          <tr>
+            <td>背景图</td>
+            <td><code>cover-hero</code> · coverAsset</td>
+            <td><code>closing-hero</code> · 见「封底图来源」</td>
+          </tr>
+          <tr>
+            <td>第 1 行</td>
+            <td><code>cover-opening__place</code> · accent 地点</td>
+            <td><code>cover-closing__label</code> · Colophon / 尾声</td>
+          </tr>
+          <tr>
+            <td>第 2 行</td>
+            <td><code>trip-meta</code> · 日期 · 天数</td>
+            <td><code>cover-closing__stats</code> · X 天 · X 地方 · X 张</td>
+          </tr>
+          <tr>
+            <td>主文案</td>
+            <td><code>cover-opening__title</code> · 杂志名</td>
+            <td><code>cover-closing__text</code> · epilogue 收尾句</td>
+          </tr>
+          <tr>
+            <td>副文案</td>
+            <td><code>cover-opening__hook</code> · 钩子</td>
+            <td><code>cover-closing__title</code> · 标题回响（弱化 · 可选）</td>
+          </tr>
+          <tr>
+            <td>底部 affordance</td>
+            <td>进入正文 ⌄</td>
+            <td><code>cover-closing__brand</code> · 品牌 / Studio 回链</td>
+          </tr>
+          <tr>
+            <td>动效</td>
+            <td>进场 reveal + 滚出视差</td>
+            <td>滚入 reveal + 滚出淡出（仅封底段）</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="contract" style="background:#e8eaf6;border-color:#5c6bc0">
+        <h3 style="color:#3949ab">封底图来源 · 待拍板（4 选 1 或组合）</h3>
+        <div class="option-cards">
+          <div class="option-card is-rec">
+            <strong>★ S1 · 末屏自动</strong>
+            取最后一屏 <code>layout-screen</code> 主图 · 零配置 · 与正文视觉连续
+          </div>
+          <div class="option-card">
+            <strong>S2 · 策展末章</strong>
+            末章内选低饱和/傍晚图（PRD 智能排版末章倾向）· 需 layout 侧 helper
+          </div>
+          <div class="option-card">
+            <strong>S3 · 显式 closingAssetId</strong>
+            新增 trip 字段 · 用户可换 · 成本最高
+          </div>
+          <div class="option-card">
+            <strong>S4 · 复用 coverAsset</strong>
+            书脊对称 · 易重复 · 一般不推荐
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 现状 ── -->
+    <section class="panel" id="panel-current">
+      <div class="section">
+        <h2>现状 · epilogue-screen 内联于正文流</h2>
+        <p class="lead">林芝 trip 当前：最后一章屏后直接 <code>epilogue-screen</code> + <code>footer-cta</code>，浅色底、无上屏图，结束感弱。</p>
+      </div>
+      <div class="grid-2">
+        <div class="frame">
+          <div class="chrome"><div class="chrome__dots"><span></span><span></span><span></span></div><span class="chrome__tab">林芝 · 预览 · 页尾</span></div>
+          <div class="toolbar">
+            <span class="toolbar__back">← 书架</span>
+            <span class="toolbar__spacer"></span>
+            <span class="toolbar__btn">▶ 放映</span>
+            <span class="toolbar__btn toolbar__btn--gold">保存长图</span>
+          </div>
+          <div class="preview-main">
+            <div class="body-tail">最后一屏 · 05 · screen-landscape-1</div>
+            <div class="current-closing">
+              <div class="current-gap">⚠ 无独立封底屏：Colophon 漂在正文末尾，与封面首屏不对仗</div>
+              <p class="current-label"><span class="block-tag block-tag--anno" style="position:static;display:inline-block;margin-right:6px">epilogue-screen</span>Colophon</p>
+              <p class="current-stats">28 天 · 1 个地方 · 213 张照片</p>
+              <p class="current-epilogue">三个月，从桃粉到雨密，林芝的春天是一首慢诗。</p>
+              <div class="current-footer"><span class="block-tag block-tag--anno" style="position:static;display:inline-block;margin-right:6px">footer-cta</span>Travelogue · Visual Journal</div>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <h3>问题清单</h3>
+          <ul>
+            <li>与全视窗 <code>cover-opening</code> 头重脚轻</li>
+            <li>无封底图，stats + epilogue 挤在版心内</li>
+            <li><code>footer-cta</code> 品牌行与 colophon 视觉重复</li>
+            <li>长图导出（P5-L5）封底边界不清晰</li>
+            <li>滚到底缺少「合上书」的停顿</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ── 方案 D 推荐 ── -->
+    <section class="panel" id="panel-d">
+      <div class="section">
+        <h2>方案 D · 全视窗封底（推荐）</h2>
+        <p class="lead">
+          与已落地封面相同：<code>100dvh − toolbar</code>、深色底、底部渐变叠字、左对齐。
+          竖图 <code>object-fit: contain</code> + 渐变底（不裁头）。<code>footer-cta</code> 品牌行收入 panel，Studio 回链仍可在 toolbar / 分享态单独处理。
+        </p>
+      </div>
+      <div class="grid-2">
+        <div class="frame frame--rec">
+          <div class="chrome"><div class="chrome__dots"><span></span><span></span><span></span></div><span class="chrome__tab">林芝 · 预览 · 封底</span></div>
+          <div class="toolbar">
+            <span class="toolbar__back">← 书架</span>
+            <span class="toolbar__spacer"></span>
+            <span class="toolbar__btn">▶ 放映</span>
+            <span class="toolbar__btn toolbar__btn--gold">保存长图</span>
+          </div>
+          <div class="preview-main">
+            <div class="body-tail" style="padding:12px">↑ … 正文 · 滚入此屏前最后一章已离开视口</div>
+            <div class="fullbleed">
+              <div class="wf-img fullbleed__stage">
+                <span class="block-tag block-tag--new">cover-closing</span>
+                <span class="block-tag" style="top:36px">closing-hero</span>
+                <span class="fullbleed__end">THE END</span>
+                <span class="fullbleed__vh-tag">100dvh − toolbar</span>
+                CLOSING IMAGE<br />
+                <small>末屏 asset · contain/cover · focal-y 偏下<br />竖图不裁头 · 同 cover-hero 规则</small>
+                <div class="theater__gradient"></div>
+                <div class="fullbleed__content">
+                  <p class="closing__label">Colophon</p>
+                  <p class="closing__stats">28 天 · 1 个地方 · 213 张照片</p>
+                  <p class="closing__text">三个月，从桃粉到雨密，林芝的春天是一首慢诗。</p>
+                  <p class="closing__title">林芝</p>
+                  <p class="closing__brand">Travelogue · Visual Journal</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <span class="rec-badge">★ 推荐方案</span>
+          <h3>设计要点</h3>
+          <ul>
+            <li><strong>信息层级</strong>：Label → Stats → Epilogue → Title echo → Brand</li>
+            <li><strong>对齐</strong>：panel 左对齐，与 cover-opening 一致</li>
+            <li><strong>渐变</strong>：同封面 to-top 94%→8%，保证浅/深图可读</li>
+            <li><strong>标题回响</strong>：Brush 弱化 55% 白，可配置隐藏</li>
+            <li><strong>空态</strong>：无 epilogue 时仍显示 stats + brand</li>
+          </ul>
+          <h3 style="margin-top:16px">与封面差异</h3>
+          <ul>
+            <li>无「向下滚动」提示 · 已是终点</li>
+            <li>动效方向：滚<strong>入</strong>时 reveal，而非首屏 eager</li>
+            <li>可选顶部 <code>THE END</code> 微标（分享态）</li>
+          </ul>
+          <h3 style="margin-top:16px">footer-cta 处置</h3>
+          <ul>
+            <li>Web：<code>footer-cta</code> 品牌行并入 panel · 块本身隐藏</li>
+            <li>Studio 草稿：「← 返回 Studio」保留在 toolbar / 或 panel 链接</li>
+            <li>Mobile：维持现有 inline epilogue（不强制全屏）</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ── 方案 B ── -->
+    <section class="panel" id="panel-b">
+      <div class="section">
+        <h2>方案 B · 收尾 Spread</h2>
+        <p class="lead">16:9 封底图（max 48vh）+ 下方 colophon 区 · 不强制 100dvh · 实现最轻。</p>
+      </div>
+      <div class="grid-2">
+        <div class="frame">
+          <div class="chrome"><div class="chrome__dots"><span></span><span></span><span></span></div><span class="chrome__tab">林芝 · 封底 B</span></div>
+          <div class="preview-main spread">
+            <div class="body-tail">↑ 正文结束</div>
+            <div class="wf-img spread__hero">
+              <span class="block-tag">closing-hero</span>
+              CLOSING · 16:9<br /><small>max-height: 48vh</small>
+            </div>
+            <div class="spread__closing">
+              <span class="block-tag block-tag--anno" style="top:-36px;left:50%;transform:translateX(-50%)">epilogue-screen 视觉编组</span>
+              <p class="closing__label">Colophon</p>
+              <p class="closing__stats">28 天 · 1 个地方 · 213 张照片</p>
+              <p class="closing__text">三个月，从桃粉到雨密，林芝的春天是一首慢诗。</p>
+              <p class="closing__title">林芝</p>
+              <p class="closing__brand">Travelogue · Visual Journal</p>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <h3>适用</h3>
+          <ul>
+            <li>认为封底不必占满视窗时</li>
+            <li>超长 epilogue 需要更多浅色底阅读区</li>
+          </ul>
+          <h3 style="margin-top:16px">顾虑</h3>
+          <ul>
+            <li>与封面 D 不对仗 · 头重脚轻残留</li>
+            <li>宽屏下 48vh 图偏小</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ── 方案 A ── -->
+    <section class="panel" id="panel-a">
+      <div class="section">
+        <h2>方案 A · 分栏杂志</h2>
+        <p class="lead">左图右文 · 桌面编辑感 · ≥1024px 最佳。</p>
+      </div>
+      <div class="grid-2">
+        <div class="frame">
+          <div class="preview-main">
+            <div class="body-tail">↑ 正文结束</div>
+            <div class="magazine">
+              <div class="wf-img magazine__media">
+                <span class="block-tag">closing-hero</span>
+                CLOSING
+              </div>
+              <div class="magazine__text">
+                <p class="closing__label">Colophon</p>
+                <p class="closing__stats">28 天 · 1 个地方 · 213 张照片</p>
+                <p class="closing__text">三个月，从桃粉到雨密，林芝的春天是一首慢诗。</p>
+                <p class="closing__title">林芝</p>
+                <p class="closing__brand">Travelogue · Visual Journal</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <h3>备注</h3>
+          <ul>
+            <li>窄屏回退 B 或 D</li>
+            <li>与 cover-opening 分栏 A 对称</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ── 方案 C ── -->
+    <section class="panel" id="panel-c">
+      <div class="section">
+        <h2>方案 C · 轻遮罩剧场</h2>
+        <p class="lead">16:9 舞台 + 图内叠字 · 非全屏 · 电影感。</p>
+      </div>
+      <div class="grid-2">
+        <div class="frame">
+          <div class="preview-main">
+            <div class="body-tail">↑ 正文结束</div>
+            <div class="wf-img theater">
+              <span class="block-tag">closing-hero</span>
+              <div class="theater__gradient"></div>
+              <div class="theater__content">
+                <p class="closing__label">Colophon</p>
+                <p class="closing__stats">28 天 · 1 个地方 · 213 张照片</p>
+                <p class="closing__text">三个月，从桃粉到雨密，林芝的春天是一首慢诗。</p>
+                <p class="closing__title">林芝</p>
+              </div>
+            </div>
+            <div style="padding:12px 24px;text-align:center;font-size:11px;color:var(--wf-muted)">
+              <span class="block-tag block-tag--anno" style="position:static;display:inline-block">footer-cta</span>
+              Travelogue · Visual Journal
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <h3>备注</h3>
+          <ul>
+            <li>品牌行仍在图外 · 与 D 相比收束感弱</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ── 规格 & 待拍板 ── -->
+    <section class="panel" id="panel-spec">
+      <div class="section">
+        <h2>规格摘要 · 方案 D（推荐落地版）</h2>
+        <p class="lead">可直接写入 <code>journal.css</code> 的 <code>html[data-layout="web"]</code> 段，与 <code>.cover-opening</code> 并列。</p>
+      </div>
+
+      <div class="bp-row">
+        <div class="bp-card">
+          <h4>Web · 全视窗封底</h4>
+          <div class="frame" style="font-size:12px;padding:12px">
+            <pre style="margin:0;white-space:pre-wrap;font-family:var(--font);font-size:11px">.cover-closing
+  min-height: 100dvh
+  /* Studio: calc(100dvh - var(--preview-toolbar-h)) */
+
+.closing-hero
+  position: absolute; inset: 0
+  /* 复用 cover-hero 媒体规则 · contain 竖图 */
+
+.cover-closing__panel
+  margin-top: auto
+  padding: 28px max(24px,5vw) calc(32px + safe-bottom)
+  text-align: left
+  gradient: 同 cover-opening__panel
+
+label:  10px · letter-spacing .18em · accent
+stats:  11px · uppercase · 70% white
+text:   clamp(1.05rem, 2.2vw, 1.375rem) · serif
+title:  clamp(1.35rem, 3vw, 2rem) · brush · 55% white
+brand:  10px · uppercase · 45% white</pre>
+          </div>
+        </div>
+        <div class="bp-card">
+          <h4>Mobile · 不强制全屏</h4>
+          <div class="frame" style="font-size:12px;padding:12px">
+            <pre style="margin:0;white-space:pre-wrap;font-family:var(--font);font-size:11px">html[data-layout="mobile"]
+  维持现有 epilogue-screen inline
+  或可选 closing-hero 16:9 + 下方 colophon
+
+长图 longshot
+  cover-closing 作为边界最后一屏
+  与 P5-L5 longshot-boundary-footer 合并评估</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="contract">
+        <h3>数据契约（尽量复用 · 新增最少）</h3>
+        <p style="margin:0 0 8px">
+          <code>epilogue-screen</code> · label + stats + text（已有）<br />
+          <code>epilogue</code> · ≤80 字 · 可空 · inline-edit 路径不变<br />
+          <code>epilogueStats</code> · summaryLine（已有）<br />
+          <code>footer-cta</code> · Web 下品牌行迁入 panel · 块可 <code>display:none</code><br />
+          <code>closing-hero</code> · <strong>新 block</strong> · 1 张图 · 来源见 S1–S4
+        </p>
+      </div>
+
+      <div class="contract" style="background:#e0f2f1;border-color:#00897b">
+        <h3 style="color:#00695c">✓ 已拍板（2026-06-09）</h3>
+        <ul style="margin:8px 0 0;padding-left:20px;font-size:13px">
+          <li><strong>方案</strong>：D 全视窗封底</li>
+          <li><strong>封底图</strong>：S1 末屏自动 · S2 末章策展兜底</li>
+          <li><strong>标题回响</strong>：弱显示杂志名</li>
+          <li><strong>THE END</strong>：分享态左上角（宽屏）</li>
+          <li><strong>footer-cta</strong>：Web 品牌行并入 panel</li>
+          <li><strong>动效</strong>：同封面档位 · 滚入 IO reveal</li>
+        </ul>
+      </div>
+
+      <div class="contract" style="margin-top:16px;background:#e0f2f1;border-color:#00897b">
+        <h3 style="color:#00695c">实现范围建议（拍板后）</h3>
+        <ul style="margin:8px 0 0;padding-left:20px;font-size:13px">
+          <li>新增 <code>partials/cover-closing.hbs</code> + <code>render/cover_closing.py</code>（镜像 cover_opening）</li>
+          <li><code>journal.hbs</code> 末段替换 inline epilogue-screen</li>
+          <li><code>breath.js</code> 封底滚入动效（不重复首屏 eager 逻辑）</li>
+          <li>长图 <code>longshot.js</code> 边界屏对齐</li>
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    document.querySelectorAll('.tabs button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('is-active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('is-visible'));
+        btn.classList.add('is-active');
+        document.getElementById('panel-' + btn.dataset.panel).classList.add('is-visible');
+      });
+    });
+  </script>
+</body>
+</html>

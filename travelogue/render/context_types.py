@@ -312,3 +312,6 @@ class TripRenderContext(TypedDict, total=False):
     epilogueStats: EpilogueStatsContext | None
     useEpilogueStats: bool
     useEpilogueScreen: bool
+    useCoverClosing: bool
+    showClosingTitle: bool
+    closing: CoverRenderContext

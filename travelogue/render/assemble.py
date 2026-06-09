@@ -43,6 +43,12 @@ def build_render_context(
     )
     from travelogue.render.engine import LONGSHOT_INDEX_NAME
     from travelogue.render.reading_profile import reading_html_attrs
+    from travelogue.render.cover_closing import (
+        closing_focal_point,
+        closing_use_contain_fit,
+        resolve_closing_asset_id,
+        show_closing_title,
+    )
     from travelogue.render.cover_opening import (
         cover_focal_point,
         cover_place_is_distinct,
@@ -95,14 +101,14 @@ def build_render_context(
     )
     cover_show_title = resolve_cover_show_title(trip, cfg=cfg)
     hook = (meta.get("hook") or "").strip()
-    show_cover_hook = show_hook_on_cover(hook)
-    show_cover_place = cover_place_is_distinct(cover_place, meta_title)
-    fx, fy = cover_focal_point(cover_asset)
-    cover_contain = cover_use_contain_fit(cover_asset)
     epilogue = (trip.get("epilogue") or "").strip()
     if surface.strip_narrative_copy:
         hook = ""
         epilogue = ""
+    show_cover_hook = show_hook_on_cover(hook)
+    show_cover_place = cover_place_is_distinct(cover_place, meta_title)
+    fx, fy = cover_focal_point(cover_asset)
+    cover_contain = cover_use_contain_fit(cover_asset)
 
     chapters_bundle = build_chapters_render_context(
         trip,
@@ -123,6 +129,38 @@ def build_render_context(
         if (use_epilogue_stats or surface.is_longshot_surface)
         else None
     )
+
+    has_epilogue = bool(epilogue) or use_epilogue_stats
+    use_cover_closing = (
+        surface.use_screens_global
+        and not surface.is_longshot_surface
+        and image_layout in ("web", "auto")
+        and has_epilogue
+    )
+    closing_asset = None
+    closing_id = ""
+    if use_cover_closing:
+        closing_id = (
+            resolve_closing_asset_id(
+                trip,
+                assets,
+                prefer_landscape=image_layout in ("web", "auto"),
+            )
+            or ""
+        )
+        closing_asset = assets.get(closing_id) if closing_id else None
+        if not closing_asset:
+            use_cover_closing = False
+
+    closing_fx, closing_fy = (0.5, 0.45)
+    closing_contain = False
+    closing_src = ""
+    closing_srcset = ""
+    if use_cover_closing and closing_asset:
+        closing_src = pick_image_src(closing_asset, export_layout=image_layout)
+        closing_srcset = compile_srcset(closing_asset, mobile=image_layout == "mobile")
+        closing_fx, closing_fy = closing_focal_point(closing_asset)
+        closing_contain = closing_use_contain_fit(closing_asset)
 
     html_attrs = [f'data-export="{surface.export_mode}"']
     if surface.export_layout:
@@ -214,7 +252,7 @@ def build_render_context(
         "hasHook": bool(hook),
         "editableHook": surface.is_draft and bool(hook),
         "epilogue": epilogue,
-        "hasEpilogue": bool(epilogue) or use_epilogue_stats,
+        "hasEpilogue": has_epilogue,
         "editableEpilogue": surface.is_draft and bool(epilogue),
         "tripId": trip.get("tripId") or "",
         "chapters": chapters_bundle.chapters_out,
@@ -241,5 +279,20 @@ def build_render_context(
         "epilogueStats": epilogue_stats,
         "useEpilogueStats": use_epilogue_stats,
         "useEpilogueScreen": (surface.folio_lite and bool(epilogue)) or use_epilogue_stats,
+        "useCoverClosing": use_cover_closing,
+        "showClosingTitle": show_closing_title(meta_title) if use_cover_closing else False,
+        "closing": CoverRenderContext(
+            src=closing_src,
+            hasSrcset=bool(closing_srcset),
+            srcset=closing_srcset,
+            sizes=pick_image_sizes(image_layout, "cover"),
+            alt=alt_text(None, closing_asset, meta_title) if closing_asset else meta_title,
+            useContainFit=closing_contain,
+            focalX=closing_fx,
+            focalY=closing_fy,
+            hasFocal=True,
+        )
+        if use_cover_closing
+        else CoverRenderContext(src="", hasSrcset=False, srcset="", sizes="", alt=""),
     }
     return ctx

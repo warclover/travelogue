@@ -1,0 +1,20 @@
+<section class="cover-closing" data-block="cover-closing">
+  {{> closing-hero}}
+  <div class="cover-closing__panel">
+    <span class="cover-closing__label">Colophon</span>
+    {{#if useEpilogueStats}}
+    <p class="cover-closing__stats">{{epilogueStats.summaryLine}}</p>
+    {{/if}}
+    {{#if epilogue}}
+    <p class="cover-closing__text epilogue" data-block="epilogue" data-present-aux="true"{{#if editableEpilogue}} data-editable="epilogue" data-edit-path="epilogue"{{/if}}>{{epilogue}}</p>
+    {{/if}}
+    {{#if showClosingTitle}}
+    <p class="cover-closing__title" aria-hidden="true">{{title}}</p>
+    {{/if}}
+    <p class="cover-closing__brand">Travelogue · Visual Journal</p>
+    <p class="footer-cta__studio-home cover-closing__studio-home" hidden>
+      <a class="footer-cta__studio-home-link" href="/">← 返回 Studio 首页</a>
+    </p>
+  </div>
+  <span class="cover-closing__end" aria-hidden="true">THE END</span>
+</section>

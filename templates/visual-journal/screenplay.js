@@ -10,7 +10,7 @@
   var FADE_MS = 700;
   var SELECTOR = '.layout-screen[data-block="layout-screen"]';
   var AUX_SELECTOR =
-    'header[data-block="cover-hero"], .foreword-spread[data-block="foreword-spread"], .trip-index[data-block="trip-index"], .featured-grid[data-block="featured-grid"], .screen-spread[data-block="screen-spread"], .epilogue-screen[data-block="epilogue-screen"], .epilogue[data-block="epilogue"]';
+    'header[data-block="cover-hero"], .foreword-spread[data-block="foreword-spread"], .trip-index[data-block="trip-index"], .featured-grid[data-block="featured-grid"], .screen-spread[data-block="screen-spread"], section[data-block="cover-closing"], .epilogue-screen[data-block="epilogue-screen"], .epilogue[data-block="epilogue"]';
   var featuredOnlyOverride = null;
   var presentHash = global.TraveloguePresentHash || {};
   var presentBookmarks = global.TraveloguePresentBookmarks || {};
@@ -88,6 +88,10 @@
     return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable;
   }
 
+  function hasCoverClosingSlide() {
+    return !!document.querySelector('section[data-block="cover-closing"]');
+  }
+
   function presentSlideSelector() {
     if (skipAuxBlocksEnabled()) {
       return SELECTOR;
@@ -97,6 +101,18 @@
 
   function collectSlides() {
     var all = Array.prototype.slice.call(document.querySelectorAll(presentSlideSelector()));
+    if (hasCoverClosingSlide()) {
+      all = all.filter(function (el) {
+        if (el.matches('[data-block="epilogue-screen"]')) return false;
+        if (
+          el.matches('[data-block="epilogue"]') &&
+          !el.closest('[data-block="cover-closing"]')
+        ) {
+          return false;
+        }
+        return true;
+      });
+    }
     if (!featuredOnlyEnabled()) {
       return all;
     }

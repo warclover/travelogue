@@ -571,6 +571,171 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
     text-align: left;
     color: rgba(255, 255, 255, 0.52);
   }
+
+  /* Web · 全视窗封底（对称 cover-opening） */
+  html[data-layout="web"] article:has([data-block="cover-closing"]) .page > .epilogue-screen,
+  html[data-layout="auto"] article:has([data-block="cover-closing"]) .page > .epilogue-screen,
+  html[data-layout="web"] article:has([data-block="cover-closing"]) .page > .epilogue,
+  html[data-layout="auto"] article:has([data-block="cover-closing"]) .page > .epilogue,
+  html[data-layout="web"] article:has([data-block="cover-closing"]) .page > .footer-cta,
+  html[data-layout="auto"] article:has([data-block="cover-closing"]) .page > .footer-cta {
+    display: none !important;
+  }
+}
+
+/* —— Cover closing · Web 末屏 —— */
+.cover-closing {
+  display: none;
+  position: relative;
+}
+
+.cover-closing__panel {
+  position: relative;
+}
+
+.cover-closing__label {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-mobile, #7cb89a);
+}
+
+.cover-closing__stats {
+  margin: 0 0 14px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.cover-closing__text {
+  margin: 0 0 12px;
+  font-family: var(--font-serif);
+  font-size: clamp(1.05rem, 2.2vw, 1.375rem);
+  line-height: 1.55;
+  max-width: 28em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.cover-closing__title {
+  margin: 0 0 16px;
+  font-family: var(--font-brush);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.08;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.cover-closing__brand {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.cover-closing__end {
+  display: none;
+  position: absolute;
+  top: 12px;
+  left: max(12px, 3vw);
+  z-index: 2;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(223, 245, 236, 0.88);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(127, 203, 179, 0.35);
+  background: rgba(127, 203, 179, 0.12);
+  pointer-events: none;
+}
+
+html[data-export="share"] .cover-closing__end,
+html[data-preview-share="on"] .cover-closing__end {
+  display: none;
+}
+
+@media (min-width: 48rem) {
+  html[data-layout="web"] .cover-closing,
+  html[data-layout="auto"] .cover-closing {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    position: relative;
+    background: #1a1918;
+  }
+
+  html[data-preview-toolbar="on"] .cover-closing {
+    min-height: calc(100dvh - var(--preview-toolbar-h, 56px));
+  }
+
+  html[data-preview-share="on"] .cover-closing {
+    min-height: calc(100dvh - var(--preview-toolbar-h, 48px));
+  }
+
+  html[data-layout="web"] .closing-hero,
+  html[data-layout="auto"] .closing-hero {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    overflow: hidden;
+    display: block;
+  }
+
+  html[data-layout="web"] .closing-hero__media,
+  html[data-layout="auto"] .closing-hero__media {
+    position: absolute;
+    inset: 0;
+  }
+
+  html[data-layout="web"] .closing-hero__img,
+  html[data-layout="auto"] .closing-hero__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.45) * 100%);
+  }
+
+  html[data-layout="web"] .closing-hero--contain-fit .closing-hero__media,
+  html[data-layout="auto"] .closing-hero--contain-fit .closing-hero__media {
+    background: radial-gradient(ellipse at 50% 65%, #2a2826 0%, #1a1918 55%, #0f0e0d 100%);
+  }
+
+  html[data-layout="web"] .closing-hero--contain-fit .closing-hero__img--main,
+  html[data-layout="auto"] .closing-hero--contain-fit .closing-hero__img--main {
+    object-fit: contain;
+  }
+
+  html[data-layout="web"] .cover-closing__panel,
+  html[data-layout="auto"] .cover-closing__panel {
+    position: relative;
+    z-index: 1;
+    margin-top: auto;
+    width: 100%;
+    max-width: min(var(--page-width), 100%);
+    margin-left: auto;
+    margin-right: auto;
+    padding: 28px max(24px, 5vw) calc(32px + var(--safe-bottom));
+    text-align: left;
+    color: #fff;
+    background: linear-gradient(
+      to top,
+      rgba(26, 25, 24, 0.94) 0%,
+      rgba(26, 25, 24, 0.62) 52%,
+      transparent 100%
+    );
+  }
+
+  html[data-export="share"] .cover-closing__end,
+  html[data-preview-share="on"] .cover-closing__end {
+    display: block;
+  }
 }
 
 /* Mobile：overlay 模式保留 hero 标题，opening 标题隐藏 */
