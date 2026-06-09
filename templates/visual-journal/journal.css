@@ -661,6 +661,7 @@ html[data-preview-share="on"] .cover-closing__end {
 
   html[data-preview-toolbar="on"] .cover-closing {
     min-height: calc(100dvh - var(--preview-toolbar-h, 56px));
+    scroll-margin-top: var(--preview-toolbar-h, 56px);
   }
 
   html[data-preview-share="on"] .cover-closing {

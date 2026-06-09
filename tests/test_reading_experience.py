@@ -82,3 +82,12 @@ def test_journal_screens_has_snap_and_folio_rules() -> None:
     assert '[data-snap="proximity"]' in css
     assert '[data-folio="lite"]' in css
     assert ".folio-plate-meta" in css
+    assert 'html[data-snap="proximity"] {' in css
+    assert '.cover-closing[data-block="cover-closing"]' in css
+    assert "scroll-snap-align: start" in css
+
+
+def test_lenis_flow_disables_scroll_snap() -> None:
+    css = (TEMPLATE_VISUAL_JOURNAL / "breath.css").read_text(encoding="utf-8")
+    assert "html.lenis-flow" in css
+    assert "scroll-snap-type: none" in css

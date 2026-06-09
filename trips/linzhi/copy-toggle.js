@@ -68,6 +68,24 @@
     writeStorage("travelogue:captionDisplay", null);
   }
 
+  function tripIdFromDom() {
+    return document.documentElement.getAttribute("data-trip-id") || "";
+  }
+
+  function recordCopyTelemetry(event) {
+    var tripId = tripIdFromDom();
+    if (!tripId) return;
+    try {
+      fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/copy-telemetry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event: event }),
+      }).catch(function () {});
+    } catch (_e) {
+      /* ignore */
+    }
+  }
+
   function applyPhotosOnly(on) {
     var root = document.documentElement;
     var btn = document.getElementById("photos-only-toggle");
@@ -99,6 +117,7 @@
     } else {
       applyCopyMode(resolveInitialMode());
     }
+    recordCopyTelemetry("preview_open");
 
     if (copyBtn && !copyBtn.dataset.bound) {
       copyBtn.dataset.bound = "1";
@@ -135,6 +154,7 @@
           writeStorage(PHOTOS_ONLY_KEY, null);
           restoreCaptionDisplay();
         }
+        recordCopyTelemetry(next ? "photos_only_on" : "photos_only_off");
       });
     }
   }

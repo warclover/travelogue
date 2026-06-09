@@ -77,6 +77,10 @@
       });
   }
 
+  function isPhotosOnly() {
+    return document.documentElement.getAttribute("data-photos-only") === "on";
+  }
+
   function bindField(el) {
     var path = el.getAttribute("data-edit-path");
     if (!path) return;
@@ -85,6 +89,7 @@
     el.setAttribute("title", "点击编辑");
 
     el.addEventListener("click", function (e) {
+      if (isPhotosOnly()) return;
       if (el.getAttribute("contenteditable") === "true") return;
       e.preventDefault();
       el.setAttribute("contenteditable", "true");
@@ -147,12 +152,25 @@
     }
   }
 
+  function maybeShowEditHint() {
+    try {
+      if (localStorage.getItem("travelogue:inlineEditHintShown")) return;
+      localStorage.setItem("travelogue:inlineEditHintShown", "1");
+    } catch (_e) {
+      return;
+    }
+    showToast("点一下文案可修改");
+  }
+
   function init() {
     if (!isDraft() || !isEditableEnabled()) return;
     var fields = document.querySelectorAll("[data-editable][data-edit-path]");
     applyPlaceholderHints(fields);
     for (var i = 0; i < fields.length; i++) {
       bindField(fields[i]);
+    }
+    if (fields.length) {
+      maybeShowEditHint();
     }
   }
 

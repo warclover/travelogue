@@ -114,6 +114,7 @@ def test_screenplay_enabled_for_screens_engine(golden_trip: dict) -> None:
     assert "screenplay.js" not in draft_html
     assert 'data-inline-edit="on"' in draft_html
     assert 'data-longshot-bridge="on"' in draft_html
+    assert 'data-present-preview-url="index-present.html"' in draft_html
     share_html = render_html(trip, export_mode="share", layout_engine_override="screens")
     assert 'data-screenplay="on"' in share_html
     assert "screenplay-start" in share_html

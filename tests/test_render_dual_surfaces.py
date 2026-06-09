@@ -42,6 +42,7 @@ def test_render_trip_surfaces_writes_both_indexes(trip_workspace: Path) -> None:
     assert 'data-layout="mobile"' in mobile_html
     assert "layout-screen" in web_html or 'data-block="layout-screen"' in web_html
     assert 'data-export="draft"' in web_html
+    assert 'data-present-preview-url="index-present.html"' in web_html
     assert 'data-export="present-preview"' in present_html
     assert 'data-screenplay="on"' in present_html
     assert 'data-block="surface-nav"' in present_html

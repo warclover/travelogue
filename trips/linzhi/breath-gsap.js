@@ -261,7 +261,7 @@
           clearClosingMotion(closingRoot, img);
         }
       },
-      { start: 0.78, end: 1 }
+      { start: 0, end: 0.22 }
     );
   }
 

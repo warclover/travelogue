@@ -175,6 +175,8 @@ def build_render_context(
         html_attrs.append(f'data-longshot-mobile-url="{LONGSHOT_INDEX_NAME}"')
     if surface.include_screenplay:
         html_attrs.append('data-screenplay="on"')
+    if surface.present_preview_url:
+        html_attrs.append(f'data-present-preview-url="{surface.present_preview_url}"')
     if surface.include_screenplay or surface.include_long_shot or surface.include_longshot_bridge:
         html_attrs.append('data-copy-toggle="on"')
     if surface.is_draft:

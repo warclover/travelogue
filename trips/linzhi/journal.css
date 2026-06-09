@@ -571,16 +571,6 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
     text-align: left;
     color: rgba(255, 255, 255, 0.52);
   }
-
-  /* Web · 全视窗封底（对称 cover-opening） */
-  html[data-layout="web"] article:has([data-block="cover-closing"]) .page > .epilogue-screen,
-  html[data-layout="auto"] article:has([data-block="cover-closing"]) .page > .epilogue-screen,
-  html[data-layout="web"] article:has([data-block="cover-closing"]) .page > .epilogue,
-  html[data-layout="auto"] article:has([data-block="cover-closing"]) .page > .epilogue,
-  html[data-layout="web"] article:has([data-block="cover-closing"]) .page > .footer-cta,
-  html[data-layout="auto"] article:has([data-block="cover-closing"]) .page > .footer-cta {
-    display: none !important;
-  }
 }
 
 /* —— Cover closing · Web 末屏 —— */
@@ -1206,6 +1196,14 @@ html[data-layout="mobile"] .media-card__overlay-text {
   flex: 1;
   min-width: 0;
   height: 32px;
+}
+
+.voice-bar__source {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0.85;
+  letter-spacing: 0.02em;
 }
 
 .voice-bar__duration {

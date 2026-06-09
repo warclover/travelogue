@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="no-js" data-export="draft" data-layout="auto" data-layout-engine="screens" data-longshot-bridge="on" data-longshot-mobile-url="index-longshot.html" data-copy-toggle="on" data-inline-edit="on" data-reading-profile="default_hybrid" data-snap="proximity" data-breath="cinematic" data-folio="lite" data-keyboard-nav="on">
+<html lang="zh-CN" class="no-js" data-export="draft" data-layout="auto" data-layout-engine="screens" data-longshot-bridge="on" data-longshot-mobile-url="index-longshot.html" data-present-preview-url="index-present.html" data-copy-toggle="on" data-inline-edit="on" data-trip-id="linzhi" data-reading-profile="default_hybrid" data-snap="proximity" data-breath="cinematic" data-folio="lite" data-keyboard-nav="on">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <script>document.documentElement.classList.remove('no-js');</script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232d4a3e'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='15' font-family='sans-serif' fill='%23f0f7f4'%3ET%3C/text%3E%3C/svg%3E" />
   <title>林芝</title>
-  <link rel="stylesheet" href="journal.css?v=ls9dc81dc240d8" />
-  <link rel="stylesheet" href="inline-edit.css?v=ls9dc81dc240d8" />
-  <link rel="stylesheet" href="copy-display.css?v=ls9dc81dc240d8" />
-  <link rel="stylesheet" href="screenplay.css?v=ls9dc81dc240d8" />
-  <link rel="stylesheet" href="longshot.css?v=ls9dc81dc240d8" />
-  <link rel="stylesheet" href="breath.css?v=ls9dc81dc240d8" />
+  <link rel="stylesheet" href="journal.css?v=ls2e086c2e7ea2" />
+  <link rel="stylesheet" href="inline-edit.css?v=ls2e086c2e7ea2" />
+  <link rel="stylesheet" href="copy-display.css?v=ls2e086c2e7ea2" />
+  <link rel="stylesheet" href="screenplay.css?v=ls2e086c2e7ea2" />
+  <link rel="stylesheet" href="longshot.css?v=ls2e086c2e7ea2" />
+  <link rel="stylesheet" href="breath.css?v=ls2e086c2e7ea2" />
   <script>window.__TRAVELOGUE_READING__ = {"profile":"default_hybrid","scroll":{"snap":"proximity","breath":"cinematic","folio":"lite","breathEngine":"gsap","keyboardNav":true},"present":{"dwellMs":2000,"featuredOnly":false,"syncScrollOnExit":true,"skipAuxBlocks":false,"deepLink":true,"autoAdvance":true,"loop":false,"manualControls":true,"tapZoneNav":true,"clickStage":"pause"},"longshot":{"breath":"off","folio":"off"},"featuredAssetIds":[]};</script>
 </head>
 <body>
@@ -2562,26 +2562,13 @@
 
 </section>
 
-        <section class="epilogue-screen epilogue" data-block="epilogue-screen" data-present-aux="true">
-  <span class="epilogue-screen__label">Colophon</span>
-  <p class="epilogue-screen__stats">28 天 · 1 个地方 · 213 张照片</p>
-  <p class="epilogue-screen__text" data-editable="epilogue" data-edit-path="epilogue">三个月，从桃粉到雨密，林芝的春天是一首慢诗。</p>
-</section>
-
-        <footer class="footer-cta" data-block="footer-cta">
-  <p class="footer-cta__studio-home" hidden>
-    <a class="footer-cta__studio-home-link" href="/">← 返回 Studio 首页</a>
-  </p>
-  <p>Travelogue · Visual Journal</p>
-</footer>
-
       </div>
       <section class="cover-closing" data-block="cover-closing">
   <header class="closing-hero" data-block="closing-hero" data-present-aux="true">
-  <div class="closing-hero__media" style="--focal-x: 0.6943359375; --focal-y: 0.8660598179453837;">
+  <div class="closing-hero__media" style="--focal-x: 0.5; --focal-y: 0.45;">
     <img class="closing-hero__img closing-hero__img--main"
-      src="assets/asset-232-w1600.webp"
-      srcset="assets/asset-232-w800.webp 800w, assets/asset-232-w1600.webp 1600w"
+      src="assets/asset-083-w1600.webp"
+      srcset="assets/asset-083-w800.webp 800w, assets/asset-083-w1600.webp 1600w"
       sizes="(min-width: 1920px) 2200px, (min-width: 1200px) 1800px, (min-width: 768px) 1400px, 100vw"
       alt="林芝"
       loading="lazy"
@@ -2610,14 +2597,16 @@
       aria-pressed="false"
       data-label-on="纯照片"
       data-label-off="显示文案"
-      title="一键隐藏导语（Web 屏无图注）">
+      title="一键隐藏全部文案">
       纯照片
     </button>
-    <button type="button" id="copy-display-toggle" class="screenplay-toolbar__btn screenplay-toolbar__btn--secondary"
+    <button type="button" id="copy-display-toggle" class="screenplay-toolbar__btn screenplay-toolbar__btn--secondary copy-toggle-advanced"
       aria-pressed="false"
-      data-copy-label-hide="隐藏文案"
-      data-copy-label-show="显示文案">
-      隐藏文案
+      hidden
+      data-copy-label-hide="隐藏导语"
+      data-copy-label-show="显示导语"
+      title="隐藏 hook、章导语、结语（保留图注）">
+      隐藏导语
     </button>
     <button type="button" id="longshot-bridge" class="screenplay-toolbar__btn screenplay-toolbar__btn--longshot"
       title="使用手机版竖向排版生成 PNG，可先选 2×/3× 清晰度">
@@ -2628,17 +2617,17 @@
 </div>
 
 
-  <script src="copy-toggle.js?v=ls9dc81dc240d8" defer></script>
-  <script src="breath-lenis.js?v=ls9dc81dc240d8" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js?v=ls9dc81dc240d8" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js?v=ls9dc81dc240d8" defer></script>
-  <script src="breath-highlight.js?v=ls9dc81dc240d8" defer></script>
-  <script src="breath-image.js?v=ls9dc81dc240d8" defer></script>
-  <script src="breath-gsap.js?v=ls9dc81dc240d8" defer></script>
-  <script src="breath.js?v=ls9dc81dc240d8" defer></script>
-  <script src="scroll-nav.js?v=ls9dc81dc240d8" defer></script>
-  <script src="longshot-bridge.js?v=ls9dc81dc240d8" defer></script>
+  <script src="copy-toggle.js?v=ls2e086c2e7ea2" defer></script>
+  <script src="breath-lenis.js?v=ls2e086c2e7ea2" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js?v=ls2e086c2e7ea2" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js?v=ls2e086c2e7ea2" defer></script>
+  <script src="breath-highlight.js?v=ls2e086c2e7ea2" defer></script>
+  <script src="breath-image.js?v=ls2e086c2e7ea2" defer></script>
+  <script src="breath-gsap.js?v=ls2e086c2e7ea2" defer></script>
+  <script src="breath.js?v=ls2e086c2e7ea2" defer></script>
+  <script src="scroll-nav.js?v=ls2e086c2e7ea2" defer></script>
+  <script src="longshot-bridge.js?v=ls2e086c2e7ea2" defer></script>
   <script>window.TRAVELOGUE_PLACEHOLDERS={"meta.title": "给杂志起个名字", "epilogue": "写下旅途尾声"};</script>
-  <script src="inline-edit.js?v=ls9dc81dc240d8" defer></script>
+  <script src="inline-edit.js?v=ls2e086c2e7ea2" defer></script>
 </body>
 </html>

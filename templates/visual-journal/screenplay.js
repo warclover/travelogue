@@ -74,6 +74,11 @@
     return Array.isArray(ids) ? ids : [];
   }
 
+  function featuredRequestedFromQuery() {
+    var q = global.location.search || "";
+    return /(?:^|[?&])presentFeatured=1(?:&|$)/.test(q);
+  }
+
   function prefersReducedMotion() {
     return global.matchMedia && global.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
@@ -511,6 +516,11 @@
     var root = document.getElementById("screenplay-root");
     var primaryTrigger = document.getElementById("screenplay-start") || triggers[0];
     var featuredToggle = document.getElementById("featured-present-toggle");
+
+    if (featuredAssetIds().length && featuredRequestedFromQuery()) {
+      featuredOnlyOverride = true;
+      sources = collectSlides();
+    }
 
     if (featuredToggle && featuredAssetIds().length) {
       var initialFeatured =

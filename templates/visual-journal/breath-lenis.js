@@ -14,6 +14,21 @@
     );
   }
 
+  function resolveScrollTarget(y) {
+    if (y && typeof y === "object" && typeof y.getBoundingClientRect === "function") {
+      return (global.scrollY || 0) + y.getBoundingClientRect().top;
+    }
+    return typeof y === "number" && !isNaN(y) ? y : global.scrollY || 0;
+  }
+
+  function clampPair(current, target) {
+    var max = maxScrollY();
+    return {
+      current: Math.max(0, Math.min(current, max)),
+      target: Math.max(0, Math.min(target, max)),
+    };
+  }
+
   var FLOW_TAIL_MS = 300;
   var FLOW_FRAME_MS = 1000 / 60;
 
@@ -49,13 +64,16 @@
     this.lastWheelAt = Date.now();
     this.coastStartedAt = 0;
     this.target += e.deltaY * this.wheelMultiplier;
-    if (this.target < 0) this.target = 0;
-    var max = maxScrollY();
-    if (this.target > max) this.target = max;
+    var clamped = clampPair(this.current, this.target);
+    this.current = clamped.current;
+    this.target = clamped.target;
   };
 
   FlowScroll.prototype.loop = function () {
     if (!this.paused) {
+      var clamped = clampPair(this.current, this.target);
+      this.current = clamped.current;
+      this.target = clamped.target;
       var diff = this.target - this.current;
       if (Math.abs(diff) > 0.5) {
         var now = Date.now();
@@ -111,8 +129,9 @@
   };
 
   FlowScroll.prototype.scrollTo = function (y) {
-    var clamped = Math.max(0, Math.min(y, maxScrollY()));
-    this.target = clamped;
+    var clamped = clampPair(this.current, resolveScrollTarget(y));
+    this.current = clamped.current;
+    this.target = clamped.target;
   };
 
   FlowScroll.prototype.destroy = function () {
