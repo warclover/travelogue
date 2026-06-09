@@ -85,8 +85,13 @@ export function showImportFailed(err) {
   captureImportShell();
   restoreImportShell();
   populateFailedUi(_lastErr, readPendingImport());
+  try {
+    window.scrollTo(0, 0);
+  } catch (e) { /* ignore */ }
   show($("v2-failure"), true);
   setV2SkipLinkTarget("v2-failure-retry");
+  var retry = $("v2-failure-retry");
+  if (retry && typeof retry.focus === "function") retry.focus();
   if (!_wired) wireImportFailed();
 }
 

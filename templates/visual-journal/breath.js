@@ -249,6 +249,13 @@
     if (needLoop) boundaryMotionLoop();
   }
 
+  function closingRevealInView(root) {
+    if (!root || !global.getBoundingClientRect) return false;
+    var rect = root.getBoundingClientRect();
+    var vh = global.innerHeight || 0;
+    return rect.top < vh * 0.94 && rect.bottom > 0;
+  }
+
   function initCoverClosingReveal() {
     var root = coverClosingRoot();
     if (!root || breathLevel() === "off" || !coverClosingPresentationActive()) return;
@@ -262,7 +269,7 @@
       el.classList.add("breath-reveal", "closing-breath-reveal");
     });
 
-    if (prefersReducedMotion()) {
+    if (prefersReducedMotion() || closingRevealInView(root)) {
       parts.forEach(function (el) {
         el.classList.add("is-visible");
       });

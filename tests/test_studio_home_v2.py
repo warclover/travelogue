@@ -355,6 +355,13 @@ def test_studio_home_v2_layout_tier_and_failed_modules() -> None:
 
     assert "resolveLayoutTier" in tier and "shouldEagerCarouselPage" in tier
     assert "showImportFailed" in failed and "failureNextHint" in failed
+    css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    assert ".v2-first-success {" in css
+    first_success_block = css.split(".v2-first-success {", 1)[1].split("}", 1)[0]
+    failure_block = css.split(".v2-failure {", 1)[1].split("}", 1)[0]
+    assert "position: fixed" in first_success_block
+    assert "position: fixed" in failure_block
+    assert "z-index: 2500" in failure_block
     assert "readServerBucketId" in bucket
     assert "resolveBucketId" in bucket
     assert "travelogue.studio.eventRing" in analytics

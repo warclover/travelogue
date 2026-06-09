@@ -51,12 +51,12 @@ function insertScreenplayControl(parent, beforeNode) {
     screenplayBtn.type = "button";
     screenplayBtn.className = "preview-toolbar__ctl preview-toolbar__screenplay";
     screenplayBtn.setAttribute("data-screenplay-trigger", "start");
-    screenplayBtn.setAttribute("data-screenplay-label", "▶ 自动播放");
+    screenplayBtn.setAttribute("data-screenplay-label", "▶ 全屏放映");
     screenplayBtn.setAttribute("data-screenplay-busy", "退出放映");
     screenplayBtn.setAttribute("aria-pressed", "false");
-    screenplayBtn.setAttribute("aria-label", "自动播放，全屏逐屏展示");
-    screenplayBtn.title = "全屏逐屏自动放映";
-    screenplayBtn.textContent = "▶ 自动播放";
+    screenplayBtn.setAttribute("aria-label", "全屏放映，逐屏展示");
+    screenplayBtn.title = "全屏逐屏放映";
+    screenplayBtn.textContent = "▶ 全屏放映";
     parent.insertBefore(screenplayBtn, beforeNode || null);
     return screenplayBtn;
   }
@@ -65,9 +65,9 @@ function insertScreenplayControl(parent, beforeNode) {
   var autoplayLink = document.createElement("a");
   autoplayLink.className = "preview-toolbar__ctl preview-toolbar__screenplay";
   autoplayLink.href = href;
-  autoplayLink.textContent = "▶ 自动播放";
-  autoplayLink.setAttribute("aria-label", "自动播放，全屏逐屏展示");
-  autoplayLink.title = "全屏逐屏自动放映";
+  autoplayLink.textContent = "▶ 全屏放映";
+  autoplayLink.setAttribute("aria-label", "全屏放映，逐屏展示");
+  autoplayLink.title = "全屏逐屏放映";
   parent.insertBefore(autoplayLink, beforeNode || null);
   return autoplayLink;
 }
@@ -2035,20 +2035,20 @@ function insertScreenplayControl(parent, beforeNode) {
     var featuredHref = presentAutoplayHref({ featured: true });
     if (featuredHref) {
       window.location.href = featuredHref;
-      showToolbarToast("精选自动播放已开始");
+      showToolbarToast("精选全屏放映已开始");
       return;
     }
     var toggle = document.getElementById("featured-present-toggle");
     var start = document.getElementById("screenplay-start");
     if (!start) {
-      showToolbarToast("当前页面不支持自动播放", { error: true });
+      showToolbarToast("当前页面不支持全屏放映", { error: true });
       return;
     }
     if (toggle && toggle.getAttribute("aria-pressed") !== "true") {
       toggle.click();
     }
     start.click();
-    showToolbarToast("精选自动播放已开始");
+    showToolbarToast("精选全屏放映已开始");
   }
 
   function initCollageMediaControls(tripId, assetMediaById) {

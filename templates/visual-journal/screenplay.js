@@ -168,14 +168,24 @@
     return clone;
   }
 
-  function requestFullscreen(el) {
+  function requestFullscreenOn(el) {
     var fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
-    if (!fn) return Promise.resolve();
+    if (!fn) return Promise.reject(new Error("fullscreen unsupported"));
     try {
       return Promise.resolve(fn.call(el));
     } catch (e) {
       return Promise.reject(e);
     }
+  }
+
+  function requestFullscreenPreferred(root) {
+    return requestFullscreenOn(root).catch(function () {
+      var docEl = document.documentElement;
+      if (docEl && docEl !== root) {
+        return requestFullscreenOn(docEl);
+      }
+      throw new Error("fullscreen denied");
+    });
   }
 
   function exitFullscreen() {
@@ -192,25 +202,61 @@
     return !!(document.fullscreenElement || document.webkitFullscreenElement);
   }
 
-  function ScreenplayPlayer(root, sources, trigger) {
+  function ScreenplayPlayer(root, sources, trigger, gate) {
     this.root = root;
+    this.gate = gate;
     this.layerA = root.querySelector('[data-screenplay-layer="a"]');
     this.layerB = root.querySelector('[data-screenplay-layer="b"]');
     this.progressBar = root.querySelector(".screenplay-progress__bar");
     this.counter = root.querySelector(".screenplay-counter");
     this.pauseBtn = root.querySelector('[data-screenplay-action="pause"]');
     this.navWrap = root.querySelector(".screenplay-chrome__nav");
+    this.noticeEl = root.querySelector("[data-screenplay-notice]");
     this.sources = sources;
     this.trigger = trigger;
     this.index = 0;
+    this.pendingIndex = 0;
     this.timer = null;
     this.activeLayer = this.layerA;
     this.idleLayer = this.layerB;
     this.running = false;
+    this.enteredFullscreen = false;
     this.autoAdvancePaused = false;
     this.fadeMs = prefersReducedMotion() ? 0 : FADE_MS;
     this.dwellMs = prefersReducedMotion() ? 1500 : resolveDwellMs();
   }
+
+  ScreenplayPlayer.prototype.hideGate = function () {
+    if (!this.gate) return;
+    this.gate.hidden = true;
+    this.gate.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("screenplay-gate-active");
+  };
+
+  ScreenplayPlayer.prototype.showGate = function (startIndex) {
+    if (!this.gate) {
+      this.start(startIndex, { userGesture: false });
+      return;
+    }
+    this.pendingIndex = typeof startIndex === "number" && startIndex >= 0 ? startIndex : 0;
+    this.gate.hidden = false;
+    this.gate.setAttribute("aria-hidden", "false");
+    document.body.classList.add("screenplay-gate-active");
+    var btn = this.gate.querySelector("[data-screenplay-gate-start]");
+    if (btn) btn.focus();
+  };
+
+  ScreenplayPlayer.prototype.showFullscreenNotice = function (message) {
+    if (!this.noticeEl) return;
+    this.noticeEl.textContent = message;
+    this.noticeEl.hidden = false;
+  };
+
+  ScreenplayPlayer.prototype.clearFullscreenNotice = function () {
+    if (!this.noticeEl) return;
+    this.noticeEl.textContent = "";
+    this.noticeEl.hidden = true;
+  };
 
   ScreenplayPlayer.prototype.clearTimer = function () {
     if (this.timer) {
@@ -433,10 +479,13 @@
     syncLenisToViewport();
   };
 
-  ScreenplayPlayer.prototype.start = function (startIndex) {
+  ScreenplayPlayer.prototype.start = function (startIndex, options) {
     var self = this;
+    options = options || {};
+    var userGesture = options.userGesture === true;
     pauseBreath();
     pauseLenis();
+    this.hideGate();
     this.sources = collectSlides();
     if (!this.sources.length) {
       resumeBreath();
@@ -448,7 +497,9 @@
       initialIndex = Math.min(startIndex, this.sources.length - 1);
     }
     this.running = true;
+    this.enteredFullscreen = false;
     this.autoAdvancePaused = false;
+    this.clearFullscreenNotice();
     this.index = initialIndex;
     this.mountSlide(this.activeLayer, this.sources[initialIndex]);
     this.activeLayer.classList.add("is-visible");
@@ -457,15 +508,27 @@
     this.updateChrome();
     if (presentHash.set) presentHash.set(this.index);
     this.root.hidden = false;
+    this.root.setAttribute("aria-hidden", "false");
     document.body.classList.add("screenplay-active");
     this.setTriggerLabel(true);
 
-    requestFullscreen(this.root)
-      .catch(function () {
-        /* 用户拒绝或环境不支持时仍可在页面内播放 */
-      })
+    function afterEnter() {
+      self.scheduleAdvance();
+    }
+
+    if (!userGesture) {
+      afterEnter();
+      return;
+    }
+
+    requestFullscreenPreferred(this.root)
       .then(function () {
-        self.scheduleAdvance();
+        self.enteredFullscreen = true;
+        afterEnter();
+      })
+      .catch(function () {
+        self.showFullscreenNotice("无法进入全屏，已在页内放映 · Esc 或「退出」结束");
+        afterEnter();
       });
   };
 
@@ -473,10 +536,14 @@
     if (!this.running && this.root.hidden) return;
     var slideIndex = this.index;
     this.running = false;
+    this.enteredFullscreen = false;
     this.autoAdvancePaused = false;
     this.clearTimer();
+    this.clearFullscreenNotice();
+    this.hideGate();
     document.body.classList.remove("screenplay-active");
     this.root.hidden = true;
+    this.root.setAttribute("aria-hidden", "true");
     this.layerA.innerHTML = "";
     this.layerB.innerHTML = "";
     this.layerA.classList.remove("is-visible");
@@ -514,6 +581,7 @@
     );
     var toolbar = document.querySelector(".screenplay-toolbar");
     var root = document.getElementById("screenplay-root");
+    var gate = document.getElementById("screenplay-gate");
     var primaryTrigger = document.getElementById("screenplay-start") || triggers[0];
     var featuredToggle = document.getElementById("featured-present-toggle");
 
@@ -543,10 +611,19 @@
       return;
     }
 
-    var player = new ScreenplayPlayer(root, sources, primaryTrigger);
+    var player = new ScreenplayPlayer(root, sources, primaryTrigger, gate);
     player.updateChrome();
     if (presentBookmarks.wire) {
       presentBookmarks.wire(root, player);
+    }
+
+    if (gate) {
+      var gateStart = gate.querySelector("[data-screenplay-gate-start]");
+      if (gateStart) {
+        gateStart.addEventListener("click", function () {
+          player.start(player.pendingIndex, { userGesture: true });
+        });
+      }
     }
 
     for (var i = 0; i < triggers.length; i++) {
@@ -554,7 +631,7 @@
         if (player.running) {
           player.stop(true);
         } else {
-          player.start();
+          player.start(0, { userGesture: true });
         }
       });
     }
@@ -600,11 +677,18 @@
     });
 
     document.addEventListener("keydown", function (e) {
-      if (!player.running) return;
       if (e.key === "Escape") {
-        player.stop(true);
+        if (player.running) {
+          player.stop(true);
+          return;
+        }
+        if (gate && !gate.hidden) {
+          player.hideGate();
+          if (presentHash.clear) presentHash.clear();
+        }
         return;
       }
+      if (!player.running) return;
       if (!manualControlsEnabled() || isTypingTarget(e.target)) return;
 
       if (
@@ -628,20 +712,20 @@
     document.addEventListener("webkitfullscreenchange", onFullscreenEnd);
 
     function onFullscreenEnd() {
-      if (player.running && !isFullscreen()) {
+      if (player.running && player.enteredFullscreen && !isFullscreen()) {
         player.stop(false);
       }
     }
 
-    function startFromHash() {
+    function armFromHash() {
       if (player.running || !presentHash.parse) return;
       var idx = presentHash.parse();
       if (idx === null) return;
-      player.start(idx);
+      player.showGate(idx);
     }
 
     if (presentHash.enabled && presentHash.enabled() && presentHash.parse && presentHash.parse() !== null) {
-      startFromHash();
+      armFromHash();
     }
 
     global.addEventListener("hashchange", function () {
@@ -649,12 +733,13 @@
       var idx = presentHash.parse ? presentHash.parse() : null;
       if (idx === null) {
         if (player.running) player.stop(true);
+        else player.hideGate();
         return;
       }
       if (player.running) {
         player.goTo(idx);
       } else {
-        player.start(idx);
+        player.showGate(idx);
       }
     });
   }

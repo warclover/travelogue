@@ -86,6 +86,55 @@ def test_web_landscape_fallback_to_portrait_when_none() -> None:
     assert resolve_closing_asset_id(trip, assets, prefer_landscape=True) == "portrait"
 
 
+def test_resolve_closing_falls_back_to_cover_when_only_cover_exists() -> None:
+    trip = {
+        "coverAssetId": "cover",
+        "assets": [
+            {"id": "cover", "type": "image", "layoutEligible": True, "width": 1600, "height": 900},
+        ],
+        "chapters": [{"screens": [{"slots": [{"assetId": "cover"}]}]}],
+    }
+    assets = {a["id"]: a for a in trip["assets"]}
+    assert resolve_closing_asset_id(trip, assets) == "cover"
+
+
+def test_render_keeps_cover_closing_when_only_cover_asset() -> None:
+    trip = {
+        "tripId": "closing-only-cover",
+        "title": "仅封面",
+        "meta": {"title": "仅封面", "place": "旅途"},
+        "coverAssetId": "cover",
+        "exportLayout": "web",
+        "layoutEngine": "screens",
+        "assets": [
+            {
+                "id": "cover",
+                "type": "image",
+                "layoutEligible": True,
+                "width": 1600,
+                "height": 900,
+                "paths": {"w800": "assets/cover-w800.webp", "w1600": "assets/cover-w1600.webp"},
+            },
+        ],
+        "chapters": [
+            {
+                "id": "ch-01",
+                "title": "第一章",
+                "screens": [{"slots": [{"assetId": "cover"}]}],
+            }
+        ],
+        "epilogue": "尾声一句",
+    }
+    html = render_html(
+        trip,
+        export_mode="draft",
+        layout_engine_override="screens",
+        export_layout_override="web",
+        reading_profile_override="default_hybrid",
+    )
+    assert 'data-block="cover-closing"' in html
+
+
 def test_resolve_closing_excludes_cover_even_when_last_screen() -> None:
     trip = {
         "coverAssetId": "cover",
@@ -220,9 +269,11 @@ def test_mobile_render_keeps_inline_epilogue_without_cover_closing() -> None:
     assert 'data-block="epilogue-screen"' in html or 'data-block="epilogue"' in html
 
 
-def test_copy_display_css_hides_cover_closing() -> None:
+def test_copy_display_css_hides_closing_narrative_not_screen() -> None:
     css = (TEMPLATE_VISUAL_JOURNAL / "copy-display.css").read_text(encoding="utf-8")
-    assert '[data-block="cover-closing"]' in css
+    assert ".cover-closing__text" in css
+    assert ".cover-closing__stats" in css
+    assert 'html[data-copy-display="photos"] [data-block="cover-closing"]' not in css
 
 
 def test_photos_draft_still_emits_cover_closing_for_toggle() -> None:

@@ -147,3 +147,19 @@ def test_present_preview_uses_share_profile() -> None:
         index_name="index-present.html",
     )
     assert payload["profile"] == "performance"
+
+
+def test_screenplay_hash_entry_requires_user_gesture_gate() -> None:
+    js = SCREENPLAY_JS.read_text(encoding="utf-8")
+    toolbar = (TEMPLATE_VISUAL_JOURNAL / "partials/screenplay-toolbar.hbs").read_text(
+        encoding="utf-8"
+    )
+    assert "showGate" in js
+    assert "userGesture" in js
+    assert "enteredFullscreen" in js
+    assert "requestFullscreenPreferred" in js
+    assert 'id="screenplay-gate"' in toolbar
+    assert "data-screenplay-gate-start" in toolbar
+    assert "armFromHash" in js
+    assert "player.showGate(idx)" in js
+    assert "player.start(idx)" not in js

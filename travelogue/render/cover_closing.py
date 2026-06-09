@@ -231,6 +231,35 @@ def last_chapter_curated_asset_id(
     )
 
 
+def _resolve_closing_allow_cover(
+    trip: dict,
+    assets: dict[str, dict],
+    *,
+    prefer_landscape: bool,
+    screen_used: set[str],
+) -> str | None:
+    """Last resort: allow cover reuse so the closing screen still has a hero."""
+    ordered = _closing_candidate_ids(
+        trip, assets, screen_used_ids=screen_used, exclude_ids=set()
+    )
+    picked = _pick_best_closing(
+        ordered,
+        assets,
+        prefer_landscape=prefer_landscape,
+        screen_used_ids=screen_used,
+        exclude_ids=set(),
+    )
+    if picked:
+        return picked
+    return last_chapter_curated_asset_id(
+        trip,
+        assets,
+        prefer_landscape=prefer_landscape,
+        screen_used_ids=screen_used,
+        exclude_ids=set(),
+    )
+
+
 def resolve_closing_asset_id(
     trip: dict,
     assets: dict[str, dict],
@@ -241,6 +270,8 @@ def resolve_closing_asset_id(
 
     Web: landscape preferred when ``prefer_landscape``. Reusing a screen image is
     allowed when no better candidate exists (soft dedupe, not enforced).
+    Cover ids are avoided when possible; if no other eligible asset exists, cover
+    may be reused so the closing screen is not dropped at render time.
     """
     screen_used = collect_layout_screen_asset_ids(trip)
     exclude_ids = _cover_ids_to_exclude(trip)
@@ -256,12 +287,17 @@ def resolve_closing_asset_id(
     )
     if picked:
         return picked
-    return last_chapter_curated_asset_id(
+    picked = last_chapter_curated_asset_id(
         trip,
         assets,
         prefer_landscape=prefer_landscape,
         screen_used_ids=screen_used,
         exclude_ids=exclude_ids,
+    )
+    if picked:
+        return picked
+    return _resolve_closing_allow_cover(
+        trip, assets, prefer_landscape=prefer_landscape, screen_used=screen_used
     )
 
 

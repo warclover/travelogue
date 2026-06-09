@@ -513,6 +513,32 @@ def test_ac_hp2_failed_overlay(studio_server) -> None:
         browser.close()
 
 
+def test_ac_hp2_failed_overlay_visible_after_scroll(studio_server) -> None:
+    """Import Failed 应与 FirstSuccess 一样 fixed 视口居中，滚动后仍可见。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "dev=1&studioState=failed&studioFixture=empty")
+        _wait_visible(page, "v2-failure-retry")
+        page.evaluate("() => window.scrollTo(0, document.body.scrollHeight)")
+        in_viewport = page.evaluate(
+            """
+            () => {
+              const panel = document.querySelector('.v2-failure__panel');
+              const overlay = document.getElementById('v2-failure');
+              if (!panel || !overlay || overlay.hidden) return false;
+              const cs = getComputedStyle(overlay);
+              if (cs.position !== 'fixed') return false;
+              const rect = panel.getBoundingClientRect();
+              const vh = window.innerHeight;
+              return rect.top >= 0 && rect.bottom <= vh + 1;
+            }
+            """
+        )
+        assert in_viewport
+        browser.close()
+
+
 def test_ac_hp2_failed_retry_upload_reopens_sheet(studio_server) -> None:
     """上传失败重试：应回到导入 Sheet 重新选择文件，而非直接退出失败态。"""
     with sync_playwright() as p:

@@ -1,38 +1,48 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="no-js" data-export="draft" data-layout="mobile" data-longshot="on" data-copy-toggle="on" data-inline-edit="on" data-reading-profile="legacy">
+<html lang="zh-CN" class="no-js" data-export="draft" data-layout="mobile" data-longshot="on" data-copy-toggle="on" data-inline-edit="on" data-trip-id="linzhi" data-reading-profile="legacy">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <script>document.documentElement.classList.remove('no-js');</script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232d4a3e'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='15' font-family='sans-serif' fill='%23f0f7f4'%3ET%3C/text%3E%3C/svg%3E" />
   <title>林芝</title>
-  <link rel="stylesheet" href="journal.css?v=ls1f0eb73b9935" />
-  <link rel="stylesheet" href="longshot.css?v=ls1f0eb73b9935" />
-  <link rel="stylesheet" href="inline-edit.css?v=ls1f0eb73b9935" />
-  <link rel="stylesheet" href="copy-display.css?v=ls1f0eb73b9935" />
+  <link rel="stylesheet" href="journal.css?v=lsab5dfda70275" />
+  <link rel="stylesheet" href="longshot.css?v=lsab5dfda70275" />
+  <link rel="stylesheet" href="inline-edit.css?v=lsab5dfda70275" />
+  <link rel="stylesheet" href="copy-display.css?v=lsab5dfda70275" />
   <script>window.__TRAVELOGUE_READING__ = {"profile":"legacy","scroll":{"snap":"off","breath":"off","folio":"off","breathEngine":"native"},"present":{"dwellMs":2000,"featuredOnly":false,"syncScrollOnExit":false,"skipAuxBlocks":false,"deepLink":true,"autoAdvance":true,"loop":false,"manualControls":true,"tapZoneNav":true,"clickStage":"pause"},"longshot":{"breath":"off","folio":"off"},"featuredAssetIds":[]};</script>
 </head>
 <body>
   <main>
     <article itemscope itemtype="https://schema.org/Trip">
-      <header class="cover-hero cover-hero--photo-only" data-block="cover-hero" data-present-aux="true">
-  <div class="cover-hero__media">
-    <img src="assets/asset-003-w1600.webp"
+      <section class="cover-opening" data-block="cover-opening">
+  <header class="cover-hero cover-hero--photo-only cover-hero--contain-fit" data-block="cover-hero" data-present-aux="true">
+  <div class="cover-hero__media" style="--focal-x: 0.728112840466926; --focal-y: 0.5919421487603306;">
+    <img class="cover-hero__img cover-hero__img--main"
+      src="assets/asset-003-w1600.webp"
       srcset="assets/asset-003-w800.webp 800w, assets/asset-003-w1600.webp 1600w"
       sizes="100vw"
       alt="林芝"
       loading="eager"
       decoding="async" />
   </div>
-  <h1 class="cover-hero__title-sr" itemprop="name">林芝</h1>
 </header>
 
-      <div class="page">
-        <div class="trip-meta" data-block="trip-meta">
-  <time datetime="2013-03-29/2013-06-03">2013.03.29 – 06.03 · 林芝 · 67 天</time>
+  <div class="cover-opening__panel">
+    <div class="trip-meta" data-block="trip-meta">
+  <time datetime="2013-03-29/2013-06-03">
+    <span class="trip-meta__line trip-meta__line--full">2013.03.29 – 06.03 · 林芝 · 67 天</span>
+    <span class="trip-meta__line trip-meta__line--sub">2013.03.29 – 06.03 · 67 天</span>
+  </time>
 </div>
 
-        <p class="hook-line" data-block="hook-line" data-editable="hook" data-edit-path="meta.hook">在林芝，从桃花开到雨季来临。</p>
+    <h1 class="cover-opening__title" itemprop="name">林芝</h1>
+    <p class="hook-line cover-opening__hook" data-block="hook-line" data-editable="hook" data-edit-path="meta.hook">在林芝，从桃花开到雨季来临。</p>
+    <p class="cover-opening__enter" aria-hidden="true"><span>进入正文</span></p>
+  </div>
+</section>
+
+      <div class="page">
         <section class="chapter" id="ch-01" data-chapter-id="ch-01" data-pattern="open"
   >
   <header class="chapter-header" data-block="chapter-header">
@@ -3489,6 +3499,13 @@
     <button type="button" class="share-toolbar__item" data-share-action="native">
       系统分享…
     </button>
+    <button type="button" id="copy-display-toggle" class="share-toolbar__item"
+      aria-pressed="false"
+      data-copy-label-hide="隐藏导语"
+      data-copy-label-show="显示导语"
+      title="隐藏/显示 hook、章导语、结语（图注仍保留）">
+      隐藏导语（保留图注）
+    </button>
   </div>
   <div class="share-toolbar__fab-row longshot-toolbar__controls">
     <button type="button" id="photos-only-toggle" class="longshot-toolbar__btn longshot-toolbar__btn--secondary"
@@ -3507,13 +3524,6 @@
       data-label-on="图注：开" data-label-off="图注：关" title="仅隐藏/显示图片下方图注">
       图注：开
     </button>
-    <button type="button" id="copy-display-toggle" class="longshot-toolbar__btn longshot-toolbar__btn--secondary"
-      aria-pressed="false"
-      data-copy-label-hide="隐藏导语"
-      data-copy-label-show="显示导语"
-      title="隐藏/显示 hook、章导语、结语（图注仍保留）">
-      隐藏导语
-    </button>
   </div>
   <div class="share-toolbar__fab-row">
     <button type="button" id="longshot-save" class="longshot-toolbar__btn"
@@ -3529,11 +3539,11 @@
   </div>
 </div>
 
-  <script src="vendor/html2canvas.min.js?v=ls1f0eb73b9935" defer></script>
-  <script src="copy-toggle.js?v=ls1f0eb73b9935" defer></script>
-  <script src="longshot.js?v=ls1f0eb73b9935" defer></script>
-  <script src="share.js?v=ls1f0eb73b9935" defer></script>
+  <script src="vendor/html2canvas.min.js?v=lsab5dfda70275" defer></script>
+  <script src="copy-toggle.js?v=lsab5dfda70275" defer></script>
+  <script src="longshot.js?v=lsab5dfda70275" defer></script>
+  <script src="share.js?v=lsab5dfda70275" defer></script>
   <script>window.TRAVELOGUE_PLACEHOLDERS={"meta.title": "给杂志起个名字", "epilogue": "写下旅途尾声"};</script>
-  <script src="inline-edit.js?v=ls1f0eb73b9935" defer></script>
+  <script src="inline-edit.js?v=lsab5dfda70275" defer></script>
 </body>
 </html>

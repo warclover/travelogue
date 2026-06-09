@@ -2673,12 +2673,12 @@ body { overflow-x: clip; overflow-y: visible; }
   }
 }
 
-/* ── Import Failed overlay ── */
+/* ── Import Failed overlay（与 FirstSuccess 同：fixed 视口居中，书架滚动时仍可见） ── */
 #v2-failure[hidden] { display: none !important; }
 .v2-failure {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 12;
+  z-index: 2500;
   display: flex;
   align-items: center;
   justify-content: center;

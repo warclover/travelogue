@@ -155,8 +155,6 @@ def build_render_context(
             or ""
         )
         closing_asset = assets.get(closing_id) if closing_id else None
-        if not closing_asset:
-            use_cover_closing = False
 
     closing_fx, closing_fy = (0.5, 0.45)
     closing_contain = False
