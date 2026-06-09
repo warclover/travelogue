@@ -461,6 +461,8 @@ def run_narrate(
                     cfg=app_cfg,
                 )
             )
+    if not app_cfg.narrative.copy_generation_enabled:
+        return NarrateResult(fields_updated=[])
     if prov == "stub":
         result = _run_narrate_stub(
             trip,

@@ -33,6 +33,11 @@ class NarrativeConfig:
     banned_phrases: tuple[str, ...] = ()
     scope: str = "frame"
     decor_line_enabled: bool = True
+    """Master switch for lite copy (hook / decorLine / epilogue generation)."""
+    copy_generation_enabled: bool = True
+    """When false, narrate skips all generated copy including decorLine."""
+    show_hook_in_draft: bool = True
+    """Draft preview: show hook on cover even if it matches stub/system patterns."""
     decor_line_max_chars: int = 30
     decor_line_candidates: int = 3
     decor_line_allow_empty: bool = True

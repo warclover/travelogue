@@ -387,6 +387,9 @@ narrative:
     - 美不胜收
     - 令人难忘
   # Phase 11 · decorLine
+  # Lite Copy v1.1 · 默认开启 AI 点缀（hook + decorLine + epilogue）；图注仍受 scope 控制
+  copy_generation_enabled: true
+  show_hook_in_draft: true
   decor_line_enabled: true
   decor_line_max_chars: 30
   decor_line_candidates: 3

@@ -406,6 +406,23 @@ def test_decor_line_disabled_rollback() -> None:
     assert apply_decor_lines(trip, cfg=cfg) == []
 
 
+def test_legacy_copy_phase_triggers_decor_regenerate() -> None:
+    from travelogue.services.decor_line import chapter_needs_decor_line
+
+    trip = {
+        "curation": {"copyStyle": {"phase": "p11-lite-line"}},
+        "chapters": [{"id": "ch-01", "decorLine": "记住face"}],
+    }
+    assert chapter_needs_decor_line(trip["chapters"][0], trip) is True
+
+
+def test_empty_decor_line_still_needs_fill() -> None:
+    from travelogue.services.decor_line import chapter_needs_decor_line
+
+    chapter = {"id": "ch-01", "decorLine": ""}
+    assert chapter_needs_decor_line(chapter, {}) is True
+
+
 def test_apply_copy_intent_cascade() -> None:
     from travelogue.services.decor_line import apply_copy_intent_cascade
 

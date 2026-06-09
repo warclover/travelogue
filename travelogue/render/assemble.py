@@ -29,6 +29,7 @@ def build_render_context(
     cfg: AppConfig | None = None,
 ) -> TripRenderContext:
     """export_mode: draft | share | present-preview"""
+    from travelogue.config import get_config
     from travelogue.curation.curate import resolve_cover_asset_id
     from travelogue.render.context import (
         _longshot_bundle_version,
@@ -105,7 +106,12 @@ def build_render_context(
     if surface.strip_narrative_copy:
         hook = ""
         epilogue = ""
-    show_cover_hook = show_hook_on_cover(hook)
+    show_cover_hook = show_hook_on_cover(hook) or (
+        surface.is_draft
+        and bool(hook)
+        and not surface.strip_narrative_copy
+        and (cfg or get_config()).narrative.show_hook_in_draft
+    )
     show_cover_place = cover_place_is_distinct(cover_place, meta_title)
     fx, fy = cover_focal_point(cover_asset)
     cover_contain = cover_use_contain_fit(cover_asset)

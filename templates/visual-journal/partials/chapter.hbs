@@ -13,10 +13,10 @@
     <h2>{{title}}</h2>
   </header>
   {{/if}}
-  {{#unless useChapterSeparator}}
   {{#if hasDecorLine}}
   <p class="chapter-decor-line" data-block="decor-line"{{#if editableDecorLine}} data-editable="decor-line" data-edit-path="{{editDecorLinePath}}"{{/if}}>{{decorLine}}</p>
   {{/if}}
+  {{#unless useChapterSeparator}}
   {{#if hasLead}}
   <p class="chapter-lead" data-block="chapter-lead"{{#if editableLead}} data-editable="lead" data-edit-path="{{editLeadPath}}"{{/if}}>{{lead}}</p>
   {{/if}}

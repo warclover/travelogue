@@ -344,6 +344,13 @@ def load_config(path: Path | None = None) -> AppConfig:
             banned_phrases=banned,
             scope=normalize_narrative_scope(narrative_raw.get("scope", "frame")),
             decor_line_enabled=bool(narrative_raw.get("decor_line_enabled", True)),
+            copy_generation_enabled=bool(
+                narrative_raw.get(
+                    "copy_generation_enabled",
+                    narrative_raw.get("decor_line_enabled", True),
+                )
+            ),
+            show_hook_in_draft=bool(narrative_raw.get("show_hook_in_draft", True)),
             decor_line_max_chars=int(narrative_raw.get("decor_line_max_chars", 30)),
             decor_line_candidates=int(narrative_raw.get("decor_line_candidates", 3)),
             decor_line_allow_empty=bool(narrative_raw.get("decor_line_allow_empty", True)),

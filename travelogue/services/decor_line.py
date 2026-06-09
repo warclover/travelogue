@@ -490,6 +490,7 @@ def pick_best_decor_line(
 
 def chapter_needs_decor_line(
     chapter: dict,
+    trip: dict | None = None,
     *,
     regenerate: bool = False,
 ) -> bool:
@@ -497,7 +498,14 @@ def chapter_needs_decor_line(
         return False
     if regenerate:
         return True
-    if "decorLine" in chapter:
+    line = str(chapter.get("decorLine") or "").strip()
+    if line:
+        if trip:
+            phase = str(
+                ((trip.get("curation") or {}).get("copyStyle") or {}).get("phase") or ""
+            )
+            if phase and phase != "lite-copy-v1.1":
+                return True
         return False
     return True
 
@@ -512,14 +520,14 @@ def apply_decor_lines(
     chat_fn: Callable[[list[dict[str, str]]], str] | None = None,
 ) -> list[str]:
     app_cfg = decor_line_config(cfg)
-    if not app_cfg.narrative.decor_line_enabled:
+    if not app_cfg.narrative.decor_line_enabled or not app_cfg.narrative.copy_generation_enabled:
         return []
     updated: list[str] = []
     chapters = trip.get("chapters") or []
     for ch in chapters:
         if chapter_id and ch.get("id") != chapter_id:
             continue
-        if not chapter_needs_decor_line(ch, regenerate=regenerate):
+        if not chapter_needs_decor_line(ch, trip, regenerate=regenerate):
             continue
         idx = ch.get("index")
         field = f"chapters[{idx}].decorLine"
