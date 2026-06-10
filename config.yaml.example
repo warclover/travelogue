@@ -161,7 +161,7 @@ layout:
 # Phase 15 · 拼图 MCS（无用户期默认全开；PRD 亦写作 layout.mosaic_v2，顶层 mosaic 优先）
 mosaic:
   enabled: true
-  scorer_version: "p15-s2"
+  scorer_version: "p15-s3"
   deterministic_strict: true
   min_candidate_score: 0.35
   enabled_window_sizes: [3, 4, 5, 6, 8, 9]

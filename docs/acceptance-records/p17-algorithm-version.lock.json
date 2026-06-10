@@ -1,7 +1,7 @@
 {
   "strategyId": "lse-default-2026-06",
   "strategyVersion": 1,
-  "algorithmVersion": "p15-s2",
-  "contentHash": "sha256:3f7160e2623d1dd0",
-  "notes": "Update algorithmVersion or strategyVersion when default pack content_hash changes (AC-P17-13)."
+  "algorithmVersion": "p15-s3",
+  "contentHash": "sha256:8347371bf444f6af",
+  "notes": "p15-s3: R-MAIN-AR-01 main_ar_ineligible penalty on default scoring profile (AC-P17-13)."
 }

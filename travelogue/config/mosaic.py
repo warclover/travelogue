@@ -13,7 +13,7 @@ class MosaicConfig:
     """Phase 15 mosaic composition (DESIGN-PHASE15 · S1)."""
 
     enabled: bool = True
-    scorer_version: str = "p15-s2"
+    scorer_version: str = "p15-s3"
     deterministic_strict: bool = True
     min_candidate_score: float = 0.35
     enabled_window_sizes: tuple[int, ...] = (3, 4, 5, 6, 8, 9)

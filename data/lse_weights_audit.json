@@ -33,8 +33,8 @@
       "weightsHash": "sha256:c95f4f4f6a805ae1",
       "strategyId": "lse-default-2026-06",
       "strategyVersion": 1,
-      "algorithmVersion": "p15-s2",
-      "contentHash": "sha256:723afa4f4e1c98e9",
+      "algorithmVersion": "p15-s3",
+      "contentHash": "sha256:8347371bf444f6af",
       "profileId": "default",
       "weights": {
         "aspect_match": 0.2,
