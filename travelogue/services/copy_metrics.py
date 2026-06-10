@@ -134,11 +134,13 @@ def merge_copy_run_note(trip: dict, *, agent: str, note: str) -> None:
     """Append a lightweight observability note to pipeline.runs."""
     pipe = trip.setdefault("pipeline", {})
     runs = pipe.setdefault("runs", [])
+    stamp = utc_now_iso()
     runs.append(
         {
-            "runId": f"copy-metrics-{utc_now_iso()}",
+            "runId": f"copy-metrics-{stamp}",
             "agent": agent,
             "note": note,
-            "finishedAt": utc_now_iso(),
+            "startedAt": stamp,
+            "finishedAt": stamp,
         }
     )

@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from tests._golden.helpers import (
-    build_mosaic_portrait3_trip,
     build_mosaic_eligible_trip,
+    build_mosaic_portrait3_trip,
     build_mosaic_portrait4_trip,
     plan_mosaic_screens,
 )

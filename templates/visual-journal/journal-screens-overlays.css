@@ -207,7 +207,7 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-mosaic-6-main-hero-
 html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-grid-8"]:not([data-layout-hint]) .layout-slot__img--cover,
 html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-grid-8"]:not([data-layout-hint]) .layout-slot__img--cover {
   object-fit: cover;
-  object-position: center;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.45) * 100%);
 }
 
 html[data-layout="web"] .layout-screen[data-layout-hint="person-grid-8"],
@@ -271,7 +271,7 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[da
 html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-1"] .layout-slot__img--cover,
 html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-1"] .layout-slot__img--cover {
   object-fit: cover;
-  object-position: center 30%;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.3) * 100%);
   width: 100%;
   height: 100%;
 }
@@ -538,7 +538,7 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-panorama-1"] .layou
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.45) * 100%);
 }
 
 /* Single portrait, cover (full-bleed): native-aspect box fills edge to edge. */

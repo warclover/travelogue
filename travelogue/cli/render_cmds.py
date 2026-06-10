@@ -171,9 +171,8 @@ def cmd_studio(
 
     from travelogue.demo.build import DemoError
     from travelogue.web.serve import serve_studio_directory
-    from travelogue.web.studio_pipeline import run_studio_pipeline
-
     from travelogue.web.studio_config import resolve_studio_config
+    from travelogue.web.studio_pipeline import run_studio_pipeline
 
     _load_cfg(config)
     cfg = get_config()

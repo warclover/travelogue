@@ -654,6 +654,11 @@
             }
           }
         },
+        "copyMetrics": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Lite Copy v1.1 observability metrics (decorLine fill, edits, client events)"
+        },
         "folioPlan": {
           "type": "object",
           "additionalProperties": false,
@@ -1496,8 +1501,9 @@
         "runId": { "type": "string" },
         "agent": {
           "type": "string",
-          "enum": ["media_lab", "curator", "layout", "storyteller", "publisher"]
+          "enum": ["media_lab", "curator", "layout", "storyteller", "storyteller-lite", "publisher"]
         },
+        "note": { "type": "string" },
         "startedAt": { "type": "string", "format": "date-time" },
         "finishedAt": { "type": "string", "format": "date-time" },
         "model": { "type": ["string", "null"] }

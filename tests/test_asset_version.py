@@ -22,7 +22,10 @@ from travelogue.render.golden_regression import load_golden_trip
 # (breath.js/breath-gsap.js/journal.css + copy-toggle/inline-edit) changed shipped bytes.
 # Re-bumped 2026-06-10: portrait-4 (2×2) contain collapse overlay in
 # journal-screens.css removed the forced 9:16 stage box / bottom blank.
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}b9fcc4e787e6"
+# Re-bumped 2026-06-10 (b): screen-square-1 fill (742f0fb) shipped without a
+# golden bump, then AC-P17-30 focal binding restored on screen-portrait-grid-8/
+# portrait-1/panorama-1 cover rules (clobbered by fc61396) re-changed the bundle.
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}4ca665343cfe"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"
