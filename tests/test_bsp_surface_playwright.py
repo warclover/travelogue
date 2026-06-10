@@ -46,6 +46,7 @@ _MEASURE_JS = """
     out.fillRatio = sr.width > 0 ? ir.width / sr.width : 0;
     out.pattern = screen.getAttribute('data-pattern');
     out.viewportFit = screen.classList.contains('layout-screen--viewport-fit');
+    out.screenWeight = parseFloat(getComputedStyle(screen).getPropertyValue('--screen-weight')) || 0.62;
   }
   return out;
 }
@@ -215,7 +216,10 @@ def test_ac_bsp_02_p0_full_frame_height_and_fill(bsp_server) -> None:
             m = page.evaluate(_MEASURE_JS, idx)
             assert m and m.get("pattern") == "screen-full-frame", idx
             assert m.get("viewportFit") is True, idx
-            assert m["imgHeightVh"] >= VH_P0_MIN, (idx, m)
+            # full-frame 按其呈现层级使用不同 --screen-weight（普通 0.62 / wide 0.60 / ultra 0.65，
+            # 见 render/context._screen_weight_for_tier）；下限按每屏权重派生，预览顶栏占位允许 ~0.5% 余量。
+            floor = m["screenWeight"] - 0.005
+            assert m["imgHeightVh"] >= floor, (idx, m)
             assert m["fillRatio"] >= 0.98, (idx, m)
         browser.close()
 
@@ -322,6 +326,15 @@ def test_ac_bsp_04_reader_hides_plate_meta(bsp_server) -> None:
         browser = p.chromium.launch()
         page = browser.new_page(viewport=VIEWPORT_P0, device_scale_factor=DPR_P0)
         _open_demo(page, bsp_server["base"])
+        # 方案 D（e5326ed）后 studio 预览默认进入「阅读视图」(reader_immersive)，
+        # 故先显式切到「编辑预览」(studio_preview·folio lite) 建立基线再断言 plate-meta 可见。
+        page.evaluate(
+            """() => {
+              document.documentElement.setAttribute('data-reading-profile', 'studio_preview');
+              document.documentElement.removeAttribute('data-surface-mode');
+              document.documentElement.setAttribute('data-folio', 'lite');
+            }"""
+        )
         visible_studio = page.locator(".folio-plate-meta").first.is_visible()
         assert visible_studio is True
         page.evaluate(
