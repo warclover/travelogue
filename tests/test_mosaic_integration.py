@@ -4,15 +4,48 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from tests._golden.helpers import build_mosaic_eligible_trip, plan_legacy_screens
+from tests._golden.helpers import _asset, plan_legacy_screens
 from travelogue.config import get_config
 from travelogue.curation.chapter_items import summarize_screen_patterns
 from travelogue.curation.mosaic.hook import drain_mosaic_logs
 from travelogue.curation.mosaic.metrics import mcs_unified_exposure_rate, mosaic5_exposure_rate
 
 
+def _build_mosaic_eligible_trip():
+    """36 assets (6×6), each bucket 2 portraits + 4 landscapes.
+
+    After per-chapter hero extraction a mixed-orientation mosaic window survives
+    (mosaic-6-main-hero-plus-5), so mosaic-enabled planning produces real MCS
+    windows. Pure-portrait runs no longer route through mosaic (pair-first
+    priority), so an all-portrait prefix fixture would yield zero mosaic
+    activity.
+    """
+    assets: list[dict] = []
+    aspects: dict[str, str] = {}
+    buckets: list[list[str]] = []
+    for b in range(6):
+        bucket: list[str] = []
+        for i in range(6):
+            idx = b * 6 + i
+            aid = f"m{idx:03d}"
+            kind = "portrait" if i < 2 else "landscape"
+            assets.append(
+                _asset(
+                    aid,
+                    900 if kind == "portrait" else 2000,
+                    1600 if kind == "portrait" else 1200,
+                    offset_hours=float(idx) * 0.001,
+                    sharpness=0.8,
+                )
+            )
+            aspects[aid] = assets[-1]["aspectKind"]
+            bucket.append(aid)
+        buckets.append(bucket)
+    return buckets, aspects, assets
+
+
 def test_mosaic_enabled_increases_mosaic5_exposure(monkeypatch) -> None:
-    buckets, aspects, assets = build_mosaic_eligible_trip()
+    buckets, aspects, assets = _build_mosaic_eligible_trip()
     cfg = get_config()
     off = replace(cfg.mosaic, enabled=False)
     on = replace(

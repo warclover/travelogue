@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from tests._golden.helpers import (
+    build_mosaic_portrait3_trip,
     build_mosaic_eligible_trip,
     build_mosaic_portrait4_trip,
     plan_mosaic_screens,
@@ -124,7 +125,9 @@ def test_replan_screen_syncs_chapter_items() -> None:
 
 
 def test_replan_screen_legacy_builds_screen() -> None:
-    buckets, aspects_map, assets = build_mosaic_portrait4_trip()
+    # Pair-first tiling makes a 4-portrait run two portrait-2 pairs (2 slots
+    # each), below the 3-slot replan window; use a 3-portrait run (portrait-3).
+    buckets, aspects_map, assets = build_mosaic_portrait3_trip()
     aspects = {aid: aspects_map[aid] for aid in buckets[0]}
     assets_map = {a["id"]: a for a in assets}
     chapters = plan_mosaic_screens(buckets, aspects_map, assets)

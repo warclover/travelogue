@@ -2,21 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
-
 from travelogue.curation.layout_planner import (
     _apply_gallery_layout,
     _card,
     _row,
     plan_chapter_items,
+    portrait_group_sizes,
     summarize_orientations,
 )
 from travelogue.curation.mobile_layout_state import (
-    MOBILE_GRID4_ROW_LAYOUT,
-    MOBILE_GRID8_ROW_LAYOUT,
-    MOBILE_PERSON_GRID4_HINT,
-    MOBILE_PUZZLE_MIN_PHOTOS,
-    MobilePuzzlePlannerState,
     mobile_grid4_max_for_trip,
     mobile_grid8_max_for_trip,
 )
@@ -48,7 +42,8 @@ def test_summarize_five_kinds():
     assert s.tall == 1
 
 
-def test_mobile_landscapes_are_single_cards():
+def test_mobile_landscapes_stack_in_one_column():
+    # 连续 3 横图 → 一列三行纵向拼图（landscape-triple）；全景仍单卡。
     ids = ["l1", "l2", "l3", "pano"]
     aspects = {
         "l1": "landscape",
@@ -57,11 +52,11 @@ def test_mobile_landscapes_are_single_cards():
         "pano": "panorama",
     }
     items = plan_chapter_items(ids, aspects, export_layout="mobile")
-    assert all(it["type"] == "media-card" for it in items)
-    assert [it["assetId"] for it in items] == ids
-    assert items[3]["layout"]["slot"] == "panorama"
-    assert "slot" not in items[0]["layout"]
-    assert not any(it.get("type") == "media-row" for it in items)
+    assert items[0]["type"] == "media-row"
+    assert items[0]["rowLayout"] == "landscape-triple"
+    assert items[0]["assetIds"] == ["l1", "l2", "l3"]
+    assert items[1]["type"] == "media-card"
+    assert items[1]["layout"]["slot"] == "panorama"
 
 
 def test_mobile_panorama_alone():
@@ -143,185 +138,70 @@ def test_mobile_grid4_limits_by_trip_size():
     assert mobile_grid4_max_for_trip(200) == 12
 
 
-def test_mobile_no_grid8_when_trip_at_most_30():
-    ids = [f"l{i}" for i in range(8)]
-    aspects = {x: "landscape" for x in ids}
-    items = plan_chapter_items(
-        ids,
-        aspects,
-        export_layout="mobile",
-        trip_photo_total=MOBILE_PUZZLE_MIN_PHOTOS,
-    )
-    assert all(it["type"] == "media-card" for it in items)
+def test_mobile_single_landscape_falls_back_to_card():
+    items = plan_chapter_items(["l1"], {"l1": "landscape"}, export_layout="mobile")
+    assert len(items) == 1
+    assert items[0]["type"] == "media-card"
+    assert items[0]["assetId"] == "l1"
 
 
-def test_mobile_grid8_on_eight_landscape_burst():
-    ids = [f"l{i}" for i in range(8)]
+def test_mobile_two_landscapes_stack_as_pair():
+    ids = ["l0", "l1"]
     aspects = {x: "landscape" for x in ids}
-    base = datetime(2025, 7, 1, 12, 0, 0, tzinfo=UTC)
-    assets = {
-        aid: {
-            "id": aid,
-            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
-        }
-        for i, aid in enumerate(ids)
-    }
-    items = plan_chapter_items(
-        ids,
-        aspects,
-        export_layout="mobile",
-        assets=assets,
-        trip_photo_total=50,
-    )
+    items = plan_chapter_items(ids, aspects, export_layout="mobile")
     assert len(items) == 1
     assert items[0]["type"] == "media-row"
-    assert items[0]["rowLayout"] == MOBILE_GRID8_ROW_LAYOUT
+    assert items[0]["rowLayout"] == "landscape-pair"
     assert items[0]["assetIds"] == ids
 
 
-def test_mobile_grid8_ten_landscapes_yields_grid_plus_two_cards():
-    ids = [f"l{i}" for i in range(10)]
+def test_mobile_landscape_run_triple_first_then_single_tail():
+    # 4 横图 → 三联 + 单卡（仅尾部 1 张落单）。
+    ids = [f"l{i}" for i in range(4)]
     aspects = {x: "landscape" for x in ids}
-    base = datetime(2025, 7, 1, 12, 0, 0, tzinfo=UTC)
-    assets = {
-        aid: {
-            "id": aid,
-            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
-        }
-        for i, aid in enumerate(ids)
-    }
-    items = plan_chapter_items(
-        ids,
-        aspects,
-        export_layout="mobile",
-        assets=assets,
-        trip_photo_total=50,
-    )
-    assert items[0]["rowLayout"] == MOBILE_GRID8_ROW_LAYOUT
+    items = plan_chapter_items(ids, aspects, export_layout="mobile")
+    assert items[0]["rowLayout"] == "landscape-triple"
+    assert items[0]["assetIds"] == ["l0", "l1", "l2"]
     assert items[1]["type"] == "media-card"
-    assert items[2]["type"] == "media-card"
+    assert items[1]["assetId"] == "l3"
 
 
-def test_mobile_grid4_on_four_portrait_burst():
+def test_mobile_five_landscapes_triple_then_pair():
+    ids = [f"l{i}" for i in range(5)]
+    aspects = {x: "landscape" for x in ids}
+    items = plan_chapter_items(ids, aspects, export_layout="mobile")
+    assert [it.get("rowLayout") for it in items] == ["landscape-triple", "landscape-pair"]
+
+
+def test_mobile_portraits_never_collage_even_on_large_trip():
+    # 竖版恒单图：禁用任何竖版拼图，无论游记张数。
     ids = [f"p{i}" for i in range(4)]
     aspects = {x: "portrait" for x in ids}
-    base = datetime(2025, 8, 1, 9, 0, 0, tzinfo=UTC)
-    assets = {
-        aid: {
-            "id": aid,
-            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
-        }
-        for i, aid in enumerate(ids)
-    }
-    items = plan_chapter_items(
-        ids,
-        aspects,
-        export_layout="mobile",
-        assets=assets,
-        trip_photo_total=50,
-    )
-    assert len(items) == 1
-    assert items[0]["rowLayout"] == MOBILE_GRID4_ROW_LAYOUT
-    assert items[0]["assetIds"] == ids
-    assert "layoutHint" not in items[0]
+    items = plan_chapter_items(ids, aspects, export_layout="mobile", trip_photo_total=200)
+    assert all(it["type"] == "media-card" for it in items)
+    assert not any(it.get("type") == "media-row" for it in items)
 
 
-def test_mobile_grid4_person_hint_when_tagged():
+def test_portrait_group_sizes_pair_first_with_triple_filler():
+    # Web 竖版优先级：pair > triple > single（单张仅孤张兜底）。
+    assert portrait_group_sizes(1) == [1]
+    assert portrait_group_sizes(2) == [2]
+    assert portrait_group_sizes(3) == [3]
+    assert portrait_group_sizes(4) == [2, 2]
+    assert portrait_group_sizes(5) == [2, 3]
+    assert portrait_group_sizes(6) == [2, 2, 2]
+    assert portrait_group_sizes(7) == [2, 2, 3]
+
+
+def test_web_four_portraits_prefer_two_pairs():
     ids = [f"p{i}" for i in range(4)]
     aspects = {x: "portrait" for x in ids}
-    base = datetime(2025, 8, 1, 9, 0, 0, tzinfo=UTC)
-    assets = {
-        aid: {
-            "id": aid,
-            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
-            "tags": ["person"],
-        }
-        for i, aid in enumerate(ids)
-    }
-    items = plan_chapter_items(
-        ids,
-        aspects,
-        export_layout="mobile",
-        assets=assets,
-        trip_photo_total=50,
-    )
-    assert items[0]["layoutHint"] == MOBILE_PERSON_GRID4_HINT
+    items = plan_chapter_items(ids, aspects, export_layout="web")
+    assert [it["rowLayout"] for it in items] == ["portrait-pair", "portrait-pair"]
 
 
-def test_mobile_grid4_five_portraits_grid_plus_card():
+def test_web_five_portraits_pair_then_triple():
     ids = [f"p{i}" for i in range(5)]
     aspects = {x: "portrait" for x in ids}
-    base = datetime(2025, 8, 1, 9, 0, 0, tzinfo=UTC)
-    assets = {
-        aid: {
-            "id": aid,
-            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
-        }
-        for i, aid in enumerate(ids)
-    }
-    items = plan_chapter_items(
-        ids,
-        aspects,
-        export_layout="mobile",
-        assets=assets,
-        trip_photo_total=50,
-    )
-    assert items[0]["rowLayout"] == MOBILE_GRID4_ROW_LAYOUT
-    assert items[1]["type"] == "media-card"
-
-
-def test_mobile_no_grid4_when_trip_at_most_30():
-    ids = [f"p{i}" for i in range(4)]
-    aspects = {x: "portrait" for x in ids}
-    items = plan_chapter_items(
-        ids,
-        aspects,
-        export_layout="mobile",
-        trip_photo_total=MOBILE_PUZZLE_MIN_PHOTOS,
-    )
-    assert all(it["type"] == "media-card" for it in items)
-
-
-def test_mobile_grid8_respects_trip_quota():
-    ids = [f"l{i}" for i in range(24)]
-    aspects = {x: "landscape" for x in ids}
-    base = datetime(2025, 7, 1, 12, 0, 0, tzinfo=UTC)
-    assets = {
-        aid: {
-            "id": aid,
-            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
-        }
-        for i, aid in enumerate(ids)
-    }
-    items = plan_chapter_items(
-        ids,
-        aspects,
-        export_layout="mobile",
-        assets=assets,
-        trip_photo_total=50,
-    )
-    grids = [it for it in items if it.get("rowLayout") == MOBILE_GRID8_ROW_LAYOUT]
-    assert len(grids) == 1
-    assert sum(1 for it in items if it["type"] == "media-card") == 16
-
-
-def test_mobile_grid8_per_chapter_then_trip_quota():
-    ids_a = [f"a{i}" for i in range(8)]
-    ids_b = [f"b{i}" for i in range(8)]
-    aspects = {x: "landscape" for x in ids_a + ids_b}
-    base = datetime(2025, 7, 1, 12, 0, 0, tzinfo=UTC)
-    assets = {}
-    for i, aid in enumerate(ids_a + ids_b):
-        assets[aid] = {
-            "id": aid,
-            "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
-        }
-    state = MobilePuzzlePlannerState.from_trip_total(50)
-    items_a = plan_chapter_items(
-        ids_a, aspects, export_layout="mobile", assets=assets, trip_photo_total=50, puzzle_state=state
-    )
-    state.begin_chapter()
-    items_b = plan_chapter_items(
-        ids_b, aspects, export_layout="mobile", assets=assets, trip_photo_total=50, puzzle_state=state
-    )
-    assert sum(1 for it in items_a + items_b if it.get("rowLayout") == MOBILE_GRID8_ROW_LAYOUT) == 2
+    items = plan_chapter_items(ids, aspects, export_layout="web")
+    assert [it["rowLayout"] for it in items] == ["portrait-pair", "portrait-triple"]

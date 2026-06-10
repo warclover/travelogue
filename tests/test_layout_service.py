@@ -86,13 +86,15 @@ def test_extract_ordered_asset_ids_dedupes():
     assert extract_ordered_asset_ids(trip) == ["a", "b", "c"]
 
 
-def test_apply_layout_mobile_landscape_single_column():
+def test_apply_layout_mobile_landscape_stacks_in_one_column():
+    # Mobile 横版改为「一列纵向拼图」：连续横图组成 landscape-triple/-pair（窄屏 CSS
+    # 强制单列纵向叠放），三列优先。除封面 a0 外有 7 张横图 → 三联 + 三联 + 尾部单卡。
     specs = [(1200, 800)] * 8
     trip = _trip_with_assets(specs, export_layout="mobile")
     rows = [it for it in _all_items(trip) if it.get("type") == "media-row"]
-    assert not rows
+    assert [it.get("rowLayout") for it in rows] == ["landscape-triple", "landscape-triple"]
     cards = [it for it in _all_items(trip) if it.get("type") == "media-card"]
-    assert len(cards) >= 7
+    assert len(cards) == 1
 
 
 def test_apply_layout_web_portrait_mosaic():

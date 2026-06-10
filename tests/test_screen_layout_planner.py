@@ -651,6 +651,9 @@ def test_screens_layout_active_requires_web():
 
 
 def test_portrait_heavy_summary():
+    # Pair-first portrait priority: a run of 6 standard portraits tiles into
+    # three two-column pairs (portrait-2), never a dense portrait-6/portrait-4
+    # grid and never a triple+single split.
     ids = [f"p{i}" for i in range(6)]
     aspects = _aspects(ids, {x: "portrait" for x in ids})
     screens = plan_screens_for_chapter(
@@ -658,9 +661,7 @@ def test_portrait_heavy_summary():
         aspects,
         orientation_summary={"portrait": 10, "landscape": 2},
     )
-    assert len(screens) == 2
-    assert screens[0]["patternId"] == "screen-portrait-3"
-    assert screens[1]["patternId"] == "screen-portrait-3"
+    assert [s["patternId"] for s in screens] == ["screen-portrait-2"] * 3
 
 
 def test_landscape_pair_splits_into_two_single_screens():

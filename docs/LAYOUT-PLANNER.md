@@ -2,7 +2,7 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.2 |
+| **文档版本** | v0.4.1 |
 | **文档角色** | **算法 / 工程细则**（产品需求见 [PRD-LAYOUT.md](./PRD-LAYOUT.md)） |
 | **状态** | 已拍板（规则）· 代码 `travelogue/curation/layout_planner.py` |
 | **关联** | `PRD-LAYOUT.md`、`ADAPTIVE-LAYOUT.md`、`TEMPLATE-visual-journal.md`、`PRD-MVP.md` §6.3 |
@@ -118,22 +118,22 @@
 
 ## 4. 手机版面（`exportLayout: mobile` · 单列扫读）
 
-**当前实现（P0 + 大图集拼图）**：
+**当前实现（v0.4 · 竖单图 / 横纵向拼图）**：
 
-- **≤30 张**（布局可用总数）：章内每张照片一张 `media-card`，纵向单列；标准横图 CSS 限高约 **28dvh**，竖图 `contain` 满宽。
-- **>30 张**（拼图资格，见 `mobile_layout_state.py`）：
-  - **横图连拍**：连续 **≥8** 张标准横图、相邻 `takenAt` ≤ `burst_seconds` → **`mobile-landscape-grid-8`**（2×4，`cover`）。配额：31–80 **2** 块；81–150 **5**；>150 **8**。
-  - **竖图连拍**：连续 **≥4** 张标准竖图、相邻间隔同上 → **`mobile-portrait-grid-4`**（2×2 并排双列；风景 `cover`，含人物 `layoutHint: person-grid-4` + `contain`）。配额：31–80 **4** 块；81–150 **8**；>150 **12**。
-  - 余片仍为单卡；≤30 张整趟不拼图。
+- **竖版**：恒为单张 `media-card`（`contain` 满宽）；**禁用任何竖版并列拼图**（不再有 `mobile-portrait-grid-4`），无论游记张数。
+- **横版**：连续标准横图按「**三列优先**」组成「1 列 × N 行」纵向拼图——`landscape-triple`(3) / `landscape-pair`(2)，仅游程尾部剩 1 张才落单横卡。窄屏 CSS 已将这些 rowLayout 强制为单列纵向叠放，每张限高约 **28dvh**。**不再**默认出现「单张横版独占一屏」。
+- **方 / 全景 / 超长竖**：单卡（`square` / `panorama` / `tall` 专用 slot）。
+- 横版游程瓦片化（`_landscape_stack_sizes`）：`3→[3]`、`4→[3,1]`、`5→[3,2]`、`6→[3,3]`、`7→[3,3,1]`、`2→[2]`、`1→[1]`。
 
-| 优先级 | 条件 | 块类型 | 视觉效果 |
+| 优先级 | 构图 | 块类型 | 视觉效果 |
 |--------|------|--------|----------|
-| 1 | 任意×1 | `media-card` | 单列；全景 / 方 / 竖 / 横均独立成卡 |
+| 1 | 横版连续 ≥2 | `media-row` · `landscape-triple/-pair` | 一列 N 行纵向拼图（三列优先） |
+| 2 | 横版孤张 / 竖 / 方 / 全景 / 超长竖 | `media-card` | 单列独立成卡 |
 | — | 横滑章（gallery） | 仍 `media-scroll` | 屏上横滑；**长图导出**时纵向展开 |
 
-**已废弃（文档旧版）**：方×3 三联、横×2/×3 拼图在手机端 **不再生成**（见 `layout_planner._mobile_card`）。
+**已废弃**：`mobile-portrait-grid-4`（竖×4 2×2）、`mobile-landscape-grid-8`（横×8 2×4）大图集拼图与其配额逻辑在手机端 **不再生成**（见 `layout_planner._plan_chapter_items_mobile`）。
 
-**禁止**：全景进入横版三联；超长竖与另一竖并排（手机窄条无效）。
+**禁止**：全景进入横版三联；超长竖与另一竖并排（手机窄条无效）；竖版并列拼图。
 
 ---
 
@@ -145,9 +145,13 @@
 | 2 | 超长竖×1 | `media-card` · `tall` |
 | 3 | 方×3 / 方×2 | `square-triple` / `square-pair` |
 | 4 | 方×1 | `media-card` · `square` |
-| 5 | 标准竖×3 / ×2 | `media-row` · `portrait-triple` / `portrait-pair` |
+| 5 | 标准竖（连续游程） | `media-row` · **`portrait-pair` 优先 / `portrait-triple` 次之** |
 | 6 | 标准横×3 / ×2 | `landscape-triple` / `landscape-pair` |
 | 7 | 其余×1 | `media-card` |
+
+> **竖版优先级（v0.4）**：`portrait-2`（两列）> `portrait-3`（三列）> `portrait-1`（单列，最差兜底）。对连续标准竖版游程做「pair 优先、triple 作奇偶填充、single 仅孤张兜底」的瓦片化（`portrait_group_sizes`）：`2→[2]`、`3→[3]`、`4→[2,2]`、`5→[2,3]`、`7→[2,2,3]`、`1→[1]`。screens 引擎同此优先级（`screen_planner._flush_portrait_pending` / `_emit_person_portrait_screens`）。
+>
+> **v0.4.1（screens 引擎 MCS 层修正）**：连续「全标准竖版」游程**不再**塌缩为密集竖版宫格 `screen-portrait-4`（2×2）/ `-6`（3×2）/ `-9`（3×3）。MCS 窗口枚举（`mosaic/hook.py::try_mosaic_window`）对全竖版窗口跳过 `3/4/6/9` 三档，改由 pair-first 瓦片器（`stage_portrait_family` → `_drain_portrait_run_pair_first` → `_flush_portrait_pending(force=True)`）成屏：`4 连竖→两个 portrait-2`、`6 连竖→三个 portrait-2`、`3 连竖→一个 portrait-3`（force 绕过连续变化禁令，避免退化成 pair+单张）。`portrait-4/6/9` 仅保留给横版/方版或混合窗口；`portrait-grid-8`（人物 2×4）与孤立单竖 `portrait-1` 不受影响。
 
 ---
 
@@ -160,12 +164,13 @@
 | 触发 | `trip.layoutEngine=screens` 且 `exportLayout=web`（或 `config.yaml` → `layout.web_layout_engine: screens`） |
 | 数据 | `chapters[].screens[]`：`patternId` + `slots[]`（`fit`: cover \| contain） |
 | 单屏上限 | **9** 张；满屏后下一屏重算 pattern |
-| 宫格 | 横/竖/方：1·2·3·4（2×2）·6（3×2）·9（3×3） |
-| 竖三列 | `screen-portrait-3` · **cover** 拼满 16:9 |
-| 单竖 | `screen-portrait-1` · **cover** 满屏兜底；或 `screen-portrait-1-landscape-2`（1 竖+2 横，时间邻近） |
+| 宫格 | 横/方：1·2·3·4（2×2）·6（3×2）·9（3×3）；**竖版连续游程除外**——只用 1/2/3，4/6/9 密集宫格不用于纯竖版（见 v0.4.1） |
+| 竖版组屏优先级（v0.4） | **两列 `screen-portrait-2` > 三列 `screen-portrait-3` > 单列 `screen-portrait-1`**；连续竖版优先两列，仅奇数尾巴用一屏三列，单列仅孤张兜底 |
+| 竖三列 | `screen-portrait-3` · 三列竖槽（仅作奇偶填充） |
+| 单竖 | `screen-portrait-1` · 满屏兜底；或 `screen-portrait-1-landscape-2`（1 竖+2 横，时间邻近） |
 | 五图拼版 | `screen-mosaic-5-main-portrait-3land`：左上主横图（cover 分最高）+ 右上 1 竖 + 底行 3 横；连续 5 张且 `takenAt` 跨度 ≤ `burst_seconds`；整章恰好 5 张时不另起章首 Hero |
 | 八竖 2×4 | `screen-portrait-grid-8`：总量 **>50** 且 **竖图多于横图**；连续 8 竖、相邻 `takenAt` ≤ `burst_seconds`；配额 51–100 **2** 屏 / 101–200 **4** / >200 **6**（不计九宫格）；人物 `layoutHint: person-grid-8` + `contain` |
-| 连拍 | `takenAt` 间隔 ≤ `ingest.burst_seconds` 且同构图族 → 优先 4/9 宫格 |
+| 连拍 | `takenAt` 间隔 ≤ `ingest.burst_seconds` 且同构图族 → 优先 4/9 宫格（**仅横/方**；纯竖版连拍仍走 pair-first 两列瓦片，见 v0.4.1） |
 | 九宫格配额 | 按游记**布局可用照片总数**：≤50 最多 1 次；51–100 为 2–5 次；101–200 为 4–8 次；>200 为 6–10 次；**禁止连续两屏均为 `*-9`** |
 | 连续排版禁令 | 禁止连续两屏 `*-3`（三张一排）；禁止连续两屏 `*-6`（六张两排）；禁止 `*-3` 与 `*-6` 相邻（任意顺序）；禁止连续两屏 `screen-portrait-1` / `screen-tall-1` |
 | gallery 章 | screens 引擎下仍从 items 展平为 **多屏 mosaic**；渲染不用 `media-scroll` |
@@ -243,3 +248,5 @@ travelogue demo from-album .\photos --layout web
 | v0.1 | 2026-05-19 | 横竖统计 + 手机三横 / Web 两竖 |
 | v0.2 | 2026-05-19 | 五类构图：panorama / square / tall + 方图 row + 文档 |
 | v0.3 | 2026-05-21 | §5b layoutEngine screens-2：宫格 4/6/9、连拍、tone |
+| v0.4 | 2026-06-10 | 竖版优先级 pair>triple>single（web/screens）；mobile 竖版恒单图、横版三列优先纵向拼图、废除 grid-4/grid-8 |
+| v0.4.1 | 2026-06-10 | screens 引擎 MCS 层修正：全竖版连续窗口跳过 `portrait-3/4/6/9` 宫格，改走 pair-first 瓦片（4→两 pair、6→三 pair、3→triple）；修复 v0.4 仅作用于 flush、4/6 连竖仍被 MCS 窗口塌缩为 `portrait-4/6` 的问题 |

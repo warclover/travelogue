@@ -30,12 +30,17 @@ def test_golden_mosaic_portrait_3_matches_mcs():
 
 
 def test_golden_mosaic_portrait_4_matches_mcs():
-    """4 portraits use portrait-stage screen-portrait-4 (not legacy wide 2×2)."""
+    """Pair-first priority: 4 portraits tile into two portrait-2 pairs.
+
+    Two-column pairs outrank the dense portrait-4 (2×2) grid, so a run of four
+    standard portraits never collapses into a single quad screen.
+    """
     buckets, aspects, assets = build_mosaic_portrait4_trip()
     chapters = plan_mosaic_screens(buckets, aspects, assets)
     assert layout_snapshot(chapters) == load_golden("mosaic-portrait-4")
-    screens = chapters[0]["screens"]
-    assert screens[0]["patternId"] == PATTERN_PORTRAIT_4
+    patterns = [s["patternId"] for s in chapters[0]["screens"]]
+    assert patterns == ["screen-portrait-2", "screen-portrait-2"]
+    assert PATTERN_PORTRAIT_4 not in patterns
 
 
 def test_golden_mosaic_landscape_6_matches_mcs():
