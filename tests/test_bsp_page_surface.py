@@ -166,6 +166,42 @@ def test_standard_full_frame_viewport_fit_preserves_native_ar() -> None:
 
 
 @pytest.mark.unit
+def test_folio_plate_portrait_person_renders_contain() -> None:
+    """Chapter opener plate keeps slot contain fit from portrait-1 planning."""
+    assets = {
+        "p1": {
+            "id": "p1",
+            "nativeWidth": 2848,
+            "nativeHeight": 4256,
+            "width": 2400,
+            "height": 3587,
+            "tags": ["person", "face"],
+            "displayFile": "assets/p1-w800.webp",
+        }
+    }
+    screen = {
+        "patternId": "screen-portrait-1",
+        "slots": [{"assetId": "p1", "slot": 0, "fit": "contain"}],
+    }
+    ctx = build_layout_screen(
+        screen,
+        assets,
+        meta_title="Test",
+        export_layout="web",
+        folio_lite=True,
+        is_plate=True,
+        screen_index=1,
+        chapter_index="04",
+        featured_asset_ids=frozenset({"p1"}),
+    )
+    assert ctx["patternId"] == "screen-plate"
+    assert ctx.get("isPlate") is True
+    assert ctx["slots"][0]["fit"] == "contain"
+    assert "2848 / 4256" in ctx["screenStyle"]
+    assert ctx.get("isFeatured") is True
+
+
+@pytest.mark.unit
 def test_journal_screens_css_has_bsp_tokens() -> None:
     from travelogue.paths import JOURNAL_SCREENS_CSS
 

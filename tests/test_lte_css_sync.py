@@ -158,6 +158,23 @@ def test_portrait_quad_2x2_contain_collapses_stage(journal_css: str) -> None:
 
 
 @pytest.mark.unit
+def test_plate_portrait_contain_collapses_stage(journal_css: str) -> None:
+    """folio lite screen-plate + portrait contain must share portrait-1 stage collapse.
+
+    Regression: chapter opener plate promoted from screen-portrait-1 left a tall
+    native-aspect box with side bands and bottom blank (asset-027 class).
+    """
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert (
+        ':is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"])'
+        in overlays
+    )
+    assert "screen-plate (folio lite chapter opener)" in overlays
+
+
+@pytest.mark.unit
 def test_mosaic_portrait_contain_top_anchor(journal_css: str) -> None:
     """Regression: hero mosaic bottom tiles use contain + top center, not focal stretch."""
     ostart = journal_css.index(OVERLAYS_MARKER_START)

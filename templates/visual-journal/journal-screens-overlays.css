@@ -552,10 +552,11 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-1"]:not([d
  * the native-aspect box. The native box (full rail width × tall ratio) combined
  * with the universal contain cap (max-height: 108vh) left a tall bottom blank and
  * side bands. Height-auto + width-auto centers the whole portrait, capped to vh.
+ * screen-plate (folio lite chapter opener) shares the same 1-col contain path.
  */
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]):has(.layout-slot__img--contain),
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]):has(.layout-slot__img--contain),
-html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]):has(.layout-slot__img--contain) {
+html[data-layout="web"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]):has(.layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]):has(.layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]):has(.layout-slot__img--contain) {
   aspect-ratio: unset;
   height: auto;
   min-height: 0;
@@ -564,25 +565,25 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[da
   align-items: flex-start;
 }
 
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]):has(.layout-slot__img--contain) .layout-screen__grid,
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]):has(.layout-slot__img--contain) .layout-screen__grid,
-html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]):has(.layout-slot__img--contain) .layout-screen__grid {
+html[data-layout="web"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]):has(.layout-slot__img--contain) .layout-screen__grid,
+html[data-layout="auto"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]):has(.layout-slot__img--contain) .layout-screen__grid,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]):has(.layout-slot__img--contain) .layout-screen__grid {
   height: auto;
   width: 100%;
 }
 
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]) .layout-slot:has(> .layout-slot__img--contain),
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]) .layout-slot:has(> .layout-slot__img--contain),
-html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]) .layout-slot:has(> .layout-slot__img--contain) {
+html[data-layout="web"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]) .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]) .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]) .layout-slot:has(> .layout-slot__img--contain) {
   height: auto;
   min-height: 0;
   align-self: start;
   overflow: visible;
 }
 
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]) .layout-screen__grid--1col .layout-slot > .layout-slot__img--contain,
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]) .layout-screen__grid--1col .layout-slot > .layout-slot__img--contain,
-html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]) .layout-screen__grid--1col .layout-slot > .layout-slot__img--contain {
+html[data-layout="web"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]) .layout-screen__grid--1col .layout-slot > .layout-slot__img--contain,
+html[data-layout="auto"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]) .layout-screen__grid--1col .layout-slot > .layout-slot__img--contain,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]) .layout-screen__grid--1col .layout-slot > .layout-slot__img--contain {
   display: block;
   width: auto;
   height: auto;

@@ -25,7 +25,9 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-06-10 (b): screen-square-1 fill (742f0fb) shipped without a
 # golden bump, then AC-P17-30 focal binding restored on screen-portrait-grid-8/
 # portrait-1/panorama-1 cover rules (clobbered by fc61396) re-changed the bundle.
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}4ca665343cfe"
+# Re-bumped 2026-06-10 (c): screen-plate portrait contain shares portrait-1 stage
+# collapse (folio lite chapter opener blank bands regression).
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}58c91ac18118"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"
