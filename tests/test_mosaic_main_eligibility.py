@@ -284,6 +284,8 @@ def test_template_main_slot_policy_loaded():
     from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
     from travelogue.curation.mosaic.main_eligibility import (
         pattern_requires_main_ar_guard,
+        resolve_main_eligible_kinds,
+        resolve_main_forbid_kinds,
         template_main_slot_policy,
     )
 
@@ -291,6 +293,49 @@ def test_template_main_slot_policy_loaded():
     assert policy is not None
     assert policy.get("slotIndex") == 0
     assert pattern_requires_main_ar_guard(PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5)
+    assert resolve_main_forbid_kinds(PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5) == frozenset(
+        {"panorama", "tall", "portrait", "square"}
+    )
+    assert resolve_main_eligible_kinds(PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5) == frozenset(
+        {"landscape"}
+    )
+
+
+def test_forbid_kinds_runtime_enforcement():
+    pano = _asset("pano", w=5000, h=2000)
+    ok, reason = asset_eligible_for_main_slot(
+        pano,
+        forbid_kinds=frozenset({"panorama", "portrait"}),
+        eligible_kinds=frozenset({"landscape", "panorama"}),
+    )
+    assert not ok
+    assert reason == "blocked_panorama"
+
+    ok_relaxed, reason_relaxed = asset_eligible_for_main_slot(
+        pano,
+        forbid_kinds=frozenset({"portrait"}),
+        eligible_kinds=frozenset({"landscape", "panorama"}),
+    )
+    assert not ok_relaxed
+    assert reason_relaxed == "blocked_off_ladder"
+
+
+def test_eligible_kinds_must_include_landscape_from_yaml():
+    asset = _asset("std", w=3000, h=1687)
+    ok, reason = asset_eligible_for_main_slot(
+        asset,
+        pattern_id=PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+    )
+    assert ok
+    assert reason == "ok"
+
+    square = {"id": "sq", "width": 1000, "height": 1000, "quality": {"sharpness": 0.8}}
+    ok_sq, reason_sq = asset_eligible_for_main_slot(
+        square,
+        pattern_id=PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+    )
+    assert not ok_sq
+    assert reason_sq == "blocked_square"
 
 
 def test_conventional_window_still_orders_hero_six():
