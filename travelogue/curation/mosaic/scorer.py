@@ -19,6 +19,7 @@ from travelogue.curation.mosaic.constants import (
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
     PATTERN_PORTRAIT_6,
 )
+from travelogue.curation.mosaic.main_eligibility import screen_main_slot_eligible
 from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.curation.screen_planner import _is_landscape_id, _is_std_portrait_id
@@ -130,6 +131,21 @@ def _duplicate_density_penalty(asset_ids: list[str], assets_by_id: dict[str, dic
     if max_run >= 3:
         return 0.4
     return 0.0
+
+
+def _main_ar_penalty(
+    screen: dict,
+    assets_by_id: dict[str, dict],
+    *,
+    cfg: MosaicConfig,
+) -> float:
+    ok, _ = screen_main_slot_eligible(
+        screen,
+        assets_by_id,
+        pattern_id=str(screen.get("patternId") or ""),
+        cfg=cfg,
+    )
+    return 0.0 if ok else 0.95
 
 
 def _slot_geometry_penalty(
@@ -283,6 +299,7 @@ def score_candidate(
         "duplicate_density": _duplicate_density_penalty(asset_ids, assets_by_id),
         "hero_narrow_tiles": _hero_narrow_tile_penalty(screen, asset_ids, aspects, cfg=cfg),
         "hero_slot_aspect": _hero_slot_aspect_penalty(screen, aspects, cfg=cfg),
+        "main_ar_ineligible": _main_ar_penalty(screen, assets_by_id, cfg=cfg),
         "slot_geometry": _slot_geometry_penalty(screen, aspects),
         "flat_six_grid": _flat_six_grid_penalty(
             str(screen.get("patternId") or ""), asset_ids, aspects
@@ -304,7 +321,8 @@ def score_candidate(
             continue
         total *= 1.0 - _clamp01(weight) * _clamp01(pen)
         if pen >= 0.5:
-            reasons.append(f"R_{key.upper()}")
+            code = "R_MAIN_AR_BLOCK" if key == "main_ar_ineligible" else f"R_{key.upper()}"
+            reasons.append(code)
 
     if bd.temporal_coherence >= 0.7:
         reasons.append("R_TIME_COHESION")

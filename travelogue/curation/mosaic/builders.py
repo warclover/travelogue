@@ -149,10 +149,28 @@ def _order_hero_six(
     median_sharp: float | None,
 ) -> list[str] | None:
     """Main 2×2 landscape + 2 side tiles (prefer portrait) + 3 bottom landscapes."""
+    from travelogue.curation.mosaic.main_eligibility import (
+        main_ar_guard_enabled,
+        pick_best_main_eligible,
+    )
+    from travelogue.curation.mosaic.runtime import get_effective_mosaic_config
+
     portraits, landscapes = _split_portrait_landscape(asset_ids, aspects)
     if len(landscapes) < 4:
         return None
-    main = _pick_main_landscape_id(landscapes, assets_map, median_sharp=median_sharp)
+    cfg = get_effective_mosaic_config()
+    if main_ar_guard_enabled(cfg):
+        main = pick_best_main_eligible(
+            landscapes,
+            assets_map,
+            pattern_id=PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+            median_sharp=median_sharp,
+            cfg=cfg,
+        )
+        if not main:
+            return None
+    else:
+        main = _pick_main_landscape_id(landscapes, assets_map, median_sharp=median_sharp)
     bottom_pool = _sort_asset_ids_by_taken(
         [a for a in landscapes if a != main], assets_map
     )

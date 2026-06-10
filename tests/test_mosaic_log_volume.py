@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 
+from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
 from travelogue.curation.mosaic.hook import drain_mosaic_logs
 from travelogue.curation.mosaic.log import MosaicWindowLog, format_log_entry
 
@@ -40,6 +41,29 @@ def test_window_log_keeps_geometry_rejections_summary():
     assert "rejectedTemplates" not in window
     assert window["geometryRejectedTemplates"] == [
         {"templateId": hero_id, "reason": "geometry_invalid"}
+    ]
+
+
+def test_window_log_keeps_main_ar_rejections_summary():
+    hero_id = PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+    raw = MosaicWindowLog(
+        rejected_templates=[
+            {
+                "templateId": hero_id,
+                "reason": "main_ar_ineligible",
+                "detail": "blocked_panorama",
+            },
+            {"templateId": "x", "reason": "ordering_failed"},
+        ]
+    ).to_dict()
+    window = format_log_entry(raw, "window")
+    assert "rejectedTemplates" not in window
+    assert window["mainArRejectedTemplates"] == [
+        {
+            "templateId": hero_id,
+            "reason": "main_ar_ineligible",
+            "detail": "blocked_panorama",
+        }
     ]
 
 

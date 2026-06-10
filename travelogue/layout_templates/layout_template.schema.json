@@ -216,6 +216,44 @@
               }
             }
           }
+        },
+        "mainSlotPolicy": {
+          "type": "object",
+          "description": "Main hero slot asset AR eligibility (V-P16-MAIN-01 · PRD-6张拼图优化)",
+          "additionalProperties": false,
+          "properties": {
+            "slotIndex": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "targetDisplayAspect": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "eligibleAspectKinds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "forbidKinds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "arLadderTol": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "preferLadder": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          }
         }
       }
     },

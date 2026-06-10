@@ -26,6 +26,10 @@ class MosaicConfig:
     log_level: str = "window"
     # When false, restores pre-v4 hero-3-2-plus-4 geometry/scorer guards (rollback).
     hero_weighted_geometry_guard: bool = True
+    # PRD-6张拼图优化 · R-MAIN-AR-01: conventional AR only for hero+tile main slot.
+    main_ar_guard: bool = True
+    main_ar_ladder_tol: float = 0.08
+    main_ar_prefer_16_9: bool = True
     weights: dict[str, float] = field(
         default_factory=lambda: {
             "aspect_match": 0.20,
@@ -47,6 +51,7 @@ class MosaicConfig:
             "hero_narrow_tiles": 0.35,
             "hero_slot_aspect": 0.4,
             "flat_six_grid": 0.35,
+            "main_ar_ineligible": 0.95,
         }
     )
     # LSE W3b capability flags (set via layout_engine.adapter mosaic_config_from_pack)
@@ -100,6 +105,24 @@ def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
             "hero_weighted_geometry_guard",
             "heroWeightedGeometryGuard",
             defaults.hero_weighted_geometry_guard,
+        ),
+        main_ar_guard=cfg_bool(
+            raw,
+            "main_ar_guard",
+            "mainArGuard",
+            defaults.main_ar_guard,
+        ),
+        main_ar_ladder_tol=cfg_float(
+            raw,
+            "main_ar_ladder_tol",
+            "mainArLadderTol",
+            defaults.main_ar_ladder_tol,
+        ),
+        main_ar_prefer_16_9=cfg_bool(
+            raw,
+            "main_ar_prefer_16_9",
+            "mainArPrefer169",
+            defaults.main_ar_prefer_16_9,
         ),
         weights={k: float(weights_raw.get(k, defaults.weights.get(k, 0.0))) for k in defaults.weights},
         penalties={

@@ -67,6 +67,35 @@ def test_main_off_ladder_passes_publish_with_sign_off(engine: LayoutTemplateEngi
 
 
 @pytest.mark.unit
+def test_hero6_templates_declare_main_slot_policy(engine: LayoutTemplateEngine) -> None:
+    from travelogue.curation.mosaic.constants import (
+        PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+        PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+    )
+
+    for pid in (PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5, PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4):
+        report = validate_template_def(engine.get(pid), mode="publish")
+        blocking = [i for i in report.issues if i.level in ("error", "block")]
+        assert not blocking, (pid, blocking)
+
+
+@pytest.mark.unit
+def test_main_slot_policy_missing_blocks_publish(engine: LayoutTemplateEngine) -> None:
+    from dataclasses import replace
+
+    from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+
+    t = engine.get(PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5)
+    stripped = replace(
+        t,
+        constraints={k: v for k, v in t.constraints.items() if k != "mainSlotPolicy"},
+    )
+    report = validate_template_def(stripped, mode="publish")
+    assert not report.ok
+    assert any(i.code == "V-P16-MAIN-01" for i in report.issues)
+
+
+@pytest.mark.unit
 def test_validator_blocks_more_than_nine_slots(engine: LayoutTemplateEngine) -> None:
     from dataclasses import replace
 

@@ -112,5 +112,16 @@ def format_log_entry(raw: dict[str, Any], log_level: str = "window") -> dict[str
     ]
     if geom_rejected:
         out["geometryRejectedTemplates"] = geom_rejected
+    main_ar_rejected = [
+        {
+            "templateId": r["templateId"],
+            "reason": r["reason"],
+            **({"detail": r["detail"]} if r.get("detail") else {}),
+        }
+        for r in raw.get("rejectedTemplates") or []
+        if r.get("reason") == "main_ar_ineligible"
+    ]
+    if main_ar_rejected:
+        out["mainArRejectedTemplates"] = main_ar_rejected
     out.pop("rejectedTemplates", None)
     return out

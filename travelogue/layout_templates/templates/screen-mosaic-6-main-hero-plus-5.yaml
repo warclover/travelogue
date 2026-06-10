@@ -1,5 +1,5 @@
 id: screen-mosaic-6-main-hero-plus-5
-version: 1
+version: 2
 status: ga
 kind: composite
 displayName: mosaic · 6 · main · hero · plus · 5
@@ -68,6 +68,13 @@ constraints:
   portrait_forbidden_in_wide_slots: []
   landscape_forbidden_in_tall_slots: []
   intentionalGaps: []
+  mainSlotPolicy:
+    slotIndex: 0
+    targetDisplayAspect: 1.7778
+    eligibleAspectKinds: [landscape]
+    forbidKinds: [panorama, tall, portrait, square]
+    arLadderTol: 0.08
+    preferLadder: [1.7778, 1.5, 1.3333]
 scoring:
   base_weight: 1.0
   tags: []

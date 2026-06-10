@@ -78,6 +78,7 @@ scoring_profiles:
       hero_narrow_tiles: 0.35
       hero_slot_aspect: 0.40
       flat_six_grid: 0.35
+      main_ar_ineligible: 0.95
   # Studio 实验轨 · layout.scoring.enabled=true 时 PHASE6 预设（非默认 parity 基线）
   beam:
     weights:

@@ -11,6 +11,7 @@ from travelogue.curation.media_classify import is_collage_asset
 from travelogue.curation.mosaic.builders import build_screen, try_order_for_pattern
 from travelogue.curation.mosaic.features import feature_summary_for_window
 from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled, mosaic_registry
+from travelogue.curation.mosaic.main_eligibility import screen_main_slot_eligible
 from travelogue.curation.mosaic.pattern_catalog import (
     MosaicPattern,
     patterns_for_window_size,
@@ -133,7 +134,16 @@ def generate_window_candidates_with_rejections(
                 ordered = refined
                 screen = build_screen(pat, ordered, assets_map=assets_map)
         geom_ok = screen_slots_geometry_ok(screen, aspects)
-        if not geom_ok:
+        main_ok, main_reason = screen_main_slot_eligible(
+            screen,
+            assets_map,
+            pattern_id=pat.pattern_id,
+            cfg=cfg,
+        )
+        geom_ok = geom_ok and main_ok
+        if not geom_ok and not main_ok:
+            _reject(rejected, pat.pattern_id, "main_ar_ineligible", detail=main_reason)
+        elif not geom_ok:
             _reject(rejected, pat.pattern_id, "geometry_invalid")
         feat = {**summary, "patternId": pat.pattern_id}
         if slot_fallback:

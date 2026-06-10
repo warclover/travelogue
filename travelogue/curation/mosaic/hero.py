@@ -14,7 +14,12 @@ def pick_main_for_pattern(
     median_sharp: float | None = None,
 ) -> str | None:
     """Pick main/hero asset for patterns with a ``main`` role."""
+    from travelogue.curation.mosaic.main_eligibility import (
+        main_ar_guard_enabled,
+        pick_best_main_eligible,
+    )
     from travelogue.curation.mosaic.registry import default_registry
+    from travelogue.curation.mosaic.runtime import get_effective_mosaic_config
     from travelogue.curation.screen_planner import _is_landscape_id, _pick_main_landscape_id
 
     pat = default_registry().get(pattern_id)
@@ -22,6 +27,18 @@ def pick_main_for_pattern(
         aid for aid in ordered_asset_ids if _is_landscape_id(aid, aspects)
     ]
     if pat and "main" in pat.roles and landscapes:
+        cfg = get_effective_mosaic_config()
+        if main_ar_guard_enabled(cfg):
+            picked = pick_best_main_eligible(
+                landscapes,
+                assets_map,
+                pattern_id=pattern_id,
+                median_sharp=median_sharp,
+                cfg=cfg,
+            )
+            if picked:
+                return picked
+            return None
         return _pick_main_landscape_id(landscapes, assets_map, median_sharp=median_sharp)
     if ordered_asset_ids:
         return ordered_asset_ids[0]

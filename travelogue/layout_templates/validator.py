@@ -324,6 +324,57 @@ def _check_balance_policy(template: TemplateDef, report: ValidationReport) -> No
                 )
 
 
+def _check_main_slot_policy(
+    template: TemplateDef,
+    report: ValidationReport,
+    *,
+    mode: ValidateMode,
+) -> None:
+    """V-P16-MAIN-01 · 16:9 main hero+tile templates declare mainSlotPolicy."""
+    if template.kind != "composite":
+        return
+    main_rows = [row for row in slot_aspect_table(template) if row.role == "main"]
+    if not main_rows:
+        return
+    for row in main_rows:
+        if abs(row.display_aspect - (16 / 9)) > AR_LADDER_TOL:
+            continue
+        policy = (template.constraints or {}).get("mainSlotPolicy")
+        if not isinstance(policy, dict) or not policy:
+            level = "warn" if mode == "ci" else "block"
+            report.add(
+                "V-P16-MAIN-01",
+                f"slot {row.index} main targets 16:9; constraints.mainSlotPolicy required",
+                level=level,
+            )
+            continue
+        slot_idx = policy.get("slotIndex", policy.get("slot_index"))
+        if slot_idx is not None and int(slot_idx) != row.index:
+            report.add(
+                "V-P16-MAIN-01",
+                f"mainSlotPolicy.slotIndex {slot_idx} != main slot {row.index}",
+                level="warn",
+            )
+        target = policy.get("targetDisplayAspect", policy.get("target_display_aspect"))
+        if target is not None:
+            try:
+                target_f = float(target)
+            except (TypeError, ValueError):
+                report.add(
+                    "V-P16-MAIN-01",
+                    "mainSlotPolicy.targetDisplayAspect must be numeric",
+                    level="warn",
+                )
+            else:
+                if abs(target_f - row.display_aspect) > AR_LADDER_TOL:
+                    report.add(
+                        "V-P16-MAIN-01",
+                        f"mainSlotPolicy.targetDisplayAspect {target_f:.4f} "
+                        f"≠ slot displayAspect {row.display_aspect:.4f}",
+                        level="warn",
+                    )
+
+
 def _check_stack(template: TemplateDef, report: ValidationReport) -> None:
     if template.kind != "stack":
         return
@@ -376,6 +427,7 @@ def validate_template_def(
     _check_tracks_and_bounds(template, report)
     _check_role_aspect(template, report, mode=mode)
     _check_ar_ladder(template, report, mode=mode)
+    _check_main_slot_policy(template, report, mode=mode)
     _check_balance_policy(template, report)
     _check_stack(template, report)
     _check_css(template, report)
