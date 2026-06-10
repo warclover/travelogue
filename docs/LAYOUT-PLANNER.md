@@ -2,7 +2,7 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.4.1 |
+| **文档版本** | v0.4.2 |
 | **文档角色** | **算法 / 工程细则**（产品需求见 [PRD-LAYOUT.md](./PRD-LAYOUT.md)） |
 | **状态** | 已拍板（规则）· 代码 `travelogue/curation/layout_planner.py` |
 | **关联** | `PRD-LAYOUT.md`、`ADAPTIVE-LAYOUT.md`、`TEMPLATE-visual-journal.md`、`PRD-MVP.md` §6.3 |
@@ -168,6 +168,7 @@
 | 竖版组屏优先级（v0.4） | **两列 `screen-portrait-2` > 三列 `screen-portrait-3` > 单列 `screen-portrait-1`**；连续竖版优先两列，仅奇数尾巴用一屏三列，单列仅孤张兜底 |
 | 竖三列 | `screen-portrait-3` · 三列竖槽（仅作奇偶填充） |
 | 单竖 | `screen-portrait-1` · 满屏兜底；或 `screen-portrait-1-landscape-2`（1 竖+2 横，时间邻近） |
+| 跨天顺延单竖（v0.4.2） | **仅 `screen_plan_scope=day`（默认）**：某天桶遗留的孤张 `screen-portrait-1` 不立即落地，而是顺延注入**后续天桶**首个竖版之后，尝试 pair-first 配对；最多顺延 `_PORTRAIT_CARRY_MAX_HOPS=3` 个天桶，仍无法配对则就地出单张。配对成屏按「首槽归属」分配章节（顺延照片渲染在较后章节）。**排除 featured / 章节 hero**（其单张为有意编排）。trip 末尾残余由 `_flush_portrait_carry_tail` 统一拼（≥2→pair/triple，1→单张回落到原章节）。见 `screen_planner_attach.py`。 |
 | 五图拼版 | `screen-mosaic-5-main-portrait-3land`：左上主横图（cover 分最高）+ 右上 1 竖 + 底行 3 横；连续 5 张且 `takenAt` 跨度 ≤ `burst_seconds`；整章恰好 5 张时不另起章首 Hero |
 | 八竖 2×4 | `screen-portrait-grid-8`：总量 **>50** 且 **竖图多于横图**；连续 8 竖、相邻 `takenAt` ≤ `burst_seconds`；配额 51–100 **2** 屏 / 101–200 **4** / >200 **6**（不计九宫格）；人物 `layoutHint: person-grid-8` + `contain` |
 | 连拍 | `takenAt` 间隔 ≤ `ingest.burst_seconds` 且同构图族 → 优先 4/9 宫格（**仅横/方**；纯竖版连拍仍走 pair-first 两列瓦片，见 v0.4.1） |
@@ -250,3 +251,4 @@ travelogue demo from-album .\photos --layout web
 | v0.3 | 2026-05-21 | §5b layoutEngine screens-2：宫格 4/6/9、连拍、tone |
 | v0.4 | 2026-06-10 | 竖版优先级 pair>triple>single（web/screens）；mobile 竖版恒单图、横版三列优先纵向拼图、废除 grid-4/grid-8 |
 | v0.4.1 | 2026-06-10 | screens 引擎 MCS 层修正：全竖版连续窗口跳过 `portrait-3/4/6/9` 宫格，改走 pair-first 瓦片（4→两 pair、6→三 pair、3→triple）；修复 v0.4 仅作用于 flush、4/6 连竖仍被 MCS 窗口塌缩为 `portrait-4/6` 的问题 |
+| v0.4.2 | 2026-06-10 | screens 引擎 day-scope 跨天顺延单竖：孤张 `screen-portrait-1` 顺延至后续天桶（≤3 桶）尝试配对，最大幅度减少全篇遗漏单张；排除 featured/hero，末尾残余统一拼（`screen_planner_attach._carry_inject_ids` / `_flush_portrait_carry_tail`） |

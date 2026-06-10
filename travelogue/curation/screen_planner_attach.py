@@ -48,6 +48,121 @@ def _preferred_hero_for_bucket(
     )
 
 
+# Cross-day-bucket carry: a lone portrait may flow forward up to this many
+# subsequent day buckets trying to pair before it is force-emitted as a single.
+_PORTRAIT_CARRY_MAX_HOPS = 3
+
+
+def _carry_inject_ids(
+    plan_ids: list[str],
+    carry_ids: list[str],
+    aspects: dict[str, AspectKind],
+) -> list[str]:
+    """Insert carried lone portraits right after the bucket's first std portrait.
+
+    Placing them as the *follower* (not the leader) keeps screen->chapter
+    assignment (by first slot) anchored on the later bucket, so a carried photo
+    renders forward (with the later chapter) rather than dragging a later photo
+    backward into the carried photo's origin chapter.
+    """
+    if not carry_ids:
+        return plan_ids
+    from travelogue.curation.screen_planner import _is_std_portrait_id
+
+    seq = list(plan_ids)
+    insert_at = 0
+    for idx, aid in enumerate(seq):
+        if _is_std_portrait_id(aid, aspects):
+            insert_at = idx + 1
+            break
+    seq[insert_at:insert_at] = carry_ids
+    return seq
+
+
+def _carry_eligible_single(
+    screen: dict,
+    *,
+    assets_by_id: dict[str, dict],
+    hero_ids: set[str],
+) -> str | None:
+    """Return the asset id when ``screen`` is a deferrable lone portrait, else None.
+
+    Featured assets and chapter heroes are never deferred: a single, well-placed
+    portrait is intentional for them, not a leftover to be consolidated away.
+    """
+    if str(screen.get("patternId") or "") != "screen-portrait-1":
+        return None
+    slots = screen.get("slots") or []
+    if len(slots) != 1:
+        return None
+    aid = slots[0].get("assetId")
+    if not aid or aid in hero_ids:
+        return None
+    asset = assets_by_id.get(aid) or {}
+    if asset.get("userTier") == "featured":
+        return None
+    return aid
+
+
+def _flush_portrait_carry_tail(
+    carry: list[str],
+    aspects: dict[str, AspectKind],
+    *,
+    assets_by_id: dict[str, dict],
+    asset_to_ch: dict[str, str],
+    ch_by_id: dict[str, dict],
+    seq_per_ch: dict[str, int],
+    layout_state: ScreenLayoutPlannerState,
+    skip: set[str],
+    burst_seconds: float,
+    mixed_proximity_seconds: float | None,
+    orientation_summary: dict | None,
+    trip_photo_total: int | None,
+    median_sharp: float | None,
+    featured_weight: float,
+    enable_food_grid: bool,
+    mundane_grid_buckets: tuple[str, ...],
+    cfg: AppConfig | None,
+) -> None:
+    """Tile any unplaced carried portraits at trip end and distribute by ownership.
+
+    Two or more leftovers pair/triple among themselves; a final lone portrait
+    falls back to a single in its origin chapter.
+    """
+    if not carry:
+        return
+    tail_screens = plan_chapter_screens(
+        ChapterPlanContext(
+            carry,
+            aspects,
+            chapter_id="day",
+            assets=assets_by_id or None,
+            burst_seconds=burst_seconds,
+            mixed_proximity_seconds=mixed_proximity_seconds,
+            orientation_summary=orientation_summary,
+            skip_screen_asset_ids=skip,
+            layout_state=layout_state,
+            trip_photo_total=trip_photo_total,
+            median_sharp=median_sharp,
+            featured_weight=featured_weight,
+            enable_food_grid=enable_food_grid,
+            mundane_grid_buckets=mundane_grid_buckets,
+        ),
+        cfg=cfg,
+    )
+    for sc in tail_screens:
+        slots = sc.get("slots") or []
+        if not slots:
+            continue
+        ch_id = asset_to_ch.get(slots[0]["assetId"])
+        if not ch_id or ch_id not in ch_by_id:
+            continue
+        seq_per_ch[ch_id] = seq_per_ch.get(ch_id, 0) + 1
+        screen = dict(sc)
+        screen["screenId"] = f"{ch_id}-sc-{seq_per_ch[ch_id]:02d}"
+        ch_by_id[ch_id]["screens"].append(screen)
+
+
 def attach_screens_day_buckets(
     chapters: list[dict],
     day_buckets: list[list[str]],
@@ -146,6 +261,10 @@ def attach_screens_day_buckets(
         )
         ch["screens"] = gal_screens
 
+    carry: list[str] = []
+    carry_age: dict[str, int] = {}
+    hero_ids = {h for h in hero_by_ch.values() if h}
+
     for bucket in day_buckets:
         filtered = [a for a in bucket if a not in gallery_asset_ids and a not in skip]
         if not filtered:
@@ -184,10 +303,11 @@ def attach_screens_day_buckets(
                 )
                 begin_chapter_highlight_windows(windows)
                 highlight_active = True
+        plan_ids = _carry_inject_ids(bucket, carry, aspects)
         try:
             bucket_screens = plan_chapter_screens(
                 ChapterPlanContext(
-                    bucket,
+                    plan_ids,
                     aspects,
                     chapter_id="day",
                     assets=assets_by_id or None,
@@ -212,7 +332,25 @@ def attach_screens_day_buckets(
                 )
 
                 clear_chapter_highlight_windows()
+        # Defer eligible lone portraits to the next bucket (cross-day carry).
+        next_carry: list[str] = []
+        next_carry_age: dict[str, int] = {}
+        deferred: set[int] = set()
         for sc in bucket_screens:
+            aid = _carry_eligible_single(
+                sc, assets_by_id=assets_by_id, hero_ids=hero_ids
+            )
+            if aid is None:
+                continue
+            new_age = carry_age.get(aid, 0) + 1
+            if new_age > _PORTRAIT_CARRY_MAX_HOPS:
+                continue  # hop cap reached: force-emit this single in place
+            deferred.add(id(sc))
+            next_carry.append(aid)
+            next_carry_age[aid] = new_age
+        for sc in bucket_screens:
+            if id(sc) in deferred:
+                continue
             slots = sc.get("slots") or []
             if not slots:
                 continue
@@ -223,7 +361,28 @@ def attach_screens_day_buckets(
             screen = dict(sc)
             screen["screenId"] = f"{ch_id}-sc-{seq_per_ch[ch_id]:02d}"
             ch_by_id[ch_id]["screens"].append(screen)
+        carry = next_carry
+        carry_age = next_carry_age
 
+    _flush_portrait_carry_tail(
+        carry,
+        aspects,
+        assets_by_id=assets_by_id,
+        asset_to_ch=asset_to_ch,
+        ch_by_id=ch_by_id,
+        seq_per_ch=seq_per_ch,
+        layout_state=layout_state,
+        skip=skip,
+        burst_seconds=burst_seconds,
+        mixed_proximity_seconds=mixed_proximity_seconds,
+        orientation_summary=orientation_summary,
+        trip_photo_total=trip_photo_total,
+        median_sharp=med_sharp,
+        featured_weight=featured_weight,
+        enable_food_grid=enable_food_grid,
+        mundane_grid_buckets=mundane_grid_buckets,
+        cfg=cfg,
+    )
     return out
 
 
