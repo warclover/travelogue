@@ -9,7 +9,7 @@ from pathlib import Path
 
 from travelogue.config import AppConfig, app_config_scope, get_config
 from travelogue.curation.curate import CurateError, run_curate
-from travelogue.demo.build import DemoError, resolve_demo_config
+from travelogue.demo.build import DemoError
 from travelogue.media.ingest import (
     RAW_UNSUPPORTED_MESSAGE,
     IngestError,
@@ -23,6 +23,7 @@ from travelogue.services.copy_subject import is_generic_place
 from travelogue.services.trip import TripService, apply_intent
 from travelogue.services.trip_factory import create_trip
 from travelogue.util.trip_slug import demo_trip_id_from_album
+from travelogue.web.studio_config import resolve_studio_config
 from travelogue.web.studio_jobs import ProgressCallback
 
 
@@ -321,7 +322,7 @@ def run_studio_pipeline(
     layout_density: str | None = None,
 ) -> StudioPipelineResult:
     album_dir = album_dir.resolve()
-    cfg_path = resolve_demo_config(config)
+    cfg_path = resolve_studio_config(config)
     if cfg_path:
         get_config(reload=True, path=cfg_path)
     cfg = app_config or get_config()
@@ -602,13 +603,16 @@ def run_studio_pipeline(
 
         report("narrate", 3)
         hooks = StudioHooks(on_stage=report)
+        from travelogue.web.studio_narrate import resolve_studio_narrate_provider
+
+        narrate_provider = resolve_studio_narrate_provider(cfg=cfg)
         try:
             run_trip(
                 trip_json,
                 from_stage="lock_structure",
                 until="copy",
                 skip_locked=True,
-                narrate_provider="stub",
+                narrate_provider=narrate_provider,
                 validate=False,
                 cfg=cfg,
                 studio_hooks=hooks,

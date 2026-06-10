@@ -373,8 +373,13 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     if plan_bytes_b64:
         worker_payload["planBytes"] = plan_bytes_b64
         worker_payload["planFilename"] = plan_filename
-    if handler.studio_config_path and handler.studio_config_path.is_file():
-        worker_payload["configPath"] = str(handler.studio_config_path.resolve())
+    from travelogue.web.studio_config import resolve_studio_config
+
+    cfg_path = handler.studio_config_path
+    if not (cfg_path and cfg_path.is_file()):
+        cfg_path = resolve_studio_config()
+    if cfg_path and cfg_path.is_file():
+        worker_payload["configPath"] = str(cfg_path.resolve())
 
     def sweep_upload() -> None:
         finished = threading.Event()

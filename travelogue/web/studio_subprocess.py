@@ -27,10 +27,19 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             }
         )
 
+    from travelogue.env import load_dotenv_files
+    from travelogue.web.studio_config import resolve_studio_config
+
+    load_dotenv_files()
+
     cfg: AppConfig | None = None
     cfg_path = payload.get("configPath")
     if cfg_path:
         cfg = get_config(reload=True, path=Path(cfg_path))
+    else:
+        resolved = resolve_studio_config()
+        if resolved is not None:
+            cfg = get_config(reload=True, path=resolved)
 
     plan_bytes: bytes | None = None
     raw_plan = payload.get("planBytes")

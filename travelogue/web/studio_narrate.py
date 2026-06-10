@@ -25,6 +25,14 @@ def studio_llm_status(*, cfg: AppConfig | None = None) -> dict[str, object]:
         return {"llmAvailable": False, "llmProvider": provider}
 
 
+def resolve_studio_narrate_provider(*, cfg: AppConfig | None = None) -> str:
+    """Use configured LLM for Studio narrate when credentials are available."""
+    status = studio_llm_status(cfg=cfg)
+    if status.get("llmAvailable"):
+        return str(status["llmProvider"])
+    return "stub"
+
+
 def run_studio_llm_narrate(
     trip_dir: Path,
     *,

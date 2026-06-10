@@ -37,13 +37,16 @@ def continue_after_g1_confirm(
         )
     trip_dir = trip_json.parent
     trip_id = trip_dir.name
+    from travelogue.web.studio_narrate import resolve_studio_narrate_provider
+
+    narrate_provider = resolve_studio_narrate_provider(cfg=cfg)
     try:
         run_trip(
             trip_json,
             from_stage="narrate",
             until="rendered",
             skip_locked=True,
-            narrate_provider="stub",
+            narrate_provider=narrate_provider,
             validate=False,
             cfg=cfg,
         )

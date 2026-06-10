@@ -173,6 +173,8 @@ def cmd_studio(
     from travelogue.web.serve import serve_studio_directory
     from travelogue.web.studio_pipeline import run_studio_pipeline
 
+    from travelogue.web.studio_config import resolve_studio_config
+
     _load_cfg(config)
     cfg = get_config()
     root = (trips_dir or cfg.trips_dir).resolve()
@@ -221,7 +223,7 @@ def cmd_studio(
             host=host,
             app_config=cfg,
             allow_lan=allow_lan,
-            config_path=config,
+            config_path=config or resolve_studio_config(),
         )
     except KeyboardInterrupt:
         raise typer.Exit(0) from None
