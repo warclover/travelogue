@@ -90,6 +90,30 @@ def resolve_main_eligible_kinds(pattern_id: str | None) -> frozenset[str]:
     )
 
 
+def resolve_main_target_display_ar(pattern_id: str | None) -> float:
+    policy = template_main_slot_policy(pattern_id) if pattern_id else None
+    if policy:
+        raw = policy.get("targetDisplayAspect", policy.get("target_display_aspect"))
+        if raw is not None:
+            try:
+                return float(raw)
+            except (TypeError, ValueError):
+                pass
+    return MAIN_HERO_TARGET_AR
+
+
+def resolve_prefer_ladder(pattern_id: str | None) -> tuple[float, ...]:
+    policy = template_main_slot_policy(pattern_id) if pattern_id else None
+    if policy:
+        raw = policy.get("preferLadder", policy.get("prefer_ladder"))
+        if isinstance(raw, (list, tuple)) and raw:
+            try:
+                return tuple(float(x) for x in raw)
+            except (TypeError, ValueError):
+                pass
+    return (MAIN_HERO_TARGET_AR, 1.5, 4 / 3)
+
+
 def resolve_main_ar_ladder_tol(pattern_id: str, cfg: MosaicConfig) -> float:
     policy = template_main_slot_policy(pattern_id)
     if policy:
@@ -128,10 +152,23 @@ def nearest_ladder_delta(ar: float) -> float:
     return min(abs(ar - ladder) for ladder in AR_LADDER)
 
 
-def ar_preference_boost(ar: float, *, prefer_16_9: bool) -> float:
-    if not prefer_16_9:
+def ar_preference_boost(
+    ar: float,
+    *,
+    target_ar: float = MAIN_HERO_TARGET_AR,
+    prefer_ladder: tuple[float, ...] | None = None,
+    prefer_enabled: bool = True,
+) -> float:
+    if not prefer_enabled:
         return 1.0
-    return 1.0 + 0.15 / (1.0 + abs(ar - MAIN_HERO_TARGET_AR))
+    rungs = prefer_ladder if prefer_ladder else (target_ar,)
+    best = 0.0
+    for i, rung in enumerate(rungs):
+        dist = abs(ar - rung)
+        score = (0.15 / (1 + i)) / (1.0 + dist)
+        if score > best:
+            best = score
+    return 1.0 + best
 
 
 def _blocked_kind_reason(kind: AspectKind) -> str:
@@ -198,6 +235,8 @@ def pick_best_main_eligible(
         if prefer_16_9 is not None
         else resolve_main_ar_prefer_16_9(pid, cfg)
     )
+    target_ar = resolve_main_target_display_ar(pid or None)
+    prefer_ladder = resolve_prefer_ladder(pid or None) if prefer else None
     forbid = resolve_main_forbid_kinds(pid or None)
     eligible = resolve_main_eligible_kinds(pid or None)
     eligible_ids = [
@@ -222,7 +261,13 @@ def pick_best_main_eligible(
             featured_weight=featured_weight,
         )
         ar = asset_native_ar(asset) or 1.0
-        return hero * ar_preference_boost(ar, prefer_16_9=prefer), hero
+        boost = ar_preference_boost(
+            ar,
+            target_ar=target_ar,
+            prefer_ladder=prefer_ladder,
+            prefer_enabled=prefer,
+        )
+        return hero * boost, hero
 
     return max(eligible_ids, key=sort_key)
 

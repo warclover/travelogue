@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pytest
 from dataclasses import replace
 
 from travelogue.config import MosaicConfig
@@ -302,6 +303,32 @@ def test_template_main_slot_policy_loaded():
     assert resolve_main_eligible_kinds(PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5) == frozenset(
         {"landscape"}
     )
+
+
+def test_resolve_main_target_display_ar_from_yaml():
+    from travelogue.curation.mosaic.main_eligibility import (
+        resolve_main_target_display_ar,
+        resolve_prefer_ladder,
+    )
+
+    target = resolve_main_target_display_ar(PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5)
+    assert abs(target - (16 / 9)) <= 0.001
+    ladder = resolve_prefer_ladder(PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5)
+    assert ladder[0] == pytest.approx(16 / 9, rel=1e-3)
+    assert 1.5 in ladder
+
+
+def test_pick_best_main_prefers_16_9_over_3_2_at_equal_hero():
+    assets_map = {
+        "wide32": _asset("wide32", w=3000, h=2000, sharp=0.8),
+        "wide169": _asset("wide169", w=3000, h=1687, sharp=0.8),
+    }
+    picked = pick_best_main_eligible(
+        ["wide32", "wide169"],
+        assets_map,
+        pattern_id=PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+    )
+    assert picked == "wide169"
 
 
 def test_forbid_kinds_runtime_enforcement():
