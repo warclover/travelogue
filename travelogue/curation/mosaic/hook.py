@@ -264,6 +264,13 @@ def _collage_size_order(
     return preferred + rest
 
 
+def _window_all_std_portrait(window: list[str], aspects) -> bool:
+    """True when every asset in the window is a standard (non-tall) portrait."""
+    from travelogue.curation.screen_planner import _is_std_portrait_id
+
+    return bool(window) and all(_is_std_portrait_id(x, aspects) for x in window)
+
+
 def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
     """Try enabled window sizes (largest first). Returns advance count or None."""
     cfg = _mosaic_cfg()
@@ -290,6 +297,14 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         if start + size > len(ctx.ids):
             continue
         window = ctx.ids[start : start + size]
+        # Pair-first portrait priority: a run of consecutive standard portraits
+        # must NOT collapse into a pure portrait grid (portrait-3/4/6/9). Defer
+        # such windows to the portrait pending tiler, which prefers two-column
+        # pairs (portrait-2) and only uses a triple as an odd-parity filler.
+        if size in (3, 4, 6, 9) and _window_all_std_portrait(
+            window, ctx.aspects
+        ):
+            continue
         if not window_has_candidates(
             window,
             ctx.aspects,

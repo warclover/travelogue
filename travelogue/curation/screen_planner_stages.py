@@ -577,79 +577,37 @@ def try_food_grid(ctx: ChapterPlanContext) -> int | None:
     return try_mundane_grid(ctx)
 
 
-def _drain_portrait_triple_batches(ctx: ChapterPlanContext) -> None:
+def _drain_portrait_run_pair_first(ctx: ChapterPlanContext) -> None:
+    """Tile a collected portrait run pair-first (portrait-2 > portrait-3 > portrait-1).
+
+    Drains only when ≥3 standard portraits are buffered, deferring a ≤2 tail to
+    ``_finish_portrait_pending_tail`` so a 1-portrait tail can still fold into a
+    mixed portrait-1-landscape-2 screen and a 2-portrait tail stays a single
+    two-column pair even when it mixes a person + scenery shot. Pairs are
+    preferred, with a single triple absorbing any odd remainder; a lone portrait
+    is only ever produced as a last resort.
+    """
     from travelogue.curation.screen_planner import (
-        _emit_person_portrait_screens,
-        _emit_portrait_single_screens,
+        _flush_portrait_pending,
         _is_std_portrait_id,
-        _make_screen,
-        _person_portrait_ids,
-        _plan_portrait_triple_row,
-        any_asset_has_person,
     )
 
-    while len(ctx.pending_portraits) >= 3:
-        batch = [a for a in ctx.pending_portraits[:3] if _is_std_portrait_id(a, ctx.aspects)]
-        if len(batch) < 3:
-            break
-        if any_asset_has_person(batch, ctx.assets_map):
-            persons = _person_portrait_ids(batch, ctx.assets_map)
-            scenery = [a for a in batch if a not in persons]
-            for sc in _emit_person_portrait_screens(
-                persons,
-                ctx.aspects,
-                assets_map=ctx.assets_map,
-                layout_state=ctx.layout_state,
-                pending=ctx.pending_portraits,
-                solo_exclude=ctx.skip_screen_asset_ids,
-            ):
-                append_screen(ctx, sc)
-            if len(scenery) >= 3:
-                placed = _plan_portrait_triple_row(
-                    scenery[:3],
-                    ctx.aspects,
-                    assets_map=ctx.assets_map,
-                    layout_state=ctx.layout_state,
-                    pending=ctx.pending_portraits,
-                )
-                for sc in placed:
-                    append_screen(ctx, sc)
-                if not placed:
-                    break
-            elif len(scenery) == 2:
-                append_screen(
-                    ctx,
-                    _make_screen(
-                        "screen-portrait-2",
-                        scenery,
-                        screen_id="",
-                        aspects=ctx.aspects,
-                        assets_map=ctx.assets_map,
-                    ),
-                )
-            elif len(scenery) == 1:
-                for sc in _emit_portrait_single_screens(
-                    scenery,
-                    ctx.aspects,
-                    assets_map=ctx.assets_map,
-                    layout_state=ctx.layout_state,
-                    pending=ctx.pending_portraits,
-                    solo_exclude=ctx.skip_screen_asset_ids,
-                ):
-                    append_screen(ctx, sc)
-        else:
-            placed = _plan_portrait_triple_row(
-                batch[:3],
-                ctx.aspects,
-                assets_map=ctx.assets_map,
-                layout_state=ctx.layout_state,
-                pending=ctx.pending_portraits,
-            )
-            for sc in placed:
-                append_screen(ctx, sc)
-            if not placed:
-                break
-        del ctx.pending_portraits[:3]
+    std = [a for a in ctx.pending_portraits if _is_std_portrait_id(a, ctx.aspects)]
+    if len(std) < 3:
+        return
+    # force=True: the portrait run is fully collected, so there is no later
+    # portrait to batch with — bypass the consecutive-pattern variety ban so a
+    # 3-group stays a clean triple (never degraded to pair + lone single) and
+    # consecutive pairs from a 4/6-run are emitted as-is.
+    for sc in _flush_portrait_pending(
+        ctx.pending_portraits,
+        ctx.aspects,
+        assets_map=ctx.assets_map,
+        layout_state=ctx.layout_state,
+        force=True,
+        solo_exclude=ctx.skip_screen_asset_ids,
+    ):
+        append_screen(ctx, sc)
 
 
 def _finish_portrait_pending_tail(ctx: ChapterPlanContext) -> int | None:
@@ -710,7 +668,7 @@ def stage_portrait_family(ctx: ChapterPlanContext) -> int | None:
     ctx.i += run_len
     while len(ctx.pending_portraits) >= 8 and try_drain_portrait_grid8(ctx):
         pass
-    _drain_portrait_triple_batches(ctx)
+    _drain_portrait_run_pair_first(ctx)
     return _finish_portrait_pending_tail(ctx)
 
 

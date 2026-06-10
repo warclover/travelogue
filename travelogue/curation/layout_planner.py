@@ -10,12 +10,8 @@ from dataclasses import asdict, dataclass
 from typing import Literal
 
 from travelogue.config import AppConfig
-from travelogue.curation.asset_subject import any_asset_has_person
-from travelogue.curation.burst_utils import sort_ids_by_sharpness, time_near_sequential
+from travelogue.curation.burst_utils import time_near_sequential
 from travelogue.curation.mobile_layout_state import (
-    MOBILE_GRID4_ROW_LAYOUT,
-    MOBILE_GRID8_ROW_LAYOUT,
-    MOBILE_PERSON_GRID4_HINT,
     MobilePuzzlePlannerState,
     mobile_puzzle_enabled,
 )
@@ -133,16 +129,6 @@ def _row(
     return item
 
 
-def _mobile_portrait_grid4_row(
-    portrait_ids: list[str],
-    assets_map: dict[str, dict],
-) -> dict:
-    item = _row(portrait_ids, MOBILE_GRID4_ROW_LAYOUT)  # type: ignore[arg-type]
-    if any_asset_has_person(portrait_ids, assets_map):
-        item["layoutHint"] = MOBILE_PERSON_GRID4_HINT
-    return item
-
-
 def _scroll(asset_ids: list[str]) -> dict:
     return {"type": "media-scroll", "assetIds": asset_ids}
 
@@ -219,6 +205,28 @@ def _can_portrait_pair(k1: AspectKind, k2: AspectKind) -> bool:
     return k1 in ("portrait", "square") and k2 in ("portrait", "square")
 
 
+def portrait_group_sizes(count: int) -> list[int]:
+    """竖版分组优先级（pair > triple > single）下的瓦片尺寸序列。
+
+    优先输出两列(2)，仅当剩余恰为 3 张时用一个三列(3)吃掉奇数尾巴；
+    单列(1)仅在孤张时出现。例：2→[2]、3→[3]、4→[2,2]、5→[2,3]、
+    7→[2,2,3]、1→[1]。
+    """
+    sizes: list[int] = []
+    remaining = max(0, int(count))
+    while remaining > 0:
+        if remaining == 1:
+            sizes.append(1)
+            remaining -= 1
+        elif remaining == 3:
+            sizes.append(3)
+            remaining -= 3
+        else:
+            sizes.append(2)
+            remaining -= 2
+    return sizes
+
+
 def _mobile_card(aid: str, k: AspectKind) -> dict:
     """Mobile: one asset per row; special slots only for panorama/tall/square."""
     if k == "panorama":
@@ -266,6 +274,24 @@ def _time_near_sequential(
     return time_near_sequential(asset_ids, assets, burst_seconds=burst_seconds)
 
 
+def _landscape_stack_sizes(count: int) -> list[int]:
+    """Mobile 横版「一列纵向拼图」瓦片尺寸：三列优先，余 2 两行，余 1 单图。
+
+    优先三张一列纵向堆叠(3)；尾巴 2 张堆成 1 列 2 行(2)；仅剩 1 张才单横卡(1)。
+    例：3→[3]、4→[3,1]、5→[3,2]、6→[3,3]、7→[3,3,1]、2→[2]、1→[1]。
+    """
+    sizes: list[int] = []
+    remaining = max(0, int(count))
+    while remaining >= 3:
+        sizes.append(3)
+        remaining -= 3
+    if remaining == 2:
+        sizes.append(2)
+    elif remaining == 1:
+        sizes.append(1)
+    return sizes
+
+
 def _plan_chapter_items_mobile(
     asset_ids: list[str],
     aspects: dict[str, AspectKind],
@@ -276,66 +302,34 @@ def _plan_chapter_items_mobile(
     puzzle_state: MobilePuzzlePlannerState | None = None,
 ) -> list[dict]:
     """
-    Mobile: default single cards; when trip > 30 photos, emit landscape 8-grid
-    or portrait 4-grid (2×2) on sequential burst runs (quota per trip).
-    """
-    if not mobile_puzzle_enabled(trip_photo_total):
-        return [_mobile_card(aid, _kind(aid, aspects)) for aid in asset_ids]
+    Mobile (9:16 单列扫读):
 
-    state = puzzle_state or MobilePuzzlePlannerState.from_trip_total(trip_photo_total)
+    - 竖版/方/全景/超长竖：单图卡（竖版恒单图，不做任何竖版并列拼图）。
+    - 横版：连续横图按「三列优先」组成「1 列 × N 行」纵向拼图
+      (`landscape-triple` / `landscape-pair`)；仅在游程尾部剩 1 张时才落单横卡，
+      从而避免单张横版独占一屏。
+    """
     items: list[dict] = []
     ids = list(asset_ids)
     i = 0
     while i < len(ids):
-        aid = ids[i]
-        k = _kind(aid, aspects)
+        k = _kind(ids[i], aspects)
         if k == "landscape":
             run: list[str] = []
             while i < len(ids) and _kind(ids[i], aspects) == "landscape":
                 run.append(ids[i])
                 i += 1
-            j = 0
-            while j < len(run):
-                window = run[j : j + 8]
-                if (
-                    len(window) == 8
-                    and state.can_use_grid8()
-                    and _time_near_sequential(
-                        window, assets_map, burst_seconds=burst_seconds
-                    )
-                ):
-                    ordered = sort_ids_by_sharpness(window, assets_map)
-                    items.append(_row(ordered, MOBILE_GRID8_ROW_LAYOUT))  # type: ignore[arg-type]
-                    state.note_grid8()
-                    j += 8
+            pos = 0
+            for size in _landscape_stack_sizes(len(run)):
+                if size == 3:
+                    items.append(_row(run[pos : pos + 3], "landscape-triple"))
+                elif size == 2:
+                    items.append(_row(run[pos : pos + 2], "landscape-pair"))
                 else:
-                    items.append(_mobile_card(run[j], "landscape"))
-                    j += 1
+                    items.append(_mobile_card(run[pos], "landscape"))
+                pos += size
             continue
-        if k == "portrait":
-            run = []
-            while i < len(ids) and _kind(ids[i], aspects) == "portrait":
-                run.append(ids[i])
-                i += 1
-            j = 0
-            while j < len(run):
-                window = run[j : j + 4]
-                if (
-                    len(window) == 4
-                    and state.can_use_grid4()
-                    and _time_near_sequential(
-                        window, assets_map, burst_seconds=burst_seconds
-                    )
-                ):
-                    ordered = sort_ids_by_sharpness(window, assets_map)
-                    items.append(_mobile_portrait_grid4_row(ordered, assets_map))
-                    state.note_grid4()
-                    j += 4
-                else:
-                    items.append(_mobile_card(run[j], "portrait"))
-                    j += 1
-            continue
-        items.append(_mobile_card(aid, k))
+        items.append(_mobile_card(ids[i], k))
         i += 1
     return items
 
@@ -406,10 +400,23 @@ def plan_chapter_items(
             i += 1
             continue
 
-        if i + 2 < len(ids) and all(_is_std_portrait(o(ids[i + j])) for j in range(3)):
-            items.append(_row(ids[i : i + 3], "portrait-triple"))
-            i += 3
-            continue
+        # 竖版优先两联：对连续标准竖版游程做 pair 优先、triple 作奇偶填充的瓦片化。
+        if _is_std_portrait(k):
+            run = 1
+            while i + run < len(ids) and _is_std_portrait(o(ids[i + run])):
+                run += 1
+            if run >= 2:
+                pos = i
+                for size in portrait_group_sizes(run):
+                    if size == 3:
+                        items.append(_row(ids[pos : pos + 3], "portrait-triple"))
+                    elif size == 2:
+                        items.append(_row(ids[pos : pos + 2], "portrait-pair"))
+                    else:
+                        items.append(_card(ids[pos]))
+                    pos += size
+                i += run
+                continue
         if i + 1 < len(ids) and _can_portrait_pair(k, o(ids[i + 1])):
             items.append(_row([ids[i], ids[i + 1]], "portrait-pair"))
             i += 2

@@ -705,39 +705,42 @@ def _emit_person_portrait_screens(
     screens: list[dict] = []
     buf = list(person_ids)
     defer: list[str] = []
-    while len(buf) >= 3:
-        trio = buf[:3]
-        if (
-            not force
-            and layout_state is not None
-            and not layout_state.can_emit_pattern("screen-portrait-3")
-        ):
-            if layout_state.can_emit_pattern("screen-portrait-2"):
-                screen = _make_screen(
-                    "screen-portrait-2",
-                    trio[:2],
-                    screen_id="",
-                    aspects=aspects,
-                    assets_map=assets_map,
-                )
-                screen["layoutHint"] = PERSON_LAYOUT_PAIR
-                screens.append(screen)
-                buf = [trio[2]] + buf[3:]
+    # 竖版分组优先级：两列(person-pair) > 三列(person-triple) > 单列。
+    # 优先两列，仅当剩余恰为 3 张时用一屏三列吃掉奇数尾巴；单列仅作孤张兜底。
+    while len(buf) >= 2:
+        if len(buf) == 3:
+            trio = buf[:3]
+            if (
+                not force
+                and layout_state is not None
+                and not layout_state.can_emit_pattern("screen-portrait-3")
+            ):
+                if layout_state.can_emit_pattern("screen-portrait-2"):
+                    screen = _make_screen(
+                        "screen-portrait-2",
+                        trio[:2],
+                        screen_id="",
+                        aspects=aspects,
+                        assets_map=assets_map,
+                    )
+                    screen["layoutHint"] = PERSON_LAYOUT_PAIR
+                    screens.append(screen)
+                    buf = [trio[2]] + buf[3:]
+                    continue
+                defer.extend(trio)
+                buf = buf[3:]
                 continue
-            defer.extend(trio)
+            screen = _make_screen(
+                "screen-portrait-3",
+                trio,
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
+            )
+            screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
+            screens.append(screen)
             buf = buf[3:]
             continue
-        screen = _make_screen(
-            "screen-portrait-3",
-            trio,
-            screen_id="",
-            aspects=aspects,
-            assets_map=assets_map,
-        )
-        screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
-        screens.append(screen)
-        buf = buf[3:]
-    while len(buf) >= 2:
         pair = buf[:2]
         screen = _make_screen(
             "screen-portrait-2",
@@ -909,31 +912,35 @@ def _flush_portrait_pending(
         )
     )
 
-    while len(buf) >= 3:
-        trio = buf[:3]
-        placed = _plan_portrait_triple_row(
-            trio,
-            aspects,
-            assets_map=assets_map,
-            layout_state=layout_state,
-            pending=pending,
-            force=force,
-        )
-        if not placed:
-            break
-        screens.extend(placed)
-        buf = buf[3:]
-    if len(buf) == 2:
+    # 竖版分组优先级：两列(portrait-2) > 三列(portrait-3) > 单列(portrait-1)。
+    # 优先两列，仅当剩余恰为 3 张时用一屏三列吃掉奇数尾巴；单列仅作孤张兜底。
+    while len(buf) >= 2:
+        if len(buf) == 3:
+            trio = buf[:3]
+            placed = _plan_portrait_triple_row(
+                trio,
+                aspects,
+                assets_map=assets_map,
+                layout_state=layout_state,
+                pending=pending,
+                force=force,
+            )
+            if not placed:
+                break
+            screens.extend(placed)
+            buf = buf[3:]
+            continue
         screens.append(
             _make_screen(
                 "screen-portrait-2",
-                buf,
+                buf[:2],
                 screen_id="",
                 aspects=aspects,
                 assets_map=assets_map,
             )
         )
-    elif len(buf) == 1:
+        buf = buf[2:]
+    if len(buf) == 1:
         screens.extend(
             _emit_portrait_single_screens(
                 buf,
