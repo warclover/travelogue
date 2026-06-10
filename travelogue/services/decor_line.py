@@ -23,6 +23,21 @@ _GENERIC_RE = re.compile(
     r"(值得|难忘|美好|精彩|瞬间|回忆|旅程|旅行|风景|照片|记录)",
 )
 
+_TAG_STUB_RE = re.compile(
+    r"(?:^person\s*·|\bface\s*·|[，,]\s*photo[。.]?$)",
+    re.IGNORECASE,
+)
+
+
+def decor_line_is_tag_stub(line: str) -> bool:
+    """True when decorLine is rule/tag stitch, not natural-language copy."""
+    text = str(line or "").strip()
+    if not text:
+        return False
+    if " · " in text:
+        return True
+    return bool(_TAG_STUB_RE.search(text))
+
 
 def decor_line_config(cfg: AppConfig | None = None) -> AppConfig:
     return cfg or get_config()
@@ -413,19 +428,21 @@ def _merge_decor_candidates(
         if final:
             pool.append(final)
 
-    for text in _template_candidates(facts, intent):
-        final = _finalize_copy(text, max_chars)
-        if final:
-            pool.append(final)
-
+    llm_pool: list[str] = []
     if app_cfg.narrative.decor_line_llm_enabled:
         from travelogue.services.llm_decor_line import generate_llm_decor_line_candidates
 
-        pool.extend(
-            generate_llm_decor_line_candidates(
-                chapter, trip, cfg=app_cfg, chat_fn=chat_fn
-            )
+        llm_pool = generate_llm_decor_line_candidates(
+            chapter, trip, cfg=app_cfg, chat_fn=chat_fn
         )
+        pool.extend(llm_pool)
+
+    # Tag-stitch templates are fallback only when LLM is off or returned nothing.
+    if not app_cfg.narrative.decor_line_llm_enabled or not llm_pool:
+        for text in _template_candidates(facts, intent):
+            final = _finalize_copy(text, max_chars)
+            if final:
+                pool.append(final)
 
     cleaned: list[str] = []
     for text in _dedupe_candidates(pool):
@@ -493,6 +510,7 @@ def chapter_needs_decor_line(
     trip: dict | None = None,
     *,
     regenerate: bool = False,
+    cfg: AppConfig | None = None,
 ) -> bool:
     if chapter.get("edited"):
         return False
@@ -500,6 +518,9 @@ def chapter_needs_decor_line(
         return True
     line = str(chapter.get("decorLine") or "").strip()
     if line:
+        app_cfg = decor_line_config(cfg)
+        if app_cfg.narrative.decor_line_llm_enabled and decor_line_is_tag_stub(line):
+            return True
         if trip:
             phase = str(
                 ((trip.get("curation") or {}).get("copyStyle") or {}).get("phase") or ""
@@ -527,7 +548,7 @@ def apply_decor_lines(
     for ch in chapters:
         if chapter_id and ch.get("id") != chapter_id:
             continue
-        if not chapter_needs_decor_line(ch, trip, regenerate=regenerate):
+        if not chapter_needs_decor_line(ch, trip, regenerate=regenerate, cfg=app_cfg):
             continue
         idx = ch.get("index")
         field = f"chapters[{idx}].decorLine"

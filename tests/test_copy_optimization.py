@@ -240,6 +240,48 @@ def test_llm_decor_candidates_via_mock() -> None:
     assert any("鸭川" in c or "雨" in c for c in cands)
 
 
+def test_llm_decor_prefers_llm_over_tag_template() -> None:
+    trip = {
+        "tripId": "tag-fallback",
+        "meta": {"title": "测试"},
+        "assets": [
+            {
+                "id": "a1",
+                "type": "image",
+                "tags": ["person", "face", "白天"],
+                "mediaClass": "photo",
+            }
+        ],
+        "chapters": [
+            {
+                "id": "ch-03",
+                "index": 3,
+                "title": "10月5日",
+                "items": [{"type": "media-card", "assetId": "a1"}],
+            }
+        ],
+    }
+    chapter = trip["chapters"][0]
+
+    def fake_chat(_messages: list[dict[str, str]]) -> str:
+        return '{"candidates": ["制衣坊门口，阳光正好。"]}'
+
+    cfg = AppConfig(
+        narrative=NarrativeConfig(
+            decor_line_llm_enabled=True,
+            decor_line_voice_first=False,
+        )
+    )
+    picked = pick_best_decor_line(
+        generate_decor_line_candidates(chapter, trip, cfg=cfg, chat_fn=fake_chat),
+        chapter,
+        trip,
+        cfg=cfg,
+    )
+    assert "制衣坊" in picked
+    assert "person" not in picked
+
+
 def test_passive_copy_intent_from_voice() -> None:
     trip = {
         "tripId": "intent",
@@ -421,6 +463,19 @@ def test_empty_decor_line_still_needs_fill() -> None:
 
     chapter = {"id": "ch-01", "decorLine": ""}
     assert chapter_needs_decor_line(chapter, {}) is True
+
+
+def test_tag_stub_decor_line_triggers_regenerate_when_llm_enabled() -> None:
+    from travelogue.services.decor_line import chapter_needs_decor_line
+
+    trip = {
+        "curation": {"copyStyle": {"phase": "lite-copy-v1.1"}},
+        "chapters": [{"id": "ch-03", "decorLine": "person · face · 白天，photo"}],
+    }
+    cfg = AppConfig(narrative=NarrativeConfig(decor_line_llm_enabled=True))
+    assert chapter_needs_decor_line(trip["chapters"][0], trip, cfg=cfg) is True
+    cfg_off = AppConfig(narrative=NarrativeConfig(decor_line_llm_enabled=False))
+    assert chapter_needs_decor_line(trip["chapters"][0], trip, cfg=cfg_off) is False
 
 
 def test_apply_copy_intent_cascade() -> None:
