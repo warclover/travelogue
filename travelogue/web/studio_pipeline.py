@@ -343,7 +343,18 @@ def run_studio_pipeline(
 
         shutil.rmtree(trip_dir)
 
-    photo_count = count_album_photos(album_dir, max_photos=cfg.ingest.max_photos)
+    try:
+        photo_count = count_album_photos(album_dir, max_photos=cfg.ingest.max_photos)
+    except IngestError as exc:
+        # The early photo precheck shares the RAW gate with full ingest, so it can
+        # surface E_INGEST_RAW_UNSUPPORTED before the ingest stage's handler below.
+        # Translate here too, otherwise it leaks as a generic E_STUDIO_PIPELINE
+        # ("导入失败，请重试") instead of the actionable RAW / too-few guidance.
+        if exc.code == "E_INGEST_RAW_UNSUPPORTED":
+            raise DemoError(exc.code, RAW_UNSUPPORTED_MESSAGE) from exc
+        if exc.code in ("E_INGEST_TOO_FEW", "E_INGEST_EMPTY"):
+            raise DemoError("E_DEMO_TOO_FEW", str(exc)) from exc
+        raise DemoError(exc.code, str(exc)) from exc
 
     if cfg.vision.preload_on_folder_pick and cfg.vision.enabled != "false":
         if progress:

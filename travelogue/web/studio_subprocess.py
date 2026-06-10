@@ -4,10 +4,38 @@ from __future__ import annotations
 
 import logging
 import multiprocessing as mp
+import traceback
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 _log = logging.getLogger(__name__)
+
+
+def _write_import_diag(payload: dict[str, Any], code: str, message: str) -> None:
+    """Persist the real failure (code + message + traceback) to a log file.
+
+    The Studio import runs in a spawned child whose stderr is easy to lose
+    (terminal cleared, no file handler configured). Writing a stable log file
+    guarantees the underlying cause survives for diagnosis regardless of which
+    pipeline stage failed.
+    """
+    try:
+        base = payload.get("tripsDir")
+        log_dir = Path(base).resolve().parent if base else Path.cwd()
+        log_path = log_dir / "studio-import-error.log"
+        block = (
+            f"\n===== {datetime.now().isoformat(timespec='seconds')} =====\n"
+            f"code={code}\n"
+            f"album={payload.get('albumPath')!r} tripId={payload.get('tripId')!r} "
+            f"mode={payload.get('mode') or payload.get('importMode')!r}\n"
+            f"message={message}\n"
+            f"{traceback.format_exc()}"
+        )
+        with log_path.open("a", encoding="utf-8") as fh:
+            fh.write(block)
+    except Exception:
+        _log.exception("failed to write studio import diagnostic log")
 
 def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_event: mp.Event) -> None:
     from travelogue.config import AppConfig, get_config
@@ -110,6 +138,7 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             }
         )
     except DemoError as exc:
+        _write_import_diag(payload, exc.code, str(exc))
         progress_queue.put(
             {
                 "type": "error",
@@ -118,8 +147,9 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                 "demo": True,
             }
         )
-    except Exception:
+    except Exception as exc:
         _log.exception("studio import subprocess failed")
+        _write_import_diag(payload, "E_STUDIO_PIPELINE", f"{type(exc).__name__}: {exc}")
         progress_queue.put(
             {
                 "type": "error",

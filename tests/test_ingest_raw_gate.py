@@ -32,6 +32,31 @@ def test_raw_only_folder_blocked(tmp_path: Path) -> None:
     assert "JPG" in str(exc.value)
 
 
+def test_studio_precheck_translates_raw_to_demo_error(tmp_path: Path) -> None:
+    """Studio early photo precheck must surface the actionable RAW guidance.
+
+    Regression: the precheck (count_album_photos) runs before the ingest stage's
+    IngestError handler, so a RAW folder used to leak a bare IngestError and get
+    swallowed into the generic E_STUDIO_PIPELINE ("导入失败，请重试") instead of
+    the helpful "请先转换为 JPG" message.
+    """
+    from travelogue.demo.build import DemoError
+    from travelogue.web.studio_pipeline import run_studio_pipeline
+
+    album = tmp_path / "studio_raw"
+    album.mkdir()
+    for idx in range(5):
+        _write_jpg(album, f"photo{idx}.jpg")
+    (album / "B-001.dng").write_bytes(b"\x00" * 1024)
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+
+    with pytest.raises(DemoError) as exc:
+        run_studio_pipeline(album, trips_dir=trips_dir, dedupe=False)
+    assert exc.value.code == "E_INGEST_RAW_UNSUPPORTED"
+    assert "JPG" in str(exc.value)
+
+
 def test_raw_mixed_with_jpg_blocked(tmp_path: Path) -> None:
     album = tmp_path / "mixed"
     album.mkdir()
