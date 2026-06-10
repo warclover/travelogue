@@ -316,7 +316,25 @@ def _can_mosaic_5_main_portrait_3land(
         return None
     if not _time_near_chain(asset_ids, assets, burst_seconds=burst_seconds):
         return None
-    main = _pick_main_landscape_id(landscapes, assets, median_sharp=median_sharp)
+    from travelogue.curation.mosaic.main_eligibility import (
+        main_ar_guard_enabled,
+        pick_best_main_eligible,
+    )
+    from travelogue.curation.mosaic.runtime import get_effective_mosaic_config
+
+    cfg = get_effective_mosaic_config()
+    if main_ar_guard_enabled(cfg):
+        main = pick_best_main_eligible(
+            landscapes,
+            assets,
+            pattern_id=PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
+            median_sharp=median_sharp,
+            cfg=cfg,
+        )
+        if not main:
+            return None
+    else:
+        main = _pick_main_landscape_id(landscapes, assets, median_sharp=median_sharp)
     bottom = _sort_asset_ids_by_taken([a for a in landscapes if a != main], assets)
     return [main, portraits[0], bottom[0], bottom[1], bottom[2]]
 

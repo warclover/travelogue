@@ -1,5 +1,5 @@
 id: screen-mosaic-5-main-portrait-3land
-version: 1
+version: 2
 status: ga
 kind: composite
 displayName: mosaic · 5 · main · portrait · 3land
@@ -62,6 +62,13 @@ constraints:
   landscape_forbidden_in_tall_slots:
   - 1
   intentionalGaps: []
+  mainSlotPolicy:
+    slotIndex: 0
+    targetDisplayAspect: 1.7778
+    eligibleAspectKinds: [landscape]
+    forbidKinds: [panorama, tall, portrait, square]
+    arLadderTol: 0.08
+    preferLadder: [1.7778, 1.5, 1.3333]
 scoring:
   base_weight: 1.0
   tags: []

@@ -7,7 +7,10 @@ from dataclasses import replace
 from travelogue.config import MosaicConfig
 from travelogue.curation.mosaic.builders import try_order_for_pattern
 from travelogue.curation.mosaic.candidates import generate_window_candidates_with_rejections
-from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+from travelogue.curation.mosaic.constants import (
+    PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
+    PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+)
 from travelogue.curation.mosaic.main_eligibility import (
     asset_eligible_for_main_slot,
     pick_best_main_eligible,
@@ -374,3 +377,72 @@ def test_conventional_window_still_orders_hero_six():
         pattern_id=PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
     )
     assert ok
+
+
+def test_portrait_3land_template_main_slot_policy_loaded():
+    from travelogue.curation.mosaic.main_eligibility import (
+        pattern_requires_main_ar_guard,
+        resolve_main_forbid_kinds,
+        template_main_slot_policy,
+    )
+
+    policy = template_main_slot_policy(PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND)
+    assert policy is not None
+    assert policy.get("slotIndex") == 0
+    assert pattern_requires_main_ar_guard(PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND)
+    assert resolve_main_forbid_kinds(PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND) == frozenset(
+        {"panorama", "tall", "portrait", "square"}
+    )
+
+
+def test_portrait_3land_rejects_all_panorama_mains():
+    aspects = {
+        "p": "portrait",
+        "l0": "landscape",
+        "l1": "landscape",
+        "l2": "landscape",
+        "l3": "landscape",
+    }
+    assets_map = {
+        "p": _asset("p", w=1200, h=1800),
+        "l0": _asset("l0", w=5000, h=2000),
+        "l1": _asset("l1", w=5000, h=2000),
+        "l2": _asset("l2", w=5000, h=2000),
+        "l3": _asset("l3", w=5000, h=2000),
+    }
+    ordered = try_order_for_pattern(
+        PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
+        list(aspects.keys()),
+        aspects,
+        assets_map,
+        burst_seconds=3600,
+        median_sharp=0.5,
+    )
+    assert ordered is None
+
+
+def test_portrait_3land_picks_conventional_main():
+    aspects = {
+        "p": "portrait",
+        "good": "landscape",
+        "l1": "landscape",
+        "l2": "landscape",
+        "l3": "landscape",
+    }
+    assets_map = {
+        "p": _asset("p", w=1200, h=1800),
+        "good": _asset("good", w=3000, h=1687),
+        "l1": _asset("l1", w=5000, h=2000),
+        "l2": _asset("l2", w=5000, h=2000),
+        "l3": _asset("l3", w=5000, h=2000),
+    }
+    ordered = try_order_for_pattern(
+        PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
+        list(aspects.keys()),
+        aspects,
+        assets_map,
+        burst_seconds=3600,
+        median_sharp=0.5,
+    )
+    assert ordered is not None
+    assert ordered[0] == "good"

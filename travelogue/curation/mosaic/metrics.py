@@ -10,6 +10,7 @@ from travelogue.curation.mosaic.constants import (
     MOSAIC_UNIFIED_PATTERN_IDS,
     PATTERN_MOSAIC_5_2P3L_EQUAL,
     PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+    PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
     PATTERN_PORTRAIT_1_LANDSCAPE_2,
     PATTERN_PORTRAIT_2_LANDSCAPE_2,
@@ -125,10 +126,11 @@ def hero_main_conventional_rate(
     chapters: list[dict],
     assets_by_id: dict[str, dict],
 ) -> float | None:
-    """Share of hero+5/hero+4 screens whose main slot passes R-MAIN-AR-01."""
+    """Share of main-slot mosaic screens whose main passes R-MAIN-AR-01."""
     hero_patterns = {
         PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
         PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+        PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     }
     total = 0
     ok_n = 0
@@ -168,6 +170,7 @@ _HERO_MAIN_PATTERNS = frozenset(
     {
         PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
         PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+        PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     }
 )
 

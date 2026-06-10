@@ -110,6 +110,8 @@ def test_plan_mosaic_5_main_portrait_3land():
         aid: {
             "id": aid,
             "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
+            "width": 1920 if aid != "p1" else 1200,
+            "height": 1080 if aid != "p1" else 1800,
         }
         for i, aid in enumerate(ids)
     }
@@ -350,6 +352,8 @@ def test_plan_mosaic_5_beats_mixed_p1_l2_when_five_fit():
         aid: {
             "id": aid,
             "takenAt": (base + timedelta(seconds=i)).isoformat().replace("+00:00", "Z"),
+            "width": 1920 if aid != "p1" else 1200,
+            "height": 1080 if aid != "p1" else 1800,
         }
         for i, aid in enumerate(ids)
     }

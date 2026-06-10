@@ -70,10 +70,15 @@ def test_main_off_ladder_passes_publish_with_sign_off(engine: LayoutTemplateEngi
 def test_hero6_templates_declare_main_slot_policy(engine: LayoutTemplateEngine) -> None:
     from travelogue.curation.mosaic.constants import (
         PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+        PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
         PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
     )
 
-    for pid in (PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5, PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4):
+    for pid in (
+        PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+        PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+        PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
+    ):
         report = validate_template_def(engine.get(pid), mode="publish")
         blocking = [i for i in report.issues if i.level in ("error", "block")]
         assert not blocking, (pid, blocking)
