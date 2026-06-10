@@ -110,12 +110,14 @@ def extract_chapter_facts(
 
         facts.extend(extract_visual_facts(chapter, trip))
 
+    from travelogue.services.visual_facts import is_narrative_tag
+
     tag_counts: dict[str, int] = {}
     cities: set[str] = set()
     for asset in _chapter_assets(chapter, trip):
         for tag in asset.get("tags") or []:
             t = str(tag or "").strip()
-            if t:
+            if t and is_narrative_tag(t):
                 tag_counts[t] = tag_counts.get(t, 0) + 1
         city = (asset.get("place") or {}).get("city")
         if city:

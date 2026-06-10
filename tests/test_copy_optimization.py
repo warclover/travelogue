@@ -257,6 +257,9 @@ def test_llm_decor_prefers_llm_over_tag_template() -> None:
                 "id": "ch-03",
                 "index": 3,
                 "title": "10月5日",
+                # Real narrative fact (anchor) so facts are sufficient; the noise
+                # tags (person/face/photo) must be filtered out of the brief.
+                "curation": {"memoryAnchors": ["制衣坊门口"]},
                 "items": [{"type": "media-card", "assetId": "a1"}],
             }
         ],
@@ -280,6 +283,47 @@ def test_llm_decor_prefers_llm_over_tag_template() -> None:
     )
     assert "制衣坊" in picked
     assert "person" not in picked
+
+
+def test_visual_noise_tags_excluded_from_decor_facts() -> None:
+    from travelogue.services.visual_facts import is_narrative_tag
+
+    assert is_narrative_tag("制衣坊")
+    assert is_narrative_tag("海边")
+    assert is_narrative_tag("白天")  # time-of-day kept as mild context
+    for noise in ("person", "face", "photo", "竖图", "portrait", "人像", "自拍"):
+        assert not is_narrative_tag(noise), noise
+
+    trip = {
+        "tripId": "noise-only",
+        "meta": {"title": "测试"},
+        "assets": [
+            {
+                "id": "a1",
+                "type": "image",
+                "tags": ["person", "face", "竖图", "白天"],
+                "mediaClass": "photo",
+                "aspectKind": "portrait",
+            }
+        ],
+        "chapters": [
+            {
+                "id": "ch-01",
+                "index": 1,
+                "title": "10月5日",
+                "items": [{"type": "media-card", "assetId": "a1"}],
+            }
+        ],
+    }
+    chapter = trip["chapters"][0]
+    cfg = AppConfig(narrative=NarrativeConfig(decor_line_llm_enabled=True))
+
+    facts = extract_chapter_facts(chapter, trip, cfg=cfg)
+    for noise in ("person", "face", "竖图", "photo", "portrait"):
+        assert noise not in facts
+    # Only time-of-day survives → below the 2-fact threshold → no fabricated copy.
+    assert not decor_line_facts_sufficient(chapter, trip, cfg=cfg)
+    assert not should_call_llm_decor(chapter, trip, cfg=cfg)
 
 
 def test_passive_copy_intent_from_voice() -> None:

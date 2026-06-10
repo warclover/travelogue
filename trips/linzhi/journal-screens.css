@@ -831,20 +831,126 @@ html[data-layout="auto"] {
   --portrait-row-width: calc(100% - 2 * var(--portrait-row-inset));
 }
 
+/*
+ * Universal portrait contain rows (2-up / 3-up / 3×2 / mosaic tiles):
+ * beat base height:100% + focal object-position and LTE 1fr row stretch.
+ * person-pair / person-triple use dedicated overlays (single-row grids).
+ */
+html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]) .layout-screen__grid--2col:has(.layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]) .layout-screen__grid--2col:has(.layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]) .layout-screen__grid--2col:has(.layout-slot__img--contain),
+html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]) .layout-screen__grid--3col:has(.layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]) .layout-screen__grid--3col:has(.layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]) .layout-screen__grid--3col:has(.layout-slot__img--contain) {
+  grid-template-rows: auto;
+  align-items: start;
+  height: auto;
+}
+
+html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--3x2:has(.layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--3x2:has(.layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--3x2:has(.layout-slot__img--contain),
+html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--2x2:has(.layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--2x2:has(.layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--2x2:has(.layout-slot__img--contain) {
+  grid-template-rows: repeat(2, auto);
+  align-items: start;
+  height: auto;
+}
+
+/*
+ * Portrait 2×2 (screen-portrait-4) with contain tiles: drop the forced 9:16 stage
+ * box so the grid sizes to two intrinsic rows (no tall bottom blank / oversize).
+ * Cover 2×2 (landscape-4 / square-4 / portrait-2-landscape-2) keep their stage box.
+ */
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-4"]:not([data-layout-hint]):has(.layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-4"]:not([data-layout-hint]):has(.layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-4"]:not([data-layout-hint]):has(.layout-slot__img--contain) {
+  aspect-ratio: unset;
+  height: auto;
+  min-height: 0;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-4"]:not([data-layout-hint]):has(.layout-slot__img--contain) .layout-screen__grid--2x2,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-4"]:not([data-layout-hint]):has(.layout-slot__img--contain) .layout-screen__grid--2x2,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-4"]:not([data-layout-hint]):has(.layout-slot__img--contain) .layout-screen__grid--2x2 {
+  grid-template-rows: repeat(2, auto);
+  align-items: start;
+  height: auto;
+}
+
+html[data-layout="web"] [class*="layout-screen__grid--mosaic-"]:has(.layout-slot__img--contain),
+html[data-layout="auto"] [class*="layout-screen__grid--mosaic-"]:has(.layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) [class*="layout-screen__grid--mosaic-"]:has(.layout-slot__img--contain) {
+  align-items: start;
+  height: auto;
+}
+
+html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  align-self: start;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  background: transparent;
+}
+
+html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain,
+html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain {
+  display: block;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: var(--portrait-stage-vh);
+  object-fit: contain;
+  object-position: top center;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-6"],
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-6"],
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-6"] {
+  aspect-ratio: unset;
+  height: auto;
+  min-height: 0;
+}
+
 /* Dense uniform grids + mosaic composites: reinforce slot/img containment */
-html[data-layout="web"] .layout-screen__grid--2x2 .layout-slot,
-html[data-layout="auto"] .layout-screen__grid--2x2 .layout-slot,
-html[data-layout="web"] .layout-screen__grid--3x2 .layout-slot,
-html[data-layout="auto"] .layout-screen__grid--3x2 .layout-slot,
-html[data-layout="web"] .layout-screen__grid--3x3 .layout-slot,
-html[data-layout="auto"] .layout-screen__grid--3x3 .layout-slot,
-html[data-layout="web"] .layout-screen__grid--portrait-2x4 .layout-slot,
-html[data-layout="auto"] .layout-screen__grid--portrait-2x4 .layout-slot,
-html[data-layout="web"] .layout-screen__grid--portrait-left-2landscape .layout-slot,
-html[data-layout="auto"] .layout-screen__grid--portrait-left-2landscape .layout-slot,
-html[data-layout="web"] [class*="layout-screen__grid--mosaic-"] .layout-slot,
-html[data-layout="auto"] [class*="layout-screen__grid--mosaic-"] .layout-slot {
+html[data-layout="web"] .layout-screen__grid--2x2 .layout-slot:not(:has(> .layout-slot__img--contain)),
+html[data-layout="auto"] .layout-screen__grid--2x2 .layout-slot:not(:has(> .layout-slot__img--contain)),
+html[data-layout="web"] .layout-screen__grid--3x2 .layout-slot:not(:has(> .layout-slot__img--contain)),
+html[data-layout="auto"] .layout-screen__grid--3x2 .layout-slot:not(:has(> .layout-slot__img--contain)),
+html[data-layout="web"] .layout-screen__grid--3x3 .layout-slot:not(:has(> .layout-slot__img--contain)),
+html[data-layout="auto"] .layout-screen__grid--3x3 .layout-slot:not(:has(> .layout-slot__img--contain)),
+html[data-layout="web"] .layout-screen__grid--portrait-2x4 .layout-slot:not(:has(> .layout-slot__img--contain)),
+html[data-layout="auto"] .layout-screen__grid--portrait-2x4 .layout-slot:not(:has(> .layout-slot__img--contain)),
+html[data-layout="web"] .layout-screen__grid--portrait-left-2landscape .layout-slot:not(:has(> .layout-slot__img--contain)),
+html[data-layout="auto"] .layout-screen__grid--portrait-left-2landscape .layout-slot:not(:has(> .layout-slot__img--contain)),
+html[data-layout="web"] [class*="layout-screen__grid--mosaic-"] .layout-slot:not(:has(> .layout-slot__img--contain)),
+html[data-layout="auto"] [class*="layout-screen__grid--mosaic-"] .layout-slot:not(:has(> .layout-slot__img--contain)) {
   height: 100%;
+  min-height: 0;
+}
+
+html[data-layout="web"] .layout-screen__grid--2x2 .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen__grid--2x2 .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="web"] .layout-screen__grid--3x2 .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen__grid--3x2 .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="web"] .layout-screen__grid--3x3 .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen__grid--3x3 .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="web"] .layout-screen__grid--portrait-2x4 .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen__grid--portrait-2x4 .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="web"] .layout-screen__grid--portrait-left-2landscape .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen__grid--portrait-left-2landscape .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="web"] [class*="layout-screen__grid--mosaic-"] .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="auto"] [class*="layout-screen__grid--mosaic-"] .layout-slot:has(> .layout-slot__img--contain) {
+  height: auto;
   min-height: 0;
 }
 
@@ -865,10 +971,64 @@ html[data-layout="auto"] [class*="layout-screen__grid--mosaic-"] .layout-slot__i
   object-fit: cover;
 }
 
+/* Mosaic portrait tiles (contain): top-anchor + intrinsic height inside cell */
+html[data-layout="web"] [class*="layout-screen__grid--mosaic-"] .layout-slot[data-role="portrait"],
+html[data-layout="auto"] [class*="layout-screen__grid--mosaic-"] .layout-slot[data-role="portrait"],
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) [class*="layout-screen__grid--mosaic-"] .layout-slot[data-role="portrait"],
+html[data-layout="web"] [class*="layout-screen__grid--mosaic-"] .layout-slot:not([data-role="main"]):has(.layout-slot__img--contain),
+html[data-layout="auto"] [class*="layout-screen__grid--mosaic-"] .layout-slot:not([data-role="main"]):has(.layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) [class*="layout-screen__grid--mosaic-"] .layout-slot:not([data-role="main"]):has(.layout-slot__img--contain) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  align-self: start;
+  overflow: visible;
+}
+
+html[data-layout="web"] [class*="layout-screen__grid--mosaic-"] .layout-slot:not([data-role="main"]) .layout-slot__img--contain,
+html[data-layout="auto"] [class*="layout-screen__grid--mosaic-"] .layout-slot:not([data-role="main"]) .layout-slot__img--contain,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) [class*="layout-screen__grid--mosaic-"] .layout-slot:not([data-role="main"]) .layout-slot__img--contain {
+  display: block;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: top center;
+}
+
+/* Hero+m tiles: shrink bottom portrait row instead of equal 1fr band */
+html[data-layout="web"] .layout-screen[data-pattern="screen-mosaic-5-main-hero-plus-4"] .layout-screen__grid--mosaic-5-main-hero-plus-4,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-mosaic-5-main-hero-plus-4"] .layout-screen__grid--mosaic-5-main-hero-plus-4,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-mosaic-5-main-hero-plus-4"] .layout-screen__grid--mosaic-5-main-hero-plus-4,
+html[data-layout="web"] .layout-screen[data-pattern="screen-mosaic-6-main-hero-plus-5"] .layout-screen__grid--mosaic-6-main-hero-plus-5,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-mosaic-6-main-hero-plus-5"] .layout-screen__grid--mosaic-6-main-hero-plus-5,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-mosaic-6-main-hero-plus-5"] .layout-screen__grid--mosaic-6-main-hero-plus-5 {
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-mosaic-5-main-hero-plus-4"] .layout-slot[data-slot="3"],
+html[data-layout="auto"] .layout-screen[data-pattern="screen-mosaic-5-main-hero-plus-4"] .layout-slot[data-slot="3"],
+html[data-layout="web"] .layout-screen[data-pattern="screen-mosaic-5-main-hero-plus-4"] .layout-slot[data-slot="4"],
+html[data-layout="auto"] .layout-screen[data-pattern="screen-mosaic-5-main-hero-plus-4"] .layout-slot[data-slot="4"],
+html[data-layout="web"] .layout-screen[data-pattern="screen-mosaic-5-main-hero-plus-4"] .layout-slot[data-slot="5"],
+html[data-layout="auto"] .layout-screen[data-pattern="screen-mosaic-5-main-hero-plus-4"] .layout-slot[data-slot="5"],
+html[data-layout="web"] .layout-screen[data-pattern="screen-mosaic-6-main-hero-plus-5"] .layout-slot[data-slot="3"],
+html[data-layout="auto"] .layout-screen[data-pattern="screen-mosaic-6-main-hero-plus-5"] .layout-slot[data-slot="3"],
+html[data-layout="web"] .layout-screen[data-pattern="screen-mosaic-6-main-hero-plus-5"] .layout-slot[data-slot="4"],
+html[data-layout="auto"] .layout-screen[data-pattern="screen-mosaic-6-main-hero-plus-5"] .layout-slot[data-slot="4"],
+html[data-layout="web"] .layout-screen[data-pattern="screen-mosaic-6-main-hero-plus-5"] .layout-slot[data-slot="5"],
+html[data-layout="auto"] .layout-screen[data-pattern="screen-mosaic-6-main-hero-plus-5"] .layout-slot[data-slot="5"] {
+  align-self: start;
+}
+
 html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-grid-8"]:not([data-layout-hint]) .layout-slot__img--cover,
 html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-grid-8"]:not([data-layout-hint]) .layout-slot__img--cover {
   object-fit: cover;
-  object-position: center;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.45) * 100%);
 }
 
 html[data-layout="web"] .layout-screen[data-layout-hint="person-grid-8"],
@@ -912,38 +1072,44 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-3"] {
   height: auto;
 }
 
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid--2col,
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid--2col {
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-rows: auto;
-  align-items: start;
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]),
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) {
+  aspect-ratio: unset;
+  height: auto;
+  min-height: 0;
 }
 
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]),
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) {
-  aspect-ratio: auto;
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid--2col,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid--2col,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid--2col {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: auto;
+  align-items: start;
   height: auto;
 }
 
 html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-1"] .layout-slot__img--cover,
 html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-1"] .layout-slot__img--cover {
   object-fit: cover;
-  object-position: center 30%;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.3) * 100%);
   width: 100%;
   height: 100%;
 }
 
 html[data-layout="web"] .layout-screen[data-layout-hint="person-pair"],
 html[data-layout="auto"] .layout-screen[data-layout-hint="person-pair"],
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-layout-hint="person-pair"],
 html[data-layout="web"] .layout-screen[data-layout-hint="person-triple"],
-html[data-layout="auto"] .layout-screen[data-layout-hint="person-triple"] {
+html[data-layout="auto"] .layout-screen[data-layout-hint="person-triple"],
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-layout-hint="person-triple"] {
   aspect-ratio: unset;
   height: auto;
   min-height: 0;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 12px var(--portrait-row-inset);
+  padding: 0 var(--portrait-row-inset);
   box-sizing: border-box;
   width: 100%;
 }
@@ -1082,21 +1248,25 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[da
 }
 
 html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid,
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid {
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid {
   height: auto;
   width: 100%;
 }
 
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot,
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot {
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid .layout-slot,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid .layout-slot,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid .layout-slot {
   aspect-ratio: unset;
   height: auto;
   min-height: 0;
   align-self: start;
+  overflow: visible;
 }
 
 html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot__img--cover,
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot__img--cover {
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot__img--cover,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot__img--cover {
   display: block;
   width: 100%;
   height: auto;
@@ -1105,7 +1275,11 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([d
 }
 
 html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot__img--contain,
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot__img--contain {
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot__img--contain,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-slot__img--contain,
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid .layout-slot__img--contain,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid .layout-slot__img--contain,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid .layout-slot__img--contain {
   display: block;
   width: 100%;
   height: auto;
@@ -1150,17 +1324,95 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-tall-1"] .layout-sl
   max-height: 100%;
 }
 
+/*
+ * Single near-square image, contain: fill the native-aspect stage edge to edge.
+ * The square stage's aspect-ratio already equals the photo, so the universal
+ * contain cap (max-height: 108vh + width:100%) only produced a bottom band plus
+ * object-fit side bands. Matching the universal selector's (0,8,1) specificity
+ * and ordering after it lets the image fill the stage with no blank margins.
+ */
+html[data-layout="web"] .layout-screen[data-pattern="screen-square-1"]:not([data-layout-hint]) .layout-screen__grid--1col .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen[data-pattern="screen-square-1"]:not([data-layout-hint]) .layout-screen__grid--1col .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-square-1"]:not([data-layout-hint]) .layout-screen__grid--1col .layout-slot:has(> .layout-slot__img--contain) {
+  height: 100%;
+  min-height: 0;
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-square-1"]:not([data-layout-hint]) .layout-screen__grid--1col .layout-slot > .layout-slot__img--contain,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-square-1"]:not([data-layout-hint]) .layout-screen__grid--1col .layout-slot > .layout-slot__img--contain,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-square-1"]:not([data-layout-hint]) .layout-screen__grid--1col .layout-slot > .layout-slot__img--contain {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  margin-inline: 0;
+  object-fit: contain;
+  object-position: center;
+}
+
 html[data-layout="web"] .layout-screen[data-pattern="screen-panorama-1"] .layout-slot__img--cover,
 html[data-layout="auto"] .layout-screen[data-pattern="screen-panorama-1"] .layout-slot__img--cover {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.45) * 100%);
 }
 
-html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]),
-html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]) {
+/* Single portrait, cover (full-bleed): native-aspect box fills edge to edge. */
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]):not(:has(.layout-slot__img--contain)),
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-1"]:not([data-layout-hint]):not(:has(.layout-slot__img--contain)) {
   aspect-ratio: var(--screen-aspect, 3 / 4);
+}
+
+/*
+ * Single portrait, contain (person/face): size the stage to the image instead of
+ * the native-aspect box. The native box (full rail width × tall ratio) combined
+ * with the universal contain cap (max-height: 108vh) left a tall bottom blank and
+ * side bands. Height-auto + width-auto centers the whole portrait, capped to vh.
+ * screen-plate (folio lite chapter opener) shares the same 1-col contain path.
+ */
+html[data-layout="web"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]):has(.layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]):has(.layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]):has(.layout-slot__img--contain) {
+  aspect-ratio: unset;
+  height: auto;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+html[data-layout="web"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]):has(.layout-slot__img--contain) .layout-screen__grid,
+html[data-layout="auto"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]):has(.layout-slot__img--contain) .layout-screen__grid,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]):has(.layout-slot__img--contain) .layout-screen__grid {
+  height: auto;
+  width: 100%;
+}
+
+html[data-layout="web"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]) .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]) .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]) .layout-slot:has(> .layout-slot__img--contain) {
+  height: auto;
+  min-height: 0;
+  align-self: start;
+  overflow: visible;
+}
+
+html[data-layout="web"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]) .layout-screen__grid--1col .layout-slot > .layout-slot__img--contain,
+html[data-layout="auto"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]) .layout-screen__grid--1col .layout-slot > .layout-slot__img--contain,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]) .layout-screen__grid--1col .layout-slot > .layout-slot__img--contain {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: var(--portrait-stage-vh);
+  margin-inline: auto;
+  object-fit: contain;
+  object-position: top center;
 }
 
 html[data-layout-hint-debug="1"] .layout-screen[data-layout-hint="food-grid"],
@@ -1686,3 +1938,4 @@ html[data-folio="full"] .featured-grid__img {
   color: color-mix(in srgb, var(--folio-ink, #222) 70%, transparent);
 }
 /* @journal-overlays:end */
+

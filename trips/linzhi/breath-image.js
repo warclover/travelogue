@@ -17,10 +17,37 @@
 
   function slotProgress(enterRaw, index, count) {
     if (count <= 1) return smoothstep(enterRaw);
+    if (enterRaw >= 1) return 1;
     var delay = index * Math.min(0.07, 0.35 / count);
     var span = 1 - delay * 0.55;
     if (span <= 0.1) span = 0.1;
     return smoothstep((enterRaw - delay) / span);
+  }
+
+  function shouldUnifySlotMotion(screen, slots) {
+    var hint = screen.getAttribute("data-layout-hint") || "";
+    if (hint.indexOf("person-") === 0) return true;
+    var pattern = screen.getAttribute("data-pattern") || "";
+    if (pattern.indexOf("mosaic") !== -1) return true;
+    if (/^screen-portrait-(2|3|4|6|9|grid-8)$/.test(pattern)) return true;
+    var grid = screen.querySelector(".layout-screen__grid");
+    if (grid) {
+      var gridClass = grid.className || "";
+      if (
+        gridClass.indexOf("--2col") !== -1 ||
+        gridClass.indexOf("--3col") !== -1 ||
+        gridClass.indexOf("--3x2") !== -1
+      ) {
+        return true;
+      }
+    }
+    for (var i = 0; i < slots.length; i++) {
+      var img = slots[i].querySelector("img");
+      if (img && img.classList.contains("layout-slot__img--contain")) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function clearStyles() {
@@ -91,6 +118,7 @@
         });
 
         var multi = slots.length > 1;
+        var unifyMotion = shouldUnifySlotMotion(screen, slots);
 
         registerTrigger(
           ScrollTrigger.create({
@@ -121,7 +149,9 @@
               var driftNorm = clamp((vh * 0.5 - centerY) / (vh * 0.85), -1, 1);
 
               slots.forEach(function (slot, i) {
-                var slotP = slotProgress(enterRaw, i, slots.length);
+                var slotP = unifyMotion
+                  ? smoothstep(enterRaw)
+                  : slotProgress(enterRaw, i, slots.length);
                 var img = slot.querySelector("img");
                 if (!img) return;
 

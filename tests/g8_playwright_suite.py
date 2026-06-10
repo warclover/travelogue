@@ -67,24 +67,35 @@ def check_g8_08_hint_switch(page: Page, base: str) -> dict:
         }
         """
     )
-    hints = page.evaluate(
+    smart_hint = page.locator("#v2-template-hint").inner_text().strip()
+    manual_value = page.locator(
+        '#v2-template-mode option[value^="manual:"]'
+    ).first.get_attribute("value")
+    assert manual_value, "expected at least one manual template option"
+    page.evaluate(
         """
-        async () => {
+        (value) => {
           const sel = document.getElementById('v2-template-mode');
-          const hint = document.getElementById('v2-template-hint');
-          if (!sel || !hint) return { ok: false };
-          const smart = hint.textContent || '';
-          sel.value = 'manual:visual-journal';
+          if (!sel) return;
+          sel.value = value;
           sel.dispatchEvent(new Event('change', { bubbles: true }));
-          await new Promise((r) => setTimeout(r, 400));
-          const manual = hint.textContent || '';
-          return { ok: smart.length > 0 && manual.length > 0 && smart !== manual, smart, manual };
         }
-        """
+        """,
+        manual_value,
     )
-    ok = bool(hints.get("ok"))
-    smart_hint = hints.get("smart", "")
-    manual_hint = hints.get("manual", "")
+    page.wait_for_function(
+        """
+        (smartText) => {
+          const hint = document.getElementById('v2-template-hint');
+          const manual = ((hint && hint.textContent) || '').trim();
+          return manual.length > 0 && manual !== smartText;
+        }
+        """,
+        arg=smart_hint,
+        timeout=10_000,
+    )
+    manual_hint = page.locator("#v2-template-hint").inner_text().strip()
+    ok = bool(smart_hint and manual_hint and smart_hint != manual_hint)
     return {
         "id": "G8-08",
         "name": "浏览器切换 hint 文案",

@@ -4,7 +4,7 @@
  * 字体：全书微软雅黑栈 + 各平台系统无衬线回退（无需联网）
  * 可选杂志体：html[data-font-theme="magazine"] 使用 --font-legacy-brush
  */
-@import url("journal-screens.css");
+@import url("journal-screens.css?v=ls58c91ac18118");
 
 :root {
   --bp-web: 48rem;

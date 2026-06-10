@@ -72,7 +72,17 @@
     return document.documentElement.getAttribute("data-trip-id") || "";
   }
 
+  function inStudioPreview() {
+    var b = document.body;
+    if (!b) return false;
+    return (
+      b.getAttribute("data-preview-toolbar") === "on" ||
+      b.getAttribute("data-preview-share") === "on"
+    );
+  }
+
   function recordCopyTelemetry(event) {
+    if (!inStudioPreview()) return;
     var tripId = tripIdFromDom();
     if (!tripId) return;
     try {

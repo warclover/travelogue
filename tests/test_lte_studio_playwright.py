@@ -104,7 +104,8 @@ def test_ac11_preview_toolbar_shows_layout_css_stale_hint(studio_server) -> None
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1280, "height": 800})
         page.goto(url, wait_until="networkidle")
-        stale = page.locator(".preview-toolbar__stale")
+        # 方案 D（e5326ed）将 stale 提示并入 pending-row 的 pending-text。
+        stale = page.locator(".preview-toolbar__pending-text")
         stale.wait_for(state="visible", timeout=15_000)
         assert STALE_HINT in stale.inner_text()
         browser.close()
