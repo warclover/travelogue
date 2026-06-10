@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
 from dataclasses import replace
+
+import pytest
 
 from travelogue.config import MosaicConfig
 from travelogue.curation.mosaic.builders import try_order_for_pattern
