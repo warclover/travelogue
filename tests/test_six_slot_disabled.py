@@ -64,7 +64,7 @@ def test_legacy_landscape_run_skips_six_grid_when_disabled():
         assert len(sc.get("slots") or []) != 6
 
 
-def test_mosaic_pattern_policy_blocks_five_and_six_ids():
+def test_mosaic_pattern_policy_blocks_five_and_six_ids(lte_pattern_enabled):
     from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
 
     off = replace(get_config().mosaic, enabled_window_sizes=_DISABLED_5_6)

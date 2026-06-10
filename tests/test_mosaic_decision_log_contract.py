@@ -9,7 +9,7 @@ from travelogue.curation.mosaic.compose import pick_best_candidate
 from travelogue.curation.mosaic.runtime import MOSAIC_ROUTER_VERSION
 
 
-def test_pick_best_logs_top3_reason_codes_router_version() -> None:
+def test_pick_best_logs_top3_reason_codes_router_version(lte_pattern_enabled) -> None:
     ids, aspects, assets_map = build_mosaic_five_2p3l_window()
     cfg = MosaicConfig(
         enabled=True,

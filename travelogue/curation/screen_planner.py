@@ -22,6 +22,7 @@ from travelogue.curation.layout_planner import (
     _is_std_portrait,
 )
 from travelogue.curation.screen_layout_state import (  # noqa: F401 — re-exported API
+    MAX_PORTRAIT_PAIR_STREAK,
     NineGridPlannerState,
     ScreenLayoutPlannerState,
     is_nine_grid_pattern,
@@ -709,6 +710,50 @@ def _person_portrait_ids(buf: list[str], assets_map: dict[str, dict]) -> list[st
     return [a for a in buf if asset_has_person(assets_map.get(a, {}))]
 
 
+def _tile_portrait_run(n: int, *, seed_pair_streak: int = 0) -> list[int]:
+    """竖版游程分组（pair-first + R-06 + R-02）。
+
+    返回每屏吃图数序列（2=双列, 3=三列, 1=单列兜底）：
+    - 优先双列（pair-first）；
+    - 连续双列不超过 ``MAX_PORTRAIT_PAIR_STREAK``（R-06），触顶或会被逼入死角时用三列打断；
+    - 不连续三列（R-02）；
+    - 仅在收尾无法成对时落单列（1）。
+    ``seed_pair_streak`` 为跨 flush 已累计的连续双列数。
+    """
+    groups: list[int] = []
+    streak = max(0, seed_pair_streak)
+    last_was_triple = False
+    while n > 0:
+        if n == 1:
+            groups.append(1)
+            n = 0
+            continue
+        if n == 2:
+            groups.append(2)
+            n = 0
+            continue
+        if n == 3:
+            if last_was_triple:
+                groups.extend((2, 1))
+            else:
+                groups.append(3)
+            n = 0
+            continue
+        # n >= 4：判断是否需要用三列打断（触顶，或成对后会把恰好 2 张逼到顶）。
+        corner_after_pair = (n - 2 == 2) and (streak + 1 >= MAX_PORTRAIT_PAIR_STREAK)
+        if (streak >= MAX_PORTRAIT_PAIR_STREAK or corner_after_pair) and not last_was_triple:
+            groups.append(3)
+            n -= 3
+            streak = 0
+            last_was_triple = True
+        else:
+            groups.append(2)
+            n -= 2
+            streak += 1
+            last_was_triple = False
+    return groups
+
+
 def _emit_person_portrait_screens(
     person_ids: list[str],
     aspects: dict[str, AspectKind],
@@ -723,16 +768,22 @@ def _emit_person_portrait_screens(
     screens: list[dict] = []
     buf = list(person_ids)
     defer: list[str] = []
+    tail_singles: list[str] = []
     # 竖版分组优先级：两列(person-pair) > 三列(person-triple) > 单列。
-    # 优先两列，仅当剩余恰为 3 张时用一屏三列吃掉奇数尾巴；单列仅作孤张兜底。
-    while len(buf) >= 2:
-        if len(buf) == 3:
+    # 由 _tile_portrait_run 统一裁决（pair-first + R-06 连续上限 + R-02 不连三列）。
+    seed = (
+        layout_state.current_portrait_pair_streak() if layout_state is not None else 0
+    )
+    for size in _tile_portrait_run(len(buf), seed_pair_streak=seed):
+        if size == 3:
             trio = buf[:3]
+            buf = buf[3:]
             if (
                 not force
                 and layout_state is not None
                 and not layout_state.can_emit_pattern("screen-portrait-3")
             ):
+                # 与上一屏冲突：降为双列并把第三张顺延（保持原退让行为）。
                 if layout_state.can_emit_pattern("screen-portrait-2"):
                     screen = _make_screen(
                         "screen-portrait-2",
@@ -743,10 +794,9 @@ def _emit_person_portrait_screens(
                     )
                     screen["layoutHint"] = PERSON_LAYOUT_PAIR
                     screens.append(screen)
-                    buf = [trio[2]] + buf[3:]
-                    continue
-                defer.extend(trio)
-                buf = buf[3:]
+                    defer.append(trio[2])
+                else:
+                    defer.extend(trio)
                 continue
             screen = _make_screen(
                 "screen-portrait-3",
@@ -757,23 +807,25 @@ def _emit_person_portrait_screens(
             )
             screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
             screens.append(screen)
-            buf = buf[3:]
-            continue
-        pair = buf[:2]
-        screen = _make_screen(
-            "screen-portrait-2",
-            pair,
-            screen_id="",
-            aspects=aspects,
-            assets_map=assets_map,
-        )
-        screen["layoutHint"] = PERSON_LAYOUT_PAIR
-        screens.append(screen)
-        buf = buf[2:]
-    if buf:
+        elif size == 2:
+            pair = buf[:2]
+            buf = buf[2:]
+            screen = _make_screen(
+                "screen-portrait-2",
+                pair,
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
+            )
+            screen["layoutHint"] = PERSON_LAYOUT_PAIR
+            screens.append(screen)
+        else:
+            tail_singles.append(buf[0])
+            buf = buf[1:]
+    if tail_singles:
         screens.extend(
             _emit_portrait_single_screens(
-                buf,
+                tail_singles,
                 aspects,
                 assets_map=assets_map,
                 layout_state=layout_state,
@@ -931,9 +983,12 @@ def _flush_portrait_pending(
     )
 
     # 竖版分组优先级：两列(portrait-2) > 三列(portrait-3) > 单列(portrait-1)。
-    # 优先两列，仅当剩余恰为 3 张时用一屏三列吃掉奇数尾巴；单列仅作孤张兜底。
-    while len(buf) >= 2:
-        if len(buf) == 3:
+    # 由 _tile_portrait_run 统一裁决（pair-first + R-06 连续上限 + R-02 不连三列）。
+    seed = (
+        layout_state.current_portrait_pair_streak() if layout_state is not None else 0
+    )
+    for size in _tile_portrait_run(len(buf), seed_pair_streak=seed):
+        if size == 3:
             trio = buf[:3]
             placed = _plan_portrait_triple_row(
                 trio,
@@ -947,29 +1002,30 @@ def _flush_portrait_pending(
                 break
             screens.extend(placed)
             buf = buf[3:]
-            continue
-        screens.append(
-            _make_screen(
-                "screen-portrait-2",
-                buf[:2],
-                screen_id="",
-                aspects=aspects,
-                assets_map=assets_map,
+        elif size == 2:
+            screens.append(
+                _make_screen(
+                    "screen-portrait-2",
+                    buf[:2],
+                    screen_id="",
+                    aspects=aspects,
+                    assets_map=assets_map,
+                )
             )
-        )
-        buf = buf[2:]
-    if len(buf) == 1:
-        screens.extend(
-            _emit_portrait_single_screens(
-                buf,
-                aspects,
-                assets_map=assets_map,
-                layout_state=layout_state,
-                pending=pending,
-                force=force,
-                solo_exclude=solo_exclude,
+            buf = buf[2:]
+        else:
+            screens.extend(
+                _emit_portrait_single_screens(
+                    buf[:1],
+                    aspects,
+                    assets_map=assets_map,
+                    layout_state=layout_state,
+                    pending=pending,
+                    force=force,
+                    solo_exclude=solo_exclude,
+                )
             )
-        )
+            buf = buf[1:]
     return screens
 
 

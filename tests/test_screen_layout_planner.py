@@ -655,9 +655,11 @@ def test_screens_layout_active_requires_web():
 
 
 def test_portrait_heavy_summary():
-    # Pair-first portrait priority: a run of 6 standard portraits tiles into
-    # three two-column pairs (portrait-2), never a dense portrait-6/portrait-4
-    # grid and never a triple+single split.
+    # Pair-first portrait priority under R-06 (排版规则优化 v0.5): a run of 6
+    # standard portraits can't tile into 3 consecutive two-column pairs (max 2
+    # consecutive portrait-2), so the run breaks with a triple to stay within the
+    # streak cap → portrait-2, portrait-3, portrait-1. Still never a dense
+    # portrait-6/portrait-4 grid.
     ids = [f"p{i}" for i in range(6)]
     aspects = _aspects(ids, {x: "portrait" for x in ids})
     screens = plan_screens_for_chapter(
@@ -665,7 +667,17 @@ def test_portrait_heavy_summary():
         aspects,
         orientation_summary={"portrait": 10, "landscape": 2},
     )
-    assert [s["patternId"] for s in screens] == ["screen-portrait-2"] * 3
+    assert [s["patternId"] for s in screens] == [
+        "screen-portrait-2",
+        "screen-portrait-3",
+        "screen-portrait-1",
+    ]
+    from travelogue.curation.layout_constraints import max_consecutive_pattern_streak
+    from travelogue.curation.screen_layout_state import MAX_PORTRAIT_PAIR_STREAK
+
+    pair_only = [s for s in screens if s["patternId"] == "screen-portrait-2"]
+    assert max_consecutive_pattern_streak(screens) <= MAX_PORTRAIT_PAIR_STREAK
+    assert pair_only  # pair-first still favored
 
 
 def test_landscape_pair_splits_into_two_single_screens():

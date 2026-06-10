@@ -32,14 +32,14 @@ def test_read_templates_from_lte_defaults_true() -> None:
 
 
 @pytest.mark.unit
-def test_lte_registry_excludes_deprecated_includes_flagship() -> None:
+def test_lte_registry_excludes_deprecated_includes_flagship(lte_pattern_enabled) -> None:
     reg = mosaic_registry()
     assert PATTERN_MOSAIC_5_3P_2L_BALANCED not in reg
     assert PATTERN_MOSAIC_5_2P3L_EQUAL in reg
 
 
 @pytest.mark.unit
-def test_patterns_for_window_size_includes_lte_extras() -> None:
+def test_patterns_for_window_size_includes_lte_extras(lte_pattern_enabled) -> None:
     reg = mosaic_registry()
     five = patterns_for_window_size(5, reg)
     ids = [p.pattern_id for p in five]
@@ -47,7 +47,7 @@ def test_patterns_for_window_size_includes_lte_extras() -> None:
 
 
 @pytest.mark.unit
-def test_geometry_solidify_on_build_screen() -> None:
+def test_geometry_solidify_on_build_screen(lte_pattern_enabled) -> None:
     reg = mosaic_registry()
     pat = reg[PATTERN_MOSAIC_5_2P3L_EQUAL]
     assets_map = {

@@ -25,7 +25,7 @@ def _five_assets():
     return aspects, assets_map
 
 
-def test_generate_window_candidates_multiple_patterns():
+def test_generate_window_candidates_multiple_patterns(lte_pattern_enabled):
     aspects, assets_map = _five_assets()
     cfg = MosaicConfig(enabled=True, enabled_window_sizes=(5,))
     cands = generate_window_candidates(
@@ -40,7 +40,7 @@ def test_generate_window_candidates_multiple_patterns():
     assert all(p.startswith("screen-mosaic-5-") for p in pids)
 
 
-def test_time_gap_still_yields_candidates_lower_score():
+def test_time_gap_still_yields_candidates_lower_score(lte_pattern_enabled):
     """Soft time: far-apart assets still get candidates (scored lower in planner)."""
     aspects, assets_map = _five_assets()
     assets_map["a3"]["takenAt"] = "2024-06-01T12:00:00Z"

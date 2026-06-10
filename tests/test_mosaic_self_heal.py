@@ -15,7 +15,7 @@ def _window5():
     return ids, aspects, assets_map
 
 
-def test_self_heal_tightened_rescore(monkeypatch):
+def test_self_heal_tightened_rescore(monkeypatch, lte_pattern_enabled):
     ids, aspects, assets_map = _window5()
     cfg = replace(get_config().mosaic, self_heal_enabled=True, min_candidate_score=0.6)
 
@@ -41,7 +41,7 @@ def test_self_heal_tightened_rescore(monkeypatch):
     assert pick.screen is not None
 
 
-def test_self_heal_disabled_uses_legacy(monkeypatch):
+def test_self_heal_disabled_uses_legacy(monkeypatch, lte_pattern_enabled):
     ids, aspects, assets_map = _window5()
     cfg = replace(
         get_config().mosaic,

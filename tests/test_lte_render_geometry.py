@@ -29,7 +29,7 @@ def test_build_layout_screen_uses_solidified_grid_class() -> None:
 
 
 @pytest.mark.unit
-def test_mosaic_log_includes_template_metadata() -> None:
+def test_mosaic_log_includes_template_metadata(lte_pattern_enabled) -> None:
     ids, aspects, assets_map = build_mosaic_five_2p3l_window()
     cfg = MosaicConfig(
         enabled=True,

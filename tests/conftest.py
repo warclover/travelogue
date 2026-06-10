@@ -148,6 +148,28 @@ def _enable_five_slot_for_mosaic_marked_tests(
     yield
 
 
+@pytest.fixture
+def lte_pattern_enabled():
+    """Neutralize repo config.yaml ``overrides.disable`` for pattern-intrinsic tests.
+
+    The committed ``config.yaml`` disables ``screen-mosaic-5-2p3l-equal`` as a
+    reversible emergency kill (product decision). The test suite loads that
+    config, so tests exercising the template's intrinsic geometry / candidate
+    selection must run against the *undisabled* registry. Uses ``config_override``
+    (a ContextVar honored live by every ``get_config()`` call).
+    """
+    from travelogue.config.runtime import config_override, get_config
+
+    base = get_config()
+    te = base.layout.template_engine
+    clean = replace(
+        base,
+        layout=replace(base.layout, template_engine=replace(te, overrides_disable=())),
+    )
+    with config_override(clean):
+        yield clean
+
+
 @pytest.fixture(autouse=True)
 def _reset_clip_encoder_singleton() -> None:
     """Avoid CLIP singleton state leaking between vision/clustering tests."""

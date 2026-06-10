@@ -9,7 +9,7 @@ from travelogue.curation.mosaic.compose import pick_best_window
 from travelogue.curation.mosaic.scorer import MosaicScoreResult
 
 
-def test_low_score_fallback_reason(monkeypatch):
+def test_low_score_fallback_reason(monkeypatch, lte_pattern_enabled):
     aspects = {
         "p0": "portrait",
         "p1": "portrait",

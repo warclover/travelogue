@@ -12,12 +12,14 @@ from travelogue.curation.search_budget import SearchBudget
 
 
 def _asset(aid: str, kind: str, secs: float = 0) -> dict:
+    # Landscapes use a 16:9 native AR so they sit on the main-slot AR ladder
+    # (main-AR-guard rejects off-ladder mains like 5:3); portraits use 9:16.
     return {
         "id": aid,
         "aspectKind": kind,
         "takenAt": (datetime(2025, 6, 1, 10, tzinfo=UTC) + timedelta(seconds=secs)).isoformat(),
-        "width": 2000 if kind == "landscape" else 900,
-        "height": 1200 if kind == "landscape" else 1600,
+        "width": 1920 if kind == "landscape" else 900,
+        "height": 1080 if kind == "landscape" else 1600,
     }
 
 

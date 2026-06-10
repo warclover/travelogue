@@ -12,11 +12,17 @@ from travelogue.curation.layout_density import (
     layout_density_params,
 )
 
-LayoutKind = Literal["none", "nine", "triple", "six", "portrait_single", "other"]
+LayoutKind = Literal[
+    "none", "nine", "triple", "six", "portrait_single", "portrait_pair", "other"
+]
 
 _PATTERN_SLOTS_RE = re.compile(r"^screen-(?:portrait|landscape|square)-(\d+)$")
 
 PORTRAIT_GRID8_MIN_PHOTOS = 50
+
+# R-06 · 两张并排竖版（portrait-2 / person-pair 等价）连续上限。
+MAX_PORTRAIT_PAIR_STREAK = 2
+PORTRAIT_PAIR_PATTERN = "screen-portrait-2"
 
 
 def pattern_slot_count(pattern_id: str) -> int | None:
@@ -70,6 +76,10 @@ def is_portrait_single_pattern(pattern_id: str) -> bool:
     return pattern_id in ("screen-portrait-1", "screen-tall-1")
 
 
+def is_portrait_pair_pattern(pattern_id: str) -> bool:
+    return pattern_id == PORTRAIT_PAIR_PATTERN
+
+
 def layout_kind_from_pattern(pattern_id: str) -> LayoutKind:
     if is_nine_grid_pattern(pattern_id):
         return "nine"
@@ -79,6 +89,8 @@ def layout_kind_from_pattern(pattern_id: str) -> LayoutKind:
         return "six"
     if is_portrait_single_pattern(pattern_id):
         return "portrait_single"
+    if is_portrait_pair_pattern(pattern_id):
+        return "portrait_pair"
     return "other"
 
 
@@ -95,6 +107,8 @@ class ScreenLayoutPlannerState:
     nine_used: int = 0
     portrait_grid8_used: int = 0
     last_kind: LayoutKind = "none"
+    last_pattern_id: str = ""
+    pattern_streak: int = 0
     layout_density: LayoutDensity = "balanced"
     pattern_counts: dict[str, int] = field(default_factory=dict)
 
@@ -189,7 +203,15 @@ class ScreenLayoutPlannerState:
             return self.last_kind not in ("six", "triple")
         if kind == "portrait_single":
             return self.last_kind != "portrait_single"
+        if kind == "portrait_pair":
+            return self.current_portrait_pair_streak() < MAX_PORTRAIT_PAIR_STREAK
         return True
+
+    def current_portrait_pair_streak(self) -> int:
+        """R-06 · 已连续出屏的 portrait-2 数（供批量出屏路径取种子）。"""
+        if self.last_pattern_id == PORTRAIT_PAIR_PATTERN:
+            return self.pattern_streak
+        return 0
 
     def note_screen(self, pattern_id: str) -> None:
         if pattern_id:
@@ -198,6 +220,11 @@ class ScreenLayoutPlannerState:
         if kind == "nine":
             self.nine_used += 1
         self.last_kind = kind if kind != "other" else "other"
+        if pattern_id and pattern_id == self.last_pattern_id:
+            self.pattern_streak += 1
+        else:
+            self.pattern_streak = 1 if pattern_id else 0
+        self.last_pattern_id = pattern_id or ""
 
 
 NineGridPlannerState = ScreenLayoutPlannerState

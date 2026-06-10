@@ -12,7 +12,7 @@ from travelogue.curation.layout_search import _screens_signature
 from travelogue.curation.mosaic.compose import pick_best_five_window
 
 
-def test_pick_best_five_stable_signature():
+def test_pick_best_five_stable_signature(lte_pattern_enabled):
     ids, aspects, assets_map = build_mosaic_five_2p3l_window()
     cfg = MosaicConfig(
         enabled=True,
