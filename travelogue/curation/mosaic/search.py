@@ -57,21 +57,6 @@ def _collect_asset_ids_from_chapter(ch: dict) -> list[str]:
     return out
 
 
-def _preferred_hero_for_bucket(
-    bucket: list[str],
-    asset_to_ch: dict[str, str],
-    hero_by_ch: dict[str, str],
-    assets_by_id: dict[str, dict],
-    *,
-    median_sharp: float | None = None,
-) -> str | None:
-    from travelogue.curation.screen_planner_attach import _preferred_hero_for_bucket as _pick
-
-    return _pick(
-        bucket, asset_to_ch, hero_by_ch, assets_by_id, median_sharp=median_sharp
-    )
-
-
 def _apply_winning_plan_to_state(
     layout_state: ScreenLayoutPlannerState | None,
     screens: list[dict],
@@ -159,6 +144,8 @@ def replan_day_buckets_beam(
         filtered = [a for a in bucket if a not in gallery_asset_ids and a not in skip]
         if not filtered:
             continue
+        from travelogue.curation.screen_planner_attach import _preferred_hero_for_bucket
+
         preferred_hero = _preferred_hero_for_bucket(
             filtered, asset_to_ch, hero_by_ch, assets_by_id, median_sharp=med_sharp
         )

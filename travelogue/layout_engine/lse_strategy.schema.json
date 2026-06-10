@@ -154,22 +154,42 @@
         "consecutive_bans": {
           "type": "array",
           "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["kinds", "blocked"],
-            "properties": {
-              "kinds": {
-                "type": "array",
-                "minItems": 2,
-                "maxItems": 2,
-                "items": {
-                  "type": "string",
-                  "enum": ["none", "nine", "triple", "six", "portrait_single", "other"]
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kinds", "blocked"],
+                "properties": {
+                  "kinds": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": {
+                      "type": "string",
+                      "enum": ["none", "nine", "triple", "six", "portrait_single", "portrait_pair", "other"]
+                    }
+                  },
+                  "blocked": { "type": "boolean" }
                 }
               },
-              "blocked": { "type": "boolean" }
-            }
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["pattern", "max_streak"],
+                "description": "R-06 · per-pattern consecutive streak cap (排版规则优化 v0.5)",
+                "properties": {
+                  "pattern": { "type": "string" },
+                  "max_streak": { "type": "integer", "minimum": 1 }
+                }
+              }
+            ]
           }
+        },
+        "portrait_orientation_max_streak": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 6,
+          "description": "R-08 · 全竖版屏朝向连续上限（排版规则优化 v0.5）"
         },
         "portrait_grid8_min_photos": {
           "type": "integer",

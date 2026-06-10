@@ -18,7 +18,7 @@ from travelogue.curation.mosaic.main_eligibility import (
     pick_best_main_eligible,
     screen_main_slot_eligible,
 )
-from travelogue.curation.mosaic.registry import default_registry
+from travelogue.curation.mosaic.pattern_catalog import default_registry
 from travelogue.curation.mosaic.scorer import score_candidate
 
 

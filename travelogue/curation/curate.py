@@ -943,7 +943,6 @@ def run_curate(
     from travelogue.curation.degradation import assess_degradation
     from travelogue.curation.layout_metrics import compute_layout_metrics
     from travelogue.curation.layout_scoring import ScoringWeights, resolve_scoring_weights
-    from travelogue.curation.layout_search import maybe_replan_chapters
 
     layout_cfg = app_cfg.layout
     pipe_status = (trip.get("pipeline") or {}).get("status") or ""
@@ -970,72 +969,41 @@ def run_curate(
 
         scoring_weights = merge_cohort_weight(scoring_weights, app_cfg.cohort)
     intent_peak = peak_chapter_hints_for_trip(trip, len(non_empty_buckets))
-    if app_cfg.mosaic.enabled:
-        from travelogue.curation.mosaic.trip import compose_trip
+    # 统一 beam 入口（架构收敛 A3）：mosaic 开/关均走 compose_trip，
+    # deterministic_strict 与 meta 标注由 compose_trip 内部按 mosaic.enabled 选择。
+    from travelogue.curation.mosaic.trip import compose_trip
 
-        chapters, replan_meta = compose_trip(
-            chapters,
-            buckets=non_empty_buckets,
-            aspects=aspects,
-            assets=layout_assets,
-            app_cfg=app_cfg,
-            scoring_enabled=layout_cfg.scoring.enabled,
-            weights=scoring_weights,
-            beam_width=layout_cfg.scoring.beam_width,
-            degradation=degradation,
-            arc_mode=cur_cfg.arc_mode,
-            arc_profile=arc_profile,
-            chapter_heroes=chapter_heroes,
-            orientation_summary=summary_dict,
-            skip_screen_asset_ids=skip_screen_ids,
-            mixed_proximity_seconds=layout_cfg.mixed_proximity_seconds,
-            trip_photo_total=len(layout_assets),
-            search_timeout_ms=layout_cfg.scoring.search_timeout_ms,
-            max_candidates_per_bucket=layout_cfg.scoring.max_candidates_per_bucket,
-            max_evaluations_per_trip=layout_cfg.scoring.max_evaluations_per_trip,
-            allow_burst_split=layout_cfg.scoring.allow_burst_split,
-            subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
-            enable_food_grid=cur_cfg.enable_food_grid,
-            mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
-            intent_peak_chapters=intent_peak,
-            enable_gravity_balance=cur_cfg.enable_gravity_balance,
-            max_consecutive_same_pattern=cur_cfg.max_consecutive_same_pattern,
-            skip_duplicate_signatures=layout_cfg.scoring.skip_duplicate_signatures,
-            incremental_scoring=layout_cfg.scoring.incremental,
-            max_evaluations_per_segment=layout_cfg.scoring.max_evaluations_per_segment,
-        )
-    else:
-        chapters, replan_meta = maybe_replan_chapters(
-            chapters,
-            buckets=non_empty_buckets,
-            aspects=aspects,
-            assets=layout_assets,
-            scoring_enabled=layout_cfg.scoring.enabled,
-            weights=scoring_weights,
-            beam_width=layout_cfg.scoring.beam_width,
-            degradation=degradation,
-            arc_mode=cur_cfg.arc_mode,
-            arc_profile=arc_profile,
-            chapter_heroes=chapter_heroes,
-            orientation_summary=summary_dict,
-            skip_screen_asset_ids=skip_screen_ids,
-            mixed_proximity_seconds=layout_cfg.mixed_proximity_seconds,
-            trip_photo_total=len(layout_assets),
-            search_timeout_ms=layout_cfg.scoring.search_timeout_ms,
-            max_candidates_per_bucket=layout_cfg.scoring.max_candidates_per_bucket,
-            max_evaluations_per_trip=layout_cfg.scoring.max_evaluations_per_trip,
-            allow_burst_split=layout_cfg.scoring.allow_burst_split,
-            subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
-            enable_food_grid=cur_cfg.enable_food_grid,
-            mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
-            intent_peak_chapters=intent_peak,
-            enable_gravity_balance=cur_cfg.enable_gravity_balance,
-            max_consecutive_same_pattern=cur_cfg.max_consecutive_same_pattern,
-            skip_duplicate_signatures=layout_cfg.scoring.skip_duplicate_signatures,
-            deterministic_strict=app_cfg.clustering.deterministic_strict,
-            incremental_scoring=layout_cfg.scoring.incremental,
-            max_evaluations_per_segment=layout_cfg.scoring.max_evaluations_per_segment,
-        )
+    chapters, replan_meta = compose_trip(
+        chapters,
+        buckets=non_empty_buckets,
+        aspects=aspects,
+        assets=layout_assets,
+        app_cfg=app_cfg,
+        scoring_enabled=layout_cfg.scoring.enabled,
+        weights=scoring_weights,
+        beam_width=layout_cfg.scoring.beam_width,
+        degradation=degradation,
+        arc_mode=cur_cfg.arc_mode,
+        arc_profile=arc_profile,
+        chapter_heroes=chapter_heroes,
+        orientation_summary=summary_dict,
+        skip_screen_asset_ids=skip_screen_ids,
+        mixed_proximity_seconds=layout_cfg.mixed_proximity_seconds,
+        trip_photo_total=len(layout_assets),
+        search_timeout_ms=layout_cfg.scoring.search_timeout_ms,
+        max_candidates_per_bucket=layout_cfg.scoring.max_candidates_per_bucket,
+        max_evaluations_per_trip=layout_cfg.scoring.max_evaluations_per_trip,
+        allow_burst_split=layout_cfg.scoring.allow_burst_split,
+        subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
+        enable_food_grid=cur_cfg.enable_food_grid,
+        mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
+        intent_peak_chapters=intent_peak,
+        enable_gravity_balance=cur_cfg.enable_gravity_balance,
+        max_consecutive_same_pattern=cur_cfg.max_consecutive_same_pattern,
+        skip_duplicate_signatures=layout_cfg.scoring.skip_duplicate_signatures,
+        incremental_scoring=layout_cfg.scoring.incremental,
+        max_evaluations_per_segment=layout_cfg.scoring.max_evaluations_per_segment,
+    )
     if engine == LAYOUT_ENGINE_SCREENS:
         from travelogue.curation.chapter_items import (
             collect_displayed_asset_ids,
@@ -1312,12 +1280,17 @@ def run_curate(
     if apply_layout and engine == LAYOUT_ENGINE_SCREENS:
         from travelogue.curation.layout_constraints import run_rhythm_postcheck
 
+        rhythm_mode = app_cfg.layout.rhythm.post_check_mode
         rhythm_summary, rhythm_viol = run_rhythm_postcheck(
-            chapters, mode="log", trip_id=trip.get("tripId")
+            chapters,
+            mode=rhythm_mode,
+            trip_id=trip.get("tripId"),
+            max_pair_streak=app_cfg.layout.rhythm.max_portrait_pair_streak,
+            max_orientation_streak=app_cfg.layout.rhythm.max_portrait_orientation_streak,
         )
         if rhythm_viol:
             warnings.append(
-                f"节奏 post-check（log）：{len(rhythm_viol)} 处违规 {rhythm_summary}"
+                f"节奏 post-check（{rhythm_mode}）：{len(rhythm_viol)} 处违规 {rhythm_summary}"
             )
 
     if trip_dir is not None:

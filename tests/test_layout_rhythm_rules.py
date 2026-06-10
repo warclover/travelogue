@@ -150,6 +150,60 @@ def test_run_rhythm_postcheck_counts_and_logs(caplog):
     assert any("post-check" in rec.message for rec in caplog.records)
 
 
+# --- R-08 · 朝向 streak 状态 + 规划期强制换气 ---
+
+
+def test_state_orientation_streak_and_budget():
+    st = ScreenLayoutPlannerState(nine_min=0, nine_max=1)
+    assert st.orientation_budget() == 6
+    for _ in range(3):
+        st.note_screen("screen-portrait-2")
+    assert st.portrait_orientation_streak == 3
+    assert st.orientation_budget() == 3
+    st.note_screen("screen-landscape-1")
+    assert st.portrait_orientation_streak == 0
+    assert st.orientation_budget() == 6
+
+
+def test_planner_r08_forces_landscape_break():
+    """16 竖 + 2 横：全竖屏连续 ≤6，横版被强制提前换气，且不丢图。"""
+    from travelogue.curation.screen_planner import plan_screens_for_chapter
+
+    ids = [f"p{i}" for i in range(16)] + ["l1", "l2"]
+    aspects = {aid: ("portrait" if aid.startswith("p") else "landscape") for aid in ids}
+    state = ScreenLayoutPlannerState.from_trip_total(40)
+    screens = plan_screens_for_chapter(
+        ids,
+        aspects,
+        chapter_id="ch-r08",
+        layout_state=state,
+        enable_mosaic=False,
+        include_chapter_hero=False,
+    )
+    assert not check_portrait_orientation_streak([{"id": "ch", "screens": screens}])
+    total = sum(len(sc.get("slots") or []) for sc in screens)
+    assert total == len(ids)
+
+
+def test_planner_r08_pure_portrait_run_still_covers_all():
+    """纯竖版章（无横版可换气）：R-08 无法满足时保证全覆盖不死锁。"""
+    from travelogue.curation.screen_planner import plan_screens_for_chapter
+
+    ids = [f"p{i}" for i in range(16)]
+    aspects = {aid: "portrait" for aid in ids}
+    state = ScreenLayoutPlannerState.from_trip_total(40)
+    screens = plan_screens_for_chapter(
+        ids,
+        aspects,
+        chapter_id="ch-r08-pure",
+        layout_state=state,
+        enable_mosaic=False,
+        include_chapter_hero=False,
+    )
+    total = sum(len(sc.get("slots") or []) for sc in screens)
+    assert total == len(ids)
+
+
 def test_run_rhythm_postcheck_breath_transparent():
     # R-07: breath between pairs must not reset the streak — still a violation.
     pids = [

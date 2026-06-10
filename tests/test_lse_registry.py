@@ -21,7 +21,8 @@ def test_default_strategy_pack_validates() -> None:
 def test_get_default_strategy_pack() -> None:
     pack = get_strategy_pack("lse-default-2026-06")
     assert pack.id == "lse-default-2026-06"
-    assert pack.version == 1
+    # v2 · PR-6 接线 rhythm.consecutive_bans / R-06 / R-08（排版规则优化 A2）
+    assert pack.version == 2
     assert pack.weights_hash("default").startswith("sha256:")
 
 

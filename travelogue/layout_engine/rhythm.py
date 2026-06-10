@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from travelogue.curation.layout_density import LayoutDensity, LayoutDensityParams
 from travelogue.curation.screen_layout_state import (
+    DEFAULT_CONSECUTIVE_BANS,
+    PORTRAIT_PAIR_PATTERN,
+    RhythmRules,
     ScreenLayoutPlannerState,
     portrait_grid8_max_for_trip,
 )
@@ -46,6 +49,49 @@ def nine_grid_limits_for_trip_from_pack(
     return lo, hi
 
 
+def rhythm_rules_from_pack(pack: StrategyPack) -> RhythmRules:
+    """接线 pack rhythm.consecutive_bans / 阈值 → RhythmRules（PR-6）。
+
+    - ``{ kinds: [a, b], blocked: true }`` 行 → (last_kind, next_kind) 禁令对；
+    - ``{ pattern: screen-portrait-2, max_streak: N }`` 行 → R-06 上限；
+    - ``portrait_orientation_max_streak`` → R-08 上限。
+    未声明的字段回退 config.layout.rhythm / 代码默认（与既有硬编码等价）。
+    """
+    base = RhythmRules.from_config()
+    rhythm = pack.raw.get("rhythm") or {}
+    rows = rhythm.get("consecutive_bans")
+    bans: set[tuple[str, str]] = set()
+    pair_max = base.max_portrait_pair_streak
+    declared_bans = False
+    if isinstance(rows, list):
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            kinds = row.get("kinds")
+            if isinstance(kinds, list) and len(kinds) == 2:
+                declared_bans = True
+                if bool(row.get("blocked", True)):
+                    bans.add((str(kinds[0]), str(kinds[1])))
+                continue
+            if str(row.get("pattern") or "") == PORTRAIT_PAIR_PATTERN:
+                try:
+                    pair_max = int(row.get("max_streak", pair_max))
+                except (TypeError, ValueError):
+                    pass
+    orientation_max = base.max_portrait_orientation_streak
+    try:
+        orientation_max = int(
+            rhythm.get("portrait_orientation_max_streak", orientation_max)
+        )
+    except (TypeError, ValueError):
+        pass
+    return RhythmRules(
+        max_portrait_pair_streak=pair_max,
+        max_portrait_orientation_streak=orientation_max,
+        consecutive_bans=frozenset(bans) if declared_bans else DEFAULT_CONSECUTIVE_BANS,
+    )
+
+
 def layout_state_from_pack(
     total_photos: int,
     pack: StrategyPack,
@@ -64,4 +110,5 @@ def layout_state_from_pack(
         nine_max=hi,
         portrait_grid8_max=pg8_max,
         layout_density=params.density,
+        rhythm=rhythm_rules_from_pack(pack),
     )

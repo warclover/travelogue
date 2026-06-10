@@ -337,41 +337,6 @@ def try_mixed_portrait_landscape(
     return True
 
 
-def try_mosaic_five(ctx: ChapterPlanContext, start: int) -> bool:
-    from travelogue.config import get_config
-    from travelogue.curation.mosaic.hook import try_mosaic_window
-    from travelogue.curation.screen_planner import (
-        MIN_TRIP_PHOTOS_FOR_MOSAIC,
-        _can_mosaic_5_main_portrait_3land,
-        _make_mosaic_5_main_portrait_3land_screen,
-    )
-
-    if not ctx.enable_mosaic:
-        return False
-    mosaic_cfg = get_config().mosaic
-    if 5 not in mosaic_cfg.enabled_window_sizes:
-        return False
-    if mosaic_cfg.enabled:
-        return try_mosaic_window(ctx, start) == 5
-    if ctx.trip_total < MIN_TRIP_PHOTOS_FOR_MOSAIC:
-        return False
-    if ctx.pending_portraits or start + 4 >= len(ctx.ids):
-        return False
-    ordered = _can_mosaic_5_main_portrait_3land(
-        ctx.ids[start : start + 5],
-        ctx.aspects,
-        ctx.assets_map,
-        burst_seconds=ctx.mix_gap,
-        median_sharp=ctx.med_sharp,
-    )
-    if not ordered:
-        return False
-    append_screen(
-        ctx, _make_mosaic_5_main_portrait_3land_screen(ordered, assets_map=ctx.assets_map)
-    )
-    return True
-
-
 def try_drain_portrait_grid8(ctx: ChapterPlanContext) -> bool:
     from travelogue.curation.screen_planner import (
         _can_portrait_grid8_window,
@@ -577,6 +542,16 @@ def try_food_grid(ctx: ChapterPlanContext) -> int | None:
     return try_mundane_grid(ctx)
 
 
+def _has_orientation_break_ahead(ctx: ChapterPlanContext) -> bool:
+    """R-08 · 当前游程之后是否还有非竖版资产可用于换气。"""
+    from travelogue.curation.screen_planner import _family_kind
+
+    return any(
+        _family_kind(ctx.aspects.get(aid, "square")) != "portrait"
+        for aid in ctx.ids[ctx.i :]
+    )
+
+
 def _drain_portrait_run_pair_first(ctx: ChapterPlanContext) -> None:
     """Tile a collected portrait run pair-first (portrait-2 > portrait-3 > portrait-1).
 
@@ -586,21 +561,57 @@ def _drain_portrait_run_pair_first(ctx: ChapterPlanContext) -> None:
     two-column pair even when it mixes a person + scenery shot. Pairs are
     preferred, with a single triple absorbing any odd remainder; a lone portrait
     is only ever produced as a last resort.
+
+    R-08 · 当后方仍有横版可换气时，本次 drain 不超过朝向 streak 预算，
+    余量留在 pending，待 ``stage_flush_pending_for_other_family`` 先出横版
+    换气后再继续（强制插入换气屏，见 PRD 排版规则优化 §4.2）。
     """
     from travelogue.curation.screen_planner import (
         _flush_portrait_pending,
         _is_std_portrait_id,
+        _tile_portrait_run,
     )
 
     std = [a for a in ctx.pending_portraits if _is_std_portrait_id(a, ctx.aspects)]
     if len(std) < 3:
         return
+    state = ctx.layout_state
+    drain_ids: list[str] | None = None  # None → 全量 drain
+    if state is not None and _has_orientation_break_ahead(ctx):
+        budget = state.orientation_budget()
+        if budget <= 0:
+            return  # 触顶：等主循环先出横版换气
+        groups = _tile_portrait_run(
+            len(std),
+            seed_pair_streak=state.current_portrait_pair_streak(),
+            max_pair_streak=state.rhythm.max_portrait_pair_streak,
+        )
+        if len(groups) > budget:
+            take = sum(groups[:budget])
+            if take < 2:
+                return
+            drain_ids = std[:take]
     # force=True: the portrait run is fully collected, so there is no later
     # portrait to batch with — bypass the consecutive-pattern variety ban so a
     # 3-group stays a clean triple (never degraded to pair + lone single) and
     # consecutive pairs from a 4/6-run are emitted as-is.
+    if drain_ids is None:
+        for sc in _flush_portrait_pending(
+            ctx.pending_portraits,
+            ctx.aspects,
+            assets_map=ctx.assets_map,
+            layout_state=ctx.layout_state,
+            force=True,
+            solo_exclude=ctx.skip_screen_asset_ids,
+        ):
+            append_screen(ctx, sc)
+        return
+    # R-08 部分 drain：只消化预算内的张数，剩余保序回填 pending。
+    head = list(drain_ids)
+    drained = set(drain_ids)
+    rest = [a for a in ctx.pending_portraits if a not in drained]
     for sc in _flush_portrait_pending(
-        ctx.pending_portraits,
+        head,
         ctx.aspects,
         assets_map=ctx.assets_map,
         layout_state=ctx.layout_state,
@@ -608,6 +619,8 @@ def _drain_portrait_run_pair_first(ctx: ChapterPlanContext) -> None:
         solo_exclude=ctx.skip_screen_asset_ids,
     ):
         append_screen(ctx, sc)
+    # head 中未能落屏（被 defer）的余片排在 rest 前，保持时间序。
+    ctx.pending_portraits[:] = head + rest
 
 
 def _finish_portrait_pending_tail(ctx: ChapterPlanContext) -> int | None:
@@ -625,6 +638,13 @@ def _finish_portrait_pending_tail(ctx: ChapterPlanContext) -> int | None:
         if try_mixed_portrait_landscape(ctx, p_id, l1, l2):
             ctx.pending_portraits.clear()
             return 2
+    if (
+        ctx.layout_state is not None
+        and ctx.layout_state.orientation_budget() <= 0
+        and _has_orientation_break_ahead(ctx)
+    ):
+        # R-08 触顶且后方有横版可换气：tail 留在 pending，待换气后消化。
+        return None
     if len(ctx.pending_portraits) == 2:
         pair = [a for a in ctx.pending_portraits if _is_std_portrait_id(a, ctx.aspects)]
         if pair and all(asset_has_person(ctx.assets_map.get(aid, {})) for aid in pair):
@@ -673,11 +693,32 @@ def stage_portrait_family(ctx: ChapterPlanContext) -> int | None:
 
 
 def stage_flush_pending_for_other_family(ctx: ChapterPlanContext, fam: str) -> int | None:
-    """Flush pending portraits before non-portrait asset; may consume mixed pair."""
-    from travelogue.curation.screen_planner import _flush_portrait_pending
+    """Flush pending portraits before non-portrait asset; may consume mixed pair.
+
+    R-08 · 朝向 streak 触顶时先出当前横版换气（强制插入），pending 竖版
+    留待换气屏之后继续消化。
+    """
+    from travelogue.curation.screen_planner import _flush_portrait_pending, _make_screen
 
     if not ctx.pending_portraits:
         return None
+    if (
+        fam == "landscape"
+        and ctx.layout_state is not None
+        and ctx.layout_state.orientation_budget() <= 0
+        and ctx.i < len(ctx.ids)
+    ):
+        append_screen(
+            ctx,
+            _make_screen(
+                "screen-landscape-1",
+                [ctx.ids[ctx.i]],
+                screen_id="",
+                aspects=ctx.aspects,
+                assets_map=ctx.assets_map,
+            ),
+        )
+        return 1
     if len(ctx.pending_portraits) == 1 and fam == "landscape" and ctx.i + 1 < len(ctx.ids):
         if try_mixed_portrait_landscape(
             ctx, ctx.pending_portraits[0], ctx.ids[ctx.i], ctx.ids[ctx.i + 1]

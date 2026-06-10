@@ -20,9 +20,70 @@ _PATTERN_SLOTS_RE = re.compile(r"^screen-(?:portrait|landscape|square)-(\d+)$")
 
 PORTRAIT_GRID8_MIN_PHOTOS = 50
 
+# ---------------------------------------------------------------------------
+# 节奏规则单一来源（排版规则优化 v0.5 · R-01~R-08 / V-08 / V-09）。
+# 规划期硬约束（ScreenLayoutPlannerState）与事后审计（layout_constraints）
+# 共用本模块的常量与判定，禁止在别处复制阈值。
+# ---------------------------------------------------------------------------
+
 # R-06 · 两张并排竖版（portrait-2 / person-pair 等价）连续上限。
 MAX_PORTRAIT_PAIR_STREAK = 2
+# R-08 · 同朝向（全竖版屏）连续上限（触顶强制换气）。
+MAX_PORTRAIT_ORIENTATION_STREAK = 6
+
 PORTRAIT_PAIR_PATTERN = "screen-portrait-2"
+PORTRAIT_PAIR_PATTERNS = frozenset({PORTRAIT_PAIR_PATTERN})
+PORTRAIT_SINGLE_PATTERNS = frozenset({"screen-portrait-1", "screen-tall-1"})
+# V-08/V-09 · 满屏竖图等价类（plate 仅 sole portrait slot 时计入，见
+# layout_constraints.is_full_bleed_portrait_screen）。
+FULL_BLEED_PORTRAIT_PATTERNS = frozenset(
+    {"screen-portrait-1", "screen-tall-1", "screen-plate"}
+)
+# R-08 · 计入「全竖版屏」朝向 streak 的 patternId。
+PORTRAIT_ORIENTATION_PATTERNS = frozenset(
+    {"screen-portrait-1", "screen-portrait-2", "screen-portrait-3", "screen-tall-1"}
+)
+
+# (last_kind, next_kind) 连续禁令对 — 与历史硬编码 can_emit_pattern 等价：
+# 禁连 *-9 / *-3 / *-6、禁 *-3 与 *-6 相邻、禁连满屏竖单。
+DEFAULT_CONSECUTIVE_BANS: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("nine", "nine"),
+        ("triple", "triple"),
+        ("triple", "six"),
+        ("six", "triple"),
+        ("six", "six"),
+        ("portrait_single", "portrait_single"),
+    }
+)
+
+
+@dataclass(frozen=True)
+class RhythmRules:
+    """节奏阈值集合（默认值 = 历史硬编码，保证输出等价）。
+
+    来源优先级：LSE 策略包（rhythm 段） > config.layout.rhythm > 代码默认。
+    """
+
+    max_portrait_pair_streak: int = MAX_PORTRAIT_PAIR_STREAK
+    max_portrait_orientation_streak: int = MAX_PORTRAIT_ORIENTATION_STREAK
+    consecutive_bans: frozenset[tuple[str, str]] = DEFAULT_CONSECUTIVE_BANS
+
+    @classmethod
+    def from_config(cls, cfg=None) -> RhythmRules:
+        try:
+            from travelogue.config import get_config
+
+            app = cfg if cfg is not None else get_config()
+        except Exception:
+            return cls()
+        rhythm = getattr(getattr(app, "layout", None), "rhythm", None)
+        if rhythm is None:
+            return cls()
+        return cls(
+            max_portrait_pair_streak=int(rhythm.max_portrait_pair_streak),
+            max_portrait_orientation_streak=int(rhythm.max_portrait_orientation_streak),
+        )
 
 
 def pattern_slot_count(pattern_id: str) -> int | None:
@@ -72,12 +133,18 @@ def is_six_grid_pattern(pattern_id: str) -> bool:
     return pattern_slot_count(pattern_id) == 6
 
 
-def is_portrait_single_pattern(pattern_id: str) -> bool:
-    return pattern_id in ("screen-portrait-1", "screen-tall-1")
+def is_portrait_single_pattern(pattern_id: str | None) -> bool:
+    return pattern_id in PORTRAIT_SINGLE_PATTERNS
 
 
-def is_portrait_pair_pattern(pattern_id: str) -> bool:
-    return pattern_id == PORTRAIT_PAIR_PATTERN
+def is_portrait_pair_pattern(pattern_id: str | None) -> bool:
+    """R-06 · 两张竖版并排（含 person-pair 等价 patternId）。"""
+    return pattern_id in PORTRAIT_PAIR_PATTERNS
+
+
+def is_portrait_orientation_pattern(pattern_id: str | None) -> bool:
+    """R-08 · 计入「全竖版屏」朝向 streak 的 patternId。"""
+    return pattern_id in PORTRAIT_ORIENTATION_PATTERNS
 
 
 def layout_kind_from_pattern(pattern_id: str) -> LayoutKind:
@@ -109,8 +176,10 @@ class ScreenLayoutPlannerState:
     last_kind: LayoutKind = "none"
     last_pattern_id: str = ""
     pattern_streak: int = 0
+    portrait_orientation_streak: int = 0
     layout_density: LayoutDensity = "balanced"
     pattern_counts: dict[str, int] = field(default_factory=dict)
+    rhythm: RhythmRules = field(default_factory=RhythmRules)
 
     @classmethod
     def from_trip_total(
@@ -119,6 +188,7 @@ class ScreenLayoutPlannerState:
         *,
         density: LayoutDensity | None = None,
         density_params: LayoutDensityParams | None = None,
+        rhythm: RhythmRules | None = None,
     ) -> ScreenLayoutPlannerState:
         lo, hi = nine_grid_limits_for_trip(total_photos)
         params = density_params or LayoutDensityParams(density=density or "balanced")
@@ -128,6 +198,7 @@ class ScreenLayoutPlannerState:
             nine_max=hi,
             portrait_grid8_max=portrait_grid8_max_for_trip(total_photos),
             layout_density=params.density,
+            rhythm=rhythm if rhythm is not None else RhythmRules.from_config(),
         )
 
     @classmethod
@@ -139,7 +210,11 @@ class ScreenLayoutPlannerState:
         app_cfg=None,
     ) -> ScreenLayoutPlannerState:
         params = layout_density_params(trip, app_cfg=app_cfg)
-        return cls.from_trip_total(total_photos, density_params=params)
+        return cls.from_trip_total(
+            total_photos,
+            density_params=params,
+            rhythm=RhythmRules.from_config(app_cfg),
+        )
 
     @property
     def min_count(self) -> int:
@@ -195,16 +270,15 @@ class ScreenLayoutPlannerState:
         if max_ch is not None and self.pattern_counts.get(pattern_id, 0) >= max_ch:
             return False
         kind = layout_kind_from_pattern(pattern_id)
-        if kind == "nine":
-            return self.can_use_nine()
-        if kind == "triple":
-            return self.last_kind not in ("triple", "six")
-        if kind == "six":
-            return self.last_kind not in ("six", "triple")
-        if kind == "portrait_single":
-            return self.last_kind != "portrait_single"
+        if kind == "nine" and self.nine_used >= self.nine_max:
+            return False
+        if (self.last_kind, kind) in self.rhythm.consecutive_bans:
+            return False
         if kind == "portrait_pair":
-            return self.current_portrait_pair_streak() < MAX_PORTRAIT_PAIR_STREAK
+            return (
+                self.current_portrait_pair_streak()
+                < self.rhythm.max_portrait_pair_streak
+            )
         return True
 
     def current_portrait_pair_streak(self) -> int:
@@ -212,6 +286,14 @@ class ScreenLayoutPlannerState:
         if self.last_pattern_id == PORTRAIT_PAIR_PATTERN:
             return self.pattern_streak
         return 0
+
+    def orientation_budget(self) -> int:
+        """R-08 · 触发强制换气前还允许连续出的「全竖版屏」数。"""
+        return max(
+            0,
+            self.rhythm.max_portrait_orientation_streak
+            - self.portrait_orientation_streak,
+        )
 
     def note_screen(self, pattern_id: str) -> None:
         if pattern_id:
@@ -225,7 +307,9 @@ class ScreenLayoutPlannerState:
         else:
             self.pattern_streak = 1 if pattern_id else 0
         self.last_pattern_id = pattern_id or ""
-
-
-NineGridPlannerState = ScreenLayoutPlannerState
+        # R-08 · 朝向 streak：全竖版屏累计，任何其他 content pattern 打断。
+        if pattern_id and is_portrait_orientation_pattern(pattern_id):
+            self.portrait_orientation_streak += 1
+        elif pattern_id:
+            self.portrait_orientation_streak = 0
 

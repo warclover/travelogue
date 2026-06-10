@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from travelogue.config import AppConfig
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.curation.screen_layout_state import RhythmRules, ScreenLayoutPlannerState
 from travelogue.curation.screen_planner import (
     DEFAULT_FEATURED_WEIGHT,
     LAYOUT_ENGINE_SCREENS,
     _collect_asset_ids_from_chapter,
     _sort_asset_ids_by_taken,
 )
-from travelogue.layout_engine.adapter import ChapterPlanContext, plan_chapter_screens
+from travelogue.layout_engine.adapter import ChapterPlanRequest, plan_chapter_screens
 from travelogue.media.image_ops import AspectKind
 
 
@@ -51,6 +51,31 @@ def _preferred_hero_for_bucket(
 # Cross-day-bucket carry: a lone portrait may flow forward up to this many
 # subsequent day buckets trying to pair before it is force-emitted as a single.
 _PORTRAIT_CARRY_MAX_HOPS = 3
+
+
+def _rebuild_layout_state(
+    base: ScreenLayoutPlannerState,
+    noted_patterns: list[str],
+) -> ScreenLayoutPlannerState:
+    """AC-RHY-05 · 以「实际落章屏」重放节奏 state，剔除被 carry 延期屏的污染。
+
+    被 defer 的单竖在规划期已 note_screen；这里用 kept 屏序列重建配额与
+    streak，使后续天桶的节奏判定与最终阅读序一致（V-08/V-10）。
+    """
+    from travelogue.curation.screen_planner import PATTERN_PORTRAIT_GRID_8
+
+    state = ScreenLayoutPlannerState(
+        nine_min=base.nine_min,
+        nine_max=base.nine_max,
+        portrait_grid8_max=base.portrait_grid8_max,
+        layout_density=base.layout_density,
+        rhythm=base.rhythm,
+    )
+    for pid in noted_patterns:
+        state.note_screen(pid)
+        if pid == PATTERN_PORTRAIT_GRID_8:
+            state.note_portrait_grid8()
+    return state
 
 
 def _carry_inject_ids(
@@ -132,7 +157,7 @@ def _flush_portrait_carry_tail(
     if not carry:
         return
     tail_screens = plan_chapter_screens(
-        ChapterPlanContext(
+        ChapterPlanRequest(
             carry,
             aspects,
             chapter_id="day",
@@ -228,6 +253,7 @@ def attach_screens_day_buckets(
         layout_state = ScreenLayoutPlannerState.from_trip_total(
             trip_photo_total,
             density=layout_density or "balanced",
+            rhythm=RhythmRules.from_config(cfg),
         )
     seq_per_ch: dict[str, int] = {}
     gallery_asset_ids: set[str] = set()
@@ -235,6 +261,7 @@ def attach_screens_day_buckets(
         if ch.get("patternId") == "gallery":
             gallery_asset_ids.update(_collect_asset_ids_from_chapter(ch))
 
+    noted_patterns_gallery: list[str] = []
     for ch in out:
         if ch.get("patternId") != "gallery":
             continue
@@ -243,7 +270,7 @@ def attach_screens_day_buckets(
             continue
         sorted_aids = _sort_asset_ids_by_taken(aids, assets_by_id)
         gal_screens = plan_chapter_screens(
-            ChapterPlanContext(
+            ChapterPlanRequest(
                 sorted_aids,
                 aspects,
                 chapter_id=ch["id"],
@@ -260,10 +287,15 @@ def attach_screens_day_buckets(
             cfg=cfg,
         )
         ch["screens"] = gal_screens
+        noted_patterns_gallery.extend(
+            str(sc.get("patternId") or "") for sc in gal_screens
+        )
 
     carry: list[str] = []
     carry_age: dict[str, int] = {}
     hero_ids = {h for h in hero_by_ch.values() if h}
+    # AC-RHY-05 · 实际落章屏 pattern 序（不含被 defer 的 carry 单竖）。
+    noted_patterns: list[str] = list(noted_patterns_gallery)
 
     for bucket in day_buckets:
         filtered = [a for a in bucket if a not in gallery_asset_ids and a not in skip]
@@ -306,7 +338,7 @@ def attach_screens_day_buckets(
         plan_ids = _carry_inject_ids(bucket, carry, aspects)
         try:
             bucket_screens = plan_chapter_screens(
-                ChapterPlanContext(
+                ChapterPlanRequest(
                     plan_ids,
                     aspects,
                     chapter_id="day",
@@ -361,6 +393,15 @@ def attach_screens_day_buckets(
             screen = dict(sc)
             screen["screenId"] = f"{ch_id}-sc-{seq_per_ch[ch_id]:02d}"
             ch_by_id[ch_id]["screens"].append(screen)
+        noted_patterns.extend(
+            str(sc.get("patternId") or "")
+            for sc in bucket_screens
+            if id(sc) not in deferred
+        )
+        if deferred:
+            # AC-RHY-05 · 被 defer 的单竖落章前不应计入节奏 state：
+            # 用 kept 屏序列重放，消除 streak / 配额污染。
+            layout_state = _rebuild_layout_state(layout_state, noted_patterns)
         carry = next_carry
         carry_age = next_carry_age
 
@@ -462,6 +503,7 @@ def attach_screens_to_chapters(
         layout_state = ScreenLayoutPlannerState.from_trip_total(
             trip_photo_total,
             density=layout_density or "balanced",
+            rhythm=RhythmRules.from_config(cfg),
         )
 
     out: list[dict] = []
@@ -472,7 +514,7 @@ def attach_screens_to_chapters(
         if asset_ids:
             hero_id = (ch.get("curation") or {}).get("heroAssetId")
             ch["screens"] = plan_chapter_screens(
-                ChapterPlanContext(
+                ChapterPlanRequest(
                     asset_ids,
                     aspects,
                     chapter_id=ch.get("id", "ch"),

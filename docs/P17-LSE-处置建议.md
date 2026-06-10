@@ -4,9 +4,9 @@
 |------|------|
 | **文档类型** | 工程处置 / 产品结论 |
 | **范围** | Phase 17 Layout Strategy Engine（LSE）及 9 项 capability |
-| **版本** | v1.0 |
-| **日期** | 2026-06-08 |
-| **状态** | **已采纳：代码保留现状，能力默认关闭，不作产品卖点** |
+| **版本** | v1.1 |
+| **日期** | 2026-06-10 |
+| **状态** | **已采纳并执行：CAP 能力 FROZEN（代码保留、默认全关、不再扩展）**；有价值配置入口（rhythm 阈值/consecutive_bans、pattern 黑名单、stage 开关）已收编进主干 `layout.rhythm` / `RhythmRules`（排版规则优化 2026-06-10，见 [IMPLEMENTATION-排版规则优化.md](./IMPLEMENTATION-排版规则优化.md)） |
 | **关联** | [PRD-PHASE17-layout-strategy-engine.md](./PRD-PHASE17-layout-strategy-engine.md)、[PRD-智能排版开关页.md](./PRD-智能排版开关页.md)、[acceptance-records/lse-flags-admin.md](./acceptance-records/lse-flags-admin.md) |
 | **证据脚本** | `scripts/lse_flags_curate_compare.py`、`scripts/lse_flags_preview_ablate.py` |
 

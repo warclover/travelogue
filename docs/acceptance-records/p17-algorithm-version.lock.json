@@ -1,7 +1,7 @@
 {
   "strategyId": "lse-default-2026-06",
-  "strategyVersion": 1,
+  "strategyVersion": 2,
   "algorithmVersion": "p15-s3",
-  "contentHash": "sha256:8347371bf444f6af",
-  "notes": "p15-s3: R-MAIN-AR-01 main_ar_ineligible penalty on default scoring profile (AC-P17-13)."
+  "contentHash": "sha256:5ae76ec71492b330",
+  "notes": "v2: 排版规则优化 PR-6 — rhythm.consecutive_bans 接线 parity 补全（triple/triple、six/six）+ R-06 pattern max_streak + R-08 portrait_orientation_max_streak（AC-P17-13）。"
 }

@@ -21,7 +21,13 @@ from travelogue.layout_engine.rhythm import layout_state_from_pack
 
 
 @dataclass
-class ChapterPlanContext:
+class ChapterPlanRequest:
+    """plan_chapter_screens 的入参 DTO（只读请求）。
+
+    注意：与 screen_planner_stages.ChapterPlanContext（规划期可变状态）不同层，
+    为避免同名混淆于 2026-06 重命名。
+    """
+
     asset_ids: list[str]
     aspects: dict[str, AspectKind]
     chapter_id: str = "ch"
@@ -150,16 +156,20 @@ def layout_state_for_trip(
 
         params = LayoutDensityParams(density=density or "balanced")  # type: ignore[arg-type]
         return layout_state_from_pack(total_photos, active, density_params=params)
-    from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+    from travelogue.curation.screen_layout_state import (
+        RhythmRules,
+        ScreenLayoutPlannerState,
+    )
 
     return ScreenLayoutPlannerState.from_trip_total(
         total_photos,
         density=density or "balanced",  # type: ignore[arg-type]
+        rhythm=RhythmRules.from_config(cfg),
     )
 
 
 def plan_chapter_screens(
-    ctx: ChapterPlanContext,
+    ctx: ChapterPlanRequest,
     *,
     cfg: AppConfig | None = None,
     pack: StrategyPack | None = None,

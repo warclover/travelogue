@@ -51,7 +51,26 @@ class LayoutFeedbackConfig:
 
 
 @dataclass
+class LayoutRhythmConfig:
+    """排版规则优化 v0.5 · 节奏阈值（G-07 可配置；默认 = 规划器既有硬编码）。
+
+    单一来源：travelogue/curation/screen_layout_state.py 的 RhythmRules 读取本段；
+    LSE 策略包 rhythm 段（启用时）优先级更高。
+    """
+
+    max_portrait_pair_streak: int = 2  # R-06 · portrait-2 连续上限
+    max_portrait_orientation_streak: int = 6  # R-08 · 全竖版屏朝向连续上限
+    post_check_mode: str = "log"  # log | enforce（OQ-09=B 渐进；CI 断言见 tests/test_rhythm_ci_gate.py）
+
+
+@dataclass
 class LayoutStrategyCapabilitiesConfig:
+    """P17 LSE CAP 能力开关 · FROZEN（2026-06 处置建议路线 A）。
+
+    消融实测屏级变更率 0~4%，观感收益未证明：保留代码与开关、默认全关，
+    不再扩展新能力；复评门槛见 docs/P17-LSE-处置建议.md §5。
+    """
+
     saliency_scoring: bool = False
     beat_profile: str = "flat"
     tone_harmony: bool = False
@@ -116,6 +135,7 @@ class LayoutConfig:
     screen_plan_scope: str = "day"  # chapter | day — day = 按策展日桶全序列组屏
     mixed_proximity_seconds: float = 12.0  # 1竖+2横混排 takenAt 跨度上限
     layout_density_enabled: bool = True  # PRD-FINE-CRAFT-LAYOUT-DENSITY · false → balanced
+    rhythm: LayoutRhythmConfig = field(default_factory=LayoutRhythmConfig)
     template_engine: LayoutTemplateEngineConfig = field(default_factory=LayoutTemplateEngineConfig)
     strategy_engine: LayoutStrategyEngineConfig = field(default_factory=LayoutStrategyEngineConfig)
     scoring: LayoutScoringConfig = field(default_factory=LayoutScoringConfig)
@@ -184,6 +204,28 @@ def layout_template_engine_from_dict(raw: dict[str, Any]) -> LayoutTemplateEngin
         overrides_disable=disable,
         diversity_mode=div_mode,
         diversity_lambda=div_lambda,
+    )
+
+
+def layout_rhythm_from_dict(raw: dict[str, Any]) -> LayoutRhythmConfig:
+    defaults = LayoutRhythmConfig()
+    mode = str(raw.get("post_check_mode", defaults.post_check_mode)).strip().lower()
+    if mode not in ("log", "enforce"):
+        mode = defaults.post_check_mode
+    return LayoutRhythmConfig(
+        max_portrait_pair_streak=int(
+            raw.get("max_portrait_pair_streak", defaults.max_portrait_pair_streak)
+        ),
+        max_portrait_orientation_streak=int(
+            raw.get(
+                "max_portrait_orientation_streak",
+                raw.get(
+                    "portrait_orientation_max_streak",
+                    defaults.max_portrait_orientation_streak,
+                ),
+            )
+        ),
+        post_check_mode=mode,
     )
 
 

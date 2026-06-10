@@ -2,8 +2,8 @@
 
 | 属性 | 内容 |
 |------|------|
-| **版本** | v1.6 |
-| **日期** | 2026-06-05 |
+| **版本** | v1.8 |
+| **日期** | 2026-06-10 |
 | **关联** | [ARCHITECTURE-OVERVIEW.md](./ARCHITECTURE-OVERVIEW.md) · [ADR-007](./adr/007-native-clustering.md) |
 
 本文档为算法清单的**可检索附录**：§1 为自研启发式与可选依赖对照；§2 为「文件路径 → 公开/核心函数」索引（`_` 前缀内部函数仅列关键入口相关项）。
@@ -75,7 +75,9 @@
 | 三分法 / 饱和度封面加成 | native | ✅ | — | `curate_scoring` |
 | 桶内排序（burst·scene run·时间） | native | ✅ | — | `cluster_run_sort` |
 | 贪心逐屏规划 legacy | native | ✅ | — | `screen_planner` |
-| Beam Search 日桶重排 | native | ❌ | — | `scoring.enabled` + `beam_width` |
+| 节奏规则（R-06/R-08/V-08/V-09 · 单一来源） | native | ✅ | — | `screen_layout_state.RhythmRules` · `layout.rhythm`（策略包可覆盖） |
+| Beam Search 日桶重排 | native | ❌ | — | `scoring.enabled` + `beam_width` · **入口已收编**：统一经 `mosaic/trip.compose_trip`，V2 独立分支已删除 |
+| LSE 策略包（pattern 黑名单/stage 开关/rhythm 覆盖） | native | ❌（默认关） | — | `layout.strategy.*` · CAP 能力 **FROZEN**（默认全 false，不再扩展，见 [P17-LSE-处置建议](./P17-LSE-处置建议.md)） |
 | 多维加权 layout 打分 | native | ✅ | — | `layout_scoring` |
 | Mosaic 窗口枚举 + 打分 | native | ✅ | — | `mosaic/*` · Phase 15 |
 | 搜索预算 / 超时 | native | ✅ | — | `search_budget` |
@@ -217,7 +219,9 @@
 | | `score_gravity_balance` | 视觉重心连续 |
 | | `score_screen_plan` | 全章加权总分 |
 | | `rank_screens` | 候选排序 |
-| `layout_search.py` | `maybe_replan_chapters` | beam 重排入口 |
+| `layout_search.py` | `maybe_replan_chapters` | beam 重排（已收编：仅由 `compose_trip` 内部调用，curate 不再直连） |
+| `screen_layout_state.py` | `RhythmRules` / `ScreenLayoutPlannerState` | 节奏规则单一来源（R-06/R-08 streak、consecutive_bans、pattern 等价类） |
+| `layout_constraints.py` | `audit_rhythm_violations` / `run_rhythm_postcheck` | 节奏事后审计（log/enforce，常量引自 screen_layout_state） |
 | `search_budget.py` | `SearchBudget` | 超时/评估配额 |
 | `screen_planner.py` | `_plan_one_screen` | 贪心单屏 |
 | | `plan_screens_for_chapter` | **章内组屏主入口** |
@@ -319,8 +323,9 @@ run_curate                → curation/curate.py
   ├ apply_aesthetic_ml_calibration → aesthetic_score.py（可选 PA-4）
   ├ run_photo_cull        → photo_cull.py (+ photo_cull_ml.py)
   ├ pick_cover / hero     → curate_scoring.py（U-COVER / U-HERO）
-  ├ plan_screens_*        → screen_planner.py（U-SOLO 整屏大图）
-  └ maybe_replan_chapters → layout_search.py → mosaic/search.py
+  ├ plan_screens_*        → screen_planner.py（U-SOLO 整屏大图 · RhythmRules 硬约束）
+  ├ compose_trip          → mosaic/trip.py（统一 beam 入口 → maybe_replan_chapters → mosaic/search.py）
+  └ run_rhythm_postcheck  → layout_constraints.py（节奏审计 · layout.rhythm.post_check_mode）
 Studio GET …/aesthetic    → web/studio_aesthetic.py（PA-T10 explain）
 ```
 
@@ -338,3 +343,4 @@ Studio GET …/aesthetic    → web/studio_aesthetic.py（PA-T10 explain）
 | v1.5 | 2026-06-05 | PA-T10：Studio 审美 explain API + 预览抽屉展示 |
 | v1.6 | 2026-06-05 | PA-T11：清单补全（§1.4 审美闸口 · §2.1 ingest · §2.4/2.5/2.7 全 PA 函数 · 管线速查） |
 | v1.7 | 2026-06-05 | 验收脚本 + purpose presets + ingest aestheticMs + mosaic U-SOLO |
+| v1.8 | 2026-06-10 | 排版规则优化收口：节奏规则单一来源（RhythmRules）+ `layout.rhythm` 配置化；beam 入口统一为 `compose_trip`（V2 独立分支删除）；LSE CAP 标注 FROZEN；死代码清理（try_mosaic_five / NineGridPlannerState / mosaic/registry.py 等） |

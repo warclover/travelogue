@@ -43,10 +43,11 @@ def compose_trip(
     incremental_scoring: bool = False,
 ) -> tuple[list[dict], dict[str, Any]]:
     """
-    Replan chapters via beam when mosaic is enabled.
+    Trip-level beam replan · 统一入口（curate 不再区分 mosaic 开/关分支）。
 
     Window-level MCS already ran during ``build_chapters_from_buckets``; this pass
-    applies segment beam with mosaic ``deterministic_strict`` when configured.
+    applies segment beam via ``maybe_replan_chapters``. ``deterministic_strict``
+    取 mosaic（enabled 时）或 clustering 的配置；mosaic meta 标注仅在 enabled 时附加。
     """
     from travelogue.curation.layout_search import maybe_replan_chapters
 
@@ -83,6 +84,7 @@ def compose_trip(
         deterministic_strict=det,
         incremental_scoring=incremental_scoring,
     )
-    meta["mosaicEnabled"] = mosaic.enabled
-    meta["mosaicScorerVersion"] = mosaic.scorer_version
+    if mosaic.enabled:
+        meta["mosaicEnabled"] = True
+        meta["mosaicScorerVersion"] = mosaic.scorer_version
     return chapters, meta

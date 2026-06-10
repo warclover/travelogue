@@ -2,7 +2,7 @@
 # Schema: travelogue/layout_engine/lse_strategy.schema.json
 
 id: lse-default-2026-06
-version: 1
+version: 2
 status: ga
 algorithm_version: p15-s3
 displayName: 默认智能排版策略
@@ -27,11 +27,17 @@ rhythm:
     - { max_photos: 100, min: 2, max: 5 }
     - { max_photos: 200, min: 4, max: 8 }
     - { max_photos: 999999, min: 6, max: 10 }
+  # 已接线（rhythm_rules_from_pack）：与 screen_layout_state.DEFAULT_CONSECUTIVE_BANS
+  # 保持 parity；修改本段会直接改变规划期硬约束。
   consecutive_bans:
     - { kinds: [nine, nine], blocked: true }
+    - { kinds: [triple, triple], blocked: true }
     - { kinds: [triple, six], blocked: true }
     - { kinds: [six, triple], blocked: true }
+    - { kinds: [six, six], blocked: true }
     - { kinds: [portrait_single, portrait_single], blocked: true }
+    - { pattern: screen-portrait-2, max_streak: 2 }   # R-06
+  portrait_orientation_max_streak: 6                  # R-08 全竖版屏连续上限
   portrait_grid8_min_photos: 50
 
 slot_assignment:

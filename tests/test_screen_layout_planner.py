@@ -28,7 +28,6 @@ from travelogue.curation.screen_planner import (
     PATTERN_PORTRAIT_1_LANDSCAPE_2,
     PATTERN_PORTRAIT_GRID_8,
     PERSON_LAYOUT_GRID_8,
-    NineGridPlannerState,
     ScreenLayoutPlannerState,
     attach_screens_day_buckets,
     attach_screens_to_chapters,
@@ -432,7 +431,7 @@ def _nine_patterns(screens: list[dict]) -> list[str]:
 def test_trip_under_50_allows_at_most_one_nine_grid():
     ids = [f"l{i}" for i in range(18)]
     aspects = _aspects(ids, {x: "landscape" for x in ids})
-    state = NineGridPlannerState.from_trip_total(40)
+    state = ScreenLayoutPlannerState.from_trip_total(40)
     screens = plan_screens_for_chapter(
         ids, aspects, chapter_id="ch-cap", layout_state=state
     )
@@ -495,7 +494,7 @@ def test_trip_200_plus_caps_nine_and_no_consecutive():
         for i, aid in enumerate(ids)
     }
     aspects = _aspects(ids, {x: "landscape" for x in ids})
-    state = NineGridPlannerState.from_trip_total(220)
+    state = ScreenLayoutPlannerState.from_trip_total(220)
     screens = plan_screens_for_chapter(
         ids,
         aspects,

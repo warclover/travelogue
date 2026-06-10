@@ -23,7 +23,6 @@ from travelogue.curation.layout_planner import (
 )
 from travelogue.curation.screen_layout_state import (  # noqa: F401 — re-exported API
     MAX_PORTRAIT_PAIR_STREAK,
-    NineGridPlannerState,
     ScreenLayoutPlannerState,
     is_nine_grid_pattern,
     is_portrait_single_pattern,
@@ -710,12 +709,18 @@ def _person_portrait_ids(buf: list[str], assets_map: dict[str, dict]) -> list[st
     return [a for a in buf if asset_has_person(assets_map.get(a, {}))]
 
 
-def _tile_portrait_run(n: int, *, seed_pair_streak: int = 0) -> list[int]:
+def _tile_portrait_run(
+    n: int,
+    *,
+    seed_pair_streak: int = 0,
+    max_pair_streak: int = MAX_PORTRAIT_PAIR_STREAK,
+) -> list[int]:
     """竖版游程分组（pair-first + R-06 + R-02）。
 
     返回每屏吃图数序列（2=双列, 3=三列, 1=单列兜底）：
     - 优先双列（pair-first）；
-    - 连续双列不超过 ``MAX_PORTRAIT_PAIR_STREAK``（R-06），触顶或会被逼入死角时用三列打断；
+    - 连续双列不超过 ``max_pair_streak``（R-06，默认 2，G-07 可配置），
+      触顶或会被逼入死角时用三列打断；
     - 不连续三列（R-02）；
     - 仅在收尾无法成对时落单列（1）。
     ``seed_pair_streak`` 为跨 flush 已累计的连续双列数。
@@ -740,8 +745,8 @@ def _tile_portrait_run(n: int, *, seed_pair_streak: int = 0) -> list[int]:
             n = 0
             continue
         # n >= 4：判断是否需要用三列打断（触顶，或成对后会把恰好 2 张逼到顶）。
-        corner_after_pair = (n - 2 == 2) and (streak + 1 >= MAX_PORTRAIT_PAIR_STREAK)
-        if (streak >= MAX_PORTRAIT_PAIR_STREAK or corner_after_pair) and not last_was_triple:
+        corner_after_pair = (n - 2 == 2) and (streak + 1 >= max_pair_streak)
+        if (streak >= max_pair_streak or corner_after_pair) and not last_was_triple:
             groups.append(3)
             n -= 3
             streak = 0
@@ -774,7 +779,12 @@ def _emit_person_portrait_screens(
     seed = (
         layout_state.current_portrait_pair_streak() if layout_state is not None else 0
     )
-    for size in _tile_portrait_run(len(buf), seed_pair_streak=seed):
+    pair_max = (
+        layout_state.rhythm.max_portrait_pair_streak
+        if layout_state is not None
+        else MAX_PORTRAIT_PAIR_STREAK
+    )
+    for size in _tile_portrait_run(len(buf), seed_pair_streak=seed, max_pair_streak=pair_max):
         if size == 3:
             trio = buf[:3]
             buf = buf[3:]
@@ -967,6 +977,29 @@ def _flush_portrait_pending(
 
     person_buf = _person_portrait_ids(buf, assets_map)
     scenery_buf = [a for a in buf if a not in person_buf]
+
+    # V-08 收紧：恰好 1 人物 + 1 风景竖版时合并为一屏双列，
+    # 避免 person/scenery 分流各出一张连续竖单（如 carry 尾部 asset-001/003）。
+    if len(person_buf) == 1 and len(scenery_buf) == 1:
+        if (
+            force
+            or layout_state is None
+            or layout_state.can_emit_pattern("screen-portrait-2")
+        ):
+            screens.append(
+                _make_screen(
+                    "screen-portrait-2",
+                    list(buf),
+                    screen_id="",
+                    aspects=aspects,
+                    assets_map=assets_map,
+                )
+            )
+        else:
+            pending.extend(buf)
+        buf.clear()
+        return screens
+
     buf.clear()
     buf.extend(scenery_buf)
 
@@ -987,7 +1020,12 @@ def _flush_portrait_pending(
     seed = (
         layout_state.current_portrait_pair_streak() if layout_state is not None else 0
     )
-    for size in _tile_portrait_run(len(buf), seed_pair_streak=seed):
+    pair_max = (
+        layout_state.rhythm.max_portrait_pair_streak
+        if layout_state is not None
+        else MAX_PORTRAIT_PAIR_STREAK
+    )
+    for size in _tile_portrait_run(len(buf), seed_pair_streak=seed, max_pair_streak=pair_max):
         if size == 3:
             trio = buf[:3]
             placed = _plan_portrait_triple_row(

@@ -18,7 +18,7 @@ def pick_main_for_pattern(
         main_ar_guard_enabled,
         pick_best_main_eligible,
     )
-    from travelogue.curation.mosaic.registry import default_registry
+    from travelogue.curation.mosaic.pattern_catalog import default_registry
     from travelogue.curation.mosaic.runtime import get_effective_mosaic_config
     from travelogue.curation.screen_planner import _is_landscape_id, _pick_main_landscape_id
 

@@ -80,7 +80,7 @@ def _mosaic_winner_has_main_role(
     median_sharp: float | None,
 ) -> bool:
     """True when MCS would consume the window with a pattern that inlines a main hero slot."""
-    from travelogue.curation.mosaic.registry import default_registry
+    from travelogue.curation.mosaic.pattern_catalog import default_registry
 
     pick = pick_best_window(
         window,
@@ -136,11 +136,6 @@ def chapter_should_skip_hero_for_mosaic(ctx: ChapterPlanContext) -> bool:
         burst_seconds=ctx.mix_gap,
         median_sharp=ctx.med_sharp,
     )
-
-
-def chapter_has_mosaic_five_candidates(ctx: ChapterPlanContext) -> bool:
-    """Backward-compatible alias."""
-    return chapter_should_skip_hero_for_mosaic(ctx)
 
 
 def drain_mosaic_logs() -> list[dict]:

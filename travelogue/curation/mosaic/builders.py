@@ -22,7 +22,7 @@ from travelogue.curation.mosaic.constants import (
     PATTERN_PORTRAIT_GRID_8,
 )
 from travelogue.curation.mosaic.lte_adapter import read_templates_from_lte
-from travelogue.curation.mosaic.registry import MosaicPattern
+from travelogue.curation.mosaic.pattern_catalog import MosaicPattern
 from travelogue.curation.screen_planner import (
     PERSON_LAYOUT_TRIPLE,
     _can_mixed_p1_l2,

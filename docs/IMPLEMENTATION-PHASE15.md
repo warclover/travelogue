@@ -349,6 +349,8 @@ python scripts/phase15_curate_replay.py golden-mixed-scenes --fixture \
 | 编排 | `run_curate` → `mosaic.compose_trip`；beam 旧入口 `maybe_replan_chapters` 保留为 re-export |
 | 薄包装保留 API | `maybe_replan_chapters`、`generate_day_bucket_candidates`、`try_mosaic_five`（legacy 路径） |
 
+> **SUPERSEDED（2026-06-10 · 排版规则优化）**：`try_mosaic_five` 及兼容别名已删除（死代码）；`maybe_replan_chapters` 不再作为 curate 直连入口，统一经 `compose_trip` 调用；`mosaic/registry.py` re-export 已删除（直接引用 `pattern_catalog`）。见 [IMPLEMENTATION-排版规则优化.md](./IMPLEMENTATION-排版规则优化.md)。
+
 ---
 
 ## 风险与缓解

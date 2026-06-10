@@ -6,6 +6,14 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
+from travelogue.curation.screen_layout_state import (
+    MAX_PORTRAIT_ORIENTATION_STREAK,
+    MAX_PORTRAIT_PAIR_STREAK,
+    PORTRAIT_SINGLE_PATTERNS,
+    is_portrait_orientation_pattern,
+    is_portrait_pair_pattern,
+)
+
 _log = logging.getLogger(__name__)
 
 
@@ -202,33 +210,14 @@ def layout_is_valid(chapters: list[dict], **kwargs: Any) -> bool:
 
 
 # --- 排版规则优化 v0.5 · 节奏 post-check（PRD R-06 / R-08 / V-08 / V-09） ---
-
-MAX_PORTRAIT_PAIR_STREAK = 2  # R-06
-MAX_PORTRAIT_ORIENTATION_STREAK = 6  # R-08
-
-_PORTRAIT_PAIR_PATTERNS = frozenset({"screen-portrait-2"})
-_FULL_BLEED_PORTRAIT_PATTERNS = frozenset(
-    {"screen-portrait-1", "screen-tall-1", "screen-plate"}
-)
-_PORTRAIT_ORIENTATION_PATTERNS = frozenset(
-    {"screen-portrait-1", "screen-portrait-2", "screen-portrait-3", "screen-tall-1"}
-)
-
-
-def is_portrait_pair_pattern(pattern_id: str | None) -> bool:
-    """R-06 · 两张竖版并排（含 person-pair 等价 patternId）。"""
-    return pattern_id in _PORTRAIT_PAIR_PATTERNS
-
-
-def is_portrait_orientation_pattern(pattern_id: str | None) -> bool:
-    """R-08 · 计入「全竖版屏」朝向 streak 的 patternId。"""
-    return pattern_id in _PORTRAIT_ORIENTATION_PATTERNS
+# 常量与 pattern 判定的单一来源在 screen_layout_state（与规划期硬约束同源），
+# 此处仅做事后审计，禁止再复制阈值。
 
 
 def is_full_bleed_portrait_screen(screen: dict) -> bool:
     """V-08/V-09 · 满屏竖图等价类：portrait-1 / tall-1 / 单竖 plate。"""
     pid = str(screen.get("patternId") or "")
-    if pid in ("screen-portrait-1", "screen-tall-1"):
+    if pid in PORTRAIT_SINGLE_PATTERNS:
         return True
     if pid == "screen-plate":
         # plate 仅当唯一槽位为竖图时计入（sole portrait slot）

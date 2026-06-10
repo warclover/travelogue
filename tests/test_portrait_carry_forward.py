@@ -99,6 +99,41 @@ def test_single_lone_portrait_still_rendered() -> None:
     assert set(_collect_asset_ids_from_chapter(out[0])) == {"pa"}
 
 
+def test_flush_pairs_one_person_with_one_scenery_portrait() -> None:
+    """V-08 收紧：1 人物 + 1 风景竖版边界 flush 合并双列，不出两张连续竖单。"""
+    from travelogue.curation.screen_planner import _flush_portrait_pending
+
+    aspects = {"pp": "portrait", "ps": "portrait"}
+    assets = {
+        "pp": {"id": "pp", "tags": ["person"]},
+        "ps": {"id": "ps"},
+    }
+    pending = ["pp", "ps"]
+    screens = _flush_portrait_pending(
+        pending, aspects, assets_map=assets, force=True
+    )
+    assert [sc["patternId"] for sc in screens] == ["screen-portrait-2"]
+    assert {s["assetId"] for s in screens[0]["slots"]} == {"pp", "ps"}
+    assert pending == []
+
+
+def test_rebuild_layout_state_excludes_deferred_screens() -> None:
+    """AC-RHY-05 · 被 carry defer 的竖单不计入节奏 state（重放 kept 屏）。"""
+    from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+    from travelogue.curation.screen_planner_attach import _rebuild_layout_state
+
+    base = ScreenLayoutPlannerState.from_trip_total(60)
+    # 规划期 note 了 landscape + 被 defer 的 portrait-1（污染 streak）。
+    base.note_screen("screen-landscape-1")
+    base.note_screen("screen-portrait-1")
+    assert base.portrait_orientation_streak == 1
+    rebuilt = _rebuild_layout_state(base, ["screen-landscape-1"])
+    assert rebuilt.portrait_orientation_streak == 0
+    assert rebuilt.last_kind != "portrait_single"
+    assert rebuilt.can_emit_pattern("screen-portrait-1")
+    assert rebuilt.pattern_counts.get("screen-portrait-1") is None
+
+
 def test_featured_lone_portrait_is_not_carried() -> None:
     chapters = [_chapter("ch-a", ["pa"]), _chapter("ch-b", ["pb"])]
     aspects = {"pa": "portrait", "pb": "portrait"}

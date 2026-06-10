@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from travelogue.curation.mosaic.builders import build_screen, try_order_for_pattern
 from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
-from travelogue.curation.mosaic.registry import default_registry
+from travelogue.curation.mosaic.pattern_catalog import default_registry
 
 
 def _asset(aid: str, *, w: int, h: int) -> dict:
