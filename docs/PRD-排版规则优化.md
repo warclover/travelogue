@@ -131,7 +131,7 @@ flowchart TB
 
 | ID | 规则 | 状态 |
 |----|------|------|
-| **V-01** | 连续标准竖版游程瓦片：`2→[2]`、`3→[3]`、`4→[2,2]`、`5→[2,3]`、`6→[2,2,2]`… | **保留** |
+| **V-01** | 连续标准竖版游程瓦片（pair-first，受 R-06 约束）：`2→[2]`、`3→[3]`、`4→[2,2]`、`5→[2,3]`、`6→[2,3,1]`、`7→[2,2,3]`、`8→[2,2,3,1]`…（纯竖版游程内，R-06 触顶用三列打断；有横版可插时见 V-07①/R-08） | **保留**（R-06 后由 `_tile_portrait_run` 统一裁决） |
 | **V-02** | 全竖版窗口不走 `portrait-4/6/9` 密集宫格 | **保留** |
 | **V-03** | 人物竖版：`person-pair` / `person-triple`；不单列成屏（余片除外） | **保留** |
 | **V-04** | 孤张竖版优先 `screen-portrait-1-landscape-2`（1P+2L，时间邻近） | **保留** |
@@ -282,7 +282,7 @@ rhythm:
 
 | 阶段 | 范围 | 风险 | 验收 |
 |------|------|------|------|
-| **P0** | R-06 + V-06/V-07：portrait-2 streak；flush 去 blanket force | 低 | demo-2025-2 ch-01 |
+| **P0** ✅ | R-06 + V-06 + V-07（②triple/④single 消化）；`_tile_portrait_run` 统一裁决；force 不豁免 R-06；post-check 检测函数 | 低 | **已验**：demo-2025-2 `portrait-2` max streak=2、`audit_rhythm_violations`=0、ch-01 两段 4 连双竖消除（2026-06-10） |
 | **P1** | V-08 收紧 + carry/state 同步 | 中 | demo-2025-2 #41–#42 |
 | **P2** | V-09/S-02：plate 与竖单 streak + folio 选人 | 中 | demo-2025-2 ch-04 开篇 |
 | **P3** | LSE 接线 + LAYOUT-PLANNER v0.5 + golden 扩展 | 低 | demo-2025、linzhi |

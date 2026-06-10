@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any
+
+_log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -234,6 +237,12 @@ def is_full_bleed_portrait_screen(screen: dict) -> bool:
     return False
 
 
+def _is_rhythm_transparent(screen: dict) -> bool:
+    """R-07 · 呼吸屏 / 章分隔 / decor 不计入也不打断 streak。"""
+    pid = str(screen.get("patternId") or "")
+    return pid.startswith("screen-breath") or pid.startswith("screen-decor")
+
+
 def _streak_violations(
     chapters: list[dict],
     *,
@@ -246,6 +255,9 @@ def _streak_violations(
     violations: list[LayoutConstraintViolation] = []
     streak = 0
     for ch_id, si, screen in _content_screens(chapters):
+        if _is_rhythm_transparent(screen):
+            # R-07: transparent — neither count nor break the streak.
+            continue
         if pred(screen):
             streak += 1
         else:
@@ -320,3 +332,49 @@ def audit_rhythm_violations(
         check_portrait_orientation_streak(chapters, max_streak=max_orientation_streak)
     )
     return violations
+
+
+RHYTHM_POSTCHECK_CODES = (
+    "portrait_pair_streak",
+    "full_bleed_portrait_consecutive",
+    "portrait_orientation_streak",
+)
+
+
+def run_rhythm_postcheck(
+    chapters: list[dict],
+    *,
+    mode: str = "log",
+    trip_id: str | None = None,
+    max_pair_streak: int = MAX_PORTRAIT_PAIR_STREAK,
+    max_orientation_streak: int = MAX_PORTRAIT_ORIENTATION_STREAK,
+) -> tuple[dict[str, int], list[LayoutConstraintViolation]]:
+    """灰度 post-check（AC-RHY-07 · OQ-09=B）：审计 R-06 / R-08 / V-09 违规。
+
+    - ``mode="log"``（默认）：仅记录日志并返回摘要，不改变规划结果（灰度观测期）。
+    - ``mode="enforce"``：返回违规供上层处理（当前与 log 行为一致，预留硬执行接口）。
+    """
+    violations = audit_rhythm_violations(
+        chapters,
+        max_pair_streak=max_pair_streak,
+        max_orientation_streak=max_orientation_streak,
+    )
+    summary: dict[str, int] = {code: 0 for code in RHYTHM_POSTCHECK_CODES}
+    for v in violations:
+        summary[v.code] = summary.get(v.code, 0) + 1
+    if violations:
+        _log.warning(
+            "layout rhythm post-check (mode=%s) trip=%s violations=%s",
+            mode,
+            trip_id or "?",
+            summary,
+        )
+        for v in violations:
+            _log.info(
+                "  rhythm violation: %s ch=%s screen=%s · %s",
+                v.code,
+                v.chapter_id,
+                v.screen_index,
+                v.message,
+            )
+    return summary, violations

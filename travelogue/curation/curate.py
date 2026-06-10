@@ -1308,6 +1308,18 @@ def run_curate(
     if n_breath:
         warnings.append(f"卷轴呼吸屏 · 插入 {n_breath} 屏（叙事弧驱动）")
 
+    # AC-RHY-07 · 节奏 post-check（灰度先 log，OQ-09=B）：R-06 / R-08 / V-09 观测。
+    if apply_layout and engine == LAYOUT_ENGINE_SCREENS:
+        from travelogue.curation.layout_constraints import run_rhythm_postcheck
+
+        rhythm_summary, rhythm_viol = run_rhythm_postcheck(
+            chapters, mode="log", trip_id=trip.get("tripId")
+        )
+        if rhythm_viol:
+            warnings.append(
+                f"节奏 post-check（log）：{len(rhythm_viol)} 处违规 {rhythm_summary}"
+            )
+
     if trip_dir is not None:
         attach_chapter_explain(trip, trip_dir=trip_dir)
 

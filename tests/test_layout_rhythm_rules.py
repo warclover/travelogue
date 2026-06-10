@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from travelogue.curation.layout_constraints import (
+    RHYTHM_POSTCHECK_CODES,
     audit_rhythm_violations,
     check_full_bleed_portrait_consecutive,
     check_portrait_orientation_streak,
     check_portrait_pair_streak,
     max_consecutive_pattern_streak,
+    run_rhythm_postcheck,
 )
 from travelogue.curation.screen_layout_state import (
     MAX_PORTRAIT_PAIR_STREAK,
@@ -124,3 +126,48 @@ def test_audit_rhythm_violations_aggregate():
 def test_max_consecutive_pattern_streak_ignores_breaks():
     pids = ["screen-portrait-2", "screen-portrait-3", "screen-portrait-2"]
     assert max_consecutive_pattern_streak([_screen(p) for p in pids]) == 1
+
+
+# --- AC-RHY-07 post-check telemetry (灰度 log) ---
+
+
+def test_run_rhythm_postcheck_clean():
+    summary, viol = run_rhythm_postcheck(
+        _chapters(["screen-portrait-2", "screen-portrait-3", "screen-portrait-2"])
+    )
+    assert viol == []
+    assert summary == {code: 0 for code in RHYTHM_POSTCHECK_CODES}
+
+
+def test_run_rhythm_postcheck_counts_and_logs(caplog):
+    import logging
+
+    chapters = _chapters(["screen-portrait-2"] * 3)
+    with caplog.at_level(logging.WARNING, logger="travelogue.curation.layout_constraints"):
+        summary, viol = run_rhythm_postcheck(chapters, mode="log", trip_id="t-01")
+    assert summary["portrait_pair_streak"] == 1
+    assert len(viol) == 1
+    assert any("post-check" in rec.message for rec in caplog.records)
+
+
+def test_run_rhythm_postcheck_breath_transparent():
+    # R-07: breath between pairs must not reset the streak — still a violation.
+    pids = [
+        "screen-portrait-2",
+        "screen-portrait-2",
+        "screen-breath-pause",
+        "screen-portrait-2",
+    ]
+    chapters = [
+        {
+            "id": "ch-01",
+            "screens": [
+                {"patternId": "screen-portrait-2", "slots": [{"assetId": "a"}]},
+                {"patternId": "screen-portrait-2", "slots": [{"assetId": "a"}]},
+                {"patternId": "screen-breath-pause", "slots": []},
+                {"patternId": "screen-portrait-2", "slots": [{"assetId": "a"}]},
+            ],
+        }
+    ]
+    summary, viol = run_rhythm_postcheck(chapters)
+    assert summary["portrait_pair_streak"] == 1, (pids, viol)
