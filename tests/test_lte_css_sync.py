@@ -109,3 +109,61 @@ def test_journal_has_portrait_stage_tokens_and_dense_grid_overlays(journal_css: 
     assert "--portrait-stage-vh:" in overlays
     assert "layout-screen__grid--mosaic-" in overlays
     assert "layout-screen__grid--2x2 .layout-slot__img--cover" in overlays
+
+
+@pytest.mark.unit
+def test_universal_portrait_contain_row_rules(journal_css: str) -> None:
+    """All 2/3-up contain rows share top-anchor + intrinsic height overrides."""
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert "Universal portrait contain rows" in overlays
+    assert ':not([data-layout-hint="person-pair"])' in overlays
+    assert '.layout-screen__grid--2col:has(.layout-slot__img--contain)' in overlays
+    assert '.layout-screen__grid--3col:has(.layout-slot__img--contain)' in overlays
+    assert "grid-template-rows: auto;" in overlays
+    assert "grid-template-rows: repeat(2, auto)" in overlays
+    assert ".layout-screen__grid--3x2:has(.layout-slot__img--contain)" in overlays
+    assert ".layout-slot > .layout-slot__img--contain" in overlays
+    assert "object-position: top center" in overlays
+
+
+@pytest.mark.unit
+def test_portrait_pair_screen_collapses_stage(journal_css: str) -> None:
+    """screen-portrait-2 + person-pair must not keep phantom grid rows / vertical padding."""
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert '[data-pattern="screen-portrait-2"]:not([data-layout-hint])' in overlays
+    assert "grid-template-rows: auto;" in overlays
+    assert 'padding: 0 var(--portrait-row-inset);' in overlays
+
+
+@pytest.mark.unit
+def test_portrait_quad_2x2_contain_collapses_stage(journal_css: str) -> None:
+    """screen-portrait-4 (2×2 contain) must drop the forced 9:16 stage box.
+
+    Regression for consecutive two-portrait-pair collages reading as one tall
+    box with large top/bottom blank.
+    """
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert (
+        '[data-pattern="screen-portrait-4"]:not([data-layout-hint])'
+        ":has(.layout-slot__img--contain)" in overlays
+    )
+    assert '.layout-screen__grid--2x2:has(.layout-slot__img--contain)' in overlays
+    assert "aspect-ratio: unset;" in overlays
+
+
+@pytest.mark.unit
+def test_mosaic_portrait_contain_top_anchor(journal_css: str) -> None:
+    """Regression: hero mosaic bottom tiles use contain + top center, not focal stretch."""
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert "layout-screen__grid--mosaic-5-main-hero-plus-4" in overlays
+    assert "grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto" in overlays
+    assert ":not([data-role=\"main\"]) .layout-slot__img--contain" in overlays
+    assert "object-position: top center" in overlays

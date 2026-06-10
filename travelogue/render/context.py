@@ -737,8 +737,8 @@ def build_layout_screen(
         style_parts_vf = []
 
     style_parts: list[str] = list(style_parts_vf)
-    # screen-portrait-3: intrinsic row height via overlay; skip fixed stage AR.
-    skip_stage_aspect = pattern_id == "screen-portrait-3" or viewport_fit
+    # screen-portrait-2/3: intrinsic row height via overlay; skip fixed 16:9 stage AR.
+    skip_stage_aspect = pattern_id in ("screen-portrait-2", "screen-portrait-3") or viewport_fit
     if layout_geo.get("stageAspect") and not skip_stage_aspect:
         stage_aspect = str(layout_geo["stageAspect"]).replace(":", " / ")
         style_parts.append(f"--screen-aspect: {stage_aspect}")

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import shutil
 from datetime import UTC
 from pathlib import Path
@@ -582,12 +583,28 @@ def _render_trip_body(
         (out_dir / index_name).write_text(html, encoding="utf-8", newline="\n")
 
     if copy_css:
+        from travelogue.render.context import _longshot_bundle_version
+
+        bundle_version = _longshot_bundle_version(trip)
         for src, name in ((JOURNAL_CSS, "journal.css"), (JOURNAL_SCREENS_CSS, "journal-screens.css")):
             if not src.is_file():
                 raise RenderError("E_RENDER_TEMPLATE", f"missing {src.name}")
             dest = out_dir / name
             if dest.resolve() != src.resolve():
                 shutil.copy2(src, dest)
+        # Cache-bust the @import of journal-screens.css: the <link> on journal.css
+        # carries ?v=<bundle_version>, but the static @import inside journal.css does
+        # not, so browsers keep serving a stale journal-screens.css after re-renders.
+        journal_css_dest = out_dir / "journal.css"
+        if journal_css_dest.is_file():
+            css_text = journal_css_dest.read_text(encoding="utf-8")
+            busted = re.sub(
+                r'@import\s+url\(\s*["\']?journal-screens\.css(?:\?[^"\')]*)?["\']?\s*\)',
+                f'@import url("journal-screens.css?v={bundle_version}")',
+                css_text,
+            )
+            if busted != css_text:
+                journal_css_dest.write_text(busted, encoding="utf-8", newline="\n")
 
     if include_longshot is None:
         include_longshot = should_include_long_shot(

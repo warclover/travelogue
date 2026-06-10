@@ -20,7 +20,9 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-06-08: lse-flags-admin.html + first-success.js i18n in studio bundle.
 # Re-bumped 2026-06-09: Lite Copy v1.1 + Web cover-opening/closing breath bundle
 # (breath.js/breath-gsap.js/journal.css + copy-toggle/inline-edit) changed shipped bytes.
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}1459a1c7c59e"
+# Re-bumped 2026-06-10: portrait-4 (2×2) contain collapse overlay in
+# journal-screens.css removed the forced 9:16 stage box / bottom blank.
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}b9fcc4e787e6"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"
