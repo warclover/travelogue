@@ -5,6 +5,17 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
+from travelogue.layout_templates.aspect_constants import (
+    AR_LADDER,
+    AR_LADDER_TOL,
+    LANDSCAPE_AR_BLOCK_HIGH,
+    LANDSCAPE_AR_MAX,
+    LANDSCAPE_AR_MIN,
+    PORTRAIT_AR_BLOCK_HIGH,
+    PORTRAIT_AR_BLOCK_LOW,
+    PORTRAIT_AR_MAX,
+    PORTRAIT_AR_MIN,
+)
 from travelogue.layout_templates.css_gen import (
     grid_templates_for,
     slot_cells,
@@ -15,25 +26,6 @@ from travelogue.layout_templates.models import TemplateDef, TemplateSlot, Templa
 from travelogue.layout_templates.registry import get_engine
 
 ValidateMode = Literal["ci", "publish"]
-
-# §4.4 conventional AR ladder (width/height)
-AR_LADDER: tuple[float, ...] = (
-    2 / 3,
-    3 / 4,
-    1.0,
-    4 / 3,
-    3 / 2,
-    16 / 9,
-)
-AR_LADDER_TOL = 0.08
-
-PORTRAIT_AR_MIN = 0.55
-PORTRAIT_AR_MAX = 0.95
-PORTRAIT_AR_BLOCK_LOW = 0.5
-PORTRAIT_AR_BLOCK_HIGH = 1.0
-LANDSCAPE_AR_MIN = 1.25
-LANDSCAPE_AR_MAX = 2.2
-LANDSCAPE_AR_BLOCK_HIGH = 2.5
 
 
 @dataclass

@@ -12,7 +12,7 @@ from travelogue.curation.mosaic.constants import (
 )
 from travelogue.curation.mosaic.runtime import get_effective_mosaic_config
 from travelogue.curation.screen_planner import DEFAULT_FEATURED_WEIGHT
-from travelogue.layout_templates.validator import (
+from travelogue.layout_templates.aspect_constants import (
     AR_LADDER,
     AR_LADDER_TOL,
     LANDSCAPE_AR_BLOCK_HIGH,
