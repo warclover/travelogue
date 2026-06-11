@@ -1,0 +1,51 @@
+{
+  "schema": "travelogue.acceptance.p19-judge-calibration",
+  "version": 1,
+  "program": "Phase 19 · LQU",
+  "runId": "",
+  "date": "",
+  "baselineLabel": "P16-default",
+  "candidateLabel": "",
+  "vlmJudge": {
+    "promptVersion": "v1",
+    "model": "",
+    "maxScreensPerTrip": 12
+  },
+  "reviewers": [],
+  "trips": [],
+  "summary": {
+    "humanPairwiseWinRate": null,
+    "vlmPairwiseWinRate": null,
+    "agreementRate": null,
+    "agreementThreshold": 0.75,
+    "initialThreshold": 0.70,
+    "dimensionAgreement": {
+      "rhythm": null,
+      "whitespace": null,
+      "crop": null,
+      "monotony": null,
+      "book_like": null
+    },
+    "storyClarityPreferCandidatePct": null,
+    "shareIntent4PlusPct": null
+  },
+  "tripEntryTemplate": {
+    "tripId": "",
+    "humanWinner": "baseline | candidate | tie",
+    "vlmWinner": "baseline | candidate | tie",
+    "dimensionsHuman": {
+      "rhythm": "baseline | candidate | tie",
+      "whitespace": "baseline | candidate | tie",
+      "crop": "baseline | candidate | tie",
+      "monotony": "baseline | candidate | tie",
+      "book_like": "baseline | candidate | tie"
+    },
+    "storyClarity": "baseline | candidate | tie",
+    "shareIntent": 1,
+    "notes": ""
+  },
+  "reviewerVoteTemplate": {
+    "reviewerId": "",
+    "votes": []
+  }
+}

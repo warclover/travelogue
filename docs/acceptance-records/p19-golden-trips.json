@@ -1,0 +1,81 @@
+{
+  "schema": "travelogue.acceptance.p19-golden-trips",
+  "version": 1,
+  "program": "Phase 19 · LQU",
+  "updated": "2026-06-11",
+  "notes": "8 本 Layout Blind 主集 + 1 本 BSP 专项。每 Sprint Gate 与 judge 默认跑此清单。",
+  "trips": [
+    {
+      "tripId": "demo-2025",
+      "category": "portrait-heavy",
+      "gateRole": "primary",
+      "tests": ["focal", "justified-row", "rhythm"]
+    },
+    {
+      "tripId": "demo-80301df45c",
+      "category": "portrait-heavy",
+      "gateRole": "primary",
+      "tests": ["focal", "rhythm"]
+    },
+    {
+      "tripId": "demo-1506104ebf",
+      "category": "mixed",
+      "gateRole": "primary",
+      "tests": ["hard-constraints", "subset-spike", "designer-sku"]
+    },
+    {
+      "tripId": "demo-5a7c161a12",
+      "category": "mixed",
+      "gateRole": "primary",
+      "tests": ["hard-constraints", "designer-sku"]
+    },
+    {
+      "tripId": "demo-2019",
+      "category": "large-event",
+      "gateRole": "primary",
+      "tests": ["subset-tier-large", "density"]
+    },
+    {
+      "tripId": "linzhi",
+      "category": "studio",
+      "gateRole": "primary",
+      "tests": ["designer-sku", "mixed"]
+    },
+    {
+      "tripId": "chuanzang-studio",
+      "category": "studio",
+      "gateRole": "primary",
+      "tests": ["designer-sku", "mixed"]
+    },
+    {
+      "tripId": "demo-151e7b488c",
+      "category": "small-curated",
+      "gateRole": "primary",
+      "altTripId": "demo-ef0cef1d1d",
+      "tests": ["subset-tier-small", "story"]
+    },
+    {
+      "tripId": "demo-d66fe642a9",
+      "category": "bsp-surface",
+      "gateRole": "bsp",
+      "tests": ["viewport-3-2", "breath-pause", "full-frame-density"],
+      "notes": "PRD-页面优化 BSP 专项；S4 Gate 双视口截图"
+    }
+  ],
+  "baseline": {
+    "path": ".cache/book-quality/baseline",
+    "layoutPath": "P16-default",
+    "description": "screens + LTE on + LSE off + beam off（现网默认）"
+  },
+  "judge": {
+    "maxScreensPerTrip": 12,
+    "seedFields": ["tripId", "screensSignature"],
+    "dimensions": [
+      "rhythm",
+      "whitespace",
+      "crop",
+      "monotony",
+      "book_like"
+    ]
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "schema": "travelogue.acceptance.p19-sprint-gates",
+  "version": 1,
+  "program": "Phase 19 · LQU",
+  "sprints": [
+    {
+      "id": "S1",
+      "weeks": "W1-2",
+      "status": "pending",
+      "gate": {
+        "judgeRunnable": false,
+        "calibrationAgreementMin": 0.70,
+        "calibrationAgreementActual": null,
+        "focalViolations": null,
+        "judgeCropDimensionWinRateMin": 0.55,
+        "judgeCropDimensionWinRateActual": null
+      },
+      "artifacts": [
+        ".cache/book-quality/baseline/",
+        "docs/acceptance-records/p19-judge-calibration.json"
+      ]
+    },
+    {
+      "id": "S2",
+      "weeks": "W3-4",
+      "status": "pending",
+      "gate": {
+        "screenSignatureZeroDiff": false,
+        "pixelCiGreen": false
+      },
+      "artifacts": [
+        ".cache/book-quality/screens-signatures/"
+      ]
+    },
+    {
+      "id": "S3",
+      "weeks": "W5-6",
+      "status": "pending",
+      "gate": {
+        "breathViolations": null,
+        "streakViolations": null,
+        "judgeOverallWinRateMin": 0.55,
+        "judgeOverallWinRateActual": null,
+        "judgeRhythmDimensionMin": 0.60,
+        "judgeRhythmDimensionActual": null,
+        "explicitFallbackRateMax": 0.05
+      }
+    },
+    {
+      "id": "S4",
+      "weeks": "W7-8",
+      "status": "pending",
+      "gate": {
+        "portraitTripJudgeWinRateMin": 0.60,
+        "portraitTripJudgeWinRateActual": null,
+        "newPatternShareMin": 0.10,
+        "newPatternShareActual": null,
+        "bspViewport32Pass": false
+      }
+    },
+    {
+      "id": "S5",
+      "weeks": "W9-10",
+      "status": "pending",
+      "gate": {
+        "mixedTripJudgeWinRateMin": 0.60,
+        "mixedTripJudgeWinRateActual": null,
+        "designerSkuShareMin": 0.15,
+        "designerSkuShareActual": null,
+        "curateP95IncreaseMaxPct": 15,
+        "curateP95IncreaseActualPct": null
+      }
+    },
+    {
+      "id": "S6",
+      "weeks": "W11-12",
+      "status": "pending",
+      "gate": {
+        "humanBlindWinRateMin": 0.60,
+        "humanBlindWinRateActual": null,
+        "tripsWonMin": 6,
+        "tripsWonActual": null,
+        "storyClarityMin": 0.60,
+        "storyClarityActual": null,
+        "subsetReductionMedianMin": 0.25,
+        "subsetReductionMedianMax": 0.40,
+        "subsetReductionMedianActual": null
+      }
+    }
+  ]
+}
