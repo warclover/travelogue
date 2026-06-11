@@ -53,7 +53,7 @@ def test_lookup_weights_by_hash_query_api(tmp_path: Path) -> None:
 def test_strategy_trace_meta_records_weights_hash(tmp_path: Path, monkeypatch) -> None:
     store = tmp_path / "audit.json"
     monkeypatch.setattr(
-        "travelogue.layout_engine.weights_audit.DEFAULT_STORE",
+        "travelogue.layout_engine._archive.weights_audit.DEFAULT_STORE",
         store,
     )
     meta = strategy_trace_meta(_lse_enabled_cfg())

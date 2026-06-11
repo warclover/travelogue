@@ -1,4 +1,8 @@
-"""Runtime legacy grid spec resolution — LTE export when enabled (PRD R-P16-02)."""
+"""Runtime legacy grid spec resolution — LTE export when enabled (PRD R-P16-02).
+
+``_legacy_generated.py`` is a CI/codegen snapshot only (R-P19-101); runtime reads
+``get_engine().export_legacy_registry()`` when the template engine is on.
+"""
 
 from __future__ import annotations
 

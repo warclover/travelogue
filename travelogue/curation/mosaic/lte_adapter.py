@@ -11,7 +11,7 @@ def read_templates_from_lte(cfg: AppConfig | None = None) -> bool:
     te = getattr(app.layout, "template_engine", None)
     if te is None or not getattr(te, "enabled", True):
         return False
-    return bool(getattr(te, "read_templates_from_lte", False))
+    return bool(getattr(te, "read_templates_from_lte", True))
 
 
 def template_mix_requirements(pattern_id: str) -> tuple[int | None, int | None]:
@@ -23,6 +23,59 @@ def template_mix_requirements(pattern_id: str) -> tuple[int | None, int | None]:
     except KeyError:
         return None, None
     return tpl.mix_portrait, tpl.mix_landscape
+
+
+def template_matches_mix(
+    pattern_id: str,
+    mix_portrait: int,
+    mix_landscape: int,
+) -> bool:
+    """True when LTE (or legacy constants) declare exact portrait/landscape mix."""
+    if read_templates_from_lte():
+        p, l = template_mix_requirements(pattern_id)
+        if p is None or l is None:
+            return False
+        return p == mix_portrait and l == mix_landscape
+    from travelogue.curation.mosaic.constants import (
+        PATTERN_LANDSCAPE_3,
+        PATTERN_LANDSCAPE_4,
+        PATTERN_LANDSCAPE_6,
+        PATTERN_LANDSCAPE_9,
+        PATTERN_PORTRAIT_1_LANDSCAPE_2,
+        PATTERN_PORTRAIT_2_LANDSCAPE_2,
+        PATTERN_PORTRAIT_3,
+        PATTERN_PORTRAIT_4,
+        PATTERN_PORTRAIT_6,
+        PATTERN_PORTRAIT_9,
+        PATTERN_PORTRAIT_GRID_8,
+    )
+
+    legacy_mix = {
+        PATTERN_PORTRAIT_3: (3, 0),
+        PATTERN_LANDSCAPE_3: (0, 3),
+        PATTERN_PORTRAIT_1_LANDSCAPE_2: (1, 2),
+        PATTERN_PORTRAIT_2_LANDSCAPE_2: (2, 2),
+        PATTERN_PORTRAIT_4: (4, 0),
+        PATTERN_LANDSCAPE_4: (0, 4),
+        PATTERN_PORTRAIT_6: (6, 0),
+        PATTERN_LANDSCAPE_6: (0, 6),
+        PATTERN_PORTRAIT_GRID_8: (8, 0),
+        PATTERN_PORTRAIT_9: (9, 0),
+        PATTERN_LANDSCAPE_9: (0, 9),
+    }
+    return legacy_mix.get(pattern_id) == (mix_portrait, mix_landscape)
+
+
+def template_uses_mixed_p1_l2_layout(pattern_id: str) -> bool:
+    return template_matches_mix(pattern_id, 1, 2)
+
+
+def template_uses_mixed_p2_l2_layout(pattern_id: str) -> bool:
+    return template_matches_mix(pattern_id, 2, 2)
+
+
+def template_uses_portrait_grid8_layout(pattern_id: str) -> bool:
+    return template_matches_mix(pattern_id, 8, 0)
 
 
 def template_uses_main_hero_ordering(pattern_id: str) -> bool:

@@ -30,8 +30,8 @@ def _probe_regression_step(template_id: str, *, target: AdmissionTarget) -> tupl
         step["skipped"] = True
         step["reason"] = probe.get("reason")
 
-    blocks = True
-    if not probe["ok"]:
+    blocks = probe["ok"] or bool(probe.get("skipped"))
+    if not probe["ok"] and probe.get("skipped"):
         step["warnOnly"] = True
         step["ok"] = True
 

@@ -258,6 +258,10 @@ jobs:
       - name: P19 screen signature parity (unit)
         run: python -m pytest tests/test_p19_screen_signature_parity.py -m "not integration" -q --maxfail=1
 
+      - name: P19 screen signature parity (integration)
+        continue-on-error: true
+        run: python -m pytest tests/test_p19_screen_signature_parity.py -m integration -q --maxfail=1
+
       - name: P19 hard constraints (unit)
         run: python -m pytest tests/test_p19_hard_constraints.py tests/test_p19_explicit_fallback.py tests/test_p19_decision_log_rejects.py tests/test_p19_rollout_mosaic_groups.py -q --maxfail=1
 

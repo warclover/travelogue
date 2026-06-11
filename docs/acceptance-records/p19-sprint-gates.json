@@ -1,0 +1,99 @@
+{
+  "schema": "travelogue.acceptance.p19-sprint-gates",
+  "version": 1,
+  "program": "Phase 19 · LQU",
+  "updatedAt": "2026-06-11",
+  "branch": "phase19/lean-quality-uplift",
+  "note": "S2 code closure recorded; human/judge Gate metrics pending local golden trip runs.",
+  "sprints": [
+    {
+      "id": "S1",
+      "weeks": "W1-2",
+      "status": "in_progress",
+      "gate": {
+        "judgeRunnable": true,
+        "calibrationAgreementMin": 0.70,
+        "calibrationAgreementActual": null,
+        "focalViolations": 0,
+        "judgeCropDimensionWinRateMin": 0.55,
+        "judgeCropDimensionWinRateActual": null
+      },
+      "artifacts": [
+        ".cache/book-quality/baseline/",
+        "docs/acceptance-records/p19-judge-calibration.json"
+      ]
+    },
+    {
+      "id": "S2",
+      "weeks": "W3-4",
+      "status": "in_progress",
+      "gate": {
+        "screenSignatureZeroDiff": null,
+        "screenSignatureUnitParity": true,
+        "pixelCiGreen": true,
+        "lteRuntimeSingleSource": true,
+        "lseArchiveShims": true
+      },
+      "artifacts": [
+        ".cache/book-quality/screens-signatures/",
+        "tests/_golden/p19_screen_signatures.json"
+      ]
+    },
+    {
+      "id": "S3",
+      "weeks": "W5-6",
+      "status": "in_progress",
+      "gate": {
+        "breathViolations": null,
+        "streakViolations": null,
+        "judgeOverallWinRateMin": 0.55,
+        "judgeOverallWinRateActual": null,
+        "judgeRhythmDimensionMin": 0.60,
+        "judgeRhythmDimensionActual": null,
+        "explicitFallbackRateMax": 0.05,
+        "hardConstraintsCodeComplete": true
+      }
+    },
+    {
+      "id": "S4",
+      "weeks": "W7-8",
+      "status": "pending",
+      "gate": {
+        "portraitTripJudgeWinRateMin": 0.60,
+        "portraitTripJudgeWinRateActual": null,
+        "newPatternShareMin": 0.10,
+        "newPatternShareActual": null,
+        "bspViewport32Pass": false
+      }
+    },
+    {
+      "id": "S5",
+      "weeks": "W9-10",
+      "status": "pending",
+      "gate": {
+        "mixedTripJudgeWinRateMin": 0.60,
+        "mixedTripJudgeWinRateActual": null,
+        "designerSkuShareMin": 0.15,
+        "designerSkuShareActual": null,
+        "curateP95IncreaseMaxPct": 15,
+        "curateP95IncreaseActualPct": null
+      }
+    },
+    {
+      "id": "S6",
+      "weeks": "W11-12",
+      "status": "pending",
+      "gate": {
+        "humanBlindWinRateMin": 0.60,
+        "humanBlindWinRateActual": null,
+        "tripsWonMin": 6,
+        "tripsWonActual": null,
+        "storyClarityMin": 0.60,
+        "storyClarityActual": null,
+        "subsetReductionMedianMin": 0.25,
+        "subsetReductionMedianMax": 0.40,
+        "subsetReductionMedianActual": null
+      }
+    }
+  ]
+}

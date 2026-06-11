@@ -4,25 +4,17 @@ from __future__ import annotations
 
 from travelogue.curation.asset_subject import asset_has_person, portrait_fit_for_asset
 from travelogue.curation.layout_planner import AspectKind, aspect_kind_for_asset
-from travelogue.curation.mosaic.constants import (
-    PATTERN_LANDSCAPE_3,
-    PATTERN_LANDSCAPE_4,
-    PATTERN_LANDSCAPE_6,
-    PATTERN_LANDSCAPE_9,
-    PATTERN_PORTRAIT_1_LANDSCAPE_2,
-    PATTERN_PORTRAIT_2_LANDSCAPE_2,
-    PATTERN_PORTRAIT_3,
-    PATTERN_PORTRAIT_4,
-    PATTERN_PORTRAIT_6,
-    PATTERN_PORTRAIT_9,
-    PATTERN_PORTRAIT_GRID_8,
-)
+from travelogue.curation.mosaic.constants import PATTERN_PORTRAIT_3
 from travelogue.curation.mosaic.lte_adapter import (
     read_templates_from_lte,
+    template_matches_mix,
     template_mix_requirements,
     template_uses_main_hero_ordering,
     template_uses_main_hero_tile_scoring,
     template_uses_main_portrait_3land_layout,
+    template_uses_mixed_p1_l2_layout,
+    template_uses_mixed_p2_l2_layout,
+    template_uses_portrait_grid8_layout,
 )
 from travelogue.curation.mosaic.pattern_catalog import MosaicPattern
 from travelogue.curation.screen_planner import (
@@ -266,24 +258,24 @@ def try_order_for_pattern(
         )
 
     if n == 3:
-        if pattern_id == PATTERN_PORTRAIT_3 and len(portraits) >= 3:
+        if template_matches_mix(pattern_id, 3, 0) and len(portraits) >= 3:
             return _sort_asset_ids_by_taken(portraits[:3], assets_map)
-        if pattern_id == PATTERN_LANDSCAPE_3 and len(landscapes) >= 3:
+        if template_matches_mix(pattern_id, 0, 3) and len(landscapes) >= 3:
             return _sort_asset_ids_by_taken(landscapes[:3], assets_map)
-        if pattern_id == PATTERN_PORTRAIT_1_LANDSCAPE_2:
+        if template_uses_mixed_p1_l2_layout(pattern_id):
             return _order_mixed_p1_l2(
                 asset_ids, aspects, assets_map, burst_seconds=burst_seconds
             )
         return None
 
     if n == 4:
-        if pattern_id == PATTERN_PORTRAIT_2_LANDSCAPE_2:
+        if template_uses_mixed_p2_l2_layout(pattern_id):
             return _order_mixed_p2_l2(
                 asset_ids, aspects, assets_map, burst_seconds=burst_seconds
             )
-        if pattern_id == PATTERN_PORTRAIT_4 and len(portraits) >= 4:
+        if template_matches_mix(pattern_id, 4, 0) and len(portraits) >= 4:
             return _sort_asset_ids_by_taken(portraits[:4], assets_map)
-        if pattern_id == PATTERN_LANDSCAPE_4 and len(landscapes) >= 4:
+        if template_matches_mix(pattern_id, 0, 4) and len(landscapes) >= 4:
             return _sort_asset_ids_by_taken(landscapes[:4], assets_map)
         return None
 
@@ -305,14 +297,14 @@ def try_order_for_pattern(
                 pattern_id=pattern_id,
                 median_sharp=median_sharp,
             )
-        if pattern_id == PATTERN_PORTRAIT_6 and len(portraits) >= 6:
+        if template_matches_mix(pattern_id, 6, 0) and len(portraits) >= 6:
             return _sort_asset_ids_by_taken(portraits[:6], assets_map)
-        if pattern_id == PATTERN_LANDSCAPE_6 and len(landscapes) >= 6:
+        if template_matches_mix(pattern_id, 0, 6) and len(landscapes) >= 6:
             return _sort_asset_ids_by_taken(landscapes[:6], assets_map)
         return None
 
     if n == 8:
-        if pattern_id == PATTERN_PORTRAIT_GRID_8:
+        if template_uses_portrait_grid8_layout(pattern_id):
             if _can_portrait_grid8_window(
                 asset_ids, aspects, assets_map, burst_seconds=burst_seconds
             ):
@@ -320,9 +312,9 @@ def try_order_for_pattern(
         return None
 
     if n == 9:
-        if pattern_id == PATTERN_PORTRAIT_9 and len(portraits) >= 9:
+        if template_matches_mix(pattern_id, 9, 0) and len(portraits) >= 9:
             return _sort_asset_ids_by_taken(portraits[:9], assets_map)
-        if pattern_id == PATTERN_LANDSCAPE_9 and len(landscapes) >= 9:
+        if template_matches_mix(pattern_id, 0, 9) and len(landscapes) >= 9:
             return _sort_asset_ids_by_taken(landscapes[:9], assets_map)
         return None
 
@@ -347,7 +339,7 @@ def build_screen(
             pattern.pattern_id,
             assets_map,
         )
-    if pattern.pattern_id == PATTERN_PORTRAIT_1_LANDSCAPE_2:
+    if template_uses_mixed_p1_l2_layout(pattern.pattern_id):
         return _finalize_mosaic_screen(
             _make_mixed_portrait_landscape_screen(
                 ordered_ids[0],
@@ -358,7 +350,7 @@ def build_screen(
             pattern.pattern_id,
             assets_map,
         )
-    if pattern.pattern_id == PATTERN_PORTRAIT_2_LANDSCAPE_2:
+    if template_uses_mixed_p2_l2_layout(pattern.pattern_id):
         slots = []
         for idx, aid in enumerate(ordered_ids):
             kind = aspect_kind_for_asset(assets_map.get(aid, {}))
@@ -370,15 +362,11 @@ def build_screen(
             fit = _portrait_fit(aid, assets_map) if role == "portrait" else "cover"
             slots.append({"assetId": aid, "slot": idx, "fit": fit, "role": role})
         return _finalize_mosaic_screen(
-            _make_screen(
-                PATTERN_PORTRAIT_2_LANDSCAPE_2,
-                screen_id=screen_id,
-                slots=slots,
-            ),
+            _make_screen(pattern.pattern_id, screen_id=screen_id, slots=slots),
             pattern.pattern_id,
             assets_map,
         )
-    if pattern.pattern_id == PATTERN_PORTRAIT_GRID_8:
+    if template_uses_portrait_grid8_layout(pattern.pattern_id):
         return _finalize_mosaic_screen(
             _make_portrait_grid8_screen(
                 ordered_ids, screen_id=screen_id, assets_map=assets_map
