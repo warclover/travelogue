@@ -57,13 +57,16 @@
     {
       "id": "S4",
       "weeks": "W7-8",
-      "status": "pending",
+      "status": "in_progress",
       "gate": {
         "portraitTripJudgeWinRateMin": 0.60,
         "portraitTripJudgeWinRateActual": null,
         "newPatternShareMin": 0.10,
         "newPatternShareActual": null,
-        "bspViewport32Pass": false
+        "bspViewport32Pass": false,
+        "schemaV2Foundation": true,
+        "whitespaceHeroExperimental": true,
+        "justifiedRow": false
       }
     },
     {

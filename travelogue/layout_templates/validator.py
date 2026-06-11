@@ -91,6 +91,8 @@ def _ar_ladder_sign_off(template: TemplateDef, slot_index: int) -> bool:
 
 
 def _check_overlaps(template: TemplateDef, report: ValidationReport) -> None:
+    if template.kind in ("stack", "justified"):
+        return
     for i, a in enumerate(template.slots):
         cells_a = _slot_cells(a.rect)
         for b in template.slots[i + 1 :]:
@@ -103,7 +105,7 @@ def _check_overlaps(template: TemplateDef, report: ValidationReport) -> None:
 
 
 def _check_gaps(template: TemplateDef, report: ValidationReport) -> None:
-    if template.kind == "stack":
+    if template.kind in ("stack", "justified"):
         return
     stage_cells = _stage_track_cells(template.stage)
     covered: set[tuple[int, int]] = set()
@@ -123,8 +125,56 @@ def _check_gaps(template: TemplateDef, report: ValidationReport) -> None:
         )
 
 
+_V2_MAX_PHOTOS = 24
+
+
+def _is_schema_v2(template: TemplateDef) -> bool:
+    return (
+        template.schema_version >= 2
+        or template.max_fill_ratio is not None
+        or template.bleed is not None
+        or any(
+            s.inset or s.aspect_range or s.crop_policy or s.optional for s in template.slots
+        )
+        or template.stage.margins is not None
+        or template.stage.bleed is not None
+    )
+
+
 def _check_photo_count(template: TemplateDef, report: ValidationReport) -> None:
+    if template.kind == "justified":
+        if template.photo_count_min > template.photo_count_max:
+            report.add(
+                "V-P19-02",
+                f"photoCount.min={template.photo_count_min} > max={template.photo_count_max}",
+            )
+        if template.photo_count_max > _V2_MAX_PHOTOS:
+            report.add(
+                "V-P19-02",
+                f"justified photoCount.max must be ≤ {_V2_MAX_PHOTOS}",
+                level="block",
+            )
+        return
     n = len(template.slots)
+    if template.photo_count_min > template.photo_count_max:
+        report.add(
+            "V-P19-02",
+            f"photoCount.min={template.photo_count_min} > max={template.photo_count_max}",
+        )
+    if _is_schema_v2(template):
+        required = sum(1 for s in template.slots if not s.optional)
+        if required < template.photo_count_min:
+            report.add(
+                "V-P19-02",
+                f"required slots={required} < photoCount.min={template.photo_count_min}",
+            )
+        if n > _V2_MAX_PHOTOS or template.photo_count_max > _V2_MAX_PHOTOS:
+            report.add(
+                "V-P19-02",
+                f"photoCount.max/slots must be ≤ {_V2_MAX_PHOTOS}",
+                level="block",
+            )
+        return
     if n != template.photo_count_min or n != template.photo_count_max:
         report.add(
             "V-P16-03",
@@ -135,7 +185,45 @@ def _check_photo_count(template: TemplateDef, report: ValidationReport) -> None:
         report.add("V-P16-12", "photoCount.max and slots must be ≤ 9", level="block")
 
 
+def _check_schema_v2(template: TemplateDef, report: ValidationReport) -> None:
+    if not _is_schema_v2(template):
+        return
+    if template.schema_version < 2:
+        report.add(
+            "V-P19-01",
+            "schema v2 fields present but schemaVersion < 2",
+            level="warn",
+        )
+    if template.max_fill_ratio is not None:
+        mfr = template.max_fill_ratio
+        if mfr <= 0 or mfr > 1:
+            report.add("V-P19-01", f"maxFillRatio={mfr} must be in (0, 1]")
+    stage_aspect = template.stage.aspect
+    if stage_aspect not in ("16:9", "3:2", "9:16"):
+        report.add(
+            "V-P19-01",
+            f"stage.aspect={stage_aspect} not in validated set (16:9, 3:2, 9:16)",
+            level="warn",
+        )
+    for slot in template.slots:
+        if slot.aspect_range is not None:
+            ar = slot.aspect_range
+            if ar.min_aspect > ar.max_aspect:
+                report.add(
+                    "V-P19-02",
+                    f"slot {slot.index} aspectRange.min > max",
+                )
+            if slot.crop_policy is None:
+                report.add(
+                    "V-P19-02",
+                    f"slot {slot.index} aspectRange requires cropPolicy",
+                    level="warn",
+                )
+
+
 def _check_mix(template: TemplateDef, report: ValidationReport) -> None:
+    if template.kind == "justified":
+        return
     p, land = _role_counts(template)
     if template.mix_portrait is not None and template.mix_portrait != p:
         report.add("V-P16-09", f"mix.portrait={template.mix_portrait} != role count {p}")
@@ -413,6 +501,7 @@ def validate_template_def(
     """Run §6 publish gates. mode=publish enables strict blocks (AC-P16-03)."""
     report = ValidationReport(ok=True, template_id=template.id)
     _check_photo_count(template, report)
+    _check_schema_v2(template, report)
     _check_overlaps(template, report)
     _check_gaps(template, report)
     _check_mix(template, report)

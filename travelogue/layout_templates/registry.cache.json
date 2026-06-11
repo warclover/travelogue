@@ -1,7 +1,9 @@
 {
-  "contentHash": "1d41917dc98f4761ca382df868a26a771e6c7fe7e88ebd60481610877935c1da",
+  "contentHash": "5114ff3a69994434575477f4a5cbca3f09d7c5562049d7f44292a61f6025d916",
   "templateIds": [
     "screen-full-frame",
+    "screen-full-frame-bsp-3-2",
+    "screen-justified-row",
     "screen-landscape-1",
     "screen-landscape-2",
     "screen-landscape-3",
@@ -24,13 +26,16 @@
     "screen-portrait-4",
     "screen-portrait-6",
     "screen-portrait-9",
-    "screen-portrait-grid-8"
+    "screen-portrait-grid-8",
+    "screen-whitespace-hero"
   ],
   "byPhotoCount": {
     "1": [
       "screen-full-frame",
+      "screen-full-frame-bsp-3-2",
       "screen-landscape-1",
-      "screen-portrait-1"
+      "screen-portrait-1",
+      "screen-whitespace-hero"
     ],
     "2": [
       "screen-landscape-2",
@@ -42,11 +47,13 @@
       "screen-portrait-3"
     ],
     "4": [
+      "screen-justified-row",
       "screen-landscape-4",
       "screen-portrait-2-landscape-2",
       "screen-portrait-4"
     ],
     "5": [
+      "screen-justified-row",
       "screen-mosaic-5-2p3l-equal",
       "screen-mosaic-5-2portrait-3land-balanced",
       "screen-mosaic-5-3portrait-2land-balanced",
@@ -55,12 +62,17 @@
       "screen-mosaic-5-main-portrait-3land"
     ],
     "6": [
+      "screen-justified-row",
       "screen-landscape-6",
       "screen-mosaic-5-main-hero-plus-4",
       "screen-mosaic-6-main-hero-plus-5",
       "screen-portrait-6"
     ],
+    "7": [
+      "screen-justified-row"
+    ],
     "8": [
+      "screen-justified-row",
       "screen-portrait-grid-8"
     ],
     "9": [
@@ -68,5 +80,5 @@
       "screen-portrait-9"
     ]
   },
-  "generatedAt": "2026-06-11T06:20:31Z"
+  "generatedAt": "2026-06-11T06:47:34Z"
 }

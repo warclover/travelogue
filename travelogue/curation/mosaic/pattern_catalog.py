@@ -111,12 +111,44 @@ def patterns_for_window_size(size: int, registry: dict[str, MosaicPattern] | Non
             ),
             key=lambda p: p.pattern_id,
         )
-        return ordered + extras
+        from travelogue.curation.mosaic.lte_adapter import (
+            template_is_justified,
+            template_photo_count_range,
+        )
+
+        justified = sorted(
+            (
+                p
+                for p in reg.values()
+                if p.pattern_id not in seen
+                and template_is_justified(p.pattern_id)
+                and lte_rollout_eligible(p.pattern_id)
+                and template_photo_count_range(p.pattern_id) is not None
+                and template_photo_count_range(p.pattern_id)[0] <= size
+                and size <= template_photo_count_range(p.pattern_id)[1]
+            ),
+            key=lambda p: p.pattern_id,
+        )
+        return ordered + extras + justified
+    from travelogue.curation.mosaic.lte_adapter import (
+        template_is_justified,
+        template_photo_count_range,
+    )
+
     return sorted(
         (
             p
             for p in reg.values()
-            if p.slot_count == size and lte_rollout_eligible(p.pattern_id)
+            if lte_rollout_eligible(p.pattern_id)
+            and (
+                p.slot_count == size
+                or (
+                    template_is_justified(p.pattern_id)
+                    and template_photo_count_range(p.pattern_id) is not None
+                    and template_photo_count_range(p.pattern_id)[0] <= size
+                    and size <= template_photo_count_range(p.pattern_id)[1]
+                )
+            )
         ),
         key=lambda p: p.pattern_id,
     )

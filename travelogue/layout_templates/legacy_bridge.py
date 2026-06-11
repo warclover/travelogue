@@ -270,7 +270,12 @@ def export_mosaic_pattern(template: Any) -> MosaicPattern:
     from travelogue.layout_templates.models import TemplateDef
 
     assert isinstance(template, TemplateDef)
-    roles = tuple(s.role for s in template.slots)
+    if template.kind == "justified":
+        roles = tuple("portrait" for _ in range(template.photo_count_max))
+        slot_count = template.photo_count_max
+    else:
+        roles = tuple(s.role for s in template.slots)
+        slot_count = len(template.slots)
     legacy = template.raw.get("_legacy", {})
     accepts_raw = legacy.get("accepts")
     if accepts_raw:
@@ -280,7 +285,7 @@ def export_mosaic_pattern(template: Any) -> MosaicPattern:
     css_verified = bool(legacy.get("css_verified", True))
     return MosaicPattern(
         pattern_id=template.id,
-        slot_count=len(template.slots),
+        slot_count=slot_count,
         grid_class=template.render_grid_class,
         roles=roles,
         accepts=accepts,
@@ -292,6 +297,8 @@ def export_explicit_grid_specs(templates: dict[str, Any]) -> dict[str, list[tupl
     out: dict[str, list[tuple[int, int, int, int]]] = {}
     for tid, t in templates.items():
         if t.kind != "composite":
+            continue
+        if t.status == "experimental":
             continue
         out[tid] = [tuple(s.rect) for s in t.slots]
     return out

@@ -1,0 +1,45 @@
+id: screen-full-frame-bsp-3-2
+version: 1
+status: experimental
+schemaVersion: 2
+kind: primitive
+displayName: full-frame · BSP 3:2
+description: >
+  P19 BSP 3:2 stage primitive for demo-d66fe642a9 viewport gate (DQ-05).
+  Declares 3:2 stage aspect; pairs with viewport-fit on horizontal assets.
+photoCount:
+  min: 1
+  max: 1
+stage:
+  aspect: '3:2'
+  cols:
+  - 1
+  rows:
+  - 1
+slots:
+- index: 0
+  rect:
+  - 1
+  - 1
+  - 1
+  - 1
+  role: landscape
+  fit: cover
+  aspectRange:
+    min: 1.08
+    max: 2.0
+  cropPolicy: focal
+constraints:
+  portrait_forbidden_in_wide_slots: []
+  landscape_forbidden_in_tall_slots: []
+  intentionalGaps: []
+scoring:
+  base_weight: 1.0
+  tags: [bsp, full-frame, landscape]
+render:
+  gridClass: layout-screen__grid--1col
+  cssBundle: journal-screens.css
+  fitPolicy: auto_delegate
+rollout:
+  percent: 0
+  hash_key: tripId

@@ -156,6 +156,29 @@ def template_main_hero_narrow_tile_penalty(pattern_id: str) -> float:
     return 0.0
 
 
+def template_kind(pattern_id: str) -> str | None:
+    if not read_templates_from_lte():
+        return None
+    try:
+        return str(_lte_template(pattern_id).kind)
+    except KeyError:
+        return None
+
+
+def template_is_justified(pattern_id: str) -> bool:
+    return template_kind(pattern_id) == "justified"
+
+
+def template_photo_count_range(pattern_id: str) -> tuple[int, int] | None:
+    if not read_templates_from_lte():
+        return None
+    try:
+        tpl = _lte_template(pattern_id)
+    except KeyError:
+        return None
+    return tpl.photo_count_min, tpl.photo_count_max
+
+
 def lte_rollout_eligible(pattern_id: str) -> bool:
     """LTE extras with rollout.percent<=0 stay out of MCS until enabled (W3 parity)."""
     if not read_templates_from_lte():

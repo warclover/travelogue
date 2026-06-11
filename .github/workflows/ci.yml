@@ -265,6 +265,9 @@ jobs:
       - name: P19 hard constraints (unit)
         run: python -m pytest tests/test_p19_hard_constraints.py tests/test_p19_explicit_fallback.py tests/test_p19_decision_log_rejects.py tests/test_p19_rollout_mosaic_groups.py -q --maxfail=1
 
+      - name: P19 Schema v2 compat (LTE)
+        run: python -m pytest tests/test_lte_schema_v2_compat.py tests/test_p19_justified_row.py tests/test_p19_bsp_stage_aspect.py -q --maxfail=1
+
       - name: P19 rhythm audit (warn-only)
         continue-on-error: true
         run: python scripts/p19_rhythm_audit.py --out .cache/book-quality/rhythm-audit/ci-report.json

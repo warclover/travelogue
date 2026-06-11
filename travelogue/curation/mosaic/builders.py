@@ -7,6 +7,7 @@ from travelogue.curation.layout_planner import AspectKind, aspect_kind_for_asset
 from travelogue.curation.mosaic.constants import PATTERN_PORTRAIT_3
 from travelogue.curation.mosaic.lte_adapter import (
     read_templates_from_lte,
+    template_is_justified,
     template_matches_mix,
     template_mix_requirements,
     template_uses_main_hero_ordering,
@@ -248,6 +249,17 @@ def try_order_for_pattern(
     n = len(asset_ids)
     portraits, landscapes = _split_portrait_landscape(asset_ids, aspects)
 
+    if template_is_justified(pattern_id):
+        from travelogue.curation.layout.justified_row import can_use_justified_row
+
+        if not can_use_justified_row(asset_ids, aspects):
+            return None
+        from travelogue.curation.screen_planner import _sort_asset_ids_by_taken
+
+        portraits = [a for a in asset_ids if _is_std_portrait_id(a, aspects)]
+        ordered = _sort_asset_ids_by_taken(portraits, assets_map)
+        return ordered if len(ordered) == len(asset_ids) else None
+
     if template_uses_main_portrait_3land_layout(pattern_id):
         return _can_mosaic_5_main_portrait_3land(
             asset_ids,
@@ -331,6 +343,19 @@ def build_screen(
     assets_map: dict[str, dict],
     screen_id: str = "",
 ) -> dict:
+    if template_is_justified(pattern.pattern_id):
+        from travelogue.curation.layout.justified_row import build_justified_screen
+
+        return _finalize_mosaic_screen(
+            build_justified_screen(
+                pattern.pattern_id,
+                ordered_ids,
+                assets_map,
+                screen_id=screen_id,
+            ),
+            pattern.pattern_id,
+            assets_map,
+        )
     if template_uses_main_portrait_3land_layout(pattern.pattern_id):
         return _finalize_mosaic_screen(
             _make_mosaic_5_main_portrait_3land_screen(

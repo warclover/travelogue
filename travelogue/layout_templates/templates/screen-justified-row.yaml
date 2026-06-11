@@ -1,0 +1,38 @@
+id: screen-justified-row
+version: 1
+status: experimental
+schemaVersion: 2
+kind: justified
+displayName: justified · portrait row
+description: >
+  P19 justified-row family — Flickr-style variable-width portrait rows (R-403).
+  Web screens only; rollout gated until S4 Gate.
+stage:
+  aspect: '16:9'
+  grid:
+  - 1
+  - 1
+  gap: 3px
+photoCount:
+  min: 4
+  max: 8
+mix:
+  portrait: 4
+  landscape: 0
+slots: []
+constraints:
+  portrait_forbidden_in_wide_slots: []
+  landscape_forbidden_in_tall_slots: []
+  intentionalGaps: []
+scoring:
+  base_weight: 0.92
+  tags: [justified, portrait]
+  rhythm:
+    diversity_bonus: 0.08
+render:
+  gridClass: layout-screen__grid--justified-row
+  cssBundle: journal-screens.css
+  fitPolicy: auto_delegate
+rollout:
+  percent: 100
+  hash_key: tripId

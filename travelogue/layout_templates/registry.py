@@ -32,7 +32,13 @@ DEFAULT_CACHE_PATH = PACKAGE_ROOT / "registry.cache.json"
 _ACTIVE_STATUSES = frozenset({"experimental", "beta", "ga"})
 
 
-from travelogue.layout_templates.models import TemplateDef, TemplateSlot, TemplateStage
+from travelogue.layout_templates.models import (
+    SlotAspectRange,
+    StageMargins,
+    TemplateDef,
+    TemplateSlot,
+    TemplateStage,
+)
 
 
 def schema_path() -> Path:
@@ -43,6 +49,17 @@ def templates_dir() -> Path:
     return DEFAULT_TEMPLATES_DIR
 
 
+def _parse_margins(raw: dict[str, Any] | None) -> StageMargins | None:
+    if not raw:
+        return None
+    return StageMargins(
+        top=str(raw["top"]) if raw.get("top") is not None else None,
+        right=str(raw["right"]) if raw.get("right") is not None else None,
+        bottom=str(raw["bottom"]) if raw.get("bottom") is not None else None,
+        left=str(raw["left"]) if raw.get("left") is not None else None,
+    )
+
+
 def _parse_stage(raw: dict[str, Any]) -> TemplateStage:
     grid_raw = raw.get("grid")
     grid = (int(grid_raw[0]), int(grid_raw[1])) if grid_raw else None
@@ -51,12 +68,15 @@ def _parse_stage(raw: dict[str, Any]) -> TemplateStage:
     cols = tuple(float(x) for x in cols_raw) if cols_raw else None
     rows = tuple(float(x) for x in rows_raw) if rows_raw else None
     gap = raw.get("gap")
+    bleed = raw.get("bleed")
     return TemplateStage(
         aspect=str(raw["aspect"]),
         grid=grid,
         cols=cols,
         rows=rows,
         gap=str(gap) if gap is not None else None,
+        margins=_parse_margins(raw.get("margins")),
+        bleed=str(bleed) if bleed is not None else None,
     )
 
 
@@ -64,6 +84,15 @@ def _parse_slot(raw: dict[str, Any]) -> TemplateSlot:
     rect = tuple(int(x) for x in raw["rect"])
     vw = raw.get("visualWeight")
     da = raw.get("displayAspect")
+    ar_raw = raw.get("aspectRange")
+    aspect_range: SlotAspectRange | None = None
+    if isinstance(ar_raw, dict) and ar_raw.get("min") is not None and ar_raw.get("max") is not None:
+        aspect_range = SlotAspectRange(
+            min_aspect=float(ar_raw["min"]),
+            max_aspect=float(ar_raw["max"]),
+        )
+    inset = raw.get("inset")
+    crop = raw.get("cropPolicy")
     return TemplateSlot(
         index=int(raw["index"]),
         rect=(rect[0], rect[1], rect[2], rect[3]),
@@ -71,6 +100,10 @@ def _parse_slot(raw: dict[str, Any]) -> TemplateSlot:
         fit=str(raw["fit"]) if raw.get("fit") else None,
         visual_weight=float(vw) if vw is not None else None,
         display_aspect=float(da) if da is not None else None,
+        inset=str(inset) if inset is not None else None,
+        aspect_range=aspect_range,
+        crop_policy=str(crop) if crop is not None else None,
+        optional=bool(raw.get("optional", False)),
     )
 
 
@@ -78,6 +111,8 @@ def template_def_from_yaml(doc: dict[str, Any]) -> TemplateDef:
     mix = doc.get("mix") or {}
     render = doc["render"]
     photo = doc["photoCount"]
+    mfr = doc.get("maxFillRatio")
+    bleed = doc.get("bleed")
     return TemplateDef(
         id=str(doc["id"]),
         version=int(doc["version"]),
@@ -100,6 +135,9 @@ def template_def_from_yaml(doc: dict[str, Any]) -> TemplateDef:
         render_css_bundle=str(render["cssBundle"]),
         render_fit_policy=str(render["fitPolicy"]) if render.get("fitPolicy") else None,
         rollout=dict(doc.get("rollout") or {}),
+        schema_version=int(doc.get("schemaVersion") or 1),
+        max_fill_ratio=float(mfr) if mfr is not None else None,
+        bleed=str(bleed) if bleed is not None else None,
         raw=doc,
     )
 

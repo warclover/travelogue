@@ -52,6 +52,25 @@ def grid_templates_for(template: TemplateDef) -> tuple[str, str]:
     return grid_template_columns(template.stage), grid_template_rows(template.stage)
 
 
+def stage_layout_css_variables(template: TemplateDef) -> dict[str, str]:
+    """P19 R-406 · map LTE v2 tokens to CSS custom properties."""
+    out: dict[str, str] = {}
+    stage = template.stage
+    if stage.gap:
+        out["--stage-gap"] = stage.gap
+    if stage.margins:
+        for side in ("top", "right", "bottom", "left"):
+            val = getattr(stage.margins, side)
+            if val:
+                out[f"--stage-margin-{side}"] = val
+    bleed = template.bleed or stage.bleed
+    if bleed:
+        out["--stage-bleed-mode"] = bleed
+    if template.max_fill_ratio is not None:
+        out["--stage-max-fill-ratio"] = str(template.max_fill_ratio)
+    return out
+
+
 def normalize_grid_template(value: str) -> str:
     return re.sub(r"\s+", " ", value.strip())
 
@@ -126,6 +145,22 @@ def generate_slot_css(template: TemplateDef, slot: TemplateSlot) -> str:
 
 
 def generate_grid_css(template: TemplateDef) -> str:
+    if template.kind == "justified":
+        cls = template.render_grid_class
+        header = (
+            f"html[data-layout=\"web\"] .{cls},\n"
+            f"html[data-layout=\"auto\"] .{cls}"
+        )
+        gap = template.stage.gap or "3px"
+        return (
+            f"{header} {{\n"
+            f"  display: flex;\n"
+            f"  flex-direction: column;\n"
+            f"  gap: {gap};\n"
+            f"  height: 100%;\n"
+            f"  box-sizing: border-box;\n"
+            f"}}"
+        )
     if template.kind == "stack":
         cols = grid_template_columns(template.stage)
         return (
@@ -149,6 +184,8 @@ def generate_grid_css(template: TemplateDef) -> str:
     )
     if template.stage.gap:
         block += f"  gap: {template.stage.gap};\n"
+    for key, val in stage_layout_css_variables(template).items():
+        block += f"  {key}: {val};\n"
     block += "  align-items: stretch;\n}"
     if template.kind == "primitive" and template.slots and len(template.slots) <= 1:
         return block

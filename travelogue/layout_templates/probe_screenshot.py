@@ -7,7 +7,11 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any
 
-from travelogue.layout_templates.css_gen import grid_templates_for, slot_cells
+from travelogue.layout_templates.css_gen import (
+    grid_templates_for,
+    slot_cells,
+    stage_layout_css_variables,
+)
 from travelogue.layout_templates.models import TemplateDef
 from travelogue.layout_templates.registry import get_engine
 
@@ -18,6 +22,11 @@ DEFAULT_PROBE_TEMPLATE_IDS: tuple[str, ...] = (
     "screen-mosaic-5-hero-3-2-plus-4",
     "screen-portrait-3",
 )
+
+BSP_STAGE_3_2_TEMPLATE_IDS: tuple[str, ...] = ("screen-full-frame-bsp-3-2",)
+BSP_VIEWPORT_3_2 = {"width": 1440, "height": 960}
+BSP_STAGE_ASPECT_TARGET = 3 / 2
+BSP_STAGE_ASPECT_TOLERANCE = 0.04
 
 # Max mean absolute channel diff (0–255) for cover/contain layout smoke.
 DEFAULT_PIXEL_TOLERANCE = 12.0
@@ -33,6 +42,11 @@ def build_probe_html(template: TemplateDef) -> str:
     stage = template.stage
     gap = stage.gap or "3px"
     grid_class = template.render_grid_class
+    stage_vars = stage_layout_css_variables(template)
+    stage_var_rules = ""
+    if stage_vars:
+        props = " ".join(f"{k}: {v};" for k, v in stage_vars.items())
+        stage_var_rules = f".layout-screen {{ {props} }}"
     slot_rules: list[str] = []
     slot_nodes: list[str] = []
     for slot in template.slots:
@@ -67,6 +81,7 @@ html, body {{ margin: 0; padding: 0; background: #111; }}
   overflow: hidden;
   background: #222;
 }}
+{stage_var_rules}
 .{grid_class} {{
   display: grid;
   width: 100%;
@@ -96,7 +111,12 @@ html, body {{ margin: 0; padding: 0; background: #111; }}
 """
 
 
-def _capture_png(html: str, *, width: int = 980, height: int = 620) -> bytes:
+def _capture_png(
+    html: str,
+    *,
+    width: int = 980,
+    height: int = 620,
+) -> bytes:
     from playwright.sync_api import sync_playwright
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -125,6 +145,96 @@ def _mean_abs_diff(a_bytes: bytes, b_bytes: bytes) -> float:
     for x, y in zip(pa, pb, strict=False):
         diff += abs(x - y)
     return diff / max(count, 1)
+
+
+def measure_probe_stage_aspect(
+    html: str,
+    *,
+    viewport: dict[str, int] | None = None,
+) -> dict[str, Any]:
+    """Measure rendered .layout-screen box aspect at a viewport (S4-06 BSP gate)."""
+    vp = viewport or BSP_VIEWPORT_3_2
+    try:
+        import playwright  # noqa: F401
+    except ImportError:
+        return {"ok": False, "skipped": True, "reason": "playwright not installed"}
+
+    from playwright.sync_api import sync_playwright
+
+    with tempfile.TemporaryDirectory() as tmp:
+        html_path = Path(tmp) / "probe.html"
+        html_path.write_text(html, encoding="utf-8")
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page(viewport=vp)
+            page.goto(html_path.resolve().as_uri())
+            page.wait_for_timeout(100)
+            box = page.locator(".layout-screen").bounding_box()
+            browser.close()
+    if not box:
+        return {"ok": False, "reason": "layout-screen not found"}
+    width = float(box["width"])
+    height = float(box["height"])
+    if height <= 0:
+        return {"ok": False, "reason": "zero height"}
+    aspect = width / height
+    target = BSP_STAGE_ASPECT_TARGET
+    delta = abs(aspect - target)
+    return {
+        "ok": delta <= BSP_STAGE_ASPECT_TOLERANCE,
+        "width": width,
+        "height": height,
+        "aspect": round(aspect, 4),
+        "targetAspect": target,
+        "delta": round(delta, 4),
+        "tolerance": BSP_STAGE_ASPECT_TOLERANCE,
+        "viewport": vp,
+    }
+
+
+def run_bsp_stage_aspect_probe(
+    engine=None,
+    *,
+    template_ids: tuple[str, ...] | None = None,
+) -> dict[str, Any]:
+    """S4-06 · assert 3:2 stage templates render at BSP P0 viewport aspect."""
+    try:
+        import playwright  # noqa: F401
+    except ImportError:
+        return {"ok": True, "skipped": True, "reason": "playwright not installed"}
+
+    engine = engine or get_engine()
+    ids = template_ids or BSP_STAGE_3_2_TEMPLATE_IDS
+    rows: list[dict[str, Any]] = []
+    warnings: list[str] = []
+    for tid in ids:
+        try:
+            template = engine.get(tid)
+        except KeyError:
+            warnings.append(f"{tid}: template not found")
+            continue
+        if template.stage.aspect != "3:2":
+            warnings.append(f"{tid}: stage.aspect={template.stage.aspect} != 3:2")
+            rows.append({"templateId": tid, "ok": False})
+            continue
+        html = build_probe_html(template)
+        try:
+            row = measure_probe_stage_aspect(html, viewport=BSP_VIEWPORT_3_2)
+        except Exception as exc:  # pragma: no cover - env specific
+            warnings.append(f"{tid}: measure failed ({exc})")
+            continue
+        row["templateId"] = tid
+        rows.append(row)
+        if not row.get("ok"):
+            warnings.append(
+                f"{tid}: aspect {row.get('aspect')} delta {row.get('delta')} > {BSP_STAGE_ASPECT_TOLERANCE}"
+            )
+    return {
+        "ok": len(warnings) == 0,
+        "skipped": False,
+        "warnings": warnings,
+        "rows": rows,
+    }
 
 
 def compare_probe_png(actual: bytes, baseline: bytes, *, tolerance: float = DEFAULT_PIXEL_TOLERANCE) -> dict[str, Any]:

@@ -593,6 +593,130 @@ def build_epilogue_stats(trip: dict) -> EpilogueStatsContext:
     }
 
 
+def _build_justified_layout_screen_ctx(
+    screen: dict,
+    assets: dict[str, dict],
+    *,
+    pattern_id: str,
+    grid_class: str,
+    layout_geo: dict,
+    meta_title: str,
+    export_layout: str,
+    eager: bool,
+    screen_index: int | None,
+    chapter_index: str | None,
+    folio_lite: bool,
+    featured_asset_ids: frozenset[str] | None,
+) -> LayoutScreenContext:
+    justified_rows_out: list[dict] = []
+    slot_aids: list[str] = []
+    for row in screen.get("justifiedRows") or []:
+        row_items_out: list[dict] = []
+        row_style_parts: list[str] = []
+        hr = row.get("heightRatio")
+        if hr is not None:
+            try:
+                row_style_parts.append(f"flex: {float(hr):.4f} 1 0")
+            except (TypeError, ValueError):
+                pass
+        row_style = "; ".join(row_style_parts)
+        if row_style:
+            row_style += ";"
+        for j, item in enumerate(row.get("items") or []):
+            aid = str(item.get("assetId") or "")
+            asset = _asset_lookup(assets, aid) if aid else None
+            fit = str(item.get("fit") or "cover")
+            role = item.get("role")
+            entry: dict = {
+                "slotIndex": int(item.get("slot", j)),
+                "fit": fit,
+                "hasSrc": False,
+                "src": "",
+                "hasSrcset": False,
+                "srcset": "",
+                "sizes": pick_image_sizes(export_layout, "row_third"),
+                "alt": alt_text(None, asset, meta_title) if asset else "",
+                "loading": "eager" if eager and j == 0 else "lazy",
+                "slotStyle": "",
+            }
+            if role:
+                entry["role"] = role
+            style_parts: list[str] = []
+            wr = item.get("widthRatio")
+            if wr is not None:
+                try:
+                    pct = float(wr) * 100.0
+                    style_parts.append(f"flex: 0 0 {pct:.3f}%")
+                except (TypeError, ValueError):
+                    pass
+            if asset:
+                srcset = compile_srcset(asset, mobile=export_layout == "mobile")
+                fp = asset.get("focalPoint") or {}
+                try:
+                    fx = float(fp.get("x", 0.5))
+                    fy = float(fp.get("y", 0.45))
+                    style_parts.append(f"--focal-x: {fx}")
+                    style_parts.append(f"--focal-y: {fy}")
+                except (TypeError, ValueError):
+                    pass
+                entry["hasSrc"] = True
+                entry["src"] = pick_image_src(asset, export_layout=export_layout)
+                entry["hasSrcset"] = bool(srcset)
+                entry["srcset"] = srcset
+            slot_style = "; ".join(style_parts)
+            if slot_style:
+                slot_style += ";"
+            entry["slotStyle"] = slot_style
+            row_items_out.append(entry)
+            if aid:
+                slot_aids.append(aid)
+        justified_rows_out.append(
+            {
+                "rowStyle": row_style,
+                "items": row_items_out,
+            }
+        )
+    style_parts_screen: list[str] = []
+    if layout_geo.get("stageAspect"):
+        stage_aspect = str(layout_geo["stageAspect"]).replace(":", " / ")
+        style_parts_screen.append(f"--screen-aspect: {stage_aspect}")
+    tone = screen_tone_css(screen.get("tone"))
+    if tone:
+        style_parts_screen.append(f"--screen-tone: {tone}")
+    screen_style = "; ".join(style_parts_screen)
+    if screen_style:
+        screen_style += ";"
+    featured_ids = featured_asset_ids or frozenset()
+    is_featured = any(aid in featured_ids for aid in slot_aids if aid)
+    out: LayoutScreenContext = {
+        "patternId": pattern_id,
+        "gridClass": grid_class,
+        "screenTone": tone,
+        "screenStyle": screen_style,
+        "layoutHint": screen.get("layoutHint"),
+        "hasLayoutHint": bool(screen.get("layoutHint")),
+        "slots": [],
+        "isJustified": True,
+        "justifiedRows": justified_rows_out,
+        "isFeatured": is_featured,
+    }
+    if screen_index is not None:
+        out["screenIndex"] = screen_index
+        out["hasScreenIndex"] = True
+    if chapter_index:
+        out["chapterIndex"] = chapter_index
+        out["hasChapterIndex"] = True
+    joined_aids = ",".join(aid for aid in slot_aids if aid)
+    if joined_aids:
+        out["assetIds"] = joined_aids
+        out["hasAssetIds"] = True
+    if folio_lite:
+        out["folioLite"] = True
+        if screen_index is not None:
+            out["folioPageLabel"] = f"Plate · {screen_index:02d}"
+    return out
+
+
 def build_layout_screen(
     screen: dict,
     assets: dict[str, dict],
@@ -619,6 +743,21 @@ def build_layout_screen(
     layout_geo = screen.get("layoutGeometry") or {}
     if layout_geo.get("gridClass"):
         grid_class = str(layout_geo["gridClass"])
+    if screen.get("layoutKind") == "justified":
+        return _build_justified_layout_screen_ctx(
+            screen,
+            assets,
+            pattern_id=pattern_id,
+            grid_class=grid_class,
+            layout_geo=layout_geo,
+            meta_title=meta_title,
+            export_layout=export_layout,
+            eager=eager,
+            screen_index=screen_index,
+            chapter_index=chapter_index,
+            folio_lite=folio_lite,
+            featured_asset_ids=featured_asset_ids,
+        )
     n_slots = len(screen.get("slots") or [])
     if "1col" in grid_class and n_slots == 1:
         sizes_slot = "screen_full"

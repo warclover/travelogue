@@ -8,6 +8,24 @@ html[data-layout="auto"] .layout-screen__grid--1col {
   align-items: stretch;
 }
 
+/* screen-full-frame-bsp-3-2 */
+html[data-layout="web"] .layout-screen__grid--1col,
+html[data-layout="auto"] .layout-screen__grid--1col {
+  grid-template-columns: repeat(1, 1fr);
+  grid-template-rows: repeat(1, 1fr);
+  align-items: stretch;
+}
+
+/* screen-justified-row */
+html[data-layout="web"] .layout-screen__grid--justified-row,
+html[data-layout="auto"] .layout-screen__grid--justified-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
 /* screen-landscape-1 */
 html[data-layout="web"] .layout-screen__grid--1col,
 html[data-layout="auto"] .layout-screen__grid--1col {
@@ -157,6 +175,7 @@ html[data-layout="auto"] .layout-screen__grid--mosaic-5-2p3l-equal {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   gap: 2px;
+  --stage-gap: 2px;
   align-items: stretch;
 }
 
@@ -257,6 +276,7 @@ html[data-layout="auto"] .layout-screen__grid--mosaic-5-hero-3-2-plus-4 {
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
   grid-template-rows: repeat(2, 1fr);
   gap: 3px;
+  --stage-gap: 3px;
   align-items: stretch;
 }
 
@@ -692,4 +712,23 @@ html[data-layout="web"] .layout-screen__grid--portrait-2x4 .layout-slot[data-slo
 html[data-layout="web"] .layout-screen__grid--portrait-2x4 .layout-slot[data-slot="7"], html[data-layout="auto"] .layout-screen__grid--portrait-2x4 .layout-slot[data-slot="7"] {
   grid-column: 4;
   grid-row: 2;
+}
+
+/* screen-whitespace-hero */
+html[data-layout="web"] .layout-screen__grid--whitespace-hero,
+html[data-layout="auto"] .layout-screen__grid--whitespace-hero {
+  grid-template-columns: repeat(1, 1fr);
+  grid-template-rows: repeat(1, 1fr);
+  --stage-margin-top: 8%;
+  --stage-margin-right: 10%;
+  --stage-margin-bottom: 8%;
+  --stage-margin-left: 10%;
+  --stage-bleed-mode: inset;
+  --stage-max-fill-ratio: 0.62;
+  align-items: stretch;
+}
+
+html[data-layout="web"] .layout-screen__grid--whitespace-hero .layout-slot[data-slot="0"], html[data-layout="auto"] .layout-screen__grid--whitespace-hero .layout-slot[data-slot="0"] {
+  grid-column: 1;
+  grid-row: 1;
 }
