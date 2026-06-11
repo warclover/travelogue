@@ -100,99 +100,89 @@
         <div class="v2-bench">
           <div class="v2-bench__left">
             <div class="v2-bench__sample" id="v2-bench-sample">
-              <span class="v2-demo-flag" id="v2-bench-sample-flag">示例作品</span>
+              <span class="v2-demo-flag" id="v2-bench-sample-flag">示例</span>
               <div class="v2-bench__sample-thumb" id="v2-bench-thumb" aria-hidden="true"></div>
               <div class="v2-bench__sample-text">
                 <strong id="v2-bench-title">京都 · 雨后</strong>
                 <span id="v2-bench-meta">自动生成 · 86 张 · 3 章</span>
               </div>
-            </div>
-            <div class="v2-bench__recent" id="v2-bench-recent" hidden aria-label="最近画册">
-              <div class="v2-bench__recent-list" id="v2-bench-recent-list"></div>
+              <button type="button" class="v2-bench__continue" id="v2-bench-continue">继续</button>
             </div>
           </div>
           <div class="v2-bench__main">
             <button type="button" class="v2-bench__cta" id="v2-cta">开始制作我的游记 →</button>
             <p class="v2-bench__meta">照片留在本机 · 无需注册 · 下一步选择本次旅行的照片文件夹</p>
           </div>
-          <div class="v2-bench__quick" aria-label="预览切换与快捷操作">
-            <div class="v2-bench__side">
-              <p class="v2-bench__side-label">预览来源</p>
-              <div class="v2-bento-tabs" id="v2-bench-source-tabs" role="tablist" aria-label="预览来源">
-                <button type="button" class="v2-bento-tabs__btn is-active" role="tab"
-                        id="v2-tab-demo" aria-selected="true" aria-controls="v2-bento-grid">示例作品</button>
-                <button type="button" class="v2-bento-tabs__btn" role="tab"
-                        id="v2-tab-mine" aria-selected="false" aria-controls="v2-bento-grid" disabled>最近一本</button>
-              </div>
-            </div>
-            <div class="v2-bench__side">
-              <p class="v2-bench__side-label">快捷操作</p>
-              <div class="v2-bench__quick-actions">
-                <button type="button" class="v2-bench__ghost-btn" id="v2-bench-resume">继续上次</button>
-                <button type="button" class="v2-bench__ghost-btn" id="v2-bench-recent-btn">查看最近</button>
-              </div>
-            </div>
-            <div class="v2-bench__side v2-bench__side--prefs">
-              <p class="v2-bench__side-label">配色</p>
-              <select id="v2-theme-select" class="v2-bench__ghost-select" aria-label="首页配色">
+          <div class="v2-bench__tools" aria-label="工作台设置">
+            <button type="button" class="v2-bench__settings-btn" id="v2-bench-settings"
+                    aria-haspopup="dialog" aria-expanded="false" aria-controls="v2-settings-popover"
+                    title="配色与分析选项">⚙</button>
+            <div id="v2-settings-popover" class="v2-settings-popover" hidden role="dialog"
+                 aria-labelledby="v2-settings-title">
+              <p id="v2-settings-title" class="v2-settings-popover__title">工作台设置</p>
+              <div class="v2-settings-popover__section">
+                <p class="v2-settings-popover__label">配色</p>
+                <select id="v2-theme-select" class="v2-settings-popover__select" aria-label="首页配色">
                   <option value="sky">清新浅蓝</option>
                   <option value="classic">经典深色</option>
                   <option value="dawn">暖阳珊瑚</option>
                   <option value="mint">森系薄荷</option>
                   <option value="navy">夜航蓝调</option>
-                  <option value="olive">深林橄榄</option>
-                  <option value="fjord">北欧雾蓝</option>
-                  <option value="sage">雾炭鼠尾草</option>
-                  <option value="taupe">板岩暖灰</option>
-                  <option value="grove">午夜桉树</option>
+                  <option value="olive" hidden>深林橄榄</option>
+                  <option value="fjord" hidden>北欧雾蓝</option>
+                  <option value="sage" hidden>雾炭鼠尾草</option>
+                  <option value="taupe" hidden>板岩暖灰</option>
+                  <option value="grove" hidden>午夜桉树</option>
                 </select>
-            </div>
-            <div class="v2-bench__side v2-bench__side--analysis">
-              <p class="v2-bench__side-label">分析</p>
-              <button type="button" class="v2-bench__ghost-btn" id="v2-advanced-toggle"
-                      aria-expanded="false" aria-controls="v2-advanced-popover"
-                      aria-haspopup="dialog">高级选项</button>
-              <div id="v2-advanced-popover" class="v2-advanced-popover" hidden role="dialog"
-                   aria-labelledby="v2-advanced-title">
-                <p id="v2-advanced-title" class="v2-advanced-popover__title">高级 · 分析选项</p>
-                <p class="v2-advanced-popover__note">一般无需修改</p>
-                <div class="v2-advanced-popover__row">
-                  <label class="v2-advanced-popover__label" for="studio-cfg-clustering">行程识别</label>
-                  <select id="studio-cfg-clustering" class="v2-advanced-popover__select"
-                          aria-describedby="studio-cfg-clustering-hint">
-                    <option value="auto">自动（推荐）</option>
-                    <option value="true">开</option>
-                    <option value="false">关</option>
-                  </select>
-                  <p class="v2-advanced-popover__hint" id="studio-cfg-clustering-hint">默认自动：有 GPS 的照片会按行程分段（推荐）</p>
-                </div>
-                <div class="v2-advanced-popover__row">
-                  <label class="v2-advanced-popover__label" for="studio-cfg-vision">场景分析</label>
-                  <select id="studio-cfg-vision" class="v2-advanced-popover__select"
-                          aria-describedby="studio-cfg-vision-hint">
-                    <option value="false">关（默认）</option>
-                    <option value="auto">自动</option>
-                    <option value="true">开</option>
-                  </select>
-                  <p class="v2-advanced-popover__hint" id="studio-cfg-vision-hint">默认关闭；大相册可开启以合并同场景照片（较慢，首次需下载组件）</p>
-                </div>
-                <div class="v2-advanced-popover__row">
-                  <label class="v2-advanced-popover__label" for="studio-cfg-g1">结构确认（G1）</label>
-                  <select id="studio-cfg-g1" class="v2-advanced-popover__select"
-                          aria-describedby="studio-cfg-g1-hint">
-                    <option value="false">自动继续（推荐）</option>
-                    <option value="true">导入后先确认章节</option>
-                  </select>
-                  <p class="v2-advanced-popover__hint" id="studio-cfg-g1-hint">开启后需预览内确认章节顺序再生成文案</p>
-                </div>
-                <div class="v2-advanced-popover__row">
-                  <label class="v2-advanced-popover__label" for="studio-cfg-layout-scoring">智能排版</label>
-                  <select id="studio-cfg-layout-scoring" class="v2-advanced-popover__select"
-                          aria-describedby="studio-cfg-layout-scoring-hint">
-                    <option value="false">经典（默认）</option>
-                    <option value="true">实验 · beam 评分</option>
-                  </select>
-                  <p class="v2-advanced-popover__hint" id="studio-cfg-layout-scoring-hint">实验模式启用多信号 beam 搜索；内测 A/B 用，一般保持默认</p>
+                <button type="button" class="v2-settings-popover__more" id="v2-theme-more-toggle"
+                        aria-expanded="false">更多配色</button>
+              </div>
+              <div class="v2-settings-popover__section">
+                <button type="button" class="v2-settings-popover__advanced" id="v2-advanced-toggle"
+                        aria-expanded="false" aria-controls="v2-advanced-popover"
+                        aria-haspopup="dialog">高级 · 分析选项</button>
+                <div id="v2-advanced-popover" class="v2-advanced-popover v2-advanced-popover--nested" hidden role="dialog"
+                     aria-labelledby="v2-advanced-title">
+                  <p id="v2-advanced-title" class="v2-advanced-popover__title">高级 · 分析选项</p>
+                  <p class="v2-advanced-popover__note">一般无需修改</p>
+                  <div class="v2-advanced-popover__row">
+                    <label class="v2-advanced-popover__label" for="studio-cfg-clustering">行程识别</label>
+                    <select id="studio-cfg-clustering" class="v2-advanced-popover__select"
+                            aria-describedby="studio-cfg-clustering-hint">
+                      <option value="auto">自动（推荐）</option>
+                      <option value="true">开</option>
+                      <option value="false">关</option>
+                    </select>
+                    <p class="v2-advanced-popover__hint" id="studio-cfg-clustering-hint">默认自动：有 GPS 的照片会按行程分段（推荐）</p>
+                  </div>
+                  <div class="v2-advanced-popover__row">
+                    <label class="v2-advanced-popover__label" for="studio-cfg-vision">场景分析</label>
+                    <select id="studio-cfg-vision" class="v2-advanced-popover__select"
+                            aria-describedby="studio-cfg-vision-hint">
+                      <option value="false">关（默认）</option>
+                      <option value="auto">自动</option>
+                      <option value="true">开</option>
+                    </select>
+                    <p class="v2-advanced-popover__hint" id="studio-cfg-vision-hint">默认关闭；大相册可开启以合并同场景照片（较慢，首次需下载组件）</p>
+                  </div>
+                  <div class="v2-advanced-popover__row">
+                    <label class="v2-advanced-popover__label" for="studio-cfg-g1">结构确认（G1）</label>
+                    <select id="studio-cfg-g1" class="v2-advanced-popover__select"
+                            aria-describedby="studio-cfg-g1-hint">
+                      <option value="false">自动继续（推荐）</option>
+                      <option value="true">导入后先确认章节</option>
+                    </select>
+                    <p class="v2-advanced-popover__hint" id="studio-cfg-g1-hint">开启后需预览内确认章节顺序再生成文案</p>
+                  </div>
+                  <div class="v2-advanced-popover__row">
+                    <label class="v2-advanced-popover__label" for="studio-cfg-layout-scoring">智能排版</label>
+                    <select id="studio-cfg-layout-scoring" class="v2-advanced-popover__select"
+                            aria-describedby="studio-cfg-layout-scoring-hint">
+                      <option value="false">经典（默认）</option>
+                      <option value="true">实验 · beam 评分</option>
+                    </select>
+                    <p class="v2-advanced-popover__hint" id="studio-cfg-layout-scoring-hint">实验模式启用多信号 beam 搜索；内测 A/B 用，一般保持默认</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -309,94 +299,99 @@
         </div>
 
         <div class="v2-sheet__mode-panel" id="v2-sheet-panel-fine" data-mode="fine_craft" hidden>
-          <label class="v2-sheet__field">
-            <span class="v2-sheet__field-label">游记名称</span>
-            <input type="text" id="v2-trip-title" maxlength="20" autocomplete="off"
-                   placeholder="给这本画册起个名字" />
-          </label>
-          <label class="v2-sheet__field">
-            <span class="v2-sheet__field-label">主要地点（可选）</span>
-            <input type="text" id="v2-trip-place" maxlength="40" autocomplete="off"
-                   placeholder="例如：京都、大阪" />
-          </label>
-          <div class="v2-sheet__field v2-sheet__field-grid">
-            <label>
-              <span class="v2-sheet__field-label">开始日期（可选）</span>
-              <input type="date" id="v2-date-start" />
+          <div class="v2-sheet__fine-basic" id="v2-sheet-fine-basic">
+            <label class="v2-sheet__field">
+              <span class="v2-sheet__field-label">游记名称</span>
+              <input type="text" id="v2-trip-title" maxlength="20" autocomplete="off"
+                     placeholder="给这本画册起个名字" />
             </label>
-            <label>
-              <span class="v2-sheet__field-label">结束日期（可选）</span>
-              <input type="date" id="v2-date-end" />
+            <label class="v2-sheet__field">
+              <span class="v2-sheet__field-label">主要地点（可选）</span>
+              <input type="text" id="v2-trip-place" maxlength="40" autocomplete="off"
+                     placeholder="例如：京都、大阪" />
+            </label>
+            <div class="v2-sheet__field v2-sheet__field-grid">
+              <label>
+                <span class="v2-sheet__field-label">开始日期（可选）</span>
+                <input type="date" id="v2-date-start" />
+              </label>
+              <label>
+                <span class="v2-sheet__field-label">结束日期（可选）</span>
+                <input type="date" id="v2-date-end" />
+              </label>
+            </div>
+            <label class="v2-sheet__field">
+              <span class="v2-sheet__field-label">写给编辑的一句话（可选）</span>
+              <textarea id="v2-user-notes" maxlength="200" rows="2"
+                        placeholder="例如：带娃慢走，别写成导游词"></textarea>
+              <div class="v2-sheet__chips" role="list">
+                <button type="button" class="v2-sheet__chip" data-fill="v2-user-notes">带娃慢走，别写成导游词</button>
+                <button type="button" class="v2-sheet__chip" data-fill="v2-user-notes">想表达静谧，雨天的感觉</button>
+                <button type="button" class="v2-sheet__chip" data-fill="v2-user-notes">第3天最难忘</button>
+              </div>
+              <p class="v2-sheet__hint">不填也能正常出稿；这里写偏好，不是写完整游记。</p>
             </label>
           </div>
-          <label class="v2-sheet__field">
-            <span class="v2-sheet__field-label">写给编辑的一句话（可选）</span>
-            <textarea id="v2-user-notes" maxlength="200" rows="2"
-                      placeholder="例如：带娃慢走，别写成导游词"></textarea>
-            <div class="v2-sheet__chips" role="list">
-              <button type="button" class="v2-sheet__chip" data-fill="v2-user-notes">带娃慢走，别写成导游词</button>
-              <button type="button" class="v2-sheet__chip" data-fill="v2-user-notes">想表达静谧，雨天的感觉</button>
-              <button type="button" class="v2-sheet__chip" data-fill="v2-user-notes">第3天最难忘</button>
-            </div>
-            <p class="v2-sheet__hint">不填也能正常出稿；这里写偏好，不是写完整游记。</p>
-          </label>
-          <label class="v2-sheet__field v2-sheet__field--full">
-            <span class="v2-sheet__field-label">旅途见闻与感悟（可选）</span>
-            <textarea id="v2-travel-notes" maxlength="500" rows="3"
-                      placeholder="可写旅途细节与感受，系统会优先用于文案语料。"></textarea>
-          </label>
-          <label class="v2-sheet__field v2-sheet__field--full">
-            <span class="v2-sheet__field-label">行程计划文件（可选）</span>
-            <input type="file" id="v2-plan-file" accept=".txt,.md,text/plain" />
-            <p class="v2-sheet__hint" id="v2-plan-file-name"></p>
-            <p class="v2-sheet__hint">支持 txt / md，最大 32KB；会作为叙事参考，不会原样照抄。</p>
-          </label>
-          <label class="v2-sheet__field">
-            <span class="v2-sheet__field-label">精选文件夹（可选）</span>
-            <input type="text" id="v2-featured-dir" maxlength="64" autocomplete="off"
-                   placeholder="例如：精选" />
-          </label>
-          <label class="v2-sheet__field">
-            <span class="v2-sheet__field-label">素材文件夹（可选）</span>
-            <input type="text" id="v2-material-dir" maxlength="64" autocomplete="off"
-                   placeholder="例如：素材" />
-          </label>
-          <fieldset class="v2-sheet__field v2-sheet__field--full" id="v2-layout-density-field">
-            <legend class="v2-sheet__field-label" id="v2-layout-density-label">版面密度（可选）</legend>
-            <div class="v2-sheet__radio-group" role="radiogroup" aria-labelledby="v2-layout-density-label">
-              <label class="v2-sheet__radio">
-                <input type="radio" name="v2-layout-density" value="balanced" checked />
-                <span>智能平衡（推荐）</span>
-                <span class="v2-sheet__radio-hint">根据照片数量与横竖比自动排版</span>
-              </label>
-              <label class="v2-sheet__radio">
-                <input type="radio" name="v2-layout-density" value="hero_first" />
-                <span>大图为主</span>
-                <span class="v2-sheet__radio-hint">更多单张全幅画面，节奏更偏杂志感</span>
-              </label>
-              <label class="v2-sheet__radio">
-                <input type="radio" name="v2-layout-density" value="collage_first" />
-                <span>拼图为主</span>
-                <span class="v2-sheet__radio-hint">更多宫格与照片组合，连拍更易成组</span>
-              </label>
-            </div>
-            <p class="v2-sheet__hint" role="note">
-              仅影响卷轴游记排版，不影响快速分享长图。不保证每张照片单独占一页；章首重要画面与阅读节奏优先。
-            </p>
-            <p class="v2-sheet__hint v2-sheet__hint--warn" id="v2-layout-density-warn" role="note" hidden>
-              照片较少时，拼图为主的效果可能不明显，系统仍会以保证阅读节奏为先。
-            </p>
-          </fieldset>
-          <label class="v2-sheet__field v2-sheet__field--full">
-            <span class="v2-sheet__field-label">模板</span>
-            <select id="v2-template-mode" aria-label="模板选择">
-              <option value="smart" selected>智能匹配（推荐）</option>
-              <option value="manual:visual-journal">视觉游记（手动指定）</option>
-            </select>
-            <p class="v2-sheet__hint" id="v2-template-hint" role="note">
-              智能匹配会根据行程天数、地点与视频占比推荐模板；不确定时自动使用视觉游记。
-            </p>
-          </label>
+          <details class="v2-sheet__fine-advanced" id="v2-sheet-fine-advanced">
+            <summary>进阶选项（可选）</summary>
+            <label class="v2-sheet__field v2-sheet__field--full">
+              <span class="v2-sheet__field-label">旅途见闻与感悟（可选）</span>
+              <textarea id="v2-travel-notes" maxlength="500" rows="3"
+                        placeholder="可写旅途细节与感受，系统会优先用于文案语料。"></textarea>
+            </label>
+            <label class="v2-sheet__field v2-sheet__field--full">
+              <span class="v2-sheet__field-label">行程计划文件（可选）</span>
+              <input type="file" id="v2-plan-file" accept=".txt,.md,text/plain" />
+              <p class="v2-sheet__hint" id="v2-plan-file-name"></p>
+              <p class="v2-sheet__hint">支持 txt / md，最大 32KB；会作为叙事参考，不会原样照抄。</p>
+            </label>
+            <label class="v2-sheet__field">
+              <span class="v2-sheet__field-label">精选文件夹（可选）</span>
+              <input type="text" id="v2-featured-dir" maxlength="64" autocomplete="off"
+                     placeholder="例如：精选" />
+            </label>
+            <label class="v2-sheet__field">
+              <span class="v2-sheet__field-label">素材文件夹（可选）</span>
+              <input type="text" id="v2-material-dir" maxlength="64" autocomplete="off"
+                     placeholder="例如：素材" />
+            </label>
+            <fieldset class="v2-sheet__field v2-sheet__field--full" id="v2-layout-density-field">
+              <legend class="v2-sheet__field-label" id="v2-layout-density-label">版面密度（可选）</legend>
+              <div class="v2-sheet__radio-group" role="radiogroup" aria-labelledby="v2-layout-density-label">
+                <label class="v2-sheet__radio">
+                  <input type="radio" name="v2-layout-density" value="balanced" checked />
+                  <span>智能平衡（推荐）</span>
+                  <span class="v2-sheet__radio-hint">根据照片数量与横竖比自动排版</span>
+                </label>
+                <label class="v2-sheet__radio">
+                  <input type="radio" name="v2-layout-density" value="hero_first" />
+                  <span>大图为主</span>
+                  <span class="v2-sheet__radio-hint">更多单张全幅画面，节奏更偏杂志感</span>
+                </label>
+                <label class="v2-sheet__radio">
+                  <input type="radio" name="v2-layout-density" value="collage_first" />
+                  <span>拼图为主</span>
+                  <span class="v2-sheet__radio-hint">更多宫格与照片组合，连拍更易成组</span>
+                </label>
+              </div>
+              <p class="v2-sheet__hint" role="note">
+                仅影响卷轴游记排版，不影响快速分享长图。不保证每张照片单独占一页；章首重要画面与阅读节奏优先。
+              </p>
+              <p class="v2-sheet__hint v2-sheet__hint--warn" id="v2-layout-density-warn" role="note" hidden>
+                照片较少时，拼图为主的效果可能不明显，系统仍会以保证阅读节奏为先。
+              </p>
+            </fieldset>
+            <label class="v2-sheet__field v2-sheet__field--full">
+              <span class="v2-sheet__field-label">模板</span>
+              <select id="v2-template-mode" aria-label="模板选择">
+                <option value="smart" selected>智能匹配（推荐）</option>
+                <option value="manual:visual-journal">视觉游记（手动指定）</option>
+              </select>
+              <p class="v2-sheet__hint" id="v2-template-hint" role="note">
+                智能匹配会根据行程天数、地点与视频占比推荐模板；不确定时自动使用视觉游记。
+              </p>
+            </label>
+          </details>
           <div class="v2-sheet__actions v2-sheet__actions--full">
             <button type="button" class="v2-sheet__primary" id="v2-sheet-start-fine">开始制作（专业）</button>
             <button type="button" class="v2-sheet__repick" id="v2-sheet-repick-fine">重新选择文件夹</button>

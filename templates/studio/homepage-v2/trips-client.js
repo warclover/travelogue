@@ -16,6 +16,7 @@ export const SHELF_PAGE_SIZE = 20;
  * @property {string|null} [previewRelPath]
  * @property {boolean} [longshotStale]
  * @property {boolean} [algorithmStale]
+ * @property {boolean} [layoutCssStale]
  * @property {boolean} [aestheticStale]
  * @property {boolean} [cullStale]
  * @property {boolean} [layoutStale]

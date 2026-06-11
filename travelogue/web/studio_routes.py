@@ -235,6 +235,10 @@ class StudioMixin:
         if bento_trip_id is not None:
             trip_handlers.handle_bento_preview(self, bento_trip_id)
             return True
+        from travelogue.render.bundle_serve import BUNDLE_ASSET_PREFIX
+
+        if path.startswith(BUNDLE_ASSET_PREFIX):
+            return static_handlers.handle_bundle_asset(self, path)
         if path.startswith(STUDIO_ASSET_PREFIX):
             return static_handlers.handle_studio_asset(self, path)
         return False

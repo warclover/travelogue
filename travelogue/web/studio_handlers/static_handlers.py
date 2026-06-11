@@ -8,6 +8,7 @@ from typing import Literal
 from urllib.parse import unquote
 
 from travelogue.paths import STUDIO_TEMPLATE_DIR
+from travelogue.render.bundle_serve import parse_bundle_request, resolve_bundle_file
 from travelogue.web.studio_handlers.paths import HOME_V2_PATH, STUDIO_ASSET_PREFIX
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
@@ -157,6 +158,38 @@ def _asset_cache_control(handler: StudioHandlerProtocol, rel: str) -> str:
     if rel_lower.endswith("manifest.json"):
         return "public, max-age=300"
     return "public, max-age=3600"
+
+
+def handle_bundle_asset(handler: StudioHandlerProtocol, path: str) -> bool:
+    parsed = parse_bundle_request(path)
+    if parsed is None:
+        handler.send_error(404)
+        return True
+    template_id, rel = parsed
+    asset = resolve_bundle_file(template_id, rel)
+    if asset is None:
+        handler.send_error(404)
+        return True
+
+    etag = _asset_etag(asset)
+    inm = _request_header(handler, "If-None-Match")
+    if inm and inm.strip() == etag:
+        handler.send_response(304)
+        handler.send_header("ETag", etag)
+        handler.send_header("Cache-Control", _asset_cache_control(handler, rel))
+        handler.end_headers()
+        return True
+
+    ctype = mimetypes.guess_type(asset.name)[0] or "application/octet-stream"
+    data = asset.read_bytes()
+    handler.send_response(200)
+    handler.send_header("Content-Type", ctype)
+    handler.send_header("Content-Length", str(len(data)))
+    handler.send_header("ETag", etag)
+    handler.send_header("Cache-Control", _asset_cache_control(handler, rel))
+    handler.end_headers()
+    handler.wfile.write(data)
+    return True
 
 
 def handle_studio_asset(handler: StudioHandlerProtocol, path: str) -> bool:

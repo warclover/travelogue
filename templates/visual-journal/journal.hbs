@@ -8,28 +8,28 @@
   <title>{{title}}</title>
   <link rel="stylesheet" href="journal.css?v={{assetVersion}}" />
   {{#if includeLongShot}}
-  <link rel="stylesheet" href="longshot.css?v={{assetVersion}}" />
+  <link rel="stylesheet" href="{{assetRoot}}longshot.css?v={{assetVersion}}" />
   {{/if}}
   {{#if isDraft}}
-  <link rel="stylesheet" href="inline-edit.css?v={{assetVersion}}" />
+  <link rel="stylesheet" href="{{assetRoot}}inline-edit.css?v={{assetVersion}}" />
   {{/if}}
   {{#if includeScreenplay}}
-  <link rel="stylesheet" href="copy-display.css?v={{assetVersion}}" />
-  <link rel="stylesheet" href="screenplay.css?v={{assetVersion}}" />
+  <link rel="stylesheet" href="{{assetRoot}}copy-display.css?v={{assetVersion}}" />
+  <link rel="stylesheet" href="{{assetRoot}}screenplay.css?v={{assetVersion}}" />
   {{else}}
     {{#if includeLongShot}}
-  <link rel="stylesheet" href="copy-display.css?v={{assetVersion}}" />
+  <link rel="stylesheet" href="{{assetRoot}}copy-display.css?v={{assetVersion}}" />
     {{/if}}
     {{#if includeLongshotBridge}}
-  <link rel="stylesheet" href="copy-display.css?v={{assetVersion}}" />
-  <link rel="stylesheet" href="screenplay.css?v={{assetVersion}}" />
+  <link rel="stylesheet" href="{{assetRoot}}copy-display.css?v={{assetVersion}}" />
+  <link rel="stylesheet" href="{{assetRoot}}screenplay.css?v={{assetVersion}}" />
     {{/if}}
   {{/if}}
   {{#if includeLongshotBridge}}
-  <link rel="stylesheet" href="longshot.css?v={{assetVersion}}" />
+  <link rel="stylesheet" href="{{assetRoot}}longshot.css?v={{assetVersion}}" />
   {{/if}}
   {{#if includeBreath}}
-  <link rel="stylesheet" href="breath.css?v={{assetVersion}}" />
+  <link rel="stylesheet" href="{{assetRoot}}breath.css?v={{assetVersion}}" />
   {{/if}}
   <script>window.__TRAVELOGUE_READING__ = {{{readingJson}}};</script>
 </head>
@@ -77,47 +77,47 @@
   </main>
   {{#if includeLongShot}}
   {{> longshot-toolbar}}
-  <script src="vendor/html2canvas.min.js?v={{assetVersion}}" defer></script>
-  <script src="copy-toggle.js?v={{assetVersion}}" defer></script>
-  <script src="longshot.js?v={{assetVersion}}" defer></script>
-  <script src="share.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}vendor/html2canvas.min.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}copy-toggle.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}longshot.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}share.js?v={{assetVersion}}" defer></script>
   {{/if}}
   {{#if includeScreenplay}}
   {{> screenplay-toolbar}}
-  <script src="copy-toggle.js?v={{assetVersion}}" defer></script>
-  <script src="screenplay-hash.js?v={{assetVersion}}" defer></script>
-  <script src="screenplay-bookmarks.js?v={{assetVersion}}" defer></script>
-  <script src="screenplay.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}copy-toggle.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}screenplay-hash.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}screenplay-bookmarks.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}screenplay.js?v={{assetVersion}}" defer></script>
   {{else}}
   {{#if includeLongshotBridge}}
   {{> screenplay-toolbar}}
-  <script src="copy-toggle.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}copy-toggle.js?v={{assetVersion}}" defer></script>
   {{/if}}
   {{/if}}
   {{#if includeBreath}}
   {{#if includeBreathFlow}}
-  <script src="breath-lenis.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}breath-lenis.js?v={{assetVersion}}" defer></script>
   {{/if}}
   {{#if includeBreathScrub}}
   {{#if includeBreathGsapRuntime}}
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js?v={{assetVersion}}" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js?v={{assetVersion}}" defer></script>
-  <script src="breath-highlight.js?v={{assetVersion}}" defer></script>
-  <script src="breath-image.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}breath-highlight.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}breath-image.js?v={{assetVersion}}" defer></script>
   {{/if}}
-  <script src="breath-gsap.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}breath-gsap.js?v={{assetVersion}}" defer></script>
   {{/if}}
-  <script src="breath.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}breath.js?v={{assetVersion}}" defer></script>
   {{/if}}
   {{#if includeScrollKeyboardNav}}
-  <script src="scroll-nav.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}scroll-nav.js?v={{assetVersion}}" defer></script>
   {{/if}}
   {{#if includeLongshotBridge}}
-  <script src="longshot-bridge.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}longshot-bridge.js?v={{assetVersion}}" defer></script>
   {{/if}}
   {{#if isDraft}}
   {{#if placeholderScript}}{{{placeholderScript}}}{{/if}}
-  <script src="inline-edit.js?v={{assetVersion}}" defer></script>
+  <script src="{{assetRoot}}inline-edit.js?v={{assetVersion}}" defer></script>
   {{/if}}
 </body>
 </html>

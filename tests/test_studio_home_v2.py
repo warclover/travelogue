@@ -44,7 +44,8 @@ V2_HOME_MARKERS = (
     "每一个瞬间",
     "都值得再次相遇",
     "开始制作我的游记",
-    "示例作品",
+    "示例",
+    "v2-bench-continue",
     "自动分章成文",
     "v2-unsupported",
     # M20-d · Import Sheet
@@ -188,7 +189,7 @@ def test_studio_home_v2_js_modules_present() -> None:
     assert "IdleEmpty" in bootstrap and "IdleReturning" in bootstrap
     assert "Importing" in bootstrap
     assert "initViewportWatch" in bootstrap  # 视口闸（M20-f 抽到 viewport-logic）
-    assert "initAdvancedOptionsPanel" in bootstrap
+    assert "initBenchSettings" in bootstrap
     advanced = (STUDIO_DIR / "homepage-v2" / "advanced-options.js").read_text(encoding="utf-8")
     assert "bindAdvancedConfigControls" in advanced
     assert "renderBentoEmpty" in bento
@@ -473,10 +474,9 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "你的游记画册" in shelf
     logic = (STUDIO_DIR / "homepage-v2" / "shelf-actions-logic.js").read_text(encoding="utf-8")
     assert "更新长图" in logic            # stale → 更新长图
-    assert "算法待更新" in shelf
+    assert "tripStaleSummary" in shelf
     assert "重新排版" in logic
-    assert "longshotStale" in shelf
-    assert "algorithmStale" in shelf
+    assert "shelfResumeActions" in shelf
     assert "shelf-actions-logic.js" in shelf
     assert "triggerHomepageRecurate" in shelf
     assert "isDemoTrip" in shelf          # demo → 示例徽章
@@ -676,7 +676,7 @@ def test_studio_home_v2_harness_and_ac_hooks() -> None:
 
     html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
     assert 'id="v2-carousel-hint"' in html
-    assert 'id="v2-tab-demo"' in html
+    assert 'id="v2-bench-continue"' in html
     assert "#v2-web-cell" in html or 'id="v2-web-cell"' in html
 
     css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")

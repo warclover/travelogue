@@ -120,6 +120,7 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
             export_mode="draft",
             validate=False,
             update_pipeline=False,
+            shared_bundle_refs=True,
             cfg=ctx.cfg,
         )
         from travelogue.render.preview import render_preview_jpg

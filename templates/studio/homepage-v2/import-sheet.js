@@ -81,9 +81,25 @@ function releaseTrap(sheet) {
   _trapHandler = null;
 }
 
+function syncSheetBadge() {
+  var badge = $("v2-sheet-badge");
+  if (!badge) return;
+  var confirm = $("v2-sheet-confirm");
+  if (!confirm || confirm.hidden) {
+    badge.textContent = "步骤 1 / 2 · 选择照片";
+    return;
+  }
+  if (_activeMode === "fine_craft") {
+    badge.textContent = "步骤 2 / 2 · 补充信息（可选）";
+    return;
+  }
+  badge.textContent = "步骤 2 / 2 · 确认开始";
+}
+
 function resetConfirm() {
   _pendingAlbumPath = null;
   show($("v2-sheet-confirm"), false);
+  syncSheetBadge();
   switchMode("quick_share", { persist: false });
   var pick = $("v2-sheet-pick");
   if (pick) {
@@ -113,6 +129,7 @@ function showConfirm(albumPath) {
     pick.textContent = "已选择文件夹";
   }
   show($("v2-sheet-confirm"), true);
+  syncSheetBadge();
   restoreModeAndDraft();
   var quickStart = $("v2-sheet-start-quick");
   if (_activeMode === "fine_craft" && titleInput) titleInput.focus();
@@ -260,6 +277,7 @@ function switchMode(nextMode, opts) {
   }
   show(quickPanel, _activeMode === "quick_share");
   show(finePanel, _activeMode === "fine_craft");
+  syncSheetBadge();
   if (opts.persist !== false) saveSheetDraft();
 }
 
@@ -391,6 +409,7 @@ export function openImportSheet() {
   setV2BackgroundInert(true);
   _open = true;
   setError("");
+  syncSheetBadge();
   trapFocus(sheet);
   var pick = $("v2-sheet-pick");
   if (pick && !pick.disabled) pick.focus();

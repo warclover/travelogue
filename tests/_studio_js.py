@@ -33,3 +33,33 @@ def read_studio_js() -> str:
             if p.name not in {"import-run.js", "import-sheet.js", "advanced-options.js"}:
                 parts.append(p.read_text(encoding="utf-8"))
     return "\n".join(parts)
+
+
+def read_preview_toolbar_js() -> str:
+    """Read preview toolbar implementation (bootstrap + templates + store)."""
+    pt = _STUDIO / "preview-toolbar"
+    parts: list[str] = []
+    for name in (
+        "store.js",
+        "templates.js",
+        "toolbar-ui.js",
+        "pending.js",
+        "export-state.js",
+        "export-drawer.js",
+        "export-popover.js",
+        "export-run.js",
+        "menu.js",
+        "stale-sync.js",
+        "shell.js",
+        "share-mode.js",
+        "drawer-support.js",
+        "drawers.js",
+        "narrate.js",
+        "mode-reader.js",
+        "mode-edit.js",
+        "bootstrap.js",
+    ):
+        path = pt / name
+        if path.is_file():
+            parts.append(path.read_text(encoding="utf-8"))
+    return "\n".join(parts)

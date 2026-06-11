@@ -26,6 +26,7 @@ def build_render_context(
     copy_display_override: str | None = None,
     index_name: str = "index.html",
     reading_profile_override: str | None = None,
+    asset_root: str = "",
     cfg: AppConfig | None = None,
 ) -> TripRenderContext:
     """export_mode: draft | share | present-preview"""
@@ -225,6 +226,7 @@ def build_render_context(
         "longshotMobileUrl": LONGSHOT_INDEX_NAME if surface.include_longshot_bridge else None,
         "includeScreenplay": surface.include_screenplay,
         "assetVersion": asset_version,
+        "assetRoot": asset_root,
         "hasShareZip": zip_ready,
         "shareZipFile": zip_name if zip_ready else None,
         "exportLayout": surface.export_layout,

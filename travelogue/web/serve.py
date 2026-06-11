@@ -19,7 +19,7 @@ from travelogue.web.studio_chrome import inject_studio_chrome, should_inject_stu
 from travelogue.web.studio_errors import client_error_payload, internal_error_payload
 from travelogue.web.studio_routes import StudioMixin
 from travelogue.web.studio_uploads import sweep_stale_uploads
-from travelogue.web.tier_patch import TierPatchError, apply_tier_promotions
+from travelogue.web.tier_patch import TierPatchError, apply_tier_demotions, apply_tier_promotions
 
 SAVE_PATH = "/__travelogue/save-copy"
 PROMOTE_TIER_PATH = "/__travelogue/promote-tier"
@@ -250,15 +250,19 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             return
         ids = [str(aid).strip() for aid in asset_ids if str(aid).strip()]
         defer_rerender = payload.get("rerender") is False
+        demote = payload.get("demote") is True
         svc = app_context_for_trip_json(self.trip_json_path, cfg=self.app_config).trip_service()
         rendered: list[str] = []
         try:
             with self._app_config_scope():
                 with _trip_write_lock:
                     trip = svc.load(self.trip_json_path)
-                    promoted = apply_tier_promotions(trip, ids)
+                    if demote:
+                        changed = apply_tier_demotions(trip, ids)
+                    else:
+                        changed = apply_tier_promotions(trip, ids)
                     svc.save(trip, self.trip_json_path)
-                    if self.auto_rerender and promoted and not defer_rerender:
+                    if self.auto_rerender and changed and not defer_rerender:
                         from travelogue.web.rerender import rerender_draft_trip
 
                         rendered = rerender_draft_trip(self.trip_json_path)
@@ -269,7 +273,10 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             _log.exception("tier promotion failed for %s", self.trip_json_path)
             self._json_response(500, internal_error_payload())
             return
-        self._json_response(200, {"ok": True, "promoted": promoted, "rendered": rendered})
+        if demote:
+            self._json_response(200, {"ok": True, "demoted": changed, "rendered": rendered})
+        else:
+            self._json_response(200, {"ok": True, "promoted": changed, "rendered": rendered})
 
     def _json_response(self, status: int, payload: dict) -> None:
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")

@@ -587,6 +587,7 @@ def run_studio_pipeline(
                 export_mode="draft",
                 validate=False,
                 update_pipeline=False,
+                shared_bundle_refs=True,
                 cfg=cfg,
             )
             pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)

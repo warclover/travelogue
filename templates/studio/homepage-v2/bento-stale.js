@@ -3,7 +3,12 @@
  */
 import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
-import { bentoStaleMessage, shouldShowBentoStaleBar } from "./shelf-actions-logic.js";
+import { tripPreviewHref } from "../js/trip-stale.js";
+import {
+  bentoStaleActionKind,
+  bentoStaleMessage,
+  shouldShowBentoStaleBar,
+} from "./shelf-actions-logic.js";
 import { runTripCurateJob } from "./curate-client.js";
 import { clearBentoPreviewCache } from "./trip-preview.js";
 
@@ -15,7 +20,6 @@ function toast(msg, opts) {
 }
 
 function activePreviewTrip() {
-  if (V2.bentoTab !== "mine") return null;
   return V2.userPreviewTrip || null;
 }
 
@@ -26,8 +30,8 @@ function refreshAfterCurate() {
     chain = V2.reroute();
   }
   return chain.then(function () {
-    return import("./bento-tabs.js").then(function (tabs) {
-      return tabs.refreshUserBentoPreview(V2.trips, { force: true });
+    return import("./trip-preview.js").then(function (mod) {
+      return mod.refreshUserBentoPreview(V2.trips, { force: true });
     });
   });
 }
@@ -70,11 +74,20 @@ function wireStaleAction() {
   btn.addEventListener("click", function () {
     var trip = activePreviewTrip();
     if (!trip) return;
+    if (bentoStaleActionKind(trip) === "preview") {
+      trackStudioEvent("homepage_open_preview", {
+        trip_id: trip.tripId,
+        surface: "bento_stale",
+        reason: "layoutCssStale",
+      });
+      window.location.href = tripPreviewHref(trip);
+      return;
+    }
     triggerHomepageRecurate(trip.tripId, "bento_bar");
   });
 }
 
-/** 同步 Bento 主预览区 stale 提示（仅「我的画册」Tab + algorithmStale）。 */
+/** 同步 Bento 主预览区 stale 提示（最近一本 + algorithmStale）。 */
 export function syncBentoStaleBar() {
   wireStaleAction();
   var host = $("v2-bento-stale");
@@ -89,7 +102,12 @@ export function syncBentoStaleBar() {
 
   if (textEl) textEl.textContent = bentoStaleMessage(trip);
   if (actionBtn) {
-    actionBtn.disabled = _curateInFlight;
-    actionBtn.textContent = _curateInFlight ? "排版中…" : "重新排版";
+    var actionKind = bentoStaleActionKind(trip);
+    actionBtn.disabled = actionKind === "recurate" && _curateInFlight;
+    if (actionKind === "preview") {
+      actionBtn.textContent = "打开预览";
+    } else {
+      actionBtn.textContent = _curateInFlight ? "排版中…" : "重新排版";
+    }
   }
 }

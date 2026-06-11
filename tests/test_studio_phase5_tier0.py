@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from tests._studio_js import read_studio_js
+from tests._studio_js import read_preview_toolbar_js, read_studio_js
 
 ROOT = Path(__file__).resolve().parents[1]
-PREVIEW_JS = ROOT / "templates" / "studio" / "preview-toolbar.js"
 
 
 def test_p5_14_job_busy_toast_and_retry() -> None:
@@ -19,20 +18,20 @@ def test_p5_14_job_busy_toast_and_retry() -> None:
 
 
 def test_p5_32_preview_longshot_busy_retry() -> None:
-    js = PREVIEW_JS.read_text(encoding="utf-8")
+    js = read_preview_toolbar_js()
     assert "postJsonBusyRetry" in js
-    assert './js/http.js"' in js
+    assert '../js/http.js"' in js
     assert "排队中，请稍候" in js
 
 
 def test_preview_toolbar_longshot_integrated_to_top_bar() -> None:
-    js = PREVIEW_JS.read_text(encoding="utf-8")
+    js = read_preview_toolbar_js()
     css = (ROOT / "templates" / "studio" / "preview-toolbar.css").read_text(encoding="utf-8")
     client = (ROOT / "templates" / "studio" / "js" / "longshot-client.js").read_text(
         encoding="utf-8"
     )
     for token in (
-        "preview-toolbar__longshot-caret",
+        "preview-toolbar__export-settings-trigger",
         "preview-toolbar__longshot-preview-row",
         "openLongshotExportOptions",
         "openStudioLongshotExportPanel",

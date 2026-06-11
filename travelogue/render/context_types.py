@@ -264,6 +264,7 @@ class TripRenderContext(TypedDict, total=False):
     longshotMobileUrl: str | None
     includeScreenplay: bool
     assetVersion: str
+    assetRoot: str
     hasShareZip: bool
     shareZipFile: str | None
     exportLayout: str

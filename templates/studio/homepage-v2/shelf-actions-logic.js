@@ -10,7 +10,7 @@
  */
 
 /**
- * @param {{ longshotStale?: boolean, algorithmStale?: boolean }} trip
+ * @param {{ longshotStale?: boolean, algorithmStale?: boolean, layoutCssStale?: boolean }} trip
  * @returns {ShelfResumeAction[]}
  */
 export function shelfResumeActions(trip) {
@@ -32,25 +32,44 @@ export function shelfResumeActions(trip) {
       triggerCurate: true,
     });
   }
+  if (trip.layoutCssStale) {
+    actions.push({
+      kind: "layout",
+      label: "更新布局",
+      primary: !trip.longshotStale && !trip.algorithmStale,
+    });
+  }
   actions.push({
     kind: "open",
     label: "打开预览",
-    primary: !trip.longshotStale && !trip.algorithmStale,
+    primary: !trip.longshotStale && !trip.algorithmStale && !trip.layoutCssStale,
   });
   return actions;
 }
 
 /**
- * Bento「我的画册」Tab 是否应展示算法过期提示条。
- * @param {{ algorithmStale?: boolean, longshotStale?: boolean }} trip
+ * Bento「最近一本」是否应展示 stale 提示条（算法或布局 CSS 过期）。
+ * @param {{ algorithmStale?: boolean, layoutCssStale?: boolean }} trip
  * @returns {boolean}
  */
 export function shouldShowBentoStaleBar(trip) {
-  return !!(trip && trip.algorithmStale);
+  return !!(trip && (trip.algorithmStale || trip.layoutCssStale));
 }
 
 /**
- * @param {{ staleHint?: string, staleHints?: string[] }} trip
+ * Bento stale 条主操作：recurate 重新排版 | preview 打开预览应用排版。
+ * @param {{ algorithmStale?: boolean, layoutCssStale?: boolean }} trip
+ * @returns {"recurate"|"preview"|null}
+ */
+export function bentoStaleActionKind(trip) {
+  trip = trip || {};
+  if (trip.algorithmStale) return "recurate";
+  if (trip.layoutCssStale) return "preview";
+  return null;
+}
+
+/**
+ * @param {{ staleHint?: string, staleHints?: string[], algorithmStale?: boolean, layoutCssStale?: boolean }} trip
  * @returns {string}
  */
 export function bentoStaleMessage(trip) {
@@ -58,5 +77,11 @@ export function bentoStaleMessage(trip) {
   if (trip.staleHint) return String(trip.staleHint);
   var hints = trip.staleHints;
   if (Array.isArray(hints) && hints.length) return String(hints[0]);
+  if (trip.algorithmStale) {
+    return "排版算法已更新，建议重新排版以刷新预览";
+  }
+  if (trip.layoutCssStale) {
+    return "布局待更新，请在预览中应用排版";
+  }
   return "排版算法已更新，建议重新排版以刷新预览";
 }

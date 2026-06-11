@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from tests._studio_js import read_studio_js
+from tests._studio_js import read_preview_toolbar_js, read_studio_js
 from tests.clustering_fixtures import load_fixture_assets
 from tests.test_studio_server import (
     _distinct_album,
@@ -23,7 +23,6 @@ from travelogue.web.studio_stages import ingest_stage_hint, stage_hint
 
 ROOT = Path(__file__).resolve().parents[1]
 STUDIO_HTML = ROOT / "templates" / "studio" / "legacy-freeze" / "studio.classic.html"
-PREVIEW_JS = ROOT / "templates" / "studio" / "preview-toolbar.js"
 
 
 def test_ux_p3_01_job_stage_count_is_four() -> None:
@@ -100,6 +99,8 @@ def test_ux_p3_04_cluster_notice_non_blocking_string() -> None:
 def test_ux_p3_03_v2_advanced_options_markers() -> None:
     html = (ROOT / "templates" / "studio" / "studio-home-v2.html").read_text(encoding="utf-8")
     for expected in (
+        'id="v2-bench-settings"',
+        'id="v2-settings-popover"',
         'id="v2-advanced-toggle"',
         'id="v2-advanced-popover"',
         'id="studio-cfg-clustering"',
@@ -122,7 +123,7 @@ def test_ux_p3_05_06_slow_hint_thresholds_and_copy() -> None:
 
 
 def test_ux_p3_07_preview_toolbar_has_no_cluster_controls() -> None:
-    js = PREVIEW_JS.read_text(encoding="utf-8")
+    js = read_preview_toolbar_js()
     forbidden = ("sceneCluster", "clustering.enabled", "行程识别", "studio-cfg-clustering")
     for token in forbidden:
         assert token not in js

@@ -1,6 +1,7 @@
 /**
- * 首页 v2 · 用户最近画册 Bento 预览（PRD v2.0.5 · 方案 B′）。
+ * 首页 v2 · 用户最近画册 Bento 预览（PRD §4.4 · 最近一本单卡）。
  */
+import { V2 } from "./store.js";
 import { isDemoTrip } from "../js/constants.js";
 import { isValidManifest } from "./manifest.js";
 
@@ -77,4 +78,69 @@ export function loadTripBentoPreview(tripId, opts) {
       return m;
     })
     .catch(function () { return null; });
+}
+
+/** 当前 Bento 主预览 manifest：有用户画册时用最近一本，否则示例。 */
+export function activeBentoManifest() {
+  if (V2.userManifest) return V2.userManifest;
+  return V2.demoManifest;
+}
+
+/**
+ * trips 加载后拉取最近一本预览 manifest，并刷新 Bento 面。
+ * @param {import("./trips-client.js").ShelfTrip[]} trips
+ * @param {{ force?: boolean }} [opts]
+ */
+export function refreshUserBentoPreview(trips, opts) {
+  opts = opts || {};
+  var primary = pickBentoPreviewTrip(trips);
+  if (!primary) {
+    V2.userManifest = null;
+    V2.userPreviewTrip = null;
+    V2.manifest = activeBentoManifest();
+    return import("./bento-stale.js").then(function (stale) {
+      stale.syncBentoStaleBar();
+      return null;
+    });
+  }
+
+  var candidates = pickRecentUserTrips(trips);
+  var ordered = [primary].concat(
+    candidates.filter(function (t) { return t.tripId !== primary.tripId; })
+  );
+  var matchedTrip = null;
+
+  function tryAt(i) {
+    if (i >= ordered.length) return Promise.resolve(null);
+    var trip = ordered[i];
+    return loadTripBentoPreview(trip.tripId, {
+      updatedAt: trip.updatedAt,
+      force: !!opts.force,
+    }).then(function (manifest) {
+      if (manifest) {
+        manifest.tripId = manifest.tripId || trip.tripId;
+        matchedTrip = trip;
+        return manifest;
+      }
+      return tryAt(i + 1);
+    });
+  }
+
+  return tryAt(0).then(function (manifest) {
+    V2.userManifest = manifest || null;
+    V2.userPreviewTrip = manifest ? matchedTrip : null;
+    V2.manifest = activeBentoManifest();
+    var chain = Promise.resolve();
+    if (V2.manifest) {
+      chain = import("./bento.js").then(function (bento) {
+        bento.renderBentoSurface(V2.manifest);
+      });
+    }
+    return chain.then(function () {
+      return import("./bento-stale.js").then(function (stale) {
+        stale.syncBentoStaleBar();
+        return V2.userManifest;
+      });
+    });
+  });
 }

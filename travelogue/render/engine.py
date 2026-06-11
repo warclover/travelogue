@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import shutil
 from datetime import UTC
@@ -141,31 +142,62 @@ def should_include_scroll_keyboard_nav(
     return (payload.get("scroll") or {}).get("keyboardNav") is True
 
 
+def _materialize_bundle_file(
+    out_dir: Path,
+    src: Path,
+    name: str,
+    *,
+    error_code: str,
+    shared_bundle_refs: bool,
+) -> None:
+    if not src.is_file():
+        raise RenderError(error_code, f"missing {src.name}")
+    dest = out_dir / name
+    if dest.resolve() == src.resolve():
+        return
+    if shared_bundle_refs:
+        if dest.is_file():
+            dest.unlink()
+        return
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if dest.is_file():
+        dest.unlink()
+    try:
+        os.link(src, dest)
+    except OSError:
+        shutil.copy2(src, dest)
+
+
 def _copy_named_files(
     out_dir: Path,
     pairs: tuple[tuple[Path, str], ...],
     *,
     error_code: str,
+    shared_bundle_refs: bool = False,
 ) -> None:
     out_dir = out_dir.resolve()
     for src, name in pairs:
-        if not src.is_file():
-            raise RenderError(error_code, f"missing {src.name}")
-        dest = out_dir / name
-        if dest.resolve() != src.resolve():
-            shutil.copy2(src, dest)
+        _materialize_bundle_file(
+            out_dir,
+            src,
+            name,
+            error_code=error_code,
+            shared_bundle_refs=shared_bundle_refs,
+        )
 
 
-def copy_scroll_nav_bundle(out_dir: Path) -> None:
+def copy_scroll_nav_bundle(out_dir: Path, *, shared_bundle_refs: bool = False) -> None:
     out_dir = out_dir.resolve()
-    if not SCROLL_NAV_JS.is_file():
-        raise RenderError("E_RENDER_SCROLL_NAV", "missing scroll-nav.js")
-    dest = out_dir / "scroll-nav.js"
-    if dest.resolve() != SCROLL_NAV_JS.resolve():
-        shutil.copy2(SCROLL_NAV_JS, dest)
+    _materialize_bundle_file(
+        out_dir,
+        SCROLL_NAV_JS,
+        "scroll-nav.js",
+        error_code="E_RENDER_SCROLL_NAV",
+        shared_bundle_refs=shared_bundle_refs,
+    )
 
 
-def copy_longshot_bundle(out_dir: Path) -> None:
+def copy_longshot_bundle(out_dir: Path, *, shared_bundle_refs: bool = False) -> None:
     """Copy longshot.js, share.js, longshot.css, copy-toggle, and vendored html2canvas."""
     out_dir = out_dir.resolve()
     _copy_named_files(
@@ -178,14 +210,15 @@ def copy_longshot_bundle(out_dir: Path) -> None:
             (COPY_DISPLAY_CSS, "copy-display.css"),
         ),
         error_code="E_RENDER_LONGSHOT",
+        shared_bundle_refs=shared_bundle_refs,
     )
-    vendor_dir = out_dir / "vendor"
-    vendor_dir.mkdir(parents=True, exist_ok=True)
-    if not HTML2CANVAS_VENDOR.is_file():
-        raise RenderError("E_RENDER_LONGSHOT", "missing vendor/html2canvas.min.js")
-    dest_vendor = vendor_dir / "html2canvas.min.js"
-    if dest_vendor.resolve() != HTML2CANVAS_VENDOR.resolve():
-        shutil.copy2(HTML2CANVAS_VENDOR, dest_vendor)
+    _materialize_bundle_file(
+        out_dir,
+        HTML2CANVAS_VENDOR,
+        "vendor/html2canvas.min.js",
+        error_code="E_RENDER_LONGSHOT",
+        shared_bundle_refs=shared_bundle_refs,
+    )
 
 
 def should_include_longshot_bridge(
@@ -287,34 +320,45 @@ def should_include_breath_scrub(
     return (payload.get("scroll") or {}).get("breath") in ("cinematic", "gallery")
 
 
-def copy_breath_bundle(out_dir: Path, *, include_flow: bool = False, include_scrub: bool = False) -> None:
+def copy_breath_bundle(
+    out_dir: Path,
+    *,
+    include_flow: bool = False,
+    include_scrub: bool = False,
+    shared_bundle_refs: bool = False,
+) -> None:
     out_dir = out_dir.resolve()
     _copy_named_files(
         out_dir,
         ((BREATH_JS, "breath.js"), (BREATH_CSS, "breath.css")),
         error_code="E_RENDER_BREATH",
+        shared_bundle_refs=shared_bundle_refs,
     )
     if include_flow:
-        if not BREATH_LENIS_JS.is_file():
-            raise RenderError("E_RENDER_BREATH", "missing breath-lenis.js")
-        dest = out_dir / "breath-lenis.js"
-        if dest.resolve() != BREATH_LENIS_JS.resolve():
-            shutil.copy2(BREATH_LENIS_JS, dest)
+        _materialize_bundle_file(
+            out_dir,
+            BREATH_LENIS_JS,
+            "breath-lenis.js",
+            error_code="E_RENDER_BREATH",
+            shared_bundle_refs=shared_bundle_refs,
+        )
     if include_scrub:
-        if not BREATH_GSAP_JS.is_file():
-            raise RenderError("E_RENDER_BREATH", "missing breath-gsap.js")
-        dest = out_dir / "breath-gsap.js"
-        if dest.resolve() != BREATH_GSAP_JS.resolve():
-            shutil.copy2(BREATH_GSAP_JS, dest)
-        for src, name in (
-            (BREATH_HIGHLIGHT_JS, "breath-highlight.js"),
-            (BREATH_IMAGE_JS, "breath-image.js"),
-        ):
-            if not src.is_file():
-                raise RenderError("E_RENDER_BREATH", f"missing {name}")
-            dest = out_dir / name
-            if dest.resolve() != src.resolve():
-                shutil.copy2(src, dest)
+        _materialize_bundle_file(
+            out_dir,
+            BREATH_GSAP_JS,
+            "breath-gsap.js",
+            error_code="E_RENDER_BREATH",
+            shared_bundle_refs=shared_bundle_refs,
+        )
+        _copy_named_files(
+            out_dir,
+            (
+                (BREATH_HIGHLIGHT_JS, "breath-highlight.js"),
+                (BREATH_IMAGE_JS, "breath-image.js"),
+            ),
+            error_code="E_RENDER_BREATH",
+            shared_bundle_refs=shared_bundle_refs,
+        )
 
 
 def write_longshot_sidecar(
@@ -342,11 +386,11 @@ def write_longshot_sidecar(
     )
     dest = out_dir / LONGSHOT_INDEX_NAME
     dest.write_text(html, encoding="utf-8", newline="\n")
-    copy_longshot_bundle(out_dir)
+    copy_longshot_bundle(out_dir, shared_bundle_refs=False)
     return dest
 
 
-def copy_screenplay_bundle(out_dir: Path) -> None:
+def copy_screenplay_bundle(out_dir: Path, *, shared_bundle_refs: bool = False) -> None:
     """Copy screenplay, copy-toggle, copy-display, and longshot-bridge assets."""
     _copy_named_files(
         out_dir,
@@ -360,10 +404,11 @@ def copy_screenplay_bundle(out_dir: Path) -> None:
             (LONGSHOT_BRIDGE_JS, "longshot-bridge.js"),
         ),
         error_code="E_RENDER_SCREENPLAY",
+        shared_bundle_refs=shared_bundle_refs,
     )
 
 
-def copy_longshot_bridge_bundle(out_dir: Path) -> None:
+def copy_longshot_bridge_bundle(out_dir: Path, *, shared_bundle_refs: bool = False) -> None:
     """Draft web toolbar: longshot bridge + copy toggles without present bundle."""
     _copy_named_files(
         out_dir,
@@ -374,10 +419,11 @@ def copy_longshot_bridge_bundle(out_dir: Path) -> None:
             (LONGSHOT_BRIDGE_JS, "longshot-bridge.js"),
         ),
         error_code="E_RENDER_SCREENPLAY",
+        shared_bundle_refs=shared_bundle_refs,
     )
 
 
-def copy_inline_edit_bundle(out_dir: Path) -> None:
+def copy_inline_edit_bundle(out_dir: Path, *, shared_bundle_refs: bool = False) -> None:
     """Copy inline-edit assets for draft preview."""
     _copy_named_files(
         out_dir,
@@ -386,6 +432,7 @@ def copy_inline_edit_bundle(out_dir: Path) -> None:
             (INLINE_EDIT_CSS, "inline-edit.css"),
         ),
         error_code="E_RENDER_INLINE_EDIT",
+        shared_bundle_refs=shared_bundle_refs,
     )
 
 
@@ -433,6 +480,7 @@ def render_html(
     copy_display_override: str | None = None,
     index_name: str = "index.html",
     reading_profile_override: str | None = None,
+    shared_bundle_refs: bool = False,
     cfg: AppConfig | None = None,
 ) -> str:
     effective = template_id or DEFAULT_TEMPLATE_ID
@@ -449,6 +497,11 @@ def render_html(
     compiler = Compiler()
     partials = _load_partials_for_template(effective, compiler)
     template = _compile_template(compiler, tdir)
+    asset_root = ""
+    if shared_bundle_refs and export_mode == "draft":
+        from travelogue.render.bundle_serve import bundle_asset_root
+
+        asset_root = bundle_asset_root(effective)
     ctx = build_render_context(
         trip,
         export_mode=export_mode,
@@ -459,6 +512,7 @@ def render_html(
         copy_display_override=copy_display_override,
         index_name=index_name,
         reading_profile_override=reading_profile_override,
+        asset_root=asset_root,
         cfg=cfg,
     )
     return template(ctx, partials=partials)
@@ -481,6 +535,7 @@ def render_trip(
     font_theme: str | None = None,
     copy_display_override: str | None = None,
     reading_profile_override: str | None = None,
+    shared_bundle_refs: bool = False,
     cfg: AppConfig | None = None,
 ) -> Path:
     trip_path = trip_path.resolve()
@@ -528,6 +583,7 @@ def render_trip(
             reading_profile_override=reading_profile_override,
             include_longshot=include_longshot,
             update_pipeline=update_pipeline,
+            shared_bundle_refs=shared_bundle_refs,
             cfg=cfg,
         )
     except RenderError as exc:
@@ -558,6 +614,7 @@ def _render_trip_body(
     reading_profile_override: str | None,
     include_longshot: bool | None,
     update_pipeline: bool,
+    shared_bundle_refs: bool,
     cfg: AppConfig | None,
 ) -> Path:
     from travelogue.runtime import app_context_for_trip_json
@@ -576,6 +633,7 @@ def _render_trip_body(
         copy_display_override=copy_display_override,
         index_name=index_name,
         reading_profile_override=reading_profile_override,
+        shared_bundle_refs=shared_bundle_refs,
         cfg=cfg,
     )
 
@@ -614,7 +672,7 @@ def _render_trip_body(
             export_layout_override=export_layout_override,
         )
     if include_longshot:
-        copy_longshot_bundle(out_dir)
+        copy_longshot_bundle(out_dir, shared_bundle_refs=shared_bundle_refs)
 
     if should_include_screenplay(
         trip,
@@ -622,13 +680,13 @@ def _render_trip_body(
         layout_engine_override=layout_engine,
         export_layout_override=export_layout_override,
     ):
-        copy_screenplay_bundle(out_dir)
+        copy_screenplay_bundle(out_dir, shared_bundle_refs=shared_bundle_refs)
     elif should_include_longshot_bridge(
         trip,
         layout_engine_override=layout_engine,
         export_layout_override=export_layout_override,
     ):
-        copy_longshot_bridge_bundle(out_dir)
+        copy_longshot_bridge_bundle(out_dir, shared_bundle_refs=shared_bundle_refs)
 
     if should_include_breath(
         trip,
@@ -656,6 +714,7 @@ def _render_trip_body(
                 index_name=index_name,
                 reading_profile_override=reading_profile_override,
             ),
+            shared_bundle_refs=shared_bundle_refs,
         )
 
     if should_include_scroll_keyboard_nav(
@@ -665,7 +724,7 @@ def _render_trip_body(
         index_name=index_name,
         reading_profile_override=reading_profile_override,
     ):
-        copy_scroll_nav_bundle(out_dir)
+        copy_scroll_nav_bundle(out_dir, shared_bundle_refs=shared_bundle_refs)
 
     if (
         write_index
@@ -686,7 +745,7 @@ def _render_trip_body(
         )
 
     if export_mode == "draft":
-        copy_inline_edit_bundle(out_dir)
+        copy_inline_edit_bundle(out_dir, shared_bundle_refs=shared_bundle_refs)
 
     if update_pipeline:
         from datetime import datetime
@@ -712,6 +771,7 @@ def render_trip_surfaces(
     font_theme: str | None = None,
     copy_display_override: str | None = None,
     reading_profile_override: str | None = None,
+    shared_bundle_refs: bool = False,
     cfg: AppConfig | None = None,
 ) -> tuple[Path, Path, Path | None]:
     """Write index.html, index-mobile.html, and optionally index-present.html from one trip.json."""
@@ -740,6 +800,7 @@ def render_trip_surfaces(
         font_theme=font_theme,
         copy_display_override=copy_display_override,
         reading_profile_override=reading_profile_override,
+        shared_bundle_refs=shared_bundle_refs,
         **shared,
     ) / "index.html"
     mobile_index = render_trip(
@@ -755,6 +816,7 @@ def render_trip_surfaces(
         font_theme=font_theme,
         copy_display_override=copy_display_override,
         reading_profile_override=reading_profile_override,
+        shared_bundle_refs=shared_bundle_refs,
         **shared,
     ) / "index-mobile.html"
     present_index: Path | None = None
@@ -773,6 +835,7 @@ def render_trip_surfaces(
             font_theme=font_theme,
             copy_display_override=copy_display_override,
             reading_profile_override=reading_profile_override,
+            shared_bundle_refs=shared_bundle_refs,
             **shared,
         ) / PRESENT_PREVIEW_INDEX_NAME
     return web_index, mobile_index, present_index

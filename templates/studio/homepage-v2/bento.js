@@ -9,9 +9,9 @@ import { initCarousel } from "./carousel.js";
 import { initPhoneStrip } from "./phone-strip.js";
 import { resolveLayoutTier } from "./layout-tier.js";
 import { trackStudioEvent } from "../js/analytics.js";
-import { initBentoTabs, syncTabUi } from "./bento-tabs.js";
-import { syncBentoStaleBar } from "./bento-stale.js";
-import { pickRecentUserTrips } from "./trip-preview.js";
+import { syncBentoStaleBar, triggerHomepageRecurate } from "./bento-stale.js";
+import { shelfResumeActions } from "./shelf-actions-logic.js";
+import { tripPreviewHref } from "../js/trip-stale.js";
 
 var _phoneStripApi = null;
 var _phoneFrameObserver = null;
@@ -172,131 +172,105 @@ export function renderPhone(manifest, tier) {
   });
 }
 
-/** 工作台左栏 · 最近 3 本画册卡（无「最近编辑」标 / 无张数，仅标题）。 */
-export function renderBenchRecent() {
-  var sample = $("v2-bench-sample");
-  var recentHost = $("v2-bench-recent");
-  var list = $("v2-bench-recent-list");
-  var left = document.querySelector(".v2-bench__left");
-  var bench = document.querySelector(".v2-bench");
-  if (!sample || !recentHost || !list) return;
-
-  var recent = pickRecentUserTrips(V2.trips).slice(0, 3);
-  list.innerHTML = "";
-
-  if (!recent.length) {
-    show(sample, true);
-    show(recentHost, false);
-    if (left) left.classList.remove("v2-bench__left--recent");
-    if (bench) bench.classList.remove("v2-bench--recent");
-    return;
+function openBenchTrip(trip, focusLongshot) {
+  var url = trip.previewUrl || tripPreviewHref(trip);
+  if (focusLongshot) {
+    url += (url.indexOf("?") >= 0 ? "&" : "?") + "focus=longshot";
   }
-
-  recent.forEach(function (trip, idx) {
-    var card = document.createElement("a");
-    card.className = "v2-bench__recent-card";
-    var href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
-    if (trip.longshotStale) href = "/" + trip.tripId + "/index.html?focus=longshot";
-    card.href = href;
-    var benchStale = [];
-    if (trip.longshotStale) benchStale.push("长图待更新");
-    if (trip.algorithmStale) benchStale.push("算法待更新");
-    card.title = (trip.title || trip.tripId)
-      + (trip.updatedAt ? " · " + formatUpdatedAt(trip.updatedAt) : "")
-      + (benchStale.length ? " · " + benchStale.join(" · ") : "");
-
-    if (trip.previewRelPath) {
-      var img = document.createElement("img");
-      img.alt = trip.title || "游记封面";
-      img.loading = idx === 0 ? "eager" : "lazy";
-      img.src = "/" + trip.tripId + "/" + trip.previewRelPath;
-      img.onerror = function () { img.remove(); };
-      card.appendChild(img);
-    }
-
-    if (trip.longshotStale || trip.algorithmStale) {
-      var stale = document.createElement("span");
-      stale.className = "v2-bench__recent-card__stale";
-      stale.textContent = trip.longshotStale ? "长图待更新" : "算法待更新";
-      card.appendChild(stale);
-    }
-
-    var meta = document.createElement("div");
-    meta.className = "v2-bench__recent-card__meta";
-    var title = document.createElement("p");
-    title.className = "v2-bench__recent-card__title";
-    title.textContent = trip.title || trip.tripId;
-    meta.appendChild(title);
-    card.appendChild(meta);
-    list.appendChild(card);
-  });
-
-  show(sample, false);
-  show(recentHost, true);
-  if (left) left.classList.add("v2-bench__left--recent");
-  if (bench) bench.classList.add("v2-bench--recent");
+  window.location.href = url;
 }
 
-/** 工作台 bench。 */
+function resolveDemoTrip() {
+  return V2.trips.find(function (t) { return isDemoTrip(t); }) || null;
+}
+
+function syncBenchContinueButton() {
+  var btn = $("v2-bench-continue");
+  if (!btn) return;
+  var trip = V2.userPreviewTrip;
+  if (trip) {
+    var actions = shelfResumeActions(trip);
+    var primary = actions.filter(function (a) { return a.primary; })[0] || actions[0];
+    btn.textContent = primary && primary.kind === "open" ? "继续" : (primary && primary.label) || "继续";
+    btn.disabled = false;
+    return;
+  }
+  btn.textContent = "继续";
+  btn.disabled = !resolveDemoTrip();
+}
+
+function wireBenchContinue() {
+  var btn = $("v2-bench-continue");
+  if (!btn || btn.dataset.wired === "1") return;
+  btn.dataset.wired = "1";
+  btn.addEventListener("click", function () {
+    var trip = V2.userPreviewTrip || resolveDemoTrip();
+    if (!trip) return;
+    var actions = shelfResumeActions(trip);
+    var primary = actions.filter(function (a) { return a.primary; })[0] || actions[0];
+    trackStudioEvent("shelf_resume_click", {
+      trip_id: trip.tripId,
+      stale: primary && primary.kind !== "open",
+      kind: primary ? primary.kind : "open",
+      surface: "bench",
+    });
+    if (primary && primary.triggerCurate) {
+      triggerHomepageRecurate(trip.tripId, "bench_continue");
+      return;
+    }
+    openBenchTrip(trip, !!(primary && primary.focusLongshot));
+  });
+}
+
+/** 工作台 bench · 最近一本单卡（§4.4）。 */
 export function renderBench(manifest) {
-  renderBenchRecent();
   if (!manifest) return;
   var titleEl = $("v2-bench-title");
   var metaEl = $("v2-bench-meta");
   var thumb = $("v2-bench-thumb");
   var sampleFlag = $("v2-bench-sample-flag");
-  var resumeBtn = $("v2-bench-resume");
-  var recentBtn = $("v2-bench-recent-btn");
-  if (titleEl && manifest.title) titleEl.textContent = manifest.title;
+  var trip = V2.userPreviewTrip;
+
+  if (titleEl) {
+    titleEl.textContent = (trip && trip.title) || manifest.title || (trip && trip.tripId) || "最近一本";
+  }
   if (sampleFlag) {
-    show(sampleFlag, manifest.source !== "user");
+    show(sampleFlag, !trip);
   }
   if (metaEl) {
     var meta = manifest.meta || {};
-    var parts = manifest.source === "user" ? ["我的画册"] : ["自动生成"];
+    var parts = trip ? ["最近一本"] : ["示例作品"];
     if (meta.photoCount) parts.push(meta.photoCount + " 张");
     if (meta.chapterCount) parts.push(meta.chapterCount + " 章");
+    if (trip && trip.updatedAt) parts.push(formatUpdatedAt(trip.updatedAt));
     metaEl.textContent = parts.join(" · ");
   }
-  var resumeTrip = V2.trips.find(function (t) {
-    return !isDemoTrip(t);
-  });
-  if (resumeBtn) {
-    resumeBtn.disabled = !resumeTrip;
-    resumeBtn.dataset.tripId = resumeTrip ? resumeTrip.tripId : "";
-    if (!resumeBtn.dataset.wired) {
-      resumeBtn.dataset.wired = "1";
-      resumeBtn.addEventListener("click", function () {
-        var tripId = resumeBtn.dataset.tripId;
-        if (!tripId) return;
-        var trip = V2.trips.find(function (t) { return t.tripId === tripId; });
-        if (!trip) return;
-        window.location.href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
-      });
+
+  wireBenchContinue();
+  syncBenchContinueButton();
+
+  if (thumb) {
+    var coverUrl = null;
+    if (trip && trip.previewRelPath) {
+      coverUrl = "/" + trip.tripId + "/" + trip.previewRelPath;
+    } else if (manifest.assets && manifest.assets.background) {
+      coverUrl = manifestAssetUrl(manifest, "background");
+    }
+    thumb.style.backgroundImage = "";
+    if (coverUrl) {
+      var probe = new Image();
+      probe.onload = function () {
+        var bgImg = cssBackgroundImage(coverUrl);
+        if (bgImg) thumb.style.backgroundImage = bgImg;
+      };
+      probe.src = coverUrl;
     }
   }
-  if (recentBtn && !recentBtn.dataset.wired) {
-    recentBtn.dataset.wired = "1";
-    recentBtn.addEventListener("click", function () {
-      var shelf = $("v2-shelf");
-      if (shelf && !shelf.hidden) {
-        shelf.scrollIntoView({ behavior: "smooth", block: "start" });
-        return;
-      }
-      if (typeof studioToast === "function") {
-        studioToast("暂无最近作品", { duration: 1800 });
-      }
-    });
-  }
-  if (thumb && manifest.assets && manifest.assets.background) {
-    var url = manifestAssetUrl(manifest, "background");
-    var probe = new Image();
-    probe.onload = function () {
-      var bgImg = cssBackgroundImage(url);
-      if (bgImg) thumb.style.backgroundImage = bgImg;
-    };
-    probe.src = url;
-  }
+}
+
+/** 书架变更后重绘 Bench「最近一本」卡（§4.4）。 */
+export function renderBenchRecent() {
+  renderBench(V2.manifest || V2.demoManifest);
 }
 
 /** 重绘 Bento 预览区（Tab 切换 / manifest 变更）。 */
@@ -324,9 +298,6 @@ export function renderBentoEmpty(manifest) {
   show($("v2-frame"), true);
   show($("v2-importing"), false);
   setV2SkipLinkTarget("v2-cta");
-
-  initBentoTabs();
-  syncTabUi();
 
   trackStudioEvent("layout_tier", {
     tier: resolveLayoutTier({ manifestError: !manifest }),

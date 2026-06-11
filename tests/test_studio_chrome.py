@@ -30,17 +30,17 @@ def test_inject_studio_chrome_share_mode() -> None:
     out = inject_studio_chrome(html, share_mode=True)
     assert 'data-preview-share="on"' in out
     assert 'data-preview-toolbar="on"' not in out
-    assert "/__studio/preview-toolbar.js" in out
+    assert "/__studio/preview-toolbar/index.js" in out
 
 
 def test_inject_studio_chrome_adds_script() -> None:
     html = "<html><body><main>hi</main></body></html>"
     out = inject_studio_chrome(html)
     assert 'data-preview-toolbar="on"' in out
-    assert "/__studio/preview-toolbar.js" in out
+    assert "/__studio/preview-toolbar/index.js" in out
     assert "/__studio/preview-toolbar.css" in out
     assert "/__studio/studio-modal.js" in out
-    assert 'type="module" src="/__studio/preview-toolbar.js"' in out
+    assert 'type="module" src="/__studio/preview-toolbar/index.js"' in out
     assert "/__studio/studio-api.js" not in out
 
 
@@ -96,11 +96,11 @@ def test_studio_chrome_on_index_and_longshot(tmp_path: Path) -> None:
         ) as resp:
             longshot_html = resp.read().decode("utf-8")
 
-        assert "preview-toolbar.js" in index_html
-        assert 'type="module" src="/__studio/preview-toolbar.js"' in index_html
+        assert "preview-toolbar/index.js" in index_html
+        assert 'type="module" src="/__studio/preview-toolbar/index.js"' in index_html
         assert "studio-api.js" not in index_html
         assert 'data-preview-toolbar="on"' in index_html
-        assert "preview-toolbar.js" in longshot_html
+        assert "preview-toolbar/index.js" in longshot_html
         assert 'data-preview-toolbar="on"' in longshot_html
         assert 'data-block="surface-nav"' in longshot_html
         assert "← 返回卷轴" in longshot_html
@@ -109,7 +109,7 @@ def test_studio_chrome_on_index_and_longshot(tmp_path: Path) -> None:
             f"{base}/{result.trip_id}/index.html?share=1", timeout=10
         ) as resp:
             share_html = resp.read().decode("utf-8")
-        assert "preview-toolbar.js" in share_html
+        assert "preview-toolbar/index.js" in share_html
         assert 'data-preview-share="on"' in share_html
         assert 'data-preview-toolbar="on"' not in share_html
         assert "footer-cta__studio-home" in share_html

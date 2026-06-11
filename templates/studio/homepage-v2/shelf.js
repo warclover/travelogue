@@ -14,6 +14,7 @@ import { attachShelfTripMenu, closeAllShelfMenus } from "./shelf-menu.js";
 import { renderBenchRecent } from "./bento.js";
 import { shelfResumeActions } from "./shelf-actions-logic.js";
 import { triggerHomepageRecurate } from "./bento-stale.js";
+import { tripStaleSummary } from "../js/trip-stale.js";
 
 var _hostEl = null;
 var _gridEl = null;
@@ -78,8 +79,8 @@ function tripSubLine(trip) {
   if (trip.photoCount) sub.push(trip.photoCount + " 张");
   var rel = relativeTime(trip.updatedAt);
   if (rel) sub.push(rel);
-  if (trip.longshotStale) sub.push("长图待更新");
-  if (trip.algorithmStale) sub.push("算法待更新");
+  var staleLine = tripStaleSummary(trip);
+  if (staleLine) sub.push(staleLine);
   return sub.join(" · ");
 }
 
@@ -143,11 +144,9 @@ function buildCoverWrap(trip, surface) {
   var wrap = el("div", "v2-shelf__cover-wrap");
   var openCover = el("button", "v2-shelf__open v2-shelf__open--cover");
   openCover.type = "button";
-  var staleBits = [];
-  if (trip.longshotStale) staleBits.push("长图待更新");
-  if (trip.algorithmStale) staleBits.push("算法待更新");
+  var staleLine = tripStaleSummary(trip);
   openCover.title = (trip.title || trip.tripId)
-    + (staleBits.length ? " · " + staleBits.join(" · ") : "");
+    + (staleLine ? " · " + staleLine : "");
   buildCover(trip, openCover);
   openCover.addEventListener("click", function () { openTrip(trip, false); });
   wrap.appendChild(openCover);

@@ -21,7 +21,8 @@ export const V2 = {
   userManifest: null,
   /** GET /trips 行：当前 userManifest 对应的画册（stale / curate CTA）。 */
   userPreviewTrip: null,
-  bentoTab: "demo", // demo | mine（方案 B′）
+  /** @deprecated §4.4 已移除 Tab，保留字段避免旧会话报错 */
+  bentoTab: "demo",
   manifestError: false,
   trips: [],
   tripsTotal: 0,

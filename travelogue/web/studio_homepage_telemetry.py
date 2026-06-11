@@ -64,6 +64,11 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "template_smart_result_shown",
         "template_fallback_shown",
         "template_create_submitted",
+        # Preview toolbar (PRD §9)
+        "preview_mode_switch",
+        "export_settings_open",
+        "pending_apply",
+        "bench_settings_open",
     }
 )
 

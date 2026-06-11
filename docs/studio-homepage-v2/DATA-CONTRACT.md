@@ -96,8 +96,9 @@ Lightbox scroll 模式：按 `pages[]` 顺序纵向拼接全部 `webp`（或单�
 | `updatedAt` | number | 排序、相对时间（Unix 秒） |
 | `previewUrl` | string | 卡片跳转 `/slug/index.html`（**非** Bento 封面源） |
 | `previewRelPath` | string \| null | 封面图相对路径 → 拼 `GET /{tripId}/{previewRelPath}` |
-| `longshotStale` | boolean | stale 徽章「更新长图」 |
+| `longshotStale` | boolean | stale 徽章「长图待更新」 |
 | `algorithmStale` | boolean | 算法/选片/排版配置过期（含审美、preview 等聚合） |
+| `layoutCssStale` | boolean | 卷轴布局 CSS 过期；首页徽章「布局待更新」，预览内并入暂存状态条 |
 | `aestheticStale` | boolean | 审美评分明细过期 |
 | `cullStale` | boolean | 选片 `keepRatioFloor` 低于当前配置 |
 | `layoutStale` | boolean | 封面/排版算法 hash 过期 |
@@ -181,6 +182,7 @@ Lightbox scroll 模式：按 `pages[]` 顺序纵向拼接全部 `webp`（或单�
 | `cover` | `previewRelPath` → URL |
 | `stale`（长图） | `longshotStale` |
 | `stale`（算法） | `algorithmStale` |
+| `stale`（布局 CSS） | `layoutCssStale` |
 | 重新排版 CTA | `POST /trips/{id}/curate` → job poll → `V2.reroute()` + `refreshUserBentoPreview` |
 | `status`（trip） | **无服务端字段**；由 activeJob + trip 列表推断 |
 

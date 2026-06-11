@@ -306,3 +306,30 @@ def promote_assets_to_featured(trip: dict, asset_ids: list[str]) -> list[str]:
         if promote_asset_to_featured(trip, asset_id):
             promoted.append(asset_id)
     return promoted
+
+
+def demote_asset_to_material(trip: dict, asset_id: str) -> bool:
+    """G2 serve: undo user promote-tier (PRD §6.3 pending undo)."""
+    asset_id = str(asset_id or "").strip()
+    if not asset_id:
+        return False
+    for asset in trip.get("assets") or []:
+        if not isinstance(asset, dict) or asset.get("id") != asset_id:
+            continue
+        if asset.get("userTier") != TIER_FEATURED:
+            return False
+        if asset.get("userTierSource") != TIER_SOURCE_USER:
+            return False
+        asset["userTier"] = TIER_MATERIAL
+        asset.pop("userTierSource", None)
+        sync_user_tier_summary(trip)
+        return True
+    return False
+
+
+def demote_assets_from_featured(trip: dict, asset_ids: list[str]) -> list[str]:
+    demoted: list[str] = []
+    for asset_id in asset_ids:
+        if demote_asset_to_material(trip, asset_id):
+            demoted.append(asset_id)
+    return demoted

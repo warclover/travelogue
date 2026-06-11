@@ -167,6 +167,40 @@ def test_promote_tier_defer_rerender(tmp_path: Path) -> None:
         server.shutdown()
 
 
+def test_promote_tier_demote_defer_rerender(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trip_id = "demo-m16"
+    trip_dir = trips_dir / trip_id
+    trip_dir.mkdir(parents=True)
+    trip = _minimal_trip(trip_id)
+    TripService(root=tmp_path).save(trip, trip_dir / "trip.json")
+
+    port = _free_port()
+    server = _start_studio(trips_dir, port)
+    try:
+        status, body = _post_json(
+            f"http://127.0.0.1:{port}/{trip_id}/__travelogue/promote-tier",
+            {"assetIds": ["a1"], "rerender": False},
+        )
+        assert status == 200
+        assert body["promoted"] == ["a1"]
+
+        status, body = _post_json(
+            f"http://127.0.0.1:{port}/{trip_id}/__travelogue/promote-tier",
+            {"assetIds": ["a1"], "rerender": False, "demote": True},
+        )
+        assert status == 200
+        assert body["ok"] is True
+        assert body["demoted"] == ["a1"]
+        assert body["rendered"] == []
+
+        saved = json.loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
+        tiers = {a["id"]: a.get("userTier") for a in saved["assets"]}
+        assert tiers["a1"] == "material"
+    finally:
+        server.shutdown()
+
+
 def test_rerender_endpoint_ok_without_crash(tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     trip_id = "demo-m16"

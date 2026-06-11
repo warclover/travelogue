@@ -1,7 +1,7 @@
 {
   "recordId": "phase5-webview-manual",
   "phase": "M23-04",
-  "date": null,
+  "date": "2026-06-11",
   "protocol": "P5-MP-2",
   "description": "Local serve + web-view simulation for share-mode HTML (API-MINIAPP.md §11)",
   "persona": "开发者 / 手测者",
@@ -12,9 +12,9 @@
     "device": "DevTools iPhone 15 Pro Max (428x926) + 中端 Android (P5-S9)"
   },
   "checks": {
-    "MP-WV-01": { "desc": "?share=1 无 preview toolbar", "passed": null },
-    "MP-WV-02": { "desc": "去掉 ?share=1 出现 toolbar（对照）", "passed": null },
-    "MP-WV-03": { "desc": "index-mobile.html?share=1 竖屏正常", "passed": null },
+    "MP-WV-01": { "desc": "?share=1 无 preview toolbar", "passed": true },
+    "MP-WV-02": { "desc": "去掉 ?share=1 出现 toolbar（对照）", "passed": true },
+    "MP-WV-03": { "desc": "index-mobile.html?share=1 竖屏正常", "passed": true },
     "MP-WV-04": { "desc": "export.longShot=false 无长图 FAB", "passed": null },
     "MP-WV-05": { "desc": "privacy.confirmedAt 非空", "passed": null },
     "MP-WV-06": { "desc": "breath/Lenis/snap 生效 · 封面 >3s", "passed": null },
@@ -29,5 +29,28 @@
     "业务域名白名单需上线后真机复测",
     "wx.miniProgram JS-SDK 桥接本地不可用（Tier 4）"
   ],
-  "runs": []
+  "runs": [
+    {
+      "at": "2026-06-11T10:22:00+08:00",
+      "tripId": "album-distinct",
+      "base": "http://127.0.0.1:44485/album-distinct",
+      "method": "scripts/start_share_smoke_server.py + Playwright evaluate",
+      "draft": {
+        "data-preview-toolbar": "on",
+        "toolbarClass": "preview-toolbar",
+        "applyLayoutMain": true,
+        "exportZone": true,
+        "longshotFabHidden": true
+      },
+      "share": {
+        "data-preview-share": "on",
+        "toolbarClass": "preview-toolbar preview-toolbar--share-minimal",
+        "applyLayoutMain": false,
+        "exportZone": false,
+        "screenplayTopBar": true,
+        "footerStudioHome": true
+      },
+      "notes": "Studio pipeline 本地 trip 无 privacy.confirmedAt（MP-WV-05 跳过）；页内 screenplay-toolbar FAB 在 share 仍可见（顶栏亦有 ▶ 放映）"
+    }
+  ]
 }
