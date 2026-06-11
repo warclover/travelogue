@@ -1,8 +1,8 @@
-"""Cross-day-bucket carry-forward for lone portraits (web/screens, day scope).
+"""Cross-chapter carry-forward for lone portraits (web/screens, day scope).
 
-A lone portrait left at the end of a day bucket is deferred forward (up to
-``_PORTRAIT_CARRY_MAX_HOPS`` buckets) so it can pair with a later portrait,
-minimising the number of single-portrait screens across the whole trip.
+A lone portrait left at the end of a chapter bucket is deferred forward (through
+remaining chapter buckets when ``portrait_carry_max_hops=0``) so it can pair
+with a later portrait, minimising the number of single-portrait screens.
 """
 
 from __future__ import annotations
@@ -158,3 +158,67 @@ def test_featured_lone_portrait_is_not_carried() -> None:
     )
     assert pa_screen["patternId"] == "screen-portrait-1"
     assert _covered_assets(out) == {"pa", "pb"}
+
+
+def test_lone_portraits_pair_across_many_chapters() -> None:
+    """Auto hop limit (0) carries through all remaining chapters before tail single."""
+    ids = [f"p{i}" for i in range(5)]
+    chapters = [_chapter(f"ch-{i}", [pid]) for i, pid in enumerate(ids)]
+    aspects = {pid: "portrait" for pid in ids}
+
+    out = attach_screens_to_chapters(
+        chapters,
+        aspects,
+        plan_scope="day",
+        day_buckets=[[pid] for pid in ids],
+    )
+
+    patterns = _patterns(out)
+    assert patterns.count("screen-portrait-2") == 2
+    assert patterns.count("screen-portrait-1") == 1
+    assert _covered_assets(out) == set(ids)
+
+
+def test_chapter_scope_uses_cross_chapter_carry() -> None:
+    chapters = [_chapter("ch-a", ["pa"]), _chapter("ch-b", ["pb"])]
+    aspects = {"pa": "portrait", "pb": "portrait"}
+
+    out = attach_screens_to_chapters(
+        chapters,
+        aspects,
+        plan_scope="chapter",
+    )
+
+    assert "screen-portrait-1" not in _patterns(out)
+    assert "screen-portrait-2" in _patterns(out)
+
+
+def test_replan_beam_carries_lone_portraits_across_buckets() -> None:
+    """Beam replan must not bypass cross-chapter portrait carry (scoring.enabled path)."""
+    from travelogue.curation.degradation import DegradationAssessment
+    from travelogue.curation.layout_scoring import PHASE2_WEIGHTS
+    from travelogue.curation.layout_search import maybe_replan_chapters
+
+    chapters = [_chapter("ch-a", ["pa"]), _chapter("ch-b", ["pb"])]
+    for ch in chapters:
+        ch["screens"] = []
+    aspects = {"pa": "portrait", "pb": "portrait"}
+    assets = [{"id": "pa"}, {"id": "pb"}]
+
+    replanned, meta = maybe_replan_chapters(
+        chapters,
+        buckets=[["pa"], ["pb"]],
+        aspects=aspects,
+        assets=assets,
+        scoring_enabled=True,
+        weights=PHASE2_WEIGHTS,
+        beam_width=3,
+        degradation=DegradationAssessment(force_legacy=False),
+        trip_photo_total=2,
+    )
+
+    assert meta.get("replanApplied") is True
+    patterns = _patterns(replanned)
+    assert "screen-portrait-1" not in patterns
+    assert "screen-portrait-2" in patterns
+    assert _covered_assets(replanned) == {"pa", "pb"}

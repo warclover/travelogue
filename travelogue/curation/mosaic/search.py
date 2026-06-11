@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import logging
 
+from travelogue.config import AppConfig
 from travelogue.curation.decision_log import LayoutDecisionLog
 from travelogue.curation.layout_planner import AspectKind
 from travelogue.curation.layout_scoring import (
@@ -92,7 +93,10 @@ def replan_day_buckets_beam(
     skip_duplicate_signatures: bool = True,
     deterministic_strict: bool = False,
     incremental_scoring: bool = False,
+    cfg: AppConfig | None = None,
+    burst_seconds: float = 3.0,
 ) -> tuple[list[dict], list[dict], SearchBudget]:
+    from travelogue.curation.screen_planner import DEFAULT_FEATURED_WEIGHT
     from travelogue.curation.intent_hints import (
         INTENT_PEAK_ARC_BOOST,
         arc_segment_for_chapter_with_intent,
@@ -120,11 +124,29 @@ def replan_day_buckets_beam(
         else:
             ch["screens"] = []
 
-    layout_state = ScreenLayoutPlannerState.from_trip_total(trip_photo_total)
+    from travelogue.curation.screen_layout_state import RhythmRules
+    from travelogue.layout_engine.adapter import layout_state_for_trip, lse_enabled
+
+    if cfg is not None and lse_enabled(cfg):
+        layout_state = layout_state_for_trip(trip_photo_total, cfg=cfg)
+    else:
+        layout_state = ScreenLayoutPlannerState.from_trip_total(
+            trip_photo_total,
+            rhythm=RhythmRules.from_config(cfg),
+        )
     seq_per_ch: dict[str, int] = {}
     total_ch = len(out)
     decision_logs: list[dict] = []
     skip = skip_screen_asset_ids or set()
+    carry: list[str] = []
+    carry_age: dict[str, int] = {}
+    hero_ids = {h for h in hero_by_ch.values() if h}
+    noted_patterns: list[str] = []
+    from travelogue.curation.screen_planner_attach import (
+        _carry_inject_ids,
+        _flush_portrait_carry_tail,
+        assign_bucket_screens_with_portrait_carry,
+    )
     from travelogue.curation.curate_scoring import median_sharpness
 
     med_sharp = median_sharpness(list(assets_by_id.values())) if assets_by_id else 0.0
@@ -144,15 +166,16 @@ def replan_day_buckets_beam(
         filtered = [a for a in bucket if a not in gallery_asset_ids and a not in skip]
         if not filtered:
             continue
+        plan_ids = _carry_inject_ids(filtered, carry, aspects)
         from travelogue.curation.screen_planner_attach import _preferred_hero_for_bucket
 
         preferred_hero = _preferred_hero_for_bucket(
-            filtered, asset_to_ch, hero_by_ch, assets_by_id, median_sharp=med_sharp
+            plan_ids, asset_to_ch, hero_by_ch, assets_by_id, median_sharp=med_sharp
         )
         from travelogue.curation.layout_search import generate_day_bucket_candidates
 
         candidates = generate_day_bucket_candidates(
-            filtered,
+            plan_ids,
             aspects,
             assets_by_id=assets_by_id,
             orientation_summary=orientation_summary,
@@ -280,18 +303,39 @@ def replan_day_buckets_beam(
         )
         decision_logs.append(log.to_dict())
 
-        _apply_winning_plan_to_state(layout_state, best_plan)
-        for sc in best_plan:
-            slots = sc.get("slots") or []
-            if not slots:
-                continue
-            ch_id = asset_to_ch.get(slots[0].get("assetId", ""))
-            if not ch_id or ch_id not in ch_by_id:
-                continue
-            seq_per_ch[ch_id] = seq_per_ch.get(ch_id, 0) + 1
-            screen = dict(sc)
-            screen["screenId"] = f"{ch_id}-sc-{seq_per_ch[ch_id]:02d}"
-            ch_by_id[ch_id]["screens"].append(screen)
+        carry, carry_age, layout_state = assign_bucket_screens_with_portrait_carry(
+            best_plan,
+            bucket_idx=bucket_idx,
+            total_buckets=len(day_buckets),
+            carry_age=carry_age,
+            layout_state=layout_state,
+            noted_patterns=noted_patterns,
+            asset_to_ch=asset_to_ch,
+            ch_by_id=ch_by_id,
+            seq_per_ch=seq_per_ch,
+            assets_by_id=assets_by_id,
+            hero_ids=hero_ids,
+        )
+
+    _flush_portrait_carry_tail(
+        carry,
+        aspects,
+        assets_by_id=assets_by_id,
+        asset_to_ch=asset_to_ch,
+        ch_by_id=ch_by_id,
+        seq_per_ch=seq_per_ch,
+        layout_state=layout_state,
+        skip=skip,
+        burst_seconds=burst_seconds,
+        mixed_proximity_seconds=mixed_proximity_seconds,
+        orientation_summary=orientation_summary,
+        trip_photo_total=trip_photo_total,
+        median_sharp=med_sharp,
+        featured_weight=DEFAULT_FEATURED_WEIGHT,
+        enable_food_grid=enable_food_grid,
+        mundane_grid_buckets=mundane_grid_buckets,
+        cfg=cfg,
+    )
 
     return out, decision_logs, budget
 

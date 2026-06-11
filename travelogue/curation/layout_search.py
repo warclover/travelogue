@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from travelogue.config import AppConfig
 from travelogue.curation.degradation import DegradationAssessment
 from travelogue.curation.layout_candidates import generate_day_bucket_candidates  # noqa: F401
 from travelogue.curation.layout_planner import AspectKind
@@ -53,6 +54,7 @@ def maybe_replan_chapters(
     skip_duplicate_signatures: bool = True,
     deterministic_strict: bool = False,
     incremental_scoring: bool = False,
+    cfg: AppConfig | None = None,
 ) -> tuple[list[dict], dict[str, Any]]:
     """Return chapters unchanged when scoring off, degraded, or aspect-only."""
     meta: dict[str, Any] = {"replanApplied": False, "decisionLogs": []}
@@ -100,6 +102,7 @@ def maybe_replan_chapters(
         skip_duplicate_signatures=skip_duplicate_signatures,
         deterministic_strict=deterministic_strict,
         incremental_scoring=incremental_scoring,
+        cfg=cfg,
     )
     meta["decisionLogs"] = logs
     meta["searchBudget"] = budget.to_dict()

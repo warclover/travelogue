@@ -60,6 +60,7 @@ class LayoutRhythmConfig:
 
     max_portrait_pair_streak: int = 2  # R-06 · portrait-2 连续上限
     max_portrait_orientation_streak: int = 6  # R-08 · 全竖版屏朝向连续上限
+    portrait_carry_max_hops: int = 0  # 0 = auto · 可顺延至后续全部章节
     post_check_mode: str = "log"  # log | enforce（OQ-09=B 渐进；CI 断言见 tests/test_rhythm_ci_gate.py）
 
 
@@ -226,6 +227,9 @@ def layout_rhythm_from_dict(raw: dict[str, Any]) -> LayoutRhythmConfig:
             )
         ),
         post_check_mode=mode,
+        portrait_carry_max_hops=int(
+            raw.get("portrait_carry_max_hops", defaults.portrait_carry_max_hops)
+        ),
     )
 
 

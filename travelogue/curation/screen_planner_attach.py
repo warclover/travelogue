@@ -48,9 +48,22 @@ def _preferred_hero_for_bucket(
     )
 
 
-# Cross-day-bucket carry: a lone portrait may flow forward up to this many
-# subsequent day buckets trying to pair before it is force-emitted as a single.
-_PORTRAIT_CARRY_MAX_HOPS = 3
+# Cross-chapter carry: a lone portrait may flow forward through subsequent
+# chapter/day buckets trying to pair before force-emitted as a single.
+# ``portrait_carry_max_hops=0`` (default) = auto: carry through all remaining buckets.
+_DEFAULT_PORTRAIT_CARRY_MAX_HOPS = 0
+
+
+def _portrait_carry_hop_limit(
+    bucket_index: int,
+    total_buckets: int,
+    rhythm: RhythmRules,
+) -> int:
+    """Max defer hops from ``bucket_index`` (0-based) before force-emit."""
+    configured = int(getattr(rhythm, "portrait_carry_max_hops", _DEFAULT_PORTRAIT_CARRY_MAX_HOPS))
+    if configured > 0:
+        return configured
+    return max(0, total_buckets - bucket_index - 1)
 
 
 def _rebuild_layout_state(
@@ -104,6 +117,61 @@ def _carry_inject_ids(
     return seq
 
 
+def assign_bucket_screens_with_portrait_carry(
+    bucket_screens: list[dict],
+    *,
+    bucket_idx: int,
+    total_buckets: int,
+    carry_age: dict[str, int],
+    layout_state: ScreenLayoutPlannerState,
+    noted_patterns: list[str],
+    asset_to_ch: dict[str, str],
+    ch_by_id: dict[str, dict],
+    seq_per_ch: dict[str, int],
+    assets_by_id: dict[str, dict],
+    hero_ids: set[str],
+) -> tuple[list[str], dict[str, int], ScreenLayoutPlannerState]:
+    """Assign kept screens to chapters; defer lone portraits to the next bucket."""
+    hop_limit = _portrait_carry_hop_limit(
+        bucket_idx, total_buckets, layout_state.rhythm
+    )
+    next_carry: list[str] = []
+    next_carry_age: dict[str, int] = {}
+    deferred: set[int] = set()
+    for sc in bucket_screens:
+        aid = _carry_eligible_single(
+            sc, assets_by_id=assets_by_id, hero_ids=hero_ids
+        )
+        if aid is None:
+            continue
+        new_age = carry_age.get(aid, 0) + 1
+        if new_age > hop_limit:
+            continue
+        deferred.add(id(sc))
+        next_carry.append(aid)
+        next_carry_age[aid] = new_age
+    for sc in bucket_screens:
+        if id(sc) in deferred:
+            continue
+        slots = sc.get("slots") or []
+        if not slots:
+            continue
+        ch_id = asset_to_ch.get(slots[0]["assetId"])
+        if not ch_id or ch_id not in ch_by_id:
+            continue
+        seq_per_ch[ch_id] = seq_per_ch.get(ch_id, 0) + 1
+        screen = dict(sc)
+        screen["screenId"] = f"{ch_id}-sc-{seq_per_ch[ch_id]:02d}"
+        ch_by_id[ch_id]["screens"].append(screen)
+    noted_patterns.extend(
+        str(sc.get("patternId") or "")
+        for sc in bucket_screens
+        if id(sc) not in deferred
+    )
+    layout_state = _rebuild_layout_state(layout_state, noted_patterns)
+    return next_carry, next_carry_age, layout_state
+
+
 def _carry_eligible_single(
     screen: dict,
     *,
@@ -115,7 +183,8 @@ def _carry_eligible_single(
     Featured assets and chapter heroes are never deferred: a single, well-placed
     portrait is intentional for them, not a leftover to be consolidated away.
     """
-    if str(screen.get("patternId") or "") != "screen-portrait-1":
+    pid = str(screen.get("patternId") or "")
+    if pid not in ("screen-portrait-1", "screen-tall-1"):
         return None
     slots = screen.get("slots") or []
     if len(slots) != 1:
@@ -297,7 +366,7 @@ def attach_screens_day_buckets(
     # AC-RHY-05 · 实际落章屏 pattern 序（不含被 defer 的 carry 单竖）。
     noted_patterns: list[str] = list(noted_patterns_gallery)
 
-    for bucket in day_buckets:
+    for bucket_idx, bucket in enumerate(day_buckets):
         filtered = [a for a in bucket if a not in gallery_asset_ids and a not in skip]
         if not filtered:
             continue
@@ -364,46 +433,19 @@ def attach_screens_day_buckets(
                 )
 
                 clear_chapter_highlight_windows()
-        # Defer eligible lone portraits to the next bucket (cross-day carry).
-        next_carry: list[str] = []
-        next_carry_age: dict[str, int] = {}
-        deferred: set[int] = set()
-        for sc in bucket_screens:
-            aid = _carry_eligible_single(
-                sc, assets_by_id=assets_by_id, hero_ids=hero_ids
-            )
-            if aid is None:
-                continue
-            new_age = carry_age.get(aid, 0) + 1
-            if new_age > _PORTRAIT_CARRY_MAX_HOPS:
-                continue  # hop cap reached: force-emit this single in place
-            deferred.add(id(sc))
-            next_carry.append(aid)
-            next_carry_age[aid] = new_age
-        for sc in bucket_screens:
-            if id(sc) in deferred:
-                continue
-            slots = sc.get("slots") or []
-            if not slots:
-                continue
-            ch_id = asset_to_ch.get(slots[0]["assetId"])
-            if not ch_id or ch_id not in ch_by_id:
-                continue
-            seq_per_ch[ch_id] = seq_per_ch.get(ch_id, 0) + 1
-            screen = dict(sc)
-            screen["screenId"] = f"{ch_id}-sc-{seq_per_ch[ch_id]:02d}"
-            ch_by_id[ch_id]["screens"].append(screen)
-        noted_patterns.extend(
-            str(sc.get("patternId") or "")
-            for sc in bucket_screens
-            if id(sc) not in deferred
+        carry, carry_age, layout_state = assign_bucket_screens_with_portrait_carry(
+            bucket_screens,
+            bucket_idx=bucket_idx,
+            total_buckets=len(day_buckets),
+            carry_age=carry_age,
+            layout_state=layout_state,
+            noted_patterns=noted_patterns,
+            asset_to_ch=asset_to_ch,
+            ch_by_id=ch_by_id,
+            seq_per_ch=seq_per_ch,
+            assets_by_id=assets_by_id,
+            hero_ids=hero_ids,
         )
-        if deferred:
-            # AC-RHY-05 · 被 defer 的单竖落章前不应计入节奏 state：
-            # 用 kept 屏序列重放，消除 streak / 配额污染。
-            layout_state = _rebuild_layout_state(layout_state, noted_patterns)
-        carry = next_carry
-        carry_age = next_carry_age
 
     _flush_portrait_carry_tail(
         carry,
@@ -463,10 +505,19 @@ def attach_screens_to_chapters(
         if mundane_grid_buckets is None
         else (mundane_grid_buckets or ("food",))
     )
-    if scope == "day" and day_buckets:
+    chapter_buckets = [
+        _collect_asset_ids_from_chapter(ch)
+        for ch in chapters
+        if _collect_asset_ids_from_chapter(ch)
+    ]
+    effective_day_buckets = day_buckets
+    if effective_day_buckets is None and scope == "chapter" and len(chapter_buckets) > 1:
+        # Web per-chapter scope: still run cross-chapter portrait carry (PRD V-05).
+        effective_day_buckets = chapter_buckets
+    if effective_day_buckets and (scope == "day" or len(chapter_buckets) > 1):
         return attach_screens_day_buckets(
             chapters,
-            day_buckets,
+            effective_day_buckets,
             aspects,
             assets=assets,
             burst_seconds=burst_seconds,

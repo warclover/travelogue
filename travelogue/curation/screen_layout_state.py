@@ -70,6 +70,7 @@ class RhythmRules:
 
     max_portrait_pair_streak: int = MAX_PORTRAIT_PAIR_STREAK
     max_portrait_orientation_streak: int = MAX_PORTRAIT_ORIENTATION_STREAK
+    portrait_carry_max_hops: int = 0
     consecutive_bans: frozenset[tuple[str, str]] = DEFAULT_CONSECUTIVE_BANS
 
     @classmethod
@@ -86,6 +87,7 @@ class RhythmRules:
         return cls(
             max_portrait_pair_streak=int(rhythm.max_portrait_pair_streak),
             max_portrait_orientation_streak=int(rhythm.max_portrait_orientation_streak),
+            portrait_carry_max_hops=int(getattr(rhythm, "portrait_carry_max_hops", 0)),
         )
 
 

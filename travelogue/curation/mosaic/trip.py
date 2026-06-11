@@ -83,6 +83,7 @@ def compose_trip(
         skip_duplicate_signatures=skip_duplicate_signatures,
         deterministic_strict=det,
         incremental_scoring=incremental_scoring,
+        cfg=app_cfg,
     )
     if mosaic.enabled:
         meta["mosaicEnabled"] = True
