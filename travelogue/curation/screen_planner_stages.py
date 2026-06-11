@@ -185,8 +185,12 @@ def try_collage_solo_at_cursor(ctx: ChapterPlanContext) -> int | None:
 
 def run_planning_loop(ctx: ChapterPlanContext) -> None:
     """Main cursor loop over ctx.ids."""
+    from travelogue.curation.chapter_layout_dp import try_plan_chapter_with_dp
     from travelogue.curation.mosaic.hook import try_mosaic_window
     from travelogue.curation.screen_planner import _family_kind
+
+    if try_plan_chapter_with_dp(ctx):
+        return
 
     while ctx.i < len(ctx.ids):
         advance = try_collage_solo_at_cursor(ctx)

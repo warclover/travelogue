@@ -62,6 +62,9 @@ class MosaicConfig:
     lse_quality_unified: bool = False
     lse_slot_max_matrix_n: int = 16
     lse_highlight_boost: float = 1.0
+    # P19 R-303 · chapter-scale window partition DP (default off until S5 Gate).
+    chapter_dp_enabled: bool = False
+    chapter_dp_max_assets: int = 45
 
 
 def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
@@ -128,4 +131,13 @@ def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
         penalties={
             k: float(penalties_raw.get(k, defaults.penalties.get(k, 0.0))) for k in defaults.penalties
         },
+        chapter_dp_enabled=cfg_bool(
+            raw,
+            "chapter_dp_enabled",
+            "chapterDpEnabled",
+            defaults.chapter_dp_enabled,
+        ),
+        chapter_dp_max_assets=int(
+            raw.get("chapter_dp_max_assets", raw.get("chapterDpMaxAssets", defaults.chapter_dp_max_assets))
+        ),
     )

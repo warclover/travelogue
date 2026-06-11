@@ -122,6 +122,36 @@ html[data-layout="auto"] .layout-slot--blurred-fill .layout-slot__img {
 /* @lte-generated:start — YAML→CSS authority; run: python -m travelogue.layout_templates.cli export --sync-journal */
 /* Phase 16 LTE generated grid CSS — do not edit by hand */
 
+/* screen-asymmetric-hero */
+html[data-layout="web"] .layout-screen__grid--asymmetric-hero,
+html[data-layout="auto"] .layout-screen__grid--asymmetric-hero {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 3px;
+  --stage-gap: 3px;
+  align-items: stretch;
+}
+
+html[data-layout="web"] .layout-screen__grid--asymmetric-hero .layout-slot[data-slot="0"], html[data-layout="auto"] .layout-screen__grid--asymmetric-hero .layout-slot[data-slot="0"] {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+}
+
+html[data-layout="web"] .layout-screen__grid--asymmetric-hero .layout-slot[data-slot="1"], html[data-layout="auto"] .layout-screen__grid--asymmetric-hero .layout-slot[data-slot="1"] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+html[data-layout="web"] .layout-screen__grid--asymmetric-hero .layout-slot[data-slot="2"], html[data-layout="auto"] .layout-screen__grid--asymmetric-hero .layout-slot[data-slot="2"] {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+html[data-layout="web"] .layout-screen__grid--asymmetric-hero .layout-slot[data-slot="3"], html[data-layout="auto"] .layout-screen__grid--asymmetric-hero .layout-slot[data-slot="3"] {
+  grid-column: 2;
+  grid-row: 3;
+}
+
 /* screen-full-frame */
 html[data-layout="web"] .layout-screen__grid--1col,
 html[data-layout="auto"] .layout-screen__grid--1col {
@@ -834,6 +864,31 @@ html[data-layout="web"] .layout-screen__grid--portrait-2x4 .layout-slot[data-slo
 html[data-layout="web"] .layout-screen__grid--portrait-2x4 .layout-slot[data-slot="7"], html[data-layout="auto"] .layout-screen__grid--portrait-2x4 .layout-slot[data-slot="7"] {
   grid-column: 4;
   grid-row: 2;
+}
+
+/* screen-spread-folio */
+html[data-layout="web"] .layout-screen__grid--spread-folio,
+html[data-layout="auto"] .layout-screen__grid--spread-folio {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(1, 1fr);
+  gap: 4px;
+  --stage-gap: 4px;
+  --stage-margin-top: 5%;
+  --stage-margin-right: 6%;
+  --stage-margin-bottom: 5%;
+  --stage-margin-left: 6%;
+  --stage-bleed-mode: inset;
+  align-items: stretch;
+}
+
+html[data-layout="web"] .layout-screen__grid--spread-folio .layout-slot[data-slot="0"], html[data-layout="auto"] .layout-screen__grid--spread-folio .layout-slot[data-slot="0"] {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+html[data-layout="web"] .layout-screen__grid--spread-folio .layout-slot[data-slot="1"], html[data-layout="auto"] .layout-screen__grid--spread-folio .layout-slot[data-slot="1"] {
+  grid-column: 2;
+  grid-row: 1;
 }
 
 /* screen-whitespace-hero */

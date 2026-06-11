@@ -27,7 +27,10 @@ from travelogue.paths import JOURNAL_SCREENS_CSS
 
 @pytest.fixture
 def lte_engine() -> LayoutTemplateEngine:
+    from travelogue.curation.mosaic.legacy_specs import reset_legacy_specs_cache_for_tests
+
     reset_engine_cache_for_tests()
+    reset_legacy_specs_cache_for_tests()
     return LayoutTemplateEngine.load(rebuild_cache=True)
 
 
@@ -102,9 +105,12 @@ def test_pattern_grid_class_parity(lte_engine: LayoutTemplateEngine) -> None:
 
 @pytest.mark.unit
 def test_forbidden_slot_maps_parity(lte_engine: LayoutTemplateEngine) -> None:
+    from travelogue.layout_templates.legacy_bridge import export_forbidden_maps
+
     exported = lte_engine.export_legacy_registry()
-    assert exported["portrait_forbidden_wide"] == dict(_PORTRAIT_FORBIDDEN_WIDE)
-    assert exported["landscape_forbidden_tall"] == dict(_LANDSCAPE_FORBIDDEN_TALL)
+    wide, tall = export_forbidden_maps(lte_engine._templates)
+    assert exported["portrait_forbidden_wide"] == dict(wide)
+    assert exported["landscape_forbidden_tall"] == dict(tall)
 
 
 @pytest.mark.unit

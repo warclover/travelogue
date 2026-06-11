@@ -254,8 +254,6 @@ def try_order_for_pattern(
 
         if not can_use_justified_row(asset_ids, aspects):
             return None
-        from travelogue.curation.screen_planner import _sort_asset_ids_by_taken
-
         portraits = [a for a in asset_ids if _is_std_portrait_id(a, aspects)]
         ordered = _sort_asset_ids_by_taken(portraits, assets_map)
         return ordered if len(ordered) == len(asset_ids) else None

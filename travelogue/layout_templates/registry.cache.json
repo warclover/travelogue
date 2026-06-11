@@ -1,6 +1,7 @@
 {
-  "contentHash": "5114ff3a69994434575477f4a5cbca3f09d7c5562049d7f44292a61f6025d916",
+  "contentHash": "73b1eb42bfcd5b3e894ca816e47a98da55ef9ee0cb61cc26fe7dbbd938660927",
   "templateIds": [
+    "screen-asymmetric-hero",
     "screen-full-frame",
     "screen-full-frame-bsp-3-2",
     "screen-justified-row",
@@ -27,6 +28,7 @@
     "screen-portrait-6",
     "screen-portrait-9",
     "screen-portrait-grid-8",
+    "screen-spread-folio",
     "screen-whitespace-hero"
   ],
   "byPhotoCount": {
@@ -39,7 +41,8 @@
     ],
     "2": [
       "screen-landscape-2",
-      "screen-portrait-2"
+      "screen-portrait-2",
+      "screen-spread-folio"
     ],
     "3": [
       "screen-landscape-3",
@@ -47,6 +50,7 @@
       "screen-portrait-3"
     ],
     "4": [
+      "screen-asymmetric-hero",
       "screen-justified-row",
       "screen-landscape-4",
       "screen-portrait-2-landscape-2",
@@ -80,5 +84,5 @@
       "screen-portrait-9"
     ]
   },
-  "generatedAt": "2026-06-11T06:47:34Z"
+  "generatedAt": "2026-06-11T06:54:56Z"
 }

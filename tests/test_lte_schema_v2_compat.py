@@ -17,7 +17,10 @@ from travelogue.layout_templates.validator import validate_template_def
 
 @pytest.fixture(autouse=True)
 def _fresh_engine() -> None:
+    from travelogue.curation.mosaic.legacy_specs import reset_legacy_specs_cache_for_tests
+
     reset_engine_cache_for_tests()
+    reset_legacy_specs_cache_for_tests()
 
 
 @pytest.mark.unit
@@ -67,6 +70,15 @@ def test_justified_row_v2_template_loads() -> None:
     assert tpl.kind == "justified"
     report = validate_template_def(tpl, mode="ci")
     assert report.ok, report.issues
+
+
+@pytest.mark.unit
+def test_designer_skus_load() -> None:
+    engine = LayoutTemplateEngine.load(rebuild_cache=True)
+    for tid in ("screen-spread-folio", "screen-asymmetric-hero"):
+        tpl = engine.get(tid)
+        report = validate_template_def(tpl, mode="ci")
+        assert report.ok, f"{tid}: {report.issues}"
 
 
 @pytest.mark.unit

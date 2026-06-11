@@ -457,3 +457,9 @@ def get_layout_template(template_id: str):
 def reset_engine_cache_for_tests() -> None:
     get_engine.cache_clear()
     _load_policy_quotas_cached.cache_clear()
+    try:
+        from travelogue.curation.mosaic.legacy_specs import reset_legacy_specs_cache_for_tests
+
+        reset_legacy_specs_cache_for_tests()
+    except ImportError:
+        pass
