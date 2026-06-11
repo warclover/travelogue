@@ -122,7 +122,7 @@ layout:
   template_engine:
     enabled: true
     read_templates_from_lte: true
-    max_mosaic_slots: 9
+    max_mosaic_slots: 6
     exclude_collage_from_mosaic: true
     telemetry:
       emit_per_template: true
@@ -164,11 +164,15 @@ mosaic:
   scorer_version: "p15-s3"
   deterministic_strict: true
   min_candidate_score: 0.35
-  enabled_window_sizes: [3, 4, 5, 6, 8, 9]
+  enabled_window_sizes: [4, 5, 6]
   unified_mode: true
   fallback_to_legacy: true
   candidate_top_k: 4
   log_level: window
+  density_budget:
+    enabled: true
+    min_slots: 4
+    window_order: [5, 4, 6]
   self_heal:
     enabled: true
     allow_drop: false
@@ -185,6 +189,8 @@ mosaic:
     face_crop: 0.30
     main_quality: 0.25
     duplicate_density: 0.20
+    flat_nine_grid: 0.45
+    dense_without_hero: 0.25
 
 # --- Phase-3a 智能排版（beam 护栏 + 自适应叙事弧 + 亮度/主题 run）---
 # layout:

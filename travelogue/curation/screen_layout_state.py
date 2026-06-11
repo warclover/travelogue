@@ -20,6 +20,9 @@ _PATTERN_SLOTS_RE = re.compile(r"^screen-(?:portrait|landscape|square)-(\d+)$")
 
 PORTRAIT_GRID8_MIN_PHOTOS = 50
 
+# P21 · dense collage（≥4 槽）卷级配额与相邻禁令
+DENSE_COLLAGE_SLOT_MIN = 4
+
 # ---------------------------------------------------------------------------
 # 节奏规则单一来源（排版规则优化 v0.5 · R-01~R-08 / V-08 / V-09）。
 # 规划期硬约束（ScreenLayoutPlannerState）与事后审计（layout_constraints）
@@ -89,6 +92,39 @@ class RhythmRules:
 def pattern_slot_count(pattern_id: str) -> int | None:
     m = _PATTERN_SLOTS_RE.match(pattern_id)
     return int(m.group(1)) if m else None
+
+
+def dense_collage_limits_for_trip(total_photos: int) -> tuple[int, int]:
+    """P21 · max dense collage screens (slot≥4) per trip; no min quota."""
+    if total_photos <= 50:
+        return 0, 1
+    if total_photos <= 100:
+        return 0, 3
+    if total_photos <= 200:
+        return 0, 5
+    return 0, 7
+
+
+def pattern_dense_slot_count(pattern_id: str) -> int | None:
+    """Slot count for dense collage budgeting (LTE + legacy grid patterns)."""
+    n = pattern_slot_count(pattern_id)
+    if n is not None:
+        return n
+    if pattern_id == "screen-portrait-grid-8":
+        return 8
+    if pattern_id.startswith("screen-mosaic-"):
+        try:
+            from travelogue.curation.mosaic.lte_adapter import _mosaic_slot_count
+
+            return _mosaic_slot_count(pattern_id)
+        except Exception:
+            return None
+    return None
+
+
+def is_dense_collage_pattern(pattern_id: str, *, min_slots: int = DENSE_COLLAGE_SLOT_MIN) -> bool:
+    n = pattern_dense_slot_count(pattern_id)
+    return n is not None and n >= min_slots
 
 
 def nine_grid_limits_for_trip(total_photos: int) -> tuple[int, int]:
@@ -170,10 +206,14 @@ class ScreenLayoutPlannerState:
 
     nine_min: int
     nine_max: int
+    dense_collage_max: int = 0
     portrait_grid8_max: int = 0
     nine_used: int = 0
+    dense_collage_used: int = 0
     portrait_grid8_used: int = 0
     last_kind: LayoutKind = "none"
+    last_was_dense_collage: bool = False
+    dense_collage_min_slots: int = DENSE_COLLAGE_SLOT_MIN
     last_pattern_id: str = ""
     pattern_streak: int = 0
     portrait_orientation_streak: int = 0
@@ -191,11 +231,16 @@ class ScreenLayoutPlannerState:
         rhythm: RhythmRules | None = None,
     ) -> ScreenLayoutPlannerState:
         lo, hi = nine_grid_limits_for_trip(total_photos)
+        _dense_lo, dense_hi = dense_collage_limits_for_trip(total_photos)
         params = density_params or LayoutDensityParams(density=density or "balanced")
         lo, hi = params.adjust_nine_limits(lo, hi)
+        _dense_lo, dense_hi = params.adjust_dense_collage_limits(
+            _dense_lo, dense_hi, total_photos=total_photos
+        )
         return cls(
             nine_min=lo,
             nine_max=hi,
+            dense_collage_max=dense_hi,
             portrait_grid8_max=portrait_grid8_max_for_trip(total_photos),
             layout_density=params.density,
             rhythm=rhythm if rhythm is not None else RhythmRules.from_config(),
@@ -249,6 +294,22 @@ class ScreenLayoutPlannerState:
     def note_portrait_grid8(self) -> None:
         self.portrait_grid8_used += 1
 
+    def can_use_dense_collage(self, pattern_id: str) -> bool:
+        """P21 · dense collage quota + consecutive ban."""
+        if not is_dense_collage_pattern(pattern_id, min_slots=self.dense_collage_min_slots):
+            return True
+        if self.dense_collage_used >= self.dense_collage_max:
+            return False
+        return not self.last_was_dense_collage
+
+    def can_use_dense_collage_window(self, window_size: int) -> bool:
+        """True when an MCS window of this size may consume dense budget."""
+        if window_size < self.dense_collage_min_slots:
+            return True
+        if self.dense_collage_used >= self.dense_collage_max:
+            return False
+        return not self.last_was_dense_collage
+
     def can_pick_grid_size(self, size: int) -> bool:
         if size == 9:
             return self.can_use_nine()
@@ -268,6 +329,8 @@ class ScreenLayoutPlannerState:
             return False
         max_ch = template_rhythm_max_per_chapter(pattern_id)
         if max_ch is not None and self.pattern_counts.get(pattern_id, 0) >= max_ch:
+            return False
+        if not self.can_use_dense_collage(pattern_id):
             return False
         kind = layout_kind_from_pattern(pattern_id)
         if kind == "nine" and self.nine_used >= self.nine_max:
@@ -301,6 +364,11 @@ class ScreenLayoutPlannerState:
         kind = layout_kind_from_pattern(pattern_id)
         if kind == "nine":
             self.nine_used += 1
+        if is_dense_collage_pattern(pattern_id, min_slots=self.dense_collage_min_slots):
+            self.dense_collage_used += 1
+            self.last_was_dense_collage = True
+        elif pattern_id:
+            self.last_was_dense_collage = False
         self.last_kind = kind if kind != "other" else "other"
         if pattern_id and pattern_id == self.last_pattern_id:
             self.pattern_streak += 1

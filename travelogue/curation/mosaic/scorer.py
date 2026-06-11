@@ -252,6 +252,38 @@ def _flat_six_grid_penalty(
     return 0.0
 
 
+def _flat_nine_grid_penalty(
+    pattern_id: str,
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+) -> float:
+    if pattern_id != PATTERN_LANDSCAPE_9:
+        return 0.0
+    if len(asset_ids) != 9:
+        return 0.0
+    all_land = all(_is_landscape_id(aid, aspects) for aid in asset_ids)
+    all_port = all(_is_std_portrait_id(aid, aspects) for aid in asset_ids)
+    if all_land or all_port:
+        return 0.55
+    return 0.0
+
+
+def _dense_without_hero_penalty(screen: dict, pattern_id: str) -> float:
+    """P21 · penalize 5/6-slot flat grids without a main hero slot."""
+    from travelogue.curation.mosaic.pattern_catalog import default_registry
+
+    if not pattern_id.startswith("screen-mosaic-"):
+        return 0.0
+    pat = default_registry().get(pattern_id)
+    if pat is None or "main" in pat.roles:
+        return 0.0
+    slots = screen.get("slots") or []
+    n = len([s for s in slots if s.get("assetId")])
+    if n in (5, 6):
+        return 0.6
+    return 0.0
+
+
 def score_candidate(
     screen: dict,
     *,
@@ -303,6 +335,12 @@ def score_candidate(
         "slot_geometry": _slot_geometry_penalty(screen, aspects),
         "flat_six_grid": _flat_six_grid_penalty(
             str(screen.get("patternId") or ""), asset_ids, aspects
+        ),
+        "flat_nine_grid": _flat_nine_grid_penalty(
+            str(screen.get("patternId") or ""), asset_ids, aspects
+        ),
+        "dense_without_hero": _dense_without_hero_penalty(
+            screen, str(screen.get("patternId") or "")
         ),
     }
     # Soft trip_total prior (was hard MIN_TRIP_PHOTOS_FOR_MOSAIC)

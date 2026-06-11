@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from travelogue.config import MosaicConfig
 from travelogue.curation.mosaic.compose import pick_best_window
 from travelogue.curation.mosaic.legacy import append_legacy_window
-from travelogue.curation.mosaic.runtime import effective_mosaic_window_sizes
+from travelogue.curation.mosaic.runtime import effective_mosaic_window_sizes, ordered_mosaic_window_sizes
 
 if TYPE_CHECKING:
     from travelogue.curation.screen_planner_stages import ChapterPlanContext
@@ -266,8 +266,15 @@ def _window_all_std_portrait(window: list[str], aspects) -> bool:
     return bool(window) and all(_is_std_portrait_id(x, aspects) for x in window)
 
 
+def _prioritize_exact_window_fit(sizes: list[int], remaining: int) -> list[int]:
+    """When the tail length matches an enabled window, try that size first."""
+    if remaining in sizes:
+        return [remaining] + [s for s in sizes if s != remaining]
+    return sizes
+
+
 def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
-    """Try enabled window sizes (largest first). Returns advance count or None."""
+    """Try enabled window sizes (P21 balanced: 5→4→6). Returns advance count or None."""
     cfg = _mosaic_cfg()
     if not cfg.enabled or not ctx.enable_mosaic:
         return None
@@ -279,17 +286,28 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         return None
     if _defer_portrait_grid8(ctx, start):
         return None
-    sizes = [
-        s
-        for s in sorted(effective_mosaic_window_sizes(cfg), reverse=True)
-        if s in (3, 4, 5, 6, 8, 9)
-    ]
+    remaining = len(ctx.ids) - start
     if density == "collage_first":
         sizes = _collage_size_order(
-            sizes, len(ctx.ids) - start, fit_limit=len(ctx.ids) - start
+            sorted(effective_mosaic_window_sizes(cfg), reverse=True),
+            remaining,
+            fit_limit=remaining,
         )
+    else:
+        sizes = list(ordered_mosaic_window_sizes(cfg, density=density))
+    sizes = _prioritize_exact_window_fit(sizes, remaining)
+    min_dense = cfg.density_budget.min_slots if cfg.density_budget.enabled else 4
+    if ctx.layout_state is not None:
+        ctx.layout_state.dense_collage_min_slots = min_dense
     for size in sizes:
         if start + size > len(ctx.ids):
+            continue
+        if (
+            cfg.density_budget.enabled
+            and ctx.layout_state is not None
+            and size >= min_dense
+            and not ctx.layout_state.can_use_dense_collage_window(size)
+        ):
             continue
         window = ctx.ids[start : start + size]
         # Pair-first portrait priority: a run of consecutive standard portraits

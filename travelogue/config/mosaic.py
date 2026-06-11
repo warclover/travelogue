@@ -9,6 +9,15 @@ from travelogue.config_helpers import cfg_bool, cfg_float
 
 
 @dataclass
+class MosaicDensityBudgetConfig:
+    """P21 · dense collage frequency caps (PRD-PHASE21)."""
+
+    enabled: bool = True
+    min_slots: int = 4
+    window_order: tuple[int, ...] = (5, 4, 6)
+
+
+@dataclass
 class MosaicConfig:
     """Phase 15 mosaic composition (DESIGN-PHASE15 · S1)."""
 
@@ -16,7 +25,7 @@ class MosaicConfig:
     scorer_version: str = "p15-s3"
     deterministic_strict: bool = True
     min_candidate_score: float = 0.35
-    enabled_window_sizes: tuple[int, ...] = (3, 4, 5, 6, 8, 9)
+    enabled_window_sizes: tuple[int, ...] = (4, 5, 6)
     unified_mode: bool = True
     fallback_to_legacy: bool = True
     self_heal_enabled: bool = True
@@ -24,6 +33,7 @@ class MosaicConfig:
     max_drop_ratio: float = 0.5
     candidate_top_k: int = 4
     log_level: str = "window"
+    density_budget: MosaicDensityBudgetConfig = field(default_factory=MosaicDensityBudgetConfig)
     # When false, restores pre-v4 hero-3-2-plus-4 geometry/scorer guards (rollback).
     hero_weighted_geometry_guard: bool = True
     # PRD-6张拼图优化 · R-MAIN-AR-01: conventional AR only for hero+tile main slot.
@@ -51,6 +61,8 @@ class MosaicConfig:
             "hero_narrow_tiles": 0.35,
             "hero_slot_aspect": 0.4,
             "flat_six_grid": 0.35,
+            "flat_nine_grid": 0.45,
+            "dense_without_hero": 0.25,
             "main_ar_ineligible": 0.95,
         }
     )
@@ -62,6 +74,23 @@ class MosaicConfig:
     lse_quality_unified: bool = False
     lse_slot_max_matrix_n: int = 16
     lse_highlight_boost: float = 1.0
+
+
+def _density_budget_from_dict(raw: dict[str, Any]) -> MosaicDensityBudgetConfig:
+    defaults = MosaicDensityBudgetConfig()
+    db = raw.get("density_budget") if isinstance(raw.get("density_budget"), dict) else {}
+    if isinstance(raw.get("densityBudget"), dict):
+        db = raw["densityBudget"]
+    order_raw = db.get("window_order", db.get("windowOrder", defaults.window_order))
+    if isinstance(order_raw, (list, tuple)):
+        order = tuple(int(x) for x in order_raw)
+    else:
+        order = defaults.window_order
+    return MosaicDensityBudgetConfig(
+        enabled=cfg_bool(db, "enabled", "enabled", defaults.enabled),
+        min_slots=int(db.get("min_slots", db.get("minSlots", defaults.min_slots))),
+        window_order=order or defaults.window_order,
+    )
 
 
 def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
@@ -128,4 +157,5 @@ def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
         penalties={
             k: float(penalties_raw.get(k, defaults.penalties.get(k, 0.0))) for k in defaults.penalties
         },
+        density_budget=_density_budget_from_dict(raw),
     )

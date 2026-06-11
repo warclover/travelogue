@@ -59,6 +59,22 @@ class LayoutDensityParams:
         new_min = min(int(math.ceil(nine_min * 1.2)), new_max) if nine_min > 0 else 0
         return new_min, new_max
 
+    def adjust_dense_collage_limits(
+        self,
+        dense_min: int,
+        dense_max: int,
+        *,
+        total_photos: int = 0,
+    ) -> tuple[int, int]:
+        """P21 · PRD-PHASE21 §5.1 density scaling for dense collage max."""
+        if self.density == "balanced":
+            return dense_min, dense_max
+        if self.density == "hero_first":
+            return dense_min, max(0, int(math.floor(dense_max * 0.35)))
+        cap = max(dense_max, (total_photos // 4) if total_photos > 0 else dense_max)
+        new_max = min(int(math.ceil(dense_max * 1.15)), cap) if dense_max > 0 else dense_max
+        return dense_min, new_max
+
 
 def layout_density_params(trip: dict, *, app_cfg: AppConfig | None = None) -> LayoutDensityParams:
     return LayoutDensityParams(density=layout_density_from_trip(trip, app_cfg=app_cfg))
@@ -78,6 +94,28 @@ def layout_density_effect(
     if trip_photo_total < MIN_PHOTOS_COLLAGE_FULL_EFFECT and density == "collage_first":
         return "limited"
     return "full"
+
+
+def dense_collage_quota_adjusted(
+    trip_photo_total: int,
+    density: LayoutDensity,
+    *,
+    app_cfg: AppConfig | None = None,
+) -> dict[str, int]:
+    """P21 · base vs density-adjusted dense collage quota."""
+    from travelogue.curation.screen_layout_state import dense_collage_limits_for_trip
+
+    base_lo, base_hi = dense_collage_limits_for_trip(trip_photo_total)
+    params = layout_density_params({"intent": {"layoutDensity": density}}, app_cfg=app_cfg)
+    adj_lo, adj_hi = params.adjust_dense_collage_limits(
+        base_lo, base_hi, total_photos=trip_photo_total
+    )
+    return {
+        "min": adj_lo,
+        "max": adj_hi,
+        "baseMin": base_lo,
+        "baseMax": base_hi,
+    }
 
 
 def nine_quota_adjusted(

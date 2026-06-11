@@ -119,7 +119,7 @@ class LayoutTemplateEngineConfig:
     policy_path: str = "travelogue/layout_templates/lte_policy.yaml"
     read_templates_from_lte: bool = True
     exclude_collage_from_mosaic: bool = True
-    max_mosaic_slots: int = 9
+    max_mosaic_slots: int = 6
     emit_per_template: bool = True
     telemetry_registry_versions_max: int = 8
     overrides_disable: tuple[str, ...] = ()

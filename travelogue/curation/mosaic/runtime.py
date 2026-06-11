@@ -72,11 +72,46 @@ def six_slot_layout_enabled(cfg: MosaicConfig | None = None) -> bool:
     return mosaic_window_size_enabled(6, cfg)
 
 
+def _max_mosaic_slots() -> int:
+    from travelogue.config import get_config
+
+    te = getattr(get_config().layout, "template_engine", None)
+    if te is None:
+        return 9
+    return int(getattr(te, "max_mosaic_slots", 9) or 9)
+
+
+def mosaic_window_size_order(cfg: MosaicConfig | None = None) -> tuple[int, ...]:
+    """P21 · balanced MCS window attempt order (PRD §5.3)."""
+    cfg = cfg or get_effective_mosaic_config()
+    return cfg.density_budget.window_order
+
+
+def ordered_mosaic_window_sizes(
+    cfg: MosaicConfig,
+    *,
+    density: str = "balanced",
+) -> tuple[int, ...]:
+    """Return enabled window sizes in balanced P21 attempt order."""
+    sizes = effective_mosaic_window_sizes(cfg)
+    if not sizes:
+        return ()
+    if not cfg.density_budget.enabled or density != "balanced":
+        return tuple(sorted(sizes, reverse=True))
+    order = cfg.density_budget.window_order
+    head = [s for s in order if s in sizes]
+    tail = [s for s in sorted(sizes) if s not in head]
+    return tuple(head + tail)
+
+
 def effective_mosaic_window_sizes(cfg: MosaicConfig) -> tuple[int, ...]:
     """DESIGN §12.1 · unified_mode=false limits MCS to 5-slot windows only."""
     if not cfg.enabled:
         return ()
-    sizes = tuple(s for s in cfg.enabled_window_sizes if s in _ALLOWED_SIZES)
+    max_slots = _max_mosaic_slots()
+    sizes = tuple(
+        s for s in cfg.enabled_window_sizes if s in _ALLOWED_SIZES and s <= max_slots
+    )
     if cfg.unified_mode:
         return sizes
     return tuple(s for s in sizes if s == 5)

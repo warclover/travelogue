@@ -298,4 +298,7 @@ def mosaic_pattern_disabled(
         return True
     if n == 6 and not mosaic_window_size_enabled(6, mosaic_cfg):
         return True
+    max_slots = int(getattr(getattr(app.layout, "template_engine", None), "max_mosaic_slots", 9) or 9)
+    if n is not None and n > max_slots:
+        return True
     return False
