@@ -903,7 +903,7 @@ def run_curate(
     if app_cfg.mosaic.enabled:
         from travelogue.curation.mosaic.hook import begin_mosaic_capture
 
-        begin_mosaic_capture()
+        begin_mosaic_capture(str(trip.get("id") or "").strip() or None)
     try:
         from travelogue.curation.layout_density import layout_density_params
 

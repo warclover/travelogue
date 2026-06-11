@@ -20,6 +20,7 @@ from travelogue.eval.golden_trips import resolve_existing_golden_trips
 
 from book_quality_baseline import _curate_trip, _p19_candidate_cfg
 from travelogue.config import get_config
+from travelogue.curation.mosaic.lte_adapter import lte_rollout_eligible
 
 _P19_NEW_PATTERNS = frozenset(
     {
@@ -86,10 +87,15 @@ def main() -> int:
         work = ROOT / ".cache" / "book-quality" / "pattern-share-work" / tid
         body = _curate_trip(trip, work_dir=work, cfg=cfg)
         stats = _pattern_stats(body.get("chapters") or [])
-        per_trip.append({"tripId": tid, **stats})
+        cohort = {
+            pid: lte_rollout_eligible(pid, trip_id=tid)
+            for pid in _DESIGNER_SKU
+        }
+        per_trip.append({"tripId": tid, "designerSkuCohort": cohort, **stats})
         print(
             f"{tid}: new {stats['newPatternShare']:.1%} "
-            f"sku {stats['designerSkuShare']:.1%} screens={stats['screenCount']}"
+            f"sku {stats['designerSkuShare']:.1%} screens={stats['screenCount']} "
+            f"cohort={cohort}"
         )
 
     new_shares = [t["newPatternShare"] for t in per_trip if t["screenCount"] > 0]

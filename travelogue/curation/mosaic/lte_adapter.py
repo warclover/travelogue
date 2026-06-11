@@ -179,8 +179,8 @@ def template_photo_count_range(pattern_id: str) -> tuple[int, int] | None:
     return tpl.photo_count_min, tpl.photo_count_max
 
 
-def lte_rollout_eligible(pattern_id: str) -> bool:
-    """LTE extras with rollout.percent<=0 stay out of MCS until enabled (W3 parity)."""
+def lte_rollout_eligible(pattern_id: str, trip_id: str | None = None) -> bool:
+    """LTE rollout gate: percent<=0 disabled; 0<pct<100 uses tripId cohort (R-P19-105)."""
     if not read_templates_from_lte():
         return True
     try:
@@ -191,10 +191,28 @@ def lte_rollout_eligible(pattern_id: str) -> bool:
         return True
     rollout = tpl.rollout or {}
     try:
-        pct = int(rollout.get("percent", 100))
+        pct = float(rollout.get("percent", 100))
     except (TypeError, ValueError):
-        pct = 100
-    return pct > 0
+        pct = 100.0
+    if pct <= 0:
+        return False
+    if pct >= 100:
+        return True
+    tid = (trip_id or "").strip()
+    if not tid:
+        from travelogue.curation.mosaic.trip_context import mosaic_trip_id
+
+        tid = mosaic_trip_id() or ""
+    if not tid:
+        return True
+    from travelogue.config.rollout import rollout_bucket
+
+    bucket = rollout_bucket(
+        tid,
+        cohort_salt=f"lte-template:{pattern_id}",
+        traffic_percent=pct,
+    )
+    return bucket < int(round(pct))
 
 
 def mosaic_registry(cfg: AppConfig | None = None) -> dict[str, MosaicPattern]:

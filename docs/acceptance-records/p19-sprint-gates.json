@@ -65,7 +65,7 @@
         "portraitTripJudgeWinRateActual": null,
         "newPatternShareMin": 0.10,
         "newPatternShareActual": 0.0167,
-        "bspViewport32Pass": false,
+        "bspViewport32Pass": true,
         "schemaV2Foundation": true,
         "whitespaceHeroExperimental": true,
         "justifiedRow": true

@@ -66,6 +66,10 @@ def main() -> int:
     if rc:
         failures.append("pattern_share_audit")
 
+    rc = _run([py, str(scripts / "p19_bsp_gate.py")])
+    if rc:
+        failures.append("bsp_gate")
+
     sig_rc = _run([py, str(scripts / "book_quality_screen_signatures.py")])
     baseline_manifest = CACHE / "baseline" / "manifest.json"
     if not args.skip_baseline_compare and baseline_manifest.is_file():
@@ -93,6 +97,8 @@ def main() -> int:
     pattern = (
         json.loads(pattern_path.read_text(encoding="utf-8")) if pattern_path.is_file() else {}
     )
+    bsp_path = CACHE / "bsp-gate.json"
+    bsp = json.loads(bsp_path.read_text(encoding="utf-8")) if bsp_path.is_file() else {}
 
     sig_diff_path = CACHE / "screens-signatures" / "diff_report.json"
     sig_diff = None
@@ -147,6 +153,11 @@ def main() -> int:
                 "medianNewPatternShare": pattern.get("medianNewPatternShare"),
                 "medianDesignerSkuShare": pattern.get("medianDesignerSkuShare"),
                 "artifact": ".cache/book-quality/pattern-share-audit.json",
+            },
+            "bspViewport32": {
+                "ok": bsp.get("ok"),
+                "skipped": bsp.get("skipped"),
+                "artifact": ".cache/book-quality/bsp-gate.json",
             },
         },
         "failures": failures,

@@ -27,10 +27,13 @@ def _mosaic_cfg() -> MosaicConfig:
     return get_effective_mosaic_config()
 
 
-def begin_mosaic_capture() -> None:
+def begin_mosaic_capture(trip_id: str | None = None) -> None:
     """Start a fresh log buffer for the current curate/plan run (thread-safe)."""
     _mosaic_logs_var.set([])
     _mosaic_dropped_var.set([])
+    from travelogue.curation.mosaic.trip_context import set_mosaic_trip_id
+
+    set_mosaic_trip_id(trip_id)
 
 
 def _logs_buf() -> list[dict]:

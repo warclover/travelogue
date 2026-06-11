@@ -1,0 +1,31 @@
+{
+  "schema": "travelogue.acceptance.p19-bsp-gate",
+  "version": 1,
+  "date": "2026-06-11",
+  "templateIds": [
+    "screen-full-frame-bsp-3-2"
+  ],
+  "probe": {
+    "ok": true,
+    "skipped": false,
+    "warnings": [],
+    "rows": [
+      {
+        "ok": true,
+        "width": 960.0,
+        "height": 640.0,
+        "aspect": 1.5,
+        "targetAspect": 1.5,
+        "delta": 0.0,
+        "tolerance": 0.04,
+        "viewport": {
+          "width": 1440,
+          "height": 960
+        },
+        "templateId": "screen-full-frame-bsp-3-2"
+      }
+    ]
+  },
+  "ok": true,
+  "skipped": false
+}

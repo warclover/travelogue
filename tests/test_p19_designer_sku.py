@@ -14,9 +14,11 @@ from travelogue.layout_templates.validator import validate_template_def
 @pytest.fixture(autouse=True)
 def _fresh_engine() -> None:
     from travelogue.curation.mosaic.legacy_specs import reset_legacy_specs_cache_for_tests
+    from travelogue.curation.mosaic.trip_context import set_mosaic_trip_id
 
     reset_engine_cache_for_tests()
     reset_legacy_specs_cache_for_tests()
+    set_mosaic_trip_id(None)
 
 
 @pytest.mark.unit
