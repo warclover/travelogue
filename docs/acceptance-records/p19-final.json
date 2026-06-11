@@ -1,41 +1,52 @@
 {
   "schema": "travelogue.acceptance.p19-final",
-  "version": 1,
+  "version": 2,
   "program": "Phase 19 · LQU",
   "updatedAt": "2026-06-11",
   "branch": "phase19/lean-quality-uplift",
-  "status": "automated_gates_pass_pending_human",
-  "note": "P95 gate fixed: compare uses p19-candidate cfg (scoring off). Prior fail was local config.yaml layout.scoring.enabled=true. Human blind review still pending.",
+  "status": "closed_with_deferrals",
+  "closureDoc": "docs/ACCEPTANCE-PHASE19.md",
+  "productPrinciplesRef": "docs/PRD-PRODUCT-LAYOUT-PRINCIPLES.md",
+  "note": "Automated gates pass (p19-gate-run ok=true). P19-candidate defaults = P16 path (zero screen diff). North star human blind not met; solo dogfood wangdan2 all tie. SKU/new-pattern share below PRD threshold at default rollout.",
   "goldenTripIdsRef": "docs/acceptance-records/p19-golden-trips.json",
   "gateRunRef": "docs/acceptance-records/p19-gate-run.json",
+  "humanBlindRef": "docs/acceptance-records/p19-human-blind-review-wangdan2.json",
+  "automatedGatesOk": true,
   "acceptanceCriteria": [
     {
       "id": "AC-P19-01",
       "title": "感知裁判",
       "threshold": "judge–人评一致率 ≥ 75%",
-      "status": "pending",
+      "status": "not_met",
       "actual": {
         "vlmMockWinRate": 0.5556,
         "vlmMockNote": "mock only; not a Gate substitute",
-        "humanAgreementRate": null
+        "humanAgreementRate": null,
+        "reviewerCount": 0,
+        "calibrationMinReviewers": 3
       },
       "artifacts": [
         "docs/acceptance-records/p19-judge-calibration.json",
-        "docs/p19/vlm-judge-prompt-v1.md"
-      ]
+        "docs/p19/vlm-judge-prompt-v1.md",
+        "scripts/book_quality_vlm_judge.py"
+      ],
+      "deferral": "API judge + ≥3 人校准；独立开发者未执行"
     },
     {
       "id": "AC-P19-02",
       "title": "像素闭环",
       "threshold": "无 pattern 级 object-position 硬编码；CI 像素检查通过",
-      "status": "partial",
+      "status": "pass",
       "actual": {
         "pixelCiGreen": true,
-        "focalTelemetry": "pending_audit"
+        "focalCssTestPass": true,
+        "focalPointRateGolden": 1.0,
+        "focalTelemetryAudit": "scripts/p19_focal_telemetry_audit.py",
+        "renderContextFocalFromAsset": true
       },
       "artifacts": [
         "tests/test_p19_focal_css.py",
-        ".github/workflows/ci.yml"
+        ".cache/book-quality/focal-telemetry-audit.json"
       ]
     },
     {
@@ -60,38 +71,47 @@
       "id": "AC-P19-04",
       "title": "Schema v2 + 设计师 SKU",
       "threshold": "v1 零迁移；SKU + justified-row 占比达标",
-      "status": "partial",
+      "status": "partial_not_met_share",
       "actual": {
         "schemaV2Foundation": true,
         "justifiedRow": true,
+        "spreadFolio": true,
+        "asymmetricHero": true,
+        "whitespaceHeroExperimental": true,
+        "bspViewport32Pass": true,
         "designerSkuRolloutPercent": 15,
         "medianNewPatternShare": 0.0167,
         "medianDesignerSkuShare": 0.0,
         "newPatternShareGateMin": 0.1,
-        "designerSkuShareGateMin": 0.15
+        "designerSkuShareGateMin": 0.15,
+        "admissionThreeStep": true
       },
       "artifacts": [
         "scripts/p19_pattern_share_audit.py",
+        "docs/acceptance-records/p19-bsp-gate.json",
         "tests/test_lte_schema_v2_compat.py",
         "tests/test_p19_designer_sku.py"
-      ]
+      ],
+      "deferral": "占比 Gate 需提高 rollout 或默认开 SKU；人评未证明 SKU 价值"
     },
     {
       "id": "AC-P19-05",
       "title": "选片 subset",
       "threshold": "进排版资产 −25%~−40% 中位数；故事更清楚 ≥ 60%",
-      "status": "partial",
+      "status": "partial_planner_only",
       "actual": {
         "subsetIntegratedInCurate": true,
         "subsetEnabledDefault": false,
         "subsetReductionMedianOnGolden": 0.3011,
         "subsetMedianWithinGate": true,
-        "storyClarityPreferCandidatePct": null
+        "storyClarityPreferCandidatePct": null,
+        "humanStoryClarityWangdan2": "tie"
       },
       "artifacts": [
         "scripts/p19_subset_golden_audit.py",
         "tests/test_p19_curate_subset.py"
-      ]
+      ],
+      "deferral": "故事更清楚需人评；wangdan2 visible 模式仍 tie"
     },
     {
       "id": "AC-P19-06",
@@ -102,40 +122,51 @@
         "screenSignatureUnitParity": true,
         "goldenScreenSignatureZeroDiffP16Path": true,
         "screenSignatureMismatches": 0,
-        "legacyGeneratedRuntimeRemoved": false
+        "lteRuntimePrimaryWhenEnabled": true,
+        "legacyGeneratedRuntimeRemoved": false,
+        "lseArchiveShims": true,
+        "lseFlagsAdminReadonly": true
       },
       "artifacts": [
         "tests/test_p19_screen_signature_parity.py",
-        "docs/acceptance-records/p19-screen-signatures-baseline.json"
-      ]
+        "docs/acceptance-records/p19-screen-signatures-baseline.json",
+        "travelogue/curation/mosaic/legacy_specs.py"
+      ],
+      "deferral": "移除 runtime fallback 触发 import 环；单独 PR"
     },
     {
       "id": "AC-P19-07",
       "title": "北极星人评",
       "threshold": "盲评胜率 ≥ 60%（≥6/8）；Share Intent ≥ 4/5 ≥ 60%",
-      "status": "pending",
+      "status": "not_met",
       "actual": {
-        "humanBlindWinRate": null,
-        "tripsWon": null,
-        "shareIntent4PlusPct": null,
+        "humanBlindWinRate": 0.0,
+        "tripsWon": 0,
+        "tripCountPrimary8": 0,
+        "tripCountDogfood": 1,
+        "tiesDogfood": 1,
+        "shareIntent4PlusPct": 0.0,
+        "shareIntentDogfood": 3,
+        "productInsight": "算法屏序 diff 未转化为感知差异；用户关注照片非顺序",
         "organizerGuide": "docs/P19-HUMAN-BLIND-REVIEW.md"
       },
       "artifacts": [
+        "docs/acceptance-records/p19-human-blind-review-wangdan2.json",
         "docs/acceptance-records/p19-human-blind-review.template.json"
-      ]
+      ],
+      "deferral": "PRD ≥3 人 × 8 本未执行；北极星不宣称通过"
     },
     {
       "id": "AC-P19-08",
       "title": "性能与稳定",
-      "threshold": "curate P95 ≤ +15% vs P16；render 无回归",
+      "threshold": "curate P95 ≤ +15% vs P16 baseline；render 无回归",
       "status": "pass_automated",
       "actual": {
-        "p16P95Seconds": 0.475,
-        "p19CandidateP95Seconds": 0.342,
-        "p95IncreasePct": -28.0,
+        "p16P95Seconds": 0.636,
+        "p19CandidateP95Seconds": 0.455,
+        "p95IncreasePct": -28.46,
         "p95WithinGate": true,
         "comparePath": "p19-candidate cfg (scoring/LSE off)",
-        "localScoringEnabledWarning": "config.yaml layout.scoring.enabled=true inflates raw-config compare",
         "structureDraftSuccessRate": null
       },
       "artifacts": [
@@ -148,7 +179,22 @@
     "subsetInCurate": true,
     "highlightOpenerBinding": true,
     "highlightOpenerBindingDefault": false,
+    "subsetKillSwitchDefaultOff": true,
     "tripSchemaSubsetPlan": true,
-    "runbook": "docs/P19-RUNBOOK.md"
+    "runbook": "docs/P19-RUNBOOK.md",
+    "acceptanceDoc": "docs/ACCEPTANCE-PHASE19.md",
+    "humanBlindPairScript": "scripts/p19_human_blind_pair.py"
+  },
+  "recommendedMergePosture": {
+    "safeToMergeAs": "engineering_guardrails_and_optional_features_default_off",
+    "doNotClaim": [
+      "north_star_human_win_rate",
+      "perceived_layout_uplift_vs_p16",
+      "designer_sku_share_gate"
+    ],
+    "beforeDefaultOn": [
+      "human_evidence_that_order_or_sku_matters_to_users",
+      "or_subset_only_if_duplicate_reduction_is_the_goal"
+    ]
   }
 }

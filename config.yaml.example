@@ -66,6 +66,15 @@ layout:
   screen_plan_scope: day
   # 1 竖 + 2 横混排时三张图 takenAt 最大跨度（秒）
   mixed_proximity_seconds: 12
+  # Phase 20 · UC 用例 AR 阈值（TEMPLATE-USE-CASES §0；MCS use_case_scoring）
+  asset_aspect:
+    panorama_min: 2.5
+    square_min: 0.85
+    square_max: 1.15
+    use_case_scoring_enabled: true
+  multi_image_stack:
+    fit: contain
+    unify_stage_height: true
   # Phase 17 · 智能排版策略引擎（LSE）
   # 默认 enabled=false：行为与 P16 末态完全一致（现网主路径，AC-P17-01）。
   # W3a 前请勿在生产打开；Studio GET /__travelogue/config 会暴露 strategyEngine.enabled 只读状态。

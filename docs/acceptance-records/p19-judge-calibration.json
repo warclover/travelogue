@@ -11,6 +11,7 @@
     "model": "",
     "maxScreensPerTrip": 12
   },
+  "humanBlindDogfoodRef": "docs/acceptance-records/p19-human-blind-review-wangdan2.json",
   "reviewers": [],
   "trips": [],
   "summary": {

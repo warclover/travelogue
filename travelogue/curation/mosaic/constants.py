@@ -42,9 +42,13 @@ def __dir__() -> list[str]:
             "PATTERN_MOSAIC_5_3P_2L_BALANCED",
             "PATTERN_MOSAIC_5_2P3L_EQUAL",
             "PATTERN_MOSAIC_5_HERO_3_2_PLUS_4",
+            "PATTERN_MOSAIC_5_TOP_HERO_4",
+            "PATTERN_MOSAIC_5_LEFT3_RIGHT2",
             "PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4",
             "PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5",
+            "PATTERN_MOSAIC_6_GRID_HERO_BR",
             "PATTERN_PORTRAIT_3",
+            "PATTERN_LANDSCAPE_2",
             "PATTERN_LANDSCAPE_3",
             "PATTERN_PORTRAIT_1_LANDSCAPE_2",
             "PATTERN_PORTRAIT_2_LANDSCAPE_2",
@@ -67,11 +71,15 @@ PATTERN_MOSAIC_5_2P_3L_BALANCED = "screen-mosaic-5-2portrait-3land-balanced"
 PATTERN_MOSAIC_5_3P_2L_BALANCED = "screen-mosaic-5-3portrait-2land-balanced"
 PATTERN_MOSAIC_5_2P3L_EQUAL = "screen-mosaic-5-2p3l-equal"
 PATTERN_MOSAIC_5_HERO_3_2_PLUS_4 = "screen-mosaic-5-hero-3-2-plus-4"
+PATTERN_MOSAIC_5_TOP_HERO_4 = "screen-mosaic-5-top-hero-4"
+PATTERN_MOSAIC_5_LEFT3_RIGHT2 = "screen-mosaic-5-left3-right2"
 PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4 = "screen-mosaic-5-main-hero-plus-4"
 PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5 = "screen-mosaic-6-main-hero-plus-5"
+PATTERN_MOSAIC_6_GRID_HERO_BR = "screen-mosaic-6-grid-hero-br"
 
 # --- 3 / 4 / 6 · reuse existing grid patterns (S2) ---
 PATTERN_PORTRAIT_3 = "screen-portrait-3"
+PATTERN_LANDSCAPE_2 = "screen-landscape-2"
 PATTERN_LANDSCAPE_3 = "screen-landscape-3"
 PATTERN_PORTRAIT_1_LANDSCAPE_2 = "screen-portrait-1-landscape-2"
 PATTERN_PORTRAIT_2_LANDSCAPE_2 = "screen-portrait-2-landscape-2"

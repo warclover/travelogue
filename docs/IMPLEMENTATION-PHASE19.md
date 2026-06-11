@@ -7,7 +7,7 @@
 | **配套 PRD** | [PRD-PHASE19-lean-quality-uplift.md](./PRD-PHASE19-lean-quality-uplift.md)（v0.2） |
 | **分支** | `phase19/lean-quality-uplift` |
 | **更新日期** | 2026-06-11 |
-| **状态** | **S4 Schema v2 基础已落地 · justified-row/spread 待做 · S1–S3 Gate 待实跑** |
+| **状态** | **2026-06-11 工程收尾** · 见 [ACCEPTANCE-PHASE19.md](./ACCEPTANCE-PHASE19.md) · 自动化 Gate ✅ · 北极星 / SKU 占比 ❌ |
 
 > **本文定位**：把 PRD 的 R-P19-xx 落成可执行任务、PR 切片、文件级改动清单与 Sprint Gate 检查表。PRD 讲「做什么/为什么」，本文讲「先干什么、改哪里、怎么验、怎么回滚」。
 
@@ -359,12 +359,13 @@ Day 9–10  S1 Gate 预演；未达标则只合 harness/像素 PR，不进 S2 �
 | 文档 | 用途 |
 |------|------|
 | [PRD-PHASE19-lean-quality-uplift.md](./PRD-PHASE19-lean-quality-uplift.md) | 产品契约 |
+| [PRD-PRODUCT-LAYOUT-PRINCIPLES.md](./PRD-PRODUCT-LAYOUT-PRINCIPLES.md) | **阶段后产品纲领**（P-LAY-01～03） |
 | **本文** | 工程任务与 Sprint 施工图 |
 | `docs/acceptance-records/p19-golden-trips.json` | 8+1 样本清单 |
 | `docs/acceptance-records/p19-judge-calibration.template.json` | 人评录入 |
 | `docs/acceptance-records/p19-sprint-gates.template.json` | Gate 归档 |
-| `docs/P19-RUNBOOK.md` | S6 交付（待写） |
-| `docs/ACCEPTANCE-PHASE19.md` | S6 交付（待写） |
+| `docs/P19-RUNBOOK.md` | S6 交付 ✅ |
+| `docs/ACCEPTANCE-PHASE19.md` | S6 交付 ✅ |
 
 ---
 
@@ -373,3 +374,4 @@ Day 9–10  S1 Gate 预演；未达标则只合 harness/像素 PR，不进 S2 �
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v0.1 | 2026-06-11 | 初版：PRD v0.2 任务拆解、S1–S6 子任务、开发准备清单、模块与配置规划 |
+| v0.2 | 2026-06-11 | 工程收尾：ACCEPTANCE-PHASE19、p19-final closed_with_deferrals |

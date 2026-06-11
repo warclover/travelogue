@@ -112,6 +112,24 @@ class LayoutStrategyEngineConfig:
 
 
 @dataclass
+class LayoutAssetAspectConfig:
+    """Phase 20 · UC 用例 AR 阈值（TEMPLATE-USE-CASES §0）."""
+
+    panorama_min: float = 2.5
+    square_min: float = 0.85
+    square_max: float = 1.15
+    use_case_scoring_enabled: bool = True
+
+
+@dataclass
+class LayoutMultiImageStackConfig:
+    """多图 stack / 混排对齐策略（contain + 同高 stage）."""
+
+    fit: str = "contain"
+    unify_stage_height: bool = True
+
+
+@dataclass
 class LayoutTemplateEngineConfig:
     enabled: bool = True
     registry_path: str = "travelogue/layout_templates/templates"
@@ -136,6 +154,10 @@ class LayoutConfig:
     mixed_proximity_seconds: float = 12.0  # 1竖+2横混排 takenAt 跨度上限
     layout_density_enabled: bool = True  # PRD-FINE-CRAFT-LAYOUT-DENSITY · false → balanced
     rhythm: LayoutRhythmConfig = field(default_factory=LayoutRhythmConfig)
+    asset_aspect: LayoutAssetAspectConfig = field(default_factory=LayoutAssetAspectConfig)
+    multi_image_stack: LayoutMultiImageStackConfig = field(
+        default_factory=LayoutMultiImageStackConfig
+    )
     template_engine: LayoutTemplateEngineConfig = field(default_factory=LayoutTemplateEngineConfig)
     strategy_engine: LayoutStrategyEngineConfig = field(default_factory=LayoutStrategyEngineConfig)
     scoring: LayoutScoringConfig = field(default_factory=LayoutScoringConfig)
@@ -165,6 +187,38 @@ def layout_scoring_from_dict(raw: dict[str, Any]) -> LayoutScoringConfig:
         ),
         incremental=bool(raw.get("incremental", False)),
         weights=weights,
+    )
+
+
+def layout_asset_aspect_from_dict(raw: dict[str, Any]) -> LayoutAssetAspectConfig:
+    defaults = LayoutAssetAspectConfig()
+    return LayoutAssetAspectConfig(
+        panorama_min=float(raw.get("panorama_min", raw.get("panoramaMin", defaults.panorama_min))),
+        square_min=float(raw.get("square_min", raw.get("squareMin", defaults.square_min))),
+        square_max=float(raw.get("square_max", raw.get("squareMax", defaults.square_max))),
+        use_case_scoring_enabled=cfg_bool(
+            raw,
+            "use_case_scoring_enabled",
+            "useCaseScoringEnabled",
+            defaults.use_case_scoring_enabled,
+        ),
+    )
+
+
+def layout_multi_image_stack_from_dict(raw: dict[str, Any]) -> LayoutMultiImageStackConfig:
+    defaults = LayoutMultiImageStackConfig()
+    fit_raw = raw.get("fit", defaults.fit)
+    fit = str(fit_raw).strip().lower() if fit_raw is not None else defaults.fit
+    if fit not in ("contain", "cover", "auto"):
+        fit = defaults.fit
+    return LayoutMultiImageStackConfig(
+        fit=fit,
+        unify_stage_height=cfg_bool(
+            raw,
+            "unify_stage_height",
+            "unifyStageHeight",
+            defaults.unify_stage_height,
+        ),
     )
 
 

@@ -390,6 +390,15 @@ def score_candidate(
             if tone_pen >= 0.45:
                 reasons.append("R_TONE_JUMP")
 
+    from travelogue.curation.mosaic.use_case_scoring import use_case_layout_multiplier
+
+    uc_mul, uc_reasons = use_case_layout_multiplier(
+        screen, asset_ids, assets_by_id, aspects
+    )
+    if uc_mul != 1.0:
+        total = min(1.0, total * uc_mul)
+        reasons.extend(uc_reasons)
+
     return MosaicScoreResult(
         total=_clamp01(total),
         base=base,

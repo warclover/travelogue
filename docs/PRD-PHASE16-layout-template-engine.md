@@ -7,7 +7,7 @@
 | **状态** | Draft · 已过四方评审 · 收口中 |
 | **Phase 16 代号** | 「布局模板引擎」（Layout Template Engine，**LTE**） |
 | **前置条件** | Phase 15 MCS（`mosaic/`）S1–S3 已落地；`layout_engine=screens` Web 16:9 舞台稳定 |
-| **关联文档** | [PRD-PHASE15-photo-mosaic-evolution.md](./PRD-PHASE15-photo-mosaic-evolution.md)、[DESIGN-PHASE15-mosaic-system.md](./DESIGN-PHASE15-mosaic-system.md)、[IMPLEMENTATION-PHASE15.md](./IMPLEMENTATION-PHASE15.md)、[智能排版.md](./智能排版.md)、`travelogue/curation/mosaic/`、`templates/visual-journal/journal-screens.css` |
+| **关联文档** | [PRD-PRODUCT-LAYOUT-PRINCIPLES.md](./PRD-PRODUCT-LAYOUT-PRINCIPLES.md)（产品纲领 · 丰富度 ≤9）、[PRD-PHASE15-photo-mosaic-evolution.md](./PRD-PHASE15-photo-mosaic-evolution.md)、[DESIGN-PHASE15-mosaic-system.md](./DESIGN-PHASE15-mosaic-system.md)、[IMPLEMENTATION-PHASE15.md](./IMPLEMENTATION-PHASE15.md)、[智能排版.md](./智能排版.md)、`travelogue/curation/mosaic/`、`templates/visual-journal/journal-screens.css` |
 | **更新日期** | 2026-06-06 |
 
 > **定位**

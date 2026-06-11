@@ -12,7 +12,42 @@
 
 ## 2. 生成对比成稿
 
-### 自动化（推荐）
+### 单人样本：王丹精选2（推荐）
+
+tripId：`demo-b388794e0a` · 标题《王丹精选2》
+
+```bash
+python scripts/p19_human_blind_pair.py demo-b388794e0a
+```
+
+产出：
+
+| 文件 | 说明 |
+|------|------|
+| `.cache/p19-human-blind/demo-b388794e0a/preview/compare.html` | 左右 A/B 盲评（随机映射） |
+| `.cache/p19-human-blind/demo-b388794e0a/render/index-p19-baseline.html` | P16-default 成稿 |
+| `.cache/p19-human-blind/demo-b388794e0a/render/index-p19-candidate.html` | P19-candidate 成稿 |
+| `.cache/p19-human-blind/demo-b388794e0a/compare_meta.json` | A/B 与 baseline/candidate 映射 + 屏差摘要 |
+
+打开 `compare.html` 浏览并点「导出 JSON」，将结果合并到 `docs/acceptance-records/p19-human-blind-review-wangdan2.template.json`（填好后可改名为 `p19-human-blind-review.json`）。单人评审时 `reviewerCount` 记为 1，并在 `notes` 注明 dogfood 自评。
+
+**为何 A/B 完全一样？** 默认命令里 `P19-candidate` 与 `P16-default` **配置相同**（`layout.scoring` / LSE 关，且 subset、highlight、章级 DP 默认关）。自动化 Gate 测的是「不意外改行为」；**不是**终态观感。
+
+**要看排版差异（人评用）**：
+
+```bash
+python scripts/p19_human_blind_pair.py demo-b388794e0a --p19-visible
+```
+
+产出在 `.cache/p19-human-blind/demo-b388794e0a/visible/`（subset + highlight + chapter DP + spread/asymmetric rollout 视为 100%）。人评归档时在 `notes` 标明 `p19VisibleMode`，与 Gate 用的 `P19-candidate` 路径区分。
+
+调试（非盲评，显示哪边是 baseline）：
+
+```bash
+python scripts/p19_human_blind_pair.py demo-b388794e0a --reveal-labels
+```
+
+### Golden 8 本批量
 
 ```bash
 # P16 baseline（左/右随机之一）
@@ -75,7 +110,7 @@ python scripts/book_quality_vlm_judge.py --mock
 
 ## 5. 归档检查清单
 
-- [ ] `p19-human-blind-review.json`（从 template 复制填写）
-- [ ] `p19-judge-calibration.json` 更新 summary
-- [ ] `p19-final.json` AC-P19-07 字段
-- [ ] `p19-sprint-gates.json` S6 `humanBlindWinRateActual`
+- [x] `p19-human-blind-review-wangdan2.json`（单人 dogfood）
+- [ ] `p19-judge-calibration.json` API 校准（≥3 人，延期）
+- [x] `p19-final.json` · `ACCEPTANCE-PHASE19.md` 收尾
+- [x] `p19-sprint-gates.json` S6 字段

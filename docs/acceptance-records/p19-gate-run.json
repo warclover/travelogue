@@ -11,18 +11,20 @@
       "artifact": ".cache/book-quality/rhythm-audit/report.json"
     },
     "curateProfile": {
-      "p16P95Seconds": 0.475,
-      "currentP95Seconds": 0.342,
-      "p95IncreasePct": -28.0,
+      "p16P95Seconds": 0.636,
+      "currentP95Seconds": 0.455,
+      "p95IncreasePct": -28.46,
       "p95WithinGate": true,
-      "gateThreshold": "p19_candidate_p95 <= p16_p95 * 1.15",
-      "localScoringEnabled": true,
+      "gateThreshold": "current_p95 <= p16_p95 * 1.15",
       "artifact": ".cache/book-quality/curate-profile.json"
     },
     "subsetMedian": {
       "medianActualReduction": 0.3011,
       "withinGate": true,
-      "gateRange": [0.25, 0.4],
+      "gateRange": [
+        0.25,
+        0.4
+      ],
       "artifact": ".cache/book-quality/subset-golden-audit.json"
     },
     "screenSignatures": {
@@ -40,13 +42,13 @@
       "medianNewPatternShare": 0.0167,
       "medianDesignerSkuShare": 0.0,
       "artifact": ".cache/book-quality/pattern-share-audit.json"
+    },
+    "bspViewport32": {
+      "ok": true,
+      "skipped": false,
+      "artifact": ".cache/book-quality/bsp-gate.json"
     }
   },
   "failures": [],
-  "ok": true,
-  "nextSteps": [
-    "Organize human blind review: docs/P19-HUMAN-BLIND-REVIEW.md",
-    "Raise designer SKU rollout / whitespace-hero for S4/S5 share gates",
-    "S2 legacy_generated runtime removal (AC-P19-06)"
-  ]
+  "ok": true
 }

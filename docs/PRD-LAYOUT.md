@@ -6,9 +6,23 @@
 | **文档类型** | 排版与布局子系统 PRD |
 | **文档版本** | v0.1 |
 | **状态** | Draft · 规则引擎 v0 已落地；专职 Agent 规划中 |
-| **关联文档** | [PRD-MVP.md](./PRD-MVP.md)、[AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md)、[LAYOUT-PLANNER.md](./LAYOUT-PLANNER.md)、[TEMPLATE-visual-journal.md](./TEMPLATE-visual-journal.md)、[ADAPTIVE-LAYOUT.md](./ADAPTIVE-LAYOUT.md)、[DATA-MODEL.md](./DATA-MODEL.md) |
+| **关联文档** | [LTE-TEMPLATE-CATALOG.md](./LTE-TEMPLATE-CATALOG.md)、[PRD-PRODUCT-LAYOUT-PRINCIPLES.md](./PRD-PRODUCT-LAYOUT-PRINCIPLES.md)（**纲领**）、[PRD-MVP.md](./PRD-MVP.md)、[AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md)、[LAYOUT-PLANNER.md](./LAYOUT-PLANNER.md)、[TEMPLATE-visual-journal.md](./TEMPLATE-visual-journal.md)、[ADAPTIVE-LAYOUT.md](./ADAPTIVE-LAYOUT.md)、[DATA-MODEL.md](./DATA-MODEL.md) |
 | **实现参考** | `travelogue/curation/layout_planner.py`、`travelogue/media/image_ops.py` |
-| **更新日期** | 2026-05-19 |
+| **更新日期** | 2026-06-11 |
+
+---
+
+## 0. 产品纲领（排版优先）
+
+本 PRD 服从 **[PRD-PRODUCT-LAYOUT-PRINCIPLES.md](./PRD-PRODUCT-LAYOUT-PRINCIPLES.md)**：
+
+| ID | 要点 |
+|----|------|
+| **P-LAY-01** | 拼图 **≤9 张/屏**；丰富度 **P0 = 4 / 5 / 6 张**；7 / 8 / 9 张维持、非重点 |
+| **P-LAY-02** | 拼图、单张横版、单张竖版须 **合理、美观**（裁切、节奏、主次） |
+| **P-LAY-03** | **章节、叙事、文案** 优先级 **低于** 拼图与排版 |
+
+Layout Composer / LTE / mosaic 选型为本子系统的北极星；叙事与长文案不在本子系统验收范围内。
 
 ---
 

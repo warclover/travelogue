@@ -8,8 +8,8 @@
 | **交付形态** | 照片 + 可选短视频 → 杂志风 HTML 游记包（zip 离线单元） |
 | **MVP 阶段** | P0 本地工坊 + P1 轻量分享实验 |
 | **后续** | Phase 2 见 [PRD-PHASE2.md](./PRD-PHASE2.md)（本 MVP PRD **已冻结**） |
-| **关联文档** | [docs/README.md](./README.md)、`CHARTER.md`、`PRD-LAYOUT.md`、`SHARING.md`、`adr/001-delivery-and-media.md`、`AGENT-ARCHITECTURE.md`、`DATA-MODEL.md`、`MEDIA-PIPELINE.md`、`NARRATIVE-PROMPTS.md` |
-| **更新日期** | 2026-05-19 |
+| **关联文档** | [PRD-PRODUCT-LAYOUT-PRINCIPLES.md](./PRD-PRODUCT-LAYOUT-PRINCIPLES.md)（**产品原则 · 排版纲领**）、[docs/README.md](./README.md)、`CHARTER.md`、`PRD-LAYOUT.md`、`SHARING.md`、`adr/001-delivery-and-media.md`、`AGENT-ARCHITECTURE.md`、`DATA-MODEL.md`、`MEDIA-PIPELINE.md`、`NARRATIVE-PROMPTS.md` |
+| **更新日期** | 2026-06-11 |
 
 ---
 
@@ -31,14 +31,14 @@
 | 用户痛点 | MVP 要解决到什么程度 |
 |----------|----------------------|
 | 素材整理费时 | 自动按时间/地点分章、去重、提案封面与章节 |
-| 不会排版讲故事 | 固定杂志模板 + Pattern，Agent 填槽而非自由排版 |
-| 文字难写 | 基于视觉标签、G1 记忆锚点、EXIF 与用户备注生成导语/图注 |
+| 不会排版讲故事 | **拼图（≤9 张/屏）+ 横单 + 竖单** 版式丰富且美观（见 [PRD-PRODUCT-LAYOUT-PRINCIPLES](./PRD-PRODUCT-LAYOUT-PRINCIPLES.md)）；Agent 填槽而非自由排版 |
+| 文字难写 | 短 hook / 图注即可；长叙事与章结构 **次于排版**（P-LAY-03） |
 | 分享不好看 | 轻量 HTML + zip；9:16 `preview.jpg` 引流 |
 | 隐私顾虑 | 发布前剥离精确 GPS，本地优先处理 |
 
 ### 1.3 产品定位（MVP）
 
-> **本地旅行记忆的杂志编辑台**：导入文件夹 → 智能策展与叙事 → 输出可离线打开的 **zip 游记包**（`index.html` + 资源）；分享时先发封面图再发全文，而不是 AI 写作工具。
+> **本地旅行记忆的杂志编辑台**：导入文件夹 → **以版式呈现照片**（拼图 + 横竖单）→ 输出可离线打开的 **zip 游记包**（`index.html` + 资源）；分享时先发封面图再发全文。核心是 **摆图**，不是 AI 写作工具。
 
 **MVP 不追求**：应用商店上架、用户增长、付费、多模板商城、社交评论、完整地图 SDK。
 

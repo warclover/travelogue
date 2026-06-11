@@ -5,10 +5,10 @@
 | **产品代号** | Travelogue |
 | **阶段代号** | Phase 19 · LQU（Lean Quality Uplift · 精益观感跃迁） |
 | **文档版本** | v0.2 |
-| **状态** | Draft · §11 已决策 · [IMPLEMENTATION-PHASE19](./IMPLEMENTATION-PHASE19.md) 任务拆解就绪 |
+| **状态** | 工程收尾 · [ACCEPTANCE-PHASE19](./ACCEPTANCE-PHASE19.md) · 护栏通过 · 北极星未达 |
 | **战略定位** | 替代 P18 BQP 的执行方式：**减法先行、像素闭环、约束变硬、裁判可扩展**，两周一验，12 周交付 |
 | **前置结论** | [P17-LSE-处置建议.md](./P17-LSE-处置建议.md)（LSE 冻结 · 路线 A）、[观感提升路线图.md](./观感提升路线图.md)（P0–P4 优先级）、[ROADMAP-PHASE18-BOOK-QUALITY.md](./ROADMAP-PHASE18-BOOK-QUALITY.md)（方向采纳、执行方式由本 PRD 重构，见 §10） |
-| **关联文档** | [IMPLEMENTATION-PHASE19.md](./IMPLEMENTATION-PHASE19.md) · [PRD-PHASE16-layout-template-engine.md](./PRD-PHASE16-layout-template-engine.md)、[PRD-排版规则优化.md](./PRD-排版规则优化.md)、[观感提升-业内调研.md](./观感提升-业内调研.md)、[LAYOUT-SCORING.md](./LAYOUT-SCORING.md) |
+| **关联文档** | [PRD-PRODUCT-LAYOUT-PRINCIPLES.md](./PRD-PRODUCT-LAYOUT-PRINCIPLES.md)（**后续阶段纲领**）、[IMPLEMENTATION-PHASE19.md](./IMPLEMENTATION-PHASE19.md) · [PRD-PHASE16-layout-template-engine.md](./PRD-PHASE16-layout-template-engine.md)、[PRD-排版规则优化.md](./PRD-排版规则优化.md)、[观感提升-业内调研.md](./观感提升-业内调研.md)、[LAYOUT-SCORING.md](./LAYOUT-SCORING.md) |
 | **验收样本** | Golden Dogfood 8+1 本（沿用 ROADMAP-P18 §2.3：`demo-2025`、`demo-80301df45c`、`demo-1506104ebf`、`demo-5a7c161a12`、`demo-2019`、`linzhi`、`chuanzang-studio`、`demo-151e7b488c`/`demo-ef0cef1d1d`、BSP `demo-d66fe642a9`） |
 | **更新日期** | 2026-06-11 |
 
@@ -17,6 +17,8 @@
 > - P15→P17 三次升级修的都是「维护模板的体验」，不是「看模板的体验」。本阶段以 **可感知观感提升** 为唯一目标，所有交付项必须通过盲评 / VLM 裁判验证，否则回滚。
 > - 与 P18 BQP（28–32 周 Program）的区别：**先做减法、Schema v2 前置、裁判轻量化（VLM pairwise + 人评校准）、两周一验**；不以基础设施交付为里程碑。
 > - 本 PRD 是执行文档：每个工作包给出需求编号（R-P19-xx）、实现入口、Gate 条件与回滚方式。
+>
+> **阶段后纲领（2026-06-11）**：P19 收尾后，产品北极星以 **[PRD-PRODUCT-LAYOUT-PRINCIPLES.md](./PRD-PRODUCT-LAYOUT-PRINCIPLES.md)** 为准（拼图 ≤9 且丰富、横竖单美观、叙事次于排版）。本 PRD 中的「盲评胜率 / 故事更清楚」Gate **不替代** 该纲领。
 
 ---
 

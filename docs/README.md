@@ -4,13 +4,21 @@
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
 | **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–17** + Studio 首页 v2/M21 + 算法 V2 |
-| **更新日期** | 2026-06-07 |
+| **更新日期** | 2026-06-11 |
+
+---
+
+## 产品原则（必读）
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-PRODUCT-LAYOUT-PRINCIPLES.md](./PRD-PRODUCT-LAYOUT-PRINCIPLES.md) | **排版纲领** · P-LAY-01～03（拼图 ≤9 且丰富 · 横竖单美观 · 叙事次于排版） |
 
 ---
 
 ## 阅读顺序（新人）
 
-1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · 已冻结）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（Curate 聚类）→ [PRD-PHASE4.md](./PRD-PHASE4.md)（编辑意图 · 杂志心智）→ [PRD-PHASE5.md](./PRD-PHASE5.md)（整体优化 · 做深做透）→ [PRD-PHASE6.md](./PRD-PHASE6.md)（稳态与治理）→ [PRD-PHASE6-ART-OPTIMIZATION.md](./PRD-PHASE6-ART-OPTIMIZATION.md)（艺术专项）→ [PRD-PHASE7.md](./PRD-PHASE7.md)（管线性能）  
+1. [CHARTER.md](./CHARTER.md) → [PRD-PRODUCT-LAYOUT-PRINCIPLES.md](./PRD-PRODUCT-LAYOUT-PRINCIPLES.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · 已冻结）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（Curate 聚类）→ [PRD-PHASE4.md](./PRD-PHASE4.md)（编辑意图 · 杂志心智）→ [PRD-PHASE5.md](./PRD-PHASE5.md)（整体优化 · 做深做透）→ [PRD-PHASE6.md](./PRD-PHASE6.md)（稳态与治理）→ [PRD-PHASE6-ART-OPTIMIZATION.md](./PRD-PHASE6-ART-OPTIMIZATION.md)（艺术专项）→ [PRD-PHASE7.md](./PRD-PHASE7.md)（管线性能）  
 2. [AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md)  
 2b. [PRD-LAYOUT.md](./PRD-LAYOUT.md)（排版布局子系统 · Agent 1.5）  
 3. [DATA-MODEL.md](./DATA-MODEL.md) + [schemas/trip.schema.json](../schemas/trip.schema.json)  

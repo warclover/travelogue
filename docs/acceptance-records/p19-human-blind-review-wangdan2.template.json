@@ -1,0 +1,56 @@
+{
+  "schema": "travelogue.acceptance.p19-human-blind-review",
+  "version": 1,
+  "program": "Phase 19 · LQU",
+  "runId": "wangdan2-solo-dogfood",
+  "date": "",
+  "baselineLabel": "P16-default",
+  "candidateLabel": "P19-candidate",
+  "baselineManifest": ".cache/p19-human-blind/demo-b388794e0a/compare_meta.json",
+  "candidateManifest": ".cache/p19-human-blind/demo-b388794e0a/compare_meta.json",
+  "reviewerCountMin": 1,
+  "tripScope": "dogfood-single · demo-b388794e0a · 王丹精选2",
+  "notes": "单人自评；非 PRD 原 ≥3 人盲评。屏序列 diff 见 compare_meta.json（默认开关下可能为 0%）。",
+  "reviewers": [
+    {
+      "reviewerId": "solo-dev",
+      "votes": []
+    }
+  ],
+  "trips": [
+    {
+      "tripId": "demo-b388794e0a",
+      "title": "王丹精选2",
+      "comparePath": ".cache/p19-human-blind/demo-b388794e0a/visible/preview/compare.html",
+      "p19VisibleMode": true,
+      "blindMapping": {
+        "A": "baseline",
+        "B": "candidate"
+      },
+      "overallWinner": null,
+      "resolvedWinner": null,
+      "storyClarity": null,
+      "shareIntent": null,
+      "dimensions": {
+        "rhythm": null,
+        "whitespace": null,
+        "crop": null,
+        "monotony": null,
+        "book_like": null
+      },
+      "notes": ""
+    }
+  ],
+  "summary": {
+    "humanPairwiseWinRate": null,
+    "tripsWon": null,
+    "tripsWonMin": 1,
+    "tripCount": 1,
+    "storyClarityPreferCandidatePct": null,
+    "storyClarityMin": 0.6,
+    "shareIntent4PlusPct": null,
+    "shareIntentMin": 0.6,
+    "northStarPass": null,
+    "scopeNote": "单本 dogfood；不等同于 primary-8 北极星 Gate"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "schema": "travelogue.acceptance.p19-human-blind-review",
+  "version": 1,
+  "program": "Phase 19 · LQU",
+  "runId": "wangdan2-solo-dogfood",
+  "date": "2026-06-11",
+  "baselineLabel": "P16-default",
+  "candidateLabel": "P19-visible-dogfood",
+  "baselineManifest": ".cache/p19-human-blind/demo-b388794e0a/visible/compare_meta.json",
+  "candidateManifest": ".cache/p19-human-blind/demo-b388794e0a/visible/compare_meta.json",
+  "reviewerCountMin": 1,
+  "reviewerCountActual": 1,
+  "tripScope": "dogfood-single · demo-b388794e0a · 王丹精选2",
+  "notes": "单人自评；非 PRD 原 ≥3 人盲评。审核使用 --p19-visible（95% 屏序 diff），评审人无法区分观感优劣。",
+  "reviewers": [
+    {
+      "reviewerId": "solo-dev",
+      "votes": [
+        {
+          "tripId": "demo-b388794e0a",
+          "overallWinner": "tie",
+          "storyClarity": "tie",
+          "shareIntent": 3,
+          "notes": "无法区分哪版更好或更有艺术性；体感相同，仅屏序/拼图顺序不同，用户会忽略顺序，在意的是照片本身。"
+        }
+      ]
+    }
+  ],
+  "trips": [
+    {
+      "tripId": "demo-b388794e0a",
+      "title": "王丹精选2",
+      "comparePath": ".cache/p19-human-blind/demo-b388794e0a/visible/preview/compare.html",
+      "p19VisibleMode": true,
+      "automatedDiff": {
+        "screensChanged": 38,
+        "screensTotal": 40,
+        "screensChangedPct": 95.0,
+        "patternOnlyChanges": 13
+      },
+      "blindMapping": {
+        "A": "baseline",
+        "B": "candidate"
+      },
+      "overallWinner": "tie",
+      "resolvedWinner": "tie",
+      "storyClarity": "tie",
+      "shareIntent": 3,
+      "dimensions": {
+        "rhythm": "tie",
+        "whitespace": "tie",
+        "crop": "tie",
+        "monotony": "tie",
+        "book_like": "tie"
+      },
+      "notes": "无法区分 Baseline 与 P19 visible 哪个排版更好、更有艺术性；在用户眼里一样，只是顺序不同，而顺序不是用户关注点——用户在意照片。"
+    }
+  ],
+  "summary": {
+    "humanPairwiseWinRate": 0.0,
+    "tripsWon": 0,
+    "tripsWonMin": 1,
+    "tripCount": 1,
+    "ties": 1,
+    "storyClarityPreferCandidatePct": 0.0,
+    "storyClarityMin": 0.6,
+    "shareIntent4PlusPct": 0.0,
+    "shareIntentMin": 0.6,
+    "northStarPass": false,
+    "scopeNote": "单本 dogfood；不等同于 primary-8 北极星 Gate",
+    "productInsight": "算法层 95% 屏序变化未转化为可感知观感差异；旅行相册场景下选片/照片质量主导，版式顺序与 SKU 微调边际价值低。"
+  }
+}

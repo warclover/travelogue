@@ -52,6 +52,25 @@ def _p19_candidate_cfg(base: AppConfig) -> AppConfig:
     return _p16_cfg(base)
 
 
+def _p19_visible_cfg(base: AppConfig) -> AppConfig:
+    """P19 features on for human review: subset + highlight + chapter DP (dogfood only)."""
+    from travelogue.config.curate import CurateSubsetConfig
+
+    cfg = _p16_cfg(base)
+    subset = replace(
+        cfg.curate.subset,
+        enabled=True,
+        target_reduction=0.30,
+    )
+    curate = replace(
+        cfg.curate,
+        subset=subset,
+        highlight_opener_binding=True,
+    )
+    mosaic = replace(cfg.mosaic, chapter_dp_enabled=True)
+    return replace(cfg, curate=curate, mosaic=mosaic)
+
+
 def _curate_trip(trip: dict, *, work_dir: Path, cfg: AppConfig) -> dict:
     body = _prepare_trip(trip)
     run_clustering_layer(body, trip_dir=work_dir / "cluster", cfg=cfg)

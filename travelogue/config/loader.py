@@ -16,7 +16,9 @@ from travelogue.config.curate import CurateConfig, CurateSubsetConfig, cover_sco
 from travelogue.config.ingest import ingest_from_dict
 from travelogue.config.layout import (
     LayoutConfig,
+    layout_asset_aspect_from_dict,
     layout_feedback_from_dict,
+    layout_multi_image_stack_from_dict,
     layout_rhythm_from_dict,
     layout_scoring_from_dict,
     layout_strategy_engine_from_dict,
@@ -221,6 +223,14 @@ def load_config(path: Path | None = None) -> AppConfig:
     template_engine_raw = (
         layout_raw.get("template_engine") if isinstance(layout_raw.get("template_engine"), dict) else {}
     )
+    asset_aspect_raw = (
+        layout_raw.get("asset_aspect") if isinstance(layout_raw.get("asset_aspect"), dict) else {}
+    )
+    multi_image_stack_raw = (
+        layout_raw.get("multi_image_stack")
+        if isinstance(layout_raw.get("multi_image_stack"), dict)
+        else {}
+    )
     export_raw = data.get("export") if isinstance(data.get("export"), dict) else {}
     vision_raw = data.get("vision") if isinstance(data.get("vision"), dict) else {}
     narrative_raw = data.get("narrative") if isinstance(data.get("narrative"), dict) else {}
@@ -265,6 +275,8 @@ def load_config(path: Path | None = None) -> AppConfig:
             mixed_proximity_seconds=mixed_gap,
             layout_density_enabled=layout_density_enabled,
             rhythm=layout_rhythm_from_dict(rhythm_raw),
+            asset_aspect=layout_asset_aspect_from_dict(asset_aspect_raw),
+            multi_image_stack=layout_multi_image_stack_from_dict(multi_image_stack_raw),
             template_engine=layout_template_engine_from_dict(template_engine_raw),
             strategy_engine=layout_strategy_engine_from_dict(strategy_engine_raw),
             scoring=layout_scoring_from_dict(scoring_raw),

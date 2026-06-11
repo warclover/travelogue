@@ -5,10 +5,19 @@
 | **文档类型** | 产品 PRD · 体验架构 · 配置权威 |
 | **文档版本** | v1.0 |
 | **状态** | 已采纳（见 [ADR-003](./adr/003-experience-reading-modes.md)） |
-| **关联** | [PRD-MVP.md](./PRD-MVP.md)、[TEMPLATE-SURFACES.md](./TEMPLATE-SURFACES.md)、[RENDER-CONTRACT.md](./RENDER-CONTRACT.md)、[PRD-LAYOUT.md](./PRD-LAYOUT.md)、[DATA-MODEL.md](./DATA-MODEL.md) |
+| **关联** | [PRD-PRODUCT-LAYOUT-PRINCIPLES.md](./PRD-PRODUCT-LAYOUT-PRINCIPLES.md)、[PRD-MVP.md](./PRD-MVP.md)、[TEMPLATE-SURFACES.md](./TEMPLATE-SURFACES.md)、[RENDER-CONTRACT.md](./RENDER-CONTRACT.md)、[PRD-LAYOUT.md](./PRD-LAYOUT.md)、[DATA-MODEL.md](./DATA-MODEL.md) |
 | **附录** | [A · 精选上传](./PRD-EXPERIENCE-附录A-精选上传.md) · [B · 滚动动效](./PRD-EXPERIENCE-附录B-滚动动效.md) · [C · Folio 版式](./PRD-EXPERIENCE-附录C-Folio版式.md) |
 | **机器可读** | [experience-matrix.yaml](./experience-matrix.yaml) |
-| **更新日期** | 2026-05-27 |
+| **更新日期** | 2026-06-11 |
+
+---
+
+## 0. 与产品纲领的关系
+
+阅读体验（scroll / present / longshot）交付的是 **同一套屏级版式**；产品北极星见 **[PRD-PRODUCT-LAYOUT-PRINCIPLES.md](./PRD-PRODUCT-LAYOUT-PRINCIPLES.md)**：
+
+- 屏内 **拼图（≤9 张）+ 横单 + 竖单** 的丰富与美观优先于章节叙事与长文案（P-LAY-01～03）。
+- 本 PRD 负责 **三模式一致呈现** 已排好的 screens，不定义叙事优先级。
 
 ---
 
