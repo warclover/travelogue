@@ -88,13 +88,18 @@ def main() -> int:
     if args.compare_p16:
         current = _profile_rows(rows, label="current", cfg=base_cfg)
         p16 = _profile_rows(rows, label="p16", cfg=_p16_cfg(base_cfg))
-        p95_delta = current["p95Seconds"] - p16["p95Seconds"]
+        p16_p95 = float(p16["p95Seconds"])
+        cur_p95 = float(current["p95Seconds"])
+        p95_delta = cur_p95 - p16_p95
+        p95_increase_pct = (p95_delta / p16_p95 * 100.0) if p16_p95 > 0 else 0.0
         report = {
             "compareP16": True,
             "current": current,
             "p16Baseline": p16,
             "p95DeltaSeconds": round(p95_delta, 3),
-            "p95WithinGate": p95_delta <= p16["p95Seconds"] * 0.15,
+            "p95IncreasePct": round(p95_increase_pct, 2),
+            "p95WithinGate": cur_p95 <= p16_p95 * 1.15,
+            "gateThreshold": "current_p95 <= p16_p95 * 1.15",
         }
     else:
         report = _profile_rows(rows, label="p16-default", cfg=cfg)
@@ -102,8 +107,9 @@ def main() -> int:
     args.out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     if args.compare_p16:
         print(
-            f"P95 delta {report['p95DeltaSeconds']}s "
-            f"(gate ≤15%: {report['p95WithinGate']}) -> {args.out}"
+            f"P95 {cur_p95:.3f}s vs p16 {p16_p95:.3f}s "
+            f"(+{report['p95IncreasePct']:.1f}%, gate <=15%: {report['p95WithinGate']}) "
+            f"-> {args.out}"
         )
     else:
         print(

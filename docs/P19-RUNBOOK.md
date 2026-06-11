@@ -63,6 +63,9 @@ python -m travelogue.layout_templates.registry --refresh-cache   # 若项目有�
 ## 3. 验证命令
 
 ```bash
+# 一键 golden 自动化 Gate（节奏 / P95 / subset / 签名）
+python scripts/p19_golden_gate_run.py
+
 # S6 单元
 python -m pytest tests/test_p19_curate_subset.py tests/test_p19_highlight_binding.py -q
 
@@ -72,8 +75,14 @@ python scripts/p19_rhythm_audit.py
 # curate 性能对比 P16
 python scripts/p19_curate_profile.py --compare-p16
 
+# subset 全 golden 削减审计（planner only）
+python scripts/p19_subset_golden_audit.py
+
 # subset spike（单本）
 python scripts/p19_subset_spike.py --trip-id demo-1506104ebf
+
+# 人评盲评组织
+# 见 docs/P19-HUMAN-BLIND-REVIEW.md
 ```
 
 ## 4. 归档
@@ -81,8 +90,10 @@ python scripts/p19_subset_spike.py --trip-id demo-1506104ebf
 | 事件 | 记录文件 |
 |------|----------|
 | Sprint Gate | `docs/acceptance-records/p19-sprint-gates.json` |
+| 自动化 Gate 批次 | `docs/acceptance-records/p19-gate-run.json` |
 | 终验 AC 表 | `docs/acceptance-records/p19-final.json` |
 | judge 校准 | `docs/acceptance-records/p19-judge-calibration.json` |
+| 人评盲评 | `docs/P19-HUMAN-BLIND-REVIEW.md` |
 
 ## 5. Gate 通过后默认开启顺序
 

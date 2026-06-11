@@ -1,0 +1,49 @@
+{
+  "schema": "travelogue.acceptance.p19-human-blind-review",
+  "version": 1,
+  "program": "Phase 19 · LQU",
+  "runId": "",
+  "date": "",
+  "baselineLabel": "P16-default",
+  "candidateLabel": "P19-candidate",
+  "baselineManifest": ".cache/book-quality/baseline/manifest.json",
+  "candidateManifest": ".cache/book-quality/p19/manifest.json",
+  "reviewerCountMin": 3,
+  "tripScope": "primary-8",
+  "reviewers": [],
+  "trips": [],
+  "summary": {
+    "humanPairwiseWinRate": null,
+    "tripsWon": null,
+    "tripsWonMin": 6,
+    "tripCount": 8,
+    "storyClarityPreferCandidatePct": null,
+    "storyClarityMin": 0.6,
+    "shareIntent4PlusPct": null,
+    "shareIntentMin": 0.6,
+    "northStarPass": null
+  },
+  "tripEntryTemplate": {
+    "tripId": "",
+    "blindMapping": {
+      "A": "baseline | candidate",
+      "B": "baseline | candidate"
+    },
+    "overallWinner": "A | B | tie",
+    "resolvedWinner": "baseline | candidate | tie",
+    "storyClarity": "A | B | tie",
+    "shareIntent": 1,
+    "dimensions": {
+      "rhythm": "A | B | tie",
+      "whitespace": "A | B | tie",
+      "crop": "A | B | tie",
+      "monotony": "A | B | tie",
+      "book_like": "A | B | tie"
+    },
+    "notes": ""
+  },
+  "reviewerVoteTemplate": {
+    "reviewerId": "",
+    "votes": []
+  }
+}

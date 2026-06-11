@@ -1,0 +1,62 @@
+{
+  "schema": "travelogue.acceptance.p19-screen-signatures-baseline",
+  "version": 1,
+  "label": "P16-default",
+  "date": "2026-06-11",
+  "trips": [
+    {
+      "tripId": "demo-2025",
+      "screensSignature": "5038f26cebd600b3",
+      "screenCount": 55,
+      "patternSequenceDigest": "03ca7a85c80144e3"
+    },
+    {
+      "tripId": "demo-80301df45c",
+      "screensSignature": "8633beba67103c8f",
+      "screenCount": 35,
+      "patternSequenceDigest": "c0ab499f7cbacc18"
+    },
+    {
+      "tripId": "demo-1506104ebf",
+      "screensSignature": "0fd5794b4c0adae9",
+      "screenCount": 76,
+      "patternSequenceDigest": "d4e5d48bb5753771"
+    },
+    {
+      "tripId": "demo-5a7c161a12",
+      "screensSignature": "9a7006ae266c8a72",
+      "screenCount": 58,
+      "patternSequenceDigest": "e82146d1d1213ec1"
+    },
+    {
+      "tripId": "demo-2019",
+      "screensSignature": "8812ef2fb15c6346",
+      "screenCount": 120,
+      "patternSequenceDigest": "efc50ee354f48f0f"
+    },
+    {
+      "tripId": "linzhi",
+      "screensSignature": "aaf37a80b8251fc8",
+      "screenCount": 68,
+      "patternSequenceDigest": "c370e058d4ede469"
+    },
+    {
+      "tripId": "chuanzang-studio",
+      "screensSignature": "79581ca6aa3fd0e3",
+      "screenCount": 85,
+      "patternSequenceDigest": "67db1a6dce7dd004"
+    },
+    {
+      "tripId": "demo-151e7b488c",
+      "screensSignature": "59ba5f18386595a2",
+      "screenCount": 38,
+      "patternSequenceDigest": "662358f8a72a7144"
+    },
+    {
+      "tripId": "demo-d66fe642a9",
+      "screensSignature": "5db54111390506be",
+      "screenCount": 130,
+      "patternSequenceDigest": "bde2a4ab11823801"
+    }
+  ]
+}

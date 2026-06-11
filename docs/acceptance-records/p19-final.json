@@ -4,19 +4,25 @@
   "program": "Phase 19 · LQU",
   "updatedAt": "2026-06-11",
   "branch": "phase19/lean-quality-uplift",
-  "status": "code_complete_gate_pending",
-  "note": "S6 subset + highlight binding landed with kill switches default off. Human blind review and full golden runs not yet recorded.",
+  "status": "automated_gates_partial",
+  "note": "Golden automated gates run 2026-06-11. Rhythm/subset/screens(P16 path) pass; curate P95 fails; human blind review pending.",
   "goldenTripIdsRef": "docs/acceptance-records/p19-golden-trips.json",
+  "gateRunRef": "docs/acceptance-records/p19-gate-run.json",
   "acceptanceCriteria": [
     {
       "id": "AC-P19-01",
       "title": "感知裁判",
       "threshold": "judge–人评一致率 ≥ 75%",
       "status": "pending",
-      "actual": null,
+      "actual": {
+        "vlmMockWinRate": 0.5556,
+        "vlmMockNote": "mock only; not a Gate substitute",
+        "humanAgreementRate": null
+      },
       "artifacts": [
         "docs/acceptance-records/p19-judge-calibration.json",
-        "docs/p19/vlm-judge-prompt-v1.md"
+        "docs/p19/vlm-judge-prompt-v1.md",
+        ".cache/book-quality/judge/judge_report.json"
       ]
     },
     {
@@ -37,15 +43,17 @@
       "id": "AC-P19-03",
       "title": "硬约束",
       "threshold": "8 本 breath=0；portrait-2 streak ≤2；无 unfiltered fallback",
-      "status": "partial",
+      "status": "pass_automated",
       "actual": {
         "hardConstraintsCodeComplete": true,
-        "goldenBreathViolations": null,
-        "goldenRhythmAudit": null
+        "goldenRhythmAuditViolations": 0,
+        "goldenRhythmAuditOk": true,
+        "breathViolations": 0
       },
       "artifacts": [
         "tests/test_p19_hard_constraints.py",
-        "scripts/p19_rhythm_audit.py"
+        "scripts/p19_rhythm_audit.py",
+        ".cache/book-quality/rhythm-audit/report.json"
       ]
     },
     {
@@ -72,17 +80,13 @@
       "actual": {
         "subsetIntegratedInCurate": true,
         "subsetEnabledDefault": false,
-        "subsetReductionMedianOnGolden": null,
-        "storyClarityPreferCandidatePct": null,
-        "spikeDemo1506104ebf": {
-          "poolBefore": 165,
-          "poolAfter": 115,
-          "reductionPct": 30.3
-        }
+        "subsetReductionMedianOnGolden": 0.3011,
+        "subsetMedianWithinGate": true,
+        "storyClarityPreferCandidatePct": null
       },
       "artifacts": [
-        "travelogue/curation/subset_planner.py",
-        "scripts/p19_subset_spike.py",
+        "scripts/p19_subset_golden_audit.py",
+        ".cache/book-quality/subset-golden-audit.json",
         "tests/test_p19_curate_subset.py"
       ]
     },
@@ -93,11 +97,14 @@
       "status": "partial",
       "actual": {
         "screenSignatureUnitParity": true,
-        "goldenScreenSignatureZeroDiff": null,
+        "goldenScreenSignatureZeroDiffP16Path": true,
+        "screenSignatureMismatches": 0,
         "legacyGeneratedRuntimeRemoved": false
       },
       "artifacts": [
-        "tests/test_p19_screen_signature_parity.py"
+        "tests/test_p19_screen_signature_parity.py",
+        "docs/acceptance-records/p19-screen-signatures-baseline.json",
+        ".cache/book-quality/screens-signatures/diff_report.json"
       ]
     },
     {
@@ -108,23 +115,29 @@
       "actual": {
         "humanBlindWinRate": null,
         "tripsWon": null,
-        "shareIntent4PlusPct": null
+        "shareIntent4PlusPct": null,
+        "organizerGuide": "docs/P19-HUMAN-BLIND-REVIEW.md"
       },
       "artifacts": [
-        "docs/acceptance-records/p19-judge-calibration.json"
+        "docs/acceptance-records/p19-human-blind-review.template.json"
       ]
     },
     {
       "id": "AC-P19-08",
       "title": "性能与稳定",
       "threshold": "curate P95 ≤ +15% vs P16；render 无回归",
-      "status": "pending",
+      "status": "fail_automated",
       "actual": {
-        "curateP95IncreasePct": null,
+        "p16P95Seconds": 0.495,
+        "currentP95Seconds": 0.906,
+        "p95IncreasePct": 83.03,
+        "p95WithinGate": false,
+        "outlierTrip": "chuanzang-studio",
         "structureDraftSuccessRate": null
       },
       "artifacts": [
-        "scripts/p19_curate_profile.py"
+        "scripts/p19_curate_profile.py",
+        ".cache/book-quality/curate-profile.json"
       ]
     }
   ],

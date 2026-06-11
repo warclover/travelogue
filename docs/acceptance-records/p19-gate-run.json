@@ -1,0 +1,41 @@
+{
+  "schema": "travelogue.acceptance.p19-gate-run",
+  "version": 1,
+  "program": "Phase 19 · LQU",
+  "date": "2026-06-11",
+  "branch": "phase19/lean-quality-uplift",
+  "gates": {
+    "rhythmAudit": {
+      "ok": true,
+      "totalViolations": 0,
+      "artifact": ".cache/book-quality/rhythm-audit/report.json"
+    },
+    "curateProfile": {
+      "p16P95Seconds": 0.495,
+      "currentP95Seconds": 0.906,
+      "p95IncreasePct": 83.03,
+      "p95WithinGate": false,
+      "gateThreshold": "current_p95 <= p16_p95 * 1.15",
+      "artifact": ".cache/book-quality/curate-profile.json"
+    },
+    "subsetMedian": {
+      "medianActualReduction": 0.3011,
+      "withinGate": true,
+      "gateRange": [0.25, 0.4],
+      "artifact": ".cache/book-quality/subset-golden-audit.json"
+    },
+    "screenSignatures": {
+      "baselineCompareSkipped": false,
+      "diffOk": true,
+      "mismatches": [],
+      "artifact": ".cache/book-quality/screens-signatures/signatures.json"
+    }
+  },
+  "failures": [],
+  "ok": false,
+  "nextSteps": [
+    "Organize human blind review: docs/P19-HUMAN-BLIND-REVIEW.md",
+    "Investigate curate P95 regression (chuanzang-studio outlier)",
+    "Run API VLM judge after human calibration session"
+  ]
+}

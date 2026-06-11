@@ -76,6 +76,16 @@ def main() -> int:
         help="Output root",
     )
     parser.add_argument("--skip-curate", action="store_true", help="Only render existing trip.json")
+    parser.add_argument(
+        "--skip-render",
+        action="store_true",
+        help="Curate only; skip HTML render (signature gate)",
+    )
+    parser.add_argument(
+        "--p19-candidate",
+        action="store_true",
+        help="Full config (P19 candidate) instead of P16-default baseline path",
+    )
     args = parser.parse_args()
 
     rows = resolve_existing_golden_trips(root=ROOT)
@@ -83,7 +93,8 @@ def main() -> int:
         wanted = set(args.trip_id)
         rows = [r for r in rows if r["tripId"] in wanted]
 
-    cfg = _p16_cfg(get_config(reload=True))
+    base_cfg = get_config(reload=True)
+    cfg = base_cfg if args.p19_candidate else _p16_cfg(base_cfg)
     manifest_trips: list[dict[str, Any]] = []
     args.out.mkdir(parents=True, exist_ok=True)
 
@@ -106,9 +117,13 @@ def main() -> int:
             body = _curate_trip(trip, work_dir=work / "curate", cfg=cfg)
 
         chapters = body.get("chapters") or []
-        print(f"Render {tid}...")
-        html_path = _render_trip(trip_dir, body)
-        metrics = compute_layout_metrics(chapters, body.get("assets") or [])
+        if args.skip_render:
+            html_path = None
+            metrics = compute_layout_metrics(chapters, body.get("assets") or [])
+        else:
+            print(f"Render {tid}...")
+            html_path = _render_trip(trip_dir, body)
+            metrics = compute_layout_metrics(chapters, body.get("assets") or [])
         sig = screens_signature(chapters, trip_id=tid)
         sampled = sample_screens(chapters, trip_id=tid, max_screens=12)
 
@@ -116,7 +131,7 @@ def main() -> int:
             "tripId": tid,
             "status": "ok",
             "tripDir": str(trip_dir),
-            "html": str(html_path),
+            "html": str(html_path) if html_path else None,
             "screenCount": sum(len(ch.get("screens") or []) for ch in chapters),
             "screensSignature": sig,
             "patternSequence": _pattern_sequence(chapters),
@@ -131,7 +146,7 @@ def main() -> int:
         print(f"  OK screens={entry['screenCount']} signature={sig}")
 
     manifest = {
-        "label": "P16-default",
+        "label": "P19-candidate" if args.p19_candidate else "P16-default",
         "path": str(args.out),
         "trips": manifest_trips,
     }

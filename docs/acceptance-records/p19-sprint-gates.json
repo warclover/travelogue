@@ -4,7 +4,7 @@
   "program": "Phase 19 · LQU",
   "updatedAt": "2026-06-11",
   "branch": "phase19/lean-quality-uplift",
-  "note": "S2 code closure recorded; human/judge Gate metrics pending local golden trip runs.",
+  "note": "Automated golden gates run 2026-06-11: rhythm 0 violations; P16-path screen sig 0 diff; subset median 30.1%; curate P95 +83% (fail). Human blind pending.",
   "sprints": [
     {
       "id": "S1",
@@ -28,7 +28,8 @@
       "weeks": "W3-4",
       "status": "in_progress",
       "gate": {
-        "screenSignatureZeroDiff": null,
+        "screenSignatureZeroDiff": true,
+        "screenSignatureMismatches": 0,
         "screenSignatureUnitParity": true,
         "pixelCiGreen": true,
         "lteRuntimeSingleSource": true,
@@ -44,8 +45,9 @@
       "weeks": "W5-6",
       "status": "in_progress",
       "gate": {
-        "breathViolations": null,
-        "streakViolations": null,
+        "breathViolations": 0,
+        "streakViolations": 0,
+        "rhythmAuditGoldenOk": true,
         "judgeOverallWinRateMin": 0.55,
         "judgeOverallWinRateActual": null,
         "judgeRhythmDimensionMin": 0.60,
@@ -79,7 +81,8 @@
         "designerSkuShareMin": 0.15,
         "designerSkuShareActual": null,
         "curateP95IncreaseMaxPct": 15,
-        "curateP95IncreaseActualPct": null
+        "curateP95IncreaseActualPct": 83.03,
+        "curateP95WithinGate": false
       }
     },
     {
@@ -95,7 +98,8 @@
         "storyClarityActual": null,
         "subsetReductionMedianMin": 0.25,
         "subsetReductionMedianMax": 0.40,
-        "subsetReductionMedianActual": null,
+        "subsetReductionMedianActual": 0.3011,
+        "subsetMedianWithinGate": true,
         "subsetIntegratedInCurate": true,
         "highlightOpenerBinding": true,
         "subsetKillSwitchDefaultOff": true
