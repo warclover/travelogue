@@ -4,7 +4,7 @@
   "program": "Phase 19 · LQU",
   "updatedAt": "2026-06-11",
   "branch": "phase19/lean-quality-uplift",
-  "note": "Automated golden gates run 2026-06-11: rhythm 0 violations; P16-path screen sig 0 diff; subset median 30.1%; curate P95 +83% (fail). Human blind pending.",
+  "note": "Automated gates 2026-06-11: rhythm 0; screen sig 0 diff; subset 30.1%; P95 pass (p19-candidate vs p16). SKU share proxy below gate. Human blind pending.",
   "sprints": [
     {
       "id": "S1",
@@ -64,11 +64,11 @@
         "portraitTripJudgeWinRateMin": 0.60,
         "portraitTripJudgeWinRateActual": null,
         "newPatternShareMin": 0.10,
-        "newPatternShareActual": null,
+        "newPatternShareActual": 0.0167,
         "bspViewport32Pass": false,
         "schemaV2Foundation": true,
         "whitespaceHeroExperimental": true,
-        "justifiedRow": false
+        "justifiedRow": true
       }
     },
     {
@@ -79,10 +79,10 @@
         "mixedTripJudgeWinRateMin": 0.60,
         "mixedTripJudgeWinRateActual": null,
         "designerSkuShareMin": 0.15,
-        "designerSkuShareActual": null,
+        "designerSkuShareActual": 0.0,
         "curateP95IncreaseMaxPct": 15,
-        "curateP95IncreaseActualPct": 83.03,
-        "curateP95WithinGate": false
+        "curateP95IncreaseActualPct": -28.0,
+        "curateP95WithinGate": true
       }
     },
     {

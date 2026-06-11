@@ -18,7 +18,7 @@
 # P16 baseline（左/右随机之一）
 python scripts/book_quality_baseline.py --out .cache/book-quality/baseline
 
-# P19 候选（当前分支默认配置；subset/highlight 默认关）
+# P19 候选（P19-candidate cfg：与 P16 同开关 scoring/LSE off；subset/highlight 默认关）
 python scripts/book_quality_baseline.py --p19-candidate --out .cache/book-quality/p19
 
 # 仅签名/指标、跳过 HTML 渲染

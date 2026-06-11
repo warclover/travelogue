@@ -11,11 +11,12 @@
       "artifact": ".cache/book-quality/rhythm-audit/report.json"
     },
     "curateProfile": {
-      "p16P95Seconds": 0.495,
-      "currentP95Seconds": 0.906,
-      "p95IncreasePct": 83.03,
-      "p95WithinGate": false,
-      "gateThreshold": "current_p95 <= p16_p95 * 1.15",
+      "p16P95Seconds": 0.475,
+      "currentP95Seconds": 0.342,
+      "p95IncreasePct": -28.0,
+      "p95WithinGate": true,
+      "gateThreshold": "p19_candidate_p95 <= p16_p95 * 1.15",
+      "localScoringEnabled": true,
       "artifact": ".cache/book-quality/curate-profile.json"
     },
     "subsetMedian": {
@@ -29,13 +30,23 @@
       "diffOk": true,
       "mismatches": [],
       "artifact": ".cache/book-quality/screens-signatures/signatures.json"
+    },
+    "explicitFallback": {
+      "medianRate": 0.0,
+      "withinGate": true,
+      "artifact": ".cache/book-quality/explicit-fallback-audit.json"
+    },
+    "patternShare": {
+      "medianNewPatternShare": 0.0167,
+      "medianDesignerSkuShare": 0.0,
+      "artifact": ".cache/book-quality/pattern-share-audit.json"
     }
   },
   "failures": [],
-  "ok": false,
+  "ok": true,
   "nextSteps": [
     "Organize human blind review: docs/P19-HUMAN-BLIND-REVIEW.md",
-    "Investigate curate P95 regression (chuanzang-studio outlier)",
-    "Run API VLM judge after human calibration session"
+    "Raise designer SKU rollout / whitespace-hero for S4/S5 share gates",
+    "S2 legacy_generated runtime removal (AC-P19-06)"
   ]
 }

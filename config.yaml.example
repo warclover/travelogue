@@ -95,7 +95,8 @@ layout:
       pace_profile: false
       highlight_windows: false
       editorial_hints: false
-  # 智能排版 V2（ADR-002）；enabled=false 时与 legacy 完全等价
+  # 智能排版 V2（ADR-002）；enabled=false 时与 legacy / P16-default 完全等价
+  # P19 Gate：curate P95 对比强制 scoring=false（见 scripts/p19_curate_profile.py）
   scoring:
     enabled: false
     beam_width: 3

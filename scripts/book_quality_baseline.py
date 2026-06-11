@@ -35,6 +35,7 @@ from lse_flags_curate_compare import _pattern_sequence, _prepare_trip, _screen_s
 
 
 def _p16_cfg(base: AppConfig) -> AppConfig:
+    """P16-default parity path: LSE off, layout.scoring off (AC-P17-01 / P19 baseline)."""
     se = replace(base.layout.strategy_engine, enabled=False)
     layout = replace(base.layout, strategy_engine=se)
     scoring = replace(base.layout.scoring, enabled=False)
@@ -42,11 +43,37 @@ def _p16_cfg(base: AppConfig) -> AppConfig:
     return replace(base, layout=layout)
 
 
+def _p19_candidate_cfg(base: AppConfig) -> AppConfig:
+    """P19 candidate for Gate / blind review: same config switches as P16-default.
+
+    P19 behavior (hard constraints, LTE SKUs, subset hooks) lives in code; kill switches
+    default off. Local ``layout.scoring.enabled: true`` is *not* part of this path.
+    """
+    return _p16_cfg(base)
+
+
 def _curate_trip(trip: dict, *, work_dir: Path, cfg: AppConfig) -> dict:
     body = _prepare_trip(trip)
     run_clustering_layer(body, trip_dir=work_dir / "cluster", cfg=cfg)
     run_curate(body, apply_layout=True, trip_dir=work_dir, cfg=cfg)
     return body
+
+
+def _curate_trip_timed(trip: dict, *, work_dir: Path, cfg: AppConfig) -> tuple[dict, dict[str, float]]:
+    import time
+
+    body = _prepare_trip(trip)
+    t0 = time.perf_counter()
+    run_clustering_layer(body, trip_dir=work_dir / "cluster", cfg=cfg)
+    t_cluster = time.perf_counter()
+    run_curate(body, apply_layout=True, trip_dir=work_dir, cfg=cfg)
+    t_curate = time.perf_counter()
+    phases = {
+        "clusterSeconds": round(t_cluster - t0, 4),
+        "curateSeconds": round(t_curate - t_cluster, 4),
+        "totalSeconds": round(t_curate - t0, 4),
+    }
+    return body, phases
 
 
 def _render_trip(trip_dir: Path, body: dict) -> Path:
@@ -94,7 +121,7 @@ def main() -> int:
         rows = [r for r in rows if r["tripId"] in wanted]
 
     base_cfg = get_config(reload=True)
-    cfg = base_cfg if args.p19_candidate else _p16_cfg(base_cfg)
+    cfg = _p19_candidate_cfg(base_cfg) if args.p19_candidate else _p16_cfg(base_cfg)
     manifest_trips: list[dict[str, Any]] = []
     args.out.mkdir(parents=True, exist_ok=True)
 

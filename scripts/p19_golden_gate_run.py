@@ -58,6 +58,14 @@ def main() -> int:
     if rc:
         failures.append("subset_audit")
 
+    rc = _run([py, str(scripts / "p19_explicit_fallback_audit.py")])
+    if rc:
+        failures.append("explicit_fallback_audit")
+
+    rc = _run([py, str(scripts / "p19_pattern_share_audit.py")])
+    if rc:
+        failures.append("pattern_share_audit")
+
     sig_rc = _run([py, str(scripts / "book_quality_screen_signatures.py")])
     baseline_manifest = CACHE / "baseline" / "manifest.json"
     if not args.skip_baseline_compare and baseline_manifest.is_file():
@@ -77,6 +85,14 @@ def main() -> int:
     rhythm = json.loads((CACHE / "rhythm-audit" / "report.json").read_text(encoding="utf-8"))
     profile = json.loads((CACHE / "curate-profile.json").read_text(encoding="utf-8"))
     subset = json.loads((CACHE / "subset-golden-audit.json").read_text(encoding="utf-8"))
+    fallback_path = CACHE / "explicit-fallback-audit.json"
+    pattern_path = CACHE / "pattern-share-audit.json"
+    fallback = (
+        json.loads(fallback_path.read_text(encoding="utf-8")) if fallback_path.is_file() else {}
+    )
+    pattern = (
+        json.loads(pattern_path.read_text(encoding="utf-8")) if pattern_path.is_file() else {}
+    )
 
     sig_diff_path = CACHE / "screens-signatures" / "diff_report.json"
     sig_diff = None
@@ -122,9 +138,22 @@ def main() -> int:
                 "mismatches": sig_diff.get("mismatches") if sig_diff else None,
                 "artifact": ".cache/book-quality/screens-signatures/signatures.json",
             },
+            "explicitFallback": {
+                "medianRate": fallback.get("medianExplicitFallbackRate"),
+                "withinGate": fallback.get("withinGate"),
+                "artifact": ".cache/book-quality/explicit-fallback-audit.json",
+            },
+            "patternShare": {
+                "medianNewPatternShare": pattern.get("medianNewPatternShare"),
+                "medianDesignerSkuShare": pattern.get("medianDesignerSkuShare"),
+                "artifact": ".cache/book-quality/pattern-share-audit.json",
+            },
         },
         "failures": failures,
-        "ok": not failures and rhythm.get("ok") and (p95_within_gate is not False),
+        "ok": not failures
+        and rhythm.get("ok")
+        and (p95_within_gate is not False)
+        and (fallback.get("withinGate") is not False),
     }
 
     args.archive.parent.mkdir(parents=True, exist_ok=True)
