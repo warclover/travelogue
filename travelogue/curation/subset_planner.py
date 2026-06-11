@@ -278,6 +278,53 @@ def plan_asset_subset(
     )
 
 
+def subset_config_from_curate(cur_cfg) -> SubsetConfig:
+    """Map CurateConfig.subset → planner SubsetConfig."""
+    sub = getattr(cur_cfg, "subset", None)
+    if sub is None:
+        return SubsetConfig()
+    return SubsetConfig(
+        enabled=bool(getattr(sub, "enabled", False)),
+        target_reduction=getattr(sub, "target_reduction", None),
+        quality_sharpness_floor=float(getattr(sub, "quality_sharpness_floor", 0.12)),
+        min_per_coverage_cell=int(getattr(sub, "min_per_coverage_cell", 1)),
+    )
+
+
+def maybe_apply_asset_subset_in_curate(
+    trip: dict,
+    *,
+    trip_dir=None,
+    app_cfg=None,
+    cur_cfg=None,
+) -> dict | None:
+    """Insert point: after clustering, before screen planning (R-501 / S6-01)."""
+    if cur_cfg is None:
+        return None
+    cfg = subset_config_from_curate(cur_cfg)
+    if not cfg.enabled:
+        return None
+
+    if trip_dir is not None and app_cfg is not None:
+        clustering = (trip.get("curation") or {}).get("clustering") or {}
+        if not clustering.get("clusters"):
+            from pathlib import Path
+
+            from travelogue.curation.clustering import run_clustering_layer
+
+            run_clustering_layer(
+                trip,
+                trip_dir=Path(trip_dir) / "subset-cluster",
+                cfg=app_cfg,
+            )
+
+    plan = plan_asset_subset(trip, cfg=cfg)
+    dropped = apply_subset_plan(trip, plan)
+    summary = plan.to_dict()
+    summary["layoutEligibleMarked"] = dropped
+    return summary
+
+
 def apply_subset_plan(trip: dict, plan: SubsetPlan) -> int:
     """Mark dropped assets layout-ineligible; returns drop count."""
     dropped = 0

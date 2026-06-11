@@ -24,6 +24,16 @@ def cover_scoring_v2_from_dict(curate_raw: dict[str, Any]) -> Any:
 
 
 @dataclass
+class CurateSubsetConfig:
+    """P19 R-501/502/505 · asset subset before layout (default off until Gate)."""
+
+    enabled: bool = False
+    target_reduction: float | None = None
+    quality_sharpness_floor: float = 0.12
+    min_per_coverage_cell: int = 1
+
+
+@dataclass
 class CurateConfig:
     segment_gap_days: int = 14
     city_gap_days: int = 3
@@ -42,3 +52,6 @@ class CurateConfig:
     enable_arc_breath: bool = True
     enable_food_grid: bool = True
     mundane_grid_buckets: tuple[str, ...] = ("food",)
+    subset: CurateSubsetConfig = field(default_factory=CurateSubsetConfig)
+    # P19 R-504 · highlight window → chapter opener hero (replaces mosaic-only boost).
+    highlight_opener_binding: bool = False

@@ -723,6 +723,23 @@ def run_curate(
     )
     app_cfg = preflight.app_cfg
     cur_cfg = preflight.cur_cfg
+
+    from travelogue.curation.subset_planner import maybe_apply_asset_subset_in_curate
+
+    subset_summary = maybe_apply_asset_subset_in_curate(
+        trip,
+        trip_dir=trip_dir,
+        app_cfg=app_cfg,
+        cur_cfg=cur_cfg,
+    )
+    if subset_summary is not None:
+        layout_assets = layout_eligible_assets(trip)
+        if len(layout_assets) < MIN_CURATE_ASSETS:
+            raise CurateError(
+                "E_CURATE_TOO_FEW",
+                f"need at least {MIN_CURATE_ASSETS} layout-eligible assets after subset",
+            )
+        preflight.layout_assets = layout_assets
     layout = preflight.layout
     engine = preflight.engine
     layout_assets = preflight.layout_assets
@@ -821,6 +838,16 @@ def run_curate(
         )
         if hero:
             chapter_heroes[f"ch-{i + 1:02d}"] = hero
+
+    if cur_cfg.highlight_opener_binding:
+        from travelogue.curation.highlight_binding import bind_highlight_opener_heroes
+
+        chapter_heroes = bind_highlight_opener_heroes(
+            chapter_heroes,
+            non_empty_buckets,
+            assets_by_id,
+            enabled=True,
+        )
 
     titles = chapter_titles(
         buckets,
@@ -1154,6 +1181,12 @@ def run_curate(
     if mc:
         curation["mediaClassSummary"] = mc
     warnings: list[str] = []
+    if subset_summary is not None:
+        warnings.append(
+            f"subset · pool {subset_summary.get('baselinePoolCount', 0)} "
+            f"→ keep {subset_summary.get('targetKeepPool', 0)} "
+            f"(−{subset_summary.get('actualReduction', 0):.0%})"
+        )
     replan_skip = replan_meta.get("skipReason")
     if replan_skip == "search_timeout":
         budget = replan_meta.get("searchBudget") or {}

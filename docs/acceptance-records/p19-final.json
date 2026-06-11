@@ -1,0 +1,143 @@
+{
+  "schema": "travelogue.acceptance.p19-final",
+  "version": 1,
+  "program": "Phase 19 · LQU",
+  "updatedAt": "2026-06-11",
+  "branch": "phase19/lean-quality-uplift",
+  "status": "code_complete_gate_pending",
+  "note": "S6 subset + highlight binding landed with kill switches default off. Human blind review and full golden runs not yet recorded.",
+  "goldenTripIdsRef": "docs/acceptance-records/p19-golden-trips.json",
+  "acceptanceCriteria": [
+    {
+      "id": "AC-P19-01",
+      "title": "感知裁判",
+      "threshold": "judge–人评一致率 ≥ 75%",
+      "status": "pending",
+      "actual": null,
+      "artifacts": [
+        "docs/acceptance-records/p19-judge-calibration.json",
+        "docs/p19/vlm-judge-prompt-v1.md"
+      ]
+    },
+    {
+      "id": "AC-P19-02",
+      "title": "像素闭环",
+      "threshold": "无 pattern 级 object-position 硬编码；CI 像素检查通过",
+      "status": "partial",
+      "actual": {
+        "pixelCiGreen": true,
+        "focalTelemetry": "pending_audit"
+      },
+      "artifacts": [
+        "tests/test_p19_focal_css.py",
+        ".github/workflows/ci.yml"
+      ]
+    },
+    {
+      "id": "AC-P19-03",
+      "title": "硬约束",
+      "threshold": "8 本 breath=0；portrait-2 streak ≤2；无 unfiltered fallback",
+      "status": "partial",
+      "actual": {
+        "hardConstraintsCodeComplete": true,
+        "goldenBreathViolations": null,
+        "goldenRhythmAudit": null
+      },
+      "artifacts": [
+        "tests/test_p19_hard_constraints.py",
+        "scripts/p19_rhythm_audit.py"
+      ]
+    },
+    {
+      "id": "AC-P19-04",
+      "title": "Schema v2 + 设计师 SKU",
+      "threshold": "v1 零迁移；SKU + justified-row 占比达标",
+      "status": "partial",
+      "actual": {
+        "schemaV2Foundation": true,
+        "justifiedRow": true,
+        "designerSkuRolloutPercent": 15,
+        "newPatternShareOnGolden": null
+      },
+      "artifacts": [
+        "tests/test_lte_schema_v2_compat.py",
+        "tests/test_p19_designer_sku.py"
+      ]
+    },
+    {
+      "id": "AC-P19-05",
+      "title": "选片 subset",
+      "threshold": "进排版资产 −25%~−40% 中位数；故事更清楚 ≥ 60%",
+      "status": "partial",
+      "actual": {
+        "subsetIntegratedInCurate": true,
+        "subsetEnabledDefault": false,
+        "subsetReductionMedianOnGolden": null,
+        "storyClarityPreferCandidatePct": null,
+        "spikeDemo1506104ebf": {
+          "poolBefore": 165,
+          "poolAfter": 115,
+          "reductionPct": 30.3
+        }
+      },
+      "artifacts": [
+        "travelogue/curation/subset_planner.py",
+        "scripts/p19_subset_spike.py",
+        "tests/test_p19_curate_subset.py"
+      ]
+    },
+    {
+      "id": "AC-P19-06",
+      "title": "减法",
+      "threshold": "_legacy_generated 运行时 fallback 删除；LSE 收编",
+      "status": "partial",
+      "actual": {
+        "screenSignatureUnitParity": true,
+        "goldenScreenSignatureZeroDiff": null,
+        "legacyGeneratedRuntimeRemoved": false
+      },
+      "artifacts": [
+        "tests/test_p19_screen_signature_parity.py"
+      ]
+    },
+    {
+      "id": "AC-P19-07",
+      "title": "北极星人评",
+      "threshold": "盲评胜率 ≥ 60%（≥6/8）；Share Intent ≥ 4/5 ≥ 60%",
+      "status": "pending",
+      "actual": {
+        "humanBlindWinRate": null,
+        "tripsWon": null,
+        "shareIntent4PlusPct": null
+      },
+      "artifacts": [
+        "docs/acceptance-records/p19-judge-calibration.json"
+      ]
+    },
+    {
+      "id": "AC-P19-08",
+      "title": "性能与稳定",
+      "threshold": "curate P95 ≤ +15% vs P16；render 无回归",
+      "status": "pending",
+      "actual": {
+        "curateP95IncreasePct": null,
+        "structureDraftSuccessRate": null
+      },
+      "artifacts": [
+        "scripts/p19_curate_profile.py"
+      ]
+    }
+  ],
+  "s6Delivery": {
+    "subsetInCurate": true,
+    "subsetTierReductions": {
+      "small": 0.4,
+      "regular": 0.3,
+      "large": 0.25
+    },
+    "highlightOpenerBinding": true,
+    "highlightOpenerBindingDefault": false,
+    "tripSchemaSubsetPlan": true,
+    "runbook": "docs/P19-RUNBOOK.md"
+  }
+}

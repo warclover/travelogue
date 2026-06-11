@@ -518,6 +518,11 @@
             "curatedAt": { "type": "string", "format": "date-time" }
           }
         },
+        "subsetPlan": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "P19 subset planner output (R-501/502)"
+        },
         "cullSummary": {
           "type": "object",
           "additionalProperties": true,

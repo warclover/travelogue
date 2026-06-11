@@ -49,6 +49,11 @@ curate:
   #     layout_fit: 0.23
   #     sharpness: 0.25
   #     thirds: 0.15
+  # P19 subset v1（默认关 · Gate 后开）
+  # subset:
+  #   enabled: false
+  #   target_reduction: 0.30
+  # highlight_opener_binding: false
 
 # 精细制作「版面密度」旋钮（false → 全体当智能平衡）
 layoutDensity:

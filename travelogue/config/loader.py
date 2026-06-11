@@ -12,7 +12,7 @@ from travelogue.config.app import AppConfig
 from travelogue.config.clustering import GeocodeConfig, clustering_from_dict
 from travelogue.config.cohort import CohortConfig
 from travelogue.config.cull import cull_from_dict
-from travelogue.config.curate import CurateConfig, cover_scoring_v2_from_dict
+from travelogue.config.curate import CurateConfig, CurateSubsetConfig, cover_scoring_v2_from_dict
 from travelogue.config.ingest import ingest_from_dict
 from travelogue.config.layout import (
     LayoutConfig,
@@ -228,6 +228,7 @@ def load_config(path: Path | None = None) -> AppConfig:
     geocode_raw = data.get("geocode") if isinstance(data.get("geocode"), dict) else {}
     curate_raw = data.get("curate") if isinstance(data.get("curate"), dict) else {}
     curate_layout_raw = curate_raw.get("layout") if isinstance(curate_raw.get("layout"), dict) else {}
+    subset_raw = curate_raw.get("subset") if isinstance(curate_raw.get("subset"), dict) else {}
     render_raw = data.get("render") if isinstance(data.get("render"), dict) else {}
     clustering_raw = data.get("clustering") if isinstance(data.get("clustering"), dict) else {}
     pipeline_raw = data.get("pipeline") if isinstance(data.get("pipeline"), dict) else {}
@@ -339,6 +340,32 @@ def load_config(path: Path | None = None) -> AppConfig:
                     or ["food"]
                 )
                 if str(x).strip()
+            ),
+            subset=CurateSubsetConfig(
+                enabled=bool(subset_raw.get("enabled", False)),
+                target_reduction=(
+                    float(subset_raw.get("target_reduction", subset_raw.get("targetReduction")))
+                    if subset_raw.get("target_reduction", subset_raw.get("targetReduction")) is not None
+                    else None
+                ),
+                quality_sharpness_floor=float(
+                    subset_raw.get(
+                        "quality_sharpness_floor",
+                        subset_raw.get("qualitySharpnessFloor", 0.12),
+                    )
+                ),
+                min_per_coverage_cell=int(
+                    subset_raw.get(
+                        "min_per_coverage_cell",
+                        subset_raw.get("minPerCoverageCell", 1),
+                    )
+                ),
+            ),
+            highlight_opener_binding=bool(
+                curate_raw.get(
+                    "highlight_opener_binding",
+                    curate_raw.get("highlightOpenerBinding", False),
+                )
             ),
         ),
         narrative=NarrativeConfig(

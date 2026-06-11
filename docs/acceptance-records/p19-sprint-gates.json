@@ -72,7 +72,7 @@
     {
       "id": "S5",
       "weeks": "W9-10",
-      "status": "pending",
+      "status": "in_progress",
       "gate": {
         "mixedTripJudgeWinRateMin": 0.60,
         "mixedTripJudgeWinRateActual": null,
@@ -85,7 +85,7 @@
     {
       "id": "S6",
       "weeks": "W11-12",
-      "status": "pending",
+      "status": "in_progress",
       "gate": {
         "humanBlindWinRateMin": 0.60,
         "humanBlindWinRateActual": null,
@@ -95,8 +95,17 @@
         "storyClarityActual": null,
         "subsetReductionMedianMin": 0.25,
         "subsetReductionMedianMax": 0.40,
-        "subsetReductionMedianActual": null
-      }
+        "subsetReductionMedianActual": null,
+        "subsetIntegratedInCurate": true,
+        "highlightOpenerBinding": true,
+        "subsetKillSwitchDefaultOff": true
+      },
+      "artifacts": [
+        "docs/acceptance-records/p19-final.json",
+        "docs/P19-RUNBOOK.md",
+        "tests/test_p19_curate_subset.py",
+        "tests/test_p19_highlight_binding.py"
+      ]
     }
   ]
 }
