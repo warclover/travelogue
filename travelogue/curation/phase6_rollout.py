@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import hashlib
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 from travelogue.config import AppConfig, load_config
+from travelogue.config.rollout import in_rollout_cohort, rollout_bucket
 
 
 def p5_rollback_patch() -> dict[str, Any]:
@@ -191,16 +191,6 @@ def apply_g3_rollout_config(
     return apply_config_patch(config_path, patch)
 
 
-def rollout_bucket(trip_id: str, *, cohort_salt: str, traffic_percent: float) -> int:
-    """Deterministic bucket 0..99 for trip_id (stable across runs)."""
-    if traffic_percent <= 0:
-        return 100
-    if traffic_percent >= 100:
-        return 0
-    digest = hashlib.sha256(f"{cohort_salt}:{trip_id}".encode()).hexdigest()
-    return int(digest[:8], 16) % 100
-
-
 def phase6_in_rollout_cohort(trip_id: str, cfg: AppConfig) -> bool:
     """True when trip should receive Phase 6 behavior under current rollout gate.
 
@@ -209,23 +199,15 @@ def phase6_in_rollout_cohort(trip_id: str, cfg: AppConfig) -> bool:
     blocklist for emergency full rollback.
     """
     rollout = cfg.phase6.rollout
-    tid = str(trip_id or "").strip()
-    if not tid:
-        return False
-    if tid in rollout.blocklist_trip_ids:
-        return False
-    if tid in rollout.allowlist_trip_ids:
-        return True
-    if rollout.stage == "off" or rollout.traffic_percent <= 0:
-        return True
-    if rollout.traffic_percent >= 100:
-        return True
-    bucket = rollout_bucket(
-        tid,
+    return in_rollout_cohort(
+        trip_id,
         cohort_salt=rollout.cohort_salt,
         traffic_percent=rollout.traffic_percent,
+        stage=rollout.stage,
+        allowlist=rollout.allowlist_trip_ids,
+        blocklist=rollout.blocklist_trip_ids,
+        off_policy="allow_all",
     )
-    return bucket < int(round(rollout.traffic_percent))
 
 
 def resolve_app_config_for_trip(cfg: AppConfig, trip_id: str) -> AppConfig:

@@ -14,10 +14,13 @@ from travelogue.curation.layout_scoring import ScoringWeights, score_screen_plan
 from travelogue.curation.mosaic.constants import (
     PATTERN_LANDSCAPE_6,
     PATTERN_LANDSCAPE_9,
-    PATTERN_MOSAIC_5_HERO_3_2_PLUS_4,
-    PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
     PATTERN_PORTRAIT_6,
+)
+from travelogue.curation.mosaic.lte_adapter import (
+    template_main_hero_narrow_tile_penalty,
+    template_uses_main_hero_tile_scoring,
+    template_uses_weighted_tracks,
 )
 from travelogue.curation.mosaic.main_eligibility import screen_main_slot_eligible
 from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
@@ -165,7 +168,7 @@ def _hero_slot_aspect_penalty(
 ) -> float:
     """Side tiles prefer portrait; bottom row prefers landscape."""
     pattern_id = str(screen.get("patternId") or "")
-    if pattern_id == PATTERN_MOSAIC_5_HERO_3_2_PLUS_4:
+    if template_uses_weighted_tracks(pattern_id):
         if not cfg.hero_weighted_geometry_guard:
             return 0.0
         pen = 0.0
@@ -177,10 +180,7 @@ def _hero_slot_aspect_penalty(
             if _is_landscape_id(aid, aspects):
                 pen = max(pen, 0.9)
         return pen
-    if pattern_id not in (
-        PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
-        PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
-    ):
+    if not template_uses_main_hero_tile_scoring(pattern_id):
         return 0.0
     pen = 0.0
     for slot in screen.get("slots") or []:
@@ -211,7 +211,7 @@ def _hero_narrow_tile_penalty(
 ) -> float:
     """Penalize all-landscape hero+tile patterns where side tiles are narrow strips."""
     pattern_id = str(screen.get("patternId") or "")
-    if pattern_id == PATTERN_MOSAIC_5_HERO_3_2_PLUS_4:
+    if template_uses_weighted_tracks(pattern_id):
         if not cfg.hero_weighted_geometry_guard:
             return 0.0
         if not asset_ids:
@@ -219,10 +219,7 @@ def _hero_narrow_tile_penalty(
         if all(_is_landscape_id(aid, aspects) for aid in asset_ids):
             return 0.65
         return 0.0
-    if pattern_id not in (
-        PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
-        PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
-    ):
+    if not template_uses_main_hero_tile_scoring(pattern_id):
         return 0.0
     if not asset_ids:
         return 0.0
@@ -231,9 +228,7 @@ def _hero_narrow_tile_penalty(
     )
     if landscape_count < len(asset_ids):
         return 0.0
-    if pattern_id == PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4:
-        return 0.55
-    return 0.0
+    return template_main_hero_narrow_tile_penalty(pattern_id)
 
 
 def _flat_six_grid_penalty(

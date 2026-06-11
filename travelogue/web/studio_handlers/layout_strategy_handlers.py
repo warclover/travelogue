@@ -44,6 +44,9 @@ from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 _log = logging.getLogger(__name__)
 
+# P19 route C (DQ-04): LSE capability admin is read-only; writes go through config governance.
+LSE_CAPABILITIES_ADMIN_READONLY = True
+
 LSE_CAPS_BOOL_FIELDS: tuple[tuple[str, str], ...] = (
     ("saliencyScoring", "saliency_scoring"),
     ("toneHarmony", "tone_harmony"),
@@ -516,6 +519,7 @@ def _capabilities_payload(cfg, pack) -> dict[str, Any]:
 def _capabilities_response_body(cfg, pack) -> dict[str, Any]:
     return {
         "ok": True,
+        "readonly": LSE_CAPABILITIES_ADMIN_READONLY,
         "engineEnabled": bool(cfg.layout.strategy_engine.enabled),
         "rollout": lse_rollout_snapshot(cfg),
         "capabilities": _capabilities_payload(cfg, pack),
@@ -558,6 +562,17 @@ def _map_capabilities_patch(raw: dict[str, Any]) -> dict[str, Any]:
 
 def handle_lse_capabilities_patch(handler: StudioHandlerProtocol) -> None:
     if not _lse_caps_gate(handler, minimum="template_admin"):
+        return
+    if LSE_CAPABILITIES_ADMIN_READONLY:
+        handler._json_response(
+            403,
+            {
+                "ok": False,
+                "error": "E_LSE_CAPABILITIES_READONLY",
+                "message": "LSE 能力开关页已切换为只读（P19）；请通过配置治理流程修改",
+                "readonly": True,
+            },
+        )
         return
     payload = handler._read_json_body()
     if not isinstance(payload, dict) or not payload:

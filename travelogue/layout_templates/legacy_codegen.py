@@ -56,7 +56,9 @@ def export_legacy_data(engine: LayoutTemplateEngine) -> dict[str, Any]:
         if tpl.kind == "primitive" and str(tpl.stage.aspect) == "9:16"
     )
 
-    mosaic_groups = _load_mosaic_unified_groups()
+    from travelogue.layout_templates.mosaic_groups import build_mosaic_unified_groups
+
+    mosaic_groups = build_mosaic_unified_groups(engine)
 
     return {
         "explicit_grid_specs": explicit,

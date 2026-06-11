@@ -910,7 +910,7 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:no
   max-width: 100%;
   max-height: var(--portrait-stage-vh);
   object-fit: contain;
-  object-position: top center;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.2) * 100%);
 }
 
 html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-6"],
@@ -996,7 +996,7 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) [class*="layout-s
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  object-position: top center;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.2) * 100%);
 }
 
 /* Hero+m tiles: shrink bottom portrait row instead of equal 1fr band */
@@ -1052,7 +1052,7 @@ html[data-layout="auto"] .layout-screen[data-layout-hint="person-grid-8"] .layou
   height: 100%;
   max-height: 100%;
   object-fit: contain;
-  object-position: center;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.45) * 100%);
 }
 
 html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-2"] .layout-screen__grid--landscape-stack-2 .layout-slot,
@@ -1180,7 +1180,7 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[da
   max-width: 100%;
   max-height: var(--portrait-stage-vh);
   object-fit: contain;
-  object-position: top center;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.2) * 100%);
 }
 
 html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-3"]:not([data-layout-hint]),
@@ -1223,7 +1223,7 @@ html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-3"]:not([d
 html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-3"]:not([data-layout-hint]) .layout-screen__grid .layout-slot__img--contain {
   height: auto;
   max-height: var(--portrait-stage-vh);
-  object-position: top center;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.2) * 100%);
 }
 
 html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-3"]:not([data-layout-hint]) .layout-slot__img--cover,
@@ -1244,7 +1244,7 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[da
   height: auto;
   max-height: var(--portrait-stage-vh);
   object-fit: contain;
-  object-position: top center;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.2) * 100%);
 }
 
 html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2"]:not([data-layout-hint]) .layout-screen__grid,
@@ -1285,7 +1285,7 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[da
   height: auto;
   max-height: var(--portrait-stage-vh);
   object-fit: contain;
-  object-position: top center;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.2) * 100%);
 }
 
 html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid--2x2,
@@ -1351,7 +1351,7 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[da
   max-height: 100%;
   margin-inline: 0;
   object-fit: contain;
-  object-position: center;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.45) * 100%);
 }
 
 html[data-layout="web"] .layout-screen[data-pattern="screen-panorama-1"] .layout-slot__img--cover,
@@ -1412,7 +1412,7 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:is
   max-height: var(--portrait-stage-vh);
   margin-inline: auto;
   object-fit: contain;
-  object-position: top center;
+  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.2) * 100%);
 }
 
 html[data-layout-hint-debug="1"] .layout-screen[data-layout-hint="food-grid"],

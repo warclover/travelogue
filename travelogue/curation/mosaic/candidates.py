@@ -17,6 +17,13 @@ from travelogue.curation.mosaic.pattern_catalog import (
     patterns_for_window_size,
 )
 from travelogue.curation.mosaic.runtime import effective_mosaic_window_sizes
+from travelogue.curation.mosaic.reject_reasons import (
+    REJECT_GEOMETRY_INVALID,
+    REJECT_MAIN_AR_INELIGIBLE,
+    REJECT_ORDERING_FAILED,
+    REJECT_PATTERN_DISABLED,
+    make_rejection,
+)
 from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
 
 
@@ -52,10 +59,7 @@ def _reject(
     *,
     detail: str | None = None,
 ) -> None:
-    entry: dict[str, Any] = {"templateId": pattern_id, "reason": reason}
-    if detail:
-        entry["detail"] = detail
-    rejected.append(entry)
+    rejected.append(make_rejection(pattern_id, reason, detail=detail))
 
 
 def generate_window_candidates(
@@ -99,7 +103,7 @@ def generate_window_candidates_with_rejections(
     rejected: list[dict[str, Any]] = []
     for pat in patterns:
         if mosaic_pattern_disabled(pat.pattern_id, cfg=cfg):
-            _reject(rejected, pat.pattern_id, "pattern_disabled")
+            _reject(rejected, pat.pattern_id, REJECT_PATTERN_DISABLED)
             continue
         ordered = try_order_for_pattern(
             pat.pattern_id,
@@ -110,7 +114,7 @@ def generate_window_candidates_with_rejections(
             median_sharp=median_sharp,
         )
         if not ordered:
-            _reject(rejected, pat.pattern_id, "ordering_failed")
+            _reject(rejected, pat.pattern_id, REJECT_ORDERING_FAILED)
             continue
         slot_fallback: str | None = None
         screen = build_screen(pat, ordered, assets_map=assets_map)
@@ -142,9 +146,9 @@ def generate_window_candidates_with_rejections(
         )
         geom_ok = geom_ok and main_ok
         if not geom_ok and not main_ok:
-            _reject(rejected, pat.pattern_id, "main_ar_ineligible", detail=main_reason)
+            _reject(rejected, pat.pattern_id, REJECT_MAIN_AR_INELIGIBLE, detail=main_reason)
         elif not geom_ok:
-            _reject(rejected, pat.pattern_id, "geometry_invalid")
+            _reject(rejected, pat.pattern_id, REJECT_GEOMETRY_INVALID)
         feat = {**summary, "patternId": pat.pattern_id}
         if slot_fallback:
             feat["slotAssignmentFallback"] = slot_fallback

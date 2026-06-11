@@ -178,6 +178,7 @@ def test_patch_lse_beat_profile_rejects_invalid(tmp_path: Path) -> None:
 
 def test_handle_lse_capabilities_get_and_patch(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _auth_ok(monkeypatch)
+    monkeypatch.setattr(layout_strategy_handlers, "LSE_CAPABILITIES_ADMIN_READONLY", False)
     cfg_path = tmp_path / "config.yaml"
     cfg_path.write_text(
         yaml.safe_dump({"layout": {"strategy_engine": {"enabled": False, "capabilities": {}}}}),
@@ -223,6 +224,7 @@ def test_handle_lse_capabilities_get_and_patch(tmp_path: Path, monkeypatch: pyte
 
 def test_handle_lse_capabilities_patch_invalid_beat(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _auth_ok(monkeypatch)
+    monkeypatch.setattr(layout_strategy_handlers, "LSE_CAPABILITIES_ADMIN_READONLY", False)
     cfg_path = tmp_path / "config.yaml"
     cfg_path.write_text("layout: {}\n", encoding="utf-8")
     handler = MockStudioHandler(
@@ -294,12 +296,14 @@ def test_handle_lse_capabilities_get_matches_effective_capabilities(
     assert body["capabilities"]["saliencyScoring"]["fromConfig"] is True
     assert "allowlistTripIds" in body["rollout"]
     assert "blocklistTripIds" in body["rollout"]
+    assert body.get("readonly") is True
 
 
 def test_handle_lse_capabilities_patch_updates_capability_flags_snapshot(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _auth_ok(monkeypatch)
+    monkeypatch.setattr(layout_strategy_handlers, "LSE_CAPABILITIES_ADMIN_READONLY", False)
     cfg_path = tmp_path / "config.yaml"
     cfg_path.write_text(
         yaml.safe_dump({"layout": {"strategy_engine": {"enabled": False, "capabilities": {}}}}),
@@ -330,6 +334,7 @@ def test_handle_lse_capabilities_patch_writes_audit_log(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     _auth_ok(monkeypatch)
+    monkeypatch.setattr(layout_strategy_handlers, "LSE_CAPABILITIES_ADMIN_READONLY", False)
     cfg_path = tmp_path / "config.yaml"
     cfg_path.write_text("layout: {}\n", encoding="utf-8")
     handler = _handler(

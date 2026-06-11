@@ -250,6 +250,21 @@ jobs:
       - name: LTE registry parity
         run: python -m pytest tests/test_lte_registry_parity.py -q --maxfail=1
 
+      - name: P19 pixel probe (focal + mosaic geometry)
+        run: |
+          python scripts/p19_pixel_probe.py
+          python -m pytest tests/test_p19_pixel_probe.py tests/test_p19_focal_css.py -q --maxfail=1
+
+      - name: P19 screen signature parity (unit)
+        run: python -m pytest tests/test_p19_screen_signature_parity.py -m "not integration" -q --maxfail=1
+
+      - name: P19 hard constraints (unit)
+        run: python -m pytest tests/test_p19_hard_constraints.py tests/test_p19_explicit_fallback.py tests/test_p19_decision_log_rejects.py tests/test_p19_rollout_mosaic_groups.py -q --maxfail=1
+
+      - name: P19 rhythm audit (warn-only)
+        continue-on-error: true
+        run: python scripts/p19_rhythm_audit.py --out .cache/book-quality/rhythm-audit/ci-report.json
+
       - name: LTE legacy export smoke (warn-only)
         continue-on-error: true
         run: |

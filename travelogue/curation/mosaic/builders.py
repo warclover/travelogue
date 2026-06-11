@@ -9,10 +9,6 @@ from travelogue.curation.mosaic.constants import (
     PATTERN_LANDSCAPE_4,
     PATTERN_LANDSCAPE_6,
     PATTERN_LANDSCAPE_9,
-    PATTERN_MOSAIC_5_3P_2L_BALANCED,
-    PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
-    PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
-    PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
     PATTERN_PORTRAIT_1_LANDSCAPE_2,
     PATTERN_PORTRAIT_2_LANDSCAPE_2,
     PATTERN_PORTRAIT_3,
@@ -21,7 +17,13 @@ from travelogue.curation.mosaic.constants import (
     PATTERN_PORTRAIT_9,
     PATTERN_PORTRAIT_GRID_8,
 )
-from travelogue.curation.mosaic.lte_adapter import read_templates_from_lte
+from travelogue.curation.mosaic.lte_adapter import (
+    read_templates_from_lte,
+    template_mix_requirements,
+    template_uses_main_hero_ordering,
+    template_uses_main_hero_tile_scoring,
+    template_uses_main_portrait_3land_layout,
+)
 from travelogue.curation.mosaic.pattern_catalog import MosaicPattern
 from travelogue.curation.screen_planner import (
     PERSON_LAYOUT_TRIPLE,
@@ -146,6 +148,7 @@ def _order_hero_six(
     aspects: dict[str, AspectKind],
     assets_map: dict[str, dict],
     *,
+    pattern_id: str,
     median_sharp: float | None,
 ) -> list[str] | None:
     """Main 2×2 landscape + 2 side tiles (prefer portrait) + 3 bottom landscapes."""
@@ -163,7 +166,7 @@ def _order_hero_six(
         main = pick_best_main_eligible(
             landscapes,
             assets_map,
-            pattern_id=PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+            pattern_id=pattern_id,
             median_sharp=median_sharp,
             cfg=cfg,
         )
@@ -253,7 +256,7 @@ def try_order_for_pattern(
     n = len(asset_ids)
     portraits, landscapes = _split_portrait_landscape(asset_ids, aspects)
 
-    if pattern_id == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND:
+    if template_uses_main_portrait_3land_layout(pattern_id):
         return _can_mosaic_5_main_portrait_3land(
             asset_ids,
             aspects,
@@ -285,7 +288,8 @@ def try_order_for_pattern(
         return None
 
     if n == 5:
-        if pattern_id == PATTERN_MOSAIC_5_3P_2L_BALANCED:
+        mix_p, mix_l = template_mix_requirements(pattern_id)
+        if mix_p == 3 and mix_l == 2:
             if len(portraits) < 3 or len(landscapes) < 2:
                 return None
             p_sorted = _sort_asset_ids_by_taken(portraits[:3], assets_map)
@@ -293,9 +297,13 @@ def try_order_for_pattern(
             return [p_sorted[0], p_sorted[1], p_sorted[2], l_sorted[0], l_sorted[1]]
 
     if n == 6:
-        if pattern_id in (PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5, PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4):
+        if template_uses_main_hero_ordering(pattern_id):
             return _order_hero_six(
-                asset_ids, aspects, assets_map, median_sharp=median_sharp
+                asset_ids,
+                aspects,
+                assets_map,
+                pattern_id=pattern_id,
+                median_sharp=median_sharp,
             )
         if pattern_id == PATTERN_PORTRAIT_6 and len(portraits) >= 6:
             return _sort_asset_ids_by_taken(portraits[:6], assets_map)
@@ -331,7 +339,7 @@ def build_screen(
     assets_map: dict[str, dict],
     screen_id: str = "",
 ) -> dict:
-    if pattern.pattern_id == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND:
+    if template_uses_main_portrait_3land_layout(pattern.pattern_id):
         return _finalize_mosaic_screen(
             _make_mosaic_5_main_portrait_3land_screen(
                 ordered_ids, screen_id=screen_id, assets_map=assets_map
@@ -378,10 +386,7 @@ def build_screen(
             pattern.pattern_id,
             assets_map,
         )
-    if pattern.pattern_id in (
-        PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
-        PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
-    ):
+    if template_uses_main_hero_tile_scoring(pattern.pattern_id):
         slots = []
         for idx, aid in enumerate(ordered_ids):
             kind = aspect_kind_for_asset(assets_map.get(aid, {}))

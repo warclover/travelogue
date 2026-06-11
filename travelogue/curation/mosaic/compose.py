@@ -15,10 +15,41 @@ from travelogue.curation.mosaic.log import MosaicWindowLog
 from travelogue.curation.mosaic.log_enrich import enrich_mosaic_log_from_screen
 from travelogue.curation.mosaic.lte_adapter import mcs_diversity_config, mosaic_pattern_disabled
 from travelogue.curation.mosaic.scorer import score_candidate, weights_hash
+from travelogue.curation.mosaic.reject_reasons import (
+    REJECT_CONSECUTIVE_PATTERN,
+    REJECT_HARD_INVALID,
+    REJECT_RHYTHM_STATE,
+    make_rejection,
+)
 from travelogue.curation.mosaic.selfheal import try_self_heal_pick
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 
 _FACE_CROP_PROXY_THRESHOLD = 0.05
+
+
+def _rhythm_reject_reason(
+    cand: ScreenCandidate,
+    *,
+    layout_state: ScreenLayoutPlannerState | None,
+    prev_screen: dict | None,
+) -> str | None:
+    """P19 R-302 · drop rhythm-infeasible MCS candidates before scoring."""
+    if layout_state is None:
+        return None
+    if not layout_state.can_emit_pattern(cand.pattern_id):
+        return REJECT_RHYTHM_STATE
+    if prev_screen is not None:
+        from travelogue.curation.layout_constraints import (
+            DEFAULT_MAX_CONSECUTIVE_SAME_PATTERN,
+            plan_violates_consecutive_pattern,
+        )
+
+        if plan_violates_consecutive_pattern(
+            [prev_screen, cand.screen],
+            max_streak=DEFAULT_MAX_CONSECUTIVE_SAME_PATTERN,
+        ):
+            return REJECT_CONSECUTIVE_PATTERN
+    return None
 
 
 @dataclass
@@ -110,11 +141,19 @@ def _score_window_candidates_with_rejections(
     rejected = list(bundle.rejected)
     scored: list[tuple[ScreenCandidate, float, list[str], dict[str, float]]] = []
     for cand in candidates:
+        rhythm_reason = _rhythm_reject_reason(
+            cand,
+            layout_state=layout_state,
+            prev_screen=prev_screen,
+        )
+        if rhythm_reason:
+            rejected.append(make_rejection(cand.pattern_id, rhythm_reason))
+            continue
         if mosaic_pattern_disabled(cand.pattern_id, cfg=cfg) or not cand.hard_valid:
             if not cand.hard_valid and not any(
                 r.get("templateId") == cand.pattern_id for r in rejected
             ):
-                rejected.append({"templateId": cand.pattern_id, "reason": "hard_invalid"})
+                rejected.append(make_rejection(cand.pattern_id, REJECT_HARD_INVALID))
             continue
         sr = score_candidate(
             cand.screen,

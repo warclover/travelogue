@@ -73,22 +73,27 @@ def project_mosaic_window(
         )
 
     rejected: list[dict[str, str]] = []
-    for item in raw.get("geometryRejectedTemplates") or []:
-        if isinstance(item, dict) and item.get("templateId"):
-            rejected.append(
-                {
-                    "patternId": str(item["templateId"]),
-                    "reason": str(item.get("reason") or "geometry_invalid"),
-                }
-            )
-    for item in raw.get("rejectedTemplates") or []:
-        if isinstance(item, dict) and item.get("templateId"):
-            rejected.append(
-                {
-                    "patternId": str(item["templateId"]),
-                    "reason": str(item.get("reason") or "rejected"),
-                }
-            )
+
+    def _append_rejected(items: list[Any] | None, default_reason: str) -> None:
+        for item in items or []:
+            if not isinstance(item, dict):
+                continue
+            tid = item.get("templateId") or item.get("patternId")
+            if not tid:
+                continue
+            row: dict[str, str] = {
+                "patternId": str(tid),
+                "reason": str(item.get("reason") or default_reason),
+            }
+            if item.get("detail"):
+                row["detail"] = str(item["detail"])
+            rejected.append(row)
+
+    _append_rejected(raw.get("geometryRejectedTemplates"), "geometry_invalid")
+    _append_rejected(raw.get("mainArRejectedTemplates"), "main_ar_ineligible")
+    _append_rejected(raw.get("rhythmRejectedTemplates"), "rhythm_state")
+    _append_rejected(raw.get("constraintRejectedTemplates"), "constraint")
+    _append_rejected(raw.get("rejectedTemplates"), "rejected")
 
     winner = raw.get("winnerPatternId")
     picked = (
@@ -152,12 +157,27 @@ def project_beam_bucket(
             continue
         score = ev.get("score") if isinstance(ev.get("score"), dict) else {}
         picked_score = float(score.get("total") or 0.0)
+        rejected: list[dict[str, str]] = []
+        for item in ev.get("rejectedPlans") or []:
+            if not isinstance(item, dict):
+                continue
+            variant = item.get("variant") or item.get("templateId") or item.get("patternId")
+            if not variant:
+                continue
+            row: dict[str, str] = {
+                "patternId": str(variant),
+                "reason": str(item.get("reason") or "rejected"),
+            }
+            if item.get("detail"):
+                row["detail"] = str(item["detail"])
+            rejected.append(row)
+
         event: dict[str, Any] = {
             "chapterId": chapter_id,
             "segmentId": chapter_id,
             "window": {"start": 0, "size": 0},
             "candidates": [],
-            "rejected": [],
+            "rejected": rejected,
             "picked": {
                 "patternId": str(ev.get("variant") or "beam"),
                 "score": round(picked_score, 4),
@@ -169,6 +189,7 @@ def project_beam_bucket(
                 "plannerPath": str(ev.get("plannerPath") or "beam"),
                 "fallbackReason": ev.get("fallbackReason"),
                 "candidateCount": ev.get("candidateCount"),
+                "rejectReasonCounts": ev.get("rejectReasonCounts"),
                 "emittedAt": ev.get("at") or utc_now_iso(),
             },
         }

@@ -24,14 +24,14 @@ def _fresh() -> None:
 
 
 @pytest.mark.unit
-def test_grid_specs_reexports_legacy_generated() -> None:
-    assert EXPLICIT_GRID_SPECS is legacy_gen.EXPLICIT_GRID_SPECS
+def test_grid_specs_matches_legacy_snapshot() -> None:
+    assert EXPLICIT_GRID_SPECS == legacy_gen.EXPLICIT_GRID_SPECS
 
 
 @pytest.mark.unit
-def test_constants_reexports_mosaic_pattern_ids() -> None:
-    assert MOSAIC_3_PATTERN_IDS is legacy_gen.MOSAIC_3_PATTERN_IDS
-    assert PATTERN_GRID_CLASS is legacy_gen.PATTERN_GRID_CLASS
+def test_constants_match_legacy_snapshot() -> None:
+    assert MOSAIC_3_PATTERN_IDS == legacy_gen.MOSAIC_3_PATTERN_IDS
+    assert PATTERN_GRID_CLASS == legacy_gen.PATTERN_GRID_CLASS
 
 
 @pytest.mark.unit

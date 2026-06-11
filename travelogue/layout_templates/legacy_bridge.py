@@ -336,11 +336,7 @@ def export_forbidden_maps(templates: dict[str, Any]) -> tuple[dict[str, frozense
 
 
 def mosaic_pattern_id_groups() -> dict[str, tuple[str, ...]]:
-    return {
-        "MOSAIC_3_PATTERN_IDS": MOSAIC_3_PATTERN_IDS,
-        "MOSAIC_4_PATTERN_IDS": MOSAIC_4_PATTERN_IDS,
-        "MOSAIC_5_PATTERN_IDS": MOSAIC_5_PATTERN_IDS,
-        "MOSAIC_6_PATTERN_IDS": MOSAIC_6_PATTERN_IDS,
-        "MOSAIC_8_PATTERN_IDS": MOSAIC_8_PATTERN_IDS,
-        "MOSAIC_9_PATTERN_IDS": MOSAIC_9_PATTERN_IDS,
-    }
+    from travelogue.layout_templates.mosaic_groups import build_mosaic_unified_groups
+    from travelogue.layout_templates.registry import get_engine
+
+    return build_mosaic_unified_groups(get_engine())

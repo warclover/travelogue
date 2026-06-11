@@ -10,7 +10,7 @@ from dataclasses import dataclass, replace
 from typing import Any
 
 from travelogue.config import AppConfig
-from travelogue.curation.phase6_rollout import rollout_bucket
+from travelogue.config.rollout import in_rollout_cohort, rollout_bucket
 from travelogue.layout_engine.policy import load_policy
 from travelogue.layout_engine.runtime_store import load_lse_runtime
 
@@ -70,26 +70,17 @@ def effective_rollout(cfg: AppConfig) -> LseRolloutConfig:
 
 def lse_in_rollout_cohort(trip_id: str, cfg: AppConfig) -> bool:
     """True when trip should run LSE while global enabled=false."""
-    if cfg.layout.strategy_engine.enabled:
-        return True
     rollout = effective_rollout(cfg)
-    tid = str(trip_id or "").strip()
-    if not tid:
-        return False
-    if tid in rollout.blocklist_trip_ids:
-        return False
-    if tid in rollout.allowlist_trip_ids:
-        return True
-    if rollout.stage in ("off", "") or rollout.traffic_percent <= 0:
-        return False
-    if rollout.traffic_percent >= 100:
-        return True
-    bucket = rollout_bucket(
-        tid,
+    return in_rollout_cohort(
+        trip_id,
         cohort_salt=rollout.cohort_salt,
         traffic_percent=rollout.traffic_percent,
+        stage=rollout.stage,
+        allowlist=rollout.allowlist_trip_ids,
+        blocklist=rollout.blocklist_trip_ids,
+        global_enabled=cfg.layout.strategy_engine.enabled,
+        off_policy="deny_all",
     )
-    return bucket < int(round(rollout.traffic_percent))
 
 
 def resolve_lse_config_for_trip(cfg: AppConfig, trip_id: str) -> AppConfig:

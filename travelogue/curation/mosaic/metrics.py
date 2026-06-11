@@ -113,6 +113,8 @@ def _rejection_entries_from_log(log: dict[str, Any]) -> list[dict[str, Any]]:
         "rejected",
         "geometryRejectedTemplates",
         "mainArRejectedTemplates",
+        "rhythmRejectedTemplates",
+        "constraintRejectedTemplates",
     ):
         raw_list = log.get(key)
         if isinstance(raw_list, list):

@@ -674,8 +674,12 @@ def build_layout_screen(
                 fy = float(fp.get("y", 0.45))
                 style_parts_slot.append(f"--focal-x: {fx}")
                 style_parts_slot.append(f"--focal-y: {fy}")
+                if not asset.get("focalPoint"):
+                    entry["focalFromAsset"] = False
+                else:
+                    entry["focalFromAsset"] = True
             except (TypeError, ValueError):
-                pass
+                entry["focalFromAsset"] = False
             slot_style = "; ".join(style_parts_slot)
             if slot_style:
                 slot_style += ";"

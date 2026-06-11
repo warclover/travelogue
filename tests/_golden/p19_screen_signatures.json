@@ -1,0 +1,36 @@
+{
+  "mosaic_eligible": {
+    "patternSequence": [
+      "screen-landscape-1",
+      "screen-portrait-3",
+      "screen-landscape-1",
+      "screen-landscape-1",
+      "screen-portrait-3",
+      "screen-landscape-1",
+      "screen-landscape-1",
+      "screen-portrait-3",
+      "screen-landscape-1",
+      "screen-landscape-1",
+      "screen-portrait-3",
+      "screen-landscape-1",
+      "screen-landscape-1",
+      "screen-portrait-3",
+      "screen-landscape-1",
+      "screen-landscape-1",
+      "screen-portrait-3",
+      "screen-landscape-1",
+      "screen-landscape-1",
+      "screen-portrait-3",
+      "screen-landscape-1",
+      "screen-landscape-1",
+      "screen-portrait-3",
+      "screen-landscape-1"
+    ]
+  },
+  "portrait_heavy": {
+    "patternSequence": [
+      "screen-portrait-3",
+      "screen-portrait-3"
+    ]
+  }
+}

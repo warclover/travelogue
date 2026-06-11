@@ -14,6 +14,95 @@ def read_templates_from_lte(cfg: AppConfig | None = None) -> bool:
     return bool(getattr(te, "read_templates_from_lte", False))
 
 
+def template_mix_requirements(pattern_id: str) -> tuple[int | None, int | None]:
+    """Portrait/landscape mix targets from LTE YAML (P19 R-102)."""
+    if not read_templates_from_lte():
+        return None, None
+    try:
+        tpl = _lte_template(pattern_id)
+    except KeyError:
+        return None, None
+    return tpl.mix_portrait, tpl.mix_landscape
+
+
+def template_uses_main_hero_ordering(pattern_id: str) -> bool:
+    """True when pattern has a main hero slot and multi-slot hero ordering."""
+    if not read_templates_from_lte():
+        return False
+    try:
+        tpl = _lte_template(pattern_id)
+    except KeyError:
+        return False
+    roles = {s.role for s in tpl.slots}
+    return "main" in roles and tpl.photo_count_min >= 5
+
+
+def template_uses_weighted_tracks(pattern_id: str) -> bool:
+    """Weighted-track hero composite (e.g. hero-3-2-plus-4 scorer geometry guard)."""
+    if not read_templates_from_lte():
+        from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_HERO_3_2_PLUS_4
+
+        return pattern_id == PATTERN_MOSAIC_5_HERO_3_2_PLUS_4
+    try:
+        tpl = _lte_template(pattern_id)
+    except KeyError:
+        return False
+    return tpl.balance_policy == "weighted_tracks"
+
+
+def template_uses_main_hero_tile_scoring(pattern_id: str) -> bool:
+    """Main-hero + tile layouts (side/bottom aspect penalties in mosaic scorer)."""
+    if not read_templates_from_lte():
+        from travelogue.curation.mosaic.constants import (
+            PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+            PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+        )
+
+        return pattern_id in (
+            PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+            PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+        )
+    if template_uses_weighted_tracks(pattern_id):
+        return False
+    try:
+        tpl = _lte_template(pattern_id)
+    except KeyError:
+        return False
+    roles = {s.role for s in tpl.slots}
+    constraints = tpl.constraints or {}
+    return "main" in roles and "mainSlotPolicy" in constraints
+
+
+def template_uses_main_portrait_3land_layout(pattern_id: str) -> bool:
+    """Main portrait hero + three landscape tiles (mosaic-5-main-portrait-3land family)."""
+    if not read_templates_from_lte():
+        from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
+
+        return pattern_id == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
+    try:
+        tpl = _lte_template(pattern_id)
+    except KeyError:
+        return False
+    roles = {s.role for s in tpl.slots}
+    return (
+        "main" in roles
+        and tpl.mix_portrait == 1
+        and tpl.mix_landscape == 4
+        and tpl.photo_count_min == 5
+    )
+
+
+def template_main_hero_narrow_tile_penalty(pattern_id: str) -> float:
+    """Narrow-tile penalty weight when all assets are landscape (0 = no extra penalty)."""
+    if not read_templates_from_lte():
+        from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4
+
+        return 0.55 if pattern_id == PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4 else 0.0
+    if pattern_id == "screen-mosaic-5-main-hero-plus-4":
+        return 0.55
+    return 0.0
+
+
 def lte_rollout_eligible(pattern_id: str) -> bool:
     """LTE extras with rollout.percent<=0 stay out of MCS until enabled (W3 parity)."""
     if not read_templates_from_lte():

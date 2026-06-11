@@ -1,23 +1,55 @@
 """Expected grid cell placements for mosaic / composite layout patterns.
 
-LTE-generated data lives in ``_legacy_generated.py`` (PRD R-P16-02).
-Regenerate: ``python scripts/lte_export_legacy.py --sync-python``
+Runtime data resolves through ``legacy_specs`` (LTE YAML when enabled).
+CI snapshot: ``_legacy_generated.py`` — ``python scripts/lte_export_legacy.py --sync-python``.
 """
 
 from __future__ import annotations
 
-from travelogue.curation.mosaic._legacy_generated import (
-    AUTO_FLOW_GRIDS,
-    EXPLICIT_GRID_BOUNDS,
-    EXPLICIT_GRID_SPECS,
-    MOSAIC_3_PATTERN_IDS,
-    MOSAIC_4_PATTERN_IDS,
-    MOSAIC_5_PATTERN_IDS,
-    MOSAIC_6_PATTERN_IDS,
-    MOSAIC_8_PATTERN_IDS,
-    MOSAIC_9_PATTERN_IDS,
-    STACK_PATTERNS,
+from collections.abc import Callable
+from typing import Any
+
+from travelogue.curation.mosaic.legacy_specs import (
+    auto_flow_grids,
+    explicit_grid_bounds,
+    explicit_grid_specs,
+    mosaic_pattern_id_groups,
+    mosaic_unified_pattern_ids,
+    stack_patterns,
 )
+
+_LAZY_EXPORTS: dict[str, Callable[[], Any]] = {
+    "EXPLICIT_GRID_SPECS": explicit_grid_specs,
+    "EXPLICIT_GRID_BOUNDS": explicit_grid_bounds,
+    "AUTO_FLOW_GRIDS": auto_flow_grids,
+    "STACK_PATTERNS": stack_patterns,
+    "MOSAIC_3_PATTERN_IDS": lambda: mosaic_pattern_id_groups()["MOSAIC_3_PATTERN_IDS"],
+    "MOSAIC_4_PATTERN_IDS": lambda: mosaic_pattern_id_groups()["MOSAIC_4_PATTERN_IDS"],
+    "MOSAIC_5_PATTERN_IDS": lambda: mosaic_pattern_id_groups()["MOSAIC_5_PATTERN_IDS"],
+    "MOSAIC_6_PATTERN_IDS": lambda: mosaic_pattern_id_groups()["MOSAIC_6_PATTERN_IDS"],
+    "MOSAIC_8_PATTERN_IDS": lambda: mosaic_pattern_id_groups()["MOSAIC_8_PATTERN_IDS"],
+    "MOSAIC_9_PATTERN_IDS": lambda: mosaic_pattern_id_groups()["MOSAIC_9_PATTERN_IDS"],
+    "ALL_MOSAIC_PATTERN_IDS": mosaic_unified_pattern_ids,
+}
+
+
+def __getattr__(name: str) -> Any:
+    if name in _LAZY_EXPORTS:
+        return _LAZY_EXPORTS[name]()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:
+    return sorted(
+        set(_LAZY_EXPORTS.keys())
+        | {
+            "cells_for_spec",
+            "cells_for_specs",
+            "gap_cells",
+            "overlapping_pairs",
+            "audit_all",
+        }
+    )
 
 
 def cells_for_spec(spec: tuple[int, int, int, int]) -> set[tuple[int, int]]:
@@ -56,9 +88,13 @@ def overlapping_pairs(
 def audit_all() -> dict[str, dict]:
     """Return audit summary keyed by pattern id."""
     report: dict[str, dict] = {}
+    explicit = explicit_grid_specs()
+    bounds = explicit_grid_bounds()
+    auto_flow = auto_flow_grids()
+    stacks = stack_patterns()
 
-    for pid, specs in EXPLICIT_GRID_SPECS.items():
-        cols, rows = EXPLICIT_GRID_BOUNDS.get(pid, (3, 3))
+    for pid, specs in explicit.items():
+        cols, rows = bounds.get(pid, (3, 3))
         gaps = gap_cells(specs, cols=cols, rows=rows)
         report[pid] = {
             "kind": "explicit",
@@ -68,7 +104,7 @@ def audit_all() -> dict[str, dict]:
             "gap_cells": sorted(gaps),
         }
 
-    for pid, (cols, rows, n) in AUTO_FLOW_GRIDS.items():
+    for pid, (cols, rows, n) in auto_flow.items():
         report[pid] = {
             "kind": "auto_flow",
             "slot_count": n,
@@ -78,7 +114,7 @@ def audit_all() -> dict[str, dict]:
             "note": "满格；缺图时靠 DOM 占位，错位风险已靠 render 保留 slot 缓解",
         }
 
-    for pid in STACK_PATTERNS:
+    for pid in stacks:
         report[pid] = {
             "kind": "stack",
             "slot_count": int(pid.split("-")[-1]),
@@ -89,13 +125,3 @@ def audit_all() -> dict[str, dict]:
         }
 
     return report
-
-
-ALL_MOSAIC_PATTERN_IDS: tuple[str, ...] = (
-    *MOSAIC_3_PATTERN_IDS,
-    *MOSAIC_4_PATTERN_IDS,
-    *MOSAIC_5_PATTERN_IDS,
-    *MOSAIC_6_PATTERN_IDS,
-    *MOSAIC_8_PATTERN_IDS,
-    *MOSAIC_9_PATTERN_IDS,
-)

@@ -8,6 +8,7 @@ from travelogue.curation.mosaic.legacy_specs import (
     auto_flow_grids,
     explicit_grid_specs,
     landscape_forbidden_tall,
+    portrait_dominant_auto_flow,
     portrait_forbidden_wide,
 )
 from travelogue.curation.screen_planner import _is_landscape_id, _is_std_portrait_id
@@ -18,17 +19,9 @@ _WIDE_CELL_AR = 1.25
 _TALL_CELL_AR = 0.92
 
 # Pure portrait auto-flow grids are laid out on a portrait stage, not 16:9 landscape.
-from travelogue.curation.mosaic._legacy_generated import PORTRAIT_DOMINANT_AUTO_FLOW
-
-_PORTRAIT_DOMINANT_AUTO_FLOW = PORTRAIT_DOMINANT_AUTO_FLOW
-
-# Slots where portrait-in-wide was the user-visible defect (main tile, etc.)
-from travelogue.curation.mosaic._legacy_generated import (
-    _LANDSCAPE_FORBIDDEN_TALL as _LANDSCAPE_FORBIDDEN_TALL,
-)
-from travelogue.curation.mosaic._legacy_generated import (
-    _PORTRAIT_FORBIDDEN_WIDE as _PORTRAIT_FORBIDDEN_WIDE,
-)
+_PORTRAIT_DOMINANT_AUTO_FLOW = portrait_dominant_auto_flow()
+_PORTRAIT_FORBIDDEN_WIDE = portrait_forbidden_wide()
+_LANDSCAPE_FORBIDDEN_TALL = landscape_forbidden_tall()
 
 
 def slot_cell_aspect_ratio(

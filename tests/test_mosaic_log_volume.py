@@ -42,6 +42,9 @@ def test_window_log_keeps_geometry_rejections_summary():
     assert window["geometryRejectedTemplates"] == [
         {"templateId": hero_id, "reason": "geometry_invalid"}
     ]
+    assert window["constraintRejectedTemplates"] == [
+        {"templateId": "x", "reason": "ordering_failed"}
+    ]
 
 
 def test_window_log_keeps_main_ar_rejections_summary():

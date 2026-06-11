@@ -28,10 +28,13 @@
   <h1>智能排版能力开关（LSE Capabilities）</h1>
   <p class="muted">
     仅 loopback 或 <code>studio.layout_templates_internal=true</code> 可用。
-    PATCH 需 <code>template_admin</code> 角色。写入 <code>config.yaml</code>，下次排版子进程重载生效。
+    <span id="write-hint">PATCH 需 <code>template_admin</code> 角色。写入 <code>config.yaml</code>，下次排版子进程重载生效。</span>
     <strong>变更对当前 Studio 实例下所有 trip 全局生效（dogfood）。</strong>
     <a href="/templates-admin">← 模板治理控制台</a>
   </p>
+  <div id="readonly-banner" class="warn" hidden>
+    <strong>只读模式（P19）：</strong>本页仅展示有效能力与 rollout；修改请走配置治理流程。
+  </div>
   <p>
     <button type="button" id="btn-refresh">刷新</button>
     <button type="button" id="btn-save">保存变更</button>
@@ -93,6 +96,7 @@
     ];
 
     let snapshot = null;
+    let readonly = false;
     const dirty = new Set();
 
     function fmtEffective(key, meta) {
@@ -114,6 +118,19 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || data.error || res.statusText);
       return data;
+    }
+
+    function applyReadonlyUi() {
+      readonly = !!snapshot?.readonly;
+      document.getElementById("readonly-banner").hidden = !readonly;
+      document.getElementById("write-hint").hidden = readonly;
+      document.getElementById("btn-save").hidden = readonly;
+      document.getElementById("engine-enabled").disabled = readonly;
+      if (readonly) {
+        document.querySelectorAll("input[data-cap], #beat-profile").forEach((el) => {
+          el.disabled = true;
+        });
+      }
     }
 
     function renderBanner(data) {
@@ -189,6 +206,7 @@
         dirty.clear();
         renderBanner(snapshot);
         renderRows(snapshot);
+        applyReadonlyUi();
         document.getElementById("status").textContent = "已刷新";
       } catch (e) {
         document.getElementById("status").textContent = "加载失败：" + e.message;
@@ -196,7 +214,7 @@
     }
 
     async function save() {
-      if (!snapshot) return;
+      if (!snapshot || readonly) return;
       const body = { capabilities: {} };
       if (dirty.has("engine")) {
         body.engineEnabled = document.getElementById("engine-enabled").checked;

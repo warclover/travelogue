@@ -166,22 +166,52 @@ def replan_day_buckets_beam(
             beam_width=beam_width,
             budget=budget,
         )
+        pre_rhythm_candidates = candidates
+        rhythm_rejected_plans: list[dict[str, str]] = []
         if max_consecutive_same_pattern > 0:
-            filtered_plans = [
-                plan
-                for plan in candidates
-                if not plan_violates_consecutive_pattern(
-                    plan[1],
+            from travelogue.curation.mosaic.reject_reasons import REJECT_CONSECUTIVE_PATTERN
+
+            filtered_plans: list[tuple[str, list]] = []
+            for variant_name, plan in candidates:
+                if plan_violates_consecutive_pattern(
+                    plan,
                     max_streak=max_consecutive_same_pattern,
-                )
-            ]
+                ):
+                    rhythm_rejected_plans.append(
+                        {
+                            "variant": str(variant_name),
+                            "reason": REJECT_CONSECUTIVE_PATTERN,
+                        }
+                    )
+                else:
+                    filtered_plans.append((variant_name, plan))
             if not filtered_plans and candidates:
                 _log.warning(
                     "mosaic.search: no plan satisfies consecutive pattern "
-                    "(max_streak=%d); using unfiltered candidates",
+                    "(max_streak=%d); rejecting unfiltered candidates (P19 hard constraint)",
                     max_consecutive_same_pattern,
                 )
-            candidates = filtered_plans or candidates
+            candidates = filtered_plans
+            if not candidates and pre_rhythm_candidates:
+                from travelogue.curation.mosaic.explicit_fallback import (
+                    build_explicit_single_screen_plan,
+                )
+
+                explicit_plan = build_explicit_single_screen_plan(
+                    filtered,
+                    aspects,
+                    assets_map=assets_by_id,
+                )
+                if explicit_plan:
+                    candidates = [("explicit_single", explicit_plan)]
+                    fallback_reason = fallback_reason or "EXPLICIT_SINGLE_RHYTHM"
+                    _log.warning(
+                        "mosaic.search: explicit single fallback for bucket %d "
+                        "(reason=%s, screens=%d)",
+                        bucket_idx + 1,
+                        fallback_reason,
+                        len(explicit_plan),
+                    )
         legacy_plan = candidates[0][1] if candidates else []
         legacy_sig = _screens_signature([{"screens": legacy_plan}])
         from travelogue.curation.layout_scoring import ScoreBreakdown
@@ -264,20 +294,27 @@ def replan_day_buckets_beam(
                     best_variant = variant_name
 
         log = LayoutDecisionLog(chapter_id=f"day-bucket-{bucket_idx + 1}")
-        log.add(
-            "beam_pick",
-            {
-                "variant": best_variant,
-                "candidateCount": len(candidates),
-                "score": best_score.to_dict(),
-                "legacyScore": legacy_score.to_dict(),
-                "changed": _screens_signature([{"screens": best_plan}]) != legacy_sig,
-                "arcProfile": arc_profile,
-                "fallbackUsed": bool(fallback_reason),
-                "fallbackReason": fallback_reason,
-                "plannerPath": "legacy" if legacy_only or fallback_reason else "beam",
-            },
-        )
+        beam_payload: dict[str, object] = {
+            "variant": best_variant,
+            "candidateCount": len(candidates),
+            "score": best_score.to_dict(),
+            "legacyScore": legacy_score.to_dict(),
+            "changed": _screens_signature([{"screens": best_plan}]) != legacy_sig,
+            "arcProfile": arc_profile,
+            "fallbackUsed": bool(fallback_reason),
+            "fallbackReason": fallback_reason,
+            "plannerPath": (
+                "explicit_single"
+                if fallback_reason == "EXPLICIT_SINGLE_RHYTHM"
+                else ("legacy" if legacy_only or fallback_reason else "beam")
+            ),
+        }
+        if rhythm_rejected_plans:
+            beam_payload["rejectedPlans"] = rhythm_rejected_plans
+            beam_payload["rejectReasonCounts"] = {
+                REJECT_CONSECUTIVE_PATTERN: len(rhythm_rejected_plans),
+            }
+        log.add("beam_pick", beam_payload)
         decision_logs.append(log.to_dict())
 
         _apply_winning_plan_to_state(layout_state, best_plan)

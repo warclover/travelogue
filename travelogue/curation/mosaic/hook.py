@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from travelogue.config import MosaicConfig
 from travelogue.curation.mosaic.compose import pick_best_window
+from travelogue.curation.mosaic.explicit_fallback import append_explicit_single_fallback
 from travelogue.curation.mosaic.legacy import append_legacy_window
 from travelogue.curation.mosaic.runtime import effective_mosaic_window_sizes
 
@@ -193,10 +194,24 @@ def try_mosaic_window_mcs(
         if append_legacy_window(ctx, window, size):
             _logs_buf().append(pick.log.to_dict())
             return True
+        reason = pick.log.fallback_reason or "legacy_rejected"
+        if append_explicit_single_fallback(ctx, window, reason=reason):
+            pick.log.planner_path = "explicit_single"
+            pick.log.fallback_used = True
+            pick.log.fallback_reason = reason
+            _logs_buf().append(pick.log.to_dict())
+            return True
         return False
     if pick.screen:
         _logs_buf().append(pick.log.to_dict())
         append_screen(ctx, pick.screen)
+        return True
+    reason = pick.log.fallback_reason or "no_pick"
+    if append_explicit_single_fallback(ctx, window, reason=reason):
+        pick.log.planner_path = "explicit_single"
+        pick.log.fallback_used = True
+        pick.log.fallback_reason = reason
+        _logs_buf().append(pick.log.to_dict())
         return True
     return False
 

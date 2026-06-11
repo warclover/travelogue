@@ -1,35 +1,64 @@
 """Pattern ids for mosaic / unified grid windows (Phase 15 · S2).
 
-Semantic aliases below; authoritative tuples and grid classes live in
-``_legacy_generated.py`` (YAML export CI · R-P16-02).
+Tuple aliases resolve via ``legacy_specs`` at runtime; CI snapshot in ``_legacy_generated.py``.
 """
 
 from __future__ import annotations
 
-from travelogue.curation.mosaic._legacy_generated import (
-    MOSAIC_3_PATTERN_IDS as MOSAIC_3_PATTERN_IDS,
+from collections.abc import Callable
+from typing import Any
+
+from travelogue.curation.mosaic.legacy_specs import (
+    mosaic_pattern_id_groups,
+    mosaic_unified_pattern_ids,
+    pattern_grid_class,
 )
-from travelogue.curation.mosaic._legacy_generated import (
-    MOSAIC_4_PATTERN_IDS as MOSAIC_4_PATTERN_IDS,
-)
-from travelogue.curation.mosaic._legacy_generated import (
-    MOSAIC_5_PATTERN_IDS as MOSAIC_5_PATTERN_IDS,
-)
-from travelogue.curation.mosaic._legacy_generated import (
-    MOSAIC_6_PATTERN_IDS as MOSAIC_6_PATTERN_IDS,
-)
-from travelogue.curation.mosaic._legacy_generated import (
-    MOSAIC_8_PATTERN_IDS as MOSAIC_8_PATTERN_IDS,
-)
-from travelogue.curation.mosaic._legacy_generated import (
-    MOSAIC_9_PATTERN_IDS as MOSAIC_9_PATTERN_IDS,
-)
-from travelogue.curation.mosaic._legacy_generated import (
-    MOSAIC_UNIFIED_PATTERN_IDS as MOSAIC_UNIFIED_PATTERN_IDS,
-)
-from travelogue.curation.mosaic._legacy_generated import (
-    PATTERN_GRID_CLASS as PATTERN_GRID_CLASS,
-)
+
+_LAZY_EXPORTS: dict[str, Callable[[], Any]] = {
+    "MOSAIC_3_PATTERN_IDS": lambda: mosaic_pattern_id_groups()["MOSAIC_3_PATTERN_IDS"],
+    "MOSAIC_4_PATTERN_IDS": lambda: mosaic_pattern_id_groups()["MOSAIC_4_PATTERN_IDS"],
+    "MOSAIC_5_PATTERN_IDS": lambda: mosaic_pattern_id_groups()["MOSAIC_5_PATTERN_IDS"],
+    "MOSAIC_6_PATTERN_IDS": lambda: mosaic_pattern_id_groups()["MOSAIC_6_PATTERN_IDS"],
+    "MOSAIC_8_PATTERN_IDS": lambda: mosaic_pattern_id_groups()["MOSAIC_8_PATTERN_IDS"],
+    "MOSAIC_9_PATTERN_IDS": lambda: mosaic_pattern_id_groups()["MOSAIC_9_PATTERN_IDS"],
+    "MOSAIC_UNIFIED_PATTERN_IDS": mosaic_unified_pattern_ids,
+    "PATTERN_GRID_CLASS": pattern_grid_class,
+}
+
+
+def __getattr__(name: str) -> Any:
+    if name in _LAZY_EXPORTS:
+        return _LAZY_EXPORTS[name]()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:
+    return sorted(
+        set(_LAZY_EXPORTS.keys())
+        | {
+            "PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND",
+            "PATTERN_MOSAIC_5_MAIN_LAND_2P_2L",
+            "PATTERN_MOSAIC_5_2P_3L_BALANCED",
+            "PATTERN_MOSAIC_5_3P_2L_BALANCED",
+            "PATTERN_MOSAIC_5_2P3L_EQUAL",
+            "PATTERN_MOSAIC_5_HERO_3_2_PLUS_4",
+            "PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4",
+            "PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5",
+            "PATTERN_PORTRAIT_3",
+            "PATTERN_LANDSCAPE_3",
+            "PATTERN_PORTRAIT_1_LANDSCAPE_2",
+            "PATTERN_PORTRAIT_2_LANDSCAPE_2",
+            "PATTERN_PORTRAIT_4",
+            "PATTERN_LANDSCAPE_4",
+            "PATTERN_PORTRAIT_6",
+            "PATTERN_LANDSCAPE_6",
+            "PATTERN_PORTRAIT_GRID_8",
+            "PATTERN_PORTRAIT_9",
+            "PATTERN_LANDSCAPE_9",
+            "PATTERN_FULL_FRAME",
+        }
+    )
+
 
 # --- 5-slot mosaic family (S1) ---
 PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND = "screen-mosaic-5-main-portrait-3land"

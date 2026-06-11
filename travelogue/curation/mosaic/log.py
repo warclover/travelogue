@@ -102,26 +102,19 @@ def format_log_entry(raw: dict[str, Any], log_level: str = "window") -> dict[str
     )
     if log_level == "summary":
         return {k: raw[k] for k in summary_keys if k in raw}
-    # window: drop top3 score arrays; keep compact geometry rejections for guard verification
+    # window: drop top3 score arrays; bucket rejections for guard verification (P19 S3-05)
+    from travelogue.curation.mosaic.reject_reasons import (
+        partition_rejections,
+        reject_reason_counts,
+    )
+
     out = dict(raw)
     out.pop("top3Scores", None)
-    geom_rejected = [
-        {"templateId": r["templateId"], "reason": r["reason"]}
-        for r in raw.get("rejectedTemplates") or []
-        if r.get("reason") == "geometry_invalid"
-    ]
-    if geom_rejected:
-        out["geometryRejectedTemplates"] = geom_rejected
-    main_ar_rejected = [
-        {
-            "templateId": r["templateId"],
-            "reason": r["reason"],
-            **({"detail": r["detail"]} if r.get("detail") else {}),
-        }
-        for r in raw.get("rejectedTemplates") or []
-        if r.get("reason") == "main_ar_ineligible"
-    ]
-    if main_ar_rejected:
-        out["mainArRejectedTemplates"] = main_ar_rejected
+    rejected = list(raw.get("rejectedTemplates") or [])
+    for bucket_key, rows in partition_rejections(rejected).items():
+        out[bucket_key] = rows
+    counts = reject_reason_counts(rejected)
+    if counts:
+        out["rejectReasonCounts"] = counts
     out.pop("rejectedTemplates", None)
     return out
