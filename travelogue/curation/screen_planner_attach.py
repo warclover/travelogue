@@ -83,6 +83,10 @@ def _rebuild_layout_state(
         portrait_grid8_max=base.portrait_grid8_max,
         layout_density=base.layout_density,
         rhythm=base.rhythm,
+        dense_collage_max=base.dense_collage_max,
+        large_mosaic_min_slots=base.large_mosaic_min_slots,
+        large_mosaic_max_per_template_trip=base.large_mosaic_max_per_template_trip,
+        large_mosaic_max_per_chapter=base.large_mosaic_max_per_chapter,
     )
     for pid in noted_patterns:
         state.note_screen(pid)
@@ -168,7 +172,13 @@ def assign_bucket_screens_with_portrait_carry(
         for sc in bucket_screens
         if id(sc) not in deferred
     )
+    kept_patterns = [
+        str(sc.get("patternId") or "")
+        for sc in bucket_screens
+        if id(sc) not in deferred
+    ]
     layout_state = _rebuild_layout_state(layout_state, noted_patterns)
+    layout_state.sync_large_mosaic_chapter_used(kept_patterns)
     return next_carry, next_carry_age, layout_state
 
 
@@ -405,6 +415,7 @@ def attach_screens_day_buckets(
                 begin_chapter_highlight_windows(windows)
                 highlight_active = True
         plan_ids = _carry_inject_ids(bucket, carry, aspects)
+        layout_state.begin_chapter_bucket()
         try:
             bucket_screens = plan_chapter_screens(
                 ChapterPlanRequest(

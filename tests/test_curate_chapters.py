@@ -69,6 +69,24 @@ def test_merge_small_buckets_combines_pairs() -> None:
     assert sorted(merged[0] + merged[1]) == ["a", "b", "c", "d", "e", "f", "g"]
 
 
+def test_chapter_balance_merges_sparse_travel_days() -> None:
+    """Sparse day buckets merge into neighbors when below adaptive threshold."""
+    from travelogue.curation.bucket_planning import normalize_bucket_counts
+
+    # 4 sparse travel days + 1 heavy day → balance merges d1–d4 into fewer chapters
+    buckets = [["a1"], ["a2"], ["a3"], ["a4"], ["b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8"]]
+    norm = normalize_bucket_counts(
+        buckets,
+        None,
+        min_bucket_size=3,
+        chapter_balance_enabled=True,
+        chapter_balance_ratio=0.55,
+    )
+    assert len(norm.buckets) < len(buckets)
+    assert sum(len(b) for b in norm.buckets) == 12
+    assert max(len(b) for b in norm.buckets) - min(len(b) for b in norm.buckets) <= 8
+
+
 def test_group_by_day_keeps_calendar_buckets_not_flatten_years() -> None:
     assets: list[dict] = []
     for day in ("2010-07-11", "2026-05-20"):

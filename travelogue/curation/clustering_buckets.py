@@ -308,6 +308,8 @@ def build_buckets_from_clustering(
             segment_gap_days=cfg.curate.segment_gap_days,
             city_gap_days=cfg.curate.city_gap_days,
             min_bucket_size=min_bucket_size,
+            chapter_balance_enabled=cfg.curate.chapter_balance_enabled,
+            chapter_balance_ratio=cfg.curate.chapter_balance_ratio,
         )
 
     by_id = {a["id"]: a for a in layout_assets}
@@ -315,6 +317,8 @@ def build_buckets_from_clustering(
         buckets,
         bucket_segment_ids,
         min_bucket_size=min_bucket_size,
+        chapter_balance_enabled=cfg.curate.chapter_balance_enabled,
+        chapter_balance_ratio=cfg.curate.chapter_balance_ratio,
     )
     run_aware = cfg.clustering.scene_cluster_mode == "run_aware"
     for i, bucket in enumerate(norm.buckets):

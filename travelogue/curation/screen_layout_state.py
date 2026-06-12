@@ -129,6 +129,28 @@ def is_dense_collage_pattern(pattern_id: str, *, min_slots: int = DENSE_COLLAGE_
     return n is not None and n >= min_slots
 
 
+def is_large_mosaic_pattern(
+    pattern_id: str,
+    *,
+    min_slots: int = 5,
+) -> bool:
+    """True for mosaic/grid patterns with at least ``min_slots`` photo slots."""
+    n = pattern_dense_slot_count(pattern_id)
+    return n is not None and n >= min_slots
+
+
+def large_mosaic_limits_from_config() -> tuple[int, int, int]:
+    """(min_slots, max_per_template_trip, max_per_chapter) from mosaic.density_budget."""
+    from travelogue.config import get_config
+
+    db = get_config().mosaic.density_budget
+    return (
+        int(db.large_mosaic_min_slots),
+        int(db.max_per_template_per_trip),
+        int(db.max_large_mosaic_per_chapter),
+    )
+
+
 def nine_grid_limits_for_trip(total_photos: int) -> tuple[int, int]:
     """
     Min/max nine-grid screens (pattern with 9 slots) by layout-eligible photo count.
@@ -216,6 +238,10 @@ class ScreenLayoutPlannerState:
     last_kind: LayoutKind = "none"
     last_was_dense_collage: bool = False
     dense_collage_min_slots: int = DENSE_COLLAGE_SLOT_MIN
+    large_mosaic_min_slots: int = 5
+    large_mosaic_max_per_template_trip: int = 2
+    large_mosaic_max_per_chapter: int = 1
+    large_mosaic_chapter_used: int = 0
     last_pattern_id: str = ""
     pattern_streak: int = 0
     portrait_orientation_streak: int = 0
@@ -239,6 +265,7 @@ class ScreenLayoutPlannerState:
         _dense_lo, dense_hi = params.adjust_dense_collage_limits(
             _dense_lo, dense_hi, total_photos=total_photos
         )
+        lm_min, lm_trip, lm_ch = large_mosaic_limits_from_config()
         return cls(
             nine_min=lo,
             nine_max=hi,
@@ -246,6 +273,9 @@ class ScreenLayoutPlannerState:
             portrait_grid8_max=portrait_grid8_max_for_trip(total_photos),
             layout_density=params.density,
             rhythm=rhythm if rhythm is not None else RhythmRules.from_config(),
+            large_mosaic_min_slots=lm_min,
+            large_mosaic_max_per_template_trip=lm_trip,
+            large_mosaic_max_per_chapter=lm_ch,
         )
 
     @classmethod
@@ -308,9 +338,35 @@ class ScreenLayoutPlannerState:
         """True when an MCS window of this size may consume dense budget."""
         if window_size < self.dense_collage_min_slots:
             return True
+        if not self.can_use_large_mosaic_window(window_size):
+            return False
         if self.dense_collage_used >= self.dense_collage_max:
             return False
         return not self.last_was_dense_collage
+
+    def begin_chapter_bucket(self) -> None:
+        """Reset per-chapter large-mosaic counter at each day/chapter bucket."""
+        self.large_mosaic_chapter_used = 0
+
+    def can_use_large_mosaic_window(self, window_size: int) -> bool:
+        if window_size < self.large_mosaic_min_slots:
+            return True
+        return self.large_mosaic_chapter_used < self.large_mosaic_max_per_chapter
+
+    def can_use_large_mosaic(self, pattern_id: str) -> bool:
+        if not is_large_mosaic_pattern(pattern_id, min_slots=self.large_mosaic_min_slots):
+            return True
+        if self.large_mosaic_chapter_used >= self.large_mosaic_max_per_chapter:
+            return False
+        used = self.pattern_counts.get(pattern_id, 0)
+        return used < self.large_mosaic_max_per_template_trip
+
+    def sync_large_mosaic_chapter_used(self, pattern_ids: list[str]) -> None:
+        self.large_mosaic_chapter_used = sum(
+            1
+            for pid in pattern_ids
+            if is_large_mosaic_pattern(pid, min_slots=self.large_mosaic_min_slots)
+        )
 
     def can_pick_grid_size(self, size: int) -> bool:
         if size == 9:
@@ -333,6 +389,8 @@ class ScreenLayoutPlannerState:
         if max_ch is not None and self.pattern_counts.get(pattern_id, 0) >= max_ch:
             return False
         if not self.can_use_dense_collage(pattern_id):
+            return False
+        if not self.can_use_large_mosaic(pattern_id):
             return False
         kind = layout_kind_from_pattern(pattern_id)
         if kind == "nine" and self.nine_used >= self.nine_max:
@@ -371,6 +429,8 @@ class ScreenLayoutPlannerState:
             self.last_was_dense_collage = True
         elif pattern_id:
             self.last_was_dense_collage = False
+        if is_large_mosaic_pattern(pattern_id, min_slots=self.large_mosaic_min_slots):
+            self.large_mosaic_chapter_used += 1
         self.last_kind = kind if kind != "other" else "other"
         if pattern_id and pattern_id == self.last_pattern_id:
             self.pattern_streak += 1

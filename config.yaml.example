@@ -29,7 +29,8 @@ curate:
   segment_gap_days: 14
   city_gap_days: 3
   min_bucket_size: 3
-  # legacy | v2_adaptive | v2_five_beat — 叙事弧（ADR-002 Phase 3a，默认 legacy）
+  chapter_balance_enabled: true
+  chapter_balance_ratio: 0.55
   arc_mode: legacy
   arc_flat_variance_threshold: 0.08
   featured_weight: 1.35
@@ -122,7 +123,7 @@ layout:
   template_engine:
     enabled: true
     read_templates_from_lte: true
-    max_mosaic_slots: 6
+    max_mosaic_slots: 9
     exclude_collage_from_mosaic: true
     telemetry:
       emit_per_template: true
@@ -164,7 +165,7 @@ mosaic:
   scorer_version: "p15-s3"
   deterministic_strict: true
   min_candidate_score: 0.35
-  enabled_window_sizes: [4, 5, 6]
+  enabled_window_sizes: [4, 5, 6, 9]
   unified_mode: true
   fallback_to_legacy: true
   candidate_top_k: 4
@@ -172,7 +173,10 @@ mosaic:
   density_budget:
     enabled: true
     min_slots: 4
-    window_order: [5, 4, 6]
+    window_order: [5, 4, 6, 9]
+    large_mosaic_min_slots: 5
+    max_per_template_per_trip: 2
+    max_large_mosaic_per_chapter: 1
   self_heal:
     enabled: true
     allow_drop: false

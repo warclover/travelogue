@@ -277,6 +277,12 @@ def load_config(path: Path | None = None) -> AppConfig:
             segment_gap_days=int(curate_raw.get("segment_gap_days", 14)),
             city_gap_days=int(curate_raw.get("city_gap_days", 3)),
             min_bucket_size=int(curate_raw.get("min_bucket_size", 3)),
+            chapter_balance_enabled=bool(
+                curate_raw.get("chapter_balance_enabled", curate_raw.get("chapterBalanceEnabled", True))
+            ),
+            chapter_balance_ratio=float(
+                curate_raw.get("chapter_balance_ratio", curate_raw.get("chapterBalanceRatio", 0.55))
+            ),
             arc_mode=normalize_arc_mode(curate_raw.get("arc_mode", "legacy")),
             arc_flat_variance_threshold=float(
                 curate_raw.get("arc_flat_variance_threshold", 0.08)

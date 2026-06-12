@@ -167,6 +167,7 @@ def replan_day_buckets_beam(
         if not filtered:
             continue
         plan_ids = _carry_inject_ids(filtered, carry, aspects)
+        layout_state.begin_chapter_bucket()
         from travelogue.curation.screen_planner_attach import _preferred_hero_for_bucket
 
         preferred_hero = _preferred_hero_for_bucket(

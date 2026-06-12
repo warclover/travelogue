@@ -309,6 +309,12 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             and not ctx.layout_state.can_use_dense_collage_window(size)
         ):
             continue
+        if (
+            ctx.layout_state is not None
+            and size >= ctx.layout_state.large_mosaic_min_slots
+            and not ctx.layout_state.can_use_large_mosaic_window(size)
+        ):
+            continue
         window = ctx.ids[start : start + size]
         # Pair-first portrait priority: a run of consecutive standard portraits
         # must NOT collapse into a pure portrait grid (portrait-3/4/6/9). Defer

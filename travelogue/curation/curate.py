@@ -597,6 +597,8 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
             segment_gap_days=cur_cfg.segment_gap_days,
             city_gap_days=cur_cfg.city_gap_days,
             min_bucket_size=cur_cfg.min_bucket_size,
+            chapter_balance_enabled=cur_cfg.chapter_balance_enabled,
+            chapter_balance_ratio=cur_cfg.chapter_balance_ratio,
         )
 
     if len(layout_assets) <= SMALL_ALBUM_PHOTO_CAP:
@@ -608,6 +610,8 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
             bucket_segment_ids,
             max_chapters=max_ch,
             min_bucket_size=min(2, cur_cfg.min_bucket_size),
+            chapter_balance_enabled=cur_cfg.chapter_balance_enabled,
+            chapter_balance_ratio=cur_cfg.chapter_balance_ratio,
         )
         buckets = norm.buckets
         bucket_segment_ids = norm.primary_segment_ids

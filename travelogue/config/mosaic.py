@@ -14,7 +14,10 @@ class MosaicDensityBudgetConfig:
 
     enabled: bool = True
     min_slots: int = 4
-    window_order: tuple[int, ...] = (5, 4, 6)
+    window_order: tuple[int, ...] = (5, 4, 6, 9)
+    large_mosaic_min_slots: int = 5
+    max_per_template_per_trip: int = 2
+    max_large_mosaic_per_chapter: int = 1
 
 
 @dataclass
@@ -25,7 +28,7 @@ class MosaicConfig:
     scorer_version: str = "p15-s3"
     deterministic_strict: bool = True
     min_candidate_score: float = 0.35
-    enabled_window_sizes: tuple[int, ...] = (4, 5, 6)
+    enabled_window_sizes: tuple[int, ...] = (4, 5, 6, 9)
     unified_mode: bool = True
     fallback_to_legacy: bool = True
     self_heal_enabled: bool = True
@@ -90,6 +93,21 @@ def _density_budget_from_dict(raw: dict[str, Any]) -> MosaicDensityBudgetConfig:
         enabled=cfg_bool(db, "enabled", "enabled", defaults.enabled),
         min_slots=int(db.get("min_slots", db.get("minSlots", defaults.min_slots))),
         window_order=order or defaults.window_order,
+        large_mosaic_min_slots=int(
+            db.get("large_mosaic_min_slots", db.get("largeMosaicMinSlots", defaults.large_mosaic_min_slots))
+        ),
+        max_per_template_per_trip=int(
+            db.get(
+                "max_per_template_per_trip",
+                db.get("maxPerTemplatePerTrip", defaults.max_per_template_per_trip),
+            )
+        ),
+        max_large_mosaic_per_chapter=int(
+            db.get(
+                "max_large_mosaic_per_chapter",
+                db.get("maxLargeMosaicPerChapter", defaults.max_large_mosaic_per_chapter),
+            )
+        ),
     )
 
 

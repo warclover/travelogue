@@ -121,6 +121,20 @@ def _segments_in_chunk(seg: list[str], start: int, end: int) -> list[str]:
     return seen
 
 
+def effective_balance_min_size(
+    buckets: list[list[str]],
+    *,
+    min_bucket_size: int,
+    balance_ratio: float,
+) -> int:
+    """Adaptive floor: merge day buckets below max(min_size, ratio × average)."""
+    if not buckets:
+        return min_bucket_size
+    total = sum(len(b) for b in buckets)
+    avg = total / len(buckets)
+    return max(min_bucket_size, int(avg * balance_ratio))
+
+
 def normalize_bucket_counts(
     buckets: list[list[str]],
     segment_ids: list[str] | None = None,
@@ -128,6 +142,8 @@ def normalize_bucket_counts(
     min_chapters: int | None = None,
     max_chapters: int | None = None,
     min_bucket_size: int = 3,
+    chapter_balance_enabled: bool = True,
+    chapter_balance_ratio: float = 0.55,
 ) -> NormalizedBuckets:
     """Merge day buckets to fit manifest chapter limits; preserve segment metadata."""
     from travelogue.services.manifest_limits import chapter_limits
@@ -149,8 +165,17 @@ def normalize_bucket_counts(
     if n > max_c:
         out, seg, seg_all = _merge_adjacent_to_chapter_limit(out, seg, seg_all, max_c)
 
+    merge_min = (
+        effective_balance_min_size(
+            out,
+            min_bucket_size=min_bucket_size,
+            balance_ratio=chapter_balance_ratio,
+        )
+        if chapter_balance_enabled
+        else min_bucket_size
+    )
     out, seg, seg_all = merge_small_buckets_with_segments(
-        out, seg, seg_all, min_size=min_bucket_size
+        out, seg, seg_all, min_size=merge_min
     )
 
     if len(out) < min_c:
@@ -274,6 +299,8 @@ def group_assets_by_segments(
     segment_gap_days: int = 14,
     city_gap_days: int = 3,
     min_bucket_size: int = 3,
+    chapter_balance_enabled: bool = True,
+    chapter_balance_ratio: float = 0.55,
 ) -> tuple[list[list[str]], list[str], list[list[str]], list]:
     """Segment cluster → per-segment day buckets → flat chapter bucket list."""
     places = meta.get("places") or []
@@ -310,6 +337,8 @@ def group_assets_by_segments(
         all_buckets,
         bucket_segment_ids,
         min_bucket_size=min_bucket_size,
+        chapter_balance_enabled=chapter_balance_enabled,
+        chapter_balance_ratio=chapter_balance_ratio,
     )
     sort_buckets_in_place(norm.buckets, by_id)
     return norm.buckets, norm.primary_segment_ids, norm.segment_ids_per_bucket, segments

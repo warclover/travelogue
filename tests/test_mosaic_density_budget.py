@@ -18,6 +18,7 @@ from travelogue.curation.screen_layout_state import (
     ScreenLayoutPlannerState,
     dense_collage_limits_for_trip,
     is_dense_collage_pattern,
+    is_large_mosaic_pattern,
 )
 
 
@@ -78,7 +79,12 @@ def test_planner_state_dense_max_cap() -> None:
     assert not st.can_emit_pattern("screen-mosaic-5-main-hero-plus-4")
 
 
-def test_balanced_window_order_prefers_five_four_six() -> None:
+def test_balanced_window_order_prefers_five_four_six(monkeypatch) -> None:
+    base = get_config()
+    layout = replace(base.layout, template_engine=replace(base.layout.template_engine, max_mosaic_slots=9))
+    import travelogue.config as config_mod
+
+    monkeypatch.setattr(config_mod, "get_config", lambda: replace(base, layout=layout))
     cfg = MosaicConfig(
         enabled=True,
         enabled_window_sizes=(4, 5, 6),
@@ -87,7 +93,12 @@ def test_balanced_window_order_prefers_five_four_six() -> None:
     assert ordered_mosaic_window_sizes(cfg, density="balanced") == (5, 4, 6)
 
 
-def test_density_budget_off_falls_back_to_largest_first() -> None:
+def test_density_budget_off_falls_back_to_largest_first(monkeypatch) -> None:
+    base = get_config()
+    layout = replace(base.layout, template_engine=replace(base.layout.template_engine, max_mosaic_slots=9))
+    import travelogue.config as config_mod
+
+    monkeypatch.setattr(config_mod, "get_config", lambda: replace(base, layout=layout))
     cfg = MosaicConfig(
         enabled=True,
         enabled_window_sizes=(4, 5, 6),
@@ -109,10 +120,47 @@ def test_effective_sizes_respect_max_mosaic_slots(monkeypatch) -> None:
 def test_mosaic_pattern_disabled_above_max_slots(monkeypatch) -> None:
     base = get_config()
     layout = replace(base.layout, template_engine=replace(base.layout.template_engine, max_mosaic_slots=6))
+    mosaic = MosaicConfig(enabled=True, enabled_window_sizes=(4, 5, 6, 9))
+    patched = replace(base, layout=layout, mosaic=mosaic)
 
     monkeypatch.setattr(
         "travelogue.curation.mosaic.lte_adapter.get_config",
-        lambda: replace(base, layout=layout),
+        lambda: patched,
     )
-    assert mosaic_pattern_disabled("screen-landscape-9")
-    assert not mosaic_pattern_disabled("screen-mosaic-5-main-hero-plus-4")
+    assert mosaic_pattern_disabled("screen-landscape-9", cfg=mosaic)
+    assert not mosaic_pattern_disabled("screen-landscape-4", cfg=mosaic)
+
+
+def test_large_mosaic_per_template_trip_cap() -> None:
+    st = ScreenLayoutPlannerState.from_trip_total(120)
+    pid = "screen-landscape-5"
+    assert is_large_mosaic_pattern(pid)
+    for _ in range(2):
+        st.begin_chapter_bucket()
+        assert st.can_use_large_mosaic(pid)
+        st.note_screen(pid)
+    st.begin_chapter_bucket()
+    assert not st.can_use_large_mosaic(pid)
+
+
+def test_large_mosaic_per_chapter_cap() -> None:
+    st = ScreenLayoutPlannerState.from_trip_total(120)
+    a = "screen-landscape-5"
+    b = "screen-landscape-6"
+    st.begin_chapter_bucket()
+    assert st.can_use_large_mosaic_window(5)
+    st.note_screen(a)
+    assert not st.can_use_large_mosaic_window(6)
+    assert not st.can_use_large_mosaic(b)
+    st.begin_chapter_bucket()
+    assert st.can_use_large_mosaic(b)
+
+
+def test_effective_sizes_includes_nine_when_max_slots_nine(monkeypatch) -> None:
+    base = get_config()
+    layout = replace(base.layout, template_engine=replace(base.layout.template_engine, max_mosaic_slots=9))
+    cfg = MosaicConfig(enabled=True, enabled_window_sizes=(4, 5, 6, 9))
+    import travelogue.config as config_mod
+
+    monkeypatch.setattr(config_mod, "get_config", lambda: replace(base, layout=layout))
+    assert effective_mosaic_window_sizes(cfg) == (4, 5, 6, 9)

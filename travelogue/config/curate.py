@@ -28,6 +28,8 @@ class CurateConfig:
     segment_gap_days: int = 14
     city_gap_days: int = 3
     min_bucket_size: int = 3
+    chapter_balance_enabled: bool = True
+    chapter_balance_ratio: float = 0.55
     arc_mode: str = "legacy"  # legacy | v2_adaptive | v2_five_beat (alias)
     arc_flat_variance_threshold: float = 0.08
     featured_weight: float = 1.35
