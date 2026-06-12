@@ -39,6 +39,8 @@ class ChapterPlanContext:
     hero_preface: list[dict] = field(default_factory=list)
     seq: int = 0
     i: int = 0
+    late_chapter_active: bool = False
+    flush_lookahead_portraits: int = 0
 
 
 def build_chapter_plan_context(
@@ -62,6 +64,8 @@ def build_chapter_plan_context(
     enable_food_grid: bool = True,
     mundane_grid_buckets: tuple[str, ...] = ("food",),
     median_sharp: float | None = None,
+    late_chapter_active: bool = False,
+    flush_lookahead_portraits: int = 0,
 ) -> ChapterPlanContext:
     from travelogue.curation.screen_planner import (
         MAX_SLOTS_PER_SCREEN,
@@ -111,6 +115,8 @@ def build_chapter_plan_context(
         include_chapter_hero=include_chapter_hero,
         featured_weight=featured_weight,
         ids=ids,
+        late_chapter_active=late_chapter_active,
+        flush_lookahead_portraits=max(0, int(flush_lookahead_portraits)),
     )
 
 
@@ -697,11 +703,28 @@ def stage_flush_pending_for_other_family(ctx: ChapterPlanContext, fam: str) -> i
 
     R-08 · 朝向 streak 触顶时先出当前横版换气（强制插入），pending 竖版
     留待换气屏之后继续消化。
+
+    Late chapter · 若后续仍有竖版且仅 pending 1 张，look-ahead 暂缓 force flush。
     """
-    from travelogue.curation.screen_planner import _flush_portrait_pending, _make_screen
+    from travelogue.curation.screen_planner import _flush_portrait_pending, _make_screen, _family_kind
 
     if not ctx.pending_portraits:
         return None
+    if (
+        ctx.late_chapter_active
+        and ctx.flush_lookahead_portraits > 0
+        and len(ctx.pending_portraits) == 1
+        and fam == "landscape"
+        and ctx.layout_state is not None
+        and ctx.layout_state.orientation_budget() > 0
+    ):
+        ahead = 0
+        limit = min(len(ctx.ids), ctx.i + ctx.flush_lookahead_portraits)
+        for j in range(ctx.i, limit):
+            if _family_kind(ctx.aspects.get(ctx.ids[j], "square")) == "portrait":
+                ahead += 1
+        if ahead > 0:
+            return None
     if (
         fam == "landscape"
         and ctx.layout_state is not None

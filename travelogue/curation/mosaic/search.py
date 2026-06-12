@@ -13,10 +13,34 @@ from travelogue.curation.layout_scoring import (
     ScoringWeights,
     score_screen_plan,
 )
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.curation.screen_layout_state import (
+    PORTRAIT_PAIR_PATTERN,
+    PORTRAIT_SINGLE_PATTERNS,
+    RhythmRules,
+    ScreenLayoutPlannerState,
+)
 from travelogue.curation.search_budget import SearchBudget
 
 _log = logging.getLogger(__name__)
+
+
+def _late_chapter_beam_adjustment(
+    plan: list[dict],
+    rhythm: RhythmRules,
+    chapter_index: int,
+) -> float:
+    """Bonus/penalty for late-chapter beam picks favouring portrait-2 over singles."""
+    late = rhythm.late_chapter_pairing
+    if not late.is_late_chapter(chapter_index):
+        return 0.0
+    delta = 0.0
+    for sc in plan:
+        pid = str(sc.get("patternId") or "")
+        if pid in PORTRAIT_SINGLE_PATTERNS:
+            delta -= late.beam_portrait_single_penalty
+        elif pid == PORTRAIT_PAIR_PATTERN:
+            delta += late.beam_portrait_pair_bonus
+    return delta
 
 
 def _arc_scoring_active(arc_mode: str) -> bool:
@@ -144,7 +168,9 @@ def replan_day_buckets_beam(
     noted_patterns: list[str] = []
     from travelogue.curation.screen_planner_attach import (
         _carry_inject_ids,
+        _consolidate_adjacent_portrait_singles,
         _flush_portrait_carry_tail,
+        _late_chapter_planning_kwargs,
         assign_bucket_screens_with_portrait_carry,
     )
     from travelogue.curation.curate_scoring import median_sharpness
@@ -166,8 +192,18 @@ def replan_day_buckets_beam(
         filtered = [a for a in bucket if a not in gallery_asset_ids and a not in skip]
         if not filtered:
             continue
-        plan_ids = _carry_inject_ids(filtered, carry, aspects)
-        layout_state.begin_chapter_bucket()
+        plan_ids = _carry_inject_ids(
+            filtered,
+            carry,
+            aspects,
+            late_chapter=layout_state.rhythm.late_chapter_pairing.is_late_chapter(
+                bucket_idx + 1
+            ),
+        )
+        layout_state.begin_chapter_bucket(chapter_index=bucket_idx + 1)
+        late_kwargs = _late_chapter_planning_kwargs(
+            layout_state.rhythm, bucket_idx + 1
+        )
         from travelogue.curation.screen_planner_attach import _preferred_hero_for_bucket
 
         preferred_hero = _preferred_hero_for_bucket(
@@ -189,6 +225,7 @@ def replan_day_buckets_beam(
             mundane_grid_buckets=mundane_grid_buckets,
             beam_width=beam_width,
             budget=budget,
+            **late_kwargs,
         )
         if max_consecutive_same_pattern > 0:
             filtered_plans = [
@@ -224,6 +261,9 @@ def replan_day_buckets_beam(
                 enable_gravity_balance=enable_gravity_balance,
                 incremental=incremental_scoring,
                 incremental_state=incr_state,
+            )
+            legacy_score.total += _late_chapter_beam_adjustment(
+                legacy_plan, layout_state.rhythm, bucket_idx + 1
             )
         best_plan = legacy_plan
         best_score = legacy_score
@@ -282,10 +322,17 @@ def replan_day_buckets_beam(
                     incremental=incremental_scoring,
                     incremental_state=incr_state,
                 )
-                if bd.total > best_score.total + 1e-6:
+                adjusted_total = bd.total + _late_chapter_beam_adjustment(
+                    plan, layout_state.rhythm, bucket_idx + 1
+                )
+                if adjusted_total > best_score.total + 1e-6:
                     best_plan = plan
                     best_score = bd
+                    best_score.total = adjusted_total
                     best_variant = variant_name
+
+        if late_kwargs and best_plan:
+            best_plan = _consolidate_adjacent_portrait_singles(best_plan, aspects)
 
         log = LayoutDecisionLog(chapter_id=f"day-bucket-{bucket_idx + 1}")
         log.add(

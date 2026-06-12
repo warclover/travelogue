@@ -62,6 +62,22 @@ DEFAULT_CONSECUTIVE_BANS: frozenset[tuple[str, str]] = frozenset(
 
 
 @dataclass(frozen=True)
+class LateChapterPairingPolicy:
+    """后几章竖版收束策略（与 config.layout.rhythm.late_chapter_pairing 对齐）。"""
+
+    from_chapter_index: int = 3
+    reset_orientation_streak: bool = True
+    reset_pair_streak: bool = True
+    no_outward_portrait_carry: bool = True
+    flush_lookahead_portraits: int = 3
+    beam_portrait_single_penalty: float = 0.12
+    beam_portrait_pair_bonus: float = 0.06
+
+    def is_late_chapter(self, chapter_index_1based: int) -> bool:
+        return chapter_index_1based >= self.from_chapter_index
+
+
+@dataclass(frozen=True)
 class RhythmRules:
     """节奏阈值集合（默认值 = 历史硬编码，保证输出等价）。
 
@@ -72,6 +88,7 @@ class RhythmRules:
     max_portrait_orientation_streak: int = MAX_PORTRAIT_ORIENTATION_STREAK
     portrait_carry_max_hops: int = 0
     consecutive_bans: frozenset[tuple[str, str]] = DEFAULT_CONSECUTIVE_BANS
+    late_chapter_pairing: LateChapterPairingPolicy = LateChapterPairingPolicy()
 
     @classmethod
     def from_config(cls, cfg=None) -> RhythmRules:
@@ -84,10 +101,31 @@ class RhythmRules:
         rhythm = getattr(getattr(app, "layout", None), "rhythm", None)
         if rhythm is None:
             return cls()
+        late = getattr(rhythm, "late_chapter_pairing", None)
+        late_policy = LateChapterPairingPolicy(
+            from_chapter_index=int(getattr(late, "from_chapter_index", 3)),
+            reset_orientation_streak=bool(
+                getattr(late, "reset_orientation_streak", True)
+            ),
+            reset_pair_streak=bool(getattr(late, "reset_pair_streak", True)),
+            no_outward_portrait_carry=bool(
+                getattr(late, "no_outward_portrait_carry", True)
+            ),
+            flush_lookahead_portraits=int(
+                getattr(late, "flush_lookahead_portraits", 3)
+            ),
+            beam_portrait_single_penalty=float(
+                getattr(late, "beam_portrait_single_penalty", 0.12)
+            ),
+            beam_portrait_pair_bonus=float(
+                getattr(late, "beam_portrait_pair_bonus", 0.06)
+            ),
+        )
         return cls(
             max_portrait_pair_streak=int(rhythm.max_portrait_pair_streak),
             max_portrait_orientation_streak=int(rhythm.max_portrait_orientation_streak),
             portrait_carry_max_hops=int(getattr(rhythm, "portrait_carry_max_hops", 0)),
+            late_chapter_pairing=late_policy,
         )
 
 
@@ -344,9 +382,21 @@ class ScreenLayoutPlannerState:
             return False
         return not self.last_was_dense_collage
 
-    def begin_chapter_bucket(self) -> None:
-        """Reset per-chapter large-mosaic counter at each day/chapter bucket."""
+    def begin_chapter_bucket(
+        self,
+        *,
+        chapter_index: int = 1,
+    ) -> None:
+        """Reset per-chapter counters; optionally soft-reset rhythm streaks in late chapters."""
         self.large_mosaic_chapter_used = 0
+        late = self.rhythm.late_chapter_pairing
+        if not late.is_late_chapter(chapter_index):
+            return
+        if late.reset_orientation_streak:
+            self.portrait_orientation_streak = 0
+        if late.reset_pair_streak and self.last_pattern_id == PORTRAIT_PAIR_PATTERN:
+            self.last_pattern_id = ""
+            self.pattern_streak = 0
 
     def can_use_large_mosaic_window(self, window_size: int) -> bool:
         if window_size < self.large_mosaic_min_slots:

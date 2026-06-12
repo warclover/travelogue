@@ -46,6 +46,8 @@ class ChapterPlanRequest:
     enable_food_grid: bool = True
     mundane_grid_buckets: tuple[str, ...] = ("food",)
     median_sharp: float | None = None
+    late_chapter_active: bool = False
+    flush_lookahead_portraits: int = 0
 
 
 def lse_enabled(cfg: AppConfig | None = None) -> bool:
@@ -213,6 +215,8 @@ def plan_chapter_screens(
         enable_food_grid=food_grid,
         mundane_grid_buckets=ctx.mundane_grid_buckets,
         median_sharp=ctx.median_sharp,
+        late_chapter_active=ctx.late_chapter_active,
+        flush_lookahead_portraits=ctx.flush_lookahead_portraits,
     )
 
 

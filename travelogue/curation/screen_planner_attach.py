@@ -60,10 +60,46 @@ def _portrait_carry_hop_limit(
     rhythm: RhythmRules,
 ) -> int:
     """Max defer hops from ``bucket_index`` (0-based) before force-emit."""
+    chapter_index = bucket_index + 1
+    if (
+        rhythm.late_chapter_pairing.is_late_chapter(chapter_index)
+        and rhythm.late_chapter_pairing.no_outward_portrait_carry
+    ):
+        return 0
     configured = int(getattr(rhythm, "portrait_carry_max_hops", _DEFAULT_PORTRAIT_CARRY_MAX_HOPS))
     if configured > 0:
         return configured
     return max(0, total_buckets - bucket_index - 1)
+
+
+def _longest_portrait_run_insert_at(
+    plan_ids: list[str],
+    aspects: dict[str, AspectKind],
+) -> int:
+    """Index after the longest contiguous std-portrait run (for carry inject)."""
+    from travelogue.curation.screen_planner import _is_std_portrait_id
+
+    best_start = 0
+    best_len = 0
+    i = 0
+    while i < len(plan_ids):
+        if _is_std_portrait_id(plan_ids[i], aspects):
+            j = i
+            while j < len(plan_ids) and _is_std_portrait_id(plan_ids[j], aspects):
+                j += 1
+            run_len = j - i
+            if run_len > best_len:
+                best_len = run_len
+                best_start = i
+            i = j
+        else:
+            i += 1
+    if best_len > 0:
+        return best_start + best_len
+    for idx, aid in enumerate(plan_ids):
+        if _is_std_portrait_id(aid, aspects):
+            return idx + 1
+    return 0
 
 
 def _rebuild_layout_state(
@@ -99,8 +135,10 @@ def _carry_inject_ids(
     plan_ids: list[str],
     carry_ids: list[str],
     aspects: dict[str, AspectKind],
+    *,
+    late_chapter: bool = False,
 ) -> list[str]:
-    """Insert carried lone portraits right after the bucket's first std portrait.
+    """Insert carried lone portraits after the bucket's first or longest portrait run.
 
     Placing them as the *follower* (not the leader) keeps screen->chapter
     assignment (by first slot) anchored on the later bucket, so a carried photo
@@ -112,13 +150,68 @@ def _carry_inject_ids(
     from travelogue.curation.screen_planner import _is_std_portrait_id
 
     seq = list(plan_ids)
-    insert_at = 0
-    for idx, aid in enumerate(seq):
-        if _is_std_portrait_id(aid, aspects):
-            insert_at = idx + 1
-            break
+    insert_at = (
+        _longest_portrait_run_insert_at(seq, aspects)
+        if late_chapter
+        else 0
+    )
+    if not late_chapter:
+        for idx, aid in enumerate(seq):
+            if _is_std_portrait_id(aid, aspects):
+                insert_at = idx + 1
+                break
     seq[insert_at:insert_at] = carry_ids
     return seq
+
+
+def _consolidate_adjacent_portrait_singles(
+    screens: list[dict],
+    aspects: dict[str, AspectKind],
+) -> list[dict]:
+    """Late chapter: merge consecutive portrait-1/tall-1 into portrait-2."""
+    from travelogue.curation.screen_planner import _make_screen
+
+    single = frozenset({"screen-portrait-1", "screen-tall-1"})
+    out: list[dict] = []
+    i = 0
+    while i < len(screens):
+        sc = screens[i]
+        pid = str(sc.get("patternId") or "")
+        if pid in single and i + 1 < len(screens):
+            nxt = screens[i + 1]
+            npid = str(nxt.get("patternId") or "")
+            if npid in single:
+                slots1 = sc.get("slots") or []
+                slots2 = nxt.get("slots") or []
+                if len(slots1) == 1 and len(slots2) == 1:
+                    aids = [slots1[0]["assetId"], slots2[0]["assetId"]]
+                    out.append(
+                        _make_screen(
+                            "screen-portrait-2",
+                            aids,
+                            screen_id="",
+                            aspects=aspects,
+                        )
+                    )
+                    i += 2
+                    continue
+        out.append(sc)
+        i += 1
+    return out
+
+
+def _late_chapter_planning_kwargs(
+    rhythm: RhythmRules,
+    chapter_index: int,
+) -> dict[str, object]:
+    """Kwargs for plan_chapter_screens when bucket is in the late-chapter zone."""
+    late = rhythm.late_chapter_pairing
+    if not late.is_late_chapter(chapter_index):
+        return {}
+    return {
+        "late_chapter_active": True,
+        "flush_lookahead_portraits": late.flush_lookahead_portraits,
+    }
 
 
 def assign_bucket_screens_with_portrait_carry(
@@ -235,6 +328,9 @@ def _flush_portrait_carry_tail(
     """
     if not carry:
         return
+    late_kwargs = _late_chapter_planning_kwargs(
+        layout_state.rhythm, layout_state.rhythm.late_chapter_pairing.from_chapter_index
+    )
     tail_screens = plan_chapter_screens(
         ChapterPlanRequest(
             carry,
@@ -251,9 +347,12 @@ def _flush_portrait_carry_tail(
             featured_weight=featured_weight,
             enable_food_grid=enable_food_grid,
             mundane_grid_buckets=mundane_grid_buckets,
+            **late_kwargs,
         ),
         cfg=cfg,
     )
+    if late_kwargs:
+        tail_screens = _consolidate_adjacent_portrait_singles(tail_screens, aspects)
     for sc in tail_screens:
         slots = sc.get("slots") or []
         if not slots:
@@ -414,8 +513,18 @@ def attach_screens_day_buckets(
                 )
                 begin_chapter_highlight_windows(windows)
                 highlight_active = True
-        plan_ids = _carry_inject_ids(bucket, carry, aspects)
-        layout_state.begin_chapter_bucket()
+        plan_ids = _carry_inject_ids(
+            bucket,
+            carry,
+            aspects,
+            late_chapter=layout_state.rhythm.late_chapter_pairing.is_late_chapter(
+                bucket_idx + 1
+            ),
+        )
+        layout_state.begin_chapter_bucket(chapter_index=bucket_idx + 1)
+        late_kwargs = _late_chapter_planning_kwargs(
+            layout_state.rhythm, bucket_idx + 1
+        )
         try:
             bucket_screens = plan_chapter_screens(
                 ChapterPlanRequest(
@@ -434,6 +543,7 @@ def attach_screens_day_buckets(
                     featured_weight=featured_weight,
                     enable_food_grid=enable_food_grid,
                     mundane_grid_buckets=mundane_grid_buckets,
+                    **late_kwargs,
                 ),
                 cfg=cfg,
             )
@@ -444,6 +554,10 @@ def attach_screens_day_buckets(
                 )
 
                 clear_chapter_highlight_windows()
+        if late_kwargs:
+            bucket_screens = _consolidate_adjacent_portrait_singles(
+                bucket_screens, aspects
+            )
         carry, carry_age, layout_state = assign_bucket_screens_with_portrait_carry(
             bucket_screens,
             bucket_idx=bucket_idx,

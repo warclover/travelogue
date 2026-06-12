@@ -51,6 +51,19 @@ class LayoutFeedbackConfig:
 
 
 @dataclass
+class LayoutLateChapterPairingConfig:
+    """后几章竖版收束：前几章维持 defer/carry  outward，后章加强成对。"""
+
+    from_chapter_index: int = 3  # 1-based · 含第 3 章
+    reset_orientation_streak: bool = True
+    reset_pair_streak: bool = True
+    no_outward_portrait_carry: bool = True
+    flush_lookahead_portraits: int = 3  # 0 = 关闭章内 look-ahead
+    beam_portrait_single_penalty: float = 0.12
+    beam_portrait_pair_bonus: float = 0.06
+
+
+@dataclass
 class LayoutRhythmConfig:
     """排版规则优化 v0.5 · 节奏阈值（G-07 可配置；默认 = 规划器既有硬编码）。
 
@@ -62,6 +75,9 @@ class LayoutRhythmConfig:
     max_portrait_orientation_streak: int = 6  # R-08 · 全竖版屏朝向连续上限
     portrait_carry_max_hops: int = 0  # 0 = auto · 可顺延至后续全部章节
     post_check_mode: str = "log"  # log | enforce（OQ-09=B 渐进；CI 断言见 tests/test_rhythm_ci_gate.py）
+    late_chapter_pairing: LayoutLateChapterPairingConfig = field(
+        default_factory=LayoutLateChapterPairingConfig
+    )
 
 
 @dataclass
@@ -208,11 +224,48 @@ def layout_template_engine_from_dict(raw: dict[str, Any]) -> LayoutTemplateEngin
     )
 
 
+def layout_late_chapter_pairing_from_dict(
+    raw: dict[str, Any] | None,
+) -> LayoutLateChapterPairingConfig:
+    defaults = LayoutLateChapterPairingConfig()
+    if not raw:
+        return defaults
+    return LayoutLateChapterPairingConfig(
+        from_chapter_index=int(
+            raw.get("from_chapter_index", defaults.from_chapter_index)
+        ),
+        reset_orientation_streak=bool(
+            raw.get("reset_orientation_streak", defaults.reset_orientation_streak)
+        ),
+        reset_pair_streak=bool(
+            raw.get("reset_pair_streak", defaults.reset_pair_streak)
+        ),
+        no_outward_portrait_carry=bool(
+            raw.get("no_outward_portrait_carry", defaults.no_outward_portrait_carry)
+        ),
+        flush_lookahead_portraits=int(
+            raw.get("flush_lookahead_portraits", defaults.flush_lookahead_portraits)
+        ),
+        beam_portrait_single_penalty=float(
+            raw.get("beam_portrait_single_penalty", defaults.beam_portrait_single_penalty)
+        ),
+        beam_portrait_pair_bonus=float(
+            raw.get("beam_portrait_pair_bonus", defaults.beam_portrait_pair_bonus)
+        ),
+    )
+
+
 def layout_rhythm_from_dict(raw: dict[str, Any]) -> LayoutRhythmConfig:
     defaults = LayoutRhythmConfig()
     mode = str(raw.get("post_check_mode", defaults.post_check_mode)).strip().lower()
     if mode not in ("log", "enforce"):
         mode = defaults.post_check_mode
+    late_raw = raw.get("late_chapter_pairing")
+    late = (
+        layout_late_chapter_pairing_from_dict(late_raw)
+        if isinstance(late_raw, dict)
+        else defaults.late_chapter_pairing
+    )
     return LayoutRhythmConfig(
         max_portrait_pair_streak=int(
             raw.get("max_portrait_pair_streak", defaults.max_portrait_pair_streak)
@@ -230,6 +283,7 @@ def layout_rhythm_from_dict(raw: dict[str, Any]) -> LayoutRhythmConfig:
         portrait_carry_max_hops=int(
             raw.get("portrait_carry_max_hops", defaults.portrait_carry_max_hops)
         ),
+        late_chapter_pairing=late,
     )
 
 

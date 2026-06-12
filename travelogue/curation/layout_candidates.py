@@ -72,6 +72,8 @@ def generate_day_bucket_candidates(
     mundane_grid_buckets: tuple[str, ...] = ("food",),
     beam_width: int = 3,
     budget: SearchBudget | None = None,
+    late_chapter_active: bool = False,
+    flush_lookahead_portraits: int = 0,
 ) -> list[tuple[str, list[dict]]]:
     """Return up to beam_width distinct (variant_name, screen_plan) pairs for one day bucket."""
     cap = beam_width
@@ -88,6 +90,8 @@ def generate_day_bucket_candidates(
         trip_photo_total=trip_photo_total,
         enable_food_grid=enable_food_grid,
         mundane_grid_buckets=mundane_grid_buckets,
+        late_chapter_active=late_chapter_active,
+        flush_lookahead_portraits=flush_lookahead_portraits,
     )
     has_mosaic = bucket_has_mosaic_window(
         bucket,

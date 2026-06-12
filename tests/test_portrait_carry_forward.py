@@ -162,6 +162,21 @@ def test_featured_lone_portrait_is_not_carried() -> None:
 
 def test_lone_portraits_pair_across_many_chapters() -> None:
     """Auto hop limit (0) carries through all remaining chapters before tail single."""
+    from travelogue.config import AppConfig
+    from travelogue.config.layout import (
+        LayoutConfig,
+        LayoutLateChapterPairingConfig,
+        LayoutRhythmConfig,
+    )
+
+    cfg = AppConfig()
+    cfg.layout = LayoutConfig(
+        rhythm=LayoutRhythmConfig(
+            late_chapter_pairing=LayoutLateChapterPairingConfig(
+                from_chapter_index=999,
+            )
+        )
+    )
     ids = [f"p{i}" for i in range(5)]
     chapters = [_chapter(f"ch-{i}", [pid]) for i, pid in enumerate(ids)]
     aspects = {pid: "portrait" for pid in ids}
@@ -171,6 +186,7 @@ def test_lone_portraits_pair_across_many_chapters() -> None:
         aspects,
         plan_scope="day",
         day_buckets=[[pid] for pid in ids],
+        cfg=cfg,
     )
 
     patterns = _patterns(out)

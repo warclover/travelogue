@@ -1252,6 +1252,8 @@ def plan_screens_for_chapter(
     enable_food_grid: bool = True,
     mundane_grid_buckets: tuple[str, ...] = ("food",),
     median_sharp: float | None = None,
+    late_chapter_active: bool = False,
+    flush_lookahead_portraits: int = 0,
 ) -> list[dict]:
     """
     Map ordered asset ids → screens[] (one pattern per screen; reset after each screen).
@@ -1281,6 +1283,8 @@ def plan_screens_for_chapter(
         enable_food_grid=enable_food_grid,
         mundane_grid_buckets=mundane_grid_buckets,
         median_sharp=median_sharp,
+        late_chapter_active=late_chapter_active,
+        flush_lookahead_portraits=flush_lookahead_portraits,
     ).plan()
 
 
