@@ -9,12 +9,12 @@
           "slotAssetIds": ["l1"]
         },
         {
-          "patternId": "screen-landscape-6",
-          "slotAssetIds": ["l2", "l3", "l4", "l5", "l6", "l7"]
+          "patternId": "screen-landscape-4",
+          "slotAssetIds": ["l2", "l3", "l4", "l5"]
         },
         {
-          "patternId": "screen-landscape-1",
-          "slotAssetIds": ["l8"]
+          "patternId": "screen-landscape-3",
+          "slotAssetIds": ["l6", "l7", "l8"]
         },
         {
           "patternId": "screen-landscape-1",

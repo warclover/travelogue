@@ -416,6 +416,9 @@ def try_landscape_run(ctx: ChapterPlanContext) -> int | None:
     """2–3 consecutive landscapes → single landscape-1 screens each."""
     from travelogue.curation.screen_planner import _make_screen, _run_length
 
+    if getattr(ctx.layout_state, "layout_density", "balanced") == "collage_first":
+        return None
+
     fam, run_len = _run_length(
         ctx.ids[ctx.i :], ctx.aspects, assets_map=ctx.assets_map
     )

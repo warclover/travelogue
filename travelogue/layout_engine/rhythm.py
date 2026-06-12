@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from travelogue.curation.layout_density import LayoutDensity, LayoutDensityParams
 from travelogue.curation.screen_layout_state import (
     DEFAULT_CONSECUTIVE_BANS,
@@ -99,16 +101,22 @@ def layout_state_from_pack(
     density: LayoutDensity | None = None,
     density_params: LayoutDensityParams | None = None,
 ) -> ScreenLayoutPlannerState:
-    lo, hi = nine_grid_limits_for_trip_from_pack(total_photos, pack)
+    """Build planner state from pack rhythm + config-path P21 quotas (dense/large mosaic)."""
     params = density_params or LayoutDensityParams(density=density or "balanced")
+    rhythm = rhythm_rules_from_pack(pack)
+    state = ScreenLayoutPlannerState.from_trip_total(
+        total_photos,
+        density_params=params,
+        rhythm=rhythm,
+    )
+    lo, hi = nine_grid_limits_for_trip_from_pack(total_photos, pack)
     lo, hi = params.adjust_nine_limits(lo, hi)
-    rhythm = pack.raw.get("rhythm") or {}
-    pg8_min = int(rhythm.get("portrait_grid8_min_photos", 50))
+    rhythm_section = pack.raw.get("rhythm") or {}
+    pg8_min = int(rhythm_section.get("portrait_grid8_min_photos", 50))
     pg8_max = portrait_grid8_max_for_trip(total_photos) if total_photos > pg8_min else 0
-    return ScreenLayoutPlannerState(
+    return replace(
+        state,
         nine_min=lo,
         nine_max=hi,
         portrait_grid8_max=pg8_max,
-        layout_density=params.density,
-        rhythm=rhythm_rules_from_pack(pack),
     )

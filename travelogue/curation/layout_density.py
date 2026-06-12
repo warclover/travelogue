@@ -73,6 +73,8 @@ class LayoutDensityParams:
             return dense_min, max(0, int(math.floor(dense_max * 0.35)))
         cap = max(dense_max, (total_photos // 4) if total_photos > 0 else dense_max)
         new_max = min(int(math.ceil(dense_max * 1.15)), cap) if dense_max > 0 else dense_max
+        if MIN_PHOTOS_COLLAGE_FULL_EFFECT <= total_photos <= 50:
+            new_max = max(new_max, 3)
         return dense_min, new_max
 
 

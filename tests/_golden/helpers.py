@@ -213,12 +213,49 @@ def _mosaic_cfg_for_golden():
         mosaic=replace(
             base.mosaic,
             enabled=True,
-            enabled_window_sizes=(3, 4, 5, 6, 8, 9),
+            enabled_window_sizes=(4, 5, 6, 9),
             unified_mode=True,
             scorer_version="p15-s2",
             min_candidate_score=0.0,
         ),
     )
+
+
+def _lte_pattern_config():
+    """Undisable template_engine overrides (same intent as ``lte_pattern_enabled`` fixture)."""
+    base = get_config()
+    te = base.layout.template_engine
+    return replace(
+        base,
+        layout=replace(base.layout, template_engine=replace(te, overrides_disable=())),
+    )
+
+
+def build_mosaic_replan_chapter(
+    *,
+    trip_photo_total: int = 40,
+) -> tuple[list[dict], dict[str, str], dict[str, dict], Any]:
+    """Single 5-slot MCS screen for replan_screen tests (P21 window sizes)."""
+    from travelogue.config.runtime import config_override
+    from travelogue.curation.mosaic.compose import pick_best_five_window
+
+    ids, aspects_map, assets_map = build_mosaic_five_2p3l_window()
+    mosaic_cfg = _mosaic_cfg_for_golden().mosaic
+    aspects = {aid: aspects_map[aid] for aid in ids}
+    with config_override(_lte_pattern_config()):
+        pick = pick_best_five_window(
+            ids,
+            aspects,
+            assets_map,
+            cfg=mosaic_cfg,
+            trip_photo_total=trip_photo_total,
+        )
+    if not pick.screen:
+        raise RuntimeError("pick_best_five_window returned no screen for replan fixture")
+    screen = dict(pick.screen)
+    screen["screenId"] = "ch-01-sc-01"
+    chapters = [{"id": "ch-01", "patternId": "open", "screens": [screen]}]
+    return chapters, aspects, assets_map, mosaic_cfg
 
 
 def plan_mosaic_screens(

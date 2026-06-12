@@ -91,7 +91,7 @@ maybe_replan_chapters
 | `scorer_version` | `"p15-s2"` | `algorithm_version` 引用 | **是** |
 | `deterministic_strict` | `true` | `search` / MCS 标志 | **是** |
 | `min_candidate_score` | `0.35` | `search.min_candidate_score` | **是** |
-| `enabled_window_sizes` | `[3,4,5,6,8,9]` | `planning.stages.mosaic.enabled_window_sizes` | **是** |
+| `enabled_window_sizes` | `[4,5,6,9]`（P21 默认；legacy 回滚见 PRD-PHASE21 §8） | `planning.stages.mosaic.enabled_window_sizes` | **是** |
 | `unified_mode` | `true` | MCS 行为（非 YAML 草案字段） | **是** |
 | `fallback_to_legacy` | `true` | `self_heal` 邻域 | **是** |
 | `self_heal.enabled` | `true` | `self_heal.enabled` | **是** |
@@ -179,7 +179,7 @@ maybe_replan_chapters
 | 7 | `mosaic.weights` | `scoring_profiles.default.weights` | 见 §3.2 | **活跃** | parity 核心 |
 | 8 | `mosaic.penalties` | `scoring_profiles.default.penalties` | 见 §3.2 | **活跃** | |
 | 9 | `mosaic.min_candidate_score` | `search.min_candidate_score` | `0.35` | **活跃** | |
-| 10 | `mosaic.enabled_window_sizes` | `planning.stages.mosaic.enabled_window_sizes` | `[3,4,5,6,8,9]` | **活跃** | |
+| 10 | `mosaic.enabled_window_sizes` | `planning.stages.mosaic.enabled_window_sizes` | `[4,5,6,9]` | **活跃** | P21 对齐 |
 | 11 | `mosaic.self_heal.*` | `self_heal.*` | allow_drop=false | **活跃** | |
 | 12 | `layout.screen_plan_scope` | `planning.screen_plan_scope` | `day` | **活跃** | |
 | 13 | `layout.mixed_proximity_seconds` | `planning.mixed_proximity_seconds` | `12` | **活跃** | |

@@ -161,6 +161,14 @@ def observe_trip(
         dogfood.get("face_intact_delta_pp"),
         probes,
     )
+    probe16 = probes.get("AC-P17-16") or {}
+    face_baseline = base_metrics.get("layout.mixed.face_intact_rate")
+    if face_baseline is not None:
+        face_metric_source = "curate_mixed_screens"
+    elif probe16.get("measurable"):
+        face_metric_source = "ac_p17_16_probe"
+    else:
+        face_metric_source = None
 
     return {
         "tripId": trip_id,
@@ -169,9 +177,10 @@ def observe_trip(
         "changedCount": (report.get("diff") or {}).get("changedCount"),
         "baselineMetrics": base_metrics,
         "candidateMetrics": cand_metrics,
-        "faceIntactBaseline": base_metrics.get("layout.mixed.face_intact_rate"),
+        "faceIntactBaseline": face_baseline,
         "faceIntactCandidate": cand_metrics.get("layout.mixed.face_intact_rate"),
         "faceIntactDeltaPp": face_delta_pp,
+        "faceMetricSource": face_metric_source,
         "capabilityProbes": {
             ac_id: {
                 "passed": (probes.get(ac_id) or {}).get("passed"),

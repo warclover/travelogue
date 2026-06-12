@@ -5,34 +5,27 @@ from __future__ import annotations
 import pytest
 
 from tests._golden.helpers import (
-    build_mosaic_eligible_trip,
+    _mosaic_cfg_for_golden,
     build_mosaic_portrait3_trip,
     build_mosaic_portrait4_trip,
+    build_mosaic_replan_chapter,
     plan_mosaic_screens,
 )
-from travelogue.config import get_config
 from travelogue.curation.chapter_items import collect_screen_asset_ids
 from travelogue.curation.longshot_filter import BREATH_PATTERN
 from travelogue.curation.mosaic.candidates import ScreenCandidate
 from travelogue.curation.mosaic.replan import ReplanError, replan_screen
 
+pytestmark = pytest.mark.usefixtures("lte_pattern_enabled")
+
 
 def _chapters_with_aspects():
-    buckets, aspects_map, assets = build_mosaic_eligible_trip()
-    aspects = {aid: aspects_map[aid] for aid in buckets[0]}
-    assets_map = {a["id"]: a for a in assets}
-    chapters = plan_mosaic_screens(buckets[:1], aspects_map, assets)
-    screen = next(
-        s
-        for s in chapters[0]["screens"]
-        if len(s.get("slots") or []) >= 3
-    )
-    chapters[0]["screens"] = [screen]
-    return chapters, aspects, assets_map
+    chapters, aspects, assets_map, _mosaic_cfg = build_mosaic_replan_chapter()
+    return chapters, aspects, assets_map, _mosaic_cfg
 
 
 def test_replan_screen_alt_topk_changes_pattern() -> None:
-    chapters, aspects, assets_map = _chapters_with_aspects()
+    chapters, aspects, assets_map, mosaic_cfg = _chapters_with_aspects()
     screen = chapters[0]["screens"][0]
     sid = screen["screenId"]
     before_pid = screen["patternId"]
@@ -44,7 +37,7 @@ def test_replan_screen_alt_topk_changes_pattern() -> None:
         top_k=3,
         aspects=aspects,
         assets_map=assets_map,
-        cfg=get_config().mosaic,
+        cfg=mosaic_cfg,
     )
     assert result["applied"] is True
     assert result["itemsSynced"] is True
@@ -55,7 +48,7 @@ def test_replan_screen_alt_topk_changes_pattern() -> None:
 
 
 def test_replan_alt_topk_picks_second_rank_when_best_matches_current(monkeypatch) -> None:
-    chapters, aspects, assets_map = _chapters_with_aspects()
+    chapters, aspects, assets_map, mosaic_cfg = _chapters_with_aspects()
     screen = chapters[0]["screens"][0]
     sid = screen["screenId"]
     asset_ids = [sl["assetId"] for sl in screen["slots"]]
@@ -100,6 +93,7 @@ def test_replan_alt_topk_picks_second_rank_when_best_matches_current(monkeypatch
         top_k=3,
         aspects=aspects,
         assets_map=assets_map,
+        cfg=mosaic_cfg,
     )
     assert result["applied"] is True
     assert result["reason"] == "alt_topk"
@@ -110,14 +104,16 @@ def test_replan_alt_topk_picks_second_rank_when_best_matches_current(monkeypatch
 def test_replan_screen_syncs_chapter_items() -> None:
     from travelogue.curation.chapter_items import items_from_screens
 
-    chapters, aspects, assets_map = _chapters_with_aspects()
+    chapters, aspects, assets_map, mosaic_cfg = _chapters_with_aspects()
     sid = chapters[0]["screens"][0]["screenId"]
     replan_screen(
         chapters,
         sid,
-        strategy="legacy",
+        strategy="alt_topk",
+        top_k=3,
         aspects=aspects,
         assets_map=assets_map,
+        cfg=mosaic_cfg,
     )
     expected_items = items_from_screens(chapters[0])
     assert chapters[0].get("items") == expected_items
@@ -139,6 +135,7 @@ def test_replan_screen_legacy_builds_screen() -> None:
         strategy="legacy",
         aspects=aspects,
         assets_map=assets_map,
+        cfg=_mosaic_cfg_for_golden().mosaic,
     )
     assert result["applied"] is True
     assert result["reason"] == "legacy"
@@ -146,14 +143,14 @@ def test_replan_screen_legacy_builds_screen() -> None:
 
 
 def test_replan_screen_missing_context_raises() -> None:
-    chapters, _, _ = _chapters_with_aspects()
+    chapters, _, _, _ = _chapters_with_aspects()
     sid = chapters[0]["screens"][0]["screenId"]
     with pytest.raises(ReplanError, match="aspects"):
         replan_screen(chapters, sid)
 
 
 def test_replan_screen_breath_pause_raises() -> None:
-    chapters, aspects, assets_map = _chapters_with_aspects()
+    chapters, aspects, assets_map, _ = _chapters_with_aspects()
     breath = {
         "screenId": "breath-test",
         "patternId": BREATH_PATTERN,
@@ -170,7 +167,7 @@ def test_replan_screen_breath_pause_raises() -> None:
 
 
 def test_replan_screen_unknown_id_raises() -> None:
-    chapters, aspects, assets_map = _chapters_with_aspects()
+    chapters, aspects, assets_map, _ = _chapters_with_aspects()
     with pytest.raises(ReplanError, match="not found"):
         replan_screen(chapters, "missing-screen", aspects=aspects, assets_map=assets_map)
 

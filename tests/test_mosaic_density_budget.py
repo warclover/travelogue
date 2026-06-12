@@ -13,6 +13,7 @@ from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
 from travelogue.curation.mosaic.runtime import (
     effective_mosaic_window_sizes,
     ordered_mosaic_window_sizes,
+    planner_mosaic_window_sizes,
 )
 from travelogue.curation.screen_layout_state import (
     ScreenLayoutPlannerState,
@@ -39,6 +40,19 @@ def test_collage_first_scales_dense_quota_up() -> None:
     params = LayoutDensityParams(density="collage_first")
     _lo, hi = params.adjust_dense_collage_limits(0, 3, total_photos=100)
     assert hi >= 3
+    _lo44, hi44 = params.adjust_dense_collage_limits(0, 1, total_photos=44)
+    assert hi44 >= 3
+
+
+def test_planner_mosaic_window_sizes_append_aux_three_for_density_modes() -> None:
+    cfg = MosaicConfig(
+        enabled=True,
+        enabled_window_sizes=(4, 5, 6, 9),
+        density_budget=MosaicDensityBudgetConfig(enabled=True, window_order=(5, 4, 6, 9)),
+    )
+    assert planner_mosaic_window_sizes(cfg, density="balanced") == (5, 4, 6, 9, 3)
+    assert planner_mosaic_window_sizes(cfg, density="collage_first") == (9, 6, 5, 4, 3)
+    assert planner_mosaic_window_sizes(cfg, density="hero_first") == (9, 6, 5, 4)
 
 
 def test_dense_collage_quota_adjusted_helper() -> None:

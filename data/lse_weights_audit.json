@@ -57,6 +57,64 @@
         "main_ar_ineligible": 0.95
       },
       "recordedAt": "2026-06-10T10:25:46+00:00"
+    },
+    "sha256:e04757b0164d9bf6": {
+      "weightsHash": "sha256:e04757b0164d9bf6",
+      "strategyId": "lse-default-2026-06",
+      "strategyVersion": 2,
+      "algorithmVersion": "p15-s3",
+      "contentHash": "sha256:5ae76ec71492b330",
+      "profileId": "default",
+      "weights": {
+        "aspect_match": 0.2,
+        "sharpness": 0.15,
+        "temporal_coherence": 0.15,
+        "hero_separation": 0.1,
+        "subject_run": 0.1,
+        "layout_rhythm": 0.1,
+        "diversity": 0.1,
+        "category_coherence": 0.1,
+        "cohort_coherence": 0.0
+      },
+      "penalties": {
+        "face_crop": 0.3,
+        "main_quality": 0.25,
+        "duplicate_density": 0.2,
+        "hero_narrow_tiles": 0.35,
+        "hero_slot_aspect": 0.4,
+        "flat_six_grid": 0.35,
+        "main_ar_ineligible": 0.95
+      },
+      "recordedAt": "2026-06-12T07:35:02+00:00"
+    },
+    "sha256:bae97a2890c50422": {
+      "weightsHash": "sha256:bae97a2890c50422",
+      "strategyId": "lse-default-2026-06",
+      "strategyVersion": 3,
+      "algorithmVersion": "p15-s3",
+      "contentHash": "sha256:4ad018e780f46798",
+      "profileId": "default",
+      "weights": {
+        "aspect_match": 0.2,
+        "sharpness": 0.15,
+        "temporal_coherence": 0.15,
+        "hero_separation": 0.1,
+        "subject_run": 0.1,
+        "layout_rhythm": 0.1,
+        "diversity": 0.1,
+        "category_coherence": 0.1,
+        "cohort_coherence": 0.0
+      },
+      "penalties": {
+        "face_crop": 0.3,
+        "main_quality": 0.25,
+        "duplicate_density": 0.2,
+        "hero_narrow_tiles": 0.35,
+        "hero_slot_aspect": 0.4,
+        "flat_six_grid": 0.35,
+        "main_ar_ineligible": 0.95
+      },
+      "recordedAt": "2026-06-12T09:28:10+00:00"
     }
   }
 }

@@ -9,7 +9,11 @@ from typing import TYPE_CHECKING
 from travelogue.config import MosaicConfig
 from travelogue.curation.mosaic.compose import pick_best_window
 from travelogue.curation.mosaic.legacy import append_legacy_window
-from travelogue.curation.mosaic.runtime import effective_mosaic_window_sizes, ordered_mosaic_window_sizes
+from travelogue.curation.mosaic.runtime import (
+    effective_mosaic_window_sizes,
+    planner_mosaic_window_sizes,
+    _DENSITY_AUX_PACK_SIZE,
+)
 
 if TYPE_CHECKING:
     from travelogue.curation.screen_planner_stages import ChapterPlanContext
@@ -289,12 +293,12 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
     remaining = len(ctx.ids) - start
     if density == "collage_first":
         sizes = _collage_size_order(
-            sorted(effective_mosaic_window_sizes(cfg), reverse=True),
+            list(planner_mosaic_window_sizes(cfg, density="collage_first")),
             remaining,
             fit_limit=remaining,
         )
     else:
-        sizes = list(ordered_mosaic_window_sizes(cfg, density=density))
+        sizes = list(planner_mosaic_window_sizes(cfg, density=density))
     sizes = _prioritize_exact_window_fit(sizes, remaining)
     min_dense = cfg.density_budget.min_slots if cfg.density_budget.enabled else 4
     if ctx.layout_state is not None:
@@ -323,6 +327,15 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         if size in (3, 4, 6, 9) and _window_all_std_portrait(
             window, ctx.aspects
         ):
+            continue
+        if (
+            size == _DENSITY_AUX_PACK_SIZE
+            and density in ("balanced", "collage_first")
+        ):
+            from travelogue.curation.mosaic.legacy import append_legacy_window
+
+            if append_legacy_window(ctx, window, size):
+                return size
             continue
         if not window_has_candidates(
             window,

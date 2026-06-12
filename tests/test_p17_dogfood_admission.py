@@ -32,11 +32,17 @@ def test_observe_trip_mixed_scenes_capability_gates(tmp_path: Path) -> None:
 
 
 def test_observe_trip_person_fixture_face_measurable(tmp_path: Path) -> None:
+    """Person fixture: AC-P17-16 via window probe (no full-trip mixed screens by design)."""
     from scripts.phase3_ig2_report import load_fixture_trip
 
     trip = load_fixture_trip("golden-p17-mixed-person")
     out = observe_trip(trip, trip_id="golden-p17-mixed-person", work_dir=tmp_path / "person")
-    assert out.get("faceIntactBaseline") is not None
+    assert out.get("diffRate") == 0.0
+    assert out.get("faceIntactBaseline") is None
+    assert out.get("faceMetricSource") == "ac_p17_16_probe"
+    probes = out.get("capabilityProbes") or {}
+    assert probes.get("AC-P17-16", {}).get("measurable") is True
+    assert probes.get("AC-P17-16", {}).get("passed") is True
     assert (out.get("faceIntactDeltaPp") or 0) >= 3.0
     gates = out.get("gates") or {}
     assert all(gates.get(ac) is not False for ac in ("AC-P17-16", "AC-P17-17", "AC-P17-18"))

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import logging
+from dataclasses import replace
 
 from travelogue.config import AppConfig
 from travelogue.curation.decision_log import LayoutDecisionLog
@@ -227,6 +228,8 @@ def replan_day_buckets_beam(
             budget=budget,
             **late_kwargs,
         )
+        consecutive_filter_bypassed = False
+        filtered_candidate_count: int | None = None
         if max_consecutive_same_pattern > 0:
             filtered_plans = [
                 plan
@@ -236,12 +239,15 @@ def replan_day_buckets_beam(
                     max_streak=max_consecutive_same_pattern,
                 )
             ]
+            filtered_candidate_count = len(filtered_plans)
             if not filtered_plans and candidates:
                 _log.warning(
                     "mosaic.search: no plan satisfies consecutive pattern "
                     "(max_streak=%d); using unfiltered candidates",
                     max_consecutive_same_pattern,
                 )
+                consecutive_filter_bypassed = True
+                fallback_reason = fallback_reason or "CONSECUTIVE_PATTERN_UNSATISFIABLE"
             candidates = filtered_plans or candidates
         legacy_plan = candidates[0][1] if candidates else []
         legacy_sig = _screens_signature([{"screens": legacy_plan}])
@@ -262,9 +268,10 @@ def replan_day_buckets_beam(
                 incremental=incremental_scoring,
                 incremental_state=incr_state,
             )
-            legacy_score.total += _late_chapter_beam_adjustment(
+            legacy_adjusted = legacy_score.total + _late_chapter_beam_adjustment(
                 legacy_plan, layout_state.rhythm, bucket_idx + 1
             )
+            legacy_score = replace(legacy_score, total=legacy_adjusted)
         best_plan = legacy_plan
         best_score = legacy_score
         best_variant = "legacy"
@@ -327,8 +334,7 @@ def replan_day_buckets_beam(
                 )
                 if adjusted_total > best_score.total + 1e-6:
                     best_plan = plan
-                    best_score = bd
-                    best_score.total = adjusted_total
+                    best_score = replace(bd, total=adjusted_total)
                     best_variant = variant_name
 
         if late_kwargs and best_plan:
@@ -347,6 +353,11 @@ def replan_day_buckets_beam(
                 "fallbackUsed": bool(fallback_reason),
                 "fallbackReason": fallback_reason,
                 "plannerPath": "legacy" if legacy_only or fallback_reason else "beam",
+                "consecutivePatternFilterBypassed": consecutive_filter_bypassed,
+                "filteredCandidateCount": filtered_candidate_count,
+                "maxConsecutiveStreak": (
+                    max_consecutive_same_pattern if consecutive_filter_bypassed else None
+                ),
             },
         )
         decision_logs.append(log.to_dict())

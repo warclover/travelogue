@@ -1,14 +1,16 @@
 {
   "schemaVersion": "1",
   "benchmarkId": "p17-golden-metrics-v1",
-  "emittedAt": "2026-06-08T01:39:45+00:00",
-  "commit": "50f51137f8e5271b270d1e2502cedade2ed549c4",
+  "emittedAt": "2026-06-12T09:55:57+00:00",
+  "commit": "bca099bcb354f7c371d24887f6a4c7f9ae7d2213",
   "ac_p17": {
     "AC-P17-16": true,
     "AC-P17-17": true,
-    "AC-P17-18": true,
-    "AC-P17-19": true,
-    "AC-P17-20": true
+    "AC-P17-17b": null,
+    "AC-P17-18": null,
+    "AC-P17-19": null,
+    "AC-P17-20": null,
+    "AC-P17-26": true
   },
   "fixtures": [
     {
@@ -25,19 +27,23 @@
           },
           "baselineMetrics": {
             "layout.mixed.face_intact_rate": null,
-            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.mixed.salient_retention_p50": null,
             "layout.beat.hero_first_screen_rate": 0.6667,
             "layout.tone.adjacent_delta_e_p50": null,
             "layout.chapter.pattern_diversity_p50": 3.0,
-            "layout.segment.same_person_run_p50": null
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": null
           },
           "candidateMetrics": {
             "layout.mixed.face_intact_rate": null,
-            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.mixed.salient_retention_p50": null,
             "layout.beat.hero_first_screen_rate": 0.6667,
             "layout.tone.adjacent_delta_e_p50": null,
             "layout.chapter.pattern_diversity_p50": 3.0,
-            "layout.segment.same_person_run_p50": null
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": null
           },
           "gate": {
             "passed": true,
@@ -71,19 +77,23 @@
           },
           "baselineMetrics": {
             "layout.mixed.face_intact_rate": null,
-            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.mixed.salient_retention_p50": null,
             "layout.beat.hero_first_screen_rate": 0.6667,
             "layout.tone.adjacent_delta_e_p50": null,
             "layout.chapter.pattern_diversity_p50": 3.0,
-            "layout.segment.same_person_run_p50": null
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": null
           },
           "candidateMetrics": {
             "layout.mixed.face_intact_rate": null,
-            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.mixed.salient_retention_p50": null,
             "layout.beat.hero_first_screen_rate": 0.6667,
             "layout.tone.adjacent_delta_e_p50": null,
             "layout.chapter.pattern_diversity_p50": 3.0,
-            "layout.segment.same_person_run_p50": null
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": null
           },
           "gate": {
             "passed": true,
@@ -96,13 +106,27 @@
               "deltaPp": 7.5,
               "beatBiasHits": 1,
               "beatMultiplier": 1.12,
+              "heroQualityP50": 0.5,
               "winnerChanged": false,
               "winnerFlat": "screen-portrait-1",
               "winnerBeat": "screen-portrait-1",
               "probeAssetId": "s1d"
             },
+            "supplementalProbe": {
+              "measurable": true,
+              "passed": true,
+              "heroQualityP50": 0.5,
+              "requiredMin": 0.35,
+              "probeAssetId": "s1d"
+            },
             "curatePassed": false,
-            "probePassed": true
+            "probePassed": true,
+            "AC-P17-17b": {
+              "passed": null,
+              "measurable": false,
+              "baselineQualityP50": 0.5,
+              "candidateQualityP50": 0.5
+            }
           },
           "passed": true,
           "measurable": true
@@ -118,19 +142,23 @@
           },
           "baselineMetrics": {
             "layout.mixed.face_intact_rate": null,
-            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.mixed.salient_retention_p50": null,
             "layout.beat.hero_first_screen_rate": 0.6667,
             "layout.tone.adjacent_delta_e_p50": null,
             "layout.chapter.pattern_diversity_p50": 3.0,
-            "layout.segment.same_person_run_p50": null
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": null
           },
           "candidateMetrics": {
             "layout.mixed.face_intact_rate": null,
-            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.mixed.salient_retention_p50": null,
             "layout.beat.hero_first_screen_rate": 0.6667,
             "layout.tone.adjacent_delta_e_p50": null,
             "layout.chapter.pattern_diversity_p50": 3.0,
-            "layout.segment.same_person_run_p50": null
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": null
           },
           "gate": {
             "passed": true,
@@ -168,25 +196,29 @@
           },
           "baselineMetrics": {
             "layout.mixed.face_intact_rate": null,
-            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.mixed.salient_retention_p50": null,
             "layout.beat.hero_first_screen_rate": 0.6667,
             "layout.tone.adjacent_delta_e_p50": null,
             "layout.chapter.pattern_diversity_p50": 3.0,
-            "layout.segment.same_person_run_p50": null
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": null
           },
           "candidateMetrics": {
             "layout.mixed.face_intact_rate": null,
-            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.mixed.salient_retention_p50": null,
             "layout.beat.hero_first_screen_rate": 0.6667,
             "layout.tone.adjacent_delta_e_p50": null,
             "layout.chapter.pattern_diversity_p50": 3.0,
-            "layout.segment.same_person_run_p50": null
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": null
           },
           "gate": {
             "passed": null,
             "measurable": false,
             "faceDeltaPp": null,
-            "salientDeltaPp": 0.0,
+            "salientDeltaPp": null,
             "requiredPp": 5.0,
             "probe": {
               "measurable": false,
@@ -209,19 +241,23 @@
           },
           "baselineMetrics": {
             "layout.mixed.face_intact_rate": null,
-            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.mixed.salient_retention_p50": null,
             "layout.beat.hero_first_screen_rate": 0.6667,
             "layout.tone.adjacent_delta_e_p50": null,
             "layout.chapter.pattern_diversity_p50": 3.0,
-            "layout.segment.same_person_run_p50": null
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": null
           },
           "candidateMetrics": {
             "layout.mixed.face_intact_rate": null,
-            "layout.mixed.salient_retention_p50": 1.0,
+            "layout.mixed.salient_retention_p50": null,
             "layout.beat.hero_first_screen_rate": 0.6667,
             "layout.tone.adjacent_delta_e_p50": null,
             "layout.chapter.pattern_diversity_p50": 3.0,
-            "layout.segment.same_person_run_p50": null
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": null
           },
           "gate": {
             "passed": null,
@@ -229,6 +265,50 @@
             "baselineP50": null,
             "candidateP50": null,
             "requiredRelative": 1.15,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-26",
+          "fixtureId": "golden-mixed-scenes",
+          "baselineCaps": {
+            "highlight_windows": false
+          },
+          "candidateCaps": {
+            "highlight_windows": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "deltaPp": null,
+            "requiredPp": 8.0,
             "probe": {
               "measurable": false,
               "passed": null
@@ -255,25 +335,29 @@
             "saliency_scoring": true
           },
           "baselineMetrics": {
-            "layout.mixed.face_intact_rate": 1.0,
-            "layout.mixed.salient_retention_p50": 1.0,
-            "layout.beat.hero_first_screen_rate": 0.6667,
-            "layout.tone.adjacent_delta_e_p50": 51.5767,
-            "layout.chapter.pattern_diversity_p50": 5.0,
-            "layout.segment.same_person_run_p50": 1.0
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 50.6684,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
           },
           "candidateMetrics": {
-            "layout.mixed.face_intact_rate": 1.0,
-            "layout.mixed.salient_retention_p50": 1.0,
-            "layout.beat.hero_first_screen_rate": 0.6667,
-            "layout.tone.adjacent_delta_e_p50": 51.5767,
-            "layout.chapter.pattern_diversity_p50": 5.0,
-            "layout.segment.same_person_run_p50": 1.0
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 50.6684,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
           },
           "gate": {
             "passed": true,
-            "measurable": true,
-            "deltaPp": 0.0,
+            "measurable": false,
+            "deltaPp": null,
             "requiredPp": 3.0,
             "probe": {
               "measurable": true,
@@ -285,11 +369,11 @@
               "rankingLiftPp": 12.52,
               "probeAssetId": "d1b00"
             },
-            "curatePassed": false,
+            "curatePassed": null,
             "probePassed": true
           },
           "passed": true,
-          "measurable": true
+          "measurable": false
         },
         {
           "acId": "AC-P17-17",
@@ -301,20 +385,24 @@
             "beat_profile": "classic_magazine"
           },
           "baselineMetrics": {
-            "layout.mixed.face_intact_rate": 1.0,
-            "layout.mixed.salient_retention_p50": 1.0,
-            "layout.beat.hero_first_screen_rate": 0.6667,
-            "layout.tone.adjacent_delta_e_p50": 51.5767,
-            "layout.chapter.pattern_diversity_p50": 5.0,
-            "layout.segment.same_person_run_p50": 1.0
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 50.6684,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
           },
           "candidateMetrics": {
-            "layout.mixed.face_intact_rate": 1.0,
-            "layout.mixed.salient_retention_p50": 1.0,
-            "layout.beat.hero_first_screen_rate": 0.6667,
-            "layout.tone.adjacent_delta_e_p50": 51.5767,
-            "layout.chapter.pattern_diversity_p50": 5.0,
-            "layout.segment.same_person_run_p50": 1.0
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 50.6684,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
           },
           "gate": {
             "passed": true,
@@ -327,13 +415,27 @@
               "deltaPp": 8.27,
               "beatBiasHits": 1,
               "beatMultiplier": 1.12,
+              "heroQualityP50": 0.5,
               "winnerChanged": false,
               "winnerFlat": "screen-portrait-1",
               "winnerBeat": "screen-portrait-1",
               "probeAssetId": "d1b00"
             },
+            "supplementalProbe": {
+              "measurable": true,
+              "passed": true,
+              "heroQualityP50": 0.5,
+              "requiredMin": 0.35,
+              "probeAssetId": "d1b00"
+            },
             "curatePassed": false,
-            "probePassed": true
+            "probePassed": true,
+            "AC-P17-17b": {
+              "passed": null,
+              "measurable": false,
+              "baselineQualityP50": 0.5,
+              "candidateQualityP50": 0.5
+            }
           },
           "passed": true,
           "measurable": true
@@ -348,20 +450,24 @@
             "tone_harmony": true
           },
           "baselineMetrics": {
-            "layout.mixed.face_intact_rate": 1.0,
-            "layout.mixed.salient_retention_p50": 1.0,
-            "layout.beat.hero_first_screen_rate": 0.6667,
-            "layout.tone.adjacent_delta_e_p50": 51.5767,
-            "layout.chapter.pattern_diversity_p50": 5.0,
-            "layout.segment.same_person_run_p50": 1.0
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 50.6684,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
           },
           "candidateMetrics": {
-            "layout.mixed.face_intact_rate": 1.0,
-            "layout.mixed.salient_retention_p50": 1.0,
-            "layout.beat.hero_first_screen_rate": 0.6667,
-            "layout.tone.adjacent_delta_e_p50": 51.5767,
-            "layout.chapter.pattern_diversity_p50": 5.0,
-            "layout.segment.same_person_run_p50": 1.0
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 50.6684,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
           },
           "gate": {
             "passed": true,
@@ -398,40 +504,40 @@
             "quality_unified": true
           },
           "baselineMetrics": {
-            "layout.mixed.face_intact_rate": 1.0,
-            "layout.mixed.salient_retention_p50": 1.0,
-            "layout.beat.hero_first_screen_rate": 0.6667,
-            "layout.tone.adjacent_delta_e_p50": 51.5767,
-            "layout.chapter.pattern_diversity_p50": 5.0,
-            "layout.segment.same_person_run_p50": 1.0
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 50.6684,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
           },
           "candidateMetrics": {
-            "layout.mixed.face_intact_rate": 1.0,
-            "layout.mixed.salient_retention_p50": 1.0,
-            "layout.beat.hero_first_screen_rate": 0.6667,
-            "layout.tone.adjacent_delta_e_p50": 51.7355,
-            "layout.chapter.pattern_diversity_p50": 5.0,
-            "layout.segment.same_person_run_p50": 1.0
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 50.6684,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
           },
           "gate": {
-            "passed": true,
-            "measurable": true,
-            "faceDeltaPp": 0.0,
-            "salientDeltaPp": 0.0,
+            "passed": null,
+            "measurable": false,
+            "faceDeltaPp": null,
+            "salientDeltaPp": null,
             "requiredPp": 5.0,
             "probe": {
-              "measurable": true,
-              "passed": true,
-              "faceDeltaPp": 0.0,
-              "salientDeltaPp": 0.0,
-              "hungarianChanged": true,
-              "salientRetentionDelta": 0.0
+              "measurable": false,
+              "passed": null
             },
-            "curatePassed": false,
-            "probePassed": true
+            "curatePassed": null,
+            "probePassed": null
           },
-          "passed": true,
-          "measurable": true
+          "passed": null,
+          "measurable": false
         },
         {
           "acId": "AC-P17-20",
@@ -443,26 +549,30 @@
             "segment_order_optimizer": true
           },
           "baselineMetrics": {
-            "layout.mixed.face_intact_rate": 1.0,
-            "layout.mixed.salient_retention_p50": 1.0,
-            "layout.beat.hero_first_screen_rate": 0.6667,
-            "layout.tone.adjacent_delta_e_p50": 51.5767,
-            "layout.chapter.pattern_diversity_p50": 5.0,
-            "layout.segment.same_person_run_p50": 1.0
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 50.6684,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
           },
           "candidateMetrics": {
-            "layout.mixed.face_intact_rate": 1.0,
-            "layout.mixed.salient_retention_p50": 1.0,
-            "layout.beat.hero_first_screen_rate": 0.6667,
-            "layout.tone.adjacent_delta_e_p50": 51.5767,
-            "layout.chapter.pattern_diversity_p50": 5.0,
-            "layout.segment.same_person_run_p50": 1.0
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 50.6684,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
           },
           "gate": {
             "passed": true,
-            "measurable": true,
-            "baselineP50": 1.0,
-            "candidateP50": 1.0,
+            "measurable": false,
+            "baselineP50": null,
+            "candidateP50": null,
             "requiredRelative": 1.15,
             "probe": {
               "measurable": true,
@@ -474,8 +584,1244 @@
               "cohesionBaseline": 0.0,
               "cohesionCandidate": 2.0
             },
-            "curatePassed": false,
+            "curatePassed": null,
             "probePassed": true
+          },
+          "passed": true,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-26",
+          "fixtureId": "golden-p17-mixed-person",
+          "baselineCaps": {
+            "highlight_windows": false
+          },
+          "candidateCaps": {
+            "highlight_windows": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 50.6684,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 1.0,
+            "layout.tone.adjacent_delta_e_p50": 50.6684,
+            "layout.chapter.pattern_diversity_p50": 4.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "gate": {
+            "passed": true,
+            "measurable": true,
+            "deltaPp": 50.0,
+            "requiredPp": 8.0,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": true,
+            "probePassed": null
+          },
+          "passed": true,
+          "measurable": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixtureId": "golden-portrait-family",
+      "pairs": [
+        {
+          "acId": "AC-P17-16",
+          "fixtureId": "golden-portrait-family",
+          "baselineCaps": {
+            "saliency_scoring": false
+          },
+          "candidateCaps": {
+            "saliency_scoring": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "gate": {
+            "passed": false,
+            "measurable": false,
+            "deltaPp": null,
+            "requiredPp": 3.0,
+            "probe": {
+              "measurable": true,
+              "passed": false,
+              "faceDeltaPp": 2.72,
+              "salientDeltaPp": 2.72,
+              "rankingGapBaselinePp": 0.0,
+              "rankingGapCandidatePp": 2.72,
+              "rankingLiftPp": 2.72,
+              "probeAssetId": "f1b"
+            },
+            "curatePassed": null,
+            "probePassed": false
+          },
+          "passed": false,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-17",
+          "fixtureId": "golden-portrait-family",
+          "baselineCaps": {
+            "beat_profile": "flat"
+          },
+          "candidateCaps": {
+            "beat_profile": "classic_magazine"
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "gate": {
+            "passed": true,
+            "measurable": true,
+            "deltaPp": 0.0,
+            "requiredPp": 8.0,
+            "probe": {
+              "measurable": true,
+              "passed": true,
+              "deltaPp": 7.5,
+              "beatBiasHits": 1,
+              "beatMultiplier": 1.12,
+              "heroQualityP50": 0.5,
+              "winnerChanged": false,
+              "winnerFlat": "screen-portrait-1",
+              "winnerBeat": "screen-portrait-1",
+              "probeAssetId": "f1b"
+            },
+            "supplementalProbe": {
+              "measurable": true,
+              "passed": true,
+              "heroQualityP50": 0.5,
+              "requiredMin": 0.35,
+              "probeAssetId": "f1b"
+            },
+            "curatePassed": false,
+            "probePassed": true,
+            "AC-P17-17b": {
+              "passed": null,
+              "measurable": false,
+              "baselineQualityP50": null,
+              "candidateQualityP50": null
+            }
+          },
+          "passed": true,
+          "measurable": true
+        },
+        {
+          "acId": "AC-P17-18",
+          "fixtureId": "golden-portrait-family",
+          "baselineCaps": {
+            "tone_harmony": false
+          },
+          "candidateCaps": {
+            "tone_harmony": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "relativeDelta": null,
+            "requiredRelative": -0.1,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-19",
+          "fixtureId": "golden-portrait-family",
+          "baselineCaps": {
+            "hungarian_assignment": false,
+            "quality_unified": false
+          },
+          "candidateCaps": {
+            "hungarian_assignment": true,
+            "quality_unified": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "faceDeltaPp": null,
+            "salientDeltaPp": null,
+            "requiredPp": 5.0,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-20",
+          "fixtureId": "golden-portrait-family",
+          "baselineCaps": {
+            "segment_order_optimizer": false
+          },
+          "candidateCaps": {
+            "segment_order_optimizer": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "baselineP50": null,
+            "candidateP50": null,
+            "requiredRelative": 1.15,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-26",
+          "fixtureId": "golden-portrait-family",
+          "baselineCaps": {
+            "highlight_windows": false
+          },
+          "candidateCaps": {
+            "highlight_windows": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "deltaPp": null,
+            "requiredPp": 8.0,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        }
+      ],
+      "passed": false
+    },
+    {
+      "fixtureId": "golden-portrait-travel",
+      "pairs": [
+        {
+          "acId": "AC-P17-16",
+          "fixtureId": "golden-portrait-travel",
+          "baselineCaps": {
+            "saliency_scoring": false
+          },
+          "candidateCaps": {
+            "saliency_scoring": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "gate": {
+            "passed": false,
+            "measurable": false,
+            "deltaPp": null,
+            "requiredPp": 3.0,
+            "probe": {
+              "measurable": true,
+              "passed": false,
+              "faceDeltaPp": 2.72,
+              "salientDeltaPp": 2.72,
+              "rankingGapBaselinePp": 0.0,
+              "rankingGapCandidatePp": 2.72,
+              "rankingLiftPp": 2.72,
+              "probeAssetId": "t1b"
+            },
+            "curatePassed": null,
+            "probePassed": false
+          },
+          "passed": false,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-17",
+          "fixtureId": "golden-portrait-travel",
+          "baselineCaps": {
+            "beat_profile": "flat"
+          },
+          "candidateCaps": {
+            "beat_profile": "classic_magazine"
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "gate": {
+            "passed": true,
+            "measurable": true,
+            "deltaPp": 0.0,
+            "requiredPp": 8.0,
+            "probe": {
+              "measurable": true,
+              "passed": true,
+              "deltaPp": 7.5,
+              "beatBiasHits": 1,
+              "beatMultiplier": 1.12,
+              "heroQualityP50": 0.5,
+              "winnerChanged": false,
+              "winnerFlat": "screen-portrait-1",
+              "winnerBeat": "screen-portrait-1",
+              "probeAssetId": "t1b"
+            },
+            "supplementalProbe": {
+              "measurable": true,
+              "passed": true,
+              "heroQualityP50": 0.5,
+              "requiredMin": 0.35,
+              "probeAssetId": "t1b"
+            },
+            "curatePassed": false,
+            "probePassed": true,
+            "AC-P17-17b": {
+              "passed": null,
+              "measurable": false,
+              "baselineQualityP50": null,
+              "candidateQualityP50": null
+            }
+          },
+          "passed": true,
+          "measurable": true
+        },
+        {
+          "acId": "AC-P17-18",
+          "fixtureId": "golden-portrait-travel",
+          "baselineCaps": {
+            "tone_harmony": false
+          },
+          "candidateCaps": {
+            "tone_harmony": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "relativeDelta": null,
+            "requiredRelative": -0.1,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-19",
+          "fixtureId": "golden-portrait-travel",
+          "baselineCaps": {
+            "hungarian_assignment": false,
+            "quality_unified": false
+          },
+          "candidateCaps": {
+            "hungarian_assignment": true,
+            "quality_unified": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "faceDeltaPp": null,
+            "salientDeltaPp": null,
+            "requiredPp": 5.0,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-20",
+          "fixtureId": "golden-portrait-travel",
+          "baselineCaps": {
+            "segment_order_optimizer": false
+          },
+          "candidateCaps": {
+            "segment_order_optimizer": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "baselineP50": null,
+            "candidateP50": null,
+            "requiredRelative": 1.15,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-26",
+          "fixtureId": "golden-portrait-travel",
+          "baselineCaps": {
+            "highlight_windows": false
+          },
+          "candidateCaps": {
+            "highlight_windows": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.0,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 3.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": null,
+            "layout.highlight.main_quality_delta_pp": null
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "deltaPp": null,
+            "requiredPp": 8.0,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        }
+      ],
+      "passed": false
+    },
+    {
+      "fixtureId": "golden-landscape-coast",
+      "pairs": [
+        {
+          "acId": "AC-P17-16",
+          "fixtureId": "golden-landscape-coast",
+          "baselineCaps": {
+            "saliency_scoring": false
+          },
+          "candidateCaps": {
+            "saliency_scoring": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "deltaPp": null,
+            "requiredPp": 3.0,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-17",
+          "fixtureId": "golden-landscape-coast",
+          "baselineCaps": {
+            "beat_profile": "flat"
+          },
+          "candidateCaps": {
+            "beat_profile": "classic_magazine"
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "gate": {
+            "passed": true,
+            "measurable": true,
+            "deltaPp": 0.0,
+            "requiredPp": 8.0,
+            "probe": {
+              "measurable": true,
+              "passed": true,
+              "deltaPp": 7.5,
+              "beatBiasHits": 1,
+              "beatMultiplier": 1.12,
+              "heroQualityP50": 0.5,
+              "winnerChanged": false,
+              "winnerFlat": "screen-portrait-1",
+              "winnerBeat": "screen-portrait-1",
+              "probeAssetId": "c1a"
+            },
+            "supplementalProbe": {
+              "measurable": true,
+              "passed": true,
+              "heroQualityP50": 0.5,
+              "requiredMin": 0.35,
+              "probeAssetId": "c1a"
+            },
+            "curatePassed": false,
+            "probePassed": true,
+            "AC-P17-17b": {
+              "passed": null,
+              "measurable": false,
+              "baselineQualityP50": 0.5,
+              "candidateQualityP50": 0.5
+            }
+          },
+          "passed": true,
+          "measurable": true
+        },
+        {
+          "acId": "AC-P17-18",
+          "fixtureId": "golden-landscape-coast",
+          "baselineCaps": {
+            "tone_harmony": false
+          },
+          "candidateCaps": {
+            "tone_harmony": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "relativeDelta": null,
+            "requiredRelative": -0.1,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-19",
+          "fixtureId": "golden-landscape-coast",
+          "baselineCaps": {
+            "hungarian_assignment": false,
+            "quality_unified": false
+          },
+          "candidateCaps": {
+            "hungarian_assignment": true,
+            "quality_unified": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "faceDeltaPp": null,
+            "salientDeltaPp": null,
+            "requiredPp": 5.0,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-20",
+          "fixtureId": "golden-landscape-coast",
+          "baselineCaps": {
+            "segment_order_optimizer": false
+          },
+          "candidateCaps": {
+            "segment_order_optimizer": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "baselineP50": null,
+            "candidateP50": null,
+            "requiredRelative": 1.15,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-26",
+          "fixtureId": "golden-landscape-coast",
+          "baselineCaps": {
+            "highlight_windows": false
+          },
+          "candidateCaps": {
+            "highlight_windows": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "gate": {
+            "passed": true,
+            "measurable": true,
+            "deltaPp": 50.0,
+            "requiredPp": 8.0,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": true,
+            "probePassed": null
+          },
+          "passed": true,
+          "measurable": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixtureId": "golden-landscape-mountain",
+      "pairs": [
+        {
+          "acId": "AC-P17-16",
+          "fixtureId": "golden-landscape-mountain",
+          "baselineCaps": {
+            "saliency_scoring": false
+          },
+          "candidateCaps": {
+            "saliency_scoring": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "deltaPp": null,
+            "requiredPp": 3.0,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-17",
+          "fixtureId": "golden-landscape-mountain",
+          "baselineCaps": {
+            "beat_profile": "flat"
+          },
+          "candidateCaps": {
+            "beat_profile": "classic_magazine"
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "gate": {
+            "passed": true,
+            "measurable": true,
+            "deltaPp": 0.0,
+            "requiredPp": 8.0,
+            "probe": {
+              "measurable": true,
+              "passed": true,
+              "deltaPp": 7.5,
+              "beatBiasHits": 1,
+              "beatMultiplier": 1.12,
+              "heroQualityP50": 0.5,
+              "winnerChanged": false,
+              "winnerFlat": "screen-portrait-1",
+              "winnerBeat": "screen-portrait-1",
+              "probeAssetId": "m1a"
+            },
+            "supplementalProbe": {
+              "measurable": true,
+              "passed": true,
+              "heroQualityP50": 0.5,
+              "requiredMin": 0.35,
+              "probeAssetId": "m1a"
+            },
+            "curatePassed": false,
+            "probePassed": true,
+            "AC-P17-17b": {
+              "passed": null,
+              "measurable": false,
+              "baselineQualityP50": 0.5,
+              "candidateQualityP50": 0.5
+            }
+          },
+          "passed": true,
+          "measurable": true
+        },
+        {
+          "acId": "AC-P17-18",
+          "fixtureId": "golden-landscape-mountain",
+          "baselineCaps": {
+            "tone_harmony": false
+          },
+          "candidateCaps": {
+            "tone_harmony": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "relativeDelta": null,
+            "requiredRelative": -0.1,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-19",
+          "fixtureId": "golden-landscape-mountain",
+          "baselineCaps": {
+            "hungarian_assignment": false,
+            "quality_unified": false
+          },
+          "candidateCaps": {
+            "hungarian_assignment": true,
+            "quality_unified": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "faceDeltaPp": null,
+            "salientDeltaPp": null,
+            "requiredPp": 5.0,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-20",
+          "fixtureId": "golden-landscape-mountain",
+          "baselineCaps": {
+            "segment_order_optimizer": false
+          },
+          "candidateCaps": {
+            "segment_order_optimizer": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "gate": {
+            "passed": null,
+            "measurable": false,
+            "baselineP50": null,
+            "candidateP50": null,
+            "requiredRelative": 1.15,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": null,
+            "probePassed": null
+          },
+          "passed": null,
+          "measurable": false
+        },
+        {
+          "acId": "AC-P17-26",
+          "fixtureId": "golden-landscape-mountain",
+          "baselineCaps": {
+            "highlight_windows": false
+          },
+          "candidateCaps": {
+            "highlight_windows": true
+          },
+          "baselineMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "candidateMetrics": {
+            "layout.mixed.face_intact_rate": null,
+            "layout.mixed.salient_retention_p50": null,
+            "layout.beat.hero_first_screen_rate": 0.6667,
+            "layout.tone.adjacent_delta_e_p50": null,
+            "layout.chapter.pattern_diversity_p50": 2.0,
+            "layout.segment.same_person_run_p50": null,
+            "layout.beat.first_hero_quality_p50": 0.5,
+            "layout.highlight.main_quality_delta_pp": 50.0
+          },
+          "gate": {
+            "passed": true,
+            "measurable": true,
+            "deltaPp": 50.0,
+            "requiredPp": 8.0,
+            "probe": {
+              "measurable": false,
+              "passed": null
+            },
+            "curatePassed": true,
+            "probePassed": null
           },
           "passed": true,
           "measurable": true

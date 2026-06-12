@@ -43,7 +43,7 @@ def test_p17_lse_disabled_matches_baseline_snapshot(
 @pytest.mark.controlled_parity
 @pytest.mark.parametrize("fixture_id", P17_CONTROLLED_PARITY_FIXTURES)
 def test_p17_lse_enabled_pure_convergence(tmp_path: Path, fixture_id: str) -> None:
-    """W1: enabled=true default pack must match P16 screens (no CAP)."""
+    """W1: enabled=true default pack must match MosaicConfig default-path screens (no CAP)."""
     trip = load_fixture_trip(fixture_id)
     baseline = _curate_snapshot(trip, tmp_path / "base", _cfg_for_mode("p3_full"))
     lse_on = _curate_snapshot(trip, tmp_path / "lse_on", _cfg_with_lse(enabled=True))

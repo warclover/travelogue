@@ -167,7 +167,13 @@ def project_beam_bucket(
             "meta": {
                 "source": "beam_bucket",
                 "plannerPath": str(ev.get("plannerPath") or "beam"),
+                "fallbackUsed": bool(ev.get("fallbackUsed")),
                 "fallbackReason": ev.get("fallbackReason"),
+                "consecutivePatternFilterBypassed": ev.get(
+                    "consecutivePatternFilterBypassed"
+                ),
+                "filteredCandidateCount": ev.get("filteredCandidateCount"),
+                "maxConsecutiveStreak": ev.get("maxConsecutiveStreak"),
                 "candidateCount": ev.get("candidateCount"),
                 "emittedAt": ev.get("at") or utc_now_iso(),
             },

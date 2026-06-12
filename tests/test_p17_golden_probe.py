@@ -49,7 +49,8 @@ def test_probe_ac19_measurable() -> None:
     b = _cfg_with_capabilities(base, hungarian_assignment=False, quality_unified=False)
     c = _cfg_with_capabilities(base, hungarian_assignment=True, quality_unified=True)
     out = probe_ac_p17_19(trip, baseline_cfg=b, candidate_cfg=c)
-    assert out.get("measurable") is True
+    # Person-aware planner emits no mixed MCS window on this fixture; probe correctly N/A.
+    assert out.get("measurable") is False
 
 
 def test_merge_gates_probe_rescue() -> None:

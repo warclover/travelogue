@@ -36,6 +36,31 @@ def test_default_pack_mosaic_weights_match_config() -> None:
     assert injected.enabled_window_sizes == baseline.enabled_window_sizes
 
 
+def test_default_pack_layout_state_matches_config_path() -> None:
+    """LSE pack path must inherit P21 dense/large-mosaic quotas from config path."""
+    import travelogue.curation.screen_planner  # noqa: F401
+
+    from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState, RhythmRules
+    from travelogue.layout_engine.adapter import layout_state_for_trip
+
+    cfg = _cfg_lse_on()
+    pack = get_strategy_pack("lse-default-2026-06")
+    total = 100
+    off = ScreenLayoutPlannerState.from_trip_total(
+        total,
+        density="balanced",
+        rhythm=RhythmRules.from_config(cfg),
+    )
+    on = layout_state_for_trip(total, cfg=cfg, density="balanced", pack=pack)
+    assert on.nine_min == off.nine_min
+    assert on.nine_max == off.nine_max
+    assert on.dense_collage_max == off.dense_collage_max
+    assert on.portrait_grid8_max == off.portrait_grid8_max
+    assert on.large_mosaic_min_slots == off.large_mosaic_min_slots
+    assert on.large_mosaic_max_per_template_trip == off.large_mosaic_max_per_template_trip
+    assert on.large_mosaic_max_per_chapter == off.large_mosaic_max_per_chapter
+
+
 def test_mixed_proximity_from_default_pack() -> None:
     cfg = _cfg_lse_on()
     pack = resolve_pack(cfg)

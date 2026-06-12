@@ -1,7 +1,7 @@
 {
   "strategyId": "lse-default-2026-06",
-  "strategyVersion": 2,
+  "strategyVersion": 3,
   "algorithmVersion": "p15-s3",
-  "contentHash": "sha256:5ae76ec71492b330",
-  "notes": "v2: 排版规则优化 PR-6 — rhythm.consecutive_bans 接线 parity 补全（triple/triple、six/six）+ R-06 pattern max_streak + R-08 portrait_orientation_max_streak（AC-P17-13）。"
+  "contentHash": "sha256:4ad018e780f46798",
+  "notes": "v3: P21 对齐 — planning.stages.mosaic.enabled_window_sizes 与 MosaicConfig 默认 [4,5,6,9] 同步；LSE enabled=true 纯收敛基线随 P21 默认路径更新（AC-P17-13）。"
 }
