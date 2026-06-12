@@ -93,6 +93,35 @@ def test_full_frame_render_collage_standard_uses_native_aspect() -> None:
 
 
 @pytest.mark.unit
+def test_full_frame_render_collage_wide_uses_native_aspect() -> None:
+    """Wide-aspect collage (AR≥2) must not shrink via viewport-fit."""
+    assets = {
+        "c1": {
+            "id": "c1",
+            "mediaClass": "collage",
+            "width": 2400,
+            "height": 1178,
+            "nativeWidth": 7044,
+            "nativeHeight": 3456,
+            "displayFile": "assets/c1-w800.webp",
+        }
+    }
+    screen = {
+        "patternId": PATTERN_FULL_FRAME,
+        "slots": [{"assetId": "c1", "slot": 0, "fit": "cover"}],
+    }
+    ctx = build_layout_screen(
+        screen,
+        assets,
+        meta_title="Test",
+        export_layout="web",
+    )
+    assert ctx.get("hasViewportFit") is not True
+    assert "7044 / 3456" in ctx["screenStyle"]
+    assert "--screen-fit-ar:" not in ctx["screenStyle"]
+
+
+@pytest.mark.unit
 def test_full_frame_fits_cover_default() -> None:
     fits = _fits_for_screen(PATTERN_FULL_FRAME, ["a1"], assets_map={"a1": {"width": 1600, "height": 900}})
     assert fits == ["cover"]

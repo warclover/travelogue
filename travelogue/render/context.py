@@ -706,8 +706,9 @@ def build_layout_screen(
         ar = _asset_aspect_ratio_float(first_asset)
         tier = _presentation_tier(ar)
         if fit0 == "cover":
-            # Collage singles: full content-rail width (same weight as landscape-1).
-            if is_collage_asset(first_asset) and tier == "standard":
+            # Collage singles: always full content-rail width (native aspect),
+            # regardless of wide/ultra presentation tier — avoids narrow viewport-fit.
+            if is_collage_asset(first_asset):
                 style_parts_vf = []
                 screen_aspect = _screen_aspect_ratio_css(first_asset)
             else:

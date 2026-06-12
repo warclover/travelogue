@@ -5,6 +5,7 @@ from __future__ import annotations
 from io import BytesIO
 from pathlib import Path
 
+import pytest
 from PIL import Image
 
 from travelogue.curation.media_classify import (
@@ -115,6 +116,18 @@ def test_travel_landscape_not_false_positive_collage(tmp_path: Path) -> None:
     img.save(p, quality=85)
     assert detect_collage_asset(path=p, img=img) is False
     assert classify_media_class(path=p, img=img, date_source="exif") == "photo"
+
+
+def test_demo_style_panorama_not_false_positive_collage() -> None:
+    """Natural wide travel frames (center luminance seam) must stay photo."""
+    root = Path(__file__).resolve().parents[1]
+    for name in ("asset-058.jpg", "asset-059.jpg"):
+        p = root / "trips" / "demo-2025-4" / "source" / name
+        if not p.is_file():
+            pytest.skip(f"missing {p}")
+        img = Image.open(p)
+        assert detect_collage_asset(path=p, img=img) is False
+        assert classify_media_class(path=p, img=img, date_source="exif") == "photo"
 
 
 def test_exif_software_hint_classifies_collage(tmp_path: Path) -> None:

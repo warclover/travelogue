@@ -197,6 +197,84 @@ def _has_three_column_seams(seams: list[int], span: int) -> bool:
     return abs(a - 1 / 3) <= 0.10 and abs(b - 2 / 3) <= 0.10
 
 
+def _sharp_vertical_collage_gutter(
+    img: Image.Image, seam_col: int, sample_w: int
+) -> bool:
+    """True when a vertical seam looks like a uniform collage gutter, not a scene edge."""
+    w, h = img.size
+    if w < 640 or h < 480:
+        return False
+    cx = int(round((seam_col / max(sample_w, 1)) * w))
+    cx = max(1, min(w - 2, cx))
+    gutter_w = max(3, w // 120)
+    g = img.convert("L")
+    px = g.load()
+    step = max(1, h // 48)
+
+    def band_stats(x0: int, x1: int) -> tuple[float, float]:
+        vals: list[float] = []
+        for x in range(max(0, x0), min(w, x1)):
+            for y in range(0, h, step):
+                vals.append(float(px[x, y]))
+        if not vals:
+            return 0.0, 0.0
+        mean = sum(vals) / len(vals)
+        var = sum((v - mean) ** 2 for v in vals) / len(vals)
+        return mean, var**0.5
+
+    g_mean, g_std = band_stats(cx - gutter_w, cx + gutter_w + 1)
+    left_mean, _ = band_stats(cx - w // 3, cx - gutter_w)
+    right_mean, _ = band_stats(cx + gutter_w + 1, cx + w // 3)
+    side_avg = (left_mean + right_mean) / 2.0
+    contrast = abs(g_mean - side_avg)
+    if contrast < 18.0:
+        return False
+    if g_std > 22.0:
+        return False
+    if abs(left_mean - right_mean) < 8.0 and contrast < 30.0:
+        return False
+    return True
+
+
+def _sharp_horizontal_collage_gutter(
+    img: Image.Image, seam_row: int, sample_h: int
+) -> bool:
+    """Portrait two-panel: uniform horizontal gutter near 50%."""
+    w, h = img.size
+    if w < 480 or h < 640:
+        return False
+    cy = int(round((seam_row / max(sample_h, 1)) * h))
+    cy = max(1, min(h - 2, cy))
+    gutter_h = max(3, h // 120)
+    g = img.convert("L")
+    px = g.load()
+    step = max(1, w // 48)
+
+    def band_stats(y0: int, y1: int) -> tuple[float, float]:
+        vals: list[float] = []
+        for y in range(max(0, y0), min(h, y1)):
+            for x in range(0, w, step):
+                vals.append(float(px[x, y]))
+        if not vals:
+            return 0.0, 0.0
+        mean = sum(vals) / len(vals)
+        var = sum((v - mean) ** 2 for v in vals) / len(vals)
+        return mean, var**0.5
+
+    g_mean, g_std = band_stats(cy - gutter_h, cy + gutter_h + 1)
+    top_mean, _ = band_stats(cy - h // 3, cy - gutter_h)
+    bottom_mean, _ = band_stats(cy + gutter_h + 1, cy + h // 3)
+    side_avg = (top_mean + bottom_mean) / 2.0
+    contrast = abs(g_mean - side_avg)
+    if contrast < 18.0:
+        return False
+    if g_std > 22.0:
+        return False
+    if abs(top_mean - bottom_mean) < 8.0 and contrast < 30.0:
+        return False
+    return True
+
+
 def _seam_grid_suggests_collage(img: Image.Image) -> bool:
     """Conservative v3: seams must align with collage grid gutters, not scene edges."""
     w, h = img.size
@@ -237,9 +315,9 @@ def _seam_grid_suggests_collage(img: Image.Image) -> bool:
 
     # Two-panel landscape/portrait splits (e.g. 1600×800, 800×1600)
     if ratio >= 1.35 and w >= 640 and _has_center_panel_seam(v_seams, sw):
-        return True
+        return _sharp_vertical_collage_gutter(img, v_seams[0], sw)
     if ratio <= 0.74 and h >= 640 and _has_center_panel_seam(h_seams, sh):
-        return True
+        return _sharp_horizontal_collage_gutter(img, h_seams[0], sh)
     # Three-column horizontal collage
     if ratio >= 1.12 and w >= 600 and _has_three_column_seams(v_seams, sw):
         return True
