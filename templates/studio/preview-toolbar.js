@@ -2025,7 +2025,7 @@ function insertScreenplayControl(parent, beforeNode) {
                 var hasIntent = copyIntentPayload && copyIntentPayload.clear !== true;
                 showToolbarToast(
                   anchors.length > 0 || hasIntent
-                    ? "编辑已保存。可在 ⋯ 菜单中重新生成文案以写入锚点与点缀。"
+                    ? "编辑已保存。可在「编辑与设置」中重新生成文案以写入锚点与点缀。"
                     : "编辑已保存"
                 );
               }
@@ -2911,8 +2911,9 @@ function insertScreenplayControl(parent, beforeNode) {
       '<div class="preview-toolbar__title-wrap"></div>' +
       '<div class="preview-toolbar__actions">' +
       '<div class="preview-toolbar__menu-wrap">' +
-      '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__icon-btn" aria-haspopup="dialog" aria-expanded="false" aria-label="更多编辑与设置" title="编辑与设置">' +
-      '<span class="preview-toolbar__icon-btn__glyph preview-toolbar__icon-btn__glyph--more" aria-hidden="true">⋯</span></button>' +
+      '<button type="button" class="preview-toolbar__menu-btn" aria-haspopup="dialog" aria-expanded="false" aria-label="编辑与设置" title="编辑与设置">' +
+      '<span class="preview-toolbar__menu-btn__label preview-toolbar__menu-btn__label--short">设置</span>' +
+      '<span class="preview-toolbar__menu-btn__label preview-toolbar__menu-btn__label--full">编辑与设置</span></button>' +
       "</div>" +
       "</div>" +
       "</div>" +

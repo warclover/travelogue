@@ -1728,11 +1728,11 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v3) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
+  width: auto;
   height: 36px;
-  min-width: 36px;
+  min-width: auto;
   min-height: 36px;
-  padding: 0;
+  padding: 0 14px;
   box-sizing: border-box;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
@@ -1740,11 +1740,34 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v3) {
   color: #fff;
   flex-shrink: 0;
   vertical-align: middle;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
-.preview-toolbar--v3 .preview-toolbar__icon-btn__glyph--more {
-  transform: none;
-  line-height: 1;
+.preview-toolbar--v3 .preview-toolbar__menu-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.preview-toolbar__menu-btn__label--short {
+  display: inline;
+}
+
+.preview-toolbar__menu-btn__label--full {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .preview-toolbar__menu-btn__label--short {
+    display: none;
+  }
+
+  .preview-toolbar__menu-btn__label--full {
+    display: inline;
+  }
 }
 
 .preview-toolbar__menu-btn--dot::after {
