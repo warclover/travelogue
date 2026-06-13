@@ -178,11 +178,15 @@ def check_g8_11_shelf_template_label(page: Page, base: str) -> dict:
 
 def check_g8_11_preview_toolbar(page: Page, base: str, trip_id: str) -> dict:
     page.goto(f"{base}/{trip_id}/index.html", wait_until="networkidle")
+    page.wait_for_selector(".preview-toolbar--v3", timeout=15_000)
+    page.locator(".preview-toolbar__menu-btn").click()
+    page.wait_for_selector(".preview-sheet", timeout=10_000)
+    page.locator('.preview-sheet__tab[data-sheet-tab="layout"]').click()
     page.wait_for_selector(".preview-toolbar__template-adjust select", timeout=15_000)
     has_apply = page.locator(".preview-toolbar__template-adjust button").inner_text() == "应用"
     return {
         "id": "G8-11b",
-        "name": "预览栏模板 PATCH 控件",
+        "name": "预览 Sheet 排版 Tab 模板 PATCH 控件",
         "pass": has_apply,
         "skipped": False,
         "evidence": {"tripId": trip_id},

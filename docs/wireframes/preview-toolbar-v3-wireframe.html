@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>预览工具栏 v3 · 单栏 + 任务舱 · 设计评审线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-border: #90a4ae;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-anno: #e65100;
+      --wf-rec: #2e7d32;
+      --wf-rec-bg: #e8f5e9;
+      --wf-warn-bg: #fff8e1;
+      --wf-warn-border: #ffb74d;
+      --bar: #1a2f28;
+      --bar-text: #f5fbf8;
+      --bar-muted: #a8dcc8;
+      --gold: #d4a843;
+      --gold-text: #1a1408;
+      --accent: #3d6b5a;
+      --accent-light: #e8f5ef;
+      --radius: 12px;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 920px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--wf-bg);
+      color: var(--wf-text);
+      line-height: 1.55;
+    }
+
+    .review-bar {
+      position: sticky; top: 0; z-index: 2000;
+      background: #263238; color: #eceff1;
+      padding: 12px 20px;
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 900px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button:hover { background: #37474f; }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+
+    .layout {
+      max-width: calc(var(--max) + 300px);
+      margin: 0 auto;
+      padding: 22px 18px 72px;
+      display: grid;
+      grid-template-columns: var(--max) 270px;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .aside { order: -1; }
+    }
+
+    .panel { display: none; }
+    .panel.is-visible { display: block; }
+
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle;
+    }
+    .tag--rec { background: var(--wf-rec); color: #fff; }
+    .tag--new { background: #1565c0; color: #fff; }
+    .tag--fail { background: #c62828; color: #fff; }
+
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--wf-anno); margin: 16px 0 8px;
+    }
+
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border);
+      border-bottom: none; border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+    .browser__ico { width: 12px; height: 12px; background: var(--accent); border-radius: 2px; }
+
+    .frame {
+      background: #f4f7f5;
+      border: 2px solid var(--wf-border); border-top: none;
+      border-radius: 0 0 14px 14px;
+      min-height: 480px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── v3 顶栏：永远单行 ── */
+    .bar-v3 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 48px;
+      max-height: 48px;
+      padding: 0 12px 0 10px;
+      background: var(--bar);
+      color: var(--bar-text);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      flex-shrink: 0;
+    }
+    .bar-v3__back {
+      color: var(--bar-muted);
+      text-decoration: none;
+      font-size: 13px;
+      white-space: nowrap;
+      padding: 6px 4px;
+    }
+    .bar-v3__back:hover { color: #fff; }
+    .bar-v3__title {
+      flex: 1;
+      min-width: 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border: none;
+      background: transparent;
+      text-align: left;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: text;
+    }
+    .bar-v3__title:hover { background: rgba(255,255,255,.06); }
+    .bar-v3__title::after {
+      content: " ✎";
+      font-size: 11px;
+      color: var(--bar-muted);
+      font-weight: 400;
+    }
+    .bar-v3__actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .btn-export {
+      border: none;
+      border-radius: 999px;
+      padding: 7px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: default;
+      background: var(--gold);
+      color: var(--gold-text);
+      white-space: nowrap;
+    }
+    .btn-export--running {
+      background: #455a64;
+      color: #eceff1;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-export--stale {
+      outline: 2px solid #ffb74d;
+      outline-offset: 1px;
+    }
+    .btn-more {
+      width: 36px; height: 36px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 999px;
+      background: transparent;
+      color: #fff;
+      font-size: 18px;
+      line-height: 1;
+      cursor: default;
+    }
+    .btn-more.has-dot::after {
+      content: "";
+      position: absolute;
+      width: 8px; height: 8px;
+      background: #ffb74d;
+      border-radius: 50%;
+      margin: -28px 0 0 22px;
+    }
+    .btn-more-wrap { position: relative; }
+
+    .scroll-mock {
+      flex: 1;
+      margin: 16px;
+      border: 1.5px dashed #b0bec5;
+      border-radius: var(--radius);
+      background: #fff;
+      min-height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--wf-muted);
+      font-size: 13px;
+      padding: 24px;
+    }
+
+    /* ── 任务舱（底部居中浮条，非顶栏第二行、非永久底栏）── */
+    .task-dock {
+      position: absolute;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      width: min(420px, calc(100% - 32px));
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(26, 47, 40, .94);
+      color: #f5fbf8;
+      box-shadow: 0 8px 32px rgba(0,0,0,.22);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .task-dock__icon { font-size: 16px; flex-shrink: 0; }
+    .task-dock__text { flex: 1; min-width: 0; line-height: 1.35; }
+    .task-dock__text small { display: block; font-size: 11px; color: var(--bar-muted); margin-top: 2px; }
+    .task-dock__actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .task-dock__btn {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: default;
+      white-space: nowrap;
+    }
+    .task-dock__btn--primary { background: var(--gold); color: var(--gold-text); }
+    .task-dock__btn--ghost {
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.2);
+    }
+    .task-dock__btn--accent { background: var(--accent); color: #fff; }
+    .task-dock--warn { border-color: rgba(255,183,77,.5); }
+    .task-dock__progress {
+      flex: 1;
+      height: 4px;
+      background: rgba(255,255,255,.15);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .task-dock__progress i {
+      display: block;
+      height: 100%;
+      width: 45%;
+      background: var(--gold);
+      border-radius: 2px;
+    }
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── 统一 Sheet（⋯ 唯一入口）── */
+    .scrim {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,.35);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .sheet {
+      width: 100%;
+      max-height: 72%;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -8px 28px rgba(0,0,0,.15);
+      display: flex;
+      flex-direction: column;
+    }
+    .sheet__grab {
+      width: 40px; height: 4px;
+      background: #cfd8dc;
+      border-radius: 2px;
+      margin: 8px auto;
+    }
+    .sheet__head {
+      padding: 0 16px 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sheet__head h3 { margin: 0; font-size: 15px; flex: 1; }
+    .sheet__close {
+      border: none; background: #eceff1;
+      width: 32px; height: 32px; border-radius: 999px;
+      font-size: 18px; cursor: default; color: #546e7a;
+    }
+    .sheet__tabs {
+      display: flex;
+      gap: 4px;
+      padding: 0 16px 12px;
+      border-bottom: 1px solid #eceff1;
+      overflow-x: auto;
+    }
+    .sheet__tabs button {
+      border: none;
+      background: transparent;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--wf-muted);
+      cursor: default;
+      white-space: nowrap;
+    }
+    .sheet__tabs button.is-active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .sheet__body {
+      padding: 16px;
+      overflow-y: auto;
+      font-size: 13px;
+    }
+    .sheet__row {
+      margin-bottom: 14px;
+    }
+    .sheet__row label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--wf-muted);
+      margin-bottom: 6px;
+    }
+    .sheet__row input, .sheet__row textarea, .sheet__row select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #cfd8dc;
+      border-radius: 8px;
+      font: inherit;
+    }
+    .sheet__seg {
+      display: inline-flex;
+      padding: 3px;
+      border-radius: 999px;
+      background: #eceff1;
+      gap: 2px;
+    }
+    .sheet__seg button {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12px;
+      background: transparent;
+      cursor: default;
+    }
+    .sheet__seg button.is-on {
+      background: #fff;
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0,0,0,.08);
+    }
+    .sheet__list {
+      margin: 0; padding: 0; list-style: none;
+    }
+    .sheet__list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #eceff1;
+      font-size: 13px;
+    }
+    .sheet__foot {
+      padding: 12px 16px 16px;
+      border-top: 1px solid #eceff1;
+      display: flex;
+      gap: 8px;
+    }
+    .sheet__foot .primary {
+      flex: 1;
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .callout {
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      font-size: 13px;
+      margin: 12px 0;
+      background: #fff;
+      border: 1.5px solid var(--wf-border);
+    }
+    .callout--rec { border-color: #81c784; background: var(--wf-rec-bg); }
+    .callout--warn { border-color: var(--wf-warn-border); background: var(--wf-warn-bg); }
+    .callout h3 { margin: 0 0 6px; font-size: 14px; }
+    .callout ul { margin: 0; padding-left: 1.15em; }
+    .callout li { margin-bottom: 4px; }
+
+    .compare {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      background: #fff;
+      border: 1px solid var(--wf-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .compare th, .compare td {
+      border: 1px solid #cfd8dc;
+      padding: 7px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .compare th { background: #eceff1; }
+
+    .pin {
+      position: absolute;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--wf-anno);
+      background: #fff3e0;
+      border: 1px solid #ffcc80;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .pin--1 { top: 54px; left: 120px; }
+    .pin--2 { top: 54px; right: 100px; }
+    .pin--3 { top: 54px; right: 48px; }
+    .pin--4 { bottom: 72px; left: 50%; transform: translateX(-50%); }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .mini-frame { min-height: 360px; }
+  </style>
+</head>
+<body>
+
+<header class="review-bar">
+  <h1>预览工具栏 v3 · 单栏 + 任务舱 <span class="tag tag--new">新方案 · 待审核</span></h1>
+  <p>
+    相对 v1（顶栏堆按钮）、v2 方案 D（双行分区顶栏）、助理式重设计（底部 Tab / FAB）的<strong>第三条路</strong>：
+    顶栏永远<strong>只有 1 行 · 2 个操作</strong>；进度 / 成功 / 待应用排版 → <strong>底部任务舱</strong>（按需出现）；
+    所有编辑能力 → <strong>一个 ⋯ Sheet（4 Tab）</strong>，不再 3 个独立 drawer。
+  </p>
+  <nav class="tabs" role="tablist">
+    <button type="button" class="is-active" data-panel="why">① 为何重做</button>
+    <button type="button" data-panel="default">② 默认态 ★</button>
+    <button type="button" data-panel="exporting">③ 导出中</button>
+    <button type="button" data-panel="success">④ 导出成功</button>
+    <button type="button" data-panel="pending">⑤ 待应用排版</button>
+    <button type="button" data-panel="sheet">⑥ 统一 Sheet</button>
+    <button type="button" data-panel="rules">⑦ 交互规范</button>
+  </nav>
+</header>
+
+<div class="layout">
+  <main>
+
+    <!-- ① 为何重做 -->
+    <section class="panel is-visible" id="panel-why">
+      <div class="sec">
+        <h2>为何 v1 / v2 / 助理式方案未通过 · v3 设计约束</h2>
+        <p class="lead">从现有线框与用户路径反推：<strong>80% 用户 = 改标题 → 看一遍 → 导出长图</strong>；工具栏不应像 Lightroom 顶栏。</p>
+      </div>
+
+      <table class="compare">
+        <thead>
+          <tr>
+            <th>历史方案</th>
+            <th>做法</th>
+            <th>未通过原因（推断）</th>
+            <th>v3 对策</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>现状 / v1</td>
+            <td>顶栏 8+ 控件 + 多 drawer + 页内 FAB</td>
+            <td>同屏信息过载；金色语义混乱；反馈分散三处</td>
+            <td>顶栏 ≤2 操作；金色只绑「导出长图」</td>
+          </tr>
+          <tr>
+            <td>v2 方案 D</td>
+            <td>双行顶栏：模式切换 + 导出区 + 第二行 pending 条</td>
+            <td>仍占 80px+ 垂直空间；仍像「专业软件」</td>
+            <td><strong>取消第二行顶栏</strong>；pending 进任务舱</td>
+          </tr>
+          <tr>
+            <td>助理式 v2</td>
+            <td>底部 Tab 坞 / FAB 辐射 / 侧栏 Copilot</td>
+            <td>与桌面 Studio 语境不符；与卷轴阅读冲突；开发面大</td>
+            <td>保留<strong>顶栏返回</strong>；任务舱仅<strong>临时</strong>出现</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout--rec" style="margin-top:16px">
+        <h3>v3 三条铁律（评审请重点看）</h3>
+        <ul>
+          <li><strong>顶栏恒定 48px · 单行</strong>：← 返回 · 可编辑标题 · [导出长图] · [⋯] —— 无阅读视图、无文件夹、无放映、无模板名</li>
+          <li><strong>任务舱 ≠ 工具栏</strong>：仅 export running / export done / layout pending 时出现；完成后 8s 自动收起或用户 dismiss</li>
+          <li><strong>一个 Sheet 收拢全部编辑</strong>：文字 · 结构 · 排版 · 高级 —— 替代 edit / structure / cohort 三个 drawer</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ② 默认态 -->
+    <section class="panel" id="panel-default">
+      <div class="sec">
+        <h2>默认态 · 验货 <span class="tag tag--rec">推荐基线</span></h2>
+        <p class="lead">用户刚进入预览：卷轴占满视线，顶栏不抢戏。首次访问 ⋯ 显示一次脉冲点（可关）。</p>
+      </div>
+
+      <div class="browser">
+        <div class="browser__dots"><i></i><i></i><i></i></div>
+        <div class="browser__tab"><span class="browser__ico"></span> 林芝 · 2013 · 预览</div>
+      </div>
+      <div class="frame">
+        <header class="bar-v3" aria-label="预览工具栏 v3">
+          <a class="bar-v3__back" href="#">← 返回</a>
+          <button type="button" class="bar-v3__title" title="点击改标题">林芝 · 2013</button>
+          <div class="bar-v3__actions">
+            <button type="button" class="btn-export">导出长图</button>
+            <div class="btn-more-wrap">
+              <button type="button" class="btn-more has-dot" aria-label="更多编辑与设置">⋯</button>
+            </div>
+          </div>
+        </header>
+        <div class="scroll-mock">
+          16:9 卷轴预览<br>
+          <small>inline 点标题改字 · 点 ★ 标精选（保留在画面上）<br>顶栏无其它按钮</small>
+        </div>
+        <span class="pin pin--1">① 标题 inline 编辑</span>
+        <span class="pin pin--2">② 唯一主 CTA（金色）</span>
+        <span class="pin pin--3">③ 全部次要能力</span>
+      </div>
+
+      <div class="callout">
+        <h3>与 P5-3.7 对齐</h3>
+        <ul>
+          <li>默认可见 = <strong>返回 + 标题 + 导出 + ⋯</strong>（4 个交互点，其中标题非按钮样式）</li>
+          <li>「在文件夹中显示」移到<strong>导出成功任务舱</strong>，不占顶栏</li>
+          <li>「阅读视图 / 全屏放映」移到 Sheet → 高级 Tab</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ③ 导出中 -->
+    <section class="panel" id="panel-exporting">
+      <div class="sec">
+        <h2>导出中 · 顶栏按钮变灰 + 任务舱承载进度</h2>
+        <p class="lead">顶栏「导出长图」变为 running 态（<strong>非金色</strong>）；详细进度在任务舱，避免顶栏换行。</p>
+      </div>
+
+      <div class="browser">
+        <div class="browser__tab"><span class="browser__ico"></span> 林芝 · 2013 · 预览</div>
+      </div>
+      <div class="frame mini-frame">
+        <header class="bar-v3">
+          <a class="bar-v3__back" href="#">← 返回</a>
+          <button type="button" class="bar-v3__title">林芝 · 2013</button>
+          <div class="bar-v3__actions">
+            <button type="button" class="btn-export btn-export--running" disabled>
+              <span class="spinner"></span> 导出中…
+            </button>
+            <button type="button" class="btn-more" disabled>⋯</button>
+          </div>
+        </header>
+        <div class="scroll-mock" style="min-height:220px">卷轴预览（只读）</div>
+        <div class="task-dock" role="status" aria-live="polite">
+          <span class="task-dock__icon">⏳</span>
+          <div class="task-dock__text">
+            正在导出长图 · 第 2/5 段
+            <small>清晰 2× · 按章 · 预计还需 40 秒</small>
+          </div>
+          <div class="task-dock__progress"><i></i></div>
+          <div class="task-dock__actions">
+            <button type="button" class="task-dock__btn task-dock__btn--ghost">取消</button>
+          </div>
+        </div>
+        <span class="pin pin--4">任务舱：进度唯一入口</span>
+      </div>
+    </section>
+
+    <!-- ④ 导出成功 -->
+    <section class="panel" id="panel-success">
+      <div class="sec">
+        <h2>导出成功 · 任务舱替代 success 卡片 + toast + 路径预览卡</h2>
+        <p class="lead">三合一：打开文件夹 / 复制路径 / 再导一次。顶栏恢复金色「导出长图」。</p>
+      </div>
+
+      <div class="frame mini-frame">
+        <header class="bar-v3">
+          <a class="bar-v3__back" href="#">← 返回</a>
+          <button type="button" class="bar-v3__title">林芝 · 2013</button>
+          <div class="bar-v3__actions">
+            <button type="button" class="btn-export">导出长图</button>
+            <button type="button" class="btn-more">⋯</button>
+          </div>
+        </header>
+        <div class="scroll-mock" style="min-height:220px">卷轴预览</div>
+        <div class="task-dock" style="border-color:rgba(61,107,90,.6)">
+          <span class="task-dock__icon">✓</span>
+          <div class="task-dock__text">
+            长图已保存到画册目录
+            <small>…/trips/linzhi/林芝-ch01.png 等 3 个文件</small>
+          </div>
+          <div class="task-dock__actions">
+            <button type="button" class="task-dock__btn task-dock__btn--accent">打开文件夹</button>
+            <button type="button" class="task-dock__btn task-dock__btn--ghost">复制路径</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout--rec">
+        <h3>反馈收敛规则</h3>
+        <ul>
+          <li>成功态<strong>禁止</strong>再弹居中 toast + 顶栏路径卡 + 右下角卡片</li>
+          <li>任务舱 8s 无操作自动淡出；用户可点 ✕ 关闭</li>
+          <li>「发给微信好友」= 用户自行切微信；任务舱文案写「已保存，可去微信发送」</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ⑤ 待应用排版 -->
+    <section class="panel" id="panel-pending">
+      <div class="sec">
+        <h2>待应用排版 · 任务舱（warn 色）· 顶栏 ⋯ 显示橙点</h2>
+        <p class="lead">改拼图 / 精选 / cohort 后：顶栏不出现第二行 banner；任务舱提示 + 一键应用。</p>
+      </div>
+
+      <div class="frame mini-frame">
+        <header class="bar-v3">
+          <a class="bar-v3__back" href="#">← 返回</a>
+          <button type="button" class="bar-v3__title">林芝 · 2013</button>
+          <div class="bar-v3__actions">
+            <button type="button" class="btn-export btn-export--stale">导出长图</button>
+            <div class="btn-more-wrap">
+              <button type="button" class="btn-more has-dot">⋯</button>
+            </div>
+          </div>
+        </header>
+        <div class="scroll-mock" style="min-height:220px">卷轴预览</div>
+        <div class="task-dock task-dock--warn">
+          <span class="task-dock__icon">⚠</span>
+          <div class="task-dock__text">
+            有 3 处改动尚未应用排版
+            <small>导出长图前建议先应用，否则与当前预览不一致</small>
+          </div>
+          <div class="task-dock__actions">
+            <button type="button" class="task-dock__btn task-dock__btn--primary">应用排版</button>
+            <button type="button" class="task-dock__btn task-dock__btn--ghost">稍后</button>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--wf-muted)">
+        stale 时顶栏「导出长图」保留金色但加<strong>琥珀描边</strong>（= 可点但建议先应用），与任务舱 warn 色一致 —— 不再用浅金 inline 文案。
+      </p>
+    </section>
+
+    <!-- ⑥ 统一 Sheet -->
+    <section class="panel" id="panel-sheet">
+      <div class="sec">
+        <h2>⋯ 统一 Sheet · 四 Tab 收拢现有全部 drawer</h2>
+        <p class="lead">一个 bottom sheet 替代：编辑感受 drawer、结构/G1 drawer、cohort drawer、导出 popover。</p>
+      </div>
+
+      <div class="browser">
+        <div class="browser__tab"><span class="browser__ico"></span> 林芝 · 2013 · 预览</div>
+      </div>
+      <div class="frame mini-frame">
+        <header class="bar-v3">
+          <a class="bar-v3__back" href="#">← 返回</a>
+          <button type="button" class="bar-v3__title">林芝 · 2013</button>
+          <div class="bar-v3__actions">
+            <button type="button" class="btn-export">导出长图</button>
+            <button type="button" class="btn-more">⋯</button>
+          </div>
+        </header>
+        <div class="scroll-mock" style="min-height:120px;opacity:.4">卷轴预览（Sheet 打开时 dim）</div>
+        <div class="scrim">
+          <div class="sheet" role="dialog" aria-label="编辑与设置">
+            <div class="sheet__grab"></div>
+            <div class="sheet__head">
+              <h3>编辑与设置</h3>
+              <button type="button" class="sheet__close" aria-label="关闭">×</button>
+            </div>
+            <nav class="sheet__tabs" role="tablist">
+              <button type="button" class="is-active">文字</button>
+              <button type="button">结构</button>
+              <button type="button">排版</button>
+              <button type="button">高级</button>
+            </nav>
+            <div class="sheet__body">
+              <div class="sheet__row">
+                <label>本章感受 / 编辑意图</label>
+                <textarea rows="2" placeholder="例如：雨后京都，想突出安静和反光…">雨后京都，想突出安静和反光</textarea>
+              </div>
+              <div class="sheet__row">
+                <label>语气 · 焦点（chip 多选）</label>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+                  <span style="padding:4px 10px;border-radius:999px;background:var(--accent-light);color:var(--accent);font-size:12px">松弛</span>
+                  <span style="padding:4px 10px;border-radius:999px;background:#eceff1;font-size:12px">平静</span>
+                  <span style="padding:4px 10px;border-radius:999px;background:#eceff1;font-size:12px">人</span>
+                </div>
+              </div>
+              <div class="sheet__row">
+                <label>重新撰写本章文案</label>
+                <button type="button" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--accent);background:#fff;color:var(--accent);font-weight:600">撰写游记文字</button>
+              </div>
+            </div>
+            <div class="sheet__foot">
+              <button type="button" class="primary">保存并关闭</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:16px">
+        <div class="callout">
+          <h3>Tab · 结构</h3>
+          <ul>
+            <li>章节顺序 · G1 确认（若开启）</li>
+            <li>「为什么这样分章」explain</li>
+            <li>重排本章（replan）</li>
+          </ul>
+        </div>
+        <div class="callout">
+          <h3>Tab · 排版</h3>
+          <ul>
+            <li>cohort 分组 / 拼图改判</li>
+            <li>应用排版 · 待处理计数</li>
+            <li>模板来源（只读 + 跳转 admin）</li>
+          </ul>
+        </div>
+        <div class="callout">
+          <h3>Tab · 高级</h3>
+          <ul>
+            <li>导出范围 · 清晰度（原 export popover）</li>
+            <li>阅读视图 · 全屏放映</li>
+            <li>在文件夹中显示 · 导出 zip</li>
+          </ul>
+        </div>
+        <div class="callout callout--rec">
+          <h3>Sheet 交互</h3>
+          <ul>
+            <li>Esc 关闭 · focus trap · 焦点归还 ⋯</li>
+            <li>未保存离开 Tab → 轻提示</li>
+            <li>宽屏 ≥1024：Sheet 最大宽 480px 居中，非全宽</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑦ 规范 -->
+    <section class="panel" id="panel-rules">
+      <div class="sec">
+        <h2>交互与视觉规范 · v3</h2>
+      </div>
+
+      <table class="compare">
+        <thead>
+          <tr><th>元素</th><th>规则</th><th>禁止</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>顶栏高度</td>
+            <td>固定 48px，永不折行、永不第二行</td>
+            <td>pending banner / 路径预览 / inline 进度文案</td>
+          </tr>
+          <tr>
+            <td>金色 #d4a843</td>
+            <td>仅「导出长图」idle 态</td>
+            <td>running / stale / ★精选 / focus 描边同色相</td>
+          </tr>
+          <tr>
+            <td>Running 态</td>
+            <td>顶栏按钮 #455a64 + spinner；详情在任务舱</td>
+            <td>金色半透明 disabled</td>
+          </tr>
+          <tr>
+            <td>Stale 态</td>
+            <td>琥珀描边 #ffb74d + 任务舱 warn</td>
+            <td>顶栏浅金文字「请重新生成」</td>
+          </tr>
+          <tr>
+            <td>任务舱</td>
+            <td>bottom center · max 420px · 按需出现</td>
+            <td>永久底栏 Tab · 顶栏第二行</td>
+          </tr>
+          <tr>
+            <td>反馈</td>
+            <td>任务舱优先；错误才 toast</td>
+            <td>成功 toast + 成功卡 + 路径卡三发</td>
+          </tr>
+          <tr>
+            <td>折叠</td>
+            <td>顶栏不可折叠（已够短）</td>
+            <td>收起后只剩 handle 用户找不到返回</td>
+          </tr>
+          <tr>
+            <td>Share 态</td>
+            <td>无顶栏；页脚链回 Studio</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout--warn" style="margin-top:16px">
+        <h3>实现映射（供工程评审）</h3>
+        <ul>
+          <li><code>preview-toolbar.js</code>：拆为 top bar mount + taskDock module + unifiedSheet module</li>
+          <li>删除或合并：<code>cohort-drawer.js</code> 独立 UI → Sheet Tab「排版」</li>
+          <li>保留页内：inline 标题编辑、★ promote-tier、媒资下拉（画面上）</li>
+          <li>首访：<code>sessionStorage</code> 脉冲 ⋯ 一次 · AC：10s 内找到导出长图</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="aside">
+    <div class="callout callout--rec">
+      <h3>请您审核 · 3 个问题</h3>
+      <ul>
+        <li><strong>顶栏只留「导出 + ⋯」</strong>是否可接受？（文件夹/放映进 Sheet）</li>
+        <li><strong>任务舱</strong>放底部居中，是否比 v2 第二行顶栏更好？</li>
+        <li><strong>四 Tab Sheet</strong>是否比多个 drawer 更清晰？</li>
+      </ul>
+    </div>
+
+    <div class="callout">
+      <h3>打开方式</h3>
+      <p style="margin:0;font-size:12px">
+        本地双击本 HTML，或 Studio 运行时访问：<br>
+        <code>/__studio/../../docs/wireframes/preview-toolbar-v3-wireframe.html</code><br>
+        （开发时 copy 到 <code>templates/studio/</code> 静态目录亦可）
+      </p>
+    </div>
+
+    <div class="callout">
+      <h3>关联文档</h3>
+      <ul style="margin:0;padding-left:1.1em;font-size:12px">
+        <li>PRD-PHASE5 · P5-3.7 极简 toolbar</li>
+        <li>preview-workbench-v2-wireframe（方案 D）</li>
+        <li>preview-assistant-redesign（助理式）</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  document.querySelectorAll(".tabs button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".tabs button").forEach(function (b) { b.classList.remove("is-active"); });
+      document.querySelectorAll(".panel").forEach(function (p) { p.classList.remove("is-visible"); });
+      btn.classList.add("is-active");
+      var id = "panel-" + btn.getAttribute("data-panel");
+      var panel = document.getElementById(id);
+      if (panel) panel.classList.add("is-visible");
+    });
+  });
+</script>
+</body>
+</html>

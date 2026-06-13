@@ -32,24 +32,29 @@ def test_preview_toolbar_longshot_integrated_to_top_bar() -> None:
         encoding="utf-8"
     )
     for token in (
-        "preview-toolbar__longshot-caret",
-        "preview-toolbar__longshot-preview-row",
+        "preview-toolbar--v3",
+        "mountPreviewTaskDock",
+        "mountPreviewUnifiedSheet",
+        "preview-toolbar-v3-task-dock.js",
+        "preview-toolbar-v3-sheet.js",
         "openLongshotExportOptions",
         "openStudioLongshotExportPanel",
-        "preview-toolbar__export-popover",
-        "preview-toolbar__icon-btn",
-        "preview-toolbar__ctl",
         "buildLongshotRequestFromPage",
         "resolveCopyDisplayFromDom",
         "syncLongshotPreviewChips",
-        "openLongshotResultDrawer",
-        "bindLongshotExportMeta",
         "longshotProgressPct",
+        "preview-task-dock",
+        "preview-sheet",
+        "showG1",
+        "SHEET_HINT_KEY",
+        "mountTemplateControls",
+        "trapFocus",
+        "data-copy-preset",
+        "导出长图",
     ):
-        assert token in js, f"missing preview toolbar longshot marker: {token}"
+        assert token in js or token in css, f"missing preview toolbar v3/longshot marker: {token}"
     assert 'html[data-preview-toolbar="on"] .longshot-toolbar' in css
     assert 'html[data-preview-toolbar="on"] .screenplay-toolbar' in css
-    assert "preview-toolbar__export-meta--action" in css
     assert "resolveCopyDisplayFromDom" in client
     assert "segmentMode" in client
     assert "normalizeSegmentMode" in js

@@ -17,11 +17,14 @@ import {
 import { STUDIO_USER_NOTES_MAX_LEN } from "./js/constants.js";
 import { trackStudioEvent } from "./js/analytics.js";
 import { mountCohortDrawer } from "./cohort-drawer.js";
+import { mountPreviewTaskDock } from "./preview-toolbar-v3-task-dock.js";
+import { mountPreviewUnifiedSheet } from "./preview-toolbar-v3-sheet.js";
 
 var isJobBusy409 = isJobBusyResponse;
 var HINT_KEY = "travelogue.studio.editHint.dismissed";
 var COLLAPSE_KEY = "travelogue.studio.previewToolbar.collapsed";
 var READER_VIEW_KEY = "travelogue.studio.readerView";
+var SHEET_HINT_KEY = "travelogue.studio.previewSheet.hintSeen";
 var LONGSHOT_MODE_KEY = "travelogue:longshotMode";
 var LONGSHOT_SCALE_KEY = "travelogue:longshotScale";
 var SLOW_JOB_MS = 30000;
@@ -188,8 +191,83 @@ function insertScreenplayControl(parent, beforeNode) {
   }
 
   var _layoutPending = false;
+  var _pendingDockDismissed = false;
+  var _layoutPendingMessage = "";
+  var _g1Pending = false;
+  var _g1DockDismissed = false;
+  var _sheetEditDirty = false;
+  var _sheetEditBaseline = "";
+
+  function isPreviewToolbarV3(root) {
+    return !!(root && root.classList.contains("preview-toolbar--v3"));
+  }
+
+  function snapshotEditPanel(el) {
+    if (!el) return "";
+    var title = el.querySelector(".preview-drawer__title-input");
+    var notes = el.querySelector(".preview-drawer__notes");
+    var anchors = [];
+    el.querySelectorAll(".preview-drawer__anchor").forEach(function (inp) {
+      anchors.push((inp.value || "").trim());
+    });
+    var mood = el.querySelector(".preview-drawer__chip-mood.is-selected");
+    var focus = el.querySelector(".preview-drawer__chip-focus.is-selected");
+    var note = el.querySelector(".preview-drawer__copy-intent-note");
+    var sub = el.querySelector(".preview-drawer__copy-intent-subsequent");
+    return JSON.stringify({
+      title: title ? title.value : "",
+      notes: notes ? notes.value : "",
+      anchors: anchors,
+      mood: mood ? mood.getAttribute("data-value") : "",
+      focus: focus ? focus.getAttribute("data-value") : "",
+      intentNote: note ? note.value : "",
+      subsequent: sub ? sub.checked : false,
+    });
+  }
+
+  function markSheetEditBaseline(root, panel) {
+    _sheetEditBaseline = snapshotEditPanel(panel);
+    _sheetEditDirty = false;
+    if (root) root._sheetEditDirty = false;
+  }
+
+  function wireSheetEditDirty(root, panel) {
+    if (!panel || panel.dataset.sheetDirtyBound === "1") return;
+    panel.dataset.sheetDirtyBound = "1";
+    function syncDirty() {
+      _sheetEditDirty = snapshotEditPanel(panel) !== _sheetEditBaseline;
+      if (root) root._sheetEditDirty = _sheetEditDirty;
+    }
+    panel.addEventListener("input", syncDirty);
+    panel.addEventListener("change", syncDirty);
+    panel.querySelectorAll(".preview-drawer__chip-mood, .preview-drawer__chip-focus").forEach(
+      function (btn) {
+        btn.addEventListener("click", function () {
+          window.setTimeout(syncDirty, 0);
+        });
+      }
+    );
+  }
+
+  function refreshTaskDockState(root) {
+    if (!root || !isPreviewToolbarV3(root) || !root._taskDock) return;
+    if (root._exportDockActive || root._exportResultShowing) return;
+    if (_g1Pending && !_g1DockDismissed) {
+      root._taskDock.showG1({});
+      return;
+    }
+    if (_layoutPending && !_pendingDockDismissed) {
+      root._taskDock.showPending({
+        title: _layoutPendingMessage || "有编辑尚未应用排版",
+      });
+      return;
+    }
+    root._taskDock.hide();
+  }
+
   function setLayoutPending(on) {
     _layoutPending = !!on;
+    if (on) _pendingDockDismissed = false;
     document.querySelectorAll(".preview-toolbar__apply-layout").forEach(function (btn) {
       btn.hidden = !_layoutPending;
     });
@@ -197,6 +275,14 @@ function insertScreenplayControl(parent, beforeNode) {
       row.hidden = !_layoutPending;
     });
     var toolbar = document.querySelector(".preview-toolbar");
+    if (toolbar && isPreviewToolbarV3(toolbar)) {
+      if (toolbar._sheet) toolbar._sheet.setPendingDot(_layoutPending);
+      refreshTaskDockState(toolbar);
+      if (toolbar._sheet && typeof toolbar._sheet.refreshLayoutTab === "function") {
+        toolbar._sheet.refreshLayoutTab();
+      }
+      return;
+    }
     if (toolbar) {
       syncLongshotPreviewRowVisibility(toolbar);
       requestAnimationFrame(function () {
@@ -680,6 +766,10 @@ function insertScreenplayControl(parent, beforeNode) {
     var caret = longshotCaretEl(root);
     if (main) main.disabled = !!disabled;
     if (caret) caret.disabled = !!disabled;
+    if (isPreviewToolbarV3(root)) {
+      var menuBtn = root.querySelector(".preview-toolbar__menu-btn");
+      if (menuBtn) menuBtn.disabled = !!disabled;
+    }
   }
 
   function setLongshotExportMeta(root, text, opts) {
@@ -701,6 +791,12 @@ function insertScreenplayControl(parent, beforeNode) {
   }
 
   function openLongshotResultDrawer(root) {
+    if (isPreviewToolbarV3(root)) {
+      if (root._lastLongshotJob && root._taskDock) {
+        root._taskDock.showSuccess(root._lastLongshotJob, tripIdFromPath());
+      }
+      return;
+    }
     setToolbarCollapsed(root, false, false);
     clearLongshotDrawerTimer();
     var drawer = root.querySelector(".preview-toolbar__drawer");
@@ -763,6 +859,8 @@ function insertScreenplayControl(parent, beforeNode) {
     var zone = exportZoneEl(root);
     var btn = longshotBtnEl(root);
     if (!btn) return;
+    var isV3 = isPreviewToolbarV3(root);
+
     ["idle", "running", "done", "error"].forEach(function (s) {
       btn.classList.remove("preview-toolbar__longshot--" + s);
     });
@@ -775,18 +873,43 @@ function insertScreenplayControl(parent, beforeNode) {
 
     if (state === "running") {
       btn.classList.add("preview-toolbar__longshot--running");
-      setLongshotSplitState(root, "running");
+      if (!isV3) setLongshotSplitState(root, "running");
       if (zone) zone.classList.add("preview-toolbar__export-zone--running");
       setLongshotControlsDisabled(root, true);
-      btn.innerHTML =
-        '<span class="preview-toolbar__longshot__spinner" aria-hidden="true"></span> 正在保存…';
-      setLongshotExportMeta(root, opts.hint || "生成长图中", { actionable: false });
-      var pct = typeof opts.pct === "number" ? opts.pct : 8;
-      setLongshotExportProgress(root, true, pct);
+      if (isV3) {
+        btn.innerHTML =
+          '<span class="preview-toolbar__longshot__spinner" aria-hidden="true"></span> 导出中…';
+        root._exportDockActive = true;
+        if (root._taskDock) {
+          var prefs = readLongshotExportPrefs();
+          var modeLabel = prefs.mode === "full" ? "完整" : "按章";
+          var sub =
+            modeLabel + " · " + prefs.scale + "×" + (opts.hint ? " · " + opts.hint : "");
+          root._taskDock.updateExporting({
+            title: "正在导出长图",
+            subtitle: sub,
+            pct: typeof opts.pct === "number" ? opts.pct : 8,
+          });
+        }
+      } else {
+        btn.innerHTML =
+          '<span class="preview-toolbar__longshot__spinner" aria-hidden="true"></span> 正在保存…';
+        setLongshotExportMeta(root, opts.hint || "生成长图中", { actionable: false });
+        var pctRun = typeof opts.pct === "number" ? opts.pct : 8;
+        setLongshotExportProgress(root, true, pctRun);
+      }
       if (badge) badge.hidden = true;
       return;
     }
     if (state === "done") {
+      if (isV3) {
+        btn.classList.add("preview-toolbar__longshot--idle");
+        setLongshotControlsDisabled(root, false);
+        btn.textContent = "导出长图";
+        root._exportDockActive = false;
+        if (badge) badge.hidden = true;
+        return;
+      }
       btn.classList.add("preview-toolbar__longshot--done");
       setLongshotSplitState(root, "done");
       setLongshotControlsDisabled(root, false);
@@ -798,32 +921,46 @@ function insertScreenplayControl(parent, beforeNode) {
     }
     if (state === "error") {
       btn.classList.add("preview-toolbar__longshot--idle");
-      setLongshotSplitState(root, "idle");
+      if (!isV3) setLongshotSplitState(root, "idle");
       setLongshotControlsDisabled(root, false);
-      btn.textContent = "保存长图";
-      setLongshotExportMeta(root, opts.hint || "保存失败，请重试", { actionable: false });
-      setLongshotExportProgress(root, false);
+      btn.textContent = isV3 ? "导出长图" : "保存长图";
+      if (isV3) {
+        root._exportDockActive = false;
+        if (root._taskDock) root._taskDock.showError(opts.hint || "保存失败，请重试");
+      } else {
+        setLongshotExportMeta(root, opts.hint || "保存失败，请重试", { actionable: false });
+        setLongshotExportProgress(root, false);
+      }
       if (badge) badge.hidden = true;
       return;
     }
     if (state === "stale") {
       btn.classList.add("preview-toolbar__longshot--idle");
-      setLongshotSplitState(root, "idle");
+      if (!isV3) setLongshotSplitState(root, "idle");
       setLongshotControlsDisabled(root, false);
-      btn.textContent = "保存长图";
+      btn.textContent = isV3 ? "导出长图" : "保存长图";
       if (zone) zone.classList.add("preview-toolbar__export-zone--stale");
-      if (badge) badge.hidden = false;
-      setLongshotExportMeta(root, "内容已更新", { actionable: false });
-      setLongshotExportProgress(root, false);
+      if (isV3) {
+        btn.classList.add("preview-toolbar__longshot--stale");
+        if (badge) badge.hidden = true;
+      } else {
+        if (badge) badge.hidden = false;
+        setLongshotExportMeta(root, "内容已更新", { actionable: false });
+        setLongshotExportProgress(root, false);
+      }
       return;
     }
     btn.classList.add("preview-toolbar__longshot--idle");
-    setLongshotSplitState(root, "idle");
+    if (!isV3) setLongshotSplitState(root, "idle");
     setLongshotControlsDisabled(root, false);
-    btn.textContent = "保存长图";
+    btn.textContent = isV3 ? "导出长图" : "保存长图";
+    btn.classList.remove("preview-toolbar__longshot--stale");
+    root._exportDockActive = false;
     if (badge) badge.hidden = true;
-    refreshLongshotExportMeta(root);
-    setLongshotExportProgress(root, false);
+    if (!isV3) {
+      refreshLongshotExportMeta(root);
+      setLongshotExportProgress(root, false);
+    }
   }
 
   function hideLongshotDrawer(root) {
@@ -874,6 +1011,11 @@ function insertScreenplayControl(parent, beforeNode) {
   }
 
   function syncToolbarHeight(root) {
+    if (isPreviewToolbarV3(root)) {
+      root.style.height = "";
+      document.documentElement.style.setProperty("--preview-toolbar-h", "48px");
+      return;
+    }
     var collapsed = root.classList.contains("preview-toolbar--collapsed");
     var strip = root.querySelector(".preview-toolbar__collapsed-strip");
     if (collapsed) {
@@ -944,6 +1086,22 @@ function insertScreenplayControl(parent, beforeNode) {
   function showLongshotDrawer(root, job, opts) {
     opts = opts || {};
     root._lastLongshotJob = job;
+    if (isPreviewToolbarV3(root)) {
+      hideLongshotDrawer(root);
+      root._exportResultShowing = true;
+      if (root._taskDock) {
+        root._taskDock.showSuccess(job, tripIdFromPath());
+      }
+      if (job.status === "failed") {
+        setLongshotExportState(root, "error", {
+          hint: (job.error && (job.error.message || job.error.code)) || "导出失败",
+        });
+      } else {
+        setLongshotExportState(root, "idle");
+      }
+      hideStaleHint(root);
+      return;
+    }
     var tripId = tripIdFromPath();
     var drawer = getLongshotDrawer(root);
     setToolbarCollapsed(root, false, false);
@@ -1066,13 +1224,15 @@ function insertScreenplayControl(parent, beforeNode) {
         var trip = trips.filter(function (t) { return t.tripId === tripId; })[0];
         if (!trip) return;
         if (trip.layoutCssStale) {
+          _layoutPendingMessage = "布局 CSS 已过期，请应用排版重新渲染";
           var pendingText = root.querySelector(".preview-toolbar__pending-text");
           if (pendingText) {
-            pendingText.textContent = "布局 CSS 已过期，请应用排版重新渲染";
+            pendingText.textContent = _layoutPendingMessage;
           }
           setLayoutPending(true);
           return;
         }
+        _layoutPendingMessage = "";
         if (trip.longshotStale) {
           showStaleHint(root);
         }
@@ -1514,11 +1674,13 @@ function insertScreenplayControl(parent, beforeNode) {
     var drawer = shell.querySelector(".preview-drawer");
     var titleEl = shell.querySelector(".preview-drawer__title");
     var bodyEl = shell.querySelector(".preview-drawer__body");
+    var drawerBodyEl = bodyEl;
     var scrim = shell.querySelector(".preview-drawer__scrim");
     var closeBtn = shell.querySelector(".preview-drawer__close");
     var entryCache = null;
     var drawerFocusRelease = null;
     var drawerPreviousFocus = null;
+    var drawerEmbedTarget = null;
 
     var editTpl =
       '<label class="preview-drawer__label" for="preview-drawer-title-input">杂志名</label>' +
@@ -1592,13 +1754,13 @@ function insertScreenplayControl(parent, beforeNode) {
     }
 
     function fillAnchors(chId) {
-      var inputs = bodyEl.querySelectorAll(".preview-drawer__anchor");
+      var inputs = drawerBodyEl.querySelectorAll(".preview-drawer__anchor");
       var row = chapterRow(chId);
       var anchors = (row && row.memoryAnchors) || [];
       for (var i = 0; i < inputs.length; i++) {
         inputs[i].value = anchors[i] || "";
       }
-      var nameEl = bodyEl.querySelector(".preview-drawer__chapter-name");
+      var nameEl = drawerBodyEl.querySelector(".preview-drawer__chapter-name");
       if (nameEl) nameEl.textContent = (row && row.title) || chId || "—";
     }
 
@@ -1622,17 +1784,17 @@ function insertScreenplayControl(parent, beforeNode) {
     function fillCopyIntent(chId) {
       var row = chapterRow(chId);
       var intent = (row && row.copyIntent) || {};
-      bodyEl.querySelectorAll(".preview-drawer__chip-mood").forEach(function (btn) {
+      drawerBodyEl.querySelectorAll(".preview-drawer__chip-mood").forEach(function (btn) {
         var on = btn.getAttribute("data-value") === intent.mood;
         btn.classList.toggle("is-selected", on);
         btn.setAttribute("aria-pressed", on ? "true" : "false");
       });
-      bodyEl.querySelectorAll(".preview-drawer__chip-focus").forEach(function (btn) {
+      drawerBodyEl.querySelectorAll(".preview-drawer__chip-focus").forEach(function (btn) {
         var on = btn.getAttribute("data-value") === intent.focus;
         btn.classList.toggle("is-selected", on);
         btn.setAttribute("aria-pressed", on ? "true" : "false");
       });
-      var noteInp = bodyEl.querySelector(".preview-drawer__copy-intent-note");
+      var noteInp = drawerBodyEl.querySelector(".preview-drawer__copy-intent-note");
       if (noteInp) noteInp.value = intent.note || "";
       updateCopyIntentVisibility(chId);
     }
@@ -1643,10 +1805,10 @@ function insertScreenplayControl(parent, beforeNode) {
     }
 
     function updateCopyIntentVisibility(chId) {
-      var details = bodyEl.querySelector(".preview-drawer__copy-intent");
-      var skipNote = bodyEl.querySelector(".preview-drawer__copy-intent-voice-skip");
-      var hint = bodyEl.querySelector(".preview-drawer__copy-intent-hint");
-      var applyLabel = bodyEl.querySelector(".preview-drawer__copy-intent-apply");
+      var details = drawerBodyEl.querySelector(".preview-drawer__copy-intent");
+      var skipNote = drawerBodyEl.querySelector(".preview-drawer__copy-intent-voice-skip");
+      var hint = drawerBodyEl.querySelector(".preview-drawer__copy-intent-hint");
+      var applyLabel = drawerBodyEl.querySelector(".preview-drawer__copy-intent-apply");
       if (!details) return;
       var skip = chapterHasVoice(chId);
       details.open = !skip && details.open;
@@ -1660,10 +1822,10 @@ function insertScreenplayControl(parent, beforeNode) {
       if (chapterHasVoice(currentChapterId())) {
         return null;
       }
-      var moodBtn = bodyEl.querySelector(".preview-drawer__chip-mood.is-selected");
-      var focusBtn = bodyEl.querySelector(".preview-drawer__chip-focus.is-selected");
-      var noteInp = bodyEl.querySelector(".preview-drawer__copy-intent-note");
-      var subsequent = bodyEl.querySelector(".preview-drawer__copy-intent-subsequent");
+      var moodBtn = drawerBodyEl.querySelector(".preview-drawer__chip-mood.is-selected");
+      var focusBtn = drawerBodyEl.querySelector(".preview-drawer__chip-focus.is-selected");
+      var noteInp = drawerBodyEl.querySelector(".preview-drawer__copy-intent-note");
+      var subsequent = drawerBodyEl.querySelector(".preview-drawer__copy-intent-subsequent");
       var noteVal = noteInp ? (noteInp.value || "").trim() : "";
       var payload;
       if (!moodBtn && !focusBtn && !noteVal) {
@@ -1687,6 +1849,11 @@ function insertScreenplayControl(parent, beforeNode) {
     }
 
     function closeDrawer() {
+      if (drawerEmbedTarget) {
+        drawerEmbedTarget = null;
+        return;
+      }
+      drawerBodyEl = bodyEl;
       if (drawerFocusRelease) {
         drawerFocusRelease();
         drawerFocusRelease = null;
@@ -1742,17 +1909,25 @@ function insertScreenplayControl(parent, beforeNode) {
         });
         return;
       }
-      shell.hidden = false;
-      drawer.hidden = false;
-      document.body.classList.add("preview-drawer-open");
-      setToolbarCollapsed(root, false, false);
-      requestAnimationFrame(activateDrawerFocus);
+      var targetBody = drawerEmbedTarget || bodyEl;
+      var useOverlay = !drawerEmbedTarget;
+      drawerBodyEl = targetBody;
+
+      if (useOverlay) {
+        shell.hidden = false;
+        drawer.hidden = false;
+        document.body.classList.add("preview-drawer-open");
+        setToolbarCollapsed(root, false, false);
+        requestAnimationFrame(activateDrawerFocus);
+      } else {
+        targetBody.innerHTML = "";
+      }
 
       if (mode === "edit") {
-        titleEl.textContent = "编辑";
-        bodyEl.innerHTML = editTpl;
-        var titleInput = bodyEl.querySelector(".preview-drawer__title-input");
-        var notes = bodyEl.querySelector(".preview-drawer__notes");
+        if (useOverlay) titleEl.textContent = "编辑";
+        targetBody.innerHTML = editTpl;
+        var titleInput = targetBody.querySelector(".preview-drawer__title-input");
+        var notes = targetBody.querySelector(".preview-drawer__notes");
         if (titleInput && entryCache.intentSummary) {
           titleInput.value = entryCache.intentSummary.title || "";
         }
@@ -1760,15 +1935,19 @@ function insertScreenplayControl(parent, beforeNode) {
           notes.value = entryCache.intentSummary.userNotes || "";
         }
         fillChapterFields(currentChapterId());
-        wireChipGroup(bodyEl.querySelector(".preview-drawer__chips--mood"), "preview-drawer__chip-mood");
-        wireChipGroup(bodyEl.querySelector(".preview-drawer__chips--focus"), "preview-drawer__chip-focus");
+        wireChipGroup(targetBody.querySelector(".preview-drawer__chips--mood"), "preview-drawer__chip-mood");
+        wireChipGroup(targetBody.querySelector(".preview-drawer__chips--focus"), "preview-drawer__chip-focus");
+        if (drawerEmbedTarget) {
+          markSheetEditBaseline(root, targetBody);
+          wireSheetEditDirty(root, targetBody);
+        }
 
         function persistEditDrawer(btn, opts) {
           opts = opts || {};
           var chId = currentChapterId();
           var titleVal = (titleInput && titleInput.value || "").trim();
           var notesVal = (notes.value || "").trim();
-          var anchorInputs = bodyEl.querySelectorAll(".preview-drawer__anchor");
+          var anchorInputs = targetBody.querySelectorAll(".preview-drawer__anchor");
           var anchors = [];
           anchorInputs.forEach(function (inp) {
             var v = (inp.value || "").trim();
@@ -1850,6 +2029,9 @@ function insertScreenplayControl(parent, beforeNode) {
                     : "编辑已保存"
                 );
               }
+              if (drawerEmbedTarget) {
+                markSheetEditBaseline(root, targetBody);
+              }
               return true;
             })
             .catch(function () {
@@ -1859,13 +2041,13 @@ function insertScreenplayControl(parent, beforeNode) {
             });
         }
 
-        bodyEl.querySelector(".preview-drawer__save-edit").addEventListener("click", function () {
+        targetBody.querySelector(".preview-drawer__save-edit").addEventListener("click", function () {
           var btn = this;
           persistEditDrawer(btn).then(function (ok) {
             if (ok) closeDrawer();
           });
         });
-        var narrateAnchorsBtn = bodyEl.querySelector(".preview-drawer__narrate-anchors");
+        var narrateAnchorsBtn = targetBody.querySelector(".preview-drawer__narrate-anchors");
         if (narrateAnchorsBtn) {
           narrateAnchorsBtn.addEventListener("click", function () {
             var btn = this;
@@ -1880,11 +2062,11 @@ function insertScreenplayControl(parent, beforeNode) {
       }
 
       if (mode === "cohort") {
-        titleEl.textContent = "旅行主角 · 同框";
-        bodyEl.innerHTML = "";
+        if (useOverlay) titleEl.textContent = "旅行主角 · 同框";
+        targetBody.innerHTML = "";
         mountCohortDrawer({
           tripId: tripId,
-          bodyEl: bodyEl,
+          bodyEl: targetBody,
           showToast: showToolbarToast,
           onClose: closeDrawer,
           onEntryRefresh: function () {
@@ -1900,18 +2082,18 @@ function insertScreenplayControl(parent, beforeNode) {
         return;
       }
 
-      titleEl.textContent = "结构";
-      bodyEl.innerHTML = structTpl;
-      var g1 = bodyEl.querySelector(".preview-drawer__g1");
-      var g1Actions = bodyEl.querySelector(".preview-drawer__g1-actions");
+      if (useOverlay) titleEl.textContent = "结构";
+      targetBody.innerHTML = structTpl;
+      var g1 = targetBody.querySelector(".preview-drawer__g1");
+      var g1Actions = targetBody.querySelector(".preview-drawer__g1-actions");
       var status = entryCache.pipelineStatus || "";
       var pending = entryCache.g1Pending || status === "structure_draft";
       if (pending) {
         g1.className = "preview-drawer__g1 preview-drawer__g1--warn";
         g1.textContent = "章节结构待确认：请浏览各章顺序，确认后将生成文案并完成排版。";
         if (g1Actions) g1Actions.hidden = false;
-        var confirmBtn = bodyEl.querySelector(".preview-drawer__g1-confirm");
-        var regenBtn = bodyEl.querySelector(".preview-drawer__g1-regenerate");
+        var confirmBtn = targetBody.querySelector(".preview-drawer__g1-confirm");
+        var regenBtn = targetBody.querySelector(".preview-drawer__g1-regenerate");
         if (confirmBtn) {
           confirmBtn.addEventListener("click", function () {
             runG1Confirm(confirmBtn);
@@ -1955,14 +2137,16 @@ function insertScreenplayControl(parent, beforeNode) {
         g1.textContent = "章节已按行程排好，可在预览中改字、锚点与精选。";
         if (g1Actions) g1Actions.hidden = true;
       }
-      loadChapterExplain(tripId, bodyEl.querySelector(".preview-drawer__explain"));
-      loadAestheticExplain(tripId, bodyEl.querySelector(".preview-drawer__aesthetic"));
-      var applyBtn = bodyEl.querySelector(".preview-drawer__apply-layout");
-      applyBtn.hidden = !_layoutPending;
-      applyBtn.addEventListener("click", function () {
-        closeDrawer();
-        applyLayoutRerender(tripId, root);
-      });
+      loadChapterExplain(tripId, targetBody.querySelector(".preview-drawer__explain"));
+      loadAestheticExplain(tripId, targetBody.querySelector(".preview-drawer__aesthetic"));
+      var applyBtn = targetBody.querySelector(".preview-drawer__apply-layout");
+      if (applyBtn) {
+        applyBtn.hidden = !_layoutPending;
+        applyBtn.addEventListener("click", function () {
+          closeDrawer();
+          applyLayoutRerender(tripId, root);
+        });
+      }
     }
 
     scrim.addEventListener("click", closeDrawer);
@@ -1979,6 +2163,10 @@ function insertScreenplayControl(parent, beforeNode) {
       openEdit: function () { openDrawer("edit"); },
       openStructure: function () { openDrawer("structure"); },
       openCohort: function () { openDrawer("cohort"); },
+      openEmbed: function (mode, el) {
+        drawerEmbedTarget = el;
+        openDrawer(mode);
+      },
       confirmStructure: function () { return runG1Confirm(null); },
       close: closeDrawer,
       refreshEntry: function () {
@@ -1988,6 +2176,26 @@ function insertScreenplayControl(parent, beforeNode) {
         });
       },
     };
+  }
+
+  function initG1V3(root, tripId, drawers, sheet) {
+    Promise.all([
+      fetch("/__travelogue/config").then(function (r) { return r.ok ? r.json() : null; }),
+      fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry").then(function (r) {
+        return r.ok ? r.json() : null;
+      }),
+    ])
+      .then(function (rows) {
+        var cfg = rows[0];
+        var entry = rows[1];
+        if (!cfg || !entry || !entry.g1Pending) return;
+        if (!(cfg.studio && cfg.studio.g1ConfirmStructure)) return;
+        _g1Pending = true;
+        _g1DockDismissed = false;
+        if (sheet) sheet.setStructureDot(true);
+        refreshTaskDockState(root);
+      })
+      .catch(function () {});
   }
 
   function initG1Banner(root, tripId, drawers) {
@@ -2188,22 +2396,26 @@ function insertScreenplayControl(parent, beforeNode) {
       });
   }
 
-  function initTemplateBadge(root, tripId) {
-    var bar = root.querySelector(".preview-toolbar__bar");
-    var cluster = bar && bar.querySelector(".preview-toolbar__cluster");
-    if (!cluster || cluster.querySelector(".preview-toolbar__template")) return;
-    fetchEntry(tripId).then(function (data) {
-      var t = data && data.template;
-      if (!t) return;
-      var pill = document.createElement("span");
-      pill.className = "preview-toolbar__template";
-      pill.setAttribute("title", t.feedbackMessage || "");
-      var label = t.sourceLabel || "模板";
-      if (t.locked) label += " · 已锁定";
-      pill.textContent = label + " · " + (t.resolvedTemplateId || "visual-journal");
-      cluster.insertBefore(pill, cluster.firstChild);
-      trackStudioEvent("template_selector_impression", { surface: "preview", tripId: tripId });
-      if (!t.locked) {
+  function mountTemplateControls(slot, tripId, opts) {
+    opts = opts || {};
+    if (!slot || slot.querySelector(".preview-toolbar__template")) return;
+    fetchEntry(tripId)
+      .then(function (data) {
+        var t = data && data.template;
+        if (!t) return;
+        var pill = document.createElement("span");
+        pill.className =
+          "preview-toolbar__template" + (opts.inSheet ? " preview-toolbar__template--sheet" : "");
+        pill.setAttribute("title", t.feedbackMessage || "");
+        var label = t.sourceLabel || "模板";
+        if (t.locked) label += " · 已锁定";
+        pill.textContent = label + " · " + (t.resolvedTemplateId || "visual-journal");
+        slot.appendChild(pill);
+        trackStudioEvent("template_selector_impression", {
+          surface: opts.inSheet ? "preview-sheet" : "preview",
+          tripId: tripId,
+        });
+        if (t.locked) return;
         var wrap = document.createElement("span");
         wrap.className = "preview-toolbar__template-adjust";
         var sel = document.createElement("select");
@@ -2231,14 +2443,23 @@ function insertScreenplayControl(parent, beforeNode) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
           })
-            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (r) {
+              return r.json().then(function (j) {
+                return { ok: r.ok, j: j };
+              });
+            })
             .then(function (res) {
               if (!res.ok) {
                 showToolbarToast((res.j && res.j.message) || "模板调整失败", { error: true });
                 return;
               }
               showToolbarToast("模板策略已更新", { duration: 2000 });
-              pill.textContent = (res.j.template && res.j.template.sourceLabel) || "已更新";
+              pill.textContent =
+                ((res.j.template && res.j.template.sourceLabel) || "已更新") +
+                " · " +
+                ((res.j.template && res.j.template.resolvedTemplateId) ||
+                  t.resolvedTemplateId ||
+                  "visual-journal");
             })
             .catch(function () {
               showToolbarToast("模板调整失败", { error: true });
@@ -2246,9 +2467,16 @@ function insertScreenplayControl(parent, beforeNode) {
         });
         wrap.appendChild(sel);
         wrap.appendChild(btn);
-        cluster.insertBefore(wrap, pill.nextSibling);
-      }
-    }).catch(function () { /* ignore */ });
+        slot.appendChild(wrap);
+      })
+      .catch(function () {});
+  }
+
+  function initTemplateBadge(root, tripId) {
+    var bar = root.querySelector(".preview-toolbar__bar");
+    var cluster = bar && bar.querySelector(".preview-toolbar__cluster");
+    if (!cluster) return;
+    mountTemplateControls(cluster, tripId, { inSheet: false });
   }
 
   function snapshotReadingPayload() {
@@ -2344,20 +2572,241 @@ function insertScreenplayControl(parent, beforeNode) {
     syncSeg();
   }
 
-  function initToolbar(root) {
-    var tripId = tripIdFromPath();
-    if (!tripId) return;
-
+  function initToolbarV3(root, tripId) {
     var bar = root.querySelector(".preview-toolbar__bar");
-    var actions = root.querySelector(".preview-toolbar__actions") || bar;
-    initPreviewModeSeg(root, actions);
-    var menuBtn = root.querySelector(".preview-toolbar__menu-btn");
-    var menu = root.querySelector(".preview-toolbar__more-menu");
-    var revealBtn = root.querySelector(".preview-toolbar__reveal-folder");
-
-    initTemplateBadge(root, tripId);
+    var actions = root.querySelector(".preview-toolbar__actions");
+    initTitleEdit(root, tripId);
     var drawers = initPreviewDrawers(root, tripId);
-    initG1Banner(root, tripId, drawers);
+
+    var readerOn = false;
+    try {
+      var stored = localStorage.getItem(READER_VIEW_KEY);
+      if (stored === "1") readerOn = true;
+    } catch (e0) {}
+    var baseline = snapshotReadingPayload();
+    if (baseline && baseline.profile === "reader_immersive") readerOn = true;
+    applyReaderSurfaceMode(readerOn);
+
+    function syncLongshotPrefsUi(container) {
+      if (!container) return;
+      var prefs = readLongshotExportPrefs();
+      container.querySelectorAll("[data-studio-longshot-mode]").forEach(function (btn) {
+        var on = btn.getAttribute("data-studio-longshot-mode") === prefs.mode;
+        btn.classList.toggle("is-on", on);
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      container.querySelectorAll("[data-studio-longshot-scale]").forEach(function (btn) {
+        var on = String(btn.getAttribute("data-studio-longshot-scale")) === String(prefs.scale);
+        btn.classList.toggle("is-on", on);
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    }
+
+    function syncReaderModeUi(container) {
+      if (!container) return;
+      var on = isReaderSurfaceMode();
+      container.querySelectorAll("[data-reader-mode]").forEach(function (btn) {
+        var reader = btn.getAttribute("data-reader-mode") === "reader";
+        btn.classList.toggle("is-on", reader === on);
+        btn.setAttribute("aria-pressed", reader === on ? "true" : "false");
+      });
+    }
+
+    var cohortEnabled = false;
+    var menuBtn = root.querySelector(".preview-toolbar__menu-btn");
+    try {
+      if (menuBtn && !sessionStorage.getItem(SHEET_HINT_KEY)) {
+        menuBtn.classList.add("preview-toolbar__menu-btn--pulse");
+      }
+    } catch (eHint) {}
+
+    var sheetHooks = {
+      drawers: drawers,
+      get cohortEnabled() { return cohortEnabled; },
+      isLayoutPending: function () { return _layoutPending; },
+      confirmLeaveCurrentTab: function (tabId, done) {
+        if (tabId !== "edit" || !_sheetEditDirty) {
+          done(true);
+          return;
+        }
+        toolbarConfirm({
+          title: "未保存的编辑",
+          body: "当前「文字」Tab 有未保存改动，离开将丢弃。",
+          confirmText: "离开",
+          cancelText: "留下",
+        }).then(done);
+      },
+      onSheetTabShown: function (tabId) {
+        if (tabId !== "edit") {
+          _sheetEditDirty = false;
+          root._sheetEditDirty = false;
+        }
+      },
+      onSheetOpened: function () {
+        try {
+          sessionStorage.setItem(SHEET_HINT_KEY, "1");
+        } catch (eOpen) {}
+        if (menuBtn) menuBtn.classList.remove("preview-toolbar__menu-btn--pulse");
+      },
+      syncLongshotPrefsUi: syncLongshotPrefsUi,
+      syncReaderModeUi: syncReaderModeUi,
+      setLongshotMode: function (mode) {
+        var prefs = readLongshotExportPrefs();
+        writeStoredLongshotPrefs(mode, prefs.scale);
+      },
+      setLongshotScale: function (scale) {
+        var prefs = readLongshotExportPrefs();
+        writeStoredLongshotPrefs(prefs.mode, scale === 3 ? 3 : 2);
+      },
+      setReaderMode: function (on) {
+        applyReaderSurfaceMode(!!on);
+        try {
+          localStorage.setItem(READER_VIEW_KEY, on ? "1" : "0");
+        } catch (e1) {}
+      },
+      onRevealFolder: function () {
+        revealTripFolder(tripId);
+      },
+      onExportZip: function () {
+        exportZip(tripId);
+      },
+      onPresentFeatured: function () {
+        startFeaturedPresent();
+      },
+      onLlmNarrate: function (btn) {
+        startLlmNarrate(root, tripId, btn);
+      },
+      onApplyLayout: function () {
+        applyLayoutRerender(tripId, root);
+      },
+      mountTemplateControls: function (slot) {
+        mountTemplateControls(slot, tripId, { inSheet: true });
+      },
+      syncCopyDisplayUi: function (container) {
+        if (!container) return;
+        var html = document.documentElement;
+        var photosOnly = html.getAttribute("data-photos-only") === "on";
+        var narrativeHidden = html.getAttribute("data-copy-display") === "photos";
+        var captionsOn = html.getAttribute("data-caption-display") !== "off";
+        container.querySelectorAll("[data-copy-preset]").forEach(function (btn) {
+          var on = photosOnly
+            ? btn.getAttribute("data-copy-preset") === "photos"
+            : btn.getAttribute("data-copy-preset") === "full";
+          btn.classList.toggle("is-on", on);
+          btn.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        var captionChip = container.querySelector('[data-preview-chip="caption"]');
+        if (captionChip) {
+          captionChip.classList.toggle("is-on", captionsOn);
+          captionChip.setAttribute("aria-pressed", captionsOn ? "true" : "false");
+          captionChip.textContent = captionsOn ? "图注：开" : "图注：关";
+          captionChip.disabled = photosOnly;
+        }
+        var narrativeChip = container.querySelector('[data-preview-chip="narrative"]');
+        if (narrativeChip) {
+          narrativeChip.classList.toggle("is-on", !narrativeHidden);
+          narrativeChip.setAttribute("aria-pressed", !narrativeHidden ? "true" : "false");
+          narrativeChip.textContent = !narrativeHidden ? "导语：显" : "导语：隐";
+          narrativeChip.disabled = photosOnly;
+        }
+      },
+      applyCopyPreset: function (preset) {
+        applyToolbarCopyPreset(root, preset);
+      },
+      toggleCaptions: function () {
+        toggleToolbarCaptions(root);
+      },
+      toggleNarrative: function () {
+        toggleToolbarNarrative(root);
+      },
+      trapFocus: function (el) {
+        return trapDrawerFocus(el);
+      },
+      refreshAdvancedOptions: function (panel) {
+        if (!panel) return;
+        drawers.refreshEntry().then(function (data) {
+          var count = (data && data.intentSummary && data.intentSummary.featuredCount) || 0;
+          panel.querySelectorAll(".preview-sheet__list-item--optional").forEach(function (li) {
+            var action = li.querySelector("[data-action]");
+            if (!action) return;
+            if (action.getAttribute("data-action") === "present") {
+              li.hidden = count < 1;
+            }
+          });
+        });
+        fetch("/__travelogue/config")
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (cfg) {
+            if (!cfg || !cfg.llmAvailable) return;
+            panel.querySelectorAll(".preview-sheet__list-item--optional").forEach(function (li) {
+              var action = li.querySelector('[data-action="llm"]');
+              if (action) li.hidden = false;
+            });
+          })
+          .catch(function () {});
+      },
+    };
+
+    fetch("/__travelogue/config")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (cfg) {
+        cohortEnabled = !!(cfg && cfg.cohort && cfg.cohort.enabled);
+      })
+      .catch(function () {});
+
+    root._taskDock = mountPreviewTaskDock(root, {
+      onCancelExport: function () {
+        if (longshotPollCancel) {
+          longshotPollCancel();
+          longshotPollCancel = null;
+        }
+        if (longshotJobId) {
+          postJson("/__travelogue/cancel", { jobId: longshotJobId }).catch(function () {});
+          longshotJobId = null;
+        }
+        root._exportDockActive = false;
+        setLongshotExportState(root, "idle");
+        root._taskDock.hide();
+      },
+      onRevealFolder: function (relPath, tid) {
+        revealTripPath(tid || tripId, relPath);
+      },
+      onCopyPath: function (text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {
+            showToolbarToast("路径已复制");
+          }).catch(function () {
+            showToolbarToast(text);
+          });
+        } else {
+          showToolbarToast(text);
+        }
+      },
+      onApplyLayout: function () {
+        applyLayoutRerender(tripId, root);
+      },
+      onDismissPending: function () {
+        _pendingDockDismissed = true;
+        refreshTaskDockState(root);
+      },
+      onOpenStructure: function () {
+        if (root._sheet) root._sheet.open("structure");
+      },
+      onConfirmStructure: function () {
+        drawers.confirmStructure();
+      },
+      onDismissG1: function () {
+        _g1DockDismissed = true;
+        refreshTaskDockState(root);
+      },
+      onResultDismissed: function () {
+        root._exportResultShowing = false;
+        refreshTaskDockState(root);
+      },
+    });
+
+    root._sheet = mountPreviewUnifiedSheet(root, sheetHooks);
+    initG1V3(root, tripId, drawers, root._sheet);
     initDisplayedAestheticTitles(tripId);
 
     var exportWrap = document.createElement("div");
@@ -2366,192 +2815,26 @@ function insertScreenplayControl(parent, beforeNode) {
     var exportZone = document.createElement("div");
     exportZone.className = "preview-toolbar__export-zone";
 
-    var longshotSplit = document.createElement("div");
-    longshotSplit.className =
-      "preview-toolbar__longshot-split preview-toolbar__longshot-split--idle";
-
     var longshotBtn = document.createElement("button");
     longshotBtn.type = "button";
     longshotBtn.className =
-      "preview-toolbar__longshot preview-toolbar__longshot--main preview-toolbar__longshot--idle";
-    longshotBtn.textContent = "保存长图";
+      "preview-toolbar__longshot preview-toolbar__longshot--v3 preview-toolbar__longshot--idle";
+    longshotBtn.textContent = "导出长图";
 
-    var longshotCaret = document.createElement("button");
-    longshotCaret.type = "button";
-    longshotCaret.className = "preview-toolbar__longshot-caret";
-    longshotCaret.setAttribute("aria-label", "导出选项");
-    longshotCaret.title = "导出选项";
-    longshotCaret.innerHTML =
-      '<span class="preview-toolbar__icon-btn__glyph" aria-hidden="true">▾</span>';
-
-    longshotSplit.appendChild(longshotBtn);
-    longshotSplit.appendChild(longshotCaret);
-
-    var staleBadge = document.createElement("span");
-    staleBadge.className = "preview-toolbar__export-stale";
-    staleBadge.hidden = true;
-    staleBadge.textContent = "内容已更新";
-
-    var exportMeta = document.createElement("span");
-    exportMeta.className = "preview-toolbar__export-meta";
-    exportMeta.textContent = "按章 · 2× · 完整文案";
-
-    exportZone.appendChild(longshotSplit);
-    exportZone.appendChild(staleBadge);
-    exportZone.appendChild(exportMeta);
-
-    var progress = document.createElement("div");
-    progress.className = "preview-toolbar__export-progress";
-    progress.hidden = true;
-    progress.innerHTML = '<div class="preview-toolbar__export-progress-fill"></div>';
-
+    exportZone.appendChild(longshotBtn);
     exportWrap.appendChild(exportZone);
-    exportWrap.appendChild(progress);
-    actions.appendChild(exportWrap);
+    actions.insertBefore(exportWrap, actions.querySelector(".preview-toolbar__menu-wrap"));
+
     setLongshotExportState(root, "idle");
 
-    insertScreenplayControl(actions, exportWrap);
-
-    bindLongshotExportMeta(root);
-
     longshotBtn.addEventListener("click", function () {
-      if (longshotBtn.classList.contains("preview-toolbar__longshot--done")) {
-        openLongshotResultDrawer(root);
-        return;
-      }
       startLongshot(root, tripId);
     });
-    longshotCaret.addEventListener("click", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (longshotCaret.disabled) return;
-      openLongshotExportOptions(root);
-    });
-
-    initLongshotPreviewRow(root);
-    (function waitLongshotApi(attempts) {
-      if (longshotApi() || attempts <= 0) {
-        syncLongshotPreviewChips(root);
-        return;
-      }
-      window.setTimeout(function () {
-        waitLongshotApi(attempts - 1);
-      }, 150);
-    })(24);
-
-    var pendingApply = root.querySelector(".preview-toolbar__pending-apply");
-    if (pendingApply) {
-      pendingApply.addEventListener("click", function () {
-        applyLayoutRerender(tripId, root);
-      });
-    }
-
-    if (revealBtn) {
-      revealBtn.addEventListener("click", function () {
-        revealTripFolder(tripId);
-      });
-    }
 
     if (window.location.search.indexOf("focus=longshot") >= 0) {
-      setToolbarCollapsed(root, false, false);
       requestAnimationFrame(function () {
-        exportWrap.scrollIntoView({ behavior: "smooth", block: "center" });
         longshotBtn.focus();
         longshotBtn.classList.add("preview-toolbar__longshot--focus");
-      });
-    }
-
-    if (menu && menuBtn) {
-      var applyBtn = menu.querySelector(".preview-toolbar__apply-layout");
-      var editBtn = menu.querySelector(".preview-toolbar__open-edit");
-      var cohortBtn = menu.querySelector(".preview-toolbar__open-cohort");
-      var structBtn = menu.querySelector(".preview-toolbar__open-structure");
-      var presentBtn = menu.querySelector(".preview-toolbar__present-featured");
-      var llmSlot = menu.querySelector(".preview-toolbar__llm-slot");
-      var zipBtn = menu.querySelector(".preview-toolbar__export-zip");
-
-      function closeMenu() {
-        menu.hidden = true;
-        menuBtn.setAttribute("aria-expanded", "false");
-      }
-
-      menuBtn.addEventListener("click", function (e) {
-        e.stopPropagation();
-        var willOpen = menu.hidden;
-        menu.hidden = !willOpen;
-        menuBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
-      });
-
-      if (applyBtn) {
-        applyBtn.hidden = true;
-        applyBtn.addEventListener("click", function () {
-          closeMenu();
-          applyLayoutRerender(tripId, root);
-        });
-      }
-      if (editBtn) {
-        editBtn.addEventListener("click", function () {
-          closeMenu();
-          drawers.openEdit();
-        });
-      }
-      if (cohortBtn) {
-        fetch("/__travelogue/config")
-          .then(function (r) {
-            return r.ok ? r.json() : null;
-          })
-          .then(function (cfg) {
-            if (cfg && cfg.cohort && cfg.cohort.enabled) cohortBtn.hidden = false;
-          })
-          .catch(function () {});
-        cohortBtn.addEventListener("click", function () {
-          closeMenu();
-          drawers.openCohort();
-        });
-      }
-      if (structBtn) {
-        structBtn.addEventListener("click", function () {
-          closeMenu();
-          drawers.openStructure();
-        });
-      }
-      if (presentBtn) {
-        drawers.refreshEntry().then(function (data) {
-          var count = (data && data.intentSummary && data.intentSummary.featuredCount) || 0;
-          presentBtn.hidden = count < 1;
-        });
-        presentBtn.addEventListener("click", function () {
-          closeMenu();
-          startFeaturedPresent();
-        });
-      }
-      if (zipBtn) {
-        zipBtn.addEventListener("click", function () {
-          closeMenu();
-          exportZip(tripId);
-        });
-      }
-
-      fetch("/__travelogue/config")
-        .then(function (resp) { return resp.json(); })
-        .then(function (cfg) {
-          if (!cfg.llmAvailable || !llmSlot) return;
-          var llmBtn = document.createElement("button");
-          llmBtn.type = "button";
-          llmBtn.className = "preview-toolbar__llm";
-          llmBtn.textContent = "生成杂志感文案";
-          llmBtn.addEventListener("click", function () {
-            closeMenu();
-            startLlmNarrate(root, tripId, llmBtn);
-          });
-          llmSlot.appendChild(llmBtn);
-        })
-        .catch(function () {});
-
-      document.addEventListener("click", function (ev) {
-        if (!menu.contains(ev.target) && !menuBtn.contains(ev.target)) {
-          closeMenu();
-        }
       });
     }
 
@@ -2565,6 +2848,8 @@ function insertScreenplayControl(parent, beforeNode) {
     window.addEventListener("travelogue:copy-saved", function () {
       showStaleHint(root);
     });
+
+    syncToolbarHeight(root);
   }
 
   function isSharePreview() {
@@ -2617,74 +2902,26 @@ function insertScreenplayControl(parent, beforeNode) {
     document.documentElement.setAttribute("data-preview-toolbar", "on");
 
     var root = document.createElement("div");
-    root.className = "preview-toolbar";
+    root.className = "preview-toolbar preview-toolbar--v3";
     root.innerHTML =
-      '<div class="preview-toolbar__collapsed-strip">' +
-      '<div class="preview-toolbar__spacer preview-toolbar__spacer--strip" aria-hidden="true"></div>' +
-      '<button type="button" class="preview-toolbar__handle" aria-expanded="false">' +
-      '<span class="preview-toolbar__handle-icon" aria-hidden="true">▾</span>' +
-      '<span class="preview-toolbar__handle-label">显示工具栏</span>' +
-      "</button>" +
-      '<a class="preview-toolbar__back preview-toolbar__back--strip preview-toolbar__ctl" href="/" title="返回 Studio 首页">' +
-      '<span class="preview-toolbar__ctl__glyph" aria-hidden="true">←</span>返回</a>' +
-      "</div>" +
       '<div class="preview-toolbar__body">' +
-      '<div class="preview-toolbar__bar preview-toolbar__bar--minimal">' +
-      '<div class="preview-toolbar__spacer" aria-hidden="true"></div>' +
-      '<div class="preview-toolbar__cluster">' +
-      '<div class="preview-toolbar__ops-group">' +
-      '<div class="preview-toolbar__actions"></div>' +
-      '<button type="button" class="preview-toolbar__reveal-folder preview-toolbar__ctl" title="在文件夹中显示">文件夹</button>' +
-      '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__icon-btn" aria-haspopup="true" aria-expanded="false" aria-label="更多编辑" title="更多编辑">' +
-      '<span class="preview-toolbar__icon-btn__glyph preview-toolbar__icon-btn__glyph--more" aria-hidden="true">⋯</span></button>' +
-      '<div class="preview-toolbar__more-menu" hidden role="menu">' +
-      '<button type="button" class="preview-toolbar__open-edit" role="menuitem">编辑感受与锚点</button>' +
-      '<button type="button" class="preview-toolbar__open-cohort" role="menuitem" hidden>旅行主角 · 同框</button>' +
-      '<button type="button" class="preview-toolbar__open-structure" role="menuitem">结构与分章</button>' +
-      '<button type="button" class="preview-toolbar__apply-layout" role="menuitem" hidden>应用排版</button>' +
-      '<button type="button" class="preview-toolbar__present-featured" role="menuitem" hidden>放映精选</button>' +
-      '<span class="preview-toolbar__llm-slot" role="none"></span>' +
-      '<button type="button" class="preview-toolbar__export-zip" role="menuitem">导出 zip（自行托管）</button>' +
-      "</div>" +
-      "</div>" +
-      '<button type="button" class="preview-toolbar__collapse preview-toolbar__icon-btn" aria-expanded="true" aria-label="收起工具栏">' +
-      '<span class="preview-toolbar__icon-btn__glyph" aria-hidden="true">▴</span>' +
-      "</button>" +
+      '<div class="preview-toolbar__bar preview-toolbar__bar--v3">' +
       '<a class="preview-toolbar__back preview-toolbar__ctl" href="/" title="返回 Studio 首页">' +
       '<span class="preview-toolbar__ctl__glyph" aria-hidden="true">←</span>返回</a>' +
-      "</div>" +
-      '<div class="preview-toolbar__longshot-preview-row" hidden>' +
-      '<div class="preview-toolbar__longshot-preview-banner">' +
-      '<div class="preview-toolbar__chip-seg" role="group" aria-label="文案范围">' +
-      '<button type="button" class="preview-toolbar__chip-seg-btn" data-copy-preset="photos" aria-pressed="false">纯照片</button>' +
-      '<button type="button" class="preview-toolbar__chip-seg-btn is-selected" data-copy-preset="full" aria-pressed="true">完整文案</button>' +
-      "</div>" +
-      '<button type="button" class="preview-toolbar__chip" data-preview-chip="caption" aria-pressed="true">图注：开</button>' +
-      '<button type="button" class="preview-toolbar__chip" data-preview-chip="narrative" aria-pressed="true">导语：显</button>' +
+      '<div class="preview-toolbar__title-wrap"></div>' +
+      '<div class="preview-toolbar__actions">' +
+      '<div class="preview-toolbar__menu-wrap">' +
+      '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__icon-btn" aria-haspopup="dialog" aria-expanded="false" aria-label="更多编辑与设置" title="编辑与设置">' +
+      '<span class="preview-toolbar__icon-btn__glyph preview-toolbar__icon-btn__glyph--more" aria-hidden="true">⋯</span></button>' +
       "</div>" +
       "</div>" +
-      '<div class="preview-toolbar__pending-row" hidden>' +
-      '<div class="preview-toolbar__pending-banner">' +
-      '<span class="preview-toolbar__pending-text">有编辑尚未应用排版</span>' +
-      '<button type="button" class="preview-toolbar__pending-apply">应用排版</button>' +
-      "</div>" +
-      "</div>" +
-      '<div class="preview-toolbar__drawer" id="preview-toolbar-longshot-drawer" hidden></div>' +
       "</div>" +
       "</div>";
 
     document.body.insertBefore(root, document.body.firstChild);
-    bindToolbarCollapse(root);
-    initToolbar(root);
-
-    var startCollapsed = false;
-    try {
-      startCollapsed = localStorage.getItem(COLLAPSE_KEY) === "1";
-    } catch (e3) {}
-    if (window.location.search.indexOf("focus=longshot") >= 0) {
-      startCollapsed = false;
-    }
-    setToolbarCollapsed(root, startCollapsed, false);
+    var tripId = tripIdFromPath();
+    if (!tripId) return;
+    initToolbarV3(root, tripId);
   }
 
 if (document.readyState === "loading") {
