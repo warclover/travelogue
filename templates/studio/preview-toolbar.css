@@ -1,6 +1,7 @@
 html[data-preview-toolbar="on"] {
   --preview-toolbar-h: 56px;
   --preview-sheet-side-w: 380px;
+  --preview-sheet-float-gap: 12px;
   --preview-sheet-duration-enter: 460ms;
   --preview-sheet-duration-exit: 380ms;
   --preview-sheet-scrim-duration: 420ms;
@@ -1577,6 +1578,10 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v3) {
   --preview-toolbar-h: 48px;
 }
 
+.preview-toolbar--v3 {
+  z-index: 220;
+}
+
 .preview-toolbar--v3 .preview-toolbar__body {
   transform: none;
   opacity: 1;
@@ -2073,23 +2078,30 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v3) {
 
 @media (min-width: 1024px) {
   .preview-sheet-root {
-    align-items: center;
+    align-items: stretch;
     justify-content: flex-end;
-    padding: 12px;
+    padding:
+      calc(var(--preview-toolbar-h) + var(--preview-sheet-float-gap))
+      var(--preview-sheet-float-gap)
+      var(--preview-sheet-float-gap);
     box-sizing: border-box;
   }
 
   .preview-sheet-root--visible .preview-sheet__scrim {
-    inset: 0;
+    top: var(--preview-toolbar-h);
+    right: 0;
+    bottom: 0;
+    left: 0;
     background: rgba(0, 0, 0, 0.28);
   }
 
   .preview-sheet {
     position: relative;
     width: var(--preview-sheet-side-w);
-    max-width: calc(100vw - 24px);
-    height: calc(100% - 24px);
+    max-width: calc(100vw - var(--preview-sheet-float-gap) * 2);
+    height: 100%;
     max-height: none;
+    align-self: stretch;
     border-radius: 16px;
     box-shadow:
       0 20px 44px rgba(0, 0, 0, 0.16),

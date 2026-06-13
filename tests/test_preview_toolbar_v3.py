@@ -160,12 +160,16 @@ def test_v3_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
                 """() => {
                 const sheet = document.querySelector('.preview-sheet');
                 const rect = sheet.getBoundingClientRect();
+                const toolbar = document.querySelector('.preview-toolbar--v3');
+                const toolbarH = toolbar ? toolbar.getBoundingClientRect().height : 48;
                 return {
+                    top: rect.top,
                     x: rect.x,
                     width: rect.width,
                     height: rect.height,
                     viewportW: window.innerWidth,
                     viewportH: window.innerHeight,
+                    toolbarH,
                     bodyMarginRight: getComputedStyle(document.body).marginRight,
                     toolbarRight: getComputedStyle(document.querySelector('.preview-toolbar')).right,
                     borderRadius: getComputedStyle(sheet).borderRadius,
@@ -174,7 +178,8 @@ def test_v3_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             )
             assert side_layout["width"] >= 360, side_layout
             assert side_layout["x"] >= side_layout["viewportW"] - side_layout["width"] - 16, side_layout
-            assert side_layout["height"] <= side_layout["viewportH"] - 20, side_layout
+            assert side_layout["top"] >= side_layout["toolbarH"] + 8, side_layout
+            assert side_layout["height"] <= side_layout["viewportH"] - side_layout["toolbarH"] - 20, side_layout
             assert float(side_layout["bodyMarginRight"].replace("px", "") or 0) < 20, side_layout
             assert float(side_layout["toolbarRight"].replace("px", "") or 0) < 20, side_layout
             assert "16" in side_layout["borderRadius"], side_layout
