@@ -4,6 +4,11 @@ trips/linzhi/*.css text eol=lf
 trips/linzhi/*.js text eol=lf
 trips/linzhi/README.md text eol=lf
 
+# Binary assets
+*.png binary
+*.jpg binary
+*.webp binary
+
 # Docs and schemas: LF in repo regardless of Windows checkout.
 docs/** text eol=lf
 schemas/** text eol=lf
