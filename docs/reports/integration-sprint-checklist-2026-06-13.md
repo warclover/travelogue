@@ -41,8 +41,8 @@
 | W1-03 | 全链路重跑 **maomi** | 工程 | 2026-06-16 | ◐ | smoke/validate OK · 全链路待 `D:\Photos\maomi` |
 | W1-04 | 全链路重跑 **mao** | 工程 | 2026-06-16 | ☐ | 仓库无 `trips/mao/` · 跳过或新建 |
 | W1-05 | 跑 `python scripts/quality_gate.py` + P5 smoke | 工程 | 2026-06-16 | ☑ | 2026-06-13 QUALITY GATE OK · e2e smoke OK |
-| W1-06 | **AC-07** linzhi 长图发微信群（2× 按章 + 隐藏不准图注） | 产品/发起人 | 2026-06-18 | ☐ | linzhi.md §发群反馈已填 |
-| W1-07 | 补齐 AC-03 / AC-05 / AC-06 手测 | 产品 | 2026-06-18 | ☐ | linzhi.md AC 表全 ☑ |
+| W1-06 | **AC-07** linzhi 长图发微信群（5 章 PNG） | 产品/发起人 | 2026-06-18 | ☑ | 2026-06-13 已发群 · [linzhi.md](../acceptance-records/linzhi.md) §发群反馈 |
+| W1-07 | 补齐 AC-03 / AC-05 / AC-06 手测 | 产品 | 2026-06-18 | ◐ | AC-07 ☑ · AC-03 待群友反馈 · AC-05/06 待手测 |
 | W1-08 | 建立 **pairwise 盲评基线**（P21 前后或 master vs 上一 tag） | 产品/算法 | 2026-06-20 | ☐ | `acceptance-records/phase18-blind-baseline.json` |
 | W1-09 | 盲评结论写入 acceptance-records；若不可感知 → 正式记录「算法冻结」 | 项目负责人 | 2026-06-20 | ☐ | 结论段 + 是否继续调参决策 |
 
@@ -148,7 +148,7 @@ python scripts/phase6_cover_blind_review.py --help
 
 | 波次 | 完成 / 总数 | 状态 |
 |------|-------------|------|
-| W1 | 3 / 9 | ◐ 全链路 linzhi ☑ · AC-07/盲评待人工 |
+| W1 | 4 / 9 | ◐ AC-07 已发群 · 群友反馈/盲评待补 |
 | W2 | 5 / 8 | ◐ 文档/卫生 ☑ · OQ/分支待办 |
 | W3 | 0 / 8 | ☐ 未开始 |
 | W4 | 0 / 6 | ☐ 未开始 |
@@ -162,4 +162,4 @@ python scripts/phase6_cover_blind_review.py --help
 | 日期 | 变更 |
 |------|------|
 | 2026-06-13 | 初版 · 由项目负责人 4 周建议落地 |
-| 2026-06-13 | W1-05/W2-01～03/06/07 执行 · linzhi/maomi smoke 重验 |
+| 2026-06-13 | W1-06 AC-07 发群确认（发起人） |
