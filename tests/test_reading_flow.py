@@ -44,6 +44,7 @@ def test_breath_lenis_asset_exists() -> None:
     js = BREATH_LENIS_JS.read_text(encoding="utf-8")
     assert "TravelogueLenis" in js
     assert "lerp" in js
+    assert "wheelBypassTarget" in js
 
 
 def test_breath_js_integrates_flow_and_lenis() -> None:

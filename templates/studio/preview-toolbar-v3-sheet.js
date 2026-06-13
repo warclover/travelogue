@@ -1,5 +1,6 @@
 /**
- * Preview toolbar v3 · unified bottom sheet (文字 | 结构 | 排版 | 高级).
+ * Preview toolbar v3 · unified settings panel (文字 | 结构 | 排版 | 高级).
+ * Mobile: bottom sheet · Desktop (≥1024px): right side panel.
  */
 "use strict";
 
@@ -23,8 +24,10 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     '<h2 id="preview-sheet-title" class="preview-sheet__title">编辑与设置</h2>' +
     '<button type="button" class="preview-sheet__close" aria-label="关闭">×</button>' +
     "</div>" +
+    '<div class="preview-sheet__content">' +
     '<nav class="preview-sheet__tabs" role="tablist"></nav>' +
     '<div class="preview-sheet__body"></div>' +
+    "</div>" +
     "</div>";
   document.body.appendChild(shell);
 
@@ -40,6 +43,86 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   var pendingDot = false;
   var structureDot = false;
   var focusRelease = null;
+  var lenisPausedBySheet = false;
+  var sheetClosing = false;
+  var sheetCloseTimer = null;
+  var SHEET_ANIM_MS = 540;
+
+  function pausePageFlowScroll() {
+    if (lenisPausedBySheet) return;
+    if (window.TravelogueLenis && typeof window.TravelogueLenis.pause === "function") {
+      window.TravelogueLenis.pause();
+      lenisPausedBySheet = true;
+    }
+  }
+
+  function resumePageFlowScroll() {
+    if (!lenisPausedBySheet) return;
+    if (window.TravelogueLenis && typeof window.TravelogueLenis.resume === "function") {
+      window.TravelogueLenis.resume();
+    }
+    lenisPausedBySheet = false;
+  }
+
+  function beginSheetEnter() {
+    sheetClosing = false;
+    if (sheetCloseTimer) {
+      clearTimeout(sheetCloseTimer);
+      sheetCloseTimer = null;
+    }
+    shell.hidden = false;
+    sheet.hidden = false;
+    shell.classList.remove("preview-sheet-root--closing");
+    shell.classList.add("preview-sheet-root--visible");
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        shell.classList.add("preview-sheet-root--open");
+        document.body.classList.add("preview-sheet-open");
+      });
+    });
+  }
+
+  function finishSheetExit(after) {
+    sheetClosing = false;
+    shell.classList.remove(
+      "preview-sheet-root--closing",
+      "preview-sheet-root--visible",
+      "preview-sheet-root--open"
+    );
+    shell.hidden = true;
+    sheet.hidden = true;
+    bodyEl.innerHTML = "";
+    if (after) after();
+  }
+
+  function beginSheetExit(after) {
+    if (shell.hidden || sheetClosing) {
+      if (after) after();
+      return;
+    }
+    sheetClosing = true;
+    shell.classList.remove("preview-sheet-root--open");
+    shell.classList.add("preview-sheet-root--closing");
+    document.body.classList.remove("preview-sheet-open");
+    resumePageFlowScroll();
+
+    function onTransitionEnd(e) {
+      if (e.target !== sheet || e.propertyName !== "transform") return;
+      sheet.removeEventListener("transitionend", onTransitionEnd);
+      if (sheetCloseTimer) {
+        clearTimeout(sheetCloseTimer);
+        sheetCloseTimer = null;
+      }
+      finishSheetExit(after);
+    }
+
+    sheet.addEventListener("transitionend", onTransitionEnd);
+    sheetCloseTimer = setTimeout(function () {
+      sheet.removeEventListener("transitionend", onTransitionEnd);
+      sheetCloseTimer = null;
+      finishSheetExit(after);
+    }, SHEET_ANIM_MS + 80);
+  }
 
   function releaseFocusTrap() {
     if (focusRelease) {
@@ -272,6 +355,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     activeTab = tabId;
     syncTabUi();
     bodyEl.innerHTML = "";
+    bodyEl.scrollTop = 0;
     if (typeof hooks.onSheetTabShown === "function") {
       hooks.onSheetTabShown(tabId);
     }
@@ -293,9 +377,8 @@ export function mountPreviewUnifiedSheet(root, hooks) {
 
   function open(tabId) {
     previousFocus = document.activeElement;
-    shell.hidden = false;
-    sheet.hidden = false;
-    document.body.classList.add("preview-sheet-open");
+    beginSheetEnter();
+    pausePageFlowScroll();
     if (menuBtn) {
       menuBtn.classList.remove("preview-toolbar__menu-btn--pulse");
       menuBtn.setAttribute("aria-expanded", "true");
@@ -311,21 +394,20 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   function close() {
     confirmLeave(function (ok) {
       if (!ok) return;
+      if (sheetClosing) return;
       releaseFocusTrap();
       if (hooks.drawers && typeof hooks.drawers.close === "function") {
         hooks.drawers.close();
       }
-      shell.hidden = true;
-      sheet.hidden = true;
-      document.body.classList.remove("preview-sheet-open");
-      bodyEl.innerHTML = "";
       if (menuBtn) {
         menuBtn.setAttribute("aria-expanded", "false");
       }
-      if (previousFocus && previousFocus.focus) {
-        previousFocus.focus();
-      }
-      previousFocus = null;
+      beginSheetExit(function () {
+        if (previousFocus && previousFocus.focus) {
+          previousFocus.focus();
+        }
+        previousFocus = null;
+      });
     });
   }
 
@@ -344,12 +426,13 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   closeBtn.addEventListener("click", close);
   scrim.addEventListener("click", close);
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && !shell.hidden) close();
+    if (e.key === "Escape" && !shell.hidden && !sheetClosing) close();
   });
 
   if (menuBtn) {
     menuBtn.addEventListener("click", function (e) {
       e.stopPropagation();
+      if (sheetClosing) return;
       if (shell.hidden) open("edit");
       else close();
     });

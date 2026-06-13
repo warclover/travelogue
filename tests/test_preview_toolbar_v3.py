@@ -49,11 +49,30 @@ def test_v3_css_fixed_bar_and_task_dock() -> None:
         "preview-toolbar__bar--v3",
         "preview-task-dock",
         "preview-sheet",
+        "preview-sheet__content",
+        "--preview-sheet-side-w",
         "preview-toolbar__longshot--v3",
         "preview-toolbar__menu-btn--pulse",
         "preview-sheet__tab--dot",
+        "preview-sheet__tabs",
+        "flex-shrink: 0",
+        "translate3d",
+        "--preview-sheet-ease-enter",
+        "preview-sheet-root--open",
+        "preview-sheet-duration-enter",
     ):
         assert token in css, f"missing v3 css: {token}"
+    tabs_block = css.split(".preview-sheet__tabs {", 1)[1].split("}", 1)[0]
+    assert "flex-shrink: 0" in tabs_block
+    sheet_template = css.split(".preview-toolbar__template--sheet {", 1)[1].split("}", 1)[0]
+    assert "#1a2f28" in sheet_template
+
+
+def test_v3_sheet_has_content_wrapper() -> None:
+    sheet = SHEET_JS.read_text(encoding="utf-8")
+    assert "preview-sheet__content" in sheet
+    assert "beginSheetEnter" in sheet
+    assert "beginSheetExit" in sheet
 
 
 def test_v3_task_dock_exports_g1_and_pending() -> None:
@@ -128,8 +147,38 @@ def test_v3_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             assert page.locator(".preview-toolbar__reveal-folder").count() == 0
 
             page.locator(".preview-toolbar__menu-btn").click()
+            page.wait_for_timeout(580)
+            expect_open = page.evaluate(
+                '() => document.querySelector(".preview-sheet-root").classList.contains("preview-sheet-root--open")'
+            )
+            assert expect_open is True
+
             sheet = page.locator(".preview-sheet")
             sheet.wait_for(state="visible", timeout=5_000)
+
+            side_layout = page.evaluate(
+                """() => {
+                const sheet = document.querySelector('.preview-sheet');
+                const rect = sheet.getBoundingClientRect();
+                return {
+                    x: rect.x,
+                    width: rect.width,
+                    height: rect.height,
+                    viewportW: window.innerWidth,
+                    viewportH: window.innerHeight,
+                    bodyMarginRight: getComputedStyle(document.body).marginRight,
+                    toolbarRight: getComputedStyle(document.querySelector('.preview-toolbar')).right,
+                    borderRadius: getComputedStyle(sheet).borderRadius,
+                };
+            }"""
+            )
+            assert side_layout["width"] >= 360, side_layout
+            assert side_layout["x"] >= side_layout["viewportW"] - side_layout["width"] - 16, side_layout
+            assert side_layout["height"] <= side_layout["viewportH"] - 20, side_layout
+            assert float(side_layout["bodyMarginRight"].replace("px", "") or 0) < 20, side_layout
+            assert float(side_layout["toolbarRight"].replace("px", "") or 0) < 20, side_layout
+            assert "16" in side_layout["borderRadius"], side_layout
+
             tabs = page.locator(".preview-sheet__tab")
             assert tabs.count() == 4
             tab_labels = [tabs.nth(i).inner_text().strip() for i in range(4)]
@@ -140,6 +189,21 @@ def test_v3_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             page.wait_for_selector('[data-copy-preset="full"]', timeout=5_000)
             page.wait_for_selector('[data-action="reveal-folder"]', timeout=5_000)
 
+            page.locator('.preview-sheet__tab[data-sheet-tab="structure"]').click()
+            page.wait_for_selector(".preview-drawer__g1", timeout=5_000)
+            tab_metrics = page.evaluate(
+                """() => {
+                const tabs = document.querySelector('.preview-sheet__tabs');
+                const tab = document.querySelector('.preview-sheet__tab.is-active');
+                return {
+                    tabsH: tabs ? tabs.offsetHeight : 0,
+                    tabBtnH: tab ? tab.offsetHeight : 0,
+                };
+            }"""
+            )
+            assert tab_metrics["tabsH"] >= 40, tab_metrics
+            assert tab_metrics["tabBtnH"] >= 28, tab_metrics
+
             page.locator(".preview-sheet__close").click()
             page.locator(".preview-sheet-root").wait_for(state="hidden", timeout=5_000)
 
@@ -147,6 +211,49 @@ def test_v3_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             title_btn.wait_for(state="visible", timeout=5_000)
             assert "V3" in title_btn.inner_text()
 
+            browser.close()
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_v3_mobile_keeps_bottom_sheet(tmp_path: Path) -> None:
+    pytest.importorskip("playwright")
+    from playwright.sync_api import sync_playwright
+
+    from tests.test_studio_server import _free_port, _start_studio_server
+    from travelogue.web.studio_jobs import reset_job_store
+
+    reset_job_store()
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    trip_id = _seed_preview_trip(trips_dir)
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    base = f"http://127.0.0.1:{port}"
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page(viewport={"width": 390, "height": 700})
+            page.goto(f"{base}/{trip_id}/index.html", wait_until="networkidle")
+            page.locator(".preview-toolbar__menu-btn").click()
+            page.locator(".preview-sheet").wait_for(state="visible", timeout=5_000)
+            layout = page.evaluate(
+                """() => {
+                const sheet = document.querySelector('.preview-sheet');
+                const rect = sheet.getBoundingClientRect();
+                return {
+                    bottom: rect.bottom,
+                    viewportH: window.innerHeight,
+                    bodyMarginRight: getComputedStyle(document.body).marginRight,
+                };
+            }"""
+            )
+            assert layout["bottom"] >= layout["viewportH"] - 4, layout
+            margin = float(layout["bodyMarginRight"].replace("px", "") or 0)
+            assert margin < 40, layout
             browser.close()
     finally:
         server.shutdown()

@@ -29,6 +29,32 @@
     };
   }
 
+  function overflowAllowsScroll(style) {
+    var oy = style.overflowY;
+    return oy === "auto" || oy === "scroll" || oy === "overlay";
+  }
+
+  /** Let nested overflow containers (Sheet / drawer) consume wheel natively. */
+  function canConsumeWheel(el, deltaY) {
+    if (!el || el === document.body || el === document.documentElement) return false;
+    var style = global.getComputedStyle(el);
+    if (!overflowAllowsScroll(style)) return false;
+    if (el.scrollHeight <= el.clientHeight + 1) return false;
+    var maxScroll = el.scrollHeight - el.clientHeight;
+    if (deltaY < 0) return el.scrollTop > 0;
+    if (deltaY > 0) return el.scrollTop < maxScroll - 1;
+    return false;
+  }
+
+  function wheelBypassTarget(target, deltaY) {
+    var el = target;
+    while (el && el !== document.documentElement) {
+      if (canConsumeWheel(el, deltaY)) return el;
+      el = el.parentElement;
+    }
+    return null;
+  }
+
   var FLOW_TAIL_MS = 300;
   var FLOW_FRAME_MS = 1000 / 60;
 
@@ -60,6 +86,7 @@
 
   FlowScroll.prototype.onWheel = function (e) {
     if (this.paused) return;
+    if (wheelBypassTarget(e.target, e.deltaY)) return;
     e.preventDefault();
     this.lastWheelAt = Date.now();
     this.coastStartedAt = 0;
