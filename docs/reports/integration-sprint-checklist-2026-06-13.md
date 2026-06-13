@@ -42,7 +42,7 @@
 | W1-04 | 全链路重跑 **mao** | 工程 | 2026-06-16 | ☐ | 仓库无 `trips/mao/` · 跳过或新建 |
 | W1-05 | 跑 `python scripts/quality_gate.py` + P5 smoke | 工程 | 2026-06-16 | ☑ | 2026-06-13 QUALITY GATE OK · e2e smoke OK |
 | W1-06 | **AC-07** linzhi 长图发微信群（5 章 PNG） | 产品/发起人 | 2026-06-18 | ☑ | 2026-06-13 已发群 · [linzhi.md](../acceptance-records/linzhi.md) §发群反馈 |
-| W1-07 | 补齐 AC-03 / AC-05 / AC-06 手测 | 产品 | 2026-06-18 | ◐ | AC-07 ☑ · AC-03 待群友反馈 · AC-05/06 待手测 |
+| W1-07 | 补齐 AC-03 / AC-05 / AC-06 手测 | 产品 | 2026-06-18 | ◐ | AC-03 ☑ · AC-07 ☑ · AC-05/06 待手测 |
 | W1-08 | 建立 **pairwise 盲评基线**（P21 前后或 master vs 上一 tag） | 产品/算法 | 2026-06-20 | ☐ | `acceptance-records/phase18-blind-baseline.json` |
 | W1-09 | 盲评结论写入 acceptance-records；若不可感知 → 正式记录「算法冻结」 | 项目负责人 | 2026-06-20 | ☐ | 结论段 + 是否继续调参决策 |
 

@@ -107,7 +107,7 @@ python -m travelogue longshot-smoke trips/linzhi
 | AC-07 | 长图发微信群 | ☑ | 2026-06-13 · 5 章 PNG（`export-longshot`）已发群 · 反馈见下表 |
 | AC-05 | 另一台手机开 zip | ☐ | |
 | AC-06 | 导出图无精确 GPS | ☐ | |
-| AC-03 | 愿分享给朋友 | ☐ | 依赖群友主观反馈 |
+| AC-03 | 愿分享给朋友 | ☑ | 2026-06-13 · 发群后主观确认愿分享 |
 
 ---
 
