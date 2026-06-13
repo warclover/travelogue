@@ -47,28 +47,31 @@ function presentAutoplayHref(opts) {
   return href + "#present/1";
 }
 
-function insertScreenplayControl(parent, beforeNode) {
+function insertScreenplayControl(parent, beforeNode, opts) {
   if (!parent) return null;
+  opts = opts || {};
+  var label = opts.label != null ? opts.label : "▶ 全屏放映";
+  var v3Class = opts.v3 ? " preview-toolbar__screenplay--v3" : "";
   if (document.documentElement.getAttribute("data-screenplay") === "on") {
     var screenplayBtn = document.createElement("button");
     screenplayBtn.type = "button";
-    screenplayBtn.className = "preview-toolbar__ctl preview-toolbar__screenplay";
+    screenplayBtn.className = "preview-toolbar__ctl preview-toolbar__screenplay" + v3Class;
     screenplayBtn.setAttribute("data-screenplay-trigger", "start");
-    screenplayBtn.setAttribute("data-screenplay-label", "▶ 全屏放映");
+    screenplayBtn.setAttribute("data-screenplay-label", label);
     screenplayBtn.setAttribute("data-screenplay-busy", "退出放映");
     screenplayBtn.setAttribute("aria-pressed", "false");
     screenplayBtn.setAttribute("aria-label", "全屏放映，逐屏展示");
     screenplayBtn.title = "全屏逐屏放映";
-    screenplayBtn.textContent = "▶ 全屏放映";
+    screenplayBtn.textContent = label;
     parent.insertBefore(screenplayBtn, beforeNode || null);
     return screenplayBtn;
   }
   var href = presentAutoplayHref();
   if (!href) return null;
   var autoplayLink = document.createElement("a");
-  autoplayLink.className = "preview-toolbar__ctl preview-toolbar__screenplay";
+  autoplayLink.className = "preview-toolbar__ctl preview-toolbar__screenplay" + v3Class;
   autoplayLink.href = href;
-  autoplayLink.textContent = "▶ 全屏放映";
+  autoplayLink.textContent = label;
   autoplayLink.setAttribute("aria-label", "全屏放映，逐屏展示");
   autoplayLink.title = "全屏逐屏放映";
   parent.insertBefore(autoplayLink, beforeNode || null);
@@ -769,6 +772,21 @@ function insertScreenplayControl(parent, beforeNode) {
     if (isPreviewToolbarV3(root)) {
       var menuBtn = root.querySelector(".preview-toolbar__menu-btn");
       if (menuBtn) menuBtn.disabled = !!disabled;
+      var screenplayCtl = root.querySelector(".preview-toolbar__screenplay--v3");
+      if (screenplayCtl) {
+        if (screenplayCtl.tagName === "BUTTON") {
+          screenplayCtl.disabled = !!disabled;
+        } else {
+          screenplayCtl.classList.toggle("preview-toolbar__screenplay--disabled", !!disabled);
+          if (disabled) {
+            screenplayCtl.setAttribute("aria-disabled", "true");
+            screenplayCtl.setAttribute("tabindex", "-1");
+          } else {
+            screenplayCtl.removeAttribute("aria-disabled");
+            screenplayCtl.removeAttribute("tabindex");
+          }
+        }
+      }
     }
   }
 
@@ -2823,13 +2841,16 @@ function insertScreenplayControl(parent, beforeNode) {
 
     exportZone.appendChild(longshotBtn);
     exportWrap.appendChild(exportZone);
-    actions.insertBefore(exportWrap, actions.querySelector(".preview-toolbar__menu-wrap"));
+    var menuWrap = actions.querySelector(".preview-toolbar__menu-wrap");
+    actions.insertBefore(exportWrap, menuWrap);
 
     setLongshotExportState(root, "idle");
 
     longshotBtn.addEventListener("click", function () {
       startLongshot(root, tripId);
     });
+
+    insertScreenplayControl(actions, menuWrap, { label: "放映", v3: true });
 
     if (window.location.search.indexOf("focus=longshot") >= 0) {
       requestAnimationFrame(function () {

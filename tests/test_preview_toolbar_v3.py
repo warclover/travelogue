@@ -43,6 +43,15 @@ def test_v3_init_uses_single_bar_not_legacy_rows() -> None:
     assert "preview-toolbar__collapsed-strip" not in v3_shell
 
 
+def test_v3_toolbar_mounts_screenplay_control() -> None:
+    js = PREVIEW_JS.read_text(encoding="utf-8")
+    assert "insertScreenplayControl(actions, menuWrap" in js
+    assert 'label: "放映"' in js
+    assert "preview-toolbar__screenplay--v3" in js
+    css = PREVIEW_CSS.read_text(encoding="utf-8")
+    assert "preview-toolbar__screenplay--v3" in css
+
+
 def test_v3_css_fixed_bar_and_task_dock() -> None:
     css = PREVIEW_CSS.read_text(encoding="utf-8")
     for token in (
@@ -101,8 +110,9 @@ def _seed_preview_trip(trips_dir: Path, trip_id: str = "v3-smoke") -> str:
     }
     (trip_dir / "trip.json").write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
     html = inject_studio_chrome(
-        '<!DOCTYPE html><html><head><meta charset="utf-8"><title>V3</title></head>'
-        '<body><main class="layout-scroll">preview</main></body></html>'
+        '<!DOCTYPE html><html data-screenplay="on"><head><meta charset="utf-8"><title>V3</title></head>'
+        '<body><main class="layout-scroll">preview</main>'
+        '<button id="screenplay-start" type="button" hidden></button></body></html>'
     )
     (trip_dir / "index.html").write_text(html, encoding="utf-8")
     return trip_id
@@ -140,6 +150,8 @@ def test_v3_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
 
             assert page.locator(".preview-toolbar__back").inner_text().strip().endswith("返回")
             assert page.locator(".preview-toolbar__longshot--v3").inner_text().strip() == "导出长图"
+            assert page.locator(".preview-toolbar__screenplay--v3").count() == 1
+            assert page.locator(".preview-toolbar__screenplay--v3").inner_text().strip() == "放映"
             assert page.locator(".preview-toolbar__menu-btn").count() == 1
 
             assert page.locator(".preview-toolbar__longshot-preview-row").count() == 0

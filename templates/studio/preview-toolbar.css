@@ -1757,6 +1757,48 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v3) {
   border-color: rgba(255, 255, 255, 0.28);
 }
 
+.preview-toolbar--v3 .preview-toolbar__screenplay--v3 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: auto;
+  height: 36px;
+  min-width: auto;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.preview-toolbar--v3 .preview-toolbar__screenplay--v3:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+
+.preview-toolbar--v3 .preview-toolbar__screenplay--v3[aria-pressed="true"] {
+  background: rgba(127, 203, 179, 0.18);
+  border-color: rgba(127, 203, 179, 0.45);
+  color: #dff5ec;
+}
+
+.preview-toolbar--v3 .preview-toolbar__screenplay--v3:disabled,
+.preview-toolbar--v3 .preview-toolbar__screenplay--v3.preview-toolbar__screenplay--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .preview-toolbar__menu-btn__label--short {
   display: inline;
 }
