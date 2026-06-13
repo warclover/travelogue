@@ -355,7 +355,28 @@
         "top3Scores": {
           "type": "array",
           "items": { "type": "number" }
-        }
+        },
+        "templateVersion": { "type": "integer" },
+        "templateRegistryVersion": { "type": "string" },
+        "slotArMatchScore": { "type": "number" },
+        "faceCropProxy": { "type": "boolean" },
+        "winnerPenalties": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "scoringWeights": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "scoringPenaltyWeights": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "rejectedTemplates": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "slotAssignmentFallback": { "type": "string" }
       }
     },
     "orientationSummary": {
@@ -1016,7 +1037,7 @@
         },
         "mediaClass": {
           "type": "string",
-          "enum": ["photo", "screenshot", "thumbnail", "reupload", "archive", "unknown"]
+          "enum": ["photo", "screenshot", "thumbnail", "reupload", "archive", "collage", "unknown"]
         },
         "layoutEligible": {
           "type": "boolean",
@@ -1391,7 +1412,26 @@
         "assetId": { "type": "string" },
         "slot": { "type": "integer", "minimum": 0, "maximum": 8 },
         "fit": { "type": "string", "enum": ["cover", "contain"] },
-        "role": { "type": "string", "enum": ["portrait", "landscape", "main"] }
+        "role": { "type": "string", "enum": ["portrait", "landscape", "main"] },
+        "displayAspect": { "type": "number" },
+        "rect": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 4,
+          "maxItems": 4
+        }
+      }
+    },
+    "layoutGeometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stageAspect": { "type": ["number", "string"] },
+        "cols": { "type": "array", "items": { "type": "number" } },
+        "rows": { "type": "array", "items": { "type": "number" } },
+        "gridClass": { "type": "string" },
+        "templateVersion": { "type": "integer" },
+        "gap": { "type": "string" }
       }
     },
     "layoutScreen": {
@@ -1412,7 +1452,10 @@
             "screen-mosaic-5-2portrait-3land-balanced",
             "screen-mosaic-5-3portrait-2land-balanced",
             "screen-mosaic-5-main-hero-plus-4",
+            "screen-mosaic-5-2p3l-equal",
+            "screen-mosaic-5-hero-3-2-plus-4",
             "screen-mosaic-6-main-hero-plus-5",
+            "screen-full-frame",
             "screen-portrait-grid-8",
             "screen-portrait-2-landscape-2",
             "screen-portrait-4",
@@ -1458,6 +1501,7 @@
           "type": "string",
           "description": "Display label for screen-breath-pause (default ···)"
         },
+        "layoutGeometry": { "$ref": "#/$defs/layoutGeometry" },
         "slots": {
           "type": "array",
           "maxItems": 9,

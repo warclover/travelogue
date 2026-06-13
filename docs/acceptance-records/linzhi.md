@@ -4,7 +4,7 @@
 |------|------|
 | **tripId** | linzhi |
 | **状态** | G1 全链路已跑通 · AC-07 待发群确认 |
-| **更新** | 2026-06-13（Integration Sprint W1 自动化重验） |
+| **更新** | 2026-06-13（全链路重跑 · Integration Sprint W1） |
 
 ---
 
@@ -13,12 +13,12 @@
 | 项 | 值 |
 |----|-----|
 | 相册路径 | `D:\Photos\林芝` |
-| 素材总数 | 231 assets（ingest 跳过 18：md5×15、phash×1、burst×2） |
-| 进 screens / 长图 | 209 张（78 屏） |
+| 素材总数 | 232 assets（ingest 跳过 17：md5×15、phash×1、burst×1） |
+| 进 screens / 长图 | 207 张 layout · **125 屏** · longshot **84 cards** |
 | 章数 | 5（ch-01～ch-05） |
 | layoutEngine | screens |
-| 构图 | 横 184 / 竖 21 / 方 3 / 全景 23 |
-| mediaClass | photo 215 / thumbnail 15 / screenshot 1 |
+| 构图 | 横 169 / 竖 15 / 方 3 / 全景 20 |
+| mediaClass | photo 224 / collage 5 / screenshot 1 / thumbnail 2 |
 | 低分辨率剔除 | 20（`curation.excludedLowResAssetIds`） |
 | 叙事 | DeepSeek narrate（209 条 caption + 5 章 lead + hook/epilogue） |
 | 输出 | `index.html` + `index-mobile.html` + `index-longshot.html` |
@@ -26,7 +26,27 @@
 
 ---
 
-## 耗时
+## 耗时（2026-06-13 · 全链路）
+
+| 阶段 | 耗时 |
+|------|------|
+| workshop（from-album + lock + narrate + render + validate） | **~177s（~3 min）** |
+| export-longshot（5 章 PNG） | ~14s |
+| longshot-smoke | OK · 5 章 / 84 cards |
+
+命令：
+
+```powershell
+powershell -File scripts/workshop-pipeline.ps1 -AlbumPath "D:\Photos\林芝" -TripId linzhi -Title "林芝" -Place "林芝" -Force
+python -m travelogue export-longshot linzhi
+python -m travelogue longshot-smoke trips/linzhi
+```
+
+> 日志：`docs/acceptance-records/linzhi-pipeline-2026-06-13.log`
+
+---
+
+## 耗时（2026-05-26 · 历史）
 
 | 阶段 | 耗时 |
 |------|------|
@@ -42,7 +62,21 @@
 
 ---
 
-## 自动化检查（2026-06-13 · Integration Sprint W1）
+## 自动化检查（2026-06-13 · 全链路重跑）
+
+| 命令 | 结果 |
+|------|------|
+| `workshop-pipeline.ps1`（`-Force`） | OK · ~177s |
+| `validate trips/linzhi/trip.json` | OK |
+| `export-longshot linzhi` | OK · 5 章 PNG |
+| `longshot-smoke trips/linzhi` | OK（5 章 / 84 cards） |
+| `quality_gate.py` | OK（schema 同步后） |
+
+> **schema 修复**：`trip.schema.json` 补齐 `collage` mediaClass · LTE `layoutGeometry` / slot `rect` · mosaic log 扩展字段（否则 render 前 validate 失败）。
+
+---
+
+## 自动化检查（2026-06-13 · smoke only）
 
 | 命令 | 结果 |
 |------|------|

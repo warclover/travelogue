@@ -36,8 +36,8 @@
 
 | ID | 任务 | Owner | Due | 状态 | 验收 |
 |----|------|-------|-----|------|------|
-| W1-01 | 拉齐 `master` 与 `origin/master`（推送 pending commit） | 工程 | 2026-06-14 | ☐ | `git status` 无 ahead · **待人工 push** |
-| W1-02 | 用最新 `master` 全链路重跑 **linzhi** | 工程 | 2026-06-16 | ◐ | smoke/validate OK · 全链路待 `D:\Photos\林芝` |
+| W1-01 | 拉齐 `master` 与 `origin/master`（推送 pending commit） | 工程 | 2026-06-14 | ☑ | 2026-06-13 push OK（remote up-to-date） |
+| W1-02 | 用最新 `master` 全链路重跑 **linzhi** | 工程 | 2026-06-16 | ☑ | 2026-06-13 · ~177s · [linzhi.md](../acceptance-records/linzhi.md) |
 | W1-03 | 全链路重跑 **maomi** | 工程 | 2026-06-16 | ◐ | smoke/validate OK · 全链路待 `D:\Photos\maomi` |
 | W1-04 | 全链路重跑 **mao** | 工程 | 2026-06-16 | ☐ | 仓库无 `trips/mao/` · 跳过或新建 |
 | W1-05 | 跑 `python scripts/quality_gate.py` + P5 smoke | 工程 | 2026-06-16 | ☑ | 2026-06-13 QUALITY GATE OK · e2e smoke OK |
