@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
-| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–17** + Studio 首页 v2/M21 + 算法 V2 |
-| **更新日期** | 2026-06-07 |
+| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–22** + Studio 首页 v2/M21 + 算法 V2 |
+| **更新日期** | 2026-06-13 |
 
 ---
 
@@ -234,6 +234,23 @@
 
 ---
 
+## Phase 18–22 · 成书质量 · 存储纪律
+
+| 文档 | 说明 |
+|------|------|
+| [观感提升路线图.md](./观感提升路线图.md) | LSE 冻结 · 选片/模板/盲评优先级 |
+| [ROADMAP-PHASE18-BOOK-QUALITY.md](./ROADMAP-PHASE18-BOOK-QUALITY.md) | Phase 18 BQP 项目级路线图 |
+| [PRD-PHASE18-layout-effect-improvement.md](./PRD-PHASE18-layout-effect-improvement.md) | 版式观感专项 |
+| [PRD-PHASE21-mosaic-density-budget.md](./PRD-PHASE21-mosaic-density-budget.md) | 拼图密度预算 · ☑ 已合入 |
+| [IMPLEMENTATION-PHASE21.md](./IMPLEMENTATION-PHASE21.md) | P21 实施清单 |
+| [PRD-PHASE22-storage-platform.md](./PRD-PHASE22-storage-platform.md) | **存储平台纪律** · Approved · 待 Kickoff |
+| [IMPLEMENTATION-PHASE22.md](./IMPLEMENTATION-PHASE22.md) | P22 实施清单 |
+| [ACCEPTANCE-PHASE22.md](./ACCEPTANCE-PHASE22.md) | P22 验收 |
+| [adr/008-trip-storage-boundaries.md](./adr/008-trip-storage-boundaries.md) | trip.json 写入边界 · **Accepted** |
+| [reports/integration-sprint-checklist-2026-06-13.md](./reports/integration-sprint-checklist-2026-06-13.md) | **Integration Sprint** · 收口/验证/还债 |
+
+---
+
 ## Studio 首页 v2 · M20 / M21
 
 | 文档 | 说明 |
@@ -279,7 +296,7 @@
 | [DEVELOPMENT.md](./DEVELOPMENT.md) | 开发手册 |
 | [WORKSHOP.md](./WORKSHOP.md) | **本地工坊**：Phase 2 推荐 Studio；开发者 workshop 脚本 |
 | [老图.md](./老图.md) | **混册/老图/截图**：时间段分段、`mediaClass` 与编排原则 |
-| [ACCEPTANCE.md](./ACCEPTANCE.md) | **单轨验收入口**（MVP 附录 + Phase 2–5 索引 · 当前闸门 Phase 5） |
+| [ACCEPTANCE.md](./ACCEPTANCE.md) | **单轨验收入口**（MVP 附录 + Phase 2–21 · 闸门 P5+P6+P21 回归） |
 | [SHARING.md](./SHARING.md) | **双轨分享**：服务端长图（Phase 2 主路径）vs 小程序鉴权 HTML（P3） |
 | [PRD-LAYOUT.md](./PRD-LAYOUT.md) | **排版布局 PRD**（专职 Agent 1.5 规划） |
 | [web端模板.prd](./web端模板.prd) | **Web 端模板 PRD**（章/屏、16:9 舞台、pattern 库） |
@@ -356,6 +373,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-06-13 | 索引补 Phase 18–22 · Integration Sprint · ACCEPTANCE v1.3 闸门对齐 |
 | 2026-06-06 | 索引补 Phase 11–15 · M21 · Algorithm V2 · ADR-012 |
 | 2026-05-30 | 新增 Phase 7 管线性能 PRD 索引 |
 | 2026-05-30 | 新增 Phase 6 与艺术专项文档索引 |

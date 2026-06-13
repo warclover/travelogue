@@ -2,11 +2,12 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v1.2 |
-| **适用范围** | MVP 基线 + Phase 2–6 累计验收 |
-| **当前发布闸门** | **[Phase 5](./ACCEPTANCE-PHASE5.md)**（生产） / **[Phase 6](./ACCEPTANCE-PHASE6.md)**（开发准备） |
-| **关联** | [IMPLEMENTATION-PHASE5.md](./IMPLEMENTATION-PHASE5.md) · [PRD-PHASE5.md](./PRD-PHASE5.md) · [IMPLEMENTATION-PHASE6.md](./IMPLEMENTATION-PHASE6.md) · [PRD-PHASE6.md](./PRD-PHASE6.md) |
-| **更新日期** | 2026-06-03 |
+| **文档版本** | v1.3 |
+| **适用范围** | MVP 基线 + Phase 2–21 累计验收 · Phase 22 工程准备 |
+| **当前发布闸门** | **[Phase 5](./ACCEPTANCE-PHASE5.md)** 基线 + **[Phase 6](./ACCEPTANCE-PHASE6.md)** 稳态 + **P21 回归**（见 §2） |
+| **工程 Sprint** | [integration-sprint-checklist-2026-06-13.md](./reports/integration-sprint-checklist-2026-06-13.md) |
+| **关联** | [IMPLEMENTATION-PHASE5.md](./IMPLEMENTATION-PHASE5.md) · [PRD-PHASE5.md](./PRD-PHASE5.md) · [IMPLEMENTATION-PHASE6.md](./IMPLEMENTATION-PHASE6.md) · [PRD-PHASE6.md](./PRD-PHASE6.md) · [IMPLEMENTATION-PHASE21.md](./IMPLEMENTATION-PHASE21.md) |
+| **更新日期** | 2026-06-13 |
 
 > **P5-12.2 单轨合并**：本文档为验收入口；各 Phase 细则仍保留在分册中，**不再**以 MVP v0.1 清单单独作为发布闸门。
 
@@ -22,9 +23,13 @@
 
 ---
 
-## 2. 当前发布闸门（Phase 5）
+## 2. 当前发布闸门（P5 基线 + P6 稳态 + P21 回归）
 
-**权威文档**：[ACCEPTANCE-PHASE5.md](./ACCEPTANCE-PHASE5.md)
+**产品体验权威**：[ACCEPTANCE-PHASE5.md](./ACCEPTANCE-PHASE5.md) · **稳态与治理**：[ACCEPTANCE-PHASE6.md](./ACCEPTANCE-PHASE6.md)
+
+> **2026-06-13 对齐**：工程已合入 Phase 21（拼图密度预算）；发布闸门仍为 P5 用户路径，叠加 P6 质量闭环与 P21 layout 回归。真实分享验收（AC-07）与盲评基线见 [Integration Sprint](./reports/integration-sprint-checklist-2026-06-13.md) W1。
+
+### 2.1 产品路径（继承 Phase 5）
 
 | 类别 | 必达 | 记录 |
 |------|------|------|
@@ -32,14 +37,27 @@
 | **路径 B · 卷轴** | AC-P5-B-01/02 · UX-P5-SCROLL-01 | [phase5-scroll-qualitative.json](./acceptance-records/phase5-scroll-qualitative.json) |
 | **排版地基** | AC-P5-C-01 · AC-P5-C-02（QS-01 ≥8/10） | [phase5-layout-sprint.json](./acceptance-records/phase5-layout-sprint.json) |
 | **Studio 体验** | AC-P4-HP-01～06 · AC-P4-A11Y-03 | [ACCEPTANCE-PHASE4.md](./ACCEPTANCE-PHASE4.md) §4 |
-| **工程** | P5-10.4 e2e smoke · CLI-SPEC 同步 | `scripts/e2e_studio_smoke.ps1` |
+| **真实分享（人工闸）** | AC-07 长图发群 · AC-03 愿分享 | [acceptance-records/linzhi.md](./acceptance-records/linzhi.md) |
 | **不阻塞发布** | AC-P5-B-03～05 · P-EVAL · beam 实验 | [phase5-peval.json](./acceptance-records/phase5-peval.json) |
+
+### 2.2 工程稳态（Phase 6 + P21）
+
+| 类别 | 必达 | 记录 / 命令 |
+|------|------|-------------|
+| **质量闭环** | AC-P6-01～08 · BR-P6 回滚演练 | [ACCEPTANCE-PHASE6.md](./ACCEPTANCE-PHASE6.md) |
+| **P21 回归** | mosaic density budget · rhythm 规则不破坏 golden | `python scripts/quality_gate.py` · curate baseline OK |
+| **自动化 smoke** | P5-10.4 e2e · CLI-SPEC 同步 | `scripts/e2e_studio_smoke.ps1` |
+| **canonical trips** | maomi validate + longshot-smoke | [acceptance-records/maomi.md](./acceptance-records/maomi.md) |
+| **已知债务** | linzhi `pipeline.runs[]` schema 漂移 | Phase 22 schema 迁移 · 见 [PRD-PHASE22](./PRD-PHASE22-storage-platform.md) |
 
 ### 自动化（发布前建议）
 
 ```powershell
+python scripts/quality_gate.py
 python -m pytest tests/test_studio_a11y_p4.py tests/test_studio_entry.py tests/test_reading_p5.py tests/test_reading_auto_breath.py -q
 python scripts/e2e_studio_smoke.ps1
+python -m travelogue validate trips/maomi/trip.json
+python -m travelogue longshot-smoke trips/maomi
 ```
 
 ---
@@ -52,8 +70,10 @@ python scripts/e2e_studio_smoke.ps1
 | **2 · Studio** | [ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md) | [IMPLEMENTATION-PHASE2.md](./IMPLEMENTATION-PHASE2.md) | 已并入 P5 | AC-P2-02 长图微信可读 |
 | **3 · 聚类** | [ACCEPTANCE-PHASE3.md](./ACCEPTANCE-PHASE3.md) | [IMPLEMENTATION-PHASE3.md](./IMPLEMENTATION-PHASE3.md) | 已并入 P5 | I-G2 · cache |
 | **4 · 意图** | [ACCEPTANCE-PHASE4.md](./ACCEPTANCE-PHASE4.md) | [IMPLEMENTATION-PHASE4.md](./IMPLEMENTATION-PHASE4.md) | 代码 ☑ · 手测并行 | P-EVAL · HP/A11Y |
-| **5 · Polish** | **[ACCEPTANCE-PHASE5.md](./ACCEPTANCE-PHASE5.md)** | [IMPLEMENTATION-PHASE5.md](./IMPLEMENTATION-PHASE5.md) | **当前闸门** | UX-P5-80-01 · SCROLL-01 |
-| **6 · Stability** | [ACCEPTANCE-PHASE6.md](./ACCEPTANCE-PHASE6.md) | [IMPLEMENTATION-PHASE6.md](./IMPLEMENTATION-PHASE6.md) | 开发准备中 | AC-P6-01~08 · BR-P6 |
+| **5 · Polish** | **[ACCEPTANCE-PHASE5.md](./ACCEPTANCE-PHASE5.md)** | [IMPLEMENTATION-PHASE5.md](./IMPLEMENTATION-PHASE5.md) | **产品路径闸门** | UX-P5-80-01 · SCROLL-01 |
+| **6 · Stability** | [ACCEPTANCE-PHASE6.md](./ACCEPTANCE-PHASE6.md) | [IMPLEMENTATION-PHASE6.md](./IMPLEMENTATION-PHASE6.md) | **工程稳态闸门** | AC-P6-01~08 · BR-P6 |
+| **21 · Mosaic 密度** | — | [IMPLEMENTATION-PHASE21.md](./IMPLEMENTATION-PHASE21.md) | ☑ 已合入 master | density budget · max_mosaic_slots |
+| **22 · 存储纪律** | [ACCEPTANCE-PHASE22.md](./ACCEPTANCE-PHASE22.md) | [IMPLEMENTATION-PHASE22.md](./IMPLEMENTATION-PHASE22.md) | 待 Kickoff | G-P22-01～08 · ADR-008 |
 | **9 · Quality Gate** | [ACCEPTANCE-PHASE9.md](./ACCEPTANCE-PHASE9.md) | [IMPLEMENTATION-PHASE9.md](./IMPLEMENTATION-PHASE9.md) | **W1 Done** | G-P9-W1 · NR-P9-04 |
 | **12 · Silent Autonomy** | [ACCEPTANCE-PHASE9.md](./ACCEPTANCE-PHASE9.md) §5.1（P12 指标扩展） | [IMPLEMENTATION-PHASE12.md](./IMPLEMENTATION-PHASE12.md) | **In Progress** | L1/L2/L3 fallback · branch coverage · cpuMs |
 | **13 · Template System** | [ACCEPTANCE-PHASE13.md](./ACCEPTANCE-PHASE13.md) | [IMPLEMENTATION-PHASE13.md](./IMPLEMENTATION-PHASE13.md) | **Gate Ready** | G1–G9 · event-recap 试点 |

@@ -4,7 +4,7 @@
 |------|------|
 | **tripId** | linzhi |
 | **状态** | G1 全链路已跑通 · AC-07 待发群确认 |
-| **更新** | 2026-05-26（强化 ingest/curate/layout 后完整重测） |
+| **更新** | 2026-06-13（Integration Sprint W1 自动化重验） |
 
 ---
 
@@ -39,6 +39,19 @@
 | **导入 → 可浏览** | **~352s（~6 min）** |
 
 > 备注：首次 render 因 `asset-031` 缺 WebP 衍生图失败；`media reexport` 单张修复后通过。根因：ingest 连拍/pHash **替换**时 `_upsert_asset` 在 `_build_asset_entry` 写入 WebP 后又按同一 `asset_id` 删除了衍生图（已修：`ingest.py` + 收尾校验 `E_INGEST_DERIVATIVE_MISSING`）。
+
+---
+
+## 自动化检查（2026-06-13 · Integration Sprint W1）
+
+| 命令 | 结果 |
+|------|------|
+| `validate trips/linzhi/trip.json` | OK（修复 `pipeline.runs` 末条缺 `startedAt`） |
+| `longshot-smoke trips/linzhi` | OK（5 章 / 160 cards） |
+| `quality_gate.py` | OK |
+| `e2e_studio_smoke.ps1` | OK |
+
+> **未重跑全链路 ingest/curate**（需本机 `D:\Photos\林芝`）。结构/渲染 smoke 已在 master 最新代码下通过。
 
 ---
 

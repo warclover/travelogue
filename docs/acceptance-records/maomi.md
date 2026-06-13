@@ -4,7 +4,7 @@
 |------|------|
 | **tripId** | maomi |
 | **状态** | G1 全链路已跑通 · 待人工验收 |
-| **更新** | 2026-05-26 |
+| **更新** | 2026-06-13 |
 
 ---
 
@@ -183,3 +183,16 @@ python scripts/phase9_golden_cull_signoff.py --trip maomi --write docs/acceptanc
 **说明**：AC-P9-02 地板按 **cull 层**计量（27/33）；最终 26 张因 cull 后 `asset_quality` 低分辨率剔除 `asset-023`，与 cull 职责分离，无需调 Pass 3。
 
 记录：`docs/acceptance-records/phase9-golden-cull-signoff.json` · `phase9-quality-gate.json`
+
+---
+
+## 自动化检查（2026-06-13 · Integration Sprint W1）
+
+| 命令 | 结果 |
+|------|------|
+| `validate trips/maomi/trip.json` | OK |
+| `longshot-smoke trips/maomi` | OK（4 章 / 27 cards） |
+| `quality_gate.py` | OK |
+| `e2e_studio_smoke.ps1` | OK |
+
+> **未重跑全链路 ingest/curate**（需本机 `D:\Photos\maomi`）。

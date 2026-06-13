@@ -13,5 +13,6 @@
 | [011](./011-import-strategy.md) | 延迟 import 策略（循环依赖 / 热循环） | 已采纳 | 2026-05-30 |
 | [012](./012-semantic-tagging-p8-p12-split.md) | L1 语义：Phase 8 归档 · Phase 12 权威实施 | 已采纳 | 2026-06-06 |
 | [013](./013-layout-strategy-approval-semantics.md) | LSE L2 审批语义：operator + ≥2 approvers（非字面双人） | 已采纳 | 2026-06-07 |
+| [008](./008-trip-storage-boundaries.md) | trip.json 存储边界 · Document/Blob 分离约定 | **Accepted** | 2026-06-11 |
 
 新建 ADR 请使用 `00N-简短英文名.md`，并在本表登记。
