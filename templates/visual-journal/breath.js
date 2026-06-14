@@ -7,7 +7,7 @@
 
   var SCREEN_SEL = '.layout-screen[data-block="layout-screen"]';
   var EXTRA_SEL =
-    '.cover-hero[data-block="cover-hero"], .hook-line[data-block="hook-line"], .chapter-header[data-block="chapter-header"], .chapter-separator[data-block="chapter-separator"], .breath-pause-screen[data-block="breath-pause-screen"], .foreword-spread[data-block="foreword-spread"], .trip-index[data-block="trip-index"], .featured-grid[data-block="featured-grid"], .screen-spread[data-block="screen-spread"], .layout-screen[data-role="moment"]';
+    '.cover-hero[data-block="cover-hero"], .hook-line[data-block="hook-line"], .chapter-header[data-block="chapter-header"], .chapter-separator[data-block="chapter-separator"], .breath-pause-screen[data-block="breath-pause-screen"], .foreword-spread[data-block="foreword-spread"], .trip-index[data-block="trip-index"], .featured-grid[data-block="featured-grid"], .screen-spread[data-block="screen-spread"], .layout-screen[data-role="moment"], .layout-screen[data-role="peak"]';
   var observer = null;
   var paused = false;
   var lenisStarted = false;
@@ -412,7 +412,7 @@
     destroyCoverMotion();
     destroyHighlight();
     collectTargets().forEach(function (el) {
-      el.classList.remove("breath-reveal", "is-visible", "breath-reveal--featured");
+      el.classList.remove("breath-reveal", "is-visible", "breath-reveal--featured", "breath-reveal--moment", "breath-reveal--peak");
       el.style.opacity = "";
       el.style.transform = "";
     });
@@ -483,6 +483,12 @@
       el.classList.add("breath-reveal");
       if (el.getAttribute("data-featured") === "true") {
         el.classList.add("breath-reveal--featured");
+      }
+      var role = el.getAttribute("data-role");
+      if (role === "moment") {
+        el.classList.add("breath-reveal--moment");
+      } else if (role === "peak") {
+        el.classList.add("breath-reveal--peak");
       }
     });
 

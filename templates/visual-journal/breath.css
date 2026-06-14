@@ -32,8 +32,24 @@ html.no-js .breath-reveal {
   transition-duration: 0.8s;
 }
 
+.breath-reveal.breath-reveal--moment {
+  transition-duration: 0.88s;
+}
+
+.breath-reveal.breath-reveal--peak {
+  transition-duration: 0.76s;
+}
+
 html[data-breath="flow"] .breath-reveal.breath-reveal--featured {
   transition-duration: 0.92s;
+}
+
+html[data-breath="flow"] .breath-reveal.breath-reveal--moment {
+  transition-duration: 1s;
+}
+
+html[data-breath="flow"] .breath-reveal.breath-reveal--peak {
+  transition-duration: 0.84s;
 }
 
 html.lenis-flow {

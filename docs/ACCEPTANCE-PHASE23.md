@@ -2,9 +2,9 @@
 
 | 属性 | 内容 |
 |------|------|
-| **关联 PRD** | [PRD-PHASE23-peak-moment.md](./PRD-PHASE23-peak-moment.md) v0.23.2 |
+| **关联 PRD** | [PRD-PHASE23-peak-moment.md](./PRD-PHASE23-peak-moment.md) v0.23.3 |
 | **评审纪要** | [phase23-peak-moment-prd-review-2026-06-14.md](./acceptance-records/phase23-peak-moment-prd-review-2026-06-14.md) |
-| **代号** | P23 · 最佳时刻 |
+| **代号** | P23 · 最佳时刻（P23.1 池内 solo + EXIF） |
 | **更新日期** | 2026-06-14 |
 
 ---
@@ -26,17 +26,19 @@
 
 | ID | 描述 | 步骤 | 通过 |
 |----|------|------|------|
-| **AC-P23-01** | 全册唯一 moment 屏 | curate → render web · DOM 查询 `[data-block="moment-screen"]` | 计数 **= 1** |
+| **AC-P23-01** | 全册唯一签名屏 | curate → render web · `[data-role="moment"]` 计数 **= 1** · 无 `[data-block="moment-screen"]` | ☐ |
 | **AC-P23-02** | 签名与封面互斥 | `momentAssetId` vs `coverAssetId` / `coverByLayout` | **不相等** |
 | **AC-P23-02b** | 签名属于池 | `momentAssetId` ∈ `curation.momentPoolIds` | ☐ |
-| **AC-P23-03** | EXIF 脚注形态 | moment 屏内 `.moment-exif-line` 单行 · 非 overlay 压图 | ☐ |
+| **AC-P23-03** | EXIF 脚注形态 | 签名/池内屏 `.moment-exif-bar` 单行 · slot 内非 overlay 压图 | ☐ |
 | **AC-P23-04** | 脚注字体 | computed `font-family` 含 mono 栈 · `font-size` ≤13px | ☐ |
-| **AC-P23-05** | 插入顺序 | moment 屏在末章最后 `layout-screen` 之后、`cover-closing` 之前 | ☐ |
-| **AC-P23-06** | Reader 可见脚注 | `reader_immersive` · `.moment-exif-line` visible | ☐ |
-| **AC-P23-07** | 正文无 EXIF | 非 moment 屏无 `.moment-exif-line`；secondary 屏亦无 | ☐ |
+| **AC-P23-05** | 签名角标 | 仅 `data-role="moment"` 屏含 `.layout-screen__moment-label`「决定性瞬间」 | ☐ |
+| **AC-P23-06** | Reader 可见脚注 | `reader_immersive` · `.moment-exif-bar` visible（池内默认全显示） | ☐ |
+| **AC-P23-07** | 正文无 EXIF | 非池内 `layout-screen` 无 `.moment-exif-bar` | ☐ |
 | **AC-P23-08** | 字段落盘 | `momentPoolIds` + `momentAssetId` + `momentSecondaryIds`；`momentExplain` ≥1 | ☐ |
 | **AC-P23-23** | 池大小公式 | 仙本那册 `len(momentPoolIds)` = clamp(round(n×5%),1,5) | ☐ |
-| **AC-P23-24** | 仅一屏 moment | secondary 无 `[data-block="moment-screen"]` | ☐ |
+| **AC-P23-24** | 签名唯一叙事锚点 | 仅 1 个 `data-role="moment"`；池内其余为 `data-role="peak"` | ☐ |
+| **AC-P23-30** | 池内全员 EXIF（P23.1） | `pool_exif: true` 时 · `len(momentPoolIds)` 个 `.moment-exif-bar` · 仅 1 个 `data-role="moment"` | ☐ |
+| **AC-P23-31** | performance 保留 solo | `performance` profile · 无 EXIF · 池内仍 `data-role` solo 屏 | ☐ |
 
 ---
 
@@ -45,14 +47,14 @@
 | ID | 描述 | 通过 |
 |----|------|------|
 | **AC-P23-09** | 三图位分离（仙本那） | `coverAssetId` · `momentAssetId` · closing 解析值 **三者互异** |
-| **AC-P23-10** | 小册默认跳过 | ≤15 张 trip · 无 `momentPoolIds` · 无 moment 屏 |
-| **AC-P23-11** | EXIF 缺失降级 | 使用无相机 EXIF 的 fixture · 脚注无空占位 · 无「undefined」文案 |
-| **AC-P23-12** | 脚注段数门槛 | `exif.completeness: none` 时：隐藏行 **或** 仅 `place · daypart` 两段 |
-| **AC-P23-13** | 人物安全 fit | moment 为人物合影 · img 使用 `contain` 或 blur-fill · 人脸未裁切 |
-| **AC-P23-14** | 动效预算 | moment 屏 breath 抬升 ≤8px（Reader）· 屏缝 overlap ≤2px |
+| **AC-P23-10** | 小册默认跳过 | ≤15 张 trip · 无 `momentPoolIds` · 无 `data-role="moment"` |
+| **AC-P23-11** | EXIF 缺失降级 | 无相机 EXIF 的池内图仍 solo；无空占位脚注 · 无「undefined」 |
+| **AC-P23-12** | 脚注段数门槛 | 有效段 &lt;2 时：隐藏 `.moment-exif-bar` |
+| **AC-P23-13** | 人物安全 fit | moment/peak 人物图 · img 使用 `contain` 或 blur-fill · 人脸未裁切 |
+| **AC-P23-14** | 动效预算 | moment/peak 屏 breath 抬升 ≤8px（Reader）· 屏缝 overlap ≤2px |
 | **AC-P23-15** | ingest exif 子对象 | 含 EXIF 的 RAW/JPEG 样本 · `assets[].exif.model` 非空 |
-| **AC-P23-21** | 脚注对比度 | `.moment-exif-line` 区 WCAG 3:1（含 `--moment-exif-bg` 衬底） |
-| **AC-P23-22** | 竖图 moment | 竖图 fixture · `layout-screen--portrait` · 人物 contain 安全 |
+| **AC-P23-21** | 脚注对比度 | `.moment-exif-bar` 黑底区 WCAG 3:1 |
+| **AC-P23-22** | 竖图 moment | 竖图 fixture · `screen-portrait-1` · 人物 contain 安全 |
 
 ### 3.1 盲评（AC-P23-16 · M1/M2 分期）
 
@@ -74,9 +76,9 @@
 | ID | 描述 | 通过 |
 |----|------|------|
 | **AC-P23-17** | Studio 换图 | PATCH `momentAssetId` → 重渲染 · 页面更新 |
-| **AC-P23-18** | 池条带展示 | Studio 可见 `momentPoolIds` 全池 + 签名标记 + explain |
-| **AC-P23-25** | secondary 加权 | peak 章 hero 优先命中 `momentSecondaryIds`（W3 后） |
-| **AC-P23-19** | 配置关闭 | `curate.moment.enabled: false` → 无 moment 屏 · 无报错 |
+| **AC-P23-18** | 池条带展示 | Studio 可见 `momentPoolIds` 全池 + 签名标记 + `hasExif` + explain |
+| **AC-P23-25** | secondary 加权 | **仅** `pool_solo: false` 时 peak 章 hero 优先命中 `momentSecondaryIds` |
+| **AC-P23-19** | 配置关闭 | `curate.moment.enabled: false` → 无 moment/peak 屏 · 无报错 |
 | **AC-P23-20** | closing 软避 | moment 与 closing 相同时 · `curation.momentCollision: closing` 写入 |
 
 ---
@@ -85,10 +87,10 @@
 
 | 测试文件 | 覆盖 |
 |----------|------|
-| `tests/test_peak_moment_scoring.py` | `build_moment_pool` · clamp 公式 · 签名 ∈ pool |
-| `tests/test_moment_render.py` | 模板插入 · EXIF 行 HTML |
+| `tests/test_peak_moment_scoring.py` | `build_moment_pool` · clamp · finalize peak solo · `effective_secondary_boost` |
+| `tests/test_moment_render.py` | inline EXIF · 池内 role 分层 · performance solo · 配置回退 · 英文角标 |
 | `tests/test_ingest_exif_camera.py` | `assets[].exif` 字段 |
-| `tests/test_bsp_moment_playwright.py` | AC-P23-01–07 DOM 断言 |
+| `tests/test_bsp_moment_playwright.py` | AC-P23-01/03/30/31 DOM 断言 |
 
 ---
 
@@ -97,7 +99,7 @@
 - [ ] 封面盲评路径不受影响（`cover-selection-plan` AC 仍过）
 - [ ] `cover-closing` epilogue 仍正常渲染
 - [ ] `reader_immersive` 仍隐藏 `folio-plate-meta`
-- [ ] longshot 导出体积无异常膨胀（moment 屏 excluded）
+- [ ] longshot 导出体积无异常膨胀（moment/peak 屏 excluded）
 - [ ] `validate_trip` 对旧 trip 无 moment 字段仍通过
 
 ---
@@ -106,6 +108,7 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.23.3 | 2026-06-14 | P23.1：池内 solo + EXIF · AC 改 inline 契约 · AC-P23-30/31 |
 | v0.23.2 | 2026-06-14 | 双层模型：pool/secondary AC · 池覆盖率盲评 |
 | v0.23.1 | 2026-06-14 | 评审闭合：M1/M2 盲评分期 · AC-P23-21/22 |
 | v0.23.0 | 2026-06-14 | 初版验收 · 对齐 PRD v0.23.0 |

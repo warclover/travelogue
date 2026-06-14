@@ -106,6 +106,35 @@ def test_finalize_picks_signature_and_secondaries() -> None:
     assert result in moment_slots
 
 
+def test_finalize_creates_peak_solo_screens_when_pool_has_secondaries() -> None:
+    cfg = MomentConfig(min_score=0.0, small_trip_elevated_min_score=0.0, pool_min=2)
+    trip: dict = {"coverAssetId": "cover"}
+    assets = [_asset("cover", sharp=0.99)] + [
+        _asset(f"a{i}", featured=(i == 1), sharp=0.5 + i * 0.02) for i in range(40)
+    ]
+    chapters = [
+        {
+            "curation": {"assetIds": [f"a{i}" for i in range(4)]},
+            "screens": [
+                {
+                    "patternId": "screen-landscape-4",
+                    "slots": [{"assetId": f"a{i}"} for i in range(4)],
+                }
+            ],
+        }
+    ]
+    result = sync_trip_moments_finalize(trip, assets, chapters, cfg=cfg)
+    assert result
+    pool = trip["curation"]["momentPoolIds"]
+    assert len(pool) >= 2
+    peak_screens = [s for ch in chapters for s in ch["screens"] if s.get("role") == "peak"]
+    moment_screens = [s for ch in chapters for s in ch["screens"] if s.get("role") == "moment"]
+    assert len(moment_screens) == 1
+    assert len(peak_screens) == len(pool) - 1
+    peak_ids = {s["slots"][0]["assetId"] for s in peak_screens}
+    assert peak_ids == set(trip["curation"]["momentSecondaryIds"])
+
+
 def test_score_ranked_moment_pool_uses_peak_score_order() -> None:
     from travelogue.curation.moment_scoring import score_ranked_moment_pool
 
@@ -135,6 +164,14 @@ def test_resolve_closing_excludes_moment_asset() -> None:
         "last": _asset("last"),
     }
     assert resolve_closing_asset_id(trip, assets, exclude_ids={"moment"}) == "last"
+
+
+def test_effective_secondary_boost_off_when_pool_solo() -> None:
+    from travelogue.config.moment import effective_secondary_boost
+
+    assert effective_secondary_boost(MomentConfig(pool_solo=True)) == 0.0
+    assert effective_secondary_boost(MomentConfig(pool_solo=False, secondary_boost=0.12)) == 0.12
+    assert effective_secondary_boost(MomentConfig(enabled=False)) == 0.0
 
 
 def test_moment_secondary_plan_bonus_peak_only() -> None:
@@ -186,6 +223,70 @@ def test_ensure_moment_asset_in_chapters_inserts_layout_screen() -> None:
     assert len(moment_screen["slots"]) == 1
 
 
+def test_ensure_pool_assets_solo_screens_splits_all_pool_members() -> None:
+    from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "curation": {"assetIds": ["a1", "sig", "peak2"]},
+            "screens": [
+                {
+                    "patternId": "screen-landscape-2",
+                    "slots": [
+                        {"assetId": "a1", "slot": 0},
+                        {"assetId": "sig", "slot": 1},
+                    ],
+                }
+            ],
+        },
+        {
+            "id": "ch-02",
+            "curation": {"assetIds": ["peak2", "a3"]},
+            "screens": [
+                {
+                    "patternId": "screen-landscape-2",
+                    "slots": [
+                        {"assetId": "peak2", "slot": 0},
+                        {"assetId": "a3", "slot": 1},
+                    ],
+                }
+            ],
+        },
+    ]
+    assets_by_id = {
+        aid: {"id": aid, "type": "image", "width": 1600, "height": 900, "layoutEligible": True}
+        for aid in ("a1", "sig", "peak2", "a3")
+    }
+    pool = ["sig", "peak2"]
+    changed = ensure_pool_assets_solo_screens(
+        chapters, pool, "sig", assets_by_id=assets_by_id, arc_profile="dynamic"
+    )
+    assert changed == 2
+    moment_screens = [s for ch in chapters for s in ch["screens"] if s.get("role") == "moment"]
+    peak_screens = [s for ch in chapters for s in ch["screens"] if s.get("role") == "peak"]
+    assert len(moment_screens) == 1
+    assert len(peak_screens) == 1
+    assert moment_screens[0]["slots"][0]["assetId"] == "sig"
+    assert peak_screens[0]["slots"][0]["assetId"] == "peak2"
+    all_solo_ids = [
+        s["slots"][0]["assetId"]
+        for ch in chapters
+        for s in ch["screens"]
+        if s.get("role") in ("moment", "peak") and len(s.get("slots") or []) == 1
+    ]
+    assert sorted(all_solo_ids) == ["peak2", "sig"]
+    mosaic_slots = [
+        sl["assetId"]
+        for ch in chapters
+        for s in ch["screens"]
+        if s.get("role") not in ("moment", "peak")
+        for sl in s.get("slots") or []
+    ]
+    assert "sig" not in mosaic_slots
+    assert "peak2" not in mosaic_slots
+
+
 def test_extract_moment_from_mosaic_to_solo_screen() -> None:
     from travelogue.curation.moment_scoring import ensure_moment_asset_in_chapters
 
@@ -219,6 +320,34 @@ def test_extract_moment_from_mosaic_to_solo_screen() -> None:
     assert "sig" not in [sl["assetId"] for sl in host_screens[0]["slots"]]
     assert len(host_screens[0]["slots"]) == 3
     assert host_screens[0]["patternId"] == "screen-landscape-3"
+
+
+def test_peak_on_plate_moves_solo_after_first_screen() -> None:
+    from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "curation": {"assetIds": ["peak2", "sig"]},
+            "screens": [
+                {"slots": [{"assetId": "peak2"}]},
+                {"slots": [{"assetId": "sig"}]},
+            ],
+        }
+    ]
+    assets_by_id = {
+        aid: {"id": aid, "type": "image", "width": 1600, "height": 900, "layoutEligible": True}
+        for aid in ("peak2", "sig")
+    }
+    ensure_pool_assets_solo_screens(
+        chapters, ["sig", "peak2"], "sig", assets_by_id=assets_by_id
+    )
+    first_screen = chapters[0]["screens"][0]
+    assert first_screen["slots"][0]["assetId"] == "sig"
+    peak_screens = [s for s in chapters[0]["screens"] if s.get("role") == "peak"]
+    assert len(peak_screens) == 1
+    assert peak_screens[0]["slots"][0]["assetId"] == "peak2"
+    assert chapters[0]["screens"].index(peak_screens[0]) > 0
 
 
 def test_featured_grid_excludes_moment_signature() -> None:

@@ -534,12 +534,21 @@ def sync_trip_moments_finalize(
         explain=explain,
         collision=collision,
     )
-    ensure_moment_asset_in_chapters(
-        chapters,
-        signature_id,
-        assets_by_id=assets_by_id,
-        arc_profile=arc_profile,
-    )
+    if cfg.pool_solo:
+        ensure_pool_assets_solo_screens(
+            chapters,
+            pool,
+            signature_id,
+            assets_by_id=assets_by_id,
+            arc_profile=arc_profile,
+        )
+    else:
+        ensure_moment_asset_in_chapters(
+            chapters,
+            signature_id,
+            assets_by_id=assets_by_id,
+            arc_profile=arc_profile,
+        )
     return signature_id
 
 
@@ -584,20 +593,35 @@ def _solo_pattern_for_asset(asset: dict) -> str:
     return "screen-landscape-1"
 
 
+def _build_pool_solo_screen(
+    asset_id: str,
+    *,
+    role: str = "moment",
+    source_slot: dict | None = None,
+    assets_by_id: dict[str, dict] | None = None,
+) -> dict:
+    asset = (assets_by_id or {}).get(asset_id, {})
+    pattern = _solo_pattern_for_asset(asset)
+    fit = str((source_slot or {}).get("fit") or "cover")
+    slot_role = (source_slot or {}).get("role")
+    slot: dict = {"assetId": asset_id, "slot": 0, "fit": fit}
+    if slot_role:
+        slot["role"] = slot_role
+    return {"patternId": pattern, "role": role, "slots": [slot]}
+
+
 def _build_moment_solo_screen(
     signature_id: str,
     *,
     source_slot: dict | None = None,
     assets_by_id: dict[str, dict] | None = None,
 ) -> dict:
-    asset = (assets_by_id or {}).get(signature_id, {})
-    pattern = _solo_pattern_for_asset(asset)
-    fit = str((source_slot or {}).get("fit") or "cover")
-    role = (source_slot or {}).get("role")
-    slot: dict = {"assetId": signature_id, "slot": 0, "fit": fit}
-    if role:
-        slot["role"] = role
-    return {"patternId": pattern, "role": "moment", "slots": [slot]}
+    return _build_pool_solo_screen(
+        signature_id,
+        role="moment",
+        source_slot=source_slot,
+        assets_by_id=assets_by_id,
+    )
 
 
 def _normalize_screen_after_slot_removal(
@@ -661,27 +685,57 @@ def tag_moment_inline_screen(chapters: list[dict], signature_id: str) -> bool:
     return False
 
 
-def ensure_moment_asset_in_chapters(
+def _pick_pool_asset_chapter_index(chapters: list[dict], asset_id: str) -> int:
+    if not chapters:
+        return 0
+    for i, ch in enumerate(chapters):
+        if asset_id in _chapter_bucket_ids(ch):
+            return i
+    for i, ch in enumerate(chapters):
+        on_screen = _collect_screen_asset_ids([ch])
+        if asset_id in on_screen:
+            return i
+    return 0
+
+
+def _pick_pool_insert_index(chapter: dict, *, arc_peak: bool = False) -> int:
+    screens = chapter.get("screens") or []
+    n = len(screens)
+    if n == 0:
+        return 0
+    if arc_peak:
+        return max(1, n // 2)
+    return max(1, min(n, int(n * 0.7)))
+
+
+def _ensure_pool_asset_solo_screen(
     chapters: list[dict],
-    signature_id: str,
+    asset_id: str,
     *,
+    role: str,
     assets_by_id: dict[str, dict] | None = None,
     arc_profile: str = "dynamic",
 ) -> bool:
-    """Ensure signature moment is a dedicated single-slot layout-screen."""
-    if not signature_id or not chapters:
+    """Ensure one pool asset is a dedicated single-slot layout-screen."""
+    if not asset_id or not chapters:
         return False
 
     assets = assets_by_id or {}
-    host = _find_moment_host(chapters, signature_id)
+    host = _find_moment_host(chapters, asset_id)
     if host is None:
-        ch_idx = _pick_moment_chapter_index(chapters, signature_id, arc_profile=arc_profile)
+        if role == "moment":
+            ch_idx = _pick_moment_chapter_index(chapters, asset_id, arc_profile=arc_profile)
+            insert_at = None
+        else:
+            ch_idx = _pick_pool_asset_chapter_index(chapters, asset_id)
+            insert_at = None
         chapter = chapters[ch_idx]
         screens = list(chapter.get("screens") or [])
-        insert_at = max(1, len(screens) // 2) if screens else 0
+        if insert_at is None:
+            insert_at = _pick_pool_insert_index(chapter, arc_peak=(role == "moment"))
         screens.insert(
             insert_at,
-            _build_moment_solo_screen(signature_id, assets_by_id=assets),
+            _build_pool_solo_screen(asset_id, role=role, assets_by_id=assets),
         )
         chapter["screens"] = screens
         return True
@@ -691,8 +745,20 @@ def ensure_moment_asset_in_chapters(
     screens = list(chapter.get("screens") or [])
     host_screen = dict(screens[screen_idx])
     slots = list(host_screen.get("slots") or [])
-    if len(slots) == 1 and str(slots[0].get("assetId") or "").strip() == signature_id:
-        host_screen["role"] = "moment"
+    if len(slots) == 1 and str(slots[0].get("assetId") or "").strip() == asset_id:
+        if role == "peak" and screen_idx == 0:
+            solo = _build_pool_solo_screen(
+                asset_id,
+                role=role,
+                source_slot=slots[0],
+                assets_by_id=assets,
+            )
+            screens.pop(screen_idx)
+            insert_pos = _pick_pool_insert_index({"screens": screens}, arc_peak=False)
+            screens.insert(insert_pos, solo)
+            chapter["screens"] = screens
+            return True
+        host_screen["role"] = role
         screens[screen_idx] = host_screen
         chapter["screens"] = screens
         return True
@@ -703,19 +769,87 @@ def ensure_moment_asset_in_chapters(
         {**host_screen, "slots": remaining},
         assets_by_id=assets,
     )
-    solo = _build_moment_solo_screen(
-        signature_id,
+    solo = _build_pool_solo_screen(
+        asset_id,
+        role=role,
         source_slot=source_slot,
         assets_by_id=assets,
     )
+    insert_pos = max(screen_idx + 1, 1)
     if normalized is None:
         screens.pop(screen_idx)
-        screens.insert(screen_idx, solo)
+        screens.insert(insert_pos if insert_pos <= len(screens) else len(screens), solo)
     else:
         screens[screen_idx] = normalized
-        screens.insert(screen_idx + 1, solo)
+        screens.insert(insert_pos, solo)
     chapter["screens"] = screens
     return True
+
+
+def ensure_pool_assets_solo_screens(
+    chapters: list[dict],
+    pool_ids: list[str],
+    signature_id: str,
+    *,
+    assets_by_id: dict[str, dict] | None = None,
+    arc_profile: str = "dynamic",
+) -> int:
+    """Ensure every pool asset is a dedicated single-slot layout-screen."""
+    if not chapters or not pool_ids:
+        return 0
+
+    assets = assets_by_id or {}
+    sig = str(signature_id or "").strip()
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for aid in pool_ids:
+        val = str(aid or "").strip()
+        if val and val not in seen:
+            seen.add(val)
+            ordered.append(val)
+
+    changed = 0
+    if sig and sig in seen:
+        if _ensure_pool_asset_solo_screen(
+            chapters,
+            sig,
+            role="moment",
+            assets_by_id=assets,
+            arc_profile=arc_profile,
+        ):
+            changed += 1
+
+    for aid in ordered:
+        if aid == sig:
+            continue
+        if _ensure_pool_asset_solo_screen(
+            chapters,
+            aid,
+            role="peak",
+            assets_by_id=assets,
+            arc_profile=arc_profile,
+        ):
+            changed += 1
+    return changed
+
+
+def ensure_moment_asset_in_chapters(
+    chapters: list[dict],
+    signature_id: str,
+    *,
+    assets_by_id: dict[str, dict] | None = None,
+    arc_profile: str = "dynamic",
+) -> bool:
+    """Ensure signature moment is a dedicated single-slot layout-screen."""
+    return bool(
+        _ensure_pool_asset_solo_screen(
+            chapters,
+            signature_id,
+            role="moment",
+            assets_by_id=assets_by_id,
+            arc_profile=arc_profile,
+        )
+    )
 
 
 def preferred_secondary_hero_for_bucket(

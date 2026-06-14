@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from travelogue.config import AppConfig, CurateConfig
+from travelogue.config.moment import effective_secondary_boost
 from travelogue.curation.bucket_planning import (
     bucket_day_span,
     cap_book_buckets,
@@ -1042,9 +1043,7 @@ def run_curate(
         incremental_scoring=layout_cfg.scoring.incremental,
         max_evaluations_per_segment=layout_cfg.scoring.max_evaluations_per_segment,
         moment_secondary_ids=set(secondary_hints),
-        moment_secondary_boost=(
-            cur_cfg.moment.secondary_boost if cur_cfg.moment.enabled else 0.0
-        ),
+        moment_secondary_boost=effective_secondary_boost(cur_cfg.moment),
     )
     if engine == LAYOUT_ENGINE_SCREENS:
         from travelogue.curation.chapter_items import (

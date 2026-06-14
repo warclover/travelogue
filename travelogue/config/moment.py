@@ -22,6 +22,9 @@ class MomentConfig:
     pool_min: int = 1
     pool_max: int = 5
     show_exif: bool = True
+    pool_solo: bool = True
+    pool_exif: bool = True
+    signature_label: bool = True
     position: str = "inline"  # inline (layout-screen) | arc_peak (reserved)
     auto_disable_small_trip: bool = True
     small_trip_max_assets: int = 15
@@ -33,6 +36,13 @@ class MomentConfig:
     def __post_init__(self) -> None:
         if self.scoring is None:
             self.scoring = MomentScoringWeights()
+
+
+def effective_secondary_boost(cfg: MomentConfig) -> float:
+    """Hero/spread planner boost for momentSecondaryIds; off when pool is solo."""
+    if not cfg.enabled or cfg.pool_solo:
+        return 0.0
+    return cfg.secondary_boost
 
 
 def moment_config_from_dict(raw: dict[str, Any] | None) -> MomentConfig:
@@ -52,6 +62,9 @@ def moment_config_from_dict(raw: dict[str, Any] | None) -> MomentConfig:
         pool_min=int(raw.get("pool_min", 1)),
         pool_max=int(raw.get("pool_max", 5)),
         show_exif=bool(raw.get("show_exif", True)),
+        pool_solo=bool(raw.get("pool_solo", True)),
+        pool_exif=bool(raw.get("pool_exif", True)),
+        signature_label=bool(raw.get("signature_label", True)),
         position=str(raw.get("position", "inline")),
         auto_disable_small_trip=bool(raw.get("auto_disable_small_trip", True)),
         small_trip_max_assets=int(raw.get("small_trip_max_assets", 15)),

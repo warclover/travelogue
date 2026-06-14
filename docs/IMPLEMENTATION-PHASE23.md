@@ -2,7 +2,7 @@
 
 | 属性 | 内容 |
 |------|------|
-| **PRD** | [PRD-PHASE23-peak-moment.md](./PRD-PHASE23-peak-moment.md) v0.23.2 |
+| **PRD** | [PRD-PHASE23-peak-moment.md](./PRD-PHASE23-peak-moment.md) v0.23.3 |
 | **验收** | [ACCEPTANCE-PHASE23.md](./ACCEPTANCE-PHASE23.md) |
 | **分支** | `phase23/peak-moment` |
 | **状态** | ☑ W1–W4 闭环 |
@@ -15,8 +15,8 @@
 | 波次 | 范围 | 出口 |
 |------|------|------|
 | **P23-W1** | ingest exif + `build_moment_pool` + curate 落盘 | pool + 签名字段 |
-| **P23-W2** | `moment-screen` 模板 + assemble + CSS + EXIF 行 | 读者可见 |
-| **P23-W3** | closing exclude + secondary 加权 + validate + 单测 | 双层闭环 |
+| **P23-W2** | inline `layout-screen` + `moment-exif-bar` + assemble + CSS | 读者可见 |
+| **P23-W3** | closing exclude + `pool_solo` + validate + 单测 | 双层闭环 |
 | **P23-W4** | Studio 池条带 + 盲评脚本 | 可运营调参 |
 
 ---
@@ -52,12 +52,29 @@
 | ID | 任务 | 文件 | 状态 |
 |----|------|------|------|
 | P23-2a | `format_moment_exif_line` | `render/moment_exif.py` | ☑ |
-| P23-2b | `build_moment_screen_context` | `render/moment_screen.py` | ☑ |
+| P23-2b | `build_layout_screen` moment/peak 上下文 | `render/context.py` | ☑ |
 | P23-2c | assemble + `journal.hbs` | `render/assemble.py`, `journal.hbs` | ☑ |
-| P23-2d | `moment-screen.hbs` + CSS | `partials/`, `journal-screens.css` | ☑ |
+| P23-2d | `layout-screen.hbs` 角标 + peak role + CSS | `partials/`, `journal-screens.css` | ☑ |
 | P23-2e | `tests/test_moment_render.py` | — | ☑ |
-| P23-2f | `performance` profile 省略 moment 屏 | `render/assemble.py` | ☑ |
-| P23-2g | 英文 locale 标签 `Moment` | `render/moment_screen.py` | ☑ |
+| P23-2f | `performance` profile 省略 EXIF 保留 solo | `render/assemble.py` | ☑ |
+| P23-2g | 英文 locale 角标 `Moment` | `render/context.py` | ☑ |
+
+---
+
+## P23.1 · 池内全员 solo + EXIF（v0.23.3）
+
+| ID | 任务 | 文件 | 状态 |
+|----|------|------|------|
+| P23.1-1 | `pool_solo` / `pool_exif` / `signature_label` 配置 | `config/moment.py` | ☑ |
+| P23.1-2 | `ensure_pool_assets_solo_screens` + plate 避让 | `curation/moment_scoring.py` | ☑ |
+| P23.1-3 | `moment_exif_pool_ids` 渲染 + performance solo 解耦 | `render/assemble.py`, `chapters.py`, `context.py` | ☑ |
+| P23.1-4 | inline 角标 + `data-role="peak"` | `layout-screen.hbs`, `journal-screens.css` | ☑ |
+| P23.1-5 | schema `layoutScreen.role` | `schemas/trip.schema.json` | ☑ |
+| P23.1-6 | 池内/performance/配置回退测试 | `tests/test_moment_render.py` 等 | ☑ |
+| P23.1-7 | `effective_secondary_boost` pool_solo 降级 | `config/moment.py`, `curate.py` | ☑ |
+| P23.1-8 | breath peak 屏 + screen-weight 分层 | `breath.js`, `breath.css`, `journal-screens.css` | ☑ |
+| P23.1-9 | `config.yaml` / example / demo 文档化 | `config.yaml`, `config.yaml.example`, `config.demo.yaml` | ☑ |
+| P23.1-10 | 文档/验收同步 v0.23.3 | PRD · AC · RENDER-CONTRACT | ☑ |
 
 ---
 

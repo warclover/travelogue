@@ -152,17 +152,32 @@ def build_render_context(
         and surface.export_mode not in ("draft", "present-preview")
     )
 
-    moment_exif_asset_id = ""
+    moment_signature_id = ""
+    moment_pool_ids: list[str] = []
+    moment_exif_pool_ids: frozenset[str] = frozenset()
     moment_exclude: set[str] = set()
-    if (
-        not omit_moment_exif
-        and moment_cfg.enabled
+    moment_active = (
+        moment_cfg.enabled
         and surface.use_screens_global
         and not surface.is_longshot_surface
-    ):
+    )
+    if moment_active:
+        curation = trip.get("curation") or {}
         moment_id = str(trip.get("momentAssetId") or "").strip()
-        if moment_id and not (trip.get("curation") or {}).get("momentSkipped"):
-            moment_exif_asset_id = moment_id
+        if moment_id and not curation.get("momentSkipped"):
+            moment_signature_id = moment_id
+            moment_pool_ids = list(curation.get("momentPoolIds") or [])
+            if (
+                not omit_moment_exif
+                and moment_cfg.show_exif
+                and moment_cfg.pool_exif
+                and moment_pool_ids
+            ):
+                moment_exif_pool_ids = frozenset(
+                    str(x).strip() for x in moment_pool_ids if str(x).strip()
+                )
+            elif not omit_moment_exif and moment_cfg.show_exif:
+                moment_exif_pool_ids = frozenset([moment_id])
             if use_cover_closing:
                 moment_exclude.add(moment_id)
 
@@ -173,8 +188,12 @@ def build_render_context(
         meta_title=meta_title,
         hook=hook,
         cfg=app_cfg,
-        moment_exif_asset_id=moment_exif_asset_id,
-        show_moment_exif=moment_cfg.show_exif,
+        moment_signature_id=moment_signature_id,
+        moment_pool_ids=moment_pool_ids,
+        moment_exif_pool_ids=moment_exif_pool_ids,
+        show_moment_exif=moment_cfg.show_exif and not omit_moment_exif,
+        pool_solo=moment_cfg.pool_solo and moment_active,
+        show_signature_label=moment_cfg.signature_label,
     )
 
     closing_asset = None

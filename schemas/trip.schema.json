@@ -1577,6 +1577,11 @@
           "enum": ["open", "rise", "peak", "fall", "close", "moment"],
           "description": "Narrative arc beat for smart layout V2 (Phase 4 entry deep link)"
         },
+        "role": {
+          "type": "string",
+          "enum": ["moment", "peak"],
+          "description": "P23.1 · inline peak pool screen role (moment = signature only)"
+        },
         "breathLabel": {
           "type": "string",
           "description": "Display label for screen-breath-pause (default ···)"

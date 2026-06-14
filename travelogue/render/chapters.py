@@ -40,8 +40,12 @@ def build_chapters_render_context(
     meta_title: str,
     hook: str,
     cfg: AppConfig | None = None,
-    moment_exif_asset_id: str = "",
+    moment_signature_id: str = "",
+    moment_pool_ids: list[str] | None = None,
+    moment_exif_pool_ids: frozenset[str] | None = None,
     show_moment_exif: bool = True,
+    pool_solo: bool = True,
+    show_signature_label: bool = True,
 ) -> ChaptersRenderBundle:
     from travelogue.curation.chapter_items import resolve_chapter_items_for_render
     from travelogue.curation.layout_planner import aspect_kind_for_asset
@@ -75,7 +79,11 @@ def build_chapters_render_context(
     )
     featured_ids = frozenset(collect_featured_ids(trip))
     global_screen_index = 0
-    moment_exif_used = False
+    exif_pool = moment_exif_pool_ids or frozenset()
+    pool_ids = list(moment_pool_ids or [])
+    from travelogue.render.moment_screen import moment_label_for_trip
+
+    moment_screen_label = moment_label_for_trip(trip) if show_signature_label else ""
 
     folio_plan: dict = {}
     grid_exclude: frozenset[str] = frozenset()
@@ -98,12 +106,21 @@ def build_chapters_render_context(
                 has_foreword_spread = foreword_spread is not None
 
     raw_chapters = trip.get("chapters") or []
-    if moment_exif_asset_id:
+    if moment_signature_id and pool_ids and pool_solo:
+        from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
+
+        ensure_pool_assets_solo_screens(
+            raw_chapters,
+            pool_ids,
+            moment_signature_id,
+            assets_by_id=assets,
+        )
+    elif moment_signature_id:
         from travelogue.curation.moment_scoring import ensure_moment_asset_in_chapters
 
         ensure_moment_asset_in_chapters(
             raw_chapters,
-            moment_exif_asset_id,
+            moment_signature_id,
             assets_by_id=assets,
         )
     if is_longshot_surface:
@@ -167,19 +184,13 @@ def build_chapters_render_context(
                         folio_lite=folio_lite,
                         is_plate=chapter_screen_seq == 1,
                         featured_asset_ids=featured_ids,
-                        moment_asset_id=moment_exif_asset_id if not moment_exif_used else "",
+                        moment_exif_pool_ids=exif_pool,
+                        moment_signature_id=moment_signature_id,
                         show_moment_exif=show_moment_exif,
+                        show_signature_label=show_signature_label,
+                        moment_screen_label=moment_screen_label,
                     )
                 )
-                if (
-                    not moment_exif_used
-                    and moment_exif_asset_id
-                    and any(
-                        slot.get("hasMomentExif")
-                        for slot in (screens_out[-1].get("slots") or [])
-                    )
-                ):
-                    moment_exif_used = True
 
         screen_spread: ScreenSpreadContext | None = None
         has_screen_spread = False

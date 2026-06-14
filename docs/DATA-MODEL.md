@@ -68,11 +68,11 @@ trips/{tripId}/
 | `orientationSummary` | object | `total` / `landscape` / `portrait` / `square` / `panorama` / `tall` / `exportLayout`；见 `LAYOUT-PLANNER.md` |
 | `clustering` | object? | Phase 3 · Curate 聚类输出；见 §3.4 |
 | `momentPoolIds` | string[]? | Phase 23 · 高光池（5% clamp 1–5） |
-| `momentSecondaryIds` | string[]? | Phase 23 · 池内次要高光（无独立屏） |
+| `momentSecondaryIds` | string[]? | Phase 23 · 池内次要高光；`pool_solo=true` 时拆 solo 屏（`role=peak`），hero 加权关闭 |
 | `momentPoolSize` | number? | 池目标大小（审计） |
 | `momentCandidates` | string[]? | Studio 换签名 top-3 |
 | `momentExplain` | object[]? | 签名时刻因子解释 |
-| `momentPosition` | enum? | `before_closing` \| `arc_peak` |
+| `momentPosition` | enum? | `inline` \| `arc_peak`（保留；P23.1 默认 `inline`） |
 | `momentSkipped` | string? | 跳过原因（`small_trip` / `disabled` 等） |
 | `momentCollision` | string? | `closing` 软碰撞警告 |
 

@@ -5,8 +5,8 @@
 | **Agent** | Publisher（Agent 3） |
 | **模板** | `visual-journal` v0.2.1 |
 | **视觉裁判** | `templates/visual-journal/golden.html` + `golden.css` |
-| **文档版本** | v0.1 |
-| **更新日期** | 2026-05-19 |
+| **文档版本** | v0.2 · P23.1 inline peak |
+| **更新日期** | 2026-06-14 |
 
 ---
 
@@ -61,11 +61,29 @@
 | `media-scroll` | `media-scroll` | 横滑 `overflow-x` |
 | `epilogue` | `epilogue` | |
 | 固定 | `footer-cta` | 生成信息 |
-| Phase 23 · `momentAssetId` | `moment-screen` | `.layout-screen--moment`, `.moment-exif-line`（见 §4c） |
+| Phase 23 · 高光池 | `layout-screen` | `data-role="moment"`（签名）/ `data-role="peak"`（池内其余）· `.moment-exif-bar`（见 §4c） |
 
 ---
 
-## 4c. `moment-screen`（Phase 23 · 最佳时刻）
+## 4c. 高光池 inline peak（Phase 23.1 · 池内 solo + EXIF）
+
+> 自 P23.1 起，签名与池内次高峰均走 **inline `layout-screen`**，不再使用 trip 级 `moment-screen` 块。
+
+| 项 | 契约 |
+|----|------|
+| 块标记 | `data-block="layout-screen"` · `data-role="moment"`（签名 **唯一**）或 `data-role="peak"`（池内其余） |
+| 策展 | `ensure_pool_assets_solo_screens()` · 池内每张从拼版拆为单槽屏 |
+| 标签 | `.layout-screen__moment-label` · 中文「决定性瞬间」/ 英文 `Moment` · **仅** `data-role="moment"` |
+| EXIF 脚注 | `.moment-exif-bar` · 默认池内全集（`pool_exif: true`）· 单行 mono ≤13px |
+| 省略 EXIF | `performance` profile · `pool_exif: false` · `show_exif: false` |
+| 保留 solo | `performance` / longshot 可省略 EXIF，**仍**拆 solo（`pool_solo: true`） |
+| 配置 | `curate.moment.pool_solo` · `pool_exif` · `signature_label` |
+
+实现：`travelogue.curation.moment_scoring.ensure_pool_assets_solo_screens()`、`travelogue.render.context.build_layout_screen()`、`partials/layout-screen.hbs`。
+
+### 4c-legacy. `moment-screen`（v0.23.2 已废弃 · 勿新增调用）
+
+> **历史契约**：P23-W2 曾用 trip 级独立块；P23.1 起统一 inline `layout-screen`（见 §4c）。以下字段仅供维护遗留导出产物。
 
 | 项 | 契约 |
 |----|------|
@@ -77,7 +95,7 @@
 | 省略 | `performance` profile · `momentSkipped` · longshot 主 HTML 不含 moment 屏 |
 | secondary | `momentSecondaryIds` 融入正文屏，**不**渲染额外 moment 屏 |
 
-实现：`travelogue.render.moment_screen.build_moment_screen_context()`、`partials/moment-screen.hbs`。
+实现：`travelogue.render.moment_screen.build_moment_screen_context()`、`partials/moment-screen.hbs`（遗留，勿新增调用）。
 
 ---
 

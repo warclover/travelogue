@@ -40,5 +40,10 @@ cull:
 curate:
   # Phase 10 · food grid（默认开启，可一键关闭回退）
   enable_food_grid: true
-  # Phase 10.1 · 默认仍只启用 food 桶
   mundane_grid_buckets: [food]
+  # Phase 23.1 · 高光池（demo 与生产默认一致）
+  moment:
+    enabled: true
+    pool_solo: true
+    pool_exif: true
+    signature_label: true

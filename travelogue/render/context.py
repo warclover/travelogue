@@ -605,8 +605,11 @@ def build_layout_screen(
     folio_lite: bool = False,
     is_plate: bool = False,
     featured_asset_ids: frozenset[str] | None = None,
-    moment_asset_id: str = "",
+    moment_exif_pool_ids: frozenset[str] | None = None,
+    moment_signature_id: str = "",
     show_moment_exif: bool = True,
+    show_signature_label: bool = True,
+    moment_screen_label: str = "",
 ) -> LayoutScreenContext:
     pattern_id = screen.get("patternId", "screen-landscape-1")
     if pattern_id == "screen-breath-pause":
@@ -633,9 +636,9 @@ def build_layout_screen(
 
     slots_out = []
     mixed_p1_l2 = pattern_id == "screen-portrait-1-landscape-2"
-    moment_id = str(moment_asset_id or "").strip()
+    exif_pool = moment_exif_pool_ids or frozenset()
+    sig_id = str(moment_signature_id or "").strip()
     screen_role = str(screen.get("role") or "").strip()
-    moment_slot_tagged = False
     for j, slot in enumerate(screen.get("slots") or []):
         aid = slot.get("assetId", "")
         asset = _asset_lookup(assets, aid) if aid else None
@@ -692,14 +695,13 @@ def build_layout_screen(
             if pattern_id == "screen-full-frame" and fit == "contain":
                 entry["hasBlurFill"] = True
                 entry["blurSrc"] = entry["src"]
-        if show_moment_exif and moment_id and str(aid or "").strip() == moment_id and asset:
+        if show_moment_exif and str(aid or "").strip() in exif_pool and asset:
             from travelogue.render.moment_exif import format_moment_exif_line
 
             exif_line = format_moment_exif_line(asset)
             if exif_line:
                 entry["hasMomentExif"] = True
                 entry["momentExifLine"] = exif_line
-                moment_slot_tagged = True
         slots_out.append(entry)
 
     layout_hint = screen.get("layoutHint")
@@ -785,9 +787,15 @@ def build_layout_screen(
         "slots": slots_out,
         "isFeatured": is_featured,
     }
-    if screen_role == "moment" or moment_slot_tagged:
+    if screen_role == "moment" and show_signature_label:
         out["isMomentScreen"] = True
         out["hasMomentScreen"] = True
+        label = str(moment_screen_label or "").strip()
+        if label:
+            out["momentScreenLabel"] = label
+            out["hasMomentScreenLabel"] = True
+    elif screen_role == "peak":
+        out["hasPeakScreen"] = True
     if screen_index is not None:
         out["screenIndex"] = screen_index
         out["hasScreenIndex"] = True

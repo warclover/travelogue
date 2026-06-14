@@ -3,10 +3,10 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | v0.23.2-PHASE23 |
-| **状态** | **Approved · v0.23.2 修订 · 待 Kickoff** |
+| **文档版本** | v0.23.3-PHASE23 |
+| **状态** | **Approved · P23.1 池内 solo + EXIF** |
 | **评审纪要** | [phase23-peak-moment-prd-review-2026-06-14.md](./acceptance-records/phase23-peak-moment-prd-review-2026-06-14.md) |
-| **Phase 23 代号** | 「最佳时刻」— 5% 高光池 + 全册唯一签名屏 + EXIF 脚注 |
+| **Phase 23 代号** | 「最佳时刻」— 5% 高光池 + 签名锚点 + 池内 EXIF 展柜 |
 | **验收** | [ACCEPTANCE-PHASE23.md](./ACCEPTANCE-PHASE23.md) |
 | **前置条件** | Phase 22 已合入或并行不冲突；`coverAssetId` / `resolve_closing_asset_id` 稳定；BSP 阅读面拆分（`studio_preview` / `reader_immersive`）可用；curate → render 主链可跑通 |
 | **关联文档** | [cover-selection-plan.md](./cover-selection-plan.md)、[PRD-页面优化.md](./PRD-页面优化.md) §4.5、[PRD-WEBSITE-COMPETITIVE-RESEARCH.md](./PRD-WEBSITE-COMPETITIVE-RESEARCH.md) §2 盲点 A、[DATA-MODEL.md](./DATA-MODEL.md)、[MEDIA-PIPELINE.md](./MEDIA-PIPELINE.md)、[RENDER-CONTRACT.md](./RENDER-CONTRACT.md) |
@@ -18,8 +18,8 @@
 > Travelogue 已有 **封面**（邀请进门）、**章首 hero**（章节入口）、**封底**（告别收束）三类特殊图位，但缺少「这趟旅程就是这一张」的**全书唯一定格**。Phase 23 采用 **双层模型**：
 >
 > 1. **高光池 `momentPoolIds`**：可排版图总量的 **5%**（`clamp` 在 1–5 张），解决大册「只挑 1 张太窄」的选型问题。  
-> 2. **签名时刻 `momentAssetId`**：从池中取 `peak_moment_score` top-1，全册 **仅 1 屏** `moment-screen`，下沿 **1 行 EXIF**——落实「EXIF + 装订」差异化，且不破坏沉浸阅读。  
-> 3. **池内其余 `momentSecondaryIds`**：不单独成屏、**不挂 EXIF**；在高潮章优先用于 hero / spread 加权，融入正文节奏。
+> 2. **签名时刻 `momentAssetId`**：从池中取 `peak_moment_score` top-1；inline `data-role="moment"` +「决定性瞬间」角标 + EXIF。  
+> 3. **池内其余 `momentSecondaryIds`**：默认拆 solo 屏（`role=peak`）+ 同款 EXIF；散入各章中后段。
 >
 > **与 P22 §11 原「实验记录 DB」关系**：P22 附录中的 P23 占位项 **改由本文档承接**；pairwise 盲评 cohort DB 顺延至 **P24**（不阻塞 P23）。
 
@@ -56,11 +56,14 @@
 
 ### 1.3 核心判断
 
-- **展示层**：全册 **1 屏** + 下沿 1 行 EXIF——比每屏 EXIF 或每屏艺术边框更符合 BSP 沉浸北极星。
+- **展示层（v0.23.3）**：签名屏全册 **唯一**（`data-role="moment"` + 角标）；池内其余默认 **solo + 同款 EXIF**（`role=peak`），散入各章中后段——比封底前 EXIF 连廊更符合 BSP 沉浸北极星。
 - **选型层**：先用 **5% 高光池**（上限 5 张）收窄候选，再从中定签名时刻——比全册单点盲选更合理。
-- **反对**池内每张都做成 moment 屏或都挂 EXIF（会与章首 hero、featured-grid 打架）。
+- **反对**池内每张都标为 moment 或挂「决定性瞬间」角标（会与签名语义打架）。
 - **反对**在整理阶段统一裁切比例（见 Phase 16 §4.4）；签名屏用 **原生比例 + viewport-fit / cover 策略**。
 - 选图必须用 **独立评分 `peak_moment_score`**，不能复用封面或封底逻辑。
+
+> **P23.1 修订（2026-06-14）**  
+> 高光池内 **全部** 照片默认拆为独立单槽屏并挂同款 EXIF；**仅** `momentAssetId` 保留 `data-role="moment"` 与「决定性瞬间」角标。可通过 `curate.moment.pool_solo` / `pool_exif` / `signature_label` 回退 v0.23.2 行为。
 
 ---
 
@@ -70,20 +73,20 @@
 
 | ID | 目标 | 验收口径 |
 |----|------|----------|
-| **G-P23-01** | **全册唯一签名屏** | 每 trip 至多 1 屏 `moment-screen`；`momentAssetId` = 池内 top-1 |
+| **G-P23-01** | **全册唯一签名屏** | 每 trip 至多 1 个 `data-role="moment"`；`momentAssetId` = 池内 top-1 |
 | **G-P23-02** | **5% 高光池** | `momentPoolIds` 长度 = `clamp(round(n×5%), 1, 5)`；`momentAssetId ∈ pool` |
 | **G-P23-03** | **独立峰值选型** | `build_moment_pool()` + `pick_peak_moment()` 与 cover/closing/hero 正交 |
-| **G-P23-04** | **1 行 EXIF 脚注** | **仅** `momentAssetId` 对应屏；Reader 沉浸模式仅此屏显示 |
+| **G-P23-04** | **1 行 EXIF 脚注** | 默认池内全集（`pool_exif: true`）；`pool_exif: false` 时仅签名；`performance` 省略 EXIF 保留 solo |
 | **G-P23-05** | **三图位语义分离** | 盲评可区分封面（邀请）/ 签名时刻（峰值）/ 封底（收束） |
 | **G-P23-06** | **ingest 扩展相机 EXIF** | `assets[].exif` 结构化字段；无则优雅降级 |
 | **G-P23-07** | **Studio 可换图** | 自池内展示 `momentCandidates` top-3 + `momentExplain` |
-| **G-P23-08** | **池内次要高光融入正文** | `momentSecondaryIds` 在 peak 章 hero/spread 加权；无独立 block |
-| **G-P23-09** | **配置开关** | `curate.moment.enabled`；小册默认 off |
+| **G-P23-08** | **池内次要高光** | 默认拆 solo 屏（`pool_solo: true`）· `role=peak` · 散入各章；`pool_solo: false` 时仅签名 solo + hero 加权 |
+| **G-P23-09** | **配置开关** | `enabled` · `pool_solo` · `pool_exif` · `signature_label`；小册默认 off |
 
 ### 2.2 非目标
 
-- **不做** 高光池内每张都渲染为 `moment-screen`（仅 **1** 屏签名时刻）
-- **不做** 池内次要张自动挂 EXIF（`momentSecondaryIds` 无脚注）
+- **不做** trip 级 `moment-screen` 双轨（已废弃；统一 inline `layout-screen`）
+- **不做** 池内次高峰 `data-role="moment"` 或「决定性瞬间」角标（仅签名）
 - **不做** 每张正文屏常驻 EXIF（营销站长图 hover 仍走 F-06，另线）
 - **不做** 每屏艺术边框（folio frame 非 P23 范围）
 - **不做** 在 ingest 阶段统一裁切为标准横/竖版
@@ -98,20 +101,21 @@
 
 | 项 | 决策 |
 |----|------|
-| **双层模型** | **高光池**（5% clamp 1–5）+ **签名时刻**（池内 top-1）+ **次要高光**（池内其余 → 正文加权） |
+| **双层模型** | **高光池**（5% clamp 1–5）+ **签名时刻**（池内 top-1）+ **次要高光**（默认 solo `role=peak`） |
 | **池大小公式** | `pool_size = clamp(round(layout_eligible_images × pool_ratio), pool_min, pool_max)`；默认 **ratio=0.05 · min=1 · max=5** |
-| **签名屏数量** | 全册 **1** 屏 `moment-screen`；`momentAssetId = momentPoolIds[0]`（按分排序后） |
-| **EXIF 展示** | **仅** `momentAssetId` 对应屏；1 行；`clamp(11px, 1.2vw, 13px)`；`--folio-ink` 38% 透明度 |
+| **签名屏** | 全册 **1** 个 `data-role="moment"`；角标「决定性瞬间」 |
+| **池内展示** | 默认 `pool_solo` + `pool_exif`：池内每张 inline solo + `.moment-exif-bar` |
+| **EXIF 展示** | 默认池内全集；`pool_exif: false` 仅签名；`performance` 省略 EXIF 保留 solo |
 | **字体** | `JetBrains Mono` 或项目 mono 栈（与营销 F-06 一致） |
-| **插入位置** | 默认 `before_closing`：末章正文之后、`cover-closing` 之前；可配置 `arc_peak`（高潮章后） |
-| **滚动位置** | 目标全书 **60%–75%**（`before_closing` 自然满足） |
+| **插入位置** | **inline**：`ensure_pool_assets_solo_screens()` 写入各章 `screens[]`；目标章内 **60%–70%** 屏位 |
+| **滚动位置** | 签名与各 peak 自然分布于全书 **60%–75%** 区间 |
 | **与封面** | `momentAssetId` **不得**等于 `coverAssetId` 或 `coverByLayout.*` |
 | **与封底** | **优先不得**等于 `closingAssetId`；素材 &lt;20 张时可降级并写 `moment.collision: closing` warning |
 | **小册** | 可排版 ≤15 张且 `auto_disable_small_trip: true`（默认）→ **不写 pool、不插 moment 屏** |
 | **池与 featured-grid** | `momentPoolIds` 与 `featured-grid` 资产集合 **允许部分重叠**；同一 ID 不得重复占 featured-grid **主槽** 与 moment 签名屏 |
-| **阅读面** | `reader_immersive` **保留** EXIF 行；其余屏仍无 EXIF |
+| **阅读面** | `reader_immersive` / `studio_preview` 显示池内 EXIF；`performance` 省略 EXIF |
 | **分享 ZIP** |  raster 仍可按 `strip_exif` 剥离；HTML 内联脚注读 `trip.json` 元数据 |
-| **OQ-P23-01** | 首版 **仅** `before_closing`；`arc_peak` 顺延 P23.1 / P18 联动 |
+| **OQ-P23-01** | 首版 **inline 散入各章**；`arc_peak` 动态插入顺延 P23.2 / P18 联动 |
 | **OQ-P23-02** | longshot **不含** moment 屏 |
 | **OQ-P23-03** | 脚注 **不含** 摄影师署名（署名走 `meta` / 封面） |
 | **OQ-P23-04** | **允许**竖图 moment · `screen-portrait-1` 舞台 |
@@ -121,7 +125,7 @@
 | **16–19 张小册** | 仍渲染 moment，但 `min_score` 提升至 **0.45** |
 | **hero 撞车** | moment top-1 = 任一章首 hero → ×0.85 并记入 `momentExplain` |
 | **盲评门禁** | **M1** 签名时刻 ≥50%（5 册）→ **M2** ≥60%（+3 册 hold-out）；另 **池覆盖率** M2：用户心中 top-5 ∩ pool ≥3 |
-| **OQ-P23-05** | 5% 多屏 vs 单张 → **双层模型**（池选型 + 1 屏展示） |
+| **OQ-P23-05** | 5% 多屏 vs 单张 → **双层模型**（池选型 + 签名角标 + 池内 solo/EXIF） |
 
 ---
 
@@ -130,11 +134,12 @@
 | 术语 | 定义 |
 |------|------|
 | **高光池 / Moment Pool** | `momentPoolIds`；可排版图 **5%**（clamp 1–5）的高分候选集合 |
-| **签名时刻 / Signature Moment** | `momentAssetId`；池内 `peak_moment_score` top-1；全册唯一 EXIF 屏 |
-| **次要高光 / Secondary Moments** | `momentSecondaryIds`；池内除签名外其余 ID；融入正文，无独立屏 |
-| **moment-screen** | 渲染块 `data-block="moment-screen"`；**仅**签名时刻 1 屏 |
-| **peak_moment_score** | 池内（或全池构建前）独立打分；与 cover/closing/hero 正交 |
-| **EXIF 脚注** | 单行地名·时段·机型·曝光五元组；**仅**签名屏 |
+| **签名时刻 / Signature Moment** | `momentAssetId`；池内 top-1；`data-role="moment"` + 角标 |
+| **次要高光 / Secondary Moments** | `momentSecondaryIds`；池内除签名外；默认 `data-role="peak"` solo + EXIF |
+| **peak-screen** | inline `layout-screen` · `data-role="peak"` |
+| **签名 inline 屏** | `layout-screen` · `data-role="moment"` · `.layout-screen__moment-label` |
+| **peak_moment_score** | 池内独立打分；与 cover/closing/hero 正交 |
+| **EXIF 脚注** | `.moment-exif-bar`；默认池内全集；至少 2 段才渲染 |
 | **三图位** | Cover · Signature Moment · Closing |
 
 ### 4.1 池大小示例
@@ -157,8 +162,8 @@
 | **数量** | 1（+ layout 变体） | **展示 1** · 池内备选 1–5 | 1 |
 | **时间语义** | 与拍摄序解耦 | 叙事弧 **峰值** | 偏末段、余韵 |
 | **选图偏好** | 竖版邀请 / 画质 | 池：高潮+锚点+名场面；签名：池内 top-1 | 低饱和、黄昏、偏未用 |
-| **文字层** | 标题 + hook | **1 行 EXIF**（仅签名屏） | epilogue + stats |
-| **版式** | `cover-hero` | `moment-screen` ×1 | `closing-hero` + panel |
+| **文字层** | 标题 + hook | 角标 + EXIF（签名）；池内其余仅 EXIF | epilogue + stats |
+| **版式** | `cover-hero` | inline `layout-screen` · `data-role="moment"` | `closing-hero` + panel |
 
 ```mermaid
 flowchart TB
@@ -168,11 +173,13 @@ flowchart TB
     S --> SIG[momentAssetId 签名]
     B --> SEC[momentSecondaryIds 其余]
   end
-  subgraph render [Render]
-    BODY[正文 · 次要高光可加权出现] --> MS[moment-screen · 仅签名 + EXIF]
-    MS --> CL[cover-closing 封底]
+  subgraph render [Render · P23.1]
+    BODY[正文屏] --> POOL[池内 solo 散入各章]
+    POOL --> SIGS[data-role=moment + 角标]
+    POOL --> PEAKS[data-role=peak + EXIF]
+    SIGS --> CL[cover-closing 封底]
   end
-  SEC -.->|peak 章 hero/spread 加权| BODY
+  SEC -.->|pool_solo=false 时 hero 加权| BODY
 ```
 
 ---
@@ -185,11 +192,11 @@ flowchart TB
 |------|------|--------|------|
 | `curation.momentPoolIds` | string[]? | curate | 高光池；长度 `clamp(round(n×ratio), min, max)`；默认最多 5 |
 | `momentAssetId` | string? | curate | **签名时刻** = 池内 `peak_moment_score` top-1；∈ `momentPoolIds` |
-| `curation.momentSecondaryIds` | string[]? | curate | 池内除签名外其余 ID；用于正文加权，**无独立屏** |
+| `curation.momentSecondaryIds` | string[]? | curate | 池内除签名外其余 ID；默认 solo `role=peak` |
 | `curation.momentPoolSize` | number? | curate | 本次池目标大小（审计用） |
 | `curation.momentCandidates` | string[]? | curate | 池内按分降序 top-3（Studio 换签名用） |
 | `curation.momentExplain` | object[]? | curate | **签名时刻**因子解释 |
-| `curation.momentPosition` | enum? | curate | `before_closing` \| `arc_peak`；默认 `before_closing` |
+| `curation.momentPosition` | enum? | curate | 保留字段；inline 模式为 `inline` |
 | `curation.momentChapterIndex` | number? | curate | `arc_peak` 时插入章序（1-based） |
 | `curation.momentCollision` | string? | curate | `closing` \| `cover` 降级警告 |
 
@@ -205,11 +212,14 @@ flowchart TB
 curate:
   moment:
     enabled: true
-    pool_ratio: 0.05           # 可排版图总量的 5%
+    pool_ratio: 0.05
     pool_min: 1
     pool_max: 5
-    show_exif: true            # 仅签名屏
-    position: before_closing
+    show_exif: true
+    pool_solo: true
+    pool_exif: true
+    signature_label: true
+    position: inline
     auto_disable_small_trip: true
     small_trip_max_assets: 15
 ```
@@ -246,10 +256,11 @@ curate:
 ### 7.0 流程总览
 
 ```text
-1. build_moment_pool()     → momentPoolIds[]     （全量打分 → top-K，K=clamp(round(n×5%),1,5)）
-2. pick_peak_moment(pool)  → momentAssetId       （池内 peak_moment_score top-1）
-3. derive_secondaries()    → momentSecondaryIds  （pool \ {signature}）
-4. apply_secondary_boost() → screen planner 加权  （peak 章 hero / spread，P23-W3）
+1. build_moment_pool()     → momentPoolIds[]
+2. pick_peak_moment(pool)  → momentAssetId
+3. derive_secondaries()    → momentSecondaryIds
+4. ensure_pool_assets_solo_screens()  → 各章 screens[]（pool_solo 时）
+5. apply_secondary_boost() → 仅 pool_solo=false 时 hero 加权
 ```
 
 ### 7.1 池构建 · `build_moment_pool()`
@@ -295,18 +306,17 @@ K = clamp(round(layout_eligible_count * pool_ratio), pool_min, pool_max)
 - 封底低饱和 / 黄昏偏好（避免选成第二张封底）
 - 纯 `takenAt` 时间序（避免变成「最后一张」）
 
-### 7.3 次要高光 · `momentSecondaryIds` 与正文加权
+### 7.3 次要高光 · `momentSecondaryIds`（P23.1）
 
 | 规则 | 说明 |
 |------|------|
 | **定义** | `momentSecondaryIds = momentPoolIds` 去掉 `momentAssetId` |
-| **展示** | **不**新增 `moment-screen`；**不**挂 EXIF |
-| **加权场景** | `arc_segment == peak` 章的 `_pick_chapter_hero`：`preferred_id` 优先从 secondary 中选 |
-| **加权场景** | `layout_scoring` 对已在 secondary 的资产 +`moment_secondary_boost`（默认 **0.12**） |
-| **去重** | secondary 不得同时占同一章 **两个** hero 槽；spread 最多 **1** 张 secondary / 章 |
-| **与 featured-grid** | featured-grid 仍用竖图池；secondary 仅提高 **peak 章横图 hero** 命中率 |
-
-> P23-W1 可先 **只落盘** `momentSecondaryIds`；W3 接入 screen planner 加权。无 planner 钩子时 secondary 仅作 Studio 只读展示。
+| **默认展示** | `pool_solo: true` → 每张拆 solo 屏 · `role=peak` · 散入所属章 60%–70% 屏位 |
+| **EXIF** | `pool_exif: true` → 与签名同款 `.moment-exif-bar`；无有效段则仅 solo 无黑条 |
+| **plate 避让** | 次高峰占章首单槽时从 plate 拆出，插入章内后段 |
+| **hero 加权** | **仅** `pool_solo: false` 时：`layout_scoring` +`secondary_boost`（默认 0.12） |
+| **加权关闭** | `pool_solo: true`（默认）→ `effective_secondary_boost()` 返回 0 |
+| **与 featured-grid** | 允许部分重叠；不得重复占 featured-grid 主槽与签名屏 |
 
 ### 7.4 与封底解耦
 
@@ -345,7 +355,7 @@ moment:  prefer ON-SCREEN peak, high aesthetic, anchor hit, arc peak
     "momentPoolSize": 5,
     "momentSecondaryIds": ["asset-017", "asset-088", "asset-031", "asset-055"],
     "momentCandidates": ["asset-042", "asset-017", "asset-088"],
-    "momentPosition": "before_closing",
+    "momentPosition": "inline",
     "momentExplain": [
       {"factor": "arc_peak", "weight": 0.30, "detail": "ch-03 peak"},
       {"factor": "anchor", "weight": 0.25, "detail": "日落"},
@@ -359,19 +369,18 @@ moment:  prefer ON-SCREEN peak, high aesthetic, anchor hit, arc peak
 
 ## 8. 渲染与版式
 
-### 8.1 模板契约
+### 8.1 模板契约（inline · P23.1）
 
 | 项 | 规格 |
 |----|------|
-| **partial** | `templates/visual-journal/partials/moment-screen.hbs` |
-| **data-block** | `moment-screen` |
-| **插入点** | `journal.hbs`：末章 `screens` 列表之后；`cover-closing` 之前 |
-| **版式类** | `layout-screen layout-screen--moment layout-screen--viewport-fit`（横图默认） |
-| **fit** | 风景 `cover`；人物 `contain` + blur-fill（复用 `portrait_fit_for_asset`） |
-| **标签** | 左上角默认「决定性瞬间」（`--folio-ink` 42%，不挡主体） |
-| **竖图** | `layout-screen--portrait` + viewport-fit；复用 `portrait_fit_for_asset` |
+| **partial** | `templates/visual-journal/partials/layout-screen.hbs` |
+| **签名** | `data-role="moment"` · `.layout-screen--moment-inline` · `.layout-screen__moment-label` |
+| **次高峰** | `data-role="peak"` · 无角标 |
+| **插入点** | 策展 `ensure_pool_assets_solo_screens()` 写入各章 `screens[]` |
+| **fit** | 风景 `cover`；人物 `contain` + blur-fill |
+| **竖图** | `screen-portrait-1` + viewport-fit 可选 |
 
-### 8.2 EXIF 脚注行（`moment-exif-line`）
+### 8.2 EXIF 脚注行（`moment-exif-bar`）
 
 **格式**（有则拼接，`.` 分隔）：
 
@@ -396,11 +405,12 @@ moment:  prefer ON-SCREEN peak, high aesthetic, anchor hit, arc peak
 
 ### 8.3 阅读面（BSP 对齐）
 
-| profile | moment 屏 | EXIF 行 |
-|---------|-----------|---------|
-| `studio_preview` | 显示 | 显示 |
-| `reader_immersive` | 显示 | **显示**（全书唯一例外） |
-| `performance` / longshot | 可省略 moment 屏 | 省略 |
+| profile | 池内 solo 屏 | EXIF 行 |
+|---------|-------------|---------|
+| `studio_preview` | 显示 | 显示（`pool_exif`） |
+| `reader_immersive` | 显示 | 显示（`pool_exif`） |
+| `performance` | 显示 | **省略** |
+| longshot | 省略 | 省略 |
 
 ### 8.4 动效预算
 
@@ -459,7 +469,11 @@ curate:
     pool_ratio: 0.05
     pool_min: 1
     pool_max: 5
-    secondary_boost: 0.12      # layout_scoring / hero preferred 加权
+    show_exif: true
+    pool_solo: true          # 池内全部单独成屏
+    pool_exif: true          # 池内全部挂 EXIF
+    signature_label: true    # 仅签名显示「决定性瞬间」
+    secondary_boost: 0.12    # pool_solo=true 时自动降为 0
     scoring:
       weights:
         arc_peak: 0.30
@@ -471,7 +485,7 @@ curate:
       small_trip_elevated_min_score: 0.45
     auto_disable_small_trip: true
     small_trip_max_assets: 15
-    position: before_closing
+    position: inline
 
 aesthetic:
   presets:
@@ -494,13 +508,15 @@ ingest:
 
 | ID | 描述 | Tier |
 |----|------|------|
-| **AC-P23-01** | 全册仅 1 屏 `moment-screen`（签名时刻） | 0 |
+| **AC-P23-01** | 全册仅 1 个 `data-role="moment"` | 0 |
 | **AC-P23-02** | `momentAssetId` ≠ `coverAssetId` 且 ∈ `momentPoolIds` | 0 |
 | **AC-P23-23** | `len(momentPoolIds)` = clamp(round(n×5%),1,5)（≥16 张册） | 0 |
-| **AC-P23-24** | 正文屏无第二张 `moment-screen`；secondary 无 EXIF | 0 |
+| **AC-P23-24** | 仅 1 个 `data-role="moment"`；其余 `data-role="peak"` | 0 |
+| **AC-P23-30** | 池内 `len(pool)` 个 `.moment-exif-bar`（`pool_exif`） | 0 |
+| **AC-P23-31** | `performance` 无 EXIF 仍 solo | 0 |
 | **AC-P23-25** | 盲评 M2 池覆盖率：用户 top-5 ∩ pool ≥3 | 1 |
-| **AC-P23-03** | EXIF 脚注 1 行、在图下、mono、不 overlay | 0 |
-| **AC-P23-04** | `reader_immersive` 可见脚注；正文其他屏无 EXIF | 0 |
+| **AC-P23-03** | `.moment-exif-bar` 单行、slot 内、mono | 0 |
+| **AC-P23-04** | `reader_immersive` 可见池内 EXIF；正文其他屏无 EXIF | 0 |
 | **AC-P23-05** | 仙本那/demo 册 moment 与 cover/closing 三张互异（≥20 张） | 0 |
 | **AC-P23-06** | ≤15 张小册默认无 moment 屏 | 1 |
 | **AC-P23-07** | 无 EXIF 时优雅降级（无空行） | 1 |
@@ -516,8 +532,9 @@ ingest:
 | Sprint | 范围 | 交付 |
 |--------|------|------|
 | **P23-W1** | ingest `exif` + `build_moment_pool` + `pick_peak_moment` + curate 落盘 | pool + 签名字段 |
-| **P23-W2** | `moment-screen.hbs`（仅签名）+ `assemble.py` + CSS | 读者可见 |
-| **P23-W3** | closing exclude + secondary hero 加权 + 小册规则 + 单测 | 双层闭环 |
+| **P23-W2** | inline `layout-screen` + `moment-exif-bar` + assemble | 读者可见 |
+| **P23-W3** | closing exclude + `pool_solo` + 小册规则 + 单测 | 双层闭环 |
+| **P23.1** | 池内全员 solo/EXIF · 配置开关 · 文档 v0.23.3 | 已交付 |
 | **P23-W4** | Studio 池条带 + 盲评脚本（含池覆盖率） | 可运营调参 |
 
 **预估**：2–3 周（1 名全职；与 P22 增量 pipeline 可并行）
@@ -534,7 +551,7 @@ ingest:
 | EXIF 大面积缺失 | `completeness` + 回退地名/时间；脚注段数门槛 |
 | 与封底抢图 | 软排除 + `momentCollision` 可观测 |
 | trip.json 膨胀 | `momentExplain` 限 4 因子；与 `coverExplain` 同量级 |
-| 破坏沉浸 | 仅此一屏；可 `export.moment.enabled: false` 一键关 |
+| 破坏沉浸 | 仅池内屏挂 EXIF；可 `pool_exif: false` 或 `export.moment.enabled: false` 回退 |
 
 **回滚**：
 
@@ -560,11 +577,11 @@ ingest:
 
 | ID | 决议 |
 |----|------|
-| **OQ-P23-01** | 首版 **仅** `before_closing`；`arc_peak` 顺延 |
+| **OQ-P23-01** | 首版 **inline 散入各章**；`arc_peak` 顺延 P23.2 |
 | **OQ-P23-02** | longshot **不含** moment 屏 |
 | **OQ-P23-03** | 脚注 **不含** 摄影师署名 |
 | **OQ-P23-04** | **允许**竖图 moment |
-| **OQ-P23-05** | 5% 多屏 vs 单张 → **双层模型**（池选型 + 1 屏 EXIF） |
+| **OQ-P23-05** | 5% 多屏 vs 单张 → **双层模型**（池选型 + 签名角标 + 池内 solo/EXIF） |
 
 ---
 
@@ -572,6 +589,7 @@ ingest:
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.23.3 | 2026-06-14 | P23.1：池内 solo + 池内 EXIF · `pool_solo`/`pool_exif`/`signature_label` · hero 加权降级 |
 | v0.23.2 | 2026-06-14 | 双层模型：`momentPoolIds` 5% clamp 1–5 + 签名屏 + `momentSecondaryIds` 正文加权 |
 | v0.23.1 | 2026-06-14 | 评审闭合：OQ 拍板 · hero 去重 · closing exclude · M1/M2 盲评 · 脚注衬底 |
 | v0.23.0 | 2026-06-14 | 初版：最佳时刻全册单屏 + EXIF 脚注 + 三图位分离 + peak_moment_score |

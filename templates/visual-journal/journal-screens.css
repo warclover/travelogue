@@ -2234,6 +2234,44 @@ html[data-layout="auto"] .layout-slot:has(.moment-exif-bar) .layout-slot__img {
   background: #0a0a0a;
 }
 
+/* P23.1 · inline signature moment label (layout-screen only) */
+.layout-screen--moment-inline {
+  position: relative;
+}
+
+.layout-screen__moment-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: block;
+  padding: 0.55rem 0.85rem;
+  writing-mode: horizontal-tb;
+  white-space: nowrap;
+  font-family: var(--folio-meta-font, ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace);
+  font-size: clamp(11px, 1.2vw, 13px);
+  letter-spacing: 0.12em;
+  color: color-mix(in srgb, var(--folio-ink, #222) 72%, #fff 28%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--folio-ink, #222) 22%, transparent) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* P23.1 · peak pool screen weight (signature > peak > default) */
+html[data-layout-engine="screens"]:not([data-layout="mobile"])
+  .layout-screen--moment-inline {
+  --screen-weight: 0.75;
+}
+
+html[data-layout-engine="screens"]:not([data-layout="mobile"])
+  .layout-screen[data-role="peak"] {
+  --screen-weight: 0.68;
+}
+
 /* Legacy moment-screen (deprecated trip-level block) */
 html[data-layout="web"] .moment-screen.layout-screen--moment[data-block="moment-screen"],
 html[data-layout="auto"] .moment-screen.layout-screen--moment[data-block="moment-screen"] {
