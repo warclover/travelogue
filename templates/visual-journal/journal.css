@@ -564,6 +564,11 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
     color: rgba(255, 255, 255, 0.88);
   }
 
+  html[data-layout="web"] .cover-opening__hook .breath-highlight__unit,
+  html[data-layout="auto"] .cover-opening__hook .breath-highlight__unit {
+    color: inherit;
+  }
+
   html[data-layout="web"] .cover-opening__enter,
   html[data-layout="auto"] .cover-opening__enter {
     display: block;

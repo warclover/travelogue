@@ -1904,10 +1904,9 @@ html[data-folio="full"] .featured-grid__img {
 }
 
 .chapter-separator--ticket .chapter-separator__ticket {
-  display: grid;
-  grid-template-columns: auto 1px minmax(0, 1fr) minmax(0, 9.75rem);
+  display: flex;
   align-items: stretch;
-  gap: 0 0.75rem;
+  gap: 0.75rem;
   min-height: clamp(4.25rem, 11vh, 4.75rem);
   padding: 0.65rem 1rem 0.65rem 0.85rem;
   background: color-mix(
@@ -1919,6 +1918,47 @@ html[data-folio="full"] .featured-grid__img {
   box-shadow: 0 1px 0 color-mix(in srgb, var(--chapter-separator-ink, #1f1d1a) 6%, transparent);
 }
 
+.chapter-separator__ticket-left {
+  display: grid;
+  grid-template-columns: auto 1px minmax(0, max-content);
+  align-items: center;
+  gap: 0 0.75rem;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.chapter-separator__ticket--has-pull .chapter-separator__ticket-left {
+  flex: 0 1 auto;
+}
+
+.chapter-separator__ticket:not(.chapter-separator__ticket--has-pull) .chapter-separator__ticket-left {
+  flex: 1 1 auto;
+}
+
+.chapter-separator__pull-wrap {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding-inline: 0.15rem;
+}
+
+.chapter-separator__mark-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  min-width: 2.55rem;
+  padding-inline: 0.15rem 0.3rem;
+  font-family: var(--folio-meta-font, ui-monospace, "Cascadia Mono", monospace);
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--chapter-separator-ink, #1f1d1a) 72%, transparent);
+}
+
 .chapter-separator--ticket[style*="--chapter-separator-mode: dark"] .chapter-separator__ticket {
   background: color-mix(
     in srgb,
@@ -1927,21 +1967,6 @@ html[data-folio="full"] .featured-grid__img {
   );
   border-color: color-mix(in srgb, var(--chapter-separator-ink, #f5f2ea) 14%, transparent);
   box-shadow: 0 1px 0 color-mix(in srgb, #000 28%, transparent);
-}
-
-.chapter-separator__mark-num {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  align-self: center;
-  min-width: 2.4rem;
-  padding-inline: 0.15rem 0.3rem;
-  font-family: var(--folio-meta-font, ui-monospace, "Cascadia Mono", monospace);
-  font-size: 1.06rem;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: 0.1em;
-  color: color-mix(in srgb, var(--chapter-separator-ink, #1f1d1a) 72%, transparent);
 }
 
 .chapter-separator__vrule {

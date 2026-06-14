@@ -1,17 +1,21 @@
 <section class="chapter-separator chapter-separator--ticket" data-block="chapter-separator" style="{{chapterSeparatorStyle}}">
-  <div class="chapter-separator__ticket">
-    <span class="chapter-separator__mark-num" aria-hidden="true">{{index}}</span>
-    <div class="chapter-separator__vrule" aria-hidden="true"></div>
-    <div class="chapter-separator__main">
-      <h2 class="chapter-separator__title">{{title}}</h2>
-      {{#if hasChapterMeta}}
-      <p class="chapter-separator__meta">{{chapterMeta}}</p>
-      {{/if}}
+  <div class="chapter-separator__ticket{{#if hasDecorPull}} chapter-separator__ticket--has-pull{{/if}}">
+    <div class="chapter-separator__ticket-left">
+      <span class="chapter-separator__mark-num" aria-hidden="true">{{index}}</span>
+      <div class="chapter-separator__vrule" aria-hidden="true"></div>
+      <div class="chapter-separator__main">
+        <h2 class="chapter-separator__title">{{title}}</h2>
+        {{#if hasChapterMeta}}
+        <p class="chapter-separator__meta">{{chapterMeta}}</p>
+        {{/if}}
+      </div>
     </div>
     {{#if hasDecorPull}}
-    <blockquote class="chapter-separator__pull" data-block="decor-line"{{#if editableDecorLine}} data-editable="decor-line" data-edit-path="{{editDecorLinePath}}"{{/if}}>
-      <p>{{decorPull}}</p>
-    </blockquote>
+    <div class="chapter-separator__pull-wrap">
+      <blockquote class="chapter-separator__pull" data-block="decor-line"{{#if editableDecorLine}} data-editable="decor-line" data-edit-path="{{editDecorLinePath}}"{{/if}}>
+        <p>{{decorPull}}</p>
+      </blockquote>
+    </div>
     {{/if}}
   </div>
   {{#if hasChapterProgress}}

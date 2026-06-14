@@ -107,18 +107,18 @@
       var spans = wrapElement(el);
       if (!spans) return;
 
-      gsap.set(spans, { opacity: 0.08, y: 10 });
+      gsap.set(spans, { opacity: 0.52, y: 5 });
 
       tweens.push(
         gsap.to(spans, {
           opacity: 1,
           y: 0,
-          stagger: Math.max(0.06, 1.35 / spans.length),
+          stagger: Math.max(0.04, 0.85 / spans.length),
           ease: "none",
           scrollTrigger: {
             trigger: el,
-            start: "top 88%",
-            end: "top 22%",
+            start: "top 92%",
+            end: "top 38%",
             scrub: 0.85,
           },
         })
