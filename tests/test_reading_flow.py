@@ -45,6 +45,8 @@ def test_breath_lenis_asset_exists() -> None:
     assert "TravelogueLenis" in js
     assert "lerp" in js
     assert "wheelBypassTarget" in js
+    assert "adoptExternalScroll" in js
+    assert 'addEventListener("scroll"' in js
 
 
 def test_breath_js_integrates_flow_and_lenis() -> None:

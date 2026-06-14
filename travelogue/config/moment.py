@@ -22,7 +22,7 @@ class MomentConfig:
     pool_min: int = 1
     pool_max: int = 5
     show_exif: bool = True
-    position: str = "before_closing"  # before_closing | arc_peak
+    position: str = "inline"  # inline (layout-screen) | arc_peak (reserved)
     auto_disable_small_trip: bool = True
     small_trip_max_assets: int = 15
     secondary_boost: float = 0.12
@@ -52,7 +52,7 @@ def moment_config_from_dict(raw: dict[str, Any] | None) -> MomentConfig:
         pool_min=int(raw.get("pool_min", 1)),
         pool_max=int(raw.get("pool_max", 5)),
         show_exif=bool(raw.get("show_exif", True)),
-        position=str(raw.get("position", "before_closing")),
+        position=str(raw.get("position", "inline")),
         auto_disable_small_trip=bool(raw.get("auto_disable_small_trip", True)),
         small_trip_max_assets=int(raw.get("small_trip_max_assets", 15)),
         secondary_boost=float(raw.get("secondary_boost", 0.12)),

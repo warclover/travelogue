@@ -6,9 +6,19 @@ from pathlib import Path
 
 from travelogue.curation.asset_subject import full_frame_fit_for_asset, portrait_fit_for_asset
 from travelogue.curation.layout_planner import aspect_kind_for_asset
+from travelogue.render.context import (
+    _asset_aspect_ratio_float,
+    _presentation_tier,
+    _screen_weight_for_tier,
+)
 from travelogue.render.cover_opening import cover_focal_point
 from travelogue.render.context import alt_text, compile_srcset, pick_image_sizes, pick_image_src
 from travelogue.render.moment_exif import format_moment_exif_line
+
+
+def _moment_screen_weight_for_tier(tier: str) -> float:
+    """Slightly larger than chapter viewport-fit so the signature screen reads at full weight."""
+    return min(0.82, _screen_weight_for_tier(tier) + 0.12)
 
 
 def moment_label_for_trip(trip: dict) -> str:
@@ -57,6 +67,12 @@ def build_moment_screen_context(
     srcset = compile_srcset(asset, mobile=export_layout == "mobile")
     exif_line = format_moment_exif_line(asset) if show_exif else None
 
+    ar = _asset_aspect_ratio_float(asset)
+    tier = _presentation_tier(ar)
+    screen_style = (
+        f"--screen-fit-ar: {ar:.6f}; --screen-weight: {_moment_screen_weight_for_tier(tier):.3f}"
+    )
+
     return {
         "assetId": moment_id,
         "src": src,
@@ -72,4 +88,8 @@ def build_moment_screen_context(
         "hasExifLine": bool(exif_line),
         "exifLine": exif_line or "",
         "label": moment_label_for_trip(trip),
+        "hasViewportFit": True,
+        "hasScreenStyle": True,
+        "screenStyle": screen_style,
+        "hasTierUltra": tier == "ultra",
     }

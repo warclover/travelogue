@@ -40,6 +40,8 @@ def build_chapters_render_context(
     meta_title: str,
     hook: str,
     cfg: AppConfig | None = None,
+    moment_exif_asset_id: str = "",
+    show_moment_exif: bool = True,
 ) -> ChaptersRenderBundle:
     from travelogue.curation.chapter_items import resolve_chapter_items_for_render
     from travelogue.curation.layout_planner import aspect_kind_for_asset
@@ -73,6 +75,7 @@ def build_chapters_render_context(
     )
     featured_ids = frozenset(collect_featured_ids(trip))
     global_screen_index = 0
+    moment_exif_used = False
 
     folio_plan: dict = {}
     grid_exclude: frozenset[str] = frozenset()
@@ -95,6 +98,14 @@ def build_chapters_render_context(
                 has_foreword_spread = foreword_spread is not None
 
     raw_chapters = trip.get("chapters") or []
+    if moment_exif_asset_id:
+        from travelogue.curation.moment_scoring import ensure_moment_asset_in_chapters
+
+        ensure_moment_asset_in_chapters(
+            raw_chapters,
+            moment_exif_asset_id,
+            assets_by_id=assets,
+        )
     if is_longshot_surface:
         from travelogue.config import get_config
         from travelogue.curation.longshot_filter import chapters_for_longshot_render
@@ -154,8 +165,19 @@ def build_chapters_render_context(
                         folio_lite=folio_lite,
                         is_plate=chapter_screen_seq == 1,
                         featured_asset_ids=featured_ids,
+                        moment_asset_id=moment_exif_asset_id if not moment_exif_used else "",
+                        show_moment_exif=show_moment_exif,
                     )
                 )
+                if (
+                    not moment_exif_used
+                    and moment_exif_asset_id
+                    and any(
+                        slot.get("hasMomentExif")
+                        for slot in (screens_out[-1].get("slots") or [])
+                    )
+                ):
+                    moment_exif_used = True
 
         screen_spread: ScreenSpreadContext | None = None
         has_screen_spread = False

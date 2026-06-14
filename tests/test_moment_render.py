@@ -1,9 +1,9 @@
-"""Phase 23 · moment-screen render integration."""
+"""Phase 23 · inline moment EXIF on layout-screen."""
 
 from __future__ import annotations
 
 from travelogue.render.engine import render_html
-from travelogue.render.moment_screen import build_moment_screen_context
+from travelogue.render.moment_exif import format_moment_exif_line
 
 
 def _moment_trip() -> dict:
@@ -54,7 +54,11 @@ def _moment_trip() -> dict:
             {
                 "id": "ch-01",
                 "title": "第一章",
-                "screens": [{"slots": [{"assetId": "cover"}]}, {"slots": [{"assetId": "closing"}]}],
+                "screens": [
+                    {"slots": [{"assetId": "cover"}]},
+                    {"role": "moment", "patternId": "screen-landscape-1", "slots": [{"assetId": "moment"}]},
+                    {"slots": [{"assetId": "closing"}]},
+                ],
             }
         ],
         "curation": {
@@ -66,37 +70,15 @@ def _moment_trip() -> dict:
     }
 
 
-def test_build_moment_screen_context() -> None:
+def test_format_moment_exif_line() -> None:
     trip = _moment_trip()
-    assets = {a["id"]: a for a in trip["assets"]}
-    ctx = build_moment_screen_context(
-        trip,
-        assets,
-        export_layout="web",
-        meta_title=trip["meta"]["title"],
-    )
-    assert ctx
-    assert ctx["assetId"] == "moment"
-    assert ctx["hasExifLine"] is True
-    assert "林芝" in ctx["exifLine"]
-    assert ctx["label"] == "决定性瞬间"
+    asset = next(a for a in trip["assets"] if a["id"] == "moment")
+    line = format_moment_exif_line(asset)
+    assert line
+    assert "林芝" in line
 
 
-def test_english_moment_label() -> None:
-    trip = _moment_trip()
-    trip["meta"]["locale"] = "en-US"
-    assets = {a["id"]: a for a in trip["assets"]}
-    ctx = build_moment_screen_context(
-        trip,
-        assets,
-        export_layout="web",
-        meta_title=trip["meta"]["title"],
-    )
-    assert ctx
-    assert ctx["label"] == "Moment"
-
-
-def test_web_render_emits_single_moment_screen() -> None:
+def test_web_render_inline_moment_exif_bar() -> None:
     trip = _moment_trip()
     html = render_html(
         trip,
@@ -105,15 +87,17 @@ def test_web_render_emits_single_moment_screen() -> None:
         export_layout_override="web",
         reading_profile_override="default_hybrid",
     )
-    assert html.count('data-block="moment-screen"') == 1
-    assert 'data-asset-id="moment"' in html
-    assert "moment-exif-line" in html
-    moment_pos = html.index('data-block="moment-screen"')
+    assert 'data-block="moment-screen"' not in html
+    assert 'data-role="moment"' in html
+    assert "moment-exif-bar" in html
+    assert "林芝" in html
+    assert html.count("moment-exif-bar") == 1
+    moment_pos = html.index('data-role="moment"')
     closing_pos = html.index('data-block="cover-closing"')
     assert moment_pos < closing_pos
 
 
-def test_skipped_moment_not_rendered() -> None:
+def test_skipped_moment_has_no_exif_bar() -> None:
     trip = _moment_trip()
     trip["curation"]["momentSkipped"] = "small_trip"
     trip.pop("momentAssetId", None)
@@ -124,4 +108,4 @@ def test_skipped_moment_not_rendered() -> None:
         export_layout_override="web",
         reading_profile_override="default_hybrid",
     )
-    assert 'data-block="moment-screen"' not in html
+    assert "moment-exif-bar" not in html

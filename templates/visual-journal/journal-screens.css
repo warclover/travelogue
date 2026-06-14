@@ -1457,10 +1457,14 @@ html[data-snap="proximity"] .cover-opening[data-block="cover-opening"],
 html[data-snap="proximity"] .cover-hero[data-block="cover-hero"],
 html[data-snap="proximity"] .cover-closing[data-block="cover-closing"],
 html[data-snap="proximity"] .layout-screen[data-block="layout-screen"],
+html[data-snap="proximity"] .layout-screen[data-block="moment-screen"],
+html[data-snap="proximity"] .moment-screen[data-block="moment-screen"],
 html[data-snap="mandatory"] .cover-opening[data-block="cover-opening"],
 html[data-snap="mandatory"] .cover-hero[data-block="cover-hero"],
 html[data-snap="mandatory"] .cover-closing[data-block="cover-closing"],
-html[data-snap="mandatory"] .layout-screen[data-block="layout-screen"] {
+html[data-snap="mandatory"] .layout-screen[data-block="layout-screen"],
+html[data-snap="mandatory"] .layout-screen[data-block="moment-screen"],
+html[data-snap="mandatory"] .moment-screen[data-block="moment-screen"] {
   scroll-snap-align: start;
   scroll-margin-top: 0.5rem;
 }
@@ -1938,35 +1942,26 @@ html[data-folio="full"] .featured-grid__img {
   color: color-mix(in srgb, var(--folio-ink, #222) 70%, transparent);
 }
 
-/* P23 · signature moment screen */
-.layout-screen--moment[data-block="moment-screen"] {
-  width: 100%;
-  max-width: var(--content-rail, var(--bleed-width));
-  margin-inline: auto;
-  margin-block: 0 var(--screen-rhythm-gap, clamp(8px, 1vh, 16px));
-  position: relative;
-}
-
-.moment-screen__label {
-  position: absolute;
-  top: clamp(8px, 1vh, 14px);
-  left: clamp(10px, 1.2vw, 16px);
-  z-index: 2;
-  font-size: clamp(10px, 1.1vw, 12px);
-  letter-spacing: 0.12em;
-  color: color-mix(in srgb, var(--folio-ink, #222) 42%, transparent);
-  pointer-events: none;
-}
-
-.layout-screen--moment .layout-slot--moment {
-  width: 100%;
-  aspect-ratio: var(--screen-fit-ar, 16 / 9);
+/* P23 · inline moment EXIF bar (layout-screen slot footnote) */
+html[data-layout="web"] .layout-slot:has(.moment-exif-bar),
+html[data-layout="auto"] .layout-slot:has(.moment-exif-bar) {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
-.moment-exif-line {
-  margin: clamp(6px, 0.8vh, 10px) 0 0;
-  padding: 0.35rem 0.5rem;
+html[data-layout="web"] .layout-slot:has(.moment-exif-bar) .layout-slot__img,
+html[data-layout="auto"] .layout-slot:has(.moment-exif-bar) .layout-slot__img {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.moment-exif-bar {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
   font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
   font-size: clamp(11px, 1.2vw, 13px);
   line-height: 1.35;
@@ -1974,8 +1969,127 @@ html[data-folio="full"] .featured-grid__img {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: color-mix(in srgb, var(--folio-ink, #222) 38%, transparent);
-  background: var(--moment-exif-bg, color-mix(in srgb, var(--folio-paper, #f5f2ea) 6%, transparent));
+  color: rgba(255, 255, 255, 0.88);
+  background: #0a0a0a;
+}
+
+/* Legacy moment-screen (deprecated trip-level block) */
+html[data-layout="web"] .moment-screen.layout-screen--moment[data-block="moment-screen"],
+html[data-layout="auto"] .moment-screen.layout-screen--moment[data-block="moment-screen"] {
+  overflow: visible;
+  aspect-ratio: unset;
+  height: auto;
+  max-height: none;
+  background: transparent;
+  margin-block: 0 var(--screen-rhythm-gap, clamp(8px, 1vh, 16px));
+  scroll-snap-align: start;
+  scroll-margin-top: 0.5rem;
+}
+
+html[data-layout-engine="screens"]:not([data-layout="mobile"])
+  .moment-screen__stage.layout-screen--viewport-fit {
+  aspect-ratio: var(--screen-fit-ar, 16 / 9);
+  width: min(
+    100%,
+    calc(100dvh * var(--screen-weight, 0.75) * var(--screen-fit-ar, 16 / 9))
+  );
+  max-width: 100%;
+  max-height: calc(100dvh * var(--screen-weight, 0.75));
+  height: auto;
+  margin-inline: auto;
+  overflow: hidden;
+  background: var(--screen-tone, var(--bg-page));
+  box-sizing: border-box;
+}
+
+.layout-screen--moment .layout-screen--moment__figure {
+  position: relative;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.moment-screen__label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: block;
+  padding: 0.55rem 0.85rem;
+  writing-mode: horizontal-tb;
+  white-space: nowrap;
+  font-family: var(--folio-meta-font, ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace);
+  font-size: clamp(11px, 1.2vw, 13px);
+  letter-spacing: 0.12em;
+  color: color-mix(in srgb, var(--folio-ink, #222) 72%, #fff 28%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--folio-ink, #222) 22%, transparent) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.layout-screen--moment .layout-slot--moment {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+html[data-layout-engine="screens"]:not([data-layout="mobile"])
+  .moment-screen__stage.layout-screen--moment-portrait:has(.layout-slot__img--contain) {
+  aspect-ratio: unset;
+  height: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+html[data-layout-engine="screens"]:not([data-layout="mobile"])
+  .moment-screen__stage.layout-screen--moment-portrait:has(.layout-slot__img--contain)
+  .layout-screen--moment__figure {
+  height: auto;
+  width: 100%;
+}
+
+html[data-layout-engine="screens"]:not([data-layout="mobile"])
+  .moment-screen__stage.layout-screen--moment-portrait:has(.layout-slot__img--contain)
+  .layout-slot--moment {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+html[data-layout-engine="screens"]:not([data-layout="mobile"])
+  .moment-screen__stage.layout-screen--moment-portrait:has(.layout-slot__img--contain)
+  .layout-slot__img--contain {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: var(--portrait-stage-vh, 72dvh);
+  margin-inline: auto;
+  object-fit: contain;
+  object-position: top center;
+}
+
+.moment-exif-line {
+  margin: clamp(6px, 0.8vh, 10px) 0 0;
+  padding: 0.45rem 0.65rem;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: clamp(11px, 1.2vw, 13px);
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: color-mix(in srgb, var(--folio-ink, #222) 62%, transparent);
+  background: color-mix(in srgb, var(--folio-paper, #f5f2ea) 14%, transparent);
 }
 /* @journal-overlays:end */
 

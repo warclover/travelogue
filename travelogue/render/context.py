@@ -605,6 +605,8 @@ def build_layout_screen(
     folio_lite: bool = False,
     is_plate: bool = False,
     featured_asset_ids: frozenset[str] | None = None,
+    moment_asset_id: str = "",
+    show_moment_exif: bool = True,
 ) -> LayoutScreenContext:
     pattern_id = screen.get("patternId", "screen-landscape-1")
     if pattern_id == "screen-breath-pause":
@@ -631,6 +633,9 @@ def build_layout_screen(
 
     slots_out = []
     mixed_p1_l2 = pattern_id == "screen-portrait-1-landscape-2"
+    moment_id = str(moment_asset_id or "").strip()
+    screen_role = str(screen.get("role") or "").strip()
+    moment_slot_tagged = False
     for j, slot in enumerate(screen.get("slots") or []):
         aid = slot.get("assetId", "")
         asset = _asset_lookup(assets, aid) if aid else None
@@ -687,6 +692,14 @@ def build_layout_screen(
             if pattern_id == "screen-full-frame" and fit == "contain":
                 entry["hasBlurFill"] = True
                 entry["blurSrc"] = entry["src"]
+        if show_moment_exif and moment_id and str(aid or "").strip() == moment_id and asset:
+            from travelogue.render.moment_exif import format_moment_exif_line
+
+            exif_line = format_moment_exif_line(asset)
+            if exif_line:
+                entry["hasMomentExif"] = True
+                entry["momentExifLine"] = exif_line
+                moment_slot_tagged = True
         slots_out.append(entry)
 
     layout_hint = screen.get("layoutHint")
@@ -772,6 +785,9 @@ def build_layout_screen(
         "slots": slots_out,
         "isFeatured": is_featured,
     }
+    if screen_role == "moment" or moment_slot_tagged:
+        out["isMomentScreen"] = True
+        out["hasMomentScreen"] = True
     if screen_index is not None:
         out["screenIndex"] = screen_index
         out["hasScreenIndex"] = True

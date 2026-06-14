@@ -534,7 +534,188 @@ def sync_trip_moments_finalize(
         explain=explain,
         collision=collision,
     )
+    ensure_moment_asset_in_chapters(
+        chapters,
+        signature_id,
+        assets_by_id=assets_by_id,
+        arc_profile=arc_profile,
+    )
     return signature_id
+
+
+def _chapter_bucket_ids(chapter: dict) -> set[str]:
+    curation = chapter.get("curation") or {}
+    out: set[str] = set()
+    for aid in curation.get("assetIds") or []:
+        val = str(aid or "").strip()
+        if val:
+            out.add(val)
+    return out
+
+
+def _pick_moment_chapter_index(
+    chapters: list[dict],
+    signature_id: str,
+    *,
+    arc_profile: str,
+) -> int:
+    if not chapters:
+        return 0
+    peak_indices = _peak_chapter_indices(chapters, arc_profile=arc_profile)
+    for idx in sorted(peak_indices):
+        if signature_id in _chapter_bucket_ids(chapters[idx]):
+            return idx
+    for i, ch in enumerate(chapters):
+        if signature_id in _chapter_bucket_ids(ch):
+            return i
+    for i, ch in enumerate(chapters):
+        on_screen = _collect_screen_asset_ids([ch])
+        if signature_id in on_screen:
+            return i
+    if peak_indices:
+        return min(sorted(peak_indices)[0], len(chapters) - 1)
+    return 0
+
+
+def _solo_pattern_for_asset(asset: dict) -> str:
+    kind = aspect_kind_for_asset(asset)
+    if kind in ("portrait", "tall", "square"):
+        return "screen-portrait-1"
+    return "screen-landscape-1"
+
+
+def _build_moment_solo_screen(
+    signature_id: str,
+    *,
+    source_slot: dict | None = None,
+    assets_by_id: dict[str, dict] | None = None,
+) -> dict:
+    asset = (assets_by_id or {}).get(signature_id, {})
+    pattern = _solo_pattern_for_asset(asset)
+    fit = str((source_slot or {}).get("fit") or "cover")
+    role = (source_slot or {}).get("role")
+    slot: dict = {"assetId": signature_id, "slot": 0, "fit": fit}
+    if role:
+        slot["role"] = role
+    return {"patternId": pattern, "role": "moment", "slots": [slot]}
+
+
+def _normalize_screen_after_slot_removal(
+    screen: dict,
+    *,
+    assets_by_id: dict[str, dict],
+) -> dict | None:
+    slots = [dict(s) for s in (screen.get("slots") or [])]
+    if not slots:
+        return None
+    for i, slot in enumerate(slots):
+        slot["slot"] = i
+    out = dict(screen)
+    out.pop("role", None)
+    out.pop("layoutGeometry", None)
+    n = len(slots)
+    if n == 1:
+        aid = str(slots[0].get("assetId") or "")
+        out["patternId"] = _solo_pattern_for_asset(assets_by_id.get(aid, {}))
+        out["slots"] = slots
+        return out
+    downgrade = {
+        2: "screen-landscape-2",
+        3: "screen-landscape-3",
+        4: "screen-landscape-4",
+    }
+    if n in downgrade:
+        out["patternId"] = downgrade[n]
+        out["slots"] = slots
+        return out
+    out["slots"] = slots
+    return out
+
+
+def _find_moment_host(
+    chapters: list[dict],
+    signature_id: str,
+) -> tuple[int, int, int] | None:
+    for ch_idx, ch in enumerate(chapters or []):
+        for screen_idx, screen in enumerate(ch.get("screens") or []):
+            if str(screen.get("patternId") or "") == "screen-breath-pause":
+                continue
+            for slot_idx, slot in enumerate(screen.get("slots") or []):
+                if str(slot.get("assetId") or "").strip() == signature_id:
+                    return ch_idx, screen_idx, slot_idx
+    return None
+
+
+def tag_moment_inline_screen(chapters: list[dict], signature_id: str) -> bool:
+    """Mark the first layout-screen that carries the signature moment asset."""
+    if not signature_id:
+        return False
+    for ch in chapters or []:
+        for screen in ch.get("screens") or []:
+            if str(screen.get("patternId") or "") == "screen-breath-pause":
+                continue
+            for slot in screen.get("slots") or []:
+                if str(slot.get("assetId") or "").strip() == signature_id:
+                    screen["role"] = "moment"
+                    return True
+    return False
+
+
+def ensure_moment_asset_in_chapters(
+    chapters: list[dict],
+    signature_id: str,
+    *,
+    assets_by_id: dict[str, dict] | None = None,
+    arc_profile: str = "dynamic",
+) -> bool:
+    """Ensure signature moment is a dedicated single-slot layout-screen."""
+    if not signature_id or not chapters:
+        return False
+
+    assets = assets_by_id or {}
+    host = _find_moment_host(chapters, signature_id)
+    if host is None:
+        ch_idx = _pick_moment_chapter_index(chapters, signature_id, arc_profile=arc_profile)
+        chapter = chapters[ch_idx]
+        screens = list(chapter.get("screens") or [])
+        insert_at = max(1, len(screens) // 2) if screens else 0
+        screens.insert(
+            insert_at,
+            _build_moment_solo_screen(signature_id, assets_by_id=assets),
+        )
+        chapter["screens"] = screens
+        return True
+
+    ch_idx, screen_idx, slot_idx = host
+    chapter = chapters[ch_idx]
+    screens = list(chapter.get("screens") or [])
+    host_screen = dict(screens[screen_idx])
+    slots = list(host_screen.get("slots") or [])
+    if len(slots) == 1 and str(slots[0].get("assetId") or "").strip() == signature_id:
+        host_screen["role"] = "moment"
+        screens[screen_idx] = host_screen
+        chapter["screens"] = screens
+        return True
+
+    source_slot = dict(slots[slot_idx])
+    remaining = [dict(s) for i, s in enumerate(slots) if i != slot_idx]
+    normalized = _normalize_screen_after_slot_removal(
+        {**host_screen, "slots": remaining},
+        assets_by_id=assets,
+    )
+    solo = _build_moment_solo_screen(
+        signature_id,
+        source_slot=source_slot,
+        assets_by_id=assets,
+    )
+    if normalized is None:
+        screens.pop(screen_idx)
+        screens.insert(screen_idx, solo)
+    else:
+        screens[screen_idx] = normalized
+        screens.insert(screen_idx + 1, solo)
+    chapter["screens"] = screens
+    return True
 
 
 def preferred_secondary_hero_for_bucket(

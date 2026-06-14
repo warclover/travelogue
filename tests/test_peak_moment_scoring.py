@@ -98,7 +98,12 @@ def test_finalize_picks_signature_and_secondaries() -> None:
     curation = trip["curation"]
     assert result in curation["momentPoolIds"]
     assert curation["momentSecondaryIds"] == [aid for aid in curation["momentPoolIds"] if aid != result]
-    assert curation["momentPosition"] == "before_closing"
+    assert curation["momentPosition"] == "inline"
+    moment_screens = [s for s in chapters[0]["screens"] if s.get("role") == "moment"]
+    assert len(moment_screens) == 1
+    assert len(moment_screens[0]["slots"]) == 1
+    moment_slots = [sl.get("assetId") for sl in moment_screens[0].get("slots") or []]
+    assert result in moment_slots
 
 
 def test_score_ranked_moment_pool_uses_peak_score_order() -> None:
@@ -154,6 +159,66 @@ def test_moment_secondary_plan_bonus_peak_only() -> None:
         secondary_ids={"sec1"},
         boost=0.12,
     ) == 0.12
+
+
+def test_ensure_moment_asset_in_chapters_inserts_layout_screen() -> None:
+    from travelogue.curation.moment_scoring import ensure_moment_asset_in_chapters
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "curation": {"assetIds": ["a1", "sig", "a2"]},
+            "screens": [{"slots": [{"assetId": "a1"}]}],
+        }
+    ]
+    assets_by_id = {
+        "a1": {"id": "a1", "width": 1600, "height": 900},
+        "sig": {"id": "sig", "width": 1600, "height": 900},
+    }
+    assert ensure_moment_asset_in_chapters(
+        chapters, "sig", assets_by_id=assets_by_id, arc_profile="dynamic"
+    )
+    roles = [s.get("role") for s in chapters[0]["screens"]]
+    assert "moment" in roles
+    moment_screen = next(s for s in chapters[0]["screens"] if s.get("role") == "moment")
+    assert moment_screen["patternId"] == "screen-landscape-1"
+    assert moment_screen["slots"][0]["assetId"] == "sig"
+    assert len(moment_screen["slots"]) == 1
+
+
+def test_extract_moment_from_mosaic_to_solo_screen() -> None:
+    from travelogue.curation.moment_scoring import ensure_moment_asset_in_chapters
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "screens": [
+                {
+                    "patternId": "screen-landscape-4",
+                    "slots": [
+                        {"assetId": "a1", "slot": 0, "fit": "cover"},
+                        {"assetId": "sig", "slot": 1, "fit": "cover"},
+                        {"assetId": "a2", "slot": 2, "fit": "cover"},
+                        {"assetId": "a3", "slot": 3, "fit": "cover"},
+                    ],
+                }
+            ],
+        }
+    ]
+    assets_by_id = {
+        aid: {"id": aid, "type": "image", "width": 1600, "height": 900, "layoutEligible": True}
+        for aid in ("a1", "sig", "a2", "a3")
+    }
+    assert ensure_moment_asset_in_chapters(chapters, "sig", assets_by_id=assets_by_id)
+    moment_screens = [s for ch in chapters for s in ch["screens"] if s.get("role") == "moment"]
+    assert len(moment_screens) == 1
+    assert len(moment_screens[0]["slots"]) == 1
+    assert moment_screens[0]["slots"][0]["assetId"] == "sig"
+    host_screens = [s for s in chapters[0]["screens"] if s.get("role") != "moment"]
+    assert len(host_screens) == 1
+    assert "sig" not in [sl["assetId"] for sl in host_screens[0]["slots"]]
+    assert len(host_screens[0]["slots"]) == 3
+    assert host_screens[0]["patternId"] == "screen-landscape-3"
 
 
 def test_featured_grid_excludes_moment_signature() -> None:

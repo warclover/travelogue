@@ -7,7 +7,7 @@
 
   var SCREEN_SEL = '.layout-screen[data-block="layout-screen"]';
   var EXTRA_SEL =
-    '.cover-hero[data-block="cover-hero"], .hook-line[data-block="hook-line"], .chapter-header[data-block="chapter-header"], .chapter-separator[data-block="chapter-separator"], .breath-pause-screen[data-block="breath-pause-screen"], .foreword-spread[data-block="foreword-spread"], .trip-index[data-block="trip-index"], .featured-grid[data-block="featured-grid"], .screen-spread[data-block="screen-spread"]';
+    '.cover-hero[data-block="cover-hero"], .hook-line[data-block="hook-line"], .chapter-header[data-block="chapter-header"], .chapter-separator[data-block="chapter-separator"], .breath-pause-screen[data-block="breath-pause-screen"], .foreword-spread[data-block="foreword-spread"], .trip-index[data-block="trip-index"], .featured-grid[data-block="featured-grid"], .screen-spread[data-block="screen-spread"], .layout-screen[data-role="moment"]';
   var observer = null;
   var paused = false;
   var lenisStarted = false;

@@ -1,4 +1,4 @@
-<div class="layout-screen layout-screen--16x9{{#if hasViewportFit}} layout-screen--viewport-fit{{/if}}{{#if hasTierUltra}} layout-screen--tier-ultra{{/if}}{{#if isPlate}} layout-screen--plate{{/if}}" data-block="layout-screen" data-pattern="{{patternId}}"{{#if hasScreenIndex}} data-screen-index="{{screenIndex}}"{{/if}}{{#if hasChapterIndex}} data-chapter-index="{{chapterIndex}}"{{/if}}{{#if hasAssetIds}} data-asset-ids="{{assetIds}}"{{/if}}{{#if isFeatured}} data-featured="true"{{/if}}{{#if hasLayoutHint}} data-layout-hint="{{layoutHint}}"{{/if}}{{#if screenStyle}} style="{{screenStyle}}"{{/if}}>
+<div class="layout-screen layout-screen--16x9{{#if hasViewportFit}} layout-screen--viewport-fit{{/if}}{{#if hasTierUltra}} layout-screen--tier-ultra{{/if}}{{#if isPlate}} layout-screen--plate{{/if}}" data-block="layout-screen" data-pattern="{{patternId}}"{{#if hasScreenIndex}} data-screen-index="{{screenIndex}}"{{/if}}{{#if hasChapterIndex}} data-chapter-index="{{chapterIndex}}"{{/if}}{{#if hasAssetIds}} data-asset-ids="{{assetIds}}"{{/if}}{{#if isFeatured}} data-featured="true"{{/if}}{{#if hasMomentScreen}} data-role="moment"{{/if}}{{#if hasLayoutHint}} data-layout-hint="{{layoutHint}}"{{/if}}{{#if screenStyle}} style="{{screenStyle}}"{{/if}}>
   {{#if folioLite}}
   <div class="folio-plate-meta folio-plate-meta--top" aria-hidden="true">{{folioPageLabel}}</div>
   {{/if}}
@@ -23,6 +23,9 @@
         alt="{{alt}}"
         loading="{{loading}}"
         decoding="async" />
+      {{/if}}
+      {{#if hasMomentExif}}
+      <p class="moment-exif-bar">{{momentExifLine}}</p>
       {{/if}}
     </figure>
     {{/each}}

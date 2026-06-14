@@ -117,15 +117,6 @@ def build_render_context(
     fx, fy = cover_focal_point(cover_asset)
     cover_contain = cover_use_contain_fit(cover_asset)
 
-    chapters_bundle = build_chapters_render_context(
-        trip,
-        surface,
-        trip_root=trip_root,
-        meta_title=meta_title,
-        hook=hook,
-        cfg=cfg,
-    )
-
     use_epilogue_stats = (
         surface.use_screens_global
         and not surface.is_longshot_surface
@@ -146,7 +137,6 @@ def build_render_context(
     )
     app_cfg = cfg or get_config()
     moment_cfg = app_cfg.curate.moment
-    from travelogue.render.moment_screen import build_moment_screen_context
     from travelogue.render.reading_profile import resolve_reading_payload
 
     reading_payload = resolve_reading_payload(
@@ -157,21 +147,35 @@ def build_render_context(
         reading_profile_override=reading_profile_override,
         config_defaults=reading_profile_defaults(app_cfg),
     )
-    omit_moment_screen = str(reading_payload.get("profile") or "") == "performance"
+    omit_moment_exif = (
+        str(reading_payload.get("profile") or "") == "performance"
+        and surface.export_mode not in ("draft", "present-preview")
+    )
 
-    moment_screen = None
-    if use_cover_closing and not omit_moment_screen:
-        moment_screen = build_moment_screen_context(
-            trip,
-            assets,
-            export_layout=image_layout,
-            meta_title=meta_title,
-            cfg_moment_enabled=moment_cfg.enabled,
-            show_exif=moment_cfg.show_exif,
-        )
+    moment_exif_asset_id = ""
     moment_exclude: set[str] = set()
-    if moment_screen and moment_screen.get("assetId"):
-        moment_exclude.add(str(moment_screen["assetId"]))
+    if (
+        not omit_moment_exif
+        and moment_cfg.enabled
+        and surface.use_screens_global
+        and not surface.is_longshot_surface
+    ):
+        moment_id = str(trip.get("momentAssetId") or "").strip()
+        if moment_id and not (trip.get("curation") or {}).get("momentSkipped"):
+            moment_exif_asset_id = moment_id
+            if use_cover_closing:
+                moment_exclude.add(moment_id)
+
+    chapters_bundle = build_chapters_render_context(
+        trip,
+        surface,
+        trip_root=trip_root,
+        meta_title=meta_title,
+        hook=hook,
+        cfg=app_cfg,
+        moment_exif_asset_id=moment_exif_asset_id,
+        show_moment_exif=moment_cfg.show_exif,
+    )
 
     closing_asset = None
     closing_id = ""
@@ -320,8 +324,8 @@ def build_render_context(
         "useEpilogueStats": use_epilogue_stats,
         "useEpilogueScreen": (surface.folio_lite and bool(epilogue)) or use_epilogue_stats,
         "useCoverClosing": use_cover_closing,
-        "hasMomentScreen": bool(moment_screen),
-        "momentScreen": moment_screen or {},
+        "hasMomentScreen": False,
+        "momentScreen": {},
         "showClosingTitle": show_closing_title(meta_title) if use_cover_closing else False,
         "closing": CoverRenderContext(
             src=closing_src,
