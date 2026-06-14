@@ -197,6 +197,10 @@ class BreathPauseItemContext(TypedDict, total=False):
     breathStyle: str
 
 
+class ChapterProgressDotContext(TypedDict):
+    active: bool
+
+
 class ChapterRenderContext(TypedDict, total=False):
     """Per-chapter Handlebars bundle (screens engine path)."""
 
@@ -204,6 +208,13 @@ class ChapterRenderContext(TypedDict, total=False):
     patternId: str
     index: str
     title: str
+    hasChapterMeta: bool
+    chapterMeta: str
+    hasDecorPull: bool
+    decorPull: str
+    chapterProgressDots: list[ChapterProgressDotContext]
+    hasChapterProgress: bool
+    chapterProgressLabel: str
     lead: str
     hasLead: bool
     decorLine: str

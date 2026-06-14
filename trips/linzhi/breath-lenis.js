@@ -57,6 +57,7 @@
 
   var FLOW_TAIL_MS = 300;
   var FLOW_FRAME_MS = 1000 / 60;
+  var EXTERNAL_SCROLL_EPS = 4;
 
   function FlowScroll(options) {
     options = options || {};
@@ -76,12 +77,31 @@
     this.lastWheelAt = 0;
     this.coastStartedAt = 0;
     this.onWheel = this.onWheel.bind(this);
+    this.onScroll = this.onScroll.bind(this);
     this.loop = this.loop.bind(this);
   }
 
   FlowScroll.prototype.syncFromViewport = function () {
     this.current = global.scrollY || 0;
     this.target = this.current;
+  };
+
+  FlowScroll.prototype.adoptExternalScroll = function (y) {
+    this.current = y;
+    this.target = y;
+    this.coastStartedAt = 0;
+    this.lastWheelAt = 0;
+  };
+
+  FlowScroll.prototype.onScroll = function () {
+    if (this.paused) return;
+    var y = global.scrollY || 0;
+    if (
+      Math.abs(y - this.current) > EXTERNAL_SCROLL_EPS &&
+      Math.abs(y - this.target) > EXTERNAL_SCROLL_EPS
+    ) {
+      this.adoptExternalScroll(y);
+    }
   };
 
   FlowScroll.prototype.onWheel = function (e) {
@@ -142,6 +162,7 @@
   FlowScroll.prototype.start = function () {
     this.syncFromViewport();
     global.addEventListener("wheel", this.onWheel, { passive: false });
+    global.addEventListener("scroll", this.onScroll, { passive: true });
     this.rafId = global.requestAnimationFrame(this.loop);
     document.documentElement.classList.add("lenis-flow");
   };
@@ -167,6 +188,7 @@
       this.rafId = null;
     }
     global.removeEventListener("wheel", this.onWheel);
+    global.removeEventListener("scroll", this.onScroll);
     document.documentElement.classList.remove("lenis-flow");
   };
 

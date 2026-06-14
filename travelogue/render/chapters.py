@@ -15,7 +15,7 @@ from travelogue.render.context_types import (
     ScreenSpreadContext,
     TripIndexEntryContext,
 )
-from travelogue.render.screen_tone import chapter_separator_style
+from travelogue.render.screen_tone import build_chapter_separator_ticket, chapter_separator_style
 from travelogue.render.surface import SurfaceContext
 
 
@@ -125,6 +125,8 @@ def build_chapters_render_context(
             mmr_lambda=effective_cfg.curate.longshot_mmr_lambda,
             max_consecutive_same_pattern=effective_cfg.curate.max_consecutive_same_pattern,
         )
+
+    chapter_total = len(raw_chapters)
 
     for i, ch in enumerate(raw_chapters):
         idx = ch.get("index", i + 1)
@@ -274,6 +276,13 @@ def build_chapters_render_context(
             and surface.include_breath
             and int(idx) > 1
         )
+        divider_ctx = chapter_divider(
+            ch,
+            idx,
+            meta=trip.get("meta") or {},
+            intent=trip.get("intent"),
+            assets=trip.get("assets") or [],
+        )
 
         lead = (ch.get("lead") or "").strip()
         if strip_narrative_copy:
@@ -313,12 +322,17 @@ def build_chapters_render_context(
                 if use_chapter_separator
                 else ""
             ),
-            **chapter_divider(
-                ch,
-                idx,
-                meta=trip.get("meta") or {},
-                intent=trip.get("intent"),
-                assets=trip.get("assets") or [],
+            **divider_ctx,
+            **(
+                build_chapter_separator_ticket(
+                    ch,
+                    int(idx),
+                    chapter_total,
+                    meta=trip.get("meta") or {},
+                    divider=divider_ctx,
+                )
+                if use_chapter_separator
+                else {}
             ),
         }
         chapters_out.append(ch_ctx)
