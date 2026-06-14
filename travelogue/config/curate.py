@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from travelogue.config.moment import MomentConfig, moment_config_from_dict
 from travelogue.curation.cover_scoring_params import CoverScoringParams
 
 
@@ -44,3 +45,4 @@ class CurateConfig:
     enable_arc_breath: bool = True
     enable_food_grid: bool = True
     mundane_grid_buckets: tuple[str, ...] = ("food",)
+    moment: MomentConfig = field(default_factory=MomentConfig)

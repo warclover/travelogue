@@ -1,0 +1,20 @@
+<div class="layout-screen layout-screen--moment{{#if isPortrait}} layout-screen--portrait{{/if}} layout-screen--viewport-fit" data-block="moment-screen" data-asset-id="{{assetId}}">
+  <span class="moment-screen__label" aria-hidden="true">{{label}}</span>
+  <figure class="layout-screen__grid layout-screen--moment__figure">
+    <div class="layout-slot layout-slot--moment" data-slot="0" data-role="main">
+      <img class="layout-slot__img layout-slot__img--{{fit}}"
+        src="{{src}}"
+        {{#if hasSrcset}}
+        srcset="{{srcset}}"
+        sizes="{{sizes}}"
+        {{/if}}
+        alt="{{alt}}"
+        style="--focal-x: {{focalX}}; --focal-y: {{focalY}};"
+        loading="lazy"
+        decoding="async" />
+    </div>
+  </figure>
+  {{#if hasExifLine}}
+  <p class="moment-exif-line">{{exifLine}}</p>
+  {{/if}}
+</div>

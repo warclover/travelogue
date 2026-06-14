@@ -30,6 +30,7 @@ def build_render_context(
 ) -> TripRenderContext:
     """export_mode: draft | share | present-preview"""
     from travelogue.config import get_config
+    from travelogue.config import reading_profile_defaults
     from travelogue.curation.curate import resolve_cover_asset_id
     from travelogue.render.context import (
         _longshot_bundle_version,
@@ -143,6 +144,35 @@ def build_render_context(
         and image_layout in ("web", "auto")
         and has_epilogue
     )
+    app_cfg = cfg or get_config()
+    moment_cfg = app_cfg.curate.moment
+    from travelogue.render.moment_screen import build_moment_screen_context
+    from travelogue.render.reading_profile import resolve_reading_payload
+
+    reading_payload = resolve_reading_payload(
+        trip,
+        export_mode=surface.export_mode,
+        export_layout_override=image_layout,
+        index_name=index_name,
+        reading_profile_override=reading_profile_override,
+        config_defaults=reading_profile_defaults(app_cfg),
+    )
+    omit_moment_screen = str(reading_payload.get("profile") or "") == "performance"
+
+    moment_screen = None
+    if use_cover_closing and not omit_moment_screen:
+        moment_screen = build_moment_screen_context(
+            trip,
+            assets,
+            export_layout=image_layout,
+            meta_title=meta_title,
+            cfg_moment_enabled=moment_cfg.enabled,
+            show_exif=moment_cfg.show_exif,
+        )
+    moment_exclude: set[str] = set()
+    if moment_screen and moment_screen.get("assetId"):
+        moment_exclude.add(str(moment_screen["assetId"]))
+
     closing_asset = None
     closing_id = ""
     if use_cover_closing:
@@ -151,6 +181,7 @@ def build_render_context(
                 trip,
                 assets,
                 prefer_landscape=image_layout in ("web", "auto"),
+                exclude_ids=moment_exclude,
             )
             or ""
         )
@@ -289,6 +320,8 @@ def build_render_context(
         "useEpilogueStats": use_epilogue_stats,
         "useEpilogueScreen": (surface.folio_lite and bool(epilogue)) or use_epilogue_stats,
         "useCoverClosing": use_cover_closing,
+        "hasMomentScreen": bool(moment_screen),
+        "momentScreen": moment_screen or {},
         "showClosingTitle": show_closing_title(meta_title) if use_cover_closing else False,
         "closing": CoverRenderContext(
             src=closing_src,

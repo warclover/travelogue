@@ -5,7 +5,9 @@ from __future__ import annotations
 from travelogue.web.studio_handlers.paths import (
     ASSET_MEDIA_SUFFIX,
     CONFIG_PATH,
+    CURATION_MOMENT_SUFFIX,
     INTENT_SUFFIX,
+    MOMENT_SUFFIX,
     PIPELINE_SUFFIX,
     TRIPS_PATH,
 )
@@ -63,6 +65,14 @@ def test_studio_dispatch_patch_routes(monkeypatch) -> None:
         "travelogue.web.studio_handlers.trip_handlers.handle_asset_media_class",
         lambda h, tid: probe.calls.append(f"asset_media_handler:{tid}"),
     )
+    monkeypatch.setattr(
+        "travelogue.web.studio_handlers.trip_handlers.handle_get_moment_curation",
+        lambda h, tid: probe.calls.append(f"moment_curation_handler:{tid}"),
+    )
+    monkeypatch.setattr(
+        "travelogue.web.studio_handlers.trip_handlers.handle_patch_moment",
+        lambda h, tid: probe.calls.append(f"moment_patch_handler:{tid}"),
+    )
 
     assert probe.studio_dispatch_PATCH(CONFIG_PATH) is True
     assert probe.calls == ["config_handler"]
@@ -79,5 +89,13 @@ def test_studio_dispatch_patch_routes(monkeypatch) -> None:
     probe.calls.clear()
     assert probe.studio_dispatch_PATCH(f"{TRIPS_PATH}/{trip}{ASSET_MEDIA_SUFFIX}") is True
     assert probe.calls == [f"asset_media_handler:{trip}"]
+
+    probe.calls.clear()
+    assert probe.studio_dispatch_PATCH(f"{TRIPS_PATH}/{trip}{MOMENT_SUFFIX}") is True
+    assert probe.calls == [f"moment_patch_handler:{trip}"]
+
+    probe.calls.clear()
+    assert probe.studio_dispatch_GET(f"{TRIPS_PATH}/{trip}{CURATION_MOMENT_SUFFIX}") is True
+    assert probe.calls == [f"moment_curation_handler:{trip}"]
 
     assert probe.studio_dispatch_PATCH("/unknown") is False

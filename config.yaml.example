@@ -35,6 +35,26 @@ curate:
   arc_flat_variance_threshold: 0.08
   featured_weight: 1.35
   featured_min_for_cover_pool: 2
+  # Phase 23 · 最佳时刻（高光池 + 签名屏 + EXIF）
+  moment:
+    enabled: true
+    pool_ratio: 0.05
+    pool_min: 1
+    pool_max: 5
+    show_exif: true
+    position: before_closing
+    auto_disable_small_trip: true
+    small_trip_max_assets: 15
+    secondary_boost: 0.12
+    scoring:
+      min_score: 0.35
+      small_trip_elevated_min_score: 0.45
+      weights:
+        arc_peak: 0.30
+        anchor: 0.25
+        aesthetic: 0.20
+        on_screen: 0.15
+        featured: 0.10
   # 封面选型 · cover-selection-plan v0.2（默认=当前代码行为）
   cover_scoring_version: v2   # v1 | v2（默认 v2 加性 logit）
   cover_scoring:
@@ -50,6 +70,16 @@ curate:
   #     layout_fit: 0.23
   #     sharpness: 0.25
   #     thirds: 0.15
+
+# Phase 23 · moment 选型审美权重（见 docs/PRD-PHASE23-peak-moment.md §11）
+aesthetic:
+  presets:
+    moment:
+      composition: 0.28
+      subjectClarity: 0.28
+      lighting: 0.22
+      exposure: 0.12
+      color: 0.10
 
 # 精细制作「版面密度」旋钮（false → 全体当智能平衡）
 layoutDensity:
@@ -238,6 +268,7 @@ mosaic:
 
 ingest:
   sharpness_version: v2   # v1 | v2（默认 v2 Laplacian + ROI）
+  exif_camera: true       # Phase 23 · 写入 assets[].exif（moment-screen 脚注）
   max_photos: 250
   max_videos: 3
   max_video_source_sec: 15

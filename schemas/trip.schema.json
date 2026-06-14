@@ -48,6 +48,10 @@
     },
     "meta": { "$ref": "#/$defs/meta" },
     "coverAssetId": { "type": "string" },
+    "momentAssetId": {
+      "type": "string",
+      "description": "Phase 23 · signature moment (∈ curation.momentPoolIds)"
+    },
     "coverCandidates": {
       "type": "array",
       "items": { "type": "string" },
@@ -281,6 +285,25 @@
         "assetId": { "type": "string" },
         "score": { "type": "number", "minimum": 0 },
         "scoringVersion": { "type": "string" }
+      }
+    },
+    "assetExif": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Phase 23 · camera EXIF written at ingest",
+      "properties": {
+        "make": { "type": "string" },
+        "model": { "type": "string" },
+        "lens": { "type": "string" },
+        "focalLengthMm": { "type": "number", "minimum": 0 },
+        "aperture": { "type": "number", "minimum": 0 },
+        "shutter": { "type": "string" },
+        "iso": { "type": "integer", "minimum": 0 },
+        "altitudeM": { "type": "number" },
+        "completeness": {
+          "type": "string",
+          "enum": ["full", "partial", "none"]
+        }
       }
     },
     "coverBlindReviewEntry": {
@@ -748,6 +771,62 @@
             "nineQuotaScale": { "type": "number", "minimum": 0, "maximum": 2 }
           }
         },
+        "momentPoolIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 5,
+          "description": "Phase 23 · ranked moment pool (5% clamp 1–5)"
+        },
+        "momentSecondaryIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Phase 23 · pool members except signature (no extra screen)"
+        },
+        "momentSecondaryHintIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Phase 23 · pre-layout secondary hints (preflight only)"
+        },
+        "momentPoolSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Phase 23 · target pool size audit"
+        },
+        "momentCandidates": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 3,
+          "description": "Phase 23 · Studio signature swap top-3 (diversity order)"
+        },
+        "momentExplain": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "factor": { "type": "string" },
+              "weight": { "type": "number" },
+              "detail": { "type": "string" }
+            },
+            "required": ["factor", "detail"]
+          },
+          "description": "Phase 23 · signature scoring factors"
+        },
+        "momentPosition": {
+          "type": "string",
+          "enum": ["before_closing", "arc_peak"],
+          "description": "Phase 23 · moment screen insertion point"
+        },
+        "momentSkipped": {
+          "type": "string",
+          "description": "Phase 23 · skip reason (small_trip, disabled, below_min_score, …)"
+        },
+        "momentCollision": {
+          "type": "string",
+          "enum": ["closing"],
+          "description": "Phase 23 · soft collision warning (e.g. same asset as closing)"
+        },
         "clustering": { "$ref": "#/$defs/tripClustering" }
       }
     },
@@ -1188,6 +1267,7 @@
             "lon": { "type": "number", "minimum": -180, "maximum": 180 }
           }
         },
+        "exif": { "$ref": "#/$defs/assetExif" },
         "curation": { "$ref": "#/$defs/assetCuration" }
       },
       "allOf": [

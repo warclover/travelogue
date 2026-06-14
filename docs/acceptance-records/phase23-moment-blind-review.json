@@ -1,0 +1,63 @@
+{
+  "recordId": "phase23-moment-blind-review",
+  "phase": "P23-PeakMoment",
+  "question": "这一张最能代表这趟旅行的决定性瞬间吗？",
+  "instructions": "Blind review: show only the signature moment image (no pool order labels). Set verdict=yes|no. For M2, also record poolCoverage (user top-5 ∩ momentPoolIds). B-class ranking uses scoreRankedMomentTop3 (peak_moment_score), not momentCandidates diversity order.",
+  "thresholds": {
+    "M1": {
+      "minSamples": 5,
+      "yesRatePct": 50.0
+    },
+    "M2": {
+      "minSamples": 8,
+      "yesRatePct": 60.0,
+      "poolCoverageMin": 3
+    }
+  },
+  "samples": [
+    {
+      "tripId": "demo-d66fe642a9",
+      "exportLayout": "web",
+      "momentAssetId": null,
+      "momentPoolIds": [],
+      "scoreRankedMomentTop3": [],
+      "scoreRankedMomentTop10": [],
+      "momentCandidates": [],
+      "verdict": null,
+      "poolCoverage": null,
+      "notes": "仙本那 golden · python scripts/phase23_moment_blind_review.py --trip-dir trips/demo-d66fe642a9"
+    },
+    {
+      "tripId": "small-album-fixture",
+      "exportLayout": "web",
+      "momentAssetId": null,
+      "momentPoolIds": [],
+      "scoreRankedMomentTop3": [],
+      "scoreRankedMomentTop10": [],
+      "momentCandidates": [],
+      "verdict": null,
+      "poolCoverage": null,
+      "notes": "≤15 张 · 预期 momentSkipped=small_trip"
+    },
+    {
+      "tripId": "featured-import-fixture",
+      "exportLayout": "web",
+      "momentAssetId": null,
+      "momentPoolIds": [],
+      "scoreRankedMomentTop3": [],
+      "scoreRankedMomentTop10": [],
+      "momentCandidates": [],
+      "verdict": null,
+      "poolCoverage": null,
+      "notes": "精选导入 · 验证 featured 加权"
+    }
+  ],
+  "summary": {
+    "judged": 0,
+    "yesCount": 0,
+    "yesRatePct": null,
+    "passedM1": null,
+    "passedM2": null,
+    "notes": "Run: python scripts/phase23_moment_blind_review.py --init-template to seed from local trips; complete human blind review before release sign-off."
+  }
+}

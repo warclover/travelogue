@@ -20,6 +20,10 @@ from travelogue.web.studio_handlers.trip_list_handlers import (
     handle_entry,
     handle_trips,
 )
+from travelogue.web.studio_handlers.trip_moment_handlers import (
+    handle_get_moment_curation,
+    handle_patch_moment,
+)
 from travelogue.web.studio_handlers.trip_pipeline_handlers import (
     handle_patch_pipeline,
     handle_rerender,
@@ -34,10 +38,12 @@ __all__ = [
     "handle_chapter_layout",
     "handle_delete_trip",
     "handle_entry",
+    "handle_get_moment_curation",
     "handle_get_cohort",
     "handle_patch_cohort",
     "handle_patch_copy_intent",
     "handle_patch_intent",
+    "handle_patch_moment",
     "handle_patch_pipeline",
     "handle_patch_screen_replan",
     "handle_patch_template",

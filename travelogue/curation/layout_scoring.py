@@ -12,6 +12,27 @@ from travelogue.curation.layout_planner import AspectKind
 FEATURED_BEAM_BONUS_PER_ASSET = 0.15
 FEATURED_HERO_SEPARATION_HALVED = 0.5
 
+
+def moment_secondary_plan_bonus(
+    screens: list[dict],
+    *,
+    arc_segment: str | None,
+    secondary_ids: set[str] | frozenset[str],
+    boost: float,
+) -> float:
+    """Peak-chapter spread boost for moment pool secondaries (PRD §7.3 · max 1 hit/plan)."""
+    if boost <= 0 or not secondary_ids or arc_segment != "peak":
+        return 0.0
+    for screen in screens:
+        slot_ids = {
+            str(s.get("assetId"))
+            for s in (screen.get("slots") or [])
+            if s.get("assetId")
+        }
+        if slot_ids & secondary_ids:
+            return boost
+    return 0.0
+
 @dataclass(frozen=True)
 class ScoringWeights:
     aspect_match: float = 0.0
@@ -856,6 +877,8 @@ def score_screen_plan(
     enable_gravity_balance: bool = True,
     incremental: bool = False,
     incremental_state: IncrementalScoreState | None = None,
+    moment_secondary_ids: set[str] | frozenset[str] | None = None,
+    moment_secondary_boost: float = 0.0,
 ) -> ScoreBreakdown:
     """Aggregate score for a full screen sequence in one day bucket / chapter."""
     if not screens:
@@ -876,7 +899,7 @@ def score_screen_plan(
         cached = state.prefix_parts.get(plan_key)
         if cached is not None:
             parts, prior = cached
-            return _finalize_plan_score(
+            result = _finalize_plan_score(
                 parts,
                 screens,
                 assets_by_id=assets_by_id,
@@ -885,6 +908,13 @@ def score_screen_plan(
                 featured_beam=featured_beam,
                 enable_gravity_balance=enable_gravity_balance,
             )
+            result.total += moment_secondary_plan_bonus(
+                screens,
+                arc_segment=arc_segment,
+                secondary_ids=moment_secondary_ids or set(),
+                boost=moment_secondary_boost,
+            )
+            return result
         start_index = 0
         parts: list[ScoreBreakdown] = []
         prior: list[str] = []
@@ -910,7 +940,7 @@ def score_screen_plan(
             initial_prior=prior,
         )
         state.prefix_parts[plan_key] = (list(parts), list(prior))
-        return _finalize_plan_score(
+        result = _finalize_plan_score(
             parts,
             screens,
             assets_by_id=assets_by_id,
@@ -919,6 +949,13 @@ def score_screen_plan(
             featured_beam=featured_beam,
             enable_gravity_balance=enable_gravity_balance,
         )
+        result.total += moment_secondary_plan_bonus(
+            screens,
+            arc_segment=arc_segment,
+            secondary_ids=moment_secondary_ids or set(),
+            boost=moment_secondary_boost,
+        )
+        return result
 
     parts, prior = _build_plan_screen_parts(
         screens,
@@ -931,7 +968,7 @@ def score_screen_plan(
         featured_beam=featured_beam,
         intent_arc_boost=intent_arc_boost,
     )
-    return _finalize_plan_score(
+    result = _finalize_plan_score(
         parts,
         screens,
         assets_by_id=assets_by_id,
@@ -940,6 +977,13 @@ def score_screen_plan(
         featured_beam=featured_beam,
         enable_gravity_balance=enable_gravity_balance,
     )
+    result.total += moment_secondary_plan_bonus(
+        screens,
+        arc_segment=arc_segment,
+        secondary_ids=moment_secondary_ids or set(),
+        boost=moment_secondary_boost,
+    )
+    return result
 
 
 def rank_screens(

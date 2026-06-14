@@ -315,5 +315,7 @@ class TripRenderContext(TypedDict, total=False):
     useEpilogueStats: bool
     useEpilogueScreen: bool
     useCoverClosing: bool
+    hasMomentScreen: bool
+    momentScreen: dict[str, Any]
     showClosingTitle: bool
     closing: CoverRenderContext

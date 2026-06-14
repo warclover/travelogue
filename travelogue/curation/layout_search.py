@@ -55,6 +55,8 @@ def maybe_replan_chapters(
     deterministic_strict: bool = False,
     incremental_scoring: bool = False,
     cfg: AppConfig | None = None,
+    moment_secondary_ids: set[str] | frozenset[str] | None = None,
+    moment_secondary_boost: float = 0.0,
 ) -> tuple[list[dict], dict[str, Any]]:
     """Return chapters unchanged when scoring off, degraded, or aspect-only."""
     meta: dict[str, Any] = {"replanApplied": False, "decisionLogs": []}
@@ -103,6 +105,8 @@ def maybe_replan_chapters(
         deterministic_strict=deterministic_strict,
         incremental_scoring=incremental_scoring,
         cfg=cfg,
+        moment_secondary_ids=moment_secondary_ids,
+        moment_secondary_boost=moment_secondary_boost,
     )
     meta["decisionLogs"] = logs
     meta["searchBudget"] = budget.to_dict()

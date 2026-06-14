@@ -1937,5 +1937,45 @@ html[data-folio="full"] .featured-grid__img {
   letter-spacing: 0.08em;
   color: color-mix(in srgb, var(--folio-ink, #222) 70%, transparent);
 }
+
+/* P23 · signature moment screen */
+.layout-screen--moment[data-block="moment-screen"] {
+  width: 100%;
+  max-width: var(--content-rail, var(--bleed-width));
+  margin-inline: auto;
+  margin-block: 0 var(--screen-rhythm-gap, clamp(8px, 1vh, 16px));
+  position: relative;
+}
+
+.moment-screen__label {
+  position: absolute;
+  top: clamp(8px, 1vh, 14px);
+  left: clamp(10px, 1.2vw, 16px);
+  z-index: 2;
+  font-size: clamp(10px, 1.1vw, 12px);
+  letter-spacing: 0.12em;
+  color: color-mix(in srgb, var(--folio-ink, #222) 42%, transparent);
+  pointer-events: none;
+}
+
+.layout-screen--moment .layout-slot--moment {
+  width: 100%;
+  aspect-ratio: var(--screen-fit-ar, 16 / 9);
+  overflow: hidden;
+}
+
+.moment-exif-line {
+  margin: clamp(6px, 0.8vh, 10px) 0 0;
+  padding: 0.35rem 0.5rem;
+  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: clamp(11px, 1.2vw, 13px);
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: color-mix(in srgb, var(--folio-ink, #222) 38%, transparent);
+  background: var(--moment-exif-bg, color-mix(in srgb, var(--folio-paper, #f5f2ea) 6%, transparent));
+}
 /* @journal-overlays:end */
 

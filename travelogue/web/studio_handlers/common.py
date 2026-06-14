@@ -9,7 +9,9 @@ from travelogue.desktop.demo_album import is_demo_album_path, resolve_demo_album
 from travelogue.runtime import AppContext, app_context_from_handler
 from travelogue.web.studio_handlers.paths import (
     CURATE_SUFFIX,
+    CURATION_MOMENT_SUFFIX,
     INTENT_SUFFIX,
+    MOMENT_SUFFIX,
     PIPELINE_SUFFIX,
     PROMOTE_TIER_SUFFIX,
     RERENDER_SUFFIX,
@@ -131,6 +133,14 @@ def match_trip_pipeline(path: str) -> str | None:
 
 def match_trip_curate(path: str) -> str | None:
     return match_trip_suffix(path, CURATE_SUFFIX)
+
+
+def match_trip_moment_curation(path: str) -> str | None:
+    return match_trip_suffix(path, CURATION_MOMENT_SUFFIX)
+
+
+def match_trip_moment_patch(path: str) -> str | None:
+    return match_trip_suffix(path, MOMENT_SUFFIX)
 
 
 def match_trip_asset_media(path: str) -> str | None:

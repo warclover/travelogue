@@ -57,6 +57,15 @@ class AestheticPurposePresets:
             subject_clarity=0.20,
         )
     )
+    moment: AestheticWeights = field(
+        default_factory=lambda: AestheticWeights(
+            composition=0.28,
+            exposure=0.12,
+            color=0.10,
+            lighting=0.22,
+            subject_clarity=0.28,
+        )
+    )
 
 
 @dataclass
@@ -102,6 +111,10 @@ def _presets_from_dict(raw: dict[str, Any], defaults: AestheticPurposePresets) -
         solo=_weights_from_dict(
             pr.get("solo") if isinstance(pr.get("solo"), dict) else {},
             defaults.solo,
+        ),
+        moment=_weights_from_dict(
+            pr.get("moment") if isinstance(pr.get("moment"), dict) else {},
+            defaults.moment,
         ),
     )
 

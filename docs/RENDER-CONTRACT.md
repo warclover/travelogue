@@ -61,6 +61,23 @@
 | `media-scroll` | `media-scroll` | 横滑 `overflow-x` |
 | `epilogue` | `epilogue` | |
 | 固定 | `footer-cta` | 生成信息 |
+| Phase 23 · `momentAssetId` | `moment-screen` | `.layout-screen--moment`, `.moment-exif-line`（见 §4c） |
+
+---
+
+## 4c. `moment-screen`（Phase 23 · 最佳时刻）
+
+| 项 | 契约 |
+|----|------|
+| 块标记 | `data-block="moment-screen"` · 全册 **唯一** |
+| 插入位置 | 末章最后 `layout-screen` 之后、`cover-closing` 之前（`before_closing`） |
+| 主图 | `.layout-slot--moment` · `img.layout-slot__img--{fit}` · focal CSS 变量 |
+| 标签 | `.moment-screen__label` · 中文「最佳时刻」/ 英文 `Moment` |
+| EXIF 脚注 | `.moment-exif-line` · **仅本屏** · 单行 mono ≤13px · 非 overlay |
+| 省略 | `performance` profile · `momentSkipped` · longshot 主 HTML 不含 moment 屏 |
+| secondary | `momentSecondaryIds` 融入正文屏，**不**渲染额外 moment 屏 |
+
+实现：`travelogue.render.moment_screen.build_moment_screen_context()`、`partials/moment-screen.hbs`。
 
 ---
 

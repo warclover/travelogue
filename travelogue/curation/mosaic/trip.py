@@ -41,6 +41,8 @@ def compose_trip(
     max_consecutive_same_pattern: int = 2,
     skip_duplicate_signatures: bool = True,
     incremental_scoring: bool = False,
+    moment_secondary_ids: set[str] | frozenset[str] | None = None,
+    moment_secondary_boost: float = 0.0,
 ) -> tuple[list[dict], dict[str, Any]]:
     """
     Trip-level beam replan · 统一入口（curate 不再区分 mosaic 开/关分支）。
@@ -84,6 +86,8 @@ def compose_trip(
         deterministic_strict=det,
         incremental_scoring=incremental_scoring,
         cfg=app_cfg,
+        moment_secondary_ids=moment_secondary_ids,
+        moment_secondary_boost=moment_secondary_boost,
     )
     if mosaic.enabled:
         meta["mosaicEnabled"] = True

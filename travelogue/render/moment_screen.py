@@ -1,0 +1,75 @@
+"""Moment-screen render context (Phase 23)."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from travelogue.curation.asset_subject import full_frame_fit_for_asset, portrait_fit_for_asset
+from travelogue.curation.layout_planner import aspect_kind_for_asset
+from travelogue.render.cover_opening import cover_focal_point
+from travelogue.render.context import alt_text, compile_srcset, pick_image_sizes, pick_image_src
+from travelogue.render.moment_exif import format_moment_exif_line
+
+
+def moment_label_for_trip(trip: dict) -> str:
+    locale = str((trip.get("meta") or {}).get("locale") or "").strip().lower()
+    if locale.startswith("en"):
+        return "Moment"
+    return "决定性瞬间"
+
+
+def moment_enabled_for_trip(trip: dict, *, cfg_moment_enabled: bool = True) -> bool:
+    if not cfg_moment_enabled:
+        return False
+    moment_id = str(trip.get("momentAssetId") or "").strip()
+    if not moment_id:
+        return False
+    skipped = (trip.get("curation") or {}).get("momentSkipped")
+    return not skipped
+
+
+def build_moment_screen_context(
+    trip: dict,
+    assets: dict[str, dict],
+    *,
+    export_layout: str,
+    meta_title: str,
+    cfg_moment_enabled: bool = True,
+    show_exif: bool = True,
+) -> dict | None:
+    if not moment_enabled_for_trip(trip, cfg_moment_enabled=cfg_moment_enabled):
+        return None
+
+    moment_id = str(trip.get("momentAssetId") or "").strip()
+    asset = assets.get(moment_id)
+    if not asset:
+        return None
+
+    kind = aspect_kind_for_asset(asset)
+    is_portrait = kind in ("portrait", "tall", "square")
+    if is_portrait:
+        fit = portrait_fit_for_asset(asset)
+    else:
+        fit = full_frame_fit_for_asset(asset)
+
+    fx, fy = cover_focal_point(asset)
+    src = pick_image_src(asset, export_layout=export_layout)
+    srcset = compile_srcset(asset, mobile=export_layout == "mobile")
+    exif_line = format_moment_exif_line(asset) if show_exif else None
+
+    return {
+        "assetId": moment_id,
+        "src": src,
+        "hasSrc": bool(src),
+        "hasSrcset": bool(srcset),
+        "srcset": srcset,
+        "sizes": pick_image_sizes(export_layout, "cover"),
+        "alt": alt_text(None, asset, meta_title),
+        "fit": fit,
+        "focalX": fx,
+        "focalY": fy,
+        "isPortrait": is_portrait,
+        "hasExifLine": bool(exif_line),
+        "exifLine": exif_line or "",
+        "label": moment_label_for_trip(trip),
+    }

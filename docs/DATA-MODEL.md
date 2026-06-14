@@ -46,6 +46,7 @@ trips/{tripId}/
 | `export` | object | ❌ | 导出选项，见 §3.1 |
 | `meta` | object | ✅ | 全书元信息与文案 |
 | `coverAssetId` | string | ✅ | 封面图 asset |
+| `momentAssetId` | string? | ❌ | Phase 23 · 签名时刻（∈ `curation.momentPoolIds`） |
 | `coverCandidates` | string[] | ❌ | 策展提案的 3 张候选 |
 | `assets` | array | ✅ | 媒体资源列表 |
 | `chapters` | array | ✅ | 3–5 章 |
@@ -66,6 +67,14 @@ trips/{tripId}/
 |------|------|------|
 | `orientationSummary` | object | `total` / `landscape` / `portrait` / `square` / `panorama` / `tall` / `exportLayout`；见 `LAYOUT-PLANNER.md` |
 | `clustering` | object? | Phase 3 · Curate 聚类输出；见 §3.4 |
+| `momentPoolIds` | string[]? | Phase 23 · 高光池（5% clamp 1–5） |
+| `momentSecondaryIds` | string[]? | Phase 23 · 池内次要高光（无独立屏） |
+| `momentPoolSize` | number? | 池目标大小（审计） |
+| `momentCandidates` | string[]? | Studio 换签名 top-3 |
+| `momentExplain` | object[]? | 签名时刻因子解释 |
+| `momentPosition` | enum? | `before_closing` \| `arc_peak` |
+| `momentSkipped` | string? | 跳过原因（`small_trip` / `disabled` 等） |
+| `momentCollision` | string? | `closing` 软碰撞警告 |
 
 ### 3.4 `curation.clustering` 对象（可选 · Phase 3 · v0.3+）
 
@@ -221,7 +230,20 @@ CLI：`travelogue export … --no-longshot` 写入 `export.longShot=false`。
 | `cropMobile` | 可选 9:16 裁切 |
 | `cropWeb` | 可选 16:9 裁切 |
 | `focalPoint` | `{ x, y }` 0–1，裁切中心 |
+| `exif` | object? | Phase 23 · 相机 EXIF（ingest 写入）；见 §6.2.1 |
 | `voice` | 可选，见 §6.4 |
+
+### 6.2.1 `exif` 子对象（Phase 23 · v0.2.3+）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `make` / `model` / `lens` | string? | 厂商 / 机型 / 镜头 |
+| `focalLengthMm` | number? | 焦段 mm |
+| `aperture` | number? | f 值 |
+| `shutter` | string? | 如 `1/500` |
+| `iso` | number? | ISO |
+| `altitudeM` | number? | GPS 海拔（有则写） |
+| `completeness` | enum | `full` \| `partial` \| `none` |
 
 ### 6.3 视频 `type: video`
 

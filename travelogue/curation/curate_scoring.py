@@ -995,6 +995,7 @@ def pick_chapter_hero(
     assets_by_id: dict[str, dict],
     *,
     exclude: set[str] | None = None,
+    preferred_id: str | None = None,
     median_sharp: float = 0.0,
     aesthetic_enabled: bool | None = None,
     featured_weight: float = 1.35,
@@ -1006,6 +1007,20 @@ def pick_chapter_hero(
     exclude = exclude or set()
     ver, _, params_v2 = _curate_scoring_context(None, cover_scoring_v2, scoring_version)
     hero_pool = [assets_by_id[aid] for aid in bucket if aid in assets_by_id]
+    if preferred_id and preferred_id in bucket and preferred_id not in exclude:
+        preferred = assets_by_id.get(preferred_id)
+        if preferred and effective_hero_score(
+            preferred,
+            median_sharp=median_sharp,
+            aesthetic_enabled=aesthetic_enabled,
+            featured_weight=featured_weight,
+            memory_anchors=memory_anchors,
+            meta_places=meta_places,
+            cover_scoring_v2=params_v2,
+            scoring_version=ver,
+            pool=hero_pool,
+        ) > 0:
+            return preferred_id
     best_id: str | None = None
     best_key: tuple[float, float] = (-1.0, -1.0)
     for aid in bucket:

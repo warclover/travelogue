@@ -101,6 +101,43 @@ def chapter_visual_units(chapter: dict) -> int:
     return units
 
 
+def _cover_ids_for_moment_check(trip: dict) -> set[str]:
+    out: set[str] = set()
+    primary = str(trip.get("coverAssetId") or "").strip()
+    if primary:
+        out.add(primary)
+    by_layout = (trip.get("curation") or {}).get("coverByLayout") or {}
+    if isinstance(by_layout, dict):
+        for value in by_layout.values():
+            aid = str(value or "").strip()
+            if aid:
+                out.add(aid)
+    return out
+
+
+def _validate_moment_refs(trip: dict, assets: dict[str, dict]) -> list[str]:
+    """Phase 23 · momentAssetId must reference a valid asset and belong to momentPoolIds."""
+    errors: list[str] = []
+    moment_id = str(trip.get("momentAssetId") or "").strip()
+    if not moment_id:
+        return errors
+    if moment_id not in assets:
+        errors.append(f"E_VALIDATE_REF momentAssetId missing: {moment_id}")
+        return errors
+    if assets[moment_id].get("type") != "image":
+        errors.append(f"E_VALIDATE_REF momentAssetId must be image: {moment_id}")
+    pool = (trip.get("curation") or {}).get("momentPoolIds") or []
+    if isinstance(pool, list) and pool and moment_id not in pool:
+        errors.append(
+            f"E_VALIDATE_REF momentAssetId {moment_id} not in curation.momentPoolIds"
+        )
+    if moment_id in _cover_ids_for_moment_check(trip):
+        errors.append(
+            f"E_VALIDATE_REF momentAssetId must not equal cover: {moment_id}"
+        )
+    return errors
+
+
 def validate_manifest(
     trip: dict,
     manifest: dict | None = None,
@@ -148,6 +185,8 @@ def validate_manifest(
         errors.append(f"E_VALIDATE_REF coverAssetId missing: {cover}")
     elif cover and cover in assets and assets[cover].get("type") == "video":
         errors.append("E_VALIDATE_MANIFEST cover cannot be video (VR-M01)")
+
+    errors.extend(_validate_moment_refs(trip, assets))
 
     chapters = trip.get("chapters", [])
     min_c = limits.get("minChapters", 3)

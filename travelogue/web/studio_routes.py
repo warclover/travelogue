@@ -34,6 +34,8 @@ from travelogue.web.studio_handlers.common import (
     match_trip_curate,
     match_trip_delete,
     match_trip_intent,
+    match_trip_moment_curation,
+    match_trip_moment_patch,
     match_trip_pipeline,
     match_trip_screen_replan,
     match_trip_template,
@@ -235,6 +237,10 @@ class StudioMixin:
         if bento_trip_id is not None:
             trip_handlers.handle_bento_preview(self, bento_trip_id)
             return True
+        moment_trip_id = match_trip_moment_curation(path)
+        if moment_trip_id is not None:
+            trip_handlers.handle_get_moment_curation(self, moment_trip_id)
+            return True
         if path.startswith(STUDIO_ASSET_PREFIX):
             return static_handlers.handle_studio_asset(self, path)
         return False
@@ -289,6 +295,10 @@ class StudioMixin:
         asset_media_trip_id = match_trip_asset_media(path)
         if asset_media_trip_id is not None:
             trip_handlers.handle_asset_media_class(self, asset_media_trip_id)
+            return True
+        moment_patch_id = match_trip_moment_patch(path)
+        if moment_patch_id is not None:
+            trip_handlers.handle_patch_moment(self, moment_patch_id)
             return True
         return False
 

@@ -35,7 +35,7 @@ from travelogue.media.exposure_metrics import (
 
 AESTHETIC_VERSION = "pa-v0.1"
 SIGNAL_CACHE_FILE = "phase_pa_aesthetic.json"
-AestheticPurpose = Literal["default", "cover", "hero", "solo"]
+AestheticPurpose = Literal["default", "cover", "hero", "solo", "moment"]
 _SHARP_NORM_K = 150.0
 _LOW_CONF_MEDIA = frozenset({"screenshot", "thumbnail", "reupload"})
 
@@ -108,6 +108,8 @@ def resolve_aesthetic_weights(
         return cfg.presets.hero
     if purpose == "solo":
         return cfg.presets.solo
+    if purpose == "moment":
+        return cfg.presets.moment
     return cfg.weights
 
 

@@ -27,10 +27,12 @@ def pick_featured_grid_asset_ids(
     min_count: int = FEATURED_GRID_MIN,
     max_count: int = FEATURED_GRID_MAX,
     featured_weight: float = 1.35,
+    exclude_ids: set[str] | frozenset[str] | None = None,
 ) -> list[str]:
     """Portrait-first featured pool for featured-grid (≥ min_count or empty)."""
     from travelogue.curation.curate_scoring import effective_hero_score, median_sharpness
 
+    excluded = set(exclude_ids or set())
     featured = [
         a
         for a in layout_assets
@@ -38,6 +40,7 @@ def pick_featured_grid_asset_ids(
         and a.get("layoutEligible", True)
         and a.get("type") != "video"
         and a.get("id")
+        and str(a.get("id")) not in excluded
     ]
     if len(featured) < min_count:
         return []
@@ -99,6 +102,7 @@ def build_folio_plan(
     *,
     featured_weight: float = 1.35,
     mutate_screens: bool = False,
+    exclude_grid_ids: set[str] | frozenset[str] | None = None,
 ) -> dict[str, Any]:
     """
     Plan folio full blocks; optionally strip featured-grid assets from screens.
@@ -110,7 +114,9 @@ def build_folio_plan(
     has_foreword = bool(str(first_ch.get("lead") or "").strip())
 
     grid_ids = pick_featured_grid_asset_ids(
-        layout_assets, featured_weight=featured_weight
+        layout_assets,
+        featured_weight=featured_weight,
+        exclude_ids=exclude_grid_ids,
     )
     plan: dict[str, Any] = {
         "index": True,

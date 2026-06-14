@@ -120,6 +120,8 @@ def replan_day_buckets_beam(
     incremental_scoring: bool = False,
     cfg: AppConfig | None = None,
     burst_seconds: float = 3.0,
+    moment_secondary_ids: set[str] | frozenset[str] | None = None,
+    moment_secondary_boost: float = 0.0,
 ) -> tuple[list[dict], list[dict], SearchBudget]:
     from travelogue.curation.screen_planner import DEFAULT_FEATURED_WEIGHT
     from travelogue.curation.intent_hints import (
@@ -267,6 +269,8 @@ def replan_day_buckets_beam(
                 enable_gravity_balance=enable_gravity_balance,
                 incremental=incremental_scoring,
                 incremental_state=incr_state,
+                moment_secondary_ids=moment_secondary_ids,
+                moment_secondary_boost=moment_secondary_boost,
             )
             legacy_adjusted = legacy_score.total + _late_chapter_beam_adjustment(
                 legacy_plan, layout_state.rhythm, bucket_idx + 1
@@ -328,6 +332,8 @@ def replan_day_buckets_beam(
                     enable_gravity_balance=enable_gravity_balance,
                     incremental=incremental_scoring,
                     incremental_state=incr_state,
+                    moment_secondary_ids=moment_secondary_ids,
+                    moment_secondary_boost=moment_secondary_boost,
                 )
                 adjusted_total = bd.total + _late_chapter_beam_adjustment(
                     plan, layout_state.rhythm, bucket_idx + 1

@@ -621,9 +621,10 @@ flowchart TB
 
 | Phase | 方向 | 触发条件 |
 |-------|------|----------|
-| **P23** | 实验记录 DB（pairwise 盲评结果、cohort） | Phase 18 WS-0 启动 |
-| **P24** | 对象存储 adapter + trip snapshot 上传 | 第一次私密链接托管 POC |
-| **P25** | 用户账户 + PostgreSQL 元数据 | 内测 10–30 人需在线权限 |
+| **P23** | **最佳时刻**（全册单屏 + EXIF 脚注）— 见 [PRD-PHASE23-peak-moment.md](./PRD-PHASE23-peak-moment.md) | 产品讨论闭合 · 待 Kickoff |
+| **P24** | 实验记录 DB（pairwise 盲评结果、cohort） | Phase 18 WS-0 启动 |
+| **P25** | 对象存储 adapter + trip snapshot 上传 | 第一次私密链接托管 POC |
+| **P26** | 用户账户 + PostgreSQL 元数据 | 内测 10–30 人需在线权限 |
 | **—** | 关系型拆表 | **除非** 明确做多租户 CMS，否则不做 |
 
 ---

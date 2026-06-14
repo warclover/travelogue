@@ -451,6 +451,12 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
     from travelogue.curation.subject_tagging import semantic_category_for_asset
 
     entry["semanticTag"] = {"category": semantic_category_for_asset(entry)}
+    if getattr(ctx.cfg, "exif_camera", True):
+        from travelogue.media.exif_camera import read_camera_exif
+
+        exif_obj = read_camera_exif(photo.photo, photo.img)
+        if exif_obj:
+            entry["exif"] = exif_obj
     if crop_m:
         entry["cropMobile"] = crop_m
     if crop_w:

@@ -811,18 +811,52 @@ def run_curate(
         ]
     assets_by_id = {a["id"]: a for a in layout_assets}
     med_sharp = median_sharpness(layout_assets)
+
+    from travelogue.curation.moment_scoring import (
+        preferred_secondary_hero_for_bucket,
+        sync_trip_moments_finalize,
+        sync_trip_moments_preflight,
+    )
+
+    trip_memory_anchors: list[str] = []
+    for group in saved_memory_anchors:
+        if group:
+            trip_memory_anchors.extend(str(a) for a in group if a)
+    sync_trip_moments_preflight(
+        trip,
+        layout_assets,
+        cfg=cur_cfg.moment,
+        arc_profile=arc_profile,
+        featured_weight=cur_cfg.featured_weight,
+        aesthetic_enabled=app_cfg.aesthetic.enabled,
+        meta_places=meta_places or None,
+        memory_anchors=trip_memory_anchors or None,
+    )
+    secondary_hints = list((trip.get("curation") or {}).get("momentSecondaryHintIds") or [])
+
     chapter_heroes: dict[str, str] = {}
+    used_secondary_heroes: set[str] = set()
     for i, bucket in enumerate(non_empty_buckets):
         anchors = saved_memory_anchors[i] if i < len(saved_memory_anchors) else None
+        preferred: str | None = None
+        if use_arc:
+            from travelogue.curation.arc_patterns import arc_segment_for_chapter
+
+            if arc_segment_for_chapter(i + 1, len(non_empty_buckets), profile=arc_profile) == "peak":
+                available_hints = [h for h in secondary_hints if h not in used_secondary_heroes]
+                preferred = preferred_secondary_hero_for_bucket(bucket, available_hints)
         hero = pick_chapter_hero(
             bucket,
             assets_by_id,
             exclude=skip_screen_ids,
+            preferred_id=preferred,
             median_sharp=med_sharp,
             featured_weight=cur_cfg.featured_weight,
             memory_anchors=anchors or None,
             meta_places=meta_places or None,
         )
+        if hero and preferred and hero == preferred:
+            used_secondary_heroes.add(hero)
         if hero:
             chapter_heroes[f"ch-{i + 1:02d}"] = hero
 
@@ -1007,6 +1041,10 @@ def run_curate(
         skip_duplicate_signatures=layout_cfg.scoring.skip_duplicate_signatures,
         incremental_scoring=layout_cfg.scoring.incremental,
         max_evaluations_per_segment=layout_cfg.scoring.max_evaluations_per_segment,
+        moment_secondary_ids=set(secondary_hints),
+        moment_secondary_boost=(
+            cur_cfg.moment.secondary_boost if cur_cfg.moment.enabled else 0.0
+        ),
     )
     if engine == LAYOUT_ENGINE_SCREENS:
         from travelogue.curation.chapter_items import (
@@ -1202,25 +1240,6 @@ def run_curate(
         curation.update(tier_fields)
     warnings.extend(tier_warnings)
 
-    from travelogue.curation.folio_plan import build_folio_plan
-
-    folio_plan = build_folio_plan(
-        trip,
-        chapters,
-        layout_assets,
-        featured_weight=cur_cfg.featured_weight,
-        mutate_screens=True,
-    )
-    if folio_plan.get("featuredGrid"):
-        curation["folioPlan"] = folio_plan
-        n_grid = len(folio_plan.get("featuredGridAssetIds") or [])
-        warnings.append(f"folio featured-grid · {n_grid} 张精选（已从正文 screens 去重）")
-    elif folio_plan.get("plateAssetIds"):
-        curation["folioPlan"] = {
-            k: folio_plan[k]
-            for k in ("index", "foreword", "featuredGrid", "featuredGridAssetIds", "plateAssetIds")
-        }
-
     warnings.extend(reading_experience_warnings(trip, chapters, layout_assets))
 
     cross_seg = sum(
@@ -1273,6 +1292,44 @@ def run_curate(
     from travelogue.curation.chapter_explain import attach_chapter_explain
 
     stamp_screen_arc_segments(trip, arc_profile=arc_profile)
+    sync_trip_moments_finalize(
+        trip,
+        layout_assets,
+        chapters,
+        cfg=cur_cfg.moment,
+        arc_profile=arc_profile,
+        featured_weight=cur_cfg.featured_weight,
+        aesthetic_enabled=app_cfg.aesthetic.enabled,
+        meta_places=meta_places or None,
+        memory_anchors=trip_memory_anchors or None,
+        chapter_heroes=chapter_heroes,
+    )
+
+    from travelogue.curation.folio_plan import build_folio_plan
+
+    moment_exclude_grid: set[str] = set()
+    moment_sig = str(trip.get("momentAssetId") or "").strip()
+    if moment_sig:
+        moment_exclude_grid.add(moment_sig)
+    folio_plan = build_folio_plan(
+        trip,
+        chapters,
+        layout_assets,
+        featured_weight=cur_cfg.featured_weight,
+        mutate_screens=True,
+        exclude_grid_ids=moment_exclude_grid,
+    )
+    if folio_plan.get("featuredGrid"):
+        curation["folioPlan"] = folio_plan
+        n_grid = len(folio_plan.get("featuredGridAssetIds") or [])
+        warnings.append(f"folio featured-grid · {n_grid} 张精选（已从正文 screens 去重）")
+        curation["warnings"] = warnings
+    elif folio_plan.get("plateAssetIds"):
+        curation["folioPlan"] = {
+            k: folio_plan[k]
+            for k in ("index", "foreword", "featuredGrid", "featuredGridAssetIds", "plateAssetIds")
+        }
+
     n_breath = insert_breath_screens_in_chapters(
         chapters,
         arc_driven=cur_cfg.enable_arc_breath,

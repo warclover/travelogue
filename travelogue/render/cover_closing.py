@@ -265,6 +265,7 @@ def resolve_closing_asset_id(
     assets: dict[str, dict],
     *,
     prefer_landscape: bool = False,
+    exclude_ids: set[str] | None = None,
 ) -> str | None:
     """Pick closing hero: prefer fresh (unused) assets, then screen tail.
 
@@ -274,7 +275,8 @@ def resolve_closing_asset_id(
     may be reused so the closing screen is not dropped at render time.
     """
     screen_used = collect_layout_screen_asset_ids(trip)
-    exclude_ids = _cover_ids_to_exclude(trip)
+    exclude_ids = set(exclude_ids or set())
+    exclude_ids |= _cover_ids_to_exclude(trip)
     ordered = _closing_candidate_ids(
         trip, assets, screen_used_ids=screen_used, exclude_ids=exclude_ids
     )
