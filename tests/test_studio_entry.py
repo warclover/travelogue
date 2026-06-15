@@ -120,6 +120,17 @@ def test_intent_summary_reads_intent_then_meta():
     assert summary["hasUserNotes"] is True
 
 
+def test_build_entry_includes_cover_opening_style() -> None:
+    trip = {"meta": {"coverOpeningStyle": "magazine-head"}}
+    entry = build_entry(trip, "demo-trip")
+    assert entry["coverOpeningStyle"] == "magazine-head"
+
+
+def test_build_entry_cover_opening_style_defaults_card_br() -> None:
+    entry = build_entry({"meta": {}}, "demo-trip")
+    assert entry["coverOpeningStyle"] == "card-br"
+
+
 def test_build_entry_includes_pipeline_and_chapters():
     trip = {
         "pipeline": {"status": "structure_draft"},

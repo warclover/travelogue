@@ -36,8 +36,8 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-06-15 (f): cover title + hook use --font-legacy-brush (handwriting).
 # Re-bumped 2026-06-15 (g): cover title uses Studio HetangYuese handwriting stack.
 # Re-bumped 2026-06-15 (h): expanded hetangyuese.woff2 subset (cover titles incl. 林芝).
-# Re-bumped 2026-06-15 (i): cover handwriting fallback → --font-ui (YaHei), not cursive/KaiTi.
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}bd23ff073863"
+# Re-bumped 2026-06-15 (l): split-mat hook line-clamp in narrow panel.
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}a560681aa22d"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

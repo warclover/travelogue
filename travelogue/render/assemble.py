@@ -55,6 +55,7 @@ def build_render_context(
         cover_use_contain_fit,
         show_hook_on_cover,
     )
+    from travelogue.services.cover_opening_style import resolve_cover_opening_style
     from travelogue.render.engine import LONGSHOT_INDEX_NAME
     from travelogue.render.reading_profile import reading_html_attrs
     from travelogue.services.narrative_scope import resolve_cover_show_title
@@ -323,6 +324,7 @@ def build_render_context(
         "showCoverHook": show_cover_hook,
         "hook": hook,
         "hasHook": bool(hook),
+        "coverOpeningStyle": resolve_cover_opening_style(trip),
         "editableHook": surface.is_draft and bool(hook),
         "epilogue": epilogue,
         "hasEpilogue": has_epilogue,

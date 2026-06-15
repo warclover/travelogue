@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from travelogue.services.cover_opening_style import resolve_cover_opening_style
 from travelogue.services.decor_line import chapter_has_voice
 from travelogue.templating.summary import build_template_summary
 from travelogue.web.studio_aesthetic import build_aesthetic_entry_summary
@@ -184,4 +185,5 @@ def build_entry(
         ),
         "template": build_template_summary(trip),
         "assetMediaById": build_asset_media_index(trip),
+        "coverOpeningStyle": resolve_cover_opening_style(trip),
     }

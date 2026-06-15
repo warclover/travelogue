@@ -50,7 +50,7 @@ def _cover_opening_html(
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">'
         '<link rel="stylesheet" href="journal.css">'
         "<title>Cover V4</title></head><body><main>"
-        '<section class="cover-opening" data-block="cover-opening">'
+        '<section class="cover-opening" data-block="cover-opening" data-cover-opening="card-br">'
         '<header class="cover-hero cover-hero--photo-only">'
         '<div class="cover-hero__media" style="--focal-x: 0.5; --focal-y: 0.45;">'
         f'<img class="cover-hero__img" src="{_PLACEHOLDER_IMG}" alt="cover" />'

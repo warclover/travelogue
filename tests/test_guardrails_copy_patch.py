@@ -18,6 +18,20 @@ def test_guardrails_allows_editable_meta_hook() -> None:
     assert trip["meta"]["hook"] == "停顿一下"
 
 
+def test_guardrails_allows_meta_cover_opening_style() -> None:
+    trip = {
+        "templateId": "visual-journal",
+        "templateSelection": {"resolvedTemplateId": "visual-journal"},
+        "meta": {},
+    }
+    updated = apply_copy_patches(
+        trip,
+        [{"path": "meta.coverOpeningStyle", "value": "split-mat"}],
+    )
+    assert "meta.coverOpeningStyle" in updated
+    assert trip["meta"]["coverOpeningStyle"] == "split-mat"
+
+
 def test_guardrails_blocks_non_editable_scope() -> None:
     trip = {
         "templateId": "visual-journal",

@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
 | **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–22** + Studio 首页 v2/M21 + 算法 V2 |
-| **更新日期** | 2026-06-13 |
+| **更新日期** | 2026-06-15 |
 
 ---
 
@@ -258,6 +258,24 @@
 | [PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md) | Bento 双交付 · Import Sheet · 书架 |
 | [PRD-M21-studio-homepage-v3-retirement.md](./PRD-M21-studio-homepage-v3-retirement.md) | v3 退役 · v2 唯一入口 |
 | [studio-homepage-v2/](./studio-homepage-v2/) | FEATURE-FLAG · RUNBOOK · OPEN-QUESTIONS |
+
+---
+
+## 封面专项 · V4 / V5
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-COVER-OPTIMIZATION-V4.md](./PRD-COVER-OPTIMIZATION-V4.md) | Icon Dock + 右下书名卡 `card-br` |
+| [ACCEPTANCE-COVER-OPTIMIZATION-V4.md](./ACCEPTANCE-COVER-OPTIMIZATION-V4.md) | V4 验收 |
+| [IMPLEMENTATION-COVER-OPTIMIZATION-V4.md](./IMPLEMENTATION-COVER-OPTIMIZATION-V4.md) | V4 实施清单 |
+| [PRD-COVER-STYLES-V5.md](./PRD-COVER-STYLES-V5.md) | **封面多样式 V5** · 三款 Web 皮肤 + 创建时分配 |
+| [ACCEPTANCE-COVER-STYLES-V5.md](./ACCEPTANCE-COVER-STYLES-V5.md) | V5 验收 |
+| [IMPLEMENTATION-COVER-STYLES-V5.md](./IMPLEMENTATION-COVER-STYLES-V5.md) | V5 实施清单 |
+| [acceptance-records/cover-styles-prd-review-2026-06-15.md](./acceptance-records/cover-styles-prd-review-2026-06-15.md) | V5 跨职能评审纪要 |
+| [wireframes/cover-styles-v5-split-mat.html](./wireframes/cover-styles-v5-split-mat.html) | `split-mat` 线框 |
+| [wireframes/cover-styles-v5-magazine-head.html](./wireframes/cover-styles-v5-magazine-head.html) | `magazine-head` 线框 |
+
+阅读顺序：**PRD-COVER-OPTIMIZATION-V4**（前置）→ **PRD-COVER-STYLES-V5** v1.1 → **IMPLEMENTATION** → **ACCEPTANCE**。
 
 ---
 

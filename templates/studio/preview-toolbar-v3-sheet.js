@@ -317,10 +317,16 @@ export function mountPreviewUnifiedSheet(root, hooks) {
 
   function renderLayoutPanel() {
     bodyEl.innerHTML =
-      '<p class="preview-sheet__hint preview-sheet__hint--lead">拼图改判、精选与旅行主角设置会触发「待应用排版」。</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--lead">封面版式、拼图改判、精选与旅行主角设置会触发「待应用排版」。</p>' +
+      '<div class="preview-sheet__cover-slot"></div>' +
       '<div class="preview-sheet__template-slot"></div>' +
       '<div class="preview-sheet__embed"></div>' +
       '<button type="button" class="preview-sheet__primary preview-sheet__apply-layout" hidden>应用排版</button>';
+
+    var coverSlot = bodyEl.querySelector(".preview-sheet__cover-slot");
+    if (coverSlot && typeof hooks.mountCoverStyleControls === "function") {
+      hooks.mountCoverStyleControls(coverSlot);
+    }
 
     var templateSlot = bodyEl.querySelector(".preview-sheet__template-slot");
     if (templateSlot && typeof hooks.mountTemplateControls === "function") {

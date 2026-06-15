@@ -27,6 +27,12 @@ var READER_VIEW_KEY = "travelogue.studio.readerView";
 var SHEET_HINT_KEY = "travelogue.studio.previewSheet.hintSeen";
 var LONGSHOT_MODE_KEY = "travelogue:longshotMode";
 var LONGSHOT_SCALE_KEY = "travelogue:longshotScale";
+var COVER_STYLE_TOAST_KEY = "travelogue.coverStyleToast.";
+var COVER_OPENING_STYLE_OPTIONS = [
+  { id: "card-br", label: "书名卡" },
+  { id: "split-mat", label: "分屏衬纸" },
+  { id: "magazine-head", label: "杂志顶题" },
+];
 var SLOW_JOB_MS = 30000;
 var longshotPollCancel = null;
 var narratePollCancel = null;
@@ -203,6 +209,28 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     _toastTimer = setTimeout(function () {
       el.hidden = true;
     }, opts.duration || (opts.error ? 5000 : 2800));
+  }
+
+  function maybeShowCoverOpeningStyleToast(tripId) {
+    if (!tripId) return;
+    var section = document.querySelector(".cover-opening[data-cover-opening]");
+    if (!section) return;
+    var style = section.getAttribute("data-cover-opening") || "card-br";
+    var storageKey = COVER_STYLE_TOAST_KEY + tripId;
+    try {
+      if (localStorage.getItem(storageKey)) return;
+      localStorage.setItem(storageKey, "1");
+    } catch (e) {
+      return;
+    }
+    trackStudioEvent("cover_opening_style_render", {
+      tripId: tripId,
+      coverOpeningStyle: style,
+    });
+    showToolbarToast(
+      "这本游记的封面版式已为你选定（电脑与手机版式不同），可在「排版」设置中更换",
+      { duration: 4200 }
+    );
   }
 
   var _layoutPending = false;
@@ -2657,6 +2685,101 @@ function insertScreenplayControl(parent, beforeNode, opts) {
       });
   }
 
+  function readCoverOpeningStyleFromDom() {
+    var section = document.querySelector(".cover-opening[data-cover-opening]");
+    return section ? section.getAttribute("data-cover-opening") || "card-br" : "card-br";
+  }
+
+  function mountCoverStyleControls(slot, tripId) {
+    if (!slot || slot.querySelector(".preview-sheet__cover-styles")) return;
+    var section = document.createElement("div");
+    section.className = "preview-sheet__section preview-sheet__cover-section";
+    section.innerHTML =
+      '<span class="preview-sheet__label">封面版式</span>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">电脑预览有效；窄屏与手机版式不同。</p>' +
+      '<div class="preview-sheet__cover-styles" role="group" aria-label="封面版式"></div>';
+    var group = section.querySelector(".preview-sheet__cover-styles");
+    var selectedStyle = readCoverOpeningStyleFromDom();
+
+    function syncSelection(style) {
+      if (!group) return;
+      group.querySelectorAll("[data-cover-style]").forEach(function (btn) {
+        var on = btn.getAttribute("data-cover-style") === style;
+        btn.classList.toggle("is-on", on);
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    }
+
+    function setBusy(busy) {
+      if (!group) return;
+      group.querySelectorAll("[data-cover-style]").forEach(function (btn) {
+        btn.disabled = !!busy;
+      });
+    }
+
+    COVER_OPENING_STYLE_OPTIONS.forEach(function (opt) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "preview-sheet__cover-style";
+      btn.setAttribute("data-cover-style", opt.id);
+      btn.setAttribute("aria-label", opt.label);
+      btn.innerHTML =
+        '<span class="preview-sheet__cover-thumb" data-cover-thumb="' +
+        opt.id +
+        '" aria-hidden="true"></span>' +
+        '<span class="preview-sheet__cover-label">' +
+        opt.label +
+        "</span>";
+      btn.addEventListener("click", function () {
+        var next = opt.id;
+        if (!next || next === selectedStyle) return;
+        setBusy(true);
+        postJson(tripApiBase(tripId) + "/save-copy", {
+          patches: [{ path: "meta.coverOpeningStyle", value: next }],
+        })
+          .then(function (res) {
+            setBusy(false);
+            if (res.status !== 200 || !res.body.ok) {
+              showToolbarToast((res.body && res.body.error) || "保存失败", { error: true });
+              return;
+            }
+            var prev = selectedStyle;
+            selectedStyle = next;
+            syncSelection(next);
+            setLayoutPending(true);
+            showToolbarToast("封面版式已保存 · 点应用排版后生效");
+            trackStudioEvent("cover_opening_style_change", {
+              tripId: tripId,
+              coverOpeningStyle: next,
+              previousCoverOpeningStyle: prev,
+            });
+          })
+          .catch(function () {
+            setBusy(false);
+            showToolbarToast("保存失败", { error: true });
+          });
+      });
+      group.appendChild(btn);
+    });
+
+    syncSelection(selectedStyle);
+    fetchEntry(tripId)
+      .then(function (data) {
+        if (data && data.coverOpeningStyle) {
+          selectedStyle = data.coverOpeningStyle;
+          syncSelection(selectedStyle);
+        }
+      })
+      .catch(function () {});
+
+    slot.appendChild(section);
+    trackStudioEvent("cover_opening_style_selector_impression", {
+      surface: "preview-sheet",
+      tripId: tripId,
+      coverOpeningStyle: selectedStyle,
+    });
+  }
+
   function mountTemplateControls(slot, tripId, opts) {
     opts = opts || {};
     if (!slot || slot.querySelector(".preview-toolbar__template")) return;
@@ -2945,6 +3068,9 @@ function insertScreenplayControl(parent, beforeNode, opts) {
       mountTemplateControls: function (slot) {
         mountTemplateControls(slot, tripId, { inSheet: true });
       },
+      mountCoverStyleControls: function (slot) {
+        mountCoverStyleControls(slot, tripId);
+      },
       syncCopyDisplayUi: function (container) {
         if (!container) return;
         var html = document.documentElement;
@@ -3132,6 +3258,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
       initCoverTitleEdit(tripId);
     }
 
+    maybeShowCoverOpeningStyleToast(tripId);
     syncToolbarHeight(root);
   }
 

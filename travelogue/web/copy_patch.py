@@ -36,7 +36,7 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
     """
     Apply one edit path. Returns a short label for logging.
 
-    Paths: meta.hook, epilogue, chapters.<id>.lead, chapters.<id>.decorLine,
+    Paths: meta.hook, meta.title, meta.coverOpeningStyle, epilogue, chapters.<id>.lead, ...
            chapters.<id>.items.<index>.caption|voice.transcript,
            items.<assetId>.caption|title, assets.<assetId>.caption|voice.transcript
     """
@@ -55,6 +55,19 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
         apply_intent(trip, title=cleaned if cleaned else None)
         meta["edited"] = True
         return "meta.title"
+
+    if path == "meta.coverOpeningStyle":
+        from travelogue.services.cover_opening_style import COVER_OPENING_STYLES
+
+        cleaned = value.strip()
+        if cleaned not in COVER_OPENING_STYLES:
+            raise CopyPatchError(
+                "E_COPY_PATCH",
+                f"invalid coverOpeningStyle {cleaned!r}; expected one of {COVER_OPENING_STYLES}",
+            )
+        meta["coverOpeningStyle"] = cleaned
+        meta["edited"] = True
+        return "meta.coverOpeningStyle"
 
     if path.startswith("chapters.") and path.endswith(".curation.memoryAnchors"):
         ch_id = path[len("chapters.") : -len(".curation.memoryAnchors")]

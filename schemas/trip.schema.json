@@ -982,7 +982,12 @@
           "minItems": 1
         },
         "companions": { "type": "string", "maxLength": 32 },
-        "tone": { "type": "string", "enum": ["relaxed", "documentary"] }
+        "tone": { "type": "string", "enum": ["relaxed", "documentary"] },
+        "coverOpeningStyle": {
+          "type": "string",
+          "enum": ["card-br", "split-mat", "magazine-head"],
+          "description": "Web cover opening layout skin; assigned at trip create"
+        }
       }
     },
     "place": {

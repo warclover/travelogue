@@ -48,6 +48,19 @@ def _sample_trip() -> dict:
     }
 
 
+def test_apply_meta_cover_opening_style() -> None:
+    trip = _sample_trip()
+    apply_copy_patch(trip, "meta.coverOpeningStyle", "split-mat")
+    assert trip["meta"]["coverOpeningStyle"] == "split-mat"
+    assert trip["meta"]["edited"] is True
+
+
+def test_apply_invalid_cover_opening_style_raises() -> None:
+    trip = _sample_trip()
+    with pytest.raises(CopyPatchError):
+        apply_copy_patch(trip, "meta.coverOpeningStyle", "nope")
+
+
 def test_apply_hook_and_epilogue() -> None:
     trip = _sample_trip()
     apply_copy_patch(trip, "meta.hook", "新开场")

@@ -159,6 +159,7 @@
       "meta.title",
       "meta.subtitle",
       "meta.hook",
+      "meta.coverOpeningStyle",
       "meta.places",
       "epilogue",
       "chapters.*.title",
