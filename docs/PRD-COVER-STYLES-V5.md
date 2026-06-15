@@ -57,13 +57,13 @@
 
 > **在 V4 稳定 DOM 上叠加 2 套 CSS 皮肤**，比新建 3 份 Handlebars 模板 **风险更低、可测性更好**。  
 > **创建时一次分配 + tripId 确定性映射**，满足「随机感」与工程可复现。  
-> **P0 不做 Studio 样式切换 UI**；数据层预留枚举，P1 再补交互。
+> **P1 已交付 Studio 封面版式切换**；P0 仅创建时分配 + 数据层枚举。
 
 ### 1.4 需求讨论会拍板（2026-06-15）
 
 | 开放项 | 决议 |
 |--------|------|
-| **O-1** 用户能否事后换样式？ | **P0 不做 UI**；`meta.coverOpeningStyle` 预留；P1 Studio 下拉切换 |
+| **O-1** 用户能否事后换样式？ | **P1 已交付** Studio Sheet「排版」三选一切换；P0 仅 `meta.coverOpeningStyle` 创建时分配 |
 | **O-2** 三种样式权重？ | **均匀 1:1:1** |
 | **O-3** 新样式与参考图映射？ | **`split-mat`** ≈ 商务画册侧栏实色块；**`magazine-head`** ≈ 时尚杂志顶题 + 下大图 |
 | **O-4** hook 为空时？ | 各样式须 **无 hook 降级** 仍一屏可读（纳入 AC） |
@@ -105,7 +105,7 @@
 ### 2.2 非目标
 
 - **不** 改动 `cover-opening.hbs` 块清单（不新增 Logo 区、英文装饰条等非 meta 字段）
-- **不** 在 P0 提供 Studio 封面样式切换 UI（P1）
+- **不** 在 P0 提供 Studio 封面样式切换 UI（**P1 已交付** Sheet「排版」三选一）
 - **不** 定义 Mobile 三套皮肤（P2 另立项）
 - **不** 改动封面 **选图** 算法（`coverAssetId` / `coverByLayout`）
 - **不** 改动任务舱 / Sheet / Icon Dock 业务逻辑
@@ -361,7 +361,8 @@ html[data-layout="web"] .cover-opening[data-cover-opening="magazine-head"] { /* 
 | 渲染属性 + Share 一致 | ✓ |
 | Studio 首次预览 Toast + Mobile 说明脚注 | ✓ |
 | telemetry `coverOpeningStyle`（G-CSV-09） | ✓ |
-| 单元 / 布局测试 + linzhi 人工抽测 + **5 人走查** | ✓ |
+| 单元 / 布局测试 + linzhi 人工抽测 | ✓ |
+| **5 人走查**（UX 建议，非阻塞） | ⏭ 待执行 |
 | 文档 | ACCEPTANCE + IMPLEMENTATION |
 
 **预估**：约 3–5 人日（含测试与文档）。

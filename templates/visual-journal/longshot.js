@@ -1454,6 +1454,207 @@
     document.body.style.maxWidth = saved.bodyMaxWidth;
   }
 
+  var PAINT_PROPS = [
+    "color",
+    "background-color",
+    "background-image",
+    "border-top-color",
+    "border-right-color",
+    "border-bottom-color",
+    "border-left-color",
+    "outline-color",
+    "text-decoration-color",
+    "fill",
+    "stroke",
+  ];
+
+  function cssValueUsesUnsupportedColor(value) {
+    return Boolean(value && (value.indexOf("color-mix") !== -1 || /\bcolor\s*\(/i.test(value)));
+  }
+
+  function sanitizeCssText(text) {
+    if (!text || text.indexOf("color-mix") === -1) return text;
+    var needle = "color-mix(";
+    var out = "";
+    var i = 0;
+    while (i < text.length) {
+      var idx = text.indexOf(needle, i);
+      if (idx === -1) {
+        out += text.slice(i);
+        break;
+      }
+      out += text.slice(i, idx);
+      var depth = 1;
+      var j = idx + needle.length;
+      while (j < text.length && depth > 0) {
+        var ch = text[j];
+        if (ch === "(") depth += 1;
+        else if (ch === ")") depth -= 1;
+        j += 1;
+      }
+      out += "transparent";
+      i = j;
+    }
+    return out;
+  }
+
+  function stripColorPropsFromRuleStyle(style) {
+    for (var j = style.length - 1; j >= 0; j--) {
+      var prop = style.item(j);
+      var val = style.getPropertyValue(prop);
+      if (cssValueUsesUnsupportedColor(val)) {
+        style.removeProperty(prop);
+      }
+    }
+  }
+
+  function walkCloneStyleRules(rules) {
+    for (var i = 0; i < rules.length; i++) {
+      var rule = rules[i];
+      if (rule.cssRules) {
+        walkCloneStyleRules(rule.cssRules);
+        continue;
+      }
+      if (rule.style) stripColorPropsFromRuleStyle(rule.style);
+    }
+  }
+
+  /** html2canvas 1.4.x cannot parse color-mix() / color() in stylesheet rules. */
+  function inlineStylesheetsFromLinks(doc) {
+    var links = Array.from(doc.querySelectorAll('link[rel="stylesheet"]'));
+    links.forEach(function (link) {
+      var href = link.getAttribute("href");
+      if (!href) {
+        link.remove();
+        return;
+      }
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", href, false);
+        xhr.send(null);
+        if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
+          var style = doc.createElement("style");
+          style.setAttribute("data-longshot-capture", "1");
+          style.textContent = sanitizeCssText(xhr.responseText);
+          link.parentNode.insertBefore(style, link);
+        }
+      } catch (_e) {
+        /* ignore */
+      }
+      link.remove();
+    });
+  }
+
+  function stripUnsupportedColorsInClone(doc) {
+    inlineStylesheetsFromLinks(doc);
+    doc.querySelectorAll("style").forEach(function (el) {
+      if (el.textContent && el.textContent.indexOf("color-mix") !== -1) {
+        el.textContent = sanitizeCssText(el.textContent);
+      }
+    });
+    Array.from(doc.styleSheets || []).forEach(function (sheet) {
+      try {
+        if (sheet.cssRules) walkCloneStyleRules(sheet.cssRules);
+      } catch (_err) {
+        var node = sheet.ownerNode;
+        if (node) node.remove();
+      }
+    });
+    doc.querySelectorAll("[style]").forEach(function (el) {
+      if (el.style && el.style.cssText && cssValueUsesUnsupportedColor(el.style.cssText)) {
+        el.style.cssText = sanitizeCssText(el.style.cssText);
+      }
+    });
+  }
+
+  /** html2canvas reads live document stylesheets; patch before capture and restore after. */
+  function patchLiveStylesheetsForCapture() {
+    var saved = [];
+    Array.from(document.querySelectorAll('link[rel="stylesheet"]')).forEach(function (link) {
+      var href = link.getAttribute("href");
+      if (!href) return;
+      var entry = {
+        kind: "link",
+        link: link,
+        parent: link.parentNode,
+        next: link.nextSibling,
+        patchStyle: null,
+      };
+      saved.push(entry);
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", href, false);
+        xhr.send(null);
+        if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
+          var style = document.createElement("style");
+          style.setAttribute("data-longshot-live-patch", "1");
+          style.textContent = sanitizeCssText(xhr.responseText);
+          entry.patchStyle = style;
+          link.parentNode.insertBefore(style, link);
+          link.parentNode.removeChild(link);
+        }
+      } catch (_e) {
+        /* ignore */
+      }
+    });
+    document.querySelectorAll("style").forEach(function (el) {
+      if (el.getAttribute("data-longshot-live-patch")) return;
+      if (!el.textContent || el.textContent.indexOf("color-mix") === -1) return;
+      saved.push({ kind: "style", node: el, text: el.textContent });
+      el.textContent = sanitizeCssText(el.textContent);
+    });
+    Array.from(document.styleSheets || []).forEach(function (sheet) {
+      try {
+        if (sheet.cssRules) walkCloneStyleRules(sheet.cssRules);
+      } catch (_err) {
+        /* ignore */
+      }
+    });
+    return saved;
+  }
+
+  function restoreLiveStylesheetsForCapture(saved) {
+    if (!saved || !saved.length) return;
+    saved.forEach(function (entry) {
+      if (entry.kind === "style") {
+        entry.node.textContent = entry.text;
+        return;
+      }
+      if (entry.kind !== "link" || !entry.parent) return;
+      if (entry.patchStyle && entry.patchStyle.parentNode) {
+        entry.patchStyle.parentNode.removeChild(entry.patchStyle);
+      }
+      if (entry.link) {
+        if (entry.next) entry.parent.insertBefore(entry.link, entry.next);
+        else entry.parent.appendChild(entry.link);
+      }
+    });
+  }
+
+  function inlineResolvedPaint(liveNode, cloneNode) {
+    if (!liveNode || !cloneNode || liveNode.nodeType !== 1 || cloneNode.nodeType !== 1) return;
+    try {
+      var cs = window.getComputedStyle(liveNode);
+      PAINT_PROPS.forEach(function (prop) {
+        var val = cs.getPropertyValue(prop);
+        if (!val || val === "initial" || val === "none") return;
+        cloneNode.style.setProperty(prop, val);
+      });
+      var boxShadow = cs.getPropertyValue("box-shadow");
+      if (boxShadow && boxShadow !== "none" && !cssValueUsesUnsupportedColor(boxShadow)) {
+        cloneNode.style.setProperty("box-shadow", boxShadow);
+      }
+    } catch (_e) {
+      /* ignore */
+    }
+    var liveKids = liveNode.children;
+    var cloneKids = cloneNode.children;
+    var n = Math.min(liveKids.length, cloneKids.length);
+    for (var i = 0; i < n; i++) {
+      inlineResolvedPaint(liveKids[i], cloneKids[i]);
+    }
+  }
+
   function prepareClone(doc, clonedRoot, imageMap, sizeMap, useDisplaySizes, dimStore, pixelScale) {
     doc.documentElement.setAttribute("data-layout", "mobile");
     doc.documentElement.classList.add(ROOT_CLASS);
@@ -1501,6 +1702,12 @@
         dimStore,
         pixelScale
       );
+    }
+
+    stripUnsupportedColorsInClone(doc);
+    var liveMain = document.querySelector("main");
+    if (clonedRoot && liveMain) {
+      inlineResolvedPaint(liveMain, clonedRoot);
     }
   }
 
@@ -1554,6 +1761,7 @@
     var displaySizeMap = null;
     var captureDimStore = null;
     var useDisplaySizes = shouldUseDisplaySizes(prevLayout);
+    var liveStyleSaved = null;
 
     try {
       if (shared && shared.preloaded) {
@@ -1621,6 +1829,8 @@
         document.documentElement.scrollHeight
       );
 
+      liveStyleSaved = patchLiveStylesheetsForCapture();
+
       var canvas = await html2canvas(main, {
         backgroundColor: pageBg,
         scale: scale,
@@ -1674,6 +1884,7 @@
         imgTotal: imgTotal,
       };
     } finally {
+      restoreLiveStylesheetsForCapture(liveStyleSaved);
       if (!options.keepProgress) hideProgress();
       if (liveImageSaved) restoreLiveImages(liveImageSaved);
       if (!shared && upgradedSrcSaved) restoreUpgradedImages(upgradedSrcSaved);

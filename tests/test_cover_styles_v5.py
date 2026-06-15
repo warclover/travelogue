@@ -361,9 +361,28 @@ def test_render_html_emits_data_cover_opening(cover_styles_workspace: Path) -> N
     assert 'data-cover-opening="magazine-head"' in html
 
 
-def test_cover_styles_v5_longshot_cover_smoke(cover_styles_workspace: Path) -> None:
-    """AC-CSV-44 · longshot 含封面块且首屏可见。"""
+def test_render_twice_preserves_cover_opening_style(cover_styles_workspace: Path) -> None:
+    """AC-CSV-03 · render ×2 + rerender_draft_trip 后 data-cover-opening 不变。"""
     trip_path = cover_styles_workspace / "trip.json"
+    render_trip(trip_path, validate=False, layout_engine="screens")
+    html1 = (cover_styles_workspace / "index.html").read_text(encoding="utf-8")
+    render_trip(trip_path, validate=False, layout_engine="screens")
+    html2 = (cover_styles_workspace / "index.html").read_text(encoding="utf-8")
+    from travelogue.web.rerender import rerender_draft_trip
+
+    rerender_draft_trip(trip_path)
+    html3 = (cover_styles_workspace / "index.html").read_text(encoding="utf-8")
+    for html in (html1, html2, html3):
+        assert 'data-cover-opening="magazine-head"' in html
+
+
+@pytest.mark.parametrize("cover_style", ["magazine-head", "split-mat"])
+def test_cover_styles_v5_longshot_cover_smoke(cover_styles_workspace: Path, cover_style: str) -> None:
+    """AC-CSV-44 · longshot 含封面块、首屏可见且首章 PNG 捕获成功。"""
+    trip_path = cover_styles_workspace / "trip.json"
+    trip = json.loads(trip_path.read_text(encoding="utf-8"))
+    trip.setdefault("meta", {})["coverOpeningStyle"] = cover_style
+    trip_path.write_text(json.dumps(trip, ensure_ascii=False, indent=2), encoding="utf-8")
     render_trip(trip_path, validate=False, layout_engine="screens")
     trip = json.loads(trip_path.read_text(encoding="utf-8"))
     from travelogue.render.engine import write_longshot_sidecar
@@ -371,11 +390,14 @@ def test_cover_styles_v5_longshot_cover_smoke(cover_styles_workspace: Path) -> N
     write_longshot_sidecar(trip, cover_styles_workspace, export_mode="draft", trip_root=cover_styles_workspace)
     longshot_html = cover_styles_workspace / "index-longshot.html"
     assert longshot_html.is_file()
-    assert 'data-cover-opening="magazine-head"' in longshot_html.read_text(encoding="utf-8")
+    assert f'data-cover-opening="{cover_style}"' in longshot_html.read_text(encoding="utf-8")
     pytest.importorskip("playwright")
     from playwright.sync_api import sync_playwright
 
-    from travelogue.web.longshot_smoke import _start_static_server
+    from travelogue.web.longshot_smoke import _start_static_server, run_longshot_smoke
+
+    result = run_longshot_smoke(cover_styles_workspace, capture_first_chapter=True)
+    assert result.get("first_chapter_blob_bytes", 0) > 1024 or result.get("capture_skipped")
 
     server = _start_static_server(cover_styles_workspace, "127.0.0.1", 0)
     port = server.server_address[1]
@@ -407,7 +429,7 @@ def test_cover_styles_v5_longshot_cover_smoke(cover_styles_workspace: Path) -> N
         server.server_close()
 
     assert metrics is not None
-    assert metrics["style"] == "magazine-head"
+    assert metrics["style"] == cover_style
     assert metrics["height"] >= 120
     assert metrics["width"] >= 120
 

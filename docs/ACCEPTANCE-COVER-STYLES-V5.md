@@ -36,7 +36,7 @@
 |-------|--------|
 | AC-CSV-01 | `test_create_trip_writes_cover_opening_style` |
 | AC-CSV-02 | `test_assign_cover_opening_style_deterministic` + `test_assign_distribution_covers_all_styles` |
-| AC-CSV-03 | `test_render_html_emits_data_cover_opening`（render ×1；逻辑同 rerender） |
+| AC-CSV-03 | `test_render_twice_preserves_cover_opening_style` |
 | AC-CSV-04 | `test_build_render_context_legacy_trip_defaults_card_br` |
 | AC-CSV-05 | `test_resolve_cover_opening_style_defaults` |
 | AC-CSV-10～11 | `tests/test_cover_optimization_v4.py` 全套件 |
@@ -46,7 +46,7 @@
 | AC-CSV-40 | `test_v4_cover_mobile_layout_unchanged` |
 | AC-CSV-41～42 | V4 套件 + `test_cover_styles_v5_journal_css_tokens` |
 | AC-CSV-43～45 | `test_cover_styles_v5_split_mat_layout` / `magazine_head_layout`（对比度 + Dock） |
-| AC-CSV-44 | `test_cover_styles_v5_longshot_cover_smoke` |
+| AC-CSV-44 | `test_cover_styles_v5_longshot_cover_smoke`（`magazine-head` + `split-mat` PNG 捕获） |
 | AC-CSV-46 | `test_cover_styles_v5_first_preview_toast_once` |
 | AC-CSV-47 | `test_cover_styles_v5_short_title_panel_padding` |
 | AC-CSV-50～51 | `test_cover_styles_v5_narrow_viewport_falls_back_card_br` |
@@ -67,7 +67,7 @@
 - [x] Share `?share=1` 样式与 draft 一致（Playwright）
 - [x] 首次预览 Toast 仅一次（Playwright）
 - [x] 浅底皮肤 Icon Dock 可辨识（Playwright AC-CSV-45）
-- [x] longshot 封面首帧 smoke（`test_cover_styles_v5_longshot_cover_smoke`）
+- [x] longshot 封面首帧 smoke + 首章 PNG 捕获（`test_cover_styles_v5_longshot_cover_smoke` · magazine-head / split-mat）
 - [ ] **5 人走查**：是否注意到版式差异、是否满意（UX 研究建议）
 
 ## 样例 trip

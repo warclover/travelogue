@@ -48,6 +48,17 @@
 
 **继承不变**：`open_sheet`, `pick_folder`, `import_start`, `import_success`, `demo_try`, …
 
+### Cover Styles V5（G-CSV-09 · Studio 预览 / 创建）
+
+| 事件 | 触发 | meta（最小） |
+|------|------|--------------|
+| `cover_opening_style_assigned` | `create_trip` 写入样式 | `coverOpeningStyle`, `trip_id` |
+| `cover_opening_style_render` | Web 预览首帧（每 trip 1 次） | `coverOpeningStyle`, `trip_id` |
+| `cover_opening_style_change` | P1 Sheet 切换并应用排版 | `from`, `to`, `trip_id` |
+| `cover_opening_style_selector_impression` | Sheet「排版」封面三选一曝光 | `coverOpeningStyle`, `trip_id` |
+
+登记于 `travelogue/web/studio_homepage_telemetry.py` `ALLOWED_STUDIO_HOMEPAGE_EVENTS`。
+
 **dev ring buffer**（M20-h 可交付）：`localStorage` `travelogue.studio.eventRing` 最近 200 条 + `console.debug` — **不替代** §3 聚合。
 
 ---

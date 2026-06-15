@@ -11,7 +11,7 @@
 | 文件 | 变更类型 | 说明 |
 |------|----------|------|
 | `travelogue/services/cover_opening_style.py` | 新增 | `assign_*` / `resolve_*`；`tripId` SHA256 分配 |
-| `travelogue/services/cover_opening_style.py` | 修改 | `record_cover_opening_style_assigned` |
+| `templates/visual-journal/longshot.js` | 修改 | `prepareClone` 剥离 `color-mix`/`color()` 以兼容 html2canvas |
 | `travelogue/services/trip_factory.py` | 修改 | 创建时 telemetry |
 | `travelogue/web/studio_homepage_telemetry.py` | 修改 | Cover V5 事件白名单 |
 | `schemas/trip.schema.json` | 修改 | `meta.coverOpeningStyle` 枚举 |
@@ -90,6 +90,6 @@ python -m travelogue render trips/linzhi/trip.json
 
 ## 已知限制
 
-- 窄屏 / 对比度 / Dock 浅底：**Playwright 已覆盖**；longshot 封面帧有 smoke 测试（`magazine-head` 金样）
-- `curate` / `rerender` 不得重算样式（代码审查约束，无单测钩子）
+- 窄屏 / 对比度 / Dock 浅底：**Playwright 已覆盖**；longshot 首章 PNG 捕获 smoke（`magazine-head` + `split-mat`；`longshot.js` onclone 剥离 `color-mix`）
+- `curate` / `rerender` 不得重算样式；**AC-CSV-03** 由 `test_render_twice_preserves_cover_opening_style` 覆盖
 - 5 人走查为 UX 建议项，非阻塞发布
