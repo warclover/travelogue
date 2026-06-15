@@ -100,6 +100,63 @@ _COVER_METRICS_JS = """() => {
 }"""
 
 
+def _attach_studio_event_collector(page) -> list[dict]:
+    events: list[dict] = []
+
+    def _on_request(req) -> None:
+        if req.method == "POST" and req.url.endswith("/__travelogue/studio-event"):
+            try:
+                events.append(json.loads(req.post_data or "{}"))
+            except (ValueError, TypeError):
+                pass
+
+    page.on("request", _on_request)
+    return events
+
+
+_LONGSHOT_CAPTURE_METRICS_JS = """async () => {
+  const main = document.querySelector('main');
+  const chapters = Array.from(main.querySelectorAll('section.chapter'));
+  const coverOpening = main.querySelector('.cover-opening');
+  const cover = coverOpening || main.querySelector('.cover-hero');
+  const pageEl = main.querySelector('.page');
+  const hook = main.querySelector('.hook-line');
+  const epilogue = pageEl && pageEl.querySelector('.epilogue');
+  const tripMeta = main.querySelector('.trip-meta');
+  function stash(el, show) {
+    if (!el) return;
+    el.hidden = !show;
+    el.style.display = show ? '' : 'none';
+  }
+  chapters.forEach((ch, i) => stash(ch, i === 0));
+  stash(cover, true);
+  if (!coverOpening) {
+    stash(hook, true);
+    stash(tripMeta, true);
+  }
+  stash(epilogue, false);
+  const linkCountBefore = document.querySelectorAll('link[rel=stylesheet]').length;
+  const patchCountBefore = document.querySelectorAll('style[data-longshot-live-patch]').length;
+  const out = await window.TravelogueLongshot.captureMainToBlob({
+    scale: 1,
+    format: 'png',
+    quietProgress: true,
+  });
+  const coverEl = document.querySelector('.cover-opening');
+  const rect = coverEl ? coverEl.getBoundingClientRect() : null;
+  return {
+    blobBytes: out.blob.size,
+    style: coverEl ? coverEl.getAttribute('data-cover-opening') : null,
+    height: rect ? rect.height : 0,
+    width: rect ? rect.width : 0,
+    linkCountBefore,
+    linkCountAfter: document.querySelectorAll('link[rel=stylesheet]').length,
+    patchCountBefore,
+    patchCountAfter: document.querySelectorAll('style[data-longshot-live-patch]').length,
+  };
+}"""
+
+
 def _copy_journal_css(trip_dir: Path) -> None:
     shutil.copy2(_TEMPLATE_JOURNAL, trip_dir / "journal.css")
     font_src = ROOT / "templates" / "visual-journal" / "assets" / "fonts" / "hetangyuese.woff2"
@@ -361,6 +418,18 @@ def test_render_html_emits_data_cover_opening(cover_styles_workspace: Path) -> N
     assert 'data-cover-opening="magazine-head"' in html
 
 
+def test_render_illegal_cover_opening_style_falls_back_card_br(cover_styles_workspace: Path) -> None:
+    """AC-CSV-05 · 非法枚举 render 回退 card-br。"""
+    trip_path = cover_styles_workspace / "trip.json"
+    trip = json.loads(trip_path.read_text(encoding="utf-8"))
+    trip.setdefault("meta", {})["coverOpeningStyle"] = "nope"
+    trip_path.write_text(json.dumps(trip, ensure_ascii=False, indent=2), encoding="utf-8")
+    render_trip(trip_path, validate=False, layout_engine="screens")
+    html = (cover_styles_workspace / "index.html").read_text(encoding="utf-8")
+    assert 'data-cover-opening="card-br"' in html
+    assert 'data-cover-opening="nope"' not in html
+
+
 def test_render_twice_preserves_cover_opening_style(cover_styles_workspace: Path) -> None:
     """AC-CSV-03 · render ×2 + rerender_draft_trip 后 data-cover-opening 不变。"""
     trip_path = cover_styles_workspace / "trip.json"
@@ -376,7 +445,8 @@ def test_render_twice_preserves_cover_opening_style(cover_styles_workspace: Path
         assert 'data-cover-opening="magazine-head"' in html
 
 
-@pytest.mark.parametrize("cover_style", ["magazine-head", "split-mat"])
+@pytest.mark.parametrize("cover_style", ["card-br", "magazine-head", "split-mat"])
+@pytest.mark.playwright_serial
 def test_cover_styles_v5_longshot_cover_smoke(cover_styles_workspace: Path, cover_style: str) -> None:
     """AC-CSV-44 · longshot 含封面块、首屏可见且首章 PNG 捕获成功。"""
     trip_path = cover_styles_workspace / "trip.json"
@@ -394,10 +464,7 @@ def test_cover_styles_v5_longshot_cover_smoke(cover_styles_workspace: Path, cove
     pytest.importorskip("playwright")
     from playwright.sync_api import sync_playwright
 
-    from travelogue.web.longshot_smoke import _start_static_server, run_longshot_smoke
-
-    result = run_longshot_smoke(cover_styles_workspace, capture_first_chapter=True)
-    assert result.get("first_chapter_blob_bytes", 0) > 1024 or result.get("capture_skipped")
+    from travelogue.web.longshot_smoke import _start_static_server
 
     server = _start_static_server(cover_styles_workspace, "127.0.0.1", 0)
     port = server.server_address[1]
@@ -411,27 +478,19 @@ def test_cover_styles_v5_longshot_cover_smoke(cover_styles_workspace: Path, cove
                 "() => window.TravelogueLongshot && document.documentElement.dataset.longshot === 'on'",
                 timeout=30_000,
             )
-            metrics = page.evaluate(
-                """() => {
-                  const cover = document.querySelector('.cover-opening');
-                  if (!cover) return null;
-                  const rect = cover.getBoundingClientRect();
-                  return {
-                    style: cover.getAttribute('data-cover-opening'),
-                    height: rect.height,
-                    width: rect.width,
-                  };
-                }"""
-            )
+            metrics = page.evaluate(_LONGSHOT_CAPTURE_METRICS_JS)
             browser.close()
     finally:
         server.shutdown()
         server.server_close()
 
     assert metrics is not None
+    assert metrics["blobBytes"] > 1024
     assert metrics["style"] == cover_style
     assert metrics["height"] >= 120
     assert metrics["width"] >= 120
+    assert metrics["linkCountAfter"] == metrics["linkCountBefore"]
+    assert metrics["patchCountAfter"] == metrics["patchCountBefore"]
 
 
 def test_cover_styles_v5_journal_css_tokens() -> None:
@@ -454,6 +513,7 @@ def test_cover_styles_v5_journal_css_tokens() -> None:
 
 
 @pytest.mark.e2e
+@pytest.mark.playwright_serial
 @pytest.mark.parametrize("style", ["split-mat", "magazine-head"])
 def test_cover_styles_v5_wide_viewport_no_overflow(tmp_path: Path, style: str) -> None:
     """AC-CSV-20/22/30/32 · 三款宽屏一屏无溢出。"""
@@ -478,6 +538,7 @@ def test_cover_styles_v5_wide_viewport_no_overflow(tmp_path: Path, style: str) -
 
 
 @pytest.mark.e2e
+@pytest.mark.playwright_serial
 def test_cover_styles_v5_split_mat_layout(tmp_path: Path) -> None:
     """AC-CSV-21 · 分屏画框 + 摄影/文案区同时可见。"""
     trips_dir = tmp_path / "trips"
@@ -497,6 +558,7 @@ def test_cover_styles_v5_split_mat_layout(tmp_path: Path) -> None:
 
 
 @pytest.mark.e2e
+@pytest.mark.playwright_serial
 def test_cover_styles_v5_magazine_head_layout(tmp_path: Path) -> None:
     """AC-CSV-31/36 · 上文下图 + 摄影区 ≥58vh + 标题居中。"""
     trips_dir = tmp_path / "trips"
@@ -517,6 +579,7 @@ def test_cover_styles_v5_magazine_head_layout(tmp_path: Path) -> None:
 
 
 @pytest.mark.e2e
+@pytest.mark.playwright_serial
 @pytest.mark.parametrize("style", ["split-mat", "magazine-head"])
 def test_cover_styles_v5_narrow_viewport_falls_back_card_br(tmp_path: Path, style: str) -> None:
     """AC-CSV-25/35/51 · <1024px CSS 回落 card-br，属性不变。"""
@@ -535,6 +598,7 @@ def test_cover_styles_v5_narrow_viewport_falls_back_card_br(tmp_path: Path, styl
 
 
 @pytest.mark.e2e
+@pytest.mark.playwright_serial
 def test_cover_styles_v5_short_title_panel_padding(tmp_path: Path) -> None:
     """AC-CSV-47 · 短书名不贴边。"""
     trips_dir = tmp_path / "trips"
@@ -556,6 +620,7 @@ def test_cover_styles_v5_short_title_panel_padding(tmp_path: Path) -> None:
 
 
 @pytest.mark.e2e
+@pytest.mark.playwright_serial
 def test_cover_styles_v5_empty_hook_no_collapse(tmp_path: Path) -> None:
     """AC-CSV-23/33 · hook 为空时 panel 仍可读。"""
     trips_dir = tmp_path / "trips"
@@ -580,6 +645,7 @@ def test_cover_styles_v5_empty_hook_no_collapse(tmp_path: Path) -> None:
 
 
 @pytest.mark.e2e
+@pytest.mark.playwright_serial
 def test_cover_styles_v5_share_keeps_style(tmp_path: Path) -> None:
     """AC-CSV-34 · Share 模式保留 data-cover-opening。"""
     trips_dir = tmp_path / "trips"
@@ -599,8 +665,9 @@ def test_cover_styles_v5_share_keeps_style(tmp_path: Path) -> None:
 
 
 @pytest.mark.e2e
+@pytest.mark.playwright_serial
 def test_cover_styles_v5_first_preview_toast_once(tmp_path: Path) -> None:
-    """AC-CSV-46 · 首次预览 Toast 一次。"""
+    """AC-CSV-46 · 首次预览 Toast 一次；G-CSV-09 · render 事件一次。"""
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
     trip_id = _seed_cover_style_trip(trips_dir, "cover-toast", style="split-mat")
@@ -620,6 +687,7 @@ def test_cover_styles_v5_first_preview_toast_once(tmp_path: Path) -> None:
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page(viewport={"width": 1280, "height": 800})
+            events = _attach_studio_event_collector(page)
             page.add_init_script(f"() => localStorage.removeItem({json.dumps(storage_key)})")
             page.goto(url, wait_until="networkidle")
             toast = page.locator("#preview-toolbar-toast")
@@ -628,9 +696,15 @@ def test_cover_styles_v5_first_preview_toast_once(tmp_path: Path) -> None:
             assert "版式已为你选定" in text
             assert "排版" in text
             assert "即将推出" not in text
+            render_events = [e for e in events if e.get("event") == "cover_opening_style_render"]
+            assert len(render_events) == 1, events
+            assert render_events[0].get("meta", {}).get("tripId") == trip_id
+            assert render_events[0].get("meta", {}).get("coverOpeningStyle") == "split-mat"
             page.reload(wait_until="networkidle")
             page.wait_for_timeout(400)
             assert toast.is_hidden()
+            render_events_after = [e for e in events if e.get("event") == "cover_opening_style_render"]
+            assert len(render_events_after) == 1
             browser.close()
     finally:
         server.shutdown()
@@ -638,6 +712,7 @@ def test_cover_styles_v5_first_preview_toast_once(tmp_path: Path) -> None:
 
 
 @pytest.mark.e2e
+@pytest.mark.playwright_serial
 def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
     """P1 · Sheet 切换封面版式 → 应用排版 → 预览 data-cover-opening 刷新。"""
     trips_dir = tmp_path / "trips"
@@ -659,6 +734,7 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page(viewport={"width": 1280, "height": 800})
+            events = _attach_studio_event_collector(page)
             page.add_init_script(f"() => localStorage.setItem({json.dumps(storage_key)}, '1')")
             page.goto(url, wait_until="networkidle")
             page.locator(".preview-toolbar__dock").wait_for(state="visible", timeout=15_000)
@@ -689,6 +765,12 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
                 }""",
                 timeout=10_000,
             )
+            change_events = [e for e in events if e.get("event") == "cover_opening_style_change"]
+            assert len(change_events) == 1, events
+            change_meta = change_events[0].get("meta", {})
+            assert change_meta.get("tripId") == trip_id
+            assert change_meta.get("coverOpeningStyle") == "magazine-head"
+            assert change_meta.get("previousCoverOpeningStyle") == "split-mat"
 
             apply_btn = page.locator(".preview-sheet__apply-layout")
             apply_btn.wait_for(state="visible", timeout=5_000)
@@ -718,6 +800,7 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
 
 
 @pytest.mark.e2e
+@pytest.mark.playwright_serial
 def test_cover_styles_v5_mobile_footnote_visible(tmp_path: Path) -> None:
     """D-CSV-22 · 预览区持久 Mobile 脚注。"""
     trips_dir = tmp_path / "trips"
@@ -739,6 +822,7 @@ def test_cover_styles_v5_mobile_footnote_visible(tmp_path: Path) -> None:
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page(viewport={"width": 1280, "height": 800})
+            events = _attach_studio_event_collector(page)
             page.add_init_script(f"() => localStorage.setItem({json.dumps(storage_key)}, '1')")
             page.goto(url, wait_until="networkidle")
             footnote = page.locator("#preview-toolbar-cover-footnote")
@@ -752,6 +836,7 @@ def test_cover_styles_v5_mobile_footnote_visible(tmp_path: Path) -> None:
 
 
 @pytest.mark.e2e
+@pytest.mark.playwright_serial
 def test_cover_styles_v5_split_mat_title_edit_keeps_style(tmp_path: Path) -> None:
     """AC-CSV-24 · split-mat 书名编辑后样式不变。"""
     trips_dir = tmp_path / "trips"
@@ -773,6 +858,7 @@ def test_cover_styles_v5_split_mat_title_edit_keeps_style(tmp_path: Path) -> Non
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page(viewport={"width": 1280, "height": 800})
+            events = _attach_studio_event_collector(page)
             page.add_init_script(f"() => localStorage.setItem({json.dumps(storage_key)}, '1')")
             page.goto(url, wait_until="networkidle")
             page.locator(".cover-opening__title").wait_for(state="visible", timeout=10_000)

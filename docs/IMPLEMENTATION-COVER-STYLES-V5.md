@@ -90,6 +90,6 @@ python -m travelogue render trips/linzhi/trip.json
 
 ## 已知限制
 
-- 窄屏 / 对比度 / Dock 浅底：**Playwright 已覆盖**；longshot 首章 PNG 捕获 smoke（`magazine-head` + `split-mat`；`longshot.js` onclone 剥离 `color-mix`）
-- `curate` / `rerender` 不得重算样式；**AC-CSV-03** 由 `test_render_twice_preserves_cover_opening_style` 覆盖
+- 窄屏 / 对比度 / Dock 浅底：**Playwright 已覆盖**；longshot 三款 PNG + 捕获后样式表恢复 smoke
+- `curate` / `rerender` 不得重算样式；**AC-CSV-03/05** 有 render 集成测试；G-CSV-09 事件有 E2E 行为断言
 - 5 人走查为 UX 建议项，非阻塞发布
