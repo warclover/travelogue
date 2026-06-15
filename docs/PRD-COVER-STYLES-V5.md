@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue |
 | **文档版本** | v1.1.0 |
-| **状态** | **P0 已实施（2026-06-15）** · 跨职能评审已收敛 |
+| **状态** | **P0+P1 已实施（2026-06-15）** · 跨职能评审已收敛 |
 | **主题代号** | 「封面多样式 V5」— 新建游记时从 3 套 Web 封面皮肤中分配其一，增强首屏差异感 |
 | **前置条件** | [PRD-COVER-OPTIMIZATION-V4.md](./PRD-COVER-OPTIMIZATION-V4.md) 已落地（Icon Dock + 右下书名卡 `card-br`）；`cover-opening.hbs` / `cover-hero` 可用；封面横竖图分端选图已合入 |
 | **关联文档** | [preview-cover-album-v2-wireframe.html](./wireframes/preview-cover-album-v2-wireframe.html)（方案 E/F/G/H）、[PRD-COVER-OPTIMIZATION-V4.md](./PRD-COVER-OPTIMIZATION-V4.md)、[TEMPLATE-visual-journal.md](./TEMPLATE-visual-journal.md)、`schemas/trip.schema.json`、`travelogue/services/trip_factory.py`、`travelogue/render/assemble.py` |
@@ -147,7 +147,7 @@
 | **D-CSV-16** | `magazine-head` 高度预算 | header **`min-height: 20vh`；`max-height: 32vh`**；`cover-hero` **≥ 58vh**（R-02） |
 | **D-CSV-17** | 新皮肤色值 | 仅使用 **§4.6** token；禁止散落 hex（R-03） |
 | **D-CSV-18** | 窄屏 Web 回落 | `@media (max-width: 1023px)` 下 `split-mat` / `magazine-head` **CSS 呈现等同 `card-br`**；`data-cover-opening` 属性保持 trip 原值（R-04） |
-| **D-CSV-19** | 首次预览告知 | Studio 首次进入该 trip 预览时 **轻 Toast 一次**（非 Modal）：「这本游记的封面版式已为你选定，可在排版设置中更换（即将推出）」或等价 copy；`localStorage` 键按 `tripId` 去重（R-05） |
+| **D-CSV-19** | 首次预览告知 | Studio 首次进入该 trip 预览时 **轻 Toast 一次**（非 Modal）：「这本游记的封面版式已为你选定（电脑与手机版式不同），可在「排版」设置中更换」；`localStorage` 键按 `tripId` 去重（R-05） |
 | **D-CSV-20** | 线框门禁 | P0 编码开工前须有 **附录 C** 两款静态线框（R-06） |
 | **D-CSV-21** | 系列感 | 三套皮肤共用 §4.6 **圆角 / 阴影 / 衬纸** token，避免三款像独立产品 |
 | **D-CSV-22** | Mobile 说明 | Studio 帮助或预览区脚注一句：**「手机预览封面版式与电脑不同，以手机效果为准」** |
@@ -370,8 +370,8 @@ html[data-layout="web"] .cover-opening[data-cover-opening="magazine-head"] { /* 
 
 | 项 | 说明 |
 |----|------|
-| Studio 封面样式 **预览 + 切换** | Sheet「排版」Tab 顶部「封面版式」三选一缩略图；切换后 `meta.coverOpeningStyle` 更新 + stale |
-| 创建前预览「你将得到哪种封面」 | 低优先级 |
+| Studio 封面样式 **预览 + 切换** | Sheet「排版」Tab 顶部「封面版式」三选一缩略图；切换后 `meta.coverOpeningStyle` 更新 + stale | ✓ |
+| 创建前预览「你将得到哪种封面」 | 低优先级 | ⏭ |
 
 ### 8.3 P2（另立项）
 
@@ -434,7 +434,7 @@ html[data-layout="web"] .cover-opening[data-cover-opening="magazine-head"] { /* 
 | **AC-CSV-43** | 各样式 **文案区**（panel / header）正文对比度 **≥ 4.5:1**；大标题 **≥ 3:1**（WCAG AA） |
 | **AC-CSV-44** | 三种样式 `longshot` 封面首帧无异常裁切或空白条 |
 | **AC-CSV-45** | `split-mat` / `magazine-head` 浅底场景下 Icon Dock 图标与胶囊可辨识（对比度或描边） |
-| **AC-CSV-46** | 首次 Studio 预览该 trip | 轻 Toast 出现 **一次**；文案含「版式已选定」与「即将推出更换」 |
+| **AC-CSV-46** | 首次 Studio 预览该 trip | 轻 Toast 出现 **一次**；文案含「版式已选定」与「排版」设置引导 |
 | **AC-CSV-47** | title 仅 1–2 字 | 三款 panel | 最小内边距，文字不贴边 |
 
 ### 9.6 P0 · 视口范围
@@ -464,7 +464,7 @@ html[data-layout="web"] .cover-opening[data-cover-opening="magazine-head"] { /* 
 
 | 项 | 说明 |
 |----|------|
-| Studio 样式切换 UI | **P1**；见 O-1 |
+| Studio 样式切换 UI | **P1 已交付**；见 O-1 |
 | Mobile 多皮肤 | **P2** |
 | 第四套皮肤（如横册对开 H） | 需新增枚举 + 线框 |
 | 样式与 `export.reading.profile` 联动 | 非 P0 |
@@ -477,7 +477,7 @@ html[data-layout="web"] .cover-opening[data-cover-opening="magazine-head"] { /* 
 |------|------|------|
 | v1.0.0 | 2026-06-15 | 初稿：三种 Web 封面皮肤、创建时确定性分配、讨论会开放项拍板 |
 | v1.1.0 | 2026-06-15 | 跨职能评审收敛：R-01～R-10 并入；§4.6 token；窄屏回落 `card-br`；新增 AC-CSV-25/35/36/43～47/50～51；G-CSV-09；开工线框门禁 |
-| v1.1.1 | 2026-06-15 | P0 实施完成；ACCEPTANCE + IMPLEMENTATION 文档 |
+| v1.1.2 | 2026-06-15 | P1 Studio 切换 UI；G-CSV-09 创建 telemetry；D-CSV-22 脚注；AC-CSV-24/44 测试 |
 
 ---
 

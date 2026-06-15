@@ -39,6 +39,9 @@ const ALLOWED = new Set([
   "template_fallback_shown",
   "template_create_submitted",
   "cover_opening_style_render",
+  "cover_opening_style_assigned",
+  "cover_opening_style_change",
+  "cover_opening_style_selector_impression",
 ]);
 
 const EVENT_RING_KEY = "travelogue.studio.eventRing";

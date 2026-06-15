@@ -64,6 +64,11 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "template_smart_result_shown",
         "template_fallback_shown",
         "template_create_submitted",
+        # Cover Styles V5 (G-CSV-09)
+        "cover_opening_style_assigned",
+        "cover_opening_style_render",
+        "cover_opening_style_change",
+        "cover_opening_style_selector_impression",
     }
 )
 

@@ -21,3 +21,18 @@ def resolve_cover_opening_style(trip: dict) -> str:
     if raw in COVER_OPENING_STYLES:
         return raw
     return _DEFAULT_STYLE
+
+
+def record_cover_opening_style_assigned(trip_id: str, style: str) -> None:
+    """G-CSV-09 · log cover style once at trip create (server-side jsonl)."""
+    if style not in COVER_OPENING_STYLES:
+        return
+    try:
+        from travelogue.web.studio_homepage_telemetry import append_studio_homepage_event
+
+        append_studio_homepage_event(
+            "cover_opening_style_assigned",
+            {"tripId": trip_id, "coverOpeningStyle": style},
+        )
+    except Exception:
+        pass

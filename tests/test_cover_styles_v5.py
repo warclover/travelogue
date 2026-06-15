@@ -303,6 +303,44 @@ def test_create_trip_writes_cover_opening_style(tmp_path: Path) -> None:
     assert style == assign_cover_opening_style("csv-v5-new")
 
 
+def test_create_trip_records_cover_opening_style_assigned(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """G-CSV-09 · 创建时 telemetry 一次。"""
+    calls: list[tuple[str, dict | None]] = []
+
+    def _fake_append(event: str, meta: dict | None = None) -> Path:
+        calls.append((event, meta))
+        return tmp_path / "events.jsonl"
+
+    monkeypatch.setattr(
+        "travelogue.web.studio_homepage_telemetry.append_studio_homepage_event",
+        _fake_append,
+    )
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    create_trip("telemetry-cover", trips_dir)
+    assigned = [c for c in calls if c[0] == "cover_opening_style_assigned"]
+    assert len(assigned) == 1
+    meta = assigned[0][1] or {}
+    assert meta.get("tripId") == "telemetry-cover"
+    assert meta.get("coverOpeningStyle") in COVER_OPENING_STYLES
+
+
+def test_cover_opening_style_events_allowlisted() -> None:
+    from travelogue.web.studio_homepage_telemetry import ALLOWED_STUDIO_HOMEPAGE_EVENTS
+
+    analytics = (ROOT / "templates" / "studio" / "js" / "analytics.js").read_text(encoding="utf-8")
+    for event in (
+        "cover_opening_style_assigned",
+        "cover_opening_style_render",
+        "cover_opening_style_change",
+        "cover_opening_style_selector_impression",
+    ):
+        assert event in ALLOWED_STUDIO_HOMEPAGE_EVENTS
+        assert f'"{event}"' in analytics
+
+
 def test_build_render_context_injects_cover_opening_style() -> None:
     trip = load_golden_trip()
     trip.setdefault("meta", {})["coverOpeningStyle"] = "split-mat"
@@ -321,6 +359,57 @@ def test_render_html_emits_data_cover_opening(cover_styles_workspace: Path) -> N
     render_trip(cover_styles_workspace / "trip.json", validate=False, layout_engine="screens")
     html = (cover_styles_workspace / "index.html").read_text(encoding="utf-8")
     assert 'data-cover-opening="magazine-head"' in html
+
+
+def test_cover_styles_v5_longshot_cover_smoke(cover_styles_workspace: Path) -> None:
+    """AC-CSV-44 · longshot 含封面块且首屏可见。"""
+    trip_path = cover_styles_workspace / "trip.json"
+    render_trip(trip_path, validate=False, layout_engine="screens")
+    trip = json.loads(trip_path.read_text(encoding="utf-8"))
+    from travelogue.render.engine import write_longshot_sidecar
+
+    write_longshot_sidecar(trip, cover_styles_workspace, export_mode="draft", trip_root=cover_styles_workspace)
+    longshot_html = cover_styles_workspace / "index-longshot.html"
+    assert longshot_html.is_file()
+    assert 'data-cover-opening="magazine-head"' in longshot_html.read_text(encoding="utf-8")
+    pytest.importorskip("playwright")
+    from playwright.sync_api import sync_playwright
+
+    from travelogue.web.longshot_smoke import _start_static_server
+
+    server = _start_static_server(cover_styles_workspace, "127.0.0.1", 0)
+    port = server.server_address[1]
+    url = f"http://127.0.0.1:{port}/index-longshot.html"
+    try:
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(headless=True)
+            page = browser.new_page(viewport={"width": 428, "height": 844})
+            page.goto(url, wait_until="networkidle")
+            page.wait_for_function(
+                "() => window.TravelogueLongshot && document.documentElement.dataset.longshot === 'on'",
+                timeout=30_000,
+            )
+            metrics = page.evaluate(
+                """() => {
+                  const cover = document.querySelector('.cover-opening');
+                  if (!cover) return null;
+                  const rect = cover.getBoundingClientRect();
+                  return {
+                    style: cover.getAttribute('data-cover-opening'),
+                    height: rect.height,
+                    width: rect.width,
+                  };
+                }"""
+            )
+            browser.close()
+    finally:
+        server.shutdown()
+        server.server_close()
+
+    assert metrics is not None
+    assert metrics["style"] == "magazine-head"
+    assert metrics["height"] >= 120
+    assert metrics["width"] >= 120
 
 
 def test_cover_styles_v5_journal_css_tokens() -> None:
@@ -600,6 +689,81 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
 
             trip_data = json.loads((trips_dir / trip_id / "trip.json").read_text(encoding="utf-8"))
             assert trip_data["meta"]["coverOpeningStyle"] == "magazine-head"
+            browser.close()
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_cover_styles_v5_mobile_footnote_visible(tmp_path: Path) -> None:
+    """D-CSV-22 · 预览区持久 Mobile 脚注。"""
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    trip_id = _seed_cover_style_trip(trips_dir, "cover-footnote", style="split-mat")
+    pytest.importorskip("playwright")
+    from playwright.sync_api import sync_playwright
+
+    from tests.test_studio_server import _free_port, _start_studio_server
+    from travelogue.web.studio_jobs import reset_job_store
+
+    reset_job_store()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    url = f"http://127.0.0.1:{port}/{trip_id}/index.html"
+    storage_key = f"travelogue.coverStyleToast.{trip_id}"
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page(viewport={"width": 1280, "height": 800})
+            page.add_init_script(f"() => localStorage.setItem({json.dumps(storage_key)}, '1')")
+            page.goto(url, wait_until="networkidle")
+            footnote = page.locator("#preview-toolbar-cover-footnote")
+            footnote.wait_for(state="visible", timeout=10_000)
+            assert "手机预览封面版式与电脑不同" in footnote.inner_text()
+            assert "以手机效果为准" in footnote.inner_text()
+            browser.close()
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_cover_styles_v5_split_mat_title_edit_keeps_style(tmp_path: Path) -> None:
+    """AC-CSV-24 · split-mat 书名编辑后样式不变。"""
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    trip_id = _seed_rendered_cover_style_trip(trips_dir, "cover-title-edit", style="split-mat")
+    pytest.importorskip("playwright")
+    from playwright.sync_api import sync_playwright
+
+    from tests.test_studio_server import _free_port, _start_studio_server
+    from travelogue.web.studio_jobs import reset_job_store
+
+    reset_job_store()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    url = f"http://127.0.0.1:{port}/{trip_id}/index.html"
+    storage_key = f"travelogue.coverStyleToast.{trip_id}"
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page(viewport={"width": 1280, "height": 800})
+            page.add_init_script(f"() => localStorage.setItem({json.dumps(storage_key)}, '1')")
+            page.goto(url, wait_until="networkidle")
+            page.locator(".cover-opening__title").wait_for(state="visible", timeout=10_000)
+            assert _read_cover_opening_style(page) == "split-mat"
+            page.locator(".cover-opening__title").click()
+            title_input = page.locator(".cover-opening__title-input")
+            title_input.wait_for(state="visible", timeout=5_000)
+            title_input.fill("雨后京都")
+            title_input.press("Enter")
+            page.wait_for_load_state("networkidle", timeout=30_000)
+            page.locator(".cover-opening").wait_for(state="visible", timeout=10_000)
+            assert _read_cover_opening_style(page) == "split-mat"
+            assert "雨后京都" in (page.locator(".cover-opening__title").inner_text() or "")
             browser.close()
     finally:
         server.shutdown()

@@ -3303,6 +3303,17 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     }
   }
 
+  function ensureCoverMobileFootnote() {
+    if (isSharePreview()) return;
+    if (document.getElementById("preview-toolbar-cover-footnote")) return;
+    var note = document.createElement("p");
+    note.id = "preview-toolbar-cover-footnote";
+    note.className = "preview-toolbar__cover-footnote";
+    note.setAttribute("role", "note");
+    note.textContent = "手机预览封面版式与电脑不同，以手机效果为准";
+    document.body.appendChild(note);
+  }
+
   function init() {
     if (isSharePreview()) {
       initShareMinimal();
@@ -3324,6 +3335,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
       "</nav>";
 
     document.body.insertBefore(root, document.body.firstChild);
+    ensureCoverMobileFootnote();
     var tripId = tripIdFromPath();
     if (!tripId) return;
     initToolbarV3(root, tripId);

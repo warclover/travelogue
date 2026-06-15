@@ -11,7 +11,9 @@
 | 文件 | 变更类型 | 说明 |
 |------|----------|------|
 | `travelogue/services/cover_opening_style.py` | 新增 | `assign_*` / `resolve_*`；`tripId` SHA256 分配 |
-| `travelogue/services/trip_factory.py` | 修改 | `create_trip` 写入 `meta.coverOpeningStyle` |
+| `travelogue/services/cover_opening_style.py` | 修改 | `record_cover_opening_style_assigned` |
+| `travelogue/services/trip_factory.py` | 修改 | 创建时 telemetry |
+| `travelogue/web/studio_homepage_telemetry.py` | 修改 | Cover V5 事件白名单 |
 | `schemas/trip.schema.json` | 修改 | `meta.coverOpeningStyle` 枚举 |
 | `travelogue/render/assemble.py` | 修改 | 注入 `coverOpeningStyle` 至 Handlebars |
 | `travelogue/render/context_types.py` | 修改 | `TripRenderContext.coverOpeningStyle` |
@@ -45,13 +47,15 @@
 - [x] `split-mat` / `magazine-head` CSS（`@media min-width: 64rem`）
 - [x] `<1024px` 沿用 V4 `card-br` 规则（无额外 override）
 - [x] Studio 首次预览 Toast + `cover_opening_style_render`
-- [x] Playwright：split-mat / magazine-head / 窄屏回落 / Toast / Share
+- [x] G-CSV-09 创建时 `cover_opening_style_assigned`
+- [x] D-CSV-22 预览区 Mobile 脚注
+- [x] Playwright：切换 → 应用排版 / 脚注 / 书名编辑 / longshot smoke
 - [x] ACCEPTANCE / IMPLEMENTATION 文档
 
 ### P1
 
 - [x] Sheet「排版」封面版式三选一缩略图
-- [x] 切换后 `meta.coverOpeningStyle` 更新 + stale（`setLayoutPending` → 应用排版 → rerender）
+- [x] Playwright：切换 → 应用排版 E2E（`test_cover_styles_v5_sheet_switch_and_apply_layout`）
 
 ### P2（另立项）
 
@@ -82,10 +86,10 @@ python -m travelogue render trips/linzhi/trip.json
 
 1. **新建 trip** 自动带 `coverOpeningStyle`；老 trip 缺字段 → `card-br`
 2. `assetVersion` 已 bump（`lsa560681aa22d`），重渲染后 CSS query 自动更新
-3. telemetry：`cover_opening_style_render` 含 `tripId` + `coverOpeningStyle`
+3. telemetry：`cover_opening_style_assigned`（创建）· `cover_opening_style_render`（首次预览）· `cover_opening_style_change`（P1 切换）
 
 ## 已知限制
 
-- 窄屏 / 对比度 / longshot / Dock 浅底：**Playwright 已覆盖布局与对比度**；longshot 封面帧仍建议 linzhi 人工抽测
+- 窄屏 / 对比度 / Dock 浅底：**Playwright 已覆盖**；longshot 封面帧有 smoke 测试（`magazine-head` 金样）
 - `curate` / `rerender` 不得重算样式（代码审查约束，无单测钩子）
 - 5 人走查为 UX 建议项，非阻塞发布
