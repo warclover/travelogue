@@ -403,8 +403,10 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         menuBtn.setAttribute("aria-expanded", "false");
       }
       beginSheetExit(function () {
-        if (previousFocus && previousFocus.focus) {
+        if (previousFocus && typeof previousFocus.focus === "function") {
           previousFocus.focus();
+        } else if (menuBtn && typeof menuBtn.focus === "function") {
+          menuBtn.focus();
         }
         previousFocus = null;
       });

@@ -31,31 +31,54 @@ def test_v3_modules_exist_and_are_imported() -> None:
         assert token in js
 
 
-def test_v3_init_uses_single_bar_not_legacy_rows() -> None:
+def test_v4_init_uses_icon_dock_not_legacy_rows() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
-    marker = 'root.className = "preview-toolbar preview-toolbar--v3"'
+    marker = 'root.className = "preview-toolbar preview-toolbar--v4"'
     assert marker in js
     start = js.index(marker)
     end = js.index("initToolbarV3(root, tripId)", start)
-    v3_shell = js[start:end]
-    assert "preview-toolbar__longshot-preview-row" not in v3_shell
-    assert "preview-toolbar__pending-row" not in v3_shell
-    assert "preview-toolbar__collapsed-strip" not in v3_shell
+    v4_shell = js[start:end]
+    assert "preview-toolbar__dock" in v4_shell
+    assert "preview-toolbar__longshot-preview-row" not in v4_shell
+    assert "preview-toolbar__pending-row" not in v4_shell
+    assert "preview-toolbar__collapsed-strip" not in v4_shell
+    assert "preview-toolbar__title-wrap" not in v4_shell
 
 
-def test_v3_toolbar_mounts_screenplay_control() -> None:
+def test_v4_dock_tooltips_and_scroll_fade() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
-    assert "insertScreenplayControl(actions, menuWrap" in js
-    assert 'label: "放映"' in js
-    assert "preview-toolbar__screenplay--v3" in js
-    css = PREVIEW_CSS.read_text(encoding="utf-8")
-    assert "preview-toolbar__screenplay--v3" in css
-
-
-def test_v3_css_fixed_bar_and_task_dock() -> None:
+    for token in (
+        "initDockTooltips",
+        "initDockScrollFade",
+        "preview-toolbar__dock-tip",
+        "ensureDockTooltip",
+    ):
+        assert token in js, f"missing v4 dock ux: {token}"
     css = PREVIEW_CSS.read_text(encoding="utf-8")
     for token in (
-        "preview-toolbar__bar--v3",
+        "preview-toolbar__dock-tip",
+        "preview-toolbar__dock--dim",
+        "transition-delay: 0.3s",
+    ):
+        assert token in css, f"missing v4 dock css: {token}"
+
+
+def test_v4_toolbar_mounts_screenplay_control() -> None:
+    js = PREVIEW_JS.read_text(encoding="utf-8")
+    assert "insertScreenplayControl(actions, menuWrap" in js
+    assert "dock: true" in js
+    assert "preview-toolbar__screenplay--v3" in js
+    css = PREVIEW_CSS.read_text(encoding="utf-8")
+    assert "preview-toolbar__dock" in css
+    assert "preview-toolbar--v4" in css
+
+
+def test_v4_css_icon_dock_and_task_dock() -> None:
+    css = PREVIEW_CSS.read_text(encoding="utf-8")
+    for token in (
+        "preview-toolbar__dock",
+        "preview-toolbar--v4",
+        "--preview-toolbar-h: 0px",
         "preview-task-dock",
         "preview-sheet",
         "preview-sheet__content",
@@ -119,7 +142,7 @@ def _seed_preview_trip(trips_dir: Path, trip_id: str = "v3-smoke") -> str:
 
 
 @pytest.mark.e2e
-def test_v3_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
+def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
     pytest.importorskip("playwright")
     from playwright.sync_api import sync_playwright
 
@@ -140,19 +163,20 @@ def test_v3_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             page = browser.new_page(viewport={"width": 1280, "height": 800})
             page.goto(f"{base}/{trip_id}/index.html", wait_until="networkidle")
 
-            toolbar = page.locator(".preview-toolbar--v3")
-            toolbar.wait_for(state="visible", timeout=15_000)
+            dock = page.locator(".preview-toolbar__dock")
+            dock.wait_for(state="visible", timeout=15_000)
 
-            bar = page.locator(".preview-toolbar__bar--v3")
-            box = bar.bounding_box()
+            box = dock.bounding_box()
             assert box is not None
-            assert 44 <= box["height"] <= 52, f"bar height expected ~48px, got {box['height']}"
+            assert box["height"] <= 52, f"dock height expected compact, got {box['height']}"
+            assert box["width"] <= 200, f"dock width expected compact, got {box['width']}"
 
-            assert page.locator(".preview-toolbar__back").inner_text().strip().endswith("返回")
-            assert page.locator(".preview-toolbar__longshot--v3").inner_text().strip() == "导出长图"
+            assert page.locator(".preview-toolbar__dock-btn--back").count() == 1
+            assert page.locator(".preview-toolbar__dock-btn--export").count() == 1
             assert page.locator(".preview-toolbar__screenplay--v3").count() == 1
-            assert page.locator(".preview-toolbar__screenplay--v3").inner_text().strip() == "放映"
             assert page.locator(".preview-toolbar__menu-btn").count() == 1
+            assert page.locator(".preview-toolbar__bar--v3").count() == 0
+            assert page.locator(".preview-toolbar__title").count() == 0
 
             assert page.locator(".preview-toolbar__longshot-preview-row").count() == 0
             assert page.locator(".preview-toolbar__pending-row").count() == 0
@@ -172,8 +196,10 @@ def test_v3_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
                 """() => {
                 const sheet = document.querySelector('.preview-sheet');
                 const rect = sheet.getBoundingClientRect();
-                const toolbar = document.querySelector('.preview-toolbar--v3');
-                const toolbarH = toolbar ? toolbar.getBoundingClientRect().height : 48;
+                const toolbar = document.querySelector('.preview-toolbar--v4');
+                const toolbarH = toolbar
+                  ? parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--preview-toolbar-h')) || 0
+                  : 0;
                 return {
                     top: rect.top,
                     x: rect.x,
@@ -193,7 +219,6 @@ def test_v3_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             assert side_layout["top"] >= side_layout["toolbarH"] + 8, side_layout
             assert side_layout["height"] <= side_layout["viewportH"] - side_layout["toolbarH"] - 20, side_layout
             assert float(side_layout["bodyMarginRight"].replace("px", "") or 0) < 20, side_layout
-            assert float(side_layout["toolbarRight"].replace("px", "") or 0) < 20, side_layout
             assert "16" in side_layout["borderRadius"], side_layout
 
             tabs = page.locator(".preview-sheet__tab")
@@ -224,9 +249,13 @@ def test_v3_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             page.locator(".preview-sheet__close").click()
             page.locator(".preview-sheet-root").wait_for(state="hidden", timeout=5_000)
 
-            title_btn = page.locator(".preview-toolbar__title")
-            title_btn.wait_for(state="visible", timeout=5_000)
-            assert "V3" in title_btn.inner_text()
+            focused_menu = page.evaluate(
+                """() => {
+                const btn = document.querySelector('.preview-toolbar__menu-btn');
+                return btn && document.activeElement === btn;
+            }"""
+            )
+            assert focused_menu is True
 
             browser.close()
     finally:

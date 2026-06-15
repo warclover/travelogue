@@ -32,7 +32,7 @@ def test_preview_toolbar_longshot_integrated_to_top_bar() -> None:
         encoding="utf-8"
     )
     for token in (
-        "preview-toolbar--v3",
+        "preview-toolbar--v4",
         "mountPreviewTaskDock",
         "mountPreviewUnifiedSheet",
         "preview-toolbar-v3-task-dock.js",

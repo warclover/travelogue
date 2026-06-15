@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>封面优化 V4 · 艺术相册首屏 · 线框稿 v2.0 · 设计评审</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-paper: #f4f1ea;
+      --wf-mat: #1a1918;
+      --wf-border: #90a4ae;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-anno: #e65100;
+      --wf-rec: #00897b;
+      --wf-rec-bg: #e0f2f1;
+      --wf-warn: #ff8f00;
+      --prod-accent: #3d6b5a;
+      --prod-accent-light: #7cb89a;
+      --prod-bar: #1a2f28;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --font-serif: Georgia, "Noto Serif SC", "Songti SC", serif;
+      --font-brush: "KaiTi", "STKaiti", "FangSong", serif;
+      --page-w: 1320px;
+      --radius: 12px;
+      --vh-unit: 640px; /* 线框内模拟 100dvh */
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--wf-bg); color: var(--wf-text); line-height: 1.5; }
+
+    .review-bar {
+      position: sticky; top: 0; z-index: 1000;
+      background: #263238; color: #eceff1;
+      padding: 12px 20px;
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 90ch; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button:hover { background: #37474f; }
+    .tabs button.is-active { background: var(--wf-rec); border-color: var(--wf-rec); color: #fff; }
+    .tabs button.is-rec::after { content: " ★"; }
+
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 80px; }
+    .panel { display: none; }
+    .panel.is-visible { display: block; }
+
+    .section { margin-bottom: 36px; }
+    .section h2 { margin: 0 0 6px; font-size: 18px; }
+    .section .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; max-width: 78ch; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 300px; gap: 24px; align-items: start; }
+    @media (max-width: 960px) { .grid-2 { grid-template-columns: 1fr; } .sidebar { order: -1; } }
+
+    .sidebar {
+      background: #fff; border: 1px solid var(--wf-border); border-radius: var(--radius);
+      padding: 16px; font-size: 13px;
+    }
+    .sidebar h3 { margin: 0 0 10px; font-size: 12px; color: var(--wf-anno); text-transform: uppercase; letter-spacing: .06em; }
+    .sidebar ul { margin: 0; padding-left: 18px; }
+    .sidebar li { margin-bottom: 6px; color: var(--wf-muted); }
+
+    .frame {
+      background: var(--wf-page);
+      border: 2px solid var(--wf-border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .frame--rec { border-color: var(--wf-rec); box-shadow: 0 0 0 3px rgba(0,137,123,.15); }
+    .frame--warn { border-color: var(--wf-warn); }
+
+    .chrome { background: #dee1e6; padding: 8px 12px 0; border-bottom: 1px solid #b0bec5; }
+    .chrome__dots { display: flex; gap: 6px; margin-bottom: 8px; }
+    .chrome__dots span { width: 10px; height: 10px; border-radius: 50%; background: #b0bec5; }
+    .chrome__tab { display: inline-block; background: var(--wf-page); padding: 8px 14px; border-radius: 8px 8px 0 0; font-size: 12px; font-weight: 600; }
+
+    /* Icon Dock（V4 预览） */
+    .dock {
+      position: absolute; top: 10px; right: 10px; z-index: 20;
+      display: flex; gap: 4px; padding: 4px 6px; border-radius: 999px;
+      background: rgba(26,47,40,.82); border: 1px solid rgba(255,255,255,.1);
+      font-size: 11px; color: #fff;
+    }
+    .dock i {
+      display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center;
+      border-radius: 6px; font-style: normal; font-size: 12px;
+    }
+    .dock i.gold { background: #d4a843; color: #1a1408; border-radius: 8px; }
+
+    /* 模拟视窗 */
+    .viewport {
+      position: relative;
+      height: var(--vh-unit);
+      background: var(--wf-mat);
+      overflow: hidden;
+    }
+    .viewport--toolbar { height: calc(var(--vh-unit) - 36px); }
+    .viewport__tag {
+      position: absolute; top: 8px; left: 8px; z-index: 15;
+      font-size: 9px; font-weight: 700; letter-spacing: .05em;
+      background: #263238; color: #fff; padding: 3px 7px; border-radius: 4px;
+    }
+    .viewport__vh {
+      position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 15;
+      font-size: 9px; background: rgba(0,0,0,.55); color: #fff; padding: 3px 8px; border-radius: 4px;
+    }
+    .viewport__overflow {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 14;
+      height: 28px; background: repeating-linear-gradient(45deg, #ffcdd2, #ffcdd2 6px, #fff 6px, #fff 12px);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: #c62828;
+    }
+
+    .wf-img {
+      background: repeating-linear-gradient(-45deg, #5d6d7e, #5d6d7e 10px, #78909c 10px, #78909c 20px);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,.85); font-size: 11px; font-weight: 600; letter-spacing: .04em;
+      position: relative; overflow: hidden;
+    }
+    .wf-img small { display: block; font-weight: 400; font-size: 10px; opacity: .75; margin-top: 4px; text-align: center; }
+
+    .block-tag {
+      position: absolute; font-size: 8px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+      background: #263238; color: #fff; padding: 2px 6px; border-radius: 3px; z-index: 5;
+    }
+
+    /* ── 现状（实现 D 叠层） ── */
+    .current-d {
+      height: 100%; display: flex; flex-direction: column; position: relative;
+    }
+    .current-d__hero {
+      position: absolute; inset: 0;
+    }
+    .current-d__hero .wf-img { width: 100%; height: 100%; }
+    .current-d__grad {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(26,25,24,.94) 0%, rgba(26,25,24,.5) 40%, transparent 72%);
+    }
+    .current-d__panel {
+      position: relative; z-index: 2; margin-top: auto;
+      padding: 24px 24px 28px;
+    }
+    .current-d__place { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--prod-accent-light); margin: 0 0 4px; }
+    .current-d__meta { font-size: 10px; letter-spacing: .1em; color: rgba(255,255,255,.65); margin: 0 0 10px; }
+    .current-d__title { font-family: var(--font-brush); font-size: 34px; color: #fff; margin: 0 0 8px; line-height: 1.08; }
+    .current-d__hook { font-family: var(--font-serif); font-size: 16px; line-height: 1.5; color: rgba(255,255,255,.88); margin: 0; max-width: 28em; }
+    .current-d__enter { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.45); margin: 14px 0 0; }
+
+    /* ── 方案 E · 分屏相册（推荐）── */
+    .album-e {
+      height: 100%; display: grid;
+      grid-template-rows: minmax(0, 58fr) minmax(0, 42fr);
+      background: var(--wf-paper);
+    }
+    .album-e__photo {
+      position: relative; min-height: 0;
+      border-bottom: 1px solid rgba(0,0,0,.06);
+    }
+    .album-e__photo .wf-img { height: 100%; }
+    .album-e__mat {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 20px 28px 22px;
+      min-height: 0; overflow: hidden;
+      text-align: center;
+    }
+    .album-e__rule {
+      width: 40px; height: 2px; background: var(--prod-accent); margin: 0 auto 12px;
+    }
+    .album-e__place { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--prod-accent); margin: 0 0 4px; }
+    .album-e__meta { font-size: 10px; letter-spacing: .12em; color: var(--wf-muted); margin: 0 0 10px; }
+    .album-e__title { font-family: var(--font-brush); font-size: clamp(26px, 4.5vw, 36px); margin: 0 0 8px; line-height: 1.1; color: var(--wf-text); }
+    .album-e__hook {
+      font-family: var(--font-serif); font-size: 15px; line-height: 1.45; color: #455a64;
+      margin: 0 auto; max-width: 22em;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .album-e__enter {
+      margin-top: 12px; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--wf-muted);
+    }
+
+    /* ── 方案 F · 画框装帧 ── */
+    .album-f {
+      height: 100%; display: flex; flex-direction: column;
+      background: #121110; padding: 16px 16px 14px;
+    }
+    .album-f__frame {
+      flex: 1; min-height: 0; display: flex; flex-direction: column;
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: inset 0 0 0 8px rgba(0,0,0,.35);
+    }
+    .album-f__photo { flex: 1; min-height: 0; position: relative; }
+    .album-f__photo .wf-img { height: 100%; }
+    .album-f__caption {
+      flex-shrink: 0; padding: 14px 18px 16px;
+      background: rgba(18,17,16,.92);
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+    .album-f__meta { font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.5); margin: 0 0 6px; }
+    .album-f__title { font-family: var(--font-brush); font-size: 28px; color: #fff; margin: 0 0 4px; line-height: 1.1; }
+    .album-f__hook {
+      font-size: 13px; line-height: 1.4; color: rgba(255,255,255,.75); margin: 0;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .album-f__enter { text-align: center; margin-top: 10px; font-size: 9px; color: rgba(255,255,255,.35); letter-spacing: .1em; }
+
+    /* ── 方案 G · 剧场叠字（收紧版 D）── */
+    .album-g {
+      height: 100%; position: relative; display: flex; flex-direction: column;
+    }
+    .album-g__hero { position: absolute; inset: 0; }
+    .album-g__hero .wf-img { width: 100%; height: 100%; }
+    .album-g__grad {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(26,25,24,.92) 0%, rgba(26,25,24,.35) 28%, transparent 55%);
+    }
+    .album-g__panel {
+      position: relative; z-index: 2; margin-top: auto;
+      padding: 16px 22px 20px;
+      max-height: 38%;
+      display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .album-g__title { font-family: var(--font-brush); font-size: 30px; color: #fff; margin: 0 0 4px; line-height: 1.08; }
+    .album-g__meta { font-size: 9px; letter-spacing: .12em; color: rgba(255,255,255,.6); margin: 0 0 6px; order: -1; }
+    .album-g__hook {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.4; color: rgba(255,255,255,.82); margin: 0;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .album-g__enter { font-size: 8px; letter-spacing: .12em; color: rgba(255,255,255,.4); margin-top: 10px; }
+
+    /* ── 方案 H · 横册对开（宽屏）── */
+    .album-h {
+      height: 100%; display: grid; grid-template-columns: 1.08fr .92fr;
+      background: var(--wf-paper);
+    }
+    .album-h__left { position: relative; min-height: 0; }
+    .album-h__left .wf-img { height: 100%; }
+    .album-h__right {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 32px 28px; border-left: 1px solid rgba(0,0,0,.08);
+    }
+    .album-h__right .album-e__rule { margin: 0 0 14px; }
+    .album-h__right .album-e__title { text-align: left; font-size: 38px; }
+    .album-h__right .album-e__hook { text-align: left; margin: 0; max-width: none; }
+    .album-h__right .album-e__meta, .album-h__right .album-e__place { text-align: left; }
+
+    .compare { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+    .compare th, .compare td { border: 1px solid var(--wf-border); padding: 8px 10px; text-align: left; vertical-align: top; }
+    .compare th { background: #eceff1; font-size: 11px; }
+    .yes { color: var(--wf-rec); font-weight: 600; }
+    .no { color: #c62828; font-weight: 600; }
+    .mid { color: var(--wf-muted); }
+
+    .callout {
+      background: #fff; border: 1px solid var(--wf-border); border-left: 4px solid var(--wf-anno);
+      border-radius: var(--radius); padding: 14px 16px; font-size: 13px; margin-top: 16px;
+    }
+    .callout--rec { border-left-color: var(--wf-rec); background: var(--wf-rec-bg); }
+    .callout h3 { margin: 0 0 8px; font-size: 14px; }
+
+    .pin-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+    .pin {
+      flex: 1; min-width: 200px; background: #fff; border: 1px dashed var(--wf-border);
+      border-radius: 8px; padding: 10px 12px; font-size: 12px;
+    }
+    .pin strong { color: var(--wf-anno); }
+
+    .discuss { background: #fff8e1; border: 1px solid #ffcc80; border-radius: var(--radius); padding: 16px; margin-top: 20px; }
+    .discuss h3 { margin: 0 0 10px; font-size: 14px; color: #e65100; }
+    .discuss ol { margin: 0; padding-left: 20px; }
+    .discuss li { margin-bottom: 8px; font-size: 13px; }
+
+    pre.spec { background: #263238; color: #eceff1; padding: 14px; border-radius: 8px; font-size: 11px; overflow-x: auto; margin: 0; }
+  </style>
+</head>
+<body>
+
+<header class="review-bar">
+  <h1>封面优化 V4 · 艺术相册首屏 · 线框稿 v2.0 <span style="opacity:.7">· 与 Icon Dock PRD 配套讨论</span></h1>
+  <p>
+    问题：当前 Web 封面（方案 D 叠层）在首屏常<strong>显示不全</strong>——长 hook / 大标题 / 元信息 +「进入正文」撑破 <code>100dvh</code>，且与 Icon Dock 叠加后更显局促。
+    目标：<strong>一屏内完整呈现</strong>封面信息，气质接近<strong>艺术摄影相册 / 展览图录</strong>。
+  </p>
+  <nav class="tabs" aria-label="方案切换">
+    <button type="button" class="is-active" data-panel="diag">① 问题诊断</button>
+    <button type="button" data-panel="e" class="is-rec">② E · 分屏相册 ★</button>
+    <button type="button" data-panel="f">③ F · 画框装帧</button>
+    <button type="button" data-panel="g">④ G · 剧场收紧</button>
+    <button type="button" data-panel="h">⑤ H · 对开（宽屏）</button>
+    <button type="button" data-panel="spec">⑥ 规格 & 讨论</button>
+  </nav>
+</header>
+
+<div class="wrap">
+
+  <!-- ① 诊断 -->
+  <section class="panel is-visible" id="panel-diag">
+    <div class="section">
+      <h2>① 为何「一屏显示不全」</h2>
+      <p class="lead">
+        现网 <code>journal.css</code> 在 <code>data-layout="web"</code> 下采用<strong>全幅铺满摄影 + 底部渐变字层</strong>（线框 v1 方案 D）。
+        摄影 <code>position:absolute; inset:0</code>，文字 <code>margin-top:auto</code> 叠在底部——<strong>文字区高度不受 grid 约束</strong>，长文案会把首屏撑出视窗。
+      </p>
+    </div>
+
+    <div class="grid-2">
+      <div class="frame frame--warn">
+        <div class="chrome">
+          <div class="chrome__dots"><span></span><span></span><span></span></div>
+          <span class="chrome__tab">现状 · 方案 D 叠层 + 长 hook</span>
+        </div>
+        <div class="viewport viewport--toolbar">
+          <span class="viewport__tag">现网近似</span>
+          <span class="viewport__vh">100dvh − toolbar</span>
+          <div class="dock" aria-hidden="true"><i>←</i><i>▶</i><i>⋯</i><i class="gold">↓</i></div>
+          <div class="current-d">
+            <div class="current-d__hero">
+              <div class="wf-img"><span>cover-hero · object-fit:cover</span><small>全幅铺满</small></div>
+            </div>
+            <div class="current-d__grad"></div>
+            <div class="current-d__panel">
+              <p class="current-d__place">东澳岛</p>
+              <p class="current-d__meta">2025.06.01 – 06.03 · 3 天 · 两人</p>
+              <h1 class="current-d__title">2025东澳岛6</h1>
+              <p class="current-d__hook">海风吹干盐粒的那刻，我们坐在堤坝上不说话，只听见远处渔船的引擎声渐渐弱下去，像一本还没翻开的相册里夹着的一阵潮气。</p>
+              <p class="current-d__enter">进入正文 ⌄</p>
+            </div>
+          </div>
+          <div class="viewport__overflow">▼ 溢出视窗 · 需滚动才能看全 ▼</div>
+        </div>
+      </div>
+      <aside class="sidebar">
+        <h3>根因清单</h3>
+        <ul>
+          <li><strong>无文字区预算</strong>：hook 可多行无限增高</li>
+          <li><strong>标题字号大</strong>：<code>clamp(1.85rem…2.65rem)</code> + 毛笔体占高</li>
+          <li><strong>元信息重复</strong>：place + trip-meta 两行</li>
+          <li><strong>toolbar 扣高</strong>：48px（V4 Dock 后改为 0）</li>
+          <li><strong>进入正文</strong>：额外 ~32px</li>
+        </ul>
+        <h3 style="margin-top:14px">艺术相册的启示</h3>
+        <ul>
+          <li>摄影与<strong>版式分区</strong>，而非摄影上叠字</li>
+          <li>固定<strong>画幅比例</strong>（16:9 / 4:5 / 3:2）</li>
+          <li>文案<strong>字数预算</strong>（图录式短 hook）</li>
+          <li>装帧感：留白、衬纸、细规则线</li>
+        </ul>
+      </aside>
+    </div>
+
+    <table class="compare" style="margin-top:24px">
+      <thead>
+        <tr><th>策略</th><th>做法</th><th>能否保证一屏</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>仅缩小字号</td><td class="mid">clamp 下调</td><td class="no">长 hook 仍溢出</td></tr>
+        <tr><td>line-clamp</td><td class="mid">hook 限 2 行</td><td class="yes">必要但不充分</td></tr>
+        <tr><td><strong>分区 grid</strong></td><td class="yes">图 58% + 文 42%</td><td class="yes"><strong>结构性保证</strong></td></tr>
+        <tr><td>装帧 mat</td><td class="yes">画框 + 固定 caption 区</td><td class="yes">展览感强</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ② 方案 E -->
+  <section class="panel" id="panel-e">
+    <div class="section">
+      <h2>② 方案 E · 分屏相册（推荐基线）★</h2>
+      <p class="lead">
+        像翻开大开本摄影集：<strong>上图下文</strong>，<code>grid-template-rows: 58fr 42fr</code> 硬性分区。
+        摄影区 <code>object-fit: cover</code>，文字区衬纸色 <code>#f4f1ea</code>，居中排版 + 顶部规则线。
+        <strong>首屏必全</strong>；气质偏「艺术图录 / 展览折页」。
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="frame frame--rec">
+        <div class="chrome"><span class="chrome__tab">E · 分屏相册 + V4 Dock</span></div>
+        <div class="viewport">
+          <span class="viewport__tag">推荐</span>
+          <span class="viewport__vh">100dvh · toolbar=0</span>
+          <div class="dock"><i>←</i><i>▶</i><i>⋯</i><i class="gold">↓</i></div>
+          <div class="album-e">
+            <div class="album-e__photo">
+              <span class="block-tag" style="top:8px;left:8px">cover-hero</span>
+              <div class="wf-img"><span>摄影 · 58%</span><small>aspect 由 grid 约束 · cover</small></div>
+            </div>
+            <div class="album-e__mat">
+              <span class="block-tag" style="top:4px;left:8px">cover-opening__panel</span>
+              <div class="album-e__rule"></div>
+              <p class="album-e__place">东澳岛</p>
+              <p class="album-e__meta">2025.06.01 – 06.03 · 3 天</p>
+              <h1 class="album-e__title">2025东澳岛6</h1>
+              <p class="album-e__hook">海风吹干盐粒的那刻，我们坐在堤坝上不说话，只听见远处渔船的引擎声渐渐弱下去。</p>
+              <p class="album-e__enter">进入正文 ⌄</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <aside class="sidebar">
+        <span class="yes" style="font-size:12px;font-weight:700">★ 评审推荐</span>
+        <h3 style="margin-top:8px">优点</h3>
+        <ul>
+          <li>一屏完整性<strong>由 grid 保证</strong></li>
+          <li>与 v1 线框<strong>方案 B spread</strong>一脉相承</li>
+          <li>不新增 data-block，只改 CSS 分区</li>
+          <li>浅色衬纸区：文字可读性最佳</li>
+          <li>Dock 浮在摄影区右上，不挡标题</li>
+        </ul>
+        <h3 style="margin-top:14px">注意</h3>
+        <ul>
+          <li>竖图损失：cover 裁切为横条（可接受，相册封套常见）</li>
+          <li>需 <code>hook line-clamp: 2</code></li>
+          <li>place 与 meta 可合并为一行减高</li>
+        </ul>
+      </aside>
+    </div>
+
+    <div class="callout callout--rec">
+      <h3>与封面优化 V4 PRD 的关系</h3>
+      <ul style="margin:0;padding-left:18px">
+        <li>Icon Dock（<code>--preview-toolbar-h: 0</code>）释放整屏高度 → <strong>方案 E 收益最大</strong></li>
+        <li>顶栏标题移除 → 标题只在衬纸区展示（与「游记名称另有安排」一致）</li>
+        <li>建议 <strong>P0 Dock</strong> 与 <strong>P1 封面 E</strong> 同迭代或紧接发布</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ③ 方案 F -->
+  <section class="panel" id="panel-f">
+    <div class="section">
+      <h2>③ 方案 F · 画框装帧</h2>
+      <p class="lead">深色装帧 + 内框阴影，摄影如「裱在册子里」。caption 区固定高度，气质最接近<strong>限量版艺术画册</strong>。适合强调「作品感」的 trip。</p>
+    </div>
+    <div class="grid-2">
+      <div class="frame">
+        <div class="chrome"><span class="chrome__tab">F · 画框装帧</span></div>
+        <div class="viewport">
+          <div class="dock"><i>←</i><i>▶</i><i>⋯</i><i class="gold">↓</i></div>
+          <div class="album-f">
+            <div class="album-f__frame">
+              <div class="album-f__photo">
+                <span class="block-tag" style="top:8px;left:8px">cover-hero</span>
+                <div class="wf-img"><span>摄影作品</span></div>
+              </div>
+              <div class="album-f__caption">
+                <p class="album-f__meta">2025.06 · 东澳岛 · 3 天</p>
+                <h1 class="album-f__title">2025东澳岛6</h1>
+                <p class="album-f__hook">海风吹干盐粒的那刻，我们坐在堤坝上不说话。</p>
+              </div>
+            </div>
+            <p class="album-f__enter">进入正文 ⌄</p>
+          </div>
+        </div>
+      </div>
+      <aside class="sidebar">
+        <h3>优点</h3>
+        <ul>
+          <li>展览 / 画廊画册气质最强</li>
+          <li>暗场衬托摄影，沉浸感高</li>
+          <li>caption 区高度可控</li>
+        </ul>
+        <h3>缺点</h3>
+        <ul>
+          <li>装帧 padding 吃掉约 32px 边距</li>
+          <li>与正文浅色卷轴切换略「硬」</li>
+          <li>实现比 E 多一层 DOM 或伪元素</li>
+        </ul>
+        <p style="margin-top:12px;font-size:12px;color:var(--wf-muted)"><strong>适用</strong>：偏艺术向 trip、精选少字 hook。可作为 E 的<strong>暗色主题变体</strong>而非默认。</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ④ 方案 G -->
+  <section class="panel" id="panel-g">
+    <div class="section">
+      <h2>④ 方案 G · 剧场叠字（收紧版 D）</h2>
+      <p class="lead">保留全幅摄影情绪，但<strong>限制字层 max-height: 38%</strong> + hook 2 行 + 缩小字号。改动最小，仍可能极长标题下边缘溢出。</p>
+    </div>
+    <div class="grid-2">
+      <div class="frame">
+        <div class="chrome"><span class="chrome__tab">G · 收紧叠层</span></div>
+        <div class="viewport">
+          <div class="dock"><i>←</i><i>▶</i><i>⋯</i><i class="gold">↓</i></div>
+          <div class="album-g">
+            <div class="album-g__hero"><div class="wf-img" style="height:100%"><span>全幅 cover</span></div></div>
+            <div class="album-g__grad"></div>
+            <div class="album-g__panel">
+              <p class="album-g__meta">2025.06.01 – 06.03 · 东澳岛</p>
+              <h1 class="album-g__title">2025东澳岛6</h1>
+              <p class="album-g__hook">海风吹干盐粒的那刻，我们坐在堤坝上不说话，只听见远处渔船的引擎声。</p>
+              <p class="album-g__enter">进入正文 ⌄</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <aside class="sidebar">
+        <h3>定位</h3>
+        <ul>
+          <li><strong>低风险补丁</strong>：若暂不改动分区</li>
+          <li>分享链接仍「电影感」全幅</li>
+          <li>需 title <code>line-clamp: 2</code> 才稳</li>
+        </ul>
+        <p style="font-size:12px;color:#c62828;margin-top:10px"><strong>评审意见</strong>：治标；「艺术相册」分区感弱于 E/F。</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ⑤ 方案 H -->
+  <section class="panel" id="panel-h">
+    <div class="section">
+      <h2>⑤ 方案 H · 横册对开（≥1024px）</h2>
+      <p class="lead">宽屏模拟画册<strong>左图右文对开</strong>；窄屏回落方案 E。适合桌面 Studio 预览「像摊开一本册子」。</p>
+    </div>
+    <div class="frame">
+      <div class="chrome"><span class="chrome__tab">H · 对开 · 1280px</span></div>
+      <div class="viewport" style="height:480px">
+        <div class="dock"><i>←</i><i>▶</i><i>⋯</i><i class="gold">↓</i></div>
+        <div class="album-h">
+          <div class="album-h__left">
+            <span class="block-tag" style="top:8px;left:8px">cover-hero</span>
+            <div class="wf-img"><span>摄影 · 左页</span></div>
+          </div>
+          <div class="album-h__right">
+            <span class="block-tag" style="top:8px;left:8px">panel</span>
+            <div class="album-e__rule"></div>
+            <p class="album-e__place">东澳岛</p>
+            <p class="album-e__meta">2025.06.01 – 06.03 · 3 天</p>
+            <h1 class="album-e__title">2025东澳岛6</h1>
+            <p class="album-e__hook">海风吹干盐粒的那刻，我们坐在堤坝上不说话。</p>
+            <p class="album-e__enter">进入正文 →</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:12px">建议作为 <strong>E 的宽屏增强</strong>（<code>@media (min-width: 64rem)</code>），而非独立默认。</p>
+  </section>
+
+  <!-- ⑥ 规格 & 讨论 -->
+  <section class="panel" id="panel-spec">
+    <div class="section">
+      <h2>⑥ 推荐组合 & 待讨论问题</h2>
+    </div>
+
+    <div class="callout callout--rec">
+      <h3>评审推荐 · 默认落地组合</h3>
+      <ol style="margin:0;padding-left:20px">
+        <li><strong>默认</strong>：方案 <strong>E</strong>（分屏相册 grid 58/42）</li>
+        <li><strong>宽屏 ≥1024px</strong>：升级为 <strong>H</strong>（对开）</li>
+        <li><strong>可选主题</strong>：F 暗色装帧（trip 级或 aesthetic 开关 · P2）</li>
+        <li><strong>兜底补丁</strong>：G 的 line-clamp 规则对 E/H 同样生效</li>
+        <li><strong>配套</strong>：封面优化 V4 Icon Dock（toolbar-h = 0）</li>
+      </ol>
+    </div>
+
+    <table class="compare">
+      <thead>
+        <tr><th>方案</th><th>一屏完整</th><th>相册气质</th><th>实现成本</th><th>与现块兼容</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>现状 D</td><td class="no">否</td><td class="mid">电影海报</td><td>—</td><td class="yes">是</td></tr>
+        <tr style="background:var(--wf-rec-bg)"><td><strong>E 分屏 ★</strong></td><td class="yes">是</td><td class="yes">图录 / 折页</td><td class="yes">低</td><td class="yes">是</td></tr>
+        <tr><td>F 装帧</td><td class="yes">是</td><td class="yes">限量画册</td><td class="mid">中</td><td class="yes">是</td></tr>
+        <tr><td>G 收紧</td><td class="mid">基本</td><td class="mid">剧场</td><td class="yes">很低</td><td class="yes">是</td></tr>
+        <tr><td>H 对开</td><td class="yes">是</td><td class="yes">横册</td><td class="mid">中</td><td class="yes">是</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:28px;font-size:15px">CSS 规格草案（方案 E + H）</h3>
+    <pre class="spec">/* cover-opening · web */
+html[data-layout="web"] .cover-opening,
+html[data-layout="auto"] .cover-opening {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: minmax(0, 58fr) minmax(0, 42fr);
+  background: var(--cover-mat, #f4f1ea);
+}
+
+html[data-layout="web"] .cover-hero {
+  position: relative; /* 取消 absolute inset */
+  inset: unset;
+  min-height: 0;
+}
+
+.cover-opening__panel {
+  margin-top: 0; /* 取消 auto 叠底 */
+  background: var(--cover-mat, #f4f1ea);
+  text-align: center;
+  padding: 20px 28px 22px;
+  /* 渐变改为 none 或极浅顶线 */
+}
+
+.cover-opening__hook {
+  -webkit-line-clamp: 2;
+  display: -webkit-box;
+  overflow: hidden;
+}
+
+/* 宽屏对开 */
+@media (min-width: 64rem) {
+  .cover-opening {
+    grid-template-rows: 1fr;
+    grid-template-columns: 1.08fr 0.92fr;
+  }
+  .cover-opening__panel { text-align: left; justify-content: center; }
+}</pre>
+
+    <div class="pin-row">
+      <div class="pin"><strong>字数预算</strong><br>hook 展示 ≤2 行（约 40–56 字）；完整 hook 在正文/Sheet 可见</div>
+      <div class="pin"><strong>元信息</strong><br>place + dates 合并一行：<code>东澳岛 · 2025.06.01–06.03</code></div>
+      <div class="pin"><strong>进入正文</strong><br>保留但缩小；scroll-snap 首屏仍可吸附</div>
+      <div class="pin"><strong>竖图</strong><br>保持 cover；focal 偏上；或 contain-fit 时衬纸同色</div>
+    </div>
+
+    <div class="discuss">
+      <h3>请你拍板的 5 个问题</h3>
+      <ol>
+        <li><strong>默认气质</strong>：E 浅色衬纸 vs F 深色装帧？（建议默认 E，F 作可选主题）</li>
+        <li><strong>宽屏</strong>：是否上 H 对开？（建议 ≥1024px 启用）</li>
+        <li><strong>hook 截断</strong>：首屏限 2 行是否接受？完整 hook 是否在第二章前再出现？</li>
+        <li><strong>place 行</strong>：是否与 trip-meta 合并为一行以减高？</li>
+        <li><strong>与 V4 Dock 节奏</strong>：封面改版与 Icon Dock 同一 PR 还是紧随下一 PR？</li>
+      </ol>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  document.querySelectorAll('.tabs button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.remove('is-active'); });
+      document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('is-visible'); });
+      btn.classList.add('is-active');
+      var panel = document.getElementById('panel-' + btn.getAttribute('data-panel'));
+      if (panel) panel.classList.add('is-visible');
+    });
+  });
+</script>
+</body>
+</html>

@@ -27,7 +27,9 @@ from travelogue.render.golden_regression import load_golden_trip
 # portrait-1/panorama-1 cover rules (clobbered by fc61396) re-changed the bundle.
 # Re-bumped 2026-06-10 (c): screen-plate portrait contain shares portrait-1 stage
 # collapse (folio lite chapter opener blank bands regression).
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}58c91ac18118"
+# Re-bumped 2026-06-15: Cover optimization V4 · web cover-opening title card
+# (journal.css right-bottom solid panel + line-clamp + meta inline).
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}2dffe9baf5fb"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

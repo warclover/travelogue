@@ -51,27 +51,39 @@ function insertScreenplayControl(parent, beforeNode, opts) {
   if (!parent) return null;
   opts = opts || {};
   var label = opts.label != null ? opts.label : "▶ 全屏放映";
+  if (opts.dock) label = "▶";
   var v3Class = opts.v3 ? " preview-toolbar__screenplay--v3" : "";
+  var dockClass = opts.dock ? " preview-toolbar__dock-btn preview-toolbar__dock-btn--screenplay" : "";
   if (document.documentElement.getAttribute("data-screenplay") === "on") {
     var screenplayBtn = document.createElement("button");
     screenplayBtn.type = "button";
-    screenplayBtn.className = "preview-toolbar__ctl preview-toolbar__screenplay" + v3Class;
+    screenplayBtn.className =
+      "preview-toolbar__ctl preview-toolbar__screenplay" + v3Class + dockClass;
     screenplayBtn.setAttribute("data-screenplay-trigger", "start");
     screenplayBtn.setAttribute("data-screenplay-label", label);
     screenplayBtn.setAttribute("data-screenplay-busy", "退出放映");
     screenplayBtn.setAttribute("aria-pressed", "false");
     screenplayBtn.setAttribute("aria-label", "全屏放映，逐屏展示");
     screenplayBtn.title = "全屏逐屏放映";
-    screenplayBtn.textContent = label;
+    if (opts.dock) {
+      screenplayBtn.innerHTML = '<span aria-hidden="true">' + label + "</span>";
+    } else {
+      screenplayBtn.textContent = label;
+    }
     parent.insertBefore(screenplayBtn, beforeNode || null);
     return screenplayBtn;
   }
   var href = presentAutoplayHref();
   if (!href) return null;
   var autoplayLink = document.createElement("a");
-  autoplayLink.className = "preview-toolbar__ctl preview-toolbar__screenplay" + v3Class;
+  autoplayLink.className =
+    "preview-toolbar__ctl preview-toolbar__screenplay" + v3Class + dockClass;
   autoplayLink.href = href;
-  autoplayLink.textContent = label;
+  if (opts.dock) {
+    autoplayLink.innerHTML = '<span aria-hidden="true">▶</span>';
+  } else {
+    autoplayLink.textContent = label;
+  }
   autoplayLink.setAttribute("aria-label", "全屏放映，逐屏展示");
   autoplayLink.title = "全屏逐屏放映";
   parent.insertBefore(autoplayLink, beforeNode || null);
@@ -201,8 +213,109 @@ function insertScreenplayControl(parent, beforeNode, opts) {
   var _sheetEditDirty = false;
   var _sheetEditBaseline = "";
 
+  function isPreviewToolbarV4(root) {
+    return !!(root && root.classList.contains("preview-toolbar--v4"));
+  }
+
   function isPreviewToolbarV3(root) {
-    return !!(root && root.classList.contains("preview-toolbar--v3"));
+    return !!(
+      root &&
+      (root.classList.contains("preview-toolbar--v3") ||
+        root.classList.contains("preview-toolbar--v4"))
+    );
+  }
+
+  function dockLongshotIconHtml(state) {
+    if (state === "running") {
+      return '<span class="preview-toolbar__longshot__spinner" aria-hidden="true"></span>';
+    }
+    return '<span aria-hidden="true">↓</span>';
+  }
+
+  function setDockLongshotAria(btn, state) {
+    if (!btn) return;
+    if (state === "running") {
+      btn.setAttribute("aria-label", "导出中");
+      updateDockTip(btn, "导出中…");
+    } else {
+      btn.setAttribute("aria-label", "导出长图");
+      updateDockTip(btn, "导出长图");
+    }
+  }
+
+  function applyDockLongshotIdle(btn) {
+    if (!btn) return;
+    btn.innerHTML = dockLongshotIconHtml("idle");
+    setDockLongshotAria(btn, "idle");
+  }
+
+  function updateDockTip(btn, text) {
+    if (btn && btn._dockTipEl) {
+      btn._dockTipEl.textContent = text;
+    }
+  }
+
+  function ensureDockTooltip(btn, label) {
+    if (!btn || btn.querySelector(".preview-toolbar__dock-tip")) return;
+    btn.classList.add("preview-toolbar__dock-btn--has-tip");
+    var tip = document.createElement("span");
+    tip.className = "preview-toolbar__dock-tip";
+    tip.setAttribute("role", "tooltip");
+    tip.textContent = label;
+    btn.appendChild(tip);
+    btn._dockTipEl = tip;
+  }
+
+  function syncDockScreenplayTip(btn) {
+    if (!btn || !btn._dockTipEl) return;
+    btn._dockTipEl.textContent =
+      btn.getAttribute("aria-pressed") === "true" ? "退出放映" : "放映";
+  }
+
+  function initDockTooltips(root) {
+    if (!isPreviewToolbarV4(root)) return;
+    var dock = root.querySelector(".preview-toolbar__dock");
+    if (!dock) return;
+
+    ensureDockTooltip(
+      dock.querySelector(".preview-toolbar__dock-btn--back"),
+      "返回"
+    );
+    ensureDockTooltip(dock.querySelector(".preview-toolbar__menu-btn"), "编辑与设置");
+
+    var exportBtn = dock.querySelector(".preview-toolbar__dock-btn--export");
+    ensureDockTooltip(exportBtn, "导出长图");
+
+    var screenplayBtn = dock.querySelector(".preview-toolbar__screenplay--v3");
+    ensureDockTooltip(screenplayBtn, "放映");
+    if (screenplayBtn && typeof MutationObserver !== "undefined") {
+      syncDockScreenplayTip(screenplayBtn);
+      var spObs = new MutationObserver(function () {
+        syncDockScreenplayTip(screenplayBtn);
+      });
+      spObs.observe(screenplayBtn, {
+        attributes: true,
+        attributeFilter: ["aria-pressed"],
+      });
+      root._dockScreenplayTipObs = spObs;
+    }
+  }
+
+  function initDockScrollFade(root) {
+    if (!isPreviewToolbarV4(root)) return;
+    var dock = root.querySelector(".preview-toolbar__dock");
+    var cover = document.querySelector('.cover-opening[data-block="cover-opening"]');
+    if (!dock || !cover || typeof IntersectionObserver === "undefined") return;
+
+    var fadeObs = new IntersectionObserver(
+      function (entries) {
+        var onCover = entries[0] && entries[0].isIntersecting;
+        dock.classList.toggle("preview-toolbar__dock--dim", !onCover);
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+    );
+    fadeObs.observe(cover);
+    root._dockFadeObs = fadeObs;
   }
 
   function snapshotEditPanel(el) {
@@ -878,6 +991,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     var btn = longshotBtnEl(root);
     if (!btn) return;
     var isV3 = isPreviewToolbarV3(root);
+    var isDock = isPreviewToolbarV4(root);
 
     ["idle", "running", "done", "error"].forEach(function (s) {
       btn.classList.remove("preview-toolbar__longshot--" + s);
@@ -895,8 +1009,13 @@ function insertScreenplayControl(parent, beforeNode, opts) {
       if (zone) zone.classList.add("preview-toolbar__export-zone--running");
       setLongshotControlsDisabled(root, true);
       if (isV3) {
-        btn.innerHTML =
-          '<span class="preview-toolbar__longshot__spinner" aria-hidden="true"></span> 导出中…';
+        if (isDock) {
+          btn.innerHTML = dockLongshotIconHtml("running");
+          setDockLongshotAria(btn, "running");
+        } else {
+          btn.innerHTML =
+            '<span class="preview-toolbar__longshot__spinner" aria-hidden="true"></span> 导出中…';
+        }
         root._exportDockActive = true;
         if (root._taskDock) {
           var prefs = readLongshotExportPrefs();
@@ -923,7 +1042,12 @@ function insertScreenplayControl(parent, beforeNode, opts) {
       if (isV3) {
         btn.classList.add("preview-toolbar__longshot--idle");
         setLongshotControlsDisabled(root, false);
-        btn.textContent = "导出长图";
+        if (isDock) {
+          btn.innerHTML = dockLongshotIconHtml("idle");
+          setDockLongshotAria(btn, "idle");
+        } else {
+          btn.textContent = "导出长图";
+        }
         root._exportDockActive = false;
         if (badge) badge.hidden = true;
         return;
@@ -941,7 +1065,11 @@ function insertScreenplayControl(parent, beforeNode, opts) {
       btn.classList.add("preview-toolbar__longshot--idle");
       if (!isV3) setLongshotSplitState(root, "idle");
       setLongshotControlsDisabled(root, false);
-      btn.textContent = isV3 ? "导出长图" : "保存长图";
+      if (isDock) {
+        applyDockLongshotIdle(btn);
+      } else {
+        btn.textContent = isV3 ? "导出长图" : "保存长图";
+      }
       if (isV3) {
         root._exportDockActive = false;
         if (root._taskDock) root._taskDock.showError(opts.hint || "保存失败，请重试");
@@ -956,7 +1084,11 @@ function insertScreenplayControl(parent, beforeNode, opts) {
       btn.classList.add("preview-toolbar__longshot--idle");
       if (!isV3) setLongshotSplitState(root, "idle");
       setLongshotControlsDisabled(root, false);
-      btn.textContent = isV3 ? "导出长图" : "保存长图";
+      if (isDock) {
+        applyDockLongshotIdle(btn);
+      } else {
+        btn.textContent = isV3 ? "导出长图" : "保存长图";
+      }
       if (zone) zone.classList.add("preview-toolbar__export-zone--stale");
       if (isV3) {
         btn.classList.add("preview-toolbar__longshot--stale");
@@ -971,7 +1103,11 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     btn.classList.add("preview-toolbar__longshot--idle");
     if (!isV3) setLongshotSplitState(root, "idle");
     setLongshotControlsDisabled(root, false);
-    btn.textContent = isV3 ? "导出长图" : "保存长图";
+    if (isDock) {
+      applyDockLongshotIdle(btn);
+    } else {
+      btn.textContent = isV3 ? "导出长图" : "保存长图";
+    }
     btn.classList.remove("preview-toolbar__longshot--stale");
     root._exportDockActive = false;
     if (badge) badge.hidden = true;
@@ -1029,6 +1165,11 @@ function insertScreenplayControl(parent, beforeNode, opts) {
   }
 
   function syncToolbarHeight(root) {
+    if (isPreviewToolbarV4(root)) {
+      root.style.height = "";
+      document.documentElement.style.setProperty("--preview-toolbar-h", "0px");
+      return;
+    }
     if (isPreviewToolbarV3(root)) {
       root.style.height = "";
       document.documentElement.style.setProperty("--preview-toolbar-h", "48px");
@@ -2591,9 +2732,11 @@ function insertScreenplayControl(parent, beforeNode, opts) {
   }
 
   function initToolbarV3(root, tripId) {
-    var bar = root.querySelector(".preview-toolbar__bar");
-    var actions = root.querySelector(".preview-toolbar__actions");
-    initTitleEdit(root, tripId);
+    var dock = root.querySelector(".preview-toolbar__dock");
+    var actions = dock || root.querySelector(".preview-toolbar__actions");
+    if (!isPreviewToolbarV4(root)) {
+      initTitleEdit(root, tripId);
+    }
     var drawers = initPreviewDrawers(root, tripId);
 
     var readerOn = false;
@@ -2837,20 +2980,31 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     longshotBtn.type = "button";
     longshotBtn.className =
       "preview-toolbar__longshot preview-toolbar__longshot--v3 preview-toolbar__longshot--idle";
-    longshotBtn.textContent = "导出长图";
+    if (isPreviewToolbarV4(root)) {
+      longshotBtn.className +=
+        " preview-toolbar__dock-btn preview-toolbar__dock-btn--export";
+      longshotBtn.innerHTML = dockLongshotIconHtml("idle");
+      longshotBtn.setAttribute("aria-label", "导出长图");
+    } else {
+      longshotBtn.textContent = "导出长图";
+    }
 
     exportZone.appendChild(longshotBtn);
     exportWrap.appendChild(exportZone);
     var menuWrap = actions.querySelector(".preview-toolbar__menu-wrap");
-    actions.insertBefore(exportWrap, menuWrap);
+    if (isPreviewToolbarV4(root)) {
+      insertScreenplayControl(actions, menuWrap, { label: "▶", v3: true, dock: true });
+      actions.appendChild(exportWrap);
+    } else {
+      actions.insertBefore(exportWrap, menuWrap);
+      insertScreenplayControl(actions, menuWrap, { label: "放映", v3: true });
+    }
 
     setLongshotExportState(root, "idle");
 
     longshotBtn.addEventListener("click", function () {
       startLongshot(root, tripId);
     });
-
-    insertScreenplayControl(actions, menuWrap, { label: "放映", v3: true });
 
     if (window.location.search.indexOf("focus=longshot") >= 0) {
       requestAnimationFrame(function () {
@@ -2869,6 +3023,11 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     window.addEventListener("travelogue:copy-saved", function () {
       showStaleHint(root);
     });
+
+    if (isPreviewToolbarV4(root)) {
+      initDockTooltips(root);
+      initDockScrollFade(root);
+    }
 
     syncToolbarHeight(root);
   }
@@ -2923,22 +3082,16 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     document.documentElement.setAttribute("data-preview-toolbar", "on");
 
     var root = document.createElement("div");
-    root.className = "preview-toolbar preview-toolbar--v3";
+    root.className = "preview-toolbar preview-toolbar--v4";
     root.innerHTML =
-      '<div class="preview-toolbar__body">' +
-      '<div class="preview-toolbar__bar preview-toolbar__bar--v3">' +
-      '<a class="preview-toolbar__back preview-toolbar__ctl" href="/" title="返回 Studio 首页">' +
-      '<span class="preview-toolbar__ctl__glyph" aria-hidden="true">←</span>返回</a>' +
-      '<div class="preview-toolbar__title-wrap"></div>' +
-      '<div class="preview-toolbar__actions">' +
+      '<nav class="preview-toolbar__dock" aria-label="预览快捷操作">' +
+      '<a class="preview-toolbar__dock-btn preview-toolbar__dock-btn--back preview-toolbar__ctl" href="/" aria-label="返回" title="返回 Studio 首页">' +
+      '<span aria-hidden="true">←</span></a>' +
       '<div class="preview-toolbar__menu-wrap">' +
-      '<button type="button" class="preview-toolbar__menu-btn" aria-haspopup="dialog" aria-expanded="false" aria-label="编辑与设置" title="编辑与设置">' +
-      '<span class="preview-toolbar__menu-btn__label preview-toolbar__menu-btn__label--short">设置</span>' +
-      '<span class="preview-toolbar__menu-btn__label preview-toolbar__menu-btn__label--full">编辑与设置</span></button>' +
+      '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__dock-btn preview-toolbar__dock-btn--menu" aria-haspopup="dialog" aria-expanded="false" aria-label="编辑与设置" title="编辑与设置">' +
+      '<span aria-hidden="true">⋯</span></button>' +
       "</div>" +
-      "</div>" +
-      "</div>" +
-      "</div>";
+      "</nav>";
 
     document.body.insertBefore(root, document.body.firstChild);
     var tripId = tripIdFromPath();

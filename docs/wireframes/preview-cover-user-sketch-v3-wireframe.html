@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>封面示意优化 · 全幅摄影 + 右下书名卡 · 线框稿 v3.0</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-border: #90a4ae;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-anno: #e65100;
+      --wf-rec: #00897b;
+      --wf-rec-bg: #e0f2f1;
+      --sketch-red: #e53935;
+      --photo: #b0bec5;
+      --photo-deep: #90a4ae;
+      --card-dark: #121110;
+      --prod-accent: #3d6b5a;
+      --prod-accent-light: #7cb89a;
+      --prod-gold: #d4a843;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --font-serif: Georgia, "Noto Serif SC", "Songti SC", serif;
+      --font-brush: "KaiTi", "STKaiti", "FangSong", serif;
+      --vh: 620px;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--wf-bg); color: var(--wf-text); line-height: 1.5; }
+
+    .review-bar {
+      position: sticky; top: 0; z-index: 1000;
+      background: #263238; color: #eceff1; padding: 12px 20px;
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 95ch; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button:hover { background: #37474f; }
+    .tabs button.is-active { background: var(--wf-rec); border-color: var(--wf-rec); color: #fff; }
+    .tabs button.is-rec::after { content: " ★"; }
+
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 20px 80px; }
+    .panel { display: none; }
+    .panel.is-visible { display: block; }
+    .section { margin-bottom: 32px; }
+    .section h2 { margin: 0 0 6px; font-size: 18px; }
+    .section .lead { margin: 0 0 14px; color: var(--wf-muted); font-size: 14px; max-width: 80ch; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 290px; gap: 22px; align-items: start; }
+    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .sidebar {
+      background: #fff; border: 1px solid var(--wf-border); border-radius: var(--radius);
+      padding: 14px; font-size: 13px;
+    }
+    .sidebar h3 { margin: 0 0 8px; font-size: 11px; color: var(--wf-anno); text-transform: uppercase; letter-spacing: .06em; }
+    .sidebar ul { margin: 0; padding-left: 18px; }
+    .sidebar li { margin-bottom: 5px; color: var(--wf-muted); font-size: 12px; }
+
+    .frame { border: 2px solid var(--wf-border); border-radius: 14px; overflow: hidden; background: #fff; }
+    .frame--rec { border-color: var(--wf-rec); box-shadow: 0 0 0 3px rgba(0,137,123,.12); }
+    .frame--user { border-color: var(--sketch-red); box-shadow: 0 0 0 2px rgba(229,57,53,.15); }
+
+    .chrome { background: #dee1e6; padding: 8px 12px 0; border-bottom: 1px solid #b0bec5; font-size: 12px; }
+    .chrome__tab { display: inline-block; background: #fff; padding: 7px 12px; border-radius: 8px 8px 0 0; font-weight: 600; }
+
+    /* ── 屏幕容器 ── */
+    .screen {
+      position: relative;
+      height: var(--vh);
+      overflow: hidden;
+      background: #888;
+    }
+    .screen--sketch {
+      border: 3px solid var(--sketch-red);
+      margin: 8px;
+      height: calc(var(--vh) - 16px);
+    }
+    .screen__label {
+      position: absolute; z-index: 30; font-size: 9px; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase; padding: 3px 7px; border-radius: 4px;
+    }
+
+    /* 摄影区 */
+    .photo {
+      position: absolute; inset: 0;
+      background:
+        repeating-linear-gradient(-45deg, var(--photo-deep), var(--photo-deep) 12px, var(--photo) 12px, var(--photo) 24px);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,.9); font-size: 12px; font-weight: 600;
+    }
+    .photo small { display: block; font-size: 10px; font-weight: 400; opacity: .8; margin-top: 4px; text-align: center; }
+
+    /* 用户原示意 */
+    .sketch-icons {
+      position: absolute; top: 14px; right: 14px; z-index: 20;
+      display: flex; gap: 6px;
+    }
+    .sketch-icons span {
+      width: 28px; height: 28px; border: 2px solid var(--sketch-red);
+      background: rgba(255,255,255,.5); display: block;
+    }
+    .sketch-card {
+      position: absolute; right: 0; bottom: 18%;
+      width: 38%; height: 28%;
+      background: #111; border: 2px solid #000;
+      z-index: 15;
+    }
+    .sketch-card::after {
+      content: "游记名称 / 底部文案";
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,.35); font-size: 10px; text-align: center; padding: 8px;
+    }
+
+    /* Icon Dock · 优化版 */
+    .dock {
+      position: absolute; top: max(12px, env(safe-area-inset-top, 12px));
+      right: max(12px, env(safe-area-inset-right, 12px));
+      z-index: 25;
+      display: flex; gap: 4px; padding: 4px 6px; border-radius: 999px;
+      background: rgba(26, 47, 40, 0.82);
+      border: 1px solid rgba(255,255,255,0.10);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0,0,0,.18);
+    }
+    .dock button {
+      width: 34px; height: 34px; border: none; border-radius: 8px;
+      background: transparent; color: #a8dcc8; font-size: 13px; cursor: default;
+      display: flex; align-items: center; justify-content: center;
+      font-family: inherit;
+    }
+    .dock button:hover { background: rgba(255,255,255,.08); }
+    .dock button.is-gold { background: var(--prod-gold); color: #1a1408; border-radius: 9px; }
+    .dock button.is-active { background: rgba(127,203,179,.2); color: #dff5ec; outline: 1px solid rgba(127,203,179,.4); }
+
+    /* 书名卡 · 优化版 */
+    .title-card {
+      position: absolute;
+      z-index: 18;
+      right: max(20px, 3.5vw);
+      bottom: max(20px, 3.5vw);
+      width: min(420px, 46vw);
+      max-height: min(240px, 38vh);
+      padding: 18px 20px 16px;
+      background: rgba(18, 17, 16, 0.90);
+      border-left: 3px solid var(--prod-accent-light);
+      box-shadow: 0 12px 40px rgba(0,0,0,.35);
+      color: #fff;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      overflow: hidden;
+    }
+    .title-card--frost {
+      background: rgba(18, 17, 16, 0.62);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,.12);
+      border-left: 3px solid var(--prod-accent-light);
+    }
+    .title-card--flush {
+      right: 0; bottom: 0; width: min(440px, 48vw);
+      border-radius: 0; border-left: 3px solid var(--prod-accent-light);
+    }
+    .title-card__meta {
+      font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+      color: var(--prod-accent-light); margin: 0 0 6px;
+    }
+    .title-card__title {
+      font-family: var(--font-brush); font-size: clamp(22px, 3.8vw, 32px);
+      font-weight: 400; line-height: 1.1; letter-spacing: .03em;
+      margin: 0 0 6px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .title-card__hook {
+      font-family: var(--font-serif); font-size: 13px; line-height: 1.45;
+      color: rgba(255,255,255,.82); margin: 0;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .title-card__enter {
+      margin-top: 10px; font-size: 8px; letter-spacing: .14em; text-transform: uppercase;
+      color: rgba(255,255,255,.42);
+    }
+
+    /* 摄影辅助 */
+    .photo-vignette {
+      position: absolute; inset: 0; z-index: 12; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 70% at 35% 40%, transparent 40%, rgba(0,0,0,.12) 100%),
+        linear-gradient(to top right, transparent 50%, rgba(0,0,0,.25) 100%);
+    }
+    .photo-corner-grad {
+      position: absolute; right: 0; bottom: 0; width: 55%; height: 50%; z-index: 14; pointer-events: none;
+      background: linear-gradient(135deg, transparent 0%, rgba(0,0,0,.45) 100%);
+    }
+    .scroll-hint {
+      position: absolute; left: max(20px, 3.5vw); bottom: max(20px, 3.5vw); z-index: 16;
+      font-size: 8px; letter-spacing: .14em; text-transform: uppercase;
+      color: rgba(255,255,255,.45);
+    }
+    .scroll-hint::after { content: " ⌄"; font-size: 12px; }
+
+    /* 标注层 */
+    .anno-line {
+      position: absolute; z-index: 40; pointer-events: none;
+    }
+    .anno-line--h { height: 1px; background: var(--wf-anno); }
+    .anno-line--v { width: 1px; background: var(--wf-anno); }
+    .anno-tag {
+      position: absolute; z-index: 41; font-size: 9px; font-weight: 700;
+      color: #fff; background: var(--wf-anno); padding: 2px 6px; border-radius: 3px;
+      white-space: nowrap;
+    }
+
+    .compare { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 14px; }
+    .compare th, .compare td { border: 1px solid var(--wf-border); padding: 8px 10px; text-align: left; vertical-align: top; }
+    .compare th { background: #eceff1; font-size: 11px; }
+    .yes { color: var(--wf-rec); font-weight: 700; }
+    .no { color: #c62828; font-weight: 700; }
+
+    .callout {
+      border-radius: var(--radius); padding: 14px 16px; font-size: 13px; margin-top: 16px;
+      background: #fff; border: 1px solid var(--wf-border);
+    }
+    .callout--rec { background: var(--wf-rec-bg); border-left: 4px solid var(--wf-rec); }
+    .callout h3 { margin: 0 0 8px; font-size: 14px; }
+
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; font-size: 11px; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+    .legend .i-red { border: 2px solid var(--sketch-red); background: #fff; }
+    .legend .i-photo { background: var(--photo); }
+    .legend .i-card { background: var(--card-dark); }
+    .legend .i-dock { background: rgba(26,47,40,.85); }
+
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    @media (max-width: 720px) { .row-2 { grid-template-columns: 1fr; } }
+
+    pre.spec {
+      background: #263238; color: #eceff1; padding: 14px; border-radius: 8px;
+      font-size: 11px; overflow-x: auto; margin: 12px 0 0;
+    }
+  </style>
+</head>
+<body>
+
+<header class="review-bar">
+  <h1>封面示意优化 v3.0 · 基于你的草图（全幅摄影 + 右下书名卡 + 右上 Dock）</h1>
+  <p>
+    红框 = 屏幕 · 灰区 = 封面图 · 黑块 = 游记名称与底部文案 · 右上四钮 = 快捷操作。
+    本稿在<strong>保留你的构图意图</strong>前提下，由页面/视觉专家做比例、层级、可读性与一屏完整性优化。
+  </p>
+  <nav class="tabs">
+    <button type="button" class="is-active" data-panel="yours">① 你的原示意</button>
+    <button type="button" data-panel="refined" class="is-rec">② 优化稿 ★</button>
+    <button type="button" data-panel="variants">③ 书名卡变体</button>
+    <button type="button" data-panel="stress">④ 压力测试</button>
+    <button type="button" data-panel="spec">⑤ 规格 & 审核</button>
+  </nav>
+</header>
+
+<div class="wrap">
+
+  <!-- ① 原示意 -->
+  <section class="panel is-visible" id="panel-yours">
+    <div class="section">
+      <h2>① 你的原示意（忠实还原）</h2>
+      <p class="lead">构图方向正确：<strong>摄影为主场、工具退居右上、信息集中在右下</strong>。专家标注的 4 处可优化点见右侧。</p>
+      <div class="legend">
+        <span><i class="i-red"></i> 屏幕红框</span>
+        <span><i class="i-photo"></i> 封面摄影</span>
+        <span><i class="i-card"></i> 书名/文案色块</span>
+        <span><i class="i-red"></i> 四快捷钮（方块）</span>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="frame frame--user">
+        <div class="chrome"><span class="chrome__tab">你的草图 · 数字化还原</span></div>
+        <div class="screen screen--sketch">
+          <span class="screen__label" style="top:6px;left:6px;background:var(--sketch-red)">屏幕</span>
+          <div class="photo"><span>封面摄影<small>灰框 · 全幅</small></span></div>
+          <div class="sketch-icons" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div class="sketch-card"></div>
+        </div>
+      </div>
+      <aside class="sidebar">
+        <h3>保留的优点</h3>
+        <ul>
+          <li>摄影几乎占满屏，沉浸感强</li>
+          <li>右下书名卡 = 杂志封套标签感</li>
+          <li>右上工具不抢画面中心</li>
+          <li>与 Icon Dock V4 方向一致</li>
+        </ul>
+        <h3 style="margin-top:12px">建议优化的 4 点</h3>
+        <ul>
+          <li><strong>黑块贴边且偏大</strong> → 建议内缩 20px + 限宽限高</li>
+          <li><strong>纯黑实心</strong> → 90% 深灰 + 左侧 accent 线更有「图录」感</li>
+          <li><strong>四红方块分散</strong> → 合并为半透明胶囊坞</li>
+          <li><strong>无字数预算</strong> → 标题/hook 各限 2 行，保证一屏</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ② 优化稿 -->
+  <section class="panel" id="panel-refined">
+    <div class="section">
+      <h2>② 专家优化稿 ★（推荐审核基线）</h2>
+      <p class="lead">
+        在同一构图下：摄影全幅保留；右下<strong>书名卡内缩</strong>；左下独立「进入正文」；右上<strong>Icon Dock 胶囊</strong>；
+        右下加轻 corner gradient 保证卡下摄影不过亮。
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="frame frame--rec">
+        <div class="chrome"><span class="chrome__tab">优化稿 · 推荐落地</span></div>
+        <div class="screen">
+          <span class="screen__label" style="top:8px;left:8px;background:#263238">100dvh</span>
+          <div class="photo">
+            <span>封面摄影 · cover-hero<small>object-fit: cover · focal 偏左中</small></span>
+          </div>
+          <div class="photo-vignette"></div>
+          <div class="photo-corner-grad"></div>
+
+          <nav class="dock" aria-label="预览快捷操作">
+            <button type="button" title="返回">←</button>
+            <button type="button" title="放映">▶</button>
+            <button type="button" title="编辑与设置">⋯</button>
+            <button type="button" class="is-gold" title="导出长图">↓</button>
+          </nav>
+
+          <div class="title-card">
+            <p class="title-card__meta">东澳岛 · 2025.06.01 – 06.03</p>
+            <h1 class="title-card__title">2025东澳岛6</h1>
+            <p class="title-card__hook">海风吹干盐粒的那刻，我们坐在堤坝上不说话。</p>
+            <p class="title-card__enter">进入正文</p>
+          </div>
+
+          <p class="scroll-hint">向下滚动</p>
+
+          <!-- 尺寸标注 -->
+          <span class="anno-tag" style="right:20px;bottom:calc(38vh + 24px)">卡 max-height 38vh</span>
+          <span class="anno-tag" style="right:min(420px,46vw);bottom:20px;transform:translateX(-100%) translateX(-12px)">宽 max 420px / 46vw</span>
+        </div>
+      </div>
+      <aside class="sidebar">
+        <span class="yes" style="font-size:12px">★ 推荐作为实现基线</span>
+        <h3 style="margin-top:8px">相对原示意改动</h3>
+        <ul>
+          <li>书名卡：<strong>右下内缩 20px</strong>，不贴边</li>
+          <li>宽度 <code>min(420px, 46vw)</code></li>
+          <li>高度 <code>max 38vh</code>，超出 clamp</li>
+          <li>左边线 <code>3px #7cb89a</code> 图录标签</li>
+          <li>Dock：胶囊 + 导出金色</li>
+          <li>「进入正文」移到<strong>左下角</strong>，与书名卡错开</li>
+        </ul>
+        <h3 style="margin-top:12px">视觉层级</h3>
+        <ul>
+          <li>L1 摄影（全幅）</li>
+          <li>L2 角部渐变（辅助可读）</li>
+          <li>L3 书名卡（信息）</li>
+          <li>L4 Dock（工具 · 最高 z）</li>
+        </ul>
+      </aside>
+    </div>
+
+    <div class="callout callout--rec">
+      <h3>构图逻辑（艺术相册语境）</h3>
+      <p style="margin:0">
+        摄影画册封面常把<strong>类型标签/书名放在右下或左下</strong>，把画面中心留给主体。
+        你的右下黑块 = 「封底书脊标签」的现代数字版；内缩与左边线让它从「色块贴图」升级为「装帧组件」。
+      </p>
+    </div>
+  </section>
+
+  <!-- ③ 变体 -->
+  <section class="panel" id="panel-variants">
+    <div class="section">
+      <h2>③ 书名卡变体（三选一或组合）</h2>
+      <p class="lead">右下信息区的材质差异——实现成本接近，建议评审时选定默认 + 备选。</p>
+    </div>
+    <div class="row-2">
+      <div class="frame">
+        <div class="chrome"><span class="chrome__tab">A · 实心卡（推荐默认）</span></div>
+        <div class="screen" style="height:400px">
+          <div class="photo" style="font-size:11px">摄影</div>
+          <div class="photo-corner-grad"></div>
+          <div class="dock" style="transform:scale(.9);transform-origin:top right"><button>←</button><button>▶</button><button>⋯</button><button class="is-gold">↓</button></div>
+          <div class="title-card" style="width:min(360px,52vw);max-height:200px">
+            <p class="title-card__meta">东澳岛 · 2025.06</p>
+            <h1 class="title-card__title">2025东澳岛6</h1>
+            <p class="title-card__hook">海风吹干盐粒的那刻。</p>
+          </div>
+        </div>
+      </div>
+      <div class="frame">
+        <div class="chrome"><span class="chrome__tab">B · 磨砂玻璃卡</span></div>
+        <div class="screen" style="height:400px">
+          <div class="photo">摄影</div>
+          <div class="dock" style="transform:scale(.9);transform-origin:top right"><button>←</button><button>▶</button><button>⋯</button><button class="is-gold">↓</button></div>
+          <div class="title-card title-card--frost" style="width:min(360px,52vw);max-height:200px">
+            <p class="title-card__meta">东澳岛 · 2025.06</p>
+            <h1 class="title-card__title">2025东澳岛6</h1>
+            <p class="title-card__hook">海风吹干盐粒的那刻。</p>
+          </div>
+        </div>
+      </div>
+      <div class="frame">
+        <div class="chrome"><span class="chrome__tab">C · 贴边封套（接近原示意）</span></div>
+        <div class="screen" style="height:400px">
+          <div class="photo">摄影</div>
+          <div class="dock" style="transform:scale(.9);transform-origin:top right"><button>←</button><button>▶</button><button>⋯</button><button class="is-gold">↓</button></div>
+          <div class="title-card title-card--flush" style="max-height:210px">
+            <p class="title-card__meta">东澳岛 · 2025.06</p>
+            <h1 class="title-card__title">2025东澳岛6</h1>
+            <p class="title-card__hook">海风吹干盐粒的那刻。</p>
+          </div>
+        </div>
+      </div>
+      <div class="frame frame--rec">
+        <div class="chrome"><span class="chrome__tab">对比建议</span></div>
+        <div style="padding:14px;font-size:13px">
+          <table class="compare">
+            <tr><th>变体</th><th>气质</th><th>可读性</th><th>建议</th></tr>
+            <tr style="background:var(--wf-rec-bg)"><td><strong>A 实心</strong></td><td>图录 / 展览标签</td><td class="yes">最高</td><td><strong>默认</strong></td></tr>
+            <tr><td>B 磨砂</td><td>现代画册 App</td><td class="yes">高</td><td>亮图/浅图备选</td></tr>
+            <tr><td>C 贴边</td><td>最接近原草图</td><td class="yes">高</td><td>宽屏可选</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ④ 压力测试 -->
+  <section class="panel" id="panel-stress">
+    <div class="section">
+      <h2>④ 压力测试 · 一屏完整性</h2>
+      <p class="lead">长标题 + 长 hook + 窄屏，验证 <code>line-clamp</code> 与 <code>max-height</code> 是否守住一屏。</p>
+    </div>
+    <div class="row-2">
+      <div class="frame">
+        <div class="chrome"><span class="chrome__tab">极端文案 · 仍在一屏内</span></div>
+        <div class="screen" style="height:520px">
+          <div class="photo">摄影</div>
+          <div class="photo-corner-grad"></div>
+          <div class="dock"><button>←</button><button>▶</button><button>⋯</button><button class="is-gold">↓</button></div>
+          <div class="title-card">
+            <p class="title-card__meta">东澳岛 · 2025.06.01 – 06.06 · 5 天 · 两人</p>
+            <h1 class="title-card__title">二零二五东澳岛夏日之旅纪念册</h1>
+            <p class="title-card__hook">海风吹干盐粒的那刻，我们坐在堤坝上不说话，只听见远处渔船的引擎声渐渐弱下去，像一本还没翻开的相册里夹着的一阵潮气。</p>
+          </div>
+          <p class="scroll-hint">向下滚动</p>
+        </div>
+      </div>
+      <aside class="sidebar">
+        <h3>结果</h3>
+        <ul>
+          <li class="yes">标题 2 行截断</li>
+          <li class="yes">hook 2 行截断</li>
+          <li class="yes">卡高度 ≤ 38vh</li>
+          <li class="yes">无纵向溢出</li>
+        </ul>
+        <h3 style="margin-top:12px">规则</h3>
+        <ul>
+          <li>完整 hook 可在第一章前再出现</li>
+          <li>meta 合并为一行减高</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ⑤ 规格 -->
+  <section class="panel" id="panel-spec">
+    <div class="section">
+      <h2>⑤ 实现规格摘要 & 请你审核</h2>
+    </div>
+
+    <table class="compare">
+      <thead>
+        <tr><th>区域</th><th>你的示意</th><th>优化稿 ★</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>屏幕</td><td>红框 100%</td><td><code>cover-opening: min-height 100dvh</code></td></tr>
+        <tr><td>封面图</td><td>灰色全幅</td><td><code>cover-hero absolute inset:0</code> · cover</td></tr>
+        <tr><td>书名卡</td><td>右下黑块 · 贴边 · 偏大</td><td>右下内缩 · <code>min(420px,46vw)</code> · max 38vh · 左 accent 线</td></tr>
+        <tr><td>文案</td><td>底部文案入黑块</td><td>meta + title + hook(2行) + 卡内「进入正文」可选</td></tr>
+        <tr><td>快捷钮</td><td>右上四个红方块</td><td>Dock 胶囊 · 36px 图标 · 导出金色</td></tr>
+        <tr><td>滚动提示</td><td>—</td><td>左下独立轻提示（与卡错开）</td></tr>
+      </tbody>
+    </table>
+
+    <pre class="spec">/* 推荐 CSS 结构（示意） */
+.cover-opening {
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+.cover-hero { position: absolute; inset: 0; }
+.cover-opening__panel {          /* 原 panel 改为书名卡 */
+  position: absolute;
+  right: max(20px, 3.5vw);
+  bottom: max(20px, 3.5vw);
+  width: min(420px, 46vw);
+  max-height: min(240px, 38vh);
+  padding: 18px 20px 16px;
+  background: rgba(18, 17, 16, 0.90);
+  border-left: 3px solid var(--accent-mobile, #7cb89a);
+  box-shadow: 0 12px 40px rgba(0,0,0,.35);
+}
+.cover-opening__title { -webkit-line-clamp: 2; }
+.cover-opening__hook  { -webkit-line-clamp: 2; }
+.cover-opening__enter { /* 可选：留在卡内或移到左下 */ }</pre>
+
+    <div class="callout callout--rec" style="margin-top:20px">
+      <h3>专家推荐结论</h3>
+      <ol style="margin:0;padding-left:20px">
+        <li><strong>采纳你的构图</strong>：全幅摄影 + 右下书名卡 + 右上 Dock（不改为上下分屏）</li>
+        <li><strong>优化书名卡</strong>：内缩、限宽限高、左边线、实心 A 为默认</li>
+        <li><strong>Dock</strong>：与 PRD-COVER-OPTIMIZATION-V4 Icon Dock 一致</li>
+        <li><strong>一屏保障</strong>：title/hook 各 2 行 + 卡 max 38vh</li>
+        <li><strong>「进入正文」</strong>：建议左下全局提示，避免书名卡过高</li>
+      </ol>
+    </div>
+
+    <div class="callout" style="border-left:4px solid var(--wf-anno)">
+      <h3>请你审核的 4 项</h3>
+      <ol style="margin:0;padding-left:20px;font-size:13px">
+        <li>书名卡默认：<strong>A 实心</strong> / B 磨砂 / C 贴边？</li>
+        <li>「进入正文」放<strong>左下</strong>还是留在<strong>卡内底部</strong>？</li>
+        <li>右下渐变衬底（corner grad）是否需要？（建议保留，亮图可读性更好）</li>
+        <li>宽屏 ≥1280px：书名卡宽度维持 420px 上限，还是略放大？</li>
+      </ol>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  document.querySelectorAll('.tabs button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.remove('is-active'); });
+      document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('is-visible'); });
+      btn.classList.add('is-active');
+      var el = document.getElementById('panel-' + btn.getAttribute('data-panel'));
+      if (el) el.classList.add('is-visible');
+    });
+  });
+</script>
+</body>
+</html>
