@@ -86,8 +86,10 @@ def cmd_render(
             err=True,
         )
         raise typer.Exit(1)
+    trip_for_layout = _trip_svc(trip_path).load(trip_path)
+    use_dual_surfaces = dual or trip_for_layout.get("exportLayout", "auto") == "auto"
     try:
-        if dual:
+        if use_dual_surfaces:
             web_path, mobile_path, present_path = render_trip_surfaces(
                 trip_path,
                 out,

@@ -5,6 +5,7 @@ from __future__ import annotations
 from travelogue.curation.curate import (
     _pick_cover_asset_id,
     resolve_cover_asset_id,
+    resolve_cover_render_profile,
     sync_trip_covers,
 )
 from travelogue.render.engine import render_html
@@ -21,6 +22,39 @@ def _asset(aid: str, w: int, h: int, *, sharp: float = 120.0) -> dict:
         "dateConfidence": "high",
         "quality": {"sharpness": sharp},
     }
+
+
+def test_resolve_cover_render_profile_auto() -> None:
+    assert resolve_cover_render_profile("auto", index_name="index.html", layout_engine="screens") == "web"
+    assert resolve_cover_render_profile("auto", index_name="index-mobile.html") == "mobile"
+    assert resolve_cover_render_profile("web") == "web"
+
+
+def test_auto_index_html_uses_web_cover() -> None:
+    trip = {
+        "exportLayout": "auto",
+        "layoutEngine": "screens",
+        "coverAssetId": "port",
+        "assets": [
+            _asset("port", 900, 2000),
+            _asset("land", 1920, 1080),
+            _asset("a3", 1200, 800),
+            _asset("a4", 1200, 800),
+        ],
+        "curation": {"coverByLayout": {"mobile": "port", "web": "land"}},
+        "chapters": [],
+        "meta": {"title": "测", "dateStart": "2025-04-01", "dateEnd": "2025-04-02", "places": ["京都"]},
+    }
+    web_html = render_html(
+        trip, export_layout_override="auto", layout_engine_override="screens"
+    )
+    assert "land" in web_html or "1920" in web_html
+    assert resolve_cover_asset_id(
+        trip,
+        export_layout="auto",
+        index_name="index.html",
+        layout_engine="screens",
+    ) == "land"
 
 
 def test_sync_cover_by_layout_auto() -> None:

@@ -15,6 +15,21 @@ html[data-inline-edit="on"] .inline-edit__field--active {
   outline: none;
   box-shadow: 0 0 0 2px rgba(61, 107, 90, 0.55);
   background: rgba(255, 255, 255, 0.92);
+  color: #1a1918;
+}
+
+html[data-inline-edit="on"] .inline-edit__field--active .breath-highlight__unit {
+  opacity: 1 !important;
+  transform: none !important;
+  color: inherit;
+}
+
+html[data-inline-edit="on"] .cover-opening__hook.inline-edit__field--active,
+html[data-inline-edit="on"] .cover-opening__hook[contenteditable="true"] {
+  color: #1a1918;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
 }
 
 html[data-inline-edit="on"][data-layout="web"] .inline-edit__field--active {

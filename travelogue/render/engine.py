@@ -25,6 +25,7 @@ from travelogue.paths import (
     INLINE_EDIT_JS,
     JOURNAL_CSS,
     JOURNAL_SCREENS_CSS,
+    HETANGYUESE_WOFF2,
     LONGSHOT_BRIDGE_JS,
     LONGSHOT_CSS,
     LONGSHOT_JS,
@@ -154,6 +155,17 @@ def _copy_named_files(
         dest = out_dir / name
         if dest.resolve() != src.resolve():
             shutil.copy2(src, dest)
+
+
+def copy_journal_fonts(out_dir: Path) -> None:
+    """Ship webfonts referenced by journal.css (cover title handwriting)."""
+    if not HETANGYUESE_WOFF2.is_file():
+        return
+    font_dest_dir = out_dir / "assets" / "fonts"
+    font_dest_dir.mkdir(parents=True, exist_ok=True)
+    dest = font_dest_dir / HETANGYUESE_WOFF2.name
+    if dest.resolve() != HETANGYUESE_WOFF2.resolve():
+        shutil.copy2(HETANGYUESE_WOFF2, dest)
 
 
 def copy_scroll_nav_bundle(out_dir: Path) -> None:
@@ -605,6 +617,7 @@ def _render_trip_body(
             )
             if busted != css_text:
                 journal_css_dest.write_text(busted, encoding="utf-8", newline="\n")
+        copy_journal_fonts(out_dir)
 
     if include_longshot is None:
         include_longshot = should_include_long_shot(

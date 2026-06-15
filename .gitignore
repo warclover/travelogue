@@ -63,3 +63,6 @@ v3c-*.png
 v3final-*.png
 screenshots/
 studio-import-error.log
+
+# Full HetangYuese TTF (~7MB); regenerate via scripts/build_hetangyuese_cover_font.py
+templates/studio/assets/fonts/hetangyuese-source.ttf

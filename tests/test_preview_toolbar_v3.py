@@ -50,7 +50,8 @@ def test_v4_dock_tooltips_and_scroll_fade() -> None:
     for token in (
         "initDockTooltips",
         "initDockScrollFade",
-        "preview-toolbar__dock-tip",
+        "initCoverTitleEdit",
+        "cover-opening__title--editable",
         "ensureDockTooltip",
     ):
         assert token in js, f"missing v4 dock ux: {token}"

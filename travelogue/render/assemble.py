@@ -31,7 +31,7 @@ def build_render_context(
     """export_mode: draft | share | present-preview"""
     from travelogue.config import get_config
     from travelogue.config import reading_profile_defaults
-    from travelogue.curation.curate import resolve_cover_asset_id
+    from travelogue.curation.curate import resolve_cover_asset_id, resolve_cover_render_profile
     from travelogue.render.context import (
         _longshot_bundle_version,
         alt_text,
@@ -78,7 +78,17 @@ def build_render_context(
 
     from travelogue.render.engine import RenderError
 
-    cover_id = resolve_cover_asset_id(trip, export_layout=image_layout)
+    cover_profile = resolve_cover_render_profile(
+        image_layout,
+        index_name=surface.index_name,
+        layout_engine=surface.layout_engine,
+    )
+    cover_id = resolve_cover_asset_id(
+        trip,
+        export_layout=image_layout,
+        index_name=surface.index_name,
+        layout_engine=surface.layout_engine,
+    )
     if not cover_id or cover_id not in assets:
         cover_id = str(trip.get("coverAssetId") or "")
     cover_asset = assets.get(cover_id)
@@ -93,8 +103,8 @@ def build_render_context(
             "E_RENDER_COVER_MISSING",
             "no layout-eligible cover asset found for render",
         )
-    cover_src = pick_image_src(cover_asset, export_layout=image_layout)
-    cover_srcset = compile_srcset(cover_asset, mobile=image_layout == "mobile")
+    cover_src = pick_image_src(cover_asset, export_layout=cover_profile)
+    cover_srcset = compile_srcset(cover_asset, mobile=cover_profile == "mobile")
 
     meta_line, meta_datetime, cover_place, meta_subline = format_trip_meta(
         meta,

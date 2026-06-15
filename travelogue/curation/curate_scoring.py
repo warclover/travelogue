@@ -52,6 +52,7 @@ _COVER_EXCLUDED_CLASSES = frozenset({"screenshot", "thumbnail", "reupload"})
 _HERO_EXCLUDED_CLASSES = frozenset({"screenshot", "thumbnail", "reupload"})
 _MOBILE_COVER_MIN_SHORT_EDGE = 600
 _MOBILE_VERTICAL_KINDS = frozenset({"portrait", "tall"})
+_WEB_HORIZONTAL_KINDS = frozenset({"landscape", "panorama"})
 _COVER_FACTOR_LABELS: dict[str, str] = {
     "aspect": "画幅比例",
     "face_bbox": "人脸构图",
@@ -126,11 +127,16 @@ def mobile_cover_pool(assets: list[dict]) -> list[dict]:
 
 
 def cover_asset_pool(assets: list[dict], *, export_layout: str) -> list[dict]:
-    pool = mobile_cover_pool(assets) if export_layout == "mobile" else cover_eligible_assets(assets)
     if export_layout == "mobile":
+        pool = mobile_cover_pool(assets)
         vertical = [a for a in pool if aspect_kind_for_asset(a) in _MOBILE_VERTICAL_KINDS]
         if vertical:
             return vertical
+        return pool
+    pool = cover_eligible_assets(assets)
+    horizontal = [a for a in pool if aspect_kind_for_asset(a) in _WEB_HORIZONTAL_KINDS]
+    if horizontal:
+        return horizontal
     return pool
 
 

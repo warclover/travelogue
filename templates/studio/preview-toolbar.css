@@ -1851,7 +1851,10 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   right: max(12px, env(safe-area-inset-right, 0px));
   z-index: 221;
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 4px;
   padding: 4px 6px;
   border-radius: 999px;
@@ -1863,6 +1866,63 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   pointer-events: auto;
   opacity: 0.88;
   transition: opacity 0.25s ease;
+}
+
+.preview-toolbar--v4 .preview-toolbar__menu-wrap,
+.preview-toolbar--v4 .preview-toolbar__export-zone-wrap,
+.preview-toolbar--v4 .preview-toolbar__export-zone {
+  display: contents;
+}
+
+.preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__dock-btn,
+.preview-toolbar--v4 .preview-toolbar__dock a.preview-toolbar__dock-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  max-width: 36px;
+  max-height: 36px;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+.preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__ctl.preview-toolbar__dock-btn {
+  padding: 0;
+  height: 36px;
+  min-height: 36px;
+  border-radius: 8px;
+}
+
+.preview-toolbar--v4
+  .preview-toolbar__dock
+  .preview-toolbar__longshot--v3.preview-toolbar__dock-btn {
+  padding: 0;
+  width: 36px;
+  min-width: 36px;
+  border-radius: 9px;
+  white-space: nowrap;
+}
+
+.preview-toolbar--v4 .preview-toolbar__dock-btn > span[aria-hidden="true"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
+}
+
+.preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__longshot__spinner {
+  width: 14px;
+  height: 14px;
 }
 
 .preview-toolbar__dock:hover,
@@ -2002,6 +2062,44 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
 .preview-toolbar--v4 .preview-toolbar__export-zone-wrap,
 .preview-toolbar--v4 .preview-toolbar__export-zone {
   display: contents;
+}
+
+/* Studio · 封面书名卡内杂志名可编辑 */
+html[data-preview-toolbar="on"] .cover-opening__title--editable {
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+html[data-preview-toolbar="on"] .cover-opening__title--editable:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+html[data-preview-toolbar="on"] .cover-opening__title--editable:focus-visible {
+  outline: 2px solid rgba(127, 203, 179, 0.55);
+  outline-offset: 2px;
+}
+
+html[data-preview-toolbar="on"] .cover-opening__title--saving {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+html[data-preview-toolbar="on"] .cover-opening__title-input {
+  display: block;
+  width: 100%;
+  margin: 0 0 6px;
+  padding: 4px 6px;
+  box-sizing: border-box;
+  font: inherit;
+  font-family: var(--font-handwriting);
+  font-size: clamp(1.375rem, 3.5vw, 1.875rem);
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(127, 203, 179, 0.45);
+  border-radius: 4px;
 }
 
 .preview-toolbar--v4 .preview-toolbar__screenplay--v3:disabled,

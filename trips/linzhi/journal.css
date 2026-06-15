@@ -4,7 +4,19 @@
  * 字体：全书微软雅黑栈 + 各平台系统无衬线回退（无需联网）
  * 可选杂志体：html[data-font-theme="magazine"] 使用 --font-legacy-brush
  */
-@import url("journal-screens.css?v=ls5dabb615e0a7");
+@import url("journal-screens.css?v=lsbd23ff073863");
+
+/* Studio 首页同源 · 荷塘月色手写体（hetangyuese-headline subset） */
+@font-face {
+  font-family: "HetangYuese";
+  src:
+    local("hetangyuese"),
+    local("荷塘月色手写体"),
+    url("assets/fonts/hetangyuese.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+}
 
 :root {
   --bp-web: 48rem;
@@ -36,6 +48,7 @@
   --font-sans: var(--font-ui);
   --font-brush: var(--font-ui);
   --font-serif: var(--font-ui);
+  --font-handwriting: "HetangYuese", "荷塘月色手写体", var(--font-ui);
   --chapter-gap: 4px;
   --radius: 0;
   --page-pad: 0;
@@ -429,31 +442,14 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
 .cover-opening__title {
   display: none;
   margin: 0;
-  font-family: var(--font-brush);
+  font-family: var(--font-handwriting);
   font-weight: 400;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   line-height: 1.08;
 }
 
 .cover-opening__hook {
   margin-bottom: 0;
-}
-
-.cover-opening__enter {
-  display: none;
-  margin: 0;
-  padding: 0;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-align: center;
-}
-
-.cover-opening__enter span::after {
-  content: " ⌄";
-  font-size: 14px;
-  line-height: 1;
 }
 
 .trip-meta__line--sub {
@@ -470,14 +466,14 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
   html[data-layout="web"] .cover-opening,
   html[data-layout="auto"] .cover-opening {
     min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
+    display: block;
     position: relative;
     background: #1a1918;
+    overflow: hidden;
   }
 
   html[data-preview-toolbar="on"] .cover-opening {
-    min-height: calc(100dvh - var(--preview-toolbar-h, 56px));
+    min-height: calc(100dvh - var(--preview-toolbar-h, 0px));
   }
 
   html[data-preview-share="on"] .cover-opening {
@@ -495,40 +491,54 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
   html[data-layout="web"] .cover-opening__place,
   html[data-layout="auto"] .cover-opening__place {
     display: block;
-    margin: 0 0 6px;
-    font-size: 11px;
+    margin: 0 0 13px;
+    font-size: 16px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--accent-mobile, #7cb89a);
   }
 
-  html[data-layout="web"] .cover-opening__title,
-  html[data-layout="auto"] .cover-opening__title {
-    display: block;
-    font-size: clamp(1.85rem, 3.2vw, 2.65rem);
-    margin: 0 0 10px;
-    color: #fff;
-    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
+  /* V4 · 封面书名卡不展示日期/天数（方案 A：仅保留地点） */
+  html[data-layout="web"] .cover-opening .trip-meta,
+  html[data-layout="auto"] .cover-opening .trip-meta {
+    display: none;
   }
 
+  html[data-layout="web"] .cover-opening__title,
+  html[data-layout="auto"] .cover-opening__title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-family: var(--font-handwriting);
+    font-size: clamp(2.2rem, 5.6vw, 3rem);
+    margin: 0 0 10px;
+    color: #fff;
+    text-shadow: none;
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+  }
+
+  /* V4 · 右下实心书名卡 */
   html[data-layout="web"] .cover-opening__panel,
   html[data-layout="auto"] .cover-opening__panel {
-    position: relative;
-    z-index: 1;
-    margin-top: auto;
-    width: 100%;
-    max-width: min(var(--page-width), 100%);
-    margin-left: auto;
-    margin-right: auto;
-    padding: 28px max(24px, 5vw) calc(32px + var(--safe-bottom));
+    position: absolute;
+    z-index: 18;
+    right: max(32px, 5.6vw);
+    bottom: max(32px, 5.6vw);
+    left: auto;
+    width: max-content;
+    max-width: min(640px, 70.4vw);
+    min-width: min(320px, 56vw);
+    max-height: min(352px, 57.6vh);
+    margin: 0;
+    padding: 29px 32px 22px;
+    overflow: hidden;
     text-align: left;
     color: #fff;
-    background: linear-gradient(
-      to top,
-      rgba(26, 25, 24, 0.94) 0%,
-      rgba(26, 25, 24, 0.62) 52%,
-      transparent 100%
-    );
+    background: rgba(18, 17, 16, 0.9);
+    border-left: 5px solid var(--accent-mobile, #7cb89a);
+    box-shadow: 0 19px 64px rgba(0, 0, 0, 0.35);
   }
 
   html[data-layout="web"] .cover-opening__panel::before,
@@ -536,40 +546,24 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
     display: none;
   }
 
-  html[data-layout="web"] .trip-meta__line--full,
-  html[data-layout="auto"] .trip-meta__line--full {
-    display: none;
-  }
-
-  html[data-layout="web"] .trip-meta__line--sub,
-  html[data-layout="auto"] .trip-meta__line--sub {
-    display: inline;
-  }
-
-  html[data-layout="web"] .cover-opening .trip-meta,
-  html[data-layout="auto"] .cover-opening .trip-meta {
-    padding: 0 0 10px;
-    text-align: left;
-    color: rgba(255, 255, 255, 0.72);
-  }
-
   html[data-layout="web"] .cover-opening__hook,
   html[data-layout="auto"] .cover-opening__hook {
-    font-size: 1.05rem;
-    line-height: 1.5;
-    max-width: 28em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 1.3rem;
+    line-height: 1.45;
+    max-width: none;
     margin: 0;
     padding: 0;
     text-align: left;
-    color: rgba(255, 255, 255, 0.88);
+    color: rgba(255, 255, 255, 0.82);
   }
 
-  html[data-layout="web"] .cover-opening__enter,
-  html[data-layout="auto"] .cover-opening__enter {
-    display: block;
-    margin-top: 18px;
-    text-align: left;
-    color: rgba(255, 255, 255, 0.52);
+  html[data-layout="web"] .cover-opening__hook .breath-highlight__unit,
+  html[data-layout="auto"] .cover-opening__hook .breath-highlight__unit {
+    color: inherit;
   }
 }
 
@@ -736,14 +730,11 @@ html[data-layout="mobile"] .cover-hero:not(.cover-hero--photo-only) + .cover-ope
 
 html[data-layout="mobile"] .cover-hero--photo-only + .cover-opening__panel .cover-opening__title {
   display: block;
+  font-family: var(--font-handwriting);
   font-size: clamp(2.1rem, 6vw + 0.75rem, 3.5rem);
   margin: 0 0 6px;
   text-align: center;
   padding: 16px 16px 0;
-}
-
-html[data-layout="mobile"] .cover-hero--photo-only + .cover-opening__panel .cover-opening__enter {
-  display: none;
 }
 
 /* 封面与正文无缝衔接 */

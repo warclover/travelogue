@@ -179,18 +179,43 @@ def apply_low_resolution_exclusion(
     return apply_layout_eligibility_marks(trip, app_cfg=app_cfg)
 
 
+def resolve_cover_render_profile(
+    export_layout: str,
+    *,
+    index_name: str = "index.html",
+    layout_engine: str | None = None,
+) -> str:
+    """Map render surface to cover profile (mobile portrait vs web landscape)."""
+    if export_layout in ("mobile", "web"):
+        return export_layout
+    if index_name in ("index-mobile.html",):
+        return "mobile"
+    from travelogue.curation.screen_planner import LAYOUT_ENGINE_SCREENS
+
+    if layout_engine == LAYOUT_ENGINE_SCREENS or index_name in (
+        "index.html",
+        "index-present.html",
+    ):
+        return "web"
+    return "mobile"
+
+
 def resolve_cover_asset_id(
     trip: dict,
     *,
     export_layout: str,
+    index_name: str | None = None,
+    layout_engine: str | None = None,
 ) -> str:
-    """Pick cover for render/curate profile (mobile | web | auto→mobile)."""
+    """Pick cover for render/curate profile (mobile | web | auto→surface)."""
     assets = layout_eligible_assets(trip)
     if not assets:
         return ""
-    profile = export_layout
-    if profile == "auto":
-        profile = "mobile"
+    profile = resolve_cover_render_profile(
+        export_layout,
+        index_name=index_name or "index.html",
+        layout_engine=layout_engine or trip.get("layoutEngine"),
+    )
     by_layout = (trip.get("curation") or {}).get("coverByLayout") or {}
     if isinstance(by_layout, dict) and profile in by_layout:
         cid = by_layout[profile]

@@ -1569,6 +1569,126 @@ function insertScreenplayControl(parent, beforeNode, opts) {
       });
   }
 
+  function saveMagazineTitle(tripId, next, el, onDone) {
+    var prev = (el.dataset.title || el.textContent || "").trim();
+    if (next === prev) {
+      if (onDone) onDone(false);
+      return;
+    }
+    el.classList.add("preview-toolbar__title--saving");
+    if (el.classList.contains("cover-opening__title")) {
+      el.classList.add("cover-opening__title--saving");
+    }
+    postJson(tripApiBase(tripId) + "/save-copy", {
+      patches: [{ path: "meta.title", value: next }],
+    })
+      .then(function (res) {
+        el.classList.remove("preview-toolbar__title--saving");
+        el.classList.remove("cover-opening__title--saving");
+        if (res.status !== 200 || !res.body.ok) {
+          showToolbarToast((res.body && res.body.error) || "保存失败", { error: true });
+          if (onDone) onDone(false);
+          return;
+        }
+        el.textContent = next;
+        el.dataset.title = next;
+        showToolbarToast("杂志名已保存");
+        try {
+          window.dispatchEvent(new CustomEvent("travelogue:copy-saved"));
+        } catch (e0) {}
+        if (res.body.rendered && res.body.rendered.length) {
+          window.location.reload();
+          return;
+        }
+        if (onDone) onDone(true);
+      })
+      .catch(function () {
+        el.classList.remove("preview-toolbar__title--saving");
+        el.classList.remove("cover-opening__title--saving");
+        showToolbarToast("保存失败", { error: true });
+        if (onDone) onDone(false);
+      });
+  }
+
+  function initCoverTitleEdit(tripId) {
+    if (isSharePreview()) return;
+    var titleEl = document.querySelector(".cover-opening__title");
+    if (!titleEl || titleEl.dataset.coverTitleEdit === "on") return;
+    titleEl.dataset.coverTitleEdit = "on";
+    titleEl.classList.add("cover-opening__title--editable");
+    titleEl.setAttribute("role", "button");
+    titleEl.setAttribute("tabindex", "0");
+    titleEl.setAttribute("aria-label", "点击编辑杂志名");
+    titleEl.title = "点击编辑杂志名";
+    titleEl.dataset.title = (titleEl.textContent || "").trim();
+
+    fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (data && data.intentSummary && data.intentSummary.title) {
+          var t = String(data.intentSummary.title).trim();
+          titleEl.textContent = t;
+          titleEl.dataset.title = t;
+        }
+      })
+      .catch(function () {});
+
+    function openEditor() {
+      if (titleEl.classList.contains("cover-opening__title--saving")) return;
+      if (titleEl.parentElement.querySelector(".cover-opening__title-input")) return;
+      var input = document.createElement("input");
+      input.type = "text";
+      input.className = "cover-opening__title-input";
+      input.maxLength = 20;
+      input.value = titleEl.dataset.title || titleEl.textContent || "";
+      titleEl.hidden = true;
+      titleEl.parentElement.insertBefore(input, titleEl.nextSibling);
+      input.focus();
+      input.select();
+
+      function finish(save) {
+        var next = (input.value || "").trim();
+        input.remove();
+        titleEl.hidden = false;
+        if (!save) {
+          titleEl.textContent = titleEl.dataset.title || titleEl.textContent;
+          return;
+        }
+        if (next.length > 20) {
+          showToolbarToast("杂志名最多 20 个字", { error: true });
+          return;
+        }
+        if (!next) {
+          showToolbarToast("杂志名不能为空", { error: true });
+          return;
+        }
+        saveMagazineTitle(tripId, next, titleEl);
+      }
+
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          finish(true);
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          finish(false);
+        }
+      });
+      input.addEventListener("blur", function () {
+        finish(true);
+      });
+    }
+
+    titleEl.addEventListener("click", openEditor);
+    titleEl.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openEditor();
+      }
+    });
+  }
+
   function initTitleEdit(root, tripId) {
     var wrap = root.querySelector(".preview-toolbar__title-wrap");
     if (!wrap) return;
@@ -1629,28 +1749,10 @@ function insertScreenplayControl(parent, beforeNode, opts) {
           return;
         }
         display.classList.add("preview-toolbar__title--saving");
-        postJson(tripApiBase(tripId) + "/save-copy", {
-          patches: [{ path: "meta.title", value: next }],
-        })
-          .then(function (res) {
-            display.classList.remove("preview-toolbar__title--saving");
-            if (res.status !== 200 || !res.body.ok) {
-              showToolbarToast((res.body && res.body.error) || "保存失败", { error: true });
-              return;
-            }
-            setTitle(next);
-            showToolbarToast("杂志名已保存");
-            try {
-              window.dispatchEvent(new CustomEvent("travelogue:copy-saved"));
-            } catch (e) {}
-            if (res.body.rendered && res.body.rendered.length) {
-              window.location.reload();
-            }
-          })
-          .catch(function () {
-            display.classList.remove("preview-toolbar__title--saving");
-            showToolbarToast("保存失败", { error: true });
-          });
+        saveMagazineTitle(tripId, next, display, function () {
+          display.classList.remove("preview-toolbar__title--saving");
+          setTitle(next);
+        });
       }
 
       input.addEventListener("keydown", function (e) {
@@ -3027,6 +3129,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     if (isPreviewToolbarV4(root)) {
       initDockTooltips(root);
       initDockScrollFade(root);
+      initCoverTitleEdit(tripId);
     }
 
     syncToolbarHeight(root);

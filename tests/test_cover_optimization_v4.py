@@ -29,6 +29,11 @@ _PLACEHOLDER_IMG = (
 
 def _copy_journal_css(trip_dir: Path) -> None:
     shutil.copy2(TEMPLATE_JOURNAL, trip_dir / "journal.css")
+    font_src = ROOT / "templates" / "visual-journal" / "assets" / "fonts" / "hetangyuese.woff2"
+    if font_src.is_file():
+        font_dest_dir = trip_dir / "assets" / "fonts"
+        font_dest_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(font_src, font_dest_dir / font_src.name)
 
 
 def _cover_opening_html(
@@ -59,7 +64,6 @@ def _cover_opening_html(
         "</time></div>"
         f'<h1 class="cover-opening__title">{title}</h1>'
         f'<p class="cover-opening__hook">{hook}</p>'
-        '<p class="cover-opening__enter" aria-hidden="true"><span>进入正文</span></p>'
         "</div></section>"
         f"{extra_body}"
         "</main>"
@@ -101,16 +105,21 @@ def test_cover_opening_title_card_styles() -> None:
     block = css.split("/* V4 · 右下实心书名卡 */", 1)[1].split("}", 1)[0]
     for token in (
         "position: absolute",
-        "min(400px, 44vw)",
-        "min(220px, 36vh)",
+        "width: max-content",
+        "max-width: min(640px, 70.4vw)",
+        "min(352px, 57.6vh)",
         "rgba(18, 17, 16, 0.9)",
-        "border-left: 3px solid",
+        "border-left: 5px solid",
         "-webkit-line-clamp: 2",
-        "text-align: right",
-        "display: inline",
-        "cover-opening__place + .trip-meta::before",
+        "display: block",
+        'font-family: "HetangYuese"',
+        "font-family: var(--font-handwriting)",
+        "assets/fonts/hetangyuese.woff2",
+        ".cover-opening .trip-meta",
+        "display: none",
     ):
         assert token in css, f"missing cover v4 token: {token}"
+    assert "cover-opening__enter" not in css
     assert "linear-gradient" not in block
 
 
@@ -143,7 +152,6 @@ def test_v4_cover_opening_layout_playwright(tmp_path: Path) -> None:
                 """() => {
                 const cover = document.querySelector('.cover-opening');
                 const panel = document.querySelector('.cover-opening__panel');
-                const enter = document.querySelector('.cover-opening__enter');
                 const title = document.querySelector('.cover-opening__title');
                 const hook = document.querySelector('.cover-opening__hook');
                 const vh = window.innerHeight;
@@ -159,7 +167,6 @@ def test_v4_cover_opening_layout_playwright(tmp_path: Path) -> None:
                   panelWidth: panelRect.width,
                   panelHeight: panelRect.height,
                   panelPosition: getComputedStyle(panel).position,
-                  enterAlign: enter ? getComputedStyle(enter).textAlign : '',
                   coverOverflow: cover.scrollHeight > cover.clientHeight + 2,
                   titleOverflow: title ? title.scrollHeight > title.clientHeight + 2 : false,
                   hookOverflow: hook ? hook.scrollHeight > hook.clientHeight + 4 : false,
@@ -171,9 +178,8 @@ def test_v4_cover_opening_layout_playwright(tmp_path: Path) -> None:
             assert metrics["toolbarH"] == 0, metrics
             assert abs(metrics["coverHeight"] - metrics["viewportH"]) <= 2, metrics
             assert metrics["panelPosition"] == "absolute", metrics
-            assert metrics["panelWidth"] <= 400 + 1, metrics
-            assert metrics["panelHeight"] <= min(220, metrics["viewportH"] * 0.36) + 2, metrics
-            assert metrics["enterAlign"] == "right", metrics
+            assert metrics["panelWidth"] <= 640 + 1, metrics
+            assert metrics["panelHeight"] <= min(352, metrics["viewportH"] * 0.576) + 2, metrics
             assert metrics["coverOverflow"] is False, metrics
             assert metrics["panelBeforeDisplay"] in ("none", ""), metrics
 
