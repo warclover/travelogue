@@ -1890,7 +1890,7 @@ html[data-folio="full"] .featured-grid__img {
 }
 
 /* P5-S2 · ticket-stub chapter separator (scheme B) */
-.chapter-separator[data-block="chapter-separator"] {
+.chapter-separator--ticket[data-block="chapter-separator"] {
   width: 100%;
   max-width: var(--content-rail, var(--bleed-width));
   margin-inline: auto;
@@ -1901,11 +1901,16 @@ html[data-folio="full"] .featured-grid__img {
   overflow: visible;
   scroll-snap-align: start;
   scroll-margin-top: 0.5rem;
+  display: block;
+  text-align: left;
+  min-height: 0;
+  padding: 0;
 }
 
 .chapter-separator--ticket .chapter-separator__ticket {
   display: flex;
   align-items: stretch;
+  position: relative;
   gap: 0.75rem;
   min-height: clamp(4.25rem, 11vh, 4.75rem);
   padding: 0.65rem 1rem 0.65rem 0.85rem;
@@ -1923,32 +1928,37 @@ html[data-folio="full"] .featured-grid__img {
   grid-template-columns: auto 1px minmax(0, max-content);
   align-items: center;
   gap: 0 0.75rem;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 1;
   min-width: 0;
-}
-
-.chapter-separator__ticket--has-pull .chapter-separator__ticket-left {
-  flex: 0 1 auto;
 }
 
 .chapter-separator__ticket:not(.chapter-separator__ticket--has-pull) .chapter-separator__ticket-left {
   flex: 1 1 auto;
 }
 
-.chapter-separator__pull-wrap {
-  flex: 1 1 0;
+.chapter-separator__ticket--has-pull .chapter-separator__pull-wrap {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 0;
+  pointer-events: none;
   min-width: 0;
   padding-inline: 0.15rem;
+}
+
+.chapter-separator__ticket--has-pull .chapter-separator__pull {
+  pointer-events: auto;
 }
 
 .chapter-separator__mark-num {
   display: flex;
   align-items: center;
-  justify-content: center;
-  align-self: center;
+  justify-content: flex-start;
+  align-self: stretch;
   min-width: 2.55rem;
   padding-inline: 0.15rem 0.3rem;
   font-family: var(--folio-meta-font, ui-monospace, "Cascadia Mono", monospace);
@@ -2145,8 +2155,10 @@ html[data-folio="full"] .featured-grid__img {
   }
 
   .chapter-separator__pull-wrap {
+    position: static;
     width: 100%;
     padding-inline: 0;
+    pointer-events: auto;
   }
 
   .chapter-separator__pull {

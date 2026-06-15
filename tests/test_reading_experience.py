@@ -87,6 +87,17 @@ def test_journal_screens_has_snap_and_folio_rules() -> None:
     assert "scroll-snap-align: start" in css
 
 
+def test_chapter_ticket_centers_pull_not_index() -> None:
+    css = SCREENS_CSS.read_text(encoding="utf-8")
+    assert ".chapter-separator--ticket[data-block=\"chapter-separator\"]" in css
+    assert ".chapter-separator__ticket--has-pull .chapter-separator__pull-wrap" in css
+    assert "justify-content: center" in css.split(".chapter-separator__ticket--has-pull .chapter-separator__pull-wrap")[1].split(".chapter-separator__mark-num")[0]
+    mark = css.split(".chapter-separator__mark-num")[1].split(".chapter-separator--ticket[style")[0]
+    assert "justify-content: flex-start" in mark
+    overlays = (TEMPLATE_VISUAL_JOURNAL / "journal-screens-overlays.css").read_text(encoding="utf-8")
+    assert ':not(.chapter-separator--ticket)' in overlays
+
+
 def test_lenis_flow_disables_scroll_snap() -> None:
     css = (TEMPLATE_VISUAL_JOURNAL / "breath.css").read_text(encoding="utf-8")
     assert "html.lenis-flow" in css
