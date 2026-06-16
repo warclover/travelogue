@@ -44,7 +44,7 @@ def _build_mosaic_eligible_trip():
     return buckets, aspects, assets
 
 
-def test_mosaic_enabled_increases_mosaic5_exposure(monkeypatch) -> None:
+def test_mosaic_enabled_increases_mosaic5_exposure(monkeypatch, lte_pattern_enabled) -> None:
     buckets, aspects, assets = _build_mosaic_eligible_trip()
     cfg = get_config()
     off = replace(cfg.mosaic, enabled=False)

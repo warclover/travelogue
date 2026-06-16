@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from tests._golden.helpers import build_mixed_aspects_trip, plan_mosaic_screens
+from tests._golden.helpers import build_mosaic_eligible_trip, plan_mosaic_screens
 from travelogue.curation.mosaic.metrics import compute_mosaic_metrics
 from travelogue.curation.mosaic.render_check import (
     compute_layout_render_error_rate,
@@ -11,16 +11,16 @@ from travelogue.curation.mosaic.render_check import (
 from travelogue.curation.mosaic.runtime import MOSAIC_ROUTER_VERSION
 
 
-def test_mcs_patterns_render_chain_ok() -> None:
-    buckets, aspects, assets = build_mixed_aspects_trip()
+def test_mcs_patterns_render_chain_ok(lte_pattern_enabled) -> None:
+    buckets, aspects, assets = build_mosaic_eligible_trip()
     chapters = plan_mosaic_screens(buckets, aspects, assets)
     m = compute_layout_render_error_rate(chapters, scope="mcs_unified")
     assert m["layoutRenderChecked"] >= 2
     assert m["layout.render.error_rate"] == 0.0
 
 
-def test_mosaic_metrics_include_render_error_rate() -> None:
-    buckets, aspects, assets = build_mixed_aspects_trip()
+def test_mosaic_metrics_include_render_error_rate(lte_pattern_enabled) -> None:
+    buckets, aspects, assets = build_mosaic_eligible_trip()
     chapters = plan_mosaic_screens(buckets, aspects, assets)
     metrics = compute_mosaic_metrics(chapters, mosaic_logs=[])
     assert metrics["layout.render.error_rate"] == 0.0

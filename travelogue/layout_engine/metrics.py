@@ -215,22 +215,27 @@ def highlight_main_quality_delta_pp(
 
 
 def same_person_run_p50(chapters: list[dict], assets_by_id: dict[str, dict]) -> float | None:
-    """p50 consecutive person-tag run length across chapter item order (CAP-06)."""
-    runs: list[int] = []
+    """p50 consecutive person-tag run length across chapter reading order (CAP-06)."""
+    order: list[str] = []
     for ch in chapters:
-        order = [
-            str(item.get("assetId"))
-            for item in (ch.get("items") or [])
-            if item.get("assetId")
-        ]
-        if not order:
-            for scr in ch.get("screens") or []:
-                for sl in scr.get("slots") or []:
-                    aid = sl.get("assetId")
-                    if aid:
-                        order.append(str(aid))
-        if order:
-            runs.extend(same_person_run_lengths(order, assets_by_id))
+        screens = ch.get("screens") or []
+        if screens:
+            ch_order = [
+                str(sl["assetId"])
+                for scr in screens
+                for sl in (scr.get("slots") or [])
+                if sl.get("assetId")
+            ]
+        else:
+            ch_order = [
+                str(item.get("assetId"))
+                for item in (ch.get("items") or [])
+                if item.get("assetId")
+            ]
+        order.extend(ch_order)
+    if not order:
+        return None
+    runs = same_person_run_lengths(order, assets_by_id)
     if not runs:
         return None
     return round(statistics.median(runs), 4)

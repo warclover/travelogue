@@ -15,6 +15,7 @@ from travelogue.render.dual_layout_regression import prepare_trip_web_screens
 from travelogue.render.engine import render_html
 
 SCREEN_SELECTOR = r'data-block="layout-screen"'
+BREATH_SCREEN_SELECTOR = r'data-block="breath-pause-screen"'
 CARD_SELECTOR = r'data-block="media-card"'
 LINZHI = ROOT / "trips" / "linzhi"
 LINZHI_CI = FIXTURES_DIR / "trip.linzhi_screens.json"
@@ -32,10 +33,14 @@ def _screen_indices(html: str) -> list[int]:
     return [int(x) for x in re.findall(r'data-screen-index="(\d+)"', html)]
 
 
+def _count_scroll_screens(html: str) -> int:
+    return _count(SCREEN_SELECTOR, html) + _count(BREATH_SCREEN_SELECTOR, html)
+
+
 def assert_screen_order_contract(trip: dict, html: str) -> None:
     """Shared E0 / AC-EXP-01 checks for scroll DOM vs trip screens[]."""
     expected = _expected_screen_count(trip)
-    assert _count(SCREEN_SELECTOR, html) == expected
+    assert _count_scroll_screens(html) == expected
     indices = _screen_indices(html)
     assert len(indices) == expected
     assert indices == list(range(1, expected + 1))

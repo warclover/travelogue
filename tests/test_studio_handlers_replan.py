@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from tests._golden.helpers import build_mosaic_eligible_trip, plan_mosaic_screens
+from tests._golden.helpers import build_mosaic_replan_chapter
 from tests.studio_test_helpers import MockStudioHandler
 from travelogue.config import AppConfig
 from travelogue.curation.screen_planner import LAYOUT_ENGINE_SCREENS
@@ -19,11 +19,10 @@ pytestmark = pytest.mark.unit
 
 
 def _trip_with_screens(trips_dir: Path, trip_id: str = "replan-demo") -> Path:
-    buckets, aspects_map, assets = build_mosaic_eligible_trip()
-    chapters = plan_mosaic_screens(buckets[:1], aspects_map, assets)
+    chapters, _aspects_map, assets, _mosaic_cfg = build_mosaic_replan_chapter()
     trip_json = create_trip(trip_id, trips_dir, title="Replan", place="测试")
     trip = TripService(root=trips_dir.parent).load(trip_json)
-    trip["assets"] = assets
+    trip["assets"] = list(assets.values())
     trip["chapters"] = chapters
     trip["layoutEngine"] = LAYOUT_ENGINE_SCREENS
     TripService(root=trips_dir.parent).save(trip, trip_json)
@@ -31,7 +30,7 @@ def _trip_with_screens(trips_dir: Path, trip_id: str = "replan-demo") -> Path:
 
 
 @patch("travelogue.web.studio_handlers.trip_replan_handlers.studio_ctx")
-def test_handle_patch_screen_replan(mock_ctx, tmp_path: Path) -> None:
+def test_handle_patch_screen_replan(mock_ctx, tmp_path: Path, lte_pattern_enabled) -> None:
     trips_dir = tmp_path / "trips"
     trip_json = _trip_with_screens(trips_dir)
     trip = TripService(root=trips_dir.parent).load(trip_json)

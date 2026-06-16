@@ -207,7 +207,7 @@ def layout_snapshot(chapters: list[dict]) -> dict[str, Any]:
 
 
 def _mosaic_cfg_for_golden():
-    base = get_config()
+    base = _lte_pattern_config()
     return replace(
         base,
         mosaic=replace(

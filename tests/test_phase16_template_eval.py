@@ -58,7 +58,7 @@ def test_mixed_layout_exposure_rate() -> None:
 
 
 @pytest.mark.unit
-def test_evaluate_registry_shape() -> None:
+def test_evaluate_registry_shape(lte_pattern_enabled) -> None:
     report = evaluate_registry()
     assert report["readTemplatesFromLte"] is True
     assert report["flagshipPresent"] is True
