@@ -3,12 +3,12 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | v0.12.2-PHASE12 |
+| **文档版本** | v0.12.3-PHASE12 |
 | **状态** | In Progress |
 | **Phase 12 代号** | 「静默自治选片增强」— 零打扰后台评分与编排质量提升 |
 | **前置条件** | [PRD-PHASE9.md](./PRD-PHASE9.md) 已上线（Quality Gate）；[PRD-PHASE10-food-grid.md](./PRD-PHASE10-food-grid.md) 已上线（mundane grid） |
-| **关联文档** | [PRD-PHASE8-photo-semantic-clustering.md](./PRD-PHASE8-photo-semantic-clustering.md)、`photo_cull.py`、`subject_tagging.py`、`layout_scoring.py` |
-| **更新日期** | 2026-06-03 |
+| **关联文档** | [PRD-PHASE8-photo-semantic-clustering.md](./PRD-PHASE8-photo-semantic-clustering.md)、[PRD-PORTRAIT-CULL.md](./PRD-PORTRAIT-CULL.md)（**附录 D · 人像质量选片权威实现**）、`photo_cull.py`、`subject_tagging.py`、`layout_scoring.py` |
+| **更新日期** | 2026-06-16 |
 
 > **定位**
 >
@@ -97,28 +97,32 @@ Phase 9/10 已覆盖基础去重、质量闸口与 mundane grid，但仍存在�
 
 ## 5.1 P12-A · 人像细粒度质量信号（后台）
 
+> **权威实现规格**见 [PRD-PORTRAIT-CULL.md](./PRD-PORTRAIT-CULL.md)（人像质量选片 · v0.2+）。本节仅保留 Phase 12 级摘要。
+
 在不引入重模型的前提下，新增轻量信号并进入 cull 排序：
 
 - `portraitEyesOpenScore`（可空）
 - `portraitEyeFocusScore`（可空）
 - `portraitFaceQualityScore`（可空）
+- 嵌套结构 `quality.portrait.*`（权威）
 
 策略：
 
 1. 仅对有人脸资产生效；无人脸资产走现有评分逻辑。
-2. 新信号默认低权重（防止改变过大）。
+2. 新信号默认低权重（防止改变过大）；M1.5 shadow mode 后再启用 Pass 2 PK。
 3. 信号不可用时自动降级，不影响导入完成。
 
-实现位置（建议）：
+实现位置：
 
+- `travelogue/media/portrait_analyze.py`（新建）
 - `travelogue/curation/photo_cull.py`
-- `travelogue/config.py`（新增权重与开关）
-- `travelogue/media/ingest.py`（透传信号）
+- `travelogue/config/cull.py`
+- `travelogue/media/ingest.py`
 
-补充说明（来源于调研结论）：
+补充说明：
 
-- 本 Phase 不直接引入重型 FIQA 作为主依赖。
-- CR-FIQA / DN-PIQA 保留为 W3 可选实验项，不纳入 W1/W2 交付门槛。
+- 本 Phase 不直接引入重型 FIQA 作为主依赖（W3 试点见 Portrait PRD）。
+- CR-FIQA / DN-PIQA 保留为 W3 可选实验项。
 
 ## 5.2 P12-B · 11 类 L1 语义映射（后台）
 
@@ -390,10 +394,24 @@ scan -> dedupe -> asset build
 
 ---
 
-## 14. 修订记录
+## 14. 附录 D · 人像质量选片（P12-A 权威下钻）
+
+| 属性 | 内容 |
+|------|------|
+| **文档** | [PRD-PORTRAIT-CULL.md](./PRD-PORTRAIT-CULL.md) |
+| **版本** | v0.3.0-PORTRAIT-QG |
+| **范围** | ingest 人像信号、`photo_cull` Pass 1'/Pass 2、**下游择优集成（封面/封底/高光池/决定性瞬间/拼图主图，经 `aesthetic.subjectClarity`）**、preset、验收 AC-PC-* |
+| **不在此文** | 11 类 L1、`category_coherence`、风光分支美学 |
+
+Phase 12 验收中与人像命中率相关的 AC-P12-01/02，由 Portrait PRD 的 AC-PC-04/05 承接；合并 signoff 时两份文档一并勾选。
+
+---
+
+## 15. 修订记录
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.12.3 | 2026-06-16 | 增加附录 D 指向 PRD-PORTRAIT-CULL v0.2；§5.1 改为摘要并引用权威文档 |
 | v0.12.2 | 2026-06-03 | 对齐实现口径：参数命名、默认值、L1/L2/L3 telemetry 字段与验收汇总链路 |
 | v0.12.1 | 2026-06-03 | 增补分支化评分流程、模型选型矩阵、Facet/CR-FIQA 引入决策、降级与时延策略 |
 | v0.12.0 | 2026-06-03 | 初稿：基于 P9/P10 现状复核，固化「纳入/暂缓/不纳入」决策与零打扰原则 |
