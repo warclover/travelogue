@@ -10,9 +10,9 @@ from travelogue.config import MosaicConfig
 from travelogue.curation.mosaic.compose import pick_best_window
 from travelogue.curation.mosaic.legacy import append_legacy_window
 from travelogue.curation.mosaic.runtime import (
+    _DENSITY_AUX_PACK_SIZE,
     effective_mosaic_window_sizes,
     planner_mosaic_window_sizes,
-    _DENSITY_AUX_PACK_SIZE,
 )
 
 if TYPE_CHECKING:

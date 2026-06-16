@@ -4,19 +4,7 @@
  * 字体：全书微软雅黑栈 + 各平台系统无衬线回退（无需联网）
  * 可选杂志体：html[data-font-theme="magazine"] 使用 --font-legacy-brush
  */
-@import url("journal-screens.css?v=lsa560681aa22d");
-
-/* Studio 首页同源 · 荷塘月色手写体（hetangyuese-headline subset） */
-@font-face {
-  font-family: "HetangYuese";
-  src:
-    local("hetangyuese"),
-    local("荷塘月色手写体"),
-    url("assets/fonts/hetangyuese.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 400;
-  font-style: normal;
-}
+@import url("journal-screens.css?v=lse6c0326c2654");
 
 :root {
   --bp-web: 48rem;
@@ -48,7 +36,6 @@
   --font-sans: var(--font-ui);
   --font-brush: var(--font-ui);
   --font-serif: var(--font-ui);
-  --font-handwriting: "HetangYuese", "荷塘月色手写体", var(--font-ui);
   --chapter-gap: 4px;
   --radius: 0;
   --page-pad: 0;
@@ -442,7 +429,7 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
 .cover-opening__title {
   display: none;
   margin: 0;
-  font-family: var(--font-handwriting);
+  font-family: var(--font-ui);
   font-weight: 400;
   letter-spacing: 0.02em;
   line-height: 1.08;
@@ -510,7 +497,7 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    font-family: var(--font-handwriting);
+    font-family: var(--font-ui);
     font-size: clamp(2.2rem, 5.6vw, 3rem);
     margin: 0 0 10px;
     color: #fff;
@@ -901,7 +888,7 @@ html[data-layout="mobile"] .cover-hero:not(.cover-hero--photo-only) + .cover-ope
 
 html[data-layout="mobile"] .cover-hero--photo-only + .cover-opening__panel .cover-opening__title {
   display: block;
-  font-family: var(--font-handwriting);
+  font-family: var(--font-ui);
   font-size: clamp(2.1rem, 6vw + 0.75rem, 3.5rem);
   margin: 0 0 6px;
   text-align: center;

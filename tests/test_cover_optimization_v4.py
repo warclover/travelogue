@@ -29,11 +29,6 @@ _PLACEHOLDER_IMG = (
 
 def _copy_journal_css(trip_dir: Path) -> None:
     shutil.copy2(TEMPLATE_JOURNAL, trip_dir / "journal.css")
-    font_src = ROOT / "templates" / "visual-journal" / "assets" / "fonts" / "hetangyuese.woff2"
-    if font_src.is_file():
-        font_dest_dir = trip_dir / "assets" / "fonts"
-        font_dest_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(font_src, font_dest_dir / font_src.name)
 
 
 def _cover_opening_html(
@@ -112,9 +107,7 @@ def test_cover_opening_title_card_styles() -> None:
         "border-left: 5px solid",
         "-webkit-line-clamp: 2",
         "display: block",
-        'font-family: "HetangYuese"',
-        "font-family: var(--font-handwriting)",
-        "assets/fonts/hetangyuese.woff2",
+        "font-family: var(--font-ui)",
         ".cover-opening .trip-meta",
         "display: none",
     ):

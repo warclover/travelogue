@@ -29,8 +29,7 @@ def build_render_context(
     cfg: AppConfig | None = None,
 ) -> TripRenderContext:
     """export_mode: draft | share | present-preview"""
-    from travelogue.config import get_config
-    from travelogue.config import reading_profile_defaults
+    from travelogue.config import get_config, reading_profile_defaults
     from travelogue.curation.curate import resolve_cover_asset_id, resolve_cover_render_profile
     from travelogue.render.context import (
         _longshot_bundle_version,
@@ -55,9 +54,9 @@ def build_render_context(
         cover_use_contain_fit,
         show_hook_on_cover,
     )
-    from travelogue.services.cover_opening_style import resolve_cover_opening_style
     from travelogue.render.engine import LONGSHOT_INDEX_NAME
     from travelogue.render.reading_profile import reading_html_attrs
+    from travelogue.services.cover_opening_style import resolve_cover_opening_style
     from travelogue.services.narrative_scope import resolve_cover_show_title
 
     surface = resolve_surface_context(

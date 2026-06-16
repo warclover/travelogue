@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from travelogue.curation.layout_planner import aspect_kind_for_asset
-
 
 def _month_label(taken_at: str | None) -> str | None:
     if not taken_at:

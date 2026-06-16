@@ -9,12 +9,11 @@ from travelogue.curation.screen_layout_state import (
 )
 from travelogue.curation.screen_planner import attach_screens_to_chapters
 from travelogue.curation.screen_planner_attach import (
-    _consolidate_adjacent_portrait_singles,
     _carry_inject_ids,
+    _consolidate_adjacent_portrait_singles,
     _portrait_carry_hop_limit,
 )
 from travelogue.curation.screen_planner_stages import (
-    ChapterPlanContext,
     build_chapter_plan_context,
     stage_flush_pending_for_other_family,
 )
@@ -123,7 +122,11 @@ def test_early_chapters_still_defer_carry_outward() -> None:
 def test_late_chapter_no_outward_carry_reduces_tail_singles() -> None:
     """Ch3+ must digest carry locally; ch1-2 may still defer forward."""
     from travelogue.config import AppConfig
-    from travelogue.config.layout import LayoutConfig, LayoutLateChapterPairingConfig, LayoutRhythmConfig
+    from travelogue.config.layout import (
+        LayoutConfig,
+        LayoutLateChapterPairingConfig,
+        LayoutRhythmConfig,
+    )
 
     cfg = AppConfig()
     cfg.layout = LayoutConfig(

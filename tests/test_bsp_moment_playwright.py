@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from travelogue.render.engine import render_html
 from tests.test_moment_render import _moment_trip
+from travelogue.render.engine import render_html
 
 pytest.importorskip("playwright")
 from playwright.sync_api import sync_playwright

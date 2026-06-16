@@ -709,7 +709,11 @@ def stage_flush_pending_for_other_family(ctx: ChapterPlanContext, fam: str) -> i
 
     Late chapter · 若后续仍有竖版且仅 pending 1 张，look-ahead 暂缓 force flush。
     """
-    from travelogue.curation.screen_planner import _flush_portrait_pending, _make_screen, _family_kind
+    from travelogue.curation.screen_planner import (
+        _family_kind,
+        _flush_portrait_pending,
+        _make_screen,
+    )
 
     if not ctx.pending_portraits:
         return None

@@ -25,7 +25,6 @@ from travelogue.paths import (
     INLINE_EDIT_JS,
     JOURNAL_CSS,
     JOURNAL_SCREENS_CSS,
-    HETANGYUESE_WOFF2,
     LONGSHOT_BRIDGE_JS,
     LONGSHOT_CSS,
     LONGSHOT_JS,
@@ -158,14 +157,8 @@ def _copy_named_files(
 
 
 def copy_journal_fonts(out_dir: Path) -> None:
-    """Ship webfonts referenced by journal.css (cover title handwriting)."""
-    if not HETANGYUESE_WOFF2.is_file():
-        return
-    font_dest_dir = out_dir / "assets" / "fonts"
-    font_dest_dir.mkdir(parents=True, exist_ok=True)
-    dest = font_dest_dir / HETANGYUESE_WOFF2.name
-    if dest.resolve() != HETANGYUESE_WOFF2.resolve():
-        shutil.copy2(HETANGYUESE_WOFF2, dest)
+    """Reserved for optional webfonts; cover titles use --font-ui (Microsoft YaHei stack)."""
+    del out_dir  # no bundled handwriting fonts
 
 
 def copy_scroll_nav_bundle(out_dir: Path) -> None:

@@ -13,12 +13,10 @@ from travelogue.paths import (
     BREATH_JS,
     COPY_DISPLAY_CSS,
     COPY_TOGGLE_JS,
-    HETANGYUESE_WOFF2,
     INLINE_EDIT_CSS,
     INLINE_EDIT_JS,
     JOURNAL_CSS,
     JOURNAL_SCREENS_CSS,
-    LONGSHOT_BRIDGE_JS,
     LONGSHOT_JS,
     SCREENPLAY_BOOKMARKS_JS,
     SCREENPLAY_CSS,
@@ -65,7 +63,6 @@ _BUNDLE_VERSION_PATHS = (
     SCREENPLAY_BOOKMARKS_JS,
     COPY_TOGGLE_JS,
     COPY_DISPLAY_CSS,
-    HETANGYUESE_WOFF2,
     INLINE_EDIT_CSS,
     INLINE_EDIT_JS,
     INLINE_EDIT_CSS,
@@ -639,7 +636,6 @@ def build_layout_screen(
     slots_out = []
     mixed_p1_l2 = pattern_id == "screen-portrait-1-landscape-2"
     exif_pool = moment_exif_pool_ids or frozenset()
-    sig_id = str(moment_signature_id or "").strip()
     screen_role = str(screen.get("role") or "").strip()
     for j, slot in enumerate(screen.get("slots") or []):
         aid = slot.get("assetId", "")

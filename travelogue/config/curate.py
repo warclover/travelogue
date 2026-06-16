@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from travelogue.config.moment import MomentConfig, moment_config_from_dict
+from travelogue.config.moment import MomentConfig
 from travelogue.curation.cover_scoring_params import CoverScoringParams
 
 

@@ -14,7 +14,6 @@ from travelogue.config.cohort import CohortConfig
 from travelogue.config.cull import cull_from_dict
 from travelogue.config.curate import CurateConfig, cover_scoring_v2_from_dict
 from travelogue.config.ingest import ingest_from_dict
-from travelogue.config.moment import moment_config_from_dict
 from travelogue.config.layout import (
     LayoutConfig,
     layout_feedback_from_dict,
@@ -30,6 +29,7 @@ from travelogue.config.misc import (
     pipeline_from_dict,
     render_from_dict,
 )
+from travelogue.config.moment import moment_config_from_dict
 from travelogue.config.mosaic import mosaic_from_dict
 from travelogue.config.phase6 import phase6_from_dict
 from travelogue.config.studio import StudioConfig

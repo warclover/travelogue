@@ -38,9 +38,8 @@ def test_default_pack_mosaic_weights_match_config() -> None:
 
 def test_default_pack_layout_state_matches_config_path() -> None:
     """LSE pack path must inherit P21 dense/large-mosaic quotas from config path."""
-    import travelogue.curation.screen_planner  # noqa: F401
 
-    from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState, RhythmRules
+    from travelogue.curation.screen_layout_state import RhythmRules, ScreenLayoutPlannerState
     from travelogue.layout_engine.adapter import layout_state_for_trip
 
     cfg = _cfg_lse_on()

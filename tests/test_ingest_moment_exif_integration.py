@@ -66,8 +66,8 @@ def test_ingest_writes_exif_subobject(tmp_path: Path) -> None:
 
 def test_golden_trip_moment_pool_size_formula() -> None:
     """AC-P23-23 · clamp(round(n×5%), 1, 5) when golden trip is present."""
-    from travelogue.curation.moment_scoring import moment_pool_target_size
     from travelogue.config.moment import MomentConfig
+    from travelogue.curation.moment_scoring import moment_pool_target_size
 
     trip_json = ROOT / "trips" / "demo-d66fe642a9" / "trip.json"
     if not trip_json.is_file():

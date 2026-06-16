@@ -123,11 +123,11 @@ def replan_day_buckets_beam(
     moment_secondary_ids: set[str] | frozenset[str] | None = None,
     moment_secondary_boost: float = 0.0,
 ) -> tuple[list[dict], list[dict], SearchBudget]:
-    from travelogue.curation.screen_planner import DEFAULT_FEATURED_WEIGHT
     from travelogue.curation.intent_hints import (
         INTENT_PEAK_ARC_BOOST,
         arc_segment_for_chapter_with_intent,
     )
+    from travelogue.curation.screen_planner import DEFAULT_FEATURED_WEIGHT
 
     out = _shallow_copy_chapters(chapters)
     asset_to_ch: dict[str, str] = {}
@@ -169,6 +169,7 @@ def replan_day_buckets_beam(
     carry_age: dict[str, int] = {}
     hero_ids = {h for h in hero_by_ch.values() if h}
     noted_patterns: list[str] = []
+    from travelogue.curation.curate_scoring import median_sharpness
     from travelogue.curation.screen_planner_attach import (
         _carry_inject_ids,
         _consolidate_adjacent_portrait_singles,
@@ -176,7 +177,6 @@ def replan_day_buckets_beam(
         _late_chapter_planning_kwargs,
         assign_bucket_screens_with_portrait_carry,
     )
-    from travelogue.curation.curate_scoring import median_sharpness
 
     med_sharp = median_sharpness(list(assets_by_id.values())) if assets_by_id else 0.0
     incr_state = IncrementalScoreState() if incremental_scoring else None

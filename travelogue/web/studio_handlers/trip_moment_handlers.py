@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from travelogue.services.moment_curation import (
     apply_moment_signature,
@@ -56,7 +56,7 @@ def handle_patch_moment(handler: StudioHandlerProtocol, trip_id: str) -> None:
         handler._json_response(400, {"ok": False, "error": str(exc)})
         return
 
-    trip["updatedAt"] = datetime.now(timezone.utc).isoformat()
+    trip["updatedAt"] = datetime.now(UTC).isoformat()
     ctx = studio_ctx(handler)
     ctx.trip_service().save(trip, trip_json)
     try:

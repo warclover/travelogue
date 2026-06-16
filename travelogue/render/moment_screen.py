@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from travelogue.curation.asset_subject import full_frame_fit_for_asset, portrait_fit_for_asset
 from travelogue.curation.layout_planner import aspect_kind_for_asset
 from travelogue.render.context import (
     _asset_aspect_ratio_float,
     _presentation_tier,
     _screen_weight_for_tier,
+    alt_text,
+    compile_srcset,
+    pick_image_sizes,
+    pick_image_src,
 )
 from travelogue.render.cover_opening import cover_focal_point
-from travelogue.render.context import alt_text, compile_srcset, pick_image_sizes, pick_image_src
 from travelogue.render.moment_exif import format_moment_exif_line
 
 

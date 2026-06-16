@@ -159,11 +159,6 @@ _LONGSHOT_CAPTURE_METRICS_JS = """async () => {
 
 def _copy_journal_css(trip_dir: Path) -> None:
     shutil.copy2(_TEMPLATE_JOURNAL, trip_dir / "journal.css")
-    font_src = ROOT / "templates" / "visual-journal" / "assets" / "fonts" / "hetangyuese.woff2"
-    if font_src.is_file():
-        font_dest_dir = trip_dir / "assets" / "fonts"
-        font_dest_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(font_src, font_dest_dir / font_src.name)
 
 
 def _cover_opening_html(
@@ -822,7 +817,7 @@ def test_cover_styles_v5_mobile_footnote_visible(tmp_path: Path) -> None:
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page(viewport={"width": 1280, "height": 800})
-            events = _attach_studio_event_collector(page)
+            _attach_studio_event_collector(page)
             page.add_init_script(f"() => localStorage.setItem({json.dumps(storage_key)}, '1')")
             page.goto(url, wait_until="networkidle")
             footnote = page.locator("#preview-toolbar-cover-footnote")
@@ -858,7 +853,7 @@ def test_cover_styles_v5_split_mat_title_edit_keeps_style(tmp_path: Path) -> Non
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page(viewport={"width": 1280, "height": 800})
-            events = _attach_studio_event_collector(page)
+            _attach_studio_event_collector(page)
             page.add_init_script(f"() => localStorage.setItem({json.dumps(storage_key)}, '1')")
             page.goto(url, wait_until="networkidle")
             page.locator(".cover-opening__title").wait_for(state="visible", timeout=10_000)
