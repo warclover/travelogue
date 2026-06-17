@@ -53,13 +53,107 @@ function presentAutoplayHref(opts) {
   return href + "#present/1";
 }
 
+/** Folio / editorial-room SVG glyphs for v4 icon dock. */
+function dockIconSvg(name) {
+  var attrs =
+    'class="preview-toolbar__dock-icon" viewBox="0 0 24 24" ' +
+    'fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" ' +
+    'stroke-linejoin="round" aria-hidden="true" focusable="false"';
+  var accent =
+    'class="preview-toolbar__dock-icon-accent" fill="currentColor" stroke="none"';
+  switch (name) {
+    case "back":
+      return (
+        "<svg " +
+        attrs +
+        ">" +
+        '<path d="M3.5 3.5h10.2L20.5 7.2V20a1.4 1.4 0 0 1-1.4 1.4H5.4A1.4 1.4 0 0 1 4 20V3.5h-.5z"/>' +
+        '<path d="M13.7 3.5V7.4H20.5"/>' +
+        '<path d="M13.7 3.5H20.5" ' +
+        accent +
+        "/>" +
+        '<path d="M8 12.2 4.8 12l3.2-2.8"/>' +
+        '<path d="M4.8 12h6.8" stroke-width="2"/>' +
+        "</svg>"
+      );
+    case "play":
+      return (
+        "<svg " +
+        attrs +
+        ">" +
+        '<rect x="2.5" y="2.5" width="19" height="19" rx="2"/>' +
+        '<circle cx="5.2" cy="6.8" r="1.05" fill="currentColor" stroke="none"/>' +
+        '<circle cx="5.2" cy="12" r="1.05" fill="currentColor" stroke="none"/>' +
+        '<circle cx="5.2" cy="17.2" r="1.05" fill="currentColor" stroke="none"/>' +
+        '<circle cx="18.8" cy="6.8" r="1.05" fill="currentColor" stroke="none"/>' +
+        '<circle cx="18.8" cy="12" r="1.05" fill="currentColor" stroke="none"/>' +
+        '<circle cx="18.8" cy="17.2" r="1.05" fill="currentColor" stroke="none"/>' +
+        '<polygon points="9,7.5 9,16.5 17.5,12" ' +
+        accent +
+        "/>" +
+        "</svg>"
+      );
+    case "edit":
+      return (
+        "<svg " +
+        attrs +
+        ">" +
+        '<rect x="2.5" y="3.5" width="19" height="17" rx="1.8"/>' +
+        '<path d="M8.2 3.5v17"/>' +
+        '<path d="M4.6 9.2h2.4M4.6 12h2.4M4.6 14.8h2.4"/>' +
+        '<circle cx="5.8" cy="9.2" r="0.85" ' +
+        accent +
+        "/>" +
+        '<circle cx="5.8" cy="12" r="0.85" ' +
+        accent +
+        "/>" +
+        '<circle cx="5.8" cy="14.8" r="0.85" ' +
+        accent +
+        "/>" +
+        '<path d="M10.2 8.5h9.8M10.2 12h8.6M10.2 15.5h9.8" stroke-width="1.85"/>' +
+        "</svg>"
+      );
+    case "scroll":
+      return (
+        "<svg " +
+        attrs +
+        ">" +
+        '<rect x="7" y="2" width="10" height="5.2" rx="0.9" opacity="0.42"/>' +
+        '<rect x="5" y="7.2" width="14" height="5.6" rx="0.9" opacity="0.68"/>' +
+        '<rect x="3" y="12.8" width="18" height="8.2" rx="1"/>' +
+        '<path d="M6.5 20.8h11" stroke-dasharray="2.2 1.6" opacity="0.8" stroke-width="1.6"/>' +
+        '<path d="M3 13.8h18" ' +
+        accent +
+        ' stroke-width="1.45"/>' +
+        "</svg>"
+      );
+    default:
+      return "";
+  }
+}
+
+function dockLongshotContentHtml(state) {
+  if (state === "running") {
+    return (
+      '<span class="preview-toolbar__dock-export-inner preview-toolbar__dock-export-inner--running">' +
+      '<span class="preview-toolbar__longshot__spinner" aria-hidden="true"></span>' +
+      '<span class="preview-toolbar__dock-export-label">导出中</span></span>'
+    );
+  }
+  return (
+    '<span class="preview-toolbar__dock-export-inner">' +
+    dockIconSvg("scroll") +
+    '<span class="preview-toolbar__dock-export-label">长图</span></span>'
+  );
+}
+
 function insertScreenplayControl(parent, beforeNode, opts) {
   if (!parent) return null;
   opts = opts || {};
   var label = opts.label != null ? opts.label : "▶ 全屏放映";
   if (opts.dock) label = "▶";
   var v3Class = opts.v3 ? " preview-toolbar__screenplay--v3" : "";
-  var dockClass = opts.dock ? " preview-toolbar__dock-btn preview-toolbar__dock-btn--screenplay" : "";
+  var dockClass = opts.dock ? " preview-toolbar__dock-btn preview-toolbar__dock-btn--screenplay preview-toolbar__dock-btn--folio" : "";
   if (document.documentElement.getAttribute("data-screenplay") === "on") {
     var screenplayBtn = document.createElement("button");
     screenplayBtn.type = "button";
@@ -72,7 +166,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     screenplayBtn.setAttribute("aria-label", "全屏放映，逐屏展示");
     screenplayBtn.title = "全屏逐屏放映";
     if (opts.dock) {
-      screenplayBtn.innerHTML = '<span aria-hidden="true">' + label + "</span>";
+      screenplayBtn.innerHTML = dockIconSvg("play");
     } else {
       screenplayBtn.textContent = label;
     }
@@ -86,7 +180,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     "preview-toolbar__ctl preview-toolbar__screenplay" + v3Class + dockClass;
   autoplayLink.href = href;
   if (opts.dock) {
-    autoplayLink.innerHTML = '<span aria-hidden="true">▶</span>';
+    autoplayLink.innerHTML = dockIconSvg("play");
   } else {
     autoplayLink.textContent = label;
   }
@@ -254,10 +348,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
   }
 
   function dockLongshotIconHtml(state) {
-    if (state === "running") {
-      return '<span class="preview-toolbar__longshot__spinner" aria-hidden="true"></span>';
-    }
-    return '<span aria-hidden="true">↓</span>';
+    return dockLongshotContentHtml(state);
   }
 
   function setDockLongshotAria(btn, state) {
@@ -3222,6 +3313,10 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     var menuWrap = actions.querySelector(".preview-toolbar__menu-wrap");
     if (isPreviewToolbarV4(root)) {
       insertScreenplayControl(actions, menuWrap, { label: "▶", v3: true, dock: true });
+      var exportDivider = document.createElement("span");
+      exportDivider.className = "preview-toolbar__dock-divider";
+      exportDivider.setAttribute("aria-hidden", "true");
+      actions.appendChild(exportDivider);
       actions.appendChild(exportWrap);
     } else {
       actions.insertBefore(exportWrap, menuWrap);
@@ -3327,10 +3422,13 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     root.innerHTML =
       '<nav class="preview-toolbar__dock" aria-label="预览快捷操作">' +
       '<a class="preview-toolbar__dock-btn preview-toolbar__dock-btn--back preview-toolbar__ctl" href="/" aria-label="返回" title="返回 Studio 首页">' +
-      '<span aria-hidden="true">←</span></a>' +
+      dockIconSvg("back") +
+      "</a>" +
+      '<span class="preview-toolbar__dock-divider" aria-hidden="true"></span>' +
       '<div class="preview-toolbar__menu-wrap">' +
-      '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__dock-btn preview-toolbar__dock-btn--menu" aria-haspopup="dialog" aria-expanded="false" aria-label="编辑与设置" title="编辑与设置">' +
-      '<span aria-hidden="true">⋯</span></button>' +
+      '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__dock-btn preview-toolbar__dock-btn--menu preview-toolbar__dock-btn--folio" aria-haspopup="dialog" aria-expanded="false" aria-label="编辑与设置" title="编辑与设置">' +
+      dockIconSvg("edit") +
+      "</button>" +
       "</div>" +
       "</nav>";
 
