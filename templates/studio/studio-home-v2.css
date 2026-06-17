@@ -198,7 +198,7 @@ body { overflow-x: clip; overflow-y: visible; }
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding: 28px 32px 24px;
+  padding: 12px 32px 20px;
   box-sizing: border-box;
   overflow-x: clip;
   overflow-y: visible;
@@ -286,15 +286,15 @@ body { overflow-x: clip; overflow-y: visible; }
 }
 
 /* ── Headline / Slogan（Bento 网格内 · 左列第 1 行） ──
-   layout D（默认 · body data-headline-layout="d"）：Eyebrow+Tags 顶行，H1 独占行。
+   layout D（默认 · body data-headline-layout="d"）：Eyebrow + H1 + Lead 纵向排列。
    ROLLBACK legacy：body data-headline-layout="legacy" + 恢复 studio-home-v2.html 注释 DOM。 ── */
 [data-headline-layout="d"] .v2-bento__headline {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
-    "eyebrow tags"
-    "title   title"
-    "lead    lead";
+    "eyebrow"
+    "title"
+    "lead";
   align-items: start;
 }
 .v2-bento__headline {
@@ -302,7 +302,7 @@ body { overflow-x: clip; overflow-y: visible; }
   grid-row: 1;
   min-width: 0;
   font-family: var(--v2-font-display);
-  margin-top: -16px;
+  margin-top: -4px;
 }
 .v2-bento__eyebrow {
   display: block;
@@ -352,18 +352,6 @@ body { overflow-x: clip; overflow-y: visible; }
   border-bottom: 1px solid var(--v2-gold-soft);
 }
 
-.v2-auto-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0 0 6px;
-  justify-content: flex-end;
-}
-[data-headline-layout="d"] .v2-auto-tags {
-  grid-area: tags;
-  align-self: end;
-}
-
 /* ROLLBACK legacy headline（body data-headline-layout="legacy"） */
 [data-headline-layout="legacy"] .v2-bento__headline {
   display: block;
@@ -378,29 +366,6 @@ body { overflow-x: clip; overflow-y: visible; }
 [data-headline-layout="legacy"] .v2-bento__title {
   flex: 1 1 240px;
   min-width: 0;
-}
-[data-headline-layout="legacy"] .v2-auto-tags {
-  margin: 4px 0 0;
-  flex: 0 1 auto;
-}
-.v2-auto-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  letter-spacing: .04em;
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: var(--v2-demo-flag-bg);
-  border: 1px solid var(--v2-frame-outer-line);
-  color: var(--v2-demo-flag-ink);
-}
-.v2-auto-tag::before {
-  content: "";
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--v2-primary);
 }
 
 /* ── demo-flag（独立于占位槽紫） ── */
@@ -429,7 +394,7 @@ body { overflow-x: clip; overflow-y: visible; }
   z-index: 5;
   flex: 1;
   min-height: 0;
-  padding: 14px 16px 16px;
+  padding: 8px 16px 14px;
   border: 1px solid var(--v2-border);
   border-radius: 10px;
   background: var(--v2-frame-bg);
@@ -524,7 +489,7 @@ body { overflow-x: clip; overflow-y: visible; }
   display: grid;
   grid-template-columns: minmax(0, 2.1fr) minmax(148px, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 10px 14px;
+  gap: 8px 14px;
   align-items: stretch;
 }
 .v2-bento__web {
@@ -2567,7 +2532,7 @@ body { overflow-x: clip; overflow-y: visible; }
 
 /* ── Responsive：≥1024 与 iPad 横屏 双列；窄视口交给 JS 切 Unsupported ── */
 @media (max-width: 1100px) {
-  .v2-bento__hero { padding: 24px 20px 20px; }
+  .v2-bento__hero { padding: 12px 20px 18px; }
   .v2-bento__title { font-size: 28px; }
   .v2-bento__grid { grid-template-columns: minmax(0, 1.85fr) minmax(132px, 1fr); }
   .v2-bench {
@@ -2620,14 +2585,14 @@ body { overflow-x: clip; overflow-y: visible; }
 
 /* iPad 横屏（768–1023）：沿用 Bento 双列，绝不堆叠（D-07 / §10.1） */
 @media (min-width: 768px) and (max-width: 1023px) {
-  .v2-bento__hero { padding: 22px 18px 18px; }
+  .v2-bento__hero { padding: 10px 18px 16px; }
   .v2-bento__title { font-size: 26px; }
   .v2-bento__lead { font-size: 12px; max-width: 100%; }
   .v2-bento__grid {
     grid-template-columns: minmax(0, 1.75fr) minmax(120px, 1fr);
     gap: 8px 10px;
   }
-  .v2-bento__frame { padding: 12px; }
+  .v2-bento__frame { padding: 8px 12px 12px; }
   .v2-shelf__grid { grid-template-columns: repeat(3, 1fr); }
 }
 

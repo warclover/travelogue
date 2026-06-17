@@ -45,7 +45,6 @@ V2_HOME_MARKERS = (
     "都值得再次相遇",
     "开始制作我的游记",
     "示例作品",
-    "自动分章成文",
     "v2-unsupported",
     # M20-d · Import Sheet
     "v2-import-sheet",
@@ -167,7 +166,6 @@ def test_studio_home_v2_css_present() -> None:
         ".v2-phone",
         ".v2-bench",
         ".v2-demo-flag",
-        ".v2-auto-tag",
         ".v2-shared__bg",
         ".v2-unsupported",
     ):
