@@ -30,7 +30,7 @@ export function markSampleEngaged() {
 
 // ── Stage labels (§8.2) ──
 export const STAGE_LABELS = {
-  ingest: "正在读取你的照片",
+  ingest: "正在分析你指定的照片",
   curate: "正在挑选与排版",
   narrate: "正在撰写游记文字",
   render: "正在生成杂志预览",

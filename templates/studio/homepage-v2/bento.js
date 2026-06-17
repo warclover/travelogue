@@ -172,25 +172,20 @@ export function renderPhone(manifest, tier) {
   });
 }
 
-/** 工作台左栏 · 最近 3 本画册卡（无「最近编辑」标 / 无张数，仅标题）。 */
+/** 工作台左栏 · 新建卡 + 最近 3 本画册卡（无「最近编辑」标 / 无张数，仅标题）。 */
 export function renderBenchRecent() {
   var sample = $("v2-bench-sample");
   var recentHost = $("v2-bench-recent");
   var list = $("v2-bench-recent-list");
   var left = document.querySelector(".v2-bench__left");
   var bench = document.querySelector(".v2-bench");
-  if (!sample || !recentHost || !list) return;
+  if (!recentHost || !list) return;
+
+  list.querySelectorAll(".v2-bench__recent-card").forEach(function (el) {
+    el.remove();
+  });
 
   var recent = pickRecentUserTrips(V2.trips).slice(0, 3);
-  list.innerHTML = "";
-
-  if (!recent.length) {
-    show(sample, true);
-    show(recentHost, false);
-    if (left) left.classList.remove("v2-bench__left--recent");
-    if (bench) bench.classList.remove("v2-bench--recent");
-    return;
-  }
 
   recent.forEach(function (trip, idx) {
     var card = document.createElement("a");
@@ -230,6 +225,11 @@ export function renderBenchRecent() {
     card.appendChild(meta);
     list.appendChild(card);
   });
+
+  list.style.setProperty(
+    "--v2-bench-recent-cols",
+    String(Math.min(4, Math.max(1, recent.length + 1)))
+  );
 
   show(sample, false);
   show(recentHost, true);

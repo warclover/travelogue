@@ -134,7 +134,7 @@ const JOB_FIXTURES = {
     stageIndex: 1,
     stageCount: 4,
     stage: "ingest",
-    stageHint: "正在读取你的照片",
+    stageHint: "正在分析你指定的照片",
   },
   succeeded: {
     status: "succeeded",

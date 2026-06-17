@@ -58,6 +58,8 @@ def test_longshot_css_caption_display() -> None:
     css = LONGSHOT_CSS.read_text(encoding="utf-8")
     assert "data-caption-display" in css
     assert ".longshot-toolbar__btn--secondary" in css
+    assert "body.longshot-capturing .cover-hero__text h1" in css
+    assert "font-size: 26px" in css
 
 
 def test_longshot_css_preview_and_wechat() -> None:
