@@ -5,11 +5,22 @@
       "patternId": "open",
       "screens": [
         {
-          "patternId": "screen-portrait-1-landscape-2",
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": [
+            "l1"
+          ]
+        },
+        {
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": [
+            "l2"
+          ]
+        },
+        {
+          "patternId": "screen-portrait-2",
           "slotAssetIds": [
             "p1",
-            "l1",
-            "l2"
+            "p2"
           ]
         }
       ]
@@ -19,10 +30,14 @@
       "patternId": "close",
       "screens": [
         {
-          "patternId": "screen-portrait-1-landscape-2",
+          "patternId": "screen-landscape-1",
           "slotAssetIds": [
-            "p2",
-            "l3",
+            "l3"
+          ]
+        },
+        {
+          "patternId": "screen-landscape-1",
+          "slotAssetIds": [
             "l4"
           ]
         }

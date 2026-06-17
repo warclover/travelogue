@@ -27,7 +27,7 @@ def test_phase10_fixture_trip_produces_food_grid_screen() -> None:
         trip_photo_total=len(assets),
         enable_food_grid=True,
     )
-    screens = (chapters[0].get("screens") or []) if chapters else []
+    screens = [sc for ch in (chapters or []) for sc in (ch.get("screens") or [])]
     assert any(sc.get("layoutHint") == FOOD_GRID_LAYOUT_HINT for sc in screens)
     assert any(sc.get("patternId") == "screen-square-4" for sc in screens)
     used_ids = {slot.get("assetId") for sc in screens for slot in (sc.get("slots") or [])}

@@ -178,7 +178,7 @@ def check_g8_11_shelf_template_label(page: Page, base: str) -> dict:
 
 def check_g8_11_preview_toolbar(page: Page, base: str, trip_id: str) -> dict:
     page.goto(f"{base}/{trip_id}/index.html", wait_until="networkidle")
-    page.wait_for_selector(".preview-toolbar--v4", timeout=15_000)
+    page.locator(".preview-toolbar__dock").wait_for(state="visible", timeout=15_000)
     page.locator(".preview-toolbar__menu-btn").click()
     page.wait_for_selector(".preview-sheet", timeout=10_000)
     page.locator('.preview-sheet__tab[data-sheet-tab="layout"]').click()

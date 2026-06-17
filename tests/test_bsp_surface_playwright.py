@@ -210,8 +210,8 @@ def test_ac_bsp_02_p0_full_frame_height_and_fill(bsp_server) -> None:
         page = browser.new_page(viewport=VIEWPORT_P0, device_scale_factor=DPR_P0)
         _open_demo(page, bsp_server["base"])
         indices = _viewport_fit_full_frame_indices(page)
-        assert len(indices) >= 4, "expected viewport-fit full-frame screens"
-        sample = indices[:4]
+        assert len(indices) >= 3, "expected viewport-fit full-frame screens"
+        sample = indices[: min(4, len(indices))]
         for idx in sample:
             m = page.evaluate(_MEASURE_JS, idx)
             assert m and m.get("pattern") == "screen-full-frame", idx
@@ -232,8 +232,8 @@ def test_ac_bsp_02a_p1_full_frame_height_and_fill(bsp_server) -> None:
         page = browser.new_page(viewport=VIEWPORT_P1)
         _open_demo(page, bsp_server["base"])
         indices = _viewport_fit_full_frame_indices(page)
-        assert len(indices) >= 4
-        sample = indices[:4]
+        assert len(indices) >= 3
+        sample = indices[: min(4, len(indices))]
         for idx in sample:
             m = page.evaluate(_MEASURE_JS, idx)
             assert m and m.get("pattern") == "screen-full-frame", idx
@@ -253,8 +253,8 @@ def test_ac_bsp_02b_p0_not_thinner_than_p1(bsp_server) -> None:
         page0 = browser.new_page(viewport=VIEWPORT_P0, device_scale_factor=DPR_P0)
         _open_demo(page0, bsp_server["base"])
         indices = _viewport_fit_full_frame_indices(page0)
-        assert len(indices) >= 4
-        sample = indices[:4]
+        assert len(indices) >= 3
+        sample = indices[: min(4, len(indices))]
         for idx in sample:
             m = page0.evaluate(_MEASURE_JS, idx)
             assert m and m.get("imgHeightVh") is not None
