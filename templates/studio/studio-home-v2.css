@@ -491,6 +491,7 @@ body { overflow-x: clip; overflow-y: visible; }
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 8px 14px;
   align-items: stretch;
+  --v2-web-preview-lift: 30px;
 }
 .v2-bento__web {
   grid-column: 1;
@@ -573,6 +574,7 @@ body { overflow-x: clip; overflow-y: visible; }
 }
 .v2-bento__mobile .v2-cell-label {
   grid-row: 2;
+  align-self: end;
   justify-self: center;
   width: min(100%, calc(var(--v2-phone-height) * var(--v2-phone-ratio) * var(--v2-phone-scale, 1)));
   margin-top: 6px;
@@ -583,6 +585,7 @@ body { overflow-x: clip; overflow-y: visible; }
   min-height: 14px;
   box-sizing: border-box;
   color: var(--v2-text-muted);
+  transform: translateY(calc(-1 * var(--v2-web-preview-lift, 0px) + var(--v2-cell-label-nudge, 0px)));
 }
 .v2-cell-label__hint {
   color: var(--v2-text-muted);
@@ -604,6 +607,7 @@ body { overflow-x: clip; overflow-y: visible; }
   border: 1px solid var(--v2-border);
   box-shadow: 0 12px 36px var(--v2-shadow-carousel);
   background: var(--v2-surface);
+  transform: translateY(calc(-1 * var(--v2-web-preview-lift, 0px)));
 }
 .v2-carousel__viewport::before {
   content: "";
@@ -699,6 +703,7 @@ body { overflow-x: clip; overflow-y: visible; }
   padding: 0 2px;
   gap: 8px;
   min-height: 14px;
+  transform: translateY(calc(-1 * var(--v2-web-preview-lift, 0px)));
 }
 .v2-carousel__dots { display: flex; gap: 5px; }
 .v2-carousel__dots button {
@@ -724,11 +729,11 @@ body { overflow-x: clip; overflow-y: visible; }
   text-align: right;
 }
 
-/* ── Phone preview（右列顶对齐 · 不超出浅灰 frame 上沿） ── */
+/* ── Phone preview（右列顶对齐 · 底边与 web 卷轴预览框对齐 · JS 写入高度） ── */
 .v2-phone {
   --v2-phone-ratio: calc(9 / 16);
   --v2-phone-scale: 1;
-  --v2-phone-height: clamp(560px, 62vh, 700px);
+  --v2-phone-height: clamp(360px, 52vh, 640px);
   grid-row: 1;
   align-self: start;
   justify-self: center;
@@ -738,7 +743,7 @@ body { overflow-x: clip; overflow-y: visible; }
   margin-top: 0;
   aspect-ratio: var(--v2-phone-ratio);
   max-height: calc(980px * var(--v2-phone-scale));
-  min-height: calc(520px * var(--v2-phone-scale));
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
