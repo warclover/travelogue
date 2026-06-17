@@ -39,6 +39,7 @@ def test_inject_studio_chrome_adds_script() -> None:
     assert 'data-preview-toolbar="on"' in out
     assert "/__studio/preview-toolbar.js" in out
     assert "/__studio/preview-toolbar.css" in out
+    assert "/__studio/studio-modal.css" in out
     assert "/__studio/studio-modal.js" in out
     assert 'type="module" src="/__studio/preview-toolbar.js"' in out
     assert "/__studio/studio-api.js" not in out

@@ -36,6 +36,7 @@
   --font-sans: var(--font-ui);
   --font-brush: var(--font-ui);
   --font-serif: var(--font-ui);
+  --font-handwriting: var(--font-ui);
   --chapter-gap: 4px;
   --radius: 0;
   --page-pad: 0;
@@ -206,7 +207,7 @@ html[data-font-theme="magazine"] {
   background: rgba(26, 47, 40, 0.94);
   color: #f5fbf8;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
-  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-ui);
   font-size: 14px;
 }
 

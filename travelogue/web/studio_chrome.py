@@ -11,6 +11,7 @@ CHROME_ALLOWLIST = frozenset(
 SHARE_QUERY_MARKERS = ("share=1", "mode=share")
 
 CHROME_INJECT = (
+    '<link rel="stylesheet" href="/__studio/studio-modal.css">\n'
     '<link rel="stylesheet" href="/__studio/preview-toolbar.css">\n'
     '<script src="/__studio/studio-modal.js" defer></script>\n'
     '<script type="module" src="/__studio/preview-toolbar.js"></script>'

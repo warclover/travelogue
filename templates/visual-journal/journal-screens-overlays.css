@@ -649,8 +649,8 @@ html[data-folio="full"] {
   --folio-paper: #faf8fc;
   --folio-ink: #2d1f3a;
   --folio-accent: var(--screen-tone, #c8956c);
-  --folio-meta-font: ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
-  --folio-display-font: var(--font-serif, Georgia, "Times New Roman", serif);
+  --folio-meta-font: var(--font-ui);
+  --folio-display-font: var(--font-ui);
 }
 
 html[data-folio="lite"] body,
@@ -1111,7 +1111,7 @@ html[data-folio="full"] .featured-grid__img {
 
 .epilogue-screen__stats {
   margin: 0 0 0.75rem;
-  font-family: var(--folio-meta-font, sans-serif);
+  font-family: var(--folio-meta-font, var(--font-ui));
   font-size: 0.95rem;
   letter-spacing: 0.08em;
   color: color-mix(in srgb, var(--folio-ink, #222) 70%, transparent);

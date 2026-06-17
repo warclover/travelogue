@@ -2488,23 +2488,26 @@ body { overflow-x: clip; overflow-y: visible; }
   border: 1px solid rgba(255, 255, 255, .1);
   border-radius: 12px;
   text-align: center;
+  color: rgba(255, 255, 255, .92);
 }
 .v2-import-panel__source {
   font-size: 10px;
   letter-spacing: .08em;
-  color: var(--v2-gold);
+  color: #90e0ef;
   margin: 0 0 10px;
 }
 .v2-import-panel__title {
   margin: 0 0 6px;
-  font-family: var(--v2-font-display);
+  font-family: var(--v2-font-sans);
   font-size: 20px;
-  font-weight: 400;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #fff;
 }
 .v2-import-panel__estimate {
   margin: 0 0 16px;
   font-size: 11px;
-  color: rgba(255, 255, 255, .45);
+  color: rgba(255, 255, 255, .68);
 }
 .v2-import-panel__bar {
   height: 3px;
@@ -2522,15 +2525,15 @@ body { overflow-x: clip; overflow-y: visible; }
 .v2-import-panel__stage {
   margin: 0 0 16px;
   font-size: 12px;
-  color: rgba(255, 255, 255, .7);
+  color: rgba(255, 255, 255, .86);
 }
 .v2-import-panel__cancel {
   min-height: 40px;
   padding: 9px 16px;
-  border: 1px solid rgba(255, 255, 255, .15);
+  border: 1px solid rgba(255, 255, 255, .28);
   border-radius: 6px;
   background: transparent;
-  color: rgba(255, 255, 255, .5);
+  color: rgba(255, 255, 255, .82);
   font-size: 12px;
   cursor: pointer;
 }

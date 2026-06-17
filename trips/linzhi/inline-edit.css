@@ -61,6 +61,7 @@ html[data-inline-edit="on"] .inline-edit__field--saved {
   transform: translateX(-50%);
   margin: 0;
   padding: 10px 16px;
+  font-family: var(--font-ui);
   font-size: 13px;
   line-height: 1.4;
   color: #f5fbf8;

@@ -4,7 +4,7 @@
  * 字体：全书微软雅黑栈 + 各平台系统无衬线回退（无需联网）
  * 可选杂志体：html[data-font-theme="magazine"] 使用 --font-legacy-brush
  */
-@import url("journal-screens.css?v=lse6c0326c2654");
+@import url("journal-screens.css?v=ls8b2e4bfe64a0");
 
 :root {
   --bp-web: 48rem;
@@ -36,6 +36,7 @@
   --font-sans: var(--font-ui);
   --font-brush: var(--font-ui);
   --font-serif: var(--font-ui);
+  --font-handwriting: var(--font-ui);
   --chapter-gap: 4px;
   --radius: 0;
   --page-pad: 0;
@@ -206,7 +207,7 @@ html[data-font-theme="magazine"] {
   background: rgba(26, 47, 40, 0.94);
   color: #f5fbf8;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
-  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-ui);
   font-size: 14px;
 }
 

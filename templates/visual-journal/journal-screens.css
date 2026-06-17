@@ -1474,8 +1474,8 @@ html[data-folio="full"] {
   --folio-paper: #faf8fc;
   --folio-ink: #2d1f3a;
   --folio-accent: var(--screen-tone, #c8956c);
-  --folio-meta-font: ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace;
-  --folio-display-font: var(--font-serif, Georgia, "Times New Roman", serif);
+  --folio-meta-font: var(--font-ui);
+  --folio-display-font: var(--font-ui);
 }
 
 html[data-folio="lite"] body,
@@ -1961,7 +1961,7 @@ html[data-folio="full"] .featured-grid__img {
   align-self: stretch;
   min-width: 2.55rem;
   padding-inline: 0.15rem 0.3rem;
-  font-family: var(--folio-meta-font, ui-monospace, "Cascadia Mono", monospace);
+  font-family: var(--folio-meta-font, var(--font-ui));
   font-size: 1.55rem;
   font-weight: 600;
   line-height: 1;
@@ -2011,7 +2011,7 @@ html[data-folio="full"] .featured-grid__img {
 
 .chapter-separator__meta {
   margin: 0.18rem 0 0;
-  font-family: var(--folio-meta-font, ui-monospace, "Cascadia Mono", monospace);
+  font-family: var(--folio-meta-font, var(--font-ui));
   font-size: 0.87rem;
   line-height: 1.35;
   letter-spacing: 0.16em;
@@ -2048,7 +2048,7 @@ html[data-folio="full"] .featured-grid__img {
   position: absolute;
   left: 0.42rem;
   top: 0.08rem;
-  font-family: var(--folio-display-font, Georgia, serif);
+  font-family: var(--folio-display-font, var(--font-ui));
   font-size: 1.15rem;
   line-height: 1;
   color: color-mix(
@@ -2126,7 +2126,7 @@ html[data-folio="full"] .featured-grid__img {
 
 .chapter-separator__progress-label {
   margin-left: 0.5rem;
-  font-family: var(--folio-meta-font, ui-monospace, "Cascadia Mono", monospace);
+  font-family: var(--folio-meta-font, var(--font-ui));
   font-size: 0.62rem;
   font-weight: 500;
   letter-spacing: 0.14em;
@@ -2209,7 +2209,7 @@ html[data-folio="full"] .featured-grid__img {
 
 .epilogue-screen__stats {
   margin: 0 0 0.75rem;
-  font-family: var(--folio-meta-font, sans-serif);
+  font-family: var(--folio-meta-font, var(--font-ui));
   font-size: 0.95rem;
   letter-spacing: 0.08em;
   color: color-mix(in srgb, var(--folio-ink, #222) 70%, transparent);
@@ -2235,7 +2235,7 @@ html[data-layout="auto"] .layout-slot:has(.moment-exif-bar) .layout-slot__img {
   padding: 0.5rem 0.75rem;
   width: 100%;
   box-sizing: border-box;
-  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-family: var(--font-ui);
   font-size: clamp(11px, 1.2vw, 13px);
   line-height: 1.35;
   letter-spacing: 0.02em;
@@ -2261,7 +2261,7 @@ html[data-layout="auto"] .layout-slot:has(.moment-exif-bar) .layout-slot__img {
   padding: 0.55rem 0.85rem;
   writing-mode: horizontal-tb;
   white-space: nowrap;
-  font-family: var(--folio-meta-font, ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace);
+  font-family: var(--folio-meta-font, var(--font-ui));
   font-size: clamp(11px, 1.2vw, 13px);
   letter-spacing: 0.12em;
   color: color-mix(in srgb, var(--folio-ink, #222) 72%, #fff 28%);
@@ -2330,7 +2330,7 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"])
   padding: 0.55rem 0.85rem;
   writing-mode: horizontal-tb;
   white-space: nowrap;
-  font-family: var(--folio-meta-font, ui-monospace, "Cascadia Mono", "Segoe UI Mono", monospace);
+  font-family: var(--folio-meta-font, var(--font-ui));
   font-size: clamp(11px, 1.2vw, 13px);
   letter-spacing: 0.12em;
   color: color-mix(in srgb, var(--folio-ink, #222) 72%, #fff 28%);
@@ -2392,7 +2392,7 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"])
   padding: 0.45rem 0.65rem;
   width: 100%;
   box-sizing: border-box;
-  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-family: var(--font-ui);
   font-size: clamp(11px, 1.2vw, 13px);
   line-height: 1.35;
   letter-spacing: 0.02em;

@@ -1,5 +1,11 @@
 /* studio-modal.js · CMP-HP-07 · 全站确认框（v2 / v3 / preview 共用） */
 
+:root {
+  --studio-font-ui:
+    "Microsoft YaHei", "微软雅黑", "PingFang SC", "Hiragino Sans GB",
+    "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+}
+
 .studio__modal-backdrop {
   position: fixed;
   inset: 0;
@@ -10,6 +16,7 @@
   padding: 24px;
   background: rgba(6, 5, 4, .52);
   backdrop-filter: blur(4px);
+  font-family: var(--studio-font-ui);
 }
 
 .studio__modal {
@@ -19,6 +26,7 @@
   border-radius: 10px;
   box-shadow: 0 24px 64px rgba(0, 0, 0, .28);
   color: #14110d;
+  font-family: var(--studio-font-ui);
 }
 
 .studio__modal[role="alertdialog"] .studio__modal-body {
@@ -102,4 +110,61 @@
 
 body.studio-modal-open {
   overflow: hidden;
+}
+
+/* studio-toast.js · CMP-HP-09 */
+.studio-toast-container {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+  transform: translateX(-50%);
+  z-index: 6500;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.studio__toast {
+  margin: 0;
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-family: var(--studio-font-ui);
+  font-size: 13px;
+  line-height: 1.45;
+  color: #f7f2e9;
+  background: rgba(20, 17, 13, 0.92);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  animation: studio-toast-in 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.studio__toast--warn {
+  background: rgba(120, 72, 18, 0.94);
+}
+
+.studio__toast--leaving {
+  animation: studio-toast-out 0.25s ease forwards;
+}
+
+@keyframes studio-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes studio-toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
 }
