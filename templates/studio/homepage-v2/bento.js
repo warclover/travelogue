@@ -29,8 +29,7 @@ function clampPhoneHeight(px) {
   return Math.round(v);
 }
 
-var PHONE_VISUAL_SCALE = 1.10;
-var PHONE_VISUAL_SCALE_MAX = 1.22;
+var PHONE_VISUAL_SCALE = 1;
 var PHONE_CAPTION_GAP = 6;
 
 function phoneCaptionReserve() {
@@ -39,7 +38,7 @@ function phoneCaptionReserve() {
   return Math.ceil(caption.getBoundingClientRect().height) + PHONE_CAPTION_GAP;
 }
 
-/** 按右列可用宽高放大手机框；底边由 grid 锚定，左侧 web 预览不受影响。 */
+/** 按右列可用宽高适配手机框；顶边与浅灰 frame 顶对齐，不向上溢出。 */
 function syncPhoneFrameFromWeb() {
   var phone = $("v2-phone");
   if (!phone) return;
@@ -58,22 +57,13 @@ function syncPhoneFrameFromWeb() {
   _phoneSyncAttempts = 0;
 
   var availableH = Math.max(0, cellH - phoneCaptionReserve());
-  var byWidth = Math.floor((cellW * 16) / (9 * PHONE_VISUAL_SCALE));
-  var byHeight = Math.floor(availableH / PHONE_VISUAL_SCALE);
+  var byWidth = Math.floor((cellW * 16) / 9);
+  var byHeight = Math.floor(availableH);
   var target = clampPhoneHeight(Math.min(byWidth, byHeight));
   if (target <= 0) return;
 
-  var scale = PHONE_VISUAL_SCALE;
-  var maxScale = Math.min(
-    availableH / target,
-    (cellW * 16) / (9 * target)
-  );
-  if (maxScale > scale) {
-    scale = Math.min(maxScale, PHONE_VISUAL_SCALE_MAX);
-  }
-
   phone.style.setProperty("--v2-phone-height", target + "px");
-  phone.style.setProperty("--v2-phone-scale", String(scale));
+  phone.style.setProperty("--v2-phone-scale", String(PHONE_VISUAL_SCALE));
   if (_phoneStripApi && _phoneStripApi.relayout) _phoneStripApi.relayout();
 }
 
