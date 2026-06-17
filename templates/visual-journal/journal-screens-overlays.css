@@ -683,7 +683,7 @@ html[data-folio="full"] .chapter-header {
 html[data-folio="lite"] .chapter-header__index,
 html[data-folio="full"] .chapter-header__index {
   font-family: var(--folio-meta-font);
-  font-size: 0.72rem;
+  font-size: 0.97rem;
   letter-spacing: 0.14em;
   color: color-mix(in srgb, var(--folio-ink) 55%, transparent);
 }

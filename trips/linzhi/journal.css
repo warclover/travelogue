@@ -106,7 +106,7 @@ html[data-layout="mobile"] {
   --type-meta: 13px;
   --type-caption: max(12px, calc(16px - 2 * var(--type-sm-step)));
   --type-footer: max(10px, calc(12px - 2 * var(--type-sm-step)));
-  --type-index: max(10px, calc(12px - 2 * var(--type-sm-step)));
+  --type-index: max(14px, calc(16px - 2 * var(--type-sm-step)));
   --type-appendix: max(12px, calc(17px - 2 * var(--type-sm-step)));
   font-size: var(--type-body);
 }
@@ -969,7 +969,7 @@ html[data-layout="mobile"] .cover-hero--photo-only + .cover-opening__panel .cove
 
 .chapter-header__index {
   display: block;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 400;
   letter-spacing: 0.28em;
   text-transform: uppercase;
@@ -1016,7 +1016,7 @@ html[data-layout="mobile"] .cover-hero--photo-only + .cover-opening__panel .cove
   padding: 0 16px clamp(1.25rem, 2.5vh, 2rem);
   max-width: 26em;
   text-align: center;
-  font-size: clamp(0.92rem, 1.8vw, 1.05rem);
+  font-size: clamp(1.17rem, calc(1.8vw + 0.25rem), 1.3rem);
   line-height: 1.55;
   color: color-mix(in srgb, var(--muted) 88%, transparent);
 }
