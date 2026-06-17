@@ -93,24 +93,13 @@ function dockIconSvg(name) {
         "/>" +
         "</svg>"
       );
-    case "edit":
+    case "settings":
       return (
         "<svg " +
         attrs +
-        ">" +
-        '<rect x="2.5" y="3.5" width="19" height="17" rx="1.8"/>' +
-        '<path d="M8.2 3.5v17"/>' +
-        '<path d="M4.6 9.2h2.4M4.6 12h2.4M4.6 14.8h2.4"/>' +
-        '<circle cx="5.8" cy="9.2" r="0.85" ' +
-        accent +
-        "/>" +
-        '<circle cx="5.8" cy="12" r="0.85" ' +
-        accent +
-        "/>" +
-        '<circle cx="5.8" cy="14.8" r="0.85" ' +
-        accent +
-        "/>" +
-        '<path d="M10.2 8.5h9.8M10.2 12h8.6M10.2 15.5h9.8" stroke-width="1.85"/>' +
+        ' stroke-width="1.9">' +
+        '<path d="M12 2.3L15.65 5.68L20.41 7.15L19.3 12L20.41 16.85L15.65 18.32L12 21.7L8.35 18.32L3.59 16.85L4.7 12L3.59 7.15L8.35 5.68Z"/>' +
+        '<circle cx="12" cy="12" r="3.4"/>' +
         "</svg>"
       );
     case "scroll":
@@ -3427,7 +3416,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
       '<span class="preview-toolbar__dock-divider" aria-hidden="true"></span>' +
       '<div class="preview-toolbar__menu-wrap">' +
       '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__dock-btn preview-toolbar__dock-btn--menu preview-toolbar__dock-btn--folio" aria-haspopup="dialog" aria-expanded="false" aria-label="编辑与设置" title="编辑与设置">' +
-      dockIconSvg("edit") +
+      dockIconSvg("settings") +
       "</button>" +
       "</div>" +
       "</nav>";
