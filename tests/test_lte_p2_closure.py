@@ -100,3 +100,59 @@ def test_list_studio_trips_layout_css_not_stale_when_geometry_solidified(tmp_pat
     (trip_dir / "journal-screens.css").write_text(".wrong {}", encoding="utf-8")
     rows = list_studio_trips(trips_dir)
     assert rows[0]["layoutCssStale"] is False
+
+
+@pytest.mark.unit
+def test_list_studio_trips_shelf_cover_prefers_mobile_cover(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trip_dir = trips_dir / "dual-cover"
+    assets = trip_dir / "assets"
+    assets.mkdir(parents=True)
+    (assets / "port-cover.webp").write_bytes(b"webp")
+    (assets / "land-cover.webp").write_bytes(b"webp")
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    data = {
+        "meta": {"title": "Dual cover"},
+        "coverAssetId": "port",
+        "exportLayout": "auto",
+        "assets": [
+            {
+                "id": "port",
+                "type": "image",
+                "width": 900,
+                "height": 2000,
+                "displayFile": "assets/port-cover.webp",
+                "layoutEligible": True,
+            },
+            {
+                "id": "land",
+                "type": "image",
+                "width": 1920,
+                "height": 1080,
+                "displayFile": "assets/land-cover.webp",
+                "layoutEligible": True,
+            },
+        ],
+        "curation": {"coverByLayout": {"mobile": "port", "web": "land"}},
+    }
+    (trip_dir / "trip.json").write_text(json.dumps(data), encoding="utf-8")
+
+    rows = list_studio_trips(trips_dir)
+    assert len(rows) == 1
+    assert rows[0]["previewRelPath"] == "preview.jpg"
+    assert rows[0]["shelfCoverRelPath"] == "assets/port-cover.webp"
+
+
+@pytest.mark.unit
+def test_list_studio_trips_shelf_cover_falls_back_to_preview(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trip_dir = trips_dir / "preview-only"
+    trip_dir.mkdir(parents=True)
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    (trip_dir / "trip.json").write_text(
+        json.dumps({"meta": {"title": "Preview only"}}),
+        encoding="utf-8",
+    )
+
+    rows = list_studio_trips(trips_dir)
+    assert rows[0]["shelfCoverRelPath"] == "preview.jpg"

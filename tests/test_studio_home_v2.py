@@ -480,7 +480,7 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "triggerHomepageRecurate" in shelf
     assert "isDemoTrip" in shelf          # demo → 示例徽章
     assert "openImportSheet" in shelf     # 新建 → Sheet
-    assert "previewRelPath" in shelf      # 封面派生
+    assert "shelfCoverRelPath" in shelf   # 书架竖版封面（mobile cover）
     assert "loadMoreShelf" in shelf
     assert "fetchTripsPage" in shelf
     assert "加载更多" in shelf

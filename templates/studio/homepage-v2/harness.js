@@ -54,6 +54,7 @@ function trip(id, title, opts) {
     photoCount: opts.photoCount || 24,
     updatedAt: opts.updatedAt || NOW - DAY,
     previewRelPath: opts.previewRelPath || null,
+    shelfCoverRelPath: opts.shelfCoverRelPath || opts.previewRelPath || null,
     previewUrl: opts.previewUrl || null,
     longshotStale: !!opts.longshotStale,
     algorithmStale: !!opts.algorithmStale,

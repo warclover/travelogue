@@ -36,7 +36,8 @@ function relativeTime(ts) {
 }
 
 function coverUrl(trip) {
-  return trip.previewRelPath ? "/" + trip.tripId + "/" + trip.previewRelPath : null;
+  var rel = trip.shelfCoverRelPath || trip.previewRelPath;
+  return rel ? "/" + trip.tripId + "/" + rel : null;
 }
 
 function titleInitials(title) {

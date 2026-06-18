@@ -18,8 +18,10 @@ export const V2_BENTO_TAB_SESSION_KEY = "travelogue.studio.v2.bentoTab";
 export const V2_BENTO_PREVIEW_TRIP_SESSION_KEY = "travelogue.studio.v2.bentoPreviewTripIdSession";
 /** D-14 一次性迁移完成标记（localStorage）。 */
 export const V2_BENTO_D14_MIGRATED_KEY = "travelogue.studio.v2.bentoD14Migrated";
-/** D-14 离线：最近一次成功的 GET /trips 首屏快照（JSON `{ trips, total }`）。 */
+/** D-14 离线：最近一次成功的 GET /trips 首屏快照（JSON `{ v, trips, total }`）。 */
 export const V2_TRIPS_CACHE_KEY = "travelogue.studio.v2.tripsCache";
+/** Bump when trips row shape changes (e.g. shelfCoverRelPath). */
+export const V2_TRIPS_CACHE_VERSION = 2;
 export const V2_THEME_DEFAULT = "sky";
 
 /** v2 首页运行时状态（单一可变源，勿重新赋值绑定）。 */
@@ -165,7 +167,7 @@ export function readTripsCache() {
     var raw = localStorage.getItem(V2_TRIPS_CACHE_KEY);
     if (!raw) return null;
     var data = JSON.parse(raw);
-    if (!data || !Array.isArray(data.trips)) return null;
+    if (!data || data.v !== V2_TRIPS_CACHE_VERSION || !Array.isArray(data.trips)) return null;
     return {
       trips: data.trips,
       total: typeof data.total === "number" ? data.total : data.trips.length,
@@ -178,6 +180,7 @@ export function readTripsCache() {
 export function persistTripsCache(trips, total) {
   try {
     var payload = {
+      v: V2_TRIPS_CACHE_VERSION,
       trips: (trips || []).slice(),
       total: typeof total === "number" ? total : (trips || []).length,
     };
