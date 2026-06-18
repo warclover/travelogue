@@ -55,7 +55,7 @@
 | ID | 任务 | 文件 | AC |
 |----|------|------|-----|
 | T16 | 静态断言 | `test_studio_home_v2.py` | select 存在 |
-| T17 | 单测（可选） | `bento-preview-picker.test.mjs` | — |
+| T17 | 单测（可选） | `bento-preview-picker-logic.test.mjs` | ✅ |
 | T18–T19 | E2E | `test_studio_home_v2_ac_playwright.py` | AC-D14-01–06 |
 | T20 | harness | `harness.js` | `?bentoPreviewTrip=` |
 

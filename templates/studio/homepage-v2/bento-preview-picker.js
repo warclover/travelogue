@@ -1,7 +1,6 @@
 /**
  * 首页 v2 · 预览画册 Combobox（D-14 · Phase 2/3 缩略图 popover + 搜索/分页）。
  */
-import { isDemoTrip } from "../js/constants.js";
 import {
   V2,
   $,
@@ -16,6 +15,12 @@ import {
 } from "./trip-preview.js";
 import { fetchTripsPage, SHELF_PAGE_SIZE } from "./trips-client.js";
 import { setBentoPreviewTripId, refreshBentoUserPreview } from "./bento-tabs.js";
+import {
+  tripLabel,
+  matchesPreviewSearch,
+  stalePreviewLabel,
+  shouldDisablePreviewPicker,
+} from "./bento-preview-picker-logic.js";
 
 var _wired = false;
 var _open = false;
@@ -27,10 +32,6 @@ var _searchQuery = "";
 var _loadingMore = false;
 
 var DEMO_LABEL = "示例作品";
-
-function tripLabel(trip) {
-  return (trip && (trip.title || trip.tripId) || "").trim() || (trip && trip.tripId) || "";
-}
 
 function demoThumbUrl() {
   var m = V2.demoManifest;
@@ -47,13 +48,6 @@ function tripThumbUrl(trip) {
   return "/" + trip.tripId + "/preview.jpg";
 }
 
-function staleLabel(trip) {
-  if (!trip) return "";
-  if (trip.longshotStale) return "长图待更新";
-  if (trip.algorithmStale) return "算法待更新";
-  return "";
-}
-
 function optionsHost() {
   return $("v2-bento-preview-options");
 }
@@ -67,14 +61,6 @@ function catalogTotal() {
   return typeof V2.pickerCatalogTotal === "number" && V2.pickerCatalogTotal > 0
     ? V2.pickerCatalogTotal
     : previewCatalogTrips().length;
-}
-
-function matchesSearch(trip, query) {
-  if (!query) return true;
-  var q = query.toLowerCase();
-  var title = (trip.title || "").toLowerCase();
-  var id = (trip.tripId || "").toLowerCase();
-  return title.indexOf(q) >= 0 || id.indexOf(q) >= 0;
 }
 
 function ensureScrim() {
@@ -227,7 +213,7 @@ function buildOptionEl(tripId, label, trip, isSelected) {
   title.textContent = label;
   text.appendChild(title);
 
-  var chip = staleLabel(trip);
+  var chip = stalePreviewLabel(trip);
   if (chip) {
     var stale = document.createElement("span");
     stale.className = "v2-preview-combobox__option-stale";
@@ -254,7 +240,7 @@ function listboxTrips() {
     if (orphan) userTrips = [orphan].concat(userTrips);
   }
   if (_searchQuery) {
-    userTrips = userTrips.filter(function (t) { return matchesSearch(t, _searchQuery); });
+    userTrips = userTrips.filter(function (t) { return matchesPreviewSearch(t, _searchQuery); });
   }
   return userTrips;
 }
@@ -384,7 +370,7 @@ var NO_USER_TRIPS_TITLE = "暂无用户画册，仅可预览示例作品";
 function syncPickerAvailability(trigger) {
   if (!trigger) trigger = $("v2-bento-preview-trigger");
   if (!trigger) return;
-  var hasUser = pickRecentUserTrips(previewCatalogTrips()).length > 0;
+  var hasUser = !shouldDisablePreviewPicker(previewCatalogTrips());
   trigger.disabled = !hasUser;
   if (!hasUser) {
     trigger.title = NO_USER_TRIPS_TITLE;

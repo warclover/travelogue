@@ -12,7 +12,7 @@
 
 | OQ-MANIFEST | 京都 trip 最终章数是否为 3（5 半页） | M20-a 素材 | 产品/设计 | 2026-06-01 | 🟢 示例已按 3 章冻结 |
 
-| OQ-DEMO-ASSETS | demo-showcase WebP 切图包交付 | M20-a dogfood | **设计 · @PM 指派** | **2026-06-15** | 🔴 |
+| OQ-DEMO-ASSETS | demo-showcase WebP 切图包交付 | M20-a dogfood | **设计 · @PM 指派** | **2026-06-15** | 🟡 工程 dogfood 暂用 PLACEHOLDER；正式切图仍待设计交付 · [DEMO-ASSETS-BRIEF.md](./DEMO-ASSETS-BRIEF.md) |
 
 | OQ-FLAG-DEFAULT | 各环境 `TRAVELOGUE_STUDIO_HOMEPAGE_V2` 默认值 | M20-a | 工程 | 2026-06-01 | 🟢 见 FEATURE-FLAG.md · 生产 intentionally `off` |
 

@@ -1,7 +1,7 @@
 # M20-j · 切主站 Sign-off 与观察窗
 
 > P2 交付物 · 对照 [RUNBOOK-HOLDBACK.md](./RUNBOOK-HOLDBACK.md) §4、[FEATURE-FLAG.md](./FEATURE-FLAG.md) §3。  
-> **当前默认**：`TRAVELOGUE_STUDIO_HOMEPAGE_V2=off`（故意保持，直至本清单全部 ✅ + PM 签字）。
+> **当前默认**：`TRAVELOGUE_STUDIO_HOMEPAGE_V2=on`（M21 已切主站；holdback / 人工 sign-off 见 §2）。
 
 ---
 
@@ -23,10 +23,11 @@ Rollout 日志模板：[`../acceptance-records/studio-homepage-v2-rollout-log.js
 
 ### 2.1 自动化（工程 Owner 签字）
 
-- [ ] `pytest tests/test_studio_home_v2_ac_playwright.py -q` 全绿
-- [ ] `pytest tests/test_studio_home_v2.py -k gate -q` 全绿
+- [x] `pytest tests/test_studio_home_v2_ac_playwright.py -q` 全绿（2026-06-18 · 50 passed）
+- [x] `pytest tests/test_studio_home_v2.py -k gate -q` 全绿（2026-06-18 · 12 passed）
+- [x] `pytest tests/test_studio_homepage_gate.py -q` 全绿（2026-06-18 · 15 passed）
 - [ ] Nightly holdback funnel 连续 **3** 天绿（GitHub Actions artifact）
-- [ ] `python scripts/studio_homepage_rollback_drill.py` → exit 0
+- [x] `python scripts/studio_homepage_rollback_drill.py` → exit 0（2026-06-18 · 见 `studio-homepage-v2-rollback-drill.json`）
 - [ ] `python scripts/studio_homepage_m20i_drill.py --spawn --synthetic --lcp-runs 10` 无 `should_rollback`（或 LCP 人工复核）
 
 ### 2.2 素材与体验（设计 / PM 签字）

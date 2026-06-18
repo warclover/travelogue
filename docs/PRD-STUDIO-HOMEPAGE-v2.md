@@ -250,7 +250,7 @@ Eyebrow + H1 + lead + auto-tags。`layout-bento__frame` top 在 iPad 横屏/矮�
 
 | 项 | 规格 |
 |----|------|
-| **预览画册（D-14）** | 默认 **示例作品**；用户可从 select 指定任意非 demo 画册（`GET /trips` 首屏列表）；见 §6.8 |
+| **预览画册（D-14）** | 默认 **示例作品**；用户可从 **Combobox** 指定任意非 demo 画册（`GET /trips` 首屏列表；Phase 3 客户端搜索/分页）；见 §6.8 |
 | demo-flag | **仅**选中 **示例作品** 时显示 |
 | 用户画册 | 工作台标题为 trip 名；数据来自 `GET /trips/{id}/bento-preview` |
 | 屏数 | 封面 + N 章 + 尾声 |

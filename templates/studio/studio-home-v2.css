@@ -419,7 +419,6 @@ body { overflow-x: clip; overflow-y: visible; }
   color: var(--v2-text-muted);
 }
 .v2-bench__ghost-btn,
-.v2-bento-tabs__btn,
 .v2-bench__ghost-select {
   min-height: 38px;
   padding: 8px 14px;
@@ -446,29 +445,9 @@ body { overflow-x: clip; overflow-y: visible; }
   outline-offset: 1px;
 }
 .v2-bench__ghost-btn:hover:not(:disabled),
-.v2-bento-tabs__btn:hover:not(:disabled),
 .v2-bench__ghost-select:hover {
   border-color: var(--v2-border-strong);
   background: rgba(255, 255, 255, .95);
-}
-.v2-bento-tabs__btn.is-active {
-  border-color: var(--v2-border-strong);
-  background: rgba(255, 255, 255, .95);
-  color: var(--v2-ink);
-}
-.v2-bento-tabs__btn:disabled {
-  opacity: .45;
-  cursor: not-allowed;
-}
-.v2-bench__quick .v2-bento-tabs {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-.v2-bench__quick .v2-bento-tabs__btn {
-  flex: 1 1 auto;
-  text-align: center;
 }
 .v2-user-flag {
   display: inline-flex;
@@ -1845,15 +1824,12 @@ body { overflow-x: clip; overflow-y: visible; }
   background: #f7f2e9;
 }
 :root[data-v2-theme="classic"] .v2-bench__ghost-btn,
-:root[data-v2-theme="classic"] .v2-bento-tabs__btn,
 :root[data-v2-theme="classic"] .v2-bench__ghost-select {
   background: rgba(255, 255, 255, .06);
   border-color: rgba(255, 255, 255, .22);
   color: rgba(255, 255, 255, .82);
 }
 :root[data-v2-theme="classic"] .v2-bench__ghost-btn:hover:not(:disabled),
-:root[data-v2-theme="classic"] .v2-bento-tabs__btn:hover:not(:disabled),
-:root[data-v2-theme="classic"] .v2-bento-tabs__btn.is-active,
 :root[data-v2-theme="classic"] .v2-bench__ghost-select:hover {
   border-color: rgba(255, 255, 255, .34);
   background: rgba(255, 255, 255, .12);

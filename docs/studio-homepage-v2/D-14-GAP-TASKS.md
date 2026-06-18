@@ -1,7 +1,7 @@
 # D-14 预览画册选择器 · PRD 对照遗漏清单
 
 > **对照基准**：[PRD-STUDIO-HOMEPAGE-v2.md §6.8](../PRD-STUDIO-HOMEPAGE-v2.md#68-预览画册选择器d-14--v206-草案) · [§6.8.9 AC-D14-01～08](../PRD-STUDIO-HOMEPAGE-v2.md#689-验收标准) · [D-14-TASKS.md](./D-14-TASKS.md)  
-> **对照日期**：2026-06-17 · 代码态：MVP + Phase 2 + Phase 3 已落地，**未提交**
+> **对照日期**：2026-06-18 · 代码态：MVP + Phase 2 + Phase 3 已落地 · **已提交 master**
 
 ---
 
@@ -33,7 +33,7 @@
 | **G-04** | P1 | **`bento_tab_switch` shim** | §6.8.8 | ✅ `setBentoPreviewTripId` 切换时 fire |
 | **G-05** | P2 | **离线 preference 保选项** | §6.8.4：fetch 失败不清 preference；用**缓存 trips** 填选项 | ✅ `tripsCache` + `test_ac_d14_offline_trips_cache` |
 | **G-06** | P2 | **遥测 `source` 补全** | §6.8.8 | ✅ deep link 发 `source: deeplink` |
-| **G-07** | P3 | **死代码清理** | — | `.v2-bento-tabs__*` CSS 残留；`setBentoTab` deprecated shim | `studio-home-v2.css` |
+| **G-07** | P3 | **死代码清理** | — | ✅ 移除 `.v2-bento-tabs__*` CSS · `setBentoTab` shim |
 
 ---
 
@@ -48,7 +48,7 @@
 | **G-14** | P1 | **AC-D14-07 algorithmStale** | 选 B → stale bar 绑定 B | ✅ `test_ac_d14_07_algorithm_stale_bar` |
 | **G-15** | P1 | **AC-D14-08 curate 后刷新** | reroute 后仍刷新 preference manifest | ✅ `page.route` mock curate/status + `test_ac_d14_08` |
 | **G-16** | P2 | **AC-VERIFICATION 登记** | PRD §16 引用 AC-D14-01～08 | ✅ 8 行 |
-| **G-17** | P3 | **T17 单测（可选）** | D-14-TASKS T17 | 未做 | `bento-preview-picker.test.mjs` |
+| **G-17** | P3 | **T17 单测（可选）** | D-14-TASKS T17 | ✅ `bento-preview-picker-logic.test.mjs` |
 
 **已有 D-14 相关 e2e（非 AC 编号一一对应）**：`test_ac_hp2_bento_tab_mine` · `test_ac_hp2_d14_*`（combobox / shelf / deeplink / 分页搜索）。
 
@@ -62,7 +62,7 @@
 | **G-21** | P1 | **DEV-HARNESS 补参** | ✅ `preview` / `bentoPreviewTrip` / D-14 参数 |
 | **G-22** | P2 | **DATA-CONTRACT §5 文件索引** | ✅ migrate / deeplink / picker |
 | **G-23** | P2 | **遥测契约** | ✅ PRD §6.8.8 source 枚举 |
-| **G-24** | P3 | **§6.4 文案** | 「用户可从 select 指定」→ 应改为 Combobox |
+| **G-24** | P3 | **§6.4 文案** | ✅ 「Combobox」已同步 PRD §6.4 |
 
 ---
 
@@ -120,5 +120,6 @@ P3  清理 / 可选
 
 | 日期 | 说明 |
 |------|------|
+| 2026-06-18 | G-07 / G-17 / G-24 收尾；状态更新为已提交 |
 | 2026-06-17 | G-11～G-16、G-20～G-23、G-06 落地 |
 | 2026-06-17 | 初版：对照 PRD v2.0.6 §6.8 vs 当前未提交实现 |

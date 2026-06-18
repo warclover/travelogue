@@ -255,6 +255,7 @@ L2 行为：carousel 仅 eager 加载 `pages[0..1]`，其余 `loading="lazy"`。
 |------|----------|
 | `templates/studio/homepage-v2/store.js` | `V2_BENTO_PREVIEW_TRIP_KEY`；read/persist/clear |
 | `templates/studio/homepage-v2/bento-preview-picker.js` | Combobox · init / sync / 搜索分页 |
+| `templates/studio/homepage-v2/bento-preview-picker-logic.js` | 纯逻辑 · 搜索/禁用判定（node --test） |
 | `templates/studio/homepage-v2/bento-preview-deeplink.js` | `?preview=` deep link |
 | `templates/studio/homepage-v2/bento-preview-migrate.js` | D-13 → D-14 一次性迁移 |
 | `templates/studio/homepage-v2/bento-tabs.js` | preview source；单 tripId 加载 |

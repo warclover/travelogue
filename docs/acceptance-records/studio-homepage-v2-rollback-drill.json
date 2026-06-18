@@ -1,0 +1,23 @@
+{
+  "schema": "studio-homepage-rollback-drill/v1",
+  "timestamp": "2026-06-18T02:34:49.586072+00:00",
+  "gate_mode_simulated": "off",
+  "tests": [
+    "tests/test_studio_home_v2.py::test_studio_home_gate_off_serves_classic_at_root",
+    "tests/test_studio_home_v2.py::test_studio_home_gate_auto_zero_percent_no_redirect",
+    "tests/test_studio_home_v2.py::test_studio_classic_contract_smoke_config_capabilities",
+    "tests/test_studio_home_v2_ac_playwright.py::test_ac_hp2_23_rollback_ignores_homepage_variant"
+  ],
+  "passed": true,
+  "pytest_output_tail": "....                                                                     [100%]\n4 passed in 7.98s",
+  "checklist": {
+    "stop_redirect": true,
+    "v3_dom_regression": true,
+    "session_homepage_variant_ignored": true
+  },
+  "next_steps_manual": [
+    "验证 staging GET / 无 302",
+    "Import 续 poll 手测（harness importing-resume）",
+    "24h 漏斗监控 v3 恢复"
+  ]
+}

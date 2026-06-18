@@ -401,6 +401,7 @@ def test_v2_js_logic_node_units() -> None:
         str(js_dir / "viewport-logic.test.mjs"),
         str(js_dir / "layout-tier.test.mjs"),
         str(js_dir / "shelf-actions-logic.test.mjs"),
+        str(js_dir / "bento-preview-picker-logic.test.mjs"),
     ]
     try:
         result = subprocess.run(

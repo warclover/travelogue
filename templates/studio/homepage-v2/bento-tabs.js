@@ -122,15 +122,6 @@ export function setBentoPreviewTripId(tripId, opts) {
   });
 }
 
-/** @deprecated D-13 shim */
-export function setBentoTab(tab, opts) {
-  if (tab === "demo") return setBentoPreviewTripId(null, opts);
-  if (tab === "mine" && V2.bentoPreviewTripId) {
-    return setBentoPreviewTripId(V2.bentoPreviewTripId, opts);
-  }
-  return Promise.resolve(null);
-}
-
 /** trips 加载后按 preference 或指定 tripId 拉取 bento-preview（单本，无回退链）。 */
 export function refreshBentoUserPreview(trips, opts) {
   opts = opts || {};
