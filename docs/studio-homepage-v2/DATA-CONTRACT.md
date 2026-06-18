@@ -120,13 +120,33 @@ Lightbox scroll 模式：按 `pages[]` 顺序纵向拼接全部 `webp`（或单�
 
 ### 2.5 `GET /__travelogue/trips/{tripId}/bento-preview`
 
-**用途**：Bento Tab「我的最近一本」· manifest 形只读 payload。
+**用途**：Bento **用户画册预览** · manifest 形只读 payload（D-14：任意指定 tripId；D-13 曾限定「最近一本 Tab」）。
+
+**路径参数**：`tripId` — 任意有效 Studio 画册 ID（**非** demo-showcase 静态包）。
 
 **响应**（200）：`ok` + 与 §1.1 同形字段；`source: "user"`；`pages[].url` 为 `/{tripId}/…` 绝对路径（非 demo `webp`）。
 
 **404**：无 `preview.jpg` → `E_BENTO_PREVIEW_UNAVAILABLE`。
 
-**选取规则**：客户端对 `GET /trips` 取 **第一条非 demo**（`updatedAt` 降序）。
+**客户端选取规则（D-14 · 冻结）**：
+
+| 条件 | 行为 |
+|------|------|
+| `bentoPreviewTripId === null`（未指定 / 无 preference） | 使用 demo-showcase manifest；**不**请求本 API |
+| `bentoPreviewTripId` 为有效 tripId | 请求 `GET /trips/{tripId}/bento-preview` |
+| 404 / 网络失败 | **保持用户选中**；Bento 占位 + 内联提示；**禁止**静默 fallback 到其他 trip |
+| preference 指向已删除 trip | 清除 `localStorage` 键 → 回 demo |
+
+> D-13 曾用 `GET /trips` 第一条非 demo（`updatedAt` 降序）隐式决定预览；D-14 起仅作 select **选项排序**，不作为默认预览源（默认仍为示例作品）。
+
+**首页派生（客户端 · D-14）**：
+
+| 字段 | 规则 |
+|------|------|
+| `V2.bentoPreviewTripId` | `null` = 示例；非 null = 用户指定 |
+| `V2.bentoTab` | 派生：`bentoPreviewTripId ? "mine" : "demo"` |
+| `V2.userManifest` | 当前选中 trip 的 bento-preview 响应缓存 |
+| `V2.userPreviewTrip` | `GET /trips` 中与 `bentoPreviewTripId` 匹配的行（stale / curate） |
 
 ### 2.2 `GET /__travelogue/status?jobId=`
 
@@ -167,6 +187,8 @@ Lightbox scroll 模式：按 `pages[]` 顺序纵向拼接全部 `webp`（或单�
 | 键 | 用途 |
 |----|------|
 | `travelogue.studio.homepageVariant` | `v2` \| `v3` 持久分桶 |
+| `travelogue.studio.v2.bentoPreviewTripId` | D-14：用户指定的 Bento 预览画册 tripId；缺失 / 空 ≡ 未指定（默认示例作品） |
+| `travelogue.studio.v2.theme` | 首页配色偏好（见 `store.js` `V2_THEME_KEY`） |
 
 **护栏**：v2 **禁止** rename/delete/改类型既有键；v3 读 storage 时 **忽略**未知键。回滚见 [FEATURE-FLAG.md](./FEATURE-FLAG.md)。
 
@@ -181,7 +203,8 @@ Lightbox scroll 模式：按 `pages[]` 顺序纵向拼接全部 `webp`（或单�
 | `cover` | `previewRelPath` → URL |
 | `stale`（长图） | `longshotStale` |
 | `stale`（算法） | `algorithmStale` |
-| 重新排版 CTA | `POST /trips/{id}/curate` → job poll → `V2.reroute()` + `refreshUserBentoPreview` |
+| 重新排版 CTA | `POST /trips/{id}/curate` → job poll → `V2.reroute()` + `refreshBentoUserPreview`（尊重 `bentoPreviewTripId`） |
+| Bento 预览来源 | D-14：`bentoPreviewTripId` + select；D-13 已 supersede（双 Tab） |
 | `status`（trip） | **无服务端字段**；由 activeJob + trip 列表推断 |
 
 ---
@@ -206,3 +229,34 @@ Lightbox scroll 模式：按 `pages[]` 顺序纵向拼接全部 `webp`（或单�
 | 若 connection 不可用 | 视为 fast；标注 **「L2 仅 saveData/慢网客户端；loopback 验收不测 L2」** |
 
 L2 行为：carousel 仅 eager 加载 `pages[0..1]`，其余 `loading="lazy"`。
+
+---
+
+## 5. D-14 实现文件索引（草案）
+
+> 工程落地清单；PRD 详述见 [PRD-STUDIO-HOMEPAGE-v2.md §6.8](../PRD-STUDIO-HOMEPAGE-v2.md#68-预览画册选择器d-14--v206-草案)。
+
+### 5.1 MVP（必改）
+
+| 文件 | 改动要点 |
+|------|----------|
+| `templates/studio/homepage-v2/store.js` | `V2_BENTO_PREVIEW_TRIP_KEY`；read/persist/clear |
+| `templates/studio/homepage-v2/bento-preview-picker.js` | **新建** · init / syncOptions / apply |
+| `templates/studio/homepage-v2/bento-tabs.js` | 重构 preview source；单 tripId 加载；去 tryAt 回退链 |
+| `templates/studio/homepage-v2/trip-preview.js` | `resolvePreviewTrip`；404 不回退 |
+| `templates/studio/homepage-v2/bento-stale.js` | `activePreviewTrip` 读 `bentoPreviewTripId` |
+| `templates/studio/homepage-v2/bootstrap.js` | 启动读 preference |
+| `templates/studio/homepage-v2/bento.js` | 接入 picker init |
+| `templates/studio/studio-home-v2.html` | Tab → `#v2-bento-preview-select` |
+| `templates/studio/studio-home-v2.css` | select 布局 |
+| `templates/studio/js/analytics.js` | `bento_preview_select` |
+| `travelogue/web/studio_homepage_telemetry.py` | allowlist |
+| `tests/test_studio_home_v2.py` | HTML 断言更新 |
+| `tests/test_studio_home_v2_ac_playwright.py` | AC-D14 e2e |
+
+### 5.2 MVP 不改
+
+| 模块 | 原因 |
+|------|------|
+| `travelogue/web/studio_bento_preview.py` | API 已 tripId 通用 |
+| `carousel.js` / `phone-strip.js` | 仅消费 manifest |

@@ -3,13 +3,13 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v2.0.5-HOMEPAGE** |
-| **状态** | **Implemented · dogfood**（退役 v3 见 [PRD-M21-studio-homepage-v3-retirement.md](./PRD-M21-studio-homepage-v3-retirement.md)） |
+| **文档版本** | **v2.0.6-HOMEPAGE**（D-14 草案） |
+| **状态** | **Implemented · dogfood**（D-14 待开发；退役 v3 见 [PRD-M21-studio-homepage-v3-retirement.md](./PRD-M21-studio-homepage-v3-retirement.md)） |
 | **页面路由** | **目标态（M21）**：`GET /` → `studio-home-v2.html`；过渡期见 [FEATURE-FLAG §1](./studio-homepage-v2/FEATURE-FLAG.md#1-门控点冻结--双路由模型) |
 | **权威线框** | [wireframes/studio-homepage-output-first-v1.6.html](./wireframes/studio-homepage-output-first-v1.6.html)（**Web·空态 / iPad·横屏 / 书架** Tab；Mobile Tab 见 §0.4） |
 | **关联文档** | [PRD-PHASE4.md](./PRD-PHASE4.md) · [PRD-PHASE5.md](./PRD-PHASE5.md) · [PRD-STUDIO-DUAL-LAYOUT.md](./PRD-STUDIO-DUAL-LAYOUT.md) · [API-MINIAPP.md](./API-MINIAPP.md) · [SHARING.md](./SHARING.md) |
 | **开发前契约** | [DATA-CONTRACT](./studio-homepage-v2/DATA-CONTRACT.md) · [FEATURE-FLAG](./studio-homepage-v2/FEATURE-FLAG.md) · [PRE-DEV](./studio-homepage-v2/PRE-DEV.md) |
-| **更新日期** | 2026-06-01 |
+| **更新日期** | 2026-06-17 |
 
 ---
 
@@ -38,13 +38,16 @@
 | D-06 | **示例作品** | 人工精选 1 篇 · 统一 demo-flag |
 | D-07 | **响应式** | ≥1024 与 **iPad 横屏** Bento 双列；**拒绝 768 堆叠** |
 | D-08 | **回访** | **恒常 Bento 首页**；有用户画册时在 Bento **下方**追加书架区（不整页替换） |
-| D-13 | **Bento 双 Tab** | **示例作品**（demo-showcase）与 **我的最近一本**（最近编辑的非 demo 画册）；切换重载 carousel / 长图 / 背景 |
+| D-13 | **Bento 双 Tab**（**已由 D-14 supersede**） | v2.0.5：**示例作品** / **最近一本** 双 Tab；v2.0.6 起交互见 D-14 |
+| D-14 | **预览画册选择器**（**草案 · v2.0.6**） | 单一选择器指定任意用户画册；**未指定 → 示例作品**；见 §6.8 |
 | D-09 | **用词** | In-product「自动」；禁止突出 AI；见 §3.2 |
 | D-10 | **Carousel 边界** | **到头 clamp，不循环 wrap**（spread 禁止尾声｜封面拼版） |
 | D-11 | **灰度** | 并发 holdback + 性能/错误护栏；见 §19.2 |
 | D-12 | **平台边界** | **M20 仅 Web + iPad 横屏**；手机 UI 由 **微信小程序** 承接；见 §0.4 |
 
 ### 0.3 修订摘要
+
+**v2.0.6（草案）**：**D-14 预览画册选择器** — 工作台「预览画册」由双 Tab 改为单一 `<select>`（MVP）；用户可指定任意用户画册；未指定默认示例作品；`localStorage` 持久化；`bento-preview` API 不变。详见 §6.8 · [DATA-CONTRACT §2.5](./studio-homepage-v2/DATA-CONTRACT.md#25-get-__traveloguetripstripidbento-preview)。
 
 **v2.0.5**：**D-13 方案 B′** — Bento 双 Tab「示例作品 / 我的最近一本」；`GET /trips/{id}/bento-preview`；demo-flag 仅示例 Tab。
 
@@ -247,9 +250,9 @@ Eyebrow + H1 + lead + auto-tags。`layout-bento__frame` top 在 iPad 横屏/矮�
 
 | 项 | 规格 |
 |----|------|
-| **Tab（D-13）** | 默认 **示例作品**；有用户画册时可选 **我的最近一本**（`updatedAt` 最新非 demo） |
-| demo-flag | **仅**「示例作品」Tab 显示 |
-| 用户 Tab | 「我的画册」徽章 + 工作台标题为 trip 名；数据来自 `GET /trips/{id}/bento-preview` |
+| **预览画册（D-14）** | 默认 **示例作品**；用户可从 select 指定任意非 demo 画册（`GET /trips` 首屏列表）；见 §6.8 |
+| demo-flag | **仅**选中 **示例作品** 时显示 |
+| 用户画册 | 工作台标题为 trip 名；数据来自 `GET /trips/{id}/bento-preview` |
 | 屏数 | 封面 + N 章 + 尾声 |
 | spread | 50% 宽 · 每次滑 1 页 |
 | **边界（D-10）** | **到头 clamp，不 wrap**；禁止末页｜封面循环拼版 |
@@ -278,6 +281,106 @@ label + demo-flag · 内滚 · 轻点/⤢ → Lightbox（**非**真机小程序 
 ### 6.7 Lightbox
 
 卷轴堆叠 / 长图竖滚 · focus trap · Esc · 不进 editor preview。
+
+### 6.8 预览画册选择器（D-14 · v2.0.6 草案）
+
+> **替代** D-13 双 Tab 交互形态；**保留** `bento-preview` API 与 manifest 形态。
+
+#### 6.8.1 背景与范围
+
+| 属性 | 内容 |
+|------|------|
+| **用户价值** | 多本创作者可在首页固定展示「代表作」；验货时可切换任意已完成画册；演示/截图可复现 |
+| **MVP 包含** | ghost-select + `localStorage` + 边界态 + 测试 + D-13 迁移 |
+| **MVP 不含** | 全库搜索、URL deep link、服务端偏好同步、导入后强制切换预览 |
+
+#### 6.8.2 交互与 IA
+
+| 项 | 规格 |
+|----|------|
+| **控件位置** | Bench 快捷区，原 `#v2-bench-source-tabs` 位置 |
+| **Side label** | **预览画册**（原「预览来源」） |
+| **控件类型（MVP）** | 原生 `<select class="v2-bench__ghost-select">`，模式对齐 `#v2-theme-select` |
+| **选项结构** | ① 固定首项 `value=""` → **示例作品**；② 动态项 → `GET /trips` 首屏非 demo 画册（`updatedAt` 降序） |
+| **demo-flag** | 仅当选中 **示例作品** 时显示 `#v2-bench-sample-flag` / `[data-demo-flag]` |
+| **Phase 2** | Combobox + 缩略图 popover；书架卡片菜单 **「在上方预览」** |
+
+#### 6.8.3 状态模型
+
+| 字段 | 类型 | 含义 |
+|------|------|------|
+| `V2.bentoPreviewTripId` | `null \| string` | `null` = 示例；非 null = 指定 tripId |
+| `V2.bentoTab` | `"demo" \| "mine"` | **派生**：`bentoPreviewTripId ? "mine" : "demo"`（兼容 stale / 遥测 shim） |
+| `V2.userManifest` | manifest \| null | 当前选中用户画册的 bento-preview 缓存 |
+| `V2.userPreviewTrip` | trip row \| null | 对应 `GET /trips` 行（stale / curate） |
+
+**localStorage 键（加法）**：`travelogue.studio.v2.bentoPreviewTripId` — 值 tripId；删除键或空字符串 ≡ 未指定。详见 [DATA-CONTRACT §2.4](./studio-homepage-v2/DATA-CONTRACT.md#24-sessionstorage--localstorage只读--新增)。
+
+#### 6.8.4 默认与边界行为（冻结）
+
+| 场景 | 行为 |
+|------|------|
+| 首次访问 / 无 preference | **示例作品** |
+| 有 preference 且 trip 存在、preview 可用 | 加载该本 `bento-preview` → 渲染 Bento |
+| preference 指向已删除 trip | 清除 preference → **回示例** + toast「原预览画册已不可用，已切回示例」 |
+| 用户选中 trip 但 `bento-preview` 404 | **保持选中**；Bento 占位帧 + bench 内联提示「预览尚未就绪」+ CTA「打开画册」；**禁止**静默换其他画册 |
+| 无用户画册 | select 仅「示例作品」一项（或 disabled + title 提示） |
+| 离线 | 用缓存 trips 填充选项；fetch 失败不清 preference |
+| Import / FirstSuccess 完成 | **不自动**写入 preference；可选 toast 行动点「设为首页预览」（Phase 2） |
+| trips 分页外画册 | MVP 选择器不可见；Phase 2 书架「在上方预览」 |
+
+#### 6.8.5 与相邻区域分工
+
+| 区域 | 职责 |
+|------|------|
+| **预览画册 select** | 切换 Bento 主舞台（carousel + phone strip + 背景） |
+| **Bench 左栏 recent 卡** | 导航打开成稿（`<a href>`）；若 `tripId === bentoPreviewTripId` 加 `is-previewing` 描边（Phase 2） |
+| **「继续上次」** | 导航，与预览 preference **独立** |
+| **书架** | 打开 / 删除 / 长图；Phase 2 菜单加「在上方预览」 |
+
+#### 6.8.6 数据与 API
+
+- 示例：`GET /__studio/assets/demo-showcase/manifest.json`
+- 用户：`GET /__travelogue/trips/{tripId}/bento-preview`（404 → `E_BENTO_PREVIEW_UNAVAILABLE`）
+- 画册列表：`GET /__travelogue/trips?limit=20&offset=0`
+- **后端 MVP 无变更**；客户端可请求**任意非 demo** tripId
+
+#### 6.8.7 迁移（D-13 → D-14）
+
+一次性迁移（首版加载脚本）：
+
+- 若 localStorage 无新键、且 session 内曾使用 `mine` Tab：将当时 `V2.userPreviewTrip.tripId` 写入 `bentoPreviewTripId`
+- 新用户与未交互用户：**不**自动切 mine
+
+> D-13 的「有 manifest 则自动 mine」逻辑 **删除**。
+
+#### 6.8.8 遥测
+
+| 事件 | Payload | 说明 |
+|------|---------|------|
+| `bento_preview_select`（新增） | `{ trip_id: string \| null, source: "select" }` | `trip_id: null` = 示例 |
+| `bento_tab_switch` | 保留 1 个版本 | shim 触发或 deprecate；allowlist 需同步 |
+
+#### 6.8.9 验收标准
+
+| ID | Given | When | Then |
+|----|-------|------|------|
+| AC-D14-01 | 无 preference | 打开首页 | Bento 展示示例作品；demo-flag 可见 |
+| AC-D14-02 | 有 2+ 用户画册 | select 选 B | carousel / 长图 / 背景切为 B；demo-flag 隐藏 |
+| AC-D14-03 | 选中 B 后刷新 | 硬刷新 | 仍展示 B（localStorage） |
+| AC-D14-04 | preference 指向已删 trip | 打开首页 | 回示例 + toast |
+| AC-D14-05 | B 无 preview.jpg | 选 B | 占位 + 说明；select 仍显示 B；不切 A |
+| AC-D14-06 | 无用户画册 | 打开首页 | select 仅示例；与 AC-D14-01 一致 |
+| AC-D14-07 | B 有 algorithmStale | 选 B | stale bar 出现且绑定 B |
+| AC-D14-08 | curate 完成 | reroute | 若 preference 仍为 B，刷新 B 的 manifest |
+
+#### 6.8.10 Phase 划分
+
+| Phase | 内容 | 估时 |
+|-------|------|------|
+| **MVP（D-14）** | ghost-select + localStorage + 边界 + 测试 + 迁移 | 1.5–2d |
+| **Phase 2** | Combobox 封面 / stale chip；recent 卡高亮；书架「在上方预览」 | +1d |
+| **Phase 3** | 分页加载 / 搜索；`?preview=` deep link；FirstSuccess CTA | +1–2d |
 
 ---
 
@@ -406,8 +509,8 @@ templates/studio/assets/demo-showcase/
 
 ### 11.3 useDemoAlbum · Bento 数据源
 
-- Bento **示例 Tab** 永不 import；数据仅 demo-showcase。
-- **我的最近一本 Tab**：只读最近用户 trip 的 `preview.jpg` / 章节 PNG / longshot；**不**替换示例素材包。
+- Bento **示例作品**（`bentoPreviewTripId === null`）永不 import；数据仅 demo-showcase。
+- **用户指定画册**（D-14）：只读该 trip 的 `preview.jpg` / 章节 PNG / longshot；**不**替换示例素材包。
 - 试用示例仍走 Sheet 三级入口；书架 demo 标 **示例**。
 
 
@@ -555,6 +658,7 @@ Carousel ←/→ · dots `aria-current` · Lightbox trap · Sheet §7.1 · 触�
 | AC-HP2-23 | flag 回滚；Import 中禁切换 variant |
 | AC-HP2-24 | Sheet focus trap · Esc · 焦点归还 CTA |
 | AC-HP2-25 | `homepage_view` 仅在 state 确定后上报 |
+| AC-D14-01 … 08 | 预览画册选择器 · 见 §6.8.9 |
 
 ---
 
@@ -613,6 +717,7 @@ Bento · Sheet · 双交付预览 · Lightbox · Web 书架 · 示例策略 · u
 
 | 版本 | 说明 |
 |------|------|
+| **v2.0.6**（草案） | D-14 预览画册选择器（supersede D-13 Tab 交互） |
 | **v2.0.5** | D-13 Bento 双 Tab + bento-preview API |
 | **v2.0.4** | D-08 方案 A：恒常 Bento + 下方书架区 |
 | **v2.0.3** | 开发前契约包；manifest schema；flag/telemetry/harness；AC 验证方式；§8.2/§12.4；线框 reconcile |
