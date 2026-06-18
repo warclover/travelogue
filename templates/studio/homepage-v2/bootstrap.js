@@ -6,6 +6,7 @@ import { trackStudioEvent } from "../js/analytics.js";
 import { resolveBucketId } from "../js/bucket.js";
 import {
   V2, $, show, persistVariant,
+  readTripsCache, persistTripsCache,
 } from "./store.js";
 import { loadManifest } from "./manifest.js";
 import { renderBentoEmpty } from "./bento.js";
@@ -16,28 +17,45 @@ import { initErrorPipeline } from "./error-pipeline.js";
 import {
   harnessTripsOverride, harnessAssetsFail, harnessPreseedSession,
   harnessInstallFetchMocks, harnessInstallBentoPreviewMock,
+  harnessInstallCurateMock,
   harnessApplyStartup, harnessEnabled,
 } from "./harness.js";
 import { fetchTripsFirstPage } from "./trips-client.js";
 import { initVariantGuard, syncVariantGuard } from "./variant-guard.js";
 import { initThemeSettings } from "./theme.js";
 import { initAdvancedOptionsPanel, syncAdvancedOptionsLock } from "./advanced-options.js";
+import { applyPreviewDeepLink } from "./bento-preview-deeplink.js";
 
 function applyTripsData(data) {
   V2.trips = (data && data.trips) || [];
   V2.tripsTotal =
     data && typeof data.total === "number" ? data.total : V2.trips.length;
   V2.isOffline = false;
+  persistTripsCache(V2.trips, V2.tripsTotal);
   return V2.trips;
+}
+
+function restoreTripsFromCache() {
+  var cached = readTripsCache();
+  if (!cached) {
+    V2.trips = [];
+    V2.tripsTotal = 0;
+    return [];
+  }
+  V2.trips = cached.trips.slice();
+  V2.tripsTotal = cached.total;
+  return V2.trips;
+}
+
+function markTripsFetchFailed() {
+  V2.isOffline = true;
+  return restoreTripsFromCache();
 }
 
 function fetchTrips() {
   var override = harnessTripsOverride();
   if (override === "__ERROR__") {
-    V2.isOffline = true;
-    V2.trips = [];
-    V2.tripsTotal = 0;
-    return Promise.resolve([]);
+    return Promise.resolve(markTripsFetchFailed());
   }
 
   return fetchTripsFirstPage()
@@ -45,10 +63,7 @@ function fetchTrips() {
       return applyTripsData(data);
     })
     .catch(function () {
-      V2.isOffline = true;
-      V2.trips = [];
-      V2.tripsTotal = 0;
-      return [];
+      return markTripsFetchFailed();
     });
 }
 
@@ -96,13 +111,14 @@ function routeFinalState() {
     V2.state = "Importing";
     syncVariantGuard();
     trackHomepageView();
-    return;
+    return Promise.resolve();
   }
   V2.state = hasUserTrips() ? "IdleReturning" : "IdleEmpty";
   syncAdvancedOptionsLock();
   renderBentoEmpty(V2.demoManifest);
-  import("./bento-tabs.js").then(function (tabs) {
-    tabs.refreshUserBentoPreview(V2.trips).finally(finishRoute);
+  return import("./bento-preview-picker.js").then(function (picker) {
+    picker.syncPreviewSelectOptions(V2.trips);
+    return picker.applyStoredBentoPreviewPreference(V2.trips).finally(finishRoute);
   });
 }
 
@@ -121,7 +137,8 @@ var _reroutePromise = null;
 function rerouteFromTrips() {
   if (_reroutePromise) return _reroutePromise;
   _reroutePromise = fetchTrips().then(function () {
-    routeFinalState();
+    var routed = routeFinalState();
+    return routed || Promise.resolve();
   }).finally(function () {
     _reroutePromise = null;
   });
@@ -142,7 +159,8 @@ function startApp() {
       V2.manifest = results[0];
       V2.manifestError = !results[0];
       if (harnessApplyStartup()) return;
-      routeFinalState();
+      var routed = routeFinalState();
+      if (routed && typeof routed.catch === "function") routed.catch(function () { /* ignore */ });
     });
   });
 }
@@ -161,9 +179,11 @@ function init() {
   initErrorPipeline();
   initThemeSettings();
   initAdvancedOptionsPanel();
+  applyPreviewDeepLink();
   if (harnessEnabled()) {
     harnessPreseedSession();
     harnessInstallBentoPreviewMock();
+    harnessInstallCurateMock();
     harnessInstallFetchMocks();
   }
   persistVariant("v2");

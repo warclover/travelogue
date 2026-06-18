@@ -188,7 +188,20 @@ Lightbox scroll 模式：按 `pages[]` 顺序纵向拼接全部 `webp`（或单�
 |----|------|
 | `travelogue.studio.homepageVariant` | `v2` \| `v3` 持久分桶 |
 | `travelogue.studio.v2.bentoPreviewTripId` | D-14：用户指定的 Bento 预览画册 tripId；缺失 / 空 ≡ 未指定（默认示例作品） |
+| `travelogue.studio.v2.tripsCache` | D-14 离线：最近一次成功的 `GET /trips` 首屏快照 `{ trips, total }` |
+| `travelogue.studio.v2.bentoD14Migrated` | D-14 一次性 D-13 迁移完成标记 |
 | `travelogue.studio.v2.theme` | 首页配色偏好（见 `store.js` `V2_THEME_KEY`） |
+
+**sessionStorage（D-14 迁移 / shim）**：
+
+| 键 | 用途 |
+|----|------|
+| `travelogue.studio.v2.bentoTab` | 本 session 预览 Tab（`mine` \| 缺失≡demo）；D-13→D-14 迁移读取 |
+| `travelogue.studio.v2.bentoPreviewTripIdSession` | mine Tab 时的 tripId 备份 |
+
+**URL deep link（D-14 Phase 3）**：`GET /?preview={tripId}` 或 `?preview=demo`（≡ 示例作品）在首屏 bootstrap 写入 `bentoPreviewTripId` 后 **从地址栏移除** `preview` 参数（`history.replaceState`）。Dev harness 另支持 `?bentoPreviewTrip=`（仅 loopback）。
+
+**预览 Combobox catalog（Phase 3）**：首屏 `GET /trips?limit=20` 填充选项；`total > 20` 时 popover 内「加载更多」分页追加；搜索为客户端过滤 `title` / `tripId`。preference trip 不在首屏时，`ensureTripInCatalog` 自动分页直至找到或确认删除。
 
 **护栏**：v2 **禁止** rename/delete/改类型既有键；v3 读 storage 时 **忽略**未知键。回滚见 [FEATURE-FLAG.md](./FEATURE-FLAG.md)。
 
@@ -204,7 +217,7 @@ Lightbox scroll 模式：按 `pages[]` 顺序纵向拼接全部 `webp`（或单�
 | `stale`（长图） | `longshotStale` |
 | `stale`（算法） | `algorithmStale` |
 | 重新排版 CTA | `POST /trips/{id}/curate` → job poll → `V2.reroute()` + `refreshBentoUserPreview`（尊重 `bentoPreviewTripId`） |
-| Bento 预览来源 | D-14：`bentoPreviewTripId` + select；D-13 已 supersede（双 Tab） |
+| Bento 预览来源 | D-14：`bentoPreviewTripId` + Combobox；D-13 已 supersede（双 Tab） |
 | `status`（trip） | **无服务端字段**；由 activeJob + trip 列表推断 |
 
 ---
@@ -241,15 +254,19 @@ L2 行为：carousel 仅 eager 加载 `pages[0..1]`，其余 `loading="lazy"`。
 | 文件 | 改动要点 |
 |------|----------|
 | `templates/studio/homepage-v2/store.js` | `V2_BENTO_PREVIEW_TRIP_KEY`；read/persist/clear |
-| `templates/studio/homepage-v2/bento-preview-picker.js` | **新建** · init / syncOptions / apply |
-| `templates/studio/homepage-v2/bento-tabs.js` | 重构 preview source；单 tripId 加载；去 tryAt 回退链 |
+| `templates/studio/homepage-v2/bento-preview-picker.js` | Combobox · init / sync / 搜索分页 |
+| `templates/studio/homepage-v2/bento-preview-deeplink.js` | `?preview=` deep link |
+| `templates/studio/homepage-v2/bento-preview-migrate.js` | D-13 → D-14 一次性迁移 |
+| `templates/studio/homepage-v2/bento-tabs.js` | preview source；单 tripId 加载 |
 | `templates/studio/homepage-v2/trip-preview.js` | `resolvePreviewTrip`；404 不回退 |
 | `templates/studio/homepage-v2/bento-stale.js` | `activePreviewTrip` 读 `bentoPreviewTripId` |
 | `templates/studio/homepage-v2/bootstrap.js` | 启动读 preference |
 | `templates/studio/homepage-v2/bento.js` | 接入 picker init |
 | `templates/studio/studio-home-v2.html` | Tab → `#v2-bento-preview-select` |
 | `templates/studio/studio-home-v2.css` | select 布局 |
-| `templates/studio/js/analytics.js` | `bento_preview_select` |
+| `templates/studio/js/analytics.js` | `bento_preview_select` · `bento_tab_switch` |
+
+**`bento_preview_select.source` 枚举**：`select` · `shelf` · `first_success` · `deeplink`（`trip_id: null` = 示例作品）。
 | `travelogue/web/studio_homepage_telemetry.py` | allowlist |
 | `tests/test_studio_home_v2.py` | HTML 断言更新 |
 | `tests/test_studio_home_v2_ac_playwright.py` | AC-D14 e2e |

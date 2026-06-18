@@ -56,6 +56,7 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "shelf_longshot_reveal",
         "shelf_longshot_busy",
         "bento_tab_switch",
+        "bento_preview_select",
         "js_error",
         # Phase 13 template funnel
         "template_selector_impression",

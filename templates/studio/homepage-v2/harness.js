@@ -3,6 +3,12 @@
  *
  * URL 参数强制态，供 Playwright 跑 AC 自动化与人工走查：
  *  - studioFixture=empty|single-stale|multi|multi-templates|demo-only|error  → mock GET /trips
+ *  - bentoPreviewTrip=<tripId|demo|>                          → 预置预览画册 preference
+ *  - bentoTabSession=mine|demo                                 → D-13 session Tab（迁移测试）
+ *  - bentoTabSessionTrip=<tripId>                              → 配合 bentoTabSession=mine
+ *  - preview=<tripId|demo|>                                   → 同 deep link（生产 URL）
+ *  - bentoPreview404=<tripId|all|1>                          → mock bento-preview 404
+ *  - studioCurate=succeed                                     → mock POST /curate + job 成功
  *  - studioAssetsFail=1                                       → manifest 失败（降级）
  *  - studioState=…                                            → 跳过正常 bootstrap 路由
  *  - studioJob=running|succeeded                              → mock GET /status + POST /import
@@ -10,7 +16,7 @@
  * 生产 build 不应打包（调用方负责 tree-shake）。
  */
 import { SS, isDemoTrip } from "../js/constants.js";
-import { isLoopback, V2, $, show } from "./store.js";
+import { isLoopback, V2, $, show, V2_BENTO_PREVIEW_TRIP_KEY, V2_BENTO_TAB_SESSION_KEY, V2_BENTO_PREVIEW_TRIP_SESSION_KEY } from "./store.js";
 import { renderBentoEmpty } from "./bento.js";
 import { renderShelf } from "./shelf.js";
 import { renderImportingPanel } from "./import-run.js";
@@ -189,9 +195,33 @@ export function harnessJobName() {
   return params().get("studioJob");
 }
 
-/** 在 bootstrap 最早阶段写入 sessionStorage（importing-resume 等）。 */
+/** 在 bootstrap 最早阶段写入 sessionStorage（importing-resume 等）与 D-14 preference。 */
 export function harnessPreseedSession() {
   if (!harnessEnabled()) return;
+  var previewTrip = params().get("bentoPreviewTrip");
+  if (previewTrip !== null) {
+    try {
+      if (previewTrip === "" || previewTrip === "demo") {
+        localStorage.removeItem(V2_BENTO_PREVIEW_TRIP_KEY);
+      } else {
+        localStorage.setItem(V2_BENTO_PREVIEW_TRIP_KEY, previewTrip);
+      }
+    } catch (e) { /* ignore */ }
+  }
+  var sessionTab = params().get("bentoTabSession");
+  if (sessionTab === "mine" || sessionTab === "demo") {
+    try {
+      if (sessionTab === "mine") {
+        sessionStorage.setItem(V2_BENTO_TAB_SESSION_KEY, "mine");
+        var sessionTrip = params().get("bentoTabSessionTrip");
+        if (sessionTrip) {
+          sessionStorage.setItem(V2_BENTO_PREVIEW_TRIP_SESSION_KEY, sessionTrip);
+        }
+      } else {
+        sessionStorage.removeItem(V2_BENTO_TAB_SESSION_KEY);
+      }
+    } catch (e) { /* ignore */ }
+  }
   var state = harnessStateName();
   if (state === "importing-resume") {
     try {
@@ -212,7 +242,25 @@ function jobFixturePayload() {
   return JOB_FIXTURES[name];
 }
 
-/** Mock import/status/cancel，供 AC-15/16 等无需真实 pipeline。 */
+const HARNESS_CURATE_JOB_ID = "harness-curate-1";
+
+function bentoPreviewShould404(tripId) {
+  var rule = params().get("bentoPreview404");
+  if (!rule) return false;
+  if (rule === "1" || rule === "all") return true;
+  return rule.split(",").some(function (part) {
+    return part.trim() === tripId;
+  });
+}
+
+function trackBentoPreviewFetch(tripId) {
+  try {
+    window.__v2BentoPreviewFetches = window.__v2BentoPreviewFetches || {};
+    window.__v2BentoPreviewFetches[tripId] = (window.__v2BentoPreviewFetches[tripId] || 0) + 1;
+  } catch (e) { /* ignore */ }
+}
+
+/** Mock bento-preview / curate / status（AC-D14-05/08）。 */
 export function harnessInstallBentoPreviewMock() {
   if (!harnessEnabled()) return;
   if (window.__v2BentoPreviewMock) return;
@@ -220,6 +268,30 @@ export function harnessInstallBentoPreviewMock() {
   var orig = window.fetch;
   window.fetch = function (url, opts) {
     var href = typeof url === "string" ? url : (url && url.url) || "";
+    var method = ((opts && opts.method) || (url && url.method) || "GET").toUpperCase();
+
+    if (params().get("studioCurate") === "succeed") {
+      if (href.indexOf("/trips/") >= 0 && href.indexOf("/curate") >= 0 && method === "POST") {
+        try { window.__v2CurateMockPost = true; } catch (e) { /* ignore */ }
+        return Promise.resolve(new Response(JSON.stringify({ jobId: HARNESS_CURATE_JOB_ID }), {
+          status: 202,
+          headers: { "Content-Type": "application/json" },
+        }));
+      }
+      if (href.indexOf("/__travelogue/status") >= 0) {
+        try { window.__v2CurateStatusPoll = true; } catch (e) { /* ignore */ }
+        return Promise.resolve(new Response(JSON.stringify({
+          jobId: HARNESS_CURATE_JOB_ID,
+          status: "succeeded",
+          stage: "curate",
+          stageHint: "排版完成",
+        }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }));
+      }
+    }
+
     if (href.indexOf("/bento-preview") >= 0) {
       // 无 studioFixture 时走真实 /trips/{id}/bento-preview（本地 dogfood）
       if (!params().get("studioFixture")) {
@@ -227,6 +299,16 @@ export function harnessInstallBentoPreviewMock() {
       }
       var parts = href.split("/trips/");
       var tripId = parts[1] ? decodeURIComponent(parts[1].split("/")[0]) : "harness-trip";
+      trackBentoPreviewFetch(tripId);
+      if (bentoPreviewShould404(tripId)) {
+        return Promise.resolve(new Response(JSON.stringify({
+          ok: false,
+          error: "E_BENTO_PREVIEW_UNAVAILABLE",
+        }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        }));
+      }
       var body = {
         ok: true,
         version: "1",
@@ -255,6 +337,9 @@ export function harnessInstallBentoPreviewMock() {
     return orig.apply(this, arguments);
   };
 }
+
+/** @deprecated 合并至 harnessInstallBentoPreviewMock */
+export function harnessInstallCurateMock() {}
 
 /** Mock import/status/cancel，供 AC-15/16 等无需真实 pipeline。 */
 export function harnessInstallFetchMocks() {

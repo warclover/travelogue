@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue Studio |
 | **文档版本** | **v2.0.6-HOMEPAGE**（D-14 草案） |
-| **状态** | **Implemented · dogfood**（D-14 待开发；退役 v3 见 [PRD-M21-studio-homepage-v3-retirement.md](./PRD-M21-studio-homepage-v3-retirement.md)） |
+| **状态** | **Implemented · dogfood**（D-14 已落地 · Combobox Phase 2/3；退役 v3 见 [PRD-M21-studio-homepage-v3-retirement.md](./PRD-M21-studio-homepage-v3-retirement.md)） |
 | **页面路由** | **目标态（M21）**：`GET /` → `studio-home-v2.html`；过渡期见 [FEATURE-FLAG §1](./studio-homepage-v2/FEATURE-FLAG.md#1-门控点冻结--双路由模型) |
 | **权威线框** | [wireframes/studio-homepage-output-first-v1.6.html](./wireframes/studio-homepage-output-first-v1.6.html)（**Web·空态 / iPad·横屏 / 书架** Tab；Mobile Tab 见 §0.4） |
 | **关联文档** | [PRD-PHASE4.md](./PRD-PHASE4.md) · [PRD-PHASE5.md](./PRD-PHASE5.md) · [PRD-STUDIO-DUAL-LAYOUT.md](./PRD-STUDIO-DUAL-LAYOUT.md) · [API-MINIAPP.md](./API-MINIAPP.md) · [SHARING.md](./SHARING.md) |
@@ -47,7 +47,7 @@
 
 ### 0.3 修订摘要
 
-**v2.0.6（草案）**：**D-14 预览画册选择器** — 工作台「预览画册」由双 Tab 改为单一 `<select>`（MVP）；用户可指定任意用户画册；未指定默认示例作品；`localStorage` 持久化；`bento-preview` API 不变。详见 §6.8 · [DATA-CONTRACT §2.5](./studio-homepage-v2/DATA-CONTRACT.md#25-get-__traveloguetripstripidbento-preview)。
+**v2.0.6（草案）**：**D-14 预览画册选择器** — 工作台「预览画册」由双 Tab 改为 **Combobox + 缩略图 popover**（Phase 2）；用户可指定任意用户画册；未指定默认示例作品；`localStorage` 持久化；`?preview=` deep link（Phase 3）；`bento-preview` API 不变。详见 §6.8 · [DATA-CONTRACT §2.5](./studio-homepage-v2/DATA-CONTRACT.md#25-get-__traveloguetripstripidbento-preview)。
 
 **v2.0.5**：**D-13 方案 B′** — Bento 双 Tab「示例作品 / 我的最近一本」；`GET /trips/{id}/bento-preview`；demo-flag 仅示例 Tab。
 
@@ -291,8 +291,9 @@ label + demo-flag · 内滚 · 轻点/⤢ → Lightbox（**非**真机小程序 
 | 属性 | 内容 |
 |------|------|
 | **用户价值** | 多本创作者可在首页固定展示「代表作」；验货时可切换任意已完成画册；演示/截图可复现 |
-| **MVP 包含** | ghost-select + `localStorage` + 边界态 + 测试 + D-13 迁移 |
-| **MVP 不含** | 全库搜索、URL deep link、服务端偏好同步、导入后强制切换预览 |
+| **MVP 包含** | Combobox（Phase 2）+ `localStorage` + 边界态 + 测试 + D-13 迁移 |
+| **MVP 不含** | 全库**服务端**搜索、服务端偏好同步、导入后强制切换预览 |
+| **Phase 3 已含** | 客户端搜索 / 分页「加载更多」· `?preview=` deep link |
 
 #### 6.8.2 交互与 IA
 
@@ -300,10 +301,10 @@ label + demo-flag · 内滚 · 轻点/⤢ → Lightbox（**非**真机小程序 
 |----|------|
 | **控件位置** | Bench 快捷区，原 `#v2-bench-source-tabs` 位置 |
 | **Side label** | **预览画册**（原「预览来源」） |
-| **控件类型（MVP）** | 原生 `<select class="v2-bench__ghost-select">`，模式对齐 `#v2-theme-select` |
-| **选项结构** | ① 固定首项 `value=""` → **示例作品**；② 动态项 → `GET /trips` 首屏非 demo 画册（`updatedAt` 降序） |
+| **控件类型** | **Combobox**（`#v2-bento-preview-trigger` + 缩略图 popover；hidden native `<select>` 供表单/a11y） |
+| **选项结构** | ① 固定首项 `value=""` → **示例作品**；② 动态项 → `GET /trips` 非 demo（`updatedAt` 降序；Phase 3 分页 + 客户端搜索） |
 | **demo-flag** | 仅当选中 **示例作品** 时显示 `#v2-bench-sample-flag` / `[data-demo-flag]` |
-| **Phase 2** | Combobox + 缩略图 popover；书架卡片菜单 **「在上方预览」** |
+| **Phase 2** | ✅ Combobox + 缩略图 popover；书架 **「在上方预览」**；FirstSuccess **「设为首页预览」** |
 
 #### 6.8.3 状态模型
 
@@ -358,7 +359,7 @@ label + demo-flag · 内滚 · 轻点/⤢ → Lightbox（**非**真机小程序 
 
 | 事件 | Payload | 说明 |
 |------|---------|------|
-| `bento_preview_select`（新增） | `{ trip_id: string \| null, source: "select" }` | `trip_id: null` = 示例 |
+| `bento_preview_select`（新增） | `{ trip_id: string \| null, source: "select" \| "shelf" \| "first_success" \| "deeplink" }` | `trip_id: null` = 示例 |
 | `bento_tab_switch` | 保留 1 个版本 | shim 触发或 deprecate；allowlist 需同步 |
 
 #### 6.8.9 验收标准
@@ -378,9 +379,9 @@ label + demo-flag · 内滚 · 轻点/⤢ → Lightbox（**非**真机小程序 
 
 | Phase | 内容 | 估时 |
 |-------|------|------|
-| **MVP（D-14）** | ghost-select + localStorage + 边界 + 测试 + 迁移 | 1.5–2d |
-| **Phase 2** | Combobox 封面 / stale chip；recent 卡高亮；书架「在上方预览」 | +1d |
-| **Phase 3** | 分页加载 / 搜索；`?preview=` deep link；FirstSuccess CTA | +1–2d |
+| **MVP（D-14）** | Combobox + localStorage + 边界 + 测试 + 迁移 | ✅ |
+| **Phase 2** | Combobox 封面 / stale chip；recent 卡高亮；书架「在上方预览」 | ✅ |
+| **Phase 3** | 分页加载 / 搜索；`?preview=` deep link；FirstSuccess CTA | ✅ |
 
 ---
 

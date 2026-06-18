@@ -1,144 +1,204 @@
 /**
- * 首页 v2 · Bento 预览 Tab（示例作品 / 最近一本 · 方案 B′）。
+ * 首页 v2 · Bento 预览来源（D-14 · 预览画册 select）。
  */
 import { trackStudioEvent } from "../js/analytics.js";
-import { V2, $, show } from "./store.js";
+import {
+  V2,
+  $,
+  show,
+  syncDerivedBentoTab,
+  persistBentoPreviewTripId,
+  clearBentoPreviewTripId,
+} from "./store.js";
 import { renderBentoSurface } from "./bento.js";
-import { fetchTripsFirstPage } from "./trips-client.js";
+import { syncPreviewSelectValue } from "./bento-preview-picker.js";
+import {
+  persistSessionBentoTab,
+  persistSessionLegacyPreviewTripId,
+} from "./bento-preview-migrate.js";
 
-var _wired = false;
-var _userTabInteracted = false;
+function toast(msg, opts) {
+  if (typeof studioToast === "function") studioToast(msg, opts);
+}
 
-function syncTabUi() {
-  var demoBtn = $("v2-tab-demo");
-  var mineBtn = $("v2-tab-mine");
-  var tab = V2.bentoTab || "demo";
-  if (demoBtn) {
-    demoBtn.classList.toggle("is-active", tab === "demo");
-    demoBtn.setAttribute("aria-selected", tab === "demo" ? "true" : "false");
-  }
-  if (mineBtn) {
-    mineBtn.classList.toggle("is-active", tab === "mine");
-    mineBtn.setAttribute("aria-selected", tab === "mine" ? "true" : "false");
-    mineBtn.disabled = !V2.userManifest;
-  }
-
-  document.querySelectorAll("[data-demo-flag]").forEach(function (el) {
-    show(el, tab === "demo");
+function trackBentoTabSwitch(prevTab, opts) {
+  if (opts && opts.silent) return;
+  if (V2.bentoTab === prevTab) return;
+  trackStudioEvent("bento_tab_switch", {
+    tab: V2.bentoTab,
+    trip_id: V2.bentoPreviewTripId,
   });
 }
 
+function syncSessionPreviewState() {
+  if (V2.bentoPreviewTripId) {
+    persistSessionBentoTab("mine");
+    persistSessionLegacyPreviewTripId(V2.bentoPreviewTripId);
+  } else {
+    persistSessionBentoTab("demo");
+    persistSessionLegacyPreviewTripId(null);
+  }
+}
+
+/** 同步 demo-flag 与预览不可用提示。 */
+export function syncPreviewUi() {
+  syncDerivedBentoTab();
+  var isDemo = !V2.bentoPreviewTripId;
+  document.querySelectorAll("[data-demo-flag]").forEach(function (el) {
+    show(el, isDemo);
+  });
+  var sampleFlag = $("v2-bench-sample-flag");
+  if (sampleFlag) show(sampleFlag, isDemo);
+
+  var unavailable = $("v2-preview-unavailable");
+  var openLink = $("v2-preview-unavailable-open");
+  var showUnavailable = !!V2.bentoPreviewTripId && !V2.userManifest;
+  show(unavailable, showUnavailable);
+  if (openLink && V2.userPreviewTrip) {
+    var href = V2.userPreviewTrip.previewUrl
+      || ("/" + V2.userPreviewTrip.tripId + "/index.html");
+    openLink.href = href;
+  }
+}
+
+export { syncPreviewUi as syncTabUi };
+
 export function activeBentoManifest() {
-  if (V2.bentoTab === "mine" && V2.userManifest) return V2.userManifest;
+  if (V2.bentoPreviewTripId && V2.userManifest) return V2.userManifest;
   return V2.demoManifest;
 }
 
-export function setBentoTab(tab, opts) {
+/**
+ * @param {string|null} tripId null = 示例作品
+ * @param {{ silent?: boolean, force?: boolean, skipPersist?: boolean }} [opts]
+ */
+export function setBentoPreviewTripId(tripId, opts) {
   opts = opts || {};
-  if (tab === "mine" && !V2.userManifest) return;
-  if (V2.bentoTab === tab && !opts.force) return;
-  V2.bentoTab = tab;
-  V2.manifest = activeBentoManifest();
-  syncTabUi();
-  renderBentoSurface(V2.manifest);
-  import("./bento-stale.js").then(function (stale) { stale.syncBentoStaleBar(); });
-  if (!opts.silent) {
-    trackStudioEvent("bento_tab_switch", {
-      tab: tab,
-      trip_id: tab === "mine" && V2.userManifest ? V2.userManifest.tripId : null,
-    });
+  var nextId = tripId || null;
+  var prevTab = V2.bentoTab;
+  if (V2.bentoPreviewTripId === nextId && !opts.force) {
+    syncPreviewUi();
+    syncPreviewSelectValue();
+    return Promise.resolve(V2.userManifest);
   }
-}
 
-export function initBentoTabs() {
-  if (_wired) return;
-  _wired = true;
-  var demoBtn = $("v2-tab-demo");
-  var mineBtn = $("v2-tab-mine");
-  if (demoBtn) {
-    demoBtn.addEventListener("click", function () {
-      _userTabInteracted = true;
-      setBentoTab("demo");
-    });
-  }
-  if (mineBtn) {
-    mineBtn.addEventListener("click", function () {
-      _userTabInteracted = true;
-      fetchTripsFirstPage()
-        .then(function (data) {
-          V2.trips = data.trips || [];
-          V2.tripsTotal = typeof data.total === "number" ? data.total : V2.trips.length;
-          V2.isOffline = false;
-          return refreshUserBentoPreview(V2.trips);
-        })
-        .catch(function () {})
-        .finally(function () {
-          setBentoTab("mine", { force: true });
+  V2.bentoPreviewTripId = nextId;
+  if (!opts.skipPersist) persistBentoPreviewTripId(nextId);
+  syncDerivedBentoTab();
+  syncSessionPreviewState();
+  trackBentoTabSwitch(prevTab, opts);
+
+  if (!nextId) {
+    V2.userManifest = null;
+    V2.userPreviewTrip = null;
+    V2.manifest = V2.demoManifest;
+    syncPreviewUi();
+    syncPreviewSelectValue();
+    renderBentoSurface(V2.manifest);
+    return import("./bento-stale.js").then(function (stale) {
+      stale.syncBentoStaleBar();
+      if (!opts.silent) {
+        trackStudioEvent("bento_preview_select", {
+          trip_id: null,
+          source: opts.source || "select",
         });
+      }
+      return null;
     });
   }
+
+  return refreshBentoUserPreview(V2.trips, {
+    tripId: nextId,
+    force: !!opts.force,
+    silent: !!opts.silent,
+  }).then(function (manifest) {
+    if (!opts.silent) {
+      trackStudioEvent("bento_preview_select", {
+        trip_id: nextId,
+        source: opts.source || "select",
+      });
+    }
+    return manifest;
+  });
 }
 
-/** trips 加载后拉取最近一本预览 manifest。 */
-export function refreshUserBentoPreview(trips, opts) {
+/** @deprecated D-13 shim */
+export function setBentoTab(tab, opts) {
+  if (tab === "demo") return setBentoPreviewTripId(null, opts);
+  if (tab === "mine" && V2.bentoPreviewTripId) {
+    return setBentoPreviewTripId(V2.bentoPreviewTripId, opts);
+  }
+  return Promise.resolve(null);
+}
+
+/** trips 加载后按 preference 或指定 tripId 拉取 bento-preview（单本，无回退链）。 */
+export function refreshBentoUserPreview(trips, opts) {
   opts = opts || {};
+  if (opts.force) {
+    try { window.__v2BentoPreviewForceFetch = true; } catch (e) { /* ignore */ }
+  }
   return import("./trip-preview.js").then(function (mod) {
-    var primary = mod.pickBentoPreviewTrip(trips);
-    if (!primary) {
+    var tripId = opts.tripId != null ? opts.tripId : V2.bentoPreviewTripId;
+    if (!tripId) {
       V2.userManifest = null;
       V2.userPreviewTrip = null;
-      if (!_userTabInteracted || V2.bentoTab === "mine") {
-        V2.bentoTab = "demo";
-      }
-      syncTabUi();
+      V2.manifest = V2.demoManifest;
+      syncPreviewUi();
+      syncPreviewSelectValue();
       return import("./bento-stale.js").then(function (stale) {
         stale.syncBentoStaleBar();
         return null;
       });
     }
 
-    var candidates = mod.pickRecentUserTrips(trips);
-    var ordered = [primary].concat(
-      candidates.filter(function (t) { return t.tripId !== primary.tripId; })
-    );
+    return mod.ensureTripInCatalog(tripId).then(function (trip) {
+      if (!trip) {
+        if (V2.isOffline && tripId) {
+          trip = { tripId: tripId };
+        } else {
+          clearBentoPreviewTripId();
+          V2.bentoPreviewTripId = null;
+          V2.userManifest = null;
+          V2.userPreviewTrip = null;
+          V2.manifest = V2.demoManifest;
+          syncDerivedBentoTab();
+          syncSessionPreviewState();
+          syncPreviewUi();
+          syncPreviewSelectValue();
+          toast("原预览画册已不可用，已切回示例", { duration: 2800 });
+          renderBentoSurface(V2.manifest);
+          return import("./bento-stale.js").then(function (stale) {
+            stale.syncBentoStaleBar();
+            return null;
+          });
+        }
+      }
 
-    var matchedTrip = null;
-
-    function tryAt(i) {
-      if (i >= ordered.length) return Promise.resolve(null);
-      var trip = ordered[i];
       return mod.loadTripBentoPreview(trip.tripId, {
         updatedAt: trip.updatedAt,
         force: !!opts.force,
       }).then(function (manifest) {
-        if (manifest) {
-          manifest.tripId = manifest.tripId || trip.tripId;
-          matchedTrip = trip;
-          return manifest;
-        }
-        return tryAt(i + 1);
-      });
-    }
-
-    return tryAt(0).then(function (manifest) {
-      V2.userManifest = manifest || null;
-      V2.userPreviewTrip = manifest ? matchedTrip : null;
-      if (!_userTabInteracted) {
-        V2.bentoTab = V2.userManifest ? "mine" : "demo";
-      } else if (!V2.userManifest && V2.bentoTab === "mine") {
-        V2.bentoTab = "demo";
-      }
-      V2.manifest = activeBentoManifest();
-      syncTabUi();
-      if (V2.manifest) {
+        V2.userPreviewTrip = trip;
+        V2.userManifest = manifest || null;
+        if (manifest) manifest.tripId = manifest.tripId || trip.tripId;
+        V2.manifest = activeBentoManifest();
+        syncSessionPreviewState();
+        syncPreviewUi();
+        syncPreviewSelectValue();
         renderBentoSurface(V2.manifest);
-      }
-      return import("./bento-stale.js").then(function (stale) {
-        stale.syncBentoStaleBar();
-        return V2.userManifest;
+        return import("./bento-stale.js").then(function (stale) {
+          stale.syncBentoStaleBar();
+          return V2.userManifest;
+        });
       });
     });
   });
 }
 
-export { syncTabUi };
+/** @deprecated 别名 · stale / bootstrap */
+export function refreshUserBentoPreview(trips, opts) {
+  return refreshBentoUserPreview(trips, opts);
+}
+
+/** @deprecated picker 接管 init */
+export function initBentoTabs() {}

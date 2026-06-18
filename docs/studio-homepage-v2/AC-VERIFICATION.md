@@ -30,6 +30,19 @@
 | AC-HP2-24 | Sheet focus trap · Esc · 焦点归还 | **自动** | tab trap + Esc e2e |
 | AC-HP2-25 | `homepage_view` 仅在 state 确定后 | **自动** | mock analytics 调用序 |
 
+### D-14 · 预览画册选择器（§6.8.9）
+
+| ID | Then | 验证方式 | 工具 / 备注 |
+|----|------|----------|-------------|
+| AC-D14-01 | 无 preference → 示例 + demo-flag ×2 | **自动** | `test_ac_hp2_02_demo_flags` · `test_ac_d14_06` |
+| AC-D14-02 | 选用户画册 B → 切 B + demo-flag 隐藏 | **自动** | `test_ac_d14_01` · `test_ac_hp2_bento_tab_mine` |
+| AC-D14-03 | 选 B 后硬刷新仍 B | **自动** | `test_ac_d14_03_persist_refresh` · localStorage |
+| AC-D14-04 | preference 已删 trip → 示例 + toast | **自动** | `test_ac_d14_04_deleted_trip_fallback` |
+| AC-D14-05 | bento-preview 404 → 占位 + 仍选 B | **自动** | `bentoPreview404=` harness · `test_ac_d14_05` |
+| AC-D14-06 | 无用户画册 → 仅示例 / disabled | **自动** | `test_ac_d14_06_no_user_trips_combobox_disabled` |
+| AC-D14-07 | B algorithmStale → stale bar 绑定 B | **自动** | `single-algorithm-stale` · `test_ac_d14_07` |
+| AC-D14-08 | curate 完成 → 刷新 B manifest | **自动** | `studioCurate=succeed` · `test_ac_d14_08` |
+
 ### M20-j · holdback / 门控（扩展）
 
 | ID | Then | 验证方式 | 工具 / 备注 |

@@ -26,6 +26,12 @@
 | `studioOffline` | `1` | 模拟 offline |
 | `studioSlowNet` | `1` | 触发 L2 懒加载 |
 | `studioAssetsFail` | `1` | manifest 404 |
+| `bentoPreviewTrip` | tripId \| `demo` \| `` | 预置 `localStorage` 预览 preference（D-14） |
+| `preview` | tripId \| `demo` | 生产 deep link 同义；bootstrap 写入后清 URL |
+| `bentoTabSession` | `mine` \| `demo` | D-13 session Tab（D-14 迁移测试） |
+| `bentoTabSessionTrip` | tripId | 配合 `bentoTabSession=mine` |
+| `bentoPreview404` | tripId \| `all` \| `1` | mock 指定 trip 的 `bento-preview` 404 |
+| `studioCurate` | `succeed` | mock POST `/curate` + job 成功（AC-D14-08） |
 
 ### 2.1 `studioState` 枚举
 
@@ -83,4 +89,10 @@
 ```bash
 # 示例 repro URL
 http://127.0.0.1:8766/?homepageVariant=v2&studioState=idle-empty&studioFixture=empty
+
+# D-14 · 预览 preference + 404 边界
+http://127.0.0.1:8766/?studioFixture=multi&bentoPreviewTrip=kyoto-rain&bentoPreview404=kyoto-rain
+
+# D-14 · deep link（生产 URL 形态）
+http://127.0.0.1:8766/?preview=kyoto-rain
 ```

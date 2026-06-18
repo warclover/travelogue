@@ -674,10 +674,37 @@ def test_studio_home_v2_harness_and_ac_hooks() -> None:
 
     html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
     assert 'id="v2-carousel-hint"' in html
-    assert 'id="v2-tab-demo"' in html
+    assert 'data-demo-flag' in html
+    assert html.count('data-demo-flag') >= 2
+    assert 'id="v2-bento-preview-select"' in html
+    assert 'id="v2-bento-preview-trigger"' in html
+    assert 'id="v2-bento-preview-listbox"' in html
+    assert "预览画册" in html
+    assert 'id="v2-success-set-preview"' in html
+
+    picker = (STUDIO_DIR / "homepage-v2" / "bento-preview-picker.js").read_text(encoding="utf-8")
+    assert "setBentoPreviewTripId" in picker
+    assert "v2-preview-combobox__option" in picker
+    shelf_menu = (STUDIO_DIR / "homepage-v2" / "shelf-menu.js").read_text(encoding="utf-8")
+    assert "在上方预览" in shelf_menu
+    assert "is-previewing" in (STUDIO_DIR / "homepage-v2" / "bento.js").read_text(encoding="utf-8")
+    assert "bentoPreviewTrip" in (
+        STUDIO_DIR / "homepage-v2" / "harness.js"
+    ).read_text(encoding="utf-8")
+    assert "bentoPreview404" in harness
+    assert "studioCurate" in harness
+    assert "harnessInstallCurateMock" in harness
+    deeplink = (STUDIO_DIR / "homepage-v2" / "bento-preview-deeplink.js").read_text(encoding="utf-8")
+    assert "applyPreviewDeepLink" in deeplink
+    migrate = (STUDIO_DIR / "homepage-v2" / "bento-preview-migrate.js").read_text(encoding="utf-8")
+    assert "migrateD13BentoPreference" in migrate
+    assert "ensureTripInCatalog" in (STUDIO_DIR / "homepage-v2" / "trip-preview.js").read_text(encoding="utf-8")
+    assert "v2-bento-preview-search" in picker
     assert "#v2-web-cell" in html or 'id="v2-web-cell"' in html
 
     css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    assert ".v2-preview-combobox__trigger" in css
+    assert ".v2-preview-combobox__option-stale" in css
     # 隐藏的 fixed 覆盖层不得拦截点击
     assert "#v2-unsupported[hidden]" in css
     assert "display: none !important" in css

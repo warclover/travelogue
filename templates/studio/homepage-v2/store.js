@@ -11,6 +11,15 @@ export const STUDIO_DEMO_SHOWCASE_BASE = "/__studio/assets/demo-showcase/";
 /** v2 新增 sessionStorage 键（加法，不改 v3 既有键形状）。 */
 export const V2_VARIANT_KEY = "travelogue.studio.homepageVariant";
 export const V2_THEME_KEY = "travelogue.studio.v2.theme";
+export const V2_BENTO_PREVIEW_TRIP_KEY = "travelogue.studio.v2.bentoPreviewTripId";
+/** D-13 session：本 tab 内曾选「我的最近一本」（供 D-14 迁移读取）。 */
+export const V2_BENTO_TAB_SESSION_KEY = "travelogue.studio.v2.bentoTab";
+/** D-13 session：mine Tab 激活时的预览 tripId。 */
+export const V2_BENTO_PREVIEW_TRIP_SESSION_KEY = "travelogue.studio.v2.bentoPreviewTripIdSession";
+/** D-14 一次性迁移完成标记（localStorage）。 */
+export const V2_BENTO_D14_MIGRATED_KEY = "travelogue.studio.v2.bentoD14Migrated";
+/** D-14 离线：最近一次成功的 GET /trips 首屏快照（JSON `{ trips, total }`）。 */
+export const V2_TRIPS_CACHE_KEY = "travelogue.studio.v2.tripsCache";
 export const V2_THEME_DEFAULT = "sky";
 
 /** v2 首页运行时状态（单一可变源，勿重新赋值绑定）。 */
@@ -21,10 +30,15 @@ export const V2 = {
   userManifest: null,
   /** GET /trips 行：当前 userManifest 对应的画册（stale / curate CTA）。 */
   userPreviewTrip: null,
-  bentoTab: "demo", // demo | mine（方案 B′）
+  /** D-14：null = 示例作品；非 null = 指定用户画册 tripId。 */
+  bentoPreviewTripId: null,
+  bentoTab: "demo", // 派生：bentoPreviewTripId ? "mine" : "demo"
   manifestError: false,
   trips: [],
   tripsTotal: 0,
+  /** D-14 P3 · 预览选择器已加载的 trips 页（含分页追加） */
+  pickerCatalogTrips: [],
+  pickerCatalogTotal: 0,
   isOffline: false,
   activeJobId: null,
   layout: "wide", // wide | tablet_landscape | unsupported_*
@@ -114,4 +128,61 @@ export function persistTheme(theme) {
     /* ignore */
   }
   return next;
+}
+
+/** 派生 bentoTab（兼容 stale / 遥测 shim）。 */
+export function syncDerivedBentoTab() {
+  V2.bentoTab = V2.bentoPreviewTripId ? "mine" : "demo";
+}
+
+export function readBentoPreviewTripId() {
+  try {
+    var raw = localStorage.getItem(V2_BENTO_PREVIEW_TRIP_KEY);
+    if (!raw) return null;
+    var id = String(raw).trim();
+    return id || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function persistBentoPreviewTripId(tripId) {
+  try {
+    if (!tripId) localStorage.removeItem(V2_BENTO_PREVIEW_TRIP_KEY);
+    else localStorage.setItem(V2_BENTO_PREVIEW_TRIP_KEY, String(tripId));
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+export function clearBentoPreviewTripId() {
+  persistBentoPreviewTripId(null);
+}
+
+/** @returns {{ trips: object[], total: number } | null} */
+export function readTripsCache() {
+  try {
+    var raw = localStorage.getItem(V2_TRIPS_CACHE_KEY);
+    if (!raw) return null;
+    var data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.trips)) return null;
+    return {
+      trips: data.trips,
+      total: typeof data.total === "number" ? data.total : data.trips.length,
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+export function persistTripsCache(trips, total) {
+  try {
+    var payload = {
+      trips: (trips || []).slice(),
+      total: typeof total === "number" ? total : (trips || []).length,
+    };
+    localStorage.setItem(V2_TRIPS_CACHE_KEY, JSON.stringify(payload));
+  } catch (e) {
+    /* ignore */
+  }
 }

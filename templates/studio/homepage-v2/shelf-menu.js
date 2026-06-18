@@ -6,6 +6,7 @@ import { trackStudioEvent } from "../js/analytics.js";
 import { V2 } from "./store.js";
 import { deleteTrip } from "./trips-client.js";
 import { runShelfLongshot } from "./shelf-longshot.js";
+import { setBentoPreviewTripId } from "./bento-tabs.js";
 
 var _openMenuEl = null;
 var _docBound = false;
@@ -126,6 +127,16 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
   menu.dataset.open = "false";
   menu.hidden = true;
 
+  var previewItem = document.createElement("button");
+  previewItem.type = "button";
+  previewItem.className = "v2-shelf__menu-item";
+  previewItem.setAttribute("role", "menuitem");
+  previewItem.textContent = "在上方预览";
+  if (demo) {
+    previewItem.disabled = true;
+    previewItem.title = "示例画册无法设为预览";
+  }
+
   var longshotItem = document.createElement("button");
   longshotItem.type = "button";
   longshotItem.className = "v2-shelf__menu-item";
@@ -142,6 +153,7 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
     deleteItem.title = "示例画册无法删除";
   }
 
+  menu.appendChild(previewItem);
   menu.appendChild(longshotItem);
   menu.appendChild(deleteItem);
   coverWrap.appendChild(menuBtn);
@@ -156,6 +168,17 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
     }
     trackStudioEvent("shelf_menu_open", { trip_id: trip.tripId, surface: surface });
     openMenu(menu, menuBtn);
+  });
+
+  previewItem.addEventListener("click", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (previewItem.disabled) return;
+    closeMenu(menu);
+    setBentoPreviewTripId(trip.tripId, { source: "shelf" }).then(function () {
+      var frame = document.getElementById("v2-frame");
+      if (frame) frame.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   });
 
   longshotItem.addEventListener("click", function (e) {

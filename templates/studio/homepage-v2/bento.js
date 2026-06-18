@@ -9,7 +9,8 @@ import { initCarousel } from "./carousel.js";
 import { initPhoneStrip } from "./phone-strip.js";
 import { resolveLayoutTier } from "./layout-tier.js";
 import { trackStudioEvent } from "../js/analytics.js";
-import { initBentoTabs, syncTabUi } from "./bento-tabs.js";
+import { initBentoPreviewPicker } from "./bento-preview-picker.js";
+import { syncPreviewUi } from "./bento-tabs.js";
 import { syncBentoStaleBar } from "./bento-stale.js";
 import { pickRecentUserTrips } from "./trip-preview.js";
 
@@ -208,6 +209,9 @@ export function renderBenchRecent() {
     var href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
     if (trip.longshotStale) href = "/" + trip.tripId + "/index.html?focus=longshot";
     card.href = href;
+    if (V2.bentoPreviewTripId && trip.tripId === V2.bentoPreviewTripId) {
+      card.classList.add("is-previewing");
+    }
     var benchStale = [];
     if (trip.longshotStale) benchStale.push("长图待更新");
     if (trip.algorithmStale) benchStale.push("算法待更新");
@@ -314,12 +318,17 @@ export function renderBench(manifest) {
   }
 }
 
-/** 重绘 Bento 预览区（Tab 切换 / manifest 变更）。 */
+/** 重绘 Bento 预览区（manifest 变更 / 预览画册切换）。 */
 export function renderBentoSurface(manifest) {
   resetBackgroundLayer();
   var tier = resolveLayoutTier({ manifestError: !manifest });
   V2.layoutTier = tier;
   if (!manifest) {
+    if (V2.bentoPreviewTripId) {
+      initCarousel({ pages: [] }, { tier: tier });
+      renderPhone({ pages: [] }, tier);
+    }
+    renderBench(null);
     syncBentoStaleBar();
     return;
   }
@@ -340,8 +349,8 @@ export function renderBentoEmpty(manifest) {
   show($("v2-importing"), false);
   setV2SkipLinkTarget("v2-cta");
 
-  initBentoTabs();
-  syncTabUi();
+  initBentoPreviewPicker();
+  syncPreviewUi();
 
   trackStudioEvent("layout_tier", {
     tier: resolveLayoutTier({ manifestError: !manifest }),

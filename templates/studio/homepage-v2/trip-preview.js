@@ -1,8 +1,10 @@
 /**
- * 首页 v2 · 用户最近画册 Bento 预览（PRD v2.0.5 · 方案 B′）。
+ * 首页 v2 · 用户画册 Bento 预览（D-14 · 可指定任意 tripId）。
  */
 import { isDemoTrip } from "../js/constants.js";
 import { isValidManifest } from "./manifest.js";
+import { V2 } from "./store.js";
+import { fetchTripsPage, SHELF_PAGE_SIZE } from "./trips-client.js";
 
 /** @typedef {import("./trips-client.js").ShelfTrip} ShelfTrip */
 
@@ -29,17 +31,69 @@ export function pickRecentUserTrips(trips) {
 }
 
 /**
- * Bento「最近一本」：严格取 updatedAt 最新的非 demo 画册。
- *
- * 说明：
- * - 旧逻辑会优先 hasLongshotExport，可能把焦点固定在历史老画册，
- *   导致新建游记后「最近一本」不更新。
- * - 实际预览可用性由 refreshUserBentoPreview 的候选回退链保障。
+ * Bento 选项排序参考：updatedAt 最新的非 demo 画册。
  */
 export function pickBentoPreviewTrip(trips) {
   var userTrips = pickRecentUserTrips(trips);
   if (!userTrips.length) return null;
   return userTrips[0];
+}
+
+/** 在 trips 列表中解析指定 tripId（非 demo）。 */
+export function resolvePreviewTrip(trips, tripId) {
+  if (!tripId) return null;
+  var rows = pickRecentUserTrips(trips);
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].tripId === tripId) return rows[i];
+  }
+  return null;
+}
+
+/** 当前预览选择器 catalog（含分页）。 */
+export function previewCatalogTrips() {
+  if (V2.pickerCatalogTrips && V2.pickerCatalogTrips.length) {
+    return V2.pickerCatalogTrips;
+  }
+  return V2.trips || [];
+}
+
+/** 分页拉取直至找到 tripId，或确认不存在。 */
+export function ensureTripInCatalog(tripId) {
+  if (!tripId) return Promise.resolve(null);
+  var catalog = previewCatalogTrips().slice();
+  var found = resolvePreviewTrip(catalog, tripId);
+  if (found) return Promise.resolve(found);
+
+  if (V2.isOffline) {
+    return Promise.resolve({ tripId: tripId });
+  }
+
+  var total = typeof V2.pickerCatalogTotal === "number" && V2.pickerCatalogTotal > 0
+    ? V2.pickerCatalogTotal
+    : (typeof V2.tripsTotal === "number" ? V2.tripsTotal : catalog.length);
+  if (catalog.length >= total) return Promise.resolve(null);
+
+  function fetchNext() {
+    return fetchTripsPage(SHELF_PAGE_SIZE, catalog.length).then(function (data) {
+      var batch = data.trips || [];
+      batch.forEach(function (t) {
+        if (!catalog.some(function (x) { return x.tripId === t.tripId; })) {
+          catalog.push(t);
+        }
+      });
+      V2.pickerCatalogTrips = catalog;
+      V2.pickerCatalogTotal = typeof data.total === "number" ? data.total : total;
+      var hit = resolvePreviewTrip(catalog, tripId);
+      if (hit) return hit;
+      total = V2.pickerCatalogTotal;
+      if (catalog.length >= total || batch.length === 0) return null;
+      return fetchNext();
+    }).catch(function () {
+      return null;
+    });
+  }
+
+  return fetchNext();
 }
 
 /**
@@ -59,6 +113,9 @@ export function loadTripBentoPreview(tripId, opts) {
     && _previewCache.manifest
   ) {
     return Promise.resolve(_previewCache.manifest);
+  }
+  if (opts.force) {
+    try { window.__v2BentoPreviewForceFetch = true; } catch (e) { /* ignore */ }
   }
   return fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/bento-preview?t=" + String(Date.now()))
     .then(function (r) {

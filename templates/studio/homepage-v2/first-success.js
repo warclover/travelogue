@@ -165,6 +165,10 @@ function populateSuccessUi(result) {
     secondary.textContent = "打开卷轴预览";
     show(secondary, _successRefinedEnabled && _successMode === "quick_share");
   }
+  var setPreview = $("v2-success-set-preview");
+  if (setPreview) {
+    show(setPreview, !!result.tripId);
+  }
 
   var cover = $("v2-success-cover");
   var coverImg = $("v2-success-cover-img");
@@ -298,6 +302,22 @@ function wireFirstSuccess() {
     secondary.addEventListener("click", function (e) {
       e.preventDefault();
       openPreview("open_preview_secondary");
+    });
+  }
+  var setPreview = $("v2-success-set-preview");
+  if (setPreview) {
+    setPreview.addEventListener("click", function () {
+      if (!_successResult || !_successResult.tripId) return;
+      clearCountdown();
+      import("./bento-tabs.js").then(function (m) {
+        return m.setBentoPreviewTripId(_successResult.tripId, { source: "first_success" });
+      }).then(function () {
+        if (typeof studioToast === "function") {
+          studioToast("已设为首页预览", { duration: 2200 });
+        }
+        markFirstPreviewDone(_successResult.tripId);
+        dismissFirstSuccess();
+      });
     });
   }
 }

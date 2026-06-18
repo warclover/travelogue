@@ -15,21 +15,20 @@ function toast(msg, opts) {
 }
 
 function activePreviewTrip() {
-  if (V2.bentoTab !== "mine") return null;
+  if (!V2.bentoPreviewTripId) return null;
   return V2.userPreviewTrip || null;
 }
 
 function refreshAfterCurate() {
   clearBentoPreviewCache();
-  var chain = Promise.resolve();
-  if (typeof V2.reroute === "function") {
-    chain = V2.reroute();
-  }
-  return chain.then(function () {
-    return import("./bento-tabs.js").then(function (tabs) {
-      return tabs.refreshUserBentoPreview(V2.trips, { force: true });
-    });
+  try { window.__v2RefreshAfterCurate = true; } catch (e) { /* ignore */ }
+  var rerouteP = typeof V2.reroute === "function"
+    ? V2.reroute().catch(function () { return null; })
+    : Promise.resolve();
+  var refreshP = import("./bento-tabs.js").then(function (tabs) {
+    return tabs.refreshBentoUserPreview(V2.trips, { force: true });
   });
+  return Promise.all([rerouteP, refreshP]).then(function () { return refreshP; });
 }
 
 export function triggerHomepageRecurate(tripId, surface) {

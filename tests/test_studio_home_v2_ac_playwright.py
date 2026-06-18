@@ -143,17 +143,289 @@ def _contrast_ratio(page, selector: str) -> float:
     )
 
 
+def _visible_demo_flag_count(page) -> int:
+    return page.evaluate(
+        """
+        () => Array.from(document.querySelectorAll('[data-demo-flag]'))
+          .filter((el) => {
+            if (el.hidden) return false;
+            const cs = getComputedStyle(el);
+            return cs.display !== 'none' && cs.visibility !== 'hidden'
+              && el.getClientRects().length > 0;
+          }).length
+        """
+    )
+
+
 def test_ac_hp2_02_demo_flags(studio_server) -> None:
-    """AC-HP2-02 · 卷轴说明 + 预览 Tab（示例 / 我的）。"""
+    """AC-HP2-02 / AC-D14-01 · 默认示例作品 + 16:9/9:16 双 demo-flag。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
-        _goto_v2(page, studio_server["base"])
+        _goto_v2(page, studio_server["base"], "studioFixture=empty")
         _wait_visible(page, "v2-frame")
         assert "横滑" in page.locator("#v2-carousel-hint").inner_text()
-        assert page.locator("#v2-tab-demo").is_visible()
-        assert page.locator("#v2-tab-demo").evaluate("el => el.classList.contains('is-active')")
-        assert page.locator("#v2-bench-source-tabs").is_visible()
+        assert page.locator("#v2-bento-preview-trigger").is_visible()
+        assert page.evaluate(
+            "() => document.getElementById('v2-bento-preview-select').value"
+        ) == ""
+        assert page.locator("#v2-bento-preview-label").inner_text() == "示例作品"
+        assert "京都" in page.locator("#v2-bench-title").inner_text()
+        assert _visible_demo_flag_count(page) == 2
+        browser.close()
+
+
+def test_ac_d14_01_demo_flags_hidden_when_user_preview(studio_server) -> None:
+    """AC-D14-02 · 选中用户画册后 demo-flag 隐藏。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=multi&bentoPreviewTrip=kyoto-rain")
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'kyoto-rain'",
+            timeout=10_000,
+        )
+        assert _visible_demo_flag_count(page) == 0
+        browser.close()
+
+
+def test_ac_d14_d13_session_migration(studio_server) -> None:
+    """G-01 · D-13 session mine Tab → D-14 localStorage preference。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(
+            page,
+            studio_server["base"],
+            "studioFixture=multi&bentoTabSession=mine&bentoTabSessionTrip=kyoto-rain",
+        )
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'kyoto-rain'",
+            timeout=10_000,
+        )
+        stored = page.evaluate(
+            """
+            () => localStorage.getItem('travelogue.studio.v2.bentoPreviewTripId')
+            """
+        )
+        assert stored == "kyoto-rain"
+        assert _visible_demo_flag_count(page) == 0
+        browser.close()
+
+
+def test_ac_d14_06_no_user_trips_combobox_disabled(studio_server) -> None:
+    """AC-D14-06 · 无用户画册时 Combobox disabled + title。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=empty")
+        _wait_visible(page, "v2-frame")
+        trigger = page.locator("#v2-bento-preview-trigger")
+        assert trigger.is_disabled()
+        title = trigger.get_attribute("title") or ""
+        assert "暂无用户画册" in title
+        assert _visible_demo_flag_count(page) == 2
+        browser.close()
+
+
+def _select_preview_trip(page, label_fragment: str) -> None:
+    page.locator("#v2-bento-preview-trigger").click()
+    page.locator(
+        "#v2-bento-preview-listbox .v2-preview-combobox__option",
+        has_text=label_fragment,
+    ).click()
+
+
+def test_ac_d14_03_persist_refresh(studio_server) -> None:
+    """AC-D14-03 · 选中用户画册后硬刷新仍保持 preference。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=multi")
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select option[value=\"kyoto-rain\"]')",
+            timeout=10_000,
+        )
+        _select_preview_trip(page, "京都")
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'kyoto-rain'",
+            timeout=10_000,
+        )
+        page.reload(wait_until="networkidle")
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'kyoto-rain'",
+            timeout=10_000,
+        )
+        stored = page.evaluate(
+            "() => localStorage.getItem('travelogue.studio.v2.bentoPreviewTripId')"
+        )
+        assert stored == "kyoto-rain"
+        assert _visible_demo_flag_count(page) == 0
+        browser.close()
+
+
+def test_ac_d14_04_deleted_trip_fallback(studio_server) -> None:
+    """AC-D14-04 · preference 指向已删 trip → 回示例 + toast。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(
+            page,
+            studio_server["base"],
+            "studioFixture=multi&bentoPreviewTrip=ghost-trip",
+        )
+        _wait_visible(page, "v2-frame")
+        page.wait_for_selector(".studio__toast", timeout=10_000)
+        toast_text = page.locator(".studio__toast").inner_text()
+        assert "原预览画册已不可用" in toast_text
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === ''",
+            timeout=10_000,
+        )
+        assert page.locator("#v2-bento-preview-label").inner_text() == "示例作品"
+        assert _visible_demo_flag_count(page) == 2
+        browser.close()
+
+
+def test_ac_d14_05_preview_404_keeps_selection(studio_server) -> None:
+    """AC-D14-05 · bento-preview 404 时保持选中 + 内联不可用提示。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(
+            page,
+            studio_server["base"],
+            "studioFixture=multi&bentoPreviewTrip=kyoto-rain&bentoPreview404=kyoto-rain",
+        )
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'kyoto-rain'",
+            timeout=10_000,
+        )
+        _wait_visible(page, "v2-preview-unavailable")
+        assert "预览尚未就绪" in page.locator("#v2-preview-unavailable-text").inner_text()
+        assert _visible_demo_flag_count(page) == 0
+        browser.close()
+
+
+def test_ac_d14_07_algorithm_stale_bar(studio_server) -> None:
+    """AC-D14-07 · 用户预览 preference + algorithmStale → stale bar 绑定 B。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(
+            page,
+            studio_server["base"],
+            "studioFixture=single-algorithm-stale&bentoPreviewTrip=kyoto-rain",
+        )
+        _wait_visible(page, "v2-frame")
+        _wait_visible(page, "v2-bento-stale")
+        stale_text = page.locator("#v2-bento-stale-text").inner_text()
+        assert "选片配置已更新" in stale_text or "重新排版" in stale_text
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'kyoto-rain'",
+            timeout=10_000,
+        )
+        browser.close()
+
+
+def test_ac_d14_08_curate_refreshes_preference_manifest(studio_server) -> None:
+    """AC-D14-08 · curate 成功后 refreshAfterCurate 刷新 preference manifest。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+
+        def _route_travelogue(route) -> None:
+            req = route.request
+            url = req.url
+            if "/trips/" in url and "/curate" in url and req.method == "POST":
+                route.fulfill(
+                    status=202,
+                    content_type="application/json",
+                    body='{"jobId":"harness-curate-1"}',
+                )
+                return
+            if "/__travelogue/status" in url:
+                route.fulfill(
+                    status=200,
+                    content_type="application/json",
+                    body='{"jobId":"harness-curate-1","status":"succeeded","stage":"curate"}',
+                )
+                return
+            route.continue_()
+
+        page.route("**/__travelogue/**", _route_travelogue)
+        _goto_v2(
+            page,
+            studio_server["base"],
+            "studioFixture=single-algorithm-stale&bentoPreviewTrip=kyoto-rain",
+        )
+        _wait_visible(page, "v2-frame")
+        _wait_visible(page, "v2-bento-stale")
+        page.locator("#v2-bento-stale-action").click()
+        page.wait_for_function(
+            "() => window.__v2RefreshAfterCurate === true",
+            timeout=15_000,
+        )
+        page.wait_for_function(
+            "() => window.__v2BentoPreviewForceFetch === true",
+            timeout=10_000,
+        )
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'kyoto-rain'",
+            timeout=10_000,
+        )
+        browser.close()
+
+
+def test_ac_d14_offline_trips_cache(studio_server) -> None:
+    """G-05 · 离线时用缓存 trips 填 Combobox；fetch 失败不清 preference。"""
+    cache = {
+        "trips": [
+            {
+                "tripId": "kyoto-rain",
+                "title": "京都 · 雨后",
+                "updatedAt": 1718000000,
+                "photoCount": 24,
+            }
+        ],
+        "total": 1,
+    }
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        page.add_init_script(
+            f"""
+            localStorage.setItem(
+              'travelogue.studio.v2.tripsCache',
+              {json.dumps(json.dumps(cache))}
+            );
+            localStorage.setItem(
+              'travelogue.studio.v2.bentoPreviewTripId',
+              'kyoto-rain'
+            );
+            """
+        )
+        _goto_v2(page, studio_server["base"], "studioFixture=error")
+        _wait_visible(page, "v2-frame")
+        _wait_visible(page, "v2-offline")
+        trigger = page.locator("#v2-bento-preview-trigger")
+        assert not trigger.is_disabled()
+        assert (
+            page.evaluate(
+                "() => document.querySelector('#v2-bento-preview-select').value"
+            )
+            == "kyoto-rain"
+        )
+        assert "京都" in page.locator("#v2-bento-preview-label").inner_text()
+        stored = page.evaluate(
+            "() => localStorage.getItem('travelogue.studio.v2.bentoPreviewTripId')"
+        )
+        assert stored == "kyoto-rain"
         browser.close()
 
 
@@ -305,6 +577,9 @@ def test_ac_hp2_v2_advanced_popover_focus_trap(studio_server) -> None:
         _goto_v2(page, studio_server["base"])
         _wait_visible(page, "v2-frame")
 
+        page.evaluate(
+            "() => { const p = document.getElementById('v2-dev-panel'); if (p) p.hidden = true; }"
+        )
         toggle = page.locator("#v2-advanced-toggle")
         toggle.click()
         page.wait_for_function(
@@ -412,25 +687,140 @@ def test_ac_hp2_11_idle_returning_shelf(studio_server) -> None:
 
 
 def test_ac_hp2_bento_tab_mine(studio_server) -> None:
-    """D-13 · 有用户画册时可切「我的最近一本」Tab。"""
+    """D-14 · 预览画册 Combobox 可切换至用户画册。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
         _goto_v2(page, studio_server["base"], "studioFixture=multi")
         _wait_visible(page, "v2-frame")
-        mine = page.locator("#v2-tab-mine")
         page.wait_for_function(
-            "() => !document.getElementById('v2-tab-mine').disabled",
+            "() => document.querySelector('#v2-bento-preview-select option[value=\"kyoto-rain\"]')",
             timeout=10_000,
         )
-        mine.click()
+        page.locator("#v2-bento-preview-trigger").click()
+        page.locator(
+            "#v2-bento-preview-listbox .v2-preview-combobox__option",
+            has_text="京都",
+        ).click()
         page.wait_for_function(
-            "() => document.getElementById('v2-tab-mine').classList.contains('is-active')",
+            "() => document.querySelector('#v2-bento-preview-select').value === 'kyoto-rain'",
             timeout=5_000,
         )
-        assert page.locator("#v2-tab-mine").evaluate("el => el.classList.contains('is-active')")
-        assert not page.locator("#v2-tab-demo").evaluate("el => el.classList.contains('is-active')")
+        page.wait_for_function(
+            "() => (document.querySelector('#v2-bench-title') || {}).textContent.indexOf('Harness') >= 0",
+            timeout=10_000,
+        )
         assert "Harness" in page.locator("#v2-bench-title").inner_text()
+        assert not page.locator("#v2-bench-sample-flag").is_visible()
+        assert page.locator(".v2-bench__recent-card.is-previewing").count() >= 1
+        browser.close()
+
+
+def test_ac_hp2_d14_preview_combobox_popover(studio_server) -> None:
+    """D-14 P2-1 · Combobox 缩略图 popover 可切换预览。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=multi")
+        _wait_visible(page, "v2-frame")
+        page.locator("#v2-bento-preview-trigger").click()
+        page.wait_for_function(
+            """
+            () => {
+              const pop = document.getElementById('v2-bento-preview-listbox');
+              return !!pop && !pop.hidden && pop.querySelectorAll('.v2-preview-combobox__option').length >= 2;
+            }
+            """,
+            timeout=5_000,
+        )
+        page.locator(
+            "#v2-bento-preview-listbox .v2-preview-combobox__option",
+            has_text="京都",
+        ).click()
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'kyoto-rain'",
+            timeout=10_000,
+        )
+        label = page.locator("#v2-bento-preview-label").inner_text()
+        assert "Harness" in label or "京都" in label
+        browser.close()
+
+
+def test_ac_hp2_d14_shelf_preview_on_top(studio_server) -> None:
+    """D-14 Phase 2 · 书架菜单「在上方预览」切换 Bento。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=multi&bentoPreviewTrip=demo")
+        _wait_visible(page, "v2-frame")
+        _wait_visible(page, "v2-shelf")
+        card = page.locator('.v2-shelf__card[data-trip-id="kyoto-rain"]')
+        card.hover()
+        card.locator(".v2-shelf__menu-btn").click()
+        card.locator(".v2-shelf__menu-item", has_text="在上方预览").click()
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'kyoto-rain'",
+            timeout=10_000,
+        )
+        browser.close()
+
+
+def test_ac_hp2_d14_preview_deeplink(studio_server) -> None:
+    """D-14 P3-2 · ?preview= deep link 写入 preference 并清理 URL。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=multi&preview=kyoto-rain")
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'kyoto-rain'",
+            timeout=10_000,
+        )
+        assert "preview=" not in page.url
+        browser.close()
+
+
+def test_ac_hp2_d14_preview_deeplink_paginated(studio_server) -> None:
+    """D-14 P3 · ?preview= 指向分页外画册时自动拉取 catalog。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=many&preview=shelf-trip-22")
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'shelf-trip-22'",
+            timeout=15_000,
+        )
+        browser.close()
+
+
+def test_ac_hp2_d14_combobox_search_load_more(studio_server) -> None:
+    """D-14 P3-1 · Combobox 搜索与加载更多。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=many")
+        _wait_visible(page, "v2-frame")
+        page.locator("#v2-bento-preview-trigger").click()
+        page.wait_for_selector("#v2-bento-preview-search", timeout=5_000)
+        load_more = page.locator("#v2-bento-preview-load-more")
+        assert load_more.is_visible()
+        load_more.click()
+        page.wait_for_function(
+            """
+            () => document.querySelectorAll('#v2-bento-preview-options .v2-preview-combobox__option').length >= 21
+            """,
+            timeout=10_000,
+        )
+        page.locator("#v2-bento-preview-search").fill("22")
+        page.locator(
+            "#v2-bento-preview-options .v2-preview-combobox__option",
+            has_text="22",
+        ).click()
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'shelf-trip-22'",
+            timeout=10_000,
+        )
         browser.close()
 
 

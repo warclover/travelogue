@@ -84,7 +84,10 @@
             <button type="button" class="v2-carousel__arrow v2-carousel__arrow--next" id="v2-carousel-next" aria-label="下一屏">›</button>
           </div>
           <div class="v2-carousel__footer">
-            <div class="v2-carousel__dots" id="v2-carousel-dots" role="tablist" aria-label="卷轴页面"></div>
+            <div class="v2-carousel__footer-start">
+              <div class="v2-carousel__dots" id="v2-carousel-dots" role="tablist" aria-label="卷轴页面"></div>
+              <span class="v2-demo-flag v2-carousel__demo-flag" data-demo-flag hidden>示例作品</span>
+            </div>
             <span class="v2-carousel__hint" id="v2-carousel-hint">← 横滑 · 一屏一页 · 到头停止 →</span>
           </div>
         </div>
@@ -114,13 +117,33 @@
           </div>
           <div class="v2-bench__quick" aria-label="预览切换与快捷操作">
             <div class="v2-bench__side">
-              <p class="v2-bench__side-label">预览来源</p>
-              <div class="v2-bento-tabs" id="v2-bench-source-tabs" role="tablist" aria-label="预览来源">
-                <button type="button" class="v2-bento-tabs__btn is-active" role="tab"
-                        id="v2-tab-demo" aria-selected="true" aria-controls="v2-bento-grid">示例作品</button>
-                <button type="button" class="v2-bento-tabs__btn" role="tab"
-                        id="v2-tab-mine" aria-selected="false" aria-controls="v2-bento-grid" disabled>最近一本</button>
+              <p class="v2-bench__side-label">预览画册</p>
+              <div class="v2-preview-combobox" id="v2-bento-preview-combobox">
+                <button type="button"
+                        id="v2-bento-preview-trigger"
+                        class="v2-preview-combobox__trigger"
+                        aria-expanded="false"
+                        aria-haspopup="listbox"
+                        aria-controls="v2-bento-preview-listbox"
+                        aria-label="Bento 预览画册">
+                  <span class="v2-preview-combobox__thumb" id="v2-bento-preview-thumb" aria-hidden="true"></span>
+                  <span class="v2-preview-combobox__label" id="v2-bento-preview-label">示例作品</span>
+                  <span class="v2-preview-combobox__chev" aria-hidden="true">▾</span>
+                </button>
+                <div id="v2-bento-preview-listbox"
+                     class="v2-preview-combobox__popover"
+                     role="listbox"
+                     hidden
+                     aria-label="预览画册列表"></div>
+                <select id="v2-bento-preview-select" class="v2-preview-combobox__native"
+                        hidden aria-hidden="true" tabindex="-1">
+                  <option value="">示例作品</option>
+                </select>
               </div>
+              <p class="v2-preview-unavailable" id="v2-preview-unavailable" hidden>
+                <span id="v2-preview-unavailable-text">该画册预览尚未就绪，仍可打开编辑。</span>
+                <a id="v2-preview-unavailable-open" class="v2-preview-unavailable__link" href="#">打开画册</a>
+              </p>
             </div>
             <div class="v2-bench__side">
               <p class="v2-bench__side-label">快捷操作</p>
@@ -213,7 +236,10 @@
           </div>
         </div>
         <p class="v2-cell-label">
-          <span>微信长图 · 竖屏预览</span>
+          <span class="v2-cell-label__lead">
+            <span class="v2-demo-flag v2-phone__demo-flag" data-demo-flag hidden>示例作品</span>
+            <span>微信长图 · 竖屏预览</span>
+          </span>
           <span class="v2-cell-label__hint">←→ 切换 · 一屏一章</span>
         </p>
         </div>
@@ -242,6 +268,7 @@
       <div class="v2-first-success__actions">
         <a id="v2-success-open" href="#" class="v2-first-success__cta">打开卷轴预览 →</a>
         <a id="v2-success-secondary" href="#" class="v2-first-success__stay" hidden>保存长图</a>
+        <button type="button" class="v2-first-success__stay" id="v2-success-set-preview" hidden>设为首页预览</button>
         <button type="button" class="v2-first-success__stay" id="v2-success-stay">留在首页</button>
       </div>
     </div>

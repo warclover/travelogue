@@ -31,6 +31,7 @@ const ALLOWED = new Set([
   "shelf_longshot_reveal",
   "shelf_longshot_busy",
   "bento_tab_switch",
+  "bento_preview_select",
   "js_error",
   "template_selector_impression",
   "template_mode_changed",
