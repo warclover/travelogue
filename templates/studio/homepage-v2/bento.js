@@ -245,11 +245,6 @@ export function renderBenchRecent() {
     list.appendChild(card);
   });
 
-  list.style.setProperty(
-    "--v2-bench-recent-cols",
-    String(Math.min(4, Math.max(1, recent.length + 1)))
-  );
-
   show(sample, false);
   show(recentHost, true);
   if (left) left.classList.add("v2-bench__left--recent");

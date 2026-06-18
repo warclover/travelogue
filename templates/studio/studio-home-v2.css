@@ -965,9 +965,9 @@ body { overflow-x: clip; overflow-y: visible; }
   padding: 8px 16px;
 }
 .v2-bench--recent .v2-bench__left {
-  flex: 1 1 42%;
-  min-width: 240px;
-  max-width: 58%;
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: none;
   align-self: center;
 }
 .v2-bench--recent .v2-bench__quick {
@@ -993,7 +993,8 @@ body { overflow-x: clip; overflow-y: visible; }
   align-self: center;
 }
 .v2-bench__recent {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
   min-height: 0;
   display: flex;
@@ -1002,23 +1003,25 @@ body { overflow-x: clip; overflow-y: visible; }
   --v2-bench-card-h: calc(108px * var(--v2-bench-recent-scale));
 }
 .v2-bench__recent-list {
-  display: grid;
-  grid-template-columns: repeat(var(--v2-bench-recent-cols, 1), minmax(0, 1fr));
-  gap: 10px;
-  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 8px;
+  width: auto;
+  max-width: 100%;
   height: var(--v2-bench-card-h);
   min-height: var(--v2-bench-card-h);
   max-height: var(--v2-bench-card-h);
-  align-items: stretch;
 }
 .v2-bench__create-card {
   position: relative;
+  flex: 0 0 auto;
   height: 100%;
   width: auto;
   max-width: 100%;
   min-width: 0;
   aspect-ratio: 3 / 4;
-  justify-self: center;
   align-self: stretch;
   display: flex;
   flex-direction: column;
@@ -1104,12 +1107,12 @@ body { overflow-x: clip; overflow-y: visible; }
 }
 .v2-bench__recent-card {
   position: relative;
+  flex: 0 0 auto;
   height: 100%;
   width: auto;
   max-width: 100%;
   min-width: 0;
   aspect-ratio: 3 / 4;
-  justify-self: center;
   align-self: stretch;
   border-radius: 8px;
   overflow: hidden;
