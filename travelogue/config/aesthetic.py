@@ -69,6 +69,32 @@ class AestheticPurposePresets:
 
 
 @dataclass
+class AestheticMllmConfig:
+    """AA · M3 · vision LLM scoring for high-value shortlist only."""
+
+    enabled: bool = False
+    provider: str | None = None
+    model: str = "qwen-vl-max"
+    shortlist_purposes: tuple[str, ...] = ("cover", "hero", "moment")
+    shortlist_k: int = 5
+    max_calls_per_trip: int = 20
+    blend: float = 0.45
+    temperature: float = 0.0
+    cache: bool = True
+    rubric: str = "universal"
+    image_max_edge: int = 768
+
+
+DEFAULT_STRATUM_BLENDS: dict[str, float] = {
+    "group": 0.10,
+    "person": 0.38,
+    "landscape": 0.35,
+    "food": 0.30,
+    "general": 0.35,
+}
+
+
+@dataclass
 class AestheticConfig:
     """PA · photo aesthetic evaluation (Layer 1, path A · zero-dependency)."""
 
@@ -78,8 +104,47 @@ class AestheticConfig:
     presets: AestheticPurposePresets = field(default_factory=AestheticPurposePresets)
     ml_calibrate: bool = False
     ml_calibrate_blend: float = 0.4
+    learned_metric: str = "nima"
+    learned_allow_cpu: bool = True
+    learned_device: str | None = None
+    warm_learned_on_ingest: bool = False
+    use_stratum_blend: bool = False
+    stratum_blends: dict[str, float] = field(default_factory=lambda: dict(DEFAULT_STRATUM_BLENDS))
+    stratum_blend_only: tuple[str, ...] = ()
+    stratum_blend_only_by_purpose: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    use_album_relative: bool = False
+    album_relative_percentile: float = 0.75
+    album_relative_lo: float = 0.7
+    album_relative_hi: float = 1.3
+    portrait_lite_enabled: bool = True
+    mllm: AestheticMllmConfig = field(default_factory=AestheticMllmConfig)
     use_purpose_presets: bool = True
     thumb_px: int = 32
+
+
+def resolve_learned_blend(
+    asset: dict,
+    cfg: AestheticConfig,
+    *,
+    purpose: str = "default",
+) -> float:
+    """Per-stratum learned blend when ``use_stratum_blend`` is on."""
+    if not cfg.use_stratum_blend:
+        return float(cfg.ml_calibrate_blend)
+    from travelogue.curation.aesthetic_blind_review import review_stratum_for_asset
+
+    stratum = review_stratum_for_asset(asset)
+    blend_only = cfg.stratum_blend_only
+    by_purpose = cfg.stratum_blend_only_by_purpose or {}
+    if purpose and purpose != "default" and purpose in by_purpose:
+        blend_only = by_purpose[purpose]
+    if blend_only:
+        if stratum not in frozenset(blend_only):
+            return 0.0
+    raw = (cfg.stratum_blends or {}).get(stratum)
+    if raw is None:
+        return float(cfg.ml_calibrate_blend)
+    return float(raw)
 
 
 def _weights_from_dict(raw: dict[str, Any], defaults: AestheticWeights) -> AestheticWeights:
@@ -125,9 +190,38 @@ def aesthetic_from_dict(raw: dict[str, Any]) -> AestheticConfig:
     weights = _weights_from_dict(weights_raw, defaults.weights)
     presets_raw = raw.get("presets") if isinstance(raw.get("presets"), dict) else {}
     presets = _presets_from_dict(presets_raw, defaults.presets)
+    learned_raw = raw.get("learned") if isinstance(raw.get("learned"), dict) else {}
+    mllm_raw = raw.get("mllm") if isinstance(raw.get("mllm"), dict) else {}
+    stratum_raw = raw.get("stratum_blends") if isinstance(raw.get("stratum_blends"), dict) else {}
     source = str(raw.get("source", defaults.source)).strip().lower()
     if source not in ("rules", "rules+ml", "mllm"):
         source = defaults.source
+    mllm_defaults = defaults.mllm
+    shortlist_raw = mllm_raw.get("shortlist_purposes", mllm_raw.get("shortlistPurposes"))
+    if isinstance(shortlist_raw, list):
+        shortlist_purposes = tuple(str(x) for x in shortlist_raw if x)
+    else:
+        shortlist_purposes = mllm_defaults.shortlist_purposes
+    stratum_blends = dict(DEFAULT_STRATUM_BLENDS)
+    stratum_blends.update({str(k): float(v) for k, v in stratum_raw.items()})
+    blend_only_raw = raw.get("stratum_blend_only", raw.get("stratumBlendOnly"))
+    if isinstance(blend_only_raw, list):
+        stratum_blend_only = tuple(str(x) for x in blend_only_raw if x)
+    else:
+        stratum_blend_only = defaults.stratum_blend_only
+    blend_only_by_purpose_raw = raw.get(
+        "stratum_blend_only_by_purpose",
+        raw.get("stratumBlendOnlyByPurpose"),
+    )
+    stratum_blend_only_by_purpose: dict[str, tuple[str, ...]] = dict(
+        defaults.stratum_blend_only_by_purpose
+    )
+    if isinstance(blend_only_by_purpose_raw, dict):
+        stratum_blend_only_by_purpose = {
+            str(k): tuple(str(x) for x in v if x)
+            for k, v in blend_only_by_purpose_raw.items()
+            if isinstance(v, list)
+        }
     return AestheticConfig(
         enabled=bool(raw.get("enabled", defaults.enabled)),
         source=source,
@@ -136,6 +230,67 @@ def aesthetic_from_dict(raw: dict[str, Any]) -> AestheticConfig:
         ml_calibrate=bool(raw.get("ml_calibrate", raw.get("mlCalibrate", defaults.ml_calibrate))),
         ml_calibrate_blend=float(
             raw.get("ml_calibrate_blend", raw.get("mlCalibrateBlend", defaults.ml_calibrate_blend))
+        ),
+        learned_metric=str(
+            learned_raw.get("metric", raw.get("learned_metric", raw.get("learnedMetric", defaults.learned_metric)))
+        ),
+        learned_allow_cpu=bool(
+            learned_raw.get(
+                "allow_cpu",
+                raw.get("learned_allow_cpu", raw.get("learnedAllowCpu", defaults.learned_allow_cpu)),
+            )
+        ),
+        learned_device=(
+            str(learned_raw["device"]).strip()
+            if learned_raw.get("device")
+            else raw.get("learned_device", raw.get("learnedDevice"))
+        ),
+        warm_learned_on_ingest=bool(
+            raw.get(
+                "warm_learned_on_ingest",
+                raw.get("warmLearnedOnIngest", defaults.warm_learned_on_ingest),
+            )
+        ),
+        use_stratum_blend=bool(
+            raw.get("use_stratum_blend", raw.get("useStratumBlend", defaults.use_stratum_blend))
+        ),
+        stratum_blends=stratum_blends,
+        stratum_blend_only=stratum_blend_only,
+        stratum_blend_only_by_purpose=stratum_blend_only_by_purpose,
+        use_album_relative=bool(
+            raw.get("use_album_relative", raw.get("useAlbumRelative", defaults.use_album_relative))
+        ),
+        album_relative_percentile=float(
+            raw.get(
+                "album_relative_percentile",
+                raw.get("albumRelativePercentile", defaults.album_relative_percentile),
+            )
+        ),
+        album_relative_lo=float(
+            raw.get("album_relative_lo", raw.get("albumRelativeLo", defaults.album_relative_lo))
+        ),
+        album_relative_hi=float(
+            raw.get("album_relative_hi", raw.get("albumRelativeHi", defaults.album_relative_hi))
+        ),
+        portrait_lite_enabled=bool(
+            raw.get("portrait_lite_enabled", raw.get("portraitLiteEnabled", defaults.portrait_lite_enabled))
+        ),
+        mllm=AestheticMllmConfig(
+            enabled=bool(mllm_raw.get("enabled", mllm_defaults.enabled)),
+            provider=(str(mllm_raw["provider"]).strip() if mllm_raw.get("provider") else None),
+            model=str(mllm_raw.get("model", mllm_defaults.model)),
+            shortlist_purposes=shortlist_purposes,
+            shortlist_k=int(mllm_raw.get("shortlist_k", mllm_raw.get("shortlistK", mllm_defaults.shortlist_k))),
+            max_calls_per_trip=int(
+                mllm_raw.get("max_calls_per_trip", mllm_raw.get("maxCallsPerTrip", mllm_defaults.max_calls_per_trip))
+            ),
+            blend=float(mllm_raw.get("blend", mllm_defaults.blend)),
+            temperature=float(mllm_raw.get("temperature", mllm_defaults.temperature)),
+            cache=bool(mllm_raw.get("cache", mllm_defaults.cache)),
+            rubric=str(mllm_raw.get("rubric", mllm_defaults.rubric)),
+            image_max_edge=int(
+                mllm_raw.get("image_max_edge", mllm_raw.get("imageMaxEdge", mllm_defaults.image_max_edge))
+            ),
         ),
         use_purpose_presets=bool(
             raw.get("use_purpose_presets", raw.get("usePurposePresets", defaults.use_purpose_presets))

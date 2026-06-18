@@ -1,0 +1,250 @@
+{
+  "tripDir": "C:\\Users\\xiafe\\Projects\\travelogue\\trips\\demo-fc8b3a5c08",
+  "metric": "nima",
+  "scored": true,
+  "rulesBaseline": {
+    "sampleCount": 54,
+    "srcc": -0.0036
+  },
+  "stratumCalibration": {
+    "strata": {
+      "general": {
+        "sampleCount": 9,
+        "skipped": false,
+        "bestBlend": 0.0,
+        "bestSrcc": 0.1917,
+        "grid": [
+          {
+            "blend": 0.0,
+            "sampleCount": 9,
+            "srcc": 0.1917
+          },
+          {
+            "blend": 0.05,
+            "sampleCount": 9,
+            "srcc": 0.1917
+          },
+          {
+            "blend": 0.1,
+            "sampleCount": 9,
+            "srcc": 0.1917
+          },
+          {
+            "blend": 0.15,
+            "sampleCount": 9,
+            "srcc": 0.073
+          },
+          {
+            "blend": 0.2,
+            "sampleCount": 9,
+            "srcc": 0.0
+          },
+          {
+            "blend": 0.25,
+            "sampleCount": 9,
+            "srcc": -0.1187
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 9,
+            "srcc": -0.1187
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 9,
+            "srcc": -0.2373
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 9,
+            "srcc": -0.2373
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 9,
+            "srcc": -0.356
+          },
+          {
+            "blend": 0.5,
+            "sampleCount": 9,
+            "srcc": -0.429
+          },
+          {
+            "blend": 0.55,
+            "sampleCount": 9,
+            "srcc": -0.429
+          },
+          {
+            "blend": 0.6,
+            "sampleCount": 9,
+            "srcc": -0.4308
+          }
+        ]
+      },
+      "group": {
+        "sampleCount": 30,
+        "skipped": false,
+        "bestBlend": 0.35,
+        "bestSrcc": 0.1634,
+        "grid": [
+          {
+            "blend": 0.0,
+            "sampleCount": 30,
+            "srcc": 0.0936
+          },
+          {
+            "blend": 0.05,
+            "sampleCount": 30,
+            "srcc": 0.0955
+          },
+          {
+            "blend": 0.1,
+            "sampleCount": 30,
+            "srcc": 0.1001
+          },
+          {
+            "blend": 0.15,
+            "sampleCount": 30,
+            "srcc": 0.0845
+          },
+          {
+            "blend": 0.2,
+            "sampleCount": 30,
+            "srcc": 0.0936
+          },
+          {
+            "blend": 0.25,
+            "sampleCount": 30,
+            "srcc": 0.101
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 30,
+            "srcc": 0.1542
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 30,
+            "srcc": 0.1634
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 30,
+            "srcc": 0.1542
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 30,
+            "srcc": 0.1561
+          },
+          {
+            "blend": 0.5,
+            "sampleCount": 30,
+            "srcc": 0.1414
+          },
+          {
+            "blend": 0.55,
+            "sampleCount": 30,
+            "srcc": 0.1542
+          },
+          {
+            "blend": 0.6,
+            "sampleCount": 30,
+            "srcc": 0.1285
+          }
+        ]
+      },
+      "person": {
+        "sampleCount": 15,
+        "skipped": false,
+        "bestBlend": 0.6,
+        "bestSrcc": 0.5765,
+        "grid": [
+          {
+            "blend": 0.0,
+            "sampleCount": 15,
+            "srcc": -0.1743
+          },
+          {
+            "blend": 0.05,
+            "sampleCount": 15,
+            "srcc": -0.109
+          },
+          {
+            "blend": 0.1,
+            "sampleCount": 15,
+            "srcc": -0.0297
+          },
+          {
+            "blend": 0.15,
+            "sampleCount": 15,
+            "srcc": 0.0099
+          },
+          {
+            "blend": 0.2,
+            "sampleCount": 15,
+            "srcc": 0.0099
+          },
+          {
+            "blend": 0.25,
+            "sampleCount": 15,
+            "srcc": 0.1149
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 15,
+            "srcc": 0.2457
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 15,
+            "srcc": 0.4041
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 15,
+            "srcc": 0.3923
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 15,
+            "srcc": 0.4457
+          },
+          {
+            "blend": 0.5,
+            "sampleCount": 15,
+            "srcc": 0.4461
+          },
+          {
+            "blend": 0.55,
+            "sampleCount": 15,
+            "srcc": 0.5374
+          },
+          {
+            "blend": 0.6,
+            "sampleCount": 15,
+            "srcc": 0.5765
+          }
+        ]
+      }
+    },
+    "recommendedBlends": {
+      "group": 0.35,
+      "person": 0.6,
+      "landscape": 0.35,
+      "food": 0.3,
+      "general": 0.0
+    },
+    "fullCorpus": {
+      "sampleCount": 54,
+      "srcc": 0.2177
+    },
+    "uniformBlend": {
+      "sampleCount": 54,
+      "srcc": 0.1173
+    },
+    "deltaVsUniform": 0.1004,
+    "baselineRulesSrcc": -0.0036,
+    "deltaVsBaseline": 0.2213
+  }
+}

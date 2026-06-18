@@ -23,6 +23,7 @@ from travelogue.web.studio_handlers import (
 from travelogue.web.studio_handlers.common import (
     bind_studio_trip,
     match_aesthetic,
+    match_aesthetic_preference,
     match_bento_preview,
     match_entry,
     match_trip_api,
@@ -299,6 +300,10 @@ class StudioMixin:
         moment_patch_id = match_trip_moment_patch(path)
         if moment_patch_id is not None:
             trip_handlers.handle_patch_moment(self, moment_patch_id)
+            return True
+        pref_trip_id = match_aesthetic_preference(path)
+        if pref_trip_id is not None:
+            trip_handlers.handle_patch_stratum_preference(self, pref_trip_id)
             return True
         return False
 

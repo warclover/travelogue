@@ -1,0 +1,37 @@
+{
+  "recordId": "aesthetic-alignment-g2-dogfood.demo-2025-6",
+  "date": "2026-06-18",
+  "tripId": "demo-2025-6",
+  "configStage": "G1+G2",
+  "configFile": "config.yaml",
+  "before": {
+    "coverAssetId": "asset-102",
+    "learnedAssets": 0,
+    "mllmScored": 0
+  },
+  "afterCurate": {
+    "coverAssetId": "asset-102",
+    "coverChanged": false,
+    "learnedAssets": 125,
+    "aestheticSourceRulesMl": 125,
+    "mllmScored": 8,
+    "mllmCritiques": 8,
+    "mllmCacheFile": "trips/demo-2025-6/cache/aesthetic-mllm.json"
+  },
+  "mllmShortlist": [
+    {"assetId": "asset-040", "purpose": "cover", "mllmScore": 0.85},
+    {"assetId": "asset-045", "purpose": "cover", "mllmScore": 0.75},
+    {"assetId": "asset-104", "purpose": "cover", "mllmScore": 0.92},
+    {"assetId": "asset-114", "purpose": "cover", "mllmScore": 0.85},
+    {"assetId": "asset-125", "purpose": "cover", "mllmScore": 0.7},
+    {"assetId": "asset-062", "purpose": "hero", "mllmScore": 0.85},
+    {"assetId": "asset-105", "purpose": "hero", "mllmScore": 0.9},
+    {"assetId": "asset-064", "purpose": "moment", "mllmScore": 0.85}
+  ],
+  "notes": [
+    "Cover unchanged after G1+G2 curate; MLLM top cover candidate asset-104 (0.92) differs from picked asset-102.",
+    "Render: python -m travelogue render demo-2025-6 --web-layout screens --no-validate",
+    "View: http://127.0.0.1:8766/demo-2025-6/index.html",
+    "Fixed portrait_lite base → signals.subjectClarityBase; schema allows AA string signals."
+  ]
+}

@@ -1174,7 +1174,13 @@
                 },
                 "signals": {
                   "type": "object",
-                  "additionalProperties": { "type": ["number", "null"] }
+                  "description": "Numeric CV/ML signals; AA may add string metadata (learnedMetric, mllmModel, mllmShortlist).",
+                  "properties": {
+                    "learnedMetric": { "type": "string" },
+                    "mllmModel": { "type": "string" },
+                    "mllmShortlist": { "type": "string" }
+                  },
+                  "additionalProperties": { "type": ["number", "string", "null"] }
                 },
                 "critique": { "type": ["string", "null"] }
               }
@@ -1182,6 +1188,19 @@
             "lowResSuspected": { "type": "boolean" },
             "faceCount": { "type": "integer", "minimum": 0 },
             "faceRatio": { "type": "number", "minimum": 0, "maximum": 1 },
+            "portraitEyesOpenScore": { "type": "number", "minimum": 0, "maximum": 1 },
+            "portrait": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "version": { "type": "string" },
+                "backend": { "type": "string" },
+                "eyesOpenScore": { "type": "number", "minimum": 0, "maximum": 1 },
+                "faceSharpness": { "type": "number", "minimum": 0 },
+                "eyeFocusRaw": { "type": "number", "minimum": 0 },
+                "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+              }
+            },
             "cullBranch": {
               "type": "string",
               "enum": ["portrait", "landscape", "gray"],

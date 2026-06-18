@@ -1,0 +1,164 @@
+{
+  "version": "1",
+  "tripId": "demo-2025-6",
+  "pairCount": 6,
+  "pairsPerPurpose": 6,
+  "purposes": [
+    "hero"
+  ],
+  "seed": 46,
+  "pairs": [
+    {
+      "pairId": "hero-006",
+      "purpose": "hero",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-086",
+        "displayFile": "assets/asset-086-w2400.webp",
+        "score": 0.4887
+      },
+      "optionRight": {
+        "assetId": "asset-013",
+        "displayFile": "assets/asset-013-w2400.webp",
+        "score": 0.5132
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-002",
+      "purpose": "hero",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-114",
+        "displayFile": "assets/asset-114-w2400.webp",
+        "score": 0.5938
+      },
+      "optionRight": {
+        "assetId": "asset-038",
+        "displayFile": "assets/asset-038-w2400.webp",
+        "score": 0.4841
+      },
+      "leftRole": "aligned",
+      "rightRole": "rules",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-003",
+      "purpose": "hero",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-086",
+        "displayFile": "assets/asset-086-w2400.webp",
+        "score": 0.4887
+      },
+      "optionRight": {
+        "assetId": "asset-106",
+        "displayFile": "assets/asset-106-w2400.webp",
+        "score": 0.5111
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-004",
+      "purpose": "hero",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-038",
+        "displayFile": "assets/asset-038-w2400.webp",
+        "score": 0.5235
+      },
+      "optionRight": {
+        "assetId": "asset-071",
+        "displayFile": "assets/asset-071-w2400.webp",
+        "score": 0.557
+      },
+      "leftRole": "aligned",
+      "rightRole": "rules",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-001",
+      "purpose": "hero",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-008",
+        "displayFile": "assets/asset-008-w2400.webp",
+        "score": 0.5109
+      },
+      "optionRight": {
+        "assetId": "asset-061",
+        "displayFile": "assets/asset-061-w2400.webp",
+        "score": 0.4831
+      },
+      "leftRole": "aligned",
+      "rightRole": "rules",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-005",
+      "purpose": "hero",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-001",
+        "displayFile": "assets/asset-001-w2400.webp",
+        "score": 0.4853
+      },
+      "optionRight": {
+        "assetId": "asset-045",
+        "displayFile": "assets/asset-045-w2400.webp",
+        "score": 0.5423
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    }
+  ],
+  "topPicks": {
+    "hero": {
+      "rules": {
+        "assetId": "asset-071",
+        "displayFile": "assets/asset-071-w2400.webp",
+        "score": 0.557
+      },
+      "aligned": {
+        "assetId": "asset-114",
+        "displayFile": "assets/asset-114-w2400.webp",
+        "score": 0.5938
+      }
+    }
+  },
+  "exportedAt": "2026-06-18T10:49:47.366122+00:00",
+  "pilotConfig": {
+    "mlCalibrate": true,
+    "useStratumBlend": true,
+    "stratumBlendOnly": [
+      "landscape",
+      "person"
+    ],
+    "stratumBlendOnlyByPurpose": {
+      "hero": [
+        "landscape"
+      ]
+    },
+    "useAlbumRelative": true,
+    "stratumBlends": {
+      "group": 0.1,
+      "person": 0.6,
+      "landscape": 0.6,
+      "food": 0.35,
+      "general": 0.35
+    }
+  },
+  "previewUrl": "http://127.0.0.1:8766/demo-2025-6",
+  "notes": "东澳 hero 补评 · seed 46 · hero MLLM off + landscape-only blend"
+}

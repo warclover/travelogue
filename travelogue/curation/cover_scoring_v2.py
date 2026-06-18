@@ -312,6 +312,9 @@ def _person_feature(
         penalty = params.person_demote_portrait_trip_penalty
     else:
         penalty = params.person_demote_penalty
+    from travelogue.curation.portrait_subject_clarity import portrait_cover_defect_penalty
+
+    penalty = min(1.0, penalty + portrait_cover_defect_penalty(asset))
     return max(0.0, 1.0 - penalty)
 
 
@@ -398,6 +401,27 @@ def extract_cover_features(
     return features
 
 
+def _mllm_cover_logit_boost(asset: dict) -> float:
+    """GAP-08 · small logit boost when MLLM scored asset for cover shortlist."""
+    from travelogue.curation.aesthetic_score import asset_aesthetic
+
+    ae = asset_aesthetic(asset)
+    if not ae:
+        return 0.0
+    sig = ae.get("signals")
+    if not isinstance(sig, dict):
+        return 0.0
+    if str(sig.get("mllmShortlist") or "") != "cover":
+        return 0.0
+    score = sig.get("mllmScore")
+    if score is None:
+        return 0.0
+    try:
+        return 0.12 * max(0.0, min(1.0, float(score)))
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def cover_logit_v2(
     asset: dict,
     export_layout: str,
@@ -432,6 +456,7 @@ def cover_logit_v2(
             logit -= w * (1.0 - feat)
         else:
             logit += w * feat
+    logit += _mllm_cover_logit_boost(asset)
     return logit
 
 
@@ -496,7 +521,27 @@ def hero_logit_v2(
         pool,
         params=hero_params,
         aesthetic_enabled=aesthetic_enabled,
+    ) - _hero_portrait_defect_logit_penalty(asset)
+
+
+_HERO_PORTRAIT_DEFECT_LOGIT_SCALE = 3.0
+
+
+def _hero_portrait_defect_logit_penalty(asset: dict) -> float:
+    """Demote landscape hero candidates with closed eyes / blur faces (P3-3)."""
+    from travelogue.curation.aesthetic_blind_review import (
+        PORTRAIT_REVIEW_STRATA,
+        review_stratum_for_asset,
     )
+    from travelogue.curation.cover_scoring_params import asset_has_person_tag
+    from travelogue.curation.portrait_subject_clarity import portrait_cover_defect_penalty
+
+    if not asset_has_person_tag(asset) and review_stratum_for_asset(asset) not in PORTRAIT_REVIEW_STRATA:
+        return 0.0
+    defect = portrait_cover_defect_penalty(asset)
+    if defect <= 0:
+        return 0.0
+    return defect * _HERO_PORTRAIT_DEFECT_LOGIT_SCALE
 
 
 def hero_score_v2(

@@ -1,0 +1,44 @@
+{
+  "version": "1",
+  "exportedAt": "2026-06-18T11:00:24.785538+00:00",
+  "purposes": [
+    "cover",
+    "hero"
+  ],
+  "pairsPerPurpose": 6,
+  "suffix": "person-pilot-v3",
+  "notes": "hero 调权 · seed 46 全量（与 hero-recheck 同 seed）",
+  "trips": {
+    "demo-2025-6": {
+      "pairCount": 12,
+      "topPicks": {
+        "cover": {
+          "rules": {
+            "assetId": "asset-114",
+            "displayFile": "assets/asset-114-w2400.webp",
+            "score": 0.5555
+          },
+          "aligned": {
+            "assetId": "asset-104",
+            "displayFile": "assets/asset-104-w2400.webp",
+            "score": 0.886
+          }
+        },
+        "hero": {
+          "rules": {
+            "assetId": "asset-071",
+            "displayFile": "assets/asset-071-w2400.webp",
+            "score": 0.557
+          },
+          "aligned": {
+            "assetId": "asset-114",
+            "displayFile": "assets/asset-114-w2400.webp",
+            "score": 0.5938
+          }
+        }
+      },
+      "json": "docs/acceptance-records/purpose-pairwise.demo-2025-6.person-pilot-v3.json",
+      "html": "docs/acceptance-records/purpose-pairwise.demo-2025-6.person-pilot-v3.html"
+    }
+  }
+}

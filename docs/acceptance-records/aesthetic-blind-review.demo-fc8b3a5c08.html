@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>审美盲评</title>
+  <style>
+    :root {
+      --bg: #0f1115; --panel: #1a1d24; --text: #e8eaed; --muted: #9aa0a6;
+      --accent: #6ea8fe; --ok: #3dd68c; --border: #2a2f3a;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 16px 20px 32px; }
+    header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    h1 { font-size: 1.1rem; font-weight: 600; margin: 0; }
+    .meta { color: var(--muted); font-size: 0.85rem; }
+    .progress { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; margin: 8px 0 16px; }
+    .progress > i { display: block; height: 100%; width: 0%; background: var(--ok); transition: width .2s; }
+    .stage { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .img-box { display: flex; align-items: center; justify-content: center; min-height: 52vh; background: #000; border-radius: 8px; overflow: hidden; }
+    .img-box img { max-width: 100%; max-height: 70vh; object-fit: contain; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+    button, .score-btn {
+      border: 1px solid var(--border); background: #252932; color: var(--text);
+      padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.95rem;
+    }
+    button:hover, .score-btn:hover { border-color: var(--accent); }
+    button.primary { background: #2b4a7a; border-color: #3d6cb9; }
+    button.primary:hover { background: #35598f; }
+    .score-btn.selected { background: #2d5a3d; border-color: var(--ok); }
+    .score-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .hint { color: var(--muted); font-size: 0.82rem; margin-top: 10px; line-height: 1.5; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #252932; font-size: 0.75rem; color: var(--muted); }
+    @media (max-width: 640px) { .img-box { min-height: 40vh; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 id="title">审美盲评</h1>
+      <div class="meta" id="counter">—</div>
+    </header>
+    <div class="progress"><i id="bar"></i></div>
+    <div class="stage">
+      <div class="meta" style="margin-bottom:8px">
+        <span class="badge" id="stratum">—</span>
+        <span id="assetId" style="margin-left:8px"></span>
+      </div>
+      <div class="img-box"><img id="photo" alt="review" /></div>
+      <div class="score-row" id="scores"></div>
+      <div class="toolbar">
+        <button type="button" id="prev">← 上一张</button>
+        <button type="button" id="next">下一张 →</button>
+        <button type="button" id="export" class="primary">下载标签 JSON</button>
+      </div>
+      <p class="hint">
+        键盘：<kbd>1</kbd>–<kbd>5</kbd> 打分 · <kbd>←</kbd>/<kbd>→</kbd> 切换 · 进度自动保存在本机浏览器。<br/>
+        1=废片/明显不好 · 3=一般可用 · 5=封面级好片。盲评时不显示算法分数。
+      </p>
+    </div>
+  </div>
+  <script id="review-data" type="application/json">{"title": "审美盲评", "exportedAt": "2026-06-18T06:46:28.159503+00:00", "sampleCount": 54, "tripBases": {"demo-fc8b3a5c08": "http://127.0.0.1:8766/demo-fc8b3a5c08"}, "rows": [{"displayOrder": 1, "assetId": "asset-176", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-176-w3200.webp", "stratum": "person", "predictedOverall": 0.5529, "predictedCover": 0.625275, "predictedHero": 0.649942, "predictedMoment": 0.6106520000000001}, {"displayOrder": 2, "assetId": "asset-148", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-148-w3200.webp", "stratum": "group", "predictedOverall": 0.541, "predictedCover": 0.53356, "predictedHero": 0.5808070000000001, "predictedMoment": 0.5891660000000001}, {"displayOrder": 3, "assetId": "asset-032", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-032-w3200.webp", "stratum": "person", "predictedOverall": 0.55, "predictedCover": 0.503775, "predictedHero": 0.5737450000000001, "predictedMoment": 0.5769920000000001}, {"displayOrder": 4, "assetId": "asset-036", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-036-w3200.webp", "stratum": "person", "predictedOverall": 0.5776, "predictedCover": 0.49583499999999997, "predictedHero": 0.561943, "predictedMoment": 0.571524}, {"displayOrder": 5, "assetId": "asset-090", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-090-w3200.webp", "stratum": "group", "predictedOverall": 0.5934, "predictedCover": 0.60371, "predictedHero": 0.640117, "predictedMoment": 0.6592600000000001}, {"displayOrder": 6, "assetId": "asset-048", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-048-w3200.webp", "stratum": "general", "predictedOverall": 0.5522, "predictedCover": 0.5318, "predictedHero": 0.588475, "predictedMoment": 0.6057400000000001}, {"displayOrder": 7, "assetId": "asset-083", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-083-w3200.webp", "stratum": "group", "predictedOverall": 0.4979, "predictedCover": 0.497275, "predictedHero": 0.5384140000000001, "predictedMoment": 0.568748}, {"displayOrder": 8, "assetId": "asset-184", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-184-w3200.webp", "stratum": "person", "predictedOverall": 0.5744, "predictedCover": 0.593685, "predictedHero": 0.6265900000000001, "predictedMoment": 0.6061940000000001}, {"displayOrder": 9, "assetId": "asset-039", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-039-w3200.webp", "stratum": "group", "predictedOverall": 0.447, "predictedCover": 0.43037, "predictedHero": 0.460051, "predictedMoment": 0.45658600000000005}, {"displayOrder": 10, "assetId": "asset-166", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-166-w3200.webp", "stratum": "group", "predictedOverall": 0.5327, "predictedCover": 0.522995, "predictedHero": 0.558877, "predictedMoment": 0.59208}, {"displayOrder": 11, "assetId": "asset-197", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-197-w3200.webp", "stratum": "group", "predictedOverall": 0.49, "predictedCover": 0.456325, "predictedHero": 0.488272, "predictedMoment": 0.483986}, {"displayOrder": 12, "assetId": "asset-159", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-159-w3200.webp", "stratum": "group", "predictedOverall": 0.5356, "predictedCover": 0.55266, "predictedHero": 0.573319, "predictedMoment": 0.5411020000000001}, {"displayOrder": 13, "assetId": "asset-130", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-130-w3200.webp", "stratum": "group", "predictedOverall": 0.5702, "predictedCover": 0.59149, "predictedHero": 0.608982, "predictedMoment": 0.624936}, {"displayOrder": 14, "assetId": "asset-165", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-165-w3200.webp", "stratum": "general", "predictedOverall": 0.5862, "predictedCover": 0.62098, "predictedHero": 0.6467620000000001, "predictedMoment": 0.6180180000000001}, {"displayOrder": 15, "assetId": "asset-172", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-172-w3200.webp", "stratum": "person", "predictedOverall": 0.5404, "predictedCover": 0.538395, "predictedHero": 0.574758, "predictedMoment": 0.5512520000000001}, {"displayOrder": 16, "assetId": "asset-189", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-189-w3200.webp", "stratum": "group", "predictedOverall": 0.5068, "predictedCover": 0.459235, "predictedHero": 0.48139200000000004, "predictedMoment": 0.46811200000000003}, {"displayOrder": 17, "assetId": "asset-011", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-011-w3200.webp", "stratum": "group", "predictedOverall": 0.5207, "predictedCover": 0.497085, "predictedHero": 0.549929, "predictedMoment": 0.551802}, {"displayOrder": 18, "assetId": "asset-177", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-177-w3200.webp", "stratum": "general", "predictedOverall": 0.5987, "predictedCover": 0.61112, "predictedHero": 0.608955, "predictedMoment": 0.570296}, {"displayOrder": 19, "assetId": "asset-133", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-133-w3200.webp", "stratum": "group", "predictedOverall": 0.5404, "predictedCover": 0.575745, "predictedHero": 0.5936490000000001, "predictedMoment": 0.5968160000000001}, {"displayOrder": 20, "assetId": "asset-185", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-185-w3200.webp", "stratum": "general", "predictedOverall": 0.4953, "predictedCover": 0.45893, "predictedHero": 0.480354, "predictedMoment": 0.47652200000000006}, {"displayOrder": 21, "assetId": "asset-099", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-099-w3200.webp", "stratum": "group", "predictedOverall": 0.5318, "predictedCover": 0.540855, "predictedHero": 0.542887, "predictedMoment": 0.521146}, {"displayOrder": 22, "assetId": "asset-075", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-075-w3200.webp", "stratum": "person", "predictedOverall": 0.5403, "predictedCover": 0.56807, "predictedHero": 0.604207, "predictedMoment": 0.617468}, {"displayOrder": 23, "assetId": "asset-097", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-097-w3200.webp", "stratum": "group", "predictedOverall": 0.4915, "predictedCover": 0.47263, "predictedHero": 0.486842, "predictedMoment": 0.47228400000000004}, {"displayOrder": 24, "assetId": "asset-012", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-012-w3200.webp", "stratum": "person", "predictedOverall": 0.568, "predictedCover": 0.538555, "predictedHero": 0.597901, "predictedMoment": 0.6188400000000001}, {"displayOrder": 25, "assetId": "asset-010", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-010-w3200.webp", "stratum": "group", "predictedOverall": 0.5484, "predictedCover": 0.536635, "predictedHero": 0.585395, "predictedMoment": 0.616256}, {"displayOrder": 26, "assetId": "asset-014", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-014-w3200.webp", "stratum": "group", "predictedOverall": 0.5229, "predictedCover": 0.49315, "predictedHero": 0.506859, "predictedMoment": 0.499842}, {"displayOrder": 27, "assetId": "asset-002", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-002-w3200.webp", "stratum": "group", "predictedOverall": 0.5434, "predictedCover": 0.50351, "predictedHero": 0.540585, "predictedMoment": 0.55508}, {"displayOrder": 28, "assetId": "asset-034", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-034-w3200.webp", "stratum": "general", "predictedOverall": 0.5757, "predictedCover": 0.5469849999999999, "predictedHero": 0.588912, "predictedMoment": 0.58774}, {"displayOrder": 29, "assetId": "asset-072", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-072-w3200.webp", "stratum": "group", "predictedOverall": 0.6134, "predictedCover": 0.646015, "predictedHero": 0.679105, "predictedMoment": 0.6969380000000001}, {"displayOrder": 30, "assetId": "asset-058", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-058-w3200.webp", "stratum": "person", "predictedOverall": 0.5362, "predictedCover": 0.529895, "predictedHero": 0.596758, "predictedMoment": 0.5968380000000001}, {"displayOrder": 31, "assetId": "asset-160", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-160-w3200.webp", "stratum": "general", "predictedOverall": 0.5568, "predictedCover": 0.544335, "predictedHero": 0.5882580000000001, "predictedMoment": 0.5729460000000001}, {"displayOrder": 32, "assetId": "asset-124", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-124-w3200.webp", "stratum": "group", "predictedOverall": 0.5023, "predictedCover": 0.46171999999999996, "predictedHero": 0.518762, "predictedMoment": 0.518392}, {"displayOrder": 33, "assetId": "asset-151", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-151-w3200.webp", "stratum": "group", "predictedOverall": 0.5051, "predictedCover": 0.46991, "predictedHero": 0.507121, "predictedMoment": 0.51086}, {"displayOrder": 34, "assetId": "asset-196", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-196-w3200.webp", "stratum": "person", "predictedOverall": 0.5857, "predictedCover": 0.61422, "predictedHero": 0.653104, "predictedMoment": 0.64591}, {"displayOrder": 35, "assetId": "asset-155", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-155-w3200.webp", "stratum": "person", "predictedOverall": 0.4763, "predictedCover": 0.466175, "predictedHero": 0.493134, "predictedMoment": 0.47760400000000003}, {"displayOrder": 36, "assetId": "asset-033", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-033-w3200.webp", "stratum": "general", "predictedOverall": 0.5582, "predictedCover": 0.5303, "predictedHero": 0.5725720000000001, "predictedMoment": 0.5678960000000001}, {"displayOrder": 37, "assetId": "asset-046", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-046-w3200.webp", "stratum": "group", "predictedOverall": 0.5071, "predictedCover": 0.44478999999999996, "predictedHero": 0.49265600000000004, "predictedMoment": 0.509672}, {"displayOrder": 38, "assetId": "asset-135", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-135-w3200.webp", "stratum": "person", "predictedOverall": 0.5063, "predictedCover": 0.54002, "predictedHero": 0.591395, "predictedMoment": 0.624876}, {"displayOrder": 39, "assetId": "asset-191", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-191-w3200.webp", "stratum": "general", "predictedOverall": 0.5764, "predictedCover": 0.58519, "predictedHero": 0.621996, "predictedMoment": 0.616222}, {"displayOrder": 40, "assetId": "asset-094", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-094-w3200.webp", "stratum": "group", "predictedOverall": 0.5092, "predictedCover": 0.49095, "predictedHero": 0.537575, "predictedMoment": 0.563154}, {"displayOrder": 41, "assetId": "asset-109", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-109-w3200.webp", "stratum": "group", "predictedOverall": 0.5332, "predictedCover": 0.5513699999999999, "predictedHero": 0.583061, "predictedMoment": 0.60389}, {"displayOrder": 42, "assetId": "asset-192", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-192-w3200.webp", "stratum": "person", "predictedOverall": 0.5607, "predictedCover": 0.530045, "predictedHero": 0.6012810000000001, "predictedMoment": 0.608}, {"displayOrder": 43, "assetId": "asset-044", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-044-w3200.webp", "stratum": "group", "predictedOverall": 0.5282, "predictedCover": 0.43288499999999996, "predictedHero": 0.48559, "predictedMoment": 0.5050760000000001}, {"displayOrder": 44, "assetId": "asset-035", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-035-w3200.webp", "stratum": "person", "predictedOverall": 0.522, "predictedCover": 0.48800499999999997, "predictedHero": 0.5305489999999999, "predictedMoment": 0.5469820000000001}, {"displayOrder": 45, "assetId": "asset-149", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-149-w3200.webp", "stratum": "person", "predictedOverall": 0.5659, "predictedCover": 0.573875, "predictedHero": 0.628105, "predictedMoment": 0.6154580000000001}, {"displayOrder": 46, "assetId": "asset-080", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-080-w3200.webp", "stratum": "group", "predictedOverall": 0.5066, "predictedCover": 0.49292499999999995, "predictedHero": 0.53564, "predictedMoment": 0.57872}, {"displayOrder": 47, "assetId": "asset-164", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-164-w3200.webp", "stratum": "group", "predictedOverall": 0.574, "predictedCover": 0.56504, "predictedHero": 0.577807, "predictedMoment": 0.557192}, {"displayOrder": 48, "assetId": "asset-022", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-022-w3200.webp", "stratum": "group", "predictedOverall": 0.4811, "predictedCover": 0.42665, "predictedHero": 0.44713, "predictedMoment": 0.46253200000000005}, {"displayOrder": 49, "assetId": "asset-051", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-051-w3200.webp", "stratum": "group", "predictedOverall": 0.548, "predictedCover": 0.54087, "predictedHero": 0.585071, "predictedMoment": 0.5888}, {"displayOrder": 50, "assetId": "asset-110", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-110-w3200.webp", "stratum": "group", "predictedOverall": 0.4757, "predictedCover": 0.44971, "predictedHero": 0.443025, "predictedMoment": 0.448886}, {"displayOrder": 51, "assetId": "asset-091", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-091-w3200.webp", "stratum": "general", "predictedOverall": 0.547, "predictedCover": 0.5219499999999999, "predictedHero": 0.578657, "predictedMoment": 0.589618}, {"displayOrder": 52, "assetId": "asset-181", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-181-w3200.webp", "stratum": "group", "predictedOverall": 0.5815, "predictedCover": 0.562595, "predictedHero": 0.589716, "predictedMoment": 0.5802240000000001}, {"displayOrder": 53, "assetId": "asset-123", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-123-w3200.webp", "stratum": "group", "predictedOverall": 0.5072, "predictedCover": 0.488645, "predictedHero": 0.505904, "predictedMoment": 0.5028300000000001}, {"displayOrder": 54, "assetId": "asset-008", "tripId": "demo-fc8b3a5c08", "displayFile": "assets/asset-008-w3200.webp", "stratum": "person", "predictedOverall": 0.5212, "predictedCover": 0.480825, "predictedHero": 0.5372720000000001, "predictedMoment": 0.5412880000000001}]}</script>
+  <script>
+    const DATA = JSON.parse(document.getElementById("review-data").textContent);
+    const STORAGE_KEY = "aesthetic-blind-docs\\acceptance-records\\aesthetic-alignment-corpus.demo-fc8b3a5c08.json-42";
+    const SCORE_LABELS = {1:"废片",2:"偏弱",3:"一般",4:"好",5:"很好"};
+    let index = 0;
+    let scores = {};
+
+    function loadScores() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) scores = JSON.parse(raw);
+      } catch (e) { scores = {}; }
+    }
+    function saveScores() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+      updateProgress();
+    }
+    function imageUrl(row) {
+      const base = (DATA.tripBases && DATA.tripBases[row.tripId]) || "";
+      const file = (row.displayFile || "").replace(/^\//, "");
+      if (base) return base.replace(/\/$/, "") + "/" + file;
+      return file;
+    }
+    function ratedCount() {
+      return DATA.rows.filter(r => scores[r.assetId] != null).length;
+    }
+    function updateProgress() {
+      const n = ratedCount();
+      const total = DATA.rows.length;
+      document.getElementById("bar").style.width = (total ? (100 * n / total) : 0) + "%";
+      document.getElementById("counter").textContent = `已评 ${n} / ${total} · 第 ${index + 1} 张`;
+    }
+    function renderScores() {
+      const row = DATA.rows[index];
+      const box = document.getElementById("scores");
+      box.innerHTML = "";
+      for (let s = 1; s <= 5; s++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "score-btn" + (scores[row.assetId] === s ? " selected" : "");
+        btn.textContent = s + " · " + SCORE_LABELS[s];
+        btn.addEventListener("click", () => setScore(s, true));
+        box.appendChild(btn);
+      }
+    }
+    function showAt(i) {
+      index = Math.max(0, Math.min(DATA.rows.length - 1, i));
+      const row = DATA.rows[index];
+      document.getElementById("photo").src = imageUrl(row);
+      document.getElementById("stratum").textContent = row.stratum || "general";
+      document.getElementById("assetId").textContent = row.assetId || "";
+      renderScores();
+      updateProgress();
+    }
+    function setScore(s, advance) {
+      const row = DATA.rows[index];
+      scores[row.assetId] = s;
+      saveScores();
+      renderScores();
+      if (advance && index < DATA.rows.length - 1) showAt(index + 1);
+    }
+    function exportLabels() {
+      const rows = DATA.rows.map(r => ({
+        assetId: r.assetId,
+        tripId: r.tripId,
+        stratum: r.stratum,
+        displayFile: r.displayFile,
+        humanScore: scores[r.assetId] ?? null,
+        predictedOverall: r.predictedOverall ?? null,
+        predictedCover: r.predictedCover ?? null,
+        predictedHero: r.predictedHero ?? null,
+        predictedMoment: r.predictedMoment ?? null,
+      }));
+      const payload = {
+        version: "1",
+        frozen: false,
+        notes: "Exported from blind-review HTML · humanScore 1–5",
+        sourceExport: DATA.exportedAt,
+        rows,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "aesthetic-human-labels.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+    document.getElementById("prev").addEventListener("click", () => showAt(index - 1));
+    document.getElementById("next").addEventListener("click", () => showAt(index + 1));
+    document.getElementById("export").addEventListener("click", exportLabels);
+    document.addEventListener("keydown", (e) => {
+      if (e.key >= "1" && e.key <= "5") { setScore(Number(e.key), true); e.preventDefault(); }
+      if (e.key === "ArrowLeft") { showAt(index - 1); e.preventDefault(); }
+      if (e.key === "ArrowRight") { showAt(index + 1); e.preventDefault(); }
+    });
+    loadScores();
+    showAt(0);
+  </script>
+</body>
+</html>

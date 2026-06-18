@@ -1,0 +1,284 @@
+{
+  "version": "1",
+  "tripId": "demo-2025-6",
+  "pairCount": 12,
+  "pairsPerPurpose": 6,
+  "purposes": [
+    "cover",
+    "hero"
+  ],
+  "seed": 42,
+  "pairs": [
+    {
+      "pairId": "cover-001",
+      "purpose": "cover",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-001",
+        "displayFile": "assets/asset-001-w2400.webp",
+        "score": 0.5696
+      },
+      "optionRight": {
+        "assetId": "asset-100",
+        "displayFile": "assets/asset-100-w2400.webp",
+        "score": 0.5486
+      },
+      "leftRole": "aligned",
+      "rightRole": "rules",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "cover-002",
+      "purpose": "cover",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-120",
+        "displayFile": "assets/asset-120-w2400.webp",
+        "score": 0.5529
+      },
+      "optionRight": {
+        "assetId": "asset-045",
+        "displayFile": "assets/asset-045-w2400.webp",
+        "score": 0.5758
+      },
+      "leftRole": "aligned",
+      "rightRole": "rules",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "cover-006",
+      "purpose": "cover",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-120",
+        "displayFile": "assets/asset-120-w2400.webp",
+        "score": 0.5529
+      },
+      "optionRight": {
+        "assetId": "asset-104",
+        "displayFile": "assets/asset-104-w2400.webp",
+        "score": 0.5907
+      },
+      "leftRole": "aligned",
+      "rightRole": "rules",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-007",
+      "purpose": "hero",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-121",
+        "displayFile": "assets/asset-121-w2400.webp",
+        "score": 0.6205
+      },
+      "optionRight": {
+        "assetId": "asset-045",
+        "displayFile": "assets/asset-045-w2400.webp",
+        "score": 0.7759
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-009",
+      "purpose": "hero",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-062",
+        "displayFile": "assets/asset-062-w2400.webp",
+        "score": 0.6104
+      },
+      "optionRight": {
+        "assetId": "asset-104",
+        "displayFile": "assets/asset-104-w2400.webp",
+        "score": 0.9465
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "cover-004",
+      "purpose": "cover",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-001",
+        "displayFile": "assets/asset-001-w2400.webp",
+        "score": 0.559
+      },
+      "optionRight": {
+        "assetId": "asset-040",
+        "displayFile": "assets/asset-040-w2400.webp",
+        "score": 0.8915
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "cover-005",
+      "purpose": "cover",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-006",
+        "displayFile": "assets/asset-006-w2400.webp",
+        "score": 0.5854
+      },
+      "optionRight": {
+        "assetId": "asset-113",
+        "displayFile": "assets/asset-113-w2400.webp",
+        "score": 0.5601
+      },
+      "leftRole": "aligned",
+      "rightRole": "rules",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-011",
+      "purpose": "hero",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-045",
+        "displayFile": "assets/asset-045-w2400.webp",
+        "score": 0.7759
+      },
+      "optionRight": {
+        "assetId": "asset-100",
+        "displayFile": "assets/asset-100-w2400.webp",
+        "score": 0.6033
+      },
+      "leftRole": "aligned",
+      "rightRole": "rules",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "cover-003",
+      "purpose": "cover",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-104",
+        "displayFile": "assets/asset-104-w2400.webp",
+        "score": 0.5907
+      },
+      "optionRight": {
+        "assetId": "asset-001",
+        "displayFile": "assets/asset-001-w2400.webp",
+        "score": 0.5696
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-008",
+      "purpose": "hero",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-102",
+        "displayFile": "assets/asset-102-w2400.webp",
+        "score": 0.624
+      },
+      "optionRight": {
+        "assetId": "asset-072",
+        "displayFile": "assets/asset-072-w2400.webp",
+        "score": 0.594
+      },
+      "leftRole": "aligned",
+      "rightRole": "rules",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-012",
+      "purpose": "hero",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-062",
+        "displayFile": "assets/asset-062-w2400.webp",
+        "score": 0.6104
+      },
+      "optionRight": {
+        "assetId": "asset-012",
+        "displayFile": "assets/asset-012-w2400.webp",
+        "score": 0.5759
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-010",
+      "purpose": "hero",
+      "tripId": "demo-2025-6",
+      "optionLeft": {
+        "assetId": "asset-016",
+        "displayFile": "assets/asset-016-w2400.webp",
+        "score": 0.5979
+      },
+      "optionRight": {
+        "assetId": "asset-114",
+        "displayFile": "assets/asset-114-w2400.webp",
+        "score": 0.8254
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    }
+  ],
+  "topPicks": {
+    "cover": {
+      "rules": {
+        "assetId": "asset-040",
+        "displayFile": "assets/asset-040-w2400.webp",
+        "score": 0.6013
+      },
+      "aligned": {
+        "assetId": "asset-104",
+        "displayFile": "assets/asset-104-w2400.webp",
+        "score": 0.929
+      }
+    },
+    "hero": {
+      "rules": {
+        "assetId": "asset-104",
+        "displayFile": "assets/asset-104-w2400.webp",
+        "score": 0.6518
+      },
+      "aligned": {
+        "assetId": "asset-104",
+        "displayFile": "assets/asset-104-w2400.webp",
+        "score": 0.9465
+      }
+    }
+  },
+  "exportedAt": "2026-06-18T09:08:42.271986+00:00",
+  "pilotConfig": {
+    "mlCalibrate": true,
+    "useStratumBlend": true,
+    "stratumBlendOnly": [
+      "landscape"
+    ],
+    "useAlbumRelative": true,
+    "stratumBlends": {
+      "group": 0.1,
+      "person": 0.6,
+      "landscape": 0.6,
+      "food": 0.35,
+      "general": 0.35
+    }
+  },
+  "previewUrl": "http://127.0.0.1:8766/demo-2025-6"
+}

@@ -1,0 +1,21 @@
+{
+  "version": "3",
+  "notes": "锡兰之旅 v3 全量重标 · 146 eligible · 废弃 v2 误 stratum 批次。exportMode=all_eligible。",
+  "exportMode": "all_eligible",
+  "targetTotal": 146,
+  "seed": 43,
+  "replaces": "aesthetic-human-labels.demo-fc8b3a5c08.archived-v2-misstratum.json",
+  "trips": [
+    {
+      "tripId": "demo-fc8b3a5c08",
+      "tripDir": "trips/demo-fc8b3a5c08",
+      "tags": ["travel", "sri_lanka", "landscape_heavy"],
+      "sourcePhotos": "D:\\Photos\\锡兰之旅",
+      "previewUrl": "http://127.0.0.1:8766/demo-fc8b3a5c08/index.html",
+      "expectedStrata": {
+        "landscape": 119,
+        "person": 27
+      }
+    }
+  ]
+}

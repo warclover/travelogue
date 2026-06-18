@@ -1,0 +1,29 @@
+{
+  "version": "1",
+  "notes": "Fill tripDir paths. targetTotal ≥150. Adjust strata quotas for coverage.",
+  "targetTotal": 150,
+  "seed": 42,
+  "strataQuotas": {
+    "person": 40,
+    "landscape": 40,
+    "food": 25,
+    "group": 25,
+    "general": 20
+  },
+  "trips": [
+    {
+      "tripId": "album-a",
+      "tripDir": "trips/album-a",
+      "tags": [
+        "portrait_heavy"
+      ]
+    },
+    {
+      "tripId": "album-b",
+      "tripDir": "trips/album-b",
+      "tags": [
+        "mixed"
+      ]
+    }
+  ]
+}

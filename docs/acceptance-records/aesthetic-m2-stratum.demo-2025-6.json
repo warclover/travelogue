@@ -1,0 +1,182 @@
+{
+  "tripDir": "C:\\Users\\xiafe\\Projects\\travelogue\\trips\\demo-2025-6",
+  "metric": "nima",
+  "scored": true,
+  "rulesBaseline": {
+    "sampleCount": 109,
+    "srcc": 0.2548
+  },
+  "stratumCalibration": {
+    "strata": {
+      "general": {
+        "sampleCount": 2,
+        "skipped": true,
+        "reason": "need>=3 samples"
+      },
+      "group": {
+        "sampleCount": 97,
+        "skipped": false,
+        "bestBlend": 0.35,
+        "bestSrcc": 0.2468,
+        "grid": [
+          {
+            "blend": 0.0,
+            "sampleCount": 97,
+            "srcc": 0.2063
+          },
+          {
+            "blend": 0.05,
+            "sampleCount": 97,
+            "srcc": 0.2085
+          },
+          {
+            "blend": 0.1,
+            "sampleCount": 97,
+            "srcc": 0.2206
+          },
+          {
+            "blend": 0.15,
+            "sampleCount": 97,
+            "srcc": 0.2327
+          },
+          {
+            "blend": 0.2,
+            "sampleCount": 97,
+            "srcc": 0.2412
+          },
+          {
+            "blend": 0.25,
+            "sampleCount": 97,
+            "srcc": 0.2418
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 97,
+            "srcc": 0.244
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 97,
+            "srcc": 0.2468
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 97,
+            "srcc": 0.2445
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 97,
+            "srcc": 0.2391
+          },
+          {
+            "blend": 0.5,
+            "sampleCount": 97,
+            "srcc": 0.2284
+          },
+          {
+            "blend": 0.55,
+            "sampleCount": 97,
+            "srcc": 0.2136
+          },
+          {
+            "blend": 0.6,
+            "sampleCount": 97,
+            "srcc": 0.1959
+          }
+        ]
+      },
+      "person": {
+        "sampleCount": 10,
+        "skipped": false,
+        "bestBlend": 0.4,
+        "bestSrcc": 0.6843,
+        "grid": [
+          {
+            "blend": 0.0,
+            "sampleCount": 10,
+            "srcc": 0.6777
+          },
+          {
+            "blend": 0.05,
+            "sampleCount": 10,
+            "srcc": 0.6777
+          },
+          {
+            "blend": 0.1,
+            "sampleCount": 10,
+            "srcc": 0.6777
+          },
+          {
+            "blend": 0.15,
+            "sampleCount": 10,
+            "srcc": 0.6777
+          },
+          {
+            "blend": 0.2,
+            "sampleCount": 10,
+            "srcc": 0.6777
+          },
+          {
+            "blend": 0.25,
+            "sampleCount": 10,
+            "srcc": 0.6316
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 10,
+            "srcc": 0.6316
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 10,
+            "srcc": 0.6316
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 10,
+            "srcc": 0.6843
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 10,
+            "srcc": 0.6843
+          },
+          {
+            "blend": 0.5,
+            "sampleCount": 10,
+            "srcc": 0.6843
+          },
+          {
+            "blend": 0.55,
+            "sampleCount": 10,
+            "srcc": 0.6843
+          },
+          {
+            "blend": 0.6,
+            "sampleCount": 10,
+            "srcc": 0.6843
+          }
+        ]
+      }
+    },
+    "recommendedBlends": {
+      "group": 0.35,
+      "person": 0.4,
+      "landscape": 0.35,
+      "food": 0.3,
+      "general": 0.35
+    },
+    "fullCorpus": {
+      "sampleCount": 109,
+      "srcc": 0.287
+    },
+    "uniformBlend": {
+      "sampleCount": 109,
+      "srcc": 0.2808
+    },
+    "deltaVsUniform": 0.0062,
+    "baselineRulesSrcc": 0.2548,
+    "deltaVsBaseline": 0.0322
+  }
+}

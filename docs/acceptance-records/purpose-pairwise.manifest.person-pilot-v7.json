@@ -1,0 +1,44 @@
+{
+  "version": "1",
+  "exportedAt": "2026-06-18T11:55:26.060488+00:00",
+  "purposes": [
+    "cover",
+    "hero"
+  ],
+  "pairsPerPurpose": 6,
+  "suffix": "person-pilot-v7",
+  "notes": "071 layoutEligible=false · topPick 优先 · per-purpose dedupe · seed46",
+  "trips": {
+    "demo-2025-6": {
+      "pairCount": 12,
+      "topPicks": {
+        "cover": {
+          "rules": {
+            "assetId": "asset-114",
+            "displayFile": "assets/asset-114-w2400.webp",
+            "score": 0.5555
+          },
+          "aligned": {
+            "assetId": "asset-013",
+            "displayFile": "assets/asset-013-w2400.webp",
+            "score": 0.5478
+          }
+        },
+        "hero": {
+          "rules": {
+            "assetId": "asset-013",
+            "displayFile": "assets/asset-013-w2400.webp",
+            "score": 0.5364
+          },
+          "aligned": {
+            "assetId": "asset-114",
+            "displayFile": "assets/asset-114-w2400.webp",
+            "score": 0.5938
+          }
+        }
+      },
+      "json": "docs/acceptance-records/purpose-pairwise.demo-2025-6.person-pilot-v7.json",
+      "html": "docs/acceptance-records/purpose-pairwise.demo-2025-6.person-pilot-v7.html"
+    }
+  }
+}

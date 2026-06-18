@@ -1260,6 +1260,51 @@ html[data-preview-share="on"] .preview-toolbar__cover-footnote {
   font-weight: 600;
   color: #2a3d36;
 }
+.preview-drawer__aesthetic-meta {
+  margin: 0 0 4px;
+  font-size: 11px;
+  color: #5a6e66;
+  line-height: 1.45;
+}
+.preview-drawer__aesthetic-critique {
+  margin: 0 0 6px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #4a5c55;
+  font-style: italic;
+}
+.preview-drawer__aesthetic-album {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(61, 107, 90, 0.1);
+  border: 1px solid rgba(61, 107, 90, 0.12);
+}
+.preview-drawer__aesthetic-pref {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 4px;
+}
+.preview-drawer__aesthetic-pref-btn {
+  border: 1px solid rgba(61, 107, 90, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #2a3d36;
+  font-size: 11px;
+  line-height: 1.2;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.preview-drawer__aesthetic-pref-btn.is-active {
+  background: rgba(61, 107, 90, 0.18);
+  border-color: rgba(61, 107, 90, 0.55);
+  font-weight: 600;
+}
+.preview-drawer__aesthetic-pref-btn:hover {
+  background: rgba(61, 107, 90, 0.12);
+}
 .preview-drawer__aesthetic[hidden] { display: none !important; }
 .preview-drawer__primary {
   width: 100%;

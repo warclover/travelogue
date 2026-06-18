@@ -1,0 +1,19 @@
+{
+  "version": "1",
+  "recordedAt": "2026-06-18T12:00:00+00:00",
+  "notes": "PC-M1 baseline · portrait_analyze opencv_eye backend · pending fixtures/portrait/eyes AC-PC-03",
+  "tripId": "demo-1a737d6205",
+  "backend": "opencv_eye",
+  "assetsWithFaces": 216,
+  "portraitSignalRate": 0.968,
+  "minConfidence": 0.35,
+  "eyesOpenScore": {
+    "median": 0.5,
+    "p25": 0.45,
+    "p75": 0.85
+  },
+  "acceptance": {
+    "AC-PC-00": { "passed": false, "note": "pending burst tiebreak + fixtures" },
+    "AC-PC-03": { "passed": false, "note": "pending eyes open/closed fixture set AUC" }
+  }
+}

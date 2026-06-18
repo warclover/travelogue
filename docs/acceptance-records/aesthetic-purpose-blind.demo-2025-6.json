@@ -1,0 +1,77 @@
+{
+  "version": "1",
+  "tripId": "demo-2025-6",
+  "targetWinratePct": 60.0,
+  "automated": {
+    "purposes": {
+      "cover": {
+        "rulesPick": "asset-040",
+        "alignedPick": "asset-045",
+        "samePick": false,
+        "verdict": "rules_wins",
+        "humanRules": 0.75,
+        "humanAligned": 0.5
+      },
+      "hero": {
+        "rulesPick": "asset-104",
+        "alignedPick": "asset-104",
+        "samePick": true,
+        "verdict": "same_pick"
+      },
+      "moment": {
+        "rulesPick": "asset-104",
+        "alignedPick": "asset-045",
+        "samePick": false,
+        "verdict": "rules_wins",
+        "humanRules": 0.75,
+        "humanAligned": 0.5
+      },
+      "solo": {
+        "rulesPick": "asset-062",
+        "alignedPick": "asset-062",
+        "samePick": true,
+        "verdict": "same_pick"
+      }
+    },
+    "targetWinratePct": 60.0,
+    "automatedWinCount": 0,
+    "comparablePurposes": 2,
+    "automatedWinratePct": 0.0,
+    "passed": false
+  },
+  "pairwise": null,
+  "purposeComparisons": [
+    {
+      "purpose": "cover",
+      "rulesPick": "asset-040",
+      "candidatePick": "asset-045",
+      "automatedVerdict": "rules_wins",
+      "judgeVerdict": null,
+      "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+    },
+    {
+      "purpose": "hero",
+      "rulesPick": "asset-104",
+      "candidatePick": "asset-104",
+      "automatedVerdict": "same_pick",
+      "judgeVerdict": null,
+      "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+    },
+    {
+      "purpose": "moment",
+      "rulesPick": "asset-104",
+      "candidatePick": "asset-045",
+      "automatedVerdict": "rules_wins",
+      "judgeVerdict": null,
+      "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+    },
+    {
+      "purpose": "solo",
+      "rulesPick": "asset-062",
+      "candidatePick": "asset-062",
+      "automatedVerdict": "same_pick",
+      "judgeVerdict": null,
+      "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+    }
+  ]
+}

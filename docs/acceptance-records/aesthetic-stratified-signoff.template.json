@@ -1,0 +1,73 @@
+{
+  "version": "1",
+  "notes": "分层精选验收模板 · 配套 PRD-STRATIFIED-CURATION.md AC-SC-*",
+  "corpusVersion": "v3",
+  "labelsSource": "docs/acceptance-records/aesthetic-human-labels.merged.v3.json",
+  "recordedAt": null,
+  "frozen": false,
+  "minStratumSamples": {
+    "group": 30,
+    "person": 30,
+    "landscape": 20,
+    "food": 20,
+    "general": 20
+  },
+  "perStratum": {
+    "group": {
+      "sampleCount": null,
+      "rulesSrcc": null,
+      "stratumBlendSrcc": null,
+      "delta": null,
+      "passedAcSc01": null
+    },
+    "person": {
+      "sampleCount": null,
+      "rulesSrcc": null,
+      "stratumBlendSrcc": null,
+      "delta": null,
+      "passedAcSc01": null
+    },
+    "landscape": {
+      "sampleCount": null,
+      "rulesSrcc": null,
+      "stratumBlendSrcc": null,
+      "delta": null,
+      "passedAcSc01": null
+    },
+    "food": {
+      "sampleCount": null,
+      "rulesSrcc": null,
+      "stratumBlendSrcc": null,
+      "delta": null,
+      "passedAcSc01": null
+    },
+    "general": {
+      "sampleCount": null,
+      "rulesSrcc": null,
+      "stratumBlendSrcc": null,
+      "delta": null,
+      "passedAcSc01": null
+    }
+  },
+  "weightedStratumDelta": null,
+  "pooledSrcc": {
+    "exportBaseline": null,
+    "stratumBlend": null,
+    "note": "健康检查 only，不阻塞 G3"
+  },
+  "acceptance": {
+    "AC-SC-00": { "passed": null, "note": "每 stratum 达 min-n" },
+    "AC-SC-01": { "passed": null, "note": "每层 blend > rules" },
+    "AC-SC-02": { "passed": null, "note": "加权分层 Δ ≥ 0.10" },
+    "AC-SC-03": { "passed": null, "note": "≥3 本 dogfood purpose 胜率 ≥60%" },
+    "AC-SC-04": { "passed": null, "note": "albumProfile 写入 + skew 册不回归" },
+    "AC-SC-05": { "passed": true, "note": "继承 AC-AA-04~08" },
+    "AC-SC-06": { "passed": true, "note": "开关回退" }
+  },
+  "dogfoodTrips": [],
+  "signoff": {
+    "author": null,
+    "date": null,
+    "approvedForG3": false
+  }
+}

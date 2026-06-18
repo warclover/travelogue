@@ -1,0 +1,103 @@
+{
+  "version": "1",
+  "tripId": "demo-fc8b3a5c08",
+  "exportedAt": "2026-06-18T10:35:02.656Z",
+  "pairs": [
+    {
+      "pairId": "hero-005",
+      "purpose": "hero",
+      "tripId": "demo-fc8b3a5c08",
+      "optionLeft": {
+        "assetId": "asset-195",
+        "displayFile": "assets/asset-195-w3200.webp",
+        "score": 0.628
+      },
+      "optionRight": {
+        "assetId": "asset-072",
+        "displayFile": "assets/asset-072-w3200.webp",
+        "score": 0.6066
+      },
+      "judgeVerdict": "right"
+    },
+    {
+      "pairId": "hero-001",
+      "purpose": "hero",
+      "tripId": "demo-fc8b3a5c08",
+      "optionLeft": {
+        "assetId": "asset-149",
+        "displayFile": "assets/asset-149-w3200.webp",
+        "score": 0.6281
+      },
+      "optionRight": {
+        "assetId": "asset-072",
+        "displayFile": "assets/asset-072-w3200.webp",
+        "score": 0.6066
+      },
+      "judgeVerdict": "right"
+    },
+    {
+      "pairId": "hero-003",
+      "purpose": "hero",
+      "tripId": "demo-fc8b3a5c08",
+      "optionLeft": {
+        "assetId": "asset-180",
+        "displayFile": "assets/asset-180-w3200.webp",
+        "score": 0.5855
+      },
+      "optionRight": {
+        "assetId": "asset-173",
+        "displayFile": "assets/asset-173-w3200.webp",
+        "score": 0.6298
+      },
+      "judgeVerdict": "tie"
+    },
+    {
+      "pairId": "hero-004",
+      "purpose": "hero",
+      "tripId": "demo-fc8b3a5c08",
+      "optionLeft": {
+        "assetId": "asset-072",
+        "displayFile": "assets/asset-072-w3200.webp",
+        "score": 0.6066
+      },
+      "optionRight": {
+        "assetId": "asset-092",
+        "displayFile": "assets/asset-092-w3200.webp",
+        "score": 0.6424
+      },
+      "judgeVerdict": "left"
+    },
+    {
+      "pairId": "hero-002",
+      "purpose": "hero",
+      "tripId": "demo-fc8b3a5c08",
+      "optionLeft": {
+        "assetId": "asset-090",
+        "displayFile": "assets/asset-090-w3200.webp",
+        "score": 0.6401
+      },
+      "optionRight": {
+        "assetId": "asset-180",
+        "displayFile": "assets/asset-180-w3200.webp",
+        "score": 0.5855
+      },
+      "judgeVerdict": "left"
+    },
+    {
+      "pairId": "hero-006",
+      "purpose": "hero",
+      "tripId": "demo-fc8b3a5c08",
+      "optionLeft": {
+        "assetId": "asset-092",
+        "displayFile": "assets/asset-092-w3200.webp",
+        "score": 0.6424
+      },
+      "optionRight": {
+        "assetId": "asset-003",
+        "displayFile": "assets/asset-003-w3200.webp",
+        "score": 0.5804
+      },
+      "judgeVerdict": "left"
+    }
+  ]
+}

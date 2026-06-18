@@ -1,0 +1,96 @@
+{
+  "tripDir": "C:\\Users\\xiafe\\Projects\\travelogue\\trips\\demo-2025-6",
+  "blend": 0.38,
+  "provider": "oracle-human",
+  "useStratumBlend": true,
+  "stratumBlends": {
+    "group": 0.35,
+    "person": 0.4,
+    "landscape": 0.35,
+    "food": 0.3,
+    "general": 0.35
+  },
+  "portraitLite": true,
+  "mllm": {
+    "dryRun": false,
+    "shortlistCount": 8,
+    "shortlist": [
+      {
+        "assetId": "asset-125",
+        "purpose": "cover"
+      },
+      {
+        "assetId": "asset-040",
+        "purpose": "cover"
+      },
+      {
+        "assetId": "asset-045",
+        "purpose": "cover"
+      },
+      {
+        "assetId": "asset-114",
+        "purpose": "cover"
+      },
+      {
+        "assetId": "asset-104",
+        "purpose": "cover"
+      },
+      {
+        "assetId": "asset-062",
+        "purpose": "hero"
+      },
+      {
+        "assetId": "asset-105",
+        "purpose": "hero"
+      },
+      {
+        "assetId": "asset-064",
+        "purpose": "moment"
+      }
+    ],
+    "mode": "oracle-human",
+    "scored": 5,
+    "missingLabel": 3
+  },
+  "evalRows": 109,
+  "comparison": {
+    "sampleCount": 109,
+    "metrics": {
+      "baseline_rules_export": {
+        "field": "baselinePredicted",
+        "sampleCount": 109,
+        "srcc": 0.2548
+      },
+      "rules_only_recomputed": {
+        "field": "rulesOnly",
+        "sampleCount": 109,
+        "srcc": 0.2369
+      },
+      "learned_nima": {
+        "field": "learnedOnly",
+        "sampleCount": 109,
+        "srcc": 0.1353
+      },
+      "rules_plus_learned_blend": {
+        "field": "blendedOverall",
+        "sampleCount": 109,
+        "srcc": 0.2913
+      },
+      "blended_cover": {
+        "field": "blendedCover",
+        "sampleCount": 109,
+        "srcc": 0.2645
+      },
+      "blended_hero": {
+        "field": "blendedHero",
+        "sampleCount": 109,
+        "srcc": 0.3017
+      },
+      "blended_moment": {
+        "field": "blendedMoment",
+        "sampleCount": 109,
+        "srcc": 0.288
+      }
+    }
+  }
+}

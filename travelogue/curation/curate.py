@@ -761,13 +761,14 @@ def run_curate(
     res_warn = preflight.res_warn
     saved_memory_anchors = preflight.saved_memory_anchors
 
-    if trip_dir is not None and app_cfg.aesthetic.enabled and app_cfg.aesthetic.ml_calibrate:
-        from travelogue.curation.aesthetic_score import apply_aesthetic_ml_calibration
+    if trip_dir is not None and app_cfg.aesthetic.enabled:
+        from travelogue.curation.aesthetic_score import apply_aesthetic_alignment
 
-        apply_aesthetic_ml_calibration(
+        apply_aesthetic_alignment(
             trip.get("assets") or [],
             trip_dir=trip_dir,
             cfg=app_cfg,
+            trip=trip,
         )
 
     from travelogue.curation.screen_planner import (
@@ -801,6 +802,10 @@ def run_curate(
     if cohort_summary:
         curation["cohort"] = cohort_summary
         trip["curation"] = curation
+
+    from travelogue.curation.album_profile import write_album_profile
+
+    write_album_profile(trip)
 
     aspects = {a["id"]: aspect_kind_for_asset(a) for a in layout_assets}
     non_empty_buckets = [b for b in buckets if b]

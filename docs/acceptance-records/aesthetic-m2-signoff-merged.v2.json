@@ -1,0 +1,65 @@
+{
+  "version": "1",
+  "recordedAt": "2026-06-18",
+  "corpus": "docs/acceptance-records/aesthetic-alignment-corpus.v2.json",
+  "labels": "docs/acceptance-records/aesthetic-human-labels.merged.v2.json",
+  "labelCount": 163,
+  "trips": [
+    {
+      "tripId": "demo-2025-6",
+      "labeled": 109,
+      "stratumCalibration": "docs/acceptance-records/aesthetic-m2-stratum.demo-2025-6.json",
+      "rulesSrcc": 0.2369,
+      "stratumBlendSrcc": 0.2727,
+      "delta": 0.0358
+    },
+    {
+      "tripId": "demo-fc8b3a5c08",
+      "labeled": 54,
+      "stratumCalibration": "docs/acceptance-records/aesthetic-m2-stratum.demo-fc8b3a5c08.json",
+      "rulesSrcc": -0.0036,
+      "stratumBlendSrcc": 0.2177,
+      "delta": 0.2213,
+      "recommendedBlends": {
+        "group": 0.35,
+        "person": 0.6,
+        "general": 0.0
+      }
+    }
+  ],
+  "mergedPooled": {
+    "source": "docs/acceptance-records/aesthetic-m2-merged.v2.json",
+    "exportBaselineSrcc": 0.2951,
+    "rulesRecomputedSrcc": 0.1085,
+    "stratumBlendSrcc": 0.1914,
+    "deltaVsExportBaseline": -0.1037,
+    "deltaVsRulesRecomputed": 0.0829
+  },
+  "acceptance": {
+    "AC-AA-00": {
+      "passed": true,
+      "note": "163 labeled images ≥150"
+    },
+    "AC-AA-01": {
+      "passed": true,
+      "note": "Per-trip stratum blend beats rules on both trips"
+    },
+    "AC-AA-02": {
+      "passed": false,
+      "note": "Merged pooled stratum SRCC 0.1914; delta vs export baseline -0.104; vs rules recomputed +0.083 (<0.15). Do not change AppConfig default."
+    },
+    "AC-AA-03": {
+      "passed": false,
+      "note": "Automated purpose win rate 0% (demo-2025-6); manual pairwise still needed"
+    }
+  },
+  "gapStatus": {
+    "GAP-01": "done",
+    "GAP-02": "blocked",
+    "GAP-05": "unchanged_ml_calibrate_false"
+  },
+  "commands": [
+    "python scripts/aesthetic_merged_eval.py --corpus docs/acceptance-records/aesthetic-alignment-corpus.v2.json --labels docs/acceptance-records/aesthetic-human-labels.merged.v2.json",
+    "python scripts/aesthetic_calibrate.py --trip-dir trips/demo-fc8b3a5c08 --labels docs/acceptance-records/aesthetic-human-labels.demo-fc8b3a5c08.json --by-stratum"
+  ]
+}

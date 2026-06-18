@@ -1,0 +1,59 @@
+{
+  "version": "1",
+  "albumId": "demo-2025-6",
+  "title": "2025东澳岛6",
+  "frozenAt": "2026-06-18",
+  "labelsFile": "docs/acceptance-records/aesthetic-human-labels.demo-2025-6.json",
+  "sampleCount": 109,
+  "labeledCount": 109,
+  "baseline": {
+    "source": "rules",
+    "predictedKey": "predictedOverall",
+    "srcc": 0.2548,
+    "byStratum": {
+      "group": { "sampleCount": 97, "srcc": 0.2063 },
+      "person": { "sampleCount": 10, "srcc": 0.6777 },
+      "general": { "sampleCount": 2, "srcc": null }
+    },
+    "purposeComparison": {
+      "predictedOverall": 0.2548,
+      "predictedCover": 0.238,
+      "predictedHero": 0.2567,
+      "predictedMoment": 0.236
+    }
+  },
+  "notes": "M0 基线 · 作者盲评 109/109。SRCC≈0.25 说明 rules 主导算法与人类审美仅弱相关；合影(group) 尤其不准(0.21)。M1/M2 目标：整体 SRCC 显著上升。",
+  "m1Eval": {
+    "nima_blend_0.4": {
+      "learnedOnly": 0.1353,
+      "rulesPlusLearned": 0.281,
+      "blendedHero": 0.2963,
+      "file": "docs/acceptance-records/aesthetic-m1-eval.demo-2025-6.json"
+    },
+    "clipiqa_plus_blend_0.4": {
+      "learnedOnly": 0.0407,
+      "rulesPlusLearned": 0.1901,
+      "file": "docs/acceptance-records/aesthetic-m1-eval-clipiqa.demo-2025-6.json"
+    },
+    "conclusion": "通用 AVA/CLIP 审美模型在本相册上未超越 rules；nima blend=0.4 略升至 0.281（+0.026）。M2 需网格拟合 blend；L3/MLLM 对合影旅行照可能更关键。"
+  },
+  "m2Calibration": {
+    "metric": "nima",
+    "rulesBaselineSrcc": 0.2548,
+    "learnedOnlySrcc": 0.1353,
+    "recommendedBlend": 0.35,
+    "bestSrcc": {
+      "default": 0.2843,
+      "cover": 0.2677,
+      "hero": 0.2971,
+      "moment": 0.2851
+    },
+    "deltaVsBaseline": {
+      "default": 0.0295,
+      "hero": 0.0423
+    },
+    "acMet": false,
+    "acNote": "未达 AC-AA-02（+0.15 或 ≥0.6）；blend 网格已收敛于 0.30–0.35",
+    "file": "docs/acceptance-records/aesthetic-m2-calibrate.demo-2025-6.json"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "version": "1",
+  "exportedAt": "2026-06-18T11:38:04.442445+00:00",
+  "purposes": [
+    "cover",
+    "hero"
+  ],
+  "pairsPerPurpose": 6,
+  "suffix": "person-pilot-v5",
+  "notes": "东澳 mixed_travel · cover landscape 0.45 · hero 冻结 · seed47 对齐 v2",
+  "trips": {
+    "demo-2025-6": {
+      "pairCount": 12,
+      "topPicks": {
+        "cover": {
+          "rules": {
+            "assetId": "asset-114",
+            "displayFile": "assets/asset-114-w2400.webp",
+            "score": 0.5555
+          },
+          "aligned": {
+            "assetId": "asset-071",
+            "displayFile": "assets/asset-071-w2400.webp",
+            "score": 0.6493
+          }
+        },
+        "hero": {
+          "rules": {
+            "assetId": "asset-071",
+            "displayFile": "assets/asset-071-w2400.webp",
+            "score": 0.557
+          },
+          "aligned": {
+            "assetId": "asset-114",
+            "displayFile": "assets/asset-114-w2400.webp",
+            "score": 0.5938
+          }
+        }
+      },
+      "json": "docs/acceptance-records/purpose-pairwise.demo-2025-6.person-pilot-v5.json",
+      "html": "docs/acceptance-records/purpose-pairwise.demo-2025-6.person-pilot-v5.html"
+    }
+  }
+}

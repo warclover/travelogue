@@ -1,0 +1,246 @@
+{
+  "recordedAt": "2026-06-18T10:21:59.372856+00:00",
+  "labelsSource": "docs/acceptance-records/aesthetic-human-labels.merged.v3.json",
+  "metric": "nima",
+  "trips": [
+    "demo-2025-6",
+    "demo-fc8b3a5c08",
+    "demo-1a737d6205",
+    "demo-53cda5151f"
+  ],
+  "recommendedBlends": {
+    "group": 0.1,
+    "person": 0.6,
+    "landscape": 0.6,
+    "food": 0.35,
+    "general": 0.35
+  },
+  "stratumCalibration": {
+    "food": {
+      "sampleCount": 17,
+      "skipped": false,
+      "bestBlend": 0.35,
+      "bestSrcc": 0.1118,
+      "grid": [
+        {
+          "blend": 0.0,
+          "sampleCount": 17,
+          "srcc": -0.0745
+        },
+        {
+          "blend": 0.05,
+          "sampleCount": 17,
+          "srcc": 0.0
+        },
+        {
+          "blend": 0.1,
+          "sampleCount": 17,
+          "srcc": 0.0
+        },
+        {
+          "blend": 0.15,
+          "sampleCount": 17,
+          "srcc": 0.0373
+        },
+        {
+          "blend": 0.2,
+          "sampleCount": 17,
+          "srcc": 0.0745
+        },
+        {
+          "blend": 0.25,
+          "sampleCount": 17,
+          "srcc": 0.0745
+        },
+        {
+          "blend": 0.3,
+          "sampleCount": 17,
+          "srcc": 0.0745
+        },
+        {
+          "blend": 0.35,
+          "sampleCount": 17,
+          "srcc": 0.1118
+        },
+        {
+          "blend": 0.4,
+          "sampleCount": 17,
+          "srcc": 0.0745
+        },
+        {
+          "blend": 0.45,
+          "sampleCount": 17,
+          "srcc": 0.0745
+        },
+        {
+          "blend": 0.5,
+          "sampleCount": 17,
+          "srcc": 0.0745
+        },
+        {
+          "blend": 0.55,
+          "sampleCount": 17,
+          "srcc": 0.0745
+        },
+        {
+          "blend": 0.6,
+          "sampleCount": 17,
+          "srcc": 0.0745
+        }
+      ]
+    },
+    "landscape": {
+      "sampleCount": 207,
+      "skipped": false,
+      "bestBlend": 0.6,
+      "bestSrcc": -0.0075,
+      "grid": [
+        {
+          "blend": 0.0,
+          "sampleCount": 207,
+          "srcc": -0.1353
+        },
+        {
+          "blend": 0.05,
+          "sampleCount": 207,
+          "srcc": -0.1304
+        },
+        {
+          "blend": 0.1,
+          "sampleCount": 207,
+          "srcc": -0.1247
+        },
+        {
+          "blend": 0.15,
+          "sampleCount": 207,
+          "srcc": -0.1179
+        },
+        {
+          "blend": 0.2,
+          "sampleCount": 207,
+          "srcc": -0.1102
+        },
+        {
+          "blend": 0.25,
+          "sampleCount": 207,
+          "srcc": -0.099
+        },
+        {
+          "blend": 0.3,
+          "sampleCount": 207,
+          "srcc": -0.0908
+        },
+        {
+          "blend": 0.35,
+          "sampleCount": 207,
+          "srcc": -0.0794
+        },
+        {
+          "blend": 0.4,
+          "sampleCount": 207,
+          "srcc": -0.07
+        },
+        {
+          "blend": 0.45,
+          "sampleCount": 207,
+          "srcc": -0.0506
+        },
+        {
+          "blend": 0.5,
+          "sampleCount": 207,
+          "srcc": -0.0356
+        },
+        {
+          "blend": 0.55,
+          "sampleCount": 207,
+          "srcc": -0.0259
+        },
+        {
+          "blend": 0.6,
+          "sampleCount": 207,
+          "srcc": -0.0075
+        }
+      ]
+    },
+    "person": {
+      "sampleCount": 108,
+      "skipped": false,
+      "bestBlend": 0.6,
+      "bestSrcc": 0.0738,
+      "grid": [
+        {
+          "blend": 0.0,
+          "sampleCount": 108,
+          "srcc": -0.0594
+        },
+        {
+          "blend": 0.05,
+          "sampleCount": 108,
+          "srcc": -0.0613
+        },
+        {
+          "blend": 0.1,
+          "sampleCount": 108,
+          "srcc": -0.0553
+        },
+        {
+          "blend": 0.15,
+          "sampleCount": 108,
+          "srcc": -0.047
+        },
+        {
+          "blend": 0.2,
+          "sampleCount": 108,
+          "srcc": -0.042
+        },
+        {
+          "blend": 0.25,
+          "sampleCount": 108,
+          "srcc": -0.03
+        },
+        {
+          "blend": 0.3,
+          "sampleCount": 108,
+          "srcc": -0.0207
+        },
+        {
+          "blend": 0.35,
+          "sampleCount": 108,
+          "srcc": -0.0179
+        },
+        {
+          "blend": 0.4,
+          "sampleCount": 108,
+          "srcc": -0.0023
+        },
+        {
+          "blend": 0.45,
+          "sampleCount": 108,
+          "srcc": 0.0138
+        },
+        {
+          "blend": 0.5,
+          "sampleCount": 108,
+          "srcc": 0.0383
+        },
+        {
+          "blend": 0.55,
+          "sampleCount": 108,
+          "srcc": 0.0562
+        },
+        {
+          "blend": 0.6,
+          "sampleCount": 108,
+          "srcc": 0.0738
+        }
+      ]
+    }
+  },
+  "fullCorpus": {
+    "exportBaseline": 0.1671,
+    "rulesBaseline": -0.1419,
+    "stratumBlend": -0.0216,
+    "deltaVsUniform": 0.0634,
+    "note": "健康检查 only，不阻塞 G3"
+  }
+}

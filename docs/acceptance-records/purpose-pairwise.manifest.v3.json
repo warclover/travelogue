@@ -1,0 +1,104 @@
+{
+  "version": "1",
+  "exportedAt": "2026-06-18T09:08:42.274749+00:00",
+  "purposes": [
+    "cover",
+    "hero"
+  ],
+  "pairsPerPurpose": 6,
+  "trips": {
+    "demo-fc8b3a5c08": {
+      "pairCount": 12,
+      "topPicks": {
+        "cover": {
+          "rules": {
+            "assetId": "asset-020",
+            "displayFile": "assets/asset-020-w3200.webp",
+            "score": 0.6723
+          },
+          "aligned": {
+            "assetId": "asset-194",
+            "displayFile": "assets/asset-194-w3200.webp",
+            "score": 0.9854
+          }
+        },
+        "hero": {
+          "rules": {
+            "assetId": "asset-020",
+            "displayFile": "assets/asset-020-w3200.webp",
+            "score": 0.728
+          },
+          "aligned": {
+            "assetId": "asset-020",
+            "displayFile": "assets/asset-020-w3200.webp",
+            "score": 1.0128
+          }
+        }
+      },
+      "json": "docs/acceptance-records/purpose-pairwise.demo-fc8b3a5c08.json",
+      "html": "docs/acceptance-records/purpose-pairwise.demo-fc8b3a5c08.html"
+    },
+    "demo-1a737d6205": {
+      "pairCount": 12,
+      "topPicks": {
+        "cover": {
+          "rules": {
+            "assetId": "asset-006",
+            "displayFile": "assets/asset-006-w3200.webp",
+            "score": 0.6694
+          },
+          "aligned": {
+            "assetId": "asset-006",
+            "displayFile": "assets/asset-006-w3200.webp",
+            "score": 0.9662
+          }
+        },
+        "hero": {
+          "rules": {
+            "assetId": "asset-006",
+            "displayFile": "assets/asset-006-w3200.webp",
+            "score": 0.6968
+          },
+          "aligned": {
+            "assetId": "asset-006",
+            "displayFile": "assets/asset-006-w3200.webp",
+            "score": 0.974
+          }
+        }
+      },
+      "json": "docs/acceptance-records/purpose-pairwise.demo-1a737d6205.json",
+      "html": "docs/acceptance-records/purpose-pairwise.demo-1a737d6205.html"
+    },
+    "demo-2025-6": {
+      "pairCount": 12,
+      "topPicks": {
+        "cover": {
+          "rules": {
+            "assetId": "asset-040",
+            "displayFile": "assets/asset-040-w2400.webp",
+            "score": 0.6013
+          },
+          "aligned": {
+            "assetId": "asset-104",
+            "displayFile": "assets/asset-104-w2400.webp",
+            "score": 0.929
+          }
+        },
+        "hero": {
+          "rules": {
+            "assetId": "asset-104",
+            "displayFile": "assets/asset-104-w2400.webp",
+            "score": 0.6518
+          },
+          "aligned": {
+            "assetId": "asset-104",
+            "displayFile": "assets/asset-104-w2400.webp",
+            "score": 0.9465
+          }
+        }
+      },
+      "json": "docs/acceptance-records/purpose-pairwise.demo-2025-6.json",
+      "html": "docs/acceptance-records/purpose-pairwise.demo-2025-6.html"
+    }
+  }
+}

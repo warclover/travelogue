@@ -117,23 +117,25 @@ def _extract_content(data: dict[str, Any]) -> str:
 
 
 def chat_completion(
-    messages: list[dict[str, str]],
+    messages: list[dict[str, Any]],
     *,
     provider: str | None = None,
     model: str | None = None,
     temperature: float = 0.7,
     runtime: LlmRuntime | None = None,
+    json_mode: bool = True,
 ) -> str:
     """Call OpenAI-compatible /chat/completions and return assistant content."""
     rt = runtime or resolve_llm_runtime(provider)
     use_model = model or rt.model
     url = f"{rt.base_url}/chat/completions"
-    payload = {
+    payload: dict[str, Any] = {
         "model": use_model,
         "messages": messages,
         "temperature": temperature,
-        "response_format": {"type": "json_object"},
     }
+    if json_mode:
+        payload["response_format"] = {"type": "json_object"}
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(
         url,
@@ -168,6 +170,26 @@ def chat_completion(
     assert last_http is not None
     detail = last_http.read().decode("utf-8", errors="replace")[:400]
     raise LlmError("E_LLM_HTTP", f"HTTP {last_http.code}: {detail}") from last_http
+
+
+def vision_chat_completion(
+    messages: list[dict[str, Any]],
+    *,
+    provider: str | None = None,
+    model: str | None = None,
+    temperature: float = 0.0,
+    runtime: LlmRuntime | None = None,
+    json_mode: bool = True,
+) -> str:
+    """Multimodal chat (text + image_url blocks in message content)."""
+    return chat_completion(
+        messages,
+        provider=provider,
+        model=model,
+        temperature=temperature,
+        runtime=runtime,
+        json_mode=json_mode,
+    )
 
 
 def llm_ping(*, provider: str | None = None) -> str:

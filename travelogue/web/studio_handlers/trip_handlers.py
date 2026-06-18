@@ -18,6 +18,7 @@ from travelogue.web.studio_handlers.trip_list_handlers import (
     handle_chapter_layout,
     handle_delete_trip,
     handle_entry,
+    handle_patch_stratum_preference,
     handle_trips,
 )
 from travelogue.web.studio_handlers.trip_moment_handlers import (
@@ -46,6 +47,7 @@ __all__ = [
     "handle_patch_moment",
     "handle_patch_pipeline",
     "handle_patch_screen_replan",
+    "handle_patch_stratum_preference",
     "handle_patch_template",
     "handle_post_cohort_refresh",
     "handle_post_copy_telemetry",

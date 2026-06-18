@@ -1,0 +1,76 @@
+{
+  "version": "1",
+  "exportedAt": "2026-06-18T10:03:49.920269+00:00",
+  "purposes": [
+    "cover",
+    "hero"
+  ],
+  "pairsPerPurpose": 6,
+  "suffix": "portrait-v2",
+  "notes": "post PC-M1 portrait subjectClarity + cover eyes demote",
+  "seed": 44,
+  "trips": {
+    "demo-1a737d6205": {
+      "pairCount": 12,
+      "topPicks": {
+        "cover": {
+          "rules": {
+            "assetId": "asset-181",
+            "displayFile": "assets/asset-181-w3200.webp",
+            "score": 0.5898
+          },
+          "aligned": {
+            "assetId": "asset-006",
+            "displayFile": "assets/asset-006-w3200.webp",
+            "score": 0.9172
+          }
+        },
+        "hero": {
+          "rules": {
+            "assetId": "asset-150",
+            "displayFile": "assets/asset-150-w3200.webp",
+            "score": 0.56
+          },
+          "aligned": {
+            "assetId": "asset-006",
+            "displayFile": "assets/asset-006-w3200.webp",
+            "score": 0.9337
+          }
+        }
+      },
+      "json": "docs/acceptance-records/purpose-pairwise.demo-1a737d6205.portrait-v2.json",
+      "html": "docs/acceptance-records/purpose-pairwise.demo-1a737d6205.portrait-v2.html"
+    },
+    "demo-2025-6": {
+      "pairCount": 12,
+      "topPicks": {
+        "cover": {
+          "rules": {
+            "assetId": "asset-114",
+            "displayFile": "assets/asset-114-w2400.webp",
+            "score": 0.5555
+          },
+          "aligned": {
+            "assetId": "asset-104",
+            "displayFile": "assets/asset-104-w2400.webp",
+            "score": 0.886
+          }
+        },
+        "hero": {
+          "rules": {
+            "assetId": "asset-071",
+            "displayFile": "assets/asset-071-w2400.webp",
+            "score": 0.557
+          },
+          "aligned": {
+            "assetId": "asset-104",
+            "displayFile": "assets/asset-104-w2400.webp",
+            "score": 0.9018
+          }
+        }
+      },
+      "json": "docs/acceptance-records/purpose-pairwise.demo-2025-6.portrait-v2.json",
+      "html": "docs/acceptance-records/purpose-pairwise.demo-2025-6.portrait-v2.html"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "version": "1",
+  "exportedAt": "2026-06-18T11:23:23.035637+00:00",
+  "purposes": [
+    "cover"
+  ],
+  "pairsPerPurpose": 6,
+  "suffix": "cover-recheck",
+  "notes": "张智慧 cover 补评 · MLLM cover 关闭 · subjectClarity 0.55",
+  "trips": {
+    "demo-1a737d6205": {
+      "pairCount": 6,
+      "topPicks": {
+        "cover": {
+          "rules": {
+            "assetId": "asset-181",
+            "displayFile": "assets/asset-181-w3200.webp",
+            "score": 0.5898
+          },
+          "aligned": {
+            "assetId": "asset-071",
+            "displayFile": "assets/asset-071-w3200.webp",
+            "score": 0.7353
+          }
+        }
+      },
+      "json": "docs/acceptance-records/purpose-pairwise.demo-1a737d6205.cover-recheck.json",
+      "html": "docs/acceptance-records/purpose-pairwise.demo-1a737d6205.cover-recheck.html"
+    }
+  }
+}

@@ -1,0 +1,753 @@
+{
+  "tripId": "demo-2025-6",
+  "tripDir": "C:\\Users\\xiafe\\Projects\\travelogue\\trips\\demo-2025-6",
+  "labeledCount": 109,
+  "changeCount": 104,
+  "changeRatio": 0.9541,
+  "oldStrata": {
+    "group": 97,
+    "person": 10,
+    "general": 2
+  },
+  "newStrata": {
+    "landscape": 62,
+    "person": 47
+  },
+  "changeMatrix": {
+    "general->landscape": 2,
+    "group->landscape": 55,
+    "group->person": 42,
+    "person->landscape": 5
+  },
+  "changes": [
+    {
+      "assetId": "asset-091",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-091-w2400.webp"
+    },
+    {
+      "assetId": "asset-041",
+      "tripId": "demo-2025-6",
+      "oldStratum": "person",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-041-w2400.webp"
+    },
+    {
+      "assetId": "asset-072",
+      "tripId": "demo-2025-6",
+      "oldStratum": "person",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-072-w2400.webp"
+    },
+    {
+      "assetId": "asset-015",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-015-w2400.webp"
+    },
+    {
+      "assetId": "asset-115",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-115-w2400.webp"
+    },
+    {
+      "assetId": "asset-010",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-010-w2400.webp"
+    },
+    {
+      "assetId": "asset-085",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-085-w2400.webp"
+    },
+    {
+      "assetId": "asset-120",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-120-w2400.webp"
+    },
+    {
+      "assetId": "asset-025",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-025-w2400.webp"
+    },
+    {
+      "assetId": "asset-061",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-061-w2400.webp"
+    },
+    {
+      "assetId": "asset-062",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-062-w2400.webp"
+    },
+    {
+      "assetId": "asset-032",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-032-w2400.webp"
+    },
+    {
+      "assetId": "asset-071",
+      "tripId": "demo-2025-6",
+      "oldStratum": "general",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-071-w2400.webp"
+    },
+    {
+      "assetId": "asset-004",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-004-w2400.webp"
+    },
+    {
+      "assetId": "asset-063",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-063-w2400.webp"
+    },
+    {
+      "assetId": "asset-089",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-089-w2400.webp"
+    },
+    {
+      "assetId": "asset-117",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-117-w2400.webp"
+    },
+    {
+      "assetId": "asset-056",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-056-w2400.webp"
+    },
+    {
+      "assetId": "asset-038",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-038-w2400.webp"
+    },
+    {
+      "assetId": "asset-008",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-008-w2400.webp"
+    },
+    {
+      "assetId": "asset-098",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-098-w2400.webp"
+    },
+    {
+      "assetId": "asset-048",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-048-w2400.webp"
+    },
+    {
+      "assetId": "asset-043",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-043-w2400.webp"
+    },
+    {
+      "assetId": "asset-006",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-006-w2400.webp"
+    },
+    {
+      "assetId": "asset-045",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-045-w2400.webp"
+    },
+    {
+      "assetId": "asset-069",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-069-w2400.webp"
+    },
+    {
+      "assetId": "asset-107",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-107-w2400.webp"
+    },
+    {
+      "assetId": "asset-110",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-110-w2400.webp"
+    },
+    {
+      "assetId": "asset-084",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-084-w2400.webp"
+    },
+    {
+      "assetId": "asset-078",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-078-w2400.webp"
+    },
+    {
+      "assetId": "asset-023",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-023-w2400.webp"
+    },
+    {
+      "assetId": "asset-112",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-112-w2400.webp"
+    },
+    {
+      "assetId": "asset-087",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-087-w2400.webp"
+    },
+    {
+      "assetId": "asset-101",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-101-w2400.webp"
+    },
+    {
+      "assetId": "asset-119",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-119-w2400.webp"
+    },
+    {
+      "assetId": "asset-001",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-001-w2400.webp"
+    },
+    {
+      "assetId": "asset-022",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-022-w2400.webp"
+    },
+    {
+      "assetId": "asset-086",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-086-w2400.webp"
+    },
+    {
+      "assetId": "asset-092",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-092-w2400.webp"
+    },
+    {
+      "assetId": "asset-027",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-027-w2400.webp"
+    },
+    {
+      "assetId": "asset-003",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-003-w2400.webp"
+    },
+    {
+      "assetId": "asset-046",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-046-w2400.webp"
+    },
+    {
+      "assetId": "asset-005",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-005-w2400.webp"
+    },
+    {
+      "assetId": "asset-014",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-014-w2400.webp"
+    },
+    {
+      "assetId": "asset-099",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-099-w2400.webp"
+    },
+    {
+      "assetId": "asset-011",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-011-w2400.webp"
+    },
+    {
+      "assetId": "asset-049",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-049-w2400.webp"
+    },
+    {
+      "assetId": "asset-040",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-040-w2400.webp"
+    },
+    {
+      "assetId": "asset-067",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-067-w2400.webp"
+    },
+    {
+      "assetId": "asset-042",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-042-w2400.webp"
+    },
+    {
+      "assetId": "asset-051",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-051-w2400.webp"
+    },
+    {
+      "assetId": "asset-104",
+      "tripId": "demo-2025-6",
+      "oldStratum": "person",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-104-w2400.webp"
+    },
+    {
+      "assetId": "asset-070",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-070-w2400.webp"
+    },
+    {
+      "assetId": "asset-090",
+      "tripId": "demo-2025-6",
+      "oldStratum": "person",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-090-w2400.webp"
+    },
+    {
+      "assetId": "asset-016",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-016-w2400.webp"
+    },
+    {
+      "assetId": "asset-058",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-058-w2400.webp"
+    },
+    {
+      "assetId": "asset-065",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-065-w2400.webp"
+    },
+    {
+      "assetId": "asset-113",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-113-w2400.webp"
+    },
+    {
+      "assetId": "asset-106",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-106-w2400.webp"
+    },
+    {
+      "assetId": "asset-054",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-054-w2400.webp"
+    },
+    {
+      "assetId": "asset-055",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-055-w2400.webp"
+    },
+    {
+      "assetId": "asset-057",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-057-w2400.webp"
+    },
+    {
+      "assetId": "asset-020",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-020-w2400.webp"
+    },
+    {
+      "assetId": "asset-033",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-033-w2400.webp"
+    },
+    {
+      "assetId": "asset-009",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-009-w2400.webp"
+    },
+    {
+      "assetId": "asset-075",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-075-w2400.webp"
+    },
+    {
+      "assetId": "asset-122",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-122-w2400.webp"
+    },
+    {
+      "assetId": "asset-013",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-013-w2400.webp"
+    },
+    {
+      "assetId": "asset-082",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-082-w2400.webp"
+    },
+    {
+      "assetId": "asset-066",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-066-w2400.webp"
+    },
+    {
+      "assetId": "asset-024",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-024-w2400.webp"
+    },
+    {
+      "assetId": "asset-068",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-068-w2400.webp"
+    },
+    {
+      "assetId": "asset-108",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-108-w2400.webp"
+    },
+    {
+      "assetId": "asset-047",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-047-w2400.webp"
+    },
+    {
+      "assetId": "asset-044",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-044-w2400.webp"
+    },
+    {
+      "assetId": "asset-031",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-031-w2400.webp"
+    },
+    {
+      "assetId": "asset-102",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-102-w2400.webp"
+    },
+    {
+      "assetId": "asset-030",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-030-w2400.webp"
+    },
+    {
+      "assetId": "asset-118",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-118-w2400.webp"
+    },
+    {
+      "assetId": "asset-077",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-077-w2400.webp"
+    },
+    {
+      "assetId": "asset-094",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-094-w2400.webp"
+    },
+    {
+      "assetId": "asset-083",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-083-w2400.webp"
+    },
+    {
+      "assetId": "asset-103",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-103-w2400.webp"
+    },
+    {
+      "assetId": "asset-060",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-060-w2400.webp"
+    },
+    {
+      "assetId": "asset-100",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-100-w2400.webp"
+    },
+    {
+      "assetId": "asset-081",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-081-w2400.webp"
+    },
+    {
+      "assetId": "asset-093",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-093-w2400.webp"
+    },
+    {
+      "assetId": "asset-050",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-050-w2400.webp"
+    },
+    {
+      "assetId": "asset-097",
+      "tripId": "demo-2025-6",
+      "oldStratum": "person",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-097-w2400.webp"
+    },
+    {
+      "assetId": "asset-079",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-079-w2400.webp"
+    },
+    {
+      "assetId": "asset-053",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-053-w2400.webp"
+    },
+    {
+      "assetId": "asset-074",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-074-w2400.webp"
+    },
+    {
+      "assetId": "asset-059",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-059-w2400.webp"
+    },
+    {
+      "assetId": "asset-080",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-080-w2400.webp"
+    },
+    {
+      "assetId": "asset-073",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-073-w2400.webp"
+    },
+    {
+      "assetId": "asset-017",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-017-w2400.webp"
+    },
+    {
+      "assetId": "asset-026",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-026-w2400.webp"
+    },
+    {
+      "assetId": "asset-076",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-076-w2400.webp"
+    },
+    {
+      "assetId": "asset-064",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-064-w2400.webp"
+    },
+    {
+      "assetId": "asset-095",
+      "tripId": "demo-2025-6",
+      "oldStratum": "general",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-095-w2400.webp"
+    },
+    {
+      "assetId": "asset-036",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-036-w2400.webp"
+    },
+    {
+      "assetId": "asset-007",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-007-w2400.webp"
+    },
+    {
+      "assetId": "asset-002",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "landscape",
+      "displayFile": "assets/asset-002-w2400.webp"
+    },
+    {
+      "assetId": "asset-037",
+      "tripId": "demo-2025-6",
+      "oldStratum": "group",
+      "newStratum": "person",
+      "displayFile": "assets/asset-037-w2400.webp"
+    }
+  ],
+  "auditedAt": "2026-06-18T08:28:36.578052+00:00"
+}

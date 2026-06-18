@@ -1,0 +1,498 @@
+{
+  "tripDir": "C:\\Users\\xiafe\\Projects\\travelogue\\trips\\demo-2025-6",
+  "metric": "nima",
+  "scored": true,
+  "rulesBaseline": {
+    "sampleCount": 109,
+    "srcc": 0.2548
+  },
+  "calibration": {
+    "sampleCount": 109,
+    "blendGrid": [
+      0.25,
+      0.26,
+      0.27,
+      0.28,
+      0.29,
+      0.3,
+      0.31,
+      0.32,
+      0.33,
+      0.34,
+      0.35,
+      0.36,
+      0.37,
+      0.38,
+      0.39,
+      0.4,
+      0.41,
+      0.42,
+      0.43,
+      0.44,
+      0.45
+    ],
+    "learnedOnly": {
+      "sampleCount": 109,
+      "srcc": 0.1353
+    },
+    "purposes": {
+      "default": {
+        "grid": [
+          {
+            "blend": 0.25,
+            "sampleCount": 109,
+            "srcc": 0.2824
+          },
+          {
+            "blend": 0.26,
+            "sampleCount": 109,
+            "srcc": 0.2817
+          },
+          {
+            "blend": 0.27,
+            "sampleCount": 109,
+            "srcc": 0.2842
+          },
+          {
+            "blend": 0.28,
+            "sampleCount": 109,
+            "srcc": 0.2827
+          },
+          {
+            "blend": 0.29,
+            "sampleCount": 109,
+            "srcc": 0.2848
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 109,
+            "srcc": 0.2836
+          },
+          {
+            "blend": 0.31,
+            "sampleCount": 109,
+            "srcc": 0.2844
+          },
+          {
+            "blend": 0.32,
+            "sampleCount": 109,
+            "srcc": 0.2841
+          },
+          {
+            "blend": 0.33,
+            "sampleCount": 109,
+            "srcc": 0.282
+          },
+          {
+            "blend": 0.34,
+            "sampleCount": 109,
+            "srcc": 0.2832
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 109,
+            "srcc": 0.2843
+          },
+          {
+            "blend": 0.36,
+            "sampleCount": 109,
+            "srcc": 0.2841
+          },
+          {
+            "blend": 0.37,
+            "sampleCount": 109,
+            "srcc": 0.2852
+          },
+          {
+            "blend": 0.38,
+            "sampleCount": 109,
+            "srcc": 0.2855
+          },
+          {
+            "blend": 0.39,
+            "sampleCount": 109,
+            "srcc": 0.2853
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 109,
+            "srcc": 0.2808
+          },
+          {
+            "blend": 0.41,
+            "sampleCount": 109,
+            "srcc": 0.278
+          },
+          {
+            "blend": 0.42,
+            "sampleCount": 109,
+            "srcc": 0.2748
+          },
+          {
+            "blend": 0.43,
+            "sampleCount": 109,
+            "srcc": 0.2746
+          },
+          {
+            "blend": 0.44,
+            "sampleCount": 109,
+            "srcc": 0.2766
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 109,
+            "srcc": 0.2738
+          }
+        ],
+        "bestBlend": 0.38,
+        "bestSrcc": 0.2855,
+        "baselineRulesSrcc": 0.2548,
+        "deltaVsBaseline": 0.0307
+      },
+      "cover": {
+        "grid": [
+          {
+            "blend": 0.25,
+            "sampleCount": 109,
+            "srcc": 0.2603
+          },
+          {
+            "blend": 0.26,
+            "sampleCount": 109,
+            "srcc": 0.264
+          },
+          {
+            "blend": 0.27,
+            "sampleCount": 109,
+            "srcc": 0.2642
+          },
+          {
+            "blend": 0.28,
+            "sampleCount": 109,
+            "srcc": 0.267
+          },
+          {
+            "blend": 0.29,
+            "sampleCount": 109,
+            "srcc": 0.2683
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 109,
+            "srcc": 0.2677
+          },
+          {
+            "blend": 0.31,
+            "sampleCount": 109,
+            "srcc": 0.2691
+          },
+          {
+            "blend": 0.32,
+            "sampleCount": 109,
+            "srcc": 0.2686
+          },
+          {
+            "blend": 0.33,
+            "sampleCount": 109,
+            "srcc": 0.2641
+          },
+          {
+            "blend": 0.34,
+            "sampleCount": 109,
+            "srcc": 0.2624
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 109,
+            "srcc": 0.2634
+          },
+          {
+            "blend": 0.36,
+            "sampleCount": 109,
+            "srcc": 0.2626
+          },
+          {
+            "blend": 0.37,
+            "sampleCount": 109,
+            "srcc": 0.2657
+          },
+          {
+            "blend": 0.38,
+            "sampleCount": 109,
+            "srcc": 0.2658
+          },
+          {
+            "blend": 0.39,
+            "sampleCount": 109,
+            "srcc": 0.2646
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 109,
+            "srcc": 0.2653
+          },
+          {
+            "blend": 0.41,
+            "sampleCount": 109,
+            "srcc": 0.2624
+          },
+          {
+            "blend": 0.42,
+            "sampleCount": 109,
+            "srcc": 0.2595
+          },
+          {
+            "blend": 0.43,
+            "sampleCount": 109,
+            "srcc": 0.255
+          },
+          {
+            "blend": 0.44,
+            "sampleCount": 109,
+            "srcc": 0.2563
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 109,
+            "srcc": 0.2534
+          }
+        ],
+        "bestBlend": 0.31,
+        "bestSrcc": 0.2691,
+        "baselineRulesSrcc": 0.2548,
+        "deltaVsBaseline": 0.0143
+      },
+      "hero": {
+        "grid": [
+          {
+            "blend": 0.25,
+            "sampleCount": 109,
+            "srcc": 0.2905
+          },
+          {
+            "blend": 0.26,
+            "sampleCount": 109,
+            "srcc": 0.29
+          },
+          {
+            "blend": 0.27,
+            "sampleCount": 109,
+            "srcc": 0.289
+          },
+          {
+            "blend": 0.28,
+            "sampleCount": 109,
+            "srcc": 0.2904
+          },
+          {
+            "blend": 0.29,
+            "sampleCount": 109,
+            "srcc": 0.29
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 109,
+            "srcc": 0.291
+          },
+          {
+            "blend": 0.31,
+            "sampleCount": 109,
+            "srcc": 0.2932
+          },
+          {
+            "blend": 0.32,
+            "sampleCount": 109,
+            "srcc": 0.2957
+          },
+          {
+            "blend": 0.33,
+            "sampleCount": 109,
+            "srcc": 0.295
+          },
+          {
+            "blend": 0.34,
+            "sampleCount": 109,
+            "srcc": 0.2957
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 109,
+            "srcc": 0.2971
+          },
+          {
+            "blend": 0.36,
+            "sampleCount": 109,
+            "srcc": 0.2939
+          },
+          {
+            "blend": 0.37,
+            "sampleCount": 109,
+            "srcc": 0.2944
+          },
+          {
+            "blend": 0.38,
+            "sampleCount": 109,
+            "srcc": 0.2957
+          },
+          {
+            "blend": 0.39,
+            "sampleCount": 109,
+            "srcc": 0.2987
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 109,
+            "srcc": 0.2963
+          },
+          {
+            "blend": 0.41,
+            "sampleCount": 109,
+            "srcc": 0.2982
+          },
+          {
+            "blend": 0.42,
+            "sampleCount": 109,
+            "srcc": 0.2966
+          },
+          {
+            "blend": 0.43,
+            "sampleCount": 109,
+            "srcc": 0.299
+          },
+          {
+            "blend": 0.44,
+            "sampleCount": 109,
+            "srcc": 0.2967
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 109,
+            "srcc": 0.2949
+          }
+        ],
+        "bestBlend": 0.43,
+        "bestSrcc": 0.299,
+        "baselineRulesSrcc": 0.2548,
+        "deltaVsBaseline": 0.0442
+      },
+      "moment": {
+        "grid": [
+          {
+            "blend": 0.25,
+            "sampleCount": 109,
+            "srcc": 0.2701
+          },
+          {
+            "blend": 0.26,
+            "sampleCount": 109,
+            "srcc": 0.2723
+          },
+          {
+            "blend": 0.27,
+            "sampleCount": 109,
+            "srcc": 0.2704
+          },
+          {
+            "blend": 0.28,
+            "sampleCount": 109,
+            "srcc": 0.2729
+          },
+          {
+            "blend": 0.29,
+            "sampleCount": 109,
+            "srcc": 0.275
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 109,
+            "srcc": 0.273
+          },
+          {
+            "blend": 0.31,
+            "sampleCount": 109,
+            "srcc": 0.2735
+          },
+          {
+            "blend": 0.32,
+            "sampleCount": 109,
+            "srcc": 0.2746
+          },
+          {
+            "blend": 0.33,
+            "sampleCount": 109,
+            "srcc": 0.2762
+          },
+          {
+            "blend": 0.34,
+            "sampleCount": 109,
+            "srcc": 0.2773
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 109,
+            "srcc": 0.2811
+          },
+          {
+            "blend": 0.36,
+            "sampleCount": 109,
+            "srcc": 0.284
+          },
+          {
+            "blend": 0.37,
+            "sampleCount": 109,
+            "srcc": 0.2832
+          },
+          {
+            "blend": 0.38,
+            "sampleCount": 109,
+            "srcc": 0.2845
+          },
+          {
+            "blend": 0.39,
+            "sampleCount": 109,
+            "srcc": 0.2867
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 109,
+            "srcc": 0.2829
+          },
+          {
+            "blend": 0.41,
+            "sampleCount": 109,
+            "srcc": 0.2813
+          },
+          {
+            "blend": 0.42,
+            "sampleCount": 109,
+            "srcc": 0.2813
+          },
+          {
+            "blend": 0.43,
+            "sampleCount": 109,
+            "srcc": 0.279
+          },
+          {
+            "blend": 0.44,
+            "sampleCount": 109,
+            "srcc": 0.283
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 109,
+            "srcc": 0.2851
+          }
+        ],
+        "bestBlend": 0.39,
+        "bestSrcc": 0.2867,
+        "baselineRulesSrcc": 0.2548,
+        "deltaVsBaseline": 0.0319
+      }
+    },
+    "recommended": {
+      "blend": 0.38,
+      "srcc": 0.2855,
+      "purpose": "default"
+    }
+  }
+}

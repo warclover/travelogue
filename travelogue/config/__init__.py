@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from travelogue.config._common import TriState
 from travelogue.config.aesthetic import (
+    DEFAULT_STRATUM_BLENDS,
     AestheticConfig,
+    AestheticMllmConfig,
     AestheticPurposePresets,
     AestheticWeights,
+    resolve_learned_blend,
 )
 from travelogue.config.app import AppConfig
 from travelogue.config.clustering import (
@@ -54,8 +57,10 @@ from travelogue.config.vision import VisionConfig
 
 __all__ = [
     "DEFAULT_RAW_BLOCKLIST_SUFFIXES",
+    "DEFAULT_STRATUM_BLENDS",
     "TriState",
     "AestheticConfig",
+    "AestheticMllmConfig",
     "AestheticPurposePresets",
     "AestheticWeights",
     "AppConfig",
@@ -98,5 +103,6 @@ __all__ = [
     "patch_config_file",
     "reading_profile_defaults",
     "reset_config_cache",
+    "resolve_learned_blend",
     "studio_config_expose",
 ]

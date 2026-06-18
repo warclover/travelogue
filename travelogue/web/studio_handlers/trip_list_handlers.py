@@ -130,6 +130,32 @@ def handle_aesthetic(handler: StudioHandlerProtocol, trip_id: str) -> None:
     handler._json_response(200, {"ok": True, **payload})
 
 
+def handle_patch_stratum_preference(handler: StudioHandlerProtocol, trip_id: str) -> None:
+    from travelogue.curation.album_profile import apply_stratum_preference
+    from travelogue.web.studio_aesthetic import build_stratum_preference_studio_summary
+
+    payload = handler._read_json_body()
+    if not payload:
+        return
+    raw = payload.get("stratumPreference", payload.get("value"))
+    if raw is None:
+        handler._json_response(400, {"ok": False, "error": "stratumPreference required"})
+        return
+    loaded = load_trip_or_404(handler, trip_id)
+    if loaded is None:
+        return
+    trip_dir, trip = loaded
+    trip_json = trip_dir / "trip.json"
+    ctx = studio_ctx(handler)
+    svc = ctx.trip_service()
+    pref = apply_stratum_preference(trip, str(raw))
+    svc.save(trip, trip_json)
+    handler._json_response(
+        200,
+        {"ok": True, "stratumPreference": build_stratum_preference_studio_summary(trip)},
+    )
+
+
 def handle_bento_preview(handler: StudioHandlerProtocol, trip_id: str) -> None:
     from travelogue.web.studio_bento_preview import build_trip_bento_preview
 

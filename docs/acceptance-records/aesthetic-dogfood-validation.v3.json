@@ -1,0 +1,363 @@
+{
+  "version": "1",
+  "recordedAt": "2026-06-18T09:45:49.477432+00:00",
+  "notes": "Dogfood · landscape stratum-blend pilot · food 语料搁置",
+  "pilotConfig": {
+    "mlCalibrate": true,
+    "useStratumBlend": true,
+    "stratumBlendOnly": [
+      "landscape"
+    ],
+    "useAlbumRelative": true,
+    "stratumBlends": {
+      "group": 0.1,
+      "person": 0.6,
+      "landscape": 0.6,
+      "food": 0.35,
+      "general": 0.35
+    }
+  },
+  "calibrationSource": "docs/acceptance-records/aesthetic-stratum-calibration.merged.v3.json",
+  "useAlbumRelative": true,
+  "trips": {
+    "demo-fc8b3a5c08": {
+      "profileTag": "landscape_heavy",
+      "albumProfile": {
+        "version": "1",
+        "computedAt": "2026-06-18T09:45:49Z",
+        "eligibleImages": 146,
+        "strata": {
+          "person": 0.1849,
+          "landscape": 0.8151
+        },
+        "dominantStratum": "landscape",
+        "isSkewed": true
+      },
+      "labelsPath": "docs/acceptance-records/aesthetic-human-labels.demo-fc8b3a5c08.v3.json",
+      "automated": {
+        "purposes": {
+          "cover": {
+            "rulesPick": "asset-020",
+            "alignedPick": "asset-020",
+            "samePick": true,
+            "verdict": "same_pick"
+          },
+          "hero": {
+            "rulesPick": "asset-020",
+            "alignedPick": "asset-020",
+            "samePick": true,
+            "verdict": "same_pick"
+          },
+          "moment": {
+            "rulesPick": "asset-020",
+            "alignedPick": "asset-020",
+            "samePick": true,
+            "verdict": "same_pick"
+          }
+        },
+        "targetWinratePct": 60.0,
+        "automatedWinCount": 0,
+        "comparablePurposes": 0,
+        "automatedWinratePct": null,
+        "passed": false
+      },
+      "signoff": {
+        "version": "1",
+        "tripId": "demo-fc8b3a5c08",
+        "targetWinratePct": 60.0,
+        "automated": {
+          "purposes": {
+            "cover": {
+              "rulesPick": "asset-020",
+              "alignedPick": "asset-020",
+              "samePick": true,
+              "verdict": "same_pick"
+            },
+            "hero": {
+              "rulesPick": "asset-020",
+              "alignedPick": "asset-020",
+              "samePick": true,
+              "verdict": "same_pick"
+            },
+            "moment": {
+              "rulesPick": "asset-020",
+              "alignedPick": "asset-020",
+              "samePick": true,
+              "verdict": "same_pick"
+            }
+          },
+          "targetWinratePct": 60.0,
+          "automatedWinCount": 0,
+          "comparablePurposes": 0,
+          "automatedWinratePct": null,
+          "passed": false
+        },
+        "pairwise": null,
+        "purposeComparisons": [
+          {
+            "purpose": "cover",
+            "rulesPick": "asset-020",
+            "candidatePick": "asset-020",
+            "automatedVerdict": "same_pick",
+            "judgeVerdict": null,
+            "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+          },
+          {
+            "purpose": "hero",
+            "rulesPick": "asset-020",
+            "candidatePick": "asset-020",
+            "automatedVerdict": "same_pick",
+            "judgeVerdict": null,
+            "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+          },
+          {
+            "purpose": "moment",
+            "rulesPick": "asset-020",
+            "candidatePick": "asset-020",
+            "automatedVerdict": "same_pick",
+            "judgeVerdict": null,
+            "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+          }
+        ]
+      },
+      "acSc03Passed": false,
+      "acSc04AlbumProfile": true
+    },
+    "demo-1a737d6205": {
+      "profileTag": "mixed_portrait",
+      "albumProfile": {
+        "version": "1",
+        "computedAt": "2026-06-18T09:45:49Z",
+        "eligibleImages": 181,
+        "strata": {
+          "person": 0.5635,
+          "landscape": 0.4365
+        },
+        "dominantStratum": "person",
+        "isSkewed": false
+      },
+      "labelsPath": "docs/acceptance-records/aesthetic-human-labels.demo-1a737d6205.json",
+      "automated": {
+        "purposes": {
+          "cover": {
+            "rulesPick": "asset-006",
+            "alignedPick": "asset-150",
+            "samePick": false,
+            "verdict": "tie",
+            "humanRules": 0.5,
+            "humanAligned": 0.5
+          },
+          "hero": {
+            "rulesPick": "asset-006",
+            "alignedPick": "asset-012",
+            "samePick": false,
+            "verdict": "missing_labels"
+          },
+          "moment": {
+            "rulesPick": "asset-006",
+            "alignedPick": "asset-012",
+            "samePick": false,
+            "verdict": "missing_labels"
+          }
+        },
+        "targetWinratePct": 60.0,
+        "automatedWinCount": 0,
+        "comparablePurposes": 1,
+        "automatedWinratePct": 0.0,
+        "passed": false
+      },
+      "signoff": {
+        "version": "1",
+        "tripId": "demo-1a737d6205",
+        "targetWinratePct": 60.0,
+        "automated": {
+          "purposes": {
+            "cover": {
+              "rulesPick": "asset-006",
+              "alignedPick": "asset-150",
+              "samePick": false,
+              "verdict": "tie",
+              "humanRules": 0.5,
+              "humanAligned": 0.5
+            },
+            "hero": {
+              "rulesPick": "asset-006",
+              "alignedPick": "asset-012",
+              "samePick": false,
+              "verdict": "missing_labels"
+            },
+            "moment": {
+              "rulesPick": "asset-006",
+              "alignedPick": "asset-012",
+              "samePick": false,
+              "verdict": "missing_labels"
+            }
+          },
+          "targetWinratePct": 60.0,
+          "automatedWinCount": 0,
+          "comparablePurposes": 1,
+          "automatedWinratePct": 0.0,
+          "passed": false
+        },
+        "pairwise": null,
+        "purposeComparisons": [
+          {
+            "purpose": "cover",
+            "rulesPick": "asset-006",
+            "candidatePick": "asset-150",
+            "automatedVerdict": "tie",
+            "judgeVerdict": null,
+            "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+          },
+          {
+            "purpose": "hero",
+            "rulesPick": "asset-006",
+            "candidatePick": "asset-012",
+            "automatedVerdict": "missing_labels",
+            "judgeVerdict": null,
+            "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+          },
+          {
+            "purpose": "moment",
+            "rulesPick": "asset-006",
+            "candidatePick": "asset-012",
+            "automatedVerdict": "missing_labels",
+            "judgeVerdict": null,
+            "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+          }
+        ]
+      },
+      "acSc03Passed": false,
+      "acSc04AlbumProfile": true
+    },
+    "demo-2025-6": {
+      "profileTag": "mixed_travel",
+      "albumProfile": {
+        "version": "1",
+        "computedAt": "2026-06-18T09:45:49Z",
+        "eligibleImages": 113,
+        "strata": {
+          "person": 0.4425,
+          "landscape": 0.5575
+        },
+        "dominantStratum": "landscape",
+        "isSkewed": false
+      },
+      "labelsPath": "docs/acceptance-records/aesthetic-human-labels.demo-2025-6.json",
+      "automated": {
+        "purposes": {
+          "cover": {
+            "rulesPick": "asset-040",
+            "alignedPick": "asset-114",
+            "samePick": false,
+            "verdict": "missing_labels"
+          },
+          "hero": {
+            "rulesPick": "asset-104",
+            "alignedPick": "asset-045",
+            "samePick": false,
+            "verdict": "rules_wins",
+            "humanRules": 0.75,
+            "humanAligned": 0.5
+          },
+          "moment": {
+            "rulesPick": "asset-104",
+            "alignedPick": "asset-064",
+            "samePick": false,
+            "verdict": "rules_wins",
+            "humanRules": 0.75,
+            "humanAligned": 0.5
+          }
+        },
+        "targetWinratePct": 60.0,
+        "automatedWinCount": 0,
+        "comparablePurposes": 2,
+        "automatedWinratePct": 0.0,
+        "passed": false
+      },
+      "signoff": {
+        "version": "1",
+        "tripId": "demo-2025-6",
+        "targetWinratePct": 60.0,
+        "automated": {
+          "purposes": {
+            "cover": {
+              "rulesPick": "asset-040",
+              "alignedPick": "asset-114",
+              "samePick": false,
+              "verdict": "missing_labels"
+            },
+            "hero": {
+              "rulesPick": "asset-104",
+              "alignedPick": "asset-045",
+              "samePick": false,
+              "verdict": "rules_wins",
+              "humanRules": 0.75,
+              "humanAligned": 0.5
+            },
+            "moment": {
+              "rulesPick": "asset-104",
+              "alignedPick": "asset-064",
+              "samePick": false,
+              "verdict": "rules_wins",
+              "humanRules": 0.75,
+              "humanAligned": 0.5
+            }
+          },
+          "targetWinratePct": 60.0,
+          "automatedWinCount": 0,
+          "comparablePurposes": 2,
+          "automatedWinratePct": 0.0,
+          "passed": false
+        },
+        "pairwise": null,
+        "purposeComparisons": [
+          {
+            "purpose": "cover",
+            "rulesPick": "asset-040",
+            "candidatePick": "asset-114",
+            "automatedVerdict": "missing_labels",
+            "judgeVerdict": null,
+            "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+          },
+          {
+            "purpose": "hero",
+            "rulesPick": "asset-104",
+            "candidatePick": "asset-045",
+            "automatedVerdict": "rules_wins",
+            "judgeVerdict": null,
+            "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+          },
+          {
+            "purpose": "moment",
+            "rulesPick": "asset-104",
+            "candidatePick": "asset-064",
+            "automatedVerdict": "rules_wins",
+            "judgeVerdict": null,
+            "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+          }
+        ]
+      },
+      "acSc03Passed": false,
+      "acSc04AlbumProfile": true
+    }
+  },
+  "aggregate": {
+    "automatedWinCount": 0,
+    "comparablePurposes": 3,
+    "automatedWinratePct": 0.0,
+    "targetWinratePct": 60.0,
+    "passedAcSc03": false
+  },
+  "acceptance": {
+    "AC-SC-03": {
+      "passed": false,
+      "automatedWinratePct": 0.0,
+      "note": "自动化 proxy；人工 pairwise 待补"
+    },
+    "AC-SC-04": {
+      "passed": true,
+      "note": "albumProfile 已计算；skew 册回归待 curate 对比"
+    }
+  }
+}

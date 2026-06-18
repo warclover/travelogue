@@ -43,6 +43,8 @@ def expected_profile(app_cfg: AppConfig | None = None, *, layout_engine: str | N
         "profileVersion": PROFILE_VERSION,
         "aestheticVersion": AESTHETIC_VERSION,
         "aestheticEnabled": bool(cfg.aesthetic.enabled),
+        "aestheticMlCalibrate": bool(cfg.aesthetic.ml_calibrate),
+        "aestheticMllmEnabled": bool(cfg.aesthetic.mllm.enabled),
         "cullEnabled": bool(cfg.cull.enabled),
         "cullKeepRatioFloor": float(cfg.cull.keep_ratio_floor),
         "coverScoringHash": _cover_scoring_hash(cfg),

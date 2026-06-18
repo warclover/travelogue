@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
+from travelogue.config.portrait import PortraitConfig, portrait_from_dict
 from travelogue.config_helpers import cfg_bool, cfg_float, cfg_int
 
 
@@ -44,6 +45,7 @@ class CullConfig:
     face_ratio_gray_high: float = 0.20
     score_branch_weight_portrait: float = 0.15
     score_branch_weight_landscape: float = 0.15
+    portrait: PortraitConfig = field(default_factory=PortraitConfig)
 
 
 def cull_from_dict(raw: dict[str, Any]) -> CullConfig:
@@ -141,4 +143,5 @@ def cull_from_dict(raw: dict[str, Any]) -> CullConfig:
         score_branch_weight_landscape=cfg_float(
             raw, "score_branch_weight_landscape", "scoreBranchWeightLandscape", 0.15
         ),
+        portrait=portrait_from_dict(raw.get("portrait") if isinstance(raw.get("portrait"), dict) else raw),
     )

@@ -1,0 +1,37 @@
+{
+  "source": "docs\\acceptance-records\\aesthetic-human-labels.demo-53cda5151f.json",
+  "frozen": true,
+  "predictedKey": "predictedOverall",
+  "sampleCount": 17,
+  "srcc": -0.0745,
+  "labeledCount": 17,
+  "exportCount": 17,
+  "byStratum": {
+    "food": {
+      "sampleCount": 17,
+      "srcc": -0.0745
+    }
+  },
+  "purposeComparison": {
+    "predictedOverall": {
+      "sampleCount": 17,
+      "srcc": -0.0745
+    },
+    "predictedCover": {
+      "sampleCount": 17,
+      "srcc": -0.1118
+    },
+    "predictedHero": {
+      "sampleCount": 17,
+      "srcc": -0.0373
+    },
+    "predictedMoment": {
+      "sampleCount": 17,
+      "srcc": 0.1118
+    },
+    "predictedSolo": {
+      "sampleCount": 17,
+      "srcc": -0.0745
+    }
+  }
+}

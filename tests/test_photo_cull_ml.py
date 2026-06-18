@@ -13,6 +13,7 @@ from travelogue.curation.photo_cull_ml import (
     apply_aesthetic_scores,
     pyiqa_available,
     resolve_effective_mode,
+    _norm_aesthetic,
 )
 
 
@@ -134,6 +135,9 @@ def test_apply_aesthetic_scores_uses_persistent_cache(
     assert ok1
     assert calls["n"] == 1
     assert asset.get("quality", {}).get("aestheticScore") == pytest.approx(0.66, abs=1e-4)
+    sig = asset["quality"]["aesthetic"]["signals"]
+    assert sig["learnedAesthetic"] == pytest.approx(0.66, abs=1e-4)
+    assert sig["learnedMetric"] == cfg.aesthetic_metric
 
     asset2 = {
         "id": "a1",
@@ -146,3 +150,10 @@ def test_apply_aesthetic_scores_uses_persistent_cache(
     assert ok2
     assert calls["n"] == 1
     assert asset2.get("quality", {}).get("aestheticScore") == pytest.approx(0.66, abs=1e-4)
+
+
+def test_norm_aesthetic_nima_maps_ten_point_scale() -> None:
+    assert _norm_aesthetic(2.0, metric_name="nima") == pytest.approx(1.0 / 9.0, abs=1e-6)
+    assert _norm_aesthetic(10.0, metric_name="nima") == pytest.approx(1.0, abs=1e-6)
+    assert _norm_aesthetic(5.5, metric_name="nima") == pytest.approx(0.5, abs=1e-6)
+    assert _norm_aesthetic(0.72, metric_name="nima") == pytest.approx(0.72, abs=1e-6)

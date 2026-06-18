@@ -1,0 +1,164 @@
+{
+  "version": "1",
+  "tripId": "demo-1a737d6205",
+  "pairCount": 6,
+  "pairsPerPurpose": 6,
+  "purposes": [
+    "cover"
+  ],
+  "seed": 46,
+  "pairs": [
+    {
+      "pairId": "cover-002",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-151",
+        "displayFile": "assets/asset-151-w3200.webp",
+        "score": 0.5287
+      },
+      "optionRight": {
+        "assetId": "asset-205",
+        "displayFile": "assets/asset-205-w3200.webp",
+        "score": 0.5734
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "cover-003",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-067",
+        "displayFile": "assets/asset-067-w3200.webp",
+        "score": 0.5191
+      },
+      "optionRight": {
+        "assetId": "asset-071",
+        "displayFile": "assets/asset-071-w3200.webp",
+        "score": 0.7353
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "cover-004",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-006",
+        "displayFile": "assets/asset-006-w3200.webp",
+        "score": 0.585
+      },
+      "optionRight": {
+        "assetId": "asset-181",
+        "displayFile": "assets/asset-181-w3200.webp",
+        "score": 0.5589
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "cover-005",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-139",
+        "displayFile": "assets/asset-139-w3200.webp",
+        "score": 0.5203
+      },
+      "optionRight": {
+        "assetId": "asset-152",
+        "displayFile": "assets/asset-152-w3200.webp",
+        "score": 0.5633
+      },
+      "leftRole": "aligned",
+      "rightRole": "rules",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "cover-006",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-179",
+        "displayFile": "assets/asset-179-w3200.webp",
+        "score": 0.5771
+      },
+      "optionRight": {
+        "assetId": "asset-213",
+        "displayFile": "assets/asset-213-w3200.webp",
+        "score": 0.5062
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "cover-001",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-213",
+        "displayFile": "assets/asset-213-w3200.webp",
+        "score": 0.5062
+      },
+      "optionRight": {
+        "assetId": "asset-215",
+        "displayFile": "assets/asset-215-w3200.webp",
+        "score": 0.5346
+      },
+      "leftRole": "aligned",
+      "rightRole": "rules",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    }
+  ],
+  "topPicks": {
+    "cover": {
+      "rules": {
+        "assetId": "asset-181",
+        "displayFile": "assets/asset-181-w3200.webp",
+        "score": 0.5898
+      },
+      "aligned": {
+        "assetId": "asset-071",
+        "displayFile": "assets/asset-071-w3200.webp",
+        "score": 0.7353
+      }
+    }
+  },
+  "exportedAt": "2026-06-18T11:23:23.031719+00:00",
+  "pilotConfig": {
+    "mlCalibrate": true,
+    "useStratumBlend": true,
+    "stratumBlendOnly": [
+      "landscape",
+      "person"
+    ],
+    "stratumBlendOnlyByPurpose": {
+      "hero": [
+        "landscape"
+      ]
+    },
+    "useAlbumRelative": true,
+    "stratumBlends": {
+      "group": 0.1,
+      "person": 0.6,
+      "landscape": 0.6,
+      "food": 0.35,
+      "general": 0.35
+    }
+  },
+  "previewUrl": "http://127.0.0.1:8766/demo-1a737d6205",
+  "notes": "张智慧 cover 补评 · MLLM cover 关闭 · subjectClarity 0.55"
+}

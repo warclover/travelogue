@@ -1,0 +1,63 @@
+# AC-SC · 分层精选 pilot 配置冻结（v3）
+# 归档日期：2026-06-18 · 分支 feat/aesthetic-alignment
+# 用法：合并到项目根 config.yaml（密钥仍走 .env · 勿提交本地 config.yaml）
+#
+# 关联 signoff：
+#   docs/aesthetic-alignment/SIGNOFF-PILOT-FREEZE.v3.md
+#   docs/acceptance-records/purpose-pairwise-signoff.v3.json
+#   docs/acceptance-records/aesthetic-stratified-signoff.v3.json
+
+aesthetic:
+  enabled: true
+  source: rules+ml
+  ml_calibrate: true
+  use_stratum_blend: true
+  stratum_blend_only: [landscape, person]
+  stratum_blend_only_by_purpose:
+    hero: [landscape]
+  stratum_blends:
+    group: 0.1
+    person: 0.6
+    landscape: 0.6
+    food: 0.35
+    general: 0.35
+  use_album_relative: true
+  album_relative_percentile: 0.75
+  album_relative_lo: 0.7
+  album_relative_hi: 1.3
+  presets:
+    cover:
+      composition: 0.1941
+      exposure: 0.0971
+      color: 0.1618
+      lighting: 0.0971
+      subjectClarity: 0.55
+  portrait_lite_enabled: true
+  learned:
+    metric: nima
+    allow_cpu: true
+  mllm:
+    enabled: true
+    provider: dashscope
+    model: qwen-vl-max
+    shortlist_purposes: [moment]
+    shortlist_k: 5
+    max_calls_per_trip: 20
+    blend: 0.45
+    temperature: 0
+    cache: true
+    rubric: universal
+    image_max_edge: 768
+
+cull:
+  ml:
+    allow_cpu_ml: true
+
+# --- 冻结说明（非 YAML 配置项）---
+# calibrationSource: docs/acceptance-records/aesthetic-stratum-calibration.merged.v3.json
+# coverLandscapeWeights: docs/acceptance-records/aesthetic-purpose-calibration.cover-landscape.v3.json (subjectClarity 0.45)
+# coverPortraitWeights: docs/acceptance-records/aesthetic-purpose-calibration.cover-zhang.v3.json (subjectClarity 0.55)
+# heroDongaoFix: docs/acceptance-records/aesthetic-purpose-calibration.hero-dongao.v3.json
+# codeDeps:
+#   - travelogue/config/aesthetic.py · stratum_blend_only_by_purpose
+#   - travelogue/curation/aesthetic_score.py · MLLM skip when purpose not in shortlist_purposes

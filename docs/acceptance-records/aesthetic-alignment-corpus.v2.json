@@ -1,0 +1,34 @@
+{
+  "version": "2",
+  "notes": "多 trip 语料 · demo-2025-6 已有 109 张冻结标签 + demo-fc8b3a5c08 新抽 54 张 → 合并后 ≥163。扩样后重跑 M2 校准见 GAP-02。",
+  "targetTotal": 163,
+  "seed": 42,
+  "strataQuotas": {
+    "person": 45,
+    "landscape": 40,
+    "food": 25,
+    "group": 35,
+    "general": 18
+  },
+  "trips": [
+    {
+      "tripId": "demo-2025-6",
+      "tripDir": "trips/demo-2025-6",
+      "tags": ["travel", "mixed", "dongao_2025"],
+      "sourcePhotos": "D:\\Photos\\2025东澳岛6",
+      "previewUrl": "http://127.0.0.1:8766/demo-2025-6/index.html",
+      "existingLabels": "docs/acceptance-records/aesthetic-human-labels.demo-2025-6.json",
+      "labeledCount": 109,
+      "stratumCalibration": "docs/acceptance-records/aesthetic-m2-stratum.demo-2025-6.json"
+    },
+    {
+      "tripId": "demo-fc8b3a5c08",
+      "tripDir": "trips/demo-fc8b3a5c08",
+      "tags": ["travel", "sri_lanka", "group_heavy"],
+      "sourcePhotos": "D:\\Photos\\锡兰之旅",
+      "previewUrl": "http://127.0.0.1:8766/demo-fc8b3a5c08/index.html",
+      "newBlindExport": "docs/acceptance-records/aesthetic-blind-export.demo-fc8b3a5c08.json",
+      "stratumCalibration": "docs/acceptance-records/aesthetic-m2-stratum.demo-fc8b3a5c08.json"
+    }
+  ]
+}

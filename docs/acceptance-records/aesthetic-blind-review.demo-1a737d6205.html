@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>张智慧精选 · 审美盲评</title>
+  <style>
+    :root {
+      --bg: #0f1115; --panel: #1a1d24; --text: #e8eaed; --muted: #9aa0a6;
+      --accent: #6ea8fe; --ok: #3dd68c; --border: #2a2f3a;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 16px 20px 32px; }
+    header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    h1 { font-size: 1.1rem; font-weight: 600; margin: 0; }
+    .meta { color: var(--muted); font-size: 0.85rem; }
+    .progress { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; margin: 8px 0 16px; }
+    .progress > i { display: block; height: 100%; width: 0%; background: var(--ok); transition: width .2s; }
+    .stage { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .img-box { display: flex; align-items: center; justify-content: center; min-height: 52vh; background: #000; border-radius: 8px; overflow: hidden; }
+    .img-box img { max-width: 100%; max-height: 70vh; object-fit: contain; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+    button, .score-btn {
+      border: 1px solid var(--border); background: #252932; color: var(--text);
+      padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.95rem;
+    }
+    button:hover, .score-btn:hover { border-color: var(--accent); }
+    button.primary { background: #2b4a7a; border-color: #3d6cb9; }
+    button.primary:hover { background: #35598f; }
+    .score-btn.selected { background: #2d5a3d; border-color: var(--ok); }
+    .score-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .hint { color: var(--muted); font-size: 0.82rem; margin-top: 10px; line-height: 1.5; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #252932; font-size: 0.75rem; color: var(--muted); }
+    .stratum-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; align-items: center; }
+    .stratum-btn { padding: 4px 10px; font-size: 0.8rem; }
+    .stratum-btn.selected { background: #2b4a7a; border-color: var(--accent); }
+    .rubric { background: #12151c; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 0.82rem; line-height: 1.55; color: var(--muted); }
+    .rubric strong { color: var(--text); }
+    @media (max-width: 640px) { .img-box { min-height: 40vh; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 id="title">张智慧精选 · 审美盲评</h1>
+      <div class="meta" id="counter">—</div>
+    </header>
+    <div class="progress"><i id="bar"></i></div>
+    <div class="stage">
+      <div class="meta" style="margin-bottom:8px">
+        <span class="badge" id="stratumBadge">—</span>
+        <span id="assetId" style="margin-left:8px"></span>
+      </div>
+      <div class="stratum-row" id="stratumPick"></div>
+      <div class="img-box"><img id="photo" alt="review" /></div>
+      <div class="rubric" id="rubric"></div>
+      <div class="score-row" id="scores"></div>
+      <div class="toolbar">
+        <button type="button" id="prev">← 上一张</button>
+        <button type="button" id="next">下一张 →</button>
+        <button type="button" id="export" class="primary">下载标签 JSON</button>
+      </div>
+      <p class="hint">
+        键盘：<kbd>1</kbd>–<kbd>5</kbd> 打分 · <kbd>←</kbd>/<kbd>→</kbd> 切换 · 进度自动保存在本机浏览器。<br/>
+        先确认照片类型（风景/人像/合影/美食），类型不对请先点上方按钮修改，再按对应标准打分。
+      </p>
+    </div>
+  </div>
+  <script id="review-data" type="application/json">{"title": "张智慧精选 · 审美盲评", "exportedAt": "2026-06-18T07:59:21.682821+00:00", "sampleCount": 60, "tripBases": {"demo-1a737d6205": "http://127.0.0.1:8766/demo-1a737d6205"}, "rows": [{"displayOrder": 1, "assetId": "asset-020", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-020-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5168, "predictedCover": 0.47338499999999994, "predictedHero": 0.493345, "predictedMoment": 0.491336}, {"displayOrder": 2, "assetId": "asset-111", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-111-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5237, "predictedCover": 0.45080499999999996, "predictedHero": 0.499235, "predictedMoment": 0.503598}, {"displayOrder": 3, "assetId": "asset-083", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-083-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.4329, "predictedCover": 0.35897999999999997, "predictedHero": 0.390002, "predictedMoment": 0.392228}, {"displayOrder": 4, "assetId": "asset-152", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-152-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5889, "predictedCover": 0.63176, "predictedHero": 0.641104, "predictedMoment": 0.633414}, {"displayOrder": 5, "assetId": "asset-203", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-203-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5328, "predictedCover": 0.490485, "predictedHero": 0.527552, "predictedMoment": 0.5263120000000001}, {"displayOrder": 6, "assetId": "asset-142", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-142-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5131, "predictedCover": 0.46109, "predictedHero": 0.509201, "predictedMoment": 0.51359}, {"displayOrder": 7, "assetId": "asset-215", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-215-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5656, "predictedCover": 0.608845, "predictedHero": 0.634528, "predictedMoment": 0.632382}, {"displayOrder": 8, "assetId": "asset-209", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-209-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5049, "predictedCover": 0.50929, "predictedHero": 0.54509, "predictedMoment": 0.539416}, {"displayOrder": 9, "assetId": "asset-172", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-172-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5744, "predictedCover": 0.57002, "predictedHero": 0.6021719999999999, "predictedMoment": 0.6059100000000001}, {"displayOrder": 10, "assetId": "asset-018", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-018-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.4531, "predictedCover": 0.45169499999999996, "predictedHero": 0.482923, "predictedMoment": 0.482022}, {"displayOrder": 11, "assetId": "asset-005", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-005-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5369, "predictedCover": 0.5397449999999999, "predictedHero": 0.581047, "predictedMoment": 0.593396}, {"displayOrder": 12, "assetId": "asset-007", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-007-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5249, "predictedCover": 0.50729, "predictedHero": 0.534918, "predictedMoment": 0.5262140000000001}, {"displayOrder": 13, "assetId": "asset-089", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-089-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5291, "predictedCover": 0.52685, "predictedHero": 0.531359, "predictedMoment": 0.519108}, {"displayOrder": 14, "assetId": "asset-133", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-133-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.4765, "predictedCover": 0.47292999999999996, "predictedHero": 0.517983, "predictedMoment": 0.538846}, {"displayOrder": 15, "assetId": "asset-098", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-098-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5267, "predictedCover": 0.49363999999999997, "predictedHero": 0.524236, "predictedMoment": 0.527632}, {"displayOrder": 16, "assetId": "asset-016", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-016-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5543, "predictedCover": 0.537885, "predictedHero": 0.582648, "predictedMoment": 0.594558}, {"displayOrder": 17, "assetId": "asset-160", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-160-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5283, "predictedCover": 0.494225, "predictedHero": 0.53159, "predictedMoment": 0.54095}, {"displayOrder": 18, "assetId": "asset-045", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-045-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.508, "predictedCover": 0.49637, "predictedHero": 0.5466070000000001, "predictedMoment": 0.5581940000000001}, {"displayOrder": 19, "assetId": "asset-175", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-175-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5634, "predictedCover": 0.52965, "predictedHero": 0.5793820000000001, "predictedMoment": 0.581562}, {"displayOrder": 20, "assetId": "asset-058", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-058-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5523, "predictedCover": 0.53554, "predictedHero": 0.595132, "predictedMoment": 0.58487}, {"displayOrder": 21, "assetId": "asset-053", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-053-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5396, "predictedCover": 0.506705, "predictedHero": 0.552644, "predictedMoment": 0.5610580000000001}, {"displayOrder": 22, "assetId": "asset-064", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-064-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.528, "predictedCover": 0.51746, "predictedHero": 0.539534, "predictedMoment": 0.5352600000000001}, {"displayOrder": 23, "assetId": "asset-171", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-171-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.515, "predictedCover": 0.480305, "predictedHero": 0.534098, "predictedMoment": 0.542358}, {"displayOrder": 24, "assetId": "asset-046", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-046-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5552, "predictedCover": 0.51564, "predictedHero": 0.554923, "predictedMoment": 0.570046}, {"displayOrder": 25, "assetId": "asset-112", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-112-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5376, "predictedCover": 0.53194, "predictedHero": 0.576712, "predictedMoment": 0.599016}, {"displayOrder": 26, "assetId": "asset-078", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-078-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5386, "predictedCover": 0.496635, "predictedHero": 0.53728, "predictedMoment": 0.536522}, {"displayOrder": 27, "assetId": "asset-127", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-127-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.4948, "predictedCover": 0.45704, "predictedHero": 0.493904, "predictedMoment": 0.517474}, {"displayOrder": 28, "assetId": "asset-181", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-181-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.7071, "predictedCover": 0.61618, "predictedHero": 0.586968, "predictedMoment": 0.5479080000000001}, {"displayOrder": 29, "assetId": "asset-164", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-164-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5264, "predictedCover": 0.473555, "predictedHero": 0.514469, "predictedMoment": 0.52152}, {"displayOrder": 30, "assetId": "asset-128", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-128-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5055, "predictedCover": 0.491985, "predictedHero": 0.536487, "predictedMoment": 0.5611240000000001}, {"displayOrder": 31, "assetId": "asset-122", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-122-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5358, "predictedCover": 0.527255, "predictedHero": 0.555543, "predictedMoment": 0.53855}, {"displayOrder": 32, "assetId": "asset-009", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-009-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.4911, "predictedCover": 0.46215, "predictedHero": 0.491061, "predictedMoment": 0.495304}, {"displayOrder": 33, "assetId": "asset-087", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-087-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.575, "predictedCover": 0.566125, "predictedHero": 0.62403, "predictedMoment": 0.638738}, {"displayOrder": 34, "assetId": "asset-040", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-040-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.521, "predictedCover": 0.519905, "predictedHero": 0.5662590000000001, "predictedMoment": 0.577498}, {"displayOrder": 35, "assetId": "asset-063", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-063-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5309, "predictedCover": 0.52839, "predictedHero": 0.560987, "predictedMoment": 0.556996}, {"displayOrder": 36, "assetId": "asset-150", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-150-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5834, "predictedCover": 0.635095, "predictedHero": 0.647482, "predictedMoment": 0.640012}, {"displayOrder": 37, "assetId": "asset-105", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-105-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.4912, "predictedCover": 0.429605, "predictedHero": 0.481288, "predictedMoment": 0.48322000000000004}, {"displayOrder": 38, "assetId": "asset-043", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-043-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5389, "predictedCover": 0.534575, "predictedHero": 0.596137, "predictedMoment": 0.6084120000000001}, {"displayOrder": 39, "assetId": "asset-051", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-051-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5237, "predictedCover": 0.51269, "predictedHero": 0.541312, "predictedMoment": 0.525746}, {"displayOrder": 40, "assetId": "asset-006", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-006-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.7656, "predictedCover": 0.66936, "predictedHero": 0.696763, "predictedMoment": 0.6808960000000001}, {"displayOrder": 41, "assetId": "asset-044", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-044-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.552, "predictedCover": 0.54879, "predictedHero": 0.571913, "predictedMoment": 0.589036}, {"displayOrder": 42, "assetId": "asset-163", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-163-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5478, "predictedCover": 0.53565, "predictedHero": 0.564486, "predictedMoment": 0.566716}, {"displayOrder": 43, "assetId": "asset-210", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-210-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5083, "predictedCover": 0.50332, "predictedHero": 0.538125, "predictedMoment": 0.531292}, {"displayOrder": 44, "assetId": "asset-162", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-162-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.4839, "predictedCover": 0.450315, "predictedHero": 0.497693, "predictedMoment": 0.5074120000000001}, {"displayOrder": 45, "assetId": "asset-138", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-138-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.485, "predictedCover": 0.435585, "predictedHero": 0.492554, "predictedMoment": 0.49760000000000004}, {"displayOrder": 46, "assetId": "asset-123", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-123-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5524, "predictedCover": 0.542685, "predictedHero": 0.569456, "predictedMoment": 0.554108}, {"displayOrder": 47, "assetId": "asset-208", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-208-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5505, "predictedCover": 0.54854, "predictedHero": 0.580722, "predictedMoment": 0.5706260000000001}, {"displayOrder": 48, "assetId": "asset-170", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-170-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5253, "predictedCover": 0.52349, "predictedHero": 0.577433, "predictedMoment": 0.588446}, {"displayOrder": 49, "assetId": "asset-080", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-080-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5133, "predictedCover": 0.498785, "predictedHero": 0.538906, "predictedMoment": 0.57004}, {"displayOrder": 50, "assetId": "asset-077", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-077-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5401, "predictedCover": 0.497345, "predictedHero": 0.540501, "predictedMoment": 0.54865}, {"displayOrder": 51, "assetId": "asset-027", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-027-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5027, "predictedCover": 0.48425999999999997, "predictedHero": 0.5280440000000001, "predictedMoment": 0.5430780000000001}, {"displayOrder": 52, "assetId": "asset-079", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-079-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5195, "predictedCover": 0.524, "predictedHero": 0.576994, "predictedMoment": 0.602986}, {"displayOrder": 53, "assetId": "asset-062", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-062-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.4946, "predictedCover": 0.46813, "predictedHero": 0.515643, "predictedMoment": 0.519204}, {"displayOrder": 54, "assetId": "asset-119", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-119-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5381, "predictedCover": 0.5506, "predictedHero": 0.586812, "predictedMoment": 0.6075640000000001}, {"displayOrder": 55, "assetId": "asset-026", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-026-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.4913, "predictedCover": 0.45497, "predictedHero": 0.49090200000000006, "predictedMoment": 0.5033420000000001}, {"displayOrder": 56, "assetId": "asset-198", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-198-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.493, "predictedCover": 0.442065, "predictedHero": 0.496284, "predictedMoment": 0.5137240000000001}, {"displayOrder": 57, "assetId": "asset-146", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-146-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.4505, "predictedCover": 0.41718, "predictedHero": 0.445594, "predictedMoment": 0.438294}, {"displayOrder": 58, "assetId": "asset-057", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-057-w3200.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5097, "predictedCover": 0.47769, "predictedHero": 0.515665, "predictedMoment": 0.514074}, {"displayOrder": 59, "assetId": "asset-094", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-094-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.4524, "predictedCover": 0.41394499999999995, "predictedHero": 0.446455, "predictedMoment": 0.45189}, {"displayOrder": 60, "assetId": "asset-190", "tripId": "demo-1a737d6205", "displayFile": "assets/asset-190-w3200.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5118, "predictedCover": 0.46415, "predictedHero": 0.512024, "predictedMoment": 0.5185420000000001}]}</script>
+  <script>
+    const DATA = JSON.parse(document.getElementById("review-data").textContent);
+    const STORAGE_KEY = "aesthetic-blind-docs\\acceptance-records\\aesthetic-alignment-corpus.zhangzhihui-jingxuan.json-44";
+    const SCORE_LABELS = {1:"废片",2:"偏弱",3:"一般",4:"好",5:"很好"};
+    const STRATUM_LABELS = {
+      person: "单人照", group: "合影", landscape: "风景", food: "美食", general: "其他"
+    };
+    const RUBRICS = {
+      person: "5=表情自然清晰 · 3=平淡或有瑕疵 · 1=糊/闭眼/废片",
+      group: "5=关键人物清晰、表情可接受 · 3=有人略糊 · 1=多人闭眼/糊脸",
+      landscape: "5=构图光线舒服、有代表性 · 3=普通记录 · 1=平淡或技术硬伤",
+      food: "5=诱人、主体清楚 · 3=食欲感一般 · 1=难辨认/无食欲",
+      general: "按「是否值得在这本游记里重点展示」打 1–5"
+    };
+    const STRATA = ["landscape", "person", "group", "food", "general"];
+    let index = 0;
+    let scores = {};
+    let strata = {};
+
+    function loadScores() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          scores = parsed.scores || parsed;
+          strata = parsed.strata || {};
+        }
+      } catch (e) { scores = {}; strata = {}; }
+    }
+    function saveScores() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ scores, strata }));
+      updateProgress();
+    }
+    function currentStratum(row) {
+      return strata[row.assetId] || row.stratum || "general";
+    }
+    function imageUrl(row) {
+      const base = (DATA.tripBases && DATA.tripBases[row.tripId]) || "";
+      const file = (row.displayFile || "").replace(/^\//, "");
+      if (base) return base.replace(/\/$/, "") + "/" + file;
+      return file;
+    }
+    function ratedCount() {
+      return DATA.rows.filter(r => scores[r.assetId] != null).length;
+    }
+    function updateProgress() {
+      const n = ratedCount();
+      const total = DATA.rows.length;
+      document.getElementById("bar").style.width = (total ? (100 * n / total) : 0) + "%";
+      document.getElementById("counter").textContent = `已评 ${n} / ${total} · 第 ${index + 1} 张`;
+    }
+    function renderStratumPick() {
+      const row = DATA.rows[index];
+      const box = document.getElementById("stratumPick");
+      box.innerHTML = "<span style='color:var(--muted);font-size:0.8rem'>类型：</span>";
+      const cur = currentStratum(row);
+      for (const s of STRATA) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "stratum-btn" + (cur === s ? " selected" : "");
+        btn.textContent = STRATUM_LABELS[s] || s;
+        btn.addEventListener("click", () => {
+          strata[row.assetId] = s;
+          saveScores();
+          showAt(index);
+        });
+        box.appendChild(btn);
+      }
+    }
+    function renderRubric() {
+      const row = DATA.rows[index];
+      const s = currentStratum(row);
+      const el = document.getElementById("rubric");
+      el.innerHTML = "<strong>" + (STRATUM_LABELS[s] || s) + " · 打分参考</strong><br/>" + (RUBRICS[s] || "");
+    }
+    function renderScores() {
+      const row = DATA.rows[index];
+      const box = document.getElementById("scores");
+      box.innerHTML = "";
+      for (let s = 1; s <= 5; s++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "score-btn" + (scores[row.assetId] === s ? " selected" : "");
+        btn.textContent = s + " · " + SCORE_LABELS[s];
+        btn.addEventListener("click", () => setScore(s, true));
+        box.appendChild(btn);
+      }
+    }
+    function showAt(i) {
+      index = Math.max(0, Math.min(DATA.rows.length - 1, i));
+      const row = DATA.rows[index];
+      document.getElementById("photo").src = imageUrl(row);
+      const s = currentStratum(row);
+      document.getElementById("stratumBadge").textContent = STRATUM_LABELS[s] || s;
+      document.getElementById("assetId").textContent = row.assetId || "";
+      renderStratumPick();
+      renderRubric();
+      renderScores();
+      updateProgress();
+    }
+    function setScore(s, advance) {
+      const row = DATA.rows[index];
+      scores[row.assetId] = s;
+      saveScores();
+      renderScores();
+      if (advance && index < DATA.rows.length - 1) showAt(index + 1);
+    }
+    function exportLabels() {
+      const rows = DATA.rows.map(r => ({
+        assetId: r.assetId,
+        tripId: r.tripId,
+        stratum: currentStratum(r),
+        stratumAuto: r.stratumAuto || r.stratum,
+        displayFile: r.displayFile,
+        humanScore: scores[r.assetId] ?? null,
+        predictedOverall: r.predictedOverall ?? null,
+        predictedCover: r.predictedCover ?? null,
+        predictedHero: r.predictedHero ?? null,
+        predictedMoment: r.predictedMoment ?? null,
+      }));
+      const payload = {
+        version: "1",
+        frozen: false,
+        notes: "Exported from blind-review HTML · humanScore 1–5",
+        sourceExport: DATA.exportedAt,
+        rows,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "aesthetic-human-labels.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+    document.getElementById("prev").addEventListener("click", () => showAt(index - 1));
+    document.getElementById("next").addEventListener("click", () => showAt(index + 1));
+    document.getElementById("export").addEventListener("click", exportLabels);
+    document.addEventListener("keydown", (e) => {
+      if (e.key >= "1" && e.key <= "5") { setScore(Number(e.key), true); e.preventDefault(); }
+      if (e.key === "ArrowLeft") { showAt(index - 1); e.preventDefault(); }
+      if (e.key === "ArrowRight") { showAt(index + 1); e.preventDefault(); }
+    });
+    loadScores();
+    showAt(0);
+  </script>
+</body>
+</html>

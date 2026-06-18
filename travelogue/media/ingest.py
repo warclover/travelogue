@@ -137,6 +137,7 @@ class IngestAssetBuildContext:
     elapsed_acc: dict[str, float] | None = None
     aesthetic: AestheticConfig | None = None
     aesthetic_cache: dict[str, dict] | None = None
+    portrait_cfg: Any | None = None
 
 
 @dataclass
@@ -439,6 +440,9 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
                     subj.salient_box.get("h", 0.0)
                 )
                 q["faceRatio"] = round(max(0.0, min(1.0, face_ratio)), 4)
+                entry["salientBox"] = subj.salient_box
+            if cfg.portrait_analyze and subj.faces:
+                _attach_portrait(ctx, entry, photo.img, list(subj.faces))
     entry["mediaClass"] = classify_media_class(
         path=photo.photo,
         img=photo.img,
@@ -491,6 +495,45 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
     return entry
 
 
+def _attach_portrait(
+    ctx: IngestAssetBuildContext,
+    entry: dict,
+    img: Image.Image,
+    faces: list[tuple[int, int, int, int]],
+) -> None:
+    """PC-M1 · portrait_analyze → quality.portrait (fail-open)."""
+    from travelogue.config.portrait import PortraitConfig
+    from travelogue.media.portrait_analyze import analyze_portrait
+
+    portrait_cfg = ctx.portrait_cfg if ctx.portrait_cfg is not None else PortraitConfig()
+    if not portrait_cfg.enabled:
+        return
+    acc = ctx.elapsed_acc
+    t0 = time.monotonic()
+    try:
+        result = analyze_portrait(
+            img,
+            faces,
+            cfg=portrait_cfg,
+            min_face_px=ctx.cfg.face_min_size_px,
+        )
+        block = result.to_quality_dict(cfg=portrait_cfg)
+        quality = entry.get("quality")
+        if not isinstance(quality, dict):
+            return
+        quality["portrait"] = block
+        if result.eyes_open_score is not None:
+            quality["portraitEyesOpenScore"] = round(result.eyes_open_score, 4)
+        ctx.ingest_stats["portrait_analyzed"] = ctx.ingest_stats.get("portrait_analyzed", 0) + 1
+    except Exception:
+        ctx.ingest_stats["portrait_analyze_errors"] = ctx.ingest_stats.get(
+            "portrait_analyze_errors", 0
+        ) + 1
+    finally:
+        if acc is not None:
+            acc["portrait"] = acc.get("portrait", 0.0) + (time.monotonic() - t0) * 1000.0
+
+
 def _attach_aesthetic(
     ctx: IngestAssetBuildContext,
     entry: dict,
@@ -522,7 +565,12 @@ def _attach_aesthetic(
             signals = compute_aesthetic_signals(photo.img, entry, cfg=ae_cfg)
             if cache is not None and sig_key:
                 cache[sig_key] = {"version": AESTHETIC_VERSION, "signals": signals}
-        block = compute_aesthetic(entry, signals=signals, cfg=ae_cfg)
+        block = compute_aesthetic(
+            entry,
+            signals=signals,
+            cfg=ae_cfg,
+            portrait_cfg=ctx.portrait_cfg,
+        )
         quality = entry.get("quality")
         if isinstance(quality, dict):
             quality["aesthetic"] = block
@@ -1014,6 +1062,21 @@ def _finalize_ingest_assets(
         ingest_stats["cull_layout_eligible_final"] = final_layout_eligible
         ingest_stats["cull_non_featured_eligible_final"] = final_non_featured
 
+    ae_cfg = resolved_app.aesthetic
+    if ae_cfg.enabled and ae_cfg.ml_calibrate and ae_cfg.warm_learned_on_ingest:
+        from travelogue.curation.aesthetic_score import apply_aesthetic_ml_calibration
+
+        try:
+            ingest_stats["aestheticLearnedWarm"] = bool(
+                apply_aesthetic_ml_calibration(
+                    assets,
+                    trip_dir=trip_dir,
+                    cfg=resolved_app,
+                )
+            )
+        except Exception:
+            ingest_stats["aestheticLearnedWarm"] = False
+
     from travelogue.curation.algorithm_profile import write_ingest_profile
 
     write_ingest_profile(trip, app_cfg=resolved_app)
@@ -1156,6 +1219,7 @@ def ingest_into_trip(
         elapsed_acc=loop_state.elapsed_acc,
         aesthetic=aesthetic_cfg if aesthetic_cfg.enabled else None,
         aesthetic_cache=aesthetic_cache if aesthetic_cfg.enabled else None,
+        portrait_cfg=resolved_app.cull.portrait,
     )
 
     total_photos = len(photo_tiers)

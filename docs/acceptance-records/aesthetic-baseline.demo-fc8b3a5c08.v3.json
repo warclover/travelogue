@@ -1,0 +1,41 @@
+{
+  "source": "docs\\acceptance-records\\aesthetic-human-labels.demo-fc8b3a5c08.v3.json",
+  "frozen": true,
+  "predictedKey": "predictedOverall",
+  "sampleCount": 146,
+  "srcc": 0.1095,
+  "labeledCount": 146,
+  "exportCount": 146,
+  "byStratum": {
+    "landscape": {
+      "sampleCount": 119,
+      "srcc": 0.1819
+    },
+    "person": {
+      "sampleCount": 27,
+      "srcc": -0.2142
+    }
+  },
+  "purposeComparison": {
+    "predictedOverall": {
+      "sampleCount": 146,
+      "srcc": 0.1095
+    },
+    "predictedCover": {
+      "sampleCount": 146,
+      "srcc": 0.0083
+    },
+    "predictedHero": {
+      "sampleCount": 146,
+      "srcc": 0.035
+    },
+    "predictedMoment": {
+      "sampleCount": 146,
+      "srcc": 0.0629
+    },
+    "predictedSolo": {
+      "sampleCount": 146,
+      "srcc": 0.1095
+    }
+  }
+}

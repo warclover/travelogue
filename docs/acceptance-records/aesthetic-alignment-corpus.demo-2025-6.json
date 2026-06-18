@@ -1,0 +1,22 @@
+{
+  "version": "1",
+  "notes": "测试案例 · 2025东澳岛6（D:\\Photos\\2025东澳岛6 → trips/demo-2025-6）。eligible≈109，targetTotal 取满池。",
+  "targetTotal": 109,
+  "seed": 42,
+  "strataQuotas": {
+    "person": 30,
+    "landscape": 30,
+    "food": 15,
+    "group": 20,
+    "general": 14
+  },
+  "trips": [
+    {
+      "tripId": "demo-2025-6",
+      "tripDir": "trips/demo-2025-6",
+      "tags": ["travel", "mixed", "dongao_2025"],
+      "sourcePhotos": "D:\\Photos\\2025东澳岛6",
+      "previewUrl": "http://127.0.0.1:8766/demo-2025-6/index.html"
+    }
+  ]
+}

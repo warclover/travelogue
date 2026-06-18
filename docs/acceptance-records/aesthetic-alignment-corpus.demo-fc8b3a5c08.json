@@ -1,0 +1,26 @@
+{
+  "version": "1",
+  "notes": "锡兰之旅 · landscape 向（横图 119/146 ≈81%）。自动分层已修复：不再用无 bbox 的 quality.faceCount 误判合影。",
+  "targetTotal": 54,
+  "seed": 42,
+  "strataQuotas": {
+    "landscape": 35,
+    "person": 15,
+    "group": 0,
+    "food": 0,
+    "general": 4
+  },
+  "trips": [
+    {
+      "tripId": "demo-fc8b3a5c08",
+      "tripDir": "trips/demo-fc8b3a5c08",
+      "tags": ["travel", "sri_lanka", "landscape_heavy"],
+      "sourcePhotos": "D:\\Photos\\锡兰之旅",
+      "previewUrl": "http://127.0.0.1:8766/demo-fc8b3a5c08/index.html",
+      "albumProfile": {
+        "landscape": 0.81,
+        "person": 0.19
+      }
+    }
+  ]
+}

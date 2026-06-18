@@ -1879,6 +1879,98 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     });
   }
 
+  var AESTHETIC_STRATUM_LABELS = {
+    person: "人像",
+    landscape: "风景",
+    food: "美食",
+    group: "合影",
+    general: "通用",
+  };
+  var AESTHETIC_PURPOSE_LABELS = {
+    cover: "封面",
+    hero: "主图",
+    moment: "瞬间",
+  };
+
+  function formatAestheticPurposeLine(row) {
+    var purposes = row && row.purposes;
+    if (!purposes) return "";
+    return ["cover", "hero", "moment"]
+      .filter(function (p) { return purposes[p] != null; })
+      .map(function (p) {
+        var label = (row.purposeLabels && row.purposeLabels[p]) || AESTHETIC_PURPOSE_LABELS[p] || p;
+        return label + " " + Math.round(Number(purposes[p]) * 100);
+      })
+      .join(" · ");
+  }
+
+  function renderAestheticAlbumProfile(container, profile, pref, tripId) {
+    if (!profile || !container) return;
+    var block = document.createElement("div");
+    block.className = "preview-drawer__aesthetic-album";
+    var head = document.createElement("p");
+    head.className = "preview-drawer__aesthetic-head";
+    var skew = profile.isSkewed ? " · 层偏斜" : "";
+    head.textContent =
+      "成册分层 · 主层 " +
+      (profile.dominantLabel || profile.dominantStratum || "—") +
+      skew;
+    block.appendChild(head);
+    var meta = document.createElement("p");
+    meta.className = "preview-drawer__aesthetic-meta";
+    var parts = [];
+    var pct = profile.strataPct || {};
+    Object.keys(pct).forEach(function (key) {
+      var label =
+        (profile.strataLabels && profile.strataLabels[key]) ||
+        AESTHETIC_STRATUM_LABELS[key] ||
+        key;
+      parts.push(label + " " + pct[key] + "%");
+    });
+    meta.textContent = parts.length ? parts.join(" · ") : "—";
+    block.appendChild(meta);
+    if (pref && pref.options && pref.options.length) {
+      var hint = document.createElement("p");
+      hint.className = "preview-drawer__aesthetic-meta";
+      hint.textContent = pref.selectionHint || "";
+      block.appendChild(hint);
+      var prefRow = document.createElement("div");
+      prefRow.className = "preview-drawer__aesthetic-pref";
+      pref.options.forEach(function (opt) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "preview-drawer__aesthetic-pref-btn";
+        if (opt.value === pref.value) btn.classList.add("is-active");
+        btn.textContent = opt.label || opt.value;
+        btn.addEventListener("click", function () {
+          if (opt.value === pref.value) return;
+          patchJson(
+            "/__travelogue/trips/" +
+              encodeURIComponent(tripId) +
+              "/aesthetic/preference",
+            { stratumPreference: opt.value }
+          ).then(function (result) {
+            var data = result && (result.data || result.body);
+            if (!data || !data.ok) return;
+            renderAestheticAlbumProfile(container, profile, data.stratumPreference, tripId);
+          });
+        });
+        prefRow.appendChild(btn);
+      });
+      block.appendChild(prefRow);
+      if (pref.recurateHint) {
+        var recurate = document.createElement("p");
+        recurate.className = "preview-drawer__aesthetic-meta";
+        recurate.textContent = pref.recurateHint;
+        block.appendChild(recurate);
+      }
+    }
+    container.querySelectorAll(".preview-drawer__aesthetic-album").forEach(function (node) {
+      node.remove();
+    });
+    container.appendChild(block);
+  }
+
   function loadAestheticExplain(tripId, container) {
     if (!container) return;
     fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/aesthetic")
@@ -1899,9 +1991,17 @@ function insertScreenplayControl(parent, beforeNode, opts) {
           summary:
             "已评分 " +
             (data.scoredCount != null ? data.scoredCount : assets.length) +
-            " 张 · 成册中各图 top-3 维度",
+            " 张 · 成册中各图分层 / purpose / top-3 维度",
           details: [],
         });
+        if (data.albumProfile) {
+          renderAestheticAlbumProfile(
+            container,
+            data.albumProfile,
+            data.stratumPreference,
+            tripId
+          );
+        }
         assets.forEach(function (row) {
           var block = document.createElement("div");
           block.className = "preview-drawer__aesthetic-asset";
@@ -1909,8 +2009,36 @@ function insertScreenplayControl(parent, beforeNode, opts) {
           head.className = "preview-drawer__aesthetic-head";
           var overall =
             row.overall != null ? Math.round(Number(row.overall) * 100) + " 分" : "—";
-          head.textContent = (row.id || "?") + " · overall " + overall;
+          var stratum = row.stratumLabel || row.stratum || "";
+          head.textContent =
+            (row.id || "?") +
+            " · overall " +
+            overall +
+            (stratum ? " · " + stratum : "");
           block.appendChild(head);
+          var purposeLine = formatAestheticPurposeLine(row);
+          if (purposeLine) {
+            var purposeMeta = document.createElement("p");
+            purposeMeta.className = "preview-drawer__aesthetic-meta";
+            purposeMeta.textContent = purposeLine;
+            block.appendChild(purposeMeta);
+          }
+          if (row.mllmScore != null) {
+            var mllmMeta = document.createElement("p");
+            mllmMeta.className = "preview-drawer__aesthetic-meta";
+            mllmMeta.textContent =
+              "MLLM " + Math.round(Number(row.mllmScore) * 100) + " 分";
+            block.appendChild(mllmMeta);
+          }
+          if (row.critique) {
+            var critique = document.createElement("p");
+            critique.className = "preview-drawer__aesthetic-critique";
+            critique.textContent =
+              typeof row.critique === "string"
+                ? row.critique
+                : row.critique.summary || row.critique.text || "";
+            block.appendChild(critique);
+          }
           var list = document.createElement("ul");
           list.className = "preview-drawer__explain-list";
           (row.explain || []).forEach(function (item) {
@@ -1949,9 +2077,18 @@ function insertScreenplayControl(parent, beforeNode, opts) {
               .filter(Boolean)
               .join("；");
             var pct = row.overall != null ? Math.round(Number(row.overall) * 100) : null;
+            var stratum = row.stratumLabel || row.stratum || "";
+            var purposeLine = formatAestheticPurposeLine(row);
             img.setAttribute(
               "title",
-              (pct != null ? "审美 " + pct + " · " : "") + tips
+              [
+                pct != null ? "审美 " + pct : "",
+                stratum ? stratum : "",
+                purposeLine,
+                tips,
+              ]
+                .filter(Boolean)
+                .join(" · ")
             );
           });
       })

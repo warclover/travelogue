@@ -1,0 +1,37 @@
+{
+  "version": "1",
+  "notes": "单册验收集协议 · 配套 PRD-STRATIFIED-CURATION §5.4",
+  "corpusVersion": "v3",
+  "samplingPolicy": "per_album_profile_weighted",
+  "targetPerAlbum": {
+    "min": 20,
+    "max": 40
+  },
+  "minPerStratumInAlbum": 3,
+  "purposes": ["cover", "hero", "moment"],
+  "evaluation": {
+    "automated": "automated_purpose_win_report · rules vs aligned pick",
+    "human": "export_purpose_blind_signoff · pairwise optional",
+    "passWinratePct": 60
+  },
+  "dogfoodTrips": [
+    {
+      "tripId": "demo-fc8b3a5c08",
+      "profile": "landscape_heavy",
+      "pairwiseHtml": "docs/acceptance-records/purpose-pairwise.demo-fc8b3a5c08.html"
+    },
+    {
+      "tripId": "demo-1a737d6205",
+      "profile": "mixed_portrait",
+      "pairwiseHtml": "docs/acceptance-records/purpose-pairwise.demo-1a737d6205.html"
+    },
+    {
+      "tripId": "demo-2025-6",
+      "profile": "mixed_travel",
+      "pairwiseHtml": "docs/acceptance-records/purpose-pairwise.demo-2025-6.html"
+    }
+  ],
+  "deferred": {
+    "food": "demo-53cda5151f · 17 张 · min-n 未达 · 暂不阻塞"
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "version": "1",
+  "tripId": "demo-1a737d6205",
+  "exportedAt": "2026-06-18T11:25:27.818Z",
+  "pairs": [
+    {
+      "pairId": "cover-002",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-151",
+        "displayFile": "assets/asset-151-w3200.webp",
+        "score": 0.5287
+      },
+      "optionRight": {
+        "assetId": "asset-205",
+        "displayFile": "assets/asset-205-w3200.webp",
+        "score": 0.5734
+      },
+      "judgeVerdict": "right"
+    },
+    {
+      "pairId": "cover-003",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-067",
+        "displayFile": "assets/asset-067-w3200.webp",
+        "score": 0.5191
+      },
+      "optionRight": {
+        "assetId": "asset-071",
+        "displayFile": "assets/asset-071-w3200.webp",
+        "score": 0.7353
+      },
+      "judgeVerdict": "tie"
+    },
+    {
+      "pairId": "cover-004",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-006",
+        "displayFile": "assets/asset-006-w3200.webp",
+        "score": 0.585
+      },
+      "optionRight": {
+        "assetId": "asset-181",
+        "displayFile": "assets/asset-181-w3200.webp",
+        "score": 0.5589
+      },
+      "judgeVerdict": "right"
+    },
+    {
+      "pairId": "cover-005",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-139",
+        "displayFile": "assets/asset-139-w3200.webp",
+        "score": 0.5203
+      },
+      "optionRight": {
+        "assetId": "asset-152",
+        "displayFile": "assets/asset-152-w3200.webp",
+        "score": 0.5633
+      },
+      "judgeVerdict": "left"
+    },
+    {
+      "pairId": "cover-006",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-179",
+        "displayFile": "assets/asset-179-w3200.webp",
+        "score": 0.5771
+      },
+      "optionRight": {
+        "assetId": "asset-213",
+        "displayFile": "assets/asset-213-w3200.webp",
+        "score": 0.5062
+      },
+      "judgeVerdict": "right"
+    },
+    {
+      "pairId": "cover-001",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-213",
+        "displayFile": "assets/asset-213-w3200.webp",
+        "score": 0.5062
+      },
+      "optionRight": {
+        "assetId": "asset-215",
+        "displayFile": "assets/asset-215-w3200.webp",
+        "score": 0.5346
+      },
+      "judgeVerdict": "left"
+    }
+  ]
+}

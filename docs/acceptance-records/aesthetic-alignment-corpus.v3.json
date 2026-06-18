@@ -1,0 +1,79 @@
+{
+  "version": "3",
+  "notes": "全局校准库 v3 · merged 332 frozen；food 语料搁置。",
+  "targetTotal": 220,
+  "seed": 42,
+  "strataQuotas": {
+    "group": 50,
+    "person": 40,
+    "landscape": 50,
+    "food": 30,
+    "general": 20
+  },
+  "samplingPolicy": "per_stratum_global_pool",
+  "generalCapRatio": 0.15,
+  "trips": [
+    {
+      "tripId": "demo-2025-6",
+      "tripDir": "trips/demo-2025-6",
+      "tags": ["travel", "mixed", "dongao_2025"],
+      "sourcePhotos": "D:\\Photos\\2025东澳岛6",
+      "previewUrl": "http://127.0.0.1:8766/demo-2025-6/index.html",
+      "existingLabels": "docs/acceptance-records/aesthetic-human-labels.demo-2025-6.json",
+      "labeledCount": 109,
+      "labelsFrozen": true,
+      "stratumAudit": "docs/acceptance-records/aesthetic-stratum-audit.demo-2025-6.json",
+      "role": "base_corpus"
+    },
+    {
+      "tripId": "demo-fc8b3a5c08",
+      "tripDir": "trips/demo-fc8b3a5c08",
+      "tags": ["travel", "sri_lanka", "landscape_heavy"],
+      "sourcePhotos": "D:\\Photos\\锡兰之旅",
+      "previewUrl": "http://127.0.0.1:8766/demo-fc8b3a5c08/index.html",
+      "role": "sri_lanka_v3_full_relabel",
+      "corpusExport": "docs/acceptance-records/aesthetic-alignment-corpus.demo-fc8b3a5c08-v3.json",
+      "labelsTarget": "docs/acceptance-records/aesthetic-human-labels.demo-fc8b3a5c08.v3.json",
+      "labeledCount": 146,
+      "labelsFrozen": true,
+      "eligibleCount": 146,
+      "archivedLabels": "docs/acceptance-records/aesthetic-human-labels.demo-fc8b3a5c08.archived-v2-misstratum.json"
+    },
+    {
+      "tripId": "demo-1a737d6205",
+      "tripDir": "trips/demo-1a737d6205",
+      "tags": ["curated", "zhangzhihui", "mixed"],
+      "sourcePhotos": "D:\\Photos\\张智慧精选",
+      "sourcePhotoCount": 251,
+      "previewUrl": "http://127.0.0.1:8766/demo-1a737d6205/index.html",
+      "role": "global_v3_supplement",
+      "corpusSpec": "docs/acceptance-records/aesthetic-alignment-corpus.zhangzhihui-jingxuan.json",
+      "corpusExport": "docs/acceptance-records/aesthetic-alignment-corpus.zhangzhihui-jingxuan-export.json",
+      "labelsTarget": "docs/acceptance-records/aesthetic-human-labels.demo-1a737d6205.json",
+      "ingestStatus": "done",
+      "eligibleCount": 181,
+      "labeledCount": 60,
+      "labelsFrozen": true,
+      "baseline": "docs/acceptance-records/aesthetic-baseline.demo-1a737d6205.json"
+    },
+    {
+      "tripId": "demo-53cda5151f",
+      "tripDir": "trips/demo-53cda5151f",
+      "tags": ["food_heavy", "corpus_v3"],
+      "sourcePhotos": "D:\\Photos\\food",
+      "sourcePhotoCount": 18,
+      "role": "fill_food",
+      "corpusSpec": "docs/acceptance-records/aesthetic-alignment-corpus.food.json",
+      "corpusExport": "docs/acceptance-records/aesthetic-alignment-corpus.food-export.json",
+      "labelsTarget": "docs/acceptance-records/aesthetic-human-labels.demo-53cda5151f.json",
+      "ingestStatus": "done",
+      "eligibleCount": 17,
+      "labeledCount": 17,
+      "labelsFrozen": true,
+      "baseline": "docs/acceptance-records/aesthetic-baseline.demo-53cda5151f.json",
+      "ingestStatus": "deferred",
+      "notes": "搁置：17 张已冻结；暂不纳入 signoff min-n"
+    }
+  ],
+  "mergeInto": "docs/acceptance-records/aesthetic-human-labels.merged.v3.json"
+}

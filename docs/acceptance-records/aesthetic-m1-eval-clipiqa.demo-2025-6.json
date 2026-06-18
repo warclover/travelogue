@@ -1,0 +1,47 @@
+{
+  "tripDir": "C:\\Users\\xiafe\\Projects\\travelogue\\trips\\demo-2025-6",
+  "metric": "clipiqa+",
+  "blend": 0.4,
+  "scored": true,
+  "evalRows": 109,
+  "comparison": {
+    "sampleCount": 109,
+    "metrics": {
+      "baseline_rules_export": {
+        "field": "baselinePredicted",
+        "sampleCount": 109,
+        "srcc": 0.2548
+      },
+      "rules_only_recomputed": {
+        "field": "rulesOnly",
+        "sampleCount": 109,
+        "srcc": 0.2548
+      },
+      "learned_nima": {
+        "field": "learnedOnly",
+        "sampleCount": 109,
+        "srcc": 0.0407
+      },
+      "rules_plus_learned_blend": {
+        "field": "blendedOverall",
+        "sampleCount": 109,
+        "srcc": 0.1901
+      },
+      "blended_cover": {
+        "field": "blendedCover",
+        "sampleCount": 109,
+        "srcc": 0.1695
+      },
+      "blended_hero": {
+        "field": "blendedHero",
+        "sampleCount": 109,
+        "srcc": 0.2028
+      },
+      "blended_moment": {
+        "field": "blendedMoment",
+        "sampleCount": 109,
+        "srcc": 0.2006
+      }
+    }
+  }
+}

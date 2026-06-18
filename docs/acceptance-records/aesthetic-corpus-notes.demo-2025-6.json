@@ -1,0 +1,28 @@
+{
+  "version": "1",
+  "tripId": "demo-2025-6",
+  "recordedAt": "2026-06-18T12:00:00+00:00",
+  "updatedAt": "2026-06-18T11:54:00+00:00",
+  "notes": "东澳 dogfood 语料已知污染 · 不影响 SRCC 自动化 AC，但干扰 purpose pairwise topPick 锚点",
+  "contaminants": [
+    {
+      "assetId": "asset-071",
+      "issue": "suspected_wrong_ingest_sunset_landscape",
+      "stratum": "landscape",
+      "tags": ["风景", "宽图"],
+      "humanScore": 3,
+      "takenAt": "2025-04-23T16:14:58Z",
+      "impact": "多轮 person-pilot topPick 锚点（cover aligned / hero rules）",
+      "remediation": {
+        "layoutEligible": false,
+        "appliedAt": "2026-06-18T11:54:00+00:00",
+        "tripPath": "trips/demo-2025-6/trip.json"
+      }
+    }
+  ],
+  "pairwiseExports": {
+    "withContaminant": ["person-pilot-v2", "person-pilot-v4", "person-pilot-v5"],
+    "excludingContaminant": ["person-pilot-v6", "person-pilot-v7"],
+    "latest": "person-pilot-v7"
+  }
+}

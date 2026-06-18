@@ -1,0 +1,159 @@
+{
+  "version": "1",
+  "tripId": "demo-fc8b3a5c08",
+  "pairCount": 6,
+  "pairsPerPurpose": 6,
+  "purposes": [
+    "hero"
+  ],
+  "seed": 46,
+  "pairs": [
+    {
+      "pairId": "hero-005",
+      "purpose": "hero",
+      "tripId": "demo-fc8b3a5c08",
+      "optionLeft": {
+        "assetId": "asset-195",
+        "displayFile": "assets/asset-195-w3200.webp",
+        "score": 0.628
+      },
+      "optionRight": {
+        "assetId": "asset-072",
+        "displayFile": "assets/asset-072-w3200.webp",
+        "score": 0.6066
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-001",
+      "purpose": "hero",
+      "tripId": "demo-fc8b3a5c08",
+      "optionLeft": {
+        "assetId": "asset-149",
+        "displayFile": "assets/asset-149-w3200.webp",
+        "score": 0.6281
+      },
+      "optionRight": {
+        "assetId": "asset-072",
+        "displayFile": "assets/asset-072-w3200.webp",
+        "score": 0.6066
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-003",
+      "purpose": "hero",
+      "tripId": "demo-fc8b3a5c08",
+      "optionLeft": {
+        "assetId": "asset-180",
+        "displayFile": "assets/asset-180-w3200.webp",
+        "score": 0.5855
+      },
+      "optionRight": {
+        "assetId": "asset-173",
+        "displayFile": "assets/asset-173-w3200.webp",
+        "score": 0.6298
+      },
+      "leftRole": "aligned",
+      "rightRole": "rules",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-004",
+      "purpose": "hero",
+      "tripId": "demo-fc8b3a5c08",
+      "optionLeft": {
+        "assetId": "asset-072",
+        "displayFile": "assets/asset-072-w3200.webp",
+        "score": 0.6066
+      },
+      "optionRight": {
+        "assetId": "asset-092",
+        "displayFile": "assets/asset-092-w3200.webp",
+        "score": 0.6424
+      },
+      "leftRole": "aligned",
+      "rightRole": "rules",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-002",
+      "purpose": "hero",
+      "tripId": "demo-fc8b3a5c08",
+      "optionLeft": {
+        "assetId": "asset-090",
+        "displayFile": "assets/asset-090-w3200.webp",
+        "score": 0.6401
+      },
+      "optionRight": {
+        "assetId": "asset-180",
+        "displayFile": "assets/asset-180-w3200.webp",
+        "score": 0.5855
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    },
+    {
+      "pairId": "hero-006",
+      "purpose": "hero",
+      "tripId": "demo-fc8b3a5c08",
+      "optionLeft": {
+        "assetId": "asset-092",
+        "displayFile": "assets/asset-092-w3200.webp",
+        "score": 0.6424
+      },
+      "optionRight": {
+        "assetId": "asset-003",
+        "displayFile": "assets/asset-003-w3200.webp",
+        "score": 0.5804
+      },
+      "leftRole": "rules",
+      "rightRole": "aligned",
+      "judgeVerdict": null,
+      "notes": "盲选更适合作封面/主图的一张；左右顺序随机，不透露算法版本。"
+    }
+  ],
+  "topPicks": {
+    "hero": {
+      "rules": {
+        "assetId": "asset-020",
+        "displayFile": "assets/asset-020-w3200.webp",
+        "score": 0.728
+      },
+      "aligned": {
+        "assetId": "asset-194",
+        "displayFile": "assets/asset-194-w3200.webp",
+        "score": 0.9883
+      }
+    }
+  },
+  "exportedAt": "2026-06-18T10:31:24.579725+00:00",
+  "pilotConfig": {
+    "mlCalibrate": true,
+    "useStratumBlend": true,
+    "stratumBlendOnly": [
+      "landscape",
+      "person"
+    ],
+    "useAlbumRelative": true,
+    "stratumBlends": {
+      "group": 0.1,
+      "person": 0.6,
+      "landscape": 0.6,
+      "food": 0.35,
+      "general": 0.35
+    }
+  },
+  "previewUrl": "http://127.0.0.1:8766/demo-fc8b3a5c08",
+  "notes": "锡兰 hero 补评 · seed 46 · 初轮 hero 4 tie/2 可比"
+}

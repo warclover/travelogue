@@ -1,0 +1,199 @@
+{
+  "version": "1",
+  "tripId": "demo-1a737d6205",
+  "exportedAt": "2026-06-18T10:11:25.285Z",
+  "pairs": [
+    {
+      "pairId": "hero-012",
+      "purpose": "hero",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-177",
+        "displayFile": "assets/asset-177-w3200.webp",
+        "score": 0.8789
+      },
+      "optionRight": {
+        "assetId": "asset-153",
+        "displayFile": "assets/asset-153-w3200.webp",
+        "score": 0.5138
+      },
+      "judgeVerdict": "left"
+    },
+    {
+      "pairId": "hero-009",
+      "purpose": "hero",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-181",
+        "displayFile": "assets/asset-181-w3200.webp",
+        "score": 0.5431
+      },
+      "optionRight": {
+        "assetId": "asset-111",
+        "displayFile": "assets/asset-111-w3200.webp",
+        "score": 0.598
+      },
+      "judgeVerdict": "left"
+    },
+    {
+      "pairId": "cover-002",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-157",
+        "displayFile": "assets/asset-157-w3200.webp",
+        "score": 0.5289
+      },
+      "optionRight": {
+        "assetId": "asset-111",
+        "displayFile": "assets/asset-111-w3200.webp",
+        "score": 0.6403
+      },
+      "judgeVerdict": "left"
+    },
+    {
+      "pairId": "hero-011",
+      "purpose": "hero",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-074",
+        "displayFile": "assets/asset-074-w3200.webp",
+        "score": 0.5508
+      },
+      "optionRight": {
+        "assetId": "asset-157",
+        "displayFile": "assets/asset-157-w3200.webp",
+        "score": 0.5159
+      },
+      "judgeVerdict": "right"
+    },
+    {
+      "pairId": "cover-005",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-006",
+        "displayFile": "assets/asset-006-w3200.webp",
+        "score": 0.585
+      },
+      "optionRight": {
+        "assetId": "asset-204",
+        "displayFile": "assets/asset-204-w3200.webp",
+        "score": 0.5511
+      },
+      "judgeVerdict": "left"
+    },
+    {
+      "pairId": "hero-007",
+      "purpose": "hero",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-153",
+        "displayFile": "assets/asset-153-w3200.webp",
+        "score": 0.5138
+      },
+      "optionRight": {
+        "assetId": "asset-012",
+        "displayFile": "assets/asset-012-w3200.webp",
+        "score": 0.5597
+      },
+      "judgeVerdict": "right"
+    },
+    {
+      "pairId": "hero-010",
+      "purpose": "hero",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-046",
+        "displayFile": "assets/asset-046-w3200.webp",
+        "score": 0.5562
+      },
+      "optionRight": {
+        "assetId": "asset-214",
+        "displayFile": "assets/asset-214-w3200.webp",
+        "score": 0.5199
+      },
+      "judgeVerdict": "left"
+    },
+    {
+      "pairId": "cover-006",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-023",
+        "displayFile": "assets/asset-023-w3200.webp",
+        "score": 0.5399
+      },
+      "optionRight": {
+        "assetId": "asset-150",
+        "displayFile": "assets/asset-150-w3200.webp",
+        "score": 0.575
+      },
+      "judgeVerdict": "left"
+    },
+    {
+      "pairId": "hero-008",
+      "purpose": "hero",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-111",
+        "displayFile": "assets/asset-111-w3200.webp",
+        "score": 0.598
+      },
+      "optionRight": {
+        "assetId": "asset-145",
+        "displayFile": "assets/asset-145-w3200.webp",
+        "score": 0.5147
+      },
+      "judgeVerdict": "left"
+    },
+    {
+      "pairId": "cover-001",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-012",
+        "displayFile": "assets/asset-012-w3200.webp",
+        "score": 0.5097
+      },
+      "optionRight": {
+        "assetId": "asset-004",
+        "displayFile": "assets/asset-004-w3200.webp",
+        "score": 0.849
+      },
+      "judgeVerdict": "left"
+    },
+    {
+      "pairId": "cover-004",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-145",
+        "displayFile": "assets/asset-145-w3200.webp",
+        "score": 0.7262
+      },
+      "optionRight": {
+        "assetId": "asset-153",
+        "displayFile": "assets/asset-153-w3200.webp",
+        "score": 0.5407
+      },
+      "judgeVerdict": "right"
+    },
+    {
+      "pairId": "cover-003",
+      "purpose": "cover",
+      "tripId": "demo-1a737d6205",
+      "optionLeft": {
+        "assetId": "asset-180",
+        "displayFile": "assets/asset-180-w3200.webp",
+        "score": 0.8555
+      },
+      "optionRight": {
+        "assetId": "asset-150",
+        "displayFile": "assets/asset-150-w3200.webp",
+        "score": 0.5826
+      },
+      "judgeVerdict": "left"
+    }
+  ]
+}

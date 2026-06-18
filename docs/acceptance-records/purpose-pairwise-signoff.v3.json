@@ -1,0 +1,468 @@
+{
+  "version": "1",
+  "recordedAt": "2026-06-18T14:00:00+00:00",
+  "frozen": true,
+  "frozenAt": "2026-06-18T14:00:00+00:00",
+  "freezeDoc": "docs/aesthetic-alignment/SIGNOFF-PILOT-FREEZE.v3.md",
+  "configFreeze": "docs/acceptance-records/aesthetic-pilot-config.freeze.v3.yaml",
+  "notes": "AC-SC-03 人工 purpose pairwise · pilot 配置已冻结 · 2/3 canonical ≥60% · 东澳 product waiver 2026-06-18",
+  "targetWinratePct": 60.0,
+  "pilotConfig": "aesthetic-pilot-config.freeze.v3.yaml",
+  "canonicalGate": {
+    "rule": "每本取调权后整本 person-pilot 最新 passed 轮次；未达标取最高整本胜率轮次",
+    "trips": {
+      "demo-fc8b3a5c08": {
+        "canonicalRecheck": "personPilotRecheck",
+        "alignedWinratePct": 60.0,
+        "passed": true
+      },
+      "demo-1a737d6205": {
+        "canonicalRecheck": "personPilotV2Recheck",
+        "alignedWinratePct": 66.67,
+        "passed": true
+      },
+      "demo-2025-6": {
+        "canonicalRecheck": "personPilotV2Recheck",
+        "alignedWinratePct": 50.0,
+        "passed": false,
+        "blocker": false,
+        "waiver": {
+          "accepted": true,
+          "acceptedAt": "2026-06-18T12:00:00+00:00",
+          "acceptedBy": "product",
+          "rationale": "整本 canonical 50% 未达 60%；分 purpose 合并 75%（cover v2 67% + hero-recheck 83%）；语料含 asset-071 误 ingest 日落片；多轮 v5–v7 无突破",
+          "supplementaryEvidence": "purposeMergeScore 75%",
+          "followUp": "asset-071 layoutEligible=false 已落地 · per-profile cover 权重可选"
+        }
+      }
+    },
+    "passedTripCount": 3,
+    "requiredTripCount": 3,
+    "acSc03Passed": true,
+    "acSc03WaiverTrips": ["demo-2025-6"]
+  },
+  "aggregate": {
+    "tripCount": 3,
+    "pairCount": 36,
+    "judgedCount": 36,
+    "comparable": 31,
+    "ties": 5,
+    "alignedWins": 16,
+    "alignedWinratePct": 51.61,
+    "passed": false
+  },
+  "perTrip": {
+    "demo-fc8b3a5c08": {
+      "profile": "landscape_heavy",
+      "pairCount": 12,
+      "comparable": 7,
+      "alignedWins": 4,
+      "alignedWinratePct": 57.14,
+      "passed": false,
+      "byPurpose": {
+        "cover": {
+          "comparable": 5,
+          "alignedWins": 2,
+          "ties": 1
+        },
+        "hero": {
+          "comparable": 2,
+          "alignedWins": 2,
+          "ties": 4
+        }
+      },
+      "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-fc8b3a5c08.json",
+      "personPilotRecheck": {
+        "status": "completed",
+        "notes": "stratum_blend_only=[landscape,person] · person blend 0.6 · seed 45",
+        "pairCount": 12,
+        "comparable": 10,
+        "ties": 2,
+        "alignedWins": 6,
+        "alignedWinratePct": 60.0,
+        "passed": true,
+        "byPurpose": {
+          "cover": { "comparable": 6, "alignedWins": 4, "ties": 0 },
+          "hero": { "comparable": 4, "alignedWins": 2, "ties": 2 }
+        },
+        "vsRound1WinratePct": 57.14,
+        "deltaWinratePct": 2.86,
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-fc8b3a5c08.person-pilot.json",
+        "judgedSource": "docs/acceptance-records/purpose-pairwise-judged.demo-fc8b3a5c08.person-pilot.json"
+      },
+      "heroRecheck": {
+        "status": "completed",
+        "notes": "初轮 hero 4 tie / 2 可比 · seed 46 · hero-only 6 组",
+        "pairCount": 6,
+        "comparable": 5,
+        "ties": 1,
+        "alignedWins": 3,
+        "alignedWinratePct": 60.0,
+        "passed": true,
+        "byPurpose": {
+          "hero": { "comparable": 5, "alignedWins": 3, "ties": 1 }
+        },
+        "vsRound1Hero": { "comparable": 2, "alignedWins": 2, "ties": 4, "alignedWinratePct": 100.0 },
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-fc8b3a5c08.hero-recheck.json",
+        "judgedSource": "docs/acceptance-records/purpose-pairwise-judged.demo-fc8b3a5c08.hero-recheck.json"
+      }
+    },
+    "demo-1a737d6205": {
+      "profile": "mixed_portrait",
+      "pairCount": 12,
+      "comparable": 12,
+      "alignedWins": 6,
+      "alignedWinratePct": 50.0,
+      "passed": false,
+      "byPurpose": {
+        "cover": {
+          "comparable": 6,
+          "alignedWins": 3,
+          "ties": 0
+        },
+        "hero": {
+          "comparable": 6,
+          "alignedWins": 3,
+          "ties": 0
+        }
+      },
+      "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-1a737d6205.json",
+      "portraitV2Recheck": {
+        "status": "completed",
+        "revision": 2,
+        "notes": "PC-M1 · seed 44 · 复核重选（12/12 无 tie）",
+        "pairCount": 12,
+        "comparable": 12,
+        "ties": 0,
+        "alignedWins": 5,
+        "alignedWinratePct": 41.67,
+        "passed": false,
+        "byPurpose": {
+          "cover": { "comparable": 6, "alignedWins": 1, "ties": 0 },
+          "hero": { "comparable": 6, "alignedWins": 4, "ties": 0 }
+        },
+        "vsRound1WinratePct": 50.0,
+        "deltaWinratePct": -8.33,
+        "priorRevision": { "alignedWinratePct": 50.0, "comparable": 4, "ties": 8 },
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-1a737d6205.portrait-v2.json",
+        "judgedSource": "docs/acceptance-records/purpose-pairwise-judged.demo-1a737d6205.portrait-v2.json"
+      },
+      "personPilotRecheck": {
+        "status": "completed",
+        "notes": "stratum_blend_only=[landscape,person] · person blend 0.6 · seed 45",
+        "pairCount": 12,
+        "comparable": 10,
+        "ties": 2,
+        "alignedWins": 4,
+        "alignedWinratePct": 40.0,
+        "passed": false,
+        "byPurpose": {
+          "cover": { "comparable": 4, "alignedWins": 1, "ties": 2 },
+          "hero": { "comparable": 6, "alignedWins": 3, "ties": 0 }
+        },
+        "vsRound1WinratePct": 50.0,
+        "vsPortraitV2WinratePct": 41.67,
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-1a737d6205.person-pilot.json",
+        "judgedSource": "docs/acceptance-records/purpose-pairwise-judged.demo-1a737d6205.person-pilot.json"
+      },
+      "coverRecheck": {
+        "status": "completed",
+        "notes": "MLLM cover 关闭 · subjectClarity 0.55 · seed 46",
+        "pairCount": 6,
+        "comparable": 5,
+        "ties": 1,
+        "alignedWins": 5,
+        "alignedWinratePct": 100.0,
+        "passed": true,
+        "byPurpose": {
+          "cover": { "comparable": 5, "alignedWins": 5, "ties": 1 }
+        },
+        "vsPersonPilotCover": { "comparable": 4, "alignedWins": 1, "ties": 2, "alignedWinratePct": 25.0 },
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-1a737d6205.cover-recheck.json",
+        "judgedSource": "docs/acceptance-records/purpose-pairwise-judged.demo-1a737d6205.cover-recheck.json",
+        "calibrationSource": "docs/acceptance-records/aesthetic-purpose-calibration.cover-zhang.v3.json"
+      },
+      "personPilotV2Recheck": {
+        "status": "completed",
+        "notes": "MLLM cover off · hero landscape blend · seed 47",
+        "pairCount": 12,
+        "comparable": 12,
+        "ties": 0,
+        "alignedWins": 8,
+        "alignedWinratePct": 66.67,
+        "passed": true,
+        "byPurpose": {
+          "cover": { "comparable": 6, "alignedWins": 5, "ties": 0 },
+          "hero": { "comparable": 6, "alignedWins": 3, "ties": 0 }
+        },
+        "vsPersonPilotV1WinratePct": 40.0,
+        "vsRound1WinratePct": 50.0,
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-1a737d6205.person-pilot-v2.json",
+        "judgedSource": "docs/acceptance-records/purpose-pairwise-judged.demo-1a737d6205.person-pilot-v2.json"
+      }
+    },
+    "demo-2025-6": {
+      "profile": "mixed_travel",
+      "pairCount": 12,
+      "comparable": 12,
+      "alignedWins": 6,
+      "alignedWinratePct": 50.0,
+      "passed": false,
+      "byPurpose": {
+        "cover": {
+          "comparable": 6,
+          "alignedWins": 1,
+          "ties": 0
+        },
+        "hero": {
+          "comparable": 6,
+          "alignedWins": 5,
+          "ties": 0
+        }
+      },
+      "scoredSourceNote": "round1 计分归档于 2026-06-18 初轮导入；明细 JSON 已由 cover-v2 复核覆盖",
+      "coverV2Recheck": {
+        "notes": "cover×landscape 调权后（subjectClarity 0.45）· 8 组 cover-only",
+        "pairCount": 8,
+        "comparable": 5,
+        "ties": 3,
+        "alignedWins": 2,
+        "alignedWinratePct": 40.0,
+        "passed": false,
+        "vsRound1Cover": {
+          "alignedWins": 1,
+          "comparable": 6,
+          "alignedWinratePct": 16.67,
+          "deltaWinratePct": 23.33
+        },
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-2025-6.cover-v2.json",
+        "judgedSource": "docs/acceptance-records/purpose-pairwise-judged.demo-2025-6.cover-v2.json"
+      },
+      "portraitV2Recheck": {
+        "status": "completed",
+        "revision": 2,
+        "notes": "PC-M1 · seed 44 · 复核重选（12/12 无 tie）",
+        "pairCount": 12,
+        "comparable": 12,
+        "ties": 0,
+        "alignedWins": 5,
+        "alignedWinratePct": 41.67,
+        "passed": false,
+        "byPurpose": {
+          "cover": { "comparable": 6, "alignedWins": 1, "ties": 0 },
+          "hero": { "comparable": 6, "alignedWins": 4, "ties": 0 }
+        },
+        "vsRound1WinratePct": 50.0,
+        "deltaWinratePct": -8.33,
+        "priorRevision": { "alignedWinratePct": 25.0, "comparable": 4, "ties": 8 },
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-2025-6.portrait-v2.json",
+        "judgedSource": "docs/acceptance-records/purpose-pairwise-judged.demo-2025-6.portrait-v2.json"
+      },
+      "personPilotRecheck": {
+        "status": "completed",
+        "notes": "stratum_blend_only=[landscape,person] · seed 45",
+        "pairCount": 12,
+        "comparable": 11,
+        "ties": 1,
+        "alignedWins": 4,
+        "alignedWinratePct": 36.36,
+        "passed": false,
+        "byPurpose": {
+          "cover": { "comparable": 5, "alignedWins": 3, "ties": 1 },
+          "hero": { "comparable": 6, "alignedWins": 1, "ties": 0 }
+        },
+        "vsRound1WinratePct": 50.0,
+        "vsPortraitV2WinratePct": 41.67,
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-2025-6.person-pilot.json",
+        "judgedSource": "docs/acceptance-records/purpose-pairwise-judged.demo-2025-6.person-pilot.json"
+      },
+      "heroRecheck": {
+        "status": "completed",
+        "notes": "MLLM hero 关闭 + stratum_blend_only_by_purpose.hero=landscape · seed 46",
+        "pairCount": 6,
+        "comparable": 6,
+        "ties": 0,
+        "alignedWins": 5,
+        "alignedWinratePct": 83.33,
+        "passed": true,
+        "byPurpose": {
+          "hero": { "comparable": 6, "alignedWins": 5, "ties": 0 }
+        },
+        "vsPersonPilotHero": { "alignedWins": 1, "comparable": 6, "alignedWinratePct": 16.67 },
+        "vsRound1Hero": { "alignedWins": 5, "comparable": 6, "alignedWinratePct": 83.33 },
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-2025-6.hero-recheck.json",
+        "judgedSource": "docs/acceptance-records/purpose-pairwise-judged.demo-2025-6.hero-recheck.json",
+        "calibrationSource": "docs/acceptance-records/aesthetic-purpose-calibration.hero-dongao.v3.json"
+      },
+      "personPilotV2Recheck": {
+        "status": "completed",
+        "notes": "hero 调权后全量重导 · seed 47",
+        "pairCount": 12,
+        "comparable": 12,
+        "ties": 0,
+        "alignedWins": 6,
+        "alignedWinratePct": 50.0,
+        "passed": false,
+        "byPurpose": {
+          "cover": { "comparable": 6, "alignedWins": 4, "ties": 0 },
+          "hero": { "comparable": 6, "alignedWins": 2, "ties": 0 }
+        },
+        "vsPersonPilotV1WinratePct": 36.36,
+        "vsHeroRecheckWinratePct": 83.33,
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-2025-6.person-pilot-v2.json",
+        "judgedSource": "docs/acceptance-records/purpose-pairwise-judged.demo-2025-6.person-pilot-v2.json"
+      },
+      "personPilotV3Recheck": {
+        "status": "completed",
+        "notes": "hero 调权 · seed 46 全量 12 组",
+        "pairCount": 12,
+        "comparable": 12,
+        "ties": 0,
+        "alignedWins": 5,
+        "alignedWinratePct": 41.67,
+        "passed": false,
+        "byPurpose": {
+          "cover": { "comparable": 6, "alignedWins": 3, "ties": 0 },
+          "hero": { "comparable": 6, "alignedWins": 2, "ties": 0 }
+        },
+        "vsPersonPilotV2WinratePct": 50.0,
+        "vsHeroRecheckWinratePct": 83.33,
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-2025-6.person-pilot-v3.json",
+        "judgedSource": "docs/acceptance-records/purpose-pairwise-judged.demo-2025-6.person-pilot-v3.json",
+        "note": "同 seed46 全量 hero 2/6 vs hero-only 5/6 · pair 集合不同"
+      },
+      "personPilotV4Recheck": {
+        "status": "completed",
+        "notes": "冻结配置全量 · MLLM moment-only · hero landscape blend · cover subjectClarity 0.55 · seed 48",
+        "pairCount": 12,
+        "comparable": 12,
+        "ties": 0,
+        "alignedWins": 3,
+        "alignedWinratePct": 25.0,
+        "passed": false,
+        "byPurpose": {
+          "cover": { "comparable": 6, "alignedWins": 1, "ties": 0 },
+          "hero": { "comparable": 6, "alignedWins": 2, "ties": 0 }
+        },
+        "vsPersonPilotV2WinratePct": 50.0,
+        "vsHeroRecheckWinratePct": 83.33,
+        "deltaWinratePct": -25.0,
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-2025-6.person-pilot-v4.json",
+        "judgedSource": "d:\\HuaweiMoveData\\Users\\xiafe\\Desktop\\purpose-pairwise-demo-2025-6.json",
+        "note": "cover 1/6 较 v2 4/6 大幅回落；全局 0.55 可能不适 mixed_travel 册"
+      },
+      "personPilotV5Recheck": {
+        "status": "completed",
+        "notes": "cover subjectClarity 0.45 override · seed 47 · 对齐 v2 canonical 轮次",
+        "pairCount": 12,
+        "comparable": 12,
+        "ties": 0,
+        "alignedWins": 6,
+        "alignedWinratePct": 50.0,
+        "passed": false,
+        "byPurpose": {
+          "cover": { "comparable": 6, "alignedWins": 4, "ties": 0 },
+          "hero": { "comparable": 6, "alignedWins": 2, "ties": 0 }
+        },
+        "vsPersonPilotV2WinratePct": 50.0,
+        "vsPersonPilotV4WinratePct": 25.0,
+        "deltaWinratePct": 25.0,
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-2025-6.person-pilot-v5.json",
+        "judgedSource": "d:\\HuaweiMoveData\\Users\\xiafe\\Desktop\\purpose-pairwise-demo-2025-6.json",
+        "corpusNote": "asset-071 为册内疑似误 ingest 日落风景片（landscape · 无 person 标签）· 多轮 topPick 锚点 · v5 出现于 cover-002 / hero-009",
+        "corpusSensitivity": {
+          "excludeAssetIds": ["asset-071"],
+          "excludedPairs": 2,
+          "alignedWinsInExcluded": 2,
+          "adjustedComparable": 10,
+          "adjustedAlignedWins": 4,
+          "adjustedWinratePct": 40.0,
+          "note": "剔除含 071 的 pair 后胜率更低；071 在 v5 两局中均被评员判负（非 aligned 侧）"
+        }
+      },
+      "personPilotV6Recheck": {
+        "status": "completed",
+        "notes": "剔除 asset-071 日落误 ingest · cover 0.45 · seed 47",
+        "pairCount": 12,
+        "comparable": 11,
+        "ties": 1,
+        "alignedWins": 4,
+        "alignedWinratePct": 36.36,
+        "passed": false,
+        "byPurpose": {
+          "cover": { "comparable": 6, "alignedWins": 3, "ties": 0 },
+          "hero": { "comparable": 5, "alignedWins": 1, "ties": 1 }
+        },
+        "excludedAssetIds": ["asset-071"],
+        "corpusSource": "docs/acceptance-records/aesthetic-corpus-notes.demo-2025-6.json",
+        "vsPersonPilotV5WinratePct": 50.0,
+        "deltaWinratePct": -13.64,
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-2025-6.person-pilot-v6.json",
+        "judgedSource": "d:\\HuaweiMoveData\\Users\\xiafe\\Desktop\\purpose-pairwise-demo-2025-6.json",
+        "note": "剔除 071 后 pair 集合变化 · cover 3/6 hero 1/5 · 低于 v5；canonical 仍用 v5/v2 50%"
+      },
+      "personPilotV7Recheck": {
+        "status": "completed",
+        "notes": "071 layoutEligible=false · topPick 优先入组 · per-purpose dedupe · seed 46 · cover 0.45",
+        "pairCount": 12,
+        "comparable": 9,
+        "ties": 3,
+        "alignedWins": 4,
+        "alignedWinratePct": 44.44,
+        "passed": false,
+        "byPurpose": {
+          "cover": { "comparable": 5, "alignedWins": 2, "ties": 1 },
+          "hero": { "comparable": 4, "alignedWins": 2, "ties": 2 }
+        },
+        "excludedAssetIds": ["asset-071"],
+        "corpusSource": "docs/acceptance-records/aesthetic-corpus-notes.demo-2025-6.json",
+        "vsPersonPilotV5WinratePct": 50.0,
+        "deltaWinratePct": -5.56,
+        "scoredSource": "docs/acceptance-records/purpose-pairwise-scored.demo-2025-6.person-pilot-v7.json",
+        "judgedSource": "d:\\HuaweiMoveData\\Users\\xiafe\\Desktop\\purpose-pairwise-demo-2025-6.json",
+        "codeDeps": [
+          "travelogue/curation/aesthetic_purpose_blind.py · pin topPick pair per purpose",
+          "aesthetic_purpose_blind.py · dedupe per (purpose, asset-pair)"
+        ],
+        "note": "hero-007/cover-001 topPick 均为 tie · 3 tie 拉低可比基数 · canonical 仍 v5 50%"
+      },
+      "purposeMergeScore": {
+        "notes": "分 purpose 合并 · cover=v2 seed47 · hero=hero-recheck seed46",
+        "comparable": 12,
+        "alignedWins": 9,
+        "alignedWinratePct": 75.0,
+        "passed": true,
+        "byPurpose": {
+          "cover": {
+            "source": "person-pilot-v2",
+            "comparable": 6,
+            "alignedWins": 4,
+            "alignedWinratePct": 66.67
+          },
+          "hero": {
+            "source": "hero-recheck",
+            "comparable": 6,
+            "alignedWins": 5,
+            "alignedWinratePct": 83.33
+          }
+        },
+        "gateNote": "分 purpose 合并 · 东澳 waiver 辅助证据 · 主 canonical 见 personPilotV2Recheck 50%"
+      }
+    }
+  },
+  "acceptance": {
+    "AC-SC-03": {
+      "passed": true,
+      "passedWithWaiver": true,
+      "alignedWinratePct": 51.61,
+      "canonicalWinrateSummary": {
+        "demo-fc8b3a5c08": 60.0,
+        "demo-1a737d6205": 66.67,
+        "demo-2025-6": 50.0
+      },
+      "passedTripCount": 3,
+      "waiverTrips": ["demo-2025-6"],
+      "note": "锡兰 60% ✅ · 张智慧 v2 66.7% ✅ · 东澳 v2 50% **product waiver 接受**（辅助 purpose 合并 75%）· 2026-06-18"
+    }
+  }
+}

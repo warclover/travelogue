@@ -1,0 +1,116 @@
+{
+  "version": "1",
+  "recordedAt": "2026-06-18T08:47:41.128521+00:00",
+  "mergedSource": "docs/acceptance-records/aesthetic-human-labels.merged.v3.json",
+  "sampleCount": 332,
+  "pooledSrcc": 0.1671,
+  "byStratum": {
+    "food": {
+      "sampleCount": 17,
+      "srcc": -0.0745
+    },
+    "landscape": {
+      "sampleCount": 207,
+      "srcc": 0.2574
+    },
+    "person": {
+      "sampleCount": 108,
+      "srcc": -0.0437
+    }
+  },
+  "perTrip": {
+    "demo-2025-6": {
+      "labelsPath": "docs/acceptance-records/aesthetic-human-labels.demo-2025-6.json",
+      "labeledCount": 109,
+      "frozen": true,
+      "stratumAudit": {
+        "auditedAt": "2026-06-18T08:28:36.579821+00:00",
+        "changeCount": 104,
+        "changeRatio": 0.9541,
+        "oldStrata": {
+          "group": 97,
+          "person": 10,
+          "general": 2
+        },
+        "newStrata": {
+          "landscape": 62,
+          "person": 47
+        },
+        "changeMatrix": {
+          "general->landscape": 2,
+          "group->landscape": 55,
+          "group->person": 42,
+          "person->landscape": 5
+        },
+        "notes": "stratum 批量修正：review_stratum_for_asset（faces[] bbox only；横图优先 landscape）"
+      },
+      "srcc": {
+        "pooled": 0.2548,
+        "byStratum": {
+          "landscape": {
+            "sampleCount": 62,
+            "srcc": 0.41
+          },
+          "person": {
+            "sampleCount": 47,
+            "srcc": -0.0225
+          }
+        }
+      }
+    },
+    "demo-fc8b3a5c08": {
+      "labelsPath": "docs/acceptance-records/aesthetic-human-labels.demo-fc8b3a5c08.v3.json",
+      "labeledCount": 146,
+      "frozen": true,
+      "stratumAudit": null,
+      "srcc": {
+        "pooled": 0.1095,
+        "byStratum": {
+          "landscape": {
+            "sampleCount": 119,
+            "srcc": 0.1819
+          },
+          "person": {
+            "sampleCount": 27,
+            "srcc": -0.2142
+          }
+        }
+      }
+    },
+    "demo-1a737d6205": {
+      "labelsPath": "docs/acceptance-records/aesthetic-human-labels.demo-1a737d6205.json",
+      "labeledCount": 60,
+      "frozen": true,
+      "stratumAudit": null,
+      "srcc": {
+        "pooled": -0.0944,
+        "byStratum": {
+          "landscape": {
+            "sampleCount": 26,
+            "srcc": -0.0723
+          },
+          "person": {
+            "sampleCount": 34,
+            "srcc": -0.1012
+          }
+        }
+      }
+    },
+    "demo-53cda5151f": {
+      "labelsPath": "docs/acceptance-records/aesthetic-human-labels.demo-53cda5151f.json",
+      "labeledCount": 17,
+      "frozen": true,
+      "stratumAudit": null,
+      "srcc": {
+        "pooled": -0.0745,
+        "byStratum": {
+          "food": {
+            "sampleCount": 17,
+            "srcc": -0.0745
+          }
+        }
+      }
+    }
+  },
+  "frozen": true
+}

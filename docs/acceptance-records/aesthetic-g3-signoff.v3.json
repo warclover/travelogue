@@ -1,0 +1,49 @@
+{
+  "version": "1",
+  "recordedAt": "2026-06-18T18:00:00+00:00",
+  "status": "pending_signoff",
+  "notes": "G3 改 AppConfig 默认 · 文档就绪 · 代码默认未改",
+  "signoffDoc": "docs/aesthetic-alignment/SIGNOFF-G3-DEFAULT-ML.md",
+  "pilotConfigFreeze": "docs/acceptance-records/aesthetic-pilot-config.freeze.v3.yaml",
+  "pilotFreezeDoc": "docs/aesthetic-alignment/SIGNOFF-PILOT-FREEZE.v3.md",
+  "preconditions": {
+    "AC-SC-00": { "passed": true, "ref": "docs/acceptance-records/aesthetic-stratified-signoff.v3.json" },
+    "AC-SC-01": { "passed": true, "weightedDelta": 0.1306 },
+    "AC-SC-02": { "passed": true, "threshold": 0.10 },
+    "AC-SC-03": {
+      "passed": true,
+      "waiverTrips": ["demo-2025-6"],
+      "ref": "docs/acceptance-records/purpose-pairwise-signoff.v3.json"
+    },
+    "AC-SC-04": { "passed": true },
+    "AC-SC-05": { "passed": true },
+    "AC-SC-06": { "passed": true },
+    "pooledSrccHealthCheck": {
+      "passed": false,
+      "blocksG3": false,
+      "note": "PRD-SC DS-5 健康检查 only"
+    },
+    "portraitDefectBaseline": {
+      "passed": null,
+      "script": "scripts/aesthetic_portrait_defect_signoff.py",
+      "note": "待本机 dogfood baseline 对比"
+    }
+  },
+  "proposedDefaults": {
+    "mlCalibrate": true,
+    "useStratumBlend": true,
+    "stratumBlendOnly": ["landscape", "person"],
+    "stratumBlendOnlyByPurpose": { "hero": ["landscape"] },
+    "useAlbumRelative": true,
+    "portraitLiteEnabled": true,
+    "mllmEnabled": false,
+    "mllmShortlistPurposes": ["moment"]
+  },
+  "codeDefaultChanged": false,
+  "acceptance": {
+    "G3-default-on": {
+      "passed": false,
+      "pending": "product_algorithm_engineering_signoff"
+    }
+  }
+}

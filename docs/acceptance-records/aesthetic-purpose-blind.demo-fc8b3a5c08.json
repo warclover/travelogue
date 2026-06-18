@@ -1,0 +1,73 @@
+{
+  "version": "1",
+  "tripId": "demo-fc8b3a5c08",
+  "targetWinratePct": 60.0,
+  "automated": {
+    "purposes": {
+      "cover": {
+        "rulesPick": "asset-020",
+        "alignedPick": "asset-194",
+        "samePick": false,
+        "verdict": "missing_labels"
+      },
+      "hero": {
+        "rulesPick": "asset-020",
+        "alignedPick": "asset-020",
+        "samePick": true,
+        "verdict": "same_pick"
+      },
+      "moment": {
+        "rulesPick": "asset-020",
+        "alignedPick": "asset-020",
+        "samePick": true,
+        "verdict": "same_pick"
+      },
+      "solo": {
+        "rulesPick": "asset-020",
+        "alignedPick": "asset-020",
+        "samePick": true,
+        "verdict": "same_pick"
+      }
+    },
+    "targetWinratePct": 60.0,
+    "automatedWinCount": 0,
+    "comparablePurposes": 0,
+    "automatedWinratePct": null,
+    "passed": false
+  },
+  "pairwise": null,
+  "purposeComparisons": [
+    {
+      "purpose": "cover",
+      "rulesPick": "asset-020",
+      "candidatePick": "asset-194",
+      "automatedVerdict": "missing_labels",
+      "judgeVerdict": null,
+      "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+    },
+    {
+      "purpose": "hero",
+      "rulesPick": "asset-020",
+      "candidatePick": "asset-020",
+      "automatedVerdict": "same_pick",
+      "judgeVerdict": null,
+      "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+    },
+    {
+      "purpose": "moment",
+      "rulesPick": "asset-020",
+      "candidatePick": "asset-020",
+      "automatedVerdict": "same_pick",
+      "judgeVerdict": null,
+      "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+    },
+    {
+      "purpose": "solo",
+      "rulesPick": "asset-020",
+      "candidatePick": "asset-020",
+      "automatedVerdict": "same_pick",
+      "judgeVerdict": null,
+      "notes": "A=rules pick · B=candidate (aligned) · C=tie"
+    }
+  ]
+}

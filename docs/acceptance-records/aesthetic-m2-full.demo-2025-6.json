@@ -1,0 +1,56 @@
+{
+  "tripDir": "C:\\Users\\xiafe\\Projects\\travelogue\\trips\\demo-2025-6",
+  "metric": "nima",
+  "blend": 0.38,
+  "useStratumBlend": true,
+  "stratumBlends": {
+    "group": 0.35,
+    "person": 0.4,
+    "landscape": 0.35,
+    "food": 0.3,
+    "general": 0.35
+  },
+  "portraitLite": true,
+  "scored": true,
+  "evalRows": 109,
+  "comparison": {
+    "sampleCount": 109,
+    "metrics": {
+      "baseline_rules_export": {
+        "field": "baselinePredicted",
+        "sampleCount": 109,
+        "srcc": 0.2548
+      },
+      "rules_only_recomputed": {
+        "field": "rulesOnly",
+        "sampleCount": 109,
+        "srcc": 0.2369
+      },
+      "learned_nima": {
+        "field": "learnedOnly",
+        "sampleCount": 109,
+        "srcc": 0.1353
+      },
+      "rules_plus_learned_blend": {
+        "field": "blendedOverall",
+        "sampleCount": 109,
+        "srcc": 0.2726
+      },
+      "blended_cover": {
+        "field": "blendedCover",
+        "sampleCount": 109,
+        "srcc": 0.2537
+      },
+      "blended_hero": {
+        "field": "blendedHero",
+        "sampleCount": 109,
+        "srcc": 0.2787
+      },
+      "blended_moment": {
+        "field": "blendedMoment",
+        "sampleCount": 109,
+        "srcc": 0.2669
+      }
+    }
+  }
+}

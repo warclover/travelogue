@@ -1,0 +1,26 @@
+{
+  "version": "1",
+  "notes": "美食语料 · 盲评 17/17 已冻结。",
+  "exportMode": "all_eligible",
+  "targetTotal": 18,
+  "seed": 45,
+  "strataQuotas": {
+    "food": 18,
+    "person": 0,
+    "landscape": 0,
+    "group": 0,
+    "general": 0
+  },
+  "trips": [
+    {
+      "tripId": "demo-53cda5151f",
+      "tripDir": "trips/demo-53cda5151f",
+      "tags": ["food_heavy", "corpus_v3"],
+      "sourcePhotos": "D:\\Photos\\food",
+      "sourcePhotoCount": 18,
+      "stratumOverride": "food",
+      "ingestNotes": "dedupe=false；1 张 material 档不计入 layoutEligible",
+      "role": "fill_food"
+    }
+  ]
+}

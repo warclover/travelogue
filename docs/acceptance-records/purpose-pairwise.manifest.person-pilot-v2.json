@@ -1,0 +1,44 @@
+{
+  "version": "1",
+  "exportedAt": "2026-06-18T11:23:33.529633+00:00",
+  "purposes": [
+    "cover",
+    "hero"
+  ],
+  "pairsPerPurpose": 6,
+  "suffix": "person-pilot-v2",
+  "notes": "张智慧 person-pilot v2 · MLLM cover off · hero landscape blend",
+  "trips": {
+    "demo-1a737d6205": {
+      "pairCount": 12,
+      "topPicks": {
+        "cover": {
+          "rules": {
+            "assetId": "asset-181",
+            "displayFile": "assets/asset-181-w3200.webp",
+            "score": 0.5898
+          },
+          "aligned": {
+            "assetId": "asset-071",
+            "displayFile": "assets/asset-071-w3200.webp",
+            "score": 0.7353
+          }
+        },
+        "hero": {
+          "rules": {
+            "assetId": "asset-150",
+            "displayFile": "assets/asset-150-w3200.webp",
+            "score": 0.56
+          },
+          "aligned": {
+            "assetId": "asset-150",
+            "displayFile": "assets/asset-150-w3200.webp",
+            "score": 0.6617
+          }
+        }
+      },
+      "json": "docs/acceptance-records/purpose-pairwise.demo-1a737d6205.person-pilot-v2.json",
+      "html": "docs/acceptance-records/purpose-pairwise.demo-1a737d6205.person-pilot-v2.html"
+    }
+  }
+}

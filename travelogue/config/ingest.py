@@ -58,6 +58,7 @@ class IngestConfig:
     raw_detect_sample_limit: int = 5
     sharpness_version: str = "v2"  # v1 | v2
     exif_camera: bool = True
+    portrait_analyze: bool = True
 
 
 def ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
@@ -102,4 +103,5 @@ def ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
             raw.get("sharpness_version", raw.get("sharpnessVersion", "v2"))
         ).lower(),
         exif_camera=bool(raw.get("exif_camera", raw.get("exifCamera", True))),
+        portrait_analyze=bool(raw.get("portrait_analyze", raw.get("portraitAnalyze", True))),
     )

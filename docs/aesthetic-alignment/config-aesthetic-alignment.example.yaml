@@ -1,0 +1,84 @@
+# AA · 人类审美对齐 · 灰度配置样例
+# 复制所需段落合并到项目根 config.yaml（勿提交密钥；API key 见 .env）
+#
+# 阶段说明见 ROLLOUT.md · SIGNOFF-M4.md
+
+# --- G1：本地 learned + 分层 blend（推荐先开）---
+# aesthetic:
+#   enabled: true
+#   source: rules+ml
+#   ml_calibrate: true
+#   ml_calibrate_blend: 0.35
+#   use_stratum_blend: true
+#   stratum_blends:
+#     group: 0.35
+#     person: 0.40
+#     landscape: 0.35
+#     food: 0.30
+#     general: 0.35
+#   portrait_lite_enabled: true
+#   learned:
+#     metric: nima
+#     allow_cpu: true
+#     device: cuda:0   # GAP-14 · 可选，覆盖 cull.ml.device
+#   warm_learned_on_ingest: false   # GAP-10 · true 时 ingest 后预热 learned 缓存
+#   mllm:
+#     enabled: false
+
+# --- G2：作者 trip 额外开 MLLM 短名单（需 DASHSCOPE_API_KEY）---
+# aesthetic:
+#   mllm:
+#     enabled: true
+#     provider: dashscope
+#     model: qwen-vl-max
+#     shortlist_purposes: [cover, hero, moment]
+#     shortlist_k: 5
+#     max_calls_per_trip: 20
+#     blend: 0.45
+#     temperature: 0
+#     cache: true
+#     rubric: universal
+#     image_max_edge: 768
+
+# llm 段仍用 DeepSeek 文本（与 vision 分离）：
+# llm:
+#   provider: deepseek
+#   model: deepseek-chat
+#   api_key_env: DEEPSEEK_API_KEY
+
+# cull.ml.aesthetic_metric 默认 topiq_nr；PA 校准读 aesthetic.learned.metric
+
+# --- G1b：分层精选 pilot（landscape-only blend · 不改全局默认）---
+# aesthetic:
+#   ml_calibrate: true
+#   use_stratum_blend: true
+#   stratum_blend_only: [landscape]
+#   stratum_blends:
+#     landscape: 0.6
+#   use_album_relative: true
+#   album_relative_percentile: 0.75
+#   album_relative_lo: 0.7
+#   album_relative_hi: 1.3
+# 校准来源：docs/acceptance-records/aesthetic-stratum-calibration.merged.v3.json
+
+# --- G1c：分层精选 pilot 冻结（v3 · 2026-06-18）---
+# 详见 docs/aesthetic-alignment/SIGNOFF-PILOT-FREEZE.v3.md
+# 完整快照：docs/acceptance-records/aesthetic-pilot-config.freeze.v3.yaml
+#
+# aesthetic:
+#   ml_calibrate: true
+#   use_stratum_blend: true
+#   stratum_blend_only: [landscape, person]
+#   stratum_blend_only_by_purpose:
+#     hero: [landscape]
+#   stratum_blends:
+#     person: 0.6
+#     landscape: 0.6
+#   use_album_relative: true
+#   presets:
+#     cover:
+#       subjectClarity: 0.55
+#   mllm:
+#     enabled: true
+#     shortlist_purposes: [moment]
+#   portrait_lite_enabled: true

@@ -83,6 +83,35 @@ aesthetic:
       lighting: 0.22
       exposure: 0.12
       color: 0.10
+  # AA 人类审美对齐（默认关；灰度见 docs/aesthetic-alignment/config-aesthetic-alignment.example.yaml）
+  # ml_calibrate: false
+  # use_stratum_blend: false
+  # portrait_lite_enabled: true
+  # mllm:
+  #   enabled: false
+  #
+  # --- G1c 分层精选 pilot 冻结（v3 · AC-SC-03 dogfood）---
+  # 完整快照：docs/acceptance-records/aesthetic-pilot-config.freeze.v3.yaml
+  # Signoff：docs/aesthetic-alignment/SIGNOFF-PILOT-FREEZE.v3.md
+  # ml_calibrate: true
+  # use_stratum_blend: true
+  # stratum_blend_only: [landscape, person]
+  # stratum_blend_only_by_purpose:
+  #   hero: [landscape]
+  # stratum_blends:
+  #   person: 0.6
+  #   landscape: 0.6
+  # use_album_relative: true
+  # album_relative_percentile: 0.75
+  # album_relative_lo: 0.7
+  # album_relative_hi: 1.3
+  # presets:
+  #   cover:
+  #     subjectClarity: 0.55
+  # mllm:
+  #   enabled: true
+  #   shortlist_purposes: [moment]
+  # portrait_lite_enabled: true
 
 # 精细制作「版面密度」旋钮（false → 全体当智能平衡）
 layoutDensity:
@@ -296,8 +325,10 @@ ingest:
   max_zip_mb: 25
   # 人脸检测（需 pip install -e ".[vision]"）；用于人物竖图免拼图、焦点
   detect_faces: true
+  portrait_analyze: true
   face_min_size_px: 48
-  face_detect_max_edge: 0   # 0=原图检测；640=检测前缩放到长边 640（P7-B4）
+  face_detect_max_edge: 0
+  portrait_analyze: true   # 0=原图检测；640=检测前缩放到长边 640（P7-B4）
   featured_dir_names: ["主图上传", "精选", "featured", "hero"]
   material_dir_names: ["素材上传", "素材", "material", "extras"]
   warn_featured_count_above: 30
@@ -319,6 +350,16 @@ cull:
   face_ratio_gray_high: 0.20
   score_branch_weight_portrait: 0.15
   score_branch_weight_landscape: 0.15
+  portrait:
+    enabled: true
+    min_confidence: 0.35
+    bbox_pad_ratio: 0.20
+    subject_clarity_weights:
+      face_sharp: 0.40
+      eyes: 0.30
+      frontal: 0.15
+      base: 0.15
+    subject_clarity_penalty_cap: 0.20
   featured_exempt: true
   featured_hard_exclude: false
   featured_exempt_low_res: true

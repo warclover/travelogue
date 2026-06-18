@@ -1,0 +1,330 @@
+{
+  "tripDir": "C:\\Users\\xiafe\\Projects\\travelogue\\trips\\demo-2025-6",
+  "metric": "nima",
+  "scored": true,
+  "rulesBaseline": {
+    "sampleCount": 109,
+    "srcc": 0.2548
+  },
+  "calibration": {
+    "sampleCount": 109,
+    "blendGrid": [
+      0.0,
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.35,
+      0.4,
+      0.45,
+      0.5,
+      0.55,
+      0.6
+    ],
+    "learnedOnly": {
+      "sampleCount": 109,
+      "srcc": 0.1353
+    },
+    "purposes": {
+      "default": {
+        "grid": [
+          {
+            "blend": 0.0,
+            "sampleCount": 109,
+            "srcc": 0.2548
+          },
+          {
+            "blend": 0.05,
+            "sampleCount": 109,
+            "srcc": 0.2577
+          },
+          {
+            "blend": 0.1,
+            "sampleCount": 109,
+            "srcc": 0.2665
+          },
+          {
+            "blend": 0.15,
+            "sampleCount": 109,
+            "srcc": 0.2772
+          },
+          {
+            "blend": 0.2,
+            "sampleCount": 109,
+            "srcc": 0.282
+          },
+          {
+            "blend": 0.25,
+            "sampleCount": 109,
+            "srcc": 0.2824
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 109,
+            "srcc": 0.2836
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 109,
+            "srcc": 0.2843
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 109,
+            "srcc": 0.2808
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 109,
+            "srcc": 0.2738
+          },
+          {
+            "blend": 0.5,
+            "sampleCount": 109,
+            "srcc": 0.2643
+          },
+          {
+            "blend": 0.55,
+            "sampleCount": 109,
+            "srcc": 0.2522
+          },
+          {
+            "blend": 0.6,
+            "sampleCount": 109,
+            "srcc": 0.235
+          }
+        ],
+        "bestBlend": 0.35,
+        "bestSrcc": 0.2843,
+        "baselineRulesSrcc": 0.2548,
+        "deltaVsBaseline": 0.0295
+      },
+      "cover": {
+        "grid": [
+          {
+            "blend": 0.0,
+            "sampleCount": 109,
+            "srcc": 0.238
+          },
+          {
+            "blend": 0.05,
+            "sampleCount": 109,
+            "srcc": 0.2484
+          },
+          {
+            "blend": 0.1,
+            "sampleCount": 109,
+            "srcc": 0.2477
+          },
+          {
+            "blend": 0.15,
+            "sampleCount": 109,
+            "srcc": 0.259
+          },
+          {
+            "blend": 0.2,
+            "sampleCount": 109,
+            "srcc": 0.2651
+          },
+          {
+            "blend": 0.25,
+            "sampleCount": 109,
+            "srcc": 0.2603
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 109,
+            "srcc": 0.2677
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 109,
+            "srcc": 0.2634
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 109,
+            "srcc": 0.2653
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 109,
+            "srcc": 0.2534
+          },
+          {
+            "blend": 0.5,
+            "sampleCount": 109,
+            "srcc": 0.2413
+          },
+          {
+            "blend": 0.55,
+            "sampleCount": 109,
+            "srcc": 0.2324
+          },
+          {
+            "blend": 0.6,
+            "sampleCount": 109,
+            "srcc": 0.224
+          }
+        ],
+        "bestBlend": 0.3,
+        "bestSrcc": 0.2677,
+        "baselineRulesSrcc": 0.2548,
+        "deltaVsBaseline": 0.0129
+      },
+      "hero": {
+        "grid": [
+          {
+            "blend": 0.0,
+            "sampleCount": 109,
+            "srcc": 0.257
+          },
+          {
+            "blend": 0.05,
+            "sampleCount": 109,
+            "srcc": 0.2609
+          },
+          {
+            "blend": 0.1,
+            "sampleCount": 109,
+            "srcc": 0.272
+          },
+          {
+            "blend": 0.15,
+            "sampleCount": 109,
+            "srcc": 0.2833
+          },
+          {
+            "blend": 0.2,
+            "sampleCount": 109,
+            "srcc": 0.2844
+          },
+          {
+            "blend": 0.25,
+            "sampleCount": 109,
+            "srcc": 0.2905
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 109,
+            "srcc": 0.291
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 109,
+            "srcc": 0.2971
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 109,
+            "srcc": 0.2963
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 109,
+            "srcc": 0.2949
+          },
+          {
+            "blend": 0.5,
+            "sampleCount": 109,
+            "srcc": 0.277
+          },
+          {
+            "blend": 0.55,
+            "sampleCount": 109,
+            "srcc": 0.2612
+          },
+          {
+            "blend": 0.6,
+            "sampleCount": 109,
+            "srcc": 0.2467
+          }
+        ],
+        "bestBlend": 0.35,
+        "bestSrcc": 0.2971,
+        "baselineRulesSrcc": 0.2548,
+        "deltaVsBaseline": 0.0423
+      },
+      "moment": {
+        "grid": [
+          {
+            "blend": 0.0,
+            "sampleCount": 109,
+            "srcc": 0.2365
+          },
+          {
+            "blend": 0.05,
+            "sampleCount": 109,
+            "srcc": 0.2406
+          },
+          {
+            "blend": 0.1,
+            "sampleCount": 109,
+            "srcc": 0.2461
+          },
+          {
+            "blend": 0.15,
+            "sampleCount": 109,
+            "srcc": 0.2562
+          },
+          {
+            "blend": 0.2,
+            "sampleCount": 109,
+            "srcc": 0.2605
+          },
+          {
+            "blend": 0.25,
+            "sampleCount": 109,
+            "srcc": 0.2701
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 109,
+            "srcc": 0.273
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 109,
+            "srcc": 0.2811
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 109,
+            "srcc": 0.2829
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 109,
+            "srcc": 0.2851
+          },
+          {
+            "blend": 0.5,
+            "sampleCount": 109,
+            "srcc": 0.2786
+          },
+          {
+            "blend": 0.55,
+            "sampleCount": 109,
+            "srcc": 0.269
+          },
+          {
+            "blend": 0.6,
+            "sampleCount": 109,
+            "srcc": 0.2561
+          }
+        ],
+        "bestBlend": 0.45,
+        "bestSrcc": 0.2851,
+        "baselineRulesSrcc": 0.2548,
+        "deltaVsBaseline": 0.0303
+      }
+    },
+    "recommended": {
+      "blend": 0.35,
+      "srcc": 0.2843,
+      "purpose": "default"
+    }
+  }
+}

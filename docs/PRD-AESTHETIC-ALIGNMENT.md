@@ -3,13 +3,13 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | v0.1.0-AESTHETIC-ALIGN |
-| **状态** | Draft · 待评审 |
+| **文档版本** | v0.2.0-AESTHETIC-ALIGN |
+| **状态** | Draft · 分层增补见 [PRD-STRATIFIED-CURATION.md](./PRD-STRATIFIED-CURATION.md) |
 | **代号** | 「挑出人类认为的好照片」— 让自动选片对齐人类审美判断 |
 | **前置条件** | PA 美学层（`aesthetic_score.py`、`quality.aesthetic`）已在；`photo_cull_ml.py` + pyiqa 管线可用；`pa_acceptance`（SRCC + 盲评）可用 |
-| **关联文档** | [DESIGN-PHOTO-AESTHETIC-EVALUATION.md](./DESIGN-PHOTO-AESTHETIC-EVALUATION.md)、[PRD-PORTRAIT-CULL.md](./PRD-PORTRAIT-CULL.md)（人像质量 = 本 PRD 的 L1 输入）、[PRD-PHASE23-peak-moment.md](./PRD-PHASE23-peak-moment.md)、[cover-selection-plan.md](./cover-selection-plan.md) |
+| **关联文档** | [DESIGN-PHOTO-AESTHETIC-EVALUATION.md](./DESIGN-PHOTO-AESTHETIC-EVALUATION.md)、[PRD-STRATIFIED-CURATION.md](./PRD-STRATIFIED-CURATION.md)（**分层精选 v1 · 标注/验收升级**）、[PRD-PORTRAIT-CULL.md](./PRD-PORTRAIT-CULL.md)（人像质量 = 本 PRD 的 L1 输入）、[PRD-PHASE23-peak-moment.md](./PRD-PHASE23-peak-moment.md)、[cover-selection-plan.md](./cover-selection-plan.md) |
 | **实现模块（规划）** | `travelogue/curation/aesthetic_score.py`、`photo_cull_ml.py`、`pa_acceptance.py`、`travelogue/vision/aesthetic_mllm.py`（新建）、`config/aesthetic.py`、`scripts/aesthetic_blind_review.py` |
-| **更新日期** | 2026-06-16 |
+| **更新日期** | 2026-06-18 |
 
 > **定位**
 >
@@ -41,6 +41,7 @@
 | **AA-PR-05** | 成本可控 | MLLM 仅对**候选短名单**（每 trip 几次调用），不全量 |
 | **AA-PR-06** | 个人可维护 | 本地优先；外部依赖可关；不自建训练平台 |
 | **AA-PR-07** | 不做修图 | 仅评分与选择，不改像素 |
+| **AA-PR-08** | 分层优先（v0.2+） | 验收以 **stratum × purpose** 为主；pooled SRCC 不作唯一门禁 → 见 [PRD-STRATIFIED-CURATION.md](./PRD-STRATIFIED-CURATION.md) |
 
 ---
 
@@ -209,7 +210,7 @@ aesthetic:
 
 | 里程碑 | 内容 | 出口（必须有数字） |
 |--------|------|--------------------|
-| **M0** | `aesthetic_blind_review.py` + 作者盲评 ≥150 张 + 冻结标签集 | 标签集入库 |
+| **M0** | `aesthetic_blind_review.py` + 作者盲评 ≥150 张 + 冻结标签集 | 标签集入库 · 任务清单见 [TASKS.md](./aesthetic-alignment/TASKS.md) |
 | **M1（路线 A）** | 接入 nima/clipiqa，写 `learnedAesthetic`，开 ml_calibrate | learned 推理跑通；缓存生效 |
 | **M2（路线 B）** | SRCC 基线 + 网格拟合 blend/purpose 权重 | **SRCC：rules vs rules+learned 对比表**；G-AA-01/02 |
 | **M3（路线 C）** | `aesthetic_mllm.py`，短名单 MLLM 打分 + critique，确定性缓存 | 高价值图位**盲评胜率**；G-AA-03 |
@@ -221,7 +222,7 @@ aesthetic:
 |----|------|
 | **AC-AA-00** | 作者盲评标签集冻结（≥150，覆盖多题材），可复跑 SRCC |
 | **AC-AA-01** | `learnedAesthetic` 在标签集上 SRCC > 现 rules 主导基线 |
-| **AC-AA-02** | 拟合后 `overall` SRCC ≥ 0.6 或较基线 +0.15（取先达） |
+| **AC-AA-02** | 拟合后 `overall` SRCC ≥ 0.6 或较基线 +0.15（取先达） | **健康检查**；G3 主门禁迁移至 [AC-SC-02](./PRD-STRATIFIED-CURATION.md#10-验收标准ac-sc-) |
 | **AC-AA-03** | 封面/hero/决定性瞬间：新选择盲评胜率 ≥ 60%（不劣于旧 ≥ 90%） |
 | **AC-AA-04** | MLLM 不可用/超额 → 回退 learned/rules，导入成功率不变 |
 | **AC-AA-05** | MLLM 同图同配置二次运行结果一致（缓存 + 温度 0） |
@@ -249,10 +250,22 @@ aesthetic:
 | [PRD-PORTRAIT-CULL.md](./PRD-PORTRAIT-CULL.md) | L1 人像质量（睁眼/清晰）→ 本 PRD 的 `subjectClarity` 输入 + 废片下限 |
 | [PRD-PHASE12.md](./PRD-PHASE12.md) | 分支化评分骨架 |
 
-> 实施顺序建议：**先并行做 Portrait M1（拿到人脸信号）与本 PRD M0（人类标签）**，再进 M1/M2，避免返工。
+> 实施顺序建议：**先并行做 Portrait M1（拿到人脸信号）与本 PRD M0（人类标签）**，再进 M1/M2，避免返工。  
+> **v0.2 增补（2026-06-18）**：merged v2 实测表明混合 pooled SRCC 不适合作唯一门禁 → 见 [PRD-STRATIFIED-CURATION.md](./PRD-STRATIFIED-CURATION.md) 与 [TASKS-STRATIFIED.md](./aesthetic-alignment/TASKS-STRATIFIED.md)。
 
-## 13. 修订记录
+## 13. 分层精选增补（v0.2 · 不替代本文档）
+
+| 文档 | 内容 |
+|------|------|
+| [PRD-STRATIFIED-CURATION.md](./PRD-STRATIFIED-CURATION.md) | 三维框架（stratum × purpose × albumProfile）；语料 v3；AC-SC-* |
+| [aesthetic-alignment/RUBRICS-v1.md](./aesthetic-alignment/RUBRICS-v1.md) | 分类盲评 rubric |
+| [aesthetic-alignment/TASKS-STRATIFIED.md](./aesthetic-alignment/TASKS-STRATIFIED.md) | P0–P4 任务清单 |
+
+**AC 映射**：AC-AA-00/01/02/03 → AC-SC-00/01/02/03（AC-AA-02 降级为健康检查）。
+
+## 14. 修订记录
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v0.1.0 | 2026-06-16 | 初稿：诊断「规则优化无瑕疵≠人类好照片」；三层模型；复用 pyiqa + pa_acceptance + MLLM；DA-1~4 已拍板；路线 A/B/C + SRCC/盲评评测 + 里程碑/AC |
+| v0.2.0 | 2026-06-18 | 增补 §13 分层精选交叉引用；AA-PR-08；AC-AA-02 降级说明；链至 PRD-STRATIFIED-CURATION |

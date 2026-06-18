@@ -1,0 +1,44 @@
+{
+  "version": "1",
+  "exportedAt": "2026-06-18T10:31:03.884728+00:00",
+  "purposes": [
+    "cover",
+    "hero"
+  ],
+  "pairsPerPurpose": 6,
+  "suffix": "person-pilot",
+  "notes": "landscape+person blend pilot · PC-M1",
+  "trips": {
+    "demo-fc8b3a5c08": {
+      "pairCount": 12,
+      "topPicks": {
+        "cover": {
+          "rules": {
+            "assetId": "asset-020",
+            "displayFile": "assets/asset-020-w3200.webp",
+            "score": 0.6723
+          },
+          "aligned": {
+            "assetId": "asset-194",
+            "displayFile": "assets/asset-194-w3200.webp",
+            "score": 0.9989
+          }
+        },
+        "hero": {
+          "rules": {
+            "assetId": "asset-020",
+            "displayFile": "assets/asset-020-w3200.webp",
+            "score": 0.728
+          },
+          "aligned": {
+            "assetId": "asset-194",
+            "displayFile": "assets/asset-194-w3200.webp",
+            "score": 0.9883
+          }
+        }
+      },
+      "json": "docs/acceptance-records/purpose-pairwise.demo-fc8b3a5c08.person-pilot.json",
+      "html": "docs/acceptance-records/purpose-pairwise.demo-fc8b3a5c08.person-pilot.html"
+    }
+  }
+}

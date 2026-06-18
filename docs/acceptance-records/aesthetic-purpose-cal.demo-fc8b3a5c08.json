@@ -1,0 +1,571 @@
+{
+  "tripDir": "C:\\Users\\xiafe\\Projects\\travelogue\\trips\\demo-fc8b3a5c08",
+  "metric": "nima",
+  "rulesBaseline": {
+    "sampleCount": 54,
+    "srcc": -0.0036
+  },
+  "calibration": {
+    "emphasisGrid": [
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.35,
+      0.4
+    ],
+    "purposes": {
+      "cover": {
+        "byDim": {
+          "subjectClarity": {
+            "grid": [
+              {
+                "emphasis": 0.1,
+                "sampleCount": 54,
+                "srcc": 0.0746
+              },
+              {
+                "emphasis": 0.15,
+                "sampleCount": 54,
+                "srcc": 0.0718
+              },
+              {
+                "emphasis": 0.2,
+                "sampleCount": 54,
+                "srcc": 0.0635
+              },
+              {
+                "emphasis": 0.25,
+                "sampleCount": 54,
+                "srcc": 0.0391
+              },
+              {
+                "emphasis": 0.3,
+                "sampleCount": 54,
+                "srcc": 0.0354
+              },
+              {
+                "emphasis": 0.35,
+                "sampleCount": 54,
+                "srcc": 0.0159
+              },
+              {
+                "emphasis": 0.4,
+                "sampleCount": 54,
+                "srcc": -0.005
+              }
+            ],
+            "bestEmphasis": 0.1,
+            "bestSrcc": 0.0746
+          },
+          "composition": {
+            "grid": [
+              {
+                "emphasis": 0.1,
+                "sampleCount": 54,
+                "srcc": 0.0972
+              },
+              {
+                "emphasis": 0.15,
+                "sampleCount": 54,
+                "srcc": 0.0812
+              },
+              {
+                "emphasis": 0.2,
+                "sampleCount": 54,
+                "srcc": 0.0791
+              },
+              {
+                "emphasis": 0.25,
+                "sampleCount": 54,
+                "srcc": 0.0571
+              },
+              {
+                "emphasis": 0.3,
+                "sampleCount": 54,
+                "srcc": 0.0718
+              },
+              {
+                "emphasis": 0.35,
+                "sampleCount": 54,
+                "srcc": 0.0512
+              },
+              {
+                "emphasis": 0.4,
+                "sampleCount": 54,
+                "srcc": 0.04
+              }
+            ],
+            "bestEmphasis": 0.1,
+            "bestSrcc": 0.0972
+          },
+          "color": {
+            "grid": [
+              {
+                "emphasis": 0.1,
+                "sampleCount": 54,
+                "srcc": 0.1247
+              },
+              {
+                "emphasis": 0.15,
+                "sampleCount": 54,
+                "srcc": 0.1135
+              },
+              {
+                "emphasis": 0.2,
+                "sampleCount": 54,
+                "srcc": 0.0935
+              },
+              {
+                "emphasis": 0.25,
+                "sampleCount": 54,
+                "srcc": 0.0718
+              },
+              {
+                "emphasis": 0.3,
+                "sampleCount": 54,
+                "srcc": 0.0417
+              },
+              {
+                "emphasis": 0.35,
+                "sampleCount": 54,
+                "srcc": 0.034
+              },
+              {
+                "emphasis": 0.4,
+                "sampleCount": 54,
+                "srcc": 0.0033
+              }
+            ],
+            "bestEmphasis": 0.1,
+            "bestSrcc": 0.1247
+          }
+        },
+        "recommended": {
+          "dim": "color",
+          "emphasis": 0.1,
+          "srcc": 0.1247
+        },
+        "baselineRulesSrcc": -0.0036
+      },
+      "hero": {
+        "byDim": {
+          "subjectClarity": {
+            "grid": [
+              {
+                "emphasis": 0.1,
+                "sampleCount": 54,
+                "srcc": 0.1154
+              },
+              {
+                "emphasis": 0.15,
+                "sampleCount": 54,
+                "srcc": 0.0939
+              },
+              {
+                "emphasis": 0.2,
+                "sampleCount": 54,
+                "srcc": 0.0921
+              },
+              {
+                "emphasis": 0.25,
+                "sampleCount": 54,
+                "srcc": 0.0859
+              },
+              {
+                "emphasis": 0.3,
+                "sampleCount": 54,
+                "srcc": 0.072
+              },
+              {
+                "emphasis": 0.35,
+                "sampleCount": 54,
+                "srcc": 0.0525
+              },
+              {
+                "emphasis": 0.4,
+                "sampleCount": 54,
+                "srcc": 0.0387
+              }
+            ],
+            "bestEmphasis": 0.1,
+            "bestSrcc": 0.1154
+          },
+          "composition": {
+            "grid": [
+              {
+                "emphasis": 0.1,
+                "sampleCount": 54,
+                "srcc": 0.1013
+              },
+              {
+                "emphasis": 0.15,
+                "sampleCount": 54,
+                "srcc": 0.0937
+              },
+              {
+                "emphasis": 0.2,
+                "sampleCount": 54,
+                "srcc": 0.0909
+              },
+              {
+                "emphasis": 0.25,
+                "sampleCount": 54,
+                "srcc": 0.0978
+              },
+              {
+                "emphasis": 0.3,
+                "sampleCount": 54,
+                "srcc": 0.0765
+              },
+              {
+                "emphasis": 0.35,
+                "sampleCount": 54,
+                "srcc": 0.0646
+              },
+              {
+                "emphasis": 0.4,
+                "sampleCount": 54,
+                "srcc": 0.0649
+              }
+            ],
+            "bestEmphasis": 0.1,
+            "bestSrcc": 0.1013
+          },
+          "color": {
+            "grid": [
+              {
+                "emphasis": 0.1,
+                "sampleCount": 54,
+                "srcc": 0.107
+              },
+              {
+                "emphasis": 0.15,
+                "sampleCount": 54,
+                "srcc": 0.1027
+              },
+              {
+                "emphasis": 0.2,
+                "sampleCount": 54,
+                "srcc": 0.0726
+              },
+              {
+                "emphasis": 0.25,
+                "sampleCount": 54,
+                "srcc": 0.0272
+              },
+              {
+                "emphasis": 0.3,
+                "sampleCount": 54,
+                "srcc": -0.0007
+              },
+              {
+                "emphasis": 0.35,
+                "sampleCount": 54,
+                "srcc": -0.0071
+              },
+              {
+                "emphasis": 0.4,
+                "sampleCount": 54,
+                "srcc": -0.0106
+              }
+            ],
+            "bestEmphasis": 0.1,
+            "bestSrcc": 0.107
+          }
+        },
+        "recommended": {
+          "dim": "subjectClarity",
+          "emphasis": 0.1,
+          "srcc": 0.1154
+        },
+        "baselineRulesSrcc": -0.0036
+      },
+      "moment": {
+        "byDim": {
+          "subjectClarity": {
+            "grid": [
+              {
+                "emphasis": 0.1,
+                "sampleCount": 54,
+                "srcc": 0.2029
+              },
+              {
+                "emphasis": 0.15,
+                "sampleCount": 54,
+                "srcc": 0.1654
+              },
+              {
+                "emphasis": 0.2,
+                "sampleCount": 54,
+                "srcc": 0.1397
+              },
+              {
+                "emphasis": 0.25,
+                "sampleCount": 54,
+                "srcc": 0.0996
+              },
+              {
+                "emphasis": 0.3,
+                "sampleCount": 54,
+                "srcc": 0.1071
+              },
+              {
+                "emphasis": 0.35,
+                "sampleCount": 54,
+                "srcc": 0.0945
+              },
+              {
+                "emphasis": 0.4,
+                "sampleCount": 54,
+                "srcc": 0.0653
+              }
+            ],
+            "bestEmphasis": 0.1,
+            "bestSrcc": 0.2029
+          },
+          "composition": {
+            "grid": [
+              {
+                "emphasis": 0.1,
+                "sampleCount": 54,
+                "srcc": 0.1593
+              },
+              {
+                "emphasis": 0.15,
+                "sampleCount": 54,
+                "srcc": 0.1562
+              },
+              {
+                "emphasis": 0.2,
+                "sampleCount": 54,
+                "srcc": 0.1492
+              },
+              {
+                "emphasis": 0.25,
+                "sampleCount": 54,
+                "srcc": 0.1126
+              },
+              {
+                "emphasis": 0.3,
+                "sampleCount": 54,
+                "srcc": 0.0917
+              },
+              {
+                "emphasis": 0.35,
+                "sampleCount": 54,
+                "srcc": 0.107
+              },
+              {
+                "emphasis": 0.4,
+                "sampleCount": 54,
+                "srcc": 0.0707
+              }
+            ],
+            "bestEmphasis": 0.1,
+            "bestSrcc": 0.1593
+          },
+          "color": {
+            "grid": [
+              {
+                "emphasis": 0.1,
+                "sampleCount": 54,
+                "srcc": 0.0934
+              },
+              {
+                "emphasis": 0.15,
+                "sampleCount": 54,
+                "srcc": 0.092
+              },
+              {
+                "emphasis": 0.2,
+                "sampleCount": 54,
+                "srcc": 0.0713
+              },
+              {
+                "emphasis": 0.25,
+                "sampleCount": 54,
+                "srcc": 0.0423
+              },
+              {
+                "emphasis": 0.3,
+                "sampleCount": 54,
+                "srcc": 0.0251
+              },
+              {
+                "emphasis": 0.35,
+                "sampleCount": 54,
+                "srcc": 0.0013
+              },
+              {
+                "emphasis": 0.4,
+                "sampleCount": 54,
+                "srcc": -0.005
+              }
+            ],
+            "bestEmphasis": 0.1,
+            "bestSrcc": 0.0934
+          }
+        },
+        "recommended": {
+          "dim": "subjectClarity",
+          "emphasis": 0.1,
+          "srcc": 0.2029
+        },
+        "baselineRulesSrcc": -0.0036
+      },
+      "solo": {
+        "byDim": {
+          "subjectClarity": {
+            "grid": [
+              {
+                "emphasis": 0.1,
+                "sampleCount": 54,
+                "srcc": 0.2217
+              },
+              {
+                "emphasis": 0.15,
+                "sampleCount": 54,
+                "srcc": 0.1779
+              },
+              {
+                "emphasis": 0.2,
+                "sampleCount": 54,
+                "srcc": 0.1543
+              },
+              {
+                "emphasis": 0.25,
+                "sampleCount": 54,
+                "srcc": 0.1387
+              },
+              {
+                "emphasis": 0.3,
+                "sampleCount": 54,
+                "srcc": 0.1373
+              },
+              {
+                "emphasis": 0.35,
+                "sampleCount": 54,
+                "srcc": 0.1276
+              },
+              {
+                "emphasis": 0.4,
+                "sampleCount": 54,
+                "srcc": 0.0834
+              }
+            ],
+            "bestEmphasis": 0.1,
+            "bestSrcc": 0.2217
+          },
+          "composition": {
+            "grid": [
+              {
+                "emphasis": 0.1,
+                "sampleCount": 54,
+                "srcc": 0.1497
+              },
+              {
+                "emphasis": 0.15,
+                "sampleCount": 54,
+                "srcc": 0.1654
+              },
+              {
+                "emphasis": 0.2,
+                "sampleCount": 54,
+                "srcc": 0.1574
+              },
+              {
+                "emphasis": 0.25,
+                "sampleCount": 54,
+                "srcc": 0.1581
+              },
+              {
+                "emphasis": 0.3,
+                "sampleCount": 54,
+                "srcc": 0.1479
+              },
+              {
+                "emphasis": 0.35,
+                "sampleCount": 54,
+                "srcc": 0.1236
+              },
+              {
+                "emphasis": 0.4,
+                "sampleCount": 54,
+                "srcc": 0.1006
+              }
+            ],
+            "bestEmphasis": 0.15,
+            "bestSrcc": 0.1654
+          },
+          "color": {
+            "grid": [
+              {
+                "emphasis": 0.1,
+                "sampleCount": 54,
+                "srcc": 0.1798
+              },
+              {
+                "emphasis": 0.15,
+                "sampleCount": 54,
+                "srcc": 0.1543
+              },
+              {
+                "emphasis": 0.2,
+                "sampleCount": 54,
+                "srcc": 0.1403
+              },
+              {
+                "emphasis": 0.25,
+                "sampleCount": 54,
+                "srcc": 0.0868
+              },
+              {
+                "emphasis": 0.3,
+                "sampleCount": 54,
+                "srcc": 0.0579
+              },
+              {
+                "emphasis": 0.35,
+                "sampleCount": 54,
+                "srcc": 0.0571
+              },
+              {
+                "emphasis": 0.4,
+                "sampleCount": 54,
+                "srcc": 0.0392
+              }
+            ],
+            "bestEmphasis": 0.1,
+            "bestSrcc": 0.1798
+          }
+        },
+        "recommended": {
+          "dim": "subjectClarity",
+          "emphasis": 0.1,
+          "srcc": 0.2217
+        },
+        "baselineRulesSrcc": -0.0036
+      }
+    }
+  },
+  "tunedPurposeSrcc": {
+    "cover": {
+      "sampleCount": 54,
+      "srcc": 0.1247
+    },
+    "hero": {
+      "sampleCount": 54,
+      "srcc": 0.1154
+    },
+    "moment": {
+      "sampleCount": 54,
+      "srcc": 0.2029
+    },
+    "solo": {
+      "sampleCount": 54,
+      "srcc": 0.2217
+    }
+  }
+}

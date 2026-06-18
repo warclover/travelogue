@@ -18,6 +18,7 @@ from travelogue.web.studio_handlers.trip_handlers import (
     handle_patch_copy_intent,
     handle_patch_intent,
     handle_patch_pipeline,
+    handle_patch_stratum_preference,
     handle_rerender,
     handle_trips,
 )
@@ -139,6 +140,29 @@ def test_handle_aesthetic_success(tmp_path: Path) -> None:
     assert len(body["assets"]) == 1
     assert body["assets"][0]["id"] == "img-1"
     assert len(body["assets"][0]["explain"]) == 3
+
+
+def test_handle_patch_stratum_preference_success(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trip_json = create_trip("demo-pref", trips_dir, title="偏好", place="京都")
+    trip = TripService(root=trips_dir.parent).load(trip_json)
+    trip["assets"] = [{"id": "img-1", "type": "image"}]
+    TripService(root=trips_dir.parent).save(trip, trip_json)
+
+    handler = MockStudioHandler(
+        trips_dir,
+        path="/__travelogue/trips/demo-pref/aesthetic/preference",
+        json_body={"stratumPreference": "portrait"},
+    )
+    handle_patch_stratum_preference(handler, "demo-pref")
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 200
+    assert body["ok"] is True
+    assert body["stratumPreference"]["value"] == "portrait"
+
+    saved = TripService(root=trips_dir.parent).load(trip_json)
+    assert saved["curation"]["stratumPreference"] == "portrait"
 
 
 def test_handle_chapter_layout_requires_trip_id(tmp_path: Path) -> None:

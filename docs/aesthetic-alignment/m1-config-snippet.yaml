@@ -1,0 +1,27 @@
+# M1 · learned 审美配置片段（AA 路线 A）
+
+```yaml
+aesthetic:
+  enabled: true
+  source: rules+ml
+  ml_calibrate: true
+  ml_calibrate_blend: 0.35       # uniform 默认；hero 可试 0.43
+  use_stratum_blend: true          # M2 分层（demo: group=0.35 person=0.4）
+  stratum_blends:
+    group: 0.35
+    person: 0.40
+  portrait_lite_enabled: true      # 合影/人脸 subjectClarity 轻量修正
+  learned:
+    metric: nima        # nima | clipiqa+ | topiq_nr
+    allow_cpu: true
+  mllm:                            # 默认关；需 DASHSCOPE_API_KEY
+    enabled: false
+    provider: dashscope
+    model: qwen-vl-max
+    shortlist_purposes: [cover, hero, moment]
+    shortlist_k: 5
+    max_calls_per_trip: 20
+    blend: 0.45
+```
+
+`cull.ml.aesthetic_metric` 仍默认 `topiq_nr`（IQA/cull 路径）；PA 校准路径优先用 `aesthetic.learned.metric`。

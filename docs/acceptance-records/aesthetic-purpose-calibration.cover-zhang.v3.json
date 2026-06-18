@@ -1,0 +1,46 @@
+{
+  "version": "1",
+  "recordedAt": "2026-06-18T11:24:00+00:00",
+  "notes": "张智慧 cover pairwise 根因 · person-pilot cover 1/4 + 2 tie",
+  "tripId": "demo-1a737d6205",
+  "profile": "mixed_portrait",
+  "diagnosis": {
+    "personPilotCover": { "comparable": 4, "alignedWins": 1, "ties": 2, "alignedWinratePct": 25.0 },
+    "personPilotHero": { "comparable": 6, "alignedWins": 3, "alignedWinratePct": 50.0 },
+    "rootCause": "MLLM 在 cover purpose 抬高 asset-006/asset-180（0.85+），人工 pairwise 更偏 rules；person blend 本身合理",
+    "alignedTopBefore": { "assetId": "asset-006", "score": 0.9172 },
+    "alignedTopAfter": { "assetId": "asset-071", "score": 0.7353 },
+    "rulesTopCover": { "assetId": "asset-181", "score": 0.5898 }
+  },
+  "fixes": [
+    "mllm.shortlist_purposes 移除 cover（仅 moment）",
+    "presets.cover.subjectClarity 0.55（张智慧 person 网格最优）",
+    "hero 沿用 stratum_blend_only_by_purpose.hero=landscape"
+  ],
+  "configYamlSnippet": {
+    "aesthetic": {
+      "presets": {
+        "cover": {
+          "composition": 0.1588,
+          "exposure": 0.0794,
+          "color": 0.1324,
+          "lighting": 0.0794,
+          "subjectClarity": 0.55
+        }
+      },
+      "mllm": { "shortlist_purposes": ["moment"] }
+    }
+  },
+  "coverRecheckExport": {
+    "seed": 46,
+    "pairs": 6,
+    "json": "docs/acceptance-records/purpose-pairwise.demo-1a737d6205.cover-recheck.json",
+    "html": "docs/acceptance-records/purpose-pairwise.demo-1a737d6205.cover-recheck.html"
+  },
+  "personPilotV2Export": {
+    "seed": 47,
+    "pairs": 12,
+    "json": "docs/acceptance-records/purpose-pairwise.demo-1a737d6205.person-pilot-v2.json",
+    "html": "docs/acceptance-records/purpose-pairwise.demo-1a737d6205.person-pilot-v2.html"
+  }
+}

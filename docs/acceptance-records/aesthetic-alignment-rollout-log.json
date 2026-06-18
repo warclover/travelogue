@@ -1,0 +1,118 @@
+{
+  "recordId": "aesthetic-alignment-rollout-log",
+  "phase": "AA-M4-aesthetic-alignment",
+  "date": "2026-06-18",
+  "branch": "feat/aesthetic-alignment",
+  "corpus": {
+    "tripId": "demo-2025-6",
+    "labelCount": 109,
+    "frozen": true,
+    "baselineRulesSrcc": 0.2548
+  },
+  "owner": {
+    "productOwner": null,
+    "engineeringOwner": null,
+    "qaOwner": null
+  },
+  "gates": {
+    "G0-dogfood": {
+      "description": "作者相册 demo-2025-6 全链路：M0–M3 + curate hook",
+      "required": [
+        "aesthetic-human-labels.demo-2025-6.json frozen",
+        "pytest test_aesthetic_* 全绿",
+        "aesthetic-m3-eval.demo-2025-6.json 真实 MLLM 8/8",
+        "MLLM cache 二次 calls=0"
+      ],
+      "status": "passed",
+      "completedAt": "2026-06-18",
+      "metrics": {
+        "bestOverallSrcc": 0.2744,
+        "bestOverallDeltaVsRules": 0.0196,
+        "heroSrccWithMllm": 0.2796,
+        "oracleUpperBoundSrcc": 0.2913
+      }
+    },
+    "G1-ml-stratum": {
+      "description": "灰度：ml_calibrate + use_stratum_blend；mllm 关",
+      "configRef": "docs/aesthetic-alignment/config-aesthetic-alignment.example.yaml#G1",
+      "required": [
+        "pip install -e .[cull-ml]",
+        "config.yaml 合并 G1 片段",
+        "recurate 目标 trip 观察封面/hero 变化"
+      ],
+      "status": "passed",
+      "completedAt": "2026-06-18",
+      "tripId": "demo-2025-6",
+      "blockedBy": ["AC-AA-02 未达标，禁止改代码默认"]
+    },
+    "G2-mllm-author": {
+      "description": "作者 trip 开启 MLLM 短名单（百炼 vision）",
+      "configRef": "docs/aesthetic-alignment/config-aesthetic-alignment.example.yaml#G2",
+      "required": [
+        "DASHSCOPE_API_KEY in .env",
+        "mllm.enabled=true",
+        "max_calls_per_trip 观察 ≤20"
+      ],
+      "status": "passed",
+      "completedAt": "2026-06-18",
+      "tripId": "demo-2025-6",
+      "dogfoodRecord": "docs/acceptance-records/aesthetic-g2-dogfood.demo-2025-6.json"
+    },
+    "G3-default-on": {
+      "description": "AC-SC 达标后改 AppConfig 默认为 stratified pilot（ml_calibrate=true 等）",
+      "signoffRef": "docs/aesthetic-alignment/SIGNOFF-G3-DEFAULT-ML.md",
+      "signoffJson": "docs/acceptance-records/aesthetic-g3-signoff.v3.json",
+      "required": [
+        "AC-SC-01/02/04/05/06 passed",
+        "AC-SC-03 passed (incl. waiver documented)",
+        "SIGNOFF-G3-DEFAULT-ML.md 三联签",
+        "G3 代码 PR 合并（本阶段仅文档）"
+      ],
+      "status": "pending_signoff",
+      "blockedBy": ["产品/算法/工程联签未完成", "AppConfig 默认 intentionally unchanged"],
+      "preconditionsMet": {
+        "acScMatrix": true,
+        "pilotFreezeG1c": true,
+        "codeDefaultChanged": false
+      }
+    },
+    "G1c-stratified-pilot-freeze": {
+      "description": "分层精选 pilot 配置冻结 v3（landscape+person · MLLM moment-only）",
+      "configRef": "docs/acceptance-records/aesthetic-pilot-config.freeze.v3.yaml",
+      "signoffRef": "docs/aesthetic-alignment/SIGNOFF-PILOT-FREEZE.v3.md",
+      "required": [
+        "AC-SC-01/02 passed",
+        "AC-SC-03 canonical 2/3 trips ≥60% or product waiver",
+        "purpose-pairwise-signoff.v3.json frozen"
+      ],
+      "status": "passed",
+      "completedAt": "2026-06-18",
+      "metrics": {
+        "acSc03Passed": true,
+        "acSc03WaiverTrips": ["demo-2025-6"],
+        "acSc03PassedTripsStrict": 2,
+        "canonicalWinrates": {
+          "demo-fc8b3a5c08": 60.0,
+          "demo-1a737d6205": 66.67,
+          "demo-2025-6": 50.0
+        },
+        "dongaoPurposeMergeWinratePct": 75.0
+      },
+      "note": "东澳 50% product waiver 2026-06-18"
+    }
+  },
+  "rollback": {
+    "instant": "aesthetic.ml_calibrate: false; aesthetic.mllm.enabled: false",
+    "verify": "recurate → quality.aesthetic.source 回到 rules"
+  },
+  "acceptanceRecords": [
+    "docs/acceptance-records/aesthetic-baseline.demo-2025-6.json",
+    "docs/acceptance-records/aesthetic-m2-stratum.demo-2025-6.json",
+    "docs/acceptance-records/aesthetic-m3-eval.demo-2025-6.json",
+    "docs/acceptance-records/aesthetic-m3-oracle.demo-2025-6.json",
+    "docs/acceptance-records/aesthetic-stratified-signoff.v3.json",
+    "docs/acceptance-records/purpose-pairwise-signoff.v3.json",
+    "docs/acceptance-records/aesthetic-pilot-config.freeze.v3.yaml",
+    "docs/acceptance-records/aesthetic-g3-signoff.v3.json"
+  ]
+}

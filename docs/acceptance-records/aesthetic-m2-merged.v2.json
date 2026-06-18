@@ -1,0 +1,71 @@
+{
+  "metric": "nima",
+  "portraitLite": true,
+  "sampleCount": 163,
+  "exportBaseline": {
+    "srcc": 0.2951,
+    "sampleCount": 163
+  },
+  "rulesRecomputed": {
+    "sampleCount": 163,
+    "srcc": 0.1085
+  },
+  "stratumBlend": {
+    "sampleCount": 163,
+    "srcc": 0.1914
+  },
+  "coverPurpose": {
+    "sampleCount": 163,
+    "srcc": 0.1394
+  },
+  "deltaVsExportBaseline": -0.1037,
+  "deltaVsRules": 0.0829,
+  "acAa02": {
+    "targetDelta": 0.15,
+    "targetAbsolute": 0.6,
+    "deltaFromBaseline": -0.1037,
+    "passedDelta": false,
+    "passedAbsolute": false,
+    "passed": false
+  },
+  "perTrip": {
+    "demo-2025-6": {
+      "labeled": 109,
+      "learnedScored": true,
+      "stratumBlends": {
+        "group": 0.35,
+        "person": 0.4,
+        "landscape": 0.35,
+        "food": 0.3,
+        "general": 0.35
+      },
+      "rulesSrcc": 0.2369,
+      "stratumBlendSrcc": 0.2727
+    },
+    "demo-fc8b3a5c08": {
+      "labeled": 54,
+      "learnedScored": true,
+      "stratumBlends": {
+        "group": 0.35,
+        "person": 0.6,
+        "landscape": 0.35,
+        "food": 0.3,
+        "general": 0.0
+      },
+      "rulesSrcc": -0.0036,
+      "stratumBlendSrcc": 0.2177
+    }
+  },
+  "trips": [
+    {
+      "tripId": "demo-2025-6",
+      "tripDir": "trips/demo-2025-6",
+      "stratumCalibration": "docs/acceptance-records/aesthetic-m2-stratum.demo-2025-6.json"
+    },
+    {
+      "tripId": "demo-fc8b3a5c08",
+      "tripDir": "trips/demo-fc8b3a5c08",
+      "stratumCalibration": "docs/acceptance-records/aesthetic-m2-stratum.demo-fc8b3a5c08.json"
+    }
+  ]
+}

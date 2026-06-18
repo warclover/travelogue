@@ -1,0 +1,37 @@
+{
+  "version": "1",
+  "recordedAt": "2026-06-18T10:50:00+00:00",
+  "notes": "东澳 hero pairwise 根因 · person-pilot hero 1/6",
+  "tripId": "demo-2025-6",
+  "diagnosis": {
+    "personPilotHero": { "comparable": 6, "alignedWins": 1, "alignedWinratePct": 16.67 },
+    "round1Hero": { "comparable": 6, "alignedWins": 5, "alignedWinratePct": 83.33 },
+    "rootCause": "MLLM 在 hero purpose 混入 asset-104 等高分，与人工 pairwise 偏好背离；person stratum blend 为次要因素",
+    "alignedTopBefore": { "assetId": "asset-104", "score": 0.9018 },
+    "alignedTopAfter": { "assetId": "asset-114", "score": 0.5938 },
+    "rulesTop": { "assetId": "asset-071", "score": 0.557 }
+  },
+  "fixes": [
+    "mllm.shortlist_purposes 移除 hero（cover/moment 保留）",
+    "purpose_overall 对非 shortlist purpose 跳过 MLLM blend",
+    "stratum_blend_only_by_purpose.hero = [landscape]"
+  ],
+  "configYamlSnippet": {
+    "aesthetic": {
+      "stratum_blend_only_by_purpose": { "hero": ["landscape"] },
+      "mllm": { "shortlist_purposes": ["cover", "moment"] }
+    }
+  },
+  "heroRecheckExport": {
+    "seed": 46,
+    "pairs": 6,
+    "json": "docs/acceptance-records/purpose-pairwise.demo-2025-6.hero-recheck.json",
+    "html": "docs/acceptance-records/purpose-pairwise.demo-2025-6.hero-recheck.html"
+  },
+  "personPilotV2Export": {
+    "seed": 47,
+    "pairs": 12,
+    "json": "docs/acceptance-records/purpose-pairwise.demo-2025-6.person-pilot-v2.json",
+    "html": "docs/acceptance-records/purpose-pairwise.demo-2025-6.person-pilot-v2.html"
+  }
+}

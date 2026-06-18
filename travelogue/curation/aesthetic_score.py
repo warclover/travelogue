@@ -18,7 +18,7 @@ from typing import Any, Literal
 
 from PIL import Image
 
-from travelogue.config import AestheticConfig, AestheticWeights
+from travelogue.config import AestheticConfig, AestheticWeights, resolve_learned_blend
 from travelogue.curation.asset_quality import asset_sharpness
 from travelogue.curation.composition_signals import mean_thirds_score
 from travelogue.media.color_metrics import (
@@ -75,7 +75,7 @@ def _read_mean_luma(asset: dict) -> float | None:
 
 
 def _read_topiq_score(asset: dict) -> float | None:
-    """``quality.aestheticScore`` from pyiqa (topiq), or ``None`` when absent."""
+    """``quality.aestheticScore`` from pyiqa (legacy flat field)."""
     q = asset.get("quality")
     if isinstance(q, dict) and q.get("aestheticScore") is not None:
         try:
@@ -83,6 +83,56 @@ def _read_topiq_score(asset: dict) -> float | None:
         except (TypeError, ValueError):
             return None
     return None
+
+
+def _read_learned_aesthetic_score(asset: dict) -> float | None:
+    """``quality.aesthetic.signals.learnedAesthetic`` with flat-field fallback."""
+    q = asset.get("quality")
+    if isinstance(q, dict):
+        ae = q.get("aesthetic")
+        if isinstance(ae, dict):
+            sig = ae.get("signals")
+            if isinstance(sig, dict) and sig.get("learnedAesthetic") is not None:
+                try:
+                    return _clamp01(float(sig["learnedAesthetic"]))
+                except (TypeError, ValueError):
+                    pass
+    return _read_topiq_score(asset)
+
+
+def _read_mllm_score(asset: dict) -> float | None:
+    q = asset.get("quality")
+    if isinstance(q, dict):
+        ae = q.get("aesthetic")
+        if isinstance(ae, dict):
+            sig = ae.get("signals")
+            if isinstance(sig, dict) and sig.get("mllmScore") is not None:
+                try:
+                    return _clamp01(float(sig["mllmScore"]))
+                except (TypeError, ValueError):
+                    pass
+    return None
+
+
+def _blend_mllm_overall(
+    base: float,
+    asset: dict,
+    *,
+    cfg: AestheticConfig,
+    purpose: str = "default",
+) -> tuple[float, str]:
+    mllm = _read_mllm_score(asset)
+    if mllm is None or not cfg.mllm.enabled:
+        return base, "rules+ml"
+    if purpose and purpose != "default":
+        allowed = cfg.mllm.shortlist_purposes or ()
+        if allowed and purpose not in allowed:
+            return base, "rules+ml"
+    blend = _clamp01(cfg.mllm.blend)
+    if blend <= 0:
+        return base, "rules+ml"
+    out = round(_clamp01((1.0 - blend) * base + blend * mllm), 4)
+    return out, "mllm" if blend >= 0.35 else "rules+ml"
 
 
 def _rules_overall_from_weights(dims: dict[str, float], weights: AestheticWeights) -> float:
@@ -137,7 +187,7 @@ def purpose_overall(
     if not required.issubset(dims.keys()):
         return aesthetic_overall(asset)
     rules = _rules_overall_from_weights(dims, resolve_aesthetic_weights(cfg, purpose))
-    blended, _, _ = _blend_ml_overall(rules, asset, cfg=cfg)
+    blended, _, _ = _blend_ml_overall(rules, asset, cfg=cfg, purpose=purpose)
     return blended
 
 
@@ -146,21 +196,27 @@ def _blend_ml_overall(
     asset: dict,
     *,
     cfg: AestheticConfig,
+    purpose: str = "default",
 ) -> tuple[float, str, dict[str, float]]:
-    """Blend rules overall with topiq when ``ml_calibrate`` is enabled."""
+    """Blend rules overall with learned aesthetic when ``ml_calibrate`` is enabled."""
     base_source = str(cfg.source or "rules")
     if not cfg.ml_calibrate:
         return rules_overall, base_source, {}
-    ml = _read_topiq_score(asset)
+    ml = _read_learned_aesthetic_score(asset)
     if ml is None:
         return rules_overall, base_source, {}
-    blend = _clamp01(cfg.ml_calibrate_blend)
+    blend = _clamp01(resolve_learned_blend(asset, cfg, purpose=purpose))
     blended = (1.0 - blend) * rules_overall + blend * ml
-    extra = {
+    blended, final_source = _blend_mllm_overall(blended, asset, cfg=cfg, purpose=purpose)
+    extra: dict[str, float] = {
         "rulesOverall": round(rules_overall, 4),
         "mlScore": round(ml, 4),
+        "learnedAesthetic": round(ml, 4),
     }
-    return round(_clamp01(blended), 4), "rules+ml", extra
+    mllm = _read_mllm_score(asset)
+    if mllm is not None:
+        extra["mllmScore"] = round(mllm, 4)
+    return round(_clamp01(blended), 4), final_source, extra
 
 
 def _read_dominant_tone(asset: dict) -> str | None:
@@ -250,10 +306,18 @@ def compute_aesthetic(
     *,
     signals: dict[str, Any] | None = None,
     cfg: AestheticConfig | None = None,
-    source: str | None = None,
+    portrait_cfg: Any | None = None,
 ) -> dict[str, Any]:
     """Synthesise the ``quality.aesthetic`` block from *signals* + asset fields."""
     cfg = cfg or AestheticConfig()
+    from travelogue.config.portrait import PortraitConfig
+    from travelogue.curation.portrait_subject_clarity import (
+        compute_portrait_subject_clarity,
+        portrait_has_signal,
+        read_portrait_block,
+    )
+
+    p_cfg = portrait_cfg if portrait_cfg is not None else PortraitConfig()
     sig = dict(signals or {})
 
     def _sig(key: str) -> float | None:
@@ -292,6 +356,19 @@ def compute_aesthetic(
     norm_sharp = normalize_sharpness(asset_sharpness(asset))
     subj_contrast = _sig("subjectContrast")
     subject_clarity, subj_c = _blend([(0.7, norm_sharp), (0.3, subj_contrast)])
+    portrait_sigs: dict[str, float] = {}
+    portrait_block = read_portrait_block(asset)
+    if portrait_has_signal(asset, min_confidence=p_cfg.min_confidence) and portrait_block:
+        subject_clarity, portrait_sigs = compute_portrait_subject_clarity(
+            norm_sharp=norm_sharp,
+            portrait=portrait_block,
+            cfg=p_cfg,
+        )
+        subj_c = 1.0
+    elif cfg.portrait_lite_enabled:
+        from travelogue.curation.portrait_lite import portrait_lite_subject_clarity_factor
+
+        subject_clarity = _clamp01(subject_clarity * portrait_lite_subject_clarity_factor(asset))
 
     dims = {
         "composition": round(composition, 4),
@@ -327,6 +404,7 @@ def compute_aesthetic(
     if neg_space is not None:
         out_signals["negativeSpace"] = neg_space
     out_signals["normSharp"] = round(norm_sharp, 4)
+    out_signals.update(portrait_sigs)
     for key in (
         "dynamicRange",
         "clipHighRatio",
@@ -347,7 +425,7 @@ def compute_aesthetic(
 
     return {
         "version": AESTHETIC_VERSION,
-        "source": str(source or final_source),
+        "source": str(final_source),
         "overall": round(_clamp01(overall), 4),
         "confidence": round(_clamp01(confidence), 4),
         "dims": dims,
@@ -357,11 +435,11 @@ def compute_aesthetic(
 
 
 def refresh_aesthetic_ml_blend(asset: dict, *, cfg: AestheticConfig | None = None) -> bool:
-    """Re-blend ``quality.aesthetic.overall`` after topiq scores are written (PA-4)."""
+    """Re-blend ``quality.aesthetic.overall`` after learned scores are written (PA-4 / AA-M1)."""
     cfg = cfg or AestheticConfig()
     if not cfg.ml_calibrate:
         return False
-    ml = _read_topiq_score(asset)
+    ml = _read_learned_aesthetic_score(asset)
     if ml is None:
         return False
     q = asset.get("quality")
@@ -389,11 +467,13 @@ def apply_aesthetic_ml_calibration(
     trip_dir: Path,
     cfg: Any | None = None,
 ) -> bool:
-    """Run topiq scoring + refresh ``quality.aesthetic.overall`` (curate hook, PA-4).
+    """Run learned pyiqa scoring + refresh ``quality.aesthetic.overall`` (curate hook, AA-M1).
 
     Fail-open: returns False when ``ml_calibrate`` is off, pyiqa/torch unavailable,
     or no assets were scored — existing rules-only overall values are kept.
     """
+    from dataclasses import replace
+
     from travelogue.config import AppConfig
 
     app_cfg = cfg if cfg is not None else AppConfig()
@@ -402,14 +482,253 @@ def apply_aesthetic_ml_calibration(
         return False
     from travelogue.curation.photo_cull_ml import apply_aesthetic_scores
 
+    metric = str(ae_cfg.learned_metric or app_cfg.cull.aesthetic_metric or "nima")
+    ml_device = ae_cfg.learned_device or app_cfg.cull.ml_device
+    cull_cfg = replace(
+        app_cfg.cull,
+        aesthetic_metric=metric,
+        allow_cpu_ml=ae_cfg.learned_allow_cpu or app_cfg.cull.allow_cpu_ml,
+        ml_device=str(ml_device or "auto"),
+    )
     scored = apply_aesthetic_scores(
         assets,
         trip_dir=trip_dir,
-        cfg=app_cfg.cull,
+        cfg=cull_cfg,
         force_ml=True,
     )
     refreshed = sum(1 for a in assets if refresh_aesthetic_ml_blend(a, cfg=ae_cfg))
     return scored or refreshed > 0
+
+
+def refresh_portrait_lite_overall(asset: dict, *, cfg: AestheticConfig | None = None) -> bool:
+    """Recompute rules overall after portrait-lite ``subjectClarity`` adjustment."""
+    cfg = cfg or AestheticConfig()
+    if not cfg.portrait_lite_enabled:
+        return False
+    ae = asset_aesthetic(asset)
+    if not ae:
+        return False
+    dims = ae.get("dims")
+    if not isinstance(dims, dict) or "subjectClarity" not in dims:
+        return False
+    from travelogue.curation.portrait_lite import portrait_lite_subject_clarity_factor
+
+    sig = ae.setdefault("signals", {})
+    if not isinstance(sig, dict):
+        return False
+    base = sig.get("subjectClarityBase")
+    if base is None:
+        legacy = dims.pop("_subjectClarityBase", None)
+        if legacy is not None:
+            base = legacy
+        else:
+            try:
+                base = float(dims["subjectClarity"])
+            except (TypeError, ValueError):
+                return False
+        sig["subjectClarityBase"] = round(float(base), 4)
+    else:
+        try:
+            base = float(base)
+        except (TypeError, ValueError):
+            return False
+    factor = portrait_lite_subject_clarity_factor(asset)
+    dims["subjectClarity"] = round(_clamp01(base * factor), 4)
+    rules = _rules_overall_from_dims(dims, cfg)
+    overall, final_source, ml_signals = _blend_ml_overall(rules, asset, cfg=cfg)
+    ae["overall"] = overall
+    ae["source"] = final_source
+    if isinstance(sig, dict):
+        sig.update(ml_signals)
+        sig["portraitLiteFactor"] = round(factor, 4)
+    return True
+
+
+def refresh_portrait_subject_clarity_overall(
+    asset: dict,
+    *,
+    cfg: AestheticConfig | None = None,
+    portrait_cfg: Any | None = None,
+) -> bool:
+    """Recompute rules overall after §6.3 portrait ``subjectClarity`` injection."""
+    from travelogue.config.portrait import PortraitConfig
+    from travelogue.curation.portrait_subject_clarity import (
+        compute_portrait_subject_clarity,
+        portrait_has_signal,
+        read_portrait_block,
+    )
+
+    cfg = cfg or AestheticConfig()
+    p_cfg = portrait_cfg if portrait_cfg is not None else PortraitConfig()
+    if not portrait_has_signal(asset, min_confidence=p_cfg.min_confidence):
+        return False
+    ae = asset_aesthetic(asset)
+    if not ae:
+        return False
+    dims = ae.get("dims")
+    if not isinstance(dims, dict) or "subjectClarity" not in dims:
+        return False
+    portrait_block = read_portrait_block(asset)
+    if not portrait_block:
+        return False
+    sig = ae.setdefault("signals", {})
+    if not isinstance(sig, dict):
+        return False
+    norm_sharp = sig.get("normSharp")
+    if norm_sharp is None:
+        norm_sharp = normalize_sharpness(asset_sharpness(asset))
+    else:
+        try:
+            norm_sharp = float(norm_sharp)
+        except (TypeError, ValueError):
+            norm_sharp = normalize_sharpness(asset_sharpness(asset))
+    subject_clarity, portrait_sigs = compute_portrait_subject_clarity(
+        norm_sharp=norm_sharp,
+        portrait=portrait_block,
+        cfg=p_cfg,
+    )
+    dims["subjectClarity"] = subject_clarity
+    sig.update(portrait_sigs)
+    rules = _rules_overall_from_dims(dims, cfg)
+    overall, final_source, ml_signals = _blend_ml_overall(rules, asset, cfg=cfg)
+    ae["overall"] = overall
+    ae["source"] = final_source
+    sig.update(ml_signals)
+    return True
+
+
+def _eligible_aesthetic_images(assets: list[dict]) -> list[dict]:
+    return [
+        a
+        for a in assets
+        if a.get("type", "image") != "video"
+        and a.get("layoutEligible") is not False
+        and a.get("id")
+    ]
+
+
+def build_aesthetic_alignment_telemetry(
+    assets: list[dict],
+    report: dict[str, Any],
+    *,
+    cfg: AestheticConfig,
+) -> dict[str, Any]:
+    """GAP-11 · coverage / fail-open summary for trip.curation.aestheticAlignment."""
+    eligible = _eligible_aesthetic_images(assets)
+    n = len(eligible)
+    learned_n = sum(1 for a in eligible if _read_learned_aesthetic_score(a) is not None)
+    mllm_n = sum(1 for a in eligible if _read_mllm_score(a) is not None)
+    mllm_rep = report.get("mllm") if isinstance(report.get("mllm"), dict) else {}
+    return {
+        "version": "1",
+        "source": str(cfg.source),
+        "mlCalibrate": bool(cfg.ml_calibrate),
+        "mllmEnabled": bool(cfg.mllm.enabled),
+        "portraitLiteEnabled": bool(cfg.portrait_lite_enabled),
+        "eligibleImages": n,
+        "learnedScored": learned_n,
+        "learnedHitRate": round(learned_n / n, 4) if n else None,
+        "mllmScored": mllm_n,
+        "mllmHitRate": round(mllm_n / n, 4) if n and cfg.mllm.enabled else None,
+        "portraitLiteAdjusted": int(report.get("portraitLite") or 0),
+        "mlApplied": bool(report.get("ml")),
+        "mllmCalls": int(mllm_rep.get("calls") or 0),
+        "mllmCached": int(mllm_rep.get("cached") or 0),
+        "mllmFailed": int(mllm_rep.get("failed") or 0),
+        "failOpen": {
+            "mlSkipped": bool(cfg.ml_calibrate and not report.get("ml")),
+            "mllmSkipped": bool(cfg.mllm.enabled and not mllm_rep),
+            "mllmFailures": int(mllm_rep.get("failed") or 0),
+        },
+    }
+
+
+def persist_aesthetic_alignment(
+    trip: dict,
+    report: dict[str, Any],
+    *,
+    cfg: AestheticConfig | None = None,
+) -> dict[str, Any]:
+    """Write telemetry to ``trip.curation.aestheticAlignment`` + algorithmProfile."""
+    from datetime import UTC, datetime
+
+    cfg = cfg or AestheticConfig()
+    assets = list(trip.get("assets") or [])
+    telemetry = build_aesthetic_alignment_telemetry(assets, report, cfg=cfg)
+    telemetry["appliedAt"] = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    curation = trip.setdefault("curation", {})
+    curation["aestheticAlignment"] = telemetry
+    profile = curation.setdefault("algorithmProfile", {})
+    profile["aestheticAlignmentAt"] = telemetry["appliedAt"]
+    profile["aestheticMlCalibrate"] = telemetry["mlCalibrate"]
+    profile["aestheticMllmEnabled"] = telemetry["mllmEnabled"]
+    profile["aestheticLearnedHitRate"] = telemetry.get("learnedHitRate")
+    profile["aestheticMllmHitRate"] = telemetry.get("mllmHitRate")
+    return telemetry
+
+
+def apply_aesthetic_alignment(
+    assets: list[dict],
+    *,
+    trip_dir: Path,
+    cfg: Any | None = None,
+    trip: dict | None = None,
+) -> dict[str, Any]:
+    """Curate hook: learned blend + optional MLLM shortlist (fail-open)."""
+    from travelogue.config import AppConfig
+    from dataclasses import replace
+
+    app_cfg = cfg if cfg is not None else AppConfig()
+    if trip is not None:
+        from travelogue.config.aesthetic_stratified import apply_stratum_preference_overlay
+        from travelogue.curation.album_profile import stratum_preference_for_trip
+
+        pref = stratum_preference_for_trip(trip)
+        app_cfg = replace(
+            app_cfg,
+            aesthetic=apply_stratum_preference_overlay(app_cfg.aesthetic, pref),
+        )
+    ae_cfg = app_cfg.aesthetic
+    report: dict[str, Any] = {"ml": False, "mllm": None, "portraitLite": 0, "portraitSubjectClarity": 0}
+    if not ae_cfg.enabled:
+        return report
+    report["ml"] = apply_aesthetic_ml_calibration(assets, trip_dir=trip_dir, cfg=app_cfg)
+    portrait_cfg = app_cfg.cull.portrait
+    report["portraitSubjectClarity"] = sum(
+        1
+        for a in assets
+        if refresh_portrait_subject_clarity_overall(a, cfg=ae_cfg, portrait_cfg=portrait_cfg)
+    )
+    if ae_cfg.portrait_lite_enabled:
+        from travelogue.curation.portrait_subject_clarity import portrait_has_signal
+
+        report["portraitLite"] = sum(
+            1
+            for a in assets
+            if not portrait_has_signal(a, min_confidence=portrait_cfg.min_confidence)
+            and refresh_portrait_lite_overall(a, cfg=ae_cfg)
+        )
+    if ae_cfg.mllm.enabled:
+        from travelogue.vision.aesthetic_mllm import apply_aesthetic_mllm_scores
+
+        try:
+            report["mllm"] = apply_aesthetic_mllm_scores(
+                assets, trip_dir=trip_dir, cfg=ae_cfg, trip=trip
+            )
+        except Exception as exc:
+            report["mllm"] = {
+                "enabled": True,
+                "scored": 0,
+                "cached": 0,
+                "failed": 0,
+                "skipped": 0,
+                "calls": 0,
+                "error": str(exc),
+            }
+    report["telemetry"] = build_aesthetic_alignment_telemetry(assets, report, cfg=ae_cfg)
+    if trip is not None:
+        persist_aesthetic_alignment(trip, report, cfg=ae_cfg)
+    return report
 
 
 def asset_aesthetic(asset: dict) -> dict | None:
@@ -469,6 +788,93 @@ def median_aesthetic_overall(
     if len(values) % 2:
         return values[mid]
     return (values[mid - 1] + values[mid]) / 2.0
+
+
+def _percentile_sorted(values: list[float], percentile: float) -> float:
+    if not values:
+        return 0.0
+    values = sorted(values)
+    if len(values) == 1:
+        return values[0]
+    p = min(1.0, max(0.0, float(percentile)))
+    idx = int(round(p * (len(values) - 1)))
+    return values[idx]
+
+
+def stratum_score_percentiles(
+    assets: list[dict],
+    *,
+    purpose: AestheticPurpose = "default",
+    cfg: AestheticConfig | None = None,
+    percentile: float = 0.75,
+) -> dict[str, float]:
+    """Per-stratum score percentile within a trip pool (album-relative baseline)."""
+    from travelogue.curation.aesthetic_blind_review import review_stratum_for_asset
+
+    cfg = cfg or AestheticConfig()
+    buckets: dict[str, list[float]] = {}
+    for asset in assets:
+        if asset.get("layoutEligible") is False or asset.get("type") == "video":
+            continue
+        stratum = review_stratum_for_asset(asset)
+        if purpose == "default":
+            score = aesthetic_overall(asset)
+        else:
+            score = purpose_overall(asset, purpose, cfg=cfg)
+        if score is None:
+            continue
+        buckets.setdefault(stratum, []).append(float(score))
+    return {s: round(_percentile_sorted(vals, percentile), 4) for s, vals in buckets.items() if vals}
+
+
+def album_relative_multiplier(
+    asset: dict,
+    *,
+    p_by_stratum: dict[str, float],
+    purpose: AestheticPurpose = "cover",
+    cfg: AestheticConfig | None = None,
+    lo: float | None = None,
+    hi: float | None = None,
+) -> float:
+    """Score ratio vs within-album stratum P75, clamped (PRD-SC §7.2)."""
+    cfg = cfg or AestheticConfig()
+    if not cfg.use_album_relative:
+        return 1.0
+    from travelogue.curation.aesthetic_blind_review import review_stratum_for_asset
+
+    stratum = review_stratum_for_asset(asset)
+    baseline = float(p_by_stratum.get(stratum) or 0.0)
+    if purpose == "default":
+        overall = aesthetic_overall(asset)
+    else:
+        overall = purpose_overall(asset, purpose, cfg=cfg)
+    if overall is None or baseline <= 0:
+        return 1.0
+    ratio = float(overall) / baseline
+    lo_v = float(lo if lo is not None else cfg.album_relative_lo)
+    hi_v = float(hi if hi is not None else cfg.album_relative_hi)
+    return min(hi_v, max(lo_v, ratio))
+
+
+def relative_purpose_score(
+    asset: dict,
+    purpose: AestheticPurpose,
+    *,
+    p_by_stratum: dict[str, float],
+    cfg: AestheticConfig | None = None,
+) -> float | None:
+    """Purpose score scaled by album-relative multiplier for within-stratum ranking."""
+    cfg = cfg or AestheticConfig()
+    base = purpose_overall(asset, purpose, cfg=cfg)
+    if base is None:
+        return None
+    mult = album_relative_multiplier(
+        asset,
+        p_by_stratum=p_by_stratum,
+        purpose=purpose,
+        cfg=cfg,
+    )
+    return round(float(base) * mult, 4)
 
 
 def aesthetic_multiplier(
