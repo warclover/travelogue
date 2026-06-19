@@ -587,10 +587,12 @@ def test_cover_styles_v5_split_mat_vertical_title(tmp_path: Path) -> None:
           };
         }""")
         assert metrics is not None
-        assert "0.5fr" in metrics["gridCols"]
+        # getComputedStyle resolves fr → px; narrow sidebar ratio is the stable check.
+        cols = [c.strip() for c in metrics["gridCols"].split() if c.strip()]
+        assert len(cols) == 2, metrics
+        assert metrics["panelShare"] < 0.28, metrics
         assert metrics["writingMode"] in ("vertical-rl", "sideways-rl")
         assert "cover-opening__title--vertical" in metrics["titleClass"]
-        assert metrics["panelShare"] < 0.28, metrics
     finally:
         ctx.close()
 
@@ -658,7 +660,7 @@ def test_cover_styles_v5_narrow_viewport_falls_back_card_br(tmp_path: Path, styl
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
 def test_cover_styles_v5_short_title_panel_padding(tmp_path: Path) -> None:
-    """AC-CSV-47 · 短书名不贴边。"""
+    """AC-CSV-47 · 短书名不贴边（窄侧栏 panel padding 20px 14px 18px）。"""
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
     trip_id = _seed_cover_style_trip(
@@ -672,7 +674,7 @@ def test_cover_styles_v5_short_title_panel_padding(tmp_path: Path) -> None:
     ctx = _playwright_cover_page(tmp_path, trip_id, viewport={"width": 1280, "height": 800})
     try:
         m = ctx.page.evaluate(_COVER_METRICS_JS)
-        assert m["panelPaddingLeft"] >= 16, m
+        assert m["panelPaddingLeft"] >= 12, m
     finally:
         ctx.close()
 
