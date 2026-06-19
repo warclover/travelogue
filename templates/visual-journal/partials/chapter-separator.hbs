@@ -10,6 +10,16 @@
         {{/if}}
       </div>
     </div>
+    {{#if hasChapterProgress}}
+    <div class="chapter-separator__progress" aria-label="章节进度">
+      <span class="chapter-separator__progress-label">{{chapterProgressLabel}}</span>
+      <div class="chapter-separator__progress-track" aria-hidden="true">
+        {{#each chapterProgressDots}}
+        <span class="chapter-separator__progress-dot{{#if active}} is-active{{/if}}"></span>
+        {{/each}}
+      </div>
+    </div>
+    {{/if}}
     {{#if hasDecorPull}}
     <div class="chapter-separator__pull-wrap">
       <blockquote class="chapter-separator__pull" data-block="decor-line"{{#if editableDecorLine}} data-editable="decor-line" data-edit-path="{{editDecorLinePath}}"{{/if}}>
@@ -19,12 +29,7 @@
     {{/if}}
   </div>
   {{#if hasChapterProgress}}
-  <div class="chapter-separator__sprocket" aria-hidden="true">
-    {{#each chapterProgressDots}}
-    <span class="chapter-separator__perforation{{#if active}} is-active{{/if}}"></span>
-    {{/each}}
-    <span class="chapter-separator__progress-label">{{chapterProgressLabel}}</span>
-  </div>
+  <div class="chapter-separator__sprocket" aria-hidden="true"></div>
   {{/if}}
   {{#if hasLead}}
   <p class="chapter-separator__lead" data-block="chapter-lead"{{#if editableLead}} data-editable="lead" data-edit-path="{{editLeadPath}}"{{/if}}>{{lead}}</p>

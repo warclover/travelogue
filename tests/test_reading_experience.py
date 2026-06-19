@@ -87,6 +87,16 @@ def test_journal_screens_has_snap_and_folio_rules() -> None:
     assert "scroll-snap-align: start" in css
 
 
+def test_chapter_sprocket_is_decoration_only() -> None:
+    css = SCREENS_CSS.read_text(encoding="utf-8")
+    sprocket = css.split(".chapter-separator__sprocket")[1].split(".chapter-separator--ticket[style")[0]
+    assert "display: block" in sprocket
+    assert "overflow: hidden" in sprocket
+    assert "justify-content: center" not in sprocket
+    assert ".chapter-separator__perforation" not in css
+    assert ".chapter-separator__progress-dot" in css
+
+
 def test_chapter_ticket_centers_pull_not_index() -> None:
     css = SCREENS_CSS.read_text(encoding="utf-8")
     assert ".chapter-separator--ticket[data-block=\"chapter-separator\"]" in css

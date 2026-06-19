@@ -129,6 +129,55 @@ def test_build_epilogue_stats_summary():
     assert "张照片" in stats["summaryLine"]
 
 
+def test_web_render_chapter_separator_progress_in_ticket_not_sprocket():
+    trip = prepare_trip_web_screens(
+        {
+            "meta": {"title": "测试"},
+            "assets": [{"id": "a1", "width": 1200, "height": 1600, "layoutEligible": True}],
+            "chapters": [
+                {
+                    "id": "ch-01",
+                    "index": 1,
+                    "title": "第一日",
+                    "screens": [
+                        {
+                            "screenId": "s1",
+                            "patternId": "screen-portrait-1",
+                            "slots": [{"assetId": "a1"}],
+                        }
+                    ],
+                },
+                {
+                    "id": "ch-02",
+                    "index": 2,
+                    "title": "第二日",
+                    "screens": [
+                        {
+                            "screenId": "s2",
+                            "patternId": "screen-portrait-1",
+                            "slots": [{"assetId": "a1"}],
+                        }
+                    ],
+                },
+            ],
+        }
+    )
+    trip = copy.deepcopy(trip)
+    trip.setdefault("export", {})["reading"] = {"profile": "default_hybrid"}
+    html = render_html(
+        trip,
+        export_mode="draft",
+        layout_engine_override="screens",
+        export_layout_override="web",
+    )
+    assert 'class="chapter-separator__progress"' in html
+    assert 'class="chapter-separator__progress-dot is-active"' in html
+    assert "chapter-separator__perforation" not in html
+    sprocket = html.split('class="chapter-separator__sprocket"', 1)[1].split("</div>", 1)[0]
+    assert "progress-label" not in sprocket
+    assert "progress-dot" not in sprocket
+
+
 def test_web_render_includes_chapter_separator_with_breath():
     trip = prepare_trip_web_screens(
         {
