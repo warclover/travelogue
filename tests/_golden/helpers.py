@@ -3,15 +3,77 @@
 from __future__ import annotations
 
 import json
+from contextlib import contextmanager
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 from travelogue.config import get_config
 from travelogue.curation.curate_patterns import pattern_hint_for_bucket
 from travelogue.curation.layout_planner import build_chapters_from_buckets, summarize_orientations
 from travelogue.media.image_ops import classify_aspect
+
+FLAGSHIP_2P3L_EQUAL = "screen-mosaic-5-2p3l-equal"
+_MOSAIC_DISABLED_PATCH_MODULES = (
+    "travelogue.curation.mosaic.lte_adapter",
+    "travelogue.curation.mosaic.candidates",
+    "travelogue.curation.mosaic.compose",
+)
+_MOSAIC_REGISTRY_PATCH_MODULES = (
+    "travelogue.curation.mosaic.lte_adapter",
+    "travelogue.curation.mosaic.candidates",
+)
+
+
+@contextmanager
+def intrinsic_2p3l_mcs_enabled():
+    """Re-enable retired flagship only for intrinsic geometry / MCS tests."""
+    from contextlib import ExitStack
+
+    from travelogue.curation.mosaic import lte_adapter
+    from travelogue.layout_templates.legacy_bridge import export_mosaic_pattern
+    from travelogue.layout_templates.registry import get_engine
+
+    _orig_disabled = lte_adapter.mosaic_pattern_disabled
+    _orig_registry = lte_adapter.mosaic_registry
+    _orig_rollout = lte_adapter.lte_rollout_eligible
+
+    def _allow_flagship_disabled(pattern_id: str, *, cfg=None) -> bool:
+        if pattern_id == FLAGSHIP_2P3L_EQUAL:
+            return False
+        return _orig_disabled(pattern_id, cfg=cfg)
+
+    def _inject_flagship_registry(cfg=None):
+        reg = dict(_orig_registry(cfg))
+        if FLAGSHIP_2P3L_EQUAL not in reg:
+            reg[FLAGSHIP_2P3L_EQUAL] = export_mosaic_pattern(
+                get_engine().get(FLAGSHIP_2P3L_EQUAL)
+            )
+        return reg
+
+    def _allow_flagship_rollout(pattern_id: str) -> bool:
+        if pattern_id == FLAGSHIP_2P3L_EQUAL:
+            return True
+        return _orig_rollout(pattern_id)
+
+    with ExitStack() as stack:
+        stack.enter_context(
+            patch(
+                "travelogue.curation.mosaic.lte_adapter.lte_rollout_eligible",
+                _allow_flagship_rollout,
+            )
+        )
+        for mod in _MOSAIC_DISABLED_PATCH_MODULES:
+            stack.enter_context(
+                patch(f"{mod}.mosaic_pattern_disabled", _allow_flagship_disabled)
+            )
+        for mod in _MOSAIC_REGISTRY_PATCH_MODULES:
+            stack.enter_context(
+                patch(f"{mod}.mosaic_registry", _inject_flagship_registry)
+            )
+        yield
 
 GOLDEN_DIR = Path(__file__).resolve().parent
 
@@ -242,7 +304,7 @@ def build_mosaic_replan_chapter(
     ids, aspects_map, assets_map = build_mosaic_five_2p3l_window()
     mosaic_cfg = _mosaic_cfg_for_golden().mosaic
     aspects = {aid: aspects_map[aid] for aid in ids}
-    with config_override(_lte_pattern_config()):
+    with intrinsic_2p3l_mcs_enabled(), config_override(_lte_pattern_config()):
         pick = pick_best_five_window(
             ids,
             aspects,

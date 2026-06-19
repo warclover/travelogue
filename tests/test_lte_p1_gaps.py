@@ -96,4 +96,4 @@ def test_phase16_curate_dogfood_script_writes_curate_specs(tmp_path: Path) -> No
     assert trip["tripId"] == "phase16-dogfood-portrait"
     assert trip["chapters"][0]["screens"]
     static = build_dogfood_trip("mixed-layout-alt", DOGFOOD_SPECS["mixed-layout-alt"])
-    assert static["chapters"][0]["screens"][0]["patternId"] == "screen-mosaic-5-2p3l-equal"
+    assert static["chapters"][0]["screens"][0]["patternId"] == "screen-mosaic-5-main-portrait-3land"

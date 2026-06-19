@@ -94,7 +94,7 @@ DOGFOOD_SPECS: dict[str, dict[str, Any]] = {
         "tripId": "phase16-dogfood-mixed",
         "patterns": [
             "screen-portrait-3",
-            "screen-mosaic-5-2p3l-equal",
+            "screen-mosaic-5-main-portrait-3land",
             "screen-portrait-1-landscape-2",
             "screen-landscape-1",
             "screen-mosaic-5-hero-3-2-plus-4",
@@ -103,7 +103,7 @@ DOGFOOD_SPECS: dict[str, dict[str, Any]] = {
     "mixed-layout-alt": {
         "source": "static",
         "tripId": "phase16-dogfood-mixed-alt",
-        "patterns": ["screen-mosaic-5-2p3l-equal", "screen-portrait-3"],
+        "patterns": ["screen-mosaic-5-main-portrait-3land", "screen-portrait-3"],
     },
 }
 

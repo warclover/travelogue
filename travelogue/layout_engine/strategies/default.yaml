@@ -63,7 +63,8 @@ density_profiles:
 
 pattern_policy:
   blacklist: []
-  lte_overrides_disable: []
+  lte_overrides_disable:
+    - screen-mosaic-5-2p3l-equal
 
 scoring_profiles:
   default:

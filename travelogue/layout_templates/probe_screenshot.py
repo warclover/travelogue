@@ -14,7 +14,6 @@ from travelogue.layout_templates.registry import get_engine
 PACKAGE_ROOT = Path(__file__).resolve().parent
 BASELINE_DIR = PACKAGE_ROOT / "probes" / "baselines"
 DEFAULT_PROBE_TEMPLATE_IDS: tuple[str, ...] = (
-    "screen-mosaic-5-2p3l-equal",
     "screen-mosaic-5-hero-3-2-plus-4",
     "screen-portrait-3",
 )

@@ -4,9 +4,8 @@
     {
       "id": "ch-01",
       "screens": [
-        {"patternId": "screen-portrait-1-landscape-2"},
-        {"patternId": "screen-portrait-2-landscape-2"},
-        {"patternId": "screen-mosaic-5-2p3l-equal"}
+        {"patternId": "screen-mosaic-5-main-portrait-3land"},
+        {"patternId": "screen-portrait-3"}
       ]
     }
   ]

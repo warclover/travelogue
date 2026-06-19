@@ -62,6 +62,7 @@ def test_evaluate_registry_shape(lte_pattern_enabled) -> None:
     report = evaluate_registry()
     assert report["readTemplatesFromLte"] is True
     assert report["flagshipPresent"] is True
+    assert report["retiredFlagshipAbsent"] is True
     assert report["heroPresent"] is True
     assert "templateExposureCount" in report
     assert "dogfood" in report
@@ -78,11 +79,11 @@ def test_exposure_debt_proposals_shape() -> None:
 
     engine = LayoutTemplateEngine.load(rebuild_cache=True)
     proposals = compute_exposure_debt_proposals(
-        {"screen-portrait-3": 0.9, "screen-mosaic-5-2p3l-equal": 0.01},
+        {"screen-portrait-3": 0.01, "screen-mosaic-5-main-portrait-3land": 0.9},
         engine,
     )
     assert proposals
-    low = next(p for p in proposals if p["templateId"] == "screen-mosaic-5-2p3l-equal")
+    low = next(p for p in proposals if p["templateId"] == "screen-portrait-3")
     assert low["suggestedBaseWeight"] > low["currentBaseWeight"]
     assert low["approvalRequired"] is True
 

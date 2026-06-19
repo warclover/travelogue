@@ -211,7 +211,8 @@ layout:
           lambda: 0.65
     # 不改 YAML 即可零曝光某 pattern（AC-P16-13）
     overrides:
-      disable: []
+      disable:
+        - screen-mosaic-5-2p3l-equal
       # - screen-portrait-3
 
 # 旅行主角二人 · 同框识别（需 vision + trip.intent.featuredSubjects + seed 正脸照）

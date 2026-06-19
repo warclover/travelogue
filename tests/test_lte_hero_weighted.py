@@ -43,7 +43,7 @@ def test_hero_rollout_percent_full() -> None:
     assert tpl.version >= 3
     assert int((tpl.rollout or {}).get("percent", 0)) == 100
     assert lte_rollout_eligible(PATTERN_MOSAIC_5_HERO_3_2_PLUS_4) is True
-    assert lte_rollout_eligible("screen-mosaic-5-2p3l-equal") is True
+    assert lte_rollout_eligible("screen-mosaic-5-2p3l-equal") is False
 
 
 @pytest.mark.unit

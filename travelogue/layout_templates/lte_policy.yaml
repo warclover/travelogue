@@ -15,7 +15,6 @@ mosaic_unified_groups:
     - screen-landscape-4
   MOSAIC_5_PATTERN_IDS:
     - screen-mosaic-5-main-portrait-3land
-    - screen-mosaic-5-2p3l-equal
   MOSAIC_6_PATTERN_IDS:
     - screen-mosaic-5-main-hero-plus-4
     - screen-mosaic-6-main-hero-plus-5
@@ -36,7 +35,8 @@ quotas:
     max_active_total: 4
 
 # Emergency disable without editing template YAML (R-P16-08) — runtime config mirror:
-# layout.template_engine.overrides.disable: []
+# layout.template_engine.overrides.disable:
+#   - screen-mosaic-5-2p3l-equal
 #
 # Roll back hero-3-2-plus-4 v4 geometry guard (Plate 63 fix) without reverting YAML:
 # mosaic.hero_weighted_geometry_guard: false

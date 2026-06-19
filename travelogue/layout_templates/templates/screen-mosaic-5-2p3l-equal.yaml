@@ -1,12 +1,12 @@
 id: screen-mosaic-5-2p3l-equal
 version: 2
-status: ga
+status: deprecated
 kind: composite
 displayName: 五图 · 双竖 hero + 三横右栏
 description: >
   左中两列满高双竖 hero（displayAspect≈0.59）+ 右栏三等高横图（1.78）。
   3×3 整数网格下唯一可无缝平铺、不留空位、不把竖图塞进宽格的 2P+3L 拓扑。
-  P16 旗舰 composite，替代 deprecated 3P+2L balanced。
+  已退役：新 trip 不再候选；历史 screens[] 仍可渲染。
 aesthetic: dense
 balancePolicy: equal_height
 
@@ -50,7 +50,7 @@ render:
   fitPolicy: auto_delegate
 
 rollout:
-  percent: 100
+  percent: 0
   hash_key: tripId
 
 _legacy:

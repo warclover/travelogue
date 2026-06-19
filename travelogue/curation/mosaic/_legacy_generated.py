@@ -2,7 +2,7 @@
 
 Regenerate:
   python scripts/lte_export_legacy.py --sync-python
-Content hash: f98bc351cd559f568dcf1addaf03abad10c57cf2409b2afa1465f87527c0b0fa
+Content hash: b347249d6d053495923db2c0900fcd2d40e74e132b00b130a87a74bad6d249b3
 """
 
 from __future__ import annotations
@@ -89,7 +89,7 @@ MOSAIC_3_PATTERN_IDS: tuple[str, ...] = ("screen-portrait-3", "screen-landscape-
 
 MOSAIC_4_PATTERN_IDS: tuple[str, ...] = ("screen-portrait-2-landscape-2", "screen-portrait-4", "screen-landscape-4",)
 
-MOSAIC_5_PATTERN_IDS: tuple[str, ...] = ("screen-mosaic-5-main-portrait-3land", "screen-mosaic-5-2p3l-equal",)
+MOSAIC_5_PATTERN_IDS: tuple[str, ...] = ("screen-mosaic-5-main-portrait-3land",)
 
 MOSAIC_6_PATTERN_IDS: tuple[str, ...] = ("screen-mosaic-5-main-hero-plus-4", "screen-mosaic-6-main-hero-plus-5", "screen-portrait-6", "screen-landscape-6",)
 
