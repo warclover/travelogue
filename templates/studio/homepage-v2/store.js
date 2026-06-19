@@ -22,7 +22,7 @@ export const V2_BENTO_D14_MIGRATED_KEY = "travelogue.studio.v2.bentoD14Migrated"
 export const V2_TRIPS_CACHE_KEY = "travelogue.studio.v2.tripsCache";
 /** Bump when trips row shape changes (e.g. shelfCoverRelPath). */
 export const V2_TRIPS_CACHE_VERSION = 2;
-export const V2_THEME_DEFAULT = "sky";
+export const V2_THEME_DEFAULT = "mist";
 
 /** v2 首页运行时状态（单一可变源，勿重新赋值绑定）。 */
 export const V2 = {
@@ -62,12 +62,14 @@ export const V2_THEME_LABELS = {
   folio: "纸墨装帧",
   atelier: "木紫文艺",
 };
+export const V2_THEME_FEATURED = ["mist", "folio", "dawn", "classic"];
+export const V2_THEME_MORE = ["atelier", "sky"];
 const V2_THEME_ID_SET = new Set(V2_THEME_IDS);
 
 function normalizeTheme(theme) {
   if (theme === "sky") return "sky";
   if (V2_THEME_ID_SET.has(theme)) return theme;
-  return "sky";
+  return V2_THEME_DEFAULT;
 }
 
 export function $(id) {
@@ -110,7 +112,9 @@ export function persistVariant(variant) {
 
 export function readThemePreference() {
   try {
-    return normalizeTheme(localStorage.getItem(V2_THEME_KEY));
+    var raw = localStorage.getItem(V2_THEME_KEY);
+    if (!raw) return V2_THEME_DEFAULT;
+    return normalizeTheme(raw);
   } catch (e) {
     return V2_THEME_DEFAULT;
   }

@@ -5,7 +5,7 @@
     <p class="cover-opening__place">{{coverPlace}}</p>
     {{/if}}
     {{> trip-meta}}
-    <h1 class="cover-opening__title" itemprop="name">{{title}}</h1>
+    <h1 class="cover-opening__title cover-opening__title--{{coverTitleLayout}}" itemprop="name">{{title}}</h1>
     {{#if showCoverHook}}
     <p class="hook-line cover-opening__hook" data-block="hook-line"{{#if editableHook}} data-editable="hook" data-edit-path="meta.hook"{{/if}}>{{hook}}</p>
     {{/if}}

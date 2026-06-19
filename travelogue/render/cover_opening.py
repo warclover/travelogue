@@ -60,6 +60,17 @@ def cover_use_contain_fit(asset: dict) -> bool:
     return ar is not None and ar < _PORTRAIT_CONTAIN_AR
 
 
+def resolve_split_mat_title_layout(title: str) -> str:
+    """split-mat cover title axis: vertical | vertical-compact | horizontal."""
+    text = (title or "").strip()
+    n = len(text)
+    if n <= 8:
+        return "vertical"
+    if n <= 14:
+        return "vertical-compact"
+    return "horizontal"
+
+
 def cover_focal_point(asset: dict) -> tuple[float, float]:
     fp = asset.get("focalPoint") or {}
     try:

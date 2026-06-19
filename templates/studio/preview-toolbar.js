@@ -1677,6 +1677,26 @@ function insertScreenplayControl(parent, beforeNode, opts) {
       });
   }
 
+  function resolveSplitMatTitleLayoutClass(title) {
+    var t = String(title || "").trim();
+    var n = t.length;
+    if (n <= 8) return "cover-opening__title--vertical";
+    if (n <= 14) return "cover-opening__title--vertical-compact";
+    return "cover-opening__title--horizontal";
+  }
+
+  function syncCoverTitleLayoutClass(el) {
+    if (!el) return;
+    var section = document.querySelector('.cover-opening[data-cover-opening="split-mat"]');
+    if (!section) return;
+    el.classList.remove(
+      "cover-opening__title--vertical",
+      "cover-opening__title--vertical-compact",
+      "cover-opening__title--horizontal"
+    );
+    el.classList.add(resolveSplitMatTitleLayoutClass(el.dataset.title || el.textContent || ""));
+  }
+
   function saveMagazineTitle(tripId, next, el, onDone) {
     var prev = (el.dataset.title || el.textContent || "").trim();
     if (next === prev) {
@@ -1700,6 +1720,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
         }
         el.textContent = next;
         el.dataset.title = next;
+        syncCoverTitleLayoutClass(el);
         showToolbarToast("杂志名已保存");
         try {
           window.dispatchEvent(new CustomEvent("travelogue:copy-saved"));
@@ -1729,6 +1750,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     titleEl.setAttribute("aria-label", "点击编辑杂志名");
     titleEl.title = "点击编辑杂志名";
     titleEl.dataset.title = (titleEl.textContent || "").trim();
+    syncCoverTitleLayoutClass(titleEl);
 
     fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry")
       .then(function (r) { return r.ok ? r.json() : null; })
@@ -1737,6 +1759,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
           var t = String(data.intentSummary.title).trim();
           titleEl.textContent = t;
           titleEl.dataset.title = t;
+          syncCoverTitleLayoutClass(titleEl);
         }
       })
       .catch(function () {});

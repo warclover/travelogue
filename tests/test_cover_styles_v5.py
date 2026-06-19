@@ -10,6 +10,7 @@ import pytest
 
 from travelogue.paths import ROOT, TEMPLATE_VISUAL_JOURNAL
 from travelogue.render.assemble import build_render_context
+from travelogue.render.cover_opening import resolve_split_mat_title_layout
 from travelogue.render.engine import render_trip
 from travelogue.render.golden_regression import load_golden_trip
 from travelogue.services.cover_opening_style import (
@@ -169,6 +170,7 @@ def _cover_opening_html(
     hook: str = "海风吹干盐粒的那刻，我们坐在礁石上。",
     include_hook: bool = True,
 ) -> str:
+    title_layout = resolve_split_mat_title_layout(title)
     hook_html = (
         f'<p class="hook-line cover-opening__hook">{hook}</p>' if include_hook else ""
     )
@@ -189,7 +191,7 @@ def _cover_opening_html(
         '<time datetime="2025-06-01/2025-06-03">'
         '<span class="trip-meta__line trip-meta__line--full">2025.06.01 – 06.03 · 东澳岛</span>'
         "</time></div>"
-        f'<h1 class="cover-opening__title">{title}</h1>'
+        f'<h1 class="cover-opening__title cover-opening__title--{title_layout}">{title}</h1>'
         f"{hook_html}"
         "</div></section>"
         "</main>"
@@ -396,8 +398,18 @@ def test_cover_opening_style_events_allowlisted() -> None:
 def test_build_render_context_injects_cover_opening_style() -> None:
     trip = load_golden_trip()
     trip.setdefault("meta", {})["coverOpeningStyle"] = "split-mat"
+    trip["meta"]["title"] = "斯里兰卡风光精选"
     ctx = build_render_context(trip, export_mode="draft")
     assert ctx["coverOpeningStyle"] == "split-mat"
+    assert ctx["coverTitleLayout"] == "vertical"
+
+
+def test_build_render_context_long_title_layout_horizontal() -> None:
+    trip = load_golden_trip()
+    trip.setdefault("meta", {})["coverOpeningStyle"] = "split-mat"
+    trip["meta"]["title"] = _LONG_TITLE
+    ctx = build_render_context(trip, export_mode="draft")
+    assert ctx["coverTitleLayout"] == "horizontal"
 
 
 def test_build_render_context_legacy_trip_defaults_card_br() -> None:
@@ -488,17 +500,27 @@ def test_cover_styles_v5_longshot_cover_smoke(cover_styles_workspace: Path, cove
     assert metrics["patchCountAfter"] == metrics["patchCountBefore"]
 
 
+def test_resolve_split_mat_title_layout_tiers() -> None:
+    assert resolve_split_mat_title_layout("斯里兰卡风光精选") == "vertical"
+    assert resolve_split_mat_title_layout("东澳岛") == "vertical"
+    assert resolve_split_mat_title_layout("二〇二五年东澳岛夏日纪行") == "vertical-compact"
+    assert resolve_split_mat_title_layout(_LONG_TITLE) == "horizontal"
+
+
 def test_cover_styles_v5_journal_css_tokens() -> None:
     """§4.6 token + split-mat / magazine-head selectors present."""
     css = JOURNAL_CSS.read_text(encoding="utf-8")
     for token in (
         "--cover-mat-ground",
         "--cover-mat-panel-bg",
+        "--cover-mat-accent",
         "--cover-mag-header-bg",
         'data-cover-opening="split-mat"',
         'data-cover-opening="magazine-head"',
         "min-width: 64rem",
-        "grid-template-columns: 1.45fr 1fr",
+        "grid-template-columns: 1.45fr 0.5fr",
+        "cover-opening__title--vertical",
+        "#f2efe7",
         "min-height: 20vh",
         "max-height: 32vh",
         "flex: 1 1 0",
@@ -528,6 +550,47 @@ def test_cover_styles_v5_wide_viewport_no_overflow(tmp_path: Path, style: str) -
         assert m["style"] == style
         assert abs(m["coverHeight"] - m["viewportH"]) <= 2, m
         assert m["coverOverflow"] is False, m
+    finally:
+        ctx.close()
+
+
+@pytest.mark.e2e
+@pytest.mark.playwright_serial
+def test_cover_styles_v5_split_mat_vertical_title(tmp_path: Path) -> None:
+    """split-mat 短书名竖排 + 窄侧栏。"""
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    trip_id = _seed_cover_style_trip(
+        trips_dir,
+        "cover-split-mat-vertical",
+        style="split-mat",
+        title="斯里兰卡风光精选",
+    )
+    ctx = _playwright_cover_page(tmp_path, trip_id, viewport={"width": 1280, "height": 800})
+    try:
+        metrics = ctx.page.evaluate("""() => {
+          const cover = document.querySelector('.cover-opening');
+          const panel = document.querySelector('.cover-opening__panel');
+          const title = document.querySelector('.cover-opening__title');
+          if (!cover || !panel || !title) return null;
+          const csCover = getComputedStyle(cover);
+          const csTitle = getComputedStyle(title);
+          const coverRect = cover.getBoundingClientRect();
+          const panelRect = panel.getBoundingClientRect();
+          return {
+            gridCols: csCover.gridTemplateColumns,
+            writingMode: csTitle.writingMode,
+            titleClass: title.className,
+            panelWidth: panelRect.width,
+            coverWidth: coverRect.width,
+            panelShare: panelRect.width / coverRect.width,
+          };
+        }""")
+        assert metrics is not None
+        assert "0.5fr" in metrics["gridCols"]
+        assert metrics["writingMode"] in ("vertical-rl", "sideways-rl")
+        assert "cover-opening__title--vertical" in metrics["titleClass"]
+        assert metrics["panelShare"] < 0.28, metrics
     finally:
         ctx.close()
 

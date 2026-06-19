@@ -39,7 +39,9 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-06-16: cover title uses --font-ui (Microsoft YaHei); remove HetangYuese.
 # Re-bumped 2026-06-17: unify non-homepage UI fonts to Microsoft YaHei stack (folio meta, toasts, modals).
 # Re-bumped 2026-06-19: chapter-separator sprocket decoration-only + ticket progress markup.
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}49f165520cfc"
+# Re-bumped 2026-06-19 (b): split-mat narrow panel + vertical title layout (journal/longshot CSS).
+# Re-bumped 2026-06-19 (c): Studio default mist + journal accent sync + cover-mat folio ground.
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}7ba2192cedc3"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

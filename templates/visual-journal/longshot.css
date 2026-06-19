@@ -340,6 +340,34 @@ body.longshot-capturing .cover-opening__title {
   overflow: hidden;
 }
 
+body.longshot-capturing .cover-opening[data-cover-opening="split-mat"] .cover-opening__title--vertical,
+body.longshot-capturing .cover-opening[data-cover-opening="split-mat"] .cover-opening__title--vertical-compact {
+  display: block;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  max-width: none;
+  padding: 0;
+  margin: auto 0;
+  font-family: var(--font-handwriting);
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+}
+
+body.longshot-capturing .cover-opening[data-cover-opening="split-mat"] .cover-opening__title--horizontal {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  font-size: 18px;
+  max-width: none;
+  width: 100%;
+  text-align: left;
+  padding: 0;
+}
+
 body.longshot-capturing .trip-meta {
   font-size: 13px;
   letter-spacing: 0.1em;

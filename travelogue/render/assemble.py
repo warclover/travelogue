@@ -52,6 +52,7 @@ def build_render_context(
         cover_focal_point,
         cover_place_is_distinct,
         cover_use_contain_fit,
+        resolve_split_mat_title_layout,
         show_hook_on_cover,
     )
     from travelogue.render.engine import LONGSHOT_INDEX_NAME
@@ -324,6 +325,7 @@ def build_render_context(
         "hook": hook,
         "hasHook": bool(hook),
         "coverOpeningStyle": resolve_cover_opening_style(trip),
+        "coverTitleLayout": resolve_split_mat_title_layout(meta_title),
         "editableHook": surface.is_draft and bool(hook),
         "epilogue": epilogue,
         "hasEpilogue": has_epilogue,

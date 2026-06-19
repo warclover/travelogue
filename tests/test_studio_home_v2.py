@@ -201,10 +201,17 @@ def test_studio_home_v2_theme_palette_options() -> None:
         assert f"{theme_id}: 1" in boot
 
     assert 'export const V2_THEME_IDS = ["classic", "dawn", "mist", "folio", "atelier"]' in store
+    assert 'export const V2_THEME_DEFAULT = "mist"' in store
+    assert 'export const V2_THEME_FEATURED = ["mist", "folio", "dawn", "classic"]' in store
+    assert 'export const V2_THEME_MORE = ["atelier", "sky"]' in store
+    assert '<optgroup label="精选">' in html
+    assert '<optgroup label="更多">' in html
+    assert 'DEFAULT_THEME = "mist"' in boot
     assert "V2_THEME_LABELS" in store
     assert "V2_THEME_LABELS" in theme_js
     assert ':root[data-v2-theme="folio"] .v2-bento__veil' in css
     assert ':root[data-v2-theme="atelier"] .v2-bento__veil' in css
+    assert ':root[data-v2-theme="mist"] .v2-shelf' in css
 
 
 def test_studio_home_v2_js_modules_present() -> None:
