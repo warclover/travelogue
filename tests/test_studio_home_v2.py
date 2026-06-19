@@ -172,6 +172,11 @@ def test_studio_home_v2_css_present() -> None:
         ".v2-unsupported",
     ):
         assert sel in css, sel
+    assert "--v2-create-card-bg-image:" in css
+    assert "--v2-create-card-bg-image-hover:" in css
+    create_card = css.split(".v2-bench__create-card {", 1)[1].split("}", 1)[0]
+    assert "backdrop-filter" not in create_card
+    assert "var(--v2-create-card-bg-image)" in create_card
 
 
 def test_studio_home_v2_js_modules_present() -> None:
