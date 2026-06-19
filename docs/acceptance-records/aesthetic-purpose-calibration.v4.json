@@ -1,0 +1,386 @@
+{
+  "version": "1",
+  "mergedLandscapePerson": {
+    "metric": "nima",
+    "trips": [
+      "demo-2025-6",
+      "demo-fc8b3a5c08",
+      "demo-1a737d6205",
+      "demo-53cda5151f",
+      "demo-1506104ebf",
+      "demo-ef0cef1d1d",
+      "demo-b388794e0a",
+      "demo-ecc41072d7",
+      "demo-1d4f92d534",
+      "demo-food2-v4"
+    ],
+    "scoredByTrip": {
+      "demo-2025-6": true,
+      "demo-fc8b3a5c08": true,
+      "demo-1a737d6205": true,
+      "demo-53cda5151f": true,
+      "demo-1506104ebf": true,
+      "demo-ef0cef1d1d": true,
+      "demo-b388794e0a": true,
+      "demo-ecc41072d7": true,
+      "demo-1d4f92d534": true,
+      "demo-food2-v4": true
+    },
+    "strataFilter": [
+      "landscape",
+      "person"
+    ],
+    "sampleCount": 442,
+    "rulesBaseline": {
+      "sampleCount": 442,
+      "srcc": 0.0626
+    },
+    "calibration": {
+      "emphasisGrid": [
+        0.1,
+        0.15,
+        0.2,
+        0.25,
+        0.3,
+        0.35,
+        0.4,
+        0.45
+      ],
+      "purposes": {
+        "cover": {
+          "byDim": {
+            "subjectClarity": {
+              "grid": [
+                {
+                  "emphasis": 0.1,
+                  "sampleCount": 442,
+                  "srcc": 0.2
+                },
+                {
+                  "emphasis": 0.15,
+                  "sampleCount": 442,
+                  "srcc": 0.1893
+                },
+                {
+                  "emphasis": 0.2,
+                  "sampleCount": 442,
+                  "srcc": 0.174
+                },
+                {
+                  "emphasis": 0.25,
+                  "sampleCount": 442,
+                  "srcc": 0.1579
+                },
+                {
+                  "emphasis": 0.3,
+                  "sampleCount": 442,
+                  "srcc": 0.1429
+                },
+                {
+                  "emphasis": 0.35,
+                  "sampleCount": 442,
+                  "srcc": 0.1274
+                },
+                {
+                  "emphasis": 0.4,
+                  "sampleCount": 442,
+                  "srcc": 0.1129
+                },
+                {
+                  "emphasis": 0.45,
+                  "sampleCount": 442,
+                  "srcc": 0.1021
+                }
+              ],
+              "bestEmphasis": 0.1,
+              "bestSrcc": 0.2
+            },
+            "composition": {
+              "grid": [
+                {
+                  "emphasis": 0.1,
+                  "sampleCount": 442,
+                  "srcc": 0.0784
+                },
+                {
+                  "emphasis": 0.15,
+                  "sampleCount": 442,
+                  "srcc": 0.0864
+                },
+                {
+                  "emphasis": 0.2,
+                  "sampleCount": 442,
+                  "srcc": 0.096
+                },
+                {
+                  "emphasis": 0.25,
+                  "sampleCount": 442,
+                  "srcc": 0.1063
+                },
+                {
+                  "emphasis": 0.3,
+                  "sampleCount": 442,
+                  "srcc": 0.118
+                },
+                {
+                  "emphasis": 0.35,
+                  "sampleCount": 442,
+                  "srcc": 0.1302
+                },
+                {
+                  "emphasis": 0.4,
+                  "sampleCount": 442,
+                  "srcc": 0.1429
+                },
+                {
+                  "emphasis": 0.45,
+                  "sampleCount": 442,
+                  "srcc": 0.1549
+                }
+              ],
+              "bestEmphasis": 0.45,
+              "bestSrcc": 0.1549
+            },
+            "color": {
+              "grid": [
+                {
+                  "emphasis": 0.1,
+                  "sampleCount": 442,
+                  "srcc": 0.0956
+                },
+                {
+                  "emphasis": 0.15,
+                  "sampleCount": 442,
+                  "srcc": 0.0914
+                },
+                {
+                  "emphasis": 0.2,
+                  "sampleCount": 442,
+                  "srcc": 0.0896
+                },
+                {
+                  "emphasis": 0.25,
+                  "sampleCount": 442,
+                  "srcc": 0.088
+                },
+                {
+                  "emphasis": 0.3,
+                  "sampleCount": 442,
+                  "srcc": 0.0862
+                },
+                {
+                  "emphasis": 0.35,
+                  "sampleCount": 442,
+                  "srcc": 0.0852
+                },
+                {
+                  "emphasis": 0.4,
+                  "sampleCount": 442,
+                  "srcc": 0.0838
+                },
+                {
+                  "emphasis": 0.45,
+                  "sampleCount": 442,
+                  "srcc": 0.0819
+                }
+              ],
+              "bestEmphasis": 0.1,
+              "bestSrcc": 0.0956
+            }
+          },
+          "recommended": {
+            "dim": "subjectClarity",
+            "emphasis": 0.1,
+            "srcc": 0.2
+          },
+          "baselineRulesSrcc": 0.0626
+        },
+        "hero": {
+          "byDim": {
+            "subjectClarity": {
+              "grid": [
+                {
+                  "emphasis": 0.1,
+                  "sampleCount": 442,
+                  "srcc": 0.2114
+                },
+                {
+                  "emphasis": 0.15,
+                  "sampleCount": 442,
+                  "srcc": 0.1991
+                },
+                {
+                  "emphasis": 0.2,
+                  "sampleCount": 442,
+                  "srcc": 0.1834
+                },
+                {
+                  "emphasis": 0.25,
+                  "sampleCount": 442,
+                  "srcc": 0.1667
+                },
+                {
+                  "emphasis": 0.3,
+                  "sampleCount": 442,
+                  "srcc": 0.1487
+                },
+                {
+                  "emphasis": 0.35,
+                  "sampleCount": 442,
+                  "srcc": 0.1346
+                },
+                {
+                  "emphasis": 0.4,
+                  "sampleCount": 442,
+                  "srcc": 0.1203
+                },
+                {
+                  "emphasis": 0.45,
+                  "sampleCount": 442,
+                  "srcc": 0.1084
+                }
+              ],
+              "bestEmphasis": 0.1,
+              "bestSrcc": 0.2114
+            },
+            "composition": {
+              "grid": [
+                {
+                  "emphasis": 0.1,
+                  "sampleCount": 442,
+                  "srcc": 0.124
+                },
+                {
+                  "emphasis": 0.15,
+                  "sampleCount": 442,
+                  "srcc": 0.136
+                },
+                {
+                  "emphasis": 0.2,
+                  "sampleCount": 442,
+                  "srcc": 0.1483
+                },
+                {
+                  "emphasis": 0.25,
+                  "sampleCount": 442,
+                  "srcc": 0.1597
+                },
+                {
+                  "emphasis": 0.3,
+                  "sampleCount": 442,
+                  "srcc": 0.1712
+                },
+                {
+                  "emphasis": 0.35,
+                  "sampleCount": 442,
+                  "srcc": 0.1825
+                },
+                {
+                  "emphasis": 0.4,
+                  "sampleCount": 442,
+                  "srcc": 0.1933
+                },
+                {
+                  "emphasis": 0.45,
+                  "sampleCount": 442,
+                  "srcc": 0.2006
+                }
+              ],
+              "bestEmphasis": 0.45,
+              "bestSrcc": 0.2006
+            },
+            "color": {
+              "grid": [
+                {
+                  "emphasis": 0.1,
+                  "sampleCount": 442,
+                  "srcc": 0.1744
+                },
+                {
+                  "emphasis": 0.15,
+                  "sampleCount": 442,
+                  "srcc": 0.1702
+                },
+                {
+                  "emphasis": 0.2,
+                  "sampleCount": 442,
+                  "srcc": 0.1637
+                },
+                {
+                  "emphasis": 0.25,
+                  "sampleCount": 442,
+                  "srcc": 0.1581
+                },
+                {
+                  "emphasis": 0.3,
+                  "sampleCount": 442,
+                  "srcc": 0.1517
+                },
+                {
+                  "emphasis": 0.35,
+                  "sampleCount": 442,
+                  "srcc": 0.1429
+                },
+                {
+                  "emphasis": 0.4,
+                  "sampleCount": 442,
+                  "srcc": 0.1362
+                },
+                {
+                  "emphasis": 0.45,
+                  "sampleCount": 442,
+                  "srcc": 0.1295
+                }
+              ],
+              "bestEmphasis": 0.1,
+              "bestSrcc": 0.1744
+            }
+          },
+          "recommended": {
+            "dim": "subjectClarity",
+            "emphasis": 0.1,
+            "srcc": 0.2114
+          },
+          "baselineRulesSrcc": 0.0626
+        }
+      }
+    },
+    "tunedPurposeSrcc": {
+      "cover": {
+        "sampleCount": 442,
+        "srcc": 0.2
+      },
+      "hero": {
+        "sampleCount": 442,
+        "srcc": 0.2114
+      }
+    },
+    "recommendedCoverWeights": {
+      "composition": 0.3176,
+      "exposure": 0.1589,
+      "color": 0.2647,
+      "lighting": 0.1589,
+      "subjectClarity": 0.1
+    }
+  },
+  "recommended": {
+    "cover": {
+      "dim": "subjectClarity",
+      "emphasis": 0.1,
+      "srcc": 0.2
+    },
+    "hero": {
+      "dim": "subjectClarity",
+      "emphasis": 0.1,
+      "srcc": 0.2114
+    },
+    "coverWeights": {
+      "composition": 0.3176,
+      "exposure": 0.1589,
+      "color": 0.2647,
+      "lighting": 0.1589,
+      "subjectClarity": 0.1
+    },
+    "heroWeights": null
+  }
+}

@@ -145,7 +145,12 @@ def test_automated_purpose_win_report_aligned_wins():
         {"assetId": "rules_pick", "humanScore": 2},
         {"assetId": "aligned_pick", "humanScore": 5},
     ]
-    cfg = AestheticConfig(ml_calibrate=True, ml_calibrate_blend=0.5, use_purpose_presets=True)
+    cfg = AestheticConfig(
+        ml_calibrate=True,
+        ml_calibrate_blend=0.5,
+        use_purpose_presets=True,
+        use_stratum_blend=False,
+    )
     report = automated_purpose_win_report(
         assets,
         labels,

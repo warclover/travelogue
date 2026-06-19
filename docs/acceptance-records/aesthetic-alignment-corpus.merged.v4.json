@@ -1,0 +1,107 @@
+{
+  "version": "4",
+  "notes": "Signoff corpus · v3 trips + v4 calibration (excl. enshi hold-out)",
+  "trips": [
+    {
+      "tripId": "demo-2025-6",
+      "tripDir": "trips/demo-2025-6",
+      "tags": [
+        "travel",
+        "mixed",
+        "dongao_2025"
+      ],
+      "sourcePhotos": "D:\\Photos\\2025东澳岛6",
+      "previewUrl": "http://127.0.0.1:8766/demo-2025-6/index.html",
+      "role": "base_corpus"
+    },
+    {
+      "tripId": "demo-fc8b3a5c08",
+      "tripDir": "trips/demo-fc8b3a5c08",
+      "tags": [
+        "travel",
+        "sri_lanka",
+        "landscape_heavy"
+      ],
+      "sourcePhotos": "D:\\Photos\\锡兰之旅",
+      "previewUrl": "http://127.0.0.1:8766/demo-fc8b3a5c08/index.html",
+      "role": "sri_lanka_v3_full_relabel"
+    },
+    {
+      "tripId": "demo-1a737d6205",
+      "tripDir": "trips/demo-1a737d6205",
+      "tags": [
+        "curated",
+        "zhangzhihui",
+        "mixed"
+      ],
+      "sourcePhotos": "D:\\Photos\\张智慧精选",
+      "previewUrl": "http://127.0.0.1:8766/demo-1a737d6205/index.html",
+      "role": "global_v3_supplement"
+    },
+    {
+      "tripId": "demo-53cda5151f",
+      "tripDir": "trips/demo-53cda5151f",
+      "tags": [
+        "food_heavy",
+        "corpus_v3"
+      ],
+      "sourcePhotos": "D:\\Photos\\food",
+      "role": "fill_food",
+      "previewUrl": "http://127.0.0.1:8766/demo-53cda5151f"
+    },
+    {
+      "tripId": "demo-1506104ebf",
+      "tripDir": "trips/demo-1506104ebf",
+      "title": "川藏线",
+      "sourcePhotos": "D:\\Photos\\川藏线",
+      "role": "calibration",
+      "profile": "landscape_only",
+      "previewUrl": "http://127.0.0.1:8766/demo-1506104ebf"
+    },
+    {
+      "tripId": "demo-ef0cef1d1d",
+      "tripDir": "trips/demo-ef0cef1d1d",
+      "title": "我家云南自驾精选",
+      "sourcePhotos": "D:\\Photos\\我家云南自驾精选",
+      "role": "calibration",
+      "profile": "portrait_heavy",
+      "previewUrl": "http://127.0.0.1:8766/demo-ef0cef1d1d"
+    },
+    {
+      "tripId": "demo-b388794e0a",
+      "tripDir": "trips/demo-b388794e0a",
+      "title": "王丹精选2",
+      "sourcePhotos": "D:\\Photos\\王丹精选2",
+      "role": "calibration",
+      "profile": "portrait",
+      "previewUrl": "http://127.0.0.1:8766/demo-b388794e0a"
+    },
+    {
+      "tripId": "demo-ecc41072d7",
+      "tripDir": "trips/demo-ecc41072d7",
+      "title": "广西之游",
+      "sourcePhotos": "D:\\Photos\\广西之游",
+      "role": "calibration",
+      "profile": "mixed",
+      "previewUrl": "http://127.0.0.1:8766/demo-ecc41072d7"
+    },
+    {
+      "tripId": "demo-1d4f92d534",
+      "tripDir": "trips/demo-1d4f92d534",
+      "title": "仙本那精选全集2",
+      "sourcePhotos": "D:\\Photos\\仙本那精选全集2",
+      "role": "calibration",
+      "profile": "mixed",
+      "previewUrl": "http://127.0.0.1:8766/demo-1d4f92d534"
+    },
+    {
+      "tripId": "demo-food2-v4",
+      "tripDir": "trips/demo-food2-v4",
+      "title": "美食语料 food2",
+      "sourcePhotos": "D:\\Photos\\food2",
+      "role": "calibration",
+      "profile": "food",
+      "previewUrl": "http://127.0.0.1:8766/demo-food2-v4"
+    }
+  ]
+}

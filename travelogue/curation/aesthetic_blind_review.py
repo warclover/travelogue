@@ -287,11 +287,31 @@ def init_labels_from_export(export: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def relative_trip_image_bases(export: dict[str, Any], *, html_depth: int = 2) -> dict[str, str]:
+    """Repo-relative bases for HTML under docs/acceptance-records/ → ../../trips/<id>."""
+    prefix = "/".join([".."] * html_depth)
+    bases: dict[str, str] = {}
+    for trip in export.get("trips") or []:
+        tid = str(trip.get("tripId") or "").strip()
+        if not tid:
+            continue
+        tdir = str(trip.get("tripDir") or f"trips/{tid}").replace("\\", "/").strip("/")
+        bases[tid] = f"{prefix}/{tdir}".replace("//", "/")
+    for row in export.get("rows") or []:
+        tid = str(row.get("tripId") or "").strip()
+        if not tid or tid in bases:
+            continue
+        tdir = str(row.get("tripDir") or f"trips/{tid}").replace("\\", "/").strip("/")
+        bases[tid] = f"{prefix}/{tdir}".replace("//", "/")
+    return bases
+
+
 def build_blind_review_html(
     export: dict[str, Any],
     *,
     image_base_urls: dict[str, str] | None = None,
     default_image_base_url: str = "",
+    use_relative_image_urls: bool = True,
     title: str = "审美盲评",
 ) -> str:
     """Standalone HTML reviewer; hides algorithm scores during rating."""
@@ -304,6 +324,8 @@ def build_blind_review_html(
             tid = str(trip.get("tripId") or "")
             if tid:
                 trip_bases[tid] = default_image_base_url.rstrip("/")
+    elif not trip_bases and use_relative_image_urls:
+        trip_bases = relative_trip_image_bases(export)
 
     payload = {
         "title": title,

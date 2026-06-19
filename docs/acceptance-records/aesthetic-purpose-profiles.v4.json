@@ -1,0 +1,77 @@
+{
+  "version": "1",
+  "recordedAt": "2026-06-19T06:35:00+00:00",
+  "calibrationSource": "docs/acceptance-records/aesthetic-stratum-calibration.merged.v4.json",
+  "notes": "Phase 3 · per-trip purpose pilot · human-validated locks on portrait passes + grid tune on landscape/mixed",
+  "judgedSourceSuffix": "v4-p2",
+  "exportSuffix": "v4-p3",
+  "trips": {
+    "demo-1506104ebf": {
+      "stratumPreference": "landscape",
+      "stratumBlendOnly": ["landscape"],
+      "heroStrata": ["landscape"],
+      "coverStrata": ["landscape"],
+      "coverSubjectClarity": 0.15,
+      "heroComposition": 0.35,
+      "albumRelativePercentile": 0.7,
+      "kind": "landscape",
+      "role": "calibration",
+      "humanWinratePctV4p2": 50.0
+    },
+    "demo-ef0cef1d1d": {
+      "stratumPreference": "portrait",
+      "heroStrata": ["landscape", "person"],
+      "coverSubjectClarity": 0.3,
+      "heroComposition": 0.28,
+      "kind": "portrait",
+      "role": "calibration",
+      "humanWinratePctV4p2": 75.0,
+      "lockedFrom": "v4-p2-human-pass"
+    },
+    "demo-b388794e0a": {
+      "stratumPreference": "portrait",
+      "heroStrata": ["landscape"],
+      "coverSubjectClarity": 0.3,
+      "heroComposition": 0.42,
+      "kind": "portrait",
+      "role": "calibration",
+      "humanWinratePctV4p2": 83.33,
+      "lockedFrom": "v4-p2-human-pass"
+    },
+    "demo-ecc41072d7": {
+      "stratumPreference": "mixed",
+      "heroStrata": ["landscape", "person", "group"],
+      "coverStrata": ["landscape", "person", "group"],
+      "coverSubjectClarity": 0.35,
+      "heroSubjectClarity": 0.35,
+      "heroComposition": 0.28,
+      "kind": "mixed",
+      "role": "calibration",
+      "humanWinratePctV4p2": 30.0
+    },
+    "demo-1d4f92d534": {
+      "stratumPreference": "landscape",
+      "stratumBlendOnly": ["landscape", "person"],
+      "heroStrata": ["landscape"],
+      "coverStrata": ["landscape"],
+      "coverComposition": 0.4,
+      "heroColor": 0.3,
+      "heroComposition": 0.35,
+      "albumRelativePercentile": 0.75,
+      "kind": "underwater",
+      "role": "calibration",
+      "humanWinratePctV4p2": 33.33
+    },
+    "demo-enshi-v4": {
+      "stratumPreference": "mixed",
+      "heroStrata": ["landscape", "person", "group"],
+      "coverStrata": ["landscape", "person"],
+      "coverSubjectClarity": 0.45,
+      "heroSubjectClarity": 0.3,
+      "heroComposition": 0.28,
+      "kind": "mixed",
+      "role": "hold_out",
+      "humanWinratePctV4p2": 41.67
+    }
+  }
+}

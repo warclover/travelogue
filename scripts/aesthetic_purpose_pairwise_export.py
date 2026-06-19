@@ -17,6 +17,11 @@ if str(ROOT) not in sys.path:
 
 from travelogue.config import get_config  # noqa: E402
 from travelogue.config.aesthetic import AestheticConfig  # noqa: E402
+from travelogue.config.aesthetic_purpose_profiles import (  # noqa: E402
+    build_pilot_aligned_cfg,
+    profile_summary,
+    purpose_profile_for_trip,
+)
 from travelogue.config.aesthetic_stratified import config_summary, landscape_pilot_config  # noqa: E402
 from travelogue.curation.aesthetic_purpose_blind import (  # noqa: E402
     build_purpose_pairwise_html,
@@ -76,6 +81,8 @@ def export_trip_pairwise(
     use_app_config: bool = True,
     cover_subject_clarity: float | None = None,
     exclude_asset_ids: tuple[str, ...] = (),
+    purpose_profile: dict[str, Any] | None = None,
+    min_score_gap: float = 0.02,
 ) -> dict[str, Any]:
     trip_dir = _resolve(Path(spec["tripDir"]))
     trip = _load_json(trip_dir / "trip.json")
@@ -90,14 +97,23 @@ def export_trip_pairwise(
     if app_cfg.aesthetic.enabled:
         apply_aesthetic_alignment(assets, trip_dir=trip_dir, cfg=app_cfg, trip=trip)
 
-    if use_app_config and app_cfg.aesthetic.ml_calibrate:
-        rules_cfg = replace(app_cfg.aesthetic, ml_calibrate=False, use_album_relative=False, source="rules")
+    rules_cfg = replace(app_cfg.aesthetic, ml_calibrate=False, use_album_relative=False, source="rules")
+    profile = purpose_profile or purpose_profile_for_trip(trip)
+
+    if profile:
+        aligned_cfg = build_pilot_aligned_cfg(calibration_path, profile)
+        cover_sc = cover_subject_clarity if cover_subject_clarity is not None else profile.get("coverSubjectClarity")
+        if cover_sc is not None:
+            rules_cfg = _apply_cover_subject_clarity(rules_cfg, float(cover_sc))
+    elif use_app_config and app_cfg.aesthetic.ml_calibrate:
         aligned_cfg = app_cfg.aesthetic
     else:
-        rules_cfg = replace(app_cfg.aesthetic, ml_calibrate=False, use_album_relative=False, source="rules")
         aligned_cfg = landscape_pilot_config(calibration_path, use_album_relative=True)
+        if cover_subject_clarity is not None:
+            rules_cfg = _apply_cover_subject_clarity(rules_cfg, cover_subject_clarity)
+            aligned_cfg = _apply_cover_subject_clarity(aligned_cfg, cover_subject_clarity)
 
-    if cover_subject_clarity is not None:
+    if profile is None and cover_subject_clarity is not None and not (use_app_config and app_cfg.aesthetic.ml_calibrate):
         rules_cfg = _apply_cover_subject_clarity(rules_cfg, cover_subject_clarity)
         aligned_cfg = _apply_cover_subject_clarity(aligned_cfg, cover_subject_clarity)
 
@@ -110,11 +126,14 @@ def export_trip_pairwise(
         pairs_per_purpose=pairs_per_purpose,
         seed=seed,
         album_relative=bool(aligned_cfg.use_album_relative),
+        min_score_gap=min_score_gap,
     )
     export["exportedAt"] = datetime.now(timezone.utc).isoformat()
     pilot = config_summary(aligned_cfg)
     if cover_subject_clarity is not None:
         pilot["coverSubjectClarityOverride"] = cover_subject_clarity
+    if profile:
+        export["purposeProfile"] = profile_summary(profile)
     if exclude_asset_ids:
         export["excludedAssetIds"] = list(exclude_asset_ids)
     export["pilotConfig"] = pilot
@@ -233,7 +252,7 @@ def main(argv: list[str] | None = None) -> int:
         html_path.write_text(
             build_purpose_pairwise_html(
                 export,
-                image_base_url=str(spec.get("previewUrl") or ""),
+                image_base_url="",
                 title=str(spec.get("title") or trip_id),
             ),
             encoding="utf-8",

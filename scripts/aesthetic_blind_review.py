@@ -165,7 +165,12 @@ def main(argv: list[str] | None = None) -> int:
         "--image-base-url",
         type=str,
         default="",
-        help="Image base for HTML reviewer, e.g. http://127.0.0.1:8766/demo-2025-6",
+        help="Optional HTTP base for HTML reviewer; default uses ../../trips/<id> (no Studio required)",
+    )
+    parser.add_argument(
+        "--no-relative-images",
+        action="store_true",
+        help="Disable ../../trips/ relative image URLs (requires --image-base-url or Studio)",
     )
     parser.add_argument("--html-title", type=str, default="审美盲评")
     args = parser.parse_args(argv)
@@ -212,6 +217,7 @@ def main(argv: list[str] | None = None) -> int:
             build_blind_review_html(
                 out,
                 default_image_base_url=args.image_base_url,
+                use_relative_image_urls=not args.no_relative_images,
                 title=args.html_title,
             ),
             encoding="utf-8",

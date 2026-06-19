@@ -1,0 +1,81 @@
+# AC-SC · 分层精选 pilot 配置冻结（v4 · Phase 2 草案）
+# 归档日期：2026-06-19 · 分支 feat/aesthetic-alignment
+# 状态：AC-SC-03 waiver 已接受 · G3 ml_calibrate 默认 true（2026-06-19）
+# 用法：合并到项目根 config.yaml（密钥仍走 .env · 勿提交本地 config.yaml）
+#
+# 关联 signoff / tune / Phase 3：
+#   docs/acceptance-records/aesthetic-stratified-signoff.v4.json
+#   docs/acceptance-records/purpose-pairwise-signoff.v4-p2.json
+#   docs/acceptance-records/purpose-pairwise-waiver.v4.json
+#   docs/acceptance-records/aesthetic-purpose-profiles.v4.json
+#   docs/acceptance-records/aesthetic-purpose-tune.v4-p3.json
+#   docs/acceptance-records/purpose-pairwise.*.v4-p3.html
+
+aesthetic:
+  enabled: true
+  source: rules+ml
+  ml_calibrate: true
+  use_stratum_blend: true
+  stratum_blend_only: [landscape, person, group]
+  stratum_blend_only_by_purpose:
+    hero: [landscape, person]
+    cover: [landscape, person]
+  stratum_blends:
+    group: 0.6
+    person: 0.6
+    landscape: 0.6
+    food: 0.6
+    general: 0.25
+  use_album_relative: true
+  album_relative_percentile: 0.75
+  album_relative_lo: 0.7
+  album_relative_hi: 1.3
+  presets:
+    cover:
+      composition: 0.3176
+      exposure: 0.1589
+      color: 0.2647
+      lighting: 0.1589
+      subjectClarity: 0.4
+    hero:
+      composition: 0.35
+      exposure: 0.18
+      color: 0.17
+      lighting: 0.12
+      subjectClarity: 0.2
+  portrait_lite_enabled: true
+  learned:
+    metric: nima
+    allow_cpu: true
+  mllm:
+    enabled: true
+    provider: dashscope
+    model: qwen-vl-max
+    shortlist_purposes: [moment]
+    shortlist_k: 5
+    max_calls_per_trip: 20
+    blend: 0.45
+    temperature: 0
+    cache: true
+    rubric: universal
+    image_max_edge: 768
+
+cull:
+  ml:
+    allow_cpu_ml: true
+
+# --- 冻结说明（非 YAML 配置项）---
+# calibrationSource: docs/acceptance-records/aesthetic-stratum-calibration.merged.v4.json
+# purposeProfiles: docs/acceptance-records/aesthetic-purpose-profiles.v4.json
+# waiver: docs/acceptance-records/purpose-pairwise-waiver.v4.json
+#
+# profileOverlays（trip.curation.purposePilotProfile · 运行时按 tripId 叠加）:
+#   人像 pass · 云南 demo-ef0cef1d1d · cover SC 0.30 · hero comp 0.28
+#   人像 pass · 王丹 demo-b388794e0a · cover SC 0.30 · hero comp 0.42
+#   风景 · 川藏 demo-1506104ebf · landscape-only · cover SC 0.15 · hero comp 0.35
+#   混合 · 广西 demo-ecc41072d7 · mixed preset · hero SC 0.35
+#   水下 · 仙本那 demo-1d4f92d534 · cover comp 0.40 · hero color 0.30
+#
+# v4-p2 human winrate:
+#   王丹 83.3% · 云南 75.0% · 川藏 50% · 广西 30% · 仙本那 33.3% · 恩施 41.7%
+# G3 ml_calibrate 默认: true（waiver 接受 · aesthetic-g3-signoff.v4.json）

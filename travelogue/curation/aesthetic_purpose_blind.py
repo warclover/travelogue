@@ -293,6 +293,9 @@ def build_purpose_pairwise_html(
 
     trip_id = str(export.get("tripId") or "")
     pairs = export.get("pairs") or []
+    image_base = image_base_url.rstrip("/")
+    if not image_base and trip_id:
+        image_base = f"../../trips/{trip_id}"
     public_pairs = [
         {
             "pairId": p.get("pairId"),
@@ -306,7 +309,7 @@ def build_purpose_pairwise_html(
     payload = {
         "title": title,
         "tripId": trip_id,
-        "imageBase": image_base_url.rstrip("/"),
+        "imageBase": image_base,
         "pairCount": len(public_pairs),
         "pairs": public_pairs,
     }

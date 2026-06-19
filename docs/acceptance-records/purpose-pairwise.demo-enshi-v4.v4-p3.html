@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>恩施 hold-out cover/hero A/B</title>
+  <style>
+    :root {
+      --bg: #0f1115; --panel: #1a1d24; --text: #e8eaed; --muted: #9aa0a6;
+      --accent: #6ea8fe; --ok: #3dd68c; --border: #2a2f3a;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 16px 20px 32px; }
+    h1 { font-size: 1.1rem; margin: 0 0 8px; }
+    .meta { color: var(--muted); font-size: 0.85rem; }
+    .progress { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; margin: 12px 0; }
+    .progress > i { display: block; height: 100%; width: 0%; background: var(--ok); transition: width .2s; }
+    .stage { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .col { background: #000; border-radius: 8px; overflow: hidden; min-height: 36vh; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid transparent; }
+    .col img { max-width: 100%; max-height: 55vh; object-fit: contain; }
+    .col.selected { border-color: var(--ok); }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    button { border: 1px solid var(--border); background: #252932; color: var(--text); padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+    button.primary { background: #2b4a7a; border-color: #3d6cb9; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #252932; font-size: 0.75rem; color: var(--muted); }
+    @media (max-width: 720px) { .cols { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 id="title">恩施 hold-out cover/hero A/B</h1>
+    <div class="meta" id="counter">—</div>
+    <div class="progress"><i id="bar"></i></div>
+    <div class="stage">
+      <div class="meta" style="margin-bottom:10px"><span class="badge" id="purposeBadge">—</span></div>
+      <div class="cols">
+        <div class="col" id="colL" title="选左图"><img id="imgL" alt="A" /></div>
+        <div class="col" id="colR" title="选右图"><img id="imgR" alt="B" /></div>
+      </div>
+      <div class="toolbar">
+        <button type="button" id="pickL">选左图</button>
+        <button type="button" id="pickR">选右图</button>
+        <button type="button" id="pickTie">差不多</button>
+        <button type="button" id="prev">← 上一组</button>
+        <button type="button" id="next">下一组 →</button>
+        <button type="button" id="export" class="primary">下载结果 JSON</button>
+      </div>
+      <p class="meta" style="margin-top:10px;line-height:1.5">盲选：左右顺序随机，不显示算法分数。键盘 <kbd>1</kbd> 左 · <kbd>2</kbd> 右 · <kbd>3</kbd> 差不多 · <kbd>←</kbd>/<kbd>→</kbd> 切换。</p>
+    </div>
+  </div>
+  <script id="review-data" type="application/json">{"title": "恩施 hold-out cover/hero A/B", "tripId": "demo-enshi-v4", "imageBase": "../../trips/demo-enshi-v4", "pairCount": 12, "pairs": [{"pairId": "cover-006", "purpose": "cover", "tripId": "demo-enshi-v4", "optionLeft": {"assetId": "asset-102", "displayFile": "assets/asset-102-w3200.webp", "score": 0.6491}, "optionRight": {"assetId": "asset-013", "displayFile": "assets/asset-013-w3200.webp", "score": 0.5469}}, {"pairId": "hero-011", "purpose": "hero", "tripId": "demo-enshi-v4", "optionLeft": {"assetId": "asset-024", "displayFile": "assets/asset-024-w3200.webp", "score": 0.663}, "optionRight": {"assetId": "asset-116", "displayFile": "assets/asset-116-w3200.webp", "score": 0.4862}}, {"pairId": "hero-009", "purpose": "hero", "tripId": "demo-enshi-v4", "optionLeft": {"assetId": "asset-134", "displayFile": "assets/asset-134-w3200.webp", "score": 0.5851}, "optionRight": {"assetId": "asset-102", "displayFile": "assets/asset-102-w3200.webp", "score": 0.5983}}, {"pairId": "cover-002", "purpose": "cover", "tripId": "demo-enshi-v4", "optionLeft": {"assetId": "asset-053", "displayFile": "assets/asset-053-w3200.webp", "score": 0.5008}, "optionRight": {"assetId": "asset-030", "displayFile": "assets/asset-030-w3200.webp", "score": 0.5138}}, {"pairId": "hero-007", "purpose": "hero", "tripId": "demo-enshi-v4", "optionLeft": {"assetId": "asset-029", "displayFile": "assets/asset-029-w3200.webp", "score": 0.6106}, "optionRight": {"assetId": "asset-116", "displayFile": "assets/asset-116-w3200.webp", "score": 0.4862}}, {"pairId": "cover-005", "purpose": "cover", "tripId": "demo-enshi-v4", "optionLeft": {"assetId": "asset-085", "displayFile": "assets/asset-085-w3200.webp", "score": 0.5592}, "optionRight": {"assetId": "asset-030", "displayFile": "assets/asset-030-w3200.webp", "score": 0.5138}}, {"pairId": "cover-001", "purpose": "cover", "tripId": "demo-enshi-v4", "optionLeft": {"assetId": "asset-024", "displayFile": "assets/asset-024-w3200.webp", "score": 0.6124}, "optionRight": {"assetId": "asset-029", "displayFile": "assets/asset-029-w3200.webp", "score": 0.6996}}, {"pairId": "cover-003", "purpose": "cover", "tripId": "demo-enshi-v4", "optionLeft": {"assetId": "asset-142", "displayFile": "assets/asset-142-w3200.webp", "score": 0.4486}, "optionRight": {"assetId": "asset-050", "displayFile": "assets/asset-050-w3200.webp", "score": 0.5106}}, {"pairId": "hero-012", "purpose": "hero", "tripId": "demo-enshi-v4", "optionLeft": {"assetId": "asset-134", "displayFile": "assets/asset-134-w3200.webp", "score": 0.5851}, "optionRight": {"assetId": "asset-139", "displayFile": "assets/asset-139-w3200.webp", "score": 0.4907}}, {"pairId": "hero-008", "purpose": "hero", "tripId": "demo-enshi-v4", "optionLeft": {"assetId": "asset-050", "displayFile": "assets/asset-050-w3200.webp", "score": 0.48}, "optionRight": {"assetId": "asset-102", "displayFile": "assets/asset-102-w3200.webp", "score": 0.5983}}, {"pairId": "cover-004", "purpose": "cover", "tripId": "demo-enshi-v4", "optionLeft": {"assetId": "asset-082", "displayFile": "assets/asset-082-w3200.webp", "score": 0.5599}, "optionRight": {"assetId": "asset-037", "displayFile": "assets/asset-037-w3200.webp", "score": 0.5068}}, {"pairId": "hero-010", "purpose": "hero", "tripId": "demo-enshi-v4", "optionLeft": {"assetId": "asset-034", "displayFile": "assets/asset-034-w3200.webp", "score": 0.4751}, "optionRight": {"assetId": "asset-131", "displayFile": "assets/asset-131-w3200.webp", "score": 0.5892}}]}</script>
+  <script>
+    const DATA = JSON.parse(document.getElementById("review-data").textContent);
+    const STORAGE_KEY = "purpose-pairwise-demo-enshi-v4-45";
+    const PURPOSE_LABELS = {"cover": "封面", "hero": "主图", "moment": "瞬间", "solo": "单人"};
+    let index = 0;
+    let verdicts = {};
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) verdicts = JSON.parse(raw).verdicts || JSON.parse(raw);
+      } catch (e) { verdicts = {}; }
+    }
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ verdicts }));
+      updateProgress();
+    }
+    function imageUrl(row) {
+      const file = (row.displayFile || "").replace(/^\//, "");
+      if (DATA.imageBase) return DATA.imageBase + "/" + file;
+      return file;
+    }
+    function judgedCount() {
+      return DATA.pairs.filter(p => verdicts[p.pairId]).length;
+    }
+    function updateProgress() {
+      const n = judgedCount();
+      const total = DATA.pairs.length;
+      document.getElementById("bar").style.width = (total ? (100 * n / total) : 0) + "%";
+      document.getElementById("counter").textContent = `已评 ${n} / ${total} · 第 ${index + 1} 组`;
+    }
+    function showAt(i) {
+      index = Math.max(0, Math.min(DATA.pairs.length - 1, i));
+      const p = DATA.pairs[index];
+      document.getElementById("purposeBadge").textContent = (PURPOSE_LABELS[p.purpose] || p.purpose) + " · " + p.pairId;
+      document.getElementById("imgL").src = imageUrl(p.optionLeft);
+      document.getElementById("imgR").src = imageUrl(p.optionRight);
+      const v = verdicts[p.pairId];
+      document.getElementById("colL").classList.toggle("selected", v === "left");
+      document.getElementById("colR").classList.toggle("selected", v === "right");
+      updateProgress();
+    }
+    function pick(v) {
+      const p = DATA.pairs[index];
+      verdicts[p.pairId] = v;
+      saveState();
+      showAt(index);
+      if (index < DATA.pairs.length - 1) showAt(index + 1);
+    }
+    document.getElementById("pickL").onclick = () => pick("left");
+    document.getElementById("pickR").onclick = () => pick("right");
+    document.getElementById("pickTie").onclick = () => pick("tie");
+    document.getElementById("colL").onclick = () => pick("left");
+    document.getElementById("colR").onclick = () => pick("right");
+    document.getElementById("prev").onclick = () => showAt(index - 1);
+    document.getElementById("next").onclick = () => showAt(index + 1);
+    document.getElementById("export").onclick = () => {
+      const rows = DATA.pairs.map(p => ({ ...p, judgeVerdict: verdicts[p.pairId] || null }));
+      const blob = new Blob([JSON.stringify({
+        version: "1",
+        tripId: DATA.tripId,
+        exportedAt: new Date().toISOString(),
+        pairs: rows
+      }, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "purpose-pairwise-" + DATA.tripId + ".json";
+      a.click();
+    };
+    document.addEventListener("keydown", e => {
+      if (e.key === "1") pick("left");
+      if (e.key === "2") pick("right");
+      if (e.key === "3") pick("tie");
+      if (e.key === "ArrowLeft") showAt(index - 1);
+      if (e.key === "ArrowRight") showAt(index + 1);
+    });
+    loadState();
+    showAt(0);
+  </script>
+</body>
+</html>

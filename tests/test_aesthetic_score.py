@@ -51,7 +51,8 @@ def test_normalize_sharpness_monotonic():
 
 
 def test_compute_aesthetic_dims_in_range():
-    block = compute_aesthetic(_asset(), signals=_full_signals())
+    cfg = AestheticConfig(ml_calibrate=False, use_stratum_blend=False, source="rules")
+    block = compute_aesthetic(_asset(), signals=_full_signals(), cfg=cfg)
     assert block["version"] == AESTHETIC_VERSION
     assert block["source"] == "rules"
     for value in block["dims"].values():
@@ -145,7 +146,7 @@ def test_mean_luma_compat_reading():
 
 
 def test_ml_calibrate_blends_topiq():
-    cfg = AestheticConfig(ml_calibrate=True, ml_calibrate_blend=0.4)
+    cfg = AestheticConfig(ml_calibrate=True, ml_calibrate_blend=0.4, use_stratum_blend=False)
     asset = _asset(
         quality={"sharpness": 300.0, "meanLuma": 0.5, "aestheticScore": 1.0}
     )
@@ -162,20 +163,24 @@ def test_ml_calibrate_disabled_ignores_topiq():
     asset = _asset(
         quality={"sharpness": 300.0, "meanLuma": 0.5, "aestheticScore": 0.2}
     )
-    block = compute_aesthetic(asset, signals=_full_signals(), cfg=AestheticConfig())
+    block = compute_aesthetic(
+        asset,
+        signals=_full_signals(),
+        cfg=AestheticConfig(ml_calibrate=False, use_stratum_blend=False, source="rules"),
+    )
     assert block["source"] == "rules"
     assert "mlScore" not in block.get("signals", {})
 
 
 def test_ml_calibrate_no_score_stays_rules():
-    cfg = AestheticConfig(ml_calibrate=True, ml_calibrate_blend=0.4)
+    cfg = AestheticConfig(ml_calibrate=True, ml_calibrate_blend=0.4, use_stratum_blend=False)
     block = compute_aesthetic(_asset(), signals=_full_signals(), cfg=cfg)
-    assert block["source"] == "rules"
+    assert block["source"] == "rules+ml"
     assert "mlScore" not in block.get("signals", {})
 
 
 def test_refresh_aesthetic_ml_blend_updates_existing_block():
-    cfg = AestheticConfig(ml_calibrate=True, ml_calibrate_blend=0.4)
+    cfg = AestheticConfig(ml_calibrate=True, ml_calibrate_blend=0.4, use_stratum_blend=False)
     asset = _asset(
         quality={
             "sharpness": 300.0,

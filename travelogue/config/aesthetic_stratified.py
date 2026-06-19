@@ -20,7 +20,17 @@ STRATUM_PREFERENCE_PRESETS: dict[str, dict[str, Any]] = {
     },
     "portrait": {
         "stratum_blend_only": ("landscape", "person", "group"),
-        "stratum_blend_only_by_purpose": {"hero": ("landscape",)},
+        "stratum_blend_only_by_purpose": {
+            "hero": ("landscape", "person"),
+            "cover": ("landscape", "person"),
+        },
+    },
+    "mixed": {
+        "stratum_blend_only": ("landscape", "person", "group"),
+        "stratum_blend_only_by_purpose": {
+            "hero": ("landscape", "person", "group"),
+            "cover": ("landscape", "person", "group"),
+        },
     },
 }
 

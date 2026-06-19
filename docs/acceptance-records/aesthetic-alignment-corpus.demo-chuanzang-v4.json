@@ -1,0 +1,22 @@
+{
+  "version": "1",
+  "notes": "川藏线 · demo-1506104ebf · 纯风景 · v4 校准",
+  "targetTotal": 35,
+  "seed": 44,
+  "strataQuotas": {
+    "landscape": 35,
+    "person": 0,
+    "group": 0,
+    "food": 0,
+    "general": 0
+  },
+  "trips": [
+    {
+      "tripId": "demo-1506104ebf",
+      "tripDir": "trips/demo-1506104ebf",
+      "tags": ["travel", "landscape_only", "v4_calibration"],
+      "sourcePhotos": "D:\\Photos\\川藏线",
+      "previewUrl": "http://127.0.0.1:8766/demo-1506104ebf/index.html"
+    }
+  ]
+}

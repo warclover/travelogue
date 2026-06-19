@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>川藏线 v4 盲评</title>
+  <style>
+    :root {
+      --bg: #0f1115; --panel: #1a1d24; --text: #e8eaed; --muted: #9aa0a6;
+      --accent: #6ea8fe; --ok: #3dd68c; --border: #2a2f3a;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 16px 20px 32px; }
+    header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    h1 { font-size: 1.1rem; font-weight: 600; margin: 0; }
+    .meta { color: var(--muted); font-size: 0.85rem; }
+    .progress { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; margin: 8px 0 16px; }
+    .progress > i { display: block; height: 100%; width: 0%; background: var(--ok); transition: width .2s; }
+    .stage { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .img-box { display: flex; align-items: center; justify-content: center; min-height: 52vh; background: #000; border-radius: 8px; overflow: hidden; }
+    .img-box img { max-width: 100%; max-height: 70vh; object-fit: contain; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+    button, .score-btn {
+      border: 1px solid var(--border); background: #252932; color: var(--text);
+      padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.95rem;
+    }
+    button:hover, .score-btn:hover { border-color: var(--accent); }
+    button.primary { background: #2b4a7a; border-color: #3d6cb9; }
+    button.primary:hover { background: #35598f; }
+    .score-btn.selected { background: #2d5a3d; border-color: var(--ok); }
+    .score-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .hint { color: var(--muted); font-size: 0.82rem; margin-top: 10px; line-height: 1.5; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #252932; font-size: 0.75rem; color: var(--muted); }
+    .stratum-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; align-items: center; }
+    .stratum-btn { padding: 4px 10px; font-size: 0.8rem; }
+    .stratum-btn.selected { background: #2b4a7a; border-color: var(--accent); }
+    .defect-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; align-items: center; }
+    .defect-btn { padding: 4px 10px; font-size: 0.8rem; }
+    .defect-btn.selected { background: #5a3030; border-color: #c96; }
+    .rubric { background: #12151c; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 0.82rem; line-height: 1.55; color: var(--muted); }
+    .rubric strong { color: var(--text); }
+    @media (max-width: 640px) { .img-box { min-height: 40vh; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 id="title">川藏线 v4 盲评</h1>
+      <div class="meta" id="counter">—</div>
+    </header>
+    <div class="progress"><i id="bar"></i></div>
+    <div class="stage">
+      <div class="meta" style="margin-bottom:8px">
+        <span class="badge" id="stratumBadge">—</span>
+        <span id="assetId" style="margin-left:8px"></span>
+      </div>
+      <div class="stratum-row" id="stratumPick"></div>
+      <div class="defect-row" id="defectPick" hidden></div>
+      <div class="img-box"><img id="photo" alt="review" /></div>
+      <div class="rubric" id="rubric"></div>
+      <div class="score-row" id="scores"></div>
+      <div class="toolbar">
+        <button type="button" id="prev">← 上一张</button>
+        <button type="button" id="next">下一张 →</button>
+        <button type="button" id="export" class="primary">下载标签 JSON</button>
+      </div>
+      <p class="hint">
+        键盘：<kbd>1</kbd>–<kbd>5</kbd> 打分 · <kbd>←</kbd>/<kbd>→</kbd> 切换 · 进度自动保存在本机浏览器。<br/>
+        先确认照片类型（风景/人像/合影/美食），类型不对请先点上方按钮修改，再按对应标准打分。<br/>
+        单人照/合影可勾选「闭眼」「糊脸」缺陷标签（可选，导出至 defectTags）。
+      </p>
+    </div>
+  </div>
+  <script id="review-data" type="application/json">{"title": "川藏线 v4 盲评", "exportedAt": "2026-06-19T05:00:33.115407+00:00", "sampleCount": 35, "tripBases": {"demo-1506104ebf": "../../trips/demo-1506104ebf"}, "rows": [{"displayOrder": 1, "assetId": "asset-135", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-135-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5136, "predictedCover": 0.47211, "predictedHero": 0.530537, "predictedMoment": 0.54424, "defectTags": []}, {"displayOrder": 2, "assetId": "asset-138", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-138-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5228, "predictedCover": 0.47974, "predictedHero": 0.519909, "predictedMoment": 0.5350900000000001, "defectTags": []}, {"displayOrder": 3, "assetId": "asset-117", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-117-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.4937, "predictedCover": 0.463155, "predictedHero": 0.511813, "predictedMoment": 0.51748, "defectTags": []}, {"displayOrder": 4, "assetId": "asset-028", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-028-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5611, "predictedCover": 0.4955, "predictedHero": 0.563333, "predictedMoment": 0.581828, "defectTags": []}, {"displayOrder": 5, "assetId": "asset-096", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-096-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5847, "predictedCover": 0.544775, "predictedHero": 0.606195, "predictedMoment": 0.6092460000000001, "defectTags": []}, {"displayOrder": 6, "assetId": "asset-014", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-014-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.533, "predictedCover": 0.48678, "predictedHero": 0.54419, "predictedMoment": 0.5544880000000001, "defectTags": []}, {"displayOrder": 7, "assetId": "asset-032", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-032-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.4579, "predictedCover": 0.38836, "predictedHero": 0.464003, "predictedMoment": 0.47477400000000003, "defectTags": []}, {"displayOrder": 8, "assetId": "asset-150", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-150-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.4873, "predictedCover": 0.450775, "predictedHero": 0.499927, "predictedMoment": 0.5241560000000001, "defectTags": []}, {"displayOrder": 9, "assetId": "asset-186", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-186-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5052, "predictedCover": 0.452275, "predictedHero": 0.5092810000000001, "predictedMoment": 0.5286580000000001, "defectTags": []}, {"displayOrder": 10, "assetId": "asset-107", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-107-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5009, "predictedCover": 0.46065999999999996, "predictedHero": 0.505847, "predictedMoment": 0.514282, "defectTags": []}, {"displayOrder": 11, "assetId": "asset-133", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-133-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.4903, "predictedCover": 0.42356, "predictedHero": 0.491786, "predictedMoment": 0.5051720000000001, "defectTags": []}, {"displayOrder": 12, "assetId": "asset-146", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-146-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.4737, "predictedCover": 0.45219499999999996, "predictedHero": 0.49649699999999997, "predictedMoment": 0.49731200000000003, "defectTags": []}, {"displayOrder": 13, "assetId": "asset-080", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-080-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5685, "predictedCover": 0.529505, "predictedHero": 0.581633, "predictedMoment": 0.601994, "defectTags": []}, {"displayOrder": 14, "assetId": "asset-087", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-087-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5559, "predictedCover": 0.51252, "predictedHero": 0.560011, "predictedMoment": 0.578208, "defectTags": []}, {"displayOrder": 15, "assetId": "asset-165", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-165-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5255, "predictedCover": 0.484465, "predictedHero": 0.5631390000000001, "predictedMoment": 0.5745840000000001, "defectTags": []}, {"displayOrder": 16, "assetId": "asset-094", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-094-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5383, "predictedCover": 0.50001, "predictedHero": 0.566611, "predictedMoment": 0.574222, "defectTags": []}, {"displayOrder": 17, "assetId": "asset-102", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-102-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5076, "predictedCover": 0.463225, "predictedHero": 0.510396, "predictedMoment": 0.514974, "defectTags": []}, {"displayOrder": 18, "assetId": "asset-112", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-112-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5916, "predictedCover": 0.52502, "predictedHero": 0.599594, "predictedMoment": 0.624666, "defectTags": []}, {"displayOrder": 19, "assetId": "asset-019", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-019-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5717, "predictedCover": 0.53271, "predictedHero": 0.590329, "predictedMoment": 0.605894, "defectTags": []}, {"displayOrder": 20, "assetId": "asset-182", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-182-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5077, "predictedCover": 0.46272499999999994, "predictedHero": 0.518035, "predictedMoment": 0.52758, "defectTags": []}, {"displayOrder": 21, "assetId": "asset-155", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-155-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.6014, "predictedCover": 0.565785, "predictedHero": 0.623849, "predictedMoment": 0.6484780000000001, "defectTags": []}, {"displayOrder": 22, "assetId": "asset-122", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-122-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5202, "predictedCover": 0.473125, "predictedHero": 0.53035, "predictedMoment": 0.534554, "defectTags": []}, {"displayOrder": 23, "assetId": "asset-088", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-088-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5671, "predictedCover": 0.5454749999999999, "predictedHero": 0.5956600000000001, "predictedMoment": 0.583608, "defectTags": []}, {"displayOrder": 24, "assetId": "asset-179", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-179-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5123, "predictedCover": 0.49615499999999996, "predictedHero": 0.538331, "predictedMoment": 0.538114, "defectTags": []}, {"displayOrder": 25, "assetId": "asset-025", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-025-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5372, "predictedCover": 0.49354, "predictedHero": 0.554684, "predictedMoment": 0.551472, "defectTags": []}, {"displayOrder": 26, "assetId": "asset-043", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-043-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.4733, "predictedCover": 0.41035499999999997, "predictedHero": 0.475251, "predictedMoment": 0.48724, "defectTags": []}, {"displayOrder": 27, "assetId": "asset-159", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-159-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.4865, "predictedCover": 0.42536999999999997, "predictedHero": 0.489727, "predictedMoment": 0.508062, "defectTags": []}, {"displayOrder": 28, "assetId": "asset-026", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-026-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5849, "predictedCover": 0.54036, "predictedHero": 0.589862, "predictedMoment": 0.6110800000000001, "defectTags": []}, {"displayOrder": 29, "assetId": "asset-176", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-176-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5331, "predictedCover": 0.4929, "predictedHero": 0.546994, "predictedMoment": 0.54652, "defectTags": []}, {"displayOrder": 30, "assetId": "asset-072", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-072-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.4702, "predictedCover": 0.427765, "predictedHero": 0.48466000000000004, "predictedMoment": 0.48549400000000004, "defectTags": []}, {"displayOrder": 31, "assetId": "asset-065", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-065-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.4955, "predictedCover": 0.44620499999999996, "predictedHero": 0.496382, "predictedMoment": 0.509652, "defectTags": []}, {"displayOrder": 32, "assetId": "asset-095", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-095-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5004, "predictedCover": 0.467155, "predictedHero": 0.5136, "predictedMoment": 0.520914, "defectTags": []}, {"displayOrder": 33, "assetId": "asset-153", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-153-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5024, "predictedCover": 0.453065, "predictedHero": 0.520445, "predictedMoment": 0.529024, "defectTags": []}, {"displayOrder": 34, "assetId": "asset-145", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-145-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.4708, "predictedCover": 0.44189999999999996, "predictedHero": 0.485534, "predictedMoment": 0.492134, "defectTags": []}, {"displayOrder": 35, "assetId": "asset-201", "tripId": "demo-1506104ebf", "displayFile": "assets/asset-201-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5306, "predictedCover": 0.493355, "predictedHero": 0.554379, "predictedMoment": 0.555124, "defectTags": []}]}</script>
+  <script>
+    const DATA = JSON.parse(document.getElementById("review-data").textContent);
+    const STORAGE_KEY = "aesthetic-blind-docs\\acceptance-records\\aesthetic-alignment-corpus.demo-chuanzang-v4.json-44";
+    const SCORE_LABELS = {1:"废片",2:"偏弱",3:"一般",4:"好",5:"很好"};
+    const STRATUM_LABELS = {
+      person: "单人照", group: "合影", landscape: "风景", food: "美食", general: "其他"
+    };
+    const RUBRICS = {
+      person: "5=表情自然清晰 · 3=平淡或有瑕疵 · 1=糊/闭眼/废片",
+      group: "5=关键人物清晰、表情可接受 · 3=有人略糊 · 1=多人闭眼/糊脸",
+      landscape: "5=构图光线舒服、有代表性 · 3=普通记录 · 1=平淡或技术硬伤",
+      food: "5=诱人、主体清楚 · 3=食欲感一般 · 1=难辨认/无食欲",
+      general: "按「是否值得在这本游记里重点展示」打 1–5"
+    };
+    const STRATA = ["landscape", "person", "group", "food", "general"];
+    const DEFECT_TAGS = ["closed_eyes", "blur_face"];
+    const DEFECT_LABELS = { closed_eyes: "闭眼", blur_face: "糊脸" };
+    const PORTRAIT_STRATA = new Set(["person", "group"]);
+    let index = 0;
+    let scores = {};
+    let strata = {};
+    let defects = {};
+
+    function loadScores() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          scores = parsed.scores || parsed;
+          strata = parsed.strata || {};
+          defects = parsed.defects || {};
+        }
+      } catch (e) { scores = {}; strata = {}; defects = {}; }
+      for (const row of DATA.rows) {
+        if (!defects[row.assetId] && row.defectTags && row.defectTags.length) {
+          defects[row.assetId] = row.defectTags.slice();
+        }
+      }
+    }
+    function saveScores() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ scores, strata, defects }));
+      updateProgress();
+    }
+    function currentStratum(row) {
+      return strata[row.assetId] || row.stratum || "general";
+    }
+    function currentDefects(row) {
+      return defects[row.assetId] || [];
+    }
+    function isPortraitStratum(s) {
+      return PORTRAIT_STRATA.has(s);
+    }
+    function imageUrl(row) {
+      const base = (DATA.tripBases && DATA.tripBases[row.tripId]) || "";
+      const file = (row.displayFile || "").replace(/^\//, "");
+      if (base) return base.replace(/\/$/, "") + "/" + file;
+      return file;
+    }
+    function ratedCount() {
+      return DATA.rows.filter(r => scores[r.assetId] != null).length;
+    }
+    function updateProgress() {
+      const n = ratedCount();
+      const total = DATA.rows.length;
+      document.getElementById("bar").style.width = (total ? (100 * n / total) : 0) + "%";
+      document.getElementById("counter").textContent = `已评 ${n} / ${total} · 第 ${index + 1} 张`;
+    }
+    function renderStratumPick() {
+      const row = DATA.rows[index];
+      const box = document.getElementById("stratumPick");
+      box.innerHTML = "<span style='color:var(--muted);font-size:0.8rem'>类型：</span>";
+      const cur = currentStratum(row);
+      for (const s of STRATA) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "stratum-btn" + (cur === s ? " selected" : "");
+        btn.textContent = STRATUM_LABELS[s] || s;
+        btn.addEventListener("click", () => {
+          strata[row.assetId] = s;
+          saveScores();
+          showAt(index);
+        });
+        box.appendChild(btn);
+      }
+    }
+    function renderDefectPick() {
+      const row = DATA.rows[index];
+      const box = document.getElementById("defectPick");
+      const s = currentStratum(row);
+      if (!isPortraitStratum(s)) {
+        box.hidden = true;
+        box.innerHTML = "";
+        return;
+      }
+      box.hidden = false;
+      box.innerHTML = "<span style='color:var(--muted);font-size:0.8rem'>人像缺陷（可选）：</span>";
+      const cur = new Set(currentDefects(row));
+      for (const tag of DEFECT_TAGS) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "defect-btn" + (cur.has(tag) ? " selected" : "");
+        btn.textContent = DEFECT_LABELS[tag] || tag;
+        btn.addEventListener("click", () => {
+          const next = new Set(currentDefects(row));
+          if (next.has(tag)) next.delete(tag); else next.add(tag);
+          defects[row.assetId] = Array.from(next);
+          saveScores();
+          renderDefectPick();
+        });
+        box.appendChild(btn);
+      }
+    }
+    function renderRubric() {
+      const row = DATA.rows[index];
+      const s = currentStratum(row);
+      const el = document.getElementById("rubric");
+      el.innerHTML = "<strong>" + (STRATUM_LABELS[s] || s) + " · 打分参考</strong><br/>" + (RUBRICS[s] || "");
+    }
+    function renderScores() {
+      const row = DATA.rows[index];
+      const box = document.getElementById("scores");
+      box.innerHTML = "";
+      for (let s = 1; s <= 5; s++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "score-btn" + (scores[row.assetId] === s ? " selected" : "");
+        btn.textContent = s + " · " + SCORE_LABELS[s];
+        btn.addEventListener("click", () => setScore(s, true));
+        box.appendChild(btn);
+      }
+    }
+    function showAt(i) {
+      index = Math.max(0, Math.min(DATA.rows.length - 1, i));
+      const row = DATA.rows[index];
+      document.getElementById("photo").src = imageUrl(row);
+      const s = currentStratum(row);
+      document.getElementById("stratumBadge").textContent = STRATUM_LABELS[s] || s;
+      document.getElementById("assetId").textContent = row.assetId || "";
+      renderStratumPick();
+      renderDefectPick();
+      renderRubric();
+      renderScores();
+      updateProgress();
+    }
+    function setScore(s, advance) {
+      const row = DATA.rows[index];
+      scores[row.assetId] = s;
+      saveScores();
+      renderScores();
+      if (advance && index < DATA.rows.length - 1) showAt(index + 1);
+    }
+    function exportLabels() {
+      const rows = DATA.rows.map(r => {
+        const s = currentStratum(r);
+        const row = {
+          assetId: r.assetId,
+          tripId: r.tripId,
+          stratum: s,
+          stratumAuto: r.stratumAuto || r.stratum,
+          displayFile: r.displayFile,
+          humanScore: scores[r.assetId] ?? null,
+          predictedOverall: r.predictedOverall ?? null,
+          predictedCover: r.predictedCover ?? null,
+          predictedHero: r.predictedHero ?? null,
+          predictedMoment: r.predictedMoment ?? null,
+          defectTags: isPortraitStratum(s) ? currentDefects(r) : [],
+        };
+        return row;
+      });
+      const payload = {
+        version: "1",
+        frozen: false,
+        notes: "Exported from blind-review HTML · humanScore 1–5",
+        sourceExport: DATA.exportedAt,
+        rows,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "aesthetic-human-labels.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+    document.getElementById("prev").addEventListener("click", () => showAt(index - 1));
+    document.getElementById("next").addEventListener("click", () => showAt(index + 1));
+    document.getElementById("export").addEventListener("click", exportLabels);
+    document.addEventListener("keydown", (e) => {
+      if (e.key >= "1" && e.key <= "5") { setScore(Number(e.key), true); e.preventDefault(); }
+      if (e.key === "ArrowLeft") { showAt(index - 1); e.preventDefault(); }
+      if (e.key === "ArrowRight") { showAt(index + 1); e.preventDefault(); }
+    });
+    loadScores();
+    showAt(0);
+  </script>
+</body>
+</html>

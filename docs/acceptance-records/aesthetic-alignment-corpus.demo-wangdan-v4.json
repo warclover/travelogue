@@ -1,0 +1,22 @@
+{
+  "version": "1",
+  "notes": "王丹精选2 · demo-b388794e0a · 人像 · v4 校准",
+  "targetTotal": 30,
+  "seed": 46,
+  "strataQuotas": {
+    "person": 30,
+    "landscape": 0,
+    "group": 0,
+    "food": 0,
+    "general": 0
+  },
+  "trips": [
+    {
+      "tripId": "demo-b388794e0a",
+      "tripDir": "trips/demo-b388794e0a",
+      "tags": ["curated", "portrait", "v4_calibration"],
+      "sourcePhotos": "D:\\Photos\\王丹精选2",
+      "previewUrl": "http://127.0.0.1:8766/demo-b388794e0a/index.html"
+    }
+  ]
+}

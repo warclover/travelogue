@@ -680,14 +680,25 @@ def apply_aesthetic_alignment(
 
     app_cfg = cfg if cfg is not None else AppConfig()
     if trip is not None:
+        from travelogue.config.aesthetic_purpose_profiles import (
+            apply_purpose_pilot_overlay,
+            purpose_profile_for_trip,
+        )
         from travelogue.config.aesthetic_stratified import apply_stratum_preference_overlay
         from travelogue.curation.album_profile import stratum_preference_for_trip
 
-        pref = stratum_preference_for_trip(trip)
-        app_cfg = replace(
-            app_cfg,
-            aesthetic=apply_stratum_preference_overlay(app_cfg.aesthetic, pref),
-        )
+        profile = purpose_profile_for_trip(trip)
+        if profile:
+            app_cfg = replace(
+                app_cfg,
+                aesthetic=apply_purpose_pilot_overlay(app_cfg.aesthetic, profile),
+            )
+        else:
+            pref = stratum_preference_for_trip(trip)
+            app_cfg = replace(
+                app_cfg,
+                aesthetic=apply_stratum_preference_overlay(app_cfg.aesthetic, pref),
+            )
     ae_cfg = app_cfg.aesthetic
     report: dict[str, Any] = {"ml": False, "mllm": None, "portraitLite": 0, "portraitSubjectClarity": 0}
     if not ae_cfg.enabled:

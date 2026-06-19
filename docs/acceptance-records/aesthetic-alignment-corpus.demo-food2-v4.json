@@ -1,0 +1,22 @@
+{
+  "version": "1",
+  "notes": "food2 · demo-food2-v4 · 与 demo-53cda5151f（17 张）合并进 v4 food 层",
+  "targetTotal": 30,
+  "seed": 50,
+  "strataQuotas": {
+    "food": 30,
+    "person": 0,
+    "landscape": 0,
+    "group": 0,
+    "general": 0
+  },
+  "trips": [
+    {
+      "tripId": "demo-food2-v4",
+      "tripDir": "trips/demo-food2-v4",
+      "tags": ["food", "v4_calibration"],
+      "sourcePhotos": "D:\\Photos\\food2",
+      "previewUrl": "http://127.0.0.1:8766/demo-food2-v4/index.html"
+    }
+  ]
+}

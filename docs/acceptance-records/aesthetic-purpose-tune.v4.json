@@ -1,0 +1,233 @@
+{
+  "version": "1",
+  "recordedAt": "2026-06-19T05:59:53.682587+00:00",
+  "calibrationSource": "docs/acceptance-records/aesthetic-stratum-calibration.merged.v4.json",
+  "judgedSourceSuffix": "v4",
+  "exportSuffix": "v4-p2",
+  "seed": 44,
+  "minScoreGap": 0.012,
+  "trips": {
+    "demo-1506104ebf": {
+      "tripId": "demo-1506104ebf",
+      "role": "calibration",
+      "beforeRoleWinratePct": 37.5,
+      "beforeAssetReplayPct": 62.5,
+      "afterAssetReplayPct": 75.0,
+      "tune": {
+        "preference": "landscape",
+        "coverSubjectClarity": 0.3,
+        "heroComposition": 0.42,
+        "heroStrata": [
+          "landscape"
+        ],
+        "coverStrata": null,
+        "comparable": 8,
+        "alignedWins": 6,
+        "ties": 4,
+        "alignedWinratePct": 75.0,
+        "passed": true
+      },
+      "afterByPurpose": {
+        "hero": {
+          "comparable": 4,
+          "alignedWins": 3,
+          "ties": 2
+        },
+        "cover": {
+          "comparable": 4,
+          "alignedWins": 3,
+          "ties": 2
+        }
+      },
+      "exportJson": "docs/acceptance-records/purpose-pairwise.demo-1506104ebf.v4-p2.json",
+      "exportHtml": "docs/acceptance-records/purpose-pairwise.demo-1506104ebf.v4-p2.html",
+      "pairCount": 12
+    },
+    "demo-ef0cef1d1d": {
+      "tripId": "demo-ef0cef1d1d",
+      "role": "calibration",
+      "beforeRoleWinratePct": 42.86,
+      "beforeAssetReplayPct": 28.57,
+      "afterAssetReplayPct": 42.86,
+      "tune": {
+        "preference": "portrait",
+        "coverSubjectClarity": 0.3,
+        "heroComposition": 0.28,
+        "heroStrata": [
+          "landscape",
+          "person"
+        ],
+        "coverStrata": null,
+        "comparable": 7,
+        "alignedWins": 3,
+        "ties": 5,
+        "alignedWinratePct": 42.86,
+        "passed": false
+      },
+      "afterByPurpose": {
+        "cover": {
+          "comparable": 3,
+          "alignedWins": 1,
+          "ties": 3
+        },
+        "hero": {
+          "comparable": 4,
+          "alignedWins": 2,
+          "ties": 2
+        }
+      },
+      "exportJson": "docs/acceptance-records/purpose-pairwise.demo-ef0cef1d1d.v4-p2.json",
+      "exportHtml": "docs/acceptance-records/purpose-pairwise.demo-ef0cef1d1d.v4-p2.html",
+      "pairCount": 12
+    },
+    "demo-b388794e0a": {
+      "tripId": "demo-b388794e0a",
+      "role": "calibration",
+      "beforeRoleWinratePct": 75.0,
+      "beforeAssetReplayPct": 75.0,
+      "afterAssetReplayPct": 87.5,
+      "tune": {
+        "preference": "portrait",
+        "coverSubjectClarity": 0.3,
+        "heroComposition": 0.42,
+        "heroStrata": [
+          "landscape"
+        ],
+        "coverStrata": null,
+        "comparable": 8,
+        "alignedWins": 7,
+        "ties": 4,
+        "alignedWinratePct": 87.5,
+        "passed": true
+      },
+      "afterByPurpose": {
+        "hero": {
+          "comparable": 5,
+          "alignedWins": 4,
+          "ties": 1
+        },
+        "cover": {
+          "comparable": 3,
+          "alignedWins": 3,
+          "ties": 3
+        }
+      },
+      "exportJson": "docs/acceptance-records/purpose-pairwise.demo-b388794e0a.v4-p2.json",
+      "exportHtml": "docs/acceptance-records/purpose-pairwise.demo-b388794e0a.v4-p2.html",
+      "pairCount": 12
+    },
+    "demo-ecc41072d7": {
+      "tripId": "demo-ecc41072d7",
+      "role": "calibration",
+      "beforeRoleWinratePct": 58.33,
+      "beforeAssetReplayPct": 66.67,
+      "afterAssetReplayPct": 66.67,
+      "tune": {
+        "preference": "portrait",
+        "coverSubjectClarity": 0.4,
+        "heroComposition": 0.28,
+        "heroStrata": [
+          "landscape",
+          "person"
+        ],
+        "coverStrata": null,
+        "comparable": 12,
+        "alignedWins": 8,
+        "ties": 0,
+        "alignedWinratePct": 66.67,
+        "passed": true
+      },
+      "afterByPurpose": {
+        "cover": {
+          "comparable": 6,
+          "alignedWins": 4,
+          "ties": 0
+        },
+        "hero": {
+          "comparable": 6,
+          "alignedWins": 4,
+          "ties": 0
+        }
+      },
+      "exportJson": "docs/acceptance-records/purpose-pairwise.demo-ecc41072d7.v4-p2.json",
+      "exportHtml": "docs/acceptance-records/purpose-pairwise.demo-ecc41072d7.v4-p2.html",
+      "pairCount": 12
+    },
+    "demo-1d4f92d534": {
+      "tripId": "demo-1d4f92d534",
+      "role": "calibration",
+      "beforeRoleWinratePct": 0.0,
+      "beforeAssetReplayPct": 0.0,
+      "afterAssetReplayPct": 40.0,
+      "tune": {
+        "preference": "landscape",
+        "coverSubjectClarity": 0.3,
+        "heroComposition": 0.28,
+        "heroStrata": [
+          "landscape"
+        ],
+        "coverStrata": null,
+        "comparable": 5,
+        "alignedWins": 2,
+        "ties": 7,
+        "alignedWinratePct": 40.0,
+        "passed": false
+      },
+      "afterByPurpose": {
+        "hero": {
+          "comparable": 1,
+          "alignedWins": 0,
+          "ties": 5
+        },
+        "cover": {
+          "comparable": 4,
+          "alignedWins": 2,
+          "ties": 2
+        }
+      },
+      "exportJson": "docs/acceptance-records/purpose-pairwise.demo-1d4f92d534.v4-p2.json",
+      "exportHtml": "docs/acceptance-records/purpose-pairwise.demo-1d4f92d534.v4-p2.html",
+      "pairCount": 12
+    },
+    "demo-enshi-v4": {
+      "tripId": "demo-enshi-v4",
+      "role": "hold_out",
+      "beforeRoleWinratePct": 33.33,
+      "beforeAssetReplayPct": 44.44,
+      "afterAssetReplayPct": 55.56,
+      "tune": {
+        "preference": "landscape",
+        "coverSubjectClarity": 0.45,
+        "heroComposition": 0.28,
+        "heroStrata": [
+          "landscape"
+        ],
+        "coverStrata": null,
+        "comparable": 9,
+        "alignedWins": 5,
+        "ties": 3,
+        "alignedWinratePct": 55.56,
+        "passed": false
+      },
+      "afterByPurpose": {
+        "cover": {
+          "comparable": 3,
+          "alignedWins": 2,
+          "ties": 3
+        },
+        "hero": {
+          "comparable": 6,
+          "alignedWins": 3,
+          "ties": 0
+        }
+      },
+      "exportJson": "docs/acceptance-records/purpose-pairwise.demo-enshi-v4.v4-p2.json",
+      "exportHtml": "docs/acceptance-records/purpose-pairwise.demo-enshi-v4.v4-p2.html",
+      "pairCount": 12
+    }
+  },
+  "summary": {
+    "calibrationPassedReplay": "3/5",
+    "note": "Asset-based replay on frozen v4 pairs; re-export for optional human recheck"
+  }
+}

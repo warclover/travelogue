@@ -75,7 +75,7 @@ class AestheticMllmConfig:
     enabled: bool = False
     provider: str | None = None
     model: str = "qwen-vl-max"
-    shortlist_purposes: tuple[str, ...] = ("cover", "hero", "moment")
+    shortlist_purposes: tuple[str, ...] = ("moment",)
     shortlist_k: int = 5
     max_calls_per_trip: int = 20
     blend: float = 0.45
@@ -93,26 +93,65 @@ DEFAULT_STRATUM_BLENDS: dict[str, float] = {
     "general": 0.35,
 }
 
+# G3 · v4 pilot freeze (merged calibration · feat/aesthetic-alignment)
+PILOT_V4_STRATUM_BLENDS: dict[str, float] = {
+    "group": 0.6,
+    "person": 0.6,
+    "landscape": 0.6,
+    "food": 0.6,
+    "general": 0.25,
+}
+
+
+def _pilot_v4_presets() -> AestheticPurposePresets:
+    return AestheticPurposePresets(
+        cover=AestheticWeights(
+            composition=0.3176,
+            exposure=0.1589,
+            color=0.2647,
+            lighting=0.1589,
+            subject_clarity=0.4,
+        ),
+        hero=AestheticWeights(
+            composition=0.35,
+            exposure=0.18,
+            color=0.17,
+            lighting=0.12,
+            subject_clarity=0.2,
+        ),
+    )
+
+
+def _pilot_v4_stratum_blend_by_purpose() -> dict[str, tuple[str, ...]]:
+    return {
+        "hero": ("landscape", "person"),
+        "cover": ("landscape", "person"),
+    }
+
 
 @dataclass
 class AestheticConfig:
     """PA · photo aesthetic evaluation (Layer 1, path A · zero-dependency)."""
 
     enabled: bool = True
-    source: str = "rules"  # rules | rules+ml | mllm
+    source: str = "rules+ml"  # rules | rules+ml | mllm
     weights: AestheticWeights = field(default_factory=AestheticWeights)
-    presets: AestheticPurposePresets = field(default_factory=AestheticPurposePresets)
-    ml_calibrate: bool = False
+    presets: AestheticPurposePresets = field(default_factory=_pilot_v4_presets)
+    ml_calibrate: bool = True
     ml_calibrate_blend: float = 0.4
     learned_metric: str = "nima"
     learned_allow_cpu: bool = True
     learned_device: str | None = None
     warm_learned_on_ingest: bool = False
-    use_stratum_blend: bool = False
-    stratum_blends: dict[str, float] = field(default_factory=lambda: dict(DEFAULT_STRATUM_BLENDS))
-    stratum_blend_only: tuple[str, ...] = ()
-    stratum_blend_only_by_purpose: dict[str, tuple[str, ...]] = field(default_factory=dict)
-    use_album_relative: bool = False
+    use_stratum_blend: bool = True
+    stratum_blends: dict[str, float] = field(
+        default_factory=lambda: dict(PILOT_V4_STRATUM_BLENDS)
+    )
+    stratum_blend_only: tuple[str, ...] = ("landscape", "person", "group")
+    stratum_blend_only_by_purpose: dict[str, tuple[str, ...]] = field(
+        default_factory=_pilot_v4_stratum_blend_by_purpose
+    )
+    use_album_relative: bool = True
     album_relative_percentile: float = 0.75
     album_relative_lo: float = 0.7
     album_relative_hi: float = 1.3

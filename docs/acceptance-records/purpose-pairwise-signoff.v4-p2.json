@@ -1,0 +1,165 @@
+{
+  "version": "1",
+  "recordedAt": "2026-06-19T06:25:51.718170+00:00",
+  "frozen": true,
+  "frozenAt": "2026-06-19T06:25:51.718186+00:00",
+  "notes": "AC-SC-03 v4-p2 · Phase 2 tune export · author pairwise 2026-06-19",
+  "targetWinratePct": 60.0,
+  "calibrationSource": "docs/acceptance-records/aesthetic-stratum-calibration.merged.v4.json",
+  "tuneReport": "docs/acceptance-records/aesthetic-purpose-tune.v4.json",
+  "pilotConfigDraft": "docs/acceptance-records/aesthetic-pilot-config.freeze.v4.yaml",
+  "canonicalGate": {
+    "rule": "v4-p2 校准 5 本 · 整本 alignedWinratePct >= 60%",
+    "trips": {
+      "demo-1506104ebf": {
+        "tripId": "demo-1506104ebf",
+        "pairCount": 12,
+        "comparable": 12,
+        "alignedWins": 6,
+        "alignedWinratePct": 50.0,
+        "passed": false,
+        "byPurpose": {
+          "cover": {
+            "comparable": 6,
+            "alignedWins": 3,
+            "ties": 0
+          },
+          "hero": {
+            "comparable": 6,
+            "alignedWins": 3,
+            "ties": 0
+          }
+        },
+        "scoredSource": "docs\\acceptance-records\\purpose-pairwise-scored.demo-1506104ebf.v4-p2.json"
+      },
+      "demo-ef0cef1d1d": {
+        "tripId": "demo-ef0cef1d1d",
+        "pairCount": 12,
+        "comparable": 12,
+        "alignedWins": 9,
+        "alignedWinratePct": 75.0,
+        "passed": true,
+        "byPurpose": {
+          "cover": {
+            "comparable": 6,
+            "alignedWins": 4,
+            "ties": 0
+          },
+          "hero": {
+            "comparable": 6,
+            "alignedWins": 5,
+            "ties": 0
+          }
+        },
+        "scoredSource": "docs\\acceptance-records\\purpose-pairwise-scored.demo-ef0cef1d1d.v4-p2.json"
+      },
+      "demo-b388794e0a": {
+        "tripId": "demo-b388794e0a",
+        "pairCount": 12,
+        "comparable": 12,
+        "alignedWins": 10,
+        "alignedWinratePct": 83.33,
+        "passed": true,
+        "byPurpose": {
+          "cover": {
+            "comparable": 6,
+            "alignedWins": 4,
+            "ties": 0
+          },
+          "hero": {
+            "comparable": 6,
+            "alignedWins": 6,
+            "ties": 0
+          }
+        },
+        "scoredSource": "docs\\acceptance-records\\purpose-pairwise-scored.demo-b388794e0a.v4-p2.json"
+      },
+      "demo-ecc41072d7": {
+        "tripId": "demo-ecc41072d7",
+        "pairCount": 12,
+        "comparable": 10,
+        "alignedWins": 3,
+        "alignedWinratePct": 30.0,
+        "passed": false,
+        "byPurpose": {
+          "hero": {
+            "comparable": 6,
+            "alignedWins": 1,
+            "ties": 0
+          },
+          "cover": {
+            "comparable": 4,
+            "alignedWins": 2,
+            "ties": 2
+          }
+        },
+        "scoredSource": "docs\\acceptance-records\\purpose-pairwise-scored.demo-ecc41072d7.v4-p2.json"
+      },
+      "demo-1d4f92d534": {
+        "tripId": "demo-1d4f92d534",
+        "pairCount": 12,
+        "comparable": 12,
+        "alignedWins": 4,
+        "alignedWinratePct": 33.33,
+        "passed": false,
+        "byPurpose": {
+          "cover": {
+            "comparable": 6,
+            "alignedWins": 2,
+            "ties": 0
+          },
+          "hero": {
+            "comparable": 6,
+            "alignedWins": 2,
+            "ties": 0
+          }
+        },
+        "scoredSource": "docs\\acceptance-records\\purpose-pairwise-scored.demo-1d4f92d534.v4-p2.json"
+      }
+    },
+    "passedTripCount": 2,
+    "requiredTripCount": 5,
+    "acSc03Passed": false,
+    "strictAllPassed": false
+  },
+  "holdOut": {
+    "trips": {
+      "demo-enshi-v4": {
+        "tripId": "demo-enshi-v4",
+        "pairCount": 12,
+        "comparable": 12,
+        "alignedWins": 5,
+        "alignedWinratePct": 41.67,
+        "passed": false,
+        "byPurpose": {
+          "cover": {
+            "comparable": 6,
+            "alignedWins": 3,
+            "ties": 0
+          },
+          "hero": {
+            "comparable": 6,
+            "alignedWins": 2,
+            "ties": 0
+          }
+        },
+        "scoredSource": "docs\\acceptance-records\\purpose-pairwise-scored.demo-enshi-v4.v4-p2.json"
+      }
+    }
+  },
+  "aggregate": {
+    "calibrationTripCount": 5,
+    "comparable": 58,
+    "alignedWins": 32,
+    "alignedWinratePct": 55.17,
+    "passed": false
+  },
+  "acceptance": {
+    "AC-SC-03": {
+      "passed": false,
+      "calibrationPassed": "2/5",
+      "holdOutWinratePct": 41.67,
+      "aggregateWinratePct": 55.17
+    }
+  }
+}

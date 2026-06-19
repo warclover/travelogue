@@ -29,7 +29,7 @@ DEFAULT_MIN_N = {
     "food": 20,
     "general": 20,
 }
-DEFERRED_STRATA = frozenset({"food"})
+DEFERRED_STRATA: frozenset[str] = frozenset({"food"})
 AC_SC_02_TARGET = 0.10
 
 
@@ -68,10 +68,12 @@ def build_signoff_report(
     min_stratum_samples: dict[str, int] | None = None,
     metric: str = "nima",
     allow_cpu: bool = True,
+    deferred_strata: frozenset[str] | None = None,
 ) -> dict[str, Any]:
     min_n = dict(DEFAULT_MIN_N)
     if min_stratum_samples:
         min_n.update(min_stratum_samples)
+    deferred = deferred_strata if deferred_strata is not None else DEFERRED_STRATA
 
     rows = list(labels_doc.get("rows") or [])
     trip_specs = [t for t in (corpus.get("trips") or []) if not str(t.get("tripId") or "").startswith("TBD")]
@@ -97,7 +99,7 @@ def build_signoff_report(
 
     ac_sc_00: dict[str, bool | None] = {}
     for stratum, need in min_n.items():
-        if stratum in DEFERRED_STRATA:
+        if stratum in deferred:
             ac_sc_00[stratum] = None
             continue
         n = (per_stratum.get(stratum) or {}).get("sampleCount") or 0
@@ -147,7 +149,7 @@ def build_signoff_report(
             "AC-SC-00": {
                 "passed": bool(active_checks) and all(active_checks),
                 "perStratum": ac_sc_00,
-                "deferredStrata": sorted(DEFERRED_STRATA),
+                "deferredStrata": sorted(deferred),
                 "note": "每 stratum 达 min-n（food 搁置跳过）",
             },
             "AC-SC-01": {
@@ -178,7 +180,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--write-calibration", type=Path, default=Path("docs/acceptance-records/aesthetic-stratum-calibration.merged.v3.json"))
     parser.add_argument("--metric", type=str, default="nima")
     parser.add_argument("--no-cpu", action="store_true")
+    parser.add_argument(
+        "--defer-strata",
+        type=str,
+        default="food",
+        help="Comma-separated strata skipped for AC-SC-00 min-n (empty = none)",
+    )
     args = parser.parse_args(argv)
+
+    deferred = frozenset(
+        s.strip()
+        for s in args.defer_strata.split(",")
+        if s.strip() and s.strip().lower() not in ("none", "-")
+    )
 
     if not pyiqa_available():
         print("E_AA_SIGNOFF: pyiqa not installed", file=sys.stderr)
@@ -193,6 +207,7 @@ def main(argv: list[str] | None = None) -> int:
         labels_doc=labels_doc,
         metric=str(args.metric),
         allow_cpu=not args.no_cpu,
+        deferred_strata=deferred,
     )
     report["labelsSource"] = str(labels_path.relative_to(ROOT)).replace("\\", "/")
 

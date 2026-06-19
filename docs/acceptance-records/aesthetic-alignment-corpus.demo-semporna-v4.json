@@ -1,0 +1,22 @@
+{
+  "version": "1",
+  "notes": "仙本那精选全集2 · demo-1d4f92d534 · 与 demo-d66fe642a9 同源 · v4 校准",
+  "targetTotal": 25,
+  "seed": 48,
+  "strataQuotas": {
+    "person": 12,
+    "landscape": 13,
+    "group": 0,
+    "food": 0,
+    "general": 0
+  },
+  "trips": [
+    {
+      "tripId": "demo-1d4f92d534",
+      "tripDir": "trips/demo-1d4f92d534",
+      "tags": ["travel", "mixed", "semporna_v2", "v4_calibration"],
+      "sourcePhotos": "D:\\Photos\\仙本那精选全集2",
+      "previewUrl": "http://127.0.0.1:8766/demo-1d4f92d534/index.html"
+    }
+  ]
+}

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>云南自驾精选 v4 盲评</title>
+  <style>
+    :root {
+      --bg: #0f1115; --panel: #1a1d24; --text: #e8eaed; --muted: #9aa0a6;
+      --accent: #6ea8fe; --ok: #3dd68c; --border: #2a2f3a;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 16px 20px 32px; }
+    header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    h1 { font-size: 1.1rem; font-weight: 600; margin: 0; }
+    .meta { color: var(--muted); font-size: 0.85rem; }
+    .progress { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; margin: 8px 0 16px; }
+    .progress > i { display: block; height: 100%; width: 0%; background: var(--ok); transition: width .2s; }
+    .stage { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .img-box { display: flex; align-items: center; justify-content: center; min-height: 52vh; background: #000; border-radius: 8px; overflow: hidden; }
+    .img-box img { max-width: 100%; max-height: 70vh; object-fit: contain; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+    button, .score-btn {
+      border: 1px solid var(--border); background: #252932; color: var(--text);
+      padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.95rem;
+    }
+    button:hover, .score-btn:hover { border-color: var(--accent); }
+    button.primary { background: #2b4a7a; border-color: #3d6cb9; }
+    button.primary:hover { background: #35598f; }
+    .score-btn.selected { background: #2d5a3d; border-color: var(--ok); }
+    .score-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .hint { color: var(--muted); font-size: 0.82rem; margin-top: 10px; line-height: 1.5; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #252932; font-size: 0.75rem; color: var(--muted); }
+    .stratum-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; align-items: center; }
+    .stratum-btn { padding: 4px 10px; font-size: 0.8rem; }
+    .stratum-btn.selected { background: #2b4a7a; border-color: var(--accent); }
+    .defect-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; align-items: center; }
+    .defect-btn { padding: 4px 10px; font-size: 0.8rem; }
+    .defect-btn.selected { background: #5a3030; border-color: #c96; }
+    .rubric { background: #12151c; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 0.82rem; line-height: 1.55; color: var(--muted); }
+    .rubric strong { color: var(--text); }
+    @media (max-width: 640px) { .img-box { min-height: 40vh; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 id="title">云南自驾精选 v4 盲评</h1>
+      <div class="meta" id="counter">—</div>
+    </header>
+    <div class="progress"><i id="bar"></i></div>
+    <div class="stage">
+      <div class="meta" style="margin-bottom:8px">
+        <span class="badge" id="stratumBadge">—</span>
+        <span id="assetId" style="margin-left:8px"></span>
+      </div>
+      <div class="stratum-row" id="stratumPick"></div>
+      <div class="defect-row" id="defectPick" hidden></div>
+      <div class="img-box"><img id="photo" alt="review" /></div>
+      <div class="rubric" id="rubric"></div>
+      <div class="score-row" id="scores"></div>
+      <div class="toolbar">
+        <button type="button" id="prev">← 上一张</button>
+        <button type="button" id="next">下一张 →</button>
+        <button type="button" id="export" class="primary">下载标签 JSON</button>
+      </div>
+      <p class="hint">
+        键盘：<kbd>1</kbd>–<kbd>5</kbd> 打分 · <kbd>←</kbd>/<kbd>→</kbd> 切换 · 进度自动保存在本机浏览器。<br/>
+        先确认照片类型（风景/人像/合影/美食），类型不对请先点上方按钮修改，再按对应标准打分。<br/>
+        单人照/合影可勾选「闭眼」「糊脸」缺陷标签（可选，导出至 defectTags）。
+      </p>
+    </div>
+  </div>
+  <script id="review-data" type="application/json">{"title": "云南自驾精选 v4 盲评", "exportedAt": "2026-06-19T05:00:33.371485+00:00", "sampleCount": 35, "tripBases": {"demo-ef0cef1d1d": "../../trips/demo-ef0cef1d1d"}, "rows": [{"displayOrder": 1, "assetId": "asset-016", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-016-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5613, "predictedCover": 0.5283049999999999, "predictedHero": 0.574247, "predictedMoment": 0.57635, "defectTags": []}, {"displayOrder": 2, "assetId": "asset-033", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-033-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.6396, "predictedCover": 0.6143000000000001, "predictedHero": 0.6480710000000001, "predictedMoment": 0.6685340000000001, "defectTags": []}, {"displayOrder": 3, "assetId": "asset-027", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-027-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.6213, "predictedCover": 0.584765, "predictedHero": 0.635434, "predictedMoment": 0.659012, "defectTags": []}, {"displayOrder": 4, "assetId": "asset-030", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-030-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.577, "predictedCover": 0.5416949999999999, "predictedHero": 0.596283, "predictedMoment": 0.607382, "defectTags": []}, {"displayOrder": 5, "assetId": "asset-009", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-009-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5619, "predictedCover": 0.54644, "predictedHero": 0.58767, "predictedMoment": 0.5786720000000001, "defectTags": []}, {"displayOrder": 6, "assetId": "asset-022", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-022-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.638, "predictedCover": 0.6087549999999999, "predictedHero": 0.650695, "predictedMoment": 0.658664, "defectTags": []}, {"displayOrder": 7, "assetId": "asset-041", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-041-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5843, "predictedCover": 0.552075, "predictedHero": 0.593707, "predictedMoment": 0.6135740000000001, "defectTags": []}, {"displayOrder": 8, "assetId": "asset-025", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-025-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.6294, "predictedCover": 0.60399, "predictedHero": 0.646549, "predictedMoment": 0.65278, "defectTags": []}, {"displayOrder": 9, "assetId": "asset-010", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-010-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5947, "predictedCover": 0.56348, "predictedHero": 0.611324, "predictedMoment": 0.612522, "defectTags": []}, {"displayOrder": 10, "assetId": "asset-019", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-019-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.6086, "predictedCover": 0.574265, "predictedHero": 0.6306630000000001, "predictedMoment": 0.657586, "defectTags": []}, {"displayOrder": 11, "assetId": "asset-013", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-013-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5606, "predictedCover": 0.52149, "predictedHero": 0.576534, "predictedMoment": 0.595534, "defectTags": []}, {"displayOrder": 12, "assetId": "asset-008", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-008-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5872, "predictedCover": 0.54802, "predictedHero": 0.601326, "predictedMoment": 0.619394, "defectTags": []}, {"displayOrder": 13, "assetId": "asset-015", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-015-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5665, "predictedCover": 0.52154, "predictedHero": 0.585376, "predictedMoment": 0.608708, "defectTags": []}, {"displayOrder": 14, "assetId": "asset-028", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-028-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5954, "predictedCover": 0.5616049999999999, "predictedHero": 0.601707, "predictedMoment": 0.616512, "defectTags": []}, {"displayOrder": 15, "assetId": "asset-005", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-005-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5668, "predictedCover": 0.546075, "predictedHero": 0.5910030000000001, "predictedMoment": 0.601164, "defectTags": []}, {"displayOrder": 16, "assetId": "asset-039", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-039-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5871, "predictedCover": 0.556565, "predictedHero": 0.5947830000000001, "predictedMoment": 0.6132580000000001, "defectTags": []}, {"displayOrder": 17, "assetId": "asset-006", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-006-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5799, "predictedCover": 0.550315, "predictedHero": 0.60198, "predictedMoment": 0.6190100000000001, "defectTags": []}, {"displayOrder": 18, "assetId": "asset-031", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-031-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.6227, "predictedCover": 0.60494, "predictedHero": 0.627115, "predictedMoment": 0.633136, "defectTags": []}, {"displayOrder": 19, "assetId": "asset-040", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-040-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5904, "predictedCover": 0.55309, "predictedHero": 0.609256, "predictedMoment": 0.622974, "defectTags": []}, {"displayOrder": 20, "assetId": "asset-037", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-037-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5591, "predictedCover": 0.524625, "predictedHero": 0.570298, "predictedMoment": 0.569992, "defectTags": []}, {"displayOrder": 21, "assetId": "asset-014", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-014-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.6123, "predictedCover": 0.57907, "predictedHero": 0.624436, "predictedMoment": 0.630262, "defectTags": []}, {"displayOrder": 22, "assetId": "asset-023", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-023-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.6284, "predictedCover": 0.6007549999999999, "predictedHero": 0.648059, "predictedMoment": 0.671174, "defectTags": []}, {"displayOrder": 23, "assetId": "asset-007", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-007-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.617, "predictedCover": 0.57849, "predictedHero": 0.6227010000000001, "predictedMoment": 0.6430840000000001, "defectTags": []}, {"displayOrder": 24, "assetId": "asset-011", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-011-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.556, "predictedCover": 0.5053099999999999, "predictedHero": 0.565948, "predictedMoment": 0.593998, "defectTags": []}, {"displayOrder": 25, "assetId": "asset-036", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-036-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.6263, "predictedCover": 0.60743, "predictedHero": 0.639979, "predictedMoment": 0.623236, "defectTags": []}, {"displayOrder": 26, "assetId": "asset-029", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-029-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.5961, "predictedCover": 0.57751, "predictedHero": 0.6149730000000001, "predictedMoment": 0.6167320000000001, "defectTags": []}, {"displayOrder": 27, "assetId": "asset-024", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-024-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5361, "predictedCover": 0.504795, "predictedHero": 0.558263, "predictedMoment": 0.5763820000000001, "defectTags": []}, {"displayOrder": 28, "assetId": "asset-038", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-038-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.6301, "predictedCover": 0.6031299999999999, "predictedHero": 0.642217, "predictedMoment": 0.663464, "defectTags": []}, {"displayOrder": 29, "assetId": "asset-034", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-034-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.6178, "predictedCover": 0.58763, "predictedHero": 0.6292880000000001, "predictedMoment": 0.6441560000000001, "defectTags": []}, {"displayOrder": 30, "assetId": "asset-020", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-020-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.6016, "predictedCover": 0.56904, "predictedHero": 0.624733, "predictedMoment": 0.6522380000000001, "defectTags": []}, {"displayOrder": 31, "assetId": "asset-032", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-032-w1600.webp", "stratum": "person", "stratumAuto": "person", "predictedOverall": 0.6085, "predictedCover": 0.576695, "predictedHero": 0.630792, "predictedMoment": 0.649466, "defectTags": []}, {"displayOrder": 32, "assetId": "asset-026", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-026-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.6174, "predictedCover": 0.58761, "predictedHero": 0.6243460000000001, "predictedMoment": 0.6205620000000001, "defectTags": []}, {"displayOrder": 33, "assetId": "asset-021", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-021-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5135, "predictedCover": 0.48933, "predictedHero": 0.54255, "predictedMoment": 0.549886, "defectTags": []}, {"displayOrder": 34, "assetId": "asset-012", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-012-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5968, "predictedCover": 0.547395, "predictedHero": 0.600782, "predictedMoment": 0.627956, "defectTags": []}, {"displayOrder": 35, "assetId": "asset-017", "tripId": "demo-ef0cef1d1d", "displayFile": "assets/asset-017-w1600.webp", "stratum": "landscape", "stratumAuto": "landscape", "predictedOverall": 0.5398, "predictedCover": 0.500845, "predictedHero": 0.553602, "predictedMoment": 0.573532, "defectTags": []}]}</script>
+  <script>
+    const DATA = JSON.parse(document.getElementById("review-data").textContent);
+    const STORAGE_KEY = "aesthetic-blind-docs\\acceptance-records\\aesthetic-alignment-corpus.demo-yunnan-v4.json-45";
+    const SCORE_LABELS = {1:"废片",2:"偏弱",3:"一般",4:"好",5:"很好"};
+    const STRATUM_LABELS = {
+      person: "单人照", group: "合影", landscape: "风景", food: "美食", general: "其他"
+    };
+    const RUBRICS = {
+      person: "5=表情自然清晰 · 3=平淡或有瑕疵 · 1=糊/闭眼/废片",
+      group: "5=关键人物清晰、表情可接受 · 3=有人略糊 · 1=多人闭眼/糊脸",
+      landscape: "5=构图光线舒服、有代表性 · 3=普通记录 · 1=平淡或技术硬伤",
+      food: "5=诱人、主体清楚 · 3=食欲感一般 · 1=难辨认/无食欲",
+      general: "按「是否值得在这本游记里重点展示」打 1–5"
+    };
+    const STRATA = ["landscape", "person", "group", "food", "general"];
+    const DEFECT_TAGS = ["closed_eyes", "blur_face"];
+    const DEFECT_LABELS = { closed_eyes: "闭眼", blur_face: "糊脸" };
+    const PORTRAIT_STRATA = new Set(["person", "group"]);
+    let index = 0;
+    let scores = {};
+    let strata = {};
+    let defects = {};
+
+    function loadScores() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          scores = parsed.scores || parsed;
+          strata = parsed.strata || {};
+          defects = parsed.defects || {};
+        }
+      } catch (e) { scores = {}; strata = {}; defects = {}; }
+      for (const row of DATA.rows) {
+        if (!defects[row.assetId] && row.defectTags && row.defectTags.length) {
+          defects[row.assetId] = row.defectTags.slice();
+        }
+      }
+    }
+    function saveScores() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ scores, strata, defects }));
+      updateProgress();
+    }
+    function currentStratum(row) {
+      return strata[row.assetId] || row.stratum || "general";
+    }
+    function currentDefects(row) {
+      return defects[row.assetId] || [];
+    }
+    function isPortraitStratum(s) {
+      return PORTRAIT_STRATA.has(s);
+    }
+    function imageUrl(row) {
+      const base = (DATA.tripBases && DATA.tripBases[row.tripId]) || "";
+      const file = (row.displayFile || "").replace(/^\//, "");
+      if (base) return base.replace(/\/$/, "") + "/" + file;
+      return file;
+    }
+    function ratedCount() {
+      return DATA.rows.filter(r => scores[r.assetId] != null).length;
+    }
+    function updateProgress() {
+      const n = ratedCount();
+      const total = DATA.rows.length;
+      document.getElementById("bar").style.width = (total ? (100 * n / total) : 0) + "%";
+      document.getElementById("counter").textContent = `已评 ${n} / ${total} · 第 ${index + 1} 张`;
+    }
+    function renderStratumPick() {
+      const row = DATA.rows[index];
+      const box = document.getElementById("stratumPick");
+      box.innerHTML = "<span style='color:var(--muted);font-size:0.8rem'>类型：</span>";
+      const cur = currentStratum(row);
+      for (const s of STRATA) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "stratum-btn" + (cur === s ? " selected" : "");
+        btn.textContent = STRATUM_LABELS[s] || s;
+        btn.addEventListener("click", () => {
+          strata[row.assetId] = s;
+          saveScores();
+          showAt(index);
+        });
+        box.appendChild(btn);
+      }
+    }
+    function renderDefectPick() {
+      const row = DATA.rows[index];
+      const box = document.getElementById("defectPick");
+      const s = currentStratum(row);
+      if (!isPortraitStratum(s)) {
+        box.hidden = true;
+        box.innerHTML = "";
+        return;
+      }
+      box.hidden = false;
+      box.innerHTML = "<span style='color:var(--muted);font-size:0.8rem'>人像缺陷（可选）：</span>";
+      const cur = new Set(currentDefects(row));
+      for (const tag of DEFECT_TAGS) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "defect-btn" + (cur.has(tag) ? " selected" : "");
+        btn.textContent = DEFECT_LABELS[tag] || tag;
+        btn.addEventListener("click", () => {
+          const next = new Set(currentDefects(row));
+          if (next.has(tag)) next.delete(tag); else next.add(tag);
+          defects[row.assetId] = Array.from(next);
+          saveScores();
+          renderDefectPick();
+        });
+        box.appendChild(btn);
+      }
+    }
+    function renderRubric() {
+      const row = DATA.rows[index];
+      const s = currentStratum(row);
+      const el = document.getElementById("rubric");
+      el.innerHTML = "<strong>" + (STRATUM_LABELS[s] || s) + " · 打分参考</strong><br/>" + (RUBRICS[s] || "");
+    }
+    function renderScores() {
+      const row = DATA.rows[index];
+      const box = document.getElementById("scores");
+      box.innerHTML = "";
+      for (let s = 1; s <= 5; s++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "score-btn" + (scores[row.assetId] === s ? " selected" : "");
+        btn.textContent = s + " · " + SCORE_LABELS[s];
+        btn.addEventListener("click", () => setScore(s, true));
+        box.appendChild(btn);
+      }
+    }
+    function showAt(i) {
+      index = Math.max(0, Math.min(DATA.rows.length - 1, i));
+      const row = DATA.rows[index];
+      document.getElementById("photo").src = imageUrl(row);
+      const s = currentStratum(row);
+      document.getElementById("stratumBadge").textContent = STRATUM_LABELS[s] || s;
+      document.getElementById("assetId").textContent = row.assetId || "";
+      renderStratumPick();
+      renderDefectPick();
+      renderRubric();
+      renderScores();
+      updateProgress();
+    }
+    function setScore(s, advance) {
+      const row = DATA.rows[index];
+      scores[row.assetId] = s;
+      saveScores();
+      renderScores();
+      if (advance && index < DATA.rows.length - 1) showAt(index + 1);
+    }
+    function exportLabels() {
+      const rows = DATA.rows.map(r => {
+        const s = currentStratum(r);
+        const row = {
+          assetId: r.assetId,
+          tripId: r.tripId,
+          stratum: s,
+          stratumAuto: r.stratumAuto || r.stratum,
+          displayFile: r.displayFile,
+          humanScore: scores[r.assetId] ?? null,
+          predictedOverall: r.predictedOverall ?? null,
+          predictedCover: r.predictedCover ?? null,
+          predictedHero: r.predictedHero ?? null,
+          predictedMoment: r.predictedMoment ?? null,
+          defectTags: isPortraitStratum(s) ? currentDefects(r) : [],
+        };
+        return row;
+      });
+      const payload = {
+        version: "1",
+        frozen: false,
+        notes: "Exported from blind-review HTML · humanScore 1–5",
+        sourceExport: DATA.exportedAt,
+        rows,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "aesthetic-human-labels.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+    document.getElementById("prev").addEventListener("click", () => showAt(index - 1));
+    document.getElementById("next").addEventListener("click", () => showAt(index + 1));
+    document.getElementById("export").addEventListener("click", exportLabels);
+    document.addEventListener("keydown", (e) => {
+      if (e.key >= "1" && e.key <= "5") { setScore(Number(e.key), true); e.preventDefault(); }
+      if (e.key === "ArrowLeft") { showAt(index - 1); e.preventDefault(); }
+      if (e.key === "ArrowRight") { showAt(index + 1); e.preventDefault(); }
+    });
+    loadScores();
+    showAt(0);
+  </script>
+</body>
+</html>

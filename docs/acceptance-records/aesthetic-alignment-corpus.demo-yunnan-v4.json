@@ -1,0 +1,22 @@
+{
+  "version": "1",
+  "notes": "云南自驾精选 · demo-ef0cef1d1d · 人像为主 · v4 校准",
+  "targetTotal": 35,
+  "seed": 45,
+  "strataQuotas": {
+    "person": 28,
+    "landscape": 7,
+    "group": 0,
+    "food": 0,
+    "general": 0
+  },
+  "trips": [
+    {
+      "tripId": "demo-ef0cef1d1d",
+      "tripDir": "trips/demo-ef0cef1d1d",
+      "tags": ["travel", "portrait_heavy", "v4_calibration"],
+      "sourcePhotos": "D:\\Photos\\我家云南自驾精选",
+      "previewUrl": "http://127.0.0.1:8766/demo-ef0cef1d1d/index.html"
+    }
+  ]
+}

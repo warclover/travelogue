@@ -1,0 +1,147 @@
+{
+  "version": "1",
+  "recordedAt": "2026-06-19T06:29:39.278578+00:00",
+  "exportSuffix": "v4-p3",
+  "trips": {
+    "demo-1506104ebf": {
+      "tripId": "demo-1506104ebf",
+      "role": "calibration",
+      "kind": "landscape",
+      "beforeHumanWinratePct": 50.0,
+      "afterProfileReplayPct": 50.0,
+      "profile": {
+        "stratumPreference": "landscape",
+        "stratumBlendOnly": [
+          "landscape"
+        ],
+        "heroStrata": [
+          "landscape"
+        ],
+        "coverStrata": [
+          "landscape"
+        ],
+        "coverSubjectClarity": 0.15,
+        "heroComposition": 0.35,
+        "albumRelativePercentile": 0.7
+      },
+      "exportJson": "docs/acceptance-records/purpose-pairwise.demo-1506104ebf.v4-p3.json",
+      "exportHtml": "docs/acceptance-records/purpose-pairwise.demo-1506104ebf.v4-p3.html"
+    },
+    "demo-ef0cef1d1d": {
+      "tripId": "demo-ef0cef1d1d",
+      "role": "calibration",
+      "kind": "portrait",
+      "beforeHumanWinratePct": 75.0,
+      "afterProfileReplayPct": 58.33,
+      "profile": {
+        "stratumPreference": "portrait",
+        "heroStrata": [
+          "landscape",
+          "person"
+        ],
+        "coverSubjectClarity": 0.25,
+        "heroComposition": 0.28
+      },
+      "exportJson": "docs/acceptance-records/purpose-pairwise.demo-ef0cef1d1d.v4-p3.json",
+      "exportHtml": "docs/acceptance-records/purpose-pairwise.demo-ef0cef1d1d.v4-p3.html"
+    },
+    "demo-b388794e0a": {
+      "tripId": "demo-b388794e0a",
+      "role": "calibration",
+      "kind": "portrait",
+      "beforeHumanWinratePct": 83.33,
+      "afterProfileReplayPct": 66.67,
+      "profile": {
+        "stratumPreference": "portrait",
+        "heroStrata": [
+          "landscape"
+        ],
+        "coverSubjectClarity": 0.3,
+        "heroComposition": 0.42
+      },
+      "exportJson": "docs/acceptance-records/purpose-pairwise.demo-b388794e0a.v4-p3.json",
+      "exportHtml": "docs/acceptance-records/purpose-pairwise.demo-b388794e0a.v4-p3.html"
+    },
+    "demo-ecc41072d7": {
+      "tripId": "demo-ecc41072d7",
+      "role": "calibration",
+      "kind": "mixed",
+      "beforeHumanWinratePct": 30.0,
+      "afterProfileReplayPct": 40.0,
+      "profile": {
+        "stratumPreference": "mixed",
+        "heroStrata": [
+          "landscape",
+          "person",
+          "group"
+        ],
+        "coverStrata": [
+          "landscape",
+          "person",
+          "group"
+        ],
+        "coverSubjectClarity": 0.35,
+        "heroComposition": 0.22,
+        "heroSubjectClarity": 0.25
+      },
+      "exportJson": "docs/acceptance-records/purpose-pairwise.demo-ecc41072d7.v4-p3.json",
+      "exportHtml": "docs/acceptance-records/purpose-pairwise.demo-ecc41072d7.v4-p3.html"
+    },
+    "demo-1d4f92d534": {
+      "tripId": "demo-1d4f92d534",
+      "role": "calibration",
+      "kind": "underwater",
+      "beforeHumanWinratePct": 33.33,
+      "afterProfileReplayPct": 16.67,
+      "profile": {
+        "stratumPreference": "landscape",
+        "stratumBlendOnly": [
+          "landscape",
+          "person"
+        ],
+        "heroStrata": [
+          "landscape"
+        ],
+        "coverStrata": [
+          "landscape"
+        ],
+        "coverComposition": 0.5,
+        "heroComposition": 0.25,
+        "heroColor": 0.2,
+        "albumRelativePercentile": 0.65
+      },
+      "exportJson": "docs/acceptance-records/purpose-pairwise.demo-1d4f92d534.v4-p3.json",
+      "exportHtml": "docs/acceptance-records/purpose-pairwise.demo-1d4f92d534.v4-p3.html"
+    },
+    "demo-enshi-v4": {
+      "tripId": "demo-enshi-v4",
+      "role": "hold_out",
+      "kind": "mixed",
+      "beforeHumanWinratePct": 41.67,
+      "afterProfileReplayPct": 33.33,
+      "profile": {
+        "stratumPreference": "mixed",
+        "heroStrata": [
+          "landscape",
+          "person",
+          "group"
+        ],
+        "coverStrata": [
+          "landscape",
+          "person",
+          "group"
+        ],
+        "coverSubjectClarity": 0.45,
+        "heroComposition": 0.22,
+        "heroSubjectClarity": 0.25
+      },
+      "exportJson": "docs/acceptance-records/purpose-pairwise.demo-enshi-v4.v4-p3.json",
+      "exportHtml": "docs/acceptance-records/purpose-pairwise.demo-enshi-v4.v4-p3.html"
+    }
+  },
+  "summary": {
+    "calibrationPassedReplay": "1/5",
+    "aggregateReplayWinratePct": 46.55,
+    "profilesPath": "docs/acceptance-records/aesthetic-purpose-profiles.v4.json"
+  }
+}

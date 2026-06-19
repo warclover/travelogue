@@ -158,6 +158,7 @@ def test_build_blind_review_html_contains_rows():
         "exportedAt": "t",
         "sampleCount": 1,
         "seed": 1,
+        "trips": [{"tripId": "demo", "tripDir": "trips/demo"}],
         "rows": [
             {
                 "displayOrder": 1,
@@ -171,6 +172,7 @@ def test_build_blind_review_html_contains_rows():
     }
     html = build_blind_review_html(export, title="test")
     assert "a1" in html
+    assert "../../trips/demo" in html
     assert "assets/a.webp" in html
     assert "defectPick" in html
     assert "closed_eyes" in html

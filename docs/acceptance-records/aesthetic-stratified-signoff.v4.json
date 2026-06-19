@@ -1,0 +1,494 @@
+{
+  "version": "1",
+  "notes": "分层精选 signoff · merged v4 · 522 labels",
+  "corpusVersion": "4",
+  "labelsSource": "docs/acceptance-records/aesthetic-human-labels.merged.v4.json",
+  "recordedAt": "2026-06-19T05:34:11.948824+00:00",
+  "frozen": true,
+  "minStratumSamples": {
+    "group": 30,
+    "person": 30,
+    "landscape": 20,
+    "food": 20,
+    "general": 20
+  },
+  "perStratum": {
+    "food": {
+      "sampleCount": 47,
+      "rulesSrcc": 0.02,
+      "stratumBlendSrcc": 0.1064,
+      "delta": 0.0864,
+      "passedAcSc01": true
+    },
+    "general": {
+      "sampleCount": 4,
+      "rulesSrcc": -0.2582,
+      "stratumBlendSrcc": 0.7746,
+      "delta": 1.0328,
+      "passedAcSc01": true
+    },
+    "group": {
+      "sampleCount": 29,
+      "rulesSrcc": 0.2258,
+      "stratumBlendSrcc": 0.3889,
+      "delta": 0.1631,
+      "passedAcSc01": true
+    },
+    "landscape": {
+      "sampleCount": 266,
+      "rulesSrcc": -0.109,
+      "stratumBlendSrcc": 0.0927,
+      "delta": 0.2017,
+      "passedAcSc01": true
+    },
+    "person": {
+      "sampleCount": 176,
+      "rulesSrcc": 0.2467,
+      "stratumBlendSrcc": 0.3288,
+      "delta": 0.0821,
+      "passedAcSc01": true
+    }
+  },
+  "weightedStratumDelta": 0.1552,
+  "pooledSrcc": {
+    "exportBaseline": 0.2853,
+    "rulesBaseline": 0.1258,
+    "stratumBlend": 0.2057,
+    "deltaVsUniform": 0.0235,
+    "note": "健康检查 only，不阻塞 G3"
+  },
+  "stratumCalibration": {
+    "recommendedBlends": {
+      "group": 0.6,
+      "person": 0.6,
+      "landscape": 0.6,
+      "food": 0.6,
+      "general": 0.25
+    },
+    "perStratumGrid": {
+      "food": {
+        "sampleCount": 47,
+        "skipped": false,
+        "bestBlend": 0.6,
+        "bestSrcc": 0.1499,
+        "grid": [
+          {
+            "blend": 0.0,
+            "sampleCount": 47,
+            "srcc": 0.02
+          },
+          {
+            "blend": 0.05,
+            "sampleCount": 47,
+            "srcc": 0.0344
+          },
+          {
+            "blend": 0.1,
+            "sampleCount": 47,
+            "srcc": 0.0437
+          },
+          {
+            "blend": 0.15,
+            "sampleCount": 47,
+            "srcc": 0.0583
+          },
+          {
+            "blend": 0.2,
+            "sampleCount": 47,
+            "srcc": 0.0612
+          },
+          {
+            "blend": 0.25,
+            "sampleCount": 47,
+            "srcc": 0.0782
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 47,
+            "srcc": 0.0902
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 47,
+            "srcc": 0.0972
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 47,
+            "srcc": 0.1069
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 47,
+            "srcc": 0.1118
+          },
+          {
+            "blend": 0.5,
+            "sampleCount": 47,
+            "srcc": 0.1225
+          },
+          {
+            "blend": 0.55,
+            "sampleCount": 47,
+            "srcc": 0.1382
+          },
+          {
+            "blend": 0.6,
+            "sampleCount": 47,
+            "srcc": 0.1499
+          }
+        ]
+      },
+      "general": {
+        "sampleCount": 4,
+        "skipped": false,
+        "bestBlend": 0.25,
+        "bestSrcc": 0.7746,
+        "grid": [
+          {
+            "blend": 0.0,
+            "sampleCount": 4,
+            "srcc": -0.2582
+          },
+          {
+            "blend": 0.05,
+            "sampleCount": 4,
+            "srcc": 0.2582
+          },
+          {
+            "blend": 0.1,
+            "sampleCount": 4,
+            "srcc": 0.2582
+          },
+          {
+            "blend": 0.15,
+            "sampleCount": 4,
+            "srcc": 0.2582
+          },
+          {
+            "blend": 0.2,
+            "sampleCount": 4,
+            "srcc": 0.2582
+          },
+          {
+            "blend": 0.25,
+            "sampleCount": 4,
+            "srcc": 0.7746
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 4,
+            "srcc": 0.7746
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 4,
+            "srcc": 0.7746
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 4,
+            "srcc": 0.7746
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 4,
+            "srcc": 0.7746
+          },
+          {
+            "blend": 0.5,
+            "sampleCount": 4,
+            "srcc": 0.7746
+          },
+          {
+            "blend": 0.55,
+            "sampleCount": 4,
+            "srcc": 0.7746
+          },
+          {
+            "blend": 0.6,
+            "sampleCount": 4,
+            "srcc": 0.7746
+          }
+        ]
+      },
+      "group": {
+        "sampleCount": 29,
+        "skipped": false,
+        "bestBlend": 0.6,
+        "bestSrcc": 0.3889,
+        "grid": [
+          {
+            "blend": 0.0,
+            "sampleCount": 29,
+            "srcc": 0.2258
+          },
+          {
+            "blend": 0.05,
+            "sampleCount": 29,
+            "srcc": 0.2384
+          },
+          {
+            "blend": 0.1,
+            "sampleCount": 29,
+            "srcc": 0.2511
+          },
+          {
+            "blend": 0.15,
+            "sampleCount": 29,
+            "srcc": 0.2511
+          },
+          {
+            "blend": 0.2,
+            "sampleCount": 29,
+            "srcc": 0.3026
+          },
+          {
+            "blend": 0.25,
+            "sampleCount": 29,
+            "srcc": 0.3111
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 29,
+            "srcc": 0.3204
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 29,
+            "srcc": 0.3533
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 29,
+            "srcc": 0.35
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 29,
+            "srcc": 0.361
+          },
+          {
+            "blend": 0.5,
+            "sampleCount": 29,
+            "srcc": 0.3567
+          },
+          {
+            "blend": 0.55,
+            "sampleCount": 29,
+            "srcc": 0.3699
+          },
+          {
+            "blend": 0.6,
+            "sampleCount": 29,
+            "srcc": 0.3889
+          }
+        ]
+      },
+      "landscape": {
+        "sampleCount": 266,
+        "skipped": false,
+        "bestBlend": 0.6,
+        "bestSrcc": 0.0927,
+        "grid": [
+          {
+            "blend": 0.0,
+            "sampleCount": 266,
+            "srcc": -0.109
+          },
+          {
+            "blend": 0.05,
+            "sampleCount": 266,
+            "srcc": -0.099
+          },
+          {
+            "blend": 0.1,
+            "sampleCount": 266,
+            "srcc": -0.0864
+          },
+          {
+            "blend": 0.15,
+            "sampleCount": 266,
+            "srcc": -0.0737
+          },
+          {
+            "blend": 0.2,
+            "sampleCount": 266,
+            "srcc": -0.0571
+          },
+          {
+            "blend": 0.25,
+            "sampleCount": 266,
+            "srcc": -0.0393
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 266,
+            "srcc": -0.0219
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 266,
+            "srcc": -0.0042
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 266,
+            "srcc": 0.0142
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 266,
+            "srcc": 0.0392
+          },
+          {
+            "blend": 0.5,
+            "sampleCount": 266,
+            "srcc": 0.0592
+          },
+          {
+            "blend": 0.55,
+            "sampleCount": 266,
+            "srcc": 0.0732
+          },
+          {
+            "blend": 0.6,
+            "sampleCount": 266,
+            "srcc": 0.0927
+          }
+        ]
+      },
+      "person": {
+        "sampleCount": 176,
+        "skipped": false,
+        "bestBlend": 0.6,
+        "bestSrcc": 0.3288,
+        "grid": [
+          {
+            "blend": 0.0,
+            "sampleCount": 176,
+            "srcc": 0.2467
+          },
+          {
+            "blend": 0.05,
+            "sampleCount": 176,
+            "srcc": 0.2476
+          },
+          {
+            "blend": 0.1,
+            "sampleCount": 176,
+            "srcc": 0.253
+          },
+          {
+            "blend": 0.15,
+            "sampleCount": 176,
+            "srcc": 0.2578
+          },
+          {
+            "blend": 0.2,
+            "sampleCount": 176,
+            "srcc": 0.2631
+          },
+          {
+            "blend": 0.25,
+            "sampleCount": 176,
+            "srcc": 0.2696
+          },
+          {
+            "blend": 0.3,
+            "sampleCount": 176,
+            "srcc": 0.2771
+          },
+          {
+            "blend": 0.35,
+            "sampleCount": 176,
+            "srcc": 0.2823
+          },
+          {
+            "blend": 0.4,
+            "sampleCount": 176,
+            "srcc": 0.2943
+          },
+          {
+            "blend": 0.45,
+            "sampleCount": 176,
+            "srcc": 0.3038
+          },
+          {
+            "blend": 0.5,
+            "sampleCount": 176,
+            "srcc": 0.32
+          },
+          {
+            "blend": 0.55,
+            "sampleCount": 176,
+            "srcc": 0.3276
+          },
+          {
+            "blend": 0.6,
+            "sampleCount": 176,
+            "srcc": 0.3288
+          }
+        ]
+      }
+    }
+  },
+  "acceptance": {
+    "AC-SC-00": {
+      "passed": false,
+      "perStratum": {
+        "group": false,
+        "person": true,
+        "landscape": true,
+        "food": true,
+        "general": false
+      },
+      "deferredStrata": [],
+      "note": "每 stratum 达 min-n（food 搁置跳过）"
+    },
+    "AC-SC-01": {
+      "passed": true,
+      "note": "每层 blend SRCC > rules SRCC（n≥3）"
+    },
+    "AC-SC-02": {
+      "passed": true,
+      "target": 0.1,
+      "weightedDelta": 0.1552,
+      "note": "加权分层 Δ ≥ 0.10 或主层 n≥40 且 Δ≥0.15"
+    },
+    "AC-SC-03": {
+      "passed": false,
+      "note": "purpose-pairwise v4 · 1/5 校准册 ≥60% · 聚合 47.5%",
+      "signoffRef": "docs/acceptance-records/purpose-pairwise-signoff.v4.json",
+      "calibrationPassed": "1/5",
+      "passedTrips": ["demo-b388794e0a"],
+      "nearMissTrips": ["demo-ecc41072d7"],
+      "aggregateWinratePct": 47.5
+    },
+    "AC-SC-04": {
+      "passed": null,
+      "note": "albumProfile 写入 + skew 册不回归"
+    },
+    "AC-SC-05": {
+      "passed": true,
+      "note": "继承 AC-AA-04~08"
+    },
+    "AC-SC-06": {
+      "passed": true,
+      "note": "开关回退"
+    }
+  },
+  "trips": [
+    "demo-2025-6",
+    "demo-fc8b3a5c08",
+    "demo-1a737d6205",
+    "demo-53cda5151f",
+    "demo-1506104ebf",
+    "demo-ef0cef1d1d",
+    "demo-b388794e0a",
+    "demo-ecc41072d7",
+    "demo-1d4f92d534",
+    "demo-food2-v4"
+  ],
+  "metric": "nima"
+}

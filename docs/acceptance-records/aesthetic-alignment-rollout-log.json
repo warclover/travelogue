@@ -59,21 +59,27 @@
       "dogfoodRecord": "docs/acceptance-records/aesthetic-g2-dogfood.demo-2025-6.json"
     },
     "G3-default-on": {
-      "description": "AC-SC 达标后改 AppConfig 默认为 stratified pilot（ml_calibrate=true 等）",
+      "description": "AC-SC waiver v4 后改 AppConfig 默认为 stratified pilot v4",
       "signoffRef": "docs/aesthetic-alignment/SIGNOFF-G3-DEFAULT-ML.md",
-      "signoffJson": "docs/acceptance-records/aesthetic-g3-signoff.v3.json",
+      "signoffJson": "docs/acceptance-records/aesthetic-g3-signoff.v4.json",
+      "waiverRef": "docs/acceptance-records/purpose-pairwise-waiver.v4.json",
+      "configRef": "docs/acceptance-records/aesthetic-pilot-config.freeze.v4.yaml",
       "required": [
         "AC-SC-01/02/04/05/06 passed",
-        "AC-SC-03 passed (incl. waiver documented)",
-        "SIGNOFF-G3-DEFAULT-ML.md 三联签",
-        "G3 代码 PR 合并（本阶段仅文档）"
+        "AC-SC-03 waiver accepted (3/5 + aggregate 58.9%)",
+        "purposeProfiles backfilled on v4 trips"
       ],
-      "status": "pending_signoff",
-      "blockedBy": ["产品/算法/工程联签未完成", "AppConfig 默认 intentionally unchanged"],
+      "status": "passed_waiver",
+      "completedAt": "2026-06-19",
       "preconditionsMet": {
         "acScMatrix": true,
-        "pilotFreezeG1c": true,
-        "codeDefaultChanged": false
+        "pilotFreezeV4": true,
+        "codeDefaultChanged": true
+      },
+      "metrics": {
+        "acSc03Strict": "3/5",
+        "acSc03AggregateWinratePct": 58.93,
+        "waiverAccepted": true
       }
     },
     "G1c-stratified-pilot-freeze": {

@@ -1,0 +1,44 @@
+{
+  "version": "1",
+  "exportedAt": "2026-06-19T05:36:07.925879+00:00",
+  "purposes": [
+    "cover",
+    "hero"
+  ],
+  "pairsPerPurpose": 6,
+  "suffix": "v4",
+  "notes": "v4 purpose pairwise",
+  "trips": {
+    "demo-enshi-v4": {
+      "pairCount": 12,
+      "topPicks": {
+        "cover": {
+          "rules": {
+            "assetId": "asset-024",
+            "displayFile": "assets/asset-024-w3200.webp",
+            "score": 0.6124
+          },
+          "aligned": {
+            "assetId": "asset-029",
+            "displayFile": "assets/asset-029-w3200.webp",
+            "score": 0.7255
+          }
+        },
+        "hero": {
+          "rules": {
+            "assetId": "asset-024",
+            "displayFile": "assets/asset-024-w3200.webp",
+            "score": 0.6555
+          },
+          "aligned": {
+            "assetId": "asset-024",
+            "displayFile": "assets/asset-024-w3200.webp",
+            "score": 0.6555
+          }
+        }
+      },
+      "json": "docs/acceptance-records/purpose-pairwise.demo-enshi-v4.v4.json",
+      "html": "docs/acceptance-records/purpose-pairwise.demo-enshi-v4.v4.html"
+    }
+  }
+}

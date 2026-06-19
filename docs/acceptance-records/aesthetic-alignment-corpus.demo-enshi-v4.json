@@ -1,0 +1,22 @@
+{
+  "version": "1",
+  "notes": "恩施大峡谷手机记录 · demo-enshi-v4 · hold-out（不参与 v4 拟合）",
+  "targetTotal": 25,
+  "seed": 49,
+  "strataQuotas": {
+    "person": 12,
+    "landscape": 13,
+    "group": 0,
+    "food": 0,
+    "general": 0
+  },
+  "trips": [
+    {
+      "tripId": "demo-enshi-v4",
+      "tripDir": "trips/demo-enshi-v4",
+      "tags": ["travel", "mobile", "mixed", "v4_hold_out"],
+      "sourcePhotos": "D:\\Photos\\恩施大峡谷手机记录",
+      "previewUrl": "http://127.0.0.1:8766/demo-enshi-v4/index.html"
+    }
+  ]
+}

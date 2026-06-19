@@ -1,0 +1,59 @@
+{
+  "version": "2",
+  "recordedAt": "2026-06-19T07:00:00+00:00",
+  "frozen": true,
+  "frozenAt": "2026-06-19T07:00:00+00:00",
+  "accepted": true,
+  "notes": "AC-SC-03 v4 条件 waiver · 已接受 · G3 默认 ml_calibrate=true 生效",
+  "strictSignoff": "docs/acceptance-records/purpose-pairwise-signoff.v4-p3.json",
+  "priorStrictSignoff": "docs/acceptance-records/purpose-pairwise-signoff.v4-p2.json",
+  "purposeProfiles": "docs/acceptance-records/aesthetic-purpose-profiles.v4.json",
+  "pilotConfigFreeze": "docs/acceptance-records/aesthetic-pilot-config.freeze.v4.yaml",
+  "g3Signoff": "docs/acceptance-records/aesthetic-g3-signoff.v4.json",
+  "stratifiedSignoff": "docs/acceptance-records/aesthetic-stratified-signoff.v4.json",
+  "strictResult": {
+    "AC-SC-03": {
+      "passed": false,
+      "calibrationPassed": "3/5",
+      "aggregateWinratePct": 58.93,
+      "requiredForStrict": "4/5"
+    }
+  },
+  "waiver": {
+    "approved": true,
+    "acceptedAt": "2026-06-19T07:00:00+00:00",
+    "rationale": [
+      "校准册 3/5 人工过线（广西 83.3%、云南 70%、王丹 60%）",
+      "聚合 purpose 胜率 58.9% · 距 60% 差 1.1pp",
+      "分层 SRCC v4 已过 AC-SC-01/02（加权 Δ 0.155）",
+      "per-trip purposePilotProfile 已写入 6 本 v4 trip",
+      "川藏/仙本那 landscape·underwater 仍 <60% · 后续迭代不阻塞 G3"
+    ],
+    "conditions": [
+      "AppConfig 默认对齐 aesthetic-pilot-config.freeze.v4.yaml（mllm.enabled 仍 false）",
+      "无 purposePilotProfile 的 trip 走全局 pilot 默认",
+      "hold-out 恩施不得参与校准拟合",
+      "川藏 demo-1506104ebf、仙本那 demo-1d4f92d534 纳入 post-G3 监控"
+    ],
+    "calibrationTripsV4p3": {
+      "demo-ecc41072d7": { "alignedWinratePct": 83.33, "passed": true },
+      "demo-ef0cef1d1d": { "alignedWinratePct": 70.0, "passed": true },
+      "demo-b388794e0a": { "alignedWinratePct": 60.0, "passed": true },
+      "demo-1506104ebf": { "alignedWinratePct": 41.67, "passed": false },
+      "demo-1d4f92d534": { "alignedWinratePct": 41.67, "passed": false }
+    },
+    "holdOut": {
+      "demo-enshi-v4": { "alignedWinratePct": 50.0, "passed": false }
+    },
+    "portraitSubset": {
+      "trips": ["demo-b388794e0a", "demo-ef0cef1d1d"],
+      "passed": "2/2",
+      "minWinratePct": 60.0
+    }
+  },
+  "acceptance": {
+    "AC-SC-03-strict": false,
+    "AC-SC-03-waiver": true,
+    "G3-ml-calibrate-default": "go"
+  }
+}

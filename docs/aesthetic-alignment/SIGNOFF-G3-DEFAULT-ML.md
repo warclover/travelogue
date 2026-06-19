@@ -1,10 +1,7 @@
 # G3 · 默认开启分层审美校准 Sign-off
 
-> **状态**：**待联签**（文档就绪 · **未改代码默认**）  
-> PRD：[PRD-STRATIFIED-CURATION.md](../PRD-STRATIFIED-CURATION.md) DS-6 · [PRD-AESTHETIC-ALIGNMENT.md](../PRD-AESTHETIC-ALIGNMENT.md) §8  
-> 前置冻结：[SIGNOFF-PILOT-FREEZE.v3.md](./SIGNOFF-PILOT-FREEZE.v3.md)  
-> 配置快照：[aesthetic-pilot-config.freeze.v3.yaml](../acceptance-records/aesthetic-pilot-config.freeze.v3.yaml)  
-> 机器可读：[aesthetic-g3-signoff.v3.json](../acceptance-records/aesthetic-g3-signoff.v3.json)
+> **状态**：**v4 waiver 已接受 · 代码默认已改**（2026-06-19）  
+> v4 证据：[purpose-pairwise-waiver.v4.json](../acceptance-records/purpose-pairwise-waiver.v4.json) · [aesthetic-g3-signoff.v4.json](../acceptance-records/aesthetic-g3-signoff.v4.json) · [aesthetic-pilot-config.freeze.v4.yaml](../acceptance-records/aesthetic-pilot-config.freeze.v4.yaml)
 
 ---
 
@@ -116,4 +113,5 @@ recurate 目标 trip → `quality.aesthetic.source` 回到 `rules`。
 
 | 日期 | 说明 |
 |------|------|
+| 2026-06-19 | v4 waiver：AC-SC-03 3/5 + 聚合 58.9% · purposeProfiles · AppConfig 默认切换 |
 | 2026-06-18 | 初版：AC-SC 全矩阵 + pilot 冻结后 G3 单列 signoff 草案 |

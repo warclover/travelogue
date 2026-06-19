@@ -1,0 +1,22 @@
+{
+  "version": "1",
+  "notes": "广西之游 · demo-ecc41072d7 · 混合 · v4 purpose 攻坚",
+  "targetTotal": 35,
+  "seed": 47,
+  "strataQuotas": {
+    "person": 15,
+    "landscape": 18,
+    "group": 2,
+    "food": 0,
+    "general": 0
+  },
+  "trips": [
+    {
+      "tripId": "demo-ecc41072d7",
+      "tripDir": "trips/demo-ecc41072d7",
+      "tags": ["travel", "mixed", "v4_calibration"],
+      "sourcePhotos": "D:\\Photos\\广西之游",
+      "previewUrl": "http://127.0.0.1:8766/demo-ecc41072d7/index.html"
+    }
+  ]
+}

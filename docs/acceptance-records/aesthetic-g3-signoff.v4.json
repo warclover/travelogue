@@ -1,0 +1,57 @@
+{
+  "version": "1",
+  "recordedAt": "2026-06-19T07:00:00+00:00",
+  "status": "waiver_accepted",
+  "notes": "G3 v4 · AC-SC-03 waiver 已接受 · AppConfig 默认已改",
+  "signoffDoc": "docs/aesthetic-alignment/SIGNOFF-G3-DEFAULT-ML.md",
+  "pilotConfigFreeze": "docs/acceptance-records/aesthetic-pilot-config.freeze.v4.yaml",
+  "purposeProfiles": "docs/acceptance-records/aesthetic-purpose-profiles.v4.json",
+  "waiverRef": "docs/acceptance-records/purpose-pairwise-waiver.v4.json",
+  "preconditions": {
+    "AC-SC-00": {
+      "passed": false,
+      "note": "group 29/30 · general 4/20 · 不阻塞 waiver",
+      "ref": "docs/acceptance-records/aesthetic-stratified-signoff.v4.json"
+    },
+    "AC-SC-01": { "passed": true, "ref": "docs/acceptance-records/aesthetic-stratified-signoff.v4.json" },
+    "AC-SC-02": { "passed": true, "weightedDelta": 0.155 },
+    "AC-SC-03": {
+      "passed": true,
+      "viaWaiver": true,
+      "strictCalibrationPassed": "3/5",
+      "aggregateWinratePct": 58.93,
+      "ref": "docs/acceptance-records/purpose-pairwise-signoff.v4-p3.json"
+    },
+    "AC-SC-04": { "passed": true },
+    "AC-SC-05": { "passed": true },
+    "AC-SC-06": { "passed": true }
+  },
+  "appliedDefaults": {
+    "mlCalibrate": true,
+    "useStratumBlend": true,
+    "stratumBlendOnly": ["landscape", "person", "group"],
+    "stratumBlendOnlyByPurpose": {
+      "hero": ["landscape", "person"],
+      "cover": ["landscape", "person"]
+    },
+    "stratumBlends": {
+      "group": 0.6,
+      "person": 0.6,
+      "landscape": 0.6,
+      "food": 0.6,
+      "general": 0.25
+    },
+    "useAlbumRelative": true,
+    "portraitLiteEnabled": true,
+    "mllmEnabled": false,
+    "mllmShortlistPurposes": ["moment"]
+  },
+  "codeDefaultChanged": true,
+  "codeTouchpoint": "travelogue/config/aesthetic.py · AestheticConfig",
+  "acceptance": {
+    "G3-default-on": {
+      "passed": true,
+      "via": "AC-SC-03-waiver-v4"
+    }
+  }
+}
