@@ -675,8 +675,9 @@ def apply_aesthetic_alignment(
     trip: dict | None = None,
 ) -> dict[str, Any]:
     """Curate hook: learned blend + optional MLLM shortlist (fail-open)."""
-    from travelogue.config import AppConfig
     from dataclasses import replace
+
+    from travelogue.config import AppConfig
 
     app_cfg = cfg if cfg is not None else AppConfig()
     if trip is not None:

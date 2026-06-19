@@ -7,7 +7,7 @@ import copy
 import json
 import sys
 from dataclasses import replace
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -22,7 +22,10 @@ from travelogue.config.aesthetic_purpose_profiles import (  # noqa: E402
     profile_summary,
     purpose_profile_for_trip,
 )
-from travelogue.config.aesthetic_stratified import config_summary, landscape_pilot_config  # noqa: E402
+from travelogue.config.aesthetic_stratified import (  # noqa: E402
+    config_summary,
+    landscape_pilot_config,
+)
 from travelogue.curation.aesthetic_purpose_blind import (  # noqa: E402
     build_purpose_pairwise_html,
     export_purpose_pick_pairs,
@@ -128,7 +131,7 @@ def export_trip_pairwise(
         album_relative=bool(aligned_cfg.use_album_relative),
         min_score_gap=min_score_gap,
     )
-    export["exportedAt"] = datetime.now(timezone.utc).isoformat()
+    export["exportedAt"] = datetime.now(UTC).isoformat()
     pilot = config_summary(aligned_cfg)
     if cover_subject_clarity is not None:
         pilot["coverSubjectClarityOverride"] = cover_subject_clarity
@@ -268,7 +271,7 @@ def main(argv: list[str] | None = None) -> int:
 
     manifest = {
         "version": "1",
-        "exportedAt": datetime.now(timezone.utc).isoformat(),
+        "exportedAt": datetime.now(UTC).isoformat(),
         "purposes": list(purposes),
         "pairsPerPurpose": args.pairs_per_purpose,
         "suffix": suffix or None,

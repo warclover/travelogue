@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -47,7 +47,7 @@ def main(argv: list[str] | None = None) -> int:
     rows = labels_doc if isinstance(labels_doc, list) else list(labels_doc.get("rows") or [])
 
     audit = audit_label_strata(trip_dir=trip_dir, label_rows=rows)
-    audit["auditedAt"] = datetime.now(timezone.utc).isoformat()
+    audit["auditedAt"] = datetime.now(UTC).isoformat()
 
     print(f"trip={audit['tripId']} labeled={audit['labeledCount']} changes={audit['changeCount']}")
     print(f"old={audit['oldStrata']}")

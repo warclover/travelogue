@@ -148,7 +148,7 @@ def handle_patch_stratum_preference(handler: StudioHandlerProtocol, trip_id: str
     trip_json = trip_dir / "trip.json"
     ctx = studio_ctx(handler)
     svc = ctx.trip_service()
-    pref = apply_stratum_preference(trip, str(raw))
+    apply_stratum_preference(trip, str(raw))
     svc.save(trip, trip_json)
     handler._json_response(
         200,

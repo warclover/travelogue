@@ -21,7 +21,9 @@ from travelogue.env import load_dotenv_files  # noqa: E402
 
 load_dotenv_files()
 
-from travelogue.curation.aesthetic_purpose_calibrate import run_purpose_weight_calibration  # noqa: E402
+from travelogue.curation.aesthetic_purpose_calibrate import (
+    run_purpose_weight_calibration,  # noqa: E402
+)
 from travelogue.curation.photo_cull_ml import pyiqa_available  # noqa: E402
 
 

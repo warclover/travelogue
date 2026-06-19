@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +23,9 @@ from travelogue.curation.aesthetic_learned_eval import (  # noqa: E402
     per_stratum_rules_vs_blend,
     rules_for_purpose,
 )
-from travelogue.curation.aesthetic_score import refresh_portrait_subject_clarity_overall  # noqa: E402
+from travelogue.curation.aesthetic_score import (
+    refresh_portrait_subject_clarity_overall,  # noqa: E402
+)
 from travelogue.curation.aesthetic_stratum_audit import remap_rows_for_merged  # noqa: E402
 from travelogue.curation.photo_cull_ml import pyiqa_available  # noqa: E402
 
@@ -115,7 +117,7 @@ def evaluate_person_pilot(
     pilot_srcc = srcc_report(pilot_rows, by_stratum=False)
 
     return {
-        "recordedAt": datetime.now(timezone.utc).isoformat(),
+        "recordedAt": datetime.now(UTC).isoformat(),
         "stratumBlendOnly": list(stratum_blend_only),
         "recommendedBlends": blends,
         "portraitRefreshed": portrait_refreshed,

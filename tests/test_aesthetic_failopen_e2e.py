@@ -6,7 +6,10 @@ from dataclasses import replace
 from unittest.mock import patch
 
 from travelogue.config import AppConfig
-from travelogue.curation.aesthetic_score import apply_aesthetic_alignment, persist_aesthetic_alignment
+from travelogue.curation.aesthetic_score import (
+    apply_aesthetic_alignment,
+    persist_aesthetic_alignment,
+)
 from travelogue.curation.curate import run_curate
 
 

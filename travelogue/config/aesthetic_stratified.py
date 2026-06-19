@@ -7,7 +7,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from travelogue.config import AestheticConfig, DEFAULT_STRATUM_BLENDS
+from travelogue.config import DEFAULT_STRATUM_BLENDS, AestheticConfig
 from travelogue.curation.album_profile import normalize_stratum_preference
 
 STRATUM_PREFERENCE_PRESETS: dict[str, dict[str, Any]] = {

@@ -7,7 +7,7 @@ import json
 import re
 import sys
 from dataclasses import replace
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -16,14 +16,13 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from travelogue.config import get_config  # noqa: E402
+from travelogue.config.aesthetic_stratified import landscape_pilot_config  # noqa: E402
+from travelogue.curation.aesthetic_purpose_blind import build_purpose_pairwise_html  # noqa: E402
 from travelogue.curation.aesthetic_purpose_calibrate import (  # noqa: E402
-    apply_recommended_presets,
     run_purpose_weight_calibration,
     run_purpose_weight_calibration_merged,
 )
-from travelogue.curation.aesthetic_purpose_blind import build_purpose_pairwise_html  # noqa: E402
 from travelogue.curation.photo_cull_ml import pyiqa_available  # noqa: E402
-from travelogue.config.aesthetic_stratified import landscape_pilot_config  # noqa: E402
 
 CALIBRATION_PATH = Path("docs/acceptance-records/aesthetic-stratum-calibration.merged.v3.json")
 CORPUS_PATH = Path("docs/acceptance-records/aesthetic-alignment-corpus.v3.json")
@@ -128,7 +127,7 @@ def main(argv: list[str] | None = None) -> int:
 
     out = {
         "version": "1",
-        "recordedAt": datetime.now(timezone.utc).isoformat(),
+        "recordedAt": datetime.now(UTC).isoformat(),
         "notes": "P2-4 · cover purpose grid · landscape stratum · merged v3",
         "mergedLandscape": merged_landscape,
         "dongaoTrip": dongao_cover,

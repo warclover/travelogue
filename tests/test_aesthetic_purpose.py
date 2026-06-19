@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from travelogue.config import AestheticConfig, AestheticWeights
 from travelogue.curation.aesthetic_blind_review import normalize_human_score
 from travelogue.curation.aesthetic_purpose_blind import (
     automated_purpose_win_report,
@@ -12,7 +13,6 @@ from travelogue.curation.aesthetic_purpose_calibrate import (
     grid_search_purpose_weights,
     weights_with_dim_emphasis,
 )
-from travelogue.config import AestheticConfig, AestheticWeights
 
 
 def _asset(aid: str, *, rules_cover: float, learned: float) -> dict:

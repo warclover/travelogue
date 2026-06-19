@@ -10,10 +10,10 @@ from PIL import Image
 from travelogue.config import CullConfig
 from travelogue.curation.photo_cull import run_photo_cull
 from travelogue.curation.photo_cull_ml import (
+    _norm_aesthetic,
     apply_aesthetic_scores,
     pyiqa_available,
     resolve_effective_mode,
-    _norm_aesthetic,
 )
 
 

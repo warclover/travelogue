@@ -15,8 +15,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from travelogue.config import get_config  # noqa: E402
-from travelogue.curation.album_profile import write_album_profile  # noqa: E402
 from travelogue.curation.aesthetic_score import apply_aesthetic_alignment  # noqa: E402
+from travelogue.curation.album_profile import write_album_profile  # noqa: E402
 from travelogue.curation.curate import run_curate  # noqa: E402
 
 DOGFOOD = [

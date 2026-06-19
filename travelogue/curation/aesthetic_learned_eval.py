@@ -7,8 +7,16 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any, Literal
 
-from travelogue.config import AestheticConfig, AppConfig, DEFAULT_STRATUM_BLENDS, resolve_learned_blend
-from travelogue.curation.aesthetic_blind_review import review_stratum_for_asset
+from travelogue.config import (
+    DEFAULT_STRATUM_BLENDS,
+    AestheticConfig,
+    AppConfig,
+    resolve_learned_blend,
+)
+from travelogue.curation.aesthetic_blind_review import (
+    normalize_human_score,
+    review_stratum_for_asset,
+)
 from travelogue.curation.aesthetic_score import (
     _read_learned_aesthetic_score,
     _rules_overall_from_dims,
@@ -20,7 +28,6 @@ from travelogue.curation.aesthetic_score import (
     refresh_portrait_lite_overall,
     resolve_aesthetic_weights,
 )
-from travelogue.curation.aesthetic_blind_review import normalize_human_score
 from travelogue.curation.pa_acceptance import srcc_from_label_rows
 from travelogue.curation.photo_cull_ml import apply_aesthetic_scores
 

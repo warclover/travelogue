@@ -16,7 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -65,7 +65,7 @@ def build_report(*, trip_specs: list[str]) -> dict[str, Any]:
     aggregate = aggregate_defect_rates(trips_out)
     return {
         "version": "1",
-        "recordedAt": datetime.now(timezone.utc).isoformat(),
+        "recordedAt": datetime.now(UTC).isoformat(),
         "notes": "AC-PC-D1~D3 proxy · portrait key-slot defect rate (automated portrait block)",
         "trips": trips_out,
         "aggregate": aggregate,

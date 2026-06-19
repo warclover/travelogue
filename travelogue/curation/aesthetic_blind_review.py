@@ -6,7 +6,7 @@ import random
 from typing import Any, Literal
 
 from travelogue.curation.aesthetic_score import aesthetic_overall, purpose_overall
-from travelogue.curation.pa_acceptance import spearman_srcc, srcc_from_label_rows
+from travelogue.curation.pa_acceptance import srcc_from_label_rows
 from travelogue.curation.subject_tagging import semantic_category_for_asset, subject_class_for_asset
 
 ReviewStratum = Literal["person", "landscape", "food", "group", "general"]

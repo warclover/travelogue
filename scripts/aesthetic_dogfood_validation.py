@@ -6,7 +6,7 @@ import argparse
 import copy
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -14,14 +14,20 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from travelogue.config.aesthetic_stratified import config_summary, landscape_pilot_config  # noqa: E402
-from travelogue.curation.album_profile import compute_album_profile, write_album_profile  # noqa: E402
+from travelogue.config import get_config  # noqa: E402
+from travelogue.config.aesthetic_stratified import (  # noqa: E402
+    config_summary,
+    landscape_pilot_config,
+)
 from travelogue.curation.aesthetic_purpose_blind import (  # noqa: E402
     automated_purpose_win_report,
     export_purpose_blind_signoff,
 )
 from travelogue.curation.aesthetic_score import apply_aesthetic_alignment  # noqa: E402
-from travelogue.config import get_config  # noqa: E402
+from travelogue.curation.album_profile import (  # noqa: E402
+    compute_album_profile,
+    write_album_profile,
+)
 
 DOGFOOD_TRIPS: list[dict[str, str]] = [
     {
@@ -129,7 +135,7 @@ def run_dogfood(
     winrate = round(100.0 * wins / comparable, 2) if comparable else None
     return {
         "version": "1",
-        "recordedAt": datetime.now(timezone.utc).isoformat(),
+        "recordedAt": datetime.now(UTC).isoformat(),
         "notes": "Dogfood · landscape stratum-blend pilot · food 语料搁置",
         "pilotConfig": config_summary(aligned_cfg),
         "calibrationSource": str(calibration_path.relative_to(ROOT)).replace("\\", "/"),

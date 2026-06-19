@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from travelogue.curation.aesthetic_blind_review import review_stratum_for_asset
 from travelogue.curation.aesthetic_stratum_audit import (
     apply_stratum_audit,
     audit_label_strata,
     merged_asset_key,
     remap_rows_for_merged,
 )
-from travelogue.curation.aesthetic_blind_review import review_stratum_for_asset
 
 
 def test_merged_asset_key_and_remap():

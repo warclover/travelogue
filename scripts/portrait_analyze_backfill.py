@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import copy
 import json
 import sys
 from pathlib import Path
@@ -18,7 +17,6 @@ from travelogue.config import get_config
 from travelogue.curation.aesthetic_score import (
     compute_aesthetic,
     compute_aesthetic_signals,
-    refresh_portrait_subject_clarity_overall,
 )
 from travelogue.media.portrait_analyze import analyze_portrait
 from travelogue.media.subject_detect import detect_faces_in_image

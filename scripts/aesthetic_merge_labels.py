@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -45,9 +45,9 @@ def merge_label_docs(
     return {
         "version": "3",
         "frozen": frozen,
-        "frozenAt": datetime.now(timezone.utc).isoformat() if frozen else None,
+        "frozenAt": datetime.now(UTC).isoformat() if frozen else None,
         "notes": notes,
-        "mergedAt": datetime.now(timezone.utc).isoformat(),
+        "mergedAt": datetime.now(UTC).isoformat(),
         "trips": trips,
         "rows": rows,
     }
@@ -93,7 +93,7 @@ def main(argv: list[str] | None = None) -> int:
     pooled = srcc_report(merged["rows"], by_stratum=True)
     baseline = {
         "version": "1",
-        "recordedAt": datetime.now(timezone.utc).isoformat(),
+        "recordedAt": datetime.now(UTC).isoformat(),
         "mergedSource": str(merged_path.relative_to(ROOT)).replace("\\", "/"),
         "sampleCount": pooled.get("sampleCount"),
         "pooledSrcc": pooled.get("srcc"),

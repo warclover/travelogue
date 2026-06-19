@@ -8,7 +8,11 @@ from __future__ import annotations
 from typing import Any
 
 from travelogue.curation.aesthetic_blind_review import review_stratum_for_asset
-from travelogue.curation.aesthetic_score import asset_aesthetic, build_aesthetic_explain, purpose_overall
+from travelogue.curation.aesthetic_score import (
+    asset_aesthetic,
+    build_aesthetic_explain,
+    purpose_overall,
+)
 from travelogue.curation.album_profile import (
     album_profile_for_trip,
     stratum_preference_for_trip,

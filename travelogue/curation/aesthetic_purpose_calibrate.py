@@ -15,7 +15,6 @@ from travelogue.curation.aesthetic_learned_eval import (
 )
 from travelogue.curation.aesthetic_score import (
     _blend_ml_overall,
-    _read_learned_aesthetic_score,
     _rules_overall_from_weights,
     asset_aesthetic,
     purpose_overall,

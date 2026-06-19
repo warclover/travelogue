@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from travelogue.config import AestheticConfig, resolve_learned_blend
-from travelogue.config.aesthetic_stratified import landscape_pilot_config
+from travelogue.config.aesthetic_stratified import (
+    apply_stratum_preference_overlay,
+    landscape_pilot_config,
+)
+from travelogue.curation.aesthetic_score import stratum_score_percentiles
 from travelogue.curation.album_profile import (
     compute_album_profile,
     effective_priority_strata,
     profile_priority_strata,
 )
-from travelogue.config.aesthetic_stratified import apply_stratum_preference_overlay
-from travelogue.curation.aesthetic_score import stratum_score_percentiles
 
 
 def _asset(aid: str, *, width: int = 4000, height: int = 3000, overall: float = 0.5):

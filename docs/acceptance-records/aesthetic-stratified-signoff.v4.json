@@ -436,6 +436,8 @@
   "acceptance": {
     "AC-SC-00": {
       "passed": false,
+      "passedVia": "waiver",
+      "waiverRef": "docs/acceptance-records/ac-sc-00-waiver.v4.json",
       "perStratum": {
         "group": false,
         "person": true,
@@ -444,7 +446,7 @@
         "general": false
       },
       "deferredStrata": [],
-      "note": "每 stratum 达 min-n · general 10/20 · group 29/30 · sc00-recruit +6 general"
+      "note": "每 stratum 达 min-n · general 10/20 · group 29/30 · sc00-recruit +6 · waiver 接受"
     },
     "AC-SC-01": {
       "passed": true,
@@ -468,8 +470,10 @@
       "aggregateWinratePct": 58.93
     },
     "AC-SC-04": {
-      "passed": null,
-      "note": "albumProfile 写入 + skew 册不回归"
+      "passed": true,
+      "note": "三本 dogfood albumProfile 已写入 · skew 册 fc8b3a5c08 回归 OK",
+      "signoffRef": "docs/acceptance-records/aesthetic-dogfood-validation.v4.json",
+      "dogfoodRecurateRef": "docs/acceptance-records/aesthetic-g3-dogfood-recurate.v4.json"
     },
     "AC-SC-05": {
       "passed": true,

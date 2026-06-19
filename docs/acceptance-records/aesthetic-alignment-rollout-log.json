@@ -105,6 +105,25 @@
         "dongaoPurposeMergeWinratePct": 75.0
       },
       "note": "东澳 50% product waiver 2026-06-18"
+    },
+    "merge-prep-v4": {
+      "description": "feat/aesthetic-alignment → master 合并前准备",
+      "signoffRef": "docs/aesthetic-alignment/MERGE-READINESS.v4.md",
+      "required": [
+        "ruff check 全绿",
+        "test_aesthetic_* 全绿",
+        "AC-SC-04 dogfood validation v4",
+        "AC-SC-00 waiver v4",
+        "三本 dogfood G3 recurate"
+      ],
+      "status": "ready_pending_studio_spotcheck",
+      "completedAt": "2026-06-19",
+      "metrics": {
+        "mergedLabels": 528,
+        "acSc00General": "10/20",
+        "acSc00Group": "29/30",
+        "pytestAesthetic": "42 passed"
+      }
     }
   },
   "rollback": {
@@ -119,6 +138,12 @@
     "docs/acceptance-records/aesthetic-stratified-signoff.v3.json",
     "docs/acceptance-records/purpose-pairwise-signoff.v3.json",
     "docs/acceptance-records/aesthetic-pilot-config.freeze.v3.yaml",
-    "docs/acceptance-records/aesthetic-g3-signoff.v3.json"
+    "docs/acceptance-records/aesthetic-g3-signoff.v3.json",
+    "docs/acceptance-records/aesthetic-stratified-signoff.v4.json",
+    "docs/acceptance-records/aesthetic-g3-signoff.v4.json",
+    "docs/acceptance-records/ac-sc-00-waiver.v4.json",
+    "docs/acceptance-records/aesthetic-dogfood-validation.v4.json",
+    "docs/acceptance-records/aesthetic-g3-dogfood-recurate.v4.json",
+    "docs/aesthetic-alignment/MERGE-READINESS.v4.md"
   ]
 }

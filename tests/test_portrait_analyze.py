@@ -9,7 +9,6 @@ from PIL import Image
 from travelogue.config.portrait import PortraitConfig
 from travelogue.curation.portrait_subject_clarity import (
     compute_portrait_subject_clarity,
-    norm_face_sharpness,
     penalty_eyes_closed,
     portrait_has_signal,
 )
@@ -19,7 +18,7 @@ from travelogue.media.portrait_analyze import (
     laplacian_variance,
     pad_bbox,
 )
-from travelogue.media.portrait_backends import FaceLandmarks, NullBackend, map_ear_to_eyes_open
+from travelogue.media.portrait_backends import NullBackend, map_ear_to_eyes_open
 
 
 def test_pad_bbox_clamps_to_image():

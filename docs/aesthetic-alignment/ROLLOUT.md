@@ -55,18 +55,21 @@ python scripts/aesthetic_mllm_eval.py \
 
 ---
 
-## G3 · 全量（待联签）
+## G3 · 全量（v4 waiver · 已生效）
 
-> 权威：[SIGNOFF-G3-DEFAULT-ML.md](./SIGNOFF-G3-DEFAULT-ML.md) · [aesthetic-g3-signoff.v3.json](../acceptance-records/aesthetic-g3-signoff.v3.json)
+> 权威：[SIGNOFF-G3-DEFAULT-ML.md](./SIGNOFF-G3-DEFAULT-ML.md) · [aesthetic-g3-signoff.v4.json](../acceptance-records/aesthetic-g3-signoff.v4.json)  
+> Merge 准备：[MERGE-READINESS.v4.md](./MERGE-READINESS.v4.md)
 
-**分层门禁（AC-SC-*）已关**（含东澳 waiver）。G3 改 `AppConfig` 默认仍须 **产品/算法/工程三联签**，通过后单独 PR 改代码默认。
+**分层门禁（AC-SC-*）**：01/02/04/05/06 ✅ · 03 + 00 **waiver 接受** · AppConfig 默认已改。
 
 ### 联签前检查
 
 - [x] AC-SC-01/02/04/05/06
-- [x] AC-SC-03（2/3 strict + waiver）
-- [x] Pilot 配置冻结 v3
-- [ ] 三本 dogfood recurate 对比（G3 PR 前）
+- [x] AC-SC-03（v4-p3 waiver）
+- [x] AC-SC-00（general/group waiver）
+- [x] Pilot 配置冻结 v4
+- [x] 三本 dogfood recurate（G3 默认）→ `aesthetic-g3-dogfood-recurate.v4.json`
+- [ ] Studio cover/hero 人工抽检（merge 前）
 - [ ] portrait 缺陷率 ≤ baseline（可选 · `aesthetic_portrait_defect_signoff.py`）
 
 ### 旧 AA 门禁（仅供参考，不阻塞 G3）

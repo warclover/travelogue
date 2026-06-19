@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import random
-from typing import Any, Callable, Literal
+from collections.abc import Callable
+from typing import Any, Literal
 
 from travelogue.config import AestheticConfig
 from travelogue.curation.aesthetic_blind_review import normalize_human_score

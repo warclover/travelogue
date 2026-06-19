@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 import json
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -94,7 +94,7 @@ def apply_stratum_audit(
         applied += 1
     out["rows"] = rows
     out["stratumAudit"] = {
-        "auditedAt": datetime.now(timezone.utc).isoformat(),
+        "auditedAt": datetime.now(UTC).isoformat(),
         "changeCount": applied,
         "changeRatio": audit.get("changeRatio"),
         "oldStrata": audit.get("oldStrata"),

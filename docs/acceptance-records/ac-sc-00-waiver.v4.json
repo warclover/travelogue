@@ -1,0 +1,46 @@
+{
+  "version": "1",
+  "recordedAt": "2026-06-19T12:00:00+00:00",
+  "frozen": true,
+  "accepted": true,
+  "acceptedAt": "2026-06-19T12:00:00+00:00",
+  "notes": "AC-SC-00 v4 条件 waiver · general/group min-n 未达 · 不阻塞 merge master",
+  "strictSignoff": "docs/acceptance-records/aesthetic-stratified-signoff.v4.json",
+  "sc00RecruitLabels": "docs/acceptance-records/aesthetic-human-labels.sc00-recruit.v4.json",
+  "strictResult": {
+    "AC-SC-00": {
+      "passed": false,
+      "perStratum": {
+        "group": { "count": 29, "required": 30, "gap": 1 },
+        "general": { "count": 10, "required": 20, "gap": 10 },
+        "person": { "count": 176, "required": 30, "passed": true },
+        "landscape": { "count": 266, "required": 20, "passed": true },
+        "food": { "count": 47, "required": 20, "passed": true }
+      }
+    }
+  },
+  "waiver": {
+    "approved": true,
+    "rationale": [
+      "v4 calibration 语料内 general/group 未标注候选已耗尽（recruit 仅 +6 general）",
+      "AC-SC-01/02 已过 · purpose AC-SC-03 waiver 已接受",
+      "general 层 n=10 已具备 blend 校准网格（bestSrcc 0.83）",
+      "group 仅差 1 张（29/30）",
+      "post-merge 可从 dogfood 或其它 trip 扩标，不阻塞 G3 默认"
+    ],
+    "conditions": [
+      "merge 后监控 general/group 层 SRCC 漂移",
+      "新 trip ingest 时优先补 group/general 标签",
+      "不得用 hold-out 恩施参与校准拟合"
+    ],
+    "postMerge": [
+      "扩展 recruit 脚本支持全 trip 扫描",
+      "或下调 PRD min-n 与现状对齐"
+    ]
+  },
+  "acceptance": {
+    "AC-SC-00-strict": false,
+    "AC-SC-00-waiver": true,
+    "merge-to-master": "go"
+  }
+}

@@ -31,10 +31,13 @@ trip.curation.purposeProfileKind  →  profileTemplates[kind]
 
 ## 放量检查清单
 
-- [ ] `pip install -e ".[cull-ml]"` 本机可用
-- [ ] `python scripts/aesthetic_dogfood_recurate_g3.py` 三本 dogfood
-- [ ] Studio 抽检 cover/hero 是否漂移
-- [ ] AC-SC-00：补标 [sc00-recruit HTML](../acceptance-records/aesthetic-blind-review.sc00-recruit.v4.html)（**+6 general 已合并** · 仍缺 general 10、group 1）
+- [x] `pip install -e ".[cull-ml]"` 本机可用
+- [x] `python scripts/aesthetic_dogfood_recurate_g3.py` 三本 dogfood → [recurate.v4.json](../acceptance-records/aesthetic-g3-dogfood-recurate.v4.json)
+- [ ] Studio 抽检 cover/hero 是否漂移（**merge 前人工**）
+- [x] AC-SC-00 sc00-recruit +6 general 已合并
+- [x] AC-SC-00 waiver 接受 → [ac-sc-00-waiver.v4.json](../acceptance-records/ac-sc-00-waiver.v4.json)
+- [x] AC-SC-04 dogfood validation → [dogfood-validation.v4.json](../acceptance-records/aesthetic-dogfood-validation.v4.json)
+- [x] Merge 准备文档 → [MERGE-READINESS.v4.md](./MERGE-READINESS.v4.md)
 
 ## 回滚
 

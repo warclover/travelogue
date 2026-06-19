@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -129,7 +129,7 @@ def build_signoff_report(
         "notes": "分层精选 signoff · merged v3",
         "corpusVersion": corpus.get("version", "v3"),
         "labelsSource": None,
-        "recordedAt": datetime.now(timezone.utc).isoformat(),
+        "recordedAt": datetime.now(UTC).isoformat(),
         "frozen": bool(labels_doc.get("frozen")),
         "minStratumSamples": min_n,
         "perStratum": per_stratum,

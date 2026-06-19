@@ -6,7 +6,6 @@ import argparse
 import copy
 import json
 import sys
-from dataclasses import replace
 from datetime import UTC, datetime
 from itertools import product
 from pathlib import Path
@@ -16,16 +15,19 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from scripts.aesthetic_purpose_pairwise_export import export_trip_pairwise  # noqa: E402
 from travelogue.config import get_config  # noqa: E402
 from travelogue.config.aesthetic import AestheticConfig  # noqa: E402
-from travelogue.config.aesthetic_purpose_profiles import build_pilot_aligned_cfg, profile_summary  # noqa: E402
+from travelogue.config.aesthetic_purpose_profiles import (  # noqa: E402
+    build_pilot_aligned_cfg,
+    profile_summary,
+)
 from travelogue.curation.aesthetic_purpose_blind import (  # noqa: E402
     PurposeKey,
     build_purpose_pairwise_html,
     rank_assets_for_purpose,
 )
 from travelogue.curation.aesthetic_score import apply_aesthetic_alignment  # noqa: E402
-from scripts.aesthetic_purpose_pairwise_export import export_trip_pairwise  # noqa: E402
 
 CAL_V4 = ROOT / "docs/acceptance-records/aesthetic-stratum-calibration.merged.v4.json"
 RECORDS = ROOT / "docs/acceptance-records"

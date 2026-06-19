@@ -6,7 +6,6 @@ import argparse
 import copy
 import json
 import sys
-from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -14,15 +13,18 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from travelogue.config import AestheticConfig, DEFAULT_STRATUM_BLENDS  # noqa: E402
+from travelogue.config import (  # noqa: E402
+    DEFAULT_STRATUM_BLENDS,
+    AestheticConfig,
+    resolve_learned_blend,  # noqa: E402
+)
+from travelogue.curation.aesthetic_blind_review import srcc_report  # noqa: E402
 from travelogue.curation.aesthetic_learned_eval import (  # noqa: E402
     _read_learned_aesthetic_score,
     blended_score,
     ensure_learned_scores,
     rules_for_purpose,
 )
-from travelogue.config import resolve_learned_blend  # noqa: E402
-from travelogue.curation.aesthetic_blind_review import srcc_report  # noqa: E402
 from travelogue.curation.aesthetic_score import purpose_overall  # noqa: E402
 from travelogue.curation.photo_cull_ml import pyiqa_available  # noqa: E402
 
