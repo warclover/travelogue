@@ -64,6 +64,7 @@ V2_HOME_MARKERS = (
     "v2-first-success",
     "v2-success-open",
     "v2-success-stay",
+    "v2-success-details",
     "打开卷轴预览",
     # M20 · 高级分析选项（工作台 Popover）
     "v2-advanced-toggle",
@@ -356,9 +357,12 @@ def test_studio_home_v2_layout_tier_and_failed_modules() -> None:
     css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
     assert ".v2-first-success {" in css
     first_success_block = css.split(".v2-first-success {", 1)[1].split("}", 1)[0]
+    first_success_panel = css.split(".v2-first-success__panel {", 1)[1].split("}", 1)[0]
     failure_block = css.split(".v2-failure {", 1)[1].split("}", 1)[0]
     assert "position: fixed" in first_success_block
     assert "position: fixed" in failure_block
+    assert "isolation: isolate" in first_success_panel
+    assert "--v2-fs-ink" in first_success_panel
     assert "z-index: 2500" in failure_block
     assert "readServerBucketId" in bucket
     assert "resolveBucketId" in bucket

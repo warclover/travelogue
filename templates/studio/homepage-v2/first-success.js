@@ -112,25 +112,36 @@ function populateSuccessUi(result) {
   if (!_successRefinedEnabled) _successMode = "fine_craft";
   var title = result.title || "我的旅途";
   var msg = $("v2-success-msg");
+  var details = $("v2-success-details");
   if (msg) {
     var featured = result.featuredCount;
     var segments = result.segmentCount;
     var photoCount = result.photoCount || 0;
     if (result.g1Pending) {
       msg.textContent = "《" + title + "》章节结构已就绪，请先在预览中确认。";
+      if (details) {
+        details.textContent = "";
+        show(details, false);
+      }
     } else {
       var summary = featured > 0 ? ("精选 " + featured + " 张") : ("照片 " + photoCount + " 张");
       if (segments > 0) summary += "，行程 " + segments + " 段";
       var line1 = "《" + title + "》已生成 · " + summary;
+      var detailLines = [];
       var tplLine = result.templateFeedbackMessage || "";
-      var body = line1;
-      if (tplLine) body += "\n" + tplLine;
-      if (result.cullUserLine) body += "\n" + result.cullUserLine;
+      if (tplLine) detailLines.push(tplLine);
+      if (result.cullUserLine) detailLines.push(result.cullUserLine);
       var density = String(result.layoutDensity || "").toLowerCase();
       var densityLine = densitySummaryLine(density);
-      if (densityLine) body += "\n" + densityLine;
-      msg.textContent = body;
-      msg.setAttribute("aria-label", body.replace(/\n/g, "; "));
+      if (densityLine) detailLines.push(densityLine);
+      msg.textContent = line1;
+      if (details) {
+        var detailBody = detailLines.join("\n");
+        details.textContent = detailBody;
+        show(details, detailLines.length > 0);
+      }
+      var ariaBody = line1 + (detailLines.length ? "; " + detailLines.join("; ") : "");
+      msg.setAttribute("aria-label", ariaBody);
       if (result.templateFeedbackKind) {
         var ev = result.templateFeedbackKind === "fallback"
           ? "template_fallback_shown"

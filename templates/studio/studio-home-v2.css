@@ -2462,6 +2462,11 @@ body { overflow-x: clip; overflow-y: visible; }
   pointer-events: auto;
 }
 .v2-first-success__panel {
+  /* fixed 深色浮层：独立字色，不继承页面主题 --v2-ink */
+  --v2-fs-ink: #f5f0e8;
+  --v2-fs-muted: rgba(255, 255, 255, .62);
+  --v2-fs-accent: #d4b896;
+  --v2-fs-accent: color-mix(in srgb, var(--v2-gold) 48%, #fff 52%);
   position: relative;
   z-index: 1;
   width: min(440px, 92vw);
@@ -2472,6 +2477,9 @@ body { overflow-x: clip; overflow-y: visible; }
   text-align: center;
   pointer-events: auto;
   box-shadow: 0 24px 64px rgba(0, 0, 0, .45);
+  color: var(--v2-fs-ink);
+  color-scheme: dark;
+  isolation: isolate;
 }
 .v2-first-success__cover {
   margin: 0 auto 14px;
@@ -2491,7 +2499,7 @@ body { overflow-x: clip; overflow-y: visible; }
   margin: 0 0 6px;
   font-size: 11px;
   letter-spacing: .12em;
-  color: var(--v2-gold);
+  color: var(--v2-fs-accent);
 }
 .v2-first-success__msg {
   margin: 0 0 8px;
@@ -2499,12 +2507,22 @@ body { overflow-x: clip; overflow-y: visible; }
   font-size: 20px;
   font-weight: 400;
   line-height: 1.35;
+  color: var(--v2-fs-ink);
+}
+.v2-first-success__details {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
   white-space: pre-line;
+  color: var(--v2-fs-muted);
+}
+.v2-first-success__msg:has(+ .v2-first-success__details:not([hidden])) {
+  margin-bottom: 4px;
 }
 .v2-first-success__countdown {
   margin: 0 0 14px;
   font-size: 12px;
-  color: rgba(255, 255, 255, .55);
+  color: var(--v2-fs-muted);
 }
 .v2-first-success__actions {
   display: flex;
@@ -2533,13 +2551,13 @@ body { overflow-x: clip; overflow-y: visible; }
   padding: 8px 12px;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, .55);
+  color: var(--v2-fs-muted);
   font-size: 12px;
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.v2-first-success__stay:hover { color: rgba(255, 255, 255, .85); }
+.v2-first-success__stay:hover { color: var(--v2-fs-ink); }
 
 @media (min-width: 1280px) {
   .v2-sheet__mode-panel[data-mode="fine_craft"] {
@@ -2600,6 +2618,8 @@ body { overflow-x: clip; overflow-y: visible; }
   pointer-events: auto;
 }
 .v2-failure__panel {
+  --v2-fs-ink: #f5f0e8;
+  --v2-fs-muted: rgba(255, 255, 255, .62);
   position: relative;
   z-index: 1;
   width: min(440px, 92vw);
@@ -2610,6 +2630,9 @@ body { overflow-x: clip; overflow-y: visible; }
   text-align: center;
   pointer-events: auto;
   box-shadow: 0 24px 64px rgba(0, 0, 0, .45);
+  color: var(--v2-fs-ink);
+  color-scheme: dark;
+  isolation: isolate;
 }
 .v2-failure__eyebrow {
   margin: 0 0 8px;
@@ -2628,11 +2651,12 @@ body { overflow-x: clip; overflow-y: visible; }
   font-family: var(--v2-font-display);
   font-size: 18px;
   line-height: 1.35;
+  color: var(--v2-fs-ink);
 }
 .v2-failure__hint {
   margin: 0 0 16px;
   font-size: 12px;
-  color: rgba(255, 255, 255, .55);
+  color: var(--v2-fs-muted);
   line-height: 1.5;
 }
 .v2-failure__actions {

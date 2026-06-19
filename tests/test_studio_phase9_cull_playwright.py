@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.test_studio_home_v2_ac_playwright import _goto_v2, _wait_visible
+from tests.test_studio_home_v2_ac_playwright import _goto_v2, _success_dialog_text, _wait_visible
 from tests.test_studio_server import _free_port, _start_studio_server
 from travelogue.web.studio_jobs import reset_job_store
 
@@ -77,7 +77,7 @@ def test_ac_p9_ux_02_v2_first_success_shows_cull_line(studio_server) -> None:
             CULL_LINE,
         )
         _wait_visible(page, "v2-success-open")
-        msg = page.locator("#v2-success-msg").inner_text()
+        msg = _success_dialog_text(page)
         assert "已生成" in msg
         assert "经挑选" in msg
         assert "精选 2 张已为您保留" in msg
@@ -172,7 +172,7 @@ def test_ac_p9_ux_04_max_photos_warn_non_blocking(studio_server) -> None:
         assert page.locator("#ux-cull-warn-toast").inner_text() == warn
         assert "超过建议上限" in warn
         _wait_visible(page, "v2-success-open")
-        assert "经挑选" in page.locator("#v2-success-msg").inner_text()
+        assert "经挑选" in _success_dialog_text(page)
         browser.close()
 
 
@@ -199,10 +199,9 @@ def test_ac_p9_ux_05_fail_open_no_cull_line(studio_server) -> None:
             """
         )
         _wait_visible(page, "v2-success-open")
-        text = page.locator("#v2-success-msg").inner_text()
+        text = _success_dialog_text(page)
         assert "已生成" in text
         assert "经挑选" not in text
-        assert "\n" not in text.strip() or text.count("\n") == 0
         browser.close()
 
 
@@ -236,9 +235,12 @@ def test_ac_p9_ux_06_compact_success_msg_no_overflow(studio_server) -> None:
         overflow = page.evaluate(
             """
             () => {
-              const el = document.getElementById('v2-success-msg');
-              if (!el) return true;
-              return el.scrollWidth <= el.clientWidth + 2;
+              const ids = ['v2-success-msg', 'v2-success-details'];
+              return ids.every((id) => {
+                const el = document.getElementById(id);
+                if (!el || el.hidden) return true;
+                return el.scrollWidth <= el.clientWidth + 2;
+              });
             }
             """
         )

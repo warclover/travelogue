@@ -72,6 +72,24 @@ def _goto_v2(page, base: str, query: str = "") -> None:
     page.goto(url, wait_until="networkidle")
 
 
+def _success_dialog_text(page) -> str:
+    """FirstSuccess 主标题 + 次要说明（v2-success-details）合并文案。"""
+    return page.evaluate(
+        """
+        () => {
+          const msg = document.getElementById('v2-success-msg');
+          const details = document.getElementById('v2-success-details');
+          const parts = [];
+          if (msg && msg.textContent) parts.push(msg.textContent.trim());
+          if (details && !details.hidden && details.textContent) {
+            parts.push(details.textContent.trim());
+          }
+          return parts.join('\\n');
+        }
+        """
+    )
+
+
 def _install_frame_flash_tracker(page) -> None:
     """AC-HP2-11：从首帧起追踪 #v2-frame 是否曾可见。"""
     page.add_init_script(

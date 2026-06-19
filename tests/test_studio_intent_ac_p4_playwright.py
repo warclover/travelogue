@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.test_studio_home_v2_ac_playwright import _goto_v2, _wait_visible
+from tests.test_studio_home_v2_ac_playwright import _goto_v2, _success_dialog_text, _wait_visible
 from tests.test_studio_server import _free_port, _start_studio_server
 from travelogue.web.studio_jobs import reset_job_store
 
@@ -66,7 +66,7 @@ def test_ac_p4_02_first_success_shows_featured_summary(studio_server) -> None:
                 "cullUserLine": "经挑选 40 张进入排版（精选 12 张已为您保留）",
             },
         )
-        msg = page.locator("#v2-success-msg").inner_text()
+        msg = _success_dialog_text(page)
         assert "雨后京都" in msg
         assert "精选 12 张" in msg
         assert "行程 3 段" in msg

@@ -129,7 +129,20 @@ def check_g8_09_template_feedback(page: Page, base: str) -> dict:
         msg_line,
     )
     _wait_visible(page, "v2-success-open")
-    text = page.locator("#v2-success-msg").inner_text()
+    text = page.evaluate(
+        """
+        () => {
+          const msg = document.getElementById('v2-success-msg');
+          const details = document.getElementById('v2-success-details');
+          const parts = [];
+          if (msg && msg.textContent) parts.push(msg.textContent.trim());
+          if (details && !details.hidden && details.textContent) {
+            parts.push(details.textContent.trim());
+          }
+          return parts.join('\\n');
+        }
+        """
+    )
     ok = msg_line in text
     return {
         "id": "G8-09",
