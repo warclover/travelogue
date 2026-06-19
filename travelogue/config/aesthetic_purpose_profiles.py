@@ -1,4 +1,4 @@
-"""Per-trip purpose pilot profiles (cover/hero weight + stratum scope)."""
+"""Purpose pilot profiles · global templates + album/trip kind resolution (PRD-SC DS-3)."""
 
 from __future__ import annotations
 
@@ -17,6 +17,18 @@ from travelogue.curation.aesthetic_purpose_calibrate import weights_with_dim_emp
 
 DEFAULT_PROFILES_PATH = Path("docs/acceptance-records/aesthetic-purpose-profiles.v4.json")
 
+PURPOSE_PROFILE_KINDS: tuple[str, ...] = ("portrait", "mixed", "landscape", "underwater")
+
+_META_KEYS = frozenset(
+    {
+        "kind",
+        "role",
+        "humanWinratePctV4p2",
+        "lockedFrom",
+        "humanWinratePctV4p3",
+    }
+)
+
 
 def _as_tuple(value: Any) -> tuple[str, ...] | None:
     if value is None:
@@ -30,7 +42,7 @@ def _as_tuple(value: Any) -> tuple[str, ...] | None:
 def _load_profiles_json(path_str: str) -> dict[str, Any]:
     path = Path(path_str)
     if not path.is_file():
-        return {"version": "1", "trips": {}}
+        return {"version": "1", "profileTemplates": {}, "tripKindMap": {}, "trips": {}}
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -42,22 +54,97 @@ def load_purpose_profiles(path: Path | None = None) -> dict[str, Any]:
     return _load_profiles_json(str(resolved.resolve()))
 
 
+def _strip_meta(raw: dict[str, Any]) -> dict[str, Any]:
+    return {k: v for k, v in raw.items() if k not in _META_KEYS and v is not None}
+
+
+def profile_template(
+    kind: str,
+    *,
+    profiles_doc: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    doc = profiles_doc if profiles_doc is not None else load_purpose_profiles()
+    templates = doc.get("profileTemplates") or {}
+    raw = templates.get(kind)
+    if isinstance(raw, dict):
+        return dict(raw)
+    # v1 fallback: trips entry with matching kind
+    for trip_raw in (doc.get("trips") or {}).values():
+        if isinstance(trip_raw, dict) and str(trip_raw.get("kind") or "") == kind:
+            return _strip_meta(trip_raw)
+    return None
+
+
+def infer_purpose_profile_kind(trip: dict | None) -> str:
+    """Resolve profile kind from album composition (DS-3 · no per-trip weights)."""
+    if not trip:
+        return "mixed"
+    curation = trip.get("curation") or {}
+    explicit = curation.get("purposeProfileKind")
+    if explicit and str(explicit) in PURPOSE_PROFILE_KINDS:
+        return str(explicit)
+
+    trip_id = str(trip.get("tripId") or "")
+    doc = load_purpose_profiles()
+    mapped = (doc.get("tripKindMap") or {}).get(trip_id)
+    if mapped and str(mapped) in PURPOSE_PROFILE_KINDS:
+        return str(mapped)
+
+    from travelogue.curation.album_profile import (
+        album_profile_for_trip,
+        stratum_preference_for_trip,
+    )
+
+    pref = stratum_preference_for_trip(trip)
+    if pref == "landscape":
+        return "landscape"
+    if pref == "portrait":
+        return "portrait"
+
+    profile = album_profile_for_trip(trip)
+    dom = str(profile.get("dominantStratum") or "general")
+    strata = profile.get("strata") if isinstance(profile.get("strata"), dict) else {}
+    top = float(strata.get(dom) or 0.0)
+    if dom == "landscape" and top >= 0.55:
+        return "landscape"
+    if dom in ("person", "group") and top >= 0.5:
+        return "portrait"
+    return "mixed"
+
+
 def purpose_profile_for_trip(
     trip: dict | None,
     *,
     profiles_doc: dict[str, Any] | None = None,
     trip_id: str | None = None,
 ) -> dict[str, Any] | None:
+    doc = profiles_doc if profiles_doc is not None else load_purpose_profiles()
+
     if trip:
         stored = (trip.get("curation") or {}).get("purposePilotProfile")
         if isinstance(stored, dict) and stored:
-            return dict(stored)
+            if stored.get("stratumPreference") or stored.get("coverSubjectClarity") is not None:
+                return dict(stored)
         trip_id = trip_id or str(trip.get("tripId") or "")
-    if not trip_id:
+
+    kind: str | None = None
+    if trip:
+        kind_raw = (trip.get("curation") or {}).get("purposeProfileKind")
+        if kind_raw:
+            kind = str(kind_raw)
+    if not kind and trip_id:
+        kind = (doc.get("tripKindMap") or {}).get(trip_id)
+    if not kind and trip:
+        kind = infer_purpose_profile_kind(trip)
+    if not kind and trip_id:
+        legacy = (doc.get("trips") or {}).get(trip_id)
+        if isinstance(legacy, dict):
+            return _strip_meta(legacy)
+    if not kind:
         return None
-    doc = profiles_doc if profiles_doc is not None else load_purpose_profiles()
-    raw = (doc.get("trips") or {}).get(trip_id)
-    return dict(raw) if isinstance(raw, dict) else None
+
+    template = profile_template(str(kind), profiles_doc=doc)
+    return dict(template) if template else None
 
 
 def apply_purpose_pilot_overlay(cfg: AestheticConfig, profile: dict[str, Any]) -> AestheticConfig:

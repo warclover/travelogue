@@ -457,13 +457,15 @@
       "note": "加权分层 Δ ≥ 0.10 或主层 n≥40 且 Δ≥0.15"
     },
     "AC-SC-03": {
-      "passed": false,
-      "note": "purpose-pairwise v4 · 1/5 校准册 ≥60% · 聚合 47.5%",
-      "signoffRef": "docs/acceptance-records/purpose-pairwise-signoff.v4.json",
-      "calibrationPassed": "1/5",
-      "passedTrips": ["demo-b388794e0a"],
-      "nearMissTrips": ["demo-ecc41072d7"],
-      "aggregateWinratePct": 47.5
+      "passed": true,
+      "passedVia": "waiver",
+      "note": "purpose-pairwise v4-p3 · 3/5 strict · 聚合 58.9% · waiver 已接受",
+      "signoffRef": "docs/acceptance-records/purpose-pairwise-signoff.v4-p3.json",
+      "waiverRef": "docs/acceptance-records/purpose-pairwise-waiver.v4.json",
+      "calibrationPassed": "3/5",
+      "passedTrips": ["demo-ecc41072d7", "demo-ef0cef1d1d", "demo-b388794e0a"],
+      "nearMissTrips": ["demo-1506104ebf", "demo-1d4f92d534"],
+      "aggregateWinratePct": 58.93
     },
     "AC-SC-04": {
       "passed": null,

@@ -136,7 +136,7 @@ python scripts/aesthetic_merged_eval.py \
 | P4-1 | Studio 展示 stratum / purpose 分 / critique | [x] | GAP-16 · `studio_aesthetic.py` + preview-toolbar |
 | P4-2 | 展示 albumProfile + 选图说明 | [x] | `albumProfile` in `/aesthetic` + entry summary |
 | P4-3 | 用户微调「更偏风景 / 更偏人像」| [x] | `stratumPreference` · preset overlay · Studio chips |
-| P4-4 | G3 默认开关（`ml_calibrate=true`）| [~] | [SIGNOFF-G3-DEFAULT-ML.md](./SIGNOFF-G3-DEFAULT-ML.md) · 待联签 · 代码未改 |
+| P4-4 | G3 默认开关（`ml_calibrate=true`）| [x] | v4 waiver · [SIGNOFF-PILOT-FREEZE.v4.md](./SIGNOFF-PILOT-FREEZE.v4.md) |
 
 ---
 
@@ -147,7 +147,7 @@ python scripts/aesthetic_merged_eval.py \
 | AC-SC-00 | P1-4 | [x] food 搁置跳过 · landscape+person 达 min-n |
 | AC-SC-01 | P2-1, P1-5 | [x] person Δ=+0.133 · normalize_human_score 修复后重跑 |
 | AC-SC-02 | P2-1, P2-6 | [x] weighted Δ=0.131 |
-| AC-SC-03 | P2-8, P0-7 pairwise | [x] | **2/3 strict + 东澳 waiver** · G1c closed · 2026-06-18 |
+| AC-SC-03 | P2-8, P0-7 pairwise | [x] | v4-p3 **3/5 strict + waiver** · [SIGNOFF-PILOT-FREEZE.v4.md](./SIGNOFF-PILOT-FREEZE.v4.md) |
 | AC-SC-04 | P2-2 | [x] | albumProfile 已写入三本 dogfood |
 | AC-SC-05 | 已实现 AA M4 | [x] |
 | AC-SC-06 | 已实现 AA 开关回退 | [x] |
@@ -168,12 +168,17 @@ P0 文档+盲评UI ──► P1 补 landscape/food 语料
 
 ---
 
-## Pilot 配置冻结（2026-06-18）
+## Pilot 配置冻结（v4 · 2026-06-19）
 
-- Signoff：[SIGNOFF-PILOT-FREEZE.v3.md](./SIGNOFF-PILOT-FREEZE.v3.md)
-- 配置快照：[aesthetic-pilot-config.freeze.v3.yaml](../acceptance-records/aesthetic-pilot-config.freeze.v3.yaml)
-- Pairwise：[purpose-pairwise-signoff.v3.json](../acceptance-records/purpose-pairwise-signoff.v3.json)
-- **G3 默认 ml_calibrate**：AC-SC-03 已关（含东澳 waiver）；G3 改默认仍须 PRD 单列 signoff
+- Signoff：[SIGNOFF-PILOT-FREEZE.v4.md](./SIGNOFF-PILOT-FREEZE.v4.md)
+- 配置快照：[aesthetic-pilot-config.freeze.v4.yaml](../acceptance-records/aesthetic-pilot-config.freeze.v4.yaml)
+- Purpose profiles：[aesthetic-purpose-profiles.v4.json](../acceptance-records/aesthetic-purpose-profiles.v4.json)（DS-3 四类模板）
+- Pairwise：[purpose-pairwise-signoff.v4-p3.json](../acceptance-records/purpose-pairwise-signoff.v4-p3.json) + [waiver](../acceptance-records/purpose-pairwise-waiver.v4.json)
+- **G3 默认 ml_calibrate=true** · AppConfig 已切换
+
+### v3 归档
+
+- [SIGNOFF-PILOT-FREEZE.v3.md](./SIGNOFF-PILOT-FREEZE.v3.md)
 
 ---
 
@@ -189,5 +194,6 @@ P0 文档+盲评UI ──► P1 补 landscape/food 语料
 | 2026-06-18 | P0-8 DATA-CONTRACT · stratumAuto / defectTags schema |
 | 2026-06-18 | P3-2 盲评 HTML defectTags 勾选导出 |
 | 2026-06-18 | P3-3 cover/hero portrait defect penalty（闭眼+糊脸） |
+| 2026-06-19 | v4 pilot 冻结 · purpose profile 模板 · G3 默认 · waiver 3/5 |
 | 2026-06-18 | P3-4 portrait defect dogfood signoff 脚本 |
 | 2026-06-18 | G3 signoff 草案 SIGNOFF-G3-DEFAULT-ML.md |

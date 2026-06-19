@@ -67,14 +67,14 @@
 |----|------|----------|------|----------|
 | **GAP-01** | 扩充人类标签语料至 **≥150 张**（多 trip：人像/风景/食物/合影） | M0、AC-AA-00、§5.B | [x] | **163** 张 · `aesthetic-human-labels.merged.v2.json` |
 | **GAP-02** | 达标 SRCC：**+0.15 或 ≥0.6**（扩样后重跑 M2 校准） | G-AA-02、AC-AA-02、§5.B.4 | [~] | pooled 未达标 → **AC-SC-02** · `TASKS-STRATIFIED` P2 |
-| **GAP-03** | **高价值图位盲评**：rules vs G1+G2 的 cover/hero/moment **pairwise 胜率 ≥60%** | G-AA-03、AC-AA-03、§6、M3 出口 | [~] | `scripts/aesthetic_purpose_blind.py` + 自动化 proxy；人工 pairwise 待填 |
+| **GAP-03** | **高价值图位盲评**：rules vs G1+G2 的 cover/hero/moment **pairwise 胜率 ≥60%** | G-AA-03、AC-AA-03、§6、M3 出口 | [x] | v4-p3 **3/5 strict** · [waiver](../acceptance-records/purpose-pairwise-waiver.v4.json) 接受 |
 | **GAP-04** | **purpose 预设权重网格拟合**（cover/hero/moment 的 5 维权重，非仅 blend） | §5.B.3 | [x] | `grid_search_purpose_weights()` + `scripts/aesthetic_purpose_calibrate.py` |
 
 ### P1 · PRD 明示但未实现 / 未完成
 
 | ID | 任务 | PRD 依据 | 状态 | 说明 |
 |----|------|----------|------|------|
-| **GAP-05** | **AppConfig 默认仍为 rules**（`ml_calibrate=False`）— 联签通过后改 | §8、M4、G3 signoff | [~] | [SIGNOFF-G3-DEFAULT-ML.md](./SIGNOFF-G3-DEFAULT-ML.md) 草案就绪 |
+| **GAP-05** | **AppConfig 默认 G3 pilot** | §8、M4、G3 signoff | [x] | v4 waiver · [aesthetic-g3-signoff.v4.json](../acceptance-records/aesthetic-g3-signoff.v4.json) |
 | **GAP-06** | **Portrait PRD M1**（MediaPipe 睁眼/脸锐度 → subjectClarity L1） | §12、AC-AA-07、P-1 | [ ] | 替换/增强 `portrait_lite`；见 PRD-PORTRAIT-CULL |
 | **GAP-07** | AC-AA-07 **dogfood 度量**：重点位闭眼/糊脸率 vs 基线 | G-AA-04、AC-PC-D* | [x] | `aesthetic_portrait_defect_signoff.py` |
 | **GAP-08** | **封面选型与 aesthetic 对齐**：MLLM 高分图未成为 cover（asset-104 vs 102） | §4 架构、dogfood 观察 | [x] | `cover_logit_v2` MLLM cover 短名单 +0.12·score tie-break |

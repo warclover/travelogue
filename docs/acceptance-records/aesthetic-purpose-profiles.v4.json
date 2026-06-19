@@ -1,55 +1,33 @@
 {
-  "version": "1",
-  "recordedAt": "2026-06-19T06:35:00+00:00",
+  "version": "2",
+  "recordedAt": "2026-06-19T08:00:00+00:00",
   "calibrationSource": "docs/acceptance-records/aesthetic-stratum-calibration.merged.v4.json",
-  "notes": "Phase 3 · per-trip purpose pilot · human-validated locks on portrait passes + grid tune on landscape/mixed",
-  "judgedSourceSuffix": "v4-p2",
-  "exportSuffix": "v4-p3",
-  "trips": {
-    "demo-1506104ebf": {
-      "stratumPreference": "landscape",
-      "stratumBlendOnly": ["landscape"],
-      "heroStrata": ["landscape"],
-      "coverStrata": ["landscape"],
-      "coverSubjectClarity": 0.15,
-      "heroComposition": 0.35,
-      "albumRelativePercentile": 0.7,
-      "kind": "landscape",
-      "role": "calibration",
-      "humanWinratePctV4p2": 50.0
-    },
-    "demo-ef0cef1d1d": {
+  "notes": "DS-3 · 4 global profileTemplates + tripKindMap · v4-p3 human-validated",
+  "profileTemplates": {
+    "portrait": {
       "stratumPreference": "portrait",
       "heroStrata": ["landscape", "person"],
       "coverSubjectClarity": 0.3,
-      "heroComposition": 0.28,
-      "kind": "portrait",
-      "role": "calibration",
-      "humanWinratePctV4p2": 75.0,
-      "lockedFrom": "v4-p2-human-pass"
+      "heroComposition": 0.35
     },
-    "demo-b388794e0a": {
-      "stratumPreference": "portrait",
-      "heroStrata": ["landscape"],
-      "coverSubjectClarity": 0.3,
-      "heroComposition": 0.42,
-      "kind": "portrait",
-      "role": "calibration",
-      "humanWinratePctV4p2": 83.33,
-      "lockedFrom": "v4-p2-human-pass"
-    },
-    "demo-ecc41072d7": {
+    "mixed": {
       "stratumPreference": "mixed",
       "heroStrata": ["landscape", "person", "group"],
       "coverStrata": ["landscape", "person", "group"],
       "coverSubjectClarity": 0.35,
       "heroSubjectClarity": 0.35,
-      "heroComposition": 0.28,
-      "kind": "mixed",
-      "role": "calibration",
-      "humanWinratePctV4p2": 30.0
+      "heroComposition": 0.28
     },
-    "demo-1d4f92d534": {
+    "landscape": {
+      "stratumPreference": "landscape",
+      "stratumBlendOnly": ["landscape"],
+      "heroStrata": ["landscape"],
+      "coverStrata": ["landscape"],
+      "coverSubjectClarity": 0.2,
+      "heroComposition": 0.38,
+      "albumRelativePercentile": 0.75
+    },
+    "underwater": {
       "stratumPreference": "landscape",
       "stratumBlendOnly": ["landscape", "person"],
       "heroStrata": ["landscape"],
@@ -57,21 +35,45 @@
       "coverComposition": 0.4,
       "heroColor": 0.3,
       "heroComposition": 0.35,
-      "albumRelativePercentile": 0.75,
+      "albumRelativePercentile": 0.75
+    }
+  },
+  "tripKindMap": {
+    "demo-1506104ebf": "landscape",
+    "demo-ef0cef1d1d": "portrait",
+    "demo-b388794e0a": "portrait",
+    "demo-ecc41072d7": "mixed",
+    "demo-1d4f92d534": "underwater",
+    "demo-enshi-v4": "mixed",
+    "demo-2025-6": "mixed",
+    "demo-fc8b3a5c08": "landscape",
+    "demo-1a737d6205": "portrait"
+  },
+  "trips": {
+    "demo-1506104ebf": {
+      "kind": "landscape",
+      "humanWinratePctV4p3": 41.67
+    },
+    "demo-ef0cef1d1d": {
+      "kind": "portrait",
+      "humanWinratePctV4p3": 70.0
+    },
+    "demo-b388794e0a": {
+      "kind": "portrait",
+      "humanWinratePctV4p3": 60.0
+    },
+    "demo-ecc41072d7": {
+      "kind": "mixed",
+      "humanWinratePctV4p3": 83.33
+    },
+    "demo-1d4f92d534": {
       "kind": "underwater",
-      "role": "calibration",
-      "humanWinratePctV4p2": 33.33
+      "humanWinratePctV4p3": 41.67
     },
     "demo-enshi-v4": {
-      "stratumPreference": "mixed",
-      "heroStrata": ["landscape", "person", "group"],
-      "coverStrata": ["landscape", "person"],
-      "coverSubjectClarity": 0.45,
-      "heroSubjectClarity": 0.3,
-      "heroComposition": 0.28,
       "kind": "mixed",
       "role": "hold_out",
-      "humanWinratePctV4p2": 41.67
+      "humanWinratePctV4p3": 50.0
     }
   }
 }

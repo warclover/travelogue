@@ -1,0 +1,159 @@
+{
+  "version": "1",
+  "exportedAt": "2026-06-19T09:16:50.027092+00:00",
+  "purpose": "AC-SC-00 recruit · general/group gap fill",
+  "targetGeneral": 16,
+  "targetGroup": 1,
+  "sampleCount": 6,
+  "stratumCounts": {
+    "general": 6,
+    "group": 0
+  },
+  "rows": [
+    {
+      "displayOrder": 1,
+      "assetId": "asset-202",
+      "tripId": "demo-1506104ebf",
+      "tripDir": "trips/demo-1506104ebf",
+      "displayFile": "assets/asset-202-w1600.webp",
+      "stratum": "general",
+      "stratumAuto": "general",
+      "predictedOverall": 0.586,
+      "predictedCover": 0.6052154218906238,
+      "predictedHero": 0.5903460784313725,
+      "predictedMoment": 0.599156,
+      "predictedSolo": 0.5698030000000001,
+      "dims": {
+        "composition": 0.5567,
+        "exposure": 0.6821,
+        "color": 0.4302,
+        "lighting": 0.4318,
+        "subjectClarity": 0.7979
+      },
+      "humanScore": null,
+      "defectTags": [],
+      "imagePath": "trips/demo-1506104ebf/assets/asset-202-w1600.webp"
+    },
+    {
+      "displayOrder": 2,
+      "assetId": "asset-200",
+      "tripId": "demo-1506104ebf",
+      "tripDir": "trips/demo-1506104ebf",
+      "displayFile": "assets/asset-200-w1600.webp",
+      "stratum": "general",
+      "stratumAuto": "general",
+      "predictedOverall": 0.5813,
+      "predictedCover": 0.5950745788785479,
+      "predictedHero": 0.5690784313725491,
+      "predictedMoment": 0.5750360000000001,
+      "predictedSolo": 0.562821,
+      "dims": {
+        "composition": 0.4313,
+        "exposure": 0.7248,
+        "color": 0.5393,
+        "lighting": 0.4435,
+        "subjectClarity": 0.7707
+      },
+      "humanScore": null,
+      "defectTags": [],
+      "imagePath": "trips/demo-1506104ebf/assets/asset-200-w1600.webp"
+    },
+    {
+      "displayOrder": 3,
+      "assetId": "asset-188",
+      "tripId": "demo-fc8b3a5c08",
+      "tripDir": "trips/demo-fc8b3a5c08",
+      "displayFile": "assets/asset-188-w3200.webp",
+      "stratum": "general",
+      "stratumAuto": "general",
+      "predictedOverall": 0.5292,
+      "predictedCover": 0.5561,
+      "predictedHero": 0.5683,
+      "predictedMoment": 0.5132,
+      "predictedSolo": 0.5014,
+      "dims": {
+        "composition": 0.6323,
+        "exposure": 0.6151,
+        "color": 0.6966,
+        "lighting": 0.2267,
+        "subjectClarity": 0.5101
+      },
+      "humanScore": null,
+      "defectTags": [],
+      "imagePath": "trips/demo-fc8b3a5c08/assets/asset-188-w3200.webp"
+    },
+    {
+      "displayOrder": 4,
+      "assetId": "asset-114",
+      "tripId": "demo-fc8b3a5c08",
+      "tripDir": "trips/demo-fc8b3a5c08",
+      "displayFile": "assets/asset-114-w3200.webp",
+      "stratum": "general",
+      "stratumAuto": "general",
+      "predictedOverall": 0.5605,
+      "predictedCover": 0.6226,
+      "predictedHero": 0.5976,
+      "predictedMoment": 0.6517,
+      "predictedSolo": 0.6463,
+      "dims": {
+        "composition": 0.4029,
+        "exposure": 0.8438,
+        "color": 0.3259,
+        "lighting": 0.7562,
+        "subjectClarity": 0.8523
+      },
+      "humanScore": null,
+      "defectTags": [],
+      "imagePath": "trips/demo-fc8b3a5c08/assets/asset-114-w3200.webp"
+    },
+    {
+      "displayOrder": 5,
+      "assetId": "asset-125",
+      "tripId": "demo-ecc41072d7",
+      "tripDir": "trips/demo-ecc41072d7",
+      "displayFile": "assets/asset-125-w1600.webp",
+      "stratum": "general",
+      "stratumAuto": "general",
+      "predictedOverall": 0.5112,
+      "predictedCover": 0.5206002307514807,
+      "predictedHero": 0.4922558823529412,
+      "predictedMoment": 0.54417,
+      "predictedSolo": 0.5345030000000001,
+      "dims": {
+        "composition": 0.3065,
+        "exposure": 0.7083,
+        "color": 0.238,
+        "lighting": 0.6141,
+        "subjectClarity": 0.7659
+      },
+      "humanScore": null,
+      "defectTags": [],
+      "imagePath": "trips/demo-ecc41072d7/assets/asset-125-w1600.webp"
+    },
+    {
+      "displayOrder": 6,
+      "assetId": "asset-144",
+      "tripId": "demo-fc8b3a5c08",
+      "tripDir": "trips/demo-fc8b3a5c08",
+      "displayFile": "assets/asset-144-w3200.webp",
+      "stratum": "general",
+      "stratumAuto": "general",
+      "predictedOverall": 0.7302,
+      "predictedCover": 0.7004,
+      "predictedHero": 0.659,
+      "predictedMoment": 0.6959,
+      "predictedSolo": 0.6933,
+      "dims": {
+        "composition": 0.45,
+        "exposure": 0.7788,
+        "color": 0.6189,
+        "lighting": 0.7211,
+        "subjectClarity": 0.9139
+      },
+      "humanScore": null,
+      "defectTags": [],
+      "imagePath": "trips/demo-fc8b3a5c08/assets/asset-144-w3200.webp"
+    }
+  ],
+  "notes": "人工盲评后 merge 进 aesthetic-human-labels.merged.v4.json 并重跑 signoff"
+}

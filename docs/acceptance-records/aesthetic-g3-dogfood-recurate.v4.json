@@ -1,0 +1,167 @@
+{
+  "recordedAt": "2026-06-19T09:17:00.292513+00:00",
+  "trips": [
+    {
+      "tripId": "demo-2025-6",
+      "albumProfile": {
+        "version": "1",
+        "computedAt": "2026-06-19T09:17:00Z",
+        "eligibleImages": 112,
+        "strata": {
+          "person": 0.4464,
+          "landscape": 0.5536
+        },
+        "dominantStratum": "landscape",
+        "isSkewed": false
+      },
+      "aestheticAlignment": {
+        "ml": true,
+        "mllm": {
+          "enabled": true,
+          "scored": 5,
+          "cached": 5,
+          "failed": 0,
+          "skipped": 0,
+          "calls": 0
+        },
+        "portraitLite": 4,
+        "portraitSubjectClarity": 121,
+        "telemetry": {
+          "version": "1",
+          "source": "rules+ml",
+          "mlCalibrate": true,
+          "mllmEnabled": true,
+          "portraitLiteEnabled": true,
+          "eligibleImages": 112,
+          "learnedScored": 112,
+          "learnedHitRate": 1.0,
+          "mllmScored": 6,
+          "mllmHitRate": 0.0536,
+          "portraitLiteAdjusted": 4,
+          "mlApplied": true,
+          "mllmCalls": 0,
+          "mllmCached": 5,
+          "mllmFailed": 0,
+          "failOpen": {
+            "mlSkipped": false,
+            "mllmSkipped": false,
+            "mllmFailures": 0
+          }
+        }
+      },
+      "curate": {
+        "chapterCount": 3,
+        "layoutSummary": "共 112 张 · 横 56 · 竖 50 · 全景 6 · 版式 mobile；7 组横图三联、3 条全景宽条"
+      },
+      "purposeProfileKind": "mixed"
+    },
+    {
+      "tripId": "demo-fc8b3a5c08",
+      "albumProfile": {
+        "version": "1",
+        "computedAt": "2026-06-19T09:17:08Z",
+        "eligibleImages": 146,
+        "strata": {
+          "person": 0.1849,
+          "landscape": 0.8151
+        },
+        "dominantStratum": "landscape",
+        "isSkewed": true
+      },
+      "aestheticAlignment": {
+        "ml": true,
+        "mllm": {
+          "enabled": true,
+          "scored": 5,
+          "cached": 5,
+          "failed": 0,
+          "skipped": 0,
+          "calls": 0
+        },
+        "portraitLite": 197,
+        "portraitSubjectClarity": 0,
+        "telemetry": {
+          "version": "1",
+          "source": "rules+ml",
+          "mlCalibrate": true,
+          "mllmEnabled": true,
+          "portraitLiteEnabled": true,
+          "eligibleImages": 146,
+          "learnedScored": 146,
+          "learnedHitRate": 1.0,
+          "mllmScored": 3,
+          "mllmHitRate": 0.0205,
+          "portraitLiteAdjusted": 197,
+          "mlApplied": true,
+          "mllmCalls": 0,
+          "mllmCached": 5,
+          "mllmFailed": 0,
+          "failOpen": {
+            "mlSkipped": false,
+            "mllmSkipped": false,
+            "mllmFailures": 0
+          }
+        }
+      },
+      "curate": {
+        "chapterCount": 4,
+        "layoutSummary": "共 146 张 · 横 119 · 竖 25 · 方 2 · 版式 mobile；20 组横图三联"
+      },
+      "purposeProfileKind": "landscape"
+    },
+    {
+      "tripId": "demo-1a737d6205",
+      "albumProfile": {
+        "version": "1",
+        "computedAt": "2026-06-19T09:17:08Z",
+        "eligibleImages": 181,
+        "strata": {
+          "person": 0.5635,
+          "landscape": 0.4365
+        },
+        "dominantStratum": "person",
+        "isSkewed": false
+      },
+      "aestheticAlignment": {
+        "ml": true,
+        "mllm": {
+          "enabled": true,
+          "scored": 5,
+          "cached": 5,
+          "failed": 0,
+          "skipped": 0,
+          "calls": 0
+        },
+        "portraitLite": 7,
+        "portraitSubjectClarity": 216,
+        "telemetry": {
+          "version": "1",
+          "source": "rules+ml",
+          "mlCalibrate": true,
+          "mllmEnabled": true,
+          "portraitLiteEnabled": true,
+          "eligibleImages": 181,
+          "learnedScored": 181,
+          "learnedHitRate": 1.0,
+          "mllmScored": 6,
+          "mllmHitRate": 0.0331,
+          "portraitLiteAdjusted": 7,
+          "mlApplied": true,
+          "mllmCalls": 0,
+          "mllmCached": 5,
+          "mllmFailed": 0,
+          "failOpen": {
+            "mlSkipped": false,
+            "mllmSkipped": false,
+            "mllmFailures": 0
+          }
+        }
+      },
+      "curate": {
+        "chapterCount": 3,
+        "layoutSummary": "共 181 张 · 横 79 · 竖 102 · 版式 mobile；12 组横图三联"
+      },
+      "purposeProfileKind": "portrait"
+    }
+  ]
+}
