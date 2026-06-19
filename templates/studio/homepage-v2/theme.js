@@ -3,6 +3,7 @@
  */
 import {
   $,
+  V2_THEME_LABELS,
   applyTheme,
   persistTheme,
   readThemePreference,
@@ -11,11 +12,6 @@ import {
 export function initThemeSettings() {
   var select = $("v2-theme-select");
   var initialTheme = applyTheme(readThemePreference());
-  var THEME_LABEL = {
-    sky: "清新浅蓝",
-    classic: "经典深色",
-    dawn: "暖阳珊瑚",
-  };
   if (!select) return;
 
   persistTheme(initialTheme);
@@ -23,8 +19,9 @@ export function initThemeSettings() {
   select.addEventListener("change", function () {
     var next = applyTheme(select.value);
     persistTheme(next);
+    select.value = next;
     if (typeof studioToast === "function") {
-      studioToast("已切换到" + (THEME_LABEL[next] || "清新浅蓝"), {
+      studioToast("已切换到" + (V2_THEME_LABELS[next] || V2_THEME_LABELS.sky), {
         duration: 1600,
       });
     }

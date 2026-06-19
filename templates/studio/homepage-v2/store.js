@@ -50,14 +50,23 @@ export const V2 = {
   importShell: "bento", // 方案 A：Import 前壳层恒为 Bento 首屏
   reroute: null, // bootstrap 注入：重新拉 trips 并路由最终态（import 结束/取消后调用）
   onExpand: null, // Lightbox 打开钩子（当前 Bento 未接入）
-  theme: V2_THEME_DEFAULT, // sky | classic | dawn
+  theme: V2_THEME_DEFAULT, // sky | classic | dawn | mist | folio | atelier
 };
 
-const V2_THEME_IDS = new Set(["classic", "dawn"]);
+export const V2_THEME_IDS = ["classic", "dawn", "mist", "folio", "atelier"];
+export const V2_THEME_LABELS = {
+  sky: "清新浅蓝",
+  classic: "经典深色",
+  dawn: "暖阳珊瑚",
+  mist: "雾蓝纸本",
+  folio: "纸墨装帧",
+  atelier: "木紫文艺",
+};
+const V2_THEME_ID_SET = new Set(V2_THEME_IDS);
 
 function normalizeTheme(theme) {
   if (theme === "sky") return "sky";
-  if (V2_THEME_IDS.has(theme)) return theme;
+  if (V2_THEME_ID_SET.has(theme)) return theme;
   return "sky";
 }
 

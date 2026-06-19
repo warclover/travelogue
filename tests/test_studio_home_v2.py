@@ -179,6 +179,34 @@ def test_studio_home_v2_css_present() -> None:
     assert "var(--v2-create-card-bg-image)" in create_card
 
 
+def test_studio_home_v2_theme_palette_options() -> None:
+    """新增 mist / folio / atelier 三套中国传统色主题。"""
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+    css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    store = (STUDIO_DIR / "homepage-v2" / "store.js").read_text(encoding="utf-8")
+    theme_js = (STUDIO_DIR / "homepage-v2" / "theme.js").read_text(encoding="utf-8")
+    boot = (STUDIO_DIR / "homepage-v2" / "theme-boot.js").read_text(encoding="utf-8")
+
+    assert 'src="/__studio/homepage-v2/theme-boot.js"' in html
+
+    for theme_id, label in (
+        ("mist", "雾蓝纸本"),
+        ("folio", "纸墨装帧"),
+        ("atelier", "木紫文艺"),
+    ):
+        assert f'<option value="{theme_id}">{label}</option>' in html
+        assert f':root[data-v2-theme="{theme_id}"]' in css
+        assert f'--v2-primary: #' in css.split(f':root[data-v2-theme="{theme_id}"]', 1)[1].split("}", 1)[0]
+        assert f'{theme_id}:' in store
+        assert f"{theme_id}: 1" in boot
+
+    assert 'export const V2_THEME_IDS = ["classic", "dawn", "mist", "folio", "atelier"]' in store
+    assert "V2_THEME_LABELS" in store
+    assert "V2_THEME_LABELS" in theme_js
+    assert ':root[data-v2-theme="folio"] .v2-bento__veil' in css
+    assert ':root[data-v2-theme="atelier"] .v2-bento__veil' in css
+
+
 def test_studio_home_v2_js_modules_present() -> None:
     bootstrap = (STUDIO_DIR / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
     bento = (STUDIO_DIR / "homepage-v2" / "bento.js").read_text(encoding="utf-8")

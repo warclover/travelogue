@@ -1,0 +1,18 @@
+/**
+ * 首屏主题闪屏抑制：在 CSS 解析前恢复 localStorage 中的 data-v2-theme。
+ * 须与 store.js 中 V2_THEME_IDS 保持同步。
+ */
+(function () {
+  var KEY = "travelogue.studio.v2.theme";
+  var ALLOWED = { classic: 1, dawn: 1, mist: 1, folio: 1, atelier: 1 };
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (!raw || raw === "sky" || !ALLOWED[raw]) {
+      document.documentElement.removeAttribute("data-v2-theme");
+      return;
+    }
+    document.documentElement.setAttribute("data-v2-theme", raw);
+  } catch (e) {
+    /* ignore */
+  }
+})();
