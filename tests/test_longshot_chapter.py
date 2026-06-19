@@ -62,6 +62,20 @@ def test_longshot_css_caption_display() -> None:
     assert "font-size: 26px" in css
 
 
+def test_longshot_split_mat_title_horizontal_on_capture() -> None:
+    """split-mat 竖排书名在长图截图态须横排，且按字数分档字号。"""
+    css = LONGSHOT_CSS.read_text(encoding="utf-8")
+    marker = 'body.longshot-capturing .cover-opening[data-cover-opening="split-mat"] .cover-opening__title--vertical,'
+    start = css.index(marker)
+    end = css.index("/* ≤8 字", start)
+    capture_block = css[start:end]
+    assert "writing-mode: horizontal-tb" in capture_block
+    assert "vertical-rl" not in capture_block
+    assert "clamp(24px, 6.5vw, 28px)" in css
+    assert "font-size: 21px" in css
+    assert "font-size: 19px" in css
+
+
 def test_longshot_css_preview_and_wechat() -> None:
     css = LONGSHOT_CSS.read_text(encoding="utf-8")
     assert ".longshot-preview" in css

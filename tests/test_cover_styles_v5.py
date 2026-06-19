@@ -500,6 +500,74 @@ def test_cover_styles_v5_longshot_cover_smoke(cover_styles_workspace: Path, cove
     assert metrics["patchCountAfter"] == metrics["patchCountBefore"]
 
 
+_SPLIT_MAT_LONGSHOT_TITLE_CAPTURE_JS = """async () => {
+  const title = document.querySelector('.cover-opening__title');
+  if (!title) return null;
+  document.body.classList.add('longshot-capturing');
+  document.documentElement.classList.add('longshot-capturing-root');
+  document.documentElement.setAttribute('data-layout', 'mobile');
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const cs = getComputedStyle(title);
+  const out = {
+    writingMode: cs.writingMode,
+    textAlign: cs.textAlign,
+    fontSize: cs.fontSize,
+    titleClass: title.className,
+  };
+  document.body.classList.remove('longshot-capturing');
+  document.documentElement.classList.remove('longshot-capturing-root');
+  return out;
+}"""
+
+
+@pytest.mark.e2e
+@pytest.mark.playwright_serial
+def test_cover_styles_v5_split_mat_longshot_title_horizontal(tmp_path: Path) -> None:
+    """split-mat 短书名：长图截图态横排 + 居中。"""
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    trip_id = "cover-split-mat-longshot-title"
+    trip_dir = trips_dir / trip_id
+    trip_dir.mkdir(parents=True)
+    trip = json.loads(_FIXTURE.read_text(encoding="utf-8"))
+    trip["tripId"] = trip_id
+    trip.setdefault("meta", {})["coverOpeningStyle"] = "split-mat"
+    trip["meta"]["title"] = "斯里兰卡风光精选"
+    shutil.copytree(TEMPLATE_VISUAL_JOURNAL / "assets", trip_dir / "assets")
+    (trip_dir / "assets" / "demo" / "placeholder.m4a").write_bytes(b"")
+    (trip_dir / "assets" / "demo" / "video.mp4").write_bytes(b"")
+    (trip_dir / "trip.json").write_text(json.dumps(trip, ensure_ascii=False, indent=2), encoding="utf-8")
+    render_trip(trip_dir / "trip.json", validate=False, layout_engine="screens")
+    from travelogue.render.engine import write_longshot_sidecar
+
+    trip = json.loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
+    write_longshot_sidecar(trip, trip_dir, export_mode="draft", trip_root=trip_dir)
+    pytest.importorskip("playwright")
+    from playwright.sync_api import sync_playwright
+
+    from travelogue.web.longshot_smoke import _start_static_server
+
+    server = _start_static_server(trip_dir, "127.0.0.1", 0)
+    port = server.server_address[1]
+    url = f"http://127.0.0.1:{port}/index-longshot.html"
+    try:
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(headless=True)
+            page = browser.new_page(viewport={"width": 428, "height": 844})
+            page.goto(url, wait_until="networkidle")
+            metrics = page.evaluate(_SPLIT_MAT_LONGSHOT_TITLE_CAPTURE_JS)
+            browser.close()
+    finally:
+        server.shutdown()
+        server.server_close()
+
+    assert metrics is not None
+    assert "cover-opening__title--vertical" in metrics["titleClass"]
+    assert metrics["writingMode"] in ("horizontal-tb", "lr-tb")
+    assert metrics["textAlign"] == "center"
+    assert float(metrics["fontSize"].replace("px", "")) >= 24
+
+
 def test_resolve_split_mat_title_layout_tiers() -> None:
     assert resolve_split_mat_title_layout("斯里兰卡风光精选") == "vertical"
     assert resolve_split_mat_title_layout("东澳岛") == "vertical"

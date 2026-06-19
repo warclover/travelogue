@@ -340,32 +340,51 @@ body.longshot-capturing .cover-opening__title {
   overflow: hidden;
 }
 
+/* split-mat · 长图导出：竖排书名 → 横排（Web 预览仍竖排） */
 body.longshot-capturing .cover-opening[data-cover-opening="split-mat"] .cover-opening__title--vertical,
-body.longshot-capturing .cover-opening[data-cover-opening="split-mat"] .cover-opening__title--vertical-compact {
-  display: block;
-  -webkit-line-clamp: unset;
-  -webkit-box-orient: unset;
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  max-width: none;
-  padding: 0;
-  margin: auto 0;
-  font-family: var(--font-handwriting);
-  font-weight: 400;
-  font-size: 22px;
-  letter-spacing: 0.12em;
-  line-height: 1.35;
-}
-
+body.longshot-capturing .cover-opening[data-cover-opening="split-mat"] .cover-opening__title--vertical-compact,
 body.longshot-capturing .cover-opening[data-cover-opening="split-mat"] .cover-opening__title--horizontal {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
-  font-size: 18px;
-  max-width: none;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
   width: 100%;
-  text-align: left;
-  padding: 0;
+  max-width: none;
+  margin: 0 auto 6px;
+  padding: 0 12px;
+  text-align: center;
+  align-self: stretch;
+  overflow: hidden;
+}
+
+/* ≤8 字：手写体单行/双行，略大字号 */
+body.longshot-capturing .cover-opening[data-cover-opening="split-mat"] .cover-opening__title--vertical {
+  font-family: var(--font-handwriting);
+  font-weight: 400;
+  font-size: clamp(24px, 6.5vw, 28px);
+  letter-spacing: 0.06em;
+  line-height: 1.28;
+  -webkit-line-clamp: 2;
+}
+
+/* 9–14 字：手写体双行紧凑 */
+body.longshot-capturing .cover-opening[data-cover-opening="split-mat"] .cover-opening__title--vertical-compact {
+  font-family: var(--font-handwriting);
+  font-weight: 400;
+  font-size: 21px;
+  letter-spacing: 0.04em;
+  line-height: 1.32;
+  -webkit-line-clamp: 2;
+}
+
+/* >14 字：UI 体多行居中 */
+body.longshot-capturing .cover-opening[data-cover-opening="split-mat"] .cover-opening__title--horizontal {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: 0.03em;
+  line-height: 1.3;
+  -webkit-line-clamp: 3;
 }
 
 body.longshot-capturing .trip-meta {
