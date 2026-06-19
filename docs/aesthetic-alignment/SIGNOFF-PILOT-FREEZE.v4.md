@@ -34,7 +34,7 @@ trip.curation.purposeProfileKind  →  profileTemplates[kind]
 - [ ] `pip install -e ".[cull-ml]"` 本机可用
 - [ ] `python scripts/aesthetic_dogfood_recurate_g3.py` 三本 dogfood
 - [ ] Studio 抽检 cover/hero 是否漂移
-- [ ] AC-SC-00：补标 [sc00-recruit HTML](../acceptance-records/aesthetic-blind-review.sc00-recruit.v4.html)
+- [ ] AC-SC-00：补标 [sc00-recruit HTML](../acceptance-records/aesthetic-blind-review.sc00-recruit.v4.html)（**+6 general 已合并** · 仍缺 general 10、group 1）
 
 ## 回滚
 

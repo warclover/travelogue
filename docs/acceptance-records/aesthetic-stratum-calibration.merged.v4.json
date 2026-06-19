@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-06-19T05:34:11.948824+00:00",
+  "recordedAt": "2026-06-19T09:20:03.274177+00:00",
   "labelsSource": "docs/acceptance-records/aesthetic-human-labels.merged.v4.json",
   "metric": "nima",
   "trips": [
@@ -96,75 +96,75 @@
       ]
     },
     "general": {
-      "sampleCount": 4,
+      "sampleCount": 10,
       "skipped": false,
       "bestBlend": 0.25,
-      "bestSrcc": 0.7746,
+      "bestSrcc": 0.8257,
       "grid": [
         {
           "blend": 0.0,
-          "sampleCount": 4,
-          "srcc": -0.2582
+          "sampleCount": 10,
+          "srcc": 0.6606
         },
         {
           "blend": 0.05,
-          "sampleCount": 4,
-          "srcc": 0.2582
+          "sampleCount": 10,
+          "srcc": 0.7156
         },
         {
           "blend": 0.1,
-          "sampleCount": 4,
-          "srcc": 0.2582
+          "sampleCount": 10,
+          "srcc": 0.7156
         },
         {
           "blend": 0.15,
-          "sampleCount": 4,
-          "srcc": 0.2582
+          "sampleCount": 10,
+          "srcc": 0.7707
         },
         {
           "blend": 0.2,
-          "sampleCount": 4,
-          "srcc": 0.2582
+          "sampleCount": 10,
+          "srcc": 0.7707
         },
         {
           "blend": 0.25,
-          "sampleCount": 4,
-          "srcc": 0.7746
+          "sampleCount": 10,
+          "srcc": 0.8257
         },
         {
           "blend": 0.3,
-          "sampleCount": 4,
-          "srcc": 0.7746
+          "sampleCount": 10,
+          "srcc": 0.8257
         },
         {
           "blend": 0.35,
-          "sampleCount": 4,
-          "srcc": 0.7746
+          "sampleCount": 10,
+          "srcc": 0.7707
         },
         {
           "blend": 0.4,
-          "sampleCount": 4,
-          "srcc": 0.7746
+          "sampleCount": 10,
+          "srcc": 0.7707
         },
         {
           "blend": 0.45,
-          "sampleCount": 4,
-          "srcc": 0.7746
+          "sampleCount": 10,
+          "srcc": 0.7707
         },
         {
           "blend": 0.5,
-          "sampleCount": 4,
-          "srcc": 0.7746
+          "sampleCount": 10,
+          "srcc": 0.7707
         },
         {
           "blend": 0.55,
-          "sampleCount": 4,
-          "srcc": 0.7746
+          "sampleCount": 10,
+          "srcc": 0.7156
         },
         {
           "blend": 0.6,
-          "sampleCount": 4,
-          "srcc": 0.7746
+          "sampleCount": 10,
+          "srcc": 0.6606
         }
       ]
     },
@@ -245,72 +245,72 @@
       "sampleCount": 266,
       "skipped": false,
       "bestBlend": 0.6,
-      "bestSrcc": 0.0927,
+      "bestSrcc": 0.0488,
       "grid": [
         {
           "blend": 0.0,
           "sampleCount": 266,
-          "srcc": -0.109
+          "srcc": -0.1366
         },
         {
           "blend": 0.05,
           "sampleCount": 266,
-          "srcc": -0.099
+          "srcc": -0.1268
         },
         {
           "blend": 0.1,
           "sampleCount": 266,
-          "srcc": -0.0864
+          "srcc": -0.1163
         },
         {
           "blend": 0.15,
           "sampleCount": 266,
-          "srcc": -0.0737
+          "srcc": -0.1064
         },
         {
           "blend": 0.2,
           "sampleCount": 266,
-          "srcc": -0.0571
+          "srcc": -0.0931
         },
         {
           "blend": 0.25,
           "sampleCount": 266,
-          "srcc": -0.0393
+          "srcc": -0.0801
         },
         {
           "blend": 0.3,
           "sampleCount": 266,
-          "srcc": -0.0219
+          "srcc": -0.067
         },
         {
           "blend": 0.35,
           "sampleCount": 266,
-          "srcc": -0.0042
+          "srcc": -0.0539
         },
         {
           "blend": 0.4,
           "sampleCount": 266,
-          "srcc": 0.0142
+          "srcc": -0.0384
         },
         {
           "blend": 0.45,
           "sampleCount": 266,
-          "srcc": 0.0392
+          "srcc": -0.0153
         },
         {
           "blend": 0.5,
           "sampleCount": 266,
-          "srcc": 0.0592
+          "srcc": 0.0047
         },
         {
           "blend": 0.55,
           "sampleCount": 266,
-          "srcc": 0.0732
+          "srcc": 0.0281
         },
         {
           "blend": 0.6,
           "sampleCount": 266,
-          "srcc": 0.0927
+          "srcc": 0.0488
         }
       ]
     },
@@ -318,81 +318,81 @@
       "sampleCount": 176,
       "skipped": false,
       "bestBlend": 0.6,
-      "bestSrcc": 0.3288,
+      "bestSrcc": 0.343,
       "grid": [
         {
           "blend": 0.0,
           "sampleCount": 176,
-          "srcc": 0.2467
+          "srcc": 0.2579
         },
         {
           "blend": 0.05,
           "sampleCount": 176,
-          "srcc": 0.2476
+          "srcc": 0.2609
         },
         {
           "blend": 0.1,
           "sampleCount": 176,
-          "srcc": 0.253
+          "srcc": 0.2661
         },
         {
           "blend": 0.15,
           "sampleCount": 176,
-          "srcc": 0.2578
+          "srcc": 0.2717
         },
         {
           "blend": 0.2,
           "sampleCount": 176,
-          "srcc": 0.2631
+          "srcc": 0.2769
         },
         {
           "blend": 0.25,
           "sampleCount": 176,
-          "srcc": 0.2696
+          "srcc": 0.2826
         },
         {
           "blend": 0.3,
           "sampleCount": 176,
-          "srcc": 0.2771
+          "srcc": 0.2895
         },
         {
           "blend": 0.35,
           "sampleCount": 176,
-          "srcc": 0.2823
+          "srcc": 0.2939
         },
         {
           "blend": 0.4,
           "sampleCount": 176,
-          "srcc": 0.2943
+          "srcc": 0.3051
         },
         {
           "blend": 0.45,
           "sampleCount": 176,
-          "srcc": 0.3038
+          "srcc": 0.3131
         },
         {
           "blend": 0.5,
           "sampleCount": 176,
-          "srcc": 0.32
+          "srcc": 0.3255
         },
         {
           "blend": 0.55,
           "sampleCount": 176,
-          "srcc": 0.3276
+          "srcc": 0.3316
         },
         {
           "blend": 0.6,
           "sampleCount": 176,
-          "srcc": 0.3288
+          "srcc": 0.343
         }
       ]
     }
   },
   "fullCorpus": {
-    "exportBaseline": 0.2853,
-    "rulesBaseline": 0.1258,
-    "stratumBlend": 0.2057,
-    "deltaVsUniform": 0.0235,
+    "exportBaseline": 0.2902,
+    "rulesBaseline": 0.1205,
+    "stratumBlend": 0.1872,
+    "deltaVsUniform": 0.025,
     "note": "健康检查 only，不阻塞 G3"
   }
 }

@@ -1,0 +1,88 @@
+{
+  "version": "1",
+  "frozen": true,
+  "frozenAt": "2026-06-19T12:00:00+00:00",
+  "notes": "AC-SC-00 recruit · 6 general labels · blind-review HTML export 2026-06-19",
+  "sourceExport": "docs/acceptance-records/aesthetic-blind-export.sc00-recruit.v4.json",
+  "exportedAt": "2026-06-19T09:16:50.027092+00:00",
+  "rows": [
+    {
+      "assetId": "asset-202",
+      "tripId": "demo-1506104ebf",
+      "stratum": "general",
+      "stratumAuto": "general",
+      "displayFile": "assets/asset-202-w1600.webp",
+      "humanScore": 3,
+      "predictedOverall": 0.586,
+      "predictedCover": 0.6052154218906238,
+      "predictedHero": 0.5903460784313725,
+      "predictedMoment": 0.599156,
+      "defectTags": []
+    },
+    {
+      "assetId": "asset-200",
+      "tripId": "demo-1506104ebf",
+      "stratum": "general",
+      "stratumAuto": "general",
+      "displayFile": "assets/asset-200-w1600.webp",
+      "humanScore": 3,
+      "predictedOverall": 0.5813,
+      "predictedCover": 0.5950745788785479,
+      "predictedHero": 0.5690784313725491,
+      "predictedMoment": 0.5750360000000001,
+      "defectTags": []
+    },
+    {
+      "assetId": "asset-188",
+      "tripId": "demo-fc8b3a5c08",
+      "stratum": "general",
+      "stratumAuto": "general",
+      "displayFile": "assets/asset-188-w3200.webp",
+      "humanScore": 3,
+      "predictedOverall": 0.5292,
+      "predictedCover": 0.5561,
+      "predictedHero": 0.5683,
+      "predictedMoment": 0.5132,
+      "defectTags": []
+    },
+    {
+      "assetId": "asset-114",
+      "tripId": "demo-fc8b3a5c08",
+      "stratum": "general",
+      "stratumAuto": "general",
+      "displayFile": "assets/asset-114-w3200.webp",
+      "humanScore": 5,
+      "predictedOverall": 0.5605,
+      "predictedCover": 0.6226,
+      "predictedHero": 0.5976,
+      "predictedMoment": 0.6517,
+      "defectTags": []
+    },
+    {
+      "assetId": "asset-125",
+      "tripId": "demo-ecc41072d7",
+      "stratum": "general",
+      "stratumAuto": "general",
+      "displayFile": "assets/asset-125-w1600.webp",
+      "humanScore": 1,
+      "predictedOverall": 0.5112,
+      "predictedCover": 0.5206002307514807,
+      "predictedHero": 0.4922558823529412,
+      "predictedMoment": 0.54417,
+      "defectTags": []
+    },
+    {
+      "assetId": "asset-144",
+      "tripId": "demo-fc8b3a5c08",
+      "stratum": "general",
+      "stratumAuto": "general",
+      "displayFile": "assets/asset-144-w3200.webp",
+      "humanScore": 5,
+      "predictedOverall": 0.7302,
+      "predictedCover": 0.7004,
+      "predictedHero": 0.659,
+      "predictedMoment": 0.6959,
+      "defectTags": []
+    }
+  ]
+}
