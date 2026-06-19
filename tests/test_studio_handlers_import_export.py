@@ -360,6 +360,37 @@ def test_handle_import_quick_share_omits_layout_density(tmp_path: Path) -> None:
     assert "layoutDensity" not in worker_payload
 
 
+def test_handle_import_passes_photo_cull_enabled_default_true(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    album = tmp_path / "album"
+    album.mkdir()
+    handler = MockStudioHandler(trips_dir, json_body={"albumPath": str(album)})
+    with patch("travelogue.web.studio_handlers.import_handlers.run_import_job_subprocess") as run_job:
+        with patch(
+            "travelogue.web.studio_handlers.import_handlers.assert_album_importable",
+        ):
+            handle_import(handler)
+    worker_payload = run_job.call_args.args[1]
+    assert worker_payload["photoCullEnabled"] is True
+
+
+def test_handle_import_passes_photo_cull_enabled_false(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    album = tmp_path / "album"
+    album.mkdir()
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={"albumPath": str(album), "photoCullEnabled": False},
+    )
+    with patch("travelogue.web.studio_handlers.import_handlers.run_import_job_subprocess") as run_job:
+        with patch(
+            "travelogue.web.studio_handlers.import_handlers.assert_album_importable",
+        ):
+            handle_import(handler)
+    worker_payload = run_job.call_args.args[1]
+    assert worker_payload["photoCullEnabled"] is False
+
+
 def test_handle_reveal_denies_path_outside_trip(tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     create_trip("demo-reveal", trips_dir)

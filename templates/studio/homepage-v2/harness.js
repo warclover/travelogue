@@ -150,6 +150,8 @@ const JOB_FIXTURES = {
       title: "Harness · 测试",
       previewUrl: "/harness-trip/index.html",
       photoCount: 12,
+      layoutEligibleCount: 12,
+      photoCullEnabled: true,
       segmentCount: 2,
     },
   },
@@ -356,6 +358,22 @@ export function harnessInstallFetchMocks() {
       }));
     }
     if (href.indexOf("/__travelogue/import") >= 0 && (!opts || opts.method === "POST")) {
+      try {
+        window.__v2HarnessImportBodies = window.__v2HarnessImportBodies || [];
+        if (opts && opts.body instanceof FormData) {
+          var fields = {};
+          opts.body.forEach(function (value, key) {
+            if (key === "files[]") return;
+            fields[key] = value;
+          });
+          window.__v2HarnessImportBodies.push({ kind: "multipart", fields: fields });
+        } else if (opts && typeof opts.body === "string") {
+          window.__v2HarnessImportBodies.push({
+            kind: "json",
+            fields: JSON.parse(opts.body),
+          });
+        }
+      } catch (e) { /* ignore */ }
       return Promise.resolve(new Response(JSON.stringify({ jobId: HARNESS_JOB_ID }), {
         status: 202,
         headers: { "Content-Type": "application/json" },

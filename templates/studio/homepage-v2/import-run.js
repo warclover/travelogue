@@ -15,7 +15,7 @@ import {
 } from "../js/constants.js";
 import { postJson, withJobBusyRetry, isJobBusyResponse } from "../js/http.js";
 import { pollJobUntilDone } from "../js/job-poll.js";
-import { trackStudioEvent } from "../js/analytics.js";
+import { trackStudioEvent, trackImportPhotoCullPref, readPhotoCullPrefSource } from "../js/analytics.js";
 import { V2, $, show, setV2SkipLinkTarget } from "./store.js";
 import { fetchTripsFirstPage } from "./trips-client.js";
 import { renderColdStartBackground } from "./bento.js";
@@ -91,6 +91,7 @@ function buildUploadForm(files, opts) {
   form.append("template_mode", tpl.template_mode || "smart");
   if (tpl.template_id) form.append("template_id", tpl.template_id);
   if (opts.force) form.append("force", "true");
+  form.append("photoCullEnabled", opts.photoCullEnabled === false ? "false" : "true");
   for (var i = 0; i < files.length; i++) {
     form.append("files[]", files[i], files[i].webkitRelativePath || files[i].name);
   }
@@ -266,6 +267,11 @@ function pollImport(jobId, gen, source) {
     },
   }).then(function (job) {
     if (gen !== _gen) return null;
+    var pending = null;
+    try {
+      var pendingRaw = sessionStorage.getItem(SS.activePending);
+      if (pendingRaw) pending = JSON.parse(pendingRaw);
+    } catch (e) { /* ignore */ }
     _activeJobId = null;
     try {
       sessionStorage.removeItem(SS.activeJobId);
@@ -279,6 +285,14 @@ function pollImport(jobId, gen, source) {
         templateId: result.resolvedTemplateId || null,
         layoutDensity: result.layoutDensity || null,
         layoutDensityEffect: result.layoutDensityEffect || null,
+      });
+      trackImportPhotoCullPref({
+        enabled: result.photoCullEnabled !== false,
+        mode: (pending && pending.mode) || result.importMode || "quick_share",
+        photo_count: result.photoCount,
+        layout_eligible_final: result.layoutEligibleCount,
+        cull_user_line_present: !!(result.cullUserLine),
+        pref_source: readPhotoCullPrefSource(),
       });
       return refreshTripsForImportSuccess(result).then(function () {
         showFirstSuccess({ result: result });
@@ -311,6 +325,7 @@ export function startV2Import(body, opts) {
     mode: String((body && body.mode) || "quick_share"),
     layoutDensity: body && body.layoutDensity ? body.layoutDensity : null,
     eligibleCount: body && body.eligibleCount != null ? body.eligibleCount : null,
+    photoCullEnabled: body && body.photoCullEnabled !== false,
   });
   trackStudioEvent("template_create_submitted", {
     template_mode: tpl.template_mode,
@@ -381,12 +396,20 @@ export function startV2UploadImport(files, opts) {
 
   var gen = ++_gen;
   var source = opts.source || "浏览器上传";
-  trackStudioEvent("import_start", { via: "upload", surface: "v2_sheet" });
+  var uploadMode = String(opts.mode || "quick_share");
+  trackStudioEvent("import_start", {
+    via: "upload",
+    surface: "v2_sheet",
+    mode: uploadMode,
+    photoCullEnabled: opts.photoCullEnabled !== false,
+  });
   try {
     sessionStorage.setItem(SS.activePending, JSON.stringify({
       uploadForm: true,
       fileCount: list.length,
       title: (opts.title || guessUploadTitle(list) || "我的旅途").slice(0, 20),
+      mode: uploadMode,
+      photoCullEnabled: opts.photoCullEnabled !== false,
     }));
   } catch (e) { /* ignore */ }
 
@@ -394,7 +417,13 @@ export function startV2UploadImport(files, opts) {
   setStage("上传照片中…", 0);
 
   var submit = function (force) {
-    var form = buildUploadForm(list, { title: opts.title, force: !!force });
+    var form = buildUploadForm(list, {
+      title: opts.title,
+      force: !!force,
+      photoCullEnabled: opts.photoCullEnabled,
+      mode: uploadMode,
+      layoutDensity: opts.layoutDensity,
+    });
     return withJobBusyRetry(function () {
       return postMultipartImportV2(form, {
         onUploadProgress: function (ev) {

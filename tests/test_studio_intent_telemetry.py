@@ -17,10 +17,20 @@ def test_build_studio_intent_telemetry_fields() -> None:
     trip = {
         "tripId": "demo",
         "userNotes": "带娃慢走",
-        "intent": {"travelPlan": {"cities": ["京都"]}, "title": "京都"},
+        "intent": {
+            "travelPlan": {"cities": ["京都"]},
+            "title": "京都",
+            "photoCullEnabled": False,
+        },
         "assets": [{"userTier": "featured"}, {"userTier": "material"}],
         "chapters": [{"curation": {"memoryAnchors": ["寺", "雨"]}}],
         "pipeline": {"status": "rendered"},
+        "curation": {
+            "cullSummary": {
+                "finalLayoutEligibleCount": 55,
+                "layoutEligibleCount": 58,
+            },
+        },
     }
     payload = build_studio_intent_telemetry(trip, tier_mode="dual", g1_pending=False)
     assert payload["hasUserNotes"] is True
@@ -32,6 +42,8 @@ def test_build_studio_intent_telemetry_fields() -> None:
     assert payload["layoutDensity"] == "balanced"
     assert payload["layoutDensityEffect"] == "ignored_quick"
     assert payload["nineQuotaAdjusted"]["baseMin"] == 0
+    assert payload["photoCullEnabled"] is False
+    assert payload["layoutEligibleFinal"] == 55
 
 
 def test_write_studio_intent_telemetry_file(tmp_path: Path) -> None:

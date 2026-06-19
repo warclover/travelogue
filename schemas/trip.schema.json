@@ -161,6 +161,10 @@
           "enum": ["balanced", "hero_first", "collage_first"],
           "description": "Fine-craft layout preference: single-hero vs collage-heavy (PRD-FINE-CRAFT-LAYOUT-DENSITY)"
         },
+        "photoCullEnabled": {
+          "type": "boolean",
+          "description": "When false, skip Phase 9 photo cull for this trip (PRD-P9-F1); default true when omitted"
+        },
         "featuredSubjects": {
           "type": "array",
           "maxItems": 4,

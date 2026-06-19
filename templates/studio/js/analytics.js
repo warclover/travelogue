@@ -8,6 +8,7 @@ const ALLOWED = new Set([
   "pick_folder",
   "import_start",
   "import_success",
+  "import_photo_cull_pref",
   "success_primary_click",
   "prep_open",
   "demo_try",
@@ -83,4 +84,35 @@ export function trackStudioEvent(event, meta) {
       keepalive: true,
     }).catch(function () { /* ignore */ });
   } catch (e) { /* ignore */ }
+}
+
+const IMPORT_DRAFT_KEY = "travelogue.studio.importDraft";
+
+/** PRD-P9-F1 §6.7 · session 内是否曾手动改过智能挑选开关。 */
+export function readPhotoCullPrefSource() {
+  try {
+    var raw = sessionStorage.getItem(IMPORT_DRAFT_KEY);
+    if (!raw) return "default";
+    var draft = JSON.parse(raw);
+    return draft && draft.photoCullTouched ? "draft" : "default";
+  } catch (e) {
+    return "default";
+  }
+}
+
+/** PRD-P9-F1 · checkbox 变更或 import 完成时上报。 */
+export function trackImportPhotoCullPref(meta) {
+  meta = meta || {};
+  trackStudioEvent("import_photo_cull_pref", {
+    enabled: meta.enabled !== false,
+    mode: meta.mode || "quick_share",
+    photo_count: meta.photo_count != null ? meta.photo_count : null,
+    layout_eligible_final: meta.layout_eligible_final != null
+      ? meta.layout_eligible_final
+      : null,
+    cull_user_line_present: meta.cull_user_line_present != null
+      ? !!meta.cull_user_line_present
+      : null,
+    pref_source: meta.pref_source === "draft" ? "draft" : "default",
+  });
 }

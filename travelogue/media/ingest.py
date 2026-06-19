@@ -1022,10 +1022,15 @@ def _finalize_ingest_assets(
             f"精选照片 {featured_n} 张，超过建议上限 {cfg.warn_featured_count_above}（仍已导入）"
         )
 
-    from travelogue.curation.photo_cull import apply_photo_cull, cull_stage_hint
+    from travelogue.curation.photo_cull import (
+        apply_photo_cull,
+        cull_stage_hint,
+        photo_cull_enabled_for_trip,
+    )
 
     cull_cfg = resolved_app.cull
-    if on_cull_hint and cull_cfg.enabled:
+    cull_effective = photo_cull_enabled_for_trip(trip, app_cfg=resolved_app)
+    if on_cull_hint and cull_effective:
         hint = cull_stage_hint(cull_cfg)
         if hint:
             on_cull_hint(hint)
@@ -1040,7 +1045,7 @@ def _finalize_ingest_assets(
             ingest_stats["low_res_excluded_warn"] = low_res_warn
     curation = trip.setdefault("curation", {})
     cull_summary = curation.get("cullSummary")
-    if isinstance(cull_summary, dict) and cull_summary.get("enabled") is True:
+    if isinstance(cull_summary, dict):
         final_images = [a for a in assets if a.get("type", "image") != "video"]
         final_layout_eligible = sum(
             1 for a in final_images if a.get("layoutEligible", True)
@@ -1055,10 +1060,11 @@ def _finalize_ingest_assets(
         final_ratio = (final_non_featured / scanned) if scanned > 0 else 0.0
         cull_summary["finalLayoutEligibleCount"] = final_layout_eligible
         cull_summary["finalNonFeaturedEligibleCount"] = final_non_featured
-        cull_summary["finalNonFeaturedKeepRatio"] = round(final_ratio, 4)
-        cull_summary["finalFloorNotMet"] = final_ratio < float(
-            cull_summary.get("keepRatioFloor") or 0.0
-        )
+        if cull_summary.get("enabled") is True:
+            cull_summary["finalNonFeaturedKeepRatio"] = round(final_ratio, 4)
+            cull_summary["finalFloorNotMet"] = final_ratio < float(
+                cull_summary.get("keepRatioFloor") or 0.0
+            )
         ingest_stats["cull_layout_eligible_final"] = final_layout_eligible
         ingest_stats["cull_non_featured_eligible_final"] = final_non_featured
 

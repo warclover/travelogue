@@ -243,6 +243,10 @@ def should_recull_on_curate(
     cfg = app_cfg or get_config()
     if not cfg.cull.enabled:
         return False
+    from travelogue.curation.photo_cull import photo_cull_enabled_for_trip
+
+    if not photo_cull_enabled_for_trip(trip, app_cfg=cfg):
+        return False
     if refresh_algorithms is True:
         return True
     if refresh_algorithms is False:

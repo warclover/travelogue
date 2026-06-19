@@ -65,6 +65,7 @@ V2_HOME_MARKERS = (
     "v2-success-open",
     "v2-success-stay",
     "v2-success-details",
+    "v2-photo-cull-enabled",
     "打开卷轴预览",
     # M20 · 高级分析选项（工作台 Popover）
     "v2-advanced-toggle",
@@ -275,6 +276,7 @@ def test_studio_home_v2_phase14_dual_mode_smoke() -> None:
     """Phase 14 最小前端冒烟：双模式 DOM + 行为挂钩均已接线。"""
     html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
     sheet = (STUDIO_DIR / "homepage-v2" / "import-sheet.js").read_text(encoding="utf-8")
+    run = (STUDIO_DIR / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
     first_success = (STUDIO_DIR / "homepage-v2" / "first-success.js").read_text(encoding="utf-8")
 
     for marker in (
@@ -294,11 +296,22 @@ def test_studio_home_v2_phase14_dual_mode_smoke() -> None:
         "版面密度（可选）",
         'name="v2-layout-density"',
         "拼图为主",
+        "v2-photo-cull-enabled",
+        "智能挑选照片（推荐）",
+        "v2-photo-cull-hint-short",
+        "v2-photo-cull-optout",
     ):
         assert marker in html, marker
     assert "layoutDensity" in sheet
     assert "readLayoutDensity" in sheet
+    assert "readPhotoCullEnabled" in sheet
+    assert "photoCullEnabled" in sheet
+    assert "showUploadConfirm" in sheet
+    assert "trackImportPhotoCullPref" in sheet
     assert "layoutDensity" in first_success or "大图为主" in first_success
+    assert "cullDisabledDetailLine" in first_success
+    assert "photoCullEnabled" in first_success
+    assert "trackImportPhotoCullPref" in run or "readPhotoCullPrefSource" in run
 
     for marker in (
         "switchMode(",

@@ -81,6 +81,14 @@ def test_apply_intent_layout_density() -> None:
     assert "layoutDensity" not in trip["intent"]
 
 
+def test_apply_intent_photo_cull_enabled() -> None:
+    trip: dict = {"meta": {"places": ["旅途"]}}
+    apply_intent(trip, photo_cull_enabled=False)
+    assert trip["intent"]["photoCullEnabled"] is False
+    apply_intent(trip, photo_cull_enabled=True)
+    assert trip["intent"]["photoCullEnabled"] is True
+
+
 def test_apply_intent_accepts_travel_notes_and_date_range() -> None:
     trip: dict = {}
     apply_intent(

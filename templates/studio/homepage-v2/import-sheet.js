@@ -8,7 +8,7 @@
  */
 import { SHEET_FOCUSABLE, UPLOAD_BYTES_SOFT_LIMIT } from "../js/constants.js";
 import { postJson } from "../js/http.js";
-import { trackStudioEvent } from "../js/analytics.js";
+import { trackStudioEvent, trackImportPhotoCullPref } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
 import { startV2Import, startV2UploadImport, buildImportPayload } from "./import-run.js";
 
@@ -18,8 +18,10 @@ let _trapHandler = null;
 let _pickInFlight = false;
 let _uploadInFlight = false;
 let _pendingAlbumPath = null;
+let _pendingUploadFiles = null;
 let _pendingPhotoCount = null;
 let _importStarted = false; // 本次 Sheet 会话是否已发起 import（区分 abandon）
+let _photoCullTouched = false;
 let _activeMode = "quick_share";
 const IMPORT_DRAFT_KEY = "travelogue.studio.importDraft";
 const IMPORT_MODE_KEY = "travelogue.studio.lastImportMode";
@@ -81,10 +83,20 @@ function releaseTrap(sheet) {
   _trapHandler = null;
 }
 
+function updateQuickStartLabel() {
+  var btn = $("v2-sheet-start-quick");
+  if (!btn) return;
+  btn.textContent = _pendingUploadFiles && _pendingUploadFiles.length
+    ? "开始上传"
+    : "开始制作";
+}
+
 function resetConfirm() {
   _pendingAlbumPath = null;
+  _pendingUploadFiles = null;
   show($("v2-sheet-confirm"), false);
   switchMode("quick_share", { persist: false });
+  updateQuickStartLabel();
   var pick = $("v2-sheet-pick");
   if (pick) {
     pick.disabled = false;
@@ -94,10 +106,12 @@ function resetConfirm() {
 
 function showConfirm(albumPath) {
   _pendingAlbumPath = albumPath;
+  _pendingUploadFiles = null;
   _pendingPhotoCount = null;
   fetchAlbumPhotoCount(albumPath).then(function (count) {
     _pendingPhotoCount = count;
     updateLayoutDensityWarn();
+    updatePhotoCullOptoutUi();
     saveSheetDraft();
   });
   var picked = $("v2-sheet-picked");
@@ -114,9 +128,33 @@ function showConfirm(albumPath) {
   }
   show($("v2-sheet-confirm"), true);
   restoreModeAndDraft();
+  updateQuickStartLabel();
   var quickStart = $("v2-sheet-start-quick");
   if (_activeMode === "fine_craft" && titleInput) titleInput.focus();
   else if (quickStart) quickStart.focus();
+}
+
+function showUploadConfirm(files) {
+  _pendingAlbumPath = null;
+  _pendingUploadFiles = files ? Array.prototype.slice.call(files) : [];
+  _pendingPhotoCount = _pendingUploadFiles.length;
+  var picked = $("v2-sheet-picked");
+  if (picked) {
+    picked.textContent = "已选择：浏览器上传（" + _pendingPhotoCount + " 张）";
+  }
+  var pick = $("v2-sheet-pick");
+  if (pick) {
+    pick.disabled = false;
+    pick.textContent = "选择本次旅行的照片文件夹";
+  }
+  switchMode("quick_share", { persist: false });
+  updatePhotoCullOptoutUi();
+  saveSheetDraft();
+  show($("v2-sheet-confirm"), true);
+  restoreModeAndDraft();
+  updateQuickStartLabel();
+  var startQuick = $("v2-sheet-start-quick");
+  if (startQuick) startQuick.focus();
 }
 
 function safeGet(id) {
@@ -158,6 +196,38 @@ function updateLayoutDensityWarn() {
   show(warn, collage && fewPhotos);
 }
 
+function readPhotoCullEnabled() {
+  var el = $("v2-photo-cull-enabled");
+  if (!el) return true;
+  return !!el.checked;
+}
+
+function setPhotoCullEnabled(enabled) {
+  var el = $("v2-photo-cull-enabled");
+  if (!el) return;
+  el.checked = enabled !== false;
+  updatePhotoCullOptoutUi();
+}
+
+function updatePhotoCullOptoutUi() {
+  var optout = $("v2-photo-cull-optout");
+  if (!optout) return;
+  if (readPhotoCullEnabled()) {
+    optout.textContent = "";
+    show(optout, false);
+    return;
+  }
+  var parts = [];
+  if (_pendingPhotoCount != null) {
+    parts.push("不做智能挑选，" + _pendingPhotoCount + " 张照片将参与排版。");
+  } else {
+    parts.push("不做智能挑选，文件夹内照片将参与排版。");
+  }
+  parts.push("相同文件仍会自动去重，与智能挑选无关。");
+  optout.textContent = parts.join(" ");
+  show(optout, true);
+}
+
 function fetchAlbumPhotoCount(albumPath) {
   return postJson("/__travelogue/album-preview", { albumPath: albumPath })
     .then(function (res) {
@@ -194,6 +264,8 @@ function saveSheetDraft() {
     featuredDir: safeGet("v2-featured-dir"),
     materialDir: safeGet("v2-material-dir"),
     layoutDensity: readLayoutDensity(),
+    photoCullEnabled: readPhotoCullEnabled(),
+    photoCullTouched: _photoCullTouched,
     photoCount: _pendingPhotoCount,
     planFileName: (function () {
       var input = $("v2-plan-file");
@@ -229,8 +301,11 @@ function restoreModeAndDraft() {
   safeSet("v2-featured-dir", draft.featuredDir || "");
   safeSet("v2-material-dir", draft.materialDir || "");
   setLayoutDensity(draft.layoutDensity || "balanced");
+  setPhotoCullEnabled(draft.photoCullEnabled !== false);
+  _photoCullTouched = !!draft.photoCullTouched;
   _pendingPhotoCount = typeof draft.photoCount === "number" ? draft.photoCount : null;
   updateLayoutDensityWarn();
+  updatePhotoCullOptoutUi();
   var planName = $("v2-plan-file-name");
   if (planName) {
     planName.textContent = draft.planFileName
@@ -371,6 +446,7 @@ function buildSheetPayload() {
   if (_activeMode === "fine_craft") {
     body.layoutDensity = readLayoutDensity();
   }
+  body.photoCullEnabled = readPhotoCullEnabled();
   if (_pendingPhotoCount != null) body.eligibleCount = _pendingPhotoCount;
   return body;
 }
@@ -510,21 +586,41 @@ function handleUploadInput() {
   setError("");
   confirmLargeUpload(files).then(function (proceed) {
     if (!proceed) return;
-    _importStarted = true;
-    closeImportSheet("start_upload");
-    if (typeof studioToast === "function") {
-      studioToast("已选择 " + files.length + " 张照片，开始上传…", { duration: 2200 });
-    }
-    return startV2UploadImport(files, { source: "浏览器上传" });
+    showUploadConfirm(files);
   }).catch(function () {
-    /* 错误由 import-run 内部展示 */
+    /* ignore */
   }).finally(function () {
     if (input) input.value = "";
     _uploadInFlight = false;
   });
 }
 
+function startUploadFromConfirm() {
+  var files = _pendingUploadFiles ? Array.prototype.slice.call(_pendingUploadFiles) : [];
+  if (!files.length) {
+    setError("请先选择要上传的照片");
+    return;
+  }
+  saveSheetDraft();
+  _importStarted = true;
+  _pendingUploadFiles = null;
+  closeImportSheet("start_upload");
+  if (typeof studioToast === "function") {
+    studioToast("已选择 " + files.length + " 张照片，开始上传…", { duration: 2200 });
+  }
+  return startV2UploadImport(files, {
+    source: "浏览器上传",
+    photoCullEnabled: readPhotoCullEnabled(),
+    mode: _activeMode,
+  }).catch(function () {
+    /* 错误由 import-run 内部展示 */
+  });
+}
+
 function startFromConfirm() {
+  if (_pendingUploadFiles && _pendingUploadFiles.length) {
+    return startUploadFromConfirm();
+  }
   if (!_pendingAlbumPath) {
     setError("请先选择照片文件夹");
     return;
@@ -668,6 +764,21 @@ export function initImportSheet() {
   }
   if (tabQuick) tabQuick.addEventListener("keydown", onTabKeydown);
   if (tabFine) tabFine.addEventListener("keydown", onTabKeydown);
+
+  var photoCull = $("v2-photo-cull-enabled");
+  if (photoCull) {
+    photoCull.addEventListener("change", function () {
+      _photoCullTouched = true;
+      updatePhotoCullOptoutUi();
+      saveSheetDraft();
+      trackImportPhotoCullPref({
+        enabled: readPhotoCullEnabled(),
+        mode: _activeMode,
+        photo_count: _pendingPhotoCount,
+        pref_source: "draft",
+      });
+    });
+  }
 
   var draftIds = [
     "v2-trip-title",

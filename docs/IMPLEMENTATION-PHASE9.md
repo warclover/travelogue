@@ -7,9 +7,9 @@
 | **里程碑** | M30 · Quality Gate |
 | **W1 状态** | **Done**（2026-06-02） |
 | **W2 状态** | **Partial**（ML 验收脚本已跑 · pyiqa/GPU 环境 skipped） |
-| **更新** | 2026-06-06 |
+| **更新** | 2026-06-19 |
 
-> **Wave 5 对账**：W1 ☑；W2 ML 脚本 `phase9_ml_acceptance.py` 可跑（无 pyiqa/GPU 时 skipped 为预期）；golden 签核见 `phase9-golden-cull-signoff.json` · `phase9-eval-baseline.json`。
+> **Wave 5 对账**：W1 ☑；W2 ML 脚本 `phase9_ml_acceptance.py` 可跑（无 pyiqa/GPU 时 skipped 为预期）；golden 签核见 `phase9-golden-cull-signoff.json` · `phase9-eval-baseline.json`。**P9-F1** ☑（2026-06-19 · [IMPLEMENTATION-P9-F1.md](./IMPLEMENTATION-P9-F1.md)）。
 
 ## 波次总览
 
@@ -90,10 +90,23 @@
 
 ---
 
+## P9-F1 · 智能挑选用户开关（2026-06-19 · Done）
+
+| 属性 | 内容 |
+|------|------|
+| **PRD** | [PRD-PHOTO-CULL-USER-TOGGLE.md](./PRD-PHOTO-CULL-USER-TOGGLE.md) v0.2 Approved |
+| **实施** | [IMPLEMENTATION-P9-F1.md](./IMPLEMENTATION-P9-F1.md) |
+| **验收** | [ACCEPTANCE-PHASE9.md](./ACCEPTANCE-PHASE9.md) §8 AC-F1-* |
+
+**出口**：`intent.photoCullEnabled` · Import Sheet checkbox · FirstSuccess N/M · Job result 回传 · 12+ pytest 绿。
+
+---
+
 ## 回归清单
 
 ```bash
 pytest tests/test_photo_cull.py tests/test_trip_schema_cull.py tests/test_studio_phase9_cull_playwright.py -v
+pytest tests/test_photo_cull_policy.py -v
 pytest tests/test_ingest_enrichment.py tests/test_asset_quality.py -v
 pytest tests/test_curate.py -v --timeout=120
 python -m travelogue demo verify
@@ -105,7 +118,7 @@ python -m travelogue demo verify
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
-| v0.9.3 | 2026-06-02 | W2 部分：stageHint · maxPhotos WARN · exposure spike · AC-P9-10 |
+| v0.9.4 | 2026-06-19 | P9-F1 Done · 回归清单增 test_photo_cull_policy |
 | v0.9.2 | 2026-06-02 | W1 Done：NR-P9-04 签 off · Pass 2 material-only skip |
 | v0.9.1 | 2026-06-02 | Kickoff：M30-0a · W1 范围 · ACCEPTANCE 链接 |
 | v0.9.0 | 2026-06-02 | 初稿 |

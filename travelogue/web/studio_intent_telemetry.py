@@ -39,6 +39,12 @@ def build_studio_intent_telemetry(
         layout_density or intent.get("layoutDensity"),
     )
     photo_total = len(assets)
+    cull_summary = (trip.get("curation") or {}).get("cullSummary") or {}
+    layout_eligible_final = int(
+        cull_summary.get("finalLayoutEligibleCount")
+        or cull_summary.get("layoutEligibleCount")
+        or photo_total
+    )
     return {
         "recordedAt": datetime.now(UTC).isoformat(timespec="seconds"),
         "tripId": trip.get("tripId"),
@@ -54,6 +60,8 @@ def build_studio_intent_telemetry(
         "layoutDensity": density,
         "layoutDensityEffect": layout_density_effect(photo_total, density, import_mode=mode),
         "nineQuotaAdjusted": nine_quota_adjusted(photo_total, density),
+        "photoCullEnabled": bool(intent.get("photoCullEnabled", True)),
+        "layoutEligibleFinal": layout_eligible_final,
     }
 
 

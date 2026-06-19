@@ -43,6 +43,20 @@ _log = logging.getLogger(__name__)
 _ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
+def _parse_photo_cull_enabled(raw: object) -> bool:
+    """PRD-P9-F1 · default true when missing or invalid."""
+    if raw is None:
+        return True
+    if isinstance(raw, bool):
+        return raw
+    text = str(raw).strip().lower()
+    if text in ("0", "false", "no", "off"):
+        return False
+    if text in ("1", "true", "yes", "on"):
+        return True
+    return True
+
+
 def _studio_trust_local_album_paths() -> bool:
     raw = os.environ.get("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "1").strip().lower()
     return raw not in ("0", "false", "no", "off")
@@ -158,6 +172,9 @@ def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | No
             payload["layoutDensity"] = normalize_layout_density(
                 fields.get("layoutDensity")
             )
+        payload["photoCullEnabled"] = _parse_photo_cull_enabled(
+            fields.get("photoCullEnabled")
+        )
         if plan_bytes is not None:
             import base64
 
@@ -296,6 +313,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         template_mode = "smart"
     template_id_raw = payload.get("template_id") or payload.get("templateId")
     template_id_str = str(template_id_raw).strip() if template_id_raw else None
+    photo_cull_enabled = _parse_photo_cull_enabled(payload.get("photoCullEnabled"))
 
     try:
         assert_album_importable(
@@ -349,6 +367,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         "port": port,
         "mode": import_mode,
         "template_mode": template_mode,
+        "photoCullEnabled": photo_cull_enabled,
     }
     if template_id_str:
         worker_payload["template_id"] = template_id_str

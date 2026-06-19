@@ -41,6 +41,18 @@ function densitySummaryLine(density) {
   return "";
 }
 
+function cullDisabledDetailLine(result) {
+  var n = result.photoCount || 0;
+  var m = typeof result.layoutEligibleCount === "number"
+    ? result.layoutEligibleCount
+    : n;
+  if (m === n) {
+    return "不做智能挑选 · " + m + " 张进入排版";
+  }
+  return "不做智能挑选 · 导入 " + n + " 张 · " + m + " 张进入排版\n"
+    + "部分极低清晰度照片未进入排版";
+}
+
 function loadSuccessFeatureFlag() {
   return fetch("/__travelogue/config")
     .then(function (r) { return r.json(); })
@@ -130,7 +142,11 @@ function populateSuccessUi(result) {
       var detailLines = [];
       var tplLine = result.templateFeedbackMessage || "";
       if (tplLine) detailLines.push(tplLine);
-      if (result.cullUserLine) detailLines.push(result.cullUserLine);
+      if (result.cullUserLine) {
+        detailLines.push(result.cullUserLine);
+      } else if (result.photoCullEnabled === false) {
+        detailLines.push(cullDisabledDetailLine(result));
+      }
       var density = String(result.layoutDensity || "").toLowerCase();
       var densityLine = densitySummaryLine(density);
       if (densityLine) detailLines.push(densityLine);

@@ -600,6 +600,55 @@ def _build_user_line(summary: dict[str, Any]) -> str:
     return f"经挑选 {n} 张进入排版"
 
 
+def photo_cull_enabled_for_trip(trip: dict, *, app_cfg: AppConfig | None = None) -> bool:
+    """PRD-P9-F1 · effective photo cull = config enabled AND intent not opted out."""
+    cfg = app_cfg or get_config()
+    if not cfg.cull.enabled:
+        return False
+    intent = trip.get("intent") or {}
+    return bool(intent.get("photoCullEnabled", True))
+
+
+def _skipped_cull_summary(
+    body: list[dict],
+    *,
+    user_disabled: bool,
+    config_disabled: bool,
+) -> dict[str, Any]:
+    images = _image_assets(body)
+    eligible = sum(1 for a in images if a.get("layoutEligible", True))
+    return {
+        "enabled": False,
+        "userDisabled": user_disabled,
+        "configDisabled": config_disabled,
+        "scanned": len(images),
+        "layoutEligibleCount": eligible,
+    }
+
+
+def _write_skipped_cull_result(
+    trip: dict,
+    body: list[dict],
+    summary: dict[str, Any],
+    *,
+    ingest_stats: dict | None = None,
+) -> dict[str, Any]:
+    curation = trip.setdefault("curation", {})
+    curation["cullSummary"] = dict(summary)
+    curation.pop("cullUserLine", None)
+    curation.pop("excludedByCullAssetIds", None)
+    if ingest_stats is not None:
+        ingest_stats["cull_layout_eligible"] = summary.get("layoutEligibleCount", 0)
+        ingest_stats["cull_user_line"] = ""
+        ingest_stats["cull_fail_open"] = False
+        ingest_stats["cull_l1_ml_fallback_rate"] = 0.0
+        ingest_stats["cull_l2_branch_fallback_rate"] = 0.0
+        ingest_stats["cull_l3_fail_open_rate"] = 0.0
+        ingest_stats["cull_user_disabled"] = bool(summary.get("userDisabled"))
+        ingest_stats["cull_config_disabled"] = bool(summary.get("configDisabled"))
+    return summary
+
+
 def format_ingest_progress_hint(cur: int, total: int, *, cull_enabled: bool) -> str:
     """P9-D §3.2 · merged ingest+cull progress hint for Studio."""
     core = f"已处理 {cur}/{total} 张"
@@ -741,8 +790,12 @@ def apply_photo_cull(
     body = assets if assets is not None else trip.get("assets") or []
 
     if not cull_cfg.enabled:
-        summary = {"enabled": False, "layoutEligibleCount": sum(1 for a in body if a.get("layoutEligible", True))}
-        return summary
+        summary = _skipped_cull_summary(body, user_disabled=False, config_disabled=True)
+        return _write_skipped_cull_result(trip, body, summary, ingest_stats=ingest_stats)
+
+    if not photo_cull_enabled_for_trip(trip, app_cfg=resolved):
+        summary = _skipped_cull_summary(body, user_disabled=True, config_disabled=False)
+        return _write_skipped_cull_result(trip, body, summary, ingest_stats=ingest_stats)
 
     try:
         summary = run_photo_cull(

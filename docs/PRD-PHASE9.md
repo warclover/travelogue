@@ -9,7 +9,7 @@
 | **前置条件** | Phase 2 Studio 导入管线可用；Phase 7 ingest 性能基线已登记；[PRD-EXPERIENCE-附录A-精选上传.md](./PRD-EXPERIENCE-附录A-精选上传.md) 双文件夹 ingest 已落地或并行 |
 | **交付形态** | 用户选文件夹 / 上传后，**后台静默**完成照片评价与筛选；仅一行摘要提示「经挑选 N 张进入排版」；被筛照片 **不可见**、不可恢复（MVP） |
 | **关联文档** | 子文档见 §2；下游 [PRD-PHASE10-food-grid.md](./PRD-PHASE10-food-grid.md)、规划 [PRD-PHASE8-photo-semantic-clustering.md](./PRD-PHASE8-photo-semantic-clustering.md)；[AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md)、[智能排版V2.md](./智能排版V2.md) §14.2 Step 0、[DATA-MODEL.md](./DATA-MODEL.md) |
-| **更新日期** | 2026-06-02 |
+| **更新日期** | 2026-06-19 |
 
 > **定位说明**
 >
@@ -82,6 +82,8 @@
 | [PRD-PHASE9-E-subject-bridge.md](./PRD-PHASE9-E-subject-bridge.md) | P9-E | Wave 3：`subject_tagging` 消费 CLIP `subjectClass` |
 | [IMPLEMENTATION-PHASE9.md](./IMPLEMENTATION-PHASE9.md) | — | 里程碑 **M30** 任务清单与文件映射 |
 | [ACCEPTANCE-PHASE9.md](./ACCEPTANCE-PHASE9.md) | — | W1/W2/W3 验收与 NR-P9 |
+| [PRD-PHOTO-CULL-USER-TOGGLE.md](./PRD-PHOTO-CULL-USER-TOGGLE.md) | P9-F1 | 智能挑选用户开关 · Import Sheet checkbox · FirstSuccess N/M |
+| [IMPLEMENTATION-P9-F1.md](./IMPLEMENTATION-P9-F1.md) | — | P9-F1 实施清单（2026-06-19 Done） |
 
 **下游（另立 PRD，不在本 Phase 实现范围）**
 

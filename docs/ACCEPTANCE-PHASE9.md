@@ -8,8 +8,9 @@
 | **关联实施** | [IMPLEMENTATION-PHASE9.md](./IMPLEMENTATION-PHASE9.md) · 里程碑 **M30** |
 | **前置验收** | Phase 7 ingest 基线已登记；Phase 2 Studio Job 可用 |
 | **代号** | P9-QualityGate |
-| **更新日期** | 2026-06-02 |
+| **更新日期** | 2026-06-19 |
 | **W1 状态** | **Done**（G-P9-W1 已闭合 · 2026-06-02） |
+| **P9-F1 状态** | **Done**（2026-06-19 · 见 [PRD-PHOTO-CULL-USER-TOGGLE.md](./PRD-PHOTO-CULL-USER-TOGGLE.md)） |
 
 ---
 
@@ -146,10 +147,39 @@ python scripts/phase9_eval_baseline.py --golden docs/acceptance-records/phase9-g
 
 ---
 
-## 8. 修订记录
+## 8. P9-F1 · 智能挑选用户开关（2026-06-19）
+
+> 完整 AC 见 [PRD-PHOTO-CULL-USER-TOGGLE.md](./PRD-PHOTO-CULL-USER-TOGGLE.md) §9。
+
+| ID | 条件 | 验证方式 |
+|----|------|----------|
+| **AC-F1-01** | 默认勾选 → cull 正常、`cullUserLine` 存在 | pytest + Playwright |
+| **AC-F1-02** | 取消勾选 → 跳过 cull、无「挑选」hint | `tests/test_photo_cull_policy.py` |
+| **AC-F1-03** | 关闭后 re-curate 不 recull | `tests/test_photo_cull_policy.py` |
+| **AC-F1-04** | 旧 trip 无字段等同默认开启 | `photo_cull_enabled_for_trip` 单测 |
+| **AC-F1-05** | `config.cull.enabled=false` → `configDisabled` | `tests/test_photo_cull_policy.py` |
+| **AC-F1-06/06b** | 新会话默认勾选；同会话草稿恢复 | `import-sheet.js` + 手工 |
+| **AC-F1-07** | 390px 不溢出 | Playwright |
+| **AC-F1-08** | 快速/精细切换 checkbox 保持 | 手工 / DOM 冒烟 |
+| **AC-F1-09** | FirstSuccess cull 关：N/M、无「经挑选」 | `test_ac_f1_photo_cull_disabled_success_copy` |
+| **AC-F1-10** | `studio-intent.json` 含 `photoCullEnabled` | telemetry / 导入后检查 |
+| **AC-F1-11** | schema validate 通过 | `validate_trip` |
+| **AC-F1-12** | cull 关 + 低清仍降 M | `test_low_res_still_excluded_when_user_cull_disabled` |
+| **AC-F1-13** | `should_recull_on_curate` false | `tests/test_photo_cull_policy.py` |
+| **AC-F1-14** | multipart 缺字段 → true | `test_handle_import_passes_photo_cull_enabled_default_true` |
+| **AC-F1-15** | Job result 含 `photoCullEnabled`、`layoutEligibleCount` | pipeline |
+| **AC-F1-16** | `aria-live` 副文案 | DOM + 手工 |
+| **AC-F1-17** | dev harness 默认 true | `harness.js` JOB_FIXTURES |
+
+**签核**：`tests/test_photo_cull_policy.py` · `tests/test_studio_phase9_cull_playwright.py` · [IMPLEMENTATION-P9-F1.md](./IMPLEMENTATION-P9-F1.md)。
+
+---
+
+## 9. 修订记录
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.9.4 | 2026-06-19 | P9-F1 AC-F1-* 索引 · 签核指向 IMPLEMENTATION-P9-F1 |
 | v0.9.3 | 2026-06-03 | 新增 P12 指标扩展口径：L1/L2/L3 telemetry 字段映射与 baseline 聚合字段 |
 | v0.9.2 | 2026-06-02 | G-P9-W1 闭合 · NR-P9-04 mao/maomi signed_off |
 | v0.9.1 | 2026-06-02 | Kickoff 修订：W1 独立发版 · NR-P9-04 golden |

@@ -129,6 +129,8 @@
 | `finalFloorNotMet` | low-res 后最终 non-feat 率仍 &lt; floor |
 | `error` | fail-open 异常信息 |
 | `maxPhotosExceeded` | 方案 B WARN 标志 |
+| `userDisabled` | P9-F1：`intent.photoCullEnabled=false` 时跳过 cull |
+| `configDisabled` | `config.cull.enabled=false` 时跳过 cull |
 
 **口径**：`floorTargetNonFeatured = ceil(keep_ratio_floor × N_scan)`（例：100 张 → 90）。
 
@@ -141,6 +143,16 @@
 ```
 
 分项由前端/CLI 从 `cullSummary` 组装，见 P9-D。
+
+---
+
+## 3.3 `intent.photoCullEnabled`（P9-F1）
+
+| 字段 | 类型 | 缺省 | 说明 |
+|------|------|------|------|
+| `intent.photoCullEnabled` | bool | `true` | `false` = 用户显式关闭智能挑选；仅跳过 `apply_photo_cull` / `maybe_refresh_cull` |
+
+**有效 cull**：`config.cull.enabled AND intent.photoCullEnabled`（缺省 true）。低清门、dedupe、`max_photos` 不受此字段影响。
 
 ---
 
@@ -188,6 +200,7 @@
 | `curation.cullSummary` | 新增 object |
 | `curation.excludedByCullAssetIds` | 新增 string[] |
 | `curation.cullUserLine` | 新增 optional string |
+| `intent.photoCullEnabled` | P9-F1 · optional boolean，缺省 true |
 
 **向后兼容**：旧 trip 无 cull 字段 → curate 视全员 eligible（与现行为一致）。
 
@@ -207,5 +220,6 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.9.2 | 2026-06-19 | P9-F1：`intent.photoCullEnabled` · `cullSummary.userDisabled/configDisabled` |
 | v0.9.1 | 2026-06-02 | floorTargetNonFeatured · pass3Skipped/floorNotMet/error |
 | v0.9.0 | 2026-06-02 | 初稿 |

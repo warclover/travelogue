@@ -50,6 +50,8 @@ class StudioPipelineResult:
     layout_density: str = "balanced"
     layout_density_effect: str = "ignored_quick"
     date_range_warn: str = ""
+    photo_cull_enabled: bool = True
+    layout_eligible_count: int = 0
 
 
 def _parse_iso_date(raw: object) -> date | None:
@@ -124,6 +126,13 @@ def _finalize_pipeline_result(
     cull_user_line = str(curation.get("cullUserLine") or "")
     cull_summary = curation.get("cullSummary") or {}
     cull_warn = str(cull_summary.get("warnMessage") or "") if cull_summary.get("maxPhotosExceeded") else ""
+    intent = trip_final.get("intent") or {}
+    photo_cull_enabled = bool(intent.get("photoCullEnabled", True))
+    layout_eligible_count = int(
+        cull_summary.get("finalLayoutEligibleCount")
+        or cull_summary.get("layoutEligibleCount")
+        or photo_count
+    )
     from travelogue.templating.router import template_user_feedback
 
     sel = trip_final.get("templateSelection") or {}
@@ -169,6 +178,8 @@ def _finalize_pipeline_result(
         layout_density=layout_density,
         layout_density_effect=density_effect,
         date_range_warn=date_range_warn,
+        photo_cull_enabled=photo_cull_enabled,
+        layout_eligible_count=layout_eligible_count,
     )
 
 
@@ -320,6 +331,7 @@ def run_studio_pipeline(
     featured_dir: str | Path | None = None,
     material_dir: str | Path | None = None,
     layout_density: str | None = None,
+    photo_cull_enabled: bool = True,
 ) -> StudioPipelineResult:
     album_dir = album_dir.resolve()
     cfg_path = resolve_studio_config(config)
@@ -386,7 +398,7 @@ def run_studio_pipeline(
             format_ingest_progress_hint(
                 cur,
                 total,
-                cull_enabled=bool(getattr(cfg.cull, "enabled", True)),
+                cull_enabled=photo_cull_enabled,
             ),
         )
 
@@ -456,6 +468,7 @@ def run_studio_pipeline(
             import_mode=import_mode,
             app_cfg=cfg,
         )
+        intent_kwargs["photo_cull_enabled"] = bool(photo_cull_enabled)
         apply_intent(trip, **intent_kwargs)
 
         if plan_bytes is not None or plan_text:

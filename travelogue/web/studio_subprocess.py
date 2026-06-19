@@ -109,6 +109,7 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             featured_dir=payload.get("featuredDir"),
             material_dir=payload.get("materialDir"),
             layout_density=payload.get("layoutDensity"),
+            photo_cull_enabled=bool(payload.get("photoCullEnabled", True)),
         )
         progress_queue.put(
             {
@@ -134,6 +135,8 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     "layoutDensity": result.layout_density or "balanced",
                     "layoutDensityEffect": result.layout_density_effect or "ignored_quick",
                     "dateRangeWarn": result.date_range_warn or "",
+                    "photoCullEnabled": result.photo_cull_enabled,
+                    "layoutEligibleCount": result.layout_eligible_count,
                 },
             }
         )

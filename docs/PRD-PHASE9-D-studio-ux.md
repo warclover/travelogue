@@ -19,6 +19,7 @@
 | **UX-P9-04** | **不增 stageCount**：仍 4 段 Job |
 | **UX-P9-05** | **Fail-open**：cull 失败不阻断 Job；WARN + 全量 eligible |
 | **UX-P9-06** | **cullUserLine** 为成功 toast **第二行**，不替换第一行（D-P9-15） |
+| **UX-P9-07** | **P9-F1**：Import Sheet 提供「智能挑选照片」checkbox（默认勾选）；关闭时 FirstSuccess 展示 N/M 双数字，不出现「经挑选」 |
 
 ---
 
@@ -203,6 +204,7 @@ FirstSuccess / 预览入口
 | **AC-P9-UX-04** | maxPhotos WARN 非阻断 |
 | **AC-P9-UX-05** | cull 失败 Job 仍 success + 无 cullUserLine 或降级文案 |
 | **AC-P9-UX-06** | compact 390px toast 不溢出（继承 P5 规范） |
+| **AC-P9-UX-07** | P9-F1：checkbox 默认勾选；关闭时成功态无「经挑选」、有 N/M（见 [PRD-PHOTO-CULL-USER-TOGGLE.md](./PRD-PHOTO-CULL-USER-TOGGLE.md) AC-F1-*） |
 
 ---
 
@@ -210,5 +212,6 @@ FirstSuccess / 预览入口
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.9.2 | 2026-06-19 | UX-P9-07 · AC-P9-UX-07（P9-F1） |
 | v0.9.1 | 2026-06-02 | D-P9-15 两行 toast · W1 无 cull stageHint 细粒度 |
 | v0.9.0 | 2026-06-02 | 初稿 |
