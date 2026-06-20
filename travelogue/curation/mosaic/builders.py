@@ -363,13 +363,19 @@ def build_screen(
             )
             fit = _portrait_fit(aid, assets_map) if role == "portrait" else "cover"
             slots.append({"assetId": aid, "slot": idx, "fit": fit, "role": role})
+        screen = _make_screen(
+            PATTERN_PORTRAIT_2_LANDSCAPE_2,
+            screen_id=screen_id,
+            slots=slots,
+        )
+        from travelogue.curation.editorial_4mix import apply_editorial_4mix_to_screen
+
+        screen = apply_editorial_4mix_to_screen(
+            screen, assets_map, trip=trip, cfg=cfg
+        )
         return _finalize_mosaic_screen(
-            _make_screen(
-                PATTERN_PORTRAIT_2_LANDSCAPE_2,
-                screen_id=screen_id,
-                slots=slots,
-            ),
-            pattern.pattern_id,
+            screen,
+            str(screen.get("patternId") or pattern.pattern_id),
             assets_map,
         )
     if pattern.pattern_id == PATTERN_PORTRAIT_GRID_8:
@@ -432,4 +438,10 @@ def build_screen(
     screen = apply_editorial_portrait_row_to_screen(
         screen, assets_map, trip=trip, cfg=cfg
     )
-    return _finalize_mosaic_screen(screen, pattern.pattern_id, assets_map)
+    from travelogue.curation.editorial_4mix import apply_editorial_4mix_to_screen
+
+    screen = apply_editorial_4mix_to_screen(
+        screen, assets_map, trip=trip, cfg=cfg
+    )
+    final_pid = str(screen.get("patternId") or pattern.pattern_id)
+    return _finalize_mosaic_screen(screen, final_pid, assets_map)

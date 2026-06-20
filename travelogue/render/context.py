@@ -602,6 +602,9 @@ def build_layout_screen(
     eager: bool = False,
     screen_index: int | None = None,
     chapter_index: str | None = None,
+    chapter_id: str | None = None,
+    is_draft: bool = False,
+    strip_narrative_copy: bool = False,
     folio_lite: bool = False,
     is_plate: bool = False,
     featured_asset_ids: frozenset[str] | None = None,
@@ -684,6 +687,7 @@ def build_layout_screen(
         "screen-portrait-2",
         "screen-portrait-3",
         "screen-portrait-3-editorial",
+        "screen-editorial-4mix",
     ) or viewport_fit
     stage_ar = resolve_stage_aspect_ratio(
         layout_geo=layout_geo,
@@ -858,7 +862,56 @@ def build_layout_screen(
                     out["hasPlateCaption"] = True
         if screen_index is not None:
             out["folioPageLabel"] = f"Plate · {screen_index:02d}"
+    _enrich_editorial_4mix_copy(
+        out,
+        screen=screen,
+        chapter_id=chapter_id,
+        is_draft=is_draft,
+        strip_narrative_copy=strip_narrative_copy,
+    )
     return out
+
+
+def _enrich_editorial_4mix_copy(
+    out: LayoutScreenContext,
+    *,
+    screen: dict,
+    chapter_id: str | None,
+    is_draft: bool,
+    strip_narrative_copy: bool,
+) -> None:
+    if screen.get("patternId") != "screen-editorial-4mix" or strip_narrative_copy:
+        return
+    if out.get("isPlate"):
+        return
+
+    copy = screen.get("copy") or {}
+    kicker = str(copy.get("kicker") or "").strip()
+    body = str(copy.get("body") or "").strip()
+    screen_id = str(screen.get("screenId") or "").strip()
+    base_path = (
+        f"chapters.{chapter_id}.screens.{screen_id}.copy"
+        if chapter_id and screen_id
+        else None
+    )
+
+    if kicker or is_draft:
+        out["hasCopyKicker"] = True
+        out["copyKicker"] = kicker
+        if not kicker and is_draft:
+            out["copyKickerEmpty"] = True
+        if is_draft and base_path:
+            out["editableCopyKicker"] = True
+            out["editCopyKickerPath"] = f"{base_path}.kicker"
+
+    if body or is_draft:
+        out["hasCopyBody"] = True
+        out["copyBody"] = body
+        if not body and is_draft:
+            out["copyBodyEmpty"] = True
+        if is_draft and base_path:
+            out["editableCopyBody"] = True
+            out["editCopyBodyPath"] = f"{base_path}.body"
 
 
 def chapter_divider(

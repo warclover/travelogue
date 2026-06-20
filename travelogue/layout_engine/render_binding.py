@@ -16,6 +16,8 @@ _EXEMPT_CONTAIN_MARKERS = (
     "person-triple",
     "portrait-row-editorial",
     "screen-portrait-3-editorial",
+    "screen-editorial-4mix",
+    "editorial-4mix",
     "person-grid-8",
 )
 

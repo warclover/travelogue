@@ -59,6 +59,10 @@ def copy_path_to_scope(path: str) -> str:
         return "items.*.caption"
     if p.startswith("items.") and p.endswith(".title"):
         return "items.*.title"
+    if p.startswith("chapters.") and ".screens." in p and p.endswith(".copy.kicker"):
+        return "chapters.*.screens.*.copy.kicker"
+    if p.startswith("chapters.") and ".screens." in p and p.endswith(".copy.body"):
+        return "chapters.*.screens.*.copy.body"
     return p
 
 

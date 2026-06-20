@@ -143,6 +143,18 @@ def test_portrait_row_editorial_overlay_rules(journal_css: str) -> None:
 
 
 @pytest.mark.unit
+def test_editorial_4mix_overlay_rules(journal_css: str) -> None:
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert 'data-pattern="screen-editorial-4mix"' in overlays
+    assert "layout-screen__grid--editorial-4mix" in overlays
+    assert "--editorial-4mix-width:" in overlays
+    assert ':not([data-pattern="screen-editorial-4mix"])' in overlays
+    assert ':not([data-layout-hint="editorial-4mix"])' in overlays
+
+
+@pytest.mark.unit
 def test_portrait_pair_screen_collapses_stage(journal_css: str) -> None:
     """screen-portrait-2 + person-pair must not keep phantom grid rows / vertical padding."""
     ostart = journal_css.index(OVERLAYS_MARKER_START)

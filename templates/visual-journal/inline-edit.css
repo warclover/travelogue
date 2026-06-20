@@ -96,3 +96,22 @@ html[data-layout="longshot"][data-caption-edit="on"][data-inline-edit="on"] [dat
   opacity: 0.65;
   font-style: italic;
 }
+
+/* screen-editorial-4mix · draft empty copy slots */
+html[data-inline-edit="on"] .layout-copy--empty[data-editable] {
+  outline: 1px dashed rgba(61, 107, 90, 0.45);
+  outline-offset: 4px;
+  min-height: 1.25em;
+}
+
+html[data-inline-edit="on"] .layout-copy--kicker.layout-copy--empty[data-editable]:empty::before {
+  content: "地点 · 时刻";
+  opacity: 0.55;
+  font-style: italic;
+}
+
+html[data-inline-edit="on"] .layout-copy--body.layout-copy--empty[data-editable]:empty::before {
+  content: "一句感受或细节";
+  opacity: 0.55;
+  font-style: italic;
+}

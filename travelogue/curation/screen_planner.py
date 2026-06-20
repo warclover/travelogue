@@ -66,6 +66,7 @@ PATTERN_GRID_CLASS: dict[str, str] = {
     "screen-portrait-2": "layout-screen__grid--2col",
     "screen-portrait-3": "layout-screen__grid--3col",
     "screen-portrait-3-editorial": "layout-screen__grid--3col",
+    "screen-editorial-4mix": "layout-screen__grid--editorial-4mix",
     "screen-portrait-4": "layout-screen__grid--2x2",
     "screen-portrait-6": "layout-screen__grid--3x2",
     "screen-portrait-9": "layout-screen__grid--3x3",
@@ -161,6 +162,19 @@ def _fits_for_screen(
             return ["contain"] * n
         # Scenery fit finalized after screenId (§4.3); placeholder until attach/render.
         return ["contain"] * n
+    if pattern_id == "screen-editorial-4mix":
+        # Scenery portrait cover random finalized at render (apply_editorial_4mix_slot_fits).
+        fits: list[LayoutFit] = []
+        for idx, aid in enumerate(asset_ids):
+            asset = assets_map.get(aid, {})
+            is_land = idx in (0, 3)
+            if asset_has_person(asset):
+                fits.append("contain")
+            elif is_land:
+                fits.append("cover")
+            else:
+                fits.append("contain")
+        return fits
     if pattern_id in (
         "screen-portrait-2",
         "screen-portrait-3",

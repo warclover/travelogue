@@ -171,7 +171,9 @@
       "assets.*.caption",
       "assets.*.voice.transcript",
       "items.*.caption",
-      "items.*.title"
+      "items.*.title",
+      "chapters.*.screens.*.copy.kicker",
+      "chapters.*.screens.*.copy.body"
     ],
     "lockedScopes": [
       "chapters.*.screens",

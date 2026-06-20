@@ -10,7 +10,7 @@ LETTERBOX_AR_THRESHOLD = 0.035
 # stays full content-rail width — max-height cap can still leave pillar bands.
 _VH_CAP_BLUR_PATTERNS = frozenset({"screen-portrait-1", "screen-plate"})
 _INTRINSIC_CONTAIN_HINTS = frozenset(
-    {"person-pair", "person-triple", "portrait-row-editorial"}
+    {"person-pair", "person-triple", "portrait-row-editorial", "editorial-4mix"}
 )
 
 

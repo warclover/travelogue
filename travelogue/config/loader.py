@@ -16,6 +16,7 @@ from travelogue.config.curate import CurateConfig, cover_scoring_v2_from_dict
 from travelogue.config.ingest import ingest_from_dict
 from travelogue.config.layout import (
     LayoutConfig,
+    editorial_4mix_from_dict,
     editorial_portrait_row_from_dict,
     layout_feedback_from_dict,
     layout_rhythm_from_dict,
@@ -219,6 +220,11 @@ def load_config(path: Path | None = None) -> AppConfig:
         if isinstance(layout_raw.get("editorial_portrait_row"), dict)
         else {}
     )
+    editorial_4mix_raw = (
+        layout_raw.get("editorial_4mix")
+        if isinstance(layout_raw.get("editorial_4mix"), dict)
+        else {}
+    )
     feedback_raw = layout_raw.get("feedback") if isinstance(layout_raw.get("feedback"), dict) else {}
     strategy_engine_raw = (
         layout_raw.get("strategy_engine")
@@ -271,6 +277,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             mixed_proximity_seconds=mixed_gap,
             layout_density_enabled=layout_density_enabled,
             editorial_portrait_row=editorial_portrait_row_from_dict(editorial_row_raw),
+            editorial_4mix=editorial_4mix_from_dict(editorial_4mix_raw),
             rhythm=layout_rhythm_from_dict(rhythm_raw),
             template_engine=layout_template_engine_from_dict(template_engine_raw),
             strategy_engine=layout_strategy_engine_from_dict(strategy_engine_raw),

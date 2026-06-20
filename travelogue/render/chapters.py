@@ -143,6 +143,9 @@ def build_chapters_render_context(
             max_consecutive_same_pattern=effective_cfg.curate.max_consecutive_same_pattern,
         )
 
+    from travelogue.config import get_config
+
+    render_cfg = cfg or get_config()
     chapter_total = len(raw_chapters)
 
     for i, ch in enumerate(raw_chapters):
@@ -160,23 +163,27 @@ def build_chapters_render_context(
                 chapter_index=idx,
             )
             from travelogue.render.mobile_screens import (
-                expand_portrait_triples_for_mobile,
-                should_expand_portrait_triple_for_mobile,
+                expand_screens_for_mobile,
+                should_expand_screens_for_mobile,
             )
 
             render_screens = raw_screens
-            if should_expand_portrait_triple_for_mobile(
+            if should_expand_screens_for_mobile(
                 image_layout, is_longshot=is_longshot_surface
             ):
-                render_screens = expand_portrait_triples_for_mobile(raw_screens)
+                render_screens = expand_screens_for_mobile(raw_screens)
             from travelogue.curation.editorial_portrait_row import (
                 apply_editorial_row_slot_fits,
             )
+            from travelogue.curation.editorial_4mix import apply_editorial_4mix_slot_fits
 
             raw_screens_for_spread.extend(raw_screens)
             chapter_screen_seq = 0
             for sc in render_screens:
                 sc = apply_editorial_row_slot_fits(dict(sc), assets, trip=trip)
+                sc = apply_editorial_4mix_slot_fits(
+                    sc, assets, trip=trip, cfg=render_cfg
+                )
                 slots = sc.get("slots") or []
                 if grid_exclude:
                     slots = [s for s in slots if s.get("assetId") not in grid_exclude]
@@ -196,6 +203,9 @@ def build_chapters_render_context(
                         eager=i == 0 and chapter_screen_seq == 1,
                         screen_index=global_screen_index,
                         chapter_index=f"{idx:02d}",
+                        chapter_id=str(ch.get("id") or ""),
+                        is_draft=is_draft,
+                        strip_narrative_copy=strip_narrative_copy,
                         folio_lite=folio_lite,
                         is_plate=chapter_screen_seq == 1,
                         featured_asset_ids=featured_ids,

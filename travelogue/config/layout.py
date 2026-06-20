@@ -155,6 +155,16 @@ class EditorialPortraitRowConfig:
 
 
 @dataclass
+class Editorial4MixConfig:
+    """PRD screen-editorial-4mix · default off (legacy mosaic-4 unchanged)."""
+
+    enabled: bool = False
+    replace_patterns: tuple[str, ...] = ("screen-portrait-2-landscape-2",)
+    trip_allowlist: tuple[str, ...] = ()
+    scenery_portrait_cover_random: bool = True
+
+
+@dataclass
 class LayoutConfig:
     """Web layout engine default when exportLayout is web (see docs/web端模板升级计划.md)."""
 
@@ -165,6 +175,7 @@ class LayoutConfig:
     editorial_portrait_row: EditorialPortraitRowConfig = field(
         default_factory=EditorialPortraitRowConfig
     )
+    editorial_4mix: Editorial4MixConfig = field(default_factory=Editorial4MixConfig)
     rhythm: LayoutRhythmConfig = field(default_factory=LayoutRhythmConfig)
     template_engine: LayoutTemplateEngineConfig = field(default_factory=LayoutTemplateEngineConfig)
     strategy_engine: LayoutStrategyEngineConfig = field(default_factory=LayoutStrategyEngineConfig)
@@ -324,6 +335,32 @@ def editorial_portrait_row_from_dict(raw: dict[str, Any] | None) -> EditorialPor
         replace_patterns=replace or defaults.replace_patterns,
         scope=scope,
         trip_allowlist=allowlist,
+    )
+
+
+def editorial_4mix_from_dict(raw: dict[str, Any] | None) -> Editorial4MixConfig:
+    defaults = Editorial4MixConfig()
+    if not raw:
+        return defaults
+    replace_raw = raw.get("replace_patterns") or list(defaults.replace_patterns)
+    replace = (
+        tuple(str(x) for x in replace_raw if x)
+        if isinstance(replace_raw, list)
+        else defaults.replace_patterns
+    )
+    allow_raw = raw.get("trip_allowlist") or []
+    allowlist = (
+        tuple(str(x) for x in allow_raw if x)
+        if isinstance(allow_raw, list)
+        else defaults.trip_allowlist
+    )
+    return Editorial4MixConfig(
+        enabled=bool(raw.get("enabled", defaults.enabled)),
+        replace_patterns=replace or defaults.replace_patterns,
+        trip_allowlist=allowlist,
+        scenery_portrait_cover_random=bool(
+            raw.get("scenery_portrait_cover_random", defaults.scenery_portrait_cover_random)
+        ),
     )
 
 

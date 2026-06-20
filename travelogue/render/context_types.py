@@ -146,6 +146,16 @@ class LayoutScreenContext(TypedDict, total=False):
     plateCaption: NotRequired[str]
     hasPlateCaption: NotRequired[bool]
     folioPageLabel: NotRequired[str]
+    hasCopyKicker: NotRequired[bool]
+    copyKicker: NotRequired[str]
+    copyKickerEmpty: NotRequired[bool]
+    editableCopyKicker: NotRequired[bool]
+    editCopyKickerPath: NotRequired[str | None]
+    hasCopyBody: NotRequired[bool]
+    copyBody: NotRequired[str]
+    copyBodyEmpty: NotRequired[bool]
+    editableCopyBody: NotRequired[bool]
+    editCopyBodyPath: NotRequired[str | None]
 
 
 class ScreenSpreadContext(TypedDict, total=False):

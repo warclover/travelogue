@@ -55,6 +55,17 @@ def main() -> int:
             update_baselines=args.update_baselines,
         )
         payload["editorialScreenshotProbe"] = editorial_shot
+        from travelogue.layout_templates.probe_editorial_4mix import (
+            run_editorial_4mix_screenshot_probe,
+        )
+
+        mix_shot = run_editorial_4mix_screenshot_probe(
+            update_baselines=args.update_baselines,
+        )
+        payload["editorial4MixScreenshotProbe"] = mix_shot
+        if args.strict and not mix_shot.get("skipped") and not mix_shot.get("ok", True):
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+            return 1
         if args.strict and not editorial_shot.get("skipped") and not editorial_shot.get("ok", True):
             print(json.dumps(payload, ensure_ascii=False, indent=2))
             return 1

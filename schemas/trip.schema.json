@@ -223,6 +223,10 @@
         "editorialPortraitRow": {
           "type": "boolean",
           "description": "Trip-level override for layout.editorial_portrait_row (portrait-row-editorial pilot)"
+        },
+        "editorial4Mix": {
+          "type": "boolean",
+          "description": "Trip-level override for layout.editorial_4mix (screen-editorial-4mix pilot)"
         }
       }
     },
@@ -1559,6 +1563,7 @@
             "screen-portrait-2",
             "screen-portrait-3",
             "screen-portrait-3-editorial",
+            "screen-editorial-4mix",
             "screen-portrait-1-landscape-2",
             "screen-mosaic-5-main-portrait-3land",
             "screen-mosaic-5-main-landscape-2portrait-2land",
@@ -1602,7 +1607,7 @@
         },
         "layoutHint": {
           "type": "string",
-          "enum": ["person-pair", "person-triple", "person-grid-8", "portrait-row-editorial"],
+          "enum": ["person-pair", "person-triple", "person-grid-8", "portrait-row-editorial", "editorial-4mix"],
           "description": "Person portrait: 2-col pair, 3-col row, 4×2 grid (contain per slot); editorial row hint"
         },
         "arcSegment": {
@@ -1620,6 +1625,29 @@
           "description": "Display label for screen-breath-pause (default ···)"
         },
         "layoutGeometry": { "$ref": "#/$defs/layoutGeometry" },
+        "copy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kicker": { "type": "string", "maxLength": 30 },
+            "body": { "type": "string", "maxLength": 80 }
+          },
+          "description": "screen-editorial-4mix / 2land inline copy (kicker + body)"
+        },
+        "copyMeta": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kickerSource": {
+              "type": "string",
+              "enum": ["user", "ai_sparse", "chapter_seed", "empty"]
+            },
+            "bodySource": {
+              "type": "string",
+              "enum": ["user", "ai_sparse", "chapter_seed", "empty"]
+            }
+          }
+        },
         "slots": {
           "type": "array",
           "maxItems": 9,

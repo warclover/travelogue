@@ -1,6 +1,7 @@
 {
-  "contentHash": "3f3f979fb32e35462449e32be57d4da4e194ef1f072998c22f6436344bbeced6",
+  "contentHash": "5bed28d062bb1c1cadbf3435df5e9151c761f14ba9fb152567e03f5c15878e4a",
   "templateIds": [
+    "screen-editorial-4mix",
     "screen-full-frame",
     "screen-landscape-1",
     "screen-landscape-2",
@@ -44,6 +45,7 @@
       "screen-portrait-3-editorial"
     ],
     "4": [
+      "screen-editorial-4mix",
       "screen-landscape-4",
       "screen-portrait-2-landscape-2",
       "screen-portrait-4"
@@ -70,5 +72,5 @@
       "screen-portrait-9"
     ]
   },
-  "generatedAt": "2026-06-20T11:52:58Z"
+  "generatedAt": "2026-06-20T13:32:10Z"
 }

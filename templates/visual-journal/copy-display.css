@@ -51,3 +51,9 @@ html[data-copy-display="photos"] .chapter-decor-line,
 html[data-photos-only="on"] .chapter-decor-line {
   display: none !important;
 }
+
+/* screen-editorial-4mix · Kicker/Body (AC-4M-06/10) */
+html[data-copy-display="photos"] .layout-copy,
+html[data-photos-only="on"] .layout-copy {
+  display: none !important;
+}

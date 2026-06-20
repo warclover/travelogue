@@ -5,6 +5,9 @@
   {{#if folioLite}}
   <div class="folio-plate-meta folio-plate-meta--top" aria-hidden="true">{{folioPageLabel}}</div>
   {{/if}}
+  {{#if hasCopyKicker}}
+  <p class="layout-copy layout-copy--kicker{{#if copyKickerEmpty}} layout-copy--empty{{/if}}" data-block="screen-copy" data-copy-slot="kicker"{{#if editableCopyKicker}} data-editable="screen-copy-kicker" data-edit-path="{{editCopyKickerPath}}"{{/if}}>{{copyKicker}}</p>
+  {{/if}}
   <div class="layout-screen__grid {{gridClass}}">
     {{#each slots}}
     <figure class="layout-slot{{#if hasBlurFill}} layout-slot--blurred-fill{{/if}}" data-slot="{{slotIndex}}"{{#if role}} data-role="{{role}}"{{/if}}{{#if slotStyle}} style="{{slotStyle}}"{{/if}}>
@@ -33,6 +36,9 @@
     </figure>
     {{/each}}
   </div>
+  {{#if hasCopyBody}}
+  <p class="layout-copy layout-copy--body{{#if copyBodyEmpty}} layout-copy--empty{{/if}}" data-block="screen-copy" data-copy-slot="body"{{#if editableCopyBody}} data-editable="screen-copy-body" data-edit-path="{{editCopyBodyPath}}"{{/if}}>{{copyBody}}</p>
+  {{/if}}
   {{#if hasPlateCaption}}
   <figcaption class="plate-caption">{{plateCaption}}</figcaption>
   {{/if}}

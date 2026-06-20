@@ -276,6 +276,7 @@ def assign_bucket_screens_with_portrait_carry(
     ]
     layout_state = _rebuild_layout_state(layout_state, noted_patterns)
     layout_state.sync_large_mosaic_chapter_used(kept_patterns)
+    layout_state.sync_editorial_composite_chapter_used(kept_patterns)
     return next_carry, next_carry_age, layout_state
 
 

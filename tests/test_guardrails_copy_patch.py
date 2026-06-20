@@ -32,6 +32,30 @@ def test_guardrails_allows_meta_cover_opening_style() -> None:
     assert trip["meta"]["coverOpeningStyle"] == "split-mat"
 
 
+def test_guardrails_allows_screen_copy_kicker() -> None:
+    trip = {
+        "templateId": "visual-journal",
+        "templateSelection": {"resolvedTemplateId": "visual-journal"},
+        "chapters": [
+            {
+                "id": "ch-01",
+                "screens": [
+                    {
+                        "screenId": "ch01-s4mix",
+                        "patternId": "screen-editorial-4mix",
+                        "slots": [{"assetId": "a1", "slot": 0}],
+                    }
+                ],
+            }
+        ],
+    }
+    updated = apply_copy_patches(
+        trip,
+        [{"path": "chapters.ch-01.screens.ch01-s4mix.copy.kicker", "value": "地点"}],
+    )
+    assert updated == ["chapters.ch-01.screens.ch01-s4mix.copy.kicker"]
+
+
 def test_guardrails_blocks_non_editable_scope() -> None:
     trip = {
         "templateId": "visual-journal",

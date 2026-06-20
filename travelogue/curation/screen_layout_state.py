@@ -171,6 +171,10 @@ def pattern_dense_slot_count(pattern_id: str) -> int | None:
 
 
 def is_dense_collage_pattern(pattern_id: str, *, min_slots: int = DENSE_COLLAGE_SLOT_MIN) -> bool:
+    from travelogue.curation.editorial_4mix import is_editorial_composite_pattern
+
+    if is_editorial_composite_pattern(pattern_id):
+        return False
     n = pattern_dense_slot_count(pattern_id)
     return n is not None and n >= min_slots
 
@@ -290,6 +294,7 @@ class ScreenLayoutPlannerState:
     large_mosaic_max_per_template_trip: int = 2
     large_mosaic_max_per_chapter: int = 1
     large_mosaic_chapter_used: int = 0
+    editorial_composite_chapter_used: int = 0
     last_pattern_id: str = ""
     pattern_streak: int = 0
     portrait_orientation_streak: int = 0
@@ -399,6 +404,7 @@ class ScreenLayoutPlannerState:
     ) -> None:
         """Reset per-chapter counters; optionally soft-reset rhythm streaks in late chapters."""
         self.large_mosaic_chapter_used = 0
+        self.editorial_composite_chapter_used = 0
         late = self.rhythm.late_chapter_pairing
         if not late.is_late_chapter(chapter_index):
             return
@@ -428,6 +434,16 @@ class ScreenLayoutPlannerState:
             if is_large_mosaic_pattern(pid, min_slots=self.large_mosaic_min_slots)
         )
 
+    def sync_editorial_composite_chapter_used(self, pattern_ids: list[str]) -> None:
+        from travelogue.curation.editorial_4mix import is_editorial_composite_pattern
+
+        self.editorial_composite_chapter_used = sum(
+            1 for pid in pattern_ids if is_editorial_composite_pattern(pid)
+        )
+
+    def can_emit_editorial_composite(self) -> bool:
+        return self.editorial_composite_chapter_used < 1
+
     def can_pick_grid_size(self, size: int) -> bool:
         if size == 9:
             return self.can_use_nine()
@@ -444,6 +460,10 @@ class ScreenLayoutPlannerState:
         )
 
         if mosaic_pattern_disabled(pattern_id):
+            return False
+        from travelogue.curation.editorial_4mix import is_editorial_composite_pattern
+
+        if is_editorial_composite_pattern(pattern_id) and not self.can_emit_editorial_composite():
             return False
         max_ch = template_rhythm_max_per_chapter(pattern_id)
         if max_ch is not None and self.pattern_counts.get(pattern_id, 0) >= max_ch:
@@ -491,6 +511,10 @@ class ScreenLayoutPlannerState:
             self.last_was_dense_collage = False
         if is_large_mosaic_pattern(pattern_id, min_slots=self.large_mosaic_min_slots):
             self.large_mosaic_chapter_used += 1
+        from travelogue.curation.editorial_4mix import is_editorial_composite_pattern
+
+        if is_editorial_composite_pattern(pattern_id):
+            self.editorial_composite_chapter_used += 1
         self.last_kind = kind if kind != "other" else "other"
         if pattern_id and pattern_id == self.last_pattern_id:
             self.pattern_streak += 1

@@ -9,6 +9,8 @@ HOOK_MAX = 56
 EPILOGUE_MAX = 80
 LEAD_MAX = 80
 DECOR_LINE_MAX = 30
+SCREEN_COPY_KICKER_MAX = 30
+SCREEN_COPY_BODY_MAX = 80
 CAPTION_MAX = 60
 TITLE_MAX = 14
 META_TITLE_MAX = 20
@@ -19,6 +21,16 @@ TRANSCRIPT_MAX = 2000
 
 class CopyPatchError(CodeError):
     pass
+
+
+def _find_screen_by_ids(trip: dict, chapter_id: str, screen_id: str) -> dict | None:
+    for ch in trip.get("chapters") or []:
+        if ch.get("id") != chapter_id:
+            continue
+        for sc in ch.get("screens") or []:
+            if sc.get("screenId") == screen_id:
+                return sc
+    return None
 
 
 def _find_item_by_asset_id(trip: dict, asset_id: str) -> dict | None:
@@ -109,6 +121,34 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
                 ch["edited"] = True
                 return path
         raise CopyPatchError("E_COPY_PATCH", f"unknown chapter {ch_id!r}")
+
+    if path.startswith("chapters.") and ".screens." in path and ".copy." in path:
+        parts = path.split(".")
+        if len(parts) == 6 and parts[0] == "chapters" and parts[2] == "screens" and parts[4] == "copy":
+            ch_id, screen_id, field = parts[1], parts[3], parts[5]
+            screen = _find_screen_by_ids(trip, ch_id, screen_id)
+            if not screen:
+                raise CopyPatchError(
+                    "E_COPY_PATCH",
+                    f"unknown screen {screen_id!r} in chapter {ch_id!r}",
+                )
+            copy = screen.setdefault("copy", {})
+            if field == "kicker":
+                if value:
+                    copy["kicker"] = value[:SCREEN_COPY_KICKER_MAX]
+                else:
+                    copy.pop("kicker", None)
+                screen["edited"] = True
+                return path
+            if field == "body":
+                if value:
+                    copy["body"] = value[:SCREEN_COPY_BODY_MAX]
+                else:
+                    copy.pop("body", None)
+                screen["edited"] = True
+                return path
+            raise CopyPatchError("E_COPY_PATCH", f"unsupported screen copy field {field!r}")
+        raise CopyPatchError("E_COPY_PATCH", f"unsupported path {path!r}")
 
     if path.startswith("chapters.") and ".items." in path:
         parts = path.split(".")
