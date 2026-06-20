@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from travelogue.config import AppConfig
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.curation.subject_tagging import is_mundane_clusterable, mundane_run_length
 from travelogue.media.image_ops import AspectKind
@@ -41,6 +42,8 @@ class ChapterPlanContext:
     i: int = 0
     late_chapter_active: bool = False
     flush_lookahead_portraits: int = 0
+    trip: dict | None = None
+    app_config: AppConfig | None = None
 
 
 def build_chapter_plan_context(
@@ -66,6 +69,8 @@ def build_chapter_plan_context(
     median_sharp: float | None = None,
     late_chapter_active: bool = False,
     flush_lookahead_portraits: int = 0,
+    trip: dict | None = None,
+    app_config: AppConfig | None = None,
 ) -> ChapterPlanContext:
     from travelogue.curation.screen_planner import (
         MAX_SLOTS_PER_SCREEN,
@@ -117,6 +122,8 @@ def build_chapter_plan_context(
         ids=ids,
         late_chapter_active=late_chapter_active,
         flush_lookahead_portraits=max(0, int(flush_lookahead_portraits)),
+        trip=trip,
+        app_config=app_config,
     )
 
 
@@ -612,6 +619,8 @@ def _drain_portrait_run_pair_first(ctx: ChapterPlanContext) -> None:
             layout_state=ctx.layout_state,
             force=True,
             solo_exclude=ctx.skip_screen_asset_ids,
+            trip=ctx.trip,
+            cfg=ctx.app_config,
         ):
             append_screen(ctx, sc)
         return
@@ -626,6 +635,8 @@ def _drain_portrait_run_pair_first(ctx: ChapterPlanContext) -> None:
         layout_state=ctx.layout_state,
         force=True,
         solo_exclude=ctx.skip_screen_asset_ids,
+        trip=ctx.trip,
+        cfg=ctx.app_config,
     ):
         append_screen(ctx, sc)
     # head 中未能落屏（被 defer）的余片排在 rest 前，保持时间序。
@@ -663,6 +674,8 @@ def _finish_portrait_pending_tail(ctx: ChapterPlanContext) -> int | None:
                 assets_map=ctx.assets_map,
                 layout_state=ctx.layout_state,
                 pending=ctx.pending_portraits,
+                trip=ctx.trip,
+                cfg=ctx.app_config,
             ):
                 append_screen(ctx, sc)
         else:
@@ -762,6 +775,8 @@ def stage_flush_pending_for_other_family(ctx: ChapterPlanContext, fam: str) -> i
         layout_state=ctx.layout_state,
         force=True,
         solo_exclude=ctx.skip_screen_asset_ids,
+        trip=ctx.trip,
+        cfg=ctx.app_config,
     ):
         append_screen(ctx, sc)
     return 0
@@ -815,6 +830,8 @@ def stage_flush_remaining_portraits(ctx: ChapterPlanContext) -> None:
         layout_state=ctx.layout_state,
         force=True,
         solo_exclude=ctx.skip_screen_asset_ids,
+        trip=ctx.trip,
+        cfg=ctx.app_config,
     ):
         append_screen(ctx, sc)
     if ctx.pending_portraits:

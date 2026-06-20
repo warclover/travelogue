@@ -330,6 +330,8 @@ def build_screen(
     *,
     assets_map: dict[str, dict],
     screen_id: str = "",
+    trip: dict | None = None,
+    cfg=None,
 ) -> dict:
     if pattern.pattern_id == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND:
         return _finalize_mosaic_screen(
@@ -423,4 +425,11 @@ def build_screen(
         asset_has_person(assets_map.get(aid, {})) for aid in ordered_ids
     ):
         screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
+    from travelogue.curation.editorial_portrait_row import (
+        apply_editorial_portrait_row_to_screen,
+    )
+
+    screen = apply_editorial_portrait_row_to_screen(
+        screen, assets_map, trip=trip, cfg=cfg
+    )
     return _finalize_mosaic_screen(screen, pattern.pattern_id, assets_map)

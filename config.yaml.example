@@ -124,6 +124,13 @@ layout:
   screen_plan_scope: day
   # 1 竖 + 2 横混排时三张图 takenAt 最大跨度（秒）
   mixed_proximity_seconds: 12
+  # 三竖 editorial row（screen-portrait-3-editorial）· 默认关闭
+  editorial_portrait_row:
+    enabled: false
+    replace_patterns:
+      - screen-portrait-3
+    scope: all              # all | person | scenery
+    trip_allowlist: []
   # 节奏阈值与后几章竖版收束（前几章维持 defer/carry outward）
   rhythm:
     max_portrait_pair_streak: 2

@@ -1,5 +1,5 @@
 {
-  "contentHash": "b347249d6d053495923db2c0900fcd2d40e74e132b00b130a87a74bad6d249b3",
+  "contentHash": "3f3f979fb32e35462449e32be57d4da4e194ef1f072998c22f6436344bbeced6",
   "templateIds": [
     "screen-full-frame",
     "screen-landscape-1",
@@ -21,6 +21,7 @@
     "screen-portrait-2",
     "screen-portrait-2-landscape-2",
     "screen-portrait-3",
+    "screen-portrait-3-editorial",
     "screen-portrait-4",
     "screen-portrait-6",
     "screen-portrait-9",
@@ -39,7 +40,8 @@
     "3": [
       "screen-landscape-3",
       "screen-portrait-1-landscape-2",
-      "screen-portrait-3"
+      "screen-portrait-3",
+      "screen-portrait-3-editorial"
     ],
     "4": [
       "screen-landscape-4",
@@ -68,5 +70,5 @@
       "screen-portrait-9"
     ]
   },
-  "generatedAt": "2026-06-19T11:29:00Z"
+  "generatedAt": "2026-06-20T11:52:58Z"
 }

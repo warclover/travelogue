@@ -127,6 +127,19 @@ def test_universal_portrait_contain_row_rules(journal_css: str) -> None:
     assert ".layout-screen__grid--3x2:has(.layout-slot__img--contain)" in overlays
     assert ".layout-slot > .layout-slot__img--contain" in overlays
     assert "object-position: top center" in overlays
+    assert ':not([data-layout-hint="portrait-row-editorial"])' in overlays
+
+
+@pytest.mark.unit
+def test_portrait_row_editorial_overlay_rules(journal_css: str) -> None:
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert 'data-pattern="screen-portrait-3-editorial"' in overlays
+    assert "--portrait-row-editorial-width:" in overlays
+    assert "object-position: bottom center" in overlays
+    assert "layout-slot__img--cover" in overlays
+    assert "--editorial-row-ar" in overlays
 
 
 @pytest.mark.unit

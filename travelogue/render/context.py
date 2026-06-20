@@ -680,7 +680,11 @@ def build_layout_screen(
     else:
         style_parts_vf = []
 
-    skip_stage_aspect = pattern_id in ("screen-portrait-2", "screen-portrait-3") or viewport_fit
+    skip_stage_aspect = pattern_id in (
+        "screen-portrait-2",
+        "screen-portrait-3",
+        "screen-portrait-3-editorial",
+    ) or viewport_fit
     stage_ar = resolve_stage_aspect_ratio(
         layout_geo=layout_geo,
         viewport_fit=viewport_fit,
@@ -784,6 +788,20 @@ def build_layout_screen(
     tone = screen_tone_css(screen.get("tone"))
     if tone:
         style_parts.append(f"--screen-tone: {tone}")
+    if pattern_id == "screen-portrait-3-editorial":
+        slot_fits = [str(s.get("fit") or "cover") for s in screen.get("slots") or []]
+        if slot_fits and all(f == "cover" for f in slot_fits):
+            from travelogue.curation.editorial_portrait_row import (
+                editorial_row_ar_from_assets,
+            )
+
+            aids = [
+                str(s.get("assetId") or "")
+                for s in screen.get("slots") or []
+                if s.get("assetId")
+            ]
+            row_ar = editorial_row_ar_from_assets(aids, assets)
+            style_parts.append(f"--editorial-row-ar: {row_ar:.6f}")
     screen_style = "; ".join(style_parts)
     if screen_style:
         screen_style += ";"

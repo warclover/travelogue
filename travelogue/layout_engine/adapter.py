@@ -48,6 +48,8 @@ class ChapterPlanRequest:
     median_sharp: float | None = None
     late_chapter_active: bool = False
     flush_lookahead_portraits: int = 0
+    trip: dict | None = None
+    app_config: AppConfig | None = None
 
 
 def lse_enabled(cfg: AppConfig | None = None) -> bool:
@@ -217,6 +219,8 @@ def plan_chapter_screens(
         median_sharp=ctx.median_sharp,
         late_chapter_active=ctx.late_chapter_active,
         flush_lookahead_portraits=ctx.flush_lookahead_portraits,
+        trip=ctx.trip,
+        app_config=app,
     )
 
 

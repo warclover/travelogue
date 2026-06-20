@@ -65,6 +65,7 @@ PATTERN_GRID_CLASS: dict[str, str] = {
     "screen-portrait-1": "layout-screen__grid--1col",
     "screen-portrait-2": "layout-screen__grid--2col",
     "screen-portrait-3": "layout-screen__grid--3col",
+    "screen-portrait-3-editorial": "layout-screen__grid--3col",
     "screen-portrait-4": "layout-screen__grid--2x2",
     "screen-portrait-6": "layout-screen__grid--3x2",
     "screen-portrait-9": "layout-screen__grid--3x3",
@@ -155,6 +156,11 @@ def _fits_for_screen(
             portrait_fit_for_asset(assets_map.get(aid), default="cover")
             for aid in asset_ids
         ]
+    if pattern_id == "screen-portrait-3-editorial":
+        if any(asset_has_person(assets_map.get(aid, {})) for aid in asset_ids):
+            return ["contain"] * n
+        # Scenery fit finalized after screenId (§4.3); placeholder until attach/render.
+        return ["contain"] * n
     if pattern_id in (
         "screen-portrait-2",
         "screen-portrait-3",
@@ -768,6 +774,8 @@ def _emit_person_portrait_screens(
     pending: list[str] | None = None,
     force: bool = False,
     solo_exclude: set[str] | None = None,
+    trip: dict | None = None,
+    cfg: AppConfig | None = None,
 ) -> list[dict]:
     """人物竖图：仅三列(≥3) / 双列(2)；单张不单独成屏（见余片 cover portrait-1）。"""
     screens: list[dict] = []
@@ -816,6 +824,13 @@ def _emit_person_portrait_screens(
                 assets_map=assets_map,
             )
             screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
+            from travelogue.curation.editorial_portrait_row import (
+                apply_editorial_portrait_row_to_screen,
+            )
+
+            screen = apply_editorial_portrait_row_to_screen(
+                screen, assets_map, trip=trip, cfg=cfg
+            )
             screens.append(screen)
         elif size == 2:
             pair = buf[:2]
@@ -904,16 +919,25 @@ def _plan_portrait_triple_row(
     layout_state: ScreenLayoutPlannerState | None,
     pending: list[str],
     force: bool = False,
+    trip: dict | None = None,
+    cfg: AppConfig | None = None,
 ) -> list[dict]:
     """三张一排；若与上一屏冲突则降为双列并回退余片。"""
     if force or layout_state is None or layout_state.can_emit_pattern("screen-portrait-3"):
+        from travelogue.curation.editorial_portrait_row import (
+            apply_editorial_portrait_row_to_screen,
+        )
+
+        screen = _make_screen(
+            "screen-portrait-3",
+            trio,
+            screen_id="",
+            aspects=aspects,
+            assets_map=assets_map,
+        )
         return [
-            _make_screen(
-                "screen-portrait-3",
-                trio,
-                screen_id="",
-                aspects=aspects,
-                assets_map=assets_map,
+            apply_editorial_portrait_row_to_screen(
+                screen, assets_map, trip=trip, cfg=cfg
             )
         ]
     if layout_state and layout_state.can_emit_pattern("screen-portrait-2"):
@@ -961,6 +985,8 @@ def _flush_portrait_pending(
     layout_state: ScreenLayoutPlannerState | None = None,
     force: bool = False,
     solo_exclude: set[str] | None = None,
+    trip: dict | None = None,
+    cfg: AppConfig | None = None,
 ) -> list[dict]:
     """Emit portrait-3 (风景竖图) or portrait-1 (含人物) for buffered std portraits.
 
@@ -1012,6 +1038,8 @@ def _flush_portrait_pending(
             pending=pending,
             force=force,
             solo_exclude=solo_exclude,
+            trip=trip,
+            cfg=cfg,
         )
     )
 
@@ -1035,6 +1063,8 @@ def _flush_portrait_pending(
                 layout_state=layout_state,
                 pending=pending,
                 force=force,
+                trip=trip,
+                cfg=cfg,
             )
             if not placed:
                 break
@@ -1254,6 +1284,8 @@ def plan_screens_for_chapter(
     median_sharp: float | None = None,
     late_chapter_active: bool = False,
     flush_lookahead_portraits: int = 0,
+    trip: dict | None = None,
+    app_config: AppConfig | None = None,
 ) -> list[dict]:
     """
     Map ordered asset ids → screens[] (one pattern per screen; reset after each screen).
@@ -1285,6 +1317,8 @@ def plan_screens_for_chapter(
         median_sharp=median_sharp,
         late_chapter_active=late_chapter_active,
         flush_lookahead_portraits=flush_lookahead_portraits,
+        trip=trip,
+        app_config=app_config,
     ).plan()
 
 

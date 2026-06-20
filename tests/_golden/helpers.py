@@ -413,6 +413,8 @@ def plan_legacy_screens(
         assets, export_layout="web"
     ).to_dict()
     total = trip_photo_total if trip_photo_total is not None else len(assets)
+    import travelogue.config as config_mod
+
     return build_chapters_from_buckets(
         buckets,
         aspects,  # type: ignore[arg-type]
@@ -423,6 +425,7 @@ def plan_legacy_screens(
         trip_photo_total=total,
         pattern_hints=hints,
         layout_density=layout_density,
+        cfg=config_mod.get_config(),
     )
 
 

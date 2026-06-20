@@ -279,6 +279,37 @@ def test_portrait_pair_contain_no_blur() -> None:
 
 
 @pytest.mark.unit
+def test_intrinsic_contain_portrait_row_editorial_hint() -> None:
+    assert uses_intrinsic_contain_layout(
+        pattern_id="screen-portrait-3-editorial",
+        layout_hint="portrait-row-editorial",
+        n_slots=3,
+        export_layout="web",
+        is_plate=False,
+    )
+
+
+@pytest.mark.unit
+def test_portrait_row_editorial_contain_no_blur() -> None:
+    assets = {
+        f"p{i}": {"id": f"p{i}", "width": 800, "height": 1200, "tags": ["person"]}
+        for i in range(3)
+    }
+    screen = {
+        "patternId": "screen-portrait-3-editorial",
+        "layoutHint": "portrait-row-editorial",
+        "slots": [
+            {"assetId": f"p{i}", "slot": i, "fit": "contain"} for i in range(3)
+        ],
+    }
+    ctx = build_layout_screen(screen, assets, meta_title="Test", export_layout="web")
+    assert ctx["layoutHint"] == "portrait-row-editorial"
+    assert ctx["patternId"] == "screen-portrait-3-editorial"
+    assert "aspect-ratio" not in (ctx.get("screenStyle") or "")
+    assert all(s.get("hasBlurFill") is not True for s in ctx["slots"])
+
+
+@pytest.mark.unit
 def test_full_frame_mobile_blurred_fill_preserved() -> None:
     assets = {
         "c1": {

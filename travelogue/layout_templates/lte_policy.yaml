@@ -7,6 +7,7 @@ registry_version: p16-2026-06
 mosaic_unified_groups:
   MOSAIC_3_PATTERN_IDS:
     - screen-portrait-3
+    # screen-portrait-3-editorial · beta primitive · planner hook only (PRD portrait-row-editorial)
     - screen-landscape-3
     - screen-portrait-1-landscape-2
   MOSAIC_4_PATTERN_IDS:

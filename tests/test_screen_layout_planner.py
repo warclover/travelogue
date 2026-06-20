@@ -58,6 +58,7 @@ def test_plan_three_portraits_one_screen():
     assert len(screens[0]["slots"]) == 3
     assert all(s["fit"] == "cover" for s in screens[0]["slots"])
     assert grid_class_for_pattern("screen-portrait-3") == "layout-screen__grid--3col"
+    assert grid_class_for_pattern("screen-portrait-3-editorial") == "layout-screen__grid--3col"
 
 
 def test_plan_single_portrait_cover_fallback():

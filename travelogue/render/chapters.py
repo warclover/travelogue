@@ -159,8 +159,24 @@ def build_chapters_render_context(
                 trip_root=trip_root,
                 chapter_index=idx,
             )
+            from travelogue.render.mobile_screens import (
+                expand_portrait_triples_for_mobile,
+                should_expand_portrait_triple_for_mobile,
+            )
+
+            render_screens = raw_screens
+            if should_expand_portrait_triple_for_mobile(
+                image_layout, is_longshot=is_longshot_surface
+            ):
+                render_screens = expand_portrait_triples_for_mobile(raw_screens)
+            from travelogue.curation.editorial_portrait_row import (
+                apply_editorial_row_slot_fits,
+            )
+
+            raw_screens_for_spread.extend(raw_screens)
             chapter_screen_seq = 0
-            for sc in raw_screens:
+            for sc in render_screens:
+                sc = apply_editorial_row_slot_fits(dict(sc), assets, trip=trip)
                 slots = sc.get("slots") or []
                 if grid_exclude:
                     slots = [s for s in slots if s.get("assetId") not in grid_exclude]
@@ -169,7 +185,6 @@ def build_chapters_render_context(
                     if len(slots) != len(sc.get("slots") or []):
                         sc = dict(sc)
                         sc["slots"] = slots
-                raw_screens_for_spread.append(sc)
                 chapter_screen_seq += 1
                 global_screen_index += 1
                 screens_out.append(

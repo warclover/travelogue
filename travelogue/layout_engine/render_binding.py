@@ -14,6 +14,8 @@ _EXEMPT_CONTAIN_MARKERS = (
     "layout-slot__img--contain",
     "person-pair",
     "person-triple",
+    "portrait-row-editorial",
+    "screen-portrait-3-editorial",
     "person-grid-8",
 )
 

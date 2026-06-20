@@ -219,7 +219,11 @@
           "enum": ["off", "lite", "full"],
           "description": "Deprecated alias for export.reading.scroll.folio (1-version compat)"
         },
-        "reading": { "$ref": "#/$defs/readingOptions" }
+        "reading": { "$ref": "#/$defs/readingOptions" },
+        "editorialPortraitRow": {
+          "type": "boolean",
+          "description": "Trip-level override for layout.editorial_portrait_row (portrait-row-editorial pilot)"
+        }
       }
     },
     "readingOptions": {
@@ -1554,6 +1558,7 @@
             "screen-portrait-1",
             "screen-portrait-2",
             "screen-portrait-3",
+            "screen-portrait-3-editorial",
             "screen-portrait-1-landscape-2",
             "screen-mosaic-5-main-portrait-3land",
             "screen-mosaic-5-main-landscape-2portrait-2land",
@@ -1597,8 +1602,8 @@
         },
         "layoutHint": {
           "type": "string",
-          "enum": ["person-pair", "person-triple", "person-grid-8"],
-          "description": "Person portrait: 2-col pair, 3-col row, or 4×2 grid (contain per slot)"
+          "enum": ["person-pair", "person-triple", "person-grid-8", "portrait-row-editorial"],
+          "description": "Person portrait: 2-col pair, 3-col row, 4×2 grid (contain per slot); editorial row hint"
         },
         "arcSegment": {
           "type": "string",

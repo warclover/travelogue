@@ -227,6 +227,7 @@ def assign_bucket_screens_with_portrait_carry(
     seq_per_ch: dict[str, int],
     assets_by_id: dict[str, dict],
     hero_ids: set[str],
+    trip: dict | None = None,
 ) -> tuple[list[str], dict[str, int], ScreenLayoutPlannerState]:
     """Assign kept screens to chapters; defer lone portraits to the next bucket."""
     hop_limit = _portrait_carry_hop_limit(
@@ -259,6 +260,9 @@ def assign_bucket_screens_with_portrait_carry(
         seq_per_ch[ch_id] = seq_per_ch.get(ch_id, 0) + 1
         screen = dict(sc)
         screen["screenId"] = f"{ch_id}-sc-{seq_per_ch[ch_id]:02d}"
+        from travelogue.curation.editorial_portrait_row import apply_editorial_row_slot_fits
+
+        screen = apply_editorial_row_slot_fits(screen, assets_by_id, trip=trip)
         ch_by_id[ch_id]["screens"].append(screen)
     noted_patterns.extend(
         str(sc.get("patternId") or "")
@@ -320,6 +324,7 @@ def _flush_portrait_carry_tail(
     enable_food_grid: bool,
     mundane_grid_buckets: tuple[str, ...],
     cfg: AppConfig | None,
+    trip: dict | None = None,
 ) -> None:
     """Tile any unplaced carried portraits at trip end and distribute by ownership.
 
@@ -363,6 +368,9 @@ def _flush_portrait_carry_tail(
         seq_per_ch[ch_id] = seq_per_ch.get(ch_id, 0) + 1
         screen = dict(sc)
         screen["screenId"] = f"{ch_id}-sc-{seq_per_ch[ch_id]:02d}"
+        from travelogue.curation.editorial_portrait_row import apply_editorial_row_slot_fits
+
+        screen = apply_editorial_row_slot_fits(screen, assets_by_id, trip=trip)
         ch_by_id[ch_id]["screens"].append(screen)
 
 
@@ -382,6 +390,7 @@ def attach_screens_day_buckets(
     mundane_grid_buckets: tuple[str, ...] = ("food",),
     layout_density: str | None = None,
     cfg: AppConfig | None = None,
+    trip: dict | None = None,
 ) -> list[dict]:
     """
     Plan screens on each day bucket (full takenAt sequence), assign to chapters
@@ -461,6 +470,7 @@ def attach_screens_day_buckets(
                 trip_photo_total=trip_photo_total,
                 enable_food_grid=enable_food_grid,
                 mundane_grid_buckets=mundane_grid_buckets,
+                trip=trip,
             ),
             cfg=cfg,
         )
@@ -544,6 +554,7 @@ def attach_screens_day_buckets(
                     enable_food_grid=enable_food_grid,
                     mundane_grid_buckets=mundane_grid_buckets,
                     **late_kwargs,
+                    trip=trip,
                 ),
                 cfg=cfg,
             )
@@ -570,6 +581,7 @@ def attach_screens_day_buckets(
             seq_per_ch=seq_per_ch,
             assets_by_id=assets_by_id,
             hero_ids=hero_ids,
+            trip=trip,
         )
 
     _flush_portrait_carry_tail(
@@ -590,6 +602,7 @@ def attach_screens_day_buckets(
         enable_food_grid=enable_food_grid,
         mundane_grid_buckets=mundane_grid_buckets,
         cfg=cfg,
+        trip=trip,
     )
     return out
 
@@ -611,6 +624,7 @@ def attach_screens_to_chapters(
     enable_food_grid: bool | None = None,
     mundane_grid_buckets: tuple[str, ...] | None = None,
     layout_density: str | None = None,
+    trip: dict | None = None,
 ) -> list[dict]:
     """Add screens[] to each chapter (per-chapter or per-day bucket scope)."""
     from travelogue.config import (
@@ -655,6 +669,7 @@ def attach_screens_to_chapters(
             mundane_grid_buckets=tuple(str(x).strip().lower() for x in grid_buckets if str(x).strip()),
             layout_density=layout_density,
             cfg=cfg,
+            trip=trip,
         )
 
     assets_by_id: dict[str, dict] = {}
@@ -688,8 +703,14 @@ def attach_screens_to_chapters(
         asset_ids = _collect_asset_ids_from_chapter(ch)
 
         if asset_ids:
+            from travelogue.curation.editorial_portrait_row import (
+                apply_editorial_row_slot_fits,
+            )
+
             hero_id = (ch.get("curation") or {}).get("heroAssetId")
-            ch["screens"] = plan_chapter_screens(
+            ch["screens"] = [
+                apply_editorial_row_slot_fits(sc, assets_by_id, trip=trip)
+                for sc in plan_chapter_screens(
                 ChapterPlanRequest(
                     asset_ids,
                     aspects,
@@ -707,9 +728,11 @@ def attach_screens_to_chapters(
                     mundane_grid_buckets=tuple(
                         str(x).strip().lower() for x in grid_buckets if str(x).strip()
                     ),
+                    trip=trip,
                 ),
                 cfg=cfg,
             )
+            ]
         else:
             ch["screens"] = []
         out.append(ch)

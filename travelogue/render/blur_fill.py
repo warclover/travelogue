@@ -9,7 +9,9 @@ LETTERBOX_AR_THRESHOLD = 0.035
 # Single-slot patterns whose contain path shrinks slot height but the screen
 # stays full content-rail width — max-height cap can still leave pillar bands.
 _VH_CAP_BLUR_PATTERNS = frozenset({"screen-portrait-1", "screen-plate"})
-_INTRINSIC_CONTAIN_HINTS = frozenset({"person-pair", "person-triple"})
+_INTRINSIC_CONTAIN_HINTS = frozenset(
+    {"person-pair", "person-triple", "portrait-row-editorial"}
+)
 
 
 def parse_aspect_ratio(value: str | float | int | None) -> float | None:

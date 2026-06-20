@@ -44,8 +44,16 @@ FULL_BLEED_PORTRAIT_PATTERNS = frozenset(
 )
 # R-08 · 计入「全竖版屏」朝向 streak 的 patternId。
 PORTRAIT_ORIENTATION_PATTERNS = frozenset(
-    {"screen-portrait-1", "screen-portrait-2", "screen-portrait-3", "screen-tall-1"}
+    {
+        "screen-portrait-1",
+        "screen-portrait-2",
+        "screen-portrait-3",
+        "screen-portrait-3-editorial",
+        "screen-tall-1",
+    }
 )
+
+PATTERN_PORTRAIT_3_EDITORIAL = "screen-portrait-3-editorial"
 
 # (last_kind, next_kind) 连续禁令对 — 与历史硬编码 can_emit_pattern 等价：
 # 禁连 *-9 / *-3 / *-6、禁 *-3 与 *-6 相邻、禁连满屏竖单。
@@ -224,6 +232,8 @@ def is_nine_grid_pattern(pattern_id: str) -> bool:
 
 
 def is_triple_row_pattern(pattern_id: str) -> bool:
+    if pattern_id == PATTERN_PORTRAIT_3_EDITORIAL:
+        return True
     return pattern_slot_count(pattern_id) == 3
 
 
