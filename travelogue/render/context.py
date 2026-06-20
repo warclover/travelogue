@@ -494,6 +494,7 @@ def build_media_scroll(
 
 from travelogue.curation.asset_subject import full_frame_fit_for_asset
 from travelogue.curation.screen_planner import grid_class_for_pattern
+from travelogue.render.blur_fill import resolve_stage_aspect_ratio, should_blur_fill_slot
 from travelogue.render.context_types import VoiceRenderContext, VoiceSourceContext
 from travelogue.render.screen_tone import screen_tone_css
 
@@ -633,6 +634,61 @@ def build_layout_screen(
     else:
         sizes_slot = "row_third"
 
+    layout_hint = screen.get("layoutHint")
+    if pattern_id == "screen-full-frame":
+        layout_hint = "full-frame"
+
+    first_aid = (screen.get("slots") or [{}])[0].get("assetId", "")
+    first_asset = assets.get(first_aid) if first_aid else None
+
+    viewport_fit = False
+    tier_ultra = False
+    screen_aspect: str | None = None
+    if pattern_id == "screen-full-frame" and first_asset:
+        from travelogue.curation.media_classify import is_collage_asset
+
+        fit0 = full_frame_fit_for_asset(first_asset, default="cover")
+        ar = _asset_aspect_ratio_float(first_asset)
+        tier = _presentation_tier(ar)
+        if fit0 == "cover":
+            if is_collage_asset(first_asset):
+                style_parts_vf = []
+                screen_aspect = _screen_aspect_ratio_css(first_asset)
+            else:
+                viewport_fit = True
+                style_parts_vf = [
+                    f"--screen-fit-ar: {ar:.6f}",
+                    f"--screen-weight: {_screen_weight_for_tier(tier):.3f}",
+                ]
+        else:
+            style_parts_vf = []
+            screen_aspect = _screen_aspect_ratio_css(first_asset)
+    elif layout_hint not in ("person-pair", "person-triple") and n_slots == 1 and "1col" in grid_class:
+        if first_asset:
+            ar = _asset_aspect_ratio_float(first_asset)
+            tier = _presentation_tier(ar)
+            style_parts_vf = []
+            if tier == "ultra":
+                tier_ultra = True
+                viewport_fit = True
+                style_parts_vf = [
+                    f"--screen-fit-ar: {ar:.6f}",
+                    f"--screen-weight: {_screen_weight_for_tier('ultra'):.3f}",
+                ]
+            else:
+                screen_aspect = _screen_aspect_ratio_css(first_asset)
+    else:
+        style_parts_vf = []
+
+    skip_stage_aspect = pattern_id in ("screen-portrait-2", "screen-portrait-3") or viewport_fit
+    stage_ar = resolve_stage_aspect_ratio(
+        layout_geo=layout_geo,
+        viewport_fit=viewport_fit,
+        screen_aspect_css=screen_aspect,
+        skip_stage_aspect=skip_stage_aspect,
+        layout_hint=layout_hint,
+    )
+
     slots_out = []
     mixed_p1_l2 = pattern_id == "screen-portrait-1-landscape-2"
     exif_pool = moment_exif_pool_ids or frozenset()
@@ -690,7 +746,18 @@ def build_layout_screen(
             entry["hasSrcset"] = bool(srcset)
             entry["srcset"] = srcset
             entry["slotStyle"] = slot_style
-            if pattern_id == "screen-full-frame" and fit == "contain":
+            if should_blur_fill_slot(
+                fit=fit,
+                asset=asset,
+                pattern_id=pattern_id,
+                layout_hint=layout_hint,
+                n_slots=n_slots,
+                export_layout=export_layout,
+                grid_class=grid_class,
+                stage_ar=stage_ar,
+                is_plate=is_plate or (folio_lite and pattern_id == "screen-portrait-1"),
+                asset_aspect=_asset_aspect_ratio_float(asset),
+            ):
                 entry["hasBlurFill"] = True
                 entry["blurSrc"] = entry["src"]
         if show_moment_exif and str(aid or "").strip() in exif_pool and asset:
@@ -702,57 +769,7 @@ def build_layout_screen(
                 entry["momentExifLine"] = exif_line
         slots_out.append(entry)
 
-    layout_hint = screen.get("layoutHint")
-    if pattern_id == "screen-full-frame":
-        layout_hint = "full-frame"
-
-    first_aid = (screen.get("slots") or [{}])[0].get("assetId", "")
-    first_asset = assets.get(first_aid) if first_aid else None
-
-    viewport_fit = False
-    tier_ultra = False
-    screen_aspect: str | None = None
-    if pattern_id == "screen-full-frame" and first_asset:
-        from travelogue.curation.media_classify import is_collage_asset
-
-        fit0 = full_frame_fit_for_asset(first_asset, default="cover")
-        ar = _asset_aspect_ratio_float(first_asset)
-        tier = _presentation_tier(ar)
-        if fit0 == "cover":
-            # Collage singles: always full content-rail width (native aspect),
-            # regardless of wide/ultra presentation tier — avoids narrow viewport-fit.
-            if is_collage_asset(first_asset):
-                style_parts_vf = []
-                screen_aspect = _screen_aspect_ratio_css(first_asset)
-            else:
-                viewport_fit = True
-                style_parts_vf = [
-                    f"--screen-fit-ar: {ar:.6f}",
-                    f"--screen-weight: {_screen_weight_for_tier(tier):.3f}",
-                ]
-        else:
-            style_parts_vf = []
-            screen_aspect = _screen_aspect_ratio_css(first_asset)
-    elif layout_hint not in ("person-pair", "person-triple") and n_slots == 1 and "1col" in grid_class:
-        if first_asset:
-            ar = _asset_aspect_ratio_float(first_asset)
-            tier = _presentation_tier(ar)
-            style_parts_vf = []
-            if tier == "ultra":
-                tier_ultra = True
-                viewport_fit = True
-                style_parts_vf = [
-                    f"--screen-fit-ar: {ar:.6f}",
-                    f"--screen-weight: {_screen_weight_for_tier('ultra'):.3f}",
-                ]
-            else:
-                screen_aspect = _screen_aspect_ratio_css(first_asset)
-    else:
-        style_parts_vf = []
-
     style_parts: list[str] = list(style_parts_vf)
-    # screen-portrait-2/3: intrinsic row height via overlay; skip fixed 16:9 stage AR.
-    skip_stage_aspect = pattern_id in ("screen-portrait-2", "screen-portrait-3") or viewport_fit
     if layout_geo.get("stageAspect") and not skip_stage_aspect:
         stage_aspect = str(layout_geo["stageAspect"]).replace(":", " / ")
         style_parts.append(f"--screen-aspect: {stage_aspect}")

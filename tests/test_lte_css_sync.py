@@ -98,6 +98,7 @@ def test_journal_has_base_slot_image_containment(journal_css: str) -> None:
     assert ".layout-slot__img" in preamble
     assert "min-height: 0" in preamble
     assert "layout-slot--blurred-fill" in preamble
+    assert 'html[data-layout-engine="screens"] .layout-slot__blur' in preamble
 
 
 @pytest.mark.unit

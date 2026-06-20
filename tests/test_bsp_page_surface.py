@@ -69,7 +69,7 @@ def test_full_frame_landscape_viewport_fit() -> None:
 
 
 @pytest.mark.unit
-def test_full_frame_person_contain_blur_fill() -> None:
+def test_full_frame_person_contain_native_stage_no_blur() -> None:
     assets = {
         "p1": {
             "id": "p1",
@@ -88,7 +88,7 @@ def test_full_frame_person_contain_blur_fill() -> None:
     assert "2000 / 3000" in ctx["screenStyle"]
     slot = ctx["slots"][0]
     assert slot["fit"] == "contain"
-    assert slot.get("hasBlurFill") is True
+    assert slot.get("hasBlurFill") is not True
 
 
 @pytest.mark.unit

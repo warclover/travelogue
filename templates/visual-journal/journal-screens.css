@@ -94,14 +94,24 @@ html[data-layout="auto"] .layout-screen__grid .layout-slot__img {
   max-height: 100%;
 }
 
+/* Portrait single contain: slot fills stage width; blur replaces --screen-tone bands. */
+html[data-layout-engine="screens"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]) .layout-slot--blurred-fill {
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+html[data-layout-engine="screens"] .layout-screen:is([data-pattern="screen-portrait-1"], [data-pattern="screen-plate"]):not([data-layout-hint]) .layout-slot--blurred-fill > .layout-slot__img--contain {
+  position: relative;
+  z-index: 1;
+}
+
 /* full-frame / collage blurred fill (PRD §3.4 · R-P16-15) */
-html[data-layout="web"] .layout-slot--blurred-fill,
-html[data-layout="auto"] .layout-slot--blurred-fill {
+html[data-layout-engine="screens"] .layout-slot--blurred-fill {
   position: relative;
 }
 
-html[data-layout="web"] .layout-slot__blur,
-html[data-layout="auto"] .layout-slot__blur {
+html[data-layout-engine="screens"] .layout-slot__blur {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -113,8 +123,7 @@ html[data-layout="auto"] .layout-slot__blur {
   pointer-events: none;
 }
 
-html[data-layout="web"] .layout-slot--blurred-fill .layout-slot__img,
-html[data-layout="auto"] .layout-slot--blurred-fill .layout-slot__img {
+html[data-layout-engine="screens"] .layout-slot--blurred-fill .layout-slot__img {
   position: relative;
   z-index: 1;
 }
@@ -1044,6 +1053,10 @@ html[data-layout="auto"] .layout-screen[data-layout-hint="person-grid-8"] .layou
   justify-content: center;
   min-height: 0;
   background: var(--screen-tone, var(--bg-page));
+}
+
+html[data-layout-engine="screens"] .layout-screen[data-layout-hint="person-grid-8"] .layout-slot--blurred-fill {
+  background: transparent;
 }
 
 html[data-layout="web"] .layout-screen[data-layout-hint="person-grid-8"] .layout-slot__img--contain,
