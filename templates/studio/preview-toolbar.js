@@ -507,6 +507,30 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     window.location.replace(url.toString());
   }
 
+  function syncCoverOpeningStyleInDom(style) {
+    var section = document.querySelector('.cover-opening[data-block="cover-opening"]');
+    if (!section || !style) return;
+    section.setAttribute("data-cover-opening", style);
+    var titleEl = section.querySelector(".cover-opening__title");
+    if (style === "split-mat") {
+      syncCoverTitleLayoutClass(titleEl);
+    } else if (titleEl) {
+      titleEl.classList.remove(
+        "cover-opening__title--vertical",
+        "cover-opening__title--vertical-compact",
+        "cover-opening__title--horizontal"
+      );
+    }
+  }
+
+  function refreshPreviewAfterCopySave(res, tripId, root) {
+    var rendered = res.body && res.body.rendered;
+    if (rendered && rendered.length) {
+      return Promise.resolve(true);
+    }
+    return applyLayoutRerender(tripId, root);
+  }
+
   function setLayoutPending(on) {
     _layoutPending = !!on;
     if (on) _pendingDockDismissed = false;
@@ -1762,7 +1786,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
           window.dispatchEvent(new CustomEvent("travelogue:copy-saved"));
         } catch (e0) {}
         if (res.body.rendered && res.body.rendered.length) {
-          window.location.reload();
+          reloadPreviewAfterLayout();
           return;
         }
         if (onDone) onDone(true);
@@ -3022,16 +3046,21 @@ function insertScreenplayControl(parent, beforeNode, opts) {
             var prev = selectedStyle;
             selectedStyle = next;
             syncSelection(next);
+            syncCoverOpeningStyleInDom(next);
             trackStudioEvent("cover_opening_style_change", {
               tripId: tripId,
               coverOpeningStyle: next,
               previousCoverOpeningStyle: prev,
             });
-            showToolbarToast("封面版式已保存，正在更新预览…");
-            return applyLayoutRerender(
+            showToolbarToast("封面版式已更新");
+            var toolbar = document.querySelector(".preview-toolbar");
+            return refreshPreviewAfterCopySave(
+              res,
               tripId,
-              document.querySelector(".preview-toolbar") || section
-            );
+              toolbar || section
+            ).then(function (ok) {
+              if (ok && toolbar) refreshStaleHint(toolbar, tripId);
+            });
           })
           .catch(function () {
             setBusy(false);

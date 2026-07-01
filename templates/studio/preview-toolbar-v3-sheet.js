@@ -317,7 +317,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
 
   function renderLayoutPanel() {
     bodyEl.innerHTML =
-      '<p class="preview-sheet__hint preview-sheet__hint--lead">封面版式与模板策略保存后会自动更新预览。拼图改判、精选与旅行主角设置需点「应用排版」。</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--lead">封面版式保存后立即在预览中生效。模板策略保存后会自动重渲染。拼图改判、精选与旅行主角设置需点「应用排版」。</p>' +
       '<div class="preview-sheet__cover-slot"></div>' +
       '<div class="preview-sheet__template-slot"></div>' +
       '<div class="preview-sheet__embed"></div>' +
