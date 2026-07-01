@@ -109,7 +109,7 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             featured_dir=payload.get("featuredDir"),
             material_dir=payload.get("materialDir"),
             layout_density=payload.get("layoutDensity"),
-            photo_cull_enabled=bool(payload.get("photoCullEnabled", True)),
+            photo_cull_enabled=bool(payload.get("photoCullEnabled", False)),
         )
         progress_queue.put(
             {

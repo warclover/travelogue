@@ -198,14 +198,14 @@ function updateLayoutDensityWarn() {
 
 function readPhotoCullEnabled() {
   var el = $("v2-photo-cull-enabled");
-  if (!el) return true;
+  if (!el) return false;
   return !!el.checked;
 }
 
 function setPhotoCullEnabled(enabled) {
   var el = $("v2-photo-cull-enabled");
   if (!el) return;
-  el.checked = enabled !== false;
+  el.checked = enabled === true;
   updatePhotoCullOptoutUi();
 }
 
@@ -301,7 +301,7 @@ function restoreModeAndDraft() {
   safeSet("v2-featured-dir", draft.featuredDir || "");
   safeSet("v2-material-dir", draft.materialDir || "");
   setLayoutDensity(draft.layoutDensity || "balanced");
-  setPhotoCullEnabled(draft.photoCullEnabled !== false);
+  setPhotoCullEnabled(draft.photoCullEnabled === true);
   _photoCullTouched = !!draft.photoCullTouched;
   _pendingPhotoCount = typeof draft.photoCount === "number" ? draft.photoCount : null;
   updateLayoutDensityWarn();

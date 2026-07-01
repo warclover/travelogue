@@ -44,9 +44,9 @@ _ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def _parse_photo_cull_enabled(raw: object) -> bool:
-    """PRD-P9-F1 · default true when missing or invalid."""
+    """PRD-P9-F1 · default false when missing or invalid (Import Sheet unchecked)."""
     if raw is None:
-        return True
+        return False
     if isinstance(raw, bool):
         return raw
     text = str(raw).strip().lower()
@@ -54,7 +54,7 @@ def _parse_photo_cull_enabled(raw: object) -> bool:
         return False
     if text in ("1", "true", "yes", "on"):
         return True
-    return True
+    return False
 
 
 def _studio_trust_local_album_paths() -> bool:
