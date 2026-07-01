@@ -842,7 +842,7 @@ def test_cover_styles_v5_first_preview_toast_once(tmp_path: Path) -> None:
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
 def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
-    """P1 · Sheet 切换封面版式 → 应用排版 → 预览 data-cover-opening 刷新。"""
+    """P1 · Sheet 切换封面版式后自动 rerender，预览 data-cover-opening 刷新。"""
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
     trip_id = _seed_rendered_cover_style_trip(trips_dir, "cover-switch", style="split-mat")
@@ -885,7 +885,8 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
                 lambda r: r.url.endswith("/save-copy") and r.request.method == "POST",
                 timeout=15_000,
             ):
-                page.locator('[data-cover-style="magazine-head"]').click()
+                with page.expect_navigation(wait_until="networkidle", timeout=30_000):
+                    page.locator('[data-cover-style="magazine-head"]').click()
             page.wait_for_function(
                 """() => {
                   const el = document.getElementById('preview-toolbar-toast');
@@ -900,10 +901,8 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
             assert change_meta.get("coverOpeningStyle") == "magazine-head"
             assert change_meta.get("previousCoverOpeningStyle") == "split-mat"
 
-            apply_btn = page.locator(".preview-sheet__apply-layout")
-            apply_btn.wait_for(state="visible", timeout=5_000)
-            assert page.locator('[data-cover-style="magazine-head"].is-on').count() == 1
-            assert _read_cover_opening_style(page) == "split-mat"
+            page.locator(".cover-opening").wait_for(state="visible", timeout=10_000)
+            assert _read_cover_opening_style(page) == "magazine-head"
 
             entry = page.evaluate(
                 f"""async () => {{
@@ -912,12 +911,6 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
                 }}"""
             )
             assert entry and entry.get("coverOpeningStyle") == "magazine-head"
-
-            with page.expect_navigation(wait_until="networkidle", timeout=30_000):
-                apply_btn.click()
-
-            page.locator(".cover-opening").wait_for(state="visible", timeout=10_000)
-            assert _read_cover_opening_style(page) == "magazine-head"
 
             trip_data = json.loads((trips_dir / trip_id / "trip.json").read_text(encoding="utf-8"))
             assert trip_data["meta"]["coverOpeningStyle"] == "magazine-head"

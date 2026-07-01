@@ -489,12 +489,34 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     root._taskDock.hide();
   }
 
+  function layoutApplyButtons(root) {
+    var scope = root && root.nodeType === 1 ? root : document;
+    var toolbar =
+      (scope.closest && scope.closest(".preview-toolbar")) ||
+      (scope.classList && scope.classList.contains("preview-toolbar") ? scope : null) ||
+      document.querySelector(".preview-toolbar");
+    var searchRoot = toolbar || scope;
+    return searchRoot.querySelectorAll(
+      ".preview-toolbar__apply-layout, .preview-sheet__apply-layout, .preview-drawer__apply-layout"
+    );
+  }
+
+  function reloadPreviewAfterLayout() {
+    var url = new URL(window.location.href);
+    url.searchParams.set("_preview", String(Date.now()));
+    window.location.replace(url.toString());
+  }
+
   function setLayoutPending(on) {
     _layoutPending = !!on;
     if (on) _pendingDockDismissed = false;
-    document.querySelectorAll(".preview-toolbar__apply-layout").forEach(function (btn) {
-      btn.hidden = !_layoutPending;
-    });
+    document
+      .querySelectorAll(
+        ".preview-toolbar__apply-layout, .preview-sheet__apply-layout, .preview-drawer__apply-layout"
+      )
+      .forEach(function (btn) {
+        btn.hidden = !_layoutPending;
+      });
     document.querySelectorAll(".preview-toolbar__pending-row").forEach(function (row) {
       row.hidden = !_layoutPending;
     });
@@ -1654,26 +1676,40 @@ function insertScreenplayControl(parent, beforeNode, opts) {
   }
 
   function applyLayoutRerender(tripId, root) {
-    var btn = root.querySelector(".preview-toolbar__apply-layout");
-    var pendingBtn = root.querySelector(".preview-toolbar__pending-apply");
-    if (btn) btn.disabled = true;
+    var applyBtns = layoutApplyButtons(
+      root || document.querySelector(".preview-toolbar") || document.body
+    );
+    var pendingBtn =
+      (root && root.querySelector && root.querySelector(".preview-toolbar__pending-apply")) ||
+      document.querySelector(".preview-toolbar__pending-apply");
+    applyBtns.forEach(function (btn) {
+      btn.disabled = true;
+    });
     if (pendingBtn) pendingBtn.disabled = true;
+    showToolbarToast("正在应用排版…", { duration: 3000 });
     return postJson(tripApiBase(tripId) + "/rerender", {})
       .then(function (res) {
-        if (btn) btn.disabled = false;
+        applyBtns.forEach(function (btn) {
+          btn.disabled = false;
+        });
         if (pendingBtn) pendingBtn.disabled = false;
         if (res.status !== 200 || !res.body.ok) {
           showToolbarToast((res.body && res.body.error) || "排版失败", { error: true });
-          return;
+          setLayoutPending(true);
+          return false;
         }
         setLayoutPending(false);
-        showToolbarToast("排版已更新");
-        window.location.reload();
+        reloadPreviewAfterLayout();
+        return true;
       })
       .catch(function () {
-        if (btn) btn.disabled = false;
+        applyBtns.forEach(function (btn) {
+          btn.disabled = false;
+        });
         if (pendingBtn) pendingBtn.disabled = false;
         showToolbarToast("排版失败", { error: true });
+        setLayoutPending(true);
+        return false;
       });
   }
 
@@ -2986,13 +3022,16 @@ function insertScreenplayControl(parent, beforeNode, opts) {
             var prev = selectedStyle;
             selectedStyle = next;
             syncSelection(next);
-            setLayoutPending(true);
-            showToolbarToast("封面版式已保存 · 点应用排版后生效");
             trackStudioEvent("cover_opening_style_change", {
               tripId: tripId,
               coverOpeningStyle: next,
               previousCoverOpeningStyle: prev,
             });
+            showToolbarToast("封面版式已保存，正在更新预览…");
+            return applyLayoutRerender(
+              tripId,
+              document.querySelector(".preview-toolbar") || section
+            );
           })
           .catch(function () {
             setBusy(false);
@@ -3077,13 +3116,17 @@ function insertScreenplayControl(parent, beforeNode, opts) {
                 showToolbarToast((res.j && res.j.message) || "模板调整失败", { error: true });
                 return;
               }
-              showToolbarToast("模板策略已更新", { duration: 2000 });
               pill.textContent =
                 ((res.j.template && res.j.template.sourceLabel) || "已更新") +
                 " · " +
                 ((res.j.template && res.j.template.resolvedTemplateId) ||
                   t.resolvedTemplateId ||
                   "visual-journal");
+              showToolbarToast("模板已更新，正在应用排版…", { duration: 2500 });
+              return applyLayoutRerender(
+                tripId,
+                document.querySelector(".preview-toolbar") || slot
+              );
             })
             .catch(function () {
               showToolbarToast("模板调整失败", { error: true });
