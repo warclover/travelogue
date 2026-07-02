@@ -146,6 +146,7 @@ export function initPhoneStrip(manifest, opts) {
     track.innerHTML = '<div class="v2-phone-strip__slide-ph">暂无长图预览</div>';
     if (prevBtn) prevBtn.disabled = true;
     if (nextBtn) nextBtn.disabled = true;
+    updatePhoneCaptionHint(0);
     return null;
   }
 
@@ -213,6 +214,17 @@ export function initPhoneStrip(manifest, opts) {
     });
     if (prevBtn) prevBtn.disabled = !canPrev(index);
     if (nextBtn) nextBtn.disabled = !canNext(index, pageCount);
+    updatePhoneCaptionHint(pageCount);
+  }
+
+  function updatePhoneCaptionHint(count) {
+    var hint = $("v2-phone-caption-hint");
+    if (!hint) return;
+    if (count > 1) {
+      hint.textContent = "共 " + count + " 章";
+      return;
+    }
+    hint.textContent = count === 1 ? "共 1 章" : "微信里收到的样子";
   }
 
   function go(requested, goOpts) {

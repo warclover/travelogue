@@ -20,6 +20,14 @@ import { V2, $ } from "./store.js";
 
 var _disposeActive = function () {};
 
+function carouselHintText(manifest, index, pageCount) {
+  if (!pageCount) return "";
+  var isDemo = !manifest || manifest.source !== "user";
+  var prefix = isDemo ? "示例 · " : "";
+  var title = (manifest && manifest.title) || "作品";
+  return prefix + title + " · 第 " + (index + 1) + " / " + pageCount + " 页";
+}
+
 function pagePlaceholderText(page) {
   if (!page) return "";
   if (page.label) return page.label;
@@ -143,7 +151,11 @@ export function initCarousel(manifest, opts) {
     return dot;
   });
 
-  if (hint) hint.textContent = "← 横滑 · 一屏一页 · 到头停止 · 共 " + pageCount + " 张 →";
+  if (hint) hint.textContent = carouselHintText(manifest, 0, pageCount);
+
+  function updateHint() {
+    if (hint) hint.textContent = carouselHintText(manifest, index, pageCount);
+  }
 
   function viewportWidth() {
     return (viewport && viewport.clientWidth) || (track && track.clientWidth) || 0;
@@ -176,6 +188,7 @@ export function initCarousel(manifest, opts) {
     });
     if (prevBtn) prevBtn.disabled = !canPrev(index);
     if (nextBtn) nextBtn.disabled = !canNext(index, pageCount);
+    updateHint();
   }
 
   function go(requested, opts) {

@@ -15,6 +15,9 @@ import { renderBenchRecent } from "./bento.js";
 import { shelfResumeActions } from "./shelf-actions-logic.js";
 import { triggerHomepageRecurate } from "./bento-stale.js";
 
+var STALE_BADGE = "可更新";
+var STALE_LONGSHOT = "长图可更新";
+var _shelfScrollTracked = false;
 var _hostEl = null;
 var _gridEl = null;
 var _newCardEl = null;
@@ -79,8 +82,8 @@ function tripSubLine(trip) {
   if (trip.photoCount) sub.push(trip.photoCount + " 张");
   var rel = relativeTime(trip.updatedAt);
   if (rel) sub.push(rel);
-  if (trip.longshotStale) sub.push("长图待更新");
-  if (trip.algorithmStale) sub.push("算法待更新");
+  if (trip.longshotStale) sub.push("长图可更新");
+  if (trip.algorithmStale) sub.push("可更新 · 重新排版可获得新版式");
   return sub.join(" · ");
 }
 
@@ -145,8 +148,8 @@ function buildCoverWrap(trip, surface) {
   var openCover = el("button", "v2-shelf__open v2-shelf__open--cover");
   openCover.type = "button";
   var staleBits = [];
-  if (trip.longshotStale) staleBits.push("长图待更新");
-  if (trip.algorithmStale) staleBits.push("算法待更新");
+  if (trip.longshotStale) staleBits.push("长图可更新");
+  if (trip.algorithmStale) staleBits.push("可更新");
   openCover.title = (trip.title || trip.tripId)
     + (staleBits.length ? " · " + staleBits.join(" · ") : "");
   buildCover(trip, openCover);
@@ -154,6 +157,11 @@ function buildCoverWrap(trip, surface) {
   wrap.appendChild(openCover);
   if (isDemoTrip(trip)) {
     wrap.appendChild(el("span", "v2-demo-flag v2-shelf__badge", "示例"));
+  }
+  if (trip.longshotStale || trip.algorithmStale) {
+    var badgeText = trip.longshotStale ? STALE_LONGSHOT : STALE_BADGE;
+    var staleBadge = el("span", "v2-shelf__stale-badge", badgeText);
+    wrap.appendChild(staleBadge);
   }
   attachShelfTripMenu(wrap, trip, { surface: surface, onDeleted: onTripDeleted });
   return wrap;
@@ -340,6 +348,20 @@ export function renderShelf(trips, total) {
 
   syncFooter();
   show(host, true);
+  wireShelfScrollObserver(host);
+}
+
+function wireShelfScrollObserver(host) {
+  if (_shelfScrollTracked || !host || typeof IntersectionObserver !== "function") return;
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting || _shelfScrollTracked) return;
+      _shelfScrollTracked = true;
+      trackStudioEvent("shelf_scroll_into_view", {});
+      observer.disconnect();
+    });
+  }, { threshold: 0.15 });
+  observer.observe(host);
 }
 
 export { loadMoreShelf, SHELF_PAGE_SIZE };

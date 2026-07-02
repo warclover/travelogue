@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/__studio/studio-home-v2.css" />
   <link rel="stylesheet" href="/__studio/studio-modal.css" />
 </head>
-<body data-studio-v="v2" data-homepage-variant="v2" data-headline-layout="d" data-bucket-id="__STUDIO_BUCKET_ID__" data-studio-dev="__STUDIO_DEV__">
+<body data-studio-v="v2" data-homepage-variant="v2" data-homepage-v21="1" data-headline-layout="d" data-bucket-id="__STUDIO_BUCKET_ID__" data-studio-dev="__STUDIO_DEV__">
 <a href="#v2-cta" class="v2-skip-link">跳到主要操作</a>
 
 <div id="v2-offline" class="v2-offline-banner" hidden>
@@ -60,6 +60,8 @@
         <p class="v2-bento__lead v2-bento__lead--script">
           选一次旅行的照片，<b>自动分章 · 配文 · 排版</b>，生成大屏卷轴 + 微信长图。
         </p>
+        <p class="v2-bento__trust" id="v2-headline-trust">照片留在本机 · 无需注册</p>
+        <div class="v2-bento__headline-cta" id="v2-headline-cta-slot"></div>
       </div>
       <!-- ROLLBACK legacy DOM（配合 data-headline-layout="legacy"）：
       <div class="v2-bento__headline" id="v2-headline" hidden>
@@ -88,8 +90,9 @@
             <div class="v2-carousel__footer-start">
               <div class="v2-carousel__dots" id="v2-carousel-dots" role="tablist" aria-label="卷轴页面"></div>
               <span class="v2-demo-flag v2-carousel__demo-flag" data-demo-flag hidden>示例作品</span>
+              <span class="v2-user-flag v2-carousel__user-flag" id="v2-carousel-user-flag" hidden></span>
             </div>
-            <span class="v2-carousel__hint" id="v2-carousel-hint">← 横滑 · 一屏一页 · 到头停止 →</span>
+            <span class="v2-carousel__hint" id="v2-carousel-hint">第 1 页</span>
           </div>
         </div>
       </section>
@@ -98,21 +101,18 @@
       <section class="v2-bento__bench" aria-label="工作台">
         <div class="v2-bench">
           <div class="v2-bench__left">
+            <div class="v2-bench__cta-row">
+              <div class="v2-bench__cta-slot" id="v2-bench-cta-slot"></div>
+              <div class="v2-bench__recent" id="v2-bench-recent" hidden aria-label="最近画册">
+                <div class="v2-bench__recent-list" id="v2-bench-recent-list"></div>
+              </div>
+            </div>
             <div class="v2-bench__sample" id="v2-bench-sample">
               <span class="v2-demo-flag" id="v2-bench-sample-flag">示例作品</span>
               <div class="v2-bench__sample-thumb" id="v2-bench-thumb" aria-hidden="true"></div>
               <div class="v2-bench__sample-text">
                 <strong id="v2-bench-title">京都 · 雨后</strong>
                 <span id="v2-bench-meta">自动生成 · 86 张 · 3 章</span>
-              </div>
-            </div>
-            <div class="v2-bench__recent" id="v2-bench-recent" hidden aria-label="最近画册与新建">
-              <div class="v2-bench__recent-list" id="v2-bench-recent-list">
-                <button type="button" class="v2-bench__create-card" id="v2-cta"
-                        aria-label="开始制作我的游记">
-                  <span class="v2-bench__create-card__icon" aria-hidden="true">+</span>
-                  <span class="v2-bench__create-card__label">新建</span>
-                </button>
               </div>
             </div>
           </div>
@@ -149,72 +149,10 @@
             <div class="v2-bench__side">
               <p class="v2-bench__side-label">快捷操作</p>
               <div class="v2-bench__quick-actions">
-                <button type="button" class="v2-bench__ghost-btn" id="v2-bench-resume">继续上次</button>
-                <button type="button" class="v2-bench__ghost-btn" id="v2-bench-recent-btn">查看最近</button>
-              </div>
-            </div>
-            <div class="v2-bench__side v2-bench__side--prefs">
-              <p class="v2-bench__side-label">配色</p>
-              <select id="v2-theme-select" class="v2-bench__ghost-select" aria-label="首页配色">
-                  <optgroup label="精选">
-                    <option value="mist">雾蓝纸本</option>
-                    <option value="folio">纸墨装帧</option>
-                    <option value="dawn">暖阳珊瑚</option>
-                    <option value="classic">经典深色</option>
-                  </optgroup>
-                  <optgroup label="更多">
-                    <option value="atelier">木紫文艺</option>
-                    <option value="sky">清新浅蓝</option>
-                  </optgroup>
-                </select>
-            </div>
-            <div class="v2-bench__side v2-bench__side--analysis">
-              <p class="v2-bench__side-label">分析</p>
-              <button type="button" class="v2-bench__ghost-btn" id="v2-advanced-toggle"
-                      aria-expanded="false" aria-controls="v2-advanced-popover"
-                      aria-haspopup="dialog">高级选项</button>
-              <div id="v2-advanced-popover" class="v2-advanced-popover" hidden role="dialog"
-                   aria-labelledby="v2-advanced-title">
-                <p id="v2-advanced-title" class="v2-advanced-popover__title">高级 · 分析选项</p>
-                <p class="v2-advanced-popover__note">一般无需修改</p>
-                <div class="v2-advanced-popover__row">
-                  <label class="v2-advanced-popover__label" for="studio-cfg-clustering">行程识别</label>
-                  <select id="studio-cfg-clustering" class="v2-advanced-popover__select"
-                          aria-describedby="studio-cfg-clustering-hint">
-                    <option value="auto">自动（推荐）</option>
-                    <option value="true">开</option>
-                    <option value="false">关</option>
-                  </select>
-                  <p class="v2-advanced-popover__hint" id="studio-cfg-clustering-hint">默认自动：有 GPS 的照片会按行程分段（推荐）</p>
-                </div>
-                <div class="v2-advanced-popover__row">
-                  <label class="v2-advanced-popover__label" for="studio-cfg-vision">场景分析</label>
-                  <select id="studio-cfg-vision" class="v2-advanced-popover__select"
-                          aria-describedby="studio-cfg-vision-hint">
-                    <option value="false">关（默认）</option>
-                    <option value="auto">自动</option>
-                    <option value="true">开</option>
-                  </select>
-                  <p class="v2-advanced-popover__hint" id="studio-cfg-vision-hint">默认关闭；大相册可开启以合并同场景照片（较慢，首次需下载组件）</p>
-                </div>
-                <div class="v2-advanced-popover__row">
-                  <label class="v2-advanced-popover__label" for="studio-cfg-g1">结构确认（G1）</label>
-                  <select id="studio-cfg-g1" class="v2-advanced-popover__select"
-                          aria-describedby="studio-cfg-g1-hint">
-                    <option value="false">自动继续（推荐）</option>
-                    <option value="true">导入后先确认章节</option>
-                  </select>
-                  <p class="v2-advanced-popover__hint" id="studio-cfg-g1-hint">开启后需预览内确认章节顺序再生成文案</p>
-                </div>
-                <div class="v2-advanced-popover__row">
-                  <label class="v2-advanced-popover__label" for="studio-cfg-layout-scoring">智能排版</label>
-                  <select id="studio-cfg-layout-scoring" class="v2-advanced-popover__select"
-                          aria-describedby="studio-cfg-layout-scoring-hint">
-                    <option value="false">经典（默认）</option>
-                    <option value="true">实验 · beam 评分</option>
-                  </select>
-                  <p class="v2-advanced-popover__hint" id="studio-cfg-layout-scoring-hint">实验模式启用多信号 beam 搜索；内测 A/B 用，一般保持默认</p>
-                </div>
+                <button type="button" class="v2-bench__ghost-btn v2-bench__ghost-btn--secondary" id="v2-bench-resume">继续上次</button>
+                <button type="button" class="v2-bench__ghost-btn v2-settings-toggle" id="v2-settings-toggle"
+                        aria-label="工作台设置" aria-expanded="false" aria-controls="v2-settings-popover"
+                        aria-haspopup="dialog">设置</button>
               </div>
             </div>
           </div>
@@ -248,9 +186,78 @@
             <span class="v2-demo-flag v2-phone__demo-flag" data-demo-flag hidden>示例作品</span>
             <span>微信长图 · 竖屏预览</span>
           </span>
-          <span class="v2-cell-label__hint">←→ 切换 · 一屏一章</span>
+          <span class="v2-cell-label__hint" id="v2-phone-caption-hint">微信里收到的样子</span>
         </p>
         </div>
+      </section>
+    </div>
+
+    <button type="button" class="v2-bench__cta-primary" id="v2-cta"
+            aria-label="开始制作我的游记">开始制作我的游记 →</button>
+
+    <div id="v2-settings-popover" class="v2-settings-popover" hidden role="dialog"
+         aria-labelledby="v2-settings-title">
+      <p id="v2-settings-title" class="v2-settings-popover__title">工作台设置</p>
+      <section class="v2-settings-popover__section" aria-label="外观">
+        <p class="v2-settings-popover__section-label">外观</p>
+        <select id="v2-theme-select" class="v2-settings-popover__select" aria-label="首页配色">
+          <optgroup label="精选">
+            <option value="mist">雾蓝纸本</option>
+            <option value="folio">纸墨装帧</option>
+            <option value="dawn">暖阳珊瑚</option>
+            <option value="classic">经典深色</option>
+          </optgroup>
+          <optgroup label="更多">
+            <option value="atelier">木紫文艺</option>
+            <option value="sky">清新浅蓝</option>
+          </optgroup>
+        </select>
+      </section>
+      <section class="v2-settings-popover__section" aria-label="导入选项">
+        <p class="v2-settings-popover__section-label">导入选项</p>
+        <p class="v2-advanced-popover__note">一般无需修改</p>
+        <div class="v2-advanced-popover__row">
+          <label class="v2-advanced-popover__label" for="studio-cfg-clustering">行程识别</label>
+          <select id="studio-cfg-clustering" class="v2-advanced-popover__select"
+                  aria-describedby="studio-cfg-clustering-hint">
+            <option value="auto">自动（推荐）</option>
+            <option value="true">开</option>
+            <option value="false">关</option>
+          </select>
+          <p class="v2-advanced-popover__hint" id="studio-cfg-clustering-hint">默认自动：有 GPS 的照片会按行程分段（推荐）</p>
+        </div>
+        <div class="v2-advanced-popover__row">
+          <label class="v2-advanced-popover__label" for="studio-cfg-vision">场景分析</label>
+          <select id="studio-cfg-vision" class="v2-advanced-popover__select"
+                  aria-describedby="studio-cfg-vision-hint">
+            <option value="false">关（默认）</option>
+            <option value="auto">自动</option>
+            <option value="true">开</option>
+          </select>
+          <p class="v2-advanced-popover__hint" id="studio-cfg-vision-hint">默认关闭；大相册可开启以合并同场景照片（较慢，首次需下载组件）</p>
+        </div>
+        <div class="v2-advanced-popover__row">
+          <label class="v2-advanced-popover__label" for="studio-cfg-g1">结构确认（G1）</label>
+          <select id="studio-cfg-g1" class="v2-advanced-popover__select"
+                  aria-describedby="studio-cfg-g1-hint">
+            <option value="false">自动继续（推荐）</option>
+            <option value="true">导入后先确认章节</option>
+          </select>
+          <p class="v2-advanced-popover__hint" id="studio-cfg-g1-hint">开启后需预览内确认章节顺序再生成文案</p>
+        </div>
+        <div class="v2-advanced-popover__row">
+          <label class="v2-advanced-popover__label" for="studio-cfg-layout-scoring">智能排版</label>
+          <select id="studio-cfg-layout-scoring" class="v2-advanced-popover__select"
+                  aria-describedby="studio-cfg-layout-scoring-hint">
+            <option value="false">经典（默认）</option>
+            <option value="true">实验 · beam 评分</option>
+          </select>
+          <p class="v2-advanced-popover__hint" id="studio-cfg-layout-scoring-hint">实验模式启用多信号 beam 搜索；内测 A/B 用，一般保持默认</p>
+        </div>
+      </section>
+      <section class="v2-settings-popover__section v2-settings-popover__section--dev" id="v2-settings-dev-section" hidden>
+        <p class="v2-settings-popover__section-label">开发者</p>
+        <button type="button" class="v2-settings-popover__dev-btn" id="v2-settings-dev-toggle">打开 Dev 面板</button>
       </section>
     </div>
   </div>

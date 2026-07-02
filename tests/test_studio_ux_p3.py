@@ -97,16 +97,17 @@ def test_ux_p3_04_cluster_notice_non_blocking_string() -> None:
     assert "clusterNotice" in first_success
 
 
-def test_ux_p3_03_v2_advanced_options_markers() -> None:
+def test_ux_p3_03_v2_settings_markers() -> None:
     html = (ROOT / "templates" / "studio" / "studio-home-v2.html").read_text(encoding="utf-8")
     for expected in (
-        'id="v2-advanced-toggle"',
-        'id="v2-advanced-popover"',
+        'id="v2-settings-toggle"',
+        'id="v2-settings-popover"',
         'id="studio-cfg-clustering"',
         'id="studio-cfg-vision"',
         'id="studio-cfg-layout-scoring"',
-        "高级 · 分析选项",
+        "工作台设置",
         "智能排版",
+        "开始制作我的游记",
     ):
         assert expected in html, f"missing v2 UX marker: {expected}"
 

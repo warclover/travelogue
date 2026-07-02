@@ -22,6 +22,20 @@
 
 ---
 
+## 0.1 v2.1 工作台优化（`studio.homepage.v21_bench`）
+
+| 属性 | 说明 |
+|------|------|
+| **Flag ID** | `studio.homepage.v21_bench` |
+| **文档** | [PRD-STUDIO-HOMEPAGE-v2.1-OPTIMIZATION.md](../PRD-STUDIO-HOMEPAGE-v2.1-OPTIMIZATION.md) |
+| **M22 默认** | **on**（与 v2 Bento 同批交付；HTML `data-homepage-v21="1"`） |
+| **回滚** | 回退至 v2.0.6 bench 布局需 git revert；无独立 classic 路由 |
+| **灰度判据** | 见 v2.1 PRD §8.2：`cta_click`、`import_start`、`bench_resume_click` |
+
+P2 文案类改动（微文案、来源徽标）不设独立 flag，随 v2.1 一并上线。
+
+---
+
 ## 1. 门控点（历史 · M20 双路由模型）
 
 | 层级 | 决策 |

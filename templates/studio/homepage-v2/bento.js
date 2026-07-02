@@ -10,9 +10,30 @@ import { initPhoneStrip } from "./phone-strip.js";
 import { resolveLayoutTier } from "./layout-tier.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { initBentoPreviewPicker } from "./bento-preview-picker.js";
-import { syncPreviewUi } from "./bento-tabs.js";
+import { syncPreviewUi, setBentoPreviewTripId } from "./bento-tabs.js";
 import { syncBentoStaleBar } from "./bento-stale.js";
 import { pickRecentUserTrips } from "./trip-preview.js";
+
+var STALE_BADGE = "可更新";
+var STALE_LONGSHOT = "长图可更新";
+
+/** D-19 · 空态 CTA 在文案区，回访 CTA 在工作台。 */
+export function syncCtaPlacement() {
+  var cta = $("v2-cta");
+  var headlineSlot = $("v2-headline-cta-slot");
+  var benchSlot = $("v2-bench-cta-slot");
+  var ctaRow = document.querySelector(".v2-bench__cta-row");
+  if (!cta || !headlineSlot || !benchSlot) return;
+  var isReturning = pickRecentUserTrips(V2.trips).length > 0;
+  if (isReturning) {
+    benchSlot.appendChild(cta);
+    cta.classList.remove("is-headline");
+  } else {
+    headlineSlot.appendChild(cta);
+    cta.classList.add("is-headline");
+  }
+  if (ctaRow) show(ctaRow, isReturning);
+}
 
 var _phoneStripApi = null;
 var _phoneFrameObserver = null;
@@ -203,21 +224,51 @@ export function renderBenchRecent() {
 
   var recent = pickRecentUserTrips(V2.trips).slice(0, 3);
 
+  if (!recent.length) {
+    show(sample, true);
+    show(recentHost, false);
+    if (left) left.classList.remove("v2-bench__left--recent");
+    if (bench) bench.classList.remove("v2-bench--recent");
+    syncCtaPlacement();
+    return;
+  }
+
   recent.forEach(function (trip, idx) {
-    var card = document.createElement("a");
-    card.className = "v2-bench__recent-card";
-    var href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
-    if (trip.longshotStale) href = "/" + trip.tripId + "/index.html?focus=longshot";
-    card.href = href;
+    var card;
+    var isAlgorithmStale = !!trip.algorithmStale;
+
+    if (isAlgorithmStale) {
+      card = document.createElement("button");
+      card.type = "button";
+      card.className = "v2-bench__recent-card v2-bench__recent-card--action";
+      card.addEventListener("click", function () {
+        setBentoPreviewTripId(trip.tripId, { source: "bench_recent" }).then(function () {
+          renderBenchRecent();
+          syncBentoStaleBar();
+          var staleHost = $("v2-bento-stale");
+          var webCell = $("v2-web-cell");
+          var target = staleHost && !staleHost.hidden ? staleHost : webCell;
+          if (target) target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        });
+      });
+    } else {
+      card = document.createElement("a");
+      card.className = "v2-bench__recent-card";
+      var href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
+      if (trip.longshotStale) href = "/" + trip.tripId + "/index.html?focus=longshot";
+      card.href = href;
+    }
+
     if (V2.bentoPreviewTripId && trip.tripId === V2.bentoPreviewTripId) {
       card.classList.add("is-previewing");
     }
     var benchStale = [];
-    if (trip.longshotStale) benchStale.push("长图待更新");
-    if (trip.algorithmStale) benchStale.push("算法待更新");
+    if (trip.longshotStale) benchStale.push(STALE_LONGSHOT);
+    if (trip.algorithmStale) benchStale.push(STALE_BADGE);
     card.title = (trip.title || trip.tripId)
       + (trip.updatedAt ? " · " + formatUpdatedAt(trip.updatedAt) : "")
-      + (benchStale.length ? " · " + benchStale.join(" · ") : "");
+      + (benchStale.length ? " · " + benchStale.join(" · ") : "")
+      + (isAlgorithmStale ? " · 点击切换预览并更新" : "");
 
     if (trip.previewRelPath) {
       var img = document.createElement("img");
@@ -231,7 +282,7 @@ export function renderBenchRecent() {
     if (trip.longshotStale || trip.algorithmStale) {
       var stale = document.createElement("span");
       stale.className = "v2-bench__recent-card__stale";
-      stale.textContent = trip.longshotStale ? "长图待更新" : "算法待更新";
+      stale.textContent = trip.algorithmStale ? STALE_BADGE : STALE_LONGSHOT;
       card.appendChild(stale);
     }
 
@@ -249,6 +300,7 @@ export function renderBenchRecent() {
   show(recentHost, true);
   if (left) left.classList.add("v2-bench__left--recent");
   if (bench) bench.classList.add("v2-bench--recent");
+  syncCtaPlacement();
 }
 
 /** 工作台 bench。 */
@@ -260,7 +312,6 @@ export function renderBench(manifest) {
   var thumb = $("v2-bench-thumb");
   var sampleFlag = $("v2-bench-sample-flag");
   var resumeBtn = $("v2-bench-resume");
-  var recentBtn = $("v2-bench-recent-btn");
   if (titleEl && manifest.title) titleEl.textContent = manifest.title;
   if (sampleFlag) {
     show(sampleFlag, manifest.source !== "user");
@@ -285,22 +336,13 @@ export function renderBench(manifest) {
         if (!tripId) return;
         var trip = V2.trips.find(function (t) { return t.tripId === tripId; });
         if (!trip) return;
+        trackStudioEvent("bench_resume_click", {
+          trip_id: tripId,
+          stale: !!(trip.algorithmStale || trip.longshotStale),
+        });
         window.location.href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
       });
     }
-  }
-  if (recentBtn && !recentBtn.dataset.wired) {
-    recentBtn.dataset.wired = "1";
-    recentBtn.addEventListener("click", function () {
-      var shelf = $("v2-shelf");
-      if (shelf && !shelf.hidden) {
-        shelf.scrollIntoView({ behavior: "smooth", block: "start" });
-        return;
-      }
-      if (typeof studioToast === "function") {
-        studioToast("暂无最近作品", { duration: 1800 });
-      }
-    });
   }
   if (thumb && manifest.assets && manifest.assets.background) {
     var url = manifestAssetUrl(manifest, "background");
@@ -346,6 +388,7 @@ export function renderBentoEmpty(manifest) {
 
   initBentoPreviewPicker();
   syncPreviewUi();
+  syncCtaPlacement();
 
   trackStudioEvent("layout_tier", {
     tier: resolveLayoutTier({ manifestError: !manifest }),

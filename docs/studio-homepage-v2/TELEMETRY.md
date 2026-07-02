@@ -37,7 +37,10 @@
 |------|------|--------------|
 | `experiment_exposure` | variant 确定 | `variant`, `bucket_id` |
 | `homepage_view` | 最终态首帧 | `state`, `layout`, `variant` |
-| `cta_click` | 开始制作… | `surface: bench` |
+| `cta_click` | 开始制作… | `surface: bench \| headline` |
+| `settings_open` | ⚙ 设置打开 | `source: toolbar` |
+| `bench_resume_click` | bench「继续上次」 | `trip_id`, `stale` |
+| `shelf_scroll_into_view` | 书架首次进入视口 | — |
 | `sheet_open` | Sheet 开 | `state` |
 | `sheet_close` | Sheet 关 | `reason` |
 | `sheet_abandon` | 未 import 关 Sheet | — |

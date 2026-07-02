@@ -50,6 +50,18 @@ export function syncPreviewUi() {
   var sampleFlag = $("v2-bench-sample-flag");
   if (sampleFlag) show(sampleFlag, isDemo);
 
+  var userFlag = $("v2-carousel-user-flag");
+  if (userFlag) {
+    if (isDemo) {
+      show(userFlag, false);
+    } else {
+      var trip = V2.userPreviewTrip;
+      var name = (trip && (trip.title || trip.tripId)) || "我的画册";
+      userFlag.textContent = "我的画册 · " + name;
+      show(userFlag, true);
+    }
+  }
+
   var unavailable = $("v2-preview-unavailable");
   var openLink = $("v2-preview-unavailable-open");
   var showUnavailable = !!V2.bentoPreviewTripId && !V2.userManifest;
@@ -79,7 +91,10 @@ export function setBentoPreviewTripId(tripId, opts) {
   if (V2.bentoPreviewTripId === nextId && !opts.force) {
     syncPreviewUi();
     syncPreviewSelectValue();
-    return Promise.resolve(V2.userManifest);
+    return import("./bento-stale.js").then(function (stale) {
+      stale.syncBentoStaleBar();
+      return V2.userManifest;
+    });
   }
 
   V2.bentoPreviewTripId = nextId;

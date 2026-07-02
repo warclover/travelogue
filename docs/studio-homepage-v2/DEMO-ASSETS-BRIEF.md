@@ -38,6 +38,7 @@
 
 - [ ] `manifest.schema.json` 校验通过
 - [ ] 总包 ≤800KB（PRD §12.3）
+- [ ] **封面首帧（v2.1 · HP21-08）**：`pages[0]` 明亮、主体清晰、可承载 UI 控件叠加；避免暗调首帧影响首屏印象
 - [ ] 16:9 / 9:16 均可见 demo-flag（工程层）
 - [ ] 设计 sign-off 截图归档 `docs/acceptance-records/`
 

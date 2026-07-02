@@ -17,8 +17,8 @@ export function matchesPreviewSearch(trip, query) {
 
 export function stalePreviewLabel(trip) {
   if (!trip) return "";
-  if (trip.longshotStale) return "长图待更新";
-  if (trip.algorithmStale) return "算法待更新";
+  if (trip.longshotStale) return "长图可更新";
+  if (trip.algorithmStale) return "可更新";
   return "";
 }
 

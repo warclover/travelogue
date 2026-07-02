@@ -182,7 +182,7 @@ def test_ac_hp2_02_demo_flags(studio_server) -> None:
         page = browser.new_page(viewport={"width": 1440, "height": 900})
         _goto_v2(page, studio_server["base"], "studioFixture=empty")
         _wait_visible(page, "v2-frame")
-        assert "横滑" in page.locator("#v2-carousel-hint").inner_text()
+        assert "第 1" in page.locator("#v2-carousel-hint").inner_text()
         assert page.locator("#v2-bento-preview-trigger").is_visible()
         assert page.evaluate(
             "() => document.getElementById('v2-bento-preview-select').value"
@@ -403,6 +403,7 @@ def test_ac_d14_08_curate_refreshes_preference_manifest(studio_server) -> None:
 def test_ac_d14_offline_trips_cache(studio_server) -> None:
     """G-05 · 离线时用缓存 trips 填 Combobox；fetch 失败不清 preference。"""
     cache = {
+        "v": 2,
         "trips": [
             {
                 "tripId": "kyoto-rain",
@@ -587,8 +588,8 @@ def test_ac_hp2_v2_sheet_background_inert(studio_server) -> None:
         browser.close()
 
 
-def test_ac_hp2_v2_advanced_popover_focus_trap(studio_server) -> None:
-    """高级设置 Popover：打开聚焦、Tab 不逃逸、Esc 关闭回焦 toggle。"""
+def test_ac_hp2_v2_settings_popover_focus_trap(studio_server) -> None:
+    """设置 Popover：打开聚焦、Tab 不逃逸、Esc 关闭回焦 toggle。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -598,12 +599,12 @@ def test_ac_hp2_v2_advanced_popover_focus_trap(studio_server) -> None:
         page.evaluate(
             "() => { const p = document.getElementById('v2-dev-panel'); if (p) p.hidden = true; }"
         )
-        toggle = page.locator("#v2-advanced-toggle")
+        toggle = page.locator("#v2-settings-toggle")
         toggle.click()
         page.wait_for_function(
             """
             () => {
-              const pop = document.getElementById('v2-advanced-popover');
+              const pop = document.getElementById('v2-settings-popover');
               return !!pop && !pop.hidden;
             }
             """,
@@ -612,7 +613,7 @@ def test_ac_hp2_v2_advanced_popover_focus_trap(studio_server) -> None:
         focused_in_popover = page.evaluate(
             """
             () => {
-              const pop = document.getElementById('v2-advanced-popover');
+              const pop = document.getElementById('v2-settings-popover');
               return pop && pop.contains(document.activeElement);
             }
             """
@@ -624,7 +625,7 @@ def test_ac_hp2_v2_advanced_popover_focus_trap(studio_server) -> None:
             inside = page.evaluate(
                 """
                 () => {
-                  const pop = document.getElementById('v2-advanced-popover');
+                  const pop = document.getElementById('v2-settings-popover');
                   return pop && pop.contains(document.activeElement);
                 }
                 """
@@ -635,14 +636,14 @@ def test_ac_hp2_v2_advanced_popover_focus_trap(studio_server) -> None:
         page.wait_for_function(
             """
             () => {
-              const pop = document.getElementById('v2-advanced-popover');
+              const pop = document.getElementById('v2-settings-popover');
               return !!pop && pop.hidden;
             }
             """,
             timeout=5_000,
         )
         focused_toggle = page.evaluate(
-            "() => document.activeElement === document.getElementById('v2-advanced-toggle')"
+            "() => document.activeElement === document.getElementById('v2-settings-toggle')"
         )
         assert focused_toggle
         browser.close()
@@ -1205,6 +1206,294 @@ def test_ac_hp2_14_ipad_portrait_rotate_hint(studio_server) -> None:
             "() => { const f = document.getElementById('v2-frame'); return !f || f.hidden; }"
         )
         assert bento_hidden
+        browser.close()
+
+
+def test_ac_hp21_02_idle_empty_headline_cta(studio_server) -> None:
+    """AC-HP21-02 · 空态：Lead + 信任 + 主 CTA 在文案区首屏可见。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 768})
+        _goto_v2(page, studio_server["base"], "studioFixture=empty")
+        _wait_visible(page, "v2-frame")
+        visible = page.evaluate(
+            """
+            () => {
+              const ids = ['v2-headline-trust', 'v2-cta'];
+              const lead = document.querySelector('.v2-bento__lead');
+              const inViewport = (el) => {
+                if (!el) return false;
+                const r = el.getBoundingClientRect();
+                return r.top >= 0 && r.bottom <= window.innerHeight;
+              };
+              return {
+                trust: inViewport(document.getElementById('v2-headline-trust')),
+                ctaInHeadline: document.getElementById('v2-cta')?.classList.contains('is-headline'),
+                ctaText: document.getElementById('v2-cta')?.textContent || '',
+                leadVisible: lead && lead.offsetParent !== null,
+              };
+            }
+            """
+        )
+        assert visible["leadVisible"]
+        assert visible["trust"]
+        assert visible["ctaInHeadline"]
+        assert "开始制作我的游记" in visible["ctaText"]
+        browser.close()
+
+
+def test_ac_hp21_03_idle_returning_bench_cta(studio_server) -> None:
+    """AC-HP21-03 · 回访：主 CTA 在 bench，文案区无 CTA。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 768})
+        _goto_v2(page, studio_server["base"], "studioFixture=multi")
+        _wait_visible(page, "v2-frame")
+        state = page.evaluate(
+            """
+            () => {
+              const cta = document.getElementById('v2-cta');
+              const slot = document.getElementById('v2-bench-cta-slot');
+              return {
+                inBench: !!(cta && slot && slot.contains(cta)),
+                headlineHasCta: !!document.getElementById('v2-headline-cta-slot')?.contains(cta),
+                trustVisible: !!document.getElementById('v2-headline-trust')?.offsetParent,
+              };
+            }
+            """
+        )
+        assert state["inBench"]
+        assert not state["headlineHasCta"]
+        assert state["trustVisible"]
+        browser.close()
+
+
+def test_ac_hp21_07_carousel_hint_content(studio_server) -> None:
+    """AC-HP21-07 · 示例预览翻页后 hint 为内容化页码。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=empty")
+        _wait_visible(page, "v2-frame")
+        page.locator("#v2-carousel-next").click()
+        hint = page.locator("#v2-carousel-hint").inner_text()
+        assert "示例 ·" in hint
+        assert "第 2 /" in hint
+        browser.close()
+
+
+def test_ac_hp21_08_user_preview_source_flag(studio_server) -> None:
+    """AC-HP21-08 · 用户画册预览显示来源徽标。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=multi&bentoPreviewTrip=kyoto-rain")
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'kyoto-rain'",
+            timeout=10_000,
+        )
+        flag = page.locator("#v2-carousel-user-flag")
+        assert flag.is_visible()
+        assert "我的画册 ·" in flag.inner_text()
+        browser.close()
+
+
+def test_ac_hp21_10_settings_dev_section(studio_server) -> None:
+    """AC-HP21-10 · ?dev=1 时设置 Popover 内可见 Dev 入口。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "dev=1")
+        _wait_visible(page, "v2-frame")
+        page.locator("#v2-settings-toggle").click()
+        page.wait_for_function(
+            "() => { const p = document.getElementById('v2-settings-popover'); return p && !p.hidden; }"
+        )
+        dev_section = page.locator("#v2-settings-dev-section")
+        assert dev_section.is_visible()
+        browser.close()
+
+
+def test_ac_hp21_01_primary_cta_hierarchy(studio_server) -> None:
+    """AC-HP21-01 · 主 CTA 文案正确且视觉等级高于 recent 缩略图。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=multi")
+        _wait_visible(page, "v2-frame")
+        metrics = page.evaluate(
+            """
+            () => {
+              const cta = document.getElementById('v2-cta');
+              const card = document.querySelector('.v2-bench__recent-card');
+              const area = (el) => {
+                if (!el) return 0;
+                const r = el.getBoundingClientRect();
+                return r.width * r.height;
+              };
+              return {
+                text: cta ? cta.textContent.trim() : '',
+                ctaArea: area(cta),
+                cardArea: area(card),
+                minHeight: cta ? parseFloat(getComputedStyle(cta).minHeight) : 0,
+              };
+            }
+            """
+        )
+        assert "开始制作我的游记" in metrics["text"]
+        assert metrics["minHeight"] >= 56
+        assert metrics["ctaArea"] > metrics["cardArea"] > 0
+        assert _contrast_ratio(page, "#v2-cta") >= 4.5
+        browser.close()
+
+
+def test_ac_hp21_04_bench_simplified(studio_server) -> None:
+    """AC-HP21-04 · bench 无冗余控件；⚙ 设置入口存在。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=multi")
+        _wait_visible(page, "v2-frame")
+        state = page.evaluate(
+            """
+            () => {
+              const bench = document.querySelector('.v2-bench');
+              const benchText = bench ? bench.innerText : '';
+              const devToggle = document.getElementById('v2-dev-panel-toggle');
+              const devVisible = devToggle && devToggle.offsetParent !== null;
+              const themeInBench = bench
+                ? bench.querySelector('#v2-theme-select:not([hidden])')
+                : null;
+              return {
+                hasSettings: !!document.getElementById('v2-settings-toggle'),
+                hasViewRecent: benchText.includes('查看最近'),
+                hasBenchTheme: !!themeInBench,
+                hasBenchAnalysis: benchText.includes('分析'),
+                devToggleVisible: devVisible,
+              };
+            }
+            """
+        )
+        assert state["hasSettings"]
+        assert not state["hasViewRecent"]
+        assert not state["hasBenchTheme"]
+        assert not state["hasBenchAnalysis"]
+        assert not state["devToggleVisible"]
+        browser.close()
+
+
+def test_ac_hp21_05_settings_theme_persist(studio_server) -> None:
+    """AC-HP21-05 · 设置 Popover 切换配色写入 localStorage 并 Esc 关闭回焦。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"])
+        _wait_visible(page, "v2-frame")
+        page.evaluate(
+            "() => { const p = document.getElementById('v2-dev-panel'); if (p) p.hidden = true; }"
+        )
+        page.locator("#v2-settings-toggle").click()
+        page.wait_for_function(
+            "() => { const pop = document.getElementById('v2-settings-popover'); return pop && !pop.hidden; }"
+        )
+        page.select_option("#v2-theme-select", "classic")
+        stored = page.evaluate(
+            "() => localStorage.getItem('travelogue.studio.v2.theme')"
+        )
+        assert stored == "classic"
+        page.keyboard.press("Escape")
+        page.wait_for_function(
+            "() => document.getElementById('v2-settings-popover').hidden === true"
+        )
+        focused = page.evaluate(
+            "() => document.activeElement === document.getElementById('v2-settings-toggle')"
+        )
+        assert focused
+        browser.close()
+
+
+def test_ac_hp21_06_stale_user_copy(studio_server) -> None:
+    """AC-HP21-06 · stale 徽标与选择器文案为用户语言「可更新」。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(
+            page,
+            studio_server["base"],
+            "studioFixture=multi&bentoPreviewTrip=hokkaido",
+        )
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bench-recent-list .v2-bench__recent-card__stale')",
+            timeout=10_000,
+        )
+        bench_badge = page.locator(".v2-bench__recent-card__stale").first.inner_text()
+        assert bench_badge == "可更新"
+        assert "算法待更新" not in page.locator(".v2-bench").inner_text()
+
+        page.locator("#v2-bento-preview-trigger").click()
+        page.wait_for_function(
+            "() => !document.getElementById('v2-bento-preview-listbox').hidden"
+        )
+        picker_text = page.locator("#v2-bento-preview-listbox").inner_text()
+        assert "长图可更新" in picker_text or "可更新" in picker_text
+        assert "算法待更新" not in picker_text
+
+        page.evaluate(
+            """
+            () => {
+              const shelf = document.getElementById('v2-shelf');
+              if (shelf) shelf.scrollIntoView({ block: 'center' });
+            }
+            """
+        )
+        page.wait_for_timeout(300)
+        shelf_badge = page.locator(".v2-shelf__stale-badge").first
+        assert shelf_badge.is_visible()
+        assert "可更新" in shelf_badge.inner_text()
+        browser.close()
+
+
+def test_ac_hp21_09_carousel_controls_contrast(studio_server) -> None:
+    """AC-HP21-09 · carousel 箭头与非文本控件对比度 ≥3:1。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=empty")
+        _wait_visible(page, "v2-frame")
+        arrow_ratio = _contrast_ratio(page, "#v2-carousel-next")
+        assert arrow_ratio >= 3.0, f"carousel arrow contrast {arrow_ratio:.2f} < 3.0"
+        dot_ratio = page.evaluate(
+            """
+            () => {
+              const dot = document.querySelector('#v2-carousel-dots button:not(.is-active)')
+                || document.querySelector('#v2-carousel-dots button');
+              if (!dot) return 0;
+              const cs = getComputedStyle(dot);
+              const parse = (raw) => {
+                if (!raw || raw === 'transparent') return null;
+                const m = raw.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/);
+                if (m) return [Number(m[1]), Number(m[2]), Number(m[3])];
+                return null;
+              };
+              const lum = ([r, g, b]) => {
+                const lin = [r, g, b].map((c) => {
+                  const v = c / 255;
+                  return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+                });
+                return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+              };
+              const fill = parse(cs.backgroundColor);
+              const ring = parse(cs.borderTopColor);
+              if (!fill || !ring) return 0;
+              const l1 = lum(fill) + 0.05;
+              const l2 = lum(ring) + 0.05;
+              return Math.max(l1, l2) / Math.min(l1, l2);
+            }
+            """
+        )
+        assert dot_ratio >= 3.0, f"carousel dot contrast {dot_ratio:.2f} < 3.0"
         browser.close()
 
 

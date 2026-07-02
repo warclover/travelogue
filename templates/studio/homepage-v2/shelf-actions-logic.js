@@ -58,5 +58,5 @@ export function bentoStaleMessage(trip) {
   if (trip.staleHint) return String(trip.staleHint);
   var hints = trip.staleHints;
   if (Array.isArray(hints) && hints.length) return String(hints[0]);
-  return "排版算法已更新，建议重新排版以刷新预览";
+  return "这本画册可以用新版式重新排版";
 }

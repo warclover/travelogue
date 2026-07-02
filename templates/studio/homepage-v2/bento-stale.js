@@ -2,10 +2,12 @@
  * 首页 v2 · Bento 主预览区算法过期提示条。
  */
 import { trackStudioEvent } from "../js/analytics.js";
-import { V2, $, show } from "./store.js";
+import { isDemoTrip } from "../js/constants.js";
+import { V2, $, show, persistTripsCache } from "./store.js";
 import { bentoStaleMessage, shouldShowBentoStaleBar } from "./shelf-actions-logic.js";
 import { runTripCurateJob } from "./curate-client.js";
-import { clearBentoPreviewCache } from "./trip-preview.js";
+import { clearBentoPreviewCache, resolvePreviewTrip } from "./trip-preview.js";
+import { fetchTripsFirstPage } from "./trips-client.js";
 
 var _curateInFlight = false;
 var _wired = false;
@@ -16,19 +18,65 @@ function toast(msg, opts) {
 
 function activePreviewTrip() {
   if (!V2.bentoPreviewTripId) return null;
-  return V2.userPreviewTrip || null;
+  var fresh = resolvePreviewTrip(V2.trips, V2.bentoPreviewTripId);
+  if (fresh) {
+    V2.userPreviewTrip = fresh;
+    return fresh;
+  }
+  return V2.userPreviewTrip;
 }
 
-function refreshAfterCurate() {
+function patchTripFreshness(tripId) {
+  function patch(row) {
+    if (!row || row.tripId !== tripId) return;
+    row.algorithmStale = false;
+    row.aestheticStale = false;
+    row.cullStale = false;
+    row.layoutStale = false;
+    row.previewStale = false;
+    row.staleHint = null;
+    row.staleHints = [];
+  }
+  (V2.trips || []).forEach(patch);
+  patch(V2.userPreviewTrip);
+  if (V2.pickerCatalogTrips) V2.pickerCatalogTrips.forEach(patch);
+}
+
+function reloadTripsList() {
+  return fetchTripsFirstPage().then(function (data) {
+    V2.trips = (data && data.trips) || [];
+    V2.tripsTotal = typeof data.total === "number" ? data.total : V2.trips.length;
+    V2.isOffline = false;
+    persistTripsCache(V2.trips, V2.tripsTotal);
+    return V2.trips;
+  }).catch(function () {
+    return V2.trips;
+  });
+}
+
+function refreshAfterCurate(tripId) {
   clearBentoPreviewCache();
   try { window.__v2RefreshAfterCurate = true; } catch (e) { /* ignore */ }
-  var rerouteP = typeof V2.reroute === "function"
-    ? V2.reroute().catch(function () { return null; })
-    : Promise.resolve();
-  var refreshP = import("./bento-tabs.js").then(function (tabs) {
-    return tabs.refreshBentoUserPreview(V2.trips, { force: true });
+  return reloadTripsList().then(function () {
+    patchTripFreshness(tripId);
+    return import("./bento-preview-picker.js").then(function (picker) {
+      picker.syncPreviewSelectOptions(V2.trips);
+      return import("./bento-tabs.js").then(function (tabs) {
+        return tabs.refreshBentoUserPreview(V2.trips, { force: true, tripId: tripId });
+      });
+    });
+  }).then(function () {
+    return import("./shelf.js").then(function (shelf) {
+      if (V2.trips.some(function (t) { return !isDemoTrip(t); })) {
+        shelf.renderShelf(V2.trips, V2.tripsTotal);
+      }
+    });
+  }).then(function () {
+    return import("./bento.js").then(function (bench) {
+      bench.renderBenchRecent();
+      syncBentoStaleBar();
+    });
   });
-  return Promise.all([rerouteP, refreshP]).then(function () { return refreshP; });
 }
 
 export function triggerHomepageRecurate(tripId, surface) {
@@ -45,7 +93,7 @@ export function triggerHomepageRecurate(tripId, surface) {
     if (job && job.status === "succeeded") {
       trackStudioEvent("homepage_recurate_success", { trip_id: tripId, surface: surface || "unknown" });
       toast("排版已更新", { duration: 2600 });
-      return refreshAfterCurate().then(function () { return true; });
+      return refreshAfterCurate(tripId).then(function () { return true; });
     }
     trackStudioEvent("homepage_recurate_failed", { trip_id: tripId, surface: surface || "unknown" });
     toast("重新排版失败，请稍后重试", { duration: 3200, error: true });

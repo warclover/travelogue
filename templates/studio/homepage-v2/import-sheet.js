@@ -750,7 +750,8 @@ export function initImportSheet() {
   wireTemplateSelect();
   var cta = $("v2-cta");
   if (cta) cta.addEventListener("click", function () {
-    trackStudioEvent("cta_click", { surface: "bench" });
+    var surface = cta.classList.contains("is-headline") ? "headline" : "bench";
+    trackStudioEvent("cta_click", { surface: surface });
     openImportSheet();
   });
 

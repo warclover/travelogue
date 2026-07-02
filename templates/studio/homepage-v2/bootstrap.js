@@ -24,6 +24,7 @@ import { fetchTripsFirstPage } from "./trips-client.js";
 import { initVariantGuard, syncVariantGuard } from "./variant-guard.js";
 import { initThemeSettings } from "./theme.js";
 import { initAdvancedOptionsPanel, syncAdvancedOptionsLock } from "./advanced-options.js";
+import { initSettingsPanel } from "./settings-panel.js";
 import { applyPreviewDeepLink } from "./bento-preview-deeplink.js";
 
 function applyTripsData(data) {
@@ -178,6 +179,7 @@ function trackExperimentExposure() {
 function init() {
   initErrorPipeline();
   initThemeSettings();
+  initSettingsPanel();
   initAdvancedOptionsPanel();
   applyPreviewDeepLink();
   if (harnessEnabled()) {

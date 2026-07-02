@@ -67,13 +67,14 @@ V2_HOME_MARKERS = (
     "v2-success-details",
     "v2-photo-cull-enabled",
     "打开卷轴预览",
-    # M20 · 高级分析选项（工作台 Popover）
-    "v2-advanced-toggle",
-    "v2-advanced-popover",
+    # M20 · 设置 Popover（v2.1 · 导入选项迁入）
+    "v2-settings-toggle",
+    "v2-settings-popover",
+    "工作台设置",
     'id="studio-cfg-clustering"',
     'id="studio-cfg-vision"',
-    "高级 · 分析选项",
-    "智能排版",
+    "开始制作我的游记",
+    "照片留在本机 · 无需注册",
     # Import Failed overlay
     "v2-failure",
     "v2-failure-retry",
@@ -229,8 +230,10 @@ def test_studio_home_v2_js_modules_present() -> None:
     assert "Importing" in bootstrap
     assert "initViewportWatch" in bootstrap  # 视口闸（M20-f 抽到 viewport-logic）
     assert "initAdvancedOptionsPanel" in bootstrap
-    advanced = (STUDIO_DIR / "homepage-v2" / "advanced-options.js").read_text(encoding="utf-8")
-    assert "bindAdvancedConfigControls" in advanced
+    assert "initSettingsPanel" in bootstrap
+    settings = (STUDIO_DIR / "homepage-v2" / "settings-panel.js").read_text(encoding="utf-8")
+    assert "bindAdvancedConfigControls" in settings
+    assert "syncCtaPlacement" in bento
     assert "renderBentoEmpty" in bento
     assert "renderBackground" in bento
     assert "initCarousel" in bento  # M20-b：carousel 由独立模块渲染
@@ -529,7 +532,7 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "你的游记画册" in shelf
     logic = (STUDIO_DIR / "homepage-v2" / "shelf-actions-logic.js").read_text(encoding="utf-8")
     assert "更新长图" in logic            # stale → 更新长图
-    assert "算法待更新" in shelf
+    assert "可更新" in shelf
     assert "重新排版" in logic
     assert "longshotStale" in shelf
     assert "algorithmStale" in shelf
@@ -1077,3 +1080,45 @@ def test_studio_homepage_gate_wired() -> None:
     gate = (REPO_ROOT / "travelogue" / "web" / "studio_homepage_gate.py").read_text(encoding="utf-8")
     assert "TRAVELOGUE_STUDIO_HOMEPAGE_V2" in gate
     assert "decide_root_variant" in gate
+
+
+HOMEPAGE_V21_FORBIDDEN_COPY = (
+    "算法待更新",
+    "长图待更新",
+    "到头停止",
+    "← 横滑",
+)
+
+
+def test_homepage_v21_no_internal_terminology_in_studio_templates() -> None:
+    """AC-HP21-06 · G-HP21-05 · 首页用户可见文案禁止内部术语。"""
+    for path in STUDIO_DIR.rglob("*"):
+        if path.suffix not in {".html", ".js", ".css"}:
+            continue
+        if "legacy-freeze" in path.parts:
+            continue
+        text = path.read_text(encoding="utf-8")
+        for term in HOMEPAGE_V21_FORBIDDEN_COPY:
+            assert term not in text, f"禁止术语 {term!r} 出现在 {path.relative_to(REPO_ROOT)}"
+
+
+def test_homepage_v21_telemetry_events_registered() -> None:
+    """M22-e · v2.1 新增事件已登记于客户端与服务端 allowlist。"""
+    from travelogue.web.studio_homepage_telemetry import ALLOWED_STUDIO_HOMEPAGE_EVENTS
+
+    analytics = (STUDIO_DIR / "js" / "analytics.js").read_text(encoding="utf-8")
+    for event in ("settings_open", "bench_resume_click", "shelf_scroll_into_view"):
+        assert f'"{event}"' in analytics
+        assert event in ALLOWED_STUDIO_HOMEPAGE_EVENTS
+
+
+def test_homepage_v21_markers_present() -> None:
+    """v2.1 壳层 marker：设置入口、信任行、data-homepage-v21。"""
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+    for marker in (
+        'data-homepage-v21="1"',
+        'id="v2-headline-trust"',
+        'id="v2-settings-toggle"',
+        "照片留在本机 · 无需注册",
+    ):
+        assert marker in html

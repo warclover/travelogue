@@ -1,7 +1,7 @@
 /**
  * 首页 v2 · Dev Panel（DEV-HARNESS.md §4 · M20-h）。
  *
- * loopback 或 ?dev=1 时注入浮动面板：state / fixture / job 下拉 + Copy repro URL。
+ * loopback 或 ?dev=1 时注入面板；默认隐藏，经设置 Popover 唤起（v2.1 · D-15）。
  */
 import { harnessEnabled } from "./harness.js";
 import { initVariantGuard, syncVariantGuard } from "./variant-guard.js";
@@ -79,6 +79,21 @@ function wireToggle(id, paramName) {
   });
 }
 
+/** 由设置 Popover「打开 Dev 面板」唤起。 */
+export function openDevPanelFromSettings() {
+  var panel = document.getElementById("v2-dev-panel");
+  if (!panel) return;
+  panel.hidden = false;
+  panel.classList.add("is-visible");
+  var body = document.getElementById("v2-dev-panel-body");
+  var toggle = document.getElementById("v2-dev-panel-toggle");
+  if (body) body.hidden = false;
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", "true");
+    toggle.focus();
+  }
+}
+
 export function initDevPanel() {
   if (!harnessEnabled()) return;
   if (document.getElementById("v2-dev-panel")) return;
@@ -86,8 +101,9 @@ export function initDevPanel() {
   var panel = document.createElement("aside");
   panel.id = "v2-dev-panel";
   panel.className = "v2-dev-panel";
+  panel.hidden = true;
   panel.innerHTML =
-    '<button type="button" class="v2-dev-panel__toggle" id="v2-dev-panel-toggle" aria-expanded="true">Dev</button>' +
+    '<button type="button" class="v2-dev-panel__toggle" id="v2-dev-panel-toggle" aria-expanded="false">Dev</button>' +
     '<div class="v2-dev-panel__body" id="v2-dev-panel-body">' +
     '<p class="v2-dev-panel__title">Studio v2 Harness</p>' +
     '<label class="v2-dev-panel__field">studioState<select id="v2-dev-state"></select></label>' +
