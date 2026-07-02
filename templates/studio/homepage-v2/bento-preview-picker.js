@@ -341,7 +341,6 @@ function syncNativeSelect() {
 function syncComboboxTrigger() {
   var tripId = V2.bentoPreviewTripId || "";
   var labelEl = $("v2-bento-preview-label");
-  var thumbEl = $("v2-bento-preview-thumb");
   var host = optionsHost();
   var trigger = $("v2-bento-preview-trigger");
 
@@ -350,10 +349,8 @@ function syncComboboxTrigger() {
       || V2.userPreviewTrip
       || { tripId: tripId };
     if (labelEl) labelEl.textContent = tripLabel(trip) || tripId;
-    if (thumbEl) thumbEl.style.backgroundImage = "url(\"" + tripThumbUrl(trip) + "\")";
   } else {
     if (labelEl) labelEl.textContent = DEMO_LABEL;
-    if (thumbEl) thumbEl.style.backgroundImage = "url(\"" + demoThumbUrl() + "\")";
   }
 
   if (host) {
