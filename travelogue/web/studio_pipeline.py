@@ -52,6 +52,8 @@ class StudioPipelineResult:
     date_range_warn: str = ""
     photo_cull_enabled: bool = True
     layout_eligible_count: int = 0
+    keep_near_duplicates: bool = False
+    assets_written: int = 0
 
 
 def _parse_iso_date(raw: object) -> date | None:
@@ -128,6 +130,8 @@ def _finalize_pipeline_result(
     cull_warn = str(cull_summary.get("warnMessage") or "") if cull_summary.get("maxPhotosExceeded") else ""
     intent = trip_final.get("intent") or {}
     photo_cull_enabled = bool(intent.get("photoCullEnabled", True))
+    keep_near_duplicates = bool(intent.get("keepNearDuplicates", False))
+    assets_written = len(trip_final.get("assets") or [])
     layout_eligible_count = int(
         cull_summary.get("finalLayoutEligibleCount")
         or cull_summary.get("layoutEligibleCount")
@@ -180,6 +184,8 @@ def _finalize_pipeline_result(
         date_range_warn=date_range_warn,
         photo_cull_enabled=photo_cull_enabled,
         layout_eligible_count=layout_eligible_count,
+        keep_near_duplicates=keep_near_duplicates,
+        assets_written=assets_written,
     )
 
 
@@ -332,6 +338,7 @@ def run_studio_pipeline(
     material_dir: str | Path | None = None,
     layout_density: str | None = None,
     photo_cull_enabled: bool = True,
+    keep_near_duplicates: bool = False,
 ) -> StudioPipelineResult:
     album_dir = album_dir.resolve()
     cfg_path = resolve_studio_config(config)
@@ -434,6 +441,16 @@ def run_studio_pipeline(
             from travelogue.layout_engine.rollout import resolve_lse_config_for_trip
 
             cfg = resolve_lse_config_for_trip(cfg, trip_rollout_id)
+        # PRD-P9-F2: keep near-duplicates → skip ingest burst/pHash dedupe for this
+        # trip only (MD5 exact dedupe unaffected). Override the resolved ingest config
+        # after rollout resolution so it is not clobbered; global config untouched.
+        if keep_near_duplicates:
+            from dataclasses import replace
+
+            cfg = replace(
+                cfg,
+                ingest=replace(cfg.ingest, dedupe_burst=False, dedupe_phash=False),
+            )
         # F-P4 M15: single-writer intent — mirrors meta.title/places + trip.userNotes
         # (never meta.userNotes, which is not in schema).
         place_raw = str(place or "").strip()
@@ -469,6 +486,7 @@ def run_studio_pipeline(
             app_cfg=cfg,
         )
         intent_kwargs["photo_cull_enabled"] = bool(photo_cull_enabled)
+        intent_kwargs["keep_near_duplicates"] = bool(keep_near_duplicates)
         apply_intent(trip, **intent_kwargs)
 
         if plan_bytes is not None or plan_text:

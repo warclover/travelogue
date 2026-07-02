@@ -251,6 +251,12 @@ def scan_image_paths(
     return files, stats
 
 
+def keep_near_duplicates_for_trip(trip: dict) -> bool:
+    """PRD-P9-F2 · when true, skip ingest burst/pHash dedupe (MD5 still applies)."""
+    intent = trip.get("intent") or {}
+    return bool(intent.get("keepNearDuplicates", False))
+
+
 def _next_asset_id(assets: list[dict]) -> str:
     max_n = 0
     for a in assets:

@@ -57,6 +57,18 @@ def _parse_photo_cull_enabled(raw: object) -> bool:
     return False
 
 
+def _parse_keep_near_duplicates(raw: object) -> bool:
+    """PRD-P9-F2 · default false when missing or invalid (Import Sheet unchecked)."""
+    if isinstance(raw, bool):
+        return raw
+    if raw is None:
+        return False
+    text = str(raw).strip().lower()
+    if text in ("1", "true", "yes", "on"):
+        return True
+    return False
+
+
 def _studio_trust_local_album_paths() -> bool:
     raw = os.environ.get("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "1").strip().lower()
     return raw not in ("0", "false", "no", "off")
@@ -174,6 +186,9 @@ def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | No
             )
         payload["photoCullEnabled"] = _parse_photo_cull_enabled(
             fields.get("photoCullEnabled")
+        )
+        payload["keepNearDuplicates"] = _parse_keep_near_duplicates(
+            fields.get("keepNearDuplicates")
         )
         if plan_bytes is not None:
             import base64
@@ -314,6 +329,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     template_id_raw = payload.get("template_id") or payload.get("templateId")
     template_id_str = str(template_id_raw).strip() if template_id_raw else None
     photo_cull_enabled = _parse_photo_cull_enabled(payload.get("photoCullEnabled"))
+    keep_near_duplicates = _parse_keep_near_duplicates(payload.get("keepNearDuplicates"))
 
     try:
         assert_album_importable(
@@ -368,6 +384,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         "mode": import_mode,
         "template_mode": template_mode,
         "photoCullEnabled": photo_cull_enabled,
+        "keepNearDuplicates": keep_near_duplicates,
     }
     if template_id_str:
         worker_payload["template_id"] = template_id_str

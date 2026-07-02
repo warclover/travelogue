@@ -48,6 +48,7 @@ def apply_intent(
     featured_subjects: Any = _UNSET,
     layout_density: Any = _UNSET,
     photo_cull_enabled: Any = _UNSET,
+    keep_near_duplicates: Any = _UNSET,
     submitted_at: str | None = None,
 ) -> dict:
     """Single writer for Phase 4 ``trip.intent`` (PRD-PHASE4 §4.1/§14).
@@ -165,6 +166,12 @@ def apply_intent(
             intent.pop("photoCullEnabled", None)
         else:
             intent["photoCullEnabled"] = bool(photo_cull_enabled)
+
+    if keep_near_duplicates is not _UNSET:
+        if keep_near_duplicates is None:
+            intent.pop("keepNearDuplicates", None)
+        else:
+            intent["keepNearDuplicates"] = bool(keep_near_duplicates)
 
     if featured_subjects is not _UNSET:
         from travelogue.services.cohort import normalize_featured_subjects, validate_seeds_exist

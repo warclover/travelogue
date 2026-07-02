@@ -110,6 +110,7 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             material_dir=payload.get("materialDir"),
             layout_density=payload.get("layoutDensity"),
             photo_cull_enabled=bool(payload.get("photoCullEnabled", False)),
+            keep_near_duplicates=bool(payload.get("keepNearDuplicates", False)),
         )
         progress_queue.put(
             {
@@ -137,6 +138,8 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     "dateRangeWarn": result.date_range_warn or "",
                     "photoCullEnabled": result.photo_cull_enabled,
                     "layoutEligibleCount": result.layout_eligible_count,
+                    "keepNearDuplicates": result.keep_near_duplicates,
+                    "assetsWritten": result.assets_written,
                 },
             }
         )

@@ -61,6 +61,8 @@ def build_studio_intent_telemetry(
         "layoutDensityEffect": layout_density_effect(photo_total, density, import_mode=mode),
         "nineQuotaAdjusted": nine_quota_adjusted(photo_total, density),
         "photoCullEnabled": bool(intent.get("photoCullEnabled", True)),
+        "keepNearDuplicates": bool(intent.get("keepNearDuplicates", False)),
+        "assetsWritten": photo_total,
         "layoutEligibleFinal": layout_eligible_final,
     }
 

@@ -8,7 +8,11 @@
  */
 import { SHEET_FOCUSABLE, UPLOAD_BYTES_SOFT_LIMIT } from "../js/constants.js";
 import { postJson } from "../js/http.js";
-import { trackStudioEvent, trackImportPhotoCullPref } from "../js/analytics.js";
+import {
+  trackStudioEvent,
+  trackImportPhotoCullPref,
+  trackImportKeepDupesPref,
+} from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
 import { startV2Import, startV2UploadImport, buildImportPayload } from "./import-run.js";
 
@@ -22,6 +26,7 @@ let _pendingUploadFiles = null;
 let _pendingPhotoCount = null;
 let _importStarted = false; // 本次 Sheet 会话是否已发起 import（区分 abandon）
 let _photoCullTouched = false;
+let _keepDupesTouched = false;
 let _activeMode = "quick_share";
 const IMPORT_DRAFT_KEY = "travelogue.studio.importDraft";
 const IMPORT_MODE_KEY = "travelogue.studio.lastImportMode";
@@ -210,6 +215,8 @@ function setPhotoCullEnabled(enabled) {
 }
 
 function updatePhotoCullOptoutUi() {
+  // 智能挑选状态变化会影响「保留连拍」副文案分支（§5.4），级联刷新
+  updateKeepDupesNoteUi();
   var optout = $("v2-photo-cull-optout");
   if (!optout) return;
   if (readPhotoCullEnabled()) {
@@ -226,6 +233,37 @@ function updatePhotoCullOptoutUi() {
   parts.push("相同文件仍会自动去重，与智能挑选无关。");
   optout.textContent = parts.join(" ");
   show(optout, true);
+}
+
+function readKeepDupesEnabled() {
+  var el = $("v2-keep-dupes-enabled");
+  if (!el) return false;
+  return !!el.checked;
+}
+
+function setKeepDupesEnabled(enabled) {
+  var el = $("v2-keep-dupes-enabled");
+  if (!el) return;
+  el.checked = enabled === true;
+  updateKeepDupesNoteUi();
+}
+
+function updateKeepDupesNoteUi() {
+  var note = $("v2-keep-dupes-note");
+  if (!note) return;
+  if (!readKeepDupesEnabled()) {
+    note.textContent = "";
+    show(note, false);
+    return;
+  }
+  // PRD-P9-F2 §5.4 · 副文案按智能挑选是否开启分两支
+  if (readPhotoCullEnabled()) {
+    note.textContent =
+      "将保留相近照片进入排版池；智能挑选仍可能在成册时择优。取消「智能挑选照片」可完整成组。";
+  } else {
+    note.textContent = "将保留时间相近或画面相似的照片，适合完整记录精彩瞬间。";
+  }
+  show(note, true);
 }
 
 function fetchAlbumPhotoCount(albumPath) {
@@ -266,6 +304,8 @@ function saveSheetDraft() {
     layoutDensity: readLayoutDensity(),
     photoCullEnabled: readPhotoCullEnabled(),
     photoCullTouched: _photoCullTouched,
+    keepNearDuplicates: readKeepDupesEnabled(),
+    keepDupesTouched: _keepDupesTouched,
     photoCount: _pendingPhotoCount,
     planFileName: (function () {
       var input = $("v2-plan-file");
@@ -303,6 +343,8 @@ function restoreModeAndDraft() {
   setLayoutDensity(draft.layoutDensity || "balanced");
   setPhotoCullEnabled(draft.photoCullEnabled === true);
   _photoCullTouched = !!draft.photoCullTouched;
+  setKeepDupesEnabled(draft.keepNearDuplicates === true);
+  _keepDupesTouched = !!draft.keepDupesTouched;
   _pendingPhotoCount = typeof draft.photoCount === "number" ? draft.photoCount : null;
   updateLayoutDensityWarn();
   updatePhotoCullOptoutUi();
@@ -447,6 +489,7 @@ function buildSheetPayload() {
     body.layoutDensity = readLayoutDensity();
   }
   body.photoCullEnabled = readPhotoCullEnabled();
+  body.keepNearDuplicates = readKeepDupesEnabled();
   if (_pendingPhotoCount != null) body.eligibleCount = _pendingPhotoCount;
   return body;
 }
@@ -611,6 +654,7 @@ function startUploadFromConfirm() {
   return startV2UploadImport(files, {
     source: "浏览器上传",
     photoCullEnabled: readPhotoCullEnabled(),
+    keepNearDuplicates: readKeepDupesEnabled(),
     mode: _activeMode,
   }).catch(function () {
     /* 错误由 import-run 内部展示 */
@@ -773,6 +817,21 @@ export function initImportSheet() {
       saveSheetDraft();
       trackImportPhotoCullPref({
         enabled: readPhotoCullEnabled(),
+        mode: _activeMode,
+        photo_count: _pendingPhotoCount,
+        pref_source: "draft",
+      });
+    });
+  }
+
+  var keepDupes = $("v2-keep-dupes-enabled");
+  if (keepDupes) {
+    keepDupes.addEventListener("change", function () {
+      _keepDupesTouched = true;
+      updateKeepDupesNoteUi();
+      saveSheetDraft();
+      trackImportKeepDupesPref({
+        enabled: readKeepDupesEnabled(),
         mode: _activeMode,
         photo_count: _pendingPhotoCount,
         pref_source: "draft",

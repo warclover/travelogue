@@ -333,15 +333,34 @@
             <span>智能挑选照片（推荐）</span>
           </label>
           <p class="v2-sheet__photo-cull-summary" id="v2-photo-cull-hint-short">
-            自动去掉模糊、重复连拍和截图类照片。
+            自动去掉过于模糊和截图类照片。
           </p>
           <details class="v2-sheet__photo-cull-details">
             <summary class="v2-sheet__photo-cull-more">说明</summary>
             <p class="v2-sheet__hint" id="v2-photo-cull-hint-detail">
-              自动去掉过于模糊、重复连拍和截图类照片。若文件夹里已是你的精选集，可取消勾选。
+              自动去掉过于模糊和截图类照片。若文件夹里已是你的精选集，可取消勾选。
             </p>
           </details>
           <p class="v2-sheet__photo-cull-optout" id="v2-photo-cull-optout" hidden
+             aria-live="polite"></p>
+        </div>
+
+        <div class="v2-sheet__photo-cull" id="v2-keep-dupes-field">
+          <label class="v2-sheet__photo-cull-label">
+            <input type="checkbox" id="v2-keep-dupes-enabled"
+                   aria-describedby="v2-keep-dupes-hint-short v2-keep-dupes-note" />
+            <span>保留连拍与近似照片</span>
+          </label>
+          <p class="v2-sheet__photo-cull-summary" id="v2-keep-dupes-hint-short">
+            默认会合并时间相近或画面相似的照片；勾选后全部保留。
+          </p>
+          <details class="v2-sheet__photo-cull-details">
+            <summary class="v2-sheet__photo-cull-more">说明</summary>
+            <p class="v2-sheet__hint" id="v2-keep-dupes-hint-detail">
+              连拍与抓拍常记录同一瞬间的连续画面。默认系统会择优保留一张；若你希望完整保留这组精彩瞬间，勾选此项。完全相同的重复文件仍会自动去重。
+            </p>
+          </details>
+          <p class="v2-sheet__photo-cull-optout" id="v2-keep-dupes-note" hidden
              aria-live="polite"></p>
         </div>
 

@@ -15,7 +15,12 @@ import {
 } from "../js/constants.js";
 import { postJson, withJobBusyRetry, isJobBusyResponse } from "../js/http.js";
 import { pollJobUntilDone } from "../js/job-poll.js";
-import { trackStudioEvent, trackImportPhotoCullPref, readPhotoCullPrefSource } from "../js/analytics.js";
+import {
+  trackStudioEvent,
+  trackImportPhotoCullPref,
+  trackImportKeepDupesPref,
+  readPhotoCullPrefSource,
+} from "../js/analytics.js";
 import { V2, $, show, setV2SkipLinkTarget } from "./store.js";
 import { fetchTripsFirstPage } from "./trips-client.js";
 import { renderColdStartBackground } from "./bento.js";
@@ -92,6 +97,7 @@ function buildUploadForm(files, opts) {
   if (tpl.template_id) form.append("template_id", tpl.template_id);
   if (opts.force) form.append("force", "true");
   form.append("photoCullEnabled", opts.photoCullEnabled === false ? "false" : "true");
+  form.append("keepNearDuplicates", opts.keepNearDuplicates === true ? "true" : "false");
   for (var i = 0; i < files.length; i++) {
     form.append("files[]", files[i], files[i].webkitRelativePath || files[i].name);
   }
@@ -294,6 +300,13 @@ function pollImport(jobId, gen, source) {
         cull_user_line_present: !!(result.cullUserLine),
         pref_source: readPhotoCullPrefSource(),
       });
+      trackImportKeepDupesPref({
+        enabled: result.keepNearDuplicates === true,
+        mode: (pending && pending.mode) || result.importMode || "quick_share",
+        photo_count: result.photoCount,
+        assets_written: result.assetsWritten,
+        pref_source: readPhotoCullPrefSource(),
+      });
       return refreshTripsForImportSuccess(result).then(function () {
         showFirstSuccess({ result: result });
         return job;
@@ -421,6 +434,7 @@ export function startV2UploadImport(files, opts) {
       title: opts.title,
       force: !!force,
       photoCullEnabled: opts.photoCullEnabled,
+      keepNearDuplicates: opts.keepNearDuplicates,
       mode: uploadMode,
       layoutDensity: opts.layoutDensity,
     });

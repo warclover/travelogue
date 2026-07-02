@@ -53,6 +53,16 @@ function cullDisabledDetailLine(result) {
     + "部分极低清晰度照片未进入排版";
 }
 
+// PRD-P9-F2 §5.7 · 保留连拍/近似照片的完成态说明
+function keepDupesDetailLine(result) {
+  var n = result.photoCount || 0;
+  var a = typeof result.assetsWritten === "number" ? result.assetsWritten : n;
+  if (a >= n) {
+    return "已保留全部相近照片";
+  }
+  return "已保留连拍与近似照片（仍去除了完全相同的重复文件）";
+}
+
 function loadSuccessFeatureFlag() {
   return fetch("/__travelogue/config")
     .then(function (r) { return r.json(); })
@@ -146,6 +156,9 @@ function populateSuccessUi(result) {
         detailLines.push(result.cullUserLine);
       } else if (result.photoCullEnabled === false) {
         detailLines.push(cullDisabledDetailLine(result));
+      }
+      if (result.keepNearDuplicates === true) {
+        detailLines.push(keepDupesDetailLine(result));
       }
       var density = String(result.layoutDensity || "").toLowerCase();
       var densityLine = densitySummaryLine(density);

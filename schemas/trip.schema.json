@@ -165,6 +165,10 @@
           "type": "boolean",
           "description": "When false, skip Phase 9 photo cull for this trip (PRD-P9-F1); default true when omitted"
         },
+        "keepNearDuplicates": {
+          "type": "boolean",
+          "description": "When true, skip ingest burst/pHash dedupe for this trip (PRD-P9-F2); MD5 exact dedupe still runs; default false when omitted"
+        },
         "featuredSubjects": {
           "type": "array",
           "maxItems": 4,

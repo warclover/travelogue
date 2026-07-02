@@ -9,6 +9,7 @@ const ALLOWED = new Set([
   "import_start",
   "import_success",
   "import_photo_cull_pref",
+  "import_keep_dupes_pref",
   "success_primary_click",
   "prep_open",
   "demo_try",
@@ -113,6 +114,18 @@ export function trackImportPhotoCullPref(meta) {
     cull_user_line_present: meta.cull_user_line_present != null
       ? !!meta.cull_user_line_present
       : null,
+    pref_source: meta.pref_source === "draft" ? "draft" : "default",
+  });
+}
+
+/** PRD-P9-F2 · 保留连拍开关变更或 import 完成时上报。 */
+export function trackImportKeepDupesPref(meta) {
+  meta = meta || {};
+  trackStudioEvent("import_keep_dupes_pref", {
+    enabled: meta.enabled === true,
+    mode: meta.mode || "quick_share",
+    photo_count: meta.photo_count != null ? meta.photo_count : null,
+    assets_written: meta.assets_written != null ? meta.assets_written : null,
     pref_source: meta.pref_source === "draft" ? "draft" : "default",
   });
 }
