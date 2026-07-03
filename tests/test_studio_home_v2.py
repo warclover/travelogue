@@ -176,9 +176,13 @@ def test_studio_home_v2_css_present() -> None:
         assert sel in css, sel
     assert "--v2-create-card-bg-image:" in css
     assert "--v2-create-card-bg-image-hover:" in css
+    assert "--v2-cta-bg-image:" in css
     create_card = css.split(".v2-bench__create-card {", 1)[1].split("}", 1)[0]
     assert "backdrop-filter" not in create_card
     assert "var(--v2-create-card-bg-image)" in create_card
+    cta_primary = css.split(".v2-bench__cta-primary {", 1)[1].split("}", 1)[0]
+    assert "var(--v2-cta-bg-image)" in cta_primary
+    assert "#c9920f" not in cta_primary
 
 
 def test_studio_home_v2_theme_palette_options() -> None:
