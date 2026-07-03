@@ -2092,21 +2092,6 @@ body { overflow-x: clip; overflow-y: visible; }
   font-size: 13px;
   color: var(--v2-text-muted);
 }
-.v2-shelf__new {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 12px 22px;
-  border: none;
-  border-radius: 6px;
-  background: var(--v2-primary);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: .04em;
-  cursor: pointer;
-}
 .v2-shelf__resume {
   display: flex;
   align-items: center;
@@ -2495,10 +2480,9 @@ body { overflow-x: clip; overflow-y: visible; }
 :root[data-v2-theme="classic"] .v2-shelf {
   border-top: 1px solid rgba(255, 255, 255, .08);
   box-shadow: 0 -24px 64px rgba(0, 0, 0, .35);
-}
-:root[data-v2-theme="classic"] .v2-shelf__new {
-  background: var(--v2-ink);
-  color: var(--v2-paper);
+  /* 书架为浅色纸本，须覆盖 classic 全局浅色字（供暗色 Bento 用） */
+  --v2-text-muted: #6b6458;
+  --v2-text-secondary: #524c44;
 }
 :root[data-v2-theme="classic"] .v2-shelf__resume-actions button.primary {
   background: var(--v2-ink);

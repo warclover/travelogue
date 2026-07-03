@@ -325,10 +325,6 @@ export function renderShelf(trips, total) {
   }
   headLeft.appendChild(el("p", "v2-shelf__count", countBits.join(" · ")));
   head.appendChild(headLeft);
-  var newBtn = el("button", "v2-shelf__new", "+ 选择文件夹新建");
-  newBtn.type = "button";
-  newBtn.addEventListener("click", function () { openImportSheet(); });
-  head.appendChild(newBtn);
   host.appendChild(head);
 
   var resumeTrip = latestNonDemo;
