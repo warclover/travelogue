@@ -969,6 +969,7 @@ body { overflow-x: clip; overflow-y: visible; }
   gap: 8px 14px;
   align-items: stretch;
   --v2-web-preview-lift: 30px;
+  --v2-bench-nudge: 8mm;
 }
 .v2-bento__web {
   grid-column: 1;
@@ -1021,7 +1022,12 @@ body { overflow-x: clip; overflow-y: visible; }
   opacity: .6;
   cursor: wait;
 }
-.v2-bento__bench { grid-column: 1 / -1; grid-row: 3; min-width: 0; }
+.v2-bento__bench {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  min-width: 0;
+  transform: translateY(calc(-1 * var(--v2-bench-nudge, 0px)));
+}
 .v2-bento__mobile {
   grid-column: 2;
   grid-row: 1 / 3;
