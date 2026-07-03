@@ -14,6 +14,8 @@ var _bound = null;
 var _scrim = null;
 var _focusTrapHandler = null;
 var _focusRestoreEl = null;
+var _repositionHandler = null;
+var _popoverResizeObserver = null;
 var POPOVER_FOCUSABLE = [
   "a[href]",
   "button:not([disabled])",
@@ -85,19 +87,68 @@ function positionPopover(popover, toggle) {
   popover.style.width = width + "px";
   popover.style.left = "auto";
   popover.style.right = Math.max(margin, window.innerWidth - rect.right) + "px";
-  var maxH = Math.min(window.innerHeight * 0.78, 520);
+
+  var spaceAbove = Math.max(0, rect.top - margin);
+  var spaceBelow = Math.max(0, window.innerHeight - rect.bottom - margin);
+  var placeAbove = spaceAbove >= spaceBelow;
+  var avail = placeAbove ? spaceAbove : spaceBelow;
+  var maxH = Math.min(window.innerHeight * 0.78, 520, Math.max(avail - gap, 160));
   popover.style.maxHeight = maxH + "px";
   popover.hidden = false;
-  var popH = popover.offsetHeight;
-  var spaceAbove = rect.top - margin;
-  var spaceBelow = window.innerHeight - rect.bottom - margin;
-  if (spaceAbove >= popH + gap || spaceAbove >= spaceBelow) {
+
+  if (placeAbove) {
     popover.style.top = "auto";
     popover.style.bottom = (window.innerHeight - rect.top + gap) + "px";
   } else {
     popover.style.bottom = "auto";
     popover.style.top = (rect.bottom + gap) + "px";
   }
+}
+
+function schedulePositionPopover() {
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      if (!_open) return;
+      var popover = $("v2-settings-popover");
+      var toggle = $("v2-settings-toggle");
+      if (popover && toggle) positionPopover(popover, toggle);
+    });
+  });
+}
+
+function releasePopoverResizeObserver() {
+  if (_popoverResizeObserver) {
+    _popoverResizeObserver.disconnect();
+    _popoverResizeObserver = null;
+  }
+}
+
+function bindRepositionWhileOpen() {
+  releaseRepositionWhileOpen();
+  _repositionHandler = function () {
+    if (!_open) return;
+    var popover = $("v2-settings-popover");
+    var toggle = $("v2-settings-toggle");
+    if (popover && toggle) positionPopover(popover, toggle);
+  };
+  window.addEventListener("resize", _repositionHandler);
+  window.addEventListener("scroll", _repositionHandler, true);
+  if (typeof ResizeObserver === "function") {
+    var toggle = $("v2-settings-toggle");
+    if (toggle) {
+      _popoverResizeObserver = new ResizeObserver(_repositionHandler);
+      _popoverResizeObserver.observe(toggle);
+    }
+  }
+}
+
+function releaseRepositionWhileOpen() {
+  if (_repositionHandler) {
+    window.removeEventListener("resize", _repositionHandler);
+    window.removeEventListener("scroll", _repositionHandler, true);
+    _repositionHandler = null;
+  }
+  releasePopoverResizeObserver();
 }
 
 function syncDevSection() {
@@ -113,6 +164,7 @@ export function closeSettings() {
   _open = false;
   popover.hidden = true;
   releaseFocusTrap(popover);
+  releaseRepositionWhileOpen();
   toggle.setAttribute("aria-expanded", "false");
   if (_scrim) _scrim.hidden = true;
   var restore = _focusRestoreEl;
@@ -130,6 +182,8 @@ function openSettings() {
   _focusRestoreEl = document.activeElement;
   _open = true;
   positionPopover(popover, toggle);
+  schedulePositionPopover();
+  bindRepositionWhileOpen();
   var scrim = ensureScrim();
   scrim.hidden = false;
   toggle.setAttribute("aria-expanded", "true");
@@ -171,6 +225,7 @@ export function initSettingsPanel() {
   _bound = bindAdvancedConfigControls();
   syncSettingsLock();
   syncDevSection();
+  ensurePopoverPortaled(popover);
   maybeShowSettingsMovedHint();
 
   toggle.addEventListener("click", function (e) {
@@ -191,6 +246,14 @@ export function initSettingsPanel() {
     e.stopPropagation();
   });
 
+  var closeBtn = $("v2-settings-close");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (_open) closeSettings();
+    });
+  }
+
   var devBtn = $("v2-settings-dev-toggle");
   if (devBtn) {
     devBtn.addEventListener("click", function () {
@@ -198,12 +261,6 @@ export function initSettingsPanel() {
       openDevPanelFromSettings();
     });
   }
-
-  window.addEventListener("resize", function () {
-    if (!_open) return;
-    var pop = $("v2-settings-popover");
-    if (pop && toggle) positionPopover(pop, toggle);
-  });
 
   document.addEventListener("mousedown", function (e) {
     if (!_open) return;

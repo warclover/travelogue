@@ -70,6 +70,7 @@ V2_HOME_MARKERS = (
     # M20 · 设置 Popover（v2.1 · 导入选项迁入）
     "v2-settings-toggle",
     "v2-settings-popover",
+    "v2-settings-close",
     "工作台设置",
     'id="studio-cfg-clustering"',
     'id="studio-cfg-vision"',

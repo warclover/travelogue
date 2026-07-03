@@ -102,6 +102,7 @@ def test_ux_p3_03_v2_settings_markers() -> None:
     for expected in (
         'id="v2-settings-toggle"',
         'id="v2-settings-popover"',
+        'id="v2-settings-close"',
         'id="studio-cfg-clustering"',
         'id="studio-cfg-vision"',
         'id="studio-cfg-layout-scoring"',

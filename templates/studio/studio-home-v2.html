@@ -196,7 +196,11 @@
 
     <div id="v2-settings-popover" class="v2-settings-popover" hidden role="dialog"
          aria-labelledby="v2-settings-title">
-      <p id="v2-settings-title" class="v2-settings-popover__title">工作台设置</p>
+      <div class="v2-settings-popover__head">
+        <p id="v2-settings-title" class="v2-settings-popover__title">工作台设置</p>
+        <button type="button" class="v2-settings-popover__close" id="v2-settings-close"
+                aria-label="关闭">×</button>
+      </div>
       <section class="v2-settings-popover__section" aria-label="外观">
         <p class="v2-settings-popover__section-label">外观</p>
         <select id="v2-theme-select" class="v2-settings-popover__select" aria-label="首页配色">

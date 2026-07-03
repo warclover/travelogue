@@ -649,6 +649,63 @@ def test_ac_hp2_v2_settings_popover_focus_trap(studio_server) -> None:
         browser.close()
 
 
+def test_ac_hp21_05_settings_close_button(studio_server) -> None:
+    """设置 Popover · 标题栏 × 关闭并回焦 toggle。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"])
+        _wait_visible(page, "v2-frame")
+        page.evaluate(
+            "() => { const p = document.getElementById('v2-dev-panel'); if (p) p.hidden = true; }"
+        )
+        page.locator("#v2-settings-toggle").click()
+        page.wait_for_function(
+            "() => { const pop = document.getElementById('v2-settings-popover'); return pop && !pop.hidden; }"
+        )
+        close_box = page.locator("#v2-settings-close").bounding_box()
+        assert close_box and min(close_box["width"], close_box["height"]) >= 44
+        page.locator("#v2-settings-close").click()
+        page.wait_for_function(
+            "() => document.getElementById('v2-settings-popover').hidden === true"
+        )
+        focused = page.evaluate(
+            "() => document.activeElement === document.getElementById('v2-settings-toggle')"
+        )
+        assert focused
+        browser.close()
+
+
+def test_ac_hp21_05_settings_popover_anchor_after_scroll(studio_server) -> None:
+    """设置 Popover · 页面滚动后仍锚定在设置按钮旁（gapAbove 或 gapBelow ≤ 12）。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=multi")
+        _wait_visible(page, "v2-frame")
+        page.evaluate(
+            "() => { const d = document.getElementById('v2-dev-panel'); if (d) d.hidden = true; }"
+        )
+        page.evaluate("() => window.scrollTo(0, 400)")
+        page.locator("#v2-settings-toggle").click()
+        page.wait_for_function(
+            "() => { const pop = document.getElementById('v2-settings-popover'); return pop && !pop.hidden; }"
+        )
+        gap = page.evaluate(
+            """
+            () => {
+              const toggle = document.getElementById('v2-settings-toggle');
+              const pop = document.getElementById('v2-settings-popover');
+              const tr = toggle.getBoundingClientRect();
+              const pr = pop.getBoundingClientRect();
+              return Math.min(Math.abs(tr.top - pr.bottom), Math.abs(pr.top - tr.bottom));
+            }
+            """
+        )
+        assert gap <= 12
+        browser.close()
+
+
 def test_ac_hp2_21_touch_targets(studio_server) -> None:
     """AC-HP2-21 · 关键触控目标 ≥44px。"""
     with sync_playwright() as p:

@@ -677,11 +677,41 @@ body { overflow-x: clip; overflow-y: visible; }
   isolation: isolate;
   color-scheme: light;
 }
+.v2-settings-popover__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
 .v2-settings-popover__title {
-  margin: 0 0 10px;
+  margin: 0;
+  flex: 1;
   font-size: 13px;
   font-weight: 700;
   color: var(--v2-set-ink);
+}
+.v2-settings-popover__close {
+  flex-shrink: 0;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -6px -8px -6px 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--v2-set-muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.v2-settings-popover__close:hover {
+  color: var(--v2-set-ink);
+  background: var(--v2-set-surface);
+}
+.v2-settings-popover__close:focus-visible {
+  outline: 3px solid var(--v2-set-focus);
+  outline-offset: 1px;
 }
 .v2-settings-popover__section + .v2-settings-popover__section {
   margin-top: 14px;
