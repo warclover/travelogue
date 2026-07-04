@@ -286,6 +286,44 @@ def _mixed_portrait_dense_skip(
     return n >= 2
 
 
+def _single_portrait_dense_skip(
+    window: list[str],
+    aspects,
+    size: int,
+    *,
+    cfg: MosaicConfig,
+) -> bool:
+    """True when a 1P+5L (or denser) window should skip size≥6 for five-slot mix."""
+    if not cfg.prefer_five_slot_single_portrait or size < 6:
+        return False
+    from travelogue.curation.screen_planner import _is_landscape_id, _is_std_portrait_id
+
+    n_p = sum(1 for aid in window if _is_std_portrait_id(aid, aspects))
+    n_l = sum(1 for aid in window if _is_landscape_id(aid, aspects))
+    return n_p == 1 and n_l >= 5
+
+
+def _prioritize_five_slot_single_portrait(
+    sizes: list[int],
+    segment: list[str],
+    aspects,
+    remaining: int,
+    *,
+    cfg: MosaicConfig,
+) -> list[int]:
+    """When a 6-photo tail is 1P+5L with portrait in the first 5, try size=5 first."""
+    if not cfg.prefer_five_slot_single_portrait or remaining != 6 or 5 not in sizes:
+        return sizes
+    from travelogue.curation.screen_planner import _is_std_portrait_id
+
+    prefix = segment[:5]
+    n_p_prefix = sum(1 for aid in prefix if _is_std_portrait_id(aid, aspects))
+    n_p_total = sum(1 for aid in segment if _is_std_portrait_id(aid, aspects))
+    if n_p_total != 1 or n_p_prefix != 1:
+        return sizes
+    return [5] + [s for s in sizes if s != 5]
+
+
 def _prioritize_exact_window_fit(sizes: list[int], remaining: int) -> list[int]:
     """When the tail length matches an enabled window, try that size first."""
     if remaining in sizes:
@@ -315,7 +353,11 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         )
     else:
         sizes = list(planner_mosaic_window_sizes(cfg, density=density))
+    segment = ctx.ids[start : start + remaining]
     sizes = _prioritize_exact_window_fit(sizes, remaining)
+    sizes = _prioritize_five_slot_single_portrait(
+        sizes, segment, ctx.aspects, remaining, cfg=cfg
+    )
     min_dense = cfg.density_budget.min_slots if cfg.density_budget.enabled else 4
     if ctx.layout_state is not None:
         ctx.layout_state.dense_collage_min_slots = min_dense
@@ -345,6 +387,8 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         ):
             continue
         if _mixed_portrait_dense_skip(window, ctx.aspects, size, cfg=cfg):
+            continue
+        if _single_portrait_dense_skip(window, ctx.aspects, size, cfg=cfg):
             continue
         if (
             size == _DENSITY_AUX_PACK_SIZE

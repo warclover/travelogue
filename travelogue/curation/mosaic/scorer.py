@@ -16,6 +16,7 @@ from travelogue.curation.mosaic.constants import (
     PATTERN_LANDSCAPE_9,
     PATTERN_MOSAIC_5_HERO_3_2_PLUS_4,
     PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+    PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
     PATTERN_PORTRAIT_6,
 )
@@ -371,6 +372,16 @@ def score_candidate(
     ) <= 0.0 and penalties.get("hero_slot_aspect", 0.0) <= 0.0:
         total = min(1.0, total * 1.08)
         reasons.append("R_HERO6_LAND")
+    if (
+        cfg.prefer_five_slot_single_portrait
+        and screen.get("patternId") == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
+        and asset_ids
+    ):
+        n_p = sum(1 for aid in asset_ids if _is_std_portrait_id(aid, aspects))
+        n_l = sum(1 for aid in asset_ids if _is_landscape_id(aid, aspects))
+        if n_p == 1 and n_l >= 4:
+            total = min(1.0, total * 1.05)
+            reasons.append("R_SINGLE_PORTRAIT_3LAND")
     if screen.get("patternId") == PATTERN_LANDSCAPE_9 and penalties.get(
         "hero_slot_aspect", 0.0
     ) <= 0.0:
