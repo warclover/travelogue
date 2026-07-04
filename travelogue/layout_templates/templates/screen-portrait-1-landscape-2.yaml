@@ -61,3 +61,16 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: true
+usage:
+  summary: 三图混排：左列满高竖图领衔，右列上下两横叠放；竖图是视觉主角。
+  whenToUse: |
+    - 窗口 1 竖 + 2 横，竖图质量/叙事权重明显高于两横时
+    - 竖图为人物全身或纵向地标，需要满高展示位时
+  whenNotToUse: |
+    - 竖图只是横拍中的“配角”（应选 mosaic-5-main-portrait-3land 或 portrait-2-landscape-2）
+    - 两横图才是窗口主角、竖图可拆出时（竖图单独 portrait-1 更干净）
+  siblings:
+    - id: screen-portrait-2-landscape-2
+      difference: 该模板 2 竖 2 横等权 2×2；本模板 1 竖主导 + 2 横从属。
+    - id: screen-mosaic-5-main-portrait-3land
+      difference: 该模板 5 图、主横领衔；本模板 3 图、竖图领衔。

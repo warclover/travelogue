@@ -71,3 +71,19 @@ render:
   cssBundle: journal-screens.css
   fitPolicy: auto_delegate
   presentation: editorial-4mix
+usage:
+  summary: 四图横竖棋盘 + 留白呼吸：TL/BR 横图、TR/BL 竖图呈 Z 字混排，适合密度屏之后的“换口气”。
+  whenToUse: |
+    - 窗口恰 2 横 + 2 竖，且四张图质量接近、不需要 hero 主次时
+    - 前一屏为 dense 拼图或九宫格，需要 airy 呼吸屏缓冲节奏时
+    - 章内有 decorLine / 用户 voice，可填 kicker/body 文案位时（experimental）
+  whenNotToUse: |
+    - 窗口内有明确 hero 或需要主次分明时（应选 mosaic 主图类或 landscape-1）
+    - 纯横图或纯竖图连拍（mix 硬约束不满足；纯竖走 portrait-3-editorial）
+    - 章内已有 editorial 屏（rhythm max_per_chapter: 1）
+  designIntent: 加权轨道实现横竖棋盘而非等分 2×2；与 portrait-2-landscape-2 相比多了节奏配额与文案预留。
+  siblings:
+    - id: screen-portrait-2-landscape-2
+      difference: 该模板为 16:9 等分 2×2 无文案；本模板加权棋盘 + 每章限 1 次 editorial 节奏。
+    - id: screen-portrait-3-editorial
+      difference: 该模板三竖专屏；本模板必须 2 横 2 竖混排。

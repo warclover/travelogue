@@ -61,3 +61,16 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: true
+usage:
+  summary: 三横竖向 stack：三张横图上下等分宽条，快速消化横图连拍。
+  whenToUse: |
+    - 连续 3 张横图 run，无 hero、无混竖需求时
+    - 过渡性过场屏：比单图轻、比 6 宫格密
+  whenNotToUse: |
+    - 其中一张应为章内 hero（应选 landscape-1 或 mosaic 主图类）
+    - 需要 4 张及以上等权横图（应选 landscape-4 / landscape-6）
+  siblings:
+    - id: screen-landscape-2
+      difference: 该模板 2 横 stack；本模板 3 横，多一层。
+    - id: screen-landscape-4
+      difference: 该模板 2×2 网格；本模板竖向 stack，单条更宽。

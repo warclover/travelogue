@@ -316,8 +316,12 @@
         },
         "fitPolicy": {
           "type": "string",
-          "enum": ["slot", "asset", "auto_delegate"],
-          "description": "Fit resolution policy (R-P16-06)"
+          "enum": ["slot", "asset", "auto_delegate", "editorial_row"],
+          "description": "Fit resolution policy (R-P16-06); editorial_row delegates to editorial_portrait_row uniform fit"
+        },
+        "presentation": {
+          "type": "string",
+          "description": "Named render presentation hook (e.g. editorial-4mix overlay)"
         }
       }
     },
@@ -339,6 +343,53 @@
     "generator": {
       "type": "string",
       "description": "Reserved P17: marks auto-generated composite source"
+    },
+    "usage": {
+      "type": "object",
+      "description": "Human/AI-facing usage contract: when to (not) use this template and how it differs from confusable siblings",
+      "additionalProperties": false,
+      "required": ["summary"],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "One-line positioning; judgment content only, geometry facts stay in structured fields"
+        },
+        "whenToUse": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "whenNotToUse": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Failure modes / negative guidance; the most valuable section"
+        },
+        "designIntent": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "siblings": {
+          "type": "array",
+          "description": "Confusable near-neighbour templates and the one-line difference",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "difference"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "difference": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              }
+            }
+          }
+        }
+      }
     },
     "_legacy": {
       "type": "object",

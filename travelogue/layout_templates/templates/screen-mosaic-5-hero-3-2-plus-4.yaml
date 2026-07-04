@@ -63,3 +63,18 @@ _legacy:
     max_portrait: 0
     max_landscape: 5
   css_verified: true
+usage:
+  summary: 加权轨道 5 图屏：左列满高主槽（偏竖 AR≈0.89）+ 右侧 2×2 四配图；主槽实为“竖形窗口”，与名字里的 hero 横图直觉相反。
+  whenToUse: |
+    - 5 张横图窗口中，主图裁成偏方/偏竖构图仍成立（中心构图、主体居中）时
+    - 需要与 3×3 整数网格屏形成节奏差异（fr 加权轨道的非对称感）时
+  whenNotToUse: |
+    - 主图为宽幅风景、地平线构图时（cover 进 0.89 竖形槽会拦腰裁切；Plate 63 教训，
+      现由 landscape_forbidden_tall + arLadderSignOff 守卫）
+    - 四张配图差异过大时（右侧 2×2 等分格会放大参差感）
+  designIntent: P16 §4.6 加权轨道样板；保留它主要为展示 fr 轨道能力，日常 hero 需求优先 main-hero-plus-4。
+  siblings:
+    - id: screen-mosaic-5-main-hero-plus-4
+      difference: 该模板主槽是 16:9 横槽、6 张图；本模板主槽偏竖、5 张图，主图构图要求苛刻得多。
+    - id: screen-mosaic-5-main-portrait-3land
+      difference: 该模板主槽横、竖图放右侧窄槽；本模板反之，主槽本身就是竖形窗口。

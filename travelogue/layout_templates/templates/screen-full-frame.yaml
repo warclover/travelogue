@@ -40,3 +40,16 @@ _legacy:
     max_portrait: 1
     max_landscape: 1
   css_verified: true
+usage:
+  summary: 全幅单图 contain：整图完整展示，AR 不匹配处 blur fill；collage/特殊比例专用。
+  whenToUse: |
+    - collage 类素材或 ingest 标记需完整展示、不宜 cover 裁切时
+    - 全景/超长比例/截图类图片，cover 会损失关键信息时
+  whenNotToUse: |
+    - 常规横/竖照片需要满屏冲击力时（应选 landscape-1 / portrait-1 cover）
+    - 多图窗口（photoCount=1 硬约束）
+  siblings:
+    - id: screen-landscape-1
+      difference: 该模板 cover 满屏横图；本模板 contain + blur fill，保完整不裁切。
+    - id: screen-portrait-1
+      difference: 该模板 9:16 竖图 cover；本模板 16:9 contain，面向特殊比例整图。

@@ -74,3 +74,12 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: false
+usage:
+  summary: 已退役的 1 竖 + 4 横混排屏（main-portrait-3land 的前身，槽位相同但无主槽守卫）。
+  whenNotToUse: |
+    - 已退役：新 trip 不再候选，仅保留渲染历史 screens[]。
+    - 退役原因：缺 mainSlotPolicy 与禁入约束，主槽可能被全景/竖图占用导致破版；
+      由 screen-mosaic-5-main-portrait-3land 带守卫版取代。
+  siblings:
+    - id: screen-mosaic-5-main-portrait-3land
+      difference: 直接后继：槽位 rect 完全相同，补齐了主槽 AR 守卫与竖槽禁入约束。

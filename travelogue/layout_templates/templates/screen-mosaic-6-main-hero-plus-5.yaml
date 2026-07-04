@@ -89,3 +89,17 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: true
+usage:
+  summary: 6 图 hero 密度屏（mosaic-5-main-hero-plus-4 的几何孪生）：主横图 2×2 + 右列双图 + 底行三图。
+  whenToUse: |
+    - 与 screen-mosaic-5-main-hero-plus-4 相同：有明确 hero 横图 + 5 张同场景细节
+    - 6 张窗口且规划器按 photoCount=6 检索到本 id 时
+  whenNotToUse: |
+    - 窗口无明确主次时（应降级 screen-landscape-6 等分网格）
+    - 章内密度屏已达节奏配额、缺少呼吸屏缓冲时
+  designIntent: 与 mosaic-5-main-hero-plus-4 槽位 rect 逐格相同，仅 id/gridClass 因历史原因并存；改动几何需两者同步。
+  siblings:
+    - id: screen-mosaic-5-main-hero-plus-4
+      difference: 几何孪生，槽位完全一致；仅 id 与 gridClass 不同，选用行为无差异。
+    - id: screen-landscape-6
+      difference: landscape-6 无主次等分；本模板需要一张能撑住 2×2 主槽的 hero。

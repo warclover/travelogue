@@ -91,3 +91,20 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: true
+usage:
+  summary: 主图引领的 6 图密度屏：hero 横图占 2×2，右列与底行共 5 张铺陈细节，适合“一个主场景 + 一串环境细节”。
+  whenToUse: |
+    - 窗口内有 hero 分显著领先的横图，且其后紧跟同场景连拍或细节图
+    - 章节中段需要一次信息密度高峰、快速消化大量同质横图时
+  whenNotToUse: |
+    - 窗口内图片质量均匀、无明确主次时（主槽名不副实，应降级 screen-landscape-6）
+    - 章内已出现密度屏且未经过大图/留白屏缓冲时
+    - 维护提示：id 带 "5" 但实际需要 6 张横图（photoCount=6），勿按名字推断
+  designIntent: 模拟杂志“主打图 + 花絮带”版式；右列双图与底行三图刻意等分，避免与主图争夺视觉焦点。
+  siblings:
+    - id: screen-mosaic-6-main-hero-plus-5
+      difference: 几何孪生（槽位 rect 完全相同），仅历史 id 与 gridClass 不同，需同步维护。
+    - id: screen-mosaic-5-hero-3-2-plus-4
+      difference: 该模板主槽为偏竖加权槽（AR≈0.89）且默认守卫下极少入选；本模板主槽为 16:9 横槽。
+    - id: screen-landscape-6
+      difference: landscape-6 为无主次 3×2 等分网格；窗口无明确 hero 时应选它。

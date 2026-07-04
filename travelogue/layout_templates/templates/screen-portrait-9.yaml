@@ -106,3 +106,16 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: true
+usage:
+  summary: 九竖满格（9:16 舞台 3×3）：一屏九张竖图等分，全书密度最高的竖图专屏之一。
+  whenToUse: |
+    - 连续 ≥9 张竖图 mundane run（美食/招牌/连拍），需极速消化时
+    - trip 总张数足够大且 rhythm 配额允许九宫格时
+  whenNotToUse: |
+    - 竖图不足 9 张或质量差异大（空槽感或主次混乱）
+    - 章内已用过 3×3 或前一屏为 dense mosaic 且未缓冲时
+  siblings:
+    - id: screen-portrait-6
+      difference: 该模板 6 竖 3×2；本模板 9 竖满格，密度更高、配额更严。
+    - id: screen-landscape-9
+      difference: 该模板 9 横 3×3（16:9）；本模板 9 竖（9:16 舞台），构图族对称。

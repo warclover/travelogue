@@ -82,3 +82,16 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: true
+usage:
+  summary: 六横 3×2 等分网格（16:9）：无主次横图密度屏，适合同质连拍批量带过。
+  whenToUse: |
+    - 连续 6 张横图 run，质量均匀、无 hero 分差时
+    - 需要快速消化横图连拍，且 rhythm 配额允许时
+  whenNotToUse: |
+    - 窗口内有 hero 分显著领先的横图（应选 mosaic-5-main-hero-plus-4）
+    - 章内已有 dense 屏且缺少呼吸缓冲时
+  siblings:
+    - id: screen-mosaic-5-main-hero-plus-4
+      difference: 该模板主 hero 2×2 + 5 配图；本模板 6 图等权无主次。
+    - id: screen-landscape-9
+      difference: 该模板 9 横 3×3 满格；本模板 6 横，密度低一档。

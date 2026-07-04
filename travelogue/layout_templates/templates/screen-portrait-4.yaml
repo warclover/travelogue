@@ -66,3 +66,16 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: true
+usage:
+  summary: 四竖 2×2 专屏（9:16 舞台）：一屏四张竖图等分，密度适中。
+  whenToUse: |
+    - 连续 4 张竖图 burst，质量均匀、无需 hero 时
+    - 竖图连拍需要比 portrait-3 多收一张、又不必上六宫格时
+  whenNotToUse: |
+    - 窗口混入横图或竖图质量差异大需主次时
+    - 需要更高密度（6/8/9 张）时选 portrait-6 / grid-8 / portrait-9
+  siblings:
+    - id: screen-portrait-3
+      difference: 该模板 3 竖一行；本模板 4 竖 2×2，密度更高。
+    - id: screen-portrait-2-landscape-2
+      difference: 该模板 2 竖 2 横混排（16:9）；本模板 4 竖专屏。

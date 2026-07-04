@@ -52,3 +52,17 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: false
+usage:
+  summary: 双横竖向 stack：两张横图上下叠放，每条宽条 AR≈3.56，无主次、无文案。
+  whenToUse: |
+    - 连续 2 张横图，质量接近、只需快速连排时
+    - 不需要 hero、不需要屏内文案的“相册条”式过渡屏
+  whenNotToUse: |
+    - 两图有主次或需要点缀文案（应选 editorial-2land 或 mosaic）
+    - 主图为宽幅全景/需大图冲击时（应选 screen-landscape-1）
+    - 三图及以上横 run（应选 landscape-3 stack 或 landscape-4 网格）
+  siblings:
+    - id: screen-landscape-3
+      difference: 该模板 3 横 stack；本模板 2 横，更轻。
+    - id: screen-portrait-1-landscape-2
+      difference: 该模板 1 竖 + 2 横混排；本模板纯 2 横 stack。

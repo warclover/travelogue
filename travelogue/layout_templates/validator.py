@@ -398,6 +398,69 @@ def _check_css(template: TemplateDef, report: ValidationReport) -> None:
             report.add("V-P16-06", f"slot {slot.index} covers no track cells")
 
 
+def _usage_doc(template: TemplateDef) -> dict:
+    raw = template.raw.get("usage") if isinstance(template.raw, dict) else None
+    return raw if isinstance(raw, dict) else {}
+
+
+def _known_template_docs() -> dict[str, dict]:
+    """All registry templates' raw docs (empty on load failure — checks degrade)."""
+    try:
+        engine = get_engine()
+    except Exception:
+        return {}
+    return {tid: t.raw for tid, t in engine._templates.items()}
+
+
+def _check_usage(template: TemplateDef, report: ValidationReport) -> None:
+    """V-P16-U01..03 · usage contract checks (字数/结构由 JSON Schema 保证)."""
+    usage = _usage_doc(template)
+    if not usage:
+        if template.status == "ga":
+            report.add(
+                "V-P16-U02",
+                "ga template missing usage block (summary/whenToUse/whenNotToUse)",
+                level="warn",
+            )
+        return
+
+    known = _known_template_docs()
+    siblings = usage.get("siblings") or []
+    for entry in siblings:
+        if not isinstance(entry, dict):
+            continue
+        sid = str(entry.get("id") or "")
+        if sid == template.id:
+            report.add("V-P16-U01", f"usage.siblings references self ({sid})")
+            continue
+        if known and sid not in known:
+            report.add("V-P16-U01", f"usage.siblings id {sid!r} not found in registry")
+            continue
+        # Reciprocity is advisory: A documents B, B should document A back.
+        other_usage = known.get(sid, {}).get("usage") if known else None
+        if isinstance(other_usage, dict):
+            back_ids = {
+                str(e.get("id") or "")
+                for e in (other_usage.get("siblings") or [])
+                if isinstance(e, dict)
+            }
+            if template.id not in back_ids:
+                report.add(
+                    "V-P16-U03",
+                    f"sibling {sid} does not reference {template.id} back",
+                    level="warn",
+                )
+
+    if template.status == "ga":
+        for key in ("whenToUse", "whenNotToUse"):
+            if not str(usage.get(key) or "").strip():
+                report.add(
+                    "V-P16-U02",
+                    f"ga template usage missing {key}",
+                    level="warn",
+                )
+
+
 def _check_id_naming(template: TemplateDef, report: ValidationReport) -> None:
     if template.status != "deprecated" and template.id.endswith("-deprecated"):
         report.add("V-P16-08", "active template id looks deprecated", level="warn")
@@ -424,6 +487,7 @@ def validate_template_def(
     _check_stack(template, report)
     _check_css(template, report)
     _check_id_naming(template, report)
+    _check_usage(template, report)
     return report
 
 

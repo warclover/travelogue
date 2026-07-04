@@ -98,3 +98,16 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: true
+usage:
+  summary: 八竖 4×2 宽排格（9:16 舞台）：比 3×3 少一格，适合 8 张竖图连拍且不想留空位时。
+  whenToUse: |
+    - 连续 8 张竖图 run（比 6 多、比 9 少），质量均匀时
+    - 4 列宽排比 3×3 更适合“横滑式”连拍浏览感时
+  whenNotToUse: |
+    - 竖图不足 8 张（应降级 portrait-6 或 portrait-4）
+    - 需要满格九宫冲击感时选 portrait-9
+  siblings:
+    - id: screen-portrait-9
+      difference: 该模板 9 竖 3×3 满格；本模板 8 竖 4×2，少一格、更宽。
+    - id: screen-portrait-6
+      difference: 该模板 6 竖 3×2；本模板 8 竖，密度更高。

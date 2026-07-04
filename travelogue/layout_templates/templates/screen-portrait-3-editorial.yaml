@@ -54,3 +54,19 @@ render:
   cssBundle: journal-screens.css
   fitPolicy: editorial_row
   presentation: portrait-row-editorial
+usage:
+  summary: 杂志式三竖并列行：16:9 舞台上一行三竖，脚线对齐、视觉 intrinsic 渲染，人像/街拍成组感强。
+  whenToUse: |
+    - 连续 3 张竖图 run（人物、街拍、门洞/塔楼等纵向主体）
+    - 需要比 portrait-3（9:16 舞台）更“杂志横 spread”的展示感时
+    - 含人物时 editorial_row 统一 contain，避免裁脸
+  whenNotToUse: |
+    - 窗口混入横图或仅 1–2 张竖图时
+    - 需要信息密度（九宫格）而非留白行时
+    - 竖图质量差异大、需要主次分明时（应拆成 portrait-1 + 其他屏）
+  designIntent: fitPolicy=editorial_row 驱动同行等高与脚线对齐；与 primitive portrait-3 同槽数但渲染语义完全不同。
+  siblings:
+    - id: screen-portrait-3
+      difference: 该模板 9:16 舞台三列等格；本模板 16:9 单行 editorial 渲染，杂志感更强。
+    - id: screen-portrait-2
+      difference: 该模板仅 2 竖并排；本模板 3 竖成组，适合三连拍叙事。

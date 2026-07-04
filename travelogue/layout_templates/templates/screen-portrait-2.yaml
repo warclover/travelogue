@@ -30,3 +30,16 @@ render:
   gridClass: layout-screen__grid--2col
   cssBundle: journal-screens.css
   fitPolicy: auto_delegate
+usage:
+  summary: 双竖并排（16:9）：两列等分，适合章末竖图配对或两张同等重要的竖图。
+  whenToUse: |
+    - 连续 2 张竖图，叙事权重接近、无需第三张时
+    - 末章 late pairing 偏好：收尾两张竖图对称并排时
+  whenNotToUse: |
+    - 其中一张明显更强（应拆成 portrait-1 + 其他，或 portrait-1-landscape-2）
+    - 有第三张竖图可成组时（应选 portrait-3-editorial）
+  siblings:
+    - id: screen-portrait-1
+      difference: 该模板单竖满屏（9:16）；本模板双竖并列（16:9），每张更小。
+    - id: screen-portrait-3-editorial
+      difference: 该模板三竖 editorial 行；本模板仅两竖，更轻。

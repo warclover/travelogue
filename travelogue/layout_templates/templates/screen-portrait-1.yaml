@@ -29,3 +29,16 @@ render:
   gridClass: layout-screen__grid--1col
   cssBundle: journal-screens.css
   fitPolicy: auto_delegate
+usage:
+  summary: 单竖满屏（9:16 舞台 cover）：一张竖图独占一屏，章末孤儿竖图或强竖构图专用。
+  whenToUse: |
+    - 单张竖图质量突出，值得独占一屏时
+    - 章末 carry-forward 的孤儿竖图、late chapter pairing 收尾时
+  whenNotToUse: |
+    - 竖图一般、后面还有竖 run 可成组（应选 portrait-2 / portrait-3-editorial）
+    - 素材实为横图或全景（应选 landscape-1 / full-frame）
+  siblings:
+    - id: screen-portrait-2
+      difference: 该模板双竖并列；本模板单竖满屏，冲击力更大。
+    - id: screen-full-frame
+      difference: 该模板 contain 保完整；本模板 cover 满屏，适合标准竖图。

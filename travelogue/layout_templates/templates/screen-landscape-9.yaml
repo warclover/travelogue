@@ -106,3 +106,16 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: true
+usage:
+  summary: 九横满格 3×3（16:9）：全书密度最高的横图等分屏之一，适合 mundane 连拍。
+  whenToUse: |
+    - 连续 ≥9 张横图 mundane run（美食/环境/连拍），需极速消化时
+    - trip 总张数足够且 rhythm 九宫格配额允许时
+  whenNotToUse: |
+    - 横图不足 9 张或存在明显 hero（应降级 landscape-6 或 mosaic）
+    - 章内已用过 3×3 或前一屏为 dense mosaic 且未缓冲时
+  siblings:
+    - id: screen-landscape-6
+      difference: 该模板 6 横 3×2；本模板 9 横满格，配额更严。
+    - id: screen-portrait-9
+      difference: 该模板 9 竖（9:16 舞台）；本模板 9 横（16:9），构图族对称。

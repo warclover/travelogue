@@ -29,3 +29,17 @@ render:
   gridClass: layout-screen__grid--1col
   cssBundle: journal-screens.css
   fitPolicy: auto_delegate
+usage:
+  summary: 单横满屏 cover（16:9）：章首 hero、全景、收尾大图的默认单图屏。
+  whenToUse: |
+    - 单张横/全景质量突出，需要全屏出血展示时
+    - 章首 open 或 peak 时刻的 hero 候选图时
+  whenNotToUse: |
+    - 需要完整展示不裁切（collage/全景条 → screen-full-frame contain）
+    - 竖图素材（mix 硬约束不满足）
+    - 后面紧跟同场景连拍可组 mosaic 时（单独 hero 可能浪费窗口）
+  siblings:
+    - id: screen-full-frame
+      difference: 该模板 contain + blur；本模板 cover 满屏，常规横图默认首选。
+    - id: screen-landscape-2
+      difference: 该模板 2 横 stack 无主次；本模板单张独占，hero 感强得多。

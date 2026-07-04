@@ -80,3 +80,14 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: false
+usage:
+  summary: 已退役的 3 竖 + 2 横拼屏（注意：id 写 2portrait 但 mix 实为 3 竖，命名与实际不符）。
+  whenNotToUse: |
+    - 已退役：新 trip 不再候选，仅保留渲染历史 screens[]。
+    - 退役原因：右上两格（col3 · row1-2）留空（intentionalGaps 记录在案），
+      视觉像缺图；由 2p3l-equal 修正，后者亦已退役。
+  siblings:
+    - id: screen-mosaic-5-3portrait-2land-balanced
+      difference: 同为 3 竖 + 2 横退役前身；该模板无留空但竖图矮胖，本模板留空但竖图比例更好。
+    - id: screen-mosaic-5-2p3l-equal
+      difference: 本模板的直接后继（消除留空），同样已退役。

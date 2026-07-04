@@ -66,3 +66,17 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: true
+usage:
+  summary: 四图等权混排：2 竖 + 2 横的 16:9 等分 2×2 棋盘，无 hero、无文案位。
+  whenToUse: |
+    - 窗口 2 竖 2 横，四张图叙事权重接近、无需主次时
+    - 需要快速消化一组混拍，又不想上 5 图 mosaic 密度时
+  whenNotToUse: |
+    - 需要 hero 或主次（应选 mosaic / portrait-1-landscape-2）
+    - 需要呼吸感或屏内文案（应选 screen-editorial-4mix）
+    - 纯竖或纯横连拍（mix 不满足）
+  siblings:
+    - id: screen-editorial-4mix
+      difference: 同为 2L2P，但该模板加权棋盘 + editorial 节奏配额；本模板等分 2×2 更“相册感”。
+    - id: screen-portrait-4
+      difference: 该模板 4 竖专屏（9:16）；本模板必须混横竖。

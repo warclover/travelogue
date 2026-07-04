@@ -74,3 +74,14 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: true
+usage:
+  summary: 已退役的 3 竖 + 2 横拼屏：上排三竖并列（占 2/3 高）+ 底行两横。
+  whenNotToUse: |
+    - 已退役：新 trip 不再候选，仅保留渲染历史 screens[]。
+    - 退役原因：三竖槽 AR≈0.84 偏方，竖图 cover 裁切损失大；
+      多竖窗口现走 screen-portrait-3 等专屏。
+  siblings:
+    - id: screen-mosaic-5-2portrait-3land-balanced
+      difference: 同期退役前身：该模板竖图比例更好但右上留空；本模板无留空但竖槽偏方。
+    - id: screen-portrait-3
+      difference: 现役三竖方案：竖图专屏、比例正确，横图另行组屏。

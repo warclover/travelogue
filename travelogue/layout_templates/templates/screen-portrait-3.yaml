@@ -58,3 +58,16 @@ _legacy:
     max_portrait: 9
     max_landscape: 9
   css_verified: true
+usage:
+  summary: 三竖等分专屏（9:16 舞台）：一屏三张竖图横排，适合竖图连拍快速带过。
+  whenToUse: |
+    - 连续 3 张竖图 run，无需混横、无需 hero 时
+    - 竖图主体清晰，槽位 AR 与素材匹配（标准竖图 cover）
+  whenNotToUse: |
+    - Web 16:9 需要杂志式脚线对齐时（应选 screen-portrait-3-editorial）
+    - 窗口含横图或需要主次分明时
+  siblings:
+    - id: screen-portrait-3-editorial
+      difference: 该模板 16:9 editorial 行渲染；本模板 9:16 舞台等分三列，更紧凑。
+    - id: screen-portrait-2
+      difference: 该模板 2 竖（16:9）；本模板 3 竖（9:16 舞台）。
