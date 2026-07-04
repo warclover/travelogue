@@ -1,4 +1,4 @@
-"""Deterministic usage rule evaluation (P0-a/b · UR-01～UR-06)."""
+"""Deterministic usage rule evaluation (P0-a/b · UR-01～UR-06, UR-09)."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from travelogue.curation.usage_rules.context import (
     WindowContext,
     main_eligible_hero_score_gap,
     portrait_is_window_hero_max,
+    window_std_portrait_count,
 )
 from travelogue.curation.usage_rules.registry import (
     EDITORIAL_4MIX_PATTERN,
@@ -25,6 +26,7 @@ from travelogue.curation.usage_rules.registry import (
     RULE_UR_04,
     RULE_UR_05,
     RULE_UR_06,
+    RULE_UR_09,
 )
 
 
@@ -106,6 +108,15 @@ def evaluate_ur06(pattern_id: str, ctx: WindowContext, cfg: UsageRulesConfig) ->
     return False, ""
 
 
+def evaluate_ur09(pattern_id: str, ctx: WindowContext, cfg: UsageRulesConfig) -> tuple[bool, str]:
+    if pattern_id not in HERO_LED_PATTERNS:
+        return False, ""
+    n = window_std_portrait_count(ctx)
+    if n >= 2:
+        return True, f"window_portraits={n}"
+    return False, ""
+
+
 def _evaluate_dense_breath(pattern_id: str, ctx: WindowContext) -> tuple[bool, str]:
     st = ctx.layout_state
     if st is None:
@@ -134,6 +145,8 @@ def evaluate_reject(
         return False, None, None
 
     checks: list[tuple[str, tuple[bool, str]]] = []
+    if not _rule_disabled(RULE_UR_09, cfg):
+        checks.append((RULE_UR_09, evaluate_ur09(pattern_id, ctx, cfg)))
     if not _rule_disabled(RULE_UR_01, cfg):
         checks.append((RULE_UR_01, evaluate_ur01(pattern_id, ctx, cfg)))
     if not _rule_disabled(RULE_UR_02, cfg):

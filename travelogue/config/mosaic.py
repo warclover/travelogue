@@ -43,6 +43,8 @@ class MosaicConfig:
     main_ar_guard: bool = True
     main_ar_ladder_tol: float = 0.08
     main_ar_prefer_16_9: bool = True
+    # Skip dense windows (size≥6) when the window has ≥2 standard portraits.
+    skip_dense_window_multi_portrait: bool = True
     weights: dict[str, float] = field(
         default_factory=lambda: {
             "aspect_match": 0.20,
@@ -170,6 +172,12 @@ def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
             "main_ar_prefer_16_9",
             "mainArPrefer169",
             defaults.main_ar_prefer_16_9,
+        ),
+        skip_dense_window_multi_portrait=cfg_bool(
+            raw,
+            "skip_dense_window_multi_portrait",
+            "skipDenseWindowMultiPortrait",
+            defaults.skip_dense_window_multi_portrait,
         ),
         weights={k: float(weights_raw.get(k, defaults.weights.get(k, 0.0))) for k in defaults.weights},
         penalties={

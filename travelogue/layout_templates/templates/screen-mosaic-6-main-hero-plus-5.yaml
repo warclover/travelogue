@@ -96,6 +96,7 @@ usage:
     - 6 张窗口且规划器按 photoCount=6 检索到本 id 时
   whenNotToUse: |
     - 窗口无明确主次时（应降级 screen-landscape-6 等分网格）
+    - 窗口内标准竖图 ≥2 张时（侧栏宽槽无法容纳双竖，应降级混排或拆分窗口）
     - 章内密度屏已达节奏配额、缺少呼吸屏缓冲时
   designIntent: 与 mosaic-5-main-hero-plus-4 槽位 rect 逐格相同，仅 id/gridClass 因历史原因并存；改动几何需两者同步。
   siblings:

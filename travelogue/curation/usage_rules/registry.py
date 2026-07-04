@@ -20,6 +20,7 @@ RULE_UR_03 = "UR-03"
 RULE_UR_04 = "UR-04"
 RULE_UR_05 = "UR-05"
 RULE_UR_06 = "UR-06"
+RULE_UR_09 = "UR-09"
 
 ALL_RULE_IDS: tuple[str, ...] = (
     RULE_UR_01,
@@ -28,6 +29,7 @@ ALL_RULE_IDS: tuple[str, ...] = (
     RULE_UR_04,
     RULE_UR_05,
     RULE_UR_06,
+    RULE_UR_09,
 )
 
 # Weakest-first undo order when usage filter would empty the candidate set (PRD §3.6).

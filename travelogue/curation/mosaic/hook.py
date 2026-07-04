@@ -270,6 +270,22 @@ def _window_all_std_portrait(window: list[str], aspects) -> bool:
     return bool(window) and all(_is_std_portrait_id(x, aspects) for x in window)
 
 
+def _mixed_portrait_dense_skip(
+    window: list[str],
+    aspects,
+    size: int,
+    *,
+    cfg: MosaicConfig,
+) -> bool:
+    """True when a size≥6 dense window should be skipped (≥2 std portraits)."""
+    if not cfg.skip_dense_window_multi_portrait or size < 6:
+        return False
+    from travelogue.curation.screen_planner import _is_std_portrait_id
+
+    n = sum(1 for aid in window if _is_std_portrait_id(aid, aspects))
+    return n >= 2
+
+
 def _prioritize_exact_window_fit(sizes: list[int], remaining: int) -> list[int]:
     """When the tail length matches an enabled window, try that size first."""
     if remaining in sizes:
@@ -327,6 +343,8 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         if size in (3, 4, 6, 9) and _window_all_std_portrait(
             window, ctx.aspects
         ):
+            continue
+        if _mixed_portrait_dense_skip(window, ctx.aspects, size, cfg=cfg):
             continue
         if (
             size == _DENSITY_AUX_PACK_SIZE

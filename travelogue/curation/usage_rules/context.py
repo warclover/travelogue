@@ -98,3 +98,12 @@ def portrait_is_window_hero_max(ctx: WindowContext) -> bool:
     if portrait_strength <= 0:
         return False
     return portrait_strength >= max(strength(aid) for aid in ctx.window_asset_ids) - 1e-9
+
+
+def window_std_portrait_count(ctx: WindowContext) -> int:
+    """Count standard (non-tall) portraits in the window."""
+    from travelogue.curation.screen_planner import _is_std_portrait_id
+
+    return sum(
+        1 for aid in ctx.window_asset_ids if _is_std_portrait_id(aid, ctx.aspects)
+    )

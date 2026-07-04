@@ -375,16 +375,16 @@ def test_conventional_window_still_orders_hero_six():
         "l1": "landscape",
         "l2": "landscape",
         "l3": "landscape",
+        "l4": "landscape",
         "p1": "portrait",
-        "p2": "portrait",
     }
     assets_map = {
         "l0": _asset("l0", w=3000, h=1687),
         "l1": _asset("l1", w=3000, h=1687),
         "l2": _asset("l2", w=3000, h=1687),
         "l3": _asset("l3", w=3000, h=1687),
+        "l4": _asset("l4", w=3000, h=1687),
         "p1": _asset("p1", w=1200, h=1800),
-        "p2": _asset("p2", w=1200, h=1800),
     }
     ordered = try_order_for_pattern(
         PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,

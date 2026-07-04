@@ -11,8 +11,8 @@ from travelogue.config.layout import UsageRulesConfig
 from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.curation.usage_rules.context import WindowContext, main_eligible_hero_score_gap
-from travelogue.curation.usage_rules.evaluator import evaluate_reject, evaluate_ur01, evaluate_ur02
-from travelogue.curation.usage_rules.registry import RULE_UR_01, RULE_UR_02
+from travelogue.curation.usage_rules.evaluator import evaluate_reject, evaluate_ur01, evaluate_ur02, evaluate_ur09
+from travelogue.curation.usage_rules.registry import RULE_UR_01, RULE_UR_02, RULE_UR_09
 
 
 def _asset(aid: str, *, w: int, h: int, sharp: float = 0.8) -> dict:
@@ -105,3 +105,31 @@ def test_evaluate_reject_respects_global_enabled_flag(monkeypatch):
     reject, rule_id, _ = evaluate_reject(PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5, ctx)
     assert not reject
     assert rule_id is None
+
+
+def test_ur09_rejects_hero_when_two_portraits():
+    assets = [_asset("hero", w=3000, h=1687, sharp=0.99)]
+    assets.extend(_asset(f"l{i}", w=3000, h=1687, sharp=0.70) for i in range(3))
+    assets.extend(
+        [
+            _asset("p1", w=1200, h=1800),
+            _asset("p2", w=1200, h=1800),
+        ]
+    )
+    ctx = _ctx(assets)
+    cfg = UsageRulesConfig(enabled=True)
+    reject, detail = evaluate_ur09(PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5, ctx, cfg)
+    assert reject
+    assert detail == "window_portraits=2"
+    reject_all, rule_id, _ = evaluate_reject(PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5, ctx, cfg=cfg)
+    assert reject_all
+    assert rule_id == RULE_UR_09
+
+
+def test_ur09_allows_hero_with_one_portrait():
+    assets = [_asset(f"l{i}", w=3000, h=1687) for i in range(5)]
+    assets.append(_asset("p1", w=1200, h=1800))
+    ctx = _ctx(assets)
+    cfg = UsageRulesConfig(enabled=True)
+    reject, _ = evaluate_ur09(PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5, ctx, cfg)
+    assert not reject
