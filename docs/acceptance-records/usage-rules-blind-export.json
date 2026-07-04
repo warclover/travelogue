@@ -1,0 +1,107 @@
+[
+  {
+    "tripId": "demo-80301df45c",
+    "reviewDir": "trips/demo-80301df45c/_uro-blind-review",
+    "mappingSealedIn": "_uro-blind-review/key.json",
+    "preferenceTemplate": "_uro-blind-review/preference.template.json",
+    "rendered": true,
+    "objective": {
+      "layoutSnapshotEqual": true,
+      "offScreens": 92,
+      "onScreens": 92,
+      "usageRuleRejectCount": 0,
+      "offHeroMismatchRate": null,
+      "onHeroMismatchRate": null
+    }
+  },
+  {
+    "tripId": "demo-1506104ebf",
+    "reviewDir": "trips/demo-1506104ebf/_uro-blind-review",
+    "mappingSealedIn": "_uro-blind-review/key.json",
+    "preferenceTemplate": "_uro-blind-review/preference.template.json",
+    "rendered": true,
+    "objective": {
+      "layoutSnapshotEqual": true,
+      "offScreens": 118,
+      "onScreens": 118,
+      "usageRuleRejectCount": 0,
+      "offHeroMismatchRate": null,
+      "onHeroMismatchRate": null
+    }
+  },
+  {
+    "tripId": "demo-5a7c161a12",
+    "reviewDir": "trips/demo-5a7c161a12/_uro-blind-review",
+    "mappingSealedIn": "_uro-blind-review/key.json",
+    "preferenceTemplate": "_uro-blind-review/preference.template.json",
+    "rendered": true,
+    "objective": {
+      "layoutSnapshotEqual": true,
+      "offScreens": 101,
+      "onScreens": 101,
+      "usageRuleRejectCount": 0,
+      "offHeroMismatchRate": null,
+      "onHeroMismatchRate": null
+    }
+  },
+  {
+    "tripId": "demo-2019",
+    "reviewDir": "trips/demo-2019/_uro-blind-review",
+    "mappingSealedIn": "_uro-blind-review/key.json",
+    "preferenceTemplate": "_uro-blind-review/preference.template.json",
+    "rendered": true,
+    "objective": {
+      "layoutSnapshotEqual": true,
+      "offScreens": 174,
+      "onScreens": 174,
+      "usageRuleRejectCount": 0,
+      "offHeroMismatchRate": null,
+      "onHeroMismatchRate": null
+    }
+  },
+  {
+    "tripId": "chuanzang-studio",
+    "reviewDir": "trips/chuanzang-studio/_uro-blind-review",
+    "mappingSealedIn": "_uro-blind-review/key.json",
+    "preferenceTemplate": "_uro-blind-review/preference.template.json",
+    "rendered": true,
+    "objective": {
+      "layoutSnapshotEqual": true,
+      "offScreens": 123,
+      "onScreens": 123,
+      "usageRuleRejectCount": 0,
+      "offHeroMismatchRate": null,
+      "onHeroMismatchRate": null
+    }
+  },
+  {
+    "tripId": "demo-151e7b488c",
+    "reviewDir": "trips/demo-151e7b488c/_uro-blind-review",
+    "mappingSealedIn": "_uro-blind-review/key.json",
+    "preferenceTemplate": "_uro-blind-review/preference.template.json",
+    "rendered": true,
+    "objective": {
+      "layoutSnapshotEqual": true,
+      "offScreens": 42,
+      "onScreens": 42,
+      "usageRuleRejectCount": 0,
+      "offHeroMismatchRate": null,
+      "onHeroMismatchRate": null
+    }
+  },
+  {
+    "tripId": "demo-ef0cef1d1d",
+    "reviewDir": "trips/demo-ef0cef1d1d/_uro-blind-review",
+    "mappingSealedIn": "_uro-blind-review/key.json",
+    "preferenceTemplate": "_uro-blind-review/preference.template.json",
+    "rendered": true,
+    "objective": {
+      "layoutSnapshotEqual": true,
+      "offScreens": 34,
+      "onScreens": 34,
+      "usageRuleRejectCount": 0,
+      "offHeroMismatchRate": null,
+      "onHeroMismatchRate": null
+    }
+  }
+]

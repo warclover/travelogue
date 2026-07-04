@@ -23,6 +23,7 @@ from travelogue.config.layout import (
     layout_scoring_from_dict,
     layout_strategy_engine_from_dict,
     layout_template_engine_from_dict,
+    usage_rules_from_dict,
 )
 from travelogue.config.misc import (
     ExportConfig,
@@ -225,6 +226,11 @@ def load_config(path: Path | None = None) -> AppConfig:
         if isinstance(layout_raw.get("editorial_4mix"), dict)
         else {}
     )
+    usage_rules_raw = (
+        layout_raw.get("usage_rules")
+        if isinstance(layout_raw.get("usage_rules"), dict)
+        else {}
+    )
     feedback_raw = layout_raw.get("feedback") if isinstance(layout_raw.get("feedback"), dict) else {}
     strategy_engine_raw = (
         layout_raw.get("strategy_engine")
@@ -278,6 +284,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             layout_density_enabled=layout_density_enabled,
             editorial_portrait_row=editorial_portrait_row_from_dict(editorial_row_raw),
             editorial_4mix=editorial_4mix_from_dict(editorial_4mix_raw),
+            usage_rules=usage_rules_from_dict(usage_rules_raw),
             rhythm=layout_rhythm_from_dict(rhythm_raw),
             template_engine=layout_template_engine_from_dict(template_engine_raw),
             strategy_engine=layout_strategy_engine_from_dict(strategy_engine_raw),

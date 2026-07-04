@@ -17,6 +17,7 @@ from travelogue.curation.mosaic.lte_adapter import mcs_diversity_config, mosaic_
 from travelogue.curation.mosaic.scorer import score_candidate, weights_hash
 from travelogue.curation.mosaic.selfheal import try_self_heal_pick
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.curation.usage_rules.context import build_window_context
 
 _FACE_CROP_PROXY_THRESHOLD = 0.05
 
@@ -98,6 +99,13 @@ def _score_window_candidates_with_rejections(
     chapter_screen_count: int = 12,
 ) -> tuple[list[tuple[ScreenCandidate, float, list[str], dict[str, float]]], list[dict]]:
     """Score MCS window candidates and collect validator-level rejections."""
+    window_ctx = build_window_context(
+        asset_ids,
+        aspects,
+        assets_map,
+        layout_state=layout_state,
+        median_sharp=median_sharp,
+    )
     bundle = generate_window_candidates_with_rejections(
         asset_ids,
         aspects,
@@ -105,6 +113,7 @@ def _score_window_candidates_with_rejections(
         cfg=cfg,
         burst_seconds=burst_seconds,
         median_sharp=median_sharp,
+        window_ctx=window_ctx,
     )
     candidates = bundle.candidates
     rejected = list(bundle.rejected)
@@ -138,6 +147,24 @@ def _score_window_candidates_with_rejections(
         mmr_lambda=float(div_cfg.get("lambda", 0.65)),
     )
     return scored, rejected
+
+
+def _usage_rule_log_entries(rejected: list[dict]) -> list[dict[str, str]]:
+    out: list[dict[str, str]] = []
+    for entry in rejected:
+        reason = str(entry.get("reason") or "")
+        if not reason.startswith("usage_rule:"):
+            continue
+        rule_id = reason.split(":", 1)[1]
+        row: dict[str, str] = {
+            "ruleId": rule_id,
+            "templateId": str(entry.get("templateId") or ""),
+        }
+        detail = entry.get("detail")
+        if detail:
+            row["detail"] = str(detail)
+        out.append(row)
+    return out
 
 
 def pick_best_window(
@@ -185,6 +212,7 @@ def pick_best_window(
         chapter_screen_count=chapter_screen_count,
     )
     log.rejected_templates = rejected
+    log.usage_rule_rejects = _usage_rule_log_entries(rejected)
     log.candidates_count = len(scored)
     if not scored:
         log.fallback_used = True

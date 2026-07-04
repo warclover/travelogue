@@ -18,6 +18,9 @@ from travelogue.curation.mosaic.pattern_catalog import (
 )
 from travelogue.curation.mosaic.runtime import effective_mosaic_window_sizes
 from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
+from travelogue.curation.usage_rules.context import WindowContext
+from travelogue.curation.usage_rules.evaluator import evaluate_reject
+from travelogue.curation.usage_rules.registry import USAGE_RULE_UNDO_ORDER
 
 
 @dataclass
@@ -58,6 +61,31 @@ def _reject(
     rejected.append(entry)
 
 
+def _restore_if_usage_emptied_candidates(
+    out: list[ScreenCandidate],
+    rejected: list[dict[str, Any]],
+    usage_deferred: list[tuple[ScreenCandidate, str]],
+) -> None:
+    if any(c.hard_valid for c in out) or not usage_deferred:
+        return
+    for rule_id in USAGE_RULE_UNDO_ORDER:
+        restore = [c for c, rid in usage_deferred if rid == rule_id]
+        if not restore:
+            continue
+        out.extend(restore)
+        restored_ids = {c.pattern_id for c in restore}
+        rejected[:] = [
+            r
+            for r in rejected
+            if not (
+                str(r.get("reason") or "") == f"usage_rule:{rule_id}"
+                and r.get("templateId") in restored_ids
+            )
+        ]
+        if any(c.hard_valid for c in out):
+            return
+
+
 def generate_window_candidates(
     asset_ids: list[str],
     aspects: dict[str, AspectKind],
@@ -88,6 +116,7 @@ def generate_window_candidates_with_rejections(
     burst_seconds: float = 12.0,
     median_sharp: float | None = None,
     registry: dict[str, MosaicPattern] | None = None,
+    window_ctx: WindowContext | None = None,
 ) -> WindowCandidateResult:
     asset_ids = _mosaic_eligible_asset_ids(asset_ids, assets_map)
     if len(asset_ids) not in effective_mosaic_window_sizes(cfg):
@@ -97,6 +126,7 @@ def generate_window_candidates_with_rejections(
     summary = feature_summary_for_window(asset_ids, assets_map)
     out: list[ScreenCandidate] = []
     rejected: list[dict[str, Any]] = []
+    usage_deferred: list[tuple[ScreenCandidate, str]] = []
     for pat in patterns:
         if mosaic_pattern_disabled(pat.pattern_id, cfg=cfg):
             _reject(rejected, pat.pattern_id, "pattern_disabled")
@@ -145,6 +175,29 @@ def generate_window_candidates_with_rejections(
             _reject(rejected, pat.pattern_id, "main_ar_ineligible", detail=main_reason)
         elif not geom_ok:
             _reject(rejected, pat.pattern_id, "geometry_invalid")
+        elif geom_ok and main_ok and window_ctx is not None:
+            reject, rule_id, detail = evaluate_reject(
+                pat.pattern_id, window_ctx, screen=screen
+            )
+            if reject and rule_id:
+                reason = f"usage_rule:{rule_id}"
+                _reject(rejected, pat.pattern_id, reason, detail=detail)
+                feat = {**summary, "patternId": pat.pattern_id}
+                if slot_fallback:
+                    feat["slotAssignmentFallback"] = slot_fallback
+                usage_deferred.append(
+                    (
+                        ScreenCandidate(
+                            pattern_id=pat.pattern_id,
+                            ordered_asset_ids=ordered,
+                            screen=screen,
+                            feature_summary=feat,
+                            hard_valid=True,
+                        ),
+                        rule_id,
+                    )
+                )
+                continue
         feat = {**summary, "patternId": pat.pattern_id}
         if slot_fallback:
             feat["slotAssignmentFallback"] = slot_fallback
@@ -157,6 +210,7 @@ def generate_window_candidates_with_rejections(
                 hard_valid=geom_ok,
             )
         )
+    _restore_if_usage_emptied_candidates(out, rejected, usage_deferred)
     if cfg.deterministic_strict:
         out.sort(key=lambda c: (c.pattern_id, tuple(c.ordered_asset_ids)))
     return WindowCandidateResult(candidates=out, rejected=rejected)

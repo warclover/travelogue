@@ -165,6 +165,18 @@ class Editorial4MixConfig:
 
 
 @dataclass
+class UsageRulesConfig:
+    """URO · usage-driven layout rules (PRD-USAGE-RULES-LAYOUT-OPTIMIZATION)."""
+
+    enabled: bool = False
+    hero_gap_threshold: float = 0.15
+    hero_gap_prefer_threshold: float = 0.22
+    tiebreak_enabled: bool = False
+    log_rejections: bool = True
+    disabled_rules: tuple[str, ...] = ()
+
+
+@dataclass
 class LayoutConfig:
     """Web layout engine default when exportLayout is web (see docs/web端模板升级计划.md)."""
 
@@ -176,6 +188,7 @@ class LayoutConfig:
         default_factory=EditorialPortraitRowConfig
     )
     editorial_4mix: Editorial4MixConfig = field(default_factory=Editorial4MixConfig)
+    usage_rules: UsageRulesConfig = field(default_factory=UsageRulesConfig)
     rhythm: LayoutRhythmConfig = field(default_factory=LayoutRhythmConfig)
     template_engine: LayoutTemplateEngineConfig = field(default_factory=LayoutTemplateEngineConfig)
     strategy_engine: LayoutStrategyEngineConfig = field(default_factory=LayoutStrategyEngineConfig)
@@ -335,6 +348,28 @@ def editorial_portrait_row_from_dict(raw: dict[str, Any] | None) -> EditorialPor
         replace_patterns=replace or defaults.replace_patterns,
         scope=scope,
         trip_allowlist=allowlist,
+    )
+
+
+def usage_rules_from_dict(raw: dict[str, Any] | None) -> UsageRulesConfig:
+    defaults = UsageRulesConfig()
+    if not raw:
+        return defaults
+    disabled_raw = raw.get("disabled_rules") or []
+    disabled = (
+        tuple(str(x) for x in disabled_raw if x)
+        if isinstance(disabled_raw, list)
+        else defaults.disabled_rules
+    )
+    return UsageRulesConfig(
+        enabled=bool(raw.get("enabled", defaults.enabled)),
+        hero_gap_threshold=float(raw.get("hero_gap_threshold", defaults.hero_gap_threshold)),
+        hero_gap_prefer_threshold=float(
+            raw.get("hero_gap_prefer_threshold", defaults.hero_gap_prefer_threshold)
+        ),
+        tiebreak_enabled=bool(raw.get("tiebreak_enabled", defaults.tiebreak_enabled)),
+        log_rejections=bool(raw.get("log_rejections", defaults.log_rejections)),
+        disabled_rules=disabled,
     )
 
 

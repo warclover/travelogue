@@ -33,6 +33,8 @@ class MosaicWindowLog:
     slot_ar_match_score: float | None = None
     face_crop_proxy: bool = False
     rejected_templates: list[dict[str, Any]] = field(default_factory=list)
+    usage_rule_rejects: list[dict[str, Any]] = field(default_factory=list)
+    usage_rule_hits: list[dict[str, Any]] = field(default_factory=list)
     winner_penalties: dict[str, float] = field(default_factory=dict)
     scoring_weights: dict[str, float] = field(default_factory=dict)
     scoring_penalty_weights: dict[str, float] = field(default_factory=dict)
@@ -70,6 +72,10 @@ class MosaicWindowLog:
             out["faceCropProxy"] = True
         if self.rejected_templates:
             out["rejectedTemplates"] = list(self.rejected_templates)
+        if self.usage_rule_rejects:
+            out["usageRuleRejects"] = list(self.usage_rule_rejects)
+        if self.usage_rule_hits:
+            out["usageRuleHits"] = list(self.usage_rule_hits)
         if self.winner_penalties:
             out["winnerPenalties"] = {
                 k: round(float(v), 4) for k, v in self.winner_penalties.items()

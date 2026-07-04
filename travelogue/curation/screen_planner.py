@@ -334,6 +334,21 @@ def _can_mosaic_5_main_portrait_3land(
     landscapes = [a for a in asset_ids if _is_landscape_id(a, aspects)]
     if len(portraits) != 1 or len(landscapes) != 4:
         return None
+    from travelogue.config import get_config
+
+    if get_config().layout.usage_rules.enabled:
+        from travelogue.curation.usage_rules.context import build_window_context
+        from travelogue.curation.usage_rules.evaluator import evaluate_reject
+
+        wctx = build_window_context(
+            asset_ids,
+            aspects,
+            assets,
+            median_sharp=median_sharp,
+        )
+        reject, _, _ = evaluate_reject(PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND, wctx)
+        if reject:
+            return None
     if not _time_near_chain(asset_ids, assets, burst_seconds=burst_seconds):
         return None
     from travelogue.curation.mosaic.main_eligibility import (

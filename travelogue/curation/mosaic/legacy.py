@@ -179,11 +179,25 @@ def append_legacy_window(
     )
     if not screen:
         return False
+    from travelogue.curation.usage_rules.context import build_window_context
+    from travelogue.curation.usage_rules.evaluator import evaluate_reject
+
+    window_ctx = build_window_context(
+        window,
+        ctx.aspects,
+        ctx.assets_map,
+        layout_state=ctx.layout_state,
+        median_sharp=ctx.med_sharp,
+        featured_weight=ctx.featured_weight,
+    )
+    pid = str(screen.get("patternId") or "")
+    reject, _rule_id, _detail = evaluate_reject(pid, window_ctx, screen=screen)
+    if reject:
+        return False
     from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
     from travelogue.curation.mosaic.runtime import get_effective_mosaic_config
     from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
 
-    pid = str(screen.get("patternId") or "")
     if pid and mosaic_pattern_disabled(pid, cfg=get_effective_mosaic_config()):
         return False
     # Legacy size==4 emits portrait-4 (2×2) for all-portrait windows, which on the

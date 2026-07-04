@@ -415,7 +415,34 @@
           "type": "array",
           "items": { "type": "object" }
         },
-        "slotAssignmentFallback": { "type": "string" }
+        "slotAssignmentFallback": { "type": "string" },
+        "usageRuleRejects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["ruleId", "templateId"],
+            "properties": {
+              "ruleId": { "type": "string" },
+              "templateId": { "type": "string" },
+              "detail": { "type": "string" }
+            }
+          }
+        },
+        "usageRuleHits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["ruleId", "templateId"],
+            "properties": {
+              "ruleId": { "type": "string" },
+              "templateId": { "type": "string" },
+              "action": { "type": "string" },
+              "detail": { "type": "string" }
+            }
+          }
+        }
       }
     },
     "orientationSummary": {

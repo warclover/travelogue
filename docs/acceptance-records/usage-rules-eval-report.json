@@ -1,0 +1,276 @@
+{
+  "recordId": "usage-rules-eval-report",
+  "feature": "URO",
+  "gate": "AC-URO-BLIND-prep",
+  "blindThreshold": 0.55,
+  "aggregate": {
+    "tripCount": 10,
+    "layoutChangedCount": 0,
+    "heroMismatchTargetPassCount": 0,
+    "heroMismatchTargetPassRate": 0.0,
+    "acUroBlindThreshold": 0.55,
+    "notes": "AC-URO-BLIND 需人工盲评 pairwise；代理指标 heroMismatchRate 改善 ≥30% 为非门禁诊断。"
+  },
+  "trips": [
+    {
+      "tripId": "demo-80301df45c",
+      "assetCount": 164,
+      "layoutSnapshotEqual": true,
+      "off": {
+        "screenCount": 92,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.820731
+      },
+      "on": {
+        "screenCount": 92,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.820731,
+        "usageRuleRejectCount": 0
+      },
+      "delta": {
+        "heroMismatchRateDelta": null,
+        "denseStreakViolationRateDelta": 0.0,
+        "patternExposureEntropyDelta": 0.0,
+        "screenCountDelta": 0.0
+      },
+      "passesHeroMismatchTarget": false,
+      "notes": "layoutSnapshotEqual=true 表示 off 基线未被意外改变；盲评胜率需人工 AC-URO-BLIND，本脚本仅输出诊断指标。"
+    },
+    {
+      "tripId": "demo-1506104ebf",
+      "assetCount": 206,
+      "layoutSnapshotEqual": true,
+      "off": {
+        "screenCount": 118,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.625857
+      },
+      "on": {
+        "screenCount": 118,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.625857,
+        "usageRuleRejectCount": 0
+      },
+      "delta": {
+        "heroMismatchRateDelta": null,
+        "denseStreakViolationRateDelta": 0.0,
+        "patternExposureEntropyDelta": 0.0,
+        "screenCountDelta": 0.0
+      },
+      "passesHeroMismatchTarget": false,
+      "notes": "layoutSnapshotEqual=true 表示 off 基线未被意外改变；盲评胜率需人工 AC-URO-BLIND，本脚本仅输出诊断指标。"
+    },
+    {
+      "tripId": "demo-5a7c161a12",
+      "assetCount": 150,
+      "layoutSnapshotEqual": true,
+      "off": {
+        "screenCount": 101,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.822052
+      },
+      "on": {
+        "screenCount": 101,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.822052,
+        "usageRuleRejectCount": 0
+      },
+      "delta": {
+        "heroMismatchRateDelta": null,
+        "denseStreakViolationRateDelta": 0.0,
+        "patternExposureEntropyDelta": 0.0,
+        "screenCountDelta": 0.0
+      },
+      "passesHeroMismatchTarget": false,
+      "notes": "layoutSnapshotEqual=true 表示 off 基线未被意外改变；盲评胜率需人工 AC-URO-BLIND，本脚本仅输出诊断指标。"
+    },
+    {
+      "tripId": "demo-2019",
+      "assetCount": 231,
+      "layoutSnapshotEqual": true,
+      "off": {
+        "screenCount": 174,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.744939
+      },
+      "on": {
+        "screenCount": 174,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.744939,
+        "usageRuleRejectCount": 0
+      },
+      "delta": {
+        "heroMismatchRateDelta": null,
+        "denseStreakViolationRateDelta": 0.0,
+        "patternExposureEntropyDelta": 0.0,
+        "screenCountDelta": 0.0
+      },
+      "passesHeroMismatchTarget": false,
+      "notes": "layoutSnapshotEqual=true 表示 off 基线未被意外改变；盲评胜率需人工 AC-URO-BLIND，本脚本仅输出诊断指标。"
+    },
+    {
+      "tripId": "chuanzang-studio",
+      "assetCount": 206,
+      "layoutSnapshotEqual": true,
+      "off": {
+        "screenCount": 123,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.617758
+      },
+      "on": {
+        "screenCount": 123,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.617758,
+        "usageRuleRejectCount": 0
+      },
+      "delta": {
+        "heroMismatchRateDelta": null,
+        "denseStreakViolationRateDelta": 0.0,
+        "patternExposureEntropyDelta": 0.0,
+        "screenCountDelta": 0.0
+      },
+      "passesHeroMismatchTarget": false,
+      "notes": "layoutSnapshotEqual=true 表示 off 基线未被意外改变；盲评胜率需人工 AC-URO-BLIND，本脚本仅输出诊断指标。"
+    },
+    {
+      "tripId": "demo-151e7b488c",
+      "assetCount": 57,
+      "layoutSnapshotEqual": true,
+      "off": {
+        "screenCount": 42,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.756614
+      },
+      "on": {
+        "screenCount": 42,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.756614,
+        "usageRuleRejectCount": 0
+      },
+      "delta": {
+        "heroMismatchRateDelta": null,
+        "denseStreakViolationRateDelta": 0.0,
+        "patternExposureEntropyDelta": 0.0,
+        "screenCountDelta": 0.0
+      },
+      "passesHeroMismatchTarget": false,
+      "notes": "layoutSnapshotEqual=true 表示 off 基线未被意外改变；盲评胜率需人工 AC-URO-BLIND，本脚本仅输出诊断指标。"
+    },
+    {
+      "tripId": "demo-ef0cef1d1d",
+      "assetCount": 41,
+      "layoutSnapshotEqual": true,
+      "off": {
+        "screenCount": 34,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.70408
+      },
+      "on": {
+        "screenCount": 34,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.70408,
+        "usageRuleRejectCount": 0
+      },
+      "delta": {
+        "heroMismatchRateDelta": null,
+        "denseStreakViolationRateDelta": 0.0,
+        "patternExposureEntropyDelta": 0.0,
+        "screenCountDelta": 0.0
+      },
+      "passesHeroMismatchTarget": false,
+      "notes": "layoutSnapshotEqual=true 表示 off 基线未被意外改变；盲评胜率需人工 AC-URO-BLIND，本脚本仅输出诊断指标。"
+    },
+    {
+      "tripId": "golden-mixed-scenes",
+      "assetCount": 18,
+      "layoutSnapshotEqual": true,
+      "off": {
+        "screenCount": 12,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.844541
+      },
+      "on": {
+        "screenCount": 12,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.844541,
+        "usageRuleRejectCount": 0
+      },
+      "delta": {
+        "heroMismatchRateDelta": null,
+        "denseStreakViolationRateDelta": 0.0,
+        "patternExposureEntropyDelta": 0.0,
+        "screenCountDelta": 0.0
+      },
+      "passesHeroMismatchTarget": false,
+      "notes": "layoutSnapshotEqual=true 表示 off 基线未被意外改变；盲评胜率需人工 AC-URO-BLIND，本脚本仅输出诊断指标。"
+    },
+    {
+      "tripId": "golden-portrait-family",
+      "assetCount": 18,
+      "layoutSnapshotEqual": true,
+      "off": {
+        "screenCount": 10,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.875
+      },
+      "on": {
+        "screenCount": 10,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.875,
+        "usageRuleRejectCount": 0
+      },
+      "delta": {
+        "heroMismatchRateDelta": null,
+        "denseStreakViolationRateDelta": 0.0,
+        "patternExposureEntropyDelta": 0.0,
+        "screenCountDelta": 0.0
+      },
+      "passesHeroMismatchTarget": false,
+      "notes": "layoutSnapshotEqual=true 表示 off 基线未被意外改变；盲评胜率需人工 AC-URO-BLIND，本脚本仅输出诊断指标。"
+    },
+    {
+      "tripId": "golden-landscape-coast",
+      "assetCount": 18,
+      "layoutSnapshotEqual": true,
+      "off": {
+        "screenCount": 12,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.729847
+      },
+      "on": {
+        "screenCount": 12,
+        "heroMismatchRate": null,
+        "denseStreakViolationRate": 0.0,
+        "patternExposureEntropy": 0.729847,
+        "usageRuleRejectCount": 0
+      },
+      "delta": {
+        "heroMismatchRateDelta": null,
+        "denseStreakViolationRateDelta": 0.0,
+        "patternExposureEntropyDelta": 0.0,
+        "screenCountDelta": 0.0
+      },
+      "passesHeroMismatchTarget": false,
+      "notes": "layoutSnapshotEqual=true 表示 off 基线未被意外改变；盲评胜率需人工 AC-URO-BLIND，本脚本仅输出诊断指标。"
+    }
+  ]
+}

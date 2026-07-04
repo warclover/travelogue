@@ -1,0 +1,8 @@
+{
+  "description": "Six similar landscape hero scores · UR-01 should reject main-hero patterns when usage_rules enabled",
+  "windowSize": 6,
+  "expectUsageReject": {
+    "ruleId": "UR-01",
+    "templateId": "screen-mosaic-6-main-hero-plus-5"
+  }
+}

@@ -275,6 +275,20 @@ def compute_layout_metrics(
         out.update(compute_mosaic_metrics(chapters, mosaic_logs=mosaic_logs))
     elif any(p in MOSAIC_UNIFIED_PATTERN_IDS for p in pids):
         out.update(compute_mosaic_metrics(chapters, mosaic_logs=None))
+    if assets:
+        from travelogue.config import get_config
+        from travelogue.curation.usage_rules.metrics import compute_usage_rules_metrics
+
+        ur_cfg = get_config().layout.usage_rules
+        out.update(
+            compute_usage_rules_metrics(
+                chapters,
+                assets,
+                mosaic_logs=mosaic_logs,
+                usage_rules_enabled=ur_cfg.enabled,
+                hero_gap_threshold=ur_cfg.hero_gap_threshold,
+            )
+        )
     return out
 
 

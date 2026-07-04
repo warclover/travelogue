@@ -1,0 +1,124 @@
+{
+  "schemaVersion": "1",
+  "reviewId": "usage-rules-blind-review",
+  "feature": "URO",
+  "gate": "AC-URO-BLIND",
+  "blindThreshold": 0.55,
+  "reviewer": null,
+  "reviewedAt": null,
+  "tripPairs": [
+    {
+      "tripId": "demo-2025",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "dimensions": {
+        "layoutMatch": null,
+        "breathRhythm": null,
+        "heroClarity": null
+      },
+      "studioVeto": false,
+      "notes": "preference=on|off|tie after blind A/B (usage_rules on vs off)"
+    },
+    {
+      "tripId": "demo-80301df45c",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "dimensions": {
+        "layoutMatch": null,
+        "breathRhythm": null,
+        "heroClarity": null
+      },
+      "studioVeto": false,
+      "notes": "preference=on|off|tie after blind A/B (usage_rules on vs off)"
+    },
+    {
+      "tripId": "demo-1506104ebf",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "dimensions": {
+        "layoutMatch": null,
+        "breathRhythm": null,
+        "heroClarity": null
+      },
+      "studioVeto": false,
+      "notes": "preference=on|off|tie after blind A/B (usage_rules on vs off)"
+    },
+    {
+      "tripId": "demo-5a7c161a12",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "dimensions": {
+        "layoutMatch": null,
+        "breathRhythm": null,
+        "heroClarity": null
+      },
+      "studioVeto": false,
+      "notes": "preference=on|off|tie after blind A/B (usage_rules on vs off)"
+    },
+    {
+      "tripId": "demo-2019",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "dimensions": {
+        "layoutMatch": null,
+        "breathRhythm": null,
+        "heroClarity": null
+      },
+      "studioVeto": false,
+      "notes": "preference=on|off|tie after blind A/B (usage_rules on vs off)"
+    },
+    {
+      "tripId": "linzhi",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "dimensions": {
+        "layoutMatch": null,
+        "breathRhythm": null,
+        "heroClarity": null
+      },
+      "studioVeto": true,
+      "notes": "preference=on|off|tie after blind A/B (usage_rules on vs off)"
+    },
+    {
+      "tripId": "chuanzang-studio",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "dimensions": {
+        "layoutMatch": null,
+        "breathRhythm": null,
+        "heroClarity": null
+      },
+      "studioVeto": true,
+      "notes": "preference=on|off|tie after blind A/B (usage_rules on vs off)"
+    },
+    {
+      "tripId": "demo-151e7b488c",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "dimensions": {
+        "layoutMatch": null,
+        "breathRhythm": null,
+        "heroClarity": null
+      },
+      "studioVeto": false,
+      "notes": "preference=on|off|tie after blind A/B (usage_rules on vs off)"
+    },
+    {
+      "tripId": "demo-ef0cef1d1d",
+      "presentedOrder": "randomized",
+      "preference": null,
+      "dimensions": {
+        "layoutMatch": null,
+        "breathRhythm": null,
+        "heroClarity": null
+      },
+      "studioVeto": false,
+      "notes": "preference=on|off|tie after blind A/B (usage_rules on vs off)"
+    }
+  ],
+  "aggregate": {
+    "onPreferredRate": null,
+    "passesBlindGate": null
+  },
+  "notes": "Complete preference after human blind review; aggregate onPreferredRate ≥ 0.55 required for enabled=true merge."
+}
