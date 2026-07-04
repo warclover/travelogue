@@ -14,6 +14,35 @@ var _previewCache = {
   manifest: null,
 };
 
+/** 已知坏数据：carousel 页 URL 重复（旧版 bento-preview）。 */
+function carouselHasDuplicateUrls(manifest) {
+  if (!manifest || !Array.isArray(manifest.pages)) return false;
+  var urls = manifest.pages.map(function (p) { return p && p.url; }).filter(Boolean);
+  if (urls.length < 2) return false;
+  for (var i = 0; i < urls.length; i++) {
+    for (var j = i + 1; j < urls.length; j++) {
+      if (urls[i] === urls[j]) return true;
+    }
+  }
+  return false;
+}
+
+/** @deprecated 尾声与最后一章重复 */
+function epilogueDuplicatesLastChapter(manifest) {
+  if (!manifest || !Array.isArray(manifest.pages)) return false;
+  var chapters = manifest.pages.filter(function (p) {
+    return p && p.role === "chapter";
+  });
+  if (!chapters.length) return false;
+  var epilogue = manifest.pages[manifest.pages.length - 1];
+  if (!epilogue || epilogue.role !== "epilogue") return false;
+  return chapters[chapters.length - 1].url === epilogue.url;
+}
+
+function isStaleBentoPreviewManifest(manifest) {
+  return carouselHasDuplicateUrls(manifest) || epilogueDuplicatesLastChapter(manifest);
+}
+
 export function clearBentoPreviewCache() {
   _previewCache.tripId = null;
   _previewCache.updatedAt = null;
@@ -111,6 +140,7 @@ export function loadTripBentoPreview(tripId, opts) {
     && opts.updatedAt != null
     && _previewCache.updatedAt === opts.updatedAt
     && _previewCache.manifest
+    && !isStaleBentoPreviewManifest(_previewCache.manifest)
   ) {
     return Promise.resolve(_previewCache.manifest);
   }
@@ -128,9 +158,13 @@ export function loadTripBentoPreview(tripId, opts) {
       delete m.ok;
       m.source = "user";
       if (!isValidManifest(m)) return null;
-      _previewCache.tripId = tripId;
-      _previewCache.updatedAt = opts.updatedAt != null ? opts.updatedAt : null;
-      _previewCache.manifest = m;
+      if (!isStaleBentoPreviewManifest(m)) {
+        _previewCache.tripId = tripId;
+        _previewCache.updatedAt = opts.updatedAt != null ? opts.updatedAt : null;
+        _previewCache.manifest = m;
+      } else {
+        clearBentoPreviewCache();
+      }
       return m;
     })
     .catch(function () { return null; });

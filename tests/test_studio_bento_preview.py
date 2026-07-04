@@ -71,14 +71,67 @@ def test_build_trip_bento_preview_chapter_urls_from_trip_assets(tmp_path: Path) 
     assets_dir = trip_dir / "assets"
     assets_dir.mkdir(parents=True)
     (trip_dir / "preview.jpg").write_bytes(b"jpg")
-    for name in ("a.webp", "b.webp", "c.webp"):
+    for name in ("cover.webp", "a.webp", "b.webp", "c.webp"):
         (assets_dir / name).write_bytes(b"webp")
     trip = {
         "meta": {"title": "京都 · 雨后"},
         "assets": [
-            {"id": "a1", "type": "image", "displayFile": "assets/a.webp", "layoutEligible": True},
-            {"id": "a2", "type": "image", "displayFile": "assets/b.webp", "layoutEligible": True},
-            {"id": "a3", "type": "image", "displayFile": "assets/c.webp", "layoutEligible": True},
+            {"id": "a0", "type": "image", "displayFile": "assets/cover.webp", "aspectKind": "landscape", "width": 1600, "height": 900, "layoutEligible": True},
+            {"id": "a1", "type": "image", "displayFile": "assets/a.webp", "aspectKind": "landscape", "width": 1600, "height": 900, "layoutEligible": True},
+            {"id": "a2", "type": "image", "displayFile": "assets/b.webp", "aspectKind": "landscape", "width": 1600, "height": 900, "layoutEligible": True},
+            {"id": "a3", "type": "image", "displayFile": "assets/c.webp", "aspectKind": "landscape", "width": 1600, "height": 900, "layoutEligible": True},
+        ],
+        "chapters": [
+            {
+                "id": "c1",
+                "title": "第一章",
+                "screens": [{"screenId": "s1", "slots": [{"assetId": "a1"}]}],
+            },
+            {
+                "id": "c2",
+                "title": "第二章",
+                "screens": [{"screenId": "s2", "slots": [{"assetId": "a2"}]}],
+            },
+            {
+                "id": "c3",
+                "title": "第三章",
+                "screens": [{"screenId": "s3", "slots": [{"assetId": "a3"}]}],
+            },
+        ],
+    }
+    (trip_dir / "trip.json").write_text(__import__("json").dumps(trip), encoding="utf-8")
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    # 封面用横图（专属封面资产），绝不用竖版 preview.jpg（封面卡下半为深色标题带 → 16:9 框内黑块）
+    assert payload["pages"][0]["url"] == f"/{trip_id}/assets/cover.webp"
+    chapter_urls = [p["url"] for p in payload["pages"] if p["role"] == "chapter"]
+    assert chapter_urls == [
+        f"/{trip_id}/assets/a.webp",
+        f"/{trip_id}/assets/b.webp",
+        f"/{trip_id}/assets/c.webp",
+    ]
+    # 轮播页一律横图，preview.jpg 不得出现
+    assert f"/{trip_id}/preview.jpg" not in [p["url"] for p in payload["pages"]]
+    assert payload["pages"][-1]["url"] != chapter_urls[-1]
+
+
+def test_build_trip_bento_preview_epilogue_differs_from_last_chapter(tmp_path: Path) -> None:
+    """尾声页不得与最后一章 carousel 使用同一 URL。"""
+    trip_id = "dedupe-epilogue"
+    trip_dir = tmp_path / trip_id
+    assets_dir = trip_dir / "assets"
+    assets_dir.mkdir(parents=True)
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    for name in ("a.webp", "b.webp", "c.webp", "d.webp"):
+        (assets_dir / name).write_bytes(b"webp")
+    trip = {
+        "meta": {"title": "去重测试"},
+        "assets": [
+            {"id": "a1", "type": "image", "displayFile": "assets/a.webp", "aspectKind": "landscape", "width": 1600, "height": 900, "layoutEligible": True},
+            {"id": "a2", "type": "image", "displayFile": "assets/b.webp", "aspectKind": "landscape", "width": 1600, "height": 900, "layoutEligible": True},
+            {"id": "a3", "type": "image", "displayFile": "assets/c.webp", "aspectKind": "landscape", "width": 1600, "height": 900, "layoutEligible": True},
+            {"id": "a4", "type": "image", "displayFile": "assets/d.webp", "aspectKind": "landscape", "width": 1600, "height": 900, "layoutEligible": True},
         ],
         "chapters": [
             {
@@ -103,12 +156,159 @@ def test_build_trip_bento_preview_chapter_urls_from_trip_assets(tmp_path: Path) 
     payload = build_trip_bento_preview(trip_dir, trip, trip_id)
     assert payload is not None
     chapter_urls = [p["url"] for p in payload["pages"] if p["role"] == "chapter"]
-    assert chapter_urls == [
-        f"/{trip_id}/assets/a.webp",
-        f"/{trip_id}/assets/b.webp",
-        f"/{trip_id}/assets/c.webp",
-    ]
-    assert payload["pages"][-1]["url"] == f"/{trip_id}/assets/c.webp"
+    epilogue_url = payload["pages"][-1]["url"]
+    assert epilogue_url != chapter_urls[-1]
+
+
+def test_build_trip_bento_preview_carousel_page_urls_unique(tmp_path: Path) -> None:
+    """Web carousel 各页 URL 互不重复（含封面 vs 第三章）。"""
+    trip_id = "carousel-dedupe"
+    trip_dir = tmp_path / trip_id
+    assets_dir = trip_dir / "assets"
+    assets_dir.mkdir(parents=True)
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    for name in ("hero.webp", "ch1.webp", "ch2.webp", "ch3a.webp", "ch3b.webp", "epi.webp"):
+        (assets_dir / name).write_bytes(b"webp")
+    trip = {
+        "meta": {"title": "去重轮播"},
+        "coverAssetId": "hero",
+        "assets": [
+            {
+                "id": "hero",
+                "type": "image",
+                "displayFile": "assets/hero.webp",
+                "aspectKind": "landscape",
+                "width": 1600,
+                "height": 900,
+                "layoutEligible": True,
+            },
+            {
+                "id": "a1",
+                "type": "image",
+                "displayFile": "assets/ch1.webp",
+                "aspectKind": "landscape",
+                "width": 1600,
+                "height": 900,
+                "layoutEligible": True,
+            },
+            {
+                "id": "a2",
+                "type": "image",
+                "displayFile": "assets/ch2.webp",
+                "aspectKind": "landscape",
+                "width": 1600,
+                "height": 900,
+                "layoutEligible": True,
+            },
+            {
+                "id": "a3",
+                "type": "image",
+                "displayFile": "assets/hero.webp",
+                "aspectKind": "landscape",
+                "width": 1600,
+                "height": 900,
+                "layoutEligible": True,
+            },
+            {
+                "id": "a3b",
+                "type": "image",
+                "displayFile": "assets/ch3b.webp",
+                "aspectKind": "landscape",
+                "width": 1600,
+                "height": 900,
+                "layoutEligible": True,
+            },
+            {
+                "id": "epi",
+                "type": "image",
+                "displayFile": "assets/epi.webp",
+                "aspectKind": "landscape",
+                "width": 1600,
+                "height": 900,
+                "layoutEligible": True,
+            },
+        ],
+        "chapters": [
+            {
+                "id": "c1",
+                "title": "第一章",
+                "screens": [{"screenId": "s1", "slots": [{"assetId": "a1"}]}],
+            },
+            {
+                "id": "c2",
+                "title": "第二章",
+                "screens": [{"screenId": "s2", "slots": [{"assetId": "a2"}]}],
+            },
+            {
+                "id": "c3",
+                "title": "第三章",
+                "screens": [{"screenId": "s3", "slots": [{"assetId": "a3"}, {"assetId": "a3b"}]}],
+            },
+        ],
+    }
+    (trip_dir / "trip.json").write_text(__import__("json").dumps(trip), encoding="utf-8")
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    urls = [p["url"] for p in payload["pages"]]
+    assert len(urls) == len(set(urls))
+    assert payload["pages"][0]["url"] == f"/{trip_id}/assets/hero.webp"
+    chapter_urls = [p["url"] for p in payload["pages"] if p["role"] == "chapter"]
+    assert chapter_urls[0] == f"/{trip_id}/assets/ch1.webp"
+    assert chapter_urls[2] == f"/{trip_id}/assets/ch3b.webp"
+    assert chapter_urls[2] != payload["pages"][0]["url"]
+
+
+def test_build_trip_bento_preview_web_carousel_landscape_only(tmp_path: Path) -> None:
+    """Web 轮播 · 章内仅有竖图时回退 preview.jpg，不选 portrait。"""
+    trip_id = "portrait-only-ch"
+    trip_dir = tmp_path / trip_id
+    assets_dir = trip_dir / "assets"
+    assets_dir.mkdir(parents=True)
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    for name in ("portrait.webp", "landscape.webp"):
+        (assets_dir / name).write_bytes(b"webp")
+    trip = {
+        "meta": {"title": "竖图章节"},
+        "assets": [
+            {
+                "id": "p1",
+                "type": "image",
+                "displayFile": "assets/portrait.webp",
+                "aspectKind": "portrait",
+                "width": 900,
+                "height": 1600,
+                "layoutEligible": True,
+            },
+            {
+                "id": "l1",
+                "type": "image",
+                "displayFile": "assets/landscape.webp",
+                "aspectKind": "landscape",
+                "width": 1600,
+                "height": 900,
+                "layoutEligible": True,
+            },
+        ],
+        "chapters": [
+            {
+                "id": "c1",
+                "title": "第一章",
+                "screens": [{"screenId": "s1", "slots": [{"assetId": "p1"}]}],
+            },
+        ],
+    }
+    (trip_dir / "trip.json").write_text(__import__("json").dumps(trip), encoding="utf-8")
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    web_urls = [p["url"] for p in payload["pages"]]
+    assert f"/{trip_id}/assets/portrait.webp" not in web_urls
+    # 封面优先横图；无横图时才回退 preview.jpg（此处有横图，故用 landscape.webp）
+    assert payload["pages"][0]["url"] == f"/{trip_id}/assets/landscape.webp"
+    assert f"/{trip_id}/preview.jpg" not in web_urls
+    chapter_urls = [p["url"] for p in payload["pages"] if p["role"] == "chapter"]
+    assert chapter_urls == [f"/{trip_id}/assets/landscape.webp"]
 
 
 def test_build_trip_bento_preview_prefers_landscape_for_web(tmp_path: Path) -> None:
@@ -159,6 +359,7 @@ def test_build_trip_bento_preview_prefers_landscape_for_web(tmp_path: Path) -> N
 
     payload = build_trip_bento_preview(trip_dir, trip, trip_id)
     assert payload is not None
+    # 有横图时封面/背景用横图，不用竖版 preview.jpg
     assert payload["pages"][0]["url"] == f"/{trip_id}/assets/landscape.webp"
     chapter_urls = [p["url"] for p in payload["pages"] if p["role"] == "chapter"]
     assert chapter_urls == [f"/{trip_id}/assets/landscape.webp"]
@@ -251,10 +452,12 @@ def test_build_trip_bento_preview_longshot_pages_from_vertical_ch_pngs(tmp_path:
     assert payload["longshotPages"][0]["scrollPreview"] is True
     assert payload["longshotPages"][0]["label"] == "第一章"
     chapter_urls = [p["url"] for p in payload["pages"] if p["role"] == "chapter"]
+    # 仅一张横图时，横图耗尽后复用横图，而非把竖版 preview.jpg 塞进 16:9 轮播
     assert chapter_urls == [
         f"/{trip_id}/assets/landscape.webp",
         f"/{trip_id}/assets/landscape.webp",
     ]
+    assert f"/{trip_id}/preview.jpg" not in [p["url"] for p in payload["pages"]]
 
 
 def test_build_trip_bento_preview_longshot_pages_single_export_png(tmp_path: Path) -> None:

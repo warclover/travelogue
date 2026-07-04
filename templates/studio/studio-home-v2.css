@@ -1124,6 +1124,7 @@ body { overflow-x: clip; overflow-y: visible; }
 }
 .v2-carousel__track {
   display: flex;
+  width: 100%;
   height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
@@ -1133,18 +1134,31 @@ body { overflow-x: clip; overflow-y: visible; }
 .v2-carousel__track::-webkit-scrollbar { display: none; }
 .v2-carousel__slide {
   flex: 0 0 100%;
+  width: 100%;
+  min-width: 100%;
   scroll-snap-align: start;
+  position: relative;
   height: 100%;
   min-height: 0;
   overflow: hidden;
   border-right: 1px solid rgba(189, 230, 240, .9);
-  background-size: cover;
-  background-position: center;
   background-color: #20262099;
+}
+.v2-carousel__slide img,
+.v2-carousel__slide-img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 .v2-carousel__slide:last-child { border-right: none; }
 .v2-carousel__slide--blank { background: transparent; }
 .v2-carousel__slide-ph {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   display: flex;

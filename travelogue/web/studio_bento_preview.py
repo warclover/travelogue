@@ -10,6 +10,7 @@ from urllib.parse import quote
 from PIL import Image
 
 from travelogue.render.context import asset_aspect_kind, pick_image_src
+from travelogue.render.cover_closing import resolve_closing_asset_id
 
 
 def _trip_static_url(trip_id: str, rel: str | Path) -> str:
@@ -88,6 +89,23 @@ def _is_web_landscape_file(path: Path) -> bool:
     if ratio is None:
         return False
     return ratio >= _WEB_LANDSCAPE_RATIO_MIN
+
+
+def _is_web_landscape_asset(asset: dict, trip_dir: Path) -> bool:
+    """Web 16:9 轮播仅接受横版资产（w/h ≥ 1.08）。"""
+    if not _is_image_asset(asset):
+        return False
+    w = int(asset.get("width") or 0)
+    h = int(asset.get("height") or 0)
+    if w > 0 and h > 0:
+        return (w / h) >= _WEB_LANDSCAPE_RATIO_MIN
+    rel = pick_image_src(asset)
+    if rel:
+        ratio = _file_width_height_ratio(trip_dir / rel)
+        if ratio is not None:
+            return ratio >= _WEB_LANDSCAPE_RATIO_MIN
+    kind = asset_aspect_kind(asset)
+    return kind in ("landscape", "panorama")
 
 
 def _is_phone_vertical_file(path: Path) -> bool:
@@ -180,6 +198,7 @@ def _best_asset_url(
     *,
     kind_scores: dict[str, int],
     target_ratio: float,
+    landscape_only: bool = False,
 ) -> str | None:
     assets = _asset_map(trip)
     best_url: str | None = None
@@ -187,6 +206,8 @@ def _best_asset_url(
     for aid in asset_ids:
         asset = assets.get(str(aid))
         if not _is_image_asset(asset) or not asset.get("layoutEligible", True):
+            continue
+        if landscape_only and not _is_web_landscape_asset(asset, trip_dir):
             continue
         url = _asset_public_url(trip_id, trip_dir, asset)
         if not url:
@@ -234,58 +255,101 @@ def _best_cover_image_url(
 ) -> str:
     assets = _asset_map(trip)
     cover_id = trip.get("coverAssetId")
-    ordered_ids: list[str] = []
     if cover_id:
-        ordered_ids.append(str(cover_id))
-    for aid in _eligible_asset_ids(trip):
-        if aid not in ordered_ids:
-            ordered_ids.append(aid)
+        asset = assets.get(str(cover_id))
+        if _is_image_asset(asset) and _is_web_landscape_asset(asset, trip_dir):
+            direct = _asset_public_url(trip_id, trip_dir, asset)
+            if direct:
+                return direct
+    # 无显式横版封面资产时，从全部资产里挑最佳横图。
+    # 注意：preview.jpg 是竖版封面卡（下半为深色标题栏），若直接用作 16:9 轮播首页
+    # 会在框内露出深色标题带（“黑块”）。故仅当整本没有任何横图时才回退 preview.jpg。
     url = _best_asset_url(
         trip,
         trip_id,
         trip_dir,
-        ordered_ids,
+        _eligible_asset_ids(trip),
         kind_scores=_WEB_KIND_SCORE,
         target_ratio=_TARGET_WEB_RATIO,
+        landscape_only=True,
     )
-    if url:
-        return url
-    if cover_id:
-        asset = assets.get(str(cover_id))
-        if _is_image_asset(asset):
-            direct = _asset_public_url(trip_id, trip_dir, asset)
-            if direct:
-                return direct
-    return fallback
+    return url or fallback
 
 
-def _best_epilogue_image_url(
+def _chapter_carousel_asset_id(
+    trip: dict,
+    trip_id: str,
+    trip_dir: Path,
+    chapter: dict,
+    index: int,
+    ch_pngs: list[Path],
+) -> str | None:
+    """Web carousel 章页对应的 trip 资产 id；横版 *-ch*.png 章页无资产 id。"""
+    if index <= len(ch_pngs):
+        png = ch_pngs[index - 1]
+        if _is_web_landscape_file(png):
+            return None
+    if not chapter:
+        return None
+    assets = _asset_map(trip)
+    best_id: str | None = None
+    best_score: tuple[int, float] | None = None
+    for aid in _iter_chapter_asset_ids(chapter):
+        asset = assets.get(str(aid))
+        if not _is_image_asset(asset) or not asset.get("layoutEligible", True):
+            continue
+        if not _is_web_landscape_asset(asset, trip_dir):
+            continue
+        score = _asset_fit_score(
+            asset,
+            kind_scores=_WEB_KIND_SCORE,
+            target_ratio=_TARGET_WEB_RATIO,
+        )
+        if best_score is None or score > best_score:
+            best_score = score
+            best_id = str(aid)
+    return best_id
+
+
+def _epilogue_asset_url(
     trip: dict,
     trip_id: str,
     trip_dir: Path,
     *,
+    exclude_asset_ids: set[str],
+    avoid_urls: set[str],
     fallback: str,
+    prefer_landscape: bool,
 ) -> str:
-    chapters = trip.get("chapters") or []
-    for chapter in reversed(chapters):
-        url = _best_asset_url(
-            trip,
-            trip_id,
-            trip_dir,
-            _iter_chapter_asset_ids(chapter),
-            kind_scores=_WEB_KIND_SCORE,
-            target_ratio=_TARGET_WEB_RATIO,
-        )
-        if url:
-            return url
+    """尾声图：与正式 closing 同源，且不与 carousel 章页（尤其最后一章）重复。"""
     assets = _asset_map(trip)
+    closing_id = resolve_closing_asset_id(
+        trip,
+        assets,
+        prefer_landscape=prefer_landscape,
+        exclude_ids=exclude_asset_ids,
+    )
+    if closing_id:
+        asset = assets.get(closing_id)
+        if asset and (not prefer_landscape or _is_web_landscape_asset(asset, trip_dir)):
+            url = _asset_public_url(trip_id, trip_dir, asset)
+            if url and url not in avoid_urls:
+                return url
+
     for aid in reversed(_eligible_asset_ids(trip)):
+        if aid in exclude_asset_ids:
+            continue
         asset = assets.get(aid)
         if not asset:
             continue
+        if prefer_landscape and not _is_web_landscape_asset(asset, trip_dir):
+            continue
         url = _asset_public_url(trip_id, trip_dir, asset)
-        if url:
+        if url and url not in avoid_urls:
             return url
+
+    if fallback not in avoid_urls:
+        return fallback
     return fallback
 
 
@@ -342,36 +406,6 @@ def _best_cover_portrait_url(
     return fallback
 
 
-def _best_epilogue_portrait_url(
-    trip: dict,
-    trip_id: str,
-    trip_dir: Path,
-    *,
-    fallback: str,
-) -> str:
-    chapters = trip.get("chapters") or []
-    for chapter in reversed(chapters):
-        url = _best_asset_url(
-            trip,
-            trip_id,
-            trip_dir,
-            _iter_chapter_asset_ids(chapter),
-            kind_scores=_PHONE_KIND_SCORE,
-            target_ratio=_TARGET_PHONE_RATIO,
-        )
-        if url:
-            return url
-    assets = _asset_map(trip)
-    for aid in reversed(_eligible_asset_ids(trip)):
-        asset = assets.get(aid)
-        if not asset:
-            continue
-        url = _asset_public_url(trip_id, trip_dir, asset)
-        if url:
-            return url
-    return fallback
-
-
 def _portrait_url_for_carousel_page(
     trip: dict,
     trip_id: str,
@@ -381,6 +415,8 @@ def _portrait_url_for_carousel_page(
     *,
     cover_url: str,
     preview_url: str,
+    epilogue_exclude_asset_ids: set[str] | None = None,
+    epilogue_avoid_urls: set[str] | None = None,
 ) -> str:
     role = page.get("role")
     if role == "cover":
@@ -395,7 +431,15 @@ def _portrait_url_for_carousel_page(
                 trip, trip_id, trip_dir, chapters[idx - 1], fallback=cover_url
             )
     if role == "epilogue":
-        return _best_epilogue_portrait_url(trip, trip_id, trip_dir, fallback=cover_url)
+        return _epilogue_asset_url(
+            trip,
+            trip_id,
+            trip_dir,
+            exclude_asset_ids=epilogue_exclude_asset_ids or set(),
+            avoid_urls=epilogue_avoid_urls or set(),
+            fallback=cover_url,
+            prefer_landscape=False,
+        )
     return str(page.get("url") or cover_url)
 
 
@@ -408,6 +452,8 @@ def _longshot_pages_from_carousel(
     *,
     cover_url: str,
     preview_url: str,
+    epilogue_exclude_asset_ids: set[str] | None = None,
+    epilogue_avoid_urls: set[str] | None = None,
 ) -> list[dict[str, Any]]:
     """与 Web carousel 同序 · 每页选竖版原图（无导出长图时的 fallback）。"""
     pages: list[dict[str, Any]] = []
@@ -423,6 +469,8 @@ def _longshot_pages_from_carousel(
                 chapters,
                 cover_url=cover_url,
                 preview_url=preview_url,
+                epilogue_exclude_asset_ids=epilogue_exclude_asset_ids,
+                epilogue_avoid_urls=epilogue_avoid_urls,
             ),
             "scrollPreview": True,
         }
@@ -464,6 +512,8 @@ def _build_longshot_pages(
     *,
     cover_url: str,
     preview_url: str,
+    epilogue_exclude_asset_ids: set[str] | None = None,
+    epilogue_avoid_urls: set[str] | None = None,
 ) -> list[dict[str, Any]]:
     """手机框切换序列：整卷 longshot → 竖条 *-ch*.png → 按 carousel 章序竖版原图。"""
     longshot = _pick_longshot(trip_dir)
@@ -502,6 +552,8 @@ def _build_longshot_pages(
             chapters,
             cover_url=cover_url,
             preview_url=preview_url,
+            epilogue_exclude_asset_ids=epilogue_exclude_asset_ids,
+            epilogue_avoid_urls=epilogue_avoid_urls,
         )
         if derived:
             chapter_pages = [p for p in derived if p.get("chapterIndex")]
@@ -513,6 +565,74 @@ def _build_longshot_pages(
     return [{"id": "longshot", "label": "微信长图", "url": fallback, "scrollPreview": True}]
 
 
+def _ranked_chapter_asset_urls(
+    trip: dict,
+    trip_id: str,
+    trip_dir: Path,
+    chapter: dict,
+    *,
+    used_urls: set[str],
+) -> list[str]:
+    """章内候选 URL（仅横版），排除 carousel 已用 URL。"""
+    assets = _asset_map(trip)
+    ranked: list[tuple[tuple[int, float], str]] = []
+    seen: set[str] = set()
+    for aid in _iter_chapter_asset_ids(chapter):
+        asset = assets.get(str(aid))
+        if not _is_image_asset(asset) or not asset.get("layoutEligible", True):
+            continue
+        if not _is_web_landscape_asset(asset, trip_dir):
+            continue
+        url = _asset_public_url(trip_id, trip_dir, asset)
+        if not url or url in used_urls or url in seen:
+            continue
+        seen.add(url)
+        score = _asset_fit_score(
+            asset,
+            kind_scores=_WEB_KIND_SCORE,
+            target_ratio=_TARGET_WEB_RATIO,
+        )
+        ranked.append((score, url))
+    ranked.sort(reverse=True)
+    return [url for _, url in ranked]
+
+
+def _first_unused_landscape_asset_url(
+    trip: dict,
+    trip_id: str,
+    trip_dir: Path,
+    *,
+    used_urls: set[str],
+) -> str | None:
+    assets = _asset_map(trip)
+    for aid in _eligible_asset_ids(trip):
+        asset = assets.get(aid)
+        if not asset or not _is_web_landscape_asset(asset, trip_dir):
+            continue
+        url = _asset_public_url(trip_id, trip_dir, asset)
+        if url and url not in used_urls:
+            return url
+    return None
+
+
+def _any_landscape_asset_url(
+    trip: dict,
+    trip_id: str,
+    trip_dir: Path,
+) -> str | None:
+    """整本第一张横图（忽略去重）。用于横图耗尽时的兜底，
+    避免竖版 preview.jpg（封面卡）进入 16:9 轮播产生黑块。"""
+    assets = _asset_map(trip)
+    for aid in _eligible_asset_ids(trip):
+        asset = assets.get(aid)
+        if not asset or not _is_web_landscape_asset(asset, trip_dir):
+            continue
+        url = _asset_public_url(trip_id, trip_dir, asset)
+        if url:
+            return url
+    return None
+
+
 def _chapter_page_url(
     trip: dict,
     trip_id: str,
@@ -521,15 +641,29 @@ def _chapter_page_url(
     index: int,
     ch_pngs: list[Path],
     *,
+    used_urls: set[str],
     fallback: str,
 ) -> str:
-    """章节轮播 URL：横版 *-ch*.png 优先，否则从 trip 资产选最横图。"""
+    """章节轮播 URL：横版 *-ch*.png 优先；不与封面/前章重复。"""
     if index <= len(ch_pngs):
         png = ch_pngs[index - 1]
         if _is_web_landscape_file(png):
-            return _trip_static_url(trip_id, png.name)
-    if chapter:
-        return _best_chapter_image_url(trip, trip_id, trip_dir, chapter, fallback=fallback)
+            url = _trip_static_url(trip_id, png.name)
+            if url not in used_urls:
+                return url
+
+    for url in _ranked_chapter_asset_urls(
+        trip, trip_id, trip_dir, chapter, used_urls=used_urls
+    ):
+        return url
+
+    spare = _first_unused_landscape_asset_url(trip, trip_id, trip_dir, used_urls=used_urls)
+    if spare:
+        return spare
+    # 横图已耗尽：宁可复用一张横图，也不让竖版 preview.jpg 进轮播（会露深色标题带）。
+    reuse = _any_landscape_asset_url(trip, trip_id, trip_dir)
+    if reuse:
+        return reuse
     return fallback
 
 
@@ -554,26 +688,51 @@ def build_trip_bento_preview(trip_dir: Path, trip: dict, trip_id: str) -> dict[s
     ]
 
     ch_pngs = _chapter_pngs(trip_dir)
+    used_carousel_urls: set[str] = {cover_url}
+    chapter_carousel_asset_ids: set[str] = set()
     if chapters:
         for i, ch in enumerate(chapters, 1):
+            chapter_url = _chapter_page_url(
+                trip,
+                trip_id,
+                trip_dir,
+                ch,
+                i,
+                ch_pngs,
+                used_urls=used_carousel_urls,
+                fallback=preview_url,
+            )
+            used_carousel_urls.add(chapter_url)
+            carousel_asset_id = _chapter_carousel_asset_id(trip, trip_id, trip_dir, ch, i, ch_pngs)
+            if carousel_asset_id:
+                chapter_carousel_asset_ids.add(carousel_asset_id)
             pages.append(
                 {
                     "id": str(ch.get("id") or f"ch{i:02d}"),
                     "role": "chapter",
                     "label": _chapter_label(ch, i),
                     "chapterIndex": i,
-                    "url": _chapter_page_url(
-                        trip, trip_id, trip_dir, ch, i, ch_pngs, fallback=cover_url
-                    ),
+                    "url": chapter_url,
                 }
             )
     elif ch_pngs:
         for i, png in enumerate(ch_pngs, 1):
-            url = (
-                _trip_static_url(trip_id, png.name)
-                if _is_web_landscape_file(png)
-                else cover_url
-            )
+            png_url = _trip_static_url(trip_id, png.name)
+            if _is_web_landscape_file(png) and png_url not in used_carousel_urls:
+                url = png_url
+            else:
+                url = (
+                    _first_unused_landscape_asset_url(
+                        trip, trip_id, trip_dir, used_urls=used_carousel_urls
+                    )
+                    or _any_landscape_asset_url(trip, trip_id, trip_dir)
+                    or (
+                        preview_url
+                        if preview_url not in used_carousel_urls
+                        else cover_url
+                    )
+                )
+            used_carousel_urls.add(url)
             pages.append(
                 {
                     "id": f"ch{i:02d}",
@@ -594,7 +753,22 @@ def build_trip_bento_preview(trip_dir: Path, trip: dict, trip_id: str) -> dict[s
             }
         )
 
-    epilogue_url = _best_epilogue_image_url(trip, trip_id, trip_dir, fallback=cover_url)
+    epilogue_url = _epilogue_asset_url(
+        trip,
+        trip_id,
+        trip_dir,
+        exclude_asset_ids=chapter_carousel_asset_ids,
+        avoid_urls=used_carousel_urls,
+        fallback=cover_url,
+        prefer_landscape=True,
+    )
+    if epilogue_url in used_carousel_urls:
+        # 与已用页重复时，优先换一张未用横图；没有则保留横图（宁可重复也不上竖版封面卡）。
+        spare_epilogue = _first_unused_landscape_asset_url(
+            trip, trip_id, trip_dir, used_urls=used_carousel_urls
+        )
+        if spare_epilogue:
+            epilogue_url = spare_epilogue
     pages.append(
         {"id": "epilogue", "role": "epilogue", "label": "尾声", "url": epilogue_url},
     )
@@ -608,6 +782,8 @@ def build_trip_bento_preview(trip_dir: Path, trip: dict, trip_id: str) -> dict[s
         pages,
         cover_url=cover_url,
         preview_url=preview_url,
+        epilogue_exclude_asset_ids=chapter_carousel_asset_ids,
+        epilogue_avoid_urls=used_carousel_urls,
     )
     longshot_url = longshot_pages[0]["url"] if longshot_pages else preview_url
 

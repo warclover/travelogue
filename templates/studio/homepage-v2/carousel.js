@@ -36,6 +36,11 @@ function pagePlaceholderText(page) {
   return "";
 }
 
+function mountCarouselSlideImage(slide, img) {
+  slide.innerHTML = "";
+  slide.appendChild(img);
+}
+
 function buildSlide(manifest, page, index, tier) {
   var slide = document.createElement("div");
   slide.className = "v2-carousel__slide";
@@ -52,18 +57,16 @@ function buildSlide(manifest, page, index, tier) {
     var eager = shouldEagerCarouselPage(index, tier);
     var attachImg = function () {
       var img = document.createElement("img");
+      img.className = "v2-carousel__slide-img";
       img.alt = (page && page.label) || "";
-      img.style.width = "100%";
-      img.style.height = "100%";
-      img.style.objectFit = "cover";
       if (eager && index === 0) img.setAttribute("fetchpriority", "high");
       if (!eager) img.loading = "lazy";
-      img.onload = function () {
-        slide.innerHTML = "";
-        slide.appendChild(img);
-      };
+      img.onload = function () { mountCarouselSlideImage(slide, img); };
       img.onerror = function () { /* 保留 placeholder */ };
       img.src = url;
+      if (img.complete && img.naturalWidth > 0) {
+        mountCarouselSlideImage(slide, img);
+      }
     };
     if (eager) attachImg();
     else slide.dataset.lazySrc = url;
@@ -77,17 +80,15 @@ function ensureSlideLoaded(slide) {
   delete slide.dataset.lazySrc;
   var pageLabel = slide.getAttribute("aria-label") || "";
   var img = document.createElement("img");
+  img.className = "v2-carousel__slide-img";
   img.alt = pageLabel;
   img.loading = "lazy";
-  img.style.width = "100%";
-  img.style.height = "100%";
-  img.style.objectFit = "cover";
-  img.onload = function () {
-    slide.innerHTML = "";
-    slide.appendChild(img);
-  };
+  img.onload = function () { mountCarouselSlideImage(slide, img); };
   img.onerror = function () { /* 保留 placeholder */ };
   img.src = url;
+  if (img.complete && img.naturalWidth > 0) {
+    mountCarouselSlideImage(slide, img);
+  }
 }
 
 /**
@@ -167,15 +168,20 @@ export function initCarousel(manifest, opts) {
   }
 
   function scrollTargetFor(idx) {
+    var slide = slideEls[idx];
+    if (slide && slide.offsetLeft >= 0) return slide.offsetLeft;
     var vw = viewportWidth();
     if (idx === pageCount - 1) return domMaxScrollLeft();
     return scrollLeftFor(idx, vw, pageCount);
   }
 
   function indexFromDomScrollLeft(scrollLeft) {
-    var max = domMaxScrollLeft();
-    if (pageCount > 0 && scrollLeft >= max - 2) return pageCount - 1;
-    return indexFromScrollLeft(scrollLeft, viewportWidth(), pageCount);
+    var sl = Number(scrollLeft) || 0;
+    if (pageCount > 0 && sl >= domMaxScrollLeft() - 2) return pageCount - 1;
+    for (var i = slideEls.length - 1; i >= 0; i--) {
+      if (sl >= slideEls[i].offsetLeft - 2) return i;
+    }
+    return indexFromScrollLeft(sl, viewportWidth(), pageCount);
   }
 
   function syncUi() {
@@ -194,10 +200,9 @@ export function initCarousel(manifest, opts) {
   function go(requested, opts) {
     opts = opts || {};
     index = clampIndex(requested, pageCount);
-    if (tier === "L2") {
-      ensureSlideLoaded(slideEls[index]);
-      if (index + 1 < slideEls.length) ensureSlideLoaded(slideEls[index + 1]);
-    }
+    ensureSlideLoaded(slideEls[index]);
+    if (index + 1 < slideEls.length) ensureSlideLoaded(slideEls[index + 1]);
+    if (index > 0) ensureSlideLoaded(slideEls[index - 1]);
     if (!opts.fromScroll) {
       syncing = true;
       if (scrollTimer) clearTimeout(scrollTimer);

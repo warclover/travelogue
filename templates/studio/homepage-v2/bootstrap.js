@@ -21,6 +21,7 @@ import {
   harnessApplyStartup, harnessEnabled,
 } from "./harness.js";
 import { fetchTripsFirstPage } from "./trips-client.js";
+import { clearBentoPreviewCache } from "./trip-preview.js";
 import { initVariantGuard, syncVariantGuard } from "./variant-guard.js";
 import { initThemeSettings } from "./theme.js";
 import { initAdvancedOptionsPanel, syncAdvancedOptionsLock } from "./advanced-options.js";
@@ -147,6 +148,7 @@ function rerouteFromTrips() {
 }
 
 function startApp() {
+  clearBentoPreviewCache();
   show($("v2-loading"), true);
   initVariantGuard();
   initImportSheet();
