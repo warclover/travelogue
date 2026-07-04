@@ -287,6 +287,101 @@ def test_ensure_pool_assets_solo_screens_splits_all_pool_members() -> None:
     assert "peak2" not in mosaic_slots
 
 
+def test_extract_moment_from_portrait_triple_to_portrait_pair() -> None:
+    from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "screens": [
+                {
+                    "patternId": "screen-portrait-3",
+                    "slots": [
+                        {"assetId": "p1", "slot": 0},
+                        {"assetId": "peak", "slot": 1},
+                        {"assetId": "p2", "slot": 2},
+                    ],
+                }
+            ],
+        }
+    ]
+    assets_by_id = {
+        aid: {
+            "id": aid,
+            "type": "image",
+            "width": 900,
+            "height": 1600,
+            "layoutEligible": True,
+        }
+        for aid in ("p1", "peak", "p2", "sig")
+    }
+    assets_by_id["sig"] = {
+        "id": "sig",
+        "type": "image",
+        "width": 1600,
+        "height": 900,
+        "layoutEligible": True,
+    }
+    ensure_pool_assets_solo_screens(
+        chapters, ["sig", "peak"], "sig", assets_by_id=assets_by_id
+    )
+    host_screens = [
+        s for s in chapters[0]["screens"] if s.get("role") not in ("peak", "moment")
+    ]
+    assert len(host_screens) == 1
+    assert host_screens[0]["patternId"] == "screen-portrait-2"
+    assert [sl["assetId"] for sl in host_screens[0]["slots"]] == ["p1", "p2"]
+
+
+def test_extract_peak_from_mosaic_six_decomposes_without_empty_slot() -> None:
+    from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
+
+    chapters = [
+        {
+            "id": "ch-02",
+            "screens": [
+                {
+                    "patternId": "screen-mosaic-6-main-hero-plus-5",
+                    "slots": [
+                        {"assetId": "main", "slot": 0, "role": "main"},
+                        {"assetId": "side1", "slot": 1, "role": "portrait"},
+                        {"assetId": "side2", "slot": 2, "role": "portrait"},
+                        {"assetId": "bot1", "slot": 3, "role": "landscape"},
+                        {"assetId": "bot2", "slot": 4, "role": "landscape"},
+                        {"assetId": "peak", "slot": 5, "role": "landscape"},
+                    ],
+                }
+            ],
+        }
+    ]
+    assets_by_id = {
+        "main": {"id": "main", "width": 3200, "height": 1800, "layoutEligible": True},
+        "side1": {"id": "side1", "width": 3200, "height": 4480, "layoutEligible": True},
+        "side2": {"id": "side2", "width": 3200, "height": 4480, "layoutEligible": True},
+        "bot1": {"id": "bot1", "width": 3200, "height": 2070, "layoutEligible": True},
+        "bot2": {"id": "bot2", "width": 3200, "height": 1800, "layoutEligible": True},
+        "peak": {"id": "peak", "width": 3200, "height": 1800, "layoutEligible": True},
+        "sig": {"id": "sig", "width": 3200, "height": 1800, "layoutEligible": True},
+    }
+    ensure_pool_assets_solo_screens(
+        chapters, ["sig", "peak"], "sig", assets_by_id=assets_by_id
+    )
+    peak_screens = [s for s in chapters[0]["screens"] if s.get("role") == "peak"]
+    assert len(peak_screens) == 1
+    assert peak_screens[0]["slots"][0]["assetId"] == "peak"
+    remainder = [
+        s
+        for s in chapters[0]["screens"]
+        if s.get("role") not in ("peak", "moment")
+    ]
+    assert all("mosaic-6" not in str(s.get("patternId") or "") for s in remainder)
+    remainder_ids = [
+        sl["assetId"] for s in remainder for sl in s.get("slots") or []
+    ]
+    assert sorted(remainder_ids) == sorted(["main", "side1", "side2", "bot1", "bot2"])
+    assert len(remainder_ids) == 5
+
+
 def test_extract_moment_from_mosaic_to_solo_screen() -> None:
     from travelogue.curation.moment_scoring import ensure_moment_asset_in_chapters
 

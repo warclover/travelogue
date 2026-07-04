@@ -16,6 +16,7 @@ mosaic_unified_groups:
     - screen-landscape-4
   MOSAIC_5_PATTERN_IDS:
     - screen-mosaic-5-main-portrait-3land
+    - screen-mosaic-5-hero-3-2-plus-4   # MCR · D4 · 行为等价，消除 orphan
   MOSAIC_6_PATTERN_IDS:
     - screen-mosaic-5-main-hero-plus-4
     - screen-mosaic-6-main-hero-plus-5

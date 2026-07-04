@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
@@ -270,6 +271,17 @@ def load_config(path: Path | None = None) -> AppConfig:
     llm_preset = PROVIDER_PRESETS.get(llm_provider, {})
     llm_base = llm_raw.get("base_url")
     llm_base_url = str(llm_base).strip() if llm_base else None
+    mosaic_defaults_used = not mosaic_raw
+    if mosaic_defaults_used and (
+        os.environ.get("TRAVELOGUE_CONFIG_VERBOSE", "").strip().lower() in ("1", "true", "yes")
+        or os.environ.get("TRAVELOGUE_VERBOSE", "").strip().lower() in ("1", "true", "yes")
+    ):
+        defaults = mosaic_from_dict({})
+        _log.info(
+            "mosaic: no mosaic: section in config; using MosaicConfig defaults "
+            "(enabled_window_sizes=%s)",
+            defaults.enabled_window_sizes,
+        )
     return AppConfig(
         trips_dir=trips_dir,
         ingest=ingest_from_dict(ingest_raw),

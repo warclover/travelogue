@@ -593,6 +593,126 @@ def _solo_pattern_for_asset(asset: dict) -> str:
     return "screen-landscape-1"
 
 
+def _asset_ids_from_slots(slots: list[dict]) -> list[str]:
+    out: list[str] = []
+    for slot in slots:
+        aid = str(slot.get("assetId") or "").strip()
+        if aid:
+            out.append(aid)
+    return out
+
+
+def _is_fixed_composite_pattern(pattern_id: str) -> bool:
+    """Patterns whose slot geometry breaks when a single tile is removed."""
+    pid = str(pattern_id or "")
+    if pid.startswith("screen-mosaic-"):
+        return True
+    if "portrait" in pid and "landscape" in pid:
+        return True
+    return pid in frozenset(
+        {
+            "screen-portrait-4",
+            "screen-portrait-6",
+            "screen-portrait-9",
+            "screen-portrait-grid-8",
+            "screen-landscape-4",
+            "screen-landscape-6",
+            "screen-landscape-9",
+        }
+    )
+
+
+def _homogeneous_stack_pattern(
+    asset_ids: list[str],
+    assets_by_id: dict[str, dict],
+) -> str | None:
+    """Map a same-family run to screen-{family}-{n} when n ∈ {1,2,3,4}."""
+    if not asset_ids or len(asset_ids) > 4:
+        return None
+    from travelogue.curation.screen_planner import _layout_family_for_asset
+
+    aspects = {
+        aid: aspect_kind_for_asset(assets_by_id.get(aid, {})) for aid in asset_ids
+    }
+    families = [
+        _layout_family_for_asset(aid, aspects, assets_by_id) for aid in asset_ids
+    ]
+    if len(set(families)) != 1:
+        return None
+    fam = families[0]
+    if fam in ("panorama", "tall", "square"):
+        return _solo_pattern_for_asset(assets_by_id.get(asset_ids[0], {}))
+    if fam in ("portrait", "landscape") and len(asset_ids) in (1, 2, 3, 4):
+        if len(asset_ids) == 1:
+            return _solo_pattern_for_asset(assets_by_id.get(asset_ids[0], {}))
+        return f"screen-{fam}-{len(asset_ids)}"
+    return None
+
+
+def _decompose_to_primitive_screens(
+    asset_ids: list[str],
+    assets_by_id: dict[str, dict],
+) -> list[dict]:
+    """Rebuild remaining assets as valid primitive screens (pair-first portraits)."""
+    from travelogue.curation.screen_planner import _layout_family_for_asset, _make_screen
+
+    if not asset_ids:
+        return []
+    aspects = {
+        aid: aspect_kind_for_asset(assets_by_id.get(aid, {})) for aid in asset_ids
+    }
+    screens: list[dict] = []
+    i = 0
+    while i < len(asset_ids):
+        fam = _layout_family_for_asset(asset_ids[i], aspects, assets_by_id)
+        j = i + 1
+        while j < len(asset_ids) and _layout_family_for_asset(
+            asset_ids[j], aspects, assets_by_id
+        ) == fam:
+            j += 1
+        run = asset_ids[i:j]
+        k = 0
+        while k < len(run):
+            if fam == "portrait":
+                if k + 2 <= len(run):
+                    chunk = run[k : k + 2]
+                    pattern_id = "screen-portrait-2"
+                    k += 2
+                else:
+                    chunk = run[k : k + 1]
+                    pattern_id = "screen-portrait-1"
+                    k += 1
+            elif fam == "landscape":
+                rem = len(run) - k
+                if rem >= 3:
+                    chunk = run[k : k + 3]
+                    pattern_id = "screen-landscape-3"
+                    k += 3
+                elif rem == 2:
+                    chunk = run[k : k + 2]
+                    pattern_id = "screen-landscape-2"
+                    k += 2
+                else:
+                    chunk = run[k : k + 1]
+                    pattern_id = "screen-landscape-1"
+                    k += 1
+            else:
+                chunk = run[k : k + 1]
+                pattern_id = _solo_pattern_for_asset(assets_by_id.get(chunk[0], {}))
+                k += 1
+            screens.append(
+                _make_screen(
+                    pattern_id,
+                    chunk,
+                    screen_id="",
+                    aspects=aspects,
+                    assets_map=assets_by_id,
+                )
+            )
+        i = j
+    return screens
+
+
 def _build_pool_solo_screen(
     asset_id: str,
     *,
@@ -628,7 +748,7 @@ def _normalize_screen_after_slot_removal(
     screen: dict,
     *,
     assets_by_id: dict[str, dict],
-) -> dict | None:
+) -> dict | list[dict] | None:
     slots = [dict(s) for s in (screen.get("slots") or [])]
     if not slots:
         return None
@@ -637,21 +757,29 @@ def _normalize_screen_after_slot_removal(
     out = dict(screen)
     out.pop("role", None)
     out.pop("layoutGeometry", None)
+    original_pattern = str(out.get("patternId") or "")
+    asset_ids = _asset_ids_from_slots(slots)
     n = len(slots)
+
+    if _is_fixed_composite_pattern(original_pattern):
+        rebuilt = _decompose_to_primitive_screens(asset_ids, assets_by_id)
+        return rebuilt if rebuilt else None
+
     if n == 1:
-        aid = str(slots[0].get("assetId") or "")
+        aid = asset_ids[0]
         out["patternId"] = _solo_pattern_for_asset(assets_by_id.get(aid, {}))
         out["slots"] = slots
         return out
-    downgrade = {
-        2: "screen-landscape-2",
-        3: "screen-landscape-3",
-        4: "screen-landscape-4",
-    }
-    if n in downgrade:
-        out["patternId"] = downgrade[n]
+
+    stack_pattern = _homogeneous_stack_pattern(asset_ids, assets_by_id)
+    if stack_pattern is not None:
+        out["patternId"] = stack_pattern
         out["slots"] = slots
         return out
+
+    rebuilt = _decompose_to_primitive_screens(asset_ids, assets_by_id)
+    if rebuilt:
+        return rebuilt
     out["slots"] = slots
     return out
 
@@ -775,11 +903,16 @@ def _ensure_pool_asset_solo_screen(
         source_slot=source_slot,
         assets_by_id=assets,
     )
-    insert_pos = max(screen_idx + 1, 1)
     if normalized is None:
+        insert_pos = max(screen_idx + 1, 1)
         screens.pop(screen_idx)
         screens.insert(insert_pos if insert_pos <= len(screens) else len(screens), solo)
+    elif isinstance(normalized, list):
+        screens[screen_idx : screen_idx + 1] = normalized
+        insert_pos = screen_idx + len(normalized)
+        screens.insert(insert_pos, solo)
     else:
+        insert_pos = max(screen_idx + 1, 1)
         screens[screen_idx] = normalized
         screens.insert(insert_pos, solo)
     chapter["screens"] = screens

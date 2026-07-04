@@ -28,6 +28,27 @@ curate → MCS（lte_adapter 读 LTE registry）→ 选 patternId + 照片分配
                                     预览 / 导出 / 长图
 ```
 
+### 1.1 拼图（mosaic）配置三层含义（MCR · PRD §0）
+
+代码库中 **不存在** LTE 模板 YAML 顶层字段 `mosaic:`（schema 未定义）。「拼图能力」实际分三层，排查「为何无拼图」时请先确认是哪一层：
+
+| 层级 | 文件 | 「mosaic 段」指什么 | 谁改 |
+|------|------|---------------------|------|
+| **L1 项目配置** | `config.yaml` 顶层 `mosaic:` | `enabled_window_sizes`、`density_budget` 等 MCS 窗宽与配额 | 开发者 / 运维 |
+| **L2 策略注册** | `lte_policy.yaml` → `mosaic_unified_groups` | MCS 窗族 pattern 白名单（`MOSAIC_5_PATTERN_IDS` 等） | GitOps + `lte_export_legacy.py --sync-python` |
+| **L3 模板元数据** | `screen-*.yaml` 的 `usage` / `constraints` | 使用说明与几何约束（**不是** `mosaic:` 键） | 模板作者 |
+
+**别名**：`layout.mosaic_v2` 与顶层 `mosaic:` 合并时 **顶层优先**（与 Phase 15 ROLLOUT 一致）。
+
+**诊断**：
+
+```bash
+python scripts/mosaic_config_diag.py --strict
+python scripts/mosaic_config_diag.py --trip trips/<id>
+```
+
+缺 L1 段时，MCR 修复后仍回退 `MosaicConfig` dataclass 默认 `(4, 5, 6, 9)`；旧 trip 需 **re-curate** 才反映窗宽恢复。详见 [MCR-RELEASE-NOTE.md](./MCR-RELEASE-NOTE.md)。
+
 ---
 
 ## 2. 快速启用与回退

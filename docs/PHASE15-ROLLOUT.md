@@ -5,6 +5,16 @@
 PRD：[PRD-PHASE15-photo-mosaic-evolution.md](./PRD-PHASE15-photo-mosaic-evolution.md)  
 验收：[ACCEPTANCE-PHASE15.md](./ACCEPTANCE-PHASE15.md)
 
+## 0. 新 clone 检查清单（MCR · P0-b）
+
+1. 确认本地 `config.yaml` 含完整 `mosaic:` 段，或对照 `config.yaml.example` 自行追加。
+2. **MCR P0-a 修复后**：即使缺少 `mosaic:` 段，`load_config` 也会回退 `MosaicConfig` dataclass 默认（`enabled_window_sizes: [4, 5, 6, 9]`），不再 silent 缩成仅 5 窗。
+3. 可选自检：`python scripts/mosaic_config_diag.py --strict`（window 6 应为 enabled）。
+4. 行为验收（本机有 trip 时）：`python scripts/mcr_eval_recurate.py chuanzang-studio` → 留档 `.cache/mcr-eval/`。
+5. usage 一致性（mosaic 族）：`python scripts/check_usage_consistency.py --family mosaic`。
+6. 缺 `mosaic:` 段调试：`TRAVELOGUE_CONFIG_VERBOSE=1` 下 `load_config` 会 INFO dataclass 默认窗宽。
+7. **不要**将本地 `config.yaml` 提交到 git（已在 `.gitignore`）。
+
 ## 1. 默认配置（`config.yaml` / `config.yaml.example`）
 
 ```yaml

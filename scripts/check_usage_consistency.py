@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import re
 import sys
 from pathlib import Path
@@ -16,6 +17,15 @@ CLAIM_RE = re.compile(
     r"(?:(\d+)\s*(?:张|图|槽|竖|横|图屏|竖图|横图))"
     r"|(?:(\d+)\s*[Pp]\s*\+\s*(\d+)\s*[Ll])"
     r"|(?:(\d+)×(\d+))"
+)
+MIX_ZH_RE = re.compile(r"(\d+)\s*竖\s*\+\s*(\d+)\s*横")
+TOTAL_SLOT_RE = re.compile(r"(\d+)\s*图(?:屏|密度屏)?")
+SCRUB_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (MIX_ZH_RE, ""),
+    (re.compile(r"\d+\s*[Pp]\s*\+\s*\d+\s*[Ll]"), ""),
+    (re.compile(r"2×2"), ""),
+    (re.compile(r"共\s*\d+\s*张"), ""),
+    (re.compile(r"比\s*\d+×\d+[^，。；]*"), ""),
 )
 
 
@@ -39,17 +49,34 @@ def slot_info(doc: dict) -> tuple[int, int, int, int, int]:
     return n, p, l, int(pc["min"]), int(pc["max"])
 
 
-def grid_product(text: str) -> int | None:
-    m = re.search(r"(\d+)×(\d+)", text)
-    if m:
-        return int(m.group(1)) * int(m.group(2))
-    return None
+def is_mosaic_family(tid: str) -> bool:
+    return "mosaic" in tid
+
+
+def scrub_summary_for_scan(summary: str) -> str:
+    text = summary
+    for pattern, repl in SCRUB_PATTERNS:
+        text = pattern.sub(repl, text)
+    return text
 
 
 def check_summary_counts(tid: str, n: int, p: int, l: int, summary: str) -> list[str]:
     issues: list[str] = []
-    # Explicit "N 图/张/槽" in summary must match n (when N is 1-9)
-    for m in CLAIM_RE.finditer(summary):
+
+    mix_m = MIX_ZH_RE.search(summary)
+    if mix_m:
+        cp, cl = int(mix_m.group(1)), int(mix_m.group(2))
+        if (p or l) and (cp != p or cl != l):
+            issues.append(f"summary 写 {cp}竖+{cl}横，实际 mix={p}P+{l}L")
+
+    total_m = TOTAL_SLOT_RE.search(summary)
+    if total_m and is_mosaic_family(tid):
+        total = int(total_m.group(1))
+        if total != n:
+            issues.append(f"summary 总槽位写 {total} 图屏，实际 slots={n}")
+
+    scrubbed = scrub_summary_for_scan(summary)
+    for m in CLAIM_RE.finditer(scrubbed):
         if m.group(1):
             claimed = int(m.group(1))
             if 1 <= claimed <= 9 and claimed != n:
@@ -63,21 +90,27 @@ def check_summary_counts(tid: str, n: int, p: int, l: int, summary: str) -> list
         elif m.group(4) and m.group(5):
             grid_n = int(m.group(4)) * int(m.group(5))
             if grid_n != n:
-                issues.append(f"summary 写 {m.group(4)}×{m.group(5)}={grid_n} 格，实际 slots={n}")
-
-    # Common shorthand: "六图" "九竖" etc — skip, CLAIM_RE handles digits
-
-    # Special: id says 5 but photoCount 6
-    if "mosaic-5-main-hero-plus-4" in tid and n == 6:
-        if "6" not in summary and "5-main" in summary and "6 图" not in summary:
-            if "6" not in summary.split("id")[0]:
-                pass  # usage already warns about id vs photoCount
+                issues.append(
+                    f"summary 写 {m.group(4)}×{m.group(5)}={grid_n} 格，实际 slots={n}"
+                )
 
     return issues
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Check usage.summary vs slot counts")
+    parser.add_argument(
+        "--family",
+        choices=("all", "mosaic"),
+        default="all",
+        help="Only check mosaic templates (MCR-P-06)",
+    )
+    args = parser.parse_args()
+
     templates = load_templates()
+    if args.family == "mosaic":
+        templates = [(p, d) for p, d in templates if is_mosaic_family(str(d.get("id") or ""))]
+
     missing: list[str] = []
     internal: list[tuple[str, str]] = []
     mismatches: list[tuple[str, list[str]]] = []
@@ -127,24 +160,27 @@ def main() -> int:
     else:
         print("  (无)")
 
-    # Sibling id validity
-    known = {doc["id"] for _, doc in templates}
-    broken_siblings: list[tuple[str, str]] = []
-    for _, doc in templates:
-        usage = doc.get("usage") or {}
-        for s in usage.get("siblings") or []:
-            if isinstance(s, dict):
-                sid = str(s.get("id") or "")
-                if sid and sid not in known:
-                    broken_siblings.append((doc["id"], sid))
-    print()
-    print(f"siblings 断链: {len(broken_siblings)}")
-    for tid, sid in broken_siblings:
-        print(f"  {tid} -> {sid!r}")
+    if args.family == "all":
+        known = {doc["id"] for _, doc in templates}
+        broken_siblings: list[tuple[str, str]] = []
+        for _, doc in load_templates():
+            usage = doc.get("usage") or {}
+            for s in usage.get("siblings") or []:
+                if isinstance(s, dict):
+                    sid = str(s.get("id") or "")
+                    if sid and sid not in known:
+                        broken_siblings.append((doc["id"], sid))
+        print()
+        print(f"siblings 断链: {len(broken_siblings)}")
+        for tid, sid in broken_siblings:
+            print(f"  {tid} -> {sid!r}")
+        siblings_ok = not broken_siblings
+    else:
+        siblings_ok = True
 
-    ok = not missing and not internal and not mismatches and not broken_siblings
+    ok = not missing and not internal and not mismatches and siblings_ok
     print()
-    print("结论:", "一致 ✓" if ok else "存在不一致，见上")
+    print("结论:", "一致 OK" if ok else "存在不一致，见上")
     return 0 if ok else 1
 
 

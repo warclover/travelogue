@@ -204,6 +204,8 @@ def test_legacy_append_rejects_retired_pattern(monkeypatch) -> None:
         mix_gap = 12.0
         med_sharp = None
         trip_total = 40
+        layout_state = None
+        featured_weight = 1.0
 
     monkeypatch.setattr(
         "travelogue.curation.mosaic.legacy.build_legacy_screen",

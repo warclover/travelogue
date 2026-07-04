@@ -18,6 +18,13 @@ MOSAIC_GRID_SPECS: dict[str, list[tuple[int, int, int, int]]] = {
         (2, 2, 3, 3),
         (3, 3, 3, 3),
     ],
+    "screen-mosaic-5-hero-3-2-plus-4": [
+        (1, 1, 1, 2),
+        (2, 2, 1, 1),
+        (3, 3, 1, 1),
+        (2, 2, 2, 2),
+        (3, 3, 2, 2),
+    ],
     "screen-mosaic-5-main-landscape-2portrait-2land": [
         (1, 2, 1, 2),
         (3, 3, 1, 2),

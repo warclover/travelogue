@@ -2,7 +2,7 @@
 
 Regenerate:
   python scripts/lte_export_legacy.py --sync-python
-Content hash: b347249d6d053495923db2c0900fcd2d40e74e132b00b130a87a74bad6d249b3
+Content hash: 0dfaffc5728be3a690cb4ff458eb93143fad855aca860b91492af17776266764
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 EXPLICIT_GRID_SPECS: dict[str, Any] = {
+    "screen-editorial-4mix": [(1, 1, 1, 1), (2, 2, 1, 1), (1, 1, 2, 2), (2, 2, 2, 2)],
     "screen-mosaic-5-2p3l-equal": [(1, 1, 1, 3), (2, 2, 1, 3), (3, 3, 1, 1), (3, 3, 2, 2), (3, 3, 3, 3)],
     "screen-mosaic-5-2portrait-3land-balanced": [(1, 1, 1, 1), (2, 2, 1, 1), (1, 1, 2, 3), (2, 2, 2, 2), (2, 3, 3, 3)],
     "screen-mosaic-5-3portrait-2land-balanced": [(1, 1, 1, 2), (2, 2, 1, 2), (3, 3, 1, 2), (1, 2, 3, 3), (3, 3, 3, 3)],
@@ -22,6 +23,7 @@ EXPLICIT_GRID_SPECS: dict[str, Any] = {
 }
 
 EXPLICIT_GRID_BOUNDS: dict[str, Any] = {
+    "screen-editorial-4mix": (2, 2),
     "screen-mosaic-5-2p3l-equal": (3, 3),
     "screen-mosaic-5-2portrait-3land-balanced": (3, 3),
     "screen-mosaic-5-3portrait-2land-balanced": (3, 3),
@@ -38,6 +40,7 @@ AUTO_FLOW_GRIDS: dict[str, Any] = {
     "screen-landscape-6": (3, 2, 6),
     "screen-landscape-9": (3, 3, 9),
     "screen-portrait-2-landscape-2": (2, 2, 4),
+    "screen-portrait-3-editorial": (3, 1, 3),
     "screen-portrait-3": (3, 1, 3),
     "screen-portrait-4": (2, 2, 4),
     "screen-portrait-6": (3, 2, 6),
@@ -48,6 +51,7 @@ AUTO_FLOW_GRIDS: dict[str, Any] = {
 STACK_PATTERNS = frozenset({"screen-landscape-2", "screen-landscape-3"})
 
 PATTERN_GRID_CLASS: dict[str, Any] = {
+    "screen-editorial-4mix": 'layout-screen__grid--editorial-4mix',
     "screen-full-frame": 'layout-screen__grid--1col',
     "screen-landscape-1": 'layout-screen__grid--1col',
     "screen-landscape-2": 'layout-screen__grid--landscape-stack-2',
@@ -67,6 +71,7 @@ PATTERN_GRID_CLASS: dict[str, Any] = {
     "screen-portrait-1": 'layout-screen__grid--1col',
     "screen-portrait-2-landscape-2": 'layout-screen__grid--2x2',
     "screen-portrait-2": 'layout-screen__grid--2col',
+    "screen-portrait-3-editorial": 'layout-screen__grid--3col',
     "screen-portrait-3": 'layout-screen__grid--3col',
     "screen-portrait-4": 'layout-screen__grid--2x2',
     "screen-portrait-6": 'layout-screen__grid--3x2',
@@ -89,7 +94,7 @@ MOSAIC_3_PATTERN_IDS: tuple[str, ...] = ("screen-portrait-3", "screen-landscape-
 
 MOSAIC_4_PATTERN_IDS: tuple[str, ...] = ("screen-portrait-2-landscape-2", "screen-portrait-4", "screen-landscape-4",)
 
-MOSAIC_5_PATTERN_IDS: tuple[str, ...] = ("screen-mosaic-5-main-portrait-3land",)
+MOSAIC_5_PATTERN_IDS: tuple[str, ...] = ("screen-mosaic-5-main-portrait-3land", "screen-mosaic-5-hero-3-2-plus-4",)
 
 MOSAIC_6_PATTERN_IDS: tuple[str, ...] = ("screen-mosaic-5-main-hero-plus-4", "screen-mosaic-6-main-hero-plus-5", "screen-portrait-6", "screen-landscape-6",)
 

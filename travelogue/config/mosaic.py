@@ -113,7 +113,7 @@ def _density_budget_from_dict(raw: dict[str, Any]) -> MosaicDensityBudgetConfig:
 
 def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
     defaults = MosaicConfig()
-    sizes_raw = raw.get("enabled_window_sizes", raw.get("enabledWindowSizes", [5]))
+    sizes_raw = raw.get("enabled_window_sizes", raw.get("enabledWindowSizes", defaults.enabled_window_sizes))
     if isinstance(sizes_raw, (list, tuple)):
         sizes = tuple(int(x) for x in sizes_raw)
     else:
