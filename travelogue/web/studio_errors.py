@@ -27,12 +27,16 @@ USER_MESSAGES: dict[str, str] = {
     "E_LNG_NO_LONGSHOT": "未找到长图页面，请先完成渲染",
     "E_LNG_PLAYWRIGHT": "无法生成长图，请安装 Playwright",
     "E_LLM_AUTH": "未配置 LLM API Key，无法生成杂志感文案",
+    "E_LLM_NETWORK": "文案生成时网络中断，请重试",
     "E_NARRATE_API": "文案生成失败，请重试",
     "E_TRIP_NOT_FOUND": "游记不存在",
     "E_EXPORT_PRIVACY": "导出 zip 需要确认隐私设置",
     "E_SERVER": "服务内部错误，请稍后重试",
     "E_STUDIO_RERENDER": "预览重新渲染失败，请稍后重试",
 }
+
+# Codes with a fixed user-facing line — do not append raw exception text.
+_PLAIN_ONLY_CODES = frozenset({"E_LLM_NETWORK"})
 
 
 def internal_error_payload() -> dict[str, str | bool]:
@@ -75,7 +79,7 @@ def user_message(code: str, fallback: str = "") -> str:
         detail = str(fallback).split(": ", 1)[-1]
         if detail and detail != text:
             return detail
-    if code in USER_MESSAGES and fallback:
+    if code in USER_MESSAGES and fallback and code not in _PLAIN_ONLY_CODES:
         detail = str(fallback).split(": ", 1)[-1]
         if detail and detail not in text and len(detail) < 120:
             return f"{text}（{detail}）"

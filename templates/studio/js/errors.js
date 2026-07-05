@@ -65,6 +65,7 @@ const FAILURE_NEXT_HINTS = {
   E_PICK_FOLDER_FAILED: "请粘贴完整路径，或安装 desktop 依赖后重试浏览文件夹。",
   E_STUDIO_PIPELINE: "通常是临时问题：检查文件夹仍可访问后点「重试」。",
   E_LLM_AUTH: "在 config.yaml 配置 LLM API Key 后重试，或关闭需要文案的高级选项。",
+  E_LLM_NETWORK: "通常是临时网络问题：检查网络或代理后点「重试」，无需重新选文件夹。",
 };
 
 export function failureNextHint(code) {

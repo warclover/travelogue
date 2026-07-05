@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from travelogue.demo.build import DemoError
 from travelogue.errors import CodeError
-from travelogue.web.studio_errors import client_error_payload, internal_error_payload
+from travelogue.web.studio_errors import client_error_payload, internal_error_payload, user_message
 
 
 class _SampleError(CodeError):
@@ -42,3 +42,12 @@ def test_client_error_payload_generic_value_error() -> None:
     body = client_error_payload(ValueError("invalid lifecycle"))
     assert body["error"] == "E_BAD_REQUEST"
     assert "invalid lifecycle" in str(body["message"])
+
+
+def test_user_message_llm_network_hides_ssl_detail() -> None:
+    msg = user_message(
+        "E_LLM_NETWORK",
+        "E_LLM_NETWORK: [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol",
+    )
+    assert msg == "文案生成时网络中断，请重试"
+    assert "SSL" not in msg

@@ -59,6 +59,7 @@ export const STUDIO_ERROR_MESSAGES = {
   E_LNG_NO_LONGSHOT: "未找到长图页面，请先完成渲染",
   E_LNG_PLAYWRIGHT: "无法生成长图，请安装 Playwright",
   E_LLM_AUTH: "未配置 LLM API Key，无法生成杂志感文案",
+  E_LLM_NETWORK: "文案生成时网络中断，请重试",
   E_NARRATE_API: "文案生成失败，请重试",
   E_TRIP_NOT_FOUND: "游记不存在",
   E_EXPORT_PRIVACY: "导出 zip 需要确认隐私设置",
