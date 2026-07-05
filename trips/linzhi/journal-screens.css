@@ -2064,28 +2064,20 @@ html[data-folio="full"] .featured-grid__img {
   --film-pitch: 17px;
   --film-hole-fill: var(--bg-page, #eceae6);
   display: block;
-  min-height: 1.85rem;
+  min-height: 1.15rem;
   margin-top: 0;
-  padding: 0.72rem 0 0.58rem;
+  padding: 0;
   overflow: hidden;
   background-color: #1f1f1f;
-  background-image:
-    repeating-linear-gradient(
-      90deg,
-      var(--film-hole-fill) 0,
-      var(--film-hole-fill) var(--film-hole-w),
-      transparent var(--film-hole-w),
-      transparent var(--film-pitch)
-    ),
-    repeating-linear-gradient(
-      90deg,
-      var(--film-hole-fill) 0,
-      var(--film-hole-fill) var(--film-hole-w),
-      transparent var(--film-hole-w),
-      transparent var(--film-pitch)
-    );
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--film-hole-fill) 0,
+    var(--film-hole-fill) var(--film-hole-w),
+    transparent var(--film-hole-w),
+    transparent var(--film-pitch)
+  );
   background-size: var(--film-pitch) var(--film-hole-h);
-  background-position: 0 0.14rem, 0 calc(100% - 0.14rem - var(--film-hole-h));
+  background-position: center;
   background-repeat: repeat-x;
   border: 1px solid #3a3a3a;
   border-top: 2px solid #141414;
