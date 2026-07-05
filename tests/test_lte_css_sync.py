@@ -15,7 +15,10 @@ from travelogue.layout_templates.css_gen import (
     LTE_MARKER_START,
     OVERLAYS_MARKER_END,
     OVERLAYS_MARKER_START,
+    TrailingLegacyCssError,
+    _truncate_trailing_legacy_after_overlays,
     lte_grid_classes_outside_marker,
+    sync_journal_screens_css,
 )
 from travelogue.layout_templates.registry import get_layout_template, reset_engine_cache_for_tests
 from travelogue.paths import JOURNAL_SCREENS_CSS
@@ -253,3 +256,143 @@ def test_mosaic_portrait_contain_top_anchor(journal_css: str) -> None:
     assert "grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto" in overlays
     assert ":not([data-role=\"main\"]) .layout-slot__img--contain" in overlays
     assert "object-position: top center" in overlays
+
+
+# --- T-LRG-11 / AC-LRG-03: automated negative guard tests ------------------
+#
+# Hard constraint (PRD §3.2.3): these tests operate ONLY on in-memory strings
+# or tmp_path file copies. They must never write to / delete-and-restore the
+# real templates/visual-journal/journal-screens*.css files.
+
+_TICKET_STUB_KEY_SELECTORS = (
+    'chapter-separator--ticket[data-block="chapter-separator"]',
+    ".chapter-separator--ticket .chapter-separator__title",
+    ':not(.chapter-separator--ticket) .chapter-separator__title',
+)
+
+
+def _missing_overlay_selectors(overlays_text: str, required: tuple[str, ...]) -> list[str]:
+    """AC-LRG-03 guard-detection helper: which required key selectors are absent."""
+    return [sel for sel in required if sel not in overlays_text]
+
+
+@pytest.mark.unit
+def test_overlay_ticket_removal_fails_guard(journal_css: str) -> None:
+    """AC-LRG-03: deleting the ticket-stub overlay selector must be detectable.
+
+    Simulates the regression from the 2026-07 incident (ticket-stub overlay block
+    silently missing) by tampering an *in-memory copy* of the overlay text — the
+    real overlays.css / journal-screens.css on disk are only ever read here.
+    """
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert _missing_overlay_selectors(overlays, _TICKET_STUB_KEY_SELECTORS) == []
+
+    tampered = overlays.replace(
+        '.chapter-separator--ticket[data-block="chapter-separator"]',
+        '.chapter-separator--REMOVED[data-block="chapter-separator"]',
+    )
+    missing = _missing_overlay_selectors(tampered, _TICKET_STUB_KEY_SELECTORS)
+    assert missing == ['chapter-separator--ticket[data-block="chapter-separator"]']
+
+
+@pytest.mark.unit
+def test_overlay_exif_removal_fails_guard(journal_css: str) -> None:
+    """AC-LRG-03 companion: same guard-detection sanity check for the EXIF overlay."""
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    exif_selectors = (".moment-exif-bar", ".layout-slot:has(.moment-exif-bar)")
+    assert _missing_overlay_selectors(overlays, exif_selectors) == []
+
+    tampered = overlays.replace(".moment-exif-bar", ".REMOVED-exif-bar")
+    missing = _missing_overlay_selectors(tampered, exif_selectors)
+    assert ".moment-exif-bar" in missing
+
+
+# --- T-LRG-12 / AC-LRG-12: export fail-fast on marker-external legacy CSS ---
+
+
+@pytest.mark.unit
+def test_truncate_trailing_legacy_raises_by_default() -> None:
+    text = (
+        f"{OVERLAYS_MARKER_START}\n.overlay-rule {{ color: blue; }}\n{OVERLAYS_MARKER_END}\n"
+        "\n.legacy-leftover { color: red; }\n"
+    )
+    with pytest.raises(TrailingLegacyCssError) as exc_info:
+        _truncate_trailing_legacy_after_overlays(text)
+    assert "legacy-leftover" in str(exc_info.value)
+
+
+@pytest.mark.unit
+def test_truncate_trailing_legacy_warn_only_still_truncates(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    text = (
+        f"{OVERLAYS_MARKER_START}\n.overlay-rule {{ color: blue; }}\n{OVERLAYS_MARKER_END}\n"
+        "\n.legacy-leftover { color: red; }\n"
+    )
+    result = _truncate_trailing_legacy_after_overlays(text, on_trailing_legacy="warn")
+    assert ".legacy-leftover" not in result
+    assert result.rstrip().endswith(OVERLAYS_MARKER_END)
+    err = capsys.readouterr().err
+    assert "WARNING" in err
+    assert "legacy-leftover" in err
+
+
+@pytest.mark.unit
+def test_truncate_trailing_legacy_ignores_comment_and_whitespace_only_tail() -> None:
+    text = (
+        f"{OVERLAYS_MARKER_START}\n.overlay-rule {{ color: blue; }}\n{OVERLAYS_MARKER_END}\n"
+        "\n/* trailing comment only, no rule */\n  \n"
+    )
+    result = _truncate_trailing_legacy_after_overlays(text)  # must not raise
+    assert result.rstrip().endswith(OVERLAYS_MARKER_END)
+
+
+@pytest.mark.unit
+def test_sync_journal_screens_css_strict_raises_on_trailing_legacy(tmp_path: Path) -> None:
+    """T-LRG-12 integration: fail-fast fires through the real sync pipeline.
+
+    Only a tmp_path copy is written/read; the repo's real journal-screens.css is
+    never touched, and journal-screens-overlays.css is only ever *read* here.
+    """
+    journal_text = (
+        'html[data-layout="web"] .layout-screen__grid--1col,\n'
+        'html[data-layout="auto"] .layout-screen__grid--1col {\n'
+        "  grid-template-columns: 1fr;\n"
+        "}\n\n"
+        f"{OVERLAYS_MARKER_START}\n/* placeholder */\n{OVERLAYS_MARKER_END}\n"
+        "\n.legacy-leftover-rule { color: red; }\n"
+    )
+    journal_path = tmp_path / "journal-screens.css"
+    journal_path.write_text(journal_text, encoding="utf-8")
+
+    with pytest.raises(TrailingLegacyCssError) as exc_info:
+        sync_journal_screens_css({}, journal_path=journal_path)
+    assert "legacy-leftover-rule" in str(exc_info.value)
+    # Fail-fast must not leave a partially-written file behind.
+    assert journal_path.read_text(encoding="utf-8") == journal_text
+
+
+@pytest.mark.unit
+def test_sync_journal_screens_css_warn_bypass_writes_truncated_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    journal_text = (
+        'html[data-layout="web"] .layout-screen__grid--1col,\n'
+        'html[data-layout="auto"] .layout-screen__grid--1col {\n'
+        "  grid-template-columns: 1fr;\n"
+        "}\n\n"
+        f"{OVERLAYS_MARKER_START}\n/* placeholder */\n{OVERLAYS_MARKER_END}\n"
+        "\n.legacy-leftover-rule { color: red; }\n"
+    )
+    journal_path = tmp_path / "journal-screens.css"
+    journal_path.write_text(journal_text, encoding="utf-8")
+
+    sync_journal_screens_css({}, journal_path=journal_path, on_trailing_legacy="warn")
+
+    written = journal_path.read_text(encoding="utf-8")
+    assert ".legacy-leftover-rule" not in written
+    assert "WARNING" in capsys.readouterr().err

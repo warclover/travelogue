@@ -100,12 +100,21 @@ def cmd_export(args: argparse.Namespace) -> int:
     root = Path(args.templates) if args.templates else DEFAULT_TEMPLATES_DIR
     out = Path(args.out) if args.out else root.parent / "journal-screens.generated.css"
     engine = LayoutTemplateEngine.load(root, rebuild_cache=True)
-    from travelogue.layout_templates.css_gen import sync_journal_screens_css, write_generated_css
+    from travelogue.layout_templates.css_gen import (
+        TrailingLegacyCssError,
+        sync_journal_screens_css,
+        write_generated_css,
+    )
 
     write_generated_css(engine._templates, out)
     print(f"generated CSS → {out} ({len(engine._templates)} templates)")
     if args.sync_journal:
-        journal = sync_journal_screens_css(engine._templates)
+        on_trailing_legacy = "warn" if args.warn_trailing_legacy else "strict"
+        try:
+            journal = sync_journal_screens_css(engine._templates, on_trailing_legacy=on_trailing_legacy)
+        except TrailingLegacyCssError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
         print(f"synced LTE marker → {journal}")
     return 0
 
@@ -194,6 +203,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--sync-journal",
         action="store_true",
         help="Inject generated CSS into templates/visual-journal/journal-screens.css marker",
+    )
+    export.add_argument(
+        "--warn-trailing-legacy",
+        action="store_true",
+        help=(
+            "Warn (exit 0) instead of failing when hand-written CSS is found after "
+            "@journal-overlays:end (T-LRG-12 migration bypass); default is strict fail-fast"
+        ),
     )
     export.set_defaults(func=cmd_export)
 

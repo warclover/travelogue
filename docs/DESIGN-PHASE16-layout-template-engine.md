@@ -66,6 +66,20 @@ layout_admin  ──GitOps──> promotion.py + Studio handlers
 
 `cli export --sync-journal` 替换 generated 块并截断 marker 后的 legacy grid 重复。
 
+### 4.1 Overlay 贡献者约束（LRG T-LRG-02 · 详见 [PRD-LAYOUT-READER-REGRESSION-GUARD §3.2.4](./PRD-LAYOUT-READER-REGRESSION-GUARD.md#324-贡献者约束写入-contributing-或-phase-16-design-补丁)）
+
+2026-07 曾发生章节票根 / EXIF / mosaic-5 contain overlay 因 `export --sync-journal` 静默截断而丢失，`test_reading_experience` FAIL 仍被 merge 的事故（详见 PRD §1.1）。为避免复发，任何触碰 `journal-screens.css` / `journal-screens-overlays.css` / `css_gen.py` 的改动**必须**遵守：
+
+1. **禁止**在 `journal-screens.css` 的 `@journal-overlays:end` 之后追加手写规则——该区域会被 `export --sync-journal` 静默截断（`css_gen._truncate_trailing_legacy_after_overlays`，T-LRG-12 起默认 strict fail-fast，非零退出）。读者可见、非 LTE 生成的样式**只能**写在 `templates/visual-journal/journal-screens-overlays.css`（`@journal-overlays:start…end` 之前的手写内容会在下次 sync 时被合并/覆盖）。
+2. **禁止**只改 `trips/*/journal-screens.css` 而不改 template overlays（`journal-screens-overlays.css`）——trip 目录下的 CSS 副本是 render 产物，下一次 render 会被无条件覆盖，双轨修改必然漂移（LRG-P-04）。
+3. `export --sync-journal` 后必须跑：
+
+   ```bash
+   pytest tests/test_lte_css_sync.py tests/test_reading_experience.py -q
+   ```
+
+   确认全绿再 `git add` / commit 生成后的 `journal-screens.css`；CI `validate` job 的 "LTE journal CSS sync drift" 步骤会重跑同一 sync 并 `git diff --exit-code` 校验，本地先跑可避免 PR 反复往返。
+
 ---
 
 ## 5. 生命周期与准入

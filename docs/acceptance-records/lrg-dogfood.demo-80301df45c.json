@@ -1,0 +1,35 @@
+{
+  "tripId": "demo-80301df45c",
+  "screenCount": 78,
+  "htmlLayoutScreenCount": 78,
+  "patternHistogram": {
+    "screen-breath-pause": 19,
+    "screen-full-frame": 26,
+    "screen-landscape-1": 6,
+    "screen-portrait-1": 14,
+    "screen-portrait-2": 15,
+    "screen-portrait-3": 17
+  },
+  "mosaicDecisionSummary": {},
+  "momentExifBarCount": 0,
+  "chapterSeparatorTicketCount": 4,
+  "burstPassRate": 0.0,
+  "burstPassRateDetail": {
+    "5": {
+      "geometryWindows": 5,
+      "burstPassWindows": 0
+    },
+    "6": {
+      "geometryWindows": 5,
+      "burstPassWindows": 0
+    }
+  },
+  "windowExposure": {
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "9": 0
+  },
+  "mixedProximitySeconds": 900.0,
+  "warnings": []
+}

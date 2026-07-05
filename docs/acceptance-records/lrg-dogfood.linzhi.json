@@ -1,0 +1,21 @@
+{
+  "tripId": "linzhi",
+  "screenCount": null,
+  "htmlLayoutScreenCount": 100,
+  "patternHistogram": {},
+  "mosaicDecisionSummary": {},
+  "momentExifBarCount": 0,
+  "chapterSeparatorTicketCount": 4,
+  "burstPassRate": null,
+  "burstPassRateDetail": {},
+  "windowExposure": {
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "9": 0
+  },
+  "mixedProximitySeconds": null,
+  "warnings": [
+    "trip.json not found under trips\\linzhi; trip may be gitignored on this checkout (e.g. personal album source data) — report limited to HTML-derived fields only"
+  ]
+}

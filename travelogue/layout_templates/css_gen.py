@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 from travelogue.layout_templates.models import TemplateDef, TemplateSlot, TemplateStage
@@ -252,16 +253,72 @@ OVERLAYS_MARKER_START = "/* @journal-overlays:start */"
 OVERLAYS_MARKER_END = "/* @journal-overlays:end */"
 
 
-def _truncate_trailing_legacy_after_overlays(journal_text: str) -> str:
+_CSS_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
+_TRAILING_SELECTOR_RE = re.compile(r"([^{}]+)\{")
+
+
+def _is_blank_or_comment_only(css_text: str) -> bool:
+    """True if css_text has no CSS content once comments/whitespace are stripped."""
+    return _CSS_COMMENT_RE.sub("", css_text).strip() == ""
+
+
+def _trailing_legacy_selector_preview(css_text: str, *, max_selectors: int = 5) -> list[str]:
+    """Best-effort selector list for a trailing CSS blob, for stderr/error reporting."""
+    stripped = _CSS_COMMENT_RE.sub("", css_text)
+    selectors = [s.strip().replace("\n", " ") for s in _TRAILING_SELECTOR_RE.findall(stripped)]
+    selectors = [re.sub(r"\s+", " ", s) for s in selectors if s]
+    return selectors[:max_selectors]
+
+
+class TrailingLegacyCssError(RuntimeError):
+    """Raised (T-LRG-12 / AC-LRG-12) when hand-written CSS survives after
+    @journal-overlays:end and would otherwise be silently truncated by export.
+    """
+
+    def __init__(self, preview: list[str]) -> None:
+        self.preview = preview
+        listing = "\n".join(f"  - {sel}" for sel in preview) or "  (selector preview unavailable)"
+        super().__init__(
+            "export --sync-journal: hand-written CSS found after @journal-overlays:end; "
+            "it would be silently truncated (T-LRG-12). Truncated selector preview:\n"
+            f"{listing}\n"
+            "Move these rules into templates/visual-journal/journal-screens-overlays.css "
+            "before the marker (only file allowed to hold hand-written reader-visible "
+            "overlay CSS), or pass --warn-trailing-legacy for a warn-only migration bypass."
+        )
+
+
+def _truncate_trailing_legacy_after_overlays(
+    journal_text: str,
+    *,
+    on_trailing_legacy: str = "strict",
+) -> str:
     """Drop hand-written grid CSS after overlay marker (LTE is authoritative).
 
     Universal slot/img containment lives in the preamble *before* LTE_MARKER_START;
     do not move it into the truncated tail or export will drop mosaic image sizing.
+
+    Before truncating, detect non-blank/non-comment CSS in the region being dropped
+    (T-LRG-12 / AC-LRG-12):
+      - on_trailing_legacy="strict" (default): raise TrailingLegacyCssError.
+      - on_trailing_legacy="warn": print a WARNING to stderr, still truncate.
     """
     oend = journal_text.find(OVERLAYS_MARKER_END)
     if oend == -1:
         return journal_text
     end_pos = oend + len(OVERLAYS_MARKER_END)
+    trailing = journal_text[end_pos:]
+    if not _is_blank_or_comment_only(trailing):
+        preview = _trailing_legacy_selector_preview(trailing)
+        if on_trailing_legacy == "warn":
+            listing = "; ".join(preview) or "(selector preview unavailable)"
+            print(
+                "WARNING: hand-written CSS found after @journal-overlays:end; "
+                f"truncating (T-LRG-12 warn-only bypass): {listing}",
+                file=sys.stderr,
+            )
+        else:
+            raise TrailingLegacyCssError(preview)
     return journal_text[:end_pos].rstrip() + "\n"
 
 
@@ -269,8 +326,14 @@ def sync_journal_screens_css(
     templates: dict[str, TemplateDef],
     *,
     journal_path: Path | None = None,
+    on_trailing_legacy: str = "strict",
 ) -> Path:
-    """Inject/replace LTE generated grid CSS in journal-screens.css (R-P16-14)."""
+    """Inject/replace LTE generated grid CSS in journal-screens.css (R-P16-14).
+
+    on_trailing_legacy: forwarded to _truncate_trailing_legacy_after_overlays
+    (T-LRG-12); "strict" (default) raises TrailingLegacyCssError on marker-external
+    hand-written CSS, "warn" logs to stderr and still truncates.
+    """
     path = journal_path or Path(JOURNAL_SCREENS_CSS)
     text = path.read_text(encoding="utf-8")
     generated = generate_bundle_css(templates)
@@ -296,7 +359,7 @@ def sync_journal_screens_css(
         new_text = text[:insert_at] + "\n\n" + block + text[insert_at:]
     new_text = prune_lte_duplicate_blocks_outside_marker(new_text)
     new_text = sync_journal_overlays(new_text)
-    new_text = _truncate_trailing_legacy_after_overlays(new_text)
+    new_text = _truncate_trailing_legacy_after_overlays(new_text, on_trailing_legacy=on_trailing_legacy)
     path.write_text(new_text, encoding="utf-8")
     return path
 

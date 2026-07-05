@@ -14,5 +14,6 @@
 | [012](./012-semantic-tagging-p8-p12-split.md) | L1 语义：Phase 8 归档 · Phase 12 权威实施 | 已采纳 | 2026-06-06 |
 | [013](./013-layout-strategy-approval-semantics.md) | LSE L2 审批语义：operator + ≥2 approvers（非字面双人） | 已采纳 | 2026-06-07 |
 | [008](./008-trip-storage-boundaries.md) | trip.json 存储边界 · Document/Blob 分离约定 | **Accepted** | 2026-06-11 |
+| [014](./014-mosaic-proximity-window-order.md) | 拼图连拍门槛 `mixed_proximity_seconds` 与 MCS `window_order` 默认值 | **Draft · LRG-W1** | 2026-07-05 |
 
 新建 ADR 请使用 `00N-简短英文名.md`，并在本表登记。

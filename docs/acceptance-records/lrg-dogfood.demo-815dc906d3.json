@@ -1,0 +1,57 @@
+{
+  "tripId": "demo-815dc906d3",
+  "screenCount": 112,
+  "htmlLayoutScreenCount": 112,
+  "patternHistogram": {
+    "screen-breath-pause": 28,
+    "screen-full-frame": 3,
+    "screen-landscape-1": 41,
+    "screen-landscape-2": 1,
+    "screen-landscape-3": 10,
+    "screen-landscape-4": 3,
+    "screen-mosaic-5-main-portrait-3land": 2,
+    "screen-portrait-1": 8,
+    "screen-portrait-2": 30,
+    "screen-portrait-3": 11,
+    "screen-portrait-grid-8": 3
+  },
+  "mosaicDecisionSummary": {
+    "4": {
+      "decisions": 3,
+      "success": 3,
+      "fallback": 0,
+      "patterns": [
+        "screen-landscape-4"
+      ]
+    },
+    "5": {
+      "decisions": 2,
+      "success": 2,
+      "fallback": 0,
+      "patterns": [
+        "screen-mosaic-5-main-portrait-3land"
+      ]
+    }
+  },
+  "momentExifBarCount": 5,
+  "chapterSeparatorTicketCount": 2,
+  "burstPassRate": 0.5946,
+  "burstPassRateDetail": {
+    "5": {
+      "geometryWindows": 19,
+      "burstPassWindows": 12
+    },
+    "6": {
+      "geometryWindows": 18,
+      "burstPassWindows": 10
+    }
+  },
+  "windowExposure": {
+    "4": 3,
+    "5": 2,
+    "6": 0,
+    "9": 0
+  },
+  "mixedProximitySeconds": 900.0,
+  "warnings": []
+}
