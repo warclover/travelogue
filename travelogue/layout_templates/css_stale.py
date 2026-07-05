@@ -62,3 +62,27 @@ def trip_layout_css_stale(trip_dir: Path, data: dict[str, Any] | None = None) ->
     except OSError:
         return True
     return any(gc not in text for gc in required)
+
+
+def trip_render_bundle_stale(trip_dir: Path, data: dict[str, Any] | None = None) -> bool:
+    """True when trip.json is newer than index.html (LRG G-LRG-08 preview stale).
+
+    Detects curate/copy edits that were not followed by ``render`` — the common cause
+    of trip.json vs index.html screen-count drift in dogfood acceptance.
+    """
+    trip_json = trip_dir / "trip.json"
+    index_html = trip_dir / "index.html"
+    if not trip_json.is_file() or not index_html.is_file():
+        return False
+    if data is None:
+        try:
+            data = json.loads(trip_json.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            data = {}
+    from travelogue.curation.algorithm_profile import _trip_updated_mtime
+
+    trip_mtime = _trip_updated_mtime(trip_dir, data)
+    try:
+        return trip_mtime > index_html.stat().st_mtime + 0.5
+    except OSError:
+        return False

@@ -1536,8 +1536,13 @@ function insertScreenplayControl(parent, beforeNode, opts) {
         var trips = data.trips || [];
         var trip = trips.filter(function (t) { return t.tripId === tripId; })[0];
         if (!trip) return;
-        if (trip.layoutCssStale) {
-          _layoutPendingMessage = "布局 CSS 已过期，请应用排版重新渲染";
+        if (trip.layoutCssStale || trip.renderBundleStale) {
+          _layoutPendingMessage = trip.renderBundleStale
+            ? "预览产物已过期，请重新渲染"
+            : "布局 CSS 已过期，请应用排版重新渲染";
+          if (trip.layoutCssStale && trip.renderBundleStale) {
+            _layoutPendingMessage = "预览产物与布局 CSS 已过期，请重新渲染";
+          }
           var pendingText = root.querySelector(".preview-toolbar__pending-text");
           if (pendingText) {
             pendingText.textContent = _layoutPendingMessage;

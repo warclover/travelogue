@@ -155,10 +155,15 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
         preview_rel = _pick_preview(child)
         shelf_cover_rel = _pick_shelf_cover_rel(child, data)
         layout_css_stale = False
+        render_bundle_stale = False
         if data:
-            from travelogue.layout_templates.css_stale import trip_layout_css_stale
+            from travelogue.layout_templates.css_stale import (
+                trip_layout_css_stale,
+                trip_render_bundle_stale,
+            )
 
             layout_css_stale = trip_layout_css_stale(child, data)
+            render_bundle_stale = trip_render_bundle_stale(child, data)
         rows.append(
             (
                 updated_at,
@@ -170,6 +175,7 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
                     "photoCount": photo_count,
                     "longshotStale": longshot_outputs_stale(child, trip_mtime=updated_at),
                     "layoutCssStale": layout_css_stale,
+                    "renderBundleStale": render_bundle_stale,
                     "hasLongshotExport": has_longshot_exports(child),
                     "previewRelPath": preview_rel,
                     "shelfCoverRelPath": shelf_cover_rel,

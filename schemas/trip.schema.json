@@ -858,7 +858,7 @@
         },
         "momentPosition": {
           "type": "string",
-          "enum": ["before_closing", "arc_peak"],
+          "enum": ["inline", "before_closing", "arc_peak"],
           "description": "Phase 23 · moment screen insertion point"
         },
         "momentSkipped": {
@@ -870,7 +870,17 @@
           "enum": ["closing"],
           "description": "Phase 23 · soft collision warning (e.g. same asset as closing)"
         },
-        "clustering": { "$ref": "#/$defs/tripClustering" }
+        "clustering": { "$ref": "#/$defs/tripClustering" },
+        "aestheticAlignment": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "GAP-11 aesthetic alignment telemetry written during curate"
+        },
+        "albumProfile": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Stratified album composition profile (PRD-SC §6 · album_profile.py)"
+        }
       }
     },
     "geoEventSegment": {

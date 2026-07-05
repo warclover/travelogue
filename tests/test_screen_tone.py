@@ -36,6 +36,30 @@ def test_build_chapter_separator_ticket_pull_for_long_decor() -> None:
     assert ticket["decorPull"] == "夜景比白天安静。"
 
 
+def test_chapter_meta_omits_album_title_without_divider_place() -> None:
+    """G-LRG-09: no dividerPlace → do not show album meta.title on the ticket stub."""
+    ticket = build_chapter_separator_ticket(
+        {"decorLine": "夜景"},
+        2,
+        5,
+        meta={"title": "张智慧精选2"},
+        divider={},
+    )
+    assert ticket["chapterMeta"] == "夜景"
+    assert "张智慧" not in ticket["chapterMeta"]
+
+
+def test_chapter_meta_uses_divider_date_when_place_absent() -> None:
+    ticket = build_chapter_separator_ticket(
+        {},
+        2,
+        5,
+        meta={"title": "雨后京都"},
+        divider={"dividerDate": "04.28"},
+    )
+    assert ticket["chapterMeta"] == "04.28"
+
+
 def test_chapter_separator_style_uses_dark_ink_on_light_tone() -> None:
     style = chapter_separator_style({"r": 232, "g": 228, "b": 223})
     assert "--chapter-separator-accent: #e8e4df;" in style

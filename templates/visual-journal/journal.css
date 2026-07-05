@@ -270,6 +270,13 @@ body {
   overflow-x: hidden;
 }
 
+/* G-LRG-10 · block legacy mobile 48px cascade on web/auto layout readers */
+html[data-layout="web"] body,
+html[data-layout="auto"] body {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
 /* —— Cover —— */
 .cover-hero {
   position: relative;

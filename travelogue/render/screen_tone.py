@@ -94,18 +94,19 @@ def _decor_pull_text(ch: dict, meta_tag: str) -> str:
 
 
 def _chapter_meta_line(ch: dict, meta: dict | None, divider: dict) -> str:
+    """Build ticket stub meta line (G-LRG-09 / PRD-CHAPTER-NAMING §4.2).
+
+    Uses chapter divider place/date only — never falls back to album ``meta.title``,
+    which duplicates the chapter title on ticket stubs when ``dividerPlace`` is absent.
+    """
+    _ = meta  # kept for call-site compatibility; album title must not appear here.
     parts: list[str] = []
     place = str(divider.get("dividerPlace") or "").strip()
-    if not place:
-        title = str((meta or {}).get("title") or "").strip()
-        if "·" in title:
-            place = title.split("·", 1)[0].strip()
-        elif "•" in title:
-            place = title.split("•", 1)[0].strip()
-        elif title:
-            place = title
     if place:
         parts.append(place.upper() if place.isascii() else place)
+    divider_date = str(divider.get("dividerDate") or "").strip()
+    if divider_date and divider_date not in parts:
+        parts.append(divider_date)
     tag = _short_decor_tag(ch)
     if tag and tag not in parts:
         parts.append(tag)

@@ -112,3 +112,13 @@ def test_lenis_flow_disables_scroll_snap() -> None:
     css = (TEMPLATE_VISUAL_JOURNAL / "breath.css").read_text(encoding="utf-8")
     assert "html.lenis-flow" in css
     assert "scroll-snap-type: none" in css
+
+
+def test_web_layout_resets_body_font_size() -> None:
+    """G-LRG-10 · web/auto readers must not inherit legacy 48px body cascade."""
+    css = (TEMPLATE_VISUAL_JOURNAL / "journal.css").read_text(encoding="utf-8")
+    assert 'html[data-layout="web"] body' in css
+    assert 'html[data-layout="auto"] body' in css
+    block = css.split('html[data-layout="web"] body')[1].split("}")[0]
+    assert "font-size: 1rem" in block
+    assert "48px" not in block

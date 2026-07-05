@@ -38,6 +38,8 @@ W3：翻开关 → MCS 仅读 LTE；几何固化进 screens[]；render 自包含
 回退：read_templates_from_lte=false + registry_version pin 上一 tag
 ```
 
+**LRG overlay 铁律（AC-LRG-06 · [PRD-LAYOUT-READER-REGRESSION-GUARD §3.2.4](./PRD-LAYOUT-READER-REGRESSION-GUARD.md#324-贡献者约束写入-contributing-或-phase-16-design-补丁)）**：读者可见、非 LTE 生成的 layout 样式**只能**维护在 `templates/visual-journal/journal-screens-overlays.css`；禁止在 `journal-screens.css` 的 `@journal-overlays:end` 之后手写规则；禁止只改 `trips/*/journal-screens.css` 而不改 template overlays。
+
 ### 1.2 九个融合点（文件级）
 
 | # | 融合点 | 关键文件 | 摩擦 | 改动要点 |
