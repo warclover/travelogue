@@ -18,6 +18,7 @@ from travelogue.curation.mosaic.scorer import score_candidate, weights_hash
 from travelogue.curation.mosaic.selfheal import try_self_heal_pick
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.curation.usage_rules.context import build_window_context
+from travelogue.curation.usage_rules.tiebreak import apply_usage_tiebreaks
 
 _FACE_CROP_PROXY_THRESHOLD = 0.05
 
@@ -42,7 +43,7 @@ def score_window_candidates_with_rejections(
     prev_screen: dict | None = None,
     chapter_screen_index: int = 0,
     chapter_screen_count: int = 12,
-) -> tuple[list[tuple[ScreenCandidate, float, list[str], dict[str, float]]], list[dict]]:
+) -> tuple[list[tuple[ScreenCandidate, float, list[str], dict[str, float]]], list[dict], list[dict]]:
     """Score MCS window candidates and return validator-level rejections (golden probe / tests)."""
     return _score_window_candidates_with_rejections(
         asset_ids,
@@ -71,7 +72,7 @@ def score_window_candidates(
     median_sharp: float | None = None,
 ) -> list[tuple[ScreenCandidate, float, list[str], dict[str, float]]]:
     """Score all MCS window candidates (shared by compose + replan)."""
-    scored, _rejected = _score_window_candidates_with_rejections(
+    scored, _rejected, _hits = _score_window_candidates_with_rejections(
         asset_ids,
         aspects,
         assets_map,
@@ -97,7 +98,7 @@ def _score_window_candidates_with_rejections(
     prev_screen: dict | None = None,
     chapter_screen_index: int = 0,
     chapter_screen_count: int = 12,
-) -> tuple[list[tuple[ScreenCandidate, float, list[str], dict[str, float]]], list[dict]]:
+) -> tuple[list[tuple[ScreenCandidate, float, list[str], dict[str, float]]], list[dict], list[dict]]:
     """Score MCS window candidates and collect validator-level rejections."""
     window_ctx = build_window_context(
         asset_ids,
@@ -117,6 +118,7 @@ def _score_window_candidates_with_rejections(
     )
     candidates = bundle.candidates
     rejected = list(bundle.rejected)
+    usage_hits = list(bundle.usage_rule_hits)
     scored: list[tuple[ScreenCandidate, float, list[str], dict[str, float]]] = []
     for cand in candidates:
         if mosaic_pattern_disabled(cand.pattern_id, cfg=cfg) or not cand.hard_valid:
@@ -138,6 +140,12 @@ def _score_window_candidates_with_rejections(
             chapter_screen_count=chapter_screen_count,
         )
         scored.append((cand, sr.total, sr.reason_codes, dict(sr.penalties)))
+    scored = apply_usage_tiebreaks(
+        scored,
+        ctx=window_ctx,
+        rejected=rejected,
+        usage_hits=usage_hits,
+    )
     scored.sort(key=lambda t: (-t[1], t[0].pattern_id))
     div_cfg = mcs_diversity_config()
     scored = apply_candidate_diversity(
@@ -146,7 +154,7 @@ def _score_window_candidates_with_rejections(
         mode=str(div_cfg.get("mode", "off")),
         mmr_lambda=float(div_cfg.get("lambda", 0.65)),
     )
-    return scored, rejected
+    return scored, rejected, usage_hits
 
 
 def _usage_rule_log_entries(rejected: list[dict]) -> list[dict[str, str]]:
@@ -198,7 +206,7 @@ def pick_best_window(
         log.planner_path = "legacy"
         return WindowPickResult(screen=None, log=log, used_legacy=True)
 
-    scored, rejected = _score_window_candidates_with_rejections(
+    scored, rejected, usage_hits = _score_window_candidates_with_rejections(
         asset_ids,
         aspects,
         assets_map,
@@ -213,6 +221,7 @@ def pick_best_window(
     )
     log.rejected_templates = rejected
     log.usage_rule_rejects = _usage_rule_log_entries(rejected)
+    log.usage_rule_hits = usage_hits
     log.candidates_count = len(scored)
     if not scored:
         log.fallback_used = True

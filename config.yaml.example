@@ -122,8 +122,8 @@ layout:
   web_layout_engine: screens
   # 组屏范围：day=按策展日桶时间序全序列；chapter=仅章内 items 顺序
   screen_plan_scope: day
-  # 1 竖 + 2 横混排时三张图 takenAt 最大跨度（秒）
-  mixed_proximity_seconds: 12
+  # 混排/拼图连拍 takenAt 最大跨度（秒）· 默认 900 = 15min
+  mixed_proximity_seconds: 900
   # 三竖 editorial row（screen-portrait-3-editorial）· 默认关闭
   editorial_portrait_row:
     enabled: false
@@ -208,6 +208,14 @@ layout:
   feedback:
     enabled: false
     log_path: null
+  # URO · 模板 usage 语义硬过滤（默认关；开：enabled: true）
+  usage_rules:
+    enabled: false
+    hero_gap_threshold: 0.15
+    hero_gap_prefer_threshold: 0.15   # 与 threshold 相等 → 关闭 UT-01 edge；需 edge 改 0.22
+    tiebreak_enabled: true            # false → UT-01～04 不生效
+    log_rejections: true
+    disabled_rules: []              # 例：["UR-04"] 禁用单条规则
   # Phase 16 · 布局模板引擎（LTE）
   template_engine:
     enabled: true

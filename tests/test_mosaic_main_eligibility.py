@@ -449,7 +449,20 @@ def test_portrait_3land_rejects_all_panorama_mains():
     assert ordered is None
 
 
-def test_portrait_3land_picks_conventional_main():
+def test_portrait_3land_picks_conventional_main(monkeypatch):
+    from dataclasses import replace
+
+    from travelogue.config import get_config
+    from travelogue.config.layout import UsageRulesConfig
+
+    base = get_config()
+    layout = replace(base.layout, usage_rules=UsageRulesConfig(enabled=False))
+    patched = replace(base, layout=layout)
+    monkeypatch.setattr("travelogue.config.get_config", lambda: patched)
+    monkeypatch.setattr(
+        "travelogue.curation.usage_rules.evaluator.get_config",
+        lambda: patched,
+    )
     aspects = {
         "p": "portrait",
         "good": "landscape",

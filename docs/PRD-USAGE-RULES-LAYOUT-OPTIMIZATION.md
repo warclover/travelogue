@@ -408,7 +408,7 @@ class WindowContext:
 # config.yaml
 layout:
   usage_rules:
-    enabled: false              # 默认关 · AC-URO-01
+    enabled: false              # 默认关 · AC-URO-01（runtime 默认 true 见 layout.py · 2026-07-05）
     hero_gap_threshold: 0.15    # UR-01
     hero_gap_prefer_threshold: 0.22  # UT-01 上界
     tiebreak_enabled: false     # P1 · UT-01～04

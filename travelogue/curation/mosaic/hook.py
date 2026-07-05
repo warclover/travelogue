@@ -55,20 +55,35 @@ def window_has_candidates(
     cfg: MosaicConfig,
     burst_seconds: float,
     median_sharp: float | None,
+    layout_state=None,
 ) -> bool:
-    from travelogue.curation.mosaic.candidates import generate_window_candidates
+    from travelogue.config import get_config
+    from travelogue.curation.mosaic.candidates import (
+        generate_window_candidates_with_rejections,
+    )
+    from travelogue.curation.usage_rules.context import build_window_context
 
     if len(window) != size:
         return False
-    candidates = generate_window_candidates(
+    window_ctx = None
+    if get_config().layout.usage_rules.enabled:
+        window_ctx = build_window_context(
+            window,
+            aspects,
+            assets_map,
+            layout_state=layout_state,
+            median_sharp=median_sharp,
+        )
+    result = generate_window_candidates_with_rejections(
         window,
         aspects,
         assets_map,
         cfg=cfg,
         burst_seconds=burst_seconds,
         median_sharp=median_sharp,
+        window_ctx=window_ctx,
     )
-    return any(c.hard_valid for c in candidates)
+    return any(c.hard_valid for c in result.candidates)
 
 
 def _mosaic_winner_has_main_role(
@@ -123,6 +138,7 @@ def chapter_should_skip_hero_for_mosaic(ctx: ChapterPlanContext) -> bool:
                 cfg=cfg,
                 burst_seconds=ctx.mix_gap,
                 median_sharp=ctx.med_sharp,
+                layout_state=ctx.layout_state,
             )
         )
     if size == 5 and ctx.trip_total < MIN_TRIP_PHOTOS_FOR_MOSAIC and not cfg.enabled:
@@ -407,6 +423,7 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             cfg=cfg,
             burst_seconds=ctx.mix_gap,
             median_sharp=ctx.med_sharp,
+            layout_state=ctx.layout_state,
         ):
             continue
         if try_mosaic_window_mcs(ctx, start, size, cfg):

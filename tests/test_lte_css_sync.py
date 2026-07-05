@@ -201,6 +201,49 @@ def test_plate_portrait_contain_collapses_stage(journal_css: str) -> None:
 
 
 @pytest.mark.unit
+def test_moment_exif_bar_rules_in_overlays(journal_css: str) -> None:
+    """P23 moment EXIF footnote CSS must live inside @journal-overlays (Phase 16 sync)."""
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert "inline moment EXIF bar" in overlays
+    assert ".moment-exif-bar" in overlays
+    assert "background: #0a0a0a" in overlays
+    assert ".moment-exif-line" in overlays
+    assert ".layout-slot:has(.moment-exif-bar)" in overlays
+
+
+@pytest.mark.unit
+def test_chapter_ticket_stub_rules_in_overlays(journal_css: str) -> None:
+    """Ticket-stub chapter separator CSS must live inside @journal-overlays (Phase 16 sync)."""
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert "ticket-stub chapter separator (scheme B)" in overlays
+    assert '.chapter-separator--ticket[data-block="chapter-separator"]' in overlays
+    assert ".chapter-separator--ticket .chapter-separator__title" in overlays
+    assert ':not(.chapter-separator--ticket) .chapter-separator__title' in overlays
+
+
+@pytest.mark.unit
+def test_mosaic_5_main_portrait_3land_contain_collapses_stage(journal_css: str) -> None:
+    """screen-mosaic-5-main-portrait-3land with contain portrait must drop 16:9 clip.
+
+    Regression: portrait contain tile expands grid past fixed stage; bottom landscape
+    row was clipped (~74% hidden) when aspect-ratio stayed locked.
+    """
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert (
+        '[data-pattern="screen-mosaic-5-main-portrait-3land"]'
+        ":has(.layout-slot__img--contain)" in overlays
+    )
+    assert ".layout-screen__grid--mosaic-5-main-portrait-3land" in overlays
+    assert "grid-template-rows: repeat(3, auto)" in overlays
+
+
+@pytest.mark.unit
 def test_mosaic_portrait_contain_top_anchor(journal_css: str) -> None:
     """Regression: hero mosaic bottom tiles use contain + top center, not focal stretch."""
     ostart = journal_css.index(OVERLAYS_MARKER_START)

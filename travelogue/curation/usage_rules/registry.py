@@ -21,6 +21,10 @@ RULE_UR_04 = "UR-04"
 RULE_UR_05 = "UR-05"
 RULE_UR_06 = "UR-06"
 RULE_UR_09 = "UR-09"
+RULE_UT_01 = "UT-01"
+RULE_UT_02 = "UT-02"
+RULE_UT_03 = "UT-03"
+RULE_UT_04 = "UT-04"
 
 ALL_RULE_IDS: tuple[str, ...] = (
     RULE_UR_01,
@@ -30,6 +34,10 @@ ALL_RULE_IDS: tuple[str, ...] = (
     RULE_UR_05,
     RULE_UR_06,
     RULE_UR_09,
+    RULE_UT_01,
+    RULE_UT_02,
+    RULE_UT_03,
+    RULE_UT_04,
 )
 
 # Weakest-first undo order when usage filter would empty the candidate set (PRD §3.6).
@@ -40,6 +48,7 @@ USAGE_RULE_UNDO_ORDER: tuple[str, ...] = (
     RULE_UR_03,
     RULE_UR_02,
     RULE_UR_01,
+    RULE_UR_09,
 )
 
 HERO_LED_PATTERNS: frozenset[str] = frozenset(

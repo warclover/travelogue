@@ -21,7 +21,17 @@ def _asset(aid: str, *, w: int, h: int) -> dict:
     }
 
 
-def test_main_portrait_3land_gets_single_portrait_bonus():
+def test_main_portrait_3land_gets_single_portrait_bonus(monkeypatch):
+    from travelogue.config.layout import UsageRulesConfig
+
+    base = get_config()
+    layout = replace(base.layout, usage_rules=UsageRulesConfig(enabled=False))
+    patched = replace(base, layout=layout)
+    monkeypatch.setattr("travelogue.config.get_config", lambda: patched)
+    monkeypatch.setattr(
+        "travelogue.curation.usage_rules.evaluator.get_config",
+        lambda: patched,
+    )
     aspects = {
         "l0": "landscape",
         "l1": "landscape",

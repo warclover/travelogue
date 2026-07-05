@@ -46,6 +46,7 @@ def _mosaic_eligible_asset_ids(
 class WindowCandidateResult:
     candidates: list[ScreenCandidate]
     rejected: list[dict[str, Any]] = field(default_factory=list)
+    usage_rule_hits: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _reject(
@@ -65,6 +66,7 @@ def _restore_if_usage_emptied_candidates(
     out: list[ScreenCandidate],
     rejected: list[dict[str, Any]],
     usage_deferred: list[tuple[ScreenCandidate, str]],
+    usage_hits: list[dict[str, Any]] | None = None,
 ) -> None:
     if any(c.hard_valid for c in out) or not usage_deferred:
         return
@@ -74,6 +76,15 @@ def _restore_if_usage_emptied_candidates(
             continue
         out.extend(restore)
         restored_ids = {c.pattern_id for c in restore}
+        if usage_hits is not None:
+            for cand in restore:
+                usage_hits.append(
+                    {
+                        "ruleId": rule_id,
+                        "templateId": cand.pattern_id,
+                        "action": "restore",
+                    }
+                )
         rejected[:] = [
             r
             for r in rejected
@@ -127,6 +138,7 @@ def generate_window_candidates_with_rejections(
     out: list[ScreenCandidate] = []
     rejected: list[dict[str, Any]] = []
     usage_deferred: list[tuple[ScreenCandidate, str]] = []
+    usage_hits: list[dict[str, Any]] = []
     for pat in patterns:
         if mosaic_pattern_disabled(pat.pattern_id, cfg=cfg):
             _reject(rejected, pat.pattern_id, "pattern_disabled")
@@ -210,10 +222,14 @@ def generate_window_candidates_with_rejections(
                 hard_valid=geom_ok,
             )
         )
-    _restore_if_usage_emptied_candidates(out, rejected, usage_deferred)
+    _restore_if_usage_emptied_candidates(out, rejected, usage_deferred, usage_hits)
     if cfg.deterministic_strict:
         out.sort(key=lambda c: (c.pattern_id, tuple(c.ordered_asset_ids)))
-    return WindowCandidateResult(candidates=out, rejected=rejected)
+    return WindowCandidateResult(
+        candidates=out,
+        rejected=rejected,
+        usage_rule_hits=usage_hits,
+    )
 
 
 def generate_five_candidates(

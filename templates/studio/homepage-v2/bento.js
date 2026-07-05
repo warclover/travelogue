@@ -282,7 +282,7 @@ export function renderBenchRecent() {
     if (trip.longshotStale || trip.algorithmStale) {
       var stale = document.createElement("span");
       stale.className = "v2-bench__recent-card__stale";
-      stale.textContent = trip.algorithmStale ? STALE_BADGE : STALE_LONGSHOT;
+      stale.textContent = trip.longshotStale ? STALE_LONGSHOT : STALE_BADGE;
       card.appendChild(stale);
     }
 

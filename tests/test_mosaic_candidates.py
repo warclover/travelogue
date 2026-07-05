@@ -2,10 +2,18 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from tests._golden.helpers import build_mixed_aspects_trip
-from travelogue.config import MosaicConfig
+from travelogue.config import MosaicConfig, get_config
+from travelogue.config.layout import UsageRulesConfig
 from travelogue.curation.mosaic.candidates import generate_window_candidates
-from travelogue.curation.mosaic.constants import PATTERN_PORTRAIT_2_LANDSCAPE_2
+from travelogue.curation.mosaic.constants import (
+    PATTERN_LANDSCAPE_9,
+    PATTERN_PORTRAIT_2_LANDSCAPE_2,
+)
+from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.curation.usage_rules.context import build_window_context
 
 
 def _five_assets():
@@ -102,3 +110,51 @@ def test_window_has_candidates_requires_geometry_valid():
         burst_seconds=3600.0,
         median_sharp=None,
     )
+
+
+def test_window_has_candidates_aligns_with_usage_filter(monkeypatch):
+    """Probe must apply the same usage-rule filter as compose (PRD §7.1)."""
+    from travelogue.curation.mosaic.candidates import (
+        generate_window_candidates_with_rejections,
+    )
+    from travelogue.curation.mosaic.hook import window_has_candidates
+
+    aspects = {f"a{i}": "landscape" for i in range(9)}
+    assets_map = {
+        f"a{i}": {
+            "id": f"a{i}",
+            "width": 3000,
+            "height": 1687,
+            "takenAt": "2024-06-01T10:00:00Z",
+            "quality": {"sharpness": 0.8},
+        }
+        for i in range(9)
+    }
+    ids = [f"a{i}" for i in range(9)]
+    cfg = MosaicConfig(enabled=True, enabled_window_sizes=(9,))
+    st = ScreenLayoutPlannerState.from_trip_total(40)
+    st.last_was_dense_collage = True
+    base = get_config()
+    layout = replace(base.layout, usage_rules=UsageRulesConfig(enabled=True))
+    patched = replace(base, layout=layout)
+    monkeypatch.setattr("travelogue.config.get_config", lambda: patched)
+    monkeypatch.setattr(
+        "travelogue.curation.usage_rules.evaluator.get_config",
+        lambda: patched,
+    )
+    ctx = build_window_context(ids, aspects, assets_map, layout_state=st, median_sharp=0.5)
+    bundle = generate_window_candidates_with_rejections(
+        ids, aspects, assets_map, cfg=cfg, window_ctx=ctx, median_sharp=0.5
+    )
+    expected = any(c.hard_valid for c in bundle.candidates)
+    assert window_has_candidates(
+        ids,
+        aspects,
+        assets_map,
+        size=9,
+        cfg=cfg,
+        burst_seconds=3600.0,
+        median_sharp=0.5,
+        layout_state=st,
+    ) == expected
+    assert any(c.pattern_id == PATTERN_LANDSCAPE_9 for c in bundle.candidates if c.hard_valid)

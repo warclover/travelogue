@@ -134,17 +134,23 @@ def usage_rule_log_stats(mosaic_logs: list[dict] | None) -> dict[str, Any]:
     reject_count = 0
     hit_count = 0
     rule_counts: Counter[str] = Counter()
+    hit_by_rule: Counter[str] = Counter()
     for lg in logs:
         for row in lg.get("usageRuleRejects") or []:
             reject_count += 1
             rid = str(row.get("ruleId") or "")
             if rid:
                 rule_counts[rid] += 1
-        hit_count += len(lg.get("usageRuleHits") or [])
+        for row in lg.get("usageRuleHits") or []:
+            hit_count += 1
+            rid = str(row.get("ruleId") or "")
+            if rid:
+                hit_by_rule[rid] += 1
     return {
         "rejectCount": reject_count,
         "hitCount": hit_count,
         "rejectByRule": dict(sorted(rule_counts.items())),
+        "hitByRule": dict(sorted(hit_by_rule.items())),
     }
 
 

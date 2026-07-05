@@ -28,7 +28,7 @@ from travelogue.curation.usage_rules.evaluator import (
     evaluate_ur05,
     evaluate_ur06,
 )
-from travelogue.curation.usage_rules.registry import RULE_UR_05
+from travelogue.curation.usage_rules.registry import RULE_UR_05, RULE_UR_09, USAGE_RULE_UNDO_ORDER
 
 
 def _asset(aid: str, *, w: int, h: int, sharp: float = 0.8) -> dict:
@@ -176,6 +176,9 @@ def test_usage_empty_fallback_restores_weakest_rule(monkeypatch):
         r.get("templateId") == PATTERN_LANDSCAPE_9 and r.get("reason") == f"usage_rule:{RULE_UR_05}"
         for r in usage_rejects
     )
+    restores = [h for h in result.usage_rule_hits if h.get("action") == "restore"]
+    if restores:
+        assert any(h.get("ruleId") == RULE_UR_05 for h in restores)
 
 
 def test_ur03_sole_candidate_restored_by_empty_fallback(monkeypatch):
@@ -220,3 +223,46 @@ def test_ur03_sole_candidate_restored_by_empty_fallback(monkeypatch):
         assert hero is not None
     finally:
         reset_mosaic_config_override()
+
+
+def test_ur09_is_weakest_undo_rule():
+    """§3.6 · UR-09 is evaluated first (strongest) and undone last."""
+    assert RULE_UR_09 in USAGE_RULE_UNDO_ORDER
+    assert USAGE_RULE_UNDO_ORDER[-1] == RULE_UR_09
+
+
+def test_ur09_empty_fallback_restores_when_sole_deferral():
+    """When UR-09 is the only usage deferral, §3.6 undo must restore candidates."""
+    from travelogue.curation.mosaic.candidates import (
+        ScreenCandidate,
+        _restore_if_usage_emptied_candidates,
+    )
+    from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4
+
+    cand = ScreenCandidate(
+        pattern_id=PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+        ordered_asset_ids=["a0", "a1", "a2", "a3", "a4"],
+        screen={"patternId": PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4, "slots": []},
+        hard_valid=True,
+    )
+    out: list[ScreenCandidate] = []
+    rejected = [
+        {"templateId": cand.pattern_id, "reason": f"usage_rule:{RULE_UR_09}"},
+    ]
+    deferred = [(cand, RULE_UR_09)]
+    hits: list[dict] = []
+    _restore_if_usage_emptied_candidates(out, rejected, deferred, hits)
+    assert len(out) == 1
+    assert out[0].hard_valid
+    assert hits == [
+        {
+            "ruleId": RULE_UR_09,
+            "templateId": PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+            "action": "restore",
+        }
+    ]
+    assert not any(
+        r.get("reason") == f"usage_rule:{RULE_UR_09}"
+        and r.get("templateId") == PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4
+        for r in rejected
+    )

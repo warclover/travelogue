@@ -184,6 +184,9 @@ export function refreshBentoUserPreview(trips, opts) {
         updatedAt: trip.updatedAt,
         force: !!opts.force,
       }).then(function (manifest) {
+        if (V2.bentoPreviewTripId !== trip.tripId) {
+          return V2.userManifest;
+        }
         V2.userPreviewTrip = trip;
         V2.userManifest = manifest || null;
         if (manifest) manifest.tripId = manifest.tripId || trip.tripId;

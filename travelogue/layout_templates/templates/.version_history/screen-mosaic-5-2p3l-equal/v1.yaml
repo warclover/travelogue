@@ -1,10 +1,10 @@
 id: screen-mosaic-5-2p3l-equal
 version: 1
-status: ga
+status: deprecated
 kind: composite
 displayName: 五图 · 双竖 hero + 三横右栏
 description: '左中两列满高双竖 hero（displayAspect≈0.59）+ 右栏三等高横图（1.78）。 3×3 整数网格下唯一可无缝平铺、不留空位、不把竖图塞进宽格的
-  2P+3L 拓扑。 P16 旗舰 composite，替代 deprecated 3P+2L balanced。
+  2P+3L 拓扑。 已退役：新 trip 不再候选；历史 screens[] 仍可渲染。
 
   '
 aesthetic: dense
@@ -93,7 +93,7 @@ render:
   cssBundle: journal-screens.css
   fitPolicy: auto_delegate
 rollout:
-  percent: 100
+  percent: 0
   hash_key: tripId
 _legacy:
   accepts:
@@ -102,3 +102,15 @@ _legacy:
     max_portrait: 2
     max_landscape: 3
   css_verified: true
+usage:
+  summary: 已退役的 2 竖 + 3 横无缝拼屏：双竖 hero 满高占左中两列，右栏三横等高。
+  whenNotToUse: '- 已退役（rollout 0%）：新 trip 不再候选，仅保留渲染历史 screens[]。
+
+    - 退役背景：双竖等宽满高信息密度过高、缺主次，被主图引领类模板取代。
+
+    '
+  siblings:
+  - id: screen-mosaic-5-2portrait-3land-balanced
+    difference: 更早的 2P3L 前身（右上留空缺陷），本模板曾是其修正版；两者均已退役。
+  - id: screen-mosaic-5-main-portrait-3land
+    difference: 现役的竖图混排方案：仅收 1 竖且有明确主横图，密度更克制。

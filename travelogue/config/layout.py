@@ -170,8 +170,8 @@ class UsageRulesConfig:
 
     enabled: bool = False
     hero_gap_threshold: float = 0.15
-    hero_gap_prefer_threshold: float = 0.22
-    tiebreak_enabled: bool = False
+    hero_gap_prefer_threshold: float = 0.15  # == threshold → UT-01 edge 区关闭
+    tiebreak_enabled: bool = True
     log_rejections: bool = True
     disabled_rules: tuple[str, ...] = ()
 
@@ -182,7 +182,7 @@ class LayoutConfig:
 
     web_layout_engine: str = "screens"  # legacy | screens
     screen_plan_scope: str = "day"  # chapter | day — day = 按策展日桶全序列组屏
-    mixed_proximity_seconds: float = 12.0  # 1竖+2横混排 takenAt 跨度上限
+    mixed_proximity_seconds: float = 900.0  # 混排/拼图连拍 takenAt 跨度上限（秒）· 默认 15min
     layout_density_enabled: bool = True  # PRD-FINE-CRAFT-LAYOUT-DENSITY · false → balanced
     editorial_portrait_row: EditorialPortraitRowConfig = field(
         default_factory=EditorialPortraitRowConfig

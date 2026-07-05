@@ -24,7 +24,8 @@
    - `screen-mosaic-5-main-landscape-2portrait-2land`
 3. **竖图为主相册**（如儿童年度册）修复后 **仍可能无** 五/六张拼图 — 属 1P+4L 几何 + 12s 连拍门槛，非故障。运行 `python scripts/mosaic_config_diag.py --trip trips/<id>` 查看 burst_fail / 竖图占比。
 4. **横图为主相册** re-curate 后预期可出现 **主 hero + 配图** 拼图（1～3 屏量级），密度仍受 P21 `density_budget` 约束；不会满屏网格。
-5. URO `usage_rules.enabled` 仍为 **false**；MCR 应先于 URO enabled=true 上线。
+5. **URO** `layout.usage_rules.enabled` 默认 **false**（2026-07-05 曾短暂默认开，已回退）；需 UR 硬过滤时在 `config.yaml` 设 `enabled: true` 并 re-curate。
+6. **UT tie-break** `layout.usage_rules.tiebreak_enabled` 默认 **true**，但须 `usage_rules.enabled: true` 才生效。
 
 ## 本地验收
 

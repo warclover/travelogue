@@ -210,7 +210,12 @@ def load_config(path: Path | None = None) -> AppConfig:
     scope = str(layout_raw.get("screen_plan_scope", "day")).strip().lower()
     if scope not in ("chapter", "day"):
         scope = "day"
-    mixed_gap = float(layout_raw.get("mixed_proximity_seconds", 12.0))
+    mixed_gap = float(
+        layout_raw.get(
+            "mixed_proximity_seconds",
+            LayoutConfig().mixed_proximity_seconds,
+        )
+    )
     layout_density_top = data.get("layoutDensity") if isinstance(data.get("layoutDensity"), dict) else {}
     layout_density_enabled = bool(
         layout_density_top.get("enabled", layout_raw.get("layout_density_enabled", True))

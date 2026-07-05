@@ -1,5 +1,33 @@
 /* Phase 16 LTE generated grid CSS — do not edit by hand */
 
+/* screen-editorial-4mix */
+html[data-layout="web"] .layout-screen__grid--editorial-4mix,
+html[data-layout="auto"] .layout-screen__grid--editorial-4mix {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+  align-items: stretch;
+}
+
+html[data-layout="web"] .layout-screen__grid--editorial-4mix .layout-slot[data-slot="0"], html[data-layout="auto"] .layout-screen__grid--editorial-4mix .layout-slot[data-slot="0"] {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+html[data-layout="web"] .layout-screen__grid--editorial-4mix .layout-slot[data-slot="1"], html[data-layout="auto"] .layout-screen__grid--editorial-4mix .layout-slot[data-slot="1"] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+html[data-layout="web"] .layout-screen__grid--editorial-4mix .layout-slot[data-slot="2"], html[data-layout="auto"] .layout-screen__grid--editorial-4mix .layout-slot[data-slot="2"] {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+html[data-layout="web"] .layout-screen__grid--editorial-4mix .layout-slot[data-slot="3"], html[data-layout="auto"] .layout-screen__grid--editorial-4mix .layout-slot[data-slot="3"] {
+  grid-column: 2;
+  grid-row: 2;
+}
+
 /* screen-full-frame */
 html[data-layout="web"] .layout-screen__grid--1col,
 html[data-layout="auto"] .layout-screen__grid--1col {
@@ -505,6 +533,29 @@ html[data-layout="web"] .layout-screen__grid--2x2 .layout-slot[data-slot="3"], h
 }
 
 /* screen-portrait-3 */
+html[data-layout="web"] .layout-screen__grid--3col,
+html[data-layout="auto"] .layout-screen__grid--3col {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(1, 1fr);
+  align-items: stretch;
+}
+
+html[data-layout="web"] .layout-screen__grid--3col .layout-slot[data-slot="0"], html[data-layout="auto"] .layout-screen__grid--3col .layout-slot[data-slot="0"] {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+html[data-layout="web"] .layout-screen__grid--3col .layout-slot[data-slot="1"], html[data-layout="auto"] .layout-screen__grid--3col .layout-slot[data-slot="1"] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+html[data-layout="web"] .layout-screen__grid--3col .layout-slot[data-slot="2"], html[data-layout="auto"] .layout-screen__grid--3col .layout-slot[data-slot="2"] {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+/* screen-portrait-3-editorial */
 html[data-layout="web"] .layout-screen__grid--3col,
 html[data-layout="auto"] .layout-screen__grid--3col {
   grid-template-columns: repeat(3, 1fr);

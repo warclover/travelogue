@@ -102,12 +102,20 @@ def test_usage_rule_log_stats():
                 {"ruleId": "UR-01", "templateId": PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5},
                 {"ruleId": "UR-02", "templateId": PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5},
             ],
-            "usageRuleHits": [],
+            "usageRuleHits": [
+                {
+                    "ruleId": "UR-05",
+                    "templateId": "screen-landscape-9",
+                    "action": "restore",
+                }
+            ],
         }
     ]
     stats = usage_rule_log_stats(logs)
     assert stats["rejectCount"] == 2
+    assert stats["hitCount"] == 1
     assert stats["rejectByRule"]["UR-01"] == 1
+    assert stats["hitByRule"]["UR-05"] == 1
 
 
 def test_compute_usage_rules_metrics_block():

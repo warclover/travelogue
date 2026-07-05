@@ -4,7 +4,7 @@
 |------|------|
 | **关联 PRD** | [PRD-USAGE-RULES-LAYOUT-OPTIMIZATION.md](./PRD-USAGE-RULES-LAYOUT-OPTIMIZATION.md) v0.2.0 |
 | **阶段** | P0-a/b/c（基础设施 + UR-01～06 + 评估体系） |
-| **默认** | `layout.usage_rules.enabled: false` |
+| **默认** | `layout.usage_rules.enabled: false`（开：`enabled: true`） |
 | **merge 条件** | P0-a/b：`enabled=false` 可 merge；**`enabled=true` 须过 AC-URO-BLIND** |
 
 ---
@@ -64,10 +64,10 @@ hook.try_mosaic_window → pick.used_legacy
 ```yaml
 layout:
   usage_rules:
-    enabled: false
+    enabled: false              # true → 启用 UR-01～06 / UR-09
     hero_gap_threshold: 0.15
-    hero_gap_prefer_threshold: 0.22
-    tiebreak_enabled: false
+    hero_gap_prefer_threshold: 0.15
+    tiebreak_enabled: true
     log_rejections: true
     disabled_rules: []
 ```
@@ -81,7 +81,7 @@ layout:
 | AC-URO-01 | `test_usage_rules_baseline.py` · enabled=false 不改变候选集 |
 | AC-URO-02 | `test_usage_rules_evaluator.py` · UR-01 reject main-hero |
 | AC-URO-03 | rejected reason `usage_rule:UR-01` 进入 log |
-| AC-URO-09 | `test_usage_rules_legacy_gate.py` · legacy 守门 |
+| AC-URO-06 | `test_usage_rules_tiebreak.py` · tiebreak 独立开关 + UT-01 prefer |
 
 ---
 
@@ -93,7 +93,11 @@ layout:
 | UR-04 | 1 竖图且竖图 hero 分最高 | `evaluator` + `_can_mosaic_5_main_portrait_3land` |
 | UR-05 | landscape/portrait-9 + dense breath | 复用 `can_use_dense_collage` |
 | UR-06 | editorial-4mix 章配额已满 | `can_emit_editorial_composite()` |
-| 空候选 | 全被 usage reject → 按 UR-06…UR-01 逆序恢复 | `candidates._restore_if_usage_emptied_candidates` |
+| 空候选 | 全被 usage reject → 按 UR-06…UR-09 逆序恢复 | `candidates._restore_if_usage_emptied_candidates` |
+| UT-01 | 6 图窗 · gap < 0.22 · hero vs landscape-6 | `usage_rules/tiebreak.py` · prefer +0.05 |
+| UT-02 | 3 图窗 · 1P+2L · 竖 hero 最高 | `tiebreak.py` · portrait-1-landscape-2 +0.05 |
+| UT-03 | 3 竖 run · web editorial | `tiebreak.py` · portrait-3 +0.05 → editorial |
+| UT-04 | mosaic-5 hero · UR-01 区 · needsHero strong | `tiebreak.py` · 非 hero siblings +0.03 |
 
 ---
 
@@ -168,4 +172,93 @@ python scripts/usage_rules_blind_review.py --export demo-2019 --no-render  # 仅
 本地 `--golden` 共评估 **10** 本（2 本 trip 目录缺失 skip）。  
 全部 `layoutSnapshotEqual=true` · `usageRuleRejectCount=0` — 说明当前 dogfood 集上规则未改变排版（符合 AC-URO-01）；  
 `heroMismatchRate` 多为 `null`（无 hero-led 屏输出）。  
-**AC-URO-BLIND 仍待人工 A/B** 后再考虑 `enabled=true` merge。
+**AC-URO-BLIND 仍待人工 A/B** 后再评估是否维持 `enabled=true` 为长期默认；回退：`layout.usage_rules.enabled: false`。
+
+---
+
+## 8. UT tie-break（P1 · AC-URO-06 · UT-01～04）
+
+**开关**：`layout.usage_rules.tiebreak_enabled`（默认 `true`；须与 `enabled: true` 同时开）
+
+**回退**：`layout.usage_rules.tiebreak_enabled: false`
+
+| 规则 | 条件 | 动作 |
+|------|------|------|
+| **UT-01** | 6 图窗 · gap 边缘或 UR-01 区 | landscape-6 **+0.05** |
+| **UT-02** | 3 图窗 · 1P+2L · 竖图 hero 最高 · 与 mosaic-3 分差 < 0.03 | portrait-1-landscape-2 **+0.05** |
+| **UT-03** | 3 竖 run · editorial portrait row 开启 · 与竞品分差 < 0.03 | portrait-3 **+0.05**（emit 为 editorial） |
+| **UT-04** | mosaic-5 hero · needsHero strong · UR-01 区 · 与 hero 分差 < 0.03 | 非 hero siblings **+0.03** |
+
+**UT-01 模式**：
+
+| 模式 | 条件 |
+|------|------|
+| **edge** | `hero_gap_threshold ≤ gap < hero_gap_prefer_threshold` 且 hero 与 landscape-6 分差 < 0.03 |
+| **ur01_zone** | `gap < hero_gap_threshold`（UR-01 会 reject hero）且 landscape-6 在候选中 |
+
+**UT-04 needsHero**：优先读 LTE 模板 `usage.signals.needsHero`；缺省时 hero-led 模板（`main-hero-plus-4/5`）视为 strong。siblings 来自模板 `usage.siblings`，否则回退为同窗内非 hero 的 `screen-mosaic-5-*` + `landscape-6`。
+
+**日志**：`usageRuleHits[]` → `{ ruleId: "UT-0x", action: "prefer", templateId }`
+
+**测试**：`tests/test_usage_rules_tiebreak.py`
+
+---
+
+## 9. UR-04 与 Mosaic `prefer_five_slot_single_portrait` 交互
+
+| 层 | 行为 | 配置 |
+|----|------|------|
+| **Mosaic hook/scorer** | 1P+4L 窗口 **鼓励** `screen-mosaic-5-main-portrait-3land`（窗口排序 + scorer +5%） | `mosaic.prefer_five_slot_single_portrait: true`（默认） |
+| **UR-04** | 当窗口内 **仅 1 张竖图且竖图 hero 分最高** 时 **reject** 上述模板 | `layout.usage_rules.enabled: true` |
+
+**冲突场景**：1 竖 + 4 横，竖图 sharpness/hero 分高于横图 → scorer 推高 `main-portrait-3land`，UR-04 硬拒绝。
+
+**实际路径**（URO 开）：
+
+1. UR-04 将 `main-portrait-3land` 放入 `usage_deferred`；
+2. 若仍有其他 hard_valid 候选 → 选非 UR-04 拒绝的模板；
+3. 若 UR-04 是唯一过滤且候选将空 → §3.6 undo 可恢复（含 UR-09 链末位）；
+4. legacy 路径同样过 `evaluate_reject`，不得绕过（AC-URO-09）。
+
+**运维选项**：
+
+```yaml
+layout:
+  usage_rules:
+    disabled_rules: ["UR-04"]   # 仅关 UR-04，保留其余规则
+# 或
+mosaic:
+  prefer_five_slot_single_portrait: false   # 关 mosaic 侧鼓励，不解除 UR-04
+```
+
+**诊断**：`mosaicDecisionLog[].usageRuleRejects` 中 `ruleId: UR-04` + `detail: portrait_hero_is_max`；§3.6 恢复时 `usageRuleHits` 含 `action: restore`。
+
+---
+
+## 10. 5/6 拼图变少 · 诊断与调参
+
+URO 开启后 hero 拼图（`main-hero-plus-4/5`、`main-portrait-3land`、`hero-3-2-plus-4`）减少多为**规则生效**，非 MCS 故障。
+
+| 规则 | 影响的模板 | 典型场景 |
+|------|-----------|----------|
+| **UR-01** | `main-hero-plus-4/5` | 连拍横图 hero 分差 < 0.15 → 硬 reject |
+| **UR-02** | hero-led dense | 上一屏已是密度屏 / 章内 dense 配额满 |
+| **UR-04** | `main-portrait-3land` | 1P+4L 且竖图 sharpness 最高 |
+| **UR-09** | hero-led | 6 图窗内 ≥2 张标准竖图 |
+| **UT-01 edge** | → `landscape-6` | `0.15≤gap<prefer` 且分差 <0.03 时 +0.05 抢 hero 胜（**默认已关**：`prefer=threshold=0.15`） |
+
+**降级路径**（hero reject 后）：6 图窗常落 **`screen-landscape-6`**（3×2 等分），视觉上不像「主 hero 拼图」。
+
+**调参建议**（由弱到强）：
+
+```yaml
+layout:
+  usage_rules:
+    hero_gap_threshold: 0.12          # 放宽 UR-01，更多弱 hero 可过
+    hero_gap_prefer_threshold: 0.15   # 保持 0.15 关闭 edge；恢复 edge 改 0.22
+    tiebreak_enabled: false           # 关 UT-01～04 微调
+    disabled_rules: ["UR-02"]         # 仅关密度呼吸（保留 UR-01）
+    disabled_rules: ["UR-04"]         # 恢复 1P+4L 五格竖主图
+```
+
+**日志**：re-curate 后查 `trip.curation.mosaicDecisionLog[]` → `usageRuleRejects` / `usageRuleHits` / `winnerPatternId`。

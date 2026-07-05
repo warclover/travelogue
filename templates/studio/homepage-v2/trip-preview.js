@@ -154,6 +154,7 @@ export function loadTripBentoPreview(tripId, opts) {
     })
     .then(function (data) {
       if (!data || !data.ok) return null;
+      if (V2.bentoPreviewTripId && V2.bentoPreviewTripId !== tripId) return null;
       var m = Object.assign({}, data);
       delete m.ok;
       m.source = "user";

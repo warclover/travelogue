@@ -1123,6 +1123,10 @@ def ingest_into_trip(
     """
     resolved_app = app_cfg or get_config()
     cfg = cfg or resolved_app.ingest
+    if dedupe and keep_near_duplicates_for_trip(trip):
+        from dataclasses import replace
+
+        cfg = replace(cfg, dedupe_burst=False, dedupe_phash=False)
     max_photos = max_photos if max_photos is not None else cfg.max_photos
     if generate_crops is None:
         generate_crops = cfg.generate_crops

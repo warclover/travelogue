@@ -48,17 +48,19 @@ function reloadTripsList() {
     V2.tripsTotal = typeof data.total === "number" ? data.total : V2.trips.length;
     V2.isOffline = false;
     persistTripsCache(V2.trips, V2.tripsTotal);
-    return V2.trips;
+    return { ok: true, trips: V2.trips };
   }).catch(function () {
-    return V2.trips;
+    return { ok: false, trips: V2.trips };
   });
 }
 
 function refreshAfterCurate(tripId) {
   clearBentoPreviewCache();
   try { window.__v2RefreshAfterCurate = true; } catch (e) { /* ignore */ }
-  return reloadTripsList().then(function () {
-    patchTripFreshness(tripId);
+  return reloadTripsList().then(function (result) {
+    if (result.ok) {
+      patchTripFreshness(tripId);
+    }
     return import("./bento-preview-picker.js").then(function (picker) {
       picker.syncPreviewSelectOptions(V2.trips);
       return import("./bento-tabs.js").then(function (tabs) {
