@@ -58,7 +58,7 @@ def test_run_variant_on_uses_config_override_for_rules(monkeypatch):
     from scripts.usage_rules_eval_common import run_variant
     from travelogue.config import get_config
     from travelogue.config.layout import UsageRulesConfig
-    import travelogue.curation.usage_rules.evaluator as ev
+    import travelogue.curation.mosaic.candidates as mosaic_candidates
 
     trip = load_trip("golden-mixed-scenes", trips_dir=ROOT / "trips", use_fixture=True)
     assert trip is not None
@@ -71,15 +71,19 @@ def test_run_variant_on_uses_config_override_for_rules(monkeypatch):
         ),
     )
     calls = {"enabled": 0}
-    orig = ev.evaluate_reject
+    orig = mosaic_candidates.evaluate_reject
 
     def counting(*args, **kwargs):
-        cfg = kwargs.get("cfg") or ev._usage_rules_config()
+        cfg = kwargs.get("cfg")
+        if cfg is None:
+            from travelogue.curation.usage_rules.evaluator import _usage_rules_config
+
+            cfg = _usage_rules_config()
         if cfg.enabled:
             calls["enabled"] += 1
         return orig(*args, **kwargs)
 
-    monkeypatch.setattr(ev, "evaluate_reject", counting)
+    monkeypatch.setattr(mosaic_candidates, "evaluate_reject", counting)
     work = ROOT / ".cache" / "test-usage-rules-eval" / "override-smoke"
     on = run_variant(trip, usage_enabled=True, work_dir=work / "on", cfg_base=cfg_on)
     assert on["usageRulesEnabled"] is True

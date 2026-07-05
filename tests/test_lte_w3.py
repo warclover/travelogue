@@ -11,6 +11,7 @@ from travelogue.curation.mosaic.candidates import generate_window_candidates
 from travelogue.curation.mosaic.constants import (
     PATTERN_MOSAIC_5_2P3L_EQUAL,
     PATTERN_MOSAIC_5_3P_2L_BALANCED,
+    PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
 )
 from travelogue.curation.mosaic.lte_adapter import mosaic_registry, read_templates_from_lte
 from travelogue.curation.mosaic.pattern_catalog import patterns_for_window_size
@@ -35,7 +36,8 @@ def test_read_templates_from_lte_defaults_true() -> None:
 def test_lte_registry_excludes_deprecated_includes_flagship(lte_pattern_enabled) -> None:
     reg = mosaic_registry()
     assert PATTERN_MOSAIC_5_3P_2L_BALANCED not in reg
-    assert PATTERN_MOSAIC_5_2P3L_EQUAL in reg
+    assert PATTERN_MOSAIC_5_2P3L_EQUAL not in reg
+    assert PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND in reg
 
 
 @pytest.mark.unit
@@ -43,23 +45,26 @@ def test_patterns_for_window_size_includes_lte_extras(lte_pattern_enabled) -> No
     reg = mosaic_registry()
     five = patterns_for_window_size(5, reg)
     ids = [p.pattern_id for p in five]
-    assert PATTERN_MOSAIC_5_2P3L_EQUAL in ids
+    assert PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND in ids
 
 
 @pytest.mark.unit
 def test_geometry_solidify_on_build_screen(lte_pattern_enabled) -> None:
     reg = mosaic_registry()
-    pat = reg[PATTERN_MOSAIC_5_2P3L_EQUAL]
+    pat = reg[PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND]
     assets_map = {
-        f"a{i}": {"id": f"a{i}", "takenAt": f"2024-01-0{i}T12:00:00"}
-        for i in range(1, 6)
+        "p": {"id": "p", "takenAt": "2024-01-01T12:00:00", "width": 1200, "height": 1800},
+        "good": {"id": "good", "takenAt": "2024-01-01T12:00:05", "width": 3000, "height": 1687},
+        "l1": {"id": "l1", "takenAt": "2024-01-01T12:00:10", "width": 5000, "height": 2000},
+        "l2": {"id": "l2", "takenAt": "2024-01-01T12:00:11", "width": 5000, "height": 2000},
+        "l3": {"id": "l3", "takenAt": "2024-01-01T12:00:12", "width": 5000, "height": 2000},
     }
     aspects: dict[str, AspectKind] = {
-        "a1": "portrait",
-        "a2": "portrait",
-        "a3": "landscape",
-        "a4": "landscape",
-        "a5": "landscape",
+        "p": "portrait",
+        "good": "landscape",
+        "l1": "landscape",
+        "l2": "landscape",
+        "l3": "landscape",
     }
     ordered = try_order_for_pattern(
         pat.pattern_id,
@@ -117,7 +122,7 @@ def test_collage_assets_excluded_from_mosaic_candidates(monkeypatch) -> None:
 
 @pytest.mark.unit
 def test_layout_template_admission_flagship_beta() -> None:
-    report = run_layout_template_admission(PATTERN_MOSAIC_5_2P3L_EQUAL, target="beta")
+    report = run_layout_template_admission(PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND, target="beta")
     assert report["ok"] is True
     step_names = [s["name"] for s in report["steps"]]
     assert "registry" in step_names

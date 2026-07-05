@@ -41,7 +41,8 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-06-19: chapter-separator sprocket decoration-only + ticket progress markup.
 # Re-bumped 2026-06-19 (b): split-mat narrow panel + vertical title layout (journal/longshot CSS).
 # Re-bumped 2026-06-19 (c): Studio default mist + journal accent sync + cover-mat folio ground.
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}7ba2192cedc3"
+# Re-bumped 2026-07-05: LTE journal-screens.generated.css sync + mosaic template usage docs.
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}ffd8ce9ae923"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

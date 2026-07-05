@@ -1,7 +1,7 @@
 {
   "strategyId": "lse-default-2026-06",
   "strategyVersion": 3,
-  "algorithmVersion": "p15-s3",
-  "contentHash": "sha256:4ad018e780f46798",
-  "notes": "v3: P21 对齐 — planning.stages.mosaic.enabled_window_sizes 与 MosaicConfig 默认 [4,5,6,9] 同步；LSE enabled=true 纯收敛基线随 P21 默认路径更新（AC-P17-13）。"
+  "algorithmVersion": "p15-s4",
+  "contentHash": "sha256:cdece86362392d09",
+  "notes": "p15-s4: LSE pattern_policy 禁用已退役 screen-mosaic-5-2p3l-equal，与 MCR 默认 mosaic 窗族对齐（AC-P17-13）。"
 }

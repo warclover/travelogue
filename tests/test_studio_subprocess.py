@@ -37,6 +37,10 @@ class _FakePipelineResult:
     layout_density: str = "balanced"
     layout_density_effect: str = "ignored_quick"
     date_range_warn: str = ""
+    photo_cull_enabled: bool = True
+    layout_eligible_count: int = 0
+    keep_near_duplicates: bool = False
+    assets_written: int = 0
 
 
 def _drain_queue(queue: mp.Queue, *, timeout: float = 2.0) -> list[dict]:

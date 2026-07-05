@@ -4,7 +4,7 @@
 id: lse-default-2026-06
 version: 3
 status: ga
-algorithm_version: p15-s3
+algorithm_version: p15-s4
 displayName: 默认智能排版策略
 description: >
   P17 默认策略包：收敛 mosaic.weights/penalties + 节奏配额 + 搜索预算。
