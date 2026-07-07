@@ -263,11 +263,19 @@ def test_trip_preview_prefers_latest_trip_not_export_flag() -> None:
 def test_studio_home_v2_import_sheet_modules() -> None:
     """M20-d · Import Sheet + 导入编排，复用 v3 共享原语（非复制视图）。"""
     sheet = (STUDIO_DIR / "homepage-v2" / "import-sheet.js").read_text(encoding="utf-8")
+    wizard = (STUDIO_DIR / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
     run = (STUDIO_DIR / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
     assert "refreshTripsForImportSuccess" in run
 
-    for js in (sheet, run):
+    for js in (sheet, wizard, run):
         assert "\ufffd" not in js
+
+    # Wizard v3（PRD v3.0.1）
+    assert "openImportWizard" in wizard and "startV2Import" in wizard
+    assert "wizard_step_view" in wizard
+    assert "填写细节 →" in wizard
+    assert "isImportWizardV3Enabled" in sheet
+    assert "importWizardV3Enabled" in sheet
 
     # Sheet a11y（§7.1）：focus trap + Esc + 焦点归还 CTA
     assert "openImportSheet" in sheet and "closeImportSheet" in sheet

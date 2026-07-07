@@ -232,6 +232,45 @@ def _even_sample_indices(total: int, count: int) -> list[int]:
     return [min(total - 1, round(i * step)) for i in range(count)]
 
 
+# PRD-IMPORT-SHEET-v3-WIZARD §7 BE-02 · 超过此候选文件数时，验货预览跳过精确
+# EXIF 排序扫描（成本随候选数线性增长），改为降级：只做轻量计数 + 文件名序抽样，
+# 避免大相册（>2000 张）阻塞 Step 2 一屏渲染。真实导入 pipeline 不受影响。
+ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD = 800
+MAX_ALBUM_PREVIEW_THUMBS = 6
+
+
+def _fast_candidate_paths(album_dir: Path) -> list[Path]:
+    """Extension-only scan，不打开图片，仅用于预估候选数量与降级抽样。"""
+    from travelogue.media.ingest import HEIC_SUFFIXES, IMAGE_SUFFIXES
+
+    candidates: list[Path] = []
+    for path in album_dir.rglob("*"):
+        if not path.is_file():
+            continue
+        suf = path.suffix.lower()
+        if suf in IMAGE_SUFFIXES or suf in HEIC_SUFFIXES:
+            candidates.append(path)
+    return candidates
+
+
+def _render_thumb_data_url(path: Path, thumb_px: int) -> str | None:
+    import base64
+    from io import BytesIO
+
+    from travelogue.media.image_ops import load_image_normalized
+
+    try:
+        loaded = load_image_normalized(path)
+        img = loaded.image
+        img.thumbnail((thumb_px, thumb_px))
+        buf = BytesIO()
+        img.save(buf, format="JPEG", quality=78)
+        b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+        return f"data:image/jpeg;base64,{b64}"
+    except Exception:
+        return None
+
+
 def sample_album_preview_thumbs(
     album_dir: Path,
     *,
@@ -239,11 +278,31 @@ def sample_album_preview_thumbs(
     thumb_px: int = 112,
     max_photos: int = 250,
 ) -> tuple[list[str], int]:
-    """Return JPEG data-URL thumbs evenly sampled from *album_dir*."""
-    import base64
-    from io import BytesIO
+    """Return JPEG data-URL thumbs evenly sampled from *album_dir*.
 
-    from travelogue.media.image_ops import load_image_normalized
+    大相册降级（BE-02）：候选文件数超过 `ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD` 时，
+    跳过逐张打开做 EXIF 排序的精确扫描，改为按文件名序抽样，photo_count 为快速
+    候选计数（近似值，仅用于验货文案，不影响真实导入的精确统计口径）。
+    """
+    count = max(1, min(int(count or count), MAX_ALBUM_PREVIEW_THUMBS))
+
+    try:
+        fast_candidates = _fast_candidate_paths(album_dir)
+    except OSError:
+        return [], 0
+
+    if not fast_candidates:
+        return [], 0
+
+    if len(fast_candidates) > ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD:
+        fast_candidates.sort(key=lambda p: str(p).lower())
+        photo_count = len(fast_candidates)
+        thumbs: list[str] = []
+        for idx in _even_sample_indices(photo_count, count):
+            url = _render_thumb_data_url(fast_candidates[idx], thumb_px)
+            if url:
+                thumbs.append(url)
+        return thumbs, photo_count
 
     try:
         paths, _stats = scan_image_paths(album_dir, max_photos=max_photos)
@@ -254,18 +313,11 @@ def sample_album_preview_thumbs(
     if not paths:
         return [], 0
 
-    thumbs: list[str] = []
+    thumbs = []
     for idx in _even_sample_indices(len(paths), count):
-        try:
-            loaded = load_image_normalized(paths[idx])
-            img = loaded.image
-            img.thumbnail((thumb_px, thumb_px))
-            buf = BytesIO()
-            img.save(buf, format="JPEG", quality=78)
-            b64 = base64.b64encode(buf.getvalue()).decode("ascii")
-            thumbs.append(f"data:image/jpeg;base64,{b64}")
-        except Exception:
-            continue
+        url = _render_thumb_data_url(paths[idx], thumb_px)
+        if url:
+            thumbs.append(url)
     return thumbs, photo_count
 
 

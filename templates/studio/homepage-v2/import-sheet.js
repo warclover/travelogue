@@ -33,7 +33,12 @@ const IMPORT_MODE_KEY = "travelogue.studio.lastImportMode";
 const _featureFlags = {
   importDualModeEnabled: true,
   importSheetLargeEnabled: true,
+  importWizardV3Enabled: false,
 };
+
+export function isImportWizardV3Enabled() {
+  return !!_featureFlags.importWizardV3Enabled;
+}
 
 function setV2BackgroundInert(inert) {
   var ids = ["v2-bento-hero", "v2-shelf"];
@@ -407,10 +412,19 @@ function loadFeatureFlags() {
       if (typeof studio.importSheetLargeEnabled === "boolean") {
         _featureFlags.importSheetLargeEnabled = studio.importSheetLargeEnabled;
       }
+      if (typeof studio.importWizardV3Enabled === "boolean") {
+        _featureFlags.importWizardV3Enabled = studio.importWizardV3Enabled;
+      }
       applyFeatureFlags();
+      if (_featureFlags.importWizardV3Enabled) {
+        import("./import-wizard.js").then(function (m) { m.initImportWizard(); });
+      }
     })
     .catch(function () {
       applyFeatureFlags();
+      if (_featureFlags.importWizardV3Enabled) {
+        import("./import-wizard.js").then(function (m) { m.initImportWizard(); });
+      }
     });
 }
 
@@ -494,9 +508,16 @@ function buildSheetPayload() {
   return body;
 }
 
-export function openImportSheet() {
+export function openImportSheet(opts) {
+  opts = opts || {};
   if (V2.state === "Importing") {
     if (typeof studioToast === "function") studioToast("正在制作中", { duration: 2200 });
+    return;
+  }
+  if (_featureFlags.importWizardV3Enabled) {
+    import("./import-wizard.js").then(function (m) {
+      m.openImportWizard(opts);
+    });
     return;
   }
   if (_open) return;

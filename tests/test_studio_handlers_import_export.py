@@ -523,6 +523,59 @@ def test_handle_album_preview_success(tmp_path: Path) -> None:
     assert len(body["thumbs"]) == 4
 
 
+def test_handle_album_preview_includes_folder_name(tmp_path: Path) -> None:
+    """PRD-IMPORT-SHEET-v3-WIZARD BE-03 · 验货区文件夹名由服务端统一返回。"""
+    from tests.studio_test_helpers import make_test_album
+
+    trips_dir = tmp_path / "trips"
+    album = make_test_album(tmp_path, n=3, name="贵州暑假游")
+    handler = MockStudioHandler(trips_dir, json_body={"albumPath": str(album)})
+    handle_album_preview(handler)
+    status, body = handler.response
+    assert status == 200
+    assert body["folderName"] == "贵州暑假游"
+
+
+def test_handle_album_preview_thumb_count_clamped(tmp_path: Path) -> None:
+    """PRD-IMPORT-SHEET-v3-WIZARD D-W6 · Wizard 请求 thumbCount，服务端夹在 1..6。"""
+    from tests.studio_test_helpers import make_test_album
+
+    trips_dir = tmp_path / "trips"
+    album = make_test_album(tmp_path, n=8)
+    handler = MockStudioHandler(
+        trips_dir, json_body={"albumPath": str(album), "thumbCount": 6}
+    )
+    handle_album_preview(handler)
+    status, body = handler.response
+    assert status == 200
+    assert len(body["thumbs"]) == 6
+
+    handler2 = MockStudioHandler(
+        trips_dir, json_body={"albumPath": str(album), "thumbCount": 999}
+    )
+    handle_album_preview(handler2)
+    status2, body2 = handler2.response
+    assert status2 == 200
+    assert len(body2["thumbs"]) <= 6
+
+
+def test_sample_album_preview_thumbs_large_album_degrades(tmp_path: Path) -> None:
+    """PRD-IMPORT-SHEET-v3-WIZARD BE-02 · 候选数超阈值走快速降级路径，仍能出片与计数。"""
+    import travelogue.web.studio_pipeline as pipeline_mod
+    from tests.studio_test_helpers import make_test_album
+
+    album = make_test_album(tmp_path, n=6)
+    original = pipeline_mod.ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD
+    pipeline_mod.ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD = 2
+    try:
+        thumbs, count = pipeline_mod.sample_album_preview_thumbs(album, count=4)
+    finally:
+        pipeline_mod.ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD = original
+    assert count == 6
+    assert len(thumbs) == 4
+    assert all(t.startswith("data:image/jpeg;base64,") for t in thumbs)
+
+
 def test_handle_album_preview_denies_untrusted_album(tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     outside = tmp_path / "outside-album"

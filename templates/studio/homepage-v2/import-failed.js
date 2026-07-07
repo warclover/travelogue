@@ -101,7 +101,7 @@ function retryImportFailed() {
     try { sessionStorage.removeItem(SS.activePending); } catch (e) { /* ignore */ }
     hideImportFailed();
     syncVariantGuard();
-    openImportSheet();
+    openImportSheet({ forceStep: "pick" });
     if (typeof studioToast === "function") {
       studioToast("请重新选择要上传的照片后重试", { duration: 2200 });
     }

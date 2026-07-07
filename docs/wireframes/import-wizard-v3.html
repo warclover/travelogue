@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Import Wizard v3 · 两步向导线框（PRD v3.0.1）</title>
+  <style>
+    :root {
+      --ink: #141210;
+      --cream: #f5f0e8;
+      --gold: #d2a657;
+      --muted: rgba(245, 240, 232, .55);
+      --line: rgba(255, 255, 255, .12);
+      --wf-label: #e85d04;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); font-size: 14px; background: #2a2824; color: var(--cream); }
+    .wf-meta { padding: 16px 24px; background: #1a1814; border-bottom: 2px solid var(--wf-label); }
+    .wf-meta h1 { margin: 0 0 6px; font-size: 18px; color: #fff; }
+    .wf-meta p, .wf-meta li { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .wf-tabs { display: flex; gap: 6px; padding: 16px 24px 0; flex-wrap: wrap; }
+    .wf-tabs button {
+      border: 1px solid var(--line); background: rgba(255,255,255,.06); color: var(--cream);
+      padding: 8px 14px; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 12px;
+    }
+    .wf-tabs button[aria-selected="true"] { background: #141210; border-bottom-color: #141210; font-weight: 600; color: #fff; }
+    .wf-panel { display: none; padding: 20px 24px 40px; }
+    .wf-panel[data-active="true"] { display: block; }
+    .wf-viewport {
+      max-width: 720px; margin: 0 auto; min-height: 520px; position: relative;
+      border-radius: 12px; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+    .wf-bg { position: absolute; inset: 0; background: linear-gradient(160deg, #1a1814, #2a3530); }
+    .wf-scrim { position: absolute; inset: 0; background: rgba(6,5,4,.5); backdrop-filter: blur(6px); }
+    /* 居中 Dialog（D-W1） */
+    .wf-dialog {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      width: min(560px, 92%); max-height: 86vh; overflow: hidden;
+      background: rgba(20, 18, 16, .96); border: 1px solid var(--line);
+      border-radius: 20px; padding: 20px 26px 22px; z-index: 2;
+      display: flex; flex-direction: column;
+    }
+    .wf-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .wf-head h2 { margin: 0; font-size: 21px; font-weight: 400; }
+    .wf-back { border: none; background: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 0; }
+    .wf-close { border: none; background: none; color: var(--muted); font-size: 24px; cursor: pointer; }
+    .wf-steps { font-size: 11px; color: var(--gold); margin-bottom: 14px; letter-spacing: .02em; }
+    .wf-steps .dim { color: var(--muted); }
+    .wf-body { flex: 1; min-height: 0; }
+    .wf-btn-primary {
+      display: block; width: 100%; min-height: 52px; border: none; border-radius: 8px;
+      background: var(--cream); color: var(--ink); font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .wf-hint { margin: 10px 0 0; font-size: 11px; color: var(--muted); line-height: 1.55; text-align: center; }
+    .wf-verify { margin-bottom: 14px; }
+    .wf-verify-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
+    .wf-verify-row .link { color: var(--gold); font-size: 12px; cursor: pointer; border: none; background: none; }
+    .wf-verify-foot { font-size: 10px; color: var(--muted); margin-top: 4px; }
+    .wf-thumbs { display: flex; gap: 6px; margin-top: 10px; }
+    .wf-thumb { width: 56px; height: 56px; border-radius: 6px; background: rgba(255,255,255,.08); border: 1px solid var(--line); }
+    .wf-mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+    .wf-mode-card {
+      border: 1px solid var(--line); border-radius: 10px; padding: 12px; cursor: pointer;
+      background: rgba(255,255,255,.04); font-size: 12px;
+    }
+    .wf-mode-card[aria-checked="true"] { border-color: var(--gold); background: rgba(210,166,87,.08); }
+    .wf-mode-card strong { display: block; font-size: 13px; margin-bottom: 4px; }
+    .wf-mode-card span { color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .wf-photo-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      font-size: 11px; color: var(--muted); margin-bottom: 14px;
+    }
+    .wf-photo-row button { border: 1px solid var(--line); background: transparent; color: var(--cream);
+      font-size: 11px; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+    .wf-drawer {
+      border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px;
+      background: rgba(255,255,255,.04); font-size: 12px;
+    }
+    .wf-drawer label { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; cursor: pointer; }
+    .wf-group-title { font-size: 11px; color: var(--gold); letter-spacing: .08em; margin: 12px 0 8px; }
+    .wf-field { display: block; margin-bottom: 10px; }
+    .wf-field span { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .wf-field input, .wf-field textarea, .wf-field select {
+      width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line);
+      background: rgba(255,255,255,.06); color: var(--cream); font-size: 13px;
+    }
+    .wf-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .wf-actions-sticky {
+      display: flex; gap: 10px; margin-top: 14px; padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+    .wf-actions-sticky .wf-btn-primary { flex: 1; }
+    .wf-btn-secondary {
+      min-height: 48px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px;
+      background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; white-space: nowrap;
+    }
+    .wf-details { margin-top: 14px; font-size: 12px; color: var(--muted); }
+    .wf-details summary { cursor: pointer; color: var(--gold); }
+    .wf-note { max-width: 720px; margin: 16px auto 0; padding: 12px 16px; background: rgba(232,93,4,.12);
+      border-left: 3px solid var(--wf-label); font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .wf-downstream { max-width: 720px; margin: 12px auto 0; font-size: 11px; color: #8a8; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="wf-meta">
+    <h1>Import Wizard v3 · 线框（PRD v3.0.1）</h1>
+    <p>居中 Dialog · 两步向导 + Step 2b 精细子页。快速路径 Step 1/2 一屏无滚轮（1024×768）。下游经 <code>startV2Import</code> → Importing → FirstSuccess。</p>
+    <ul>
+      <li>缩略图 v3.0 纯展示，不接 Lightbox</li>
+      <li>「← 重新选择」与「更换」同义回 Step 1</li>
+      <li>精细 CTA：「填写细节 →」</li>
+    </ul>
+  </div>
+
+  <div class="wf-tabs" role="tablist">
+    <button type="button" role="tab" aria-selected="true" data-panel="s1">Step 1 · 选文件夹</button>
+    <button type="button" role="tab" aria-selected="false" data-panel="s2">Step 2 · 确认（折叠）</button>
+    <button type="button" role="tab" aria-selected="false" data-panel="s2d">Step 2 · 抽屉展开</button>
+    <button type="button" role="tab" aria-selected="false" data-panel="s2b">Step 2b · 精细制作</button>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="wf-panel" data-panel="s1" data-active="true">
+    <div class="wf-viewport">
+      <div class="wf-bg"></div><div class="wf-scrim"></div>
+      <div class="wf-dialog" role="dialog" aria-labelledby="t1">
+        <div class="wf-head">
+          <h2 id="t1">制作我的游记画册</h2>
+          <button type="button" class="wf-close" aria-label="关闭">×</button>
+        </div>
+        <div class="wf-body">
+          <button type="button" class="wf-btn-primary" style="margin-top:8px">📁 选择本次旅行的照片文件夹</button>
+          <p class="wf-hint">一次旅行一个文件夹，照片留在本机</p>
+          <details class="wf-details"><summary>文件夹怎么选？</summary>
+            <p>一次旅行一个文件夹 · 子目录可放精选/素材 · JPG/PNG/WebP/HEIC · 照片留在本机</p>
+          </details>
+          <details class="wf-details"><summary>其他导入方式</summary>
+            <p>小文件夹试用（≤200MB）· 粘贴路径</p>
+          </details>
+        </div>
+      </div>
+    </div>
+    <p class="wf-downstream">选夹成功 → album-preview → 切 Step 2</p>
+  </div>
+
+  <!-- Step 2 折叠 -->
+  <div class="wf-panel" data-panel="s2">
+    <div class="wf-viewport">
+      <div class="wf-bg"></div><div class="wf-scrim"></div>
+      <div class="wf-dialog">
+        <div class="wf-head">
+          <button type="button" class="wf-back">← 重新选择</button>
+          <h2>确认并开始</h2>
+          <button type="button" class="wf-close">×</button>
+        </div>
+        <p class="wf-steps"><span class="dim">① 选文件夹 →</span> <strong>② 确认并开始</strong></p>
+        <div class="wf-body">
+          <div class="wf-verify">
+            <div class="wf-verify-row">
+              <span>📁 贵州暑假游 · 已清点 134 张</span>
+              <button type="button" class="link">更换</button>
+            </div>
+            <p class="wf-verify-foot">制作时将自动去重与挑选</p>
+            <div class="wf-thumbs">
+              <div class="wf-thumb"></div><div class="wf-thumb"></div><div class="wf-thumb"></div><div class="wf-thumb"></div>
+            </div>
+          </div>
+          <div class="wf-mode-cards" role="radiogroup" aria-label="导入模式">
+            <div class="wf-mode-card" role="radio" aria-checked="true" tabindex="0">
+              <strong>● 快速分享（推荐）</strong>
+              <span>生成微信长图，即刻分享</span>
+            </div>
+            <div class="wf-mode-card" role="radio" aria-checked="false" tabindex="-1">
+              <strong>○ 精细制作</strong>
+              <span>成稿更贴你的旅程</span>
+            </div>
+          </div>
+          <div class="wf-photo-row">
+            <span>照片处理：智能挑选已开启 · 连拍自动择优</span>
+            <button type="button">调整照片处理</button>
+          </div>
+          <button type="button" class="wf-btn-primary">开始制作 →</button>
+          <p class="wf-hint">每个文件夹会生成一本新游记画册，不会覆盖已有作品</p>
+        </div>
+      </div>
+    </div>
+    <p class="wf-downstream">开始制作 → closeImportSheet → startV2Import → Importing</p>
+  </div>
+
+  <!-- Step 2 抽屉展开 -->
+  <div class="wf-panel" data-panel="s2d">
+    <div class="wf-viewport" style="min-height:580px">
+      <div class="wf-bg"></div><div class="wf-scrim"></div>
+      <div class="wf-dialog" style="max-height:90vh">
+        <div class="wf-head"><button class="wf-back">← 重新选择</button><h2>确认并开始</h2><button class="wf-close">×</button></div>
+        <p class="wf-steps"><span class="dim">① 选文件夹 →</span> <strong>② 确认并开始</strong></p>
+        <div class="wf-body" style="overflow-y:auto;max-height:420px">
+          <div class="wf-verify">
+            <div class="wf-verify-row"><span>📁 demo-2025-8 · 已清点 129 张</span><button class="link">更换</button></div>
+          </div>
+          <div class="wf-mode-cards">
+            <div class="wf-mode-card" aria-checked="true"><strong>● 快速分享（推荐）</strong></div>
+            <div class="wf-mode-card" aria-checked="false"><strong>○ 精细制作</strong></div>
+          </div>
+          <div class="wf-drawer">
+            <p style="margin:0 0 8px;font-weight:600;font-size:12px">照片处理</p>
+            <label><input type="checkbox" checked /> 智能挑选照片（推荐）</label>
+            <label><input type="checkbox" /> 保留连拍与近似照片</label>
+          </div>
+          <button type="button" class="wf-btn-primary">开始制作 →</button>
+        </div>
+      </div>
+    </div>
+    <p class="wf-note">抽屉展开态允许 body 内滚动；折叠态才是一屏硬约束（AC-IW-02）</p>
+  </div>
+
+  <!-- Step 2b -->
+  <div class="wf-panel" data-panel="s2b">
+    <div class="wf-viewport" style="min-height:640px">
+      <div class="wf-bg"></div><div class="wf-scrim"></div>
+      <div class="wf-dialog" style="width:min(680px,94%);max-height:88vh">
+        <div class="wf-head"><button class="wf-back">← 返回</button><h2>精细制作</h2><button class="wf-close">×</button></div>
+        <p class="wf-verify-row" style="font-size:12px;margin-bottom:12px">📁 贵州暑假游 · 134 张</p>
+        <div class="wf-body" style="overflow-y:auto;max-height:460px">
+          <p class="wf-group-title">基本信息</p>
+          <div class="wf-grid2">
+            <label class="wf-field"><span>游记名称</span><input value="贵州暑假游" /></label>
+            <label class="wf-field"><span>主要地点（可选）</span><input placeholder="例如：京都" /></label>
+            <label class="wf-field"><span>开始日期</span><input type="date" /></label>
+            <label class="wf-field"><span>结束日期</span><input type="date" /></label>
+          </div>
+          <p class="wf-group-title">叙事素材</p>
+          <label class="wf-field"><span>写给编辑的一句话</span><textarea rows="2"></textarea></label>
+          <p class="wf-group-title">排版与模板</p>
+          <label class="wf-field"><span>模板</span><select><option>智能匹配（推荐）</option></select></label>
+        </div>
+        <div class="wf-actions-sticky">
+          <button type="button" class="wf-btn-primary">开始制作（专业） →</button>
+          <button type="button" class="wf-btn-secondary">← 返回上一步</button>
+        </div>
+      </div>
+    </div>
+    <p class="wf-downstream">开始（专业）→ startV2Import(mode=fine_craft) → FirstSuccess 卷轴预览 CTA</p>
+  </div>
+
+  <div class="wf-note" style="max-width:720px">
+    <strong>下游衔接（§16）</strong>：Wizard 仅替换 UI；payload 经 <code>buildSheetPayload()</code> 与现版等价；
+    <code>import_start.surface</code> 仍为 <code>v2_sheet</code>；Failed 重试回 Step 1。
+  </div>
+
+  <script>
+    document.querySelectorAll(".wf-tabs button").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll(".wf-tabs button").forEach(function (b) {
+          b.setAttribute("aria-selected", b === btn ? "true" : "false");
+        });
+        document.querySelectorAll(".wf-panel").forEach(function (p) {
+          p.dataset.active = p.dataset.panel === btn.dataset.panel ? "true" : "false";
+        });
+      });
+    });
+    document.querySelectorAll(".wf-mode-card").forEach(function (card) {
+      card.addEventListener("click", function () {
+        card.closest(".wf-mode-cards").querySelectorAll(".wf-mode-card").forEach(function (c) {
+          c.setAttribute("aria-checked", c === card ? "true" : "false");
+        });
+      });
+    });
+  </script>
+</body>
+</html>

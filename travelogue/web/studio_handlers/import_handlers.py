@@ -474,8 +474,18 @@ def handle_album_preview(handler: StudioHandlerProtocol) -> None:
         )
         return
 
-    thumbs, photo_count = sample_album_preview_thumbs(album_path)
+    raw_count = payload.get("thumbCount")
+    try:
+        thumb_count = max(1, min(int(raw_count), 6)) if raw_count is not None else 4
+    except (TypeError, ValueError):
+        thumb_count = 4
+    thumbs, photo_count = sample_album_preview_thumbs(album_path, count=thumb_count)
     handler._json_response(
         200,
-        {"ok": True, "thumbs": thumbs, "photoCount": photo_count},
+        {
+            "ok": True,
+            "thumbs": thumbs,
+            "photoCount": photo_count,
+            "folderName": album_path.name,
+        },
     )

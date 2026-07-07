@@ -17,6 +17,7 @@ class StudioConfig:
     import_dual_mode_enabled: bool = True
     success_refined_default_enabled: bool = True
     import_sheet_large_enabled: bool = True
+    import_wizard_v3_enabled: bool = False
     layout_templates_internal: bool = False
 
 
@@ -45,6 +46,7 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
             "importDualModeEnabled": cfg.studio.import_dual_mode_enabled,
             "successRefinedDefaultEnabled": cfg.studio.success_refined_default_enabled,
             "importSheetLargeEnabled": cfg.studio.import_sheet_large_enabled,
+            "importWizardV3Enabled": cfg.studio.import_wizard_v3_enabled,
             "layoutTemplatesInternal": cfg.studio.layout_templates_internal,
         },
         "cohort": {
