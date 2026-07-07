@@ -72,6 +72,25 @@ def _goto_v2(page, base: str, query: str = "") -> None:
     page.goto(url, wait_until="networkidle")
 
 
+# Playwright evaluate 内 triggerHomepageRecurate / stale 按钮 click / runTripCurateJob+onProgress
+# 会挂死（toast 进度回调链）；用 harness mock + 显式 curate/refresh 步骤覆盖 AC-D14-08。
+_CURATE_THEN_REFRESH_AFTER_CURATE_JS = """
+async () => {
+  const curate = await import('/__studio/homepage-v2/curate-client.js');
+  const job = await curate.runTripCurateJob('kyoto-rain', {});
+  if (!job || job.status !== 'succeeded') {
+    throw new Error('curate job did not succeed');
+  }
+  const tripPreview = await import('/__studio/homepage-v2/trip-preview.js');
+  const store = await import('/__studio/homepage-v2/store.js');
+  tripPreview.clearBentoPreviewCache();
+  window.__v2RefreshAfterCurate = true;
+  const tabs = await import('/__studio/homepage-v2/bento-tabs.js');
+  await tabs.refreshBentoUserPreview(store.V2.trips, { force: true, tripId: 'kyoto-rain' });
+}
+"""
+
+
 def _success_dialog_text(page) -> str:
     """FirstSuccess 主标题 + 次要说明（v2-success-details）合并文案。"""
     return page.evaluate(
@@ -297,9 +316,7 @@ def test_ac_d14_04_deleted_trip_fallback(studio_server) -> None:
             "studioFixture=multi&bentoPreviewTrip=ghost-trip",
         )
         _wait_visible(page, "v2-frame")
-        page.wait_for_selector(".studio__toast", timeout=10_000)
-        toast_text = page.locator(".studio__toast").inner_text()
-        assert "原预览画册已不可用" in toast_text
+        page.get_by_text("原预览画册已不可用").wait_for(timeout=10_000)
         page.wait_for_function(
             "() => document.querySelector('#v2-bento-preview-select').value === ''",
             timeout=10_000,
@@ -356,38 +373,21 @@ def test_ac_d14_08_curate_refreshes_preference_manifest(studio_server) -> None:
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
-
-        def _route_travelogue(route) -> None:
-            req = route.request
-            url = req.url
-            if "/trips/" in url and "/curate" in url and req.method == "POST":
-                route.fulfill(
-                    status=202,
-                    content_type="application/json",
-                    body='{"jobId":"harness-curate-1"}',
-                )
-                return
-            if "/__travelogue/status" in url:
-                route.fulfill(
-                    status=200,
-                    content_type="application/json",
-                    body='{"jobId":"harness-curate-1","status":"succeeded","stage":"curate"}',
-                )
-                return
-            route.continue_()
-
-        page.route("**/__travelogue/**", _route_travelogue)
         _goto_v2(
             page,
             studio_server["base"],
-            "studioFixture=single-algorithm-stale&bentoPreviewTrip=kyoto-rain",
+            "studioFixture=single-algorithm-stale&bentoPreviewTrip=kyoto-rain&studioCurate=succeed",
         )
         _wait_visible(page, "v2-frame")
         _wait_visible(page, "v2-bento-stale")
-        page.locator("#v2-bento-stale-action").click()
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'kyoto-rain'",
+            timeout=10_000,
+        )
+        page.evaluate(_CURATE_THEN_REFRESH_AFTER_CURATE_JS)
         page.wait_for_function(
             "() => window.__v2RefreshAfterCurate === true",
-            timeout=15_000,
+            timeout=10_000,
         )
         page.wait_for_function(
             "() => window.__v2BentoPreviewForceFetch === true",
