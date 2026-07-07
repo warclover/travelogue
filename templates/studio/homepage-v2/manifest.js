@@ -33,10 +33,19 @@ export function assetUrl(relPath) {
   return STUDIO_DEMO_SHOWCASE_BASE + String(relPath).replace(/^\/+/, "");
 }
 
+/** demo 相对路径或 trip 绝对 / 外链 URL（禁止裸相对路径泄漏到站点根）。 */
+export function resolvePageAssetUrl(spec) {
+  if (!spec) return "";
+  var s = String(spec);
+  if (/^https?:\/\//i.test(s)) return s;
+  if (s.charAt(0) === "/") return encodeTripAssetUrl(s);
+  return assetUrl(s);
+}
+
 /** 单页图片 URL（demo webp 或 user trip 绝对 url）。 */
 export function pageImageUrl(manifest, page) {
   if (!page) return "";
-  if (page.url) return encodeTripAssetUrl(page.url);
+  if (page.url) return resolvePageAssetUrl(page.url);
   return assetUrl(page.webp);
 }
 
@@ -64,7 +73,7 @@ export function longshotPages(manifest) {
 /** longshotPages 条目 URL。 */
 export function longshotPageUrl(manifest, page) {
   if (!page) return "";
-  if (page.url) return encodeTripAssetUrl(page.url);
+  if (page.url) return resolvePageAssetUrl(page.url);
   return manifestAssetUrl(manifest, "longshot");
 }
 

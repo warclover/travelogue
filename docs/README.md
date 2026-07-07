@@ -256,6 +256,8 @@
 | 文档 | 说明 |
 |------|------|
 | [PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md) | Bento 双交付 · Import Sheet · 书架 |
+| [PRD-STUDIO-HOMEPAGE-v2.1-OPTIMIZATION.md](./PRD-STUDIO-HOMEPAGE-v2.1-OPTIMIZATION.md) | v2.1 体验优化 · CTA 层级 · bench 三分法 |
+| [PRD-STUDIO-HOMEPAGE-v2.2-OPTIMIZATION.md](./PRD-STUDIO-HOMEPAGE-v2.2-OPTIMIZATION.md) | **v2.2 体验优化（Draft）** · 窄屏出口 · 首屏视觉权重 · 书架检索 |
 | [PRD-M21-studio-homepage-v3-retirement.md](./PRD-M21-studio-homepage-v3-retirement.md) | v3 退役 · v2 唯一入口 |
 | [studio-homepage-v2/](./studio-homepage-v2/) | FEATURE-FLAG · RUNBOOK · OPEN-QUESTIONS |
 
