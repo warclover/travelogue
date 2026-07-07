@@ -37,7 +37,7 @@ v2.1（bench 三分法、主 CTA 恢复、stale 语言化）已落地并在本�
 
 | 优先级 | 编号 | 问题 | 性质 |
 |--------|------|------|------|
-| **P0** | HP22-01 | 窄屏 / 手机访问是死路：仅一句提示，无任何替代出口 | 新决策 D-20 |
+| **P0** | HP22-01 | 窄屏 / 手机访问是死路：仅一句提示，无任何替代出口 | 新决策 D-20（**已交付** · M23-b） |
 | **P0** | HP22-02a | demo `longshotPages[].url` 相对路径被解析到站点根 → `/longshot-PLACEHOLDER.webp` 404 | 工程 bug（**已修复** · `manifest.js` `resolvePageAssetUrl`） |
 | **P2** | HP22-02b | demo-showcase 正式切图包仍待设计交付（OQ-DEMO-ASSETS） | 外部依赖 · 非阻塞 |
 | **P1** | HP22-03 | 首屏 H1 手写体字号偏小、青蓝色叠浅背景对比不足，被两侧预览图夺走焦点 | 视觉规格补强（v2 §3.1） |
@@ -129,7 +129,7 @@ v2 漏斗：`homepage_view → cta_click → sheet_open → folder_picked → im
 
 ## 3. P0 需求：边界体验
 
-### 3.1 Unsupported 视口出口（D-20 · HP22-01）
+### 3.1 Unsupported 视口出口（D-20 · HP22-01 · **已交付**）
 
 #### 需求
 
@@ -143,7 +143,7 @@ v2 漏斗：`homepage_view → cta_click → sheet_open → folder_picked → im
 
 #### 约束
 
-- 小程序码资产：静态图片放入 `templates/studio/assets/`；若小程序未上线，该位降级为「小程序即将上线」占位 + 复制链接按钮（由 config 开关控制，缺资产不阻塞本期发布）。
+- 小程序码资产：静态图片放入 `templates/studio/assets/miniapp-qr.webp`；服务端注入 `data-miniapp-qr="0|1"`（`inject_home_placeholders` 检测文件是否存在）。**无资产时不发起 QR 请求**，仅显示「小程序即将上线」占位 + 复制链接按钮。
 - `viewport-logic.js` 的 `unsupportedCopy()` 返回结构扩展 `actions` 字段，保持纯函数可测。
 - 深色 unsupported 页面背景保留，动作按钮对比度 ≥4.5:1。
 
@@ -325,14 +325,14 @@ v2 漏斗：`homepage_view → cta_click → sheet_open → folder_picked → im
 |----|------|------|------|
 | **M23-a（P0）** | demo 长图 URL 404 修复（HP22-02a） | 无 | **✅ 已交付** |
 | **M23-a′** | demo 正式切图包（HP22-02b · OQ-DEMO-ASSETS） | 设计 | 外部排期 |
-| **M23-b（P0）** | unsupported 三态出口（D-20）+ 埋点 | 小程序码资产（可降级） | 1d |
+| **M23-b（P0）** | unsupported 三态出口（D-20）+ 埋点 + AC-HP22-01/02 | 无 | **✅ 已交付** |
 | **M23-c（P1）** | 首屏视觉：标题 scrim / 字号（§4.1）+ 氛围减法与过渡带（§4.3）+ 高度收敛（§4.4） | 无 | 2d |
 | **M23-d（P1）** | 双预览错帧（D-21） | M23-a（需正式 demo 资产验证） | 0.5d |
 | **M23-e（P1）** | 书架：新建卡前置（D-23）+ 搜索/排序（D-24）+ flag | 无 | 2d |
 | **M23-f（P2）** | 元信息简化 + 恢复卡条件 + footer + carousel 对比度复核 | M23-e | 1d |
 | **M23-g** | 埋点验证 + AC 全量回归 + dogfood 观察 | a–f | 1d |
 
-**顺序**：a、b（P0，立即）→ c、e（并行）→ d → f → g。
+**顺序**：a、b（P0，**已完成**）→ c、e（并行）→ d → f → g。
 
 ---
 
@@ -356,3 +356,4 @@ v2 漏斗：`homepage_view → cta_click → sheet_open → folder_picked → im
 |------|------|
 | **v2.2.0**（草案） | 首版：P0 unsupported 出口（D-20）+ demo 长图 URL 404（HP22-02a）；P1 首屏视觉权重 + 书架效率；P2 元信息简化、footer 等 |
 | **v2.2.1** | HP22-02a 已修复：`manifest.js` · `resolvePageAssetUrl` · `tests/js/manifest.test.mjs` |
+| **v2.2.2** | HP22-01 已交付（M23-b）：D-20 动作区 · `data-miniapp-qr` 门控 · AC-HP22-01/02 e2e · P0 闭环 |

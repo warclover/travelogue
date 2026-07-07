@@ -22,6 +22,8 @@ import os
 from typing import Any, Literal
 from urllib.parse import parse_qs
 
+from travelogue.paths import STUDIO_TEMPLATE_DIR
+
 ENV_MODE = "TRAVELOGUE_STUDIO_HOMEPAGE_V2"
 ENV_PERCENT = "TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT"
 ENV_BUCKET_SECRET = "TRAVELOGUE_STUDIO_HP_BUCKET_SECRET"
@@ -208,10 +210,16 @@ def inject_home_placeholders(html: str, handler: Any, bucket: int) -> str:
     token = html_module.escape(getattr(handler, "studio_token", None) or "", quote=True)
     host = getattr(handler, "studio_host", "127.0.0.1") or "127.0.0.1"
     dev_flag = "1" if is_loopback_host(host) else ""
+    miniapp_qr = (
+        "1"
+        if (STUDIO_TEMPLATE_DIR / "assets" / "miniapp-qr.webp").is_file()
+        else "0"
+    )
     return (
         html.replace("__STUDIO_TOKEN__", token)
         .replace("__STUDIO_BUCKET_ID__", str(bucket))
         .replace("__STUDIO_DEV__", dev_flag)
+        .replace("__STUDIO_MINIAPP_QR__", miniapp_qr)
     )
 
 

@@ -35,13 +35,14 @@ def test_inject_home_placeholders_escapes_token() -> None:
     h = _Hdr(token='"><script>alert(1)</script>')
     html = inject_home_placeholders(
         '<meta content="__STUDIO_TOKEN__" data-bucket-id="__STUDIO_BUCKET_ID__" '
-        'data-studio-dev="__STUDIO_DEV__">',
+        'data-studio-dev="__STUDIO_DEV__" data-miniapp-qr="__STUDIO_MINIAPP_QR__">',
         h,
         7,
     )
     assert "__STUDIO_" not in html
     assert 'data-bucket-id="7"' in html
     assert 'data-studio-dev="1"' in html
+    assert 'data-miniapp-qr="0"' in html or 'data-miniapp-qr="1"' in html
     assert "<script>" not in html
 
 

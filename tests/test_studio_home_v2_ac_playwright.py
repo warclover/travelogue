@@ -750,16 +750,24 @@ def test_ac_hp2_13_unsupported_phone(studio_server) -> None:
 
 
 def test_ac_hp22_01_unsupported_phone_actions(studio_server) -> None:
-    """AC-HP22-01 · 手机触屏 → 复制按钮可见；QR 缺失时降级占位。"""
+    """AC-HP22-01 · 手机触屏 → 复制按钮可见；QR 缺失时降级占位且不请求 404。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         context = browser.new_context(**p.devices["iPhone 13"])
         page = context.new_page()
+        qr_requests: list[str] = []
+
+        def _on_response(resp) -> None:
+            if "miniapp-qr" in resp.url:
+                qr_requests.append(resp.url)
+
+        page.on("response", _on_response)
         _goto_v2(page, studio_server["base"])
         _wait_visible(page, "v2-unsupported")
         assert "电脑浏览器" in page.locator("#v2-unsupported-title").inner_text()
         copy_btn = page.locator("#v2-unsupported-copy")
         assert copy_btn.is_visible()
+        assert qr_requests == []
         page.evaluate(
             """
             () => {
@@ -786,6 +794,27 @@ def test_ac_hp22_01_unsupported_phone_actions(studio_server) -> None:
         )
         assert qr_fallback_visible
         context.close()
+        browser.close()
+
+
+def test_ac_hp22_02_unsupported_resize_enter_workbench(studio_server) -> None:
+    """AC-HP22-02 · 桌面窄窗拉宽至 ≥1024px → 无刷新自动进入工作台。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 700, "height": 500})
+        _goto_v2(page, studio_server["base"])
+        _wait_visible(page, "v2-unsupported")
+        page.set_viewport_size({"width": 1280, "height": 800})
+        page.wait_for_function(
+            """
+            () => {
+              const u = document.getElementById('v2-unsupported');
+              const m = document.getElementById('v2-bento-main');
+              return u && u.hidden && m && !m.hidden;
+            }
+            """,
+            timeout=5000,
+        )
         browser.close()
 
 

@@ -49,10 +49,24 @@ function copyPageUrl() {
 }
 
 function onQrError() {
-  var qrImg = $("v2-unsupported-qr");
   var qrFallback = $("v2-unsupported-qr-fallback");
-  show(qrImg, false);
-  show(qrFallback, true);
+  showMiniappQrFallback($("v2-unsupported-qr"), qrFallback, qrFallback && qrFallback.textContent);
+}
+
+function miniappQrAssetAvailable() {
+  var body = document.body;
+  return !!(body && body.getAttribute("data-miniapp-qr") === "1");
+}
+
+function showMiniappQrFallback(qrImg, qrFallback, text) {
+  if (qrImg) {
+    qrImg.removeAttribute("src");
+    show(qrImg, false);
+  }
+  if (qrFallback) {
+    if (text) qrFallback.textContent = text;
+    show(qrFallback, true);
+  }
 }
 
 function ensureActionHandlers() {
@@ -93,14 +107,17 @@ function renderActions(actions) {
 
   if (qrWrap) {
     show(qrWrap, !!qrAction);
-    if (qrAction && qrImg) {
-      show(qrImg, true);
-      show(qrFallback, false);
-      if (qrFallback) {
-        qrFallback.textContent = qrAction.fallback || "小程序即将上线";
+    if (qrAction) {
+      var fallbackText = qrAction.fallback || "小程序即将上线";
+      if (qrFallback) qrFallback.textContent = fallbackText;
+      if (miniappQrAssetAvailable() && qrImg && qrAction.src) {
+        show(qrImg, true);
+        show(qrFallback, false);
+        qrImg.alt = "微信小程序";
+        qrImg.src = qrAction.src;
+      } else {
+        showMiniappQrFallback(qrImg, qrFallback, fallbackText);
       }
-      qrImg.alt = "微信小程序";
-      qrImg.src = qrAction.src || "";
     }
   }
 
