@@ -33,3 +33,17 @@ test("unsupportedCopy 文案分支", () => {
   assert.match(unsupportedCopy("unsupported_phone").title, /电脑浏览器/);
   assert.match(unsupportedCopy("unsupported_narrow").title, /拉宽/);
 });
+
+test("unsupportedCopy narrow 含当前宽度", () => {
+  var copy = unsupportedCopy("unsupported_narrow", { width: 390 });
+  assert.match(copy.lead, /当前 390px/);
+  assert.equal(copy.actions.length, 0);
+});
+
+test("unsupportedCopy phone 含动作区", () => {
+  var copy = unsupportedCopy("unsupported_phone");
+  assert.equal(copy.actions.length, 2);
+  assert.equal(copy.actions[0].type, "miniapp_qr");
+  assert.equal(copy.actions[1].type, "copy_link");
+  assert.match(copy.actions[1].label, /复制/);
+});

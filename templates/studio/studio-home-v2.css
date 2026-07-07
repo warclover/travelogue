@@ -3362,7 +3362,7 @@ body { overflow-x: clip; overflow-y: visible; }
   background: radial-gradient(circle at 50% 35%, #1a1714, #0c0b0a);
 }
 .v2-unsupported__card {
-  width: min(440px, 100%);
+  width: min(480px, 100%);
   text-align: center;
 }
 .v2-unsupported__brand {
@@ -3383,6 +3383,64 @@ body { overflow-x: clip; overflow-y: visible; }
   font-size: 13px;
   line-height: 1.65;
   color: rgba(255, 255, 255, .6);
+}
+.v2-unsupported__actions {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.v2-unsupported__qr-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.v2-unsupported__qr {
+  display: block;
+  width: 160px;
+  height: 160px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .08);
+  object-fit: cover;
+}
+.v2-unsupported__qr-fallback {
+  margin: 0;
+  width: 160px;
+  padding: 48px 16px;
+  box-sizing: border-box;
+  border: 1px dashed rgba(255, 255, 255, .22);
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, .55);
+}
+.v2-unsupported__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  min-width: 200px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 999px;
+  background: #f5f0e8;
+  color: #1a1714;
+  font-family: var(--v2-font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  cursor: pointer;
+  transition: transform .18s ease, background .18s ease;
+}
+.v2-unsupported__btn:hover {
+  transform: translateY(-1px);
+  background: #fff;
+}
+.v2-unsupported__btn:focus-visible {
+  outline: 3px solid var(--v2-gold);
+  outline-offset: 3px;
 }
 
 /* ── Responsive：≥1024 与 iPad 横屏 双列；窄视口交给 JS 切 Unsupported ── */

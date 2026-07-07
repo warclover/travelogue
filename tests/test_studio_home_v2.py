@@ -46,6 +46,7 @@ V2_HOME_MARKERS = (
     "开始制作我的游记",
     "示例作品",
     "v2-unsupported",
+    "v2-unsupported-copy",
     # M20-d · Import Sheet
     "v2-import-sheet",
     'role="dialog"',

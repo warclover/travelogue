@@ -12,6 +12,7 @@
 
 export const WIDE_MIN_WIDTH = 1024;
 export const TABLET_MIN_WIDTH = 768;
+export const MINIAPP_QR_SRC = "/__studio/assets/miniapp-qr.webp";
 
 /** @returns {'wide'|'tablet_landscape'|'unsupported_rotate'|'unsupported_phone'|'unsupported_narrow'} */
 export function classifyViewport(width, height, coarsePointer) {
@@ -29,22 +30,35 @@ export function isSupported(layout) {
   return layout === "wide" || layout === "tablet_landscape";
 }
 
-/** Unsupported 文案（§10.3）。 */
-export function unsupportedCopy(layout) {
+/**
+ * Unsupported 文案与动作区（§10.3 · D-20）。
+ * @param {string} layout
+ * @param {{ width?: number }} [ctx] 当前视口宽度（narrow 态 lead 提示）
+ */
+export function unsupportedCopy(layout, ctx) {
+  ctx = ctx || {};
+  var width = Number(ctx.width) || 0;
   if (layout === "unsupported_rotate") {
     return {
       title: "请旋转至横屏使用 Studio",
       lead: "Studio 工作台为横屏双列设计，请将设备旋转至横屏。",
+      actions: [],
     };
   }
   if (layout === "unsupported_phone") {
     return {
       title: "请在电脑浏览器打开 Studio",
       lead: "手机端的阅读与分享请使用微信小程序；工作台导入请在电脑浏览器打开。",
+      actions: [
+        { type: "miniapp_qr", src: MINIAPP_QR_SRC, fallback: "小程序即将上线" },
+        { type: "copy_link", label: "复制电脑打开地址" },
+      ],
     };
   }
+  var widthHint = width > 0 ? "当前 " + Math.round(width) + "px · " : "";
   return {
     title: "请拉宽窗口至 1024px 以上",
-    lead: "当前窗口过窄，拉宽窗口即可进入 Studio 工作台。",
+    lead: widthHint + "拉宽窗口即可进入 Studio 工作台。",
+    actions: [],
   };
 }
