@@ -28,6 +28,9 @@ jobs:
       - name: Trip save lint
         run: python scripts/lint_trip_save_calls.py
 
+      - name: Trip JSON lint (ADR-008)
+        run: python scripts/lint_trip_json.py schemas/fixtures tests/fixtures
+
   test-pr:
     runs-on: ubuntu-latest
     strategy:
@@ -121,6 +124,7 @@ jobs:
           python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level all
           python scripts/validate_trip.py schemas/fixtures/trip.render_golden.json --level all
           python scripts/validate_trip.py schemas/fixtures/trip.linzhi_screens.json --level all
+          python scripts/lint_trip_json.py schemas/fixtures tests/fixtures
 
       - name: Demo verify (fixtures + DOM)
         run: |
