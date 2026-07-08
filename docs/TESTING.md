@@ -69,6 +69,8 @@ python -m travelogue demo verify
 
 **M-C2 batch7（2026-07-08）**：mosaic 单测 → `tests/unit/layout_engine/`（18 文件）；补删 batch6 遗留的顶层 layout 副本。
 
+**M-C2 batch8（2026-07-08）**：mosaic 余量 21 文件 → `tests/unit/layout_engine/`（mosaic 顶层测试清零）。
+
 新增测试请放入 `tests/unit/{包名}/` 或 `tests/integration/`，勿在 `tests/` 根目录新建 `test_*.py`。
 
 | 模块 | 用例示例 |
