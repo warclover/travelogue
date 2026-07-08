@@ -3,11 +3,11 @@
     "travelogue.curation",
     "travelogue.layout_engine"
   ],
-  "totalCrossEdges": 27,
-  "layoutEngineToCuration": 13,
-  "curationToLayoutEngine": 14,
+  "totalCrossEdges": 7,
+  "layoutEngineToCuration": 0,
+  "curationToLayoutEngine": 7,
   "targetAfterMigration": {
-    "maxCrossEdges": 5,
+    "maxCrossEdges": 1,
     "reductionPercent": 80,
     "note": "M-B4b proceeds only if post-kernel (M-B4a) cross edges ≤ maxCrossEdges"
   },
@@ -15,105 +15,9 @@
     [
       "travelogue.curation.curate",
       7
-    ],
-    [
-      "travelogue.layout_engine.metrics",
-      2
-    ],
-    [
-      "travelogue.layout_engine.sandbox",
-      2
-    ],
-    [
-      "travelogue.curation.editorial_4mix",
-      1
-    ],
-    [
-      "travelogue.curation.editorial_portrait_row",
-      1
-    ],
-    [
-      "travelogue.curation.layout_scoring",
-      1
-    ],
-    [
-      "travelogue.curation.moment_scoring",
-      1
-    ],
-    [
-      "travelogue.curation.solo_scoring",
-      1
-    ],
-    [
-      "travelogue.curation.usage_rules.evaluator",
-      1
-    ],
-    [
-      "travelogue.curation.usage_rules.tiebreak",
-      1
-    ],
-    [
-      "travelogue.layout_engine.editorial.four_mix",
-      1
-    ],
-    [
-      "travelogue.layout_engine.mosaic.search",
-      1
-    ],
-    [
-      "travelogue.layout_engine.planner.beam_scoring",
-      1
-    ],
-    [
-      "travelogue.layout_engine.planner.layout_search",
-      1
-    ],
-    [
-      "travelogue.layout_engine.planner.screen_planner",
-      1
     ]
   ],
   "topImported": [
-    [
-      "travelogue.curation.clustering",
-      2
-    ],
-    [
-      "travelogue.curation.curate",
-      2
-    ],
-    [
-      "travelogue.curation.usage_rules.context",
-      2
-    ],
-    [
-      "travelogue.curation.aesthetic_score",
-      1
-    ],
-    [
-      "travelogue.curation.asset_quality",
-      1
-    ],
-    [
-      "travelogue.curation.cohort_faces",
-      1
-    ],
-    [
-      "travelogue.curation.intent_hints",
-      1
-    ],
-    [
-      "travelogue.curation.layout_candidates",
-      1
-    ],
-    [
-      "travelogue.curation.phase6_rollout",
-      1
-    ],
-    [
-      "travelogue.curation.screen_planner",
-      1
-    ],
     [
       "travelogue.layout_engine.adapter",
       1
@@ -123,15 +27,23 @@
       1
     ],
     [
-      "travelogue.layout_engine.editorial.four_mix",
-      1
-    ],
-    [
-      "travelogue.layout_engine.editorial.portrait_row",
-      1
-    ],
-    [
       "travelogue.layout_engine.editorial_hints",
+      1
+    ],
+    [
+      "travelogue.layout_engine.pattern_policy",
+      1
+    ],
+    [
+      "travelogue.layout_engine.replan",
+      1
+    ],
+    [
+      "travelogue.layout_engine.rollout",
+      1
+    ],
+    [
+      "travelogue.layout_engine.segment_order",
       1
     ]
   ],
@@ -188,146 +100,6 @@
       "imported": "travelogue.layout_engine.segment_order",
       "lines": [
         631
-      ]
-    },
-    {
-      "importer": "travelogue.curation.editorial_4mix",
-      "imported": "travelogue.layout_engine.editorial.four_mix",
-      "lines": [
-        3
-      ]
-    },
-    {
-      "importer": "travelogue.curation.editorial_portrait_row",
-      "imported": "travelogue.layout_engine.editorial.portrait_row",
-      "lines": [
-        3
-      ]
-    },
-    {
-      "importer": "travelogue.curation.layout_scoring",
-      "imported": "travelogue.layout_engine.planner.beam_scoring",
-      "lines": [
-        117
-      ]
-    },
-    {
-      "importer": "travelogue.curation.moment_scoring",
-      "imported": "travelogue.layout_engine.highlight_windows",
-      "lines": [
-        125
-      ]
-    },
-    {
-      "importer": "travelogue.curation.solo_scoring",
-      "imported": "travelogue.layout_engine.scoring.solo",
-      "lines": [
-        3
-      ]
-    },
-    {
-      "importer": "travelogue.curation.usage_rules.evaluator",
-      "imported": "travelogue.layout_engine.usage_rules.evaluator",
-      "lines": [
-        2
-      ]
-    },
-    {
-      "importer": "travelogue.curation.usage_rules.tiebreak",
-      "imported": "travelogue.layout_engine.usage_rules.tiebreak",
-      "lines": [
-        3
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.editorial.four_mix",
-      "imported": "travelogue.curation.screen_planner",
-      "lines": [
-        75
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.metrics",
-      "imported": "travelogue.curation.clustering",
-      "lines": [
-        277
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.metrics",
-      "imported": "travelogue.curation.curate",
-      "lines": [
-        278
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.mosaic.search",
-      "imported": "travelogue.curation.intent_hints",
-      "lines": [
-        126
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.planner.beam_scoring",
-      "imported": "travelogue.curation.cohort_faces",
-      "lines": [
-        329
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.planner.layout_search",
-      "imported": "travelogue.curation.layout_candidates",
-      "lines": [
-        9
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.planner.screen_planner",
-      "imported": "travelogue.curation.asset_quality",
-      "lines": [
-        299
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.rollout",
-      "imported": "travelogue.curation.phase6_rollout",
-      "lines": [
-        13
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.sandbox",
-      "imported": "travelogue.curation.clustering",
-      "lines": [
-        17
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.sandbox",
-      "imported": "travelogue.curation.curate",
-      "lines": [
-        18
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.scoring.solo",
-      "imported": "travelogue.curation.aesthetic_score",
-      "lines": [
-        17
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.usage_rules.evaluator",
-      "imported": "travelogue.curation.usage_rules.context",
-      "lines": [
-        10
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.usage_rules.tiebreak",
-      "imported": "travelogue.curation.usage_rules.context",
-      "lines": [
-        11
       ]
     }
   ]

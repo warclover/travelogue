@@ -296,7 +296,7 @@ def _pick_main_landscape_id(
     featured_weight: float = DEFAULT_FEATURED_WEIGHT,
     aesthetic_enabled: bool | None = None,
 ) -> str:
-    from travelogue.curation.asset_quality import asset_sharpness
+    from travelogue.media.quality import asset_sharpness
     from travelogue.layout_engine.scoring.hero import effective_hero_score
     from travelogue.layout_contract.scoring import median_sharpness
 

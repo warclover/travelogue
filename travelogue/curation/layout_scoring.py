@@ -114,25 +114,6 @@ def resolve_scoring_weights(
 
 
 
-from travelogue.layout_engine.planner.beam_scoring import (  # noqa: F401
-    asset_mean_luma,
-    rank_screens,
-    score_aspect_match,
-    score_burst_integrity,
-    score_category_coherence,
-    score_cohort_coherence,
-    score_gravity_balance,
-    score_layout_rhythm,
-    score_luminance_continuity,
-    score_screen,
-    score_screen_plan,
-    score_sharpness,
-    score_subject_run_soft,
-    score_temporal_coherence,
-    score_tone_continuity,
-    screen_mean_luma,
-    screen_visual_center,
-)
 
 __all__ = [
     "FEATURED_BEAM_BONUS_PER_ASSET",
@@ -165,3 +146,12 @@ __all__ = [
     "screen_mean_luma",
     "screen_visual_center",
 ]
+
+_BEAM_EXPORTS = frozenset({'asset_mean_luma', 'rank_screens', 'score_aspect_match', 'score_burst_integrity', 'score_category_coherence', 'score_cohort_coherence', 'score_gravity_balance', 'score_layout_rhythm', 'score_luminance_continuity', 'score_screen', 'score_screen_plan', 'score_sharpness', 'score_subject_run_soft', 'score_temporal_coherence', 'score_tone_continuity', 'screen_mean_luma', 'screen_visual_center'})
+
+def __getattr__(name: str):
+    if name in _BEAM_EXPORTS:
+        import importlib
+        mod = importlib.import_module('travelogue.layout_engine.planner.beam_scoring')
+        return getattr(mod, name)
+    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')

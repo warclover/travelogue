@@ -1,3 +1,11 @@
-"""Shim → travelogue.layout_engine.scoring.solo."""
+"""Shim → layout_engine.scoring.solo."""
 
-from travelogue.layout_engine.scoring.solo import *  # noqa: F403
+from __future__ import annotations
+
+import importlib
+
+_mod = importlib.import_module("travelogue.layout_engine.scoring.solo")
+for _name in dir(_mod):
+    if _name.startswith("_"):
+        continue
+    globals()[_name] = getattr(_mod, _name)

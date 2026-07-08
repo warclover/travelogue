@@ -10,7 +10,7 @@ from dataclasses import dataclass, replace
 from typing import Any
 
 from travelogue.config import AppConfig
-from travelogue.curation.phase6_rollout import rollout_bucket
+from travelogue.layout_engine.rollout_bucket import rollout_bucket
 from travelogue.layout_engine.policy import load_policy
 from travelogue.layout_engine.runtime_store import load_lse_runtime
 

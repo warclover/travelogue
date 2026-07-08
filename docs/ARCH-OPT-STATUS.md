@@ -32,7 +32,7 @@
 | **M-C2** | done | 2026-07-08 | 全量 **423** 文件分层；baseline **1**（`test_ingest.py` shim）；collect **2714**；14 个 `tests/unit/*` 目录 | — |
 | M-C3 | done | 2026-07-08 | `gen_scripts_registry.py` + `scripts/README.md`（168 脚本）+ 7 个 phase 脚本已 `git mv` 至 `scripts/archive/` + docs 索引 | — |
 | M-C5 | done | 2026-07-08 | ESM 10 模块 + tsc + preview-toolbar CSS + **studio-home-v2.css** 13 partials | — |
-| M-D1 | done | 2026-07-08 | 删 legacy 开关；LSE kernel batch-1～5（108→**27**） | PRD ≤10 待 batch-6（shim 白名单 + sandbox/curate 边） |
+| M-D1 | done | 2026-07-08 | 删 legacy 开关；LSE batch-1～6（108→**7**） | PRD ≤10 ✅ · 余 7 边为 curate→adapter 白名单 |
 
 ## M-B1 交付摘要（PRD §5.3.2）
 
@@ -70,13 +70,13 @@
 > **与 import-linter 分层违例不同维度**：仅统计 `layout_engine` ↔ `curation` 包间 AST 边。  
 > 刷新：`python scripts/lse_cross_import_stats.py` → `docs/acceptance-records/lse-cross-import-baseline.json`
 
-| 指标 | M-B0 参考 | **2026-07-08（batch-5 后）** | PRD / ADR 目标 |
+| 指标 | M-B0 参考 | **2026-07-08（batch-6 后）** | PRD / ADR 目标 |
 |------|-----------|------------------------------|----------------|
-| layout_engine → curation | — | **13** | — |
-| curation → layout_engine | — | **14**（shim 回引 + curate adapter） | adapter 白名单 |
-| **合计** | 51（B4a 前）→ 44（B4a 后） | **27**（batch-1～5：108→62→35→27） | PRD ≤10 ❌ · ADR 20%≈22 ❌ |
-| Top importer | — | `curation.curate` (7) · shim 模块 (5+) | adapter 收敛 |
-| Top imported | — | `layout_engine.*` shim 目标 · `aesthetic_score` (3) | batch-6 待迁 |
+| layout_engine → curation | — | **0** | — |
+| curation → layout_engine | — | **7**（curate→adapter 白名单） | adapter 单向入口 |
+| **合计** | 51（B4a 前）→ 44（B4a 后） | **7**（batch-1～6：108→7） | PRD ≤10 ✅ |
+| Top importer | — | `curation.curate` (7) | 符合 §5.3.1 白名单 |
+| Top imported | — | `layout_engine.adapter` 等 7 模块 | intentional |
 
 **说明**：B4b 物理迁移后 LSE 模块仍大量 lazy-import curation（评分、mosaic shim、curate 实验路径），边数上升属预期；**≤10 目标归属 M-B4 后续**（adapter 薄化 + curation shim 删除 + 白名单边审计），非 M-B1 范围。
 
@@ -103,6 +103,6 @@ P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓
 
 | 优先级 | 任务 | 触发 / 门禁 | 目标 |
 |--------|------|-------------|------|
-| P1 | **LSE cross-import 收敛**（27→≤10） | `lint_lse_cross_import.py` weekly 防回归 | batch-6: shim 白名单审计 + sandbox/metrics + cohort_faces |
+| P1 | **LSE 收敛收尾** | 7 边 curate→adapter 文档化 | import-linter 11 豁免清零（M-B1 余量） |
 | P2 | **M-C1 / P-18** 路由表化 | 新增 Studio API | 机会主义 |
 | 背景 | 全量 `pytest --fast` 预存失败 (~25) | 非 M-C6 | 分批 issue |

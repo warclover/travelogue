@@ -14,12 +14,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from travelogue.curation.aesthetic_score import (
-    aesthetic_dim,
-    aesthetic_overall,
-    asset_aesthetic,
-    purpose_overall,
+from travelogue.layout_engine.scoring.aesthetic import aesthetic_overall
+
+_aesthetic = __import__(
+    "travelogue.curation.aesthetic_score",
+    fromlist=["aesthetic_dim", "asset_aesthetic", "purpose_overall"],
 )
+aesthetic_dim = _aesthetic.aesthetic_dim
+asset_aesthetic = _aesthetic.asset_aesthetic
+purpose_overall = _aesthetic.purpose_overall
 from travelogue.media.quality import asset_sharpness
 from travelogue.media.color_metrics import delta_e_cie76, triangular_score
 

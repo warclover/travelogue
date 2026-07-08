@@ -72,7 +72,7 @@ def chess_window_matches(
 ) -> bool:
     if len(asset_ids) != 4:
         return False
-    from travelogue.curation.screen_planner import (
+    from travelogue.layout_engine.planner.screen_planner import (
         _is_landscape_id,
         _is_std_portrait_id,
     )

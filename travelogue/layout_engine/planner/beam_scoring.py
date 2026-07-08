@@ -326,7 +326,7 @@ def score_cohort_coherence(
     asset_ids: list[str],
     assets_by_id: Mapping[str, dict],
 ) -> float:
-    from travelogue.curation.cohort_faces import score_cohort_coherence as _score
+    from travelogue.layout_engine.scoring.cohort import score_cohort_coherence as _score
 
     return _score(asset_ids, assets_by_id)
 

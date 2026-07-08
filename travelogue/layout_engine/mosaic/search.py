@@ -123,7 +123,7 @@ def replan_day_buckets_beam(
     moment_secondary_ids: set[str] | frozenset[str] | None = None,
     moment_secondary_boost: float = 0.0,
 ) -> tuple[list[dict], list[dict], SearchBudget]:
-    from travelogue.curation.intent_hints import (
+    from travelogue.layout_engine.intent_hints import (
         INTENT_PEAK_ARC_BOOST,
         arc_segment_for_chapter_with_intent,
     )

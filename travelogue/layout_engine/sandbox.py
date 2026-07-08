@@ -14,8 +14,19 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.config import AppConfig
-from travelogue.curation.clustering import run_clustering_layer
-from travelogue.curation.curate import run_curate
+
+
+def _run_clustering_layer(body: dict, *, trip_dir: Path, cfg: AppConfig) -> None:
+    _mod = __import__(
+        "travelogue.curation.clustering",
+        fromlist=["run_clustering_layer"],
+    )
+    _mod.run_clustering_layer(body, trip_dir=trip_dir, cfg=cfg)
+
+
+def _run_curate(body: dict, *, trip_dir: Path, cfg: AppConfig) -> None:
+    _mod = __import__("travelogue.curation.curate", fromlist=["run_curate"])
+    _mod.run_curate(body, apply_layout=True, trip_dir=trip_dir, cfg=cfg)
 
 
 def _pattern_distribution(chapters: list[dict]) -> dict[str, float]:
@@ -110,8 +121,8 @@ def _run_curate_snapshot(
     cfg: AppConfig,
 ) -> dict[str, Any]:
     body = _prepare_trip(trip)
-    run_clustering_layer(body, trip_dir=work_dir / "cluster", cfg=cfg)
-    run_curate(body, apply_layout=True, trip_dir=work_dir, cfg=cfg)
+    _run_clustering_layer(body, trip_dir=work_dir / "cluster", cfg=cfg)
+    _run_curate(body, trip_dir=work_dir, cfg=cfg)
     chapters = body.get("chapters") or []
     return {
         "snapshot": _layout_snapshot(chapters),

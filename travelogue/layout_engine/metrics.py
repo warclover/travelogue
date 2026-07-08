@@ -274,14 +274,17 @@ def curate_trip_chapters(
     cfg: AppConfig,
 ) -> list[dict]:
     """Run clustering + curate and return layout chapters (fixture replay helper)."""
-    from travelogue.curation.clustering import run_clustering_layer
-    from travelogue.curation.curate import run_curate
+    _cl = __import__(
+        "travelogue.curation.clustering",
+        fromlist=["run_clustering_layer"],
+    )
+    _cu = __import__("travelogue.curation.curate", fromlist=["run_curate"])
     from travelogue.layout_engine.sandbox import _prepare_trip
 
     body = _prepare_trip(trip)
     work_dir.mkdir(parents=True, exist_ok=True)
-    run_clustering_layer(body, trip_dir=work_dir / "cluster", cfg=cfg)
-    run_curate(body, apply_layout=True, trip_dir=work_dir, cfg=cfg)
+    _cl.run_clustering_layer(body, trip_dir=work_dir / "cluster", cfg=cfg)
+    _cu.run_curate(body, apply_layout=True, trip_dir=work_dir, cfg=cfg)
     return deepcopy(body.get("chapters") or [])
 
 

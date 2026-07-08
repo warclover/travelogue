@@ -6,7 +6,7 @@ from typing import Any
 
 from travelogue.config import AppConfig
 from travelogue.layout_contract.degradation import DegradationAssessment
-from travelogue.curation.layout_candidates import generate_day_bucket_candidates  # noqa: F401
+from travelogue.layout_engine.planner.layout_candidates import generate_day_bucket_candidates  # noqa: F401
 from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_contract.scoring import ScoringWeights
 
