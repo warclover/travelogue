@@ -8,7 +8,7 @@ from typing import Any
 
 from travelogue.config import AppConfig, MosaicConfig, get_config
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-from travelogue.curation.screen_planner import DEFAULT_FEATURED_WEIGHT, plan_screens_for_chapter
+from travelogue.layout_engine.planner.screen_planner import DEFAULT_FEATURED_WEIGHT
 from travelogue.layout_engine.decision_log import (
     ingest_beam_logs,
     ingest_mosaic_logs,
@@ -62,6 +62,14 @@ def resolve_pack(cfg: AppConfig) -> StrategyPack | None:
         return None
     sid = cfg.layout.strategy_engine.default_strategy_id
     return get_strategy_pack(sid, cfg.layout.strategy_engine.policy_path)
+
+
+def _planner_module(cfg: AppConfig) -> Any:
+    if cfg.layout.planner_impl == "curation":
+        import travelogue.curation.screen_planner as mod
+    else:
+        import travelogue.layout_engine.planner.screen_planner as mod
+    return mod
 
 
 def _stage_enabled(pack: StrategyPack | None, stage: str, *, default: bool = True) -> bool:
@@ -212,7 +220,8 @@ def plan_chapter_screens(
     if layout_state is None and active_pack is not None and ctx.trip_photo_total:
         layout_state = layout_state_for_trip(ctx.trip_photo_total, cfg=app, pack=active_pack)
 
-    return plan_screens_for_chapter(
+    mod = _planner_module(app)
+    return mod.plan_screens_for_chapter(
         ctx.asset_ids,
         ctx.aspects,
         chapter_id=ctx.chapter_id,

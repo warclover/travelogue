@@ -11,7 +11,7 @@ from travelogue.config import AppConfig
 from travelogue.curation.asset_subject import asset_has_person
 from travelogue.curation.layout_metrics import pattern_diversity_p50
 from travelogue.curation.layout_scoring import screen_dominant_tone
-from travelogue.curation.mosaic.metrics import _MIXED_LAYOUT_PATTERNS
+from travelogue.layout_engine.mosaic.metrics import _MIXED_LAYOUT_PATTERNS
 from travelogue.layout_contract.rhythm import is_portrait_single_pattern
 from travelogue.layout_engine.features import salient_retention_for_slot
 from travelogue.layout_engine.highlight_windows import (

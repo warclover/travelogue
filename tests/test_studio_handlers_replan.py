@@ -10,7 +10,7 @@ import pytest
 from tests._golden.helpers import build_mosaic_replan_chapter
 from tests.studio_test_helpers import MockStudioHandler
 from travelogue.config import AppConfig
-from travelogue.curation.screen_planner import LAYOUT_ENGINE_SCREENS
+from travelogue.layout_engine.planner.screen_planner import LAYOUT_ENGINE_SCREENS
 from travelogue.services.trip import TripService
 from travelogue.services.trip_factory import create_trip
 from travelogue.web.studio_handlers.trip_handlers import handle_patch_screen_replan

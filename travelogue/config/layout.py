@@ -182,6 +182,7 @@ class LayoutConfig:
 
     web_layout_engine: str = "screens"  # legacy | screens
     screen_plan_scope: str = "day"  # chapter | day — day = 按策展日桶全序列组屏
+    planner_impl: str = "layout_engine"  # layout_engine | curation — M-B4b rollback
     mixed_proximity_seconds: float = 900.0  # 混排/拼图连拍 takenAt 跨度上限（秒）· 默认 15min
     layout_density_enabled: bool = True  # PRD-FINE-CRAFT-LAYOUT-DENSITY · false → balanced
     editorial_portrait_row: EditorialPortraitRowConfig = field(

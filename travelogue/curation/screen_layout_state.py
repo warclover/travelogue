@@ -81,7 +81,7 @@ def pattern_dense_slot_count(pattern_id: str) -> int | None:
         return 8
     if pattern_id.startswith("screen-mosaic-"):
         try:
-            from travelogue.curation.mosaic.lte_adapter import _mosaic_slot_count
+            from travelogue.layout_engine.mosaic.lte_adapter import _mosaic_slot_count
 
             return _mosaic_slot_count(pattern_id)
         except Exception:
@@ -293,7 +293,7 @@ class ScreenLayoutPlannerState:
         return True
 
     def can_emit_pattern(self, pattern_id: str) -> bool:
-        from travelogue.curation.mosaic.lte_adapter import (
+        from travelogue.layout_engine.mosaic.lte_adapter import (
             mosaic_pattern_disabled,
             template_rhythm_max_per_chapter,
         )

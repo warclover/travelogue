@@ -24,7 +24,7 @@
 | M-B2 | todo | — | — | 需 G-WIP-01 |
 | M-B3 | todo | — | — | 需 M-B2 Go + G-WIP-01 |
 | M-C4 | todo | — | — | — |
-| M-B4b | todo | — | — | ADR-015 已批；待启动 |
+| M-B4b | done | 2026-07-08 | planner+mosaic→layout_engine/；shim+planner_impl 开关；adapter/消费方收敛；equivalence 全绿 | cross-import 109（物理迁移后 planner/mosaic 对 curation 依赖边计入 LE→cur；shim 9 条；≤10 待 M-B1 kernel 清偿） |
 | M-B1 | todo | — | — | — |
 | M-B6 | todo | — | — | — |
 | M-C1 | todo | — | — | 触发：新增 Studio API |
@@ -39,7 +39,7 @@
 | 开关 | 上线日期 | 4 周 DoD 到期 | 备注 |
 |------|----------|---------------|------|
 | `pipeline.orchestration` | — | — | M-B3 登记 |
-| `layout.planner_impl` | — | — | M-B4b 登记 |
+| `layout.planner_impl` | 2026-07-08 | 2026-08-05 | M-B4b 默认 layout_engine |
 
 ## 发现问题
 

@@ -195,7 +195,7 @@ def _reset_mosaic_and_config_process_state() -> None:
     """Prevent mosaic override / get_config() cache leaking across tests."""
     yield
     try:
-        from travelogue.curation.mosaic.runtime import reset_mosaic_config_override
+        from travelogue.layout_engine.mosaic.runtime import reset_mosaic_config_override
 
         reset_mosaic_config_override()
     except Exception as exc:

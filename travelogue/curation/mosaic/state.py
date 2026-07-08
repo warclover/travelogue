@@ -1,18 +1,17 @@
-"""Shared rhythm / quota state for MCS (thin migration from screen_layout_state)."""
+"""Deprecated shim · moved to layout_engine (M-B4b)."""
 
-from __future__ import annotations
+import warnings
 
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+warnings.warn(
+    "travelogue.curation.mosaic.state is deprecated; use travelogue.layout_engine.mosaic.state",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
-MosaicPlannerState = ScreenLayoutPlannerState
-
-
-def note_screens_batch(
-    state: ScreenLayoutPlannerState | None,
-    screens: list[dict],
-) -> None:
-    """Record emitted patterns once after a segment merge (P15-2j)."""
-    if state is None:
-        return
-    for sc in screens:
-        state.note_screen(sc.get("patternId", ""))
+from importlib import import_module
+_mod = import_module('travelogue.layout_engine.mosaic.state')
+for _name, _value in vars(_mod).items():
+    if _name.startswith('__'):
+        continue
+    globals()[_name] = _value
+del _mod, _name, _value

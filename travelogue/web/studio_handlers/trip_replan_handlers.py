@@ -12,12 +12,12 @@ def handle_patch_screen_replan(
 ) -> None:
     """PATCH …/screens/{screenId}/replan — MCS alt_topk or legacy for one screen."""
     from travelogue.curation.layout_planner import aspect_kind_for_asset
-    from travelogue.curation.mosaic.replan import (
+    from travelogue.layout_engine.mosaic.replan import (
         ReplanError,
         refresh_trip_displayed_assets,
         replan_screen,
     )
-    from travelogue.curation.screen_planner import LAYOUT_ENGINE_SCREENS
+    from travelogue.layout_engine.planner.screen_planner import LAYOUT_ENGINE_SCREENS
 
     payload = handler._read_json_body() or {}
     loaded = load_trip_or_404(handler, trip_id)

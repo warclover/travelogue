@@ -300,7 +300,7 @@ jobs:
       - name: LTE legacy Python snapshot drift
         run: |
           python scripts/lte_export_legacy.py --sync-python --out /tmp/lte_legacy_export.json
-          git diff --exit-code travelogue/curation/mosaic/_legacy_generated.py || {
+          git diff --exit-code travelogue/layout_engine/mosaic/_legacy_generated.py || {
             echo "_legacy_generated.py out of sync; run: python scripts/lte_export_legacy.py --sync-python"
             exit 1
           }

@@ -7,7 +7,7 @@ from typing import Any
 
 from travelogue.config import AppConfig, MosaicConfig
 from travelogue.curation.layout_planner import aspect_kind_for_asset
-from travelogue.curation.mosaic.scorer import score_candidate
+from travelogue.layout_engine.mosaic.scorer import score_candidate
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.layout_engine.adapter import mosaic_config_from_pack, resolve_pack
 from travelogue.layout_engine.beat import beat_score_multiplier
@@ -438,7 +438,7 @@ def probe_ac_p17_19(
     assets_map = _assets_map(trip)
     if not window or len(window) < 4:
         return {"measurable": False, "passed": None}
-    from travelogue.curation.mosaic.candidates import generate_window_candidates_with_rejections
+    from travelogue.layout_engine.mosaic.candidates import generate_window_candidates_with_rejections
 
     aspects = _aspects(trip)
     pack_b = resolve_pack(baseline_cfg)
