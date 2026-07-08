@@ -32,7 +32,7 @@
 | **M-C2** | done | 2026-07-08 | 全量 **423** 文件分层；baseline **1**（`test_ingest.py` shim）；collect **2714**；14 个 `tests/unit/*` 目录 | — |
 | M-C3 | done | 2026-07-08 | `gen_scripts_registry.py` + `scripts/README.md`（168 脚本）+ 7 个 phase 脚本已 `git mv` 至 `scripts/archive/` + docs 索引 | — |
 | M-C5 | done | 2026-07-08 | ESM 10 模块 + tsc + preview-toolbar CSS + **studio-home-v2.css** 13 partials | — |
-| M-D1 | done | 2026-07-08 | 删 legacy 开关；LSE kernel import batch-1/2（108→77） | ScreenLayoutPlannerState 等待下沉 layout_contract |
+| M-D1 | done | 2026-07-08 | 删 legacy 开关；LSE kernel import batch-1/2/3（108→62） | ScreenLayoutPlannerState 等待下沉 layout_contract |
 
 ## M-B1 交付摘要（PRD §5.3.2）
 
