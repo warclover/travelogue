@@ -14,13 +14,13 @@ from typing import Any
 from PIL import Image
 
 from travelogue.config import AestheticConfig, AppConfig, IngestConfig, get_config
-from travelogue.curation.asset_quality import apply_layout_eligibility_marks, asset_sharpness
-from travelogue.curation.media_classify import (
+from travelogue.media.media_classify import (
     classify_media_class,
     date_confidence_for_source,
     refine_archive_media_class,
     summarize_media_classes,
 )
+from travelogue.media.quality import apply_layout_eligibility_marks, asset_sharpness
 from travelogue.errors import CodeError
 from travelogue.media import ingest_checkpoint as icp
 from travelogue.media.color_metrics import color_metrics_from_thumb
