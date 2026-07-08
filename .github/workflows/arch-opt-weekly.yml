@@ -37,3 +37,33 @@ jobs:
 
       - name: pipeline.orchestration legacy vs unified (+ CLI phase 2)
         run: python scripts/orchestration_dual_run.py --json
+
+  switch-dod-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: pip install -e ".[dev]"
+
+      - name: M-D1 DoD readiness report (PRD §3.3)
+        run: python scripts/check_switch_dod.py
+
+  lse-cross-import-ceiling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: pip install -e ".[dev]"
+
+      - name: LSE cross-import regression ceiling
+        run: python scripts/lint_lse_cross_import.py

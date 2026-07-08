@@ -1,0 +1,234 @@
+/* Homepage v2 · Lightbox, unsupported, responsive, reduced motion */
+/* ── Lightbox（§6.7） ── */
+.v2-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+.v2-lightbox.is-open { display: flex; }
+.v2-lightbox__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 3, 2, .86);
+  backdrop-filter: blur(8px);
+}
+.v2-lightbox__inner {
+  position: relative;
+  width: min(960px, 92vw);
+  max-height: 86vh;
+}
+.v2-lightbox__inner--phone { width: min(360px, 88vw); }
+.v2-lightbox__close {
+  position: absolute;
+  top: -42px;
+  right: 0;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, .25);
+  background: rgba(255, 255, 255, .06);
+  color: #ece8e0;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.v2-lightbox__close:hover { background: rgba(255, 255, 255, .14); }
+.v2-lightbox__scroll {
+  width: 100%;
+  max-height: 86vh;
+  overflow: auto;
+  border-radius: 6px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .6);
+  background: #14110d;
+}
+.v2-lightbox__scroll img { display: block; width: 100%; height: auto; }
+.v2-lightbox__page-ph {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--v2-font-display);
+  font-style: italic;
+  color: rgba(255, 255, 255, .4);
+  background: linear-gradient(135deg, #232b25, #161b17);
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+}
+.v2-lightbox__caption {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: .04em;
+  color: rgba(255, 255, 255, .55);
+}
+
+/* ── Unsupported viewport ── */
+.v2-unsupported {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(circle at 50% 35%, #1a1714, #0c0b0a);
+}
+.v2-unsupported__card {
+  width: min(480px, 100%);
+  text-align: center;
+}
+.v2-unsupported__brand {
+  font-size: 10px;
+  letter-spacing: .24em;
+  color: var(--v2-gold);
+  margin: 0 0 18px;
+}
+.v2-unsupported__title {
+  margin: 0 0 12px;
+  font-family: var(--v2-font-display);
+  font-size: 24px;
+  font-weight: 400;
+  color: #f5f0e8;
+}
+.v2-unsupported__lead {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, .6);
+}
+.v2-unsupported__actions {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.v2-unsupported__qr-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.v2-unsupported__qr {
+  display: block;
+  width: 160px;
+  height: 160px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .08);
+  object-fit: cover;
+}
+.v2-unsupported__qr-fallback {
+  margin: 0;
+  width: 160px;
+  padding: 48px 16px;
+  box-sizing: border-box;
+  border: 1px dashed rgba(255, 255, 255, .22);
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, .55);
+}
+.v2-unsupported__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  min-width: 200px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 999px;
+  background: #f5f0e8;
+  color: #1a1714;
+  font-family: var(--v2-font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  cursor: pointer;
+  transition: transform .18s ease, background .18s ease;
+}
+.v2-unsupported__btn:hover {
+  transform: translateY(-1px);
+  background: #fff;
+}
+.v2-unsupported__btn:focus-visible {
+  outline: 3px solid var(--v2-gold);
+  outline-offset: 3px;
+}
+
+/* ── Responsive：≥1024 与 iPad 横屏 双列；窄视口交给 JS 切 Unsupported ── */
+@media (max-width: 1100px) {
+  .v2-bento__hero { padding: 12px 20px 18px; }
+  .v2-bento__title { font-size: 28px; }
+  .v2-bento__grid { grid-template-columns: minmax(0, 1.85fr) minmax(132px, 1fr); }
+  .v2-bench {
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+  .v2-bench__left {
+    flex: 1 1 38%;
+    min-width: 210px;
+  }
+  .v2-bench--recent .v2-bench__left {
+    flex: 1 1 100%;
+    max-width: none;
+    min-width: 0;
+  }
+  .v2-bench--recent .v2-bench__recent-list {
+    height: var(--v2-bench-card-h, calc(108px * 0.7225));
+    min-height: var(--v2-bench-card-h, calc(108px * 0.7225));
+    max-height: var(--v2-bench-card-h, calc(108px * 0.7225));
+  }
+  .v2-bench--recent .v2-bench__quick {
+    flex: 1 1 100%;
+    border-left: none;
+    border-top: none;
+    padding-left: 0;
+    padding-top: 0;
+  }
+  .v2-bench__quick {
+    flex: 1 1 100%;
+    min-width: 0;
+    border-left: none;
+    border-top: 1px solid var(--v2-border);
+    padding-left: 0;
+    padding-top: 12px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 14px 18px;
+  }
+  .v2-bench__side {
+    flex: 1 1 200px;
+    min-width: 180px;
+  }
+  .v2-bench__side--prefs {
+    flex: 1 1 100%;
+    border-top: none;
+    padding-top: 0;
+  }
+}
+
+/* iPad 横屏（768–1023）：沿用 Bento 双列，绝不堆叠（D-07 / §10.1） */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .v2-bento__hero { padding: 10px 18px 16px; }
+  .v2-bento__title { font-size: 26px; }
+  .v2-bento__lead { font-size: 12px; max-width: 100%; }
+  .v2-bento__grid {
+    grid-template-columns: minmax(0, 1.75fr) minmax(120px, 1fr);
+    gap: 8px 10px;
+  }
+  .v2-bento__frame { padding: 8px 12px 12px; }
+  .v2-shelf__grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* prefers-reduced-motion（§12.4 L1）：禁 Ken Burns / shimmer */
+@media (prefers-reduced-motion: reduce) {
+  .v2-shared__bg.is-kenburns { animation: none; }
+  .v2-loading__bar,
+  .v2-loading__frame { animation: none; }
+}
+

@@ -22,11 +22,13 @@ import pytest
 import yaml
 
 from tests.integration.studio.test_studio_server import _free_port, _post_json, _start_studio_server
+from tests.unit.web._studio_home_v2_css import read_studio_home_v2_css_bundle
 from travelogue.web.studio_handlers.paths import STUDIO_EVENT_PATH
 from travelogue.web.studio_jobs import reset_job_store
 
 REPO_ROOT = repo_root(__file__)
 STUDIO_DIR = REPO_ROOT / "templates" / "studio"
+V2_CSS_BUNDLE = read_studio_home_v2_css_bundle(STUDIO_DIR)
 
 
 @pytest.fixture(autouse=True)
@@ -166,8 +168,18 @@ def test_studio_home_classic_unchanged_on_gate_off(tmp_path: Path, monkeypatch) 
         server.server_close()
 
 
+def test_studio_home_v2_css_split_modules() -> None:
+    entry = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    assert '@import url("homepage-v2/css/tokens.css")' in entry
+    assert '@import url("homepage-v2/css/dev-panel.css")' in entry
+    for name in ("tokens.css", "bento.css", "import-wizard.css", "chrome.css"):
+        assert (STUDIO_DIR / "homepage-v2" / "css" / name).is_file(), name
+    assert "--v2-ink:" in V2_CSS_BUNDLE
+    assert "prefers-reduced-motion: reduce" in V2_CSS_BUNDLE
+
+
 def test_studio_home_v2_css_present() -> None:
-    css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    css = V2_CSS_BUNDLE
     for sel in (
         ".v2-bento",
         ".v2-carousel",
@@ -192,7 +204,7 @@ def test_studio_home_v2_css_present() -> None:
 def test_studio_home_v2_theme_palette_options() -> None:
     """新增 mist / folio / atelier 三套中国传统色主题。"""
     html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
-    css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    css = V2_CSS_BUNDLE
     store = (STUDIO_DIR / "homepage-v2" / "store.js").read_text(encoding="utf-8")
     theme_js = (STUDIO_DIR / "homepage-v2" / "theme.js").read_text(encoding="utf-8")
     boot = (STUDIO_DIR / "homepage-v2" / "theme-boot.js").read_text(encoding="utf-8")
@@ -385,7 +397,7 @@ def test_studio_home_v2_phase14_dual_mode_smoke() -> None:
     ):
         assert marker in sheet, marker
 
-    css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    css = V2_CSS_BUNDLE
     assert ".v2-sheet__mode-panel[hidden]" in css
     assert "display: none !important;" in css
 
@@ -411,7 +423,7 @@ def test_studio_home_v2_variant_guard_and_dev_panel() -> None:
     """AC-HP2-23 variant guard + DEV-HARNESS dev panel。"""
     guard = (STUDIO_DIR / "homepage-v2" / "variant-guard.js").read_text(encoding="utf-8")
     panel = (STUDIO_DIR / "homepage-v2" / "dev-panel.js").read_text(encoding="utf-8")
-    css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    css = V2_CSS_BUNDLE
     assert "isVariantSwitchLocked" in guard and "syncVariantGuard" in guard
     assert "initDevPanel" in panel and "Copy repro URL" in panel
     assert ".v2-dev-panel" in css
@@ -427,7 +439,7 @@ def test_studio_home_v2_layout_tier_and_failed_modules() -> None:
 
     assert "resolveLayoutTier" in tier and "shouldEagerCarouselPage" in tier
     assert "showImportFailed" in failed and "failureNextHint" in failed
-    css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    css = V2_CSS_BUNDLE
     assert ".v2-first-success {" in css
     first_success_block = css.split(".v2-first-success {", 1)[1].split("}", 1)[0]
     first_success_panel = css.split(".v2-first-success__panel {", 1)[1].split("}", 1)[0]
@@ -528,7 +540,7 @@ def test_studio_home_v2_stale_recurate_modules() -> None:
     curate = (STUDIO_DIR / "homepage-v2" / "curate-client.js").read_text(encoding="utf-8")
     logic = (STUDIO_DIR / "homepage-v2" / "shelf-actions-logic.js").read_text(encoding="utf-8")
     html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
-    css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    css = V2_CSS_BUNDLE
     bento = (STUDIO_DIR / "homepage-v2" / "bento.js").read_text(encoding="utf-8")
 
     assert "syncBentoStaleBar" in stale and "triggerHomepageRecurate" in stale
@@ -565,7 +577,7 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "即将上线" not in shelf
     assert "shelf-menu.js" in shelf
     assert "v2-shelf__card" in shelf
-    assert "v2-shelf__menu-btn" in (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    assert "v2-shelf__menu-btn" in V2_CSS_BUNDLE
 
     html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
     assert "studio-modal.css" in html
@@ -601,7 +613,7 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "studioAuthHeaders" in trips_client
     assert 'method: "DELETE"' in trips_client
 
-    css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    css = V2_CSS_BUNDLE
     assert ".v2-shelf" in css
     assert "line-clamp" in css            # 长标题 2 行 clamp
 
@@ -628,7 +640,7 @@ def test_studio_home_v2_viewport_modules() -> None:
     assert "orientationchange" in unsupported  # 动态重判
     assert "resize" in unsupported
 
-    css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    css = V2_CSS_BUNDLE
     # iPad 横屏断点保持双列（不堆叠）
     assert "min-width: 768px) and (max-width: 1023px" in css
 
@@ -781,7 +793,7 @@ def test_studio_home_v2_harness_and_ac_hooks() -> None:
     assert "v2-bento-preview-search" in picker
     assert "#v2-web-cell" in html or 'id="v2-web-cell"' in html
 
-    css = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    css = V2_CSS_BUNDLE
     assert ".v2-preview-combobox__trigger" in css
     assert ".v2-preview-combobox__option-stale" in css
     # 隐藏的 fixed 覆盖层不得拦截点击

@@ -9,6 +9,8 @@ from pathlib import Path
 
 from tests.unit.web._preview_toolbar_css import read_preview_toolbar_css_bundle
 
+from tests.unit.web._studio_home_v2_css import read_studio_home_v2_css_bundle
+
 ROOT = repo_root(__file__)
 STUDIO = ROOT / "templates" / "studio"
 
@@ -31,7 +33,7 @@ def test_ac_p4_a11y_02_import_sheet_dialog_semantics() -> None:
 
 def test_ac_p4_a11y_03_reduced_motion_disables_shimmer() -> None:
     """prefers-reduced-motion disables Ken Burns / loading shimmer animations."""
-    css = (STUDIO / "studio-home-v2.css").read_text(encoding="utf-8")
+    css = read_studio_home_v2_css_bundle(STUDIO)
     assert "prefers-reduced-motion: reduce" in css
     assert ".v2-loading__bar" in css
     block_start = css.index("@media (prefers-reduced-motion: reduce)")

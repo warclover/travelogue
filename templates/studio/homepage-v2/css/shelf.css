@@ -1,0 +1,222 @@
+/* Homepage v2 · Web shelf revisit zone */
+/* ── Web 书架（§8 · Bento 下方回访区 · 方案 A） ── */
+.v2-shelf {
+  position: relative;
+  z-index: 6;
+  overflow: visible;
+  padding: 40px 48px 56px;
+  background: var(--v2-paper);
+  color: var(--v2-ink);
+  border-top: 1px solid var(--v2-border);
+  box-shadow: 0 -20px 52px var(--v2-shadow-soft);
+}
+.v2-shelf__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--v2-border);
+}
+.v2-shelf__title-h1 {
+  margin: 0;
+  font-family: var(--v2-font-display);
+  font-size: 42px;
+  font-weight: 400;
+  line-height: 1;
+}
+.v2-shelf__count {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--v2-text-muted);
+}
+.v2-shelf__resume {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 20px;
+  margin-bottom: 26px;
+  background: #fff;
+  border: 1px solid var(--v2-border);
+  border-radius: 8px;
+  position: relative;
+}
+.v2-shelf__resume-thumb-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.v2-shelf__resume .v2-shelf__menu-btn { top: 4px; right: 4px; }
+.v2-shelf__resume .v2-shelf__menu { top: 40px; right: 4px; }
+.v2-shelf__resume-thumb {
+  width: 60px;
+  height: 80px;
+  border-radius: 4px;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+.v2-shelf__resume-text { flex: 1; min-width: 0; }
+.v2-shelf__resume-text strong { display: block; font-size: 15px; }
+.v2-shelf__resume-text span { font-size: 12px; color: var(--v2-text-muted); }
+.v2-shelf__resume-actions { display: flex; gap: 10px; flex-shrink: 0; }
+.v2-shelf__resume-actions button {
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 1px solid var(--v2-border-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--v2-ink);
+  font-size: 12px;
+  cursor: pointer;
+}
+.v2-shelf__resume-actions button.primary {
+  background: var(--v2-primary);
+  color: #fff;
+  border-color: var(--v2-primary);
+}
+.v2-shelf__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+.v2-shelf__card {
+  position: relative;
+  text-align: left;
+}
+.v2-shelf__card--leaving {
+  opacity: 0;
+  transform: scale(.98);
+  transition: opacity .2s, transform .2s;
+  pointer-events: none;
+}
+.v2-shelf__book {
+  position: relative;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+.v2-shelf__cover-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
+.v2-shelf__open {
+  display: block;
+  width: 100%;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+.v2-shelf__open--cover { margin: 0; }
+.v2-shelf__menu-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .92);
+  color: var(--v2-ink);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.v2-shelf__menu-btn:focus-visible {
+  outline: 2px solid var(--v2-primary);
+  outline-offset: 2px;
+}
+.v2-shelf__card:hover .v2-shelf__menu-btn,
+.v2-shelf__card:focus-within .v2-shelf__menu-btn,
+.v2-shelf__card.is-menu-open .v2-shelf__menu-btn,
+.v2-shelf__resume:hover .v2-shelf__menu-btn,
+.v2-shelf__resume:focus-within .v2-shelf__menu-btn,
+.v2-shelf__resume.is-menu-open .v2-shelf__menu-btn {
+  display: flex;
+}
+.v2-shelf__menu-btn.is-active {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+}
+.v2-shelf__menu {
+  position: absolute;
+  top: 44px;
+  right: 8px;
+  z-index: 4;
+  min-width: 148px;
+  padding: 6px 0;
+  background: #fff;
+  border: 1px solid rgba(20, 17, 13, .12);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(16, 15, 13, .14);
+  /* 弹层恒为白底，勿用 --v2-ink（classic 等深色主题为浅色字） */
+  --v2-shelf-menu-ink: #14110d;
+}
+.v2-shelf__menu[hidden] { display: none !important; }
+.v2-shelf__menu-item {
+  display: block;
+  width: 100%;
+  padding: 9px 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--v2-shelf-menu-ink);
+}
+.v2-shelf__menu-item:hover { background: rgba(20, 17, 13, .04); }
+.v2-shelf__menu-item--danger { color: #a33b36; }
+.v2-shelf__menu-item--danger:hover { background: rgba(163, 59, 54, .1); }
+.v2-shelf__menu-item:disabled {
+  color: rgba(20, 17, 13, .35);
+  cursor: not-allowed;
+}
+.v2-shelf__menu-item:disabled:hover { background: none; }
+
+.v2-shelf-longshot__body p {
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+.v2-shelf-longshot__body p:last-child { margin-bottom: 0; }
+
+@media (hover: none) {
+  .v2-shelf__menu-btn {
+    display: flex;
+    opacity: .82;
+  }
+}
+.v2-shelf__badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+}
+.v2-shelf__cover {
+  aspect-ratio: 3 / 4;
+  border-radius: 4px;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 8px 26px var(--v2-shadow-mid);
+  transition: transform .25s, box-shadow .25s;
+}
+.v2-shelf__card:hover .v2-shelf__cover,
+.v2-shelf__card:focus-within .v2-shelf__cover,
+.v2-shelf__card.is-menu-open .v2-shelf__cover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 46px var(--v2-shadow-strong);
+}
+.v2-shelf__book:hover .v2-shelf__cover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 46px var(--v2-shadow-strong);
+}
+
