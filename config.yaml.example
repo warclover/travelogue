@@ -364,8 +364,7 @@ ingest:
   detect_faces: true
   portrait_analyze: true
   face_min_size_px: 48
-  face_detect_max_edge: 0
-  portrait_analyze: true   # 0=原图检测；640=检测前缩放到长边 640（P7-B4）
+  face_detect_max_edge: 0   # 0=原图检测；640=检测前缩放到长边 640（P7-B4）
   featured_dir_names: ["主图上传", "精选", "featured", "hero"]
   material_dir_names: ["素材上传", "素材", "material", "extras"]
   warn_featured_count_above: 30

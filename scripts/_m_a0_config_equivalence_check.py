@@ -35,11 +35,24 @@ def check_no_duplicate_top_level_keys(path: Path) -> None:
         raise SystemExit(f"duplicate top-level keys: {sorted(dupes)}")
 
 
-def _appconfig_snapshot(path: Path):
-    from travelogue.config.loader import load_config
+def _appconfig_snapshot(path: Path, *, strict_yaml: bool = True):
+    from travelogue.config import loader as loader_mod
 
-    return load_config(path)
+    if strict_yaml:
+        return loader_mod.load_config(path)
 
+    # Historical baselines (e.g. master before M-A2) may contain silent duplicate keys.
+    original = loader_mod.load_yaml_mapping
+
+    def _safe_mapping(text: str, *, source: str = "config") -> dict:
+        loaded = yaml.safe_load(text) or {}
+        return loaded if isinstance(loaded, dict) else {}
+
+    loader_mod.load_yaml_mapping = _safe_mapping
+    try:
+        return loader_mod.load_config(path)
+    finally:
+        loader_mod.load_yaml_mapping = original
 
 def _normalize(obj, *, exclude_paths: bool = False):
     if dataclasses.is_dataclass(obj):
@@ -57,8 +70,8 @@ def _normalize(obj, *, exclude_paths: bool = False):
 
 
 def compare_load_config(before_path: Path, after_path: Path) -> None:
-    before = _normalize(_appconfig_snapshot(before_path), exclude_paths=True)
-    after = _normalize(_appconfig_snapshot(after_path), exclude_paths=True)
+    before = _normalize(_appconfig_snapshot(before_path, strict_yaml=False), exclude_paths=True)
+    after = _normalize(_appconfig_snapshot(after_path, strict_yaml=True), exclude_paths=True)
     if before != after:
         # Print first differing top-level section for debugging.
         for key in sorted(set(before) | set(after)):
