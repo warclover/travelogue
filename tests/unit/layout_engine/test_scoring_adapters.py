@@ -30,6 +30,15 @@ def test_aesthetic_overall_adapter_returns_optional_float_without_recursion() ->
     assert value is None or isinstance(value, float)
 
 
+def test_layout_engine_mosaic_metrics_imports() -> None:
+    import travelogue.layout_engine.mosaic.metrics as metrics
+
+    counts = metrics.summarize_screen_patterns(
+        [{"screens": [{"patternId": "screen-portrait-2"}]}]
+    )
+    assert counts == {"screen-portrait-2": 1}
+
+
 @pytest.mark.parametrize(
     "rel",
     [
