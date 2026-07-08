@@ -22,7 +22,7 @@
 | ADR-015 | accepted | 2026-07-08 | ADR 已批准；cross-import 51→44（B4a 后） | M-B4b 可启动 |
 | M-B4a | done | 2026-07-08 | kernel→layout_contract；adapter 收敛；mosaic ContextVar；render_fingerprint；equivalence 全绿 | B4b 目标 cross-import ≤10（现 44） |
 | M-B4b | done | 2026-07-08 | planner+mosaic→layout_engine/；weekly dual-run；消费方收敛 | cross-import ≤10 待 M-B1 |
-| M-B1 | in_progress | 2026-07-08 | …copy_subject→domain；ingest + sandbox render 违例清零 | §5.3.2 余表项（curate→templating 等） |
+| M-B1 | in_progress | 2026-07-08 | …ingest/sandbox 违例清零；curation_adapter→curation | §5.3.2 余表项 + cross-import 统计 |
 | M-B2 | todo | — | — | 需 G-WIP-01 |
 | M-B3 | todo | — | — | 需 M-B2 Go + G-WIP-01 |
 | M-C4 | in_progress | 2026-07-08 | `domain/pipeline_view` + assets/chapters 视图；`pipeline_state` re-export | trip 直赋 lint 待补 |

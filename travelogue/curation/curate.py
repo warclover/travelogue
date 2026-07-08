@@ -693,7 +693,7 @@ def run_curate(
             f"need at least {MIN_CURATE_ASSETS} assets to curate",
         )
 
-    from travelogue.templating.curation_adapter import apply_curation_adapter_hints
+    from travelogue.curation.curation_adapter import apply_curation_adapter_hints
 
     apply_curation_adapter_hints(trip, cfg=cfg)
 

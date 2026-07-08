@@ -96,7 +96,6 @@ ignore_imports = [
     "travelogue.config.loader -> travelogue.desktop.bundle",
     "travelogue.config.loader -> travelogue.llm.presets",
     "travelogue.curation.chapter_explain -> travelogue.services.intent_plan",
-    "travelogue.curation.curate -> travelogue.templating.curation_adapter",
     "travelogue.curation.moment_scoring -> travelogue.render.cover_closing",
     "travelogue.curation.mosaic.lte_adapter -> travelogue.templating.admin_store",
     "travelogue.curation.mosaic.telemetry -> travelogue.templating.metrics",
