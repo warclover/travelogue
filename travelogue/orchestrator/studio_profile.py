@@ -10,6 +10,7 @@ PersistCallback = Callable[[], None]
 AssetAddedCallback = Callable[[dict], None]
 IngestProgressCallback = Callable[[int, int], None]
 CullHintCallback = Callable[[str], None]
+IngestCompleteCallback = Callable[[dict], None]
 
 
 @dataclass
@@ -25,6 +26,7 @@ class IngestProfile:
     on_cull_hint: CullHintCallback | None = None
     on_persist: PersistCallback | None = None
     on_asset_added: AssetAddedCallback | None = None
+    on_complete: IngestCompleteCallback | None = None
     use_parallel_embed: bool = False
 
 

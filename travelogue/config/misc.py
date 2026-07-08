@@ -63,6 +63,8 @@ class LlmConfig:
 class PipelineConfig:
     parallel_embed: bool = True
     parallel_embed_chunk: int = 32
+    """Studio vs run_trip unified orchestration (M-B3 · PRD §3.3)."""
+    orchestration: str = "unified"
 
 
 def render_reading_from_dict(raw: dict[str, Any]) -> RenderReadingConfig:
@@ -80,7 +82,11 @@ def render_from_dict(raw: dict[str, Any]) -> RenderConfig:
 
 
 def pipeline_from_dict(raw: dict[str, Any]) -> PipelineConfig:
+    orchestration = str(raw.get("orchestration") or "unified").strip().lower()
+    if orchestration not in ("unified", "legacy"):
+        orchestration = "unified"
     return PipelineConfig(
         parallel_embed=cfg_bool(raw, "parallel_embed", "parallelEmbed", True),
         parallel_embed_chunk=cfg_int(raw, "parallel_embed_chunk", "parallelEmbedChunk", 32),
+        orchestration=orchestration,
     )

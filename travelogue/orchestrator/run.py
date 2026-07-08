@@ -171,7 +171,7 @@ def _run_trip_stages(
                         if prior_added is not None:
                             prior_added(entry)
 
-            ingest_into_trip(
+            ingest_result = ingest_into_trip(
                 trip,
                 trip_root,
                 from_dir=album_dir,
@@ -187,6 +187,8 @@ def _run_trip_stages(
                 on_asset_added=ingest_asset_added,
                 resume_ingest=ingest_opts.resume_ingest,
             )
+            if ingest_opts.on_complete is not None:
+                ingest_opts.on_complete(ingest_result.stats or {})
             if parallel_embed is not None:
                 parallel_embed.finish()
             pipeline_timings["ingestMs"] = round((time.monotonic() - ingest_t0) * 1000.0, 2)
@@ -206,6 +208,8 @@ def _run_trip_stages(
 
             cluster_t0 = time.monotonic()
             cluster_result = run_clustering_layer(trip, trip_dir=trip_root, cfg=get_config())
+            if studio_hooks is not None and studio_hooks.on_clustering_done is not None:
+                studio_hooks.on_clustering_done(cluster_result.user_notice)
             pipeline_timings["clusterMs"] = round((time.monotonic() - cluster_t0) * 1000.0, 2)
             cluster_meta = (trip.get("curation") or {}).get("clustering") or {}
             embed_stats = cluster_meta.get("embedStats") or {}

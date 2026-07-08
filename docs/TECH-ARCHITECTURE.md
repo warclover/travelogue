@@ -446,7 +446,7 @@ CI：`lint` job 跑 `lint-imports`；`validate` job 跑 `arch_equivalence_check`
 
 | 开关 | 状态 | 说明 |
 |------|------|------|
-| `pipeline.orchestration` | 未上线 | M-B3 登记 |
+| `pipeline.orchestration` | 已上线（默认 unified） | M-B3 登记 |
 | `layout.planner_impl` | 2026-07-08 | 2026-08-05 | M-B4b 默认 layout_engine |
 
 详见 [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md) §开关台账。

@@ -112,7 +112,24 @@ def _normalize_scalar(value: Any) -> Any:
 
 
 def _should_drop_key(path: tuple[str, ...], key: str) -> bool:
-    if key in {"updatedAt", "appliedAt", "computedAt", "aestheticAlignmentAt"}:
+    if key in {
+        "updatedAt",
+        "appliedAt",
+        "computedAt",
+        "aestheticAlignmentAt",
+        "createdAt",
+        "curatedAt",
+        "ingestedAt",
+        "submittedAt",
+    }:
+        return True
+    if key == "ingestBatchId":
+        return True
+    if key == "lastBatchId" and path == ("pipeline",):
+        return True
+    if key == "revision" and path == ("meta",):
+        return True
+    if key == "runId" and "runs" in path:
         return True
     if key == "timings" and path == ("pipeline",):
         return True

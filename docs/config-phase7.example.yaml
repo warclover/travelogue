@@ -17,6 +17,7 @@ ingest:
 pipeline:
   parallel_embed: true
   parallel_embed_chunk: 32
+  orchestration: unified
 
 layout_scoring:
   skip_duplicate_signatures: true

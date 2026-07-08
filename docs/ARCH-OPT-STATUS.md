@@ -3,7 +3,7 @@
 > 配套 [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) v1.1 · 执行提示词见 [PROMPTS-ARCH-OPTIMIZATION.md](./PROMPTS-ARCH-OPTIMIZATION.md)
 
 **当前分支**: `arch/optimization-ws1`  
-**最后更新**: 2026-07-08（M-C2 全量收口）
+**最后更新**: 2026-07-08（M-B3 编排切换）
 
 ## 里程碑总表
 
@@ -23,8 +23,8 @@
 | M-B4a | done | 2026-07-08 | kernel→layout_contract；adapter 收敛；mosaic ContextVar；render_fingerprint；equivalence 全绿 | LSE cross-import 109（非 import-linter） |
 | M-B4b | done | 2026-07-08 | planner+mosaic→layout_engine/；weekly dual-run；消费方收敛 | PRD cross-import ≤10 未达标（109）；待 adapter/shim 退役 |
 | M-B1 | done | 2026-07-08 | PRD §5.3.2 违例表清零；import-linter 26→**11** 豁免；`lint-imports` 全绿；domain/kernel 下沉见 §M-B1 交付 | 11 条 intentional 豁免（§import-linter）；LSE 互引 109 不归 M-B1 |
-| M-B2 | in_progress | 2026-07-08 | S1 `ARCH-ORCH-DIFF-MATRIX.md`；S2 StudioProfile/Hooks + clustering stage | M-B3 切换 studio_pipeline 待 G-WIP-01 |
-| M-B3 | todo | — | — | 需 M-B2 Go + G-WIP-01 |
+| M-B2 | done | 2026-07-08 | S1 `ARCH-ORCH-DIFF-MATRIX.md`；S2 StudioProfile/Hooks + clustering stage；Go（G-WIP-01 用户授权） | — |
+| M-B3 | done | 2026-07-08 | `pipeline.orchestration` unified 默认；legacy 保留；`orchestration_dual_run.py`；weekly CI | legacy 开关 4 周 DoD 至 2026-08-05 |
 | M-C4 | done | 2026-07-08 | 三视图 + lint + 单测；curate/orchestrator/render/cli/export 改引 pipeline_view | media/ingest/sandbox 直赋属 ingest 域 |
 | M-B6 | done | 2026-07-08 | `trip_migration` 兼容窗口 + 模块 doc；`lint_trip_json` version 窗；超窗单测 | 多 minor 迁移链待 schema bump 时补 |
 | M-C6 | in_progress | 2026-07-08 | `docs/GLOSSARY.md` + `store.js` 注释清理 | variant v3→classic 待 G-WIP-03 |
@@ -84,7 +84,7 @@
 
 | 开关 | 上线日期 | 4 周 DoD 到期 | 备注 |
 |------|----------|---------------|------|
-| `pipeline.orchestration` | — | — | M-B3 登记 |
+| `pipeline.orchestration` | 2026-07-08 | 2026-08-05 | M-B3 默认 unified；legacy weekly dual-run |
 | `layout.planner_impl` | 2026-07-08 | 2026-08-05 | M-B4b 默认 layout_engine |
 
 ## 发现问题
@@ -95,4 +95,4 @@
 
 ## WS1 执行顺序
 
-P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓** · P-22 第一段 (M-C6) 进行中 · P-11 (M-B2) S1+S2 · M-B3 待 G-WIP-01
+P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓** · **P-12 (M-B3) ✓** · P-22 第一段 (M-C6) 进行中
