@@ -10,9 +10,9 @@
 | 里程碑 ID | 状态 | 完成日期 | 证据摘要 | 遗留项 |
 |-----------|------|----------|----------|--------|
 | M-A0 | done | 2026-07-08 | `python scripts/_m_a0_config_equivalence_check.py` 全绿；无重复顶层键；load_config 与合并前后段生效值一致 | — |
-| M-A1a | done | 2026-07-08 | `pytest tests/test_trip_service_update.py` 7 passed；`validate_trip` golden fixture OK | — |
-| M-A1b | todo | — | — | — |
-| M-A1c | todo | — | — | — |
+| M-A1a | done | 2026-07-08 | `pytest tests/test_trip_service_update.py` 7 passed | — |
+| M-A1b | done | 2026-07-08 | handlers 14 处 + serve.py 2 处改 svc.update；409 E_TRIP_CONFLICT + http.js 重试；`pytest tests/test_studio_handlers_trip.py` 等 41 passed | — |
+| M-A1c | in-progress | — | — | — |
 | M-A1d | todo | — | — | — |
 | M-A1e | todo | — | — | — |
 | M-A2 | todo | — | — | — |

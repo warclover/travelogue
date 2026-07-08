@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, TypeVar
 
+from travelogue.errors import CodeError
 from travelogue.services.validate import load_json
 from travelogue.util.datetime_ import utc_now_iso
 
@@ -27,10 +28,11 @@ class TripSaveError(OSError):
     code = "E_TRIP_SAVE_BUSY"
 
 
-class TripConflictError(Exception):
+class TripConflictError(CodeError):
     """Optimistic lock conflict after CAS retries exhausted."""
 
-    code = "E_TRIP_CONFLICT"
+    def __init__(self, message: str) -> None:
+        super().__init__("E_TRIP_CONFLICT", message)
 
 
 _trip_write_locks: dict[str, threading.Lock] = {}
@@ -324,7 +326,7 @@ class TripService:
                 self.save(trip, path)
                 return result
         raise TripConflictError(
-            f"E_TRIP_CONFLICT revision conflict for {path} (expected {last_expected})"
+            f"revision conflict for {path} (expected {last_expected})"
         )
 
     apply_intent = staticmethod(apply_intent)

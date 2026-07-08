@@ -12,6 +12,7 @@ from travelogue.web.studio_handlers.common import (
     resolve_trip_dir_listed,
     studio_ctx,
     trip_id_from_query,
+    trip_update_or_respond,
 )
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_handlers.trip_common import is_protected_demo_trip
@@ -148,8 +149,15 @@ def handle_patch_stratum_preference(handler: StudioHandlerProtocol, trip_id: str
     trip_json = trip_dir / "trip.json"
     ctx = studio_ctx(handler)
     svc = ctx.trip_service()
-    apply_stratum_preference(trip, str(raw))
-    svc.save(trip, trip_json)
+    ok, _ = trip_update_or_respond(
+        handler,
+        svc,
+        trip_json,
+        lambda t: apply_stratum_preference(t, str(raw)),
+    )
+    if not ok:
+        return
+    trip = svc.load(trip_json)
     handler._json_response(
         200,
         {"ok": True, "stratumPreference": build_stratum_preference_studio_summary(trip)},

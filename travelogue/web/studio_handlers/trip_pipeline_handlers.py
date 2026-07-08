@@ -7,7 +7,7 @@ import threading
 
 from travelogue.demo.build import DemoError
 from travelogue.web.studio_errors import internal_error_payload
-from travelogue.web.studio_handlers.common import load_trip_or_404, studio_ctx
+from travelogue.web.studio_handlers.common import load_trip_or_404, studio_ctx, trip_update_or_respond
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_jobs import get_job_store, run_g1_continue_job
 
@@ -42,8 +42,13 @@ def handle_patch_pipeline(handler: StudioHandlerProtocol, trip_id: str) -> None:
         handler._json_response(400, {"ok": False, "error": "unsupported status"})
         return
 
-    lock_trip_structure(trip)
-    svc.save(trip, trip_json)
+    if not trip_update_or_respond(
+        handler,
+        svc,
+        trip_json,
+        lock_trip_structure,
+    )[0]:
+        return
     if not continue_pipeline:
         handler._json_response(200, {"ok": True, "pipelineStatus": "structure_locked"})
         return
@@ -113,7 +118,22 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
                 export_layout="web",
                 layout_engine="screens",
             )
-        svc.save(trip, trip_json)
+
+        def mutator(t: dict) -> None:
+            for key in (
+                "chapters",
+                "assets",
+                "curation",
+                "pipeline",
+                "coverAssetId",
+                "coverCandidates",
+                "layoutEngine",
+                "momentAssetId",
+            ):
+                if key in trip:
+                    t[key] = trip[key]
+
+        svc.update(trip_json, mutator)
         render_trip_surfaces(
             trip_json,
             trip_dir,

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import logging
-import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import partial
@@ -14,6 +13,7 @@ from urllib.parse import unquote
 
 from travelogue.config import AppConfig, app_config_scope, get_config
 from travelogue.runtime import app_context_for_trip_json
+from travelogue.services.trip import TripConflictError
 from travelogue.web.copy_patch import CopyPatchError, apply_copy_patches
 from travelogue.web.studio_chrome import inject_studio_chrome, should_inject_studio_chrome
 from travelogue.web.studio_errors import client_error_payload, internal_error_payload
@@ -26,7 +26,6 @@ PROMOTE_TIER_PATH = "/__travelogue/promote-tier"
 FAVICON_SILENT_PATHS = frozenset({"/favicon.ico", "/favicon.svg"})
 MAX_JSON_BODY = 1_048_576
 _log = logging.getLogger(__name__)
-_trip_write_lock = threading.Lock()
 
 
 class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
@@ -223,14 +222,18 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
         rendered: list[str] = []
         try:
             with self._app_config_scope():
-                with _trip_write_lock:
-                    trip = svc.load(self.trip_json_path)
-                    updated = apply_copy_patches(trip, patches)
-                    svc.save(trip, self.trip_json_path)
-                    if self.auto_rerender:
-                        from travelogue.web.rerender import rerender_draft_trip
 
-                        rendered = rerender_draft_trip(self.trip_json_path)
+                def mutator(trip: dict) -> list[str]:
+                    return apply_copy_patches(trip, patches)
+
+                updated = svc.update(self.trip_json_path, mutator)
+                if self.auto_rerender:
+                    from travelogue.web.rerender import rerender_draft_trip
+
+                    rendered = rerender_draft_trip(self.trip_json_path)
+        except TripConflictError as exc:
+            self._json_response(409, client_error_payload(exc))
+            return
         except CopyPatchError as exc:
             self._json_response(400, client_error_payload(exc))
             return
@@ -254,14 +257,18 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
         rendered: list[str] = []
         try:
             with self._app_config_scope():
-                with _trip_write_lock:
-                    trip = svc.load(self.trip_json_path)
-                    promoted = apply_tier_promotions(trip, ids)
-                    svc.save(trip, self.trip_json_path)
-                    if self.auto_rerender and promoted and not defer_rerender:
-                        from travelogue.web.rerender import rerender_draft_trip
 
-                        rendered = rerender_draft_trip(self.trip_json_path)
+                def mutator(trip: dict) -> list[str]:
+                    return apply_tier_promotions(trip, ids)
+
+                promoted = svc.update(self.trip_json_path, mutator)
+                if self.auto_rerender and promoted and not defer_rerender:
+                    from travelogue.web.rerender import rerender_draft_trip
+
+                    rendered = rerender_draft_trip(self.trip_json_path)
+        except TripConflictError as exc:
+            self._json_response(409, client_error_payload(exc))
+            return
         except TierPatchError as exc:
             self._json_response(400, client_error_payload(exc))
             return

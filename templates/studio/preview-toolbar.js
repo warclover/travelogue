@@ -7,6 +7,8 @@ import {
   postJson,
   patchJson,
   postJsonBusyRetry,
+  postJsonConflictRetry,
+  patchJsonConflictRetry,
   isJobBusyResponse,
 } from "./js/http.js";
 import { startJobPollInterval, pollJobUntilDone } from "./js/job-poll.js";
@@ -1772,7 +1774,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     if (el.classList.contains("cover-opening__title")) {
       el.classList.add("cover-opening__title--saving");
     }
-    postJson(tripApiBase(tripId) + "/save-copy", {
+    postJsonConflictRetry(tripApiBase(tripId) + "/save-copy", {
       patches: [{ path: "meta.title", value: next }],
     })
       .then(function (res) {
@@ -2032,7 +2034,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
         btn.textContent = opt.label || opt.value;
         btn.addEventListener("click", function () {
           if (opt.value === pref.value) return;
-          patchJson(
+          patchJsonConflictRetry(
             "/__travelogue/trips/" +
               encodeURIComponent(tripId) +
               "/aesthetic/preference",
@@ -2554,14 +2556,14 @@ function insertScreenplayControl(parent, beforeNode, opts) {
             return Promise.resolve(false);
           }
           var tasks = [
-            patchJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/intent", {
+            patchJsonConflictRetry("/__travelogue/trips/" + encodeURIComponent(tripId) + "/intent", {
               title: titleVal || null,
               userNotes: notesVal || null,
             }),
           ];
           if (chId) {
             tasks.push(
-              postJson(tripApiBase(tripId) + "/save-copy", {
+              postJsonConflictRetry(tripApiBase(tripId) + "/save-copy", {
                 patches: [{
                   path: "chapters." + chId + ".curation.memoryAnchors",
                   value: anchors.join(", "),
@@ -2570,7 +2572,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
             );
             var copyIntentPayload = readCopyIntentPayload();
             if (copyIntentPayload) {
-              tasks.push(patchJson(copyIntentApiUrl(tripId, chId), copyIntentPayload));
+              tasks.push(patchJsonConflictRetry(copyIntentApiUrl(tripId, chId), copyIntentPayload));
             }
           }
           return Promise.all(tasks)
@@ -2871,7 +2873,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
     function applyMediaClass(assetId, mediaClass, selectEl) {
       if (selectEl.disabled) return;
       selectEl.disabled = true;
-      patchJson(apiUrl, { assetId: assetId, mediaClass: mediaClass })
+      patchJsonConflictRetry(apiUrl, { assetId: assetId, mediaClass: mediaClass })
         .then(function (res) {
           selectEl.disabled = false;
           if (res.status !== 200 || !res.body.ok) {
@@ -2950,7 +2952,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
         e.stopPropagation();
         if (star.disabled) return;
         star.disabled = true;
-        postJson(tripApiBase(tripId) + "/promote-tier", {
+        postJsonConflictRetry(tripApiBase(tripId) + "/promote-tier", {
           assetIds: [assetId],
           rerender: false,
         })
@@ -3039,7 +3041,7 @@ function insertScreenplayControl(parent, beforeNode, opts) {
         var next = opt.id;
         if (!next || next === selectedStyle) return;
         setBusy(true);
-        postJson(tripApiBase(tripId) + "/save-copy", {
+        postJsonConflictRetry(tripApiBase(tripId) + "/save-copy", {
           patches: [{ path: "meta.coverOpeningStyle", value: next }],
         })
           .then(function (res) {
