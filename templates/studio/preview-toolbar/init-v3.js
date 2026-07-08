@@ -1,0 +1,416 @@
+/**
+ * Preview toolbar · v3 init (bridges, sheet, dock, longshot mount).
+ */
+"use strict";
+
+import { mountPreviewTaskDock } from "../preview-toolbar-v3-task-dock.js";
+import { mountPreviewUnifiedSheet } from "../preview-toolbar-v3-sheet.js";
+import {
+  insertScreenplayControl,
+  isPreviewToolbarV4,
+  dockLongshotIconHtml,
+  initDockTooltips,
+  initDockScrollFade,
+} from "./dock.js";
+import { isSharePreview } from "./share.js";
+import {
+  registerInlineEditBridge,
+  initCoverTitleEdit,
+} from "./inline-edit.js";
+import {
+  registerLongshotBridge,
+  cancelPreviewLongshotExport,
+  startLongshot,
+  setLongshotExportState,
+  readLongshotExportPrefs,
+  writeStoredLongshotPrefs,
+  exportZip,
+  revealTripPath,
+  isReaderSurfaceMode,
+  refreshStaleHint,
+  showStaleHint,
+  applyToolbarCopyPreset,
+  toggleToolbarCaptions,
+  toggleToolbarNarrative,
+} from "./longshot.js";
+import {
+  tripIdFromPath,
+  tripApiBase,
+  toolbarConfirm,
+  toolbarAlert,
+  showToolbarToast,
+  maybeShowCoverOpeningStyleToast,
+  reloadPreviewAfterLayout,
+  setSlowHint,
+  syncToolbarHeight,
+  setToolbarCollapsed,
+  toolbarBody,
+} from "./shell.js";
+import {
+  registerDrawersBridge,
+  initPreviewDrawers,
+  trapDrawerFocus,
+} from "./drawers.js";
+import {
+  getLayoutPending,
+  setLayoutPendingMessage,
+  getSheetEditDirty,
+  clearSheetEditDirty,
+  dismissPendingDock,
+  dismissG1Dock,
+  markSheetEditBaseline,
+  wireSheetEditDirty,
+  refreshTaskDockState,
+  setLayoutPending,
+  startLlmNarrate,
+  applyLayoutRerender,
+  fetchEntry,
+  currentChapterId,
+  refreshPreviewCover,
+} from "./core.js";
+import {
+  initTitleEdit,
+  initDisplayedAestheticTitles,
+  initG1V3,
+  startFeaturedPresent,
+  initCollageMediaControls,
+  initFeaturedStars,
+  revealTripFolder,
+  mountCoverStyleControls,
+  mountTemplateControls,
+  snapshotReadingPayload,
+  applyReaderSurfaceMode,
+} from "./features.js";
+
+var READER_VIEW_KEY = "travelogue.studio.readerView";
+var SHEET_HINT_KEY = "travelogue.studio.previewSheet.hintSeen";
+
+export function initToolbarV3(root, tripId) {
+  registerLongshotBridge({
+    showToolbarToast: showToolbarToast,
+    toolbarConfirm: toolbarConfirm,
+    toolbarAlert: toolbarAlert,
+    setSlowHint: setSlowHint,
+    setToolbarCollapsed: setToolbarCollapsed,
+    syncToolbarHeight: syncToolbarHeight,
+    refreshTaskDockState: refreshTaskDockState,
+    getLayoutPending: getLayoutPending,
+    tripIdFromPath: tripIdFromPath,
+    toolbarBody: toolbarBody,
+    setLayoutPending: setLayoutPending,
+    setLayoutPendingMessage: setLayoutPendingMessage,
+  });
+  registerDrawersBridge({
+    fetchEntry: fetchEntry,
+    currentChapterId: currentChapterId,
+    markSheetEditBaseline: markSheetEditBaseline,
+    wireSheetEditDirty: wireSheetEditDirty,
+    startLlmNarrate: startLlmNarrate,
+    applyLayoutRerender: applyLayoutRerender,
+    getLayoutPending: getLayoutPending,
+  });
+  registerInlineEditBridge({
+    tripApiBase: tripApiBase,
+    reloadPreviewAfterLayout: reloadPreviewAfterLayout,
+    showToolbarToast: showToolbarToast,
+    isSharePreview: isSharePreview,
+  });
+  var dock = root.querySelector(".preview-toolbar__dock");
+  var actions = dock || root.querySelector(".preview-toolbar__actions");
+  if (!isPreviewToolbarV4(root)) {
+    initTitleEdit(root, tripId);
+  }
+  var drawers = initPreviewDrawers(root, tripId);
+
+  var readerOn = false;
+  try {
+    var stored = localStorage.getItem(READER_VIEW_KEY);
+    if (stored === "1") readerOn = true;
+  } catch (e0) {}
+  var baseline = snapshotReadingPayload();
+  if (baseline && baseline.profile === "reader_immersive") readerOn = true;
+  applyReaderSurfaceMode(readerOn);
+
+  function syncLongshotPrefsUi(container) {
+    if (!container) return;
+    var prefs = readLongshotExportPrefs();
+    container.querySelectorAll("[data-studio-longshot-mode]").forEach(function (btn) {
+      var on = btn.getAttribute("data-studio-longshot-mode") === prefs.mode;
+      btn.classList.toggle("is-on", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    container.querySelectorAll("[data-studio-longshot-scale]").forEach(function (btn) {
+      var on = String(btn.getAttribute("data-studio-longshot-scale")) === String(prefs.scale);
+      btn.classList.toggle("is-on", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+
+  function syncReaderModeUi(container) {
+    if (!container) return;
+    var on = isReaderSurfaceMode();
+    container.querySelectorAll("[data-reader-mode]").forEach(function (btn) {
+      var reader = btn.getAttribute("data-reader-mode") === "reader";
+      btn.classList.toggle("is-on", reader === on);
+      btn.setAttribute("aria-pressed", reader === on ? "true" : "false");
+    });
+  }
+
+  var cohortEnabled = false;
+  var menuBtn = root.querySelector(".preview-toolbar__menu-btn");
+  try {
+    if (menuBtn && !sessionStorage.getItem(SHEET_HINT_KEY)) {
+      menuBtn.classList.add("preview-toolbar__menu-btn--pulse");
+    }
+  } catch (eHint) {}
+
+  var sheetHooks = {
+    drawers: drawers,
+    get cohortEnabled() { return cohortEnabled; },
+    isLayoutPending: getLayoutPending,
+    confirmLeaveCurrentTab: function (tabId, done) {
+      if (tabId !== "edit" || !getSheetEditDirty()) {
+        done(true);
+        return;
+      }
+      toolbarConfirm({
+        title: "未保存的编辑",
+        body: "当前「文字」Tab 有未保存改动，离开将丢弃。",
+        confirmText: "离开",
+        cancelText: "留下",
+      }).then(done);
+    },
+    onSheetTabShown: function (tabId) {
+      if (tabId !== "edit") {
+        clearSheetEditDirty(root);
+      }
+    },
+    onSheetOpened: function () {
+      try {
+        sessionStorage.setItem(SHEET_HINT_KEY, "1");
+      } catch (eOpen) {}
+      if (menuBtn) menuBtn.classList.remove("preview-toolbar__menu-btn--pulse");
+    },
+    syncLongshotPrefsUi: syncLongshotPrefsUi,
+    syncReaderModeUi: syncReaderModeUi,
+    setLongshotMode: function (mode) {
+      var prefs = readLongshotExportPrefs();
+      writeStoredLongshotPrefs(mode, prefs.scale);
+    },
+    setLongshotScale: function (scale) {
+      var prefs = readLongshotExportPrefs();
+      writeStoredLongshotPrefs(prefs.mode, scale === 3 ? 3 : 2);
+    },
+    setReaderMode: function (on) {
+      applyReaderSurfaceMode(!!on);
+      try {
+        localStorage.setItem(READER_VIEW_KEY, on ? "1" : "0");
+      } catch (e1) {}
+    },
+    onRevealFolder: function () {
+      revealTripFolder(tripId);
+    },
+    onExportZip: function () {
+      exportZip(tripId);
+    },
+    onPresentFeatured: function () {
+      startFeaturedPresent();
+    },
+    onLlmNarrate: function (btn) {
+      startLlmNarrate(root, tripId, btn);
+    },
+    onApplyLayout: function () {
+      applyLayoutRerender(tripId, root);
+    },
+    mountTemplateControls: function (slot) {
+      mountTemplateControls(slot, tripId, { inSheet: true });
+    },
+    mountCoverStyleControls: function (slot) {
+      mountCoverStyleControls(slot, tripId);
+    },
+    syncCopyDisplayUi: function (container) {
+      if (!container) return;
+      var html = document.documentElement;
+      var photosOnly = html.getAttribute("data-photos-only") === "on";
+      var narrativeHidden = html.getAttribute("data-copy-display") === "photos";
+      var captionsOn = html.getAttribute("data-caption-display") !== "off";
+      container.querySelectorAll("[data-copy-preset]").forEach(function (btn) {
+        var on = photosOnly
+          ? btn.getAttribute("data-copy-preset") === "photos"
+          : btn.getAttribute("data-copy-preset") === "full";
+        btn.classList.toggle("is-on", on);
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      var captionChip = container.querySelector('[data-preview-chip="caption"]');
+      if (captionChip) {
+        captionChip.classList.toggle("is-on", captionsOn);
+        captionChip.setAttribute("aria-pressed", captionsOn ? "true" : "false");
+        captionChip.textContent = captionsOn ? "图注：开" : "图注：关";
+        captionChip.disabled = photosOnly;
+      }
+      var narrativeChip = container.querySelector('[data-preview-chip="narrative"]');
+      if (narrativeChip) {
+        narrativeChip.classList.toggle("is-on", !narrativeHidden);
+        narrativeChip.setAttribute("aria-pressed", !narrativeHidden ? "true" : "false");
+        narrativeChip.textContent = !narrativeHidden ? "导语：显" : "导语：隐";
+        narrativeChip.disabled = photosOnly;
+      }
+    },
+    applyCopyPreset: function (preset) {
+      applyToolbarCopyPreset(root, preset);
+    },
+    toggleCaptions: function () {
+      toggleToolbarCaptions(root);
+    },
+    toggleNarrative: function () {
+      toggleToolbarNarrative(root);
+    },
+    trapFocus: function (el) {
+      return trapDrawerFocus(el);
+    },
+    refreshAdvancedOptions: function (panel) {
+      if (!panel) return;
+      drawers.refreshEntry().then(function (data) {
+        var count = (data && data.intentSummary && data.intentSummary.featuredCount) || 0;
+        panel.querySelectorAll(".preview-sheet__list-item--optional").forEach(function (li) {
+          var action = li.querySelector("[data-action]");
+          if (!action) return;
+          if (action.getAttribute("data-action") === "present") {
+            li.hidden = count < 1;
+          }
+        });
+      });
+      fetch("/__travelogue/config")
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (cfg) {
+          if (!cfg || !cfg.llmAvailable) return;
+          panel.querySelectorAll(".preview-sheet__list-item--optional").forEach(function (li) {
+            var action = li.querySelector('[data-action="llm"]');
+            if (action) li.hidden = false;
+          });
+        })
+        .catch(function () {});
+    },
+  };
+
+  fetch("/__travelogue/config")
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (cfg) {
+      cohortEnabled = !!(cfg && cfg.cohort && cfg.cohort.enabled);
+    })
+    .catch(function () {});
+
+  root._taskDock = mountPreviewTaskDock(root, {
+    onCancelExport: function () {
+      cancelPreviewLongshotExport(root);
+      root._exportDockActive = false;
+      root._taskDock.hide();
+    },
+    onRevealFolder: function (relPath, tid) {
+      revealTripPath(tid || tripId, relPath);
+    },
+    onCopyPath: function (text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          showToolbarToast("路径已复制");
+        }).catch(function () {
+          showToolbarToast(text);
+        });
+      } else {
+        showToolbarToast(text);
+      }
+    },
+    onApplyLayout: function () {
+      applyLayoutRerender(tripId, root);
+    },
+    onDismissPending: function () {
+      dismissPendingDock();
+      refreshTaskDockState(root);
+    },
+    onOpenStructure: function () {
+      if (root._sheet) root._sheet.open("structure");
+    },
+    onConfirmStructure: function () {
+      drawers.confirmStructure();
+    },
+    onDismissG1: function () {
+      dismissG1Dock();
+      refreshTaskDockState(root);
+    },
+    onResultDismissed: function () {
+      root._exportResultShowing = false;
+      refreshTaskDockState(root);
+    },
+  });
+
+  root._sheet = mountPreviewUnifiedSheet(root, sheetHooks);
+  initG1V3(root, tripId, drawers, root._sheet);
+  initDisplayedAestheticTitles(tripId);
+
+  var exportWrap = document.createElement("div");
+  exportWrap.className = "preview-toolbar__export-zone-wrap";
+
+  var exportZone = document.createElement("div");
+  exportZone.className = "preview-toolbar__export-zone";
+
+  var longshotBtn = document.createElement("button");
+  longshotBtn.type = "button";
+  longshotBtn.className =
+    "preview-toolbar__longshot preview-toolbar__longshot--v3 preview-toolbar__longshot--idle";
+  if (isPreviewToolbarV4(root)) {
+    longshotBtn.className +=
+      " preview-toolbar__dock-btn preview-toolbar__dock-btn--export";
+    longshotBtn.innerHTML = dockLongshotIconHtml("idle");
+    longshotBtn.setAttribute("aria-label", "导出长图");
+  } else {
+    longshotBtn.textContent = "导出长图";
+  }
+
+  exportZone.appendChild(longshotBtn);
+  exportWrap.appendChild(exportZone);
+  var menuWrap = actions.querySelector(".preview-toolbar__menu-wrap");
+  if (isPreviewToolbarV4(root)) {
+    insertScreenplayControl(actions, menuWrap, { label: "▶", v3: true, dock: true });
+    var exportDivider = document.createElement("span");
+    exportDivider.className = "preview-toolbar__dock-divider";
+    exportDivider.setAttribute("aria-hidden", "true");
+    actions.appendChild(exportDivider);
+    actions.appendChild(exportWrap);
+  } else {
+    actions.insertBefore(exportWrap, menuWrap);
+    insertScreenplayControl(actions, menuWrap, { label: "放映", v3: true });
+  }
+
+  setLongshotExportState(root, "idle");
+
+  longshotBtn.addEventListener("click", function () {
+    startLongshot(root, tripId);
+  });
+
+  if (window.location.search.indexOf("focus=longshot") >= 0) {
+    requestAnimationFrame(function () {
+      longshotBtn.focus();
+      longshotBtn.classList.add("preview-toolbar__longshot--focus");
+    });
+  }
+
+  refreshStaleHint(root, tripId);
+  refreshPreviewCover(root);
+  fetchEntry(tripId).then(function (data) {
+    initFeaturedStars(tripId);
+    initCollageMediaControls(tripId, (data && data.assetMediaById) || {});
+  });
+
+  window.addEventListener("travelogue:copy-saved", function () {
+    showStaleHint(root);
+  });
+
+  if (isPreviewToolbarV4(root)) {
+    initDockTooltips(root);
+    initDockScrollFade(root);
+    initCoverTitleEdit(tripId);
+  }
+
+  maybeShowCoverOpeningStyleToast(tripId);
+  syncToolbarHeight(root);
+}

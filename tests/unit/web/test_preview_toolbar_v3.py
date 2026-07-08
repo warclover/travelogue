@@ -22,20 +22,24 @@ SHEET_JS = STUDIO / "preview-toolbar-v3-sheet.js"
 
 def test_v3_modules_exist_and_are_imported() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     assert TASK_DOCK_JS.is_file()
     assert SHEET_JS.is_file()
+    assert 'from "./preview-toolbar/init-v3.js"' in js
     for token in (
-        'from "./preview-toolbar-v3-task-dock.js"',
-        'from "./preview-toolbar-v3-sheet.js"',
-        'from "./preview-toolbar/dock.js"',
-        'from "./preview-toolbar/longshot.js"',
-        "initToolbarV3",
+        'from "../preview-toolbar-v3-task-dock.js"',
+        'from "../preview-toolbar-v3-sheet.js"',
+        'from "./dock.js"',
+        'from "./longshot.js"',
+        "export function initToolbarV3",
         "mountPreviewTaskDock",
         "mountPreviewUnifiedSheet",
         "registerLongshotBridge",
         "startLongshot",
     ):
-        assert token in js
+        assert token in init_v3
+    assert "initToolbarV3" in js
+    assert "registerBootstrapBridge" in js
 
 
 def test_m5_longshot_module_exports() -> None:
@@ -51,9 +55,9 @@ def test_m5_longshot_module_exports() -> None:
 
 
 def test_m5_shell_module_exports() -> None:
-    js = PREVIEW_JS.read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     shell = (STUDIO / "preview-toolbar" / "shell.js").read_text(encoding="utf-8")
-    assert 'from "./preview-toolbar/shell.js"' in js
+    assert 'from "./shell.js"' in init_v3
     for token in (
         "export function showToolbarToast",
         "export function syncToolbarHeight",
@@ -64,9 +68,9 @@ def test_m5_shell_module_exports() -> None:
 
 
 def test_m5_drawers_module_exports() -> None:
-    js = PREVIEW_JS.read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     drawers = (STUDIO / "preview-toolbar" / "drawers.js").read_text(encoding="utf-8")
-    assert 'from "./preview-toolbar/drawers.js"' in js
+    assert 'from "./drawers.js"' in init_v3
     for token in (
         "export function initPreviewDrawers",
         "export function trapDrawerFocus",
@@ -77,11 +81,11 @@ def test_m5_drawers_module_exports() -> None:
 
 
 def test_m5_core_module_exports() -> None:
-    js = PREVIEW_JS.read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     core = (STUDIO / "preview-toolbar" / "core.js").read_text(encoding="utf-8")
     jsconfig = STUDIO / "preview-toolbar" / "jsconfig.json"
     assert jsconfig.is_file()
-    assert 'from "./preview-toolbar/core.js"' in js
+    assert 'from "./core.js"' in init_v3
     for token in (
         "export function setLayoutPending",
         "export function applyLayoutRerender",
@@ -107,9 +111,9 @@ def test_m5_bootstrap_module_exports() -> None:
 
 
 def test_m5_features_module_exports() -> None:
-    js = PREVIEW_JS.read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
-    assert 'from "./preview-toolbar/features.js"' in js
+    assert 'from "./features.js"' in init_v3
     for token in (
         "export function mountTemplateControls",
         "export function initFeaturedStars",
@@ -119,12 +123,28 @@ def test_m5_features_module_exports() -> None:
         assert token in features, f"missing features export: {token}"
 
 
-def test_v4_init_uses_icon_dock_not_legacy_rows() -> None:
+def test_m5_init_v3_module_exports() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    assert 'from "./preview-toolbar/init-v3.js"' in js
+    for token in (
+        "export function initToolbarV3",
+        "mountPreviewTaskDock",
+        "mountPreviewUnifiedSheet",
+        "insertScreenplayControl(actions, menuWrap",
+        "registerLongshotBridge",
+        "registerDrawersBridge",
+        "registerInlineEditBridge",
+    ):
+        assert token in init_v3, f"missing init-v3 export/wiring: {token}"
+
+
+def test_v4_init_uses_icon_dock_not_legacy_rows() -> None:
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     bootstrap = (STUDIO / "preview-toolbar" / "bootstrap.js").read_text(encoding="utf-8")
     marker = 'root.className = "preview-toolbar preview-toolbar--v4"'
     assert marker in bootstrap
-    assert "initToolbarV3(root, tripId)" in js
+    assert "export function initToolbarV3" in init_v3
     start = bootstrap.index(marker)
     end = bootstrap.index("_initToolbarV3(root, tripId)", start)
     v4_shell = bootstrap[start:end]
@@ -136,7 +156,7 @@ def test_v4_init_uses_icon_dock_not_legacy_rows() -> None:
 
 
 def test_v4_dock_tooltips_and_scroll_fade() -> None:
-    js = PREVIEW_JS.read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     inline = (STUDIO / "preview-toolbar" / "inline-edit.js").read_text(encoding="utf-8")
     dock = (STUDIO / "preview-toolbar" / "dock.js").read_text(encoding="utf-8")
     for token in (
@@ -144,9 +164,9 @@ def test_v4_dock_tooltips_and_scroll_fade() -> None:
         "initDockScrollFade",
         "ensureDockTooltip",
     ):
-        assert token in js or token in dock, f"missing v4 dock ux: {token}"
+        assert token in init_v3 or token in dock, f"missing v4 dock ux: {token}"
     for token in ("initCoverTitleEdit", "cover-opening__title--editable"):
-        assert token in js or token in inline, f"missing v4 inline edit: {token}"
+        assert token in init_v3 or token in inline, f"missing v4 inline edit: {token}"
     css = PREVIEW_CSS.read_text(encoding="utf-8")
     for token in (
         "preview-toolbar__dock-tip",
@@ -157,11 +177,11 @@ def test_v4_dock_tooltips_and_scroll_fade() -> None:
 
 
 def test_v4_toolbar_mounts_screenplay_control() -> None:
-    js = PREVIEW_JS.read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     dock = (STUDIO / "preview-toolbar" / "dock.js").read_text(encoding="utf-8")
-    assert "insertScreenplayControl(actions, menuWrap" in js
-    assert "dock: true" in js
-    assert "preview-toolbar__screenplay--v3" in js or "preview-toolbar__screenplay--v3" in dock
+    assert "insertScreenplayControl(actions, menuWrap" in init_v3
+    assert "dock: true" in init_v3
+    assert "preview-toolbar__screenplay--v3" in init_v3 or "preview-toolbar__screenplay--v3" in dock
     css = PREVIEW_CSS.read_text(encoding="utf-8")
     assert "preview-toolbar__dock" in css
     assert "preview-toolbar--v4" in css
