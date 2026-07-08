@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "pytest-cov>=4.0", "piexif>=1.1", "playwright>=1.40", "ruff>=0.8"]
+dev = ["pytest>=8.0", "pytest-cov>=4.0", "piexif>=1.1", "playwright>=1.40", "ruff>=0.8", "import-linter>=2.13"]
 desktop = ["comtypes>=1.4", "pyinstaller>=6.6"]
 playwright = ["playwright>=1.40"]
 heif = ["pillow-heif>=0.16"]
@@ -71,3 +71,51 @@ ignore = ["E501", "E402"]
 # Public re-exports; F401 is intentional.
 "travelogue/curation/screen_planner.py" = ["F401"]
 "travelogue/curation/layout_search.py" = ["F401"]
+
+[tool.importlinter]
+root_package = "travelogue"
+
+[[tool.importlinter.contracts]]
+name = "Architectural layers (PRD §5.3.1 · M-B0 baseline)"
+type = "layers"
+unmatched_ignore_imports_alerting = "none"
+# Top → bottom (import-linter: higher entries may import lower only).
+layers = [
+    "travelogue.cli : travelogue.web : travelogue.desktop",
+    "travelogue.orchestrator",
+    "travelogue.render : travelogue.export",
+    "travelogue.services : travelogue.templating",
+    "travelogue.curation : travelogue.layout_engine : travelogue.layout_templates",
+    "travelogue.media : travelogue.vision : travelogue.llm",
+    "travelogue.config",
+    "travelogue.util : travelogue.types : travelogue.layout_contract : travelogue.constants : travelogue.paths : travelogue.errors : travelogue.domain",
+]
+# M-B0 baseline: grimp-detected upward imports (PRD §5.3.2; cleared in M-B1).
+ignore_imports = [
+    "travelogue.config.app -> travelogue.desktop.bundle",
+    "travelogue.config.loader -> travelogue.desktop.bundle",
+    "travelogue.config.loader -> travelogue.llm.presets",
+    "travelogue.curation.bucket_planning -> travelogue.services.copy_subject",
+    "travelogue.curation.bucket_planning -> travelogue.services.manifest_limits",
+    "travelogue.curation.chapter_explain -> travelogue.services.intent_plan",
+    "travelogue.curation.chapter_titles -> travelogue.services.copy_subject",
+    "travelogue.curation.curate -> travelogue.services.copy_subject",
+    "travelogue.curation.curate -> travelogue.services.pipeline_state",
+    "travelogue.curation.curate -> travelogue.templating.curation_adapter",
+    "travelogue.curation.geo_events -> travelogue.services.copy_subject",
+    "travelogue.curation.moment_scoring -> travelogue.render.cover_closing",
+    "travelogue.curation.mosaic.lte_adapter -> travelogue.templating.admin_store",
+    "travelogue.curation.mosaic.telemetry -> travelogue.templating.metrics",
+    "travelogue.curation.time_segments -> travelogue.services.copy_subject",
+    "travelogue.layout_engine.sandbox -> travelogue.render.context",
+    "travelogue.layout_engine.sandbox -> travelogue.web.studio_bento_preview",
+    "travelogue.layout_templates.admission -> travelogue.templating.review",
+    "travelogue.layout_templates.layout_admin -> travelogue.templating.admission",
+    "travelogue.layout_templates.layout_admin -> travelogue.templating.review",
+    "travelogue.media.ingest -> travelogue.services.copy_subject",
+    "travelogue.services.cover_opening_style -> travelogue.web.studio_homepage_telemetry",
+    "travelogue.templating.admission -> travelogue.render.dual_layout_regression",
+    "travelogue.templating.admission -> travelogue.render.engine",
+    "travelogue.templating.roles -> travelogue.web.studio_auth",
+    "travelogue.paths -> travelogue.templates.registry",
+]

@@ -31,6 +31,9 @@ jobs:
       - name: Trip JSON lint (ADR-008)
         run: python scripts/lint_trip_json.py schemas/fixtures tests/fixtures
 
+      - name: Import layer contract (M-B0)
+        run: lint-imports
+
   test-pr:
     runs-on: ubuntu-latest
     strategy:
@@ -125,6 +128,15 @@ jobs:
           python scripts/validate_trip.py schemas/fixtures/trip.render_golden.json --level all
           python scripts/validate_trip.py schemas/fixtures/trip.linzhi_screens.json --level all
           python scripts/lint_trip_json.py schemas/fixtures tests/fixtures
+
+      - name: Architecture equivalence self-check (M-B0 · PR warn)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: python scripts/arch_equivalence_check.py
+
+      - name: Architecture equivalence self-check (M-B0 · release block)
+        if: github.event_name != 'pull_request'
+        run: python scripts/arch_equivalence_check.py
 
       - name: Demo verify (fixtures + DOM)
         run: |

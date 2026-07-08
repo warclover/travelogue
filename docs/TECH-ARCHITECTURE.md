@@ -2,10 +2,10 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.1 |
+| **文档版本** | v0.1（+ §18 v0.9 增量 · M-B0） |
 | **阶段** | P0 本地工坊 |
 | **关联** | `CHARTER.md`、`AGENT-ARCHITECTURE.md`、`DATA-MODEL.md` |
-| **更新日期** | 2026-05-22 |
+| **更新日期** | 2026-05-22（§18 · 2026-07-08） |
 
 ---
 
@@ -404,3 +404,49 @@ Phase 7 在不改变编排语义的前提下，对 **ingest → CLIP embed → c
 python scripts/phase7_verify_rollback.py
 # 逐项关闭 fast-path：见 docs/config-phase7.example.yaml 注释与 tests/test_phase7_rollback_flags.py
 ```
+
+---
+
+## 18. 架构优化增量（v0.9 · M-B0）
+
+> SSOT 增量章节，对应 [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) v1.1 与 [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md)。全量文档刷新留待 M-D1。
+
+### 18.1 现行分层（as-is · 2026-07）
+
+与 MVP §2 一致：CLI / Web Studio / Desktop → Orchestrator → Agents（media · curation · render）→ TripService + schema。  
+已知倒置：`media→curation`、`curation→services`、`templating→web`、`layout_engine→web` 等（见 §18.3 豁免清单）。
+
+### 18.2 目标分层 DAG（to-be · PRD §5.3.1）
+
+```text
+第0层  util · types · domain · layout_contract · constants · paths · errors
+第1层  config
+第2层  media · vision · llm
+第3层  curation · layout_engine · layout_templates   ← 同层；互访经 adapter / layout_contract
+第4层  services · templating
+第5层  render · export
+第6层  orchestrator
+第7层  cli · web · desktop
+```
+
+规则：仅上层 import 下层；同层子模块用 `:` 合并（import-linter 契约）。  
+`export→render` 为第 5 层内白名单，不拆。
+
+### 18.3 工具化契约（M-B0 基线）
+
+| 工具 | 位置 | 说明 |
+|------|------|------|
+| `arch_equivalence_check.py` | `scripts/` | 确定性 profile 下同一 fixture 双跑；L3a 规范化 trip diff + L3b `layout_snapshot` |
+| `lint-imports` | `pyproject.toml` `[tool.importlinter]` | 分层 DAG + **26 条显式豁免**（PRD §5.3.2；M-B1 清零） |
+| `lint_trip_json.py` | `scripts/` | trip.json schema 门禁（M-B5） |
+
+CI：`lint` job 跑 `lint-imports`；`validate` job 跑 `arch_equivalence_check`（PR warn / main block）。
+
+### 18.4 开关台账
+
+| 开关 | 状态 | 说明 |
+|------|------|------|
+| `pipeline.orchestration` | 未上线 | M-B3 登记 |
+| `layout.planner_impl` | 未上线 | M-B4b 登记 |
+
+详见 [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md) §开关台账。
