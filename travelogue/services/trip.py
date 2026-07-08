@@ -382,3 +382,24 @@ class TripService:
             return cwd_trip_json.resolve()
 
         raise TripNotFoundError(f"E_TRIP_NOT_FOUND {trip_id_or_path}")
+
+
+def persist_trip_snapshot(
+    svc: TripService,
+    trip_json_path: Path | str,
+    work: dict,
+    *,
+    max_retries: int = 3,
+) -> None:
+    """Merge an in-memory trip dict onto disk via revision CAS."""
+
+    def mutator(trip: dict) -> None:
+        for key, value in work.items():
+            trip[key] = value
+
+    svc.update(trip_json_path, mutator, max_retries=max_retries)
+
+
+def write_new_trip(svc: TripService, trip: dict, trip_json_path: Path | str) -> None:
+    """Initial trip.json write when no concurrent CAS is required."""
+    svc.save(trip, trip_json_path)

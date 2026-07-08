@@ -52,6 +52,13 @@ def _apply_auto_markers(item: pytest.Item) -> None:
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
+        "--stress-iterations",
+        action="store",
+        default=200,
+        type=int,
+        help="AC-ARC-01 concurrent update iterations per thread (default: 200).",
+    )
+    parser.addoption(
         "--fast",
         action="store_true",
         default=False,

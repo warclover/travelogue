@@ -9,6 +9,7 @@ import typer
 from travelogue.cli._apps import cluster_app
 from travelogue.config import get_config
 from travelogue.runtime import app_context_for_trips_dir
+from travelogue.services.trip import persist_trip_snapshot
 
 
 @cluster_app.command("recluster")
@@ -35,7 +36,7 @@ def cluster_recluster(
 
         clear_cluster_cache(trip_dir)
     result = run_clustering_layer(body, trip_dir=trip_dir, cfg=cfg)
-    svc.save(body, trip_json)
+    persist_trip_snapshot(svc, trip_json, body)
     typer.echo(
         f"OK recluster · mode={result.mode} segments={result.geo_event_count} "
         f"clusters={result.scene_cluster_count} force={force}"
@@ -143,7 +144,7 @@ def cluster_process_pending(
     if clear:
         cleared = clear_pending_assets(body)
 
-    svc.save(body, trip_json)
+    persist_trip_snapshot(svc, trip_json, body)
     typer.echo(
         "OK process-pending · "
         f"pending={len(pending_before)} cleared={len(cleared)} "

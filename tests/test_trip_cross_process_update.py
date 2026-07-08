@@ -1,4 +1,4 @@
-"""Cross-process trip.json CAS (M-A1c / AC-ARC-02 sketch)."""
+"""Cross-process trip.json CAS (AC-ARC-02)."""
 
 from __future__ import annotations
 

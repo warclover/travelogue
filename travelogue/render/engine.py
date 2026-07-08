@@ -695,14 +695,11 @@ def _render_trip_body(
         copy_inline_edit_bundle(out_dir)
 
     if update_pipeline:
-        from datetime import datetime
+        from travelogue.services.trip import persist_trip_snapshot
 
         pipe = trip.setdefault("pipeline", {})
         pipe["status"] = "rendered"
-        trip["updatedAt"] = (
-            datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-        )
-        app_context_for_trip_json(trip_path, cfg=cfg).trip_service().save(trip, trip_path)
+        persist_trip_snapshot(trip_svc, trip_path, trip)
 
     record_render_outcome(trip_id=trip_id, template_id=effective_template, ok=True)
     return out_dir

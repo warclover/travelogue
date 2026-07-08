@@ -1,62 +1,91 @@
-"""Concurrent trip.json writes stay atomic and parseable."""
+"""Concurrent trip.json writes stay atomic and parseable (via TripService.update)."""
 
 from __future__ import annotations
 
 import json
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from travelogue.services.trip import TripSaveError, TripService
+from travelogue.services.trip import TripConflictError, TripSaveError, TripService, meta_revision
 
 
-def test_concurrent_save_leaves_valid_trip_json(tmp_path: Path) -> None:
+def _minimal_trip() -> dict:
+    return {
+        "version": "0.2",
+        "tripId": "race",
+        "templateId": "visual-journal",
+        "exportLayout": "auto",
+        "meta": {
+            "title": "init",
+            "dateStart": "2025-01-01",
+            "dateEnd": "2025-01-02",
+            "places": ["测试"],
+            "tone": "relaxed",
+        },
+        "assets": [],
+        "chapters": [],
+        "pipeline": {"status": "draft"},
+        "createdAt": "2025-01-01T00:00:00Z",
+        "updatedAt": "2025-01-01T00:00:00Z",
+    }
+
+
+def test_concurrent_update_leaves_valid_trip_json(tmp_path: Path) -> None:
     path = tmp_path / "trip.json"
-    path.write_text(
-        json.dumps({"tripId": "race", "version": "0.2", "meta": {"title": "init"}}, indent=2)
-        + "\n",
-        encoding="utf-8",
-    )
+    TripService().save(_minimal_trip(), path)
     svc = TripService()
+    expected: set[str] = set()
+    guard = threading.Lock()
     errors: list[BaseException] = []
 
-    def _save(run_id: int) -> None:
+    def _update(run_id: int) -> None:
+        key = f"writer-{run_id}"
         try:
-            trip = json.loads(path.read_text(encoding="utf-8"))
-            trip.setdefault("meta", {})["title"] = f"writer-{run_id}"
-            trip["updatedAt"] = f"2026-05-30T12:00:{run_id:02d}Z"
-            svc.save(trip, path)
-        except (TripSaveError, OSError, json.JSONDecodeError) as exc:
+
+            def mutator(trip: dict, marker: str = key) -> None:
+                trip.setdefault("meta", {})["title"] = marker
+
+            svc.update(path, mutator, max_retries=5)
+            with guard:
+                expected.add(key)
+        except (TripConflictError, TripSaveError, OSError, json.JSONDecodeError) as exc:
             errors.append(exc)
 
     with ThreadPoolExecutor(max_workers=6) as pool:
-        list(pool.map(_save, range(12)))
+        list(pool.map(_update, range(12)))
 
+    assert not errors
     data = json.loads(path.read_text(encoding="utf-8"))
     assert data["tripId"] == "race"
-    assert str(data["meta"]["title"]).startswith("writer-")
-    leftovers = list(tmp_path.glob(".trip-*.json"))
-    assert leftovers == []
+    assert data["meta"]["title"] in expected
+    assert meta_revision(data) >= len(expected)
+    assert list(tmp_path.glob(".trip-*.json")) == []
 
 
-def test_concurrent_save_no_temp_file_leaks(tmp_path: Path) -> None:
+def test_concurrent_update_no_temp_file_leaks(tmp_path: Path) -> None:
     path = tmp_path / "trip.json"
-    path.write_text('{"tripId":"t2","version":"0.2"}\n', encoding="utf-8")
+    TripService().save(_minimal_trip(), path)
     svc = TripService()
     busy_errors: list[TripSaveError] = []
 
-    def _save(i: int) -> None:
+    def _update(i: int) -> None:
         try:
-            trip = json.loads(path.read_text(encoding="utf-8"))
-            trip["batch"] = i
-            svc.save(trip, path)
+
+            def mutator(trip: dict, batch: int = i) -> None:
+                trip["batch"] = batch
+
+            svc.update(path, mutator, max_retries=5)
+        except TripConflictError:
+            return
         except (TripSaveError, PermissionError, OSError, json.JSONDecodeError) as exc:
             if isinstance(exc, TripSaveError):
                 busy_errors.append(exc)
 
     with ThreadPoolExecutor(max_workers=4) as pool:
-        list(pool.map(_save, range(20)))
+        list(pool.map(_update, range(20)))
 
     assert list(tmp_path.glob(".trip-*.json")) == []
     data = json.loads(path.read_text(encoding="utf-8"))
-    assert data["tripId"] == "t2"
+    assert data["tripId"] == "race"
     assert "batch" in data

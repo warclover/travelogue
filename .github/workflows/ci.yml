@@ -25,6 +25,9 @@ jobs:
         run: |
           python -m ruff check travelogue tests scripts
 
+      - name: Trip save lint
+        run: python scripts/lint_trip_save_calls.py
+
   test-pr:
     runs-on: ubuntu-latest
     strategy:

@@ -13,8 +13,8 @@
 | M-A1a | done | 2026-07-08 | `pytest tests/test_trip_service_update.py` 7 passed | — |
 | M-A1b | done | 2026-07-08 | handlers 14 处 + serve.py 2 处改 svc.update；409 E_TRIP_CONFLICT + http.js 重试；`pytest tests/test_studio_handlers_trip.py` 等 41 passed | — |
 | M-A1c | done | 2026-07-08 | studio_pipeline 5 处 + studio_narrate 1 处改 update；`tests/test_trip_cross_process_update.py` spawn 集成测试通过 | 文件锁补强（.trip.lock）跳过 |
-| M-A1d | todo | — | — | — |
-| M-A1e | todo | — | — | — |
+| M-A1d | done | 2026-07-08 | render/engine.py + orchestrator/run.py + CLI/export 收口 persist_trip_snapshot | — |
+| M-A1e | done | 2026-07-08 | `scripts/lint_trip_save_calls.py` + CI；AC-ARC-01/02 测试；`test_trip_concurrent_save.py` 改写 | — |
 | M-A2 | todo | — | — | — |
 | M-A3 | todo | — | — | — |
 | M-B5 | todo | — | — | — |

@@ -16,6 +16,7 @@ from travelogue.runtime import app_context_for_trip_json
 from travelogue.services.layout import apply_layout_to_trip
 from travelogue.services.narrate import run_narrate
 from travelogue.services.pipeline_state import Until, assert_stage_allowed
+from travelogue.services.trip import persist_trip_snapshot
 
 
 @dataclass
@@ -85,7 +86,7 @@ def _run_trip_stages(
     locks = (trip.get("pipeline") or {}).get("locks") or {}
 
     def save() -> None:
-        svc.save(trip, trip_path)
+        persist_trip_snapshot(svc, trip_path, trip)
 
     stages_order = ["ingest", "curate", "layout", "lock_structure", "narrate", "lock_copy", "render", "export"]
     start_idx = stages_order.index(from_stage) if from_stage in stages_order else 0
@@ -221,7 +222,7 @@ def _run_trip_stages(
             pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
             trip = svc.load(trip_path)
             trip.setdefault("pipeline", {})["timings"] = pipeline_timings
-            svc.save(trip, trip_path)
+            persist_trip_snapshot(svc, trip_path, trip)
 
             result.stages.append("render")
 
@@ -236,13 +237,13 @@ def _run_trip_stages(
             pipeline_timings["exportMs"] = round((time.monotonic() - export_t0) * 1000.0, 2)
             trip = svc.load(trip_path)
             trip.setdefault("pipeline", {})["timings"] = pipeline_timings
-            svc.save(trip, trip_path)
+            persist_trip_snapshot(svc, trip_path, trip)
             result.publish = pub
             result.stages.append("export")
 
     pipeline_timings["totalMs"] = round((time.monotonic() - pipeline_t0) * 1000.0, 2)
     trip = svc.load(trip_path)
     trip.setdefault("pipeline", {})["timings"] = pipeline_timings
-    svc.save(trip, trip_path)
+    persist_trip_snapshot(svc, trip_path, trip)
 
     return result
