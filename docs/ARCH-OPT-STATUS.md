@@ -21,12 +21,12 @@
 | M-B0 | done | 2026-07-08 | `scripts/arch_equivalence_check.py` 自反性冒烟；`lint-imports` 26 豁免全绿；CI lint+validate；TECH-ARCH §18 | grimp 未解析的 media→curation 等 AST 违例留 M-B1 |
 | ADR-015 | accepted | 2026-07-08 | ADR 已批准；cross-import 51→44（B4a 后） | M-B4b 可启动 |
 | M-B4a | done | 2026-07-08 | kernel→layout_contract；adapter 收敛；mosaic ContextVar；render_fingerprint；equivalence 全绿 | B4b 目标 cross-import ≤10（现 44） |
+| M-B4b | done | 2026-07-08 | planner+mosaic→layout_engine/；weekly dual-run；消费方收敛 | cross-import ≤10 待 M-B1 |
+| M-B1 | in_progress | 2026-07-08 | `util/net.is_loopback_host` 清偿 templating→web | §5.3.2 余表项 |
 | M-B2 | todo | — | — | 需 G-WIP-01 |
 | M-B3 | todo | — | — | 需 M-B2 Go + G-WIP-01 |
-| M-C4 | todo | — | — | — |
-| M-B4b | done | 2026-07-08 | planner+mosaic→layout_engine/；shim+planner_impl 开关；adapter/消费方收敛；equivalence 全绿 | cross-import 109（物理迁移后 planner/mosaic 对 curation 依赖边计入 LE→cur；shim 9 条；≤10 待 M-B1 kernel 清偿） |
-| M-B1 | todo | — | — | — |
-| M-B6 | todo | — | — | — |
+| M-C4 | in_progress | 2026-07-08 | `domain/pipeline_view` + assets/chapters 视图；`pipeline_state` re-export | trip 直赋 lint 待补 |
+| M-B6 | in_progress | 2026-07-08 | `trip_migration.MIGRATIONS` + `migrate_trip` + lint version 校验 | 文档规则 + 超窗测试待补 |
 | M-C1 | todo | — | — | 触发：新增 Studio API |
 | M-C2 | todo | — | — | 触发：与 M-B4b 错开 |
 | M-C3 | todo | — | — | 触发：Phase 验收完成 |

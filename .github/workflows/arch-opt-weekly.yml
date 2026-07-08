@@ -1,0 +1,23 @@
+# PRD §3.3 · layout.planner_impl legacy path weekly dual-run (M-B4b DoD)
+name: Arch Opt Weekly
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+jobs:
+  planner-impl-dual-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: pip install -e ".[dev]"
+
+      - name: layout.planner_impl layout_engine vs curation
+        run: python scripts/planner_impl_dual_run.py --json

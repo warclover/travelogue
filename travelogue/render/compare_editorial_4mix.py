@@ -17,9 +17,9 @@ from travelogue.curation.editorial_4mix import (
     chess_window_matches,
 )
 from travelogue.curation.layout_planner import aspect_kind_for_asset
-from travelogue.curation.mosaic.builders import build_screen
-from travelogue.curation.mosaic.constants import PATTERN_PORTRAIT_2_LANDSCAPE_2
-from travelogue.curation.mosaic.pattern_catalog import default_registry
+from travelogue.layout_engine.mosaic.builders import build_screen
+from travelogue.layout_engine.mosaic.constants import PATTERN_PORTRAIT_2_LANDSCAPE_2
+from travelogue.layout_engine.mosaic.pattern_catalog import default_registry
 from travelogue.render.engine import render_trip
 from travelogue.services.validate import asset_map
 

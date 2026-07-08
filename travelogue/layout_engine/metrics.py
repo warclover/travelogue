@@ -1,4 +1,8 @@
-"""P17 golden layout metrics · AC-P17-16～19 probes (PRD §12)."""
+"""P17 golden layout metrics · AC-P17-16～19 probes (PRD §12).
+
+PRD §5.2.3 / R-15: **实验路径** — `curate_trip_chapters` 内嵌 clustering+curate；
+仅供 golden probe / fixture replay，非 Studio/CLI 主路径。
+"""
 
 from __future__ import annotations
 

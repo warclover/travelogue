@@ -64,7 +64,7 @@ def should_include_long_shot(
     export_layout_override: str | None = None,
 ) -> bool:
     """P0: long-shot export on by default (draft + share). Set export.longShot=false to disable."""
-    from travelogue.curation.screen_planner import screens_layout_active
+    from travelogue.layout_engine.planner.screen_planner import screens_layout_active
 
     export_layout = export_layout_override or trip.get("exportLayout", "auto")
     if export_layout == EXPORT_LAYOUT_LONGSHOT:
@@ -91,7 +91,7 @@ def web_screens_surface_active(
     export_layout_override: str | None = None,
 ) -> bool:
     """Web index with chapter screens[] (present / longshot-bridge eligibility)."""
-    from travelogue.curation.screen_planner import screens_layout_active
+    from travelogue.layout_engine.planner.screen_planner import screens_layout_active
 
     if not screens_layout_active(trip, override=layout_engine_override):
         return False
@@ -332,7 +332,7 @@ def write_longshot_sidecar(
     copy_display_override: str | None = None,
 ) -> Path:
     """Write index-longshot.html (screens flattened to vertical stack) for capture from screens web."""
-    from travelogue.curation.screen_planner import LAYOUT_ENGINE_SCREENS
+    from travelogue.layout_engine.planner.screen_planner import LAYOUT_ENGINE_SCREENS
 
     out_dir = out_dir.resolve()
     html = render_html(
@@ -720,7 +720,7 @@ def render_trip_surfaces(
     cfg: AppConfig | None = None,
 ) -> tuple[Path, Path, Path | None]:
     """Write index.html, index-mobile.html, and optionally index-present.html from one trip.json."""
-    from travelogue.curation.screen_planner import LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS
+    from travelogue.layout_engine.planner.screen_planner import LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS
 
     trip_path = trip_path.resolve()
     trip_root = trip_path.parent

@@ -107,7 +107,7 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
             )
         except CurateError as exc:
             raise DemoError(exc.code, str(exc)) from exc
-        from travelogue.curation.screen_planner import LAYOUT_ENGINE_SCREENS, resolve_layout_engine
+        from travelogue.layout_engine.planner.screen_planner import LAYOUT_ENGINE_SCREENS, resolve_layout_engine
         from travelogue.services.layout import apply_layout_to_trip
 
         if resolve_layout_engine(trip) == LAYOUT_ENGINE_SCREENS and not any(

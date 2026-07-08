@@ -258,9 +258,9 @@ class TripService:
         p = Path(path)
         if not p.is_file():
             raise TripNotFoundError(f"E_TRIP_NOT_FOUND {p}")
-        from travelogue.curation.trip_migration import strip_legacy_curation_fields
+        from travelogue.curation.trip_migration import migrate_trip
 
-        return strip_legacy_curation_fields(load_json(p))
+        return migrate_trip(load_json(p))
 
     def save(self, trip: dict, path: Path | str) -> None:
         p = Path(path)

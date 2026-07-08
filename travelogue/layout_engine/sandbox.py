@@ -1,4 +1,8 @@
-"""LSE trip layout sandbox replay + diff (W2 · AC-P17-09 prep)."""
+"""LSE trip layout sandbox replay + diff (W2 · AC-P17-09 prep).
+
+PRD §5.2.3 / R-15: **实验路径** — 内嵌 clustering+curate 全管线，仅供 sandbox/dogfood；
+禁止作为第四套生产编排扩散（生产入口 = curate → adapter → planner）。
+"""
 
 from __future__ import annotations
 

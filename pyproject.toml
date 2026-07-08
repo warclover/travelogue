@@ -116,6 +116,5 @@ ignore_imports = [
     "travelogue.services.cover_opening_style -> travelogue.web.studio_homepage_telemetry",
     "travelogue.templating.admission -> travelogue.render.dual_layout_regression",
     "travelogue.templating.admission -> travelogue.render.engine",
-    "travelogue.templating.roles -> travelogue.web.studio_auth",
     "travelogue.paths -> travelogue.templates.registry",
 ]
