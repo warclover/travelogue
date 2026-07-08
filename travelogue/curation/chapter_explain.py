@@ -235,7 +235,7 @@ def build_chapter_explain(trip: dict, *, trip_dir: Path | None = None) -> dict[s
     if not plan_cities:
         plan_cities = ((trip.get("intent") or {}).get("travelPlan") or {}).get("cities") or []
     if plan_cities:
-        from travelogue.services.intent_plan import cities_match
+        from travelogue.domain.plan_cities import cities_match
 
         segment_labels = [
             _segment_label(seg) for seg in segments if isinstance(seg, dict)
