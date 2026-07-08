@@ -2,42 +2,47 @@
 
 from __future__ import annotations
 
+from contextvars import ContextVar
+
 from travelogue.config import MosaicConfig
 
 MOSAIC_ROUTER_VERSION = "p15-mcs-1"
 
-_mosaic_cfg_override: MosaicConfig | None = None
-_disabled_pattern_ids: tuple[str, ...] = ()
+_mosaic_cfg_override_var: ContextVar[MosaicConfig | None] = ContextVar(
+    "mosaic_cfg_override", default=None
+)
+_disabled_pattern_ids_var: ContextVar[tuple[str, ...]] = ContextVar(
+    "mosaic_disabled_patterns", default=()
+)
 
 _ALLOWED_SIZES = frozenset({3, 4, 5, 6, 8, 9})
 
 
 def set_mosaic_config_override(cfg: MosaicConfig | None) -> None:
-    """Thread-local style override for curate chapter planning (cohort weights)."""
-    global _mosaic_cfg_override
-    _mosaic_cfg_override = cfg
+    """Context-local override for curate chapter planning (cohort weights)."""
+    _mosaic_cfg_override_var.set(cfg)
 
 
 def reset_mosaic_config_override() -> None:
-    set_mosaic_config_override(None)
+    _mosaic_cfg_override_var.set(None)
 
 
 def set_mosaic_disabled_patterns(pattern_ids: tuple[str, ...] | list[str]) -> None:
-    global _disabled_pattern_ids
-    _disabled_pattern_ids = tuple(str(x) for x in pattern_ids if x)
+    _disabled_pattern_ids_var.set(tuple(str(x) for x in pattern_ids if x))
 
 
 def reset_mosaic_disabled_patterns() -> None:
-    set_mosaic_disabled_patterns(())
+    _disabled_pattern_ids_var.set(())
 
 
 def get_mosaic_disabled_patterns() -> tuple[str, ...]:
-    return _disabled_pattern_ids
+    return _disabled_pattern_ids_var.get()
 
 
 def get_effective_mosaic_config() -> MosaicConfig:
-    if _mosaic_cfg_override is not None:
-        return _mosaic_cfg_override
+    override = _mosaic_cfg_override_var.get()
+    if override is not None:
+        return override
     from travelogue.config import get_config
 
     return get_config().mosaic
@@ -104,7 +109,6 @@ def ordered_mosaic_window_sizes(
     return tuple(head + tail)
 
 
-# Slot-3 legacy grids pack without consuming P21 dense collage budget (min_slots=4).
 _DENSITY_AUX_PACK_SIZE = 3
 
 

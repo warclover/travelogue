@@ -2,159 +2,78 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
-from typing import Literal
 
-from travelogue.curation.layout_density import (
+from travelogue.layout_contract.density import (
     LayoutDensity,
     LayoutDensityParams,
     layout_density_params,
 )
+from travelogue.layout_contract.rhythm import (  # re-export for curation callers
+    DEFAULT_CONSECUTIVE_BANS,
+    DENSE_COLLAGE_SLOT_MIN,
+    FULL_BLEED_PORTRAIT_PATTERNS,
+    MAX_PORTRAIT_ORIENTATION_STREAK,
+    MAX_PORTRAIT_PAIR_STREAK,
+    PATTERN_PORTRAIT_3_EDITORIAL,
+    PORTRAIT_GRID8_MIN_PHOTOS,
+    PORTRAIT_ORIENTATION_PATTERNS,
+    PORTRAIT_PAIR_PATTERN,
+    PORTRAIT_PAIR_PATTERNS,
+    PORTRAIT_SINGLE_PATTERNS,
+    LateChapterPairingPolicy,
+    LayoutKind,
+    RhythmRules,
+    dense_collage_limits_for_trip,
+    is_nine_grid_pattern,
+    is_portrait_orientation_pattern,
+    is_portrait_pair_pattern,
+    is_portrait_single_pattern,
+    is_six_grid_pattern,
+    is_triple_row_pattern,
+    layout_kind_from_pattern,
+    nine_grid_limits_for_trip,
+    pattern_slot_count,
+    portrait_grid8_allowed,
+    portrait_grid8_max_for_trip,
+)
 
-LayoutKind = Literal[
-    "none", "nine", "triple", "six", "portrait_single", "portrait_pair", "other"
+__all__ = [
+    "DEFAULT_CONSECUTIVE_BANS",
+    "DENSE_COLLAGE_SLOT_MIN",
+    "FULL_BLEED_PORTRAIT_PATTERNS",
+    "LateChapterPairingPolicy",
+    "LayoutKind",
+    "MAX_PORTRAIT_ORIENTATION_STREAK",
+    "MAX_PORTRAIT_PAIR_STREAK",
+    "PATTERN_PORTRAIT_3_EDITORIAL",
+    "PORTRAIT_GRID8_MIN_PHOTOS",
+    "PORTRAIT_ORIENTATION_PATTERNS",
+    "PORTRAIT_PAIR_PATTERN",
+    "PORTRAIT_PAIR_PATTERNS",
+    "PORTRAIT_SINGLE_PATTERNS",
+    "RhythmRules",
+    "ScreenLayoutPlannerState",
+    "dense_collage_limits_for_trip",
+    "is_dense_collage_pattern",
+    "is_large_mosaic_pattern",
+    "is_nine_grid_pattern",
+    "is_portrait_orientation_pattern",
+    "is_portrait_pair_pattern",
+    "is_portrait_single_pattern",
+    "is_six_grid_pattern",
+    "is_triple_row_pattern",
+    "large_mosaic_limits_from_config",
+    "layout_kind_from_pattern",
+    "nine_grid_limits_for_trip",
+    "pattern_dense_slot_count",
+    "pattern_slot_count",
+    "portrait_grid8_allowed",
+    "portrait_grid8_max_for_trip",
 ]
-
-_PATTERN_SLOTS_RE = re.compile(r"^screen-(?:portrait|landscape|square)-(\d+)$")
-
-PORTRAIT_GRID8_MIN_PHOTOS = 50
-
-# P21 · dense collage（≥4 槽）卷级配额与相邻禁令
-DENSE_COLLAGE_SLOT_MIN = 4
-
-# ---------------------------------------------------------------------------
-# 节奏规则单一来源（排版规则优化 v0.5 · R-01~R-08 / V-08 / V-09）。
-# 规划期硬约束（ScreenLayoutPlannerState）与事后审计（layout_constraints）
-# 共用本模块的常量与判定，禁止在别处复制阈值。
-# ---------------------------------------------------------------------------
-
-# R-06 · 两张并排竖版（portrait-2 / person-pair 等价）连续上限。
-MAX_PORTRAIT_PAIR_STREAK = 2
-# R-08 · 同朝向（全竖版屏）连续上限（触顶强制换气）。
-MAX_PORTRAIT_ORIENTATION_STREAK = 6
-
-PORTRAIT_PAIR_PATTERN = "screen-portrait-2"
-PORTRAIT_PAIR_PATTERNS = frozenset({PORTRAIT_PAIR_PATTERN})
-PORTRAIT_SINGLE_PATTERNS = frozenset({"screen-portrait-1", "screen-tall-1"})
-# V-08/V-09 · 满屏竖图等价类（plate 仅 sole portrait slot 时计入，见
-# layout_constraints.is_full_bleed_portrait_screen）。
-FULL_BLEED_PORTRAIT_PATTERNS = frozenset(
-    {"screen-portrait-1", "screen-tall-1", "screen-plate"}
-)
-# R-08 · 计入「全竖版屏」朝向 streak 的 patternId。
-PORTRAIT_ORIENTATION_PATTERNS = frozenset(
-    {
-        "screen-portrait-1",
-        "screen-portrait-2",
-        "screen-portrait-3",
-        "screen-portrait-3-editorial",
-        "screen-tall-1",
-    }
-)
-
-PATTERN_PORTRAIT_3_EDITORIAL = "screen-portrait-3-editorial"
-
-# (last_kind, next_kind) 连续禁令对 — 与历史硬编码 can_emit_pattern 等价：
-# 禁连 *-9 / *-3 / *-6、禁 *-3 与 *-6 相邻、禁连满屏竖单。
-DEFAULT_CONSECUTIVE_BANS: frozenset[tuple[str, str]] = frozenset(
-    {
-        ("nine", "nine"),
-        ("triple", "triple"),
-        ("triple", "six"),
-        ("six", "triple"),
-        ("six", "six"),
-        ("portrait_single", "portrait_single"),
-    }
-)
-
-
-@dataclass(frozen=True)
-class LateChapterPairingPolicy:
-    """后几章竖版收束策略（与 config.layout.rhythm.late_chapter_pairing 对齐）。"""
-
-    from_chapter_index: int = 3
-    reset_orientation_streak: bool = True
-    reset_pair_streak: bool = True
-    no_outward_portrait_carry: bool = True
-    flush_lookahead_portraits: int = 3
-    beam_portrait_single_penalty: float = 0.12
-    beam_portrait_pair_bonus: float = 0.06
-
-    def is_late_chapter(self, chapter_index_1based: int) -> bool:
-        return chapter_index_1based >= self.from_chapter_index
-
-
-@dataclass(frozen=True)
-class RhythmRules:
-    """节奏阈值集合（默认值 = 历史硬编码，保证输出等价）。
-
-    来源优先级：LSE 策略包（rhythm 段） > config.layout.rhythm > 代码默认。
-    """
-
-    max_portrait_pair_streak: int = MAX_PORTRAIT_PAIR_STREAK
-    max_portrait_orientation_streak: int = MAX_PORTRAIT_ORIENTATION_STREAK
-    portrait_carry_max_hops: int = 0
-    consecutive_bans: frozenset[tuple[str, str]] = DEFAULT_CONSECUTIVE_BANS
-    late_chapter_pairing: LateChapterPairingPolicy = LateChapterPairingPolicy()
-
-    @classmethod
-    def from_config(cls, cfg=None) -> RhythmRules:
-        try:
-            from travelogue.config import get_config
-
-            app = cfg if cfg is not None else get_config()
-        except Exception:
-            return cls()
-        rhythm = getattr(getattr(app, "layout", None), "rhythm", None)
-        if rhythm is None:
-            return cls()
-        late = getattr(rhythm, "late_chapter_pairing", None)
-        late_policy = LateChapterPairingPolicy(
-            from_chapter_index=int(getattr(late, "from_chapter_index", 3)),
-            reset_orientation_streak=bool(
-                getattr(late, "reset_orientation_streak", True)
-            ),
-            reset_pair_streak=bool(getattr(late, "reset_pair_streak", True)),
-            no_outward_portrait_carry=bool(
-                getattr(late, "no_outward_portrait_carry", True)
-            ),
-            flush_lookahead_portraits=int(
-                getattr(late, "flush_lookahead_portraits", 3)
-            ),
-            beam_portrait_single_penalty=float(
-                getattr(late, "beam_portrait_single_penalty", 0.12)
-            ),
-            beam_portrait_pair_bonus=float(
-                getattr(late, "beam_portrait_pair_bonus", 0.06)
-            ),
-        )
-        return cls(
-            max_portrait_pair_streak=int(rhythm.max_portrait_pair_streak),
-            max_portrait_orientation_streak=int(rhythm.max_portrait_orientation_streak),
-            portrait_carry_max_hops=int(getattr(rhythm, "portrait_carry_max_hops", 0)),
-            late_chapter_pairing=late_policy,
-        )
-
-
-def pattern_slot_count(pattern_id: str) -> int | None:
-    m = _PATTERN_SLOTS_RE.match(pattern_id)
-    return int(m.group(1)) if m else None
-
-
-def dense_collage_limits_for_trip(total_photos: int) -> tuple[int, int]:
-    """P21 · max dense collage screens (slot≥4) per trip; no min quota."""
-    if total_photos <= 50:
-        return 0, 1
-    if total_photos <= 100:
-        return 0, 3
-    if total_photos <= 200:
-        return 0, 5
-    return 0, 7
 
 
 def pattern_dense_slot_count(pattern_id: str) -> int | None:
-    """Slot count for dense collage budgeting (LTE + legacy grid patterns)."""
     n = pattern_slot_count(pattern_id)
     if n is not None:
         return n
@@ -184,13 +103,11 @@ def is_large_mosaic_pattern(
     *,
     min_slots: int = 5,
 ) -> bool:
-    """True for mosaic/grid patterns with at least ``min_slots`` photo slots."""
     n = pattern_dense_slot_count(pattern_id)
     return n is not None and n >= min_slots
 
 
 def large_mosaic_limits_from_config() -> tuple[int, int, int]:
-    """(min_slots, max_per_template_trip, max_per_chapter) from mosaic.density_budget."""
     from travelogue.config import get_config
 
     db = get_config().mosaic.density_budget
@@ -201,84 +118,9 @@ def large_mosaic_limits_from_config() -> tuple[int, int, int]:
     )
 
 
-def nine_grid_limits_for_trip(total_photos: int) -> tuple[int, int]:
-    """
-    Min/max nine-grid screens (pattern with 9 slots) by layout-eligible photo count.
-
-    ≤50: 0–1; 51–100: 2–5; 101–200: 4–8; >200: 6–10.
-    """
-    if total_photos <= 50:
-        return 0, 1
-    if total_photos <= 100:
-        return 2, 5
-    if total_photos <= 200:
-        return 4, 8
-    return 6, 10
-
-
-def portrait_grid8_max_for_trip(total_photos: int) -> int:
-    """Max 8-portrait 2×4 screens when total > PORTRAIT_GRID8_MIN_PHOTOS."""
-    if total_photos <= PORTRAIT_GRID8_MIN_PHOTOS:
-        return 0
-    if total_photos <= 100:
-        return 2
-    if total_photos <= 200:
-        return 4
-    return 6
-
-
-def portrait_grid8_allowed(total_photos: int, *, portrait_heavy: bool) -> bool:
-    return total_photos > PORTRAIT_GRID8_MIN_PHOTOS and portrait_heavy
-
-
-def is_nine_grid_pattern(pattern_id: str) -> bool:
-    return pattern_slot_count(pattern_id) == 9
-
-
-def is_triple_row_pattern(pattern_id: str) -> bool:
-    if pattern_id == PATTERN_PORTRAIT_3_EDITORIAL:
-        return True
-    return pattern_slot_count(pattern_id) == 3
-
-
-def is_six_grid_pattern(pattern_id: str) -> bool:
-    return pattern_slot_count(pattern_id) == 6
-
-
-def is_portrait_single_pattern(pattern_id: str | None) -> bool:
-    return pattern_id in PORTRAIT_SINGLE_PATTERNS
-
-
-def is_portrait_pair_pattern(pattern_id: str | None) -> bool:
-    """R-06 · 两张竖版并排（含 person-pair 等价 patternId）。"""
-    return pattern_id in PORTRAIT_PAIR_PATTERNS
-
-
-def is_portrait_orientation_pattern(pattern_id: str | None) -> bool:
-    """R-08 · 计入「全竖版屏」朝向 streak 的 patternId。"""
-    return pattern_id in PORTRAIT_ORIENTATION_PATTERNS
-
-
-def layout_kind_from_pattern(pattern_id: str) -> LayoutKind:
-    if is_nine_grid_pattern(pattern_id):
-        return "nine"
-    if is_triple_row_pattern(pattern_id):
-        return "triple"
-    if is_six_grid_pattern(pattern_id):
-        return "six"
-    if is_portrait_single_pattern(pattern_id):
-        return "portrait_single"
-    if is_portrait_pair_pattern(pattern_id):
-        return "portrait_pair"
-    return "other"
-
-
 @dataclass
 class ScreenLayoutPlannerState:
-    """
-    Nine-grid quota + consecutive bans: *-9, *-3, *-6, *-3+*-6, portrait-1/tall-1.
-    Portrait 8-grid (2×4) has a separate quota (layout_kind other).
-    """
+    """Nine-grid quota + consecutive bans (implementation stays in curation until M-B4b)."""
 
     nine_min: int
     nine_max: int
@@ -380,7 +222,6 @@ class ScreenLayoutPlannerState:
         self.portrait_grid8_used += 1
 
     def can_use_dense_collage(self, pattern_id: str) -> bool:
-        """P21 · dense collage quota + consecutive ban."""
         if not is_dense_collage_pattern(pattern_id, min_slots=self.dense_collage_min_slots):
             return True
         if self.dense_collage_used >= self.dense_collage_max:
@@ -388,7 +229,6 @@ class ScreenLayoutPlannerState:
         return not self.last_was_dense_collage
 
     def can_use_dense_collage_window(self, window_size: int) -> bool:
-        """True when an MCS window of this size may consume dense budget."""
         if window_size < self.dense_collage_min_slots:
             return True
         if not self.can_use_large_mosaic_window(window_size):
@@ -402,7 +242,6 @@ class ScreenLayoutPlannerState:
         *,
         chapter_index: int = 1,
     ) -> None:
-        """Reset per-chapter counters; optionally soft-reset rhythm streaks in late chapters."""
         self.large_mosaic_chapter_used = 0
         self.editorial_composite_chapter_used = 0
         late = self.rhythm.late_chapter_pairing
@@ -478,24 +317,18 @@ class ScreenLayoutPlannerState:
         if (self.last_kind, kind) in self.rhythm.consecutive_bans:
             return False
         if kind == "portrait_pair":
-            return (
-                self.current_portrait_pair_streak()
-                < self.rhythm.max_portrait_pair_streak
-            )
+            return self.current_portrait_pair_streak() < self.rhythm.max_portrait_pair_streak
         return True
 
     def current_portrait_pair_streak(self) -> int:
-        """R-06 · 已连续出屏的 portrait-2 数（供批量出屏路径取种子）。"""
         if self.last_pattern_id == PORTRAIT_PAIR_PATTERN:
             return self.pattern_streak
         return 0
 
     def orientation_budget(self) -> int:
-        """R-08 · 触发强制换气前还允许连续出的「全竖版屏」数。"""
         return max(
             0,
-            self.rhythm.max_portrait_orientation_streak
-            - self.portrait_orientation_streak,
+            self.rhythm.max_portrait_orientation_streak - self.portrait_orientation_streak,
         )
 
     def note_screen(self, pattern_id: str) -> None:
@@ -521,9 +354,7 @@ class ScreenLayoutPlannerState:
         else:
             self.pattern_streak = 1 if pattern_id else 0
         self.last_pattern_id = pattern_id or ""
-        # R-08 · 朝向 streak：全竖版屏累计，任何其他 content pattern 打断。
         if pattern_id and is_portrait_orientation_pattern(pattern_id):
             self.portrait_orientation_streak += 1
         elif pattern_id:
             self.portrait_orientation_streak = 0
-

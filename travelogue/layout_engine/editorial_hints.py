@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from travelogue.curation.layout_scoring import screen_dominant_tone
-from travelogue.curation.screen_layout_state import pattern_slot_count
+from travelogue.layout_contract.rhythm import pattern_slot_count
 from travelogue.media.color_metrics import delta_e_cie76
 
 

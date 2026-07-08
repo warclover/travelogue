@@ -28,7 +28,6 @@ def test_normalize_strips_timing_and_screen_ids() -> None:
                 "screens": [{"screenId": "breath-deadbeef", "patternId": "open"}],
             }
         ],
-        "curation": {"cullSummary": {"cpuMs": 0.42, "kept": 3}},
     }
     normalized = normalize_trip(trip)
     assert "updatedAt" not in normalized["meta"]

@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from travelogue.curation.layout_density import LayoutDensity, LayoutDensityParams
-from travelogue.curation.screen_layout_state import (
+from travelogue.layout_contract.constraints import FOCAL_EDGE_MARGIN
+from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.density import LayoutDensity, LayoutDensityParams
+from travelogue.layout_contract.rhythm import (
     DEFAULT_CONSECUTIVE_BANS,
     PORTRAIT_PAIR_PATTERN,
     RhythmRules,
-    ScreenLayoutPlannerState,
     portrait_grid8_max_for_trip,
 )
 from travelogue.layout_engine.registry import StrategyPack
@@ -39,7 +40,7 @@ def nine_grid_limits_for_trip_from_pack(
 ) -> tuple[int, int]:
     tiers = nine_grid_limits_from_pack(pack)
     if not tiers:
-        from travelogue.curation.screen_layout_state import nine_grid_limits_for_trip
+        from travelogue.layout_contract.rhythm import nine_grid_limits_for_trip
 
         return nine_grid_limits_for_trip(total_photos)
     tiers = sorted(tiers, key=lambda t: t[0])

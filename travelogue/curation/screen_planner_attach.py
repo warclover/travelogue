@@ -429,20 +429,13 @@ def attach_screens_day_buckets(
         for ch in chapters:
             all_ids.update(_collect_asset_ids_from_chapter(ch))
         trip_photo_total = len(all_ids)
-    from travelogue.layout_engine.adapter import layout_state_for_trip, lse_enabled
+    from travelogue.layout_engine.adapter import lse_enabled, resolve_attach_layout_state
 
-    if lse_enabled(cfg):
-        layout_state = layout_state_for_trip(
-            trip_photo_total,
-            cfg=cfg,
-            density=layout_density or "balanced",
-        )
-    else:
-        layout_state = ScreenLayoutPlannerState.from_trip_total(
-            trip_photo_total,
-            density=layout_density or "balanced",
-            rhythm=RhythmRules.from_config(cfg),
-        )
+    layout_state = resolve_attach_layout_state(
+        trip_photo_total,
+        cfg=cfg,
+        density=layout_density or "balanced",
+    )
     seq_per_ch: dict[str, int] = {}
     gallery_asset_ids: set[str] = set()
     for ch in out:
@@ -683,20 +676,13 @@ def attach_screens_to_chapters(
         trip_photo_total = len(assets_by_id) if assets_by_id else sum(
             len(_collect_asset_ids_from_chapter(ch)) for ch in chapters
         )
-    from travelogue.layout_engine.adapter import layout_state_for_trip, lse_enabled
+    from travelogue.layout_engine.adapter import lse_enabled, resolve_attach_layout_state
 
-    if lse_enabled(cfg):
-        layout_state = layout_state_for_trip(
-            trip_photo_total,
-            cfg=cfg,
-            density=layout_density or "balanced",
-        )
-    else:
-        layout_state = ScreenLayoutPlannerState.from_trip_total(
-            trip_photo_total,
-            density=layout_density or "balanced",
-            rhythm=RhythmRules.from_config(cfg),
-        )
+    layout_state = resolve_attach_layout_state(
+        trip_photo_total,
+        cfg=cfg,
+        density=layout_density or "balanced",
+    )
 
     out: list[dict] = []
     for ch in chapters:

@@ -2,7 +2,7 @@
 
 | 属性 | 内容 |
 |------|------|
-| **状态** | **Proposed**（待产品/技术负责人批准；**批准前不得启动 M-B4b**） |
+| **状态** | **Accepted**（2026-07-08 批准；M-B4b 可启动，须 M-B4a 完成 + golden 门禁） |
 | **日期** | 2026-07-08 |
 | **决策者** | 技术负责人（**待签字**） |
 | **影响范围** | `travelogue/layout_engine/`、`travelogue/curation/`（`screen_planner*`、`mosaic/`、`layout_search.py`）、`travelogue/layout_contract/` |
@@ -154,7 +154,7 @@ python scripts/lse_cross_import_stats.py
 
 - [x] 基线 cross-import 统计脚本 `scripts/lse_cross_import_stats.py`
 - [x] 基线 JSON `docs/acceptance-records/lse-cross-import-baseline.json`（51 边）
-- [ ] **决策者批准**本 ADR（Proposed → Accepted）
+- [x] **决策者批准**本 ADR（Proposed → Accepted · 2026-07-08）
 - [ ] M-B4a 完成后复测 cross-import JSON 并附于 PR 描述
 - [ ] M-B4b 完成后 AC-ARC-08v2 三项验收
 

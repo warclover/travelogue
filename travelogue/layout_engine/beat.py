@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.curation.screen_layout_state import (
+from travelogue.layout_contract.rhythm import (
     is_nine_grid_pattern,
     is_portrait_single_pattern,
 )

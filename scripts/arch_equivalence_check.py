@@ -112,7 +112,7 @@ def _normalize_scalar(value: Any) -> Any:
 
 
 def _should_drop_key(path: tuple[str, ...], key: str) -> bool:
-    if key in {"updatedAt", "appliedAt"}:
+    if key in {"updatedAt", "appliedAt", "computedAt", "aestheticAlignmentAt"}:
         return True
     if key == "timings" and path == ("pipeline",):
         return True

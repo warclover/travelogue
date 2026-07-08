@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.config import AppConfig, MosaicConfig, get_config
-from travelogue.curation.layout_planner import AspectKind
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.curation.screen_planner import DEFAULT_FEATURED_WEIGHT, plan_screens_for_chapter
 from travelogue.layout_engine.decision_log import (
@@ -18,6 +17,7 @@ from travelogue.layout_engine.decision_log import (
 )
 from travelogue.layout_engine.registry import StrategyPack, get_strategy_pack
 from travelogue.layout_engine.rhythm import layout_state_from_pack
+from travelogue.media.image_ops import AspectKind
 
 
 @dataclass
@@ -154,22 +154,36 @@ def layout_state_for_trip(
     pack: StrategyPack | None = None,
     density: str | None = None,
 ) -> ScreenLayoutPlannerState:
+    from travelogue.layout_contract.density import LayoutDensityParams
+    from travelogue.layout_contract.rhythm import RhythmRules
+
     active = pack if pack is not None else resolve_pack(cfg)
     if active is not None:
-        from travelogue.curation.layout_density import LayoutDensityParams
-
         params = LayoutDensityParams(density=density or "balanced")  # type: ignore[arg-type]
         return layout_state_from_pack(total_photos, active, density_params=params)
-    from travelogue.curation.screen_layout_state import (
-        RhythmRules,
-        ScreenLayoutPlannerState,
-    )
-
     return ScreenLayoutPlannerState.from_trip_total(
         total_photos,
         density=density or "balanced",  # type: ignore[arg-type]
         rhythm=RhythmRules.from_config(cfg),
     )
+
+
+def resolve_attach_layout_state(
+    trip_photo_total: int,
+    *,
+    cfg: AppConfig | None = None,
+    density: str | None = None,
+) -> ScreenLayoutPlannerState:
+    """Single entry for screen_planner_attach (M-B4a adapter convergence)."""
+    from travelogue.layout_contract.rhythm import RhythmRules
+
+    if cfg is None:
+        return ScreenLayoutPlannerState.from_trip_total(
+            trip_photo_total,
+            density=density or "balanced",  # type: ignore[arg-type]
+            rhythm=RhythmRules.from_config(None),
+        )
+    return layout_state_for_trip(trip_photo_total, cfg=cfg, density=density or "balanced")
 
 
 def plan_chapter_screens(

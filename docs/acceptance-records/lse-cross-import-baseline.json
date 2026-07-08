@@ -3,11 +3,11 @@
     "travelogue.curation",
     "travelogue.layout_engine"
   ],
-  "totalCrossEdges": 51,
-  "layoutEngineToCuration": 32,
+  "totalCrossEdges": 44,
+  "layoutEngineToCuration": 25,
   "curationToLayoutEngine": 19,
   "targetAfterMigration": {
-    "maxCrossEdges": 10,
+    "maxCrossEdges": 9,
     "reductionPercent": 80,
     "note": "M-B4b proceeds only if post-kernel (M-B4a) cross edges ≤ maxCrossEdges"
   },
@@ -18,15 +18,11 @@
     ],
     [
       "travelogue.layout_engine.metrics",
-      7
+      6
     ],
     [
       "travelogue.curation.mosaic.scorer",
       5
-    ],
-    [
-      "travelogue.layout_engine.adapter",
-      4
     ],
     [
       "travelogue.layout_engine.golden_probe",
@@ -41,11 +37,7 @@
       2
     ],
     [
-      "travelogue.layout_engine.editorial_hints",
-      2
-    ],
-    [
-      "travelogue.layout_engine.rhythm",
+      "travelogue.layout_engine.adapter",
       2
     ],
     [
@@ -65,29 +57,33 @@
       1
     ],
     [
-      "travelogue.layout_engine.beat",
+      "travelogue.layout_engine.editorial_hints",
       1
     ],
     [
       "travelogue.layout_engine.feedback",
       1
+    ],
+    [
+      "travelogue.layout_engine.highlight_windows",
+      1
+    ],
+    [
+      "travelogue.layout_engine.quality_features",
+      1
     ]
   ],
   "topImported": [
-    [
-      "travelogue.curation.screen_layout_state",
-      6
-    ],
     [
       "travelogue.curation.asset_subject",
       3
     ],
     [
-      "travelogue.curation.layout_density",
+      "travelogue.curation.layout_scoring",
       3
     ],
     [
-      "travelogue.curation.layout_scoring",
+      "travelogue.curation.screen_layout_state",
       3
     ],
     [
@@ -111,10 +107,6 @@
       2
     ],
     [
-      "travelogue.curation.layout_planner",
-      2
-    ],
-    [
       "travelogue.layout_engine.capabilities",
       2
     ],
@@ -131,7 +123,15 @@
       1
     ],
     [
-      "travelogue.curation.layout_constraints",
+      "travelogue.curation.layout_density",
+      1
+    ],
+    [
+      "travelogue.curation.layout_metrics",
+      1
+    ],
+    [
+      "travelogue.curation.layout_planner",
       1
     ]
   ],
@@ -259,59 +259,37 @@
       "lines": [
         13,
         432,
-        506,
-        686
+        499,
+        679
       ]
     },
     {
       "importer": "travelogue.curation.screen_planner_attach",
       "imported": "travelogue.layout_engine.capabilities",
       "lines": [
-        507
+        500
       ]
     },
     {
       "importer": "travelogue.curation.screen_planner_attach",
       "imported": "travelogue.layout_engine.highlight_windows",
       "lines": [
-        508,
-        564
+        501,
+        557
       ]
     },
     {
       "importer": "travelogue.layout_engine.adapter",
-      "imported": "travelogue.curation.layout_density",
-      "lines": [
-        159
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.adapter",
-      "imported": "travelogue.curation.layout_planner",
+      "imported": "travelogue.curation.screen_layout_state",
       "lines": [
         10
       ]
     },
     {
       "importer": "travelogue.layout_engine.adapter",
-      "imported": "travelogue.curation.screen_layout_state",
-      "lines": [
-        11,
-        163
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.adapter",
       "imported": "travelogue.curation.screen_planner",
       "lines": [
-        12
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.beat",
-      "imported": "travelogue.curation.screen_layout_state",
-      "lines": [
-        5
+        11
       ]
     },
     {
@@ -319,13 +297,6 @@
       "imported": "travelogue.curation.layout_scoring",
       "lines": [
         7
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.editorial_hints",
-      "imported": "travelogue.curation.screen_layout_state",
-      "lines": [
-        8
       ]
     },
     {
@@ -413,13 +384,6 @@
       ]
     },
     {
-      "importer": "travelogue.layout_engine.metrics",
-      "imported": "travelogue.curation.screen_layout_state",
-      "lines": [
-        15
-      ]
-    },
-    {
       "importer": "travelogue.layout_engine.quality_features",
       "imported": "travelogue.curation.aesthetic_score",
       "lines": [
@@ -435,17 +399,9 @@
     },
     {
       "importer": "travelogue.layout_engine.rhythm",
-      "imported": "travelogue.curation.layout_density",
-      "lines": [
-        7
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.rhythm",
       "imported": "travelogue.curation.screen_layout_state",
       "lines": [
-        8,
-        42
+        8
       ]
     },
     {
@@ -481,13 +437,6 @@
       "imported": "travelogue.curation.curate_scoring",
       "lines": [
         6
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.slot_assignment",
-      "imported": "travelogue.curation.layout_constraints",
-      "lines": [
-        8
       ]
     },
     {
