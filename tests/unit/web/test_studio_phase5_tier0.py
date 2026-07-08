@@ -9,6 +9,8 @@ from pathlib import Path
 
 from tests._studio_js import read_studio_js
 
+from tests.unit.web._preview_toolbar_css import read_preview_toolbar_css_bundle
+
 ROOT = repo_root(__file__)
 PREVIEW_JS = ROOT / "templates" / "studio" / "preview-toolbar.js"
 INIT_V3_JS = ROOT / "templates" / "studio" / "preview-toolbar" / "init-v3.js"
@@ -41,7 +43,7 @@ def test_preview_toolbar_longshot_integrated_to_top_bar() -> None:
     core = CORE_JS.read_text(encoding="utf-8")
     task_dock = TASK_DOCK_JS.read_text(encoding="utf-8")
     bundle = js + init_v3 + longshot + core + task_dock
-    css = (ROOT / "templates" / "studio" / "preview-toolbar.css").read_text(encoding="utf-8")
+    css = read_preview_toolbar_css_bundle(ROOT / "templates" / "studio")
     client = (ROOT / "templates" / "studio" / "js" / "longshot-client.js").read_text(
         encoding="utf-8"
     )

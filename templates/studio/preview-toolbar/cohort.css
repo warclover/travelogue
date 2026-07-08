@@ -1,0 +1,155 @@
+/* Preview toolbar · Cohort seed picker */
+/* Cohort · featured-subject seed picker */
+.cohort-drawer__lead {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #4a5c55;
+}
+.cohort-drawer__status {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.cohort-drawer__status--info {
+  background: rgba(61, 107, 90, 0.12);
+  color: #1a2f28;
+}
+.cohort-drawer__status--warn {
+  background: rgba(210, 166, 87, 0.22);
+  color: #5c4a1a;
+}
+.cohort-drawer__subject {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(61, 107, 90, 0.15);
+}
+.cohort-drawer__subject-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+.cohort-drawer__subject-head .preview-drawer__label {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+.cohort-drawer__id,
+.cohort-drawer__label-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(61, 107, 90, 0.25);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
+}
+.cohort-drawer__id {
+  background: rgba(61, 107, 90, 0.06);
+  color: #6b7f78;
+}
+.cohort-drawer__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 44px;
+  margin-bottom: 8px;
+}
+.cohort-drawer__chip {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 2px solid #3d6b5a;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #e8f2ec;
+}
+.cohort-drawer__chip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cohort-drawer__chip-x {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  background: rgba(26, 47, 40, 0.75);
+  color: #fff;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+.cohort-drawer__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+  max-height: 200px;
+  overflow: auto;
+  padding: 2px;
+}
+.cohort-drawer__tile {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #e0ebe6;
+}
+.cohort-drawer__tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cohort-drawer__tile--on {
+  border-color: #3d6b5a;
+  box-shadow: 0 0 0 2px rgba(61, 107, 90, 0.35);
+}
+.cohort-drawer__tile--duo:not(.cohort-drawer__tile--on) {
+  border-color: rgba(210, 166, 87, 0.65);
+}
+.cohort-drawer__badge {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(210, 166, 87, 0.92);
+  color: #3a2f10;
+}
+.cohort-drawer__empty {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7f78;
+}
+.cohort-drawer__hint {
+  margin: 8px 0 12px;
+  font-size: 12px;
+  color: #6b7f78;
+}
+.cohort-drawer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.cohort-drawer__actions .preview-drawer__primary,
+.cohort-drawer__actions .preview-drawer__ghost {
+  flex: 1 1 140px;
+  width: auto;
+}
+.cohort-drawer__save-layout {
+  width: 100%;
+}
+

@@ -1,0 +1,19 @@
+/* Preview toolbar · Design tokens */
+html[data-preview-toolbar="on"] {
+  --preview-toolbar-h: 56px;
+  --studio-font-ui:
+    "Microsoft YaHei", "微软雅黑", "PingFang SC", "Hiragino Sans GB",
+    "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+  --preview-sheet-side-w: 380px;
+  --preview-sheet-float-gap: 12px;
+  --preview-sheet-duration-enter: 460ms;
+  --preview-sheet-duration-exit: 380ms;
+  --preview-sheet-scrim-duration: 420ms;
+  --preview-sheet-content-duration: 340ms;
+  --preview-sheet-enter-delay: 50ms;
+  --preview-sheet-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --preview-sheet-ease-exit: cubic-bezier(0.4, 0, 0.78, 0);
+  --preview-sheet-ease-scrim: cubic-bezier(0.22, 1, 0.36, 1);
+  scroll-padding-top: var(--preview-toolbar-h);
+}
+

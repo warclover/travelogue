@@ -1,0 +1,105 @@
+/* Preview toolbar · Preview task dock */
+/* Task dock */
+.preview-task-dock {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 199;
+  width: min(420px, calc(100% - 32px));
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(26, 47, 40, 0.94);
+  color: #f5fbf8;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  pointer-events: auto;
+}
+
+.preview-task-dock--warn {
+  border-color: rgba(255, 183, 77, 0.5);
+}
+
+.preview-task-dock--success {
+  border-color: rgba(61, 107, 90, 0.6);
+}
+
+.preview-task-dock__icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.preview-task-dock__text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.preview-task-dock__text small {
+  display: block;
+  font-size: 11px;
+  color: #a8dcc8;
+  margin-top: 2px;
+}
+
+.preview-task-dock__progress {
+  flex: 0 0 48px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.preview-task-dock__progress i {
+  display: block;
+  height: 100%;
+  width: 8%;
+  background: #d4a843;
+  border-radius: 2px;
+  transition: width 0.25s ease;
+}
+
+.preview-task-dock__actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.preview-task-dock__btn {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.preview-task-dock__btn--primary {
+  background: #d4a843;
+  color: #1a1408;
+}
+
+.preview-task-dock__btn--ghost {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.preview-task-dock__btn--accent {
+  background: #3d6b5a;
+  color: #fff;
+}
+
+.preview-task-dock__btn--close {
+  padding: 4px 10px;
+  font-size: 16px;
+  line-height: 1;
+}
+

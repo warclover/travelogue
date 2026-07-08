@@ -7,13 +7,15 @@ from tests._repo_root import repo_root
 
 from pathlib import Path
 
+from tests.unit.web._preview_toolbar_css import read_preview_toolbar_css_bundle
+
 ROOT = repo_root(__file__)
 STUDIO = ROOT / "templates" / "studio"
 
 
 def test_ac_p4_a11y_01_accent_ink_on_gold_controls() -> None:
     """Gold CTA text uses dark ink (#1a1408), not low-contrast gold-on-gold."""
-    css = (STUDIO / "preview-toolbar.css").read_text(encoding="utf-8")
+    css = read_preview_toolbar_css_bundle(STUDIO)
     assert "#1a1408" in css.lower()
 
 

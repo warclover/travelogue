@@ -11,11 +11,13 @@ from pathlib import Path
 import pytest
 
 from travelogue.web.studio_chrome import inject_studio_chrome
+from tests.unit.web._preview_toolbar_css import read_preview_toolbar_css_bundle
 
 ROOT = repo_root(__file__)
 STUDIO = ROOT / "templates" / "studio"
 PREVIEW_JS = STUDIO / "preview-toolbar.js"
 PREVIEW_CSS = STUDIO / "preview-toolbar.css"
+PREVIEW_CSS_BUNDLE = read_preview_toolbar_css_bundle(STUDIO)
 TASK_DOCK_JS = STUDIO / "preview-toolbar-v3-task-dock.js"
 SHEET_JS = STUDIO / "preview-toolbar-v3-sheet.js"
 
@@ -139,6 +141,34 @@ def test_m5_init_v3_module_exports() -> None:
         assert token in init_v3, f"missing init-v3 export/wiring: {token}"
 
 
+def test_m5_css_split_modules() -> None:
+    entry = PREVIEW_CSS.read_text(encoding="utf-8")
+    assert '@import url("preview-toolbar/tokens.css")' in entry
+    assert '@import url("preview-toolbar/sheet.css")' in entry
+    for name in (
+        "tokens.css",
+        "shell.css",
+        "longshot.css",
+        "dock.css",
+        "task-dock.css",
+        "sheet.css",
+    ):
+        assert (STUDIO / "preview-toolbar" / name).is_file(), f"missing css partial: {name}"
+    assert "--preview-toolbar-h:" in PREVIEW_CSS_BUNDLE
+    assert ".preview-toolbar__dock" in PREVIEW_CSS_BUNDLE
+
+
+def test_m5_css_import_mime_and_static_path() -> None:
+    import mimetypes
+
+    from travelogue.paths import STUDIO_TEMPLATE_DIR
+
+    assert mimetypes.guess_type("preview-toolbar.css")[0] == "text/css"
+    partial = STUDIO_TEMPLATE_DIR / "preview-toolbar" / "dock.css"
+    assert partial.is_file()
+    assert mimetypes.guess_type(partial.name)[0] == "text/css"
+
+
 def test_m5_tsc_gate_files() -> None:
     jsconfig = STUDIO / "preview-toolbar" / "jsconfig.json"
     global_dts = STUDIO / "preview-toolbar" / "global.d.ts"
@@ -179,7 +209,7 @@ def test_v4_dock_tooltips_and_scroll_fade() -> None:
         assert token in init_v3 or token in dock, f"missing v4 dock ux: {token}"
     for token in ("initCoverTitleEdit", "cover-opening__title--editable"):
         assert token in init_v3 or token in inline, f"missing v4 inline edit: {token}"
-    css = PREVIEW_CSS.read_text(encoding="utf-8")
+    css = PREVIEW_CSS_BUNDLE
     for token in (
         "preview-toolbar__dock-tip",
         "preview-toolbar__dock--dim",
@@ -194,13 +224,13 @@ def test_v4_toolbar_mounts_screenplay_control() -> None:
     assert "insertScreenplayControl(actions, menuWrap" in init_v3
     assert "dock: true" in init_v3
     assert "preview-toolbar__screenplay--v3" in init_v3 or "preview-toolbar__screenplay--v3" in dock
-    css = PREVIEW_CSS.read_text(encoding="utf-8")
+    css = PREVIEW_CSS_BUNDLE
     assert "preview-toolbar__dock" in css
     assert "preview-toolbar--v4" in css
 
 
 def test_v4_css_icon_dock_and_task_dock() -> None:
-    css = PREVIEW_CSS.read_text(encoding="utf-8")
+    css = PREVIEW_CSS_BUNDLE
     for token in (
         "preview-toolbar__dock",
         "preview-toolbar--v4",

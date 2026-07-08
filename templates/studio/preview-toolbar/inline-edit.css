@@ -1,0 +1,52 @@
+/* Preview toolbar · Cover title inline edit */
+/* Studio · 封面书名卡内杂志名可编辑 */
+html[data-preview-toolbar="on"] .cover-opening__title--editable {
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+html[data-preview-toolbar="on"] .cover-opening__title--editable:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+html[data-preview-toolbar="on"] .cover-opening__title--editable:focus-visible {
+  outline: 2px solid rgba(127, 203, 179, 0.55);
+  outline-offset: 2px;
+}
+
+html[data-preview-toolbar="on"] .cover-opening__title--saving {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+html[data-preview-toolbar="on"] .cover-opening__title-input {
+  display: block;
+  width: 100%;
+  margin: 0 0 6px;
+  padding: 4px 6px;
+  box-sizing: border-box;
+  font: inherit;
+  font-family: var(--font-ui);
+  font-size: clamp(1.375rem, 3.5vw, 1.875rem);
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(127, 203, 179, 0.45);
+  border-radius: 4px;
+}
+
+.preview-toolbar--v4 .preview-toolbar__screenplay--v3:disabled,
+.preview-toolbar--v4 .preview-toolbar__screenplay--v3.preview-toolbar__screenplay--disabled,
+.preview-toolbar--v4 .preview-toolbar__menu-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+body.screenplay-active .preview-toolbar--v4 .preview-toolbar__dock {
+  visibility: hidden;
+  pointer-events: none;
+}
+
