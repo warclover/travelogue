@@ -38,7 +38,7 @@ def main() -> int:
         )
     steps.extend(
         [
-            [py, "scripts/phase13_metrics_reset_dev.py", "--yes"],
+            [py, "scripts/archive/phase13/phase13_metrics_reset_dev.py", "--yes"],
             [py, "scripts/phase13_metrics_window.py", "--hours", "72", "--write", str(RECORDS / "phase13-metrics-72h.json")],
             [
                 py,
@@ -50,7 +50,7 @@ def main() -> int:
             ],
             [py, "scripts/phase13_g8_automation_check.py", "--merge-signoff", "--write", str(RECORDS / "phase13-g8-signoff.json")],
             [py, "scripts/phase13_gate_signoff.py", "--write", str(RECORDS / "phase13-gate-signoff.json")],
-            [py, "scripts/phase13_release_day_checklist.py", "--write", str(RECORDS / "phase13-release-day-checklist.json")],
+            [py, "scripts/archive/phase13/phase13_release_day_checklist.py", "--write", str(RECORDS / "phase13-release-day-checklist.json")],
             [py, "scripts/phase13_release_day_gate_section5.py", "--write", str(RECORDS / "phase13-release-day-gate-section5.json")],
         ]
     )

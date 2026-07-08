@@ -30,7 +30,7 @@
 | M-C6 | done | 2026-07-08 | gate `v3`→`classic` + telemetry/LCP 同步；GLOSSARY + holdback docs；Import Wizard §16 AC-IW-DS-01～08 e2e 全覆盖 | legacy telemetry `variant=v3` 聚合归一化为 classic |
 | M-C1 | todo | — | — | 触发：新增 Studio API |
 | **M-C2** | done | 2026-07-08 | 全量 **423** 文件分层；baseline **1**（`test_ingest.py` shim）；collect **2714**；14 个 `tests/unit/*` 目录 | — |
-| M-C3 | todo | — | — | 触发：Phase 验收完成 |
+| M-C3 | done | 2026-07-08 | `gen_scripts_registry.py` + `scripts/README.md`（168 脚本）+ 7 个 phase 脚本已 `git mv` 至 `scripts/archive/` + docs 索引 | — |
 | M-C5 | todo | — | — | 需 G-WIP-02 |
 | M-D1 | todo | — | — | 开关满 4 周 DoD |
 
@@ -95,20 +95,16 @@
 
 ## WS1 执行顺序
 
-P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓** · **P-12 (M-B3) ✓** · **P-22 (M-C6) ✓**
+P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓** · **P-12 (M-C3) ✓** · **P-22 (M-C6) ✓** · **AC-ARC-14a-d ✓**
 
-## 下一步（2026-07-08 更新）
+## 下一步（2026-07-08 更新 · 不合并 PR，优先编码/文档）
 
-| 优先级 | 任务 | 触发 / 门禁 | 目标日期 |
-|--------|------|-------------|----------|
-| P0 | 合并 `arch/optimization-ws1`（M-C6 收口 PR） | 本分支 CI 绿 | 立即 |
+| 优先级 | 任务 | 触发 / 门禁 | 目标 |
+|--------|------|-------------|------|
 | P0 | 开关观察：`pipeline.orchestration` · `layout.planner_impl` weekly dual-run | §3.3 DoD ①–④ | 至 **2026-08-05** |
-| P1 | **M-D1 / P-23** 删 legacy 路径 + shim + TECH-ARCH 全量更新 | 开关 DoD 全满足 | **2026-08-05** 后 |
-| P1 | **LSE cross-import 收敛**（109→≤10） | ADR-015 后续迭代 | 独立 PR 链 |
-| P2 | **M-C5 / P-21** 前端拆分 + tsc | **G-WIP-02**：M23-c～g 交付 | M23 完成后 |
-| P2 | **M-C1 / P-18** 路由表化 | 下次新增 Studio API | 机会主义 |
-| P2 | **M-C3 / P-20** 脚本/文档归档 registry | Phase 验收后 | 机会主义 |
-| 产品 | Homepage v2.2 **M23-c～g** | 产品排期 | 先于 M-C5 |
-| 产品 | Import Wizard v3 灰度 / flag 决策 | §16 AC 已绿 | 产品拍板 |
-| 产品 | Longshot 2.0 评审（工作区草案） | ADR-016 草案 | 独立线 |
-| 背景 | 全量 `pytest --fast` 预存失败 (~25) | 非 M-C6 引入 | 分批 issue |
+| P1 | **AC-ARC-14a-d** Playwright（M-C5 前置） | `tests/e2e/test_preview_toolbar_arc14_playwright.py` | **done** · 4 passed |
+| P1 | **M-D1 / P-23** 删 legacy + TECH-ARCH 全量 | 开关 DoD 全满足 | **2026-08-05** 后 |
+| P1 | **LSE cross-import 收敛**（109→≤10） | ADR-015 后续 | 独立 PR 链 |
+| P2 | **M-C5 / P-21** 前端拆分 + tsc | **G-WIP-02** | M23-c～g 后 |
+| P2 | **M-C1 / P-18** 路由表化 | 新增 Studio API | 机会主义 |
+| 背景 | 全量 `pytest --fast` 预存失败 (~25) | 非 M-C6 | 分批 issue |
