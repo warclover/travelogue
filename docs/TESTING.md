@@ -61,7 +61,7 @@ python -m travelogue demo verify
 
 **M-C2 batch1（2026-07-08）**：domain / orchestrator / lint / trip_migration → `tests/unit/`；trip CAS → `tests/integration/trip/`。
 
-**M-C2 batch3（2026-07-08）**：media/ingest + validate → `tests/unit/`；ingest enrichment → `tests/integration/media/`；`tests/test_ingest.py` 保留 `_album` 兼容 shim。
+**M-C2 batch4（2026-07-08）**：studio handlers + curate + studio 单测 → `tests/unit/web/`；`scripts/quality_gate.py` REGRESSION_TESTS 路径已更新。
 
 新增测试请放入 `tests/unit/{包名}/` 或 `tests/integration/`，勿在 `tests/` 根目录新建 `test_*.py`。
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from tests.test_ingest import _album
+from tests.studio_test_helpers import make_test_album as _album
 from travelogue.curation.curate import _date_span_warning, _pick_cover_asset_id, run_curate
 from travelogue.media.ingest import ingest_into_trip
 from travelogue.services.trip_factory import create_trip
