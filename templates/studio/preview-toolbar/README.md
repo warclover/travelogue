@@ -12,5 +12,6 @@ Physical ESM split from `preview-toolbar.js` (entry URL unchanged).
 | `drawers.js` | Overlay drawers: edit, structure, cohort (G1) |
 | `core.js` | Layout pending state, sheet dirty tracking, rerender/narrate jobs |
 | `bootstrap.js` | v4 shell mount, share short-circuit, DOM ready wiring |
+| `features.js` | Template/cover/featured/reader-mode preview UX |
 
 `initToolbarV3` remains in `../preview-toolbar.js`. Bootstrap (`bootstrap.js`) mounts v4 shell and wires DOM ready. Type-check: `npx tsc -p preview-toolbar/jsconfig.json`.

@@ -106,6 +106,19 @@ def test_m5_bootstrap_module_exports() -> None:
         assert token in bootstrap, f"missing bootstrap export: {token}"
 
 
+def test_m5_features_module_exports() -> None:
+    js = PREVIEW_JS.read_text(encoding="utf-8")
+    features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
+    assert 'from "./preview-toolbar/features.js"' in js
+    for token in (
+        "export function mountTemplateControls",
+        "export function initFeaturedStars",
+        "export function applyReaderSurfaceMode",
+        "export function mountCoverStyleControls",
+    ):
+        assert token in features, f"missing features export: {token}"
+
+
 def test_v4_init_uses_icon_dock_not_legacy_rows() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
     bootstrap = (STUDIO / "preview-toolbar" / "bootstrap.js").read_text(encoding="utf-8")
