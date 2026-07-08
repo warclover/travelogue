@@ -140,54 +140,54 @@
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.adapter",
       "lines": [
-        646,
-        920,
-        1145,
-        1155
+        624,
+        898,
+        1123,
+        1133
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.capabilities",
       "lines": [
-        647,
-        1156
+        625,
+        1134
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.editorial_hints",
       "lines": [
-        1157
+        1135
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.pattern_policy",
       "lines": [
-        939
+        917
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.replan",
       "lines": [
-        679,
-        778
+        657,
+        756
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.rollout",
       "lines": [
-        539
+        517
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.segment_order",
       "lines": [
-        648
+        626
       ]
     },
     {
@@ -258,35 +258,35 @@
       "importer": "travelogue.layout_engine.metrics",
       "imported": "travelogue.curation.asset_subject",
       "lines": [
-        11
+        15
       ]
     },
     {
       "importer": "travelogue.layout_engine.metrics",
       "imported": "travelogue.curation.clustering",
       "lines": [
-        273
+        277
       ]
     },
     {
       "importer": "travelogue.layout_engine.metrics",
       "imported": "travelogue.curation.curate",
       "lines": [
-        274
+        278
       ]
     },
     {
       "importer": "travelogue.layout_engine.metrics",
       "imported": "travelogue.curation.layout_metrics",
       "lines": [
-        12
+        16
       ]
     },
     {
       "importer": "travelogue.layout_engine.metrics",
       "imported": "travelogue.curation.layout_scoring",
       "lines": [
-        13
+        17
       ]
     },
     {
@@ -881,14 +881,14 @@
       "importer": "travelogue.layout_engine.sandbox",
       "imported": "travelogue.curation.clustering",
       "lines": [
-        12
+        17
       ]
     },
     {
       "importer": "travelogue.layout_engine.sandbox",
       "imported": "travelogue.curation.curate",
       "lines": [
-        13
+        18
       ]
     },
     {
