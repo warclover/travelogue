@@ -50,7 +50,7 @@ from travelogue.domain.cover_view import (
 )
 from travelogue.errors import CodeError
 from travelogue.layout_contract import LAYOUT_PLAN_VERSION, format_layout_summary
-from travelogue.services.pipeline_state import set_layout_status
+from travelogue.domain.pipeline_view import set_layout_status
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 # Backward-compatible private aliases for tests and internal callers.
@@ -571,7 +571,7 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
         build_buckets_from_clustering,
         should_use_clustering_buckets,
     )
-    from travelogue.services.copy_subject import effective_meta_places
+    from travelogue.domain.copy_subject import effective_meta_places
 
     meta = trip.get("meta", {})
     meta_places = effective_meta_places(
@@ -655,7 +655,7 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
 
 def _build_layout_only_bucket_plan(trip: dict, preflight: _CuratePreflight) -> _CurateBucketPlan | None:
     from travelogue.layout_engine.replan import buckets_from_existing_chapters
-    from travelogue.services.copy_subject import effective_meta_places
+    from travelogue.domain.copy_subject import effective_meta_places
 
     raw = buckets_from_existing_chapters(trip)
     if raw is None:

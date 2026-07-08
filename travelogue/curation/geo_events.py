@@ -287,7 +287,7 @@ def detect_geo_events(
 
     Returns (segments, segmentation_meta) where meta includes gapMode/thresholdHours.
     """
-    from travelogue.services.copy_subject import (
+    from travelogue.domain.copy_subject import (
         narrative_copy_subject,
         suppress_chapter_geo_places,
     )

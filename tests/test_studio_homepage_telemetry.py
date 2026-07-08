@@ -20,7 +20,7 @@ pytestmark = pytest.mark.unit
 def test_append_studio_homepage_event_writes_jsonl(tmp_path, monkeypatch) -> None:
     path = tmp_path / "studio-homepage-events.jsonl"
     monkeypatch.setattr(
-        "travelogue.web.studio_homepage_telemetry.studio_homepage_events_path",
+        "travelogue.services.studio_homepage_telemetry.studio_homepage_events_path",
         lambda: path,
     )
     append_studio_homepage_event("open_sheet", {"state": "IdleEmpty"})
@@ -40,7 +40,7 @@ def test_append_rejects_unknown_event() -> None:
 def test_handle_studio_event_accepts_allowed_event(tmp_path, monkeypatch) -> None:
     events_path = tmp_path / "events.jsonl"
     monkeypatch.setattr(
-        "travelogue.web.studio_homepage_telemetry.studio_homepage_events_path",
+        "travelogue.services.studio_homepage_telemetry.studio_homepage_events_path",
         lambda: events_path,
     )
     handler = MockStudioHandler(tmp_path / "trips")
@@ -69,7 +69,7 @@ def test_studio_homepage_events_default_path_under_travelogue() -> None:
 def test_append_trims_oversized_meta(tmp_path, monkeypatch) -> None:
     path = tmp_path / "studio-homepage-events.jsonl"
     monkeypatch.setattr(
-        "travelogue.web.studio_homepage_telemetry.studio_homepage_events_path",
+        "travelogue.services.studio_homepage_telemetry.studio_homepage_events_path",
         lambda: path,
     )
     huge = {"payload": "x" * 5000}

@@ -368,7 +368,7 @@ def test_create_trip_records_cover_opening_style_assigned(
         return tmp_path / "events.jsonl"
 
     monkeypatch.setattr(
-        "travelogue.web.studio_homepage_telemetry.append_studio_homepage_event",
+        "travelogue.services.studio_homepage_telemetry.append_studio_homepage_event",
         _fake_append,
     )
     trips_dir = tmp_path / "trips"

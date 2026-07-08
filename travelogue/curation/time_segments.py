@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Any
 
-from travelogue.services.copy_subject import is_generic_place
+from travelogue.domain.copy_subject import is_generic_place
 
 DEFAULT_SEGMENT_GAP_DAYS = 14
 DEFAULT_CITY_GAP_DAYS = 3

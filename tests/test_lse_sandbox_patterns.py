@@ -59,6 +59,41 @@ def test_sandbox_lse_off_vs_on_zero_diff(tmp_path: Path) -> None:
     assert report["diffRate"] == 0.0
 
 
+def test_enrich_changed_screen_previews_injects_callback(tmp_path: Path) -> None:
+    from travelogue.layout_engine.sandbox import enrich_changed_screen_previews
+
+    trip = {
+        "assets": [
+            {
+                "id": "a1",
+                "displayFile": "assets/a1.webp",
+                "width": 800,
+                "height": 600,
+            }
+        ]
+    }
+    asset_path = tmp_path / "assets" / "a1.webp"
+    asset_path.parent.mkdir(parents=True)
+    asset_path.write_bytes(b"x")
+    diff = {
+        "changedScreens": [
+            {
+                "index": 0,
+                "baseline": {"slotAssetIds": ["a1"]},
+                "candidate": None,
+            }
+        ]
+    }
+    rows = enrich_changed_screen_previews(
+        trip,
+        tmp_path,
+        diff,
+        preview_url_for=lambda rel: f"/trip/{rel}",
+    )
+    assert rows[0]["baselinePreview"] == "/trip/assets/a1.webp"
+    assert "candidatePreview" not in rows[0]
+
+
 def test_curate_respects_runtime_disable_patterns(tmp_path: Path, monkeypatch) -> None:
     store = tmp_path / "lse_runtime.json"
     monkeypatch.setattr(

@@ -6,7 +6,7 @@ from datetime import date
 
 from travelogue.curation.bucket_planning import bucket_day_span
 from travelogue.curation.time_segments import parse_asset_date
-from travelogue.services.copy_subject import narrative_copy_subject
+from travelogue.domain.copy_subject import narrative_copy_subject
 
 
 def title_for_bucket_span(span: list[str]) -> str | None:
