@@ -5,7 +5,7 @@
 | **文档版本** | v1.0（M-D1 全量刷新 · 2026-07-08） |
 | **阶段** | P0 本地工坊 |
 | **关联** | `CHARTER.md`、`AGENT-ARCHITECTURE.md`、`DATA-MODEL.md` |
-| **更新日期** | 2026-05-22（§18 · 2026-07-08） |
+| **更新日期** | 2026-05-22（§18 · 2026-07-08 M-C1） |
 
 ---
 
@@ -270,6 +270,7 @@ Agent 2 失败：L1/L2 错误列表 → 自动重试 prompt（≤2 次）。
 | v0.1 | 2026-05-19 | P0 技术架构初稿 |
 | v0.2 | 2026-05-30 | Phase 6：场景聚类默认策略与自适应事件分段 |
 | v1.0 | 2026-07-08 | M-D1：§18 全量刷新；import-linter 0 豁免；LSE 7 边 |
+| v1.1 | 2026-07-08 | M-C1：`studio_dispatch.py` 声明式路由表（68 条）+ AC-ARC-13 快照 |
 
 ---
 
@@ -457,5 +458,17 @@ python scripts/phase7_verify_rollback.py
 
 - 测试：`tests/unit/{包名}/` · `tests/integration/` · `tests/e2e/`（423 文件分层完成）
 - 脚本：`scripts/gen_scripts_registry.py` + `scripts/archive/phaseN/`
+
+### 18.6 Studio 路由表（M-C1）
+
+| 模块 | 职责 |
+|------|------|
+| `travelogue/web/studio_dispatch.py` | `ROUTE_SPECS` 声明式路由表（68 条）+ `dispatch_studio()` |
+| `travelogue/web/studio_routes.py` | `StudioMixin` 薄 facade；委托 dispatch |
+| `travelogue/web/serve.py` | HTTP 入口；`studio_trip_parts` 静态 fallback **不在路由表管辖** |
+
+- 匹配器：exact / prefix / capture（复用 `studio_handlers/paths.py` · `common.py` matcher）
+- 收编：原 `serve.py` trip 级 POST 第二入口（save-copy / promote-tier / rerender）
+- 门禁：`tests/unit/web/test_studio_route_snapshot.py`（AC-ARC-13 method+path+handler 三元组）
 
 详见 [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md)。

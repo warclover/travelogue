@@ -1,0 +1,357 @@
+[
+  {
+    "method": "DELETE",
+    "path": "/__travelogue/trips/{tripId}",
+    "handler": "trip_handlers.handle_delete_trip"
+  },
+  {
+    "method": "GET",
+    "path": "/",
+    "handler": "static_handlers.handle_home_root"
+  },
+  {
+    "method": "GET",
+    "path": "/__studio/*",
+    "handler": "static_handlers.handle_studio_asset"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/chapter-layout",
+    "handler": "trip_handlers.handle_chapter_layout"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/config",
+    "handler": "config_handlers.handle_config"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/layout-strategies",
+    "handler": "layout_strategy_handlers.handle_layout_strategies_list"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/layout-strategies/capabilities",
+    "handler": "layout_strategy_handlers.handle_lse_capabilities_get"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/layout-strategies/weights/{weightsHash}",
+    "handler": "layout_strategy_handlers.handle_layout_strategy_weights"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/layout-strategies/{strategyId}",
+    "handler": "layout_strategy_handlers.handle_layout_strategy_detail"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/layout-strategies/{strategyId}/decisions",
+    "handler": "layout_strategy_handlers.handle_layout_strategy_decisions"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/status",
+    "handler": "job_handlers.handle_status"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/templates",
+    "handler": "template_handlers.handle_templates_list"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/templates/admin",
+    "handler": "template_admin_handlers.handle_templates_admin_list"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/templates/admin/audit",
+    "handler": "template_admin_handlers.handle_templates_admin_audit"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/templates/admin/dashboard",
+    "handler": "template_admin_handlers.handle_templates_admin_dashboard"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/templates/admin/decisions",
+    "handler": "template_admin_handlers.handle_templates_admin_decisions"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/templates/admin/{templateId}/version",
+    "handler": "template_admin_handlers.handle_templates_admin_version_diff"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/templates/decisions*",
+    "handler": "template_handlers.handle_template_decisions"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/trips",
+    "handler": "trip_handlers.handle_trips"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/trips/{tripId}/aesthetic",
+    "handler": "trip_handlers.handle_aesthetic"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/trips/{tripId}/bento-preview",
+    "handler": "trip_handlers.handle_bento_preview"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/trips/{tripId}/cohort",
+    "handler": "trip_handlers.handle_get_cohort"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/trips/{tripId}/curation/moment",
+    "handler": "trip_handlers.handle_get_moment_curation"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/trips/{tripId}/entry",
+    "handler": "trip_handlers.handle_entry"
+  },
+  {
+    "method": "GET",
+    "path": "/classic",
+    "handler": "static_handlers.handle_home"
+  },
+  {
+    "method": "GET",
+    "path": "/lse-flags-admin",
+    "handler": "static_handlers.handle_lse_flags_admin_page"
+  },
+  {
+    "method": "GET",
+    "path": "/templates-admin",
+    "handler": "static_handlers.handle_templates_admin_page"
+  },
+  {
+    "method": "GET",
+    "path": "/v2",
+    "handler": "static_handlers.send_redirect"
+  },
+  {
+    "method": "PATCH",
+    "path": "/__travelogue/config",
+    "handler": "config_handlers.handle_config"
+  },
+  {
+    "method": "PATCH",
+    "path": "/__travelogue/layout-strategies/capabilities",
+    "handler": "layout_strategy_handlers.handle_lse_capabilities_patch"
+  },
+  {
+    "method": "PATCH",
+    "path": "/__travelogue/templates/admin/{templateId}",
+    "handler": "template_admin_handlers.handle_templates_admin_patch"
+  },
+  {
+    "method": "PATCH",
+    "path": "/__travelogue/templates/admin/{templateId}/metadata",
+    "handler": "template_admin_handlers.handle_templates_admin_metadata"
+  },
+  {
+    "method": "PATCH",
+    "path": "/__travelogue/trips/{tripId}/aesthetic/preference",
+    "handler": "trip_handlers.handle_patch_stratum_preference"
+  },
+  {
+    "method": "PATCH",
+    "path": "/__travelogue/trips/{tripId}/asset-media-class",
+    "handler": "trip_handlers.handle_asset_media_class"
+  },
+  {
+    "method": "PATCH",
+    "path": "/__travelogue/trips/{tripId}/chapters/{chapterId}/copy-intent",
+    "handler": "trip_handlers.handle_patch_copy_intent"
+  },
+  {
+    "method": "PATCH",
+    "path": "/__travelogue/trips/{tripId}/cohort",
+    "handler": "trip_handlers.handle_patch_cohort"
+  },
+  {
+    "method": "PATCH",
+    "path": "/__travelogue/trips/{tripId}/intent",
+    "handler": "trip_handlers.handle_patch_intent"
+  },
+  {
+    "method": "PATCH",
+    "path": "/__travelogue/trips/{tripId}/moment",
+    "handler": "trip_handlers.handle_patch_moment"
+  },
+  {
+    "method": "PATCH",
+    "path": "/__travelogue/trips/{tripId}/pipeline",
+    "handler": "trip_handlers.handle_patch_pipeline"
+  },
+  {
+    "method": "PATCH",
+    "path": "/__travelogue/trips/{tripId}/screens/{screenId}/replan",
+    "handler": "trip_handlers.handle_patch_screen_replan"
+  },
+  {
+    "method": "PATCH",
+    "path": "/__travelogue/trips/{tripId}/template",
+    "handler": "trip_handlers.handle_patch_template"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/album-preview",
+    "handler": "import_handlers.handle_album_preview"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/cancel",
+    "handler": "job_handlers.handle_cancel"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/export",
+    "handler": "export_handlers.handle_export"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/import",
+    "handler": "import_handlers.handle_import"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/layout-strategies/runtime/approve",
+    "handler": "layout_strategy_handlers.handle_layout_strategy_runtime_approve"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/layout-strategies/sandbox",
+    "handler": "layout_strategy_handlers.handle_layout_strategy_sandbox"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/layout-strategies/shadow",
+    "handler": "layout_strategy_handlers.handle_layout_strategy_shadow"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/layout-strategies/{strategyId}/rollback",
+    "handler": "layout_strategy_handlers.handle_layout_strategy_rollback"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/layout-strategies/{strategyId}/runtime",
+    "handler": "layout_strategy_handlers.handle_layout_strategy_runtime_propose"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/longshot",
+    "handler": "export_handlers.handle_longshot"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/narrate",
+    "handler": "export_handlers.handle_narrate"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/pick-folder",
+    "handler": "config_handlers.handle_pick_folder"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/reveal",
+    "handler": "export_handlers.handle_reveal"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/studio-event",
+    "handler": "telemetry_handlers.handle_studio_event"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/templates/admin/admission",
+    "handler": "template_admin_handlers.handle_templates_admin_admission"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/templates/admin/delete",
+    "handler": "template_admin_handlers.handle_templates_admin_delete"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/templates/admin/register",
+    "handler": "template_admin_handlers.handle_templates_admin_register"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/templates/admin/review",
+    "handler": "template_admin_handlers.handle_templates_admin_review"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/templates/admin/rollback",
+    "handler": "template_admin_handlers.handle_templates_admin_rollback"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/templates/admin/runtime",
+    "handler": "template_admin_handlers.handle_templates_admin_runtime"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/templates/preview",
+    "handler": "template_handlers.handle_template_preview"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/templates/recompute",
+    "handler": "template_handlers.handle_template_recompute"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/templates/replay",
+    "handler": "template_handlers.handle_template_replay"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/asset-media-class",
+    "handler": "trip_handlers.handle_asset_media_class"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/cohort/refresh",
+    "handler": "trip_handlers.handle_post_cohort_refresh"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/copy-telemetry",
+    "handler": "trip_handlers.handle_post_copy_telemetry"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/curate",
+    "handler": "trip_handlers.handle_trip_curate"
+  },
+  {
+    "method": "POST",
+    "path": "{tripId}/__travelogue/promote-tier",
+    "handler": "serve._handle_promote_tier"
+  },
+  {
+    "method": "POST",
+    "path": "{tripId}/__travelogue/rerender",
+    "handler": "trip_handlers.handle_rerender"
+  },
+  {
+    "method": "POST",
+    "path": "{tripId}/__travelogue/save-copy",
+    "handler": "serve._handle_save_copy"
+  }
+]

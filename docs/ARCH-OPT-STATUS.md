@@ -3,7 +3,7 @@
 > 配套 [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) v1.1 · 执行提示词见 [PROMPTS-ARCH-OPTIMIZATION.md](./PROMPTS-ARCH-OPTIMIZATION.md)
 
 **当前分支**: `arch/optimization-ws1`  
-**最后更新**: 2026-07-08（M-C6 命名消歧 done）
+**最后更新**: 2026-07-08（M-C1 路由表化 done · WS1 里程碑全部完成）
 
 ## 里程碑总表
 
@@ -28,7 +28,7 @@
 | M-C4 | done | 2026-07-08 | 三视图 + lint + 单测；curate/orchestrator/render/cli/export 改引 pipeline_view | media/ingest/sandbox 直赋属 ingest 域 |
 | M-B6 | done | 2026-07-08 | `trip_migration` 兼容窗口 + 模块 doc；`lint_trip_json` version 窗；超窗单测 | 多 minor 迁移链待 schema bump 时补 |
 | M-C6 | done | 2026-07-08 | gate `v3`→`classic` + telemetry/LCP 同步；GLOSSARY + holdback docs；Import Wizard §16 AC-IW-DS-01～08 e2e 全覆盖 | legacy telemetry `variant=v3` 聚合归一化为 classic |
-| M-C1 | todo | — | — | 触发：新增 Studio API |
+| M-C1 | done | 2026-07-08 | `studio_dispatch.py` 声明式路由表（68 条）+ `dispatch_studio`；serve.py trip POST 第二入口收编；AC-ARC-13 快照测试 | — |
 | **M-C2** | done | 2026-07-08 | 全量 **423** 文件分层；baseline **1**（`test_ingest.py` shim）；collect **2714**；14 个 `tests/unit/*` 目录 | — |
 | M-C3 | done | 2026-07-08 | `gen_scripts_registry.py` + `scripts/README.md`（168 脚本）+ 7 个 phase 脚本已 `git mv` 至 `scripts/archive/` + docs 索引 | — |
 | M-C5 | done | 2026-07-08 | ESM 10 模块 + tsc + preview-toolbar CSS + **studio-home-v2.css** 13 partials | — |
@@ -98,12 +98,13 @@
 
 ## WS1 执行顺序
 
-P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓** · **P-12 (M-C3) ✓** · **P-22 (M-C6) ✓** · **AC-ARC-14a-d ✓**
+P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓** · **P-12 (M-C3) ✓** · **P-22 (M-C6) ✓** · **P-18 (M-C1) ✓** · **AC-ARC-14a-d ✓**
 
-## 下一步（2026-07-08 更新 · 不合并 PR，优先编码/文档）
+## 下一步（2026-07-08 · WS1 已闭环）
 
-| 优先级 | 任务 | 触发 / 门禁 | 目标 |
-|--------|------|-------------|------|
-| P2 | **M-C1 路由表化** | 新增 Studio API | AC-ARC-13 |
-| 背景 | G-ARC-06 CacheRegistry 立项 | 未追踪 | — |
-| 背景 | 全量 `pytest --fast` 预存失败 (~25) | 非 M-C6 | 分批 issue |
+| 优先级 | 任务 | 说明 |
+|--------|------|------|
+| — | **WS1 里程碑** | PRD §8.2 全部 done；可开 PR 合并 `arch/optimization-ws1` |
+| 背景 | G-ARC-06 CacheRegistry 立项 | 未追踪 · 独立 PRD |
+| 背景 | 全量 `pytest --fast` 预存失败 (~25) | 非架构里程碑 · 分批 issue |
+| 背景 | LONGSHOT 2.0 文档 | workspace 未跟踪 · 独立分支 |

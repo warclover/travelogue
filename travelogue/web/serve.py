@@ -97,23 +97,6 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
         if self.studio_mode:
             if self.studio_dispatch_POST(path):
                 return
-            api = self._studio_trip_api(path)
-            if api is not None:
-                if not self._studio_require_post_auth():
-                    return
-                trip_id, action = api
-                if self.studio_bind_trip(trip_id) is None:
-                    self.send_error(404)
-                    return
-                if action == "save-copy":
-                    self._handle_save_copy()
-                    return
-                if action == "promote-tier":
-                    self._handle_promote_tier()
-                    return
-                if action == "rerender":
-                    self._studio_handle_rerender()
-                    return
             self.send_error(404)
             return
         if path == SAVE_PATH:

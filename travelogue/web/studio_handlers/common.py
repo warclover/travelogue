@@ -221,19 +221,34 @@ def match_trip_screen_replan(path: str) -> tuple[str, str] | None:
     return trip_id, screen_id
 
 
+def _match_trip_root_suffix(path: str, suffix: str) -> str | None:
+    if not path.endswith(suffix):
+        return None
+    trip_id = path[: -len(suffix)].strip("/")
+    if not trip_id or "/" in trip_id:
+        return None
+    return trip_id
+
+
+def match_trip_save_copy(path: str) -> str | None:
+    return _match_trip_root_suffix(path, SAVE_COPY_SUFFIX)
+
+
+def match_trip_promote_tier(path: str) -> str | None:
+    return _match_trip_root_suffix(path, PROMOTE_TIER_SUFFIX)
+
+
+def match_trip_rerender(path: str) -> str | None:
+    return _match_trip_root_suffix(path, RERENDER_SUFFIX)
+
+
 def match_trip_api(path: str) -> tuple[str, str] | None:
-    if path.endswith(SAVE_COPY_SUFFIX):
-        trip_id = path[: -len(SAVE_COPY_SUFFIX)].strip("/")
-        if trip_id and "/" not in trip_id:
-            return trip_id, "save-copy"
-    if path.endswith(PROMOTE_TIER_SUFFIX):
-        trip_id = path[: -len(PROMOTE_TIER_SUFFIX)].strip("/")
-        if trip_id and "/" not in trip_id:
-            return trip_id, "promote-tier"
-    if path.endswith(RERENDER_SUFFIX):
-        trip_id = path[: -len(RERENDER_SUFFIX)].strip("/")
-        if trip_id and "/" not in trip_id:
-            return trip_id, "rerender"
+    if (trip_id := match_trip_save_copy(path)) is not None:
+        return trip_id, "save-copy"
+    if (trip_id := match_trip_promote_tier(path)) is not None:
+        return trip_id, "promote-tier"
+    if (trip_id := match_trip_rerender(path)) is not None:
+        return trip_id, "rerender"
     return None
 
 
