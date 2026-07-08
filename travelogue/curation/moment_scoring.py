@@ -515,7 +515,7 @@ def sync_trip_moments_finalize(
 
     explain = _moment_explain(assets_by_id.get(signature_id, {}), signature_score, ctx)
     collision: str | None = None
-    from travelogue.render.cover_closing import resolve_closing_asset_id
+    from travelogue.domain.closing_view import resolve_closing_asset_id
 
     assets_map = assets_by_id
     closing_id = resolve_closing_asset_id(
