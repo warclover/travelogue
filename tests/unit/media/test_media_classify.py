@@ -120,7 +120,7 @@ def test_travel_landscape_not_false_positive_collage(tmp_path: Path) -> None:
 
 def test_demo_style_panorama_not_false_positive_collage() -> None:
     """Natural wide travel frames (center luminance seam) must stay photo."""
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[3]
     for name in ("asset-058.jpg", "asset-059.jpg"):
         p = root / "trips" / "demo-2025-4" / "source" / name
         if not p.is_file():

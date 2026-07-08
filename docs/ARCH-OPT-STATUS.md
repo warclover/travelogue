@@ -29,7 +29,7 @@
 | M-B6 | done | 2026-07-08 | `trip_migration` 兼容窗口 + 模块 doc；`lint_trip_json` version 窗；超窗单测 | 多 minor 迁移链待 schema bump 时补 |
 | M-C6 | in_progress | 2026-07-08 | `docs/GLOSSARY.md` + `store.js` 注释清理 | variant v3→classic 待 G-WIP-03 |
 | M-C1 | todo | — | — | 触发：新增 Studio API |
-| **M-C2** | in_progress | 2026-07-08 | batch1 13 + **batch2 15** 文件分层；lint+目录打标 | 顶层 ~409 文件待分批 |
+| **M-C2** | in_progress | 2026-07-08 | batch1–3 共 **43** 文件分层；lint+目录打标 | 顶层 ~393 文件待分批 |
 | M-C3 | todo | — | — | 触发：Phase 验收完成 |
 | M-C5 | todo | — | — | 需 G-WIP-02 |
 | M-D1 | todo | — | — | 开关满 4 周 DoD |

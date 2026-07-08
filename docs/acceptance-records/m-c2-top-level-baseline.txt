@@ -106,15 +106,6 @@ test_heuristic_v2_gates.py
 test_image_ops.py
 test_import_wizard_v3_playwright.py
 test_ingest.py
-test_ingest_checkpoint.py
-test_ingest_derivative_regression.py
-test_ingest_enrichment.py
-test_ingest_exif_camera.py
-test_ingest_keep_near_duplicates.py
-test_ingest_moment_exif_integration.py
-test_ingest_pending_assets.py
-test_ingest_raw_gate.py
-test_ingest_thumbnail_hints.py
 test_intent_hints.py
 test_intent_plan.py
 test_late_chapter_pairing.py
@@ -174,7 +165,6 @@ test_lte_validator.py
 test_lte_w3.py
 test_m21_h2_sample_longshots.py
 test_m21_phase5.py
-test_media_classify.py
 test_minor_guards.py
 test_mobile_render_layout.py
 test_moment_render.py
@@ -400,10 +390,4 @@ test_usage_rules_legacy_gate.py
 test_usage_rules_metrics.py
 test_usage_rules_p0b.py
 test_usage_rules_tiebreak.py
-test_user_tier.py
-test_validate.py
-test_validate_limits.py
-test_validate_moment.py
-test_validate_photo_limit.py
-test_validate_vr_p05.py
 test_workshop_pipeline_script.py
