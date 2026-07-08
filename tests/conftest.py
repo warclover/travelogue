@@ -31,10 +31,33 @@ def _module_basename(item: pytest.Item) -> str:
     return nodeid.split("/")[-1].split("::")[0]
 
 
+def _tests_subpath(item: pytest.Item) -> list[str]:
+    nodeid = item.nodeid.replace("\\", "/")
+    parts = nodeid.split("/")
+    if "tests" not in parts:
+        return []
+    idx = parts.index("tests")
+    return parts[idx + 1 :]
+
+
 def _apply_auto_markers(item: pytest.Item) -> None:
     """Ensure Playwright / browser tests are tagged for CI tier selection."""
     if item.get_closest_marker("unit"):
         return
+    subpath = _tests_subpath(item)
+    if subpath:
+        bucket = subpath[0]
+        if bucket == "unit":
+            item.add_marker(pytest.mark.unit)
+            return
+        if bucket == "integration":
+            if not item.get_closest_marker("integration"):
+                item.add_marker(pytest.mark.integration)
+            return
+        if bucket == "e2e":
+            if not item.get_closest_marker("e2e"):
+                item.add_marker(pytest.mark.e2e)
+            return
     names = {m.name for m in item.iter_markers()}
     if "playwright_serial" in names and "e2e" not in names:
         item.add_marker(pytest.mark.e2e)

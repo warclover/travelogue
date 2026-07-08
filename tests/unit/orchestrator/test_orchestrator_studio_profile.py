@@ -86,3 +86,60 @@ def test_studio_hooks_timing_callback(tmp_path: Path) -> None:
     )
     assert seen, "expected at least one timing flush"
     assert "totalMs" in seen[-1]
+
+
+def test_clustering_stage_matches_manual_preflight(tmp_path: Path) -> None:
+    """M-B2 AC: run_trip clustering stage ≡ manual run_clustering_layer + curate."""
+    from travelogue.curation.clustering import run_clustering_layer
+    from travelogue.media.ingest import ingest_into_trip
+
+    cfg = AppConfig(
+        clustering=ClusteringConfig(enabled="false"),
+        vision=VisionConfig(enabled="false"),
+    )
+    album = _album(tmp_path, 8)
+    profile = StudioProfile(
+        run_clustering=True,
+        export_layout="auto",
+        ingest=StudioProfile.cli_default().ingest,
+    )
+
+    trips_a = tmp_path / "trips-a"
+    trip_json_a = create_trip("eq-stage", trips_a, title="stage path")
+    run_trip(
+        trip_json_a,
+        from_stage="ingest",
+        until="structure",
+        album_dir=album,
+        validate=False,
+        dedupe=False,
+        cfg=cfg,
+        studio_profile=profile,
+    )
+    trip_a = json.loads(trip_json_a.read_text(encoding="utf-8"))
+
+    trips_b = tmp_path / "trips-b"
+    trip_json_b = create_trip("eq-manual", trips_b, title="manual path")
+    trip_dir_b = trips_b / "eq-manual"
+    trip_b = json.loads(trip_json_b.read_text(encoding="utf-8"))
+    ingest_into_trip(trip_b, trip_dir_b, from_dir=album, dedupe=False, app_cfg=cfg)
+    trip_json_b.write_text(json.dumps(trip_b, ensure_ascii=False, indent=2), encoding="utf-8")
+    run_clustering_layer(trip_b, trip_dir=trip_dir_b, cfg=cfg)
+    trip_json_b.write_text(json.dumps(trip_b, ensure_ascii=False, indent=2), encoding="utf-8")
+    run_trip(
+        trip_json_b,
+        from_stage="curate",
+        until="structure",
+        export_layout="auto",
+        validate=False,
+        dedupe=False,
+        cfg=cfg,
+        studio_profile=profile,
+    )
+    trip_b = json.loads(trip_json_b.read_text(encoding="utf-8"))
+
+    cluster_a = (trip_a.get("curation") or {}).get("clustering") or {}
+    cluster_b = (trip_b.get("curation") or {}).get("clustering") or {}
+    assert cluster_a.get("mode") == cluster_b.get("mode")
+    assert len(trip_a.get("chapters") or []) == len(trip_b.get("chapters") or [])
+    assert trip_a["pipeline"]["status"] == trip_b["pipeline"]["status"]

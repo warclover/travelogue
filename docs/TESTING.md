@@ -50,7 +50,18 @@ python -m travelogue demo verify
 
 ## 3. 单元测试（pytest）
 
-目录：`tests/`
+目录：`tests/`（M-C2 起分批迁入子目录）
+
+| 子目录 | 用途 | CI job |
+|--------|------|--------|
+| `tests/unit/` | 纯单测（自动 `@pytest.mark.unit`） | test-pr |
+| `tests/integration/` | 管道/并发/CAS（自动 `integration`） | test-integration |
+| `tests/e2e/` | 浏览器/Playwright（规划；暂与顶层 playwright 文件并存） | test-e2e |
+| `tests/test_*.py` | **冻结**：禁止新增顶层文件（`scripts/lint_test_layout.py`） | 按 marker |
+
+**M-C2 batch1（2026-07-08）**：domain / orchestrator / lint / trip_migration → `tests/unit/`；trip CAS → `tests/integration/trip/`。
+
+新增测试请放入 `tests/unit/{包名}/` 或 `tests/integration/`，勿在 `tests/` 根目录新建 `test_*.py`。
 
 | 模块 | 用例示例 |
 |------|----------|

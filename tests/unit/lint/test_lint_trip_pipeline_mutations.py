@@ -7,7 +7,7 @@ from pathlib import Path
 
 from scripts.lint_trip_pipeline_mutations import PipelineMutationLintVisitor, iter_scan_files, lint_file
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def _violations(source: str, *, rel: str = "sample.py") -> list[str]:

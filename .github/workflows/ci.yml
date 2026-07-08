@@ -31,6 +31,9 @@ jobs:
       - name: Trip pipeline mutation lint (M-C4)
         run: python scripts/lint_trip_pipeline_mutations.py
 
+      - name: Test layout lint (M-C2)
+        run: python scripts/lint_test_layout.py
+
       - name: Trip JSON lint (ADR-008)
         run: python scripts/lint_trip_json.py schemas/fixtures tests/fixtures
 

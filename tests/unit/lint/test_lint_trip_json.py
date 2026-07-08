@@ -15,7 +15,7 @@ from scripts.lint_trip_json import (
     main,
 )
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 FIXTURE = ROOT / "schemas/fixtures/trip.example.json"
 
 
