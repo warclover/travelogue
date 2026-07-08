@@ -1,13 +1,16 @@
 """Tests for scripts/lint_trip_pipeline_mutations.py (M-C4)."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 import ast
 from pathlib import Path
 
 from scripts.lint_trip_pipeline_mutations import PipelineMutationLintVisitor, iter_scan_files, lint_file
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = repo_root(__file__)
 
 
 def _violations(source: str, *, rel: str = "sample.py") -> list[str]:

@@ -1,6 +1,9 @@
 """P0 dual-engine regression: legacy vs screens."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 import json
 import shutil
@@ -79,7 +82,7 @@ def test_longshot_bridge_writes_longshot_sidecar(tmp_path: Path) -> None:
 
     fixture = FIXTURES_DIR / "trip.render_golden.json"
     trip = json.loads(fixture.read_text(encoding="utf-8"))
-    demo = Path(__file__).resolve().parents[1] / "templates" / "visual-journal" / "assets"
+    demo = repo_root(__file__) / "templates" / "visual-journal" / "assets"
     if not demo.is_dir():
         pytest.skip("demo assets not present")
     trip = prepare_trip_web_screens(trip)
@@ -157,7 +160,7 @@ def test_dual_render_fixture_trip(tmp_path: Path) -> None:
     """Write legacy + screens HTML from render_golden fixture (offline assets)."""
     fixture = FIXTURES_DIR / "trip.render_golden.json"
     trip = json.loads(fixture.read_text(encoding="utf-8"))
-    demo = Path(__file__).resolve().parents[1] / "templates" / "visual-journal" / "assets" / "demo"
+    demo = repo_root(__file__) / "templates" / "visual-journal" / "assets" / "demo"
     if not demo.is_dir():
         pytest.skip("demo assets not present")
     ws = tmp_path / "dual"

@@ -1,6 +1,9 @@
 """Characterization tests for build_render_context (P1a tech-debt safety net)."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 import copy
 import json
@@ -12,7 +15,7 @@ from travelogue.render.context import build_render_context
 from travelogue.render.dual_layout_regression import prepare_trip_web_screens
 from travelogue.render.golden_regression import load_golden_trip
 
-_FIXTURE = Path(__file__).resolve().parents[1] / "schemas" / "fixtures" / "trip.render_golden.json"
+_FIXTURE = repo_root(__file__) / "schemas" / "fixtures" / "trip.render_golden.json"
 
 # Stable top-level keys for regression — excludes volatile assetVersion / paths.
 _SNAPSHOT_KEYS = (

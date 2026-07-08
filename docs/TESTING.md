@@ -57,9 +57,9 @@ python -m travelogue demo verify
 | `tests/unit/` | 纯单测（自动 `@pytest.mark.unit`）；含 domain / web / media 等 | test-pr |
 | `tests/unit/layout_engine/` | layout / mosaic / lte / lse / usage_rules 单测 | test-pr |
 | `tests/unit/layout_templates/` | 模板引擎单测 | test-pr |
-| `tests/integration/` | 管道/并发/CAS（自动 `integration`） | test-integration |
-| `tests/e2e/` | 浏览器/Playwright（规划；暂与顶层 playwright 文件并存） | test-e2e |
-| `tests/test_*.py` | **冻结**：禁止新增顶层文件（`scripts/lint_test_layout.py`） | 按 marker |
+| `tests/integration/` | phase 验收 / studio server / p17 / demo（自动 `integration`） | test-integration |
+| `tests/e2e/` | Playwright 浏览器测试（自动 `e2e`） | test-e2e |
+| `tests/test_ingest.py` | **唯一**顶层 shim（`_album` 向后兼容）；禁止新增其他顶层 `test_*.py` | — |
 
 **M-C2 batch1（2026-07-08）**：domain / orchestrator / lint / trip_migration → `tests/unit/`；trip CAS → `tests/integration/trip/`。
 
@@ -79,7 +79,9 @@ python -m travelogue demo verify
 
 **M-C2 batch11（2026-07-08）**：lse + usage_rules（13）→ `tests/unit/layout_engine/`；template（15）→ `tests/unit/layout_templates/`；phase13 gate 脚本路径已更新。
 
-新增测试请放入 `tests/unit/{包名}/` 或 `tests/integration/`，勿在 `tests/` 根目录新建 `test_*.py`。
+**M-C2 batch12–finish（2026-07-08）**：剩余 **247** 顶层文件一次性迁入 `unit/*` / `integration/*` / `e2e/`；baseline 冻结为 `test_ingest.py`；`tests/_repo_root.py` 统一 repo 路径；`pytest --collect-only` **2714** 与迁移前一致。
+
+新增测试请放入 `tests/unit/{包名}/`、`tests/integration/` 或 `tests/e2e/`，勿在 `tests/` 根目录新建 `test_*.py`（`lint_test_layout.py` CI 守护）。
 
 | 模块 | 用例示例 |
 |------|----------|

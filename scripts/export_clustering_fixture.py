@@ -98,7 +98,7 @@ def main() -> None:
             f"# {args.trip_id}\n\n"
             f"- 来源：`{args.trip_dir}`\n"
             f"- 编辑 `segments-golden.json` 完成人工 event 标注\n"
-            f"- 运行：`pytest tests/test_clustering_spike.py -k {args.trip_id}`\n",
+            f"- 运行：`pytest tests/unit/curation/test_clustering_spike.py -k {args.trip_id}`\n",
             encoding="utf-8",
         )
 

@@ -1,6 +1,9 @@
 """Mosaic grid slot placements must not overlap on the 3×3 stage."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 from travelogue.curation.mosaic.constants import (
     MOSAIC_5_PATTERN_IDS,
@@ -127,7 +130,7 @@ def test_mosaic6_grid_class_in_css():
     from pathlib import Path
 
     css = (
-        Path(__file__).resolve().parents[1]
+        repo_root(__file__)
         / "templates"
         / "visual-journal"
         / "journal-screens.css"

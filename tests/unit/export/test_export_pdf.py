@@ -1,6 +1,9 @@
 """PDF export via Playwright."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 import json
 import shutil
@@ -18,7 +21,7 @@ pytest.importorskip("playwright")
 
 @pytest.fixture
 def pdf_workspace(tmp_path: Path) -> Path:
-    demo = Path(__file__).resolve().parents[1] / "templates" / "visual-journal" / "assets"
+    demo = repo_root(__file__) / "templates" / "visual-journal" / "assets"
     if not demo.is_dir():
         pytest.skip("demo assets not present")
     ws = tmp_path / "pdf-export"

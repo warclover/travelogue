@@ -1,6 +1,9 @@
 """AC-P3-C08 · clustering output deterministic on same fixture."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 import hashlib
 import json
@@ -9,7 +12,7 @@ from pathlib import Path
 from travelogue.config import AppConfig, ClusteringConfig
 from travelogue.curation.clustering import run_clustering_layer
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = repo_root(__file__)
 FIXTURE = ROOT / "tests" / "fixtures" / "clustering" / "synthetic-gps" / "assets-manifest.json"
 
 

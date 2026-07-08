@@ -9,7 +9,7 @@ from urllib import error, request
 
 import pytest
 
-from tests.test_studio_server import _distinct_album, _free_port, _start_studio_server
+from tests.integration.studio.test_studio_server import _distinct_album, _free_port, _start_studio_server
 from travelogue.config import StudioConfig, get_config
 from travelogue.services.pipeline_state import trip_status
 from travelogue.services.trip import TripService

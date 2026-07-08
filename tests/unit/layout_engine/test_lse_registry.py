@@ -1,6 +1,9 @@
 """LSE registry and schema validation."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 import time
 from pathlib import Path
@@ -9,7 +12,7 @@ from travelogue.layout_engine.cli import main as lse_cli_main
 from travelogue.layout_engine.registry import get_strategy_pack, list_active_strategies
 from travelogue.layout_engine.validator import validate_strategy_file
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = repo_root(__file__)
 DEFAULT_PACK = ROOT / "travelogue/layout_engine/strategies/default.yaml"
 
 

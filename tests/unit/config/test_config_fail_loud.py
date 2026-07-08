@@ -1,6 +1,9 @@
 """M-A2 config fail-loud acceptance tests (AC-ARC-03/04)."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 import logging
 from pathlib import Path
@@ -11,7 +14,7 @@ from travelogue.config.errors import ConfigError
 from travelogue.config.loader import load_config
 from travelogue.config.yaml_loader import load_yaml_mapping
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = repo_root(__file__)
 EXAMPLE = ROOT / "config.yaml.example"
 
 

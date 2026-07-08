@@ -1,6 +1,9 @@
 """Dual HTML surfaces: index.html (web) + index-mobile.html (mobile)."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 import json
 from pathlib import Path
@@ -12,7 +15,7 @@ from travelogue.render.engine import render_trip_surfaces
 
 @pytest.fixture
 def trip_workspace(tmp_path: Path) -> Path:
-    fixture = Path(__file__).resolve().parents[1] / "fixtures" / "trip.render_golden.json"
+    fixture = repo_root(__file__) / "fixtures" / "trip.render_golden.json"
     if not fixture.is_file():
         pytest.skip("fixture missing")
     ws = tmp_path / "dual-surface"
@@ -21,7 +24,7 @@ def trip_workspace(tmp_path: Path) -> Path:
     trip["exportLayout"] = "auto"
     trip["layoutEngine"] = "screens"
     (ws / "trip.json").write_text(json.dumps(trip, ensure_ascii=False, indent=2), encoding="utf-8")
-    demo = Path(__file__).resolve().parents[1] / "templates" / "visual-journal" / "assets" / "demo"
+    demo = repo_root(__file__) / "templates" / "visual-journal" / "assets" / "demo"
     if demo.is_dir():
         import shutil
 

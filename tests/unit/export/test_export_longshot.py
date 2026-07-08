@@ -1,6 +1,9 @@
 """Longshot export (Phase 2 M9)."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 import json
 import shutil
@@ -35,7 +38,7 @@ pytestmark = [pytest.mark.e2e, pytest.mark.playwright_serial]
 
 @pytest.fixture
 def longshot_workspace(tmp_path: Path) -> Path:
-    demo = Path(__file__).resolve().parents[1] / "templates" / "visual-journal" / "assets"
+    demo = repo_root(__file__) / "templates" / "visual-journal" / "assets"
     if not demo.is_dir():
         pytest.skip("demo assets not present")
     ws = tmp_path / "longshot-export"

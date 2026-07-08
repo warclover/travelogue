@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.test_studio_server import _free_port, _start_studio_server
+from tests.integration.studio.test_studio_server import _free_port, _start_studio_server
 from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_3P_2L_BALANCED
 from travelogue.web.studio_chrome import inject_studio_chrome
 from travelogue.web.studio_jobs import reset_job_store

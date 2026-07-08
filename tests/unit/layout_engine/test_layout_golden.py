@@ -1,6 +1,9 @@
 """M13 layout golden gates · AC-P3-C02/C03/C09 + I-G1/I-G2 + LY-P3."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 import copy
 import json
@@ -29,7 +32,7 @@ from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.curate import run_curate
 from travelogue.vision.clip_encoder import clip_torch_available
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = repo_root(__file__)
 LOCAL_GOLDEN_TRIPS = ("mao", "maomi", "linzhi")
 CI_FIXTURE = "golden-mixed-scenes"
 

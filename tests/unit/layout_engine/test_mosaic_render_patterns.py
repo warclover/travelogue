@@ -1,6 +1,9 @@
 """AC-P15-02/06 · grid_class mapping for all MCS 5-slot patterns."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 from pathlib import Path
 
@@ -12,7 +15,7 @@ from travelogue.curation.mosaic.constants import (
 )
 from travelogue.curation.screen_planner import grid_class_for_pattern
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = repo_root(__file__)
 SCREENS_CSS = ROOT / "templates" / "visual-journal" / "journal-screens.css"
 
 

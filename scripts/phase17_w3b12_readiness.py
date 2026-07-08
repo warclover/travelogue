@@ -37,13 +37,13 @@ def main() -> int:
 
     checks: dict[str, bool] = {}
 
-    code, _ = _run([sys.executable, "-m", "pytest", "tests/test_p17_controlled_parity.py", "-q"])
+    code, _ = _run([sys.executable, "-m", "pytest", "tests/integration/p17/test_p17_controlled_parity.py", "-q"])
     checks["controlledParity"] = code == 0
 
-    code, _ = _run([sys.executable, "-m", "pytest", "tests/test_p17_w3a_gates.py", "-q"])
+    code, _ = _run([sys.executable, "-m", "pytest", "tests/integration/p17/test_p17_w3a_gates.py", "-q"])
     checks["quickShareZeroDiff"] = code == 0
 
-    code, _ = _run([sys.executable, "-m", "pytest", "tests/test_p17_w3a_zero_step_e2e.py", "-q"])
+    code, _ = _run([sys.executable, "-m", "pytest", "tests/integration/p17/test_p17_w3a_zero_step_e2e.py", "-q"])
     checks["zeroStepE2E"] = code == 0
 
     code, _ = _run([sys.executable, "scripts/phase17_golden_metrics.py", "--strict"])

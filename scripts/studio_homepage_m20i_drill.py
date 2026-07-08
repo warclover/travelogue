@@ -72,7 +72,7 @@ def _synthetic_events() -> list[dict]:
 def _spawn_studio() -> tuple[object, str, Path]:
     """起临时 loopback Studio；返回 (server, base_url, trips_dir)。"""
     sys.path.insert(0, str(_REPO))
-    from tests.test_studio_server import _free_port, _start_studio_server
+    from tests.integration.studio.test_studio_server import _free_port, _start_studio_server
 
     trips_dir = Path(tempfile.mkdtemp(prefix="m20i-drill-")) / "trips"
     trips_dir.mkdir(parents=True)

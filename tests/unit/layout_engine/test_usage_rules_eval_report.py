@@ -1,13 +1,16 @@
 """URO P0-c · eval report + blind review script tests."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 from pathlib import Path
 
 from scripts.usage_rules_blind_review import init_template, score_review
 from scripts.usage_rules_eval_common import ensure_trip_screen_ids, evaluate_trip_off_on, load_trip
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = repo_root(__file__)
 
 
 def test_evaluate_trip_off_on_fixture_smoke():

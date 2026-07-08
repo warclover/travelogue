@@ -13,9 +13,9 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 
 PHASE14_TESTS = [
-    "tests/test_studio_home_v2.py::test_studio_home_v2_phase14_dual_mode_smoke",
-    "tests/test_studio_handlers_import_export.py",
-    "tests/test_studio_intent.py",
+    "tests/unit/web/test_studio_home_v2.py::test_studio_home_v2_phase14_dual_mode_smoke",
+    "tests/unit/web/handlers/test_studio_handlers_import_export.py",
+    "tests/unit/web/test_studio_intent.py",
     "tests/unit/layout_engine/test_layout_density.py",
 ]
 

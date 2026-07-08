@@ -1,13 +1,16 @@
 """NR-P9-03 · trip.schema.json accepts Phase 9 cull fields."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 import json
 from pathlib import Path
 
 from travelogue.services.validate import validate_trip
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = repo_root(__file__)
 SCHEMA_FIXTURE = ROOT / "schemas" / "fixtures" / "trip.render_golden.json"
 
 

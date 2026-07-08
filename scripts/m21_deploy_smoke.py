@@ -63,7 +63,7 @@ def _fetch(url: str, *, method: str = "GET", follow_redirect: bool = True) -> tu
 
 def _spawn_base(*, gate_mode: str) -> tuple[object, str]:
     sys.path.insert(0, str(_REPO))
-    from tests.test_studio_server import _free_port, _start_studio_server
+    from tests.integration.studio.test_studio_server import _free_port, _start_studio_server
 
     prev = os.environ.get("TRAVELOGUE_STUDIO_HOMEPAGE_V2")
     os.environ["TRAVELOGUE_STUDIO_HOMEPAGE_V2"] = gate_mode

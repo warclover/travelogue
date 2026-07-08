@@ -1,6 +1,9 @@
 """PRD portrait-row-editorial · AC / G-ED integration regression (v0.3)."""
 
+
+
 from __future__ import annotations
+from tests._repo_root import repo_root
 
 import copy
 import json
@@ -30,7 +33,7 @@ from travelogue.render.golden_regression import load_golden_trip
 from travelogue.render.mobile_screens import expand_portrait_triples_for_mobile
 
 _GOLDEN_FIXTURE = FIXTURES_DIR / "trip.render_golden.json"
-_DEMO_ASSETS = Path(__file__).resolve().parents[1] / "templates" / "visual-journal" / "assets"
+_DEMO_ASSETS = repo_root(__file__) / "templates" / "visual-journal" / "assets"
 
 
 def _copy_demo_assets(ws: Path) -> None:

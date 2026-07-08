@@ -25,7 +25,7 @@ REGRESSION_TESTS = [
     "tests/unit/web/handlers/test_studio_handlers_trip.py",
     "tests/unit/web/test_studio_subprocess.py",
     "tests/unit/web/test_studio_telemetry.py",
-    "tests/test_algorithm_profile.py",
+    "tests/unit/config/test_algorithm_profile.py",
     "tests/unit/web/test_studio_aesthetic.py",
 ]
 
