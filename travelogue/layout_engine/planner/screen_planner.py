@@ -10,7 +10,7 @@ from typing import Literal
 
 from travelogue.config import AppConfig
 from travelogue.curation.aspect_buckets import prefix_same_bucket
-from travelogue.curation.asset_subject import (
+from travelogue.layout_contract.subject import (
     any_asset_has_person,
     asset_has_person,
     portrait_fit_for_asset,
@@ -143,7 +143,7 @@ def _fits_for_screen(
     if pattern_id in ("screen-tall-1", "screen-square-1"):
         return ["contain"] * n
     if pattern_id == "screen-full-frame":
-        from travelogue.curation.asset_subject import full_frame_fit_for_asset
+        from travelogue.layout_contract.subject import full_frame_fit_for_asset
 
         return [
             full_frame_fit_for_asset(assets_map.get(aid), default="cover")

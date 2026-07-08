@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.curation.asset_subject import asset_has_person
+from travelogue.layout_contract.subject import asset_has_person
 from travelogue.curation.curate_scoring import sort_bucket_asset_ids
 
 

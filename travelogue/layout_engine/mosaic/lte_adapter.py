@@ -210,7 +210,7 @@ def resolve_slot_fit(
     cfg: AppConfig | None = None,
 ) -> str:
     """R-P16-06 fit layer L1: LTE slot fit → curate applies before render."""
-    from travelogue.curation.asset_subject import portrait_fit_for_asset
+    from travelogue.layout_contract.subject import portrait_fit_for_asset
 
     asset = asset or {}
     default = portrait_fit_for_asset(asset, default="cover") if role == "portrait" else "cover"

@@ -32,7 +32,7 @@
 | **M-C2** | done | 2026-07-08 | 全量 **423** 文件分层；baseline **1**（`test_ingest.py` shim）；collect **2714**；14 个 `tests/unit/*` 目录 | — |
 | M-C3 | done | 2026-07-08 | `gen_scripts_registry.py` + `scripts/README.md`（168 脚本）+ 7 个 phase 脚本已 `git mv` 至 `scripts/archive/` + docs 索引 | — |
 | M-C5 | done | 2026-07-08 | ESM 10 模块 + tsc + preview-toolbar CSS + **studio-home-v2.css** 13 partials | — |
-| M-D1 | done | 2026-07-08 | 删 legacy 开关；LSE kernel import 迁移 batch-1（108→88） | ScreenLayoutPlannerState 等待下沉 layout_contract |
+| M-D1 | done | 2026-07-08 | 删 legacy 开关；LSE kernel import batch-1/2（108→77） | ScreenLayoutPlannerState 等待下沉 layout_contract |
 
 ## M-B1 交付摘要（PRD §5.3.2）
 
@@ -72,9 +72,9 @@
 
 | 指标 | M-B0 参考 | **2026-07-08（M-B4b + M-B1 后）** | PRD / ADR 目标 |
 |------|-----------|-----------------------------------|----------------|
-| layout_engine → curation | — | **79** | — |
+| layout_engine → curation | — | **68** | — |
 | curation → layout_engine | — | **9** | — |
-| **合计** | 51（B4a 前）→ 44（B4a 后） | **88** | PRD ≤10 ❌ · ADR 20%≈22 ❌ |
+| **合计** | 51（B4a 前）→ 44（B4a 后） | **77** | PRD ≤10 ❌ · ADR 20%≈22 ❌ |
 | Top importer | — | `layout_engine.planner.screen_planner` (12) | adapter 白名单收敛 |
 | Top imported | — | `curation.layout_planner` (16) · `screen_layout_state` (14) | kernel/shim 共享待续 |
 
@@ -103,6 +103,6 @@ P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓
 
 | 优先级 | 任务 | 触发 / 门禁 | 目标 |
 |--------|------|-------------|------|
-| P1 | **LSE cross-import 收敛**（88→≤10） | `lint_lse_cross_import.py` weekly 防回归 | 独立 PR 链 · kernel 已迁 + import 路径待续 |
+| P1 | **LSE cross-import 收敛**（77→≤10） | `lint_lse_cross_import.py` weekly 防回归 | batch-3: usage_rules + screen_layout_state |
 | P2 | **M-C1 / P-18** 路由表化 | 新增 Studio API | 机会主义 |
 | 背景 | 全量 `pytest --fast` 预存失败 (~25) | 非 M-C6 | 分批 issue |

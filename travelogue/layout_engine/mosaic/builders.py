@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.curation.asset_subject import asset_has_person, portrait_fit_for_asset
+from travelogue.layout_contract.subject import asset_has_person, portrait_fit_for_asset
 from travelogue.layout_contract.orientations import (
     AspectKind,
     aspect_kind_for_asset,

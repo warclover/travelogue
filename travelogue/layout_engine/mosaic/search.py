@@ -9,11 +9,11 @@ from dataclasses import replace
 from travelogue.config import AppConfig
 from travelogue.curation.decision_log import LayoutDecisionLog
 from travelogue.layout_contract.orientations import AspectKind
-from travelogue.curation.layout_scoring import (
+from travelogue.layout_contract.scoring import (
     IncrementalScoreState,
     ScoringWeights,
-    score_screen_plan,
 )
+from travelogue.curation.layout_scoring import score_screen_plan
 from travelogue.layout_contract.rhythm import (
     PORTRAIT_PAIR_PATTERN,
     PORTRAIT_SINGLE_PATTERNS,
@@ -253,7 +253,7 @@ def replan_day_buckets_beam(
             candidates = filtered_plans or candidates
         legacy_plan = candidates[0][1] if candidates else []
         legacy_sig = _screens_signature([{"screens": legacy_plan}])
-        from travelogue.curation.layout_scoring import ScoreBreakdown
+        from travelogue.layout_contract.scoring import ScoreBreakdown
 
         legacy_score = ScoreBreakdown(total=0.0)
         if legacy_plan and budget.can_evaluate():

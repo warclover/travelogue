@@ -10,7 +10,8 @@ from typing import Any
 from travelogue.config import MosaicConfig
 from travelogue.layout_contract.constraints import FOCAL_EDGE_MARGIN
 from travelogue.layout_contract.orientations import AspectKind
-from travelogue.curation.layout_scoring import ScoringWeights, score_screen_plan
+from travelogue.layout_contract.scoring import ScoringWeights
+from travelogue.curation.layout_scoring import score_screen_plan
 from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_6,
     PATTERN_LANDSCAPE_9,

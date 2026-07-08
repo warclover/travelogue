@@ -5,7 +5,7 @@ from __future__ import annotations
 from contextvars import ContextVar
 from typing import Any
 
-from travelogue.curation.asset_subject import asset_has_person
+from travelogue.layout_contract.subject import asset_has_person
 from travelogue.layout_engine.quality_features import QualityPool, build_quality_pool
 
 _highlight_windows_var: ContextVar[tuple[frozenset[str], ...] | None] = ContextVar(
