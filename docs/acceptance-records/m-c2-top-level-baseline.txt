@@ -20,7 +20,6 @@ test_arch_equivalence_check.py
 test_asset_caption.py
 test_asset_quality.py
 test_asset_version.py
-test_beam_consecutive_fallback_telemetry.py
 test_blur_fill.py
 test_breath_image_motion.py
 test_breath_lenis_scroll_playwright.py
@@ -49,7 +48,6 @@ test_code_error.py
 test_cohort_faces.py
 test_collage_full_frame.py
 test_color_metrics.py
-test_compare_web_layout.py
 test_copy_display.py
 test_copy_optimization.py
 test_copy_patch.py
@@ -68,13 +66,7 @@ test_desktop_m11.py
 test_diff_curate.py
 test_discovery_sort_modes.py
 test_dom_regression.py
-test_dual_layout_engine.py
 test_e2e_trip_acceptance.py
-test_editorial_4mix.py
-test_editorial_4mix_probe.py
-test_editorial_ac_regression.py
-test_editorial_portrait_row.py
-test_editorial_probe.py
 test_embedding_cache_schema.py
 test_env.py
 test_epilogue_displayed_assets.py
@@ -86,8 +78,6 @@ test_food_grid.py
 test_food_grid_fixture_trip.py
 test_geo_events.py
 test_geocode.py
-test_golden_layouts.py
-test_golden_mosaic_unified.py
 test_golden_reference.py
 test_guardrails_copy_patch.py
 test_heuristic_v2_gates.py
@@ -202,9 +192,6 @@ test_replan_items_sync.py
 test_rhythm_ci_gate.py
 test_scene_clusters.py
 test_scene_subsegments_conservation.py
-test_screen_layout_planner.py
-test_screen_planner_flush_state.py
-test_screen_planner_stages.py
 test_screen_tone.py
 test_search_budget.py
 test_serve_favicon.py
@@ -262,7 +249,6 @@ test_studio_templates_admin_page.py
 test_studio_trip_delete.py
 test_studio_ux_p3.py
 test_subject_detect.py
-test_subject_layout.py
 test_subject_tagging_bridge.py
 test_template_admin_crud.py
 test_template_admin_metrics.py

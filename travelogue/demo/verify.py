@@ -16,9 +16,9 @@ from travelogue.services.validate import validate_trip
 
 QUICK_TEST_PATHS = [
     "tests/test_validate.py",
-    "tests/test_layout_planner.py",
-    "tests/test_layout_service.py",
-    "tests/test_dual_layout_engine.py",
+    "tests/unit/layout_engine/test_layout_planner.py",
+    "tests/unit/layout_engine/test_layout_service.py",
+    "tests/unit/layout_engine/test_dual_layout_engine.py",
     "tests/test_demo_build.py",
     "tests/test_demo_from_album.py",
     "tests/test_dom_regression.py",

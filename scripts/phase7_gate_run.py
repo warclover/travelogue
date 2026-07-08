@@ -33,7 +33,7 @@ PYTEST_TARGETS = (
     "tests/test_phase7_cache_abi.py",
     "tests/test_phase7_fault_recovery.py",
     "tests/test_phase7_rollback_flags.py",
-    "tests/test_layout_golden.py",
+    "tests/unit/layout_engine/test_layout_golden.py",
 )
 
 

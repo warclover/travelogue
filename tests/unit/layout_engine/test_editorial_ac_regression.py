@@ -16,7 +16,7 @@ from tests._golden.helpers import (
     load_golden,
     plan_legacy_screens,
 )
-from tests.test_editorial_portrait_row import _cfg_with_editorial
+from .test_editorial_portrait_row import _cfg_with_editorial
 from travelogue.curation.breath_pauses import BREATH_PATTERN, insert_breath_screens_in_chapters
 from travelogue.curation.editorial_portrait_row import (
     LAYOUT_HINT_PORTRAIT_ROW_EDITORIAL,

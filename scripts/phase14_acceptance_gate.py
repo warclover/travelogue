@@ -16,7 +16,7 @@ PHASE14_TESTS = [
     "tests/test_studio_home_v2.py::test_studio_home_v2_phase14_dual_mode_smoke",
     "tests/test_studio_handlers_import_export.py",
     "tests/test_studio_intent.py",
-    "tests/test_layout_density.py",
+    "tests/unit/layout_engine/test_layout_density.py",
 ]
 
 
