@@ -7,5 +7,6 @@ Physical ESM split from `preview-toolbar.js` (entry URL unchanged).
 | `dock.js` | Icon dock, screenplay control, tooltips, scroll fade |
 | `share.js` | `?share=1` minimal toolbar |
 | `inline-edit.js` | Cover title inline edit (AC-ARC-14b) |
+| `longshot.js` | Longshot export, stale hint, zip export, job poll (AC-ARC-14c) |
 
-Longshot export, sheet/drawers, and `initToolbarV3` remain in `../preview-toolbar.js` until the next split batch.
+Sheet/drawers and `initToolbarV3` remain in `../preview-toolbar.js` until the next split batch.

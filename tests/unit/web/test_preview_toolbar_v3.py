@@ -28,11 +28,26 @@ def test_v3_modules_exist_and_are_imported() -> None:
         'from "./preview-toolbar-v3-task-dock.js"',
         'from "./preview-toolbar-v3-sheet.js"',
         'from "./preview-toolbar/dock.js"',
+        'from "./preview-toolbar/longshot.js"',
         "initToolbarV3",
         "mountPreviewTaskDock",
         "mountPreviewUnifiedSheet",
+        "registerLongshotBridge",
+        "startLongshot",
     ):
         assert token in js
+
+
+def test_m5_longshot_module_exports() -> None:
+    longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    for token in (
+        "export function startLongshot",
+        "export function pollJob",
+        "export function registerLongshotBridge",
+        "export function cancelPreviewLongshotExport",
+    ):
+        assert token in longshot, f"missing longshot export: {token}"
+    assert "export function (job)" not in longshot
 
 
 def test_v4_init_uses_icon_dock_not_legacy_rows() -> None:
@@ -72,9 +87,10 @@ def test_v4_dock_tooltips_and_scroll_fade() -> None:
 
 def test_v4_toolbar_mounts_screenplay_control() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
+    dock = (STUDIO / "preview-toolbar" / "dock.js").read_text(encoding="utf-8")
     assert "insertScreenplayControl(actions, menuWrap" in js
     assert "dock: true" in js
-    assert "preview-toolbar__screenplay--v3" in js
+    assert "preview-toolbar__screenplay--v3" in js or "preview-toolbar__screenplay--v3" in dock
     css = PREVIEW_CSS.read_text(encoding="utf-8")
     assert "preview-toolbar__dock" in css
     assert "preview-toolbar--v4" in css

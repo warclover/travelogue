@@ -11,6 +11,7 @@ from tests._studio_js import read_studio_js
 
 ROOT = repo_root(__file__)
 PREVIEW_JS = ROOT / "templates" / "studio" / "preview-toolbar.js"
+LONGSHOT_JS = ROOT / "templates" / "studio" / "preview-toolbar" / "longshot.js"
 
 
 def test_p5_14_job_busy_toast_and_retry() -> None:
@@ -23,13 +24,17 @@ def test_p5_14_job_busy_toast_and_retry() -> None:
 
 def test_p5_32_preview_longshot_busy_retry() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
-    assert "postJsonBusyRetry" in js
-    assert './js/http.js"' in js
-    assert "排队中，请稍候" in js
+    longshot = LONGSHOT_JS.read_text(encoding="utf-8")
+    bundle = js + longshot
+    assert "postJsonBusyRetry" in bundle
+    assert './js/http.js"' in longshot or './js/http.js"' in js
+    assert "排队中，请稍候" in bundle
 
 
 def test_preview_toolbar_longshot_integrated_to_top_bar() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
+    longshot = LONGSHOT_JS.read_text(encoding="utf-8")
+    bundle = js + longshot
     css = (ROOT / "templates" / "studio" / "preview-toolbar.css").read_text(encoding="utf-8")
     client = (ROOT / "templates" / "studio" / "js" / "longshot-client.js").read_text(
         encoding="utf-8"
@@ -55,12 +60,12 @@ def test_preview_toolbar_longshot_integrated_to_top_bar() -> None:
         "data-copy-preset",
         "导出长图",
     ):
-        assert token in js or token in css, f"missing preview toolbar v3/longshot marker: {token}"
+        assert token in bundle or token in css, f"missing preview toolbar v3/longshot marker: {token}"
     assert 'html[data-preview-toolbar="on"] .longshot-toolbar' in css
     assert 'html[data-preview-toolbar="on"] .screenplay-toolbar' in css
     assert "resolveCopyDisplayFromDom" in client
     assert "segmentMode" in client
-    assert "normalizeSegmentMode" in js
+    assert "normalizeSegmentMode" in bundle
 
 
 def test_p5_a4_shared_http_module() -> None:
