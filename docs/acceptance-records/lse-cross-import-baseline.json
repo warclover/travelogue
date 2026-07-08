@@ -3,8 +3,8 @@
     "travelogue.curation",
     "travelogue.layout_engine"
   ],
-  "totalCrossEdges": 109,
-  "layoutEngineToCuration": 100,
+  "totalCrossEdges": 108,
+  "layoutEngineToCuration": 99,
   "curationToLayoutEngine": 9,
   "targetAfterMigration": {
     "maxCrossEdges": 22,
@@ -69,7 +69,7 @@
       3
     ],
     [
-      "travelogue.layout_engine.adapter",
+      "travelogue.layout_engine.golden_probe",
       2
     ]
   ],
@@ -140,54 +140,54 @@
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.adapter",
       "lines": [
-        624,
-        898,
-        1123,
-        1133
+        629,
+        903,
+        1128,
+        1138
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.capabilities",
       "lines": [
-        625,
-        1134
+        630,
+        1139
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.editorial_hints",
       "lines": [
-        1135
+        1140
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.pattern_policy",
       "lines": [
-        917
+        922
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.replan",
       "lines": [
-        657,
-        756
+        662,
+        761
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.rollout",
       "lines": [
-        517
+        522
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.segment_order",
       "lines": [
-        626
+        631
       ]
     },
     {
@@ -210,13 +210,6 @@
       "imported": "travelogue.curation.screen_layout_state",
       "lines": [
         10
-      ]
-    },
-    {
-      "importer": "travelogue.layout_engine.adapter",
-      "imported": "travelogue.curation.screen_planner",
-      "lines": [
-        69
       ]
     },
     {

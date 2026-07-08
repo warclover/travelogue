@@ -103,7 +103,7 @@ python scripts/gen_scripts_registry.py
 | `migrate_sharpness_v2.py` | docs | — | `docs/IMPLEMENTATION-ALGORITHM-V2.md`, `docs/acceptance-records/algorithm-v2-prd-review-2026-06-05.md` | — |
 | `mosaic_config_diag.py` | docs | — | `docs/GUIDE-PHASE16-layout-template-engine.md`, `docs/MCR-RELEASE-NOTE.md`, `docs/PHASE15-ROLLOUT.md`, `+3 more` | `scripts/mosaic_config_diag.py` |
 | `mosaic_probe_window.py` | active | — | — | `scripts/mosaic_probe_window.py` |
-| `orchestration_dual_run.py` | CI | `.github/workflows/arch-opt-weekly.yml` | — | — |
+| `lint_lse_cross_import.py` | CI | `.github/workflows/arch-opt-weekly.yml` | — | — |
 | `p17_w0_search_budget_parity_probe.py` | docs | — | `docs/acceptance-records/p17-w0-audit-b-determinism-parity.md` | `scripts/p17_w0_search_budget_parity_probe.py` |
 | `pa_aesthetic_acceptance.py` | docs | — | `docs/QUALITY-GATE.md`, `docs/reports/pa-task-backlog.md` | `scripts/pa_aesthetic_acceptance.py` |
 | `parity_screens_dump.py` | active | — | — | `scripts/parity_screens_dump.py` |
@@ -169,7 +169,6 @@ python scripts/gen_scripts_registry.py
 | `phase9_eval_baseline.py` | CI | `.github/workflows/ci.yml` | `docs/ACCEPTANCE-PHASE9.md`, `docs/IMPLEMENTATION-PHASE12.md`, `docs/acceptance-records/README.md`, `+3 more` | — |
 | `phase9_golden_cull_signoff.py` | docs | — | `docs/ACCEPTANCE-PHASE9.md`, `docs/IMPLEMENTATION-PHASE12.md`, `docs/acceptance-records/README.md`, `+4 more` | — |
 | `phase9_ml_acceptance.py` | docs | — | `docs/IMPLEMENTATION-PHASE9.md`, `docs/acceptance-records/README.md`, `docs/acceptance-records/phase9-w1-pr-memo.md` | `scripts/phase9_ml_acceptance.py` |
-| `planner_impl_dual_run.py` | CI | `.github/workflows/arch-opt-weekly.yml` | — | — |
 | `portrait_analyze_backfill.py` | active | — | — | — |
 | `quality_gate.py` | CI | `.github/workflows/ci.yml` | `docs/ACCEPTANCE.md`, `docs/PRD-ARCH-OPTIMIZATION.md`, `docs/PROMPTS-ARCH-OPTIMIZATION.md`, `+5 more` | — |
 | `recasa_readonly_compare.py` | active | — | — | `scripts/recasa_readonly_compare.py` |

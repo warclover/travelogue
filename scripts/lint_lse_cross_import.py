@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 BASELINE = ROOT / "docs" / "acceptance-records" / "lse-cross-import-baseline.json"
-DEFAULT_CEILING = 109
+DEFAULT_CEILING = 108
 
 
 def _edge_total(report: dict[str, object]) -> int:

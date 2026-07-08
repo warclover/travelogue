@@ -442,11 +442,13 @@ python scripts/phase7_verify_rollback.py
 
 CI：`lint` job 跑 `lint-imports`；`validate` job 跑 `arch_equivalence_check`（PR warn / main block）。
 
-### 18.4 开关台账
+### 18.4 已删除的双路径开关（M-D1 · 2026-07-08）
 
-| 开关 | 状态 | 说明 |
-|------|------|------|
-| `pipeline.orchestration` | 已上线（默认 unified） | M-B3 登记 |
-| `layout.planner_impl` | 2026-07-08 | 2026-08-05 | M-B4b 默认 layout_engine |
+| 原开关 | 处置 |
+|--------|------|
+| `pipeline.orchestration` | 已删除；Studio 固定 `run_trip` unified 路径；config 残留 `legacy` 仅 warning |
+| `layout.planner_impl` | 已删除；固定 `layout_engine.planner`；config 残留 `curation` 仅 warning |
 
-详见 [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md) §开关台账。
+LSE import 路径兼容：`curation.screen_planner*` 仍为无警告 re-export，完整迁移见 ADR-015 后续 PR。
+
+详见 [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md)。

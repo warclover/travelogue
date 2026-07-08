@@ -1,56 +1,38 @@
-"""M-B3 · pipeline.orchestration legacy vs unified."""
+"""M-D1 · unified studio pipeline orchestration."""
 
 from __future__ import annotations
 
 import json
-from dataclasses import replace
+import warnings
 from pathlib import Path
+
+import pytest
 
 from tests.studio_test_helpers import make_test_album
 from travelogue.config import AppConfig, ClusteringConfig, PipelineConfig, VisionConfig
-from travelogue.web.studio_pipeline import (
-    _resolve_pipeline_orchestration,
-    run_studio_pipeline,
-)
+from travelogue.config.misc import pipeline_from_dict
+from travelogue.web.studio_pipeline import run_studio_pipeline
 
 
-def test_resolve_pipeline_orchestration_defaults_unified() -> None:
-    cfg = AppConfig()
-    assert _resolve_pipeline_orchestration(cfg) == "unified"
+def test_pipeline_from_dict_warns_on_removed_legacy_orchestration() -> None:
+    with pytest.warns(UserWarning, match="pipeline.orchestration=legacy was removed"):
+        cfg = pipeline_from_dict({"orchestration": "legacy"})
+    assert cfg.parallel_embed is True
 
 
-def test_resolve_pipeline_orchestration_legacy() -> None:
-    cfg = AppConfig(pipeline=PipelineConfig(orchestration="legacy"))
-    assert _resolve_pipeline_orchestration(cfg) == "legacy"
-
-
-def test_legacy_and_unified_produce_same_trip_shape(tmp_path: Path) -> None:
-    from scripts.arch_equivalence_check import diff_normalized, normalize_trip
-
+def test_unified_studio_pipeline_imports_album(tmp_path: Path) -> None:
     album = make_test_album(tmp_path, 6)
-    base_cfg = AppConfig(
+    cfg = AppConfig(
         clustering=ClusteringConfig(enabled="false"),
         vision=VisionConfig(enabled="false"),
-        pipeline=PipelineConfig(parallel_embed=False, orchestration="legacy"),
+        pipeline=PipelineConfig(parallel_embed=False),
     )
-    legacy_cfg = replace(base_cfg, pipeline=replace(base_cfg.pipeline, orchestration="legacy"))
-    unified_cfg = replace(base_cfg, pipeline=replace(base_cfg.pipeline, orchestration="unified"))
-
-    legacy = run_studio_pipeline(
+    result = run_studio_pipeline(
         album,
-        trips_dir=tmp_path / "legacy-trips",
+        trips_dir=tmp_path / "trips",
         dedupe=False,
-        app_config=legacy_cfg,
+        app_config=cfg,
     )
-    unified = run_studio_pipeline(
-        album,
-        trips_dir=tmp_path / "unified-trips",
-        dedupe=False,
-        app_config=unified_cfg,
-    )
-
-    trip_legacy = normalize_trip(json.loads(legacy.trip_json.read_text(encoding="utf-8")))
-    trip_unified = normalize_trip(json.loads(unified.trip_json.read_text(encoding="utf-8")))
-    assert not diff_normalized(trip_legacy, trip_unified)
-    assert legacy.photo_count == unified.photo_count
-    assert legacy.tier_mode == unified.tier_mode
+    trip = json.loads(result.trip_json.read_text(encoding="utf-8"))
+    assert trip.get("tripId")
+    assert result.photo_count >= 1

@@ -252,9 +252,15 @@ def load_config(path: Path | None = None) -> AppConfig:
     scope = str(layout_raw.get("screen_plan_scope", "day")).strip().lower()
     if scope not in ("chapter", "day"):
         scope = "day"
-    planner_impl = str(layout_raw.get("planner_impl", "layout_engine")).strip().lower()
-    if planner_impl not in ("layout_engine", "curation"):
-        planner_impl = "layout_engine"
+    import warnings
+
+    legacy_planner = str(layout_raw.get("planner_impl", "")).strip().lower()
+    if legacy_planner == "curation":
+        warnings.warn(
+            "layout.planner_impl=curation was removed (M-D1); using layout_engine planner",
+            UserWarning,
+            stacklevel=2,
+        )
     mixed_gap = float(
         layout_raw.get(
             "mixed_proximity_seconds",
@@ -359,7 +365,6 @@ def load_config(path: Path | None = None) -> AppConfig:
         layout=LayoutConfig(
             web_layout_engine=web_engine,
             screen_plan_scope=scope,
-            planner_impl=planner_impl,
             mixed_proximity_seconds=mixed_gap,
             layout_density_enabled=layout_density_enabled,
             editorial_portrait_row=editorial_portrait_row_from_dict(editorial_row_raw),

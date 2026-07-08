@@ -24,7 +24,7 @@
 | M-B4b | done | 2026-07-08 | planner+mosaic→layout_engine/；weekly dual-run；消费方收敛 | PRD cross-import ≤10 未达标（109）；待 adapter/shim 退役 |
 | M-B1 | done | 2026-07-08 | PRD §5.3.2 违例表清零；import-linter 26→**11** 豁免；`lint-imports` 全绿；domain/kernel 下沉见 §M-B1 交付 | 11 条 intentional 豁免（§import-linter）；LSE 互引 109 不归 M-B1 |
 | M-B2 | done | 2026-07-08 | S1 `ARCH-ORCH-DIFF-MATRIX.md`；S2 StudioProfile/Hooks + clustering stage；Go（G-WIP-01 用户授权） | — |
-| M-B3 | done | 2026-07-08 | `pipeline.orchestration` unified 默认；legacy 保留；`orchestration_dual_run.py`；weekly CI | legacy 开关 4 周 DoD 至 2026-08-05 |
+| M-B3 | done | 2026-07-08 | unified `run_trip` 编排；legacy 已于 M-D1 删除 | — |
 | M-C4 | done | 2026-07-08 | 三视图 + lint + 单测；curate/orchestrator/render/cli/export 改引 pipeline_view | media/ingest/sandbox 直赋属 ingest 域 |
 | M-B6 | done | 2026-07-08 | `trip_migration` 兼容窗口 + 模块 doc；`lint_trip_json` version 窗；超窗单测 | 多 minor 迁移链待 schema bump 时补 |
 | M-C6 | done | 2026-07-08 | gate `v3`→`classic` + telemetry/LCP 同步；GLOSSARY + holdback docs；Import Wizard §16 AC-IW-DS-01～08 e2e 全覆盖 | legacy telemetry `variant=v3` 聚合归一化为 classic |
@@ -32,7 +32,7 @@
 | **M-C2** | done | 2026-07-08 | 全量 **423** 文件分层；baseline **1**（`test_ingest.py` shim）；collect **2714**；14 个 `tests/unit/*` 目录 | — |
 | M-C3 | done | 2026-07-08 | `gen_scripts_registry.py` + `scripts/README.md`（168 脚本）+ 7 个 phase 脚本已 `git mv` 至 `scripts/archive/` + docs 索引 | — |
 | M-C5 | done | 2026-07-08 | ESM 10 模块 + tsc + preview-toolbar CSS + **studio-home-v2.css** 13 partials | — |
-| M-D1 | todo | — | — | 开关满 4 周 DoD |
+| M-D1 | done | 2026-07-08 | 删 `pipeline.orchestration` legacy + `layout.planner_impl` 开关；weekly dual-run 下线；config 残留 warning | LSE import 路径 re-export 待收敛 |
 
 ## M-B1 交付摘要（PRD §5.3.2）
 
@@ -74,18 +74,20 @@
 |------|-----------|-----------------------------------|----------------|
 | layout_engine → curation | — | **100** | — |
 | curation → layout_engine | — | **9** | — |
-| **合计** | 51（B4a 前）→ 44（B4a 后） | **109** | PRD ≤10 ❌ · ADR 20%≈22 ❌ |
+| **合计** | 51（B4a 前）→ 44（B4a 后） | **108** | PRD ≤10 ❌ · ADR 20%≈22 ❌ |
 | Top importer | — | `layout_engine.planner.screen_planner` (12) | adapter 白名单收敛 |
 | Top imported | — | `curation.layout_planner` (16) · `screen_layout_state` (14) | kernel/shim 共享待续 |
 
 **说明**：B4b 物理迁移后 LSE 模块仍大量 lazy-import curation（评分、mosaic shim、curate 实验路径），边数上升属预期；**≤10 目标归属 M-B4 后续**（adapter 薄化 + curation shim 删除 + 白名单边审计），非 M-B1 范围。
 
-## 开关台账
+## 开关台账（M-D1 后）
 
-| 开关 | 上线日期 | 4 周 DoD 到期 | 备注 |
-|------|----------|---------------|------|
-| `pipeline.orchestration` | 2026-07-08 | 2026-08-05 | M-B3 默认 unified；legacy weekly dual-run |
-| `layout.planner_impl` | 2026-07-08 | 2026-08-05 | M-B4b 默认 layout_engine |
+> 双路径开关已于 **2026-07-08** 删除（用户授权提前执行）。残留 config 键仅触发 `UserWarning`，不阻断启动。
+
+| 原开关 | 删除日期 | 现行路径 |
+|--------|----------|----------|
+| `pipeline.orchestration` | 2026-07-08 | unified `run_trip`（唯一） |
+| `layout.planner_impl` | 2026-07-08 | `layout_engine.planner`（唯一） |
 
 ## 发现问题
 
@@ -101,9 +103,6 @@ P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓
 
 | 优先级 | 任务 | 触发 / 门禁 | 目标 |
 |--------|------|-------------|------|
-| P0 | 开关观察 + **M-D1 准备** | `check_switch_dod.py` · weekly dual-run | 至 **2026-08-05** 后删 legacy |
-| P1 | **AC-ARC-14a-d** Playwright（M-C5 前置） | `tests/e2e/test_preview_toolbar_arc14_playwright.py` | **done** · 4 passed |
-| P1 | **M-D1 / P-23** 删 legacy + TECH-ARCH 全量 | 开关 DoD 全满足 | **2026-08-05** 后 |
-| P1 | **LSE cross-import 收敛**（109→≤10） | `lint_lse_cross_import.py` weekly 防回归 | 独立 PR 链 |
+| P1 | **LSE cross-import 收敛**（108→≤10） | `lint_lse_cross_import.py` weekly 防回归 | 独立 PR 链 · import 路径迁移 |
 | P2 | **M-C1 / P-18** 路由表化 | 新增 Studio API | 机会主义 |
 | 背景 | 全量 `pytest --fast` 预存失败 (~25) | 非 M-C6 | 分批 issue |

@@ -65,10 +65,8 @@ def resolve_pack(cfg: AppConfig) -> StrategyPack | None:
 
 
 def _planner_module(cfg: AppConfig) -> Any:
-    if cfg.layout.planner_impl == "curation":
-        import travelogue.curation.screen_planner as mod
-    else:
-        import travelogue.layout_engine.planner.screen_planner as mod
+    import travelogue.layout_engine.planner.screen_planner as mod
+
     return mod
 
 

@@ -9,12 +9,11 @@ from datetime import date
 from pathlib import Path
 
 from travelogue.config import AppConfig, app_config_scope, get_config
-from travelogue.curation.curate import CurateError, run_curate
+from travelogue.curation.curate import CurateError
 from travelogue.demo.build import DemoError
 from travelogue.media.ingest import (
     RAW_UNSUPPORTED_MESSAGE,
     IngestError,
-    ingest_into_trip,
     scan_image_paths,
 )
 from travelogue.orchestrator.run import run_trip
@@ -95,11 +94,6 @@ def _build_date_range_weak_hint(
 def _resolve_tier_mode(ingest_stats: dict) -> str:
     mode = ingest_stats.get("tier_mode") or ingest_stats.get("mode")
     return str(mode) if mode else "single"
-
-
-def _resolve_pipeline_orchestration(cfg: AppConfig) -> str:
-    raw = str(getattr(cfg.pipeline, "orchestration", "unified") or "unified").strip().lower()
-    return raw if raw in ("unified", "legacy") else "unified"
 
 
 def _apply_featured_detected_intent(trip: dict, ingest_stats: dict) -> str:
@@ -737,7 +731,6 @@ def run_studio_pipeline(
                 filename=plan_filename,
             )
 
-        orchestration = _resolve_pipeline_orchestration(cfg)
         featured_path, material_path = _resolve_ingest_folder_paths(album_dir, folder_overrides)
 
         def persist_partial_ingest() -> None:
@@ -762,107 +755,6 @@ def run_studio_pipeline(
             "persist_trip_state": _persist_trip_state,
             "flush_pipeline_timings": _flush_pipeline_timings,
         }
-
-        if orchestration == "legacy":
-            try:
-                parallel_embed = None
-                if cfg.pipeline.parallel_embed and cfg.vision.enabled != "false":
-                    from travelogue.vision.parallel_embed import ParallelEmbedCoordinator
-
-                    parallel_embed = ParallelEmbedCoordinator(
-                        trip_root,
-                        cfg=cfg,
-                        chunk_size=cfg.pipeline.parallel_embed_chunk,
-                    )
-
-                def on_asset_added(entry: dict) -> None:
-                    if parallel_embed is not None:
-                        parallel_embed.offer(entry)
-
-                ingest_t0 = time.monotonic()
-                ingest_result = ingest_into_trip(
-                    trip,
-                    trip_root,
-                    from_dir=album_dir,
-                    max_photos=cfg.ingest.max_photos,
-                    dedupe=dedupe,
-                    app_cfg=cfg,
-                    featured_dir=featured_path,
-                    material_dir=material_path,
-                    on_progress=ingest_progress if progress else None,
-                    on_cull_hint=cull_progress_hint if progress else None,
-                    on_persist=persist_partial_ingest,
-                    on_asset_added=on_asset_added if parallel_embed else None,
-                    resume_ingest=True,
-                )
-                if parallel_embed is not None:
-                    parallel_embed.finish()
-                pipeline_timings["ingestMs"] = round((time.monotonic() - ingest_t0) * 1000.0, 2)
-            except IngestError as exc:
-                _raise_demo_from_ingest(exc)
-
-            tier_mode = _apply_featured_detected_intent(trip, ingest_result.stats or {})
-
-            from travelogue.curation.intent_hints import apply_editorial_intent_hints
-
-            apply_editorial_intent_hints(trip)
-
-            from travelogue.curation.clustering import run_clustering_layer
-
-            cluster_t0 = time.monotonic()
-            cluster_result = run_clustering_layer(trip, trip_dir=trip_root, cfg=cfg)
-            pipeline_timings["clusterMs"] = round((time.monotonic() - cluster_t0) * 1000.0, 2)
-            cluster_meta = (trip.get("curation") or {}).get("clustering") or {}
-            embed_stats = cluster_meta.get("embedStats") or {}
-            if cluster_meta.get("embedSkipped"):
-                pipeline_timings["embedMs"] = 0.0
-            else:
-                pipeline_timings["embedMs"] = float(embed_stats.get("elapsedMs") or 0.0)
-            _flush_pipeline_timings()
-            cluster_notice = cluster_result.user_notice
-            _persist_trip_state()
-
-            if cluster_result.stage_hint and progress:
-                progress("curate", 2, cluster_result.stage_hint)
-            else:
-                report("curate", 2)
-            try:
-                curate_t0 = time.monotonic()
-                run_curate(
-                    trip,
-                    export_layout="auto",
-                    apply_layout=True,
-                    trip_dir=trip_root,
-                    cfg=cfg,
-                )
-                pipeline_timings["curateMs"] = round((time.monotonic() - curate_t0) * 1000.0, 2)
-                _flush_pipeline_timings()
-            except CurateError as exc:
-                raise DemoError(exc.code, str(exc)) from exc
-            _persist_trip_state()
-
-            if stop_after == "structure":
-                return _finalize_pipeline_result(
-                    svc=svc,
-                    trip_json=trip_json,
-                    trip_root=trip_root,
-                    slug=slug,
-                    host=host,
-                    port=port,
-                    title=title,
-                    photo_count=photo_count,
-                    cluster_notice=cluster_notice,
-                    tier_mode=tier_mode,
-                    user_date_range=date_payload,
-                    import_mode=import_mode,
-                    g1_pending=False,
-                )
-
-            return _studio_post_curate(
-                **post_curate_kwargs,
-                cluster_notice=cluster_notice,
-                tier_mode=tier_mode,
-            )
 
         ingest_stats_holder: dict = {}
         cluster_notice = ""
