@@ -50,6 +50,19 @@ def test_m5_longshot_module_exports() -> None:
     assert "export function (job)" not in longshot
 
 
+def test_m5_shell_module_exports() -> None:
+    js = PREVIEW_JS.read_text(encoding="utf-8")
+    shell = (STUDIO / "preview-toolbar" / "shell.js").read_text(encoding="utf-8")
+    assert 'from "./preview-toolbar/shell.js"' in js
+    for token in (
+        "export function showToolbarToast",
+        "export function syncToolbarHeight",
+        "export function tripIdFromPath",
+        "export function reloadPreviewAfterLayout",
+    ):
+        assert token in shell, f"missing shell export: {token}"
+
+
 def test_v4_init_uses_icon_dock_not_legacy_rows() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
     marker = 'root.className = "preview-toolbar preview-toolbar--v4"'
