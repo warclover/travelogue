@@ -485,6 +485,16 @@ def run_studio_pipeline(
         app_ctx = AppContext(cfg=cfg, trips_root=trips_root.resolve())
         svc = app_ctx.trip_service()
         trip = svc.load(trip_json)
+
+        def _persist_trip_state() -> None:
+            work = trip
+
+            def mutator(t: dict) -> None:
+                for key, value in work.items():
+                    t[key] = value
+
+            svc.update(trip_json, mutator)
+
         trip_rollout_id = str(trip.get("tripId") or slug).strip()
         if trip_rollout_id:
             from travelogue.curation.phase6_rollout import resolve_app_config_for_trip
@@ -564,7 +574,7 @@ def run_studio_pipeline(
                 )
 
             def persist_partial_ingest() -> None:
-                svc.save(trip, trip_json)
+                _persist_trip_state()
 
             def on_asset_added(entry: dict) -> None:
                 if parallel_embed is not None:
@@ -637,7 +647,7 @@ def run_studio_pipeline(
             pipeline_timings["embedMs"] = float(embed_stats.get("elapsedMs") or 0.0)
         _flush_pipeline_timings()
         cluster_notice = cluster_result.user_notice
-        svc.save(trip, trip_json)
+        _persist_trip_state()
 
         if cluster_result.stage_hint and progress:
             progress("curate", 2, cluster_result.stage_hint)
@@ -656,7 +666,7 @@ def run_studio_pipeline(
             _flush_pipeline_timings()
         except CurateError as exc:
             raise DemoError(exc.code, str(exc)) from exc
-        svc.save(trip, trip_json)
+        _persist_trip_state()
 
         g1_pending = bool(cfg.studio.g1_confirm_structure)
         if g1_pending:
@@ -674,7 +684,7 @@ def run_studio_pipeline(
             )
             pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
             _flush_pipeline_timings()
-            svc.save(trip, trip_json)
+            _persist_trip_state()
             report("render", 4)
             trip_final = svc.load(trip_json)
             if trip_status(trip_final) != "structure_draft":
@@ -733,7 +743,7 @@ def run_studio_pipeline(
             pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
             trip = svc.load(trip_json)
             _flush_pipeline_timings()
-            svc.save(trip, trip_json)
+            _persist_trip_state()
         except Exception as exc:
             code = getattr(exc, "code", "E_STUDIO_PIPELINE")
             raise DemoError(code, str(exc)) from exc
