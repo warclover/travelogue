@@ -155,8 +155,6 @@ def enrich_changed_screen_previews(
     preview_url_for: Callable[[str | Path], str] | None = None,
 ) -> list[dict[str, Any]]:
     """Attach first-slot preview URLs for changed screens (Studio sandbox UI)."""
-    from travelogue.render.context import pick_image_src
-
     assets = {
         str(a.get("id")): a for a in (trip.get("assets") or []) if a.get("id")
     }
@@ -173,7 +171,7 @@ def enrich_changed_screen_previews(
                 asset = assets.get(str(aid)) if aid else None
                 if not asset:
                     continue
-                rel = pick_image_src(asset)
+                rel = asset.get("displayFile") or asset.get("sourceFile") or ""
                 if rel and (trip_dir / rel).is_file():
                     row[f"{side}Preview"] = preview_url_for(rel)
         enriched.append(row)

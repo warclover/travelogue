@@ -1006,7 +1006,7 @@ def _finalize_ingest_assets(
     for w in apply_meta_dates_from_assets(trip):
         ingest_stats.setdefault("date_warnings", []).append(w)
 
-    from travelogue.services.copy_subject import narrative_copy_subject
+    from travelogue.domain.copy_subject import narrative_copy_subject
 
     meta = trip.get("meta") or {}
     journey_place = narrative_copy_subject(
