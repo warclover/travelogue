@@ -71,6 +71,8 @@ python -m travelogue demo verify
 
 **M-C2 batch8（2026-07-08）**：mosaic 余量 21 文件 → `tests/unit/layout_engine/`（mosaic 顶层测试清零）。
 
+**M-C2 batch9（2026-07-08）**：lte 单测 21 文件 → `tests/unit/layout_engine/`；`test_lte_studio_playwright.py` → `tests/e2e/`；CI registry parity 路径已更新。
+
 新增测试请放入 `tests/unit/{包名}/` 或 `tests/integration/`，勿在 `tests/` 根目录新建 `test_*.py`。
 
 | 模块 | 用例示例 |

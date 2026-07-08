@@ -3,7 +3,7 @@
 > 配套 [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) v1.1 · 执行提示词见 [PROMPTS-ARCH-OPTIMIZATION.md](./PROMPTS-ARCH-OPTIMIZATION.md)
 
 **当前分支**: `arch/optimization-ws1`  
-**最后更新**: 2026-07-08（M-C2 batch8 mosaic 收尾）
+**最后更新**: 2026-07-08（M-C2 batch9 lte）
 
 ## 里程碑总表
 
@@ -29,7 +29,7 @@
 | M-B6 | done | 2026-07-08 | `trip_migration` 兼容窗口 + 模块 doc；`lint_trip_json` version 窗；超窗单测 | 多 minor 迁移链待 schema bump 时补 |
 | M-C6 | in_progress | 2026-07-08 | `docs/GLOSSARY.md` + `store.js` 注释清理 | variant v3→classic 待 G-WIP-03 |
 | M-C1 | todo | — | — | 触发：新增 Studio API |
-| **M-C2** | in_progress | 2026-07-08 | batch1–7 共 **103** 文件分层；baseline **333**；batch7 mosaic 63 passed（3 失败为既有） | 顶层 ~333 待 batch8+ |
+| **M-C2** | in_progress | 2026-07-08 | batch1–9 共 **146** 文件分层；baseline **290**；lte 21→layout_engine、playwright→`tests/e2e/` | 顶层 ~290 待 batch10+ |
 | M-C3 | todo | — | — | 触发：Phase 验收完成 |
 | M-C5 | todo | — | — | 需 G-WIP-02 |
 | M-D1 | todo | — | — | 开关满 4 周 DoD |
@@ -95,4 +95,4 @@
 
 ## WS1 执行顺序
 
-P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · P-22 第一段 (M-C6) 进行中 · P-11 (M-B2) S1+S2 · **P-19 (M-C2) batch7 ✓** · batch8 mosaic/lte 待续 · M-B3 待 G-WIP-01
+P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · P-22 第一段 (M-C6) 进行中 · P-11 (M-B2) S1+S2 · **P-19 (M-C2) batch9 ✓** · batch10+ 待续 · M-B3 待 G-WIP-01

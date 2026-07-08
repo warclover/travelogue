@@ -288,7 +288,7 @@ jobs:
         run: python scripts/lte_probe_regress.py --screenshot --strict
 
       - name: LTE registry parity
-        run: python -m pytest tests/test_lte_registry_parity.py -q --maxfail=1
+        run: python -m pytest tests/unit/layout_engine/test_lte_registry_parity.py -q --maxfail=1
 
       - name: LTE legacy export smoke (warn-only)
         continue-on-error: true
