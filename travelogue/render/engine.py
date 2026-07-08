@@ -518,6 +518,7 @@ def render_trip(
     try:
         return _render_trip_body(
             trip,
+            trip_svc=trip_svc,
             trip_path=trip_path,
             trip_root=trip_root,
             out_dir=out_dir,
@@ -548,6 +549,7 @@ def render_trip(
 def _render_trip_body(
     trip: dict,
     *,
+    trip_svc,
     trip_path: Path,
     trip_root: Path,
     out_dir: Path,
