@@ -19,7 +19,7 @@
 | M-A3 | done | 2026-07-08 | `.gitignore` 增加 registry.cache.json / trips/.cache/；registry.cache 移出索引；import-wizard.js 索引无正反斜杠重复 | — |
 | M-B5 | done | 2026-07-08 | `scripts/lint_trip_json.py` + CI validate/lint；`e2e_trip_acceptance` 接入；13 fixtures + `pytest tests/test_lint_trip_json.py` 6 passed | — |
 | M-B0 | done | 2026-07-08 | `scripts/arch_equivalence_check.py` 自反性冒烟；`lint-imports` 26 豁免全绿；CI lint+validate；TECH-ARCH §18 | grimp 未解析的 media→curation 等 AST 违例留 M-B1 |
-| ADR-015 | todo | — | — | — |
+| ADR-015 | proposed | 2026-07-08 | `docs/adr/015-lse-planner-migration.md` + `lse_cross_import_stats.py`（51 边基线）；**待批准**后 M-B4b 可启动 | M-B4a 无需批准 |
 | M-B2 | todo | — | — | 需 G-WIP-01 |
 | M-B3 | todo | — | — | 需 M-B2 Go + G-WIP-01 |
 | M-C4 | todo | — | — | — |
@@ -49,4 +49,4 @@
 
 ## WS1 执行顺序
 
-P-00 ✓ → P-01 (M-A0) → P-02~P-08 ✓ **WS1 完成** → P-09 (M-B0) ✓ **WS2 首项完成**
+P-00 ✓ → P-01 (M-A0) → P-02~P-08 ✓ **WS1 完成** → P-09 (M-B0) ✓ → P-10 (ADR-015) ✓ **待批准**
