@@ -234,7 +234,7 @@ def resolve_slot_fit(
 
 
 def _mosaic_slot_count(pattern_id: str) -> int | None:
-    from travelogue.curation.screen_layout_state import pattern_slot_count
+    from travelogue.layout_contract.rhythm import pattern_slot_count
 
     n = pattern_slot_count(pattern_id)
     if n is not None:

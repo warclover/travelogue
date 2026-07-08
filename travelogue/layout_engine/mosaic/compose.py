@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from travelogue.config import MosaicConfig
-from travelogue.curation.layout_planner import AspectKind
+from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_engine.mosaic.candidates import (
     ScreenCandidate,
     generate_window_candidates_with_rejections,

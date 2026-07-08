@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.config import AppConfig, get_config
-from travelogue.curation.layout_density import layout_density_params, normalize_layout_density
+from travelogue.layout_contract.density import layout_density_params, normalize_layout_density
 
 
 @dataclass(frozen=True)

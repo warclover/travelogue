@@ -19,6 +19,9 @@ from travelogue.layout_contract.orientations import (
     ExportLayout,
     OrientationSummary,
     aspect_kind_for_asset,
+    effective_export_profile as _effective_profile,
+    is_std_landscape as _is_std_landscape,
+    is_std_portrait as _is_std_portrait,
     summarize_orientations,
 )
 
@@ -35,12 +38,6 @@ RowLayout = Literal[
 ]
 
 LAYOUT_FILL = {"fill": True, "bleed": True, "overlay": True}
-
-
-def _effective_profile(export_layout: ExportLayout) -> Literal["mobile", "web"]:
-    if export_layout == "web":
-        return "web"
-    return "mobile"
 
 
 def _card(asset_id: str, *, slot: str | None = None) -> dict:
@@ -134,14 +131,6 @@ def _apply_gallery_layout(
 
 def _kind(aid: str, aspects: dict[str, AspectKind]) -> AspectKind:
     return aspects.get(aid, "square")
-
-
-def _is_std_landscape(k: AspectKind) -> bool:
-    return k == "landscape"
-
-
-def _is_std_portrait(k: AspectKind) -> bool:
-    return k == "portrait"
 
 
 def _can_portrait_pair(k1: AspectKind, k2: AspectKind) -> bool:

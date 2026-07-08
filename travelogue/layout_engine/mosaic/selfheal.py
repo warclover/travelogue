@@ -6,7 +6,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from travelogue.config import MosaicConfig
-from travelogue.curation.layout_planner import AspectKind
+from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_engine.mosaic.candidates import ScreenCandidate
 from travelogue.layout_engine.mosaic.constants import (
     MOSAIC_3_PATTERN_IDS,

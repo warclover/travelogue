@@ -35,7 +35,7 @@ def _run_script(rel: str, *argv: str) -> tuple[int, str]:
 def test_lint_lse_cross_import_at_baseline() -> None:
     code, out = _run_script("scripts/lint_lse_cross_import.py")
     assert code == 0, out
-    assert "108" in out
+    assert "88" in out
 
 
 def test_load_config_warns_on_removed_planner_impl(tmp_path) -> None:

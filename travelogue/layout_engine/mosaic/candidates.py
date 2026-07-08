@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from travelogue.config import MosaicConfig, get_config
-from travelogue.curation.layout_planner import AspectKind
+from travelogue.layout_contract.orientations import AspectKind
 from travelogue.curation.media_classify import is_collage_asset
 from travelogue.layout_engine.mosaic.builders import build_screen, try_order_for_pattern
 from travelogue.layout_engine.mosaic.features import feature_summary_for_window

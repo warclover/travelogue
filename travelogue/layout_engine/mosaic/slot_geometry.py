@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.curation.layout_planner import AspectKind
+from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_HERO_3_2_PLUS_4
 from travelogue.layout_engine.mosaic.legacy_specs import (
     auto_flow_grids,

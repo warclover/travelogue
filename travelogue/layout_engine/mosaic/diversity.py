@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from travelogue.layout_engine.mosaic.candidates import ScreenCandidate
 from travelogue.layout_engine.mosaic.lte_adapter import read_templates_from_lte
-from travelogue.curation.screen_layout_state import layout_kind_from_pattern
+from travelogue.layout_contract.rhythm import layout_kind_from_pattern
 
 
 def _normalize_scores(scores: list[float]) -> list[float]:

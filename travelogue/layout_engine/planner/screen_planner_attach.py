@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from travelogue.config import AppConfig
-from travelogue.curation.screen_layout_state import RhythmRules, ScreenLayoutPlannerState
+from travelogue.layout_contract.rhythm import RhythmRules
+from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.layout_engine.planner.screen_planner import (
     DEFAULT_FEATURED_WEIGHT,
     LAYOUT_ENGINE_SCREENS,

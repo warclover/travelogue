@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from travelogue.curation.layout_planner import AspectKind
+from travelogue.layout_contract.orientations import AspectKind
 
 if TYPE_CHECKING:
     from travelogue.layout_engine.planner.screen_planner_stages import ChapterPlanContext

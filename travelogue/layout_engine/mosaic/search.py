@@ -8,18 +8,18 @@ from dataclasses import replace
 
 from travelogue.config import AppConfig
 from travelogue.curation.decision_log import LayoutDecisionLog
-from travelogue.curation.layout_planner import AspectKind
+from travelogue.layout_contract.orientations import AspectKind
 from travelogue.curation.layout_scoring import (
     IncrementalScoreState,
     ScoringWeights,
     score_screen_plan,
 )
-from travelogue.curation.screen_layout_state import (
+from travelogue.layout_contract.rhythm import (
     PORTRAIT_PAIR_PATTERN,
     PORTRAIT_SINGLE_PATTERNS,
     RhythmRules,
-    ScreenLayoutPlannerState,
 )
+from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.curation.search_budget import SearchBudget
 
 _log = logging.getLogger(__name__)
@@ -151,7 +151,7 @@ def replan_day_buckets_beam(
         else:
             ch["screens"] = []
 
-    from travelogue.curation.screen_layout_state import RhythmRules
+    from travelogue.layout_contract.rhythm import RhythmRules
     from travelogue.layout_engine.adapter import layout_state_for_trip, lse_enabled
 
     if cfg is not None and lse_enabled(cfg):

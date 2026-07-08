@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.curation.layout_planner import AspectKind
+from travelogue.layout_contract.orientations import AspectKind
 
 
 def pick_main_for_pattern(

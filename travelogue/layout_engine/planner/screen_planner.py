@@ -16,14 +16,13 @@ from travelogue.curation.asset_subject import (
     portrait_fit_for_asset,
 )
 from travelogue.curation.collage_routing import single_asset_screen_pattern
-from travelogue.curation.layout_planner import (
-    _effective_profile,
-    _is_std_landscape,
-    _is_std_portrait,
+from travelogue.layout_contract.orientations import (
+    effective_export_profile as _effective_profile,
+    is_std_landscape as _is_std_landscape,
+    is_std_portrait as _is_std_portrait,
 )
-from travelogue.curation.screen_layout_state import (  # noqa: F401 — re-exported API
+from travelogue.layout_contract.rhythm import (
     MAX_PORTRAIT_PAIR_STREAK,
-    ScreenLayoutPlannerState,
     is_nine_grid_pattern,
     is_portrait_single_pattern,
     is_six_grid_pattern,
@@ -32,6 +31,9 @@ from travelogue.curation.screen_layout_state import (  # noqa: F401 — re-expor
     nine_grid_limits_for_trip,
     pattern_slot_count,
     portrait_grid8_allowed,
+)
+from travelogue.curation.screen_layout_state import (  # noqa: F401 — re-exported API
+    ScreenLayoutPlannerState,
 )
 from travelogue.media.image_ops import AspectKind
 

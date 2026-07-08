@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from travelogue.curation.layout_planner import AspectKind, aspect_kind_for_asset
+from travelogue.layout_contract.orientations import (
+    AspectKind,
+    aspect_kind_for_asset,
+)
 
 
 @dataclass

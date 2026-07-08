@@ -6,7 +6,7 @@ from dataclasses import replace
 from typing import Any
 
 from travelogue.config import AppConfig, MosaicConfig
-from travelogue.curation.layout_planner import aspect_kind_for_asset
+from travelogue.layout_contract.orientations import aspect_kind_for_asset
 from travelogue.layout_engine.mosaic.scorer import score_candidate
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
 from travelogue.layout_engine.adapter import mosaic_config_from_pack, resolve_pack

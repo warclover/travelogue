@@ -5,7 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from travelogue.config import MosaicConfig
-from travelogue.curation.layout_planner import AspectKind, aspect_kind_for_asset
+from travelogue.layout_contract.orientations import (
+    AspectKind,
+    aspect_kind_for_asset,
+)
 from travelogue.layout_engine.mosaic.constants import (
     PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,

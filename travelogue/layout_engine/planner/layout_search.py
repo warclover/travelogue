@@ -7,7 +7,7 @@ from typing import Any
 from travelogue.config import AppConfig
 from travelogue.curation.degradation import DegradationAssessment
 from travelogue.curation.layout_candidates import generate_day_bucket_candidates  # noqa: F401
-from travelogue.curation.layout_planner import AspectKind
+from travelogue.layout_contract.orientations import AspectKind
 from travelogue.curation.layout_scoring import ScoringWeights
 
 # Re-export beam entry for ADR / tests

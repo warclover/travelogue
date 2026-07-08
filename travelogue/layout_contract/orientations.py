@@ -87,3 +87,17 @@ def summarize_orientations(
         tall=counts["tall"],
         export_layout=export_layout,
     )
+
+
+def effective_export_profile(export_layout: ExportLayout) -> Literal["mobile", "web"]:
+    if export_layout == "web":
+        return "web"
+    return "mobile"
+
+
+def is_std_landscape(k: AspectKind) -> bool:
+    return k == "landscape"
+
+
+def is_std_portrait(k: AspectKind) -> bool:
+    return k == "portrait"

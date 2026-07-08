@@ -26,6 +26,9 @@ from travelogue.layout_contract.orientations import (
     OrientationSummary,
     aspect_kind_for_asset,
     classify_aspect,
+    effective_export_profile,
+    is_std_landscape,
+    is_std_portrait,
     summarize_orientations,
 )
 from travelogue.layout_contract.summary import (
@@ -40,6 +43,9 @@ __all__ = [
     "OrientationSummary",
     "aspect_kind_for_asset",
     "classify_aspect",
+    "effective_export_profile",
+    "is_std_landscape",
+    "is_std_portrait",
     "summarize_orientations",
     "DEFAULT_CONSECUTIVE_BANS",
     "FOCAL_EDGE_MARGIN",
