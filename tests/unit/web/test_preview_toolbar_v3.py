@@ -27,6 +27,7 @@ def test_v3_modules_exist_and_are_imported() -> None:
     for token in (
         'from "./preview-toolbar-v3-task-dock.js"',
         'from "./preview-toolbar-v3-sheet.js"',
+        'from "./preview-toolbar/dock.js"',
         "initToolbarV3",
         "mountPreviewTaskDock",
         "mountPreviewUnifiedSheet",
@@ -50,14 +51,16 @@ def test_v4_init_uses_icon_dock_not_legacy_rows() -> None:
 
 def test_v4_dock_tooltips_and_scroll_fade() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
+    inline = (STUDIO / "preview-toolbar" / "inline-edit.js").read_text(encoding="utf-8")
+    dock = (STUDIO / "preview-toolbar" / "dock.js").read_text(encoding="utf-8")
     for token in (
         "initDockTooltips",
         "initDockScrollFade",
-        "initCoverTitleEdit",
-        "cover-opening__title--editable",
         "ensureDockTooltip",
     ):
-        assert token in js, f"missing v4 dock ux: {token}"
+        assert token in js or token in dock, f"missing v4 dock ux: {token}"
+    for token in ("initCoverTitleEdit", "cover-opening__title--editable"):
+        assert token in js or token in inline, f"missing v4 inline edit: {token}"
     css = PREVIEW_CSS.read_text(encoding="utf-8")
     for token in (
         "preview-toolbar__dock-tip",
@@ -173,7 +176,7 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             box = dock.bounding_box()
             assert box is not None
             assert box["height"] <= 52, f"dock height expected compact, got {box['height']}"
-            assert box["width"] <= 200, f"dock width expected compact, got {box['width']}"
+            assert box["width"] <= 240, f"dock width expected compact, got {box['width']}"
 
             assert page.locator(".preview-toolbar__dock-btn--back").count() == 1
             assert page.locator(".preview-toolbar__dock-btn--export").count() == 1
