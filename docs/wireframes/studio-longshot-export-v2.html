@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio · 导出长图 2.0 Popover · 交互稿</title>
+  <style>
+    :root {
+      --ink: #14110d;
+      --paper: #f7f2e9;
+      --line: rgba(20, 17, 13, .12);
+      --forest: #2d4a3e;
+      --muted: rgba(20, 17, 13, .55);
+      --wf-label: #e85d04;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); font-size: 14px; color: var(--ink); background: #ccc8be; }
+    .wf-meta { padding: 14px 22px; background: #fff; border-bottom: 2px solid var(--wf-label); }
+    .wf-meta h1 { margin: 0 0 4px; font-size: 17px; }
+    .wf-meta p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .wf-layout { display: grid; grid-template-columns: 1fr 320px; min-height: calc(100vh - 80px); }
+    @media (max-width: 900px) { .wf-layout { grid-template-columns: 1fr; } }
+    .wf-main { padding: 24px; display: flex; justify-content: center; align-items: flex-start; }
+    .toolbar-mock {
+      width: 100%; max-width: 720px; background: var(--paper); border-radius: 8px;
+      padding: 12px 16px; display: flex; align-items: center; gap: 12px; position: relative;
+    }
+    .dock-btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px;
+      background: var(--forest); color: #fff; border: none; border-radius: 6px; font-weight: 600; font-size: 13px;
+    }
+    .dock-btn--dynamic::after { content: "（随平台变化）"; font-weight: 400; font-size: 11px; opacity: .85; }
+    .popover {
+      position: absolute; top: calc(100% + 8px); left: 0; width: 320px; background: #fff;
+      border: 1px solid var(--line); border-radius: 10px; padding: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.12);
+    }
+    .popover h2 { margin: 0 0 4px; font-size: 14px; }
+    .popover .hint { margin: 0 0 14px; font-size: 11px; color: var(--muted); line-height: 1.45; }
+    .field { margin-bottom: 14px; }
+    .field-label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+    .seg button {
+      border: 1px solid var(--line); background: #fff; padding: 7px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+    }
+    .seg button.is-selected { background: var(--paper); border-color: rgba(20,17,13,.3); font-weight: 600; }
+    .expect { font-size: 11px; color: var(--forest); background: rgba(45,74,62,.08); padding: 8px 10px; border-radius: 6px; line-height: 1.45; }
+    .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+    .actions button { padding: 8px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .actions .ok { background: var(--ink); color: var(--paper); border: none; }
+    .actions .cancel { background: #fff; border: 1px solid var(--line); }
+    .success-mock {
+      margin-top: 24px; max-width: 720px; background: #fff; border-radius: 10px; padding: 20px; border: 1px solid var(--line);
+    }
+    .success-mock h3 { margin: 0 0 8px; font-size: 15px; }
+    .thumbs { display: flex; gap: 6px; overflow-x: auto; padding: 8px 0; }
+    .thumb { flex: 0 0 48px; height: 64px; background: linear-gradient(180deg,#ddd,#bbb); border-radius: 4px; position: relative; font-size: 10px; color: #fff; display: flex; align-items: flex-end; justify-content: center; padding: 4px; }
+    .guide { font-size: 12px; line-height: 1.55; color: var(--muted); margin: 12px 0; }
+    .wf-spec { background: #fff; border-left: 1px solid var(--line); padding: 18px 20px; font-size: 12px; line-height: 1.55; }
+    .wf-spec h2 { font-size: 13px; color: var(--wf-label); margin: 0 0 10px; }
+    .wf-spec ul { margin: 0; padding-left: 18px; }
+    .wf-spec li { margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <header class="wf-meta">
+    <h1>导出长图 2.0 · Popover + 成功态 · PRD v0.3.2</h1>
+    <p>评审修订：动态 CTA · publishGuide · <strong>缩略条延后 v2.0.1（Phase A 成功态用文件列表）</strong></p>
+  </header>
+  <div class="wf-layout">
+    <main class="wf-main">
+      <div>
+        <div class="toolbar-mock">
+          <button type="button" class="dock-btn dock-btn--dynamic" id="cta-demo">导出 9 张朋友圈配图</button>
+          <span style="font-size:12px;color:var(--muted)">⋯ 其他工具</span>
+          <div class="popover" aria-label="导出设置">
+            <h2>导出设置</h2>
+            <p class="hint">调整平台与清晰度；点左侧按钮开始导出。</p>
+            <div class="field">
+              <span class="field-label">分享平台</span>
+              <div class="seg" role="group">
+                <button type="button">微信群</button>
+                <button type="button" class="is-selected">朋友圈</button>
+                <button type="button">小红书</button>
+              </div>
+            </div>
+            <div class="field">
+              <span class="field-label">预期</span>
+              <div class="expect">将生成 <strong>9 张</strong>配图（内容少时可能 6–9 张）· 预计 30–60 秒</div>
+            </div>
+            <div class="field">
+              <span class="field-label">清晰度</span>
+              <div class="seg">
+                <button type="button" class="is-selected">标准 2×</button>
+                <button type="button">高清 3×</button>
+              </div>
+            </div>
+            <div class="actions">
+              <button type="button" class="cancel">取消</button>
+              <button type="button" class="ok">确定</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="success-mock">
+          <h3>✓ 9 张朋友圈配图已就绪</h3>
+          <div class="thumbs" aria-label="输出缩略">
+            <div class="thumb">01</div><div class="thumb">02</div><div class="thumb">03</div>
+            <div class="thumb">04</div><div class="thumb">05</div><div class="thumb">06</div>
+            <div class="thumb">07</div><div class="thumb">08</div><div class="thumb">09</div>
+          </div>
+          <p class="guide"><strong>发布步骤：</strong>1. 在文件夹按 01→09 全选 · 2. 朋友圈 → 从相册选择 · 3. 按顺序发布（滑动可连读）</p>
+          <button type="button" class="dock-btn" style="background:var(--ink)">在文件夹中显示</button>
+        </div>
+      </div>
+    </main>
+    <aside class="wf-spec">
+      <h2>交互规格</h2>
+      <ul>
+        <li>选「微信群」时显示「导出范围：按章 / 完整」</li>
+        <li>选「朋友圈 / 小红书」时隐藏导出范围</li>
+        <li>主按钮 CTA 随平台变化（非固定「导出长图」）</li>
+        <li>Phase C 不增加「更多平台」前端入口</li>
+        <li>模块：<code>longshot-export-panel.js</code></li>
+      </ul>
+      <h2 style="margin-top:20px">CTA 文案</h2>
+      <ul>
+        <li>微信群 → 导出长图</li>
+        <li>朋友圈 → 导出 9 张朋友圈配图</li>
+        <li>小红书 → 导出小红书配图</li>
+      </ul>
+    </aside>
+  </div>
+</body>
+</html>
