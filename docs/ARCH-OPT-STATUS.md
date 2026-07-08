@@ -3,7 +3,7 @@
 > 配套 [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) v1.1 · 执行提示词见 [PROMPTS-ARCH-OPTIMIZATION.md](./PROMPTS-ARCH-OPTIMIZATION.md)
 
 **当前分支**: `arch/optimization-ws1`  
-**最后更新**: 2026-07-08（M-C2 batch5 export/render）
+**最后更新**: 2026-07-08（M-C2 batch6 layout_engine）
 
 ## 里程碑总表
 
