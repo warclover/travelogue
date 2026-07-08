@@ -61,6 +61,8 @@ python -m travelogue demo verify
 
 **M-C2 batch1（2026-07-08）**：domain / orchestrator / lint / trip_migration → `tests/unit/`；trip CAS → `tests/integration/trip/`。
 
+**M-C2 batch2（2026-07-08）**：config / trip schema → `tests/unit/`；domain copy/closing；curation clustering；orchestrator 集成 → `tests/integration/orchestrator/`。`_album` 统一为 `tests.studio_test_helpers.make_test_album`。
+
 新增测试请放入 `tests/unit/{包名}/` 或 `tests/integration/`，勿在 `tests/` 根目录新建 `test_*.py`。
 
 | 模块 | 用例示例 |

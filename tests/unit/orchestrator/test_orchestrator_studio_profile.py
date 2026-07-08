@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from tests.test_ingest import _album
+from tests.studio_test_helpers import make_test_album as _album
 from travelogue.config import AppConfig, ClusteringConfig, VisionConfig
 from travelogue.orchestrator.run import run_trip
 from travelogue.orchestrator.studio_hooks import StudioHooks

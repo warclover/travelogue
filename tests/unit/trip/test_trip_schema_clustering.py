@@ -9,7 +9,7 @@ from travelogue.config import AppConfig, ClusteringConfig
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.services.validate import validate_trip
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_FIXTURE = ROOT / "schemas" / "fixtures" / "trip.render_golden.json"
 SYNTHETIC = ROOT / "tests" / "fixtures" / "clustering" / "synthetic-gps" / "assets-manifest.json"
 

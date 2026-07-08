@@ -7,7 +7,7 @@ from pathlib import Path
 
 from travelogue.services.validate import validate_trip
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_FIXTURE = ROOT / "schemas" / "fixtures" / "trip.render_golden.json"
 
 

@@ -8,22 +8,9 @@ from pathlib import Path
 
 from PIL import Image
 
+from tests.studio_test_helpers import make_test_album as _album
 from travelogue.media.ingest import ingest_into_trip
 from travelogue.services.trip_factory import create_trip
-
-
-def _album(tmp_path: Path, n: int = 6) -> Path:
-    album = tmp_path / "album"
-    album.mkdir()
-    stamp = time.time() - n * 10
-    for i in range(n):
-        path = album / f"p{i:02d}.jpg"
-        Image.new("RGB", (2400, 3200), (30 + i * 17, 50 + i * 11, 70 + i * 13)).save(
-            path, quality=95
-        )
-        ts = stamp + i * 10
-        os.utime(path, (ts, ts))
-    return album
 
 
 def test_ingest_preserves_aspect_without_crop(tmp_path: Path) -> None:

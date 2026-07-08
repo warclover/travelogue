@@ -9,7 +9,8 @@ from pathlib import Path
 from travelogue.config import AppConfig, ClusteringConfig
 from travelogue.curation.clustering import run_clustering_layer
 
-FIXTURE = Path(__file__).resolve().parent / "fixtures" / "clustering" / "synthetic-gps" / "assets-manifest.json"
+ROOT = Path(__file__).resolve().parents[3]
+FIXTURE = ROOT / "tests" / "fixtures" / "clustering" / "synthetic-gps" / "assets-manifest.json"
 
 
 def _cluster_hash(trip: dict) -> str:

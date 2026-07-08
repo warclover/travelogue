@@ -43,7 +43,6 @@ test_cluster_cli.py
 test_cluster_eval.py
 test_cluster_m14.py
 test_clustering_bucket_recovery.py
-test_clustering_deterministic.py
 test_clustering_regression.py
 test_clustering_spike.py
 test_clustering_timeout.py
@@ -52,16 +51,11 @@ test_cohort_faces.py
 test_collage_full_frame.py
 test_color_metrics.py
 test_compare_web_layout.py
-test_config_fail_loud.py
-test_config_helpers.py
-test_config_override.py
 test_copy_display.py
 test_copy_optimization.py
 test_copy_patch.py
-test_copy_subject.py
 test_cover_by_layout.py
 test_cover_candidates_v2.py
-test_cover_closing.py
 test_cover_opening.py
 test_cover_optimization_v4.py
 test_cover_scoring_config.py
@@ -70,7 +64,6 @@ test_cover_scoring_v2_gates.py
 test_cover_styles_v5.py
 test_curate.py
 test_curate_chapters.py
-test_curate_clustering.py
 test_curate_limits.py
 test_curate_p5_cover.py
 test_curate_reading_warnings.py
@@ -103,7 +96,6 @@ test_exposure_metrics.py
 test_feedback.py
 test_food_grid.py
 test_food_grid_fixture_trip.py
-test_g1_narrate_pipeline.py
 test_geo_events.py
 test_geocode.py
 test_golden_layouts.py
@@ -283,14 +275,12 @@ test_phash.py
 test_photo_cull.py
 test_photo_cull_ml.py
 test_photo_cull_policy.py
-test_pipeline_config.py
 test_portrait_analyze.py
 test_portrait_carry_forward.py
 test_portrait_cover_demote.py
 test_portrait_defect_metrics.py
 test_portrait_heavy_workshop.py
 test_preview_toolbar_v3.py
-test_publish_e2e.py
 test_pytest_markers.py
 test_reading_ac_regression.py
 test_reading_auto_breath.py
@@ -403,11 +393,6 @@ test_template_router.py
 test_template_security_hardening.py
 test_template_summary.py
 test_time_segments.py
-test_trip_dates.py
-test_trip_schema_clustering.py
-test_trip_schema_cull.py
-test_trip_service.py
-test_trip_slug.py
 test_usage_rules_baseline.py
 test_usage_rules_eval_report.py
 test_usage_rules_evaluator.py

@@ -11,7 +11,7 @@ from travelogue.config.errors import ConfigError
 from travelogue.config.loader import load_config
 from travelogue.config.yaml_loader import load_yaml_mapping
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 EXAMPLE = ROOT / "config.yaml.example"
 
 
