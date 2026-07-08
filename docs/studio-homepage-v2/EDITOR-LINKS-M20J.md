@@ -12,7 +12,7 @@
 | `templates/studio/preview-toolbar.js` | `href="/"` ×4 | **v2 首页** ✓ |
 | `templates/visual-journal/partials/*.hbs` | `href="/"` | **v2 首页** ✓ |
 | `trips/*/index*.html`（已发布 trip） | `href="/"` | **v2 首页** ✓ |
-| `studio-home-v2.html` topbar | `href="/"`（经典首页） | loopback dev → v3；生产 `on` 时仍可用 `/classic` |
+| `studio-home-v2.html` topbar | `href="/"`（经典首页） | loopback dev → classic @ `/`；生产 `on` 时仍可用 `/classic` |
 
 ---
 
@@ -21,10 +21,10 @@
 | 问题 | 结论 |
 |------|------|
 | M20-j 是否批量改 editor `href="/"` → `/classic`？ | **否**。`on` 模式下 `/` 即 v2，用户期望「返回首页」= 新 Bento 首页。 |
-| 是否需要 v3 永久入口？ | **是**。`GET /classic`（已实现）；v2 topbar「经典首页」仅 loopback 显示。 |
-| 预览页返回是否应区分 variant？ | **否**。统一 `/`；holdback 对照组用户从 editor 返回仍进 v3 仅当 gate 将其留在 v3 且 **未** 从 editor 导航（editor 链不受 session 分桶影响，始终 `/`）。 |
+| 是否需要 classic 永久入口？ | **是**。`GET /classic`（已实现）；v2 topbar「经典首页」仅 loopback 显示。 |
+| 预览页返回是否应区分 variant？ | **否**。统一 `/`；holdback 对照组用户从 editor 返回仍进 classic 仅当 gate 将其留在 classic 且 **未** 从 editor 导航（editor 链不受 session 分桶影响，始终 `/`）。 |
 
-**Holdback 注意**：对照组用户若从 `/` 进 v3，从 trip editor 点「返回首页」会到 `/` → 仍 v3（gate 不重定向 editor 内导航）。进组用户 editor 返回 → v2。符合 A/B 意图。
+**Holdback 注意**：对照组用户若从 `/` 进 classic，从 trip editor 点「返回首页」会到 `/` → 仍 classic（gate 不重定向 editor 内导航）。进组用户 editor 返回 → v2。符合 A/B 意图。
 
 ---
 

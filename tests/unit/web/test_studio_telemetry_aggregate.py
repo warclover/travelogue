@@ -45,7 +45,7 @@ def test_aggregate_by_day_variant_event() -> None:
     ]
     out = agg_mod.aggregate(agg_mod.parse_events(_jsonl(recs)))
     assert out[("2026-06-01", "v2", "homepage_view")] == 2
-    assert out[("2026-06-02", "v3", "homepage_view")] == 1
+    assert out[("2026-06-02", "classic", "homepage_view")] == 1
 
 
 def test_funnel_ratios() -> None:
@@ -64,7 +64,7 @@ def test_funnel_ratios() -> None:
 
 def test_rollback_flags_triggers_on_conversion_drop() -> None:
     recs = (
-        # v3 baseline：转化 100%
+        # classic baseline（legacy v3 写入，归一化为 classic）：转化 100%
         [{"event": "import_start", "meta": {"variant": "v3"}}] * 10
         + [{"event": "import_success", "meta": {"variant": "v3"}}] * 10
         # v2：转化 50% → 下降 50% > 15% 阈值

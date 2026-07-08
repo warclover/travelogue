@@ -3,13 +3,16 @@
 对照 docs/PRD-IMPORT-SHEET-v3-WIZARD.md §12：
   AC-IW-01/02 一屏无滚轮 · AC-IW-04 默认无 checkbox · AC-IW-05 摘要行随开关同步
   AC-IW-09b 首次访问强制快速分享 · AC-IW-11 flag 关回落旧 Sheet
-  AC-IW-DS-01 下游 import_start/Importing 衔接 · AC-IW-DS-05 上传失败重试回 Step 1
+  AC-IW-DS-01 下游 import_start/Importing 衔接 · AC-IW-DS-04 Importing 中 CTA 拦截
+  AC-IW-DS-05 上传失败重试回 Step 1 · AC-IW-DS-02 精细模式 payload · AC-IW-DS-07 刷新续 poll
+  AC-IW-DS-03 关智能挑选 FirstSuccess 文案 · AC-IW-DS-06 上传路径 · AC-IW-DS-08 Wizard/Sheet 下游等价
 
 flag：studio.importWizardV3Enabled（默认 false，仅本文件测试显式开启）。
 """
 
 from __future__ import annotations
 
+import json
 import yaml
 from pathlib import Path
 
@@ -32,7 +35,7 @@ def _reset_jobs() -> None:
 @pytest.fixture
 def wizard_server(tmp_path: Path):
     trips_dir = tmp_path / "trips"
-    trips_dir.mkdir()
+    trips_dir.mkdir(parents=True, exist_ok=True)
     config_path = tmp_path / "config.yaml"
     config_path.write_text(
         yaml.safe_dump({"studio": {"import_wizard_v3_enabled": True}}),
@@ -52,7 +55,7 @@ def wizard_server(tmp_path: Path):
 def legacy_server(tmp_path: Path):
     """flag 关闭（默认）· AC-IW-11 回归基线。"""
     trips_dir = tmp_path / "trips"
-    trips_dir.mkdir()
+    trips_dir.mkdir(parents=True, exist_ok=True)
     port = _free_port()
     server = _start_studio_server(trips_dir, port)
     base = f"http://127.0.0.1:{port}"
@@ -274,3 +277,272 @@ def test_ac_iw_ds_upload_retry_reopens_wizard_at_step1(wizard_server) -> None:
         )
         assert step_pick_visible
         browser.close()
+
+
+def _wizard_to_confirm(page) -> None:
+    page.locator("#v2-wizard-more-import summary").click()
+    page.locator("#v2-wizard-album-path").fill("/harness/album")
+    page.locator("#v2-wizard-path-submit").click()
+    _wait_visible(page, "v2-wizard-step-confirm")
+
+
+def test_ac_iw_ds_02_fine_craft_payload(wizard_server) -> None:
+    """AC-IW-DS-02 · Wizard 精细路径 → activePending.mode=fine_craft + layoutDensity。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, wizard_server["base"])
+        _wait_visible(page, "v2-frame")
+        _open_wizard(page)
+        _wizard_to_confirm(page)
+        page.locator("#v2-wizard-mode-fine").click()
+        page.locator("#v2-wizard-start").click()
+        _wait_visible(page, "v2-wizard-step-fine")
+        page.locator("#v2-wizard-trip-title").fill("京都秋色")
+        page.locator('input[name="v2-wizard-layout-density"][value="hero_first"]').check()
+        page.locator("#v2-wizard-start-fine").click()
+        _wait_visible(page, "v2-import-cancel")
+
+        pending = page.evaluate(
+            "() => JSON.parse(sessionStorage.getItem('travelogue.studio.activePending') || '{}')"
+        )
+        assert pending.get("mode") == "fine_craft"
+        assert pending.get("layoutDensity") == "hero_first"
+        assert pending.get("title") == "京都秋色"
+        browser.close()
+
+
+def test_ac_iw_ds_04_importing_blocks_cta(wizard_server) -> None:
+    """AC-IW-DS-04 · Importing 进行中尝试开 Wizard → toast，Wizard 不打开。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, wizard_server["base"], "dev=1&studioState=importing")
+        page.wait_for_selector("#v2-import-cancel", timeout=20_000)
+        page.evaluate(
+            """
+            async () => {
+              const mod = await import('/__studio/homepage-v2/import-wizard.js');
+              mod.openImportWizard();
+            }
+            """
+        )
+        wizard_hidden = page.evaluate(
+            "() => { const w = document.getElementById('v2-wizard-root'); return !w || w.hidden; }"
+        )
+        assert wizard_hidden
+        toast = page.locator(".studio__toast", has_text="正在制作中").inner_text(timeout=5000)
+        assert "正在制作中" in toast
+        browser.close()
+
+
+def test_ac_iw_ds_07_reload_resumes_import_not_wizard(wizard_server) -> None:
+    """AC-IW-DS-07 · 导入中刷新 → resumeImportIfNeeded 续 poll，不进 Wizard。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(
+            page,
+            wizard_server["base"],
+            "dev=1&studioState=importing-resume&studioJob=running",
+        )
+        page.wait_for_selector("#v2-import-cancel", timeout=20_000)
+        page.reload(wait_until="networkidle")
+        page.wait_for_selector("#v2-import-cancel", timeout=20_000)
+        wizard_hidden = page.evaluate(
+            "() => { const w = document.getElementById('v2-wizard-root'); return !w || w.hidden; }"
+        )
+        assert wizard_hidden
+        job_id = page.evaluate(
+            "() => sessionStorage.getItem('travelogue.studio.activeJobId')"
+        )
+        assert job_id == "harness-job-1"
+        browser.close()
+
+
+def _route_harness_import_mocks(
+    page,
+    *,
+    photo_count: int = 129,
+    layout_eligible: int = 120,
+    photo_cull_enabled: bool = False,
+) -> None:
+    """Playwright 路由：album-preview + import + status（不依赖真实 pipeline）。"""
+
+    def _album_preview(route) -> None:
+        route.fulfill(
+            status=200,
+            content_type="application/json",
+            body=json.dumps(
+                {
+                    "ok": True,
+                    "photoCount": photo_count,
+                    "folderName": "harness-album",
+                    "thumbs": [],
+                }
+            ),
+        )
+
+    def _import_post(route) -> None:
+        route.fulfill(
+            status=202,
+            content_type="application/json",
+            body=json.dumps({"jobId": "harness-job-1"}),
+        )
+
+    def _status_poll(route) -> None:
+        route.fulfill(
+            status=200,
+            content_type="application/json",
+            body=json.dumps(
+                {
+                    "jobId": "harness-job-1",
+                    "status": "succeeded",
+                    "result": {
+                        "tripId": "harness-trip",
+                        "title": "Harness · 测试",
+                        "previewUrl": "/harness-trip/index.html",
+                        "photoCount": photo_count,
+                        "layoutEligibleCount": layout_eligible,
+                        "photoCullEnabled": photo_cull_enabled,
+                        "segmentCount": 3,
+                    },
+                }
+            ),
+        )
+
+    page.route("**/__travelogue/album-preview", _album_preview)
+    page.route("**/__travelogue/import", _import_post)
+    page.route("**/__travelogue/status**", _status_poll)
+
+
+def _wizard_quick_folder_to_confirm(page) -> None:
+    _open_wizard(page)
+    page.locator("#v2-wizard-more-import summary").click()
+    page.locator("#v2-wizard-album-path").fill("/harness/album")
+    page.locator("#v2-wizard-path-submit").click()
+    _wait_visible(page, "v2-wizard-step-confirm")
+
+
+def _sheet_quick_folder_to_confirm(page) -> None:
+    page.locator("#v2-cta").click()
+    _wait_visible(page, "v2-sheet-root")
+    page.locator(".v2-sheet__details").nth(1).locator("summary").click()
+    page.locator("#v2-album-path").fill("/harness/album")
+    page.locator("#v2-path-submit").click()
+    page.wait_for_selector("#v2-sheet-confirm:not([hidden])", timeout=20_000)
+
+
+def _import_fields(body: dict) -> dict:
+    fields = dict(body.get("fields") or {})
+    keep = (
+        "albumPath",
+        "mode",
+        "photoCullEnabled",
+        "keepNearDuplicates",
+        "title",
+    )
+    return {k: fields[k] for k in keep if k in fields}
+
+
+def test_ac_iw_ds_03_cull_disabled_first_success_copy(wizard_server) -> None:
+    """AC-IW-DS-03 · 关智能挑选 + 129 张 → FirstSuccess「不做智能挑选 · N/M 张…」。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _route_harness_import_mocks(
+            page,
+            photo_count=129,
+            layout_eligible=120,
+            photo_cull_enabled=False,
+        )
+        _goto_v2(page, wizard_server["base"])
+        _wait_visible(page, "v2-frame")
+        _wizard_quick_folder_to_confirm(page)
+
+        page.locator("#v2-wizard-photo-adjust").click()
+        _wait_visible(page, "v2-wizard-photo-drawer")
+        page.locator("#v2-wizard-photo-cull").uncheck()
+
+        page.locator("#v2-wizard-start").click()
+        page.wait_for_selector("#v2-success-open", timeout=30_000)
+
+        details = page.locator("#v2-success-details").inner_text()
+        assert "不做智能挑选" in details
+        assert "129" in details
+        assert "120" in details
+        assert "经挑选" not in details
+        browser.close()
+
+
+def test_ac_iw_ds_06_upload_path_reaches_importing(wizard_server, tmp_path: Path) -> None:
+    """AC-IW-DS-06 · Wizard 浏览器上传 → activePending.uploadForm + Importing 面板。"""
+    upload_dir = tmp_path / "browser-upload"
+    upload_dir.mkdir()
+    for i in range(3):
+        (upload_dir / f"trip-{i}.jpg").write_bytes(b"\xff\xd8\xff\xe0" + b"\x00" * 64)
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _route_harness_import_mocks(page, photo_count=3, layout_eligible=3)
+        _goto_v2(page, wizard_server["base"])
+        _wait_visible(page, "v2-frame")
+        _open_wizard(page)
+        page.locator("#v2-wizard-album-upload").set_input_files(str(upload_dir))
+        _wait_visible(page, "v2-wizard-step-confirm")
+        page.locator("#v2-wizard-start").click()
+        page.wait_for_selector("#v2-import-cancel", timeout=20_000)
+
+        pending = page.evaluate(
+            "() => JSON.parse(sessionStorage.getItem('travelogue.studio.activePending') || '{}')"
+        )
+        assert pending.get("uploadForm") is True
+        assert pending.get("fileCount") == 3
+        assert pending.get("mode") == "quick_share"
+        browser.close()
+
+
+def test_ac_iw_ds_08_wizard_and_sheet_same_import_payload(
+    wizard_server,
+    legacy_server,
+) -> None:
+    """AC-IW-DS-08 · Wizard flag 开/关 · 同输入 import POST 字段等价（仅入口 UI 不同）。"""
+    query = "dev=1&studioJob=running"
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+
+        page_w = browser.new_page(viewport={"width": 1440, "height": 900})
+        _route_harness_import_mocks(page_w)
+        _goto_v2(page_w, wizard_server["base"], query)
+        _wait_visible(page_w, "v2-frame")
+        _wizard_quick_folder_to_confirm(page_w)
+        page_w.locator("#v2-wizard-start").click()
+        page_w.wait_for_function(
+            "() => window.__v2HarnessImportBodies && window.__v2HarnessImportBodies.length > 0",
+            timeout=20_000,
+        )
+        wizard_body = page_w.evaluate(
+            "() => window.__v2HarnessImportBodies.slice(-1)[0]"
+        )
+
+        page_l = browser.new_page(viewport={"width": 1440, "height": 900})
+        _route_harness_import_mocks(page_l)
+        _goto_v2(page_l, legacy_server["base"], query)
+        _wait_visible(page_l, "v2-frame")
+        _sheet_quick_folder_to_confirm(page_l)
+        page_l.locator("#v2-sheet-start-quick").click()
+        page_l.wait_for_function(
+            "() => window.__v2HarnessImportBodies && window.__v2HarnessImportBodies.length > 0",
+            timeout=20_000,
+        )
+        sheet_body = page_l.evaluate(
+            "() => window.__v2HarnessImportBodies.slice(-1)[0]"
+        )
+
+        browser.close()
+
+    assert wizard_body.get("kind") == "json"
+    assert sheet_body.get("kind") == "json"
+    assert _import_fields(wizard_body) == _import_fields(sheet_body)

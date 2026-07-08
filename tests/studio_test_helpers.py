@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import socket
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -15,6 +16,88 @@ from PIL import Image
 
 from travelogue.config import get_config
 from travelogue.runtime import AppContext
+
+# Chromium http(s) blocked ports (net/base/port_util.cc · kRestrictedPorts).
+_CHROMIUM_BLOCKED_PORTS = frozenset(
+    {
+        1,
+        7,
+        9,
+        11,
+        13,
+        15,
+        17,
+        19,
+        20,
+        21,
+        22,
+        23,
+        25,
+        37,
+        42,
+        43,
+        53,
+        77,
+        79,
+        87,
+        95,
+        101,
+        102,
+        103,
+        104,
+        109,
+        110,
+        111,
+        113,
+        115,
+        117,
+        119,
+        123,
+        135,
+        139,
+        143,
+        179,
+        389,
+        465,
+        512,
+        513,
+        514,
+        515,
+        526,
+        530,
+        531,
+        532,
+        540,
+        556,
+        563,
+        587,
+        601,
+        636,
+        993,
+        995,
+        2049,
+        3659,
+        4045,
+        6000,
+        6665,
+        6666,
+        6667,
+        6668,
+        6669,
+        6697,
+    }
+)
+
+
+def chromium_safe_free_port(*, host: str = "127.0.0.1") -> int:
+    """Ephemeral port safe for Playwright navigation to ``host:port``."""
+    for _ in range(64):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.bind((host, 0))
+            port = int(sock.getsockname()[1])
+        if port not in _CHROMIUM_BLOCKED_PORTS:
+            return port
+    raise RuntimeError("could not allocate a Chromium-safe ephemeral port")
 
 
 def make_test_album(base: Path, n: int = 6, *, name: str = "album") -> Path:

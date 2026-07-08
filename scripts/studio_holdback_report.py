@@ -120,7 +120,7 @@ def build_holdback_report(
 
 
 def _print_report(report: dict[str, Any]) -> None:
-    print("=== Studio 首页 Holdback 报告（v2 vs v3 · §17.2）===")
+    print("=== Studio 首页 Holdback 报告（v2 vs classic · §17.2）===")
     print(f"生成时间：{report['generated_at']}\n")
 
     funnel = report.get("funnel") or {}
@@ -191,7 +191,7 @@ def main(argv: list[str] | None = None) -> int:
             print("现场 LCP 需要 playwright", file=sys.stderr)
             return 2
         lcp_summary = _lcp.run_measurements(
-            args.lcp_base, ["v2", "v3"], args.lcp_runs, settle_ms=1200
+            args.lcp_base, ["v2", "classic"], args.lcp_runs, settle_ms=1200
         )
 
     report = build_holdback_report(events, lcp_summary)

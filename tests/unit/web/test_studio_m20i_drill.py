@@ -41,7 +41,7 @@ def test_run_drill_synthetic_skip_lcp(tmp_path: Path) -> None:
     body = json.loads(out.read_text(encoding="utf-8"))
     assert body["should_rollback"] is False
     assert "v2" in body["funnel"]
-    assert "v3" in body["funnel"]
+    assert "classic" in body["funnel"]
     assert report["lcp"] is None
 
 
@@ -58,9 +58,9 @@ def test_main_spawn_lcp(tmp_path: Path) -> None:
     body = json.loads(out.read_text(encoding="utf-8"))
     assert body["lcp"] is not None
     assert body["lcp"]["v2"]["n"] == 2
-    assert body["lcp"]["v3"]["n"] == 2
+    assert body["lcp"]["classic"]["n"] == 2
     assert body["lcp"]["v2"]["p95"] > 0
-    assert body["lcp"]["v3"]["p95"] > 0
+    assert body["lcp"]["classic"]["p95"] > 0
     assert body["flags"]["lcp"]
     assert body["funnel"]["v2"]["import_conversion"] == 1.0
     assert rc in (0, 1)

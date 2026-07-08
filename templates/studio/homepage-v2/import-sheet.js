@@ -346,7 +346,9 @@ function restoreModeAndDraft() {
   safeSet("v2-featured-dir", draft.featuredDir || "");
   safeSet("v2-material-dir", draft.materialDir || "");
   setLayoutDensity(draft.layoutDensity || "balanced");
-  setPhotoCullEnabled(draft.photoCullEnabled === true);
+  setPhotoCullEnabled(
+    draft.photoCullTouched ? draft.photoCullEnabled !== false : true,
+  );
   _photoCullTouched = !!draft.photoCullTouched;
   setKeepDupesEnabled(draft.keepNearDuplicates === true);
   _keepDupesTouched = !!draft.keepDupesTouched;

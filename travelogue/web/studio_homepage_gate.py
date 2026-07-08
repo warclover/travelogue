@@ -9,7 +9,8 @@ TRAVELOGUE_STUDIO_HOMEPAGE_V2：
 percent：环境变量 TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT，或 config.yaml
   `studio.homepage.v2_bento.percent`（0–100）。
 
-Query 覆盖（仅 loopback）：`?homepageVariant=v2|v3` 强制 variant（仅 /）。
+Query 覆盖（仅 loopback）：`?homepageVariant=v2|classic` 强制 variant（仅 /）；
+  兼容旧值 `v3`（读入时归一化为 classic）。
 """
 
 from __future__ import annotations
@@ -34,6 +35,19 @@ LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
 _log = logging.getLogger(__name__)
 
 HomepageGateMode = Literal["off", "on", "auto"]
+HomepageVariant = Literal["v2", "classic"]
+
+
+def normalize_homepage_variant(raw: str | None) -> HomepageVariant | None:
+    """Holdback variant 归一化；legacy ``v3`` → ``classic``。"""
+    if not raw:
+        return None
+    v = str(raw).strip().lower()
+    if v == "v2":
+        return "v2"
+    if v in ("classic", "v3"):
+        return "classic"
+    return None
 
 
 def resolve_mode(raw: str | None = None) -> HomepageGateMode:
@@ -156,15 +170,12 @@ def verify_bucket_cookie(raw: str, secret: str) -> int | None:
     return bucket
 
 
-def query_variant_override(query: dict[str, list[str]]) -> str | None:
-    """?homepageVariant=v2|v3 dev 覆盖。"""
+def query_variant_override(query: dict[str, list[str]]) -> HomepageVariant | None:
+    """?homepageVariant=v2|classic dev 覆盖（兼容 legacy ``v3``）。"""
     vals = query.get("homepageVariant") or query.get("homepagevariant") or []
     if not vals:
         return None
-    v = str(vals[0]).strip().lower()
-    if v in ("v2", "v3"):
-        return v
-    return None
+    return normalize_homepage_variant(vals[0])
 
 
 def decide_root_variant(
@@ -174,25 +185,23 @@ def decide_root_variant(
     bucket: int,
     query: dict[str, list[str]] | None = None,
     allow_override: bool = False,
-) -> Literal["v2", "v3"]:
+) -> HomepageVariant:
     """GET / 应展示的 variant（不含 redirect 细节）。"""
     if allow_override:
         override = query_variant_override(query or {})
-        if override == "v2":
-            return "v2"
-        if override == "v3":
-            return "v3"
+        if override is not None:
+            return override
     if mode == "on":
         return "v2"
     if mode == "auto":
-        return "v2" if bucket_in_treatment(bucket, percent) else "v3"
-    return "v3"
+        return "v2" if bucket_in_treatment(bucket, percent) else "classic"
+    return "classic"
 
 
 def should_redirect_root_to_v2(
     *,
     mode: HomepageGateMode,
-    variant: Literal["v2", "v3"],
+    variant: HomepageVariant,
 ) -> bool:
     """M21-c 后统一在根路径渲染，不再从 / 跳转到 /v2。"""
     return False
@@ -205,8 +214,14 @@ def parse_request_query(path_with_query: str) -> dict[str, list[str]]:
     return parse_qs(qs, keep_blank_values=False)
 
 
-def inject_home_placeholders(html: str, handler: Any, bucket: int) -> str:
-    """替换 __STUDIO_*__ 占位符（token escape + bucket + dev 标志）。"""
+def inject_home_placeholders(
+    html: str,
+    handler: Any,
+    bucket: int,
+    *,
+    homepage_variant: HomepageVariant | None = None,
+) -> str:
+    """替换 __STUDIO_*__ 占位符（token escape + bucket + dev 标志 + variant）。"""
     token = html_module.escape(getattr(handler, "studio_token", None) or "", quote=True)
     host = getattr(handler, "studio_host", "127.0.0.1") or "127.0.0.1"
     dev_flag = "1" if is_loopback_host(host) else ""
@@ -215,11 +230,13 @@ def inject_home_placeholders(html: str, handler: Any, bucket: int) -> str:
         if (STUDIO_TEMPLATE_DIR / "assets" / "miniapp-qr.webp").is_file()
         else "0"
     )
+    variant_attr = homepage_variant or "v2"
     return (
         html.replace("__STUDIO_TOKEN__", token)
         .replace("__STUDIO_BUCKET_ID__", str(bucket))
         .replace("__STUDIO_DEV__", dev_flag)
         .replace("__STUDIO_MINIAPP_QR__", miniapp_qr)
+        .replace("__STUDIO_HOMEPAGE_VARIANT__", variant_attr)
     )
 
 

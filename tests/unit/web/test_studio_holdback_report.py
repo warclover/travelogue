@@ -46,7 +46,7 @@ def test_build_holdback_report_triggers_rollback() -> None:
     )
     lcp = {
         "v2": {"n": 10, "p95": 2000.0, "metric": "lcp"},
-        "v3": {"n": 10, "p95": 1000.0, "metric": "lcp"},
+        "classic": {"n": 10, "p95": 1000.0, "metric": "lcp"},
     }
     report = hb_mod.build_holdback_report(events, lcp)
     assert report["should_rollback"] is True

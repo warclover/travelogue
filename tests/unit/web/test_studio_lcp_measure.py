@@ -47,7 +47,7 @@ def test_summarize_empty() -> None:
 def test_rollback_flag_triggers_when_v2_slower() -> None:
     summary = {
         "v2": {"n": 10, "p95": 2000.0},
-        "v3": {"n": 10, "p95": 1000.0},  # v2 比 v3 慢 100% > 30%
+        "classic": {"n": 10, "p95": 1000.0},  # v2 比 classic 慢 100% > 30%
     }
     flags = lcp_mod.lcp_rollback_flags(summary)
     assert any(f.startswith("ROLLBACK") for f in flags)
@@ -56,7 +56,7 @@ def test_rollback_flag_triggers_when_v2_slower() -> None:
 def test_rollback_flag_ok_within_threshold() -> None:
     summary = {
         "v2": {"n": 10, "p95": 1100.0},  # +10% < 30%
-        "v3": {"n": 10, "p95": 1000.0},
+        "classic": {"n": 10, "p95": 1000.0},
     }
     flags = lcp_mod.lcp_rollback_flags(summary)
     assert flags and flags[0].startswith("OK")
@@ -78,7 +78,8 @@ def test_rollback_flag_metric_mismatch() -> None:
 
 def test_variant_paths() -> None:
     assert lcp_mod.VARIANT_PATHS["v2"] == "/"
-    assert lcp_mod.VARIANT_PATHS["v3"] == "/classic"
+    assert lcp_mod.VARIANT_PATHS["classic"] == "/classic"
+    assert lcp_mod.LEGACY_VARIANT_ALIASES["v3"] == "classic"
 
 
 def test_lcp_baseline_fixture_valid() -> None:
@@ -95,8 +96,8 @@ def test_lcp_baseline_fixture_valid() -> None:
     assert body["schema"] == "studio-homepage-lcp-baseline/v1"
     assert body["min_runs_required"] >= 10
     ref = body["reference"]
-    for variant in ("v2", "v3"):
+    for variant in ("v2", "classic"):
         assert ref[variant]["p95"] > 0
         assert ref[variant]["n"] >= 10
     ratio = body["rollback_ratio"]
-    assert ref["v2"]["p95"] <= ref["v3"]["p95"] * ratio
+    assert ref["v2"]["p95"] <= ref["classic"]["p95"] * ratio

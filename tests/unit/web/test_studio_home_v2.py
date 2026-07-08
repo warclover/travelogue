@@ -1009,8 +1009,8 @@ def test_studio_home_gate_auto_treatment_redirects(tmp_path: Path, monkeypatch) 
 
 
 @pytest.mark.e2e
-def test_studio_home_gate_auto_control_stays_v3(tmp_path: Path, monkeypatch) -> None:
-    """M20-j · auto 10% · 对照组 UA → 200 v3。"""
+def test_studio_home_gate_auto_control_stays_classic(tmp_path: Path, monkeypatch) -> None:
+    """M20-j · auto 10% · 对照组 UA → 200 classic（data-homepage-variant=classic）。"""
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "auto")
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", "10")
     trips_dir = tmp_path / "trips"
@@ -1027,6 +1027,7 @@ def test_studio_home_gate_auto_control_stays_v3(tmp_path: Path, monkeypatch) -> 
         with urllib.request.urlopen(req, timeout=10) as resp:
             assert resp.status == 200
             html = resp.read().decode("utf-8")
+        assert 'data-homepage-variant="classic"' in html
         assert 'data-studio-v="4"' in html
         assert "studio-home-v2.css" not in html
     finally:

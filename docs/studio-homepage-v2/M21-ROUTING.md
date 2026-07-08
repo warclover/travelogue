@@ -8,7 +8,7 @@
 
 | 路径 | HTTP | 模板 / 行为 | `meta.variant` | 说明 |
 |------|------|-------------|----------------|------|
-| **`GET /`** | 200 | `studio-home-v2.html` 或 `legacy-freeze/studio.classic.html` | `v2` / `v3` | **唯一主入口**；按门控在根路径直接渲染 |
+| **`GET /`** | 200 | `studio-home-v2.html` 或 `legacy-freeze/studio.classic.html` | `v2` / `classic` | **唯一主入口**；按门控在根路径直接渲染 |
 | **`GET /v2`** | **302 → `/`** | — | — | 旧书签兼容；M21-c 已收敛 |
 | **`GET /classic`** | 200 | `legacy-freeze/studio.classic.*` | — | **deprecated** 应急入口；长期保留 |
 | **`GET /{tripId}/…`** | 不变 | 预览 / 长图 | — | 与首页 variant 无关 |
@@ -54,9 +54,9 @@ yaml 可选：`studio.homepage.v2_bento.percent`（见 `config-holdback.example.
 | v2 主路径 | **`/`**（v2 渲染） | `v2` | — |
 | holdback 对照 | **`/`**（classic 渲染） | `v3` | 同期 jsonl，**非**历史 v3 baseline |
 | 应急 classic | **`/classic`** | 通常不上报 holdback | 人工 smoke |
-| LCP / Playwright | `scripts/studio_lcp_measure.py` | `v2` → `/`，`v3` → `/classic` | 见 `VARIANT_PATHS` |
+| LCP / Playwright | `scripts/studio_lcp_measure.py` | `v2` → `/`，`classic` → `/classic` | 见 `VARIANT_PATHS` |
 
-**禁止**：10% 阶段仅用切主站前的 v3 `@ /` 历史数据做自动回滚（须 v2/v3 **同期** holdback）。
+**禁止**：10% 阶段仅用切主站前的 classic `@ /` 历史数据做自动回滚（须 v2/classic **同期** holdback）。
 
 客户端：`templates/studio/homepage-v2/**` · 共享 `templates/studio/js/analytics.js` → `POST /__travelogue/studio-event` → `~/.travelogue/telemetry/studio-homepage-events.jsonl`。
 

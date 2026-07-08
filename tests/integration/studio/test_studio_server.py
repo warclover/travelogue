@@ -13,7 +13,7 @@ from urllib.parse import quote
 
 import pytest
 
-from tests.studio_test_helpers import wait_for_job
+from tests.studio_test_helpers import chromium_safe_free_port, wait_for_job
 from travelogue.web.serve import TripPreviewHandler
 from travelogue.web.studio_jobs import reset_job_store
 from travelogue.web.studio_pipeline import run_studio_pipeline
@@ -42,10 +42,7 @@ def _distinct_album(tmp_path: Path, n: int = 6) -> Path:
 
 
 def _free_port() -> int:
-    server = ThreadingHTTPServer(("127.0.0.1", 0), TripPreviewHandler)
-    port = server.server_address[1]
-    server.server_close()
-    return port
+    return chromium_safe_free_port()
 
 
 def _start_studio_server(

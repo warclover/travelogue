@@ -13,6 +13,7 @@ import pytest
 
 from travelogue.services.trip import TripService, apply_intent
 from travelogue.web.copy_patch import apply_copy_patches
+from tests.studio_test_helpers import chromium_safe_free_port
 from travelogue.web.serve import TripPreviewHandler
 from travelogue.web.studio_entry import build_intent_summary
 
@@ -54,10 +55,7 @@ def _post_json(url: str, payload: dict) -> tuple[int, dict]:
 
 
 def _free_port() -> int:
-    server = ThreadingHTTPServer(("127.0.0.1", 0), TripPreviewHandler)
-    port = server.server_address[1]
-    server.server_close()
-    return port
+    return chromium_safe_free_port()
 
 
 def _start_studio(trips_dir: Path, port: int) -> ThreadingHTTPServer:

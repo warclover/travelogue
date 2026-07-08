@@ -36,12 +36,12 @@ python scripts/studio_holdback_report.py --telemetry ~/.travelogue/telemetry/stu
 
 | 判据 | 阈值 | 数据源 |
 |------|------|--------|
-| import 转化率 | v2 较 v3 **↓>15%** | jsonl `import_success/import_start` |
-| CTA 点击率 | v2 较 v3 **↓>20%**（按 PV） | jsonl `cta_click/homepage_view` |
-| LCP P95 | v2 较 v3 **↑>30%** | Playwright LCP/FCP |
-| JS error rate | v2 较 v3 **↑>2×** | jsonl `js_error/homepage_view` |
+| import 转化率 | v2 较 classic **↓>15%** | jsonl `import_success/import_start` |
+| CTA 点击率 | v2 较 classic **↓>20%**（按 PV） | jsonl `cta_click/homepage_view` |
+| LCP P95 | v2 较 classic **↑>30%** | Playwright LCP/FCP |
+| JS error rate | v2 较 classic **↑>2×** | jsonl `js_error/homepage_view` |
 
-**禁止**：10% 阶段仅用历史 v3 baseline 自动回滚（必须 v2/v3 **同期** holdback）。
+**禁止**：10% 阶段仅用历史 classic baseline 自动回滚（必须 v2/classic **同期** holdback）。
 
 报告字段：`flags.classified.rollback` · `should_rollback`。
 
@@ -74,14 +74,14 @@ python scripts/studio_homepage_rollback_drill.py --out docs/acceptance-records/s
 
 | 检查项 | 命令 / 路径 |
 |--------|-------------|
-| v3 首页 DOM 回归 | `pytest tests/test_studio_home_v2.py::test_studio_home_gate_off_serves_classic_at_root -q` |
+| classic 首页 DOM 回归 | `pytest tests/unit/web/test_studio_home_v2.py::test_studio_home_gate_off_serves_classic_at_root -q` |
 | Import 续 poll | `/?dev=1&studioState=importing-resume&studioJob=running` → 刷新后 `#v2-import-cancel` 可见 |
 | sessionStorage 未清 | `activeJobId` / `activePending` **不得** bulk 清除 |
 | 书架 / FirstSuccess | harness `idle-returning` / `first-success` 走查 |
 
 ### 3.3 回滚后监控（24h）
 
-1. 继续跑 `studio_telemetry_aggregate.py`，确认 v3 漏斗恢复。
+1. 继续跑 `studio_telemetry_aggregate.py`，确认 classic 漏斗恢复。
 2. 记录事件到 `docs/acceptance-records/`（rollout log JSON，模板可参考 phase6）。
 3. 根因分析：区分 LCP / 转化 / JS error；修复后再走 **M20-j 放量 checklist**。
 
@@ -119,7 +119,7 @@ TRAVELOGUE_STUDIO_HOMEPAGE_V2=off python scripts/studio_homepage_gate_status.py
 
 | 现象 | 可能原因 | 处理 |
 |------|----------|------|
-| `INSUFFICIENT_DATA` | jsonl 无 v2/v3 同期 | 延长灰度窗口；检查 `meta.variant` |
+| `INSUFFICIENT_DATA` | jsonl 无 v2/classic 同期 | 延长灰度窗口；检查 `meta.variant` |
 | LCP 仅 FCP | headless 无 LCP 条目 | 报告 `metric=fcp`；用有头 Chromium 复测 |
 | 误报 ROLLBACK | 样本过少 | `--lcp-runs` ≥10；24h 窗口聚合 |
 | import 转化骤降 | pipeline 回归 | 查 `import_failed` / 后端 job store |

@@ -64,7 +64,10 @@ def _variant_of(rec: dict[str, Any]) -> str:
     if isinstance(meta, dict):
         v = meta.get("variant")
         if v:
-            return str(v)
+            from travelogue.web.studio_homepage_gate import normalize_homepage_variant
+
+            normalized = normalize_homepage_variant(str(v))
+            return normalized or str(v)
     return "unknown"
 
 
@@ -128,40 +131,40 @@ def funnel_summary(events: list[dict[str, Any]]) -> dict[str, VariantFunnel]:
 
 
 def rollback_flags(summary: dict[str, VariantFunnel]) -> list[str]:
-    """对照 §17.2：v2 相对 v3 是否触发回滚判据。无 v2/v3 同期数据则返回提示。"""
+    """对照 §17.2：v2 相对 classic 是否触发回滚判据。无 v2/classic 同期数据则返回提示。"""
     flags: list[str] = []
     v2 = summary.get("v2")
-    v3 = summary.get("v3")
-    if not v2 or not v3:
-        flags.append("INSUFFICIENT_DATA: 缺少 v2/v3 同期对照，禁止仅用历史 baseline 自动回滚")
+    classic = summary.get("classic")
+    if not v2 or not classic:
+        flags.append("INSUFFICIENT_DATA: 缺少 v2/classic 同期对照，禁止仅用历史 baseline 自动回滚")
         return flags
 
-    if v3.import_conversion > 0:
-        drop = (1 - v2.import_conversion / v3.import_conversion) * 100
+    if classic.import_conversion > 0:
+        drop = (1 - v2.import_conversion / classic.import_conversion) * 100
         if drop > ROLLBACK_THRESHOLDS["import_conversion_drop_pct"]:
             flags.append(
                 f"ROLLBACK: import 转化率下降 {drop:.1f}% "
-                f"(v2={v2.import_conversion:.3f} v3={v3.import_conversion:.3f})"
+                f"(v2={v2.import_conversion:.3f} classic={classic.import_conversion:.3f})"
             )
 
-    if v3.cta_per_view > 0:
-        drop = (1 - v2.cta_per_view / v3.cta_per_view) * 100
+    if classic.cta_per_view > 0:
+        drop = (1 - v2.cta_per_view / classic.cta_per_view) * 100
         if drop > ROLLBACK_THRESHOLDS["cta_click_drop_pct"]:
             flags.append(
                 f"ROLLBACK: cta_click/PV 下降 {drop:.1f}% "
-                f"(v2={v2.cta_per_view:.3f} v3={v3.cta_per_view:.3f})"
+                f"(v2={v2.cta_per_view:.3f} classic={classic.cta_per_view:.3f})"
             )
 
-    if v3.js_error_rate > 0:
-        ratio = v2.js_error_rate / v3.js_error_rate
+    if classic.js_error_rate > 0:
+        ratio = v2.js_error_rate / classic.js_error_rate
         if ratio > ROLLBACK_THRESHOLDS["js_error_rate_ratio"]:
             flags.append(
                 f"ROLLBACK: JS error rate ↑{ratio:.1f}× "
-                f"(v2={v2.js_error_rate:.4f} v3={v3.js_error_rate:.4f})"
+                f"(v2={v2.js_error_rate:.4f} classic={classic.js_error_rate:.4f})"
             )
     elif v2.js_error_rate > 0:
         flags.append(
-            f"WARN: v3 无 JS error 基线，v2 error rate={v2.js_error_rate:.4f}"
+            f"WARN: classic 无 JS error 基线，v2 error rate={v2.js_error_rate:.4f}"
         )
 
     return flags
@@ -191,7 +194,7 @@ def _print_summary(summary: dict[str, VariantFunnel], flags: list[str]) -> None:
         for flag in flags:
             print("  - " + flag)
     else:
-        print("  无触发（v2 未劣于 v3 阈值）")
+        print("  无触发（v2 未劣于 classic 阈值）")
 
 
 def main(argv: list[str] | None = None) -> int:

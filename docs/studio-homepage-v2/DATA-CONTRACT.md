@@ -186,7 +186,7 @@ Lightbox scroll 模式：按 `pages[]` 顺序纵向拼接全部 `webp`（或单�
 
 | 键 | 用途 |
 |----|------|
-| `travelogue.studio.homepageVariant` | `v2` \| `v3` 持久分桶 |
+| `travelogue.studio.homepageVariant` | `v2` \| `classic` 持久分桶（读入兼容 legacy `v3`） |
 | `travelogue.studio.v2.bentoPreviewTripId` | D-14：用户指定的 Bento 预览画册 tripId；缺失 / 空 ≡ 未指定（默认示例作品） |
 | `travelogue.studio.v2.tripsCache` | D-14 离线：最近一次成功的 `GET /trips` 首屏快照 `{ trips, total }` |
 | `travelogue.studio.v2.bentoD14Migrated` | D-14 一次性 D-13 迁移完成标记 |

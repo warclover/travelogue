@@ -58,10 +58,10 @@ def _synthetic_events() -> list[dict]:
         }
 
     return (
-        [ev("v3", "homepage_view") for _ in range(20)]
-        + [ev("v3", "cta_click") for _ in range(8)]
-        + [ev("v3", "import_start") for _ in range(5)]
-        + [ev("v3", "import_success") for _ in range(5)]
+        [ev("classic", "homepage_view") for _ in range(20)]
+        + [ev("classic", "cta_click") for _ in range(8)]
+        + [ev("classic", "import_start") for _ in range(5)]
+        + [ev("classic", "import_success") for _ in range(5)]
         + [ev("v2", "homepage_view") for _ in range(20)]
         + [ev("v2", "cta_click") for _ in range(7)]
         + [ev("v2", "import_start") for _ in range(5)]
@@ -137,7 +137,7 @@ def run_drill(
                     print("LCP 需要 playwright", file=sys.stderr)
                     return {"error": "playwright missing"}, 2
                 lcp_summary = _lcp.run_measurements(
-                    base, ["v2", "v3"], lcp_runs, settle_ms
+                    base, ["v2", "classic"], lcp_runs, settle_ms
                 )
     finally:
         if server is not None:

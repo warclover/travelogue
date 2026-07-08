@@ -48,10 +48,10 @@
 | ID | Then | 验证方式 | 工具 / 备注 |
 |----|------|----------|-------------|
 | M20-j-01 | auto 10% 进组 UA → 302 `/v2` | **自动** | `test_studio_home_gate_auto_treatment_redirects` |
-| M20-j-02 | auto 10% 对照组 → 200 v3 | **自动** | `test_studio_home_gate_auto_control_stays_v3` |
+| M20-j-02 | auto 10% 对照组 → 200 classic @ `/` | **自动** | `test_studio_home_gate_auto_control_stays_classic` |
 | M20-j-03 | yaml `percent` 无 env 时生效 | **自动** | `test_studio_home_gate_auto_yaml_percent_redirects` |
 | M20-j-04 | redirect 后进组报 `experiment_exposure` | **自动** | Playwright · `bucket_id` 与 cookie 一致 |
-| M20-j-05 | 对照组 v3 报 `experiment_exposure` | **自动** | Playwright · `variant=v3` + `bucket_id` |
+| M20-j-05 | 对照组 classic 报 `experiment_exposure` | **自动** | Playwright · `variant=classic` + `bucket_id` |
 | M20-j-06 | gate off 忽略 `homepageVariant` 键 | **自动** | Playwright · 预置 sessionStorage 无报错 |
 
 **图例**：自动 = CI 可无人值守；人工 = QA 走查；可用性 = 招募被试（AC-01 挂 M20-h 后窗口）。

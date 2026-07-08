@@ -3,7 +3,7 @@
 > 配套 [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) v1.1 · 执行提示词见 [PROMPTS-ARCH-OPTIMIZATION.md](./PROMPTS-ARCH-OPTIMIZATION.md)
 
 **当前分支**: `arch/optimization-ws1`  
-**最后更新**: 2026-07-08（M-B3 编排切换）
+**最后更新**: 2026-07-08（M-C6 命名消歧 done）
 
 ## 里程碑总表
 
@@ -27,7 +27,7 @@
 | M-B3 | done | 2026-07-08 | `pipeline.orchestration` unified 默认；legacy 保留；`orchestration_dual_run.py`；weekly CI | legacy 开关 4 周 DoD 至 2026-08-05 |
 | M-C4 | done | 2026-07-08 | 三视图 + lint + 单测；curate/orchestrator/render/cli/export 改引 pipeline_view | media/ingest/sandbox 直赋属 ingest 域 |
 | M-B6 | done | 2026-07-08 | `trip_migration` 兼容窗口 + 模块 doc；`lint_trip_json` version 窗；超窗单测 | 多 minor 迁移链待 schema bump 时补 |
-| M-C6 | in_progress | 2026-07-08 | `docs/GLOSSARY.md` + `store.js` 注释清理 | variant v3→classic 待 G-WIP-03 |
+| M-C6 | done | 2026-07-08 | gate `v3`→`classic` + telemetry/LCP 同步；GLOSSARY + holdback docs；Import Wizard §16 AC-IW-DS-01～08 e2e 全覆盖 | legacy telemetry `variant=v3` 聚合归一化为 classic |
 | M-C1 | todo | — | — | 触发：新增 Studio API |
 | **M-C2** | done | 2026-07-08 | 全量 **423** 文件分层；baseline **1**（`test_ingest.py` shim）；collect **2714**；14 个 `tests/unit/*` 目录 | — |
 | M-C3 | todo | — | — | 触发：Phase 验收完成 |
@@ -95,4 +95,20 @@
 
 ## WS1 执行顺序
 
-P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓** · **P-12 (M-B3) ✓** · P-22 第一段 (M-C6) 进行中
+P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓** · **P-12 (M-B3) ✓** · **P-22 (M-C6) ✓**
+
+## 下一步（2026-07-08 更新）
+
+| 优先级 | 任务 | 触发 / 门禁 | 目标日期 |
+|--------|------|-------------|----------|
+| P0 | 合并 `arch/optimization-ws1`（M-C6 收口 PR） | 本分支 CI 绿 | 立即 |
+| P0 | 开关观察：`pipeline.orchestration` · `layout.planner_impl` weekly dual-run | §3.3 DoD ①–④ | 至 **2026-08-05** |
+| P1 | **M-D1 / P-23** 删 legacy 路径 + shim + TECH-ARCH 全量更新 | 开关 DoD 全满足 | **2026-08-05** 后 |
+| P1 | **LSE cross-import 收敛**（109→≤10） | ADR-015 后续迭代 | 独立 PR 链 |
+| P2 | **M-C5 / P-21** 前端拆分 + tsc | **G-WIP-02**：M23-c～g 交付 | M23 完成后 |
+| P2 | **M-C1 / P-18** 路由表化 | 下次新增 Studio API | 机会主义 |
+| P2 | **M-C3 / P-20** 脚本/文档归档 registry | Phase 验收后 | 机会主义 |
+| 产品 | Homepage v2.2 **M23-c～g** | 产品排期 | 先于 M-C5 |
+| 产品 | Import Wizard v3 灰度 / flag 决策 | §16 AC 已绿 | 产品拍板 |
+| 产品 | Longshot 2.0 评审（工作区草案） | ADR-016 草案 | 独立线 |
+| 背景 | 全量 `pytest --fast` 预存失败 (~25) | 非 M-C6 引入 | 分批 issue |

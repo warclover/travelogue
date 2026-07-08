@@ -16,6 +16,7 @@ from travelogue.web.studio_homepage_gate import (
     bucket_in_treatment,
     decide_root_variant,
     is_loopback_host,
+    normalize_homepage_variant,
     query_variant_override,
     resolve_mode,
     resolve_percent,
@@ -63,11 +64,23 @@ def test_bucket_in_treatment() -> None:
     assert bucket_in_treatment(50, 0) is False
 
 
+def test_normalize_homepage_variant_legacy_v3() -> None:
+    assert normalize_homepage_variant("v3") == "classic"
+    assert normalize_homepage_variant("classic") == "classic"
+    assert normalize_homepage_variant("v2") == "v2"
+    assert normalize_homepage_variant("unknown") is None
+
+
 def test_decide_root_variant_modes() -> None:
-    assert decide_root_variant(mode="off", percent=0, bucket=0) == "v3"
+    assert decide_root_variant(mode="off", percent=0, bucket=0) == "classic"
     assert decide_root_variant(mode="on", percent=0, bucket=99) == "v2"
     assert decide_root_variant(mode="auto", percent=10, bucket=5) == "v2"
-    assert decide_root_variant(mode="auto", percent=10, bucket=50) == "v3"
+    assert decide_root_variant(mode="auto", percent=10, bucket=50) == "classic"
+
+
+def test_query_override_legacy_v3_alias() -> None:
+    assert query_variant_override({"homepageVariant": ["v3"]}) == "classic"
+    assert query_variant_override({"homepageVariant": ["classic"]}) == "classic"
 
 
 def test_query_override() -> None:
@@ -95,7 +108,17 @@ def test_query_override_ignored_without_allow() -> None:
         bucket=0,
         query={"homepageVariant": ["v2"]},
         allow_override=False,
-    ) == "v3"
+    ) == "classic"
+
+
+def test_query_override_v3_respected_when_allowed() -> None:
+    assert decide_root_variant(
+        mode="off",
+        percent=0,
+        bucket=0,
+        query={"homepageVariant": ["v3"]},
+        allow_override=True,
+    ) == "classic"
 
 
 def test_is_loopback_host() -> None:
@@ -108,7 +131,7 @@ def test_is_loopback_host() -> None:
 def test_should_redirect_disabled_after_m21c() -> None:
     assert should_redirect_root_to_v2(mode="auto", variant="v2") is False
     assert should_redirect_root_to_v2(mode="on", variant="v2") is False
-    assert should_redirect_root_to_v2(mode="auto", variant="v3") is False
+    assert should_redirect_root_to_v2(mode="auto", variant="classic") is False
 
 
 def test_stable_bucket_sha256_contract() -> None:

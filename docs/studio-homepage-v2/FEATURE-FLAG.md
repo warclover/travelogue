@@ -18,7 +18,7 @@
 
 - 环境变量：`TRAVELOGUE_STUDIO_HOMEPAGE_V2=on|auto|off`（默认 **`on`**）
 - **不再** `302 / → /v2`（`should_redirect_root_to_v2` 恒 `false`）
-- Telemetry / LCP：`v2` → `/`，holdback 对照 `v3` → `/classic`（见 TELEMETRY §6）
+- Telemetry / LCP：`v2` → `/`，holdback 对照 **`classic`** → `/classic`（见 TELEMETRY §6；legacy 键名 `v3` 仍可读）
 
 ---
 
@@ -72,7 +72,7 @@ GET /v2   → handle_home_v2 → studio-home-v2.html  （v2 · homepage-v2/boots
 | 4 | **sessionStorage 分桶** | `travelogue.studio.homepageVariant`（加法键） | 全部 | holdback 一致性；首帧写入 |
 | 5 | **服务端 redirect 策略** | 环境变量 / yaml percent | 各环境 | 见 §3 |
 
-`travelogue.studio.homepageVariant` 为 **加法键**（值 `v2`/`v3`），v2 首帧持久化；
+`travelogue.studio.homepageVariant` 为 **加法键**（值 `v2`/`classic`，兼容 legacy `v3`），v2 首帧持久化；
 **不得** rename/delete/改类型 `activeJobId` / `activePending`。
 
 ---
@@ -81,9 +81,9 @@ GET /v2   → handle_home_v2 → studio-home-v2.html  （v2 · homepage-v2/boots
 
 | 环境 | `/` 行为 | 说明 |
 |------|----------|------|
-| 本地 dev | 默认 `on` → v2 @ `/` | loopback 可用 `?homepageVariant=v3` 强制 classic |
-| dogfood holdback | `auto` + percent | v2/v3 **同期** @ `/`（非 redirect） |
-| 100%（M21-a） | `on` → v2 @ `/` | v3 应急 → `/classic` |
+| 本地 dev | 默认 `on` → v2 @ `/` | loopback 可用 `?homepageVariant=classic` 或 legacy `v3` 强制 classic |
+| dogfood holdback | `auto` + percent | v2/classic **同期** @ `/`（非 redirect） |
+| 100%（M21-a） | `on` → v2 @ `/` | classic 应急 → `/classic` |
 | 紧急回滚 | `off` → classic @ `/` | 见 M21-ROLLBACK-CARD |
 
 **环境变量**：`TRAVELOGUE_STUDIO_HOMEPAGE_V2=auto|on|off`（默认 **`on`**）
@@ -122,8 +122,8 @@ GET /v2   → handle_home_v2 → studio-home-v2.html  （v2 · homepage-v2/boots
 
 ## 6. CMP-HP2-14 验收（双路由）
 
-- [x] `GET /` off 模式仍 v3（gate e2e）
+- [x] `GET /` off 模式仍 classic @ `/`（gate e2e）
 - [x] `GET /v2` 200 且加载 v2 视图层
 - [x] Importing 中跨页不切换 variant（AC-HP2-23）
 - [x] holdback 分桶稳定（gate 单测 + `bucket.test.mjs` + 10% e2e）
-- [x] 回滚（停 redirect）后 v3 忽略 `homepageVariant` 键不报错（Playwright AC-HP2-23）
+- [x] 回滚（停 redirect）后 classic 忽略 `homepageVariant` 键不报错（Playwright AC-HP2-23）

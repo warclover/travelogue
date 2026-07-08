@@ -44,7 +44,7 @@
 ### 发布后 0–2h
 
 - [ ] `GET /` 返回 v2（含 `data-homepage-variant="v2"`）
-- [ ] `GET /classic` 返回 v3（deprecated）
+- [ ] `GET /classic` 返回 classic 冻结壳（deprecated；legacy 亦称 v3）
 - [ ] 预览页 “返回首页” 回到 v2
 - [ ] 导入漏斗核心指标无明显劣化
 
