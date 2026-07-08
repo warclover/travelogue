@@ -15,7 +15,6 @@ import { trackStudioEvent } from "./js/analytics.js";
 import { mountPreviewTaskDock } from "./preview-toolbar-v3-task-dock.js";
 import { mountPreviewUnifiedSheet } from "./preview-toolbar-v3-sheet.js";
 import {
-  dockIconSvg,
   insertScreenplayControl,
   isPreviewToolbarV4,
   isPreviewToolbarV3,
@@ -27,8 +26,6 @@ import {
 } from "./preview-toolbar/dock.js";
 import {
   isSharePreview,
-  initShareMinimal,
-  ensureCoverMobileFootnote,
 } from "./preview-toolbar/share.js";
 import {
   registerInlineEditBridge,
@@ -98,6 +95,11 @@ import {
   syncCoverOpeningStyleInDom,
   refreshPreviewAfterCopySave,
 } from "./preview-toolbar/core.js";
+import {
+  registerBootstrapBridge,
+  bootstrapPreviewToolbarWhenReady,
+} from "./preview-toolbar/bootstrap.js";
+
 
 var isJobBusy409 = isJobBusyResponse;
 var HINT_KEY = "travelogue.studio.editHint.dismissed";
@@ -1070,38 +1072,5 @@ onCancelExport: function () {
   }
 
 
-  function init() {
-    if (isSharePreview()) {
-      initShareMinimal();
-      return;
-    }
-
-    document.documentElement.setAttribute("data-preview-toolbar", "on");
-
-    var root = document.createElement("div");
-    root.className = "preview-toolbar preview-toolbar--v4";
-    root.innerHTML =
-      '<nav class="preview-toolbar__dock" aria-label="预览快捷操作">' +
-      '<a class="preview-toolbar__dock-btn preview-toolbar__dock-btn--back preview-toolbar__ctl" href="/" aria-label="返回" title="返回 Studio 首页">' +
-      dockIconSvg("back") +
-      "</a>" +
-      '<span class="preview-toolbar__dock-divider" aria-hidden="true"></span>' +
-      '<div class="preview-toolbar__menu-wrap">' +
-      '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__dock-btn preview-toolbar__dock-btn--menu preview-toolbar__dock-btn--folio" aria-haspopup="dialog" aria-expanded="false" aria-label="编辑与设置" title="编辑与设置">' +
-      dockIconSvg("settings") +
-      "</button>" +
-      "</div>" +
-      "</nav>";
-
-    document.body.insertBefore(root, document.body.firstChild);
-    ensureCoverMobileFootnote();
-    var tripId = tripIdFromPath();
-    if (!tripId) return;
-    initToolbarV3(root, tripId);
-  }
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
-}
+registerBootstrapBridge({ initToolbarV3: initToolbarV3 });
+bootstrapPreviewToolbarWhenReady();

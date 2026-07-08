@@ -91,13 +91,30 @@ def test_m5_core_module_exports() -> None:
         assert token in core, f"missing core export: {token}"
 
 
+def test_m5_bootstrap_module_exports() -> None:
+    js = PREVIEW_JS.read_text(encoding="utf-8")
+    bootstrap = (STUDIO / "preview-toolbar" / "bootstrap.js").read_text(encoding="utf-8")
+    assert 'from "./preview-toolbar/bootstrap.js"' in js
+    assert "registerBootstrapBridge" in js
+    assert "bootstrapPreviewToolbarWhenReady" in js
+    for token in (
+        "export function initPreviewToolbar",
+        "export function bootstrapPreviewToolbarWhenReady",
+        "preview-toolbar--v4",
+        "preview-toolbar__dock",
+    ):
+        assert token in bootstrap, f"missing bootstrap export: {token}"
+
+
 def test_v4_init_uses_icon_dock_not_legacy_rows() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
+    bootstrap = (STUDIO / "preview-toolbar" / "bootstrap.js").read_text(encoding="utf-8")
     marker = 'root.className = "preview-toolbar preview-toolbar--v4"'
-    assert marker in js
-    start = js.index(marker)
-    end = js.index("initToolbarV3(root, tripId)", start)
-    v4_shell = js[start:end]
+    assert marker in bootstrap
+    assert "initToolbarV3(root, tripId)" in js
+    start = bootstrap.index(marker)
+    end = bootstrap.index("_initToolbarV3(root, tripId)", start)
+    v4_shell = bootstrap[start:end]
     assert "preview-toolbar__dock" in v4_shell
     assert "preview-toolbar__longshot-preview-row" not in v4_shell
     assert "preview-toolbar__pending-row" not in v4_shell
