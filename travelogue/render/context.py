@@ -1114,7 +1114,7 @@ def collect_asset_paths(trip: dict, trip_root: Path) -> list[tuple[str, Path]]:
                         continue
                     add(pick_image_src(a, export_layout=export_layout))
 
-    from travelogue.curation.curate import resolve_cover_asset_id
+    from travelogue.domain.cover_view import resolve_cover_asset_id
 
     if export_layout == "auto":
         cover_profiles: tuple[str, ...] = ("mobile", "web")

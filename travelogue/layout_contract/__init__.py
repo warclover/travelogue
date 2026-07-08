@@ -20,6 +20,14 @@ from travelogue.layout_contract.rhythm import (
     nine_grid_limits_for_trip,
     pattern_slot_count,
 )
+from travelogue.layout_contract.orientations import (
+    AspectKind,
+    ExportLayout,
+    OrientationSummary,
+    aspect_kind_for_asset,
+    classify_aspect,
+    summarize_orientations,
+)
 from travelogue.layout_contract.summary import (
     LAYOUT_PLAN_VERSION,
     VALID_EXPORT_LAYOUTS,
@@ -27,6 +35,12 @@ from travelogue.layout_contract.summary import (
 )
 
 __all__ = [
+    "AspectKind",
+    "ExportLayout",
+    "OrientationSummary",
+    "aspect_kind_for_asset",
+    "classify_aspect",
+    "summarize_orientations",
     "DEFAULT_CONSECUTIVE_BANS",
     "FOCAL_EDGE_MARGIN",
     "LAYOUT_PLAN_VERSION",

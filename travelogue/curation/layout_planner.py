@@ -6,7 +6,6 @@ See docs/LAYOUT-PLANNER.md for product rules (mobile 9:16 vs web 16:9).
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 from typing import Literal
 
 from travelogue.config import AppConfig
@@ -15,9 +14,14 @@ from travelogue.curation.mobile_layout_state import (
     MobilePuzzlePlannerState,
     mobile_puzzle_enabled,
 )
-from travelogue.media.image_ops import AspectKind, classify_aspect
+from travelogue.layout_contract.orientations import (
+    AspectKind,
+    ExportLayout,
+    OrientationSummary,
+    aspect_kind_for_asset,
+    summarize_orientations,
+)
 
-ExportLayout = Literal["auto", "mobile", "web"]
 RowLayout = Literal[
     "landscape-triple",
     "landscape-pair",
@@ -31,66 +35,6 @@ RowLayout = Literal[
 ]
 
 LAYOUT_FILL = {"fill": True, "bleed": True, "overlay": True}
-
-
-@dataclass
-class OrientationSummary:
-    """Counts after ingest (display dimensions, post-crop)."""
-
-    total: int
-    landscape: int
-    portrait: int
-    square: int
-    panorama: int
-    tall: int
-    export_layout: str
-
-    @property
-    def dominant(self) -> str:
-        counts = {
-            "landscape": self.landscape,
-            "portrait": self.portrait,
-            "square": self.square,
-            "panorama": self.panorama,
-            "tall": self.tall,
-        }
-        return max(counts, key=counts.get)  # type: ignore[arg-type]
-
-    def to_dict(self) -> dict:
-        return asdict(self)
-
-
-def aspect_kind_for_asset(asset: dict) -> AspectKind:
-    """Prefer native pixels so layout tier matches render-time aspect ratio."""
-    w = int(asset.get("nativeWidth") or asset.get("width") or 0)
-    h = int(asset.get("nativeHeight") or asset.get("height") or 0)
-    if w > 0 and h > 0:
-        return classify_aspect(w, h)
-    stored = asset.get("aspectKind")
-    if stored in ("portrait", "landscape", "square", "panorama", "tall"):
-        return stored  # type: ignore[return-value]
-    return "square"
-
-
-def summarize_orientations(
-    assets: list[dict],
-    *,
-    export_layout: ExportLayout = "auto",
-) -> OrientationSummary:
-    counts = {k: 0 for k in ("landscape", "portrait", "square", "panorama", "tall")}
-    for a in assets:
-        k = aspect_kind_for_asset(a)
-        if k in counts:
-            counts[k] += 1
-    return OrientationSummary(
-        total=len(assets),
-        landscape=counts["landscape"],
-        portrait=counts["portrait"],
-        square=counts["square"],
-        panorama=counts["panorama"],
-        tall=counts["tall"],
-        export_layout=export_layout,
-    )
 
 
 def _effective_profile(export_layout: ExportLayout) -> Literal["mobile", "web"]:

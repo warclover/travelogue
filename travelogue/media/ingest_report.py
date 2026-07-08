@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.curation.layout_planner import summarize_orientations
+from travelogue.layout_contract import summarize_orientations
 
 
 def format_ingest_report(result, trip: dict | None = None) -> str:

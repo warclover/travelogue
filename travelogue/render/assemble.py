@@ -30,7 +30,7 @@ def build_render_context(
 ) -> TripRenderContext:
     """export_mode: draft | share | present-preview"""
     from travelogue.config import get_config, reading_profile_defaults
-    from travelogue.curation.curate import resolve_cover_asset_id, resolve_cover_render_profile
+    from travelogue.domain.cover_view import resolve_cover_asset_id, resolve_cover_render_profile
     from travelogue.render.context import (
         _longshot_bundle_version,
         alt_text,
