@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from travelogue.config import AppConfig, get_config
 from travelogue.web.studio_auth import studio_post_authorized
 from travelogue.web.studio_chrome import should_inject_studio_chrome
 from travelogue.web.studio_dispatch import dispatch_studio
@@ -125,6 +124,3 @@ class StudioMixin:
 
     def should_inject_studio_chrome(self, rel_path: str) -> bool:
         return should_inject_studio_chrome(rel_path)
-
-    def _studio_cfg(self) -> AppConfig:
-        return self.app_config or get_config()

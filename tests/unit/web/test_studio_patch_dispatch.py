@@ -37,15 +37,6 @@ class _PatchProbe(StudioMixin):
     def _json_response(self, code: int, payload: dict) -> None:
         pass
 
-    def _studio_handle_config(self) -> None:
-        self.calls.append("config")
-
-    def _studio_handle_patch_intent(self, trip_id: str) -> None:
-        self.calls.append(f"intent:{trip_id}")
-
-    def _studio_handle_patch_pipeline(self, trip_id: str) -> None:
-        self.calls.append(f"pipeline:{trip_id}")
-
 
 def test_studio_dispatch_patch_routes(monkeypatch) -> None:
     probe = _PatchProbe()

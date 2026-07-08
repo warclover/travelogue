@@ -242,16 +242,6 @@ def match_trip_rerender(path: str) -> str | None:
     return _match_trip_root_suffix(path, RERENDER_SUFFIX)
 
 
-def match_trip_api(path: str) -> tuple[str, str] | None:
-    if (trip_id := match_trip_save_copy(path)) is not None:
-        return trip_id, "save-copy"
-    if (trip_id := match_trip_promote_tier(path)) is not None:
-        return trip_id, "promote-tier"
-    if (trip_id := match_trip_rerender(path)) is not None:
-        return trip_id, "rerender"
-    return None
-
-
 def trip_id_from_query(handler: StudioHandlerProtocol) -> str:
     query = parse_qs(urlparse(handler.path).query)
     return (query.get("tripId") or query.get("tripid") or [""])[0]

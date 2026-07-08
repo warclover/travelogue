@@ -340,7 +340,6 @@ _CAPTURE_MATCHERS: dict[str, Matcher] = {
     "/__travelogue/templates/admin/{templateId}": match_template_admin_patch,
     "/__travelogue/templates/admin/{templateId}/metadata": match_template_admin_metadata,
     "/__travelogue/trips/{tripId}/intent": match_trip_intent,
-    "/__travelogue/trips/{tripId}/cohort": match_trip_cohort,
     "/__travelogue/trips/{tripId}/template": match_trip_template,
     "/__travelogue/trips/{tripId}/pipeline": match_trip_pipeline,
     "/__travelogue/trips/{tripId}/screens/{screenId}/replan": match_trip_screen_replan,
@@ -370,16 +369,6 @@ def _invoke_capture(handler_fn: Callable[..., None], handler: Any, cap: Any) -> 
 def _resolve_handler(handler_id: str) -> Callable[..., None]:
     if handler_id == "static_handlers.send_redirect":
         return lambda h: _invoke_redirect_home(h)
-    if handler_id == "static_handlers.handle_studio_asset":
-        raise RuntimeError("handle_studio_asset uses path-specific invoker")
-    if handler_id == "template_handlers.handle_template_decisions":
-        return lambda h: _invoke_template_decisions(h, "")
-    if handler_id == "serve._handle_save_copy":
-        return lambda h, trip_id: _invoke_save_copy(h, trip_id)
-    if handler_id == "serve._handle_promote_tier":
-        return lambda h, trip_id: _invoke_promote_tier(h, trip_id)
-    if handler_id == "trip_handlers.handle_rerender":
-        return lambda h, trip_id: _invoke_rerender(h, trip_id)
 
     module_name, fn_name = handler_id.rsplit(".", 1)
     module = {

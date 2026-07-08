@@ -18,10 +18,10 @@
 | M-A2 | done | 2026-07-08 | 重复键 ConfigError（含行号）；未知键单条 warning / strict 报错；`pytest tests/test_config_fail_loud.py` 5 passed；example 零告警回归 | — |
 | M-A3 | done | 2026-07-08 | `.gitignore` 增加 registry.cache.json / trips/.cache/；registry.cache 移出索引；import-wizard.js 索引无正反斜杠重复 | — |
 | M-B5 | done | 2026-07-08 | `scripts/lint_trip_json.py` + CI validate/lint；`e2e_trip_acceptance` 接入；13 fixtures + `pytest tests/test_lint_trip_json.py` 6 passed | — |
-| M-B0 | done | 2026-07-08 | `scripts/arch_equivalence_check.py` 自反性冒烟；`lint-imports` 基线 26 豁免；CI lint+validate；TECH-ARCH §18 | M-B1 已收紧至 11 豁免 |
-| ADR-015 | accepted | 2026-07-08 | ADR 已批准；cross-import 51→44（B4a 后） | LSE 互引 109 见下表 |
-| M-B4a | done | 2026-07-08 | kernel→layout_contract；adapter 收敛；mosaic ContextVar；render_fingerprint；equivalence 全绿 | LSE cross-import 109（非 import-linter） |
-| M-B4b | done | 2026-07-08 | planner+mosaic→layout_engine/；weekly dual-run；消费方收敛 | PRD cross-import ≤10 未达标（109）；待 adapter/shim 退役 |
+| M-B0 | done | 2026-07-08 | `scripts/arch_equivalence_check.py` 自反性冒烟；`lint-imports` 基线 26 豁免；CI lint+validate；TECH-ARCH §18 | M-B1 已清零（0 豁免） |
+| ADR-015 | accepted | 2026-07-08 | ADR 已批准；cross-import 51→44（B4a 后）→ **7**（batch-6 后） | 余 7 边 curate→adapter 白名单 |
+| M-B4a | done | 2026-07-08 | kernel→layout_contract；adapter 收敛；mosaic ContextVar；render_fingerprint；equivalence 全绿 | LSE 7 边（见下表） |
+| M-B4b | done | 2026-07-08 | planner+mosaic→layout_engine/；weekly dual-run；消费方收敛 | PRD ≤10 ✅；shim 待后续退役 |
 | M-B1 | done | 2026-07-08 | import-linter **26→0** 豁免；PRD §5.3.2 违例清零 | — |
 | M-B2 | done | 2026-07-08 | S1 `ARCH-ORCH-DIFF-MATRIX.md`；S2 StudioProfile/Hooks + clustering stage；Go（G-WIP-01 用户授权） | — |
 | M-B3 | done | 2026-07-08 | unified `run_trip` 编排；legacy 已于 M-D1 删除 | — |
