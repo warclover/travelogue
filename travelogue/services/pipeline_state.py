@@ -6,9 +6,16 @@ from travelogue.domain.pipeline_view import (  # noqa: F401
     PipelineError,
     Stage,
     Until,
+    append_pipeline_run,
     assert_stage_allowed,
+    lock_structure,
+    revert_copy_lock_for_edit,
     set_layout_status,
+    set_pipeline_lock,
+    set_pipeline_status,
+    set_pipeline_timings,
     trip_status,
+    unlock_structure_for_replan,
 )
 
 __all__ = [
@@ -17,7 +24,14 @@ __all__ = [
     "PipelineError",
     "Stage",
     "Until",
+    "append_pipeline_run",
     "assert_stage_allowed",
+    "lock_structure",
+    "revert_copy_lock_for_edit",
     "set_layout_status",
+    "set_pipeline_lock",
+    "set_pipeline_status",
+    "set_pipeline_timings",
     "trip_status",
+    "unlock_structure_for_replan",
 ]

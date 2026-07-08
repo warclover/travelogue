@@ -28,6 +28,9 @@ jobs:
       - name: Trip save lint
         run: python scripts/lint_trip_save_calls.py
 
+      - name: Trip pipeline mutation lint (M-C4)
+        run: python scripts/lint_trip_pipeline_mutations.py
+
       - name: Trip JSON lint (ADR-008)
         run: python scripts/lint_trip_json.py schemas/fixtures tests/fixtures
 

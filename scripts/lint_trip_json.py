@@ -139,13 +139,14 @@ def lint_trip_data(
         if key in FORBIDDEN_TOP_LEVEL_KEYS:
             report.failures.append(f"denylist: top-level key {key!r} must not be stored in trip.json")
 
-    from travelogue.curation.trip_migration import CURRENT_TRIP_VERSION
+    from travelogue.curation.trip_migration import CURRENT_TRIP_VERSION, MIN_SUPPORTED_TRIP_VERSION
 
     raw_version = data.get("version")
     version = str(raw_version) if raw_version not in (None, "") else CURRENT_TRIP_VERSION
-    if version != CURRENT_TRIP_VERSION:
+    if version < MIN_SUPPORTED_TRIP_VERSION or version > CURRENT_TRIP_VERSION:
         report.failures.append(
-            f"version: {version!r} unsupported (supported: {CURRENT_TRIP_VERSION})"
+            f"version: {version!r} outside supported window "
+            f"[{MIN_SUPPORTED_TRIP_VERSION}, {CURRENT_TRIP_VERSION}]"
         )
 
     _walk_dict(data, "", report)

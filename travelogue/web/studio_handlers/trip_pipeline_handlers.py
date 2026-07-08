@@ -91,11 +91,10 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
     svc = ctx.trip_service()
 
     def runner() -> dict:
+        from travelogue.domain.pipeline_view import unlock_structure_for_replan
+
         trip = svc.load(trip_json)
-        pipe = trip.setdefault("pipeline", {})
-        locks = pipe.setdefault("locks", {})
-        locks["structure"] = False
-        pipe["status"] = "structure_draft"
+        unlock_structure_for_replan(trip)
         try:
             run_curate(
                 trip,

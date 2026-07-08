@@ -255,11 +255,9 @@ def apply_copy_patches(trip: dict, patches: list[dict]) -> list[str]:
         updated.append(apply_copy_patch(trip, str(path), str(patch.get("value") or "")))
     if updated:
         trip["updatedAt"] = _utc_now_iso()
-        pipe = trip.setdefault("pipeline", {})
-        if pipe.get("status") == "copy_locked":
-            pipe["status"] = "copy_draft"
-            locks = pipe.setdefault("locks", {})
-            locks["copy"] = False
+        from travelogue.services.pipeline_state import revert_copy_lock_for_edit
+
+        revert_copy_lock_for_edit(trip)
         copy_paths = {
             p
             for p in paths

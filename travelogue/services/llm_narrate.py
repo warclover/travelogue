@@ -536,16 +536,18 @@ def run_llm_narrate(
                 raise NarrateError("E_NARRATE_RETRY_EXHAUSTED", "; ".join(errs[:3]))
             fix_errors = errs
 
-    pipe = trip.setdefault("pipeline", {})
-    pipe["status"] = "copy_draft"
-    pipe.setdefault("runs", []).append(
+    from travelogue.services.pipeline_state import append_pipeline_run, set_pipeline_status
+
+    set_pipeline_status(trip, "copy_draft")
+    append_pipeline_run(
+        trip,
         {
             "runId": f"narrate-{_utc_now_iso()}",
             "agent": "storyteller",
             "startedAt": _utc_now_iso(),
             "finishedAt": _utc_now_iso(),
             "model": f"{provider}/{rt_model}",
-        }
+        },
     )
     trip["updatedAt"] = _utc_now_iso()
     return NarrateResult(fields_updated=updated)

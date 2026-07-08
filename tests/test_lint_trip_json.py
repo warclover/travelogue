@@ -80,3 +80,20 @@ def test_main_json_output(tmp_path: Path) -> None:
     path = tmp_path / "trip.json"
     path.write_text(json.dumps(trip), encoding="utf-8")
     assert main([str(path), "--json"]) == 0
+
+
+def test_version_outside_window_fails() -> None:
+    data = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    data["version"] = "9.9"
+    report = lint_trip_data(data, path="fixture", size_bytes=1000)
+    assert not report.ok
+    assert any("outside supported window" in item for item in report.failures)
+
+
+def test_version_current_passes() -> None:
+    from travelogue.curation.trip_migration import CURRENT_TRIP_VERSION
+
+    data = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    data["version"] = CURRENT_TRIP_VERSION
+    report = lint_trip_data(data, path="fixture", size_bytes=1000)
+    assert report.ok

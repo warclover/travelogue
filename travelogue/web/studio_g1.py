@@ -8,15 +8,12 @@ from travelogue.config import AppConfig, get_config
 from travelogue.demo.build import DemoError
 from travelogue.orchestrator.run import run_trip
 from travelogue.runtime import app_context_for_trip_json
-from travelogue.services.pipeline_state import trip_status
+from travelogue.services.pipeline_state import lock_structure, trip_status
 
 
 def lock_trip_structure(trip: dict) -> None:
     """G1 confirm: structure_draft → structure_locked."""
-    pipe = trip.setdefault("pipeline", {})
-    locks = pipe.setdefault("locks", {})
-    locks["structure"] = True
-    pipe["status"] = "structure_locked"
+    lock_structure(trip)
 
 
 def continue_after_g1_confirm(

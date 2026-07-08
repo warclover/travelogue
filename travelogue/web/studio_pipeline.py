@@ -441,7 +441,9 @@ def run_studio_pipeline(
         if extra:
             pipeline_timings.update(extra)
         pipeline_timings["totalMs"] = round((time.monotonic() - pipeline_t0) * 1000.0, 2)
-        trip.setdefault("pipeline", {})["timings"] = dict(pipeline_timings)
+        from travelogue.domain.pipeline_view import set_pipeline_timings
+
+        set_pipeline_timings(trip, pipeline_timings)
 
     def report(stage: str, index: int, hint: str | None = None) -> None:
         if progress:

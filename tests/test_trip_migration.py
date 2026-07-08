@@ -27,8 +27,10 @@ def test_migrate_trip_applies_registry() -> None:
 
 
 def test_migrate_trip_rejects_unsupported_version() -> None:
-    with pytest.raises(TripVersionError):
+    with pytest.raises(TripVersionError, match="9.9"):
         migrate_trip({"version": "9.9", "assets": []})
+    with pytest.raises(TripVersionError, match="0.1"):
+        migrate_trip({"version": "0.1", "assets": []})
 
 
 def test_migrate_trip_accepts_current_version() -> None:

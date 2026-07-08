@@ -1,4 +1,11 @@
-"""Trip JSON load-time migrations (M-B6 · PRD §5.5)."""
+"""Trip JSON load-time migrations (M-B6 · PRD §5.5).
+
+Version rules (trip.version):
+- Add optional fields without bumping (e.g. meta.revision defaults to 0).
+- Semantic change or field removal bumps the minor version.
+- migrate_trip applies registered migrations in order for trips at or below each step.
+- Supported load window: MIN_SUPPORTED_TRIP_VERSION … CURRENT_TRIP_VERSION (one minor back).
+"""
 
 from __future__ import annotations
 

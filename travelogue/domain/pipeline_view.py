@@ -66,3 +66,41 @@ def assert_stage_allowed(trip: dict, stage: Stage) -> None:
 def set_layout_status(trip: dict, layout_status: str) -> None:
     pipe = trip.setdefault("pipeline", {})
     pipe["layoutStatus"] = layout_status
+
+
+def pipeline_dict(trip: dict) -> dict:
+    return trip.setdefault("pipeline", {})
+
+
+def set_pipeline_status(trip: dict, status: str) -> None:
+    pipeline_dict(trip)["status"] = status
+
+
+def set_pipeline_lock(trip: dict, name: str, value: bool) -> None:
+    pipeline_dict(trip).setdefault("locks", {})[name] = value
+
+
+def append_pipeline_run(trip: dict, run: dict) -> None:
+    pipeline_dict(trip).setdefault("runs", []).append(run)
+
+
+def set_pipeline_timings(trip: dict, timings: dict[str, float]) -> None:
+    pipeline_dict(trip)["timings"] = dict(timings)
+
+
+def lock_structure(trip: dict) -> None:
+    """G1 confirm: structure_draft → structure_locked."""
+    set_pipeline_lock(trip, "structure", True)
+    set_pipeline_status(trip, "structure_locked")
+
+
+def unlock_structure_for_replan(trip: dict) -> None:
+    set_pipeline_lock(trip, "structure", False)
+    set_pipeline_status(trip, "structure_draft")
+
+
+def revert_copy_lock_for_edit(trip: dict) -> None:
+    """Inline copy edit after copy_locked → copy_draft."""
+    if pipeline_dict(trip).get("status") == "copy_locked":
+        set_pipeline_status(trip, "copy_draft")
+        set_pipeline_lock(trip, "copy", False)
