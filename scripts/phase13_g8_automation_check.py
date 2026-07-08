@@ -20,7 +20,7 @@ def run_checks() -> dict:
         "pytest",
         "tests/test_studio_template_create.py",
         "tests/test_studio_import_template_mode.py",
-        "tests/test_template_platform.py",
+        "tests/unit/layout_templates/test_template_platform.py",
         "-q",
         "--tb=no",
     ]

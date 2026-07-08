@@ -54,7 +54,9 @@ python -m travelogue demo verify
 
 | 子目录 | 用途 | CI job |
 |--------|------|--------|
-| `tests/unit/` | 纯单测（自动 `@pytest.mark.unit`） | test-pr |
+| `tests/unit/` | 纯单测（自动 `@pytest.mark.unit`）；含 domain / web / media 等 | test-pr |
+| `tests/unit/layout_engine/` | layout / mosaic / lte / lse / usage_rules 单测 | test-pr |
+| `tests/unit/layout_templates/` | 模板引擎单测 | test-pr |
 | `tests/integration/` | 管道/并发/CAS（自动 `integration`） | test-integration |
 | `tests/e2e/` | 浏览器/Playwright（规划；暂与顶层 playwright 文件并存） | test-e2e |
 | `tests/test_*.py` | **冻结**：禁止新增顶层文件（`scripts/lint_test_layout.py`） | 按 marker |
@@ -74,6 +76,8 @@ python -m travelogue demo verify
 **M-C2 batch9（2026-07-08）**：lte 单测 21 文件 → `tests/unit/layout_engine/`；`test_lte_studio_playwright.py` → `tests/e2e/`；CI registry parity 路径已更新。
 
 **M-C2 batch10（2026-07-08）**：dual/screen/golden/editorial/subject/compare/beam 等 14 文件 → `tests/unit/layout_engine/`；`demo/verify.py` 与 phase gate 脚本路径已同步。
+
+**M-C2 batch11（2026-07-08）**：lse + usage_rules（13）→ `tests/unit/layout_engine/`；template（15）→ `tests/unit/layout_templates/`；phase13 gate 脚本路径已更新。
 
 新增测试请放入 `tests/unit/{包名}/` 或 `tests/integration/`，勿在 `tests/` 根目录新建 `test_*.py`。
 
