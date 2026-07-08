@@ -63,6 +63,19 @@ def test_m5_shell_module_exports() -> None:
         assert token in shell, f"missing shell export: {token}"
 
 
+def test_m5_drawers_module_exports() -> None:
+    js = PREVIEW_JS.read_text(encoding="utf-8")
+    drawers = (STUDIO / "preview-toolbar" / "drawers.js").read_text(encoding="utf-8")
+    assert 'from "./preview-toolbar/drawers.js"' in js
+    for token in (
+        "export function initPreviewDrawers",
+        "export function trapDrawerFocus",
+        "export function registerDrawersBridge",
+        "preview-drawer__copy-intent",
+    ):
+        assert token in drawers, f"missing drawers export: {token}"
+
+
 def test_v4_init_uses_icon_dock_not_legacy_rows() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
     marker = 'root.className = "preview-toolbar preview-toolbar--v4"'
