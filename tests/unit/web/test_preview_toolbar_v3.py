@@ -76,6 +76,21 @@ def test_m5_drawers_module_exports() -> None:
         assert token in drawers, f"missing drawers export: {token}"
 
 
+def test_m5_core_module_exports() -> None:
+    js = PREVIEW_JS.read_text(encoding="utf-8")
+    core = (STUDIO / "preview-toolbar" / "core.js").read_text(encoding="utf-8")
+    jsconfig = STUDIO / "preview-toolbar" / "jsconfig.json"
+    assert jsconfig.is_file()
+    assert 'from "./preview-toolbar/core.js"' in js
+    for token in (
+        "export function setLayoutPending",
+        "export function applyLayoutRerender",
+        "export function getLayoutPending",
+        "export function refreshTaskDockState",
+    ):
+        assert token in core, f"missing core export: {token}"
+
+
 def test_v4_init_uses_icon_dock_not_legacy_rows() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
     marker = 'root.className = "preview-toolbar preview-toolbar--v4"'

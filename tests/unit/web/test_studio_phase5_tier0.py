@@ -12,6 +12,8 @@ from tests._studio_js import read_studio_js
 ROOT = repo_root(__file__)
 PREVIEW_JS = ROOT / "templates" / "studio" / "preview-toolbar.js"
 LONGSHOT_JS = ROOT / "templates" / "studio" / "preview-toolbar" / "longshot.js"
+CORE_JS = ROOT / "templates" / "studio" / "preview-toolbar" / "core.js"
+TASK_DOCK_JS = ROOT / "templates" / "studio" / "preview-toolbar-v3-task-dock.js"
 
 
 def test_p5_14_job_busy_toast_and_retry() -> None:
@@ -34,7 +36,9 @@ def test_p5_32_preview_longshot_busy_retry() -> None:
 def test_preview_toolbar_longshot_integrated_to_top_bar() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
     longshot = LONGSHOT_JS.read_text(encoding="utf-8")
-    bundle = js + longshot
+    core = CORE_JS.read_text(encoding="utf-8")
+    task_dock = TASK_DOCK_JS.read_text(encoding="utf-8")
+    bundle = js + longshot + core + task_dock
     css = (ROOT / "templates" / "studio" / "preview-toolbar.css").read_text(encoding="utf-8")
     client = (ROOT / "templates" / "studio" / "js" / "longshot-client.js").read_text(
         encoding="utf-8"

@@ -31,7 +31,7 @@
 | M-C1 | todo | — | — | 触发：新增 Studio API |
 | **M-C2** | done | 2026-07-08 | 全量 **423** 文件分层；baseline **1**（`test_ingest.py` shim）；collect **2714**；14 个 `tests/unit/*` 目录 | — |
 | M-C3 | done | 2026-07-08 | `gen_scripts_registry.py` + `scripts/README.md`（168 脚本）+ 7 个 phase 脚本已 `git mv` 至 `scripts/archive/` + docs 索引 | — |
-| M-C5 | in-progress | 2026-07-08 | **Phase 2** `preview-toolbar/{dock,share,inline-edit,longshot,shell,drawers}.js` | init/sheet 拆分 · tsc · CSS（G-WIP-02） |
+| M-C5 | in-progress | 2026-07-08 | **Phase 2** `preview-toolbar/{dock,share,inline-edit,longshot,shell,drawers,core}.js` + jsconfig | init bootstrap · CSS（G-WIP-02） |
 | M-D1 | todo | — | — | 开关满 4 周 DoD |
 
 ## M-B1 交付摘要（PRD §5.3.2）
@@ -105,6 +105,6 @@ P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓
 | P1 | **AC-ARC-14a-d** Playwright（M-C5 前置） | `tests/e2e/test_preview_toolbar_arc14_playwright.py` | **done** · 4 passed |
 | P1 | **M-D1 / P-23** 删 legacy + TECH-ARCH 全量 | 开关 DoD 全满足 | **2026-08-05** 后 |
 | P1 | **LSE cross-import 收敛**（109→≤10） | ADR-015 后续 | 独立 PR 链 |
-| P2 | **M-C5 / P-21 Phase 2 续** · init/sheet ESM + tsc + CSS | initToolbarV3 模块 · **G-WIP-02**（CSS） | drawers 已拆 |
+| P2 | **M-C5 / P-21 Phase 2 续** · init bootstrap + CSS | initToolbarV3 留在 entry · **G-WIP-02**（CSS） | core + jsconfig 已加 |
 | P2 | **M-C1 / P-18** 路由表化 | 新增 Studio API | 机会主义 |
 | 背景 | 全量 `pytest --fast` 预存失败 (~25) | 非 M-C6 | 分批 issue |

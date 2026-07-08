@@ -10,5 +10,6 @@ Physical ESM split from `preview-toolbar.js` (entry URL unchanged).
 | `longshot.js` | Longshot export, stale hint, zip export, job poll (AC-ARC-14c) |
 | `shell.js` | Shared chrome: toast, collapse, toolbar height, trip path helpers |
 | `drawers.js` | Overlay drawers: edit, structure, cohort (G1) |
+| `core.js` | Layout pending state, sheet dirty tracking, rerender/narrate jobs |
 
-`initToolbarV3` and sheet wiring remain in `../preview-toolbar.js` until the next split batch.
+`initToolbarV3` bootstrap remains in `../preview-toolbar.js`. Type-check: `npx tsc -p preview-toolbar/jsconfig.json`.
