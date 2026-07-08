@@ -45,7 +45,10 @@ var _currentChapterId = function () {
 var _markSheetEditBaseline = function (_root, _panel) {};
 var _wireSheetEditDirty = function (_root, _panel) {};
 var _startLlmNarrate = function (_root, _tripId, _btn) {};
-var _applyLayoutRerender = function (_tripId, _root) {};
+/** @type {function(string, Element=): Promise<void>} */
+var _applyLayoutRerender = function (_tripId, _root) {
+  return Promise.resolve();
+};
 var _getLayoutPending = function () {
   return false;
 };
@@ -494,6 +497,7 @@ export function initPreviewDrawers(root, tripId) {
       var noteInp = drawerBodyEl.querySelector(".preview-drawer__copy-intent-note");
       var subsequent = drawerBodyEl.querySelector(".preview-drawer__copy-intent-subsequent");
       var noteVal = noteInp ? (noteInp.value || "").trim() : "";
+      /** @type {{ clear?: boolean; mood?: string | null; focus?: string | null; note?: string | null; applyToSubsequent?: boolean }} */
       var payload;
       if (!moodBtn && !focusBtn && !noteVal) {
         payload = { clear: true };

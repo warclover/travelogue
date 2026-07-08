@@ -139,6 +139,18 @@ def test_m5_init_v3_module_exports() -> None:
         assert token in init_v3, f"missing init-v3 export/wiring: {token}"
 
 
+def test_m5_tsc_gate_files() -> None:
+    jsconfig = STUDIO / "preview-toolbar" / "jsconfig.json"
+    global_dts = STUDIO / "preview-toolbar" / "global.d.ts"
+    pkg = ROOT / "package.json"
+    assert jsconfig.is_file()
+    assert global_dts.is_file()
+    assert pkg.is_file()
+    pkg_json = pkg.read_text(encoding="utf-8")
+    assert "tsc:preview-toolbar" in pkg_json
+    assert '"typescript"' in pkg_json
+
+
 def test_v4_init_uses_icon_dock_not_legacy_rows() -> None:
     init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     bootstrap = (STUDIO / "preview-toolbar" / "bootstrap.js").read_text(encoding="utf-8")

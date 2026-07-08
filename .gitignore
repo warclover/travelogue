@@ -27,8 +27,9 @@ trips/linzhi/*
 !trips/linzhi/index-longshot.html
 !trips/linzhi/README.md
 
-# OS
-.DS_Store
+
+# Node (preview-toolbar tsc gate)
+node_modules/
 Thumbs.db
 
 # IDE

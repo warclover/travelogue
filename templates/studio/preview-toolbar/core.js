@@ -26,6 +26,7 @@ var _g1Pending = false;
 var _g1DockDismissed = false;
 var _sheetEditDirty = false;
 var _sheetEditBaseline = "";
+var narrateJobId = null;
 
 export function getLayoutPending() {
   return _layoutPending;

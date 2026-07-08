@@ -270,7 +270,7 @@ export function initToolbarV3(root, tripId) {
     },
     refreshAdvancedOptions: function (panel) {
       if (!panel) return;
-      drawers.refreshEntry().then(function (data) {
+      drawers.refreshEntry().then(function (/** @type {{ intentSummary?: { featuredCount?: number } }} */ data) {
         var count = (data && data.intentSummary && data.intentSummary.featuredCount) || 0;
         panel.querySelectorAll(".preview-sheet__list-item--optional").forEach(function (li) {
           var action = li.querySelector("[data-action]");

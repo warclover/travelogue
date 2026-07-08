@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "tsc:preview-toolbar": "tsc -p templates/studio/preview-toolbar/jsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

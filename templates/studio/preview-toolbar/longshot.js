@@ -32,7 +32,6 @@ var LONGSHOT_DRAWER_AUTO_MS = 3000;
 var longshotPollCancel = null;
 var narratePollCancel = null;
 var longshotJobId = null;
-var narrateJobId = null;
 var _longshotDrawerTimer = null;
 var _studioExportPopoverClose = null;
 

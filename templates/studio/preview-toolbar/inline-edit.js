@@ -158,7 +158,7 @@ export function initCoverTitleEdit(tripId) {
     }
 
     titleEl.addEventListener("click", openEditor);
-    titleEl.addEventListener("keydown", function (e) {
+    titleEl.addEventListener("keydown", function (/** @type {KeyboardEvent} */ e) {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         openEditor();

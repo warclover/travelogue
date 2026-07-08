@@ -15,4 +15,6 @@ Physical ESM split from `preview-toolbar.js` (entry URL unchanged).
 | `features.js` | Template/cover/featured/reader-mode preview UX |
 | `init-v3.js` | `initToolbarV3`: bridges, sheet/task dock, longshot mount |
 
-Entry `../preview-toolbar.js` only registers bootstrap bridge. Bootstrap (`bootstrap.js`) mounts v4 shell and wires DOM ready. Type-check: `npx tsc -p preview-toolbar/jsconfig.json`.
+Entry `../preview-toolbar.js` only registers bootstrap bridge. Bootstrap (`bootstrap.js`) mounts v4 shell and wires DOM ready.
+
+Type-check (M-C5 gate): `npm run tsc:preview-toolbar` — uses `jsconfig.json` + `global.d.ts` for ambient DOM/window shims.

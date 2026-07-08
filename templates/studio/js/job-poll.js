@@ -17,9 +17,10 @@ export function fetchJobStatus(jobId) {
  * @param {number} [options.intervalMs=500]
  * @param {number} [options.slowMs=30000]
  * @param {number} [options.maxErrors=5]
+ * @param {number} [options.startedAt]
  * @param {function(): boolean} [options.shouldAbort]
- * @param {function(object, number)} [options.onTick] - (job, startedAt)
- * @param {function()} [options.onSlow]
+ * @param {function(object, number): void} [options.onTick] - (job, startedAt)
+ * @param {function(): void} [options.onSlow]
  * @returns {Promise<object>}
  */
 export function pollJobUntilDone(jobId, options) {

@@ -75,7 +75,8 @@ function buildCandidateList(data, subjects) {
  * @param {string} opts.tripId
  * @param {HTMLElement} opts.bodyEl
  * @param {function(string, object=): void} opts.showToast
- * @param {function(boolean): void} [opts.onClose]
+ * @param {function(): void} [opts.onClose]
+ * @param {function(): Promise<object>} [opts.onEntryRefresh]
  * @param {function(): Promise<void>} [opts.onApplyLayout]
  */
 export function mountCohortDrawer(opts) {

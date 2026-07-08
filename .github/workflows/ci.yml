@@ -40,6 +40,16 @@ jobs:
       - name: Import layer contract (M-B0)
         run: lint-imports
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Preview toolbar tsc (M-C5)
+        run: |
+          npm ci
+          npm run tsc:preview-toolbar
+
   test-pr:
     runs-on: ubuntu-latest
     strategy:
