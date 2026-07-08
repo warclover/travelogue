@@ -6,13 +6,13 @@ from typing import Any
 
 from travelogue.config import get_config
 from travelogue.config.layout import UsageRulesConfig
+from travelogue.layout_contract.usage_context import WindowContext
 from travelogue.curation.usage_rules.context import (
-    WindowContext,
     main_eligible_hero_score_gap,
     portrait_is_window_hero_max,
     window_std_portrait_count,
 )
-from travelogue.curation.usage_rules.registry import (
+from travelogue.layout_contract.usage_rules_registry import (
     EDITORIAL_4MIX_PATTERN,
     HERO_32_PATTERN,
     HERO_32_WIDE_AR_THRESHOLD,

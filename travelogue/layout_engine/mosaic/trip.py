@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from travelogue.config import AppConfig
-from travelogue.curation.degradation import DegradationAssessment
+from travelogue.layout_contract.degradation import DegradationAssessment
 from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_contract.scoring import ScoringWeights
 

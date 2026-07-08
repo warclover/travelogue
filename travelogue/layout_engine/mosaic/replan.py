@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from travelogue.config import MosaicConfig
 from travelogue.layout_contract.orientations import AspectKind
-from travelogue.curation.longshot_filter import BREATH_PATTERN
+from travelogue.layout_contract.rhythm import BREATH_PATTERN
 from travelogue.layout_engine.mosaic.compose import score_window_candidates
 from travelogue.layout_engine.mosaic.legacy import build_legacy_screen
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState

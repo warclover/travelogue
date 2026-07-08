@@ -7,7 +7,7 @@ from typing import Any
 
 from travelogue.config import MosaicConfig, get_config
 from travelogue.layout_contract.orientations import AspectKind
-from travelogue.curation.media_classify import is_collage_asset
+from travelogue.media.media_classify import is_collage_asset
 from travelogue.layout_engine.mosaic.builders import build_screen, try_order_for_pattern
 from travelogue.layout_engine.mosaic.features import feature_summary_for_window
 from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled, mosaic_registry
@@ -18,9 +18,9 @@ from travelogue.layout_engine.mosaic.pattern_catalog import (
 )
 from travelogue.layout_engine.mosaic.runtime import effective_mosaic_window_sizes
 from travelogue.layout_engine.mosaic.slot_geometry import screen_slots_geometry_ok
-from travelogue.curation.usage_rules.context import WindowContext
+from travelogue.layout_contract.usage_context import WindowContext
 from travelogue.curation.usage_rules.evaluator import evaluate_reject
-from travelogue.curation.usage_rules.registry import USAGE_RULE_UNDO_ORDER
+from travelogue.layout_contract.usage_rules_registry import USAGE_RULE_UNDO_ORDER
 
 
 @dataclass

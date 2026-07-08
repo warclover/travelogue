@@ -175,7 +175,7 @@ def stage_chapter_hero(ctx: ChapterPlanContext) -> None:
 def try_collage_solo_at_cursor(ctx: ChapterPlanContext) -> int | None:
     """Collage assets never share a multi-slot screen — route each to full-frame solo."""
     from travelogue.curation.collage_routing import collage_routing_enabled
-    from travelogue.curation.media_classify import is_collage_asset
+    from travelogue.media.media_classify import is_collage_asset
     from travelogue.layout_engine.planner.screen_planner import _make_screen
 
     if not collage_routing_enabled() or ctx.i >= len(ctx.ids):

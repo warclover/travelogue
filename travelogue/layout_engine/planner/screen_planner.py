@@ -339,7 +339,7 @@ def _can_mosaic_5_main_portrait_3land(
     from travelogue.config import get_config
 
     if get_config().layout.usage_rules.enabled:
-        from travelogue.curation.usage_rules.context import build_window_context
+        from travelogue.layout_contract.usage_context import build_window_context
         from travelogue.curation.usage_rules.evaluator import evaluate_reject
 
         wctx = build_window_context(

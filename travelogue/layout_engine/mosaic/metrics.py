@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from travelogue.curation.chapter_items import summarize_screen_patterns
-from travelogue.curation.longshot_filter import BREATH_PATTERN
+from travelogue.layout_contract.rhythm import BREATH_PATTERN
 from travelogue.layout_engine.mosaic.constants import (
     MOSAIC_UNIFIED_PATTERN_IDS,
     PATTERN_MOSAIC_5_2P3L_EQUAL,

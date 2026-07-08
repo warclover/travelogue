@@ -14,6 +14,7 @@ _PATTERN_SLOTS_RE = re.compile(r"^screen-(?:portrait|landscape|square)-(\d+)$")
 
 PORTRAIT_GRID8_MIN_PHOTOS = 50
 DENSE_COLLAGE_SLOT_MIN = 4
+BREATH_PATTERN = "screen-breath-pause"
 
 MAX_PORTRAIT_PAIR_STREAK = 2
 MAX_PORTRAIT_ORIENTATION_STREAK = 6

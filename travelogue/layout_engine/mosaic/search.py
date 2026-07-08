@@ -7,7 +7,7 @@ import logging
 from dataclasses import replace
 
 from travelogue.config import AppConfig
-from travelogue.curation.decision_log import LayoutDecisionLog
+from travelogue.layout_contract.decision_log import LayoutDecisionLog
 from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_contract.scoring import (
     IncrementalScoreState,
@@ -20,7 +20,7 @@ from travelogue.layout_contract.rhythm import (
     RhythmRules,
 )
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-from travelogue.curation.search_budget import SearchBudget
+from travelogue.layout_contract.search_budget import SearchBudget
 
 _log = logging.getLogger(__name__)
 

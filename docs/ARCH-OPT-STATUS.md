@@ -72,9 +72,9 @@
 
 | 指标 | M-B0 参考 | **2026-07-08（M-B4b + M-B1 后）** | PRD / ADR 目标 |
 |------|-----------|-----------------------------------|----------------|
-| layout_engine → curation | — | **68** | — |
+| layout_engine → curation | — | **53** | — |
 | curation → layout_engine | — | **9** | — |
-| **合计** | 51（B4a 前）→ 44（B4a 后） | **77** | PRD ≤10 ❌ · ADR 20%≈22 ❌ |
+| **合计** | 51（B4a 前）→ 44（B4a 后） | **62** | PRD ≤10 ❌ · ADR 20%≈22 ❌ |
 | Top importer | — | `layout_engine.planner.screen_planner` (12) | adapter 白名单收敛 |
 | Top imported | — | `curation.layout_planner` (16) · `screen_layout_state` (14) | kernel/shim 共享待续 |
 
@@ -103,6 +103,6 @@ P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓
 
 | 优先级 | 任务 | 触发 / 门禁 | 目标 |
 |--------|------|-------------|------|
-| P1 | **LSE cross-import 收敛**（77→≤10） | `lint_lse_cross_import.py` weekly 防回归 | batch-3: usage_rules + screen_layout_state |
+| P1 | **LSE cross-import 收敛**（62→≤10） | `lint_lse_cross_import.py` weekly 防回归 | batch-4: screen_layout_state + curate_scoring |
 | P2 | **M-C1 / P-18** 路由表化 | 新增 Studio API | 机会主义 |
 | 背景 | 全量 `pytest --fast` 预存失败 (~25) | 非 M-C6 | 分批 issue |

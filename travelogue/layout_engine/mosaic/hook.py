@@ -61,7 +61,7 @@ def window_has_candidates(
     from travelogue.layout_engine.mosaic.candidates import (
         generate_window_candidates_with_rejections,
     )
-    from travelogue.curation.usage_rules.context import build_window_context
+    from travelogue.layout_contract.usage_context import build_window_context
 
     if len(window) != size:
         return False
