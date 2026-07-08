@@ -128,20 +128,24 @@ def test_ux_p3_05_06_slow_hint_thresholds_and_copy() -> None:
 
 def test_ux_p3_07_preview_toolbar_has_no_cluster_controls() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
+    toolbar_dir = PREVIEW_JS.parent / "preview-toolbar"
+    bundle = js + "".join(
+        p.read_text(encoding="utf-8") for p in sorted(toolbar_dir.glob("*.js"))
+    )
     forbidden = ("sceneCluster", "clustering.enabled", "行程识别", "studio-cfg-clustering")
     for token in forbidden:
-        assert token not in js
-    assert "为什么这样分章" in js or "chapter-layout" in js
-    assert "layoutExplain" in js
-    assert "排版引擎" in js
-    assert "preview-toolbar__g1-banner" in js
-    assert "preview-drawer__narrate-anchors" in js
-    assert "copy-intent" in js
-    assert "章级意图" in js
-    assert "preview-drawer__chip-mood" in js
-    assert "trapDrawerFocus" in js
-    assert "toolbarConfirm" in js
-    assert "window.alert(" not in js
+        assert token not in bundle
+    assert "为什么这样分章" in bundle or "chapter-layout" in bundle
+    assert "layoutExplain" in bundle
+    assert "排版引擎" in bundle
+    assert "preview-toolbar__g1-banner" in bundle
+    assert "preview-drawer__narrate-anchors" in bundle
+    assert "copy-intent" in bundle
+    assert "章级意图" in bundle
+    assert "preview-drawer__chip-mood" in bundle
+    assert "trapDrawerFocus" in bundle
+    assert "toolbarConfirm" in bundle
+    assert "window.alert(" not in bundle
 
 
 @pytest.mark.e2e
