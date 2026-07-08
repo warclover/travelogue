@@ -2,7 +2,7 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.1（+ §18 v0.9 增量 · M-B0） |
+| **文档版本** | v1.0（M-D1 全量刷新 · 2026-07-08） |
 | **阶段** | P0 本地工坊 |
 | **关联** | `CHARTER.md`、`AGENT-ARCHITECTURE.md`、`DATA-MODEL.md` |
 | **更新日期** | 2026-05-22（§18 · 2026-07-08） |
@@ -269,6 +269,7 @@ Agent 2 失败：L1/L2 错误列表 → 自动重试 prompt（≤2 次）。
 |------|------|------|
 | v0.1 | 2026-05-19 | P0 技术架构初稿 |
 | v0.2 | 2026-05-30 | Phase 6：场景聚类默认策略与自适应事件分段 |
+| v1.0 | 2026-07-08 | M-D1：§18 全量刷新；import-linter 0 豁免；LSE 7 边 |
 
 ---
 
@@ -407,48 +408,54 @@ python scripts/phase7_verify_rollback.py
 
 ---
 
-## 18. 架构优化增量（v0.9 · M-B0）
+## 18. 架构优化（M-D1 · 2026-07-08 全量）
 
-> SSOT 增量章节，对应 [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) v1.1 与 [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md)。全量文档刷新留待 M-D1。
+> SSOT：[PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) v1.1 · 进度 [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md)
 
-### 18.1 现行分层（as-is · 2026-07）
-
-与 MVP §2 一致：CLI / Web Studio / Desktop → Orchestrator → Agents（media · curation · render）→ TripService + schema。  
-已知倒置：`media→curation`、`curation→services`、`templating→web`、`layout_engine→web` 等（见 §18.3 豁免清单）。
-
-### 18.2 目标分层 DAG（to-be · PRD §5.3.1）
+### 18.1 现行分层（as-is）
 
 ```text
-第0层  util · types · domain · layout_contract · constants · paths · errors
+第0层  util · types · domain · layout_contract · constants · paths · errors · manifest_limits
 第1层  config
 第2层  media · vision · llm
-第3层  curation · layout_engine · layout_templates   ← 同层；互访经 adapter / layout_contract
+第3层  curation · layout_engine · layout_templates   ← 同层；LSE cross-import 7 边（curate→adapter 白名单）
 第4层  services · templating
-第5层  render · export
+第5层  render · export          ← export→render 为层内白名单
 第6层  orchestrator
 第7层  cli · web · desktop
 ```
 
-规则：仅上层 import 下层；同层子模块用 `:` 合并（import-linter 契约）。  
-`export→render` 为第 5 层内白名单，不拆。
+**数据安全（WS1）**：`TripService.update` + `meta.revision` CAS；`lint_trip_save_calls` / `lint_trip_json` CI 门禁。
 
-### 18.3 工具化契约（M-B0 基线）
+**编排（M-B3）**：Studio 与 CLI 统一 `run_trip`（clustering 为一等 stage）；legacy 双路径开关已删除。
 
-| 工具 | 位置 | 说明 |
+**布局（M-B4 + LSE batch-1～6）**：screen planner / mosaic 主实现位于 `layout_engine/`；`layout_contract/` 为共享 kernel；`curation.*` 保留 importlib shim。LSE ↔ curation **7 条** intentional 边（`curate` → adapter 模块）。
+
+### 18.2 分层契约工具
+
+| 工具 | 说明 | 状态 |
 |------|------|------|
-| `arch_equivalence_check.py` | `scripts/` | 确定性 profile 下同一 fixture 双跑；L3a 规范化 trip diff + L3b `layout_snapshot` |
-| `lint-imports` | `pyproject.toml` `[tool.importlinter]` | 分层 DAG + **26 条显式豁免**（PRD §5.3.2；M-B1 清零） |
-| `lint_trip_json.py` | `scripts/` | trip.json schema 门禁（M-B5） |
+| `lint-imports` | `pyproject.toml` `[tool.importlinter]` · PRD §5.3.1 DAG | **0 豁免**（M-B1 清零 · 2026-07-08） |
+| `lint_lse_cross_import.py` | LSE ↔ curation AST 边；ceiling **10** | **7 边** ✅ |
+| `arch_equivalence_check.py` | L3a/b/c 等价门禁 | CI validate |
+| `lint_trip_json.py` | trip.json schema + 体积 | CI validate |
 
-CI：`lint` job 跑 `lint-imports`；`validate` job 跑 `arch_equivalence_check`（PR warn / main block）。
-
-### 18.4 已删除的双路径开关（M-D1 · 2026-07-08）
+### 18.3 已删除的双路径开关
 
 | 原开关 | 处置 |
 |--------|------|
-| `pipeline.orchestration` | 已删除；Studio 固定 `run_trip` unified 路径；config 残留 `legacy` 仅 warning |
-| `layout.planner_impl` | 已删除；固定 `layout_engine.planner`；config 残留 `curation` 仅 warning |
+| `pipeline.orchestration` | 已删除；唯一路径 `run_trip` unified |
+| `layout.planner_impl` | 已删除；唯一路径 `layout_engine.planner` |
 
-LSE import 路径兼容：`curation.screen_planner*` 仍为无警告 re-export，完整迁移见 ADR-015 后续 PR。
+残留 config 值触发 `UserWarning`，不阻断启动。
+
+### 18.4 领域视图（M-C4）
+
+`domain/pipeline_view.py` · `assets_view.py` · `chapters_view.py` · `cover_view.py` 等为 trip dict 高频 mutation 入口；`lint_trip_field_assignments.py` AST 门禁。
+
+### 18.5 测试与脚本治理（M-C2 / M-C3）
+
+- 测试：`tests/unit/{包名}/` · `tests/integration/` · `tests/e2e/`（423 文件分层完成）
+- 脚本：`scripts/gen_scripts_registry.py` + `scripts/archive/phaseN/`
 
 详见 [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md)。

@@ -44,7 +44,7 @@ from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
 from travelogue.config.vision import vision_from_dict
 from travelogue.config_helpers import cfg_bool
 from travelogue.curation.cover_scoring_params import CoverScoringParams
-from travelogue.llm.presets import PROVIDER_PRESETS
+from travelogue.util.llm_presets import PROVIDER_PRESETS
 from travelogue.paths import ROOT
 
 _log = logging.getLogger(__name__)
@@ -226,7 +226,7 @@ def load_config(path: Path | None = None) -> AppConfig:
     if not trips_dir.is_absolute():
         base = Path.cwd()
         try:
-            from travelogue.desktop.bundle import exe_dir, is_frozen
+            from travelogue.paths import exe_dir, is_frozen
 
             if is_frozen():
                 base = exe_dir()

@@ -36,7 +36,7 @@ def record_mosaic_layout_metrics(
 ) -> None:
     """Append curate-time layout KPIs; never raises."""
     try:
-        from travelogue.templating.metrics import record_template_metric
+        from travelogue.util.template_metrics import record_template_metric
     except ImportError:
         return
 
@@ -78,7 +78,7 @@ def record_per_template_layout_metrics(
     if not _emit_per_template_enabled():
         return
     try:
-        from travelogue.templating.metrics import record_template_metric
+        from travelogue.util.template_metrics import record_template_metric
     except ImportError:
         return
 

@@ -17,18 +17,9 @@ ReviewStatus = Literal["none", "pending", "approved", "rejected"]
 
 
 def get_review_status(template_id: str) -> dict[str, Any]:
-    with _LOCK:
-        row = dict((_load_unlocked().get("templates") or {}).get(template_id) or {})
-    review = dict(row.get("review") or {})
-    return {
-        "templateId": template_id,
-        "status": str(review.get("status") or "none"),
-        "submittedAt": review.get("submittedAt"),
-        "submittedBy": review.get("submittedBy"),
-        "reviewedAt": review.get("reviewedAt"),
-        "reviewedBy": review.get("reviewedBy"),
-        "note": review.get("note"),
-    }
+    from travelogue.domain.template_admin_state import get_review_status as _read
+
+    return _read(template_id)
 
 
 def _admission_for_review(template_id: str) -> dict[str, Any]:

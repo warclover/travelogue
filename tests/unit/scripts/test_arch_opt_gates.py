@@ -32,6 +32,20 @@ def _run_script(rel: str, *argv: str) -> tuple[int, str]:
     return code, buf.getvalue()
 
 
+def test_lint_imports_no_exemptions() -> None:
+    import subprocess
+
+    result = subprocess.run(
+        [sys.executable, "-m", "importlinter.cli", "lint-imports"],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr or result.stdout
+    ignore_block = (ROOT / "pyproject.toml").read_text(encoding="utf-8").split("ignore_imports = ", 1)[-1]
+    assert ignore_block.startswith("[]"), "ignore_imports must be empty"
+
+
 def test_lint_lse_cross_import_at_baseline() -> None:
     code, out = _run_script("scripts/lint_lse_cross_import.py")
     assert code == 0, out

@@ -64,27 +64,13 @@ def run_admission_check(
 
     if fixture.is_file():
         try:
-            from travelogue.render.dual_layout_regression import prepare_trip_web_screens
-            from travelogue.render.engine import render_html
+            import travelogue.render.admission_golden  # noqa: F401 — registers hook
+
+            from travelogue.domain.admission_hooks import run_golden_render_step
 
             trip_render = json.loads(fixture.read_text(encoding="utf-8"))
-            trip_render = prepare_trip_web_screens(trip_render)
-            sel = trip_render.setdefault("templateSelection", {})
-            sel["resolvedTemplateId"] = template_id
-            trip_render["templateId"] = template_id
-            html = render_html(
-                trip_render,
-                template_id=template_id,
-                layout_engine_override="screens",
-                export_layout_override="web",
-            )
-            steps.append(
-                {
-                    "name": "golden_render",
-                    "pass": isinstance(html, str) and len(html) > 200,
-                    "htmlBytes": len(html) if isinstance(html, str) else 0,
-                }
-            )
+            step = run_golden_render_step(template_id, trip_render)
+            steps.append(step)
         except Exception as exc:
             steps.append({"name": "golden_render", "pass": False, "detail": str(exc)})
     else:

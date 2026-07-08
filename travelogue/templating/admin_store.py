@@ -7,12 +7,7 @@ import threading
 from datetime import UTC, datetime
 from typing import Any, Literal
 
-from travelogue.paths import ROOT
-from travelogue.templating.lifecycle import assert_transition
-
-TemplateLifecycle = Literal["experimental", "beta", "ga", "deprecated", "disabled"]
-
-_STATE_PATH = ROOT / "runs" / "template_admin_state.json"
+from travelogue.domain.template_admin_state import STATE_PATH as _STATE_PATH
 _LOCK = threading.Lock()
 _HIGH_RISK_TARGETS = frozenset({"disabled", "deprecated"})
 

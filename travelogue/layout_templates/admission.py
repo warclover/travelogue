@@ -151,7 +151,7 @@ def run_layout_template_admission(
             ok = False
 
     if target == "ga":
-        from travelogue.templating.review import get_review_status
+        from travelogue.domain.template_admin_state import get_review_status
 
         review = get_review_status(template_id)
         review_ok = review.get("status") == "approved"

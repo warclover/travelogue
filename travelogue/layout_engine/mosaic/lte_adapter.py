@@ -62,9 +62,9 @@ def _lte_template(pattern_id: str):
 
 def _runtime_base_weight_override(pattern_id: str) -> float | None:
     """Approved runtime weights from config_governance (§9.4)."""
-    from travelogue.templating.admin_store import load_runtime
+    from travelogue.domain.template_admin_state import load_runtime_overrides
 
-    runtime = load_runtime()
+    runtime = load_runtime_overrides()
     overrides = runtime.get("layout_template_base_weights") or {}
     if not isinstance(overrides, dict):
         return None

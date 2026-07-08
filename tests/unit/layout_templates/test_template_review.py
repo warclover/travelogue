@@ -22,6 +22,7 @@ def test_review_workflow_ga_gate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
         encoding="utf-8",
     )
     monkeypatch.setattr("travelogue.templating.admin_store._STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state)
 
     with pytest.raises(ValueError, match="E_TEMPLATE_REVIEW_REQUIRED"):
         require_review_approved_for_ga("visual-journal")

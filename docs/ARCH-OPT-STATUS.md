@@ -22,7 +22,7 @@
 | ADR-015 | accepted | 2026-07-08 | ADR 已批准；cross-import 51→44（B4a 后） | LSE 互引 109 见下表 |
 | M-B4a | done | 2026-07-08 | kernel→layout_contract；adapter 收敛；mosaic ContextVar；render_fingerprint；equivalence 全绿 | LSE cross-import 109（非 import-linter） |
 | M-B4b | done | 2026-07-08 | planner+mosaic→layout_engine/；weekly dual-run；消费方收敛 | PRD cross-import ≤10 未达标（109）；待 adapter/shim 退役 |
-| M-B1 | done | 2026-07-08 | PRD §5.3.2 违例表清零；import-linter 26→**11** 豁免；`lint-imports` 全绿；domain/kernel 下沉见 §M-B1 交付 | 11 条 intentional 豁免（§import-linter）；LSE 互引 109 不归 M-B1 |
+| M-B1 | done | 2026-07-08 | import-linter **26→0** 豁免；PRD §5.3.2 违例清零 | — |
 | M-B2 | done | 2026-07-08 | S1 `ARCH-ORCH-DIFF-MATRIX.md`；S2 StudioProfile/Hooks + clustering stage；Go（G-WIP-01 用户授权） | — |
 | M-B3 | done | 2026-07-08 | unified `run_trip` 编排；legacy 已于 M-D1 删除 | — |
 | M-C4 | done | 2026-07-08 | 三视图 + lint + 单测；curate/orchestrator/render/cli/export 改引 pipeline_view | media/ingest/sandbox 直赋属 ingest 域 |
@@ -52,18 +52,19 @@
 
 证据：`python -m importlinter.cli lint-imports` 全绿；相关 pytest（ingest / cover / sandbox / intent / closing）通过；分支 `51964a3` 起可复现。
 
-## import-linter 豁免余量（M-B1 后 · 11 条）
+## import-linter（M-B1 后 · 0 豁免）
 
-> M-B0 基线 26 条 → M-B1 后 **11 条**（`pyproject.toml` `[tool.importlinter.contracts]`）。均属 PRD 表外或 R-15 实验路径，**不阻塞 M-B1 收口**。
+> M-B0 基线 26 条 → M-B1 初版 11 条 → **2026-07-08 清零 0 条**（domain/util 下沉 + admission hook 注册）。
 
-| # | 违例 | 性质 / 后续 |
-|---|------|-------------|
-| 1–2 | `config.app/loader` → `desktop.bundle` | 桌面 bundle 路径；config 层待独立 ADR |
-| 3 | `config.loader` → `llm.presets` | 配置加载可选预设 |
-| 4–5 | `curation.mosaic.*` → `templating.*` | R-15 实验路径；随 mosaic shim 退役 |
-| 6–8 | `layout_templates.*` → `templating.*` | 同层 layout 管理 |
-| 9–10 | `templating.admission` → `render.*` | 准入 golden 回归 |
-| 11 | `paths` → `templates.registry` | manifest 路径解析 |
+| 批次 | 清偿项 | 处置 |
+|------|--------|------|
+| batch-6a | config→desktop/llm | `paths` 平台路径 + `util/llm_presets` |
+| batch-6a | paths→templates.registry | 直接 `TEMPLATES_ROOT / id` |
+| batch-6b | layout_engine→templating | `domain/template_admin_state` · `util/template_metrics` |
+| batch-6b | layout_templates↔templating | review 读 domain；HTML admission 上移至 web handler |
+| batch-6b | templating→render | `domain/admission_hooks` + `render/admission_golden` 注册 |
+
+证据：`python -m importlinter.cli lint-imports` 全绿（`ignore_imports = []`）。
 
 ## LSE ↔ curation cross-import 基线（ADR-015）
 
@@ -103,6 +104,6 @@ P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓
 
 | 优先级 | 任务 | 触发 / 门禁 | 目标 |
 |--------|------|-------------|------|
-| P1 | **LSE 收敛收尾** | 7 边 curate→adapter 文档化 | import-linter 11 豁免清零（M-B1 余量） |
-| P2 | **M-C1 / P-18** 路由表化 | 新增 Studio API | 机会主义 |
+| P2 | **M-C1 路由表化** | 新增 Studio API | AC-ARC-13 |
+| 背景 | G-ARC-06 CacheRegistry 立项 | 未追踪 | — |
 | 背景 | 全量 `pytest --fast` 预存失败 (~25) | 非 M-C6 | 分批 issue |
