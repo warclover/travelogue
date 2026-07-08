@@ -29,7 +29,6 @@ test_bsp_moment_playwright.py
 test_bsp_page_surface.py
 test_bsp_reading_profiles.py
 test_bsp_surface_playwright.py
-test_build_render_context.py
 test_burst_priority.py
 test_cfg_injection.py
 test_chapter_explain.py
@@ -81,11 +80,6 @@ test_env.py
 test_epilogue_displayed_assets.py
 test_error_paths_p1.py
 test_event_recap_template.py
-test_export.py
-test_export_exif.py
-test_export_longshot.py
-test_export_pdf.py
-test_export_zip_budget.py
 test_exposure_metrics.py
 test_feedback.py
 test_food_grid.py
@@ -278,11 +272,6 @@ test_reading_present_sync.py
 test_reading_profile.py
 test_reading_screen_order.py
 test_reexport.py
-test_render.py
-test_render_cover_and_card.py
-test_render_dual_surfaces.py
-test_render_missing_asset_ref.py
-test_render_placeholders.py
 test_replan_items_sync.py
 test_rhythm_ci_gate.py
 test_scene_clusters.py

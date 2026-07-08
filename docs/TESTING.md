@@ -63,6 +63,8 @@ python -m travelogue demo verify
 
 **M-C2 batch4（2026-07-08）**：studio handlers + curate + studio 单测 → `tests/unit/web/`；`scripts/quality_gate.py` REGRESSION_TESTS 路径已更新。
 
+**M-C2 batch5（2026-07-08）**：export / render 单测 → `tests/unit/export/`、`tests/unit/render/`（11 文件）。
+
 新增测试请放入 `tests/unit/{包名}/` 或 `tests/integration/`，勿在 `tests/` 根目录新建 `test_*.py`。
 
 | 模块 | 用例示例 |
