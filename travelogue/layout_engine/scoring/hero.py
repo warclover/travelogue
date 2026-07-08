@@ -19,7 +19,7 @@ def effective_hero_score(
     scoring_version: str | None = None,
     pool: list[dict] | None = None,
 ) -> float:
-    from travelogue.layout_engine.scoring.hero import effective_hero_score as _score
+    from travelogue.curation.curate_scoring import effective_hero_score as _score
 
     return _score(
         asset,
