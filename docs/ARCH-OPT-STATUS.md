@@ -76,7 +76,7 @@
 | curation → layout_engine | — | **9** | — |
 | **合计** | 51（B4a 前）→ 44（B4a 后） | **109** | PRD ≤10 ❌ · ADR 20%≈22 ❌ |
 | Top importer | — | `layout_engine.planner.screen_planner` (12) | adapter 白名单收敛 |
-| Top imported | — | `curation.curate_scoring` 等 | kernel 共享待续 |
+| Top imported | — | `curation.layout_planner` (16) · `screen_layout_state` (14) | kernel/shim 共享待续 |
 
 **说明**：B4b 物理迁移后 LSE 模块仍大量 lazy-import curation（评分、mosaic shim、curate 实验路径），边数上升属预期；**≤10 目标归属 M-B4 后续**（adapter 薄化 + curation shim 删除 + 白名单边审计），非 M-B1 范围。
 
