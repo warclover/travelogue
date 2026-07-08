@@ -13,13 +13,13 @@ from travelogue.layout_contract.scoring import (
     IncrementalScoreState,
     ScoringWeights,
 )
-from travelogue.curation.layout_scoring import score_screen_plan
+from travelogue.layout_engine.planner.beam_scoring import score_screen_plan
 from travelogue.layout_contract.rhythm import (
     PORTRAIT_PAIR_PATTERN,
     PORTRAIT_SINGLE_PATTERNS,
     RhythmRules,
 )
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_contract.search_budget import SearchBudget
 
 _log = logging.getLogger(__name__)
@@ -70,7 +70,7 @@ def _screens_signature(chapters: list[dict]) -> list[list[str]]:
 
 
 def _collect_asset_ids_from_chapter(ch: dict) -> list[str]:
-    from travelogue.curation.chapter_items import collect_screen_asset_ids, item_asset_ids
+    from travelogue.layout_contract.chapter_items import collect_screen_asset_ids, item_asset_ids
 
     aids = collect_screen_asset_ids(ch)
     if aids:
@@ -169,7 +169,7 @@ def replan_day_buckets_beam(
     carry_age: dict[str, int] = {}
     hero_ids = {h for h in hero_by_ch.values() if h}
     noted_patterns: list[str] = []
-    from travelogue.curation.curate_scoring import median_sharpness
+    from travelogue.layout_contract.scoring import median_sharpness
     from travelogue.layout_engine.planner.screen_planner_attach import (
         _carry_inject_ids,
         _consolidate_adjacent_portrait_singles,
@@ -180,7 +180,7 @@ def replan_day_buckets_beam(
 
     med_sharp = median_sharpness(list(assets_by_id.values())) if assets_by_id else 0.0
     incr_state = IncrementalScoreState() if incremental_scoring else None
-    from travelogue.curation.layout_constraints import plan_violates_consecutive_pattern
+    from travelogue.layout_contract.constraints import plan_violates_consecutive_pattern
 
     for bucket_idx, bucket in enumerate(day_buckets):
         budget.begin_segment()
@@ -306,7 +306,7 @@ def replan_day_buckets_beam(
                 arc_seg = None
                 arc_boost = 0.0
                 if _arc_scoring_active(arc_mode):
-                    from travelogue.curation.arc_patterns import ARC_PEAK
+                    from travelogue.layout_contract.arc import ARC_PEAK
 
                     arc_seg = arc_segment_for_chapter_with_intent(
                         ch_index,

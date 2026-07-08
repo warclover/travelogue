@@ -228,7 +228,7 @@ def pick_best_main_eligible(
     cfg: MosaicConfig | None = None,
 ) -> str | None:
     """Pick highest-scoring main among AR-eligible landscape candidates."""
-    from travelogue.curation.curate_scoring import effective_hero_score
+    from travelogue.layout_engine.scoring.hero import effective_hero_score
 
     cfg = cfg or get_effective_mosaic_config()
     pid = pattern_id or ""

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 from travelogue.layout_contract.constraints import FOCAL_EDGE_MARGIN
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_contract.density import LayoutDensity, LayoutDensityParams
 from travelogue.layout_contract.rhythm import (
     DEFAULT_CONSECUTIVE_BANS,

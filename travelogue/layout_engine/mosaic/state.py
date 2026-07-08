@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 
 MosaicPlannerState = ScreenLayoutPlannerState
 

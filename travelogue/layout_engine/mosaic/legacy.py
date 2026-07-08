@@ -180,7 +180,7 @@ def append_legacy_window(
     if not screen:
         return False
     from travelogue.layout_contract.usage_context import build_window_context
-    from travelogue.curation.usage_rules.evaluator import evaluate_reject
+    from travelogue.layout_engine.usage_rules.evaluator import evaluate_reject
 
     window_ctx = build_window_context(
         window,

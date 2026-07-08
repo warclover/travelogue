@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from travelogue.layout_contract.subject import asset_has_person
-from travelogue.curation.curate_scoring import sort_bucket_asset_ids
+from travelogue.layout_contract.scoring import sort_bucket_asset_ids
 
 
 def _subject_key(asset: dict) -> str:

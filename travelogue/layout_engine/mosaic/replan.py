@@ -9,7 +9,7 @@ from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_contract.rhythm import BREATH_PATTERN
 from travelogue.layout_engine.mosaic.compose import score_window_candidates
 from travelogue.layout_engine.mosaic.legacy import build_legacy_screen
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 
 ReplanStrategy = Literal["alt_topk", "legacy"]
 
@@ -68,14 +68,14 @@ def _pick_alt_topk(
 
 
 def _sync_chapter_items(chapters: list[dict]) -> None:
-    from travelogue.curation.chapter_items import compact_chapter_items_for_screens
+    from travelogue.layout_contract.chapter_items import compact_chapter_items_for_screens
 
     compact_chapter_items_for_screens(chapters)
 
 
 def refresh_trip_displayed_assets(trip: dict, chapters: list[dict]) -> list[str]:
     """Rebuild ``curation.displayedAssetIds`` from screens + chapter heroes."""
-    from travelogue.curation.chapter_items import collect_displayed_asset_ids
+    from travelogue.layout_contract.chapter_items import collect_displayed_asset_ids
 
     hero_extra = [
         str((ch.get("curation") or {}).get("heroAssetId"))

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from travelogue.config import AppConfig
 from travelogue.layout_contract.rhythm import RhythmRules
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_engine.planner.screen_planner import (
     DEFAULT_FEATURED_WEIGHT,
     LAYOUT_ENGINE_SCREENS,
@@ -24,7 +24,8 @@ def _preferred_hero_for_bucket(
     median_sharp: float | None = None,
     featured_weight: float = DEFAULT_FEATURED_WEIGHT,
 ) -> str | None:
-    from travelogue.curation.curate_scoring import effective_hero_score, median_sharpness
+    from travelogue.layout_engine.scoring.hero import effective_hero_score
+    from travelogue.layout_contract.scoring import median_sharpness
 
     med = (
         median_sharp
@@ -261,7 +262,7 @@ def assign_bucket_screens_with_portrait_carry(
         seq_per_ch[ch_id] = seq_per_ch.get(ch_id, 0) + 1
         screen = dict(sc)
         screen["screenId"] = f"{ch_id}-sc-{seq_per_ch[ch_id]:02d}"
-        from travelogue.curation.editorial_portrait_row import apply_editorial_row_slot_fits
+        from travelogue.layout_engine.editorial.portrait_row import apply_editorial_row_slot_fits
 
         screen = apply_editorial_row_slot_fits(screen, assets_by_id, trip=trip)
         ch_by_id[ch_id]["screens"].append(screen)
@@ -370,7 +371,7 @@ def _flush_portrait_carry_tail(
         seq_per_ch[ch_id] = seq_per_ch.get(ch_id, 0) + 1
         screen = dict(sc)
         screen["screenId"] = f"{ch_id}-sc-{seq_per_ch[ch_id]:02d}"
-        from travelogue.curation.editorial_portrait_row import apply_editorial_row_slot_fits
+        from travelogue.layout_engine.editorial.portrait_row import apply_editorial_row_slot_fits
 
         screen = apply_editorial_row_slot_fits(screen, assets_by_id, trip=trip)
         ch_by_id[ch_id]["screens"].append(screen)
@@ -404,7 +405,7 @@ def attach_screens_day_buckets(
     elif isinstance(assets, list):
         assets_by_id = {a["id"]: a for a in assets if a.get("id")}
 
-    from travelogue.curation.curate_scoring import median_sharpness
+    from travelogue.layout_contract.scoring import median_sharpness
 
     med_sharp = median_sharpness(list(assets_by_id.values())) if assets_by_id else 0.0
 
@@ -691,7 +692,7 @@ def attach_screens_to_chapters(
         asset_ids = _collect_asset_ids_from_chapter(ch)
 
         if asset_ids:
-            from travelogue.curation.editorial_portrait_row import (
+            from travelogue.layout_engine.editorial.portrait_row import (
                 apply_editorial_row_slot_fits,
             )
 

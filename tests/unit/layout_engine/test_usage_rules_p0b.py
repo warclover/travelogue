@@ -139,6 +139,10 @@ def test_can_mosaic_main_portrait_blocked_by_ur04(monkeypatch):
         "travelogue.curation.usage_rules.evaluator.get_config",
         lambda: patched,
     )
+    monkeypatch.setattr(
+        "travelogue.layout_engine.usage_rules.evaluator.get_config",
+        lambda: patched,
+    )
     ordered = _can_mosaic_5_main_portrait_3land(
         window,
         aspects,

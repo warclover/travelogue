@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from travelogue.config import AppConfig
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-from travelogue.curation.subject_tagging import is_mundane_clusterable, mundane_run_length
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.subject_tagging import is_mundane_clusterable, mundane_run_length
 from travelogue.media.image_ops import AspectKind
 
 
@@ -87,7 +87,7 @@ def build_chapter_plan_context(
         trip_total, portrait_heavy=portrait_heavy
     ) and enable_portrait_grid8
     assets_map: dict[str, dict] = assets or {}
-    from travelogue.curation.curate_scoring import median_sharpness
+    from travelogue.layout_contract.scoring import median_sharpness
 
     med_sharp = (
         median_sharp
@@ -174,7 +174,7 @@ def stage_chapter_hero(ctx: ChapterPlanContext) -> None:
 
 def try_collage_solo_at_cursor(ctx: ChapterPlanContext) -> int | None:
     """Collage assets never share a multi-slot screen — route each to full-frame solo."""
-    from travelogue.curation.collage_routing import collage_routing_enabled
+    from travelogue.layout_contract.collage_routing import collage_routing_enabled
     from travelogue.media.media_classify import is_collage_asset
     from travelogue.layout_engine.planner.screen_planner import _make_screen
 

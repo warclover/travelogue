@@ -64,7 +64,7 @@ def _pick_solo_portrait_for_mosaic(
         return None
     if len(portrait_ids) == 1:
         return portrait_ids[0]
-    from travelogue.curation.solo_scoring import pick_solo_asset_id
+    from travelogue.layout_engine.scoring.solo import pick_solo_asset_id
 
     picked = pick_solo_asset_id(
         portrait_ids,
@@ -373,7 +373,7 @@ def build_screen(
             screen_id=screen_id,
             slots=slots,
         )
-        from travelogue.curation.editorial_4mix import apply_editorial_4mix_to_screen
+        from travelogue.layout_engine.editorial.four_mix import apply_editorial_4mix_to_screen
 
         screen = apply_editorial_4mix_to_screen(
             screen, assets_map, trip=trip, cfg=cfg
@@ -436,14 +436,14 @@ def build_screen(
         asset_has_person(assets_map.get(aid, {})) for aid in ordered_ids
     ):
         screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
-    from travelogue.curation.editorial_portrait_row import (
+    from travelogue.layout_engine.editorial.portrait_row import (
         apply_editorial_portrait_row_to_screen,
     )
 
     screen = apply_editorial_portrait_row_to_screen(
         screen, assets_map, trip=trip, cfg=cfg
     )
-    from travelogue.curation.editorial_4mix import apply_editorial_4mix_to_screen
+    from travelogue.layout_engine.editorial.four_mix import apply_editorial_4mix_to_screen
 
     screen = apply_editorial_4mix_to_screen(
         screen, assets_map, trip=trip, cfg=cfg

@@ -19,7 +19,7 @@ from travelogue.layout_engine.mosaic.pattern_catalog import (
 from travelogue.layout_engine.mosaic.runtime import effective_mosaic_window_sizes
 from travelogue.layout_engine.mosaic.slot_geometry import screen_slots_geometry_ok
 from travelogue.layout_contract.usage_context import WindowContext
-from travelogue.curation.usage_rules.evaluator import evaluate_reject
+from travelogue.layout_engine.usage_rules.evaluator import evaluate_reject
 from travelogue.layout_contract.usage_rules_registry import USAGE_RULE_UNDO_ORDER
 
 

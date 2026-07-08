@@ -16,9 +16,9 @@ from travelogue.layout_engine.mosaic.log_enrich import enrich_mosaic_log_from_sc
 from travelogue.layout_engine.mosaic.lte_adapter import mcs_diversity_config, mosaic_pattern_disabled
 from travelogue.layout_engine.mosaic.scorer import score_candidate, weights_hash
 from travelogue.layout_engine.mosaic.selfheal import try_self_heal_pick
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_contract.usage_context import build_window_context
-from travelogue.curation.usage_rules.tiebreak import apply_usage_tiebreaks
+from travelogue.layout_engine.usage_rules.tiebreak import apply_usage_tiebreaks
 
 _FACE_CROP_PROXY_THRESHOLD = 0.05
 

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.config import AppConfig, MosaicConfig, get_config
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_engine.planner.screen_planner import DEFAULT_FEATURED_WEIGHT
 from travelogue.layout_engine.decision_log import (
     ingest_beam_logs,

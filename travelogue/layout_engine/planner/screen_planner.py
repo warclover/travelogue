@@ -9,13 +9,13 @@ from __future__ import annotations
 from typing import Literal
 
 from travelogue.config import AppConfig
-from travelogue.curation.aspect_buckets import prefix_same_bucket
+from travelogue.layout_contract.aspect_buckets import prefix_same_bucket
 from travelogue.layout_contract.subject import (
     any_asset_has_person,
     asset_has_person,
     portrait_fit_for_asset,
 )
-from travelogue.curation.collage_routing import single_asset_screen_pattern
+from travelogue.layout_contract.collage_routing import single_asset_screen_pattern
 from travelogue.layout_contract.orientations import (
     effective_export_profile as _effective_profile,
     is_std_landscape as _is_std_landscape,
@@ -32,7 +32,7 @@ from travelogue.layout_contract.rhythm import (
     pattern_slot_count,
     portrait_grid8_allowed,
 )
-from travelogue.curation.screen_layout_state import (  # noqa: F401 — re-exported API
+from travelogue.layout_contract.planner_state import (  # noqa: F401 — re-exported API
     ScreenLayoutPlannerState,
 )
 from travelogue.media.image_ops import AspectKind
@@ -297,7 +297,8 @@ def _pick_main_landscape_id(
     aesthetic_enabled: bool | None = None,
 ) -> str:
     from travelogue.curation.asset_quality import asset_sharpness
-    from travelogue.curation.curate_scoring import effective_hero_score, median_sharpness
+    from travelogue.layout_engine.scoring.hero import effective_hero_score
+    from travelogue.layout_contract.scoring import median_sharpness
 
     med = (
         median_sharp
@@ -340,7 +341,7 @@ def _can_mosaic_5_main_portrait_3land(
 
     if get_config().layout.usage_rules.enabled:
         from travelogue.layout_contract.usage_context import build_window_context
-        from travelogue.curation.usage_rules.evaluator import evaluate_reject
+        from travelogue.layout_engine.usage_rules.evaluator import evaluate_reject
 
         wctx = build_window_context(
             asset_ids,
@@ -590,7 +591,7 @@ def _pattern_id(family: str, count: int) -> str:
 
 
 def _parse_taken_ts(asset: dict) -> float | None:
-    from travelogue.curation.burst_utils import parse_taken_ts
+    from travelogue.layout_contract.burst import parse_taken_ts
 
     return parse_taken_ts(asset)
 
@@ -601,7 +602,7 @@ def _time_near_chain(
     *,
     burst_seconds: float,
 ) -> bool:
-    from travelogue.curation.burst_utils import time_near_chain
+    from travelogue.layout_contract.burst import time_near_chain
 
     return time_near_chain(asset_ids, assets, burst_seconds=burst_seconds)
 
@@ -613,7 +614,7 @@ def burst_group_map(
     *,
     burst_seconds: float = 3.0,
 ) -> dict[str, int]:
-    from travelogue.curation.burst_utils import burst_group_map as _map
+    from travelogue.layout_contract.burst import burst_group_map as _map
 
     return _map(asset_ids, assets, aspects, burst_seconds=burst_seconds)
 
@@ -622,7 +623,7 @@ def _same_burst_group(
     asset_ids: list[str],
     burst_groups: dict[str, int],
 ) -> bool:
-    from travelogue.curation.burst_utils import same_burst_group
+    from travelogue.layout_contract.burst import same_burst_group
 
     return same_burst_group(asset_ids, burst_groups)
 
@@ -855,7 +856,7 @@ def _emit_person_portrait_screens(
                 assets_map=assets_map,
             )
             screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
-            from travelogue.curation.editorial_portrait_row import (
+            from travelogue.layout_engine.editorial.portrait_row import (
                 apply_editorial_portrait_row_to_screen,
             )
 
@@ -912,7 +913,7 @@ def _emit_portrait_single_screens(
     either drop the asset or stall the planning loop.
     """
     if len(portrait_ids) > 1:
-        from travelogue.curation.solo_scoring import sort_ids_by_solo_score
+        from travelogue.layout_engine.scoring.solo import sort_ids_by_solo_score
 
         portrait_ids = sort_ids_by_solo_score(
             portrait_ids,
@@ -955,7 +956,7 @@ def _plan_portrait_triple_row(
 ) -> list[dict]:
     """三张一排；若与上一屏冲突则降为双列并回退余片。"""
     if force or layout_state is None or layout_state.can_emit_pattern("screen-portrait-3"):
-        from travelogue.curation.editorial_portrait_row import (
+        from travelogue.layout_engine.editorial.portrait_row import (
             apply_editorial_portrait_row_to_screen,
         )
 
@@ -1136,7 +1137,7 @@ def _pick_solo_from_candidates(
 ) -> str | None:
     if len(candidate_ids) <= 1:
         return candidate_ids[0] if candidate_ids else None
-    from travelogue.curation.solo_scoring import pick_solo_asset_id
+    from travelogue.layout_engine.scoring.solo import pick_solo_asset_id
 
     return pick_solo_asset_id(
         candidate_ids,
@@ -1241,7 +1242,8 @@ def _pick_chapter_hero(
     featured_weight: float = DEFAULT_FEATURED_WEIGHT,
 ) -> tuple[str, str] | None:
     """Best landscape/panorama for opening 16:9 hero screen (web editorial rhythm)."""
-    from travelogue.curation.curate_scoring import effective_hero_score, median_sharpness
+    from travelogue.layout_engine.scoring.hero import effective_hero_score
+    from travelogue.layout_contract.scoring import median_sharpness
 
     med = (
         median_sharp

@@ -11,7 +11,7 @@ from travelogue.config import MosaicConfig
 from travelogue.layout_contract.constraints import FOCAL_EDGE_MARGIN
 from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_contract.scoring import ScoringWeights
-from travelogue.curation.layout_scoring import score_screen_plan
+from travelogue.layout_engine.planner.beam_scoring import score_screen_plan
 from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_6,
     PATTERN_LANDSCAPE_9,
@@ -23,7 +23,7 @@ from travelogue.layout_engine.mosaic.constants import (
 )
 from travelogue.layout_engine.mosaic.main_eligibility import screen_main_slot_eligible
 from travelogue.layout_engine.mosaic.slot_geometry import screen_slots_geometry_ok
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_engine.planner.screen_planner import _is_landscape_id, _is_std_portrait_id
 
 
@@ -100,7 +100,7 @@ def _main_quality_penalty(
             return 0.0
         q = asset.get("quality") or {}
         try:
-            from travelogue.curation.aesthetic_score import aesthetic_overall
+            from travelogue.layout_engine.scoring.aesthetic import aesthetic_overall
 
             overall = aesthetic_overall(asset)
         except Exception:

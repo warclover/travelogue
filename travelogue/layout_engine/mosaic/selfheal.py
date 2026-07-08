@@ -30,7 +30,7 @@ _STABLE_PATTERN_IDS = frozenset(
 )
 
 if TYPE_CHECKING:
-    from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+    from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 
 
 def _tightened_cfg(cfg: MosaicConfig) -> MosaicConfig:
