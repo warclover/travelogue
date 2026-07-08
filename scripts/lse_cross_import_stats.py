@@ -54,7 +54,6 @@ def target_module(node: ast.ImportFrom) -> str | None:
 def collect_imports(path: Path) -> list[tuple[str, int]]:
     source = path.read_text(encoding="utf-8")
     tree = ast.parse(source)
-    importer = module_from_path(path)
     found: list[tuple[str, int]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
