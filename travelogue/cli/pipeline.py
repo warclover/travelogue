@@ -25,7 +25,7 @@ from travelogue.orchestrator.run import RunResult, run_trip
 from travelogue.render.engine import RenderError, render_trip
 from travelogue.services.layout import LayoutError, apply_layout_to_trip
 from travelogue.services.narrate import NarrateError, run_narrate
-from travelogue.services.pipeline_state import PipelineError
+from travelogue.services.pipeline_state import PipelineError, lock_copy, lock_structure
 from travelogue.services.trip import persist_trip_snapshot
 
 
@@ -146,8 +146,6 @@ def cmd_lock(
     """Lock structure or copy gate."""
     trip_path = _resolve(path, trips_dir=trips_dir)
     trip = _trip_svc(trip_path).load(trip_path)
-    pipe = trip.setdefault("pipeline", {})
-    locks = pipe.setdefault("locks", {"structure": False, "copy": False})
     assets = {a["id"] for a in trip.get("assets", [])}
     if target == "structure":
         if cover:
@@ -155,12 +153,10 @@ def cmd_lock(
                 typer.echo(f"E_LOCK cover not in assets: {cover}", err=True)
                 raise typer.Exit(1)
             trip["coverAssetId"] = cover
-        locks["structure"] = True
-        pipe["status"] = "structure_locked"
+        lock_structure(trip)
         typer.echo("OK structure_locked")
     elif target == "copy":
-        locks["copy"] = True
-        pipe["status"] = "copy_locked"
+        lock_copy(trip)
         typer.echo("OK copy_locked")
     else:
         typer.echo("E_CLI: lock target must be structure or copy", err=True)

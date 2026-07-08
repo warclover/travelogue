@@ -3,7 +3,7 @@
 > 配套 [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) v1.1 · 执行提示词见 [PROMPTS-ARCH-OPTIMIZATION.md](./PROMPTS-ARCH-OPTIMIZATION.md)
 
 **当前分支**: `arch/optimization-ws1`  
-**最后更新**: 2026-07-08（M-C4 + M-B6 收口）
+**最后更新**: 2026-07-08（M-C4 全量收口 + M-C6 第一段）
 
 ## 里程碑总表
 
@@ -25,8 +25,9 @@
 | M-B1 | done | 2026-07-08 | PRD §5.3.2 违例表清零；import-linter 26→**11** 豁免；`lint-imports` 全绿；domain/kernel 下沉见 §M-B1 交付 | 11 条 intentional 豁免（§import-linter）；LSE 互引 109 不归 M-B1 |
 | M-B2 | todo | — | — | 需 G-WIP-01 |
 | M-B3 | todo | — | — | 需 M-B2 Go + G-WIP-01 |
-| M-C4 | done | 2026-07-08 | `domain/pipeline_view` 扩展；8 处消费方改引；`lint_trip_pipeline_mutations.py` + CI；单测 | — |
+| M-C4 | done | 2026-07-08 | 三视图 + lint + 单测；curate/orchestrator/render/cli/export 改引 pipeline_view | media/ingest/sandbox 直赋属 ingest 域 |
 | M-B6 | done | 2026-07-08 | `trip_migration` 兼容窗口 + 模块 doc；`lint_trip_json` version 窗；超窗单测 | 多 minor 迁移链待 schema bump 时补 |
+| M-C6 | in_progress | 2026-07-08 | `docs/GLOSSARY.md` + `store.js` 注释清理 | variant v3→classic 待 G-WIP-03 |
 | M-C1 | todo | — | — | 触发：新增 Studio API |
 | M-C2 | todo | — | — | 触发：与 M-B4b 错开 |
 | M-C3 | todo | — | — | 触发：Phase 验收完成 |
@@ -95,4 +96,4 @@
 
 ## WS1 执行顺序
 
-P-00 ✓ → … → P-10 (ADR-015) ✓ → P-14 (M-B4a) ✓ → P-15 (M-B4b) ✓ → **P-16 (M-B1) ✓** · WS2 后续：M-B2/B3（G-WIP-01）· LSE cross-import 收敛
+P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · P-22 第一段 (M-C6) 进行中 · WS2 阻塞：**M-B2/B3（G-WIP-01）** · LSE cross-import 收敛

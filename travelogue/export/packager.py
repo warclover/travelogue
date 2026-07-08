@@ -19,6 +19,7 @@ from travelogue.render.engine import (
 from travelogue.render.preview import render_preview_jpg
 from travelogue.services.trip import persist_trip_snapshot
 from travelogue.services.validate import validate_trip
+from travelogue.domain.pipeline_view import set_pipeline_status
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 
@@ -27,14 +28,12 @@ class ExportError(CodeError):
 
 
 def _mark_rendered(trip: dict) -> None:
-    pipe = trip.setdefault("pipeline", {})
-    pipe["status"] = "rendered"
+    set_pipeline_status(trip, "rendered")
     trip["updatedAt"] = _utc_now_iso()
 
 
 def _mark_exported(trip: dict, *, confirm_privacy: bool) -> None:
-    pipe = trip.setdefault("pipeline", {})
-    pipe["status"] = "exported"
+    set_pipeline_status(trip, "exported")
     if confirm_privacy:
         privacy = trip.setdefault("privacy", {})
         privacy["confirmedAt"] = _utc_now_iso()

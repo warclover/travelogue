@@ -20,6 +20,11 @@ def set_asset_tier(trip: dict, asset_id: str, tier: str) -> None:
     asset["tier"] = tier
 
 
+def promote_asset_to_featured(trip: dict, asset_id: str) -> None:
+    """Raise layout tier to featured (M-C4 view helper)."""
+    set_asset_tier(trip, asset_id, "featured")
+
+
 def featured_asset_ids(trip: dict) -> list[str]:
     return [
         str(a["id"])

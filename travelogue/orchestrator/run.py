@@ -15,7 +15,7 @@ from travelogue.render.engine import render_trip, render_trip_surfaces
 from travelogue.runtime import app_context_for_trip_json
 from travelogue.services.layout import apply_layout_to_trip
 from travelogue.services.narrate import run_narrate
-from travelogue.services.pipeline_state import Until, assert_stage_allowed
+from travelogue.services.pipeline_state import Until, assert_stage_allowed, lock_copy, lock_structure, set_pipeline_timings, trip_status
 from travelogue.services.trip import persist_trip_snapshot
 
 
@@ -133,7 +133,7 @@ def _run_trip_stages(
                 dedupe=dedupe,
             )
             pipeline_timings["ingestMs"] = round((time.monotonic() - ingest_t0) * 1000.0, 2)
-            trip.setdefault("pipeline", {})["timings"] = pipeline_timings
+            set_pipeline_timings(trip, pipeline_timings)
             result.stages.append("ingest")
             save()
 
@@ -147,7 +147,7 @@ def _run_trip_stages(
                 trip_dir=trip_root,
             )
             pipeline_timings["curateMs"] = round((time.monotonic() - curate_t0) * 1000.0, 2)
-            trip.setdefault("pipeline", {})["timings"] = pipeline_timings
+            set_pipeline_timings(trip, pipeline_timings)
             result.stages.append("curate")
             save()
 
@@ -156,7 +156,7 @@ def _run_trip_stages(
             layout_t0 = time.monotonic()
             apply_layout_to_trip(trip, export_layout=export_layout, cfg=get_config())
             pipeline_timings["layoutMs"] = round((time.monotonic() - layout_t0) * 1000.0, 2)
-            trip.setdefault("pipeline", {})["timings"] = pipeline_timings
+            set_pipeline_timings(trip, pipeline_timings)
             result.stages.append("layout")
             save()
 
@@ -164,12 +164,10 @@ def _run_trip_stages(
             if status == "structure_locked" and locks.get("structure") and skip_locked:
                 continue
             assert_stage_allowed(trip, "lock_structure")
-            pipe = trip.setdefault("pipeline", {})
-            pipe["locks"]["structure"] = True
-            pipe["status"] = "structure_locked"
+            lock_structure(trip)
             result.stages.append("lock_structure")
             save()
-            status = pipe["status"]
+            status = trip_status(trip)
 
         elif stage == "narrate":
             if status == "copy_locked" and skip_locked:
@@ -184,7 +182,7 @@ def _run_trip_stages(
                 cache_dir=cache_dir,
             )
             pipeline_timings["narrateMs"] = round((time.monotonic() - narrate_t0) * 1000.0, 2)
-            trip.setdefault("pipeline", {})["timings"] = pipeline_timings
+            set_pipeline_timings(trip, pipeline_timings)
             result.stages.append("narrate")
             save()
 
@@ -192,9 +190,7 @@ def _run_trip_stages(
             if status == "copy_locked" and skip_locked:
                 continue
             assert_stage_allowed(trip, "lock_copy")
-            pipe = trip.setdefault("pipeline", {})
-            pipe["locks"]["copy"] = True
-            pipe["status"] = "copy_locked"
+            lock_copy(trip)
             result.stages.append("lock_copy")
             save()
 
@@ -221,7 +217,7 @@ def _run_trip_stages(
                 )
             pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
             trip = svc.load(trip_path)
-            trip.setdefault("pipeline", {})["timings"] = pipeline_timings
+            set_pipeline_timings(trip, pipeline_timings)
             persist_trip_snapshot(svc, trip_path, trip)
 
             result.stages.append("render")
@@ -236,14 +232,14 @@ def _run_trip_stages(
             )
             pipeline_timings["exportMs"] = round((time.monotonic() - export_t0) * 1000.0, 2)
             trip = svc.load(trip_path)
-            trip.setdefault("pipeline", {})["timings"] = pipeline_timings
+            set_pipeline_timings(trip, pipeline_timings)
             persist_trip_snapshot(svc, trip_path, trip)
             result.publish = pub
             result.stages.append("export")
 
     pipeline_timings["totalMs"] = round((time.monotonic() - pipeline_t0) * 1000.0, 2)
     trip = svc.load(trip_path)
-    trip.setdefault("pipeline", {})["timings"] = pipeline_timings
+    set_pipeline_timings(trip, pipeline_timings)
     persist_trip_snapshot(svc, trip_path, trip)
 
     return result

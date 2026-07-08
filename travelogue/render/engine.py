@@ -697,10 +697,10 @@ def _render_trip_body(
         copy_inline_edit_bundle(out_dir)
 
     if update_pipeline:
+        from travelogue.domain.pipeline_view import set_pipeline_status
         from travelogue.services.trip import persist_trip_snapshot
 
-        pipe = trip.setdefault("pipeline", {})
-        pipe["status"] = "rendered"
+        set_pipeline_status(trip, "rendered")
         persist_trip_snapshot(trip_svc, trip_path, trip)
 
     record_render_outcome(trip_id=trip_id, template_id=effective_template, ok=True)

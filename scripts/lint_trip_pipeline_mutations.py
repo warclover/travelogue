@@ -18,6 +18,10 @@ SCAN_PATHS = (
     ROOT / "travelogue" / "web" / "studio_pipeline.py",
     ROOT / "travelogue" / "web" / "copy_patch.py",
     ROOT / "travelogue" / "services",
+    ROOT / "travelogue" / "orchestrator" / "run.py",
+    ROOT / "travelogue" / "render" / "engine.py",
+    ROOT / "travelogue" / "cli" / "pipeline.py",
+    ROOT / "travelogue" / "export" / "packager.py",
 )
 
 EXEMPT_FILES = frozenset(

@@ -50,7 +50,12 @@ from travelogue.domain.cover_view import (
 )
 from travelogue.errors import CodeError
 from travelogue.layout_contract import LAYOUT_PLAN_VERSION, format_layout_summary
-from travelogue.domain.pipeline_view import set_layout_status
+from travelogue.domain.pipeline_view import (
+    append_pipeline_run,
+    clear_pending_assets,
+    set_layout_status,
+    set_pipeline_status,
+)
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 # Backward-compatible private aliases for tests and internal callers.
@@ -1263,35 +1268,37 @@ def run_curate(
         curation["warnings"] = warnings
 
     layout_summary = format_layout_summary(summary_dict, chapters)
-    pipe = trip.setdefault("pipeline", {})
     now = _utc_now_iso()
+    trip_id = str(trip.get("tripId") or "trip")
     if apply_layout:
         set_layout_status(trip, "layout_draft")
-        pipe.setdefault("runs", []).append(
+        append_pipeline_run(
+            trip,
             {
-                "runId": f"layout-{trip.get('tripId', 'trip')}",
+                "runId": f"layout-{trip_id}",
                 "agent": "layout",
                 "startedAt": now,
                 "finishedAt": now,
                 "model": None,
-            }
+            },
         )
     else:
         set_layout_status(trip, "pending")
 
     # Main pipeline status (structure_draft); layoutStatus above is the Agent 1.5 sub-state.
-    pipe["status"] = "structure_draft"
+    set_pipeline_status(trip, "structure_draft")
     # Re-curate from structure_draft clears the post-lock pending ingest queue.
-    pipe["pendingAssets"] = []
+    clear_pending_assets(trip)
     trip["updatedAt"] = now
-    pipe.setdefault("runs", []).append(
+    append_pipeline_run(
+        trip,
         {
-            "runId": f"curate-{trip.get('tripId', 'trip')}",
+            "runId": f"curate-{trip_id}",
             "agent": "curator",
             "startedAt": now,
             "finishedAt": now,
             "model": None,
-        }
+        },
     )
 
     from travelogue.curation.arc_screen_tags import stamp_screen_arc_segments

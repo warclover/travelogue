@@ -88,10 +88,20 @@ def set_pipeline_timings(trip: dict, timings: dict[str, float]) -> None:
     pipeline_dict(trip)["timings"] = dict(timings)
 
 
+def clear_pending_assets(trip: dict) -> None:
+    pipeline_dict(trip)["pendingAssets"] = []
+
+
 def lock_structure(trip: dict) -> None:
     """G1 confirm: structure_draft → structure_locked."""
     set_pipeline_lock(trip, "structure", True)
     set_pipeline_status(trip, "structure_locked")
+
+
+def lock_copy(trip: dict) -> None:
+    """Copy gate: copy_draft → copy_locked."""
+    set_pipeline_lock(trip, "copy", True)
+    set_pipeline_status(trip, "copy_locked")
 
 
 def unlock_structure_for_replan(trip: dict) -> None:
