@@ -147,7 +147,11 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     ctx = studio_ctx(handler)
     cfg = ctx.cfg
     longshot2_enabled = bool(getattr(cfg.studio, "longshot2_enabled", True))
-    allowed_platforms = list(getattr(cfg.studio, "longshot2_platforms", ["wechat_moments"]))
+    from travelogue.config.studio import DEFAULT_LONGSHOT2_PLATFORMS
+
+    allowed_platforms = list(
+        getattr(cfg.studio, "longshot2_platforms", list(DEFAULT_LONGSHOT2_PLATFORMS))
+    )
 
     platform_raw = payload.get("platform")
     # When longshot2 disabled, ignore platform (PRD §13)

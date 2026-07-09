@@ -39,7 +39,9 @@ export var PLATFORMS = {
 export function enabledPlatformsFromConfig(cfgStudio) {
   var l2 = (cfgStudio && cfgStudio.longshot2) || {};
   if (l2.enabled === false) return ["wechat_chat"];
-  var list = Array.isArray(l2.platforms) ? l2.platforms.slice() : ["wechat_moments"];
+  var list = Array.isArray(l2.platforms)
+    ? l2.platforms.slice()
+    : ["wechat_moments", "xiaohongshu"];
   var out = ["wechat_chat"];
   list.forEach(function (id) {
     if (id && id !== "wechat_chat" && out.indexOf(id) < 0) {

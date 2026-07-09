@@ -32,8 +32,8 @@ ASPECT_FIT_PLATFORM_IDS = frozenset(
     {"xiaohongshu", "instagram", "weibo", "douyin_cover", "custom"}
 )
 
-# Phase A UI / API gray-list default (config may override)
-PHASE_A_PLATFORMS = ("wechat_moments",)
+# Studio UI / API allow-list default (config may override). Phase A+B.
+PHASE_A_PLATFORMS = ("wechat_moments", "xiaohongshu")
 # Phase C platforms are CLI/API only — never auto-listed in Studio Popover
 PHASE_C_CLI_ONLY = frozenset({"instagram", "weibo", "douyin_cover", "custom"})
 

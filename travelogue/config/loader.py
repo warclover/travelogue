@@ -38,7 +38,11 @@ from travelogue.config.misc import (
 from travelogue.config.moment import moment_config_from_dict
 from travelogue.config.mosaic import mosaic_from_dict
 from travelogue.config.phase6 import phase6_from_dict
-from travelogue.config.studio import Longshot2Config, StudioConfig
+from travelogue.config.studio import (
+    DEFAULT_LONGSHOT2_PLATFORMS,
+    Longshot2Config,
+    StudioConfig,
+)
 from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
 from travelogue.config.tracking import TrackedDict, collect_unknown_keys, wrap_tracked
 from travelogue.config.vision import vision_from_dict
@@ -52,19 +56,19 @@ _log = logging.getLogger(__name__)
 
 def _parse_longshot2_config(studio_raw: dict[str, Any]) -> Longshot2Config:
     raw = studio_raw.get("longshot2") if isinstance(studio_raw.get("longshot2"), dict) else {}
-    platforms_raw = raw.get("platforms", ["wechat_moments"])
+    platforms_raw = raw.get("platforms", list(DEFAULT_LONGSHOT2_PLATFORMS))
     if isinstance(platforms_raw, str):
         platforms: tuple[str, ...] = (platforms_raw,)
     elif isinstance(platforms_raw, (list, tuple)):
         platforms = tuple(str(x).strip() for x in platforms_raw if str(x).strip())
     else:
-        platforms = ("wechat_moments",)
+        platforms = DEFAULT_LONGSHOT2_PLATFORMS
     smart = raw.get("smart_crop") if isinstance(raw.get("smart_crop"), dict) else {}
     if not smart and isinstance(raw.get("smartCrop"), dict):
         smart = raw["smartCrop"]
     return Longshot2Config(
         enabled=cfg_bool(raw, "enabled", "enabled", True) if raw else True,
-        platforms=platforms or ("wechat_moments",),
+        platforms=platforms or DEFAULT_LONGSHOT2_PLATFORMS,
         smart_crop_enabled=cfg_bool(smart, "enabled", "enabled", False) if smart else False,
     )
 

@@ -77,11 +77,26 @@ def test_resolve_profile_rejects_unknown() -> None:
 def test_resolve_profile_gray_list() -> None:
     with pytest.raises(PlatformProfileError):
         resolve_profile("xiaohongshu", allowed_platforms=["wechat_moments"])
-    ok = resolve_profile("wechat_moments", allowed_platforms=["wechat_moments"])
-    assert ok.id == "wechat_moments"
-    # Phase C bypasses Studio gray-list (CLI/API only)
+    ok = resolve_profile(
+        "xiaohongshu",
+        allowed_platforms=["wechat_moments", "xiaohongshu"],
+    )
+    assert ok.id == "xiaohongshu"
+    moments = resolve_profile("wechat_moments", allowed_platforms=["wechat_moments"])
+    assert moments.id == "wechat_moments"
+    # Phase C bypasses Studio allow-list (CLI/API only)
     ins = resolve_profile("instagram", allowed_platforms=["wechat_moments"])
     assert ins.id == "instagram"
+
+
+def test_default_longshot2_platforms_include_xhs() -> None:
+    from travelogue.config.studio import DEFAULT_LONGSHOT2_PLATFORMS, Longshot2Config
+    from travelogue.export.platform_profiles import PHASE_A_PLATFORMS
+
+    assert "wechat_moments" in DEFAULT_LONGSHOT2_PLATFORMS
+    assert "xiaohongshu" in DEFAULT_LONGSHOT2_PLATFORMS
+    assert PHASE_A_PLATFORMS == DEFAULT_LONGSHOT2_PLATFORMS
+    assert Longshot2Config().platforms == DEFAULT_LONGSHOT2_PLATFORMS
 
 
 def test_platform_export_writer_single_file(tmp_path: Path) -> None:

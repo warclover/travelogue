@@ -32,6 +32,22 @@ def test_panel_module_exists_and_exports() -> None:
         assert token in src, f"missing: {token}"
 
 
+def test_preview_toolbar_wires_export_popover_caret() -> None:
+    """AC-LNG2-07 · preview dock exposes settings caret → Popover."""
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    panel = PANEL.read_text(encoding="utf-8")
+    assert "preview-toolbar__longshot-caret" in init_v3
+    assert "preview-toolbar__longshot-split" in init_v3
+    assert "openLongshotExportOptions(root)" in init_v3
+    assert "startLongshot(root, tripId)" in init_v3
+    assert "export function openStudioLongshotExportPanel" in longshot
+    assert "ensureStudioExportPopover" in longshot
+    assert "syncLongshotCtaLabel" in longshot
+    # Dev default: moments + xhs without requiring config.yaml
+    assert '["wechat_moments", "xiaohongshu"]' in panel
+
+
 def test_studio_panel_excludes_phase_c_platforms() -> None:
     """H-C-04 · Studio UI must not list Ins/微博/抖音/custom (Phase C backend only)."""
     src = PANEL.read_text(encoding="utf-8")

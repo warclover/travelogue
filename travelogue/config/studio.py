@@ -9,12 +9,16 @@ if TYPE_CHECKING:
     from travelogue.config.app import AppConfig
 
 
+# Studio Popover platforms (Phase A+B). Phase C stays CLI/API-only.
+DEFAULT_LONGSHOT2_PLATFORMS: tuple[str, ...] = ("wechat_moments", "xiaohongshu")
+
+
 @dataclass
 class Longshot2Config:
     """Longshot 2.0 platform export flags (PRD §13)."""
 
     enabled: bool = True
-    platforms: tuple[str, ...] = ("wechat_moments",)
+    platforms: tuple[str, ...] = DEFAULT_LONGSHOT2_PLATFORMS
     smart_crop_enabled: bool = False
 
 

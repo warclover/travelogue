@@ -163,9 +163,27 @@ export function cancelPreviewLongshotExport(root) {
     if (!root) return;
     var btn = longshotBtnEl(root);
     if (!btn) return;
-    var prefs = readExportPrefs();
-    var label = ctaLabelForPlatform(prefs.platform || "wechat_chat");
     if (btn.getAttribute("data-label-locked") === "1") return;
+    var prefs = readExportPrefs();
+    var platform = prefs.platform || "wechat_chat";
+    var label = ctaLabelForPlatform(platform);
+    var isDock = isPreviewToolbarV4(root);
+    if (isDock) {
+      // Compact dock: short chip text; full CTA on aria/tooltip.
+      var short =
+        platform === "wechat_moments"
+          ? "朋友圈"
+          : platform === "xiaohongshu"
+            ? "小红书"
+            : "长图";
+      var labelEl = btn.querySelector(".preview-toolbar__dock-export-label");
+      if (labelEl && !btn.classList.contains("preview-toolbar__longshot--running")) {
+        labelEl.textContent = short;
+      }
+      btn.setAttribute("aria-label", label);
+      updateDockTip(btn, label);
+      return;
+    }
     btn.textContent = label;
   }
 
@@ -761,7 +779,7 @@ export function cancelPreviewLongshotExport(root) {
 
     if (state === "running") {
       btn.classList.add("preview-toolbar__longshot--running");
-      if (!isV3) setLongshotSplitState(root, "running");
+      setLongshotSplitState(root, "running");
       if (zone) zone.classList.add("preview-toolbar__export-zone--running");
       setLongshotControlsDisabled(root, true);
       if (isV3) {
@@ -797,13 +815,13 @@ export function cancelPreviewLongshotExport(root) {
     if (state === "done") {
       if (isV3) {
         btn.classList.add("preview-toolbar__longshot--idle");
+        setLongshotSplitState(root, "idle");
         setLongshotControlsDisabled(root, false);
         if (isDock) {
           btn.innerHTML = dockLongshotIconHtml("idle");
           setDockLongshotAria(btn, "idle");
-        } else {
-          btn.textContent = "导出长图";
         }
+        syncLongshotCtaLabel(root);
         root._exportDockActive = false;
         if (badge) badge.hidden = true;
         return;
@@ -819,13 +837,12 @@ export function cancelPreviewLongshotExport(root) {
     }
     if (state === "error") {
       btn.classList.add("preview-toolbar__longshot--idle");
-      if (!isV3) setLongshotSplitState(root, "idle");
+      setLongshotSplitState(root, "idle");
       setLongshotControlsDisabled(root, false);
       if (isDock) {
         applyDockLongshotIdle(btn);
-      } else {
-        btn.textContent = isV3 ? "导出长图" : "保存长图";
       }
+      syncLongshotCtaLabel(root);
       if (isV3) {
         root._exportDockActive = false;
         if (root._taskDock) root._taskDock.showError(opts.hint || "保存失败，请重试");
@@ -838,13 +855,12 @@ export function cancelPreviewLongshotExport(root) {
     }
     if (state === "stale") {
       btn.classList.add("preview-toolbar__longshot--idle");
-      if (!isV3) setLongshotSplitState(root, "idle");
+      setLongshotSplitState(root, "idle");
       setLongshotControlsDisabled(root, false);
       if (isDock) {
         applyDockLongshotIdle(btn);
-      } else {
-        btn.textContent = isV3 ? "导出长图" : "保存长图";
       }
+      syncLongshotCtaLabel(root);
       if (zone) zone.classList.add("preview-toolbar__export-zone--stale");
       if (isV3) {
         btn.classList.add("preview-toolbar__longshot--stale");
@@ -857,18 +873,17 @@ export function cancelPreviewLongshotExport(root) {
       return;
     }
     btn.classList.add("preview-toolbar__longshot--idle");
-    if (!isV3) setLongshotSplitState(root, "idle");
+    setLongshotSplitState(root, "idle");
     setLongshotControlsDisabled(root, false);
     if (isDock) {
       applyDockLongshotIdle(btn);
-    } else {
-      btn.textContent = isV3 ? "导出长图" : "保存长图";
     }
+    syncLongshotCtaLabel(root);
     btn.classList.remove("preview-toolbar__longshot--stale");
     root._exportDockActive = false;
     if (badge) badge.hidden = true;
+    refreshLongshotExportMeta(root);
     if (!isV3) {
-      refreshLongshotExportMeta(root);
       setLongshotExportProgress(root, false);
     }
   }

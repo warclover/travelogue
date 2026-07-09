@@ -34,6 +34,8 @@ import {
   toggleToolbarNarrative,
   applyLongshot2Config,
   syncLongshotCtaLabel,
+  openLongshotExportOptions,
+  refreshLongshotExportMeta,
 } from "./longshot.js";
 import {
   tripIdFromPath,
@@ -302,6 +304,7 @@ export function initToolbarV3(root, tripId) {
       if (cfg && cfg.studio) {
         applyLongshot2Config(cfg.studio);
         syncLongshotCtaLabel(root);
+        refreshLongshotExportMeta(root);
       }
     })
     .catch(function () {});
@@ -359,10 +362,14 @@ export function initToolbarV3(root, tripId) {
   var exportZone = document.createElement("div");
   exportZone.className = "preview-toolbar__export-zone";
 
+  // Split control: main = one-click export (default 1.x); caret = Longshot 2.0 settings.
+  var split = document.createElement("div");
+  split.className = "preview-toolbar__longshot-split preview-toolbar__longshot-split--idle";
+
   var longshotBtn = document.createElement("button");
   longshotBtn.type = "button";
   longshotBtn.className =
-    "preview-toolbar__longshot preview-toolbar__longshot--v3 preview-toolbar__longshot--idle";
+    "preview-toolbar__longshot preview-toolbar__longshot--main preview-toolbar__longshot--v3 preview-toolbar__longshot--idle";
   if (isPreviewToolbarV4(root)) {
     longshotBtn.className +=
       " preview-toolbar__dock-btn preview-toolbar__dock-btn--export";
@@ -372,7 +379,17 @@ export function initToolbarV3(root, tripId) {
     longshotBtn.textContent = "导出长图";
   }
 
-  exportZone.appendChild(longshotBtn);
+  var caretBtn = document.createElement("button");
+  caretBtn.type = "button";
+  caretBtn.className = "preview-toolbar__longshot-caret";
+  caretBtn.setAttribute("aria-label", "导出设置");
+  caretBtn.setAttribute("aria-haspopup", "dialog");
+  caretBtn.title = "导出设置（平台 / 清晰度）";
+  caretBtn.textContent = "▾";
+
+  split.appendChild(longshotBtn);
+  split.appendChild(caretBtn);
+  exportZone.appendChild(split);
   exportWrap.appendChild(exportZone);
   var menuWrap = actions.querySelector(".preview-toolbar__menu-wrap");
   if (isPreviewToolbarV4(root)) {
@@ -388,9 +405,16 @@ export function initToolbarV3(root, tripId) {
   }
 
   setLongshotExportState(root, "idle");
+  syncLongshotCtaLabel(root);
+  refreshLongshotExportMeta(root);
 
   longshotBtn.addEventListener("click", function () {
     startLongshot(root, tripId);
+  });
+  caretBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    openLongshotExportOptions(root);
   });
 
   if (window.location.search.indexOf("focus=longshot") >= 0) {

@@ -44,10 +44,66 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   --dock-folio-gold: #d4a843;
 }
 
-.preview-toolbar--v4 .preview-toolbar__menu-wrap,
-.preview-toolbar--v4 .preview-toolbar__export-zone-wrap,
-.preview-toolbar--v4 .preview-toolbar__export-zone {
+.preview-toolbar--v4 .preview-toolbar__menu-wrap {
   display: contents;
+}
+
+.preview-toolbar--v4 .preview-toolbar__export-zone-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.preview-toolbar--v4 .preview-toolbar__export-zone {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.preview-toolbar--v4 .preview-toolbar__longshot-split {
+  height: 40px;
+  border-radius: 10px;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.preview-toolbar--v4 .preview-toolbar__longshot--main.preview-toolbar__dock-btn--export {
+  border-radius: 10px 0 0 10px;
+  height: 100%;
+  min-width: 0;
+}
+
+.preview-toolbar--v4 .preview-toolbar__longshot-caret {
+  width: 26px;
+  min-width: 26px;
+  border-radius: 0 10px 10px 0;
+  border-left: 1px solid rgba(26, 20, 8, 0.18);
+  background: linear-gradient(165deg, #d4ae48 0%, #b88432 100%);
+  color: #1a1408;
+  font-size: 11px;
+}
+
+.preview-toolbar--v4
+  .preview-toolbar__longshot-split--idle
+  .preview-toolbar__longshot-caret:hover:not(:disabled) {
+  background: linear-gradient(165deg, #e0ba52 0%, #c8943f 100%);
+}
+
+.preview-toolbar--v4 .preview-toolbar__longshot-split--running .preview-toolbar__longshot-caret {
+  background: linear-gradient(165deg, #566b74 0%, #455a64 100%);
+  color: #eceff1;
+  border-left-color: rgba(255, 255, 255, 0.18);
+}
+
+.preview-toolbar--v4 .preview-toolbar__export-popover {
+  right: 0;
+  left: auto;
+  top: calc(100% + 8px);
 }
 
 .preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__dock-btn,
@@ -323,10 +379,5 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
 
 .preview-toolbar--v4 .preview-toolbar__menu-btn.preview-toolbar__dock-btn {
   position: relative;
-}
-
-.preview-toolbar--v4 .preview-toolbar__export-zone-wrap,
-.preview-toolbar--v4 .preview-toolbar__export-zone {
-  display: contents;
 }
 

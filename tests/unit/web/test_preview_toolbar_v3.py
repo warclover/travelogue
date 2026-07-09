@@ -325,14 +325,26 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             box = dock.bounding_box()
             assert box is not None
             assert box["height"] <= 52, f"dock height expected compact, got {box['height']}"
-            assert box["width"] <= 240, f"dock width expected compact, got {box['width']}"
+            # Split export (main + caret) is slightly wider than the old single icon.
+            assert box["width"] <= 280, f"dock width expected compact, got {box['width']}"
 
             assert page.locator(".preview-toolbar__dock-btn--back").count() == 1
             assert page.locator(".preview-toolbar__dock-btn--export").count() == 1
+            assert page.locator(".preview-toolbar__longshot-caret").count() == 1
+            assert page.locator(".preview-toolbar__longshot-split").count() == 1
             assert page.locator(".preview-toolbar__screenplay--v3").count() == 1
             assert page.locator(".preview-toolbar__menu-btn").count() == 1
             assert page.locator(".preview-toolbar__bar--v3").count() == 0
             assert page.locator(".preview-toolbar__title").count() == 0
+
+            page.locator(".preview-toolbar__longshot-caret").click()
+            page.wait_for_timeout(200)
+            pop = page.locator(".preview-toolbar__export-popover")
+            pop.wait_for(state="visible", timeout=5_000)
+            assert page.locator("[data-studio-longshot-platform]").count() >= 2
+            page.locator('.preview-toolbar__export-popover [data-action="cancel"]').click()
+            page.wait_for_timeout(150)
+            assert pop.is_hidden() or not pop.is_visible()
 
             assert page.locator(".preview-toolbar__longshot-preview-row").count() == 0
             assert page.locator(".preview-toolbar__pending-row").count() == 0
