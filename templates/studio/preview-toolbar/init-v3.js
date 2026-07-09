@@ -32,6 +32,8 @@ import {
   applyToolbarCopyPreset,
   toggleToolbarCaptions,
   toggleToolbarNarrative,
+  applyLongshot2Config,
+  syncLongshotCtaLabel,
 } from "./longshot.js";
 import {
   tripIdFromPath,
@@ -297,6 +299,10 @@ export function initToolbarV3(root, tripId) {
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (cfg) {
       cohortEnabled = !!(cfg && cfg.cohort && cfg.cohort.enabled);
+      if (cfg && cfg.studio) {
+        applyLongshot2Config(cfg.studio);
+        syncLongshotCtaLabel(root);
+      }
     })
     .catch(function () {});
 

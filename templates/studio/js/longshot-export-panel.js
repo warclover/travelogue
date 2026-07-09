@@ -347,7 +347,7 @@ export function syncPanelUI(pop, draft, opts) {
 
 /**
  * Wire draft mutation handlers on a freshly built popover.
- * @returns {{ getDraft: function(): object, setDraft: function(object): void }}
+ * @returns {{ getDraft: function(): object, setDraft: function(object): void, setUiOpts: function(object): void }}
  */
 export function bindPanelDraft(pop, initialDraft, opts) {
   opts = opts || {};

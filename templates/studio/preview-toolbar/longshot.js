@@ -14,6 +14,20 @@ import {
   resolveCopyDisplayFromDom,
 } from "../js/longshot-client.js";
 import {
+  bindPanelDraft,
+  buildPanelHtml,
+  ctaLabelForPlatform,
+  enabledPlatformsFromConfig,
+  estimatePhotoCountFromDom,
+  isSmartCropUiEnabled,
+  markMomentsCoachSeen,
+  readExportPrefs,
+  shouldHintSparseMoments,
+  sparseMomentsHintMessage,
+  writeExportPrefs,
+} from "../js/longshot-export-panel.js";
+import { trackStudioEvent } from "../js/analytics.js";
+import {
   applyDockLongshotIdle,
   dockLongshotContentHtml,
   dockLongshotIconHtml,
@@ -34,6 +48,9 @@ var narratePollCancel = null;
 var longshotJobId = null;
 var _longshotDrawerTimer = null;
 var _studioExportPopoverClose = null;
+var _longshot2PlatformIds = ["wechat_chat", "wechat_moments"];
+var _longshot2SmartCrop = false;
+var _sparseMomentsToastAt = 0;
 
 var _showToolbarToast = function (_message, _opts) {};
 var _toolbarConfirm = function (_opts) {
@@ -137,16 +154,41 @@ export function cancelPreviewLongshotExport(root) {
     }
   }
 
+  export function applyLongshot2Config(studioCfg) {
+    _longshot2PlatformIds = enabledPlatformsFromConfig(studioCfg || {});
+    _longshot2SmartCrop = isSmartCropUiEnabled(studioCfg || {});
+  }
+
+  export function syncLongshotCtaLabel(root) {
+    if (!root) return;
+    var btn = longshotBtnEl(root);
+    if (!btn) return;
+    var prefs = readExportPrefs();
+    var label = ctaLabelForPlatform(prefs.platform || "wechat_chat");
+    if (btn.getAttribute("data-label-locked") === "1") return;
+    btn.textContent = label;
+  }
+
+  function maybeToastSparseMoments() {
+    var n = estimatePhotoCountFromDom(document);
+    if (!shouldHintSparseMoments(n)) return;
+    var now = Date.now();
+    if (now - _sparseMomentsToastAt < 2500) return;
+    _sparseMomentsToastAt = now;
+    _showToolbarToast(sparseMomentsHintMessage());
+  }
+
   export function readLongshotExportPrefs() {
     var ls = longshotApi();
+    var stored = readExportPrefs();
     var scale =
       ls && typeof ls.getUserSelectedScale === "function"
         ? ls.getUserSelectedScale()
-        : readStoredLongshotScale();
+        : stored.scale || readStoredLongshotScale();
     var mode =
       ls && typeof ls.getUserSelectedMode === "function"
         ? ls.getUserSelectedMode()
-        : readStoredLongshotMode();
+        : stored.mode || readStoredLongshotMode();
     var captions =
       ls && typeof ls.areCaptionsVisible === "function"
         ? ls.areCaptionsVisible()
@@ -156,11 +198,22 @@ export function cancelPreviewLongshotExport(root) {
       mode: mode,
       captions: captions,
       copyDisplay: resolveCopyDisplayFromDom(document),
+      platform: stored.platform || "wechat_chat",
+      slideCount: stored.slideCount,
+      padMode: stored.padMode || "letterbox",
     };
   }
 
   export function formatLongshotExportMetaLabel() {
     var prefs = readLongshotExportPrefs();
+    var platform = prefs.platform || "wechat_chat";
+    if (platform === "wechat_moments") {
+      return "朋友圈 · " + prefs.scale + "×";
+    }
+    if (platform === "xiaohongshu") {
+      var n = prefs.slideCount == null ? "auto" : String(prefs.slideCount);
+      return "小红书 · " + n + " 张 · " + prefs.scale + "×";
+    }
     var modeLabel = prefs.mode === "full" ? "完整" : "按章";
     var copyLabel = prefs.copyDisplay === "photos" ? "纯照片" : "完整文案";
     var capLabel = prefs.captions ? "" : " · 无图注";
@@ -178,11 +231,15 @@ export function cancelPreviewLongshotExport(root) {
 
   export function buildLongshotRequestFromPage(tripId) {
     var prefs = readLongshotExportPrefs();
+    var platform = prefs.platform || "wechat_chat";
     return buildLongshotRequest(tripId, {
       scale: prefs.scale,
       format: "png",
       copyDisplay: prefs.copyDisplay,
       segmentMode: normalizeSegmentMode(prefs.mode),
+      platform: platform,
+      slideCount: prefs.slideCount,
+      padMode: prefs.padMode,
     });
   }
 
@@ -346,16 +403,10 @@ export function cancelPreviewLongshotExport(root) {
   }
 
   export function syncStudioExportPopoverUI(pop) {
-    var prefs = readLongshotExportPrefs();
-    pop.querySelectorAll("[data-studio-longshot-mode]").forEach(function (btn) {
-      var on = btn.getAttribute("data-studio-longshot-mode") === prefs.mode;
-      btn.classList.toggle("is-selected", on);
-      btn.setAttribute("aria-pressed", on ? "true" : "false");
-    });
-    pop.querySelectorAll("[data-studio-longshot-scale]").forEach(function (btn) {
-      var on = String(btn.getAttribute("data-studio-longshot-scale")) === String(prefs.scale);
-      btn.classList.toggle("is-selected", on);
-      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    if (!pop || !pop._panelDraft) return;
+    pop._panelDraft.setUiOpts({
+      smartCropEnabled: _longshot2SmartCrop,
+      photoCount: estimatePhotoCountFromDom(document),
     });
   }
 
@@ -370,61 +421,70 @@ export function cancelPreviewLongshotExport(root) {
     pop.hidden = true;
     pop.setAttribute("role", "dialog");
     pop.setAttribute("aria-label", "导出设置");
-    pop.innerHTML =
-      '<p class="preview-toolbar__export-popover-title">导出设置</p>' +
-      '<p class="preview-toolbar__export-popover-note">调整范围与清晰度；点左侧「保存长图」开始导出。</p>' +
-      '<div class="preview-toolbar__export-popover-field">' +
-      '<span class="preview-toolbar__export-popover-label">导出范围</span>' +
-      '<div class="preview-toolbar__export-popover-seg" role="group">' +
-      '<button type="button" data-studio-longshot-mode="chapter">按章导出</button>' +
-      '<button type="button" data-studio-longshot-mode="full">完整长图</button>' +
-      "</div></div>" +
-      '<div class="preview-toolbar__export-popover-field">' +
-      '<span class="preview-toolbar__export-popover-label">清晰度</span>' +
-      '<div class="preview-toolbar__export-popover-seg" role="group">' +
-      '<button type="button" data-studio-longshot-scale="2">标准 2×</button>' +
-      '<button type="button" data-studio-longshot-scale="3">高清 3×</button>' +
-      "</div></div>" +
-      '<div class="preview-toolbar__export-popover-actions">' +
-      '<button type="button" class="preview-toolbar__export-popover-ok" data-action="ok">确定</button>' +
-      '<button type="button" class="preview-toolbar__export-popover-cancel" data-action="cancel">取消</button>' +
-      "</div>";
+    pop.innerHTML = buildPanelHtml(_longshot2PlatformIds);
 
-    var draftMode = "chapter";
-    var draftScale = 2;
-
-    pop.querySelectorAll("[data-studio-longshot-mode]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        draftMode = btn.getAttribute("data-studio-longshot-mode") || "chapter";
-        pop.querySelectorAll("[data-studio-longshot-mode]").forEach(function (b) {
-          var on = b === btn;
-          b.classList.toggle("is-selected", on);
-          b.setAttribute("aria-pressed", on ? "true" : "false");
-        });
-      });
-    });
-    pop.querySelectorAll("[data-studio-longshot-scale]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        draftScale = parseInt(btn.getAttribute("data-studio-longshot-scale"), 10) || 2;
-        pop.querySelectorAll("[data-studio-longshot-scale]").forEach(function (b) {
-          var on = b === btn;
-          b.classList.toggle("is-selected", on);
-          b.setAttribute("aria-pressed", on ? "true" : "false");
-        });
-      });
-    });
+    var prefs0 = readLongshotExportPrefs();
+    var panel = bindPanelDraft(
+      pop,
+      {
+        platform: prefs0.platform,
+        mode: prefs0.mode,
+        scale: prefs0.scale,
+        slideCount: prefs0.slideCount,
+        padMode: prefs0.padMode,
+      },
+      {
+        smartCropEnabled: _longshot2SmartCrop,
+        photoCount: estimatePhotoCountFromDom(document),
+      }
+    );
+    pop._panelDraft = panel;
 
     pop.addEventListener("click", function (e) {
       e.stopPropagation();
     });
 
+    pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var pid = btn.getAttribute("data-studio-longshot-platform") || "wechat_chat";
+        var prev = readExportPrefs().platform || "wechat_chat";
+        if (pid !== prev) {
+          trackStudioEvent("longshot_platform_change", { from: prev, to: pid });
+        }
+        if (pid === "wechat_moments") {
+          maybeToastSparseMoments();
+        }
+      });
+    });
+
     pop._applyDraft = function () {
-      writeStoredLongshotPrefs(draftMode, draftScale);
+      var draft = panel.getDraft();
+      writeStoredLongshotPrefs(draft.mode, draft.scale);
+      writeExportPrefs({
+        platform: draft.platform,
+        mode: draft.mode,
+        scale: draft.scale,
+        slideCount: draft.slideCount,
+        padMode: draft.padMode,
+      });
+      if (draft.platform === "wechat_moments") {
+        markMomentsCoachSeen();
+        maybeToastSparseMoments();
+      }
+      syncLongshotCtaLabel(root);
+      refreshLongshotExportMeta(root);
     };
     pop._readDraftFromPrefs = function () {
       var prefs = readLongshotExportPrefs();
-      draftMode = prefs.mode;
-      draftScale = prefs.scale;
+      if (panel.setDraft) {
+        panel.setDraft({
+          platform: prefs.platform,
+          mode: prefs.mode,
+          scale: prefs.scale,
+          slideCount: prefs.slideCount,
+          padMode: prefs.padMode,
+        });
+      }
       syncStudioExportPopoverUI(pop);
     };
 
@@ -1043,6 +1103,18 @@ export function cancelPreviewLongshotExport(root) {
     setLongshotExportState(root, "running", { hint: "正在保存…" });
     _setSlowHint(root, "", false);
 
+    var prefs = readLongshotExportPrefs();
+    var platform = prefs.platform || "wechat_chat";
+    var t0 = Date.now();
+    trackStudioEvent("longshot_export_start", {
+      platform: platform,
+      scale: prefs.scale,
+      slide_count: prefs.slideCount == null ? null : prefs.slideCount,
+      photo_count: estimatePhotoCountFromDom(document),
+      trip_id: tripId,
+      surface: "preview",
+    });
+
     postJsonBusyRetry("/__travelogue/longshot", buildLongshotRequestFromPage(tripId), {
       onBusy: function () {
         setLongshotExportState(root, "running", { hint: "排队中，请稍候…" });
@@ -1054,12 +1126,24 @@ export function cancelPreviewLongshotExport(root) {
           return;
         }
         if (res.status === 409) {
+          trackStudioEvent("longshot_export_fail", {
+            platform: platform,
+            error_code: (res.body && res.body.error) || "E_STUDIO_JOB_BUSY",
+            trip_id: tripId,
+            surface: "preview",
+          });
           setLongshotExportState(root, "error", {
             hint: (res.body && res.body.message) || "请稍候再试",
           });
           return;
         }
         if (res.status !== 202 || !res.body.jobId) {
+          trackStudioEvent("longshot_export_fail", {
+            platform: platform,
+            error_code: "E_LNG2_START_FAILED",
+            trip_id: tripId,
+            surface: "preview",
+          });
           setLongshotExportState(root, "error", { hint: "无法开始导出" });
           return;
         }
@@ -1070,9 +1154,25 @@ export function cancelPreviewLongshotExport(root) {
           function (job) {
             _setSlowHint(root, "", false);
             if (job.status === "succeeded") {
+              var result = job.result || {};
+              trackStudioEvent("longshot_export_success", {
+                platform: result.platform || platform,
+                output_count: (result.outputs && result.outputs.length) || 0,
+                target_page_count: result.pageCount != null ? result.pageCount : null,
+                duration_ms: Date.now() - t0,
+                trip_id: tripId,
+                surface: "preview",
+              });
               setLongshotExportState(root, "done");
               showLongshotDrawer(root, job);
             } else if (job.status === "failed") {
+              var err = job.error || {};
+              trackStudioEvent("longshot_export_fail", {
+                platform: platform,
+                error_code: err.code || "E_EXPORT_LONGSHOT",
+                trip_id: tripId,
+                surface: "preview",
+              });
               setLongshotExportState(root, "error");
               showLongshotDrawer(root, job);
             } else {
@@ -1085,6 +1185,12 @@ export function cancelPreviewLongshotExport(root) {
         );
       })
       .catch(function () {
+        trackStudioEvent("longshot_export_fail", {
+          platform: platform,
+          error_code: "network",
+          trip_id: tripId,
+          surface: "preview",
+        });
         setLongshotExportState(root, "error", { hint: "网络错误" });
       });
   }
