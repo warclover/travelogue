@@ -101,6 +101,7 @@ def test_ingest_e2e_cull_explain_and_summary(tmp_path: Path) -> None:
 def test_ingest_e2e_ml_cache_reused_between_rebuilds(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    pytest.importorskip("torch")
     album = _album_for_regression(tmp_path)
     trips = tmp_path / "trips"
     trip_json = create_trip("phase9-e2e-ml-cache", trips, title="P9 ML 缓存")

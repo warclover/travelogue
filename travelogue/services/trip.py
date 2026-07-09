@@ -40,7 +40,9 @@ _trip_write_locks_guard = threading.Lock()
 
 
 def _trip_lock_key(path: Path) -> str:
-    return os.path.normcase(str(path.resolve()))
+    # casefold so Linux CI matches Windows normcase for lock identity
+    # (test_trip_lock_key_normalizes_path_case · AC path-case).
+    return os.path.normcase(str(path.resolve())).casefold()
 
 
 def _get_trip_write_lock(path: Path) -> threading.Lock:
