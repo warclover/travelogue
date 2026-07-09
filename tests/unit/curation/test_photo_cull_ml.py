@@ -89,6 +89,7 @@ def test_cull_score_prefers_aesthetic_when_ml() -> None:
 def test_apply_aesthetic_scores_uses_persistent_cache(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    pytest.importorskip("torch")
     img_rel = "assets/a1-w800.webp"
     img_path = tmp_path / img_rel
     img_path.parent.mkdir(parents=True, exist_ok=True)

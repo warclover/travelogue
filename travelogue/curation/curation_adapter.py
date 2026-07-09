@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from travelogue.config import AppConfig, get_config
-from travelogue.templates.registry import DEFAULT_TEMPLATE_ID, EVENT_RECAP_TEMPLATE_ID, get_registry
+from travelogue.domain.template_ids import DEFAULT_TEMPLATE_ID, EVENT_RECAP_TEMPLATE_ID
 
 
 @dataclass(frozen=True)
@@ -66,9 +66,7 @@ def resolve_effective_template(trip: dict) -> str:
 
 
 def get_curation_adapter(template_id: str) -> CurationAdapter:
-    rec = get_registry().get(template_id)
-    adapter_id = getattr(rec, "curation_adapter", None) or template_id
-    return _ADAPTERS.get(adapter_id) or _ADAPTERS[DEFAULT_TEMPLATE_ID]
+    return _ADAPTERS.get(template_id) or _ADAPTERS[DEFAULT_TEMPLATE_ID]
 
 
 def apply_curation_adapter_hints(trip: dict, *, cfg: AppConfig | None = None) -> CurationPlan:

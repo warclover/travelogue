@@ -73,13 +73,9 @@ class RhythmRules:
 
     @classmethod
     def from_config(cls, cfg=None) -> RhythmRules:
-        try:
-            from travelogue.config import get_config
-
-            app = cfg if cfg is not None else get_config()
-        except Exception:
+        if cfg is None:
             return cls()
-        rhythm = getattr(getattr(app, "layout", None), "rhythm", None)
+        rhythm = getattr(getattr(cfg, "layout", None), "rhythm", None)
         if rhythm is None:
             return cls()
         late = getattr(rhythm, "late_chapter_pairing", None)

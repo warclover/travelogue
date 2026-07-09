@@ -7,6 +7,7 @@ from pathlib import Path
 
 from PIL import Image
 
+from travelogue.layout_contract.media_class import is_collage_asset  # noqa: F401
 from travelogue.media.quality import (
     is_suspected_thumbnail_asset,
     is_upscaled_thumbnail,
@@ -343,11 +344,6 @@ def detect_collage_asset(
     if _exif_software_suggests_collage(img):
         return True
     return _seam_grid_suggests_collage(img)
-
-
-def is_collage_asset(asset: dict | None) -> bool:
-    """True when asset is tagged collage (PRD §3.4 · AC-P16-18)."""
-    return str((asset or {}).get("mediaClass") or "") == "collage"
 
 
 def summarize_media_classes(assets: list[dict]) -> dict[str, int]:

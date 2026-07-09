@@ -55,6 +55,12 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "shelf_longshot_fail",
         "shelf_longshot_reveal",
         "shelf_longshot_busy",
+        # Longshot export funnel (homepage / preview toolbar)
+        "longshot_export_start",
+        "longshot_export_success",
+        "longshot_export_fail",
+        "longshot_export_cancel",
+        "longshot_platform_change",
         "bento_tab_switch",
         "bento_preview_select",
         "settings_open",

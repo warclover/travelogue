@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from travelogue.layout_contract.density import (
@@ -9,6 +10,7 @@ from travelogue.layout_contract.density import (
     LayoutDensityParams,
     layout_density_params,
 )
+from travelogue.layout_contract.patterns import is_editorial_composite_pattern
 from travelogue.layout_contract.rhythm import (  # re-export for curation callers
     DEFAULT_CONSECUTIVE_BANS,
     DENSE_COLLAGE_SLOT_MIN,
@@ -73,25 +75,23 @@ __all__ = [
 ]
 
 
+_MOSAIC_WINDOW_SLOTS_RE = re.compile(r"^screen-mosaic-(\d+)(?:-|$)")
+
+
 def pattern_dense_slot_count(pattern_id: str) -> int | None:
     n = pattern_slot_count(pattern_id)
     if n is not None:
         return n
     if pattern_id == "screen-portrait-grid-8":
         return 8
-    if pattern_id.startswith("screen-mosaic-"):
-        try:
-            from travelogue.layout_engine.mosaic.lte_adapter import _mosaic_slot_count
-
-            return _mosaic_slot_count(pattern_id)
-        except Exception:
-            return None
+    # Parse window size from pattern id (e.g. screen-mosaic-5-...) without importing LTE.
+    mosaic = _MOSAIC_WINDOW_SLOTS_RE.match(pattern_id)
+    if mosaic:
+        return int(mosaic.group(1))
     return None
 
 
 def is_dense_collage_pattern(pattern_id: str, *, min_slots: int = DENSE_COLLAGE_SLOT_MIN) -> bool:
-    from travelogue.layout_engine.editorial.four_mix import is_editorial_composite_pattern
-
     if is_editorial_composite_pattern(pattern_id):
         return False
     n = pattern_dense_slot_count(pattern_id)
@@ -107,10 +107,10 @@ def is_large_mosaic_pattern(
     return n is not None and n >= min_slots
 
 
-def large_mosaic_limits_from_config() -> tuple[int, int, int]:
-    from travelogue.config import get_config
-
-    db = get_config().mosaic.density_budget
+def large_mosaic_limits_from_config(cfg=None) -> tuple[int, int, int]:
+    db = getattr(getattr(cfg, "mosaic", None), "density_budget", None)
+    if db is None:
+        return 5, 2, 1
     return (
         int(db.large_mosaic_min_slots),
         int(db.max_per_template_per_trip),
@@ -182,11 +182,16 @@ class ScreenLayoutPlannerState:
         app_cfg=None,
     ) -> ScreenLayoutPlannerState:
         params = layout_density_params(trip, app_cfg=app_cfg)
-        return cls.from_trip_total(
+        state = cls.from_trip_total(
             total_photos,
             density_params=params,
             rhythm=RhythmRules.from_config(app_cfg),
         )
+        lm_min, lm_trip, lm_ch = large_mosaic_limits_from_config(app_cfg)
+        state.large_mosaic_min_slots = lm_min
+        state.large_mosaic_max_per_template_trip = lm_trip
+        state.large_mosaic_max_per_chapter = lm_ch
+        return state
 
     @property
     def min_count(self) -> int:
@@ -274,8 +279,6 @@ class ScreenLayoutPlannerState:
         )
 
     def sync_editorial_composite_chapter_used(self, pattern_ids: list[str]) -> None:
-        from travelogue.layout_engine.editorial.four_mix import is_editorial_composite_pattern
-
         self.editorial_composite_chapter_used = sum(
             1 for pid in pattern_ids if is_editorial_composite_pattern(pid)
         )
@@ -293,18 +296,10 @@ class ScreenLayoutPlannerState:
         return True
 
     def can_emit_pattern(self, pattern_id: str) -> bool:
-        from travelogue.layout_engine.mosaic.lte_adapter import (
-            mosaic_pattern_disabled,
-            template_rhythm_max_per_chapter,
-        )
-
-        if mosaic_pattern_disabled(pattern_id):
-            return False
-        from travelogue.layout_engine.editorial.four_mix import is_editorial_composite_pattern
-
+        # Template-specific rhythm gates live in layout_engine; keep this kernel layer pure.
+        max_ch = None
         if is_editorial_composite_pattern(pattern_id) and not self.can_emit_editorial_composite():
             return False
-        max_ch = template_rhythm_max_per_chapter(pattern_id)
         if max_ch is not None and self.pattern_counts.get(pattern_id, 0) >= max_ch:
             return False
         if not self.can_use_dense_collage(pattern_id):
@@ -344,8 +339,6 @@ class ScreenLayoutPlannerState:
             self.last_was_dense_collage = False
         if is_large_mosaic_pattern(pattern_id, min_slots=self.large_mosaic_min_slots):
             self.large_mosaic_chapter_used += 1
-        from travelogue.layout_engine.editorial.four_mix import is_editorial_composite_pattern
-
         if is_editorial_composite_pattern(pattern_id):
             self.editorial_composite_chapter_used += 1
         self.last_kind = kind if kind != "other" else "other"

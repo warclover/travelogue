@@ -170,7 +170,7 @@ def resolve_learned_blend(
     """Per-stratum learned blend when ``use_stratum_blend`` is on."""
     if not cfg.use_stratum_blend:
         return float(cfg.ml_calibrate_blend)
-    from travelogue.curation.aesthetic_blind_review import review_stratum_for_asset
+    from travelogue.domain.review_stratum import review_stratum_for_asset
 
     stratum = review_stratum_for_asset(asset)
     blend_only = cfg.stratum_blend_only

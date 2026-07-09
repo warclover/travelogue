@@ -458,7 +458,7 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
     if tags:
         entry["tags"] = tags
         entry["tagsSource"] = "heuristic"
-    from travelogue.curation.subject_tagging import semantic_category_for_asset
+    from travelogue.layout_contract.subject_tagging import semantic_category_for_asset
 
     entry["semanticTag"] = {"category": semantic_category_for_asset(entry)}
     if getattr(ctx.cfg, "exif_camera", True):

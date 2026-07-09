@@ -157,6 +157,12 @@ def build_intent_hints(trip: dict) -> dict[str, Any]:
     curation = trip.get("curation") or {}
     hints: dict[str, Any] = dict(curation.get("intentHints") or {})
 
+    # Prefer intent.travelPlan.cities when present; otherwise keep existing planCities.
+    travel_plan = (trip.get("intent") or {}).get("travelPlan") or {}
+    plan_cities = travel_plan.get("cities")
+    if isinstance(plan_cities, list) and plan_cities:
+        hints["planCities"] = list(plan_cities)
+
     user_notes = resolve_user_notes(trip)
     keywords = extract_user_notes_keywords(user_notes)
     if keywords:

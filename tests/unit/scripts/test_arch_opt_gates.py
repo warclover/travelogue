@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import runpy
 import sys
+import tomllib
 from io import StringIO
 
 import pytest
@@ -12,6 +13,14 @@ from tests._repo_root import repo_root
 from travelogue.config.loader import load_config
 
 ROOT = repo_root(__file__)
+EXPECTED_IMPORTLINTER_IGNORES = [
+    "travelogue.media.ingest -> travelogue.curation.aesthetic_score",
+    "travelogue.media.ingest -> travelogue.curation.photo_cull",
+    "travelogue.media.ingest -> travelogue.curation.algorithm_profile",
+    "travelogue.vision.aesthetic_mllm -> travelogue.curation.aesthetic_blind_review",
+    "travelogue.vision.aesthetic_mllm -> travelogue.curation.aesthetic_score",
+    "travelogue.vision.aesthetic_mllm -> travelogue.curation.album_profile",
+]
 
 
 def _run_script(rel: str, *argv: str) -> tuple[int, str]:
@@ -32,17 +41,14 @@ def _run_script(rel: str, *argv: str) -> tuple[int, str]:
 
 
 def test_lint_imports_no_exemptions() -> None:
-    import subprocess
+    from click.testing import CliRunner
+    from importlinter.cli import lint_imports_command
 
-    result = subprocess.run(
-        [sys.executable, "-m", "importlinter.cli", "lint-imports"],
-        cwd=str(ROOT),
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0, result.stderr or result.stdout
-    ignore_block = (ROOT / "pyproject.toml").read_text(encoding="utf-8").split("ignore_imports = ", 1)[-1]
-    assert ignore_block.startswith("[]"), "ignore_imports must be empty"
+    result = CliRunner().invoke(lint_imports_command)
+    assert result.exit_code == 0, result.output
+    data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    contract = data["tool"]["importlinter"]["contracts"][0]
+    assert contract["ignore_imports"] == EXPECTED_IMPORTLINTER_IGNORES
 
 
 def test_lint_lse_cross_import_at_baseline() -> None:

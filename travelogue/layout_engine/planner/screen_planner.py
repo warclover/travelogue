@@ -25,6 +25,13 @@ from travelogue.layout_contract.planner_state import (  # noqa: F401 — re-expo
 )
 from travelogue.layout_contract.rhythm import (
     MAX_PORTRAIT_PAIR_STREAK,
+    is_nine_grid_pattern,  # noqa: F401
+    is_portrait_single_pattern,  # noqa: F401
+    is_six_grid_pattern,  # noqa: F401
+    is_triple_row_pattern,  # noqa: F401
+    layout_kind_from_pattern,  # noqa: F401
+    nine_grid_limits_for_trip,  # noqa: F401
+    portrait_grid8_allowed,  # noqa: F401
 )
 from travelogue.layout_contract.subject import (
     any_asset_has_person,
@@ -255,12 +262,14 @@ def _make_screen(
     tone: dict | None = None,
     aspects: dict[str, AspectKind] | None = None,
     assets_map: dict[str, dict] | None = None,
+    exclude_collage_from_mosaic: bool | None = None,
 ) -> dict:
     if slots is None and asset_ids and len(asset_ids) == 1:
         pattern_id = single_asset_screen_pattern(
             pattern_id,
             asset_ids[0],
             assets_map,
+            exclude_collage_from_mosaic=exclude_collage_from_mosaic,
         )
     if slots is None:
         ids = list(asset_ids or [])
@@ -1349,5 +1358,43 @@ def plan_screens_for_chapter(
         trip=trip,
         app_config=app_config,
     ).plan()
+
+
+from travelogue.layout_engine.planner.screen_planner_attach import (  # noqa: E402,F401
+    attach_screens_day_buckets,
+    attach_screens_to_chapters,
+    gallery_chapter_uses_screens_not_scroll,
+)
+
+__all__ = [
+    "DEFAULT_FEATURED_WEIGHT",
+    "FOOD_GRID_LAYOUT_HINT",
+    "LAYOUT_ENGINE_LEGACY",
+    "LAYOUT_ENGINE_SCREENS",
+    "LAYOUT_ENGINE_VERSION_SCREENS",
+    "MAX_SLOTS_PER_SCREEN",
+    "MIN_TRIP_PHOTOS_FOR_MOSAIC",
+    "PATTERN_GRID_CLASS",
+    "PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND",
+    "PATTERN_PORTRAIT_1_LANDSCAPE_2",
+    "PATTERN_PORTRAIT_2_LANDSCAPE_2",
+    "PATTERN_PORTRAIT_GRID_8",
+    "PERSON_LAYOUT_GRID_8",
+    "ScreenLayoutPlannerState",
+    "attach_screens_day_buckets",
+    "attach_screens_to_chapters",
+    "gallery_chapter_uses_screens_not_scroll",
+    "grid_class_for_pattern",
+    "is_nine_grid_pattern",
+    "is_portrait_single_pattern",
+    "is_six_grid_pattern",
+    "is_triple_row_pattern",
+    "layout_kind_from_pattern",
+    "nine_grid_limits_for_trip",
+    "plan_screens_for_chapter",
+    "portrait_grid8_allowed",
+    "resolve_layout_engine",
+    "screens_layout_active",
+]
 
 

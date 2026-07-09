@@ -6,15 +6,7 @@ import statistics
 from pathlib import Path
 
 from travelogue.config import AppConfig, IngestConfig, get_config
-
-
-def asset_sharpness(asset: dict) -> float:
-    quality = asset.get("quality")
-    if isinstance(quality, dict):
-        val = quality.get("sharpness")
-        if isinstance(val, (int, float)):
-            return float(val)
-    return 0.0
+from travelogue.layout_contract.quality import asset_sharpness  # noqa: F401
 
 
 def asset_sharpness_version(asset: dict) -> str:

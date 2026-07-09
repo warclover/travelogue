@@ -64,7 +64,6 @@ def run_admission_check(
 
     if fixture.is_file():
         try:
-            import travelogue.render.admission_golden  # noqa: F401 — registers hook
             from travelogue.domain.admission_hooks import run_golden_render_step
 
             trip_render = json.loads(fixture.read_text(encoding="utf-8"))

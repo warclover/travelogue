@@ -6,8 +6,6 @@ import math
 from dataclasses import dataclass
 from typing import Literal
 
-from travelogue.config import AppConfig, get_config
-
 LayoutDensity = Literal["balanced", "hero_first", "collage_first"]
 
 _VALID: frozenset[str] = frozenset({"balanced", "hero_first", "collage_first"})
@@ -24,9 +22,9 @@ def normalize_layout_density(raw: object, *, enabled: bool = True) -> LayoutDens
     return "balanced"
 
 
-def layout_density_from_trip(trip: dict, *, app_cfg: AppConfig | None = None) -> LayoutDensity:
-    cfg = app_cfg or get_config()
-    enabled = bool(getattr(cfg.layout, "layout_density_enabled", True))
+def layout_density_from_trip(trip: dict, *, app_cfg=None) -> LayoutDensity:
+    layout = getattr(app_cfg, "layout", None)
+    enabled = bool(getattr(layout, "layout_density_enabled", True))
     intent = trip.get("intent") or {}
     return normalize_layout_density(intent.get("layoutDensity"), enabled=enabled)
 
@@ -62,5 +60,5 @@ class LayoutDensityParams:
         return dense_min, new_max
 
 
-def layout_density_params(trip: dict, *, app_cfg: AppConfig | None = None) -> LayoutDensityParams:
+def layout_density_params(trip: dict, *, app_cfg=None) -> LayoutDensityParams:
     return LayoutDensityParams(density=layout_density_from_trip(trip, app_cfg=app_cfg))

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.curation.time_segments import cluster_time_segments
+from travelogue.domain.time_segments import cluster_time_segments
 
 
 def preview_multi_journey(assets: list[dict], *, place: str = "旅途") -> str | None:

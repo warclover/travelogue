@@ -112,7 +112,9 @@ def test_overrides_disable_independent_from_deprecated_status(monkeypatch) -> No
     )
     reg = mosaic_registry()
     assert "screen-portrait-3" not in reg
-    assert PATTERN_MOSAIC_5_2P3L_EQUAL in reg
+    # Active composite still present; deprecated 2p3l-equal must stay out of list_active.
+    assert "screen-mosaic-5-main-portrait-3land" in reg
+    assert PATTERN_MOSAIC_5_2P3L_EQUAL not in reg
     assert PATTERN_MOSAIC_5_3P_2L_BALANCED not in reg
 
 

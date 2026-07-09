@@ -29,35 +29,28 @@ def test_collage_routes_to_full_frame() -> None:
 
 
 @pytest.mark.unit
-def test_collage_routing_respects_disable_flag(monkeypatch) -> None:
-    monkeypatch.setattr(
-        "travelogue.layout_contract.collage_routing.get_config",
-        lambda: AppConfig(
-            layout=LayoutConfig(
-                template_engine=LayoutTemplateEngineConfig(exclude_collage_from_mosaic=False)
-            )
-        ),
-    )
+def test_collage_routing_respects_disable_flag() -> None:
     assets = {"c1": {"id": "c1", "mediaClass": "collage"}}
-    assert single_asset_screen_pattern("screen-portrait-1", "c1", assets) == "screen-portrait-1"
+    assert (
+        single_asset_screen_pattern(
+            "screen-portrait-1",
+            "c1",
+            assets,
+            exclude_collage_from_mosaic=False,
+        )
+        == "screen-portrait-1"
+    )
 
 
 @pytest.mark.unit
-def test_make_screen_collage_single_uses_full_frame(monkeypatch) -> None:
-    monkeypatch.setattr(
-        "travelogue.layout_contract.collage_routing.get_config",
-        lambda: AppConfig(
-            layout=LayoutConfig(
-                template_engine=LayoutTemplateEngineConfig(exclude_collage_from_mosaic=True)
-            )
-        ),
-    )
+def test_make_screen_collage_single_uses_full_frame() -> None:
     assets = {"c1": {"id": "c1", "mediaClass": "collage", "width": 1200, "height": 800}}
     screen = _make_screen(
         "screen-landscape-1",
         ["c1"],
         screen_id="s1",
         assets_map=assets,
+        exclude_collage_from_mosaic=True,
     )
     assert screen["patternId"] == PATTERN_FULL_FRAME
     assert screen["slots"][0]["fit"] == "cover"
@@ -131,15 +124,7 @@ def test_full_frame_fits_cover_default() -> None:
 
 
 @pytest.mark.unit
-def test_collage_never_groups_with_photo_in_planner(monkeypatch) -> None:
-    monkeypatch.setattr(
-        "travelogue.layout_contract.collage_routing.get_config",
-        lambda: AppConfig(
-            layout=LayoutConfig(
-                template_engine=LayoutTemplateEngineConfig(exclude_collage_from_mosaic=True)
-            )
-        ),
-    )
+def test_collage_never_groups_with_photo_in_planner() -> None:
     from travelogue.layout_engine.planner.screen_planner import plan_screens_for_chapter
 
     assets_map = {
@@ -147,6 +132,11 @@ def test_collage_never_groups_with_photo_in_planner(monkeypatch) -> None:
         "c1": {"id": "c1", "mediaClass": "collage", "width": 1600, "height": 800},
     }
     aspects = {"p1": "portrait", "c1": "landscape"}
+    cfg = AppConfig(
+        layout=LayoutConfig(
+            template_engine=LayoutTemplateEngineConfig(exclude_collage_from_mosaic=True)
+        )
+    )
     screens = plan_screens_for_chapter(
         ["c1", "p1"],
         aspects,
@@ -154,6 +144,7 @@ def test_collage_never_groups_with_photo_in_planner(monkeypatch) -> None:
         trip_photo_total=2,
         chapter_id="ch-01",
         enable_mosaic=False,
+        app_config=cfg,
     )
     collage_screens = [s for s in screens if any(sl.get("assetId") == "c1" for sl in s.get("slots") or [])]
     assert len(collage_screens) == 1

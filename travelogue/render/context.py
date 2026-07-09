@@ -73,13 +73,14 @@ def _longshot_bundle_version(trip: dict) -> str:
     """Pin asset cache-busting to template bundle content hashes (P2-4).
 
     Content-stable across re-renders; changes only when shipped CSS/JS changes.
+    Normalize CRLF→LF so Windows checkouts match Linux CI hashes.
     """
     digest = hashlib.sha256()
     found = False
     for path in _BUNDLE_VERSION_PATHS:
         try:
             digest.update(path.name.encode("utf-8"))
-            digest.update(path.read_bytes())
+            digest.update(path.read_bytes().replace(b"\r\n", b"\n"))
             found = True
         except OSError:
             continue

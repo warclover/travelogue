@@ -20,9 +20,9 @@ class FaceDetectionResult:
 
 def _opencv_available() -> bool:
     try:
-        import cv2  # noqa: F401
+        import cv2
 
-        return True
+        return hasattr(cv2, "CascadeClassifier") and hasattr(cv2, "data")
     except ImportError:
         return False
 

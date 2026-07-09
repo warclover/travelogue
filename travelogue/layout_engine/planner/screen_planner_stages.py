@@ -178,7 +178,8 @@ def try_collage_solo_at_cursor(ctx: ChapterPlanContext) -> int | None:
     from travelogue.layout_engine.planner.screen_planner import _make_screen
     from travelogue.media.media_classify import is_collage_asset
 
-    if not collage_routing_enabled() or ctx.i >= len(ctx.ids):
+    te = getattr(getattr(getattr(ctx.app_config, "layout", None), "template_engine", None), "exclude_collage_from_mosaic", None)
+    if not collage_routing_enabled(te) or ctx.i >= len(ctx.ids):
         return None
     aid = ctx.ids[ctx.i]
     if not is_collage_asset(ctx.assets_map.get(aid, {})):
@@ -191,6 +192,7 @@ def try_collage_solo_at_cursor(ctx: ChapterPlanContext) -> int | None:
             screen_id="",
             aspects=ctx.aspects,
             assets_map=ctx.assets_map,
+            exclude_collage_from_mosaic=te,
         ),
     )
     return 1

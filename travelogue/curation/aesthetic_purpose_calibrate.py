@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from travelogue.config import AestheticConfig, AestheticPurposePresets, AestheticWeights
+from travelogue.config.aesthetic_weights_ops import weights_with_dim_emphasis
 from travelogue.curation.aesthetic_learned_eval import (
     _srcc_for_predictions,
     ensure_learned_scores,
@@ -21,7 +22,6 @@ from travelogue.curation.aesthetic_score import (
 )
 
 PurposeGrid = Literal["cover", "hero", "moment", "solo"]
-_DIM_KEYS = ("composition", "exposure", "color", "lighting", "subjectClarity")
 
 
 def _base_weights(cfg: AestheticConfig, purpose: PurposeGrid) -> AestheticWeights:
@@ -33,33 +33,6 @@ def _base_weights(cfg: AestheticConfig, purpose: PurposeGrid) -> AestheticWeight
     if purpose == "solo":
         return presets.solo
     return presets.moment
-
-
-def weights_with_dim_emphasis(
-    base: AestheticWeights,
-    *,
-    dim: str,
-    emphasis: float,
-) -> AestheticWeights:
-    """Set one dim to *emphasis* and scale the rest to sum to 1."""
-    key = dim if dim != "subject_clarity" else "subjectClarity"
-    if key not in _DIM_KEYS:
-        raise ValueError(f"unknown dim {dim!r}")
-    m = base.as_dim_map()
-    emphasis = max(0.05, min(0.85, float(emphasis)))
-    others = [k for k in _DIM_KEYS if k != key]
-    rest = 1.0 - emphasis
-    others_sum = sum(float(m[k]) for k in others) or 1.0
-    scaled = {key: emphasis}
-    for k in others:
-        scaled[k] = rest * float(m[k]) / others_sum
-    return AestheticWeights(
-        composition=scaled["composition"],
-        exposure=scaled["exposure"],
-        color=scaled["color"],
-        lighting=scaled["lighting"],
-        subject_clarity=scaled["subjectClarity"],
-    )
 
 
 def purpose_overall_with_weights(

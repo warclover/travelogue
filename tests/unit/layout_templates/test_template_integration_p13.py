@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import travelogue.render.admission_golden  # noqa: F401
 from travelogue.services.trip_factory import create_trip
 from travelogue.templating.admission import run_admission_check
 
