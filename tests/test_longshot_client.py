@@ -32,6 +32,17 @@ def test_panel_module_exists_and_exports() -> None:
         assert token in src, f"missing: {token}"
 
 
+def test_studio_panel_excludes_phase_c_platforms() -> None:
+    """H-C-04 · Studio UI must not list Ins/微博/抖音/custom (Phase C backend only)."""
+    src = PANEL.read_text(encoding="utf-8")
+    assert 'id === "wechat_moments" || id === "xiaohongshu"' in src
+    for banned in ("instagram", "weibo", "douyin_cover"):
+        assert f'id: "{banned}"' not in src
+    assert 'id: "custom"' not in src
+    # xhs custom slide-count control remains allowed
+    assert 'data-studio-xhs-count="custom"' in src
+
+
 def test_build_longshot_request_platform_contract() -> None:
     """AC-LNG2-07b · request carries platform when opted in."""
     src = CLIENT.read_text(encoding="utf-8")

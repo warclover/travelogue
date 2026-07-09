@@ -14,11 +14,28 @@ from travelogue.paths import ROOT
 PLATFORM_PROFILES_PATH = ROOT / "config" / "platform_profiles.yaml"
 
 DEFAULT_PLATFORM = "wechat_chat"
-PLATFORM_SEGMENT_IDS = frozenset({"wechat_moments", "xiaohongshu"})
-KNOWN_PLATFORM_IDS = frozenset({"wechat_chat", "wechat_moments", "xiaohongshu"})
+# Branch B · content-balanced platforms (ADR-016). Studio UI only opens a subset via config.
+PLATFORM_SEGMENT_IDS = frozenset(
+    {
+        "wechat_moments",
+        "xiaohongshu",
+        "instagram",
+        "weibo",
+        "douyin_cover",
+        "custom",
+    }
+)
+KNOWN_PLATFORM_IDS = frozenset({"wechat_chat"} | PLATFORM_SEGMENT_IDS)
+
+# Aspect-fit platforms (letterbox / smart_crop to fixed WxH)
+ASPECT_FIT_PLATFORM_IDS = frozenset(
+    {"xiaohongshu", "instagram", "weibo", "douyin_cover", "custom"}
+)
 
 # Phase A UI / API gray-list default (config may override)
 PHASE_A_PLATFORMS = ("wechat_moments",)
+# Phase C platforms are CLI/API only — never auto-listed in Studio Popover
+PHASE_C_CLI_ONLY = frozenset({"instagram", "weibo", "douyin_cover", "custom"})
 
 
 class PlatformProfileError(ValueError):
@@ -152,7 +169,8 @@ def resolve_profile(
                 "E_LNG2_INVALID_PLATFORM",
                 "平台导出未启用，请改用微信群长图",
             )
-        if allowed_platforms is not None:
+        if allowed_platforms is not None and pid not in PHASE_C_CLI_ONLY:
+            # Phase C platforms are CLI/API only — skip Studio gray-list gate
             allow = {str(x).strip() for x in allowed_platforms if str(x).strip()}
             if pid not in allow:
                 raise PlatformProfileError(
@@ -168,8 +186,10 @@ def resolve_profile(
                 "E_LNG2_INVALID_SLIDE_COUNT",
                 "slideCount 须为整数",
             ) from exc
-        # moments ignores slideCount (PRD §8.1); xhs validates range
-        if pid == "xiaohongshu" and (n < profile.min_pages or n > profile.max_pages):
+        # moments ignores slideCount (PRD §8.1); aspect-fit platforms validate range
+        if pid in ASPECT_FIT_PLATFORM_IDS and (
+            n < profile.min_pages or n > profile.max_pages
+        ):
             raise PlatformProfileError(
                 "E_LNG2_INVALID_SLIDE_COUNT",
                 f"slideCount 须在 {profile.min_pages}–{profile.max_pages} 之间",
@@ -182,6 +202,74 @@ def resolve_profile(
         )
 
     return profile
+
+
+def output_canvas_size(profile: PlatformProfile) -> tuple[int, int] | None:
+    """Return (width, height) for aspect-fit platforms; None for moments/chat."""
+    out = profile.output or {}
+    w = _coerce_int(out.get("width"))
+    h = _coerce_int(out.get("height"))
+    if w and h and w > 0 and h > 0:
+        return int(w), int(h)
+    return None
+
+
+def is_single_file_output(profile: PlatformProfile) -> bool:
+    out = profile.output or {}
+    return bool(out.get("single_file")) or int(profile.max_pages or 1) == 1
+
+
+def with_custom_output(
+    profile: PlatformProfile,
+    *,
+    width: int | None = None,
+    height: int | None = None,
+    pad_mode: str | None = None,
+) -> PlatformProfile:
+    """Return a custom profile with overridden canvas size (CLI only)."""
+    if profile.id != "custom":
+        return profile
+    out = dict(profile.output or {})
+    if width is not None:
+        out["width"] = int(width)
+    if height is not None:
+        out["height"] = int(height)
+    w = int(out.get("width") or 1080)
+    h = int(out.get("height") or 1440)
+    if w < 64 or h < 64 or w > 4096 or h > 8192:
+        raise PlatformProfileError(
+            "E_LNG2_INVALID_CUSTOM_SIZE",
+            "custom 宽高须在 64–4096 × 64–8192 之间",
+        )
+    out["width"] = w
+    out["height"] = h
+    out["aspect"] = f"{w}:{h}"
+    default_pad = (pad_mode or profile.default_pad_mode or "letterbox").strip().lower()
+    if default_pad not in ("letterbox", "smart_crop", "auto", ""):
+        raise PlatformProfileError(
+            "E_LNG2_INVALID_PAD_MODE",
+            "padMode 须为 letterbox 或 smart_crop",
+        )
+    if default_pad in ("", "auto"):
+        default_pad = "letterbox"
+    return PlatformProfile(
+        id=profile.id,
+        label=profile.label,
+        segment=profile.segment,
+        capture=profile.capture,
+        allow_p1=profile.allow_p1,
+        target_pages=profile.target_pages,
+        min_pages=profile.min_pages,
+        max_pages=profile.max_pages,
+        tiny_photo_max=profile.tiny_photo_max,
+        sparse_photo_hint_below=profile.sparse_photo_hint_below,
+        default_pad_mode=default_pad,
+        naming=profile.naming,
+        footer=profile.footer,
+        publish_guide=profile.publish_guide,
+        output=out,
+        phase=profile.phase,
+    )
 
 
 def resolve_moments_page_count(
@@ -233,6 +321,28 @@ def resolve_xhs_slide_count(
 
     Returns (N, userHint). When ``slide_count`` is set, use it (clamped to profile).
     """
+    return resolve_aspect_slide_count(
+        photo_count=photo_count,
+        slide_count=slide_count,
+        max_feasible_segments=max_feasible_segments,
+        profile=profile or get_profile("xiaohongshu"),
+        hint_kind="xhs",
+    )
+
+
+def resolve_aspect_slide_count(
+    *,
+    photo_count: int,
+    slide_count: int | None = None,
+    max_feasible_segments: int | None = None,
+    profile: PlatformProfile | None = None,
+    hint_kind: str = "aspect",
+) -> tuple[int, str]:
+    """Generic page count for aspect-fit platforms (xhs / ins / weibo / custom).
+
+    Uses Guizang-style auto formula when slide_count is None; clamps to profile
+    min/max and feasible segments. ``douyin_cover`` always returns 1.
+    """
     import math
 
     profile = profile or get_profile("xiaohongshu")
@@ -245,25 +355,51 @@ def resolve_xhs_slide_count(
         else max_pages
     )
 
+    # Single-frame covers (douyin)
+    if max_pages == 1 or is_single_file_output(profile):
+        return 1, "已生成 1 张竖版封面"
+
+    size = output_canvas_size(profile)
+    ratio_label = "配图"
+    if size:
+        w, h = size
+        if (w, h) == (1080, 1440):
+            ratio_label = "3:4 配图"
+        elif (w, h) == (1080, 1350):
+            ratio_label = "4:5 配图"
+        else:
+            ratio_label = f"{w}×{h} 配图"
+
     if slide_count is not None:
         n = max(min_pages, min(int(slide_count), max_pages, feasible))
-        hint = f"已生成 {n} 张 3:4 配图 · 更多细节可写在笔记正文"
+        if hint_kind == "xhs":
+            hint = f"已生成 {n} 张 3:4 配图 · 更多细节可写在笔记正文"
+        else:
+            hint = f"已生成 {n} 张{ratio_label}"
         return n, hint
 
+    # Guizang-calibrated auto (same as xhs §6.4.3); clamp to platform max
     n0 = max(1, int(math.ceil(photos / 4))) if photos else 1
     if photos < 12:
-        n = max(3, min(n0, 6))
+        n = max(min(3, max_pages), min(n0, min(6, max_pages)))
+        n = max(min_pages, n)
     else:
-        n = max(5, min(n0, 9))
+        n = max(min(5, max_pages), min(n0, min(9, max_pages)))
         if photos > 48:
-            n = min(n, 10)
+            n = min(n, min(10, max_pages))
     n = max(min_pages, min(n, max_pages, feasible))
-    hint = f"已生成 {n} 张 3:4 配图 · 更多细节可写在笔记正文"
+    if hint_kind == "xhs":
+        hint = f"已生成 {n} 张 3:4 配图 · 更多细节可写在笔记正文"
+    else:
+        hint = f"已生成 {n} 张{ratio_label}"
     return n, hint
 
 
 def file_prefix_for_platform(title: str, platform_id: str) -> str:
-    """Stem prefix before ``-{nn}.ext`` (e.g. ``林芝-moments``)."""
+    """Stem prefix before ``-{nn}.ext`` (e.g. ``林芝-moments``).
+
+    ``douyin_cover`` uses ``{slug}-douyin-cover`` (single file, no nn in prefix).
+    """
     from travelogue.export.longshot import _slug_title
 
     slug = _slug_title(title)
@@ -271,4 +407,12 @@ def file_prefix_for_platform(title: str, platform_id: str) -> str:
         return f"{slug}-moments"
     if platform_id == "xiaohongshu":
         return f"{slug}-xhs"
+    if platform_id == "instagram":
+        return f"{slug}-ins"
+    if platform_id == "weibo":
+        return f"{slug}-weibo"
+    if platform_id == "douyin_cover":
+        return f"{slug}-douyin-cover"
+    if platform_id == "custom":
+        return f"{slug}-custom"
     return f"{slug}-{platform_id}"

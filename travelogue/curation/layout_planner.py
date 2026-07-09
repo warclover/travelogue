@@ -19,7 +19,11 @@ from travelogue.layout_contract.orientations import (
     ExportLayout,
     OrientationSummary,
     aspect_kind_for_asset,
+<<<<<<< HEAD
     summarize_orientations,  # noqa: F401
+=======
+    summarize_orientations,
+>>>>>>> a1a48f1 (feat(longshot): add Phase C platform profiles and CLI export)
 )
 from travelogue.layout_contract.orientations import (
     effective_export_profile as _effective_profile,

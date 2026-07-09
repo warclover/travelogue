@@ -130,8 +130,8 @@
 
 | ID | 任务 | 文件 | 状态 |
 |----|------|------|------|
-| BE-LNG2-40 | ins / weibo / douyin_cover profiles | `platform_profiles.yaml` | ☐ |
-| BE-LNG2-41 | custom profile（CLI only） | `platform_profiles.py` | ☐ |
+| BE-LNG2-40 | ins / weibo / douyin_cover profiles | `platform_profiles.yaml` | ☑ |
+| BE-LNG2-41 | custom profile（CLI only） | `platform_profiles.py` | ☑ |
 | BE-LNG2-42 | `_longshot_files()` glob 扩展 | `studio_trips.py` | ☑ |
 | BE-LNG2-43 | stale 测试 AC-LNG2-06 | `tests/test_studio_trips.py` | ☑ |
 | BE-LNG2-44 | CLI flags | `cli/render_cmds.py` | ☑ |

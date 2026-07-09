@@ -192,8 +192,11 @@
 |------|------|------|------|
 | H-C-01 | `export-longshot T --platform wechat_moments` | 产出 moments 前缀 | ☐ |
 | H-C-02 | `export-longshot T --platform xiaohongshu --slide-count 6` | 6×1080×1440 | ☐ |
+| H-C-02b | `export-longshot T --platform instagram --slide-count 4` | 4×1080×1350 · `-ins-` | ☑ |
+| H-C-02c | `export-longshot T --platform douyin_cover` | 1×1080×1920 · `-douyin-cover.png` | ☑ |
+| H-C-02d | `export-longshot T --platform custom --width 720 --height 960 --slide-count 3` | 3×720×960 · `-custom-` | ☑ |
 | H-C-03 | 编辑 trip 后首页 | **长图可更新** stale 徽章 | ☐ |
-| H-C-04 | Studio UI | **无** Ins/微博/抖音 菜单项（Phase C 仅后端） | ☐ |
+| H-C-04 | Studio UI | **无** Ins/微博/抖音 菜单项（Phase C 仅后端） | ☑ |
 
 ---
 

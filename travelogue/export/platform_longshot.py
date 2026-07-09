@@ -4,7 +4,8 @@ Single P0 full capture → boundary → DP split → postprocess → atomic writ
 P1 fallback is forbidden (D-LNG2-10).
 
 Phase A: wechat_moments (crop + footer).
-Phase B: xiaohongshu (fit_aspect 3:4 + footer).
+Phase B/C: aspect-fit platforms (fit_aspect WxH + footer; douyin single-file).
+Phase C: instagram / weibo / douyin_cover / custom (CLI · aspect-fit).
 """
 
 from __future__ import annotations
@@ -16,8 +17,8 @@ from typing import Any
 from travelogue.export.boundary_metrics import collect_boundaries, count_photos_heuristic
 from travelogue.export.content_splitter import (
     clamp_breakpoints_to_height,
+    plan_aspect_split,
     plan_moments_split,
-    plan_xhs_split,
     slice_canvas_png,
     slice_ranges,
 )
@@ -37,11 +38,14 @@ from travelogue.export.longshot import (
     _trip_title,
 )
 from travelogue.export.platform_profiles import (
+    ASPECT_FIT_PLATFORM_IDS,
     DEFAULT_PLATFORM,
     PLATFORM_SEGMENT_IDS,
     PlatformProfile,
     file_prefix_for_platform,
     get_profile,
+    is_single_file_output,
+    output_canvas_size,
 )
 from travelogue.export.slide_postprocess import draw_page_footer, fit_aspect
 from travelogue.render.engine import LONGSHOT_INDEX_NAME
@@ -54,20 +58,36 @@ MAX_SCALE_DOWN_ATTEMPTS = 2
 
 
 class PlatformExportWriter:
-    """Atomic ``.part`` → rename writer (D-LNG2-14)."""
+    """Atomic ``.part`` → rename writer (D-LNG2-14).
 
-    def __init__(self, directory: Path, prefix: str, *, ext: str = "png") -> None:
+    Multi-page: ``{prefix}-{nn:02d}.{ext}``.
+    Single-file (douyin_cover): ``{prefix}.{ext}`` when ``single_file=True``.
+    """
+
+    def __init__(
+        self,
+        directory: Path,
+        prefix: str,
+        *,
+        ext: str = "png",
+        single_file: bool = False,
+    ) -> None:
         self.directory = Path(directory)
         self.prefix = prefix
         self.ext = ext.lstrip(".")
+        self.single_file = bool(single_file)
         self._parts: list[Path] = []
         self._finals: list[Path] = []
         self._committed = False
 
     def part_path(self, nn: int) -> Path:
+        if self.single_file:
+            return self.directory / f"{self.prefix}.{self.ext}.part"
         return self.directory / f"{self.prefix}-{nn:02d}.{self.ext}.part"
 
     def final_path(self, nn: int) -> Path:
+        if self.single_file:
+            return self.directory / f"{self.prefix}.{self.ext}"
         return self.directory / f"{self.prefix}-{nn:02d}.{self.ext}"
 
     def write(self, nn: int, data: bytes) -> Path:
@@ -103,6 +123,15 @@ class PlatformExportWriter:
                 orphan.unlink()
             except OSError:
                 _log.debug("rollback orphan part failed: %s", orphan, exc_info=True)
+        if self.single_file:
+            orphan_single = self.directory / f"{self.prefix}.{self.ext}.part"
+            try:
+                if orphan_single.exists():
+                    orphan_single.unlink()
+            except OSError:
+                _log.debug(
+                    "rollback single part failed: %s", orphan_single, exc_info=True
+                )
         self._parts.clear()
         self._finals.clear()
 
@@ -160,6 +189,8 @@ def _publish_guide(page_count: int, profile: PlatformProfile) -> str:
             "发布步骤：保存到相册 → 小红书 → 发笔记 → 选图；"
             "详情写在笔记正文，配图是视觉提纲"
         )
+    if profile.id in ASPECT_FIT_PLATFORM_IDS:
+        return f"已生成 {page_count} 张平台配图，按编号顺序使用"
     return (
         f"发布步骤：1. 在文件夹按 01→{page_count:02d} 全选（图底 i/n 助 orientation）"
         " 2. 朋友圈 → 从相册选择 3. 按顺序发布 · 滑动可连读"
@@ -175,7 +206,8 @@ def _resolve_pad_mode(
     raw = (pad_mode or profile.default_pad_mode or "letterbox").strip().lower()
     if raw in ("", "auto"):
         raw = profile.default_pad_mode or "letterbox"
-    if raw == "smart_crop" and not smart_crop_enabled:
+    # douyin_cover defaults to smart_crop; allow even when experimental flag off
+    if raw == "smart_crop" and not smart_crop_enabled and profile.id != "douyin_cover":
         _log.info("smart_crop requested but flag off; falling back to letterbox")
         return "letterbox"
     if raw not in ("letterbox", "smart_crop"):
@@ -210,7 +242,7 @@ def export_platform_longshot(
     profile: PlatformProfile | None = None,
     smart_crop_enabled: bool | None = None,
 ) -> LongshotExportResult:
-    """Branch B entry · wechat_moments / xiaohongshu."""
+    """Branch B entry · moments / xhs / Phase C aspect-fit platforms."""
     trip_dir = trip_dir.resolve()
     longshot_html = trip_dir / LONGSHOT_INDEX_NAME
     if not longshot_html.is_file():
@@ -231,7 +263,9 @@ def export_platform_longshot(
             f"不支持的平台「{profile.id}」",
         )
 
-    is_xhs = profile.id == "xiaohongshu"
+    is_aspect = profile.id in ASPECT_FIT_PLATFORM_IDS
+    single_file = is_single_file_output(profile)
+    canvas_size = output_canvas_size(profile) if is_aspect else None
     if smart_crop_enabled is None:
         smart_crop_enabled = _smart_crop_flag_from_config()
     resolved_pad = _resolve_pad_mode(
@@ -239,10 +273,10 @@ def export_platform_longshot(
     )
 
     scale = max(1, min(int(scale), 3))
-    # xhs final output is always PNG 1080×1440; capture may still use jpeg under size pressure
+    # Aspect-fit finals are PNG; capture may still use jpeg under size pressure
     fmt = "jpeg" if str(fmt).lower() == "jpeg" else "png"
-    out_fmt = "png" if is_xhs else fmt
-    out_ext = "png" if is_xhs else ("jpg" if fmt == "jpeg" else "png")
+    out_fmt = "png" if is_aspect else fmt
+    out_ext = "png" if is_aspect else ("jpg" if fmt == "jpeg" else "png")
     title = _slug_title(_trip_title(trip_dir))
     prefix = file_prefix_for_platform(title, profile.id)
 
@@ -264,9 +298,16 @@ def export_platform_longshot(
     publish_guide = ""
     page_count = 0
     target_page_count: int | None = (
-        None if is_xhs else int(profile.target_pages or 9)
+        None if is_aspect else int(profile.target_pages or 9)
     )
-    label_noun = "小红书配图" if is_xhs else "朋友圈配图"
+    label_noun = {
+        "wechat_moments": "朋友圈配图",
+        "xiaohongshu": "小红书配图",
+        "instagram": "Instagram 配图",
+        "weibo": "微博配图",
+        "douyin_cover": "抖音封面",
+        "custom": "自定义配图",
+    }.get(profile.id, "平台配图")
 
     try:
         _report(W_OPEN, W_TOTAL, "正在打开页面…")
@@ -304,13 +345,15 @@ def export_platform_longshot(
             _report(W_OPEN + 10, W_TOTAL, "正在全页截图…")
             canvas_bytes = _capture_full_p0_only(page, scale=scale, fmt=working_fmt)
 
-            if is_xhs:
-                plan = plan_xhs_split(
+            if is_aspect:
+                plan = plan_aspect_split(
                     scroll_height_css=boundaries.scroll_height_css,
                     boundaries_css=boundaries.as_points(),
                     scale=scale,
                     photo_count=photo_count,
                     slide_count=slide_count,
+                    profile=profile,
+                    hint_kind="xhs" if profile.id == "xiaohongshu" else "aspect",
                 )
             else:
                 plan = plan_moments_split(
@@ -366,7 +409,7 @@ def export_platform_longshot(
         page_count = len(ranges)
         user_hint = plan.user_hint
         publish_guide = _publish_guide(page_count, profile)
-        if is_xhs:
+        if is_aspect:
             target_page_count = page_count
 
         capture_done = W_OPEN + W_CAPTURE
@@ -375,15 +418,20 @@ def export_platform_longshot(
             W_TOTAL,
             f"正在切分{label_noun}（0/{page_count}）…",
         )
-        writer = PlatformExportWriter(trip_dir, prefix, ext=out_ext)
+        writer = PlatformExportWriter(
+            trip_dir, prefix, ext=out_ext, single_file=single_file
+        )
         try:
             with writer:
                 for i, (y0, y1) in enumerate(ranges):
                     slice_bytes = slice_canvas_png(canvas_bytes, y0, y1)
-                    if is_xhs:
+                    if is_aspect and canvas_size:
+                        w, h = canvas_size
                         slice_bytes = fit_aspect(
                             slice_bytes,
                             pad_mode=resolved_pad,
+                            width=w,
+                            height=h,
                             fmt=out_fmt,
                         )
                     elif len(slice_bytes) > MAX_WECHAT_SLICE_BYTES and working_fmt == "png":
@@ -391,9 +439,10 @@ def export_platform_longshot(
                             "E_LNG2_SLICE_TOO_LARGE",
                             "单张超过 20MB，请降低清晰度",
                         )
-                    slice_bytes = draw_page_footer(
-                        slice_bytes, i + 1, page_count, fmt=out_fmt
-                    )
+                    if not (single_file and page_count == 1):
+                        slice_bytes = draw_page_footer(
+                            slice_bytes, i + 1, page_count, fmt=out_fmt
+                        )
                     writer.write(i + 1, slice_bytes)
                     split_pct = int(W_SPLIT * (i + 1) / max(page_count, 1))
                     _report(

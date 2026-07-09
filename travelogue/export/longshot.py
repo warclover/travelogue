@@ -559,6 +559,7 @@ def export_trip_longshot(
     platform: str | None = None,
     slide_count: int | None = None,
     pad_mode: str | None = None,
+    profile: Any = None,
 ) -> LongshotExportResult:
     """Export longshot. Branch A (wechat_chat) by default; platform → branch B."""
     from travelogue.export.platform_profiles import DEFAULT_PLATFORM, normalize_platform_id
@@ -581,6 +582,7 @@ def export_trip_longshot(
             copy_display=copy_display,
             slide_count=slide_count,
             pad_mode=pad_mode,
+            profile=profile,
         )
 
     trip_dir = trip_dir.resolve()

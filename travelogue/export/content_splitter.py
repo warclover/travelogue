@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from io import BytesIO
-from typing import Sequence
+from typing import Any, Sequence
 
 BOUNDARY_WEIGHT: dict[str, float] = {
     "cover": 1.5,
@@ -319,8 +319,36 @@ def plan_xhs_split(
     slide_count: int | None = None,
 ) -> SplitPlan:
     """Xiaohongshu split plan: auto/user N then DP (greedy fallback)."""
-    from travelogue.export.platform_profiles import get_profile, resolve_xhs_slide_count
+    from travelogue.export.platform_profiles import get_profile
 
+    return plan_aspect_split(
+        scroll_height_css=scroll_height_css,
+        boundaries_css=boundaries_css,
+        scale=scale,
+        photo_count=photo_count,
+        slide_count=slide_count,
+        profile=get_profile("xiaohongshu"),
+        hint_kind="xhs",
+    )
+
+
+def plan_aspect_split(
+    *,
+    scroll_height_css: float,
+    boundaries_css: Sequence[float] | Sequence[BoundaryPoint],
+    scale: int,
+    photo_count: int,
+    slide_count: int | None = None,
+    profile: Any = None,
+    hint_kind: str = "aspect",
+) -> SplitPlan:
+    """Aspect-fit platform split (xhs / ins / weibo / custom / douyin_cover)."""
+    from travelogue.export.platform_profiles import (
+        get_profile,
+        resolve_aspect_slide_count,
+    )
+
+    profile = profile or get_profile("xiaohongshu")
     scale = max(1, int(scale))
     h = canvas_height(scroll_height_css, scale)
     if boundaries_css and isinstance(boundaries_css[0], BoundaryPoint):
@@ -329,16 +357,24 @@ def plan_xhs_split(
         pts = [BoundaryPoint(float(y), "photo") for y in boundaries_css]  # type: ignore[arg-type]
 
     canvas_pts = [(p.y_canvas(scale), p.kind) for p in pts]
-    profile = get_profile("xiaohongshu")
-    # Use a generous n_target for feasibility packing
-    feasible = max_feasible_segments(h, canvas_pts, scale=1, n_target=9)
-    n, hint = resolve_xhs_slide_count(
+    n_target = int(profile.max_pages or 9)
+    feasible = max_feasible_segments(h, canvas_pts, scale=1, n_target=n_target)
+    n, hint = resolve_aspect_slide_count(
         photo_count=photo_count,
         slide_count=slide_count,
         max_feasible_segments=feasible,
         profile=profile,
+        hint_kind=hint_kind,
     )
     n = max(1, min(int(n), int(profile.max_pages or 18), feasible))
+
+    if n == 1:
+        return SplitPlan(
+            breakpoints=[0, h],
+            page_count=1,
+            user_hint=hint,
+            method="single",
+        )
 
     bp = compute_breakpoints_dp(n, h, canvas_pts, scale=1)
     method = "dp"
@@ -346,7 +382,10 @@ def plan_xhs_split(
         bp = compute_breakpoints_greedy(n, h, canvas_pts, scale=1)
         method = "greedy"
         n = max(1, len(bp) - 1)
-        hint = f"已生成 {n} 张 3:4 配图 · 更多细节可写在笔记正文"
+        if hint_kind == "xhs":
+            hint = f"已生成 {n} 张 3:4 配图 · 更多细节可写在笔记正文"
+        else:
+            hint = f"已生成 {n} 张配图"
 
     return SplitPlan(breakpoints=bp, page_count=n, user_hint=hint, method=method)
 

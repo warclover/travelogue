@@ -396,24 +396,41 @@ def cmd_export_longshot(
     platform: str | None = typer.Option(
         None,
         "--platform",
-        help="wechat_chat (default) | wechat_moments | xiaohongshu",
+        help=(
+            "wechat_chat (default) | wechat_moments | xiaohongshu | "
+            "instagram | weibo | douyin_cover | custom"
+        ),
     ),
     slide_count: int | None = typer.Option(
         None,
         "--slide-count",
-        help="platform slide count (xiaohongshu; moments ignores)",
+        help="aspect-fit slide count (xhs/ins/weibo/custom; moments/douyin ignore)",
     ),
     pad_mode: str | None = typer.Option(
         None,
         "--pad-mode",
-        help="letterbox | smart_crop (xiaohongshu Phase B)",
+        help="letterbox | smart_crop (aspect-fit platforms)",
+    ),
+    width: int | None = typer.Option(
+        None,
+        "--width",
+        help="custom canvas width (only with --platform custom)",
+    ),
+    height: int | None = typer.Option(
+        None,
+        "--height",
+        help="custom canvas height (only with --platform custom)",
     ),
 ) -> None:
     """Export trip longshot PNG via Playwright (requires playwright + chromium)."""
     import time
 
     from travelogue.export.longshot import LongshotExportError, export_trip_longshot
-    from travelogue.export.platform_profiles import PlatformProfileError, resolve_profile
+    from travelogue.export.platform_profiles import (
+        PlatformProfileError,
+        resolve_profile,
+        with_custom_output,
+    )
     from travelogue.web.studio_homepage_telemetry import append_studio_homepage_event
     from travelogue.web.serve import resolve_trip_serve_dir
 
@@ -434,8 +451,20 @@ def cmd_export_longshot(
         pass
 
     try:
+        profile = None
         if platform:
-            resolve_profile(platform, slide_count=slide_count, pad_mode=pad_mode)
+            profile = resolve_profile(
+                platform, slide_count=slide_count, pad_mode=pad_mode
+            )
+            if profile.id == "custom":
+                profile = with_custom_output(
+                    profile, width=width, height=height, pad_mode=pad_mode
+                )
+            elif width is not None or height is not None:
+                raise PlatformProfileError(
+                    "E_LNG2_INVALID_CUSTOM_SIZE",
+                    "--width/--height 仅用于 --platform custom",
+                )
         trip_path = _resolve(path)
         serve_dir = resolve_trip_serve_dir(trip_path)
         result = export_trip_longshot(
@@ -448,6 +477,7 @@ def cmd_export_longshot(
             platform=platform,
             slide_count=slide_count,
             pad_mode=pad_mode,
+            profile=profile,
         )
     except (TripNotFoundError, FileNotFoundError, LongshotExportError, PlatformProfileError) as exc:
         try:

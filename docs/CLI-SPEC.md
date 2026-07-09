@@ -358,13 +358,18 @@ python -m travelogue export-longshot demo-雨后京都 --chapter 2
 # Longshot 2.0 · 平台化（见 SHARING §2.5 / PRD-LONGSHOT-2.0）
 python -m travelogue export-longshot demo-雨后京都 --platform wechat_moments --scale 2
 python -m travelogue export-longshot demo-雨后京都 --platform xiaohongshu --slide-count 6 --pad-mode letterbox
+python -m travelogue export-longshot demo-雨后京都 --platform instagram --slide-count 4
+python -m travelogue export-longshot demo-雨后京都 --platform weibo --slide-count 6
+python -m travelogue export-longshot demo-雨后京都 --platform douyin_cover
+python -m travelogue export-longshot demo-雨后京都 --platform custom --width 720 --height 960 --slide-count 3
 ```
 
 | 选项 | 说明 |
 |------|------|
-| `--platform` | `wechat_chat`（默认）· `wechat_moments` · `xiaohongshu` |
-| `--slide-count` | 小红书张数（1–18）；省略 = auto；朋友圈忽略 |
-| `--pad-mode` | `letterbox`（默认）· `smart_crop`（需 `studio.longshot2.smart_crop.enabled`） |
+| `--platform` | `wechat_chat`（默认）· `wechat_moments` · `xiaohongshu` · `instagram` · `weibo` · `douyin_cover` · `custom` |
+| `--slide-count` | aspect-fit 张数（xhs 1–18 / ins 1–10 / weibo 1–9 / custom 1–18）；省略 = auto；朋友圈 / 抖音封面忽略 |
+| `--pad-mode` | `letterbox`（默认）· `smart_crop`（需 `studio.longshot2.smart_crop.enabled`；`douyin_cover` 默认 smart_crop） |
+| `--width` / `--height` | 仅 `--platform custom`；默认 1080×1440；范围 64–4096 × 64–8192 |
 | `--scale` | 1–3；平台模式降 scale 会重采 boundary + 重截图 |
 | `--chapter` | 仅 `wechat_chat`；平台模式忽略 |
 

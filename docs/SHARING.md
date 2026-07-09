@@ -66,8 +66,12 @@
 | **微信群**（默认） | `wechat_chat` / 省略 | `{title}-longshot.png` 或 `{title}-ch{nn}.png` | Longshot 1.x；允许 P1 兼容截图 |
 | **朋友圈** | `wechat_moments` | `{title}-moments-{nn}.png` | 目标 9 张（内容少时 6–9）；竖切 + 页脚 `i/n`；**禁止 P1** |
 | **小红书** | `xiaohongshu` | `{title}-xhs-{nn}.png` | 3:4 → **1080×1440**；默认 letterbox；张数 auto 或 1–18 |
+| **Instagram** | `instagram` | `{title}-ins-{nn}.png` | 4:5 → **1080×1350**；CLI/API only |
+| **微博** | `weibo` | `{title}-weibo-{nn}.png` | 3:4 → **1080×1440**；CLI/API only |
+| **抖音封面** | `douyin_cover` | `{title}-douyin-cover.png` | 9:16 → **1080×1920**；单文件；CLI/API only |
+| **自定义** | `custom` | `{title}-custom-{nn}.png` | CLI `--width`/`--height`；默认 1080×1440 |
 
-**Studio**：预览页导出 Popover 选平台；书架「保存长图」仍为微信群 1.x（不带 `platform`）。
+**Studio**：预览页导出 Popover 仅开放灰度列表（朋友圈 / 小红书）；**无** Ins/微博/抖音菜单。书架「保存长图」仍为微信群 1.x。
 
 **CLI 示例：**
 
@@ -75,6 +79,9 @@
 python -m travelogue export-longshot trips\demo-album
 python -m travelogue export-longshot trips\demo-album --platform wechat_moments --scale 2
 python -m travelogue export-longshot trips\demo-album --platform xiaohongshu --slide-count 6 --pad-mode letterbox
+python -m travelogue export-longshot trips\demo-album --platform instagram --slide-count 4
+python -m travelogue export-longshot trips\demo-album --platform douyin_cover
+python -m travelogue export-longshot trips\demo-album --platform custom --width 720 --height 960 --slide-count 3
 ```
 
 **配置**（`config.yaml` · `studio.longshot2`）：

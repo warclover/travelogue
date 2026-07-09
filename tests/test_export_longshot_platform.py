@@ -18,9 +18,14 @@ from travelogue.export.platform_longshot import (
     export_platform_longshot,
 )
 from travelogue.export.platform_profiles import (
+    PHASE_C_CLI_ONLY,
     PlatformProfileError,
+    file_prefix_for_platform,
     get_profile,
+    is_single_file_output,
+    output_canvas_size,
     resolve_profile,
+    with_custom_output,
 )
 from travelogue.export.slide_postprocess import draw_page_footer
 
@@ -35,6 +40,34 @@ def test_profiles_load_moments_and_chat() -> None:
     assert moments.target_pages == 9
 
 
+def test_profiles_load_phase_c() -> None:
+    ins = get_profile("instagram")
+    weibo = get_profile("weibo")
+    douyin = get_profile("douyin_cover")
+    custom = get_profile("custom")
+    assert output_canvas_size(ins) == (1080, 1350)
+    assert ins.max_pages == 10
+    assert output_canvas_size(weibo) == (1080, 1440)
+    assert weibo.max_pages == 9
+    assert output_canvas_size(douyin) == (1080, 1920)
+    assert is_single_file_output(douyin) is True
+    assert douyin.max_pages == 1
+    assert output_canvas_size(custom) == (1080, 1440)
+    assert custom.max_pages == 18
+    assert PHASE_C_CLI_ONLY == {"instagram", "weibo", "douyin_cover", "custom"}
+    assert file_prefix_for_platform("林芝", "instagram").endswith("-ins")
+    assert file_prefix_for_platform("林芝", "douyin_cover").endswith("-douyin-cover")
+
+
+def test_with_custom_output_overrides_size() -> None:
+    base = get_profile("custom")
+    overridden = with_custom_output(base, width=800, height=1200)
+    assert output_canvas_size(overridden) == (800, 1200)
+    with pytest.raises(PlatformProfileError) as ei:
+        with_custom_output(base, width=10, height=10)
+    assert ei.value.code == "E_LNG2_INVALID_CUSTOM_SIZE"
+
+
 def test_resolve_profile_rejects_unknown() -> None:
     with pytest.raises(PlatformProfileError) as ei:
         resolve_profile("not_a_platform")
@@ -46,6 +79,21 @@ def test_resolve_profile_gray_list() -> None:
         resolve_profile("xiaohongshu", allowed_platforms=["wechat_moments"])
     ok = resolve_profile("wechat_moments", allowed_platforms=["wechat_moments"])
     assert ok.id == "wechat_moments"
+    # Phase C bypasses Studio gray-list (CLI/API only)
+    ins = resolve_profile("instagram", allowed_platforms=["wechat_moments"])
+    assert ins.id == "instagram"
+
+
+def test_platform_export_writer_single_file(tmp_path: Path) -> None:
+    writer = PlatformExportWriter(
+        tmp_path, "demo-douyin-cover", ext="png", single_file=True
+    )
+    writer.write(1, b"a" * 100)
+    assert (tmp_path / "demo-douyin-cover.png.part").is_file()
+    finals = writer.commit()
+    assert len(finals) == 1
+    assert finals[0].name == "demo-douyin-cover.png"
+    assert not (tmp_path / "demo-douyin-cover.png.part").exists()
 
 
 def test_platform_export_writer_atomic_commit_and_rollback(tmp_path: Path) -> None:
@@ -314,6 +362,147 @@ def test_export_xhs_pipeline_mocked(tmp_path: Path, monkeypatch: pytest.MonkeyPa
         assert im.size == (1080, 1440)
     assert "笔记正文" in (result.user_hint or "")
     assert result.publish_guide
+
+
+def _mock_platform_capture(
+    monkeypatch: pytest.MonkeyPatch, canvas_bytes: bytes, *, scroll_h: int = 3000
+) -> None:
+    class _Page:
+        def goto(self, *a, **k):
+            return None
+
+        def wait_for_function(self, *a, **k):
+            return None
+
+        def close(self):
+            return None
+
+    class _Browser:
+        def new_page(self, **k):
+            return _Page()
+
+    monkeypatch.setattr(
+        "travelogue.export.platform_longshot._BROWSER_POOL.acquire",
+        lambda: _Browser(),
+    )
+    monkeypatch.setattr(
+        "travelogue.export.platform_longshot._BROWSER_POOL.release", lambda: None
+    )
+    monkeypatch.setattr(
+        "travelogue.export.platform_longshot._resolve_longshot_url",
+        lambda *a, **k: ("http://127.0.0.1:9/", None),
+    )
+    monkeypatch.setattr(
+        "travelogue.export.platform_longshot._apply_copy_display", lambda *a, **k: None
+    )
+    monkeypatch.setattr(
+        "travelogue.export.platform_longshot._page_metrics",
+        lambda *_: {
+            "scrollHeight": scroll_h,
+            "chapterCount": 1,
+            "perChapter": [20],
+        },
+    )
+    tops = list(range(0, scroll_h + 1, 150))
+    monkeypatch.setattr(
+        "travelogue.export.platform_longshot.collect_boundaries",
+        lambda *_: BoundaryMetrics(
+            float(scroll_h),
+            [float(y) for y in tops],
+            ["start"] + ["photo"] * (len(tops) - 2) + ["end"],
+        ),
+    )
+    monkeypatch.setattr(
+        "travelogue.export.platform_longshot.count_photos_heuristic", lambda *_: 24
+    )
+    monkeypatch.setattr(
+        "travelogue.export.platform_longshot._capture_full_p0_only",
+        lambda *a, **k: canvas_bytes,
+    )
+
+
+def test_export_instagram_1080x1350(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    trip = tmp_path / "ins"
+    trip.mkdir()
+    (trip / "index-longshot.html").write_text("<html></html>", encoding="utf-8")
+    (trip / "trip.json").write_text('{"meta":{"title":"Ins"}}', encoding="utf-8")
+    canvas = Image.new("RGB", (428, 3000), (20, 40, 60))
+    buf = BytesIO()
+    canvas.save(buf, format="PNG")
+    _mock_platform_capture(monkeypatch, buf.getvalue())
+
+    result = export_platform_longshot(
+        trip,
+        platform="instagram",
+        scale=1,
+        slide_count=4,
+        pad_mode="letterbox",
+        smart_crop_enabled=False,
+    )
+    assert result.platform == "instagram"
+    assert result.page_count == 4
+    assert len(result.outputs) == 4
+    for item in result.outputs:
+        assert "-ins-" in item.path.name
+        assert Image.open(item.path).size == (1080, 1350)
+
+
+def test_export_douyin_cover_single_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    trip = tmp_path / "dy"
+    trip.mkdir()
+    (trip / "index-longshot.html").write_text("<html></html>", encoding="utf-8")
+    (trip / "trip.json").write_text('{"meta":{"title":"Dy"}}', encoding="utf-8")
+    canvas = Image.new("RGB", (428, 3000), (30, 50, 70))
+    buf = BytesIO()
+    canvas.save(buf, format="PNG")
+    _mock_platform_capture(monkeypatch, buf.getvalue())
+
+    result = export_platform_longshot(
+        trip,
+        platform="douyin_cover",
+        scale=1,
+        smart_crop_enabled=False,
+    )
+    assert result.platform == "douyin_cover"
+    assert result.page_count == 1
+    assert len(result.outputs) == 1
+    out = result.outputs[0].path
+    assert out.name.endswith("-douyin-cover.png")
+    assert "-01" not in out.name
+    assert Image.open(out).size == (1080, 1920)
+
+
+def test_export_custom_canvas_size(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    trip = tmp_path / "cu"
+    trip.mkdir()
+    (trip / "index-longshot.html").write_text("<html></html>", encoding="utf-8")
+    (trip / "trip.json").write_text('{"meta":{"title":"Cu"}}', encoding="utf-8")
+    canvas = Image.new("RGB", (428, 3000), (40, 60, 80))
+    buf = BytesIO()
+    canvas.save(buf, format="PNG")
+    _mock_platform_capture(monkeypatch, buf.getvalue())
+    profile = with_custom_output(get_profile("custom"), width=720, height=960)
+
+    result = export_platform_longshot(
+        trip,
+        platform="custom",
+        scale=1,
+        slide_count=3,
+        pad_mode="letterbox",
+        profile=profile,
+        smart_crop_enabled=False,
+    )
+    assert result.platform == "custom"
+    assert result.page_count == 3
+    for item in result.outputs:
+        assert "-custom-" in item.path.name
+        assert Image.open(item.path).size == (720, 960)
 
 
 def test_xhs_safe_area_warn_during_letterbox(caplog) -> None:
