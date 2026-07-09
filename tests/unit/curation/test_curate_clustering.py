@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from travelogue.config import AppConfig, ClusteringConfig, VisionConfig
+from travelogue.config import AppConfig, ClusteringConfig, SceneClusterConfig, VisionConfig
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.clustering_buckets import cap_geo_segments, merge_small_geo_events
 from travelogue.curation.curate import run_curate
@@ -94,14 +94,19 @@ def test_merge_small_geo_events_combines_neighbors() -> None:
 
 
 def test_vision_clustering_writes_scene_fields(tmp_path) -> None:
+    """Scene fields must write with sklearn even when CLIP/torch is absent (CI)."""
     pytest.importorskip("sklearn")
     from PIL import Image
 
     trip_dir = tmp_path / "vision-trip"
     trip_dir.mkdir()
     (trip_dir / "assets").mkdir()
+    # Loose DBSCAN params so heuristic embeddings (no torch) still form clusters.
     cfg = AppConfig(
-        clustering=ClusteringConfig(enabled="true"),
+        clustering=ClusteringConfig(
+            enabled="true",
+            scene=SceneClusterConfig(algorithm="dbscan", cluster_eps=0.5, cluster_min_samples=3),
+        ),
         vision=VisionConfig(enabled="true"),
     )
     trip = _gps_trip()
