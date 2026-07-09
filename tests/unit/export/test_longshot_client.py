@@ -8,7 +8,7 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 STUDIO = ROOT / "templates" / "studio"
 CLIENT = STUDIO / "js" / "longshot-client.js"
 PANEL = STUDIO / "js" / "longshot-export-panel.js"

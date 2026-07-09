@@ -52,8 +52,8 @@
 
 | ID | 标准 | 测试 / 方法 | Phase | 通过 |
 |----|------|-------------|-------|------|
-| **AC-LNG2-05** | 请求 **无 `platform`** → 与 Longshot 1.x 行为一致 | `tests/test_export_longshot.py` 全绿 | A | ☐ |
-| **AC-LNG2-05b** | `platform=wechat_chat` 显式传递 → 同 1.x | `tests/test_export_longshot.py` | A | ☐ |
+| **AC-LNG2-05** | 请求 **无 `platform`** → 与 Longshot 1.x 行为一致 | `tests/unit/export/test_export_longshot.py` 全绿 | A | ☐ |
+| **AC-LNG2-05b** | `platform=wechat_chat` 显式传递 → 同 1.x | `tests/unit/export/test_export_longshot.py` | A | ☐ |
 | **AC-LNG2-05c** | 非法 `platform` → **400**，不静默回退 | `tests/test_studio_handlers_import_export.py` | A | ☐ |
 | **AC-LNG2-10** | 书架「保存长图」仍为 scale=3 · photos · wechat_chat | `tests/test_studio_home_v2.py` · AC-M14 子集 | A | ☐ |
 
@@ -61,11 +61,11 @@
 
 | ID | 标准 | 测试 / 方法 | Phase | 通过 |
 |----|------|-------------|-------|------|
-| **AC-LNG2-02** | 切点 **不穿过 photo cell 内部** | `tests/test_content_splitter.py` | A | ☐ |
-| **AC-LNG2-02b** | scale=2/3 时 canvas 坐标 = css×scale | `tests/test_content_splitter.py` | A | ☐ |
-| **AC-LNG2-02c** | DP 段高方差优于纯贪心（固定 fixture 断言） | `tests/test_content_splitter.py` | A | ☐ |
-| **AC-LNG2-02w** | 切点 weight：首切点倾向 cover/章分隔（fixture） | `tests/test_content_splitter.py` | A | ☐ |
-| **AC-LNG2-01** | T-large · moments → **9 张** | `tests/test_export_longshot_platform.py` | A | ☐ |
+| **AC-LNG2-02** | 切点 **不穿过 photo cell 内部** | `tests/unit/export/test_content_splitter.py` | A | ☐ |
+| **AC-LNG2-02b** | scale=2/3 时 canvas 坐标 = css×scale | `tests/unit/export/test_content_splitter.py` | A | ☐ |
+| **AC-LNG2-02c** | DP 段高方差优于纯贪心（固定 fixture 断言） | `tests/unit/export/test_content_splitter.py` | A | ☐ |
+| **AC-LNG2-02w** | 切点 weight：首切点倾向 cover/章分隔（fixture） | `tests/unit/export/test_content_splitter.py` | A | ☐ |
+| **AC-LNG2-01** | T-large · moments → **9 张** | `tests/unit/export/test_export_longshot_platform.py` | A | ☐ |
 | **AC-LNG2-01b** | T-small（**8–12 张**）· moments → **6–9 张** + userHint | 集成测试 + fixture | A | ☐ |
 | **AC-LNG2-01t** | T-tiny（**1–5 张**）· moments → **1–5 张** + 建议微信群 | 集成测试 | A | ☐ |
 
@@ -103,7 +103,7 @@
 | ID | 标准 | 测试 / 方法 | Phase | 通过 |
 |----|------|-------------|-------|------|
 | **AC-LNG2-07** | Popover 含平台选项 · prefs 持久化 | `tests/test_preview_toolbar_v3.py` | A | ☐ |
-| **AC-LNG2-07b** | `buildLongshotRequest` 携带 platform | `tests/test_longshot_client.py` | A | ☐ |
+| **AC-LNG2-07b** | `buildLongshotRequest` 携带 platform | `tests/unit/export/test_longshot_client.py` | A | ☐ |
 | **AC-LNG2-07c** | 选朋友圈时 **隐藏**「按章/完整」 | Playwright / DOM | A | ☐ |
 
 ---

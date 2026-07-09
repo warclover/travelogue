@@ -262,9 +262,8 @@ def test_auto_downgrade_scale_memory() -> None:
 
 def test_sparse_moments_hint_helpers_in_panel_source() -> None:
     """D-LNG2-17 · panel exports sparse hint helpers (FE contract)."""
-    
     panel = (
-        Path(__file__).resolve().parents[1]
+        Path(__file__).resolve().parents[3]
         / "templates"
         / "studio"
         / "js"

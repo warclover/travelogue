@@ -71,8 +71,8 @@
 | BE-LNG2-12 | `compute_breakpoints_dp(n, height, boundaries)` | `content_splitter.py` | ☑ |
 | BE-LNG2-13 | 贪心 fallback + 6–9 张降级 + **boundary weight**（D-LNG2-29） | `content_splitter.py` | ☑ |
 | BE-LNG2-14 | `slice_canvas(bytes, breakpoints)` | `content_splitter.py` | ☑ |
-| BE-LNG2-15 | 单测：photo cell 不切中间 | `tests/test_content_splitter.py` | ☑ |
-| BE-LNG2-16 | 单测：scale=2/3 坐标 | `tests/test_content_splitter.py` | ☑ |
+| BE-LNG2-15 | 单测：photo cell 不切中间 | `tests/unit/export/test_content_splitter.py` | ☑ |
+| BE-LNG2-16 | 单测：scale=2/3 坐标 | `tests/unit/export/test_content_splitter.py` | ☑ |
 | BE-LNG2-17 | 内存预估 + 自动降 scale | `platform_longshot.py` | ☑ |
 
 ---
@@ -90,7 +90,7 @@
 | BE-LNG2-24 | 命名 `{title}-moments-{nn}` | 同上 | ☑ |
 | BE-LNG2-25 | >20MB：降 scale → **重 boundary + 重 capture**（≤2 次） | `platform_longshot.py` | ☑ |
 | BE-LNG2-26 | progress 分阶段权重 | 同上 | ☑ |
-| BE-LNG2-27 | 集成测试 AC-LNG2-01/02/11/12/13 | `tests/test_export_longshot_platform.py` | ☑ |
+| BE-LNG2-27 | 集成测试 AC-LNG2-01/02/11/12/13 | `tests/unit/export/test_export_longshot_platform.py` | ☑ |
 
 ### 前端
 
