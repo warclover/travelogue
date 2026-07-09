@@ -50,7 +50,38 @@ python -m travelogue demo verify
 
 ## 3. 单元测试（pytest）
 
-目录：`tests/`
+目录：`tests/`（M-C2 起分批迁入子目录）
+
+| 子目录 | 用途 | CI job |
+|--------|------|--------|
+| `tests/unit/` | 纯单测（自动 `@pytest.mark.unit`）；含 domain / web / media 等 | test-pr |
+| `tests/unit/layout_engine/` | layout / mosaic / lte / lse / usage_rules 单测 | test-pr |
+| `tests/unit/layout_templates/` | 模板引擎单测 | test-pr |
+| `tests/integration/` | phase 验收 / studio server / p17 / demo（自动 `integration`） | test-integration |
+| `tests/e2e/` | Playwright 浏览器测试（自动 `e2e`） | test-e2e |
+| `tests/test_ingest.py` | **唯一**顶层 shim（`_album` 向后兼容）；禁止新增其他顶层 `test_*.py` | — |
+
+**M-C2 batch1（2026-07-08）**：domain / orchestrator / lint / trip_migration → `tests/unit/`；trip CAS → `tests/integration/trip/`。
+
+**M-C2 batch4（2026-07-08）**：studio handlers + curate + studio 单测 → `tests/unit/web/`；`scripts/quality_gate.py` REGRESSION_TESTS 路径已更新。
+
+**M-C2 batch5（2026-07-08）**：export / render 单测 → `tests/unit/export/`、`tests/unit/render/`（11 文件）。
+
+**M-C2 batch6（2026-07-08）**：layout 单测 → `tests/unit/layout_engine/`（13 文件）；`quality_gate` REGRESSION_TESTS 路径已更新。
+
+**M-C2 batch7（2026-07-08）**：mosaic 单测 → `tests/unit/layout_engine/`（18 文件）；补删 batch6 遗留的顶层 layout 副本。
+
+**M-C2 batch8（2026-07-08）**：mosaic 余量 21 文件 → `tests/unit/layout_engine/`（mosaic 顶层测试清零）。
+
+**M-C2 batch9（2026-07-08）**：lte 单测 21 文件 → `tests/unit/layout_engine/`；`test_lte_studio_playwright.py` → `tests/e2e/`；CI registry parity 路径已更新。
+
+**M-C2 batch10（2026-07-08）**：dual/screen/golden/editorial/subject/compare/beam 等 14 文件 → `tests/unit/layout_engine/`；`demo/verify.py` 与 phase gate 脚本路径已同步。
+
+**M-C2 batch11（2026-07-08）**：lse + usage_rules（13）→ `tests/unit/layout_engine/`；template（15）→ `tests/unit/layout_templates/`；phase13 gate 脚本路径已更新。
+
+**M-C2 batch12–finish（2026-07-08）**：剩余 **247** 顶层文件一次性迁入 `unit/*` / `integration/*` / `e2e/`；baseline 冻结为 `test_ingest.py`；`tests/_repo_root.py` 统一 repo 路径；`pytest --collect-only` **2714** 与迁移前一致。
+
+新增测试请放入 `tests/unit/{包名}/`、`tests/integration/` 或 `tests/e2e/`，勿在 `tests/` 根目录新建 `test_*.py`（`lint_test_layout.py` CI 守护）。
 
 | 模块 | 用例示例 |
 |------|----------|

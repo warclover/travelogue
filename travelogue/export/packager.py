@@ -6,6 +6,7 @@ import zipfile
 from pathlib import Path
 
 from travelogue.config import AppConfig, app_config_scope, get_config
+from travelogue.domain.pipeline_view import set_pipeline_status
 from travelogue.errors import CodeError
 from travelogue.export.exif import write_asset_to_zip
 from travelogue.render.context import collect_asset_paths
@@ -17,6 +18,7 @@ from travelogue.render.engine import (
     should_include_screenplay,
 )
 from travelogue.render.preview import render_preview_jpg
+from travelogue.services.trip import persist_trip_snapshot
 from travelogue.services.validate import validate_trip
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
@@ -26,14 +28,12 @@ class ExportError(CodeError):
 
 
 def _mark_rendered(trip: dict) -> None:
-    pipe = trip.setdefault("pipeline", {})
-    pipe["status"] = "rendered"
+    set_pipeline_status(trip, "rendered")
     trip["updatedAt"] = _utc_now_iso()
 
 
 def _mark_exported(trip: dict, *, confirm_privacy: bool) -> None:
-    pipe = trip.setdefault("pipeline", {})
-    pipe["status"] = "exported"
+    set_pipeline_status(trip, "exported")
     if confirm_privacy:
         privacy = trip.setdefault("privacy", {})
         privacy["confirmedAt"] = _utc_now_iso()
@@ -110,13 +110,13 @@ def _export_trip_stages(
 
     if no_longshot:
         trip.setdefault("export", {})["longShot"] = False
-        svc.save(trip, trip_path)
+        persist_trip_snapshot(svc, trip_path, trip)
 
     if auto_render:
         render_trip(trip_path, trip_root, export_mode="share", validate=False)
         trip = svc.load(trip_path)
         _mark_rendered(trip)
-        svc.save(trip, trip_path)
+        persist_trip_snapshot(svc, trip_path, trip)
 
     index = trip_root / "index.html"
     css = trip_root / "journal.css"
@@ -214,5 +214,5 @@ def _export_trip_stages(
             curation["warnings"] = warnings
 
     _mark_exported(trip, confirm_privacy=True)
-    svc.save(trip, trip_path)
+    persist_trip_snapshot(svc, trip_path, trip)
     return zip_path

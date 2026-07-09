@@ -5,7 +5,11 @@ from __future__ import annotations
 import copy
 
 from travelogue.web.studio_errors import client_error_payload
-from travelogue.web.studio_handlers.common import load_trip_or_404, studio_ctx
+from travelogue.web.studio_handlers.common import (
+    load_trip_or_404,
+    studio_ctx,
+    trip_update_or_respond,
+)
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 
@@ -62,8 +66,14 @@ def handle_patch_intent(handler: StudioHandlerProtocol, trip_id: str) -> None:
                 {"ok": False, "error": "E_TEMPLATE_GUARDRAIL", "message": gerrs[0]},
             )
             return
-        intent = apply_intent(trip, **kwargs)
-        svc.save(trip, trip_json)
+        ok, intent = trip_update_or_respond(
+            handler,
+            svc,
+            trip_json,
+            lambda t: apply_intent(t, **kwargs),
+        )
+        if not ok:
+            return
     except (ValueError, TypeError) as exc:
         handler._json_response(400, client_error_payload(exc))
         return
@@ -103,27 +113,30 @@ def handle_patch_cohort(handler: StudioHandlerProtocol, trip_id: str) -> None:
             {"ok": False, "error": "E_COHORT_DISABLED", "message": "cohort.enabled is false in config"},
         )
         return
+    refresh = bool(payload.get("refresh"))
+    if "featuredSubjects" not in payload and not refresh:
+        handler._json_response(400, {"ok": False, "error": "no cohort fields"})
+        return
     try:
-        if "featuredSubjects" in payload:
-            apply_intent(trip, featured_subjects=payload.get("featuredSubjects"))
-        refresh = bool(payload.get("refresh"))
-        summary = None
-        if refresh or "featuredSubjects" in payload:
-            summary = apply_cohort_tags(trip, trip_dir=trip_dir, cfg=ctx.app_config)
-            if summary:
-                cur = trip.setdefault("curation", {})
-                cur["cohort"] = summary
-        if "featuredSubjects" not in payload and not refresh:
-            handler._json_response(400, {"ok": False, "error": "no cohort fields"})
+        def mutator(t: dict) -> None:
+            if "featuredSubjects" in payload:
+                apply_intent(t, featured_subjects=payload.get("featuredSubjects"))
+            if refresh or "featuredSubjects" in payload:
+                summary = apply_cohort_tags(t, trip_dir=trip_dir, cfg=ctx.app_config)
+                if summary:
+                    t.setdefault("curation", {})["cohort"] = summary
+
+        ok, _ = trip_update_or_respond(handler, svc, trip_json, mutator)
+        if not ok:
             return
-        svc.save(trip, trip_json)
+        trip = svc.load(trip_json)
     except (ValueError, TypeError) as exc:
         handler._json_response(400, client_error_payload(exc))
         return
     from travelogue.services.cohort import build_cohort_studio_payload
 
     body = build_cohort_studio_payload(trip, cohort_enabled=True)
-    body["summary"] = (trip.get("curation") or {}).get("cohort") or summary
+    body["summary"] = (trip.get("curation") or {}).get("cohort")
     handler._json_response(200, {"ok": True, **body})
 
 
@@ -212,17 +225,25 @@ def handle_patch_copy_intent(
             )
             return
 
-    updated_ids = apply_copy_intent_cascade(
-        trip,
-        chapter_id,
-        intent_payload,
-        apply_to_subsequent=apply_to_subsequent,
-    )
-    from travelogue.services.decor_line import _copy_intent
-
-    intent = _copy_intent(chapter)
     trip_json = trip_dir / "trip.json"
-    studio_ctx(handler).trip_service().save(trip, trip_json)
+    svc = studio_ctx(handler).trip_service()
+
+    def mutator(t: dict) -> tuple[list[str], dict | None]:
+        from travelogue.services.decor_line import _copy_intent
+
+        ids = apply_copy_intent_cascade(
+            t,
+            chapter_id,
+            intent_payload,
+            apply_to_subsequent=apply_to_subsequent,
+        )
+        ch = next((c for c in (t.get("chapters") or []) if c.get("id") == chapter_id), None)
+        return ids, _copy_intent(ch) if ch else None
+
+    ok, result = trip_update_or_respond(handler, svc, trip_json, mutator)
+    if not ok:
+        return
+    updated_ids, intent = result
     handler._json_response(
         200,
         {
@@ -257,13 +278,20 @@ def handle_post_copy_telemetry(handler: StudioHandlerProtocol, trip_id: str) -> 
     if loaded is None:
         return
     trip_dir, trip = loaded
+    trip_json = trip_dir / "trip.json"
+    svc = studio_ctx(handler).trip_service()
     try:
-        metrics = record_copy_ui_event(trip, event)
+        event_name = event
+
+        def mutator(t: dict) -> dict:
+            return record_copy_ui_event(t, event_name)
+
+        ok, metrics = trip_update_or_respond(handler, svc, trip_json, mutator)
+        if not ok:
+            return
     except ValueError as exc:
         handler._json_response(400, client_error_payload(exc))
         return
-    trip_json = trip_dir / "trip.json"
-    studio_ctx(handler).trip_service().save(trip, trip_json)
     handler._json_response(200, {"ok": True, "event": event, "copyMetrics": metrics})
 
 
@@ -282,10 +310,19 @@ def handle_post_cohort_refresh(handler: StudioHandlerProtocol, trip_id: str) -> 
             {"ok": False, "error": "E_COHORT_DISABLED", "message": "cohort.enabled is false in config"},
         )
         return
-    summary = apply_cohort_tags(trip, trip_dir=trip_dir, cfg=ctx.app_config)
-    if summary:
-        trip.setdefault("curation", {})["cohort"] = summary
-    ctx.trip_service().save(trip, trip_json)
+    trip_json = trip_dir / "trip.json"
+    ctx = studio_ctx(handler)
+    svc = ctx.trip_service()
+
+    def mutator(t: dict) -> dict | None:
+        summary = apply_cohort_tags(t, trip_dir=trip_dir, cfg=ctx.app_config)
+        if summary:
+            t.setdefault("curation", {})["cohort"] = summary
+        return summary
+
+    ok, summary = trip_update_or_respond(handler, svc, trip_json, mutator)
+    if not ok:
+        return
     handler._json_response(200, {"ok": True, "summary": summary})
 
 
@@ -320,17 +357,24 @@ def handle_patch_template(handler: StudioHandlerProtocol, trip_id: str) -> None:
         handler._json_response(400, {"ok": False, "error": "templateId required for manual mode"})
         return
     ctx = studio_ctx(handler)
-    selection = apply_template_selection(
-        trip,
-        mode=mode,  # type: ignore[arg-type]
-        requested_template_id=template_id_str,
-        cfg=ctx.cfg,
-        recompute=True,
-        trip_dir=trip_dir,
-        log_action="user_adjust",
-    )
+    svc = ctx.trip_service()
     trip_json = trip_dir / "trip.json"
-    ctx.trip_service().save(trip, trip_json)
+
+    def mutator(t: dict):
+        return apply_template_selection(
+            t,
+            mode=mode,  # type: ignore[arg-type]
+            requested_template_id=template_id_str,
+            cfg=ctx.cfg,
+            recompute=True,
+            trip_dir=trip_dir,
+            log_action="user_adjust",
+        )
+
+    ok, selection = trip_update_or_respond(handler, svc, trip_json, mutator)
+    if not ok:
+        return
+    trip = svc.load(trip_json)
     handler._json_response(
         200,
         {"ok": True, "template": build_template_summary(trip), "templateSelection": selection},

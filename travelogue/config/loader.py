@@ -14,6 +14,7 @@ from travelogue.config.clustering import GeocodeConfig, clustering_from_dict
 from travelogue.config.cohort import CohortConfig
 from travelogue.config.cull import cull_from_dict
 from travelogue.config.curate import CurateConfig, cover_scoring_v2_from_dict
+from travelogue.config.errors import ConfigError
 from travelogue.config.ingest import ingest_from_dict
 from travelogue.config.layout import (
     LayoutConfig,
@@ -38,11 +39,13 @@ from travelogue.config.mosaic import mosaic_from_dict
 from travelogue.config.phase6 import phase6_from_dict
 from travelogue.config.studio import StudioConfig
 from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
+from travelogue.config.tracking import TrackedDict, collect_unknown_keys, wrap_tracked
 from travelogue.config.vision import vision_from_dict
+from travelogue.config.yaml_loader import load_yaml_mapping
 from travelogue.config_helpers import cfg_bool
 from travelogue.curation.cover_scoring_params import CoverScoringParams
-from travelogue.llm.presets import PROVIDER_PRESETS
 from travelogue.paths import ROOT
+from travelogue.util.llm_presets import PROVIDER_PRESETS
 
 _log = logging.getLogger(__name__)
 
@@ -183,22 +186,47 @@ def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
         yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
 
 
+def _read_strict_flag(data: dict[str, Any]) -> bool:
+    if isinstance(data, TrackedDict):
+        data.mark_keys("strict", "config")
+    config_raw = data.get("config") if isinstance(data.get("config"), dict) else {}
+    if isinstance(config_raw, TrackedDict):
+        config_raw.mark_keys("strict")
+    if "strict" in data:
+        return bool(data.get("strict", False))
+    if isinstance(config_raw, dict):
+        return bool(config_raw.get("strict", False))
+    return False
+
+
+def _report_unknown_config_keys(keys: list[str], *, strict: bool) -> None:
+    if not keys:
+        return
+    joined = ", ".join(keys)
+    message = f"config: unknown keys: {joined}"
+    if strict:
+        raise ConfigError(message)
+    _log.warning(message)
+
+
 def load_config(path: Path | None = None) -> AppConfig:
     """Load config.yaml from path, or ./config.yaml, or defaults."""
     candidates = [path, Path.cwd() / "config.yaml", ROOT / "config.yaml"]
     cfg_path = next((p for p in candidates if p and p.is_file()), None)
-    data: dict[str, Any] = {}
+    data: TrackedDict | dict[str, Any] = {}
     if cfg_path and yaml is not None:
-        with cfg_path.open(encoding="utf-8") as f:
-            loaded = yaml.safe_load(f) or {}
-            if isinstance(loaded, dict):
-                data = loaded
+        text = cfg_path.read_text(encoding="utf-8")
+        loaded = load_yaml_mapping(text, source=str(cfg_path))
+        data = wrap_tracked(loaded)
+    if isinstance(data, TrackedDict):
+        data.mark_keys("ffmpeg", "preview")
+    strict = _read_strict_flag(data) if isinstance(data, TrackedDict) else False
     trips = data.get("trips_dir", "./trips")
     trips_dir = Path(trips)
     if not trips_dir.is_absolute():
         base = Path.cwd()
         try:
-            from travelogue.desktop.bundle import exe_dir, is_frozen
+            from travelogue.paths import exe_dir, is_frozen
 
             if is_frozen():
                 base = exe_dir()
@@ -206,6 +234,17 @@ def load_config(path: Path | None = None) -> AppConfig:
             _log.debug("frozen exe_dir lookup failed; using cwd for trips_dir", exc_info=True)
         trips_dir = (base / trips_dir).resolve()
     ingest_raw = data.get("ingest") if isinstance(data.get("ingest"), dict) else {}
+    if isinstance(ingest_raw, TrackedDict):
+        ingest_raw.mark_keys(
+            "max_videos",
+            "max_video_source_sec",
+            "max_video_clip_mb",
+            "max_zip_mb",
+            "maxVideos",
+            "maxVideoSourceSec",
+            "maxVideoClipMb",
+            "maxZipMb",
+        )
     layout_raw = data.get("layout") if isinstance(data.get("layout"), dict) else {}
     web_engine = str(layout_raw.get("web_layout_engine", "screens")).strip().lower()
     if web_engine not in ("legacy", "screens"):
@@ -213,6 +252,15 @@ def load_config(path: Path | None = None) -> AppConfig:
     scope = str(layout_raw.get("screen_plan_scope", "day")).strip().lower()
     if scope not in ("chapter", "day"):
         scope = "day"
+    import warnings
+
+    legacy_planner = str(layout_raw.get("planner_impl", "")).strip().lower()
+    if legacy_planner == "curation":
+        warnings.warn(
+            "layout.planner_impl=curation was removed (M-D1); using layout_engine planner",
+            UserWarning,
+            stacklevel=2,
+        )
     mixed_gap = float(
         layout_raw.get(
             "mixed_proximity_seconds",
@@ -250,10 +298,20 @@ def load_config(path: Path | None = None) -> AppConfig:
         layout_raw.get("template_engine") if isinstance(layout_raw.get("template_engine"), dict) else {}
     )
     export_raw = data.get("export") if isinstance(data.get("export"), dict) else {}
+    if isinstance(export_raw, TrackedDict):
+        export_raw.mark_keys(
+            "max_zip_mb",
+            "preview_width",
+            "strip_exif",
+            "previewWidth",
+            "stripExif",
+        )
     vision_raw = data.get("vision") if isinstance(data.get("vision"), dict) else {}
     narrative_raw = data.get("narrative") if isinstance(data.get("narrative"), dict) else {}
     llm_raw = data.get("llm") if isinstance(data.get("llm"), dict) else {}
     geocode_raw = data.get("geocode") if isinstance(data.get("geocode"), dict) else {}
+    if isinstance(geocode_raw, TrackedDict):
+        geocode_raw.mark_keys("enabled", "provider", "api_key_env", "apiKeyEnv")
     curate_raw = data.get("curate") if isinstance(data.get("curate"), dict) else {}
     curate_layout_raw = curate_raw.get("layout") if isinstance(curate_raw.get("layout"), dict) else {}
     render_raw = data.get("render") if isinstance(data.get("render"), dict) else {}
@@ -268,9 +326,16 @@ def load_config(path: Path | None = None) -> AppConfig:
     aesthetic_raw = data.get("aesthetic") if isinstance(data.get("aesthetic"), dict) else {}
     mosaic_raw = data.get("mosaic") if isinstance(data.get("mosaic"), dict) else {}
     layout_top = data.get("layout") if isinstance(data.get("layout"), dict) else {}
+    if isinstance(layout_top, TrackedDict):
+        layout_top.mark_keys("mosaic_v2", "mosaicV2")
     mosaic_v2 = layout_top.get("mosaic_v2") if isinstance(layout_top.get("mosaic_v2"), dict) else {}
     if mosaic_v2:
-        mosaic_raw = {**mosaic_v2, **mosaic_raw}
+        if isinstance(mosaic_raw, TrackedDict) and isinstance(mosaic_v2, TrackedDict):
+            merged = dict(mosaic_v2)
+            merged.update(mosaic_raw)
+            mosaic_raw = wrap_tracked(merged, path="mosaic", allow_extra=mosaic_raw.allow_extra)
+        else:
+            mosaic_raw = {**mosaic_v2, **mosaic_raw}
     banned_raw = narrative_raw.get("banned_phrases") or []
     banned = tuple(str(p) for p in banned_raw if p) if isinstance(banned_raw, list) else ()
     llm_provider = str(llm_raw.get("provider", "stub")).strip().lower()
@@ -290,7 +355,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             "(enabled_window_sizes=%s)",
             defaults.enabled_window_sizes,
         )
-    return AppConfig(
+    app_cfg = AppConfig(
         trips_dir=trips_dir,
         ingest=ingest_from_dict(ingest_raw),
         cull=cull_from_dict(cull_raw),
@@ -537,3 +602,6 @@ def load_config(path: Path | None = None) -> AppConfig:
         ),
         aesthetic=aesthetic_from_dict(aesthetic_raw),
     )
+    if isinstance(data, TrackedDict):
+        _report_unknown_config_keys(collect_unknown_keys(data), strict=strict)
+    return app_cfg

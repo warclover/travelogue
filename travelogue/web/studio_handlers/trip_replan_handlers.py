@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from travelogue.web.studio_errors import client_error_payload
-from travelogue.web.studio_handlers.common import load_trip_or_404, studio_ctx
+from travelogue.web.studio_handlers.common import (
+    load_trip_or_404,
+    studio_ctx,
+    trip_update_or_respond,
+)
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 
@@ -12,12 +16,12 @@ def handle_patch_screen_replan(
 ) -> None:
     """PATCH …/screens/{screenId}/replan — MCS alt_topk or legacy for one screen."""
     from travelogue.curation.layout_planner import aspect_kind_for_asset
-    from travelogue.curation.mosaic.replan import (
+    from travelogue.layout_engine.mosaic.replan import (
         ReplanError,
         refresh_trip_displayed_assets,
         replan_screen,
     )
-    from travelogue.curation.screen_planner import LAYOUT_ENGINE_SCREENS
+    from travelogue.layout_engine.planner.screen_planner import LAYOUT_ENGINE_SCREENS
 
     payload = handler._read_json_body() or {}
     loaded = load_trip_or_404(handler, trip_id)
@@ -86,8 +90,31 @@ def handle_patch_screen_replan(
             cfg=ctx.app_config,
         )
     trip_json = trip_dir / "trip.json"
-    ctx.trip_service().save(trip, trip_json)
-    payload = {"ok": True, **result}
+    svc = ctx.trip_service()
+    if not result.get("applied"):
+        handler._json_response(200, {"ok": True, **result})
+        return
+
+    captured_result = result
+    captured_feedback = feedback_summary
+
+    def mutator(t: dict) -> tuple[dict, dict | None]:
+        t["chapters"] = chapters
+        refresh_trip_displayed_assets(t, chapters)
+        fb = persist_studio_layout_feedback(
+            trip_id,
+            trip_dir,
+            before_trip,
+            t,
+            cfg=ctx.app_config,
+        )
+        return captured_result, fb or captured_feedback
+
+    ok, update_result = trip_update_or_respond(handler, svc, trip_json, mutator)
+    if not ok:
+        return
+    captured_result, feedback_summary = update_result
+    payload = {"ok": True, **captured_result}
     if feedback_summary:
         payload["layoutFeedback"] = feedback_summary
     handler._json_response(200, payload)

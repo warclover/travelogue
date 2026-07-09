@@ -1,0 +1,23 @@
+# Post-M-D1 · LSE cross-import regression + optional stats refresh
+name: Arch Opt Weekly
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+jobs:
+  lse-cross-import-ceiling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: pip install -e ".[dev]"
+
+      - name: LSE cross-import regression ceiling
+        run: python scripts/lint_lse_cross_import.py

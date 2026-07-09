@@ -24,6 +24,10 @@ from travelogue.curation.cover_scoring_v2 import (
 from travelogue.curation.layout_planner import aspect_kind_for_asset
 from travelogue.curation.media_classify import cover_class_weight
 from travelogue.curation.time_segments import parse_asset_date
+from travelogue.layout_contract.scoring import (  # noqa: F401
+    median_sharpness,
+    sort_bucket_asset_ids,
+)
 from travelogue.media.color_metrics import color_richness_multiplier
 
 _DEFAULT_COVER_SCORING = CoverScoringParams()
@@ -84,15 +88,6 @@ def _resolve_aesthetic_enabled(enabled: bool | None) -> bool:
         return False
 
 
-def median_sharpness(assets: list[dict]) -> float:
-    values = [asset_sharpness(a) for a in assets if asset_sharpness(a) > 0]
-    if not values:
-        return 0.0
-    values.sort()
-    mid = len(values) // 2
-    if len(values) % 2:
-        return values[mid]
-    return (values[mid - 1] + values[mid]) / 2.0
 
 
 def cover_eligible_assets(assets: list[dict]) -> list[dict]:
@@ -1053,29 +1048,6 @@ def pick_chapter_hero(
     return best_id
 
 
-def sort_bucket_asset_ids(bucket: list[str], assets_by_id: dict[str, dict]) -> list[str]:
-    """Sort by takenAt; keep burstGroupId contiguous; sharpest first within burst."""
-    items = [(aid, assets_by_id.get(aid, {})) for aid in bucket]
-    items.sort(key=lambda x: x[1].get("takenAt") or "")
-
-    result: list[str] = []
-    i = 0
-    while i < len(items):
-        aid, a = items[i]
-        bg = a.get("burstGroupId")
-        if bg:
-            group_ids = [aid]
-            j = i + 1
-            while j < len(items) and items[j][1].get("burstGroupId") == bg:
-                group_ids.append(items[j][0])
-                j += 1
-            group_ids.sort(key=lambda x: -asset_sharpness(assets_by_id.get(x, {})))
-            result.extend(group_ids)
-            i = j
-        else:
-            result.append(aid)
-            i += 1
-    return result
 
 
 def build_user_tier_curation(

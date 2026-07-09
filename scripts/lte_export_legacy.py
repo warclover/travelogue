@@ -11,7 +11,7 @@ from pathlib import Path
 from travelogue.layout_templates.legacy_codegen import write_legacy_python_module
 from travelogue.layout_templates.registry import DEFAULT_TEMPLATES_DIR, LayoutTemplateEngine
 
-DEFAULT_PY_OUT = Path("travelogue/curation/mosaic/_legacy_generated.py")
+DEFAULT_PY_OUT = Path("travelogue/layout_engine/mosaic/_legacy_generated.py")
 
 
 def main() -> int:
@@ -21,7 +21,7 @@ def main() -> int:
     parser.add_argument(
         "--sync-python",
         action="store_true",
-        help="Write travelogue/curation/mosaic/_legacy_generated.py snapshot",
+        help="Write travelogue/layout_engine/mosaic/_legacy_generated.py snapshot",
     )
     parser.add_argument("--python-out", type=Path, default=DEFAULT_PY_OUT)
     args = parser.parse_args()

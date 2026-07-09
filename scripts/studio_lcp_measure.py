@@ -25,8 +25,9 @@ from typing import Any
 # §17.2：v2 LCP P95 相对 v3 上升超过 30% → 回滚
 LCP_P95_ROLLBACK_RATIO = 1.30
 
-# variant → 路径（M21-c 收敛后：v2 根路由，v3 仅 classic 应急入口）
-VARIANT_PATHS = {"v2": "/", "v3": "/classic"}
+# variant → 路径（M21-c 收敛后：v2 根路由，classic 仅 /classic 应急入口）
+VARIANT_PATHS = {"v2": "/", "classic": "/classic"}
+LEGACY_VARIANT_ALIASES = {"v3": "classic"}
 
 
 def percentile(values: Sequence[float], p: float) -> float:
@@ -60,31 +61,39 @@ def summarize(samples: Sequence[float]) -> dict[str, Any]:
     }
 
 
+def _classic_summary(summary_by_variant: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
+    """Holdback 对照组 summary；兼容 legacy ``v3`` 键。"""
+    return summary_by_variant.get("classic") or summary_by_variant.get("v3")
+
+
 def lcp_rollback_flags(
     summary_by_variant: dict[str, dict[str, Any]],
     ratio: float = LCP_P95_ROLLBACK_RATIO,
 ) -> list[str]:
-    """对照 §17.2 比较 v2 vs v3 的 P95。"""
+    """对照 §17.2 比较 v2 vs classic 的 P95。"""
     v2 = summary_by_variant.get("v2")
-    v3 = summary_by_variant.get("v3")
-    if not v2 or not v3 or v2.get("n", 0) == 0 or v3.get("n", 0) == 0:
-        return ["INSUFFICIENT_DATA: 缺少 v2/v3 同环境样本，禁止仅凭单侧 LCP 自动回滚"]
+    classic = _classic_summary(summary_by_variant)
+    if not v2 or not classic or v2.get("n", 0) == 0 or classic.get("n", 0) == 0:
+        return ["INSUFFICIENT_DATA: 缺少 v2/classic 同环境样本，禁止仅凭单侧 LCP 自动回滚"]
     m2 = v2.get("metric", "lcp")
-    m3 = v3.get("metric", "lcp")
+    m3 = classic.get("metric", "lcp")
     if m2 != m3:
-        return [f"INSUFFICIENT_DATA: v2/v3 指标不一致（{m2} vs {m3}），不可比较"]
+        return [f"INSUFFICIENT_DATA: v2/classic 指标不一致（{m2} vs {m3}），不可比较"]
     metric = m2.upper()
     v2_p95 = v2["p95"]
-    v3_p95 = v3["p95"]
-    if v3_p95 <= 0:
-        return ["INSUFFICIENT_DATA: v3 P95 基线为 0，无法比较"]
-    delta_pct = (v2_p95 / v3_p95 - 1) * 100
-    if v2_p95 > v3_p95 * ratio:
+    classic_p95 = classic["p95"]
+    if classic_p95 <= 0:
+        return ["INSUFFICIENT_DATA: classic P95 基线为 0，无法比较"]
+    delta_pct = (v2_p95 / classic_p95 - 1) * 100
+    if v2_p95 > classic_p95 * ratio:
         return [
-            f"ROLLBACK: v2 {metric} P95 较 v3 上升 {delta_pct:.1f}% "
-            f"(v2={v2_p95:.0f}ms v3={v3_p95:.0f}ms 阈值={ratio:.0%})"
+            f"ROLLBACK: v2 {metric} P95 较 classic 上升 {delta_pct:.1f}% "
+            f"(v2={v2_p95:.0f}ms classic={classic_p95:.0f}ms 阈值={ratio:.0%})"
         ]
-    return [f"OK: v2 {metric} P95 vs v3 = {delta_pct:+.1f}% (v2={v2_p95:.0f}ms v3={v3_p95:.0f}ms)"]
+    return [
+        f"OK: v2 {metric} P95 vs classic = {delta_pct:+.1f}% "
+        f"(v2={v2_p95:.0f}ms classic={classic_p95:.0f}ms)"
+    ]
 
 
 # --- 注入页面：buffered LCP + settle 后取最后一条；附带 FCP 兜底 ---
@@ -147,7 +156,8 @@ def run_measurements(
         browser = p.chromium.launch()
         try:
             for variant in variants:
-                path = VARIANT_PATHS.get(variant, "/")
+                canonical = LEGACY_VARIANT_ALIASES.get(variant, variant)
+                path = VARIANT_PATHS.get(canonical, "/")
                 url = base.rstrip("/") + path
                 lcp_samples: list[float] = []
                 fcp_samples: list[float] = []
@@ -164,7 +174,7 @@ def run_measurements(
                 chosen = lcp_samples if use_lcp else fcp_samples
                 summary = summarize(chosen)
                 summary["metric"] = "lcp" if use_lcp else "fcp"
-                out[variant] = summary
+                out[canonical] = summary
         finally:
             browser.close()
     return out
@@ -188,7 +198,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--base", default="http://127.0.0.1:8766", help="运行中的 Studio 基址")
     parser.add_argument("--runs", type=int, default=10, help="每 variant 采样次数")
     parser.add_argument("--settle-ms", type=int, default=1500, help="LCP 收尾等待")
-    parser.add_argument("--variants", default="v2,v3", help="逗号分隔，如 v2,v3")
+    parser.add_argument("--variants", default="v2,classic", help="逗号分隔，如 v2,classic（兼容 legacy v3）")
     parser.add_argument("--out", type=Path, default=None, help="输出 JSON 路径")
     args = parser.parse_args(argv)
 

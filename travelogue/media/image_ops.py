@@ -10,16 +10,17 @@ from typing import Literal
 
 from PIL import Image, ImageOps
 
+from travelogue.layout_contract.orientations import (
+    AspectKind,
+    classify_aspect,
+)
+
 Orientation = Literal["portrait", "landscape", "square"]
-AspectKind = Literal["portrait", "landscape", "square", "panorama", "tall"]
 
 PORTRAIT_ASPECT = 9 / 16  # width / height
 LANDSCAPE_ASPECT = 16 / 9
 PANORAMA_ASPECT = 2 / 1  # 全景条 · 21:9≈2.33 归入 panorama
 SQUARE_ASPECT = 1.0
-SQUARE_THRESHOLD = 1.08  # |w/h-1| below → square (between portrait/landscape)
-PANORAMA_RATIO_MIN = 2.0  # w/h ≥ 2 视为全景（含用户裁切的超宽条）
-TALL_RATIO_MAX = 0.5  # w/h ≤ 0.5 视为超长竖图（含窄长截图）
 
 # EXIF Orientation tag
 _EXIF_ORIENTATION = 274
@@ -199,32 +200,6 @@ def detect_orientation(width: int, height: int) -> Orientation:
     if kind in ("panorama", "landscape"):
         return "landscape"
     if kind in ("tall", "portrait"):
-        return "portrait"
-    return "square"
-
-
-def classify_aspect(width: int, height: int) -> AspectKind:
-    """
-    Fine-grained aspect for layout + ingest crop.
-
-    | Kind | w/h | 典型来源 |
-    |------|-----|----------|
-    | panorama | ≥ 2.0 | 全景、超宽裁切 |
-    | landscape | 1.08–2.0 | 16:9、3:2、5:4 |
-    | square | 0.93–1.08 | 1:1、近似方图 |
-    | portrait | 0.5–0.93 | 9:16、3:4、4:5 |
-    | tall | ≤ 0.5 | 长截图、超长竖裁切 |
-    """
-    if width <= 0 or height <= 0:
-        return "square"
-    ratio = width / height
-    if ratio >= PANORAMA_RATIO_MIN:
-        return "panorama"
-    if ratio <= TALL_RATIO_MAX:
-        return "tall"
-    if ratio >= SQUARE_THRESHOLD:
-        return "landscape"
-    if ratio <= 1 / SQUARE_THRESHOLD:
         return "portrait"
     return "square"
 

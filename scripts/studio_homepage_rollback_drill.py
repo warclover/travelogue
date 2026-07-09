@@ -26,10 +26,10 @@ _REPO = Path(__file__).resolve().parents[1]
 
 # RUNBOOK §3.2 最小自动化子集
 _ROLLBACK_TESTS = [
-    "tests/test_studio_home_v2.py::test_studio_home_gate_off_serves_classic_at_root",
-    "tests/test_studio_home_v2.py::test_studio_home_gate_auto_zero_percent_no_redirect",
-    "tests/test_studio_home_v2.py::test_studio_classic_contract_smoke_config_capabilities",
-    "tests/test_studio_home_v2_ac_playwright.py::test_ac_hp2_23_rollback_ignores_homepage_variant",
+    "tests/unit/web/test_studio_home_v2.py::test_studio_home_gate_off_serves_classic_at_root",
+    "tests/unit/web/test_studio_home_v2.py::test_studio_home_gate_auto_zero_percent_no_redirect",
+    "tests/unit/web/test_studio_home_v2.py::test_studio_classic_contract_smoke_config_capabilities",
+    "tests/e2e/test_studio_home_v2_ac_playwright.py::test_ac_hp2_23_rollback_ignores_homepage_variant",
 ]
 
 

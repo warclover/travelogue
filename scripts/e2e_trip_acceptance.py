@@ -45,9 +45,14 @@ def accept_trip(
     trip = TripService().load(trip_path)
     trip_id = str(trip.get("tripId") or trip_dir.name)
 
+    from scripts.lint_trip_json import lint_trip_path
+
+    lint_report = lint_trip_path(trip_path)
     errs = [e for e in validate_trip(trip, level="all") if not e.startswith("WARN:")]
     issues = list(errs)
+    issues.extend(lint_report.failures)
     issues.extend(_check_render_artifacts(trip_dir, trip))
+    warnings = [f"WARN: {item}" for item in lint_report.warnings]
 
     layout_ok: bool | None = None
     if layout_equiv and not issues:
@@ -65,8 +70,9 @@ def accept_trip(
     return {
         "tripId": trip_id,
         "ok": not issues,
-        "issues": issues,
+        "issues": issues + warnings,
         "layoutEquivalent": layout_ok,
+        "lint": lint_report.to_dict(),
         "pipelineStatus": telemetry.get("pipelineStatus"),
         "telemetry": telemetry,
         "assetCount": len(trip.get("assets") or []),

@@ -2,10 +2,10 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.1 |
+| **文档版本** | v1.0（M-D1 全量刷新 · 2026-07-08） |
 | **阶段** | P0 本地工坊 |
 | **关联** | `CHARTER.md`、`AGENT-ARCHITECTURE.md`、`DATA-MODEL.md` |
-| **更新日期** | 2026-05-22 |
+| **更新日期** | 2026-05-22（§18 · 2026-07-08 M-C1） |
 
 ---
 
@@ -269,6 +269,8 @@ Agent 2 失败：L1/L2 错误列表 → 自动重试 prompt（≤2 次）。
 |------|------|------|
 | v0.1 | 2026-05-19 | P0 技术架构初稿 |
 | v0.2 | 2026-05-30 | Phase 6：场景聚类默认策略与自适应事件分段 |
+| v1.0 | 2026-07-08 | M-D1：§18 全量刷新；import-linter 0 豁免；LSE 7 边 |
+| v1.1 | 2026-07-08 | M-C1：`studio_dispatch.py` 声明式路由表（68 条）+ AC-ARC-13 快照 |
 
 ---
 
@@ -404,3 +406,69 @@ Phase 7 在不改变编排语义的前提下，对 **ingest → CLIP embed → c
 python scripts/phase7_verify_rollback.py
 # 逐项关闭 fast-path：见 docs/config-phase7.example.yaml 注释与 tests/test_phase7_rollback_flags.py
 ```
+
+---
+
+## 18. 架构优化（M-D1 · 2026-07-08 全量）
+
+> SSOT：[PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) v1.1 · 进度 [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md)
+
+### 18.1 现行分层（as-is）
+
+```text
+第0层  util · types · domain · layout_contract · constants · paths · errors · manifest_limits
+第1层  config
+第2层  media · vision · llm
+第3层  curation · layout_engine · layout_templates   ← 同层；LSE cross-import 7 边（curate→adapter 白名单）
+第4层  services · templating
+第5层  render · export          ← export→render 为层内白名单
+第6层  orchestrator
+第7层  cli · web · desktop
+```
+
+**数据安全（WS1）**：`TripService.update` + `meta.revision` CAS；`lint_trip_save_calls` / `lint_trip_json` CI 门禁。
+
+**编排（M-B3）**：Studio 与 CLI 统一 `run_trip`（clustering 为一等 stage）；legacy 双路径开关已删除。
+
+**布局（M-B4 + LSE batch-1～6）**：screen planner / mosaic 主实现位于 `layout_engine/`；`layout_contract/` 为共享 kernel；`curation.*` 保留 importlib shim。LSE ↔ curation **7 条** intentional 边（`curate` → adapter 模块）。
+
+### 18.2 分层契约工具
+
+| 工具 | 说明 | 状态 |
+|------|------|------|
+| `lint-imports` | `pyproject.toml` `[tool.importlinter]` · PRD §5.3.1 DAG | **0 豁免**（M-B1 清零 · 2026-07-08） |
+| `lint_lse_cross_import.py` | LSE ↔ curation AST 边；ceiling **10** | **7 边** ✅ |
+| `arch_equivalence_check.py` | L3a/b/c 等价门禁 | CI validate |
+| `lint_trip_json.py` | trip.json schema + 体积 | CI validate |
+
+### 18.3 已删除的双路径开关
+
+| 原开关 | 处置 |
+|--------|------|
+| `pipeline.orchestration` | 已删除；唯一路径 `run_trip` unified |
+| `layout.planner_impl` | 已删除；唯一路径 `layout_engine.planner` |
+
+残留 config 值触发 `UserWarning`，不阻断启动。
+
+### 18.4 领域视图（M-C4）
+
+`domain/pipeline_view.py` · `assets_view.py` · `chapters_view.py` · `cover_view.py` 等为 trip dict 高频 mutation 入口；`lint_trip_field_assignments.py` AST 门禁。
+
+### 18.5 测试与脚本治理（M-C2 / M-C3）
+
+- 测试：`tests/unit/{包名}/` · `tests/integration/` · `tests/e2e/`（423 文件分层完成）
+- 脚本：`scripts/gen_scripts_registry.py` + `scripts/archive/phaseN/`
+
+### 18.6 Studio 路由表（M-C1）
+
+| 模块 | 职责 |
+|------|------|
+| `travelogue/web/studio_dispatch.py` | `ROUTE_SPECS` 声明式路由表（68 条）+ `dispatch_studio()` |
+| `travelogue/web/studio_routes.py` | `StudioMixin` 薄 facade；委托 dispatch |
+| `travelogue/web/serve.py` | HTTP 入口；`studio_trip_parts` 静态 fallback **不在路由表管辖** |
+
+- 匹配器：exact / prefix / capture（复用 `studio_handlers/paths.py` · `common.py` matcher）
+- 收编：原 `serve.py` trip 级 POST 第二入口（save-copy / promote-tier / rerender）
+- 门禁：`tests/unit/web/test_studio_route_snapshot.py`（AC-ARC-13 method+path+handler 三元组）
+
+详见 [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md)。

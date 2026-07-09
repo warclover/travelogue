@@ -20,13 +20,13 @@ FIXTURES = [
 ]
 
 REGRESSION_TESTS = [
-    "tests/test_layout_search.py",
-    "tests/test_layout_scoring.py",
-    "tests/test_studio_handlers_trip.py",
-    "tests/test_studio_subprocess.py",
-    "tests/test_studio_telemetry.py",
-    "tests/test_algorithm_profile.py",
-    "tests/test_studio_aesthetic.py",
+    "tests/unit/layout_engine/test_layout_search.py",
+    "tests/unit/layout_engine/test_layout_scoring.py",
+    "tests/unit/web/handlers/test_studio_handlers_trip.py",
+    "tests/unit/web/test_studio_subprocess.py",
+    "tests/unit/web/test_studio_telemetry.py",
+    "tests/unit/config/test_algorithm_profile.py",
+    "tests/unit/web/test_studio_aesthetic.py",
 ]
 
 

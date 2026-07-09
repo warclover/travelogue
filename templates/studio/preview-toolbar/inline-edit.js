@@ -1,0 +1,167 @@
+/**
+ * Preview toolbar · cover title inline edit (AC-ARC-14b).
+ */
+"use strict";
+
+import { postJsonConflictRetry } from "../js/http.js";
+
+var _tripApiBase = function (_tripId) {
+  return "";
+};
+var _reloadPreviewAfterLayout = function () {};
+var _showToolbarToast = function (_message, _opts) {};
+var _isSharePreview = function () {
+  return false;
+};
+
+export function registerInlineEditBridge(api) {
+  if (typeof api.tripApiBase === "function") _tripApiBase = api.tripApiBase;
+  if (typeof api.reloadPreviewAfterLayout === "function") {
+    _reloadPreviewAfterLayout = api.reloadPreviewAfterLayout;
+  }
+  if (typeof api.showToolbarToast === "function") _showToolbarToast = api.showToolbarToast;
+  if (typeof api.isSharePreview === "function") _isSharePreview = api.isSharePreview;
+}
+
+export function resolveSplitMatTitleLayoutClass(title) {
+    var t = String(title || "").trim();
+    var n = t.length;
+    if (n <= 8) return "cover-opening__title--vertical";
+    if (n <= 14) return "cover-opening__title--vertical-compact";
+    return "cover-opening__title--horizontal";
+  }
+
+export function syncCoverTitleLayoutClass(el) {
+    if (!el) return;
+    var section = document.querySelector('.cover-opening[data-cover-opening="split-mat"]');
+    if (!section) return;
+    el.classList.remove(
+      "cover-opening__title--vertical",
+      "cover-opening__title--vertical-compact",
+      "cover-opening__title--horizontal"
+    );
+    el.classList.add(resolveSplitMatTitleLayoutClass(el.dataset.title || el.textContent || ""));
+  }
+
+export function saveMagazineTitle(tripId, next, el, onDone) {
+    var prev = (el.dataset.title || el.textContent || "").trim();
+    if (next === prev) {
+      if (onDone) onDone(false);
+      return;
+    }
+    el.classList.add("preview-toolbar__title--saving");
+    if (el.classList.contains("cover-opening__title")) {
+      el.classList.add("cover-opening__title--saving");
+    }
+    postJsonConflictRetry(_tripApiBase(tripId) + "/save-copy", {
+      patches: [{ path: "meta.title", value: next }],
+    })
+      .then(function (res) {
+        el.classList.remove("preview-toolbar__title--saving");
+        el.classList.remove("cover-opening__title--saving");
+        if (res.status !== 200 || !res.body.ok) {
+          _showToolbarToast((res.body && res.body.error) || "保存失败", { error: true });
+          if (onDone) onDone(false);
+          return;
+        }
+        el.textContent = next;
+        el.dataset.title = next;
+        syncCoverTitleLayoutClass(el);
+        _showToolbarToast("杂志名已保存");
+        try {
+          window.dispatchEvent(new CustomEvent("travelogue:copy-saved"));
+        } catch (e0) {}
+        if (res.body.rendered && res.body.rendered.length) {
+          _reloadPreviewAfterLayout();
+          return;
+        }
+        if (onDone) onDone(true);
+      })
+      .catch(function () {
+        el.classList.remove("preview-toolbar__title--saving");
+        el.classList.remove("cover-opening__title--saving");
+        _showToolbarToast("保存失败", { error: true });
+        if (onDone) onDone(false);
+      });
+  }
+
+export function initCoverTitleEdit(tripId) {
+    if (_isSharePreview()) return;
+    var titleEl = document.querySelector(".cover-opening__title");
+    if (!titleEl || titleEl.dataset.coverTitleEdit === "on") return;
+    titleEl.dataset.coverTitleEdit = "on";
+    titleEl.classList.add("cover-opening__title--editable");
+    titleEl.setAttribute("role", "button");
+    titleEl.setAttribute("tabindex", "0");
+    titleEl.setAttribute("aria-label", "点击编辑杂志名");
+    titleEl.title = "点击编辑杂志名";
+    titleEl.dataset.title = (titleEl.textContent || "").trim();
+    syncCoverTitleLayoutClass(titleEl);
+
+    fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (data && data.intentSummary && data.intentSummary.title) {
+          var t = String(data.intentSummary.title).trim();
+          titleEl.textContent = t;
+          titleEl.dataset.title = t;
+          syncCoverTitleLayoutClass(titleEl);
+        }
+      })
+      .catch(function () {});
+
+    function openEditor() {
+      if (titleEl.classList.contains("cover-opening__title--saving")) return;
+      if (titleEl.parentElement.querySelector(".cover-opening__title-input")) return;
+      var input = document.createElement("input");
+      input.type = "text";
+      input.className = "cover-opening__title-input";
+      input.maxLength = 20;
+      input.value = titleEl.dataset.title || titleEl.textContent || "";
+      titleEl.hidden = true;
+      titleEl.parentElement.insertBefore(input, titleEl.nextSibling);
+      input.focus();
+      input.select();
+
+      function finish(save) {
+        var next = (input.value || "").trim();
+        input.remove();
+        titleEl.hidden = false;
+        if (!save) {
+          titleEl.textContent = titleEl.dataset.title || titleEl.textContent;
+          return;
+        }
+        if (next.length > 20) {
+          _showToolbarToast("杂志名最多 20 个字", { error: true });
+          return;
+        }
+        if (!next) {
+          _showToolbarToast("杂志名不能为空", { error: true });
+          return;
+        }
+        saveMagazineTitle(tripId, next, titleEl);
+      }
+
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          finish(true);
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          finish(false);
+        }
+      });
+      input.addEventListener("blur", function () {
+        finish(true);
+      });
+    }
+
+    titleEl.addEventListener("click", openEditor);
+    titleEl.addEventListener("keydown", function (/** @type {KeyboardEvent} */ e) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openEditor();
+      }
+    });
+  }

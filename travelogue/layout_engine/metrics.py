@@ -1,4 +1,8 @@
-"""P17 golden layout metrics · AC-P17-16～19 probes (PRD §12)."""
+"""P17 golden layout metrics · AC-P17-16～19 probes (PRD §12).
+
+PRD §5.2.3 / R-15: **实验路径** — `curate_trip_chapters` 内嵌 clustering+curate；
+仅供 golden probe / fixture replay，非 Studio/CLI 主路径。
+"""
 
 from __future__ import annotations
 
@@ -8,16 +12,16 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.config import AppConfig
-from travelogue.curation.asset_subject import asset_has_person
-from travelogue.curation.layout_metrics import pattern_diversity_p50
-from travelogue.curation.layout_scoring import screen_dominant_tone
-from travelogue.curation.mosaic.metrics import _MIXED_LAYOUT_PATTERNS
-from travelogue.curation.screen_layout_state import is_portrait_single_pattern
+from travelogue.layout_contract.layout_metrics import pattern_diversity_p50
+from travelogue.layout_contract.rhythm import is_portrait_single_pattern
+from travelogue.layout_contract.scoring import screen_dominant_tone
+from travelogue.layout_contract.subject import asset_has_person
 from travelogue.layout_engine.features import salient_retention_for_slot
 from travelogue.layout_engine.highlight_windows import (
     detect_highlight_windows,
     highlight_window_score,
 )
+from travelogue.layout_engine.mosaic.metrics import _MIXED_LAYOUT_PATTERNS
 from travelogue.layout_engine.quality_features import QualityPool, build_quality_pool
 from travelogue.layout_engine.segment_order import same_person_run_lengths
 from travelogue.layout_engine.tone_adjacency import _hard_cut_exempt
@@ -270,14 +274,17 @@ def curate_trip_chapters(
     cfg: AppConfig,
 ) -> list[dict]:
     """Run clustering + curate and return layout chapters (fixture replay helper)."""
-    from travelogue.curation.clustering import run_clustering_layer
-    from travelogue.curation.curate import run_curate
+    _cl = __import__(
+        "travelogue.curation.clustering",
+        fromlist=["run_clustering_layer"],
+    )
+    _cu = __import__("travelogue.curation.curate", fromlist=["run_curate"])
     from travelogue.layout_engine.sandbox import _prepare_trip
 
     body = _prepare_trip(trip)
     work_dir.mkdir(parents=True, exist_ok=True)
-    run_clustering_layer(body, trip_dir=work_dir / "cluster", cfg=cfg)
-    run_curate(body, apply_layout=True, trip_dir=work_dir, cfg=cfg)
+    _cl.run_clustering_layer(body, trip_dir=work_dir / "cluster", cfg=cfg)
+    _cu.run_curate(body, apply_layout=True, trip_dir=work_dir, cfg=cfg)
     return deepcopy(body.get("chapters") or [])
 
 

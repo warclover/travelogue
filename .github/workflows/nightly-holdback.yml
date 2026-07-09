@@ -69,15 +69,15 @@ jobs:
 
       - name: Studio homepage v2 AC e2e
         run: |
-          python -m pytest tests/test_studio_home_v2_ac_playwright.py -q
+          python -m pytest tests/e2e/test_studio_home_v2_ac_playwright.py -q
 
       - name: Classic emergency smoke（M21-e1）
         run: |
-          python -m pytest tests/test_studio_home_v2.py -q --tb=short -k "gate_classic_serves_v3"
+          python -m pytest tests/unit/web/test_studio_home_v2.py -q --tb=short -k "gate_classic_serves_v3"
 
       - name: Rollback contract smoke（off -> legacy classic）
         run: |
-          python -m pytest tests/test_studio_home_v2.py -q --tb=short -k "gate_off_serves_v3_at_root"
+          python -m pytest tests/unit/web/test_studio_home_v2.py -q --tb=short -k "gate_off_serves_v3_at_root"
 
       - name: Rollback drill（§3.2）
         run: python scripts/studio_homepage_rollback_drill.py

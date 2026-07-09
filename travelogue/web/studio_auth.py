@@ -5,16 +5,9 @@ from __future__ import annotations
 import secrets
 import sys
 
-LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
+from travelogue.util.net import LOOPBACK_HOSTS, is_loopback_host
 
-
-def is_loopback_host(host: str) -> bool:
-    host = (host or "").strip().lower()
-    if host in LOOPBACK_HOSTS:
-        return True
-    if host.startswith("127."):
-        return True
-    return host == "::1"
+__all__ = ["LOOPBACK_HOSTS", "is_loopback_host", "ensure_studio_bind_allowed", "new_studio_token", "studio_post_authorized"]
 
 
 def ensure_studio_bind_allowed(host: str, *, allow_lan: bool = False) -> None:

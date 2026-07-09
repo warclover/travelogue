@@ -8,7 +8,7 @@ from collections import Counter
 
 from travelogue.config import default_mixed_proximity_seconds
 from travelogue.curation.layout_planner import aspect_kind_for_asset
-from travelogue.curation.screen_planner import (
+from travelogue.layout_engine.planner.screen_planner import (
     LAYOUT_ENGINE_LEGACY,
     LAYOUT_ENGINE_SCREENS,
     _collect_asset_ids_from_chapter,

@@ -62,7 +62,7 @@ TEXT_EXTS = {
 
 IGNORE_REFERENCE_PATHS = {
     "scripts/studio_m21e2_preflight.py",
-    "tests/test_studio_m21e2_preflight.py",
+    "tests/unit/web/test_studio_m21e2_preflight.py",
 }
 
 LEGACY_TEST_HELPERS = {

@@ -108,7 +108,7 @@ def capture_all(*, out_dir: Path, base_url: str | None = None) -> list[dict]:
         raise SystemExit("需要 playwright：pip install -e '.[dev,playwright]'") from exc
 
     sys.path.insert(0, str(_REPO))
-    from tests.test_studio_server import _free_port, _start_studio_server
+    from tests.integration.studio.test_studio_server import _free_port, _start_studio_server
 
     out_dir.mkdir(parents=True, exist_ok=True)
     results: list[dict] = []

@@ -3,11 +3,13 @@
 M21 retired templates/studio/studio.js; scan v2 homepage + shared js modules.
 """
 
+
+
 from __future__ import annotations
 
-from pathlib import Path
+from tests._repo_root import repo_root
 
-_ROOT = Path(__file__).resolve().parents[1]
+_ROOT = repo_root(__file__)
 _STUDIO = _ROOT / "templates" / "studio"
 
 

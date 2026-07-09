@@ -18,7 +18,7 @@ from travelogue.export.packager import ExportError, export_trip
 from travelogue.orchestrator.pipeline import PublishResult, publish_trip
 from travelogue.render.engine import RenderError, render_trip, render_trip_surfaces
 from travelogue.render.preview import render_preview_jpg
-from travelogue.services.trip import TripNotFoundError
+from travelogue.services.trip import TripNotFoundError, persist_trip_snapshot
 
 
 @app.command("render")
@@ -314,7 +314,7 @@ def cmd_migrate_captions(
     if dry_run:
         typer.echo(f"OK migrate-captions · would migrate {len(migrated)} assets: {', '.join(migrated[:8])}")
         return
-    svc.save(trip, trip_path)
+    persist_trip_snapshot(svc, trip_path, trip)
     typer.echo(f"OK migrate-captions · migrated {len(migrated)} assets")
 
 

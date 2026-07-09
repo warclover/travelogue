@@ -26,14 +26,14 @@ DEFAULT_RECORD = ROOT / "docs" / "acceptance-records" / "phase7-perf-eval.json"
 DEFAULT_PHASE6_RECORD = ROOT / "docs" / "acceptance-records" / "phase6-quality-eval.json"
 REQUIRED_AC_KEYS = tuple(f"AC-P7-{i:02d}" for i in range(1, 13))
 PYTEST_TARGETS = (
-    "tests/test_phase7_equivalence.py",
-    "tests/test_phase7_ingest_micro.py",
-    "tests/test_phase7_parallel_embed.py",
-    "tests/test_phase7_incremental_modes.py",
-    "tests/test_phase7_cache_abi.py",
-    "tests/test_phase7_fault_recovery.py",
-    "tests/test_phase7_rollback_flags.py",
-    "tests/test_layout_golden.py",
+    "tests/integration/test_phase7_equivalence.py",
+    "tests/integration/test_phase7_ingest_micro.py",
+    "tests/integration/test_phase7_parallel_embed.py",
+    "tests/integration/test_phase7_incremental_modes.py",
+    "tests/integration/test_phase7_cache_abi.py",
+    "tests/integration/test_phase7_fault_recovery.py",
+    "tests/integration/test_phase7_rollback_flags.py",
+    "tests/unit/layout_engine/test_layout_golden.py",
 )
 
 

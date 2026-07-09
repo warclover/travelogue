@@ -1,14 +1,14 @@
 /**
  * Travelogue Studio 首页 v2 · 运行时状态 + variant 解析 + DOM 工具。
  *
- * 状态语义对齐 v3 js/state.js（五主态 + Failed/Offline），但 v2 使用独立
- * 视图层（M21-c 后主入口 GET /），不复用 v3 navigation.js 的渲染分支。
+ * 状态语义对齐 classic 首页五主态（empty / returning / importing 等），
+ * v2 使用独立视图层（M21-c 后主入口 GET /）。
  */
 import { SS } from "../js/constants.js";
 
 export const STUDIO_DEMO_SHOWCASE_BASE = "/__studio/assets/demo-showcase/";
 
-/** v2 新增 sessionStorage 键（加法，不改 v3 既有键形状）。 */
+/** v2 新增 sessionStorage 键（加法；值 `v2`|`classic`，兼容 legacy `v3`）。 */
 export const V2_VARIANT_KEY = "travelogue.studio.homepageVariant";
 export const V2_THEME_KEY = "travelogue.studio.v2.theme";
 export const V2_BENTO_PREVIEW_TRIP_KEY = "travelogue.studio.v2.bentoPreviewTripId";
@@ -101,10 +101,27 @@ export function readActiveJobId() {
   }
 }
 
+/** Holdback variant 归一化（legacy `v3` → `classic`）。 */
+export function normalizeHomepageVariant(raw) {
+  var v = String(raw || "").trim().toLowerCase();
+  if (v === "v2") return "v2";
+  if (v === "classic" || v === "v3") return "classic";
+  return v || "v2";
+}
+
+/** 读取 sessionStorage.homepageVariant（兼容 legacy `v3`）。 */
+export function readHomepageVariant() {
+  try {
+    return normalizeHomepageVariant(sessionStorage.getItem(V2_VARIANT_KEY));
+  } catch (e) {
+    return "v2";
+  }
+}
+
 /** 持久化 v2 variant 偏好（非路由依据；holdback 以服务端 cookie/redirect 为准）。 */
 export function persistVariant(variant) {
   try {
-    sessionStorage.setItem(V2_VARIANT_KEY, variant || "v2");
+    sessionStorage.setItem(V2_VARIANT_KEY, normalizeHomepageVariant(variant) || "v2");
   } catch (e) {
     /* ignore */
   }

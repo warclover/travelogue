@@ -15,5 +15,7 @@
 | [013](./013-layout-strategy-approval-semantics.md) | LSE L2 审批语义：operator + ≥2 approvers（非字面双人） | 已采纳 | 2026-06-07 |
 | [008](./008-trip-storage-boundaries.md) | trip.json 存储边界 · Document/Blob 分离约定 | **Accepted** | 2026-06-11 |
 | [014](./014-mosaic-proximity-window-order.md) | 拼图连拍门槛 `mixed_proximity_seconds` 与 MCS `window_order` 默认值 | **Draft · LRG-W1** | 2026-07-05 |
+| [015](./015-lse-planner-migration.md) | LSE 与 Screen Planner 两步渐进迁移（supersede R-P17-04 / ADR-010 D5 部分） | **Accepted** | 2026-07-08 |
+| [016](./016-longshot-platform-export.md) | 平台化长图导出：三分支 Pipeline · full capture 切分 · 禁 P1 · 原子 Job | **Accepted** | 2026-07-08 |
 
 新建 ADR 请使用 `00N-简短英文名.md`，并在本表登记。

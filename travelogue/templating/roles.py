@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Literal
 
 from travelogue.config import AppConfig, get_config
-from travelogue.web.studio_auth import is_loopback_host
+from travelogue.util.net import is_loopback_host
 
 TemplateRole = Literal["viewer", "template_operator", "template_admin"]
 

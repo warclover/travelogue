@@ -7,17 +7,17 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.config import AppConfig, MosaicConfig, get_config
-from travelogue.curation.layout_planner import AspectKind
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-from travelogue.curation.screen_planner import DEFAULT_FEATURED_WEIGHT, plan_screens_for_chapter
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_engine.decision_log import (
     ingest_beam_logs,
     ingest_mosaic_logs,
     strategy_trace_from_pack,
     write_sidecar,
 )
+from travelogue.layout_engine.planner.screen_planner import DEFAULT_FEATURED_WEIGHT
 from travelogue.layout_engine.registry import StrategyPack, get_strategy_pack
 from travelogue.layout_engine.rhythm import layout_state_from_pack
+from travelogue.media.image_ops import AspectKind
 
 
 @dataclass
@@ -62,6 +62,12 @@ def resolve_pack(cfg: AppConfig) -> StrategyPack | None:
         return None
     sid = cfg.layout.strategy_engine.default_strategy_id
     return get_strategy_pack(sid, cfg.layout.strategy_engine.policy_path)
+
+
+def _planner_module(cfg: AppConfig) -> Any:
+    import travelogue.layout_engine.planner.screen_planner as mod
+
+    return mod
 
 
 def _stage_enabled(pack: StrategyPack | None, stage: str, *, default: bool = True) -> bool:
@@ -154,22 +160,36 @@ def layout_state_for_trip(
     pack: StrategyPack | None = None,
     density: str | None = None,
 ) -> ScreenLayoutPlannerState:
+    from travelogue.layout_contract.density import LayoutDensityParams
+    from travelogue.layout_contract.rhythm import RhythmRules
+
     active = pack if pack is not None else resolve_pack(cfg)
     if active is not None:
-        from travelogue.curation.layout_density import LayoutDensityParams
-
         params = LayoutDensityParams(density=density or "balanced")  # type: ignore[arg-type]
         return layout_state_from_pack(total_photos, active, density_params=params)
-    from travelogue.curation.screen_layout_state import (
-        RhythmRules,
-        ScreenLayoutPlannerState,
-    )
-
     return ScreenLayoutPlannerState.from_trip_total(
         total_photos,
         density=density or "balanced",  # type: ignore[arg-type]
         rhythm=RhythmRules.from_config(cfg),
     )
+
+
+def resolve_attach_layout_state(
+    trip_photo_total: int,
+    *,
+    cfg: AppConfig | None = None,
+    density: str | None = None,
+) -> ScreenLayoutPlannerState:
+    """Single entry for screen_planner_attach (M-B4a adapter convergence)."""
+    from travelogue.layout_contract.rhythm import RhythmRules
+
+    if cfg is None:
+        return ScreenLayoutPlannerState.from_trip_total(
+            trip_photo_total,
+            density=density or "balanced",  # type: ignore[arg-type]
+            rhythm=RhythmRules.from_config(None),
+        )
+    return layout_state_for_trip(trip_photo_total, cfg=cfg, density=density or "balanced")
 
 
 def plan_chapter_screens(
@@ -198,7 +218,8 @@ def plan_chapter_screens(
     if layout_state is None and active_pack is not None and ctx.trip_photo_total:
         layout_state = layout_state_for_trip(ctx.trip_photo_total, cfg=app, pack=active_pack)
 
-    return plan_screens_for_chapter(
+    mod = _planner_module(app)
+    return mod.plan_screens_for_chapter(
         ctx.asset_ids,
         ctx.aspects,
         chapter_id=ctx.chapter_id,

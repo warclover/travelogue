@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.curation.layout_scoring import screen_dominant_tone
+from travelogue.layout_contract.scoring import screen_dominant_tone
 from travelogue.media.color_metrics import delta_e_cie76
 
 

@@ -5,8 +5,16 @@ from __future__ import annotations
 from typing import Any
 
 
+def _mark_dual_keys(raw: dict[str, Any], snake: str, camel: str) -> None:
+    from travelogue.config.tracking import TrackedDict
+
+    if isinstance(raw, TrackedDict):
+        raw.mark_keys(snake, camel)
+
+
 def cfg_get(raw: dict[str, Any], snake: str, camel: str, default: Any) -> Any:
     """Return ``raw[snake]`` if present, else ``raw[camel]``, else ``default``."""
+    _mark_dual_keys(raw, snake, camel)
     if snake in raw:
         return raw[snake]
     if camel in raw:

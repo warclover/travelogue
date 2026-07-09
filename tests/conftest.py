@@ -31,26 +31,56 @@ def _module_basename(item: pytest.Item) -> str:
     return nodeid.split("/")[-1].split("::")[0]
 
 
+def _tests_subpath(item: pytest.Item) -> list[str]:
+    nodeid = item.nodeid.replace("\\", "/")
+    parts = nodeid.split("/")
+    if "tests" not in parts:
+        return []
+    idx = parts.index("tests")
+    return parts[idx + 1 :]
+
+
 def _apply_auto_markers(item: pytest.Item) -> None:
     """Ensure Playwright / browser tests are tagged for CI tier selection."""
-    if item.get_closest_marker("unit"):
-        return
+    # Playwright tagging must run before the path-bucket early returns: e2e
+    # serialization (`playwright_serial` ordering + torch contention fixture)
+    # depends on the marker even when the module lives in tests/e2e/.
     names = {m.name for m in item.iter_markers()}
-    if "playwright_serial" in names and "e2e" not in names:
-        item.add_marker(pytest.mark.e2e)
-        names.add("e2e")
     basename = _module_basename(item)
-    if "playwright" in basename:
+    if "playwright_serial" in names or "playwright" in basename:
         if "e2e" not in names:
             item.add_marker(pytest.mark.e2e)
         if "playwright_serial" not in names:
             item.add_marker(pytest.mark.playwright_serial)
-        names = {m.name for m in item.iter_markers()}
+        return
+    if item.get_closest_marker("unit"):
+        return
+    subpath = _tests_subpath(item)
+    if subpath:
+        bucket = subpath[0]
+        if bucket == "unit":
+            item.add_marker(pytest.mark.unit)
+            return
+        if bucket == "integration":
+            if not item.get_closest_marker("integration"):
+                item.add_marker(pytest.mark.integration)
+            return
+        if bucket == "e2e":
+            if not item.get_closest_marker("e2e"):
+                item.add_marker(pytest.mark.e2e)
+            return
     if not names.intersection(_TIER_MARKERS):
         item.add_marker(pytest.mark.unit)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--stress-iterations",
+        action="store",
+        default=200,
+        type=int,
+        help="AC-ARC-01 concurrent update iterations per thread (default: 200).",
+    )
     parser.addoption(
         "--fast",
         action="store_true",
@@ -188,7 +218,7 @@ def _reset_mosaic_and_config_process_state() -> None:
     """Prevent mosaic override / get_config() cache leaking across tests."""
     yield
     try:
-        from travelogue.curation.mosaic.runtime import reset_mosaic_config_override
+        from travelogue.layout_engine.mosaic.runtime import reset_mosaic_config_override
 
         reset_mosaic_config_override()
     except Exception as exc:

@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
+from typing import TypeVar
 from urllib.parse import parse_qs, unquote, urlparse
 
 from travelogue.desktop.demo_album import is_demo_album_path, resolve_demo_album_dir
 from travelogue.runtime import AppContext, app_context_from_handler
+from travelogue.services.trip import TripConflictError, TripService
+from travelogue.web.studio_errors import client_error_payload
 from travelogue.web.studio_handlers.paths import (
     CURATE_SUFFIX,
     CURATION_MOMENT_SUFFIX,
@@ -21,6 +25,8 @@ from travelogue.web.studio_handlers.paths import (
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_trip_id import is_valid_studio_trip_id
 
+_U = TypeVar("_U")
+
 
 def rel_to_trip(trip_dir: Path, target: Path) -> str:
     return target.resolve().relative_to(trip_dir.resolve()).as_posix()
@@ -34,6 +40,20 @@ def resolve_import_album_path(album_raw: str, *, use_demo: bool = False) -> Path
 
 def studio_ctx(handler: StudioHandlerProtocol) -> AppContext:
     return app_context_from_handler(handler)
+
+
+def trip_update_or_respond(
+    handler: StudioHandlerProtocol,
+    svc: TripService,
+    trip_json: Path,
+    mutator: Callable[[dict], _U],
+) -> tuple[bool, _U | None]:
+    """Run ``svc.update``; on conflict respond 409 and return ``(False, None)``."""
+    try:
+        return True, svc.update(trip_json, mutator)
+    except TripConflictError as exc:
+        handler._json_response(409, client_error_payload(exc))
+        return False, None
 
 
 def resolve_trip_dir(ctx: AppContext, trip_id: str) -> Path | None:
@@ -202,20 +222,25 @@ def match_trip_screen_replan(path: str) -> tuple[str, str] | None:
     return trip_id, screen_id
 
 
-def match_trip_api(path: str) -> tuple[str, str] | None:
-    if path.endswith(SAVE_COPY_SUFFIX):
-        trip_id = path[: -len(SAVE_COPY_SUFFIX)].strip("/")
-        if trip_id and "/" not in trip_id:
-            return trip_id, "save-copy"
-    if path.endswith(PROMOTE_TIER_SUFFIX):
-        trip_id = path[: -len(PROMOTE_TIER_SUFFIX)].strip("/")
-        if trip_id and "/" not in trip_id:
-            return trip_id, "promote-tier"
-    if path.endswith(RERENDER_SUFFIX):
-        trip_id = path[: -len(RERENDER_SUFFIX)].strip("/")
-        if trip_id and "/" not in trip_id:
-            return trip_id, "rerender"
-    return None
+def _match_trip_root_suffix(path: str, suffix: str) -> str | None:
+    if not path.endswith(suffix):
+        return None
+    trip_id = path[: -len(suffix)].strip("/")
+    if not trip_id or "/" in trip_id:
+        return None
+    return trip_id
+
+
+def match_trip_save_copy(path: str) -> str | None:
+    return _match_trip_root_suffix(path, SAVE_COPY_SUFFIX)
+
+
+def match_trip_promote_tier(path: str) -> str | None:
+    return _match_trip_root_suffix(path, PROMOTE_TIER_SUFFIX)
+
+
+def match_trip_rerender(path: str) -> str | None:
+    return _match_trip_root_suffix(path, RERENDER_SUFFIX)
 
 
 def trip_id_from_query(handler: StudioHandlerProtocol) -> str:

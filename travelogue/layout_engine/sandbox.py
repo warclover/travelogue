@@ -1,16 +1,32 @@
-"""LSE trip layout sandbox replay + diff (W2 · AC-P17-09 prep)."""
+"""LSE trip layout sandbox replay + diff (W2 · AC-P17-09 prep).
+
+PRD §5.2.3 / R-15: **实验路径** — 内嵌 clustering+curate 全管线，仅供 sandbox/dogfood；
+禁止作为第四套生产编排扩散（生产入口 = curate → adapter → planner）。
+"""
 
 from __future__ import annotations
 
 import copy
 from collections import Counter
+from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 from travelogue.config import AppConfig
-from travelogue.curation.clustering import run_clustering_layer
-from travelogue.curation.curate import run_curate
+
+
+def _run_clustering_layer(body: dict, *, trip_dir: Path, cfg: AppConfig) -> None:
+    _mod = __import__(
+        "travelogue.curation.clustering",
+        fromlist=["run_clustering_layer"],
+    )
+    _mod.run_clustering_layer(body, trip_dir=trip_dir, cfg=cfg)
+
+
+def _run_curate(body: dict, *, trip_dir: Path, cfg: AppConfig) -> None:
+    _mod = __import__("travelogue.curation.curate", fromlist=["run_curate"])
+    _mod.run_curate(body, apply_layout=True, trip_dir=trip_dir, cfg=cfg)
 
 
 def _pattern_distribution(chapters: list[dict]) -> dict[str, float]:
@@ -105,8 +121,8 @@ def _run_curate_snapshot(
     cfg: AppConfig,
 ) -> dict[str, Any]:
     body = _prepare_trip(trip)
-    run_clustering_layer(body, trip_dir=work_dir / "cluster", cfg=cfg)
-    run_curate(body, apply_layout=True, trip_dir=work_dir, cfg=cfg)
+    _run_clustering_layer(body, trip_dir=work_dir / "cluster", cfg=cfg)
+    _run_curate(body, trip_dir=work_dir, cfg=cfg)
     chapters = body.get("chapters") or []
     return {
         "snapshot": _layout_snapshot(chapters),
@@ -144,32 +160,31 @@ def sandbox_replay_trip(
 
 def enrich_changed_screen_previews(
     trip: dict,
-    trip_id: str,
     trip_dir: Path,
     diff: dict[str, Any],
+    *,
+    preview_url_for: Callable[[str | Path], str] | None = None,
 ) -> list[dict[str, Any]]:
     """Attach first-slot preview URLs for changed screens (Studio sandbox UI)."""
-    from travelogue.render.context import pick_image_src
-    from travelogue.web.studio_bento_preview import _trip_static_url
-
     assets = {
         str(a.get("id")): a for a in (trip.get("assets") or []) if a.get("id")
     }
     enriched: list[dict[str, Any]] = []
     for ch in diff.get("changedScreens") or []:
         row = dict(ch)
-        for side in ("baseline", "candidate"):
-            scr = ch.get(side)
-            if not isinstance(scr, dict):
-                continue
-            aids = scr.get("slotAssetIds") or []
-            aid = aids[0] if aids else None
-            asset = assets.get(str(aid)) if aid else None
-            if not asset:
-                continue
-            rel = pick_image_src(asset)
-            if rel and (trip_dir / rel).is_file():
-                row[f"{side}Preview"] = _trip_static_url(trip_id, rel)
+        if preview_url_for is not None:
+            for side in ("baseline", "candidate"):
+                scr = ch.get(side)
+                if not isinstance(scr, dict):
+                    continue
+                aids = scr.get("slotAssetIds") or []
+                aid = aids[0] if aids else None
+                asset = assets.get(str(aid)) if aid else None
+                if not asset:
+                    continue
+                rel = asset.get("displayFile") or asset.get("sourceFile") or ""
+                if rel and (trip_dir / rel).is_file():
+                    row[f"{side}Preview"] = preview_url_for(rel)
         enriched.append(row)
     return enriched
 

@@ -13,7 +13,10 @@ from travelogue.layout_contract import (
     VALID_EXPORT_LAYOUTS,
     format_layout_summary,
 )
-from travelogue.services.pipeline_state import set_layout_status
+from travelogue.services.pipeline_state import (
+    append_pipeline_run,
+    set_layout_status,
+)
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 
@@ -78,7 +81,7 @@ def apply_layout_to_trip(
 
     Does not re-ingest pixels or change coverAssetId.
     """
-    from travelogue.curation.screen_planner import (
+    from travelogue.layout_engine.planner.screen_planner import (
         LAYOUT_ENGINE_LEGACY,
         LAYOUT_ENGINE_SCREENS,
         LAYOUT_ENGINE_VERSION_SCREENS,
@@ -130,16 +133,15 @@ def apply_layout_to_trip(
     curation["layoutPlanVersion"] = LAYOUT_PLAN_VERSION
     curation["layoutPlanRunId"] = f"layout-{_utc_now_iso()}"
 
-    pipe = trip.setdefault("pipeline", {})
-    runs = pipe.setdefault("runs", [])
-    runs.append(
+    append_pipeline_run(
+        trip,
         {
             "runId": curation["layoutPlanRunId"],
             "agent": "layout",
             "startedAt": _utc_now_iso(),
             "finishedAt": _utc_now_iso(),
             "model": None,
-        }
+        },
     )
     trip["updatedAt"] = _utc_now_iso()
     set_layout_status(trip, "layout_draft")

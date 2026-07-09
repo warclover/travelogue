@@ -1,6 +1,6 @@
 """Phase 4 automated acceptance gate (AC-P4-02/05 · A11Y static · intent suite).
 
-E2e (FirstSuccess featured summary): ``pytest tests/test_studio_intent_ac_p4_playwright.py``
+E2e (FirstSuccess featured summary): ``pytest tests/e2e/test_studio_intent_ac_p4_playwright.py``
 (CI ``test-e2e`` job). This script covers unit/static checks only.
 """
 
@@ -14,14 +14,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 PYTEST_TARGETS = [
-    "tests/test_studio_a11y_p4.py",
-    "tests/test_studio_intent_ac_p4.py",
-    "tests/test_studio_intent.py",
-    "tests/test_studio_entry.py",
-    "tests/test_studio_intent_telemetry.py",
-    "tests/test_intent_plan.py",
-    "tests/test_studio_g1.py",
-    "tests/test_user_tier.py",
+    "tests/unit/web/test_studio_a11y_p4.py",
+    "tests/unit/web/test_studio_intent_ac_p4.py",
+    "tests/unit/web/test_studio_intent.py",
+    "tests/unit/web/test_studio_entry.py",
+    "tests/unit/web/test_studio_intent_telemetry.py",
+    "tests/unit/curation/test_intent_plan.py",
+    "tests/unit/web/test_studio_g1.py",
+    "tests/unit/media/test_user_tier.py",
 ]
 
 

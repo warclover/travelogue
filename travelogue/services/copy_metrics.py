@@ -132,15 +132,16 @@ def record_copy_metrics(trip: dict) -> dict:
 
 def merge_copy_run_note(trip: dict, *, agent: str, note: str) -> None:
     """Append a lightweight observability note to pipeline.runs."""
-    pipe = trip.setdefault("pipeline", {})
-    runs = pipe.setdefault("runs", [])
+    from travelogue.services.pipeline_state import append_pipeline_run
+
     stamp = utc_now_iso()
-    runs.append(
+    append_pipeline_run(
+        trip,
         {
             "runId": f"copy-metrics-{stamp}",
             "agent": agent,
             "note": note,
             "startedAt": stamp,
             "finishedAt": stamp,
-        }
+        },
     )

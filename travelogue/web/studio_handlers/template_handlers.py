@@ -17,7 +17,11 @@ from travelogue.templating.router import (
 )
 from travelogue.web.studio_admin_auth import studio_authenticated
 from travelogue.web.studio_errors import user_message
-from travelogue.web.studio_handlers.common import resolve_trip_dir_listed, studio_ctx
+from travelogue.web.studio_handlers.common import (
+    resolve_trip_dir_listed,
+    studio_ctx,
+    trip_update_or_respond,
+)
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 _log = logging.getLogger(__name__)
@@ -291,25 +295,23 @@ def handle_template_recompute(handler: StudioHandlerProtocol) -> None:
 
     before = dict(trip.get("templateSelection") or {})
 
-    selection = apply_template_selection(
+    svc = ctx.trip_service()
+    trip_json = trip_dir / "trip.json"
 
-        trip,
+    def mutator(t: dict):
+        return apply_template_selection(
+            t,
+            mode=mode,  # type: ignore[arg-type]
+            requested_template_id=str(requested) if requested else None,
+            cfg=ctx.cfg,
+            recompute=True,
+            trip_dir=trip_dir,
+            log_action="recompute",
+        )
 
-        mode=mode,  # type: ignore[arg-type]
-
-        requested_template_id=str(requested) if requested else None,
-
-        cfg=ctx.cfg,
-
-        recompute=True,
-
-        trip_dir=trip_dir,
-
-        log_action="recompute",
-
-    )
-
-    ctx.trip_service().save(trip, trip_dir / "trip.json")
+    ok, selection = trip_update_or_respond(handler, svc, trip_json, mutator)
+    if not ok:
+        return
 
     role = _template_operator_role(handler) or "studio"
 

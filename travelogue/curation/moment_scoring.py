@@ -122,7 +122,8 @@ def _asset_in_highlight_window(
 ) -> bool:
     """P17 highlight_windows hit within a peak chapter (Phase 23 f_arc_peak)."""
     from travelogue.curation.arc_patterns import arc_segment_for_chapter
-    from travelogue.layout_engine.highlight_windows import detect_highlight_windows
+    hw = __import__('travelogue.layout_engine.highlight_windows', fromlist=['detect_highlight_windows'])
+    detect_highlight_windows = hw.detect_highlight_windows
 
     total = len(chapters or [])
     if total <= 0:
@@ -515,7 +516,7 @@ def sync_trip_moments_finalize(
 
     explain = _moment_explain(assets_by_id.get(signature_id, {}), signature_score, ctx)
     collision: str | None = None
-    from travelogue.render.cover_closing import resolve_closing_asset_id
+    from travelogue.domain.closing_view import resolve_closing_asset_id
 
     assets_map = assets_by_id
     closing_id = resolve_closing_asset_id(

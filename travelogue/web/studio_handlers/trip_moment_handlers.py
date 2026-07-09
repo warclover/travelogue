@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime
 
 from travelogue.services.moment_curation import (
     apply_moment_signature,
@@ -11,7 +10,11 @@ from travelogue.services.moment_curation import (
     validate_moment_asset_id,
 )
 from travelogue.web.studio_errors import internal_error_payload
-from travelogue.web.studio_handlers.common import load_trip_or_404, studio_ctx
+from travelogue.web.studio_handlers.common import (
+    load_trip_or_404,
+    studio_ctx,
+    trip_update_or_respond,
+)
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 _log = logging.getLogger(__name__)
@@ -50,15 +53,20 @@ def handle_patch_moment(handler: StudioHandlerProtocol, trip_id: str) -> None:
         )
         return
 
+    ctx = studio_ctx(handler)
     try:
-        apply_moment_signature(trip, moment_id)
+        ok, moment_id_out = trip_update_or_respond(
+            handler,
+            ctx.trip_service(),
+            trip_json,
+            lambda t: (apply_moment_signature(t, moment_id), moment_id)[1],
+        )
+        if not ok:
+            return
     except ValueError as exc:
         handler._json_response(400, {"ok": False, "error": str(exc)})
         return
 
-    trip["updatedAt"] = datetime.now(UTC).isoformat()
-    ctx = studio_ctx(handler)
-    ctx.trip_service().save(trip, trip_json)
     try:
         rerender_draft_trip(trip_json)
     except Exception:
@@ -66,6 +74,7 @@ def handle_patch_moment(handler: StudioHandlerProtocol, trip_id: str) -> None:
         handler._json_response(500, internal_error_payload())
         return
 
+    trip = ctx.trip_service().load(trip_json)
     handler._json_response(
         200,
         {

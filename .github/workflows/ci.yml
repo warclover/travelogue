@@ -25,6 +25,34 @@ jobs:
         run: |
           python -m ruff check travelogue tests scripts
 
+      - name: Trip save lint
+        run: python scripts/lint_trip_save_calls.py
+
+      - name: Trip pipeline mutation lint (M-C4)
+        run: python scripts/lint_trip_pipeline_mutations.py
+
+      - name: Test layout lint (M-C2)
+        run: python scripts/lint_test_layout.py
+
+      - name: Trip JSON lint (ADR-008)
+        run: python scripts/lint_trip_json.py schemas/fixtures tests/fixtures
+
+      - name: Import layer contract (M-B0)
+        run: lint-imports
+
+      - name: LSE cross-import ceiling (ADR-015)
+        run: python scripts/lint_lse_cross_import.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Preview toolbar tsc (M-C5)
+        run: |
+          npm ci
+          npm run tsc:preview-toolbar
+
   test-pr:
     runs-on: ubuntu-latest
     strategy:
@@ -118,6 +146,16 @@ jobs:
           python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level all
           python scripts/validate_trip.py schemas/fixtures/trip.render_golden.json --level all
           python scripts/validate_trip.py schemas/fixtures/trip.linzhi_screens.json --level all
+          python scripts/lint_trip_json.py schemas/fixtures tests/fixtures
+
+      - name: Architecture equivalence self-check (M-B0 · PR warn)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: python scripts/arch_equivalence_check.py
+
+      - name: Architecture equivalence self-check (M-B0 · release block)
+        if: github.event_name != 'pull_request'
+        run: python scripts/arch_equivalence_check.py
 
       - name: Demo verify (fixtures + DOM)
         run: |
@@ -263,7 +301,7 @@ jobs:
         run: python scripts/lte_probe_regress.py --screenshot --strict
 
       - name: LTE registry parity
-        run: python -m pytest tests/test_lte_registry_parity.py -q --maxfail=1
+        run: python -m pytest tests/unit/layout_engine/test_lte_registry_parity.py -q --maxfail=1
 
       - name: LTE legacy export smoke (warn-only)
         continue-on-error: true
@@ -281,7 +319,7 @@ jobs:
       - name: LTE legacy Python snapshot drift
         run: |
           python scripts/lte_export_legacy.py --sync-python --out /tmp/lte_legacy_export.json
-          git diff --exit-code travelogue/curation/mosaic/_legacy_generated.py || {
+          git diff --exit-code travelogue/layout_engine/mosaic/_legacy_generated.py || {
             echo "_legacy_generated.py out of sync; run: python scripts/lte_export_legacy.py --sync-python"
             exit 1
           }

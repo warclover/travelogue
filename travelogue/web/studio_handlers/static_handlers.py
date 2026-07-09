@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import mimetypes
 from pathlib import Path
-from typing import Literal
 from urllib.parse import unquote
 
 from travelogue.paths import STUDIO_TEMPLATE_DIR
+from travelogue.web import studio_homepage_gate as gate
 from travelogue.web.studio_handlers.paths import HOME_V2_PATH, STUDIO_ASSET_PREFIX
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
@@ -25,12 +25,15 @@ def _serve_studio_home_html(
     *,
     bucket: int,
     is_new: bool,
+    homepage_variant: gate.HomepageVariant | None = None,
 ) -> None:
     from travelogue.web import studio_homepage_gate as gate
 
     html_path = STUDIO_TEMPLATE_DIR / template_name
     html = html_path.read_text(encoding="utf-8")
-    html = gate.inject_home_placeholders(html, handler, bucket)
+    html = gate.inject_home_placeholders(
+        html, handler, bucket, homepage_variant=homepage_variant
+    )
     data = html.encode("utf-8")
     handler.send_response(200)
     if is_new:
@@ -42,11 +45,22 @@ def _serve_studio_home_html(
     handler.wfile.write(data)
 
 
-def _serve_studio_home(handler: StudioHandlerProtocol, template_name: str) -> None:
+def _serve_studio_home(
+    handler: StudioHandlerProtocol,
+    template_name: str,
+    *,
+    homepage_variant: gate.HomepageVariant | None = None,
+) -> None:
     from travelogue.web import studio_homepage_gate as gate
 
     bucket, is_new = gate.read_or_assign_bucket(handler)
-    _serve_studio_home_html(handler, template_name, bucket=bucket, is_new=is_new)
+    _serve_studio_home_html(
+        handler,
+        template_name,
+        bucket=bucket,
+        is_new=is_new,
+        homepage_variant=homepage_variant,
+    )
 
 
 def send_redirect(handler: StudioHandlerProtocol, location: str, code: int = 302) -> None:
@@ -65,7 +79,7 @@ def handle_home_root(handler: StudioHandlerProtocol) -> bool:
     query = gate.parse_request_query(handler.path)
     bucket, is_new = gate.read_or_assign_bucket(handler)
     allow_override = gate.allow_variant_override(handler.studio_host)
-    variant: Literal["v2", "v3"] = gate.decide_root_variant(
+    variant: gate.HomepageVariant = gate.decide_root_variant(
         mode=mode,
         percent=percent,
         bucket=bucket,
@@ -82,7 +96,13 @@ def handle_home_root(handler: StudioHandlerProtocol) -> bool:
         return True
 
     template = "studio-home-v2.html" if variant == "v2" else "legacy-freeze/studio.classic.html"
-    _serve_studio_home_html(handler, template, bucket=bucket, is_new=is_new)
+    _serve_studio_home_html(
+        handler,
+        template,
+        bucket=bucket,
+        is_new=is_new,
+        homepage_variant=variant,
+    )
     return True
 
 
@@ -131,13 +151,17 @@ def handle_lse_flags_admin_page(handler: StudioHandlerProtocol) -> None:
 
 
 def handle_home(handler: StudioHandlerProtocol) -> None:
-    """Serve v3 (image-first) homepage — frozen, GET /classic."""
-    _serve_studio_home(handler, "legacy-freeze/studio.classic.html")
+    """Serve classic homepage — frozen, GET /classic."""
+    _serve_studio_home(
+        handler,
+        "legacy-freeze/studio.classic.html",
+        homepage_variant="classic",
+    )
 
 
 def handle_home_v2(handler: StudioHandlerProtocol) -> None:
     """Serve v2 (output-first Bento) homepage — GET /v2 (parallel dev route)."""
-    _serve_studio_home(handler, "studio-home-v2.html")
+    _serve_studio_home(handler, "studio-home-v2.html", homepage_variant="v2")
 
 
 def _asset_etag(asset: Path) -> str:

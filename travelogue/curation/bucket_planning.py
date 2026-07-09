@@ -8,7 +8,7 @@ from typing import NamedTuple
 
 from travelogue.curation.curate_scoring import sort_bucket_asset_ids
 from travelogue.curation.time_segments import cluster_time_segments, parse_asset_date
-from travelogue.services.copy_subject import narrative_copy_subject, user_place_explicit
+from travelogue.domain.copy_subject import narrative_copy_subject, user_place_explicit
 
 
 class NormalizedBuckets(NamedTuple):
@@ -146,7 +146,7 @@ def normalize_bucket_counts(
     chapter_balance_ratio: float = 0.55,
 ) -> NormalizedBuckets:
     """Merge day buckets to fit manifest chapter limits; preserve segment metadata."""
-    from travelogue.services.manifest_limits import chapter_limits
+    from travelogue.manifest_limits import chapter_limits
 
     min_c, max_c = chapter_limits()
     if min_chapters is not None:

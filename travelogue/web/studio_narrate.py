@@ -61,7 +61,12 @@ def run_studio_llm_narrate(
         regenerate=True,
         cfg=app_cfg,
     )
-    svc.save(trip, trip_json)
+
+    def mutator(t: dict) -> None:
+        for key, value in trip.items():
+            t[key] = value
+
+    svc.update(trip_json, mutator)
     run_trip(
         trip_json,
         from_stage="render",

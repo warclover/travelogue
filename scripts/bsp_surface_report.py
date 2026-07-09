@@ -31,7 +31,7 @@ def main() -> int:
             sys.executable,
             "-m",
             "pytest",
-            "tests/test_bsp_surface_playwright.py",
+            "tests/e2e/test_bsp_surface_playwright.py",
             "-q",
             "--tb=line",
         ]
@@ -46,7 +46,7 @@ def main() -> int:
     out_path = OUT_DIR / f"surface-report-{stamp}.json"
     payload = {
         "generatedAt": datetime.now(UTC).isoformat(),
-        "pytest": "tests/test_bsp_surface_playwright.py",
+        "pytest": "tests/e2e/test_bsp_surface_playwright.py",
         "status": "pass" if not args.skip_tests else "skeleton",
         "trips": {tid: template.get("trips", {}).get(tid, {}) for tid in args.trips},
     }

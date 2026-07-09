@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from travelogue.curation.aesthetic_score import aesthetic_overall
+from travelogue.layout_engine.scoring.aesthetic import aesthetic_overall
 
 
 def _asset_sharpness(asset: dict) -> float | None:

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 import shutil
-from datetime import UTC
 from pathlib import Path
 
 from pybars import Compiler
@@ -64,7 +63,7 @@ def should_include_long_shot(
     export_layout_override: str | None = None,
 ) -> bool:
     """P0: long-shot export on by default (draft + share). Set export.longShot=false to disable."""
-    from travelogue.curation.screen_planner import screens_layout_active
+    from travelogue.layout_engine.planner.screen_planner import screens_layout_active
 
     export_layout = export_layout_override or trip.get("exportLayout", "auto")
     if export_layout == EXPORT_LAYOUT_LONGSHOT:
@@ -91,7 +90,7 @@ def web_screens_surface_active(
     export_layout_override: str | None = None,
 ) -> bool:
     """Web index with chapter screens[] (present / longshot-bridge eligibility)."""
-    from travelogue.curation.screen_planner import screens_layout_active
+    from travelogue.layout_engine.planner.screen_planner import screens_layout_active
 
     if not screens_layout_active(trip, override=layout_engine_override):
         return False
@@ -332,7 +331,7 @@ def write_longshot_sidecar(
     copy_display_override: str | None = None,
 ) -> Path:
     """Write index-longshot.html (screens flattened to vertical stack) for capture from screens web."""
-    from travelogue.curation.screen_planner import LAYOUT_ENGINE_SCREENS
+    from travelogue.layout_engine.planner.screen_planner import LAYOUT_ENGINE_SCREENS
 
     out_dir = out_dir.resolve()
     html = render_html(
@@ -518,6 +517,7 @@ def render_trip(
     try:
         return _render_trip_body(
             trip,
+            trip_svc=trip_svc,
             trip_path=trip_path,
             trip_root=trip_root,
             out_dir=out_dir,
@@ -548,6 +548,7 @@ def render_trip(
 def _render_trip_body(
     trip: dict,
     *,
+    trip_svc,
     trip_path: Path,
     trip_root: Path,
     out_dir: Path,
@@ -565,7 +566,6 @@ def _render_trip_body(
     update_pipeline: bool,
     cfg: AppConfig | None,
 ) -> Path:
-    from travelogue.runtime import app_context_for_trip_json
     from travelogue.templating.metrics import record_render_outcome
 
     trip_id = str(trip.get("tripId") or trip_path.parent.name)
@@ -695,14 +695,11 @@ def _render_trip_body(
         copy_inline_edit_bundle(out_dir)
 
     if update_pipeline:
-        from datetime import datetime
+        from travelogue.domain.pipeline_view import set_pipeline_status
+        from travelogue.services.trip import persist_trip_snapshot
 
-        pipe = trip.setdefault("pipeline", {})
-        pipe["status"] = "rendered"
-        trip["updatedAt"] = (
-            datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-        )
-        app_context_for_trip_json(trip_path, cfg=cfg).trip_service().save(trip, trip_path)
+        set_pipeline_status(trip, "rendered")
+        persist_trip_snapshot(trip_svc, trip_path, trip)
 
     record_render_outcome(trip_id=trip_id, template_id=effective_template, ok=True)
     return out_dir
@@ -721,7 +718,10 @@ def render_trip_surfaces(
     cfg: AppConfig | None = None,
 ) -> tuple[Path, Path, Path | None]:
     """Write index.html, index-mobile.html, and optionally index-present.html from one trip.json."""
-    from travelogue.curation.screen_planner import LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS
+    from travelogue.layout_engine.planner.screen_planner import (
+        LAYOUT_ENGINE_LEGACY,
+        LAYOUT_ENGINE_SCREENS,
+    )
 
     trip_path = trip_path.resolve()
     trip_root = trip_path.parent

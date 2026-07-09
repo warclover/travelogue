@@ -28,7 +28,7 @@ def record_cover_opening_style_assigned(trip_id: str, style: str) -> None:
     if style not in COVER_OPENING_STYLES:
         return
     try:
-        from travelogue.web.studio_homepage_telemetry import append_studio_homepage_event
+        from travelogue.services.studio_homepage_telemetry import append_studio_homepage_event
 
         append_studio_homepage_event(
             "cover_opening_style_assigned",

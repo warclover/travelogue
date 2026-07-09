@@ -32,7 +32,7 @@ def _run(cmd: list[str]) -> bool:
 def probe_ci_gates() -> dict[str, bool | None]:
     py = sys.executable
     gates: dict[str, bool | None] = {}
-    gates["AC-P17-27"] = _run([py, "-m", "pytest", "tests/test_p17_w3a_gates.py", "-q", "-k", "ac_p17_27"])
+    gates["AC-P17-27"] = _run([py, "-m", "pytest", "tests/integration/p17/test_p17_w3a_gates.py", "-q", "-k", "ac_p17_27"])
     gates["AC-P17-28"] = _run(
         [
             py,

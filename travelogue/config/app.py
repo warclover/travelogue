@@ -25,21 +25,11 @@ from travelogue.config.phase6 import Phase6ObservabilityConfig
 from travelogue.config.studio import StudioConfig
 from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
 from travelogue.config.vision import VisionConfig
-from travelogue.paths import ROOT
 
 _log = logging.getLogger(__name__)
 
 
-def default_trips_dir() -> Path:
-    try:
-        from travelogue.desktop.bundle import default_trips_dir
-
-        return default_trips_dir()
-    except Exception:
-        _log.debug(
-            "desktop default_trips_dir unavailable; using ROOT/trips", exc_info=True
-        )
-        return ROOT / "trips"
+from travelogue.paths import default_trips_dir
 
 
 @dataclass

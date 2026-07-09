@@ -5,7 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from travelogue.config import AppConfig, get_config, reading_profile_defaults
-from travelogue.curation.screen_planner import resolve_layout_engine, screens_layout_active
+from travelogue.layout_engine.planner.screen_planner import (
+    resolve_layout_engine,
+    screens_layout_active,
+)
 from travelogue.render.copy_display import (
     is_photos_only,
     resolve_copy_display,

@@ -10,7 +10,9 @@ from typing import Any
 
 
 def metrics_path() -> Path:
-    return Path.home() / ".travelogue" / "telemetry" / "template-metrics.jsonl"
+    from travelogue.util.template_metrics import metrics_path as _default
+
+    return _default()
 
 
 def record_template_metric(name: str, **labels: Any) -> None:

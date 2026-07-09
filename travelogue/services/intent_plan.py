@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import re
-import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from travelogue.domain import plan_cities as _plan_cities
 from travelogue.services.trip import apply_intent
 
 logger = logging.getLogger(__name__)
@@ -38,9 +37,6 @@ _DAY_LINE = re.compile(
 _ISO_DATE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 _LIST_ITEM = re.compile(r"^[\-*•·]\s+")
 
-_ALIASES_PATH = Path(__file__).resolve().parent.parent / "data" / "city_aliases.json"
-_ALIAS_INDEX: dict[str, str] | None = None
-
 
 @dataclass(frozen=True)
 class PlanParseResult:
@@ -53,31 +49,11 @@ class PlanParseResult:
 
 
 def _load_alias_index() -> dict[str, str]:
-    global _ALIAS_INDEX
-    if _ALIAS_INDEX is not None:
-        return _ALIAS_INDEX
-    index: dict[str, str] = {}
-    try:
-        raw = json.loads(_ALIASES_PATH.read_text(encoding="utf-8"))
-        for entry in raw.get("cities") or []:
-            if not isinstance(entry, dict):
-                continue
-            canonical = str(entry.get("canonical") or "").strip()
-            if not canonical:
-                continue
-            index[_normalize(canonical)] = canonical
-            for alias in entry.get("aliases") or []:
-                alias_text = str(alias).strip()
-                if alias_text:
-                    index[_normalize(alias_text)] = canonical
-    except (OSError, json.JSONDecodeError) as exc:
-        logger.warning("city_aliases.json unavailable: %s", exc)
-    _ALIAS_INDEX = index
-    return index
+    return _plan_cities.city_alias_index()
 
 
 def _normalize(text: str) -> str:
-    return unicodedata.normalize("NFKC", text).strip().casefold()
+    return _plan_cities.normalize_city(text)
 
 
 def _is_garbage(text: str) -> bool:
@@ -210,26 +186,8 @@ def parse_plan_text(text: str, *, filename: str = "plan.txt") -> PlanParseResult
     )
 
 
-def normalize_city(text: str) -> str:
-    return _normalize(text)
-
-
-def cities_match(plan_city: str, place: str) -> bool:
-    """City alignment for plan vs geo segment labels (PRD-PHASE4 §4.2)."""
-    if not plan_city or not place:
-        return False
-    plan_norm = _normalize(plan_city)
-    place_norm = _normalize(place)
-    if plan_norm == place_norm:
-        return True
-    alias_index = _load_alias_index()
-    plan_canon = alias_index.get(plan_norm, plan_city)
-    place_canon = alias_index.get(place_norm, place)
-    if _normalize(plan_canon) == _normalize(place_canon):
-        return True
-    plan_canon_norm = _normalize(plan_canon)
-    place_canon_norm = _normalize(place_canon)
-    return plan_canon_norm in place_canon_norm or place_canon_norm in plan_canon_norm
+normalize_city = _plan_cities.normalize_city
+cities_match = _plan_cities.cities_match
 
 
 def save_plan_file(trip_dir: Path, data: bytes) -> Path:

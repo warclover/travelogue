@@ -1,0 +1,1163 @@
+"""Studio 首页 v2（GET /）路由 + 冒烟测试（Phase 0 / M20-a · M21-c）。
+
+覆盖：
+- GET / 返回 200 且含 v2 Bento 标记
+- GET /classic 应急 classic 冻结页
+- v2 CSS / JS 模块存在且含关键符号
+- demo-showcase manifest.json 结构合法
+"""
+
+
+
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+import urllib.request
+from pathlib import Path
+
+import pytest
+import yaml
+
+from tests._repo_root import repo_root
+from tests.integration.studio.test_studio_server import _free_port, _post_json, _start_studio_server
+from tests.unit.web._studio_home_v2_css import read_studio_home_v2_css_bundle
+from travelogue.web.studio_handlers.paths import STUDIO_EVENT_PATH
+from travelogue.web.studio_jobs import reset_job_store
+
+REPO_ROOT = repo_root(__file__)
+STUDIO_DIR = REPO_ROOT / "templates" / "studio"
+V2_CSS_BUNDLE = read_studio_home_v2_css_bundle(STUDIO_DIR)
+
+
+@pytest.fixture(autouse=True)
+def _reset_jobs() -> None:
+    reset_job_store()
+
+
+V2_HOME_MARKERS = (
+    'data-homepage-variant="v2"',
+    "studio-home-v2.css",
+    "studio-modal.css",
+    "homepage-v2/bootstrap.js",
+    "v2-bento",
+    "v2-carousel",
+    "v2-phone",
+    "v2-bench",
+    "v2-demo-flag",
+    "每一个瞬间",
+    "都值得再次相遇",
+    "开始制作我的游记",
+    "示例作品",
+    "v2-unsupported",
+    "v2-unsupported-copy",
+    # M20-d · Import Sheet
+    "v2-import-sheet",
+    'role="dialog"',
+    'aria-modal="true"',
+    "选择本次旅行的照片文件夹",
+    "步骤 1 / 2",
+    "v2-album-path",
+    "v2-album-upload",
+    "小文件夹试用（建议 ≤200MB）",
+    "v2-sheet-close",
+    # M20-c · Lightbox
+    "v2-lightbox",
+    "v2-lightbox-scroll",
+    "v2-lightbox-close",
+    # FirstSuccess overlay（§9.3）
+    "v2-first-success",
+    "v2-success-open",
+    "v2-success-stay",
+    "v2-success-details",
+    "v2-photo-cull-enabled",
+    "打开卷轴预览",
+    # M20 · 设置 Popover（v2.1 · 导入选项迁入）
+    "v2-settings-toggle",
+    "v2-settings-popover",
+    "v2-settings-close",
+    "工作台设置",
+    'id="studio-cfg-clustering"',
+    'id="studio-cfg-vision"',
+    "开始制作我的游记",
+    "照片留在本机 · 无需注册",
+    # Import Failed overlay
+    "v2-failure",
+    "v2-failure-retry",
+    "v2-failure-stay",
+)
+
+CLASSIC_FREEZE_MARKERS = (
+    'data-studio-v="4"',
+    "studio-hero",
+    "studio-hero-empty",
+    "Classic 首页（Deprecated）",
+)
+
+
+@pytest.mark.e2e
+def test_studio_home_v2_route(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/v2", timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+        for marker in V2_HOME_MARKERS:
+            assert marker in html, marker
+        # token 占位符已被替换（test server token=None → "")
+        assert "__STUDIO_TOKEN__" not in html
+        assert "\ufffd" not in html
+        with urllib.request.urlopen(
+            f"http://127.0.0.1:{port}/__studio/studio-modal.css", timeout=10
+        ) as css_resp:
+            css = css_resp.read().decode("utf-8")
+            assert css_resp.status == 200
+            assert ".studio__modal-backdrop" in css
+            assert "position: fixed" in css
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_studio_home_v2_route_redirects_to_root(tmp_path: Path) -> None:
+    """M21-c · GET /v2 收敛到 /（302）。"""
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/v2", method="GET")
+
+        class _NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ARG002
+                return None
+
+        opener = urllib.request.build_opener(_NoRedirect)
+        with pytest.raises(urllib.error.HTTPError) as excinfo:
+            opener.open(req, timeout=10)
+        assert excinfo.value.code == 302
+        assert excinfo.value.headers.get("Location") == "/"
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_studio_home_classic_unchanged_on_gate_off(tmp_path: Path, monkeypatch) -> None:
+    """gate off 时 GET / 仍为 classic 冻结页，且不加载 v2 bundle。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "off")
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+        for marker in CLASSIC_FREEZE_MARKERS:
+            assert marker in html, marker
+        assert "studio-home-v2.css" not in html
+        assert "homepage-v2/bootstrap.js" not in html
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_studio_home_v2_css_split_modules() -> None:
+    entry = (STUDIO_DIR / "studio-home-v2.css").read_text(encoding="utf-8")
+    assert '@import url("homepage-v2/css/tokens.css")' in entry
+    assert '@import url("homepage-v2/css/dev-panel.css")' in entry
+    for name in ("tokens.css", "bento.css", "import-wizard.css", "chrome.css"):
+        assert (STUDIO_DIR / "homepage-v2" / "css" / name).is_file(), name
+    assert "--v2-ink:" in V2_CSS_BUNDLE
+    assert "prefers-reduced-motion: reduce" in V2_CSS_BUNDLE
+
+
+def test_studio_home_v2_css_present() -> None:
+    css = V2_CSS_BUNDLE
+    for sel in (
+        ".v2-bento",
+        ".v2-carousel",
+        ".v2-phone",
+        ".v2-bench",
+        ".v2-demo-flag",
+        ".v2-shared__bg",
+        ".v2-unsupported",
+    ):
+        assert sel in css, sel
+    assert "--v2-create-card-bg-image:" in css
+    assert "--v2-create-card-bg-image-hover:" in css
+    assert "--v2-cta-bg-image:" in css
+    create_card = css.split(".v2-bench__create-card {", 1)[1].split("}", 1)[0]
+    assert "backdrop-filter" not in create_card
+    assert "var(--v2-create-card-bg-image)" in create_card
+    cta_primary = css.split(".v2-bench__cta-primary {", 1)[1].split("}", 1)[0]
+    assert "var(--v2-cta-bg-image)" in cta_primary
+    assert "#c9920f" not in cta_primary
+
+
+def test_studio_home_v2_theme_palette_options() -> None:
+    """新增 mist / folio / atelier 三套中国传统色主题。"""
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+    css = V2_CSS_BUNDLE
+    store = (STUDIO_DIR / "homepage-v2" / "store.js").read_text(encoding="utf-8")
+    theme_js = (STUDIO_DIR / "homepage-v2" / "theme.js").read_text(encoding="utf-8")
+    boot = (STUDIO_DIR / "homepage-v2" / "theme-boot.js").read_text(encoding="utf-8")
+
+    assert 'src="/__studio/homepage-v2/theme-boot.js"' in html
+
+    for theme_id, label in (
+        ("mist", "雾蓝纸本"),
+        ("folio", "纸墨装帧"),
+        ("atelier", "木紫文艺"),
+    ):
+        assert f'<option value="{theme_id}">{label}</option>' in html
+        assert f':root[data-v2-theme="{theme_id}"]' in css
+        assert '--v2-primary: #' in css.split(f':root[data-v2-theme="{theme_id}"]', 1)[1].split("}", 1)[0]
+        assert f'{theme_id}:' in store
+        assert f"{theme_id}: 1" in boot
+
+    assert 'export const V2_THEME_IDS = ["classic", "dawn", "mist", "folio", "atelier"]' in store
+    assert 'export const V2_THEME_DEFAULT = "mist"' in store
+    assert 'export const V2_THEME_FEATURED = ["mist", "folio", "dawn", "classic"]' in store
+    assert 'export const V2_THEME_MORE = ["atelier", "sky"]' in store
+    assert '<optgroup label="精选">' in html
+    assert '<optgroup label="更多">' in html
+    assert 'DEFAULT_THEME = "mist"' in boot
+    assert "V2_THEME_LABELS" in store
+    assert "V2_THEME_LABELS" in theme_js
+    assert ':root[data-v2-theme="folio"] .v2-bento__veil' in css
+    assert ':root[data-v2-theme="atelier"] .v2-bento__veil' in css
+    assert ':root[data-v2-theme="mist"] .v2-shelf' in css
+
+
+def test_studio_home_v2_js_modules_present() -> None:
+    bootstrap = (STUDIO_DIR / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
+    bento = (STUDIO_DIR / "homepage-v2" / "bento.js").read_text(encoding="utf-8")
+    manifest_js = (STUDIO_DIR / "homepage-v2" / "manifest.js").read_text(encoding="utf-8")
+    store = (STUDIO_DIR / "homepage-v2" / "store.js").read_text(encoding="utf-8")
+
+    for js in (bootstrap, bento, manifest_js, store):
+        assert "\ufffd" not in js
+
+    # 状态路由 + 视口闸
+    assert "routeFinalState" in bootstrap
+    assert "IdleEmpty" in bootstrap and "IdleReturning" in bootstrap
+    assert "Importing" in bootstrap
+    assert "initViewportWatch" in bootstrap  # 视口闸（M20-f 抽到 viewport-logic）
+    assert "initAdvancedOptionsPanel" in bootstrap
+    assert "initSettingsPanel" in bootstrap
+    settings = (STUDIO_DIR / "homepage-v2" / "settings-panel.js").read_text(encoding="utf-8")
+    assert "bindAdvancedConfigControls" in settings
+    assert "syncCtaPlacement" in bento
+    assert "renderBentoEmpty" in bento
+    assert "renderBackground" in bento
+    assert "initCarousel" in bento  # M20-b：carousel 由独立模块渲染
+    assert "initPhoneStrip" in bento
+    assert "initPhoneStrip" in (STUDIO_DIR / "homepage-v2" / "phone-strip.js").read_text(encoding="utf-8")
+    assert "longshotPages" in manifest_js
+    # 复用 v3 共享模块（最小 diff）
+    assert "../js/constants.js" in bootstrap
+    assert "isDemoTrip" in bootstrap
+    # 加法 sessionStorage 键，不改既有键
+    assert "homepageVariant" in store
+
+
+def test_trip_preview_prefers_latest_trip_not_export_flag() -> None:
+    """最近一本应按最新画册，而不是优先旧 longshot 导出。"""
+    trip_preview = (STUDIO_DIR / "homepage-v2" / "trip-preview.js").read_text(encoding="utf-8")
+    assert "return userTrips[0];" in trip_preview
+    assert "withExport" not in trip_preview
+
+
+def test_studio_home_v2_import_sheet_modules() -> None:
+    """M20-d · Import Sheet + 导入编排，复用 v3 共享原语（非复制视图）。"""
+    sheet = (STUDIO_DIR / "homepage-v2" / "import-sheet.js").read_text(encoding="utf-8")
+    wizard = (STUDIO_DIR / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
+    run = (STUDIO_DIR / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
+    assert "refreshTripsForImportSuccess" in run
+
+    for js in (sheet, wizard, run):
+        assert "\ufffd" not in js
+
+    # Wizard v3（PRD v3.0.1）
+    assert "openImportWizard" in wizard and "startV2Import" in wizard
+    assert "wizard_step_view" in wizard
+    assert "填写细节 →" in wizard
+    assert "isImportWizardV3Enabled" in sheet
+    assert "importWizardV3Enabled" in sheet
+
+    # Sheet a11y（§7.1）：focus trap + Esc + 焦点归还 CTA
+    assert "openImportSheet" in sheet and "closeImportSheet" in sheet
+    assert "trapFocus" in sheet
+    assert "Escape" in sheet
+    assert "SHEET_FOCUSABLE" in sheet
+    # pick-folder + 路径仅在 Sheet 内
+    assert "/__travelogue/pick-folder" in sheet
+    assert "submitWithPath" in sheet
+    assert "v2-album-upload" in sheet
+    assert "confirmLargeUpload" in sheet
+    assert "UPLOAD_BYTES_SOFT_LIMIT" in sheet
+    assert "仍要上传" in sheet
+    assert "建议总量≤200MB" in sheet
+    assert "startV2UploadImport" in sheet
+
+    # 导入编排复用共享原语
+    assert "startV2Import" in run and "resumeV2ImportIfAny" in run
+    assert "startV2UploadImport" in run
+    assert "postMultipartImportV2" in run
+    assert "来源 · 浏览器上传" in run or "浏览器上传" in run
+    assert "../js/job-poll.js" in run
+    assert "../js/http.js" in run
+    assert "pollJobUntilDone" in run
+    # P2 · source 路径用 textContent，不用 innerHTML 拼接
+    assert "textContent" in run
+    assert "v2-import-panel__source" in run
+    assert "replaceChildren" in run
+    # sessionStorage 形状对齐 v3（跨页续跑）
+    assert "SS.activeJobId" in run and "SS.activePending" in run
+    assert "studioModal" in run
+    assert "showFirstSuccess" in run
+    assert "showImportFailed" in run
+    # in-product 禁用「AI」字样（§3.2 / §15）
+    assert "AI 自动生成" not in sheet and "AI 自动生成" not in run
+
+
+def test_m21_0_browser_upload_contract() -> None:
+    """M21-0 · AC-M21-0 静态契约：upload 接线 + 软上限 + sessionStorage 续跑。"""
+    sheet = (STUDIO_DIR / "homepage-v2" / "import-sheet.js").read_text(encoding="utf-8")
+    run = (STUDIO_DIR / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+
+    assert 'id="v2-album-upload"' in html
+    assert 'webkitdirectory' in html
+    assert "handleUploadInput" in sheet
+    assert "_uploadInFlight" in sheet
+    assert "startV2UploadImport" in run
+    assert "postMultipartImportV2" in run
+    assert "SS.activeJobId" in run and "resumeV2ImportIfAny" in run
+    assert "200" in sheet or "UPLOAD_BYTES_SOFT_LIMIT" in sheet
+
+
+def test_studio_home_v2_phase14_dual_mode_smoke() -> None:
+    """Phase 14 最小前端冒烟：双模式 DOM + 行为挂钩均已接线。"""
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+    sheet = (STUDIO_DIR / "homepage-v2" / "import-sheet.js").read_text(encoding="utf-8")
+    run = (STUDIO_DIR / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
+    first_success = (STUDIO_DIR / "homepage-v2" / "first-success.js").read_text(encoding="utf-8")
+
+    for marker in (
+        "v2-sheet-mode-quick",
+        "v2-sheet-mode-fine",
+        "快速分享",
+        "精细制作",
+        'id="v2-sheet-panel-fine" data-mode="fine_craft" hidden',
+        "v2-travel-notes",
+        "v2-date-start",
+        "v2-date-end",
+        "v2-featured-dir",
+        "v2-material-dir",
+        "开始制作（专业）",
+        "v2-success-secondary",
+        "v2-layout-density-field",
+        "版面密度（可选）",
+        'name="v2-layout-density"',
+        "拼图为主",
+        "v2-photo-cull-enabled",
+        "智能挑选照片（推荐）",
+        "v2-photo-cull-hint-short",
+        "v2-photo-cull-optout",
+    ):
+        assert marker in html, marker
+    assert "layoutDensity" in sheet
+    assert "readLayoutDensity" in sheet
+    assert "readPhotoCullEnabled" in sheet
+    assert "photoCullEnabled" in sheet
+    assert "showUploadConfirm" in sheet
+    assert "trackImportPhotoCullPref" in sheet
+    assert "layoutDensity" in first_success or "大图为主" in first_success
+    assert "cullDisabledDetailLine" in first_success
+    assert "photoCullEnabled" in first_success
+    assert "trackImportPhotoCullPref" in run or "readPhotoCullPrefSource" in run
+
+    for marker in (
+        "switchMode(",
+        "saveSheetDraft(",
+        "restoreModeAndDraft(",
+        "validateFineFields(",
+        "body.travelNotes",
+        "body.dateRange",
+        "body.featuredDir",
+        "body.materialDir",
+    ):
+        assert marker in sheet, marker
+
+    css = V2_CSS_BUNDLE
+    assert ".v2-sheet__mode-panel[hidden]" in css
+    assert "display: none !important;" in css
+
+    for marker in (
+        "runShelfLongshot",
+        "v2-success-secondary",
+        "success_preview_unavailable_fallback_longshot",
+    ):
+        assert marker in first_success, marker
+
+
+def test_studio_home_v2_first_success_module() -> None:
+    """FirstSuccess 专屏 + harness studioState / studioJob。"""
+    fs = (STUDIO_DIR / "homepage-v2" / "first-success.js").read_text(encoding="utf-8")
+    harness = (STUDIO_DIR / "homepage-v2" / "harness.js").read_text(encoding="utf-8")
+    assert "showFirstSuccess" in fs and "captureImportShell" in fs
+    assert "success_primary_click" in fs
+    assert "harnessApplyStartup" in harness and "studioState" in harness
+    assert "studioJob" in harness and "harnessInstallFetchMocks" in harness
+
+
+def test_studio_home_v2_variant_guard_and_dev_panel() -> None:
+    """AC-HP2-23 variant guard + DEV-HARNESS dev panel。"""
+    guard = (STUDIO_DIR / "homepage-v2" / "variant-guard.js").read_text(encoding="utf-8")
+    panel = (STUDIO_DIR / "homepage-v2" / "dev-panel.js").read_text(encoding="utf-8")
+    css = V2_CSS_BUNDLE
+    assert "isVariantSwitchLocked" in guard and "syncVariantGuard" in guard
+    assert "initDevPanel" in panel and "Copy repro URL" in panel
+    assert ".v2-dev-panel" in css
+
+
+def test_studio_home_v2_layout_tier_and_failed_modules() -> None:
+    """L2 懒加载层级 + Import Failed 专屏 + bucket_id。"""
+    tier = (STUDIO_DIR / "homepage-v2" / "layout-tier.js").read_text(encoding="utf-8")
+    failed = (STUDIO_DIR / "homepage-v2" / "import-failed.js").read_text(encoding="utf-8")
+    bucket = (STUDIO_DIR / "js" / "bucket.js").read_text(encoding="utf-8")
+    analytics = (STUDIO_DIR / "js" / "analytics.js").read_text(encoding="utf-8")
+    carousel = (STUDIO_DIR / "homepage-v2" / "carousel.js").read_text(encoding="utf-8")
+
+    assert "resolveLayoutTier" in tier and "shouldEagerCarouselPage" in tier
+    assert "showImportFailed" in failed and "failureNextHint" in failed
+    css = V2_CSS_BUNDLE
+    assert ".v2-first-success {" in css
+    first_success_block = css.split(".v2-first-success {", 1)[1].split("}", 1)[0]
+    first_success_panel = css.split(".v2-first-success__panel {", 1)[1].split("}", 1)[0]
+    failure_block = css.split(".v2-failure {", 1)[1].split("}", 1)[0]
+    assert "position: fixed" in first_success_block
+    assert "position: fixed" in failure_block
+    assert "isolation: isolate" in first_success_panel
+    assert "--v2-fs-ink" in first_success_panel
+    assert "z-index: 2500" in failure_block
+    assert "readServerBucketId" in bucket
+    assert "resolveBucketId" in bucket
+    assert "travelogue.studio.eventRing" in analytics
+    assert "bucket_id" in (STUDIO_DIR / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
+    assert "lazySrc" in carousel or "lazy" in carousel
+
+
+def test_studio_home_v2_carousel_modules() -> None:
+    """M20-b · Carousel clamp/spread 控制器与纯逻辑。"""
+    logic = (STUDIO_DIR / "homepage-v2" / "carousel-logic.js").read_text(encoding="utf-8")
+    carousel = (STUDIO_DIR / "homepage-v2" / "carousel.js").read_text(encoding="utf-8")
+
+    for js in (logic, carousel):
+        assert "\ufffd" not in js
+
+    for fn in ("clampIndex", "spreadFor", "scrollLeftFor", "indexFromScrollLeft",
+               "canPrev", "canNext", "isOddTail"):
+        assert fn in logic, fn
+
+    assert "initCarousel" in carousel
+    assert "carousel-logic.js" in carousel  # 控制器复用纯逻辑
+    assert "aria-current" in carousel       # dots 无障碍
+    assert "ArrowLeft" in carousel and "ArrowRight" in carousel  # 键盘 ←/→
+    # bento 委托 carousel，不再自带 renderCarousel（去重）
+    bento = (STUDIO_DIR / "homepage-v2" / "bento.js").read_text(encoding="utf-8")
+    assert "initCarousel" in bento
+    assert "renderCarousel" not in bento
+
+
+def test_v2_js_logic_node_units() -> None:
+    """运行 v2 纯逻辑 node 单测（carousel + lightbox 阈值）；无 node 则跳过。"""
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node 不可用，跳过 JS 单测")
+    js_dir = Path(__file__).resolve().parents[2] / "js"
+    test_files = [
+        str(js_dir / "carousel-logic.test.mjs"),
+        str(js_dir / "lightbox-logic.test.mjs"),
+        str(js_dir / "viewport-logic.test.mjs"),
+        str(js_dir / "layout-tier.test.mjs"),
+        str(js_dir / "shelf-actions-logic.test.mjs"),
+        str(js_dir / "bento-preview-picker-logic.test.mjs"),
+        str(js_dir / "manifest.test.mjs"),
+    ]
+    try:
+        result = subprocess.run(
+            [node, "--test", *test_files],
+            cwd=str(REPO_ROOT),
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=60,
+        )
+    except OSError as exc:  # 某些受限终端无法创建子进程管道
+        pytest.skip(f"无法启动 node 子进程：{exc}")
+    assert result.returncode == 0, result.stdout + "\n" + result.stderr
+    assert "# fail 0" in result.stdout
+
+
+def test_studio_home_v2_lightbox_modules() -> None:
+    """M20-c · Lightbox 控制器 + 阈值纯逻辑。"""
+    logic = (STUDIO_DIR / "homepage-v2" / "lightbox-logic.js").read_text(encoding="utf-8")
+    lightbox = (STUDIO_DIR / "homepage-v2" / "lightbox.js").read_text(encoding="utf-8")
+
+    for js in (logic, lightbox):
+        assert "\ufffd" not in js
+
+    assert "LIGHTBOX_DRAG_THRESHOLD_PX" in logic
+    assert "classifyGesture" in logic and "isTap" in logic
+
+    assert "openLightbox" in lightbox and "closeLightbox" in lightbox
+    assert "initLightbox" in lightbox
+    assert "trapFocus" in lightbox          # focus trap
+    assert "Escape" in lightbox             # Esc 关闭
+    # 不进 editor preview（只读验货）：不嵌 iframe
+    assert "iframe" not in lightbox.lower()
+
+    # bootstrap 接入真 Lightbox（覆盖占位）
+    bootstrap = (STUDIO_DIR / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
+    assert "initLightbox" in bootstrap
+    assert "M20-c" not in bootstrap  # 占位 toast 已移除
+
+
+def test_studio_home_v2_stale_recurate_modules() -> None:
+    """算法过期 · Bento 提示条 + curate 客户端 + 纯逻辑。"""
+    stale = (STUDIO_DIR / "homepage-v2" / "bento-stale.js").read_text(encoding="utf-8")
+    curate = (STUDIO_DIR / "homepage-v2" / "curate-client.js").read_text(encoding="utf-8")
+    logic = (STUDIO_DIR / "homepage-v2" / "shelf-actions-logic.js").read_text(encoding="utf-8")
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+    css = V2_CSS_BUNDLE
+    bento = (STUDIO_DIR / "homepage-v2" / "bento.js").read_text(encoding="utf-8")
+
+    assert "syncBentoStaleBar" in stale and "triggerHomepageRecurate" in stale
+    assert "runTripCurateJob" in curate and "withJobBusyRetry" in curate
+    assert "shelfResumeActions" in logic and "shouldShowBentoStaleBar" in logic
+    assert "v2-bento-stale" in html and 'aria-live="polite"' in html
+    assert ".v2-bento__stale" in css
+    assert "syncBentoStaleBar" in bento
+    assert "clearBentoPreviewCache" in (
+        STUDIO_DIR / "homepage-v2" / "trip-preview.js"
+    ).read_text(encoding="utf-8")
+
+
+def test_studio_home_v2_shelf_module() -> None:
+    """M20-e · Web 书架（§8）。"""
+    shelf = (STUDIO_DIR / "homepage-v2" / "shelf.js").read_text(encoding="utf-8")
+    assert "\ufffd" not in shelf
+    assert "renderShelf" in shelf
+    assert "你的游记画册" in shelf
+    logic = (STUDIO_DIR / "homepage-v2" / "shelf-actions-logic.js").read_text(encoding="utf-8")
+    assert "更新长图" in logic            # stale → 更新长图
+    assert "可更新" in shelf
+    assert "重新排版" in logic
+    assert "longshotStale" in shelf
+    assert "algorithmStale" in shelf
+    assert "shelf-actions-logic.js" in shelf
+    assert "triggerHomepageRecurate" in shelf
+    assert "isDemoTrip" in shelf          # demo → 示例徽章
+    assert "openImportSheet" in shelf     # 新建 → Sheet
+    assert "shelfCoverRelPath" in shelf   # 书架竖版封面（mobile cover）
+    assert "loadMoreShelf" in shelf
+    assert "fetchTripsPage" in shelf
+    assert "加载更多" in shelf
+    assert "即将上线" not in shelf
+    assert "shelf-menu.js" in shelf
+    assert "v2-shelf__card" in shelf
+    assert "v2-shelf__menu-btn" in V2_CSS_BUNDLE
+
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+    assert "studio-modal.css" in html
+    modal_css = (STUDIO_DIR / "studio-modal.css").read_text(encoding="utf-8")
+    assert ".studio__modal-backdrop" in modal_css
+    assert "position: fixed" in modal_css
+    assert "z-index: 6000" in modal_css
+
+    modal_js = (STUDIO_DIR / "studio-modal.js").read_text(encoding="utf-8")
+    assert "studio-modal-open" in modal_js
+    assert "preventScroll" in modal_js
+
+    menu = (STUDIO_DIR / "homepage-v2" / "shelf-menu.js").read_text(encoding="utf-8")
+    assert "保存长图" in menu
+    assert "删除画册" in menu
+    assert "shelf_menu_open" in menu
+    assert "deleteTrip" in menu
+    assert "runShelfLongshot" in menu
+    assert "shelf-longshot.js" in menu
+
+    longshot_client = (STUDIO_DIR / "js" / "longshot-client.js").read_text(encoding="utf-8")
+    assert "LONGSHOT_PRESETS" in longshot_client
+    assert "copyDisplay" in longshot_client
+    assert '"photos"' in longshot_client
+    assert "scale: 3" in longshot_client
+
+    shelf_longshot = (STUDIO_DIR / "homepage-v2" / "shelf-longshot.js").read_text(encoding="utf-8")
+    assert "shelf_longshot_start" in shelf_longshot
+    assert "V2.reroute" in shelf_longshot
+
+    trips_client = (STUDIO_DIR / "homepage-v2" / "trips-client.js").read_text(encoding="utf-8")
+    assert "deleteTrip" in trips_client
+    assert "studioAuthHeaders" in trips_client
+    assert 'method: "DELETE"' in trips_client
+
+    css = V2_CSS_BUNDLE
+    assert ".v2-shelf" in css
+    assert "line-clamp" in css            # 长标题 2 行 clamp
+
+    bootstrap = (STUDIO_DIR / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
+    assert "renderShelf" in bootstrap
+    assert "renderShelfPlaceholder" not in bootstrap  # 占位已移除
+
+
+def test_studio_home_v2_viewport_modules() -> None:
+    """M20-f · iPad 横屏 + UnsupportedViewport（§10）。"""
+    logic = (STUDIO_DIR / "homepage-v2" / "viewport-logic.js").read_text(encoding="utf-8")
+    unsupported = (STUDIO_DIR / "homepage-v2" / "unsupported.js").read_text(encoding="utf-8")
+
+    for js in (logic, unsupported):
+        assert "\ufffd" not in js
+
+    assert "classifyViewport" in logic
+    assert "isSupported" in logic
+    assert "unsupportedCopy" in logic
+    assert "tablet_landscape" in logic
+
+    assert "applyViewport" in unsupported
+    assert "initViewportWatch" in unsupported
+    assert "orientationchange" in unsupported  # 动态重判
+    assert "resize" in unsupported
+
+    css = V2_CSS_BUNDLE
+    # iPad 横屏断点保持双列（不堆叠）
+    assert "min-width: 768px) and (max-width: 1023px" in css
+
+    bootstrap = (STUDIO_DIR / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
+    assert "initViewportWatch" in bootstrap
+    assert "detectLayout" not in bootstrap  # 已抽到 viewport-logic
+
+
+def test_studio_home_v2_coldstart_background() -> None:
+    """M20-g · 冷启动 Importing 静帧背景（§9.2 / AC-HP2-17）。"""
+    bento = (STUDIO_DIR / "homepage-v2" / "bento.js").read_text(encoding="utf-8")
+    import_run = (STUDIO_DIR / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
+
+    assert "renderColdStartBackground" in bento
+    # 静帧：明确移除 Ken Burns 动效
+    assert "classList.remove(\"is-kenburns\")" in bento
+    # 幂等：已有壳层背景不覆盖（暖启动）
+    assert "if (bg.style.backgroundImage) return" in bento
+
+    assert "renderColdStartBackground" in import_run
+
+
+def test_studio_home_v2_telemetry_wired() -> None:
+    """M20-h · 漏斗埋点接线（TELEMETRY §2 / PRD §13.2）。"""
+    # 服务端 ALLOWED 已纳入 v2 事件
+    from travelogue.web.studio_homepage_telemetry import (
+        ALLOWED_STUDIO_HOMEPAGE_EVENTS,
+    )
+    for ev in (
+        "experiment_exposure", "homepage_view", "cta_click",
+        "sheet_close", "sheet_abandon", "lightbox_open",
+        "spread_page_view", "shelf_resume_click",
+        "shelf_menu_open", "shelf_delete_confirm", "shelf_delete_success",
+        "shelf_longshot_start", "shelf_longshot_success",
+        "longshot_export_start", "longshot_export_success",
+        "longshot_export_fail", "longshot_platform_change",
+    ):
+        assert ev in ALLOWED_STUDIO_HOMEPAGE_EVENTS
+
+    # 客户端 analytics.js ALLOWED 同步
+    analytics = (STUDIO_DIR / "js" / "analytics.js").read_text(encoding="utf-8")
+    for ev in (
+        "homepage_view",
+        "cta_click",
+        "spread_page_view",
+        "shelf_resume_click",
+        "longshot_export_start",
+        "longshot_platform_change",
+    ):
+        assert ev in analytics
+
+    bootstrap = (STUDIO_DIR / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
+    assert "experiment_exposure" in bootstrap
+    assert "homepage_view" in bootstrap
+    assert "_viewTracked" in bootstrap  # 仅最终态首帧一次
+
+    sheet = (STUDIO_DIR / "homepage-v2" / "import-sheet.js").read_text(encoding="utf-8")
+    assert "cta_click" in sheet
+    assert "sheet_close" in sheet
+    assert "sheet_abandon" in sheet
+
+    carousel = (STUDIO_DIR / "homepage-v2" / "carousel.js").read_text(encoding="utf-8")
+    assert "spread_page_view" in carousel
+
+    shelf = (STUDIO_DIR / "homepage-v2" / "shelf.js").read_text(encoding="utf-8")
+    assert "shelf_resume_click" in shelf
+
+    lightbox = (STUDIO_DIR / "homepage-v2" / "lightbox.js").read_text(encoding="utf-8")
+    assert "lightbox_open" in lightbox
+
+
+@pytest.mark.e2e
+def test_studio_home_v2_event_endpoint(tmp_path: Path) -> None:
+    """Studio telemetry POST /__travelogue/studio-event accepts allowlisted events."""
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    base = f"http://127.0.0.1:{port}"
+    try:
+        status, body = _post_json(
+            f"{base}{STUDIO_EVENT_PATH}",
+            {"event": "open_sheet", "meta": {"state": "IdleEmpty", "qa": True}},
+        )
+        assert status == 200
+        assert body == {"ok": True}
+        bad_status, bad_body = _post_json(
+            f"{base}{STUDIO_EVENT_PATH}",
+            {"event": "not_allowed"},
+        )
+        assert bad_status == 400
+        assert "allowed" in bad_body
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_studio_home_v2_error_pipeline() -> None:
+    """M20-i · JS error 管道（TELEMETRY §3 / §17.2）。"""
+    from travelogue.web.studio_homepage_telemetry import (
+        ALLOWED_STUDIO_HOMEPAGE_EVENTS,
+    )
+    assert "js_error" in ALLOWED_STUDIO_HOMEPAGE_EVENTS
+
+    analytics = (STUDIO_DIR / "js" / "analytics.js").read_text(encoding="utf-8")
+    assert "js_error" in analytics
+
+    pipe = (STUDIO_DIR / "homepage-v2" / "error-pipeline.js").read_text(encoding="utf-8")
+    assert "\ufffd" not in pipe
+    assert "initErrorPipeline" in pipe
+    assert "unhandledrejection" in pipe
+    assert "addEventListener(\"error\"" in pipe
+    assert "MAX_ERRORS_PER_SESSION" in pipe  # 节流防风暴
+
+    bootstrap = (STUDIO_DIR / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
+    assert "initErrorPipeline" in bootstrap
+
+
+def test_studio_home_v2_harness_and_ac_hooks() -> None:
+    """M20-h/AC · dev harness + AC e2e 依赖的 DOM/CSS 钩子。"""
+    harness = (STUDIO_DIR / "homepage-v2" / "harness.js").read_text(encoding="utf-8")
+    assert "\ufffd" not in harness
+    assert "harnessTripsOverride" in harness
+    assert "harnessAssetsFail" in harness
+    assert "studioFixture" in harness
+    assert "studioAssetsFail" in harness
+
+    bootstrap = (STUDIO_DIR / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
+    assert "harnessTripsOverride" in bootstrap
+    assert "harnessAssetsFail" in bootstrap
+
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+    assert 'id="v2-carousel-hint"' in html
+    assert 'data-demo-flag' in html
+    assert html.count('data-demo-flag') >= 2
+    assert 'id="v2-bento-preview-select"' in html
+    assert 'id="v2-bento-preview-trigger"' in html
+    assert 'id="v2-bento-preview-listbox"' in html
+    assert "预览画册" in html
+    assert 'id="v2-success-set-preview"' in html
+
+    picker = (STUDIO_DIR / "homepage-v2" / "bento-preview-picker.js").read_text(encoding="utf-8")
+    assert "setBentoPreviewTripId" in picker
+    assert "v2-preview-combobox__option" in picker
+    shelf_menu = (STUDIO_DIR / "homepage-v2" / "shelf-menu.js").read_text(encoding="utf-8")
+    assert "在上方预览" in shelf_menu
+    assert "is-previewing" in (STUDIO_DIR / "homepage-v2" / "bento.js").read_text(encoding="utf-8")
+    assert "bentoPreviewTrip" in (
+        STUDIO_DIR / "homepage-v2" / "harness.js"
+    ).read_text(encoding="utf-8")
+    assert "bentoPreview404" in harness
+    assert "studioCurate" in harness
+    assert "harnessInstallCurateMock" in harness
+    deeplink = (STUDIO_DIR / "homepage-v2" / "bento-preview-deeplink.js").read_text(encoding="utf-8")
+    assert "applyPreviewDeepLink" in deeplink
+    migrate = (STUDIO_DIR / "homepage-v2" / "bento-preview-migrate.js").read_text(encoding="utf-8")
+    assert "migrateD13BentoPreference" in migrate
+    assert "ensureTripInCatalog" in (STUDIO_DIR / "homepage-v2" / "trip-preview.js").read_text(encoding="utf-8")
+    assert "v2-bento-preview-search" in picker
+    assert "#v2-web-cell" in html or 'id="v2-web-cell"' in html
+
+    css = V2_CSS_BUNDLE
+    assert ".v2-preview-combobox__trigger" in css
+    assert ".v2-preview-combobox__option-stale" in css
+    # 隐藏的 fixed 覆盖层不得拦截点击
+    assert "#v2-unsupported[hidden]" in css
+    assert "display: none !important" in css
+    # CTA 触控目标 ≥44px（AC-HP2-21）
+    assert "min-height: 44px" in css
+
+    dev_panel = (STUDIO_DIR / "homepage-v2" / "dev-panel.js").read_text(encoding="utf-8")
+    assert 'href="/classic"' in dev_panel
+
+
+def test_is_demo_trip_distinguishes_user_slug_hash() -> None:
+    """CJK 文件夹导入的 demo-{hash} slug 是用户画册，不是 bundled demo。"""
+    js = (STUDIO_DIR / "js" / "constants.js").read_text(encoding="utf-8")
+    assert "/^demo-[a-f0-9]{10}$/" not in js
+    assert 'id === "demo-album"' in js
+
+
+def test_studio_home_v2_review_followups() -> None:
+    """代码审查 P1/P2 后续修复断言。"""
+    manifest_js = (STUDIO_DIR / "homepage-v2" / "manifest.js").read_text(encoding="utf-8")
+    assert 'cache: "no-cache"' not in manifest_js
+
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+    assert 'rel="modulepreload"' in html
+
+    carousel = (STUDIO_DIR / "homepage-v2" / "carousel.js").read_text(encoding="utf-8")
+    assert 'fetchpriority' in carousel
+
+    bootstrap = (STUDIO_DIR / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
+    assert "_reroutePromise" in bootstrap
+    assert 'import("./shelf.js")' in bootstrap
+    assert 'from "./shelf.js"' not in bootstrap
+
+    shelf = (STUDIO_DIR / "homepage-v2" / "shelf.js").read_text(encoding="utf-8")
+    assert "cssBackgroundImage" in shelf
+
+    static = (
+        REPO_ROOT / "travelogue" / "web" / "studio_handlers" / "static_handlers.py"
+    ).read_text(encoding="utf-8")
+    assert "Cache-Control" in static
+    assert "ETag" in static
+
+
+def test_demo_showcase_manifest_valid() -> None:
+    manifest_path = (
+        STUDIO_DIR / "assets" / "demo-showcase" / "manifest.json"
+    )
+    data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert data["version"]
+    assert data["title"]
+    assert data["assets"]["background"]
+    assert data["assets"]["longshot"]
+    pages = data["pages"]
+    assert isinstance(pages, list) and len(pages) >= 3
+    # 顺序约束：首 cover、尾 epilogue（DATA-CONTRACT §1.2）
+    assert pages[0]["role"] == "cover"
+    assert pages[-1]["role"] == "epilogue"
+    for page in pages:
+        for field in ("id", "role", "label", "webp"):
+            assert page.get(field), field
+        if page["role"] == "chapter":
+            assert page.get("chapterIndex"), page["id"]
+
+    asset_root = manifest_path.parent
+    rel_paths = {data["assets"]["background"], data["assets"]["longshot"]}
+    rel_paths.update(p["webp"] for p in pages)
+    for rel in rel_paths:
+        path = asset_root / rel
+        assert path.is_file(), f"缺失 dev 占位 WebP: {rel}（运行 scripts/generate_demo_placeholders.py）"
+        assert path.read_bytes()[:4] == b"RIFF", rel
+
+
+@pytest.mark.e2e
+def test_studio_home_gate_off_serves_classic_at_root(tmp_path: Path, monkeypatch) -> None:
+    """AC-HP2-23 回滚 · TRAVELOGUE_STUDIO_HOMEPAGE_V2=off → GET / 为 classic 冻结页。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "off")
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+        for marker in CLASSIC_FREEZE_MARKERS:
+            assert marker in html, marker
+        assert "studio-home-v2.css" not in html
+        assert "/__studio/legacy-freeze/studio.classic.js" in html
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_studio_home_gate_auto_zero_percent_no_redirect(tmp_path: Path, monkeypatch) -> None:
+    """holdback 0% · auto 模式不 redirect 到 /v2。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "auto")
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", "0")
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+        assert 'data-studio-v="4"' in html
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_studio_classic_contract_smoke_config_capabilities(tmp_path: Path, monkeypatch) -> None:
+    """M21 · classic 合同 smoke：页面与导入能力配置可达。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "off")
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/classic", timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+        assert "classic-pick" in html
+
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/__travelogue/config", timeout=10) as resp:
+            assert resp.status == 200
+            body = json.loads(resp.read().decode("utf-8"))
+        caps = body.get("capabilities") or {}
+        assert "pickFolder" in caps
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_studio_home_gate_on_serves_v2_at_root(tmp_path: Path, monkeypatch) -> None:
+    """M20-j · TRAVELOGUE_STUDIO_HOMEPAGE_V2=on → GET / 直接 v2。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "on")
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+        assert 'data-homepage-variant="v2"' in html
+        assert "studio-home-v2.css" in html
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_studio_home_gate_classic_serves_frozen_page(tmp_path: Path, monkeypatch) -> None:
+    """M21-e2 · GET /classic 始终返回 legacy-freeze classic 页（与 gate 模式无关）。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "on")
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/classic", timeout=10) as resp:
+            html = resp.read().decode("utf-8")
+        for marker in CLASSIC_FREEZE_MARKERS:
+            assert marker in html, marker
+        assert "/__studio/legacy-freeze/studio.classic.js" in html
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_studio_home_gate_auto_redirects_to_v2(tmp_path: Path, monkeypatch) -> None:
+    """M21-c · auto + 100% 直接在根路径返回 v2（无 /v2 重定向）。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "auto")
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", "100")
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/", method="GET")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+            cookie = resp.headers.get("Set-Cookie") or ""
+        assert 'data-homepage-variant="v2"' in html
+        assert "studio-home-v2.css" in html
+        assert "travelogue.studio.hp_bucket=" in cookie
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_studio_home_gate_auto_treatment_redirects(tmp_path: Path, monkeypatch) -> None:
+    """M21-c · auto 10% 进组 UA 在根路径直接返回 v2。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "auto")
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", "10")
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    ua = "M20jTest/5"  # bucket=3 < 10
+    try:
+        req = urllib.request.Request(
+            f"http://127.0.0.1:{port}/",
+            method="GET",
+            headers={"User-Agent": ua},
+        )
+
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+        assert 'data-homepage-variant="v2"' in html
+        assert "studio-home-v2.css" in html
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_studio_home_gate_auto_control_stays_classic(tmp_path: Path, monkeypatch) -> None:
+    """M20-j · auto 10% · 对照组 UA → 200 classic（data-homepage-variant=classic）。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "auto")
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", "10")
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    ua = "M20jTest/1"  # bucket=70 >= 10
+    try:
+        req = urllib.request.Request(
+            f"http://127.0.0.1:{port}/",
+            method="GET",
+            headers={"User-Agent": ua},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+        assert 'data-homepage-variant="classic"' in html
+        assert 'data-studio-v="4"' in html
+        assert "studio-home-v2.css" not in html
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_studio_home_gate_auto_yaml_percent_redirects(tmp_path: Path, monkeypatch) -> None:
+    """M21-c · auto 无 env percent 时读 yaml；进组 UA 在根路径返回 v2。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "auto")
+    monkeypatch.delenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", raising=False)
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        yaml.safe_dump({"studio": {"homepage": {"v2_bento": {"percent": 10}}}}),
+        encoding="utf-8",
+    )
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port, config_path=config_path)
+    ua = "M20jTest/5"  # bucket=3 < 10
+    try:
+        req = urllib.request.Request(
+            f"http://127.0.0.1:{port}/",
+            method="GET",
+            headers={"User-Agent": ua},
+        )
+
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            assert resp.status == 200
+            html = resp.read().decode("utf-8")
+        assert 'data-homepage-variant="v2"' in html
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
+def test_studio_home_gate_query_override_v2(tmp_path: Path, monkeypatch) -> None:
+    """dev · ?homepageVariant=v2 在 off 模式下仍 serve v2。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "off")
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        with urllib.request.urlopen(
+            f"http://127.0.0.1:{port}/?homepageVariant=v2",
+            timeout=10,
+        ) as resp:
+            html = resp.read().decode("utf-8")
+        assert 'data-homepage-variant="v2"' in html
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_studio_homepage_gate_wired() -> None:
+    """门控模块已接入 studio_dispatch 路由表 + static_handlers（M-C1 后）。"""
+    dispatch = (REPO_ROOT / "travelogue" / "web" / "studio_dispatch.py").read_text(encoding="utf-8")
+    static = (
+        REPO_ROOT / "travelogue" / "web" / "studio_handlers" / "static_handlers.py"
+    ).read_text(encoding="utf-8")
+    assert "static_handlers.handle_home_root" in dispatch
+    assert "handle_home_root" in static
+    assert "HOME_CLASSIC_PATH" in dispatch
+    gate = (REPO_ROOT / "travelogue" / "web" / "studio_homepage_gate.py").read_text(encoding="utf-8")
+    assert "TRAVELOGUE_STUDIO_HOMEPAGE_V2" in gate
+    assert "decide_root_variant" in gate
+
+
+HOMEPAGE_V21_FORBIDDEN_COPY = (
+    "算法待更新",
+    "长图待更新",
+    "到头停止",
+    "← 横滑",
+)
+
+
+def test_homepage_v21_no_internal_terminology_in_studio_templates() -> None:
+    """AC-HP21-06 · G-HP21-05 · 首页用户可见文案禁止内部术语。"""
+    for path in STUDIO_DIR.rglob("*"):
+        if path.suffix not in {".html", ".js", ".css"}:
+            continue
+        if "legacy-freeze" in path.parts:
+            continue
+        text = path.read_text(encoding="utf-8")
+        for term in HOMEPAGE_V21_FORBIDDEN_COPY:
+            assert term not in text, f"禁止术语 {term!r} 出现在 {path.relative_to(REPO_ROOT)}"
+
+
+def test_homepage_v21_telemetry_events_registered() -> None:
+    """M22-e · v2.1 新增事件已登记于客户端与服务端 allowlist。"""
+    from travelogue.web.studio_homepage_telemetry import ALLOWED_STUDIO_HOMEPAGE_EVENTS
+
+    analytics = (STUDIO_DIR / "js" / "analytics.js").read_text(encoding="utf-8")
+    for event in ("settings_open", "bench_resume_click", "shelf_scroll_into_view"):
+        assert f'"{event}"' in analytics
+        assert event in ALLOWED_STUDIO_HOMEPAGE_EVENTS
+
+
+def test_homepage_v21_markers_present() -> None:
+    """v2.1 壳层 marker：设置入口、信任行、data-homepage-v21。"""
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+    for marker in (
+        'data-homepage-v21="1"',
+        'id="v2-headline-trust"',
+        'id="v2-settings-toggle"',
+        "照片留在本机 · 无需注册",
+    ):
+        assert marker in html

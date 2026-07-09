@@ -389,6 +389,49 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 ---
 
+## 现行有效文档（架构治理 · M-C3）
+
+> 历史 Phase PRD/验收仍保留在仓库中供查阅；**实施与运维以本节 + ADR 为准**。  
+> 完整脚本清单见 [scripts/README.md](../scripts/README.md)（`python scripts/gen_scripts_registry.py` 刷新）。
+
+### 主 PRD / 架构 SSOT
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) | 架构优化还债 PRD v1.1 |
+| [PRD-ARCH-OPT-WS1-MERGE-FIX.md](./PRD-ARCH-OPT-WS1-MERGE-FIX.md) | WS1 合并闸门修复 PRD（feedback / LSE baseline / CI） |
+| [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md) | 里程碑状态追踪（实施期 SSOT） |
+| [PROMPTS-ARCH-OPTIMIZATION.md](./PROMPTS-ARCH-OPTIMIZATION.md) | Agent 执行提示词 |
+| [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md) | 技术架构（M-B0 v0.9 增量；M-D1 后全量更新） |
+| [GLOSSARY.md](./GLOSSARY.md) | Studio 命名消歧（classic / Import Wizard v3 / Preview v3） |
+| [TESTING.md](./TESTING.md) | 测试分层与 CI job 说明 |
+
+### ADR（架构决策 · 现行）
+
+| 文档 | 说明 |
+|------|------|
+| [adr/README.md](./adr/README.md) | ADR 索引（含 008 revision 锁 · 015 LSE 迁移 · 016 Longshot 草案） |
+
+### 运行手册 / 运维
+
+| 文档 | 说明 |
+|------|------|
+| [DEVELOPMENT.md](./DEVELOPMENT.md) | 本地开发与调试 |
+| [studio-homepage-v2/README.md](./studio-homepage-v2/README.md) | Studio 首页 v2 文档 hub |
+| [studio-homepage-v2/RUNBOOK-HOLDBACK.md](./studio-homepage-v2/RUNBOOK-HOLDBACK.md) | Holdback 灰度 / 回滚 |
+| [studio-homepage-v2/RUNBOOK-DOGFOOD.md](./studio-homepage-v2/RUNBOOK-DOGFOOD.md) | Dogfood 观察 |
+| [QUALITY-GATE.md](./QUALITY-GATE.md) | CI 质量门禁与脚本入口 |
+
+### 历史归档
+
+| 路径 | 说明 |
+|------|------|
+| [docs/archive/](./archive/) | 退役文档（M-C3 机制） |
+| [docs/archive/ARCHIVE-CANDIDATES.md](./archive/ARCHIVE-CANDIDATES.md) | 可归档 `phaseN_*` 脚本候选清单 |
+| [scripts/archive/](../scripts/archive/) | 退役脚本（确认后 `git mv`） |
+
+---
+
 ## 版本记录
 
 | 日期 | 变更 |

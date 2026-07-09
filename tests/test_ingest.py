@@ -1,61 +1,7 @@
-"""Ingest service tests."""
+"""Backward-compat shim for ``from tests.test_ingest import _album``."""
 
 from __future__ import annotations
 
-import os
-import time
-from pathlib import Path
+from tests.studio_test_helpers import make_test_album as _album
 
-from PIL import Image
-
-from travelogue.media.ingest import ingest_into_trip
-from travelogue.services.trip_factory import create_trip
-
-
-def _album(tmp_path: Path, n: int = 6) -> Path:
-    album = tmp_path / "album"
-    album.mkdir()
-    stamp = time.time() - n * 10
-    for i in range(n):
-        path = album / f"p{i:02d}.jpg"
-        Image.new("RGB", (2400, 3200), (30 + i * 17, 50 + i * 11, 70 + i * 13)).save(
-            path, quality=95
-        )
-        ts = stamp + i * 10
-        os.utime(path, (ts, ts))
-    return album
-
-
-def test_ingest_preserves_aspect_without_crop(tmp_path: Path) -> None:
-    trips = tmp_path / "trips"
-    trip_json = create_trip("ingest-test", trips, title="导入测试")
-    trip_dir = trips / "ingest-test"
-    trip = __import__("json").loads(trip_json.read_text(encoding="utf-8"))
-    result = ingest_into_trip(
-        trip, trip_dir, from_dir=_album(tmp_path), generate_crops=False, dedupe=False
-    )
-    assert result.added == 6
-    assert trip["pipeline"]["status"] == "ingest_ready"
-    a0 = trip["assets"][0]
-    assert a0.get("cropMobile") is None
-    assert a0.get("cropWeb") is None
-    assert a0["aspectKind"] == "portrait"
-    assert a0["width"] < a0["height"]
-    display = trip_dir / a0["displayFile"]
-    assert display.is_file()
-    with Image.open(display) as img:
-        assert img.width < img.height
-
-
-def test_ingest_optional_profile_crops(tmp_path: Path) -> None:
-    trips = tmp_path / "trips"
-    trip_json = create_trip("ingest-crop-test", trips, title="裁切测试")
-    trip_dir = trips / "ingest-crop-test"
-    trip = __import__("json").loads(trip_json.read_text(encoding="utf-8"))
-    ingest_into_trip(
-        trip, trip_dir, from_dir=_album(tmp_path, 4), generate_crops=True, dedupe=False
-    )
-    a0 = trip["assets"][0]
-    assert a0.get("cropMobile", "").endswith("-m.webp")
-    assert a0.get("cropWeb", "").endswith("-w.webp")
-    assert (trip_dir / "assets" / f"{a0['id']}-m.webp").is_file()
+__all__ = ["_album"]

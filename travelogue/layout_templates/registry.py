@@ -375,8 +375,8 @@ class LayoutTemplateEngine:
         return slot_aspect_table(self.get(template_id))
 
     def export_legacy_registry(self) -> dict[str, Any]:
-        from travelogue.curation.mosaic.constants import PATTERN_GRID_CLASS
-        from travelogue.curation.mosaic.pattern_catalog import LEGACY_MOSAIC_REGISTRY_IDS
+        from travelogue.layout_engine.mosaic.constants import PATTERN_GRID_CLASS
+        from travelogue.layout_engine.mosaic.pattern_catalog import LEGACY_MOSAIC_REGISTRY_IDS
 
         mosaic_patterns = {
             tid: export_mosaic_pattern(t)

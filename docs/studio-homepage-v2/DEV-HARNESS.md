@@ -19,7 +19,7 @@
 
 | 参数 | 值 | 效果 |
 |------|-----|------|
-| `homepageVariant` | `v2` \| `v3` | 见 FEATURE-FLAG.md |
+| `homepageVariant` | `v2` \| `classic`（兼容 legacy `v3`） | 见 FEATURE-FLAG.md |
 | `studioState` | 见下表 | 跳过正常 bootstrap 路由 |
 | `studioFixture` | fixtures 名 | mock `GET /trips` |
 | `studioJob` | job fixture 名 | mock `GET /status` |

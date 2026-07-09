@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -12,16 +13,34 @@ MANIFEST_PATH = TEMPLATES_ROOT / "visual-journal" / "manifest.json"
 TEMPLATE_VISUAL_JOURNAL = TEMPLATES_ROOT / "visual-journal"
 
 
-def template_dir_for(template_id: str) -> Path:
-    from travelogue.templates.registry import get_registry
+def is_frozen() -> bool:
+    return bool(getattr(sys, "frozen", False))
 
-    return get_registry().get(template_id).template_dir
+
+def bundle_root() -> Path:
+    if is_frozen() and hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS)
+    return ROOT
+
+
+def exe_dir() -> Path:
+    if is_frozen():
+        return Path(sys.executable).resolve().parent
+    return Path.cwd()
+
+
+def default_trips_dir() -> Path:
+    if is_frozen():
+        return exe_dir() / "trips"
+    return ROOT / "trips"
+
+
+def template_dir_for(template_id: str) -> Path:
+    return TEMPLATES_ROOT / template_id
 
 
 def manifest_path_for(template_id: str) -> Path:
-    from travelogue.templates.registry import get_registry
-
-    return get_registry().get(template_id).manifest_path
+    return TEMPLATES_ROOT / template_id / "manifest.json"
 GOLDEN_HTML = TEMPLATE_VISUAL_JOURNAL / "golden.html"
 GOLDEN_TRIP_FIXTURE = FIXTURES_DIR / "trip.render_golden.json"
 GOLDEN_REFERENCE_DIR_NAME = "_golden-reference"

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any
 
-from travelogue.curation.mosaic.constants import (
+from travelogue.layout_engine.mosaic.constants import (
     MOSAIC_3_PATTERN_IDS,
     MOSAIC_4_PATTERN_IDS,
     MOSAIC_5_PATTERN_IDS,
@@ -18,17 +18,17 @@ from travelogue.curation.mosaic.constants import (
     PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
     PATTERN_PORTRAIT_1_LANDSCAPE_2,
 )
-from travelogue.curation.mosaic.grid_specs import (
+from travelogue.layout_engine.mosaic.grid_specs import (
     AUTO_FLOW_GRIDS,
     EXPLICIT_GRID_SPECS,
     STACK_PATTERNS,
 )
-from travelogue.curation.mosaic.pattern_catalog import (
+from travelogue.layout_engine.mosaic.pattern_catalog import (
     AspectProfile,
     MosaicPattern,
     default_registry,
 )
-from travelogue.curation.mosaic.slot_geometry import (
+from travelogue.layout_engine.mosaic.slot_geometry import (
     _LANDSCAPE_FORBIDDEN_TALL,
     _PORTRAIT_DOMINANT_AUTO_FLOW,
     _PORTRAIT_FORBIDDEN_WIDE,
@@ -95,7 +95,9 @@ def legacy_stage_aspect(pattern_id: str) -> str:
 def _grid_class(pattern_id: str) -> str:
     if pattern_id in PATTERN_GRID_CLASS:
         return PATTERN_GRID_CLASS[pattern_id]
-    from travelogue.curation.screen_planner import PATTERN_GRID_CLASS as planner_classes
+    from travelogue.layout_engine.planner.screen_planner import (
+        PATTERN_GRID_CLASS as planner_classes,
+    )
 
     return planner_classes[pattern_id]
 
@@ -312,7 +314,7 @@ def export_stack_patterns(templates: dict[str, Any]) -> frozenset[str]:
 
 
 def export_pattern_grid_class(templates: dict[str, Any]) -> dict[str, str]:
-    from travelogue.curation.mosaic.constants import PATTERN_GRID_CLASS
+    from travelogue.layout_engine.mosaic.constants import PATTERN_GRID_CLASS
 
     return {
         tid: templates[tid].render_grid_class

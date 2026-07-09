@@ -25,7 +25,8 @@ from travelogue.orchestrator.run import RunResult, run_trip
 from travelogue.render.engine import RenderError, render_trip
 from travelogue.services.layout import LayoutError, apply_layout_to_trip
 from travelogue.services.narrate import NarrateError, run_narrate
-from travelogue.services.pipeline_state import PipelineError
+from travelogue.services.pipeline_state import PipelineError, lock_copy, lock_structure
+from travelogue.services.trip import persist_trip_snapshot
 from travelogue.services.validate import validate_trip
 
 
@@ -69,7 +70,7 @@ def cmd_ingest(
         else:
             typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
-    _trip_svc(trip_path).save(trip, trip_path)
+    persist_trip_snapshot(_trip_svc(trip_path), trip_path, trip)
     typer.echo("OK ingest")
     typer.echo(format_ingest_report(result, trip))
 
@@ -87,7 +88,7 @@ def cmd_media_reexport(
     trip_root = trip_path.parent
     trip = _trip_svc(trip_path).load(trip_path)
     result = reexport_trip_assets(trip, trip_root, asset_ids=asset_id, app_cfg=get_config())
-    _trip_svc(trip_path).save(trip, trip_path)
+    persist_trip_snapshot(_trip_svc(trip_path), trip_path, trip)
     typer.echo("OK reexport")
     typer.echo(format_ingest_report(result, trip))
     if result.failed:
@@ -130,7 +131,7 @@ def cmd_curate(
     except CurateError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
-    _trip_svc(trip_path).save(trip, trip_path)
+    persist_trip_snapshot(_trip_svc(trip_path), trip_path, trip)
     from travelogue.curation.curate_report import format_curate_report
 
     typer.echo(format_curate_report(result, trip))
@@ -146,8 +147,6 @@ def cmd_lock(
     """Lock structure or copy gate."""
     trip_path = _resolve(path, trips_dir=trips_dir)
     trip = _trip_svc(trip_path).load(trip_path)
-    pipe = trip.setdefault("pipeline", {})
-    locks = pipe.setdefault("locks", {"structure": False, "copy": False})
     assets = {a["id"] for a in trip.get("assets", [])}
     if target == "structure":
         if cover:
@@ -155,17 +154,15 @@ def cmd_lock(
                 typer.echo(f"E_LOCK cover not in assets: {cover}", err=True)
                 raise typer.Exit(1)
             trip["coverAssetId"] = cover
-        locks["structure"] = True
-        pipe["status"] = "structure_locked"
+        lock_structure(trip)
         typer.echo("OK structure_locked")
     elif target == "copy":
-        locks["copy"] = True
-        pipe["status"] = "copy_locked"
+        lock_copy(trip)
         typer.echo("OK copy_locked")
     else:
         typer.echo("E_CLI: lock target must be structure or copy", err=True)
         raise typer.Exit(1)
-    _trip_svc(trip_path).save(trip, trip_path)
+    persist_trip_snapshot(_trip_svc(trip_path), trip_path, trip)
 
 
 @app.command("narrate")
@@ -221,7 +218,7 @@ def cmd_narrate(
     if dry_run:
         typer.echo(f"dry-run would update: {', '.join(result.fields_updated) or '(none)'}")
         return
-    _trip_svc(trip_path).save(trip, trip_path)
+    persist_trip_snapshot(_trip_svc(trip_path), trip_path, trip)
     prov = provider or get_config().llm.provider or "stub"
     typer.echo(f"OK narrate ({prov}) · updated {', '.join(result.fields_updated) or '(none)'}")
     if result.fields_updated:
@@ -365,7 +362,7 @@ def cmd_layout(
     except LayoutError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
-    svc.save(trip, trip_path)
+    persist_trip_snapshot(svc, trip_path, trip)
     typer.echo(f"OK layout · {result.summary_text}")
     typer.echo(f"  chapters: {result.chapter_count} · items blocks: {result.item_count}")
     if not no_validate:

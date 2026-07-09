@@ -73,6 +73,17 @@ curate:
   #     layout_fit: 0.23
   #     sharpness: 0.25
   #     thirds: 0.15
+  # Phase 10 · food grid（见 docs/PRD-PHASE10-food-grid.md）
+  enable_food_grid: true
+  # Phase 10.1 · 可配置 mundane 组屏桶（默认仅 food）
+  mundane_grid_buckets: [food]
+  # Phase 6 · layout rhythm & diversity (M25-B)
+  layout:
+    enable_gravity_balance: true
+    enable_mmr_diversity: true
+    max_consecutive_same_pattern: 2
+    longshot_mmr_lambda: 0.72
+    enable_arc_breath: true
 
 # Phase 23 · moment 选型审美权重（见 docs/PRD-PHASE23-peak-moment.md §11）
 aesthetic:
@@ -261,6 +272,9 @@ layout:
 mosaic:
   enabled: true
   scorer_version: "p15-s3"
+  # deterministic_strict 优先级（运行时 mosaic/trip.py::compose_trip）：
+  # mosaic.enabled=true → 使用本段 mosaic.deterministic_strict；
+  # mosaic.enabled=false → 回退 clustering.deterministic_strict（见下方 clustering 段）。
   deterministic_strict: true
   min_candidate_score: 0.35
   enabled_window_sizes: [4, 5, 6, 9]
@@ -350,8 +364,7 @@ ingest:
   detect_faces: true
   portrait_analyze: true
   face_min_size_px: 48
-  face_detect_max_edge: 0
-  portrait_analyze: true   # 0=原图检测；640=检测前缩放到长边 640（P7-B4）
+  face_detect_max_edge: 0   # 0=原图检测；640=检测前缩放到长边 640（P7-B4）
   featured_dir_names: ["主图上传", "精选", "featured", "hero"]
   material_dir_names: ["素材上传", "素材", "material", "extras"]
   warn_featured_count_above: 30
@@ -423,21 +436,6 @@ pipeline:
   parallel_embed: true
   parallel_embed_chunk: 32
 
-curate:
-  featured_weight: 1.35
-  featured_min_for_cover_pool: 2
-  # Phase 10 · food grid（见 docs/PRD-PHASE10-food-grid.md）
-  enable_food_grid: true
-  # Phase 10.1 · 可配置 mundane 组屏桶（默认仅 food）
-  mundane_grid_buckets: [food]
-  # Phase 6 · layout rhythm & diversity (M25-B)
-  layout:
-    enable_gravity_balance: true
-    enable_mmr_diversity: true
-    max_consecutive_same_pattern: 2
-    longshot_mmr_lambda: 0.72
-    enable_arc_breath: true
-
 vision:
   enabled: false                   # true | false | auto — P3-Full CLIP (M13)
   autoMinPhotos: 80
@@ -460,6 +458,7 @@ clustering:
   segmentCurateMode: event_first   # event_first | date_fallback
   sceneClusterMode: run_aware      # run_aware | off
   deterministic: true
+  # 仅当 mosaic.enabled=false 时生效；mosaic 开启时见 mosaic.deterministic_strict（见 compose_trip）。
   deterministic_strict: false      # Phase 7 · 强确定性（测试/fixture）
   cache_abi_version: v1            # Phase 7 · cache ABI
   forceRecluster: false            # true → 删 cache 全量重算 (F-CLU-CACHE-03)

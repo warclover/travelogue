@@ -5,8 +5,9 @@ from __future__ import annotations
 import copy
 from collections.abc import Mapping
 
+from travelogue.layout_contract.rhythm import BREATH_PATTERN
+
 DEFAULT_MAX_SCREENS = 12
-BREATH_PATTERN = "screen-breath-pause"
 DEFAULT_MMR_LAMBDA = 0.72
 # Exhaustive consecutive-pattern search is OK for longshot picks (≤12); not for |must|.
 _MAX_EXACT_CONSECUTIVE_SEARCH = 18

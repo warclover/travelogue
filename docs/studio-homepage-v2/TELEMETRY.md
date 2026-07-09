@@ -113,9 +113,9 @@
 | `meta.variant` | 页面 URL | 用途 |
 |----------------|----------|------|
 | `v2` | **`GET /`**（v2 渲染） | 主路径 funnel · LCP |
-| `v3` | **`GET /`**（classic 渲染，holdback 对照）或 **`GET /classic`**（应急 smoke） | holdback 对照 · **非**切主站前历史 baseline |
+| `classic` | **`GET /`**（classic 渲染，holdback 对照）或 **`GET /classic`**（应急 smoke） | holdback 对照 · **非**切主站前历史 baseline |
 | — | `GET /v2` | 仅 302 → `/`；**不**单独采样 |
 
-脚本常量：`scripts/studio_lcp_measure.py` → `VARIANT_PATHS = {"v2": "/", "v3": "/classic"}`。
+脚本常量：`scripts/studio_lcp_measure.py` → `VARIANT_PATHS = {"v2": "/", "classic": "/classic"}`（legacy 键 `v3` 可读）。
 
-聚合：`scripts/studio_telemetry_aggregate.py` · `scripts/studio_holdback_report.py` 须按 `meta.variant` 分桶，且 holdback 阶段 v2/v3 **同期** jsonl。
+聚合：`scripts/studio_telemetry_aggregate.py` · `scripts/studio_holdback_report.py` 须按 `meta.variant` 分桶，且 holdback 阶段 v2/classic **同期** jsonl。

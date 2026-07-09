@@ -27,8 +27,9 @@ trips/linzhi/*
 !trips/linzhi/index-longshot.html
 !trips/linzhi/README.md
 
-# OS
-.DS_Store
+
+# Node (preview-toolbar tsc gate)
+node_modules/
 Thumbs.db
 
 # IDE
@@ -48,11 +49,13 @@ runs/
 # Local debug / screenshots
 _debug/
 _tmp_homepage_audit/
+_tmp*
 .tmp_prefix_tests.txt
 docs/reports/playwright-failures-*.log
 pytest-full.log
 docs/reports/pattern-audit-demo-*.md
 .cache/
+trips/.cache/
 .playwright-mcp/
 page-real-mobile.png
 desktop-*.png
@@ -66,3 +69,6 @@ studio-import-error.log
 
 # Full HetangYuese TTF (~7MB); regenerate via scripts/build_hetangyuese_cover_font.py
 templates/studio/assets/fonts/hetangyuese-source.ttf
+
+# Generated layout template registry cache (rebuilt from YAML at runtime)
+travelogue/layout_templates/registry.cache.json

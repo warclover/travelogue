@@ -1,0 +1,121 @@
+{
+  "packages": [
+    "travelogue.curation",
+    "travelogue.layout_engine"
+  ],
+  "totalCrossEdges": 8,
+  "layoutEngineToCuration": 1,
+  "curationToLayoutEngine": 7,
+  "targetAfterMigration": {
+    "maxCrossEdges": 2,
+    "reductionPercent": 80,
+    "note": "M-B4b proceeds only if post-kernel (M-B4a) cross edges ≤ maxCrossEdges"
+  },
+  "topImporters": [
+    [
+      "travelogue.curation.curate",
+      7
+    ],
+    [
+      "travelogue.layout_engine.scoring.hero",
+      1
+    ]
+  ],
+  "topImported": [
+    [
+      "travelogue.curation.curate_scoring",
+      1
+    ],
+    [
+      "travelogue.layout_engine.adapter",
+      1
+    ],
+    [
+      "travelogue.layout_engine.capabilities",
+      1
+    ],
+    [
+      "travelogue.layout_engine.editorial_hints",
+      1
+    ],
+    [
+      "travelogue.layout_engine.pattern_policy",
+      1
+    ],
+    [
+      "travelogue.layout_engine.replan",
+      1
+    ],
+    [
+      "travelogue.layout_engine.rollout",
+      1
+    ],
+    [
+      "travelogue.layout_engine.segment_order",
+      1
+    ]
+  ],
+  "edges": [
+    {
+      "importer": "travelogue.curation.curate",
+      "imported": "travelogue.layout_engine.adapter",
+      "lines": [
+        629,
+        903,
+        1128,
+        1138
+      ]
+    },
+    {
+      "importer": "travelogue.curation.curate",
+      "imported": "travelogue.layout_engine.capabilities",
+      "lines": [
+        630,
+        1139
+      ]
+    },
+    {
+      "importer": "travelogue.curation.curate",
+      "imported": "travelogue.layout_engine.editorial_hints",
+      "lines": [
+        1140
+      ]
+    },
+    {
+      "importer": "travelogue.curation.curate",
+      "imported": "travelogue.layout_engine.pattern_policy",
+      "lines": [
+        922
+      ]
+    },
+    {
+      "importer": "travelogue.curation.curate",
+      "imported": "travelogue.layout_engine.replan",
+      "lines": [
+        662,
+        761
+      ]
+    },
+    {
+      "importer": "travelogue.curation.curate",
+      "imported": "travelogue.layout_engine.rollout",
+      "lines": [
+        522
+      ]
+    },
+    {
+      "importer": "travelogue.curation.curate",
+      "imported": "travelogue.layout_engine.segment_order",
+      "lines": [
+        631
+      ]
+    },
+    {
+      "importer": "travelogue.layout_engine.scoring.hero",
+      "imported": "travelogue.curation.curate_scoring",
+      "lines": [
+        22
+      ]
+    }
+  ]
+}

@@ -9,7 +9,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from tests.test_studio_server import _free_port, _start_studio_server  # noqa: E402
+from tests.integration.studio.test_studio_server import (  # noqa: E402
+    _free_port,
+    _start_studio_server,
+)
 
 AUDIT_JS = """
 () => {

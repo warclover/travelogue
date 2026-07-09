@@ -17,11 +17,16 @@ from travelogue.media.image_ops import classify_aspect
 
 FLAGSHIP_2P3L_EQUAL = "screen-mosaic-5-2p3l-equal"
 _MOSAIC_DISABLED_PATCH_MODULES = (
+    "travelogue.layout_engine.mosaic.lte_adapter",
+    "travelogue.layout_engine.mosaic.candidates",
+    "travelogue.layout_engine.mosaic.compose",
     "travelogue.curation.mosaic.lte_adapter",
     "travelogue.curation.mosaic.candidates",
     "travelogue.curation.mosaic.compose",
 )
 _MOSAIC_REGISTRY_PATCH_MODULES = (
+    "travelogue.layout_engine.mosaic.lte_adapter",
+    "travelogue.layout_engine.mosaic.candidates",
     "travelogue.curation.mosaic.lte_adapter",
     "travelogue.curation.mosaic.candidates",
 )
@@ -32,7 +37,7 @@ def intrinsic_2p3l_mcs_enabled():
     """Re-enable retired flagship only for intrinsic geometry / MCS tests."""
     from contextlib import ExitStack
 
-    from travelogue.curation.mosaic import lte_adapter
+    from travelogue.layout_engine.mosaic import lte_adapter
     from travelogue.layout_templates.legacy_bridge import export_mosaic_pattern
     from travelogue.layout_templates.registry import get_engine
 
@@ -59,6 +64,12 @@ def intrinsic_2p3l_mcs_enabled():
         return _orig_rollout(pattern_id)
 
     with ExitStack() as stack:
+        stack.enter_context(
+            patch(
+                "travelogue.layout_engine.mosaic.lte_adapter.lte_rollout_eligible",
+                _allow_flagship_rollout,
+            )
+        )
         stack.enter_context(
             patch(
                 "travelogue.curation.mosaic.lte_adapter.lte_rollout_eligible",

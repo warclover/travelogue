@@ -21,6 +21,10 @@ from PIL import Image
 from travelogue.config import AestheticConfig, AestheticWeights, resolve_learned_blend
 from travelogue.curation.asset_quality import asset_sharpness
 from travelogue.curation.composition_signals import mean_thirds_score
+from travelogue.layout_contract.scoring import (  # noqa: F401  (re-export · kernel)
+    aesthetic_overall,
+    asset_aesthetic,
+)
 from travelogue.media.color_metrics import (
     color_harmony_score,
     dominant_tone_chroma_score,
@@ -741,27 +745,6 @@ def apply_aesthetic_alignment(
     if trip is not None:
         persist_aesthetic_alignment(trip, report, cfg=ae_cfg)
     return report
-
-
-def asset_aesthetic(asset: dict) -> dict | None:
-    q = asset.get("quality")
-    if isinstance(q, dict):
-        ae = q.get("aesthetic")
-        if isinstance(ae, dict):
-            return ae
-    return None
-
-
-def aesthetic_overall(asset: dict) -> float | None:
-    """``quality.aesthetic.overall`` or ``None`` when absent (fail-open)."""
-    ae = asset_aesthetic(asset)
-    if not ae:
-        return None
-    try:
-        val = ae.get("overall")
-        return None if val is None else float(val)
-    except (TypeError, ValueError):
-        return None
 
 
 def aesthetic_dim(asset: dict, dim: str) -> float | None:

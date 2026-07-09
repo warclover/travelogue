@@ -14,7 +14,7 @@ import argparse
 import copy
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -111,7 +111,7 @@ def evaluate_trip(target: str, *, trips_dir: Path, work_dir: Path) -> dict[str, 
         "recordId": "mcr-eval-recurate",
         "tripId": trip_id,
         "tripJson": str(trip_json),
-        "evaluatedAt": datetime.now(timezone.utc).isoformat(),
+        "evaluatedAt": datetime.now(UTC).isoformat(),
         "before": before,
         "after": after,
         "passesHeroMosaic": after["heroMosaicScreenCount"] >= 1,
@@ -158,7 +158,7 @@ def main() -> int:
 
     payload = {
         "recordId": "mcr-eval-recurate",
-        "evaluatedAt": datetime.now(timezone.utc).isoformat(),
+        "evaluatedAt": datetime.now(UTC).isoformat(),
         "trips": results,
     }
     if args.write:

@@ -115,11 +115,8 @@ def run_admission_for_template(
     *,
     target: str = "beta",
 ) -> dict[str, Any]:
-    if is_layout_template_id(template_id):
-        return run_layout_template_admission(template_id, target=target)  # type: ignore[arg-type]
-    from travelogue.templating.admission import run_admission_check
-
-    return run_admission_check(template_id)
+    """Layout-template admission only; HTML templates use templating.admission."""
+    return run_layout_template_admission(template_id, target=target)  # type: ignore[arg-type]
 
 
 def layout_template_promotion_plan(
@@ -136,7 +133,7 @@ def layout_template_promotion_plan(
     review_status = None
     review_required = target == "ga"
     if review_required:
-        from travelogue.templating.review import get_review_status
+        from travelogue.domain.template_admin_state import get_review_status
 
         review_status = get_review_status(template_id)
     can_promote = bool(admission.get("ok")) and transition_err is None

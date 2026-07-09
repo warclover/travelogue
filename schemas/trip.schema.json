@@ -1040,6 +1040,11 @@
           "type": "string",
           "enum": ["card-br", "split-mat", "magazine-head"],
           "description": "Web cover opening layout skin; assigned at trip create"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Optimistic lock counter; incremented on successful TripService.update/save (ADR-008)"
         }
       }
     },

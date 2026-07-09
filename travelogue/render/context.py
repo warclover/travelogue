@@ -493,7 +493,7 @@ def build_media_scroll(
 
 
 from travelogue.curation.asset_subject import full_frame_fit_for_asset
-from travelogue.curation.screen_planner import grid_class_for_pattern
+from travelogue.layout_engine.planner.screen_planner import grid_class_for_pattern
 from travelogue.render.blur_fill import resolve_stage_aspect_ratio, should_blur_fill_slot
 from travelogue.render.context_types import VoiceRenderContext, VoiceSourceContext
 from travelogue.render.screen_tone import screen_tone_css
@@ -1114,7 +1114,7 @@ def collect_asset_paths(trip: dict, trip_root: Path) -> list[tuple[str, Path]]:
                         continue
                     add(pick_image_src(a, export_layout=export_layout))
 
-    from travelogue.curation.curate import resolve_cover_asset_id
+    from travelogue.domain.cover_view import resolve_cover_asset_id
 
     if export_layout == "auto":
         cover_profiles: tuple[str, ...] = ("mobile", "web")

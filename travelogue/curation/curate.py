@@ -43,9 +43,21 @@ from travelogue.curation.layout_planner import (
     summarize_orientations,
 )
 from travelogue.curation.time_segments import TimeSegment, parse_asset_date
+from travelogue.domain.cover_view import (
+    layout_eligible_assets,
+    resolve_cover_render_profile,
+)
+from travelogue.domain.cover_view import (
+    resolve_cover_asset_id as _resolve_cover_asset_id_from_trip,
+)
+from travelogue.domain.pipeline_view import (
+    append_pipeline_run,
+    clear_pending_assets,
+    set_layout_status,
+    set_pipeline_status,
+)
 from travelogue.errors import CodeError
 from travelogue.layout_contract import LAYOUT_PLAN_VERSION, format_layout_summary
-from travelogue.services.pipeline_state import set_layout_status
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 # Backward-compatible private aliases for tests and internal callers.
@@ -152,15 +164,6 @@ def reading_experience_warnings(
     return out
 
 
-def layout_eligible_assets(trip: dict) -> list[dict]:
-    """Assets usable for cover, chapters, and screens."""
-    return [
-        a
-        for a in trip.get("assets") or []
-        if a.get("type", "image") != "video" and a.get("layoutEligible", True) is not False
-    ]
-
-
 def apply_low_resolution_exclusion(
     trip: dict,
     *,
@@ -179,27 +182,6 @@ def apply_low_resolution_exclusion(
     return apply_layout_eligibility_marks(trip, app_cfg=app_cfg)
 
 
-def resolve_cover_render_profile(
-    export_layout: str,
-    *,
-    index_name: str = "index.html",
-    layout_engine: str | None = None,
-) -> str:
-    """Map render surface to cover profile (mobile portrait vs web landscape)."""
-    if export_layout in ("mobile", "web"):
-        return export_layout
-    if index_name in ("index-mobile.html",):
-        return "mobile"
-    from travelogue.curation.screen_planner import LAYOUT_ENGINE_SCREENS
-
-    if layout_engine == LAYOUT_ENGINE_SCREENS or index_name in (
-        "index.html",
-        "index-present.html",
-    ):
-        return "web"
-    return "mobile"
-
-
 def resolve_cover_asset_id(
     trip: dict,
     *,
@@ -208,6 +190,14 @@ def resolve_cover_asset_id(
     layout_engine: str | None = None,
 ) -> str:
     """Pick cover for render/curate profile (mobile | web | auto→surface)."""
+    cid = _resolve_cover_asset_id_from_trip(
+        trip,
+        export_layout=export_layout,
+        index_name=index_name,
+        layout_engine=layout_engine,
+    )
+    if cid:
+        return cid
     assets = layout_eligible_assets(trip)
     if not assets:
         return ""
@@ -216,11 +206,6 @@ def resolve_cover_asset_id(
         index_name=index_name or "index.html",
         layout_engine=layout_engine or trip.get("layoutEngine"),
     )
-    by_layout = (trip.get("curation") or {}).get("coverByLayout") or {}
-    if isinstance(by_layout, dict) and profile in by_layout:
-        cid = by_layout[profile]
-        if cid and any(a.get("id") == cid for a in assets):
-            return cid
     return _pick_cover_asset_id(assets, export_layout=profile)
 
 
@@ -593,7 +578,7 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
         build_buckets_from_clustering,
         should_use_clustering_buckets,
     )
-    from travelogue.services.copy_subject import effective_meta_places
+    from travelogue.domain.copy_subject import effective_meta_places
 
     meta = trip.get("meta", {})
     meta_places = effective_meta_places(
@@ -676,8 +661,8 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
 
 
 def _build_layout_only_bucket_plan(trip: dict, preflight: _CuratePreflight) -> _CurateBucketPlan | None:
+    from travelogue.domain.copy_subject import effective_meta_places
     from travelogue.layout_engine.replan import buckets_from_existing_chapters
-    from travelogue.services.copy_subject import effective_meta_places
 
     raw = buckets_from_existing_chapters(trip)
     if raw is None:
@@ -715,7 +700,7 @@ def run_curate(
             f"need at least {MIN_CURATE_ASSETS} assets to curate",
         )
 
-    from travelogue.templating.curation_adapter import apply_curation_adapter_hints
+    from travelogue.curation.curation_adapter import apply_curation_adapter_hints
 
     apply_curation_adapter_hints(trip, cfg=cfg)
 
@@ -1285,35 +1270,37 @@ def run_curate(
         curation["warnings"] = warnings
 
     layout_summary = format_layout_summary(summary_dict, chapters)
-    pipe = trip.setdefault("pipeline", {})
     now = _utc_now_iso()
+    trip_id = str(trip.get("tripId") or "trip")
     if apply_layout:
         set_layout_status(trip, "layout_draft")
-        pipe.setdefault("runs", []).append(
+        append_pipeline_run(
+            trip,
             {
-                "runId": f"layout-{trip.get('tripId', 'trip')}",
+                "runId": f"layout-{trip_id}",
                 "agent": "layout",
                 "startedAt": now,
                 "finishedAt": now,
                 "model": None,
-            }
+            },
         )
     else:
         set_layout_status(trip, "pending")
 
     # Main pipeline status (structure_draft); layoutStatus above is the Agent 1.5 sub-state.
-    pipe["status"] = "structure_draft"
+    set_pipeline_status(trip, "structure_draft")
     # Re-curate from structure_draft clears the post-lock pending ingest queue.
-    pipe["pendingAssets"] = []
+    clear_pending_assets(trip)
     trip["updatedAt"] = now
-    pipe.setdefault("runs", []).append(
+    append_pipeline_run(
+        trip,
         {
-            "runId": f"curate-{trip.get('tripId', 'trip')}",
+            "runId": f"curate-{trip_id}",
             "agent": "curator",
             "startedAt": now,
             "finishedAt": now,
             "model": None,
-        }
+        },
     )
 
     from travelogue.curation.arc_screen_tags import stamp_screen_arc_segments

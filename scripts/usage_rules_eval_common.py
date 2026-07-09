@@ -11,7 +11,6 @@ from typing import Any
 from scripts.phase3_ig2_report import load_fixture_trip
 from tests._golden.helpers import layout_snapshot
 from travelogue.config import AppConfig, get_config
-from travelogue.config.layout import UsageRulesConfig
 from travelogue.config.runtime import config_override
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.curate import run_curate

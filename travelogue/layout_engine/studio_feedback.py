@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.config import AppConfig, get_config
-from travelogue.curation.feedback import record_g1_edit
+from travelogue.layout_contract.feedback import record_g1_edit
 from travelogue.layout_engine.capabilities import effective_capabilities
 from travelogue.layout_engine.feedback import append_layout_feedback
 from travelogue.layout_engine.registry import get_strategy_pack

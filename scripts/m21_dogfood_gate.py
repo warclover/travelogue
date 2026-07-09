@@ -19,15 +19,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 UNIT_TARGETS = [
-    "tests/test_studio_home_v2.py",
-    "tests/test_studio_homepage_gate.py",
-    "tests/test_studio_homepage_gate_security.py",
+    "tests/unit/web/test_studio_home_v2.py",
+    "tests/unit/web/test_studio_homepage_gate.py",
+    "tests/unit/web/test_studio_homepage_gate_security.py",
 ]
 
 M21_0_E2E = [
-    "tests/test_studio_home_v2_ac_playwright.py::test_ac_hp2_16_refresh_resumes_import",
-    "tests/test_studio_home_v2_ac_playwright.py::test_ac_hp2_failed_retry_upload_reopens_sheet",
-    "tests/test_studio_home_v2_ac_playwright.py::test_ac_hp2_resume_clears_stale_upload_pending",
+    "tests/e2e/test_studio_home_v2_ac_playwright.py::test_ac_hp2_16_refresh_resumes_import",
+    "tests/e2e/test_studio_home_v2_ac_playwright.py::test_ac_hp2_failed_retry_upload_reopens_sheet",
+    "tests/e2e/test_studio_home_v2_ac_playwright.py::test_ac_hp2_resume_clears_stale_upload_pending",
 ]
 
 

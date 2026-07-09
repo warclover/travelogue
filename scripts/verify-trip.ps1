@@ -20,7 +20,7 @@ $tripRoot = Split-Path $TripPath -Parent
 python -m travelogue validate $TripPath
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-python -m pytest tests/test_chapter_items_screens_sync.py tests/test_validate_vr_p05.py -q
+python -m pytest tests/unit/trip/test_chapter_items_screens_sync.py tests/unit/validate/test_validate_vr_p05.py -q
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 $html = Join-Path $tripRoot "index.html"

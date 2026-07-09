@@ -6,7 +6,8 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from travelogue.curation.screen_layout_state import (
+from travelogue.layout_contract.constraints import FOCAL_EDGE_MARGIN
+from travelogue.layout_contract.rhythm import (
     MAX_PORTRAIT_ORIENTATION_STREAK,
     MAX_PORTRAIT_PAIR_STREAK,
     PORTRAIT_SINGLE_PATTERNS,
@@ -151,7 +152,6 @@ def check_cover_not_in_screens(
     return violations
 
 
-FOCAL_EDGE_MARGIN = 0.15
 
 
 def check_focal_not_at_edge(

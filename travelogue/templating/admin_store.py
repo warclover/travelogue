@@ -5,14 +5,11 @@ from __future__ import annotations
 import json
 import threading
 from datetime import UTC, datetime
-from typing import Any, Literal
+from typing import Any
 
-from travelogue.paths import ROOT
-from travelogue.templating.lifecycle import assert_transition
+from travelogue.domain.template_admin_state import STATE_PATH as _STATE_PATH
+from travelogue.templating.lifecycle import TemplateLifecycle, assert_transition
 
-TemplateLifecycle = Literal["experimental", "beta", "ga", "deprecated", "disabled"]
-
-_STATE_PATH = ROOT / "runs" / "template_admin_state.json"
 _LOCK = threading.Lock()
 _HIGH_RISK_TARGETS = frozenset({"disabled", "deprecated"})
 

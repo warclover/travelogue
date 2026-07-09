@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from travelogue.curation.feedback import G1EditRecord, edit_weight_for_record
+from travelogue.layout_contract.feedback import G1EditRecord, edit_weight_for_record
 from travelogue.util.datetime_ import utc_now_iso
 
 SIDECAR_NAME = "layout-feedback.jsonl"

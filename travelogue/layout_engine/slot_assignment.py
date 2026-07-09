@@ -5,7 +5,7 @@ from __future__ import annotations
 import itertools
 from typing import Any
 
-from travelogue.curation.layout_constraints import FOCAL_EDGE_MARGIN
+from travelogue.layout_contract.constraints import FOCAL_EDGE_MARGIN
 from travelogue.layout_engine.features import (
     _asset_aspect,
     _slot_display_aspect,

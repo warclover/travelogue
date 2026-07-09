@@ -38,6 +38,7 @@ from travelogue.templating.config_governance import (
 )
 from travelogue.templating.roles import require_template_role
 from travelogue.web.studio_admin_auth import require_admin_api_access, studio_authenticated
+from travelogue.web.studio_bento_preview import _trip_static_url
 from travelogue.web.studio_errors import client_error_payload
 from travelogue.web.studio_handlers.common import resolve_trip_dir_listed, studio_ctx
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
@@ -348,9 +349,9 @@ def handle_layout_strategy_sandbox(handler: StudioHandlerProtocol) -> None:
     )
     previews = enrich_changed_screen_previews(
         trip,
-        trip_id,
         trip_dir,
         report.get("diff") or {},
+        preview_url_for=lambda rel, _tid=trip_id: _trip_static_url(_tid, rel),
     )
     handler._json_response(
         200,
@@ -398,9 +399,9 @@ def handle_layout_strategy_shadow(handler: StudioHandlerProtocol) -> None:
     )
     previews = enrich_changed_screen_previews(
         trip,
-        trip_id,
         trip_dir,
         report.get("diff") or {},
+        preview_url_for=lambda rel, _tid=trip_id: _trip_static_url(_tid, rel),
     )
     handler._json_response(
         200,

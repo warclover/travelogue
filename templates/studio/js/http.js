@@ -39,6 +39,44 @@ export function isJobBusyResponse(result) {
   return data.error === "E_STUDIO_JOB_BUSY";
 }
 
+export function isTripConflictResponse(result) {
+  if (!result || result.status !== 409) return false;
+  var data = result.data || result.body || {};
+  return data.error === "E_TRIP_CONFLICT";
+}
+
+/** DIFF-01 · auto-retry once on optimistic lock conflict, then toast. */
+export function withTripConflictRetry(runRequest, options) {
+  options = options || {};
+  var retried = false;
+  function notifyConflict() {
+    if (typeof options.onConflict === "function") {
+      options.onConflict();
+      return;
+    }
+    if (typeof studioToast === "function") {
+      studioToast("内容已被其他操作更新，请刷新", { duration: 4000 });
+    }
+  }
+  return runRequest().then(function (result) {
+    if (!isTripConflictResponse(result)) return result;
+    if (retried) {
+      notifyConflict();
+      return result;
+    }
+    retried = true;
+    return runRequest();
+  });
+}
+
+export function patchJsonConflictRetry(url, payload, options) {
+  return withTripConflictRetry(function () { return patchJson(url, payload); }, options);
+}
+
+export function postJsonConflictRetry(url, payload, options) {
+  return withTripConflictRetry(function () { return postJson(url, payload); }, options);
+}
+
 /** P5-1.4 · toast + auto-retry when import/longshot hits E_STUDIO_JOB_BUSY (409). */
 export function withJobBusyRetry(runRequest, options) {
   options = options || {};

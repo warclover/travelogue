@@ -57,7 +57,7 @@ def solidify_screen_geometry(
             continue
         slot["rect"] = list(meta.rect)
         slot["displayAspect"] = round(slot_display_aspect(meta.rect, stage), 4)
-        from travelogue.curation.mosaic.lte_adapter import resolve_slot_fit
+        from travelogue.layout_engine.mosaic.lte_adapter import resolve_slot_fit
 
         aid = slot.get("assetId")
         asset = assets_map.get(aid) if aid else None

@@ -65,6 +65,22 @@ class PipelineConfig:
     parallel_embed_chunk: int = 32
 
 
+def pipeline_from_dict(raw: dict[str, Any]) -> PipelineConfig:
+    import warnings
+
+    legacy_orch = str(raw.get("orchestration") or "").strip().lower()
+    if legacy_orch == "legacy":
+        warnings.warn(
+            "pipeline.orchestration=legacy was removed (M-D1); using unified run_trip path",
+            UserWarning,
+            stacklevel=2,
+        )
+    return PipelineConfig(
+        parallel_embed=cfg_bool(raw, "parallel_embed", "parallelEmbed", True),
+        parallel_embed_chunk=cfg_int(raw, "parallel_embed_chunk", "parallelEmbedChunk", 32),
+    )
+
+
 def render_reading_from_dict(raw: dict[str, Any]) -> RenderReadingConfig:
     return RenderReadingConfig(
         default_profile=str(raw.get("default_profile", "default_hybrid")),
@@ -77,10 +93,3 @@ def render_reading_from_dict(raw: dict[str, Any]) -> RenderReadingConfig:
 def render_from_dict(raw: dict[str, Any]) -> RenderConfig:
     reading_raw = raw.get("reading") if isinstance(raw.get("reading"), dict) else {}
     return RenderConfig(reading=render_reading_from_dict(reading_raw))
-
-
-def pipeline_from_dict(raw: dict[str, Any]) -> PipelineConfig:
-    return PipelineConfig(
-        parallel_embed=cfg_bool(raw, "parallel_embed", "parallelEmbed", True),
-        parallel_embed_chunk=cfg_int(raw, "parallel_embed_chunk", "parallelEmbedChunk", 32),
-    )

@@ -1,0 +1,194 @@
+/* Homepage v2 · Phone preview + vertical scroll */
+/* ── Phone preview（右列顶对齐 · 底边与 web 卷轴预览框对齐 · JS 写入高度） ── */
+.v2-phone {
+  --v2-phone-ratio: calc(9 / 16);
+  --v2-phone-scale: 1;
+  --v2-phone-height: clamp(360px, 52vh, 640px);
+  grid-row: 1;
+  align-self: start;
+  justify-self: center;
+  flex: 0 0 auto;
+  height: calc(var(--v2-phone-height) * var(--v2-phone-scale));
+  width: min(100%, calc(var(--v2-phone-height) * var(--v2-phone-ratio) * var(--v2-phone-scale)));
+  margin-top: 0;
+  aspect-ratio: var(--v2-phone-ratio);
+  max-height: calc(980px * var(--v2-phone-scale));
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.v2-phone__shell {
+  flex: 1;
+  min-height: 0;
+  padding: 8px 7px 10px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, var(--v2-phone-shell-a), var(--v2-phone-shell-b));
+  box-shadow: 0 14px 40px rgba(15, 23, 42, .35);
+  border: 1px solid rgba(255, 255, 255, .22);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.v2-phone__notch {
+  width: 44px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, .15);
+  margin: 0 auto 6px;
+}
+.v2-phone__screen {
+  flex: 1;
+  overflow: hidden;
+  border-radius: 9px;
+  min-height: 0;
+  background: var(--v2-surface-soft);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.v2-phone-strip {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.v2-phone-strip__viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  isolation: isolate;
+}
+.v2-phone-strip__track {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  overflow-y: hidden;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+.v2-phone-strip__track::-webkit-scrollbar { display: none; }
+.v2-phone-strip__slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #14110d;
+  pointer-events: auto;
+}
+.v2-phone-strip__slide img,
+.v2-phone-strip__slide-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 38%;
+}
+
+/* 竖条/整卷长图：章内竖滚完整展示，避免 cover 裁成「截断」 */
+.v2-phone-strip__slide--scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none; /* Firefox：隐藏滚动条，滚轮/触摸仍可用 */
+  -ms-overflow-style: none;
+  padding-bottom: 28px;
+  box-sizing: border-box;
+  background: #14110d;
+}
+.v2-phone-strip__slide--scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+.v2-phone-strip__slide--scroll .v2-phone-strip__slide-img {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: unset;
+  object-position: unset;
+}
+
+.v2-phone-strip__slide-ph {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  font-size: 10px;
+  letter-spacing: .08em;
+  color: rgba(0, 0, 0, .35);
+  background: linear-gradient(180deg, #f5f2ec, #ebe6de);
+}
+.v2-phone-strip__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--v2-border);
+  background: rgba(255, 255, 255, .9);
+  color: var(--v2-primary-hover);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  backdrop-filter: blur(4px);
+  z-index: 5;
+  pointer-events: auto;
+}
+.v2-phone-strip__arrow--prev { left: 6px; }
+.v2-phone-strip__arrow--next { right: 6px; }
+.v2-phone-strip__arrow:disabled {
+  opacity: .25;
+  cursor: not-allowed;
+}
+.v2-phone-strip__arrow[hidden] {
+  display: none;
+}
+.v2-phone-strip__footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4px;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+.v2-phone-strip__footer[hidden] {
+  display: none;
+}
+.v2-phone-strip__dots {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  align-items: center;
+  pointer-events: auto;
+}
+.v2-phone-strip__dots button {
+  width: 5px;
+  height: 5px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--v2-border-strong);
+  cursor: pointer;
+}
+.v2-phone-strip__dots button.is-active {
+  background: var(--v2-primary, #0077b6);
+  transform: scale(1.15);
+}
+

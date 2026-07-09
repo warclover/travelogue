@@ -462,11 +462,14 @@ def handle_templates_admin_admission(handler: StudioHandlerProtocol) -> None:
     target = str(payload.get("target") or "beta").strip().lower()
     if target not in ("beta", "ga"):
         target = "beta"
-    report = run_admission_for_template(template_id, target=target)
     if is_layout_template_id(template_id):
+        report = run_admission_for_template(template_id, target=target)
         plan = layout_template_promotion_plan(template_id, target=target)
         handler._json_response(200, {"ok": True, **report, "promotionPlan": plan})
         return
+    from travelogue.templating.admission import run_admission_check
+
+    report = run_admission_check(template_id)
     handler._json_response(200, {"ok": True, **report})
 
 
