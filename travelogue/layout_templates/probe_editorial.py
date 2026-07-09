@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Literal
 
-from travelogue.curation.editorial_portrait_row import (
+from travelogue.layout_engine.editorial.portrait_row import (
     editorial_row_ar_from_assets,
 )
 from travelogue.paths import JOURNAL_SCREENS_CSS, TEMPLATE_VISUAL_JOURNAL

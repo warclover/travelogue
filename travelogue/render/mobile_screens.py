@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.curation.editorial_4mix import PATTERN_EDITORIAL_4MIX
+from travelogue.layout_engine.editorial.four_mix import PATTERN_EDITORIAL_4MIX
 
 PORTRAIT_TRIPLE_MOBILE_EXPAND = frozenset(
     {"screen-portrait-3", "screen-portrait-3-editorial"}

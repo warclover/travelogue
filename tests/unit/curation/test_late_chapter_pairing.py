@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-from travelogue.curation.screen_layout_state import (
+from travelogue.layout_contract.planner_state import (
     LateChapterPairingPolicy,
     RhythmRules,
     ScreenLayoutPlannerState,
 )
-from travelogue.curation.screen_planner import attach_screens_to_chapters
-from travelogue.curation.screen_planner_attach import (
+from travelogue.layout_engine.planner.screen_planner import attach_screens_to_chapters
+from travelogue.layout_engine.planner.screen_planner_attach import (
     _carry_inject_ids,
     _consolidate_adjacent_portrait_singles,
     _portrait_carry_hop_limit,
 )
-from travelogue.curation.screen_planner_stages import (
+from travelogue.layout_engine.planner.screen_planner_stages import (
     build_chapter_plan_context,
     stage_flush_pending_for_other_family,
 )
@@ -82,7 +82,7 @@ def test_consolidate_adjacent_portrait_singles() -> None:
 
 
 def test_late_chapter_flush_lookahead_defers_single_pending() -> None:
-    from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+    from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 
     aspects = {"p1": "portrait", "l1": "landscape", "p2": "portrait"}
     ctx = build_chapter_plan_context(

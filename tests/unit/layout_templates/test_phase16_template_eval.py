@@ -17,7 +17,7 @@ from travelogue.curation.layout_metrics import (
     chapter_distinct_pattern_counts,
     pattern_diversity_p50,
 )
-from travelogue.curation.mosaic.metrics import mixed_layout_exposure_rate
+from travelogue.layout_engine.mosaic.metrics import mixed_layout_exposure_rate
 from travelogue.layout_templates.registry import reset_engine_cache_for_tests
 
 
@@ -124,7 +124,7 @@ def test_submit_exposure_proposals_cli_flow(tmp_path: Path, monkeypatch: pytest.
     assert result["status"] == "approved"
 
     boosted = next(p for p in proposals if p["suggestedBaseWeight"] > p["currentBaseWeight"])
-    from travelogue.curation.mosaic.lte_adapter import template_base_weight
+    from travelogue.layout_engine.mosaic.lte_adapter import template_base_weight
 
     assert template_base_weight(boosted["templateId"]) == pytest.approx(boosted["suggestedBaseWeight"])
 

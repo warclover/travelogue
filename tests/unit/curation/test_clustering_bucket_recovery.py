@@ -6,7 +6,7 @@ from travelogue.curation.clustering_buckets import (
     recover_uncovered_geo_bucket_assets,
     segments_to_buckets,
 )
-from travelogue.curation.mosaic.coverage import compute_coverage_metrics
+from travelogue.layout_engine.mosaic.coverage import compute_coverage_metrics
 
 
 def _asset(aid: str, taken_at: str) -> dict:

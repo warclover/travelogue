@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-import travelogue.curation.screen_planner  # noqa: F401 — complete adapter import cycle
+import travelogue.layout_engine.planner.screen_planner  # noqa: F401 — complete adapter import cycle
 from travelogue.config import get_config
 from travelogue.layout_engine.adapter import (
     mixed_proximity_from_pack,
@@ -39,7 +39,7 @@ def test_default_pack_mosaic_weights_match_config() -> None:
 def test_default_pack_layout_state_matches_config_path() -> None:
     """LSE pack path must inherit P21 dense/large-mosaic quotas from config path."""
 
-    from travelogue.curation.screen_layout_state import RhythmRules, ScreenLayoutPlannerState
+    from travelogue.layout_contract.planner_state import RhythmRules, ScreenLayoutPlannerState
     from travelogue.layout_engine.adapter import layout_state_for_trip
 
     cfg = _cfg_lse_on()

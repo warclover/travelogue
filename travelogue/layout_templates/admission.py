@@ -119,7 +119,7 @@ def run_layout_template_admission(
 
     legacy = template.raw.get("_legacy")
     if legacy is not None:
-        from travelogue.curation.mosaic.pattern_catalog import default_registry
+        from travelogue.layout_engine.mosaic.pattern_catalog import default_registry
 
         exported = get_engine().export_legacy_registry()["mosaic_patterns"]
         if template_id in default_registry():

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
 
-import travelogue.curation.screen_planner  # noqa: F401
+import travelogue.layout_engine.planner.screen_planner  # noqa: F401
 from scripts.phase3_ig2_report import _cfg_for_mode, _prepare_trip, load_fixture_trip
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.curate import run_curate

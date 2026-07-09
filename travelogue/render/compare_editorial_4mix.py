@@ -8,7 +8,8 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-from travelogue.curation.editorial_4mix import (
+from travelogue.curation.layout_planner import aspect_kind_for_asset
+from travelogue.layout_engine.editorial.four_mix import (
     LAYOUT_HINT_EDITORIAL_4MIX,
     PATTERN_EDITORIAL_4MIX,
     apply_editorial_4mix_slot_fits,
@@ -16,7 +17,6 @@ from travelogue.curation.editorial_4mix import (
     chess_order_asset_ids,
     chess_window_matches,
 )
-from travelogue.curation.layout_planner import aspect_kind_for_asset
 from travelogue.layout_engine.mosaic.builders import build_screen
 from travelogue.layout_engine.mosaic.constants import PATTERN_PORTRAIT_2_LANDSCAPE_2
 from travelogue.layout_engine.mosaic.pattern_catalog import default_registry

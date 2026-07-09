@@ -71,11 +71,11 @@
 > **与 import-linter 分层违例不同维度**：仅统计 `layout_engine` ↔ `curation` 包间 AST 边。  
 > 查看：`python scripts/lse_cross_import_stats.py`（只读）；基线更新走 `python scripts/lint_lse_cross_import.py --update-baseline`（只降不升棘轮）
 
-| 指标 | M-B0 参考 | **2026-07-09（hotfix 后实测）** | PRD / ADR 目标 |
+| 指标 | M-B0 参考 | **2026-07-09（shim-retire + hero registry）** | PRD / ADR 目标 |
 |------|-----------|------------------------------|----------------|
-| layout_engine → curation | — | **1**（`scoring/hero.py` adapter → `curate_scoring` 内核，7/8 RecursionError 热修引入） | 0（待 hero scoring 内核下沉 layout_contract） |
+| layout_engine → curation | — | **0**（hero 经 `layout_contract` 注册表反转，无 AST 边） | 0 ✅ |
 | curation → layout_engine | — | **7**（curate→adapter 白名单） | adapter 单向入口 |
-| **合计** | 51（B4a 前）→ 44（B4a 后） | **8**（batch-1～6：108→7；hotfix +2；aesthetic 边已于 07-09 下沉消除 -1） | PRD ≤10 ✅ |
+| **合计** | 51（B4a 前）→ 44（B4a 后） | **7** | PRD ≤10 ✅ |
 | Top importer | — | `curation.curate` (7) | 符合 §5.3.1 白名单 |
 | Top imported | — | `layout_engine.adapter` 等 7 模块 | intentional |
 
@@ -101,6 +101,9 @@
 | FIX-05 | P2 | 2026-07-09 | Windows 跨进程 CAS 测试偶发失败 | ✅ M-F4：`skipif(win*)`；Linux CI 仍覆盖 AC-ARC-02；文件锁仍跳过 |
 | FIX-06 | P0 | 2026-07-09 | `admin_store.assert_transition` 缺 import；模板生命周期变更 NameError | ✅ 已修复（07-09） |
 | FIX-07 | P0 | 2026-07-09 | `pytest --fast` 57 failed（shim monkeypatch 失效 28 + fixture 路径 10 + admin state 读写分裂 7 + golden 过期等） | ✅ 已修复（07-09）：测试全面改引真实模块路径；详见 [ARCH-OPT-REVIEW-2026-07-09.md](./ARCH-OPT-REVIEW-2026-07-09.md) §五 |
+| FIX-08 | P1 | 2026-07-09 | 产线/脚本/测试仍大量引用 curation shim | ✅ 已修复（`arch/shim-retire-ws1`）：消费方改引 `layout_engine` / `layout_contract` |
+| FIX-09 | P1 | 2026-07-09 | layout_engine→curation hero AST 反向边 | ✅ 已修复：`layout_contract.scoring` 注册表反转；边数 8→7 / LE→cur=0 |
+| P2 | — | 2026-07-09 | run_curate 拆分 · `.trip.lock` · layout_contract 准入 | 见 [ARCH-OPT-P2-BACKLOG.md](./ARCH-OPT-P2-BACKLOG.md) |
 
 ---
 

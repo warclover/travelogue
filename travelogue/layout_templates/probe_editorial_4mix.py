@@ -6,7 +6,7 @@ import base64
 from pathlib import Path
 from typing import Any, Literal
 
-from travelogue.curation.editorial_4mix import (
+from travelogue.layout_engine.editorial.four_mix import (
     LAYOUT_HINT_EDITORIAL_4MIX,
     PATTERN_EDITORIAL_4MIX,
 )

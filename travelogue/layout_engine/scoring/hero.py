@@ -1,10 +1,26 @@
-"""Hero score adapter (layout_engine · delegates to curation kernel)."""
+"""Hero score adapter (layout_engine · dispatches via layout_contract registry)."""
 
 from __future__ import annotations
 
+from importlib import import_module
 from typing import Any
 
-from travelogue.layout_contract.scoring import median_sharpness as median_sharpness  # noqa: F401
+from travelogue.layout_contract.scoring import (
+    effective_hero_score as _dispatch,
+)
+from travelogue.layout_contract.scoring import (
+    get_effective_hero_score_impl,
+)
+from travelogue.layout_contract.scoring import (
+    median_sharpness as median_sharpness,  # noqa: F401
+)
+
+
+def _ensure_registered() -> None:
+    if get_effective_hero_score_impl() is not None:
+        return
+    # String import avoids a layout_engine→curation AST edge (ADR-015 gate).
+    import_module("travelogue.curation.curate_scoring")
 
 
 def effective_hero_score(
@@ -19,9 +35,8 @@ def effective_hero_score(
     scoring_version: str | None = None,
     pool: list[dict] | None = None,
 ) -> float:
-    from travelogue.curation.curate_scoring import effective_hero_score as _score
-
-    return _score(
+    _ensure_registered()
+    return _dispatch(
         asset,
         median_sharp=median_sharp,
         aesthetic_enabled=aesthetic_enabled,

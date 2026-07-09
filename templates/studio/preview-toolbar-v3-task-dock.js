@@ -151,11 +151,22 @@ export function mountPreviewTaskDock(root, hooks) {
     if (job && job.status === "failed") {
       main.textContent =
         (job.error && (job.error.message || job.error.code)) || "导出失败";
+    } else if (result.platform === "wechat_moments") {
+      var nMoments = result.pageCount || outputs.length;
+      main.textContent = "✓ " + nMoments + " 张朋友圈配图已就绪";
     } else {
       main.textContent = "长图已保存到画册目录";
     }
     textWrap.appendChild(main);
-    if (job && job.status !== "failed" && pathsLabel) {
+    if (job && job.status !== "failed" && result.publishGuide) {
+      var guide = document.createElement("small");
+      guide.textContent = result.publishGuide;
+      textWrap.appendChild(guide);
+    } else if (job && job.status !== "failed" && result.userHint) {
+      var hint = document.createElement("small");
+      hint.textContent = result.userHint;
+      textWrap.appendChild(hint);
+    } else if (job && job.status !== "failed" && pathsLabel) {
       var sub = document.createElement("small");
       sub.textContent = pathsLabel;
       textWrap.appendChild(sub);

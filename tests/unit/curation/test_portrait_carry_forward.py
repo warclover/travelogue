@@ -7,7 +7,7 @@ with a later portrait, minimising the number of single-portrait screens.
 
 from __future__ import annotations
 
-from travelogue.curation.screen_planner import (
+from travelogue.layout_engine.planner.screen_planner import (
     _collect_asset_ids_from_chapter,
     attach_screens_to_chapters,
 )
@@ -101,7 +101,7 @@ def test_single_lone_portrait_still_rendered() -> None:
 
 def test_flush_pairs_one_person_with_one_scenery_portrait() -> None:
     """V-08 收紧：1 人物 + 1 风景竖版边界 flush 合并双列，不出两张连续竖单。"""
-    from travelogue.curation.screen_planner import _flush_portrait_pending
+    from travelogue.layout_engine.planner.screen_planner import _flush_portrait_pending
 
     aspects = {"pp": "portrait", "ps": "portrait"}
     assets = {
@@ -119,8 +119,8 @@ def test_flush_pairs_one_person_with_one_scenery_portrait() -> None:
 
 def test_rebuild_layout_state_excludes_deferred_screens() -> None:
     """AC-RHY-05 · 被 carry defer 的竖单不计入节奏 state（重放 kept 屏）。"""
-    from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-    from travelogue.curation.screen_planner_attach import _rebuild_layout_state
+    from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
+    from travelogue.layout_engine.planner.screen_planner_attach import _rebuild_layout_state
 
     base = ScreenLayoutPlannerState.from_trip_total(60)
     # 规划期 note 了 landscape + 被 defer 的 portrait-1（污染 streak）。
@@ -213,7 +213,7 @@ def test_replan_beam_carries_lone_portraits_across_buckets() -> None:
     """Beam replan must not bypass cross-chapter portrait carry (scoring.enabled path)."""
     from travelogue.curation.degradation import DegradationAssessment
     from travelogue.curation.layout_scoring import PHASE2_WEIGHTS
-    from travelogue.curation.layout_search import maybe_replan_chapters
+    from travelogue.layout_engine.planner.layout_search import maybe_replan_chapters
 
     chapters = [_chapter("ch-a", ["pa"]), _chapter("ch-b", ["pb"])]
     for ch in chapters:

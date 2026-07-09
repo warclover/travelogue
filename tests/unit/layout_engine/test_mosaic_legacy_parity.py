@@ -6,7 +6,7 @@ from dataclasses import replace
 
 from tests._golden.helpers import build_mosaic_eligible_trip
 from travelogue.config import get_config
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_engine.mosaic.hook import try_mosaic_window
 from travelogue.layout_engine.planner.screen_planner_stages import (
     build_chapter_plan_context,

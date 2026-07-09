@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_engine.mosaic.diversity import (
     pattern_similarity,
     rerank_scored_candidates_mmr,

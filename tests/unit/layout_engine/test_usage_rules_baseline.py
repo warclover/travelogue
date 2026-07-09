@@ -6,7 +6,7 @@ from dataclasses import replace
 
 from travelogue.config import MosaicConfig, get_config
 from travelogue.config.layout import UsageRulesConfig
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_contract.usage_context import build_window_context
 from travelogue.layout_engine.mosaic.candidates import generate_window_candidates_with_rejections
 from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5

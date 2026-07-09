@@ -1,6 +1,6 @@
 """Chapter-end portrait flush respects layout_state."""
 
-from travelogue.curation.screen_planner import (
+from travelogue.layout_engine.planner.screen_planner import (
     ScreenLayoutPlannerState,
     is_portrait_single_pattern,
     plan_screens_for_chapter,

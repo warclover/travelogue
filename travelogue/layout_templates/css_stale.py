@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from travelogue.curation.screen_planner import grid_class_for_pattern
+from travelogue.layout_engine.planner.screen_planner import grid_class_for_pattern
 
 
 def required_grid_classes_from_trip(data: dict[str, Any]) -> set[str]:

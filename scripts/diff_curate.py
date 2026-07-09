@@ -44,7 +44,7 @@ def main() -> int:
         trip_id = trip.get("tripId") or path.parent.name
 
     if args.intent_keywords:
-        from travelogue.curation.intent_hints import evaluate_intent_keyword_coverage
+        from travelogue.layout_engine.intent_hints import evaluate_intent_keyword_coverage
 
         coverage = evaluate_intent_keyword_coverage(trip)
         print(json.dumps({"tripId": trip_id, "intentKeywords": coverage}, indent=2, ensure_ascii=False))

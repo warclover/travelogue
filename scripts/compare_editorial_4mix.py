@@ -10,7 +10,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from travelogue.curation.editorial_4mix import (
+from travelogue.layout_engine.editorial.four_mix import (
     LAYOUT_HINT_EDITORIAL_4MIX,
     PATTERN_EDITORIAL_4MIX,
 )

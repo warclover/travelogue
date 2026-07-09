@@ -349,7 +349,7 @@ def test_curate_writes_user_tier_summary(tmp_path: Path) -> None:
 
 
 def test_screen_planner_hero_prefers_featured() -> None:
-    from travelogue.curation.screen_planner import _pick_chapter_hero
+    from travelogue.layout_engine.planner.screen_planner import _pick_chapter_hero
     from travelogue.media.image_ops import AspectKind
 
     aspects: dict[str, AspectKind] = {"mat": "landscape", "feat": "landscape"}

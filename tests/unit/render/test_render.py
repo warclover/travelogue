@@ -35,7 +35,7 @@ def test_render_screens_engine_outputs_layout_screen(trip_workspace: Path) -> No
     trip["exportLayout"] = "web"
     trip["layoutEngine"] = "screens"
     from travelogue.curation.layout_planner import aspect_kind_for_asset
-    from travelogue.curation.screen_planner import attach_screens_to_chapters
+    from travelogue.layout_engine.planner.screen_planner import attach_screens_to_chapters
 
     aspects = {a["id"]: aspect_kind_for_asset(a) for a in trip.get("assets", [])}
     trip["chapters"] = attach_screens_to_chapters(trip.get("chapters", []), aspects)
@@ -56,7 +56,7 @@ def test_render_screens_includes_screenplay_bundle(trip_workspace: Path) -> None
     trip["exportLayout"] = "web"
     trip["layoutEngine"] = "screens"
     from travelogue.curation.layout_planner import aspect_kind_for_asset
-    from travelogue.curation.screen_planner import attach_screens_to_chapters
+    from travelogue.layout_engine.planner.screen_planner import attach_screens_to_chapters
 
     aspects = {a["id"]: aspect_kind_for_asset(a) for a in trip.get("assets", [])}
     trip["chapters"] = attach_screens_to_chapters(trip.get("chapters", []), aspects)

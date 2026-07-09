@@ -7,7 +7,7 @@ from dataclasses import replace
 from tests._golden.helpers import build_mixed_aspects_trip
 from travelogue.config import MosaicConfig, get_config
 from travelogue.config.layout import UsageRulesConfig
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_contract.usage_context import build_window_context
 from travelogue.layout_engine.mosaic.candidates import generate_window_candidates
 from travelogue.layout_engine.mosaic.constants import (

@@ -19,7 +19,7 @@ def eval_trip_dir(trip_dir: Path) -> dict:
     if not trip_json.is_file():
         raise FileNotFoundError(trip_json)
     trip = json.loads(trip_json.read_text(encoding="utf-8"))
-    from travelogue.curation.mosaic.render_check import compute_layout_render_error_rate
+    from travelogue.layout_engine.mosaic.render_check import compute_layout_render_error_rate
 
     render = compute_layout_render_error_rate(trip.get("chapters") or [])
     layout_strategy = (trip.get("curation") or {}).get("layoutStrategy") or {}

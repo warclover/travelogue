@@ -795,7 +795,7 @@ def build_layout_screen(
     if pattern_id == "screen-portrait-3-editorial":
         slot_fits = [str(s.get("fit") or "cover") for s in screen.get("slots") or []]
         if slot_fits and all(f == "cover" for f in slot_fits):
-            from travelogue.curation.editorial_portrait_row import (
+            from travelogue.layout_engine.editorial.portrait_row import (
                 editorial_row_ar_from_assets,
             )
 

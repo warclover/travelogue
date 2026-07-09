@@ -4,17 +4,17 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-import travelogue.curation.screen_planner  # noqa: F401
+import travelogue.layout_engine.planner.screen_planner  # noqa: F401
 from travelogue.config import AppConfig, MosaicConfig
 from travelogue.config.layout import (
     LayoutConfig,
     LayoutStrategyCapabilitiesConfig,
     LayoutStrategyEngineConfig,
 )
-from travelogue.curation.mosaic.scorer import score_candidate
 from travelogue.layout_engine.adapter import mosaic_config_from_pack
 from travelogue.layout_engine.beat import beat_score_multiplier
 from travelogue.layout_engine.features import cover_focal_retention, salient_crop_penalty
+from travelogue.layout_engine.mosaic.scorer import score_candidate
 from travelogue.layout_engine.registry import get_strategy_pack
 from travelogue.layout_engine.render_binding import cover_rules_use_focal_variables
 from travelogue.layout_engine.tone_adjacency import adjacent_tone_penalty

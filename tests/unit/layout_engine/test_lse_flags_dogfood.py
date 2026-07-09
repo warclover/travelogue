@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-import travelogue.curation.screen_planner  # noqa: F401
+import travelogue.layout_engine.planner.screen_planner  # noqa: F401
 from scripts.phase3_ig2_report import _cfg_for_mode, _prepare_trip, load_fixture_trip
 from travelogue.config import load_config
 from travelogue.config.layout import LayoutStrategyCapabilitiesConfig, LayoutStrategyEngineConfig
