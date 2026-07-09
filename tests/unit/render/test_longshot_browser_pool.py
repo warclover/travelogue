@@ -43,9 +43,13 @@ def test_browser_pool_recreates_when_job_thread_changes(monkeypatch) -> None:
 
     pool = _PlaywrightBrowserPool()
     errors: list[BaseException] = []
+    # Keep both threads alive so get_ident() values stay distinct (IDs can be
+    # reused after a thread exits, which would falsely skip pool recreation).
+    barrier = threading.Barrier(2)
 
     def run_in_thread() -> None:
         try:
+            barrier.wait(timeout=5)
             browser = pool.acquire()
             assert browser is fake_browser
             pool.release()
@@ -55,8 +59,8 @@ def test_browser_pool_recreates_when_job_thread_changes(monkeypatch) -> None:
     t1 = threading.Thread(target=run_in_thread)
     t2 = threading.Thread(target=run_in_thread)
     t1.start()
-    t1.join()
     t2.start()
+    t1.join()
     t2.join()
 
     assert not errors

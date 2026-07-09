@@ -119,13 +119,13 @@ def run_editorial_screenshot_probe(
         DEFAULT_PIXEL_TOLERANCE,
         _capture_png,
         compare_probe_png,
+        playwright_capture_available,
     )
 
     tol = DEFAULT_PIXEL_TOLERANCE if tolerance is None else tolerance
-    try:
-        import playwright  # noqa: F401
-    except ImportError:
-        return {"ok": True, "skipped": True, "reason": "playwright not installed"}
+    available, reason = playwright_capture_available()
+    if not available:
+        return {"ok": True, "skipped": True, "reason": reason or "playwright unavailable"}
 
     rows: list[dict[str, Any]] = []
     warnings: list[str] = []

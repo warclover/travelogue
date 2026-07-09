@@ -66,7 +66,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install package
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev,vision]"
 
       - name: Pytest (PR fast · unit + unmarked)
         run: |
@@ -99,7 +99,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install package
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev,vision]"
 
       - name: Pytest (integration pipeline)
         run: |

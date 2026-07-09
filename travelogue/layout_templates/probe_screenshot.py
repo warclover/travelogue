@@ -95,6 +95,22 @@ html, body {{ margin: 0; padding: 0; background: #111; }}
 """
 
 
+def playwright_capture_available() -> tuple[bool, str | None]:
+    """True when the playwright package and Chromium binary are present."""
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return False, "playwright not installed"
+    try:
+        with sync_playwright() as p:
+            exe = Path(p.chromium.executable_path)
+            if not exe.is_file():
+                return False, "playwright browser unavailable (chromium not installed)"
+    except Exception as exc:  # pragma: no cover - env specific
+        return False, f"playwright browser unavailable ({exc})"
+    return True, None
+
+
 def _capture_png(html: str, *, width: int = 980, height: int = 620) -> bytes:
     from playwright.sync_api import sync_playwright
 
@@ -143,10 +159,9 @@ def run_screenshot_probe(
     tolerance: float = DEFAULT_PIXEL_TOLERANCE,
 ) -> dict[str, Any]:
     """Capture probe PNGs and diff against baselines (skipped without playwright)."""
-    try:
-        import playwright  # noqa: F401
-    except ImportError:
-        return {"ok": True, "skipped": True, "reason": "playwright not installed"}
+    available, reason = playwright_capture_available()
+    if not available:
+        return {"ok": True, "skipped": True, "reason": reason or "playwright unavailable"}
 
     engine = engine or get_engine()
     ids = template_ids or DEFAULT_PROBE_TEMPLATE_IDS
