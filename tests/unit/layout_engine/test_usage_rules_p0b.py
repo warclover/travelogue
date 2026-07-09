@@ -6,8 +6,8 @@ from dataclasses import replace
 
 from travelogue.config import MosaicConfig, get_config
 from travelogue.config.layout import UsageRulesConfig
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-from travelogue.curation.screen_planner import _can_mosaic_5_main_portrait_3land
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
+from travelogue.layout_engine.planner.screen_planner import _can_mosaic_5_main_portrait_3land
 from travelogue.layout_contract.usage_context import WindowContext, build_window_context
 from travelogue.layout_contract.usage_rules_registry import (
     RULE_UR_05,

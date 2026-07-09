@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 from travelogue.config import get_config
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_engine.mosaic.constants import (
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,

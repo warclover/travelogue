@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from travelogue.curation.chapter_items import item_stub_for_screen
-from travelogue.curation.screen_planner import (
+from travelogue.layout_engine.planner.screen_planner import (
     _collect_asset_ids_from_chapter,
     attach_screens_to_chapters,
 )

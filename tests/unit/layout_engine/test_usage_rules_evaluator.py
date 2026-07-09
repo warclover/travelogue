@@ -8,7 +8,7 @@ import pytest
 
 from travelogue.config import get_config
 from travelogue.config.layout import UsageRulesConfig
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_contract.usage_rules_registry import RULE_UR_01, RULE_UR_09
 from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
 from travelogue.layout_engine.usage_rules.context import WindowContext, main_eligible_hero_score_gap

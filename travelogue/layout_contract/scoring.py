@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -191,6 +191,51 @@ def aesthetic_overall(asset: dict) -> float | None:
         return None if val is None else float(val)
     except (TypeError, ValueError):
         return None
+
+
+_HeroScoreFn = Callable[..., float]
+_effective_hero_score_impl: _HeroScoreFn | None = None
+
+
+def register_effective_hero_score(fn: _HeroScoreFn) -> None:
+    """Register the curation-owned hero scoring implementation (layer inversion)."""
+    global _effective_hero_score_impl
+    _effective_hero_score_impl = fn
+
+
+def get_effective_hero_score_impl() -> _HeroScoreFn | None:
+    return _effective_hero_score_impl
+
+
+def effective_hero_score(
+    asset: dict,
+    *,
+    median_sharp: float = 0.0,
+    aesthetic_enabled: bool | None = None,
+    featured_weight: float = 1.35,
+    memory_anchors: list[str] | None = None,
+    meta_places: list[str] | None = None,
+    cover_scoring_v2: Any = None,
+    scoring_version: str | None = None,
+    pool: list[dict] | None = None,
+) -> float:
+    """Dispatch to the registered curation kernel (no layout_engine→curation AST edge)."""
+    impl = _effective_hero_score_impl
+    if impl is None:
+        raise RuntimeError(
+            "effective_hero_score is not registered; import travelogue.curation.curate_scoring first"
+        )
+    return impl(
+        asset,
+        median_sharp=median_sharp,
+        aesthetic_enabled=aesthetic_enabled,
+        featured_weight=featured_weight,
+        memory_anchors=memory_anchors,
+        meta_places=meta_places,
+        cover_scoring_v2=cover_scoring_v2,
+        scoring_version=scoring_version,
+        pool=pool,
+    )
 
 
 def screen_dominant_tone(screen: dict, assets_by_id: Mapping[str, dict]) -> str | None:

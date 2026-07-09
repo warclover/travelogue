@@ -11,11 +11,11 @@ from travelogue.curation.layout_constraints import (
     max_consecutive_pattern_streak,
     run_rhythm_postcheck,
 )
-from travelogue.curation.screen_layout_state import (
+from travelogue.layout_contract.planner_state import (
     MAX_PORTRAIT_PAIR_STREAK,
     ScreenLayoutPlannerState,
 )
-from travelogue.curation.screen_planner import _tile_portrait_run
+from travelogue.layout_engine.planner.screen_planner import _tile_portrait_run
 
 
 def _screen(pid: str) -> dict:
@@ -167,7 +167,7 @@ def test_state_orientation_streak_and_budget():
 
 def test_planner_r08_forces_landscape_break():
     """16 竖 + 2 横：全竖屏连续 ≤6，横版被强制提前换气，且不丢图。"""
-    from travelogue.curation.screen_planner import plan_screens_for_chapter
+    from travelogue.layout_engine.planner.screen_planner import plan_screens_for_chapter
 
     ids = [f"p{i}" for i in range(16)] + ["l1", "l2"]
     aspects = {aid: ("portrait" if aid.startswith("p") else "landscape") for aid in ids}
@@ -187,7 +187,7 @@ def test_planner_r08_forces_landscape_break():
 
 def test_planner_r08_pure_portrait_run_still_covers_all():
     """纯竖版章（无横版可换气）：R-08 无法满足时保证全覆盖不死锁。"""
-    from travelogue.curation.screen_planner import plan_screens_for_chapter
+    from travelogue.layout_engine.planner.screen_planner import plan_screens_for_chapter
 
     ids = [f"p{i}" for i in range(16)]
     aspects = {aid: "portrait" for aid in ids}

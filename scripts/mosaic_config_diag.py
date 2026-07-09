@@ -275,7 +275,7 @@ def main() -> int:
         return 0
 
     from travelogue.config import get_config
-    from travelogue.curation.mosaic.constants import (
+    from travelogue.layout_engine.mosaic.constants import (
         MOSAIC_3_PATTERN_IDS,
         MOSAIC_4_PATTERN_IDS,
         MOSAIC_5_PATTERN_IDS,
@@ -283,8 +283,8 @@ def main() -> int:
         MOSAIC_8_PATTERN_IDS,
         MOSAIC_9_PATTERN_IDS,
     )
-    from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
-    from travelogue.curation.mosaic.runtime import mosaic_window_size_enabled
+    from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
+    from travelogue.layout_engine.mosaic.runtime import mosaic_window_size_enabled
 
     cfg = get_config().mosaic
     burst_seconds = float(get_config().layout.mixed_proximity_seconds)

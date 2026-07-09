@@ -80,7 +80,7 @@ def analyze(trip_id: str) -> str:
     pat_counts = Counter(s["pattern"] for s in screens)
     total_layout = int(ori.get("total") or len(trip.get("assets") or []))
 
-    from travelogue.curation.screen_layout_state import (
+    from travelogue.layout_contract.planner_state import (
         nine_grid_limits_for_trip,
         portrait_grid8_max_for_trip,
     )

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import yaml
 
-import travelogue.curation.screen_planner  # noqa: F401
+import travelogue.layout_engine.planner.screen_planner  # noqa: F401
 from travelogue.config import AppConfig
 from travelogue.config.layout import LayoutConfig, LayoutStrategyEngineConfig
 from travelogue.layout_engine.rollout import (

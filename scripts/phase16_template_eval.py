@@ -12,8 +12,8 @@ from typing import Any
 
 from travelogue.config import get_config
 from travelogue.curation.layout_metrics import pattern_diversity, pattern_diversity_p50
-from travelogue.curation.mosaic.lte_adapter import mosaic_registry, read_templates_from_lte
-from travelogue.curation.mosaic.metrics import (
+from travelogue.layout_engine.mosaic.lte_adapter import mosaic_registry, read_templates_from_lte
+from travelogue.layout_engine.mosaic.metrics import (
     mcs_unified_exposure_rate,
     mixed_layout_exposure_rate,
     mosaic5_exposure_rate,

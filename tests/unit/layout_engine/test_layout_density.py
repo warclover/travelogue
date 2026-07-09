@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 from travelogue.config import AppConfig, LayoutConfig
-from travelogue.curation.intent_hints import apply_editorial_intent_hints
+from travelogue.layout_engine.intent_hints import apply_editorial_intent_hints
 from travelogue.curation.layout_density import (
     MIN_PHOTOS_COLLAGE_FULL_EFFECT,
     layout_density_effect,
@@ -14,12 +14,12 @@ from travelogue.curation.layout_density import (
     normalize_layout_density,
     resolve_import_layout_density,
 )
-from travelogue.curation.screen_layout_state import (
+from travelogue.layout_contract.planner_state import (
     ScreenLayoutPlannerState,
     nine_grid_limits_for_trip,
     pattern_slot_count,
 )
-from travelogue.curation.screen_planner import attach_screens_to_chapters
+from travelogue.layout_engine.planner.screen_planner import attach_screens_to_chapters
 from travelogue.services.trip import apply_intent
 from travelogue.services.validate import validate_trip
 from travelogue.web.studio_intent_telemetry import build_studio_intent_telemetry

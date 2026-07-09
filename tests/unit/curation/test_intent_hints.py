@@ -8,7 +8,7 @@ from travelogue.curation.curate_scoring import (
     effective_hero_score,
     pick_chapter_hero,
 )
-from travelogue.curation.intent_hints import (
+from travelogue.layout_engine.intent_hints import (
     apply_editorial_intent_hints,
     arc_segment_for_chapter_with_intent,
     evaluate_intent_keyword_coverage,

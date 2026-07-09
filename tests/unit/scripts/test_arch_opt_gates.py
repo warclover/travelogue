@@ -48,8 +48,8 @@ def test_lint_imports_no_exemptions() -> None:
 def test_lint_lse_cross_import_at_baseline() -> None:
     code, out = _run_script("scripts/lint_lse_cross_import.py")
     assert code == 0, out
-    # 7 curate→adapter whitelist edges + 1 hero scoring adapter (post-M-D1 hotfix).
-    assert "edges: 8" in out
+    # 7 curate→adapter whitelist edges; layout_engine→curation = 0 after hero registry inversion.
+    assert "edges: 7" in out
 
 
 def test_load_config_warns_on_removed_planner_impl(tmp_path) -> None:

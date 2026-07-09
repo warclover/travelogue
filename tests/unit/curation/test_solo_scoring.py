@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.curation.solo_scoring import (
+from travelogue.layout_engine.scoring.solo import (
     build_solo_explain,
     duplicate_penalty,
     pick_solo_asset_id,

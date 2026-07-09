@@ -6,7 +6,7 @@ import pytest
 
 from travelogue.config import AppConfig
 from travelogue.config.layout import LayoutConfig, LayoutTemplateEngineConfig
-from travelogue.curation.screen_planner import _fits_for_screen, _make_screen
+from travelogue.layout_engine.planner.screen_planner import _fits_for_screen, _make_screen
 from travelogue.layout_contract.collage_routing import (
     collage_routing_enabled,
     single_asset_screen_pattern,
@@ -140,7 +140,7 @@ def test_collage_never_groups_with_photo_in_planner(monkeypatch) -> None:
             )
         ),
     )
-    from travelogue.curation.screen_planner import plan_screens_for_chapter
+    from travelogue.layout_engine.planner.screen_planner import plan_screens_for_chapter
 
     assets_map = {
         "p1": {"id": "p1", "mediaClass": "photo", "width": 1200, "height": 1600},

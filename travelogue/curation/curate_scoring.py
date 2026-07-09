@@ -24,8 +24,9 @@ from travelogue.curation.cover_scoring_v2 import (
 from travelogue.curation.layout_planner import aspect_kind_for_asset
 from travelogue.curation.media_classify import cover_class_weight
 from travelogue.curation.time_segments import parse_asset_date
-from travelogue.layout_contract.scoring import (  # noqa: F401
+from travelogue.layout_contract.scoring import (  # noqa: F401  (re-export)
     median_sharpness,
+    register_effective_hero_score,
     sort_bucket_asset_ids,
 )
 from travelogue.media.color_metrics import color_richness_multiplier
@@ -646,6 +647,11 @@ def effective_hero_score(
         * featured_weight_multiplier(asset, weight=featured_weight)
         * anchor_match_multiplier(asset, memory_anchors, meta_places=meta_places)
     )
+
+
+# Invert the layout_engine→curation AST edge: layout_engine dispatches via
+# layout_contract registry; this module registers the implementation on import.
+register_effective_hero_score(effective_hero_score)
 
 
 def _curate_scoring_context(

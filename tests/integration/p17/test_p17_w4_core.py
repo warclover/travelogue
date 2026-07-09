@@ -8,8 +8,8 @@ from pathlib import Path
 from scripts.phase3_ig2_report import load_fixture_trip
 from travelogue.config.mosaic import MosaicConfig
 from travelogue.curation.feedback import record_g1_edit
-from travelogue.curation.mosaic.candidates import generate_window_candidates_with_rejections
-from travelogue.curation.mosaic.scorer import score_candidate
+from travelogue.layout_engine.mosaic.candidates import generate_window_candidates_with_rejections
+from travelogue.layout_engine.mosaic.scorer import score_candidate
 from travelogue.layout_engine.feedback import (
     append_layout_feedback,
     is_valid_pairwise_label,
@@ -51,9 +51,9 @@ def test_hungarian_refine_deterministic() -> None:
     asset_ids = list(assets_map.keys())[:3]
     if len(asset_ids) < 3:
         return
-    from travelogue.curation.mosaic.builders import build_screen
-    from travelogue.curation.mosaic.lte_adapter import mosaic_registry
-    from travelogue.curation.mosaic.pattern_catalog import patterns_for_window_size
+    from travelogue.layout_engine.mosaic.builders import build_screen
+    from travelogue.layout_engine.mosaic.lte_adapter import mosaic_registry
+    from travelogue.layout_engine.mosaic.pattern_catalog import patterns_for_window_size
 
     reg = mosaic_registry()
     pats = patterns_for_window_size(3, reg)

@@ -9,7 +9,7 @@ from travelogue.curation.layout_density import (
     LayoutDensityParams,
     dense_collage_quota_adjusted,
 )
-from travelogue.curation.screen_layout_state import (
+from travelogue.layout_contract.planner_state import (
     ScreenLayoutPlannerState,
     dense_collage_limits_for_trip,
     is_dense_collage_pattern,

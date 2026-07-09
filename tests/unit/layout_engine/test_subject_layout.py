@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 from travelogue.curation.aspect_buckets import landscape_aspect_bucket, prefix_same_bucket
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-from travelogue.curation.screen_planner import (
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
+from travelogue.layout_engine.planner.screen_planner import (
     PATTERN_PORTRAIT_1_LANDSCAPE_2,
     _flush_portrait_pending,
     plan_screens_for_chapter,

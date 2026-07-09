@@ -21,8 +21,8 @@ def _planner_tests_disable_mosaic(monkeypatch, request):
         lambda: replace(cfg, mosaic=replace(cfg.mosaic, enabled=False)),
     )
 
-from travelogue.curation.screen_layout_state import portrait_grid8_max_for_trip
-from travelogue.curation.screen_planner import (
+from travelogue.layout_contract.planner_state import portrait_grid8_max_for_trip
+from travelogue.layout_engine.planner.screen_planner import (
     MIN_TRIP_PHOTOS_FOR_MOSAIC,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     PATTERN_PORTRAIT_1_LANDSCAPE_2,
@@ -540,7 +540,7 @@ def test_panorama_single_uses_landscape_screen_with_cover():
 
 def test_marginal_panorama_treated_as_landscape_family():
     """2.0–2.8 ingest panorama must not use solo ultra-wide planning/render path."""
-    from travelogue.curation.screen_planner import _layout_family_for_asset, _run_length
+    from travelogue.layout_engine.planner.screen_planner import _layout_family_for_asset, _run_length
     from travelogue.render.context import build_layout_screen
 
     aspects = {"p1": "panorama"}
@@ -673,7 +673,7 @@ def test_portrait_heavy_summary():
         "screen-portrait-1",
     ]
     from travelogue.curation.layout_constraints import max_consecutive_pattern_streak
-    from travelogue.curation.screen_layout_state import MAX_PORTRAIT_PAIR_STREAK
+    from travelogue.layout_contract.planner_state import MAX_PORTRAIT_PAIR_STREAK
 
     pair_only = [s for s in screens if s["patternId"] == "screen-portrait-2"]
     assert max_consecutive_pattern_streak(screens) <= MAX_PORTRAIT_PAIR_STREAK
@@ -756,7 +756,7 @@ def test_attach_screens_day_scope_via_buckets_param():
 
 def test_landscape_nine_across_mixed_aspect_buckets():
     """Nine-grid must not be blocked by prefix_same_bucket (classic vs standard)."""
-    from travelogue.curation.screen_planner import _plan_one_screen
+    from travelogue.layout_engine.planner.screen_planner import _plan_one_screen
 
     ids = [f"l{i}" for i in range(12)]
     aspects = {aid: "landscape" for aid in ids}

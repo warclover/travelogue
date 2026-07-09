@@ -67,7 +67,7 @@ def test_css_stale_skips_when_geometry_solidified(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_dpp_prefers_diverse_pattern() -> None:
-    from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+    from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
     from travelogue.layout_engine.mosaic.candidates import ScreenCandidate
 
     state = ScreenLayoutPlannerState(nine_min=0, nine_max=9)

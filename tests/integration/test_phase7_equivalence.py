@@ -199,7 +199,7 @@ def test_skip_duplicate_signatures_preserves_golden_layout() -> None:
     from tests._golden.helpers import build_mixed_aspects_trip, layout_snapshot, plan_legacy_screens
     from travelogue.curation.degradation import DegradationAssessment
     from travelogue.curation.layout_scoring import ScoringWeights
-    from travelogue.curation.layout_search import maybe_replan_chapters
+    from travelogue.layout_engine.planner.layout_search import maybe_replan_chapters
 
     buckets, aspects, assets = build_mixed_aspects_trip()
     legacy = plan_legacy_screens(buckets, aspects, assets)

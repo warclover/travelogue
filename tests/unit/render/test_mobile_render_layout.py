@@ -6,7 +6,7 @@ import copy
 
 from travelogue.curation.chapter_items import resolve_chapter_items_for_render
 from travelogue.curation.layout_planner import aspect_kind_for_asset
-from travelogue.curation.screen_planner import LAYOUT_ENGINE_LEGACY
+from travelogue.layout_engine.planner.screen_planner import LAYOUT_ENGINE_LEGACY
 from travelogue.render.context import build_render_context
 from travelogue.render.dual_layout_regression import prepare_trip_web_screens
 from travelogue.render.golden_regression import load_golden_trip

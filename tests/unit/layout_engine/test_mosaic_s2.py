@@ -10,7 +10,7 @@ from tests._golden.helpers import (
     build_mosaic_portrait8_trip,
 )
 from travelogue.config import get_config
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_engine.mosaic.candidates import generate_window_candidates
 from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_9,

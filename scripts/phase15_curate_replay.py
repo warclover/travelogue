@@ -26,7 +26,7 @@ from travelogue.config import AppConfig
 from travelogue.curation.chapter_items import summarize_screen_patterns
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.curate import run_curate
-from travelogue.curation.mosaic.metrics import (
+from travelogue.layout_engine.mosaic.metrics import (
     compute_mosaic_metrics,
     mcs_unified_exposure_rate,
     mosaic5_exposure_rate,

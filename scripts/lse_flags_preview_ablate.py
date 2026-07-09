@@ -28,10 +28,10 @@ from lse_flags_curate_compare import (
     _screen_signatures,
 )
 
-import travelogue.curation.screen_planner  # noqa: F401
+import travelogue.layout_engine.planner.screen_planner  # noqa: F401
 from travelogue.config import AppConfig, get_config
 from travelogue.config.layout import LayoutStrategyCapabilitiesConfig
-from travelogue.curation.screen_planner import LAYOUT_ENGINE_SCREENS
+from travelogue.layout_engine.planner.screen_planner import LAYOUT_ENGINE_SCREENS
 from travelogue.render.engine import render_trip
 
 CAP_ABLATIONS: list[tuple[str, dict[str, Any]]] = [

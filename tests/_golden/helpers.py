@@ -20,15 +20,15 @@ _MOSAIC_DISABLED_PATCH_MODULES = (
     "travelogue.layout_engine.mosaic.lte_adapter",
     "travelogue.layout_engine.mosaic.candidates",
     "travelogue.layout_engine.mosaic.compose",
-    "travelogue.curation.mosaic.lte_adapter",
-    "travelogue.curation.mosaic.candidates",
-    "travelogue.curation.mosaic.compose",
+    "travelogue.layout_engine.mosaic.lte_adapter",
+    "travelogue.layout_engine.mosaic.candidates",
+    "travelogue.layout_engine.mosaic.compose",
 )
 _MOSAIC_REGISTRY_PATCH_MODULES = (
     "travelogue.layout_engine.mosaic.lte_adapter",
     "travelogue.layout_engine.mosaic.candidates",
-    "travelogue.curation.mosaic.lte_adapter",
-    "travelogue.curation.mosaic.candidates",
+    "travelogue.layout_engine.mosaic.lte_adapter",
+    "travelogue.layout_engine.mosaic.candidates",
 )
 
 
@@ -72,7 +72,7 @@ def intrinsic_2p3l_mcs_enabled():
         )
         stack.enter_context(
             patch(
-                "travelogue.curation.mosaic.lte_adapter.lte_rollout_eligible",
+                "travelogue.layout_engine.mosaic.lte_adapter.lte_rollout_eligible",
                 _allow_flagship_rollout,
             )
         )
@@ -310,7 +310,7 @@ def build_mosaic_replan_chapter(
 ) -> tuple[list[dict], dict[str, str], dict[str, dict], Any]:
     """Single 5-slot MCS screen for replan_screen tests (P21 window sizes)."""
     from travelogue.config.runtime import config_override
-    from travelogue.curation.mosaic.compose import pick_best_five_window
+    from travelogue.layout_engine.mosaic.compose import pick_best_five_window
 
     ids, aspects_map, assets_map = build_mosaic_five_2p3l_window()
     mosaic_cfg = _mosaic_cfg_for_golden().mosaic

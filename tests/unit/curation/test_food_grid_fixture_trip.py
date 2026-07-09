@@ -8,7 +8,7 @@ import json
 
 from tests._repo_root import repo_root
 from travelogue.curation.layout_planner import aspect_kind_for_asset
-from travelogue.curation.screen_planner import FOOD_GRID_LAYOUT_HINT, attach_screens_to_chapters
+from travelogue.layout_engine.planner.screen_planner import FOOD_GRID_LAYOUT_HINT, attach_screens_to_chapters
 
 
 def test_phase10_fixture_trip_produces_food_grid_screen() -> None:

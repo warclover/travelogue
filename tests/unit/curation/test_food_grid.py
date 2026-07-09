@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from travelogue.curation.screen_planner import (
+from travelogue.layout_engine.planner.screen_planner import (
     FOOD_GRID_LAYOUT_HINT,
     PATTERN_PORTRAIT_GRID_8,
     plan_screens_for_chapter,
 )
-from travelogue.curation.screen_planner_stages import (
+from travelogue.layout_engine.planner.screen_planner_stages import (
     build_chapter_plan_context,
     stage_flush_remaining_food,
 )

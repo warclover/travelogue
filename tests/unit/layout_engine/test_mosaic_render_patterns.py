@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from tests._repo_root import repo_root
-from travelogue.curation.screen_planner import grid_class_for_pattern
+from travelogue.layout_engine.planner.screen_planner import grid_class_for_pattern
 from travelogue.layout_engine.mosaic.constants import (
     MOSAIC_4_PATTERN_IDS,
     MOSAIC_5_PATTERN_IDS,

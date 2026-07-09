@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from travelogue.curation.screen_planner import FOOD_GRID_LAYOUT_HINT, plan_screens_for_chapter
+from travelogue.layout_engine.planner.screen_planner import FOOD_GRID_LAYOUT_HINT, plan_screens_for_chapter
 
 
 def _build_assets(

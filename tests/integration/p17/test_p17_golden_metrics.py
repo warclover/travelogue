@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 from travelogue.config import get_config
-from travelogue.curation.mosaic.log import MosaicWindowLog
+from travelogue.layout_engine.mosaic.log import MosaicWindowLog
 from travelogue.layout_engine.adapter import strategy_trace_meta
 from travelogue.layout_engine.capabilities import capability_flags_snapshot
 from travelogue.layout_engine.decision_log import project_mosaic_window

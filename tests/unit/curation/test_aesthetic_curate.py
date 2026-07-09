@@ -12,7 +12,7 @@ from travelogue.curation.curate_scoring import (
     pick_cover_asset_id,
     score_ranked_cover_ids,
 )
-from travelogue.curation.screen_planner import _pick_main_landscape_id
+from travelogue.layout_engine.planner.screen_planner import _pick_main_landscape_id
 
 
 def _asset(

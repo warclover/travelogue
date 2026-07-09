@@ -208,7 +208,7 @@ def _run_trip_stages(
                 continue
             assert_stage_allowed(trip, "clustering")
             if profile.apply_editorial_hints:
-                from travelogue.curation.intent_hints import apply_editorial_intent_hints
+                from travelogue.layout_engine.intent_hints import apply_editorial_intent_hints
 
                 apply_editorial_intent_hints(trip)
             from travelogue.curation.clustering import run_clustering_layer

@@ -21,7 +21,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-import travelogue.curation.screen_planner  # noqa: F401
+import travelogue.layout_engine.planner.screen_planner  # noqa: F401
 from travelogue.config import AppConfig
 from travelogue.config.layout import LayoutStrategyCapabilitiesConfig, LayoutStrategyEngineConfig
 from travelogue.curation.clustering import run_clustering_layer

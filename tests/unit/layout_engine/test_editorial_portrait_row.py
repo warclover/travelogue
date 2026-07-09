@@ -12,11 +12,11 @@ from tests._golden.helpers import (
 )
 from travelogue.config import AppConfig
 from travelogue.config.layout import EditorialPortraitRowConfig
-from travelogue.curation.screen_layout_state import (
+from travelogue.layout_contract.planner_state import (
     ScreenLayoutPlannerState,
     is_triple_row_pattern,
 )
-from travelogue.curation.screen_planner import plan_screens_for_chapter
+from travelogue.layout_engine.planner.screen_planner import plan_screens_for_chapter
 from travelogue.layout_engine.editorial.portrait_row import (
     LAYOUT_HINT_PORTRAIT_ROW_EDITORIAL,
     PATTERN_PORTRAIT_3_EDITORIAL,

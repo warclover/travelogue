@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from travelogue.curation.mosaic.constants import PATTERN_FULL_FRAME
+from travelogue.layout_engine.mosaic.constants import PATTERN_FULL_FRAME
 from travelogue.render.blur_fill import (
     letterbox_expected,
     resolve_stage_aspect_ratio,
