@@ -10,6 +10,7 @@ from typing import Any
 
 from travelogue.domain import plan_cities as _plan_cities
 from travelogue.services.trip import apply_intent
+
 logger = logging.getLogger(__name__)
 
 MAX_PLAN_BYTES = 32 * 1024

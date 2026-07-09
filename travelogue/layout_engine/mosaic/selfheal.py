@@ -119,7 +119,9 @@ def try_self_heal_pick(
             if worst_pen >= 0.45:
                 max_drop = max(1, int(len(asset_ids) * cfg.max_drop_ratio))
                 if max_drop >= 1:
-                    from travelogue.layout_engine.mosaic.candidates import generate_window_candidates
+                    from travelogue.layout_engine.mosaic.candidates import (
+                        generate_window_candidates,
+                    )
 
                     remaining = [a for a in asset_ids if a != drop_id]
                     size = len(remaining)

@@ -6,19 +6,19 @@ from typing import Any
 
 from travelogue.config import get_config
 from travelogue.config.layout import UsageRulesConfig
-from travelogue.layout_engine.mosaic.candidates import ScreenCandidate
 from travelogue.layout_contract.usage_context import WindowContext
-from travelogue.layout_engine.usage_rules.context import (
-    main_eligible_hero_score_gap,
-    portrait_is_window_hero_max,
-    window_std_portrait_count,
-)
 from travelogue.layout_contract.usage_rules_registry import (
     HERO_LED_PATTERNS,
     RULE_UT_01,
     RULE_UT_02,
     RULE_UT_03,
     RULE_UT_04,
+)
+from travelogue.layout_engine.mosaic.candidates import ScreenCandidate
+from travelogue.layout_engine.usage_rules.context import (
+    main_eligible_hero_score_gap,
+    portrait_is_window_hero_max,
+    window_std_portrait_count,
 )
 
 PATTERN_LANDSCAPE_6 = "screen-landscape-6"

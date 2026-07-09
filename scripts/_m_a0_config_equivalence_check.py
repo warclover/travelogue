@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import dataclasses
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 

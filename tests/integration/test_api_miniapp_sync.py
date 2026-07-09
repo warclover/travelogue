@@ -8,10 +8,10 @@ schema's `additionalProperties: false` top level.
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
-from pathlib import Path
+
+from tests._repo_root import repo_root
 
 ROOT = repo_root(__file__)
 API_DOC = ROOT / "docs" / "API-MINIAPP.md"

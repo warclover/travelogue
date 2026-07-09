@@ -45,17 +45,19 @@ from travelogue.curation.layout_planner import (
 from travelogue.curation.time_segments import TimeSegment, parse_asset_date
 from travelogue.domain.cover_view import (
     layout_eligible_assets,
-    resolve_cover_asset_id as _resolve_cover_asset_id_from_trip,
     resolve_cover_render_profile,
 )
-from travelogue.errors import CodeError
-from travelogue.layout_contract import LAYOUT_PLAN_VERSION, format_layout_summary
+from travelogue.domain.cover_view import (
+    resolve_cover_asset_id as _resolve_cover_asset_id_from_trip,
+)
 from travelogue.domain.pipeline_view import (
     append_pipeline_run,
     clear_pending_assets,
     set_layout_status,
     set_pipeline_status,
 )
+from travelogue.errors import CodeError
+from travelogue.layout_contract import LAYOUT_PLAN_VERSION, format_layout_summary
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 # Backward-compatible private aliases for tests and internal callers.
@@ -659,8 +661,8 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
 
 
 def _build_layout_only_bucket_plan(trip: dict, preflight: _CuratePreflight) -> _CurateBucketPlan | None:
-    from travelogue.layout_engine.replan import buckets_from_existing_chapters
     from travelogue.domain.copy_subject import effective_meta_places
+    from travelogue.layout_engine.replan import buckets_from_existing_chapters
 
     raw = buckets_from_existing_chapters(trip)
     if raw is None:

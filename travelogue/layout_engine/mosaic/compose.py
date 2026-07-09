@@ -6,6 +6,8 @@ from dataclasses import dataclass
 
 from travelogue.config import MosaicConfig
 from travelogue.layout_contract.orientations import AspectKind
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.usage_context import build_window_context
 from travelogue.layout_engine.mosaic.candidates import (
     ScreenCandidate,
     generate_window_candidates_with_rejections,
@@ -13,11 +15,12 @@ from travelogue.layout_engine.mosaic.candidates import (
 from travelogue.layout_engine.mosaic.diversity import apply_candidate_diversity
 from travelogue.layout_engine.mosaic.log import MosaicWindowLog
 from travelogue.layout_engine.mosaic.log_enrich import enrich_mosaic_log_from_screen
-from travelogue.layout_engine.mosaic.lte_adapter import mcs_diversity_config, mosaic_pattern_disabled
+from travelogue.layout_engine.mosaic.lte_adapter import (
+    mcs_diversity_config,
+    mosaic_pattern_disabled,
+)
 from travelogue.layout_engine.mosaic.scorer import score_candidate, weights_hash
 from travelogue.layout_engine.mosaic.selfheal import try_self_heal_pick
-from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
-from travelogue.layout_contract.usage_context import build_window_context
 from travelogue.layout_engine.usage_rules.tiebreak import apply_usage_tiebreaks
 
 _FACE_CROP_PROXY_THRESHOLD = 0.05

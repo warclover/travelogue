@@ -3,7 +3,6 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import importlib.util
 import json
@@ -11,6 +10,8 @@ import sys
 from pathlib import Path
 
 from PIL import Image
+
+from tests._repo_root import repo_root
 
 ROOT = repo_root(__file__)
 sys.path.insert(0, str(ROOT))

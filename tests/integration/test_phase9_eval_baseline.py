@@ -1,11 +1,12 @@
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
 import subprocess
 import sys
 from pathlib import Path
+
+from tests._repo_root import repo_root
 
 
 def test_phase9_eval_baseline_outputs_required_metrics(tmp_path: Path) -> None:

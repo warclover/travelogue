@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterator
+from collections.abc import Iterator
 
 
 def chapter_ids(trip: dict) -> list[str]:

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from travelogue.layout_contract.scoring import screen_dominant_tone
 from travelogue.layout_contract.rhythm import pattern_slot_count
+from travelogue.layout_contract.scoring import screen_dominant_tone
 from travelogue.media.color_metrics import delta_e_cie76
 
 

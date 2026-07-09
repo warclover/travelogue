@@ -10,6 +10,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 from travelogue.desktop.demo_album import is_demo_album_path, resolve_demo_album_dir
 from travelogue.runtime import AppContext, app_context_from_handler
 from travelogue.services.trip import TripConflictError, TripService
+from travelogue.web.studio_errors import client_error_payload
 from travelogue.web.studio_handlers.paths import (
     CURATE_SUFFIX,
     CURATION_MOMENT_SUFFIX,

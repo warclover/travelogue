@@ -10,7 +10,11 @@ from travelogue.services.moment_curation import (
     validate_moment_asset_id,
 )
 from travelogue.web.studio_errors import internal_error_payload
-from travelogue.web.studio_handlers.common import load_trip_or_404, studio_ctx, trip_update_or_respond
+from travelogue.web.studio_handlers.common import (
+    load_trip_or_404,
+    studio_ctx,
+    trip_update_or_respond,
+)
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 _log = logging.getLogger(__name__)

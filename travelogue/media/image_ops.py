@@ -12,9 +12,6 @@ from PIL import Image, ImageOps
 
 from travelogue.layout_contract.orientations import (
     AspectKind,
-    PANORAMA_RATIO_MIN,
-    SQUARE_THRESHOLD,
-    TALL_RATIO_MAX,
     classify_aspect,
 )
 

@@ -6,10 +6,10 @@ from typing import Any, Literal
 
 from travelogue.config import MosaicConfig
 from travelogue.layout_contract.orientations import AspectKind
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_contract.rhythm import BREATH_PATTERN
 from travelogue.layout_engine.mosaic.compose import score_window_candidates
 from travelogue.layout_engine.mosaic.legacy import build_legacy_screen
-from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 
 ReplanStrategy = Literal["alt_topk", "legacy"]
 

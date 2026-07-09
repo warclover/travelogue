@@ -3,7 +3,6 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 from io import BytesIO
 from pathlib import Path
@@ -11,6 +10,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
+from tests._repo_root import repo_root
 from travelogue.curation.media_classify import (
     classify_media_class,
     cover_class_weight,

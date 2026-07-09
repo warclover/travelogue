@@ -175,8 +175,8 @@ def stage_chapter_hero(ctx: ChapterPlanContext) -> None:
 def try_collage_solo_at_cursor(ctx: ChapterPlanContext) -> int | None:
     """Collage assets never share a multi-slot screen — route each to full-frame solo."""
     from travelogue.layout_contract.collage_routing import collage_routing_enabled
-    from travelogue.media.media_classify import is_collage_asset
     from travelogue.layout_engine.planner.screen_planner import _make_screen
+    from travelogue.media.media_classify import is_collage_asset
 
     if not collage_routing_enabled() or ctx.i >= len(ctx.ids):
         return None
@@ -397,7 +397,10 @@ def try_mixed_with_pending(ctx: ChapterPlanContext) -> int | None:
 
 def try_mixed_triple_at_cursor(ctx: ChapterPlanContext) -> int | None:
     """P+L+L or L+L+P triple at cursor."""
-    from travelogue.layout_engine.planner.screen_planner import _is_landscape_id, _is_std_portrait_id
+    from travelogue.layout_engine.planner.screen_planner import (
+        _is_landscape_id,
+        _is_std_portrait_id,
+    )
 
     if ctx.i + 2 >= len(ctx.ids):
         return None

@@ -10,8 +10,13 @@ from pathlib import Path
 
 import pytest
 
+from tests.integration.studio.test_studio_server import (
+    _distinct_album,
+    _free_port,
+    _get_json,
+    _post_json,
+)
 from tests.studio_test_helpers import wait_for_job
-from tests.integration.studio.test_studio_server import _distinct_album, _free_port, _get_json, _post_json
 from travelogue.services.validate import validate_trip
 from travelogue.web.serve import TripPreviewHandler
 from travelogue.web.studio_jobs import reset_job_store

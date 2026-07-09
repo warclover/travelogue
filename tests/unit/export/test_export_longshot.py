@@ -3,7 +3,6 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
 import shutil
@@ -11,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from tests._repo_root import repo_root
 from travelogue.export.longshot import (
     CAPTURE_WIDTH,
     MAX_WECHAT_BYTES,

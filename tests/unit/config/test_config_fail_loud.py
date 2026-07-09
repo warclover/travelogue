@@ -3,13 +3,13 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import logging
 from pathlib import Path
 
 import pytest
 
+from tests._repo_root import repo_root
 from travelogue.config.errors import ConfigError
 from travelogue.config.loader import load_config
 from travelogue.config.yaml_loader import load_yaml_mapping

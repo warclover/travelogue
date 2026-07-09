@@ -10,8 +10,8 @@ from typing import Any
 from travelogue.config import MosaicConfig
 from travelogue.layout_contract.constraints import FOCAL_EDGE_MARGIN
 from travelogue.layout_contract.orientations import AspectKind
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_contract.scoring import ScoringWeights
-from travelogue.layout_engine.planner.beam_scoring import score_screen_plan
 from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_6,
     PATTERN_LANDSCAPE_9,
@@ -23,7 +23,7 @@ from travelogue.layout_engine.mosaic.constants import (
 )
 from travelogue.layout_engine.mosaic.main_eligibility import screen_main_slot_eligible
 from travelogue.layout_engine.mosaic.slot_geometry import screen_slots_geometry_ok
-from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
+from travelogue.layout_engine.planner.beam_scoring import score_screen_plan
 from travelogue.layout_engine.planner.screen_planner import _is_landscape_id, _is_std_portrait_id
 
 

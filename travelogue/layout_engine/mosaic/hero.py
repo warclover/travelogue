@@ -20,7 +20,10 @@ def pick_main_for_pattern(
     )
     from travelogue.layout_engine.mosaic.pattern_catalog import default_registry
     from travelogue.layout_engine.mosaic.runtime import get_effective_mosaic_config
-    from travelogue.layout_engine.planner.screen_planner import _is_landscape_id, _pick_main_landscape_id
+    from travelogue.layout_engine.planner.screen_planner import (
+        _is_landscape_id,
+        _pick_main_landscape_id,
+    )
 
     pat = default_registry().get(pattern_id)
     landscapes = [

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 
 def assets_by_id(trip: dict) -> dict[str, dict]:
     return {str(a["id"]): a for a in (trip.get("assets") or []) if a.get("id")}

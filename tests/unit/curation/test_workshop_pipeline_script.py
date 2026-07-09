@@ -1,9 +1,6 @@
 """Regression: workshop-pipeline.ps1 must not pass invalid Typer flags."""
+
 from tests._repo_root import repo_root
-
-
-
-from pathlib import Path
 
 SCRIPT = repo_root(__file__) / "scripts" / "workshop-pipeline.ps1"
 

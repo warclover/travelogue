@@ -3,11 +3,10 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
-
-from pathlib import Path
 
 import pytest
+
+from tests._repo_root import repo_root
 
 BREATH_IMAGE = (
     repo_root(__file__)

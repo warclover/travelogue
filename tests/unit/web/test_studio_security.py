@@ -11,7 +11,12 @@ from urllib import error, request
 
 import pytest
 
-from tests.integration.studio.test_studio_server import _distinct_album, _free_port, _post_json, _start_studio_server
+from tests.integration.studio.test_studio_server import (
+    _distinct_album,
+    _free_port,
+    _post_json,
+    _start_studio_server,
+)
 from travelogue.web.serve import TripPreviewHandler
 from travelogue.web.studio_jobs import get_job_store, reset_job_store
 from travelogue.web.studio_pipeline import run_studio_pipeline

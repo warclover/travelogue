@@ -7,12 +7,12 @@ from typing import Any
 
 from travelogue.config import AppConfig, MosaicConfig
 from travelogue.layout_contract.orientations import aspect_kind_for_asset
-from travelogue.layout_engine.mosaic.scorer import score_candidate
 from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_engine.adapter import mosaic_config_from_pack, resolve_pack
 from travelogue.layout_engine.beat import beat_score_multiplier
 from travelogue.layout_engine.features import salient_retention_for_slot
 from travelogue.layout_engine.metrics import mixed_face_intact_rate
+from travelogue.layout_engine.mosaic.scorer import score_candidate
 from travelogue.layout_engine.slot_assignment import hungarian_metrics, refine_asset_order_hungarian
 from travelogue.layout_engine.tone_adjacency import adjacent_tone_penalty
 
@@ -438,7 +438,9 @@ def probe_ac_p17_19(
     assets_map = _assets_map(trip)
     if not window or len(window) < 4:
         return {"measurable": False, "passed": None}
-    from travelogue.layout_engine.mosaic.candidates import generate_window_candidates_with_rejections
+    from travelogue.layout_engine.mosaic.candidates import (
+        generate_window_candidates_with_rejections,
+    )
 
     aspects = _aspects(trip)
     pack_b = resolve_pack(baseline_cfg)

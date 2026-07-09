@@ -6,14 +6,18 @@ from typing import Any
 
 from travelogue.config import AppConfig
 from travelogue.layout_contract.degradation import DegradationAssessment
-from travelogue.layout_engine.planner.layout_candidates import generate_day_bucket_candidates  # noqa: F401
 from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_contract.scoring import ScoringWeights
+from travelogue.layout_contract.search_budget import SearchBudget
 
 # Re-export beam entry for ADR / tests
 from travelogue.layout_engine.mosaic.search import replan_day_buckets_beam  # noqa: F401
-from travelogue.layout_engine.mosaic.search import replan_day_buckets_beam as _replan_day_buckets_beam
-from travelogue.layout_contract.search_budget import SearchBudget
+from travelogue.layout_engine.mosaic.search import (
+    replan_day_buckets_beam as _replan_day_buckets_beam,
+)
+from travelogue.layout_engine.planner.layout_candidates import (
+    generate_day_bucket_candidates,  # noqa: F401
+)
 
 
 def _screens_signature(chapters: list[dict]) -> list[list[str]]:

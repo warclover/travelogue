@@ -6,13 +6,13 @@ from dataclasses import replace
 
 from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.search_budget import SearchBudget
 from travelogue.layout_engine.planner.screen_planner import (
     MIN_TRIP_PHOTOS_FOR_MOSAIC,
     _can_mosaic_5_main_portrait_3land,
     _sort_asset_ids_by_taken,
     plan_screens_for_chapter,
 )
-from travelogue.layout_contract.search_budget import SearchBudget
 
 
 def _plan_signature(screens: list[dict]) -> tuple[tuple[str, tuple[str, ...]], ...]:

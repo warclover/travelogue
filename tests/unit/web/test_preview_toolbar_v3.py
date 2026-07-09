@@ -3,15 +3,15 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
 from pathlib import Path
 
 import pytest
 
-from travelogue.web.studio_chrome import inject_studio_chrome
+from tests._repo_root import repo_root
 from tests.unit.web._preview_toolbar_css import read_preview_toolbar_css_bundle
+from travelogue.web.studio_chrome import inject_studio_chrome
 
 ROOT = repo_root(__file__)
 STUDIO = ROOT / "templates" / "studio"

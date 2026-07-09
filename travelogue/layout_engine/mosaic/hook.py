@@ -58,10 +58,10 @@ def window_has_candidates(
     layout_state=None,
 ) -> bool:
     from travelogue.config import get_config
+    from travelogue.layout_contract.usage_context import build_window_context
     from travelogue.layout_engine.mosaic.candidates import (
         generate_window_candidates_with_rejections,
     )
-    from travelogue.layout_contract.usage_context import build_window_context
 
     if len(window) != size:
         return False
@@ -312,7 +312,10 @@ def _single_portrait_dense_skip(
     """True when a 1P+5L (or denser) window should skip size≥6 for five-slot mix."""
     if not cfg.prefer_five_slot_single_portrait or size < 6:
         return False
-    from travelogue.layout_engine.planner.screen_planner import _is_landscape_id, _is_std_portrait_id
+    from travelogue.layout_engine.planner.screen_planner import (
+        _is_landscape_id,
+        _is_std_portrait_id,
+    )
 
     n_p = sum(1 for aid in window if _is_std_portrait_id(aid, aspects))
     n_l = sum(1 for aid in window if _is_landscape_id(aid, aspects))

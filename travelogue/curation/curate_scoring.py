@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from travelogue.curation.asset_quality import asset_sharpness
-from travelogue.layout_contract.scoring import median_sharpness, sort_bucket_asset_ids
 from travelogue.curation.composition_signals import (
     mean_thirds_score,
 )
@@ -25,6 +24,10 @@ from travelogue.curation.cover_scoring_v2 import (
 from travelogue.curation.layout_planner import aspect_kind_for_asset
 from travelogue.curation.media_classify import cover_class_weight
 from travelogue.curation.time_segments import parse_asset_date
+from travelogue.layout_contract.scoring import (  # noqa: F401
+    median_sharpness,
+    sort_bucket_asset_ids,
+)
 from travelogue.media.color_metrics import color_richness_multiplier
 
 _DEFAULT_COVER_SCORING = CoverScoringParams()

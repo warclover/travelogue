@@ -3,11 +3,9 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
-
-from pathlib import Path
 
 from scripts.lint_test_layout import load_baseline, top_level_test_files
+from tests._repo_root import repo_root
 
 ROOT = repo_root(__file__)
 

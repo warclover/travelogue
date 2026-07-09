@@ -32,7 +32,7 @@ def write_shim(old_mod: str, new_mod: str, path: Path) -> None:
     message = f"{old_mod} is deprecated; use {new_mod}"
     body = SHIM_HEADER.format(message=message)
     # Re-export public and private names (legacy_bridge imports _LANDSCAPE_* etc.).
-    body += f"from importlib import import_module\n"
+    body += "from importlib import import_module\n"
     body += f"_mod = import_module({new_mod!r})\n"
     body += "for _name, _value in vars(_mod).items():\n"
     body += "    if _name.startswith('__'):\n"

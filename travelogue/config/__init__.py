@@ -21,9 +21,9 @@ from travelogue.config.clustering import (
 from travelogue.config.cohort import CohortConfig
 from travelogue.config.cull import CullConfig
 from travelogue.config.curate import CurateConfig
+from travelogue.config.errors import ConfigError
 from travelogue.config.ingest import DEFAULT_RAW_BLOCKLIST_SUFFIXES, IngestConfig
 from travelogue.config.layout import LayoutConfig, LayoutFeedbackConfig, LayoutScoringConfig
-from travelogue.config.errors import ConfigError
 from travelogue.config.loader import load_config, patch_config_file
 from travelogue.config.misc import (
     ExportConfig,

@@ -3,12 +3,11 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import hashlib
 import json
-from pathlib import Path
 
+from tests._repo_root import repo_root
 from travelogue.config import AppConfig, ClusteringConfig
 from travelogue.curation.clustering import run_clustering_layer
 

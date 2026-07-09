@@ -5,14 +5,16 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import numpy as np
 from PIL import Image, ImageOps
 
 from travelogue.config import AppConfig, CohortConfig
 from travelogue.media.face_embed import cosine_similarity, face_crop_embedding, mean_embedding
 from travelogue.media.subject_detect import detect_faces_in_image
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
 @dataclass(frozen=True)

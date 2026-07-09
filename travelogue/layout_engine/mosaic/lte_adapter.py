@@ -196,7 +196,9 @@ def resolve_render_grid_class(pattern_id: str, *, cfg: AppConfig | None = None) 
     gc = PATTERN_GRID_CLASS.get(pattern_id)
     if gc:
         return gc
-    from travelogue.layout_engine.planner.screen_planner import PATTERN_GRID_CLASS as planner_classes
+    from travelogue.layout_engine.planner.screen_planner import (
+        PATTERN_GRID_CLASS as planner_classes,
+    )
 
     return planner_classes.get(pattern_id)
 

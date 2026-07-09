@@ -3,13 +3,13 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
 from pathlib import Path
 
 import pytest
 
+from tests._repo_root import repo_root
 from tests._studio_js import read_studio_js
 from tests.clustering_fixtures import load_fixture_assets
 from tests.integration.studio.test_studio_server import (

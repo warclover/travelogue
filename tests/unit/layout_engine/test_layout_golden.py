@@ -3,7 +3,6 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import copy
 import json
@@ -19,6 +18,7 @@ from scripts.phase3_ig2_report import (
     run_trip_variant,
 )
 from tests._golden.helpers import layout_snapshot
+from tests._repo_root import repo_root
 from travelogue.config import (
     AppConfig,
     ClusteringConfig,

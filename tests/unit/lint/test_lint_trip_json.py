@@ -3,12 +3,9 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
 from pathlib import Path
-
-import pytest
 
 from scripts.lint_trip_json import (
     DEFAULT_MAX_BYTES,
@@ -17,6 +14,7 @@ from scripts.lint_trip_json import (
     lint_trip_path,
     main,
 )
+from tests._repo_root import repo_root
 
 ROOT = repo_root(__file__)
 FIXTURE = ROOT / "schemas/fixtures/trip.example.json"

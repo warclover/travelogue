@@ -3,10 +3,10 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import re
-from pathlib import Path
+
+from tests._repo_root import repo_root
 
 
 def pick_best_src_for_capture(srcset: str, required_width: int = 428) -> str | None:

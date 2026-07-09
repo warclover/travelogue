@@ -95,7 +95,9 @@ def legacy_stage_aspect(pattern_id: str) -> str:
 def _grid_class(pattern_id: str) -> str:
     if pattern_id in PATTERN_GRID_CLASS:
         return PATTERN_GRID_CLASS[pattern_id]
-    from travelogue.layout_engine.planner.screen_planner import PATTERN_GRID_CLASS as planner_classes
+    from travelogue.layout_engine.planner.screen_planner import (
+        PATTERN_GRID_CLASS as planner_classes,
+    )
 
     return planner_classes[pattern_id]
 

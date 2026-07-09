@@ -3,13 +3,13 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
 from pathlib import Path
 
 import pytest
 
+from tests._repo_root import repo_root
 from travelogue.render.engine import render_trip_surfaces
 
 

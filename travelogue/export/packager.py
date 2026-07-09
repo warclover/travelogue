@@ -6,6 +6,7 @@ import zipfile
 from pathlib import Path
 
 from travelogue.config import AppConfig, app_config_scope, get_config
+from travelogue.domain.pipeline_view import set_pipeline_status
 from travelogue.errors import CodeError
 from travelogue.export.exif import write_asset_to_zip
 from travelogue.render.context import collect_asset_paths
@@ -19,7 +20,6 @@ from travelogue.render.engine import (
 from travelogue.render.preview import render_preview_jpg
 from travelogue.services.trip import persist_trip_snapshot
 from travelogue.services.validate import validate_trip
-from travelogue.domain.pipeline_view import set_pipeline_status
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 

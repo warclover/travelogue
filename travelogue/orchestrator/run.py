@@ -16,7 +16,14 @@ from travelogue.render.engine import render_trip, render_trip_surfaces
 from travelogue.runtime import app_context_for_trip_json
 from travelogue.services.layout import apply_layout_to_trip
 from travelogue.services.narrate import run_narrate
-from travelogue.services.pipeline_state import Until, assert_stage_allowed, lock_copy, lock_structure, set_pipeline_timings, trip_status
+from travelogue.services.pipeline_state import (
+    Until,
+    assert_stage_allowed,
+    lock_copy,
+    lock_structure,
+    set_pipeline_timings,
+    trip_status,
+)
 from travelogue.services.trip import persist_trip_snapshot
 
 

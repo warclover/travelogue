@@ -17,7 +17,11 @@ from travelogue.templating.router import (
 )
 from travelogue.web.studio_admin_auth import studio_authenticated
 from travelogue.web.studio_errors import user_message
-from travelogue.web.studio_handlers.common import resolve_trip_dir_listed, studio_ctx, trip_update_or_respond
+from travelogue.web.studio_handlers.common import (
+    resolve_trip_dir_listed,
+    studio_ctx,
+    trip_update_or_respond,
+)
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 _log = logging.getLogger(__name__)

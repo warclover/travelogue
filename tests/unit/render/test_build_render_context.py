@@ -3,14 +3,13 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import copy
 import json
-from pathlib import Path
 
 import pytest
 
+from tests._repo_root import repo_root
 from travelogue.render.context import build_render_context
 from travelogue.render.dual_layout_regression import prepare_trip_web_screens
 from travelogue.render.golden_regression import load_golden_trip

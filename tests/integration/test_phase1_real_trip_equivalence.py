@@ -3,12 +3,12 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
-from pathlib import Path
 
 import pytest
+
+from tests._repo_root import repo_root
 
 ROOT = repo_root(__file__)
 TRIPS = ROOT / "trips"

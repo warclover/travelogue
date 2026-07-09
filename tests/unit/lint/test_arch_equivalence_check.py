@@ -3,9 +3,7 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
-import json
 from pathlib import Path
 
 from scripts.arch_equivalence_check import (
@@ -13,6 +11,7 @@ from scripts.arch_equivalence_check import (
     diff_normalized,
     normalize_trip,
 )
+from tests._repo_root import repo_root
 
 ROOT = repo_root(__file__)
 

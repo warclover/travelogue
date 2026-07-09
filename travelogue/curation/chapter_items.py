@@ -1,6 +1,7 @@
 """Compact chapter items (shim + render resolver)."""
 
-from travelogue.layout_contract.chapter_items import *  # noqa: F403
+from travelogue.layout_contract.chapter_items import *  # noqa: F403,F405
+
 
 def resolve_chapter_items_for_render(
     chapter: dict,

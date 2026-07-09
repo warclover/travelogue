@@ -3,13 +3,13 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import importlib.util
 import sys
-from pathlib import Path
 
 import pytest
+
+from tests._repo_root import repo_root
 
 _SCRIPT = repo_root(__file__) / "scripts" / "studio_lcp_measure.py"
 _spec = importlib.util.spec_from_file_location("studio_lcp_measure", _SCRIPT)

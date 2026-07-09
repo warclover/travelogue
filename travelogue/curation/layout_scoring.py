@@ -2,11 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import dataclass
-from typing import Any
-
-from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_contract.scoring import (
     FEATURED_BEAM_BONUS_PER_ASSET,
     FEATURED_HERO_SEPARATION_HALVED,
@@ -125,26 +120,10 @@ __all__ = [
     "PHASE6_WEIGHTS",
     "ScoreBreakdown",
     "ScoringWeights",
-    "asset_mean_luma",
     "moment_secondary_plan_bonus",
-    "rank_screens",
     "resolve_scoring_weights",
-    "score_aspect_match",
-    "score_burst_integrity",
-    "score_category_coherence",
-    "score_cohort_coherence",
-    "score_gravity_balance",
-    "score_layout_rhythm",
-    "score_luminance_continuity",
-    "score_screen",
-    "score_screen_plan",
-    "score_sharpness",
-    "score_subject_run_soft",
-    "score_temporal_coherence",
-    "score_tone_continuity",
     "screen_dominant_tone",
-    "screen_mean_luma",
-    "screen_visual_center",
+    # Lazy beam_scoring re-exports via __getattr__ (omitted from __all__: F822)
 ]
 
 _BEAM_EXPORTS = frozenset({'asset_mean_luma', 'rank_screens', 'score_aspect_match', 'score_burst_integrity', 'score_category_coherence', 'score_cohort_coherence', 'score_gravity_balance', 'score_layout_rhythm', 'score_luminance_continuity', 'score_screen', 'score_screen_plan', 'score_sharpness', 'score_subject_run_soft', 'score_temporal_coherence', 'score_tone_continuity', 'screen_mean_luma', 'screen_visual_center'})

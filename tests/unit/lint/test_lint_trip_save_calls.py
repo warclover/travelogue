@@ -3,12 +3,11 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import ast
-from pathlib import Path
 
 from scripts.lint_trip_save_calls import TripSaveLintVisitor, lint_file
+from tests._repo_root import repo_root
 
 ROOT = repo_root(__file__)
 

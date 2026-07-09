@@ -3,12 +3,12 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
 import shutil
 from pathlib import Path
 
+from tests._repo_root import repo_root
 from travelogue.render.engine import render_trip
 
 

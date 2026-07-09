@@ -25,12 +25,12 @@ from travelogue.config.phase6 import Phase6ObservabilityConfig
 from travelogue.config.studio import StudioConfig
 from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
 from travelogue.config.vision import VisionConfig
-from travelogue.paths import ROOT
 
 _log = logging.getLogger(__name__)
 
 
 from travelogue.paths import default_trips_dir
+
 
 @dataclass
 class AppConfig:

@@ -3,7 +3,6 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import importlib.util
 import json
@@ -11,6 +10,8 @@ import sys
 from pathlib import Path
 
 import pytest
+
+from tests._repo_root import repo_root
 
 pytest.importorskip("playwright")
 

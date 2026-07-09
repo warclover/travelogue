@@ -19,10 +19,15 @@ from travelogue.layout_contract.orientations import (
     ExportLayout,
     OrientationSummary,
     aspect_kind_for_asset,
+)
+from travelogue.layout_contract.orientations import (
     effective_export_profile as _effective_profile,
+)
+from travelogue.layout_contract.orientations import (
     is_std_landscape as _is_std_landscape,
+)
+from travelogue.layout_contract.orientations import (
     is_std_portrait as _is_std_portrait,
-    summarize_orientations,
 )
 
 RowLayout = Literal[

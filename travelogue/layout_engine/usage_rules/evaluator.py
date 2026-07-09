@@ -7,13 +7,7 @@ from typing import Any
 from travelogue.config import get_config
 from travelogue.config.layout import UsageRulesConfig
 from travelogue.layout_contract.usage_context import WindowContext
-from travelogue.layout_engine.usage_rules.context import (
-    main_eligible_hero_score_gap,
-    portrait_is_window_hero_max,
-    window_std_portrait_count,
-)
 from travelogue.layout_contract.usage_rules_registry import (
-    EDITORIAL_4MIX_PATTERN,
     HERO_32_PATTERN,
     HERO_32_WIDE_AR_THRESHOLD,
     HERO_LED_DENSE_PATTERNS,
@@ -27,6 +21,11 @@ from travelogue.layout_contract.usage_rules_registry import (
     RULE_UR_05,
     RULE_UR_06,
     RULE_UR_09,
+)
+from travelogue.layout_engine.usage_rules.context import (
+    main_eligible_hero_score_gap,
+    portrait_is_window_hero_max,
+    window_std_portrait_count,
 )
 
 

@@ -3,7 +3,6 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
 import os
@@ -15,6 +14,7 @@ from unittest.mock import MagicMock
 import pytest
 from PIL import Image
 
+from tests._repo_root import repo_root
 from travelogue.config import AppConfig, ClusteringConfig, CullConfig, IngestConfig, VisionConfig
 from travelogue.curation.asset_quality import apply_layout_eligibility_marks
 from travelogue.curation.clustering import run_clustering_layer

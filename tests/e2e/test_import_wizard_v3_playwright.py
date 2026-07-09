@@ -13,10 +13,10 @@ flag：studio.importWizardV3Enabled（默认 false，仅本文件测试显式开
 from __future__ import annotations
 
 import json
-import yaml
 from pathlib import Path
 
 import pytest
+import yaml
 
 from tests.integration.studio.test_studio_server import _free_port, _start_studio_server
 from travelogue.web.studio_jobs import reset_job_store

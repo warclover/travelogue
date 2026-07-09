@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from travelogue.web.studio_handlers.common import load_trip_or_404, studio_ctx, trip_update_or_respond
+from travelogue.web.studio_handlers.common import (
+    load_trip_or_404,
+    studio_ctx,
+    trip_update_or_respond,
+)
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 _ALLOWED = frozenset({"photo", "collage", "screenshot", "thumbnail", "reupload", "archive", "unknown"})

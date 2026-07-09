@@ -10,30 +10,26 @@ from typing import Literal
 
 from travelogue.config import AppConfig
 from travelogue.layout_contract.aspect_buckets import prefix_same_bucket
+from travelogue.layout_contract.collage_routing import single_asset_screen_pattern
+from travelogue.layout_contract.orientations import (
+    effective_export_profile as _effective_profile,
+)
+from travelogue.layout_contract.orientations import (
+    is_std_landscape as _is_std_landscape,
+)
+from travelogue.layout_contract.orientations import (
+    is_std_portrait as _is_std_portrait,
+)
+from travelogue.layout_contract.planner_state import (  # noqa: F401 — re-exported API
+    ScreenLayoutPlannerState,
+)
+from travelogue.layout_contract.rhythm import (
+    MAX_PORTRAIT_PAIR_STREAK,
+)
 from travelogue.layout_contract.subject import (
     any_asset_has_person,
     asset_has_person,
     portrait_fit_for_asset,
-)
-from travelogue.layout_contract.collage_routing import single_asset_screen_pattern
-from travelogue.layout_contract.orientations import (
-    effective_export_profile as _effective_profile,
-    is_std_landscape as _is_std_landscape,
-    is_std_portrait as _is_std_portrait,
-)
-from travelogue.layout_contract.rhythm import (
-    MAX_PORTRAIT_PAIR_STREAK,
-    is_nine_grid_pattern,
-    is_portrait_single_pattern,
-    is_six_grid_pattern,
-    is_triple_row_pattern,
-    layout_kind_from_pattern,
-    nine_grid_limits_for_trip,
-    pattern_slot_count,
-    portrait_grid8_allowed,
-)
-from travelogue.layout_contract.planner_state import (  # noqa: F401 — re-exported API
-    ScreenLayoutPlannerState,
 )
 from travelogue.media.image_ops import AspectKind
 
@@ -296,9 +292,9 @@ def _pick_main_landscape_id(
     featured_weight: float = DEFAULT_FEATURED_WEIGHT,
     aesthetic_enabled: bool | None = None,
 ) -> str:
-    from travelogue.media.quality import asset_sharpness
-    from travelogue.layout_engine.scoring.hero import effective_hero_score
     from travelogue.layout_contract.scoring import median_sharpness
+    from travelogue.layout_engine.scoring.hero import effective_hero_score
+    from travelogue.media.quality import asset_sharpness
 
     med = (
         median_sharp
@@ -1242,8 +1238,8 @@ def _pick_chapter_hero(
     featured_weight: float = DEFAULT_FEATURED_WEIGHT,
 ) -> tuple[str, str] | None:
     """Best landscape/panorama for opening 16:9 hero screen (web editorial rhythm)."""
-    from travelogue.layout_engine.scoring.hero import effective_hero_score
     from travelogue.layout_contract.scoring import median_sharpness
+    from travelogue.layout_engine.scoring.hero import effective_hero_score
 
     med = (
         median_sharp
@@ -1355,8 +1351,3 @@ def plan_screens_for_chapter(
     ).plan()
 
 
-from travelogue.layout_engine.planner.screen_planner_attach import (  # noqa: E402
-    attach_screens_day_buckets,
-    attach_screens_to_chapters,
-    gallery_chapter_uses_screens_not_scroll,
-)

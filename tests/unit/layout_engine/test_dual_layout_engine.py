@@ -3,7 +3,6 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
 import shutil
@@ -11,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from tests._repo_root import repo_root
 from travelogue.paths import FIXTURES_DIR
 from travelogue.render.dual_layout_regression import (
     check_legacy_render_contract,

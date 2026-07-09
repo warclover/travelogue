@@ -57,13 +57,13 @@ def test_pick_folder_cancelled(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.mark.e2e
 def test_studio_import_demo_album(tmp_path: Path) -> None:
-    from tests.studio_test_helpers import wait_for_job
     from tests.integration.studio.test_studio_server import (
         _free_port,
         _get_json,
         _post_json,
         _start_studio_server,
     )
+    from tests.studio_test_helpers import wait_for_job
     from travelogue.web.studio_jobs import reset_job_store
 
     reset_job_store()

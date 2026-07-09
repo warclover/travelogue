@@ -16,6 +16,7 @@ from travelogue.layout_contract.scoring import (
     screen_dominant_tone,
 )
 
+
 def _plan_screen_key(screens: list[dict]) -> tuple[Any, ...]:
     return tuple(
         (
@@ -402,6 +403,8 @@ def score_layout_rhythm(screens: list[dict]) -> float:
     """P5-R1 · penalize consecutive same layout; reward hero/grid alternation."""
     from travelogue.layout_contract.longshot import (
         is_breath_screen as _is_breath_screen,
+    )
+    from travelogue.layout_contract.longshot import (
         screen_layout_kind as _screen_kind,
     )
 

@@ -23,8 +23,8 @@ _aesthetic = __import__(
 aesthetic_dim = _aesthetic.aesthetic_dim
 asset_aesthetic = _aesthetic.asset_aesthetic
 purpose_overall = _aesthetic.purpose_overall
-from travelogue.media.quality import asset_sharpness
 from travelogue.media.color_metrics import delta_e_cie76, triangular_score
+from travelogue.media.quality import asset_sharpness
 
 _SOLO_FACTOR_LABELS: dict[str, str] = {
     "overall": "总体美感",

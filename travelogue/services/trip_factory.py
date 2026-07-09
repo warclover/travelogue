@@ -10,7 +10,7 @@ from travelogue.services.cover_opening_style import (
     assign_cover_opening_style,
     record_cover_opening_style_assigned,
 )
-from travelogue.services.trip import TripService, persist_trip_snapshot, write_new_trip
+from travelogue.services.trip import TripService, write_new_trip
 from travelogue.templating.router import RouterMode, apply_template_selection
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 

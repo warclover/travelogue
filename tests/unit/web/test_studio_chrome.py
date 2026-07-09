@@ -6,7 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from tests.integration.studio.test_studio_server import _distinct_album, _free_port, _get_json, _start_studio_server
+from tests.integration.studio.test_studio_server import (
+    _distinct_album,
+    _free_port,
+    _get_json,
+    _start_studio_server,
+)
 from travelogue.web.studio_chrome import inject_studio_chrome, should_inject_studio_chrome
 from travelogue.web.studio_jobs import reset_job_store
 from travelogue.web.studio_pipeline import run_studio_pipeline

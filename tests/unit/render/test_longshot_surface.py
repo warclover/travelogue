@@ -3,7 +3,6 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
 import re
@@ -12,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from tests._repo_root import repo_root
 from travelogue.curation.chapter_items import (
     count_chapter_screen_slots,
     flatten_screens_to_items,

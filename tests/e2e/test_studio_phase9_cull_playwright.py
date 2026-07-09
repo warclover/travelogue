@@ -6,7 +6,11 @@ from pathlib import Path
 
 import pytest
 
-from tests.e2e.test_studio_home_v2_ac_playwright import _goto_v2, _success_dialog_text, _wait_visible
+from tests.e2e.test_studio_home_v2_ac_playwright import (
+    _goto_v2,
+    _success_dialog_text,
+    _wait_visible,
+)
 from tests.integration.studio.test_studio_server import _free_port, _start_studio_server
 from travelogue.web.studio_jobs import reset_job_store
 

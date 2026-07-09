@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from travelogue.config import MosaicConfig, get_config, load_config, reset_config_cache
+from travelogue.config import MosaicConfig, load_config, reset_config_cache
 from travelogue.config.mosaic import mosaic_from_dict
 
 

@@ -3,11 +3,10 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
-from pathlib import Path
 
+from tests._repo_root import repo_root
 from travelogue.curation.layout_planner import aspect_kind_for_asset
 from travelogue.curation.screen_planner import FOOD_GRID_LAYOUT_HINT, attach_screens_to_chapters
 

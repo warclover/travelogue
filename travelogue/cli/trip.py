@@ -13,6 +13,7 @@ from travelogue.curation.curate import CurateError, run_curate
 from travelogue.media.ingest import IngestError, ingest_into_trip
 from travelogue.runtime import app_context_for_trips_dir
 from travelogue.services.trip import persist_trip_snapshot
+from travelogue.services.trip_factory import create_trip
 
 
 @trip_app.command("new")

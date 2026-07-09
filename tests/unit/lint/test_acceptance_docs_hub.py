@@ -3,9 +3,8 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
-from pathlib import Path
+from tests._repo_root import repo_root
 
 ROOT = repo_root(__file__)
 ACCEPTANCE = ROOT / "docs" / "ACCEPTANCE.md"

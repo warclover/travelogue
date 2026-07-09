@@ -9,6 +9,7 @@ warnings.warn(
 )
 
 from importlib import import_module
+
 _mod = import_module('travelogue.layout_engine.mosaic.search')
 for _name, _value in vars(_mod).items():
     if _name.startswith('__'):

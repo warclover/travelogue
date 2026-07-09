@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-from tests.studio_test_helpers import wait_for_job
 from tests.integration.studio.test_studio_server import (
     _distinct_album,
     _free_port,
@@ -14,6 +13,7 @@ from tests.integration.studio.test_studio_server import (
     _post_json,
     _start_studio_server,
 )
+from tests.studio_test_helpers import wait_for_job
 from travelogue.web.studio_jobs import get_job_store, reset_job_store
 from travelogue.web.studio_pipeline import run_studio_pipeline
 from travelogue.web.studio_trips import (

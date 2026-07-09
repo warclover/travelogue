@@ -3,11 +3,10 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
-from pathlib import Path
 
+from tests._repo_root import repo_root
 from travelogue.services.validate import validate_trip
 
 ROOT = repo_root(__file__)

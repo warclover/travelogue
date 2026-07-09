@@ -172,10 +172,10 @@ def build_chapters_render_context(
                 image_layout, is_longshot=is_longshot_surface
             ):
                 render_screens = expand_screens_for_mobile(raw_screens)
+            from travelogue.curation.editorial_4mix import apply_editorial_4mix_slot_fits
             from travelogue.curation.editorial_portrait_row import (
                 apply_editorial_row_slot_fits,
             )
-            from travelogue.curation.editorial_4mix import apply_editorial_4mix_slot_fits
 
             raw_screens_for_spread.extend(raw_screens)
             chapter_screen_seq = 0

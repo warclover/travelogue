@@ -3,7 +3,6 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
 import os
@@ -14,6 +13,7 @@ from unittest.mock import patch
 import pytest
 from PIL import Image
 
+from tests._repo_root import repo_root
 from travelogue.config import AppConfig, CullConfig
 from travelogue.curation.algorithm_profile import should_recull_on_curate
 from travelogue.curation.photo_cull import apply_photo_cull, photo_cull_enabled_for_trip
@@ -138,7 +138,6 @@ def test_low_res_still_excluded_when_user_cull_disabled(tmp_path: Path) -> None:
 
 def test_trip_schema_accepts_photo_cull_enabled_intent() -> None:
     import json
-    from pathlib import Path
 
     from travelogue.services.validate import validate_trip
 

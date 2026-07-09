@@ -7,7 +7,6 @@ loopback 服务器实量 v2(/) 与 v3(/classic)，校验能采到 >0 的 LCP 并
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import importlib.util
 import sys
@@ -15,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from tests._repo_root import repo_root
 from tests.integration.studio.test_studio_server import _free_port, _start_studio_server
 from travelogue.web.studio_jobs import reset_job_store
 

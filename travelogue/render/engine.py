@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 import shutil
-from datetime import UTC
 from pathlib import Path
 
 from pybars import Compiler
@@ -567,7 +566,6 @@ def _render_trip_body(
     update_pipeline: bool,
     cfg: AppConfig | None,
 ) -> Path:
-    from travelogue.runtime import app_context_for_trip_json
     from travelogue.templating.metrics import record_render_outcome
 
     trip_id = str(trip.get("tripId") or trip_path.parent.name)
@@ -720,7 +718,10 @@ def render_trip_surfaces(
     cfg: AppConfig | None = None,
 ) -> tuple[Path, Path, Path | None]:
     """Write index.html, index-mobile.html, and optionally index-present.html from one trip.json."""
-    from travelogue.layout_engine.planner.screen_planner import LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS
+    from travelogue.layout_engine.planner.screen_planner import (
+        LAYOUT_ENGINE_LEGACY,
+        LAYOUT_ENGINE_SCREENS,
+    )
 
     trip_path = trip_path.resolve()
     trip_root = trip_path.parent

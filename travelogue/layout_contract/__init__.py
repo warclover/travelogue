@@ -8,6 +8,17 @@ from travelogue.layout_contract.density import (
     layout_density_params,
     normalize_layout_density,
 )
+from travelogue.layout_contract.orientations import (
+    AspectKind,
+    ExportLayout,
+    OrientationSummary,
+    aspect_kind_for_asset,
+    classify_aspect,
+    effective_export_profile,
+    is_std_landscape,
+    is_std_portrait,
+    summarize_orientations,
+)
 from travelogue.layout_contract.rhythm import (
     DEFAULT_CONSECUTIVE_BANS,
     MAX_PORTRAIT_ORIENTATION_STREAK,
@@ -19,17 +30,6 @@ from travelogue.layout_contract.rhythm import (
     layout_kind_from_pattern,
     nine_grid_limits_for_trip,
     pattern_slot_count,
-)
-from travelogue.layout_contract.orientations import (
-    AspectKind,
-    ExportLayout,
-    OrientationSummary,
-    aspect_kind_for_asset,
-    classify_aspect,
-    effective_export_profile,
-    is_std_landscape,
-    is_std_portrait,
-    summarize_orientations,
 )
 from travelogue.layout_contract.summary import (
     LAYOUT_PLAN_VERSION,

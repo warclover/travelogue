@@ -8,13 +8,13 @@ from typing import Any
 
 from travelogue.config import AppConfig, MosaicConfig, get_config
 from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
-from travelogue.layout_engine.planner.screen_planner import DEFAULT_FEATURED_WEIGHT
 from travelogue.layout_engine.decision_log import (
     ingest_beam_logs,
     ingest_mosaic_logs,
     strategy_trace_from_pack,
     write_sidecar,
 )
+from travelogue.layout_engine.planner.screen_planner import DEFAULT_FEATURED_WEIGHT
 from travelogue.layout_engine.registry import StrategyPack, get_strategy_pack
 from travelogue.layout_engine.rhythm import layout_state_from_pack
 from travelogue.media.image_ops import AspectKind

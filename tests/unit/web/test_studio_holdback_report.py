@@ -3,12 +3,12 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import importlib.util
 import json
 import sys
-from pathlib import Path
+
+from tests._repo_root import repo_root
 
 _SCRIPT = repo_root(__file__) / "scripts" / "studio_holdback_report.py"
 _spec = importlib.util.spec_from_file_location("studio_holdback_report", _SCRIPT)

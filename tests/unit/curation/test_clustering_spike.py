@@ -3,7 +3,6 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import hashlib
 import json
@@ -11,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from tests._repo_root import repo_root
 from tests.clustering_fixtures import (
     GOLDEN_TRIP_IDS,
     load_fixture_assets,

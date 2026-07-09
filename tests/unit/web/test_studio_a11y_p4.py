@@ -3,12 +3,9 @@
 
 
 from __future__ import annotations
+
 from tests._repo_root import repo_root
-
-from pathlib import Path
-
 from tests.unit.web._preview_toolbar_css import read_preview_toolbar_css_bundle
-
 from tests.unit.web._studio_home_v2_css import read_studio_home_v2_css_bundle
 
 ROOT = repo_root(__file__)

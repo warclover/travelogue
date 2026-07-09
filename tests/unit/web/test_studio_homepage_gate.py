@@ -3,7 +3,6 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
 from io import StringIO
@@ -11,6 +10,7 @@ from pathlib import Path
 
 import yaml
 
+from tests._repo_root import repo_root
 from travelogue.web.studio_homepage_gate import (
     allow_variant_override,
     bucket_in_treatment,
@@ -184,7 +184,6 @@ def test_verify_bucket_cookie_tamper() -> None:
 
 def test_gate_status_script(monkeypatch) -> None:
     import importlib.util
-    from pathlib import Path
 
     monkeypatch.delenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", raising=False)
     monkeypatch.delenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2_PERCENT", raising=False)

@@ -13,7 +13,10 @@ from travelogue.layout_contract import (
     VALID_EXPORT_LAYOUTS,
     format_layout_summary,
 )
-from travelogue.services.pipeline_state import append_pipeline_run, set_layout_status, set_pipeline_status
+from travelogue.services.pipeline_state import (
+    append_pipeline_run,
+    set_layout_status,
+)
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
 

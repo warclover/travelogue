@@ -122,7 +122,11 @@ def _render_uro_variant(trip_json: Path, trip_root: Path, *, label: str) -> dict
     import shutil
 
     from scripts.phase3_blind_review import _backup_index_files, _restore_index_files
-    from travelogue.render.engine import LONGSHOT_INDEX_NAME, render_trip_surfaces, write_longshot_sidecar
+    from travelogue.render.engine import (
+        LONGSHOT_INDEX_NAME,
+        render_trip_surfaces,
+        write_longshot_sidecar,
+    )
     from travelogue.services.trip import TripService
 
     tag = label.lower()

@@ -89,8 +89,8 @@ def _rank_landscapes_by_hero(
     landscape_ids: list[str],
     assets_map: dict[str, dict],
 ) -> list[str]:
-    from travelogue.layout_engine.scoring.hero import effective_hero_score
     from travelogue.layout_contract.scoring import median_sharpness
+    from travelogue.layout_engine.scoring.hero import effective_hero_score
 
     med = median_sharpness(list(assets_map.values()))
 
@@ -112,11 +112,11 @@ def chess_order_asset_ids(
     """Reorder to [L, P, P, L] · hero landscape → TL, second → BR."""
     if not chess_window_matches(asset_ids, assets_map, aspects=aspects):
         return None
+    from travelogue.layout_engine.mosaic.builders import _sort_asset_ids_by_taken
     from travelogue.layout_engine.planner.screen_planner import (
         _is_landscape_id,
         _is_std_portrait_id,
     )
-    from travelogue.layout_engine.mosaic.builders import _sort_asset_ids_by_taken
 
     asp = aspects or {
         aid: _aspect_kind_for_id(aid, assets_map, None) for aid in asset_ids  # type: ignore[misc]

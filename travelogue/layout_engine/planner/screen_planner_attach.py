@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 from travelogue.config import AppConfig
-from travelogue.layout_contract.rhythm import RhythmRules
 from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.rhythm import RhythmRules
+from travelogue.layout_engine.adapter import ChapterPlanRequest, plan_chapter_screens
 from travelogue.layout_engine.planner.screen_planner import (
     DEFAULT_FEATURED_WEIGHT,
     LAYOUT_ENGINE_SCREENS,
     _collect_asset_ids_from_chapter,
     _sort_asset_ids_by_taken,
 )
-from travelogue.layout_engine.adapter import ChapterPlanRequest, plan_chapter_screens
 from travelogue.media.image_ops import AspectKind
 
 
@@ -24,8 +24,8 @@ def _preferred_hero_for_bucket(
     median_sharp: float | None = None,
     featured_weight: float = DEFAULT_FEATURED_WEIGHT,
 ) -> str | None:
-    from travelogue.layout_engine.scoring.hero import effective_hero_score
     from travelogue.layout_contract.scoring import median_sharpness
+    from travelogue.layout_engine.scoring.hero import effective_hero_score
 
     med = (
         median_sharp
@@ -678,7 +678,7 @@ def attach_screens_to_chapters(
         trip_photo_total = len(assets_by_id) if assets_by_id else sum(
             len(_collect_asset_ids_from_chapter(ch)) for ch in chapters
         )
-    from travelogue.layout_engine.adapter import lse_enabled, resolve_attach_layout_state
+    from travelogue.layout_engine.adapter import resolve_attach_layout_state
 
     layout_state = resolve_attach_layout_state(
         trip_photo_total,

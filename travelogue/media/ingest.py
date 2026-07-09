@@ -14,13 +14,6 @@ from typing import Any
 from PIL import Image
 
 from travelogue.config import AestheticConfig, AppConfig, IngestConfig, get_config
-from travelogue.media.media_classify import (
-    classify_media_class,
-    date_confidence_for_source,
-    refine_archive_media_class,
-    summarize_media_classes,
-)
-from travelogue.media.quality import apply_layout_eligibility_marks, asset_sharpness
 from travelogue.errors import CodeError
 from travelogue.media import ingest_checkpoint as icp
 from travelogue.media.color_metrics import color_metrics_from_thumb
@@ -33,7 +26,14 @@ from travelogue.media.image_ops import (
     save_jpeg_without_exif,
 )
 from travelogue.media.ingest_preview import preview_multi_journey
+from travelogue.media.media_classify import (
+    classify_media_class,
+    date_confidence_for_source,
+    refine_archive_media_class,
+    summarize_media_classes,
+)
 from travelogue.media.phash import dhash_hex, is_near_duplicate
+from travelogue.media.quality import apply_layout_eligibility_marks, asset_sharpness
 from travelogue.media.sharpness import sharpness_score, sharpness_score_v2
 from travelogue.media.subject_detect import analyze_subject
 from travelogue.media.trip_dates import apply_meta_dates_from_assets

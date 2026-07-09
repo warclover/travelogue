@@ -3,11 +3,12 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import importlib.util
 import sys
 from pathlib import Path
+
+from tests._repo_root import repo_root
 
 ROOT = repo_root(__file__)
 

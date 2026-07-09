@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import math
 from collections import Counter
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from travelogue.config.layout import UsageRulesConfig
 from travelogue.curation.layout_planner import AspectKind, aspect_kind_for_asset

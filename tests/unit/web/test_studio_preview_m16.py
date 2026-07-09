@@ -11,9 +11,9 @@ from urllib import error, request
 
 import pytest
 
+from tests.studio_test_helpers import chromium_safe_free_port
 from travelogue.services.trip import TripService, apply_intent
 from travelogue.web.copy_patch import apply_copy_patches
-from tests.studio_test_helpers import chromium_safe_free_port
 from travelogue.web.serve import TripPreviewHandler
 from travelogue.web.studio_entry import build_intent_summary
 

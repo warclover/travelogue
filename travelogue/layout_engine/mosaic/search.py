@@ -9,18 +9,18 @@ from dataclasses import replace
 from travelogue.config import AppConfig
 from travelogue.layout_contract.decision_log import LayoutDecisionLog
 from travelogue.layout_contract.orientations import AspectKind
-from travelogue.layout_contract.scoring import (
-    IncrementalScoreState,
-    ScoringWeights,
-)
-from travelogue.layout_engine.planner.beam_scoring import score_screen_plan
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_contract.rhythm import (
     PORTRAIT_PAIR_PATTERN,
     PORTRAIT_SINGLE_PATTERNS,
     RhythmRules,
 )
-from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.scoring import (
+    IncrementalScoreState,
+    ScoringWeights,
+)
 from travelogue.layout_contract.search_budget import SearchBudget
+from travelogue.layout_engine.planner.beam_scoring import score_screen_plan
 
 _log = logging.getLogger(__name__)
 
@@ -207,7 +207,9 @@ def replan_day_buckets_beam(
         late_kwargs = _late_chapter_planning_kwargs(
             layout_state.rhythm, bucket_idx + 1
         )
-        from travelogue.layout_engine.planner.screen_planner_attach import _preferred_hero_for_bucket
+        from travelogue.layout_engine.planner.screen_planner_attach import (
+            _preferred_hero_for_bucket,
+        )
 
         preferred_hero = _preferred_hero_for_bucket(
             plan_ids, asset_to_ch, hero_by_ch, assets_by_id, median_sharp=med_sharp

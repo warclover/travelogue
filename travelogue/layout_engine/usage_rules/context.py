@@ -10,12 +10,12 @@ def main_eligible_hero_score_gap(
     pattern_id: str,
 ) -> tuple[float, tuple[float, ...]]:
     """Top1−top2 hero score on main-eligible assets for ``pattern_id``."""
-    from travelogue.layout_engine.scoring.hero import effective_hero_score
     from travelogue.layout_engine.mosaic.main_eligibility import (
         asset_eligible_for_main_slot,
         resolve_main_ar_ladder_tol,
     )
     from travelogue.layout_engine.mosaic.runtime import get_effective_mosaic_config
+    from travelogue.layout_engine.scoring.hero import effective_hero_score
 
     cfg = get_effective_mosaic_config()
     ladder_tol = resolve_main_ar_ladder_tol(pattern_id, cfg)

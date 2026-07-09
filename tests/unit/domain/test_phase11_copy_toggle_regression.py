@@ -3,9 +3,8 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
-from pathlib import Path
+from tests._repo_root import repo_root
 
 REPO = repo_root(__file__)
 CSS = REPO / "templates" / "visual-journal" / "copy-display.css"

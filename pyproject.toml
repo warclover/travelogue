@@ -71,6 +71,12 @@ ignore = ["E501", "E402"]
 # Public re-exports; F401 is intentional.
 "travelogue/curation/screen_planner.py" = ["F401"]
 "travelogue/curation/layout_search.py" = ["F401"]
+# Star-import shim wrappers (F405 on usage of re-exported names).
+"travelogue/curation/chapter_items.py" = ["F405"]
+# One-shot migration/split scripts; style noise is not worth blocking CI.
+"scripts/check_usage_consistency.py" = ["E741"]
+"scripts/split_preview_toolbar_*.py" = ["F841", "E731"]
+"travelogue/web/studio_dispatch.py" = ["E731"]
 
 [tool.importlinter]
 root_package = "travelogue"

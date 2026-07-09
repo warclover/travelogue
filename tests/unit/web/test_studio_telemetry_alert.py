@@ -3,13 +3,13 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import importlib.util
 import json
 import sys
-from pathlib import Path
 from unittest.mock import patch
+
+from tests._repo_root import repo_root
 
 _SCRIPT = repo_root(__file__) / "scripts" / "studio_telemetry_alert.py"
 _spec = importlib.util.spec_from_file_location("studio_telemetry_alert", _SCRIPT)

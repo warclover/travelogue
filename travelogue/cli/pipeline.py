@@ -27,6 +27,7 @@ from travelogue.services.layout import LayoutError, apply_layout_to_trip
 from travelogue.services.narrate import NarrateError, run_narrate
 from travelogue.services.pipeline_state import PipelineError, lock_copy, lock_structure
 from travelogue.services.trip import persist_trip_snapshot
+from travelogue.services.validate import validate_trip
 
 
 @app.command("ingest")

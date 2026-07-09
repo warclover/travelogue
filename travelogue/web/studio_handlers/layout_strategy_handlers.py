@@ -37,8 +37,8 @@ from travelogue.templating.config_governance import (
     propose_layout_strategy_change,
 )
 from travelogue.templating.roles import require_template_role
-from travelogue.web.studio_bento_preview import _trip_static_url
 from travelogue.web.studio_admin_auth import require_admin_api_access, studio_authenticated
+from travelogue.web.studio_bento_preview import _trip_static_url
 from travelogue.web.studio_errors import client_error_payload
 from travelogue.web.studio_handlers.common import resolve_trip_dir_listed, studio_ctx
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol

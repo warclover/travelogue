@@ -7,6 +7,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from travelogue.paths import STUDIO_TEMPLATE_DIR
+from travelogue.web import studio_homepage_gate as gate
 from travelogue.web.studio_handlers.paths import HOME_V2_PATH, STUDIO_ASSET_PREFIX
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 

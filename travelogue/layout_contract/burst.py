@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from travelogue.media.quality import asset_sharpness
 from travelogue.media.image_ops import AspectKind
+from travelogue.media.quality import asset_sharpness
 
 
 def parse_taken_ts(asset: dict) -> float | None:
