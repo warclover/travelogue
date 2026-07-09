@@ -252,7 +252,7 @@ def screen_dominant_tone(screen: dict, assets_by_id: Mapping[str, dict]) -> str 
     return tones[0]
 
 def median_sharpness(assets: list[dict]) -> float:
-    from travelogue.media.quality import asset_sharpness
+    from travelogue.layout_contract.quality import asset_sharpness
 
     values = [asset_sharpness(a) for a in assets if asset_sharpness(a) > 0]
     if not values:
@@ -265,7 +265,7 @@ def median_sharpness(assets: list[dict]) -> float:
 
 
 def sort_bucket_asset_ids(bucket: list[str], assets_by_id: dict[str, dict]) -> list[str]:
-    from travelogue.media.quality import asset_sharpness
+    from travelogue.layout_contract.quality import asset_sharpness
 
     items = [(aid, assets_by_id.get(aid, {})) for aid in bucket]
     items.sort(key=lambda x: x[1].get("takenAt") or "")

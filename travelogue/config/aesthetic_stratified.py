@@ -8,7 +8,13 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.config import DEFAULT_STRATUM_BLENDS, AestheticConfig
-from travelogue.curation.album_profile import normalize_stratum_preference
+
+STRATUM_PREFERENCE_VALUES: tuple[str, ...] = ("auto", "landscape", "portrait")
+
+
+def normalize_stratum_preference(value: Any) -> str:
+    pref = str(value or "auto").strip().lower()
+    return pref if pref in STRATUM_PREFERENCE_VALUES else "auto"
 
 STRATUM_PREFERENCE_PRESETS: dict[str, dict[str, Any]] = {
     "landscape": {

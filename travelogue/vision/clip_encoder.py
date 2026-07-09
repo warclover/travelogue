@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.errors import PlainCodeError
+from travelogue.layout_contract.subject_tagging import refresh_semantic_tag_for_asset
 
 _log = logging.getLogger(__name__)
 
@@ -188,7 +189,7 @@ def _heuristic_vector(
     """18-dim quality-aware heuristic embedding (Phase C-B · PRD §6.2)."""
     from colorsys import rgb_to_hls
 
-    from travelogue.curation.asset_quality import asset_sharpness, normalized_sharpness
+    from travelogue.layout_contract.quality import asset_sharpness, normalized_sharpness
 
     search_pool = pool if pool else [asset]
     trip_stats = stats or _trip_heuristic_stats(search_pool)
@@ -583,7 +584,7 @@ class ClipEncoder:
                 _log.warning("CLIP embed failed, heuristic fallback: %s", exc)
 
         ids = [a["id"] for a in photos]
-        from travelogue.curation.asset_quality import normalized_sharpness
+        from travelogue.layout_contract.quality import normalized_sharpness
 
         sharp_map = {
             a["id"]: normalized_sharpness(a, photos, bucket_by="mediaClass") for a in photos
@@ -904,7 +905,6 @@ class ClipEncoder:
             if apply_subject_class:
                 asset["subjectClass"] = label
                 asset["subjectConfidence"] = confidence
-                from travelogue.curation.subject_tagging import refresh_semantic_tag_for_asset
 
                 refresh_semantic_tag_for_asset(asset)
 
@@ -918,7 +918,7 @@ class ClipEncoder:
             if any(len(row) != dim for row in vectors):
                 _log.warning("CLIP embed mixed dimensions; falling back to heuristic")
                 ids = [a["id"] for a in photos]
-                from travelogue.curation.asset_quality import normalized_sharpness
+                from travelogue.layout_contract.quality import normalized_sharpness
 
                 sharp_map = {
                     a["id"]: normalized_sharpness(a, photos, bucket_by="mediaClass")

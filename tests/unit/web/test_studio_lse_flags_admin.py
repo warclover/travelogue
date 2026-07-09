@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
 import pytest
@@ -327,7 +326,7 @@ def test_handle_lse_capabilities_patch_updates_capability_flags_snapshot(
 
 
 def test_handle_lse_capabilities_patch_writes_audit_log(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _auth_ok(monkeypatch)
     cfg_path = tmp_path / "config.yaml"
@@ -339,11 +338,16 @@ def test_handle_lse_capabilities_patch_writes_audit_log(
         command="PATCH",
     )
     handler.studio_config_path = cfg_path
-    caplog.set_level(logging.INFO, logger=layout_strategy_handlers.__name__)
+    logged: list[str] = []
+
+    def _capture(msg: str, *args, **kwargs) -> None:  # noqa: ANN002,ANN003
+        logged.append(msg % args if args else msg)
+
+    monkeypatch.setattr(layout_strategy_handlers._log, "info", _capture)
     handle_lse_capabilities_patch(handler)
     assert handler.response is not None
     assert handler.response[0] == 200
-    assert any("[lse-flags-admin]" in rec.message for rec in caplog.records)
+    assert any("[lse-flags-admin]" in msg for msg in logged)
 
 
 def test_ac6_warn_condition_engine_off_capability_on(

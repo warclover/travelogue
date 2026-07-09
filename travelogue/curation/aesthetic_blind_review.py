@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 from travelogue.curation.aesthetic_score import aesthetic_overall, purpose_overall
 from travelogue.curation.pa_acceptance import srcc_from_label_rows
-from travelogue.curation.subject_tagging import semantic_category_for_asset, subject_class_for_asset
+from travelogue.domain.review_stratum import review_stratum_for_asset
 
 ReviewStratum = Literal["person", "landscape", "food", "group", "general"]
 
@@ -21,47 +21,6 @@ DEFAULT_STRATA_QUOTAS: dict[str, int] = {
 
 DEFECT_TAG_VALUES: tuple[str, ...] = ("closed_eyes", "blur_face")
 PORTRAIT_REVIEW_STRATA: frozenset[str] = frozenset({"person", "group"})
-
-
-def _face_count(asset: dict) -> int:
-    """Face count for review stratum only — requires bbox list, not stale quality.faceCount."""
-    faces = asset.get("faces")
-    if isinstance(faces, list) and len(faces) > 0:
-        return len(faces)
-    # quality.faceCount without ``faces[]`` is often false-positive on scenery (e.g. safari).
-    return 0
-
-
-def _is_portraitish_tags(asset: dict) -> bool:
-    tags = {str(t).lower() for t in (asset.get("tags") or []) if t}
-    return bool(tags & {"selfie", "portrait", "合影", "人像"})
-
-
-def review_stratum_for_asset(asset: dict) -> ReviewStratum:
-    """Coarse stratum for stratified blind-review sampling."""
-    faces = _face_count(asset)
-    if faces > 1:
-        return "group"
-    if faces == 1:
-        return "person"
-
-    from travelogue.curation.layout_planner import aspect_kind_for_asset
-
-    aspect = aspect_kind_for_asset(asset)
-    if aspect in ("landscape", "panorama") and not _is_portraitish_tags(asset):
-        return "landscape"
-
-    bucket = subject_class_for_asset(asset)
-    if bucket == "person":
-        return "person"
-    category = semantic_category_for_asset(asset)
-    if category == "food" or bucket == "food":
-        return "food"
-    if category in {"landscape", "nature", "architecture", "temple", "street", "mountain", "sea"}:
-        return "landscape"
-    if bucket == "landscape":
-        return "landscape"
-    return "general"
 
 
 def _eligible_image(asset: dict) -> bool:

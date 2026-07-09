@@ -5,13 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from travelogue.config.cover_scoring_params import CoverScoringParams
+from travelogue.config.cover_scoring_v2_params import CoverScoringParamsV2
 from travelogue.config.moment import MomentConfig
-from travelogue.curation.cover_scoring_params import CoverScoringParams
 
 
 def _default_cover_scoring_v2() -> Any:
-    from travelogue.curation.cover_scoring_v2 import CoverScoringParamsV2
-
     return CoverScoringParamsV2()
 
 
@@ -19,8 +18,6 @@ def cover_scoring_v2_from_dict(curate_raw: dict[str, Any]) -> Any:
     raw = curate_raw.get("cover_scoring_v2") or curate_raw.get("coverScoringV2")
     if not raw:
         return _default_cover_scoring_v2()
-    from travelogue.curation.cover_scoring_v2 import CoverScoringParamsV2
-
     return CoverScoringParamsV2.from_mapping(raw)
 
 

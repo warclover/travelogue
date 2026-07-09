@@ -12,6 +12,7 @@ from travelogue.config.aesthetic import aesthetic_from_dict
 from travelogue.config.app import AppConfig
 from travelogue.config.clustering import GeocodeConfig, clustering_from_dict
 from travelogue.config.cohort import CohortConfig
+from travelogue.config.cover_scoring_params import CoverScoringParams
 from travelogue.config.cull import cull_from_dict
 from travelogue.config.curate import CurateConfig, cover_scoring_v2_from_dict
 from travelogue.config.errors import ConfigError
@@ -43,7 +44,6 @@ from travelogue.config.tracking import TrackedDict, collect_unknown_keys, wrap_t
 from travelogue.config.vision import vision_from_dict
 from travelogue.config.yaml_loader import load_yaml_mapping
 from travelogue.config_helpers import cfg_bool
-from travelogue.curation.cover_scoring_params import CoverScoringParams
 from travelogue.paths import ROOT
 from travelogue.util.llm_presets import PROVIDER_PRESETS
 

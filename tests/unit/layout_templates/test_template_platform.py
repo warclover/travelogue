@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+import travelogue.render.admission_golden  # noqa: F401
 from travelogue.config import AppConfig, TemplateRouterConfig
 from travelogue.templating.admission import run_admission_check
 from travelogue.templating.curation_adapter import apply_curation_adapter_hints

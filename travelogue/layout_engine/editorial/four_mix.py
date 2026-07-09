@@ -5,6 +5,10 @@ from __future__ import annotations
 import hashlib
 from typing import TYPE_CHECKING, Literal
 
+from travelogue.layout_contract.patterns import (
+    EDITORIAL_COMPOSITE_PATTERN_PREFIX,  # noqa: F401
+    is_editorial_composite_pattern,  # noqa: F401
+)
 from travelogue.layout_contract.subject import asset_has_person
 from travelogue.layout_engine.mosaic.constants import PATTERN_PORTRAIT_2_LANDSCAPE_2
 
@@ -17,15 +21,8 @@ LayoutFit = Literal["cover", "contain"]
 PATTERN_EDITORIAL_4MIX = "screen-editorial-4mix"
 LAYOUT_HINT_EDITORIAL_4MIX = "editorial-4mix"
 
-EDITORIAL_COMPOSITE_PATTERN_PREFIX = "screen-editorial-"
-
 # Chess order: TL land, TR port, BL port, BR land
 CHESS_SLOT_ROLES: tuple[str, ...] = ("landscape", "portrait", "portrait", "landscape")
-
-
-def is_editorial_composite_pattern(pattern_id: str | None) -> bool:
-    pid = str(pattern_id or "").strip()
-    return pid.startswith(EDITORIAL_COMPOSITE_PATTERN_PREFIX)
 
 
 def editorial_4mix_config(cfg: AppConfig | None = None):

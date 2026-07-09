@@ -7,12 +7,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from travelogue.domain.template_ids import DEFAULT_TEMPLATE_ID, EVENT_RECAP_TEMPLATE_ID
 from travelogue.paths import ROOT
 
 TemplateLifecycle = Literal["experimental", "beta", "ga", "deprecated", "disabled"]
 
-DEFAULT_TEMPLATE_ID = "visual-journal"
-EVENT_RECAP_TEMPLATE_ID = "event-recap"
 REGISTRY_VERSION = "registry-v2"
 KNOWN_RENDER_ADAPTERS = frozenset({DEFAULT_TEMPLATE_ID, EVENT_RECAP_TEMPLATE_ID})
 

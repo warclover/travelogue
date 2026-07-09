@@ -77,7 +77,7 @@ jobs:
             --cov=travelogue.web.studio_handlers.export_handlers \
             --cov=travelogue.web.studio_subprocess \
             --cov=travelogue.services.trip \
-            --cov=travelogue.curation.mosaic \
+            --cov=travelogue.layout_engine.mosaic \
             --cov-report=term-missing:skip-covered \
             --cov-report=xml:coverage.xml \
             --cov-fail-under=65

@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 
+from travelogue.domain.template_ids import DEFAULT_TEMPLATE_ID
 from travelogue.paths import MANIFEST_PATH, manifest_path_for
-from travelogue.templates.registry import DEFAULT_TEMPLATE_ID
 
 _DEFAULT_MIN_CHAPTERS = 3
 _DEFAULT_MAX_CHAPTERS = 5

@@ -19,6 +19,7 @@ from travelogue.layout_contract.orientations import (
     ExportLayout,
     OrientationSummary,
     aspect_kind_for_asset,
+    summarize_orientations,  # noqa: F401
 )
 from travelogue.layout_contract.orientations import (
     effective_export_profile as _effective_profile,

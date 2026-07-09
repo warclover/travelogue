@@ -12,8 +12,9 @@ from travelogue.config import AestheticConfig, get_config
 from travelogue.config.aesthetic_stratified import (
     apply_stratum_preference_overlay,
     landscape_pilot_config,
+    normalize_stratum_preference,
 )
-from travelogue.curation.aesthetic_purpose_calibrate import weights_with_dim_emphasis
+from travelogue.config.aesthetic_weights_ops import weights_with_dim_emphasis
 
 DEFAULT_PROFILES_PATH = Path("docs/acceptance-records/aesthetic-purpose-profiles.v4.json")
 
@@ -90,18 +91,13 @@ def infer_purpose_profile_kind(trip: dict | None) -> str:
     if mapped and str(mapped) in PURPOSE_PROFILE_KINDS:
         return str(mapped)
 
-    from travelogue.curation.album_profile import (
-        album_profile_for_trip,
-        stratum_preference_for_trip,
-    )
-
-    pref = stratum_preference_for_trip(trip)
+    pref = _stratum_preference_for_trip(trip)
     if pref == "landscape":
         return "landscape"
     if pref == "portrait":
         return "portrait"
 
-    profile = album_profile_for_trip(trip)
+    profile = _stored_album_profile_for_trip(trip)
     dom = str(profile.get("dominantStratum") or "general")
     strata = profile.get("strata") if isinstance(profile.get("strata"), dict) else {}
     top = float(strata.get(dom) or 0.0)
@@ -110,6 +106,17 @@ def infer_purpose_profile_kind(trip: dict | None) -> str:
     if dom in ("person", "group") and top >= 0.5:
         return "portrait"
     return "mixed"
+
+
+def _stored_album_profile_for_trip(trip: dict | None) -> dict[str, Any]:
+    stored = ((trip or {}).get("curation") or {}).get("albumProfile")
+    return dict(stored) if isinstance(stored, dict) else {}
+
+
+def _stratum_preference_for_trip(trip: dict | None) -> str:
+    curation = ((trip or {}).get("curation") or {}) if trip else {}
+    raw = curation.get("stratumPreference", curation.get("stratumPref"))
+    return normalize_stratum_preference(raw)
 
 
 def purpose_profile_for_trip(
