@@ -1,0 +1,138 @@
+# Longshot 2.0 · 平台导出 Profile（ADR-016 / PRD-LONGSHOT-2.0）
+# Phase A：wechat_moments；Phase B：xiaohongshu（UI 由 studio.longshot2.platforms 灰度）
+
+platforms:
+  wechat_chat:
+    label: 微信群
+    label_en: WeChat Chat
+    segment: technical_chapter
+    capture: chapter_or_full
+    allow_p1: true
+    output:
+      width_css: 428
+      naming: "{title}-longshot|{title}-ch{nn}"
+
+  wechat_moments:
+    label: 朋友圈
+    label_en: Moments
+    # photo_led: one complete photo per slide (variable height); no mid-image cuts
+    segment: photo_led
+    capture: full_once
+    allow_p1: false
+    target_pages: 9
+    min_pages: 1
+    max_pages: 9
+    tiny_photo_max: 5
+    sparse_photo_hint_below: 15
+    output:
+      width_css: 428
+      naming: "{title}-moments-{nn}"
+      footer: "{i}/{n}"
+    publish_guide: >-
+      发布步骤：1. 在文件夹按 01→N 全选（图底 i/n 助 orientation）
+      2. 朋友圈 → 从相册选择 3. 按顺序发布 · 滑动可连读
+
+  xiaohongshu:
+    label: 小红书
+    label_en: Xiaohongshu
+    segment: content_balanced
+    capture: full_once
+    allow_p1: false
+    phase: B
+    target_pages: null
+    min_pages: 1
+    max_pages: 18
+    default_pad_mode: letterbox
+    output:
+      width: 1080
+      height: 1440
+      aspect: "3:4"
+      naming: "{title}-xhs-{nn}"
+      footer: "{i}/{n}"
+    publish_guide: >-
+      发布步骤：保存到相册 → 小红书 → 发笔记 → 选图；
+      详情写在笔记正文，配图是视觉提纲
+
+  # Phase C · CLI / API only（Studio UI 不开放）
+  instagram:
+    label: Instagram
+    label_en: Instagram
+    segment: content_balanced
+    capture: full_once
+    allow_p1: false
+    phase: C
+    target_pages: null
+    min_pages: 1
+    max_pages: 10
+    default_pad_mode: letterbox
+    output:
+      width: 1080
+      height: 1350
+      aspect: "4:5"
+      naming: "{title}-ins-{nn}"
+      footer: "{i}/{n}"
+    publish_guide: >-
+      发布步骤：保存到相册 → Instagram → 发帖 → 多选配图；
+      按编号顺序添加
+
+  weibo:
+    label: 微博
+    label_en: Weibo
+    segment: content_balanced
+    capture: full_once
+    allow_p1: false
+    phase: C
+    target_pages: null
+    min_pages: 1
+    max_pages: 9
+    default_pad_mode: letterbox
+    output:
+      width: 1080
+      height: 1440
+      aspect: "3:4"
+      naming: "{title}-weibo-{nn}"
+      footer: "{i}/{n}"
+    publish_guide: >-
+      发布步骤：保存到相册 → 微博 → 发博 → 添加图片；
+      按编号 01→N 顺序选图
+
+  douyin_cover:
+    label: 抖音封面
+    label_en: Douyin Cover
+    segment: content_balanced
+    capture: full_once
+    allow_p1: false
+    phase: C
+    target_pages: 1
+    min_pages: 1
+    max_pages: 1
+    default_pad_mode: smart_crop
+    output:
+      width: 1080
+      height: 1920
+      aspect: "9:16"
+      naming: "{title}-douyin-cover"
+      single_file: true
+      footer: "{i}/{n}"
+    publish_guide: >-
+      发布步骤：将本图用作抖音视频封面（竖版 9:16）
+
+  custom:
+    label: 自定义
+    label_en: Custom
+    segment: content_balanced
+    capture: full_once
+    allow_p1: false
+    phase: C
+    target_pages: null
+    min_pages: 1
+    max_pages: 18
+    default_pad_mode: letterbox
+    output:
+      width: 1080
+      height: 1440
+      aspect: "3:4"
+      naming: "{title}-custom-{nn}"
+      footer: "{i}/{n}"
+    publish_guide: >-
+      已按自定义尺寸导出；按编号顺序使用

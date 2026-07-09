@@ -154,6 +154,9 @@ export function mountPreviewTaskDock(root, hooks) {
     } else if (result.platform === "wechat_moments") {
       var nMoments = result.pageCount || outputs.length;
       main.textContent = "✓ " + nMoments + " 张朋友圈配图已就绪";
+    } else if (result.platform === "xiaohongshu") {
+      var nXhs = result.pageCount || outputs.length;
+      main.textContent = "✓ " + nXhs + " 张 3:4 配图已就绪";
     } else {
       main.textContent = "长图已保存到画册目录";
     }

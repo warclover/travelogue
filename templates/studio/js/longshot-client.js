@@ -34,13 +34,27 @@ export function buildLongshotRequest(tripId, preset) {
   if (segmentMode !== "full" && segmentMode !== "chapter" && segmentMode !== "auto") {
     segmentMode = "auto";
   }
-  return {
+  var body = {
     tripId: tripId,
     scale: p.scale,
     format: p.format || "png",
     copyDisplay: p.copyDisplay || "full",
     segmentMode: segmentMode,
   };
+  // Only attach platform when caller opts in (shelf / 1.x omit → branch A)
+  if (p.platform) {
+    body.platform = p.platform;
+    if (p.platform !== "wechat_chat") {
+      body.segmentMode = "auto";
+    }
+  }
+  if (p.slideCount != null && p.slideCount !== "") {
+    body.slideCount = p.slideCount;
+  }
+  if (p.padMode) {
+    body.padMode = p.padMode;
+  }
+  return body;
 }
 
 /** Resolve copyDisplay from live preview DOM (Studio toolbar chips). */
@@ -92,7 +106,7 @@ export function waitForLongshotJob(jobId, options) {
 
 /**
  * @param {object} job
- * @returns {{ ok: boolean, title: string, lines: string[], outputs: string[], revealPath: string|null, captureMethod: string, segmented: boolean }}
+ * @returns {{ ok: boolean, title: string, lines: string[], outputs: string[], revealPath: string|null, captureMethod: string, segmented: boolean, platform?: string, publishGuide?: string }}
  */
 export function formatLongshotResult(job) {
   if (!job || job.status === "failed") {
@@ -105,6 +119,8 @@ export function formatLongshotResult(job) {
       revealPath: null,
       captureMethod: "",
       segmented: false,
+      platform: "",
+      publishGuide: "",
     };
   }
 
@@ -112,9 +128,20 @@ export function formatLongshotResult(job) {
   var outputs = result.outputs || [];
   var method = result.captureMethod || "p0";
   var segmented = result.segmented || outputs.length > 1;
+  var platform = result.platform || "wechat_chat";
   var lines = [];
+  var title = "长图已保存";
 
-  if (segmented && outputs.length > 1) {
+  if (platform === "wechat_moments") {
+    var n = result.pageCount || outputs.length;
+    title = "✓ " + n + " 张朋友圈配图已就绪";
+    if (result.userHint) lines.push(result.userHint);
+    if (result.publishGuide) lines.push(result.publishGuide);
+  } else if (platform === "xiaohongshu") {
+    title = "✓ " + (result.pageCount || outputs.length) + " 张 3:4 配图已就绪";
+    if (result.userHint) lines.push(result.userHint);
+    if (result.publishGuide) lines.push(result.publishGuide);
+  } else if (segmented && outputs.length > 1) {
     lines.push(
       result.userHint ||
         "已按章导出 " + outputs.length + " 张，底部含页码（如 2/5）便于微信按序发送。"
@@ -129,12 +156,14 @@ export function formatLongshotResult(job) {
 
   return {
     ok: true,
-    title: "长图已保存",
+    title: title,
     lines: lines,
     outputs: outputs,
     revealPath: outputs.length ? outputs[0] : null,
     captureMethod: method,
     segmented: segmented,
+    platform: platform,
+    publishGuide: result.publishGuide || "",
   };
 }
 

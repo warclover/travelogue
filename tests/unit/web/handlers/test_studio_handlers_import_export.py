@@ -485,6 +485,21 @@ def test_handle_longshot_rejects_invalid_segment_mode(tmp_path: Path) -> None:
     assert body["error"] == "invalid segmentMode"
 
 
+def test_handle_longshot_rejects_invalid_platform(tmp_path: Path) -> None:
+    """AC-LNG2-05c · illegal platform → 400, no silent fallback."""
+    from travelogue.web.studio_handlers.export_handlers import handle_longshot
+
+    handler = MockStudioHandler(
+        tmp_path / "trips",
+        json_body={"tripId": "demo", "platform": "not_a_real_platform"},
+    )
+    handle_longshot(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 400
+    assert body["error"] == "E_LNG2_INVALID_PLATFORM"
+
+
 def test_read_import_request_json_body(tmp_path: Path) -> None:
     from travelogue.web.studio_handlers.import_handlers import read_import_request
 

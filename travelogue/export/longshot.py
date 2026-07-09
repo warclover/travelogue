@@ -46,6 +46,12 @@ class LongshotExportResult:
     segmented: bool = False
     segment_reason: str = ""
     user_hint: str = ""
+    # Longshot 2.0 · platform segment extras (branch B)
+    platform: str = "wechat_chat"
+    profile_label: str = "微信群"
+    target_page_count: int | None = None
+    publish_guide: str = ""
+    page_count: int | None = None
 
     @property
     def paths(self) -> list[Path]:
@@ -550,7 +556,35 @@ def export_trip_longshot(
     progress: ProgressFn | None = None,
     copy_display: str = "full",
     segment_mode: str = "auto",
+    platform: str | None = None,
+    slide_count: int | None = None,
+    pad_mode: str | None = None,
+    profile: Any = None,
 ) -> LongshotExportResult:
+    """Export longshot. Branch A (wechat_chat) by default; platform → branch B."""
+    from travelogue.export.platform_profiles import DEFAULT_PLATFORM, normalize_platform_id
+
+    pid = normalize_platform_id(platform)
+    if pid != DEFAULT_PLATFORM:
+        from travelogue.export.platform_longshot import export_platform_longshot
+
+        return export_platform_longshot(
+            trip_dir,
+            platform=pid,
+            scale=scale,
+            fmt=fmt,
+            base_url=base_url,
+            trip_id=trip_id,
+            host=host,
+            port=port,
+            timeout_ms=timeout_ms,
+            progress=progress,
+            copy_display=copy_display,
+            slide_count=slide_count,
+            pad_mode=pad_mode,
+            profile=profile,
+        )
+
     trip_dir = trip_dir.resolve()
     longshot_html = trip_dir / LONGSHOT_INDEX_NAME
     if not longshot_html.is_file():
@@ -689,6 +723,11 @@ def export_trip_longshot(
         segmented=segmented,
         segment_reason=segment_reason,
         user_hint=user_hint,
+        platform="wechat_chat",
+        profile_label="微信群",
+        target_page_count=None,
+        publish_guide="",
+        page_count=len(outputs),
     )
 
 

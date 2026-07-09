@@ -574,6 +574,8 @@ M14 书架 · full/photos toggle · CLI 无 flag · ADR-005 分支 A · copy-dis
 
 **Dashboard**：platform 分布 · 成功率 · P95 duration · partial split 次数。
 
+本地落盘：`~/.travelogue/telemetry/studio-homepage-events.jsonl`（与 Studio homepage 漏斗共用；CLI `export-longshot` 亦写入）。
+
 ---
 
 ## 13. 兼容与回退

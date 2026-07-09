@@ -64,8 +64,12 @@ def test_preview_toolbar_longshot_integrated_to_top_bar() -> None:
         "trapFocus",
         "data-copy-preset",
         "导出长图",
+        "preview-toolbar__longshot-caret",
+        "preview-toolbar__longshot-split",
     ):
         assert token in bundle or token in css, f"missing preview toolbar v3/longshot marker: {token}"
+    assert "openLongshotExportOptions(root)" in init_v3
+    assert "preview-toolbar__longshot-caret" in init_v3
     assert 'html[data-preview-toolbar="on"] .longshot-toolbar' in css
     assert 'html[data-preview-toolbar="on"] .screenplay-toolbar' in css
     assert "resolveCopyDisplayFromDom" in client

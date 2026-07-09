@@ -180,6 +180,20 @@ def test_export_longshot_single_file(longshot_workspace: Path) -> None:
     assert any(n.endswith("-longshot.png") or "-ch" in n for n in names)
 
 
+def test_export_longshot_explicit_wechat_chat_same_as_default(
+    longshot_workspace: Path,
+) -> None:
+    """AC-LNG2-05b · platform=wechat_chat → branch A (same as omitting platform)."""
+    a = export_trip_longshot(longshot_workspace, scale=1)
+    b = export_trip_longshot(longshot_workspace, scale=1, platform="wechat_chat")
+    assert a.platform == "wechat_chat"
+    assert b.platform == "wechat_chat"
+    assert len(a.outputs) == len(b.outputs)
+    assert all(item.path.is_file() for item in b.outputs)
+    # Branch A naming — not moments prefix
+    assert all("-moments-" not in item.path.name for item in b.outputs)
+
+
 def test_export_longshot_missing_html(tmp_path: Path) -> None:
     trip_dir = tmp_path / "empty"
     trip_dir.mkdir()

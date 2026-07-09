@@ -75,7 +75,7 @@
 
 ## 3. 开发负责人 Definition of Done（Phase A）
 
-1. `pytest tests/test_content_splitter.py tests/test_export_longshot_platform.py tests/test_export_longshot.py` 0 失败  
+1. `pytest tests/unit/export/test_content_splitter.py tests/unit/export/test_export_longshot_platform.py tests/unit/export/test_export_longshot.py` 0 失败  
 2. CLI moments @ T-large → 9 张；@ T-small（8–12 张）→ 6–9 张  
 3. Studio 灰度下 Popover 同路径可导出  
 4. Job 失败无 `.part` / 残缺 `*-moments-*.png`  

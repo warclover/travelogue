@@ -212,6 +212,8 @@ export function initDockTooltips(root) {
 
     var exportBtn = dock.querySelector(".preview-toolbar__dock-btn--export");
     ensureDockTooltip(exportBtn, "导出长图");
+    var caretBtn = dock.querySelector(".preview-toolbar__longshot-caret");
+    ensureDockTooltip(caretBtn, "导出设置");
 
     var screenplayBtn = dock.querySelector(".preview-toolbar__screenplay--v3");
     ensureDockTooltip(screenplayBtn, "放映");

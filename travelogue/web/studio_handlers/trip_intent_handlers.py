@@ -284,7 +284,13 @@ def handle_post_copy_telemetry(handler: StudioHandlerProtocol, trip_id: str) -> 
         event_name = event
 
         def mutator(t: dict) -> dict:
-            return record_copy_ui_event(t, event_name)
+            from travelogue.services.trip import mark_render_bundle_current_if_fresh
+
+            metrics = record_copy_ui_event(t, event_name)
+            # Opening preview posts copy-telemetry; that must not invalidate a
+            # fresh render bundle (revision bump without HTML rewrite).
+            mark_render_bundle_current_if_fresh(t, trip_dir)
+            return metrics
 
         ok, metrics = trip_update_or_respond(handler, svc, trip_json, mutator)
         if not ok:

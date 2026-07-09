@@ -481,6 +481,7 @@ def render_trip(
     layout_engine: str | None = None,
     export_layout_override: str | None = None,
     update_pipeline: bool = False,
+    stamp_render_bundle: bool | None = None,
     include_longshot: bool | None = None,
     font_theme: str | None = None,
     copy_display_override: str | None = None,
@@ -514,6 +515,8 @@ def render_trip(
 
     effective_template = resolve_effective_template(trip)
     trip_id = str(trip.get("tripId") or trip_path.parent.name)
+    if stamp_render_bundle is None:
+        stamp_render_bundle = bool(update_pipeline)
     try:
         return _render_trip_body(
             trip,
@@ -533,6 +536,7 @@ def render_trip(
             reading_profile_override=reading_profile_override,
             include_longshot=include_longshot,
             update_pipeline=update_pipeline,
+            stamp_render_bundle=stamp_render_bundle,
             cfg=cfg,
         )
     except RenderError as exc:
@@ -564,6 +568,7 @@ def _render_trip_body(
     reading_profile_override: str | None,
     include_longshot: bool | None,
     update_pipeline: bool,
+    stamp_render_bundle: bool,
     cfg: AppConfig | None,
 ) -> Path:
     from travelogue.templating.metrics import record_render_outcome
@@ -694,11 +699,18 @@ def _render_trip_body(
     if export_mode == "draft":
         copy_inline_edit_bundle(out_dir)
 
-    if update_pipeline:
-        from travelogue.domain.pipeline_view import set_pipeline_status
-        from travelogue.services.trip import persist_trip_snapshot
+    should_stamp = bool(stamp_render_bundle) and out_dir.resolve() == trip_root.resolve()
+    if should_stamp or update_pipeline:
+        from travelogue.services.trip import mark_render_bundle_current, persist_trip_snapshot
 
-        set_pipeline_status(trip, "rendered")
+        if should_stamp:
+            mark_render_bundle_current(trip)
+        if update_pipeline:
+            from travelogue.domain.pipeline_view import set_pipeline_status
+
+            set_pipeline_status(trip, "rendered")
+            if not should_stamp:
+                mark_render_bundle_current(trip)
         persist_trip_snapshot(trip_svc, trip_path, trip)
 
     record_render_outcome(trip_id=trip_id, template_id=effective_template, ok=True)
@@ -712,6 +724,7 @@ def render_trip_surfaces(
     export_mode: str = "draft",
     validate: bool = True,
     update_pipeline: bool = False,
+    stamp_render_bundle: bool | None = None,
     font_theme: str | None = None,
     copy_display_override: str | None = None,
     reading_profile_override: str | None = None,
@@ -726,12 +739,17 @@ def render_trip_surfaces(
     trip_path = trip_path.resolve()
     trip_root = trip_path.parent
     out_dir = (out_dir or trip_root).resolve()
+    if stamp_render_bundle is None:
+        # Studio draft renders often leave update_pipeline=False but still need the watermark.
+        stamp_render_bundle = True
 
     from travelogue.runtime import app_context_for_trip_json
 
-    trip = app_context_for_trip_json(trip_path, cfg=cfg).trip_service().load(trip_path)
+    trip_svc = app_context_for_trip_json(trip_path, cfg=cfg).trip_service()
+    trip = trip_svc.load(trip_path)
     shared = {"trip": trip, "cfg": cfg}
 
+    # Stamp / pipeline persist on the primary index.html write (not the mobile pass).
     web_index = render_trip(
         trip_path,
         out_dir,
@@ -741,13 +759,16 @@ def render_trip_surfaces(
         index_name="index.html",
         layout_engine=LAYOUT_ENGINE_SCREENS,
         export_layout_override="web",
-        update_pipeline=False,
+        update_pipeline=update_pipeline,
+        stamp_render_bundle=stamp_render_bundle,
         include_longshot=False,
         font_theme=font_theme,
         copy_display_override=copy_display_override,
         reading_profile_override=reading_profile_override,
         **shared,
     ) / "index.html"
+    trip = trip_svc.load(trip_path)
+    shared["trip"] = trip
     mobile_index = render_trip(
         trip_path,
         out_dir,
@@ -757,7 +778,8 @@ def render_trip_surfaces(
         index_name="index-mobile.html",
         layout_engine=LAYOUT_ENGINE_LEGACY,
         export_layout_override="mobile",
-        update_pipeline=update_pipeline,
+        update_pipeline=False,
+        stamp_render_bundle=False,
         font_theme=font_theme,
         copy_display_override=copy_display_override,
         reading_profile_override=reading_profile_override,
@@ -775,6 +797,7 @@ def render_trip_surfaces(
             layout_engine=LAYOUT_ENGINE_SCREENS,
             export_layout_override="web",
             update_pipeline=False,
+            stamp_render_bundle=False,
             include_longshot=False,
             font_theme=font_theme,
             copy_display_override=copy_display_override,

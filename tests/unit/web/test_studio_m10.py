@@ -60,6 +60,68 @@ def test_has_longshot_exports_detects_chapter_jpgs(tmp_path: Path) -> None:
     assert has_longshot_exports(trip_dir) is True
 
 
+def test_has_longshot_exports_detects_moments_png(tmp_path: Path) -> None:
+    """AC-LNG2-06 · moments glob participates in longshot file set."""
+    from travelogue.web.studio_trips import _longshot_files
+
+    trip_dir = tmp_path / "demo-moments"
+    trip_dir.mkdir()
+    assert has_longshot_exports(trip_dir) is False
+    (trip_dir / "demo-moments-01.png").write_bytes(b"png")
+    assert has_longshot_exports(trip_dir) is True
+    (trip_dir / "demo-moments-02.png.part").write_bytes(b"part")
+    names = {p.name for p in _longshot_files(trip_dir)}
+    assert "demo-moments-01.png" in names
+    assert "demo-moments-02.png.part" not in names
+
+
+def test_longshot_stale_when_moments_older_than_trip(tmp_path: Path) -> None:
+    """AC-LNG2-06 · trip mtime newer than moments → stale."""
+    import os
+    import time
+
+    trip_dir = tmp_path / "demo-stale-moments"
+    trip_dir.mkdir()
+    moments = trip_dir / "demo-moments-01.png"
+    moments.write_bytes(b"png")
+    base = time.time() - 100
+    os.utime(moments, (base, base))
+    trip_json = trip_dir / "trip.json"
+    trip_json.write_text('{"meta":{"title":"demo"}}', encoding="utf-8")
+    assert longshot_outputs_stale(trip_dir, trip_mtime=trip_json.stat().st_mtime) is True
+
+
+def test_has_longshot_exports_detects_xhs_png(tmp_path: Path) -> None:
+    """AC-LNG2-06 · xhs glob participates in longshot file set."""
+    from travelogue.web.studio_trips import _longshot_files
+
+    trip_dir = tmp_path / "demo-xhs"
+    trip_dir.mkdir()
+    assert has_longshot_exports(trip_dir) is False
+    (trip_dir / "demo-xhs-01.png").write_bytes(b"png")
+    assert has_longshot_exports(trip_dir) is True
+    (trip_dir / "demo-xhs-02.png.part").write_bytes(b"part")
+    names = {p.name for p in _longshot_files(trip_dir)}
+    assert "demo-xhs-01.png" in names
+    assert "demo-xhs-02.png.part" not in names
+
+
+def test_longshot_stale_when_xhs_older_than_trip(tmp_path: Path) -> None:
+    """AC-LNG2-06 · trip mtime newer than *-xhs-* → stale."""
+    import os
+    import time
+
+    trip_dir = tmp_path / "demo-stale-xhs"
+    trip_dir.mkdir()
+    xhs = trip_dir / "demo-xhs-01.png"
+    xhs.write_bytes(b"png")
+    base = time.time() - 100
+    os.utime(xhs, (base, base))
+    trip_json = trip_dir / "trip.json"
+    trip_json.write_text('{"meta":{"title":"demo"}}', encoding="utf-8")
+    assert longshot_outputs_stale(trip_dir, trip_mtime=trip_json.stat().st_mtime) is True
+
+
 def test_longshot_stale_when_trip_newer(tmp_path: Path) -> None:
     import os
     import time

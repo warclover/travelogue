@@ -535,6 +535,13 @@ studio:
   import_sheet_large_enabled: true
   # Phase 16 · LTE internal 模板目录（AC-P16-14）；loopback 默认可见
   layout_templates_internal: false
+  # Longshot 2.0 · 平台化导出（PRD-LONGSHOT-2.0 §13）
+  # 开发期默认开放朋友圈 + 小红书；Ins/微博/抖音仍仅 CLI
+  longshot2:
+    enabled: true
+    platforms: [wechat_moments, xiaohongshu]
+    smart_crop:
+      enabled: false              # 实验裁切 · 默认关
 
 # Phase 6 · 验收阈值与运营告警（PRD-PHASE6 §18）
 phase6:

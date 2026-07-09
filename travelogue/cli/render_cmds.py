@@ -393,27 +393,124 @@ def cmd_export_longshot(
     format: str = typer.Option("png", "--format", "-f", help="png | jpeg"),
     chapter: int | None = typer.Option(None, "--chapter", help="export one chapter (1-based)"),
     port: int = typer.Option(0, "--port", "-p", help="HTTP port when no serve running (0 = random)"),
+    platform: str | None = typer.Option(
+        None,
+        "--platform",
+        help=(
+            "wechat_chat (default) | wechat_moments | xiaohongshu | "
+            "instagram | weibo | douyin_cover | custom"
+        ),
+    ),
+    slide_count: int | None = typer.Option(
+        None,
+        "--slide-count",
+        help="aspect-fit slide count (xhs/ins/weibo/custom; moments/douyin ignore)",
+    ),
+    pad_mode: str | None = typer.Option(
+        None,
+        "--pad-mode",
+        help="letterbox | smart_crop (aspect-fit platforms)",
+    ),
+    width: int | None = typer.Option(
+        None,
+        "--width",
+        help="custom canvas width (only with --platform custom)",
+    ),
+    height: int | None = typer.Option(
+        None,
+        "--height",
+        help="custom canvas height (only with --platform custom)",
+    ),
 ) -> None:
     """Export trip longshot PNG via Playwright (requires playwright + chromium)."""
+    import time
+
     from travelogue.export.longshot import LongshotExportError, export_trip_longshot
+    from travelogue.export.platform_profiles import (
+        PlatformProfileError,
+        resolve_profile,
+        with_custom_output,
+    )
     from travelogue.web.serve import resolve_trip_serve_dir
+    from travelogue.web.studio_homepage_telemetry import append_studio_homepage_event
+
+    platform_id = platform or "wechat_chat"
+    t0 = time.monotonic()
+    try:
+        append_studio_homepage_event(
+            "longshot_export_start",
+            {
+                "platform": platform_id,
+                "scale": scale,
+                "slide_count": slide_count,
+                "photo_count": None,
+                "surface": "cli",
+            },
+        )
+    except Exception:
+        pass
 
     try:
+        profile = None
+        if platform:
+            profile = resolve_profile(
+                platform, slide_count=slide_count, pad_mode=pad_mode
+            )
+            if profile.id == "custom":
+                profile = with_custom_output(
+                    profile, width=width, height=height, pad_mode=pad_mode
+                )
+            elif width is not None or height is not None:
+                raise PlatformProfileError(
+                    "E_LNG2_INVALID_CUSTOM_SIZE",
+                    "--width/--height 仅用于 --platform custom",
+                )
         trip_path = _resolve(path)
         serve_dir = resolve_trip_serve_dir(trip_path)
         result = export_trip_longshot(
             serve_dir,
             scale=scale,
             fmt=format,
-            chapter=chapter,
+            chapter=chapter if not platform or platform == "wechat_chat" else None,
             output=out,
             port=port,
+            platform=platform,
+            slide_count=slide_count,
+            pad_mode=pad_mode,
+            profile=profile,
         )
-    except (TripNotFoundError, FileNotFoundError, LongshotExportError) as exc:
+    except (TripNotFoundError, FileNotFoundError, LongshotExportError, PlatformProfileError) as exc:
+        try:
+            code = getattr(exc, "code", None) or type(exc).__name__
+            append_studio_homepage_event(
+                "longshot_export_fail",
+                {
+                    "platform": platform_id,
+                    "error_code": str(code),
+                    "surface": "cli",
+                },
+            )
+        except Exception:
+            pass
         typer.echo(f"E_EXPORT_LONGSHOT: {exc}", err=True)
         raise typer.Exit(1) from exc
+    try:
+        append_studio_homepage_event(
+            "longshot_export_success",
+            {
+                "platform": getattr(result, "platform", None) or platform_id,
+                "output_count": len(result.outputs),
+                "target_page_count": getattr(result, "page_count", None),
+                "duration_ms": int((time.monotonic() - t0) * 1000),
+                "surface": "cli",
+            },
+        )
+    except Exception:
+        pass
     for item in result.outputs:
         typer.echo(f"OK export-longshot · {item.path} ({item.capture_method})")
+    if getattr(result, "user_hint", ""):
+        typer.echo(result.user_hint)
 
 
 @app.command("preview")
