@@ -69,6 +69,18 @@ def test_subprocess_worker_and_main_both_persist(tmp_path: Path) -> None:
     proc.start()
     svc = TripService()
     try:
+        # Let the spawn worker land at least one CAS write before main floods.
+        deadline = time.monotonic() + 5.0
+        while time.monotonic() < deadline:
+            progress = (svc.load(trip_path).get("pipeline") or {}).get("ingestProgress") or {}
+            if any(str(k).startswith("worker.") for k in progress):
+                break
+            time.sleep(0.02)
+        else:
+            stop.set()
+            proc.join(timeout=10)
+            pytest.fail("worker process never persisted a trip update")
+
         for i in range(30):
             key = f"main.{i}"
 

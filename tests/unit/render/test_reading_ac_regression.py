@@ -63,10 +63,35 @@ def test_ac_exp_02_default_hybrid_bundle(screens_workspace: Path) -> None:
     assert "breath.js" in html
 
 
+def _ensure_single_slot_chapter_opener(trip: dict, *, asset_id: str | None = None) -> None:
+    """Force chapter-1 opener to 1 slot so folio plate rewrite remains testable."""
+    chapters = trip.get("chapters") or []
+    if not chapters:
+        return
+    screens = list(chapters[0].get("screens") or [])
+    if not screens:
+        return
+    sc = dict(screens[0])
+    slots = [s for s in (sc.get("slots") or []) if s.get("assetId")]
+    if len(slots) == 1 and not asset_id:
+        return
+    assets = trip.get("assets") or []
+    aid = asset_id
+    if not aid:
+        featured = next((a for a in assets if a.get("userTier") == "featured"), None)
+        aid = str((featured or (assets[0] if assets else {}) or {}).get("id") or slots[0]["assetId"])
+    sc["patternId"] = "screen-portrait-1"
+    sc["slots"] = [{"assetId": aid, "slot": 0, "fit": "contain"}]
+    screens[0] = sc
+    chapters[0] = dict(chapters[0])
+    chapters[0]["screens"] = screens
+
+
 def test_ac_exp_05_featured_plate_pattern(screens_workspace: Path) -> None:
     """AC-EXP-05 / AC-FO-02: featured asset on folio lite plate pattern."""
     trip = json.loads((screens_workspace / "trip.json").read_text(encoding="utf-8"))
     trip["assets"][1]["userTier"] = "featured"
+    _ensure_single_slot_chapter_opener(trip, asset_id=str(trip["assets"][1]["id"]))
     html = render_html(
         trip,
         export_mode="draft",

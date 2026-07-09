@@ -202,6 +202,70 @@ def test_folio_plate_portrait_person_renders_contain() -> None:
 
 
 @pytest.mark.unit
+def test_folio_plate_skips_multi_slot_landscape_stack() -> None:
+    """Multi-slot stacks must keep native patternId (not rewrite to screen-plate)."""
+    from travelogue.render.context import folio_plate_rewrite_eligible
+
+    assets = {
+        "a1": {
+            "id": "a1",
+            "nativeWidth": 5760,
+            "nativeHeight": 3840,
+            "width": 3200,
+            "height": 2133,
+            "displayFile": "assets/a1-w800.webp",
+            "caption": "one",
+        },
+        "a2": {
+            "id": "a2",
+            "nativeWidth": 4500,
+            "nativeHeight": 2708,
+            "width": 3200,
+            "height": 1926,
+            "displayFile": "assets/a2-w800.webp",
+        },
+        "a3": {
+            "id": "a3",
+            "nativeWidth": 5178,
+            "nativeHeight": 3144,
+            "width": 3200,
+            "height": 1943,
+            "displayFile": "assets/a3-w800.webp",
+        },
+    }
+    screen = {
+        "patternId": "screen-landscape-3",
+        "slots": [
+            {"assetId": "a1", "slot": 0, "fit": "cover", "displayAspect": 5.3333},
+            {"assetId": "a2", "slot": 1, "fit": "cover", "displayAspect": 5.3333},
+            {"assetId": "a3", "slot": 2, "fit": "cover", "displayAspect": 5.3333},
+        ],
+        "layoutGeometry": {
+            "stageAspect": "16:9",
+            "cols": [1.0],
+            "rows": [1.0, 1.0, 1.0],
+            "gridClass": "layout-screen__grid--landscape-stack-3",
+        },
+    }
+    assert folio_plate_rewrite_eligible(screen) is False
+    ctx = build_layout_screen(
+        screen,
+        assets,
+        meta_title="Test",
+        export_layout="web",
+        folio_lite=True,
+        is_plate=True,
+        screen_index=1,
+        chapter_index="01",
+    )
+    assert ctx["patternId"] == "screen-landscape-3"
+    assert ctx.get("isPlate") is not True
+    assert ctx.get("hasPlateCaption") is not True
+    assert ctx.get("folioLite") is True
+    assert ctx.get("folioPageLabel") == "Plate · 01"
+
+
+@pytest.mark.unit
 def test_journal_screens_css_has_bsp_tokens() -> None:
     from travelogue.paths import JOURNAL_SCREENS_CSS
 

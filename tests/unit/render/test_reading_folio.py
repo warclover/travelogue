@@ -245,6 +245,30 @@ def test_legacy_profile_no_folio_full_blocks(screens_workspace: Path) -> None:
     assert 'data-block="epilogue-screen"' not in html
 
 
+def _ensure_single_slot_chapter_opener(trip: dict, *, asset_id: str | None = None) -> None:
+    """Force chapter-1 opener to 1 slot so folio plate rewrite remains testable."""
+    chapters = trip.get("chapters") or []
+    if not chapters:
+        return
+    screens = list(chapters[0].get("screens") or [])
+    if not screens:
+        return
+    sc = dict(screens[0])
+    slots = [s for s in (sc.get("slots") or []) if s.get("assetId")]
+    if len(slots) == 1 and not asset_id:
+        return
+    assets = trip.get("assets") or []
+    aid = asset_id
+    if not aid:
+        featured = next((a for a in assets if a.get("userTier") == "featured"), None)
+        aid = str((featured or (assets[0] if assets else {}) or {}).get("id") or slots[0]["assetId"])
+    sc["patternId"] = "screen-portrait-1"
+    sc["slots"] = [{"assetId": aid, "slot": 0, "fit": "contain"}]
+    screens[0] = sc
+    chapters[0] = dict(chapters[0])
+    chapters[0]["screens"] = screens
+
+
 def _magazine_trip(*, foreword: bool = True) -> dict:
     trip = prepare_trip_web_screens(json.loads(FIXTURE.read_text(encoding="utf-8")))
     trip.setdefault("export", {})["reading"] = {"profile": "magazine"}
@@ -263,6 +287,13 @@ def _magazine_trip(*, foreword: bool = True) -> dict:
         "featuredGridAssetIds": [a["id"] for a in trip["assets"][:5]],
         "plateAssetIds": [],
     }
+    # Opener must stay on-screen after featured-grid strip; pick a non-featured asset.
+    featured_ids = set(trip["curation"]["folioPlan"]["featuredGridAssetIds"])
+    opener = next(
+        (a["id"] for a in trip.get("assets") or [] if a.get("id") not in featured_ids),
+        None,
+    )
+    _ensure_single_slot_chapter_opener(trip, asset_id=str(opener) if opener else None)
     return trip
 
 
@@ -294,6 +325,7 @@ def test_magazine_renders_folio_full_blocks() -> None:
 
 def test_folio_lite_renders_screen_plate_and_epilogue_screen() -> None:
     trip = prepare_trip_web_screens(json.loads(FIXTURE.read_text(encoding="utf-8")))
+    _ensure_single_slot_chapter_opener(trip)
     html = render_html(
         trip,
         export_mode="draft",
