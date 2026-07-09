@@ -82,9 +82,14 @@ def trip_render_bundle_stale(trip_dir: Path, data: dict[str, Any] | None = None)
             data = {}
     meta = data.get("meta") if isinstance(data.get("meta"), dict) else {}
     if "renderedRevision" in meta:
-        from travelogue.services.trip import meta_rendered_revision, meta_revision
+        # Keep revision math local — layout_templates must not import services.
+        def _meta_rev(key: str) -> int:
+            try:
+                return max(0, int(meta.get(key, 0)))
+            except (TypeError, ValueError):
+                return 0
 
-        return meta_revision(data) > meta_rendered_revision(data)
+        return _meta_rev("revision") > _meta_rev("renderedRevision")
 
     from travelogue.curation.algorithm_profile import _trip_updated_mtime
 
