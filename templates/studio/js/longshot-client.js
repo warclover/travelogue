@@ -106,7 +106,7 @@ export function waitForLongshotJob(jobId, options) {
 
 /**
  * @param {object} job
- * @returns {{ ok: boolean, title: string, lines: string[], outputs: string[], revealPath: string|null, captureMethod: string, segmented: boolean }}
+ * @returns {{ ok: boolean, title: string, lines: string[], outputs: string[], revealPath: string|null, captureMethod: string, segmented: boolean, platform?: string, publishGuide?: string }}
  */
 export function formatLongshotResult(job) {
   if (!job || job.status === "failed") {
@@ -119,6 +119,8 @@ export function formatLongshotResult(job) {
       revealPath: null,
       captureMethod: "",
       segmented: false,
+      platform: "",
+      publishGuide: "",
     };
   }
 
