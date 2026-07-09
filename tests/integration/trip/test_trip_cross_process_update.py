@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import multiprocessing as mp
+import sys
 import time
 from pathlib import Path
 
@@ -54,6 +55,10 @@ def _worker(path_str: str, stop: mp.Event, errors: mp.Queue) -> None:
 
 
 @pytest.mark.integration
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason="Windows spawn CAS flake (PRD-ARCH-OPT-WS1-MERGE-FIX M-F4 · D-FIX-05); Linux CI covers AC-ARC-02",
+)
 def test_subprocess_worker_and_main_both_persist(tmp_path: Path) -> None:
     ctx = mp.get_context("spawn")
     trip_path = tmp_path / "trip.json"

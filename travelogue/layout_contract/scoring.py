@@ -172,6 +172,27 @@ class IncrementalScoreState:
     )
 
 
+def asset_aesthetic(asset: dict) -> dict | None:
+    q = asset.get("quality")
+    if isinstance(q, dict):
+        ae = q.get("aesthetic")
+        if isinstance(ae, dict):
+            return ae
+    return None
+
+
+def aesthetic_overall(asset: dict) -> float | None:
+    """``quality.aesthetic.overall`` or ``None`` when absent (fail-open)."""
+    ae = asset_aesthetic(asset)
+    if not ae:
+        return None
+    try:
+        val = ae.get("overall")
+        return None if val is None else float(val)
+    except (TypeError, ValueError):
+        return None
+
+
 def screen_dominant_tone(screen: dict, assets_by_id: Mapping[str, dict]) -> str | None:
     tones: list[str] = []
     for slot in screen.get("slots") or []:

@@ -1,9 +1,5 @@
-"""Aesthetic score adapter."""
+"""Aesthetic score adapter (delegates to the layout_contract kernel)."""
 
 from __future__ import annotations
 
-
-def aesthetic_overall(asset: dict) -> float | None:
-    from travelogue.curation.aesthetic_score import aesthetic_overall as _fn
-
-    return _fn(asset)
+from travelogue.layout_contract.scoring import aesthetic_overall as aesthetic_overall  # noqa: F401

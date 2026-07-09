@@ -399,6 +399,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 | 文档 | 说明 |
 |------|------|
 | [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) | 架构优化还债 PRD v1.1 |
+| [PRD-ARCH-OPT-WS1-MERGE-FIX.md](./PRD-ARCH-OPT-WS1-MERGE-FIX.md) | WS1 合并闸门修复 PRD（feedback / LSE baseline / CI） |
 | [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md) | 里程碑状态追踪（实施期 SSOT） |
 | [PROMPTS-ARCH-OPTIMIZATION.md](./PROMPTS-ARCH-OPTIMIZATION.md) | Agent 执行提示词 |
 | [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md) | 技术架构（M-B0 v0.9 增量；M-D1 后全量更新） |

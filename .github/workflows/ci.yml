@@ -40,6 +40,9 @@ jobs:
       - name: Import layer contract (M-B0)
         run: lint-imports
 
+      - name: LSE cross-import ceiling (ADR-015)
+        run: python scripts/lint_lse_cross_import.py
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22"

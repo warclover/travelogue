@@ -3,7 +3,7 @@
 > 配套 [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) v1.1 · 执行提示词见 [PROMPTS-ARCH-OPTIMIZATION.md](./PROMPTS-ARCH-OPTIMIZATION.md)
 
 **当前分支**: `arch/optimization-ws1`  
-**最后更新**: 2026-07-08（M-C1 路由表化 done · WS1 里程碑全部完成）
+**最后更新**: 2026-07-09（WS1 功能闭环 · 合并闸门 M-F1～F3 工作区已落地，待提交/开 PR）
 
 ## 里程碑总表
 
@@ -19,8 +19,8 @@
 | M-A3 | done | 2026-07-08 | `.gitignore` 增加 registry.cache.json / trips/.cache/；registry.cache 移出索引；import-wizard.js 索引无正反斜杠重复 | — |
 | M-B5 | done | 2026-07-08 | `scripts/lint_trip_json.py` + CI validate/lint；`e2e_trip_acceptance` 接入；13 fixtures + `pytest tests/test_lint_trip_json.py` 6 passed | — |
 | M-B0 | done | 2026-07-08 | `scripts/arch_equivalence_check.py` 自反性冒烟；`lint-imports` 基线 26 豁免；CI lint+validate；TECH-ARCH §18 | M-B1 已清零（0 豁免） |
-| ADR-015 | accepted | 2026-07-08 | ADR 已批准；cross-import 51→44（B4a 后）→ **7**（batch-6 后） | 余 7 边 curate→adapter 白名单 |
-| M-B4a | done | 2026-07-08 | kernel→layout_contract；adapter 收敛；mosaic ContextVar；render_fingerprint；equivalence 全绿 | LSE 7 边（见下表） |
+| ADR-015 | accepted | 2026-07-08 | ADR 已批准；cross-import 51→44（B4a）→7（batch-6）→ **8**（07-09 hotfix 后基线） | 7 边 curate→adapter + 1 边 hero scoring adapter |
+| M-B4a | done | 2026-07-08 | kernel→layout_contract；adapter 收敛；mosaic ContextVar；render_fingerprint；equivalence 全绿 | LSE 现行 8 边（见下表） |
 | M-B4b | done | 2026-07-08 | planner+mosaic→layout_engine/；weekly dual-run；消费方收敛 | PRD ≤10 ✅；shim 待后续退役 |
 | M-B1 | done | 2026-07-08 | import-linter **26→0** 豁免；PRD §5.3.2 违例清零 | — |
 | M-B2 | done | 2026-07-08 | S1 `ARCH-ORCH-DIFF-MATRIX.md`；S2 StudioProfile/Hooks + clustering stage；Go（G-WIP-01 用户授权） | — |
@@ -32,7 +32,7 @@
 | **M-C2** | done | 2026-07-08 | 全量 **423** 文件分层；baseline **1**（`test_ingest.py` shim）；collect **2714**；14 个 `tests/unit/*` 目录 | — |
 | M-C3 | done | 2026-07-08 | `gen_scripts_registry.py` + `scripts/README.md`（168 脚本）+ 7 个 phase 脚本已 `git mv` 至 `scripts/archive/` + docs 索引 | — |
 | M-C5 | done | 2026-07-08 | ESM 10 模块 + tsc + preview-toolbar CSS + **studio-home-v2.css** 13 partials | — |
-| M-D1 | done | 2026-07-08 | 删 legacy 开关；LSE batch-1～6（108→**7**） | PRD ≤10 ✅ · 余 7 边为 curate→adapter 白名单 |
+| M-D1 | done | 2026-07-08 | 删 legacy 开关；LSE batch-1～6（108→7） | PRD ≤10 ✅ · 07-09 基线校正为 **8**（见 LSE 表） |
 
 ## M-B1 交付摘要（PRD §5.3.2）
 
@@ -69,13 +69,13 @@
 ## LSE ↔ curation cross-import 基线（ADR-015）
 
 > **与 import-linter 分层违例不同维度**：仅统计 `layout_engine` ↔ `curation` 包间 AST 边。  
-> 刷新：`python scripts/lse_cross_import_stats.py` → `docs/acceptance-records/lse-cross-import-baseline.json`
+> 查看：`python scripts/lse_cross_import_stats.py`（只读）；基线更新走 `python scripts/lint_lse_cross_import.py --update-baseline`（只降不升棘轮）
 
-| 指标 | M-B0 参考 | **2026-07-08（batch-6 后）** | PRD / ADR 目标 |
+| 指标 | M-B0 参考 | **2026-07-09（hotfix 后实测）** | PRD / ADR 目标 |
 |------|-----------|------------------------------|----------------|
-| layout_engine → curation | — | **0** | — |
+| layout_engine → curation | — | **1**（`scoring/hero.py` adapter → `curate_scoring` 内核，7/8 RecursionError 热修引入） | 0（待 hero scoring 内核下沉 layout_contract） |
 | curation → layout_engine | — | **7**（curate→adapter 白名单） | adapter 单向入口 |
-| **合计** | 51（B4a 前）→ 44（B4a 后） | **7**（batch-1～6：108→7） | PRD ≤10 ✅ |
+| **合计** | 51（B4a 前）→ 44（B4a 后） | **8**（batch-1～6：108→7；hotfix +2；aesthetic 边已于 07-09 下沉消除 -1） | PRD ≤10 ✅ |
 | Top importer | — | `curation.curate` (7) | 符合 §5.3.1 白名单 |
 | Top imported | — | `layout_engine.adapter` 等 7 模块 | intentional |
 
@@ -92,7 +92,15 @@
 
 ## 发现问题
 
-（范围外问题仅记录，不在当前里程碑修复）
+| 编号 | 优先级 | 发现日期 | 说明 | 处置 |
+|------|--------|----------|------|------|
+| FIX-01 | P0 | 2026-07-09 | `record_g1_edit` 未完整迁入 `layout_contract`；测试收集 ImportError | ✅ 已修复（07-09）：kernel 函数全部下沉 `layout_contract/feedback.py`，curation 侧纯 re-export |
+| FIX-02 | P1 | 2026-07-09 | LSE baseline JSON=7 vs 实测≥8 / 单测期望 8 | ✅ 已修复（07-09）：aesthetic 边下沉消除，基线校正为 8，stats 脚本默认只读 |
+| FIX-03 | P1 | 2026-07-09 | PR CI 不跑 `lint_lse_cross_import` | ✅ 已修复（07-09）：ci.yml lint job 增加该门禁 |
+| FIX-04 | P1 | 2026-07-09 | PR 上 `arch_equivalence_check` 为 warn-only | 合并 checklist 强制；见 [PRD-ARCH-OPT-WS1-MERGE-FIX.md](./PRD-ARCH-OPT-WS1-MERGE-FIX.md) D-FIX-04 |
+| FIX-05 | P2 | 2026-07-09 | Windows 跨进程 CAS 测试偶发失败 | ✅ M-F4：`skipif(win*)`；Linux CI 仍覆盖 AC-ARC-02；文件锁仍跳过 |
+| FIX-06 | P0 | 2026-07-09 | `admin_store.assert_transition` 缺 import；模板生命周期变更 NameError | ✅ 已修复（07-09） |
+| FIX-07 | P0 | 2026-07-09 | `pytest --fast` 57 failed（shim monkeypatch 失效 28 + fixture 路径 10 + admin state 读写分裂 7 + golden 过期等） | ✅ 已修复（07-09）：测试全面改引真实模块路径；详见 [ARCH-OPT-REVIEW-2026-07-09.md](./ARCH-OPT-REVIEW-2026-07-09.md) §五 |
 
 ---
 
@@ -100,11 +108,10 @@
 
 P-00 ✓ → … → P-17 (M-B6) ✓ · **P-13 (M-C4) ✓** · **P-19 (M-C2) ✓** · **P-12 (M-C3) ✓** · **P-22 (M-C6) ✓** · **P-18 (M-C1) ✓** · **AC-ARC-14a-d ✓**
 
-## 下一步（2026-07-08 · WS1 已闭环）
+## 下一步（2026-07-09 · 合并闸门代码已落地 · 待提交）
 
 | 优先级 | 任务 | 说明 |
 |--------|------|------|
-| — | **WS1 里程碑** | PRD §8.2 全部 done；可开 PR 合并 `arch/optimization-ws1` |
+| **P0** | **提交合并修复并开 PR** | [PRD-ARCH-OPT-WS1-MERGE-FIX.md](./PRD-ARCH-OPT-WS1-MERGE-FIX.md) M-F0～F5 工作区已绿；仅提交 FIX 相关路径，**排除 LONGSHOT WIP** |
 | 背景 | G-ARC-06 CacheRegistry 立项 | 未追踪 · 独立 PRD |
-| 背景 | 全量 `pytest --fast` 预存失败 (~25) | 非架构里程碑 · 分批 issue |
-| 背景 | LONGSHOT 2.0 文档 | workspace 未跟踪 · 独立分支 |
+| 背景 | LONGSHOT 2.0 | **独立分支**；禁止混入 WS1 合并 PR |

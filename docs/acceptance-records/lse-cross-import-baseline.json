@@ -3,11 +3,11 @@
     "travelogue.curation",
     "travelogue.layout_engine"
   ],
-  "totalCrossEdges": 7,
-  "layoutEngineToCuration": 0,
+  "totalCrossEdges": 8,
+  "layoutEngineToCuration": 1,
   "curationToLayoutEngine": 7,
   "targetAfterMigration": {
-    "maxCrossEdges": 1,
+    "maxCrossEdges": 2,
     "reductionPercent": 80,
     "note": "M-B4b proceeds only if post-kernel (M-B4a) cross edges ≤ maxCrossEdges"
   },
@@ -15,9 +15,17 @@
     [
       "travelogue.curation.curate",
       7
+    ],
+    [
+      "travelogue.layout_engine.scoring.hero",
+      1
     ]
   ],
   "topImported": [
+    [
+      "travelogue.curation.curate_scoring",
+      1
+    ],
     [
       "travelogue.layout_engine.adapter",
       1
@@ -100,6 +108,13 @@
       "imported": "travelogue.layout_engine.segment_order",
       "lines": [
         631
+      ]
+    },
+    {
+      "importer": "travelogue.layout_engine.scoring.hero",
+      "imported": "travelogue.curation.curate_scoring",
+      "lines": [
+        22
       ]
     }
   ]

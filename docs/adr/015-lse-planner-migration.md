@@ -155,8 +155,19 @@ python scripts/lse_cross_import_stats.py
 - [x] 基线 cross-import 统计脚本 `scripts/lse_cross_import_stats.py`
 - [x] 基线 JSON `docs/acceptance-records/lse-cross-import-baseline.json`（51 边）
 - [x] **决策者批准**本 ADR（Proposed → Accepted · 2026-07-08）
-- [ ] M-B4a 完成后复测 cross-import JSON 并附于 PR 描述
-- [ ] M-B4b 完成后 AC-ARC-08v2 三项验收
+- [x] M-B4a / M-B4b / batch-6 后复测：合计 **7** 边（curate→adapter 白名单）
+- [x] 2026-07-09 合并闸门 hotfix 后基线校正为 **8**（+1 `layout_engine.scoring.hero` → `curation.curate_scoring`；aesthetic adapter 已下沉 `layout_contract`，不再计边）
+- [x] M-B4b 完成后 AC-ARC-08v2：边数 ≤10 ✅；shim 退役仍属后续 DoD
+
+### 附录 · post-hotfix 边数（2026-07-09）
+
+| 方向 | 边数 | 说明 |
+|------|------|------|
+| curation → layout_engine | 7 | intentional adapter 白名单 |
+| layout_engine → curation | 1 | hero scoring adapter（正确性热修；待内核下沉） |
+| **合计** | **8** | 仍满足 ADR D2 ≤10 |
+
+刷新命令：`python scripts/lint_lse_cross_import.py --update-baseline`（只降不升棘轮）。
 
 ---
 
