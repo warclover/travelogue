@@ -540,7 +540,10 @@ def test_panorama_single_uses_landscape_screen_with_cover():
 
 def test_marginal_panorama_treated_as_landscape_family():
     """2.0–2.8 ingest panorama must not use solo ultra-wide planning/render path."""
-    from travelogue.layout_engine.planner.screen_planner import _layout_family_for_asset, _run_length
+    from travelogue.layout_engine.planner.screen_planner import (
+        _layout_family_for_asset,
+        _run_length,
+    )
     from travelogue.render.context import build_layout_screen
 
     aspects = {"p1": "panorama"}

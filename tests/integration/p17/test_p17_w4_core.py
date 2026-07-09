@@ -8,13 +8,13 @@ from pathlib import Path
 from scripts.phase3_ig2_report import load_fixture_trip
 from travelogue.config.mosaic import MosaicConfig
 from travelogue.curation.feedback import record_g1_edit
-from travelogue.layout_engine.mosaic.candidates import generate_window_candidates_with_rejections
-from travelogue.layout_engine.mosaic.scorer import score_candidate
 from travelogue.layout_engine.feedback import (
     append_layout_feedback,
     is_valid_pairwise_label,
     read_layout_feedback_events,
 )
+from travelogue.layout_engine.mosaic.candidates import generate_window_candidates_with_rejections
+from travelogue.layout_engine.mosaic.scorer import score_candidate
 from travelogue.layout_engine.quality_features import build_quality_pool
 from travelogue.layout_engine.replan import (
     buckets_from_existing_chapters,

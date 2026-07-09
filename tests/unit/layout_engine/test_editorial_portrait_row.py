@@ -16,7 +16,6 @@ from travelogue.layout_contract.planner_state import (
     ScreenLayoutPlannerState,
     is_triple_row_pattern,
 )
-from travelogue.layout_engine.planner.screen_planner import plan_screens_for_chapter
 from travelogue.layout_engine.editorial.portrait_row import (
     LAYOUT_HINT_PORTRAIT_ROW_EDITORIAL,
     PATTERN_PORTRAIT_3_EDITORIAL,
@@ -26,6 +25,7 @@ from travelogue.layout_engine.editorial.portrait_row import (
     is_editorial_portrait_row_enabled,
     maybe_editorial_portrait_row,
 )
+from travelogue.layout_engine.planner.screen_planner import plan_screens_for_chapter
 from travelogue.render.mobile_screens import (
     expand_portrait_triples_for_mobile,
     should_expand_portrait_triple_for_mobile,

@@ -5,13 +5,13 @@
 from __future__ import annotations
 
 from tests._repo_root import repo_root
-from travelogue.layout_engine.planner.screen_planner import grid_class_for_pattern
 from travelogue.layout_engine.mosaic.constants import (
     MOSAIC_4_PATTERN_IDS,
     MOSAIC_5_PATTERN_IDS,
     PATTERN_GRID_CLASS,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
 )
+from travelogue.layout_engine.planner.screen_planner import grid_class_for_pattern
 
 ROOT = repo_root(__file__)
 SCREENS_CSS = ROOT / "templates" / "visual-journal" / "journal-screens.css"

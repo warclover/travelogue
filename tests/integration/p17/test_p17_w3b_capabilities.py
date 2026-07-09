@@ -11,10 +11,10 @@ from travelogue.config.layout import (
     LayoutStrategyCapabilitiesConfig,
     LayoutStrategyEngineConfig,
 )
-from travelogue.layout_engine.mosaic.scorer import score_candidate
 from travelogue.layout_engine.adapter import mosaic_config_from_pack
 from travelogue.layout_engine.beat import beat_score_multiplier
 from travelogue.layout_engine.features import cover_focal_retention, salient_crop_penalty
+from travelogue.layout_engine.mosaic.scorer import score_candidate
 from travelogue.layout_engine.registry import get_strategy_pack
 from travelogue.layout_engine.render_binding import cover_rules_use_focal_variables
 from travelogue.layout_engine.tone_adjacency import adjacent_tone_penalty

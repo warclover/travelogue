@@ -7,7 +7,6 @@ from dataclasses import replace
 from travelogue.config import MosaicConfig, get_config
 from travelogue.config.layout import UsageRulesConfig
 from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
-from travelogue.layout_engine.planner.screen_planner import _can_mosaic_5_main_portrait_3land
 from travelogue.layout_contract.usage_context import WindowContext, build_window_context
 from travelogue.layout_contract.usage_rules_registry import (
     RULE_UR_05,
@@ -24,6 +23,7 @@ from travelogue.layout_engine.mosaic.runtime import (
     reset_mosaic_config_override,
     set_mosaic_config_override,
 )
+from travelogue.layout_engine.planner.screen_planner import _can_mosaic_5_main_portrait_3land
 from travelogue.layout_engine.usage_rules.evaluator import (
     evaluate_reject,
     evaluate_ur03,

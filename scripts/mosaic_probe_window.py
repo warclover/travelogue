@@ -97,7 +97,9 @@ def probe(
     from dataclasses import replace
 
     from travelogue.config import MosaicConfig
-    from travelogue.layout_engine.mosaic.candidates import generate_window_candidates_with_rejections
+    from travelogue.layout_engine.mosaic.candidates import (
+        generate_window_candidates_with_rejections,
+    )
     from travelogue.layout_engine.mosaic.compose import pick_best_window
     from travelogue.layout_engine.mosaic.runtime import (
         reset_mosaic_config_override,

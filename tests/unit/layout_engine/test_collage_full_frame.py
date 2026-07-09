@@ -6,12 +6,12 @@ import pytest
 
 from travelogue.config import AppConfig
 from travelogue.config.layout import LayoutConfig, LayoutTemplateEngineConfig
-from travelogue.layout_engine.planner.screen_planner import _fits_for_screen, _make_screen
 from travelogue.layout_contract.collage_routing import (
     collage_routing_enabled,
     single_asset_screen_pattern,
 )
 from travelogue.layout_engine.mosaic.constants import PATTERN_FULL_FRAME
+from travelogue.layout_engine.planner.screen_planner import _fits_for_screen, _make_screen
 from travelogue.render.context import build_layout_screen
 
 

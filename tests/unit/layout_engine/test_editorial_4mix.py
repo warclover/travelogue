@@ -10,7 +10,6 @@ import pytest
 from travelogue.config import AppConfig
 from travelogue.config.layout import Editorial4MixConfig
 from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
-from travelogue.layout_engine.planner.screen_planner import _fits_for_screen, grid_class_for_pattern
 from travelogue.layout_engine.editorial.four_mix import (
     LAYOUT_HINT_EDITORIAL_4MIX,
     PATTERN_EDITORIAL_4MIX,
@@ -25,6 +24,7 @@ from travelogue.layout_engine.mosaic.constants import (
     PATTERN_PORTRAIT_4,
 )
 from travelogue.layout_engine.mosaic.pattern_catalog import default_registry
+from travelogue.layout_engine.planner.screen_planner import _fits_for_screen, grid_class_for_pattern
 from travelogue.layout_templates.probe_editorial_4mix import (
     ROW_BBOX_JS,
     build_editorial_4mix_probe_html,
