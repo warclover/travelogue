@@ -65,10 +65,11 @@ def trip_layout_css_stale(trip_dir: Path, data: dict[str, Any] | None = None) ->
 
 
 def trip_render_bundle_stale(trip_dir: Path, data: dict[str, Any] | None = None) -> bool:
-    """True when trip.json is newer than index.html (LRG G-LRG-08 preview stale).
+    """True when preview HTML is behind trip.json content (LRG G-LRG-08).
 
-    Detects curate/copy edits that were not followed by ``render`` — the common cause
-    of trip.json vs index.html screen-count drift in dogfood acceptance.
+    Prefer ``meta.renderedRevision`` vs ``meta.revision`` so post-render metadata
+    persists (pipeline timings/status) do not false-positive. Legacy trips without
+    the watermark fall back to updatedAt/mtime vs index.html.
     """
     trip_json = trip_dir / "trip.json"
     index_html = trip_dir / "index.html"
@@ -79,6 +80,12 @@ def trip_render_bundle_stale(trip_dir: Path, data: dict[str, Any] | None = None)
             data = json.loads(trip_json.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             data = {}
+    meta = data.get("meta") if isinstance(data.get("meta"), dict) else {}
+    if "renderedRevision" in meta:
+        from travelogue.services.trip import meta_rendered_revision, meta_revision
+
+        return meta_revision(data) > meta_rendered_revision(data)
+
     from travelogue.curation.algorithm_profile import _trip_updated_mtime
 
     trip_mtime = _trip_updated_mtime(trip_dir, data)

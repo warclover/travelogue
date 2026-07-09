@@ -21,7 +21,7 @@ from travelogue.orchestrator.studio_hooks import StudioHooks
 from travelogue.orchestrator.studio_profile import StudioProfile
 from travelogue.runtime import AppContext
 from travelogue.services.copy_subject import is_generic_place
-from travelogue.services.trip import TripService, apply_intent
+from travelogue.services.trip import TripService, apply_intent, mark_render_bundle_current
 from travelogue.services.trip_factory import create_trip
 from travelogue.util.trip_slug import demo_trip_id_from_album
 from travelogue.web.studio_config import resolve_studio_config
@@ -180,6 +180,7 @@ def _studio_post_curate(
         )
         pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
         flush_pipeline_timings()
+        mark_render_bundle_current(trip)
         persist_trip_state()
         report("render", 4)
         trip_final = svc.load(trip_json)
@@ -239,6 +240,7 @@ def _studio_post_curate(
         pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
         _sync_trip_from_disk(trip, svc, trip_json)
         flush_pipeline_timings()
+        mark_render_bundle_current(trip)
         persist_trip_state()
     except Exception as exc:
         code = getattr(exc, "code", "E_STUDIO_PIPELINE")

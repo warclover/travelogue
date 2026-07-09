@@ -33,6 +33,7 @@ def rerender_draft_trip(trip_json: Path) -> list[str]:
             export_mode="draft",
             validate=False,
             layout_engine=layout_engine,
+            stamp_render_bundle=True,
         )
         written = ["index.html"]
     if (trip_root / LONGSHOT_INDEX_NAME).is_file():

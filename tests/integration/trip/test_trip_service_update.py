@@ -143,3 +143,18 @@ def test_save_without_revision_leaves_meta_revision_absent(trip_path: Path) -> N
     assert "revision" not in trip.get("meta", {})
     svc.save(trip, trip_path)
     assert meta_revision(svc.load(trip_path)) == 0
+
+
+def test_update_stamps_rendered_revision_when_marked(trip_path: Path) -> None:
+    from travelogue.services.trip import mark_render_bundle_current
+
+    svc = TripService()
+
+    def mutator(trip: dict) -> None:
+        mark_render_bundle_current(trip)
+
+    svc.update(trip_path, mutator)
+    loaded = svc.load(trip_path)
+    assert meta_revision(loaded) == 1
+    assert loaded["meta"]["renderedRevision"] == 1
+    assert "_stampRenderedRevision" not in loaded["meta"]

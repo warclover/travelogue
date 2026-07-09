@@ -1045,6 +1045,11 @@
           "type": "integer",
           "minimum": 0,
           "description": "Optimistic lock counter; incremented on successful TripService.update/save (ADR-008)"
+        },
+        "renderedRevision": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "meta.revision captured when index.html was last written; used to detect preview bundle stale without false positives from post-render metadata persists (G-LRG-08)"
         }
       }
     },

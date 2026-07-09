@@ -24,7 +24,7 @@ from travelogue.services.pipeline_state import (
     set_pipeline_timings,
     trip_status,
 )
-from travelogue.services.trip import persist_trip_snapshot
+from travelogue.services.trip import mark_render_bundle_current, persist_trip_snapshot
 
 
 @dataclass
@@ -311,6 +311,7 @@ def _run_trip_stages(
             pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
             trip = svc.load(trip_path)
             flush_timings()
+            mark_render_bundle_current(trip)
             persist_trip_snapshot(svc, trip_path, trip)
 
             result.stages.append("render")
@@ -333,6 +334,15 @@ def _run_trip_stages(
     pipeline_timings["totalMs"] = round((time.monotonic() - pipeline_t0) * 1000.0, 2)
     trip = svc.load(trip_path)
     flush_timings()
+    # Keep preview watermark across metadata-only persists after a fresh render
+    # (including skip_locked when render was already done).
+    from travelogue.services.trip import meta_rendered_revision, meta_revision
+
+    rendered_rev = meta_rendered_revision(trip)
+    if "render" in result.stages or (
+        rendered_rev > 0 and rendered_rev >= meta_revision(trip)
+    ):
+        mark_render_bundle_current(trip)
     persist_trip_snapshot(svc, trip_path, trip)
 
     return result

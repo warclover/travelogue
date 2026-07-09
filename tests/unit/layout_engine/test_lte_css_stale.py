@@ -92,3 +92,47 @@ def test_trip_render_bundle_not_stale_when_index_newer(tmp_path) -> None:
     (trip_dir / "trip.json").write_text('{"tripId":"demo"}', encoding="utf-8")
     (trip_dir / "index.html").write_text("<html></html>", encoding="utf-8")
     assert trip_render_bundle_stale(trip_dir, {"tripId": "demo"}) is False
+
+
+@pytest.mark.unit
+def test_trip_render_bundle_not_stale_after_post_render_metadata_persist(tmp_path) -> None:
+    """Creating a trip writes index.html then persists timings — must not false-positive."""
+    from travelogue.services.trip import TripService, mark_render_bundle_current, meta_revision
+
+    trip_dir = tmp_path / "demo"
+    trip_dir.mkdir()
+    trip_json = trip_dir / "trip.json"
+    index_html = trip_dir / "index.html"
+    svc = TripService()
+    trip = {"tripId": "demo", "meta": {"revision": 0}, "pipeline": {"timings": {}}}
+    svc.save(trip, trip_json)
+    index_html.write_text("<html></html>", encoding="utf-8")
+
+    def after_render(t: dict) -> None:
+        mark_render_bundle_current(t)
+
+    svc.update(trip_json, after_render)
+    rendered = svc.load(trip_json)
+    assert meta_revision(rendered) == 1
+    assert rendered["meta"]["renderedRevision"] == 1
+    assert trip_render_bundle_stale(trip_dir, rendered) is False
+
+    def timings_only(t: dict) -> None:
+        t.setdefault("pipeline", {})["timings"] = {"renderMs": 12.0, "totalMs": 99.0}
+        mark_render_bundle_current(t)
+
+    svc.update(trip_json, timings_only)
+    after = svc.load(trip_json)
+    assert meta_revision(after) == 2
+    assert after["meta"]["renderedRevision"] == 2
+    assert trip_render_bundle_stale(trip_dir, after) is False
+
+
+@pytest.mark.unit
+def test_trip_render_bundle_stale_when_revision_ahead_of_rendered(tmp_path) -> None:
+    trip_dir = tmp_path / "demo"
+    trip_dir.mkdir()
+    (trip_dir / "index.html").write_text("<html></html>", encoding="utf-8")
+    data = {"tripId": "demo", "meta": {"revision": 5, "renderedRevision": 3}}
+    (trip_dir / "trip.json").write_text("{}", encoding="utf-8")
+    assert trip_render_bundle_stale(trip_dir, data) is True

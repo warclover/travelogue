@@ -68,6 +68,34 @@ def meta_revision(trip: dict) -> int:
         return 0
 
 
+def meta_rendered_revision(trip: dict) -> int:
+    """Revision watermark from the last successful index.html write."""
+    meta = trip.get("meta")
+    if not isinstance(meta, dict):
+        return 0
+    raw = meta.get("renderedRevision", 0)
+    try:
+        return max(0, int(raw))
+    except (TypeError, ValueError):
+        return 0
+
+
+_STAMP_RENDERED_REVISION = "_stampRenderedRevision"
+
+
+def mark_render_bundle_current(trip: dict) -> None:
+    """Request the next TripService.update to stamp meta.renderedRevision.
+
+    Call before persisting after writing index.html, or before a post-render
+    metadata-only persist (timings/status) that must not flag the preview stale.
+    """
+    meta = trip.setdefault("meta", {})
+    if not isinstance(meta, dict):
+        trip["meta"] = {_STAMP_RENDERED_REVISION: True}
+        return
+    meta[_STAMP_RENDERED_REVISION] = True
+
+
 def _read_disk_revision(path: Path) -> int:
     if not path.is_file():
         return 0
@@ -314,6 +342,7 @@ class TripService:
         path = Path(trip_json_path)
         lock = _get_trip_write_lock(path)
         last_expected = 0
+        stamp_rendered = False
         for _attempt in range(max_retries):
             with lock:
                 trip = self.load(path)
@@ -321,8 +350,15 @@ class TripService:
                 last_expected = expected
                 result = mutator(trip)
                 meta = trip.setdefault("meta", {})
+                if not isinstance(meta, dict):
+                    meta = {}
+                    trip["meta"] = meta
+                if meta.pop(_STAMP_RENDERED_REVISION, False):
+                    stamp_rendered = True
                 meta["revision"] = expected + 1
                 trip["updatedAt"] = utc_now_iso()
+                if stamp_rendered:
+                    meta["renderedRevision"] = meta["revision"]
                 if _read_disk_revision(path) != expected:
                     continue
                 self.save(trip, path)
