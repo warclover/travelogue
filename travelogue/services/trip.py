@@ -96,6 +96,18 @@ def mark_render_bundle_current(trip: dict) -> None:
     meta[_STAMP_RENDERED_REVISION] = True
 
 
+def mark_render_bundle_current_if_fresh(trip: dict, trip_dir: Path) -> None:
+    """Stamp watermark when preview HTML is still current for this trip.json.
+
+    Use for metadata-only persists (telemetry, counters) that bump revision but
+    do not change renderable content — otherwise a fresh preview is false-flagged.
+    """
+    from travelogue.layout_templates.css_stale import trip_render_bundle_stale
+
+    if not trip_render_bundle_stale(trip_dir, trip):
+        mark_render_bundle_current(trip)
+
+
 def _read_disk_revision(path: Path) -> int:
     if not path.is_file():
         return 0

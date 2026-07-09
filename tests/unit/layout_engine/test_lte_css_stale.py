@@ -129,6 +129,64 @@ def test_trip_render_bundle_not_stale_after_post_render_metadata_persist(tmp_pat
 
 
 @pytest.mark.unit
+def test_mark_render_bundle_current_if_fresh_preserves_fresh_preview(tmp_path) -> None:
+    from travelogue.services.trip import (
+        TripService,
+        mark_render_bundle_current,
+        mark_render_bundle_current_if_fresh,
+        meta_revision,
+    )
+
+    trip_dir = tmp_path / "demo"
+    trip_dir.mkdir()
+    trip_json = trip_dir / "trip.json"
+    (trip_dir / "index.html").write_text("<html></html>", encoding="utf-8")
+    svc = TripService()
+    svc.save({"tripId": "demo", "meta": {"revision": 0}}, trip_json)
+    svc.update(trip_json, mark_render_bundle_current)
+    assert trip_render_bundle_stale(trip_dir, svc.load(trip_json)) is False
+
+    def telemetry(t: dict) -> None:
+        t.setdefault("curation", {})["copyMetrics"] = {"clientEventCounts": {"preview_open": 1}}
+        mark_render_bundle_current_if_fresh(t, trip_dir)
+
+    svc.update(trip_json, telemetry)
+    after = svc.load(trip_json)
+    assert meta_revision(after) == 2
+    assert after["meta"]["renderedRevision"] == 2
+    assert trip_render_bundle_stale(trip_dir, after) is False
+
+
+@pytest.mark.unit
+def test_mark_render_bundle_current_if_fresh_skips_when_already_stale(tmp_path) -> None:
+    from travelogue.services.trip import (
+        TripService,
+        mark_render_bundle_current_if_fresh,
+        meta_revision,
+    )
+
+    trip_dir = tmp_path / "demo"
+    trip_dir.mkdir()
+    trip_json = trip_dir / "trip.json"
+    (trip_dir / "index.html").write_text("<html></html>", encoding="utf-8")
+    svc = TripService()
+    svc.save(
+        {"tripId": "demo", "meta": {"revision": 5, "renderedRevision": 2}},
+        trip_json,
+    )
+    assert trip_render_bundle_stale(trip_dir, svc.load(trip_json)) is True
+
+    def telemetry(t: dict) -> None:
+        mark_render_bundle_current_if_fresh(t, trip_dir)
+
+    svc.update(trip_json, telemetry)
+    after = svc.load(trip_json)
+    assert meta_revision(after) == 6
+    assert after["meta"]["renderedRevision"] == 2
+    assert trip_render_bundle_stale(trip_dir, after) is True
+
+
+@pytest.mark.unit
 def test_trip_render_bundle_stale_when_revision_ahead_of_rendered(tmp_path) -> None:
     trip_dir = tmp_path / "demo"
     trip_dir.mkdir()

@@ -447,10 +447,24 @@ def test_handle_patch_copy_intent_apply_to_subsequent(tmp_path: Path) -> None:
 
 
 def test_handle_post_copy_telemetry(tmp_path: Path) -> None:
+    from travelogue.layout_templates.css_stale import trip_render_bundle_stale
+    from travelogue.services.trip import mark_render_bundle_current, meta_revision
     from travelogue.web.studio_handlers.trip_intent_handlers import handle_post_copy_telemetry
 
     trips_dir = tmp_path / "trips"
     trip_json = _trip_with_chapter(trips_dir)
+    trip_dir = trip_json.parent
+    (trip_dir / "index.html").write_text("<html></html>", encoding="utf-8")
+    svc = TripService(root=trips_dir.parent)
+
+    def stamp(t: dict) -> None:
+        mark_render_bundle_current(t)
+
+    svc.update(trip_json, stamp)
+    before = svc.load(trip_json)
+    assert before["meta"]["renderedRevision"] == meta_revision(before)
+    assert trip_render_bundle_stale(trip_dir, before) is False
+
     handler = MockStudioHandler(
         trips_dir,
         json_body={"event": "photos_only_on"},
@@ -461,6 +475,43 @@ def test_handle_post_copy_telemetry(tmp_path: Path) -> None:
     status, body = handler.response
     assert status == 200
     assert body["event"] == "photos_only_on"
-    saved = TripService(root=trips_dir.parent).load(trip_json)
+    saved = svc.load(trip_json)
     metrics = saved["curation"]["copyMetrics"]
     assert metrics["clientEventCounts"]["photos_only_on"] == 1
+    assert saved["meta"]["renderedRevision"] == meta_revision(saved)
+    assert trip_render_bundle_stale(trip_dir, saved) is False
+
+
+def test_handle_post_copy_telemetry_keeps_true_stale(tmp_path: Path) -> None:
+    """Telemetry must not clear a real content-ahead-of-preview watermark gap."""
+    from travelogue.layout_templates.css_stale import trip_render_bundle_stale
+    from travelogue.services.trip import meta_revision
+    from travelogue.web.studio_handlers.trip_intent_handlers import handle_post_copy_telemetry
+
+    trips_dir = tmp_path / "trips"
+    trip_json = _trip_with_chapter(trips_dir)
+    trip_dir = trip_json.parent
+    (trip_dir / "index.html").write_text("<html></html>", encoding="utf-8")
+    svc = TripService(root=trips_dir.parent)
+
+    # Bypass CAS stamp path: write a known stale watermark directly.
+    trip = svc.load(trip_json)
+    trip.setdefault("meta", {})["revision"] = 3
+    trip["meta"]["renderedRevision"] = 1
+    trip["meta"]["title"] = "edited after render"
+    svc.save(trip, trip_json)
+    assert trip_render_bundle_stale(trip_dir, svc.load(trip_json)) is True
+
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={"event": "preview_open"},
+        path="/__travelogue/trips/demo-copy-intent/copy-telemetry",
+    )
+    handle_post_copy_telemetry(handler, "demo-copy-intent")
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 200
+    after = svc.load(trip_json)
+    assert trip_render_bundle_stale(trip_dir, after) is True
+    assert after["meta"]["renderedRevision"] == 1
+    assert meta_revision(after) == 4
