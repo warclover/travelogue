@@ -68,7 +68,14 @@ class PlatformProfile:
 
     @property
     def is_platform_segment(self) -> bool:
-        return self.id in PLATFORM_SEGMENT_IDS or self.segment == "content_balanced"
+        return self.id in PLATFORM_SEGMENT_IDS or self.segment in (
+            "content_balanced",
+            "photo_led",
+        )
+
+    @property
+    def is_photo_led(self) -> bool:
+        return self.segment == "photo_led"
 
 
 def _coerce_int(value: Any, default: int | None = None) -> int | None:
@@ -278,16 +285,37 @@ def resolve_moments_page_count(
     max_feasible_segments: int,
     profile: PlatformProfile | None = None,
 ) -> tuple[int, str]:
-    """Return (N, userHint) for wechat_moments (D-LNG2-02/21/22)."""
+    """Return (N, userHint) for wechat_moments.
+
+    ``photo_led``: N = min(photo_count, max_pages) with variable-height slides.
+    Legacy ``content_balanced``: keep prior 6–9 / tiny rules for callers/tests.
+    """
     profile = profile or get_profile("wechat_moments")
     target = int(profile.target_pages or 9)
-    min_pages = int(profile.min_pages or 6)
+    min_pages = int(profile.min_pages or 1)
     max_pages = int(profile.max_pages or 9)
     tiny_max = int(profile.tiny_photo_max or 5)
-
-    feasible = max(1, int(max_feasible_segments))
     photos = max(0, int(photo_count))
+    feasible = max(1, int(max_feasible_segments))
 
+    if profile.is_photo_led:
+        n = max(1, min(photos if photos > 0 else 1, max_pages, feasible))
+        if photos > max_pages:
+            hint = (
+                f"已从 {photos} 张照片中选取 {n} 张完整配图（目标 {target} 张），"
+                f"按编号 01→{n:02d} 选图发布。"
+            )
+        elif photos <= tiny_max:
+            hint = (
+                f"已生成 {n} 张完整照片配图。"
+                "照片较少时也可改用微信群长图获得更完整阅读体验。"
+            )
+        else:
+            hint = f"已生成 {n} 张完整照片配图，按编号 01→{n:02d} 选图发布。"
+        return n, hint
+
+    # Legacy content_balanced (DP) rules
+    min_pages = max(min_pages, 6) if profile.segment == "content_balanced" else min_pages
     if photos <= tiny_max:
         n = min(feasible, max(1, photos if photos > 0 else 1), max_pages)
         n = max(1, min(n, feasible))
@@ -297,7 +325,6 @@ def resolve_moments_page_count(
         )
         return n, hint
 
-    # Prefer target 9 when feasible; else clamp to [min_pages, max_pages] ∩ feasible
     if feasible >= target:
         return target, f"已生成 {target} 张朋友圈配图，按编号 01→{target:02d} 选图发布。"
 
@@ -305,7 +332,6 @@ def resolve_moments_page_count(
         n = min(feasible, max_pages)
         return n, f"内容较少，已生成 {n} 张朋友圈配图（目标 {target} 张）。"
 
-    # Fewer than min_pages legal segments (but photos > tiny): still emit what we can
     n = max(1, min(feasible, max_pages))
     return n, f"内容较少，已生成 {n} 张朋友圈配图（目标 {target} 张）。"
 

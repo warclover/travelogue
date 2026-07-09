@@ -17,10 +17,10 @@ export var PLATFORMS = {
   wechat_moments: {
     id: "wechat_moments",
     label: "朋友圈",
-    cta: "导出 9 张朋友圈配图",
+    cta: "导出朋友圈配图",
     showSegmentMode: false,
     expectHtml:
-      "将生成 <strong>9 张</strong>配图（内容少时可能 6–9 张）· 预计 30–60 秒",
+      "将按完整照片生成 <strong>1–9 张</strong>配图（默认纯图、高度随图）· 预计 30–60 秒",
   },
   xiaohongshu: {
     id: "xiaohongshu",

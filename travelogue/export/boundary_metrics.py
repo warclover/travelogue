@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from travelogue.export.content_splitter import BOUNDARY_WEIGHT, BoundaryPoint
@@ -37,7 +37,7 @@ COLLECT_BOUNDARIES_JS = """
 () => {
   const main = document.querySelector('main');
   if (!main) {
-    return { scrollHeightCss: 0, boundariesCss: [0], boundaryKinds: ['start'] };
+    return { scrollHeightCss: 0, boundariesCss: [0], boundaryKinds: ['start'], photoCells: [] };
   }
   const mainRect = main.getBoundingClientRect();
   const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
@@ -92,13 +92,62 @@ COLLECT_BOUNDARIES_JS = """
     if (!prev || item.priority > prev.priority) byY.set(item.y, item);
   }
   const sorted = Array.from(byY.values()).sort((a, b) => a.y - b.y);
+
+  // Photo cells (top/bottom) for photo_led Moments — prefer visual/img over slot wrappers
+  /** @type {{top:number, bottom:number}[]} */
+  const cellRaw = [];
+  const seen = new Set();
+  function addCell(el) {
+    const top = Math.max(0, Math.min(scrollHeightCss, yTop(el)));
+    const bottom = Math.max(0, Math.min(scrollHeightCss, yBottom(el)));
+    if (bottom - top < 8) return;
+    const key = top + ':' + bottom;
+    if (seen.has(key)) return;
+    seen.add(key);
+    cellRaw.push({ top, bottom });
+  }
+  document.querySelectorAll('.layout-slot__img, .media-card img, .media-card__visual').forEach(addCell);
+  if (!cellRaw.length) {
+    document.querySelectorAll('.layout-slot').forEach(addCell);
+  }
+  if (!cellRaw.length) {
+    document.querySelectorAll('main img').forEach(addCell);
+  }
+  cellRaw.sort((a, b) => a.top - b.top || a.bottom - b.bottom);
+  // Drop nested/overlapping duplicates (keep outer-most by top, then taller)
+  /** @type {{top:number, bottom:number}[]} */
+  const photoCells = [];
+  for (const c of cellRaw) {
+    const prev = photoCells[photoCells.length - 1];
+    if (prev && Math.abs(c.top - prev.top) <= 2) {
+      if (c.bottom > prev.bottom) photoCells[photoCells.length - 1] = c;
+      continue;
+    }
+    photoCells.push(c);
+  }
+
   return {
     scrollHeightCss,
     boundariesCss: sorted.map((x) => x.y),
     boundaryKinds: sorted.map((x) => x.kind),
+    photoCells,
   };
 }
 """
+
+
+@dataclass(frozen=True)
+class PhotoCell:
+    """One photo visual in main CSS coordinates (top inclusive, bottom exclusive-ish)."""
+
+    top_css: float
+    bottom_css: float
+
+    def top_canvas(self, scale: int | float) -> int:
+        return int(round(float(self.top_css) * float(scale)))
+
+    def bottom_canvas(self, scale: int | float) -> int:
+        return int(round(float(self.bottom_css) * float(scale)))
 
 
 @dataclass(frozen=True)
@@ -106,6 +155,7 @@ class BoundaryMetrics:
     scroll_height_css: float
     boundaries_css: list[float]
     boundary_kinds: list[str]
+    photo_cells: list[PhotoCell] = field(default_factory=list)
 
     def as_points(self) -> list[BoundaryPoint]:
         points: list[BoundaryPoint] = []
@@ -139,10 +189,23 @@ def parse_boundary_payload(payload: dict[str, Any] | None) -> BoundaryMetrics:
     kinds = kinds[: len(boundaries)]
     if scroll <= 0:
         scroll = max(boundaries[-1] if boundaries else 1.0, 1.0)
+    cells: list[PhotoCell] = []
+    for raw in data.get("photoCells") or []:
+        if not isinstance(raw, dict):
+            continue
+        try:
+            top = float(raw.get("top"))
+            bottom = float(raw.get("bottom"))
+        except (TypeError, ValueError):
+            continue
+        if bottom - top < 1:
+            continue
+        cells.append(PhotoCell(top_css=top, bottom_css=bottom))
     return BoundaryMetrics(
         scroll_height_css=scroll,
         boundaries_css=boundaries,
         boundary_kinds=kinds,
+        photo_cells=cells,
     )
 
 

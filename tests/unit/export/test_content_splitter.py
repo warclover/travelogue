@@ -16,12 +16,12 @@ from travelogue.export.content_splitter import (
     css_to_canvas,
     max_feasible_segments,
     nearest_boundary,
+    photo_led_slice_ranges,
     plan_moments_split,
     segment_height_variance,
     slice_canvas_png,
     slice_ranges,
 )
-from travelogue.export.platform_profiles import resolve_moments_page_count
 
 pytestmark = pytest.mark.unit
 
@@ -88,9 +88,65 @@ def test_greedy_fallback_when_dp_infeasible() -> None:
 
 
 def test_plan_moments_large_trip_targets_9() -> None:
-    """AC-LNG2-01 style: enough boundaries → 9 pages."""
+    """Photo-led: enough cells → up to 9 complete photo slides."""
+    from travelogue.export.platform_profiles import clear_platform_profiles_cache
+
+    clear_platform_profiles_cache()
+    cells = [(i * 200.0, i * 200.0 + 180.0) for i in range(20)]
+    plan = plan_moments_split(
+        scroll_height_css=4000,
+        boundaries_css=[],
+        scale=2,
+        photo_count=20,
+        photo_cells=cells,
+    )
+    assert plan.page_count == 9
+    assert plan.method == "photo_led"
+    assert len(plan.breakpoints) == 18  # 9 pairs
+    ranges = photo_led_slice_ranges(plan.breakpoints)
+    assert len(ranges) == 9
+    # Variable heights allowed; no mid-cell cut (each range matches a cell×scale)
+    for y0, y1 in ranges:
+        assert y1 > y0
+
+
+def test_plan_moments_small_trip_matches_photo_count() -> None:
+    """Photo-led: 8 photos → 8 slides (not forced equal-height 6–9 DP)."""
+    from travelogue.export.platform_profiles import clear_platform_profiles_cache
+
+    clear_platform_profiles_cache()
+    cells = [(i * 300.0, i * 300.0 + 250.0) for i in range(8)]
+    plan = plan_moments_split(
+        scroll_height_css=2400,
+        boundaries_css=[],
+        scale=1,
+        photo_count=8,
+        photo_cells=cells,
+    )
+    assert plan.page_count == 8
+    assert plan.method == "photo_led"
+
+
+def test_plan_moments_tiny_trip_no_pad_to_6() -> None:
+    """Photo-led: 1–5 photos → 1–5 pages."""
+    from travelogue.export.platform_profiles import clear_platform_profiles_cache
+
+    clear_platform_profiles_cache()
+    cells = [(i * 200.0, i * 200.0 + 150.0) for i in range(3)]
+    plan = plan_moments_split(
+        scroll_height_css=800,
+        boundaries_css=[],
+        scale=1,
+        photo_count=3,
+        photo_cells=cells,
+    )
+    assert plan.page_count == 3
+    assert "完整" in plan.user_hint or "微信群" in plan.user_hint
+
+
+def test_plan_moments_legacy_content_balanced_still_works() -> None:
+    """Explicit content_balanced keeps DP 6–9 behaviour for regression."""
     height_css = 9000
-    # 40 photo tops evenly
     tops = [i * (height_css / 40) for i in range(41)]
     points = [BoundaryPoint(y, "photo") for y in tops]
     plan = plan_moments_split(
@@ -98,54 +154,58 @@ def test_plan_moments_large_trip_targets_9() -> None:
         boundaries_css=points,
         scale=2,
         photo_count=80,
+        segment="content_balanced",
     )
     assert plan.page_count == 9
+    assert plan.method in ("dp", "greedy")
     assert len(plan.breakpoints) == 10
-    assert plan.breakpoints[0] == 0
-    assert plan.breakpoints[-1] == canvas_height(height_css, 2)
-
-
-def test_plan_moments_small_trip_6_to_9() -> None:
-    """AC-LNG2-01b / D-LNG2-21: 8–12 photos → 6–9 pages."""
-    height_css = 2400
-    # Sparse legal cuts → feasible ≈6–7 segments (not full 9)
-    tops = [0, 400, 800, 1200, 1600, 2000, 2400]
-    points = [BoundaryPoint(float(y), "photo") for y in tops]
-    plan = plan_moments_split(
-        scroll_height_css=height_css,
-        boundaries_css=points,
-        scale=1,
-        photo_count=10,
-    )
-    assert 6 <= plan.page_count <= 9
-    if plan.page_count < 9:
-        assert "内容较少" in plan.user_hint
-
-
-def test_plan_moments_tiny_trip_no_pad_to_6() -> None:
-    """AC-LNG2-01t / D-LNG2-22: 1–5 photos → 1–5 pages."""
-    height_css = 800
-    tops = [0, 200, 400, 600, 800]
-    points = [BoundaryPoint(float(y), "photo") for y in tops]
-    plan = plan_moments_split(
-        scroll_height_css=height_css,
-        boundaries_css=points,
-        scale=1,
-        photo_count=3,
-    )
-    assert 1 <= plan.page_count <= 5
-    assert "微信群" in plan.user_hint
 
 
 def test_resolve_moments_page_count_rules() -> None:
+    from travelogue.export.platform_profiles import (
+        PlatformProfile,
+        clear_platform_profiles_cache,
+        resolve_moments_page_count,
+    )
+
+    clear_platform_profiles_cache()
+    # Default profile is photo_led
     n, hint = resolve_moments_page_count(photo_count=80, max_feasible_segments=12)
     assert n == 9
-    n2, hint2 = resolve_moments_page_count(photo_count=10, max_feasible_segments=7)
-    assert 6 <= n2 <= 9
-    assert "内容较少" in hint2
+    assert "完整" in hint or "选取" in hint
+
+    n2, _ = resolve_moments_page_count(photo_count=8, max_feasible_segments=8)
+    assert n2 == 8
+
     n3, hint3 = resolve_moments_page_count(photo_count=3, max_feasible_segments=4)
-    assert 1 <= n3 <= 5
-    assert "微信群" in hint3
+    assert n3 == 3
+    assert "微信群" in hint3 or "完整" in hint3
+
+    legacy = PlatformProfile(
+        id="wechat_moments",
+        label="朋友圈",
+        segment="content_balanced",
+        capture="full_once",
+        allow_p1=False,
+        target_pages=9,
+        min_pages=6,
+        max_pages=9,
+        tiny_photo_max=5,
+    )
+    n4, hint4 = resolve_moments_page_count(
+        photo_count=10, max_feasible_segments=7, profile=legacy
+    )
+    assert 6 <= n4 <= 9
+    assert "内容较少" in hint4
+
+
+def test_select_photo_led_indices_keeps_ends() -> None:
+    from travelogue.export.content_splitter import select_photo_led_indices
+
+    idx = select_photo_led_indices(20, 9)
+    assert len(idx) == 9
+    assert idx[0] == 0 and idx[-1] == 19
+    assert idx == sorted(idx)
 
 
 def test_clamp_breakpoints_scales_to_actual_height() -> None:

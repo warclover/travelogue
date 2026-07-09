@@ -17,6 +17,7 @@ from typing import Any
 from travelogue.export.boundary_metrics import collect_boundaries, count_photos_heuristic
 from travelogue.export.content_splitter import (
     clamp_breakpoints_to_height,
+    photo_led_slice_ranges,
     plan_aspect_split,
     plan_moments_split,
     slice_canvas_png,
@@ -317,7 +318,11 @@ def export_platform_longshot(
             "() => window.TravelogueLongshot && document.documentElement.dataset.longshot === 'on'",
             timeout=30_000,
         )
-        _apply_copy_display(page, copy_display)
+        # Moments photo_led defaults to pure photos (no narrative cutting through images).
+        effective_copy = (
+            "photos" if profile.id == "wechat_moments" else copy_display
+        )
+        _apply_copy_display(page, effective_copy)
 
         metrics = _page_metrics(page)
         scroll_h = float(metrics.get("scrollHeight") or 0)
@@ -333,6 +338,8 @@ def export_platform_longshot(
             _report(W_OPEN + 5, W_TOTAL, "正在采集切分边界…")
             boundaries = collect_boundaries(page)
             photo_count = count_photos_heuristic(page)
+            if boundaries.photo_cells:
+                photo_count = max(photo_count, len(boundaries.photo_cells))
             scroll_h = boundaries.scroll_height_css or scroll_h
             scale = auto_downgrade_scale(scroll_h, scale)
 
@@ -361,6 +368,8 @@ def export_platform_longshot(
                     boundaries_css=boundaries.as_points(),
                     scale=scale,
                     photo_count=photo_count,
+                    photo_cells=boundaries.photo_cells,
+                    segment=profile.segment,
                 )
             # Align CSS×scale breakpoints to actual captured PNG height
             from io import BytesIO
@@ -368,14 +377,34 @@ def export_platform_longshot(
             from PIL import Image as _PILImage
 
             actual_h = _PILImage.open(BytesIO(canvas_bytes)).height
-            clamped = clamp_breakpoints_to_height(plan.breakpoints, actual_h)
-            plan = type(plan)(
-                breakpoints=clamped,
-                page_count=max(1, len(clamped) - 1),
-                user_hint=plan.user_hint,
-                method=plan.method,
-            )
-            ranges = slice_ranges(plan.breakpoints)
+            if plan.method == "photo_led":
+                clamped = [
+                    max(0, min(int(y), actual_h)) for y in plan.breakpoints
+                ]
+                # Keep pairs valid after clamp
+                fixed: list[int] = []
+                for i in range(0, len(clamped) - 1, 2):
+                    y0, y1 = clamped[i], clamped[i + 1]
+                    if y1 <= y0:
+                        y1 = min(actual_h, y0 + 1)
+                    fixed.extend([y0, y1])
+                clamped = fixed or [0, actual_h]
+                ranges = photo_led_slice_ranges(clamped)
+                plan = type(plan)(
+                    breakpoints=clamped,
+                    page_count=max(1, len(ranges)),
+                    user_hint=plan.user_hint,
+                    method=plan.method,
+                )
+            else:
+                clamped = clamp_breakpoints_to_height(plan.breakpoints, actual_h)
+                plan = type(plan)(
+                    breakpoints=clamped,
+                    page_count=max(1, len(clamped) - 1),
+                    user_hint=plan.user_hint,
+                    method=plan.method,
+                )
+                ranges = slice_ranges(plan.breakpoints)
             too_large = False
             for y0, y1 in ranges:
                 slice_bytes = slice_canvas_png(canvas_bytes, y0, y1)
@@ -405,11 +434,14 @@ def export_platform_longshot(
             )
 
         assert canvas_bytes is not None and plan is not None
-        ranges = slice_ranges(plan.breakpoints)
+        if plan.method == "photo_led":
+            ranges = photo_led_slice_ranges(plan.breakpoints)
+        else:
+            ranges = slice_ranges(plan.breakpoints)
         page_count = len(ranges)
         user_hint = plan.user_hint
         publish_guide = _publish_guide(page_count, profile)
-        if is_aspect:
+        if is_aspect or plan.method == "photo_led":
             target_page_count = page_count
 
         capture_done = W_OPEN + W_CAPTURE

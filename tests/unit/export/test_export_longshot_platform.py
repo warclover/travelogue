@@ -33,11 +33,17 @@ pytestmark = pytest.mark.unit
 
 
 def test_profiles_load_moments_and_chat() -> None:
+    from travelogue.export.platform_profiles import clear_platform_profiles_cache
+
+    clear_platform_profiles_cache()
     chat = get_profile("wechat_chat")
     moments = get_profile("wechat_moments")
     assert chat.allow_p1 is True
     assert moments.allow_p1 is False
     assert moments.target_pages == 9
+    assert moments.segment == "photo_led"
+    assert moments.min_pages == 1
+    assert moments.is_photo_led is True
 
 
 def test_profiles_load_phase_c() -> None:

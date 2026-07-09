@@ -15,11 +15,12 @@ platforms:
   wechat_moments:
     label: 朋友圈
     label_en: Moments
-    segment: content_balanced
+    # photo_led: one complete photo per slide (variable height); no mid-image cuts
+    segment: photo_led
     capture: full_once
     allow_p1: false
     target_pages: 9
-    min_pages: 6
+    min_pages: 1
     max_pages: 9
     tiny_photo_max: 5
     sparse_photo_hint_below: 15

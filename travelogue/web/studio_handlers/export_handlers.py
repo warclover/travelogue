@@ -160,6 +160,12 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     else:
         platform_id = normalize_platform_id(platform_raw)
 
+    # Moments photo_led: always export pure photos (ignore preview copy mode).
+    if platform_id == "wechat_moments":
+        from travelogue.render.copy_display import COPY_DISPLAY_PHOTOS
+
+        copy_display = COPY_DISPLAY_PHOTOS
+
     slide_count_raw = payload.get("slideCount")
     slide_count: int | None
     if slide_count_raw is None or slide_count_raw == "":

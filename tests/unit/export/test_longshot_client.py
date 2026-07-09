@@ -28,6 +28,8 @@ def test_panel_module_exists_and_exports() -> None:
         "xiaohongshu",
         "clampXhsSlideCount",
         'data-studio-xhs-count="custom"',
+        "完整照片",
+        "导出朋友圈配图",
     ):
         assert token in src, f"missing: {token}"
 

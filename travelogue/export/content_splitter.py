@@ -261,6 +261,147 @@ def compute_breakpoints_greedy(
     return out
 
 
+def select_photo_led_indices(cell_count: int, n: int) -> list[int]:
+    """Pick ``n`` indices from ``0..cell_count-1``, keeping first/last when sampling."""
+    count = max(0, int(cell_count))
+    n = max(1, min(int(n), count if count > 0 else 1))
+    if count <= 0:
+        return []
+    if n >= count:
+        return list(range(count))
+    if n == 1:
+        return [0]
+    # Evenly sample including endpoints
+    out: list[int] = []
+    for i in range(n):
+        idx = int(round(i * (count - 1) / (n - 1)))
+        if not out or idx != out[-1]:
+            out.append(idx)
+    # Ensure length == n (rounding collisions)
+    while len(out) < n:
+        for j in range(count):
+            if j not in out:
+                out.append(j)
+                break
+        out.sort()
+    return out[:n]
+
+
+def plan_moments_photo_led_split(
+    *,
+    photo_cells: Sequence[Any],
+    scale: int,
+    photo_count: int | None = None,
+    scroll_height_css: float | None = None,
+    max_pages: int = 9,
+    tiny_photo_max: int = 5,
+) -> SplitPlan:
+    """One complete photo per slide; variable heights; never cut mid-image."""
+    from travelogue.export.platform_profiles import get_profile, resolve_moments_page_count
+
+    scale = max(1, int(scale))
+    profile = get_profile("wechat_moments")
+    max_pages = int(profile.max_pages or max_pages)
+    tiny_photo_max = int(profile.tiny_photo_max or tiny_photo_max)
+
+    cells = list(photo_cells or [])
+    # Accept PhotoCell-like objects or (top_css, bottom_css) tuples
+    normalized: list[tuple[float, float]] = []
+    for c in cells:
+        if hasattr(c, "top_css") and hasattr(c, "bottom_css"):
+            top, bottom = float(c.top_css), float(c.bottom_css)
+        elif isinstance(c, (tuple, list)) and len(c) >= 2:
+            top, bottom = float(c[0]), float(c[1])
+        else:
+            continue
+        if bottom > top:
+            normalized.append((top, bottom))
+    normalized.sort(key=lambda x: (x[0], x[1]))
+
+    cell_n = len(normalized)
+    photos = int(photo_count) if photo_count is not None else cell_n
+    if photos <= 0:
+        photos = max(1, cell_n)
+
+    n, hint = resolve_moments_page_count(
+        photo_count=photos,
+        max_feasible_segments=max(1, cell_n) if cell_n else 1,
+        profile=profile,
+    )
+    n = max(1, min(n, max_pages, cell_n if cell_n else 1))
+
+    if cell_n == 0:
+        h = canvas_height(float(scroll_height_css or 1), scale)
+        return SplitPlan(
+            breakpoints=[0, h],
+            page_count=1,
+            user_hint=hint or "未检测到照片边界，已导出整页。",
+            method="photo_led",
+        )
+
+    indices = select_photo_led_indices(cell_n, n)
+    selected = [normalized[i] for i in indices]
+    # Build per-slide ranges from cell tops/bottoms (canvas px).
+    # Use contiguous cuts: start at first top, end at each bottom, next starts at next top.
+    # For non-adjacent sampled cells, each slide is exactly [top, bottom].
+    ranges: list[tuple[int, int]] = []
+    for top_css, bottom_css in selected:
+        y0 = max(0, int(round(top_css * scale)))
+        y1 = max(y0 + 1, int(round(bottom_css * scale)))
+        ranges.append((y0, y1))
+
+    # Convert disjoint ranges into a breakpoint list for slice_ranges:
+    # when slides are non-contiguous, we still crop each [y0,y1] independently
+    # via custom ranges — but platform_longshot uses slice_ranges(breakpoints).
+    # So encode as monotonic breakpoints only when contiguous; otherwise
+    # synthesize a synthetic chain by packing selected cells in order with
+    # breakpoints at cumulative heights... Actually platform_longshot crops
+    # from the FULL canvas using absolute y0/y1. slice_ranges needs monotonic
+    # breakpoints on the same canvas. Disjoint cells are fine as long as we
+    # pass absolute ranges — but slice_ranges assumes contiguous segments of
+    # the full canvas. For photo_led we must crop each cell rect directly.
+    #
+    # Encode as breakpoints [c0.top, c0.bottom, c1.top, c1.bottom, ...] only
+    # works if we change slice_ranges usage. Simpler: return breakpoints as
+    # flattened pairs and set a flag... Cleanest for existing pipeline:
+    # return breakpoints = [0, ...] only for contiguous packing is wrong.
+    #
+    # Use absolute cell bottoms as successive cuts ONLY if cells are stacked
+    # without gaps we care about. Product wants complete photos — cropping
+    # [top,bottom] of each cell from the full canvas is correct even with gaps
+    # (gaps discarded). platform_longshot must use photo_led ranges.
+    #
+    # SplitPlan.breakpoints: store [y0_0, y1_0, y0_1, y1_1, ...] is ambiguous.
+    # Better: store monotonic list of all cut points used, and page_count=n,
+    # and add optional `ranges` — but that changes SplitPlan.
+    #
+    # Minimal approach: put breakpoints as [cell0.top, cell0.bottom, cell1.top,
+    # cell1.bottom, ...] and teach slice_ranges OR platform_longshot to pair them
+    # when method=="photo_led".
+
+    bps: list[int] = []
+    for y0, y1 in ranges:
+        bps.extend([y0, y1])
+
+    return SplitPlan(
+        breakpoints=bps,
+        page_count=len(ranges),
+        user_hint=hint,
+        method="photo_led",
+    )
+
+
+def photo_led_slice_ranges(breakpoints: Sequence[int]) -> list[tuple[int, int]]:
+    """Pair photo_led breakpoints as (top, bottom) pairs."""
+    bps = [int(y) for y in breakpoints]
+    out: list[tuple[int, int]] = []
+    for i in range(0, len(bps) - 1, 2):
+        y0, y1 = bps[i], bps[i + 1]
+        if y1 > y0:
+            out.append((y0, y1))
+    return out or [(0, max(bps[-1] if bps else 1, 1))]
+
+
 def plan_moments_split(
     *,
     scroll_height_css: float,
@@ -271,13 +412,31 @@ def plan_moments_split(
     min_pages: int = 6,
     max_pages: int = 9,
     tiny_photo_max: int = 5,
+    photo_cells: Sequence[Any] | None = None,
+    segment: str | None = None,
 ) -> SplitPlan:
-    """Full moments split plan: resolve N then DP (greedy fallback)."""
-    from travelogue.export.platform_profiles import get_profile, resolve_moments_page_count
+    """Moments split: photo_led (default) or legacy content_balanced DP."""
+    from travelogue.export.platform_profiles import (
+        PlatformProfile,
+        get_profile,
+        resolve_moments_page_count,
+    )
 
+    profile = get_profile("wechat_moments")
+    seg = segment or profile.segment
+    if seg == "photo_led":
+        return plan_moments_photo_led_split(
+            photo_cells=photo_cells or [],
+            scale=scale,
+            photo_count=photo_count,
+            scroll_height_css=scroll_height_css,
+            max_pages=int(profile.max_pages or max_pages),
+            tiny_photo_max=int(profile.tiny_photo_max or tiny_photo_max),
+        )
+
+    # Legacy content_balanced (DP / greedy)
     scale = max(1, int(scale))
     h = canvas_height(scroll_height_css, scale)
-    pts: list[BoundaryPoint]
     if boundaries_css and isinstance(boundaries_css[0], BoundaryPoint):
         pts = list(boundaries_css)  # type: ignore[arg-type]
     else:
@@ -285,12 +444,21 @@ def plan_moments_split(
 
     canvas_pts = [(p.y_canvas(scale), p.kind) for p in pts]
     feasible = max_feasible_segments(h, canvas_pts, scale=1, n_target=target_pages)
-
-    profile = get_profile("wechat_moments")
+    legacy = PlatformProfile(
+        id="wechat_moments",
+        label=profile.label,
+        segment="content_balanced",
+        capture=profile.capture,
+        allow_p1=False,
+        target_pages=target_pages,
+        min_pages=min_pages,
+        max_pages=max_pages,
+        tiny_photo_max=tiny_photo_max,
+    )
     n, hint = resolve_moments_page_count(
         photo_count=photo_count,
         max_feasible_segments=feasible,
-        profile=profile,
+        profile=legacy,
     )
     n = max(1, min(int(n), max_pages, feasible))
 
