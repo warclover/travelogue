@@ -41,7 +41,7 @@ def test_longshot2_telemetry_events_allowed(tmp_path, monkeypatch) -> None:
     """DOC-LNG2-01 · PRD-LONGSHOT-2.0 §12 events are registered."""
     path = tmp_path / "studio-homepage-events.jsonl"
     monkeypatch.setattr(
-        "travelogue.web.studio_homepage_telemetry.studio_homepage_events_path",
+        "travelogue.services.studio_homepage_telemetry.studio_homepage_events_path",
         lambda: path,
     )
     for ev in (
