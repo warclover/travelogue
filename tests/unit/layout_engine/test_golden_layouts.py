@@ -15,8 +15,8 @@ from tests._golden.helpers import (
 )
 from travelogue.curation.degradation import DegradationAssessment
 from travelogue.curation.layout_scoring import ScoringWeights
-from travelogue.curation.layout_search import maybe_replan_chapters
-from travelogue.curation.mosaic.metrics import mcs_unified_exposure_rate
+from travelogue.layout_engine.mosaic.metrics import mcs_unified_exposure_rate
+from travelogue.layout_engine.planner.layout_search import maybe_replan_chapters
 
 
 def test_golden_portrait_heavy_matches_legacy():

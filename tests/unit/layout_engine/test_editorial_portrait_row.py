@@ -4,31 +4,31 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from travelogue.config import AppConfig
-from travelogue.config.layout import EditorialPortraitRowConfig
-from travelogue.curation.editorial_portrait_row import (
-    LAYOUT_HINT_PORTRAIT_ROW_EDITORIAL,
-    PATTERN_PORTRAIT_3_EDITORIAL,
-    editorial_row_fit_mode,
-    apply_editorial_portrait_row_to_screen,
-    editorial_scope_matches,
-    is_editorial_portrait_row_enabled,
-    maybe_editorial_portrait_row,
-)
-from travelogue.curation.screen_layout_state import (
-    ScreenLayoutPlannerState,
-    is_triple_row_pattern,
-)
-from travelogue.curation.screen_planner import plan_screens_for_chapter
-from travelogue.render.mobile_screens import (
-    expand_portrait_triples_for_mobile,
-    should_expand_portrait_triple_for_mobile,
-)
 from tests._golden.helpers import (
     build_portrait_heavy_trip,
     layout_snapshot,
     load_golden,
     plan_legacy_screens,
+)
+from travelogue.config import AppConfig
+from travelogue.config.layout import EditorialPortraitRowConfig
+from travelogue.curation.screen_layout_state import (
+    ScreenLayoutPlannerState,
+    is_triple_row_pattern,
+)
+from travelogue.curation.screen_planner import plan_screens_for_chapter
+from travelogue.layout_engine.editorial.portrait_row import (
+    LAYOUT_HINT_PORTRAIT_ROW_EDITORIAL,
+    PATTERN_PORTRAIT_3_EDITORIAL,
+    apply_editorial_portrait_row_to_screen,
+    editorial_row_fit_mode,
+    editorial_scope_matches,
+    is_editorial_portrait_row_enabled,
+    maybe_editorial_portrait_row,
+)
+from travelogue.render.mobile_screens import (
+    expand_portrait_triples_for_mobile,
+    should_expand_portrait_triple_for_mobile,
 )
 
 
@@ -155,7 +155,6 @@ def test_legacy_golden_unchanged_when_editorial_disabled() -> None:
 
 
 def test_golden_editorial_portrait_row_enabled_off_on() -> None:
-    from tests._golden.helpers import load_golden
 
     ids = ["p1", "p2", "p3"]
     aspects = {x: "portrait" for x in ids}
@@ -260,7 +259,7 @@ def test_editorial_row_fit_stable_hash() -> None:
 
 
 def test_editorial_row_fit_distribution_balanced() -> None:
-    from travelogue.curation.editorial_portrait_row import editorial_row_fit_mode
+    from travelogue.layout_engine.editorial.portrait_row import editorial_row_fit_mode
 
     cover = 0
     for i in range(128):
@@ -275,7 +274,7 @@ def test_editorial_row_fit_distribution_balanced() -> None:
 
 
 def test_person_editorial_row_always_contain() -> None:
-    from travelogue.curation.editorial_portrait_row import (
+    from travelogue.layout_engine.editorial.portrait_row import (
         apply_editorial_row_slot_fits,
         editorial_row_fit_mode,
     )
@@ -300,7 +299,7 @@ def test_person_editorial_row_always_contain() -> None:
 
 
 def test_scenery_editorial_uniform_fit_after_screen_id() -> None:
-    from travelogue.curation.editorial_portrait_row import apply_editorial_row_slot_fits
+    from travelogue.layout_engine.editorial.portrait_row import apply_editorial_row_slot_fits
 
     assets = _assets_with_tags(["s1", "s2", "s3"], {})
     screen = {
@@ -315,7 +314,7 @@ def test_scenery_editorial_uniform_fit_after_screen_id() -> None:
 
 
 def test_editorial_row_ar_from_fixtures() -> None:
-    from travelogue.curation.editorial_portrait_row import editorial_row_ar_from_assets
+    from travelogue.layout_engine.editorial.portrait_row import editorial_row_ar_from_assets
 
     assets = {
         "a": {"id": "a", "nativeWidth": 800, "nativeHeight": 1200},
@@ -330,11 +329,11 @@ def test_editorial_row_ar_from_fixtures() -> None:
 
 def test_scenery_editorial_trip_produces_cover_and_contain_rows() -> None:
     """AC-ED-06 · 纯风景 editorial 行同时出现 cover 与 contain（planner + attach fit）。"""
-    from travelogue.curation.editorial_portrait_row import (
+    from travelogue.layout_engine.adapter import ChapterPlanRequest, plan_chapter_screens
+    from travelogue.layout_engine.editorial.portrait_row import (
         PATTERN_PORTRAIT_3_EDITORIAL,
         apply_editorial_row_slot_fits,
     )
-    from travelogue.layout_engine.adapter import ChapterPlanRequest, plan_chapter_screens
 
     n = 12
     ids = [f"s{i}" for i in range(n)]

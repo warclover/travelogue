@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from scripts.collage_detect_eval import evaluate_fixtures
-from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
+from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
 from travelogue.layout_templates.registry import LayoutTemplateEngine, reset_engine_cache_for_tests
 
 
@@ -79,7 +79,7 @@ def test_user_3p2l_case_golden_matches_mcs() -> None:
         load_golden,
         plan_mosaic_screens,
     )
-    from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_3P_2L_BALANCED
+    from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_3P_2L_BALANCED
 
     buckets, aspects, assets = build_user_3p2l_case_trip()
     chapters = plan_mosaic_screens(buckets, aspects, assets)

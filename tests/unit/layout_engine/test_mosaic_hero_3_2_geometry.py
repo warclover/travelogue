@@ -5,14 +5,14 @@ from __future__ import annotations
 from dataclasses import replace
 
 from travelogue.config import MosaicConfig
-from travelogue.curation.mosaic.candidates import generate_window_candidates_with_rejections
-from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_HERO_3_2_PLUS_4
-from travelogue.curation.mosaic.runtime import (
+from travelogue.layout_engine.mosaic.candidates import generate_window_candidates_with_rejections
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_HERO_3_2_PLUS_4
+from travelogue.layout_engine.mosaic.runtime import (
     reset_mosaic_config_override,
     set_mosaic_config_override,
 )
-from travelogue.curation.mosaic.scorer import score_candidate
-from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
+from travelogue.layout_engine.mosaic.scorer import score_candidate
+from travelogue.layout_engine.mosaic.slot_geometry import screen_slots_geometry_ok
 
 
 def _five_landscapes():

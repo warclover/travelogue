@@ -5,8 +5,8 @@ from __future__ import annotations
 from tests._golden.helpers import build_portrait_heavy_trip, plan_legacy_screens
 from travelogue.curation.degradation import assess_degradation
 from travelogue.curation.layout_scoring import PHASE2_WEIGHTS
-from travelogue.curation.layout_search import maybe_replan_chapters
 from travelogue.layout_engine.decision_log import ingest_beam_logs
+from travelogue.layout_engine.planner.layout_search import maybe_replan_chapters
 
 
 def _screen(pid: str, aid: str) -> dict:
@@ -35,7 +35,7 @@ def test_consecutive_bypass_sets_fallback_telemetry(monkeypatch) -> None:
         return [("violating", violating)]
 
     monkeypatch.setattr(
-        "travelogue.curation.layout_search.generate_day_bucket_candidates",
+        "travelogue.layout_engine.planner.layout_search.generate_day_bucket_candidates",
         _fake_candidates,
     )
     _, meta = maybe_replan_chapters(
@@ -74,7 +74,7 @@ def test_consecutive_filter_satisfied_no_fallback(monkeypatch) -> None:
         return [("ok", ok)]
 
     monkeypatch.setattr(
-        "travelogue.curation.layout_search.generate_day_bucket_candidates",
+        "travelogue.layout_engine.planner.layout_search.generate_day_bucket_candidates",
         _fake_candidates,
     )
     _, meta = maybe_replan_chapters(

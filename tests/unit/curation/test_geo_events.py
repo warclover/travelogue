@@ -14,7 +14,7 @@ from travelogue.curation.geo_events import (
     haversine_km,
 )
 
-FIXTURES = Path(__file__).resolve().parent / "fixtures" / "clustering"
+FIXTURES = Path(__file__).resolve().parents[2] / "fixtures" / "clustering"
 
 
 def _asset(

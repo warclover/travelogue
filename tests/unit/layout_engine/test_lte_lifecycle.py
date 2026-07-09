@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from travelogue.curation.mosaic.constants import (
+from travelogue.layout_engine.mosaic.constants import (
     PATTERN_MOSAIC_5_HERO_3_2_PLUS_4,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
 )
@@ -24,6 +24,8 @@ def _fresh_lte_engine(tmp_path, monkeypatch) -> None:
         encoding="utf-8",
     )
     monkeypatch.setattr("travelogue.templating.admin_store._STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
 
 
 @pytest.mark.unit

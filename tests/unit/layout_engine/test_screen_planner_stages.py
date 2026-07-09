@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from travelogue.curation.mosaic.compose import WindowPickResult
-from travelogue.curation.mosaic.hook import chapter_should_skip_hero_for_mosaic
-from travelogue.curation.mosaic.log import MosaicWindowLog
-from travelogue.curation.screen_planner_stages import (
+from travelogue.layout_engine.mosaic.compose import WindowPickResult
+from travelogue.layout_engine.mosaic.hook import chapter_should_skip_hero_for_mosaic
+from travelogue.layout_engine.mosaic.log import MosaicWindowLog
+from travelogue.layout_engine.planner.screen_planner_stages import (
     ChapterScreenPlanner,
     build_chapter_plan_context,
     stage_chapter_hero,
@@ -80,7 +80,7 @@ def test_chapter_hero_skipped_when_mosaic_winner_has_main_role(monkeypatch) -> N
         )
 
     monkeypatch.setattr(
-        "travelogue.curation.mosaic.hook.pick_best_window",
+        "travelogue.layout_engine.mosaic.hook.pick_best_window",
         _fake_pick,
     )
     assert chapter_should_skip_hero_for_mosaic(ctx) is True

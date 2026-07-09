@@ -7,19 +7,19 @@ from dataclasses import replace
 import pytest
 
 from travelogue.config import MosaicConfig
-from travelogue.curation.mosaic.builders import try_order_for_pattern
-from travelogue.curation.mosaic.candidates import generate_window_candidates_with_rejections
-from travelogue.curation.mosaic.constants import (
+from travelogue.layout_engine.mosaic.builders import try_order_for_pattern
+from travelogue.layout_engine.mosaic.candidates import generate_window_candidates_with_rejections
+from travelogue.layout_engine.mosaic.constants import (
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
 )
-from travelogue.curation.mosaic.main_eligibility import (
+from travelogue.layout_engine.mosaic.main_eligibility import (
     asset_eligible_for_main_slot,
     pick_best_main_eligible,
     screen_main_slot_eligible,
 )
-from travelogue.curation.mosaic.pattern_catalog import default_registry
-from travelogue.curation.mosaic.scorer import score_candidate
+from travelogue.layout_engine.mosaic.pattern_catalog import default_registry
+from travelogue.layout_engine.mosaic.scorer import score_candidate
 
 
 def _asset(aid: str, *, w: int, h: int, sharp: float = 0.8) -> dict:
@@ -158,8 +158,8 @@ def test_main_ar_guard_disabled_allows_panorama_main():
 
 
 def test_hero_main_conventional_rate_metrics():
-    from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
-    from travelogue.curation.mosaic.metrics import (
+    from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+    from travelogue.layout_engine.mosaic.metrics import (
         compute_mosaic_metrics,
         hero_main_conventional_rate,
     )
@@ -204,8 +204,8 @@ def test_hero_main_conventional_rate_metrics():
 
 
 def test_main_ar_reject_rate_from_mosaic_window_log():
-    from travelogue.curation.mosaic.log import MosaicWindowLog, format_log_entry
-    from travelogue.curation.mosaic.metrics import compute_mosaic_metrics, main_ar_reject_rate
+    from travelogue.layout_engine.mosaic.log import MosaicWindowLog, format_log_entry
+    from travelogue.layout_engine.mosaic.metrics import compute_mosaic_metrics, main_ar_reject_rate
 
     raw = MosaicWindowLog(
         rejected_templates=[
@@ -286,8 +286,8 @@ def test_scorer_penalizes_hungarian_bypass_when_guard_off():
 
 
 def test_template_main_slot_policy_loaded():
-    from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
-    from travelogue.curation.mosaic.main_eligibility import (
+    from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+    from travelogue.layout_engine.mosaic.main_eligibility import (
         pattern_requires_main_ar_guard,
         resolve_main_eligible_kinds,
         resolve_main_forbid_kinds,
@@ -307,7 +307,7 @@ def test_template_main_slot_policy_loaded():
 
 
 def test_resolve_main_target_display_ar_from_yaml():
-    from travelogue.curation.mosaic.main_eligibility import (
+    from travelogue.layout_engine.mosaic.main_eligibility import (
         resolve_main_target_display_ar,
         resolve_prefer_ladder,
     )
@@ -396,7 +396,7 @@ def test_conventional_window_still_orders_hero_six():
     )
     assert ordered is not None
     pat = default_registry()[PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5]
-    from travelogue.curation.mosaic.builders import build_screen
+    from travelogue.layout_engine.mosaic.builders import build_screen
 
     screen = build_screen(pat, ordered, assets_map=assets_map)
     ok, _ = screen_main_slot_eligible(
@@ -408,7 +408,7 @@ def test_conventional_window_still_orders_hero_six():
 
 
 def test_portrait_3land_template_main_slot_policy_loaded():
-    from travelogue.curation.mosaic.main_eligibility import (
+    from travelogue.layout_engine.mosaic.main_eligibility import (
         pattern_requires_main_ar_guard,
         resolve_main_forbid_kinds,
         template_main_slot_policy,
@@ -460,7 +460,7 @@ def test_portrait_3land_picks_conventional_main(monkeypatch):
     patched = replace(base, layout=layout)
     monkeypatch.setattr("travelogue.config.get_config", lambda: patched)
     monkeypatch.setattr(
-        "travelogue.curation.usage_rules.evaluator.get_config",
+        "travelogue.layout_engine.usage_rules.evaluator.get_config",
         lambda: patched,
     )
     aspects = {

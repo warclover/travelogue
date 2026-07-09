@@ -16,6 +16,8 @@ from travelogue.templating.lifecycle import LifecycleTransitionError
 def _isolate_state(tmp_path, monkeypatch):
     path = tmp_path / "template_admin_state.json"
     monkeypatch.setattr("travelogue.templating.admin_store._STATE_PATH", path)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", path)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
     yield
 
 

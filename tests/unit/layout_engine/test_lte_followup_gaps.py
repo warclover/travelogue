@@ -7,8 +7,11 @@ from pathlib import Path
 import pytest
 
 from scripts.collage_detect_eval import evaluate_fixtures
-from travelogue.curation.mosaic.lte_adapter import resolve_slot_fit
-from travelogue.curation.mosaic.pattern_catalog import LEGACY_MOSAIC_REGISTRY_IDS, default_registry
+from travelogue.layout_engine.mosaic.lte_adapter import resolve_slot_fit
+from travelogue.layout_engine.mosaic.pattern_catalog import (
+    LEGACY_MOSAIC_REGISTRY_IDS,
+    default_registry,
+)
 from travelogue.layout_templates.geometry_solidify import solidify_screen_geometry
 from travelogue.layout_templates.p17_research import (
     generative_composite_stage,

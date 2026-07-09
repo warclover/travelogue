@@ -5,9 +5,9 @@ from __future__ import annotations
 from dataclasses import replace
 
 from travelogue.config import get_config
-from travelogue.curation.mosaic.compose import pick_best_window
-from travelogue.curation.mosaic.hook import drain_mosaic_dropped, drain_mosaic_logs
-from travelogue.curation.mosaic.scorer import MosaicScoreResult
+from travelogue.layout_engine.mosaic.compose import pick_best_window
+from travelogue.layout_engine.mosaic.hook import drain_mosaic_dropped, drain_mosaic_logs
+from travelogue.layout_engine.mosaic.scorer import MosaicScoreResult
 
 
 def test_allow_drop_records_dropped_asset(monkeypatch):
@@ -35,8 +35,8 @@ def test_allow_drop_records_dropped_asset(monkeypatch):
     def fake_score(screen, **kwargs):
         return MosaicScoreResult(total=0.05, base=0.05, penalties={}, reason_codes=[])
 
-    monkeypatch.setattr("travelogue.curation.mosaic.compose.score_candidate", fake_score)
-    monkeypatch.setattr("travelogue.curation.mosaic.selfheal.score_candidate", fake_score)
+    monkeypatch.setattr("travelogue.layout_engine.mosaic.compose.score_candidate", fake_score)
+    monkeypatch.setattr("travelogue.layout_engine.mosaic.selfheal.score_candidate", fake_score)
     drain_mosaic_logs()
     drain_mosaic_dropped()
     pick = pick_best_window(

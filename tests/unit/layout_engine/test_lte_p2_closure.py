@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.curation.mosaic import _legacy_generated as legacy_gen
-from travelogue.curation.mosaic.constants import (
+from travelogue.layout_engine.mosaic import _legacy_generated as legacy_gen
+from travelogue.layout_engine.mosaic.constants import (
     MOSAIC_3_PATTERN_IDS,
     PATTERN_GRID_CLASS,
 )
-from travelogue.curation.mosaic.grid_specs import EXPLICIT_GRID_SPECS
+from travelogue.layout_engine.mosaic.grid_specs import EXPLICIT_GRID_SPECS
 from travelogue.layout_templates.primitive_catalog import check_primitive_yaml_drift
 from travelogue.layout_templates.registry import reset_engine_cache_for_tests
 from travelogue.web.studio_trips import list_studio_trips

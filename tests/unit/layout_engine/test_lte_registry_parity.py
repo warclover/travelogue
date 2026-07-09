@@ -9,14 +9,14 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.curation.mosaic.constants import PATTERN_GRID_CLASS
-from travelogue.curation.mosaic.grid_specs import (
+from travelogue.layout_engine.mosaic.constants import PATTERN_GRID_CLASS
+from travelogue.layout_engine.mosaic.grid_specs import (
     AUTO_FLOW_GRIDS,
     EXPLICIT_GRID_SPECS,
     STACK_PATTERNS,
 )
-from travelogue.curation.mosaic.pattern_catalog import default_registry
-from travelogue.curation.mosaic.slot_geometry import (
+from travelogue.layout_engine.mosaic.pattern_catalog import default_registry
+from travelogue.layout_engine.mosaic.slot_geometry import (
     _LANDSCAPE_FORBIDDEN_TALL,
     _PORTRAIT_FORBIDDEN_WIDE,
 )

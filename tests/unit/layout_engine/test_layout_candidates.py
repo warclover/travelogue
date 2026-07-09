@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from travelogue.curation.layout_candidates import (
+from travelogue.curation.search_budget import SearchBudget
+from travelogue.layout_engine.planner.layout_candidates import (
     bucket_has_mosaic_window,
     generate_day_bucket_candidates,
 )
-from travelogue.curation.search_budget import SearchBudget
 
 
 def _asset(aid: str, kind: str, secs: float = 0) -> dict:
@@ -86,7 +86,7 @@ def test_generate_candidates_passes_enable_food_grid_flag(monkeypatch) -> None:
         return [{"patternId": "screen-square-4", "slots": [{"assetId": "f1"}]}]
 
     monkeypatch.setattr(
-        "travelogue.curation.layout_candidates.plan_screens_for_chapter",
+        "travelogue.layout_engine.planner.layout_candidates.plan_screens_for_chapter",
         _fake_plan,
     )
     cands = generate_day_bucket_candidates(
@@ -118,7 +118,7 @@ def test_generate_candidates_passes_mundane_grid_buckets(monkeypatch) -> None:
         return [{"patternId": "screen-square-4", "slots": [{"assetId": "f1"}]}]
 
     monkeypatch.setattr(
-        "travelogue.curation.layout_candidates.plan_screens_for_chapter",
+        "travelogue.layout_engine.planner.layout_candidates.plan_screens_for_chapter",
         _fake_plan,
     )
     cands = generate_day_bucket_candidates(

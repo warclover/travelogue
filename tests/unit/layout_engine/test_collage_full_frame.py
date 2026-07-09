@@ -6,9 +6,12 @@ import pytest
 
 from travelogue.config import AppConfig
 from travelogue.config.layout import LayoutConfig, LayoutTemplateEngineConfig
-from travelogue.curation.collage_routing import collage_routing_enabled, single_asset_screen_pattern
-from travelogue.curation.mosaic.constants import PATTERN_FULL_FRAME
 from travelogue.curation.screen_planner import _fits_for_screen, _make_screen
+from travelogue.layout_contract.collage_routing import (
+    collage_routing_enabled,
+    single_asset_screen_pattern,
+)
+from travelogue.layout_engine.mosaic.constants import PATTERN_FULL_FRAME
 from travelogue.render.context import build_layout_screen
 
 
@@ -28,7 +31,7 @@ def test_collage_routes_to_full_frame() -> None:
 @pytest.mark.unit
 def test_collage_routing_respects_disable_flag(monkeypatch) -> None:
     monkeypatch.setattr(
-        "travelogue.curation.collage_routing.get_config",
+        "travelogue.layout_contract.collage_routing.get_config",
         lambda: AppConfig(
             layout=LayoutConfig(
                 template_engine=LayoutTemplateEngineConfig(exclude_collage_from_mosaic=False)
@@ -42,7 +45,7 @@ def test_collage_routing_respects_disable_flag(monkeypatch) -> None:
 @pytest.mark.unit
 def test_make_screen_collage_single_uses_full_frame(monkeypatch) -> None:
     monkeypatch.setattr(
-        "travelogue.curation.collage_routing.get_config",
+        "travelogue.layout_contract.collage_routing.get_config",
         lambda: AppConfig(
             layout=LayoutConfig(
                 template_engine=LayoutTemplateEngineConfig(exclude_collage_from_mosaic=True)
@@ -130,7 +133,7 @@ def test_full_frame_fits_cover_default() -> None:
 @pytest.mark.unit
 def test_collage_never_groups_with_photo_in_planner(monkeypatch) -> None:
     monkeypatch.setattr(
-        "travelogue.curation.collage_routing.get_config",
+        "travelogue.layout_contract.collage_routing.get_config",
         lambda: AppConfig(
             layout=LayoutConfig(
                 template_engine=LayoutTemplateEngineConfig(exclude_collage_from_mosaic=True)

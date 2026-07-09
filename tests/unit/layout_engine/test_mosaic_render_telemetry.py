@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from tests._golden.helpers import build_mosaic_eligible_trip, plan_mosaic_screens
-from travelogue.curation.mosaic.metrics import compute_mosaic_metrics
-from travelogue.curation.mosaic.render_check import (
+from travelogue.layout_engine.mosaic.metrics import compute_mosaic_metrics
+from travelogue.layout_engine.mosaic.render_check import (
     compute_layout_render_error_rate,
     screen_pattern_render_ok,
 )
-from travelogue.curation.mosaic.runtime import MOSAIC_ROUTER_VERSION
+from travelogue.layout_engine.mosaic.runtime import MOSAIC_ROUTER_VERSION
 
 
 def test_mcs_patterns_render_chain_ok(lte_pattern_enabled) -> None:
@@ -31,7 +31,7 @@ def test_portrait_2_landscape_2_has_css_binding() -> None:
 
 
 def test_mosaic_window_log_has_router_version() -> None:
-    from travelogue.curation.mosaic.log import MosaicWindowLog
+    from travelogue.layout_engine.mosaic.log import MosaicWindowLog
 
     raw = MosaicWindowLog(winner_pattern_id="screen-portrait-3").to_dict()
     assert raw["routerVersion"] == MOSAIC_ROUTER_VERSION

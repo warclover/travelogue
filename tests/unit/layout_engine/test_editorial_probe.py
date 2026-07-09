@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
-import copy
 import re
+from pathlib import Path
 
 import pytest
 
-from travelogue.curation.editorial_portrait_row import (
+from travelogue.layout_engine.editorial.portrait_row import (
     LAYOUT_HINT_PORTRAIT_ROW_EDITORIAL,
     PATTERN_PORTRAIT_3,
     PATTERN_PORTRAIT_3_EDITORIAL,

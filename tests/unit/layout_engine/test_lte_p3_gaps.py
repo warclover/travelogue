@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 
 from scripts.collage_detect_eval import evaluate_fixtures
-from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_3P_2L_BALANCED
-from travelogue.curation.mosaic.log import MosaicWindowLog, format_log_entry
-from travelogue.curation.mosaic.render_check import screen_pattern_render_ok
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_3P_2L_BALANCED
+from travelogue.layout_engine.mosaic.log import MosaicWindowLog, format_log_entry
+from travelogue.layout_engine.mosaic.render_check import screen_pattern_render_ok
 from travelogue.layout_templates.registry import reset_engine_cache_for_tests
 
 

@@ -6,7 +6,7 @@ from tests._golden.helpers import build_portrait_heavy_trip, plan_legacy_screens
 from travelogue.curation.chapter_items import collect_screen_asset_ids, item_asset_ids
 from travelogue.curation.degradation import assess_degradation
 from travelogue.curation.layout_scoring import PHASE2_WEIGHTS
-from travelogue.curation.layout_search import maybe_replan_chapters
+from travelogue.layout_engine.planner.layout_search import maybe_replan_chapters
 
 
 def test_replan_then_compact_items_match_screens(monkeypatch) -> None:
@@ -23,7 +23,7 @@ def test_replan_then_compact_items_match_screens(monkeypatch) -> None:
         return [("legacy", legacy[0].get("screens") or []), ("alt", alt_screens)]
 
     monkeypatch.setattr(
-        "travelogue.curation.layout_search.generate_day_bucket_candidates",
+        "travelogue.layout_engine.planner.layout_search.generate_day_bucket_candidates",
         _fake_candidates,
     )
     replanned, meta = maybe_replan_chapters(

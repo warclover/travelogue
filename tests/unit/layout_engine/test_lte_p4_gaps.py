@@ -7,8 +7,11 @@ from pathlib import Path
 import pytest
 
 from scripts.collage_detect_eval import evaluate_fixtures
-from travelogue.curation.mosaic._legacy_generated import EXPLICIT_GRID_SPECS, PATTERN_GRID_CLASS
-from travelogue.curation.mosaic.grid_specs import audit_all
+from travelogue.layout_engine.mosaic._legacy_generated import (
+    EXPLICIT_GRID_SPECS,
+    PATTERN_GRID_CLASS,
+)
+from travelogue.layout_engine.mosaic.grid_specs import audit_all
 from travelogue.layout_templates.legacy_codegen import (
     export_legacy_data,
     render_legacy_python_module,

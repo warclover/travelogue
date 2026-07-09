@@ -9,8 +9,8 @@ import travelogue.curation.screen_planner  # noqa: F401
 from scripts.phase3_ig2_report import _cfg_for_mode, _prepare_trip, load_fixture_trip
 from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.curate import run_curate
-from travelogue.curation.mosaic.lte_adapter import mosaic_registry
-from travelogue.curation.mosaic.runtime import (
+from travelogue.layout_engine.mosaic.lte_adapter import mosaic_registry
+from travelogue.layout_engine.mosaic.runtime import (
     reset_mosaic_disabled_patterns,
     set_mosaic_disabled_patterns,
 )

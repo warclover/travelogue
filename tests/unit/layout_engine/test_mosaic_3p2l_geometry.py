@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.curation.mosaic.grid_specs import EXPLICIT_GRID_SPECS, gap_cells
+from travelogue.layout_engine.mosaic.grid_specs import EXPLICIT_GRID_SPECS, gap_cells
 
 
 def _slot_aspect(spec: tuple[int, int, int, int], stage: float = 16 / 9) -> float:

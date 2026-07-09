@@ -9,17 +9,17 @@ from travelogue.curation.layout_density import (
     LayoutDensityParams,
     dense_collage_quota_adjusted,
 )
-from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
-from travelogue.curation.mosaic.runtime import (
-    effective_mosaic_window_sizes,
-    ordered_mosaic_window_sizes,
-    planner_mosaic_window_sizes,
-)
 from travelogue.curation.screen_layout_state import (
     ScreenLayoutPlannerState,
     dense_collage_limits_for_trip,
     is_dense_collage_pattern,
     is_large_mosaic_pattern,
+)
+from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
+from travelogue.layout_engine.mosaic.runtime import (
+    effective_mosaic_window_sizes,
+    ordered_mosaic_window_sizes,
+    planner_mosaic_window_sizes,
 )
 
 
@@ -138,7 +138,7 @@ def test_mosaic_pattern_disabled_above_max_slots(monkeypatch) -> None:
     patched = replace(base, layout=layout, mosaic=mosaic)
 
     monkeypatch.setattr(
-        "travelogue.curation.mosaic.lte_adapter.get_config",
+        "travelogue.layout_engine.mosaic.lte_adapter.get_config",
         lambda: patched,
     )
     assert mosaic_pattern_disabled("screen-landscape-9", cfg=mosaic)

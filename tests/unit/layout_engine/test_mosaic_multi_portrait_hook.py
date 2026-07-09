@@ -5,13 +5,13 @@ from __future__ import annotations
 from dataclasses import replace
 
 from travelogue.config import get_config
-from travelogue.curation.mosaic.constants import (
+from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_engine.mosaic.constants import (
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
 )
-from travelogue.curation.mosaic.hook import try_mosaic_window
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-from travelogue.curation.screen_planner_stages import build_chapter_plan_context
+from travelogue.layout_engine.mosaic.hook import try_mosaic_window
+from travelogue.layout_engine.planner.screen_planner_stages import build_chapter_plan_context
 
 
 def _patch_cfg(monkeypatch):

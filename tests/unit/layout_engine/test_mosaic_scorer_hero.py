@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from travelogue.config import MosaicConfig
-from travelogue.curation.mosaic.constants import (
+from travelogue.layout_engine.mosaic.constants import (
     PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
 )
-from travelogue.curation.mosaic.scorer import score_candidate
+from travelogue.layout_engine.mosaic.scorer import score_candidate
 
 
 def _all_landscape_assets(n: int):

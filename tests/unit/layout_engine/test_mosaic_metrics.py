@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from travelogue.curation.mosaic.metrics import compute_mosaic_metrics, mosaic_win_score_percentiles
+from travelogue.layout_engine.mosaic.metrics import (
+    compute_mosaic_metrics,
+    mosaic_win_score_percentiles,
+)
 
 
 def test_win_score_percentiles():

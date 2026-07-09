@@ -2,11 +2,6 @@
 
 from __future__ import annotations
 
-from travelogue.config.layout import UsageRulesConfig
-from travelogue.curation.mosaic.constants import (
-    PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
-    PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
-)
 from travelogue.curation.usage_rules.metrics import (
     compute_usage_rules_metrics,
     dense_streak_violation_count,
@@ -15,6 +10,10 @@ from travelogue.curation.usage_rules.metrics import (
     hero_mismatch_screens,
     pattern_exposure_entropy,
     usage_rule_log_stats,
+)
+from travelogue.layout_engine.mosaic.constants import (
+    PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+    PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
 )
 
 

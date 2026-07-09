@@ -3,9 +3,9 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
-from travelogue.curation.mosaic.constants import (
+from tests._repo_root import repo_root
+from travelogue.layout_engine.mosaic.constants import (
     MOSAIC_5_PATTERN_IDS,
     PATTERN_GRID_CLASS,
     PATTERN_MOSAIC_5_2P3L_EQUAL,
@@ -127,7 +127,6 @@ def test_mosaic6_fills_bottom_row():
 
 
 def test_mosaic6_grid_class_in_css():
-    from pathlib import Path
 
     css = (
         repo_root(__file__)

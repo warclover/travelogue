@@ -5,10 +5,10 @@ from __future__ import annotations
 from dataclasses import replace
 
 from travelogue.config import get_config
-from travelogue.curation.mosaic.builders import build_screen, try_order_for_pattern
-from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
-from travelogue.curation.mosaic.pattern_catalog import default_registry
-from travelogue.curation.mosaic.scorer import score_candidate
+from travelogue.layout_engine.mosaic.builders import build_screen, try_order_for_pattern
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
+from travelogue.layout_engine.mosaic.pattern_catalog import default_registry
+from travelogue.layout_engine.mosaic.scorer import score_candidate
 
 
 def _asset(aid: str, *, w: int, h: int) -> dict:
@@ -29,7 +29,7 @@ def test_main_portrait_3land_gets_single_portrait_bonus(monkeypatch):
     patched = replace(base, layout=layout)
     monkeypatch.setattr("travelogue.config.get_config", lambda: patched)
     monkeypatch.setattr(
-        "travelogue.curation.usage_rules.evaluator.get_config",
+        "travelogue.layout_engine.usage_rules.evaluator.get_config",
         lambda: patched,
     )
     aspects = {

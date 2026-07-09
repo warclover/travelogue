@@ -10,7 +10,6 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import json
 import shutil
@@ -21,6 +20,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests._repo_root import repo_root
 from tests.integration.studio.test_studio_server import _free_port, _post_json, _start_studio_server
 from tests.unit.web._studio_home_v2_css import read_studio_home_v2_css_bundle
 from travelogue.web.studio_handlers.paths import STUDIO_EVENT_PATH
@@ -218,7 +218,7 @@ def test_studio_home_v2_theme_palette_options() -> None:
     ):
         assert f'<option value="{theme_id}">{label}</option>' in html
         assert f':root[data-v2-theme="{theme_id}"]' in css
-        assert f'--v2-primary: #' in css.split(f':root[data-v2-theme="{theme_id}"]', 1)[1].split("}", 1)[0]
+        assert '--v2-primary: #' in css.split(f':root[data-v2-theme="{theme_id}"]', 1)[1].split("}", 1)[0]
         assert f'{theme_id}:' in store
         assert f"{theme_id}: 1" in boot
 
@@ -483,7 +483,7 @@ def test_v2_js_logic_node_units() -> None:
     node = shutil.which("node")
     if not node:
         pytest.skip("node 不可用，跳过 JS 单测")
-    js_dir = Path(__file__).resolve().parent / "js"
+    js_dir = Path(__file__).resolve().parents[2] / "js"
     test_files = [
         str(js_dir / "carousel-logic.test.mjs"),
         str(js_dir / "lightbox-logic.test.mjs"),
@@ -675,12 +675,21 @@ def test_studio_home_v2_telemetry_wired() -> None:
         "spread_page_view", "shelf_resume_click",
         "shelf_menu_open", "shelf_delete_confirm", "shelf_delete_success",
         "shelf_longshot_start", "shelf_longshot_success",
+        "longshot_export_start", "longshot_export_success",
+        "longshot_export_fail", "longshot_platform_change",
     ):
         assert ev in ALLOWED_STUDIO_HOMEPAGE_EVENTS
 
     # 客户端 analytics.js ALLOWED 同步
     analytics = (STUDIO_DIR / "js" / "analytics.js").read_text(encoding="utf-8")
-    for ev in ("homepage_view", "cta_click", "spread_page_view", "shelf_resume_click"):
+    for ev in (
+        "homepage_view",
+        "cta_click",
+        "spread_page_view",
+        "shelf_resume_click",
+        "longshot_export_start",
+        "longshot_platform_change",
+    ):
         assert ev in analytics
 
     bootstrap = (STUDIO_DIR / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
@@ -1099,15 +1108,14 @@ def test_studio_home_gate_query_override_v2(tmp_path: Path, monkeypatch) -> None
 
 
 def test_studio_homepage_gate_wired() -> None:
-    """门控模块已接入 studio_routes + static_handlers。"""
-    routes = (REPO_ROOT / "travelogue" / "web" / "studio_routes.py").read_text(encoding="utf-8")
+    """门控模块已接入 studio_dispatch 路由表 + static_handlers（M-C1 后）。"""
+    dispatch = (REPO_ROOT / "travelogue" / "web" / "studio_dispatch.py").read_text(encoding="utf-8")
     static = (
         REPO_ROOT / "travelogue" / "web" / "studio_handlers" / "static_handlers.py"
     ).read_text(encoding="utf-8")
-    assert "_dispatch_home_root" in routes
-    assert "handle_home_root" in routes
+    assert "static_handlers.handle_home_root" in dispatch
     assert "handle_home_root" in static
-    assert "HOME_CLASSIC_PATH" in routes
+    assert "HOME_CLASSIC_PATH" in dispatch
     gate = (REPO_ROOT / "travelogue" / "web" / "studio_homepage_gate.py").read_text(encoding="utf-8")
     assert "TRAVELOGUE_STUDIO_HOMEPAGE_V2" in gate
     assert "decide_root_variant" in gate

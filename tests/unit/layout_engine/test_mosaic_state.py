@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from travelogue.curation.mosaic.state import note_screens_batch
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_engine.mosaic.state import note_screens_batch
 
 
 def test_note_screens_batch_noop_when_state_none() -> None:

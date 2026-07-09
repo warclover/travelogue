@@ -108,6 +108,8 @@ def test_submit_exposure_proposals_cli_flow(tmp_path: Path, monkeypatch: pytest.
 
     state_path = tmp_path / "template_admin_state.json"
     monkeypatch.setattr(admin_store, "_STATE_PATH", state_path)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state_path)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
 
     report = evaluate_registry()
     proposals = report.get("exposureDebtProposals") or []
@@ -164,6 +166,8 @@ def test_propose_cli_empty_proposals(tmp_path: Path, monkeypatch: pytest.MonkeyP
 
     state_path = tmp_path / "template_admin_state.json"
     monkeypatch.setattr(admin_store, "_STATE_PATH", state_path)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state_path)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
 
     engine = LayoutTemplateEngine.load(rebuild_cache=True)
     target = 1.0 / len(engine.list_active())

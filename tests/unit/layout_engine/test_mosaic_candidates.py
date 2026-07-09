@@ -7,13 +7,13 @@ from dataclasses import replace
 from tests._golden.helpers import build_mixed_aspects_trip
 from travelogue.config import MosaicConfig, get_config
 from travelogue.config.layout import UsageRulesConfig
-from travelogue.curation.mosaic.candidates import generate_window_candidates
-from travelogue.curation.mosaic.constants import (
+from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_contract.usage_context import build_window_context
+from travelogue.layout_engine.mosaic.candidates import generate_window_candidates
+from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_9,
     PATTERN_PORTRAIT_2_LANDSCAPE_2,
 )
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-from travelogue.curation.usage_rules.context import build_window_context
 
 
 def _five_assets():
@@ -86,7 +86,7 @@ def test_generate_mixed_four_window_includes_p2_l2():
 
 
 def test_window_has_candidates_requires_geometry_valid():
-    from travelogue.curation.mosaic.hook import window_has_candidates
+    from travelogue.layout_engine.mosaic.hook import window_has_candidates
 
     buckets, aspects, assets = build_mixed_aspects_trip()
     assets_map = {a["id"]: a for a in assets}
@@ -114,10 +114,10 @@ def test_window_has_candidates_requires_geometry_valid():
 
 def test_window_has_candidates_aligns_with_usage_filter(monkeypatch):
     """Probe must apply the same usage-rule filter as compose (PRD §7.1)."""
-    from travelogue.curation.mosaic.candidates import (
+    from travelogue.layout_engine.mosaic.candidates import (
         generate_window_candidates_with_rejections,
     )
-    from travelogue.curation.mosaic.hook import window_has_candidates
+    from travelogue.layout_engine.mosaic.hook import window_has_candidates
 
     aspects = {f"a{i}": "landscape" for i in range(9)}
     assets_map = {
@@ -139,7 +139,7 @@ def test_window_has_candidates_aligns_with_usage_filter(monkeypatch):
     patched = replace(base, layout=layout)
     monkeypatch.setattr("travelogue.config.get_config", lambda: patched)
     monkeypatch.setattr(
-        "travelogue.curation.usage_rules.evaluator.get_config",
+        "travelogue.layout_engine.usage_rules.evaluator.get_config",
         lambda: patched,
     )
     ctx = build_window_context(ids, aspects, assets_map, layout_state=st, median_sharp=0.5)

@@ -42,6 +42,17 @@ def _tests_subpath(item: pytest.Item) -> list[str]:
 
 def _apply_auto_markers(item: pytest.Item) -> None:
     """Ensure Playwright / browser tests are tagged for CI tier selection."""
+    # Playwright tagging must run before the path-bucket early returns: e2e
+    # serialization (`playwright_serial` ordering + torch contention fixture)
+    # depends on the marker even when the module lives in tests/e2e/.
+    names = {m.name for m in item.iter_markers()}
+    basename = _module_basename(item)
+    if "playwright_serial" in names or "playwright" in basename:
+        if "e2e" not in names:
+            item.add_marker(pytest.mark.e2e)
+        if "playwright_serial" not in names:
+            item.add_marker(pytest.mark.playwright_serial)
+        return
     if item.get_closest_marker("unit"):
         return
     subpath = _tests_subpath(item)
@@ -58,17 +69,6 @@ def _apply_auto_markers(item: pytest.Item) -> None:
             if not item.get_closest_marker("e2e"):
                 item.add_marker(pytest.mark.e2e)
             return
-    names = {m.name for m in item.iter_markers()}
-    if "playwright_serial" in names and "e2e" not in names:
-        item.add_marker(pytest.mark.e2e)
-        names.add("e2e")
-    basename = _module_basename(item)
-    if "playwright" in basename:
-        if "e2e" not in names:
-            item.add_marker(pytest.mark.e2e)
-        if "playwright_serial" not in names:
-            item.add_marker(pytest.mark.playwright_serial)
-        names = {m.name for m in item.iter_markers()}
     if not names.intersection(_TIER_MARKERS):
         item.add_marker(pytest.mark.unit)
 

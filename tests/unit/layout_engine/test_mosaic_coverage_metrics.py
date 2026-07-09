@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from tests._golden.helpers import build_mosaic_eligible_trip, plan_mosaic_screens
 from travelogue.curation.layout_metrics import compute_layout_metrics, pattern_repeat_rate
-from travelogue.curation.mosaic.coverage import compute_coverage_metrics
+from travelogue.layout_engine.mosaic.coverage import compute_coverage_metrics
 
 
 def test_pattern_repeat_rate_complements_diversity() -> None:

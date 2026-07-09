@@ -45,6 +45,8 @@ def test_concurrent_admin_revision_conflict(tmp_path: Path, monkeypatch: pytest.
         encoding="utf-8",
     )
     monkeypatch.setattr("travelogue.templating.admin_store._STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
 
     reg = get_registry()
     rec = reg.get("visual-journal")
@@ -156,6 +158,8 @@ def test_concurrent_render_stable_registry_while_manifest_disk_changes(
 def test_admin_store_revision_monotonic(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     state = tmp_path / "runs" / "template_admin_state.json"
     monkeypatch.setattr("travelogue.templating.admin_store._STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
     reg = get_registry()
     rec = reg.get("visual-journal")
     rev = get_store_revision()

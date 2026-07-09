@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_3P_2L_BALANCED
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_3P_2L_BALANCED
 from travelogue.layout_templates.registry import LayoutTemplateEngine, reset_engine_cache_for_tests
 from travelogue.layout_templates.validator import LayoutTemplateGeometryHook, validate_template_def
 
@@ -68,7 +68,7 @@ def test_main_off_ladder_passes_publish_with_sign_off(engine: LayoutTemplateEngi
 
 @pytest.mark.unit
 def test_hero6_templates_declare_main_slot_policy(engine: LayoutTemplateEngine) -> None:
-    from travelogue.curation.mosaic.constants import (
+    from travelogue.layout_engine.mosaic.constants import (
         PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
         PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
         PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
@@ -88,7 +88,7 @@ def test_hero6_templates_declare_main_slot_policy(engine: LayoutTemplateEngine) 
 def test_main_slot_policy_missing_blocks_publish(engine: LayoutTemplateEngine) -> None:
     from dataclasses import replace
 
-    from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+    from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
 
     t = engine.get(PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5)
     stripped = replace(

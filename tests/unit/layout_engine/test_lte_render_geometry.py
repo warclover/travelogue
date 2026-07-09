@@ -6,8 +6,8 @@ import pytest
 
 from tests._golden.helpers import build_mosaic_five_2p3l_window
 from travelogue.config import MosaicConfig
-from travelogue.curation.mosaic.compose import pick_best_candidate
-from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_2P3L_EQUAL
+from travelogue.layout_engine.mosaic.compose import pick_best_candidate
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_2P3L_EQUAL
 from travelogue.render.context import build_layout_screen
 
 

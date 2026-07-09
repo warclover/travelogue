@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-import pytest
-
 from travelogue.config import MosaicConfig, get_config
 from travelogue.config.layout import UsageRulesConfig
-from travelogue.curation.mosaic.candidates import generate_window_candidates_with_rejections
-from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-from travelogue.curation.usage_rules.context import build_window_context
+from travelogue.layout_contract.usage_context import build_window_context
+from travelogue.layout_engine.mosaic.candidates import generate_window_candidates_with_rejections
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
 
 
 def _asset(aid: str, *, w: int, h: int, sharp: float = 0.8) -> dict:
@@ -49,7 +47,7 @@ def test_usage_rules_off_matches_no_ctx(monkeypatch):
         usage_rules=UsageRulesConfig(enabled=True, hero_gap_threshold=0.15),
     )
     monkeypatch.setattr(
-        "travelogue.curation.usage_rules.evaluator.get_config",
+        "travelogue.layout_engine.usage_rules.evaluator.get_config",
         lambda: replace(base, layout=layout),
     )
     ctx = build_window_context(
@@ -71,7 +69,7 @@ def test_usage_rules_off_matches_no_ctx(monkeypatch):
         usage_rules=UsageRulesConfig(enabled=False),
     )
     monkeypatch.setattr(
-        "travelogue.curation.usage_rules.evaluator.get_config",
+        "travelogue.layout_engine.usage_rules.evaluator.get_config",
         lambda: replace(base, layout=layout_disabled),
     )
     with_rules_disabled = generate_window_candidates_with_rejections(
@@ -104,7 +102,7 @@ def test_usage_rules_on_rejects_main_hero(monkeypatch):
         usage_rules=UsageRulesConfig(enabled=True, hero_gap_threshold=0.15),
     )
     monkeypatch.setattr(
-        "travelogue.curation.usage_rules.evaluator.get_config",
+        "travelogue.layout_engine.usage_rules.evaluator.get_config",
         lambda: replace(base, layout=layout),
     )
     ctx = build_window_context(ids, aspects, assets_map, median_sharp=0.5)

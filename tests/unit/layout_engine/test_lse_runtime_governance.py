@@ -50,6 +50,8 @@ def test_config_governance_approves_lse_patch(tmp_path: Path, monkeypatch) -> No
         lambda _path=None: store,
     )
     monkeypatch.setattr("travelogue.templating.admin_store._STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
     monkeypatch.setattr("travelogue.config.get_config", lambda **_: cfg)
 
     req = propose_router_change(
@@ -133,6 +135,8 @@ def test_effective_disable_stages_merges_runtime(tmp_path: Path, monkeypatch) ->
 def test_propose_layout_strategy_change_validates(tmp_path: Path, monkeypatch) -> None:
     state = tmp_path / "template_admin_state.json"
     monkeypatch.setattr("travelogue.templating.admin_store._STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
     try:
         propose_layout_strategy_change(
             {"layout_strategy_weights": {"aspect_match": 0.05}},

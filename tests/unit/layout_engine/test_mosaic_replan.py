@@ -13,8 +13,8 @@ from tests._golden.helpers import (
 )
 from travelogue.curation.chapter_items import collect_screen_asset_ids
 from travelogue.curation.longshot_filter import BREATH_PATTERN
-from travelogue.curation.mosaic.candidates import ScreenCandidate
-from travelogue.curation.mosaic.replan import ReplanError, replan_screen
+from travelogue.layout_engine.mosaic.candidates import ScreenCandidate
+from travelogue.layout_engine.mosaic.replan import ReplanError, replan_screen
 
 pytestmark = pytest.mark.usefixtures("lte_pattern_enabled")
 
@@ -83,7 +83,7 @@ def test_replan_alt_topk_picks_second_rank_when_best_matches_current(monkeypatch
         ]
 
     monkeypatch.setattr(
-        "travelogue.curation.mosaic.replan.score_window_candidates",
+        "travelogue.layout_engine.mosaic.replan.score_window_candidates",
         _fake_scored,
     )
     result = replan_screen(
@@ -173,7 +173,7 @@ def test_replan_screen_unknown_id_raises() -> None:
 
 
 def test_build_legacy_screen_portrait_four() -> None:
-    from travelogue.curation.mosaic.legacy import build_legacy_screen
+    from travelogue.layout_engine.mosaic.legacy import build_legacy_screen
 
     buckets, aspects_map, assets = build_mosaic_portrait4_trip()
     window = buckets[0]
@@ -187,9 +187,9 @@ def test_build_legacy_screen_portrait_four() -> None:
 
 def test_legacy_append_rejects_retired_pattern(monkeypatch) -> None:
     """append_legacy_window must not append screens blocked by pattern_policy."""
-    from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_2P_3L_BALANCED
-    from travelogue.curation.mosaic.legacy import append_legacy_window
-    from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
+    from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_2P_3L_BALANCED
+    from travelogue.layout_engine.mosaic.legacy import append_legacy_window
+    from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
 
     assert mosaic_pattern_disabled(PATTERN_MOSAIC_5_2P_3L_BALANCED)
 
@@ -208,7 +208,7 @@ def test_legacy_append_rejects_retired_pattern(monkeypatch) -> None:
         featured_weight = 1.0
 
     monkeypatch.setattr(
-        "travelogue.curation.mosaic.legacy.build_legacy_screen",
+        "travelogue.layout_engine.mosaic.legacy.build_legacy_screen",
         lambda *a, **k: retired_screen,
     )
     assert append_legacy_window(_Ctx(), ["a", "b", "c", "d", "e"], 5) is False

@@ -9,7 +9,9 @@ import pytest
 
 from travelogue.config import AppConfig
 from travelogue.config.layout import Editorial4MixConfig
-from travelogue.curation.editorial_4mix import (
+from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.curation.screen_planner import _fits_for_screen, grid_class_for_pattern
+from travelogue.layout_engine.editorial.four_mix import (
     LAYOUT_HINT_EDITORIAL_4MIX,
     PATTERN_EDITORIAL_4MIX,
     apply_editorial_4mix_to_screen,
@@ -17,14 +19,12 @@ from travelogue.curation.editorial_4mix import (
     is_editorial_4mix_enabled,
     maybe_editorial_4mix,
 )
-from travelogue.curation.mosaic.builders import build_screen
-from travelogue.curation.mosaic.constants import (
+from travelogue.layout_engine.mosaic.builders import build_screen
+from travelogue.layout_engine.mosaic.constants import (
     PATTERN_PORTRAIT_2_LANDSCAPE_2,
     PATTERN_PORTRAIT_4,
 )
-from travelogue.curation.mosaic.pattern_catalog import default_registry
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-from travelogue.curation.screen_planner import _fits_for_screen, grid_class_for_pattern
+from travelogue.layout_engine.mosaic.pattern_catalog import default_registry
 from travelogue.layout_templates.probe_editorial_4mix import (
     ROW_BBOX_JS,
     build_editorial_4mix_probe_html,
@@ -729,7 +729,7 @@ def test_ac_4m_12_longshot_html_skips_4mix_mobile_expand() -> None:
 
 @pytest.mark.unit
 def test_scenery_portrait_fit_mode_is_deterministic() -> None:
-    from travelogue.curation.editorial_4mix import editorial_4mix_scenery_portrait_fit_mode
+    from travelogue.layout_engine.editorial.four_mix import editorial_4mix_scenery_portrait_fit_mode
 
     args = dict(
         trip_id="trip-a",
@@ -745,7 +745,7 @@ def test_scenery_portrait_fit_mode_is_deterministic() -> None:
 
 @pytest.mark.unit
 def test_apply_editorial_4mix_slot_fits_person_contain_scenery_may_cover() -> None:
-    from travelogue.curation.editorial_4mix import apply_editorial_4mix_slot_fits
+    from travelogue.layout_engine.editorial.four_mix import apply_editorial_4mix_slot_fits
 
     screen = {
         "screenId": "ch01-s4mix",
@@ -776,8 +776,7 @@ def test_apply_editorial_4mix_slot_fits_person_contain_scenery_may_cover() -> No
 def test_scenery_portrait_cover_random_disabled_keeps_contain() -> None:
     from dataclasses import replace
 
-    from travelogue.curation.editorial_4mix import apply_editorial_4mix_slot_fits
-    from travelogue.config.layout import Editorial4MixConfig
+    from travelogue.layout_engine.editorial.four_mix import apply_editorial_4mix_slot_fits
 
     cfg = _cfg_with_4mix()
     e4 = replace(cfg.layout.editorial_4mix, scenery_portrait_cover_random=False)

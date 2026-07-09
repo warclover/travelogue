@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.curation.mosaic.diversity import (
+from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_engine.mosaic.diversity import (
     pattern_similarity,
     rerank_scored_candidates_mmr,
 )
-from travelogue.curation.mosaic.lte_adapter import mcs_diversity_config, template_base_weight
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_engine.mosaic.lte_adapter import mcs_diversity_config, template_base_weight
 from travelogue.layout_templates.css_gen import generate_grid_css
 from travelogue.layout_templates.geometry import slot_aspect_table, solve_tracks
 from travelogue.layout_templates.models import TemplateStage
@@ -60,6 +60,8 @@ def test_runtime_base_weight_override_applied(tmp_path: Path, monkeypatch: pytes
 
     state_path = tmp_path / "template_admin_state.json"
     monkeypatch.setattr(admin_store, "_STATE_PATH", state_path)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state_path)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
     with _LOCK:
         data = _load_unlocked()
         data["runtime"] = {
@@ -80,6 +82,8 @@ def test_exposure_debt_semi_closed_loop(tmp_path: Path, monkeypatch: pytest.Monk
 
     state_path = tmp_path / "template_admin_state.json"
     monkeypatch.setattr(admin_store, "_STATE_PATH", state_path)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state_path)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
 
     engine = LayoutTemplateEngine.load(rebuild_cache=True)
     active_ids = {t.id for t in engine.list_active()}
@@ -107,6 +111,8 @@ def test_propose_and_approve_layout_weights(tmp_path: Path, monkeypatch: pytest.
 
     state_path = tmp_path / "template_admin_state.json"
     monkeypatch.setattr(admin_store, "_STATE_PATH", state_path)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state_path)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
     req = propose_layout_weight_changes(
         [{"templateId": "screen-mosaic-5-2p3l-equal", "suggestedBaseWeight": 1.08}],
         operator="op-1",
@@ -136,7 +142,7 @@ def test_pattern_similarity_distinguishes_templates(engine: LayoutTemplateEngine
 
 @pytest.mark.unit
 def test_mmr_prefers_diverse_pattern_when_scores_close() -> None:
-    from travelogue.curation.mosaic.candidates import ScreenCandidate
+    from travelogue.layout_engine.mosaic.candidates import ScreenCandidate
 
     state = ScreenLayoutPlannerState(nine_min=0, nine_max=9)
     state.pattern_counts = {"screen-portrait-3": 2}

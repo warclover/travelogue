@@ -6,8 +6,8 @@ from dataclasses import replace
 
 from tests._golden.helpers import build_mixed_aspects_trip, plan_mosaic_screens
 from travelogue.config import get_config
-from travelogue.curation.mosaic.hook import drain_mosaic_logs
-from travelogue.curation.mosaic.slot_geometry import screen_slots_geometry_ok
+from travelogue.layout_engine.mosaic.hook import drain_mosaic_logs
+from travelogue.layout_engine.mosaic.slot_geometry import screen_slots_geometry_ok
 
 
 def test_mixed_aspects_no_portrait_in_wide_cells() -> None:

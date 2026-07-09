@@ -8,11 +8,16 @@ import pytest
 
 from travelogue.config import get_config
 from travelogue.config.layout import UsageRulesConfig
-from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
 from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-from travelogue.curation.usage_rules.context import WindowContext, main_eligible_hero_score_gap
-from travelogue.curation.usage_rules.evaluator import evaluate_reject, evaluate_ur01, evaluate_ur02, evaluate_ur09
-from travelogue.curation.usage_rules.registry import RULE_UR_01, RULE_UR_02, RULE_UR_09
+from travelogue.layout_contract.usage_rules_registry import RULE_UR_01, RULE_UR_09
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+from travelogue.layout_engine.usage_rules.context import WindowContext, main_eligible_hero_score_gap
+from travelogue.layout_engine.usage_rules.evaluator import (
+    evaluate_reject,
+    evaluate_ur01,
+    evaluate_ur02,
+    evaluate_ur09,
+)
 
 
 def _asset(aid: str, *, w: int, h: int, sharp: float = 0.8) -> dict:
@@ -97,7 +102,7 @@ def test_evaluate_reject_respects_global_enabled_flag(monkeypatch):
     base = get_config()
     layout = replace(base.layout, usage_rules=UsageRulesConfig(enabled=False))
     monkeypatch.setattr(
-        "travelogue.curation.usage_rules.evaluator.get_config",
+        "travelogue.layout_engine.usage_rules.evaluator.get_config",
         lambda: replace(base, layout=layout),
     )
     assets = [_asset(f"a{i}", w=3000, h=1687, sharp=0.80 + i * 0.01) for i in range(6)]

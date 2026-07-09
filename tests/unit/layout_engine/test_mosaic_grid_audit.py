@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_HERO_3_2_PLUS_4
-from travelogue.curation.mosaic.grid_specs import (
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_HERO_3_2_PLUS_4
+from travelogue.layout_engine.mosaic.grid_specs import (
     ALL_MOSAIC_PATTERN_IDS,
     EXPLICIT_GRID_SPECS,
     audit_all,
@@ -48,7 +48,7 @@ def test_2p3l_balanced_has_known_top_right_gap():
 
 
 def test_portrait_left_2landscape_fills_2x2():
-    from travelogue.curation.mosaic.constants import PATTERN_PORTRAIT_1_LANDSCAPE_2
+    from travelogue.layout_engine.mosaic.constants import PATTERN_PORTRAIT_1_LANDSCAPE_2
 
     specs = EXPLICIT_GRID_SPECS[PATTERN_PORTRAIT_1_LANDSCAPE_2]
     assert gap_cells(specs, cols=2, rows=2) == set()

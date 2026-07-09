@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.curation.editorial_4mix import PATTERN_EDITORIAL_4MIX
-from travelogue.curation.mosaic.constants import PATTERN_PORTRAIT_2_LANDSCAPE_2
+from travelogue.layout_engine.editorial.four_mix import PATTERN_EDITORIAL_4MIX
+from travelogue.layout_engine.mosaic.constants import PATTERN_PORTRAIT_2_LANDSCAPE_2
 from travelogue.layout_templates.probe_editorial_4mix import (
     EDITORIAL_4MIX_PROBE_IDS,
     build_editorial_4mix_probe_html,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_2P3L_EQUAL
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_2P3L_EQUAL
 from travelogue.layout_templates.layout_admin import (
     is_layout_template_id,
     layout_template_admin_row,

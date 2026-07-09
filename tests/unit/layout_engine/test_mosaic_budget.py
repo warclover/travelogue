@@ -5,8 +5,8 @@ from __future__ import annotations
 from tests._golden.helpers import build_portrait_heavy_trip, plan_legacy_screens
 from travelogue.curation.degradation import assess_degradation
 from travelogue.curation.layout_scoring import PHASE2_WEIGHTS
-from travelogue.curation.layout_search import maybe_replan_chapters
 from travelogue.curation.search_budget import SearchBudget
+from travelogue.layout_engine.planner.layout_search import maybe_replan_chapters
 
 
 def test_search_budget_segment_cap():
@@ -29,7 +29,7 @@ def test_replan_continues_after_trip_budget_exhausted(monkeypatch) -> None:
         return [("legacy", legacy[0].get("screens") or [])]
 
     monkeypatch.setattr(
-        "travelogue.curation.layout_search.generate_day_bucket_candidates",
+        "travelogue.layout_engine.planner.layout_search.generate_day_bucket_candidates",
         _fake_candidates,
     )
     maybe_replan_chapters(

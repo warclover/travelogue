@@ -41,6 +41,8 @@ def test_rollback_l1_disables_router(monkeypatch, tmp_path) -> None:
     from travelogue.templating import admin_store
 
     monkeypatch.setattr(admin_store, "_STATE_PATH", tmp_path / "state.json")
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", tmp_path / "state.json")
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
     admin_store.apply_rollback("L1", confirm_high_risk=True)
     trip = {"meta": {"dateStart": "2026-01-01", "dateEnd": "2026-01-01", "places": ["A"]}}
     sel = route_template(trip, mode="smart")

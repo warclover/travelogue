@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 
 from scripts.phase16_template_eval import compare_ac15_thresholds, evaluate_registry
-from travelogue.curation.mosaic.diversity import rerank_scored_candidates_dpp
-from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
+from travelogue.layout_engine.mosaic.diversity import rerank_scored_candidates_dpp
+from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
 from travelogue.layout_templates.css_stale import trip_layout_css_stale
 from travelogue.layout_templates.geometry_solidify import solidify_screen_geometry
 from travelogue.layout_templates.layout_admin import layout_quota_warnings
@@ -67,8 +67,8 @@ def test_css_stale_skips_when_geometry_solidified(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 def test_dpp_prefers_diverse_pattern() -> None:
-    from travelogue.curation.mosaic.candidates import ScreenCandidate
     from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+    from travelogue.layout_engine.mosaic.candidates import ScreenCandidate
 
     state = ScreenLayoutPlannerState(nine_min=0, nine_max=9)
     state.pattern_counts = {"screen-portrait-3": 2}
@@ -151,12 +151,12 @@ def test_mosaic_pattern_disabled_via_lte_adapter() -> None:
 
 @pytest.mark.unit
 def test_per_template_telemetry_emit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from travelogue.templating import metrics as metrics_mod
+    from travelogue.util import template_metrics as metrics_mod
 
     metrics_path = tmp_path / "metrics.jsonl"
     monkeypatch.setattr(metrics_mod, "metrics_path", lambda: metrics_path)
 
-    from travelogue.curation.mosaic.telemetry import record_per_template_layout_metrics
+    from travelogue.layout_engine.mosaic.telemetry import record_per_template_layout_metrics
 
     record_per_template_layout_metrics(
         trip_id="t1",

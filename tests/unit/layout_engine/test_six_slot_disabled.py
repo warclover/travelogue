@@ -9,16 +9,16 @@ from __future__ import annotations
 from dataclasses import replace
 
 from travelogue.config import get_config
-from travelogue.curation.mosaic.constants import (
+from travelogue.curation.screen_planner import plan_screens_for_chapter
+from travelogue.layout_engine.mosaic.constants import (
     MOSAIC_5_PATTERN_IDS,
     PATTERN_MOSAIC_5_2P_3L_BALANCED,
     PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
 )
-from travelogue.curation.mosaic.runtime import (
+from travelogue.layout_engine.mosaic.runtime import (
     reset_mosaic_config_override,
     set_mosaic_config_override,
 )
-from travelogue.curation.screen_planner import plan_screens_for_chapter
 
 _FORBIDDEN_SIX = frozenset(
     {
@@ -65,7 +65,7 @@ def test_legacy_landscape_run_skips_six_grid_when_disabled():
 
 
 def test_mosaic_pattern_policy_blocks_five_and_six_ids(lte_pattern_enabled):
-    from travelogue.curation.mosaic.lte_adapter import mosaic_pattern_disabled
+    from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
 
     off = replace(get_config().mosaic, enabled_window_sizes=_DISABLED_5_6)
     for pid in MOSAIC_5_PATTERN_IDS:

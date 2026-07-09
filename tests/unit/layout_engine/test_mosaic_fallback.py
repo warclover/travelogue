@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import replace
 
 from travelogue.config import get_config
-from travelogue.curation.mosaic.compose import pick_best_window
-from travelogue.curation.mosaic.scorer import MosaicScoreResult
+from travelogue.layout_engine.mosaic.compose import pick_best_window
+from travelogue.layout_engine.mosaic.scorer import MosaicScoreResult
 
 
 def test_low_score_fallback_reason(monkeypatch, lte_pattern_enabled):
@@ -37,8 +37,8 @@ def test_low_score_fallback_reason(monkeypatch, lte_pattern_enabled):
     def fake_score(screen, **kwargs):
         return MosaicScoreResult(total=0.1, base=0.1, penalties={}, reason_codes=[])
 
-    monkeypatch.setattr("travelogue.curation.mosaic.compose.score_candidate", fake_score)
-    monkeypatch.setattr("travelogue.curation.mosaic.selfheal.score_candidate", fake_score)
+    monkeypatch.setattr("travelogue.layout_engine.mosaic.compose.score_candidate", fake_score)
+    monkeypatch.setattr("travelogue.layout_engine.mosaic.selfheal.score_candidate", fake_score)
     pick = pick_best_window(
         list(aspects.keys()),
         aspects,

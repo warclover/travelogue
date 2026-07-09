@@ -21,7 +21,7 @@ from travelogue.curation.curate_scoring import (
 )
 from travelogue.media.sharpness import sharpness_score, sharpness_score_v2
 
-_FIXTURE = Path(__file__).resolve().parent / "fixtures" / "cover_v2_quality_priority.json"
+_FIXTURE = Path(__file__).resolve().parents[2] / "fixtures" / "cover_v2_quality_priority.json"
 
 
 def _asset(**extra) -> dict:

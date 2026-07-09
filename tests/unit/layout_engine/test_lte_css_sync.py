@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.curation.mosaic.constants import (
+from travelogue.layout_engine.mosaic.constants import (
     PATTERN_MOSAIC_5_2P3L_EQUAL,
     PATTERN_MOSAIC_5_HERO_3_2_PLUS_4,
 )

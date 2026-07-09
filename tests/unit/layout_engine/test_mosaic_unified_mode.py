@@ -11,9 +11,9 @@ from tests._golden.helpers import (
     plan_mosaic_screens,
 )
 from travelogue.config import get_config
-from travelogue.curation.mosaic.hook import drain_mosaic_logs
-from travelogue.curation.mosaic.metrics import mcs_unified_exposure_rate
-from travelogue.curation.mosaic.runtime import effective_mosaic_window_sizes
+from travelogue.layout_engine.mosaic.hook import drain_mosaic_logs
+from travelogue.layout_engine.mosaic.metrics import mcs_unified_exposure_rate
+from travelogue.layout_engine.mosaic.runtime import effective_mosaic_window_sizes
 
 
 def test_effective_sizes_unified_off_is_five_only() -> None:

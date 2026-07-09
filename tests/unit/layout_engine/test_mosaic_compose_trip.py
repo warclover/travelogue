@@ -8,7 +8,7 @@ from tests._golden.helpers import build_portrait_heavy_trip, plan_legacy_screens
 from travelogue.config import get_config
 from travelogue.curation.degradation import assess_degradation
 from travelogue.curation.layout_scoring import PHASE2_WEIGHTS
-from travelogue.curation.mosaic.trip import compose_trip
+from travelogue.layout_engine.mosaic.trip import compose_trip
 
 
 def test_compose_trip_forwards_mosaic_deterministic(monkeypatch):
@@ -21,7 +21,7 @@ def test_compose_trip_forwards_mosaic_deterministic(monkeypatch):
         return legacy, {"replanApplied": False, "decisionLogs": []}
 
     monkeypatch.setattr(
-        "travelogue.curation.layout_search.maybe_replan_chapters",
+        "travelogue.layout_engine.planner.layout_search.maybe_replan_chapters",
         _fake_maybe,
     )
     base = get_config()

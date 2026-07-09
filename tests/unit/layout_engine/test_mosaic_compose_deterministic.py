@@ -8,8 +8,8 @@ from tests._golden.helpers import (
     plan_mosaic_screens,
 )
 from travelogue.config import MosaicConfig
-from travelogue.curation.layout_search import _screens_signature
-from travelogue.curation.mosaic.compose import pick_best_five_window
+from travelogue.layout_engine.mosaic.compose import pick_best_five_window
+from travelogue.layout_engine.planner.layout_search import _screens_signature
 
 
 def test_pick_best_five_stable_signature(lte_pattern_enabled):

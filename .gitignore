@@ -49,6 +49,7 @@ runs/
 # Local debug / screenshots
 _debug/
 _tmp_homepage_audit/
+_tmp*
 .tmp_prefix_tests.txt
 docs/reports/playwright-failures-*.log
 pytest-full.log

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 
-from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
-from travelogue.curation.mosaic.hook import drain_mosaic_logs
-from travelogue.curation.mosaic.log import MosaicWindowLog, format_log_entry
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+from travelogue.layout_engine.mosaic.hook import drain_mosaic_logs
+from travelogue.layout_engine.mosaic.log import MosaicWindowLog, format_log_entry
 
 
 def test_window_log_omits_top3_scores():

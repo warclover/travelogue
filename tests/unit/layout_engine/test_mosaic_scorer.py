@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from travelogue.config import MosaicConfig
-from travelogue.curation.mosaic.compose import pick_best_five_window
-from travelogue.curation.mosaic.scorer import weights_hash
+from travelogue.layout_engine.mosaic.compose import pick_best_five_window
+from travelogue.layout_engine.mosaic.scorer import weights_hash
 
 
 def _five_assets():

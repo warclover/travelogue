@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_2P3L_EQUAL
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_2P3L_EQUAL
 from travelogue.layout_templates.css_stale import (
     required_grid_classes_from_trip,
     trip_layout_css_stale,

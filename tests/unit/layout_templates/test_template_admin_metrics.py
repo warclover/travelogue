@@ -14,6 +14,8 @@ from travelogue.templating.admin_store import apply_rollback, update_template_li
 def test_rollback_records_metric(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     state = tmp_path / "state.json"
     monkeypatch.setattr("travelogue.templating.admin_store._STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
     mp = tmp_path / "m.jsonl"
     monkeypatch.setattr("travelogue.templating.metrics.metrics_path", lambda: mp)
 
@@ -29,6 +31,8 @@ def test_high_risk_lifecycle_records_metric(tmp_path: Path, monkeypatch: pytest.
         encoding="utf-8",
     )
     monkeypatch.setattr("travelogue.templating.admin_store._STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
     mp = tmp_path / "m.jsonl"
     monkeypatch.setattr("travelogue.templating.metrics.metrics_path", lambda: mp)
 

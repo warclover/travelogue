@@ -4,31 +4,33 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-import pytest
-
 from travelogue.config import MosaicConfig, get_config
 from travelogue.config.layout import UsageRulesConfig
-from travelogue.curation.mosaic.candidates import generate_window_candidates_with_rejections
-from travelogue.curation.mosaic.constants import (
+from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.curation.screen_planner import _can_mosaic_5_main_portrait_3land
+from travelogue.layout_contract.usage_context import WindowContext, build_window_context
+from travelogue.layout_contract.usage_rules_registry import (
+    RULE_UR_05,
+    RULE_UR_09,
+    USAGE_RULE_UNDO_ORDER,
+)
+from travelogue.layout_engine.mosaic.candidates import generate_window_candidates_with_rejections
+from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_9,
     PATTERN_MOSAIC_5_HERO_3_2_PLUS_4,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
 )
-from travelogue.curation.mosaic.runtime import (
+from travelogue.layout_engine.mosaic.runtime import (
     reset_mosaic_config_override,
     set_mosaic_config_override,
 )
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-from travelogue.curation.screen_planner import _can_mosaic_5_main_portrait_3land
-from travelogue.curation.usage_rules.context import WindowContext, build_window_context
-from travelogue.curation.usage_rules.evaluator import (
+from travelogue.layout_engine.usage_rules.evaluator import (
     evaluate_reject,
     evaluate_ur03,
     evaluate_ur04,
     evaluate_ur05,
     evaluate_ur06,
 )
-from travelogue.curation.usage_rules.registry import RULE_UR_05, RULE_UR_09, USAGE_RULE_UNDO_ORDER
 
 
 def _asset(aid: str, *, w: int, h: int, sharp: float = 0.8) -> dict:
@@ -136,7 +138,7 @@ def test_can_mosaic_main_portrait_blocked_by_ur04(monkeypatch):
     patched = replace(base, layout=layout)
     monkeypatch.setattr("travelogue.config.get_config", lambda: patched)
     monkeypatch.setattr(
-        "travelogue.curation.usage_rules.evaluator.get_config",
+        "travelogue.layout_engine.usage_rules.evaluator.get_config",
         lambda: patched,
     )
     monkeypatch.setattr(
@@ -164,7 +166,7 @@ def test_usage_empty_fallback_restores_weakest_rule(monkeypatch):
     base = get_config()
     layout = replace(base.layout, usage_rules=UsageRulesConfig(enabled=True))
     monkeypatch.setattr(
-        "travelogue.curation.usage_rules.evaluator.get_config",
+        "travelogue.layout_engine.usage_rules.evaluator.get_config",
         lambda: replace(base, layout=layout),
     )
     result = generate_window_candidates_with_rejections(
@@ -197,7 +199,7 @@ def test_ur03_sole_candidate_restored_by_empty_fallback(monkeypatch):
     patched = replace(base, layout=layout)
     try:
         monkeypatch.setattr(
-            "travelogue.curation.usage_rules.evaluator.get_config",
+            "travelogue.layout_engine.usage_rules.evaluator.get_config",
             lambda: patched,
         )
         ctx = build_window_context(ids, aspects, assets_map, median_sharp=0.5)
@@ -237,11 +239,11 @@ def test_ur09_is_weakest_undo_rule():
 
 def test_ur09_empty_fallback_restores_when_sole_deferral():
     """When UR-09 is the only usage deferral, §3.6 undo must restore candidates."""
-    from travelogue.curation.mosaic.candidates import (
+    from travelogue.layout_engine.mosaic.candidates import (
         ScreenCandidate,
         _restore_if_usage_emptied_candidates,
     )
-    from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4
+    from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4
 
     cand = ScreenCandidate(
         pattern_id=PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,

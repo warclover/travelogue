@@ -6,8 +6,8 @@ from dataclasses import replace
 
 from tests._golden.helpers import build_mosaic_five_2p3l_window
 from travelogue.config import get_config
-from travelogue.curation.mosaic.compose import pick_best_window
-from travelogue.curation.mosaic.scorer import MosaicScoreResult
+from travelogue.layout_engine.mosaic.compose import pick_best_window
+from travelogue.layout_engine.mosaic.scorer import MosaicScoreResult
 
 
 def _window5():
@@ -25,8 +25,8 @@ def test_self_heal_tightened_rescore(monkeypatch, lte_pattern_enabled):
         total = 0.72 if boosted else 0.4
         return MosaicScoreResult(total=total, base=total, penalties={}, reason_codes=[])
 
-    monkeypatch.setattr("travelogue.curation.mosaic.compose.score_candidate", fake_score)
-    monkeypatch.setattr("travelogue.curation.mosaic.selfheal.score_candidate", fake_score)
+    monkeypatch.setattr("travelogue.layout_engine.mosaic.compose.score_candidate", fake_score)
+    monkeypatch.setattr("travelogue.layout_engine.mosaic.selfheal.score_candidate", fake_score)
     pick = pick_best_window(
         ids,
         aspects,
@@ -54,7 +54,7 @@ def test_self_heal_disabled_uses_legacy(monkeypatch, lte_pattern_enabled):
         return MosaicScoreResult(total=0.1, base=0.1, penalties={}, reason_codes=[])
 
     monkeypatch.setattr(
-        "travelogue.curation.mosaic.compose.score_candidate",
+        "travelogue.layout_engine.mosaic.compose.score_candidate",
         fake_score,
     )
     pick = pick_best_window(
@@ -71,9 +71,9 @@ def test_self_heal_disabled_uses_legacy(monkeypatch, lte_pattern_enabled):
 
 
 def test_self_heal_degrade_stable_pattern() -> None:
-    from travelogue.curation.mosaic.candidates import ScreenCandidate
-    from travelogue.curation.mosaic.constants import PATTERN_PORTRAIT_3
-    from travelogue.curation.mosaic.selfheal import try_self_heal_pick
+    from travelogue.layout_engine.mosaic.candidates import ScreenCandidate
+    from travelogue.layout_engine.mosaic.constants import PATTERN_PORTRAIT_3
+    from travelogue.layout_engine.mosaic.selfheal import try_self_heal_pick
 
     cfg = replace(get_config().mosaic, self_heal_enabled=True, min_candidate_score=0.6)
     unstable = ScreenCandidate(
@@ -104,8 +104,8 @@ def test_self_heal_degrade_stable_pattern() -> None:
 
 
 def test_self_heal_pick_disabled_returns_none() -> None:
-    from travelogue.curation.mosaic.candidates import ScreenCandidate
-    from travelogue.curation.mosaic.selfheal import try_self_heal_pick
+    from travelogue.layout_engine.mosaic.candidates import ScreenCandidate
+    from travelogue.layout_engine.mosaic.selfheal import try_self_heal_pick
 
     cfg = replace(get_config().mosaic, self_heal_enabled=False)
     cand = ScreenCandidate(
@@ -130,8 +130,8 @@ def test_self_heal_pick_disabled_returns_none() -> None:
 
 
 def test_self_heal_pick_winner_above_min_returns_none() -> None:
-    from travelogue.curation.mosaic.candidates import ScreenCandidate
-    from travelogue.curation.mosaic.selfheal import try_self_heal_pick
+    from travelogue.layout_engine.mosaic.candidates import ScreenCandidate
+    from travelogue.layout_engine.mosaic.selfheal import try_self_heal_pick
 
     cfg = replace(get_config().mosaic, self_heal_enabled=True)
     cand = ScreenCandidate(
@@ -156,7 +156,7 @@ def test_self_heal_pick_winner_above_min_returns_none() -> None:
 
 
 def test_asset_drop_penalty_skips_featured() -> None:
-    from travelogue.curation.mosaic.selfheal import _asset_drop_penalty
+    from travelogue.layout_engine.mosaic.selfheal import _asset_drop_penalty
 
     penalty = _asset_drop_penalty(
         "hero",
@@ -180,7 +180,7 @@ def test_allow_drop_false_never_sets_dropped_ids(monkeypatch):
         return MosaicScoreResult(total=0.05, base=0.05, penalties={}, reason_codes=[])
 
     monkeypatch.setattr(
-        "travelogue.curation.mosaic.compose.score_candidate",
+        "travelogue.layout_engine.mosaic.compose.score_candidate",
         fake_score,
     )
     pick = pick_best_window(

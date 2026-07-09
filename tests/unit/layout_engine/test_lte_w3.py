@@ -6,15 +6,15 @@ import pytest
 
 from travelogue.config import AppConfig
 from travelogue.config.layout import LayoutConfig, LayoutTemplateEngineConfig
-from travelogue.curation.mosaic.builders import build_screen, try_order_for_pattern
-from travelogue.curation.mosaic.candidates import generate_window_candidates
-from travelogue.curation.mosaic.constants import (
+from travelogue.layout_engine.mosaic.builders import build_screen, try_order_for_pattern
+from travelogue.layout_engine.mosaic.candidates import generate_window_candidates
+from travelogue.layout_engine.mosaic.constants import (
     PATTERN_MOSAIC_5_2P3L_EQUAL,
     PATTERN_MOSAIC_5_3P_2L_BALANCED,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
 )
-from travelogue.curation.mosaic.lte_adapter import mosaic_registry, read_templates_from_lte
-from travelogue.curation.mosaic.pattern_catalog import patterns_for_window_size
+from travelogue.layout_engine.mosaic.lte_adapter import mosaic_registry, read_templates_from_lte
+from travelogue.layout_engine.mosaic.pattern_catalog import patterns_for_window_size
 from travelogue.layout_templates.admission import run_layout_template_admission
 from travelogue.layout_templates.registry import reset_engine_cache_for_tests
 from travelogue.media.image_ops import AspectKind
@@ -88,7 +88,7 @@ def test_collage_assets_excluded_from_mosaic_candidates(monkeypatch) -> None:
 
     cfg = get_config()
     monkeypatch.setattr(
-        "travelogue.curation.mosaic.candidates.get_config",
+        "travelogue.layout_engine.mosaic.candidates.get_config",
         lambda: AppConfig(
             layout=LayoutConfig(
                 template_engine=LayoutTemplateEngineConfig(exclude_collage_from_mosaic=True)
@@ -135,7 +135,7 @@ def test_overrides_disable_removes_pattern_from_registry(monkeypatch) -> None:
 
     cfg = get_config()
     monkeypatch.setattr(
-        "travelogue.curation.mosaic.lte_adapter.get_config",
+        "travelogue.layout_engine.mosaic.lte_adapter.get_config",
         lambda: AppConfig(
             layout=LayoutConfig(
                 template_engine=LayoutTemplateEngineConfig(
@@ -164,8 +164,8 @@ def test_overrides_disable_excludes_from_window_candidates(monkeypatch) -> None:
         ),
         mosaic=cfg.mosaic,
     )
-    monkeypatch.setattr("travelogue.curation.mosaic.lte_adapter.get_config", lambda: app)
-    monkeypatch.setattr("travelogue.curation.mosaic.candidates.get_config", lambda: app)
+    monkeypatch.setattr("travelogue.layout_engine.mosaic.lte_adapter.get_config", lambda: app)
+    monkeypatch.setattr("travelogue.layout_engine.mosaic.candidates.get_config", lambda: app)
     asset_ids = ["a1", "a2", "a3"]
     aspects: dict[str, AspectKind] = {"a1": "portrait", "a2": "portrait", "a3": "portrait"}
     assets_map = {aid: {"id": aid} for aid in asset_ids}
@@ -181,10 +181,10 @@ def test_overrides_disable_excludes_from_window_candidates(monkeypatch) -> None:
 
 @pytest.mark.unit
 def test_template_engine_disabled_uses_legacy_registry(monkeypatch) -> None:
-    from travelogue.curation.mosaic.pattern_catalog import default_registry
+    from travelogue.layout_engine.mosaic.pattern_catalog import default_registry
 
     monkeypatch.setattr(
-        "travelogue.curation.mosaic.lte_adapter.get_config",
+        "travelogue.layout_engine.mosaic.lte_adapter.get_config",
         lambda: AppConfig(
             layout=LayoutConfig(
                 template_engine=LayoutTemplateEngineConfig(

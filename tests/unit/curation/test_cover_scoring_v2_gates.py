@@ -9,7 +9,7 @@ from travelogue.curation.cover_scoring_v2 import build_cover_explain_v2, cover_l
 from travelogue.curation.curate_scoring import pick_cover_asset_id, sort_bucket_asset_ids
 
 _KENDALL_FIXTURE = (
-    Path(__file__).resolve().parent / "fixtures" / "cover_v2_kendall_albums.json"
+    Path(__file__).resolve().parents[2] / "fixtures" / "cover_v2_kendall_albums.json"
 )
 
 

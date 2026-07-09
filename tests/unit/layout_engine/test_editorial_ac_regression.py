@@ -3,7 +3,6 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
 
 import copy
 import json
@@ -19,9 +18,9 @@ from tests._golden.helpers import (
     load_golden,
     plan_legacy_screens,
 )
-from .test_editorial_portrait_row import _cfg_with_editorial
+from tests._repo_root import repo_root
 from travelogue.curation.breath_pauses import BREATH_PATTERN, insert_breath_screens_in_chapters
-from travelogue.curation.editorial_portrait_row import (
+from travelogue.layout_engine.editorial.portrait_row import (
     LAYOUT_HINT_PORTRAIT_ROW_EDITORIAL,
     PATTERN_PORTRAIT_3_EDITORIAL,
 )
@@ -31,6 +30,8 @@ from travelogue.render.dual_layout_regression import prepare_trip_web_screens
 from travelogue.render.engine import render_html
 from travelogue.render.golden_regression import load_golden_trip
 from travelogue.render.mobile_screens import expand_portrait_triples_for_mobile
+
+from .test_editorial_portrait_row import _cfg_with_editorial
 
 _GOLDEN_FIXTURE = FIXTURES_DIR / "trip.render_golden.json"
 _DEMO_ASSETS = repo_root(__file__) / "templates" / "visual-journal" / "assets"

@@ -21,7 +21,7 @@ from travelogue.services.intent_plan import (
 from travelogue.services.validate import validate_trip
 from travelogue.web.studio_pipeline import run_studio_pipeline
 
-FIXTURES = Path(__file__).resolve().parent / "fixtures" / "intent"
+FIXTURES = Path(__file__).resolve().parents[2] / "fixtures" / "intent"
 
 
 def test_parse_plan_kyoto_fixture_cities() -> None:
@@ -43,7 +43,7 @@ def test_parse_plan_golden_city_hit_rate() -> None:
 
 
 def test_parse_plan_fail_open_empty_fixture() -> None:
-    raw = (Path(__file__).resolve().parent / "fixtures" / "intent" / "plan-empty.txt").read_bytes()
+    raw = (FIXTURES / "plan-empty.txt").read_bytes()
     result = parse_plan_bytes(raw)
     assert result.ok is False
     assert result.cities == ()

@@ -9,13 +9,13 @@ import yaml
 
 from travelogue.config import AppConfig
 from travelogue.config.layout import LayoutConfig, LayoutTemplateEngineConfig
-from travelogue.curation.mosaic.candidates import generate_window_candidates
-from travelogue.curation.mosaic.constants import (
+from travelogue.layout_engine.mosaic.candidates import generate_window_candidates
+from travelogue.layout_engine.mosaic.constants import (
     PATTERN_MOSAIC_5_2P3L_EQUAL,
     PATTERN_MOSAIC_5_3P_2L_BALANCED,
 )
-from travelogue.curation.mosaic.log import MosaicWindowLog, format_log_entry
-from travelogue.curation.mosaic.lte_adapter import mosaic_registry
+from travelogue.layout_engine.mosaic.log import MosaicWindowLog, format_log_entry
+from travelogue.layout_engine.mosaic.lte_adapter import mosaic_registry
 from travelogue.layout_templates.admission import run_layout_template_admission
 from travelogue.layout_templates.promotion import apply_layout_template_yaml_patch
 from travelogue.layout_templates.registry import LayoutTemplateEngine, reset_engine_cache_for_tests
@@ -32,6 +32,8 @@ def _fresh_lte_engine(tmp_path, monkeypatch) -> None:
         encoding="utf-8",
     )
     monkeypatch.setattr("travelogue.templating.admin_store._STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
 
 
 @pytest.mark.integration
@@ -97,7 +99,7 @@ def test_overrides_disable_independent_from_deprecated_status(monkeypatch) -> No
 
     cfg = get_config()
     monkeypatch.setattr(
-        "travelogue.curation.mosaic.lte_adapter.get_config",
+        "travelogue.layout_engine.mosaic.lte_adapter.get_config",
         lambda: AppConfig(
             layout=LayoutConfig(
                 template_engine=LayoutTemplateEngineConfig(

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from travelogue.curation.mosaic.telemetry import record_mosaic_layout_metrics
+from travelogue.layout_engine.mosaic.telemetry import record_mosaic_layout_metrics
 
 
 def test_record_mosaic_layout_metrics_emits_prd_keys() -> None:
@@ -14,7 +14,7 @@ def test_record_mosaic_layout_metrics_emits_prd_keys() -> None:
         calls.append((name, kwargs))
 
     with patch(
-        "travelogue.templating.metrics.record_template_metric",
+        "travelogue.util.template_metrics.record_template_metric",
         side_effect=_capture,
     ):
         record_mosaic_layout_metrics(

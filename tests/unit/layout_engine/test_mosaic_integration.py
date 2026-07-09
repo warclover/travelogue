@@ -7,8 +7,8 @@ from dataclasses import replace
 from tests._golden.helpers import _asset, plan_legacy_screens
 from travelogue.config import get_config
 from travelogue.curation.chapter_items import summarize_screen_patterns
-from travelogue.curation.mosaic.hook import drain_mosaic_logs
-from travelogue.curation.mosaic.metrics import mcs_unified_exposure_rate, mosaic5_exposure_rate
+from travelogue.layout_engine.mosaic.hook import drain_mosaic_logs
+from travelogue.layout_engine.mosaic.metrics import mcs_unified_exposure_rate, mosaic5_exposure_rate
 
 
 def _build_mosaic_eligible_trip():
@@ -79,7 +79,7 @@ def test_mosaic_enabled_increases_mosaic5_exposure(monkeypatch, lte_pattern_enab
 
 
 def test_mosaic_metrics_from_logs() -> None:
-    from travelogue.curation.mosaic.metrics import compute_mosaic_metrics
+    from travelogue.layout_engine.mosaic.metrics import compute_mosaic_metrics
 
     chapters = [{"screens": [{"patternId": "screen-mosaic-5-main-hero-plus-4", "slots": []}]}]
     logs = [

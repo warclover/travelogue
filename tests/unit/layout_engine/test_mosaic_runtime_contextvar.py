@@ -6,7 +6,7 @@ import threading
 from dataclasses import replace
 
 from travelogue.config import MosaicConfig
-from travelogue.curation.mosaic.runtime import (
+from travelogue.layout_engine.mosaic.runtime import (
     get_effective_mosaic_config,
     reset_mosaic_config_override,
     set_mosaic_config_override,

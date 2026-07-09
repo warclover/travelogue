@@ -7,8 +7,8 @@ import json
 import pytest
 import yaml
 
-from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_2P3L_EQUAL
-from travelogue.curation.mosaic.log import MosaicWindowLog
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_2P3L_EQUAL
+from travelogue.layout_engine.mosaic.log import MosaicWindowLog
 from travelogue.layout_templates.admission import run_layout_template_admission
 from travelogue.layout_templates.geometry_diff import (
     geometry_diff,
@@ -30,6 +30,8 @@ def _fresh_lte_engine(tmp_path, monkeypatch) -> None:
         encoding="utf-8",
     )
     monkeypatch.setattr("travelogue.templating.admin_store._STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
 
 
 @pytest.mark.unit
@@ -49,6 +51,8 @@ def test_layout_admission_ga_passes_with_approved_review(tmp_path, monkeypatch) 
         encoding="utf-8",
     )
     monkeypatch.setattr("travelogue.templating.admin_store._STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
     submit_for_review(PATTERN_MOSAIC_5_2P3L_EQUAL, operator="test")
     approve_review(PATTERN_MOSAIC_5_2P3L_EQUAL, reviewer="admin")
     report = run_layout_template_admission(PATTERN_MOSAIC_5_2P3L_EQUAL, target="ga")

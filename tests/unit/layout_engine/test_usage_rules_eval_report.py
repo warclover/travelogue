@@ -3,12 +3,10 @@
 
 
 from __future__ import annotations
-from tests._repo_root import repo_root
-
-from pathlib import Path
 
 from scripts.usage_rules_blind_review import init_template, score_review
 from scripts.usage_rules_eval_common import ensure_trip_screen_ids, evaluate_trip_off_on, load_trip
+from tests._repo_root import repo_root
 
 ROOT = repo_root(__file__)
 
@@ -58,10 +56,10 @@ def test_run_variant_on_uses_config_override_for_rules(monkeypatch):
     """enabled=true must reach evaluate_reject via get_config() during curate."""
     from dataclasses import replace
 
+    import travelogue.layout_engine.mosaic.candidates as mosaic_candidates
     from scripts.usage_rules_eval_common import run_variant
     from travelogue.config import get_config
     from travelogue.config.layout import UsageRulesConfig
-    import travelogue.curation.mosaic.candidates as mosaic_candidates
 
     trip = load_trip("golden-mixed-scenes", trips_dir=ROOT / "trips", use_fixture=True)
     assert trip is not None
@@ -79,7 +77,7 @@ def test_run_variant_on_uses_config_override_for_rules(monkeypatch):
     def counting(*args, **kwargs):
         cfg = kwargs.get("cfg")
         if cfg is None:
-            from travelogue.curation.usage_rules.evaluator import _usage_rules_config
+            from travelogue.layout_engine.usage_rules.evaluator import _usage_rules_config
 
             cfg = _usage_rules_config()
         if cfg.enabled:

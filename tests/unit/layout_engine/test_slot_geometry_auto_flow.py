@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.curation.mosaic.slot_geometry import (
+from travelogue.layout_engine.mosaic.slot_geometry import (
     auto_flow_cell_aspect_ratio,
     screen_slots_geometry_ok,
 )

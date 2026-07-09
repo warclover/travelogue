@@ -10,14 +10,17 @@ from tests._golden.helpers import (
     build_mosaic_portrait8_trip,
 )
 from travelogue.config import get_config
-from travelogue.curation.mosaic.candidates import generate_window_candidates
-from travelogue.curation.mosaic.constants import (
+from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
+from travelogue.layout_engine.mosaic.candidates import generate_window_candidates
+from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_9,
     PATTERN_PORTRAIT_GRID_8,
 )
-from travelogue.curation.mosaic.hook import drain_mosaic_logs, try_mosaic_window
-from travelogue.curation.screen_layout_state import ScreenLayoutPlannerState
-from travelogue.curation.screen_planner_stages import build_chapter_plan_context, run_planning_loop
+from travelogue.layout_engine.mosaic.hook import drain_mosaic_logs, try_mosaic_window
+from travelogue.layout_engine.planner.screen_planner_stages import (
+    build_chapter_plan_context,
+    run_planning_loop,
+)
 
 
 def _s2_cfg(*, max_mosaic_slots: int = 9):

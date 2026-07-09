@@ -7,8 +7,8 @@ from dataclasses import replace
 import pytest
 
 from travelogue.config import AppConfig, CohortConfig, MosaicConfig
-from travelogue.curation.mosaic.hook import _mosaic_cfg
-from travelogue.curation.mosaic.runtime import (
+from travelogue.layout_engine.mosaic.hook import _mosaic_cfg
+from travelogue.layout_engine.mosaic.runtime import (
     cohort_mosaic_override,
     reset_mosaic_config_override,
     set_mosaic_config_override,

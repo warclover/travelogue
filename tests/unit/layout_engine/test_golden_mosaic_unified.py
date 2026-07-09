@@ -13,13 +13,13 @@ from tests._golden.helpers import (
     plan_legacy_screens,
     plan_mosaic_screens,
 )
-from travelogue.curation.mosaic.constants import (
+from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_6,
     PATTERN_MOSAIC_5_HERO_3_2_PLUS_4,
     PATTERN_PORTRAIT_3,
     PATTERN_PORTRAIT_4,
 )
-from travelogue.curation.mosaic.metrics import mcs_unified_exposure_rate
+from travelogue.layout_engine.mosaic.metrics import mcs_unified_exposure_rate
 
 
 def test_golden_mosaic_portrait_3_matches_mcs():

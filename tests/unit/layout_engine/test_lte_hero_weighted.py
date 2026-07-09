@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from travelogue.curation.mosaic.constants import PATTERN_MOSAIC_5_HERO_3_2_PLUS_4
-from travelogue.curation.mosaic.grid_specs import EXPLICIT_GRID_SPECS, gap_cells
-from travelogue.curation.mosaic.lte_adapter import mosaic_registry
-from travelogue.curation.mosaic.pattern_catalog import patterns_for_window_size
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_HERO_3_2_PLUS_4
+from travelogue.layout_engine.mosaic.grid_specs import EXPLICIT_GRID_SPECS, gap_cells
+from travelogue.layout_engine.mosaic.lte_adapter import mosaic_registry
+from travelogue.layout_engine.mosaic.pattern_catalog import patterns_for_window_size
 from travelogue.layout_templates.css_gen import generate_grid_css, grid_templates_for
 from travelogue.layout_templates.registry import reset_engine_cache_for_tests
 
@@ -35,7 +35,7 @@ def test_hero_in_registry_and_rollout_eligible_in_candidates() -> None:
 
 @pytest.mark.unit
 def test_hero_rollout_percent_full() -> None:
-    from travelogue.curation.mosaic.lte_adapter import lte_rollout_eligible
+    from travelogue.layout_engine.mosaic.lte_adapter import lte_rollout_eligible
     from travelogue.layout_templates.registry import get_layout_template
 
     tpl = get_layout_template(PATTERN_MOSAIC_5_HERO_3_2_PLUS_4)

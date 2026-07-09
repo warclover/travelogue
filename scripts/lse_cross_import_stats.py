@@ -131,15 +131,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--out",
         type=Path,
-        default=ROOT / "docs" / "acceptance-records" / "lse-cross-import-baseline.json",
-        help="Write JSON report path",
+        default=None,
+        help=(
+            "Write JSON report to this path. Read-only by default; refresh the "
+            "committed baseline via scripts/lint_lse_cross_import.py --update-baseline"
+        ),
     )
     args = parser.parse_args(argv)
 
     edges = scan_edges()
     report = summarize(edges)
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    if args.out is not None:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     if args.json:
         print(json.dumps(report, indent=2, ensure_ascii=False))
@@ -148,7 +152,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"curation → layout_engine: {report['curationToLayoutEngine']}")
         print(f"total cross edges: {report['totalCrossEdges']}")
         print(f"M-B4b target (≤20% of baseline): {report['targetAfterMigration']['maxCrossEdges']}")
-        print(f"JSON: {args.out}")
+        if args.out is not None:
+            print(f"JSON: {args.out}")
     return 0
 
 

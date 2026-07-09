@@ -88,6 +88,8 @@ def test_config_approve_rejects_same_operator(tmp_path: Path, monkeypatch: pytes
         encoding="utf-8",
     )
     monkeypatch.setattr("travelogue.templating.admin_store._STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
     req = propose_router_change({"traffic_percent": 50}, operator="alice", reason="test")
     with pytest.raises(ValueError, match="E_CONFIG_APPROVER_SAME_AS_OPERATOR"):
         approve_router_change(req["id"], approver="alice")

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from tests._golden.helpers import build_mosaic_five_2p3l_window
 from travelogue.config import MosaicConfig
-from travelogue.curation.mosaic.candidates import generate_five_candidates
-from travelogue.curation.mosaic.compose import pick_best_candidate
-from travelogue.curation.mosaic.runtime import MOSAIC_ROUTER_VERSION
+from travelogue.layout_engine.mosaic.candidates import generate_five_candidates
+from travelogue.layout_engine.mosaic.compose import pick_best_candidate
+from travelogue.layout_engine.mosaic.runtime import MOSAIC_ROUTER_VERSION
 
 
 def test_pick_best_logs_top3_reason_codes_router_version(lte_pattern_enabled) -> None:

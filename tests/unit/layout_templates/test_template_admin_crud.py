@@ -38,6 +38,8 @@ def test_update_template_metadata(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
         encoding="utf-8",
     )
     monkeypatch.setattr("travelogue.templating.admin_store._STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._ADMIN_STATE_PATH", state)
+    monkeypatch.setattr("travelogue.domain.template_admin_state._RUNTIME_CACHE", None)
     out = update_template_metadata(
         "visual-journal",
         {"displayName": "视觉游记", "category": "travel"},
