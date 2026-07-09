@@ -37,6 +37,25 @@ def test_append_rejects_unknown_event() -> None:
         append_studio_homepage_event("not_real")
 
 
+def test_longshot2_telemetry_events_allowed(tmp_path, monkeypatch) -> None:
+    """DOC-LNG2-01 · PRD-LONGSHOT-2.0 §12 events are registered."""
+    path = tmp_path / "studio-homepage-events.jsonl"
+    monkeypatch.setattr(
+        "travelogue.web.studio_homepage_telemetry.studio_homepage_events_path",
+        lambda: path,
+    )
+    for ev in (
+        "longshot_export_start",
+        "longshot_export_success",
+        "longshot_export_fail",
+        "longshot_platform_change",
+    ):
+        assert ev in ALLOWED_STUDIO_HOMEPAGE_EVENTS
+        append_studio_homepage_event(ev, {"platform": "xiaohongshu"})
+    lines = path.read_text(encoding="utf-8").strip().splitlines()
+    assert len(lines) == 4
+
+
 def test_handle_studio_event_accepts_allowed_event(tmp_path, monkeypatch) -> None:
     events_path = tmp_path / "events.jsonl"
     monkeypatch.setattr(

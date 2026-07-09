@@ -32,6 +32,7 @@ const ALLOWED = new Set([
   "shelf_longshot_fail",
   "shelf_longshot_reveal",
   "shelf_longshot_busy",
+  // Longshot 2.0 · PRD §12
   "longshot_export_start",
   "longshot_export_success",
   "longshot_export_fail",

@@ -16,9 +16,25 @@ def _longshot_files(trip_dir: Path) -> list[Path]:
         "*-ch*.png",
         "*-ch*.jpg",
         "*-ch*.jpeg",
+        # Longshot 2.0 platform outputs (ADR-016 D7 / AC-LNG2-06)
+        "*-moments-*.png",
+        "*-moments-*.jpg",
+        "*-moments-*.jpeg",
+        "*-xhs-*.png",
+        "*-xhs-*.jpg",
+        "*-xhs-*.jpeg",
+        "*-ins-*.png",
+        "*-ins-*.jpg",
+        "*-weibo-*.png",
+        "*-weibo-*.jpg",
+        "*-douyin-cover.png",
+        "*-douyin-cover.jpg",
+        "*-custom-*.png",
+        "*-custom-*.jpg",
     ):
         files.extend(trip_dir.glob(pattern))
-    return files
+    # Drop atomic temp leftovers if any
+    return [p for p in files if not p.name.endswith(".part")]
 
 
 def _trip_updated_at(trip_json: Path, data: dict) -> float:

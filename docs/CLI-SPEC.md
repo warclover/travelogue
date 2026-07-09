@@ -3,10 +3,10 @@
 | 属性 | 内容 |
 |------|------|
 | **命令名** | `travelogue` |
-| **文档版本** | v0.1 |
-| **实现状态** | P0/P1 核心命令已实现；**Phase 2** `studio` / `export-longshot` / `serve --studio` **已实现**（P5-12.3 同步） |
-| **关联** | `AGENT-ARCHITECTURE.md`、`DEVELOPMENT.md`、`ERROR-CODES.md`、[PRD-PHASE2.md](./PRD-PHASE2.md)、[ACCEPTANCE.md](./ACCEPTANCE.md) |
-| **更新日期** | 2026-05-30 |
+| **文档版本** | v0.5 |
+| **实现状态** | P0/P1 核心命令已实现；**Phase 2** `studio` / `export-longshot` / `serve --studio` **已实现**（P5-12.3 同步）；**Longshot 2.0** `--platform` 已实现 |
+| **关联** | `AGENT-ARCHITECTURE.md`、`DEVELOPMENT.md`、`ERROR-CODES.md`、[PRD-PHASE2.md](./PRD-PHASE2.md)、[PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md)、[ACCEPTANCE.md](./ACCEPTANCE.md) |
+| **更新日期** | 2026-07-09 |
 
 ---
 
@@ -347,7 +347,7 @@ python -m travelogue studio --pick-folder D:\Photos\trip --no-open
 
 ---
 
-### 3.13 `travelogue export-longshot <trip>`（已实现 · Phase 2/5）
+### 3.13 `travelogue export-longshot <trip>`（已实现 · Phase 2/5 · Longshot 2.0）
 
 Playwright 捕获 `index-longshot.html`（须已 `render` 且 sidecar 存在）。
 
@@ -355,9 +355,22 @@ Playwright 捕获 `index-longshot.html`（须已 `render` 且 sidecar 存在）�
 python -m travelogue export-longshot demo-雨后京都
 python -m travelogue export-longshot demo-雨后京都 --scale 2 -o out.png
 python -m travelogue export-longshot demo-雨后京都 --chapter 2
+# Longshot 2.0 · 平台化（见 SHARING §2.5 / PRD-LONGSHOT-2.0）
+python -m travelogue export-longshot demo-雨后京都 --platform wechat_moments --scale 2
+python -m travelogue export-longshot demo-雨后京都 --platform xiaohongshu --slide-count 6 --pad-mode letterbox
 ```
 
-失败码：`E_EXPORT_LONGSHOT`（见 `ERROR-CODES.md`）。Studio 内等价 `POST /__travelogue/longshot`。
+| 选项 | 说明 |
+|------|------|
+| `--platform` | `wechat_chat`（默认）· `wechat_moments` · `xiaohongshu` |
+| `--slide-count` | 小红书张数（1–18）；省略 = auto；朋友圈忽略 |
+| `--pad-mode` | `letterbox`（默认）· `smart_crop`（需 `studio.longshot2.smart_crop.enabled`） |
+| `--scale` | 1–3；平台模式降 scale 会重采 boundary + 重截图 |
+| `--chapter` | 仅 `wechat_chat`；平台模式忽略 |
+
+失败码：`E_EXPORT_LONGSHOT` / `E_LNG2_*`（见 `ERROR-CODES.md`）。Studio 内等价 `POST /__travelogue/longshot`（可带 `platform` / `slideCount` / `padMode`）。
+
+Telemetry（本地 jsonl）：`longshot_export_start` / `_success` / `_fail` · `~/.travelogue/telemetry/studio-homepage-events.jsonl`。
 
 ---
 
@@ -426,3 +439,4 @@ travelogue export demo --confirm-privacy
 | v0.3 | 2026-05-27 | stageHint；Studio scale=2 默认；Studio Chrome |
 | v0.3.1 | 2026-05-27 | reveal API；--trips-dir；409 body |
 | v0.4 | 2026-05-30 | **P5-12.3**：studio/export-longshot 已实现 · HTTP 路由补全 · 428px/20MB 长图 · preview-toolbar |
+| v0.5 | 2026-07-09 | Longshot 2.0：`--platform` / `--slide-count` / `--pad-mode` · SHARING §2.5 |

@@ -2,10 +2,10 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.3.1 |
+| **文档版本** | v0.4.0 |
 | **状态** | 已拍板（产品方向） |
-| **关联** | `PRD-MVP.md` §5.4、`PRD-PHASE2.md` §8、`F-EXP-07`、`F-LNG-*`、`TEMPLATE-visual-journal.md` §13.5、[API-MINIAPP.md](./API-MINIAPP.md) |
-| **更新日期** | 2026-05-27 |
+| **关联** | `PRD-MVP.md` §5.4、`PRD-PHASE2.md` §8、`PRD-LONGSHOT-2.0.md`、`F-EXP-07`、`F-LNG-*`、`TEMPLATE-visual-journal.md` §13.5、[API-MINIAPP.md](./API-MINIAPP.md) |
+| **更新日期** | 2026-07-09 |
 
 ---
 
@@ -56,6 +56,36 @@
 ### 2.4 验收
 
 见 [ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md) **AC-P2-02**（主路径）、[ACCEPTANCE.md](./ACCEPTANCE.md) **AC-07**（客户端回归）、**F-LNG-*** / **F-EXP-07**。
+
+### 2.5 平台化导出（Longshot 2.0）
+
+在同一长图渲染面之上，按 **分享平台** 切分与后处理（见 [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) · [adr/016-longshot-platform-export.md](./adr/016-longshot-platform-export.md)）。
+
+| 平台 | `platform` | 产物 | 说明 |
+|------|------------|------|------|
+| **微信群**（默认） | `wechat_chat` / 省略 | `{title}-longshot.png` 或 `{title}-ch{nn}.png` | Longshot 1.x；允许 P1 兼容截图 |
+| **朋友圈** | `wechat_moments` | `{title}-moments-{nn}.png` | 目标 9 张（内容少时 6–9）；竖切 + 页脚 `i/n`；**禁止 P1** |
+| **小红书** | `xiaohongshu` | `{title}-xhs-{nn}.png` | 3:4 → **1080×1440**；默认 letterbox；张数 auto 或 1–18 |
+
+**Studio**：预览页导出 Popover 选平台；书架「保存长图」仍为微信群 1.x（不带 `platform`）。
+
+**CLI 示例：**
+
+```powershell
+python -m travelogue export-longshot trips\demo-album
+python -m travelogue export-longshot trips\demo-album --platform wechat_moments --scale 2
+python -m travelogue export-longshot trips\demo-album --platform xiaohongshu --slide-count 6 --pad-mode letterbox
+```
+
+**配置**（`config.yaml` · `studio.longshot2`）：
+
+| 键 | 默认 | 作用 |
+|----|------|------|
+| `enabled` | `true` | 关则隐藏平台 UI，API 忽略 platform |
+| `platforms` | `[wechat_moments, xiaohongshu]`（开发） | 开放列表 |
+| `smart_crop.enabled` | `false` | 小红书实验裁切 |
+
+验收：[ACCEPTANCE-LONGSHOT-2.0.md](./ACCEPTANCE-LONGSHOT-2.0.md)。
 
 ---
 
@@ -135,3 +165,4 @@ flowchart LR
 | v0.2 | 2026-05-22 | 长图专用面 `index-longshot.html`、按章导出、serve 要求、zip 含 sidecar |
 | v0.3 | 2026-05-27 | scale 双默认；preview.jpg 引流说明 |
 | v0.3.1 | 2026-05-27 | 分段双轨：服务端高度/张数兜底 vs 客户端 >45 张 |
+| v0.4.0 | 2026-07-09 | §2.5 Longshot 2.0 平台化导出（朋友圈 / 小红书） |

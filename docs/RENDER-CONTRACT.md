@@ -300,8 +300,25 @@ templates/visual-journal/
 
 ---
 
-## 11. 版本历史
+## 11. Longshot 2.0 · boundary selectors（D-LNG2-26）
+
+平台切分（`boundary_metrics.collect`）冻结 selector；变更须同步 `travelogue/export/boundary_metrics.py` 与 golden 快照。
+
+| 边界类型 | kind | Selector |
+|----------|------|----------|
+| cover 底边 | `cover` | `.cover-opening` / `.cover-hero` / `[data-block="cover-opening"]` / `[data-block="cover-hero"]` |
+| 章分隔底边 | `chapter_separator` | `.chapter-separator` / `[data-block="chapter-separator"]` |
+| 章首顶边（非首章） | `chapter_start` | `section.chapter` |
+| photo cell 顶边 | `photo` | `.media-card img` / `.media-card__visual` / `.layout-slot` / `.layout-slot__img` |
+| media-card / screen 顶边 | `card` | `.media-card` / `[data-block="media-card"]` / `.layout-screen` |
+
+坐标：`y_canvas = round(y_css × scale)`；切点权重见 PRD §6.3.7。
+
+---
+
+## 12. 版本历史
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v0.1 | 2026-05-19 | 初稿 |
+| v0.3 | 2026-07-09 | §11 Longshot 2.0 boundary selectors |

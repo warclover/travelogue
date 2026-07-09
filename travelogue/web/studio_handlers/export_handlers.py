@@ -79,6 +79,12 @@ def handle_narrate(handler: StudioHandlerProtocol) -> None:
 
 def handle_longshot(handler: StudioHandlerProtocol) -> None:
     from travelogue.export.longshot import DEFAULT_EXPORT_SCALE, export_trip_longshot
+    from travelogue.export.platform_profiles import (
+        DEFAULT_PLATFORM,
+        PlatformProfileError,
+        normalize_platform_id,
+        resolve_profile,
+    )
     from travelogue.render.copy_display import COPY_DISPLAY_FULL, VALID_COPY_DISPLAY
 
     payload = handler._read_json_body()
@@ -139,6 +145,61 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
         return
 
     ctx = studio_ctx(handler)
+    cfg = ctx.cfg
+    longshot2_enabled = bool(getattr(cfg.studio, "longshot2_enabled", True))
+    allowed_platforms = list(getattr(cfg.studio, "longshot2_platforms", ["wechat_moments"]))
+
+    platform_raw = payload.get("platform")
+    # When longshot2 disabled, ignore platform (PRD §13)
+    if not longshot2_enabled:
+        platform_id = DEFAULT_PLATFORM
+    else:
+        platform_id = normalize_platform_id(platform_raw)
+
+    slide_count_raw = payload.get("slideCount")
+    slide_count: int | None
+    if slide_count_raw is None or slide_count_raw == "":
+        slide_count = None
+    else:
+        try:
+            slide_count = int(slide_count_raw)
+        except (TypeError, ValueError):
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_LNG2_INVALID_SLIDE_COUNT",
+                    "message": "slideCount 须为整数",
+                },
+            )
+            return
+
+    pad_mode_raw = payload.get("padMode")
+    pad_mode = (
+        None
+        if pad_mode_raw is None or pad_mode_raw == ""
+        else str(pad_mode_raw).strip().lower()
+    )
+
+    try:
+        profile = resolve_profile(
+            platform_id,
+            slide_count=slide_count,
+            pad_mode=pad_mode,
+            longshot2_enabled=longshot2_enabled,
+            allowed_platforms=allowed_platforms if platform_id != DEFAULT_PLATFORM else None,
+        )
+    except PlatformProfileError as exc:
+        handler._json_response(
+            400,
+            {"ok": False, "error": exc.code, "message": exc.message},
+        )
+        return
+
+    # Non-chat platforms ignore segmentMode (PRD §8.1)
+    if profile.id != DEFAULT_PLATFORM:
+        segment_mode = "auto"
+
     trip_dir = resolve_trip_dir(ctx, trip_id)
     if trip_dir is None:
         handler._json_response(404, {"ok": False, "error": "trip not found"})
@@ -173,16 +234,24 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             progress=on_progress,
             copy_display=copy_display,
             segment_mode=segment_mode,
+            platform=profile.id,
+            slide_count=slide_count,
+            pad_mode=pad_mode,
         )
         rel_outputs = [rel_to_trip(trip_dir, item.path) for item in result.outputs]
+        page_count = result.page_count if result.page_count is not None else len(result.outputs)
         return {
             "tripId": trip_id,
             "outputs": rel_outputs,
             "captureMethod": result.capture_method,
             "segmented": result.segmented,
-            "pageCount": len(result.outputs),
+            "pageCount": page_count,
             "segmentReason": result.segment_reason,
             "userHint": result.user_hint,
+            "platform": result.platform,
+            "profileLabel": result.profile_label,
+            "targetPageCount": result.target_page_count,
+            "publishGuide": result.publish_guide,
         }
 
     threading.Thread(

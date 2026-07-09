@@ -2,10 +2,10 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.1 |
+| **文档版本** | v0.5.0 |
 | **格式** | `E_<域>_<名称>` |
-| **关联** | `CLI-SPEC.md`、`VALIDATION-RULES.md` |
-| **更新日期** | 2026-05-28 |
+| **关联** | `CLI-SPEC.md`、`VALIDATION-RULES.md`、[PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) |
+| **更新日期** | 2026-07-09 |
 
 ---
 
@@ -102,6 +102,21 @@
 | `E_LLM_AUTH` | 未配置 LLM API Key | 未配置 LLM API Key，无法生成杂志感文案 |
 | `E_EXPORT_PRIVACY` | Studio zip 未 confirmPrivacy | 导出 zip 需要确认隐私设置 |
 
+### Longshot 2.0 平台导出 `E_LNG2_*`（PRD §9）
+
+| 代码 | HTTP | 说明 | Studio / CLI 用户文案（中文） |
+|------|------|------|------------------------------|
+| `E_LNG2_INVALID_PLATFORM` | 400 | 未知或未开放的 `platform` | 不支持的平台，请更新客户端 |
+| `E_LNG2_INVALID_SLIDE_COUNT` | 400 | `slideCount` 非整数或超 profile 范围 | slideCount 无效 |
+| `E_LNG2_INVALID_PAD_MODE` | 400 | `padMode` 非 letterbox/smart_crop/auto | padMode 无效 |
+| `E_LNG2_CAPTURE_TOO_LARGE` | — | 预估内存超预算且无法再降 scale | 内容过长，请降低清晰度或改用微信群按章导出 |
+| `E_LNG2_CAPTURE_P0_FAILED` | — | 平台模式 P0 失败（**无 P1**） | 无法生成平台配图（不支持兼容模式），请改用微信群 · 按章导出 |
+| `E_LNG2_SLICE_TOO_LARGE` | — | 单段仍 >20MB（降 scale / JPEG 后） | 单张超过 20MB，请降低清晰度 |
+| `E_LNG2_BOUNDARY_FAILED` | — | 无法采集安全切分边界 | 无法安全切分，请改用微信群按章导出 |
+| `E_LNG2_SPLIT_PARTIAL` | — | 信息态：仅生成 N 张（内容较少） | 非错误；见 `userHint` |
+
+> 平台模式（`wechat_moments` / `xiaohongshu`）**禁止** Longshot 1.x 的 P1 fallback（D-LNG2-10 / D-LNG2-27）。
+
 ### Demo / ingest 用户文案（Studio 映射）
 
 | 代码 | Studio 用户文案（中文） |
@@ -135,3 +150,4 @@
 | v0.3.1 | 2026-05-27 | E_DEMO_EXISTS 409 body；E_LNG_CAPTURE_FAILED 文案 |
 | v0.3.2 | 2026-05-27 | M10 Studio Job 错误码；E_LLM_AUTH；E_STUDIO_REVEAL_DENIED |
 | v0.4.0 | 2026-05-28 | Phase 3 Curate 聚类：`E_CLUSTER_*`；废止 v0.2 洞察/引擎错误码 |
+| v0.5.0 | 2026-07-09 | Longshot 2.0：`E_LNG2_*` 平台导出错误码 |

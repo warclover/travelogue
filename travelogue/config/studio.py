@@ -2,11 +2,20 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from travelogue.config.app import AppConfig
+
+
+@dataclass
+class Longshot2Config:
+    """Longshot 2.0 platform export flags (PRD §13)."""
+
+    enabled: bool = True
+    platforms: tuple[str, ...] = ("wechat_moments",)
+    smart_crop_enabled: bool = False
 
 
 @dataclass
@@ -19,6 +28,15 @@ class StudioConfig:
     import_sheet_large_enabled: bool = True
     import_wizard_v3_enabled: bool = False
     layout_templates_internal: bool = False
+    longshot2: Longshot2Config = field(default_factory=Longshot2Config)
+
+    @property
+    def longshot2_enabled(self) -> bool:
+        return bool(self.longshot2.enabled)
+
+    @property
+    def longshot2_platforms(self) -> list[str]:
+        return list(self.longshot2.platforms)
 
 
 def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
@@ -48,6 +66,13 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
             "importSheetLargeEnabled": cfg.studio.import_sheet_large_enabled,
             "importWizardV3Enabled": cfg.studio.import_wizard_v3_enabled,
             "layoutTemplatesInternal": cfg.studio.layout_templates_internal,
+            "longshot2": {
+                "enabled": cfg.studio.longshot2.enabled,
+                "platforms": list(cfg.studio.longshot2.platforms),
+                "smartCrop": {
+                    "enabled": cfg.studio.longshot2.smart_crop_enabled,
+                },
+            },
         },
         "cohort": {
             "enabled": cfg.cohort.enabled,
