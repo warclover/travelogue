@@ -594,6 +594,18 @@ def build_epilogue_stats(trip: dict) -> EpilogueStatsContext:
     }
 
 
+def folio_plate_rewrite_eligible(screen: dict) -> bool:
+    """Whether a chapter-opener may become ``screen-plate`` (PRD appendix C §5.1).
+
+    Plate is a **1-slot** full-bleed opener. Multi-slot stacks (e.g.
+    ``screen-landscape-3``) must keep their native ``data-pattern`` so stack CSS
+    can use ``--slot-aspect``; rewriting them to ``screen-plate`` collapses each
+    row into the stage's ultra-wide cell AR (~5.33) and crops normal landscapes.
+    """
+    slots = [s for s in (screen.get("slots") or []) if s.get("assetId")]
+    return len(slots) == 1
+
+
 def build_layout_screen(
     screen: dict,
     assets: dict[str, dict],
@@ -616,6 +628,8 @@ def build_layout_screen(
     moment_screen_label: str = "",
 ) -> LayoutScreenContext:
     pattern_id = screen.get("patternId", "screen-landscape-1")
+    if is_plate and not folio_plate_rewrite_eligible(screen):
+        is_plate = False
     if pattern_id == "screen-breath-pause":
         from travelogue.curation.breath_pauses import build_breath_pause_render_ctx
 

@@ -59,6 +59,7 @@ def build_chapters_render_context(
         build_screen_spread,
         build_trip_index_entries,
         chapter_divider,
+        folio_plate_rewrite_eligible,
     )
     from travelogue.render.reading_profile import featured_asset_ids as collect_featured_ids
 
@@ -207,7 +208,8 @@ def build_chapters_render_context(
                         is_draft=is_draft,
                         strip_narrative_copy=strip_narrative_copy,
                         folio_lite=folio_lite,
-                        is_plate=chapter_screen_seq == 1,
+                        is_plate=chapter_screen_seq == 1
+                        and folio_plate_rewrite_eligible(sc),
                         featured_asset_ids=featured_ids,
                         moment_exif_pool_ids=exif_pool,
                         moment_signature_id=moment_signature_id,
