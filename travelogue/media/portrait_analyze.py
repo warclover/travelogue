@@ -59,17 +59,18 @@ def laplacian_variance(img: Image.Image, box: tuple[int, int, int, int] | None =
     try:
         import cv2
         import numpy as np
-    except ImportError:
+
+        rgb = img.convert("RGB")
+        arr = np.array(rgb)
+        gray = cv2.cvtColor(arr, cv2.COLOR_RGB2GRAY)
+        if box is not None:
+            x, y, w, h = box
+            gray = gray[y : y + h, x : x + w]
+        if gray.size == 0:
+            return 0.0
+        return float(cv2.Laplacian(gray, cv2.CV_64F).var())
+    except Exception:
         return 0.0
-    rgb = img.convert("RGB")
-    arr = np.array(rgb)
-    gray = cv2.cvtColor(arr, cv2.COLOR_RGB2GRAY)
-    if box is not None:
-        x, y, w, h = box
-        gray = gray[y : y + h, x : x + w]
-    if gray.size == 0:
-        return 0.0
-    return float(cv2.Laplacian(gray, cv2.CV_64F).var())
 
 
 @dataclass(frozen=True)

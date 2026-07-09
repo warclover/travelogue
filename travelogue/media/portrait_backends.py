@@ -70,14 +70,16 @@ class OpenCVEyeBackend:
         self._available = False
         self._eye_cascade = None
         try:
-            import cv2  # noqa: F401
+            import cv2
 
+            if not hasattr(cv2, "CascadeClassifier") or not hasattr(cv2, "data"):
+                return
             cascade_path = cv2.data.haarcascades + "haarcascade_eye.xml"
             classifier = cv2.CascadeClassifier(cascade_path)
             if not classifier.empty():
                 self._eye_cascade = classifier
                 self._available = True
-        except ImportError:
+        except Exception:
             pass
 
     @property
