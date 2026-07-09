@@ -431,8 +431,8 @@ def cmd_export_longshot(
         resolve_profile,
         with_custom_output,
     )
-    from travelogue.web.studio_homepage_telemetry import append_studio_homepage_event
     from travelogue.web.serve import resolve_trip_serve_dir
+    from travelogue.web.studio_homepage_telemetry import append_studio_homepage_event
 
     platform_id = platform or "wechat_chat"
     t0 = time.monotonic()

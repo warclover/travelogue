@@ -23,13 +23,13 @@ from travelogue.export.content_splitter import (
     slice_ranges,
 )
 from travelogue.export.longshot import (
+    _BROWSER_POOL,
     CAPTURE_WIDTH,
     DEFAULT_EXPORT_SCALE,
     LongshotExportError,
     LongshotExportResult,
     LongshotOutput,
     ProgressFn,
-    _BROWSER_POOL,
     _apply_copy_display,
     _capture_p0,
     _page_metrics,

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from io import BytesIO
-from typing import Any, Sequence
+from typing import Any
 
 BOUNDARY_WEIGHT: dict[str, float] = {
     "cover": 1.5,
