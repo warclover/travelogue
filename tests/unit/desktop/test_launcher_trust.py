@@ -40,3 +40,15 @@ def test_launcher_respects_explicit_trust_off(monkeypatch: pytest.MonkeyPatch) -
 
     monkeypatch.setattr(cli_mod, "app", _fake_app)
     launcher.main()
+
+
+def test_ensure_studio_trust_local_album_setdefault(monkeypatch: pytest.MonkeyPatch) -> None:
+    from travelogue.web.studio_handlers.import_handlers import ensure_studio_trust_local_album
+
+    monkeypatch.delenv("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", raising=False)
+    ensure_studio_trust_local_album()
+    assert os.environ.get("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM") == "1"
+
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "0")
+    ensure_studio_trust_local_album()
+    assert os.environ.get("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM") == "0"

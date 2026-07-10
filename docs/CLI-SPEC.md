@@ -83,13 +83,13 @@ python -m travelogue <子命令> …
 | `--trips-dir` | trips 根目录（默认 `config.trips_dir`） |
 | `--config` | 指定 config.yaml |
 
-**入口脚本**：`scripts/start-studio.bat`（双击启动 · 等价 `python -m travelogue studio`，并默认 `TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM=1` 以便本机文件夹导入）。
+**入口脚本**：`scripts/start-studio.bat`（双击启动 · 等价 `python -m travelogue studio`）。`travelogue studio` / `serve --studio` / bat / desktop launcher 均会 `setdefault` `TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM=1`，以便本机文件夹导入；显式设为 `0` 可锁定。
 
 **环境变量**
 
 | 变量 | 默认 | 说明 |
 |------|------|------|
-| `TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM` | `0` | 为 `1` 时，loopback 下允许 `albumPath` 指向 uploads/demo/trips 以外的本机目录（文件夹选择器 / JSON 导入）。LAN 模式始终仅允许 uploads/demo。 |
+| `TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM` | 校验层 `0`；Studio 入口 `setdefault` 为 `1` | 为 `1` 时，loopback 下允许 `albumPath` 指向 uploads/demo/trips 以外的本机目录（文件夹选择器 / JSON 导入）。LAN 模式始终仅允许 uploads/demo。显式 `0` 可关闭本机任意目录导入。 |
 
 **默认 Web pipeline**（`run_studio_pipeline`）：ingest → clustering → curate → narrate → render · Job 进度经 `StudioHooks` · `stageHint` 人话预估。
 

@@ -367,7 +367,11 @@ def serve_studio_directory(
     config_path: Path | None = None,
 ) -> None:
     from travelogue.web.studio_auth import ensure_studio_bind_allowed, new_studio_token
+    from travelogue.web.studio_handlers.import_handlers import ensure_studio_trust_local_album
 
+    # Match start-studio.bat / desktop launcher: local folder import works out of the box.
+    # Explicit TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM=0 still locks down.
+    ensure_studio_trust_local_album()
     ensure_studio_bind_allowed(host, allow_lan=allow_lan)
     trips_dir = trips_dir.resolve()
     trips_dir.mkdir(parents=True, exist_ok=True)

@@ -3,7 +3,7 @@
 Loopback album paths (folder picker / JSON ``albumPath``):
   - Always allowed: Studio uploads dir, demo album, paths under ``trips_root``.
   - Other local directories: only when ``TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM=1``
-    (default **off**). Opt in explicitly for folder-picker workflows.
+    (check-layer default **off**; Studio entry points ``setdefault`` to ``1``).
   - LAN (``--allow-lan``): uploads and demo only; requires ``X-Studio-Token``
     (header, cookie, or ``?studio_token=`` for static assets).
 """
@@ -68,6 +68,16 @@ def _parse_keep_near_duplicates(raw: object) -> bool:
     if text in ("1", "true", "yes", "on"):
         return True
     return False
+
+
+def ensure_studio_trust_local_album() -> None:
+    """Desktop Studio entry points: allow local folder-picker albums by default.
+
+    Path checks still default to deny when Studio is not started via these
+    entry points. Operators can set ``TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM=0``
+    to lock down. LAN mode never trusts arbitrary local paths.
+    """
+    os.environ.setdefault("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "1")
 
 
 def _studio_trust_local_album_paths() -> bool:
