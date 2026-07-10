@@ -68,6 +68,12 @@ def test_post_curate_uses_single_run_trip_until_rendered(tmp_path: Path) -> None
     trip = json.loads(result.trip_json.read_text(encoding="utf-8"))
     timings = (trip.get("pipeline") or {}).get("timings") or {}
     assert "totalMs" in timings or "renderMs" in timings
+    # Post-render timings flush must not false-flag renderBundleStale.
+    from travelogue.layout_templates.css_stale import trip_render_bundle_stale
+    from travelogue.services.trip import meta_rendered_revision, meta_revision
+
+    assert meta_rendered_revision(trip) == meta_revision(trip)
+    assert trip_render_bundle_stale(result.trip_json.parent, trip) is False
 
 
 def test_stop_after_structure_skips_post_curate(tmp_path: Path) -> None:

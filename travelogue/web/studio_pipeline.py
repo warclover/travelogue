@@ -230,6 +230,9 @@ def _studio_post_curate(
         render_preview_jpg(trip_json, trip_root=trip_root)
         _sync_trip_from_disk(trip, svc, trip_json)
         flush_pipeline_timings()
+        # Metadata-only persist after a fresh render must re-stamp the watermark;
+        # otherwise revision > renderedRevision and preview false-flags「产物已过期」.
+        mark_render_bundle_current(trip)
         persist_trip_state()
     except Exception as exc:
         code = getattr(exc, "code", "E_STUDIO_PIPELINE")
