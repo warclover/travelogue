@@ -92,9 +92,9 @@
 | `E_LNG_NO_LONGSHOT` | 无 index-longshot.html | 请先完成渲染，或检查 export.longShot 配置 |
 | `E_LNG_CAPTURE_FAILED` | captureMainToBlob 失败 | 长图生成失败，请重试（M10+ 可按章导出） |
 | `E_STUDIO_REVEAL_DENIED` | reveal 路径不在 trips 根下 | 无法打开该文件 |
-| `E_STUDIO_AUTH` | 非 loopback 绑定缺少 `X-Studio-Token` | Studio 请求未授权 |
+| `E_STUDIO_AUTH` | `--allow-lan` 下缺少有效 `X-Studio-Token`（Header / Cookie / query）；或单 trip 预览非 loopback 写入 | Studio 请求未授权 |
 | `E_STUDIO_BODY_TOO_LARGE` | JSON/multipart 超过上限 | 请求体过大 |
-| `E_STUDIO_ALBUM_DENIED` | LAN 模式下 JSON 任意 `albumPath` | 不允许从该路径导入 |
+| `E_STUDIO_ALBUM_DENIED` | `albumPath` / `featuredDir` / `materialDir` 越界，或未设置 `TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM=1` 时使用本机任意目录 | 不允许从该路径导入 |
 | `E_STUDIO_JOB_BUSY` | 已有 import / longshot / narrate Job | 正在处理上一任务，请稍候 |
 | `E_STUDIO_CANCELLED` | 用户取消 Job | 已取消 |
 | `E_STUDIO_UPLOAD_EMPTY` | multipart 无文件 | 未收到任何照片文件 |
