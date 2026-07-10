@@ -179,7 +179,8 @@ def test_album_path_allowed_denies_by_default(
     outside = tmp_path / "outside-album"
     outside.mkdir()
     handler = MockStudioHandler(trips_dir)
-    monkeypatch.delenv("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", raising=False)
+    # Override suite-wide TRUST=1 opt-in from tests/conftest.py
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "0")
     assert album_path_allowed(handler, outside, trips_root=trips_dir) is False
 
 
