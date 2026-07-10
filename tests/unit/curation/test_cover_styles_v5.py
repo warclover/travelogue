@@ -309,42 +309,33 @@ def cover_styles_workspace(tmp_path: Path) -> Path:
 
 
 def test_assign_cover_opening_style_deterministic() -> None:
+    """V6 · create placeholder is always default (hash path removed)."""
     a = assign_cover_opening_style("linzhi")
-    b = assign_cover_opening_style("linzhi")
-    assert a == b
+    b = assign_cover_opening_style("other-trip")
+    assert a == b == "veil-footer"
     assert a in COVER_OPENING_STYLES
 
 
-@pytest.mark.parametrize(
-    "trip_id,expected",
-    [
-        ("cover-v5-a", assign_cover_opening_style("cover-v5-a")),
-        ("cover-v5-b", assign_cover_opening_style("cover-v5-b")),
-        ("cover-v5-c", assign_cover_opening_style("cover-v5-c")),
-    ],
-)
-def test_assign_cover_opening_style_samples(trip_id: str, expected: str) -> None:
-    assert assign_cover_opening_style(trip_id) == expected
+@pytest.mark.parametrize("trip_id", ["cover-v5-a", "cover-v5-b", "cover-v5-c"])
+def test_assign_cover_opening_style_samples(trip_id: str) -> None:
+    assert assign_cover_opening_style(trip_id) == "veil-footer"
 
 
 def test_assign_distribution_covers_all_styles() -> None:
-    counts = {style: 0 for style in COVER_OPENING_STYLES}
-    for i in range(1000):
-        style = assign_cover_opening_style(f"trip-{i}")
-        counts[style] += 1
-    for style in COVER_OPENING_STYLES:
-        assert counts[style] > 200
+    """V6 · assign is placeholder-only; distribution deferred to joint (M2)."""
+    styles = {assign_cover_opening_style(f"trip-{i}") for i in range(20)}
+    assert styles == {"veil-footer"}
 
 
 def test_resolve_cover_opening_style_defaults() -> None:
-    assert resolve_cover_opening_style({}) == "card-br"
-    assert resolve_cover_opening_style({"meta": {}}) == "card-br"
-    assert resolve_cover_opening_style({"meta": {"coverOpeningStyle": "nope"}}) == "card-br"
+    assert resolve_cover_opening_style({}) == "veil-footer"
+    assert resolve_cover_opening_style({"meta": {}}) == "veil-footer"
+    assert resolve_cover_opening_style({"meta": {"coverOpeningStyle": "nope"}}) == "veil-footer"
 
 
 def test_resolve_cover_opening_style_reads_meta() -> None:
     trip = {"meta": {"coverOpeningStyle": "magazine-head"}}
-    assert resolve_cover_opening_style(trip) == "magazine-head"
+    assert resolve_cover_opening_style(trip) == "folio-overlap"
 
 
 def test_create_trip_writes_cover_opening_style(tmp_path: Path) -> None:
@@ -354,7 +345,7 @@ def test_create_trip_writes_cover_opening_style(tmp_path: Path) -> None:
     data = json.loads(trip_json.read_text(encoding="utf-8"))
     style = data["meta"]["coverOpeningStyle"]
     assert style in COVER_OPENING_STYLES
-    assert style == assign_cover_opening_style("csv-v5-new")
+    assert style == "veil-footer"
 
 
 def test_create_trip_records_cover_opening_style_assigned(
@@ -400,7 +391,7 @@ def test_build_render_context_injects_cover_opening_style() -> None:
     trip.setdefault("meta", {})["coverOpeningStyle"] = "split-mat"
     trip["meta"]["title"] = "斯里兰卡风光精选"
     ctx = build_render_context(trip, export_mode="draft")
-    assert ctx["coverOpeningStyle"] == "split-mat"
+    assert ctx["coverOpeningStyle"] == "folio-overlap"
     assert ctx["coverTitleLayout"] == "vertical"
 
 
@@ -412,28 +403,28 @@ def test_build_render_context_long_title_layout_horizontal() -> None:
     assert ctx["coverTitleLayout"] == "horizontal"
 
 
-def test_build_render_context_legacy_trip_defaults_card_br() -> None:
+def test_build_render_context_legacy_trip_defaults_veil_footer() -> None:
     trip = load_golden_trip()
     trip.get("meta", {}).pop("coverOpeningStyle", None)
     ctx = build_render_context(trip, export_mode="draft")
-    assert ctx["coverOpeningStyle"] == "card-br"
+    assert ctx["coverOpeningStyle"] == "veil-footer"
 
 
 def test_render_html_emits_data_cover_opening(cover_styles_workspace: Path) -> None:
     render_trip(cover_styles_workspace / "trip.json", validate=False, layout_engine="screens")
     html = (cover_styles_workspace / "index.html").read_text(encoding="utf-8")
-    assert 'data-cover-opening="magazine-head"' in html
+    assert 'data-cover-opening="folio-overlap"' in html
 
 
-def test_render_illegal_cover_opening_style_falls_back_card_br(cover_styles_workspace: Path) -> None:
-    """AC-CSV-05 · 非法枚举 render 回退 card-br。"""
+def test_render_illegal_cover_opening_style_falls_back_veil_footer(cover_styles_workspace: Path) -> None:
+    """AC-CSV6 · 非法枚举 render 回退 veil-footer。"""
     trip_path = cover_styles_workspace / "trip.json"
     trip = json.loads(trip_path.read_text(encoding="utf-8"))
     trip.setdefault("meta", {})["coverOpeningStyle"] = "nope"
     trip_path.write_text(json.dumps(trip, ensure_ascii=False, indent=2), encoding="utf-8")
     render_trip(trip_path, validate=False, layout_engine="screens")
     html = (cover_styles_workspace / "index.html").read_text(encoding="utf-8")
-    assert 'data-cover-opening="card-br"' in html
+    assert 'data-cover-opening="veil-footer"' in html
     assert 'data-cover-opening="nope"' not in html
 
 
@@ -449,13 +440,24 @@ def test_render_twice_preserves_cover_opening_style(cover_styles_workspace: Path
     rerender_draft_trip(trip_path)
     html3 = (cover_styles_workspace / "index.html").read_text(encoding="utf-8")
     for html in (html1, html2, html3):
-        assert 'data-cover-opening="magazine-head"' in html
+        assert 'data-cover-opening="folio-overlap"' in html
 
 
-@pytest.mark.parametrize("cover_style", ["card-br", "magazine-head", "split-mat"])
+@pytest.mark.parametrize(
+    "cover_style,resolved",
+    [
+        ("card-br", "veil-footer"),
+        ("magazine-head", "folio-overlap"),
+        ("split-mat", "folio-overlap"),
+        ("veil-footer", "veil-footer"),
+        ("band-cut", "band-cut"),
+    ],
+)
 @pytest.mark.playwright_serial
-def test_cover_styles_v5_longshot_cover_smoke(cover_styles_workspace: Path, cover_style: str) -> None:
-    """AC-CSV-44 · longshot 含封面块、首屏可见且首章 PNG 捕获成功。"""
+def test_cover_styles_v5_longshot_cover_smoke(
+    cover_styles_workspace: Path, cover_style: str, resolved: str
+) -> None:
+    """AC-CSV-44 · longshot 含封面块；DOM 为 resolve 后 id。"""
     trip_path = cover_styles_workspace / "trip.json"
     trip = json.loads(trip_path.read_text(encoding="utf-8"))
     trip.setdefault("meta", {})["coverOpeningStyle"] = cover_style
@@ -467,7 +469,7 @@ def test_cover_styles_v5_longshot_cover_smoke(cover_styles_workspace: Path, cove
     write_longshot_sidecar(trip, cover_styles_workspace, export_mode="draft", trip_root=cover_styles_workspace)
     longshot_html = cover_styles_workspace / "index-longshot.html"
     assert longshot_html.is_file()
-    assert f'data-cover-opening="{cover_style}"' in longshot_html.read_text(encoding="utf-8")
+    assert f'data-cover-opening="{resolved}"' in longshot_html.read_text(encoding="utf-8")
     pytest.importorskip("playwright")
     from playwright.sync_api import sync_playwright
 
@@ -493,7 +495,7 @@ def test_cover_styles_v5_longshot_cover_smoke(cover_styles_workspace: Path, cove
 
     assert metrics is not None
     assert metrics["blobBytes"] > 1024
-    assert metrics["style"] == cover_style
+    assert metrics["style"] == resolved
     assert metrics["height"] >= 120
     assert metrics["width"] >= 120
     assert metrics["linkCountAfter"] == metrics["linkCountBefore"]
@@ -520,6 +522,7 @@ _SPLIT_MAT_LONGSHOT_TITLE_CAPTURE_JS = """async () => {
 }"""
 
 
+@pytest.mark.skip(reason="V5 skin DOM retired; formal path uses legacy_map to V6")
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
 def test_cover_styles_v5_split_mat_longshot_title_horizontal(tmp_path: Path) -> None:
@@ -576,29 +579,28 @@ def test_resolve_split_mat_title_layout_tiers() -> None:
 
 
 def test_cover_styles_v5_journal_css_tokens() -> None:
-    """§4.6 token + split-mat / magazine-head selectors present."""
+    """V5 selectors retained (P2) + V6 tokens/skins present."""
     css = JOURNAL_CSS.read_text(encoding="utf-8")
     for token in (
-        "--cover-mat-ground",
-        "--cover-mat-panel-bg",
-        "--cover-mat-accent",
-        "--cover-mag-header-bg",
+        "--cover-font-title",
+        "--cover-veil-fog-height",
+        "--cover-band-center",
+        'data-cover-opening="veil-footer"',
+        'data-cover-opening="folio-overlap"',
+        'data-cover-opening="band-cut"',
+        'data-cover-opening="cameo-aperture"',
+        'data-cover-opening="type-monument"',
         'data-cover-opening="split-mat"',
         'data-cover-opening="magazine-head"',
         "min-width: 64rem",
-        "grid-template-columns: 1.45fr 0.5fr",
-        "cover-opening__title--vertical",
-        "#f2efe7",
-        "min-height: 20vh",
-        "max-height: 32vh",
-        "flex: 1 1 0",
-        "text-align: center",
+        "72%",
     ):
-        assert token in css, f"missing cover v5 token: {token}"
+        assert token in css, f"missing cover style token: {token}"
 
 
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
+@pytest.mark.skip(reason="V5 skin DOM retired; formal path uses legacy_map → V6 (see V6 AC)")
 @pytest.mark.parametrize("style", ["split-mat", "magazine-head"])
 def test_cover_styles_v5_wide_viewport_no_overflow(tmp_path: Path, style: str) -> None:
     """AC-CSV-20/22/30/32 · 三款宽屏一屏无溢出。"""
@@ -622,6 +624,7 @@ def test_cover_styles_v5_wide_viewport_no_overflow(tmp_path: Path, style: str) -
         ctx.close()
 
 
+@pytest.mark.skip(reason="V5 skin DOM retired; formal path uses legacy_map to V6")
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
 def test_cover_styles_v5_split_mat_vertical_title(tmp_path: Path) -> None:
@@ -665,6 +668,7 @@ def test_cover_styles_v5_split_mat_vertical_title(tmp_path: Path) -> None:
         ctx.close()
 
 
+@pytest.mark.skip(reason="V5 skin DOM retired; formal path uses legacy_map to V6")
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
 def test_cover_styles_v5_split_mat_layout(tmp_path: Path) -> None:
@@ -685,6 +689,7 @@ def test_cover_styles_v5_split_mat_layout(tmp_path: Path) -> None:
         ctx.close()
 
 
+@pytest.mark.skip(reason="V5 skin DOM retired; formal path uses legacy_map to V6")
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
 def test_cover_styles_v5_magazine_head_layout(tmp_path: Path) -> None:
@@ -706,6 +711,7 @@ def test_cover_styles_v5_magazine_head_layout(tmp_path: Path) -> None:
         ctx.close()
 
 
+@pytest.mark.skip(reason="V5 skin DOM retired; formal path uses legacy_map to V6")
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
 @pytest.mark.parametrize("style", ["split-mat", "magazine-head"])
@@ -725,6 +731,7 @@ def test_cover_styles_v5_narrow_viewport_falls_back_card_br(tmp_path: Path, styl
         ctx.close()
 
 
+@pytest.mark.skip(reason="V5 skin DOM retired; formal path uses legacy_map to V6")
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
 def test_cover_styles_v5_short_title_panel_padding(tmp_path: Path) -> None:
@@ -747,6 +754,7 @@ def test_cover_styles_v5_short_title_panel_padding(tmp_path: Path) -> None:
         ctx.close()
 
 
+@pytest.mark.skip(reason="V5 skin DOM retired; formal path uses legacy_map to V6")
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
 def test_cover_styles_v5_empty_hook_no_collapse(tmp_path: Path) -> None:
@@ -772,6 +780,7 @@ def test_cover_styles_v5_empty_hook_no_collapse(tmp_path: Path) -> None:
             ctx.close()
 
 
+@pytest.mark.skip(reason="V5 skin DOM retired; formal path uses legacy_map to V6")
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
 def test_cover_styles_v5_share_keeps_style(tmp_path: Path) -> None:
@@ -792,6 +801,7 @@ def test_cover_styles_v5_share_keeps_style(tmp_path: Path) -> None:
         ctx.close()
 
 
+@pytest.mark.skip(reason="V5 skin DOM retired; formal path uses legacy_map to V6")
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
 def test_cover_styles_v5_first_preview_toast_once(tmp_path: Path) -> None:
@@ -842,10 +852,10 @@ def test_cover_styles_v5_first_preview_toast_once(tmp_path: Path) -> None:
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
 def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
-    """P1 · Sheet 切换封面版式后立即更新预览 data-cover-opening。"""
+    """P1 · Sheet 切换封面版式后立即更新预览 data-cover-opening（V6 五选一）。"""
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
-    trip_id = _seed_rendered_cover_style_trip(trips_dir, "cover-switch", style="split-mat")
+    trip_id = _seed_rendered_cover_style_trip(trips_dir, "cover-switch", style="veil-footer")
     pytest.importorskip("playwright")
     from playwright.sync_api import sync_playwright
 
@@ -873,19 +883,21 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
                 }""",
                 timeout=6_000,
             )
-            assert _read_cover_opening_style(page) == "split-mat"
+            assert _read_cover_opening_style(page) == "veil-footer"
 
             page.locator(".preview-toolbar__menu-btn").click()
             page.wait_for_selector(".preview-sheet", timeout=10_000)
             page.locator('.preview-sheet__tab[data-sheet-tab="layout"]').click()
             page.wait_for_selector(".preview-sheet__cover-styles", timeout=10_000)
-            assert page.locator('[data-cover-style="split-mat"].is-on').count() == 1
+            page.wait_for_selector('[data-cover-style="veil-footer"]', timeout=10_000)
+            assert page.locator('[data-cover-style="veil-footer"].is-on').count() == 1
+            assert page.locator("[data-cover-style]").count() == 5
 
             with page.expect_response(
                 lambda r: r.url.endswith("/save-copy") and r.request.method == "POST",
                 timeout=15_000,
             ):
-                page.locator('[data-cover-style="magazine-head"]').click()
+                page.locator('[data-cover-style="band-cut"]').click()
             page.wait_for_function(
                 """() => {
                   const el = document.getElementById('preview-toolbar-toast');
@@ -897,10 +909,10 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
             assert len(change_events) == 1, events
             change_meta = change_events[0].get("meta", {})
             assert change_meta.get("tripId") == trip_id
-            assert change_meta.get("coverOpeningStyle") == "magazine-head"
-            assert change_meta.get("previousCoverOpeningStyle") == "split-mat"
+            assert change_meta.get("coverOpeningStyle") == "band-cut"
+            assert change_meta.get("previousCoverOpeningStyle") == "veil-footer"
 
-            assert _read_cover_opening_style(page) == "magazine-head"
+            assert _read_cover_opening_style(page) == "band-cut"
 
             entry = page.evaluate(
                 f"""async () => {{
@@ -908,10 +920,11 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
                   return r.ok ? r.json() : null;
                 }}"""
             )
-            assert entry and entry.get("coverOpeningStyle") == "magazine-head"
+            assert entry and entry.get("coverOpeningStyle") == "band-cut"
+            assert len(entry.get("coverStyleOptions") or []) == 5
 
             trip_data = json.loads((trips_dir / trip_id / "trip.json").read_text(encoding="utf-8"))
-            assert trip_data["meta"]["coverOpeningStyle"] == "magazine-head"
+            assert trip_data["meta"]["coverOpeningStyle"] == "band-cut"
             browser.close()
     finally:
         server.shutdown()
@@ -954,6 +967,7 @@ def test_cover_styles_v5_mobile_footnote_visible(tmp_path: Path) -> None:
         server.server_close()
 
 
+@pytest.mark.skip(reason="V5 skin DOM retired; formal path uses legacy_map to V6")
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
 def test_cover_styles_v5_split_mat_title_edit_keeps_style(tmp_path: Path) -> None:

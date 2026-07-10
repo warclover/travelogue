@@ -54,6 +54,7 @@ const ALLOWED = new Set([
   "cover_opening_style_assigned",
   "cover_opening_style_change",
   "cover_opening_style_selector_impression",
+  "cover_joint_pick",
 ]);
 
 const EVENT_RING_KEY = "travelogue.studio.eventRing";

@@ -493,6 +493,25 @@
             "web": { "type": "array", "items": { "type": "string" }, "maxItems": 5 }
           }
         },
+        "coverJointLocked": {
+          "type": "boolean",
+          "description": "V6 · after successful joint pick, web style+cover locked unless force/repick"
+        },
+        "coverStyleExplain": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "V6 · joint / manual / hash-fallback explain snapshot",
+          "properties": {
+            "source": { "type": "string" },
+            "styleId": { "type": "string" },
+            "assetId": { "type": "string" },
+            "joint": { "type": "number" },
+            "quality": { "type": "number" },
+            "fit": { "type": "number" },
+            "avoidPenalty": { "type": "number" },
+            "lowConfidence": { "type": "boolean" }
+          }
+        },
         "coverBlindReview": {
           "type": "object",
           "additionalProperties": false,
@@ -1038,8 +1057,17 @@
         "tone": { "type": "string", "enum": ["relaxed", "documentary"] },
         "coverOpeningStyle": {
           "type": "string",
-          "enum": ["card-br", "split-mat", "magazine-head"],
-          "description": "Web cover opening layout skin; assigned at trip create"
+          "enum": [
+            "veil-footer",
+            "folio-overlap",
+            "band-cut",
+            "cameo-aperture",
+            "type-monument",
+            "card-br",
+            "split-mat",
+            "magazine-head"
+          ],
+          "description": "Web cover opening skin. V6 assignable: first five. Last three deprecated (legacy trips only; resolve maps to V6)."
         },
         "revision": {
           "type": "integer",

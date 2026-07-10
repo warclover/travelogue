@@ -26,10 +26,10 @@ def test_guardrails_allows_meta_cover_opening_style() -> None:
     }
     updated = apply_copy_patches(
         trip,
-        [{"path": "meta.coverOpeningStyle", "value": "split-mat"}],
+        [{"path": "meta.coverOpeningStyle", "value": "folio-overlap"}],
     )
     assert "meta.coverOpeningStyle" in updated
-    assert trip["meta"]["coverOpeningStyle"] == "split-mat"
+    assert trip["meta"]["coverOpeningStyle"] == "folio-overlap"
 
 
 def test_guardrails_allows_screen_copy_kicker() -> None:

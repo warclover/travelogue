@@ -69,13 +69,14 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
         return "meta.title"
 
     if path == "meta.coverOpeningStyle":
-        from travelogue.services.cover_opening_style import COVER_OPENING_STYLES
+        from travelogue.cover_engine import assignable_style_ids, is_assignable
 
         cleaned = value.strip()
-        if cleaned not in COVER_OPENING_STYLES:
+        if not is_assignable(cleaned):
+            allowed = assignable_style_ids()
             raise CopyPatchError(
                 "E_COPY_PATCH",
-                f"invalid coverOpeningStyle {cleaned!r}; expected one of {COVER_OPENING_STYLES}",
+                f"invalid coverOpeningStyle {cleaned!r}; expected one of {allowed}",
             )
         meta["coverOpeningStyle"] = cleaned
         meta["edited"] = True

@@ -31,12 +31,9 @@ import {
   syncCoverOpeningStyleInDom,
 } from "./core.js";
 
-var COVER_OPENING_STYLE_OPTIONS = [
-  { id: "card-br", label: "书名卡" },
-  { id: "split-mat", label: "分屏衬纸" },
-  { id: "magazine-head", label: "杂志顶题" },
-];
+var COVER_OPENING_STYLE_OPTIONS = [];
 var READER_VIEW_KEY = "travelogue.studio.readerView";
+var _DEFAULT_COVER_STYLE = "veil-footer";
 
 
 export function toggleAdvancedMenu(root) {
@@ -395,7 +392,7 @@ export function revealTripFolder(tripId) {
 
 export function readCoverOpeningStyleFromDom() {
     var section = document.querySelector(".cover-opening[data-cover-opening]");
-    return section ? section.getAttribute("data-cover-opening") || "card-br" : "card-br";
+    return section ? section.getAttribute("data-cover-opening") || _DEFAULT_COVER_STYLE : _DEFAULT_COVER_STYLE;
   }
 
 
@@ -405,10 +402,19 @@ export function mountCoverStyleControls(slot, tripId) {
     section.className = "preview-sheet__section preview-sheet__cover-section";
     section.innerHTML =
       '<span class="preview-sheet__label">封面版式</span>' +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact">电脑预览有效；窄屏与手机版式不同。</p>' +
-      '<div class="preview-sheet__cover-styles" role="group" aria-label="封面版式"></div>';
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">电脑预览有效；窄屏与手机版式不同。更换版式默认会重荐封面图。</p>' +
+      '<div class="preview-sheet__cover-styles" role="group" aria-label="封面版式"></div>' +
+      '<p class="preview-sheet__cover-blurb" hidden></p>' +
+      '<label class="preview-sheet__cover-keep-label">' +
+      '<input type="checkbox" class="preview-sheet__cover-keep-check" />' +
+      ' 更换时保留当前封面图</label>' +
+      '<p class="preview-sheet__cover-fit-hint" hidden></p>';
     var group = section.querySelector(".preview-sheet__cover-styles");
+    var blurbEl = section.querySelector(".preview-sheet__cover-blurb");
+    var fitHintEl = section.querySelector(".preview-sheet__cover-fit-hint");
+    var keepCheck = section.querySelector(".preview-sheet__cover-keep-check");
     var selectedStyle = readCoverOpeningStyleFromDom();
+    var options = COVER_OPENING_STYLE_OPTIONS.slice();
 
     function syncSelection(style) {
       if (!group) return;
@@ -417,6 +423,16 @@ export function mountCoverStyleControls(slot, tripId) {
         btn.classList.toggle("is-on", on);
         btn.setAttribute("aria-pressed", on ? "true" : "false");
       });
+      if (blurbEl) {
+        var hit = options.filter(function (o) { return o.id === style; })[0];
+        if (hit && hit.blurb) {
+          blurbEl.hidden = false;
+          blurbEl.textContent = hit.blurb;
+        } else {
+          blurbEl.hidden = true;
+          blurbEl.textContent = "";
+        }
+      }
     }
 
     function setBusy(busy) {
@@ -424,64 +440,95 @@ export function mountCoverStyleControls(slot, tripId) {
       group.querySelectorAll("[data-cover-style]").forEach(function (btn) {
         btn.disabled = !!busy;
       });
+      if (keepCheck) keepCheck.disabled = !!busy;
     }
 
-    COVER_OPENING_STYLE_OPTIONS.forEach(function (opt) {
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "preview-sheet__cover-style";
-      btn.setAttribute("data-cover-style", opt.id);
-      btn.setAttribute("aria-label", opt.label);
-      btn.innerHTML =
-        '<span class="preview-sheet__cover-thumb" data-cover-thumb="' +
-        opt.id +
-        '" aria-hidden="true"></span>' +
-        '<span class="preview-sheet__cover-label">' +
-        opt.label +
-        "</span>";
-      btn.addEventListener("click", function () {
-        var next = opt.id;
-        if (!next || next === selectedStyle) return;
-        setBusy(true);
-        postJsonConflictRetry(tripApiBase(tripId) + "/save-copy", {
-          patches: [{ path: "meta.coverOpeningStyle", value: next }],
-        })
-          .then(function (res) {
-            setBusy(false);
-            if (res.status !== 200 || !res.body.ok) {
-              showToolbarToast((res.body && res.body.error) || "保存失败", { error: true });
-              return;
-            }
-            var prev = selectedStyle;
-            selectedStyle = next;
-            syncSelection(next);
-            syncCoverOpeningStyleInDom(next);
-            trackStudioEvent("cover_opening_style_change", {
-              tripId: tripId,
-              coverOpeningStyle: next,
-              previousCoverOpeningStyle: prev,
-            });
-            showToolbarToast("封面版式已更新");
-            var toolbar = document.querySelector(".preview-toolbar");
-            return refreshPreviewAfterCopySave(
-              res,
-              tripId,
-              toolbar || section
-            ).then(function (ok) {
-              if (ok && toolbar) refreshStaleHint(toolbar, tripId);
-            });
-          })
-          .catch(function () {
-            setBusy(false);
-            showToolbarToast("保存失败", { error: true });
+    function applyStyleChange(next, keepCover) {
+      setBusy(true);
+      if (fitHintEl) {
+        fitHintEl.hidden = true;
+        fitHintEl.textContent = "";
+      }
+      postJsonConflictRetry(tripApiBase(tripId) + "/save-copy", {
+        patches: [{ path: "meta.coverOpeningStyle", value: next }],
+        repickCover: !keepCover,
+        keepCover: !!keepCover,
+      })
+        .then(function (res) {
+          setBusy(false);
+          if (res.status !== 200 || !res.body.ok) {
+            showToolbarToast((res.body && res.body.error) || "保存失败", { error: true });
+            return;
+          }
+          var prev = selectedStyle;
+          selectedStyle = next;
+          syncSelection(next);
+          syncCoverOpeningStyleInDom(next);
+          trackStudioEvent("cover_opening_style_change", {
+            tripId: tripId,
+            coverOpeningStyle: next,
+            previousCoverOpeningStyle: prev,
+            repickCover: !keepCover,
           });
-      });
-      group.appendChild(btn);
-    });
+          showToolbarToast(
+            keepCover ? "封面版式已更新（保留当前封面图）" : "封面版式已更新，并重荐了封面图"
+          );
+          if (keepCover && fitHintEl && res.body.fitBelowThreshold) {
+            fitHintEl.hidden = false;
+            fitHintEl.textContent = "当前封面图可能不太适合此版式";
+          }
+          var toolbar = document.querySelector(".preview-toolbar");
+          return refreshPreviewAfterCopySave(
+            res,
+            tripId,
+            toolbar || section
+          ).then(function (ok) {
+            if (ok && toolbar) refreshStaleHint(toolbar, tripId);
+          });
+        })
+        .catch(function () {
+          setBusy(false);
+          showToolbarToast("保存失败", { error: true });
+        });
+    }
 
-    syncSelection(selectedStyle);
+    function renderOptions(list) {
+      if (!group) return;
+      group.innerHTML = "";
+      options = list && list.length ? list : options;
+      options.forEach(function (opt) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "preview-sheet__cover-style";
+        btn.setAttribute("data-cover-style", opt.id);
+        btn.setAttribute("aria-label", opt.label);
+        if (opt.blurb) btn.title = opt.blurb;
+        btn.innerHTML =
+          '<span class="preview-sheet__cover-thumb" data-cover-thumb="' +
+          opt.id +
+          '" aria-hidden="true"></span>' +
+          '<span class="preview-sheet__cover-label">' +
+          opt.label +
+          "</span>";
+        btn.addEventListener("click", function () {
+          var next = opt.id;
+          if (!next || next === selectedStyle) return;
+          var keep = !!(keepCheck && keepCheck.checked);
+          applyStyleChange(next, keep);
+        });
+        group.appendChild(btn);
+      });
+      syncSelection(selectedStyle);
+    }
+
+    renderOptions(options);
+    slot.appendChild(section);
+
     fetchEntry(tripId)
       .then(function (data) {
+        if (data && Array.isArray(data.coverStyleOptions) && data.coverStyleOptions.length) {
+          renderOptions(data.coverStyleOptions);
+        }
         if (data && data.coverOpeningStyle) {
           selectedStyle = data.coverOpeningStyle;
           syncSelection(selectedStyle);
@@ -489,7 +536,6 @@ export function mountCoverStyleControls(slot, tripId) {
       })
       .catch(function () {});
 
-    slot.appendChild(section);
     trackStudioEvent("cover_opening_style_selector_impression", {
       surface: "preview-sheet",
       tripId: tripId,

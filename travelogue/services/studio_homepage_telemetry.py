@@ -79,6 +79,7 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "cover_opening_style_render",
         "cover_opening_style_change",
         "cover_opening_style_selector_impression",
+        "cover_joint_pick",
         # Import Wizard v3（PRD-IMPORT-SHEET-v3-WIZARD §11）
         "wizard_step_view",
         "preview_loaded",

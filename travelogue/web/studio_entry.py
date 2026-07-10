@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from travelogue.services.cover_opening_style import resolve_cover_opening_style
+from travelogue.cover_engine import resolve_cover_opening_style, studio_style_options
+from travelogue.cover_engine.registry import get_style
+from travelogue.cover_engine.resolve import legacy_map
 from travelogue.services.decor_line import chapter_has_voice
 from travelogue.templating.summary import build_template_summary
 from travelogue.web.studio_aesthetic import build_aesthetic_entry_summary
@@ -169,6 +171,11 @@ def build_entry(
         scroll_share_url = f"{scroll_share_url}#screen-{peak}"
     pipeline = trip.get("pipeline") or {}
     telemetry = build_pipeline_telemetry_summary(trip)
+    curation = trip.get("curation") or {}
+    raw_style = str((trip.get("meta") or {}).get("coverOpeningStyle") or "").strip()
+    resolved = resolve_cover_opening_style(trip)
+    style_rec = get_style(resolved)
+    explain = curation.get("coverStyleExplain") if isinstance(curation, dict) else None
     return {
         "previewUrl": preview_url,
         "scrollShareUrl": scroll_share_url,
@@ -185,5 +192,16 @@ def build_entry(
         ),
         "template": build_template_summary(trip),
         "assetMediaById": build_asset_media_index(trip),
-        "coverOpeningStyle": resolve_cover_opening_style(trip),
+        "coverOpeningStyle": resolved,
+        "coverOpeningStyleRaw": raw_style or None,
+        "coverStyleOptions": studio_style_options(),
+        "coverJointLocked": bool(curation.get("coverJointLocked")) if isinstance(curation, dict) else False,
+        "coverStyleExplain": explain if isinstance(explain, dict) else None,
+        "coverStyleLabel": (style_rec.studio_label or style_rec.label) if style_rec else resolved,
+        "coverLegacyMapped": legacy_map(raw_style) is not None,
+        "coverIsPlaceholder": (
+            not bool(curation.get("coverJointLocked"))
+            if isinstance(curation, dict)
+            else True
+        ),
     }

@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cover Styles V6 · 八款封面概念线框 · 设计评审</title>
+  <style>
+    :root {
+      --wf-bg: #e8eaed;
+      --wf-page: #fafafa;
+      --wf-text: #1c1b1a;
+      --wf-muted: #5c6368;
+      --wf-anno: #c45c26;
+      --wf-rec: #0d7a6f;
+      --wf-rec-bg: #e6f4f2;
+      --wf-border: #9aa3a8;
+      --ink: #141312;
+      --paper: #f3f0ea;
+      --fog: rgba(12, 11, 10, 0.72);
+      --accent: #3d6b5a;
+      --accent-soft: #7cb89a;
+      --gold-line: rgba(196, 165, 116, 0.55);
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --font-display: "Noto Serif SC", "Songti SC", "STSong", Georgia, serif;
+      --font-brush: "KaiTi", "STKaiti", "FangSong", serif;
+      --vh-unit: 640px;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--wf-bg); color: var(--wf-text); line-height: 1.5; }
+
+    .review-bar {
+      position: sticky; top: 0; z-index: 1000;
+      background: #1c1b1a; color: #eceff1;
+      padding: 14px 20px 12px;
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 650; }
+    .review-bar p { margin: 0; font-size: 12px; color: #9aa3a8; max-width: 96ch; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .tabs button {
+      border: 1px solid #4a5258; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button:hover { background: #2e3336; }
+    .tabs button.is-active { background: var(--wf-rec); border-color: var(--wf-rec); color: #fff; }
+    .tabs button.is-rec::after { content: " ★"; }
+
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 80px; }
+    .panel { display: none; }
+    .panel.is-visible { display: block; }
+
+    .section h2 { margin: 0 0 6px; font-size: 20px; letter-spacing: -0.02em; }
+    .section .lead { margin: 0 0 18px; color: var(--wf-muted); font-size: 14px; max-width: 78ch; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 300px; gap: 22px; align-items: start; }
+    @media (max-width: 960px) { .grid-2 { grid-template-columns: 1fr; } .sidebar { order: -1; } }
+
+    .sidebar {
+      background: #fff; border: 1px solid var(--wf-border); border-radius: var(--radius);
+      padding: 16px; font-size: 13px;
+    }
+    .sidebar h3 {
+      margin: 0 0 8px; font-size: 11px; color: var(--wf-anno);
+      text-transform: uppercase; letter-spacing: .07em;
+    }
+    .sidebar h3 + h3, .sidebar .block + .block { margin-top: 16px; }
+    .sidebar ul { margin: 0; padding-left: 18px; color: var(--wf-muted); }
+    .sidebar li { margin-bottom: 6px; }
+    .pin {
+      margin-top: 14px; padding: 10px 12px; border-radius: 8px;
+      background: var(--wf-rec-bg); border: 1px solid #80cbc4; font-size: 12px;
+    }
+    .pin--warn {
+      background: #fff6e8; border-color: #ffcc80;
+    }
+    .spec {
+      margin-top: 18px; background: #1c1b1a; color: #eceff1;
+      padding: 14px 16px; border-radius: 10px; font-size: 11px; line-height: 1.55;
+      overflow-x: auto; white-space: pre-wrap;
+    }
+
+    .frame {
+      background: var(--wf-page);
+      border: 2px solid var(--wf-border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .frame--rec { border-color: var(--wf-rec); box-shadow: 0 0 0 3px rgba(13,122,111,.14); }
+    .chrome { background: #dee1e6; padding: 8px 12px 0; border-bottom: 1px solid #b0bec5; }
+    .chrome__tab {
+      display: inline-block; background: var(--wf-page);
+      padding: 8px 14px; border-radius: 8px 8px 0 0;
+      font-size: 12px; font-weight: 600;
+    }
+
+    .viewport {
+      position: relative;
+      height: var(--vh-unit);
+      overflow: hidden;
+      background: #111;
+    }
+    .viewport__tag {
+      position: absolute; top: 8px; left: 8px; z-index: 40;
+      font-size: 9px; font-weight: 700; background: #1c1b1a; color: #fff;
+      padding: 3px 7px; border-radius: 4px;
+    }
+    .dock {
+      position: absolute; top: 10px; right: 10px; z-index: 40;
+      display: flex; gap: 4px; padding: 4px 6px; border-radius: 999px;
+      background: rgba(26,47,40,.88); border: 1px solid rgba(255,255,255,.12);
+      font-size: 11px; color: #fff;
+    }
+    .dock i {
+      display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center;
+      border-radius: 6px; font-style: normal;
+    }
+    .dock i.gold { background: #d4a843; color: #1a1408; }
+
+    .wf-img {
+      width: 100%; height: 100%;
+      background:
+        linear-gradient(160deg, rgba(20,30,40,.25), rgba(10,10,10,.15)),
+        repeating-linear-gradient(-45deg, #4a5a68, #4a5a68 12px, #5f7384 12px, #5f7384 24px);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,.88); font-size: 11px; text-align: center; letter-spacing: .04em;
+    }
+    .wf-img--warm {
+      background:
+        linear-gradient(160deg, rgba(60,40,20,.2), rgba(10,10,10,.2)),
+        repeating-linear-gradient(-45deg, #6a5a48, #6a5a48 12px, #7d6b56 12px, #7d6b56 24px);
+    }
+    .wf-img--cool {
+      background:
+        linear-gradient(160deg, rgba(20,40,50,.25), rgba(10,10,10,.2)),
+        repeating-linear-gradient(-45deg, #3d5566, #3d5566 12px, #4f6a7d 12px, #4f6a7d 24px);
+    }
+
+    .anno-layer {
+      position: absolute; inset: 0; z-index: 35; pointer-events: none;
+    }
+    .anno {
+      position: absolute; font-size: 10px; font-weight: 700; color: var(--wf-anno);
+      background: rgba(255,248,240,.92); border: 1px solid #ffab40;
+      padding: 2px 6px; border-radius: 3px; white-space: nowrap;
+    }
+    .anno::before {
+      content: ""; position: absolute; width: 1px; height: 18px;
+      background: var(--wf-anno); left: 8px; top: 100%;
+    }
+
+    /* ── Overview cards ── */
+    .overview-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px; margin-bottom: 28px;
+    }
+    .ov-card {
+      background: #fff; border: 1px solid var(--wf-border); border-radius: 12px;
+      padding: 14px; cursor: pointer; text-align: left; font: inherit; color: inherit;
+      transition: border-color .15s;
+    }
+    .ov-card:hover { border-color: var(--wf-rec); }
+    .ov-card strong { display: block; font-size: 13px; margin-bottom: 4px; }
+    .ov-card span { display: block; font-size: 11px; color: var(--wf-muted); }
+    .ov-card em {
+      display: inline-block; margin-top: 8px; font-style: normal;
+      font-size: 10px; font-weight: 700; letter-spacing: .04em;
+      color: var(--wf-rec); text-transform: uppercase;
+    }
+    .critique {
+      background: #fff; border: 1px solid var(--wf-border); border-radius: 12px;
+      padding: 16px 18px; margin-bottom: 28px; font-size: 13px;
+    }
+    .critique h3 { margin: 0 0 8px; font-size: 13px; }
+    .critique ol { margin: 0; padding-left: 18px; color: var(--wf-muted); }
+    .critique li { margin-bottom: 6px; }
+
+    /* ════════════════════════════════════════
+       A · veil-footer 雾底题签
+       ════════════════════════════════════════ */
+    .veil {
+      position: relative; height: 100%;
+    }
+    .veil__photo { position: absolute; inset: 0; }
+    .veil__fog {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 38%;
+      background: linear-gradient(to top, rgba(10,9,8,.88) 0%, rgba(10,9,8,.55) 45%, rgba(10,9,8,0) 100%);
+      z-index: 2;
+    }
+    .veil__panel {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+      padding: 0 max(40px, 5vw) max(36px, 4.5vh);
+      color: #f5f3f0;
+      max-width: min(720px, 78%);
+    }
+    .veil__place {
+      margin: 0 0 10px; font-size: 11px; letter-spacing: .28em;
+      text-transform: uppercase; color: var(--accent-soft);
+    }
+    .veil__title {
+      margin: 0 0 12px; font-family: var(--font-display);
+      font-size: clamp(2.1rem, 4.2vw, 2.85rem); font-weight: 600;
+      line-height: 1.15; letter-spacing: .02em;
+    }
+    .veil__rule {
+      width: 48px; height: 1px; background: rgba(255,255,255,.35); margin: 0 0 14px;
+    }
+    .veil__hook {
+      margin: 0; font-size: 0.95rem; line-height: 1.5;
+      color: rgba(245,243,240,.78);
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* ════════════════════════════════════════
+       B · gallery-mat 展厅裱框
+       ════════════════════════════════════════ */
+    .gallery {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      background: #161514;
+      padding: max(28px, 3.2vh) max(40px, 4.5vw) max(24px, 3vh);
+      gap: 18px;
+    }
+    .gallery__frame {
+      min-height: 0; border-radius: 2px; overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.06);
+    }
+    .gallery__label {
+      display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: end;
+      color: #e8e4de; padding: 0 4px;
+    }
+    .gallery__place {
+      margin: 0 0 6px; font-size: 10px; letter-spacing: .22em;
+      text-transform: uppercase; color: rgba(232,228,222,.55);
+    }
+    .gallery__title {
+      margin: 0; font-family: var(--font-display);
+      font-size: clamp(1.35rem, 2.4vw, 1.75rem); font-weight: 500;
+      letter-spacing: .04em; line-height: 1.25;
+    }
+    .gallery__hook {
+      margin: 0; max-width: 36ch; text-align: right;
+      font-size: 0.78rem; line-height: 1.45; color: rgba(232,228,222,.58);
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* ════════════════════════════════════════
+       C · ink-spine 墨脊竖题
+       ════════════════════════════════════════ */
+    .ink {
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr 88px;
+      background: #0e0d0c;
+    }
+    .ink__photo { min-height: 0; overflow: hidden; }
+    .ink__spine {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: space-between;
+      padding: 28px 0 24px;
+      background: #0e0d0c;
+      border-left: 1px solid rgba(196,165,116,.28);
+      color: #f0ebe3;
+    }
+    .ink__place {
+      writing-mode: vertical-rl;
+      margin: 0; font-size: 11px; letter-spacing: .35em;
+      color: var(--accent-soft);
+    }
+    .ink__title {
+      writing-mode: vertical-rl;
+      margin: 0; font-family: var(--font-brush);
+      font-size: 1.85rem; font-weight: 500;
+      letter-spacing: .28em; line-height: 1;
+    }
+    .ink__hook {
+      writing-mode: horizontal-tb;
+      margin: 0; padding: 0 10px;
+      font-size: 10px; line-height: 1.4; text-align: center;
+      color: rgba(240,235,227,.55);
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+      max-height: 4.5em;
+    }
+
+    /* ════════════════════════════════════════
+       D · folio-overlap 对页叠印
+       ════════════════════════════════════════ */
+    .folio {
+      position: relative; height: 100%; background: #f7f5f2;
+    }
+    .folio__photo {
+      position: absolute; top: 0; right: 0; bottom: 0; left: 12%;
+      overflow: hidden;
+    }
+    .folio__margin {
+      position: absolute; top: 0; left: 0; bottom: 0; width: 12%;
+      background: #f7f5f2;
+      border-right: 1px solid #e5e0d8;
+    }
+    .folio__running {
+      position: absolute; top: 28px; left: 0; z-index: 5;
+      writing-mode: vertical-rl;
+      padding: 0 18px;
+      font-size: 10px; letter-spacing: .3em; text-transform: uppercase;
+      color: #6f6a63;
+    }
+    .folio__panel {
+      position: absolute; left: 0; bottom: 0; z-index: 6;
+      width: min(52%, 520px);
+      padding: 0 0 max(40px, 5vh) 0;
+      background: linear-gradient(to right, rgba(247,245,242,.97) 55%, rgba(247,245,242,0));
+      padding-left: max(28px, 3vw);
+      padding-right: 48px;
+      padding-top: 48px;
+    }
+    .folio__title {
+      margin: 0 0 14px; font-family: var(--font-display);
+      font-size: clamp(2.4rem, 5vw, 3.4rem); font-weight: 600;
+      line-height: 1.08; letter-spacing: -.01em; color: #1c1b1a;
+      /* 叠印感：标题压入摄影区 */
+      text-shadow: 0 0 0 transparent;
+    }
+    .folio__rule {
+      width: 36px; height: 2px; background: var(--accent); margin: 0 0 14px;
+    }
+    .folio__hook {
+      margin: 0; font-size: 0.92rem; line-height: 1.5; color: #5c5852;
+      max-width: 28ch;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* ════════════════════════════════════════
+       E · band-cut 切带题名
+       ════════════════════════════════════════ */
+    .band {
+      position: relative; height: 100%;
+    }
+    .band__photo { position: absolute; inset: 0; }
+    .band__strip {
+      position: absolute; left: 0; right: 0; top: 72%;
+      z-index: 4;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center; gap: 24px;
+      padding: 18px max(36px, 4.5vw);
+      background: rgba(247,245,242,.94);
+      border-top: 1px solid rgba(28,27,26,.08);
+      border-bottom: 1px solid rgba(28,27,26,.08);
+      color: #1c1b1a;
+      transform: translateY(-50%);
+    }
+    .band__place {
+      margin: 0; font-size: 11px; letter-spacing: .22em;
+      text-transform: uppercase; color: var(--accent); white-space: nowrap;
+    }
+    .band__title {
+      margin: 0; font-family: var(--font-display);
+      font-size: clamp(1.6rem, 3.2vw, 2.2rem); font-weight: 600;
+      letter-spacing: .06em; text-align: center; line-height: 1.2;
+    }
+    .band__hook {
+      margin: 0; font-size: 0.78rem; line-height: 1.4; color: #6f6a63;
+      max-width: 22ch; text-align: right;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .band__strip--ink {
+      background: rgba(18,17,16,.92);
+      color: #f5f3f0;
+      border-color: rgba(255,255,255,.08);
+    }
+    .band__strip--ink .band__place { color: var(--accent-soft); }
+    .band__strip--ink .band__hook { color: rgba(245,243,240,.65); }
+
+    .variant-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px;
+    }
+    @media (max-width: 800px) { .variant-row { grid-template-columns: 1fr; } }
+    .variant-row .viewport { height: 360px; }
+    .variant-cap {
+      margin: 8px 0 0; font-size: 12px; color: var(--wf-muted); text-align: center;
+    }
+
+    .compare {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px;
+    }
+    @media (max-width: 800px) { .compare { grid-template-columns: 1fr; } }
+    .compare .mini {
+      height: 160px; border-radius: 8px; overflow: hidden; border: 1px solid #cfd8dc;
+      position: relative; background: #333;
+    }
+    .compare .mini span {
+      position: absolute; bottom: 6px; left: 6px; font-size: 9px; font-weight: 700;
+      background: #1c1b1a; color: #fff; padding: 2px 5px; border-radius: 3px;
+    }
+
+    .batch-label {
+      margin: 22px 0 10px; font-size: 12px; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--wf-anno);
+    }
+
+    /* ════════════════════════════════════════
+       F · cameo-aperture 圆窗肖像
+       ════════════════════════════════════════ */
+    .cameo {
+      height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 22px;
+      background: #2a3238;
+      padding: 28px 40px 32px;
+    }
+    .cameo__ring {
+      width: min(52vh, 420px); height: min(52vh, 420px);
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow:
+        0 0 0 10px #2a3238,
+        0 0 0 11px rgba(196, 165, 116, 0.45);
+    }
+    .cameo__panel {
+      text-align: center; color: #e8e4de; max-width: 36ch;
+    }
+    .cameo__place {
+      margin: 0 0 8px; font-size: 10px; letter-spacing: .32em;
+      text-transform: uppercase; color: var(--accent-soft);
+    }
+    .cameo__title {
+      margin: 0 0 10px; font-family: var(--font-display);
+      font-size: clamp(1.5rem, 2.8vw, 2rem); font-weight: 500;
+      letter-spacing: .08em; line-height: 1.25;
+    }
+    .cameo__hook {
+      margin: 0; font-size: 0.8rem; line-height: 1.45; color: rgba(232,228,222,.58);
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* ════════════════════════════════════════
+       G · type-monument 巨字碑
+       ════════════════════════════════════════ */
+    .monument {
+      position: relative; height: 100%;
+    }
+    .monument__photo { position: absolute; inset: 0; }
+    .monument__dim {
+      position: absolute; inset: 0; z-index: 2;
+      background: rgba(8, 10, 12, 0.42);
+    }
+    .monument__panel {
+      position: absolute; inset: 0; z-index: 3;
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: max(36px, 5vh) max(40px, 5vw);
+      color: #f5f3f0;
+    }
+    .monument__place {
+      margin: 0; font-size: 11px; letter-spacing: .4em;
+      text-transform: uppercase; color: rgba(245,243,240,.7);
+    }
+    .monument__title {
+      margin: 0; font-family: var(--font-display);
+      font-size: clamp(3.2rem, 8vw, 5.5rem); font-weight: 700;
+      line-height: 0.95; letter-spacing: -.03em;
+      max-width: 10ch;
+    }
+    .monument__hook {
+      margin: 0; font-size: 0.95rem; line-height: 1.45;
+      color: rgba(245,243,240,.78); max-width: 34ch;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* ════════════════════════════════════════
+       H · oblique-slash 斜切色面
+       ════════════════════════════════════════ */
+    .slash {
+      position: relative; height: 100%; overflow: hidden;
+      background: #0f1f1c;
+    }
+    .slash__photo {
+      position: absolute; inset: 0;
+      clip-path: polygon(0 0, 100% 0, 100% 38%, 0 72%);
+    }
+    .slash__panel {
+      position: absolute; left: 0; right: 0; bottom: 0; top: 42%;
+      clip-path: polygon(0 38%, 100% 0, 100% 100%, 0 100%);
+      background: #0f1f1c;
+      color: #f0ebe3;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 0 max(40px, 5vw) max(36px, 4.5vh);
+      z-index: 3;
+    }
+    .slash__place {
+      margin: 0 0 12px; font-size: 11px; letter-spacing: .28em;
+      text-transform: uppercase; color: var(--accent-soft);
+    }
+    .slash__title {
+      margin: 0 0 14px; font-family: var(--font-display);
+      font-size: clamp(2.2rem, 4.8vw, 3.2rem); font-weight: 650;
+      line-height: 1.1; letter-spacing: .02em; max-width: 12ch;
+    }
+    .slash__hook {
+      margin: 0; font-size: 0.9rem; line-height: 1.45;
+      color: rgba(240,235,227,.7); max-width: 36ch;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .slash__edge {
+      position: absolute; z-index: 4; pointer-events: none;
+      left: 0; right: 0; top: 42%; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(124,184,154,.55), transparent);
+      transform: rotate(-11deg); transform-origin: left center;
+      width: 120%;
+    }
+  </style>
+</head>
+<body>
+<header class="review-bar">
+  <h1>Cover Styles V6 · 八款封面概念线框 · 设计评审（待拍板）</h1>
+  <p>
+    目标：替换/扩充现网三款（card-br / split-mat / magazine-head）中缺乏感染力的版式。
+    约束继承 V5：一块 DOM（cover-hero + panel）、100dvh、title/hook ≤2 行、Icon Dock 保留、&lt;1024px 可回落。
+    批次一（A–E）偏画册/编辑；批次二（F–H）更大胆：圆窗、巨字、斜切。线框仅评审构图与气质。
+  </p>
+  <div class="tabs" role="tablist">
+    <button type="button" class="is-active" data-tab="overview">总览</button>
+    <button type="button" class="is-rec" data-tab="veil">A · 雾底题签</button>
+    <button type="button" class="is-rec" data-tab="gallery">B · 展厅裱框</button>
+    <button type="button" data-tab="ink">C · 墨脊竖题</button>
+    <button type="button" class="is-rec" data-tab="folio">D · 对页叠印</button>
+    <button type="button" data-tab="band">E · 切带题名</button>
+    <button type="button" data-tab="cameo">F · 圆窗肖像</button>
+    <button type="button" data-tab="monument">G · 巨字碑</button>
+    <button type="button" data-tab="slash">H · 斜切色面</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ════════ OVERVIEW ════════ -->
+  <section class="panel is-visible" id="panel-overview">
+    <div class="critique">
+      <h3>对现网三款的诊断（设计视角）</h3>
+      <ol>
+        <li><strong>card-br</strong>：右下实心卡像 UI 浮层，摄影被「说明框」压住，缺少画册开篇的仪式感。</li>
+        <li><strong>split-mat</strong>：奶油衬纸 + 深棕侧栏偏商务画册模板，暖棕配色易显廉价，竖题区与摄影关系生硬。</li>
+        <li><strong>magazine-head</strong>：白顶 + 下大图结构正确，但顶区过「空」、字重与分隔线缺乏编辑部气质，像网页头图而非杂志封面。</li>
+      </ol>
+    </div>
+
+    <h2 style="margin:0 0 10px;font-size:18px">八款提案一览</h2>
+    <p class="lead" style="margin-bottom:14px">点击卡片进入对应线框。批次一偏画册气质；批次二刻意更大胆，方便你在 8 款中拉开对比再挑。</p>
+
+    <p class="batch-label">批次一 · A–E（画册 / 编辑）</p>
+    <div class="overview-grid">
+      <button type="button" class="ov-card" data-jump="veil">
+        <strong>A · veil-footer 雾底题签</strong>
+        <span>全幅沉浸摄影 + 底部雾化题签。电影感、情绪优先。</span>
+        <em>推荐 · 替代 card-br</em>
+      </button>
+      <button type="button" class="ov-card" data-jump="gallery">
+        <strong>B · gallery-mat 展厅裱框</strong>
+        <span>深底裱框 + 墙签式题名。安静、收藏级、摄影即作品。</span>
+        <em>推荐 · 全新气质</em>
+      </button>
+      <button type="button" class="ov-card" data-jump="ink">
+        <strong>C · ink-spine 墨脊竖题</strong>
+        <span>墨色窄脊 + 竖排书名。文学感，重做 split-mat 的东方命题。</span>
+        <em>可选 · 重塑分屏</em>
+      </button>
+      <button type="button" class="ov-card" data-jump="folio">
+        <strong>D · folio-overlap 对页叠印</strong>
+        <span>纸白边栏 + 超大标题压入画面。编辑部气质、记忆点强。</span>
+        <em>推荐 · 替代 magazine</em>
+      </button>
+      <button type="button" class="ov-card" data-jump="band">
+        <strong>E · band-cut 切带题名</strong>
+        <span>地平线切带横切画面。图形感强、一眼可辨。</span>
+        <em>可选 · 强识别</em>
+      </button>
+    </div>
+
+    <p class="batch-label">批次二 · F–H（更大胆 · 与 A–E 正交）</p>
+    <div class="overview-grid">
+      <button type="button" class="ov-card" data-jump="cameo">
+        <strong>F · cameo-aperture 圆窗肖像</strong>
+        <span>打破矩形：石青底 + 圆形取景窗 + 徽章式题名。浪漫、海报感。</span>
+        <em>大胆 · 非矩形</em>
+      </button>
+      <button type="button" class="ov-card" data-jump="monument">
+        <strong>G · type-monument 巨字碑</strong>
+        <span>字即封面：超大标题占主导，摄影退为氛围。海报级冲击力。</span>
+        <em>大胆 · 字压一切</em>
+      </button>
+      <button type="button" class="ov-card" data-jump="slash">
+        <strong>H · oblique-slash 斜切色面</strong>
+        <span>斜线硬切：上摄影 / 下墨色斜面。当代平面、时尚 campaign。</span>
+        <em>大胆 · 斜向几何</em>
+      </button>
+    </div>
+
+    <div class="critique">
+      <h3>评审请重点回答</h3>
+      <ol>
+        <li>八款中保留哪 <strong>3</strong> 款进入实现？（可写 3+备选）</li>
+        <li>批次二（F/G/H）是否至少选 1 款，避免三款都偏「安静画册」？</li>
+        <li>是否允许 D/E/G/H 在视觉上「压入 / 裁切」摄影区（仍用同一 DOM，仅 CSS）？</li>
+        <li>B 深底展厅、F 圆窗、H 斜切——与正文浅纸的跳转节奏是否可接受？</li>
+        <li>C 墨脊 / F 圆窗：长标题与 hook 的降级策略是否接受？</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ════════ A · VEIL ════════ -->
+  <section class="panel" id="panel-veil">
+    <div class="section">
+      <h2>A · <code>veil-footer</code> 雾底题签</h2>
+      <p class="lead">
+        摄影占满视口，文案沉在底部雾化层中——像电影片头或摄影集扉页，而不是浮在照片上的卡片。
+        去掉实心底、阴影与左侧色条，用渐隐与细线建立层次。
+      </p>
+      <div class="grid-2">
+        <div class="frame frame--rec">
+          <div class="chrome"><span class="chrome__tab">Web ≥1024px · data-cover-opening="veil-footer"</span></div>
+          <div class="viewport">
+            <span class="viewport__tag">veil-footer</span>
+            <div class="dock" aria-hidden="true"><i>←</i><i>▶</i><i>⋯</i><i class="gold">↓</i></div>
+            <div class="veil">
+              <div class="veil__photo"><div class="wf-img wf-img--cool">cover-hero · full-bleed<br>object-fit: cover · focal</div></div>
+              <div class="veil__fog" aria-hidden="true"></div>
+              <div class="veil__panel">
+                <p class="veil__place">林芝 · 桃花沟</p>
+                <h1 class="veil__title">把云的影子收进河谷</h1>
+                <div class="veil__rule" aria-hidden="true"></div>
+                <p class="veil__hook">雪山与桃花在同一条河谷里相遇，我们沿着国道慢慢开，把云的影子一张一张收进相册。</p>
+              </div>
+            </div>
+            <div class="anno-layer">
+              <span class="anno" style="right:16px;top:56%">雾化层 ≈ 38% 高 · 无硬边</span>
+              <span class="anno" style="right:16px;bottom:8%">题签左对齐 · max 720px</span>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <div class="block">
+            <h3>设计意图</h3>
+            <ul>
+              <li>摄影优先，文案「沉入」画面</li>
+              <li>替代 card-br 的 UI 卡感</li>
+              <li>情绪：电影 / 旅行纪录片开场</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>构图</h3>
+            <ul>
+              <li>hero：absolute inset 0</li>
+              <li>panel：底缘，无实心底</li>
+              <li>雾：伪元素渐变（非卡片）</li>
+              <li>细线分隔 title / hook</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>DOM</h3>
+            <ul>
+              <li>结构不变</li>
+              <li>雾层可用 panel::before</li>
+            </ul>
+          </div>
+          <div class="pin"><strong>建议</strong> 作为新默认基线，替换 card-br 的「日常感」。</div>
+        </aside>
+      </div>
+      <pre class="spec">气质关键词：沉浸 · 电影感 · 低 UI
+风险：浅色封面图时雾层对比度需 AC（继承 AC-CSV-43）
+窄屏：可保留雾底（比回落 card-br 更一致）</pre>
+    </div>
+  </section>
+
+  <!-- ════════ B · GALLERY ════════ -->
+  <section class="panel" id="panel-gallery">
+    <div class="section">
+      <h2>B · <code>gallery-mat</code> 展厅裱框</h2>
+      <p class="lead">
+        把封面图当作墙上的一幅作品：深色展墙、居中裱框、下方墙签。
+        安静、克制、收藏级——与现网三款的「网页封面」气质完全拉开。
+      </p>
+      <div class="grid-2">
+        <div class="frame frame--rec">
+          <div class="chrome"><span class="chrome__tab">Web ≥1024px · data-cover-opening="gallery-mat"</span></div>
+          <div class="viewport">
+            <span class="viewport__tag">gallery-mat</span>
+            <div class="dock" aria-hidden="true"><i>←</i><i>▶</i><i>⋯</i><i class="gold">↓</i></div>
+            <div class="gallery">
+              <div class="gallery__frame"><div class="wf-img">cover-hero · framed<br>mat padding · object-fit: cover</div></div>
+              <div class="gallery__label">
+                <div>
+                  <p class="gallery__place">林芝</p>
+                  <h1 class="gallery__title">把云的影子收进河谷</h1>
+                </div>
+                <p class="gallery__hook">雪山与桃花在同一条河谷里相遇，我们沿着国道慢慢开。</p>
+              </div>
+            </div>
+            <div class="anno-layer">
+              <span class="anno" style="right:16px;top:14%">展墙深底 #161514</span>
+              <span class="anno" style="right:16px;bottom:8%">墙签：左题名 / 右导语</span>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <div class="block">
+            <h3>设计意图</h3>
+            <ul>
+              <li>摄影 = 展品，不是背景</li>
+              <li>题名像美术馆墙签</li>
+              <li>情绪：静 · 贵 · 可收藏</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>构图</h3>
+            <ul>
+              <li>Grid：1fr + auto 墙签</li>
+              <li>四周 mat ≥ 3vh / 4vw</li>
+              <li>摄影区约占 78–82%</li>
+              <li>墙签双栏：题 / hook</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>与 split-mat 差异</h3>
+            <ul>
+              <li>非左右分栏商务册</li>
+              <li>非奶油衬纸</li>
+              <li>图在「框内」而非「贴边」</li>
+            </ul>
+          </div>
+          <div class="pin pin--warn"><strong>待决</strong> 深底首屏与正文浅纸的跳转节奏——是否接受「展厅→翻页入册」。</div>
+        </aside>
+      </div>
+      <pre class="spec">气质关键词：展厅 · 裱框 · 墙签
+实现：cover-opening 深底 + hero 内缩；panel 改为底栏墙签（order/grid）
+Dock：浅底条在深墙上对比足够（AC-CSV-45 同类）</pre>
+    </div>
+  </section>
+
+  <!-- ════════ C · INK ════════ -->
+  <section class="panel" id="panel-ink">
+    <div class="section">
+      <h2>C · <code>ink-spine</code> 墨脊竖题</h2>
+      <p class="lead">
+        保留「分屏」叙事，但彻底丢掉商务画册的奶油衬纸与深棕侧栏。
+        改为墨色窄书脊 + 竖排书名：像线装书的书脊，或摄影集的侧签。
+      </p>
+      <div class="grid-2">
+        <div class="frame">
+          <div class="chrome"><span class="chrome__tab">Web ≥1024px · data-cover-opening="ink-spine"</span></div>
+          <div class="viewport">
+            <span class="viewport__tag">ink-spine</span>
+            <div class="dock" aria-hidden="true"><i>←</i><i>▶</i><i>⋯</i><i class="gold">↓</i></div>
+            <div class="ink">
+              <div class="ink__photo"><div class="wf-img wf-img--warm">cover-hero · ~88%<br>贴边无圆角 · 满幅</div></div>
+              <div class="ink__spine">
+                <p class="ink__place">林芝</p>
+                <h1 class="ink__title">云影河谷</h1>
+                <p class="ink__hook">沿国道把云的影子一张张收进相册</p>
+              </div>
+            </div>
+            <div class="anno-layer">
+              <span class="anno" style="left:16px;top:14%">脊宽 ≈ 88px · 竖排楷体</span>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <div class="block">
+            <h3>设计意图</h3>
+            <ul>
+              <li>东方文学感，非商务册</li>
+              <li>脊窄 → 摄影更霸气</li>
+              <li>替代 split-mat 的气质失败</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>标题轴（继承）</h3>
+            <ul>
+              <li>≤8 字：竖排舒适</li>
+              <li>9–14：竖排紧缩</li>
+              <li>≥15：回落横排或改用他款</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>风险</h3>
+            <ul>
+              <li>长 hook 在窄脊难读</li>
+              <li>建议 hook 空则只留脊+题</li>
+            </ul>
+          </div>
+          <div class="pin"><strong>定位</strong> 作为「东方竖题」专项，不必强求与 A/B/D 同权重。</div>
+        </aside>
+      </div>
+      <pre class="spec">气质关键词：墨脊 · 竖题 · 线装
+相对 split-mat：去掉衬纸画框；脊更窄（约 88–104px）；色相偏墨非棕
+长标题策略可复用 resolve_split_mat_title_layout()</pre>
+    </div>
+  </section>
+
+  <!-- ════════ D · FOLIO ════════ -->
+  <section class="panel" id="panel-folio">
+    <div class="section">
+      <h2>D · <code>folio-overlap</code> 对页叠印</h2>
+      <p class="lead">
+        纸白窄边像书页切口，超大标题从纸白压入摄影——编辑部封面常见的「字压图」。
+        比 magazine-head 的「顶栏+下图」更有张力与记忆点。
+      </p>
+      <div class="grid-2">
+        <div class="frame frame--rec">
+          <div class="chrome"><span class="chrome__tab">Web ≥1024px · data-cover-opening="folio-overlap"</span></div>
+          <div class="viewport">
+            <span class="viewport__tag">folio-overlap</span>
+            <div class="dock" aria-hidden="true"><i>←</i><i>▶</i><i>⋯</i><i class="gold">↓</i></div>
+            <div class="folio">
+              <div class="folio__margin" aria-hidden="true"></div>
+              <p class="folio__running">林芝 · Nyingchi</p>
+              <div class="folio__photo"><div class="wf-img wf-img--cool">cover-hero · 右 88%<br>被标题叠印</div></div>
+              <div class="folio__panel">
+                <h1 class="folio__title">把云的影子<br>收进河谷</h1>
+                <div class="folio__rule" aria-hidden="true"></div>
+                <p class="folio__hook">雪山与桃花在同一条河谷里相遇，我们沿着国道慢慢开。</p>
+              </div>
+            </div>
+            <div class="anno-layer">
+              <span class="anno" style="right:16px;top:14%">纸白边 ≈ 12%</span>
+              <span class="anno" style="right:16px;bottom:8%">大标题压入画面</span>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <div class="block">
+            <h3>设计意图</h3>
+            <ul>
+              <li>编辑部 / 摄影集封面</li>
+              <li>字与图「咬合」产生张力</li>
+              <li>替代 magazine-head 的平淡顶栏</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>构图</h3>
+            <ul>
+              <li>左 12% 纸白边栏</li>
+              <li>place 竖排跑题</li>
+              <li>title 超大，可 2 行</li>
+              <li>panel 半透明纸白渐隐</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>可读性</h3>
+            <ul>
+              <li>标题落在纸白侧保证对比</li>
+              <li>压入摄影的笔画靠渐隐托底</li>
+            </ul>
+          </div>
+          <div class="pin"><strong>建议</strong> 与 A、B 组成「沉浸 / 展厅 / 编辑」三极差异。</div>
+        </aside>
+      </div>
+      <pre class="spec">气质关键词：对页 · 叠印 · 编辑部
+相对 magazine-head：取消顶栏占位；标题进入画面；增加纸白切口
+无 hook 时：仅 title + 细线仍成立</pre>
+    </div>
+  </section>
+
+  <!-- ════════ E · BAND ════════ -->
+  <section class="panel" id="panel-band">
+    <div class="section">
+      <h2>E · <code>band-cut</code> 切带题名</h2>
+      <p class="lead">
+        一条题名带横切画面（约黄金分割），像地平线或胶片片头条。
+        图形识别极强——缩略图也能辨出「这是切带款」。
+      </p>
+      <div class="grid-2">
+        <div class="frame">
+          <div class="chrome"><span class="chrome__tab">Web ≥1024px · data-cover-opening="band-cut"</span></div>
+          <div class="viewport">
+            <span class="viewport__tag">band-cut</span>
+            <div class="dock" aria-hidden="true"><i>←</i><i>▶</i><i>⋯</i><i class="gold">↓</i></div>
+            <div class="band">
+              <div class="band__photo"><div class="wf-img">cover-hero · full-bleed<br>被题带横切</div></div>
+              <div class="band__strip">
+                <p class="band__place">林芝</p>
+                <h1 class="band__title">把云的影子收进河谷</h1>
+                <p class="band__hook">雪山与桃花在同一条河谷里相遇</p>
+              </div>
+            </div>
+            <div class="anno-layer">
+              <span class="anno" style="right:16px;top:14%">题带中线 ≈ 72% 高</span>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <div class="block">
+            <h3>设计意图</h3>
+            <ul>
+              <li>强图形、强记忆</li>
+              <li>摄影被「切开」仍完整</li>
+              <li>适合风景大场面封面图</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>变体</h3>
+            <ul>
+              <li>纸白带（默认）</li>
+              <li>墨色带（深图时）</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>风险</h3>
+            <ul>
+              <li>切到人脸/主体需靠 focal 避让</li>
+              <li>长标题在中栏易折行难看</li>
+            </ul>
+          </div>
+          <div class="pin pin--warn"><strong>待决</strong> 是否值得占一个「随机槽」——识别强但场景挑剔。</div>
+        </aside>
+      </div>
+
+      <div class="variant-row">
+        <div>
+          <div class="frame">
+            <div class="viewport">
+              <div class="band">
+                <div class="band__photo"><div class="wf-img wf-img--cool">浅带变体</div></div>
+                <div class="band__strip">
+                  <p class="band__place">京都</p>
+                  <h1 class="band__title">雨停之后</h1>
+                  <p class="band__hook">石板上的水光还没干</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="variant-cap">变体 E1 · 纸白带</p>
+        </div>
+        <div>
+          <div class="frame">
+            <div class="viewport">
+              <div class="band">
+                <div class="band__photo"><div class="wf-img wf-img--warm">深带变体</div></div>
+                <div class="band__strip band__strip--ink">
+                  <p class="band__place">冰岛</p>
+                  <h1 class="band__title">黑沙滩上的风</h1>
+                  <p class="band__hook">浪声把名字一遍遍念给石头听</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="variant-cap">变体 E2 · 墨色带</p>
+        </div>
+      </div>
+      <pre class="spec">气质关键词：切带 · 地平线 · 强识别
+实现：panel 绝对定位水平条；三栏 place | title | hook
+无 hook：中栏 title 居中即可，左右可空或仅 place</pre>
+    </div>
+  </section>
+
+  <!-- ════════ F · CAMEO ════════ -->
+  <section class="panel" id="panel-cameo">
+    <div class="section">
+      <h2>F · <code>cameo-aperture</code> 圆窗肖像</h2>
+      <p class="lead">
+        彻底离开矩形全幅：石青展底上开一扇圆窗取景，题名像徽章落在窗下。
+        气质接近旅行海报 / 纪念章，与 A–E 的正交矩形构图完全不同。
+      </p>
+      <div class="grid-2">
+        <div class="frame">
+          <div class="chrome"><span class="chrome__tab">Web ≥1024px · data-cover-opening="cameo-aperture"</span></div>
+          <div class="viewport">
+            <span class="viewport__tag">cameo-aperture</span>
+            <div class="dock" aria-hidden="true"><i>←</i><i>▶</i><i>⋯</i><i class="gold">↓</i></div>
+            <div class="cameo">
+              <div class="cameo__ring"><div class="wf-img wf-img--warm">cover-hero<br>border-radius: 50%<br>object-fit: cover</div></div>
+              <div class="cameo__panel">
+                <p class="cameo__place">林芝 · 桃花沟</p>
+                <h1 class="cameo__title">把云的影子收进河谷</h1>
+                <p class="cameo__hook">雪山与桃花在同一条河谷里相遇，我们沿着国道慢慢开。</p>
+              </div>
+            </div>
+            <div class="anno-layer">
+              <span class="anno" style="right:16px;top:14%">圆窗 ≈ 52vh</span>
+              <span class="anno" style="right:16px;bottom:8%">徽章式居中题名</span>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <div class="block">
+            <h3>设计意图</h3>
+            <ul>
+              <li>打破「全幅矩形」惯性</li>
+              <li>摄影被「珍藏」进圆窗</li>
+              <li>情绪：浪漫 · 纪念 · 海报</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>构图</h3>
+            <ul>
+              <li>石青底 #2a3238</li>
+              <li>圆形 clip + 细金环</li>
+              <li>题名在窗下居中</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>风险</h3>
+            <ul>
+              <li>横图主体易被圆裁切</li>
+              <li>需依赖 focal 居中</li>
+              <li>长标题折行影响徽章感</li>
+            </ul>
+          </div>
+          <div class="pin pin--warn"><strong>大胆点</strong> 与现网及 A–E 差异最大的形式语言。</div>
+        </aside>
+      </div>
+      <pre class="spec">气质关键词：圆窗 · 肖像 · 纪念章
+实现：hero 圆形 overflow；panel 在下方；底色在 cover-opening
+与 gallery 差异：圆 vs 方框；居中徽章 vs 墙签双栏</pre>
+    </div>
+  </section>
+
+  <!-- ════════ G · MONUMENT ════════ -->
+  <section class="panel" id="panel-monument">
+    <div class="section">
+      <h2>G · <code>type-monument</code> 巨字碑</h2>
+      <p class="lead">
+        字就是封面。超大标题如纪念碑压在画面上，摄影退为氛围层。
+        与 B「摄影即作品」、A「摄影沉浸」相反——这里是「字压一切」的海报逻辑。
+      </p>
+      <div class="grid-2">
+        <div class="frame">
+          <div class="chrome"><span class="chrome__tab">Web ≥1024px · data-cover-opening="type-monument"</span></div>
+          <div class="viewport">
+            <span class="viewport__tag">type-monument</span>
+            <div class="dock" aria-hidden="true"><i>←</i><i>▶</i><i>⋯</i><i class="gold">↓</i></div>
+            <div class="monument">
+              <div class="monument__photo"><div class="wf-img wf-img--cool">cover-hero · full-bleed<br>退为氛围</div></div>
+              <div class="monument__dim" aria-hidden="true"></div>
+              <div class="monument__panel">
+                <p class="monument__place">林芝</p>
+                <h1 class="monument__title">把云的<br>影子收进<br>河谷</h1>
+                <p class="monument__hook">雪山与桃花在同一条河谷里相遇，我们沿着国道慢慢开。</p>
+              </div>
+            </div>
+            <div class="anno-layer">
+              <span class="anno" style="right:16px;top:14%">字号 ≈ clamp 3.2–5.5rem</span>
+              <span class="anno" style="right:16px;bottom:8%">上 place · 中巨字 · 下 hook</span>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <div class="block">
+            <h3>设计意图</h3>
+            <ul>
+              <li>冲击力 / 传播缩略图可辨</li>
+              <li>标题成为视觉主体</li>
+              <li>情绪：宣言 · 海报 · 碑</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>与 D 的差异</h3>
+            <ul>
+              <li>D：字从纸白「咬入」图</li>
+              <li>G：字铺满，图只是底</li>
+              <li>无纸白边栏，更激进</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>风险</h3>
+            <ul>
+              <li>短标题更美；长标题需折行设计</li>
+              <li>浅色图需加暗罩（已示意）</li>
+            </ul>
+          </div>
+          <div class="pin"><strong>大胆点</strong> 八款中「字重」最大的一极。</div>
+        </aside>
+      </div>
+      <pre class="spec">气质关键词：巨字 · 纪念碑 · 海报
+实现：hero 全幅 + 暗罩；panel flex 上中下；title 允许 3 行（需放宽 V5 的 2 行？待决）
+待决：是否为 G 单独允许 title 3 行 line-clamp</pre>
+    </div>
+  </section>
+
+  <!-- ════════ H · SLASH ════════ -->
+  <section class="panel" id="panel-slash">
+    <div class="section">
+      <h2>H · <code>oblique-slash</code> 斜切色面</h2>
+      <p class="lead">
+        一条斜线硬切画面：上方摄影，下方墨绿斜面承载题名。
+        A–E 全是水平/垂直分割；H 引入斜向几何，像时尚 campaign 或当代平面海报。
+      </p>
+      <div class="grid-2">
+        <div class="frame">
+          <div class="chrome"><span class="chrome__tab">Web ≥1024px · data-cover-opening="oblique-slash"</span></div>
+          <div class="viewport">
+            <span class="viewport__tag">oblique-slash</span>
+            <div class="dock" aria-hidden="true"><i>←</i><i>▶</i><i>⋯</i><i class="gold">↓</i></div>
+            <div class="slash">
+              <div class="slash__photo"><div class="wf-img">cover-hero · clip-path<br>斜切上半</div></div>
+              <div class="slash__edge" aria-hidden="true"></div>
+              <div class="slash__panel">
+                <p class="slash__place">林芝</p>
+                <h1 class="slash__title">把云的影子收进河谷</h1>
+                <p class="slash__hook">雪山与桃花在同一条河谷里相遇，我们沿着国道慢慢开。</p>
+              </div>
+            </div>
+            <div class="anno-layer">
+              <span class="anno" style="right:16px;top:14%">斜切 ≈ −11°</span>
+              <span class="anno" style="right:16px;bottom:8%">下色面 · 墨绿实底</span>
+            </div>
+          </div>
+        </div>
+        <aside class="sidebar">
+          <div class="block">
+            <h3>设计意图</h3>
+            <ul>
+              <li>引入斜向，打破正交网格</li>
+              <li>色面保证文案对比度</li>
+              <li>情绪：当代 · 锋利 · campaign</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>与 E 的差异</h3>
+            <ul>
+              <li>E：水平细带横切</li>
+              <li>H：大斜面占下半</li>
+              <li>H 更「海报」，E 更「胶片」</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>实现</h3>
+            <ul>
+              <li>hero / panel 用 clip-path</li>
+              <li>仍是一块 DOM</li>
+            </ul>
+          </div>
+          <div class="pin"><strong>大胆点</strong> 八款中唯一斜向构图。</div>
+        </aside>
+      </div>
+      <pre class="spec">气质关键词：斜切 · 色面 · 平面海报
+实现：clip-path polygon；panel 实色；可选细亮线强调切边
+风险：斜边切到人脸——focal 需偏上；长标题在色面内折行</pre>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  const tabs = document.querySelectorAll(".tabs button[data-tab]");
+  const panels = {
+    overview: document.getElementById("panel-overview"),
+    veil: document.getElementById("panel-veil"),
+    gallery: document.getElementById("panel-gallery"),
+    ink: document.getElementById("panel-ink"),
+    folio: document.getElementById("panel-folio"),
+    band: document.getElementById("panel-band"),
+    cameo: document.getElementById("panel-cameo"),
+    monument: document.getElementById("panel-monument"),
+    slash: document.getElementById("panel-slash"),
+  };
+  function show(id) {
+    Object.entries(panels).forEach(([k, el]) => {
+      el.classList.toggle("is-visible", k === id);
+    });
+    tabs.forEach((btn) => btn.classList.toggle("is-active", btn.dataset.tab === id));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  tabs.forEach((btn) => btn.addEventListener("click", () => show(btn.dataset.tab)));
+  document.querySelectorAll("[data-jump]").forEach((btn) => {
+    btn.addEventListener("click", () => show(btn.dataset.jump));
+  });
+</script>
+</body>
+</html>

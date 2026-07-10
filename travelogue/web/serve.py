@@ -237,13 +237,78 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
         if not isinstance(patches, list) or not patches:
             self._json_response(400, {"ok": False, "error": "patches required"})
             return
+        # V6 · style change: default repick cover; keepCover=true skips repick
+        keep_cover = payload.get("keepCover") is True
+        repick_cover = payload.get("repickCover")
+        if repick_cover is None:
+            repick_cover = not keep_cover
+        else:
+            repick_cover = bool(repick_cover) and not keep_cover
+        fit_below_threshold = False
         svc = app_context_for_trip_json(self.trip_json_path, cfg=self.app_config).trip_service()
         rendered: list[str] = []
         try:
             with self._app_config_scope():
 
                 def mutator(trip: dict) -> list[str]:
-                    return apply_copy_patches(trip, patches)
+                    nonlocal fit_below_threshold
+                    updated = apply_copy_patches(trip, patches)
+                    style_patch = next(
+                        (
+                            p
+                            for p in patches
+                            if isinstance(p, dict)
+                            and p.get("path") == "meta.coverOpeningStyle"
+                        ),
+                        None,
+                    )
+                    if style_patch and repick_cover:
+                        from travelogue.cover_engine.joint import repick_cover_for_style
+
+                        style_id = str(
+                            (trip.get("meta") or {}).get("coverOpeningStyle") or ""
+                        ).strip()
+                        if style_id:
+                            repick_cover_for_style(trip, style_id, layout="web")
+                            for key in (
+                                "coverAssetId",
+                                "curation.coverByLayout",
+                                "curation.coverStyleExplain",
+                                "curation.coverJointLocked",
+                            ):
+                                if key not in updated:
+                                    updated.append(key)
+                    elif style_patch and keep_cover:
+                        from travelogue.cover_engine.fit import style_fit_below_threshold
+                        from travelogue.cover_engine.joint import apply_style_keep_cover
+                        from travelogue.domain.cover_view import layout_eligible_assets
+
+                        style_id = str(
+                            (trip.get("meta") or {}).get("coverOpeningStyle") or ""
+                        ).strip()
+                        if style_id:
+                            apply_style_keep_cover(trip, style_id)
+                            for key in (
+                                "curation.coverStyleExplain",
+                                "curation.coverJointLocked",
+                            ):
+                                if key not in updated:
+                                    updated.append(key)
+                            curation = trip.get("curation") or {}
+                            cover_by = curation.get("coverByLayout") or {}
+                            asset_id = ""
+                            if isinstance(cover_by, dict):
+                                asset_id = str(cover_by.get("web") or "")
+                            if not asset_id:
+                                asset_id = str(trip.get("coverAssetId") or "")
+                            if asset_id:
+                                for asset in layout_eligible_assets(trip):
+                                    if str(asset.get("id") or "") == asset_id:
+                                        fit_below_threshold = style_fit_below_threshold(
+                                            asset, style_id
+                                        )
+                                        break
+                    return updated
 
                 updated = svc.update(self.trip_json_path, mutator)
                 if self.auto_rerender:
@@ -260,7 +325,15 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             _log.exception("copy patch failed for %s", self.trip_json_path)
             self._json_response(500, internal_error_payload())
             return
-        self._json_response(200, {"ok": True, "updated": updated, "rendered": rendered})
+        self._json_response(
+            200,
+            {
+                "ok": True,
+                "updated": updated,
+                "rendered": rendered,
+                "fitBelowThreshold": fit_below_threshold,
+            },
+        )
 
     def _handle_promote_tier(self) -> None:
         payload = self._read_json_body()

@@ -381,6 +381,72 @@
   overflow: hidden;
 }
 
+.preview-sheet__cover-thumb[data-cover-thumb="veil-footer"] {
+  background: linear-gradient(180deg, #5a6b62 0 52%, #1a1816 100%);
+}
+
+.preview-sheet__cover-thumb[data-cover-thumb="veil-footer"]::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 28%;
+  bottom: 10%;
+  height: 18%;
+  border-radius: 2px;
+  background: rgba(245, 243, 240, 0.85);
+}
+
+.preview-sheet__cover-thumb[data-cover-thumb="folio-overlap"] {
+  background: linear-gradient(90deg, #f7f5f2 0 14%, #90a4ae 14% 100%);
+}
+
+.preview-sheet__cover-thumb[data-cover-thumb="band-cut"] {
+  background: linear-gradient(180deg, #78909c 0 68%, #f7f5f2 68% 78%, #78909c 78% 100%);
+}
+
+.preview-sheet__cover-thumb[data-cover-thumb="cameo-aperture"] {
+  background: radial-gradient(circle at 50% 42%, #cfd8dc 0 28%, #232a2f 29% 100%);
+}
+
+.preview-sheet__cover-thumb[data-cover-thumb="type-monument"] {
+  background: linear-gradient(160deg, #3a4148 0%, #1a1c1e 100%);
+}
+
+.preview-sheet__cover-thumb[data-cover-thumb="type-monument"]::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  top: 28%;
+  width: 48%;
+  height: 22%;
+  border-radius: 2px;
+  background: rgba(245, 243, 240, 0.9);
+}
+
+.preview-sheet__cover-blurb {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #6f6a63;
+}
+
+.preview-sheet__cover-fit-hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #9a9590;
+}
+
+.preview-sheet__cover-keep-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #6f6a63;
+  cursor: pointer;
+}
+
 .preview-sheet__cover-thumb[data-cover-thumb="card-br"]::after {
   content: "";
   position: absolute;

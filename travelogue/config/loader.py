@@ -429,6 +429,23 @@ def load_config(path: Path | None = None) -> AppConfig:
                 )
             ).lower(),
             cover_scoring_v2=cover_scoring_v2_from_dict(curate_raw),
+            cover_joint_enabled=bool(
+                curate_raw.get(
+                    "cover_joint_enabled",
+                    curate_raw.get("coverJointEnabled", True),
+                )
+            ),
+            cover_joint_top_k=int(
+                curate_raw.get("cover_joint_top_k", curate_raw.get("coverJointTopK", 8))
+            ),
+            cover_joint_w_fit=float(
+                curate_raw.get("cover_joint_w_fit", curate_raw.get("coverJointWFit", 0.35))
+            ),
+            cover_joint_w_avoid=float(
+                curate_raw.get(
+                    "cover_joint_w_avoid", curate_raw.get("coverJointWAvoid", 0.50)
+                )
+            ),
             enable_gravity_balance=bool(
                 curate_layout_raw.get(
                     "enable_gravity_balance",

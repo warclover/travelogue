@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cover Styles V6 · 高保真 · A/D/E/F/G</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600&display=swap");
+
+    :root {
+      --bg: #d8dce0;
+      --ink: #141312;
+      --paper: #f7f5f2;
+      --muted: #6f6a63;
+      --accent: #3d6b5a;
+      --accent-soft: #7cb89a;
+      --gold: rgba(196, 165, 116, 0.55);
+      --font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --font-serif: "Noto Serif SC", "Songti SC", "STSong", Georgia, serif;
+      --vh: min(72vh, 720px);
+      --frame-w: min(1120px, 92vw);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    .bar {
+      position: sticky; top: 0; z-index: 100;
+      background: #141312; color: #eceae6;
+      padding: 14px 22px 12px;
+    }
+    .bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .bar p { margin: 0; font-size: 12px; color: #9a9590; max-width: 90ch; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .tabs button {
+      border: 1px solid #3a3836; background: transparent; color: #eceae6;
+      padding: 7px 14px; border-radius: 999px; font-size: 12px; cursor: pointer;
+      font-family: inherit;
+    }
+    .tabs button:hover { background: #2a2826; }
+    .tabs button.is-on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 28px 20px 80px; }
+    .panel { display: none; }
+    .panel.is-on { display: block; }
+
+    .intro h2 {
+      margin: 0 0 6px;
+      font-family: var(--font-serif);
+      font-size: 26px; font-weight: 600; letter-spacing: 0.02em;
+    }
+    .intro .lead { margin: 0 0 20px; color: var(--muted); font-size: 14px; max-width: 72ch; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 22px;
+      align-items: start;
+    }
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      .side { order: -1; }
+    }
+
+    .device {
+      background: #eceae6;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 24px 48px rgba(20,19,18,.18);
+    }
+    .device__chrome {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px;
+      background: #e2e0dc;
+      border-bottom: 1px solid #d0cdc6;
+      font-size: 11px; color: #6f6a63;
+    }
+    .device__chrome i {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: #c5c1b8; display: inline-block;
+    }
+    .stage {
+      position: relative;
+      width: 100%;
+      height: var(--vh);
+      overflow: hidden;
+      background: #111;
+    }
+    .dock {
+      position: absolute; top: 14px; right: 14px; z-index: 40;
+      display: flex; gap: 4px; padding: 5px 7px; border-radius: 999px;
+      background: rgba(20, 30, 26, 0.82);
+      border: 1px solid rgba(255,255,255,.1);
+      backdrop-filter: blur(8px);
+    }
+    .dock span {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 11px;
+    }
+    .dock span.gold { background: #d4a843; color: #1a1408; }
+
+    .side {
+      background: #faf9f7;
+      border: 1px solid #cfcac2;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 13px;
+    }
+    .side h3 {
+      margin: 0 0 8px;
+      font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+      color: #a85a2a;
+    }
+    .side .block + .block { margin-top: 16px; }
+    .side ul { margin: 0; padding-left: 18px; color: var(--muted); }
+    .side li { margin-bottom: 5px; }
+    .token {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 6px; font-size: 12px; color: var(--muted);
+    }
+    .swatch {
+      width: 16px; height: 16px; border-radius: 4px;
+      border: 1px solid rgba(0,0,0,.12); flex-shrink: 0;
+    }
+    .note {
+      margin-top: 14px; padding: 10px 12px; border-radius: 8px;
+      background: #e8f3f0; border: 1px solid #9bc9bc;
+      font-size: 12px; color: #2a4a40;
+    }
+
+    .photo {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+
+    /* ════════ A · veil-footer ════════ */
+    .veil { position: relative; height: 100%; }
+    .veil__photo { position: absolute; inset: 0; }
+    .veil__photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
+    .veil__fog {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 48%;
+      background: linear-gradient(
+        to top,
+        rgba(8, 7, 6, 0.92) 0%,
+        rgba(8, 7, 6, 0.62) 38%,
+        rgba(8, 7, 6, 0.18) 72%,
+        rgba(8, 7, 6, 0) 100%
+      );
+      z-index: 2;
+      pointer-events: none;
+    }
+    .veil__panel {
+      position: absolute; left: 0; bottom: 0; z-index: 3;
+      padding: 0 clamp(36px, 5vw, 56px) clamp(32px, 4.5vh, 48px);
+      max-width: min(680px, 74%);
+      color: #f5f3f0;
+    }
+    .veil__place {
+      margin: 0 0 12px;
+      font-size: 11px; font-weight: 500;
+      letter-spacing: 0.32em; text-transform: uppercase;
+      color: var(--accent-soft);
+    }
+    .veil__title {
+      margin: 0 0 14px;
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 3.8vw, 2.75rem);
+      font-weight: 600; line-height: 1.18; letter-spacing: 0.03em;
+    }
+    .veil__rule {
+      width: 40px; height: 1px;
+      background: rgba(255,255,255,.38);
+      margin: 0 0 14px;
+    }
+    .veil__hook {
+      margin: 0;
+      font-size: 0.95rem; line-height: 1.55;
+      color: rgba(245,243,240,.78);
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* ════════ D · folio-overlap ════════ */
+    .folio { position: relative; height: 100%; background: var(--paper); }
+    .folio__margin {
+      position: absolute; top: 0; left: 0; bottom: 0; width: 11%;
+      background: var(--paper);
+      border-right: 1px solid #e5e0d8;
+      z-index: 2;
+    }
+    .folio__photo {
+      position: absolute; top: 0; right: 0; bottom: 0; left: 11%;
+      overflow: hidden;
+    }
+    .folio__photo img {
+      width: 100%; height: 100%; object-fit: cover; object-position: center 35%;
+    }
+    .folio__running {
+      position: absolute; top: 32px; left: 0; z-index: 5;
+      writing-mode: vertical-rl;
+      padding: 0 22px;
+      font-size: 10px; font-weight: 500;
+      letter-spacing: 0.36em; text-transform: uppercase;
+      color: #8a847c;
+    }
+    .folio__panel {
+      position: absolute; left: 0; bottom: 0; z-index: 6;
+      width: min(54%, 540px);
+      padding: 56px 56px clamp(40px, 5vh, 52px) clamp(28px, 3.2vw, 40px);
+      background: linear-gradient(
+        95deg,
+        rgba(247,245,242,0.98) 0%,
+        rgba(247,245,242,0.94) 58%,
+        rgba(247,245,242,0) 100%
+      );
+    }
+    .folio__title {
+      margin: 0 0 16px;
+      font-family: var(--font-serif);
+      font-size: clamp(2.35rem, 4.6vw, 3.35rem);
+      font-weight: 600; line-height: 1.08; letter-spacing: -0.01em;
+      color: var(--ink);
+    }
+    .folio__rule {
+      width: 32px; height: 2px;
+      background: var(--accent);
+      margin: 0 0 14px;
+    }
+    .folio__hook {
+      margin: 0;
+      font-size: 0.92rem; line-height: 1.55; color: var(--muted);
+      max-width: 28ch;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* ════════ E · band-cut ════════ */
+    .band { position: relative; height: 100%; }
+    .band__photo { position: absolute; inset: 0; }
+    .band__photo img {
+      width: 100%; height: 100%; object-fit: cover; object-position: center 45%;
+    }
+    .band__strip {
+      position: absolute; left: 0; right: 0; top: 72%;
+      z-index: 4;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center; gap: clamp(16px, 2.5vw, 28px);
+      padding: 20px clamp(32px, 4.5vw, 52px);
+      background: rgba(247, 245, 242, 0.94);
+      border-top: 1px solid rgba(28,27,26,.06);
+      border-bottom: 1px solid rgba(28,27,26,.06);
+      backdrop-filter: blur(10px);
+      transform: translateY(-50%);
+      color: var(--ink);
+    }
+    .band__place {
+      margin: 0; font-size: 11px; font-weight: 500;
+      letter-spacing: 0.26em; text-transform: uppercase;
+      color: var(--accent); white-space: nowrap;
+    }
+    .band__title {
+      margin: 0;
+      font-family: var(--font-serif);
+      font-size: clamp(1.45rem, 2.8vw, 2.05rem);
+      font-weight: 600; letter-spacing: 0.08em;
+      text-align: center; line-height: 1.2;
+    }
+    .band__hook {
+      margin: 0; font-size: 0.78rem; line-height: 1.4; color: var(--muted);
+      max-width: 20ch; text-align: right;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .band__strip--ink {
+      background: rgba(16, 15, 14, 0.9);
+      color: #f5f3f0;
+      border-color: rgba(255,255,255,.06);
+    }
+    .band__strip--ink .band__place { color: var(--accent-soft); }
+    .band__strip--ink .band__hook { color: rgba(245,243,240,.62); }
+    .band__strip--ink .band__title { color: #f5f3f0; }
+
+    .variants {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px;
+    }
+    @media (max-width: 800px) { .variants { grid-template-columns: 1fr; } }
+    .variants .stage { height: 340px; }
+    .variants .cap {
+      margin: 8px 0 0; text-align: center; font-size: 12px; color: var(--muted);
+    }
+
+    /* ════════ F · cameo-aperture ════════ */
+    .cameo {
+      height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 26px;
+      background:
+        radial-gradient(ellipse at 50% 35%, #343c42 0%, #232a2f 55%, #1a1f23 100%);
+      padding: 36px 40px 40px;
+    }
+    .cameo__ring {
+      width: min(48vh, 400px);
+      height: min(48vh, 400px);
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow:
+        0 0 0 1px rgba(196, 165, 116, 0.35),
+        0 0 0 12px #232a2f,
+        0 0 0 13px rgba(196, 165, 116, 0.28),
+        0 28px 56px rgba(0,0,0,.35);
+    }
+    .cameo__ring img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center 30%;
+    }
+    .cameo__panel {
+      text-align: center; color: #e8e4de; max-width: 38ch;
+    }
+    .cameo__place {
+      margin: 0 0 10px;
+      font-size: 10px; font-weight: 500;
+      letter-spacing: 0.36em; text-transform: uppercase;
+      color: var(--accent-soft);
+    }
+    .cameo__title {
+      margin: 0 0 12px;
+      font-family: var(--font-serif);
+      font-size: clamp(1.45rem, 2.6vw, 1.9rem);
+      font-weight: 500; letter-spacing: 0.1em; line-height: 1.3;
+    }
+    .cameo__hook {
+      margin: 0;
+      font-size: 0.82rem; line-height: 1.5;
+      color: rgba(232,228,222,.55);
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* ════════ G · type-monument ════════ */
+    .monument { position: relative; height: 100%; }
+    .monument__photo { position: absolute; inset: 0; }
+    .monument__photo img {
+      width: 100%; height: 100%; object-fit: cover; object-position: center 40%;
+    }
+    .monument__dim {
+      position: absolute; inset: 0; z-index: 2;
+      background:
+        linear-gradient(160deg, rgba(6,8,10,.55) 0%, rgba(6,8,10,.28) 45%, rgba(6,8,10,.5) 100%);
+    }
+    .monument__panel {
+      position: absolute; inset: 0; z-index: 3;
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: clamp(32px, 5vh, 48px) clamp(36px, 5vw, 56px);
+      color: #f5f3f0;
+    }
+    .monument__place {
+      margin: 0;
+      font-size: 11px; font-weight: 500;
+      letter-spacing: 0.42em; text-transform: uppercase;
+      color: rgba(245,243,240,.72);
+    }
+    .monument__title {
+      margin: 0;
+      font-family: var(--font-serif);
+      font-size: clamp(3.4rem, 7.5vw, 5.4rem);
+      font-weight: 700; line-height: 0.96;
+      letter-spacing: -0.03em;
+      max-width: 9ch;
+      text-shadow: 0 2px 24px rgba(0,0,0,.25);
+    }
+    .monument__hook {
+      margin: 0;
+      font-size: 0.95rem; line-height: 1.5;
+      color: rgba(245,243,240,.78);
+      max-width: 34ch;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+    }
+    .ov {
+      border: 0; padding: 0; cursor: pointer;
+      background: transparent; text-align: left; font: inherit; color: inherit;
+      border-radius: 12px; overflow: hidden;
+      box-shadow: 0 8px 24px rgba(20,19,18,.12);
+      transition: transform .15s;
+    }
+    .ov:hover { transform: translateY(-2px); }
+    .ov__thumb {
+      height: 120px; position: relative; overflow: hidden;
+    }
+    .ov__thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .ov__label {
+      background: #faf9f7; padding: 10px 12px;
+      border: 1px solid #cfcac2; border-top: 0;
+      border-radius: 0 0 12px 12px;
+    }
+    .ov__label strong { display: block; font-size: 13px; margin-bottom: 2px; }
+    .ov__label span { font-size: 11px; color: var(--muted); }
+  </style>
+</head>
+<body>
+<header class="bar">
+  <h1>Cover Styles V6 · 高保真设计稿 · A / D / E / F / G</h1>
+  <p>
+    评审用高保真（真实摄影 + 定稿级排版）。文案为示意；实现仍遵循一块 DOM（cover-hero + panel）。
+    选定后写入 PRD token 与 CSS 皮肤。
+  </p>
+  <div class="tabs" role="tablist">
+    <button type="button" class="is-on" data-tab="overview">总览</button>
+    <button type="button" data-tab="veil">A · 雾底题签</button>
+    <button type="button" data-tab="folio">D · 对页叠印</button>
+    <button type="button" data-tab="band">E · 切带题名</button>
+    <button type="button" data-tab="cameo">F · 圆窗肖像</button>
+    <button type="button" data-tab="monument">G · 巨字碑</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- OVERVIEW -->
+  <section class="panel is-on" id="panel-overview">
+    <div class="intro">
+      <h2>五款高保真一览</h2>
+      <p class="lead">点击缩略图进入全尺寸预览。摄影取自项目 demo 资产，便于对照真实封面图质量。</p>
+    </div>
+    <div class="overview-grid">
+      <button type="button" class="ov" data-jump="veil">
+        <div class="ov__thumb"><img src="/trips/demo-815dc906d3/assets/asset-007-w1600.webp" alt="" /></div>
+        <div class="ov__label"><strong>A · veil-footer</strong><span>雾底题签 · 电影感沉浸</span></div>
+      </button>
+      <button type="button" class="ov" data-jump="folio">
+        <div class="ov__thumb"><img src="/trips/demo-815dc906d3/assets/asset-008-w1600.webp" alt="" /></div>
+        <div class="ov__label"><strong>D · folio-overlap</strong><span>对页叠印 · 编辑部</span></div>
+      </button>
+      <button type="button" class="ov" data-jump="band">
+        <div class="ov__thumb"><img src="/trips/demo-815dc906d3/assets/asset-004-w1600.webp" alt="" /></div>
+        <div class="ov__label"><strong>E · band-cut</strong><span>切带题名 · 强识别</span></div>
+      </button>
+      <button type="button" class="ov" data-jump="cameo">
+        <div class="ov__thumb"><img src="/trips/demo-815dc906d3/assets/asset-009-w1600.webp" alt="" /></div>
+        <div class="ov__label"><strong>F · cameo-aperture</strong><span>圆窗肖像 · 纪念章</span></div>
+      </button>
+      <button type="button" class="ov" data-jump="monument">
+        <div class="ov__thumb"><img src="/trips/demo-815dc906d3/assets/asset-003-w1600.webp" alt="" /></div>
+        <div class="ov__label"><strong>G · type-monument</strong><span>巨字碑 · 海报冲击</span></div>
+      </button>
+    </div>
+  </section>
+
+  <!-- A -->
+  <section class="panel" id="panel-veil">
+    <div class="intro">
+      <h2>A · veil-footer 雾底题签</h2>
+      <p class="lead">全幅摄影沉浸，文案沉入底部雾化层。无实心卡、无阴影浮层——像电影片头，而非 UI 说明框。</p>
+    </div>
+    <div class="layout">
+      <div class="device">
+        <div class="device__chrome"><i></i><i></i><i></i><span>Web ≥1024 · veil-footer</span></div>
+        <div class="stage">
+          <div class="dock" aria-hidden="true"><span>←</span><span>▶</span><span>⋯</span><span class="gold">↓</span></div>
+          <div class="veil">
+            <div class="veil__photo">
+              <img src="/trips/demo-815dc906d3/assets/asset-007-w1600.webp" alt="封面摄影" />
+            </div>
+            <div class="veil__fog" aria-hidden="true"></div>
+            <div class="veil__panel">
+              <p class="veil__place">林芝 · 桃花沟</p>
+              <h1 class="veil__title">把云的影子收进河谷</h1>
+              <div class="veil__rule" aria-hidden="true"></div>
+              <p class="veil__hook">雪山与桃花在同一条河谷里相遇，我们沿着国道慢慢开，把云的影子一张一张收进相册。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <aside class="side">
+        <div class="block">
+          <h3>Token</h3>
+          <div class="token"><span class="swatch" style="background:#080706"></span>雾底 #080706 → 透明</div>
+          <div class="token"><span class="swatch" style="background:#7cb89a"></span>place #7cb89a</div>
+          <div class="token"><span class="swatch" style="background:#f5f3f0"></span>title #f5f3f0</div>
+        </div>
+        <div class="block">
+          <h3>排版</h3>
+          <ul>
+            <li>雾高 ≈ 48%（软边）</li>
+            <li>panel max-width 680px</li>
+            <li>title：Noto Serif SC 600</li>
+            <li>hook ≤ 2 行 · 78% 白</li>
+          </ul>
+        </div>
+        <div class="note">建议作为新默认基线，替换 card-br。</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- D -->
+  <section class="panel" id="panel-folio">
+    <div class="intro">
+      <h2>D · folio-overlap 对页叠印</h2>
+      <p class="lead">纸白切口如书页，超大标题从纸白压入摄影。编辑部封面的「字咬图」张力。</p>
+    </div>
+    <div class="layout">
+      <div class="device">
+        <div class="device__chrome"><i></i><i></i><i></i><span>Web ≥1024 · folio-overlap</span></div>
+        <div class="stage">
+          <div class="dock" aria-hidden="true"><span>←</span><span>▶</span><span>⋯</span><span class="gold">↓</span></div>
+          <div class="folio">
+            <div class="folio__margin" aria-hidden="true"></div>
+            <p class="folio__running">林芝 · Nyingchi</p>
+            <div class="folio__photo">
+              <img src="/trips/demo-815dc906d3/assets/asset-008-w1600.webp" alt="封面摄影" />
+            </div>
+            <div class="folio__panel">
+              <h1 class="folio__title">把云的影子<br />收进河谷</h1>
+              <div class="folio__rule" aria-hidden="true"></div>
+              <p class="folio__hook">雪山与桃花在同一条河谷里相遇，我们沿着国道慢慢开。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <aside class="side">
+        <div class="block">
+          <h3>Token</h3>
+          <div class="token"><span class="swatch" style="background:#f7f5f2"></span>纸白 #f7f5f2</div>
+          <div class="token"><span class="swatch" style="background:#3d6b5a"></span>accent 细线</div>
+          <div class="token"><span class="swatch" style="background:#1c1b1a"></span>title #1c1b1a</div>
+        </div>
+        <div class="block">
+          <h3>排版</h3>
+          <ul>
+            <li>左纸白边 ≈ 11%</li>
+            <li>place 竖排跑题</li>
+            <li>title 可 2 行叠印</li>
+            <li>panel 纸白渐隐托底</li>
+          </ul>
+        </div>
+        <div class="note">标题主体落在纸白侧，保证对比度；压入摄影的笔画靠渐隐托住。</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- E -->
+  <section class="panel" id="panel-band">
+    <div class="intro">
+      <h2>E · band-cut 切带题名</h2>
+      <p class="lead">题名带横切画面（约 61% 高），像地平线或胶片片头条。缩略图即可辨认。</p>
+    </div>
+    <div class="layout">
+      <div class="device">
+        <div class="device__chrome"><i></i><i></i><i></i><span>Web ≥1024 · band-cut</span></div>
+        <div class="stage">
+          <div class="dock" aria-hidden="true"><span>←</span><span>▶</span><span>⋯</span><span class="gold">↓</span></div>
+          <div class="band">
+            <div class="band__photo">
+              <img src="/trips/demo-815dc906d3/assets/asset-004-w1600.webp" alt="封面摄影" />
+            </div>
+            <div class="band__strip">
+              <p class="band__place">林芝</p>
+              <h1 class="band__title">把云的影子收进河谷</h1>
+              <p class="band__hook">雪山与桃花在同一条河谷里相遇</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <aside class="side">
+        <div class="block">
+          <h3>Token</h3>
+          <div class="token"><span class="swatch" style="background:#f7f5f2"></span>纸白带 94%</div>
+          <div class="token"><span class="swatch" style="background:#10100e"></span>墨色带变体</div>
+          <div class="token"><span class="swatch" style="background:#3d6b5a"></span>place accent</div>
+        </div>
+        <div class="block">
+          <h3>排版</h3>
+          <ul>
+            <li>三栏：place | title | hook</li>
+            <li>中线 ≈ 72vh（评审下移）</li>
+            <li>backdrop-blur 10px</li>
+            <li>无 hook 时 title 居中</li>
+          </ul>
+        </div>
+        <div class="note">风景大场面最合适；人脸/主体需 focal 避开切带。</div>
+      </aside>
+    </div>
+    <div class="variants">
+      <div>
+        <div class="device">
+          <div class="stage">
+            <div class="band">
+              <div class="band__photo">
+                <img src="/trips/demo-815dc906d3/assets/asset-010-w1600.webp" alt="" />
+              </div>
+              <div class="band__strip">
+                <p class="band__place">京都</p>
+                <h1 class="band__title">雨停之后</h1>
+                <p class="band__hook">石板上的水光还没干</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="cap">变体 E1 · 纸白带</p>
+      </div>
+      <div>
+        <div class="device">
+          <div class="stage">
+            <div class="band">
+              <div class="band__photo">
+                <img src="/trips/demo-815dc906d3/assets/asset-002-w1600.webp" alt="" />
+              </div>
+              <div class="band__strip band__strip--ink">
+                <p class="band__place">冰岛</p>
+                <h1 class="band__title">黑沙滩上的风</h1>
+                <p class="band__hook">浪声把名字念给石头听</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="cap">变体 E2 · 墨色带</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- F -->
+  <section class="panel" id="panel-cameo">
+    <div class="intro">
+      <h2>F · cameo-aperture 圆窗肖像</h2>
+      <p class="lead">石青展底上开圆窗取景，题名如徽章落在窗下。彻底离开矩形全幅，纪念章 / 旅行海报气质。</p>
+    </div>
+    <div class="layout">
+      <div class="device">
+        <div class="device__chrome"><i></i><i></i><i></i><span>Web ≥1024 · cameo-aperture</span></div>
+        <div class="stage">
+          <div class="dock" aria-hidden="true"><span>←</span><span>▶</span><span>⋯</span><span class="gold">↓</span></div>
+          <div class="cameo">
+            <div class="cameo__ring">
+              <img src="/trips/demo-815dc906d3/assets/asset-009-w1600.webp" alt="封面摄影" />
+            </div>
+            <div class="cameo__panel">
+              <p class="cameo__place">林芝 · 桃花沟</p>
+              <h1 class="cameo__title">把云的影子收进河谷</h1>
+              <p class="cameo__hook">雪山与桃花在同一条河谷里相遇，我们沿着国道慢慢开。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <aside class="side">
+        <div class="block">
+          <h3>Token</h3>
+          <div class="token"><span class="swatch" style="background:#232a2f"></span>展底 #232a2f</div>
+          <div class="token"><span class="swatch" style="background:#c4a574"></span>金环描边</div>
+          <div class="token"><span class="swatch" style="background:#e8e4de"></span>题名 #e8e4de</div>
+        </div>
+        <div class="block">
+          <h3>排版</h3>
+          <ul>
+            <li>圆窗 ≈ 48vh</li>
+            <li>双环：内金线 + 外垫环</li>
+            <li>题名居中 · 字距略松</li>
+            <li>依赖 focal 居中裁切</li>
+          </ul>
+        </div>
+        <div class="note">横图主体易被圆裁切——选图或 focal 需偏中心。</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- G -->
+  <section class="panel" id="panel-monument">
+    <div class="intro">
+      <h2>G · type-monument 巨字碑</h2>
+      <p class="lead">字即封面。超大标题如纪念碑压在画面上，摄影退为氛围。海报级冲击力，缩略图可辨。</p>
+    </div>
+    <div class="layout">
+      <div class="device">
+        <div class="device__chrome"><i></i><i></i><i></i><span>Web ≥1024 · type-monument</span></div>
+        <div class="stage">
+          <div class="dock" aria-hidden="true"><span>←</span><span>▶</span><span>⋯</span><span class="gold">↓</span></div>
+          <div class="monument">
+            <div class="monument__photo">
+              <img src="/trips/demo-815dc906d3/assets/asset-003-w1600.webp" alt="封面摄影" />
+            </div>
+            <div class="monument__dim" aria-hidden="true"></div>
+            <div class="monument__panel">
+              <p class="monument__place">林芝</p>
+              <h1 class="monument__title">把云的<br />影子收进<br />河谷</h1>
+              <p class="monument__hook">雪山与桃花在同一条河谷里相遇，我们沿着国道慢慢开。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <aside class="side">
+        <div class="block">
+          <h3>Token</h3>
+          <div class="token"><span class="swatch" style="background:#06080a"></span>暗罩叠摄影</div>
+          <div class="token"><span class="swatch" style="background:#f5f3f0"></span>巨字 #f5f3f0</div>
+          <div class="token"><span class="swatch" style="background:#7cb89a"></span>（可选）accent</div>
+        </div>
+        <div class="block">
+          <h3>排版</h3>
+          <ul>
+            <li>字号 clamp 3.4–5.4rem</li>
+            <li>上 place / 中巨字 / 下 hook</li>
+            <li>建议允许 title 3 行</li>
+            <li>短标题更有碑感</li>
+          </ul>
+        </div>
+        <div class="note">待决：是否为 G 单独放宽 title 为 3 行 line-clamp（V5 默认 2 行）。</div>
+      </aside>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  const panels = {
+    overview: document.getElementById("panel-overview"),
+    veil: document.getElementById("panel-veil"),
+    folio: document.getElementById("panel-folio"),
+    band: document.getElementById("panel-band"),
+    cameo: document.getElementById("panel-cameo"),
+    monument: document.getElementById("panel-monument"),
+  };
+  const tabs = document.querySelectorAll(".tabs button[data-tab]");
+  function show(id) {
+    Object.entries(panels).forEach(([k, el]) => el.classList.toggle("is-on", k === id));
+    tabs.forEach((b) => b.classList.toggle("is-on", b.dataset.tab === id));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  tabs.forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));
+  document.querySelectorAll("[data-jump]").forEach((b) =>
+    b.addEventListener("click", () => show(b.dataset.jump))
+  );
+</script>
+</body>
+</html>

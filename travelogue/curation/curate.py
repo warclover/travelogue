@@ -287,8 +287,14 @@ def sync_trip_covers(
     cover_scoring=None,
     cover_scoring_v2=None,
     scoring_version: str | None = None,
+    force: bool = False,
+    joint_enabled: bool | None = None,
 ) -> str:
-    """Write coverAssetId (+ coverByLayout when exportLayout=auto). Returns primary cover id."""
+    """Write coverAssetId (+ coverByLayout when exportLayout=auto). Returns primary cover id.
+
+    V6 · web path uses Cover Style Engine joint pick when unlocked (D-CSV6-53).
+    Mobile still uses pick_cover_asset_id. When coverJointLocked and not force, web is skipped.
+    """
     assets = assets if assets is not None else layout_eligible_assets(trip)
     layout = export_layout or trip.get("exportLayout") or "auto"
     curation = trip.setdefault("curation", {})
@@ -300,6 +306,15 @@ def sync_trip_covers(
         "scoring_version": ver,
     }
 
+    use_joint = joint_enabled
+    if use_joint is None:
+        try:
+            from travelogue.config import get_config
+
+            use_joint = bool(get_config().curate.cover_joint_enabled)
+        except Exception:
+            use_joint = True
+
     def _write_blind_review(cover_id: str, profile: str) -> None:
         curation.setdefault("coverBlindReview", {})[profile] = build_cover_layout_review(
             assets,
@@ -310,6 +325,44 @@ def sync_trip_covers(
             **scoring_kwargs,
         )
 
+    def _apply_web_joint() -> str:
+        from travelogue.config import get_config
+        from travelogue.cover_engine.joint import (
+            apply_joint_pick,
+            hash_fallback_pick,
+            pick_cover_style_and_asset,
+        )
+
+        joint_kwargs = {
+            "assets": assets,
+            "featured_weight": featured_weight,
+            "enable_phase6_cover_factors": p6,
+            **scoring_kwargs,
+        }
+        try:
+            cfg = get_config().curate
+            top_k = int(getattr(cfg, "cover_joint_top_k", 8) or 8)
+            w_fit = float(getattr(cfg, "cover_joint_w_fit", 0.35))
+            w_avoid = float(getattr(cfg, "cover_joint_w_avoid", 0.50))
+        except Exception:
+            top_k, w_fit, w_avoid = 8, 0.35, 0.50
+
+        if use_joint:
+            explain = pick_cover_style_and_asset(
+                trip,
+                layout="web",
+                k=top_k,
+                w_fit=w_fit,
+                w_avoid=w_avoid,
+                **joint_kwargs,
+            )
+        else:
+            explain = hash_fallback_pick(trip, layout="web", **joint_kwargs)
+        apply_joint_pick(trip, explain, lock=True, layout="web")
+        return str(explain.asset_id or "")
+
+    web_locked = bool(curation.get("coverJointLocked")) and not force
+
     if layout == "auto":
         mobile_id = _pick_cover_asset_id(
             assets,
@@ -318,13 +371,26 @@ def sync_trip_covers(
             enable_phase6_cover_factors=p6,
             **scoring_kwargs,
         )
-        web_id = _pick_cover_asset_id(
-            assets,
-            export_layout="web",
-            featured_weight=featured_weight,
-            enable_phase6_cover_factors=p6,
-            **scoring_kwargs,
-        )
+        if web_locked:
+            cover_by = curation.get("coverByLayout") or {}
+            web_id = str((cover_by.get("web") if isinstance(cover_by, dict) else "") or "")
+            if not web_id:
+                web_id = _pick_cover_asset_id(
+                    assets,
+                    export_layout="web",
+                    featured_weight=featured_weight,
+                    enable_phase6_cover_factors=p6,
+                    **scoring_kwargs,
+                )
+        else:
+            web_id = _apply_web_joint() or _pick_cover_asset_id(
+                assets,
+                export_layout="web",
+                featured_weight=featured_weight,
+                enable_phase6_cover_factors=p6,
+                **scoring_kwargs,
+            )
+
         curation["coverByLayout"] = {"mobile": mobile_id, "web": web_id}
         trip["coverAssetId"] = mobile_id
         trip["coverCandidates"] = _cover_candidates(
@@ -384,6 +450,44 @@ def sync_trip_covers(
         _write_blind_review(mobile_id, "mobile")
         _write_blind_review(web_id, "web")
         return mobile_id
+
+    if layout == "web":
+        if web_locked:
+            cover_by = curation.get("coverByLayout") or {}
+            cover_id = str((cover_by.get("web") if isinstance(cover_by, dict) else "") or "")
+            if not cover_id:
+                cover_id = str(trip.get("coverAssetId") or "")
+            if cover_id:
+                return cover_id
+        else:
+            cover_id = _apply_web_joint()
+            if cover_id:
+                trip["coverAssetId"] = cover_id
+                trip["coverCandidates"] = _cover_candidates(
+                    assets,
+                    cover_id,
+                    export_layout="web",
+                    featured_weight=featured_weight,
+                    featured_min=featured_min_for_cover_pool,
+                    enable_phase6_cover_factors=p6,
+                    **scoring_kwargs,
+                )
+                curation.pop("coverByLayout", None)
+                curation.pop("coverCandidatesByLayout", None)
+                curation.pop("coverExplainByLayout", None)
+                explain = _cover_explain_for(
+                    assets,
+                    cover_id,
+                    "web",
+                    enable_phase6_cover_factors=p6,
+                    **scoring_kwargs,
+                )
+                if explain:
+                    curation["coverExplain"] = explain
+                else:
+                    curation.pop("coverExplain", None)
+                _write_blind_review(cover_id, "web")
+                return cover_id
 
     cover_id = _pick_cover_asset_id(
         assets,

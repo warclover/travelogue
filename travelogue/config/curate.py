@@ -35,6 +35,10 @@ class CurateConfig:
     cover_scoring: CoverScoringParams = field(default_factory=CoverScoringParams)
     cover_scoring_version: str = "v2"  # v1 | v2
     cover_scoring_v2: Any = field(default_factory=_default_cover_scoring_v2)
+    cover_joint_enabled: bool = True
+    cover_joint_top_k: int = 8
+    cover_joint_w_fit: float = 0.35
+    cover_joint_w_avoid: float = 0.50
     enable_gravity_balance: bool = True
     enable_mmr_diversity: bool = True
     max_consecutive_same_pattern: int = 2

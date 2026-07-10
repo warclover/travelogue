@@ -6,10 +6,8 @@ from datetime import date
 from pathlib import Path
 
 from travelogue.config import AppConfig, get_config
-from travelogue.services.cover_opening_style import (
-    assign_cover_opening_style,
-    record_cover_opening_style_assigned,
-)
+from travelogue.cover_engine import get_default_style_id
+from travelogue.services.cover_opening_style import record_cover_opening_style_assigned
 from travelogue.services.trip import TripService, write_new_trip
 from travelogue.templating.router import RouterMode, apply_template_selection
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
@@ -47,7 +45,7 @@ def create_trip(
             "dateEnd": today,
             "places": [place],
             "tone": "relaxed",
-            "coverOpeningStyle": assign_cover_opening_style(trip_id),
+            "coverOpeningStyle": get_default_style_id(),
         },
         "coverAssetId": "",
         "assets": [],

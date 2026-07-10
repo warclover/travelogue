@@ -8,6 +8,7 @@ import { isPreviewToolbarV3, isPreviewToolbarV4 } from "./dock.js";
 
 var COLLAPSE_KEY = "travelogue.studio.previewToolbar.collapsed";
 var COVER_STYLE_TOAST_KEY = "travelogue.coverStyleToast.";
+var COVER_LEGACY_NOTICE_KEY = "travelogue.coverLegacyNotice.";
 var _toastTimer = null;
 
 
@@ -62,22 +63,112 @@ export function maybeShowCoverOpeningStyleToast(tripId) {
     if (!tripId) return;
     var section = document.querySelector(".cover-opening[data-cover-opening]");
     if (!section) return;
-    var style = section.getAttribute("data-cover-opening") || "card-br";
+    var style = section.getAttribute("data-cover-opening") || "veil-footer";
     var storageKey = COVER_STYLE_TOAST_KEY + tripId;
-    try {
-      if (localStorage.getItem(storageKey)) return;
-      localStorage.setItem(storageKey, "1");
-    } catch (e) {
+    var legacyKey = COVER_LEGACY_NOTICE_KEY + tripId;
+
+    fetchEntrySafe(tripId).then(function (data) {
+      if (!data) return;
+      syncCoverPlaceholderBadge(!!data.coverIsPlaceholder);
+      syncCoverExplainLine(data);
+
+      // §7.4 · legacy V5 notice once
+      try {
+        if (data.coverLegacyMapped && !localStorage.getItem(legacyKey)) {
+          localStorage.setItem(legacyKey, "1");
+          var raw = data.coverOpeningStyleRaw || "";
+          var extra =
+            raw === "split-mat" || raw === "magazine-head"
+              ? "原先两款编辑向版式，现统一呈现为「对页叠印」。"
+              : "";
+          showToolbarToast(
+            "封面已按新画册风格呈现；你的原始设定未改写。" + (extra ? " " + extra : ""),
+            { duration: 5200 }
+          );
+          trackStudioEvent("cover_opening_style_render", {
+            tripId: tripId,
+            coverOpeningStyle: style,
+            legacyMapped: true,
+          });
+          return;
+        }
+      } catch (e) {}
+
+      // §7.2 · joint toast once per trip (after lock)
+      if (!data.coverJointLocked) return;
+      try {
+        if (localStorage.getItem(storageKey)) return;
+        localStorage.setItem(storageKey, "1");
+      } catch (e) {
+        return;
+      }
+      var label = data.coverStyleLabel || style;
+      trackStudioEvent("cover_opening_style_render", {
+        tripId: tripId,
+        coverOpeningStyle: style,
+        source: (data.coverStyleExplain && data.coverStyleExplain.source) || "joint-v6",
+      });
+      showToolbarToast(
+        "已为这本游记选了「" + label + "」，并配了更合适的封面图。可在「排版」中更换。",
+        { duration: 4200 }
+      );
+    });
+  }
+
+  function fetchEntrySafe(tripId) {
+    return fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  }
+
+export function syncCoverPlaceholderBadge(isPlaceholder) {
+    var cover = document.querySelector(".cover-opening");
+    if (!cover) return;
+    var badge = cover.querySelector(".cover-opening__placeholder-badge");
+    if (isPlaceholder) {
+      if (!badge) {
+        badge = document.createElement("p");
+        badge.className = "cover-opening__placeholder-badge";
+        badge.setAttribute("role", "status");
+        cover.appendChild(badge);
+      }
+      badge.hidden = false;
+      badge.textContent = "临时预览 · 精选后更新";
+    } else if (badge) {
+      badge.hidden = true;
+    }
+  }
+
+export function syncCoverExplainLine(data) {
+    var cover = document.querySelector(".cover-opening");
+    if (!cover || !data) return;
+    var line = cover.querySelector(".cover-opening__explain-line");
+    var text = explainToHuman(data.coverStyleExplain);
+    if (!text) {
+      if (line) line.hidden = true;
       return;
     }
-    trackStudioEvent("cover_opening_style_render", {
-      tripId: tripId,
-      coverOpeningStyle: style,
-    });
-    showToolbarToast(
-      "这本游记的封面版式已为你选定（电脑与手机版式不同），可在「排版」设置中更换",
-      { duration: 4200 }
-    );
+    if (!line) {
+      line = document.createElement("p");
+      line.className = "cover-opening__explain-line";
+      cover.appendChild(line);
+    }
+    line.hidden = false;
+    line.textContent = text;
+  }
+
+function explainToHuman(explain) {
+    if (!explain || typeof explain !== "object") return "";
+    if (explain.lowConfidence) return "备选有限，已选相对最合适的一款";
+    if (explain.source === "manual") return "由你手动选定";
+    var styleId = explain.styleId || "";
+    if (styleId === "cameo-aperture") return "主体较居中，适合圆窗";
+    if (styleId === "band-cut") return "避开了题带压到人物";
+    if (styleId === "veil-footer") return "主体偏上，适合雾底题签";
+    if (styleId === "folio-overlap") return "右侧有景，适合对页叠印";
+    if (styleId === "type-monument") return "氛围底图，适合海报巨字";
+    if (explain.source === "joint-v6") return "已按版式与封面图联合精选";
+    return "";
   }
 
   var _layoutPending = false;
