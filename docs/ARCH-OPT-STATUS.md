@@ -105,6 +105,7 @@
 | FIX-08 | P1 | 2026-07-09 | 产线/脚本/测试仍大量引用 curation shim | ✅ 已修复（`arch/shim-retire-ws1`）：消费方改引 `layout_engine` / `layout_contract` |
 | FIX-09 | P1 | 2026-07-09 | layout_engine→curation hero AST 反向边 | ✅ 已修复：`layout_contract.scoring` 注册表反转；边数 8→7 / LE→cur=0 |
 | P2 | — | 2026-07-09 | run_curate 拆分 · `.trip.lock` · layout_contract 准入 | 见 [ARCH-OPT-P2-BACKLOG.md](./ARCH-OPT-P2-BACKLOG.md) |
+| P2-C | ✅ | 2026-07-10 | `layout_contract` 准入文档 + `lint_layout_contract_surface` CI | TECH-ARCH §18.2.1 |
 
 ---
 
