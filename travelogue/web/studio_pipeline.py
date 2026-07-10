@@ -170,6 +170,7 @@ def _studio_post_curate(
     report: ProgressCallback | Callable[[str, int, str | None], None],
     persist_trip_state: Callable[[], None],
     flush_pipeline_timings: Callable[[dict[str, float] | None], None],
+    hooks: StudioHooks,
 ) -> StudioPipelineResult:
     g1_pending = bool(cfg.studio.g1_confirm_structure)
     if g1_pending:
@@ -209,34 +210,17 @@ def _studio_post_curate(
             g1_pending=g1_pending,
         )
 
-    report("narrate", 3)
-    hooks = StudioHooks(on_stage=report)
     from travelogue.web.studio_narrate import resolve_studio_narrate_provider
 
     narrate_provider = resolve_studio_narrate_provider(cfg=cfg)
     try:
+        # Single run_trip slice (align with continue_after_g1_confirm): lock → narrate → render.
         run_trip(
             trip_json,
             from_stage="lock_structure",
-            until="copy",
-            skip_locked=True,
-            narrate_provider=narrate_provider,
-            validate=False,
-            cfg=cfg,
-            studio_hooks=hooks,
-        )
-    except Exception as exc:
-        code = getattr(exc, "code", "E_STUDIO_PIPELINE")
-        raise DemoError(code, str(exc)) from exc
-
-    report("render", 4)
-    try:
-        render_t0 = time.monotonic()
-        run_trip(
-            trip_json,
-            from_stage="render",
             until="rendered",
             skip_locked=True,
+            narrate_provider=narrate_provider,
             validate=False,
             cfg=cfg,
             studio_hooks=hooks,
@@ -244,10 +228,8 @@ def _studio_post_curate(
         from travelogue.render.preview import render_preview_jpg
 
         render_preview_jpg(trip_json, trip_root=trip_root)
-        pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
         _sync_trip_from_disk(trip, svc, trip_json)
         flush_pipeline_timings()
-        mark_render_bundle_current(trip)
         persist_trip_state()
     except Exception as exc:
         code = getattr(exc, "code", "E_STUDIO_PIPELINE")
@@ -792,9 +774,9 @@ def run_studio_pipeline(
             on_timing=lambda timings: pipeline_timings.update(timings),
             on_clustering_done=capture_cluster_notice,
         )
+        post_curate_kwargs["hooks"] = hooks
 
         try:
-            ingest_t0 = time.monotonic()
             run_trip(
                 trip_json,
                 from_stage="ingest",
@@ -806,7 +788,6 @@ def run_studio_pipeline(
                 studio_profile=profile,
                 studio_hooks=hooks,
             )
-            pipeline_timings["ingestMs"] = round((time.monotonic() - ingest_t0) * 1000.0, 2)
         except IngestError as exc:
             _raise_demo_from_ingest(exc)
 
@@ -829,12 +810,7 @@ def run_studio_pipeline(
             raise DemoError(exc.code, str(exc)) from exc
 
         _sync_trip_from_disk(trip, svc, trip_json)
-        cluster_meta = (trip.get("curation") or {}).get("clustering") or {}
-        embed_stats = cluster_meta.get("embedStats") or {}
-        if cluster_meta.get("embedSkipped"):
-            pipeline_timings["embedMs"] = 0.0
-        else:
-            pipeline_timings["embedMs"] = float(embed_stats.get("elapsedMs") or 0.0)
+        # embedMs / clusterMs / ingestMs already flushed via StudioHooks.on_timing
         _flush_pipeline_timings()
         _persist_trip_state()
 

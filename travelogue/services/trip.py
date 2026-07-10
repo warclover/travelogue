@@ -57,6 +57,54 @@ def _get_trip_write_lock(path: Path) -> threading.Lock:
     return lock
 
 
+class _CrossProcessTripLock:
+    """Exclusive lock file so import subprocess and HTTP share CAS exclusion."""
+
+    def __init__(self, trip_json: Path) -> None:
+        self._lock_path = trip_json.with_name(f".{trip_json.name}.lock")
+        self._fh: Any = None
+
+    def __enter__(self) -> _CrossProcessTripLock:
+        self._lock_path.parent.mkdir(parents=True, exist_ok=True)
+        self._fh = open(self._lock_path, "a+b")
+        try:
+            if os.name == "nt":
+                import msvcrt
+
+                self._fh.seek(0)
+                if self._fh.read(1) == b"":
+                    self._fh.write(b"\0")
+                    self._fh.flush()
+                self._fh.seek(0)
+                msvcrt.locking(self._fh.fileno(), msvcrt.LK_LOCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(self._fh.fileno(), fcntl.LOCK_EX)
+        except Exception:
+            self._fh.close()
+            self._fh = None
+            raise
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        if self._fh is None:
+            return
+        try:
+            if os.name == "nt":
+                import msvcrt
+
+                self._fh.seek(0)
+                msvcrt.locking(self._fh.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(self._fh.fileno(), fcntl.LOCK_UN)
+        finally:
+            self._fh.close()
+            self._fh = None
+
+
 def meta_revision(trip: dict) -> int:
     meta = trip.get("meta")
     if not isinstance(meta, dict):
@@ -359,11 +407,11 @@ class TripService:
         if max_retries < 1:
             raise ValueError("max_retries must be >= 1")
         path = Path(trip_json_path)
-        lock = _get_trip_write_lock(path)
+        thread_lock = _get_trip_write_lock(path)
         last_expected = 0
         stamp_rendered = False
         for _attempt in range(max_retries):
-            with lock:
+            with thread_lock, _CrossProcessTripLock(path):
                 trip = self.load(path)
                 expected = meta_revision(trip)
                 last_expected = expected

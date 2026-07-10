@@ -368,6 +368,17 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         )
         return
 
+    # Bind tripId early so PATCH/DELETE busy checks cover in-flight imports.
+    if trip_id_str:
+        store.update(job, trip_id=trip_id_str)
+    elif not force:
+        from travelogue.util.trip_slug import demo_trip_id_from_album
+
+        predicted = demo_trip_id_from_album(
+            album_path, title=title, place=place, explicit=None
+        )
+        store.update(job, trip_id=predicted)
+
     host = handler.studio_host
     port = handler.studio_port
     job_id = job.job_id
