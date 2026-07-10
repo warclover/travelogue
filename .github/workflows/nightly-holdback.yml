@@ -1,10 +1,9 @@
-# M20-i/j · nightly holdback 演练（漏斗门禁 + LCP 审计）
-# PR 仍走 ci.yml test-e2e；本 workflow 每日跑完整 drill 并上传报告 artifact。
+# M20-i/j · holdback 演练（漏斗门禁 + LCP 审计）
+# 定时已关闭以节省 Actions 分钟；需要时在 Actions 页手动 Run workflow。
+# 合并后的 e2e 仍由 ci.yml（push to main）覆盖。
 name: Nightly Holdback
 
 on:
-  schedule:
-    - cron: "0 18 * * *"
   workflow_dispatch:
 
 jobs:

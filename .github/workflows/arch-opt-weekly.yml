@@ -1,9 +1,8 @@
 # Post-M-D1 · LSE cross-import regression + optional stats refresh
+# 定时已关闭：PR lint 已跑 lint_lse_cross_import.py；需要时手动触发。
 name: Arch Opt Weekly
 
 on:
-  schedule:
-    - cron: "0 3 * * 1"
   workflow_dispatch:
 
 jobs:

@@ -1,5 +1,7 @@
-# PR job (test-pr) skips playwright_serial / e2e markers for speed.
-# Merge to master/main requires test-e2e green (browser + longshot regression).
+# Hobbyist-friendly CI budget:
+# - PR: lint + test-pr (unit/fast only, Python 3.11)
+# - push to master/main: full gate (integration + e2e + validate)
+# test-pr skips playwright_serial / e2e markers for speed.
 name: CI
 
 on:
@@ -7,6 +9,15 @@ on:
     branches: [master, main]
   pull_request:
     branches: [master, main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".cursor/**"
+
+# Cancel superseded runs on the same ref (saves minutes on force-push / rapid commits).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint:
@@ -58,15 +69,12 @@ jobs:
 
   test-pr:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.11"
 
       - name: Install package
         run: |
@@ -89,13 +97,14 @@ jobs:
             --cov-fail-under=65
 
       - name: Upload coverage artifact
-        if: matrix.python-version == '3.11'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-xml
           path: coverage.xml
 
+  # Heavy jobs: only on push to main/master (after merge), not on every PR push.
   test-integration:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -118,6 +127,7 @@ jobs:
         run: python scripts/phase4_acceptance_gate.py
 
   test-e2e:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -135,6 +145,7 @@ jobs:
         run: python -m pytest tests/ -q -m "(e2e or playwright_serial) and not legacy_homepage"
 
   validate:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
