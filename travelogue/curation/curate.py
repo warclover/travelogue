@@ -508,7 +508,10 @@ def _curate_preflight(
     saved_memory_anchors: list[list[str] | None],
 ) -> _CuratePreflight:
     from travelogue.config import default_web_layout_engine, get_config
-    from travelogue.curation.screen_planner import LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS
+    from travelogue.layout_engine.planner.screen_planner import (
+        LAYOUT_ENGINE_LEGACY,
+        LAYOUT_ENGINE_SCREENS,
+    )
 
     app_cfg = cfg or get_config()
     trip_id = str(trip.get("tripId") or (trip_dir.name if trip_dir else "")).strip()
@@ -756,7 +759,7 @@ def run_curate(
             trip=trip,
         )
 
-    from travelogue.curation.screen_planner import (
+    from travelogue.layout_engine.planner.screen_planner import (
         LAYOUT_ENGINE_SCREENS,
         LAYOUT_ENGINE_VERSION_SCREENS,
     )
@@ -892,7 +895,7 @@ def run_curate(
     )
     summary = summarize_orientations(layout_assets, export_layout=layout)  # type: ignore[arg-type]
     summary_dict = summary.to_dict()
-    from travelogue.curation.mosaic.runtime import (
+    from travelogue.layout_engine.mosaic.runtime import (
         cohort_mosaic_override,
         reset_mosaic_config_override,
         set_mosaic_config_override,
@@ -914,7 +917,7 @@ def run_curate(
             mosaic_override_active = _dc_replace(mosaic_override_active, weights=mw)
     elif cohort_summary:
         mosaic_override_active = cohort_mosaic_override(app_cfg)
-    from travelogue.curation.mosaic.runtime import (
+    from travelogue.layout_engine.mosaic.runtime import (
         reset_mosaic_disabled_patterns,
         set_mosaic_disabled_patterns,
     )
@@ -928,7 +931,7 @@ def run_curate(
     if mosaic_override_active is not None:
         set_mosaic_config_override(mosaic_override_active)
     if app_cfg.mosaic.enabled:
-        from travelogue.curation.mosaic.hook import begin_mosaic_capture
+        from travelogue.layout_engine.mosaic.hook import begin_mosaic_capture
 
         begin_mosaic_capture()
     try:
@@ -956,7 +959,7 @@ def run_curate(
         if pattern_blacklist_active:
             reset_mosaic_disabled_patterns()
     if app_cfg.mosaic.enabled:
-        from travelogue.curation.mosaic.hook import drain_mosaic_dropped, drain_mosaic_logs
+        from travelogue.layout_engine.mosaic.hook import drain_mosaic_dropped, drain_mosaic_logs
 
         mosaic_logs = drain_mosaic_logs()
         dropped = drain_mosaic_dropped()
@@ -1025,7 +1028,7 @@ def run_curate(
     intent_peak = peak_chapter_hints_for_trip(trip, len(non_empty_buckets))
     # 统一 beam 入口（架构收敛 A3）：mosaic 开/关均走 compose_trip，
     # deterministic_strict 与 meta 标注由 compose_trip 内部按 mosaic.enabled 选择。
-    from travelogue.curation.mosaic.trip import compose_trip
+    from travelogue.layout_engine.mosaic.trip import compose_trip
 
     chapters, replan_meta = compose_trip(
         chapters,
@@ -1102,7 +1105,7 @@ def run_curate(
         curation["displayedAssetIds"] = collect_displayed_asset_ids(
             chapters, extra_asset_ids=hero_extra
         )
-        from travelogue.curation.mosaic.coverage import compute_coverage_metrics
+        from travelogue.layout_engine.mosaic.coverage import compute_coverage_metrics
 
         planned_ids = {aid for bucket in non_empty_buckets for aid in bucket}
         displayed_for_cov = list(curation.get("displayedAssetIds") or [])
@@ -1156,7 +1159,7 @@ def run_curate(
                 folio_tone_delta_max=float(ed_cfg.get("folio_tone_delta_max") or 12.0),
             )
     if engine == LAYOUT_ENGINE_SCREENS:
-        from travelogue.curation.mosaic.telemetry import (
+        from travelogue.layout_engine.mosaic.telemetry import (
             record_mosaic_layout_metrics,
             record_per_template_layout_metrics,
         )
@@ -1204,7 +1207,7 @@ def run_curate(
         else:
             best = max(curation_segments, key=lambda s: len(s.get("assetIds") or []))
             curation["primarySegmentId"] = best["id"]
-    from travelogue.curation.media_classify import summarize_media_classes
+    from travelogue.media.media_classify import summarize_media_classes
 
     mc = summarize_media_classes(trip.get("assets") or [])
     if mc:

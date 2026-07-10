@@ -697,7 +697,7 @@ def build_layout_screen(
     tier_ultra = False
     screen_aspect: str | None = None
     if pattern_id == "screen-full-frame" and first_asset:
-        from travelogue.curation.media_classify import is_collage_asset
+        from travelogue.media.media_classify import is_collage_asset
 
         fit0 = full_frame_fit_for_asset(first_asset, default="cover")
         ar = _asset_aspect_ratio_float(first_asset)

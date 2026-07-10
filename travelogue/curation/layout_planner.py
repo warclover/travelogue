@@ -479,7 +479,7 @@ def build_chapters_from_plan(
             }
         )
 
-    from travelogue.curation.screen_planner import (
+    from travelogue.layout_engine.planner.screen_planner import (
         LAYOUT_ENGINE_SCREENS,
         attach_screens_to_chapters,
     )
@@ -539,7 +539,7 @@ def build_chapters_from_buckets(
 ) -> list[dict]:
     """Plan items per chapter bucket (Agent 1 day groups → Agent 1.5 layout)."""
     from travelogue.curation.curate_patterns import resolve_chapter_pattern
-    from travelogue.curation.screen_planner import (
+    from travelogue.layout_engine.planner.screen_planner import (
         LAYOUT_ENGINE_SCREENS,
         attach_screens_to_chapters,
     )

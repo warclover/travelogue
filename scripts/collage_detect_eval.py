@@ -10,7 +10,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from travelogue.curation.media_classify import classify_media_class, detect_collage_asset
+from travelogue.media.media_classify import classify_media_class, detect_collage_asset
 
 DEFAULT_FIXTURES = Path("docs/acceptance-records/collage-detect-fixtures.json")
 DEFAULT_FIXTURES_ROOT = Path("tests/fixtures/collage")

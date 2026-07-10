@@ -15,8 +15,8 @@ from travelogue.config.cover_scoring_v2_params import (
 from travelogue.curation.asset_quality import normalized_sharpness
 from travelogue.curation.composition_signals import mean_thirds_score
 from travelogue.curation.layout_planner import aspect_kind_for_asset
-from travelogue.curation.media_classify import cover_class_weight
 from travelogue.media.color_metrics import color_richness_multiplier
+from travelogue.media.media_classify import cover_class_weight
 
 _PERSON_TAGS = frozenset({"face", "person", "selfie", "portrait"})
 _FEATURE_LABELS: dict[str, str] = {
