@@ -57,6 +57,54 @@ def _get_trip_write_lock(path: Path) -> threading.Lock:
     return lock
 
 
+class _CrossProcessTripLock:
+    """Exclusive lock file so import subprocess and HTTP share CAS exclusion."""
+
+    def __init__(self, trip_json: Path) -> None:
+        self._lock_path = trip_json.with_name(f".{trip_json.name}.lock")
+        self._fh: Any = None
+
+    def __enter__(self) -> _CrossProcessTripLock:
+        self._lock_path.parent.mkdir(parents=True, exist_ok=True)
+        self._fh = open(self._lock_path, "a+b")
+        try:
+            if os.name == "nt":
+                import msvcrt
+
+                self._fh.seek(0)
+                if self._fh.read(1) == b"":
+                    self._fh.write(b"\0")
+                    self._fh.flush()
+                self._fh.seek(0)
+                msvcrt.locking(self._fh.fileno(), msvcrt.LK_LOCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(self._fh.fileno(), fcntl.LOCK_EX)
+        except Exception:
+            self._fh.close()
+            self._fh = None
+            raise
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        if self._fh is None:
+            return
+        try:
+            if os.name == "nt":
+                import msvcrt
+
+                self._fh.seek(0)
+                msvcrt.locking(self._fh.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(self._fh.fileno(), fcntl.LOCK_UN)
+        finally:
+            self._fh.close()
+            self._fh = None
+
+
 def meta_revision(trip: dict) -> int:
     meta = trip.get("meta")
     if not isinstance(meta, dict):
@@ -359,11 +407,11 @@ class TripService:
         if max_retries < 1:
             raise ValueError("max_retries must be >= 1")
         path = Path(trip_json_path)
-        lock = _get_trip_write_lock(path)
+        thread_lock = _get_trip_write_lock(path)
         last_expected = 0
         stamp_rendered = False
         for _attempt in range(max_retries):
-            with lock:
+            with thread_lock, _CrossProcessTripLock(path):
                 trip = self.load(path)
                 expected = meta_revision(trip)
                 last_expected = expected
@@ -396,6 +444,31 @@ class TripService:
     def resolve_trip_json(self, trip_id_or_path: str | Path, *, trips_dir: Path | None = None) -> Path:
         """Resolve tripId, trip dir, or trip.json path."""
         p = Path(trip_id_or_path)
+        base = (trips_dir or (self.root / "trips")).resolve()
+
+        def _under_trips_dir(candidate: Path) -> Path:
+            resolved = candidate.resolve()
+            try:
+                resolved.relative_to(base)
+            except ValueError as exc:
+                raise TripNotFoundError(f"E_TRIP_NOT_FOUND {trip_id_or_path}") from exc
+            return resolved
+
+        if trips_dir is not None:
+            raw = str(trip_id_or_path)
+            if ".." in Path(raw).parts or Path(raw).is_absolute():
+                raise TripNotFoundError(f"E_TRIP_NOT_FOUND {trip_id_or_path}")
+            if p.is_file():
+                return _under_trips_dir(p)
+            normalized = raw.replace("\\", "/").strip("/")
+            trip_key = p.name if normalized.startswith("trips/") else raw
+            if ".." in Path(trip_key).parts:
+                raise TripNotFoundError(f"E_TRIP_NOT_FOUND {trip_id_or_path}")
+            candidate = base / trip_key / "trip.json"
+            if candidate.is_file():
+                return _under_trips_dir(candidate)
+            raise TripNotFoundError(f"E_TRIP_NOT_FOUND {trip_id_or_path}")
+
         if p.is_file():
             return p.resolve()
 
@@ -430,8 +503,9 @@ class TripService:
         if p.suffix == ".json" and p.exists():
             return p.resolve()
 
-        base = trips_dir or (self.root / "trips")
         trip_key = p.name if normalized.startswith("trips/") else str(trip_id_or_path)
+        if ".." in Path(str(trip_key)).parts:
+            raise TripNotFoundError(f"E_TRIP_NOT_FOUND {trip_id_or_path}")
         candidate = base / trip_key / "trip.json"
         if candidate.is_file():
             return candidate.resolve()

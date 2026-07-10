@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from travelogue.config import AppConfig, app_config_scope, get_config
+from travelogue.curation.clustering import run_clustering_layer
 from travelogue.curation.curate import CurateError, run_curate
 from travelogue.errors import CodeError
 from travelogue.media.ingest import IngestError, ingest_into_trip
@@ -207,6 +208,11 @@ def _run_demo_from_album_scoped(
         meta["places"] = [place]
     if hook:
         meta["hook"] = hook[:56]
+
+    cluster_result = run_clustering_layer(trip, trip_dir=trip_root, cfg=cfg)
+    stages.append("clustering")
+    stats["clustering_mode"] = cluster_result.mode
+    stats["clustering_segment_mode"] = cluster_result.segment_mode
 
     try:
         curate_result = run_curate(

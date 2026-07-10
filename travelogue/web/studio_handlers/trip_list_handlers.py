@@ -18,7 +18,7 @@ from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_handlers.trip_common import is_protected_demo_trip
 from travelogue.web.studio_jobs import get_job_store
 from travelogue.web.studio_trip_id import is_valid_studio_trip_id
-from travelogue.web.studio_trips import list_studio_trips, studio_trips_total
+from travelogue.web.studio_trips import list_studio_trips_page
 
 _log = logging.getLogger(__name__)
 
@@ -36,8 +36,7 @@ def handle_trips(handler: StudioHandlerProtocol) -> None:
         offset = 0
     offset = max(0, offset)
     ctx = studio_ctx(handler)
-    trips = list_studio_trips(ctx.trips_root, limit=limit, offset=offset)
-    total = studio_trips_total(ctx.trips_root)
+    trips, total = list_studio_trips_page(ctx.trips_root, limit=limit, offset=offset)
     handler._json_response(200, {"ok": True, "trips": trips, "total": total})
 
 

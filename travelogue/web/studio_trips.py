@@ -215,8 +215,19 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
 
 
 def list_studio_trips(trips_dir: Path, *, limit: int = 20, offset: int = 0) -> list[dict]:
+    rows, _total = list_studio_trips_page(trips_dir, limit=limit, offset=offset)
+    return rows
+
+
+def list_studio_trips_page(
+    trips_dir: Path,
+    *,
+    limit: int = 20,
+    offset: int = 0,
+) -> tuple[list[dict], int]:
+    """Return ``(page_rows, total)`` from a single directory scan."""
     rows = _trip_rows(trips_dir)
-    return [row[1] for row in rows[offset : offset + limit]]
+    return [row[1] for row in rows[offset : offset + limit]], len(rows)
 
 
 def studio_trips_total(trips_dir: Path) -> int:

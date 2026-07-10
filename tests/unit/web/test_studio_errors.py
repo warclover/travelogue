@@ -51,3 +51,16 @@ def test_user_message_llm_network_hides_ssl_detail() -> None:
     )
     assert msg == "文案生成时网络中断，请重试"
     assert "SSL" not in msg
+
+
+def test_user_message_pipeline_plain_only() -> None:
+    msg = user_message("E_STUDIO_PIPELINE", "E_STUDIO_PIPELINE: traceback /secret/path")
+    assert msg == "导入失败，请重试"
+    assert "traceback" not in msg
+    assert "/secret" not in msg
+
+
+def test_user_message_known_code_still_appends_for_demo_too_few() -> None:
+    msg = user_message("E_DEMO_TOO_FEW", "E_DEMO_TOO_FEW: need at least 4 photos")
+    assert "至少需要 4 张照片" in msg
+    assert "need at least 4 photos" in msg

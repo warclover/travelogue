@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import html
 import mimetypes
 from pathlib import Path
 from urllib.parse import unquote
 
 from travelogue.paths import STUDIO_TEMPLATE_DIR
 from travelogue.web import studio_homepage_gate as gate
+from travelogue.web.studio_auth import STUDIO_TOKEN_COOKIE
 from travelogue.web.studio_handlers.paths import HOME_V2_PATH, STUDIO_ASSET_PREFIX
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
@@ -30,14 +32,19 @@ def _serve_studio_home_html(
     from travelogue.web import studio_homepage_gate as gate
 
     html_path = STUDIO_TEMPLATE_DIR / template_name
-    html = html_path.read_text(encoding="utf-8")
-    html = gate.inject_home_placeholders(
-        html, handler, bucket, homepage_variant=homepage_variant
+    page = html_path.read_text(encoding="utf-8")
+    page = gate.inject_home_placeholders(
+        page, handler, bucket, homepage_variant=homepage_variant
     )
-    data = html.encode("utf-8")
+    data = page.encode("utf-8")
     handler.send_response(200)
     if is_new:
         gate.set_bucket_cookie(handler, bucket)
+    if handler.studio_token:
+        handler.send_header(
+            "Set-Cookie",
+            f"{STUDIO_TOKEN_COOKIE}={handler.studio_token}; Path=/; SameSite=Lax",
+        )
     handler.send_header("Content-Type", "text/html; charset=utf-8")
     handler.send_header("Content-Length", str(len(data)))
     handler.send_header("Cache-Control", "no-cache")
@@ -112,14 +119,15 @@ def handle_templates_admin_page(handler: StudioHandlerProtocol) -> None:
     if not html_path.is_file():
         handler.send_error(404)
         return
-    html = html_path.read_text(encoding="utf-8")
+    page = html_path.read_text(encoding="utf-8")
     if handler.studio_token:
-        meta = f'<meta name="studio-token" content="{handler.studio_token}" />'
-        if "<meta name=\"studio-token\"" not in html:
-            html = html.replace("<head>", "<head>\n  " + meta, 1)
+        token = html.escape(handler.studio_token, quote=True)
+        meta = f'<meta name="studio-token" content="{token}" />'
+        if '<meta name="studio-token"' not in page:
+            page = page.replace("<head>", "<head>\n  " + meta, 1)
     if handler.studio_allow_lan:
-        html = html.replace("<body>", '<body data-admin-config-role-only="1">', 1)
-    data = html.encode("utf-8")
+        page = page.replace("<body>", '<body data-admin-config-role-only="1">', 1)
+    data = page.encode("utf-8")
     handler.send_response(200)
     handler.send_header("Content-Type", "text/html; charset=utf-8")
     handler.send_header("Content-Length", str(len(data)))
@@ -134,14 +142,15 @@ def handle_lse_flags_admin_page(handler: StudioHandlerProtocol) -> None:
     if not html_path.is_file():
         handler.send_error(404)
         return
-    html = html_path.read_text(encoding="utf-8")
+    page = html_path.read_text(encoding="utf-8")
     if handler.studio_token:
-        meta = f'<meta name="studio-token" content="{handler.studio_token}" />'
-        if "<meta name=\"studio-token\"" not in html:
-            html = html.replace("<head>", "<head>\n  " + meta, 1)
+        token = html.escape(handler.studio_token, quote=True)
+        meta = f'<meta name="studio-token" content="{token}" />'
+        if '<meta name="studio-token"' not in page:
+            page = page.replace("<head>", "<head>\n  " + meta, 1)
     if handler.studio_allow_lan:
-        html = html.replace("<body>", '<body data-admin-config-role-only="1">', 1)
-    data = html.encode("utf-8")
+        page = page.replace("<body>", '<body data-admin-config-role-only="1">', 1)
+    data = page.encode("utf-8")
     handler.send_response(200)
     handler.send_header("Content-Type", "text/html; charset=utf-8")
     handler.send_header("Content-Length", str(len(data)))

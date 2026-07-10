@@ -105,6 +105,23 @@ def _apply_featured_detected_intent(trip: dict, ingest_stats: dict) -> str:
     return tier_mode
 
 
+def _path_within_album(raw: str, album_dir: Path) -> Path:
+    """Resolve ``raw`` under ``album_dir``; reject absolute escape / ``..`` traversal."""
+    album_root = album_dir.resolve()
+    candidate = Path(raw)
+    if not candidate.is_absolute():
+        candidate = album_root / candidate
+    try:
+        resolved = candidate.resolve()
+        resolved.relative_to(album_root)
+    except (OSError, ValueError) as exc:
+        raise DemoError(
+            "E_STUDIO_ALBUM_DENIED",
+            f"E_STUDIO_ALBUM_DENIED: path outside album: {raw}",
+        ) from exc
+    return resolved
+
+
 def _resolve_ingest_folder_paths(
     album_dir: Path,
     folder_overrides: dict[str, str],
@@ -112,19 +129,9 @@ def _resolve_ingest_folder_paths(
     featured_path: Path | None = None
     material_path: Path | None = None
     if folder_overrides.get("featuredDir"):
-        raw = folder_overrides["featuredDir"]
-        featured_path = (
-            Path(raw)
-            if Path(raw).is_absolute()
-            else album_dir / raw
-        )
+        featured_path = _path_within_album(folder_overrides["featuredDir"], album_dir)
     if folder_overrides.get("materialDir"):
-        raw = folder_overrides["materialDir"]
-        material_path = (
-            Path(raw)
-            if Path(raw).is_absolute()
-            else album_dir / raw
-        )
+        material_path = _path_within_album(folder_overrides["materialDir"], album_dir)
     return featured_path, material_path
 
 
@@ -163,6 +170,7 @@ def _studio_post_curate(
     report: ProgressCallback | Callable[[str, int, str | None], None],
     persist_trip_state: Callable[[], None],
     flush_pipeline_timings: Callable[[dict[str, float] | None], None],
+    hooks: StudioHooks,
 ) -> StudioPipelineResult:
     g1_pending = bool(cfg.studio.g1_confirm_structure)
     if g1_pending:
@@ -202,34 +210,17 @@ def _studio_post_curate(
             g1_pending=g1_pending,
         )
 
-    report("narrate", 3)
-    hooks = StudioHooks(on_stage=report)
     from travelogue.web.studio_narrate import resolve_studio_narrate_provider
 
     narrate_provider = resolve_studio_narrate_provider(cfg=cfg)
     try:
+        # Single run_trip slice (align with continue_after_g1_confirm): lock → narrate → render.
         run_trip(
             trip_json,
             from_stage="lock_structure",
-            until="copy",
-            skip_locked=True,
-            narrate_provider=narrate_provider,
-            validate=False,
-            cfg=cfg,
-            studio_hooks=hooks,
-        )
-    except Exception as exc:
-        code = getattr(exc, "code", "E_STUDIO_PIPELINE")
-        raise DemoError(code, str(exc)) from exc
-
-    report("render", 4)
-    try:
-        render_t0 = time.monotonic()
-        run_trip(
-            trip_json,
-            from_stage="render",
             until="rendered",
             skip_locked=True,
+            narrate_provider=narrate_provider,
             validate=False,
             cfg=cfg,
             studio_hooks=hooks,
@@ -237,10 +228,8 @@ def _studio_post_curate(
         from travelogue.render.preview import render_preview_jpg
 
         render_preview_jpg(trip_json, trip_root=trip_root)
-        pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
         _sync_trip_from_disk(trip, svc, trip_json)
         flush_pipeline_timings()
-        mark_render_bundle_current(trip)
         persist_trip_state()
     except Exception as exc:
         code = getattr(exc, "code", "E_STUDIO_PIPELINE")
@@ -785,9 +774,9 @@ def run_studio_pipeline(
             on_timing=lambda timings: pipeline_timings.update(timings),
             on_clustering_done=capture_cluster_notice,
         )
+        post_curate_kwargs["hooks"] = hooks
 
         try:
-            ingest_t0 = time.monotonic()
             run_trip(
                 trip_json,
                 from_stage="ingest",
@@ -799,7 +788,6 @@ def run_studio_pipeline(
                 studio_profile=profile,
                 studio_hooks=hooks,
             )
-            pipeline_timings["ingestMs"] = round((time.monotonic() - ingest_t0) * 1000.0, 2)
         except IngestError as exc:
             _raise_demo_from_ingest(exc)
 
@@ -822,12 +810,7 @@ def run_studio_pipeline(
             raise DemoError(exc.code, str(exc)) from exc
 
         _sync_trip_from_disk(trip, svc, trip_json)
-        cluster_meta = (trip.get("curation") or {}).get("clustering") or {}
-        embed_stats = cluster_meta.get("embedStats") or {}
-        if cluster_meta.get("embedSkipped"):
-            pipeline_timings["embedMs"] = 0.0
-        else:
-            pipeline_timings["embedMs"] = float(embed_stats.get("elapsedMs") or 0.0)
+        # embedMs / clusterMs / ingestMs already flushed via StudioHooks.on_timing
         _flush_pipeline_timings()
         _persist_trip_state()
 

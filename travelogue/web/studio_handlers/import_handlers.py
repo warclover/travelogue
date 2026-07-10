@@ -2,9 +2,10 @@
 
 Loopback album paths (folder picker / JSON ``albumPath``):
   - Always allowed: Studio uploads dir, demo album, paths under ``trips_root``.
-  - Other local directories: allowed when ``TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM`` is not
-    ``0``/``false`` (default on loopback). Set to ``0`` to restrict imports to uploads only.
-  - LAN (``--allow-lan``): uploads and demo only; requires ``X-Studio-Token``.
+  - Other local directories: only when ``TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM=1``
+    (default **off**). Opt in explicitly for folder-picker workflows.
+  - LAN (``--allow-lan``): uploads and demo only; requires ``X-Studio-Token``
+    (header, cookie, or ``?studio_token=`` for static assets).
 """
 
 from __future__ import annotations
@@ -70,8 +71,9 @@ def _parse_keep_near_duplicates(raw: object) -> bool:
 
 
 def _studio_trust_local_album_paths() -> bool:
-    raw = os.environ.get("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "1").strip().lower()
-    return raw not in ("0", "false", "no", "off")
+    # Default off: only uploads/demo/trips are allowed unless explicitly opted in.
+    raw = os.environ.get("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "0").strip().lower()
+    return raw in ("1", "true", "yes", "on")
 
 
 def _album_under_trips_root(album_path: Path, trips_root: Path) -> bool:
@@ -365,6 +367,17 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
             },
         )
         return
+
+    # Bind tripId early so PATCH/DELETE busy checks cover in-flight imports.
+    if trip_id_str:
+        store.update(job, trip_id=trip_id_str)
+    elif not force:
+        from travelogue.util.trip_slug import demo_trip_id_from_album
+
+        predicted = demo_trip_id_from_album(
+            album_path, title=title, place=place, explicit=None
+        )
+        store.update(job, trip_id=predicted)
 
     host = handler.studio_host
     port = handler.studio_port

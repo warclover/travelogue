@@ -77,15 +77,21 @@ python -m travelogue <子命令> …
 | `--demo-album` | 导入内置 demo 相册后 serve |
 | `--port` / `-p` | 默认 **8766** |
 | `--host` | 默认 `127.0.0.1` |
-| `--allow-lan` | 非 loopback 绑定 · 需 `X-Studio-Token` |
+| `--allow-lan` | 非 loopback 绑定 · **所有**变更与敏感 GET（含 `/{tripId}/*` 静态资源）需 `X-Studio-Token`（Header / Cookie / `?studio_token=`） |
 | `--no-open` | 不自动打开浏览器 |
 | `--title` / `--place` | pipeline 默认杂志名/地点 |
 | `--trips-dir` | trips 根目录（默认 `config.trips_dir`） |
 | `--config` | 指定 config.yaml |
 
-**入口脚本**：`scripts/start-studio.bat`（双击启动 · 等价 `python -m travelogue studio`）。
+**入口脚本**：`scripts/start-studio.bat`（双击启动 · 等价 `python -m travelogue studio`，并默认 `TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM=1` 以便本机文件夹导入）。
 
-**默认 Web pipeline**（`run_studio_pipeline`）：ingest → curate → narrate(stub) → render(dual) · 4 阶段 Job · `stageHint` 人话预估。
+**环境变量**
+
+| 变量 | 默认 | 说明 |
+|------|------|------|
+| `TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM` | `0` | 为 `1` 时，loopback 下允许 `albumPath` 指向 uploads/demo/trips 以外的本机目录（文件夹选择器 / JSON 导入）。LAN 模式始终仅允许 uploads/demo。 |
+
+**默认 Web pipeline**（`run_studio_pipeline`）：ingest → clustering → curate → narrate → render · Job 进度经 `StudioHooks` · `stageHint` 人话预估。
 
 **进度**：Job 返回 `stageIndex` / `stageCount` / **`stageHint`**；ingest 子进度 `processed/total`（P5-I1）。
 
@@ -94,10 +100,10 @@ python -m travelogue <子命令> …
 | 选项 | 说明 |
 |------|------|
 | `--studio` | 启用 Studio 路由（`/`、`/__travelogue/*`）+ trip 子路径 |
-| `--allow-lan` | 局域网访问 + token 鉴权 |
+| `--allow-lan` | 局域网访问 + token 鉴权（GET/POST/PATCH/DELETE 敏感路由） |
 | `--trips-dir` | path 为 tripId 时解析 trips 根 |
 
-无 `--studio` 时行为与 MVP **单 trip 预览**一致。
+无 `--studio` 时行为与 MVP **单 trip 预览**一致；**仅允许 loopback 绑定**（非 `127.0.0.1`/`localhost`/`::1` 会拒绝启动），写接口（`save-copy` / `promote-tier`）亦仅本机。
 
 #### `travelogue export-longshot <trip>`（§3.13）
 

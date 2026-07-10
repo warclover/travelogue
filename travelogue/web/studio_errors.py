@@ -37,7 +37,25 @@ USER_MESSAGES: dict[str, str] = {
 }
 
 # Codes with a fixed user-facing line — do not append raw exception text.
-_PLAIN_ONLY_CODES = frozenset({"E_LLM_NETWORK"})
+_PLAIN_ONLY_CODES = frozenset(
+    {
+        "E_LLM_NETWORK",
+        "E_LLM_AUTH",
+        "E_SERVER",
+        "E_STUDIO_PIPELINE",
+        "E_STUDIO_AUTH",
+        "E_STUDIO_ALBUM_DENIED",
+        "E_STUDIO_REVEAL_DENIED",
+        "E_LNG_CAPTURE_FAILED",
+        "E_LNG_PLAYWRIGHT",
+        "E_NARRATE_API",
+        "E_PICK_FOLDER_FAILED",
+        "E_STUDIO_CONFIG_WRITE",
+        "E_STUDIO_RERENDER",
+        "E_TRIP_CONFLICT",
+        "E_TRIP_NOT_FOUND",
+    }
+)
 
 
 def internal_error_payload() -> dict[str, str | bool]:

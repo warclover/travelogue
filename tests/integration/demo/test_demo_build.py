@@ -31,7 +31,7 @@ def test_run_demo_stages(tmp_path: Path) -> None:
         title="阶段测试",
         dedupe=False,
     )
-    assert result.stages == ["ingest", "curate", "render"]
+    assert result.stages == ["ingest", "clustering", "curate", "render"]
     assert result.trip_json.is_file()
     assert result.index_html.is_file()
     import json

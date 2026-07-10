@@ -127,6 +127,17 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
 
 @pytest.fixture(autouse=True)
+def _trust_local_album_in_tests(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Opt in to local album paths for Studio import tests.
+
+    Production defaults ``TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM=0``. Tests that
+    assert the deny path should ``monkeypatch.setenv(..., \"0\")`` or
+    ``delenv`` explicitly.
+    """
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "1")
+
+
+@pytest.fixture(autouse=True)
 def _release_resources_before_playwright(request: pytest.FixtureRequest):
     """Reduce open_clip/torch ↔ Playwright contention for longshot capture."""
     if request.node.get_closest_marker("playwright_serial") is None:

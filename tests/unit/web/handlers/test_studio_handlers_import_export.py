@@ -29,6 +29,11 @@ def _reset_jobs() -> None:
     reset_job_store()
 
 
+@pytest.fixture(autouse=True)
+def _trust_local_album(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "1")
+
+
 def test_handle_export_requires_trip_id(tmp_path: Path) -> None:
     handler = MockStudioHandler(tmp_path / "trips", json_body={"confirmPrivacy": True})
     handle_export(handler)
@@ -163,6 +168,18 @@ def test_album_path_allowed_denies_local_when_trust_disabled(
     outside = tmp_path / "outside-album"
     outside.mkdir()
     handler = MockStudioHandler(trips_dir)
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "0")
+    assert album_path_allowed(handler, outside, trips_root=trips_dir) is False
+
+
+def test_album_path_allowed_denies_by_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    trips_dir = tmp_path / "trips"
+    outside = tmp_path / "outside-album"
+    outside.mkdir()
+    handler = MockStudioHandler(trips_dir)
+    # Override suite-wide TRUST=1 opt-in from tests/conftest.py
     monkeypatch.setenv("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "0")
     assert album_path_allowed(handler, outside, trips_root=trips_dir) is False
 

@@ -215,3 +215,91 @@ def test_longshot_cancel_releases_job_slot() -> None:
     store.cancel_job(job.job_id)
     retry = store.create_longshot_job()
     assert retry is not None
+
+
+def test_studio_get_trips_requires_token_on_allow_lan(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    token = "test-token-value"
+    handler = partial(
+        TripPreviewHandler,
+        directory=str(trips_dir),
+        trip_json=trips_dir / ".placeholder" / "trip.json",
+        studio_mode=True,
+        trips_dir=trips_dir,
+        studio_host="0.0.0.0",
+        studio_port=port,
+        studio_token=token,
+        studio_allow_lan=True,
+    )
+    server = ThreadingHTTPServer(("127.0.0.1", port), handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base = f"http://127.0.0.1:{port}"
+
+    try:
+        with pytest.raises(error.HTTPError) as exc:
+            request.urlopen(f"{base}/__travelogue/trips", timeout=5)
+        assert exc.value.code == 401
+
+        req = request.Request(
+            f"{base}/__travelogue/trips",
+            headers={"X-Studio-Token": token},
+            method="GET",
+        )
+        with request.urlopen(req, timeout=5) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+        assert resp.status == 200
+        assert body["ok"] is True
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_studio_get_static_requires_token_on_allow_lan(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trip_id = "demo-static"
+    trip_dir = trips_dir / trip_id
+    trip_dir.mkdir(parents=True)
+    (trip_dir / "trip.json").write_text(
+        json.dumps({"tripId": trip_id, "meta": {"title": "T"}}),
+        encoding="utf-8",
+    )
+    asset = trip_dir / "preview.txt"
+    asset.write_text("secret", encoding="utf-8")
+    port = _free_port()
+    token = "test-token-value"
+    handler = partial(
+        TripPreviewHandler,
+        directory=str(trips_dir),
+        trip_json=trip_dir / "trip.json",
+        studio_mode=True,
+        trips_dir=trips_dir,
+        studio_host="0.0.0.0",
+        studio_port=port,
+        studio_token=token,
+        studio_allow_lan=True,
+    )
+    server = ThreadingHTTPServer(("127.0.0.1", port), handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base = f"http://127.0.0.1:{port}"
+
+    try:
+        with pytest.raises(error.HTTPError) as exc:
+            request.urlopen(f"{base}/{trip_id}/preview.txt", timeout=5)
+        assert exc.value.code == 401
+
+        req = request.Request(
+            f"{base}/{trip_id}/preview.txt",
+            headers={"X-Studio-Token": token},
+            method="GET",
+        )
+        with request.urlopen(req, timeout=5) as resp:
+            body = resp.read().decode("utf-8")
+        assert resp.status == 200
+        assert body == "secret"
+    finally:
+        server.shutdown()
+        server.server_close()
