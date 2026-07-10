@@ -268,8 +268,8 @@ def compute_layout_metrics(
                 subject_run_tolerance=subject_run_tolerance,
             )
         )
-    from travelogue.curation.mosaic.constants import MOSAIC_UNIFIED_PATTERN_IDS
-    from travelogue.curation.mosaic.metrics import compute_mosaic_metrics
+    from travelogue.layout_engine.mosaic.constants import MOSAIC_UNIFIED_PATTERN_IDS
+    from travelogue.layout_engine.mosaic.metrics import compute_mosaic_metrics
 
     if mosaic_logs is not None or any("mosaic-5" in pid for pid in pids):
         out.update(compute_mosaic_metrics(chapters, mosaic_logs=mosaic_logs))

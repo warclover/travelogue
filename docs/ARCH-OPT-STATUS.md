@@ -52,9 +52,10 @@
 
 证据：`python -m importlinter.cli lint-imports` 全绿；相关 pytest（ingest / cover / sandbox / intent / closing）通过；分支 `51964a3` 起可复现。
 
-## import-linter（M-B1 后 · 0 豁免）
+## import-linter（M-B1 清零后 · 6 条登记债务）
 
-> M-B0 基线 26 条 → M-B1 初版 11 条 → **2026-07-08 清零 0 条**（domain/util 下沉 + admission hook 注册）。
+> M-B0 基线 26 条 → M-B1 初版 11 条 → **2026-07-08 清零 0 条**。  
+> **2026-07-10**：ingest 美学收尾与 vision MLLM 引入 **6 条** `media`/`vision` → `curation` 豁免（P2 aesthetic debt，登记于 `pyproject.toml` + `EXPECTED_IMPORTLINTER_IGNORES`）。
 
 | 批次 | 清偿项 | 处置 |
 |------|--------|------|
@@ -63,23 +64,23 @@
 | batch-6b | layout_engine→templating | `domain/template_admin_state` · `util/template_metrics` |
 | batch-6b | layout_templates↔templating | review 读 domain；HTML admission 上移至 web handler |
 | batch-6b | templating→render | `domain/admission_hooks` + `render/admission_golden` 注册 |
+| post-M-B1 | ingest → aesthetic/cull/profile；MLLM → blind_review/score/album_profile | **6 条登记豁免**（待 P2 下沉 `media/` / `vision/`） |
 
-证据：`python -m importlinter.cli lint-imports` 全绿（`ignore_imports = []`）。
+证据：`python -m importlinter.cli lint-imports` 全绿（6 条 `ignore_imports`）。
 
 ## LSE ↔ curation cross-import 基线（ADR-015）
 
 > **与 import-linter 分层违例不同维度**：仅统计 `layout_engine` ↔ `curation` 包间 AST 边。  
 > 查看：`python scripts/lse_cross_import_stats.py`（只读）；基线更新走 `python scripts/lint_lse_cross_import.py --update-baseline`（只降不升棘轮）
 
-| 指标 | M-B0 参考 | **2026-07-09（shim-retire + hero registry）** | PRD / ADR 目标 |
+| 指标 | M-B0 参考 | **2026-07-10（shim 退役后）** | PRD / ADR 目标 |
 |------|-----------|------------------------------|----------------|
-| layout_engine → curation | — | **0**（hero 经 `layout_contract` 注册表反转，无 AST 边） | 0 ✅ |
-| curation → layout_engine | — | **7**（curate→adapter 白名单） | adapter 单向入口 |
-| **合计** | 51（B4a 前）→ 44（B4a 后） | **7** | PRD ≤10 ✅ |
-| Top importer | — | `curation.curate` (7) | 符合 §5.3.1 白名单 |
-| Top imported | — | `layout_engine.adapter` 等 7 模块 | intentional |
+| layout_engine → curation | — | **0** | 0 ✅ |
+| curation → layout_engine | — | **18**（含原 shim 掩盖的静态边） | adapter 单向入口；继续薄化 |
+| **合计** | 51（B4a 前）→ 7（shim 掩盖） | **18**（显式化） | PRD ≤10 为长期目标 |
+| Top importer | — | `curation.curate` | 符合 §5.3.1 白名单 |
 
-**说明**：B4b 物理迁移后 LSE 模块仍大量 lazy-import curation（评分、mosaic shim、curate 实验路径），边数上升属预期；**≤10 目标归属 M-B4 后续**（adapter 薄化 + curation shim 删除 + 白名单边审计），非 M-B1 范围。
+**说明**：删除 `curation.mosaic` / `screen_planner` 等 importlib shim 后，原先运行时才解析的依赖变为 AST 静态边（7→18）。**不是新增耦合**，而是让既有依赖可审计。后续通过 adapter 薄化继续压边。
 
 ## 开关台账（M-D1 后）
 
