@@ -96,19 +96,39 @@ def write_curate_profile(
     return profile
 
 
+def _iso_to_mtime(value: object) -> float | None:
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return dt.timestamp()
+    except (TypeError, ValueError, OSError):
+        return None
+
+
 def _trip_updated_mtime(trip_dir: Path, trip: dict) -> float:
     trip_json = trip_dir / "trip.json"
-    try:
-        updated = trip.get("updatedAt")
-        if updated:
-            dt = datetime.fromisoformat(str(updated).replace("Z", "+00:00"))
-            return dt.timestamp()
-    except (TypeError, ValueError, OSError):
-        pass
+    parsed = _iso_to_mtime(trip.get("updatedAt"))
+    if parsed is not None:
+        return parsed
     try:
         return trip_json.stat().st_mtime
     except OSError:
         return 0.0
+
+
+def _preview_content_mtime(trip_dir: Path, trip: dict) -> float:
+    """Watermark for preview.jpg freshness.
+
+    Prefer ``algorithmProfile.curatedAt`` (set on re-curate when preview is
+    regenerated). Do **not** use generic ``updatedAt`` — metadata writes such as
+    copy-telemetry bump ``updatedAt`` without regenerating ``preview.jpg``, which
+    previously false-flagged homepage ``algorithmStale`` after「更新长图」.
+    """
+    curated = _iso_to_mtime(_stored_profile(trip).get("curatedAt"))
+    if curated is not None:
+        return curated
+    return _trip_updated_mtime(trip_dir, trip)
 
 
 def preview_outputs_stale(trip_dir: Path, *, trip_mtime: float) -> bool:
@@ -204,7 +224,7 @@ def assess_algorithm_freshness(
     if trip_dir is not None:
         preview_stale = preview_outputs_stale(
             trip_dir,
-            trip_mtime=_trip_updated_mtime(trip_dir, trip),
+            trip_mtime=_preview_content_mtime(trip_dir, trip),
         )
 
     hints: list[str] = []

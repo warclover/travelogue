@@ -130,14 +130,16 @@ _MOBILE_IMAGE_SIZES: dict[str, str] = {
 }
 
 # Align with journal.css --page-width / --bleed-width clamps (up to 1320 / 1920px).
+# Cap screen_full below 3200: DPR×size otherwise selects w3200 for every full-bleed
+# slot and large trips OOM the browser tab (110×~40MB decode).
 _WEB_IMAGE_SIZES: dict[str, str] = {
     "cover": (
-        "(min-width: 1920px) 2200px, (min-width: 1200px) 1800px, "
-        "(min-width: 768px) 1400px, 100vw"
+        "(min-width: 1920px) 1800px, (min-width: 1200px) 1600px, "
+        "(min-width: 768px) 1200px, 100vw"
     ),
     "card_bleed": (
-        "(min-width: 1920px) 2200px, (min-width: 1200px) 1800px, "
-        "(min-width: 768px) 1400px, 100vw"
+        "(min-width: 1920px) 1800px, (min-width: 1200px) 1600px, "
+        "(min-width: 768px) 1200px, 100vw"
     ),
     "card_page": (
         "(min-width: 1920px) 1320px, (min-width: 1200px) 1200px, "
@@ -146,14 +148,17 @@ _WEB_IMAGE_SIZES: dict[str, str] = {
     "row_third": "(min-width: 1920px) 720px, (min-width: 1200px) 600px, 33vw",
     "row_half": "(min-width: 1920px) 1100px, (min-width: 1200px) 900px, 50vw",
     "screen_full": (
-        "(min-width: 1920px) 3200px, (min-width: 1200px) 2400px, "
-        "(min-width: 768px) 1800px, 100vw"
+        "(min-width: 1920px) 1800px, (min-width: 1200px) 1600px, "
+        "(min-width: 768px) 1200px, 100vw"
     ),
     "scroll": (
         "(min-width: 1920px) 1000px, (min-width: 1200px) 760px, "
         "(min-width: 768px) 620px, 86vw"
     ),
 }
+
+# Prefer mid-tier for <img src> fallback; srcset still offers larger for capture/retina.
+_PREFERRED_SRC_WIDTHS: tuple[int, ...] = (1600, 1200, 800, 2400, 3200)
 
 
 def pick_image_sizes(export_layout: str, slot: str) -> str:
@@ -164,8 +169,37 @@ def pick_image_sizes(export_layout: str, slot: str) -> str:
 
 
 def pick_image_src(asset: dict, *, export_layout: str = "mobile") -> str:
-    """Display WebP (scaled, original aspect). Ignores legacy profile crop files."""
-    return asset.get("displayFile") or asset.get("sourceFile") or ""
+    """Display WebP (scaled, original aspect). Ignores legacy profile crop files.
+
+    Prefer a mid-tier srcset entry (typically w1600) over ``displayFile`` when the
+    latter is the largest export (often w3200). Using w3200 as every ``<img src>``
+    fallback makes large trips OOM on reload after re-curate.
+    """
+    display = asset.get("displayFile") or ""
+    source = asset.get("sourceFile") or ""
+    if export_layout == "mobile" and asset.get("cropMobile"):
+        return display or source
+
+    srcset = asset.get("srcset") or []
+    if isinstance(srcset, list) and srcset:
+        by_width: dict[int, str] = {}
+        for entry in srcset:
+            if not isinstance(entry, dict):
+                continue
+            try:
+                width = int(entry.get("width") or 0)
+            except (TypeError, ValueError):
+                continue
+            file_rel = entry.get("file")
+            if width > 0 and file_rel:
+                by_width[width] = str(file_rel)
+        for preferred in _PREFERRED_SRC_WIDTHS:
+            if preferred in by_width:
+                return by_width[preferred]
+        if by_width:
+            return by_width[min(by_width)]
+
+    return display or source
 
 
 def asset_aspect_kind(asset: dict) -> str:

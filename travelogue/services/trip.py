@@ -347,8 +347,15 @@ class TripService:
         mutator: Callable[[dict], T],
         *,
         max_retries: int = 3,
+        touch_updated: bool = True,
     ) -> T:
-        """Atomic read-modify-write with ``meta.revision`` optimistic locking."""
+        """Atomic read-modify-write with ``meta.revision`` optimistic locking.
+
+        ``touch_updated=False`` keeps ``updatedAt`` unchanged for metadata-only
+        writes (e.g. copy telemetry). Shelf stale badges compare ``updatedAt`` /
+        ``curatedAt`` to preview/longshot mtimes; bumping ``updatedAt`` on open
+        would false-flag ``algorithmStale`` / ``longshotStale``.
+        """
         if max_retries < 1:
             raise ValueError("max_retries must be >= 1")
         path = Path(trip_json_path)
@@ -368,7 +375,8 @@ class TripService:
                 if meta.pop(_STAMP_RENDERED_REVISION, False):
                     stamp_rendered = True
                 meta["revision"] = expected + 1
-                trip["updatedAt"] = utc_now_iso()
+                if touch_updated:
+                    trip["updatedAt"] = utc_now_iso()
                 if stamp_rendered:
                     meta["renderedRevision"] = meta["revision"]
                 if _read_disk_revision(path) != expected:

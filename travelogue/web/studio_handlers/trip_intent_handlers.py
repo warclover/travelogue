@@ -292,7 +292,11 @@ def handle_post_copy_telemetry(handler: StudioHandlerProtocol, trip_id: str) -> 
             mark_render_bundle_current_if_fresh(t, trip_dir)
             return metrics
 
-        ok, metrics = trip_update_or_respond(handler, svc, trip_json, mutator)
+        # preview_open / UI counters must not bump updatedAt — that false-flags
+        # homepage previewStale / longshotStale after「更新长图」opens the preview.
+        ok, metrics = trip_update_or_respond(
+            handler, svc, trip_json, mutator, touch_updated=False
+        )
         if not ok:
             return
     except ValueError as exc:

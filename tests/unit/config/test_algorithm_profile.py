@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -93,6 +94,36 @@ def test_preview_outputs_stale_when_trip_newer(tmp_path: Path):
     os.utime(preview, (old, old))
     assert preview_outputs_stale(tmp_path, trip_mtime=old) is False
     assert preview_outputs_stale(tmp_path, trip_mtime=time.time()) is True
+
+
+def test_preview_stale_uses_curated_at_not_updated_at(tmp_path: Path):
+    """Metadata bumps to updatedAt must not false-flag previewStale after curate."""
+    import os
+
+    preview = tmp_path / "preview.jpg"
+    preview.write_bytes(b"jpeg")
+    curated_ts = time.time() - 50
+    os.utime(preview, (curated_ts + 1, curated_ts + 1))
+    trip = {
+        "updatedAt": "2099-01-01T00:00:00Z",
+        "curation": {
+            "algorithmProfile": {
+                "curatedAt": datetime.fromtimestamp(curated_ts, tz=UTC)
+                .strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "cullKeepRatioFloor": expected_profile()["cullKeepRatioFloor"],
+                "coverScoringHash": expected_profile()["coverScoringHash"],
+                "coverScoringVersion": expected_profile()["coverScoringVersion"],
+                "coverScoringV2Hash": expected_profile()["coverScoringV2Hash"],
+                "sharpnessVersion": expected_profile()["sharpnessVersion"],
+                "aestheticEnabled": expected_profile()["aestheticEnabled"],
+                "aestheticVersion": expected_profile()["aestheticVersion"],
+            }
+        },
+        "assets": [_image("a1")],
+    }
+    out = assess_algorithm_freshness(trip, tmp_path)
+    assert out["previewStale"] is False
+    assert out["algorithmStale"] is False
 
 
 def test_should_recull_on_curate_respects_flags():

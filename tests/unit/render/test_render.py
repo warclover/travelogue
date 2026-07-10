@@ -172,7 +172,7 @@ def test_render_web_export_includes_responsive_sizes(trip_workspace: Path) -> No
     trip = json.loads((trip_workspace / "trip.json").read_text(encoding="utf-8"))
     trip["exportLayout"] = "web"
     html = render_html(trip, export_mode="draft", trip_root=trip_workspace)
-    assert "2200px" in html
+    assert "1800px" in html
     assert pick_image_sizes("web", "cover") in html
     assert pick_image_sizes("mobile", "cover") == "100vw"
     assert 'sizes="100vw"' in html or "sizes=" in html

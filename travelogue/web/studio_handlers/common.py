@@ -47,10 +47,12 @@ def trip_update_or_respond(
     svc: TripService,
     trip_json: Path,
     mutator: Callable[[dict], _U],
+    *,
+    touch_updated: bool = True,
 ) -> tuple[bool, _U | None]:
     """Run ``svc.update``; on conflict respond 409 and return ``(False, None)``."""
     try:
-        return True, svc.update(trip_json, mutator)
+        return True, svc.update(trip_json, mutator, touch_updated=touch_updated)
     except TripConflictError as exc:
         handler._json_response(409, client_error_payload(exc))
         return False, None

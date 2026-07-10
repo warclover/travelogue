@@ -465,6 +465,7 @@ def test_handle_post_copy_telemetry(tmp_path: Path) -> None:
     assert before["meta"]["renderedRevision"] == meta_revision(before)
     assert trip_render_bundle_stale(trip_dir, before) is False
 
+    updated_before = before.get("updatedAt")
     handler = MockStudioHandler(
         trips_dir,
         json_body={"event": "photos_only_on"},
@@ -480,6 +481,7 @@ def test_handle_post_copy_telemetry(tmp_path: Path) -> None:
     assert metrics["clientEventCounts"]["photos_only_on"] == 1
     assert saved["meta"]["renderedRevision"] == meta_revision(saved)
     assert trip_render_bundle_stale(trip_dir, saved) is False
+    assert saved.get("updatedAt") == updated_before
 
 
 def test_handle_post_copy_telemetry_keeps_true_stale(tmp_path: Path) -> None:
@@ -499,6 +501,7 @@ def test_handle_post_copy_telemetry_keeps_true_stale(tmp_path: Path) -> None:
     trip.setdefault("meta", {})["revision"] = 3
     trip["meta"]["renderedRevision"] = 1
     trip["meta"]["title"] = "edited after render"
+    trip["updatedAt"] = "2025-01-01T00:00:00Z"
     svc.save(trip, trip_json)
     assert trip_render_bundle_stale(trip_dir, svc.load(trip_json)) is True
 
@@ -515,3 +518,63 @@ def test_handle_post_copy_telemetry_keeps_true_stale(tmp_path: Path) -> None:
     assert trip_render_bundle_stale(trip_dir, after) is True
     assert after["meta"]["renderedRevision"] == 1
     assert meta_revision(after) == 4
+    assert after.get("updatedAt") == "2025-01-01T00:00:00Z"
+
+
+def test_copy_telemetry_does_not_reflag_preview_stale(tmp_path: Path) -> None:
+    """Opening preview after curate must not revive algorithmStale via updatedAt."""
+    import os
+    from datetime import UTC, datetime
+
+    from travelogue.curation.algorithm_profile import assess_algorithm_freshness, expected_profile
+    from travelogue.services.trip import mark_render_bundle_current
+    from travelogue.web.studio_handlers.trip_intent_handlers import handle_post_copy_telemetry
+
+    trips_dir = tmp_path / "trips"
+    trip_json = _trip_with_chapter(trips_dir)
+    trip_dir = trip_json.parent
+    (trip_dir / "index.html").write_text("<html></html>", encoding="utf-8")
+    preview = trip_dir / "preview.jpg"
+    preview.write_bytes(b"jpeg")
+    svc = TripService(root=trips_dir.parent)
+    curated_at = "2025-06-01T12:00:00Z"
+    curated_ts = datetime.fromisoformat(curated_at.replace("Z", "+00:00")).timestamp()
+
+    def seed(t: dict) -> None:
+        mark_render_bundle_current(t)
+        profile = expected_profile()
+        profile["curatedAt"] = curated_at
+        t.setdefault("curation", {})["algorithmProfile"] = profile
+        t["assets"] = [
+            {
+                "id": "a1",
+                "type": "image",
+                "quality": {
+                    "aesthetic": {
+                        "version": profile["aestheticVersion"],
+                        "overall": 0.5,
+                        "confidence": 0.6,
+                        "source": "rules",
+                        "dims": {},
+                        "signals": {},
+                    }
+                },
+            }
+        ]
+
+    svc.update(trip_json, seed)
+    os.utime(preview, (curated_ts + 2, curated_ts + 2))
+    before = assess_algorithm_freshness(svc.load(trip_json), trip_dir)
+    assert before["previewStale"] is False
+
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={"event": "preview_open"},
+        path="/__travelogue/trips/demo-copy-intent/copy-telemetry",
+    )
+    handle_post_copy_telemetry(handler, "demo-copy-intent")
+    assert handler.response is not None
+    assert handler.response[0] == 200
+    after = assess_algorithm_freshness(svc.load(trip_json), trip_dir)
+    assert after["previewStale"] is False
+    assert after["algorithmStale"] is False
