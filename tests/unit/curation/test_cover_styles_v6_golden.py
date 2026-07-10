@@ -30,16 +30,17 @@ _GOLDEN: list[tuple[str, str, float, float, dict]] = [
     ("band-cut", "boost", 0.48, 0.40, {}),
     ("band-cut", "penalty", 0.5, 0.72, {}),
     ("band-cut", "penalty", 0.55, 0.70, {}),
-    # cameo-aperture · prefer center; avoid edge
-    ("cameo-aperture", "boost", 0.5, 0.45, {}),
-    ("cameo-aperture", "boost", 0.48, 0.42, {}),
+    # cameo-aperture · prefer tight center (trusted focal); avoid edge
+    ("cameo-aperture", "boost", 0.51, 0.44, {"faceCount": 1}),
+    ("cameo-aperture", "boost", 0.48, 0.42, {"faceCount": 1}),
     ("cameo-aperture", "penalty", 0.08, 0.20, {}),
     ("cameo-aperture", "penalty", 0.92, 0.85, {}),
     # type-monument · prefer texture_mood; avoid face_must_read / very_light_bg
     ("type-monument", "boost", 0.35, 0.55, {"aesthetic": {"overall": 0.72}}),
     ("type-monument", "boost", 0.6, 0.6, {"aesthetic": {"overall": 0.65}}),
-    ("type-monument", "penalty", 0.5, 0.42, {"aesthetic": {"overall": 0.3}}),
-    ("type-monument", "penalty", 0.5, 0.5, {"avgLuma": 0.85, "aesthetic": {"overall": 0.2}}),
+    # face_must_read: slightly off sentinel so focal is trusted
+    ("type-monument", "penalty", 0.52, 0.42, {"aesthetic": {"overall": 0.3}, "faceCount": 1}),
+    ("type-monument", "penalty", 0.55, 0.50, {"avgLuma": 0.85, "aesthetic": {"overall": 0.2}}),
 ]
 
 

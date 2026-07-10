@@ -8,19 +8,61 @@ from travelogue.cover_engine.registry import get_profile, get_style
 from travelogue.cover_engine.types import CoverStyleProfile
 
 _DEFAULT_FIT_THRESHOLD = 0.15
+_DEFAULT_FOCAL_X = 0.5
+_DEFAULT_FOCAL_Y = 0.45
+# Cameo must be a true circular crop candidate — not "roughly mid-frame".
+_CAMEO_CENTER_DX = 0.10
+_CAMEO_CENTER_DY = 0.12
+_CAMEO_CENTER_BONUS = 0.40
 
 
 def _focal(asset: dict[str, Any]) -> tuple[float, float]:
     fp = asset.get("focalPoint") or {}
     try:
-        fx = float(fp.get("x", 0.5))
+        fx = float(fp.get("x", _DEFAULT_FOCAL_X))
     except (TypeError, ValueError):
-        fx = 0.5
+        fx = _DEFAULT_FOCAL_X
     try:
-        fy = float(fp.get("y", 0.45))
+        fy = float(fp.get("y", _DEFAULT_FOCAL_Y))
     except (TypeError, ValueError):
-        fy = 0.45
+        fy = _DEFAULT_FOCAL_Y
     return fx, fy
+
+
+def _has_face_signal(asset: dict[str, Any]) -> bool:
+    faces = asset.get("faces")
+    if isinstance(faces, (list, tuple)) and len(faces) > 0:
+        return True
+    for key in ("faceCount", "face_count", "numFaces"):
+        raw = asset.get(key)
+        if raw is None:
+            continue
+        try:
+            if int(raw) > 0:
+                return True
+        except (TypeError, ValueError):
+            continue
+    return False
+
+
+def focal_is_trusted(asset: dict[str, Any]) -> bool:
+    """True when focal is measured — not missing / subject_detect sentinel."""
+    fp = asset.get("focalPoint")
+    if not isinstance(fp, dict):
+        return False
+    if fp.get("x") is None and fp.get("y") is None:
+        return False
+    fx, fy = _focal(asset)
+    # Default written when face detection finds nothing (subject_detect).
+    if abs(fx - _DEFAULT_FOCAL_X) < 1e-9 and abs(fy - _DEFAULT_FOCAL_Y) < 1e-9:
+        return _has_face_signal(asset)
+    return True
+
+
+def _is_cameo_center(fx: float, fy: float) -> bool:
+    return abs(fx - _DEFAULT_FOCAL_X) < _CAMEO_CENTER_DX and abs(
+        fy - _DEFAULT_FOCAL_Y
+    ) < _CAMEO_CENTER_DY
 
 
 def style_fit_score(asset: dict[str, Any], profile: CoverStyleProfile) -> float:
@@ -29,12 +71,14 @@ def style_fit_score(asset: dict[str, Any], profile: CoverStyleProfile) -> float:
         return 0.0
     score = 0.0
     fx, fy = _focal(asset)
+    trusted = focal_is_trusted(asset)
 
     if "focal_y_max" in profile.prefer and fy <= float(profile.prefer["focal_y_max"]):
         score += 0.35
     if profile.prefer.get("center_subject"):
-        if abs(fx - 0.5) < 0.18 and abs(fy - 0.45) < 0.22:
-            score += 0.4
+        # Unknown / sentinel focals must not inflate cameo (distribution collapse).
+        if trusted and _is_cameo_center(fx, fy):
+            score += _CAMEO_CENTER_BONUS
     if profile.prefer.get("right_weighted") and fx >= 0.45:
         score += 0.25
     if profile.prefer.get("upper_scene") and fy <= 0.5:
@@ -81,7 +125,7 @@ def style_avoid_penalty(asset: dict[str, Any], profile: CoverStyleProfile) -> fl
 
     if profile.avoid.get("face_must_read"):
         # Tight center focal ≈ face that must remain readable under heavy dim.
-        if abs(fx - 0.5) < 0.12 and abs(fy - 0.42) < 0.14:
+        if focal_is_trusted(asset) and abs(fx - 0.5) < 0.12 and abs(fy - 0.42) < 0.14:
             penalty += 0.55
 
     if profile.avoid.get("very_light_bg"):

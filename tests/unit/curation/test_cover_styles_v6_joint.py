@@ -54,9 +54,22 @@ def test_band_cut_penalizes_focal_in_safe_zone() -> None:
 
 def test_cameo_prefers_center_subject() -> None:
     profile = get_profile("cameo-aperture")
-    center = _asset("c", 0.5, 0.45)
+    center = _asset("c", 0.51, 0.44)
+    center["faceCount"] = 1
     edge = _asset("e", 0.1, 0.2)
     assert style_fit_score(center, profile) > style_fit_score(edge, profile)
+
+
+def test_cameo_ignores_sentinel_default_focal() -> None:
+    """Missing / (0.5,0.45) sentinel must not inflate cameo fit."""
+    profile = get_profile("cameo-aperture")
+    sentinel = _asset("s", 0.5, 0.45)
+    loose = _asset("l", 0.36, 0.33)
+    tight = _asset("t", 0.51, 0.44)
+    tight["faceCount"] = 1
+    assert style_fit_score(sentinel, profile) == 0.0
+    assert style_fit_score(loose, profile) == 0.0
+    assert style_fit_score(tight, profile) > 0.0
 
 
 def test_score_pair_joint_formula() -> None:
@@ -114,7 +127,7 @@ def test_apply_joint_pick_locks() -> None:
 def test_sync_trip_covers_respects_lock() -> None:
     assets = [
         _asset("a1", 0.5, 0.3, score_hint=2),
-        _asset("a2", 0.5, 0.4, score_hint=1),
+        _asset("a2", 0.55, 0.4, score_hint=1),
     ]
     trip = _trip(assets)
     sync_trip_covers(trip, export_layout="auto", force=True)
@@ -123,7 +136,8 @@ def test_sync_trip_covers_respects_lock() -> None:
     web = trip["curation"]["coverByLayout"]["web"]
 
     # Mutate assets order / scores would change pick; lock must freeze web
-    trip["assets"].append(_asset("a3", 0.5, 0.45, score_hint=9))
+    trip["assets"].append(_asset("a3", 0.52, 0.44, score_hint=9))
+    trip["assets"][-1]["faceCount"] = 1
     sync_trip_covers(trip, export_layout="auto", force=False)
     assert trip["meta"]["coverOpeningStyle"] == style
     assert trip["curation"]["coverByLayout"]["web"] == web
@@ -142,9 +156,10 @@ def test_sync_trip_covers_force_reopens_joint() -> None:
 
 def test_repick_cover_for_style_keeps_lock() -> None:
     assets = [
-        _asset("center", 0.5, 0.45, score_hint=2),
+        _asset("center", 0.51, 0.44, score_hint=2),
         _asset("edge", 0.1, 0.2, score_hint=2),
     ]
+    assets[0]["faceCount"] = 1
     trip = _trip(assets)
     explain = repick_cover_for_style(trip, "cameo-aperture", layout="web")
     assert explain.style_id == "cameo-aperture"
@@ -152,6 +167,7 @@ def test_repick_cover_for_style_keeps_lock() -> None:
     assert trip["curation"]["coverJointLocked"] is True
     assert trip["meta"]["coverOpeningStyle"] == "cameo-aperture"
     assert trip["curation"]["coverByLayout"]["web"] == explain.asset_id
+    assert explain.asset_id == "center"
 
 
 def test_apply_style_keep_cover() -> None:
@@ -169,4 +185,50 @@ def test_hash_fallback_pick_source() -> None:
     explain = hash_fallback_pick(trip, layout="web")
     assert explain.source == "hash-fallback"
     assert explain.style_id
-    assert explain.asset_id == "a1"
+
+
+def test_joint_pick_distribution_not_cameo_collapsed() -> None:
+    """Regression: varied focals must not all collapse to cameo-aperture."""
+    from collections import Counter
+
+    # Mix of upper / right / band-safe / true-center / atmosphere focals
+    pools = [
+        [_asset("u1", 0.5, 0.28, score_hint=3), _asset("u2", 0.55, 0.32, score_hint=2)],
+        [_asset("r1", 0.72, 0.45, score_hint=3), _asset("r2", 0.68, 0.50, score_hint=2)],
+        [_asset("b1", 0.5, 0.35, score_hint=3), _asset("b2", 0.48, 0.40, score_hint=2)],
+        [
+            _asset("c1", 0.51, 0.44, score_hint=3),
+            _asset("c2", 0.49, 0.43, score_hint=2),
+        ],
+        [_asset("m1", 0.35, 0.55, score_hint=3), _asset("m2", 0.60, 0.58, score_hint=2)],
+        [_asset("loose", 0.36, 0.33, score_hint=3), _asset("loose2", 0.40, 0.30, score_hint=2)],
+        [_asset("sent", 0.5, 0.45, score_hint=3), _asset("sent2", 0.5, 0.45, score_hint=2)],
+        [_asset("left", 0.22, 0.40, score_hint=3), _asset("up", 0.5, 0.25, score_hint=2.5)],
+    ]
+    pools[3][0]["faceCount"] = 1
+    pools[3][1]["faceCount"] = 1
+    for i, assets in enumerate(pools):
+        for a in assets:
+            a["aesthetic"] = {"overall": 0.62 + 0.01 * i}
+
+    counts: Counter[str] = Counter()
+    for i, assets in enumerate(pools):
+        trip = _trip(assets)
+        trip["tripId"] = f"dist-{i}"
+        explain = pick_cover_style_and_asset(trip, layout="web", k=5)
+        counts[explain.style_id] += 1
+
+    assert counts["cameo-aperture"] <= max(2, len(pools) // 2), counts
+    assert len(counts) >= 3, counts
+
+
+def test_loose_center_prefers_veil_or_band_over_cameo() -> None:
+    """Roughly mid-upper scene must not win as cameo solely via wide center window."""
+    assets = [
+        _asset("loose", 0.36, 0.33, score_hint=5),
+        _asset("loose2", 0.40, 0.30, score_hint=4),
+    ]
+    trip = _trip(assets)
+    explain = pick_cover_style_and_asset(trip, layout="web", k=5)
+    assert explain.style_id != "cameo-aperture"
+    assert explain.style_id in {"veil-footer", "band-cut", "folio-overlap", "type-monument"}

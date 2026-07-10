@@ -524,7 +524,7 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
     --cover-band-pad: 20px clamp(32px, 4.5vw, 52px);
     --cover-band-paper: rgba(247, 245, 242, 0.94);
     --cover-band-title-size: clamp(1.45rem, 2.8vw, 2.05rem);
-    --cover-cameo-size: min(48vh, 400px);
+    --cover-cameo-size: min(58vh, 520px);
     --cover-cameo-ground: radial-gradient(ellipse at 50% 35%, #343c42 0%, #232a2f 55%, #1a1f23 100%);
     --cover-cameo-ring:
       0 0 0 1px rgba(196, 165, 116, 0.35),
@@ -883,8 +883,8 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 26px;
-    padding: 36px 40px 40px;
+    gap: 20px;
+    padding: 28px 40px 32px;
     background: var(--cover-cameo-ground);
   }
 
