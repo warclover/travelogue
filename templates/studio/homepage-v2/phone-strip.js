@@ -55,54 +55,47 @@ function buildSlide(manifest, page, index, tier, onSlideReady) {
     slide.dataset.scrollPreview = "1";
   }
 
-  var attachImg = function () {
-    var img = document.createElement("img");
-    img.className = "v2-phone-strip__slide-img";
-    img.alt = (page && page.label) || "";
-    if (index === 0) img.setAttribute("fetchpriority", "high");
-    if (tier === "L2" && index > 0) img.loading = "lazy";
-    img.onload = function () {
-      applyScrollSlideClass(slide, page, img);
-      mountSlideImage(slide, img, onSlideReady);
-    };
-    img.onerror = function () { /* 保留 placeholder */ };
-    img.src = url;
-    if (img.complete && img.naturalWidth > 0) {
-      applyScrollSlideClass(slide, page, img);
-      mountSlideImage(slide, img, onSlideReady);
-    }
-  };
-
-  if (shouldEagerCarouselPage(index, tier)) attachImg();
-  else {
+  if (shouldEagerCarouselPage(index, tier)) {
+    attachPhoneSlideImage(slide, url, page, index, onSlideReady);
+  } else {
     slide.dataset.lazySrc = url;
   }
   return slide;
+}
+
+/**
+ * 与 carousel 相同：不可对未入 DOM 的 img 使用 loading=lazy，
+ * 否则预载邻页时请求被跳过，lazySrc 已删，末页会永久显示日期 placeholder。
+ */
+function attachPhoneSlideImage(slide, url, page, index, onSlideReady) {
+  if (!slide || !url) return;
+  var img = document.createElement("img");
+  img.className = "v2-phone-strip__slide-img";
+  img.alt = (page && page.label) || slide.getAttribute("aria-label") || "";
+  if (index === 0) img.setAttribute("fetchpriority", "high");
+  img.decoding = "async";
+  function finish() {
+    applyScrollSlideClass(slide, page, img);
+    if (slide.dataset.scrollPreview === "1" || shouldScrollPortraitImage(img)) {
+      slide.classList.add("v2-phone-strip__slide--scroll");
+    }
+    mountSlideImage(slide, img, onSlideReady);
+  }
+  img.onload = finish;
+  img.onerror = function () {
+    if (!slide.querySelector(".v2-phone-strip__slide-img")) {
+      slide.dataset.lazySrc = url;
+    }
+  };
+  img.src = url;
+  if (img.complete && img.naturalWidth > 0) finish();
 }
 
 function ensureSlideLoaded(slide, onSlideReady) {
   if (!slide || !slide.dataset.lazySrc) return;
   var url = slide.dataset.lazySrc;
   delete slide.dataset.lazySrc;
-  var label = slide.getAttribute("aria-label") || "";
-  var img = document.createElement("img");
-  img.className = "v2-phone-strip__slide-img";
-  img.alt = label;
-  img.loading = "lazy";
-  img.onload = function () {
-    if (slide.dataset.scrollPreview === "1" || shouldScrollPortraitImage(img)) {
-      slide.classList.add("v2-phone-strip__slide--scroll");
-    }
-    mountSlideImage(slide, img, onSlideReady);
-  };
-  img.onerror = function () { /* 保留 placeholder */ };
-  img.src = url;
-  if (img.complete && img.naturalWidth > 0) {
-    if (slide.dataset.scrollPreview === "1" || shouldScrollPortraitImage(img)) {
-      slide.classList.add("v2-phone-strip__slide--scroll");
-    }
-    mountSlideImage(slide, img, onSlideReady);
-  }
+  attachPhoneSlideImage(slide, url, null, -1, onSlideReady);
 }
 
 /**
@@ -276,7 +269,12 @@ export function initPhoneStrip(manifest, opts) {
     if (scrollTimer) clearTimeout(scrollTimer);
     scrollTimer = setTimeout(function () {
       var i = indexFromDomScrollLeft(track.scrollLeft);
-      if (i !== index) { index = i; syncUi(); }
+      if (i !== index) {
+        index = i;
+        ensureSlideLoaded(slideEls[index], onSlideReady);
+        if (index + 1 < slideEls.length) ensureSlideLoaded(slideEls[index + 1], onSlideReady);
+        syncUi();
+      }
     }, 120);
   });
 

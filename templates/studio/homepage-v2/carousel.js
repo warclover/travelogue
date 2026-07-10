@@ -55,40 +55,42 @@ function buildSlide(manifest, page, index, tier) {
   var url = page ? pageImageUrl(manifest, page) : "";
   if (url) {
     var eager = shouldEagerCarouselPage(index, tier);
-    var attachImg = function () {
-      var img = document.createElement("img");
-      img.className = "v2-carousel__slide-img";
-      img.alt = (page && page.label) || "";
-      if (eager && index === 0) img.setAttribute("fetchpriority", "high");
-      if (!eager) img.loading = "lazy";
-      img.onload = function () { mountCarouselSlideImage(slide, img); };
-      img.onerror = function () { /* 保留 placeholder */ };
-      img.src = url;
-      if (img.complete && img.naturalWidth > 0) {
-        mountCarouselSlideImage(slide, img);
-      }
-    };
-    if (eager) attachImg();
+    if (eager) attachCarouselSlideImage(slide, url, page, index);
     else slide.dataset.lazySrc = url;
   }
   return slide;
+}
+
+/**
+ * 挂载轮播图。不可对「尚未插入 DOM」的 img 使用 loading=lazy：
+ * 浏览器会推迟/跳过请求，而 lazySrc 已被消费，翻到该页会永久停在 placeholder
+ *（奶油底 + 居中日期标题）。何时创建由 dataset.lazySrc 控制即可。
+ */
+function attachCarouselSlideImage(slide, url, page, index) {
+  if (!slide || !url) return;
+  var img = document.createElement("img");
+  img.className = "v2-carousel__slide-img";
+  img.alt = (page && page.label) || slide.getAttribute("aria-label") || "";
+  if (index === 0) img.setAttribute("fetchpriority", "high");
+  img.decoding = "async";
+  img.onload = function () { mountCarouselSlideImage(slide, img); };
+  img.onerror = function () {
+    // 允许再次进入邻近页时重试
+    if (!slide.querySelector(".v2-carousel__slide-img")) {
+      slide.dataset.lazySrc = url;
+    }
+  };
+  img.src = url;
+  if (img.complete && img.naturalWidth > 0) {
+    mountCarouselSlideImage(slide, img);
+  }
 }
 
 function ensureSlideLoaded(slide) {
   if (!slide || !slide.dataset.lazySrc) return;
   var url = slide.dataset.lazySrc;
   delete slide.dataset.lazySrc;
-  var pageLabel = slide.getAttribute("aria-label") || "";
-  var img = document.createElement("img");
-  img.className = "v2-carousel__slide-img";
-  img.alt = pageLabel;
-  img.loading = "lazy";
-  img.onload = function () { mountCarouselSlideImage(slide, img); };
-  img.onerror = function () { /* 保留 placeholder */ };
-  img.src = url;
-  if (img.complete && img.naturalWidth > 0) {
-    mountCarouselSlideImage(slide, img);
-  }
+  attachCarouselSlideImage(slide, url, null, -1);
 }
 
 /**
@@ -223,13 +225,20 @@ export function initCarousel(manifest, opts) {
   bind(prevBtn, "click", function () { go(index - 1); });
   bind(nextBtn, "click", function () { go(index + 1); });
 
-  // 原生滚动 / 触控滑动 → 同步索引（clamp）
+  // 原生滚动 / 触控滑动 → 同步索引并补载邻近页（clamp）
   bind(track, "scroll", function () {
     if (syncing) return;
     if (scrollTimer) clearTimeout(scrollTimer);
     scrollTimer = setTimeout(function () {
       var i = indexFromDomScrollLeft(track.scrollLeft);
-      if (i !== index) { index = i; syncUi(); emitPage(); }
+      if (i !== index) {
+        index = i;
+        ensureSlideLoaded(slideEls[index]);
+        if (index + 1 < slideEls.length) ensureSlideLoaded(slideEls[index + 1]);
+        if (index > 0) ensureSlideLoaded(slideEls[index - 1]);
+        syncUi();
+        emitPage();
+      }
     }, 120);
   });
 

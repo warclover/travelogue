@@ -454,6 +454,11 @@ def test_studio_home_v2_layout_tier_and_failed_modules() -> None:
     assert "travelogue.studio.eventRing" in analytics
     assert "bucket_id" in (STUDIO_DIR / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
     assert "lazySrc" in carousel or "lazy" in carousel
+    # 邻页预载不可对未入 DOM 的 img 使用 loading=lazy（否则请求被跳过、placeholder 永驻）
+    assert "img.loading" not in carousel
+    phone = (STUDIO_DIR / "homepage-v2" / "phone-strip.js").read_text(encoding="utf-8")
+    assert "img.loading" not in phone
+    assert "dataset.lazySrc" in phone
 
 
 def test_studio_home_v2_carousel_modules() -> None:
