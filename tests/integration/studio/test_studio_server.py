@@ -136,6 +136,8 @@ def test_studio_pick_folder_api(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
 
 
 def test_studio_pick_folder_worker_failure_returns_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import sys
+
     import travelogue.desktop.folder_picker_service as picker_service
     from travelogue.desktop.folder_picker_service import FolderPickResult
 
@@ -145,6 +147,8 @@ def test_studio_pick_folder_worker_failure_returns_error(tmp_path: Path, monkeyp
     server = _start_studio_server(trips_dir, port)
     base = f"http://127.0.0.1:{port}"
 
+    # Linux CI returns 501 before the picker; force win32 so worker errors surface as 500.
+    monkeypatch.setattr(sys, "platform", "win32")
     monkeypatch.setattr(
         picker_service,
         "request_folder",

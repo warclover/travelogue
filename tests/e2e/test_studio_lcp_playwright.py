@@ -62,13 +62,15 @@ def test_measure_lcp_v2_positive(studio_server) -> None:
 
 
 def test_run_measurements_both_variants(studio_server) -> None:
+    # Legacy alias ``v3`` is canonicalized to ``classic`` in summary keys.
     summary = lcp_mod.run_measurements(
         studio_server, ["v2", "v3"], runs=2, settle_ms=1200
     )
+    classic = summary.get("classic") or summary.get("v3")
     assert summary["v2"]["n"] == 2
-    assert summary["v3"]["n"] == 2
+    assert classic is not None and classic["n"] == 2
     assert summary["v2"]["p95"] > 0
-    assert summary["v3"]["p95"] > 0
+    assert classic["p95"] > 0
     flags = lcp_mod.lcp_rollback_flags(summary)
     assert flags  # OK 或 ROLLBACK，均为有效对照
     assert "INSUFFICIENT_DATA" not in flags[0]
