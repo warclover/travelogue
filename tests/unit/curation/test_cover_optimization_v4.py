@@ -282,7 +282,14 @@ def test_v4_dock_states_playwright(tmp_path: Path) -> None:
             page.locator(".preview-toolbar__dock").wait_for(state="visible", timeout=15_000)
 
             page.locator(".preview-toolbar__dock-btn--back").hover()
-            page.wait_for_timeout(400)
+            # dock-tip uses 0.3s transition-delay + 0.15s fade; wait past both.
+            page.wait_for_function(
+                """() => {
+                const tip = document.querySelector('.preview-toolbar__dock-btn--back .preview-toolbar__dock-tip');
+                return tip && parseFloat(getComputedStyle(tip).opacity) >= 0.9;
+            }""",
+                timeout=3_000,
+            )
             tip_opacity = page.evaluate(
                 """() => {
                 const tip = document.querySelector('.preview-toolbar__dock-btn--back .preview-toolbar__dock-tip');

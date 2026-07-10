@@ -134,7 +134,10 @@ def test_render_trip_writes_index(trip_workspace: Path) -> None:
 
 def test_render_missing_asset_raises(trip_workspace: Path) -> None:
     trip = json.loads((trip_workspace / "trip.json").read_text(encoding="utf-8"))
+    # pick_image_src prefers mid-tier srcset over displayFile; clear both so the
+    # missing path is what collect_asset_paths actually checks.
     trip["assets"][0]["displayFile"] = "assets/missing.webp"
+    trip["assets"][0]["srcset"] = []
     bad = trip_workspace / "bad.json"
     bad.write_text(json.dumps(trip), encoding="utf-8")
     with pytest.raises(RenderError) as exc:

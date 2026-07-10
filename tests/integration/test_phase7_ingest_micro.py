@@ -28,9 +28,11 @@ def test_webp_method_config_default() -> None:
 def test_screen_full_sizes_requests_hd_tier() -> None:
     from travelogue.render.context import pick_image_sizes
 
+    # Cap below 3200 so DPR×size does not force w3200 decode on every full-bleed.
     sizes = pick_image_sizes("web", "screen_full")
-    assert "3200px" in sizes
-    assert "2400px" in sizes
+    assert "3200px" not in sizes
+    assert "1800px" in sizes
+    assert "1600px" in sizes
 
 
 def test_face_detect_max_edge_config_default() -> None:

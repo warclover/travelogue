@@ -524,7 +524,7 @@ def test_handle_post_copy_telemetry_keeps_true_stale(tmp_path: Path) -> None:
 def test_copy_telemetry_does_not_reflag_preview_stale(tmp_path: Path) -> None:
     """Opening preview after curate must not revive algorithmStale via updatedAt."""
     import os
-    from datetime import UTC, datetime
+    from datetime import datetime
 
     from travelogue.curation.algorithm_profile import assess_algorithm_freshness, expected_profile
     from travelogue.services.trip import mark_render_bundle_current

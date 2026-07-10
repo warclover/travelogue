@@ -1157,6 +1157,18 @@ def test_ac_hp2_l2_carousel_lazy(studio_server) -> None:
         browser.close()
 
 
+def _open_dev_panel(page) -> None:
+    """v2.1：dev panel 默认隐藏，经设置 Popover 唤起。"""
+    page.locator("#v2-settings-toggle").click()
+    page.wait_for_function(
+        "() => { const p = document.getElementById('v2-settings-popover'); return p && !p.hidden; }"
+    )
+    page.locator("#v2-settings-dev-toggle").click()
+    page.wait_for_function(
+        "() => { const p = document.getElementById('v2-dev-panel'); return p && !p.hidden && p.classList.contains('is-visible'); }"
+    )
+
+
 def test_ac_hp2_23_import_blocks_variant_switch(studio_server) -> None:
     """AC-HP2-23 · Importing 中隐藏「经典首页」链，禁止切 v3。"""
     with sync_playwright() as p:
@@ -1164,6 +1176,7 @@ def test_ac_hp2_23_import_blocks_variant_switch(studio_server) -> None:
         page = browser.new_page(viewport={"width": 1440, "height": 900})
         _goto_v2(page, studio_server["base"], "dev=1")
         _wait_visible(page, "v2-frame")
+        _open_dev_panel(page)
         assert page.locator("#v2-classic-link").is_visible()
 
         _goto_v2(
@@ -1172,6 +1185,11 @@ def test_ac_hp2_23_import_blocks_variant_switch(studio_server) -> None:
             "dev=1&studioState=importing&studioJob=running",
         )
         _wait_visible(page, "v2-import-cancel")
+        # Importing 时设置入口禁用，无法经 Popover 唤起；只断言 guard 已隐藏链。
+        page.wait_for_function(
+            "() => document.getElementById('v2-classic-link')",
+            timeout=5_000,
+        )
         classic_hidden = page.evaluate(
             "() => { const el = document.getElementById('v2-classic-link'); return !el || el.hidden; }"
         )
@@ -1180,12 +1198,13 @@ def test_ac_hp2_23_import_blocks_variant_switch(studio_server) -> None:
 
 
 def test_ac_hp2_dev_panel_visible(studio_server) -> None:
-    """Dev harness · ?dev=1 注入 dev panel。"""
+    """Dev harness · ?dev=1 可注入并经设置唤起 dev panel。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
         _goto_v2(page, studio_server["base"], "dev=1")
         _wait_visible(page, "v2-frame")
+        _open_dev_panel(page)
         assert page.locator("#v2-dev-panel").is_visible()
         assert page.locator("#v2-dev-copy").is_visible()
         browser.close()
@@ -1572,7 +1591,8 @@ def test_ac_hp21_06_stale_user_copy(studio_server) -> None:
             timeout=10_000,
         )
         bench_badge = page.locator(".v2-bench__recent-card__stale").first.inner_text()
-        assert bench_badge == "可更新"
+        # multi fixture · hokkaido 为 longshotStale → 「长图可更新」；算法 stale 为「可更新」。
+        assert bench_badge in ("可更新", "长图可更新")
         assert "算法待更新" not in page.locator(".v2-bench").inner_text()
 
         page.locator("#v2-bento-preview-trigger").click()
