@@ -1,7 +1,7 @@
 /**
  * 首页 v2 · Web 书架回访区（M20-e · §8 · 方案 A）。
  *
- * Bento 首屏下方区块：标题「你的游记画册」+ resume 卡 + 网格 + 新建卡。
+ * Bento 首屏下方区块：标题「你的游记画册」+ resume 卡 + 网格（新建卡首位）。
  * 不整页替换 Bento；无用户画册时 hideShelf()。
  */
 import { isDemoTrip } from "../js/constants.js";
@@ -263,7 +263,8 @@ function appendBooks(trips) {
     var exists = _loadedTrips.some(function (x) { return x.tripId === t.tripId; });
     if (exists) return;
     _loadedTrips.push(t);
-    _gridEl.insertBefore(buildBook(t), _newCardEl);
+    // 新建卡固定在网格首位（D-23）；新画册追加到末尾
+    _gridEl.appendChild(buildBook(t));
   });
 }
 
@@ -337,9 +338,10 @@ export function renderShelf(trips, total) {
 
   var grid = el("div", "v2-shelf__grid");
   _gridEl = grid;
-  _loadedTrips.forEach(function (t) { grid.appendChild(buildBook(t)); });
+  // D-23：新建画册卡固定在网格第 1 位（恢复卡之后、画册卡之前）
   _newCardEl = buildNewCard();
   grid.appendChild(_newCardEl);
+  _loadedTrips.forEach(function (t) { grid.appendChild(buildBook(t)); });
   host.appendChild(grid);
 
   syncFooter();
