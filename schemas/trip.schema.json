@@ -363,7 +363,7 @@
     "mosaicDecisionLogEntry": {
       "type": "object",
       "additionalProperties": false,
-      "description": "One mosaic window pick (travelogue.curation.mosaic.log.MosaicWindowLog)",
+      "description": "One mosaic window pick (travelogue.layout_engine.mosaic.log.MosaicWindowLog)",
       "properties": {
         "routerVersion": { "type": "string" },
         "segmentId": { "type": "string" },

@@ -22,7 +22,6 @@ from travelogue.curation.cover_scoring_v2 import (
     resolve_person_demote_v2,
 )
 from travelogue.curation.layout_planner import aspect_kind_for_asset
-from travelogue.curation.media_classify import cover_class_weight
 from travelogue.curation.time_segments import parse_asset_date
 from travelogue.layout_contract.scoring import (  # noqa: F401  (re-export)
     median_sharpness,
@@ -30,6 +29,7 @@ from travelogue.layout_contract.scoring import (  # noqa: F401  (re-export)
     sort_bucket_asset_ids,
 )
 from travelogue.media.color_metrics import color_richness_multiplier
+from travelogue.media.media_classify import cover_class_weight
 
 _DEFAULT_COVER_SCORING = CoverScoringParams()
 
