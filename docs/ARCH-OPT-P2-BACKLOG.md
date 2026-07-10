@@ -25,18 +25,18 @@
 | 风险 | Windows 文件锁语义差异；死锁/残留锁文件需 TTL 或进程崩溃清理策略 |
 | 估时 | 1–2 人日 |
 
-## P2-C · `layout_contract` 准入标准
+## P2-C · `layout_contract` 准入标准 ✅（2026-07-10）
 
 | 项 | 内容 |
 |----|------|
-| 现状 | 第 0 层 kernel 在救火中被塞入 chapter_items / feedback / scoring 等业务实现，约 23 文件，准入边界模糊 |
+| 现状 | ~~第 0 层 kernel 准入边界模糊~~ → 已书面化 + AST 门禁 |
 | 目标 | 书面标准：**纯函数 + DTO / 注册表钩子 only**；禁止依赖 `curation` / `layout_engine` / `web` / `templating` |
-| 机制 | `import-linter` 已约束分层；另加 `scripts/lint_layout_contract_surface.py`（禁止非白名单符号、禁止副作用 import） |
-| 验收 | 准入文档进 TECH-ARCH §18；CI 门禁；新文件 PR checklist 勾选 |
-| 估时 | 1 人日（文档+门禁）+ 后续按需下沉 |
+| 机制 | `import-linter` 分层 + `scripts/lint_layout_contract_surface.py`（层 0 allowlist） |
+| 验收 | TECH-ARCH §18.2.1；CI lint job；PR template 勾选 |
+| 后续 | 按需把过厚业务实现从 kernel 下沉（不在本项范围） |
 
 ## 建议排期
 
-1. **P2-C**（低风险、防回归）→ 2. **P2-B**（数据安全）→ 3. **P2-A**（最大收益、需独立 PR）
+1. ~~**P2-C**~~ ✅ → 2. **P2-B**（数据安全；跨进程锁已在 `fix/studio-quality-hardening`）→ 3. **P2-A**（最大收益、需独立 PR）
 
 与已完成的 P1（shim 退役 / hero 反向边）解耦，勿混入同一 PR。
