@@ -73,7 +73,11 @@ function buildSlide(manifest, page, index, tier, onSlideReady) {
     }
   };
 
-  if (shouldEagerCarouselPage(index, tier)) attachImg();
+  // 超高 scrollPreview 长图解码成本极高：仅首屏 eager，其余等 go() 再挂载。
+  var eager = useScrollPreview(page)
+    ? index === 0
+    : shouldEagerCarouselPage(index, tier);
+  if (eager) attachImg();
   else {
     slide.dataset.lazySrc = url;
   }
@@ -231,7 +235,11 @@ export function initPhoneStrip(manifest, opts) {
     goOpts = goOpts || {};
     index = clampIndex(requested, pageCount);
     ensureSlideLoaded(slideEls[index], onSlideReady);
-    if (index + 1 < slideEls.length) ensureSlideLoaded(slideEls[index + 1], onSlideReady);
+    // 预取下一屏：普通样张可预取；scrollPreview 超高图不预取，避免双章同时解码 OOM。
+    var next = slideEls[index + 1];
+    if (next && next.dataset.scrollPreview !== "1") {
+      ensureSlideLoaded(next, onSlideReady);
+    }
     if (!goOpts.fromScroll) {
       syncing = true;
       if (scrollTimer) clearTimeout(scrollTimer);

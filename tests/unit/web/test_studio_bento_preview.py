@@ -695,3 +695,77 @@ def test_build_trip_bento_preview_encodes_unicode_longshot_urls(tmp_path: Path) 
     expected = f"/{trip_id}/{quote(filename)}"
     assert payload["longshotPages"][0]["url"] == expected
     assert payload["longshotPages"][0]["scrollPreview"] is True
+
+
+def test_build_trip_bento_preview_prefers_w1600_over_w3200(tmp_path: Path) -> None:
+    """Homepage Bento 应优先中档 WebP，避免一次解码多张 w3200。"""
+    trip_id = "mid-size"
+    trip_dir = tmp_path / trip_id
+    assets_dir = trip_dir / "assets"
+    assets_dir.mkdir(parents=True)
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    for stem in ("cover", "a", "b", "c"):
+        for width in (800, 1600, 2400, 3200):
+            (assets_dir / f"{stem}-w{width}.webp").write_bytes(b"webp")
+    trip = {
+        "meta": {"title": "中档预览"},
+        "coverAssetId": "a0",
+        "assets": [
+            {
+                "id": "a0",
+                "type": "image",
+                "displayFile": "assets/cover-w3200.webp",
+                "aspectKind": "landscape",
+                "width": 3200,
+                "height": 1800,
+                "layoutEligible": True,
+            },
+            {
+                "id": "a1",
+                "type": "image",
+                "displayFile": "assets/a-w3200.webp",
+                "aspectKind": "landscape",
+                "width": 3200,
+                "height": 1800,
+                "layoutEligible": True,
+            },
+            {
+                "id": "a2",
+                "type": "image",
+                "displayFile": "assets/b-w3200.webp",
+                "aspectKind": "landscape",
+                "width": 3200,
+                "height": 1800,
+                "layoutEligible": True,
+            },
+            {
+                "id": "a3",
+                "type": "image",
+                "displayFile": "assets/c-w3200.webp",
+                "aspectKind": "landscape",
+                "width": 3200,
+                "height": 1800,
+                "layoutEligible": True,
+            },
+        ],
+        "chapters": [
+            {
+                "id": "c1",
+                "title": "第一章",
+                "screens": [{"screenId": "s1", "slots": [{"assetId": "a1"}]}],
+            },
+            {
+                "id": "c2",
+                "title": "第二章",
+                "screens": [{"screenId": "s2", "slots": [{"assetId": "a2"}]}],
+            },
+        ],
+    }
+    (trip_dir / "trip.json").write_text(__import__("json").dumps(trip), encoding="utf-8")
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    urls = [p["url"] for p in payload["pages"]]
+    assert all("-w1600.webp" in u for u in urls)
+    assert not any("-w3200.webp" in u for u in urls)
+    assert payload["assets"]["background"].endswith("cover-w1600.webp")

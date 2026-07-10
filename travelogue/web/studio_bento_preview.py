@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -160,11 +161,43 @@ def _iter_chapter_asset_ids(chapter: dict) -> Iterator[str]:
                     yield str(aid)
 
 
-def _asset_public_url(trip_id: str, trip_dir: Path, asset: dict) -> str | None:
+# Homepage Bento 缩略预览：优先中档 WebP，避免一次解码多张 w3200 把浏览器打爆。
+_BENTO_WIDTH_PREFERENCE: tuple[str, ...] = ("w1600", "w800", "w2400", "w3200")
+
+
+def _bento_display_rel(trip_dir: Path, asset: dict) -> str | None:
+    """Pick a mid-size on-disk variant for homepage preview (prefer w1600)."""
     rel = pick_image_src(asset)
     if not rel:
         return None
-    if not (trip_dir / rel).is_file():
+    rel_posix = Path(rel).as_posix()
+    if (trip_dir / rel_posix).is_file():
+        # displayFile 常为 *-w3200.webp；同 stem 若有更小档则改用。
+        for width_key in _BENTO_WIDTH_PREFERENCE:
+            candidate = _swap_webp_width(rel_posix, width_key)
+            if candidate and (trip_dir / candidate).is_file():
+                return candidate
+        return rel_posix
+    paths = asset.get("paths")
+    if isinstance(paths, dict):
+        for width_key in _BENTO_WIDTH_PREFERENCE:
+            candidate = paths.get(width_key)
+            if candidate and (trip_dir / candidate).is_file():
+                return str(candidate).replace("\\", "/")
+    return None
+
+
+def _swap_webp_width(rel: str, width_key: str) -> str | None:
+    """assets/foo-w3200.webp → assets/foo-w1600.webp（仅匹配已知档位后缀）。"""
+    m = re.search(r"^(.*)-w(800|1600|2400|3200)(\.webp)$", rel, flags=re.IGNORECASE)
+    if not m:
+        return None
+    return f"{m.group(1)}-{width_key}{m.group(3)}"
+
+
+def _asset_public_url(trip_id: str, trip_dir: Path, asset: dict) -> str | None:
+    rel = _bento_display_rel(trip_dir, asset)
+    if not rel:
         return None
     return _trip_static_url(trip_id, rel)
 

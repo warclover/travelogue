@@ -47,8 +47,10 @@ export function resolveLayoutTier(opts) {
   return "L0";
 }
 
-/** carousel L2：仅 eager 加载前 2 屏（index 0..1）。 */
-export function shouldEagerCarouselPage(index, tier) {
-  if (tier !== "L2") return true;
+/**
+ * Carousel / phone-strip：仅 eager 加载前 2 屏（index 0..1）。
+ * 其余 lazy，避免首页一次解码多张大图（尤其超高长图章）导致浏览器 OOM。
+ */
+export function shouldEagerCarouselPage(index, _tier) {
   return index <= 1;
 }

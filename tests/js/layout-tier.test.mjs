@@ -17,9 +17,12 @@ test("resolveLayoutTier L2 when harnessSlowNet opt", () => {
   assert.equal(resolveLayoutTier({ harnessSlowNet: true }), "L2");
 });
 
-test("shouldEagerCarouselPage L2 only first two slides", () => {
+test("shouldEagerCarouselPage only first two slides on all tiers", () => {
+  assert.equal(shouldEagerCarouselPage(0, "L0"), true);
+  assert.equal(shouldEagerCarouselPage(1, "L0"), true);
+  assert.equal(shouldEagerCarouselPage(2, "L0"), false);
   assert.equal(shouldEagerCarouselPage(0, "L2"), true);
   assert.equal(shouldEagerCarouselPage(1, "L2"), true);
   assert.equal(shouldEagerCarouselPage(2, "L2"), false);
-  assert.equal(shouldEagerCarouselPage(4, "L0"), true);
+  assert.equal(shouldEagerCarouselPage(4, "L0"), false);
 });
