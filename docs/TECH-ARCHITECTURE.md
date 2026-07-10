@@ -430,16 +430,28 @@ python scripts/phase7_verify_rollback.py
 
 **编排（M-B3）**：Studio 与 CLI 统一 `run_trip`（clustering 为一等 stage）；legacy 双路径开关已删除。
 
-**布局（M-B4 + LSE batch-1～6）**：screen planner / mosaic 主实现位于 `layout_engine/`；`layout_contract/` 为共享 kernel；`curation.*` 保留 importlib shim。LSE ↔ curation **7 条** intentional 边（`curate` → adapter 模块）。
+**布局（M-B4 + LSE batch-1～6）**：screen planner / mosaic 主实现位于 `layout_engine/`；`layout_contract/` 为共享 kernel。`curation.mosaic` / `screen_planner` / `media_classify` / `layout_search` **shim 已退役**（2026-07-10）；产线直接 import `layout_engine` / `media`。LSE ↔ curation intentional 边见 `lint_lse_cross_import` 基线。
 
 ### 18.2 分层契约工具
 
 | 工具 | 说明 | 状态 |
 |------|------|------|
-| `lint-imports` | `pyproject.toml` `[tool.importlinter]` · PRD §5.3.1 DAG | **0 豁免**（M-B1 清零 · 2026-07-08） |
-| `lint_lse_cross_import.py` | LSE ↔ curation AST 边；ceiling **10** | **7 边** ✅ |
+| `lint-imports` | `pyproject.toml` `[tool.importlinter]` · PRD §5.3.1 DAG | **6 条登记豁免**（post-M-B1 aesthetic / ingest debt · 2026-07-10） |
+| `lint_lse_cross_import.py` | LSE ↔ curation AST 边；ceiling **10** | 见基线文件 |
+| `lint_layout_contract_surface.py` | `layout_contract` 准入（P2-C）：仅允许层 0 包依赖 | CI lint |
 | `arch_equivalence_check.py` | L3a/b/c 等价门禁 | CI validate |
 | `lint_trip_json.py` | trip.json schema + 体积 | CI validate |
+
+### 18.2.1 `layout_contract` 准入标准（P2-C · 2026-07-10）
+
+`travelogue/layout_contract/` 是第 0 层 **共享 kernel**，只允许：
+
+- **纯函数**、**DTO / dataclass**、**注册表钩子**（callable 注入，不反向 import 实现方）
+- 依赖：stdlib，或同层包（`util` / `types` / `domain` / `constants` / `paths` / `errors` / `manifest_limits` / 本包）
+
+**禁止**：`curation` · `layout_engine` · `layout_templates` · `web` · `templating` · `services` · `media` · `vision` · `llm` · `config` · `cli` · `desktop` · `orchestrator` · `render` · `export`。
+
+门禁：`python scripts/lint_layout_contract_surface.py`（CI lint job）。新文件进 PR 时勾选 template 对应项。
 
 ### 18.3 已删除的双路径开关
 
