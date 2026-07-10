@@ -10,14 +10,16 @@ from contextlib import contextmanager
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import Any
 from urllib.parse import unquote
 
 from travelogue.config import AppConfig, app_config_scope, get_config
 from travelogue.runtime import app_context_for_trip_json
 from travelogue.services.trip import TripConflictError
 from travelogue.web.copy_patch import CopyPatchError, apply_copy_patches
+from travelogue.web.studio_auth import is_loopback_host, studio_request_authorized
 from travelogue.web.studio_chrome import inject_studio_chrome, should_inject_studio_chrome
-from travelogue.web.studio_errors import client_error_payload, internal_error_payload
+from travelogue.web.studio_errors import client_error_payload, internal_error_payload, user_message
 from travelogue.web.studio_routes import StudioMixin
 from travelogue.web.studio_uploads import sweep_stale_uploads
 from travelogue.web.tier_patch import TierPatchError, apply_tier_promotions
@@ -27,6 +29,19 @@ PROMOTE_TIER_PATH = "/__travelogue/promote-tier"
 FAVICON_SILENT_PATHS = frozenset({"/favicon.ico", "/favicon.svg"})
 MAX_JSON_BODY = 1_048_576
 _log = logging.getLogger(__name__)
+
+
+def _studio_static_authorized(handler: Any) -> bool:
+    path = getattr(handler, "path", "") or ""
+    query = path.split("?", 1)[1] if "?" in path else ""
+    headers = getattr(handler, "headers", {}) or {}
+    return studio_request_authorized(
+        host=handler.studio_host,
+        token=handler.studio_token,
+        headers=headers,
+        allow_lan=handler.studio_allow_lan,
+        query=query,
+    )
 
 
 class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
@@ -85,6 +100,16 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
                 return
             parts = self.studio_trip_parts(path)
             if parts is not None:
+                if not _studio_static_authorized(self):
+                    self._json_response(
+                        401,
+                        {
+                            "ok": False,
+                            "error": "E_STUDIO_AUTH",
+                            "message": user_message("E_STUDIO_AUTH"),
+                        },
+                    )
+                    return
                 trip_id, rel_path = parts
                 rel_path = unquote(rel_path)
                 if self._serve_trip_static(trip_id, rel_path):
@@ -100,10 +125,20 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
                 return
             self.send_error(404)
             return
-        if path == SAVE_PATH:
-            self._handle_save_copy()
-            return
-        if path == PROMOTE_TIER_PATH:
+        if path in (SAVE_PATH, PROMOTE_TIER_PATH):
+            if not is_loopback_host(self.studio_host):
+                self._json_response(
+                    403,
+                    {
+                        "ok": False,
+                        "error": "E_STUDIO_AUTH",
+                        "message": user_message("E_STUDIO_AUTH"),
+                    },
+                )
+                return
+            if path == SAVE_PATH:
+                self._handle_save_copy()
+                return
             self._handle_promote_tier()
             return
         self.send_error(404)
@@ -284,6 +319,10 @@ def serve_trip_directory(
     auto_rerender: bool = True,
     app_config: AppConfig | None = None,
 ) -> None:
+    if not is_loopback_host(host):
+        raise SystemExit(
+            f"Trip preview refuses to bind to {host!r}; use 127.0.0.1 (loopback only)."
+        )
     trip_dir = trip_dir.resolve()
     trip_json = trip_dir / "trip.json"
     if not trip_json.is_file():
@@ -296,6 +335,7 @@ def serve_trip_directory(
         trip_json=trip_json,
         auto_rerender=auto_rerender,
         studio_mode=False,
+        studio_host=host,
         app_config=pinned_cfg,
     )
     server = ThreadingHTTPServer((host, port), handler)
@@ -326,11 +366,7 @@ def serve_studio_directory(
     allow_lan: bool = False,
     config_path: Path | None = None,
 ) -> None:
-    from travelogue.web.studio_auth import (
-        ensure_studio_bind_allowed,
-        is_loopback_host,
-        new_studio_token,
-    )
+    from travelogue.web.studio_auth import ensure_studio_bind_allowed, new_studio_token
 
     ensure_studio_bind_allowed(host, allow_lan=allow_lan)
     trips_dir = trips_dir.resolve()
@@ -338,7 +374,7 @@ def serve_studio_directory(
     sweep_stale_uploads(trips_dir)
 
     pinned_cfg = app_config or get_config()
-    studio_token = new_studio_token() if allow_lan and not is_loopback_host(host) else None
+    studio_token = new_studio_token() if allow_lan else None
     handler = partial(
         TripPreviewHandler,
         directory=str(trips_dir),

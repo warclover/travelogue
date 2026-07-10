@@ -9,7 +9,7 @@ from travelogue.services.moment_curation import (
     build_moment_curation_payload,
     validate_moment_asset_id,
 )
-from travelogue.web.studio_errors import internal_error_payload
+from travelogue.web.studio_errors import client_error_payload, internal_error_payload
 from travelogue.web.studio_handlers.common import (
     load_trip_or_404,
     studio_ctx,
@@ -64,7 +64,7 @@ def handle_patch_moment(handler: StudioHandlerProtocol, trip_id: str) -> None:
         if not ok:
             return
     except ValueError as exc:
-        handler._json_response(400, {"ok": False, "error": str(exc)})
+        handler._json_response(400, client_error_payload(exc))
         return
 
     try:

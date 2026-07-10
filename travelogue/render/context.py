@@ -1132,8 +1132,18 @@ def collect_asset_paths(trip: dict, trip_root: Path) -> list[tuple[str, Path]]:
     def add(rel: str | None) -> None:
         if not rel or rel in seen:
             return
+        normalized = str(rel).replace("\\", "/")
+        if normalized.startswith("/") or normalized.startswith("../") or "/../" in f"/{normalized}/":
+            return
+        if ".." in Path(normalized).parts:
+            return
+        try:
+            abs_path = (trip_root / normalized).resolve()
+            abs_path.relative_to(trip_root.resolve())
+        except (OSError, ValueError):
+            return
         seen.add(rel)
-        out.append((rel, trip_root / rel))
+        out.append((rel, abs_path))
 
     for asset in assets.values():
         add(pick_image_src(asset, export_layout=export_layout))

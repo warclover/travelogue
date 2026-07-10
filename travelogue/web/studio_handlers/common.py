@@ -10,7 +10,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 from travelogue.desktop.demo_album import is_demo_album_path, resolve_demo_album_dir
 from travelogue.runtime import AppContext, app_context_from_handler
 from travelogue.services.trip import TripConflictError, TripService
-from travelogue.web.studio_errors import client_error_payload
+from travelogue.web.studio_errors import client_error_payload, user_message
 from travelogue.web.studio_handlers.paths import (
     CURATE_SUFFIX,
     CURATION_MOMENT_SUFFIX,
@@ -23,6 +23,7 @@ from travelogue.web.studio_handlers.paths import (
     TRIPS_PATH,
 )
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
+from travelogue.web.studio_jobs import get_job_store
 from travelogue.web.studio_trip_id import is_valid_studio_trip_id
 
 _U = TypeVar("_U")
@@ -42,6 +43,21 @@ def studio_ctx(handler: StudioHandlerProtocol) -> AppContext:
     return app_context_from_handler(handler)
 
 
+def respond_if_trip_busy(handler: StudioHandlerProtocol, trip_id: str) -> bool:
+    """Return True and send 409 when ``trip_id`` has a queued/running studio job."""
+    if not trip_id or not get_job_store().is_trip_busy(trip_id):
+        return False
+    handler._json_response(
+        409,
+        {
+            "ok": False,
+            "error": "E_STUDIO_JOB_BUSY",
+            "message": user_message("E_STUDIO_JOB_BUSY"),
+        },
+    )
+    return True
+
+
 def trip_update_or_respond(
     handler: StudioHandlerProtocol,
     svc: TripService,
@@ -51,6 +67,9 @@ def trip_update_or_respond(
     touch_updated: bool = True,
 ) -> tuple[bool, _U | None]:
     """Run ``svc.update``; on conflict respond 409 and return ``(False, None)``."""
+    busy_id = trip_json.parent.name if trip_json else ""
+    if respond_if_trip_busy(handler, busy_id):
+        return False, None
     try:
         return True, svc.update(trip_json, mutator, touch_updated=touch_updated)
     except TripConflictError as exc:

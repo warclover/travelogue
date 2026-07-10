@@ -396,6 +396,31 @@ class TripService:
     def resolve_trip_json(self, trip_id_or_path: str | Path, *, trips_dir: Path | None = None) -> Path:
         """Resolve tripId, trip dir, or trip.json path."""
         p = Path(trip_id_or_path)
+        base = (trips_dir or (self.root / "trips")).resolve()
+
+        def _under_trips_dir(candidate: Path) -> Path:
+            resolved = candidate.resolve()
+            try:
+                resolved.relative_to(base)
+            except ValueError as exc:
+                raise TripNotFoundError(f"E_TRIP_NOT_FOUND {trip_id_or_path}") from exc
+            return resolved
+
+        if trips_dir is not None:
+            raw = str(trip_id_or_path)
+            if ".." in Path(raw).parts or Path(raw).is_absolute():
+                raise TripNotFoundError(f"E_TRIP_NOT_FOUND {trip_id_or_path}")
+            if p.is_file():
+                return _under_trips_dir(p)
+            normalized = raw.replace("\\", "/").strip("/")
+            trip_key = p.name if normalized.startswith("trips/") else raw
+            if ".." in Path(trip_key).parts:
+                raise TripNotFoundError(f"E_TRIP_NOT_FOUND {trip_id_or_path}")
+            candidate = base / trip_key / "trip.json"
+            if candidate.is_file():
+                return _under_trips_dir(candidate)
+            raise TripNotFoundError(f"E_TRIP_NOT_FOUND {trip_id_or_path}")
+
         if p.is_file():
             return p.resolve()
 
@@ -430,8 +455,9 @@ class TripService:
         if p.suffix == ".json" and p.exists():
             return p.resolve()
 
-        base = trips_dir or (self.root / "trips")
         trip_key = p.name if normalized.startswith("trips/") else str(trip_id_or_path)
+        if ".." in Path(str(trip_key)).parts:
+            raise TripNotFoundError(f"E_TRIP_NOT_FOUND {trip_id_or_path}")
         candidate = base / trip_key / "trip.json"
         if candidate.is_file():
             return candidate.resolve()

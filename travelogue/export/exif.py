@@ -45,10 +45,12 @@ def write_asset_to_zip(
     from zipfile import ZipInfo
 
     arc = arcname.replace("\\", "/")
+    if ".." in Path(arc).parts or arc.startswith("/"):
+        raise ValueError(f"unsafe zip arcname: {arcname!r}")
     if should_strip(source, enabled=strip_exif):
         data = strip_image_to_bytes(source)
         info = ZipInfo(arc)
         info.compress_type = zipfile.ZIP_DEFLATED
         zf.writestr(info, data)
     else:
-        zf.write(source, arcname.replace("\\", "/"))
+        zf.write(source, arc)

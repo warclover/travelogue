@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 from pathlib import Path
 
 CHROME_ALLOWLIST = frozenset(
@@ -31,29 +32,30 @@ def should_inject_studio_chrome(rel_path: str, query: str = "") -> bool:
 
 
 def inject_studio_chrome(
-    html: str,
+    html_doc: str,
     *,
     studio_token: str | None = None,
     share_mode: bool = False,
 ) -> str:
-    if 'data-preview-toolbar="on"' in html or 'data-preview-share="on"' in html:
-        return html
-    lower = html.lower()
+    if 'data-preview-toolbar="on"' in html_doc or 'data-preview-share="on"' in html_doc:
+        return html_doc
+    lower = html_doc.lower()
     if studio_token and "<head" in lower:
-        meta = f'<meta name="studio-token" content="{studio_token}">'
-        if 'name="studio-token"' not in html:
+        token = html.escape(studio_token, quote=True)
+        meta = f'<meta name="studio-token" content="{token}">'
+        if 'name="studio-token"' not in html_doc:
             head_end = lower.index("<head")
-            insert_at = html.index(">", head_end) + 1
-            html = html[:insert_at] + "\n  " + meta + html[insert_at:]
+            insert_at = html_doc.index(">", head_end) + 1
+            html_doc = html_doc[:insert_at] + "\n  " + meta + html_doc[insert_at:]
     preview_attr = 'data-preview-share="on"' if share_mode else 'data-preview-toolbar="on"'
     if "<body" in lower:
         idx = lower.index("<body")
-        end = html.index(">", idx) + 1
-        tag = html[idx:end]
+        end = html_doc.index(">", idx) + 1
+        tag = html_doc[idx:end]
         if "data-preview-toolbar" not in tag and "data-preview-share" not in tag:
-            html = html[: end - 1] + f" {preview_attr}" + html[end - 1 :]
-    lower = html.lower()
+            html_doc = html_doc[: end - 1] + f" {preview_attr}" + html_doc[end - 1 :]
+    lower = html_doc.lower()
     if "</body>" in lower:
         pos = lower.rindex("</body>")
-        html = html[:pos] + CHROME_INJECT + "\n" + html[pos:]
-    return html
+        html_doc = html_doc[:pos] + CHROME_INJECT + "\n" + html_doc[pos:]
+    return html_doc

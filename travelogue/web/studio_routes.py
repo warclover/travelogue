@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from travelogue.web.studio_auth import studio_post_authorized
+from travelogue.web.studio_auth import studio_request_authorized
 from travelogue.web.studio_chrome import should_inject_studio_chrome
 from travelogue.web.studio_dispatch import dispatch_studio
 from travelogue.web.studio_errors import user_message
@@ -73,12 +73,16 @@ class StudioMixin:
     studio_allow_lan: bool = False
     studio_config_path: Path | None = None
 
-    def _studio_require_post_auth(self) -> bool:
-        if studio_post_authorized(
+    def _studio_require_auth(self) -> bool:
+        path = getattr(self, "path", "") or ""
+        query = path.split("?", 1)[1] if "?" in path else ""
+        headers = getattr(self, "headers", {}) or {}
+        if studio_request_authorized(
             host=self.studio_host,
             token=self.studio_token,
-            headers=self.headers,
+            headers=headers,
             allow_lan=self.studio_allow_lan,
+            query=query,
         ):
             return True
         self._json_response(
@@ -92,16 +96,16 @@ class StudioMixin:
         return False
 
     def studio_dispatch_GET(self, path: str) -> bool:
-        return dispatch_studio("GET", path, self, require_auth=lambda: True)
+        return dispatch_studio("GET", path, self, require_auth=self._studio_require_auth)
 
     def studio_dispatch_PATCH(self, path: str) -> bool:
-        return dispatch_studio("PATCH", path, self, require_auth=self._studio_require_post_auth)
+        return dispatch_studio("PATCH", path, self, require_auth=self._studio_require_auth)
 
     def studio_dispatch_DELETE(self, path: str) -> bool:
-        return dispatch_studio("DELETE", path, self, require_auth=self._studio_require_post_auth)
+        return dispatch_studio("DELETE", path, self, require_auth=self._studio_require_auth)
 
     def studio_dispatch_POST(self, path: str) -> bool:
-        return dispatch_studio("POST", path, self, require_auth=self._studio_require_post_auth)
+        return dispatch_studio("POST", path, self, require_auth=self._studio_require_auth)
 
     def studio_trip_parts(self, path: str) -> tuple[str, str] | None:
         """Parse ``/{tripId}/{rel}`` for static file fallback (not in route table)."""

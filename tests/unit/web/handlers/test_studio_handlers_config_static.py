@@ -35,6 +35,7 @@ class MockStaticHandler:
         self.request_headers = request_headers or {}
         self.status: int | None = None
         self.headers: dict[str, str] = {}
+        self.header_list: list[tuple[str, str]] = []
         self.body = io.BytesIO()
         self.error_code: int | None = None
         self.path = "/"
@@ -44,6 +45,7 @@ class MockStaticHandler:
 
     def send_header(self, key: str, value: str) -> None:
         self.headers[key] = value
+        self.header_list.append((key, value))
 
     def end_headers(self) -> None:
         pass
@@ -179,6 +181,8 @@ def test_handle_home_injects_token() -> None:
     html = handler.body.getvalue().decode("utf-8")
     assert "abc123" in html
     assert "__STUDIO_TOKEN__" not in html
+    cookie_headers = [v for k, v in handler.header_list if k == "Set-Cookie"]
+    assert any(v.startswith("studio-token=abc123") for v in cookie_headers)
 
 
 def test_handle_studio_asset_serves_existing_file() -> None:

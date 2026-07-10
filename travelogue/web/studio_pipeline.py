@@ -105,6 +105,23 @@ def _apply_featured_detected_intent(trip: dict, ingest_stats: dict) -> str:
     return tier_mode
 
 
+def _path_within_album(raw: str, album_dir: Path) -> Path:
+    """Resolve ``raw`` under ``album_dir``; reject absolute escape / ``..`` traversal."""
+    album_root = album_dir.resolve()
+    candidate = Path(raw)
+    if not candidate.is_absolute():
+        candidate = album_root / candidate
+    try:
+        resolved = candidate.resolve()
+        resolved.relative_to(album_root)
+    except (OSError, ValueError) as exc:
+        raise DemoError(
+            "E_STUDIO_ALBUM_DENIED",
+            f"E_STUDIO_ALBUM_DENIED: path outside album: {raw}",
+        ) from exc
+    return resolved
+
+
 def _resolve_ingest_folder_paths(
     album_dir: Path,
     folder_overrides: dict[str, str],
@@ -112,19 +129,9 @@ def _resolve_ingest_folder_paths(
     featured_path: Path | None = None
     material_path: Path | None = None
     if folder_overrides.get("featuredDir"):
-        raw = folder_overrides["featuredDir"]
-        featured_path = (
-            Path(raw)
-            if Path(raw).is_absolute()
-            else album_dir / raw
-        )
+        featured_path = _path_within_album(folder_overrides["featuredDir"], album_dir)
     if folder_overrides.get("materialDir"):
-        raw = folder_overrides["materialDir"]
-        material_path = (
-            Path(raw)
-            if Path(raw).is_absolute()
-            else album_dir / raw
-        )
+        material_path = _path_within_album(folder_overrides["materialDir"], album_dir)
     return featured_path, material_path
 
 
