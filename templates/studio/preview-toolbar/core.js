@@ -290,7 +290,8 @@ export function refreshPreviewCover(root) {
   }
 
 
-export function applyLayoutRerender(tripId, root) {
+export function applyLayoutRerender(tripId, root, opts) {
+    opts = opts || {};
     var applyBtns = layoutApplyButtons(
       root || document.querySelector(".preview-toolbar") || document.body
     );
@@ -301,7 +302,7 @@ export function applyLayoutRerender(tripId, root) {
       btn.disabled = true;
     });
     if (pendingBtn) pendingBtn.disabled = true;
-    showToolbarToast("正在更新版面…", { duration: 3000 });
+    showToolbarToast(opts.busyMessage || "正在更新版面…", { duration: 3000 });
     return postJson(tripApiBase(tripId) + "/rerender", {})
       .then(function (res) {
         applyBtns.forEach(function (btn) {
@@ -309,11 +310,27 @@ export function applyLayoutRerender(tripId, root) {
         });
         if (pendingBtn) pendingBtn.disabled = false;
         if (res.status !== 200 || !res.body.ok) {
-          showToolbarToast((res.body && res.body.error) || "更新版面失败", { error: true });
+          var errCode =
+            (res.body && (res.body.error || res.body.code)) ||
+            "E_LAYOUT_RERENDER";
+          showToolbarToast(
+            opts.failMessage || (res.body && res.body.error) || "更新版面失败",
+            { error: true }
+          );
           setLayoutPending(true);
+          if (typeof opts.onFail === "function") {
+            try {
+              opts.onFail(errCode, res);
+            } catch (eFail) {}
+          }
           return false;
         }
         setLayoutPending(false);
+        if (typeof opts.beforeReload === "function") {
+          try {
+            opts.beforeReload();
+          } catch (eBefore) {}
+        }
         reloadPreviewAfterLayout();
         return true;
       })
@@ -322,8 +339,13 @@ export function applyLayoutRerender(tripId, root) {
           btn.disabled = false;
         });
         if (pendingBtn) pendingBtn.disabled = false;
-        showToolbarToast("更新版面失败", { error: true });
+        showToolbarToast(opts.failMessage || "更新版面失败", { error: true });
         setLayoutPending(true);
+        if (typeof opts.onFail === "function") {
+          try {
+            opts.onFail("E_NETWORK");
+          } catch (eFailNet) {}
+        }
         return false;
       });
   }

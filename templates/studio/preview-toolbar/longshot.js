@@ -77,6 +77,125 @@ var _applyLayoutRerender = function (_tripId, _root) {
 };
 
 var EXPORT_AFTER_LAYOUT_KEY = "travelogue.studio.exportAfterLayout";
+var LAYOUT_UPDATING_KEY = "travelogue.studio.layoutUpdating";
+var EXPECT_LAYOUT_RELOAD_KEY = "travelogue.studio.expectLayoutReload";
+var UPDATE_ONLY_HINT_KEY = "travelogue.studio.updateOnlyHint";
+var EXPORT_PULSE_SEEN_KEY = "travelogue.studio.exportPulseSeen";
+var EXPORT_AFTER_TTL_MS = 10 * 60 * 1000;
+var _exportStartFrom = "direct";
+var _pagehideBound = false;
+
+function _readJsonStorage(store, key) {
+  try {
+    var raw = store.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (eRead) {
+    return null;
+  }
+}
+
+function _writeJsonStorage(store, key, value) {
+  try {
+    store.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (eWrite) {
+    return false;
+  }
+}
+
+function _removeStorage(store, key) {
+  try {
+    store.removeItem(key);
+  } catch (eRm) {}
+}
+
+function clearExportAfterLayoutFlag(reason, extra) {
+  var prev = _readJsonStorage(sessionStorage, EXPORT_AFTER_LAYOUT_KEY);
+  _removeStorage(sessionStorage, EXPORT_AFTER_LAYOUT_KEY);
+  if (prev || reason) {
+    trackStudioEvent(
+      "export_after_layout_cleared",
+      Object.assign(
+        {
+          reason: reason || "clear",
+          trip_id: (prev && prev.tripId) || null,
+        },
+        extra || {}
+      )
+    );
+  }
+}
+
+function clearLayoutUpdatingFlag() {
+  _removeStorage(sessionStorage, LAYOUT_UPDATING_KEY);
+}
+
+function markExpectLayoutReload() {
+  _writeJsonStorage(sessionStorage, EXPECT_LAYOUT_RELOAD_KEY, { ts: Date.now() });
+}
+
+function writeExportAfterLayout(tripId) {
+  return _writeJsonStorage(sessionStorage, EXPORT_AFTER_LAYOUT_KEY, {
+    tripId: String(tripId || ""),
+    ts: Date.now(),
+  });
+}
+
+function writeLayoutUpdating(tripId) {
+  return _writeJsonStorage(sessionStorage, LAYOUT_UPDATING_KEY, {
+    tripId: String(tripId || ""),
+    ts: Date.now(),
+  });
+}
+
+function readExportAfterLayout() {
+  var data = _readJsonStorage(sessionStorage, EXPORT_AFTER_LAYOUT_KEY);
+  if (!data) return null;
+  if (typeof data === "string") {
+    return { tripId: data, ts: Date.now() };
+  }
+  return data;
+}
+
+function readLayoutUpdating() {
+  return _readJsonStorage(sessionStorage, LAYOUT_UPDATING_KEY);
+}
+
+function isFlagExpired(data) {
+  if (!data || !data.ts) return true;
+  return Date.now() - Number(data.ts) > EXPORT_AFTER_TTL_MS;
+}
+
+function bindExportAfterLayoutPagehide() {
+  if (_pagehideBound || typeof window === "undefined") return;
+  _pagehideBound = true;
+  window.addEventListener("pagehide", function () {
+    var expecting = _readJsonStorage(sessionStorage, EXPECT_LAYOUT_RELOAD_KEY);
+    if (expecting) return;
+    clearExportAfterLayoutFlag("leave");
+    clearLayoutUpdatingFlag();
+  });
+}
+
+function markExportPulseSeen(tripId) {
+  try {
+    localStorage.setItem(EXPORT_PULSE_SEEN_KEY, "1");
+    if (tripId) {
+      localStorage.setItem(EXPORT_PULSE_SEEN_KEY + "." + tripId, "1");
+    }
+  } catch (ePulse) {}
+}
+
+export function shouldShowExportPulse(tripId) {
+  try {
+    if (localStorage.getItem(EXPORT_PULSE_SEEN_KEY) === "1") return false;
+    if (tripId && localStorage.getItem(EXPORT_PULSE_SEEN_KEY + "." + tripId) === "1") {
+      return false;
+    }
+  } catch (eSeen) {}
+  return true;
+}
 
 export function registerLongshotBridge(api) {
   if (typeof api.showToolbarToast === "function") _showToolbarToast = api.showToolbarToast;
@@ -192,7 +311,17 @@ export function cancelPreviewLongshotExport(root) {
       updateDockTip(btn, label);
       return;
     }
-    btn.textContent = label;
+    // F-EXP-09 · 非 Dock：可见短标签，aria 用完整 CTA
+    var shortBar =
+      platform === "wechat_moments"
+        ? "朋友圈"
+        : platform === "xiaohongshu"
+          ? "小红书"
+          : "长图";
+    if (!btn.classList.contains("preview-toolbar__longshot--running")) {
+      btn.textContent = shortBar;
+    }
+    btn.setAttribute("aria-label", label);
   }
 
   function maybeToastSparseMoments() {
@@ -586,6 +715,30 @@ export function cancelPreviewLongshotExport(root) {
     return postJson("/__travelogue/reveal", { tripId: tripId, relPath: relPath });
   }
 
+  /** After successful export: open Explorer and select the first output (best-effort). */
+  export function autoRevealLongshotOutputs(tripId, outputs, opts) {
+    opts = opts || {};
+    var list = outputs || [];
+    if (!tripId || !list.length) return Promise.resolve(false);
+    return revealTripPath(tripId, list[0])
+      .then(function () {
+        trackStudioEvent("longshot_auto_reveal", {
+          trip_id: tripId,
+          output_count: list.length,
+          platform: opts.platform || "",
+        });
+        return true;
+      })
+      .catch(function () {
+        if (opts.toastOnError !== false) {
+          _showToolbarToast("无法自动打开文件夹，请点「在文件夹中显示」", {
+            error: true,
+          });
+        }
+        return false;
+      });
+  }
+
   export function longshotProgressPct(job) {
     if (!job || job.status !== "running") return null;
     var cur = Number(job.stageIndex);
@@ -950,6 +1103,15 @@ export function cancelPreviewLongshotExport(root) {
         });
       } else {
         setLongshotExportState(root, "idle");
+        var resultV3 = job.result || {};
+        var outsV3 = resultV3.outputs || [];
+        trackStudioEvent("longshot_success_share_hint_shown", {
+          trip_id: _tripIdFromPath(),
+          segment_count: outsV3.length || 0,
+        });
+        autoRevealLongshotOutputs(_tripIdFromPath(), outsV3, {
+          platform: resultV3.platform || "wechat_chat",
+        });
       }
       hideStaleHint(root);
       return;
@@ -997,16 +1159,20 @@ export function cancelPreviewLongshotExport(root) {
     var segmented = result.segmented || outputs.length > 1;
 
     var homeHint = document.createElement("p");
-    homeHint.className = "preview-toolbar__longshot-compat";
-    homeHint.textContent = "已写入画册目录；返回 Studio 首页即可在手机框预览。";
+    homeHint.className = "preview-toolbar__longshot-compat preview-toolbar__longshot-share-hint";
+    homeHint.textContent = "已保存到本机 · 拖进微信群即可";
     drawer.appendChild(homeHint);
+    trackStudioEvent("longshot_success_share_hint_shown", {
+      trip_id: tripId,
+      segment_count: outputs.length || 0,
+    });
 
     if (segmented && outputs.length > 1) {
       var segEl = document.createElement("p");
       segEl.className = "preview-toolbar__longshot-compat";
       segEl.textContent =
         result.userHint ||
-        "已按章导出 " + outputs.length + " 张，底部含页码（如 2/5）便于微信按序发送。";
+        "共 " + outputs.length + " 张，可按章发送";
       drawer.appendChild(segEl);
     }
     if (method === "p1") {
@@ -1037,6 +1203,9 @@ export function cancelPreviewLongshotExport(root) {
         revealTripPath(tripId, outputs[0]);
       });
       actions.appendChild(revealBtn);
+      autoRevealLongshotOutputs(tripId, outputs, {
+        platform: result.platform || "wechat_chat",
+      });
     }
 
     var dismissBtn = document.createElement("button");
@@ -1132,36 +1301,123 @@ export function cancelPreviewLongshotExport(root) {
   export function startLongshot(root, tripId) {
     var btn = longshotBtnEl(root);
     if (!btn || btn.disabled) return;
+    bindExportAfterLayoutPagehide();
 
     // MF-01 / MF-06 · layoutPending 时拦截，禁止静默导出旧长图
     if (_getLayoutPending()) {
+      trackStudioEvent("longshot_export_blocked_pending", { trip_id: tripId });
       _toolbarConfirm({
-        title: "版面尚未更新",
+        title: "导出前先更新一下",
         body: "你改过精选或拼图，导出前需先更新版面，否则长图仍是旧版。",
         confirmText: "更新并导出",
         secondaryText: "仅更新版面",
         cancelText: "取消",
         stacked: true,
       }).then(function (choice) {
-        if (!choice) return;
-        var thenExport = choice === true || choice === "confirm";
-        if (thenExport) {
-          try {
-            sessionStorage.setItem(EXPORT_AFTER_LAYOUT_KEY, String(tripId || ""));
-          } catch (eFlag) {}
+        if (!choice) {
+          trackStudioEvent("longshot_export_block_dismissed", {
+            trip_id: tripId,
+            via: "cancel",
+          });
+          return;
         }
-        return _applyLayoutRerender(tripId, root).then(function (ok) {
-          if (!ok && thenExport) {
-            try {
-              sessionStorage.removeItem(EXPORT_AFTER_LAYOUT_KEY);
-            } catch (eClear) {}
+        var thenExport = choice === true || choice === "confirm";
+        var intent = thenExport ? "and_export" : "only";
+        trackStudioEvent(
+          thenExport ? "layout_update_and_export" : "layout_update_only",
+          { trip_id: tripId }
+        );
+
+        var storageOk = writeLayoutUpdating(tripId);
+        if (thenExport) {
+          storageOk = writeExportAfterLayout(tripId) && storageOk;
+        }
+        if (!storageOk) {
+          trackStudioEvent("export_after_layout_cleared", {
+            reason: "storage_fail",
+            trip_id: tripId,
+          });
+          _showToolbarToast("无法自动续导出，请更新版面后再点「长图」", {
+            error: true,
+            duration: 4000,
+          });
+        }
+
+        setLongshotExportState(root, "running", { hint: "正在更新版面…" });
+        if (root._taskDock) {
+          root._taskDock.updateExporting({
+            title: "正在更新版面…",
+            subtitle: thenExport ? "完成后将自动导出长图" : "完成后可再点「长图」",
+            pct: 6,
+          });
+          root._exportDockActive = true;
+        }
+
+        return _applyLayoutRerender(tripId, root, {
+          intent: intent,
+          busyMessage: "正在更新版面…",
+          failMessage: thenExport
+            ? "版面没有更新成功，长图尚未开始"
+            : "版面没有更新成功，请重试",
+          beforeReload: function () {
+            markExpectLayoutReload();
+            if (!thenExport) {
+              _writeJsonStorage(sessionStorage, UPDATE_ONLY_HINT_KEY, {
+                tripId: String(tripId || ""),
+                ts: Date.now(),
+              });
+              clearLayoutUpdatingFlag();
+              clearExportAfterLayoutFlag("update_only_ok");
+            }
+          },
+          onFail: function (errorCode) {
+            trackStudioEvent("layout_update_failed", {
+              trip_id: tripId,
+              intent: intent,
+              error_code: errorCode || null,
+            });
+          },
+        }).then(function (ok) {
+          if (ok) {
+            // 成功会整页刷新；仅更新的下一步提示见 consume / init
+            return;
           }
+          clearLayoutUpdatingFlag();
+          _removeStorage(sessionStorage, UPDATE_ONLY_HINT_KEY);
+          if (thenExport) {
+            clearExportAfterLayoutFlag("layout_update_failed", { intent: intent });
+          }
+          setLongshotExportState(root, "error", {
+            hint: thenExport
+              ? "版面没有更新成功，长图尚未开始"
+              : "版面没有更新成功，请重试",
+          });
         });
       });
       return;
     }
 
+    _exportStartFrom = "direct";
     runLongshotExport(root, tripId);
+  }
+
+  function showUpdateOnlyNextStep(root) {
+    if (root && root._taskDock && typeof root._taskDock.showNextStepHint === "function") {
+      root._exportResultShowing = true;
+      root._taskDock.showNextStepHint({
+        title: "版面已更新",
+        subtitle: "再点「长图」即可导出",
+      });
+      var hintBtn = longshotBtnEl(root);
+      if (hintBtn) {
+        hintBtn.classList.add("preview-toolbar__dock-btn--next-hint");
+        window.setTimeout(function () {
+          hintBtn.classList.remove("preview-toolbar__dock-btn--next-hint");
+        }, 6000);
+      }
+      return;
+    }
+    _showToolbarToast("版面已更新 · 再点「长图」即可导出", { duration: 4000 });
   }
 
   function runLongshotExport(root, tripId) {
@@ -1175,6 +1431,8 @@ export function cancelPreviewLongshotExport(root) {
     var prefs = readLongshotExportPrefs();
     var platform = prefs.platform || "wechat_chat";
     var t0 = Date.now();
+    var from = _exportStartFrom || "direct";
+    _exportStartFrom = "direct";
     trackStudioEvent("longshot_export_start", {
       platform: platform,
       scale: prefs.scale,
@@ -1182,6 +1440,7 @@ export function cancelPreviewLongshotExport(root) {
       photo_count: estimatePhotoCountFromDom(document),
       trip_id: tripId,
       surface: "preview",
+      from: from,
     });
 
     postJsonBusyRetry("/__travelogue/longshot", buildLongshotRequestFromPage(tripId), {
@@ -1194,15 +1453,20 @@ export function cancelPreviewLongshotExport(root) {
           setLongshotExportState(root, "running", { hint: "排队中，请稍候…" });
           return;
         }
+        var failHint =
+          from === "after_layout"
+            ? "版面已更新，长图没有保存成功，可再点「长图」"
+            : null;
         if (res.status === 409) {
           trackStudioEvent("longshot_export_fail", {
             platform: platform,
             error_code: (res.body && res.body.error) || "E_STUDIO_JOB_BUSY",
             trip_id: tripId,
             surface: "preview",
+            from: from,
           });
           setLongshotExportState(root, "error", {
-            hint: (res.body && res.body.message) || "请稍候再试",
+            hint: failHint || (res.body && res.body.message) || "请稍候再试",
           });
           return;
         }
@@ -1212,8 +1476,11 @@ export function cancelPreviewLongshotExport(root) {
             error_code: "E_LNG2_START_FAILED",
             trip_id: tripId,
             surface: "preview",
+            from: from,
           });
-          setLongshotExportState(root, "error", { hint: "无法开始导出" });
+          setLongshotExportState(root, "error", {
+            hint: failHint || "无法开始导出",
+          });
           return;
         }
         longshotJobId = res.body.jobId;
@@ -1224,6 +1491,7 @@ export function cancelPreviewLongshotExport(root) {
             _setSlowHint(root, "", false);
             if (job.status === "succeeded") {
               var result = job.result || {};
+              markExportPulseSeen(tripId);
               trackStudioEvent("longshot_export_success", {
                 platform: result.platform || platform,
                 output_count: (result.outputs && result.outputs.length) || 0,
@@ -1231,6 +1499,7 @@ export function cancelPreviewLongshotExport(root) {
                 duration_ms: Date.now() - t0,
                 trip_id: tripId,
                 surface: "preview",
+                from: from,
               });
               setLongshotExportState(root, "done");
               showLongshotDrawer(root, job);
@@ -1241,9 +1510,16 @@ export function cancelPreviewLongshotExport(root) {
                 error_code: err.code || "E_EXPORT_LONGSHOT",
                 trip_id: tripId,
                 surface: "preview",
+                from: from,
               });
-              setLongshotExportState(root, "error");
-              showLongshotDrawer(root, job);
+              if (from === "after_layout") {
+                setLongshotExportState(root, "error", {
+                  hint: "版面已更新，长图没有保存成功，可再点「长图」",
+                });
+              } else {
+                setLongshotExportState(root, "error");
+                showLongshotDrawer(root, job);
+              }
             } else {
               setLongshotExportState(root, "idle");
             }
@@ -1259,21 +1535,87 @@ export function cancelPreviewLongshotExport(root) {
           error_code: "network",
           trip_id: tripId,
           surface: "preview",
+          from: from,
         });
-        setLongshotExportState(root, "error", { hint: "网络错误" });
+        setLongshotExportState(root, "error", {
+          hint:
+            from === "after_layout"
+              ? "版面已更新，长图没有保存成功，可再点「长图」"
+              : "网络错误",
+        });
       });
   }
 
   export function consumeExportAfterLayout(root, tripId) {
-    var flagged = "";
-    try {
-      flagged = sessionStorage.getItem(EXPORT_AFTER_LAYOUT_KEY) || "";
-      if (flagged) sessionStorage.removeItem(EXPORT_AFTER_LAYOUT_KEY);
-    } catch (e) {
+    bindExportAfterLayoutPagehide();
+    _removeStorage(sessionStorage, EXPECT_LAYOUT_RELOAD_KEY);
+
+    var updating = readLayoutUpdating();
+    if (updating && String(updating.tripId || "") === String(tripId || "")) {
+      if (isFlagExpired(updating)) {
+        clearLayoutUpdatingFlag();
+      } else {
+        setLongshotExportState(root, "running", { hint: "正在更新版面…" });
+        if (root._taskDock) {
+          root._exportDockActive = true;
+          root._taskDock.updateExporting({
+            title: "正在更新版面…",
+            subtitle: "即将开始导出长图",
+            pct: 12,
+          });
+        }
+      }
+    }
+
+    var flagged = readExportAfterLayout();
+    if (!flagged) {
+      clearLayoutUpdatingFlag();
+      var onlyHint = _readJsonStorage(sessionStorage, UPDATE_ONLY_HINT_KEY);
+      if (
+        onlyHint &&
+        String(onlyHint.tripId || "") === String(tripId || "") &&
+        !isFlagExpired(onlyHint)
+      ) {
+        _removeStorage(sessionStorage, UPDATE_ONLY_HINT_KEY);
+        showUpdateOnlyNextStep(root);
+      } else {
+        _removeStorage(sessionStorage, UPDATE_ONLY_HINT_KEY);
+      }
       return false;
     }
-    if (!flagged || flagged !== String(tripId || "")) return false;
-    if (_getLayoutPending()) return false;
+
+    var flaggedId = String(flagged.tripId || "");
+    var currentId = String(tripId || "");
+
+    clearExportAfterLayoutFlag("consume", { flagged_id: flaggedId });
+    _removeStorage(sessionStorage, UPDATE_ONLY_HINT_KEY);
+
+    if (isFlagExpired(flagged)) {
+      clearLayoutUpdatingFlag();
+      trackStudioEvent("export_after_layout_expired", { trip_id: currentId });
+      return false;
+    }
+    if (!flaggedId || flaggedId !== currentId) {
+      clearLayoutUpdatingFlag();
+      trackStudioEvent("export_after_layout_trip_mismatch", {
+        flagged_id: flaggedId,
+        current_id: currentId,
+      });
+      return false;
+    }
+    if (_getLayoutPending()) {
+      clearLayoutUpdatingFlag();
+      return false;
+    }
+
+    clearLayoutUpdatingFlag();
+    var latencyMs =
+      flagged.ts && Number(flagged.ts) ? Date.now() - Number(flagged.ts) : null;
+    trackStudioEvent("export_after_layout_consumed", {
+      trip_id: currentId,
+      latency_ms: latencyMs,
+    });
+    _exportStartFrom = "after_layout";
     runLongshotExport(root, tripId);
     return true;
   }

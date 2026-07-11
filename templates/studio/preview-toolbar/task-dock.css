@@ -29,6 +29,15 @@
   border-color: rgba(61, 107, 90, 0.6);
 }
 
+.preview-task-dock--next-hint {
+  border-color: rgba(212, 168, 67, 0.55);
+}
+
+.preview-task-dock__share-hint {
+  color: #d4e8df !important;
+  font-weight: 500;
+}
+
 .preview-task-dock__icon {
   font-size: 16px;
   flex-shrink: 0;
@@ -45,6 +54,11 @@
   font-size: 11px;
   color: #a8dcc8;
   margin-top: 2px;
+}
+
+.preview-task-dock__remind {
+  color: rgba(255, 183, 77, 0.95) !important;
+  opacity: 0.95;
 }
 
 .preview-task-dock__progress {

@@ -73,10 +73,16 @@
 | [PRD-PHASE5.md](./PRD-PHASE5.md) | **Phase 5 产品需求** v0.5.4（**双路径交付** · 长图 A + 卷轴 B · Tier 0–4） |
 | [IMPLEMENTATION-PHASE5.md](./IMPLEMENTATION-PHASE5.md) | Phase 5 实施任务清单（M20–M23） |
 | [ACCEPTANCE-PHASE5.md](./ACCEPTANCE-PHASE5.md) | Phase 5 验收（UX-P5-80-01 · UX-P5-SCROLL-01） |
+| [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) | 预览精修体验 V1（验货默认 · 更新版面 · 导出拦截） |
+| [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) | **预览导出门面 V1** v1.1 · Reliability 条件 Go |
+| [IMPLEMENTATION-PREVIEW-EXPORT-FACADE-V1.md](./IMPLEMENTATION-PREVIEW-EXPORT-FACADE-V1.md) | 导出门面 V1 实施清单 |
+| [ACCEPTANCE-PREVIEW-EXPORT-FACADE-V1.md](./ACCEPTANCE-PREVIEW-EXPORT-FACADE-V1.md) | 导出门面 V1 验收 |
+| [acceptance-records/preview-export-facade-v1-review-2026-07-11.md](./acceptance-records/preview-export-facade-v1-review-2026-07-11.md) | 导出门面 V1 跨职能评审纪要 |
 
 **前置**：Phase 4 M15–M19 代码主线已收口。**代号**：P5-Polish。**决策**：D1–D6 见 PRD §2.2（D4/D5 暂缓）。
 
-阅读顺序：**PRD-PHASE5** →（启动实施时）**IMPLEMENTATION-PHASE5** → **ACCEPTANCE-PHASE5**。
+阅读顺序：**PRD-PHASE5** →（启动实施时）**IMPLEMENTATION-PHASE5** → **ACCEPTANCE-PHASE5**。  
+预览导出加固：**PRD-PREVIEW-REFINE-V1**（已落地）→ **PRD-PREVIEW-EXPORT-FACADE-V1**（待评审）。
 
 ---
 
@@ -351,6 +357,8 @@
 | [DEFINITION-OF-DONE.md](./DEFINITION-OF-DONE.md) | 里程碑 Done |
 | [TESTING.md](./TESTING.md) | 测试策略 |
 | [API-MINIAPP.md](./API-MINIAPP.md) | 小程序 / 云端 HTTP 契约（设计稿） |
+| [PRD-MINIAPP-P1.md](./PRD-MINIAPP-P1.md) | 小程序 P1 · 混合云长图交付（Draft） |
+| [PRD-MINIAPP-PHOTO-PICK-V1.md](./PRD-MINIAPP-PHOTO-PICK-V1.md) | **小程序选图 V1** · 双主权（我来选 / 交给应用挑） |
 
 ### ADR（架构决策）
 

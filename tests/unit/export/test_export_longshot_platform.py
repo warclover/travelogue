@@ -41,9 +41,10 @@ def test_profiles_load_moments_and_chat() -> None:
     assert chat.allow_p1 is True
     assert moments.allow_p1 is False
     assert moments.target_pages == 9
-    assert moments.segment == "photo_led"
+    assert moments.segment == "content_balanced"
     assert moments.min_pages == 1
-    assert moments.is_photo_led is True
+    assert moments.is_photo_led is False
+    assert moments.is_platform_segment is True
 
 
 def test_profiles_load_phase_c() -> None:
@@ -175,7 +176,9 @@ def test_export_platform_routes_no_p1(
         p1_called.append(True)
         return b"x" * 2048, "p1"
 
-    monkeypatch.setattr("travelogue.export.platform_longshot._capture_p0", _fail_p0)
+    monkeypatch.setattr(
+        "travelogue.export.platform_longshot._capture_p0_with_metrics", _fail_p0
+    )
     monkeypatch.setattr("travelogue.export.longshot._capture_p1", _p1)
 
     class _Page:
@@ -213,13 +216,6 @@ def test_export_platform_routes_no_p1(
         "travelogue.export.platform_longshot._page_metrics",
         lambda *_: {"scrollHeight": 2000, "chapterCount": 1, "perChapter": [10]},
     )
-    monkeypatch.setattr(
-        "travelogue.export.platform_longshot.collect_boundaries",
-        lambda *_: BoundaryMetrics(2000, [0, 1000, 2000], ["start", "photo", "end"]),
-    )
-    monkeypatch.setattr(
-        "travelogue.export.platform_longshot.count_photos_heuristic", lambda *_: 20
-    )
 
     with pytest.raises(LongshotExportError, match="E_LNG2_CAPTURE_P0_FAILED"):
         export_platform_longshot(trip, platform="wechat_moments", scale=1)
@@ -246,19 +242,23 @@ def test_export_trip_longshot_routes_platform(monkeypatch: pytest.MonkeyPatch, t
     assert called == ["wechat_moments"]
 
 
-def test_moments_split_photos_mode_boundaries_ok() -> None:
-    """AC-LNG2-13: photos-mode still uses photo cell tops (no mid-cell cuts)."""
-    height = 2000
-    tops = [0, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]
-    points = [BoundaryPoint(float(y), "photo") for y in tops]
+def test_moments_split_no_mid_cell_cuts() -> None:
+    """AC-LNG2-02/13: content_balanced cuts only at photo edges."""
+    from travelogue.export.content_splitter import breakpoints_cut_photo_interiors
+
+    cells = [(float(i * 200), float(i * 200 + 180)) for i in range(12)]
+    points = [BoundaryPoint(float(t), "photo") for t, _ in cells]
     plan = plan_moments_split(
-        scroll_height_css=height,
+        scroll_height_css=2400,
         boundaries_css=points,
         scale=1,
-        photo_count=20,
+        photo_count=12,
+        photo_cells=cells,
     )
-    for y in plan.breakpoints:
-        assert y in tops
+    assert plan.method in ("dp", "greedy")
+    assert plan.breakpoints[0] == 0 and plan.breakpoints[-1] == 2400
+    cell_canvas = [(int(t), int(b)) for t, b in cells]
+    assert breakpoints_cut_photo_interiors(plan.breakpoints, cell_canvas) == []
 
 
 def test_parse_boundary_payload() -> None:
@@ -271,6 +271,26 @@ def test_parse_boundary_payload() -> None:
     )
     assert m.scroll_height_css == 1000
     assert len(m.as_points()) == 1
+
+
+def test_parse_boundary_payload_filters_junk_cells() -> None:
+    from travelogue.export.boundary_metrics import parse_boundary_payload
+
+    m = parse_boundary_payload(
+        {
+            "scrollHeightCss": 2000,
+            "boundariesCss": [0, 2000],
+            "boundaryKinds": ["start", "end"],
+            "photoCells": [
+                {"top": 0, "bottom": 400},
+                {"top": 420, "bottom": 440},  # junk thin
+                {"top": 500, "bottom": 900},
+                {"top": 920, "bottom": 1300},
+            ],
+        }
+    )
+    assert all(c.bottom_css - c.top_css >= 72 for c in m.photo_cells)
+    assert len(m.photo_cells) == 3
 
 
 def test_auto_downgrade_scale_memory() -> None:
@@ -348,20 +368,26 @@ def test_export_xhs_pipeline_mocked(tmp_path: Path, monkeypatch: pytest.MonkeyPa
         lambda *_: {"scrollHeight": 3000, "chapterCount": 1, "perChapter": [20]},
     )
     tops = list(range(0, 3001, 150))
-    monkeypatch.setattr(
-        "travelogue.export.platform_longshot.collect_boundaries",
-        lambda *_: BoundaryMetrics(
-            3000,
-            [float(y) for y in tops],
-            ["start"] + ["photo"] * (len(tops) - 2) + ["end"],
-        ),
+    from travelogue.export.boundary_metrics import PhotoCell
+
+    cells = [
+        PhotoCell(float(y), float(min(y + 140, 3000)))
+        for y in tops[:-1]
+        if y + 140 <= 3000
+    ]
+    metrics = BoundaryMetrics(
+        3000,
+        [float(y) for y in tops],
+        ["start"] + ["photo"] * (len(tops) - 2) + ["end"],
+        photo_cells=cells,
     )
     monkeypatch.setattr(
-        "travelogue.export.platform_longshot.count_photos_heuristic", lambda *_: 24
+        "travelogue.export.platform_longshot.count_photos_heuristic",
+        lambda *_: max(24, len(cells)),
     )
     monkeypatch.setattr(
         "travelogue.export.platform_longshot._capture_full_p0_only",
-        lambda *a, **k: canvas_bytes,
+        lambda *a, **k: (canvas_bytes, metrics),
     )
 
     result = export_platform_longshot(
@@ -424,20 +450,26 @@ def _mock_platform_capture(
         },
     )
     tops = list(range(0, scroll_h + 1, 150))
-    monkeypatch.setattr(
-        "travelogue.export.platform_longshot.collect_boundaries",
-        lambda *_: BoundaryMetrics(
-            float(scroll_h),
-            [float(y) for y in tops],
-            ["start"] + ["photo"] * (len(tops) - 2) + ["end"],
-        ),
+    from travelogue.export.boundary_metrics import PhotoCell
+
+    cells = [
+        PhotoCell(float(y), float(min(y + 140, scroll_h)))
+        for y in tops[:-1]
+        if y + 140 <= scroll_h
+    ]
+    metrics = BoundaryMetrics(
+        float(scroll_h),
+        [float(y) for y in tops],
+        ["start"] + ["photo"] * (len(tops) - 2) + ["end"],
+        photo_cells=cells,
     )
     monkeypatch.setattr(
-        "travelogue.export.platform_longshot.count_photos_heuristic", lambda *_: 24
+        "travelogue.export.platform_longshot.count_photos_heuristic",
+        lambda *_: max(24, len(cells)),
     )
     monkeypatch.setattr(
         "travelogue.export.platform_longshot._capture_full_p0_only",
-        lambda *a, **k: canvas_bytes,
+        lambda *a, **k: (canvas_bytes, metrics),
     )
 
 
@@ -614,20 +646,26 @@ def test_platform_slice_too_large_raises_after_retries(
         lambda *_: {"scrollHeight": 3000, "chapterCount": 1, "perChapter": [20]},
     )
     tops = list(range(0, 3001, 500))
-    monkeypatch.setattr(
-        "travelogue.export.platform_longshot.collect_boundaries",
-        lambda *_: BoundaryMetrics(
-            3000,
-            [float(y) for y in tops],
-            ["start"] + ["photo"] * (len(tops) - 2) + ["end"],
-        ),
+    from travelogue.export.boundary_metrics import PhotoCell
+
+    cells = [
+        PhotoCell(float(y), float(min(y + 400, 3000)))
+        for y in tops[:-1]
+        if y + 100 <= 3000
+    ]
+    metrics = BoundaryMetrics(
+        3000,
+        [float(y) for y in tops],
+        ["start"] + ["photo"] * (len(tops) - 2) + ["end"],
+        photo_cells=cells,
     )
     monkeypatch.setattr(
-        "travelogue.export.platform_longshot.count_photos_heuristic", lambda *_: 24
+        "travelogue.export.platform_longshot.count_photos_heuristic",
+        lambda *_: max(24, len(cells)),
     )
     monkeypatch.setattr(
         "travelogue.export.platform_longshot._capture_full_p0_only",
-        lambda *a, **k: canvas_bytes,
+        lambda *a, **k: (canvas_bytes, metrics),
     )
     monkeypatch.setattr(
         "travelogue.export.platform_longshot.slice_canvas_png",
@@ -639,3 +677,96 @@ def test_platform_slice_too_large_raises_after_retries(
     assert ei.value.code == "E_LNG2_SLICE_TOO_LARGE"
     assert not list(trip.glob("*-moments-*.png"))
     assert not list(trip.glob("*.part"))
+
+
+def test_export_moments_missing_boundary_metrics_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Stale longshot.js without boundaryMetrics must fail closed (not drift-cut)."""
+    trip = tmp_path / "stale"
+    trip.mkdir()
+    (trip / "index-longshot.html").write_text("<html></html>", encoding="utf-8")
+    (trip / "trip.json").write_text('{"meta":{"title":"Stale"}}', encoding="utf-8")
+    canvas = Image.new("RGB", (428, 800), (10, 10, 10))
+    buf = BytesIO()
+    canvas.save(buf, format="PNG")
+    _mock_platform_capture(monkeypatch, buf.getvalue(), scroll_h=800)
+    monkeypatch.setattr(
+        "travelogue.export.platform_longshot._capture_full_p0_only",
+        lambda *a, **k: (buf.getvalue(), None),
+    )
+    with pytest.raises(LongshotExportError) as ei:
+        export_platform_longshot(trip, platform="wechat_moments", scale=1)
+    assert ei.value.code == "E_LNG2_BOUNDARIES_MISSING"
+
+
+def test_export_moments_contiguous_no_mid_cell_cut(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """AC-LNG2-02 · content_balanced contiguous strips never cut mid-photo."""
+    from PIL import ImageDraw
+
+    from travelogue.export.boundary_metrics import PhotoCell
+    from travelogue.export.content_splitter import breakpoints_cut_photo_interiors
+
+    trip = tmp_path / "moments"
+    trip.mkdir()
+    (trip / "index-longshot.html").write_text("<html></html>", encoding="utf-8")
+    (trip / "trip.json").write_text(
+        '{"meta":{"title":"凯哥拍摄精选"}}', encoding="utf-8"
+    )
+
+    h = 1800
+    canvas = Image.new("RGB", (428, h), (20, 20, 20))
+    draw = ImageDraw.Draw(canvas)
+    cells_css = [(i * 200, i * 200 + 180) for i in range(9)]
+    colors = [(30 + i * 20, 80, 160 - i * 10) for i in range(9)]
+    for (t, b), color in zip(cells_css, colors):
+        draw.rectangle([0, t, 427, b - 1], fill=color)
+    buf = BytesIO()
+    canvas.save(buf, format="PNG")
+    canvas_bytes = buf.getvalue()
+
+    tops_and_bottoms = [0.0]
+    for t, b in cells_css:
+        tops_and_bottoms.append(float(t))
+        tops_and_bottoms.append(float(b))
+    tops_and_bottoms.append(float(h))
+    # dedupe preserve order
+    bcss: list[float] = []
+    for y in tops_and_bottoms:
+        if not bcss or abs(y - bcss[-1]) > 0.5:
+            bcss.append(y)
+    kinds = ["start"] + ["photo"] * (len(bcss) - 2) + ["end"]
+    metrics = BoundaryMetrics(
+        float(h),
+        bcss,
+        kinds,
+        photo_cells=[PhotoCell(float(t), float(b)) for t, b in cells_css],
+    )
+    _mock_platform_capture(monkeypatch, canvas_bytes, scroll_h=h)
+    monkeypatch.setattr(
+        "travelogue.export.platform_longshot._capture_full_p0_only",
+        lambda *a, **k: (canvas_bytes, metrics),
+    )
+    monkeypatch.setattr(
+        "travelogue.export.platform_longshot.count_photos_heuristic",
+        lambda *_: 9,
+    )
+
+    result = export_platform_longshot(trip, platform="wechat_moments", scale=1)
+    assert result.platform == "wechat_moments"
+    assert 1 <= result.page_count <= 9
+    assert len(result.outputs) == result.page_count
+    # Reconstruct breakpoints from successive heights
+    y = 0
+    bps = [0]
+    for item in result.outputs:
+        im = Image.open(item.path)
+        y += im.height
+        bps.append(y)
+    assert bps[-1] == h
+    cell_canvas = [(t, b) for t, b in cells_css]
+    assert breakpoints_cut_photo_interiors(bps, cell_canvas) == []
+    for i, item in enumerate(result.outputs):
+        assert f"-moments-{i + 1:02d}" in item.path.name

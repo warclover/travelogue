@@ -246,6 +246,12 @@ export function runShelfLongshot(trip, opts) {
           output_count: formatted.outputs.length,
         });
         if (typeof V2.reroute === "function") V2.reroute();
+        if (formatted.revealPath) {
+          revealLongshotOutput(tripId, formatted.revealPath).catch(function () {
+            /* keep modal CTA as fallback */
+          });
+          trackStudioEvent("shelf_longshot_auto_reveal", { trip_id: tripId });
+        }
       } else {
         trackStudioEvent("shelf_longshot_fail", {
           trip_id: tripId,

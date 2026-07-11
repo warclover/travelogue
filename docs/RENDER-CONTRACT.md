@@ -309,10 +309,12 @@ templates/visual-journal/
 | cover 底边 | `cover` | `.cover-opening` / `.cover-hero` / `[data-block="cover-opening"]` / `[data-block="cover-hero"]` |
 | 章分隔底边 | `chapter_separator` | `.chapter-separator` / `[data-block="chapter-separator"]` |
 | 章首顶边（非首章） | `chapter_start` | `section.chapter` |
-| photo cell 顶边 | `photo` | `.media-card img` / `.media-card__visual` / `.layout-slot` / `.layout-slot__img` |
+| photo cell 顶边 | `photo` | `.layout-slot__img` / `.media-card img` / `.media-card__visual`（次选 `.layout-slot`） |
 | media-card / screen 顶边 | `card` | `.media-card` / `[data-block="media-card"]` / `.layout-screen` |
 
-坐标：`y_canvas = round(y_css × scale)`；切点权重见 PRD §6.3.7。
+**photo_led 过滤**：宽或高 &lt; 72px、或双轴 &lt; 120px 的节点视为 junk（图标/chrome）；相对中位高度 &lt; 28% 的薄条丢弃。**禁止**裸 `main img` 兜底。
+
+**坐标系**：须在 `captureMainToBlob` 布局 settle（`normalizeLiveImages` + rAF）之后采集；`y_canvas = round(y_css × scale)`；切点权重见 PRD §6.3.7。
 
 ---
 
@@ -322,3 +324,4 @@ templates/visual-journal/
 |------|------|------|
 | v0.1 | 2026-05-19 | 初稿 |
 | v0.3 | 2026-07-09 | §11 Longshot 2.0 boundary selectors |
+| v0.4 | 2026-07-11 | photo_led 过滤 · capture-time boundaryMetrics |

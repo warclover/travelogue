@@ -37,6 +37,7 @@ import {
   openLongshotExportOptions,
   refreshLongshotExportMeta,
   consumeExportAfterLayout,
+  shouldShowExportPulse,
 } from "./longshot.js";
 import {
   tripIdFromPath,
@@ -87,7 +88,7 @@ import {
 } from "./features.js";
 
 var READER_VIEW_KEY = "travelogue.studio.readerView";
-var EXPORT_HINT_KEY = "travelogue.studio.exportHintSeen";
+var EXPORT_HINT_KEY = "travelogue.studio.exportHintSeen"; // legacy; pulse 现用 shouldShowExportPulse
 
 export function initToolbarV3(root, tripId) {
   registerLongshotBridge({
@@ -368,7 +369,9 @@ export function initToolbarV3(root, tripId) {
     longshotBtn.innerHTML = dockLongshotIconHtml("idle");
     longshotBtn.setAttribute("aria-label", "导出长图");
   } else {
-    longshotBtn.textContent = "导出长图";
+    // F-EXP-09 · 可见「长图」；完整动作名放 aria
+    longshotBtn.textContent = "长图";
+    longshotBtn.setAttribute("aria-label", "导出长图");
   }
 
   var caretBtn = document.createElement("button");
@@ -401,14 +404,16 @@ export function initToolbarV3(root, tripId) {
   refreshLongshotExportMeta(root);
 
   try {
-    if (longshotBtn && !sessionStorage.getItem(EXPORT_HINT_KEY)) {
+    if (longshotBtn && shouldShowExportPulse(tripId)) {
       longshotBtn.classList.add("preview-toolbar__dock-btn--pulse");
     }
   } catch (eExportHint) {}
 
   longshotBtn.addEventListener("click", function () {
     try {
+      // 仅主钮点击算「学会长图」；打开 ▾ 不停脉冲（MF-EXP-05）
       sessionStorage.setItem(EXPORT_HINT_KEY, "1");
+      localStorage.setItem("travelogue.studio.exportPulseSeen", "1");
     } catch (eSeen) {}
     longshotBtn.classList.remove("preview-toolbar__dock-btn--pulse");
     longshotBtn.classList.remove("preview-toolbar__menu-btn--pulse");
@@ -417,6 +422,7 @@ export function initToolbarV3(root, tripId) {
   caretBtn.addEventListener("click", function (e) {
     e.preventDefault();
     e.stopPropagation();
+    // 打开导出选项不停止脉冲、不标记已学会
     openLongshotExportOptions(root);
   });
 

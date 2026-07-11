@@ -64,7 +64,7 @@
 | 平台 | `platform` | 产物 | 说明 |
 |------|------------|------|------|
 | **微信群**（默认） | `wechat_chat` / 省略 | `{title}-longshot.png` 或 `{title}-ch{nn}.png` | Longshot 1.x；允许 P1 兼容截图 |
-| **朋友圈** | `wechat_moments` | `{title}-moments-{nn}.png` | 目标 9 张（内容少时 6–9）；竖切 + 页脚 `i/n`；**禁止 P1** |
+| **朋友圈** | `wechat_moments` | `{title}-moments-{nn}.png` | **content_balanced**：整卷长图切成 ≤9 段（可变高）；切点仅落在照片边界；少图可 1 段；页脚 `i/n`；**禁止 P1** |
 | **小红书** | `xiaohongshu` | `{title}-xhs-{nn}.png` | 3:4 → **1080×1440**；默认 letterbox；张数 auto 或 1–18 |
 | **Instagram** | `instagram` | `{title}-ins-{nn}.png` | 4:5 → **1080×1350**；CLI/API only |
 | **微博** | `weibo` | `{title}-weibo-{nn}.png` | 3:4 → **1080×1440**；CLI/API only |

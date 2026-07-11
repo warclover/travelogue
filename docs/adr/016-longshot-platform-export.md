@@ -61,7 +61,7 @@ Longshot 2.0 需在 **不 fork HTML 模板** 的前提下，支持朋友圈 9 �
 |--------|------|
 | 主路径 | **DP 最小化段高方差**，切点仅落在合法 boundary |
 | 降级 | boundary 候选不足时 **贪心 nearest** |
-| 段数 | `wechat_moments`：目标 9；合法切点不足时允许 **6–9 张**（见 PRD D-LNG2-02 修订） |
+| **段数** | `wechat_moments`：**content_balanced** 目标 9 段连续切分；合法切点不足时减少张数（可 1 段） |
 
 ---
 
@@ -104,3 +104,4 @@ platform 模式写入 `{title}-{platform}-{nn}.png` 时使用 **`PlatformExportW
 | v0.1 | 2026-07-08 | 初稿：三分支 · scale 映射 · 禁 P1 · 原子 Job |
 | v0.2 | 2026-07-08 | 评审修订：6–9 张降级 · stale 规则 |
 | v0.3 | 2026-07-08 | 开发落地：降 scale 重 boundary · PlatformExportWriter · 写回 PRD D-LNG2-23 |
+| v0.4 | 2026-07-11 | capture-time `boundaryMetrics`（与 PNG 同布局）；朋友圈 photo_led |

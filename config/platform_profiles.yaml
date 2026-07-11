@@ -15,8 +15,9 @@ platforms:
   wechat_moments:
     label: 朋友圈
     label_en: Moments
-    # photo_led: one complete photo per slide (variable height); no mid-image cuts
-    segment: photo_led
+    # content_balanced: split full longshot into ≤9 contiguous segments;
+    # cuts only at photo/card boundaries (never mid-photo); variable heights OK.
+    segment: content_balanced
     capture: full_once
     allow_p1: false
     target_pages: 9
@@ -30,7 +31,8 @@ platforms:
       footer: "{i}/{n}"
     publish_guide: >-
       发布步骤：1. 在文件夹按 01→N 全选（图底 i/n 助 orientation）
-      2. 朋友圈 → 从相册选择 3. 按顺序发布 · 滑动可连读
+      2. 朋友圈 → 从相册选择 3. 按顺序发布 · 滑动可连读整卷长图。
+      各段高度可变；切点落在照片之间，不会切开单张照片。
 
   xiaohongshu:
     label: 小红书

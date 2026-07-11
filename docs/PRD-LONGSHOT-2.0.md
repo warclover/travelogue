@@ -174,7 +174,7 @@ flowchart TD
 | profile id | 显示名 | 张数 | 输出尺寸 | 分段 | Phase |
 |------------|--------|------|----------|------|-------|
 | `wechat_chat` | 微信群 | — | 428×scale 宽 | technical/chapter | 1.x |
-| `wechat_moments` | 朋友圈 | **6–9（目标 9）** | 428×scale 宽 | content_balanced | **A** |
+| `wechat_moments` | 朋友圈 | **1–9（目标 9）** | 428×scale 宽 | **content_balanced**（整卷连续切分） | **A** |
 | `xiaohongshu` | 小红书 | 1–18 | **1080×1440** | content_balanced + letterbox | **B** |
 | `instagram` | Instagram | 1–10 | 1080×1350 | 同 xhs 管线 | C 后端 only |
 | `weibo` | 微博 | 1–9 | 1080 宽 | 同 xhs 管线 | C 后端 only |
@@ -202,6 +202,9 @@ flowchart TD
 | 发布上限 | 9 张/条 |
 | 单张体积 | ≤ 20MB |
 | 输出宽 | 428 × scale（856@2×，1284@3×） |
+| 切分策略 | **content_balanced**：整卷长图连续切成 ≤9 段；切点仅落在照片/卡片边界；各段高度可变；照片少时允许 1 段 |
+
+> 边界必须在 **capture 布局 settle 后**采集（与 PNG 同坐标系）。禁止为凑 9 张做几何硬切（会切穿照片）。
 
 #### 6.3.1 边界采集 · `boundary_metrics`
 

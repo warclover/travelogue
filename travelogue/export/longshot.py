@@ -300,6 +300,8 @@ async (opts) => {
     title: out.title,
     outputWidth: out.outputWidth,
     method: "p0",
+    boundaryMetrics: out.boundaryMetrics || null,
+    canvasHeightCss: out.canvasHeightCss || null,
   };
 }
 """
@@ -355,7 +357,28 @@ async (opts) => {
 """
 
 
-def _capture_p0(page, *, scale: int, fmt: str, chapter_index: int | None = None) -> tuple[bytes, str]:
+def _capture_p0(
+    page,
+    *,
+    scale: int,
+    fmt: str,
+    chapter_index: int | None = None,
+) -> tuple[bytes, str]:
+    """Branch A capture · returns (png/jpeg bytes, method)."""
+    data, method, _metrics = _capture_p0_with_metrics(
+        page, scale=scale, fmt=fmt, chapter_index=chapter_index
+    )
+    return data, method
+
+
+def _capture_p0_with_metrics(
+    page,
+    *,
+    scale: int,
+    fmt: str,
+    chapter_index: int | None = None,
+) -> tuple[bytes, str, dict[str, Any] | None]:
+    """P0 capture plus capture-time boundaryMetrics (Longshot 2.0 platform path)."""
     if chapter_index is None:
         payload = page.evaluate(_CAPTURE_P0_JS, {"scale": scale, "format": fmt})
     else:
@@ -366,7 +389,10 @@ def _capture_p0(page, *, scale: int, fmt: str, chapter_index: int | None = None)
     data = base64.b64decode(payload["base64"])
     if len(data) < 1024:
         raise LongshotExportError("E_LNG_CAPTURE_FAILED", "captureMainToBlob 输出过小")
-    return data, str(payload.get("method") or "p0")
+    metrics = payload.get("boundaryMetrics")
+    if metrics is not None and not isinstance(metrics, dict):
+        metrics = None
+    return data, str(payload.get("method") or "p0"), metrics
 
 
 _CHAPTER_ISOLATE_JS = """

@@ -1711,6 +1711,154 @@
     }
   }
 
+  /**
+   * Collect split boundaries in CSS px relative to main top.
+   * Must run AFTER capture layout + normalizeLiveImages settle so Y matches the PNG.
+   * Selector contract: RENDER-CONTRACT §11 / boundary_metrics.py
+   */
+  function collectBoundaryMetrics(rootEl) {
+    var main = rootEl || document.querySelector("main");
+    if (!main) {
+      return {
+        scrollHeightCss: 0,
+        boundariesCss: [0],
+        boundaryKinds: ["start"],
+        photoCells: [],
+      };
+    }
+    var mainRect = main.getBoundingClientRect();
+    var scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+    var mainTop = mainRect.top + scrollTop;
+
+    function yTop(el) {
+      var r = el.getBoundingClientRect();
+      return Math.round(r.top + scrollTop - mainTop);
+    }
+    function yBottom(el) {
+      var r = el.getBoundingClientRect();
+      return Math.round(r.bottom + scrollTop - mainTop);
+    }
+    function cellSize(el) {
+      var r = el.getBoundingClientRect();
+      return { w: r.width, h: r.height };
+    }
+
+    var scrollHeightCss = Math.max(main.scrollHeight, main.offsetHeight, 1);
+    var raw = [];
+
+    function add(y, kind, priority) {
+      if (!Number.isFinite(y)) return;
+      var yy = Math.max(0, Math.min(scrollHeightCss, Math.round(y)));
+      raw.push({ y: yy, kind: kind, priority: priority });
+    }
+
+    main
+      .querySelectorAll(
+        '.cover-opening, .cover-hero, [data-block="cover-opening"], [data-block="cover-hero"]'
+      )
+      .forEach(function (el) {
+        add(yBottom(el), "cover", 50);
+      });
+    main
+      .querySelectorAll('.chapter-separator, [data-block="chapter-separator"]')
+      .forEach(function (el) {
+        add(yBottom(el), "chapter_separator", 40);
+      });
+    Array.from(main.querySelectorAll("section.chapter")).forEach(function (el, idx) {
+      if (idx === 0) return;
+      add(yTop(el), "chapter_start", 30);
+    });
+    main
+      .querySelectorAll(".media-card img, .media-card__visual, .layout-slot__img")
+      .forEach(function (el) {
+        add(yTop(el), "photo", 20);
+      });
+    main.querySelectorAll(".layout-slot").forEach(function (el) {
+      add(yTop(el), "photo", 20);
+    });
+    main
+      .querySelectorAll('.media-card, [data-block="media-card"], .layout-screen')
+      .forEach(function (el) {
+        add(yTop(el), "card", 10);
+      });
+
+    raw.push({ y: 0, kind: "start", priority: 100 });
+    raw.push({ y: scrollHeightCss, kind: "end", priority: 100 });
+
+    var byY = new Map();
+    raw.forEach(function (item) {
+      var prev = byY.get(item.y);
+      if (!prev || item.priority > prev.priority) byY.set(item.y, item);
+    });
+    var sorted = Array.from(byY.values()).sort(function (a, b) {
+      return a.y - b.y;
+    });
+
+    var cellRaw = [];
+    var seen = new Set();
+    function addCell(el) {
+      var size = cellSize(el);
+      // Reject icon / chrome sized nodes (junk for photo_led Moments)
+      if (size.w < 72 || size.h < 72) return;
+      if (size.w < 120 && size.h < 120) return;
+      var top = Math.max(0, Math.min(scrollHeightCss, yTop(el)));
+      var bottom = Math.max(0, Math.min(scrollHeightCss, yBottom(el)));
+      if (bottom - top < 72) return;
+      var key = top + ":" + bottom;
+      if (seen.has(key)) return;
+      seen.add(key);
+      cellRaw.push({ top: top, bottom: bottom, w: size.w, h: size.h });
+    }
+    main
+      .querySelectorAll(".layout-slot__img, .media-card img, .media-card__visual")
+      .forEach(addCell);
+    if (!cellRaw.length) {
+      main.querySelectorAll(".layout-slot").forEach(addCell);
+    }
+    // No bare `main img` fallback — toolbar / chrome icons become junk slides.
+    cellRaw.sort(function (a, b) {
+      return a.top - b.top || a.bottom - b.bottom;
+    });
+    var photoCells = [];
+    cellRaw.forEach(function (c) {
+      var prev = photoCells[photoCells.length - 1];
+      if (prev && Math.abs(c.top - prev.top) <= 2) {
+        if (c.bottom > prev.bottom) photoCells[photoCells.length - 1] = c;
+        return;
+      }
+      photoCells.push(c);
+    });
+    // Relative height filter vs median (drop thin UI strips)
+    if (photoCells.length >= 3) {
+      var heights = photoCells
+        .map(function (c) {
+          return c.bottom - c.top;
+        })
+        .sort(function (a, b) {
+          return a - b;
+        });
+      var median = heights[Math.floor(heights.length / 2)] || 1;
+      var minH = Math.max(72, Math.floor(median * 0.28));
+      photoCells = photoCells.filter(function (c) {
+        return c.bottom - c.top >= minH;
+      });
+    }
+    photoCells = photoCells.map(function (c) {
+      return { top: c.top, bottom: c.bottom };
+    });
+
+    return {
+      scrollHeightCss: scrollHeightCss,
+      boundariesCss: sorted.map(function (x) {
+        return x.y;
+      }),
+      boundaryKinds: sorted.map(function (x) {
+        return x.kind;
+      }),
+      photoCells: photoCells,
+    };
+  }
+
   async function captureMainToBlob(options) {
     options = options || {};
     teardownReadingMotion();
@@ -1810,6 +1958,9 @@
         });
       });
 
+      // Boundaries after capture layout settle — same Y space as the PNG (Longshot 2.0 P0).
+      var boundaryMetrics = collectBoundaryMetrics(main);
+
       if (!options.quietProgress) {
         showProgress(72, "合成长图（" + imgTotal + " 张 · " + outputWidth + "px 宽）…");
       }
@@ -1823,10 +1974,11 @@
         pageBg = "#111110";
       }
 
+      // Prefer main height so canvas Y matches boundaryMetrics.scrollHeightCss.
       var captureHeight = Math.max(
         main.scrollHeight,
         main.offsetHeight,
-        document.documentElement.scrollHeight
+        boundaryMetrics.scrollHeightCss || 1
       );
 
       liveStyleSaved = patchLiveStylesheetsForCapture();
@@ -1882,6 +2034,8 @@
         captureScale: captureScale,
         outputWidth: outputWidth,
         imgTotal: imgTotal,
+        boundaryMetrics: boundaryMetrics,
+        canvasHeightCss: captureHeight,
       };
     } finally {
       restoreLiveStylesheetsForCapture(liveStyleSaved);
@@ -2139,6 +2293,7 @@
     captureFull: captureLongShotFull,
     captureByChapter: captureLongShotByChapter,
     captureMainToBlob: captureMainToBlob,
+    collectBoundaryMetrics: collectBoundaryMetrics,
     captureDimensions: captureDimensions,
     buildDisplaySizeMap: buildDisplaySizeMap,
     getPaintedImageSize: getPaintedImageSize,

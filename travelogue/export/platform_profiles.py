@@ -287,12 +287,12 @@ def resolve_moments_page_count(
 ) -> tuple[int, str]:
     """Return (N, userHint) for wechat_moments.
 
-    ``photo_led``: N = min(photo_count, max_pages) with variable-height slides.
-    Legacy ``content_balanced``: keep prior 6–9 / tiny rules for callers/tests.
+    ``content_balanced`` (default): target 9 contiguous segments; fewer when
+    legal cut points are scarce; tiny trips may be 1–N (never pad blank pages).
+    ``photo_led``: N = min(photo_count, max_pages) with discrete photo crops.
     """
     profile = profile or get_profile("wechat_moments")
     target = int(profile.target_pages or 9)
-    min_pages = int(profile.min_pages or 1)
     max_pages = int(profile.max_pages or 9)
     tiny_max = int(profile.tiny_photo_max or 5)
     photos = max(0, int(photo_count))
@@ -314,26 +314,25 @@ def resolve_moments_page_count(
             hint = f"已生成 {n} 张完整照片配图，按编号 01→{n:02d} 选图发布。"
         return n, hint
 
-    # Legacy content_balanced (DP) rules
-    min_pages = max(min_pages, 6) if profile.segment == "content_balanced" else min_pages
-    if photos <= tiny_max:
-        n = min(feasible, max(1, photos if photos > 0 else 1), max_pages)
-        n = max(1, min(n, feasible))
-        hint = (
-            f"内容较少，已生成 {n} 张朋友圈配图。"
-            "建议改用微信群长图以获得更完整阅读体验。"
-        )
-        return n, hint
-
+    # content_balanced · contiguous longshot split (1…9)
     if feasible >= target:
-        return target, f"已生成 {target} 张朋友圈配图，按编号 01→{target:02d} 选图发布。"
-
-    if feasible >= min_pages:
-        n = min(feasible, max_pages)
-        return n, f"内容较少，已生成 {n} 张朋友圈配图（目标 {target} 张）。"
+        return (
+            min(target, max_pages),
+            f"已生成 {min(target, max_pages)} 张朋友圈配图，按编号 "
+            f"01→{min(target, max_pages):02d} 选图发布 · 滑动可连读。",
+        )
 
     n = max(1, min(feasible, max_pages))
-    return n, f"内容较少，已生成 {n} 张朋友圈配图（目标 {target} 张）。"
+    if photos <= tiny_max or n == 1:
+        hint = (
+            f"内容较少，已生成 {n} 张朋友圈配图。"
+            "照片少时允许单张；也可改用微信群长图。"
+        )
+    elif n < target:
+        hint = f"内容较少，已生成 {n} 张朋友圈配图（目标 {target} 张）· 滑动可连读。"
+    else:
+        hint = f"已生成 {n} 张朋友圈配图，按编号 01→{n:02d} 选图发布 · 滑动可连读。"
+    return n, hint
 
 
 def resolve_xhs_slide_count(

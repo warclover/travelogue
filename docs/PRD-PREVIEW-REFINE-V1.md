@@ -10,8 +10,9 @@
 | **关联文档** | [PRD-PHASE5.md](./PRD-PHASE5.md) §1.4 · §P5-3.7 · [PRD-COPY-OPTIMIZATION.md](./PRD-COPY-OPTIMIZATION.md) · [PRD-COVER-OPTIMIZATION-V4.md](./PRD-COVER-OPTIMIZATION-V4.md) · [preview-toolbar-v3-wireframe.html](./wireframes/preview-toolbar-v3-wireframe.html) · **线框** [preview-refine-v1-wireframe.html](./wireframes/preview-refine-v1-wireframe.html) |
 | **评审来源** | 2026-07-10 产品 × UX 诊断；**2026-07-11 页面评审会**（用户代表 · UI/UX · 交互 · 流程） |
 | **评审记录** | [preview-refine-v1-review-2026-07-11.md](./acceptance-records/preview-refine-v1-review-2026-07-11.md) |
-| **验收** | `ACCEPTANCE-PREVIEW-REFINE-V1.md`（实施后撰写） |
-| **实施清单** | `IMPLEMENTATION-PREVIEW-REFINE-V1.md`（实施后撰写） |
+| **验收** | [ACCEPTANCE-PREVIEW-REFINE-V1.md](./ACCEPTANCE-PREVIEW-REFINE-V1.md) |
+| **实施清单** | [IMPLEMENTATION-PREVIEW-REFINE-V1.md](./IMPLEMENTATION-PREVIEW-REFINE-V1.md) |
+| **后续加固** | [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md)（导出门面：续跑可靠 · 发群引导 · 埋点） |
 | **更新日期** | 2026-07-11 |
 
 > **定位**

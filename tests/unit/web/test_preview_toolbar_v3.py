@@ -496,11 +496,23 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert 'case "refine":' in dock
     assert 'dockIconSvg("refine")' in bootstrap
     assert 'aria-label="精修"' in bootstrap
-    assert "版面尚未更新" in longshot
+    assert "导出前先更新一下" in longshot
+    assert "版面尚未更新" not in longshot
     assert "更新并导出" in longshot
     assert "仅更新版面" in longshot
     assert "_getLayoutPending()" in longshot
     assert "consumeExportAfterLayout" in longshot
+    assert "export_after_layout_consumed" in longshot
+    assert "longshot_export_blocked_pending" in longshot
+    assert "EXPORT_AFTER_TTL_MS" in longshot
+    assert "shouldShowExportPulse" in longshot
+    assert "layoutUpdating" in longshot
+    assert "版面没有更新成功，长图尚未开始" in longshot
+    assert "再点「长图」即可导出" in longshot
+    assert "已保存到本机 · 拖进微信群即可" in longshot
+    assert "已保存到本机 · 拖进微信群即可" in task_dock
+    assert "showNextStepHint" in task_dock
+    assert "在文件夹中显示" in task_dock
     assert "版面有更新" in core
     assert "正在更新版面" in core
     assert "有编辑尚未应用排版" not in core
@@ -517,6 +529,45 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "工作台设置" not in home
     assert "编辑与设置" not in bootstrap
     assert "编辑与设置" not in sheet
+
+
+def test_preview_export_facade_v1_markers() -> None:
+    """PRD-PREVIEW-EXPORT-FACADE-V1 · 续跑可靠 / 发群引导 / 埋点门禁。"""
+    longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    core = (STUDIO / "preview-toolbar" / "core.js").read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    task_dock = TASK_DOCK_JS.read_text(encoding="utf-8")
+    css = (STUDIO / "preview-toolbar" / "task-dock.css").read_text(encoding="utf-8")
+
+    assert "expectLayoutReload" in longshot
+    assert "export_after_layout_cleared" in longshot
+    assert "longshot_export_block_dismissed" in longshot
+    assert "layout_update_and_export" in longshot
+    assert "layout_update_only" in longshot
+    assert "layout_update_failed" in longshot
+    assert "longshot_success_share_hint_shown" in longshot
+    assert "from: from" in longshot
+    assert "beforeReload" in core
+    assert "failMessage" in core
+    assert "shouldShowExportPulse" in init_v3
+    assert "打开导出选项不停止脉冲" in init_v3
+    assert "preview-task-dock--next-hint" in task_dock
+    assert "preview-task-dock--next-hint" in css
+    assert 'textContent = "在文件夹中显示"' in task_dock
+    assert 'textContent = "打开文件夹"' not in task_dock
+    assert "已打开文件夹" in task_dock
+    assert "autoRevealLongshotOutputs" in longshot
+    assert "longshot_auto_reveal" in longshot
+    assert "导出时仍会提醒" in task_dock
+    assert "preview-task-dock__remind" in css
+    assert "按序发到朋友圈即可" in task_dock
+    assert "导入小红书" in task_dock
+    assert "onFail" in core
+    assert "error_code" in longshot
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    # F-EXP-09 · 非 Dock 可见「长图」
+    assert 'longshotBtn.textContent = "长图"' in init_v3
+    assert 'longshotBtn.textContent = "导出长图"' not in init_v3
 
 
 def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:

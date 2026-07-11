@@ -158,21 +158,36 @@ export function mountPreviewTaskDock(root, hooks) {
       var nXhs = result.pageCount || outputs.length;
       main.textContent = "✓ " + nXhs + " 张 3:4 配图已就绪";
     } else {
-      main.textContent = "长图已保存到画册目录";
+      main.textContent = "已保存到本机 · 拖进微信群即可";
     }
     textWrap.appendChild(main);
-    if (job && job.status !== "failed" && result.publishGuide) {
-      var guide = document.createElement("small");
-      guide.textContent = result.publishGuide;
-      textWrap.appendChild(guide);
-    } else if (job && job.status !== "failed" && result.userHint) {
-      var hint = document.createElement("small");
-      hint.textContent = result.userHint;
-      textWrap.appendChild(hint);
-    } else if (job && job.status !== "failed" && pathsLabel) {
-      var sub = document.createElement("small");
-      sub.textContent = pathsLabel;
-      textWrap.appendChild(sub);
+    if (job && job.status !== "failed") {
+      var shareHint = document.createElement("small");
+      shareHint.className = "preview-task-dock__share-hint";
+      if (result.platform === "wechat_moments") {
+        shareHint.textContent =
+          outputs.length > 1
+            ? "已打开文件夹 · 共 " + outputs.length + " 张，按序发到朋友圈即可"
+            : "已打开文件夹 · 按序发到朋友圈即可";
+      } else if (result.platform === "xiaohongshu") {
+        shareHint.textContent =
+          outputs.length > 1
+            ? "已打开文件夹 · 共 " + outputs.length + " 张，导入小红书按序发布"
+            : "已打开文件夹 · 导入小红书发布即可";
+      } else if (outputs.length > 1) {
+        shareHint.textContent = "已打开文件夹 · 共 " + outputs.length + " 张，可按章发送";
+      } else if (result.publishGuide) {
+        shareHint.textContent = result.publishGuide;
+      } else if (result.userHint) {
+        shareHint.textContent = result.userHint;
+      } else if (pathsLabel && pathsLabel !== "画册目录") {
+        shareHint.textContent = pathsLabel;
+      } else {
+        shareHint.textContent = "已打开文件夹 · 拖进微信群即可";
+      }
+      if (shareHint.textContent) {
+        textWrap.appendChild(shareHint);
+      }
     }
 
     var actions = document.createElement("div");
@@ -181,8 +196,8 @@ export function mountPreviewTaskDock(root, hooks) {
     if (job && job.status !== "failed" && outputs.length && typeof hooks.onRevealFolder === "function") {
       var revealBtn = document.createElement("button");
       revealBtn.type = "button";
-      revealBtn.className = "preview-task-dock__btn preview-task-dock__btn--accent";
-      revealBtn.textContent = "打开文件夹";
+      revealBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
+      revealBtn.textContent = "在文件夹中显示";
       revealBtn.addEventListener("click", function () {
         hooks.onRevealFolder(outputs[0], tripId);
       });
@@ -295,6 +310,13 @@ export function mountPreviewTaskDock(root, hooks) {
     sub.textContent =
       opts.subtitle || "改过精选或拼图后，请先更新版面再导出";
     textWrap.appendChild(sub);
+    // F-EXP-08 / SF-EXP-02 · 稍后 dismiss 后再见，仍提示导出会拦
+    if (opts.remindExport !== false) {
+      var remind = document.createElement("small");
+      remind.className = "preview-task-dock__remind";
+      remind.textContent = opts.remindText || "导出时仍会提醒";
+      textWrap.appendChild(remind);
+    }
 
     var actions = document.createElement("div");
     actions.className = "preview-task-dock__actions";
@@ -376,6 +398,41 @@ export function mountPreviewTaskDock(root, hooks) {
     dock.appendChild(actions);
   }
 
+  function showNextStepHint(opts) {
+    opts = opts || {};
+    clearTimers();
+    dock.hidden = false;
+    dock.className = "preview-task-dock preview-task-dock--next-hint";
+    dock.innerHTML = "";
+
+    var icon = document.createElement("span");
+    icon.className = "preview-task-dock__icon";
+    icon.textContent = "✓";
+
+    var textWrap = document.createElement("div");
+    textWrap.className = "preview-task-dock__text";
+    var main = document.createElement("span");
+    main.className = "preview-task-dock__main";
+    main.textContent = opts.title || "版面已更新";
+    textWrap.appendChild(main);
+    var sub = document.createElement("small");
+    sub.textContent = opts.subtitle || "再点「长图」即可导出";
+    textWrap.appendChild(sub);
+
+    var actions = document.createElement("div");
+    actions.className = "preview-task-dock__actions";
+    actions.appendChild(
+      buildCloseBtn(function () {
+        if (typeof hooks.onResultDismissed === "function") hooks.onResultDismissed();
+      })
+    );
+
+    dock.appendChild(icon);
+    dock.appendChild(textWrap);
+    dock.appendChild(actions);
+    // 残留：不自动隐藏，直到用户关闭或再点长图
+  }
+
   function showError(message) {
     showSuccess({ status: "failed", error: { message: message || "导出失败" } });
   }
@@ -388,6 +445,7 @@ export function mountPreviewTaskDock(root, hooks) {
     showG1: showG1,
     showPending: showPending,
     showStale: showStale,
+    showNextStepHint: showNextStepHint,
     showError: showError,
   };
 }

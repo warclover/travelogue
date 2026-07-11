@@ -220,8 +220,13 @@ def compute_breakpoints_greedy(
     boundaries: Sequence[int] | Sequence[BoundaryPoint],
     *,
     scale: int | float = 1,
+    allow_geometric: bool = True,
 ) -> list[int]:
-    """Greedy: place cuts near ideal equal spacing using weighted nearest."""
+    """Greedy: place cuts near ideal equal spacing using weighted nearest.
+
+    When ``allow_geometric`` is False (Moments), never invent mid-photo Y —
+    stop early with fewer segments if legal boundaries run out.
+    """
     n = max(1, int(n))
     height = int(height)
     pts = _normalize_boundaries(height, boundaries, scale=scale)
@@ -233,7 +238,6 @@ def compute_breakpoints_greedy(
     used: set[int] = {0, height}
     for i in range(1, n):
         ideal = ideal_step * i
-        # Prefer candidates after previous cut + min_seg
         min_seg = max(1, height // max(n * 2, 1))
         prev = chosen[-1]
         candidates = [(y, k) for y, k in pts if y >= prev + min_seg and y < height]
@@ -241,7 +245,8 @@ def compute_breakpoints_greedy(
             candidates = [(y, k) for y, k in pts if prev < y < height]
         pick = nearest_boundary(ideal, candidates, exclude=used)
         if pick is None:
-            # Force geometric cut clamped to remaining interior
+            if not allow_geometric:
+                break
             y = int(round(ideal))
             y = max(prev + 1, min(height - (n - i), y))
             if y in used or y <= prev or y >= height:
@@ -252,13 +257,81 @@ def compute_breakpoints_greedy(
             chosen.append(pick[0])
             used.add(pick[0])
     chosen.append(height)
-    # Deduplicate / sort
     out = sorted(set(chosen))
     if out[0] != 0:
         out.insert(0, 0)
     if out[-1] != height:
         out.append(height)
     return out
+
+
+def snap_breakpoints_to_legal(
+    breakpoints: Sequence[int],
+    legal_ys: Sequence[int],
+    height: int,
+) -> list[int]:
+    """Snap interior cuts to nearest legal Y (photo/card edges). Keeps 0 and height."""
+    height = max(1, int(height))
+    legal = sorted({0, height, *[int(y) for y in legal_ys if 0 < int(y) < height]})
+    if len(legal) < 2:
+        return [0, height]
+    out: list[int] = [0]
+    raw = [int(y) for y in breakpoints]
+    interior = raw[1:-1] if len(raw) >= 2 else []
+    for y in interior:
+        prev = out[-1]
+        cands = [ly for ly in legal if prev < ly < height]
+        if not cands:
+            continue
+        best = min(cands, key=lambda ly: abs(ly - y))
+        if best > out[-1]:
+            out.append(best)
+    if out[-1] != height:
+        out.append(height)
+    dedup: list[int] = []
+    for y in out:
+        if not dedup or y > dedup[-1]:
+            dedup.append(y)
+    if len(dedup) < 2:
+        return [0, height]
+    return dedup
+
+
+def breakpoints_cut_photo_interiors(
+    breakpoints: Sequence[int],
+    photo_cells_canvas: Sequence[tuple[int, int]],
+    *,
+    tolerance: int = 2,
+) -> list[int]:
+    """Return interior breakpoints that fall strictly inside a photo cell."""
+    bad: list[int] = []
+    bps = [int(y) for y in breakpoints]
+    interiors = bps[1:-1]
+    for y in interiors:
+        for top, bottom in photo_cells_canvas:
+            if top + tolerance < y < bottom - tolerance:
+                bad.append(y)
+                break
+    return bad
+
+
+def _photo_cells_to_boundary_points(
+    photo_cells: Sequence[Any],
+) -> list[BoundaryPoint]:
+    """Use cell tops and bottoms as legal cut points (never mid-photo)."""
+    pts: list[BoundaryPoint] = []
+    for c in photo_cells or []:
+        if hasattr(c, "top_css") and hasattr(c, "bottom_css"):
+            top, bottom = float(c.top_css), float(c.bottom_css)
+        elif isinstance(c, (tuple, list)) and len(c) >= 2:
+            top, bottom = float(c[0]), float(c[1])
+        else:
+            continue
+        if bottom <= top:
+            continue
+        pts.append(BoundaryPoint(top, "photo"))
+        pts.append(BoundaryPoint(bottom, "photo"))
+    return pts
 
 
 def select_photo_led_indices(cell_count: int, n: int) -> list[int]:
@@ -409,15 +482,14 @@ def plan_moments_split(
     scale: int,
     photo_count: int,
     target_pages: int = 9,
-    min_pages: int = 6,
+    min_pages: int = 1,
     max_pages: int = 9,
     tiny_photo_max: int = 5,
     photo_cells: Sequence[Any] | None = None,
     segment: str | None = None,
 ) -> SplitPlan:
-    """Moments split: photo_led (default) or legacy content_balanced DP."""
+    """Moments split: content_balanced contiguous (default) or photo_led."""
     from travelogue.export.platform_profiles import (
-        PlatformProfile,
         get_profile,
         resolve_moments_page_count,
     )
@@ -434,47 +506,77 @@ def plan_moments_split(
             tiny_photo_max=int(profile.tiny_photo_max or tiny_photo_max),
         )
 
-    # Legacy content_balanced (DP / greedy)
+    # content_balanced · full longshot contiguous segments
     scale = max(1, int(scale))
     h = canvas_height(scroll_height_css, scale)
+    target_pages = int(profile.target_pages or target_pages)
+    max_pages = int(profile.max_pages or max_pages)
+    tiny_photo_max = int(profile.tiny_photo_max or tiny_photo_max)
+
+    pts: list[BoundaryPoint] = []
     if boundaries_css and isinstance(boundaries_css[0], BoundaryPoint):
-        pts = list(boundaries_css)  # type: ignore[arg-type]
-    else:
-        pts = [BoundaryPoint(float(y), "photo") for y in boundaries_css]  # type: ignore[arg-type]
+        pts.extend(list(boundaries_css))  # type: ignore[arg-type]
+    elif boundaries_css:
+        pts.extend(
+            BoundaryPoint(float(y), "photo")
+            for y in boundaries_css  # type: ignore[arg-type]
+        )
+    pts.extend(_photo_cells_to_boundary_points(photo_cells or []))
 
     canvas_pts = [(p.y_canvas(scale), p.kind) for p in pts]
+    legal_ys = sorted({y for y, _ in canvas_pts if 0 < y < h})
     feasible = max_feasible_segments(h, canvas_pts, scale=1, n_target=target_pages)
-    legacy = PlatformProfile(
-        id="wechat_moments",
-        label=profile.label,
-        segment="content_balanced",
-        capture=profile.capture,
-        allow_p1=False,
-        target_pages=target_pages,
-        min_pages=min_pages,
-        max_pages=max_pages,
-        tiny_photo_max=tiny_photo_max,
-    )
     n, hint = resolve_moments_page_count(
         photo_count=photo_count,
         max_feasible_segments=feasible,
-        profile=legacy,
+        profile=profile,
     )
     n = max(1, min(int(n), max_pages, feasible))
 
-    bp = compute_breakpoints_dp(n, h, canvas_pts, scale=1)
+    bp: list[int] | None = None
     method = "dp"
+    for try_n in range(n, 0, -1):
+        bp = compute_breakpoints_dp(try_n, h, canvas_pts, scale=1)
+        if bp is not None:
+            n = try_n
+            break
     if bp is None:
-        bp = compute_breakpoints_greedy(n, h, canvas_pts, scale=1)
+        bp = compute_breakpoints_greedy(
+            n, h, canvas_pts, scale=1, allow_geometric=False
+        )
         method = "greedy"
         n = max(1, len(bp) - 1)
-        if photo_count <= tiny_photo_max:
+        if photo_count <= tiny_photo_max or n == 1:
             hint = (
                 f"内容较少，已生成 {n} 张朋友圈配图。"
-                "建议改用微信群长图以获得更完整阅读体验。"
+                "照片少时允许单张；也可改用微信群长图。"
             )
         elif n < target_pages:
-            hint = f"内容较少，已生成 {n} 张朋友圈配图（目标 {target_pages} 张）。"
+            hint = (
+                f"内容较少，已生成 {n} 张朋友圈配图（目标 {target_pages} 张）"
+                "· 滑动可连读。"
+            )
+
+    if legal_ys:
+        bp = snap_breakpoints_to_legal(bp, legal_ys, h)
+        n = max(1, len(bp) - 1)
+
+    cell_canvas: list[tuple[int, int]] = []
+    for c in photo_cells or []:
+        if hasattr(c, "top_css") and hasattr(c, "bottom_css"):
+            cell_canvas.append(
+                (
+                    int(round(float(c.top_css) * scale)),
+                    int(round(float(c.bottom_css) * scale)),
+                )
+            )
+        elif isinstance(c, (tuple, list)) and len(c) >= 2:
+            cell_canvas.append(
+                (int(round(float(c[0]) * scale)), int(round(float(c[1]) * scale)))
+            )
+    if breakpoints_cut_photo_interiors(bp, cell_canvas) and legal_ys:
+        bp = snap_breakpoints_to_legal(bp, legal_ys, h)
+        n = max(1, len(bp) - 1)
 
     return SplitPlan(breakpoints=bp, page_count=n, user_hint=hint, method=method)
 

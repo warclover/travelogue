@@ -8,7 +8,7 @@
 | **Phase 代号** | 「小程序 P1 · 混合云长图交付」— 从本地 Studio 向微信生态过渡的 **最小可行云端形态** |
 | **前置条件** | Phase 2 Studio 可完成导入→curate→render→export-longshot；`trip.json` v0.2 + schema 稳定；建议 Phase 22 revision 锁与 document/blob 分离约定（ADR-008）至少 MVP 落地 |
 | **交付形态** | 微信小程序（**手机微信 + 电脑微信** 双端）：**选图 → 上传 → 等待处理 → 预览/保存长图 PNG → 发微信群** |
-| **关联文档** | [CHARTER.md](./CHARTER.md)、[SHARING.md](./SHARING.md)、[API-MINIAPP.md](./API-MINIAPP.md)、[PRD-PHASE2.md](./PRD-PHASE2.md)、[PRD-PHASE22-storage-platform.md](./PRD-PHASE22-storage-platform.md)、[adr/005-longshot-server-side.md](./adr/005-longshot-server-side.md)、[adr/008-trip-storage-boundaries.md](./adr/008-trip-storage-boundaries.md)、[DATA-MODEL.md](./DATA-MODEL.md)、[ERROR-CODES.md](./ERROR-CODES.md) |
+| **关联文档** | [CHARTER.md](./CHARTER.md)、[SHARING.md](./SHARING.md)、[API-MINIAPP.md](./API-MINIAPP.md)、[PRD-MINIAPP-PHOTO-PICK-V1.md](./PRD-MINIAPP-PHOTO-PICK-V1.md)（**选图双主权**，细化 `F-MP1-PICK`）、[PRD-PHASE2.md](./PRD-PHASE2.md)、[PRD-PHASE22-storage-platform.md](./PRD-PHASE22-storage-platform.md)、[adr/005-longshot-server-side.md](./adr/005-longshot-server-side.md)、[adr/008-trip-storage-boundaries.md](./adr/008-trip-storage-boundaries.md)、[DATA-MODEL.md](./DATA-MODEL.md)、[ERROR-CODES.md](./ERROR-CODES.md) |
 | **实施清单** | [IMPLEMENTATION-MINIAPP-P1.md](./IMPLEMENTATION-MINIAPP-P1.md)（待创建） |
 | **验收** | [ACCEPTANCE-MINIAPP-P1.md](./ACCEPTANCE-MINIAPP-P1.md)（待创建） |
 | **更新日期** | 2026-07-01 |
@@ -167,7 +167,7 @@ Phase 2 已解决「非开发者从文件夹到长图」的 **桌面断裂**；�
 | ID | 作为… | 我想要… | 以便… |
 |----|--------|---------|--------|
 | **US-MP1-01** | 旅行者 | 微信授权登录后直接使用 | 不用注册账号 |
-| **US-MP1-02** | 旅行者 | 从手机相册选旅行照片（首版 ≤80 张） | 不用先传到电脑 |
+| **US-MP1-02** | 旅行者 | 从手机相册选旅行照片（首版 ≤80 张）；可 **自己圈定成册** 或 **交给应用精选** | 不用先传到电脑，且选择权在自己 |
 | **US-MP1-03** | 旅行者 | 上传前看到隐私与留存说明并确认 | 知道照片会去哪里 |
 | **US-MP1-04** | 旅行者 | 看到上传与处理进度（阶段文案） | 知道还要等多久 |
 | **US-MP1-05** | 旅行者 | 处理完成后预览长图 | 确认满意再保存 |
@@ -346,7 +346,7 @@ flowchart TB
 |----|------|--------|----------|
 | **F-MP1-LOGIN** | `wx.login` → 后端换 JWT；token 本地缓存与刷新 | P0 | 冷启动免重复授权（session 有效时） |
 | **F-MP1-PLATFORM** | 启动时用 `wx.getDeviceInfo`/`getSystemInfo` 探测 **平台（手机/PC）**，驱动选图与保存路径分端 | P0 | PC 与手机各自走对应分支；不暴露无效操作 |
-| **F-MP1-PICK** | 选图：手机 `wx.chooseMedia`（相册）；**电脑 从文件系统选**（见 §7.5）；首版仅 image；计数与 80 上限 | P0 | 两端均可选到图；超上限中文提示 |
+| **F-MP1-PICK** | 选图：**双主权**（我来选图 / 交给应用挑）；手机 `wx.chooseMedia`；**电脑从文件系统选**（见 §7.5）；首版仅 image；计数与 80 上限。**细则以 [PRD-MINIAPP-PHOTO-PICK-V1.md](./PRD-MINIAPP-PHOTO-PICK-V1.md) 为准** | P0 | 两端均可选到图；超上限中文提示；模式与 cull 默认映射见选图 PRD |
 | **F-MP1-CONSENT** | 首次上传隐私确认；写 `privacy.confirmedAt` | P0 | 未确认不可上传（两端一致） |
 | **F-MP1-UPLOAD** | presign → 直传 COS → complete；展示上传进度 | P0 | 单张失败可重试 |
 | **F-MP1-RESUME** | 上传中断后从 failed 对象续传（P1 可简化为「重选未传完」） | P1 | 见 §17 OQ-MP1-05 |
@@ -735,6 +735,7 @@ P1 **不实现**：`publish`、`share-url`、web-view token。
 |------|------|------|
 | v0.1.0 | 2026-07-01 | 初稿：P1 混合云长图交付 |
 | v0.2.0 | 2026-07-01 | 增补电脑端使用：新增 PC persona（MP1-A2）、US-11~14、跨端能力矩阵 §3.4、PC 专项规格 §7.5（选图/取回长图/文案分端）、F-MP1-PLATFORM、PC 异常分支、PC 性能、AC-MP1-11/12、OQ-MP1-11~14 |
+| v0.2.1 | 2026-07-11 | `F-MP1-PICK` / US-02 对齐选图双主权；细则见 [PRD-MINIAPP-PHOTO-PICK-V1.md](./PRD-MINIAPP-PHOTO-PICK-V1.md) |
 
 ### 19.3 待创建配套文档
 
@@ -742,6 +743,7 @@ P1 **不实现**：`publish`、`share-url`、web-view token。
 |------|------|
 | IMPLEMENTATION-MINIAPP-P1.md | 工程任务拆解 |
 | ACCEPTANCE-MINIAPP-P1.md | 测试用例与 dogfood 脚本 |
+| [PRD-MINIAPP-PHOTO-PICK-V1.md](./PRD-MINIAPP-PHOTO-PICK-V1.md) | 选图双主权（已起草） |
 | ADR-013-miniapp-cloud-boundary.md | Studio vs 云端边界 ADR（建议） |
 
 ---

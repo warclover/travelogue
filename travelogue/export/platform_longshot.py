@@ -14,7 +14,11 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from travelogue.export.boundary_metrics import collect_boundaries, count_photos_heuristic
+from travelogue.export.boundary_metrics import (
+    BoundaryMetrics,
+    count_photos_heuristic,
+    parse_boundary_payload,
+)
 from travelogue.export.content_splitter import (
     clamp_breakpoints_to_height,
     photo_led_slice_ranges,
@@ -32,7 +36,7 @@ from travelogue.export.longshot import (
     LongshotOutput,
     ProgressFn,
     _apply_copy_display,
-    _capture_p0,
+    _capture_p0_with_metrics,
     _page_metrics,
     _resolve_longshot_url,
     _slug_title,
@@ -163,9 +167,16 @@ def auto_downgrade_scale(scroll_height_css: float, scale: int) -> int:
     return scale
 
 
-def _capture_full_p0_only(page: Any, *, scale: int, fmt: str) -> bytes:
+def _capture_full_p0_only(
+    page: Any, *, scale: int, fmt: str
+) -> tuple[bytes, BoundaryMetrics | None]:
+    """Full-page P0 capture; returns bytes + capture-time boundary metrics."""
     try:
-        data, method = _capture_p0(page, scale=scale, fmt=fmt)
+        data, method, metrics_payload = _capture_p0_with_metrics(
+            page, scale=scale, fmt=fmt
+        )
+    except LongshotExportError:
+        raise
     except Exception as exc:
         raise LongshotExportError(
             "E_LNG2_CAPTURE_P0_FAILED",
@@ -176,7 +187,8 @@ def _capture_full_p0_only(page: Any, *, scale: int, fmt: str) -> bytes:
             "E_LNG2_CAPTURE_P0_FAILED",
             "无法生成平台配图（不支持兼容模式），请改用微信群 · 按章导出",
         )
-    return data
+    boundaries = parse_boundary_payload(metrics_payload) if metrics_payload else None
+    return data, boundaries
 
 
 def _publish_guide(page_count: int, profile: PlatformProfile) -> str:
@@ -194,7 +206,7 @@ def _publish_guide(page_count: int, profile: PlatformProfile) -> str:
         return f"已生成 {page_count} 张平台配图，按编号顺序使用"
     return (
         f"发布步骤：1. 在文件夹按 01→{page_count:02d} 全选（图底 i/n 助 orientation）"
-        " 2. 朋友圈 → 从相册选择 3. 按顺序发布 · 滑动可连读"
+        " 2. 朋友圈 → 从相册选择 3. 按顺序发布 · 滑动可连读整卷长图。"
     )
 
 
@@ -333,24 +345,38 @@ def export_platform_longshot(
         working_fmt = fmt
         scale_attempts = 0
         tried_jpeg = False
+        boundaries: BoundaryMetrics | None = None
 
         while True:
-            _report(W_OPEN + 5, W_TOTAL, "正在采集切分边界…")
-            boundaries = collect_boundaries(page)
-            photo_count = count_photos_heuristic(page)
-            if boundaries.photo_cells:
-                photo_count = max(photo_count, len(boundaries.photo_cells))
-            scroll_h = boundaries.scroll_height_css or scroll_h
+            _report(W_OPEN + 5, W_TOTAL, "正在全页截图并采集切分边界…")
             scale = auto_downgrade_scale(scroll_h, scale)
-
             _log.info(
                 "platform longshot capture estimate_bytes=%s scale=%s platform=%s",
                 estimate_capture_memory_bytes(scroll_h, scale=scale),
                 scale,
                 profile.id,
             )
-            _report(W_OPEN + 10, W_TOTAL, "正在全页截图…")
-            canvas_bytes = _capture_full_p0_only(page, scale=scale, fmt=working_fmt)
+            canvas_bytes, boundaries = _capture_full_p0_only(
+                page, scale=scale, fmt=working_fmt
+            )
+            if boundaries is None:
+                raise LongshotExportError(
+                    "E_LNG2_BOUNDARIES_MISSING",
+                    "长图脚本过旧，无法在截图布局下采集切分边界。"
+                    "请先重新渲染该游记后再导出朋友圈配图。",
+                )
+
+            photo_count = count_photos_heuristic(page)
+            if boundaries.photo_cells:
+                photo_count = max(photo_count, len(boundaries.photo_cells))
+            scroll_h = boundaries.scroll_height_css or scroll_h
+
+            _log.info(
+                "platform longshot boundaries cells=%s scroll_h=%s method_hint=%s",
+                len(boundaries.photo_cells),
+                scroll_h,
+                profile.segment,
+            )
 
             if is_aspect:
                 plan = plan_aspect_split(
@@ -381,7 +407,6 @@ def export_platform_longshot(
                 clamped = [
                     max(0, min(int(y), actual_h)) for y in plan.breakpoints
                 ]
-                # Keep pairs valid after clamp
                 fixed: list[int] = []
                 for i in range(0, len(clamped) - 1, 2):
                     y0, y1 = clamped[i], clamped[i + 1]
@@ -397,7 +422,19 @@ def export_platform_longshot(
                     method=plan.method,
                 )
             else:
+                from travelogue.export.content_splitter import snap_breakpoints_to_legal
+
                 clamped = clamp_breakpoints_to_height(plan.breakpoints, actual_h)
+                # Moments only: re-snap to photo edges after height remap
+                if profile.id == "wechat_moments":
+                    legal = []
+                    for c in boundaries.photo_cells:
+                        legal.append(int(round(c.top_css * scale)))
+                        legal.append(int(round(c.bottom_css * scale)))
+                    for p in boundaries.as_points():
+                        legal.append(p.y_canvas(scale))
+                    if legal:
+                        clamped = snap_breakpoints_to_legal(clamped, legal, actual_h)
                 plan = type(plan)(
                     breakpoints=clamped,
                     page_count=max(1, len(clamped) - 1),
