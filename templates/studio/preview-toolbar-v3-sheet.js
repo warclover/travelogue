@@ -601,6 +601,9 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         menuBtn.setAttribute("aria-expanded", "false");
       }
       beginSheetExit(function () {
+        if (typeof hooks.onSheetClosed === "function") {
+          hooks.onSheetClosed();
+        }
         if (previousFocus && typeof previousFocus.focus === "function") {
           previousFocus.focus();
         } else if (menuBtn && typeof menuBtn.focus === "function") {

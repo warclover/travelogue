@@ -17,6 +17,12 @@ html[data-preview-share="on"] {
   scroll-padding-top: var(--preview-toolbar-h);
 }
 
+/* Trust V1 · 验货 / Share 隐藏工程 Plate 标注 */
+html[data-preview-refine="off"] .folio-plate-meta,
+html[data-preview-share="on"] .folio-plate-meta {
+  display: none !important;
+}
+
 .preview-toolbar--share-minimal .preview-toolbar__body {
   transform: none;
   opacity: 1;
@@ -220,6 +226,32 @@ html[data-preview-share="on"] .footer-cta__studio-home-link:hover {
 
 .preview-toolbar--share-minimal .preview-toolbar__screenplay {
   margin-right: 8px;
+}
+
+.preview-toolbar--share-minimal .preview-toolbar__share-save {
+  margin-left: 8px;
+}
+
+.preview-toolbar--share-minimal .preview-toolbar__share-save-status {
+  margin-left: 10px;
+  max-width: 280px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #dff5ec;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preview-toolbar--share-minimal .preview-toolbar__share-save-status--error {
+  color: #ffc9c9;
+}
+
+.preview-toolbar--share-minimal .preview-toolbar__cluster {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .preview-toolbar__screenplay[aria-pressed="true"] {

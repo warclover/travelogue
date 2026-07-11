@@ -21,6 +21,7 @@ import {
   tripApiBase,
   toolbarBody,
 } from "./shell.js";
+import { syncInspectChromeVisibility } from "./preview-mode.js";
 import {
   activateG1Pending,
   applyLayoutRerender,
@@ -357,9 +358,10 @@ export function initCollageMediaControls(tripId, assetMediaById) {
         });
         wrap.appendChild(label);
         wrap.appendChild(sel);
-        screen.style.position = screen.style.position || "relative";
-        screen.appendChild(wrap);
+      screen.style.position = screen.style.position || "relative";
+      screen.appendChild(wrap);
       });
+    syncInspectChromeVisibility();
   }
 
 
@@ -409,6 +411,7 @@ export function initFeaturedStars(tripId) {
       screen.style.position = screen.style.position || "relative";
       screen.appendChild(star);
     });
+    syncInspectChromeVisibility();
   }
 
 

@@ -1821,6 +1821,12 @@ html[data-folio="full"] .layout-screen[data-block="layout-screen"][data-featured
   box-shadow: 0 1px 0 color-mix(in srgb, var(--folio-ink) 8%, transparent);
 }
 
+/* Trust V1 · 验货默认 / Share 不露工程 Plate（叠在 folio 规则之上） */
+html[data-preview-refine="off"] .folio-plate-meta,
+html[data-preview-share="on"] .folio-plate-meta {
+  display: none !important;
+}
+
 html[data-folio="lite"] .folio-plate-meta,
 html[data-folio="full"] .folio-plate-meta {
   position: absolute;

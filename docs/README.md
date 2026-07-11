@@ -78,11 +78,18 @@
 | [IMPLEMENTATION-PREVIEW-EXPORT-FACADE-V1.md](./IMPLEMENTATION-PREVIEW-EXPORT-FACADE-V1.md) | 导出门面 V1 实施清单 |
 | [ACCEPTANCE-PREVIEW-EXPORT-FACADE-V1.md](./ACCEPTANCE-PREVIEW-EXPORT-FACADE-V1.md) | 导出门面 V1 验收 |
 | [acceptance-records/preview-export-facade-v1-review-2026-07-11.md](./acceptance-records/preview-export-facade-v1-review-2026-07-11.md) | 导出门面 V1 跨职能评审纪要 |
+| [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md) | **试用反馈信任闭环 V1**（文案门禁 · 验货壳 · Share 只读 · 续跑加严 · 平台话术） |
+| [ACCEPTANCE-UX-TRUST-V1.md](./ACCEPTANCE-UX-TRUST-V1.md) | 信任闭环 V1 验收 |
+| [IMPLEMENTATION-UX-TRUST-V1.md](./IMPLEMENTATION-UX-TRUST-V1.md) | 信任闭环 V1 实施清单 |
+| [IMPLEMENTATION-UX-TRUST-V1.md](./IMPLEMENTATION-UX-TRUST-V1.md) | 信任闭环 V1 实施清单 |
+| [acceptance-records/ux-trust-v1-review-2026-07-11.md](./acceptance-records/ux-trust-v1-review-2026-07-11.md) | 信任闭环 V1 跨职能评审纪要 · Conditional Go |
+| [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) | **帮助与情境引导系统 V1**（三层帮助 · 首访主链触达 · 帮助抽屉 · 不打断验货） |
 
 **前置**：Phase 4 M15–M19 代码主线已收口。**代号**：P5-Polish。**决策**：D1–D6 见 PRD §2.2（D4/D5 暂缓）。
 
 阅读顺序：**PRD-PHASE5** →（启动实施时）**IMPLEMENTATION-PHASE5** → **ACCEPTANCE-PHASE5**。  
-预览导出加固：**PRD-PREVIEW-REFINE-V1**（已落地）→ **PRD-PREVIEW-EXPORT-FACADE-V1**（待评审）。
+预览导出加固：**PRD-PREVIEW-REFINE-V1**（已落地）→ **PRD-PREVIEW-EXPORT-FACADE-V1**（待评审）→ **PRD-UX-TRUST-V1**（试用反馈加严）。  
+首访帮助：**PRD-HELP-ONBOARDING-V1**（复用 FirstSuccess / 脉冲 / Task Dock / publishGuide；不做全站 tour）。
 
 ---
 

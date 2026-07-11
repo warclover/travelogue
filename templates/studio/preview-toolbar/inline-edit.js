@@ -74,6 +74,9 @@ export function saveMagazineTitle(tripId, next, el, onDone) {
           el.classList.remove("cover-opening__title--saved");
         }, 800);
         try {
+          document.title = next;
+        } catch (eTitle) {}
+        try {
           window.dispatchEvent(new CustomEvent("travelogue:copy-saved"));
         } catch (e0) {}
         if (res.body.rendered && res.body.rendered.length) {
@@ -89,6 +92,40 @@ export function saveMagazineTitle(tripId, next, el, onDone) {
         if (onDone) onDone(false);
       });
   }
+
+/** Trust V1 · 门禁/无 DOM 节点时共用写路径 */
+export function saveMagazineTitleValue(tripId, nextTitle) {
+  var next = String(nextTitle || "").trim();
+  if (!next) {
+    return Promise.resolve(false);
+  }
+  var el = document.querySelector(".cover-opening__title");
+  if (el) {
+    return new Promise(function (resolve) {
+      saveMagazineTitle(tripId, next, el, function (ok) {
+        resolve(!!ok);
+      });
+    });
+  }
+  return postJsonConflictRetry(_tripApiBase(tripId) + "/save-copy", {
+    patches: [{ path: "meta.title", value: next }],
+  }).then(function (res) {
+    if (res.status !== 200 || !res.body.ok) {
+      _showToolbarToast((res.body && res.body.error) || "保存失败", { error: true });
+      return false;
+    }
+    try {
+      document.title = next;
+    } catch (e1) {}
+    try {
+      window.dispatchEvent(new CustomEvent("travelogue:copy-saved"));
+    } catch (e2) {}
+    return true;
+  }).catch(function () {
+    _showToolbarToast("保存失败", { error: true });
+    return false;
+  });
+}
 
 export function initCoverTitleEdit(tripId) {
     if (_isSharePreview()) return;

@@ -12,7 +12,7 @@
 | **评审记录** | [preview-refine-v1-review-2026-07-11.md](./acceptance-records/preview-refine-v1-review-2026-07-11.md) |
 | **验收** | [ACCEPTANCE-PREVIEW-REFINE-V1.md](./ACCEPTANCE-PREVIEW-REFINE-V1.md) |
 | **实施清单** | [IMPLEMENTATION-PREVIEW-REFINE-V1.md](./IMPLEMENTATION-PREVIEW-REFINE-V1.md) |
-| **后续加固** | [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md)（导出门面：续跑可靠 · 发群引导 · 埋点） |
+| **后续加固** | [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md)（导出门面：续跑可靠 · 发群引导 · 埋点） · [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md)（试用反馈信任闭环：验货壳 · Share · 文案门禁） |
 | **更新日期** | 2026-07-11 |
 
 > **定位**

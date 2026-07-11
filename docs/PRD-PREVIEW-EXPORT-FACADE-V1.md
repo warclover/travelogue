@@ -7,7 +7,7 @@
 | **状态** | Draft · **跨职能评审有条件通过 · Must-Fix 已回写** · 见 [评审记录](./acceptance-records/preview-export-facade-v1-review-2026-07-11.md) |
 | **主题代号** | 「导出门面 V1」— 更新并导出全程可感知 · 失败可理解 · 成功知道怎么发群 |
 | **前置条件** | [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) v1.2 **P0～P2 已落地**（导出拦截 · 更新版面 · Dock 精修/长图 · 三区 IA）；本地 Studio 预览 Toolbar v3/v4 可用 |
-| **关联文档** | [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) · [ACCEPTANCE-PREVIEW-REFINE-V1.md](./ACCEPTANCE-PREVIEW-REFINE-V1.md) · [IMPLEMENTATION-PREVIEW-REFINE-V1.md](./IMPLEMENTATION-PREVIEW-REFINE-V1.md) · [评审记录](./acceptance-records/preview-export-facade-v1-review-2026-07-11.md) · [PRD-PHASE5.md](./PRD-PHASE5.md) · [SHARING.md](./SHARING.md) · [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) |
+| **关联文档** | [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) · [ACCEPTANCE-PREVIEW-REFINE-V1.md](./ACCEPTANCE-PREVIEW-REFINE-V1.md) · [IMPLEMENTATION-PREVIEW-REFINE-V1.md](./IMPLEMENTATION-PREVIEW-REFINE-V1.md) · [评审记录](./acceptance-records/preview-export-facade-v1-review-2026-07-11.md) · [PRD-PHASE5.md](./PRD-PHASE5.md) · [SHARING.md](./SHARING.md) · [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) · **试用加严** [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md) |
 | **验收** | [ACCEPTANCE-PREVIEW-EXPORT-FACADE-V1.md](./ACCEPTANCE-PREVIEW-EXPORT-FACADE-V1.md) |
 | **实施清单** | [IMPLEMENTATION-PREVIEW-EXPORT-FACADE-V1.md](./IMPLEMENTATION-PREVIEW-EXPORT-FACADE-V1.md) |
 | **更新日期** | 2026-07-11 |

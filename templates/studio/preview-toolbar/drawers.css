@@ -333,6 +333,15 @@ body.preview-drawer-open { overflow: hidden; }
   .preview-drawer { transition: none; }
 }
 
+/* Trust V1 · 验货默认隐藏编辑控件（refine=off / share） */
+html[data-preview-refine="off"] .preview-toolbar__featured-star,
+html[data-preview-refine="off"] .preview-toolbar__collage-ctrl,
+html[data-preview-share="on"] .preview-toolbar__featured-star,
+html[data-preview-share="on"] .preview-toolbar__collage-ctrl {
+  display: none !important;
+  pointer-events: none !important;
+}
+
 .preview-toolbar__featured-star {
   position: absolute;
   right: 10px;

@@ -433,8 +433,47 @@ export function mountPreviewTaskDock(root, hooks) {
     // 残留：不自动隐藏，直到用户关闭或再点长图
   }
 
-  function showError(message) {
-    showSuccess({ status: "failed", error: { message: message || "导出失败" } });
+  function showError(messageOrOpts) {
+    var opts =
+      messageOrOpts && typeof messageOrOpts === "object"
+        ? messageOrOpts
+        : { title: messageOrOpts || "导出失败" };
+    var title = opts.title || opts.message || "导出失败";
+    clearTimers();
+    dock.hidden = false;
+    dock.className = "preview-task-dock preview-task-dock--success";
+    dock.innerHTML = "";
+
+    var icon = document.createElement("span");
+    icon.className = "preview-task-dock__icon";
+    icon.textContent = "!";
+
+    var textWrap = document.createElement("div");
+    textWrap.className = "preview-task-dock__text";
+    var main = document.createElement("span");
+    main.className = "preview-task-dock__main";
+    main.textContent = title;
+    textWrap.appendChild(main);
+    if (opts.subtitle) {
+      var sub = document.createElement("small");
+      sub.textContent = opts.subtitle;
+      textWrap.appendChild(sub);
+    }
+
+    var actions = document.createElement("div");
+    actions.className = "preview-task-dock__actions";
+    if (opts.linkHref && opts.linkText) {
+      var link = document.createElement("a");
+      link.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
+      link.href = opts.linkHref;
+      link.textContent = opts.linkText;
+      actions.appendChild(link);
+    }
+    actions.appendChild(buildCloseBtn(null));
+
+    dock.appendChild(icon);
+    dock.appendChild(textWrap);
+    dock.appendChild(actions);
   }
 
   return {

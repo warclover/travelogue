@@ -440,6 +440,9 @@
       <button type="button" data-panel="icons">⑩ 图标</button>
       <button type="button" data-panel="empty">⑪ 这页空态</button>
       <button type="button" data-panel="transition">⑫ P0 过渡</button>
+      <button type="button" data-panel="trust-gate">⑬ 信任·门禁</button>
+      <button type="button" data-panel="trust-stale">⑭ 信任·成功vs过期</button>
+      <button type="button" data-panel="trust-stale">⑭ 信任·成功vs过期</button>
     </nav>
   </div>
 
@@ -1110,6 +1113,44 @@
             <li>P1 已切换为「这页 / 这本 / 导出与更多」</li>
             <li>本帧仅作评审/发布对照，不再作为开发目标</li>
           </ul>
+        </div>
+      </section>
+
+      <!-- ⑬ 信任闭环 · 文案门禁 -->
+      <section class="panel" id="panel-trust-gate">
+        <div class="sec">
+          <h2>⑬ 信任闭环 · 文案门禁 <span class="tag tag--new">Trust V1</span></h2>
+          <p class="lead">软拦（非系统错误风）。主「改标题并导出」；次「暂时不改」；与 layout 硬拦可辨。先 C2 再出门禁。</p>
+        </div>
+        <div class="frame" style="background:#1a2f28;min-height:420px;position:relative;padding:24px">
+          <div style="max-width:360px;margin:24px auto;background:#fafafa;border-radius:12px;padding:20px 18px">
+            <h3 style="margin:0 0 8px;font-size:16px">这个标题不太合适</h3>
+            <p style="margin:0 0 8px;font-size:13px;color:#607d8b">现在的标题：</p>
+            <p style="margin:0 0 14px;font-size:18px;font-weight:600">「兴义夏天」</p>
+            <p style="margin:0 0 14px;font-size:13px;color:#455a64">发群前建议改一下，朋友一眼能看懂。</p>
+            <button type="button" style="width:100%;padding:10px;border:none;border-radius:8px;background:#d4a843;color:#1a1408;font-weight:600;margin-bottom:8px">改标题并导出</button>
+            <button type="button" style="width:100%;padding:10px;border:1px solid #b0bec5;border-radius:8px;background:#fff;margin-bottom:8px">暂时不改，继续导出</button>
+            <button type="button" style="width:100%;padding:8px;border:none;background:transparent;color:#607d8b">取消</button>
+          </div>
+          <p class="anno" style="text-align:center;color:#ffe082;font-size:12px">软拦 · 主/次/幽灵</p>
+        </div>
+      </section>
+
+      <!-- ⑭ 信任闭环 · 成功 vs stale -->
+      <section class="panel" id="panel-trust-stale">
+        <div class="sec">
+          <h2>⑭ 信任闭环 · 成功独占 <span class="tag tag--new">Trust V1</span></h2>
+          <p class="lead">export_done 会话内成功主句独占；60s 内禁止「产物过期」升主警告（D-TRU-01）。</p>
+        </div>
+        <div class="frame" style="background:#f5f7f6;min-height:360px;padding:24px">
+          <div style="max-width:420px;margin:0 auto;background:#fff;border:1px solid #cfd8dc;border-radius:12px;padding:16px 18px">
+            <p style="margin:0 0 6px;font-size:15px;font-weight:600">✓ 长图已保存</p>
+            <p style="margin:0 0 10px;font-size:14px;color:#1a2f28">已保存到本机 · 拖进微信群即可</p>
+            <p style="margin:0;font-size:12px;color:#78909c">共 3 张 · 在文件夹中显示</p>
+          </div>
+          <div style="max-width:420px;margin:16px auto;padding:12px;border:2px dashed #ef9a9a;border-radius:8px;background:#fff8f8">
+            <p style="margin:0;font-size:12px;color:#c62828;text-decoration:line-through">✗ 禁止同屏：预览产物已过期</p>
+          </div>
         </div>
       </section>
     </main>

@@ -36,6 +36,7 @@ import {
   setDockLongshotAria,
   updateDockTip,
 } from "./dock.js";
+import { saveMagazineTitleValue } from "./inline-edit.js";
 
 var isJobBusy409 = isJobBusyResponse;
 var LONGSHOT_MODE_KEY = "travelogue:longshotMode";
@@ -81,9 +82,14 @@ var LAYOUT_UPDATING_KEY = "travelogue.studio.layoutUpdating";
 var EXPECT_LAYOUT_RELOAD_KEY = "travelogue.studio.expectLayoutReload";
 var UPDATE_ONLY_HINT_KEY = "travelogue.studio.updateOnlyHint";
 var EXPORT_PULSE_SEEN_KEY = "travelogue.studio.exportPulseSeen";
+var EXPORT_SIDE_EFFECT_KEY = "travelogue.studio.exportSideEffect";
+var COPY_GATE_SEVERE_KEY = "travelogue.studio.copyGateSevere.";
 var EXPORT_AFTER_TTL_MS = 10 * 60 * 1000;
+var EXPORT_SIDE_EFFECT_MS = 60 * 1000;
 var _exportStartFrom = "direct";
 var _pagehideBound = false;
+var _copyGateBypassTitle = null;
+var _pendingExportPlatform = null;
 
 function _readJsonStorage(store, key) {
   try {
@@ -136,10 +142,93 @@ function markExpectLayoutReload() {
 }
 
 function writeExportAfterLayout(tripId) {
+  var prefs = readLongshotExportPrefs();
   return _writeJsonStorage(sessionStorage, EXPORT_AFTER_LAYOUT_KEY, {
     tripId: String(tripId || ""),
     ts: Date.now(),
+    platform: prefs.platform || "wechat_chat",
   });
+}
+
+function writeExportSideEffect(tripId) {
+  return _writeJsonStorage(sessionStorage, EXPORT_SIDE_EFFECT_KEY, {
+    tripId: String(tripId || ""),
+    ts: Date.now(),
+    until: Date.now() + EXPORT_SIDE_EFFECT_MS,
+  });
+}
+
+function isExportSideEffectActive(tripId) {
+  var data = _readJsonStorage(sessionStorage, EXPORT_SIDE_EFFECT_KEY);
+  if (!data) return false;
+  if (String(data.tripId || "") !== String(tripId || "")) return false;
+  var until = Number(data.until || 0);
+  if (!until || Date.now() > until) {
+    _removeStorage(sessionStorage, EXPORT_SIDE_EFFECT_KEY);
+    return false;
+  }
+  return true;
+}
+
+function clearExportSideEffect() {
+  _removeStorage(sessionStorage, EXPORT_SIDE_EFFECT_KEY);
+}
+
+function readMagazineTitleFromDom() {
+  var el = document.querySelector(".cover-opening__title");
+  if (el) {
+    return String(el.dataset.title || el.textContent || "").trim();
+  }
+  return String(document.title || "").trim();
+}
+
+/**
+ * Trust V1 附录 D · 可读性启发式
+ * @returns {null|{level:"soft"|"severe", reason:string}}
+ */
+export function assessMagazineTitleRisk(title) {
+  var t = String(title || "").trim();
+  if (!t) return { level: "severe", reason: "empty" };
+  if (/[\uFFFD\u0000-\u0008]/.test(t) || /�/.test(t)) {
+    return { level: "severe", reason: "garbled" };
+  }
+  if (t.length < 2) return { level: "severe", reason: "too_short" };
+  if (t.length > 40) {
+    var half = Math.floor(t.length / 2);
+    if (t.slice(0, half) === t.slice(half, half * 2)) {
+      return { level: "soft", reason: "repeat_long" };
+    }
+  }
+  // 孤立 +（可选 soft）；艺术书名含 + 可 bypass
+  if (/\S\+\S/.test(t) && !/^[A-Za-z0-9]+\+[A-Za-z0-9]+/.test(t)) {
+    return { level: "soft", reason: "plus_join" };
+  }
+  if (/\+\s|\s\+/.test(t) || /^\+|\+$/.test(t)) {
+    return { level: "soft", reason: "plus_join" };
+  }
+  return null;
+}
+
+/** Trust V1 · F-TRU-EXP-04 / 附录 C.2 · 断服反馈 */
+export function disconnectExportFeedback(tripId) {
+  var href =
+    tripId
+      ? "/" + encodeURIComponent(String(tripId)) + "/"
+      : (typeof window !== "undefined" && window.location && window.location.pathname) ||
+        "/";
+  return {
+    title: "服务已停止，长图还没有导出",
+    subtitle: "请重新启动 Studio 后打开本游记，再点「长图」",
+    linkText: "回到预览",
+    linkHref: href,
+  };
+}
+
+function applyDisconnectExportError(root, tripId) {
+  clearExportAfterLayoutFlag("disconnect");
+  clearLayoutUpdatingFlag();
+  var fb = disconnectExportFeedback(tripId);
+  setLongshotExportState(root, "error", fb);
 }
 
 function writeLayoutUpdating(tripId) {
@@ -789,6 +878,22 @@ export function cancelPreviewLongshotExport(root) {
         }
         onDone(job);
       },
+      onError: function () {
+        if (kind === "narrate") {
+          narratePollCancel = null;
+          return;
+        }
+        longshotPollCancel = null;
+        if (jobId === longshotJobId) longshotJobId = null;
+        // F-TRU-EXP-04 · 轮询断服
+        applyDisconnectExportError(root, _tripIdFromPath());
+        trackStudioEvent("longshot_export_fail", {
+          error_code: "disconnect",
+          trip_id: _tripIdFromPath(),
+          surface: "preview",
+          from: "poll",
+        });
+      },
     });
     if (kind === "narrate") {
       narratePollCancel = cancelFn;
@@ -1008,11 +1113,25 @@ export function cancelPreviewLongshotExport(root) {
         applyDockLongshotIdle(btn);
       }
       syncLongshotCtaLabel(root);
+      var errPayload =
+        opts.title || opts.linkHref
+          ? {
+              title: opts.title || opts.hint || "保存失败，请重试",
+              subtitle: opts.subtitle || "",
+              linkHref: opts.linkHref || "",
+              linkText: opts.linkText || "",
+            }
+          : opts.hint || "保存失败，请重试";
       if (isV3) {
         root._exportDockActive = false;
-        if (root._taskDock) root._taskDock.showError(opts.hint || "保存失败，请重试");
+        if (root._taskDock) root._taskDock.showError(errPayload);
       } else {
-        setLongshotExportMeta(root, opts.hint || "保存失败，请重试", { actionable: false });
+        var metaHint =
+          typeof errPayload === "string"
+            ? errPayload
+            : errPayload.title +
+              (errPayload.subtitle ? " · " + errPayload.subtitle : "");
+        setLongshotExportMeta(root, metaHint, { actionable: false });
         setLongshotExportProgress(root, false);
       }
       if (badge) badge.hidden = true;
@@ -1160,8 +1279,29 @@ export function cancelPreviewLongshotExport(root) {
 
     var homeHint = document.createElement("p");
     homeHint.className = "preview-toolbar__longshot-compat preview-toolbar__longshot-share-hint";
-    homeHint.textContent = "已保存到本机 · 拖进微信群即可";
+    var resultPlatform = result.platform || "wechat_chat";
+    if (resultPlatform === "wechat_moments") {
+      homeHint.textContent =
+        "已保存 " +
+        (outputs.length || 0) +
+        " 张朋友圈配图 · 按 01→顺序发";
+    } else if (resultPlatform === "xiaohongshu") {
+      homeHint.textContent =
+        "已保存 " +
+        (outputs.length || 0) +
+        " 张小红书配图 · 3:4 · 可直接上传";
+    } else {
+      homeHint.textContent = "已保存到本机 · 拖进微信群即可";
+    }
     drawer.appendChild(homeHint);
+    if (_copyGateBypassTitle) {
+      var echo = document.createElement("p");
+      echo.className = "preview-toolbar__longshot-compat";
+      echo.textContent =
+        "标题仍是「" + _copyGateBypassTitle + "」· 可回预览改";
+      drawer.appendChild(echo);
+      _copyGateBypassTitle = null;
+    }
     trackStudioEvent("longshot_success_share_hint_shown", {
       trip_id: tripId,
       segment_count: outputs.length || 0,
@@ -1230,6 +1370,9 @@ export function cancelPreviewLongshotExport(root) {
   export function showStaleHint(root) {
     // D-REF-18 · layoutPending 优先于 longshotStale，避免双层主待办抢注意力
     if (_getLayoutPending()) return;
+    // Trust V1 · 导出成功静音窗内不升 stale 主警告
+    if (isExportSideEffectActive(_tripIdFromPath())) return;
+    if (root && root._exportResultShowing) return;
     setLongshotExportState(root, "stale");
   }
 
@@ -1246,6 +1389,16 @@ export function cancelPreviewLongshotExport(root) {
         var trips = data.trips || [];
         var trip = trips.filter(function (t) { return t.tripId === tripId; })[0];
         if (!trip) return;
+        // Trust V1 · 导出副作用窗口：忽略 renderBundleStale / longshotStale 升主警告
+        if (isExportSideEffectActive(tripId)) {
+          trackStudioEvent("stale_warned_within_60s_of_success", {
+            trip_id: tripId,
+            suppressed: true,
+            render_bundle_stale: !!trip.renderBundleStale,
+            longshot_stale: !!trip.longshotStale,
+          });
+          return;
+        }
         if (trip.layoutCssStale || trip.renderBundleStale) {
           var pendingMsg = trip.renderBundleStale
             ? "预览产物已过期，请重新渲染"
@@ -1397,8 +1550,94 @@ export function cancelPreviewLongshotExport(root) {
       return;
     }
 
-    _exportStartFrom = "direct";
-    runLongshotExport(root, tripId);
+    maybeCopyGateThenExport(root, tripId);
+  }
+
+  function copyGateSevereKey(tripId) {
+    return COPY_GATE_SEVERE_KEY + String(tripId || "");
+  }
+
+  function maybeCopyGateThenExport(root, tripId) {
+    var title = readMagazineTitleFromDom();
+    var risk = assessMagazineTitleRisk(title);
+    if (!risk) {
+      _copyGateBypassTitle = null;
+      runLongshotExport(root, tripId);
+      return;
+    }
+
+    var severeForced = false;
+    if (risk.level === "severe") {
+      try {
+        if (sessionStorage.getItem(copyGateSevereKey(tripId)) !== "1") {
+          severeForced = true;
+        }
+      } catch (eSev) {
+        severeForced = true;
+      }
+    }
+
+    trackStudioEvent("copy_gate_shown", {
+      trip_id: tripId,
+      reason: risk.reason,
+      level: risk.level,
+      severe_forced: !!severeForced,
+    });
+
+    // F-TRU-COPY-06b · 首次出示即记 seen，再次同 trip 放宽 bypass（含取消后再点）
+    if (severeForced) {
+      try {
+        sessionStorage.setItem(copyGateSevereKey(tripId), "1");
+      } catch (eSeen) {}
+    }
+
+    var displayTitle = title || "（空）";
+    var modalOpts = {
+      title: "这个标题不太合适",
+      body:
+        "现在的标题：「" +
+        displayTitle +
+        "」。发群前建议改一下，朋友一眼能看懂。",
+      confirmText: "改标题并导出",
+      cancelText: "取消",
+      stacked: true,
+    };
+    if (!severeForced) {
+      modalOpts.secondaryText = "暂时不改，继续导出";
+    }
+
+    _toolbarConfirm(modalOpts).then(function (choice) {
+      if (!choice) {
+        trackStudioEvent("copy_gate_dismissed", { trip_id: tripId });
+        return;
+      }
+      if (choice === "secondary") {
+        trackStudioEvent("copy_gate_bypass", {
+          trip_id: tripId,
+          reason: risk.reason,
+        });
+        _copyGateBypassTitle = displayTitle;
+        runLongshotExport(root, tripId);
+        return;
+      }
+      // confirm / true → 改标题并导出
+      var next = window.prompt("改成新的标题", title || "");
+      if (next == null) return;
+      next = String(next).trim();
+      if (!next) {
+        _showToolbarToast("标题不能为空", { error: true });
+        return;
+      }
+      saveMagazineTitleValue(tripId, next).then(function (ok) {
+        if (!ok) return;
+        trackStudioEvent("copy_gate_fix", {
+          trip_id: tripId,
+          reason: risk.reason,
+        });
+        _copyGateBypassTitle = null;
+        runLongshotExport(root, tripId);
+      });
+    });
   }
 
   function showUpdateOnlyNextStep(root) {
@@ -1425,11 +1664,20 @@ export function cancelPreviewLongshotExport(root) {
     if (!btn || btn.disabled) return;
     _setToolbarCollapsed(root, false, false);
     hideLongshotDrawer(root);
-    setLongshotExportState(root, "running", { hint: "正在保存…" });
-    _setSlowHint(root, "", false);
 
     var prefs = readLongshotExportPrefs();
-    var platform = prefs.platform || "wechat_chat";
+    var platform =
+      _pendingExportPlatform || prefs.platform || "wechat_chat";
+    _pendingExportPlatform = null;
+    var runningHint =
+      platform === "wechat_moments"
+        ? "正在导出朋友圈配图…"
+        : platform === "xiaohongshu"
+          ? "正在导出小红书配图…"
+          : "正在保存…";
+    setLongshotExportState(root, "running", { hint: runningHint });
+    _setSlowHint(root, "", false);
+
     var t0 = Date.now();
     var from = _exportStartFrom || "direct";
     _exportStartFrom = "direct";
@@ -1443,7 +1691,12 @@ export function cancelPreviewLongshotExport(root) {
       from: from,
     });
 
-    postJsonBusyRetry("/__travelogue/longshot", buildLongshotRequestFromPage(tripId), {
+    var req = buildLongshotRequestFromPage(tripId);
+    if (req && platform) {
+      req.platform = platform;
+    }
+
+    postJsonBusyRetry("/__travelogue/longshot", req, {
       onBusy: function () {
         setLongshotExportState(root, "running", { hint: "排队中，请稍候…" });
       },
@@ -1492,6 +1745,7 @@ export function cancelPreviewLongshotExport(root) {
             if (job.status === "succeeded") {
               var result = job.result || {};
               markExportPulseSeen(tripId);
+              writeExportSideEffect(tripId);
               trackStudioEvent("longshot_export_success", {
                 platform: result.platform || platform,
                 output_count: (result.outputs && result.outputs.length) || 0,
@@ -1532,17 +1786,13 @@ export function cancelPreviewLongshotExport(root) {
       .catch(function () {
         trackStudioEvent("longshot_export_fail", {
           platform: platform,
-          error_code: "network",
+          error_code: "disconnect",
           trip_id: tripId,
           surface: "preview",
           from: from,
         });
-        setLongshotExportState(root, "error", {
-          hint:
-            from === "after_layout"
-              ? "版面已更新，长图没有保存成功，可再点「长图」"
-              : "网络错误",
-        });
+        // F-TRU-EXP-04 · 启动请求断服
+        applyDisconnectExportError(root, tripId);
       });
   }
 
@@ -1616,6 +1866,10 @@ export function cancelPreviewLongshotExport(root) {
       latency_ms: latencyMs,
     });
     _exportStartFrom = "after_layout";
-    runLongshotExport(root, tripId);
+    if (flagged.platform) {
+      _pendingExportPlatform = flagged.platform;
+    }
+    // 续跑后若仍有标题风险，再跑门禁；否则直接导出
+    maybeCopyGateThenExport(root, tripId);
     return true;
   }

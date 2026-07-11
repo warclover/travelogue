@@ -14,6 +14,13 @@
     return document.documentElement.getAttribute("data-inline-edit") === "on";
   }
 
+  function isSharePreview() {
+    var html = document.documentElement;
+    if (html.getAttribute("data-preview-share") === "on") return true;
+    var q = window.location.search || "";
+    return q.indexOf("share=1") >= 0 || q.indexOf("mode=share") >= 0;
+  }
+
   function getToast() {
     var el = document.getElementById("inline-edit-toast");
     if (!el) {
@@ -157,6 +164,10 @@
   }
 
   function maybeShowEditHint() {
+    // Trust V1 · 验货默认不展示「可编辑」提示；仅精修模式可提示
+    if (document.documentElement.getAttribute("data-preview-refine") !== "on") {
+      return;
+    }
     try {
       if (localStorage.getItem("travelogue:inlineEditHintShown")) return;
       localStorage.setItem("travelogue:inlineEditHintShown", "1");
@@ -167,6 +178,8 @@
   }
 
   function init() {
+    // Trust V1 · Share 真只读：禁止正文 inline-edit
+    if (isSharePreview()) return;
     if (!isDraft() || !isEditableEnabled()) return;
     var fields = document.querySelectorAll("[data-editable][data-edit-path]");
     applyPlaceholderHints(fields);

@@ -398,17 +398,17 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             assert "16" in side_layout["borderRadius"], side_layout
 
             tabs = page.locator(".preview-sheet__tab")
-            assert tabs.count() == 4
-            tab_labels = [tabs.nth(i).inner_text().strip() for i in range(4)]
-            assert tab_labels == ["文字", "结构", "排版", "高级"]
+            assert tabs.count() == 3
+            tab_labels = [tabs.nth(i).inner_text().strip() for i in range(3)]
+            assert tab_labels == ["这页", "这本", "导出与更多"]
 
-            page.locator('.preview-sheet__tab[data-sheet-tab="advanced"]').click()
+            page.locator('.preview-sheet__tab[data-sheet-tab="more"]').click()
             page.wait_for_selector('[data-reader-mode="reader"]', timeout=5_000)
             page.wait_for_selector('[data-copy-preset="full"]', timeout=5_000)
             page.wait_for_selector('[data-action="reveal-folder"]', timeout=5_000)
 
-            page.locator('.preview-sheet__tab[data-sheet-tab="structure"]').click()
-            page.wait_for_selector(".preview-drawer__g1", timeout=5_000)
+            page.locator('.preview-sheet__tab[data-sheet-tab="book"]').click()
+            page.wait_for_timeout(300)
             tab_metrics = page.evaluate(
                 """() => {
                 const tabs = document.querySelector('.preview-sheet__tabs');
@@ -422,8 +422,19 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             assert tab_metrics["tabsH"] >= 40, tab_metrics
             assert tab_metrics["tabBtnH"] >= 28, tab_metrics
 
+            # Trust V1 · 打开精修后 refine=on
+            refine_on = page.evaluate(
+                """() => document.documentElement.getAttribute('data-preview-refine')"""
+            )
+            assert refine_on == "on"
+
             page.locator(".preview-sheet__close").click()
             page.locator(".preview-sheet-root").wait_for(state="hidden", timeout=5_000)
+
+            refine_off = page.evaluate(
+                """() => document.documentElement.getAttribute('data-preview-refine')"""
+            )
+            assert refine_off == "off"
 
             focused_menu = page.evaluate(
                 """() => {

@@ -1,5 +1,5 @@
 /* Homepage v2 · Web shelf revisit zone */
-/* ── Web 书架（§8 · Bento 下方回访区 · 方案 A） ── */
+/* ── Web 书架（§8 · 首屏下方回访区 · 方案 A） ── */
 .v2-shelf {
   position: relative;
   z-index: 6;
@@ -21,9 +21,11 @@
 .v2-shelf__title-h1 {
   margin: 0;
   font-family: var(--v2-font-display);
-  font-size: 42px;
-  font-weight: 400;
+  font-size: 44px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
   line-height: 1;
+  color: var(--v2-ink);
 }
 .v2-shelf__count {
   margin: 8px 0 0;

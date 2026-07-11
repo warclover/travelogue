@@ -14,6 +14,11 @@ import {
 } from "./dock.js";
 import { isSharePreview } from "./share.js";
 import {
+  ensurePreviewRefineDefault,
+  setPreviewRefineMode,
+  syncInspectChromeVisibility,
+} from "./preview-mode.js";
+import {
   registerInlineEditBridge,
   initCoverTitleEdit,
 } from "./inline-edit.js";
@@ -28,7 +33,6 @@ import {
   revealTripPath,
   isReaderSurfaceMode,
   refreshStaleHint,
-  showStaleHint,
   applyToolbarCopyPreset,
   toggleToolbarCaptions,
   toggleToolbarNarrative,
@@ -91,6 +95,7 @@ var READER_VIEW_KEY = "travelogue.studio.readerView";
 var EXPORT_HINT_KEY = "travelogue.studio.exportHintSeen"; // legacy; pulse 现用 shouldShowExportPulse
 
 export function initToolbarV3(root, tripId) {
+  ensurePreviewRefineDefault();
   registerLongshotBridge({
     showToolbarToast: showToolbarToast,
     toolbarConfirm: toolbarConfirm,
@@ -179,7 +184,11 @@ export function initToolbarV3(root, tripId) {
       }
     },
     onSheetOpened: function () {
-      // 首访脉冲已改打导出；打开精修不再消费导出提示
+      // Trust V1 · 打开精修 → 验货壳放出 ★/拼图
+      setPreviewRefineMode(true);
+    },
+    onSheetClosed: function () {
+      setPreviewRefineMode(false);
     },
     syncLongshotPrefsUi: syncLongshotPrefsUi,
     syncReaderModeUi: syncReaderModeUi,
@@ -438,10 +447,12 @@ export function initToolbarV3(root, tripId) {
   fetchEntry(tripId).then(function (data) {
     initFeaturedStars(tripId);
     initCollageMediaControls(tripId, (data && data.assetMediaById) || {});
+    syncInspectChromeVisibility();
   });
 
+  // Trust V1 · 文案保存不升 longshotStale（废止 copy-saved → showStaleHint）
   window.addEventListener("travelogue:copy-saved", function () {
-    showStaleHint(root);
+    /* no-op: F-TRU-STALE-05 / F-TRU-EDIT-NAME-04 */
   });
 
   if (isPreviewToolbarV4(root)) {

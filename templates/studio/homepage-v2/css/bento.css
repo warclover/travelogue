@@ -278,17 +278,27 @@
 }
 .v2-settings-popover__head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 10px;
 }
+.v2-settings-popover__titles {
+  min-width: 0;
+  flex: 1;
+}
 .v2-settings-popover__title {
   margin: 0;
-  flex: 1;
   font-size: 13px;
   font-weight: 700;
   color: var(--v2-set-ink);
+}
+.v2-settings-popover__desc {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 400;
+  color: var(--v2-set-muted);
 }
 .v2-settings-popover__close {
   flex-shrink: 0;

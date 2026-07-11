@@ -703,6 +703,16 @@ export function initPreviewDrawers(root, tripId) {
                 entryCache.intentSummary.userNotes = notesVal;
                 if (titleVal) entryCache.intentSummary.title = titleVal;
               }
+              if (titleVal) {
+                var coverTitle = document.querySelector(".cover-opening__title");
+                if (coverTitle) {
+                  coverTitle.textContent = titleVal;
+                  coverTitle.dataset.title = titleVal;
+                }
+                try {
+                  document.title = titleVal;
+                } catch (eDoc) {}
+              }
               if (chId && entryCache.chapters) {
                 var row = chapterRow(chId);
                 if (row) {

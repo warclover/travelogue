@@ -47,7 +47,7 @@
   <!-- ⓪ Loading skeleton（§4.4：trips resolve 前仅 skeleton） -->
   <div class="v2-loading" id="v2-loading">
     <p class="v2-loading__brand">Travelogue · 本地杂志工坊</p>
-    <p class="v2-loading__label">正在加载工作台…</p>
+    <p class="v2-loading__label">正在加载…</p>
     <div class="v2-loading__skeleton" aria-hidden="true">
       <span class="v2-loading__bar"></span>
       <span class="v2-loading__bar v2-loading__bar--short"></span>
@@ -55,7 +55,7 @@
     </div>
   </div>
 
-  <!-- ① Bento 首屏（恒常首页 · 方案 A） -->
+  <!-- ① 首屏英雄区（恒常首页 · 方案 A） -->
   <div class="v2-bento__hero" id="v2-bento-hero">
   <div class="v2-bento__frame" id="v2-frame" hidden>
     <div class="v2-bento__grid" id="v2-bento-grid">
@@ -104,8 +104,8 @@
         </div>
       </section>
 
-      <!-- ④ 工作台 bench（左列第 3 行） -->
-      <section class="v2-bento__bench" aria-label="工作台">
+      <!-- ④ 最近与新建（左列第 3 行） -->
+      <section class="v2-bento__bench" aria-label="最近画册与新建">
         <div class="v2-bench">
           <div class="v2-bench__left">
             <div class="v2-bench__cta-row">
@@ -133,7 +133,7 @@
                         aria-expanded="false"
                         aria-haspopup="listbox"
                         aria-controls="v2-bento-preview-listbox"
-                        aria-label="Bento 预览画册">
+                        aria-label="选择预览画册">
                   <span class="v2-preview-combobox__label" id="v2-bento-preview-label">示例作品</span>
                   <span class="v2-preview-combobox__chev" aria-hidden="true">▾</span>
                 </button>
@@ -157,7 +157,9 @@
               <div class="v2-bench__quick-actions">
                 <button type="button" class="v2-bench__ghost-btn v2-bench__ghost-btn--secondary" id="v2-bench-resume">继续上次</button>
                 <button type="button" class="v2-bench__ghost-btn v2-settings-toggle" id="v2-settings-toggle"
-                        aria-label="导入偏好" aria-expanded="false" aria-controls="v2-settings-popover"
+                        aria-label="导入偏好" title="下次导入时的默认选项"
+                        aria-describedby="v2-settings-desc"
+                        aria-expanded="false" aria-controls="v2-settings-popover"
                         aria-haspopup="dialog">导入偏好</button>
               </div>
             </div>
@@ -202,9 +204,12 @@
             aria-label="开始制作我的游记">开始制作我的游记 →</button>
 
     <div id="v2-settings-popover" class="v2-settings-popover" hidden role="dialog"
-         aria-labelledby="v2-settings-title">
+         aria-labelledby="v2-settings-title" aria-describedby="v2-settings-desc">
       <div class="v2-settings-popover__head">
-        <p id="v2-settings-title" class="v2-settings-popover__title">导入偏好</p>
+        <div class="v2-settings-popover__titles">
+          <p id="v2-settings-title" class="v2-settings-popover__title">导入偏好</p>
+          <p id="v2-settings-desc" class="v2-settings-popover__desc">下次导入时的默认选项，一般不用改</p>
+        </div>
         <button type="button" class="v2-settings-popover__close" id="v2-settings-close"
                 aria-label="关闭">×</button>
       </div>
@@ -273,7 +278,7 @@
   </div>
   </div><!-- /v2-bento-hero -->
 
-  <!-- ② 回访书架区（Bento 下方 · 有用户画册时显示） -->
+  <!-- ② 回访书架区（首屏下方 · 有用户画册时显示） -->
   <div class="v2-shelf" id="v2-shelf" hidden></div>
 
   <!-- ③ Importing 占位（M20-g 接冷启动静帧 + 续 poll） -->
