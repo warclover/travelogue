@@ -50,7 +50,31 @@ def test_gate_check_default_on_passes_while_defaults_off(capsys, monkeypatch) ->
     assert out["acceleratedDefaults"] is False
 
 
-def test_benchmark_register_baseline_dry_run(capsys, monkeypatch) -> None:
+def test_benchmark_register_baseline_dry_run(tmp_path: Path, capsys, monkeypatch) -> None:
+    """Dry-run must work against a blank record (repo record may already be dogfooded)."""
+    record = tmp_path / "pipeline-throughput-perf-eval.json"
+    record.write_text(
+        json.dumps(
+            {
+                "schemaVersion": "1",
+                "benchmarkId": "tmp",
+                "baseline": {
+                    "parallel_ingest": False,
+                    "narrate_concurrency": 1,
+                    "studio_e2e_100_ms": None,
+                    "ingest_time_100_ms": None,
+                    "recordedAt": None,
+                },
+                "candidate": {},
+                "kpi": {},
+                "nr_pt": {},
+                "ac_pt": {},
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     monkeypatch.setattr(
         sys,
         "argv",
@@ -62,15 +86,50 @@ def test_benchmark_register_baseline_dry_run(capsys, monkeypatch) -> None:
             "100,250",
             "--tier",
             "S2",
+            "--record",
+            str(record),
         ],
     )
     assert bench_main() == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["mode"] == "register-baseline"
     assert payload["dryRun"] is True
+    # Dry-run must not persist
+    loaded = json.loads(record.read_text(encoding="utf-8"))
+    assert loaded["baseline"].get("recordedAt") is None
 
 
-def test_benchmark_run_microbench(capsys, monkeypatch) -> None:
+def test_benchmark_register_baseline_blocks_overwrite_without_replace(
+    tmp_path: Path, monkeypatch
+) -> None:
+    import pytest
+
+    record = tmp_path / "pipeline-throughput-perf-eval.json"
+    record.write_text(
+        json.dumps(
+            {
+                "schemaVersion": "1",
+                "baseline": {"recordedAt": "2026-07-11T00:00:00+00:00"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "pipeline_throughput_benchmark.py",
+            "--register-baseline",
+            "--dry-run",
+            "--record",
+            str(record),
+        ],
+    )
+    with pytest.raises(SystemExit, match="baseline already recorded"):
+        bench_main()
+
+
+def test_benchmark_run_microbench(tmp_path: Path, capsys, monkeypatch) -> None:
     monkeypatch.setattr(
         sys,
         "argv",
@@ -82,6 +141,8 @@ def test_benchmark_run_microbench(capsys, monkeypatch) -> None:
             "--repeats",
             "1",
             "--compare-parallel",
+            "--work-dir",
+            str(tmp_path / "work"),
         ],
     )
     assert bench_main() == 0

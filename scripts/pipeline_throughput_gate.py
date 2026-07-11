@@ -18,6 +18,9 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 DEFAULT_RECORD = ROOT / "docs" / "acceptance-records" / "pipeline-throughput-perf-eval.json"
 DEFAULT_FLAG_SIGNOFF = (
     ROOT / "docs" / "acceptance-records" / "pipeline-throughput-default-flag-signoff.json"

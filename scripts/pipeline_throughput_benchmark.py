@@ -13,6 +13,7 @@ import argparse
 import json
 import os
 import platform
+import shutil
 import statistics
 import subprocess
 import sys
@@ -224,6 +225,8 @@ def _time_pipeline_once(
     work_root: Path | None = None,
 ) -> dict[str, Any]:
     """Time ingest (+ optional cluster/curate). Fair A/B: only parallel_ingest differs."""
+    import uuid
+
     from travelogue.config import app_config_scope
     from travelogue.media.ingest import ingest_into_trip
     from travelogue.services.trip_factory import create_trip
@@ -234,8 +237,12 @@ def _time_pipeline_once(
     try:
         root = Path(td_ctx.name) if td_ctx else work_root
         assert root is not None
+        root.mkdir(parents=True, exist_ok=True)
         trips = root / "trips"
-        trip_json = create_trip("pt-bench", trips, title="pt-bench", export_layout="auto")
+        if trips.exists():
+            shutil.rmtree(trips, ignore_errors=True)
+        trip_id = f"pt-bench-{uuid.uuid4().hex[:8]}"
+        trip_json = create_trip(trip_id, trips, title="pt-bench", export_layout="auto")
         trip_dir = trip_json.parent
         trip = json.loads(trip_json.read_text(encoding="utf-8"))
         metrics: dict[str, Any] = {"parallel": parallel}
