@@ -1,0 +1,40 @@
+# Pipeline Throughput · 推荐 config 快照（G0 benchmark / 验收）
+
+# 用法：复制为临时 config 或与现有 config merge。
+# Baseline 登记时：将 parallel_ingest 保持 false，narrate_concurrency 保持 1。
+# Candidate：打开下方 PT 开关后同机对比。
+
+vision:
+  enabled: auto
+  batch_size: 16
+  session_singleton: true
+  # NR-PT L-embed 对比时改为 false（或走源图路径）
+  prefer_web_derivative: true
+  web_derivative_cosine_max: 0.02
+  preload_on_folder_pick: true
+
+ingest:
+  webp_method: 4
+  shared_color_thumb_px: 32
+  face_detect_max_edge: 0
+
+pipeline:
+  parallel_embed: true
+  parallel_embed_chunk: 32
+  # --- Pipeline Throughput (PRD v0.2) ---
+  parallel_ingest: false
+  parallel_ingest_workers: 0
+  parallel_ingest_min_photos: 12
+  persist_every_n: 8
+
+layout_scoring:
+  skip_duplicate_signatures: true
+  incremental: false
+
+clustering:
+  deterministic: true
+  force_recluster: false
+
+llm:
+  narrate_concurrency: 1
+  narrate_concurrency_backoff: true

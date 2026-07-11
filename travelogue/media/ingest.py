@@ -802,7 +802,7 @@ def _process_one_ingest_photo(
     total_photos: int,
     on_persist: Callable[[], None] | None,
     on_asset_added: Callable[[dict], None] | None,
-    emit_progress: Callable[[], None],
+    emit_progress: Callable[..., None],
 ) -> None:
     # ADR-011: user_tier imports ingest symbols — keep lazy here.
     from travelogue.media.user_tier import (
@@ -829,7 +829,7 @@ def _process_one_ingest_photo(
         state.ingest_stats["deduped"] += 1
         state.skipped += 1
         if _ingest_progress_tick(processed, total_photos):
-            emit_progress()
+            emit_progress(processed)
         return
 
     t_decode = time.monotonic()
@@ -841,7 +841,7 @@ def _process_one_ingest_photo(
         ) * 1000.0
         state.skipped += 1
         if _ingest_progress_tick(processed, total_photos):
-            emit_progress()
+            emit_progress(processed)
         return
 
     state.elapsed_acc["decode"] = state.elapsed_acc.get("decode", 0.0) + (
@@ -866,13 +866,13 @@ def _process_one_ingest_photo(
                 state.ingest_stats["deduped_burst"] += 1
                 state.skipped += 1
                 if _ingest_progress_tick(processed, total_photos):
-                    emit_progress()
+                    emit_progress(processed)
                 return
         else:
             state.ingest_stats["deduped_burst"] += 1
             state.skipped += 1
             if _ingest_progress_tick(processed, total_photos):
-                emit_progress()
+                emit_progress(processed)
             return
 
     dhash = dhash_hex(img)
@@ -890,7 +890,7 @@ def _process_one_ingest_photo(
                 state.ingest_stats["deduped_phash"] += 1
                 state.skipped += 1
                 if _ingest_progress_tick(processed, total_photos):
-                    emit_progress()
+                    emit_progress(processed)
                 return
 
     if replace_index is None:
@@ -972,7 +972,7 @@ def _process_one_ingest_photo(
                 on_persist()
 
     if _ingest_progress_tick(processed, total_photos):
-        emit_progress()
+        emit_progress(processed)
 
 
 def _finalize_ingest_assets(
@@ -1241,29 +1241,74 @@ def ingest_into_trip(
     total_photos = len(photo_tiers)
     processed = 0
 
-    def _emit_progress() -> None:
+    def _emit_progress(done: int | None = None) -> None:
+        nonlocal processed
+        if done is not None:
+            processed = int(done)
         if on_progress and total_photos > 0:
             on_progress(processed, total_photos)
 
-    for photo, user_tier in photo_tiers:
-        processed += 1
-        _process_one_ingest_photo(
-            photo=photo,
-            user_tier=user_tier,
+    use_parallel, workers, parallel_fallback = False, 1, False
+    if resolved_app.pipeline.parallel_ingest:
+        from travelogue.media.ingest_parallel import resolve_parallel_ingest_plan
+
+        use_parallel, workers, parallel_fallback = resolve_parallel_ingest_plan(
+            resolved_app, photo_count=total_photos
+        )
+
+    if use_parallel:
+        from travelogue.media.ingest_parallel import run_parallel_ingest_loop
+
+        ok = run_parallel_ingest_loop(
+            photo_tiers=photo_tiers,
+            workers=workers,
+            trip_dir=trip_dir,
+            batch=batch,
             state=loop_state,
             build_ctx=build_ctx,
             cfg=cfg,
+            app_cfg=resolved_app,
             dedupe=dedupe,
             from_dir=from_dir,
             album_root=album_root,
-            trip_dir=trip_dir,
             resume_ingest=resume_ingest,
-            processed=processed,
-            total_photos=total_photos,
             on_persist=on_persist,
             on_asset_added=on_asset_added,
             emit_progress=_emit_progress,
         )
+        if ok:
+            ingest_stats = loop_state.ingest_stats
+            ingest_stats["ingestWorkers"] = workers
+            ingest_stats["ingestParallelFallback"] = False
+        else:
+            use_parallel = False
+            parallel_fallback = True
+            loop_state.ingest_stats["ingestParallelFallback"] = True
+            loop_state.ingest_stats["ingestWorkers"] = 1
+
+    if not use_parallel:
+        if parallel_fallback:
+            loop_state.ingest_stats.setdefault("ingestParallelFallback", True)
+            loop_state.ingest_stats.setdefault("ingestWorkers", 1)
+        for photo, user_tier in photo_tiers:
+            processed += 1
+            _process_one_ingest_photo(
+                photo=photo,
+                user_tier=user_tier,
+                state=loop_state,
+                build_ctx=build_ctx,
+                cfg=cfg,
+                dedupe=dedupe,
+                from_dir=from_dir,
+                album_root=album_root,
+                trip_dir=trip_dir,
+                resume_ingest=resume_ingest,
+                processed=processed,
+                total_photos=total_photos,
+                on_persist=on_persist,
+                on_asset_added=on_asset_added,
+                emit_progress=_emit_progress,
+            )
 
     assets = loop_state.assets
     ingest_stats = loop_state.ingest_stats
@@ -1298,6 +1343,17 @@ def ingest_into_trip(
         prev_locks=prev_locks,
         ingest_stats=ingest_stats,
     )
+    # G-PT-07 · surface PT ingest telemetry on trip.pipeline.timings
+    pipe = trip.setdefault("pipeline", {})
+    timings = dict(pipe.get("timings") or {})
+    if "ingestWorkers" in ingest_stats:
+        timings["ingestWorkers"] = float(ingest_stats["ingestWorkers"])
+    if "ingestParallelFallback" in ingest_stats:
+        timings["ingestParallelFallback"] = (
+            1.0 if ingest_stats["ingestParallelFallback"] else 0.0
+        )
+    if timings:
+        pipe["timings"] = timings
 
     if from_dir and resume_ingest:
         icp.clear_ingest_checkpoint(trip_dir)

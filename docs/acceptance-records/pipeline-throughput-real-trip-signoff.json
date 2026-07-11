@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1",
+  "status": "pending",
+  "approver": "",
+  "reviewedAt": null,
+  "commit": "",
+  "tripIds": [],
+  "provider": "",
+  "model": "",
+  "narrateConcurrency": 2,
+  "vrPassRate": null,
+  "checklist": {
+    "VR-N01_fields_present": null,
+    "VR-N04_lead_title_ok": null,
+    "no_uncaptured_crash": null,
+    "cache_hit_rerun_ok": null
+  },
+  "notes": "L4 real-LLM signoff. Chat confirmation alone is invalid; gate --from-record requires status=approved and checklist booleans.",
+  "relatedPerfEval": "docs/acceptance-records/pipeline-throughput-perf-eval.json"
+}

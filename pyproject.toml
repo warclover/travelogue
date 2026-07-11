@@ -47,6 +47,7 @@ markers = [
     "mosaic: planner tests that require mosaic.enabled (Phase 15 MCS)",
     "controlled_parity: P17 LSE controlled-environment screens parity (AC-P17-01)",
     "w3a_gate: P17 W3a cut-engine gates (AC-P17-23/27/31)",
+    "pt_windows_spawn: Pipeline Throughput ProcessPool spawn smoke (nightly Windows / G1 gate)",
 ]
 # Fast local / PR subset (matches .github/workflows/ci.yml test-pr):
 #   pytest --fast -q
@@ -112,4 +113,19 @@ ignore_imports = [
     "travelogue.vision.aesthetic_mllm -> travelogue.curation.aesthetic_score",
     # master CI debt · aesthetic MLLM relocation pending P2
     "travelogue.vision.aesthetic_mllm -> travelogue.curation.album_profile",
+]
+
+[[tool.importlinter.contracts]]
+name = "Parallel ingest worker isolation (AC-PT-11)"
+type = "forbidden"
+source_modules = [
+    "travelogue.media.ingest_worker",
+]
+forbidden_modules = [
+    "travelogue.media.geocode",
+    "travelogue.services",
+    "travelogue.web",
+    "travelogue.orchestrator",
+    "travelogue.curation",
+    "travelogue.vision",
 ]

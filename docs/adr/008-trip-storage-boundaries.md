@@ -98,6 +98,26 @@ Phase 22 需要 **成文的存储边界**，避免「file-as-DB」退化为「JS
 - `trip.json` **永久** 作为 import/export 交换格式。
 - P22 **不实现** 上传；仅约定路径与 optional `assets[].contentHash`。
 
+### 9. Ingest 并行写边界（Pipeline Throughput · 2026-07-11）
+
+> 关联：[PRD-PIPELINE-THROUGHPUT.md](../PRD-PIPELINE-THROUGHPUT.md) v0.2 · [TECH-ARCHITECTURE.md](../TECH-ARCHITECTURE.md) §17.7
+
+并行 ingest（ProcessPool）**不改变** SSOT 与 revision 模型，仅收紧 Document/Blob 的进程边界：
+
+| 角色 | 允许 | 禁止 |
+|------|------|------|
+| **Worker 进程** | 写 **Blob**：临时/预分配路径下的 decode 衍生图（provisional WebP 等）；计算 phash/人脸等特征并返回主进程 | 任何 `TripService.save` / `update`；分配最终 `assetId`；写 `trip.json`；geocode 网络请求；CLIP 重模型 |
+| **主进程（import 子进程内）** | 按输入序 dedupe 终裁 → 分配 `assetId` → commit/rename Blob → `on_asset_added` → 经 **`TripService.update` 增量 merge** 写 Document | 整份内存 trip **覆盖**磁盘（禁止 `disk.clear(); disk.update(full_memory)`） |
+
+**revision 策略（对齐 §6）**：
+
+- ingest 中途 `on_persist` / checkpoint：**`bump_revision=False`**（pipeline 中间态）。
+- 用户可见结构锁定或 API 写：仍 **`bump_revision=True`**。
+
+**与 Studio HTTP 并发**：依赖已落地的线程锁 + `.trip.json.lock` + `meta.revision` CAS。并行提高写频后，须通过 **AC-ARC-02-parallel**（import × `persist_every_n` × HTTP PATCH）后方可将 `pipeline.parallel_ingest` 设为产品默认。
+
+**孤儿 Blob**：dedupe 丢弃或 worker 崩溃留下的 provisional 文件必须删除或在 resume 时回收；不得残留为最终 `assets/asset-NNN-*`。
+
 ---
 
 ## 拒绝的方案
@@ -138,5 +158,6 @@ Phase 22 需要 **成文的存储边界**，避免「file-as-DB」退化为「JS
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.3 | 2026-07-11 | 增补 §9 Ingest 并行写边界（Pipeline Throughput） |
 | v0.2 | 2026-06-11 | Accepted · PRD v0.22.1 评审闭合 |
 | v0.1 | 2026-06-11 | Proposed · Phase 22 Kickoff |

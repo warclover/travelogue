@@ -595,6 +595,12 @@ def run_studio_pipeline(
 
         preload_clip_encoder(cfg)
 
+    from travelogue.orchestrator.throughput_precheck import emit_throughput_precheck_warnings
+
+    for warn in emit_throughput_precheck_warnings(cfg):
+        if progress:
+            progress("ingest", 0, warn)
+
     pipeline_timings: dict[str, float] = {}
     pipeline_t0 = time.monotonic()
 
@@ -650,13 +656,10 @@ def run_studio_pipeline(
         trip = svc.load(trip_json)
 
         def _persist_trip_state() -> None:
-            work = trip
+            """Incremental pipeline persist — never full-trip overwrite (ADR-008 §9)."""
+            from travelogue.media.ingest_persist import make_pipeline_persist_mutator
 
-            def mutator(t: dict) -> None:
-                for key, value in work.items():
-                    t[key] = value
-
-            svc.update(trip_json, mutator)
+            svc.update(trip_json, make_pipeline_persist_mutator(trip))
 
         trip_rollout_id = str(trip.get("tripId") or slug).strip()
         if trip_rollout_id:
@@ -713,6 +716,11 @@ def run_studio_pipeline(
         intent_kwargs["photo_cull_enabled"] = bool(photo_cull_enabled)
         intent_kwargs["keep_near_duplicates"] = bool(keep_near_duplicates)
         apply_intent(trip, **intent_kwargs)
+        # Flush intent before ingest so mid-ingest merge never needs to push it,
+        # and concurrent HTTP PATCH can CAS against a real disk revision.
+        from travelogue.media.ingest_persist import make_intent_flush_mutator
+
+        svc.update(trip_json, make_intent_flush_mutator(trip))
 
         if plan_bytes is not None or plan_text:
             from travelogue.services.intent_plan import ingest_travel_plan
@@ -728,7 +736,14 @@ def run_studio_pipeline(
         featured_path, material_path = _resolve_ingest_folder_paths(album_dir, folder_overrides)
 
         def persist_partial_ingest() -> None:
-            _persist_trip_state()
+            """Incremental merge during ingest (D-PT-03 / ADR-008 §9)."""
+            from travelogue.media.ingest_persist import make_ingest_merge_mutator
+
+            svc.update(
+                trip_json,
+                make_ingest_merge_mutator(trip),
+                bump_revision=False,
+            )
 
         post_curate_kwargs = {
             "svc": svc,

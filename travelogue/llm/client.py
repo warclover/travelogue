@@ -124,8 +124,15 @@ def chat_completion(
     temperature: float = 0.7,
     runtime: LlmRuntime | None = None,
     json_mode: bool = True,
+    shared_backoff: bool = False,
 ) -> str:
-    """Call OpenAI-compatible /chat/completions and return assistant content."""
+    """Call OpenAI-compatible /chat/completions and return assistant content.
+
+    When ``shared_backoff`` is true, wait on the process-wide provider gate and
+    advance it on 429/502/503 (Pipeline Throughput · narrate concurrency).
+    """
+    from travelogue.llm.shared_backoff import get_shared_backoff
+
     rt = runtime or resolve_llm_runtime(provider)
     use_model = model or rt.model
     url = f"{rt.base_url}/chat/completions"
@@ -147,8 +154,11 @@ def chat_completion(
         method="POST",
     )
 
+    backoff = get_shared_backoff() if shared_backoff else None
     last_http: urllib.error.HTTPError | None = None
     for attempt in range(_MAX_ATTEMPTS):
+        if backoff is not None:
+            backoff.wait_turn()
         try:
             data = _post_chat(req, timeout_sec=rt.timeout_sec)
             return _extract_content(data)
@@ -157,10 +167,23 @@ def chat_completion(
             if not _http_error_retryable(exc) or attempt >= _MAX_ATTEMPTS - 1:
                 detail = exc.read().decode("utf-8", errors="replace")[:400]
                 raise LlmError("E_LLM_HTTP", f"HTTP {exc.code}: {detail}") from exc
-            time.sleep(_RETRY_BASE_SEC * (2**attempt))
+            retry_after = None
+            raw_ra = exc.headers.get("Retry-After") if exc.headers else None
+            if raw_ra:
+                try:
+                    retry_after = float(raw_ra)
+                except ValueError:
+                    retry_after = None
+            if backoff is not None:
+                backoff.note_rate_limit(retry_after_sec=retry_after, attempt=attempt)
+            else:
+                time.sleep(_RETRY_BASE_SEC * (2**attempt))
         except urllib.error.URLError as exc:
             if _url_error_retryable(exc) and attempt < _MAX_ATTEMPTS - 1:
-                time.sleep(_RETRY_BASE_SEC * (2**attempt))
+                if backoff is not None:
+                    backoff.note_rate_limit(attempt=attempt)
+                else:
+                    time.sleep(_RETRY_BASE_SEC * (2**attempt))
                 continue
             code = _url_error_code(exc)
             raise LlmError(code, str(exc.reason)) from exc

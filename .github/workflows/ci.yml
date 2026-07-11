@@ -10,8 +10,13 @@ on:
   pull_request:
     branches: [master, main]
     paths-ignore:
+      # Keep acceptance-records JSON in CI (IMPLEMENTATION §8.1); ignore prose/docs only.
       - "**.md"
-      - "docs/**"
+      - "docs/**/*.md"
+      - "docs/wireframes/**"
+      - "docs/adr/**"
+      - "docs/reports/**"
+      - "docs/templates/**"
       - ".cursor/**"
 
 # Cancel superseded runs on the same ref (saves minutes on force-push / rapid commits).
@@ -56,6 +61,15 @@ jobs:
 
       - name: layout_contract surface (P2-C)
         run: python scripts/lint_layout_contract_surface.py
+
+      - name: Pipeline Throughput default flags lint (M5)
+        run: python scripts/lint_pt_default_flags.py
+
+      - name: Pipeline Throughput gate schema (M5)
+        run: python scripts/pipeline_throughput_gate.py --from-record --require-schema-only
+
+      - name: Pipeline Throughput check-default-on (M5 · block accelerated defaults without signoff)
+        run: python scripts/pipeline_throughput_gate.py --check-default-on
 
       - uses: actions/setup-node@v4
         with:
@@ -123,6 +137,10 @@ jobs:
           python -m pytest tests/ -q \
             -m "integration and not e2e and not vision and not playwright_serial and not legacy_homepage"
 
+      - name: Pipeline Throughput integration (test_pt_*)
+        run: |
+          python -m pytest tests/integration/test_pt_*.py -q --tb=short
+
       - name: Phase 4 acceptance gate (integration)
         run: python scripts/phase4_acceptance_gate.py
 
@@ -175,6 +193,13 @@ jobs:
       - name: Architecture equivalence self-check (M-B0 · release block)
         if: github.event_name != 'pull_request'
         run: python scripts/arch_equivalence_check.py
+
+      - name: Pipeline Throughput gate from-record schema (M5 · block)
+        run: python scripts/pipeline_throughput_gate.py --from-record --require-schema-only
+
+      - name: Pipeline Throughput gate from-record strict (M5 · warn until AC filled)
+        continue-on-error: true
+        run: python scripts/pipeline_throughput_gate.py --from-record --strict
 
       - name: Demo verify (fixtures + DOM)
         run: |

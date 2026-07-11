@@ -1,0 +1,30 @@
+# Pipeline Throughput · Windows ProcessPool spawn smoke (blocks G1 default-on).
+# Manual + optional schedule; keeps CI minute budget under control.
+name: Nightly Windows PT
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 16 * * 1"  # weekly Monday 16:00 UTC (blocks G1 default-on)
+
+jobs:
+  windows-spawn:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: pip install -e ".[dev]"
+
+      - name: PT Windows spawn smoke
+        run: |
+          python -m pytest tests/integration/test_pt_ingest_windows_spawn.py -q --tb=short -m pt_windows_spawn
+
+      - name: PT default flags still off
+        run: |
+          python scripts/lint_pt_default_flags.py
+          python scripts/pipeline_throughput_gate.py --check-default-on
