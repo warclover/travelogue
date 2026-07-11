@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from travelogue.services.trip import STAMP_RENDERED_REVISION
+
 # Top-level keys ingest may write during / at end of import.
 _INGEST_OWNED_TOP = (
     "assets",
@@ -142,6 +144,12 @@ def merge_pipeline_persist(disk_trip: dict, *, memory_trip: dict) -> None:
             for key in ("title", "places", "tone"):
                 if key in mem_meta:
                     disk_meta[key] = mem_meta[key]
+        # mark_render_bundle_current sets this on memory meta; TripService.update
+        # consumes it from the disk trip the mutator edits. Without this hand-off,
+        # post-render timings/status persists bump revision ahead of renderedRevision
+        # and false-flag「预览产物已过期」right after a fresh import.
+        if mem_meta.get(STAMP_RENDERED_REVISION):
+            disk_meta[STAMP_RENDERED_REVISION] = True
 
     # Copy any other non-HTTP top-level keys from memory (template extras, etc.)
     for key, value in memory_trip.items():

@@ -69,3 +69,69 @@ def test_merge_pipeline_persist_preserves_http_intent() -> None:
     assert disk["meta"]["dateStart"] == "2025-01-01"
     assert disk["meta"]["title"] == "HTTP wins"
     assert disk["meta"]["places"] == ["大阪"]
+
+
+def test_merge_pipeline_persist_propagates_render_bundle_stamp() -> None:
+    """Post-render metadata persist must hand stamp to disk so update can watermark."""
+    from travelogue.media.ingest_persist import merge_pipeline_persist
+    from travelogue.services.trip import STAMP_RENDERED_REVISION, mark_render_bundle_current
+
+    disk = {
+        "assets": [{"id": "a1"}],
+        "pipeline": {"status": "rendered", "timings": {}},
+        "meta": {"revision": 4, "renderedRevision": 4, "title": "keep"},
+    }
+    memory = {
+        "assets": [{"id": "a1"}],
+        "pipeline": {"status": "rendered", "timings": {"totalMs": 12.0}},
+        "meta": {"revision": 4, "renderedRevision": 4, "title": "stale memory"},
+    }
+    mark_render_bundle_current(memory)
+    merge_pipeline_persist(disk, memory_trip=memory)
+    assert disk["meta"][STAMP_RENDERED_REVISION] is True
+    assert disk["pipeline"]["timings"]["totalMs"] == 12.0
+    assert disk["meta"]["renderedRevision"] == 4
+    assert disk["meta"]["title"] == "stale memory"
+
+
+def test_pipeline_persist_mutator_keeps_render_bundle_fresh(tmp_path) -> None:
+    """Studio _persist_trip_state after mark_render_bundle_current must not stale."""
+    from pathlib import Path
+
+    from travelogue.layout_templates.css_stale import trip_render_bundle_stale
+    from travelogue.media.ingest_persist import make_pipeline_persist_mutator
+    from travelogue.services.trip import (
+        TripService,
+        mark_render_bundle_current,
+        meta_rendered_revision,
+        meta_revision,
+    )
+
+    trips_dir = tmp_path / "trips" / "demo"
+    trips_dir.mkdir(parents=True)
+    trip_json = trips_dir / "trip.json"
+    (trips_dir / "index.html").write_text("<html></html>", encoding="utf-8")
+    svc = TripService(root=tmp_path)
+    seed = {
+        "tripId": "demo",
+        "meta": {"revision": 0, "title": "demo"},
+        "pipeline": {"status": "rendered", "timings": {}},
+        "assets": [],
+    }
+    svc.save(seed, trip_json)
+
+    def stamp(t: dict) -> None:
+        mark_render_bundle_current(t)
+
+    svc.update(trip_json, stamp)
+    memory = svc.load(trip_json)
+    assert meta_rendered_revision(memory) == meta_revision(memory)
+    assert trip_render_bundle_stale(trips_dir, memory) is False
+
+    memory.setdefault("pipeline", {})["timings"] = {"totalMs": 99.0}
+    mark_render_bundle_current(memory)
+    svc.update(trip_json, make_pipeline_persist_mutator(memory))
+    after = svc.load(trip_json)
+    assert after["pipeline"]["timings"]["totalMs"] == 99.0
+    assert meta_rendered_revision(after) == meta_revision(after)
+    assert trip_render_bundle_stale(Path(trips_dir), after) is False

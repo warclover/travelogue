@@ -128,7 +128,10 @@ def meta_rendered_revision(trip: dict) -> int:
         return 0
 
 
-_STAMP_RENDERED_REVISION = "_stampRenderedRevision"
+# Private mutator signal — also recognized by merge_pipeline_persist so incremental
+# persists can re-watermark without a full meta overwrite.
+STAMP_RENDERED_REVISION = "_stampRenderedRevision"
+_STAMP_RENDERED_REVISION = STAMP_RENDERED_REVISION
 
 
 def mark_render_bundle_current(trip: dict) -> None:
