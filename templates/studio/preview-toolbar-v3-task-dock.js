@@ -228,11 +228,11 @@ export function mountPreviewTaskDock(root, hooks) {
     textWrap.className = "preview-task-dock__text";
     var main = document.createElement("span");
     main.className = "preview-task-dock__main";
-    main.textContent = opts.title || "章节结构待确认（G1）";
+    main.textContent = opts.title || "章节结构待确认";
     textWrap.appendChild(main);
     var sub = document.createElement("small");
     sub.textContent =
-      opts.subtitle || "请浏览各章顺序，确认后将生成文案并完成排版";
+      opts.subtitle || "请浏览各章顺序后确认，将继续生成文案并排版";
     textWrap.appendChild(sub);
 
     var actions = document.createElement("div");
@@ -242,7 +242,7 @@ export function mountPreviewTaskDock(root, hooks) {
       var openBtn = document.createElement("button");
       openBtn.type = "button";
       openBtn.className = "preview-task-dock__btn preview-task-dock__btn--accent";
-      openBtn.textContent = "查看结构";
+      openBtn.textContent = "去确认";
       openBtn.addEventListener("click", function () {
         hooks.onOpenStructure();
       });
@@ -252,7 +252,7 @@ export function mountPreviewTaskDock(root, hooks) {
       var confirmBtn = document.createElement("button");
       confirmBtn.type = "button";
       confirmBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
-      confirmBtn.textContent = "确认并继续";
+      confirmBtn.textContent = "章节顺序 OK";
       confirmBtn.addEventListener("click", function () {
         hooks.onConfirmStructure();
       });

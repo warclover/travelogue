@@ -112,7 +112,8 @@ export function wireSheetEditDirty(root, panel) {
 export function refreshTaskDockState(root) {
     if (!root || !isPreviewToolbarV3(root) || !root._taskDock) return;
     if (root._exportDockActive || root._exportResultShowing) return;
-    if (_g1Pending && !_g1DockDismissed) {
+    // D-REF-18 · G1 > layoutPending > longshotStale；横幅在视口内时不与 Task Dock 互抢
+    if (_g1Pending && !_g1DockDismissed && !root._g1BannerVisible) {
       root._taskDock.showG1({});
       return;
     }

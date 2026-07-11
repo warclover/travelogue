@@ -3,9 +3,26 @@
 | 属性 | 内容 |
 |------|------|
 | **对应 PRD** | [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) v1.2.0 |
-| **分支** | `feat/preview-refine-v1-p0` |
+| **分支** | `feat/preview-refine-v1-p0`（已推送）· `feat/preview-refine-v1-p1`（第二拍） |
 | **范围** | **P0 第一拍**（D-REF-17 · M1 + M2 + MF-01～06） |
 | **更新日期** | 2026-07-11 |
+
+## P1 任务表（第二拍 · M4 → M3）
+
+| ID | 状态 | 落点 |
+|----|------|------|
+| **M4** | ✅ | `features.js` `mountG1Banner`；顶栏「章节顺序 OK / 重新生成结构」；横幅可见时 Task Dock 不互抢 |
+| **M3** | ✅ | Sheet Tab →「这页 / 这本 / 导出与更多」；这页空态；这本=文字+封面/模板/同框；导出与更多=原高级 |
+| **D-REF-18** | ✅ | `_g1BannerVisible` + IntersectionObserver 镜像 |
+
+### P1 文件映射
+
+| 区域 | 文件 |
+|------|------|
+| G1 横幅 | `features.js` · `drawers.css` · `drawers.js`（regenerateStructure） |
+| 优先级 | `core.js` `refreshTaskDockState` |
+| 三区 IA | `preview-toolbar-v3-sheet.js` · `sheet.css` · `init-v3.js` |
+| Task Dock 文案 | `preview-toolbar-v3-task-dock.js` |
 
 ## P0 任务表
 

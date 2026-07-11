@@ -269,12 +269,13 @@ def test_v3_task_dock_exports_g1_and_pending() -> None:
         assert token in dock
 
 
-def test_v3_sheet_has_four_tabs_and_leave_confirm() -> None:
+def test_v3_sheet_has_three_zone_tabs_and_leave_confirm() -> None:
     sheet = SHEET_JS.read_text(encoding="utf-8")
-    for label in ("文字", "结构", "排版", "高级"):
+    for label in ("这页", "这本", "导出与更多"):
         assert label in sheet
     assert "confirmLeaveCurrentTab" in sheet or "confirmLeave" in sheet
     assert "setStructureDot" in sheet
+    assert "滚动到正文屏可调整本页" in sheet
 
 
 def _seed_preview_trip(trips_dir: Path, trip_id: str = "v3-smoke") -> str:
@@ -507,3 +508,26 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "工作台设置" not in home
     assert "编辑与设置" not in bootstrap
     assert "编辑与设置" not in sheet
+
+
+def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
+    """PRD-PREVIEW-REFINE-V1 · P1 M4 G1 横幅 + M3 三区 IA。"""
+    features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
+    core = (STUDIO / "preview-toolbar" / "core.js").read_text(encoding="utf-8")
+    sheet = SHEET_JS.read_text(encoding="utf-8")
+    drawers = (STUDIO / "preview-toolbar" / "drawers.js").read_text(encoding="utf-8")
+    css = (STUDIO / "preview-toolbar" / "drawers.css").read_text(encoding="utf-8")
+
+    assert "mountG1Banner" in features
+    assert "章节结构待确认 · 请浏览各章顺序后确认" in features
+    assert "章节顺序 OK" in features
+    assert "重新生成结构" in features
+    assert "preview-toolbar__g1-banner--v4" in features or "g1-banner--v4" in css
+    assert "_g1BannerVisible" in core
+    assert 'label: "这页"' in sheet
+    assert 'label: "这本"' in sheet
+    assert 'label: "导出与更多"' in sheet
+    assert "滚动到正文屏可调整本页" in sheet
+    assert "regenerateStructure" in drawers
+    assert 'label: "文字"' not in sheet
+    assert 'label: "高级"' not in sheet

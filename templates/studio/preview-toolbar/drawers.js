@@ -572,6 +572,41 @@ export function initPreviewDrawers(root, tripId) {
         });
     }
 
+    function runG1Regenerate(triggerBtn) {
+      return toolbarConfirm({
+        title: "重新生成结构",
+        body: "将重新生成章节结构，可能覆盖当前分章。继续？",
+        confirmText: "继续",
+        danger: true,
+      }).then(function (ok) {
+        if (!ok) return false;
+        if (triggerBtn) triggerBtn.disabled = true;
+        return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/curate", { force: true })
+          .then(function (res) {
+            if (res.status === 202 && res.body && res.body.jobId) {
+              pollStudioJob(res.body.jobId, function (job) {
+                if (triggerBtn) triggerBtn.disabled = false;
+                if (job.status === "succeeded") {
+                  showToolbarToast("结构已重新生成");
+                  window.location.reload();
+                  return;
+                }
+                showToolbarToast("重新生成失败", { error: true });
+              });
+              return true;
+            }
+            if (triggerBtn) triggerBtn.disabled = false;
+            showToolbarToast("无法开始", { error: true });
+            return false;
+          })
+          .catch(function () {
+            if (triggerBtn) triggerBtn.disabled = false;
+            showToolbarToast("无法开始", { error: true });
+            return false;
+          });
+      });
+    }
+
     function openDrawer(mode) {
       if (!entryCache) {
         _fetchEntry(tripId).then(function (data) {
@@ -787,7 +822,8 @@ export function initPreviewDrawers(root, tripId) {
       var pending = entryCache.g1Pending || status === "structure_draft";
       if (pending) {
         g1.className = "preview-drawer__g1 preview-drawer__g1--warn";
-        g1.textContent = "章节结构待确认：请浏览各章顺序，确认后将生成文案并完成排版。";
+        g1.textContent =
+          "章节结构待确认：请先看顶栏横幅确认顺序；也可在此确认或重新生成。";
         if (g1Actions) g1Actions.hidden = false;
         var confirmBtn = targetBody.querySelector(".preview-drawer__g1-confirm");
         var regenBtn = targetBody.querySelector(".preview-drawer__g1-regenerate");
@@ -798,40 +834,12 @@ export function initPreviewDrawers(root, tripId) {
         }
         if (regenBtn) {
           regenBtn.addEventListener("click", function () {
-            toolbarConfirm({
-              title: "重新生成结构",
-              body: "将重新生成章节结构，可能覆盖当前分章。继续？",
-              confirmText: "继续",
-              danger: true,
-            }).then(function (ok) {
-              if (!ok) return;
-              regenBtn.disabled = true;
-              return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/curate", { force: true });
-            }).then(function (res) {
-              if (!res) return;
-              if (res.status === 202 && res.body && res.body.jobId) {
-                pollStudioJob(res.body.jobId, function (job) {
-                  regenBtn.disabled = false;
-                  if (job.status === "succeeded") {
-                    showToolbarToast("结构已重新生成");
-                    window.location.reload();
-                    return;
-                  }
-                  showToolbarToast("重新生成失败", { error: true });
-                });
-                return;
-              }
-              regenBtn.disabled = false;
-              showToolbarToast("无法开始", { error: true });
-            }).catch(function () {
-              regenBtn.disabled = false;
-              showToolbarToast("重新生成失败", { error: true });
-            });
+            runG1Regenerate(regenBtn);
           });
         }
       } else {
         g1.className = "preview-drawer__g1 preview-drawer__g1--info";
-        g1.textContent = "章节已按行程排好，可在预览中改字、锚点与精选。";
+        g1.textContent = "章节已按行程排好，可在预览中改字、锚点与精选。结构确认见顶栏横幅（若开启）。";
         if (g1Actions) g1Actions.hidden = true;
       }
       loadChapterExplain(tripId, targetBody.querySelector(".preview-drawer__explain"));
@@ -865,6 +873,7 @@ export function initPreviewDrawers(root, tripId) {
         openDrawer(mode);
       },
       confirmStructure: function () { return runG1Confirm(null); },
+      regenerateStructure: function () { return runG1Regenerate(null); },
       close: closeDrawer,
       refreshEntry: function () {
         return _fetchEntry(tripId).then(function (data) {

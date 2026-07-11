@@ -280,33 +280,48 @@
   margin: 0 12px 8px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: rgba(210, 166, 87, 0.22);
+  background: #fff8e1;
+  border: 1px solid #ffe082;
   color: #5c4a1a;
   font-size: 13px;
   pointer-events: auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+.preview-toolbar__g1-banner--v4 {
+  position: fixed;
+  top: calc(max(12px, env(safe-area-inset-top, 0px)) + 56px);
+  left: max(12px, env(safe-area-inset-left, 0px));
+  right: max(12px, env(safe-area-inset-right, 0px));
+  z-index: 218;
+  margin: 0;
+  max-width: 720px;
 }
 .preview-toolbar__g1-banner-text {
   margin: 0;
   flex: 1 1 180px;
+  font-weight: 600;
 }
 .preview-toolbar__g1-banner-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
-.preview-toolbar__g1-banner-open,
-.preview-toolbar__g1-banner-confirm {
+.preview-toolbar__g1-banner-confirm,
+.preview-toolbar__g1-banner-regen,
+.preview-toolbar__g1-banner-open {
   border: none;
-  border-radius: 999px;
+  border-radius: 8px;
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
 }
+.preview-toolbar__g1-banner-regen,
 .preview-toolbar__g1-banner-open {
-  background: rgba(255, 255, 255, 0.55);
+  background: #fff;
   color: #5c4a1a;
+  border: 1px solid #a1887f;
 }
 .preview-toolbar__g1-banner-confirm {
   background: #3d6b5a;

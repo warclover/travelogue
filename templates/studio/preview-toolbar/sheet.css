@@ -651,6 +651,37 @@ body.preview-sheet-open {
   border-radius: 8px;
 }
 
+.preview-sheet__context {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a2f28;
+}
+
+.preview-sheet__empty-label {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: rgba(20, 17, 13, 0.72);
+}
+
+.preview-sheet__page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.preview-sheet__link--block {
+  display: inline-flex;
+  margin-bottom: 6px;
+}
+
+.preview-sheet__embed--edit,
+.preview-sheet__embed--structure,
+.preview-sheet__embed--cohort {
+  margin-top: 12px;
+}
+
 .preview-sheet__tab--dot::after {
   content: "";
   display: inline-block;
