@@ -40,6 +40,14 @@
     }, isError ? 5000 : 2200);
   }
 
+  function showFieldSavedMark(el) {
+    el.classList.add("inline-edit__field--saved");
+    window.clearTimeout(el._savedMarkTimer);
+    el._savedMarkTimer = window.setTimeout(function () {
+      el.classList.remove("inline-edit__field--saved");
+    }, 800);
+  }
+
   function savePatch(path, value, el) {
     el.classList.add("inline-edit__field--saving");
     return fetch(SAVE_URL, {
@@ -55,12 +63,8 @@
       .then(function (result) {
         el.classList.remove("inline-edit__field--saving");
         if (result.ok && result.body && result.body.ok) {
-          el.classList.add("inline-edit__field--saved");
-          var msg = "已保存到 trip.json";
-          if (result.body.rendered && result.body.rendered.length) {
-            msg += " · 已更新 " + result.body.rendered.join("、");
-          }
-          showToast(msg);
+          // PRD §4.4 · 字段旁轻 ✓；禁止每次成功 toast 刷屏
+          showFieldSavedMark(el);
           try {
             window.dispatchEvent(new CustomEvent("travelogue:copy-saved"));
           } catch (e) {}

@@ -3,11 +3,28 @@
 | 属性 | 内容 |
 |------|------|
 | **对应 PRD** | [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) v1.2.0 |
-| **分支** | `feat/preview-refine-v1-p0`（已推送）· `feat/preview-refine-v1-p1`（第二拍） |
+| **分支** | `feat/preview-refine-v1-p0` · `feat/preview-refine-v1-p1` · `feat/preview-refine-v1-p2` |
 | **范围** | **P0 第一拍**（D-REF-17 · M1 + M2 + MF-01～06） |
 | **更新日期** | 2026-07-11 |
 
+## P2 任务表（M5 / M6 · 不阻塞发布）
+
+| ID | 状态 | 落点 |
+|----|------|------|
+| **M5** | ✅ | inline 成功改为字段旁 ✓（≤0.8s）；去掉「已保存到 trip.json」；首访「点一下文案可修改」保留；杂志名同轻 ✓ |
+| **M6** | ✅ | `cohortEnabled` 为假时「这本」内同框区 `hidden`（不展示未开启提示） |
+| **阅读视图上 Dock** | ⏸ | 仍按 PK-03 不上 Dock；留在「导出与更多」 |
+
+### P2 文件映射
+
+| 区域 | 文件 |
+|------|------|
+| Inline ✓ | `templates/visual-journal/inline-edit.js` · `inline-edit.css` |
+| 封面杂志名 | `preview-toolbar/inline-edit.js` · `inline-edit.css` |
+| Cohort 藏入口 | `preview-toolbar-v3-sheet.js` |
+
 ## P1 任务表（第二拍 · M4 → M3）
+
 
 | ID | 状态 | 落点 |
 |----|------|------|

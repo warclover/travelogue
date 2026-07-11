@@ -20,6 +20,31 @@ html[data-preview-toolbar="on"] .cover-opening__title--saving {
   pointer-events: none;
 }
 
+html[data-preview-toolbar="on"] .cover-opening__title--saved {
+  position: relative;
+  animation: cover-title-saved 0.8s ease;
+}
+
+html[data-preview-toolbar="on"] .cover-opening__title--saved::after {
+  content: "✓";
+  position: absolute;
+  top: 0.1em;
+  right: 0;
+  font-size: 0.55em;
+  font-weight: 700;
+  color: #7fcbb3;
+  pointer-events: none;
+}
+
+@keyframes cover-title-saved {
+  from {
+    background: rgba(127, 203, 179, 0.28);
+  }
+  to {
+    background: transparent;
+  }
+}
+
 html[data-preview-toolbar="on"] .cover-opening__title-input {
   display: block;
   width: 100%;

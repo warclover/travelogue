@@ -531,3 +531,25 @@ def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
     assert "regenerateStructure" in drawers
     assert 'label: "文字"' not in sheet
     assert 'label: "高级"' not in sheet
+
+
+def test_preview_refine_v1_p2_feedback_and_cohort_gate() -> None:
+    """PRD-PREVIEW-REFINE-V1 · P2 M5 inline ✓ + M6 cohort 藏入口。"""
+    inline_js = (ROOT / "templates" / "visual-journal" / "inline-edit.js").read_text(
+        encoding="utf-8"
+    )
+    inline_css = (ROOT / "templates" / "visual-journal" / "inline-edit.css").read_text(
+        encoding="utf-8"
+    )
+    cover_js = (STUDIO / "preview-toolbar" / "inline-edit.js").read_text(encoding="utf-8")
+    sheet = SHEET_JS.read_text(encoding="utf-8")
+
+    assert "已保存到 trip.json" not in inline_js
+    assert "showFieldSavedMark" in inline_js
+    assert "点一下文案可修改" in inline_js
+    assert "inline-edit__field--saved::after" in inline_css
+    assert 'content: "✓"' in inline_css
+    assert "cover-opening__title--saved" in cover_js
+    assert "杂志名已保存" not in cover_js
+    assert "cohortEmbed.hidden = true" in sheet
+    assert "旅行主角 · 同框未开启" not in sheet

@@ -529,8 +529,9 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         cohortEmbed.appendChild(cohortHost);
         hooks.drawers.openEmbed("cohort", cohortHost, { sheetMode: true });
       } else {
-        cohortEmbed.innerHTML =
-          '<p class="preview-sheet__hint">旅行主角 · 同框未开启。</p>';
+        // D-REF-15 / M6 · cohort 未开则藏入口（不展示「未开启」提示）
+        cohortEmbed.hidden = true;
+        cohortEmbed.innerHTML = "";
       }
     }
     var structEmbed = layoutWrap.querySelector(".preview-sheet__embed--structure");

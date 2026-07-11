@@ -67,7 +67,12 @@ export function saveMagazineTitle(tripId, next, el, onDone) {
         el.textContent = next;
         el.dataset.title = next;
         syncCoverTitleLayoutClass(el);
-        _showToolbarToast("杂志名已保存");
+        // PRD §4.4 · 轻 ✓，不刷「已保存」toast
+        el.classList.add("cover-opening__title--saved");
+        window.clearTimeout(el._savedMarkTimer);
+        el._savedMarkTimer = window.setTimeout(function () {
+          el.classList.remove("cover-opening__title--saved");
+        }, 800);
         try {
           window.dispatchEvent(new CustomEvent("travelogue:copy-saved"));
         } catch (e0) {}
