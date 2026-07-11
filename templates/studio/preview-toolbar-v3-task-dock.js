@@ -289,11 +289,11 @@ export function mountPreviewTaskDock(root, hooks) {
     textWrap.className = "preview-task-dock__text";
     var main = document.createElement("span");
     main.className = "preview-task-dock__main";
-    main.textContent = opts.title || "有编辑尚未应用排版";
+    main.textContent = opts.title || "版面有更新";
     textWrap.appendChild(main);
     var sub = document.createElement("small");
     sub.textContent =
-      opts.subtitle || "导出长图前建议先应用，否则与当前预览不一致";
+      opts.subtitle || "改过精选或拼图后，请先更新版面再导出";
     textWrap.appendChild(sub);
 
     var actions = document.createElement("div");
@@ -303,7 +303,7 @@ export function mountPreviewTaskDock(root, hooks) {
       var applyBtn = document.createElement("button");
       applyBtn.type = "button";
       applyBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
-      applyBtn.textContent = "应用排版";
+      applyBtn.textContent = "更新版面";
       applyBtn.addEventListener("click", function () {
         hooks.onApplyLayout();
       });

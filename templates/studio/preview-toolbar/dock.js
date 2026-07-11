@@ -17,7 +17,7 @@ export function presentAutoplayHref(opts) {
   return href + "#present/1";
 }
 
-/** Folio / editorial-room SVG glyphs for v4 icon dock. */
+/** Folio / editorial-room SVG glyphs for v4 icon dock (PRD §6.1.1). */
 export function dockIconSvg(name) {
   var attrs =
     'class="preview-toolbar__dock-icon" viewBox="0 0 24 24" ' +
@@ -31,13 +31,8 @@ export function dockIconSvg(name) {
         "<svg " +
         attrs +
         ">" +
-        '<path d="M3.5 3.5h10.2L20.5 7.2V20a1.4 1.4 0 0 1-1.4 1.4H5.4A1.4 1.4 0 0 1 4 20V3.5h-.5z"/>' +
-        '<path d="M13.7 3.5V7.4H20.5"/>' +
-        '<path d="M13.7 3.5H20.5" ' +
-        accent +
-        "/>" +
-        '<path d="M8 12.2 4.8 12l3.2-2.8"/>' +
-        '<path d="M4.8 12h6.8" stroke-width="2"/>' +
+        '<path d="M19 12H7"/>' +
+        '<path d="M11 7l-5 5 5 5"/>' +
         "</svg>"
       );
     case "play":
@@ -45,25 +40,21 @@ export function dockIconSvg(name) {
         "<svg " +
         attrs +
         ">" +
-        '<rect x="2.5" y="2.5" width="19" height="19" rx="2"/>' +
-        '<circle cx="5.2" cy="6.8" r="1.05" fill="currentColor" stroke="none"/>' +
-        '<circle cx="5.2" cy="12" r="1.05" fill="currentColor" stroke="none"/>' +
-        '<circle cx="5.2" cy="17.2" r="1.05" fill="currentColor" stroke="none"/>' +
-        '<circle cx="18.8" cy="6.8" r="1.05" fill="currentColor" stroke="none"/>' +
-        '<circle cx="18.8" cy="12" r="1.05" fill="currentColor" stroke="none"/>' +
-        '<circle cx="18.8" cy="17.2" r="1.05" fill="currentColor" stroke="none"/>' +
-        '<polygon points="9,7.5 9,16.5 17.5,12" ' +
+        '<rect x="3" y="5" width="18" height="14" rx="2.5"/>' +
+        '<path d="M10 9.2v5.6L15.8 12z" ' +
         accent +
         "/>" +
         "</svg>"
       );
-    case "settings":
+    case "refine":
+    case "settings": // 短暂别名兼容（settings → refine）
       return (
         "<svg " +
         attrs +
-        ' stroke-width="1.9">' +
-        '<path d="M12 2.3L15.65 5.68L20.41 7.15L19.3 12L20.41 16.85L15.65 18.32L12 21.7L8.35 18.32L3.59 16.85L4.7 12L3.59 7.15L8.35 5.68Z"/>' +
-        '<circle cx="12" cy="12" r="3.4"/>' +
+        ">" +
+        '<path d="M13.2 5.2l5.6 5.6"/>' +
+        '<path d="M4 20l1.6-5.4L15.8 4.4a2 2 0 0 1 2.8 0l1 1a2 2 0 0 1 0 2.8L9.4 18.4 4 20z"/>' +
+        '<path d="M12.2 7.2l4.6 4.6"/>' +
         "</svg>"
       );
     case "scroll":
@@ -71,13 +62,9 @@ export function dockIconSvg(name) {
         "<svg " +
         attrs +
         ">" +
-        '<rect x="7" y="2" width="10" height="5.2" rx="0.9" opacity="0.42"/>' +
-        '<rect x="5" y="7.2" width="14" height="5.6" rx="0.9" opacity="0.68"/>' +
-        '<rect x="3" y="12.8" width="18" height="8.2" rx="1"/>' +
-        '<path d="M6.5 20.8h11" stroke-dasharray="2.2 1.6" opacity="0.8" stroke-width="1.6"/>' +
-        '<path d="M3 13.8h18" ' +
-        accent +
-        ' stroke-width="1.45"/>' +
+        '<rect x="8" y="2.5" width="8" height="12.5" rx="1.6"/>' +
+        '<path d="M12 11.5v9"/>' +
+        '<path d="M9 17.5l3 3 3-3"/>' +
         "</svg>"
       );
     default:
@@ -208,7 +195,7 @@ export function initDockTooltips(root) {
       dock.querySelector(".preview-toolbar__dock-btn--back"),
       "返回"
     );
-    ensureDockTooltip(dock.querySelector(".preview-toolbar__menu-btn"), "编辑与设置");
+    ensureDockTooltip(dock.querySelector(".preview-toolbar__menu-btn"), "精修");
 
     var exportBtn = dock.querySelector(".preview-toolbar__dock-btn--export");
     ensureDockTooltip(exportBtn, "导出长图");

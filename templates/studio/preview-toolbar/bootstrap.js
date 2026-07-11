@@ -34,8 +34,8 @@ export function initPreviewToolbar() {
     "</a>" +
     '<span class="preview-toolbar__dock-divider" aria-hidden="true"></span>' +
     '<div class="preview-toolbar__menu-wrap">' +
-    '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__dock-btn preview-toolbar__dock-btn--menu preview-toolbar__dock-btn--folio" aria-haspopup="dialog" aria-expanded="false" aria-label="编辑与设置" title="编辑与设置">' +
-    dockIconSvg("settings") +
+    '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__dock-btn preview-toolbar__dock-btn--menu preview-toolbar__dock-btn--folio" aria-haspopup="dialog" aria-expanded="false" aria-label="精修" title="精修">' +
+    dockIconSvg("refine") +
     "</button>" +
     "</div>" +
     "</nav>";

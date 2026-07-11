@@ -77,7 +77,7 @@ V2_HOME_MARKERS = (
     "v2-settings-toggle",
     "v2-settings-popover",
     "v2-settings-close",
-    "工作台设置",
+    "导入偏好",
     'id="studio-cfg-clustering"',
     'id="studio-cfg-vision"',
     "开始制作我的游记",

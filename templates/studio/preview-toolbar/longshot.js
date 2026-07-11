@@ -72,6 +72,11 @@ var _toolbarBody = function (root) {
 };
 var _setLayoutPending = function (_on) {};
 var _setLayoutPendingMessage = function (_msg) {};
+var _applyLayoutRerender = function (_tripId, _root) {
+  return Promise.resolve(false);
+};
+
+var EXPORT_AFTER_LAYOUT_KEY = "travelogue.studio.exportAfterLayout";
 
 export function registerLongshotBridge(api) {
   if (typeof api.showToolbarToast === "function") _showToolbarToast = api.showToolbarToast;
@@ -91,6 +96,9 @@ export function registerLongshotBridge(api) {
   if (typeof api.setLayoutPending === "function") _setLayoutPending = api.setLayoutPending;
   if (typeof api.setLayoutPendingMessage === "function") {
     _setLayoutPendingMessage = api.setLayoutPendingMessage;
+  }
+  if (typeof api.applyLayoutRerender === "function") {
+    _applyLayoutRerender = api.applyLayoutRerender;
   }
 }
 
@@ -1042,6 +1050,8 @@ export function cancelPreviewLongshotExport(root) {
   }
 
   export function showStaleHint(root) {
+    // D-REF-18 · layoutPending 优先于 longshotStale，避免双层主待办抢注意力
+    if (_getLayoutPending()) return;
     setLongshotExportState(root, "stale");
   }
 
@@ -1061,7 +1071,7 @@ export function cancelPreviewLongshotExport(root) {
         if (trip.layoutCssStale || trip.renderBundleStale) {
           var pendingMsg = trip.renderBundleStale
             ? "预览产物已过期，请重新渲染"
-            : "布局 CSS 已过期，请应用排版重新渲染";
+            : "布局 CSS 已过期，请更新版面重新渲染";
           if (trip.layoutCssStale && trip.renderBundleStale) {
             pendingMsg = "预览产物与布局 CSS 已过期，请重新渲染";
           }
@@ -1111,6 +1121,41 @@ export function cancelPreviewLongshotExport(root) {
   }
 
   export function startLongshot(root, tripId) {
+    var btn = longshotBtnEl(root);
+    if (!btn || btn.disabled) return;
+
+    // MF-01 / MF-06 · layoutPending 时拦截，禁止静默导出旧长图
+    if (_getLayoutPending()) {
+      _toolbarConfirm({
+        title: "版面尚未更新",
+        body: "你改过精选或拼图，导出前需先更新版面，否则长图仍是旧版。",
+        confirmText: "更新并导出",
+        secondaryText: "仅更新版面",
+        cancelText: "取消",
+        stacked: true,
+      }).then(function (choice) {
+        if (!choice) return;
+        var thenExport = choice === true || choice === "confirm";
+        if (thenExport) {
+          try {
+            sessionStorage.setItem(EXPORT_AFTER_LAYOUT_KEY, String(tripId || ""));
+          } catch (eFlag) {}
+        }
+        return _applyLayoutRerender(tripId, root).then(function (ok) {
+          if (!ok && thenExport) {
+            try {
+              sessionStorage.removeItem(EXPORT_AFTER_LAYOUT_KEY);
+            } catch (eClear) {}
+          }
+        });
+      });
+      return;
+    }
+
+    runLongshotExport(root, tripId);
+  }
+
+  function runLongshotExport(root, tripId) {
     var btn = longshotBtnEl(root);
     if (!btn || btn.disabled) return;
     _setToolbarCollapsed(root, false, false);
@@ -1208,4 +1253,18 @@ export function cancelPreviewLongshotExport(root) {
         });
         setLongshotExportState(root, "error", { hint: "网络错误" });
       });
+  }
+
+  export function consumeExportAfterLayout(root, tripId) {
+    var flagged = "";
+    try {
+      flagged = sessionStorage.getItem(EXPORT_AFTER_LAYOUT_KEY) || "";
+      if (flagged) sessionStorage.removeItem(EXPORT_AFTER_LAYOUT_KEY);
+    } catch (e) {
+      return false;
+    }
+    if (!flagged || flagged !== String(tripId || "")) return false;
+    if (_getLayoutPending()) return false;
+    runLongshotExport(root, tripId);
+    return true;
   }

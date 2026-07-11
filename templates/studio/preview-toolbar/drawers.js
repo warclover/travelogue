@@ -385,10 +385,10 @@ export function initPreviewDrawers(root, tripId) {
       '<p class="preview-drawer__hint preview-drawer__copy-intent-hint">可选填；有语音素材时会优先用原声</p>' +
       '<p class="preview-drawer__hint preview-drawer__copy-intent-voice-skip" hidden>本章有录音，已优先用原声，无需填写意图</p>' +
       "</details>" +
-      '<p class="preview-drawer__featured-help">★ 在任意一屏右下角可将照片标为精选，之后点「应用排版」生效</p>' +
-      '<p class="preview-drawer__featured-help">拼图/整图屏左上角可改判媒资类型（普通照片 ↔ 拼图），改后请应用排版</p>' +
-      '<button type="button" class="preview-drawer__ghost preview-drawer__narrate-anchors">保存并重新生成文案</button>' +
-      '<button type="button" class="preview-drawer__primary preview-drawer__save-edit">保存编辑</button>';
+      '<p class="preview-drawer__featured-help">★ 在任意一屏右下角可将照片标为精选，之后点「更新版面」生效</p>' +
+      '<p class="preview-drawer__featured-help">拼图/整图屏左上角可改判媒资类型（普通照片 ↔ 拼图），改后请更新版面</p>' +
+      '<p class="preview-drawer__footnote">改精选或拼图后，请点「更新版面」。</p>' +
+      '<button type="button" class="preview-drawer__ghost preview-drawer__narrate-anchors">保存并重新生成文案</button>';
 
     var structTpl =
       '<div class="preview-drawer__g1"></div>' +
@@ -398,7 +398,7 @@ export function initPreviewDrawers(root, tripId) {
       "</div>" +
       '<div class="preview-drawer__explain"></div>' +
       '<div class="preview-drawer__aesthetic" hidden></div>' +
-      '<button type="button" class="preview-drawer__primary preview-drawer__apply-layout">应用排版</button>';
+      '<button type="button" class="preview-drawer__primary preview-drawer__apply-layout">更新版面</button>';
 
     function pollStudioJob(jobId, onDone) {
       pollJobUntilDone(jobId, { intervalMs: 800 })
@@ -624,9 +624,9 @@ export function initPreviewDrawers(root, tripId) {
             var v = (inp.value || "").trim();
             if (v) anchors.push(v);
           });
-          btn.disabled = true;
+          if (btn) btn.disabled = true;
           if (titleVal.length > 20) {
-            btn.disabled = false;
+            if (btn) btn.disabled = false;
             showToolbarToast("杂志名最多 20 个字", { error: true });
             return Promise.resolve(false);
           }
@@ -652,7 +652,7 @@ export function initPreviewDrawers(root, tripId) {
           }
           return Promise.all(tasks)
             .then(function (results) {
-              btn.disabled = false;
+              if (btn) btn.disabled = false;
               var ok = results.every(function (r) { return r.status === 200 && r.body.ok; });
               if (!ok) {
                 var errMsg = "保存失败";
@@ -692,11 +692,11 @@ export function initPreviewDrawers(root, tripId) {
                 }
               }
               if (!opts.skipToast) {
-                var copyIntentPayload = readCopyIntentPayload();
-                var hasIntent = copyIntentPayload && copyIntentPayload.clear !== true;
+                var savedIntentPayload = readCopyIntentPayload();
+                var hasIntent = savedIntentPayload && savedIntentPayload.clear !== true;
                 showToolbarToast(
                   anchors.length > 0 || hasIntent
-                    ? "编辑已保存。可在「编辑与设置」中重新生成文案以写入锚点与点缀。"
+                    ? "编辑已保存。可在「精修」中重新生成文案以写入锚点与点缀。"
                     : "编辑已保存"
                 );
               }
@@ -706,18 +706,44 @@ export function initPreviewDrawers(root, tripId) {
               return true;
             })
             .catch(function () {
-              btn.disabled = false;
+              if (btn) btn.disabled = false;
               showToolbarToast("保存失败", { error: true });
               return false;
             });
         }
 
-        targetBody.querySelector(".preview-drawer__save-edit").addEventListener("click", function () {
-          var btn = this;
-          persistEditDrawer(btn).then(function (ok) {
-            if (ok) closeDrawer();
+        // D-REF-05 · 文案类立即保存（失焦 / chip 变更），不再依赖「保存编辑」主按钮
+        var autoPersistTimer = null;
+        var autoPersisting = false;
+        function scheduleAutoPersist() {
+          if (autoPersistTimer) window.clearTimeout(autoPersistTimer);
+          autoPersistTimer = window.setTimeout(function () {
+            if (autoPersisting) return;
+            autoPersisting = true;
+            persistEditDrawer(null, { skipToast: true }).then(function () {
+              autoPersisting = false;
+            });
+          }, 320);
+        }
+        targetBody
+          .querySelectorAll(
+            ".preview-drawer__title-input, .preview-drawer__notes, .preview-drawer__anchor, .preview-drawer__copy-intent-note"
+          )
+          .forEach(function (el) {
+            el.addEventListener("blur", scheduleAutoPersist);
           });
-        });
+        var subsequent = targetBody.querySelector(".preview-drawer__copy-intent-subsequent");
+        if (subsequent) {
+          subsequent.addEventListener("change", scheduleAutoPersist);
+        }
+        targetBody
+          .querySelectorAll(".preview-drawer__chip-mood, .preview-drawer__chip-focus")
+          .forEach(function (chip) {
+            chip.addEventListener("click", function () {
+              window.setTimeout(scheduleAutoPersist, 0);
+            });
+          });
+
         var narrateAnchorsBtn = targetBody.querySelector(".preview-drawer__narrate-anchors");
         if (narrateAnchorsBtn) {
           narrateAnchorsBtn.addEventListener("click", function () {

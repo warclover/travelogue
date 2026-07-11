@@ -281,8 +281,8 @@ export function initCollageMediaControls(tripId, assetMediaById) {
           setLayoutPending(true);
           showToolbarToast(
             mediaClass === "collage"
-              ? "已标记为拼图 · 点应用排版后生效"
-              : "已标记为普通照片 · 点应用排版后生效"
+              ? "已标记为拼图 · 点更新版面后生效"
+              : "已标记为普通照片 · 点更新版面后生效"
           );
         })
         .catch(function () {
@@ -362,7 +362,7 @@ export function initFeaturedStars(tripId) {
             star.setAttribute("aria-pressed", "true");
             screen.setAttribute("data-featured", "true");
             setLayoutPending(true);
-            showToolbarToast("已标为精选 · 点应用排版后生效");
+            showToolbarToast("已标为精选 · 点更新版面后生效");
           })
           .catch(function () {
             star.disabled = false;
@@ -607,7 +607,7 @@ export function mountTemplateControls(slot, tripId, opts) {
                 ((res.j.template && res.j.template.resolvedTemplateId) ||
                   t.resolvedTemplateId ||
                   "visual-journal");
-              showToolbarToast("模板已更新，正在应用排版…", { duration: 2500 });
+              showToolbarToast("模板已更新，正在更新版面…", { duration: 2500 });
               return applyLayoutRerender(
                 tripId,
                 document.querySelector(".preview-toolbar") || slot

@@ -61,14 +61,20 @@
    * @param {string} opts.body
    * @param {string} [opts.confirmText='确定']
    * @param {string} [opts.cancelText='取消']
+   * @param {string} [opts.secondaryText] - optional middle action; when set, resolve is
+   *   "confirm" | "secondary" | false (instead of boolean)
+   * @param {boolean} [opts.stacked=false] - column button layout (primary → secondary → ghost)
    * @param {boolean} [opts.danger=false] - red confirm button
    * @param {boolean} [opts.focusCancel=false] - default focus on cancel (destructive flows)
-   * @returns {Promise<boolean>} true=confirm, false=cancel
+   * @returns {Promise<boolean|string>} true/false, or "confirm"|"secondary"|false when secondaryText set
    */
   window.studioModal = function (opts) {
     return new Promise(function (resolve) {
       opts = opts || {};
       var isDanger = !!opts.danger;
+      var hasSecondary = !!opts.secondaryText;
+      var stacked = !!opts.stacked || hasSecondary;
+      var confirmValue = hasSecondary ? "confirm" : true;
 
       var backdrop = document.createElement("div");
       backdrop.className = "studio__modal-backdrop";
@@ -90,12 +96,21 @@
       modal.setAttribute("aria-describedby", p.id);
 
       var actions = document.createElement("div");
-      actions.className = "studio__modal-actions";
+      actions.className =
+        "studio__modal-actions" + (stacked ? " studio__modal-actions--stacked" : "");
 
       var cancelBtn = document.createElement("button");
       cancelBtn.type = "button";
       cancelBtn.className = "studio__btn studio__btn--ghost studio__btn--sm";
       cancelBtn.textContent = opts.cancelText || "取消";
+
+      var secondaryBtn = null;
+      if (hasSecondary) {
+        secondaryBtn = document.createElement("button");
+        secondaryBtn.type = "button";
+        secondaryBtn.className = "studio__btn studio__btn--secondary studio__btn--sm";
+        secondaryBtn.textContent = opts.secondaryText;
+      }
 
       var confirmBtn = document.createElement("button");
       confirmBtn.type = "button";
@@ -103,8 +118,14 @@
         + (isDanger ? "studio__btn--danger" : "studio__btn--primary");
       confirmBtn.textContent = opts.confirmText || "确定";
 
-      actions.appendChild(cancelBtn);
-      actions.appendChild(confirmBtn);
+      if (stacked) {
+        actions.appendChild(confirmBtn);
+        if (secondaryBtn) actions.appendChild(secondaryBtn);
+        actions.appendChild(cancelBtn);
+      } else {
+        actions.appendChild(cancelBtn);
+        actions.appendChild(confirmBtn);
+      }
       modal.appendChild(h);
       modal.appendChild(p);
       modal.appendChild(actions);
@@ -133,7 +154,10 @@
       }
 
       cancelBtn.addEventListener("click", function () { cleanup(false); });
-      confirmBtn.addEventListener("click", function () { cleanup(true); });
+      confirmBtn.addEventListener("click", function () { cleanup(confirmValue); });
+      if (secondaryBtn) {
+        secondaryBtn.addEventListener("click", function () { cleanup("secondary"); });
+      }
       backdrop.addEventListener("click", function (e) {
         if (e.target === backdrop) cleanup(false);
       });

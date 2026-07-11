@@ -54,6 +54,16 @@
   justify-content: flex-end;
 }
 
+.studio__modal-actions--stacked {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.studio__modal-actions--stacked .studio__btn {
+  width: 100%;
+}
+
 .studio__btn {
   display: inline-flex;
   align-items: center;
@@ -76,12 +86,24 @@
 }
 
 .studio__btn--ghost {
+  background: transparent;
+  color: rgba(20, 17, 13, .62);
+  border-color: transparent;
+  font-weight: 500;
+}
+
+.studio__btn--ghost:hover:not(:disabled) {
+  background: rgba(20, 17, 13, .04);
+  color: #14110d;
+}
+
+.studio__btn--secondary {
   background: #fff;
   color: #14110d;
   border-color: rgba(20, 17, 13, .18);
 }
 
-.studio__btn--ghost:hover:not(:disabled) {
+.studio__btn--secondary:hover:not(:disabled) {
   background: rgba(20, 17, 13, .04);
 }
 

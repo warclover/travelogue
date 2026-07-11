@@ -472,3 +472,38 @@ def test_v3_mobile_keeps_bottom_sheet(tmp_path: Path) -> None:
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
+    """PRD-PREVIEW-REFINE-V1 · P0 MF-01～06 静态门禁。"""
+    dock = (STUDIO / "preview-toolbar" / "dock.js").read_text(encoding="utf-8")
+    bootstrap = (STUDIO / "preview-toolbar" / "bootstrap.js").read_text(encoding="utf-8")
+    longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    core = (STUDIO / "preview-toolbar" / "core.js").read_text(encoding="utf-8")
+    sheet = SHEET_JS.read_text(encoding="utf-8")
+    task_dock = TASK_DOCK_JS.read_text(encoding="utf-8")
+    modal = (STUDIO / "studio-modal.js").read_text(encoding="utf-8")
+    home = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
+
+    assert 'case "refine":' in dock
+    assert 'dockIconSvg("refine")' in bootstrap
+    assert 'aria-label="精修"' in bootstrap
+    assert "版面尚未更新" in longshot
+    assert "更新并导出" in longshot
+    assert "仅更新版面" in longshot
+    assert "_getLayoutPending()" in longshot
+    assert "consumeExportAfterLayout" in longshot
+    assert "版面有更新" in core
+    assert "正在更新版面" in core
+    assert "有编辑尚未应用排版" not in core
+    assert "应用排版" not in task_dock
+    assert "更新版面" in task_dock
+    assert "版面有更新" in task_dock
+    assert ">精修<" in sheet or 'preview-sheet__title">精修' in sheet
+    assert "改精选或拼图后，请点「更新版面」。" in sheet
+    assert "secondaryText" in modal
+    assert "studio__modal-actions--stacked" in modal
+    assert "导入偏好" in home
+    assert "工作台设置" not in home
+    assert "编辑与设置" not in bootstrap
+    assert "编辑与设置" not in sheet

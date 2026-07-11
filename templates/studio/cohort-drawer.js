@@ -94,7 +94,7 @@ export function mountCohortDrawer(opts) {
     '<button type="button" class="preview-drawer__ghost cohort-drawer__refresh-only">仅重新识别</button>' +
     '<button type="button" class="preview-drawer__primary cohort-drawer__save">保存种子并识别</button>' +
     "</div>" +
-    '<button type="button" class="preview-drawer__ghost cohort-drawer__save-layout" hidden>保存并应用排版</button>';
+    '<button type="button" class="preview-drawer__ghost cohort-drawer__save-layout" hidden>保存并更新版面</button>';
 
   var statusEl = bodyEl.querySelector(".cohort-drawer__status");
   var subjectsRoot = bodyEl.querySelector(".cohort-drawer__subjects");
@@ -319,7 +319,7 @@ export function mountCohortDrawer(opts) {
         state.subjects = normalizeSubjects(res.body.featuredSubjects);
         updateStatus(state.data);
         rerender();
-        showToast(thenLayout ? "已识别，正在应用排版…" : "同框标记已更新");
+        showToast(thenLayout ? "已识别，正在更新版面…" : "同框标记已更新");
         if (typeof opts.onEntryRefresh === "function") {
           opts.onEntryRefresh();
         }

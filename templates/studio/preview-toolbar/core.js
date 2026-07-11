@@ -118,7 +118,7 @@ export function refreshTaskDockState(root) {
     }
     if (_layoutPending && !_pendingDockDismissed) {
       root._taskDock.showPending({
-        title: _layoutPendingMessage || "有编辑尚未应用排版",
+        title: _layoutPendingMessage || "版面有更新",
       });
       return;
     }
@@ -266,7 +266,7 @@ export function applyLayoutRerender(tripId, root) {
       btn.disabled = true;
     });
     if (pendingBtn) pendingBtn.disabled = true;
-    showToolbarToast("正在应用排版…", { duration: 3000 });
+    showToolbarToast("正在更新版面…", { duration: 3000 });
     return postJson(tripApiBase(tripId) + "/rerender", {})
       .then(function (res) {
         applyBtns.forEach(function (btn) {
@@ -274,7 +274,7 @@ export function applyLayoutRerender(tripId, root) {
         });
         if (pendingBtn) pendingBtn.disabled = false;
         if (res.status !== 200 || !res.body.ok) {
-          showToolbarToast((res.body && res.body.error) || "排版失败", { error: true });
+          showToolbarToast((res.body && res.body.error) || "更新版面失败", { error: true });
           setLayoutPending(true);
           return false;
         }
@@ -287,7 +287,7 @@ export function applyLayoutRerender(tripId, root) {
           btn.disabled = false;
         });
         if (pendingBtn) pendingBtn.disabled = false;
-        showToolbarToast("排版失败", { error: true });
+        showToolbarToast("更新版面失败", { error: true });
         setLayoutPending(true);
         return false;
       });

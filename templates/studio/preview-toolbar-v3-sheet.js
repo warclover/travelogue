@@ -21,7 +21,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     '<div class="preview-sheet" role="dialog" aria-modal="true" aria-labelledby="preview-sheet-title" hidden>' +
     '<div class="preview-sheet__grab" aria-hidden="true"></div>' +
     '<div class="preview-sheet__head">' +
-    '<h2 id="preview-sheet-title" class="preview-sheet__title">编辑与设置</h2>' +
+    '<h2 id="preview-sheet-title" class="preview-sheet__title">精修</h2>' +
     '<button type="button" class="preview-sheet__close" aria-label="关闭">×</button>' +
     "</div>" +
     '<div class="preview-sheet__content">' +
@@ -317,11 +317,12 @@ export function mountPreviewUnifiedSheet(root, hooks) {
 
   function renderLayoutPanel() {
     bodyEl.innerHTML =
-      '<p class="preview-sheet__hint preview-sheet__hint--lead">封面版式保存后立即在预览中生效。模板策略保存后会自动重渲染。拼图改判、精选与旅行主角设置需点「应用排版」。</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--lead">封面版式保存后立即在预览中生效。模板策略保存后会自动重渲染。拼图改判、精选与旅行主角设置需点「更新版面」。</p>' +
       '<div class="preview-sheet__cover-slot"></div>' +
       '<div class="preview-sheet__template-slot"></div>' +
       '<div class="preview-sheet__embed"></div>' +
-      '<button type="button" class="preview-sheet__primary preview-sheet__apply-layout" hidden>应用排版</button>';
+      '<button type="button" class="preview-sheet__primary preview-sheet__apply-layout" hidden>更新版面</button>' +
+      '<p class="preview-sheet__footnote">改精选或拼图后，请点「更新版面」。</p>';
 
     var coverSlot = bodyEl.querySelector(".preview-sheet__cover-slot");
     if (coverSlot && typeof hooks.mountCoverStyleControls === "function") {

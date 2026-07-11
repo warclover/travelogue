@@ -36,6 +36,7 @@ import {
   syncLongshotCtaLabel,
   openLongshotExportOptions,
   refreshLongshotExportMeta,
+  consumeExportAfterLayout,
 } from "./longshot.js";
 import {
   tripIdFromPath,
@@ -87,7 +88,7 @@ import {
 } from "./features.js";
 
 var READER_VIEW_KEY = "travelogue.studio.readerView";
-var SHEET_HINT_KEY = "travelogue.studio.previewSheet.hintSeen";
+var EXPORT_HINT_KEY = "travelogue.studio.exportHintSeen";
 
 export function initToolbarV3(root, tripId) {
   registerLongshotBridge({
@@ -103,6 +104,7 @@ export function initToolbarV3(root, tripId) {
     toolbarBody: toolbarBody,
     setLayoutPending: setLayoutPending,
     setLayoutPendingMessage: setLayoutPendingMessage,
+    applyLayoutRerender: applyLayoutRerender,
   });
   registerDrawersBridge({
     fetchEntry: fetchEntry,
@@ -161,12 +163,6 @@ export function initToolbarV3(root, tripId) {
   }
 
   var cohortEnabled = false;
-  var menuBtn = root.querySelector(".preview-toolbar__menu-btn");
-  try {
-    if (menuBtn && !sessionStorage.getItem(SHEET_HINT_KEY)) {
-      menuBtn.classList.add("preview-toolbar__menu-btn--pulse");
-    }
-  } catch (eHint) {}
 
   var sheetHooks = {
     drawers: drawers,
@@ -190,10 +186,7 @@ export function initToolbarV3(root, tripId) {
       }
     },
     onSheetOpened: function () {
-      try {
-        sessionStorage.setItem(SHEET_HINT_KEY, "1");
-      } catch (eOpen) {}
-      if (menuBtn) menuBtn.classList.remove("preview-toolbar__menu-btn--pulse");
+      // 首访脉冲已改打导出；打开精修不再消费导出提示
     },
     syncLongshotPrefsUi: syncLongshotPrefsUi,
     syncReaderModeUi: syncReaderModeUi,
@@ -408,7 +401,18 @@ export function initToolbarV3(root, tripId) {
   syncLongshotCtaLabel(root);
   refreshLongshotExportMeta(root);
 
+  try {
+    if (longshotBtn && !sessionStorage.getItem(EXPORT_HINT_KEY)) {
+      longshotBtn.classList.add("preview-toolbar__dock-btn--pulse");
+    }
+  } catch (eExportHint) {}
+
   longshotBtn.addEventListener("click", function () {
+    try {
+      sessionStorage.setItem(EXPORT_HINT_KEY, "1");
+    } catch (eSeen) {}
+    longshotBtn.classList.remove("preview-toolbar__dock-btn--pulse");
+    longshotBtn.classList.remove("preview-toolbar__menu-btn--pulse");
     startLongshot(root, tripId);
   });
   caretBtn.addEventListener("click", function (e) {
@@ -443,4 +447,9 @@ export function initToolbarV3(root, tripId) {
 
   maybeShowCoverOpeningStyleToast(tripId);
   syncToolbarHeight(root);
+
+  // 「更新并导出」：版面刷新后自动续导出
+  requestAnimationFrame(function () {
+    consumeExportAfterLayout(root, tripId);
+  });
 }

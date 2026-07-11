@@ -340,7 +340,7 @@ html[data-preview-toolbar="on"] .longshot-export-sheet__note--bridge {
   }
 }
 
-/* ── 第二行 · 待应用排版 ── */
+/* ── 第二行 · 待更新版面 ── */
 .preview-toolbar__pending-row {
   pointer-events: auto;
   padding: 6px 14px;
