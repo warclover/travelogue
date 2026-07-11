@@ -3,9 +3,23 @@
 | 属性 | 内容 |
 |------|------|
 | **对应 PRD** | [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) v1.2.0 |
-| **分支** | `feat/preview-refine-v1-p0` · `feat/preview-refine-v1-p1` · `feat/preview-refine-v1-p2` |
-| **范围** | **P0 第一拍**（D-REF-17 · M1 + M2 + MF-01～06） |
+| **分支** | `feat/preview-refine-v1-p0` · `p1` · `p2`（均已推送） |
+| **范围** | M1～M6 代码已落地；本轮收口：D-REF-13 / SF 线框 / 验收文档 |
 | **更新日期** | 2026-07-11 |
+
+## 对照 PRD · 剩余清单（执行序）
+
+| 序 | ID | 项 | 类型 | 状态 |
+|----|-----|-----|------|------|
+| 1 | **D-REF-13** | 「按新意图重写文案」文案 + 二次确认 + busy 防连点 | 代码 | ✅ |
+| 2 | **SF-01** | 线框补「这页」封面/封底空态帧 | 线框 | ✅ Tab ⑪ |
+| 3 | **SF-03** | 线框拦截 Modal 主/次/幽灵层级对齐 §4.3.1 | 线框 | ✅ |
+| 4 | **SF-04** | 线框补 P0 过渡态半页（历史说明） | 线框 | ✅ Tab ⑫ |
+| 5 | **ACCEPTANCE** | 撰写 `ACCEPTANCE-PREVIEW-REFINE-V1.md` | 文档 | ✅ |
+| 6 | **SF-02** | 5 人图标盲测 | 人工 | ⏸ 验收签字栏 |
+| 7 | **OQ-REF-03** | 阅读视图是否上 Dock | 产品拍板 | ⏸ Park（PK-03） |
+
+**Park（本主题不做）**：PK-01 章标题 inline · PK-02 trip.json 乐观锁 · PK-04 放映移出 Dock
 
 ## P2 任务表（M5 / M6 · 不阻塞发布）
 
@@ -67,8 +81,6 @@
 | 首页 | `studio-home-v2.html` · `homepage-v2/settings-panel.js` |
 | 回归测 | `tests/unit/web/test_preview_toolbar_v3.py` · home/ux markers |
 
-## P1（本拍不做）
+## P1（已完成 · 历史备注）
 
-- 三区 IA（这页 / 这本 / 导出与更多）
-- G1 顶栏横幅完整体验
-- 章标题 inline · trip.json 乐观锁 · 阅读视图上 Dock · 放映移出 Dock
+原「本拍不做」项已在 P1 落地：三区 IA、G1 横幅。仍 Park：章标题 inline · trip.json 乐观锁 · 阅读视图上 Dock · 放映移出 Dock。

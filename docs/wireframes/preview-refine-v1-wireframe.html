@@ -326,6 +326,12 @@
     .modal .btns .primary {
       background: var(--accent); border-color: var(--accent); color: #fff;
     }
+    .modal .btns .secondary {
+      background: #fff; border-color: #b0bec5; color: #263238; font-weight: 600;
+    }
+    .modal .btns .ghost {
+      background: transparent; border-color: transparent; color: #78909c; font-weight: 500;
+    }
 
     .export-pop {
       position: absolute; top: 56px; right: 14px; z-index: 35;
@@ -432,6 +438,8 @@
       <button type="button" data-panel="compare">⑧ 对照表</button>
       <button type="button" data-panel="rules">⑨ 规范</button>
       <button type="button" data-panel="icons">⑩ 图标</button>
+      <button type="button" data-panel="empty">⑪ 这页空态</button>
+      <button type="button" data-panel="transition">⑫ P0 过渡</button>
     </nav>
   </div>
 
@@ -756,8 +764,8 @@
               <p>你改过精选或拼图，导出前需先更新版面，否则长图仍是旧版。</p>
               <div class="btns">
                 <button type="button" class="primary">更新并导出</button>
-                <button type="button">仅更新版面</button>
-                <button type="button">取消</button>
+                <button type="button" class="secondary">仅更新版面</button>
+                <button type="button" class="ghost">取消</button>
               </div>
             </div>
           </div>
@@ -1016,6 +1024,92 @@
             </div>
           </div>
           <p style="text-align:center;color:rgba(255,255,255,.75);font-size:12px;margin-top:20px">返回 · 放映 · 精修 · 长图▾</p>
+        </div>
+      </section>
+
+      <!-- ⑪ 这页空态 SF-01 -->
+      <section class="panel" id="panel-empty">
+        <div class="sec">
+          <h2>⑪ 这页空态 · 封面/封底 <span class="tag tag--p0">SF-01</span></h2>
+          <p class="lead">当前屏是封面或封底时，「这页」不可空白：说明 + 引导去「这本」。</p>
+        </div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab"><span class="browser__ico"></span> 精修 · 这页 · 封面空态</div>
+        </div>
+        <div class="frame" style="background:#e8efe9;min-height:420px">
+          <div class="scrim" style="position:relative;min-height:420px;justify-content:flex-end">
+            <div class="sheet" role="dialog" aria-label="精修">
+              <div class="sheet__head">
+                <div>
+                  <h3>精修</h3>
+                  <div class="sub">封面</div>
+                </div>
+                <button type="button" class="sheet__close" aria-label="关闭">×</button>
+              </div>
+              <nav class="sheet__tabs" role="tablist">
+                <button type="button" class="is-active">这页</button>
+                <button type="button">这本</button>
+                <button type="button">导出与更多</button>
+              </nav>
+              <div class="sheet__body">
+                <p class="hint" style="margin:0 0 8px;font-size:14px;color:#263238;font-weight:600">滚动到正文屏可调整本页</p>
+                <p class="hint">当前是封面，本页精修暂不可用。</p>
+                <button type="button" class="primary" style="margin-top:8px">去「这本」</button>
+                <p class="hint" style="margin-top:10px">杂志名、封面版式、章意图在「这本」里改。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout--rec" style="margin-top:12px">
+          <h3>规格</h3>
+          <ul>
+            <li>禁止空白 Sheet 无说明</li>
+            <li>主链：去「这本」</li>
+            <li>封底同理</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ⑫ P0 过渡 SF-04 -->
+      <section class="panel" id="panel-transition">
+        <div class="sec">
+          <h2>⑫ P0 过渡态（历史） <span class="tag tag--p0">SF-04</span></h2>
+          <p class="lead">第一拍曾保留四 Tab，但壳层已是「精修」+「更新版面」脚注。P1 起已切三区；本帧留作发布说明。</p>
+        </div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab"><span class="browser__ico"></span> P0 · 精修仍四 Tab</div>
+        </div>
+        <div class="frame" style="background:#f5f7f6;min-height:360px">
+          <div class="scrim" style="position:relative;min-height:360px;justify-content:flex-end">
+            <div class="sheet" role="dialog" aria-label="精修">
+              <div class="sheet__head">
+                <div><h3>精修</h3><div class="sub">过渡期</div></div>
+                <button type="button" class="sheet__close" aria-label="关闭">×</button>
+              </div>
+              <nav class="sheet__tabs" role="tablist">
+                <button type="button" class="is-active">文字</button>
+                <button type="button">结构</button>
+                <button type="button">排版</button>
+                <button type="button">高级</button>
+              </nav>
+              <div class="sheet__body">
+                <p class="hint">标题已是「精修」；Tab 暂留旧名。</p>
+                <div class="hint" style="background:#fff8e1;border:1px solid #ffe082;padding:8px 10px;border-radius:8px;margin-top:10px">
+                  改精选或拼图后，请点「更新版面」。
+                </div>
+                <button type="button" class="primary" style="margin-top:12px">更新版面</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout--warn" style="margin-top:12px">
+          <h3>现状</h3>
+          <ul>
+            <li>P1 已切换为「这页 / 这本 / 导出与更多」</li>
+            <li>本帧仅作评审/发布对照，不再作为开发目标</li>
+          </ul>
         </div>
       </section>
     </main>

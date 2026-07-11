@@ -44,7 +44,7 @@ var _currentChapterId = function () {
 };
 var _markSheetEditBaseline = function (_root, _panel) {};
 var _wireSheetEditDirty = function (_root, _panel) {};
-var _startLlmNarrate = function (_root, _tripId, _btn) {};
+var _startLlmNarrate = function (_root, _tripId, _btn, _opts) {};
 /** @type {function(string, Element=): Promise<void>} */
 var _applyLayoutRerender = function (_tripId, _root) {
   return Promise.resolve();
@@ -385,10 +385,10 @@ export function initPreviewDrawers(root, tripId) {
       '<p class="preview-drawer__hint preview-drawer__copy-intent-hint">可选填；有语音素材时会优先用原声</p>' +
       '<p class="preview-drawer__hint preview-drawer__copy-intent-voice-skip" hidden>本章有录音，已优先用原声，无需填写意图</p>' +
       "</details>" +
+      '<button type="button" class="preview-drawer__primary preview-drawer__narrate-anchors">按新意图重写文案</button>' +
       '<p class="preview-drawer__featured-help">★ 在任意一屏右下角可将照片标为精选，之后点「更新版面」生效</p>' +
       '<p class="preview-drawer__featured-help">拼图/整图屏左上角可改判媒资类型（普通照片 ↔ 拼图），改后请更新版面</p>' +
-      '<p class="preview-drawer__footnote">改精选或拼图后，请点「更新版面」。</p>' +
-      '<button type="button" class="preview-drawer__ghost preview-drawer__narrate-anchors">保存并重新生成文案</button>';
+      '<p class="preview-drawer__footnote">改精选或拼图后，请点「更新版面」。</p>';
 
     var structTpl =
       '<div class="preview-drawer__g1"></div>' +
@@ -783,10 +783,28 @@ export function initPreviewDrawers(root, tripId) {
         if (narrateAnchorsBtn) {
           narrateAnchorsBtn.addEventListener("click", function () {
             var btn = this;
-            persistEditDrawer(btn, { skipToast: true }).then(function (ok) {
+            if (btn.disabled) return;
+            // D-REF-13 · 二次确认；确认后 busy，完成前不可连点
+            toolbarConfirm({
+              title: "按新意图重写文案",
+              body: "将按当前锚点与章意图重新生成文案，可能覆盖未锁定的内容。继续？",
+              confirmText: "重写",
+            }).then(function (ok) {
               if (!ok) return;
-              closeDrawer();
-              _startLlmNarrate(root, tripId, btn);
+              btn.disabled = true;
+              btn.dataset.labelIdle = "按新意图重写文案";
+              btn.textContent = "正在重写…";
+              return persistEditDrawer(btn, { skipToast: true }).then(function (saved) {
+                if (!saved) {
+                  btn.disabled = false;
+                  btn.textContent = btn.dataset.labelIdle;
+                  return;
+                }
+                return _startLlmNarrate(root, tripId, btn, {
+                  skipConfirm: true,
+                  busyHint: "正在按新意图重写文案…",
+                });
+              });
             });
           });
         }

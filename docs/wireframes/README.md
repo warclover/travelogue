@@ -22,7 +22,7 @@
 
 双击 HTML 文件，或用浏览器打开。
 
-**精修体验 V1 评审 Tab**：**① 诊断** · **② 验货默认** · **③ 精修·这页** · **④ 精修·这本** · **⑤ 更新版面/拦截** · **⑥ G1 横幅** · **⑦ 导入偏好** · **⑧ 对照表** · **⑨ 规范** · **⑩ 图标** · PRD：[PRD-PREVIEW-REFINE-V1.md](../PRD-PREVIEW-REFINE-V1.md) **v1.1** · 评审记录：[preview-refine-v1-review-2026-07-11.md](../acceptance-records/preview-refine-v1-review-2026-07-11.md)
+**精修体验 V1 评审 Tab**：**① 诊断** · **② 验货默认** · **③ 精修·这页** · **④ 精修·这本** · **⑤ 更新版面/拦截** · **⑥ G1 横幅** · **⑦ 导入偏好** · **⑧ 对照表** · **⑨ 规范** · **⑩ 图标** · **⑪ 这页空态** · **⑫ P0 过渡** · PRD：[PRD-PREVIEW-REFINE-V1.md](../PRD-PREVIEW-REFINE-V1.md) **v1.2** · 验收：[ACCEPTANCE-PREVIEW-REFINE-V1.md](../ACCEPTANCE-PREVIEW-REFINE-V1.md) · 评审记录：[preview-refine-v1-review-2026-07-11.md](../acceptance-records/preview-refine-v1-review-2026-07-11.md)
 
 **output-first v1.6 评审 Tab（M20）**：**Web·空态** · **iPad·横屏** · **Import Sheet** · **Web·导入中** · **Web·书架** · PRD：[PRD-STUDIO-HOMEPAGE-v2.md](../PRD-STUDIO-HOMEPAGE-v2.md) **v2.0.3** · 契约：[studio-homepage-v2/](../studio-homepage-v2/README.md) · Mobile Tab 非 Studio Web 范围
 

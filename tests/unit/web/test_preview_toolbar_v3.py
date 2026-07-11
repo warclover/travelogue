@@ -533,6 +533,17 @@ def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
     assert 'label: "高级"' not in sheet
 
 
+def test_preview_refine_v1_d_ref_13_rewrite_copy() -> None:
+    """D-REF-13 · 按新意图重写：文案 + 二次确认 + busy。"""
+    drawers = (STUDIO / "preview-toolbar" / "drawers.js").read_text(encoding="utf-8")
+    core = (STUDIO / "preview-toolbar" / "core.js").read_text(encoding="utf-8")
+    assert "按新意图重写文案" in drawers
+    assert "正在重写…" in drawers
+    assert "skipConfirm: true" in drawers
+    assert "保存并重新生成文案" not in drawers
+    assert "opts.skipConfirm" in core or "skipConfirm" in core
+
+
 def test_preview_refine_v1_p2_feedback_and_cohort_gate() -> None:
     """PRD-PREVIEW-REFINE-V1 · P2 M5 inline ✓ + M6 cohort 藏入口。"""
     inline_js = (ROOT / "templates" / "visual-journal" / "inline-edit.js").read_text(
