@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from collections.abc import Callable
 from copy import deepcopy
 from pathlib import Path
@@ -363,6 +364,9 @@ def _chat_for_brief(
     regenerate: bool,
     chat_fn: Callable[[list[dict[str, str]]], str] | None,
     messages: list[dict[str, str]],
+    stats: dict[str, int] | None = None,
+    stats_lock: Any | None = None,
+    shared_backoff: bool = False,
 ) -> str:
     if cache_dir and not regenerate:
         cached = read_cached(
@@ -373,11 +377,29 @@ def _chat_for_brief(
             brief=brief,
         )
         if cached is not None:
+            if stats is not None:
+                if stats_lock is not None:
+                    with stats_lock:
+                        stats["narrateCacheHits"] = stats.get("narrateCacheHits", 0) + 1
+                else:
+                    stats["narrateCacheHits"] = stats.get("narrateCacheHits", 0) + 1
             return json.dumps(cached, ensure_ascii=False)
+    if stats is not None:
+        if stats_lock is not None:
+            with stats_lock:
+                stats["narrateCacheMisses"] = stats.get("narrateCacheMisses", 0) + 1
+        else:
+            stats["narrateCacheMisses"] = stats.get("narrateCacheMisses", 0) + 1
     if chat_fn is not None:
+        if shared_backoff:
+            from travelogue.llm.shared_backoff import get_shared_backoff
+
+            get_shared_backoff().wait_turn()
         content = chat_fn(messages)
     else:
-        content = chat_completion(messages, provider=provider)
+        content = chat_completion(
+            messages, provider=provider, shared_backoff=shared_backoff
+        )
     if cache_dir:
         try:
             payload = parse_json_content(content)
@@ -392,6 +414,317 @@ def _chat_for_brief(
         except NarrateError:
             pass
     return content
+
+
+def _merge_narrate_timings(trip: dict, stats: dict[str, int]) -> None:
+    pipe = trip.setdefault("pipeline", {})
+    timings = dict(pipe.get("timings") or {})
+    for key in (
+        "narrateConcurrency",
+        "narrateCacheHits",
+        "narrateCacheMisses",
+        "narrateProviderBackoffCount",
+    ):
+        if key in stats:
+            timings[key] = stats[key]
+    pipe["timings"] = timings
+
+
+def _fetch_chapter_payload(
+    *,
+    trip: dict,
+    ch_idx: int,
+    brief: dict[str, Any],
+    ch_id: str,
+    provider: str,
+    rt_model: str,
+    cache_dir: Path | None,
+    regenerate: bool,
+    chat_fn: Callable[[list[dict[str, str]]], str] | None,
+    max_retries: int,
+    stats: dict[str, int],
+    stats_lock: Any | None,
+    shared_backoff: bool,
+    fix_errors: list[str] | None = None,
+) -> dict[str, Any]:
+    """Chat + parse + chapterId check (no trip mutate). Raises NarrateError when exhausted."""
+    errors = fix_errors
+    for attempt in range(max_retries + 1):
+        prompt = _chapter_user_prompt(brief, fix_errors=errors)
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": prompt},
+        ]
+        content = _chat_for_brief(
+            brief,
+            scope=f"chapter-{ch_id}",
+            provider=provider,
+            model=rt_model,
+            cache_dir=cache_dir,
+            regenerate=regenerate,
+            chat_fn=chat_fn,
+            messages=messages,
+            stats=stats,
+            stats_lock=stats_lock,
+            shared_backoff=shared_backoff,
+        )
+        payload = parse_json_content(content)
+        if payload.get("chapterId") and payload.get("chapterId") != ch_id:
+            if attempt >= max_retries:
+                raise NarrateError(
+                    "E_NARRATE_PARSE",
+                    f"chapterId mismatch: {payload.get('chapterId')}",
+                )
+            errors = [f"chapterId must be {ch_id!r}"]
+            continue
+        return payload
+    raise NarrateError("E_NARRATE_RETRY_EXHAUSTED", "chapter payload fetch failed")
+
+
+def _apply_chapter_with_validation(
+    trip: dict,
+    *,
+    ch_idx: int,
+    payload: dict[str, Any],
+    lead_seen: set[str],
+    regenerate: bool,
+    scope_val: str,
+    tone_val: str,
+    app_cfg: AppConfig,
+    brief: dict[str, Any],
+    ch_id: str,
+    provider: str,
+    rt_model: str,
+    cache_dir: Path | None,
+    chat_fn: Callable[[list[dict[str, str]]], str] | None,
+    max_retries: int,
+    stats: dict[str, int],
+    stats_lock: Any | None,
+    shared_backoff: bool,
+) -> list[str]:
+    """Apply payload; on validation failure re-fetch with fix_errors (serial)."""
+    last_payload: dict[str, Any] | None = payload
+    fix_errors: list[str] | None = None
+    working = payload
+    for attempt in range(max_retries + 1):
+        chapter = trip["chapters"][ch_idx]
+        if attempt > 0:
+            working = _fetch_chapter_payload(
+                trip=trip,
+                ch_idx=ch_idx,
+                brief=brief,
+                ch_id=ch_id,
+                provider=provider,
+                rt_model=rt_model,
+                cache_dir=cache_dir,
+                regenerate=regenerate,
+                chat_fn=chat_fn,
+                max_retries=max_retries,
+                stats=stats,
+                stats_lock=stats_lock,
+                shared_backoff=shared_backoff,
+                fix_errors=fix_errors,
+            )
+            last_payload = working
+        before = deepcopy(trip)
+        batch = _apply_chapter_payload(
+            trip,
+            chapter,
+            working,
+            lead_seen=lead_seen,
+            regenerate=regenerate,
+            scope=scope_val,
+        )
+        errs = _narrative_field_errors(trip, chapter_index=ch_idx, cfg=app_cfg)
+        if not errs:
+            return batch
+        trip.clear()
+        trip.update(before)
+        if attempt >= max_retries:
+            if any("VR-N04" in e for e in errs) and last_payload is not None:
+                chapter = trip["chapters"][ch_idx]
+                batch = _apply_chapter_payload(
+                    trip,
+                    chapter,
+                    last_payload,
+                    lead_seen=lead_seen,
+                    regenerate=regenerate,
+                    scope=scope_val,
+                )
+                chapter["lead"] = _stub_lead_for_chapter(
+                    trip, chapter, tone=tone_val, lead_seen=lead_seen
+                )
+                idx = chapter.get("index")
+                if f"chapters[{idx}].lead" not in batch:
+                    batch.append(f"chapters[{idx}].lead")
+                stub_errs = _narrative_field_errors(trip, chapter_index=ch_idx, cfg=app_cfg)
+                if not stub_errs:
+                    return batch
+            raise NarrateError("E_NARRATE_RETRY_EXHAUSTED", "; ".join(errs[:3]))
+        fix_errors = errs
+    raise NarrateError("E_NARRATE_RETRY_EXHAUSTED", "chapter apply failed")
+
+
+def _narrate_chapters_serial(
+    trip: dict,
+    *,
+    chapter_indices: list[int],
+    tone_val: str,
+    scope_val: str,
+    regenerate: bool,
+    provider: str,
+    rt_model: str,
+    cache_dir: Path | None,
+    chat_fn: Callable[[list[dict[str, str]]], str] | None,
+    max_retries: int,
+    app_cfg: AppConfig,
+    lead_seen: set[str],
+    stats: dict[str, int],
+    stats_lock: Any | None,
+    shared_backoff: bool,
+) -> list[str]:
+    updated: list[str] = []
+    for ch_idx in chapter_indices:
+        chapter = trip["chapters"][ch_idx]
+        brief = build_chapter_brief(
+            trip, chapter, tone=tone_val, regenerate=regenerate, scope=scope_val
+        )
+        ch_id = brief["chapter"]["id"]
+        payload = _fetch_chapter_payload(
+            trip=trip,
+            ch_idx=ch_idx,
+            brief=brief,
+            ch_id=ch_id,
+            provider=provider,
+            rt_model=rt_model,
+            cache_dir=cache_dir,
+            regenerate=regenerate,
+            chat_fn=chat_fn,
+            max_retries=max_retries,
+            stats=stats,
+            stats_lock=stats_lock,
+            shared_backoff=shared_backoff,
+        )
+        batch = _apply_chapter_with_validation(
+            trip,
+            ch_idx=ch_idx,
+            payload=payload,
+            lead_seen=lead_seen,
+            regenerate=regenerate,
+            scope_val=scope_val,
+            tone_val=tone_val,
+            app_cfg=app_cfg,
+            brief=brief,
+            ch_id=ch_id,
+            provider=provider,
+            rt_model=rt_model,
+            cache_dir=cache_dir,
+            chat_fn=chat_fn,
+            max_retries=max_retries,
+            stats=stats,
+            stats_lock=stats_lock,
+            shared_backoff=shared_backoff,
+        )
+        updated.extend(batch)
+    return updated
+
+
+def _narrate_chapters_concurrent(
+    trip: dict,
+    *,
+    chapter_indices: list[int],
+    concurrency: int,
+    tone_val: str,
+    scope_val: str,
+    regenerate: bool,
+    provider: str,
+    rt_model: str,
+    cache_dir: Path | None,
+    chat_fn: Callable[[list[dict[str, str]]], str] | None,
+    max_retries: int,
+    app_cfg: AppConfig,
+    lead_seen: set[str],
+    stats: dict[str, int],
+    stats_lock: Any | None,
+    shared_backoff: bool,
+) -> list[str]:
+    """Fetch chapter payloads concurrently; apply in chapter-index ascending order."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    briefs: dict[int, dict[str, Any]] = {}
+    for ch_idx in chapter_indices:
+        chapter = trip["chapters"][ch_idx]
+        briefs[ch_idx] = build_chapter_brief(
+            trip, chapter, tone=tone_val, regenerate=regenerate, scope=scope_val
+        )
+
+    payloads: dict[int, dict[str, Any]] = {}
+    errors: dict[int, BaseException] = {}
+
+    def _job(ch_idx: int) -> tuple[int, dict[str, Any]]:
+        brief = briefs[ch_idx]
+        ch_id = brief["chapter"]["id"]
+        payload = _fetch_chapter_payload(
+            trip=trip,
+            ch_idx=ch_idx,
+            brief=brief,
+            ch_id=ch_id,
+            provider=provider,
+            rt_model=rt_model,
+            cache_dir=cache_dir,
+            regenerate=regenerate,
+            chat_fn=chat_fn,
+            max_retries=max_retries,
+            stats=stats,
+            stats_lock=stats_lock,
+            shared_backoff=shared_backoff,
+        )
+        return ch_idx, payload
+
+    workers = max(1, min(concurrency, len(chapter_indices)))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(_job, idx): idx for idx in chapter_indices}
+        for fut in as_completed(futures):
+            idx = futures[fut]
+            try:
+                ch_idx, payload = fut.result()
+                payloads[ch_idx] = payload
+            except BaseException as exc:  # noqa: BLE001 — collect then fail whole narrate
+                errors[idx] = exc
+
+    if errors:
+        # Preserve whole-segment failure semantics (D-PT-06).
+        first = errors[min(errors)]
+        if isinstance(first, NarrateError):
+            raise first
+        raise NarrateError("E_NARRATE_RETRY_EXHAUSTED", str(first)) from first
+
+    updated: list[str] = []
+    for ch_idx in sorted(chapter_indices):
+        brief = briefs[ch_idx]
+        ch_id = brief["chapter"]["id"]
+        batch = _apply_chapter_with_validation(
+            trip,
+            ch_idx=ch_idx,
+            payload=payloads[ch_idx],
+            lead_seen=lead_seen,
+            regenerate=regenerate,
+            scope_val=scope_val,
+            tone_val=tone_val,
+            app_cfg=app_cfg,
+            brief=brief,
+            ch_id=ch_id,
+            provider=provider,
+            rt_model=rt_model,
+            cache_dir=cache_dir,
+            chat_fn=chat_fn,
+            max_retries=max_retries,
+            stats=stats,
+            stats_lock=stats_lock,
+            shared_backoff=shared_backoff,
+        )
+        updated.extend(batch)
+    return updated
 
 
 def run_llm_narrate(
@@ -413,7 +746,12 @@ def run_llm_narrate(
     Prefer ``run_narrate`` as the entry point: it runs scope cleanup and writes
     ``curation.narrativeScope``. This function only persists ``narrativeScope``
     (no cleanup) when ``dry_run`` is false.
+
+    Chapter LLM calls may run concurrently when ``llm.narrate_concurrency > 1``;
+    payloads are always applied in chapter-index order (lead_seen).
     """
+    from travelogue.llm.shared_backoff import get_shared_backoff
+
     scope_val = resolve_narrative_scope(override=scope, cfg=cfg)
     if not dry_run:
         trip.setdefault("curation", {})["narrativeScope"] = scope_val
@@ -438,6 +776,16 @@ def run_llm_narrate(
     lead_seen: set[str] = set()
     updated: list[str] = []
     rt_model = app_cfg.llm.model or provider
+    concurrency = max(1, min(8, int(app_cfg.llm.narrate_concurrency or 1)))
+    shared_backoff = bool(app_cfg.llm.narrate_concurrency_backoff)
+    stats: dict[str, int] = {
+        "narrateConcurrency": 1,
+        "narrateCacheHits": 0,
+        "narrateCacheMisses": 0,
+        "narrateProviderBackoffCount": 0,
+    }
+    stats_lock = threading.Lock()
+    backoff_before = get_shared_backoff().backoff_count
 
     if not chapter_id and _needs_meta(trip, regenerate=regenerate):
         brief = build_meta_brief(trip, tone=tone_val, regenerate=regenerate)
@@ -454,6 +802,9 @@ def run_llm_narrate(
                 regenerate=regenerate,
                 chat_fn=chat_fn,
                 messages=messages,
+                stats=stats,
+                stats_lock=stats_lock,
+                shared_backoff=shared_backoff,
             )
             payload = parse_json_content(content)
             before = deepcopy(trip)
@@ -468,73 +819,64 @@ def run_llm_narrate(
                 raise NarrateError("E_NARRATE_RETRY_EXHAUSTED", "; ".join(errs[:3]))
             fix_errors = errs
 
-    for ch_idx in _chapter_indices(trip, chapter_id):
-        chapter = trip["chapters"][ch_idx]
-        if not _chapter_needs_copy(chapter, trip, regenerate=regenerate, scope=scope_val):
-            continue
-        brief = build_chapter_brief(
-            trip, chapter, tone=tone_val, regenerate=regenerate, scope=scope_val
+    chapter_indices = [
+        ch_idx
+        for ch_idx in _chapter_indices(trip, chapter_id)
+        if _chapter_needs_copy(
+            trip["chapters"][ch_idx], trip, regenerate=regenerate, scope=scope_val
         )
-        ch_id = brief["chapter"]["id"]
-        fix_errors = None
-        last_payload: dict[str, Any] | None = None
-        for attempt in range(max_retries + 1):
-            chapter = trip["chapters"][ch_idx]
-            prompt = _chapter_user_prompt(brief, fix_errors=fix_errors)
-            messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": prompt}]
-            content = _chat_for_brief(
-                brief,
-                scope=f"chapter-{ch_id}",
-                provider=provider,
-                model=rt_model,
-                cache_dir=cache_dir,
-                regenerate=regenerate,
-                chat_fn=chat_fn,
-                messages=messages,
+    ]
+
+    if chapter_indices:
+        # AC-PT-06: concurrency=1 (or single chapter) keeps the serial path.
+        if concurrency <= 1 or len(chapter_indices) <= 1:
+            stats["narrateConcurrency"] = 1
+            updated.extend(
+                _narrate_chapters_serial(
+                    trip,
+                    chapter_indices=chapter_indices,
+                    tone_val=tone_val,
+                    scope_val=scope_val,
+                    regenerate=regenerate,
+                    provider=provider,
+                    rt_model=rt_model,
+                    cache_dir=cache_dir,
+                    chat_fn=chat_fn,
+                    max_retries=max_retries,
+                    app_cfg=app_cfg,
+                    lead_seen=lead_seen,
+                    stats=stats,
+                    stats_lock=stats_lock,
+                    shared_backoff=shared_backoff,
+                )
             )
-            payload = parse_json_content(content)
-            last_payload = payload
-            if payload.get("chapterId") and payload.get("chapterId") != ch_id:
-                if attempt >= max_retries:
-                    raise NarrateError(
-                        "E_NARRATE_PARSE",
-                        f"chapterId mismatch: {payload.get('chapterId')}",
-                    )
-                fix_errors = [f"chapterId must be {ch_id!r}"]
-                continue
-            before = deepcopy(trip)
-            batch = _apply_chapter_payload(
-                trip, chapter, payload, lead_seen=lead_seen, regenerate=regenerate, scope=scope_val
+        else:
+            stats["narrateConcurrency"] = concurrency
+            updated.extend(
+                _narrate_chapters_concurrent(
+                    trip,
+                    chapter_indices=chapter_indices,
+                    concurrency=concurrency,
+                    tone_val=tone_val,
+                    scope_val=scope_val,
+                    regenerate=regenerate,
+                    provider=provider,
+                    rt_model=rt_model,
+                    cache_dir=cache_dir,
+                    chat_fn=chat_fn,
+                    max_retries=max_retries,
+                    app_cfg=app_cfg,
+                    lead_seen=lead_seen,
+                    stats=stats,
+                    stats_lock=stats_lock,
+                    shared_backoff=shared_backoff,
+                )
             )
-            errs = _narrative_field_errors(trip, chapter_index=ch_idx, cfg=app_cfg)
-            if not errs:
-                updated.extend(batch)
-                break
-            trip.clear()
-            trip.update(before)
-            if attempt >= max_retries:
-                if any("VR-N04" in e for e in errs) and last_payload is not None:
-                    chapter = trip["chapters"][ch_idx]
-                    batch = _apply_chapter_payload(
-                        trip,
-                        chapter,
-                        last_payload,
-                        lead_seen=lead_seen,
-                        regenerate=regenerate,
-                        scope=scope_val,
-                    )
-                    chapter["lead"] = _stub_lead_for_chapter(
-                        trip, chapter, tone=tone_val, lead_seen=lead_seen
-                    )
-                    idx = chapter.get("index")
-                    if f"chapters[{idx}].lead" not in batch:
-                        batch.append(f"chapters[{idx}].lead")
-                    stub_errs = _narrative_field_errors(trip, chapter_index=ch_idx, cfg=app_cfg)
-                    if not stub_errs:
-                        updated.extend(batch)
-                        break
-                raise NarrateError("E_NARRATE_RETRY_EXHAUSTED", "; ".join(errs[:3]))
-            fix_errors = errs
+
+    stats["narrateProviderBackoffCount"] = max(
+        0, get_shared_backoff().backoff_count - backoff_before
+    )
+    _merge_narrate_timings(trip, stats)
 
     from travelogue.services.pipeline_state import append_pipeline_run, set_pipeline_status
 

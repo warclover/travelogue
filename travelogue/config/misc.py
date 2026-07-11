@@ -57,12 +57,20 @@ class LlmConfig:
     api_key_env: str = "DEEPSEEK_API_KEY"
     base_url: str | None = None
     timeout_sec: int = 120
+    # Pipeline Throughput · Phase B placeholders (G2 前默认 concurrency=1)
+    narrate_concurrency: int = 1
+    narrate_concurrency_backoff: bool = True
 
 
 @dataclass
 class PipelineConfig:
     parallel_embed: bool = True
     parallel_embed_chunk: int = 32
+    # Pipeline Throughput · Phase A（G1 前默认 parallel_ingest=false）
+    parallel_ingest: bool = False
+    parallel_ingest_workers: int = 0  # 0 = auto
+    parallel_ingest_min_photos: int = 12
+    persist_every_n: int = 8
 
 
 def pipeline_from_dict(raw: dict[str, Any]) -> PipelineConfig:
@@ -78,6 +86,14 @@ def pipeline_from_dict(raw: dict[str, Any]) -> PipelineConfig:
     return PipelineConfig(
         parallel_embed=cfg_bool(raw, "parallel_embed", "parallelEmbed", True),
         parallel_embed_chunk=cfg_int(raw, "parallel_embed_chunk", "parallelEmbedChunk", 32),
+        parallel_ingest=cfg_bool(raw, "parallel_ingest", "parallelIngest", False),
+        parallel_ingest_workers=cfg_int(
+            raw, "parallel_ingest_workers", "parallelIngestWorkers", 0
+        ),
+        parallel_ingest_min_photos=cfg_int(
+            raw, "parallel_ingest_min_photos", "parallelIngestMinPhotos", 12
+        ),
+        persist_every_n=cfg_int(raw, "persist_every_n", "persistEveryN", 8),
     )
 
 

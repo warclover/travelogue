@@ -2,10 +2,10 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v1.0（M-D1 全量刷新 · 2026-07-08） |
+| **文档版本** | v1.1（§17.7 Pipeline Throughput · 2026-07-11） |
 | **阶段** | P0 本地工坊 |
 | **关联** | `CHARTER.md`、`AGENT-ARCHITECTURE.md`、`DATA-MODEL.md` |
-| **更新日期** | 2026-05-22（§18 · 2026-07-08 M-C1） |
+| **更新日期** | 2026-07-11（§17.7）；§18 · 2026-07-08 M-C1 |
 
 ---
 
@@ -406,6 +406,42 @@ Phase 7 在不改变编排语义的前提下，对 **ingest → CLIP embed → c
 python scripts/phase7_verify_rollback.py
 # 逐项关闭 fast-path：见 docs/config-phase7.example.yaml 注释与 tests/test_phase7_rollback_flags.py
 ```
+
+### 17.7 Pipeline Throughput（P7 之后 · 结构性并行）
+
+> 关联：[PRD-PIPELINE-THROUGHPUT.md](./PRD-PIPELINE-THROUGHPUT.md) v0.2 · [IMPLEMENTATION-PIPELINE-THROUGHPUT.md](./IMPLEMENTATION-PIPELINE-THROUGHPUT.md) · [adr/008](./adr/008-trip-storage-boundaries.md) §9  
+> 评审：[acceptance-records/pipeline-throughput-prd-review-2026-07-11.md](./acceptance-records/pipeline-throughput-prd-review-2026-07-11.md)
+
+在 **不改变阶段集合** 的前提下，对 P7 未覆盖的两类串行做加速：
+
+| 能力 | 默认（G0） | 配置键 | 落点 |
+|------|------------|--------|------|
+| 并行 ingest | **关**（达标后 G1 开） | `pipeline.parallel_ingest` / `_workers` / `_min_photos` / `persist_every_n` | `media/ingest.py` + `media/ingest_worker.py` |
+| 章级 LLM 并发 | **1**（G2 起量 2） | `llm.narrate_concurrency` / `_backoff` | `services/llm_narrate.py` |
+| 共享 429 backoff | 随并发开启 | `llm.narrate_concurrency_backoff` | LLM client 或 narrate 包装层 |
+
+**与 §17.3 parallel_embed 时序**：主进程按输入序每合并一张资产即 `ParallelEmbedCoordinator.offer`；worker 内禁止 CLIP。
+
+**写边界**：Worker → Blob only；Document 仅主进程 `TripService.update` **增量 merge**（见 ADR-008 §9）。
+
+**等价**：NR-PT 分层——结构 100%；L-embed 在 `prefer_web_derivative=false`（NR profile）下 100%；WebP 字节不比。
+
+**观测增补**（`trip.pipeline.timings` 或并列 detail）：`ingestWorkers` · `ingestParallelFallback` · `narrateConcurrency` · `narrateCacheHits` / `Misses` · `narrateProviderBackoffCount`。
+
+**门禁**：
+
+| 脚本 / 记录 | 用途 |
+|-------------|------|
+| `scripts/pipeline_throughput_benchmark.py` | 基线/候选采数 |
+| `scripts/pipeline_throughput_equivalence_check.py` | 活 diff |
+| `scripts/pipeline_throughput_gate.py` | `--from-record` / `--check-default-on` |
+| `scripts/lint_pt_default_flags.py` | 默认加速态 ↔ signoff |
+| `docs/acceptance-records/pipeline-throughput-*.json` | perf-eval / L4 / 默认开 |
+| `docs/config-pipeline-throughput.example.yaml` | 冻结 benchmark config |
+
+**回滚**：`parallel_ingest: false` + `narrate_concurrency: 1` → P7 行为面。删除 DoD 对齐 ARCH-OPT §3.3。
+
+**实现禁令**：`web/` 不得出现 `ProcessPoolExecutor`；并行入口不得绕过 `run_trip` / `ingest_into_trip`。
 
 ---
 

@@ -47,7 +47,7 @@ from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
 from travelogue.config.tracking import TrackedDict, collect_unknown_keys, wrap_tracked
 from travelogue.config.vision import vision_from_dict
 from travelogue.config.yaml_loader import load_yaml_mapping
-from travelogue.config_helpers import cfg_bool
+from travelogue.config_helpers import cfg_bool, cfg_int
 from travelogue.paths import ROOT
 from travelogue.util.llm_presets import PROVIDER_PRESETS
 
@@ -531,6 +531,12 @@ def load_config(path: Path | None = None) -> AppConfig:
             api_key_env=str(llm_raw.get("api_key_env") or llm_preset.get("api_key_env", "DEEPSEEK_API_KEY")),
             base_url=llm_base_url,
             timeout_sec=int(llm_raw.get("timeout_sec", 120)),
+            narrate_concurrency=cfg_int(
+                llm_raw, "narrate_concurrency", "narrateConcurrency", 1
+            ),
+            narrate_concurrency_backoff=cfg_bool(
+                llm_raw, "narrate_concurrency_backoff", "narrateConcurrencyBackoff", True
+            ),
         ),
         studio=StudioConfig(
             g1_confirm_structure=bool(

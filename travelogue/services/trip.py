@@ -396,6 +396,7 @@ class TripService:
         *,
         max_retries: int = 3,
         touch_updated: bool = True,
+        bump_revision: bool = True,
     ) -> T:
         """Atomic read-modify-write with ``meta.revision`` optimistic locking.
 
@@ -403,6 +404,10 @@ class TripService:
         writes (e.g. copy telemetry). Shelf stale badges compare ``updatedAt`` /
         ``curatedAt`` to preview/longshot mtimes; bumping ``updatedAt`` on open
         would false-flag ``algorithmStale`` / ``longshotStale``.
+
+        ``bump_revision=False`` keeps ``meta.revision`` unchanged for pipeline
+        intermediate persists (ingest checkpoint / on_persist). CAS still
+        compares the on-disk revision so concurrent writers are detected.
         """
         if max_retries < 1:
             raise ValueError("max_retries must be >= 1")
@@ -422,7 +427,10 @@ class TripService:
                     trip["meta"] = meta
                 if meta.pop(_STAMP_RENDERED_REVISION, False):
                     stamp_rendered = True
-                meta["revision"] = expected + 1
+                if bump_revision:
+                    meta["revision"] = expected + 1
+                else:
+                    meta["revision"] = expected
                 if touch_updated:
                     trip["updatedAt"] = utc_now_iso()
                 if stamp_rendered:

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1",
+  "status": "pending",
+  "approver": "",
+  "reviewedAt": null,
+  "commit": "",
+  "flags": {
+    "pipeline.parallel_ingest": false,
+    "llm.narrate_concurrency": 1
+  },
+  "perfEvalPath": "docs/acceptance-records/pipeline-throughput-perf-eval.json",
+  "requirements": {
+    "ac_pt_all_required_true": false,
+    "kpi_thresholds_met": false,
+    "nr_pt_passed": false,
+    "ac_arc_02_parallel_passed": false,
+    "windows_spawn_smoke_passed": false
+  },
+  "notes": "Required before changing product defaults to accelerated values. scripts/lint_pt_default_flags.py + gate --check-default-on enforce this record.",
+  "exceptions": []
+}

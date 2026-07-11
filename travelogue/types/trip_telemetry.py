@@ -14,6 +14,12 @@ class PipelineTimingsDict(TypedDict, total=False):
     renderMs: float
     exportMs: float
     totalMs: float
+    ingestWorkers: float
+    ingestParallelFallback: float
+    narrateConcurrency: float
+    narrateCacheHits: float
+    narrateCacheMisses: float
+    narrateProviderBackoffCount: float
 
 
 class EmbedStatsDict(TypedDict, total=False):
