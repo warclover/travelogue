@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **对应 PRD** | [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) v1.2.0 |
-| **分支** | `feat/preview-refine-v1-p0` · `p1` · `p2`（均已推送） |
-| **范围** | M1～M6 代码已落地；本轮收口：D-REF-13 / SF 线框 / 验收文档 |
+| **分支** | `feat/preview-refine-v1-p2`（含 P0→P2 + 收口；待合 master） |
+| **范围** | M1～M6 代码已落地；验收条件 Go（SF-02 合入后补签） |
 | **更新日期** | 2026-07-11 |
 
 ## 对照 PRD · 剩余清单（执行序）
@@ -16,7 +16,7 @@
 | 3 | **SF-03** | 线框拦截 Modal 主/次/幽灵层级对齐 §4.3.1 | 线框 | ✅ |
 | 4 | **SF-04** | 线框补 P0 过渡态半页（历史说明） | 线框 | ✅ Tab ⑫ |
 | 5 | **ACCEPTANCE** | 撰写 `ACCEPTANCE-PREVIEW-REFINE-V1.md` | 文档 | ✅ |
-| 6 | **SF-02** | 5 人图标盲测 | 人工 | ⏸ 验收签字栏 |
+| 6 | **SF-02** | 5 人图标盲测 | 人工 | ⏸ 合入后一周内补签（见 ACCEPTANCE §6 豁免） |
 | 7 | **OQ-REF-03** | 阅读视图是否上 Dock | 产品拍板 | ⏸ Park（PK-03） |
 
 **Park（本主题不做）**：PK-01 章标题 inline · PK-02 trip.json 乐观锁 · PK-04 放映移出 Dock
