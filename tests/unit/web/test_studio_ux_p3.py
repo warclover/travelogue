@@ -109,7 +109,7 @@ def test_ux_p3_03_v2_settings_markers() -> None:
         'id="studio-cfg-clustering"',
         'id="studio-cfg-vision"',
         'id="studio-cfg-layout-scoring"',
-        "工作台设置",
+        "导入偏好",
         "智能排版",
         "开始制作我的游记",
     ):

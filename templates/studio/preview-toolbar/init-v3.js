@@ -36,6 +36,7 @@ import {
   syncLongshotCtaLabel,
   openLongshotExportOptions,
   refreshLongshotExportMeta,
+  consumeExportAfterLayout,
 } from "./longshot.js";
 import {
   tripIdFromPath,
@@ -58,7 +59,6 @@ import {
 import {
   getLayoutPending,
   setLayoutPendingMessage,
-  getSheetEditDirty,
   clearSheetEditDirty,
   dismissPendingDock,
   dismissG1Dock,
@@ -87,7 +87,7 @@ import {
 } from "./features.js";
 
 var READER_VIEW_KEY = "travelogue.studio.readerView";
-var SHEET_HINT_KEY = "travelogue.studio.previewSheet.hintSeen";
+var EXPORT_HINT_KEY = "travelogue.studio.exportHintSeen";
 
 export function initToolbarV3(root, tripId) {
   registerLongshotBridge({
@@ -103,6 +103,7 @@ export function initToolbarV3(root, tripId) {
     toolbarBody: toolbarBody,
     setLayoutPending: setLayoutPending,
     setLayoutPendingMessage: setLayoutPendingMessage,
+    applyLayoutRerender: applyLayoutRerender,
   });
   registerDrawersBridge({
     fetchEntry: fetchEntry,
@@ -161,39 +162,23 @@ export function initToolbarV3(root, tripId) {
   }
 
   var cohortEnabled = false;
-  var menuBtn = root.querySelector(".preview-toolbar__menu-btn");
-  try {
-    if (menuBtn && !sessionStorage.getItem(SHEET_HINT_KEY)) {
-      menuBtn.classList.add("preview-toolbar__menu-btn--pulse");
-    }
-  } catch (eHint) {}
 
   var sheetHooks = {
     drawers: drawers,
     get cohortEnabled() { return cohortEnabled; },
     isLayoutPending: getLayoutPending,
     confirmLeaveCurrentTab: function (tabId, done) {
-      if (tabId !== "edit" || !getSheetEditDirty()) {
-        done(true);
-        return;
-      }
-      toolbarConfirm({
-        title: "未保存的编辑",
-        body: "当前「文字」Tab 有未保存改动，离开将丢弃。",
-        confirmText: "离开",
-        cancelText: "留下",
-      }).then(done);
+      // D-REF-05 · 文案立即自动保存；切 Tab 不再弹「未保存将丢弃」
+      clearSheetEditDirty(root);
+      done(true);
     },
     onSheetTabShown: function (tabId) {
-      if (tabId !== "edit") {
+      if (tabId !== "book" && tabId !== "edit") {
         clearSheetEditDirty(root);
       }
     },
     onSheetOpened: function () {
-      try {
-        sessionStorage.setItem(SHEET_HINT_KEY, "1");
-      } catch (eOpen) {}
-      if (menuBtn) menuBtn.classList.remove("preview-toolbar__menu-btn--pulse");
+      // 首访脉冲已改打导出；打开精修不再消费导出提示
     },
     syncLongshotPrefsUi: syncLongshotPrefsUi,
     syncReaderModeUi: syncReaderModeUi,
@@ -336,8 +321,15 @@ export function initToolbarV3(root, tripId) {
       dismissPendingDock();
       refreshTaskDockState(root);
     },
+    onReExport: function () {
+      startLongshot(root, tripId);
+    },
+    onDismissStale: function () {
+      root._staleDockDismissed = true;
+      refreshTaskDockState(root);
+    },
     onOpenStructure: function () {
-      if (root._sheet) root._sheet.open("structure");
+      if (root._sheet) root._sheet.open("book");
     },
     onConfirmStructure: function () {
       drawers.confirmStructure();
@@ -408,7 +400,18 @@ export function initToolbarV3(root, tripId) {
   syncLongshotCtaLabel(root);
   refreshLongshotExportMeta(root);
 
+  try {
+    if (longshotBtn && !sessionStorage.getItem(EXPORT_HINT_KEY)) {
+      longshotBtn.classList.add("preview-toolbar__dock-btn--pulse");
+    }
+  } catch (eExportHint) {}
+
   longshotBtn.addEventListener("click", function () {
+    try {
+      sessionStorage.setItem(EXPORT_HINT_KEY, "1");
+    } catch (eSeen) {}
+    longshotBtn.classList.remove("preview-toolbar__dock-btn--pulse");
+    longshotBtn.classList.remove("preview-toolbar__menu-btn--pulse");
     startLongshot(root, tripId);
   });
   caretBtn.addEventListener("click", function (e) {
@@ -443,4 +446,9 @@ export function initToolbarV3(root, tripId) {
 
   maybeShowCoverOpeningStyleToast(tripId);
   syncToolbarHeight(root);
+
+  // 「更新并导出」：版面刷新后自动续导出
+  requestAnimationFrame(function () {
+    consumeExportAfterLayout(root, tripId);
+  });
 }

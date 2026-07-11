@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>预览精修体验 V1 · 设计评审线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-border: #90a4ae;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-anno: #e65100;
+      --wf-rec: #2e7d32;
+      --wf-rec-bg: #e8f5e9;
+      --wf-warn-bg: #fff8e1;
+      --wf-warn-border: #ffb74d;
+      --bar: #1a2f28;
+      --bar-text: #f5fbf8;
+      --bar-muted: #a8dcc8;
+      --gold: #d4a843;
+      --gold-text: #1a1408;
+      --accent: #3d6b5a;
+      --accent-light: #e8f5ef;
+      --danger: #c62828;
+      --radius: 12px;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 920px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--wf-bg);
+      color: var(--wf-text);
+      line-height: 1.55;
+    }
+
+    .review-bar {
+      position: sticky; top: 0; z-index: 2000;
+      background: #263238; color: #eceff1;
+      padding: 12px 20px;
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 960px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button:hover { background: #37474f; }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+
+    .layout {
+      max-width: calc(var(--max) + 300px);
+      margin: 0 auto;
+      padding: 22px 18px 72px;
+      display: grid;
+      grid-template-columns: var(--max) 270px;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .aside { order: -1; }
+    }
+
+    .panel { display: none; }
+    .panel.is-visible { display: block; }
+
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle;
+    }
+    .tag--rec { background: var(--wf-rec); color: #fff; }
+    .tag--new { background: #1565c0; color: #fff; }
+    .tag--fail { background: #c62828; color: #fff; }
+    .tag--p0 { background: #e65100; color: #fff; }
+
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--wf-anno); margin: 16px 0 8px;
+    }
+
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border);
+      border-bottom: none; border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+    .browser__ico { width: 12px; height: 12px; background: var(--accent); border-radius: 2px; }
+
+    .frame {
+      background: #e8efe9;
+      border: 2px solid var(--wf-border); border-top: none;
+      border-radius: 0 0 14px 14px;
+      min-height: 520px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .frame--photo {
+      background:
+        linear-gradient(160deg, rgba(26,47,40,.35), rgba(26,47,40,.55)),
+        repeating-linear-gradient(-45deg, #cfd8dc, #cfd8dc 8px, #b0bec5 8px, #b0bec5 16px);
+    }
+
+    .dock {
+      position: absolute; top: 14px; right: 14px; z-index: 30;
+      display: flex; align-items: center; gap: 2px;
+      padding: 4px;
+      background: rgba(26, 47, 40, 0.88);
+      backdrop-filter: blur(8px);
+      border-radius: 999px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    }
+    .dock button {
+      width: 36px; height: 36px; border: none; border-radius: 50%;
+      background: transparent; color: #e8f5ef; font-size: 14px; cursor: pointer;
+      position: relative;
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0;
+    }
+    .dock button:hover { background: rgba(255,255,255,.1); }
+    .dock-ico {
+      width: 18px; height: 18px;
+      display: block;
+      flex-shrink: 0;
+    }
+    .dock .dock__export {
+      width: auto; min-width: 36px; padding: 0 10px 0 8px; border-radius: 999px;
+      background: var(--gold); color: var(--gold-text); font-weight: 700; font-size: 12px;
+      gap: 5px;
+    }
+    .dock .dock__export .dock-ico { width: 16px; height: 16px; }
+    .dock .dock__export-split {
+      display: flex; align-items: stretch; border-radius: 999px; overflow: hidden;
+    }
+    .dock .dock__export-split .main {
+      background: var(--gold); color: var(--gold-text); border: none;
+      padding: 0 10px 0 8px; font-weight: 700; font-size: 12px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .dock .dock__export-split .main .dock-ico { width: 16px; height: 16px; }
+    .dock .dock__export-split .caret {
+      background: #c49a3a; color: var(--gold-text); border: none;
+      padding: 0 8px; font-size: 10px; cursor: pointer;
+    }
+    .dock .dot::after {
+      content: ""; position: absolute; top: 6px; right: 6px;
+      width: 7px; height: 7px; border-radius: 50%; background: #ff7043;
+      box-shadow: 0 0 0 2px rgba(26,47,40,.9);
+    }
+    .dock .pulse { animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse {
+      0%, 100% { box-shadow: inset 0 0 0 0 rgba(212,168,67,.0); }
+      50% { box-shadow: inset 0 0 0 2px rgba(212,168,67,.85); }
+    }
+
+    .g1-banner {
+      position: absolute; top: 62px; left: 12px; right: 12px; z-index: 25;
+      background: #fff8e1; border: 1px solid var(--wf-warn-border);
+      border-radius: 10px; padding: 10px 12px;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      font-size: 12px; color: #5d4037;
+      box-shadow: 0 6px 18px rgba(0,0,0,.12);
+    }
+    .g1-banner strong { font-weight: 700; }
+    .g1-banner .actions { margin-left: auto; display: flex; gap: 6px; }
+    .g1-banner button {
+      border-radius: 8px; border: 1px solid #a1887f; background: #fff;
+      padding: 5px 10px; font-size: 11px; cursor: pointer; font-weight: 600;
+    }
+    .g1-banner button.primary {
+      background: var(--accent); border-color: var(--accent); color: #fff;
+    }
+
+    .cover-card {
+      position: absolute; right: 20px; bottom: 24px;
+      width: min(280px, 42%);
+      background: rgba(18,17,16,.9); color: #f5f5f4;
+      border-left: 3px solid #7cb89a; border-radius: 4px;
+      padding: 14px 16px 12px; font-size: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+    .cover-card .meta { font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: #7cb89a; margin-bottom: 6px; }
+    .cover-card .title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+    .cover-card .hook { font-size: 12px; opacity: .75; line-height: 1.4; }
+    .cover-card .enter { text-align: right; margin-top: 8px; font-size: 9px; letter-spacing: .12em; opacity: .5; text-transform: uppercase; }
+
+    .scroll-mock {
+      flex: 1; padding: 88px 24px 100px; color: rgba(255,255,255,.85);
+      font-size: 13px;
+    }
+    .scroll-mock .screen {
+      background: rgba(255,255,255,.12); border: 1px dashed rgba(255,255,255,.35);
+      border-radius: 8px; padding: 16px; margin-bottom: 16px; max-width: 420px;
+    }
+    .scroll-mock .caption {
+      margin-top: 8px; padding: 6px 8px; background: rgba(255,255,255,.2);
+      border-radius: 4px; font-size: 12px; outline: 1px dashed #ffcc80;
+    }
+    .star {
+      position: absolute; right: 28px; bottom: 120px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(26,47,40,.75); color: #ffd54f;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; border: 1px solid rgba(255,255,255,.2);
+    }
+
+    .task-dock {
+      position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%);
+      z-index: 28; width: min(400px, calc(100% - 24px));
+      background: #fff; border: 1px solid #b0bec5; border-radius: 12px;
+      padding: 10px 12px; display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.18); font-size: 12px;
+    }
+    .task-dock.warn { border-color: var(--wf-warn-border); background: var(--wf-warn-bg); }
+    .task-dock .msg { flex: 1; min-width: 0; }
+    .task-dock .msg strong { display: block; font-size: 13px; }
+    .task-dock .msg span { color: var(--wf-muted); font-size: 11px; }
+    .task-dock button {
+      border: none; border-radius: 8px; padding: 7px 12px;
+      background: var(--accent); color: #fff; font-weight: 700; font-size: 12px; cursor: pointer;
+      white-space: nowrap;
+    }
+    .task-dock .ghost {
+      background: transparent; color: var(--wf-muted); font-weight: 600;
+    }
+
+    /* Sheet */
+    .scrim {
+      position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 40;
+      display: flex; justify-content: flex-end; align-items: stretch;
+    }
+    .sheet {
+      width: min(400px, 92%); background: #fff; display: flex; flex-direction: column;
+      box-shadow: -8px 0 32px rgba(0,0,0,.2);
+    }
+    .sheet__head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 8px; border-bottom: 1px solid #eceff1;
+    }
+    .sheet__head h3 { margin: 0; font-size: 16px; }
+    .sheet__head .sub { margin: 2px 0 0; font-size: 11px; color: var(--wf-muted); font-weight: 400; }
+    .sheet__close {
+      width: 32px; height: 32px; border: none; border-radius: 8px;
+      background: #f5f5f5; font-size: 18px; cursor: pointer; line-height: 1;
+    }
+    .sheet__tabs {
+      display: flex; gap: 0; padding: 0 8px;
+      border-bottom: 1px solid #eceff1;
+    }
+    .sheet__tabs button {
+      flex: 1; border: none; background: transparent; padding: 10px 6px;
+      font-size: 12px; font-weight: 600; color: var(--wf-muted); cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .sheet__tabs button.is-active {
+      color: var(--accent); border-bottom-color: var(--accent);
+    }
+    .sheet__body { padding: 12px 16px; overflow: auto; flex: 1; font-size: 12px; }
+    .sheet__row { margin-bottom: 14px; }
+    .sheet__row label {
+      display: block; font-size: 11px; font-weight: 700; color: var(--wf-muted);
+      margin-bottom: 4px; letter-spacing: .02em;
+    }
+    .sheet__row input, .sheet__row textarea, .sheet__row select {
+      width: 100%; border: 1px solid #cfd8dc; border-radius: 8px;
+      padding: 8px 10px; font: inherit; background: #fff;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      padding: 4px 10px; border-radius: 999px; background: #eceff1;
+      font-size: 11px;
+    }
+    .chip.on { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+    .sheet__foot {
+      padding: 12px 16px; border-top: 1px solid #eceff1;
+      display: flex; gap: 8px;
+    }
+    .sheet__foot .primary {
+      flex: 1; border: none; border-radius: 10px; padding: 10px;
+      background: var(--accent); color: #fff; font-weight: 700; cursor: pointer;
+    }
+    .sheet__foot .secondary {
+      border: 1px solid #cfd8dc; border-radius: 10px; padding: 10px 12px;
+      background: #fff; font-weight: 600; cursor: pointer; font-size: 12px;
+    }
+    .hint {
+      font-size: 11px; color: var(--wf-muted); background: #f5f7f6;
+      border-radius: 8px; padding: 8px 10px; margin-top: 4px;
+    }
+    .thumb-row { display: flex; gap: 8px; }
+    .thumb {
+      width: 64px; height: 80px; border-radius: 6px; border: 2px solid #cfd8dc;
+      background: repeating-linear-gradient(-45deg, #eceff1, #eceff1 4px, #cfd8dc 4px, #cfd8dc 8px);
+    }
+    .thumb.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-light); }
+
+    /* Modal */
+    .modal-scrim {
+      position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 50;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal {
+      width: min(360px, 100%); background: #fff; border-radius: 14px;
+      padding: 18px 18px 14px; box-shadow: 0 16px 48px rgba(0,0,0,.3);
+    }
+    .modal h4 { margin: 0 0 6px; font-size: 15px; }
+    .modal p { margin: 0 0 14px; font-size: 13px; color: var(--wf-muted); }
+    .modal .btns { display: flex; flex-direction: column; gap: 8px; }
+    .modal .btns button {
+      border-radius: 10px; padding: 10px; font-weight: 700; font-size: 13px; cursor: pointer;
+      border: 1px solid #cfd8dc; background: #fff;
+    }
+    .modal .btns .primary {
+      background: var(--accent); border-color: var(--accent); color: #fff;
+    }
+    .modal .btns .secondary {
+      background: #fff; border-color: #b0bec5; color: #263238; font-weight: 600;
+    }
+    .modal .btns .ghost {
+      background: transparent; border-color: transparent; color: #78909c; font-weight: 500;
+    }
+
+    .export-pop {
+      position: absolute; top: 56px; right: 14px; z-index: 35;
+      width: 240px; background: #fff; border-radius: 12px;
+      border: 1px solid #b0bec5; padding: 12px;
+      box-shadow: 0 12px 32px rgba(0,0,0,.2); font-size: 12px;
+    }
+    .export-pop h4 { margin: 0 0 8px; font-size: 12px; }
+    .seg {
+      display: flex; border: 1px solid #cfd8dc; border-radius: 8px; overflow: hidden; margin-bottom: 8px;
+    }
+    .seg span {
+      flex: 1; text-align: center; padding: 6px 4px; font-size: 11px; background: #fff;
+    }
+    .seg span.on { background: var(--accent-light); color: var(--accent); font-weight: 700; }
+
+    .grid-2 {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px;
+    }
+    @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .callout {
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 12px;
+      padding: 12px 14px; font-size: 12px;
+    }
+    .callout h3 { margin: 0 0 6px; font-size: 13px; }
+    .callout ul { margin: 0; padding-left: 1.1em; }
+    .callout li { margin: 3px 0; }
+    .callout--rec { background: var(--wf-rec-bg); border-color: #81c784; }
+    .callout--warn { background: var(--wf-warn-bg); border-color: var(--wf-warn-border); }
+    .callout--fail { background: #ffebee; border-color: #ef9a9a; }
+
+    .compare {
+      width: 100%; border-collapse: collapse; font-size: 12px; background: #fff;
+      border-radius: 12px; overflow: hidden; border: 1px solid #cfd8dc;
+    }
+    .compare th, .compare td {
+      border-bottom: 1px solid #eceff1; padding: 8px 10px; text-align: left; vertical-align: top;
+    }
+    .compare th { background: #f5f7f6; font-size: 11px; }
+    .compare tr:last-child td { border-bottom: none; }
+
+    .icon-board {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px;
+    }
+    @media (max-width: 700px) { .icon-board { grid-template-columns: 1fr 1fr; } }
+    .icon-card {
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 12px;
+      padding: 14px 12px; text-align: center; font-size: 12px;
+    }
+    .icon-card .swatch {
+      width: 52px; height: 52px; margin: 0 auto 10px; border-radius: 50%;
+      background: rgba(26, 47, 40, 0.92); color: #e8f5ef;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .icon-card .swatch--gold {
+      background: var(--gold); color: var(--gold-text); border-radius: 12px;
+    }
+    .icon-card .swatch .dock-ico { width: 22px; height: 22px; }
+    .icon-card strong { display: block; font-size: 13px; margin-bottom: 2px; }
+    .icon-card span { color: var(--wf-muted); font-size: 11px; }
+    .icon-card .meta { margin-top: 8px; font-size: 10px; color: var(--wf-muted); text-align: left; line-height: 1.4; }
+
+    .aside .callout { margin-bottom: 12px; }
+    .aside code { font-size: 10px; word-break: break-all; }
+
+    .flow {
+      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+      font-size: 12px; margin: 8px 0 16px;
+    }
+    .flow span {
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 999px;
+      padding: 4px 10px;
+    }
+    .flow .arr { border: none; background: transparent; color: var(--wf-muted); padding: 0; }
+    .flow .hl { background: var(--wf-rec-bg); border-color: #81c784; font-weight: 700; }
+
+    .home-settings {
+      width: 280px; background: #fff; border: 1px solid #cfd8dc; border-radius: 12px;
+      padding: 12px; font-size: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    }
+    .home-settings h4 { margin: 0 0 8px; font-size: 13px; }
+    .home-settings .sec-label {
+      font-size: 10px; font-weight: 700; color: var(--wf-muted);
+      letter-spacing: .06em; text-transform: uppercase; margin: 10px 0 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="review-bar">
+    <h1>预览精修体验 V1 · 设计评审线框 <span class="tag tag--rec">推荐落地</span></h1>
+    <p>
+      对齐 <code>PRD-PREVIEW-REFINE-V1.md</code> <strong>v1.1</strong> · 验货默认 + 精修（笔形）+ 更新版面/导出拦截 ·
+      <strong>已拍板</strong>：放映留 Dock · 两拍发布 · 形象简洁图标套件。
+    </p>
+    <nav class="tabs" aria-label="线框章节">
+      <button type="button" class="is-active" data-panel="diag">① 诊断</button>
+      <button type="button" data-panel="inspect">② 验货默认</button>
+      <button type="button" data-panel="page">③ 精修·这页</button>
+      <button type="button" data-panel="book">④ 精修·这本</button>
+      <button type="button" data-panel="pending">⑤ 更新版面 / 拦截</button>
+      <button type="button" data-panel="g1">⑥ G1 横幅</button>
+      <button type="button" data-panel="home">⑦ 导入偏好</button>
+      <button type="button" data-panel="compare">⑧ 对照表</button>
+      <button type="button" data-panel="rules">⑨ 规范</button>
+      <button type="button" data-panel="icons">⑩ 图标</button>
+      <button type="button" data-panel="empty">⑪ 这页空态</button>
+      <button type="button" data-panel="transition">⑫ P0 过渡</button>
+    </nav>
+  </div>
+
+  <div class="layout">
+    <main>
+      <!-- ① 诊断 -->
+      <section class="panel is-visible" id="panel-diag">
+        <div class="sec">
+          <h2>① 现状诊断 · 为何要改</h2>
+          <p class="lead">v4 Dock + 四 Tab「编辑与设置」能力齐全，但保存语义分裂、任务路径绕，与 Phase 5「80% 零编辑」冲突。</p>
+        </div>
+
+        <div class="anno">问题卡（P-REF）</div>
+        <div class="grid-2">
+          <div class="callout callout--fail">
+            <h3>P-REF-01/02 · 半生效</h3>
+            <ul>
+              <li>文案立即存 · Sheet 要「保存编辑」· ★ 要「应用排版」</li>
+              <li>用户改完以为好了，导出仍是旧版</li>
+            </ul>
+          </div>
+          <div class="callout callout--fail">
+            <h3>P-REF-03/04 · 设置柜</h3>
+            <ul>
+              <li>文字/结构/排版/高级 = 系统模块</li>
+              <li>「编辑与设置」制造配置焦虑</li>
+            </ul>
+          </div>
+          <div class="callout callout--warn">
+            <h3>P-REF-05 · 双设置</h3>
+            <ul>
+              <li>首页「工作台设置」vs 预览「编辑与设置」</li>
+              <li>导入开关与单本精修混淆</li>
+            </ul>
+          </div>
+          <div class="callout callout--rec">
+            <h3>本主题解法</h3>
+            <ul>
+              <li>验货默认 · 入口改「精修」</li>
+              <li>三区：这页 / 这本 / 导出与更多</li>
+              <li>「更新版面」+ 导出拦截</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="anno">目标旅程</div>
+        <div class="flow">
+          <span class="hl">80% 验货</span><span class="arr">→</span>
+          <span>点字微调（可选）</span><span class="arr">→</span>
+          <span class="hl">导出长图</span><span class="arr">→</span>
+          <span>微信</span>
+        </div>
+        <div class="flow">
+          <span>20% 精修</span><span class="arr">→</span>
+          <span>这页 / 这本</span><span class="arr">→</span>
+          <span class="hl">更新版面</span><span class="arr">→</span>
+          <span>导出</span>
+        </div>
+      </section>
+
+      <!-- ② 验货默认 -->
+      <section class="panel" id="panel-inspect">
+        <div class="sec">
+          <h2>② 验货默认 <span class="tag tag--rec">推荐</span></h2>
+          <p class="lead">打开预览 = 看成品。Dock：返回 · 放映（可选）· 精修 · 导出。首访脉冲打在导出，不打精修。</p>
+        </div>
+
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab"><span class="browser__ico"></span> 预览 · 验货态</div>
+        </div>
+        <div class="frame frame--photo">
+          <div class="dock" title="Icon Dock V1 · 形象线描">
+            <button type="button" data-ico="back" aria-label="返回" title="返回"></button>
+            <button type="button" data-ico="play" aria-label="放映" title="放映"></button>
+            <button type="button" data-ico="refine" aria-label="精修" title="精修"></button>
+            <div class="dock__export-split">
+              <button type="button" class="main pulse" aria-label="导出长图"><span data-ico="scroll"></span>长图</button>
+              <button type="button" class="caret" aria-label="导出设置">▾</button>
+            </div>
+          </div>
+          <div class="cover-card">
+            <div class="meta">林芝 · 2013.08</div>
+            <div class="title">林芝纪行</div>
+            <div class="hook">雨停后风很轻，河谷里只剩水声。</div>
+            <div class="enter">进入正文 ⌄</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="callout callout--rec">
+            <h3>Dock 规则（已拍板）</h3>
+            <ul>
+              <li>序：返回 · <strong>放映</strong> · 精修 · 导出</li>
+              <li>精修 = <strong>笔形</strong>；tooltip「精修」</li>
+              <li>首访 pulse → <strong>导出/长图</strong>（非精修）</li>
+              <li>无 pending 时导出 = 1 次点击</li>
+              <li>图标见 Tab ⑩ · 形象简洁线描</li>
+            </ul>
+          </div>
+          <div class="callout">
+            <h3>导出 ▾（跟导出走）</h3>
+            <ul>
+              <li>纯照片 / 完整文案</li>
+              <li>图注 · 导语</li>
+              <li>按章 / 完整长图</li>
+              <li>标准 2× / 高清 3×</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="anno">导出设置 Popover 示意</div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab"><span class="browser__ico"></span> 导出设置打开</div>
+        </div>
+        <div class="frame frame--photo" style="min-height:360px">
+          <div class="dock">
+            <button type="button" data-ico="back" aria-label="返回"></button>
+            <button type="button" data-ico="play" aria-label="放映"></button>
+            <button type="button" data-ico="refine" aria-label="精修"></button>
+            <div class="dock__export-split">
+              <button type="button" class="main" aria-label="导出长图"><span data-ico="scroll"></span>长图</button>
+              <button type="button" class="caret">▾</button>
+            </div>
+          </div>
+          <div class="export-pop">
+            <h4>导出设置</h4>
+            <div class="seg"><span class="on">完整文案</span><span>纯照片</span></div>
+            <div class="seg"><span class="on">完整长图</span><span>按章</span></div>
+            <div class="seg"><span class="on">标准 2×</span><span>高清 3×</span></div>
+            <div class="hint" style="margin:0">高级项不再埋进「编辑与设置」总柜</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ③ 这页 -->
+      <section class="panel" id="panel-page">
+        <div class="sec">
+          <h2>③ 精修侧栏 · 这页 <span class="tag tag--new">新 IA</span></h2>
+          <p class="lead">当前屏语境：本屏文案提示、★、媒资改判。与画面控件同步；改版面类后进「待更新」。</p>
+        </div>
+
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab"><span class="browser__ico"></span> 精修 · 这页</div>
+        </div>
+        <div class="frame frame--photo">
+          <div class="dock">
+            <button type="button" data-ico="back" aria-label="返回"></button>
+            <button type="button" data-ico="play" aria-label="放映"></button>
+            <button type="button" class="dot" data-ico="refine" aria-label="精修（有待办）"></button>
+            <button type="button" class="dock__export" aria-label="导出长图"><span data-ico="scroll"></span>长图</button>
+          </div>
+          <div class="scroll-mock">
+            <div class="screen">
+              <div style="height:120px;background:rgba(0,0,0,.15);border-radius:6px"></div>
+              <div class="caption">点一下可改 · 河谷晨雾</div>
+            </div>
+          </div>
+          <div class="star" title="标为精选">★</div>
+          <div class="scrim">
+            <div class="sheet" role="dialog" aria-label="精修">
+              <div class="sheet__head">
+                <div>
+                  <h3>精修</h3>
+                  <div class="sub">第 3 屏 · 河谷</div>
+                </div>
+                <button type="button" class="sheet__close" aria-label="关闭">×</button>
+              </div>
+              <nav class="sheet__tabs" role="tablist">
+                <button type="button" class="is-active">这页</button>
+                <button type="button">这本</button>
+                <button type="button">导出与更多</button>
+              </nav>
+              <div class="sheet__body">
+                <div class="sheet__row">
+                  <label>本屏文案</label>
+                  <div class="hint">也可直接点画面修改 · 改完即保存</div>
+                </div>
+                <div class="sheet__row">
+                  <label>精选</label>
+                  <div class="chips">
+                    <span class="chip on">★ 已标为精选</span>
+                  </div>
+                </div>
+                <div class="sheet__row">
+                  <label>媒资类型</label>
+                  <div class="seg">
+                    <span>普通照片</span><span class="on">拼图</span>
+                  </div>
+                </div>
+                <div class="hint">精选 / 拼图改后需「更新版面」才写入预览版式</div>
+              </div>
+              <div class="sheet__foot">
+                <button type="button" class="primary">更新版面</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ④ 这本 -->
+      <section class="panel" id="panel-book">
+        <div class="sec">
+          <h2>④ 精修侧栏 · 这本</h2>
+          <p class="lead">整本杂志：杂志名、意图、锚点、封面版式、模板。文案类立即保存；无「保存编辑」主按钮。</p>
+        </div>
+
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab"><span class="browser__ico"></span> 精修 · 这本</div>
+        </div>
+        <div class="frame" style="background:#f4f7f5;min-height:640px">
+          <div class="scrim" style="position:relative;min-height:640px">
+            <div class="sheet" style="width:min(400px,100%);margin-left:auto;min-height:640px">
+              <div class="sheet__head">
+                <div>
+                  <h3>精修</h3>
+                  <div class="sub">林芝纪行</div>
+                </div>
+                <button type="button" class="sheet__close">×</button>
+              </div>
+              <nav class="sheet__tabs">
+                <button type="button">这页</button>
+                <button type="button" class="is-active">这本</button>
+                <button type="button">导出与更多</button>
+              </nav>
+              <div class="sheet__body">
+                <div class="sheet__row">
+                  <label>杂志名</label>
+                  <input type="text" value="林芝纪行" maxlength="20" />
+                  <div class="hint">失焦即保存 · 最多 20 字</div>
+                </div>
+                <div class="sheet__row">
+                  <label>写给编辑的一句话</label>
+                  <textarea rows="2" placeholder="可选">想突出安静和反光</textarea>
+                </div>
+                <div class="sheet__row">
+                  <label>记忆锚点（0–3）</label>
+                  <input type="text" placeholder="锚点 1" value="雨停" />
+                </div>
+                <div class="sheet__row">
+                  <label>这一章更像什么感觉？</label>
+                  <div class="chips">
+                    <span class="chip on">松弛</span>
+                    <span class="chip">热闹</span>
+                    <span class="chip on">平静</span>
+                  </div>
+                </div>
+                <div class="sheet__row">
+                  <label>封面版式</label>
+                  <div class="thumb-row">
+                    <div class="thumb on"></div>
+                    <div class="thumb"></div>
+                    <div class="thumb"></div>
+                  </div>
+                  <div class="hint">选后自动更新版面</div>
+                </div>
+                <div class="sheet__row">
+                  <button type="button" class="secondary" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--accent);background:#fff;color:var(--accent);font-weight:700">按新意图重写文案…</button>
+                  <div class="hint">二次确认 · 不覆盖已手动改过的字段</div>
+                </div>
+              </div>
+              <div class="sheet__foot">
+                <button type="button" class="secondary">关闭</button>
+                <button type="button" class="primary">更新版面</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout" style="margin-top:12px">
+          <h3>「导出与更多」区（文案清单）</h3>
+          <ul>
+            <li>打开导出设置（链到 Dock ▾）</li>
+            <li>编辑预览 / 阅读视图</li>
+            <li>放映精选 · 文件夹 · zip · LLM 生成</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ⑤ pending -->
+      <section class="panel" id="panel-pending">
+        <div class="sec">
+          <h2>⑤ 更新版面 · 导出拦截 <span class="tag tag--p0">P0</span></h2>
+          <p class="lead">心智：字改完就定了；版式改完要点更新；导出前系统盯着。禁止 pending 静默导出旧长图。</p>
+        </div>
+
+        <div class="anno">Task Dock · 版面有更新</div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab"><span class="browser__ico"></span> pending 态</div>
+        </div>
+        <div class="frame frame--photo" style="min-height:420px">
+          <div class="dock">
+            <button type="button" data-ico="back" aria-label="返回"></button>
+            <button type="button" data-ico="play" aria-label="放映"></button>
+            <button type="button" class="dot" data-ico="refine" aria-label="精修"></button>
+            <button type="button" class="dock__export" aria-label="导出长图"><span data-ico="scroll"></span>长图</button>
+          </div>
+          <div class="scroll-mock" style="opacity:.7">卷轴预览（已标精选，版式未更新）</div>
+          <div class="task-dock warn">
+            <div class="msg">
+              <strong>版面有更新</strong>
+              <span>精选 / 拼图改动尚未写入预览</span>
+            </div>
+            <button type="button" class="ghost">稍后</button>
+            <button type="button">更新版面</button>
+          </div>
+        </div>
+
+        <div class="anno">导出拦截 Modal</div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab"><span class="browser__ico"></span> 点导出 · 有 pending</div>
+        </div>
+        <div class="frame frame--photo" style="min-height:400px">
+          <div class="modal-scrim">
+            <div class="modal" role="alertdialog" aria-label="版面尚未更新">
+              <h4>版面尚未更新</h4>
+              <p>你改过精选或拼图，导出前需先更新版面，否则长图仍是旧版。</p>
+              <div class="btns">
+                <button type="button" class="primary">更新并导出</button>
+                <button type="button" class="secondary">仅更新版面</button>
+                <button type="button" class="ghost">取消</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout--rec" style="margin-top:12px">
+          <h3>保存矩阵（摘要）</h3>
+          <ul>
+            <li>Inline / 杂志名 / 锚点意图 → <strong>立即保存</strong></li>
+            <li>★ / 拼图 / 同框 → 立即写入意图 + <strong>待更新</strong></li>
+            <li>封面版式 → 选后 <strong>自动更新版面</strong></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ⑥ G1 -->
+      <section class="panel" id="panel-g1">
+        <div class="sec">
+          <h2>⑥ G1 结构横幅</h2>
+          <p class="lead">结构待确认时不埋进 Tab：顶栏横幅直接确认。无需打开精修。</p>
+        </div>
+
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab"><span class="browser__ico"></span> G1 pending</div>
+        </div>
+        <div class="frame frame--photo">
+          <div class="dock">
+            <button type="button" data-ico="back" aria-label="返回"></button>
+            <button type="button" data-ico="play" aria-label="放映"></button>
+            <button type="button" data-ico="refine" aria-label="精修"></button>
+            <button type="button" class="dock__export" aria-label="导出长图"><span data-ico="scroll"></span>长图</button>
+          </div>
+          <div class="g1-banner">
+            <div><strong>章节结构待确认</strong> · 请浏览各章顺序后确认</div>
+            <div class="actions">
+              <button type="button" class="primary">章节顺序 OK</button>
+              <button type="button">重新生成结构</button>
+            </div>
+          </div>
+          <div class="scroll-mock" style="padding-top:130px">各章预览滚动区…</div>
+        </div>
+      </section>
+
+      <!-- ⑦ 导入偏好 -->
+      <section class="panel" id="panel-home">
+        <div class="sec">
+          <h2>⑦ 首页 · 导入偏好（改名）</h2>
+          <p class="lead">与预览「精修」分词。分区不变：外观 · 导入选项 · 开发者。</p>
+        </div>
+
+        <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+          <div class="home-settings">
+            <h4>导入偏好 <span class="tag tag--new">新文案</span></h4>
+            <div class="sec-label">外观</div>
+            <div>首页配色 · [下拉]</div>
+            <div class="sec-label">导入选项</div>
+            <div>行程识别 · 开</div>
+            <div>场景分析 · 关</div>
+            <div>结构确认（G1）· 关</div>
+            <div>智能排版 · 开</div>
+            <div class="sec-label">开发者</div>
+            <div>打开 Dev 面板</div>
+          </div>
+          <div class="callout callout--warn" style="flex:1;min-width:220px">
+            <h3>命名对照</h3>
+            <ul>
+              <li>❌ 工作台设置 → ✅ <strong>导入偏好</strong></li>
+              <li>❌ 编辑与设置 → ✅ <strong>精修</strong></li>
+              <li>❌ 应用排版 → ✅ <strong>更新版面</strong></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑧ 对照 -->
+      <section class="panel" id="panel-compare">
+        <div class="sec">
+          <h2>⑧ 现状 vs V1</h2>
+          <p class="lead">功能等价，入口与心智重组。</p>
+        </div>
+        <table class="compare">
+          <thead>
+            <tr><th>维度</th><th>现状 v3/v4</th><th>精修 V1</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>入口名</td>
+              <td>编辑与设置</td>
+              <td><strong>精修</strong></td>
+            </tr>
+            <tr>
+              <td>侧栏 IA</td>
+              <td>文字 / 结构 / 排版 / 高级</td>
+              <td><strong>这页 / 这本 / 导出与更多</strong></td>
+            </tr>
+            <tr>
+              <td>文案保存</td>
+              <td>inline 立即 · Sheet 要保存</td>
+              <td><strong>一律立即</strong></td>
+            </tr>
+            <tr>
+              <td>版面生效</td>
+              <td>应用排版（易漏）</td>
+              <td><strong>更新版面</strong> + 导出拦截</td>
+            </tr>
+            <tr>
+              <td>G1</td>
+              <td>结构 Tab</td>
+              <td><strong>顶栏横幅</strong></td>
+            </tr>
+            <tr>
+              <td>导出设置</td>
+              <td>高级 Tab + ▾</td>
+              <td><strong>▾ 为主</strong></td>
+            </tr>
+            <tr>
+              <td>首页设置</td>
+              <td>工作台设置</td>
+              <td><strong>导入偏好</strong></td>
+            </tr>
+            <tr>
+              <td>首访脉冲</td>
+              <td>⋯ 设置</td>
+              <td><strong>导出</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ⑨ 规范 -->
+      <section class="panel" id="panel-rules">
+        <div class="sec">
+          <h2>⑨ 交互与视觉规范</h2>
+        </div>
+        <table class="compare">
+          <thead>
+            <tr><th>元素</th><th>规则</th><th>禁止</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>默认态</td>
+              <td>验货；不强迫打开精修</td>
+              <td>首屏堆配置项</td>
+            </tr>
+            <tr>
+              <td>金色</td>
+              <td>仅导出 idle</td>
+              <td>精修 / ★ / pending 同色相抢戏</td>
+            </tr>
+            <tr>
+              <td>Pending</td>
+              <td>Task Dock 一条「版面有更新」</td>
+              <td>只 toast 不留待办</td>
+            </tr>
+            <tr>
+              <td>导出</td>
+              <td>pending 必须拦截</td>
+              <td>静默导出旧长图</td>
+            </tr>
+            <tr>
+              <td>Inline 成功</td>
+              <td>轻 ✓ ≤0.8s</td>
+              <td>每次「已保存到 trip.json」</td>
+            </tr>
+            <tr>
+              <td>侧栏</td>
+              <td>Esc · focus trap · 焦点归还精修钮</td>
+              <td>未保存文案丢失（文案已立即存）</td>
+            </tr>
+            <tr>
+              <td>Share</td>
+              <td>无 Dock / 无精修</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout--warn" style="margin-top:16px">
+          <h3>落地顺序（已拍板 · 两拍）</h3>
+          <ul>
+            <li><strong>P0 第一拍</strong>：更新版面 + 导出拦截 + 精修/导入偏好改名 + <strong>图标套件</strong></li>
+            <li><strong>P1 第二拍</strong>：G1 横幅 → 三区 IA（这页/这本/导出与更多）</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ⑩ 图标 -->
+      <section class="panel" id="panel-icons">
+        <div class="sec">
+          <h2>⑩ Dock 图标套件 <span class="tag tag--new">形象 · 简洁</span></h2>
+          <p class="lead">替换现网「书册折角 / 胶片齿孔 / 齿轮」过密图形。24×24 · 描边 1.75 · 单色 currentColor · 一眼懂动作。</p>
+        </div>
+
+        <div class="icon-board">
+          <div class="icon-card">
+            <div class="swatch"><span data-ico="back"></span></div>
+            <strong>返回</strong>
+            <span>back</span>
+            <div class="meta">隐喻：左箭头回工作台。<br>禁止：合上书册 + 折角复合形。</div>
+          </div>
+          <div class="icon-card">
+            <div class="swatch"><span data-ico="play"></span></div>
+            <strong>放映</strong>
+            <span>play</span>
+            <div class="meta">隐喻：画幅 + 播放三角。<br>禁止：胶片两侧齿孔点阵。</div>
+          </div>
+          <div class="icon-card">
+            <div class="swatch"><span data-ico="refine"></span></div>
+            <strong>精修</strong>
+            <span>refine · ✎</span>
+            <div class="meta">隐喻：斜向钢笔。<br>禁止：齿轮 / 省略号 / 六边形。</div>
+          </div>
+          <div class="icon-card">
+            <div class="swatch swatch--gold"><span data-ico="scroll"></span></div>
+            <strong>导出长图</strong>
+            <span>scroll</span>
+            <div class="meta">隐喻：竖长画幅 + 向下落盘。<br>禁止：三层半透明叠页过碎。</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:16px">
+          <div class="callout callout--fail">
+            <h3>现网问题（评审共识）</h3>
+            <ul>
+              <li>返回：书形过重，小尺寸难辨</li>
+              <li>放映：齿孔像「设置/更多」</li>
+              <li>设置齿轮 ≠「精修」语义</li>
+              <li>长图叠页在 18px 发糊</li>
+            </ul>
+          </div>
+          <div class="callout callout--rec">
+            <h3>工程落点</h3>
+            <ul>
+              <li><code>dock.js</code> → <code>dockIconSvg</code></li>
+              <li><code>settings</code> → <code>refine</code>（可别名一版）</li>
+              <li>tooltip / aria：「精修」</li>
+              <li>随 P0 第一拍与改名同发</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="anno">Dock 实装预览</div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab"><span class="browser__ico"></span> 图标套件 · 实装</div>
+        </div>
+        <div class="frame frame--photo" style="min-height:200px">
+          <div class="dock" style="position:relative;top:24px;right:auto;margin:24px auto 0;width:fit-content">
+            <button type="button" data-ico="back" aria-label="返回"></button>
+            <button type="button" data-ico="play" aria-label="放映"></button>
+            <button type="button" data-ico="refine" aria-label="精修"></button>
+            <div class="dock__export-split">
+              <button type="button" class="main"><span data-ico="scroll"></span>长图</button>
+              <button type="button" class="caret">▾</button>
+            </div>
+          </div>
+          <p style="text-align:center;color:rgba(255,255,255,.75);font-size:12px;margin-top:20px">返回 · 放映 · 精修 · 长图▾</p>
+        </div>
+      </section>
+
+      <!-- ⑪ 这页空态 SF-01 -->
+      <section class="panel" id="panel-empty">
+        <div class="sec">
+          <h2>⑪ 这页空态 · 封面/封底 <span class="tag tag--p0">SF-01</span></h2>
+          <p class="lead">当前屏是封面或封底时，「这页」不可空白：说明 + 引导去「这本」。</p>
+        </div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab"><span class="browser__ico"></span> 精修 · 这页 · 封面空态</div>
+        </div>
+        <div class="frame" style="background:#e8efe9;min-height:420px">
+          <div class="scrim" style="position:relative;min-height:420px;justify-content:flex-end">
+            <div class="sheet" role="dialog" aria-label="精修">
+              <div class="sheet__head">
+                <div>
+                  <h3>精修</h3>
+                  <div class="sub">封面</div>
+                </div>
+                <button type="button" class="sheet__close" aria-label="关闭">×</button>
+              </div>
+              <nav class="sheet__tabs" role="tablist">
+                <button type="button" class="is-active">这页</button>
+                <button type="button">这本</button>
+                <button type="button">导出与更多</button>
+              </nav>
+              <div class="sheet__body">
+                <p class="hint" style="margin:0 0 8px;font-size:14px;color:#263238;font-weight:600">滚动到正文屏可调整本页</p>
+                <p class="hint">当前是封面，本页精修暂不可用。</p>
+                <button type="button" class="primary" style="margin-top:8px">去「这本」</button>
+                <p class="hint" style="margin-top:10px">杂志名、封面版式、章意图在「这本」里改。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout--rec" style="margin-top:12px">
+          <h3>规格</h3>
+          <ul>
+            <li>禁止空白 Sheet 无说明</li>
+            <li>主链：去「这本」</li>
+            <li>封底同理</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ⑫ P0 过渡 SF-04 -->
+      <section class="panel" id="panel-transition">
+        <div class="sec">
+          <h2>⑫ P0 过渡态（历史） <span class="tag tag--p0">SF-04</span></h2>
+          <p class="lead">第一拍曾保留四 Tab，但壳层已是「精修」+「更新版面」脚注。P1 起已切三区；本帧留作发布说明。</p>
+        </div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab"><span class="browser__ico"></span> P0 · 精修仍四 Tab</div>
+        </div>
+        <div class="frame" style="background:#f5f7f6;min-height:360px">
+          <div class="scrim" style="position:relative;min-height:360px;justify-content:flex-end">
+            <div class="sheet" role="dialog" aria-label="精修">
+              <div class="sheet__head">
+                <div><h3>精修</h3><div class="sub">过渡期</div></div>
+                <button type="button" class="sheet__close" aria-label="关闭">×</button>
+              </div>
+              <nav class="sheet__tabs" role="tablist">
+                <button type="button" class="is-active">文字</button>
+                <button type="button">结构</button>
+                <button type="button">排版</button>
+                <button type="button">高级</button>
+              </nav>
+              <div class="sheet__body">
+                <p class="hint">标题已是「精修」；Tab 暂留旧名。</p>
+                <div class="hint" style="background:#fff8e1;border:1px solid #ffe082;padding:8px 10px;border-radius:8px;margin-top:10px">
+                  改精选或拼图后，请点「更新版面」。
+                </div>
+                <button type="button" class="primary" style="margin-top:12px">更新版面</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout--warn" style="margin-top:12px">
+          <h3>现状</h3>
+          <ul>
+            <li>P1 已切换为「这页 / 这本 / 导出与更多」</li>
+            <li>本帧仅作评审/发布对照，不再作为开发目标</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <div class="callout callout--rec">
+        <h3>已拍板（2026-07-11）</h3>
+        <ul>
+          <li>放映 <strong>保留 Dock</strong></li>
+          <li>精修用 <strong>笔形 ✎</strong></li>
+          <li><strong>两拍</strong>：P0 拦导出+改名+图标 → P1 三区 IA</li>
+        </ul>
+      </div>
+      <div class="callout">
+        <h3>打开方式</h3>
+        <p style="margin:0;font-size:12px">
+          本地双击本 HTML，或浏览器打开：<br>
+          <code>docs/wireframes/preview-refine-v1-wireframe.html</code>
+        </p>
+      </div>
+      <div class="callout">
+        <h3>关联文档</h3>
+        <ul style="margin:0;padding-left:1.1em;font-size:12px">
+          <li><code>PRD-PREVIEW-REFINE-V1.md</code> v1.1</li>
+          <li><code>acceptance-records/preview-refine-v1-review-2026-07-11.md</code></li>
+          <li>PRD-PHASE5 · P5-3.7</li>
+        </ul>
+      </div>
+      <div class="callout callout--warn">
+        <h3>评审会待跟进</h3>
+        <ul>
+          <li>P0 过渡期四 Tab 文案脚注</li>
+          <li>阅读视图是否上 Dock（P1）</li>
+          <li>拦截 Modal 主按钮文案 A/B</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      var ATTR =
+        'class="dock-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+        'stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+      var ICONS = {
+        back:
+          "<svg " + ATTR + ">" +
+          '<path d="M19 12H7"/>' +
+          '<path d="M11 7l-5 5 5 5"/>' +
+          "</svg>",
+        play:
+          "<svg " + ATTR + ">" +
+          '<rect x="3" y="5" width="18" height="14" rx="2.5"/>' +
+          '<path d="M10 9.2v5.6L15.8 12z" fill="currentColor" stroke="none"/>' +
+          "</svg>",
+        refine:
+          "<svg " + ATTR + ">" +
+          '<path d="M13.2 5.2l5.6 5.6"/>' +
+          '<path d="M4 20l1.6-5.4L15.8 4.4a2 2 0 0 1 2.8 0l1 1a2 2 0 0 1 0 2.8L9.4 18.4 4 20z"/>' +
+          '<path d="M12.2 7.2l4.6 4.6"/>' +
+          "</svg>",
+        scroll:
+          "<svg " + ATTR + ">" +
+          '<rect x="8" y="2.5" width="8" height="12.5" rx="1.6"/>' +
+          '<path d="M12 11.5v9"/>' +
+          '<path d="M9 17.5l3 3 3-3"/>' +
+          "</svg>"
+      };
+
+      function paintIcons(root) {
+        (root || document).querySelectorAll("[data-ico]").forEach(function (el) {
+          var name = el.getAttribute("data-ico");
+          if (!ICONS[name]) return;
+          if (el.tagName === "BUTTON" || el.tagName === "SPAN") {
+            el.innerHTML = ICONS[name];
+          }
+        });
+      }
+
+      paintIcons(document);
+
+      document.querySelectorAll(".tabs button").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          document.querySelectorAll(".tabs button").forEach(function (b) { b.classList.remove("is-active"); });
+          document.querySelectorAll(".panel").forEach(function (p) { p.classList.remove("is-visible"); });
+          btn.classList.add("is-active");
+          var id = "panel-" + btn.getAttribute("data-panel");
+          var panel = document.getElementById(id);
+          if (panel) {
+            panel.classList.add("is-visible");
+            paintIcons(panel);
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

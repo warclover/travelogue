@@ -1,5 +1,5 @@
 /**
- * 首页 v2 · 工作台设置 Popover（v2.1 · D-15）。
+ * 首页 v2 · 导入偏好 Popover（v2.1 · D-15 · 精修体验 V1 改名）。
  */
 import { trackStudioEvent } from "../js/analytics.js";
 import { bindAdvancedConfigControls } from "../js/advanced.js";
@@ -213,7 +213,7 @@ function maybeShowSettingsMovedHint() {
     return;
   }
   if (typeof studioToast === "function") {
-    studioToast("配色和高级选项移到了这里", { duration: 3200 });
+    studioToast("导入与外观选项在这里", { duration: 3200 });
   }
 }
 

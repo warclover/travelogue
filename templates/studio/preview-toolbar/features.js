@@ -181,51 +181,88 @@ export function initG1V3(root, tripId, drawers, sheet) {
         if (!(cfg.studio && cfg.studio.g1ConfirmStructure)) return;
         activateG1Pending();
         if (sheet) sheet.setStructureDot(true);
+        mountG1Banner(root, drawers);
         refreshTaskDockState(root);
       })
       .catch(function () {});
   }
 
 
-export function initG1Banner(root, tripId, drawers) {
-    var body = toolbarBody(root);
-    if (!body) return;
-    Promise.all([
-      fetch("/__travelogue/config").then(function (r) { return r.ok ? r.json() : null; }),
-      fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry").then(function (r) {
-        return r.ok ? r.json() : null;
-      }),
-    ])
-      .then(function (rows) {
-        var cfg = rows[0];
-        var entry = rows[1];
-        if (!cfg || !entry || !entry.g1Pending) return;
-        if (!(cfg.studio && cfg.studio.g1ConfirmStructure)) return;
-        if (body.querySelector(".preview-toolbar__g1-banner")) return;
+/** PRD §6.2 · G1 顶栏横幅（M4）；可见时为栈顶主待办，滚出可视区后由 Task Dock 镜像。 */
+export function mountG1Banner(root, drawers) {
+    if (document.querySelector(".preview-toolbar__g1-banner")) return null;
 
-        var banner = document.createElement("div");
-        banner.className = "preview-toolbar__g1-banner";
-        banner.setAttribute("role", "status");
-        banner.innerHTML =
-          '<p class="preview-toolbar__g1-banner-text">章节结构待确认（G1 已开启）</p>' +
-          '<div class="preview-toolbar__g1-banner-actions">' +
-          '<button type="button" class="preview-toolbar__g1-banner-open">查看结构</button>' +
-          '<button type="button" class="preview-toolbar__g1-banner-confirm">确认并继续</button>' +
-          "</div>";
+    var banner = document.createElement("div");
+    banner.className = "preview-toolbar__g1-banner";
+    if (root && root.classList.contains("preview-toolbar--v4")) {
+      banner.classList.add("preview-toolbar__g1-banner--v4");
+    }
+    banner.setAttribute("role", "status");
+    banner.innerHTML =
+      '<p class="preview-toolbar__g1-banner-text">章节结构待确认 · 请浏览各章顺序后确认</p>' +
+      '<div class="preview-toolbar__g1-banner-actions">' +
+      '<button type="button" class="preview-toolbar__g1-banner-confirm">章节顺序 OK</button>' +
+      '<button type="button" class="preview-toolbar__g1-banner-regen">重新生成结构</button>' +
+      "</div>";
+
+    // v4：挂到 body，固定在 Dock 下方；旧壳：插在 toolbar body 内
+    if (banner.classList.contains("preview-toolbar__g1-banner--v4")) {
+      document.body.appendChild(banner);
+    } else {
+      var body = toolbarBody(root);
+      if (!body) {
+        document.body.appendChild(banner);
+      } else {
         var bar = body.querySelector(".preview-toolbar__bar");
         if (bar && bar.nextSibling) {
           body.insertBefore(banner, bar.nextSibling);
         } else {
           body.appendChild(banner);
         }
-        banner.querySelector(".preview-toolbar__g1-banner-open").addEventListener("click", function () {
-          drawers.openStructure();
-        });
-        banner.querySelector(".preview-toolbar__g1-banner-confirm").addEventListener("click", function () {
+      }
+    }
+
+    var confirmBtn = banner.querySelector(".preview-toolbar__g1-banner-confirm");
+    var regenBtn = banner.querySelector(".preview-toolbar__g1-banner-regen");
+    if (confirmBtn) {
+      confirmBtn.addEventListener("click", function () {
+        if (drawers && typeof drawers.confirmStructure === "function") {
           drawers.confirmStructure();
-        });
-      })
-      .catch(function () {});
+        }
+      });
+    }
+    if (regenBtn) {
+      regenBtn.addEventListener("click", function () {
+        if (drawers && typeof drawers.regenerateStructure === "function") {
+          drawers.regenerateStructure();
+        }
+      });
+    }
+
+    // 横幅在视口内时不抢 Task Dock；滚出后恢复 G1 镜像
+    if (typeof IntersectionObserver !== "undefined" && root) {
+      var io = new IntersectionObserver(
+        function (entries) {
+          var visible = entries[0] && entries[0].isIntersecting;
+          root._g1BannerVisible = !!visible;
+          refreshTaskDockState(root);
+        },
+        { threshold: 0.2 }
+      );
+      io.observe(banner);
+      root._g1BannerObs = io;
+      root._g1BannerVisible = true;
+    } else if (root) {
+      root._g1BannerVisible = true;
+    }
+
+    return banner;
+  }
+
+
+/** @deprecated 使用 mountG1Banner；保留别名以免外部引用断裂 */
+export function initG1Banner(root, tripId, drawers) {
+    mountG1Banner(root, drawers);
   }
 
 
@@ -281,8 +318,8 @@ export function initCollageMediaControls(tripId, assetMediaById) {
           setLayoutPending(true);
           showToolbarToast(
             mediaClass === "collage"
-              ? "已标记为拼图 · 点应用排版后生效"
-              : "已标记为普通照片 · 点应用排版后生效"
+              ? "已标记为拼图 · 点更新版面后生效"
+              : "已标记为普通照片 · 点更新版面后生效"
           );
         })
         .catch(function () {
@@ -362,7 +399,7 @@ export function initFeaturedStars(tripId) {
             star.setAttribute("aria-pressed", "true");
             screen.setAttribute("data-featured", "true");
             setLayoutPending(true);
-            showToolbarToast("已标为精选 · 点应用排版后生效");
+            showToolbarToast("已标为精选 · 点更新版面后生效");
           })
           .catch(function () {
             star.disabled = false;
@@ -607,7 +644,7 @@ export function mountTemplateControls(slot, tripId, opts) {
                 ((res.j.template && res.j.template.resolvedTemplateId) ||
                   t.resolvedTemplateId ||
                   "visual-journal");
-              showToolbarToast("模板已更新，正在应用排版…", { duration: 2500 });
+              showToolbarToast("模板已更新，正在更新版面…", { duration: 2500 });
               return applyLayoutRerender(
                 tripId,
                 document.querySelector(".preview-toolbar") || slot

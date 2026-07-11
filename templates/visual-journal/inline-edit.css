@@ -41,7 +41,21 @@ html[data-inline-edit="on"] .inline-edit__field--saving {
 }
 
 html[data-inline-edit="on"] .inline-edit__field--saved {
+  position: relative;
   animation: inline-edit-saved 0.8s ease;
+}
+
+html[data-inline-edit="on"] .inline-edit__field--saved::after {
+  content: "✓";
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #2e7d4f;
+  pointer-events: none;
 }
 
 @keyframes inline-edit-saved {

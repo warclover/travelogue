@@ -1,15 +1,87 @@
 /**
- * Preview toolbar v3 · unified settings panel (文字 | 结构 | 排版 | 高级).
+ * Preview toolbar v3 · unified refine sheet（这页 | 这本 | 导出与更多）.
  * Mobile: bottom sheet · Desktop (≥1024px): right side panel.
  */
 "use strict";
 
 var TAB_MODES = [
-  { id: "edit", label: "文字" },
-  { id: "structure", label: "结构" },
-  { id: "layout", label: "排版" },
-  { id: "advanced", label: "高级" },
+  { id: "page", label: "这页" },
+  { id: "book", label: "这本" },
+  { id: "more", label: "导出与更多" },
 ];
+
+var TAB_ALIASES = {
+  edit: "book",
+  structure: "book",
+  layout: "book",
+  advanced: "more",
+};
+
+function resolveSheetTab(tabId) {
+  if (!tabId) return "page";
+  return TAB_ALIASES[tabId] || tabId;
+}
+
+function findDominantScreen() {
+  var nodes = document.querySelectorAll(
+    ".cover-opening[data-block='cover-opening'], .cover-closing[data-block='cover-closing'], .layout-screen, .screen-spread[data-block='screen-spread'], section.chapter .layout-screen, [data-role='moment'], [data-role='peak']"
+  );
+  var best = null;
+  var bestVis = 0;
+  nodes.forEach(function (el) {
+    var rect = el.getBoundingClientRect();
+    var vis = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+    if (vis > bestVis) {
+      bestVis = vis;
+      best = el;
+    }
+  });
+  return best;
+}
+
+function describeScreenContext(el) {
+  if (!el) {
+    return { empty: true, label: "当前屏", detail: "" };
+  }
+  var block = el.getAttribute("data-block") || "";
+  if (block === "cover-opening" || el.classList.contains("cover-opening")) {
+    return { empty: true, label: "封面", detail: "cover" };
+  }
+  if (block === "cover-closing" || el.classList.contains("cover-closing")) {
+    return { empty: true, label: "封底", detail: "closing" };
+  }
+  var chapter = el.closest("section.chapter[data-chapter-id]");
+  var chapterName =
+    (chapter &&
+      (chapter.getAttribute("data-chapter-title") ||
+        (chapter.querySelector(".chapter-header__title, .chapter-title") || {}).textContent)) ||
+    "";
+  chapterName = String(chapterName || "").trim();
+  var screens = chapter
+    ? chapter.querySelectorAll(".layout-screen, .screen-spread, [data-role='moment'], [data-role='peak']")
+    : [];
+  var idx = 0;
+  for (var i = 0; i < screens.length; i++) {
+    if (screens[i] === el) {
+      idx = i + 1;
+      break;
+    }
+  }
+  var label =
+    (idx ? "第 " + idx + " 屏" : "正文屏") + (chapterName ? " · " + chapterName : "");
+  var kicker = el.querySelector(".kicker, .hook-line, [data-copy-role='kicker']");
+  var body = el.querySelector(".caption, .lead, .body-copy, [data-copy-role='caption'], [data-copy-role='lead']");
+  return {
+    empty: false,
+    label: label,
+    detail: "body",
+    screen: el,
+    featured: el.getAttribute("data-featured") === "true",
+    hasStar: !!el.querySelector(".preview-toolbar__featured-star"),
+    hasMediaCtl: !!el.querySelector(".preview-toolbar__collage-media, .preview-collage-media"),
+    copyHint: !!(kicker || body),
+  };
+}
 
 export function mountPreviewUnifiedSheet(root, hooks) {
   hooks = hooks || {};
@@ -21,7 +93,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     '<div class="preview-sheet" role="dialog" aria-modal="true" aria-labelledby="preview-sheet-title" hidden>' +
     '<div class="preview-sheet__grab" aria-hidden="true"></div>' +
     '<div class="preview-sheet__head">' +
-    '<h2 id="preview-sheet-title" class="preview-sheet__title">编辑与设置</h2>' +
+    '<h2 id="preview-sheet-title" class="preview-sheet__title">精修</h2>' +
     '<button type="button" class="preview-sheet__close" aria-label="关闭">×</button>' +
     "</div>" +
     '<div class="preview-sheet__content">' +
@@ -38,7 +110,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   var bodyEl = shell.querySelector(".preview-sheet__body");
   var menuBtn = root.querySelector(".preview-toolbar__menu-btn");
 
-  var activeTab = "edit";
+  var activeTab = "page";
   var previousFocus = null;
   var pendingDot = false;
   var structureDot = false;
@@ -159,7 +231,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       btn.setAttribute("aria-selected", on ? "true" : "false");
       btn.classList.toggle(
         "preview-sheet__tab--dot",
-        id === "structure" && structureDot && !on
+        id === "book" && structureDot && !on
       );
     });
   }
@@ -182,6 +254,11 @@ export function mountPreviewUnifiedSheet(root, hooks) {
 
   function renderAdvancedPanel() {
     bodyEl.innerHTML =
+      '<div class="preview-sheet__section">' +
+      '<p class="preview-sheet__label">快捷</p>' +
+      '<button type="button" class="preview-sheet__link preview-sheet__link--block" data-action="focus-export">打开导出设置</button>' +
+      '<p class="preview-sheet__hint">也可点 Dock 导出旁的 ▾</p>' +
+      "</div>" +
       '<div class="preview-sheet__section">' +
       '<p class="preview-sheet__label">长图文案范围</p>' +
       '<div class="preview-sheet__seg" data-field="copy-preset" role="group">' +
@@ -215,8 +292,13 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<li><span>导出 zip（自行托管）</span><button type="button" class="preview-sheet__link" data-action="export-zip">导出</button></li>' +
       '<li class="preview-sheet__list-item--optional" hidden><span>放映精选</span><button type="button" class="preview-sheet__link" data-action="present">开始</button></li>' +
       '<li class="preview-sheet__list-item--optional" hidden><span>生成杂志感文案</span><button type="button" class="preview-sheet__link" data-action="llm">生成</button></li>' +
-      "</ul>";
+      "</ul>" +
+      '<p class="preview-sheet__footnote">点画面上的字可直接改；改精选或拼图后请点「更新版面」。</p>';
 
+    wireAdvancedPanelActions();
+  }
+
+  function wireAdvancedPanelActions() {
     if (typeof hooks.syncCopyDisplayUi === "function") {
       hooks.syncCopyDisplayUi(bodyEl);
     }
@@ -283,6 +365,18 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       });
     });
 
+    var focusExport = bodyEl.querySelector('[data-action="focus-export"]');
+    if (focusExport) {
+      focusExport.addEventListener("click", function () {
+        close();
+        if (typeof hooks.onFocusExportSettings === "function") {
+          hooks.onFocusExportSettings();
+        } else {
+          var caret = root.querySelector(".preview-toolbar__longshot-caret");
+          if (caret) caret.click();
+        }
+      });
+    }
     var revealBtn = bodyEl.querySelector('[data-action="reveal-folder"]');
     if (revealBtn) {
       revealBtn.addEventListener("click", function () {
@@ -315,25 +409,108 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     }
   }
 
-  function renderLayoutPanel() {
+  function renderPagePanel() {
+    var ctx = describeScreenContext(findDominantScreen());
+    if (ctx.empty) {
+      bodyEl.innerHTML =
+        '<p class="preview-sheet__hint preview-sheet__hint--lead">滚动到正文屏可调整本页</p>' +
+        '<p class="preview-sheet__empty-label">当前是' +
+        (ctx.label || "封面/封底") +
+        "，本页精修暂不可用。</p>" +
+        '<button type="button" class="preview-sheet__primary" data-action="goto-book">去「这本」</button>' +
+        '<p class="preview-sheet__hint">杂志名、封面版式、章意图在「这本」里改。</p>';
+      var goBook = bodyEl.querySelector('[data-action="goto-book"]');
+      if (goBook) {
+        goBook.addEventListener("click", function () {
+          requestTabSwitch("book");
+        });
+      }
+      return;
+    }
+
     bodyEl.innerHTML =
-      '<p class="preview-sheet__hint preview-sheet__hint--lead">封面版式保存后立即在预览中生效。模板策略保存后会自动重渲染。拼图改判、精选与旅行主角设置需点「应用排版」。</p>' +
+      '<p class="preview-sheet__label">当前屏</p>' +
+      '<p class="preview-sheet__context">' +
+      ctx.label +
+      "</p>" +
+      (ctx.copyHint
+        ? '<p class="preview-sheet__hint">本屏有文案 · 也可直接点画面修改</p>'
+        : '<p class="preview-sheet__hint">也可直接点画面上的字修改</p>') +
+      '<div class="preview-sheet__section preview-sheet__page-actions"></div>' +
+      '<p class="preview-sheet__footnote">改精选或拼图后，请点「更新版面」。</p>';
+
+    var actions = bodyEl.querySelector(".preview-sheet__page-actions");
+    if (ctx.hasStar && actions) {
+      var featBtn = document.createElement("button");
+      featBtn.type = "button";
+      featBtn.className = "preview-sheet__chip" + (ctx.featured ? " is-on" : "");
+      featBtn.textContent = ctx.featured ? "★ 已标精选" : "☆ 标为精选";
+      featBtn.addEventListener("click", function () {
+        var star = ctx.screen && ctx.screen.querySelector(".preview-toolbar__featured-star");
+        if (star) star.click();
+        window.setTimeout(function () {
+          renderPagePanel();
+        }, 200);
+      });
+      actions.appendChild(featBtn);
+    }
+    if (ctx.hasMediaCtl && actions) {
+      var mediaBtn = document.createElement("button");
+      mediaBtn.type = "button";
+      mediaBtn.className = "preview-sheet__chip";
+      mediaBtn.textContent = "改判普通照片 / 拼图";
+      mediaBtn.addEventListener("click", function () {
+        var ctl =
+          ctx.screen &&
+          ctx.screen.querySelector(
+            ".preview-toolbar__collage-media, .preview-collage-media, button[data-media-class]"
+          );
+        if (ctl) ctl.click();
+      });
+      actions.appendChild(mediaBtn);
+    }
+    if (actions && !actions.childNodes.length) {
+      actions.innerHTML =
+        '<p class="preview-sheet__hint">本屏可在画面上标精选或改判拼图；改后请更新版面。</p>';
+    }
+  }
+
+  function renderLayoutPanel() {
+    var wrap = document.createElement("div");
+    wrap.className = "preview-sheet__book-layout";
+    wrap.innerHTML =
+      '<p class="preview-sheet__hint preview-sheet__hint--lead">封面版式保存后立即生效。模板策略会自动重渲染。拼图改判、精选与旅行主角需点「更新版面」。</p>' +
       '<div class="preview-sheet__cover-slot"></div>' +
       '<div class="preview-sheet__template-slot"></div>' +
-      '<div class="preview-sheet__embed"></div>' +
-      '<button type="button" class="preview-sheet__primary preview-sheet__apply-layout" hidden>应用排版</button>';
+      '<div class="preview-sheet__embed preview-sheet__embed--cohort"></div>' +
+      '<button type="button" class="preview-sheet__primary preview-sheet__apply-layout" hidden>更新版面</button>' +
+      '<p class="preview-sheet__footnote">改精选或拼图后，请点「更新版面」。</p>' +
+      '<p class="preview-sheet__hint">结构确认见顶栏横幅（若开启）；「为什么这样分章」见下方。</p>' +
+      '<div class="preview-sheet__embed preview-sheet__embed--structure"></div>';
+    return wrap;
+  }
 
-    var coverSlot = bodyEl.querySelector(".preview-sheet__cover-slot");
+  function renderBookPanel() {
+    bodyEl.innerHTML = "";
+    var editSlot = document.createElement("div");
+    editSlot.className = "preview-sheet__embed preview-sheet__embed--edit";
+    bodyEl.appendChild(editSlot);
+    if (hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
+      hooks.drawers.openEmbed("edit", editSlot, { sheetMode: true });
+    }
+
+    var layoutWrap = renderLayoutPanel();
+    bodyEl.appendChild(layoutWrap);
+
+    var coverSlot = layoutWrap.querySelector(".preview-sheet__cover-slot");
     if (coverSlot && typeof hooks.mountCoverStyleControls === "function") {
       hooks.mountCoverStyleControls(coverSlot);
     }
-
-    var templateSlot = bodyEl.querySelector(".preview-sheet__template-slot");
+    var templateSlot = layoutWrap.querySelector(".preview-sheet__template-slot");
     if (templateSlot && typeof hooks.mountTemplateControls === "function") {
       hooks.mountTemplateControls(templateSlot);
     }
-
-    var applyBtn = bodyEl.querySelector(".preview-sheet__apply-layout");
+    var applyBtn = layoutWrap.querySelector(".preview-sheet__apply-layout");
     if (applyBtn) {
       applyBtn.hidden = !(
         typeof hooks.isLayoutPending === "function"
@@ -345,40 +522,55 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         if (typeof hooks.onApplyLayout === "function") hooks.onApplyLayout();
       });
     }
-
-    var embed = bodyEl.querySelector(".preview-sheet__embed");
-    if (embed && hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
+    var cohortEmbed = layoutWrap.querySelector(".preview-sheet__embed--cohort");
+    if (cohortEmbed && hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
       if (hooks.cohortEnabled) {
-        hooks.drawers.openEmbed("cohort", embed, { sheetMode: true });
+        var cohortHost = document.createElement("div");
+        cohortEmbed.appendChild(cohortHost);
+        hooks.drawers.openEmbed("cohort", cohortHost, { sheetMode: true });
       } else {
-        embed.innerHTML =
-          '<p class="preview-sheet__hint">旅行主角 · 同框功能未开启。可在结构 Tab 调整分章，或在画面上改判拼图/标精选。</p>';
+        // D-REF-15 / M6 · cohort 未开则藏入口（不展示「未开启」提示）
+        cohortEmbed.hidden = true;
+        cohortEmbed.innerHTML = "";
+      }
+    }
+    var structEmbed = layoutWrap.querySelector(".preview-sheet__embed--structure");
+    if (structEmbed) {
+      structEmbed.innerHTML =
+        '<details class="preview-sheet__details">' +
+        "<summary>为什么这样分章 / 结构说明</summary>" +
+        '<div class="preview-sheet__struct-host"></div>' +
+        "</details>";
+      var details = structEmbed.querySelector("details");
+      var structHost = structEmbed.querySelector(".preview-sheet__struct-host");
+      if (details && structHost && hooks.drawers) {
+        details.addEventListener("toggle", function () {
+          if (!details.open || structHost.dataset.loaded === "1") return;
+          structHost.dataset.loaded = "1";
+          hooks.drawers.openEmbed("structure", structHost, { sheetMode: true });
+        });
       }
     }
   }
 
   function switchTab(tabId) {
-    activeTab = tabId;
+    activeTab = resolveSheetTab(tabId);
     syncTabUi();
     bodyEl.innerHTML = "";
     bodyEl.scrollTop = 0;
     if (typeof hooks.onSheetTabShown === "function") {
-      hooks.onSheetTabShown(tabId);
+      hooks.onSheetTabShown(activeTab);
     }
 
-    if (tabId === "advanced") {
+    if (activeTab === "more") {
       renderAdvancedPanel();
       return;
     }
-    if (tabId === "layout") {
-      renderLayoutPanel();
+    if (activeTab === "page") {
+      renderPagePanel();
       return;
     }
-
-    var mode = tabId === "edit" ? "edit" : "structure";
-    if (hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
-      hooks.drawers.openEmbed(mode, bodyEl, { sheetMode: true });
-    }
+    renderBookPanel();
   }
 
   function open(tabId) {
@@ -392,7 +584,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     if (typeof hooks.onSheetOpened === "function") {
       hooks.onSheetOpened();
     }
-    switchTab(tabId || activeTab);
+    switchTab(resolveSheetTab(tabId || activeTab));
     activateFocusTrap();
     closeBtn.focus();
   }
@@ -441,7 +633,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     menuBtn.addEventListener("click", function (e) {
       e.stopPropagation();
       if (sheetClosing) return;
-      if (shell.hidden) open("edit");
+      if (shell.hidden) open("page");
       else close();
     });
   }
@@ -453,12 +645,12 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     setPendingDot: setPendingDot,
     setStructureDot: setStructureDot,
     refreshLayoutTab: function () {
-      if (!shell.hidden && activeTab === "layout") {
-        renderLayoutPanel();
+      if (!shell.hidden && activeTab === "book") {
+        renderBookPanel();
       }
     },
     refreshAdvancedTab: function () {
-      if (!shell.hidden && activeTab === "advanced") {
+      if (!shell.hidden && activeTab === "more") {
         renderAdvancedPanel();
       }
     },

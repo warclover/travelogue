@@ -265,16 +265,24 @@ def test_v3_sheet_has_content_wrapper() -> None:
 
 def test_v3_task_dock_exports_g1_and_pending() -> None:
     dock = TASK_DOCK_JS.read_text(encoding="utf-8")
-    for token in ("showG1", "showPending", "showExporting", "showSuccess", "onResultDismissed"):
+    for token in (
+        "showG1",
+        "showPending",
+        "showStale",
+        "showExporting",
+        "showSuccess",
+        "onResultDismissed",
+    ):
         assert token in dock
 
 
-def test_v3_sheet_has_four_tabs_and_leave_confirm() -> None:
+def test_v3_sheet_has_three_zone_tabs_and_leave_confirm() -> None:
     sheet = SHEET_JS.read_text(encoding="utf-8")
-    for label in ("文字", "结构", "排版", "高级"):
+    for label in ("这页", "这本", "导出与更多"):
         assert label in sheet
     assert "confirmLeaveCurrentTab" in sheet or "confirmLeave" in sheet
     assert "setStructureDot" in sheet
+    assert "滚动到正文屏可调整本页" in sheet
 
 
 def _seed_preview_trip(trips_dir: Path, trip_id: str = "v3-smoke") -> str:
@@ -472,3 +480,116 @@ def test_v3_mobile_keeps_bottom_sheet(tmp_path: Path) -> None:
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
+    """PRD-PREVIEW-REFINE-V1 · P0 MF-01～06 静态门禁。"""
+    dock = (STUDIO / "preview-toolbar" / "dock.js").read_text(encoding="utf-8")
+    bootstrap = (STUDIO / "preview-toolbar" / "bootstrap.js").read_text(encoding="utf-8")
+    longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    core = (STUDIO / "preview-toolbar" / "core.js").read_text(encoding="utf-8")
+    sheet = SHEET_JS.read_text(encoding="utf-8")
+    task_dock = TASK_DOCK_JS.read_text(encoding="utf-8")
+    modal = (STUDIO / "studio-modal.js").read_text(encoding="utf-8")
+    home = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
+
+    assert 'case "refine":' in dock
+    assert 'dockIconSvg("refine")' in bootstrap
+    assert 'aria-label="精修"' in bootstrap
+    assert "版面尚未更新" in longshot
+    assert "更新并导出" in longshot
+    assert "仅更新版面" in longshot
+    assert "_getLayoutPending()" in longshot
+    assert "consumeExportAfterLayout" in longshot
+    assert "版面有更新" in core
+    assert "正在更新版面" in core
+    assert "有编辑尚未应用排版" not in core
+    assert "应用排版" not in task_dock
+    assert "更新版面" in task_dock
+    assert "版面有更新" in task_dock
+    assert ">精修<" in sheet or 'preview-sheet__title">精修' in sheet
+    assert "改精选或拼图后，请点「更新版面」。" in sheet
+    assert "secondaryText" in modal
+    assert "studio__modal-actions--stacked" in modal
+    assert "导入偏好" in home
+    assert ">导入偏好<" in home
+    assert ">设置<" not in home
+    assert "工作台设置" not in home
+    assert "编辑与设置" not in bootstrap
+    assert "编辑与设置" not in sheet
+
+
+def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
+    """PRD-PREVIEW-REFINE-V1 · P1 M4 G1 横幅 + M3 三区 IA。"""
+    features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
+    core = (STUDIO / "preview-toolbar" / "core.js").read_text(encoding="utf-8")
+    sheet = SHEET_JS.read_text(encoding="utf-8")
+    drawers = (STUDIO / "preview-toolbar" / "drawers.js").read_text(encoding="utf-8")
+    css = (STUDIO / "preview-toolbar" / "drawers.css").read_text(encoding="utf-8")
+    shell = (STUDIO / "preview-toolbar" / "shell.js").read_text(encoding="utf-8")
+
+    assert "mountG1Banner" in features
+    assert "章节结构待确认 · 请浏览各章顺序后确认" in features
+    assert "章节顺序 OK" in features
+    assert "重新生成结构" in features
+    assert "preview-toolbar__g1-banner--v4" in features or "g1-banner--v4" in css
+    assert "_g1BannerVisible" in core
+    # D-REF-18 · G1 pending 时不落 layoutPending Task Dock
+    assert "if (_g1Pending)" in core
+    g1_block = core.split("if (_g1Pending)", 1)[1].split("if (_layoutPending", 1)[0]
+    assert "return;" in g1_block
+    assert 'label: "这页"' in sheet
+    assert 'label: "这本"' in sheet
+    assert 'label: "导出与更多"' in sheet
+    assert "滚动到正文屏可调整本页" in sheet
+    assert "regenerateStructure" in drawers
+    assert 'label: "文字"' not in sheet
+    assert 'label: "高级"' not in sheet
+    assert "精修 · 这本" in shell
+    assert "可在「排版」中更换" not in shell
+
+
+def test_preview_refine_v1_d_ref_13_rewrite_copy() -> None:
+    """D-REF-13 · 按新意图重写：文案 + 二次确认 + busy。"""
+    drawers = (STUDIO / "preview-toolbar" / "drawers.js").read_text(encoding="utf-8")
+    core = (STUDIO / "preview-toolbar" / "core.js").read_text(encoding="utf-8")
+    assert "按新意图重写文案" in drawers
+    assert "正在重写…" in drawers
+    assert "skipConfirm: true" in drawers
+    assert "保存并重新生成文案" not in drawers
+    assert "opts.skipConfirm" in core or "skipConfirm" in core
+
+
+def test_preview_refine_v1_p2_feedback_and_cohort_gate() -> None:
+    """PRD-PREVIEW-REFINE-V1 · P2 M5 inline ✓ + M6 cohort 藏入口。"""
+    inline_js = (ROOT / "templates" / "visual-journal" / "inline-edit.js").read_text(
+        encoding="utf-8"
+    )
+    inline_css = (ROOT / "templates" / "visual-journal" / "inline-edit.css").read_text(
+        encoding="utf-8"
+    )
+    cover_js = (STUDIO / "preview-toolbar" / "inline-edit.js").read_text(encoding="utf-8")
+    sheet = SHEET_JS.read_text(encoding="utf-8")
+    task_dock = TASK_DOCK_JS.read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    hbs = (
+        ROOT / "templates" / "visual-journal" / "partials" / "longshot-toolbar.hbs"
+    ).read_text(encoding="utf-8")
+
+    assert "已保存到 trip.json" not in inline_js
+    assert "showFieldSavedMark" in inline_js
+    assert "点一下文案可修改" in inline_js
+    assert "inline-edit__field--saved::after" in inline_css
+    assert 'content: "✓"' in inline_css
+    assert "cover-opening__title--saved" in cover_js
+    assert "杂志名已保存" not in cover_js
+    assert "cohortEmbed.hidden = true" in sheet
+    assert "旅行主角 · 同框未开启" not in sheet
+    assert "showStale" in task_dock
+    assert "长图已过期" in task_dock
+    assert "重新导出" in task_dock
+    assert "onReExport" in init_v3
+    assert "未保存的编辑" not in init_v3
+    assert "_longshotStale" in longshot
+    assert "保存到 trip.json" not in hbs

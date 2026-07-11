@@ -2,6 +2,7 @@
 
 | 文件 | 说明 |
 |------|------|
+| [preview-refine-v1-wireframe.html](./preview-refine-v1-wireframe.html) | **预览精修体验 V1** · 验货默认 + 这页/这本/导出与更多 + 更新版面/导出拦截 · [PRD-PREVIEW-REFINE-V1](../PRD-PREVIEW-REFINE-V1.md) · 待评审 |
 | [preview-cover-web-v1-wireframe.html](./preview-cover-web-v1-wireframe.html) | **Web 预览页封面 v1** · 首屏线框 · 现状 + A/B/C/D 四方案 · **已落地 D 全视窗** · 设计评审用 |
 | [preview-closing-web-v1-wireframe.html](./preview-closing-web-v1-wireframe.html) | **Web 预览页封底 v1** · 末屏线框 · 对称 `cover-opening` · **推荐 D 全视窗封底** · 待评审 |
 | [studio-homepage-output-first-v1.6.html](./studio-homepage-output-first-v1.6.html) | **首页探索 v1.6** · PRD v2.0.3 reconcile · **Web/iPad Tab 为 M20 验收依据**；Mobile Tab = 小程序探索参考 |
@@ -20,6 +21,8 @@
 ## 如何查看
 
 双击 HTML 文件，或用浏览器打开。
+
+**精修体验 V1 评审 Tab**：**① 诊断** · **② 验货默认** · **③ 精修·这页** · **④ 精修·这本** · **⑤ 更新版面/拦截** · **⑥ G1 横幅** · **⑦ 导入偏好** · **⑧ 对照表** · **⑨ 规范** · **⑩ 图标** · **⑪ 这页空态** · **⑫ P0 过渡** · PRD：[PRD-PREVIEW-REFINE-V1.md](../PRD-PREVIEW-REFINE-V1.md) **v1.2** · 验收：[ACCEPTANCE-PREVIEW-REFINE-V1.md](../ACCEPTANCE-PREVIEW-REFINE-V1.md) · 评审记录：[preview-refine-v1-review-2026-07-11.md](../acceptance-records/preview-refine-v1-review-2026-07-11.md)
 
 **output-first v1.6 评审 Tab（M20）**：**Web·空态** · **iPad·横屏** · **Import Sheet** · **Web·导入中** · **Web·书架** · PRD：[PRD-STUDIO-HOMEPAGE-v2.md](../PRD-STUDIO-HOMEPAGE-v2.md) **v2.0.3** · 契约：[studio-homepage-v2/](../studio-homepage-v2/README.md) · Mobile Tab 非 Studio Web 范围
 

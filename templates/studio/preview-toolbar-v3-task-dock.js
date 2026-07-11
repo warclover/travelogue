@@ -228,11 +228,11 @@ export function mountPreviewTaskDock(root, hooks) {
     textWrap.className = "preview-task-dock__text";
     var main = document.createElement("span");
     main.className = "preview-task-dock__main";
-    main.textContent = opts.title || "章节结构待确认（G1）";
+    main.textContent = opts.title || "章节结构待确认";
     textWrap.appendChild(main);
     var sub = document.createElement("small");
     sub.textContent =
-      opts.subtitle || "请浏览各章顺序，确认后将生成文案并完成排版";
+      opts.subtitle || "请浏览各章顺序后确认，将继续生成文案并排版";
     textWrap.appendChild(sub);
 
     var actions = document.createElement("div");
@@ -242,7 +242,7 @@ export function mountPreviewTaskDock(root, hooks) {
       var openBtn = document.createElement("button");
       openBtn.type = "button";
       openBtn.className = "preview-task-dock__btn preview-task-dock__btn--accent";
-      openBtn.textContent = "查看结构";
+      openBtn.textContent = "去确认";
       openBtn.addEventListener("click", function () {
         hooks.onOpenStructure();
       });
@@ -252,7 +252,7 @@ export function mountPreviewTaskDock(root, hooks) {
       var confirmBtn = document.createElement("button");
       confirmBtn.type = "button";
       confirmBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
-      confirmBtn.textContent = "确认并继续";
+      confirmBtn.textContent = "章节顺序 OK";
       confirmBtn.addEventListener("click", function () {
         hooks.onConfirmStructure();
       });
@@ -289,11 +289,11 @@ export function mountPreviewTaskDock(root, hooks) {
     textWrap.className = "preview-task-dock__text";
     var main = document.createElement("span");
     main.className = "preview-task-dock__main";
-    main.textContent = opts.title || "有编辑尚未应用排版";
+    main.textContent = opts.title || "版面有更新";
     textWrap.appendChild(main);
     var sub = document.createElement("small");
     sub.textContent =
-      opts.subtitle || "导出长图前建议先应用，否则与当前预览不一致";
+      opts.subtitle || "改过精选或拼图后，请先更新版面再导出";
     textWrap.appendChild(sub);
 
     var actions = document.createElement("div");
@@ -303,7 +303,7 @@ export function mountPreviewTaskDock(root, hooks) {
       var applyBtn = document.createElement("button");
       applyBtn.type = "button";
       applyBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
-      applyBtn.textContent = "应用排版";
+      applyBtn.textContent = "更新版面";
       applyBtn.addEventListener("click", function () {
         hooks.onApplyLayout();
       });
@@ -325,6 +325,57 @@ export function mountPreviewTaskDock(root, hooks) {
     dock.appendChild(actions);
   }
 
+  function showStale(opts) {
+    opts = opts || {};
+    clearTimers();
+    dock.hidden = false;
+    dock.className = "preview-task-dock preview-task-dock--warn";
+    dock.innerHTML = "";
+
+    var icon = document.createElement("span");
+    icon.className = "preview-task-dock__icon";
+    icon.textContent = "↻";
+
+    var textWrap = document.createElement("div");
+    textWrap.className = "preview-task-dock__text";
+    var main = document.createElement("span");
+    main.className = "preview-task-dock__main";
+    main.textContent = opts.title || "长图已过期";
+    textWrap.appendChild(main);
+    var sub = document.createElement("small");
+    sub.textContent =
+      opts.subtitle || "内容有更新，请重新导出后再分享";
+    textWrap.appendChild(sub);
+
+    var actions = document.createElement("div");
+    actions.className = "preview-task-dock__actions";
+
+    if (typeof hooks.onReExport === "function") {
+      var exportBtn = document.createElement("button");
+      exportBtn.type = "button";
+      exportBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
+      exportBtn.textContent = "重新导出";
+      exportBtn.addEventListener("click", function () {
+        hooks.onReExport();
+      });
+      actions.appendChild(exportBtn);
+    }
+
+    var laterBtn = document.createElement("button");
+    laterBtn.type = "button";
+    laterBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
+    laterBtn.textContent = "稍后";
+    laterBtn.addEventListener("click", function () {
+      hide();
+      if (typeof hooks.onDismissStale === "function") hooks.onDismissStale();
+    });
+    actions.appendChild(laterBtn);
+
+    dock.appendChild(icon);
+    dock.appendChild(textWrap);
+    dock.appendChild(actions);
+  }
+
   function showError(message) {
     showSuccess({ status: "failed", error: { message: message || "导出失败" } });
   }
@@ -336,6 +387,7 @@ export function mountPreviewTaskDock(root, hooks) {
     showSuccess: showSuccess,
     showG1: showG1,
     showPending: showPending,
+    showStale: showStale,
     showError: showError,
   };
 }

@@ -44,7 +44,7 @@ var _currentChapterId = function () {
 };
 var _markSheetEditBaseline = function (_root, _panel) {};
 var _wireSheetEditDirty = function (_root, _panel) {};
-var _startLlmNarrate = function (_root, _tripId, _btn) {};
+var _startLlmNarrate = function (_root, _tripId, _btn, _opts) {};
 /** @type {function(string, Element=): Promise<void>} */
 var _applyLayoutRerender = function (_tripId, _root) {
   return Promise.resolve();
@@ -385,10 +385,10 @@ export function initPreviewDrawers(root, tripId) {
       '<p class="preview-drawer__hint preview-drawer__copy-intent-hint">可选填；有语音素材时会优先用原声</p>' +
       '<p class="preview-drawer__hint preview-drawer__copy-intent-voice-skip" hidden>本章有录音，已优先用原声，无需填写意图</p>' +
       "</details>" +
-      '<p class="preview-drawer__featured-help">★ 在任意一屏右下角可将照片标为精选，之后点「应用排版」生效</p>' +
-      '<p class="preview-drawer__featured-help">拼图/整图屏左上角可改判媒资类型（普通照片 ↔ 拼图），改后请应用排版</p>' +
-      '<button type="button" class="preview-drawer__ghost preview-drawer__narrate-anchors">保存并重新生成文案</button>' +
-      '<button type="button" class="preview-drawer__primary preview-drawer__save-edit">保存编辑</button>';
+      '<button type="button" class="preview-drawer__primary preview-drawer__narrate-anchors">按新意图重写文案</button>' +
+      '<p class="preview-drawer__featured-help">★ 在任意一屏右下角可将照片标为精选，之后点「更新版面」生效</p>' +
+      '<p class="preview-drawer__featured-help">拼图/整图屏左上角可改判媒资类型（普通照片 ↔ 拼图），改后请更新版面</p>' +
+      '<p class="preview-drawer__footnote">改精选或拼图后，请点「更新版面」。</p>';
 
     var structTpl =
       '<div class="preview-drawer__g1"></div>' +
@@ -398,7 +398,7 @@ export function initPreviewDrawers(root, tripId) {
       "</div>" +
       '<div class="preview-drawer__explain"></div>' +
       '<div class="preview-drawer__aesthetic" hidden></div>' +
-      '<button type="button" class="preview-drawer__primary preview-drawer__apply-layout">应用排版</button>';
+      '<button type="button" class="preview-drawer__primary preview-drawer__apply-layout">更新版面</button>';
 
     function pollStudioJob(jobId, onDone) {
       pollJobUntilDone(jobId, { intervalMs: 800 })
@@ -572,6 +572,41 @@ export function initPreviewDrawers(root, tripId) {
         });
     }
 
+    function runG1Regenerate(triggerBtn) {
+      return toolbarConfirm({
+        title: "重新生成结构",
+        body: "将重新生成章节结构，可能覆盖当前分章。继续？",
+        confirmText: "继续",
+        danger: true,
+      }).then(function (ok) {
+        if (!ok) return false;
+        if (triggerBtn) triggerBtn.disabled = true;
+        return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/curate", { force: true })
+          .then(function (res) {
+            if (res.status === 202 && res.body && res.body.jobId) {
+              pollStudioJob(res.body.jobId, function (job) {
+                if (triggerBtn) triggerBtn.disabled = false;
+                if (job.status === "succeeded") {
+                  showToolbarToast("结构已重新生成");
+                  window.location.reload();
+                  return;
+                }
+                showToolbarToast("重新生成失败", { error: true });
+              });
+              return true;
+            }
+            if (triggerBtn) triggerBtn.disabled = false;
+            showToolbarToast("无法开始", { error: true });
+            return false;
+          })
+          .catch(function () {
+            if (triggerBtn) triggerBtn.disabled = false;
+            showToolbarToast("无法开始", { error: true });
+            return false;
+          });
+      });
+    }
+
     function openDrawer(mode) {
       if (!entryCache) {
         _fetchEntry(tripId).then(function (data) {
@@ -624,9 +659,9 @@ export function initPreviewDrawers(root, tripId) {
             var v = (inp.value || "").trim();
             if (v) anchors.push(v);
           });
-          btn.disabled = true;
+          if (btn) btn.disabled = true;
           if (titleVal.length > 20) {
-            btn.disabled = false;
+            if (btn) btn.disabled = false;
             showToolbarToast("杂志名最多 20 个字", { error: true });
             return Promise.resolve(false);
           }
@@ -652,7 +687,7 @@ export function initPreviewDrawers(root, tripId) {
           }
           return Promise.all(tasks)
             .then(function (results) {
-              btn.disabled = false;
+              if (btn) btn.disabled = false;
               var ok = results.every(function (r) { return r.status === 200 && r.body.ok; });
               if (!ok) {
                 var errMsg = "保存失败";
@@ -692,11 +727,11 @@ export function initPreviewDrawers(root, tripId) {
                 }
               }
               if (!opts.skipToast) {
-                var copyIntentPayload = readCopyIntentPayload();
-                var hasIntent = copyIntentPayload && copyIntentPayload.clear !== true;
+                var savedIntentPayload = readCopyIntentPayload();
+                var hasIntent = savedIntentPayload && savedIntentPayload.clear !== true;
                 showToolbarToast(
                   anchors.length > 0 || hasIntent
-                    ? "编辑已保存。可在「编辑与设置」中重新生成文案以写入锚点与点缀。"
+                    ? "编辑已保存。可在「精修」中重新生成文案以写入锚点与点缀。"
                     : "编辑已保存"
                 );
               }
@@ -706,26 +741,70 @@ export function initPreviewDrawers(root, tripId) {
               return true;
             })
             .catch(function () {
-              btn.disabled = false;
+              if (btn) btn.disabled = false;
               showToolbarToast("保存失败", { error: true });
               return false;
             });
         }
 
-        targetBody.querySelector(".preview-drawer__save-edit").addEventListener("click", function () {
-          var btn = this;
-          persistEditDrawer(btn).then(function (ok) {
-            if (ok) closeDrawer();
+        // D-REF-05 · 文案类立即保存（失焦 / chip 变更），不再依赖「保存编辑」主按钮
+        var autoPersistTimer = null;
+        var autoPersisting = false;
+        function scheduleAutoPersist() {
+          if (autoPersistTimer) window.clearTimeout(autoPersistTimer);
+          autoPersistTimer = window.setTimeout(function () {
+            if (autoPersisting) return;
+            autoPersisting = true;
+            persistEditDrawer(null, { skipToast: true }).then(function () {
+              autoPersisting = false;
+            });
+          }, 320);
+        }
+        targetBody
+          .querySelectorAll(
+            ".preview-drawer__title-input, .preview-drawer__notes, .preview-drawer__anchor, .preview-drawer__copy-intent-note"
+          )
+          .forEach(function (el) {
+            el.addEventListener("blur", scheduleAutoPersist);
           });
-        });
+        var subsequent = targetBody.querySelector(".preview-drawer__copy-intent-subsequent");
+        if (subsequent) {
+          subsequent.addEventListener("change", scheduleAutoPersist);
+        }
+        targetBody
+          .querySelectorAll(".preview-drawer__chip-mood, .preview-drawer__chip-focus")
+          .forEach(function (chip) {
+            chip.addEventListener("click", function () {
+              window.setTimeout(scheduleAutoPersist, 0);
+            });
+          });
+
         var narrateAnchorsBtn = targetBody.querySelector(".preview-drawer__narrate-anchors");
         if (narrateAnchorsBtn) {
           narrateAnchorsBtn.addEventListener("click", function () {
             var btn = this;
-            persistEditDrawer(btn, { skipToast: true }).then(function (ok) {
+            if (btn.disabled) return;
+            // D-REF-13 · 二次确认；确认后 busy，完成前不可连点
+            toolbarConfirm({
+              title: "按新意图重写文案",
+              body: "将按当前锚点与章意图重新生成文案，可能覆盖未锁定的内容。继续？",
+              confirmText: "重写",
+            }).then(function (ok) {
               if (!ok) return;
-              closeDrawer();
-              _startLlmNarrate(root, tripId, btn);
+              btn.disabled = true;
+              btn.dataset.labelIdle = "按新意图重写文案";
+              btn.textContent = "正在重写…";
+              return persistEditDrawer(btn, { skipToast: true }).then(function (saved) {
+                if (!saved) {
+                  btn.disabled = false;
+                  btn.textContent = btn.dataset.labelIdle;
+                  return;
+                }
+                return _startLlmNarrate(root, tripId, btn, {
+                  skipConfirm: true,
+                  busyHint: "正在按新意图重写文案…",
+                });
+              });
             });
           });
         }
@@ -761,7 +840,8 @@ export function initPreviewDrawers(root, tripId) {
       var pending = entryCache.g1Pending || status === "structure_draft";
       if (pending) {
         g1.className = "preview-drawer__g1 preview-drawer__g1--warn";
-        g1.textContent = "章节结构待确认：请浏览各章顺序，确认后将生成文案并完成排版。";
+        g1.textContent =
+          "章节结构待确认：请先看顶栏横幅确认顺序；也可在此确认或重新生成。";
         if (g1Actions) g1Actions.hidden = false;
         var confirmBtn = targetBody.querySelector(".preview-drawer__g1-confirm");
         var regenBtn = targetBody.querySelector(".preview-drawer__g1-regenerate");
@@ -772,40 +852,12 @@ export function initPreviewDrawers(root, tripId) {
         }
         if (regenBtn) {
           regenBtn.addEventListener("click", function () {
-            toolbarConfirm({
-              title: "重新生成结构",
-              body: "将重新生成章节结构，可能覆盖当前分章。继续？",
-              confirmText: "继续",
-              danger: true,
-            }).then(function (ok) {
-              if (!ok) return;
-              regenBtn.disabled = true;
-              return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/curate", { force: true });
-            }).then(function (res) {
-              if (!res) return;
-              if (res.status === 202 && res.body && res.body.jobId) {
-                pollStudioJob(res.body.jobId, function (job) {
-                  regenBtn.disabled = false;
-                  if (job.status === "succeeded") {
-                    showToolbarToast("结构已重新生成");
-                    window.location.reload();
-                    return;
-                  }
-                  showToolbarToast("重新生成失败", { error: true });
-                });
-                return;
-              }
-              regenBtn.disabled = false;
-              showToolbarToast("无法开始", { error: true });
-            }).catch(function () {
-              regenBtn.disabled = false;
-              showToolbarToast("重新生成失败", { error: true });
-            });
+            runG1Regenerate(regenBtn);
           });
         }
       } else {
         g1.className = "preview-drawer__g1 preview-drawer__g1--info";
-        g1.textContent = "章节已按行程排好，可在预览中改字、锚点与精选。";
+        g1.textContent = "章节已按行程排好，可在预览中改字、锚点与精选。结构确认见顶栏横幅（若开启）。";
         if (g1Actions) g1Actions.hidden = true;
       }
       loadChapterExplain(tripId, targetBody.querySelector(".preview-drawer__explain"));
@@ -839,6 +891,7 @@ export function initPreviewDrawers(root, tripId) {
         openDrawer(mode);
       },
       confirmStructure: function () { return runG1Confirm(null); },
+      regenerateStructure: function () { return runG1Regenerate(null); },
       close: closeDrawer,
       refreshEntry: function () {
         return _fetchEntry(tripId).then(function (data) {
