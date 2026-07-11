@@ -100,6 +100,7 @@
     el.setAttribute("title", "点击编辑");
 
     el.addEventListener("click", function (e) {
+      if (isSharePreview()) return;
       if (isPhotosOnly()) return;
       if (el.getAttribute("contenteditable") === "true") return;
       e.preventDefault();
@@ -118,7 +119,15 @@
       }
     });
 
+    el.addEventListener("dblclick", function (e) {
+      if (isSharePreview()) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+
     el.addEventListener("keydown", function (e) {
+      if (isSharePreview()) return;
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         el.blur();
@@ -134,6 +143,11 @@
     });
 
     el.addEventListener("blur", function () {
+      if (isSharePreview()) {
+        el.removeAttribute("contenteditable");
+        el.classList.remove("inline-edit__field--active");
+        return;
+      }
       if (el.getAttribute("contenteditable") !== "true") return;
       el.removeAttribute("contenteditable");
       el.classList.remove("inline-edit__field--active");

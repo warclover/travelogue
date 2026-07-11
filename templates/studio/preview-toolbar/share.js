@@ -20,6 +20,50 @@ export function isSharePreview() {
   return q.indexOf("share=1") >= 0 || q.indexOf("mode=share") >= 0;
 }
 
+function stripEditableChrome() {
+  document.documentElement.setAttribute("data-inline-edit", "off");
+  document.documentElement.removeAttribute("data-caption-edit");
+
+  document.querySelectorAll("[data-editable]").forEach(function (el) {
+    el.removeAttribute("contenteditable");
+    el.removeAttribute("tabindex");
+    el.removeAttribute("title");
+    el.removeAttribute("data-editable");
+    el.removeAttribute("data-edit-path");
+    el.removeAttribute("data-edit-initial");
+    el.removeAttribute("aria-label");
+    el.classList.remove("inline-edit__field--active");
+    el.classList.remove("inline-edit__field--saving");
+  });
+  document.querySelectorAll(".cover-opening__title--editable").forEach(function (el) {
+    el.classList.remove("cover-opening__title--editable");
+    el.removeAttribute("role");
+    el.removeAttribute("tabindex");
+    el.removeAttribute("aria-label");
+  });
+
+  // 底栏 / 放映提示里的「点击文案可编辑」
+  document
+    .querySelectorAll(
+      ".footer-cta, .preview-edit-hint, .screenplay-toolbar__hint, .screenplay-toolbar"
+    )
+    .forEach(function (el) {
+      var text = el.textContent || "";
+      if (text.indexOf("可编辑") >= 0 || text.indexOf("点击文案") >= 0) {
+        if (el.classList.contains("screenplay-toolbar__hint")) {
+          el.textContent = text
+            .replace(/[·•]\s*点击文案可编辑/g, "")
+            .replace(/点击文案可编辑\s*[·•]?\s*/g, "")
+            .replace(/\s{2,}/g, " ")
+            .trim();
+          if (!el.textContent) el.hidden = true;
+        } else {
+          el.hidden = true;
+        }
+      }
+    });
+}
+
 function setShareSaveStatus(root, text, isError) {
   var el = root.querySelector(".preview-toolbar__share-save-status");
   if (!el) return;
@@ -125,6 +169,7 @@ export function initShareMinimal() {
   document.documentElement.setAttribute("data-preview-share", "on");
   // Trust V1 · Share 强制验货/只读壳
   setPreviewRefineMode(false);
+  stripEditableChrome();
 
   var root = document.createElement("div");
   root.className = "preview-toolbar preview-toolbar--share-minimal";
@@ -152,19 +197,6 @@ export function initShareMinimal() {
     });
   }
 
-  // 禁用仍残留的可编辑提示 / contenteditable
-  document.querySelectorAll("[data-editable]").forEach(function (el) {
-    el.removeAttribute("contenteditable");
-    el.removeAttribute("tabindex");
-    el.removeAttribute("title");
-    el.classList.remove("inline-edit__field--active");
-  });
-  document.querySelectorAll(".cover-opening__title--editable").forEach(function (el) {
-    el.classList.remove("cover-opening__title--editable");
-    el.removeAttribute("role");
-    el.removeAttribute("tabindex");
-  });
-
   var footerHomes = document.querySelectorAll(".footer-cta__studio-home");
   if (footerHomes.length) {
     footerHomes.forEach(function (row) {
@@ -181,13 +213,9 @@ export function initShareMinimal() {
     }
   }
 
-  // 底栏若仍写「点击文案可编辑」类文案则隐藏
-  document.querySelectorAll(".footer-cta, .preview-edit-hint").forEach(function (el) {
-    var text = el.textContent || "";
-    if (text.indexOf("可编辑") >= 0 || text.indexOf("点击文案") >= 0) {
-      el.hidden = true;
-    }
-  });
+  // 延迟再剥一次：防 inline-edit 后挂载
+  window.setTimeout(stripEditableChrome, 0);
+  window.setTimeout(stripEditableChrome, 400);
 }
 
 export function ensureCoverMobileFootnote() {

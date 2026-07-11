@@ -2337,9 +2337,16 @@ html[data-layout="web"] .media-scroll__item[data-aspect-kind="panorama"] img.med
   opacity: 0.92;
 }
 
-/* 分享导出 */
-html[data-export="share"] [data-editable] {
+/* 分享导出 / Share 预览 */
+html[data-export="share"] [data-editable],
+html[data-preview-share="on"] [data-editable] {
   outline: none;
+  pointer-events: none;
+  cursor: default;
+}
+
+html[data-preview-share="on"] [contenteditable="true"] {
+  pointer-events: none !important;
 }
 
 html[data-export="share"] .voice-transcript:not([open]) .voice-transcript__full {

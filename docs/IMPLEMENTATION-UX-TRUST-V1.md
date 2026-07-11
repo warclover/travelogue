@@ -57,7 +57,10 @@
 | M-TRU-C1 | exportAfterLayout 带 platform | ✅ |
 | M-TRU-C2 | 进度/成功平台话术 | ✅ |
 | M-TRU-C3 | 断服文案 + 回到预览（EXP-04） | ✅ |
+| M-TRU-C4 | 续跑 platform 双写 resume + prefs 同步（AC-07 复测修） | ✅ |
+| M-TRU-C5 | layout 更新 90s 超时收口 + 409 不空挂 | ✅ |
 | M-TRU-A5 | Share「保存图片」（SHARE-03） | ✅ |
+| M-TRU-A6 | Share 剥 editable + 藏「可编辑」提示（AC-13 复测修） | ✅ |
 | M-TRU-D1 | assessMagazineTitleRisk | ✅ |
 | M-TRU-D2 | 门禁 Modal + 改名写路径 | ✅ |
 | M-TRU-D3 | bypass 成功回声 | ✅ |

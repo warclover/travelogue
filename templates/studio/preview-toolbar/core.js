@@ -292,6 +292,7 @@ export function refreshPreviewCover(root) {
 
 export function applyLayoutRerender(tripId, root, opts) {
     opts = opts || {};
+    var LAYOUT_RERENDER_TIMEOUT_MS = opts.timeoutMs || 90000;
     var applyBtns = layoutApplyButtons(
       root || document.querySelector(".preview-toolbar") || document.body
     );
@@ -303,12 +304,30 @@ export function applyLayoutRerender(tripId, root, opts) {
     });
     if (pendingBtn) pendingBtn.disabled = true;
     showToolbarToast(opts.busyMessage || "正在更新版面…", { duration: 3000 });
-    return postJson(tripApiBase(tripId) + "/rerender", {})
+
+    var timedOut = false;
+    var timeoutId = null;
+    var timeoutPromise = new Promise(function (_resolve, reject) {
+      timeoutId = setTimeout(function () {
+        timedOut = true;
+        reject(new Error("layout_rerender_timeout"));
+      }, LAYOUT_RERENDER_TIMEOUT_MS);
+    });
+
+    function finishButtons() {
+      applyBtns.forEach(function (btn) {
+        btn.disabled = false;
+      });
+      if (pendingBtn) pendingBtn.disabled = false;
+    }
+
+    return Promise.race([
+      postJson(tripApiBase(tripId) + "/rerender", {}),
+      timeoutPromise,
+    ])
       .then(function (res) {
-        applyBtns.forEach(function (btn) {
-          btn.disabled = false;
-        });
-        if (pendingBtn) pendingBtn.disabled = false;
+        if (timeoutId) clearTimeout(timeoutId);
+        finishButtons();
         if (res.status !== 200 || !res.body.ok) {
           var errCode =
             (res.body && (res.body.error || res.body.code)) ||
@@ -334,16 +353,20 @@ export function applyLayoutRerender(tripId, root, opts) {
         reloadPreviewAfterLayout();
         return true;
       })
-      .catch(function () {
-        applyBtns.forEach(function (btn) {
-          btn.disabled = false;
-        });
-        if (pendingBtn) pendingBtn.disabled = false;
-        showToolbarToast(opts.failMessage || "更新版面失败", { error: true });
+      .catch(function (err) {
+        if (timeoutId) clearTimeout(timeoutId);
+        finishButtons();
+        var isTimeout =
+          timedOut ||
+          (err && String(err.message || "") === "layout_rerender_timeout");
+        var failMsg = isTimeout
+          ? opts.failMessage || "版面没有更新成功，长图尚未开始"
+          : opts.failMessage || "更新版面失败";
+        showToolbarToast(failMsg, { error: true });
         setLayoutPending(true);
         if (typeof opts.onFail === "function") {
           try {
-            opts.onFail("E_NETWORK");
+            opts.onFail(isTimeout ? "E_LAYOUT_TIMEOUT" : "E_NETWORK");
           } catch (eFailNet) {}
         }
         return false;

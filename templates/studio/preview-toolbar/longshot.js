@@ -78,6 +78,7 @@ var _applyLayoutRerender = function (_tripId, _root) {
 };
 
 var EXPORT_AFTER_LAYOUT_KEY = "travelogue.studio.exportAfterLayout";
+var EXPORT_RESUME_PLATFORM_KEY = "travelogue.studio.exportResumePlatform";
 var LAYOUT_UPDATING_KEY = "travelogue.studio.layoutUpdating";
 var EXPECT_LAYOUT_RELOAD_KEY = "travelogue.studio.expectLayoutReload";
 var UPDATE_ONLY_HINT_KEY = "travelogue.studio.updateOnlyHint";
@@ -141,12 +142,62 @@ function markExpectLayoutReload() {
   _writeJsonStorage(sessionStorage, EXPECT_LAYOUT_RELOAD_KEY, { ts: Date.now() });
 }
 
-function writeExportAfterLayout(tripId) {
+function resolveExportPlatform() {
+  var pop = document.querySelector(".preview-toolbar__export-popover");
+  if (pop && pop._panelDraft && typeof pop._panelDraft.getDraft === "function") {
+    try {
+      var draft = pop._panelDraft.getDraft();
+      if (draft && draft.platform) return String(draft.platform);
+    } catch (eDraft) {}
+  }
   var prefs = readLongshotExportPrefs();
+  return (prefs && prefs.platform) || "wechat_chat";
+}
+
+function writeResumePlatform(tripId, platform) {
+  return _writeJsonStorage(sessionStorage, EXPORT_RESUME_PLATFORM_KEY, {
+    tripId: String(tripId || ""),
+    platform: String(platform || "wechat_chat"),
+    ts: Date.now(),
+  });
+}
+
+function readResumePlatform(tripId) {
+  var data = _readJsonStorage(sessionStorage, EXPORT_RESUME_PLATFORM_KEY);
+  if (!data) return null;
+  if (String(data.tripId || "") !== String(tripId || "")) return null;
+  if (data.ts && Date.now() - Number(data.ts) > EXPORT_AFTER_TTL_MS) {
+    _removeStorage(sessionStorage, EXPORT_RESUME_PLATFORM_KEY);
+    return null;
+  }
+  return data.platform ? String(data.platform) : null;
+}
+
+function clearResumePlatform() {
+  _removeStorage(sessionStorage, EXPORT_RESUME_PLATFORM_KEY);
+}
+
+function syncPrefsPlatform(platform) {
+  if (!platform) return;
+  try {
+    var prefs = readExportPrefs();
+    writeExportPrefs(
+      Object.assign({}, prefs, {
+        platform: platform,
+      })
+    );
+  } catch (eSync) {}
+}
+
+function writeExportAfterLayout(tripId) {
+  var platform = resolveExportPlatform();
+  // AC-TRU-07 · 双写：flag + resume key，防止消费后 prefs 被默认值覆盖
+  writeResumePlatform(tripId, platform);
+  syncPrefsPlatform(platform);
   return _writeJsonStorage(sessionStorage, EXPORT_AFTER_LAYOUT_KEY, {
     tripId: String(tripId || ""),
     ts: Date.now(),
-    platform: prefs.platform || "wechat_chat",
+    platform: platform,
   });
 }
 
@@ -1666,9 +1717,14 @@ export function cancelPreviewLongshotExport(root) {
     hideLongshotDrawer(root);
 
     var prefs = readLongshotExportPrefs();
+    // AC-TRU-07 · 续跑 platform 权威：pending → resume session → prefs
     var platform =
-      _pendingExportPlatform || prefs.platform || "wechat_chat";
+      _pendingExportPlatform ||
+      readResumePlatform(tripId) ||
+      prefs.platform ||
+      "wechat_chat";
     _pendingExportPlatform = null;
+    syncPrefsPlatform(platform);
     var runningHint =
       platform === "wechat_moments"
         ? "正在导出朋友圈配图…"
@@ -1698,12 +1754,31 @@ export function cancelPreviewLongshotExport(root) {
 
     postJsonBusyRetry("/__travelogue/longshot", req, {
       onBusy: function () {
-        setLongshotExportState(root, "running", { hint: "排队中，请稍候…" });
+        var busyHint =
+          platform === "wechat_moments"
+            ? "朋友圈配图排队中，请稍候…"
+            : platform === "xiaohongshu"
+              ? "小红书配图排队中，请稍候…"
+              : "排队中，请稍候…";
+        setLongshotExportState(root, "running", { hint: busyHint });
       },
     })
       .then(function (res) {
         if (isJobBusy409(res)) {
-          setLongshotExportState(root, "running", { hint: "排队中，请稍候…" });
+          trackStudioEvent("longshot_export_fail", {
+            platform: platform,
+            error_code: "E_STUDIO_JOB_BUSY",
+            trip_id: tripId,
+            surface: "preview",
+            from: from,
+          });
+          clearResumePlatform();
+          setLongshotExportState(root, "error", {
+            hint:
+              from === "after_layout"
+                ? "版面已更新，长图还在排队，请稍后再点「长图」"
+                : "导出排队超时，请稍后再试",
+          });
           return;
         }
         var failHint =
@@ -1718,6 +1793,7 @@ export function cancelPreviewLongshotExport(root) {
             surface: "preview",
             from: from,
           });
+          clearResumePlatform();
           setLongshotExportState(root, "error", {
             hint: failHint || (res.body && res.body.message) || "请稍候再试",
           });
@@ -1731,11 +1807,13 @@ export function cancelPreviewLongshotExport(root) {
             surface: "preview",
             from: from,
           });
+          clearResumePlatform();
           setLongshotExportState(root, "error", {
             hint: failHint || "无法开始导出",
           });
           return;
         }
+        clearResumePlatform();
         longshotJobId = res.body.jobId;
         pollJob(
           res.body.jobId,
@@ -1791,6 +1869,7 @@ export function cancelPreviewLongshotExport(root) {
           surface: "preview",
           from: from,
         });
+        clearResumePlatform();
         // F-TRU-EXP-04 · 启动请求断服
         applyDisconnectExportError(root, tripId);
       });
@@ -1864,10 +1943,15 @@ export function cancelPreviewLongshotExport(root) {
     trackStudioEvent("export_after_layout_consumed", {
       trip_id: currentId,
       latency_ms: latencyMs,
+      platform: flagged.platform || null,
     });
     _exportStartFrom = "after_layout";
-    if (flagged.platform) {
-      _pendingExportPlatform = flagged.platform;
+    var resumePlatform =
+      flagged.platform || readResumePlatform(currentId) || resolveExportPlatform();
+    if (resumePlatform) {
+      _pendingExportPlatform = resumePlatform;
+      writeResumePlatform(currentId, resumePlatform);
+      syncPrefsPlatform(resumePlatform);
     }
     // 续跑后若仍有标题风险，再跑门禁；否则直接导出
     maybeCopyGateThenExport(root, tripId);

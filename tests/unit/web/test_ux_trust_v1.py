@@ -79,6 +79,7 @@ def test_share_guards_and_inline_edit():
     assert "保存图片" in share
     assert 'aria-label="保存图片"' in share
     assert "platform: \"wechat_chat\"" in share or "platform: 'wechat_chat'" in share
+    assert "stripEditableChrome" in share
     inline = _read("templates/visual-journal/inline-edit.js")
     assert "isSharePreview" in inline
     assert "data-preview-refine" in inline
@@ -97,6 +98,29 @@ def test_longshot_trust_contracts():
     assert "disconnectExportFeedback" in text
     assert "回到预览" in text
     assert "onError:" in text
+    assert "EXPORT_RESUME_PLATFORM_KEY" in text
+    assert "readResumePlatform" in text
+    assert "syncPrefsPlatform" in text
+    assert "导出排队超时" in text
+    assert "长图还在排队" in text
+
+
+def test_share_strips_editable_and_hint():
+    share = _read("templates/studio/preview-toolbar/share.js")
+    assert "stripEditableChrome" in share
+    assert "screenplay-toolbar__hint" in share
+    assert 'data-inline-edit", "off"' in share or "data-inline-edit\", \"off\"" in share
+    inline = _read("templates/visual-journal/inline-edit.js")
+    assert "if (isSharePreview()) return;" in inline
+    journal = _read("templates/visual-journal/journal.css")
+    assert 'data-preview-share="on"] [data-editable]' in journal
+
+
+def test_layout_rerender_has_timeout():
+    core = _read("templates/studio/preview-toolbar/core.js")
+    assert "LAYOUT_RERENDER_TIMEOUT_MS" in core
+    assert "E_LAYOUT_TIMEOUT" in core
+    assert "layout_rerender_timeout" in core
 
 
 def test_copy_gate_06b_marks_seen_on_first_show():
