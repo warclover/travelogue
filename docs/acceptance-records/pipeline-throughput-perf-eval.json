@@ -19,7 +19,7 @@
     "parallel_ingest": false,
     "narrate_concurrency": 1,
     "studio_e2e_100_ms": 599037.4,
-    "studio_e2e_250_ms": null,
+    "studio_e2e_250_ms": 1911350.6,
     "ingest_time_100_ms": 315714.2,
     "ingest_time_250_ms": 1245015.7,
     "narrate_time_ge6_ms": null,
@@ -31,6 +31,18 @@
       "totalMedianMs": 599037.4,
       "totalSamplesMs": [462995.3, 735079.6],
       "note": "cluster/embed ms near-zero after warm cache; curate dominates non-ingest tail. High run-to-run variance on cold CLIP/NIMA load."
+    },
+    "pipeline_proxy250": {
+      "path": "D:\\Photos\\张智慧精选2",
+      "stages": "ingest+cluster+curate",
+      "repeats": 2,
+      "photosScanned": 251,
+      "assetsKept": 223,
+      "totalMedianMs": 1911350.6,
+      "totalSamplesMs": [2212590.5, 1610110.7],
+      "ingestMedianMsInPipelineRuns": 1781143.6,
+      "ingestSamplesMs": [2086019.6, 1476267.5],
+      "note": "Serial total variance high (cold CLIP/NIMA vs warm). Curate ~134s both arms; embed fell back to heuristic on some WebP."
     },
     "albums": {
       "proxy100": {
@@ -48,7 +60,7 @@
         "samplesMs": [1255579.8, 1234451.6]
       }
     },
-    "note": "ingest_time_100_ms uses 58-photo album as local proxy for 100; ingest_time_250_ms uses 251-photo album. e2e/narrate pending pipeline+LLM dogfood."
+    "note": "ingest_time_100_ms uses 58-photo album as local proxy for 100; ingest_time_250_ms / studio_e2e_250 use 251-photo album. narrate still pending real LLM dogfood."
   },
   "candidate": {
     "label": "PT-parallel-ingest-workers4",
@@ -59,7 +71,7 @@
     "parallel_ingest": true,
     "narrate_concurrency": 1,
     "studio_e2e_100_ms": 307914.0,
-    "studio_e2e_250_ms": null,
+    "studio_e2e_250_ms": 732946.6,
     "ingest_time_100_ms": 131284.2,
     "ingest_time_250_ms": 492832.2,
     "narrate_time_ge6_ms": null,
@@ -74,6 +86,18 @@
       "totalMedianMs": 307914.0,
       "totalSamplesMs": [304623.6, 311204.4],
       "ingestMedianMsInPipelineRuns": 261890.5
+    },
+    "pipeline_proxy250": {
+      "path": "D:\\Photos\\张智慧精选2",
+      "stages": "ingest+cluster+curate",
+      "repeats": 2,
+      "workers": 4,
+      "photosScanned": 251,
+      "assetsKept": 223,
+      "totalMedianMs": 732946.6,
+      "totalSamplesMs": [733084.5, 732808.7],
+      "ingestMedianMsInPipelineRuns": 605410.5,
+      "ingestSamplesMs": [610771.4, 600049.6]
     },
     "albums": {
       "proxy100": {
@@ -95,7 +119,7 @@
   },
   "kpi": {
     "studio_e2e_100_drop": 0.486,
-    "studio_e2e_250_drop": null,
+    "studio_e2e_250_drop": 0.6165,
     "ingest_time_100_drop": 0.5842,
     "ingest_time_250_drop": 0.6042,
     "narrate_time_ge6_drop": null,
@@ -119,7 +143,9 @@
     "ingest_time_250_threshold_met": true,
     "ingest_time_250_stretch_met": true,
     "studio_e2e_100_threshold_met": true,
-    "studio_e2e_100_stretch_met": true
+    "studio_e2e_100_stretch_met": true,
+    "studio_e2e_250_threshold_met": true,
+    "studio_e2e_250_stretch_met": true
   },
   "nr_pt": {
     "structure_hash_rate_fixed": 1.0,
@@ -160,7 +186,7 @@
     },
     {
       "id": "E-PT-E2E-PENDING",
-      "detail": "studio_e2e_100 filled from 凯哥拍摄精选4 stages=pipeline (ingest+cluster+curate, no narrate/render). studio_e2e_250 still pending."
+      "detail": "studio_e2e_100/250 filled from stages=pipeline (ingest+cluster+curate, no narrate/render) on 凯哥拍摄精选4 / 张智慧精选2."
     }
   ],
   "overallPassed": null,
