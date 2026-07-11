@@ -23,7 +23,7 @@
 | 日期 | 2026-07-11 |
 | 机器 / 档位 | Windows 11 · S2 · 31.5 GB RAM |
 | CPU | Intel64 Family 6 Model 170 |
-| commit | （见 PR / 合入后回填） |
+| commit | `7767a9c`（feat/pipeline-throughput-phase-a） |
 | 相册 proxy≈100 | `D:\Photos\凯哥拍摄精选4`（58 张扫描 → 57 保留） |
 | 相册 proxy≈250 | `D:\Photos\张智慧精选2`（251 张扫描 → 223 保留） |
 | baseline ingest_58 | **315714 ms**（中位，n=2） |
