@@ -59,7 +59,6 @@ import {
 import {
   getLayoutPending,
   setLayoutPendingMessage,
-  getSheetEditDirty,
   clearSheetEditDirty,
   dismissPendingDock,
   dismissG1Dock,
@@ -169,17 +168,9 @@ export function initToolbarV3(root, tripId) {
     get cohortEnabled() { return cohortEnabled; },
     isLayoutPending: getLayoutPending,
     confirmLeaveCurrentTab: function (tabId, done) {
-      var isBook = tabId === "book" || tabId === "edit";
-      if (!isBook || !getSheetEditDirty()) {
-        done(true);
-        return;
-      }
-      toolbarConfirm({
-        title: "未保存的编辑",
-        body: "当前「这本」有未保存改动，离开将丢弃。",
-        confirmText: "离开",
-        cancelText: "留下",
-      }).then(done);
+      // D-REF-05 · 文案立即自动保存；切 Tab 不再弹「未保存将丢弃」
+      clearSheetEditDirty(root);
+      done(true);
     },
     onSheetTabShown: function (tabId) {
       if (tabId !== "book" && tabId !== "edit") {
@@ -328,6 +319,13 @@ export function initToolbarV3(root, tripId) {
     },
     onDismissPending: function () {
       dismissPendingDock();
+      refreshTaskDockState(root);
+    },
+    onReExport: function () {
+      startLongshot(root, tripId);
+    },
+    onDismissStale: function () {
+      root._staleDockDismissed = true;
       refreshTaskDockState(root);
     },
     onOpenStructure: function () {

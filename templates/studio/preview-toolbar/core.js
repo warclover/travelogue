@@ -112,15 +112,27 @@ export function wireSheetEditDirty(root, panel) {
 export function refreshTaskDockState(root) {
     if (!root || !isPreviewToolbarV3(root) || !root._taskDock) return;
     if (root._exportDockActive || root._exportResultShowing) return;
-    // D-REF-18 · G1 > layoutPending > longshotStale；横幅在视口内时不与 Task Dock 互抢
-    if (_g1Pending && !_g1DockDismissed && !root._g1BannerVisible) {
-      root._taskDock.showG1({});
+    // D-REF-18 · G1 > layoutPending > longshotStale；同时最多一层主待办
+    if (_g1Pending) {
+      // 横幅在视口内时由横幅承担；滚出且未「稍后」时由 Task Dock 镜像
+      if (!root._g1BannerVisible && !_g1DockDismissed) {
+        root._taskDock.showG1({});
+      } else {
+        root._taskDock.hide();
+      }
       return;
     }
     if (_layoutPending && !_pendingDockDismissed) {
       root._taskDock.showPending({
         title: _layoutPendingMessage || "版面有更新",
       });
+      return;
+    }
+    var longshotStale =
+      !!root._longshotStale ||
+      !!(root.querySelector && root.querySelector(".preview-toolbar__longshot--stale"));
+    if (longshotStale && !root._staleDockDismissed) {
+      root._taskDock.showStale({});
       return;
     }
     root._taskDock.hide();

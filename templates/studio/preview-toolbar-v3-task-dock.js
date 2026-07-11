@@ -325,6 +325,57 @@ export function mountPreviewTaskDock(root, hooks) {
     dock.appendChild(actions);
   }
 
+  function showStale(opts) {
+    opts = opts || {};
+    clearTimers();
+    dock.hidden = false;
+    dock.className = "preview-task-dock preview-task-dock--warn";
+    dock.innerHTML = "";
+
+    var icon = document.createElement("span");
+    icon.className = "preview-task-dock__icon";
+    icon.textContent = "↻";
+
+    var textWrap = document.createElement("div");
+    textWrap.className = "preview-task-dock__text";
+    var main = document.createElement("span");
+    main.className = "preview-task-dock__main";
+    main.textContent = opts.title || "长图已过期";
+    textWrap.appendChild(main);
+    var sub = document.createElement("small");
+    sub.textContent =
+      opts.subtitle || "内容有更新，请重新导出后再分享";
+    textWrap.appendChild(sub);
+
+    var actions = document.createElement("div");
+    actions.className = "preview-task-dock__actions";
+
+    if (typeof hooks.onReExport === "function") {
+      var exportBtn = document.createElement("button");
+      exportBtn.type = "button";
+      exportBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
+      exportBtn.textContent = "重新导出";
+      exportBtn.addEventListener("click", function () {
+        hooks.onReExport();
+      });
+      actions.appendChild(exportBtn);
+    }
+
+    var laterBtn = document.createElement("button");
+    laterBtn.type = "button";
+    laterBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
+    laterBtn.textContent = "稍后";
+    laterBtn.addEventListener("click", function () {
+      hide();
+      if (typeof hooks.onDismissStale === "function") hooks.onDismissStale();
+    });
+    actions.appendChild(laterBtn);
+
+    dock.appendChild(icon);
+    dock.appendChild(textWrap);
+    dock.appendChild(actions);
+  }
+
   function showError(message) {
     showSuccess({ status: "failed", error: { message: message || "导出失败" } });
   }
@@ -336,6 +387,7 @@ export function mountPreviewTaskDock(root, hooks) {
     showSuccess: showSuccess,
     showG1: showG1,
     showPending: showPending,
+    showStale: showStale,
     showError: showError,
   };
 }

@@ -779,6 +779,7 @@ export function cancelPreviewLongshotExport(root) {
       btn.classList.remove("preview-toolbar__longshot--" + s);
     });
     btn.classList.remove("preview-toolbar__longshot--primary");
+    btn.classList.remove("preview-toolbar__longshot--stale");
     if (zone) {
       zone.classList.remove("preview-toolbar__export-zone--stale");
       zone.classList.remove("preview-toolbar__export-zone--running");
@@ -786,6 +787,7 @@ export function cancelPreviewLongshotExport(root) {
     var badge = root.querySelector(".preview-toolbar__export-stale");
 
     if (state === "running") {
+      root._longshotStale = false;
       btn.classList.add("preview-toolbar__longshot--running");
       setLongshotSplitState(root, "running");
       if (zone) zone.classList.add("preview-toolbar__export-zone--running");
@@ -821,6 +823,7 @@ export function cancelPreviewLongshotExport(root) {
       return;
     }
     if (state === "done") {
+      root._longshotStale = false;
       if (isV3) {
         btn.classList.add("preview-toolbar__longshot--idle");
         setLongshotSplitState(root, "idle");
@@ -844,6 +847,7 @@ export function cancelPreviewLongshotExport(root) {
       return;
     }
     if (state === "error") {
+      root._longshotStale = false;
       btn.classList.add("preview-toolbar__longshot--idle");
       setLongshotSplitState(root, "idle");
       setLongshotControlsDisabled(root, false);
@@ -872,7 +876,10 @@ export function cancelPreviewLongshotExport(root) {
       if (zone) zone.classList.add("preview-toolbar__export-zone--stale");
       if (isV3) {
         btn.classList.add("preview-toolbar__longshot--stale");
+        root._longshotStale = true;
+        root._staleDockDismissed = false;
         if (badge) badge.hidden = true;
+        _refreshTaskDockState(root);
       } else {
         if (badge) badge.hidden = false;
         setLongshotExportMeta(root, "内容已更新", { actionable: false });
@@ -880,6 +887,7 @@ export function cancelPreviewLongshotExport(root) {
       }
       return;
     }
+    root._longshotStale = false;
     btn.classList.add("preview-toolbar__longshot--idle");
     setLongshotSplitState(root, "idle");
     setLongshotControlsDisabled(root, false);
@@ -887,12 +895,13 @@ export function cancelPreviewLongshotExport(root) {
       applyDockLongshotIdle(btn);
     }
     syncLongshotCtaLabel(root);
-    btn.classList.remove("preview-toolbar__longshot--stale");
     root._exportDockActive = false;
     if (badge) badge.hidden = true;
     refreshLongshotExportMeta(root);
     if (!isV3) {
       setLongshotExportProgress(root, false);
+    } else {
+      _refreshTaskDockState(root);
     }
   }
 

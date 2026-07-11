@@ -44,7 +44,7 @@
 |----|------|------|
 | **M4** | ✅ | `features.js` `mountG1Banner`；顶栏「章节顺序 OK / 重新生成结构」；横幅可见时 Task Dock 不互抢 |
 | **M3** | ✅ | Sheet Tab →「这页 / 这本 / 导出与更多」；这页空态；这本=文字+封面/模板/同框；导出与更多=原高级 |
-| **D-REF-18** | ✅ | `_g1BannerVisible` + IntersectionObserver 镜像 |
+| **D-REF-18** | ✅ | `_g1Pending` 时一律不落 layoutPending；横幅可见则 hide Task Dock，滚出且未「稍后」则 `showG1`；再下为 `showStale` |
 
 ### P1 文件映射
 
@@ -63,10 +63,10 @@
 | **MF-02** | ✅ | 用户可见「应用排版」→「更新版面」（toolbar / sheet / task-dock / features / cohort） |
 | **MF-03** | ✅ | `dock.js` `dockIconSvg`：`back`/`play`/`refine`/`scroll`；`settings` 别名 |
 | **MF-04** | ✅ | Sheet 标题「精修」；四 Tab 暂留；脚注「改精选或拼图后，请点「更新版面」。」 |
-| **MF-05** | ✅ | Task Dock：G1 > layoutPending；`showStaleHint` 在 pending 时抑制 |
+| **MF-05** | ✅ | Task Dock：G1 > layoutPending > longshotStale（`showStale`）；`showStaleHint` 在更高层 pending 时抑制 |
 | **MF-06** | ✅ | pending 时必出 Modal，无法静默旧导出；「更新并导出」经 session 续跑 |
 | **M1** | ✅ | Task Dock「版面有更新」；文字 Tab 失焦/chip 立即保存（去掉「保存编辑」主钮） |
-| **M2** | ✅ | 「精修」改名；首页「导入偏好」；首访脉冲打在导出 |
+| **M2** | ✅ | 「精修」改名；首页按钮可见文案「导入偏好」；首访脉冲打在导出 |
 
 ## 文件映射
 

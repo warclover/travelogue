@@ -265,7 +265,14 @@ def test_v3_sheet_has_content_wrapper() -> None:
 
 def test_v3_task_dock_exports_g1_and_pending() -> None:
     dock = TASK_DOCK_JS.read_text(encoding="utf-8")
-    for token in ("showG1", "showPending", "showExporting", "showSuccess", "onResultDismissed"):
+    for token in (
+        "showG1",
+        "showPending",
+        "showStale",
+        "showExporting",
+        "showSuccess",
+        "onResultDismissed",
+    ):
         assert token in dock
 
 
@@ -505,6 +512,8 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "secondaryText" in modal
     assert "studio__modal-actions--stacked" in modal
     assert "导入偏好" in home
+    assert ">导入偏好<" in home
+    assert ">设置<" not in home
     assert "工作台设置" not in home
     assert "编辑与设置" not in bootstrap
     assert "编辑与设置" not in sheet
@@ -517,6 +526,7 @@ def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
     sheet = SHEET_JS.read_text(encoding="utf-8")
     drawers = (STUDIO / "preview-toolbar" / "drawers.js").read_text(encoding="utf-8")
     css = (STUDIO / "preview-toolbar" / "drawers.css").read_text(encoding="utf-8")
+    shell = (STUDIO / "preview-toolbar" / "shell.js").read_text(encoding="utf-8")
 
     assert "mountG1Banner" in features
     assert "章节结构待确认 · 请浏览各章顺序后确认" in features
@@ -524,6 +534,10 @@ def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
     assert "重新生成结构" in features
     assert "preview-toolbar__g1-banner--v4" in features or "g1-banner--v4" in css
     assert "_g1BannerVisible" in core
+    # D-REF-18 · G1 pending 时不落 layoutPending Task Dock
+    assert "if (_g1Pending)" in core
+    g1_block = core.split("if (_g1Pending)", 1)[1].split("if (_layoutPending", 1)[0]
+    assert "return;" in g1_block
     assert 'label: "这页"' in sheet
     assert 'label: "这本"' in sheet
     assert 'label: "导出与更多"' in sheet
@@ -531,6 +545,8 @@ def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
     assert "regenerateStructure" in drawers
     assert 'label: "文字"' not in sheet
     assert 'label: "高级"' not in sheet
+    assert "精修 · 这本" in shell
+    assert "可在「排版」中更换" not in shell
 
 
 def test_preview_refine_v1_d_ref_13_rewrite_copy() -> None:
@@ -554,6 +570,12 @@ def test_preview_refine_v1_p2_feedback_and_cohort_gate() -> None:
     )
     cover_js = (STUDIO / "preview-toolbar" / "inline-edit.js").read_text(encoding="utf-8")
     sheet = SHEET_JS.read_text(encoding="utf-8")
+    task_dock = TASK_DOCK_JS.read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    hbs = (
+        ROOT / "templates" / "visual-journal" / "partials" / "longshot-toolbar.hbs"
+    ).read_text(encoding="utf-8")
 
     assert "已保存到 trip.json" not in inline_js
     assert "showFieldSavedMark" in inline_js
@@ -564,3 +586,10 @@ def test_preview_refine_v1_p2_feedback_and_cohort_gate() -> None:
     assert "杂志名已保存" not in cover_js
     assert "cohortEmbed.hidden = true" in sheet
     assert "旅行主角 · 同框未开启" not in sheet
+    assert "showStale" in task_dock
+    assert "长图已过期" in task_dock
+    assert "重新导出" in task_dock
+    assert "onReExport" in init_v3
+    assert "未保存的编辑" not in init_v3
+    assert "_longshotStale" in longshot
+    assert "保存到 trip.json" not in hbs
