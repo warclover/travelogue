@@ -60,7 +60,15 @@
 | `cover_opening_style_change` | P1 Sheet 切换并应用排版 | `from`, `to`, `trip_id` |
 | `cover_opening_style_selector_impression` | Sheet「排版」封面三选一曝光 | `coverOpeningStyle`, `trip_id` |
 
-登记于 `travelogue/web/studio_homepage_telemetry.py` `ALLOWED_STUDIO_HOMEPAGE_EVENTS`。
+### Import Wizard A.1（PRD-IMPORT-WIZARD-A1-DELTA §6）
+
+| 事件 | 触发 | meta（最小） |
+|------|------|--------------|
+| `photo_count_hint_show` | 验货张数弱提示展示 | `bucket: few\|many`, `photoCount` |
+| `advanced_fields_toggle` | 2b 进阶 `<details>` 开合 | `open: bool` |
+| `close_confirm` | 关闭确认框选择 | `action: keep\|discard\|cancel` |
+
+登记于 `travelogue/services/studio_homepage_telemetry.py` `ALLOWED_STUDIO_HOMEPAGE_EVENTS`。
 
 **dev ring buffer**（M20-h 可交付）：`localStorage` `travelogue.studio.eventRing` 最近 200 条 + `console.debug` — **不替代** §3 聚合。
 

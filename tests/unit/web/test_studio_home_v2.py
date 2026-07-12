@@ -52,16 +52,15 @@ V2_HOME_MARKERS = (
     "示例作品",
     "v2-unsupported",
     "v2-unsupported-copy",
-    # M20-d · Import Sheet
-    "v2-import-sheet",
+    # M20-d · Import Wizard（唯一入口）
+    "v2-import-wizard",
     'role="dialog"',
     'aria-modal="true"',
     "选择本次旅行的照片文件夹",
-    "步骤 1 / 2",
-    "v2-album-path",
-    "v2-album-upload",
+    "v2-wizard-album-path",
+    "v2-wizard-album-upload",
     "小文件夹试用（建议 ≤200MB）",
-    "v2-sheet-close",
+    "v2-wizard-close-pick",
     # M20-c · Lightbox
     "v2-lightbox",
     "v2-lightbox-scroll",
@@ -71,7 +70,7 @@ V2_HOME_MARKERS = (
     "v2-success-open",
     "v2-success-stay",
     "v2-success-details",
-    "v2-photo-cull-enabled",
+    "v2-wizard-photo-cull",
     "打开卷轴预览",
     # M20 · 设置 Popover（v2.1 · 导入选项迁入）
     "v2-settings-toggle",
@@ -276,36 +275,45 @@ def test_trip_preview_prefers_latest_trip_not_export_flag() -> None:
 
 
 def test_studio_home_v2_import_sheet_modules() -> None:
-    """M20-d · Import Sheet + 导入编排，复用 v3 共享原语（非复制视图）。"""
-    sheet = (STUDIO_DIR / "homepage-v2" / "import-sheet.js").read_text(encoding="utf-8")
+    """M20-d · Import entry/Wizard + 导入编排，复用 v3 共享原语（非复制视图）。"""
+    entry = (STUDIO_DIR / "homepage-v2" / "import-entry.js").read_text(encoding="utf-8")
     wizard = (STUDIO_DIR / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
     run = (STUDIO_DIR / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
     assert "refreshTripsForImportSuccess" in run
+    assert not (STUDIO_DIR / "homepage-v2" / "import-sheet.js").is_file()
+    assert not (STUDIO_DIR / "homepage-v2" / "import-flags.js").is_file()
 
-    for js in (sheet, wizard, run):
+    for js in (entry, wizard, run):
         assert "\ufffd" not in js
 
-    # Wizard v3（PRD v3.0.1）
+    # 薄编排层（RET-3 · Wizard 唯一入口）
+    assert "openImportSheet" in entry and "initImportSheet" in entry
+    assert "import-wizard.js" in entry and "openImportWizard" in entry
+    assert "import-sheet.js" not in entry
+
+    # Wizard v3（PRD v3.0.1）+ A.1
     assert "openImportWizard" in wizard and "startV2Import" in wizard
     assert "wizard_step_view" in wizard
     assert "填写细节 →" in wizard
-    assert "isImportWizardV3Enabled" in sheet
-    assert "importWizardV3Enabled" in sheet
+    assert "requestCloseWizard" in wizard
+    assert "photo_count_hint_show" in wizard
+    assert "advanced_fields_toggle" in wizard
+    assert "close_confirm" in wizard
+    assert "updateTemplateModeHint" in wizard
+    assert "wireTemplateSelect" in wizard
 
-    # Sheet a11y（§7.1）：focus trap + Esc + 焦点归还 CTA
-    assert "openImportSheet" in sheet and "closeImportSheet" in sheet
-    assert "trapFocus" in sheet
-    assert "Escape" in sheet
-    assert "SHEET_FOCUSABLE" in sheet
-    # pick-folder + 路径仅在 Sheet 内
-    assert "/__travelogue/pick-folder" in sheet
-    assert "submitWithPath" in sheet
-    assert "v2-album-upload" in sheet
-    assert "confirmLargeUpload" in sheet
-    assert "UPLOAD_BYTES_SOFT_LIMIT" in sheet
-    assert "仍要上传" in sheet
-    assert "建议总量≤200MB" in sheet
-    assert "startV2UploadImport" in sheet
+    # Sheet a11y / pick / upload 已迁到 Wizard
+    assert "trapFocus" in wizard
+    assert "Escape" in wizard
+    assert "SHEET_FOCUSABLE" in wizard
+    assert "/__travelogue/pick-folder" in wizard
+    assert "submitWithPath" in wizard
+    assert "v2-wizard-album-upload" in wizard or "handleUploadInput" in wizard
+    assert "confirmLargeUpload" in wizard
+    assert "UPLOAD_BYTES_SOFT_LIMIT" in wizard
+    assert "仍要上传" in wizard
+    assert "建议总量≤200MB" in wizard
+    assert "startV2UploadImport" in wizard
 
     # 导入编排复用共享原语
     assert "startV2Import" in run and "resumeV2ImportIfAny" in run
@@ -325,80 +333,121 @@ def test_studio_home_v2_import_sheet_modules() -> None:
     assert "showFirstSuccess" in run
     assert "showImportFailed" in run
     # in-product 禁用「AI」字样（§3.2 / §15）
-    assert "AI 自动生成" not in sheet and "AI 自动生成" not in run
+    assert "AI 自动生成" not in wizard and "AI 自动生成" not in run
+
+
+def test_studio_home_v2_import_wizard_a1_dom_smoke() -> None:
+    """A.1 · Wizard DOM：无重新选择、信任行、进阶折叠、张数 hint。"""
+    html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
+    assert "v2-wizard-back-confirm" not in html
+    assert 'id="v2-wizard-trust"' in html
+    assert 'id="v2-wizard-trust-fine"' in html
+    assert 'id="v2-wizard-count-hint"' in html
+    assert 'id="v2-wizard-advanced"' in html
+    assert "按这些偏好开始 →" in html
+    assert "优先出微信长图，适合马上分享" in html
+    assert "多填一点，文案和节奏更贴你" in html
+    assert 'aria-label="更换文件夹，返回选择步骤"' in html
+    assert "这趟旅行叫什么？" in html
+    assert "想强调什么感觉？" in html
+    assert "照片怎么组织？" in html
+    assert "版面气质怎样？" in html
+    assert 'id="v2-wizard-first-tip"' in html
+    assert 'id="v2-wizard-dup-note"' in html
+    assert "风光为主，少写攻略" in html
+    assert "人物与故事感优先" in html
+    # 精细字段仍在 DOM（进阶内）
+    assert 'id="v2-wizard-date-start"' in html
+    assert 'id="v2-wizard-travel-notes"' in html
+    assert 'name="v2-wizard-layout-density"' in html
+    assert 'id="v2-wizard-template-mode"' in html
+
+    wizard = (STUDIO_DIR / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
+    assert "继续编辑细节 →" in wizard
+    assert "FIRST_TIP_KEY" in wizard
+    assert "updateDuplicateTitleNote" in wizard
+    assert "syncChipPressedState" in wizard
+
+    from travelogue.web.studio_homepage_telemetry import ALLOWED_STUDIO_HOMEPAGE_EVENTS
+
+    analytics = (STUDIO_DIR / "js" / "analytics.js").read_text(encoding="utf-8")
+    for event in (
+        "photo_count_hint_show",
+        "advanced_fields_toggle",
+        "close_confirm",
+    ):
+        assert event in ALLOWED_STUDIO_HOMEPAGE_EVENTS
+        assert f'"{event}"' in analytics
 
 
 def test_m21_0_browser_upload_contract() -> None:
     """M21-0 · AC-M21-0 静态契约：upload 接线 + 软上限 + sessionStorage 续跑。"""
-    sheet = (STUDIO_DIR / "homepage-v2" / "import-sheet.js").read_text(encoding="utf-8")
+    wizard = (STUDIO_DIR / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
     run = (STUDIO_DIR / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
     html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
 
-    assert 'id="v2-album-upload"' in html
-    assert 'webkitdirectory' in html
-    assert "handleUploadInput" in sheet
-    assert "_uploadInFlight" in sheet
+    assert 'id="v2-wizard-album-upload"' in html
+    assert "webkitdirectory" in html
+    assert "handleUploadInput" in wizard
+    assert "_uploadInFlight" in wizard
     assert "startV2UploadImport" in run
     assert "postMultipartImportV2" in run
     assert "SS.activeJobId" in run and "resumeV2ImportIfAny" in run
-    assert "200" in sheet or "UPLOAD_BYTES_SOFT_LIMIT" in sheet
+    assert "200" in wizard or "UPLOAD_BYTES_SOFT_LIMIT" in wizard
 
 
 def test_studio_home_v2_phase14_dual_mode_smoke() -> None:
-    """Phase 14 最小前端冒烟：双模式 DOM + 行为挂钩均已接线。"""
+    """Phase 14 最小前端冒烟：双模式 DOM + 行为挂钩均已接线（Wizard）。"""
     html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
-    sheet = (STUDIO_DIR / "homepage-v2" / "import-sheet.js").read_text(encoding="utf-8")
+    wizard = (STUDIO_DIR / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
     run = (STUDIO_DIR / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
     first_success = (STUDIO_DIR / "homepage-v2" / "first-success.js").read_text(encoding="utf-8")
 
     for marker in (
-        "v2-sheet-mode-quick",
-        "v2-sheet-mode-fine",
+        "v2-wizard-mode-quick",
+        "v2-wizard-mode-fine",
         "快速分享",
         "精细制作",
-        'id="v2-sheet-panel-fine" data-mode="fine_craft" hidden',
-        "v2-travel-notes",
-        "v2-date-start",
-        "v2-date-end",
-        "v2-featured-dir",
-        "v2-material-dir",
-        "开始制作（专业）",
+        'id="v2-wizard-step-fine"',
+        "v2-wizard-travel-notes",
+        "v2-wizard-date-start",
+        "v2-wizard-date-end",
+        "v2-wizard-featured-dir",
+        "v2-wizard-material-dir",
+        "按这些偏好开始 →",
         "v2-success-secondary",
-        "v2-layout-density-field",
-        "版面密度（可选）",
-        'name="v2-layout-density"',
+        "v2-wizard-layout-density",
+        "版面气质怎样？",
+        'name="v2-wizard-layout-density"',
         "拼图为主",
-        "v2-photo-cull-enabled",
+        "v2-wizard-photo-cull",
         "智能挑选照片（推荐）",
-        "v2-photo-cull-hint-short",
-        "v2-photo-cull-optout",
+        "v2-wizard-photo-cull-hint",
+        "v2-wizard-photo-cull-optout",
     ):
         assert marker in html, marker
-    assert "layoutDensity" in sheet
-    assert "readLayoutDensity" in sheet
-    assert "readPhotoCullEnabled" in sheet
-    assert "photoCullEnabled" in sheet
-    assert "showUploadConfirm" in sheet
-    assert "trackImportPhotoCullPref" in sheet
+    assert "layoutDensity" in wizard
+    assert "readLayoutDensity" in wizard
+    assert "readPhotoCullEnabled" in wizard
+    assert "photoCullEnabled" in wizard
+    assert "trackImportPhotoCullPref" in wizard
     assert "layoutDensity" in first_success or "大图为主" in first_success
     assert "cullDisabledDetailLine" in first_success
     assert "photoCullEnabled" in first_success
     assert "trackImportPhotoCullPref" in run or "readPhotoCullPrefSource" in run
 
     for marker in (
-        "switchMode(",
-        "saveSheetDraft(",
-        "restoreModeAndDraft(",
-        "validateFineFields(",
+        "setActiveMode(",
+        "saveDraft(",
         "body.travelNotes",
         "body.dateRange",
         "body.featuredDir",
         "body.materialDir",
     ):
-        assert marker in sheet, marker
+        assert marker in wizard, marker
 
     css = V2_CSS_BUNDLE
-    assert ".v2-sheet__mode-panel[hidden]" in css
+    assert ".v2-wizard" in css
     assert "display: none !important;" in css
 
     for marker in (
@@ -702,10 +751,12 @@ def test_studio_home_v2_telemetry_wired() -> None:
     assert "homepage_view" in bootstrap
     assert "_viewTracked" in bootstrap  # 仅最终态首帧一次
 
-    sheet = (STUDIO_DIR / "homepage-v2" / "import-sheet.js").read_text(encoding="utf-8")
-    assert "cta_click" in sheet
-    assert "sheet_close" in sheet
-    assert "sheet_abandon" in sheet
+    entry = (STUDIO_DIR / "homepage-v2" / "import-entry.js").read_text(encoding="utf-8")
+    assert "cta_click" in entry
+
+    wizard = (STUDIO_DIR / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
+    assert "sheet_close" in wizard
+    assert "sheet_abandon" in wizard
 
     carousel = (STUDIO_DIR / "homepage-v2" / "carousel.js").read_text(encoding="utf-8")
     assert "spread_page_view" in carousel

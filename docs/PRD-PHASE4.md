@@ -5,7 +5,7 @@
 | **产品代号** | Travelogue |
 | **文档版本** | v0.4.3-PHASE4 |
 | **状态** | Draft · 开发准入（Intent + 极易用 · UX 规格冻结 · 负责人评审缺口已补） |
-| **UX 线框** | [wireframes/studio-import-sheet-v1.html](./wireframes/studio-import-sheet-v1.html) |
+| **UX 线框** | [archive/import-sheet/studio-import-sheet-v1.html](./archive/import-sheet/studio-import-sheet-v1.html)（已归档） |
 | **Phase 4 代号** | 「编辑意图」— 杂志编辑心智 · 可选前置输入 · G1 产品化 |
 | **前置条件** | [PRD-PHASE2.md](./PRD-PHASE2.md) M8–M10 可用；[PRD-PHASE3.md](./PRD-PHASE3.md) M12+ 建议已合入（聚类 hint 可叠加，非硬依赖） |
 | **交付形态** | 用户**可选**提供书名、感受、双文件夹精选、旅行计划、章级记忆点 → Studio/预览**可见反馈** → 策展/叙事/版式**可解释消费**；**不**增加强制填表步骤 |
@@ -307,7 +307,7 @@
 
 ### 6.3 导入面板 · `studio-import-sheet`（核心交互 · M15-HP）
 
-**权威线框**：[studio-import-sheet-v1.html](./wireframes/studio-import-sheet-v1.html)（Tab：空态 panel · 选夹后确认 · 回访大卡 · 错误态）。
+**权威线框**：[studio-import-sheet-v1.html](./archive/import-sheet/studio-import-sheet-v1.html)（已归档 · Tab：空态 panel · 选夹后确认 · 回访大卡 · 错误态）。
 
 **触发**：空态「制作我的杂志」、回访「+ 新建杂志」、样张「用我的照片做一篇」、试用示例（Intent 默认名，直达选夹）。
 
@@ -763,7 +763,7 @@ Worker：写入 `intent` + `userNotes`；解析 plan → `intent.travelPlan` + `
 
 | 交付物 | 路径 | Tab / 态 |
 |--------|------|----------|
-| 导入 panel v1 | [wireframes/studio-import-sheet-v1.html](./wireframes/studio-import-sheet-v1.html) | 空态 · 选夹后确认 · 回访大卡 · 错误 |
+| 导入 panel v1 | [archive/import-sheet/studio-import-sheet-v1.html](./archive/import-sheet/studio-import-sheet-v1.html) | 空态 · 选夹后确认 · 回访大卡 · 错误（已归档） |
 | 首页 v3（基线） | [wireframes/studio-homepage-photo-first-v3.html](./wireframes/studio-homepage-photo-first-v3.html) | 实现对照 |
 
 M15-HP **完成定义**：panel 四态线框与 `studio.css` token 对照表签字（设计/产品）。

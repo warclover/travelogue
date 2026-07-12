@@ -4,7 +4,7 @@
 |------|------|
 | PRD | [PRD-PHASE14.md](./PRD-PHASE14.md) v0.14.1 |
 | 实施 | [IMPLEMENTATION-PHASE14.md](./IMPLEMENTATION-PHASE14.md) |
-| 线框 | [wireframes/studio-import-sheet-v2-dual-mode.html](./wireframes/studio-import-sheet-v2-dual-mode.html) |
+| 线框 | [archive/import-sheet/studio-import-sheet-v2-dual-mode.html](./archive/import-sheet/studio-import-sheet-v2-dual-mode.html)（已归档） |
 | 状态 | In Progress |
 
 ---

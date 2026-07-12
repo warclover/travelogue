@@ -431,55 +431,126 @@ def _render_thumb_data_url(path: Path, thumb_px: int) -> str | None:
         return None
 
 
+def infer_album_preview_date_range(
+    album_dir: Path,
+    *,
+    budget_s: float = 2.0,
+) -> tuple[str | None, str | None]:
+    """Best-effort ISO date range for Wizard 2b prefill (A1-07).
+
+    Budget-capped: open at most a few extremes (EXIF → mtime). On timeout/failure
+    returns ``(None, None)`` so the client can still prefill folder name only.
+    """
+    from datetime import datetime
+
+    from travelogue.media.image_ops import load_image_normalized
+
+    started = time.monotonic()
+    try:
+        candidates = _fast_candidate_paths(album_dir)
+    except OSError:
+        return None, None
+    if not candidates:
+        return None, None
+
+    try:
+        by_mtime = sorted(candidates, key=lambda p: p.stat().st_mtime)
+    except OSError:
+        return None, None
+
+    sample: list[Path] = [by_mtime[0]]
+    if len(by_mtime) > 1:
+        sample.append(by_mtime[-1])
+    if len(by_mtime) > 4:
+        mid = by_mtime[len(by_mtime) // 2]
+        if mid not in sample:
+            sample.append(mid)
+
+    taken: list[datetime] = []
+    for path in sample:
+        if time.monotonic() - started > budget_s:
+            break
+        try:
+            loaded = load_image_normalized(path)
+            taken.append(loaded.taken_at)
+        except Exception:
+            try:
+                taken.append(datetime.fromtimestamp(path.stat().st_mtime))
+            except OSError:
+                continue
+
+    if not taken and by_mtime:
+        try:
+            taken = [
+                datetime.fromtimestamp(by_mtime[0].stat().st_mtime),
+                datetime.fromtimestamp(by_mtime[-1].stat().st_mtime),
+            ]
+        except OSError:
+            return None, None
+
+    if not taken:
+        return None, None
+    start_d = min(taken).date().isoformat()
+    end_d = max(taken).date().isoformat()
+    return start_d, end_d
+
+
 def sample_album_preview_thumbs(
     album_dir: Path,
     *,
     count: int = 4,
     thumb_px: int = 112,
     max_photos: int = 250,
-) -> tuple[list[str], int]:
+) -> tuple[list[str], int, list[str]]:
     """Return JPEG data-URL thumbs evenly sampled from *album_dir*.
 
     大相册降级（BE-02）：候选文件数超过 `ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD` 时，
     跳过逐张打开做 EXIF 排序的精确扫描，改为按文件名序抽样，photo_count 为快速
     候选计数（近似值，仅用于验货文案，不影响真实导入的精确统计口径）。
+
+    Returns ``(thumbs, photo_count, thumb_names)``.
     """
     count = max(1, min(int(count or count), MAX_ALBUM_PREVIEW_THUMBS))
 
     try:
         fast_candidates = _fast_candidate_paths(album_dir)
     except OSError:
-        return [], 0
+        return [], 0, []
 
     if not fast_candidates:
-        return [], 0
+        return [], 0, []
 
     if len(fast_candidates) > ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD:
         fast_candidates.sort(key=lambda p: str(p).lower())
         photo_count = len(fast_candidates)
         thumbs: list[str] = []
+        names: list[str] = []
         for idx in _even_sample_indices(photo_count, count):
-            url = _render_thumb_data_url(fast_candidates[idx], thumb_px)
+            path = fast_candidates[idx]
+            url = _render_thumb_data_url(path, thumb_px)
             if url:
                 thumbs.append(url)
-        return thumbs, photo_count
+                names.append(path.name)
+        return thumbs, photo_count, names
 
     try:
         paths, _stats = scan_image_paths(album_dir, max_photos=max_photos)
     except IngestError:
-        return [], 0
+        return [], 0, []
 
     photo_count = len(paths)
     if not paths:
-        return [], 0
+        return [], 0, []
 
     thumbs = []
+    names = []
     for idx in _even_sample_indices(len(paths), count):
-        url = _render_thumb_data_url(paths[idx], thumb_px)
+        path = paths[idx]
+        url = _render_thumb_data_url(path, thumb_px)
         if url:
             thumbs.append(url)
-    return thumbs, photo_count
-
+            names.append(path.name)
+    return thumbs, photo_count, names
 
 def resolve_studio_trip_dir(
     album_dir: Path,

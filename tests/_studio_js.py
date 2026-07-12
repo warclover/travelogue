@@ -19,7 +19,8 @@ def read_studio_js() -> str:
     candidates = [
         _STUDIO / "legacy-freeze" / "studio.classic.js",
         _STUDIO / "homepage-v2" / "import-run.js",
-        _STUDIO / "homepage-v2" / "import-sheet.js",
+        _STUDIO / "homepage-v2" / "import-entry.js",
+        _STUDIO / "homepage-v2" / "import-wizard.js",
         _STUDIO / "homepage-v2" / "advanced-options.js",
     ]
     for path in candidates:
@@ -32,6 +33,6 @@ def read_studio_js() -> str:
     v2_dir = _STUDIO / "homepage-v2"
     if v2_dir.is_dir():
         for p in sorted(v2_dir.glob("*.js")):
-            if p.name not in {"import-run.js", "import-sheet.js", "advanced-options.js"}:
+            if p.name not in {"import-run.js", "import-entry.js", "import-wizard.js", "advanced-options.js"}:
                 parts.append(p.read_text(encoding="utf-8"))
     return "\n".join(parts)

@@ -29,7 +29,7 @@ python scripts/m21_deploy_smoke.py --base http://127.0.0.1:8766
 | # | 操作 | 预期 | ☐ |
 |---|------|------|---|
 | 1 | 打开 `http://127.0.0.1:8766/` | v2 Bento 首页；`data-homepage-variant="v2"` | |
-| 2 | 点「制作我的杂志」→ Import Sheet | Sheet 打开；可见「小文件夹试用」上传入口 | |
+| 2 | 点「制作我的杂志」→ Import Wizard（默认） | Wizard 打开；可见上传 / 选文件夹入口 | |
 | 3 | 选本地小文件夹（<50MB）并开始制作 | 进入 Importing；进度文案更新 | |
 | 4 | 等待 FirstSuccess | 成功 overlay；主文案含书名/张数 | |
 | 5 | 点「打开卷轴预览」或倒计时自动进入 | 预览 URL 可打开；首屏为内容屏 | |
@@ -39,8 +39,8 @@ python scripts/m21_deploy_smoke.py --base http://127.0.0.1:8766
 
 | # | 操作 | 预期 | ☐ |
 |---|------|------|---|
-| 7 | 超大文件夹 → 确认弹窗点「取消」 | 不发起 import；Sheet 仍可操作 | |
-| 8 | Importing 中再次打开 Sheet | toast「正在制作中」 | |
+| 7 | 超大文件夹 → 确认弹窗点「取消」 | 不发起 import；导入 UI 仍可操作 | |
+| 8 | Importing 中再次打开导入 UI | toast「正在制作中」 | |
 | 9 | Importing 中刷新页面 | 仍显示 Importing（`activeJobId` 续跑） | |
 
 记录：`trips/<tripId>` · 截图 FirstSuccess + 预览首屏。

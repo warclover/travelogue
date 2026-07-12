@@ -3,13 +3,13 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio · Import Wizard |
-| **文档版本** | **v3.0.1-IMPORT-WIZARD**（评审修订稿） |
-| **状态** | **Approved · 有条件通过（2026-07-07 跨职能评审）** |
+| **文档版本** | **v3.0.2-IMPORT-WIZARD**（Sheet 退役后勘误） |
+| **状态** | **Approved · Wizard 唯一入口**（旧 Sheet 已删，见 [IMPLEMENTATION-IMPORT-SHEET-RETIRE.md](./IMPLEMENTATION-IMPORT-SHEET-RETIRE.md)） |
 | **触发入口** | 首页主 CTA「开始制作我的游记」/ 书架新建卡（D-23）→ 本弹窗 |
 | **父文档** | [PRD-PHASE14.md](./PRD-PHASE14.md) · [PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md) §7 |
 | **关联文档** | [PRD-PHOTO-CULL-USER-TOGGLE.md](./PRD-PHOTO-CULL-USER-TOGGLE.md) · [PRD-KEEP-BURST-TOGGLE.md](./PRD-KEEP-BURST-TOGGLE.md) · [TELEMETRY.md](./studio-homepage-v2/TELEMETRY.md) |
 | **评审依据** | 2026-07-07 弹窗走查 + 同日跨职能设计评审（产品/UX/UI/交付/前后端/测试） |
-| **更新日期** | 2026-07-07 |
+| **更新日期** | 2026-07-12 |
 
 ---
 
@@ -101,7 +101,7 @@ Import Sheet 是北极星漏斗的咽喉：`cta_click → sheet_open → folder_
 | **D-W6** | 选夹即验货 | thumbs + photoCount；1024 显示 4 张、1280+ 显示 6 张 |
 | **D-W7** | 帮助仅在 Step 1 | Step 2 增加「⋯ 更多导入方式」失败兜底 |
 | **D-W8** | 记住上次模式 | localStorage；**首次打开强制快速** |
-| **D-W9** | flag 灰度 | `studio.importWizardV3Enabled` 默认 false |
+| **D-W9** | ~~flag 灰度~~ → **已退役** | Wizard 为唯一导入入口；flag / 旧 Sheet 已删除（RETIRE P2/P3） |
 | **D-W10** | 步骤指示器 | Step 2 标题下：`① 选文件夹 → ② 确认并开始` |
 | **D-W11** | 下游零侵入 | Wizard 仅替换 Sheet UI；**调用现有 `import-run.js` 出口**（§16） |
 
@@ -241,7 +241,7 @@ flowchart TD
 
 | # | 任务 | 预估 |
 |---|------|------|
-| BE-01 | flag `importWizardV3Enabled` 注入 config | 0.25d |
+| BE-01 | ~~flag `importWizardV3Enabled`~~ → **已退役**（不再注入） | — |
 | BE-02 | `album-preview` 性能：6 thumbs · 2s 超时降级 · benchmark | 0.5d |
 | BE-03 | 响应增量 `folderName` | 0.25d |
 | BE-04 | import payload 契约回归测试 | 0.5d |
@@ -333,11 +333,11 @@ flowchart TD
 | AC-IW-09 | 非首次 + 上次精细 → 精细卡默认选中 |
 | AC-IW-09b | **首次打开** → 强制快速卡默认 |
 | AC-IW-10 | 键盘全程可达 |
-| AC-IW-11 | flag 关 → 旧 Sheet + 全量旧 AC |
+| AC-IW-11 | ~~flag 关 → 旧 Sheet~~ → **作废**（Sheet / flag 已删） |
 | AC-IW-12 | 上传路径与现版一致 |
 | AC-IW-13 | 快速路径 2 次点击（不含系统选夹器） |
 | AC-IW-14 | 五主题 axe 通过 |
-| AC-IW-15 | flag 切换无样式/脚本泄漏 |
+| AC-IW-15 | ~~flag 切换无样式/脚本泄漏~~ → **作废** |
 | AC-IW-16 | 关 Sheet 重开 → 步序+字段正确 |
 | AC-IW-17 | P9-F1×F2 四组合矩阵 |
 | AC-IW-18 | 键盘-only 精细路径 |
@@ -387,7 +387,9 @@ flowchart TD
 | 版本 | 说明 |
 |------|------|
 | v3.0.0 | 首版草案 |
-| **v3.0.1** | 评审修订：决议纳入 · 下游衔接 §16 · AC 扩展 · 工期 10d |
+| v3.0.1 | 评审修订：决议纳入 · 下游衔接 §16 · AC 扩展 · 工期 10d |
+| **v3.0.2** | Sheet 退役勘误：作废 AC-IW-11/15、AC-IW-DS-08；D-W9/BE-01/DS-03～05 对齐唯一入口 |
+| （关联） | 体验增量见 [PRD-IMPORT-WIZARD-A1-DELTA.md](./PRD-IMPORT-WIZARD-A1-DELTA.md) · 实施 [IMPLEMENTATION-IMPORT-WIZARD-A1.md](./IMPLEMENTATION-IMPORT-WIZARD-A1.md) · 线框 [import-wizard-a1.html](./wireframes/import-wizard-a1.html) |
 
 ---
 
@@ -515,11 +517,11 @@ cta_click → open_sheet → wizard_step_view(pick)
 | AC-IW-DS-01 | Wizard 快速路径 · 默认开关 | 开始制作 → 成功 | `import_start` payload 与现版等价；FirstSuccess 主 CTA=长图 |
 | AC-IW-DS-02 | Wizard 精细 · 填名称+密度 | 开始（专业）→ 成功 | `mode=fine_craft`；Success 显示密度摘要行 |
 | AC-IW-DS-03 | 关智能挑选 + 129 张 | 成功 | FirstSuccess 显示「不做智能挑选 · N/M 张…」（AC-F1-02） |
-| AC-IW-DS-04 | Importing 进行中 | 点首页 CTA | toast「正在制作中」；Sheet 不打开 |
+| AC-IW-DS-04 | Importing 进行中 | 点首页 CTA / 开 Wizard | toast「正在制作中」；Wizard 不打开 |
 | AC-IW-DS-05 | import 失败 | 点重试 | Wizard 打开 Step 1（非 Step 2 confirm） |
 | AC-IW-DS-06 | 浏览器上传 N 张 | 开始上传 → 成功 | `via: upload`；Success 正常 |
 | AC-IW-DS-07 | 导入中刷新 | 页面 reload | `resumeImportIfNeeded` 续 poll；不进 Wizard |
-| AC-IW-DS-08 | flag v3 开/关 | 各跑一遍 P14+F1+F2 AC | 下游结果一致；仅入口 UI 不同 |
+| AC-IW-DS-08 | ~~flag v3 开/关双路径~~ → **作废**（无双入口可对照） |
 
 ### 16.9 下游开发任务（纳入 M-IW-3 联调）
 
@@ -527,9 +529,9 @@ cta_click → open_sheet → wizard_step_view(pick)
 |---|------|-------|------|
 | DS-01 | `import-sheet.js` 拆为 wizard UI + 薄编排层 | FE | wizard 调现有 export |
 | DS-02 | Failed 重试入口改 Step 1 | FE | 查 `v2-failure-retry` 接线 |
-| DS-03 | `buildSheetPayload` 单测：v2/v3 同输入同输出 | FE/QA | snapshot test |
-| DS-04 | Playwright 端到端：Wizard → Success → Editor 链接 200 | QA | 用 demo 小夹 |
-| DS-05 | Holdback：`import_success/import_start` 分 wizard flag | BE/数据 | TELEMETRY §3 |
+| DS-03 | `buildWizardPayload` 字段契约 snapshot（冻结 §16.3 键集） | FE/QA | ✅ unit + e2e |
+| DS-04 | Playwright：Wizard → Success → 预览/Editor 链接 200 | QA | ✅ e2e harness |
+| DS-05 | ~~Holdback 分 wizard flag~~ → **搁置**（flag 已删；`surface` 仍 `v2_sheet`） |
 
 ---
 

@@ -48,14 +48,14 @@ def test_studio_config_exposes_g1_flag() -> None:
     assert exposed["studio"]["g1ConfirmStructure"] is True
 
 
-def test_studio_config_exposes_import_wizard_v3_flag() -> None:
+def test_studio_config_no_longer_exposes_import_wizard_v3_flag() -> None:
     from travelogue.config import studio_config_expose
 
-    cfg = replace(get_config(), studio=StudioConfig(import_wizard_v3_enabled=True))
+    cfg = replace(get_config(), studio=StudioConfig(import_dual_mode_enabled=True))
     exposed = studio_config_expose(cfg)
-    assert exposed["studio"]["importWizardV3Enabled"] is True
-    cfg_off = replace(get_config(), studio=StudioConfig(import_wizard_v3_enabled=False))
-    assert studio_config_expose(cfg_off)["studio"]["importWizardV3Enabled"] is False
+    assert "importWizardV3Enabled" not in exposed["studio"]
+    assert exposed["studio"]["importDualModeEnabled"] is True
+    assert exposed["studio"]["importSheetLargeEnabled"] is True
 
 
 def test_lock_trip_structure_sets_locked() -> None:

@@ -116,7 +116,9 @@ def run_walkthrough(*, base: str, browser_items: list[dict] | None = None) -> di
     )
 
     code, home_html = _get(f"{base}/")
-    has_select = "v2-template-mode" in home_html and "v2-template-hint" in home_html
+    has_select = (
+        "v2-wizard-template-mode" in home_html and "v2-wizard-template-hint" in home_html
+    )
     add(
         "G8-03b",
         "首页模板下拉与 hint DOM",
@@ -124,13 +126,13 @@ def run_walkthrough(*, base: str, browser_items: list[dict] | None = None) -> di
         {"hasV2TemplateMode": has_select},
     )
 
-    code, sheet_js = _get(f"{base}/__studio/homepage-v2/import-sheet.js")
+    code, wizard_js = _get(f"{base}/__studio/homepage-v2/import-wizard.js")
     add(
         "G8-05",
-        "import-sheet 模板逻辑",
+        "import-wizard 模板逻辑",
         code == 200
-        and "template_selector_impression" in sheet_js
-        and "template_mode_changed" in sheet_js,
+        and "template_selector_impression" in wizard_js
+        and "template_mode_changed" in wizard_js,
         {"status": code},
     )
 

@@ -10,7 +10,7 @@ import {
 } from "./store.js";
 import { loadManifest } from "./manifest.js";
 import { renderBentoEmpty } from "./bento.js";
-import { initImportSheet } from "./import-sheet.js";
+import { initImportSheet } from "./import-entry.js";
 import { resumeV2ImportIfAny } from "./import-run.js";
 import { initViewportWatch } from "./unsupported.js";
 import { initErrorPipeline } from "./error-pipeline.js";

@@ -2,13 +2,14 @@
 
 对照 docs/studio-homepage-v2/AC-VERIFICATION.md 标「自动」项：
   AC-HP2-02 双 demo-flag · 04/08/09 carousel · 06 ⤢ Lightbox · 07 横拖不误触
-  10 CTA→Sheet · 11 书架无 Bento 闪屏 · 12 iPad 横屏双列 · 13/14 Unsupported
+  10 CTA→Import UI（默认 Wizard） · 11 书架无 Bento 闪屏 · 12 iPad 横屏双列 · 13/14 Unsupported
   15 取消无半成品 · 16 刷新续 poll · 17 冷启动静帧 · 18 FirstSuccess 壳层 · 19 键盘 ←/→
   20 对比度冒烟 · 21 触控 ≥44px · 22 assets 失败不白屏 · 23 Import 禁切 variant
-  24 Sheet focus trap/Esc/归还 · 25 homepage_view 时序 · demo-showcase WebP 200 · 06 轻点 Lightbox
+  24 Import UI focus trap/Esc/归还 · 25 homepage_view 时序 · demo-showcase WebP 200 · 06 轻点 Lightbox
   M20-j holdback redirect → experiment_exposure（bucket_id 与 cookie 一致）
 
 依赖 dev harness（DEV-HARNESS §2/§3，loopback 自动启用）：studioFixture / studioAssetsFail / studioJob。
+CTA 打开 `#v2-wizard-root`（Wizard 为唯一生产入口）。
 """
 
 from __future__ import annotations
@@ -491,24 +492,24 @@ def test_ac_hp2_04_09_19_carousel(studio_server) -> None:
 
 
 def test_ac_hp2_10_cta_opens_sheet(studio_server) -> None:
-    """AC-HP2-10 · 主 CTA → Sheet；路径输入仅在 Sheet 内（Bento 不暴露）。"""
+    """AC-HP2-10 · 主 CTA → Import UI（默认 Wizard）；路径输入仅在向导内。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
         _goto_v2(page, studio_server["base"])
         _wait_visible(page, "v2-frame")
 
-        # Bento 内不应有可见路径输入
         assert not page.locator("#v2-album-path").is_visible()
+        assert not page.locator("#v2-wizard-album-path").is_visible()
 
         page.locator("#v2-cta").click()
-        _wait_visible(page, "v2-sheet-root")
-        assert page.locator("#v2-sheet-pick").is_visible()
+        _wait_visible(page, "v2-wizard-root")
+        assert page.locator("#v2-wizard-step-pick").is_visible()
         browser.close()
 
 
 def test_ac_hp2_24_sheet_focus_trap_esc(studio_server) -> None:
-    """AC-HP2-24 · Sheet focus trap + Esc 关闭 + 焦点归还 CTA。"""
+    """AC-HP2-24 · Import UI focus trap + Esc 关闭 + 焦点归还 CTA。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -516,18 +517,16 @@ def test_ac_hp2_24_sheet_focus_trap_esc(studio_server) -> None:
         _wait_visible(page, "v2-frame")
 
         page.locator("#v2-cta").click()
-        _wait_visible(page, "v2-sheet-root")
+        _wait_visible(page, "v2-wizard-root")
 
-        # 焦点落在 Sheet 内
-        in_sheet = page.evaluate(
-            "() => { const s = document.getElementById('v2-import-sheet'); return s && s.contains(document.activeElement); }"
+        in_wizard = page.evaluate(
+            "() => { const s = document.getElementById('v2-import-wizard'); return s && s.contains(document.activeElement); }"
         )
-        assert in_sheet
+        assert in_wizard
 
-        # Esc 关闭 + 焦点归还 CTA
         page.keyboard.press("Escape")
         page.wait_for_function(
-            "() => document.getElementById('v2-sheet-root').hidden === true",
+            "() => { const w = document.getElementById('v2-wizard-root'); return !w || w.hidden; }",
             timeout=5_000,
         )
         focused_cta = page.evaluate(
@@ -538,7 +537,7 @@ def test_ac_hp2_24_sheet_focus_trap_esc(studio_server) -> None:
 
 
 def test_ac_hp2_v2_sheet_background_inert(studio_server) -> None:
-    """v2 Sheet 打开时背景 inert；关闭后恢复。"""
+    """v2 Import UI 打开时背景 inert；关闭后恢复。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -546,7 +545,7 @@ def test_ac_hp2_v2_sheet_background_inert(studio_server) -> None:
         _wait_visible(page, "v2-frame")
 
         page.locator("#v2-cta").click()
-        _wait_visible(page, "v2-sheet-root")
+        _wait_visible(page, "v2-wizard-root")
         inert_on = page.evaluate(
             """
             () => {
@@ -566,7 +565,7 @@ def test_ac_hp2_v2_sheet_background_inert(studio_server) -> None:
 
         page.keyboard.press("Escape")
         page.wait_for_function(
-            "() => document.getElementById('v2-sheet-root').hidden === true",
+            "() => { const w = document.getElementById('v2-wizard-root'); return !w || w.hidden; }",
             timeout=5_000,
         )
         inert_off = page.evaluate(
@@ -717,8 +716,8 @@ def test_ac_hp2_21_touch_targets(studio_server) -> None:
         assert cta_box and cta_box["height"] >= 44
 
         page.locator("#v2-cta").click()
-        _wait_visible(page, "v2-sheet-root")
-        close_box = page.locator("#v2-sheet-close").bounding_box()
+        _wait_visible(page, "v2-wizard-root")
+        close_box = page.locator("#v2-wizard-close-pick").bounding_box()
         assert close_box and min(close_box["width"], close_box["height"]) >= 44
         browser.close()
 
@@ -1003,12 +1002,12 @@ def test_ac_hp2_15_cancel_no_half_trip(studio_server) -> None:
         )
 
         page.locator("#v2-cta").click()
-        _wait_visible(page, "v2-sheet-root")
-        page.locator(".v2-sheet__details").nth(1).click()
-        page.locator("#v2-album-path").fill("/harness/album")
-        page.locator("#v2-path-submit").click()
-        _wait_visible(page, "v2-sheet-confirm")
-        page.locator("#v2-sheet-start-quick").click()
+        _wait_visible(page, "v2-wizard-root")
+        page.locator("#v2-wizard-more-import summary").click()
+        page.locator("#v2-wizard-album-path").fill("/harness/album")
+        page.locator("#v2-wizard-path-submit").click()
+        _wait_visible(page, "v2-wizard-step-confirm")
+        page.locator("#v2-wizard-start").click()
         _wait_visible(page, "v2-import-cancel")
 
         page.locator("#v2-import-cancel").click()
@@ -1112,7 +1111,7 @@ def test_ac_hp2_failed_retry_upload_reopens_sheet(studio_server) -> None:
         )
         _wait_visible(page, "v2-failure-retry")
         page.locator("#v2-failure-retry").click()
-        _wait_visible(page, "v2-sheet-root")
+        _wait_visible(page, "v2-wizard-root")
         failure_hidden = page.evaluate("() => document.getElementById('v2-failure').hidden")
         assert failure_hidden
         pending = page.evaluate("() => sessionStorage.getItem('travelogue.studio.activePending')")

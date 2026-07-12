@@ -322,205 +322,7 @@
   </div>
 </main>
 
-<!-- Import Sheet（M20-d · §7 / §7.1 a11y）。CTA 弹出，路径仅在 Sheet 内。 -->
-<div class="v2-sheet-root" id="v2-sheet-root" hidden>
-  <div class="v2-sheet-scrim" id="v2-sheet-scrim"></div>
-  <div class="v2-sheet" id="v2-import-sheet" role="dialog" aria-modal="true" aria-labelledby="v2-sheet-title">
-    <div class="v2-sheet__handle" aria-hidden="true"></div>
-    <div class="v2-sheet__head">
-      <h2 class="v2-sheet__title" id="v2-sheet-title">制作我的游记画册</h2>
-      <button type="button" class="v2-sheet__close" id="v2-sheet-close" aria-label="关闭">×</button>
-    </div>
-    <div class="v2-sheet__body">
-      <span class="v2-sheet__badge" id="v2-sheet-badge">步骤 1 / 2 · 选择照片</span>
-
-      <button type="button" class="v2-sheet__primary" id="v2-sheet-pick">选择本次旅行的照片文件夹</button>
-      <p class="v2-sheet__hint">
-        相册里若有「精选」和「素材」两个子文件夹，封面会优先用精选（建议 8–20 张）。
-      </p>
-
-      <div class="v2-sheet__confirm" id="v2-sheet-confirm" hidden>
-        <p class="v2-sheet__picked" id="v2-sheet-picked"></p>
-        <div class="v2-sheet__mode-tabs" role="tablist" aria-label="导入模式">
-          <button type="button" class="v2-sheet__mode-tab" id="v2-sheet-mode-quick" role="tab"
-                  aria-selected="true" data-mode="quick_share">快速分享</button>
-          <button type="button" class="v2-sheet__mode-tab" id="v2-sheet-mode-fine" role="tab"
-                  aria-selected="false" data-mode="fine_craft">精细制作</button>
-        </div>
-
-        <div class="v2-sheet__photo-cull" id="v2-photo-cull-field">
-          <label class="v2-sheet__photo-cull-label">
-            <input type="checkbox" id="v2-photo-cull-enabled" checked
-                   aria-describedby="v2-photo-cull-hint-short v2-photo-cull-optout" />
-            <span>智能挑选照片（推荐）</span>
-          </label>
-          <p class="v2-sheet__photo-cull-summary" id="v2-photo-cull-hint-short">
-            自动去掉过于模糊和截图类照片。
-          </p>
-          <details class="v2-sheet__photo-cull-details">
-            <summary class="v2-sheet__photo-cull-more">说明</summary>
-            <p class="v2-sheet__hint" id="v2-photo-cull-hint-detail">
-              自动去掉过于模糊和截图类照片。若文件夹里已是你的精选集，可取消勾选。
-            </p>
-          </details>
-          <p class="v2-sheet__photo-cull-optout" id="v2-photo-cull-optout" hidden
-             aria-live="polite"></p>
-        </div>
-
-        <div class="v2-sheet__photo-cull" id="v2-keep-dupes-field">
-          <label class="v2-sheet__photo-cull-label">
-            <input type="checkbox" id="v2-keep-dupes-enabled"
-                   aria-describedby="v2-keep-dupes-hint-short v2-keep-dupes-note" />
-            <span>保留连拍与近似照片</span>
-          </label>
-          <p class="v2-sheet__photo-cull-summary" id="v2-keep-dupes-hint-short">
-            默认会合并时间相近或画面相似的照片；勾选后全部保留。
-          </p>
-          <details class="v2-sheet__photo-cull-details">
-            <summary class="v2-sheet__photo-cull-more">说明</summary>
-            <p class="v2-sheet__hint" id="v2-keep-dupes-hint-detail">
-              连拍与抓拍常记录同一瞬间的连续画面。默认系统会择优保留一张；若你希望完整保留这组精彩瞬间，勾选此项。完全相同的重复文件仍会自动去重。
-            </p>
-          </details>
-          <p class="v2-sheet__photo-cull-optout" id="v2-keep-dupes-note" hidden
-             aria-live="polite"></p>
-        </div>
-
-        <div class="v2-sheet__mode-panel" id="v2-sheet-panel-quick" data-mode="quick_share">
-          <p class="v2-sheet__hint">仅需文件夹即可开始，默认生成适合分享的长图。</p>
-          <div class="v2-sheet__actions">
-            <button type="button" class="v2-sheet__primary" id="v2-sheet-start-quick">开始制作</button>
-            <button type="button" class="v2-sheet__repick" id="v2-sheet-repick">重新选择文件夹</button>
-          </div>
-        </div>
-
-        <div class="v2-sheet__mode-panel" id="v2-sheet-panel-fine" data-mode="fine_craft" hidden>
-          <label class="v2-sheet__field">
-            <span class="v2-sheet__field-label">游记名称</span>
-            <input type="text" id="v2-trip-title" maxlength="20" autocomplete="off"
-                   placeholder="给这本画册起个名字" />
-          </label>
-          <label class="v2-sheet__field">
-            <span class="v2-sheet__field-label">主要地点（可选）</span>
-            <input type="text" id="v2-trip-place" maxlength="40" autocomplete="off"
-                   placeholder="例如：京都、大阪" />
-          </label>
-          <div class="v2-sheet__field v2-sheet__field-grid">
-            <label>
-              <span class="v2-sheet__field-label">开始日期（可选）</span>
-              <input type="date" id="v2-date-start" />
-            </label>
-            <label>
-              <span class="v2-sheet__field-label">结束日期（可选）</span>
-              <input type="date" id="v2-date-end" />
-            </label>
-          </div>
-          <label class="v2-sheet__field">
-            <span class="v2-sheet__field-label">写给编辑的一句话（可选）</span>
-            <textarea id="v2-user-notes" maxlength="200" rows="2"
-                      placeholder="例如：带娃慢走，别写成导游词"></textarea>
-            <div class="v2-sheet__chips" role="list">
-              <button type="button" class="v2-sheet__chip" data-fill="v2-user-notes">带娃慢走，别写成导游词</button>
-              <button type="button" class="v2-sheet__chip" data-fill="v2-user-notes">想表达静谧，雨天的感觉</button>
-              <button type="button" class="v2-sheet__chip" data-fill="v2-user-notes">第3天最难忘</button>
-            </div>
-            <p class="v2-sheet__hint">不填也能正常出稿；这里写偏好，不是写完整游记。</p>
-          </label>
-          <label class="v2-sheet__field v2-sheet__field--full">
-            <span class="v2-sheet__field-label">旅途见闻与感悟（可选）</span>
-            <textarea id="v2-travel-notes" maxlength="500" rows="3"
-                      placeholder="可写旅途细节与感受，系统会优先用于文案语料。"></textarea>
-          </label>
-          <label class="v2-sheet__field v2-sheet__field--full">
-            <span class="v2-sheet__field-label">行程计划文件（可选）</span>
-            <input type="file" id="v2-plan-file" accept=".txt,.md,text/plain" />
-            <p class="v2-sheet__hint" id="v2-plan-file-name"></p>
-            <p class="v2-sheet__hint">支持 txt / md，最大 32KB；会作为叙事参考，不会原样照抄。</p>
-          </label>
-          <label class="v2-sheet__field">
-            <span class="v2-sheet__field-label">精选文件夹（可选）</span>
-            <input type="text" id="v2-featured-dir" maxlength="64" autocomplete="off"
-                   placeholder="例如：精选" />
-          </label>
-          <label class="v2-sheet__field">
-            <span class="v2-sheet__field-label">素材文件夹（可选）</span>
-            <input type="text" id="v2-material-dir" maxlength="64" autocomplete="off"
-                   placeholder="例如：素材" />
-          </label>
-          <fieldset class="v2-sheet__field v2-sheet__field--full" id="v2-layout-density-field">
-            <legend class="v2-sheet__field-label" id="v2-layout-density-label">版面密度（可选）</legend>
-            <div class="v2-sheet__radio-group" role="radiogroup" aria-labelledby="v2-layout-density-label">
-              <label class="v2-sheet__radio">
-                <input type="radio" name="v2-layout-density" value="balanced" checked />
-                <span>智能平衡（推荐）</span>
-                <span class="v2-sheet__radio-hint">根据照片数量与横竖比自动排版</span>
-              </label>
-              <label class="v2-sheet__radio">
-                <input type="radio" name="v2-layout-density" value="hero_first" />
-                <span>大图为主</span>
-                <span class="v2-sheet__radio-hint">更多单张全幅画面，节奏更偏杂志感</span>
-              </label>
-              <label class="v2-sheet__radio">
-                <input type="radio" name="v2-layout-density" value="collage_first" />
-                <span>拼图为主</span>
-                <span class="v2-sheet__radio-hint">更多宫格与照片组合，连拍更易成组</span>
-              </label>
-            </div>
-            <p class="v2-sheet__hint" role="note">
-              仅影响卷轴游记排版，不影响快速分享长图。不保证每张照片单独占一页；章首重要画面与阅读节奏优先。
-            </p>
-            <p class="v2-sheet__hint v2-sheet__hint--warn" id="v2-layout-density-warn" role="note" hidden>
-              照片较少时，拼图为主的效果可能不明显，系统仍会以保证阅读节奏为先。
-            </p>
-          </fieldset>
-          <label class="v2-sheet__field v2-sheet__field--full">
-            <span class="v2-sheet__field-label">模板</span>
-            <select id="v2-template-mode" aria-label="模板选择">
-              <option value="smart" selected>智能匹配（推荐）</option>
-              <option value="manual:visual-journal">视觉游记（手动指定）</option>
-            </select>
-            <p class="v2-sheet__hint" id="v2-template-hint" role="note">
-              智能匹配会根据行程天数、地点与视频占比推荐模板；不确定时自动使用视觉游记。
-            </p>
-          </label>
-          <div class="v2-sheet__actions v2-sheet__actions--full">
-            <button type="button" class="v2-sheet__primary" id="v2-sheet-start-fine">开始制作（专业）</button>
-            <button type="button" class="v2-sheet__repick" id="v2-sheet-repick-fine">重新选择文件夹</button>
-          </div>
-        </div>
-      </div>
-
-      <details class="v2-sheet__details">
-        <summary>文件夹怎么选？</summary>
-        <p class="v2-sheet__hint">
-          一次旅行一个文件夹 · 子目录可放精选 / 素材 · 支持 JPG / PNG / WebP / HEIC · 照片留在本机。
-        </p>
-      </details>
-      <details class="v2-sheet__details">
-        <summary>其他导入方式</summary>
-        <div class="v2-sheet__upload">
-          <label class="v2-sheet__upload-btn" for="v2-album-upload"
-                 title="建议总量 ≤200MB，过大可能失败或较慢">
-            小文件夹试用（建议 ≤200MB）
-          </label>
-          <input id="v2-album-upload" type="file" webkitdirectory directory multiple hidden
-                 aria-label="小文件夹试用上传" />
-        </div>
-        <div class="v2-sheet__path">
-          <input type="text" id="v2-album-path" placeholder="粘贴文件夹路径…" aria-label="文件夹路径" />
-          <button type="button" id="v2-path-submit">使用此路径</button>
-        </div>
-      </details>
-
-      <p class="v2-sheet__hint">
-        每个文件夹会生成一本新的游记画册，<strong>不会覆盖</strong>已有作品。
-      </p>
-      <p class="v2-sheet__error" id="v2-sheet-error" role="alert" hidden></p>
-    </div>
-  </div>
-</div>
-
-<!-- Import Wizard v3（PRD v3.0.1 · flag: importWizardV3Enabled） -->
+<!-- Import Wizard v3（唯一导入入口） -->
 <div class="v2-wizard-root" id="v2-wizard-root" hidden>
   <div class="v2-wizard-scrim" id="v2-wizard-scrim"></div>
   <div class="v2-wizard" id="v2-import-wizard" role="dialog" aria-modal="true"
@@ -535,6 +337,11 @@
           选择本次旅行的照片文件夹
         </button>
         <p class="v2-wizard__hint v2-wizard__hint--center">一次旅行一个文件夹，照片留在本机</p>
+        <p class="v2-wizard__first-tip" id="v2-wizard-first-tip" hidden role="status">
+          <span id="v2-wizard-first-tip-text">选一次旅行的文件夹即可，不用先整理</span>
+          <button type="button" class="v2-wizard__first-tip-dismiss" id="v2-wizard-first-tip-dismiss"
+                  aria-label="关闭提示">×</button>
+        </p>
         <details class="v2-wizard__details">
           <summary>文件夹怎么选？</summary>
           <p class="v2-wizard__hint">
@@ -561,8 +368,7 @@
     </div>
 
     <div class="v2-wizard__panel" id="v2-wizard-step-confirm" data-wizard-step="confirm" hidden>
-      <div class="v2-wizard__head v2-wizard__head--split">
-        <button type="button" class="v2-wizard__back" id="v2-wizard-back-confirm">← 重新选择</button>
+      <div class="v2-wizard__head">
         <h2 class="v2-wizard__title" id="v2-wizard-title-confirm">确认并开始</h2>
         <button type="button" class="v2-wizard__close" id="v2-wizard-close-confirm" aria-label="关闭">×</button>
       </div>
@@ -574,21 +380,23 @@
         <div class="v2-wizard__verify" id="v2-wizard-verify">
           <div class="v2-wizard__verify-row">
             <p class="v2-wizard__verify-line" id="v2-wizard-verify-line">正在清点照片…</p>
-            <button type="button" class="v2-wizard__link" id="v2-wizard-change-folder">更换</button>
+            <button type="button" class="v2-wizard__link" id="v2-wizard-change-folder"
+                    aria-label="更换文件夹，返回选择步骤">更换</button>
           </div>
           <p class="v2-wizard__verify-foot">制作时将自动去重与挑选</p>
+          <p class="v2-wizard__count-hint" id="v2-wizard-count-hint" hidden role="status"></p>
           <div class="v2-wizard__thumbs" id="v2-wizard-thumbs" hidden></div>
         </div>
         <div class="v2-wizard__mode-cards" role="radiogroup" aria-label="导入模式" id="v2-wizard-mode-cards">
           <button type="button" class="v2-wizard__mode-card" role="radio" aria-checked="true"
                   data-mode="quick_share" id="v2-wizard-mode-quick">
             <span class="v2-wizard__mode-card-title">快速分享（推荐）</span>
-            <span class="v2-wizard__mode-card-desc">生成微信长图，即刻分享</span>
+            <span class="v2-wizard__mode-card-desc">优先出微信长图，适合马上分享</span>
           </button>
           <button type="button" class="v2-wizard__mode-card" role="radio" aria-checked="false"
                   data-mode="fine_craft" id="v2-wizard-mode-fine">
             <span class="v2-wizard__mode-card-title">精细制作</span>
-            <span class="v2-wizard__mode-card-desc">成稿更贴你的旅程</span>
+            <span class="v2-wizard__mode-card-desc">多填一点，文案和节奏更贴你</span>
           </button>
         </div>
         <div class="v2-wizard__photo-row">
@@ -601,9 +409,11 @@
           </button>
         </div>
         <button type="button" class="v2-wizard__primary" id="v2-wizard-start">开始制作 →</button>
-        <p class="v2-wizard__hint v2-wizard__hint--center">
+        <p class="v2-wizard__trust" id="v2-wizard-trust">约 3–8 分钟 · 可关闭此窗，稍后回来</p>
+        <p class="v2-wizard__hint v2-wizard__hint--center" id="v2-wizard-cover-note">
           每个文件夹会生成一本新的游记画册，<strong>不会覆盖</strong>已有作品。
         </p>
+        <p class="v2-wizard__hint v2-wizard__hint--center v2-wizard__dup-note" id="v2-wizard-dup-note" hidden></p>
         <p class="v2-wizard__error" id="v2-wizard-error-confirm" role="alert" hidden></p>
       </div>
     </div>
@@ -616,7 +426,7 @@
       </div>
       <p class="v2-wizard__verify-line v2-wizard__verify-line--compact" id="v2-wizard-fine-context"></p>
       <div class="v2-wizard__body v2-wizard__body--scroll">
-        <p class="v2-wizard__group-title">基本信息</p>
+        <p class="v2-wizard__group-title">这趟旅行叫什么？</p>
         <div class="v2-wizard__field-grid">
           <label class="v2-wizard__field">
             <span class="v2-wizard__field-label">游记名称</span>
@@ -628,49 +438,98 @@
             <input type="text" id="v2-wizard-trip-place" maxlength="40" autocomplete="off"
                    placeholder="例如：京都、大阪" />
           </label>
-          <label class="v2-wizard__field">
-            <span class="v2-wizard__field-label">开始日期（可选）</span>
-            <input type="date" id="v2-wizard-date-start" />
-          </label>
-          <label class="v2-wizard__field">
-            <span class="v2-wizard__field-label">结束日期（可选）</span>
-            <input type="date" id="v2-wizard-date-end" />
-          </label>
         </div>
-        <p class="v2-wizard__group-title">叙事素材</p>
+        <p class="v2-wizard__dup-note" id="v2-wizard-dup-note-fine" hidden></p>
+        <p class="v2-wizard__group-title">想强调什么感觉？</p>
         <label class="v2-wizard__field v2-wizard__field--full">
           <span class="v2-wizard__field-label">写给编辑的一句话（可选）</span>
           <textarea id="v2-wizard-user-notes" maxlength="200" rows="2"
                     placeholder="例如：带娃慢走，别写成导游词"></textarea>
           <div class="v2-wizard__chips" role="list">
-            <button type="button" class="v2-wizard__chip" data-fill="v2-wizard-user-notes">带娃慢走，别写成导游词</button>
-            <button type="button" class="v2-wizard__chip" data-fill="v2-wizard-user-notes">想表达静谧，雨天的感觉</button>
-            <button type="button" class="v2-wizard__chip" data-fill="v2-wizard-user-notes">第3天最难忘</button>
+            <button type="button" class="v2-wizard__chip" data-fill="v2-wizard-user-notes"
+                    aria-pressed="false">带娃慢走，别写成导游词</button>
+            <button type="button" class="v2-wizard__chip" data-fill="v2-wizard-user-notes"
+                    aria-pressed="false">想表达静谧，雨天的感觉</button>
+            <button type="button" class="v2-wizard__chip" data-fill="v2-wizard-user-notes"
+                    aria-pressed="false">第3天最难忘</button>
+            <button type="button" class="v2-wizard__chip" data-fill="v2-wizard-user-notes"
+                    aria-pressed="false">风光为主，少写攻略</button>
+            <button type="button" class="v2-wizard__chip" data-fill="v2-wizard-user-notes"
+                    aria-pressed="false">人物与故事感优先</button>
           </div>
         </label>
-        <label class="v2-wizard__field v2-wizard__field--full">
-          <span class="v2-wizard__field-label">旅途见闻与感悟（可选）</span>
-          <textarea id="v2-wizard-travel-notes" maxlength="500" rows="3"
-                    placeholder="可写旅途细节与感受，系统会优先用于文案语料。"></textarea>
-        </label>
-        <label class="v2-wizard__field v2-wizard__field--full">
-          <span class="v2-wizard__field-label">行程计划文件（可选）</span>
-          <input type="file" id="v2-wizard-plan-file" accept=".txt,.md,text/plain" />
-          <p class="v2-wizard__hint" id="v2-wizard-plan-file-name"></p>
-        </label>
-        <p class="v2-wizard__group-title">照片组织</p>
-        <div class="v2-wizard__field-grid">
-          <label class="v2-wizard__field">
-            <span class="v2-wizard__field-label">精选文件夹（可选）</span>
-            <input type="text" id="v2-wizard-featured-dir" maxlength="64" autocomplete="off"
-                   placeholder="例如：精选" />
-          </label>
-          <label class="v2-wizard__field">
-            <span class="v2-wizard__field-label">素材文件夹（可选）</span>
-            <input type="text" id="v2-wizard-material-dir" maxlength="64" autocomplete="off"
-                   placeholder="例如：素材" />
-          </label>
-        </div>
+        <details class="v2-wizard__details v2-wizard__advanced" id="v2-wizard-advanced">
+          <summary>进阶选项（日期 · 见闻 · 文件夹 · 排版 · 模板）</summary>
+          <div class="v2-wizard__advanced-body">
+            <div class="v2-wizard__field-grid">
+              <label class="v2-wizard__field">
+                <span class="v2-wizard__field-label">开始日期（可选）</span>
+                <input type="date" id="v2-wizard-date-start" />
+              </label>
+              <label class="v2-wizard__field">
+                <span class="v2-wizard__field-label">结束日期（可选）</span>
+                <input type="date" id="v2-wizard-date-end" />
+              </label>
+            </div>
+            <label class="v2-wizard__field v2-wizard__field--full">
+              <span class="v2-wizard__field-label">旅途见闻与感悟（可选）</span>
+              <textarea id="v2-wizard-travel-notes" maxlength="500" rows="3"
+                        placeholder="可写旅途细节与感受，系统会优先用于文案语料。"></textarea>
+            </label>
+            <label class="v2-wizard__field v2-wizard__field--full">
+              <span class="v2-wizard__field-label">行程计划文件（可选）</span>
+              <input type="file" id="v2-wizard-plan-file" accept=".txt,.md,text/plain" />
+              <p class="v2-wizard__hint" id="v2-wizard-plan-file-name"></p>
+            </label>
+            <p class="v2-wizard__group-title">照片怎么组织？</p>
+            <div class="v2-wizard__field-grid">
+              <label class="v2-wizard__field">
+                <span class="v2-wizard__field-label">精选文件夹（可选）</span>
+                <input type="text" id="v2-wizard-featured-dir" maxlength="64" autocomplete="off"
+                       placeholder="例如：精选" />
+              </label>
+              <label class="v2-wizard__field">
+                <span class="v2-wizard__field-label">素材文件夹（可选）</span>
+                <input type="text" id="v2-wizard-material-dir" maxlength="64" autocomplete="off"
+                       placeholder="例如：素材" />
+              </label>
+            </div>
+            <p class="v2-wizard__group-title">版面气质怎样？</p>
+            <fieldset class="v2-wizard__field v2-wizard__field--full">
+              <legend class="v2-wizard__field-label">版面密度（可选）</legend>
+              <div class="v2-wizard__radio-group" role="radiogroup">
+                <label class="v2-wizard__radio">
+                  <input type="radio" name="v2-wizard-layout-density" value="balanced" checked />
+                  <span>智能平衡（推荐）</span>
+                  <span class="v2-wizard__radio-hint">根据照片数量与横竖比自动排版</span>
+                </label>
+                <label class="v2-wizard__radio">
+                  <input type="radio" name="v2-wizard-layout-density" value="hero_first" />
+                  <span>大图为主</span>
+                  <span class="v2-wizard__radio-hint">更多单张全幅画面，节奏更偏杂志感</span>
+                </label>
+                <label class="v2-wizard__radio">
+                  <input type="radio" name="v2-wizard-layout-density" value="collage_first" />
+                  <span>拼图为主</span>
+                  <span class="v2-wizard__radio-hint">更多宫格与照片组合，连拍更易成组</span>
+                </label>
+              </div>
+              <p class="v2-wizard__hint v2-wizard__hint--warn" id="v2-wizard-layout-warn" hidden>
+                照片较少时，拼图为主的效果可能不明显，系统仍会以保证阅读节奏为先。
+              </p>
+            </fieldset>
+            <label class="v2-wizard__field v2-wizard__field--full">
+              <span class="v2-wizard__field-label">模板</span>
+              <select id="v2-wizard-template-mode" aria-label="模板选择">
+                <option value="smart" selected>智能匹配（推荐）</option>
+                <option value="manual:visual-journal">视觉游记（手动指定）</option>
+              </select>
+              <p class="v2-wizard__hint" id="v2-wizard-template-hint" role="note">
+                智能匹配会根据行程天数、地点与视频占比推荐模板；不确定时自动使用视觉游记。
+              </p>
+            </label>
+          </div>
+        </details>
         <div class="v2-wizard__photo-row">
           <p class="v2-wizard__photo-summary" id="v2-wizard-photo-summary-fine"></p>
           <button type="button" class="v2-wizard__photo-adjust" id="v2-wizard-photo-adjust-fine"
@@ -678,45 +537,12 @@
             调整照片处理
           </button>
         </div>
-        <p class="v2-wizard__group-title">排版与模板</p>
-        <fieldset class="v2-wizard__field v2-wizard__field--full">
-          <legend class="v2-wizard__field-label">版面密度（可选）</legend>
-          <div class="v2-wizard__radio-group" role="radiogroup">
-            <label class="v2-wizard__radio">
-              <input type="radio" name="v2-wizard-layout-density" value="balanced" checked />
-              <span>智能平衡（推荐）</span>
-              <span class="v2-wizard__radio-hint">根据照片数量与横竖比自动排版</span>
-            </label>
-            <label class="v2-wizard__radio">
-              <input type="radio" name="v2-wizard-layout-density" value="hero_first" />
-              <span>大图为主</span>
-              <span class="v2-wizard__radio-hint">更多单张全幅画面，节奏更偏杂志感</span>
-            </label>
-            <label class="v2-wizard__radio">
-              <input type="radio" name="v2-wizard-layout-density" value="collage_first" />
-              <span>拼图为主</span>
-              <span class="v2-wizard__radio-hint">更多宫格与照片组合，连拍更易成组</span>
-            </label>
-          </div>
-          <p class="v2-wizard__hint v2-wizard__hint--warn" id="v2-wizard-layout-warn" hidden>
-            照片较少时，拼图为主的效果可能不明显，系统仍会以保证阅读节奏为先。
-          </p>
-        </fieldset>
-        <label class="v2-wizard__field v2-wizard__field--full">
-          <span class="v2-wizard__field-label">模板</span>
-          <select id="v2-wizard-template-mode" aria-label="模板选择">
-            <option value="smart" selected>智能匹配（推荐）</option>
-            <option value="manual:visual-journal">视觉游记（手动指定）</option>
-          </select>
-          <p class="v2-wizard__hint" id="v2-wizard-template-hint" role="note">
-            智能匹配会根据行程天数、地点与视频占比推荐模板；不确定时自动使用视觉游记。
-          </p>
-        </label>
         <p class="v2-wizard__error" id="v2-wizard-error-fine" role="alert" hidden></p>
       </div>
       <div class="v2-wizard__actions">
-        <button type="button" class="v2-wizard__primary" id="v2-wizard-start-fine">开始制作（专业） →</button>
+        <button type="button" class="v2-wizard__primary" id="v2-wizard-start-fine">按这些偏好开始 →</button>
         <button type="button" class="v2-wizard__secondary" id="v2-wizard-back-fine-action">← 返回上一步</button>
+        <p class="v2-wizard__trust" id="v2-wizard-trust-fine">约 3–8 分钟 · 可关闭此窗，稍后回来</p>
       </div>
     </div>
 

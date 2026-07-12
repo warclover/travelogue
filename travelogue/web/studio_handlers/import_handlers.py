@@ -32,7 +32,11 @@ from travelogue.web.studio_handlers.common import resolve_import_album_path, stu
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_jobs import get_job_store, run_import_job_subprocess
 from travelogue.web.studio_multipart import parse_multipart_form
-from travelogue.web.studio_pipeline import assert_album_importable, sample_album_preview_thumbs
+from travelogue.web.studio_pipeline import (
+    assert_album_importable,
+    infer_album_preview_date_range,
+    sample_album_preview_thumbs,
+)
 from travelogue.web.studio_uploads import (
     delete_upload_dir,
     save_upload_files,
@@ -502,13 +506,19 @@ def handle_album_preview(handler: StudioHandlerProtocol) -> None:
         thumb_count = max(1, min(int(raw_count), 6)) if raw_count is not None else 4
     except (TypeError, ValueError):
         thumb_count = 4
-    thumbs, photo_count = sample_album_preview_thumbs(album_path, count=thumb_count)
-    handler._json_response(
-        200,
-        {
-            "ok": True,
-            "thumbs": thumbs,
-            "photoCount": photo_count,
-            "folderName": album_path.name,
-        },
+    thumbs, photo_count, thumb_names = sample_album_preview_thumbs(
+        album_path, count=thumb_count
     )
+    date_start, date_end = infer_album_preview_date_range(album_path, budget_s=2.0)
+    payload: dict = {
+        "ok": True,
+        "thumbs": thumbs,
+        "thumbNames": thumb_names,
+        "photoCount": photo_count,
+        "folderName": album_path.name,
+    }
+    if date_start:
+        payload["dateStart"] = date_start
+    if date_end:
+        payload["dateEnd"] = date_end
+    handler._json_response(200, payload)

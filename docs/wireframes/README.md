@@ -15,8 +15,11 @@
 | [studio-homepage-photo-first-v3.html](./studio-homepage-photo-first-v3.html) | **首页 v3.0** · 影像优先 · 全幅 Hero · **PRD v1.4 对齐 · 已落地** |
 | [studio-homepage-art-cards-v2.html](./studio-homepage-art-cards-v2.html) | 首页 v2.0 · 艺术卡片 · Bento 布局（已落地，用户不满意） |
 | [studio-homepage-wireframe.html](./studio-homepage-wireframe.html) | 首页 v1.4 · 杂志 Hero + 灵感画廊（PRD 对齐版） |
-| [studio-import-sheet-v1.html](./studio-import-sheet-v1.html) | **Phase 4 · 导入 panel v1** · 选夹优先 · [PRD-PHASE4](../PRD-PHASE4.md) v0.4.2 |
+| [import-wizard-v3.html](./import-wizard-v3.html) | **Import Wizard v3** · 两步向导 · [PRD-IMPORT-SHEET-v3-WIZARD](../PRD-IMPORT-SHEET-v3-WIZARD.md) |
+| [import-wizard-a1.html](./import-wizard-a1.html) | **Wizard A.1** · 进阶折叠 / 信任行 / 关闭确认 · [PRD-IMPORT-WIZARD-A1-DELTA](../PRD-IMPORT-WIZARD-A1-DELTA.md) |
 | [studio-shelf-trip-menu-v1.html](./studio-shelf-trip-menu-v1.html) | **M13 · 书架 TripCardMenu v1** · hover `⋯` 菜单 · 删除确认 · 交互稿 |
+
+> 旧 Import Sheet 线框已迁至 [archive/import-sheet/](../archive/import-sheet/)。
 
 ## 如何查看
 
@@ -40,7 +43,7 @@
 
 **v3.0 评审 Tab**：**① 空态（首次）** · **② 回访** · **③ 导入中** · **④ 窄屏 390px**
 
-**import-sheet v1 Tab**：**① 空态 panel** · **② 选夹后确认** · **③ 回访大卡** · **④ 错误态**
+**import-wizard Tab**：见 [import-wizard-v3.html](./import-wizard-v3.html) · [import-wizard-a1.html](./import-wizard-a1.html)（旧 Sheet Tab 说明已随线框归档）
 
 ## 关联 PRD
 

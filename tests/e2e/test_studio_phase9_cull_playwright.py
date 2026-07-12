@@ -22,6 +22,18 @@ pytestmark = [pytest.mark.e2e, pytest.mark.playwright_serial]
 CULL_LINE = "经挑选 10 张进入排版（精选 2 张已为您保留）"
 
 
+def _open_wizard(page) -> None:
+    page.evaluate(
+        """
+        async () => {
+          const mod = await import('/__studio/homepage-v2/import-entry.js');
+          mod.openImportSheet();
+        }
+        """
+    )
+    _wait_visible(page, "v2-wizard-root")
+
+
 def _unhide_bento_for_narrow_viewport(page) -> None:
     """<768px 会显示 unsupported 并隐藏 #v2-bento-main；FirstSuccess 在其内，窄屏 CSS 测试需先露出。"""
     page.evaluate(
@@ -286,29 +298,32 @@ def test_ac_f1_photo_cull_disabled_success_copy(studio_server) -> None:
 
 
 def test_ac_f1_07_photo_cull_checkbox_no_overflow_390(studio_server) -> None:
-    """AC-F1-07 · 390px 视口 Import Sheet checkbox 区不横向溢出。"""
+    """AC-F1-07 · 390px 视口 Wizard 照片处理 checkbox 区不横向溢出。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 390, "height": 844})
-        _goto_v2(page, studio_server["base"], "dev=1&studioState=sheet-open")
+        _goto_v2(page, studio_server["base"], "dev=1")
         _unhide_bento_for_narrow_viewport(page)
         page.evaluate(
             """
-            async () => {
+            () => {
               const u = document.getElementById('v2-unsupported');
               if (u) u.hidden = true;
-              const mod = await import('/__studio/homepage-v2/import-sheet.js');
-              mod.openImportSheet();
             }
             """
         )
-        _wait_visible(page, "v2-sheet-root")
+        _open_wizard(page)
+        page.locator("#v2-wizard-more-import summary").click()
+        page.locator("#v2-wizard-album-path").fill("/harness/album")
+        page.locator("#v2-wizard-path-submit").click()
+        _wait_visible(page, "v2-wizard-step-confirm")
+        page.locator("#v2-wizard-photo-adjust").click()
         page.evaluate(
             """
             () => {
-              const confirm = document.getElementById('v2-sheet-confirm');
-              if (confirm) confirm.hidden = false;
-              const optout = document.getElementById('v2-photo-cull-optout');
+              const drawer = document.getElementById('v2-wizard-photo-drawer');
+              if (drawer) drawer.hidden = false;
+              const optout = document.getElementById('v2-wizard-photo-cull-optout');
               if (optout) {
                 optout.hidden = false;
                 optout.textContent = '不做智能挑选，58 张照片将参与排版。相同文件仍会自动去重，与智能挑选无关。';
@@ -319,9 +334,9 @@ def test_ac_f1_07_photo_cull_checkbox_no_overflow_390(studio_server) -> None:
         overflow = page.evaluate(
             """
             () => {
-              const field = document.getElementById('v2-photo-cull-field');
-              if (!field) return false;
-              return field.scrollWidth <= field.clientWidth + 2;
+              const drawer = document.getElementById('v2-wizard-photo-drawer');
+              if (!drawer) return false;
+              return drawer.scrollWidth <= drawer.clientWidth + 2;
             }
             """
         )
@@ -330,37 +345,22 @@ def test_ac_f1_07_photo_cull_checkbox_no_overflow_390(studio_server) -> None:
 
 
 def test_ac_f1_08_mode_switch_keeps_photo_cull_checkbox(studio_server) -> None:
-    """AC-F1-08 · 快速/精细切换不重置智能挑选 checkbox。"""
+    """AC-F1-08 · 快速/精细模式切换不重置智能挑选 checkbox。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1280, "height": 900})
-        _goto_v2(page, studio_server["base"], "dev=1&studioState=sheet-open")
-        page.evaluate(
-            """
-            async () => {
-              const mod = await import('/__studio/homepage-v2/import-sheet.js');
-              mod.openImportSheet();
-            }
-            """
-        )
-        _wait_visible(page, "v2-sheet-root")
-        page.evaluate(
-            """
-            () => {
-              const confirm = document.getElementById('v2-sheet-confirm');
-              if (confirm) confirm.hidden = false;
-              const box = document.getElementById('v2-photo-cull-enabled');
-              if (box) {
-                box.checked = false;
-                box.dispatchEvent(new Event('change', { bubbles: true }));
-              }
-            }
-            """
-        )
-        page.locator("#v2-sheet-mode-fine").click()
-        unchecked_fine = page.locator("#v2-photo-cull-enabled").is_checked() is False
-        page.locator("#v2-sheet-mode-quick").click()
-        unchecked_quick = page.locator("#v2-photo-cull-enabled").is_checked() is False
+        _goto_v2(page, studio_server["base"], "dev=1")
+        _open_wizard(page)
+        page.locator("#v2-wizard-more-import summary").click()
+        page.locator("#v2-wizard-album-path").fill("/harness/album")
+        page.locator("#v2-wizard-path-submit").click()
+        _wait_visible(page, "v2-wizard-step-confirm")
+        page.locator("#v2-wizard-photo-adjust").click()
+        page.locator("#v2-wizard-photo-cull").uncheck()
+        page.locator("#v2-wizard-mode-fine").click()
+        unchecked_fine = page.locator("#v2-wizard-photo-cull").is_checked() is False
+        page.locator("#v2-wizard-mode-quick").click()
+        unchecked_quick = page.locator("#v2-wizard-photo-cull").is_checked() is False
         assert unchecked_fine and unchecked_quick
         browser.close()
 

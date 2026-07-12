@@ -53,29 +53,37 @@ def _goto(page: Page, base: str, query: str = "") -> None:
 
 
 def check_g8_08_hint_switch(page: Page, base: str) -> dict:
-    _goto(page, base, "dev=1&studioState=sheet-open")
-    _wait_visible(page, "v2-sheet-root")
-    page.wait_for_function(
-        "() => document.querySelector('#v2-template-mode option[value^=\"manual:\"]')",
-        timeout=10_000,
-    )
+    _goto(page, base, "dev=1")
     page.evaluate(
         """
-        () => {
-          const confirm = document.getElementById('v2-sheet-confirm');
-          if (confirm) confirm.hidden = false;
+        async () => {
+          const mod = await import('/__studio/homepage-v2/import-entry.js');
+          mod.openImportSheet();
         }
         """
     )
-    smart_hint = page.locator("#v2-template-hint").inner_text().strip()
+    _wait_visible(page, "v2-wizard-root")
+    page.locator("#v2-wizard-more-import summary").click()
+    page.locator("#v2-wizard-album-path").fill("/harness/album")
+    page.locator("#v2-wizard-path-submit").click()
+    _wait_visible(page, "v2-wizard-step-confirm")
+    page.locator("#v2-wizard-mode-fine").click()
+    page.locator("#v2-wizard-start").click()
+    _wait_visible(page, "v2-wizard-step-fine")
+    page.locator("#v2-wizard-advanced").evaluate("el => { el.open = true; }")
+    page.wait_for_function(
+        "() => document.querySelector('#v2-wizard-template-mode option[value^=\"manual:\"]')",
+        timeout=10_000,
+    )
+    smart_hint = page.locator("#v2-wizard-template-hint").inner_text().strip()
     manual_value = page.locator(
-        '#v2-template-mode option[value^="manual:"]'
+        '#v2-wizard-template-mode option[value^="manual:"]'
     ).first.get_attribute("value")
     assert manual_value, "expected at least one manual template option"
     page.evaluate(
         """
         (value) => {
-          const sel = document.getElementById('v2-template-mode');
+          const sel = document.getElementById('v2-wizard-template-mode');
           if (!sel) return;
           sel.value = value;
           sel.dispatchEvent(new Event('change', { bubbles: true }));
@@ -86,7 +94,7 @@ def check_g8_08_hint_switch(page: Page, base: str) -> dict:
     page.wait_for_function(
         """
         (smartText) => {
-          const hint = document.getElementById('v2-template-hint');
+          const hint = document.getElementById('v2-wizard-template-hint');
           const manual = ((hint && hint.textContent) || '').trim();
           return manual.length > 0 && manual !== smartText;
         }
@@ -94,7 +102,7 @@ def check_g8_08_hint_switch(page: Page, base: str) -> dict:
         arg=smart_hint,
         timeout=10_000,
     )
-    manual_hint = page.locator("#v2-template-hint").inner_text().strip()
+    manual_hint = page.locator("#v2-wizard-template-hint").inner_text().strip()
     ok = bool(smart_hint and manual_hint and smart_hint != manual_hint)
     return {
         "id": "G8-08",
@@ -194,12 +202,13 @@ def check_g8_11_preview_toolbar(page: Page, base: str, trip_id: str) -> dict:
     page.locator(".preview-toolbar__dock").wait_for(state="visible", timeout=15_000)
     page.locator(".preview-toolbar__menu-btn").click()
     page.wait_for_selector(".preview-sheet", timeout=10_000)
-    page.locator('.preview-sheet__tab[data-sheet-tab="layout"]').click()
+    # v3 sheet：layout → book（这本）
+    page.locator('.preview-sheet__tab[data-sheet-tab="book"]').click()
     page.wait_for_selector(".preview-toolbar__template-adjust select", timeout=15_000)
     has_apply = page.locator(".preview-toolbar__template-adjust button").inner_text() == "应用"
     return {
         "id": "G8-11b",
-        "name": "预览 Sheet 排版 Tab 模板 PATCH 控件",
+        "name": "预览 Sheet「这本」Tab 模板 PATCH 控件",
         "pass": has_apply,
         "skipped": False,
         "evidence": {"tripId": trip_id},

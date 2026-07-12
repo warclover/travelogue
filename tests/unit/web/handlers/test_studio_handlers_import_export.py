@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from unittest.mock import patch
 
@@ -534,9 +535,10 @@ def test_sample_album_preview_thumbs(tmp_path: Path) -> None:
     from tests.studio_test_helpers import make_test_album
 
     album = make_test_album(tmp_path, n=8)
-    thumbs, count = sample_album_preview_thumbs(album)
+    thumbs, count, names = sample_album_preview_thumbs(album)
     assert count == 8
     assert len(thumbs) == 4
+    assert len(names) == len(thumbs)
     assert all(t.startswith("data:image/jpeg;base64,") for t in thumbs)
 
 
@@ -600,11 +602,12 @@ def test_sample_album_preview_thumbs_large_album_degrades(tmp_path: Path) -> Non
     original = pipeline_mod.ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD
     pipeline_mod.ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD = 2
     try:
-        thumbs, count = pipeline_mod.sample_album_preview_thumbs(album, count=4)
+        thumbs, count, names = pipeline_mod.sample_album_preview_thumbs(album, count=4)
     finally:
         pipeline_mod.ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD = original
     assert count == 6
     assert len(thumbs) == 4
+    assert len(names) == len(thumbs)
     assert all(t.startswith("data:image/jpeg;base64,") for t in thumbs)
 
 
@@ -623,3 +626,32 @@ def test_handle_album_preview_denies_untrusted_album(tmp_path: Path) -> None:
     status, body = handler.response
     assert status == 403
     assert body["error"] == "E_STUDIO_ALBUM_DENIED"
+
+
+def test_handle_album_preview_optional_dates(tmp_path: Path) -> None:
+    """A1-07 · preview 可含 dateStart/dateEnd；失败/空相册仍 200。"""
+    from tests.studio_test_helpers import make_test_album
+
+    trips_dir = tmp_path / "trips"
+    album = make_test_album(tmp_path, n=4, name="日期预填夹")
+    handler = MockStudioHandler(trips_dir, json_body={"albumPath": str(album)})
+    handle_album_preview(handler)
+    status, body = handler.response
+    assert status == 200
+    assert body["ok"] is True
+    assert body["folderName"] == "日期预填夹"
+    assert "thumbNames" in body
+    assert len(body["thumbNames"]) == len(body["thumbs"])
+    # 有照片时通常能推断日期；若省略也不应失败
+    if "dateStart" in body:
+        assert re.match(r"^\d{4}-\d{2}-\d{2}$", body["dateStart"])
+    if "dateEnd" in body:
+        assert re.match(r"^\d{4}-\d{2}-\d{2}$", body["dateEnd"])
+
+
+def test_infer_album_preview_date_range_empty(tmp_path: Path) -> None:
+    from travelogue.web.studio_pipeline import infer_album_preview_date_range
+
+    empty = tmp_path / "empty-album"
+    empty.mkdir()
+    assert infer_album_preview_date_range(empty) == (None, None)

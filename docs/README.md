@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
 | **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–22** + Studio 首页 v2/M21 + 算法 V2 |
-| **更新日期** | 2026-06-15 |
+| **更新日期** | 2026-07-12 |
 
 ---
 
@@ -90,6 +90,19 @@
 阅读顺序：**PRD-PHASE5** →（启动实施时）**IMPLEMENTATION-PHASE5** → **ACCEPTANCE-PHASE5**。  
 预览导出加固：**PRD-PREVIEW-REFINE-V1**（已落地）→ **PRD-PREVIEW-EXPORT-FACADE-V1**（待评审）→ **PRD-UX-TRUST-V1**（试用反馈加严）。  
 首访帮助：**PRD-HELP-ONBOARDING-V1**（复用 FirstSuccess / 脉冲 / Task Dock / publishGuide；不做全站 tour）。
+
+---
+
+## 桌面安装与分发（Desktop Installer）
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-DESKTOP-INSTALLER-V1.md](./PRD-DESKTOP-INSTALLER-V1.md) | **桌面可安装版 V1**（绿色便携包 · Windows 安装包 · frozen 路径 · 长图双轨 · 三道发布门） |
+| IMPLEMENTATION-DESKTOP-INSTALLER-V1.md | 实施清单（**待建**） |
+| ACCEPTANCE-DESKTOP-INSTALLER-V1.md | 验收（**待建**） |
+
+**前置**：Phase 2 M11 骨架（`packaging/travelogue-studio.spec` · `travelogue.desktop`）已存在。**代号**：Desktop Installer V1。  
+**阅读顺序**：**PRD-DESKTOP-INSTALLER-V1** →（评审后）IMPLEMENTATION → ACCEPTANCE；关联 [PRD-PHASE2.md](./PRD-PHASE2.md) M11 · [PRD-WEBSITE-MARKETING.md](./PRD-WEBSITE-MARKETING.md) `/install`。
 
 ---
 
@@ -268,9 +281,16 @@
 
 | 文档 | 说明 |
 |------|------|
-| [PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md) | Bento 双交付 · Import Sheet · 书架 |
+| [PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md) | Bento 双交付 · Import Wizard · 书架 |
 | [PRD-STUDIO-HOMEPAGE-v2.1-OPTIMIZATION.md](./PRD-STUDIO-HOMEPAGE-v2.1-OPTIMIZATION.md) | v2.1 体验优化 · CTA 层级 · bench 三分法 |
 | [PRD-STUDIO-HOMEPAGE-v2.2-OPTIMIZATION.md](./PRD-STUDIO-HOMEPAGE-v2.2-OPTIMIZATION.md) | **v2.2 体验优化（Draft）** · 窄屏出口 · 首屏视觉权重 · 书架检索 |
+| [PRD-IMPORT-SHEET-v3-WIZARD.md](./PRD-IMPORT-SHEET-v3-WIZARD.md) | Import Wizard v3 · 两步向导 + 智能默认（文件名历史遗留 Sheet） |
+| [PRD-IMPORT-WIZARD-A1-DELTA.md](./PRD-IMPORT-WIZARD-A1-DELTA.md) | **方案 A.1 增量规格** · P0/P1/P2 体验补丁 |
+| [IMPLEMENTATION-IMPORT-WIZARD-A1.md](./IMPLEMENTATION-IMPORT-WIZARD-A1.md) | **v3+A.1 实施清单** · M-A1-0～5 任务勾选 |
+| [IMPLEMENTATION-IMPORT-SHEET-RETIRE.md](./IMPLEMENTATION-IMPORT-SHEET-RETIRE.md) | **旧 Sheet 退役** · P0～P4 ✅ |
+| [wireframes/import-wizard-v3.html](./wireframes/import-wizard-v3.html) | Wizard v3 线框 |
+| [wireframes/import-wizard-a1.html](./wireframes/import-wizard-a1.html) | **A.1 增量线框** · 进阶折叠 / 信任行 / 关闭确认 |
+| [archive/import-sheet/](./archive/import-sheet/) | 已退役 Sheet 线框（v1 / 双模式 / 弹窗对比） |
 | [PRD-M21-studio-homepage-v3-retirement.md](./PRD-M21-studio-homepage-v3-retirement.md) | v3 退役 · v2 唯一入口 |
 | [studio-homepage-v2/](./studio-homepage-v2/) | FEATURE-FLAG · RUNBOOK · OPEN-QUESTIONS |
 
@@ -451,6 +471,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-11 | 索引补 [PRD-DESKTOP-INSTALLER-V1.md](./PRD-DESKTOP-INSTALLER-V1.md)（Windows 可安装版 · Gate A/B/C） |
 | 2026-06-13 | 索引补 Phase 18–22 · Integration Sprint · ACCEPTANCE v1.3 闸门对齐 |
 | 2026-06-06 | 索引补 Phase 11–15 · M21 · Algorithm V2 · ADR-012 |
 | 2026-05-30 | 新增 Phase 7 管线性能 PRD 索引 |

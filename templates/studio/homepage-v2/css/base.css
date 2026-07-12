@@ -3,7 +3,6 @@
    [hidden]{display:none}，故对 v2 子树强制兜底，避免隐藏的 fixed 覆盖层拦截点击。 */
 .v2-bento [hidden],
 #v2-unsupported[hidden],
-#v2-sheet-root[hidden],
 #v2-wizard-root[hidden],
 #v2-lightbox[hidden] { display: none !important; }
 

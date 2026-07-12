@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>制作游记画册 · 弹窗线框对比（改进 vs 全新）</title>
+  <style>
+    :root {
+      --ink: #141210;
+      --cream: #f5f0e8;
+      --gold: #d2a657;
+      --muted: rgba(245, 240, 232, .55);
+      --muted2: rgba(245, 240, 232, .38);
+      --line: rgba(255, 255, 255, .12);
+      --label-a: #3d8bfd;
+      --label-b: #e85d04;
+      --label-now: #8a8578;
+      --ok: #6bcf8e;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); font-size: 14px; background: #221f1b; color: var(--cream); }
+    a { color: var(--gold); }
+
+    /* ── Meta ── */
+    .meta {
+      padding: 20px 28px 16px;
+      background: #161410;
+      border-bottom: 2px solid var(--label-b);
+    }
+    .meta h1 { margin: 0 0 8px; font-size: 20px; color: #fff; font-weight: 600; }
+    .meta .lead { margin: 0 0 12px; font-size: 13px; color: var(--muted); line-height: 1.65; max-width: 920px; }
+    .meta-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; max-width: 1100px;
+    }
+    @media (max-width: 900px) { .meta-grid { grid-template-columns: 1fr; } }
+    .meta-card {
+      border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+      background: rgba(255,255,255,.03);
+    }
+    .meta-card .tag {
+      display: inline-block; font-size: 10px; letter-spacing: .06em; font-weight: 700;
+      padding: 2px 8px; border-radius: 4px; margin-bottom: 6px;
+    }
+    .tag-now { background: rgba(138,133,120,.25); color: #c8c2b4; }
+    .tag-a { background: rgba(61,139,253,.2); color: #8bb8ff; }
+    .tag-b { background: rgba(232,93,4,.2); color: #ffb078; }
+    .meta-card h3 { margin: 0 0 6px; font-size: 14px; color: #fff; }
+    .meta-card ul { margin: 0; padding-left: 16px; font-size: 12px; color: var(--muted); line-height: 1.55; }
+    .meta-card .cost { margin-top: 8px; font-size: 11px; color: var(--gold); }
+
+    /* ── Nav ── */
+    .nav {
+      display: flex; gap: 6px; padding: 14px 28px 0; flex-wrap: wrap;
+      position: sticky; top: 0; z-index: 20; background: #221f1b;
+      border-bottom: 1px solid var(--line); padding-bottom: 0;
+    }
+    .nav button {
+      border: 1px solid var(--line); background: rgba(255,255,255,.05); color: var(--cream);
+      padding: 10px 16px; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 12px;
+      border-bottom: none;
+    }
+    .nav button[aria-selected="true"] {
+      background: #141210; color: #fff; font-weight: 600;
+      box-shadow: inset 0 2px 0 var(--gold);
+    }
+    .nav button .badge {
+      display: inline-block; margin-left: 6px; font-size: 9px; padding: 1px 5px;
+      border-radius: 3px; vertical-align: middle;
+    }
+
+    /* ── Panels ── */
+    .panel { display: none; padding: 20px 28px 48px; }
+    .panel[data-active="true"] { display: block; }
+    .panel-note {
+      max-width: 1100px; margin: 0 0 16px; padding: 10px 14px;
+      background: rgba(232,93,4,.1); border-left: 3px solid var(--label-b);
+      font-size: 12px; color: var(--muted); line-height: 1.6;
+    }
+    .panel-note.blue { background: rgba(61,139,253,.1); border-left-color: var(--label-a); }
+
+    /* Step tabs inside a scheme */
+    .steps { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .steps button {
+      border: 1px solid var(--line); background: transparent; color: var(--muted);
+      padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px;
+    }
+    .steps button[aria-selected="true"] {
+      border-color: var(--gold); color: #fff; background: rgba(210,166,87,.12);
+    }
+
+    /* Viewport / Dialog chrome */
+    .viewport {
+      max-width: 720px; margin: 0 auto; min-height: 540px; position: relative;
+      border-radius: 12px; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+    .viewport--wide { max-width: 880px; }
+    .viewport--tall { min-height: 620px; }
+    .bg { position: absolute; inset: 0; background: linear-gradient(160deg, #1a1814, #2a3530); }
+    .scrim { position: absolute; inset: 0; background: rgba(6,5,4,.5); backdrop-filter: blur(6px); }
+
+    .dialog {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      width: min(560px, 92%); max-height: 88vh; overflow: hidden;
+      background: rgba(20, 18, 16, .97); border: 1px solid var(--line);
+      border-radius: 20px; padding: 20px 26px 22px; z-index: 2;
+      display: flex; flex-direction: column;
+    }
+    .dialog--wide { width: min(720px, 94%); }
+    .dialog--sheet {
+      top: auto; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: min(640px, 100%); border-radius: 20px 20px 0 0; max-height: 78vh;
+    }
+    .handle {
+      width: 36px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.2);
+      margin: 0 auto 12px;
+    }
+    .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+    .head--split { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+    .head--split .back { justify-self: start; }
+    .head--split h2 { justify-self: center; text-align: center; }
+    .head--split .close { justify-self: end; }
+    .head h2 { margin: 0; font-size: 20px; font-weight: 400; color: #fff; }
+    .back, .link {
+      border: none; background: none; color: var(--muted); font-size: 12px; cursor: pointer; padding: 0;
+    }
+    .link { color: var(--gold); }
+    .close { border: none; background: none; color: var(--muted); font-size: 22px; cursor: pointer; line-height: 1; }
+
+    .badge-step {
+      display: inline-block; font-size: 10px; color: var(--gold); letter-spacing: .04em;
+      margin-bottom: 10px;
+    }
+    .steps-line { font-size: 11px; color: var(--gold); margin: 0 0 14px; letter-spacing: .02em; }
+    .steps-line .dim { color: var(--muted); }
+
+    .btn-primary {
+      display: block; width: 100%; min-height: 52px; border: none; border-radius: 8px;
+      background: var(--cream); color: var(--ink); font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .btn-primary--sm { min-height: 44px; font-size: 13px; }
+    .btn-ghost {
+      display: block; width: 100%; min-height: 40px; margin-top: 8px;
+      border: 1px solid var(--line); border-radius: 8px;
+      background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
+    }
+    .btn-secondary {
+      min-height: 48px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px;
+      background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; white-space: nowrap;
+    }
+    .hint { margin: 10px 0 0; font-size: 11px; color: var(--muted); line-height: 1.55; }
+    .hint--center { text-align: center; }
+    .hint--warn { color: #e0a060; }
+
+    .details { margin-top: 14px; font-size: 12px; color: var(--muted); }
+    .details summary { cursor: pointer; color: var(--gold); }
+
+    /* Verify */
+    .verify { margin-bottom: 14px; }
+    .verify-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
+    .verify-foot { font-size: 10px; color: var(--muted); margin: 4px 0 0; }
+    .thumbs { display: flex; gap: 6px; margin-top: 10px; }
+    .thumb {
+      width: 56px; height: 56px; border-radius: 6px;
+      background: linear-gradient(135deg, rgba(255,255,255,.1), rgba(255,255,255,.04));
+      border: 1px solid var(--line);
+    }
+    .thumb:nth-child(2) { background: linear-gradient(160deg, #3a4a42, #1e2824); }
+    .thumb:nth-child(3) { background: linear-gradient(160deg, #4a3a2a, #2a2218); }
+    .thumb:nth-child(4) { background: linear-gradient(160deg, #2a3a4a, #181e28); }
+    .thumb:nth-child(5) { background: linear-gradient(160deg, #3a2a3a, #221822); }
+    .thumb:nth-child(6) { background: linear-gradient(160deg, #2a4a3a, #182820); }
+
+    /* Mode cards */
+    .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+    .mode-card {
+      border: 1px solid var(--line); border-radius: 10px; padding: 12px; cursor: pointer;
+      background: rgba(255,255,255,.04); font-size: 12px; text-align: left;
+    }
+    .mode-card[aria-checked="true"] { border-color: var(--gold); background: rgba(210,166,87,.08); }
+    .mode-card strong { display: block; font-size: 13px; margin-bottom: 4px; color: #fff; }
+    .mode-card span { color: var(--muted); font-size: 11px; line-height: 1.4; }
+
+    .photo-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      font-size: 11px; color: var(--muted); margin-bottom: 14px;
+    }
+    .photo-row button {
+      border: 1px solid var(--line); background: transparent; color: var(--cream);
+      font-size: 11px; padding: 6px 10px; border-radius: 6px; cursor: pointer; flex-shrink: 0;
+    }
+
+    .check { display: flex; gap: 8px; align-items: flex-start; margin: 8px 0; font-size: 12px; cursor: pointer; }
+    .check-hint { font-size: 11px; color: var(--muted); margin: 0 0 8px 24px; line-height: 1.4; }
+    .drawer {
+      border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px;
+      background: rgba(255,255,255,.04);
+    }
+    .drawer-title { margin: 0 0 8px; font-weight: 600; font-size: 12px; }
+
+    .group-title {
+      font-size: 11px; color: var(--gold); letter-spacing: .08em; margin: 14px 0 8px; text-transform: none;
+    }
+    .field { display: block; margin-bottom: 10px; }
+    .field > span, .field-label {
+      display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;
+    }
+    .field input, .field textarea, .field select {
+      width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line);
+      background: rgba(255,255,255,.06); color: var(--cream); font-size: 13px;
+    }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .chip {
+      border: 1px solid var(--line); background: rgba(255,255,255,.05); color: var(--muted);
+      font-size: 11px; padding: 4px 8px; border-radius: 999px; cursor: pointer;
+    }
+    .actions-sticky {
+      display: flex; gap: 10px; margin-top: 14px; padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+    .actions-sticky .btn-primary { flex: 1; }
+
+    .scroll-body { overflow-y: auto; max-height: 380px; padding-right: 4px; }
+    .scroll-body--tall { max-height: 440px; }
+
+    /* Tabs (legacy) */
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin: 12px 0; }
+    .tabs button {
+      flex: 1; padding: 10px; border: none; background: transparent; color: var(--muted);
+      font-size: 13px; cursor: pointer; border-bottom: 2px solid transparent;
+    }
+    .tabs button[aria-selected="true"] { color: #fff; border-bottom-color: var(--gold); }
+
+    /* Delivery preview cards (方案 B) */
+    .deliveries { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 16px; }
+    .delivery {
+      border: 1px solid var(--line); border-radius: 12px; padding: 12px;
+      background: rgba(255,255,255,.04); cursor: pointer; text-align: left;
+    }
+    .delivery[aria-checked="true"] {
+      border-color: var(--gold); background: rgba(210,166,87,.1);
+      box-shadow: 0 0 0 1px rgba(210,166,87,.35);
+    }
+    .delivery-preview {
+      height: 88px; border-radius: 8px; margin-bottom: 10px;
+      border: 1px solid var(--line); position: relative; overflow: hidden;
+    }
+    .delivery-preview--long {
+      background: linear-gradient(180deg, #3a4540 0%, #2a322e 40%, #1e2420 100%);
+    }
+    .delivery-preview--long::after {
+      content: ""; position: absolute; left: 28%; right: 28%; top: 8%; bottom: 8%;
+      border-radius: 6px; border: 1px solid rgba(255,255,255,.15);
+      background: linear-gradient(180deg, #5a6a62, #2a3530 30%, #1a221e 60%, #121816);
+      box-shadow: 0 4px 12px rgba(0,0,0,.3);
+    }
+    .delivery-preview--scroll {
+      background: linear-gradient(90deg, #2a322e, #3a4540 50%, #2a322e);
+    }
+    .delivery-preview--scroll::after {
+      content: ""; position: absolute; left: 8%; right: 8%; top: 18%; bottom: 18%;
+      border-radius: 4px; border: 1px solid rgba(255,255,255,.12);
+      background:
+        linear-gradient(90deg, transparent 48%, rgba(255,255,255,.08) 50%, transparent 52%),
+        linear-gradient(180deg, #4a5a52, #2a3530);
+    }
+    .delivery strong { display: block; font-size: 13px; color: #fff; margin-bottom: 2px; }
+    .delivery span { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+    .intent-cards { display: grid; gap: 8px; margin: 8px 0 14px; }
+    .intent-card {
+      border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+      background: rgba(255,255,255,.04); cursor: pointer; text-align: left;
+      display: flex; gap: 12px; align-items: center;
+    }
+    .intent-card:hover { border-color: rgba(210,166,87,.4); }
+    .intent-ico {
+      width: 40px; height: 40px; border-radius: 8px; flex-shrink: 0;
+      background: rgba(210,166,87,.15); border: 1px solid rgba(210,166,87,.25);
+      display: grid; place-items: center; font-size: 16px;
+    }
+    .intent-card strong { display: block; font-size: 13px; color: #fff; }
+    .intent-card span { font-size: 11px; color: var(--muted); }
+
+    .dropzone {
+      border: 1.5px dashed rgba(255,255,255,.2); border-radius: 12px;
+      padding: 28px 16px; text-align: center; margin: 8px 0 12px;
+      background: rgba(255,255,255,.03);
+    }
+    .dropzone p { margin: 0; font-size: 12px; color: var(--muted); }
+    .dropzone .or { margin: 10px 0; font-size: 11px; color: var(--muted2); }
+
+    .layout-previews { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 8px 0; }
+    .layout-prev {
+      border: 1px solid var(--line); border-radius: 8px; padding: 8px; cursor: pointer;
+      background: rgba(255,255,255,.03); text-align: center;
+    }
+    .layout-prev[aria-checked="true"] { border-color: var(--gold); }
+    .layout-prev .mock {
+      height: 48px; border-radius: 4px; margin-bottom: 6px;
+      background: rgba(255,255,255,.06); border: 1px solid var(--line);
+    }
+    .layout-prev .mock--hero {
+      background: linear-gradient(180deg, #4a5a52 55%, transparent 55%),
+                  linear-gradient(90deg, transparent, transparent);
+    }
+    .layout-prev .mock--bal {
+      background:
+        linear-gradient(180deg, #4a5a52 40%, transparent 40%),
+        linear-gradient(90deg, #3a4540 48%, transparent 48%, transparent 52%, #3a4540 52%) 0 70% / 100% 28% no-repeat;
+    }
+    .layout-prev .mock--col {
+      background:
+        linear-gradient(#3a4540,#3a4540) 0 0 / 48% 48% no-repeat,
+        linear-gradient(#3a4540,#3a4540) 100% 0 / 48% 48% no-repeat,
+        linear-gradient(#3a4540,#3a4540) 0 100% / 48% 48% no-repeat,
+        linear-gradient(#3a4540,#3a4540) 100% 100% / 48% 48% no-repeat;
+    }
+    .layout-prev small { font-size: 10px; color: var(--muted); }
+
+    .trust-pill {
+      display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap;
+      font-size: 10px; color: var(--muted); margin-top: 8px;
+    }
+    .trust-pill span {
+      border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px;
+      background: rgba(255,255,255,.03);
+    }
+
+    .anno {
+      max-width: 720px; margin: 14px auto 0; padding: 10px 14px;
+      background: rgba(255,255,255,.04); border-radius: 8px;
+      font-size: 11px; color: var(--muted); line-height: 1.55;
+    }
+    .anno strong { color: #fff; }
+    .anno.wide { max-width: 1100px; }
+
+    /* Side-by-side compare */
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1200px; margin: 0 auto;
+    }
+    @media (max-width: 1000px) { .compare-grid { grid-template-columns: 1fr; } }
+    .compare-col .col-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .06em; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .compare-col .viewport { max-width: 100%; min-height: 500px; }
+    .compare-col .dialog { width: min(100%, 92%); padding: 16px 18px 18px; }
+    .compare-col .head h2 { font-size: 17px; }
+    .compare-col .btn-primary { min-height: 46px; font-size: 13px; }
+    .compare-col .mode-cards { gap: 8px; }
+    .compare-col .deliveries { gap: 8px; }
+    .compare-col .delivery-preview { height: 64px; }
+
+    .decision {
+      max-width: 1100px; margin: 24px auto 0; padding: 16px 18px;
+      border: 1px solid var(--line); border-radius: 12px;
+      background: rgba(255,255,255,.03);
+    }
+    .decision h3 { margin: 0 0 10px; font-size: 14px; color: #fff; }
+    .decision table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .decision th, .decision td {
+      text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line);
+      color: var(--muted); vertical-align: top; line-height: 1.45;
+    }
+    .decision th { color: #fff; font-weight: 600; }
+    .decision td:first-child { color: var(--cream); white-space: nowrap; }
+
+    .step-block { display: none; }
+    .step-block[data-active="true"] { display: block; }
+  </style>
+</head>
+<body>
+  <header class="meta">
+    <h1>制作我的游记画册 · 弹窗线框对比</h1>
+    <p class="lead">
+      左侧/方案 A 是在现有 Sheet 与已批准 Wizard v3 上的<strong>渐进改进</strong>（工期短、下游零侵入）。
+      右侧/方案 B 是<strong>不受当前形态制约</strong>的创作启动台（结果前置、偏好后置）。
+      用顶部标签切换查看；「并排对比」方便直接决策。
+    </p>
+    <div class="meta-grid">
+      <div class="meta-card">
+        <span class="tag tag-now">现状 · AS-IS</span>
+        <h3>Import Sheet v2</h3>
+        <ul>
+          <li>底部 Sheet · 选夹与确认同屏</li>
+          <li>Tab 双模式 · checkbox 直出</li>
+          <li>精细字段一长串</li>
+        </ul>
+        <p class="cost">对照基线 · 默认线上</p>
+      </div>
+      <div class="meta-card">
+        <span class="tag tag-a">方案 A · 改进</span>
+        <h3>两步向导 + A.1 增量</h3>
+        <ul>
+          <li>居中 Dialog · 步态互斥 · 验货</li>
+          <li>进阶折叠 · 张数提示 · 信任行</li>
+          <li>失败兜底 · 关闭确认 · 预填</li>
+        </ul>
+        <p class="cost">v3 ≈10d + A.1 P0/P1 ≈+2d · <a href="./import-wizard-a1.html">A.1 线框</a></p>
+      </div>
+      <div class="meta-card">
+        <span class="tag tag-b">方案 B · 全新</span>
+        <h3>创作启动台</h3>
+        <ul>
+          <li>拖放/选夹一体 · 交付物示意</li>
+          <li>默认一键开做 · 意图卡可选</li>
+          <li>版面气质用视觉样例选</li>
+        </ul>
+        <p class="cost">新 IA · 建议单独立项 · 约 3～4 周</p>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav" role="tablist" aria-label="方案切换">
+    <button type="button" role="tab" aria-selected="true" data-panel="side">并排对比<span class="badge tag-a">推荐先看</span></button>
+    <button type="button" role="tab" aria-selected="false" data-panel="now">现状 AS-IS</button>
+    <button type="button" role="tab" aria-selected="false" data-panel="a">方案 A · 改进</button>
+    <button type="button" role="tab" aria-selected="false" data-panel="b">方案 B · 全新</button>
+    <button type="button" role="tab" aria-selected="false" data-panel="decide">怎么选？</button>
+  </nav>
+
+  <!-- ═══════════════ 并排对比 ═══════════════ -->
+  <section class="panel" data-panel="side" data-active="true">
+    <p class="panel-note">
+      同一关键帧：选完文件夹后的「确认并开始」。左边是改进后的确认步，右边是全新启动台确认步。
+      关注：主 CTA 是否一屏可见、模式如何理解、高级选项是否打扰。
+    </p>
+    <div class="steps" data-steps-for="side">
+      <button type="button" aria-selected="true" data-step="confirm">确认步（主战场）</button>
+      <button type="button" aria-selected="false" data-step="pick">选夹步</button>
+      <button type="button" aria-selected="false" data-step="fine">精细 / 偏好</button>
+    </div>
+
+    <div class="step-block" data-steps="side" data-step="confirm" data-active="true">
+      <div class="compare-grid">
+        <div class="compare-col">
+          <div class="col-label"><span class="tag tag-a">方案 A.1</span> 确认并开始</div>
+          <div class="viewport">
+            <div class="bg"></div><div class="scrim"></div>
+            <div class="dialog">
+              <div class="head">
+                <h2>确认并开始</h2>
+                <button type="button" class="close" aria-label="关闭">×</button>
+              </div>
+              <p class="steps-line"><span class="dim">① 选文件夹 →</span> <strong>② 确认并开始</strong></p>
+              <div class="verify">
+                <div class="verify-row">
+                  <span>📁 贵州暑假游 · 已清点 134 张</span>
+                  <button type="button" class="link">更换</button>
+                </div>
+                <p class="verify-foot">制作时将自动去重与挑选</p>
+                <div class="thumbs">
+                  <div class="thumb"></div><div class="thumb"></div>
+                  <div class="thumb"></div><div class="thumb"></div>
+                </div>
+              </div>
+              <div class="mode-cards" role="radiogroup">
+                <div class="mode-card" aria-checked="true">
+                  <strong>● 快速分享（推荐）</strong>
+                  <span>优先出微信长图，适合马上分享</span>
+                </div>
+                <div class="mode-card" aria-checked="false">
+                  <strong>○ 精细制作</strong>
+                  <span>多填一点，文案和节奏更贴你</span>
+                </div>
+              </div>
+              <div class="photo-row">
+                <span>照片处理：智能挑选已开启 · 连拍自动择优</span>
+                <button type="button">调整</button>
+              </div>
+              <button type="button" class="btn-primary">开始制作 →</button>
+              <p class="hint hint--center" style="margin-top:8px">约 3–8 分钟 · 可关闭此窗，稍后回来</p>
+              <p class="hint hint--center">每个文件夹生成一本新画册，不会覆盖已有作品</p>
+            </div>
+          </div>
+        </div>
+        <div class="compare-col">
+          <div class="col-label"><span class="tag tag-b">方案 B</span> 确认画 · 交付物预期</div>
+          <div class="viewport">
+            <div class="bg"></div><div class="scrim"></div>
+            <div class="dialog dialog--wide">
+              <div class="head head--split">
+                <button type="button" class="back">← 换一批照片</button>
+                <h2>准备开始</h2>
+                <button type="button" class="close">×</button>
+              </div>
+              <div class="verify">
+                <div class="verify-row">
+                  <span>贵州暑假游 · 134 张照片</span>
+                  <button type="button" class="link">更换</button>
+                </div>
+                <div class="thumbs">
+                  <div class="thumb"></div><div class="thumb"></div>
+                  <div class="thumb"></div><div class="thumb"></div>
+                  <div class="thumb"></div><div class="thumb"></div>
+                </div>
+              </div>
+              <p class="hint" style="margin:0 0 4px;font-size:11px;color:var(--muted)">你想先拿到哪个？</p>
+              <div class="deliveries" role="radiogroup">
+                <div class="delivery" aria-checked="true">
+                  <div class="delivery-preview delivery-preview--long"></div>
+                  <strong>微信长图（推荐）</strong>
+                  <span>竖版一条，发朋友圈 / 微信</span>
+                </div>
+                <div class="delivery" aria-checked="false">
+                  <div class="delivery-preview delivery-preview--scroll"></div>
+                  <strong>大屏卷轴</strong>
+                  <span>杂志感横滑阅读</span>
+                </div>
+              </div>
+              <button type="button" class="btn-primary">开始制作 →</button>
+              <button type="button" class="btn-ghost">先告诉系统一点偏好（可选）</button>
+              <p class="hint hint--center">智能挑选与去重默认开启 · 可稍后在成稿里改</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="anno wide">
+        <strong>看点：</strong>A 用文字卡片区分「快速/精细」路径；B 用<strong>交付物示意</strong>对齐用户心智（长图 vs 卷轴），
+        把「精细」降为可选次入口，主路径永远是一键开做。
+      </p>
+    </div>
+
+    <div class="step-block" data-steps="side" data-step="pick">
+      <div class="compare-grid">
+        <div class="compare-col">
+          <div class="col-label"><span class="tag tag-a">方案 A</span> Step 1 选文件夹</div>
+          <div class="viewport" style="min-height:360px">
+            <div class="bg"></div><div class="scrim"></div>
+            <div class="dialog" style="padding-bottom:28px">
+              <div class="head">
+                <h2>制作我的游记画册</h2>
+                <button type="button" class="close">×</button>
+              </div>
+              <button type="button" class="btn-primary" style="margin-top:12px">📁 选择本次旅行的照片文件夹</button>
+              <p class="hint hint--center">一次旅行一个文件夹，照片留在本机</p>
+              <details class="details"><summary>文件夹怎么选？</summary>
+                <p class="hint">一次旅行一个文件夹 · 精选/素材子目录 · JPG/PNG/WebP/HEIC</p>
+              </details>
+              <details class="details"><summary>其他导入方式</summary>
+                <p class="hint">小文件夹试用（≤200MB）· 粘贴路径</p>
+              </details>
+            </div>
+          </div>
+        </div>
+        <div class="compare-col">
+          <div class="col-label"><span class="tag tag-b">方案 B</span> 启动台空态</div>
+          <div class="viewport" style="min-height:360px">
+            <div class="bg"></div><div class="scrim"></div>
+            <div class="dialog">
+              <div class="head">
+                <h2>制作我的游记画册</h2>
+                <button type="button" class="close">×</button>
+              </div>
+              <div class="dropzone">
+                <p style="color:#fff;font-size:14px;margin-bottom:6px">把旅行文件夹拖到这里</p>
+                <p>或</p>
+                <div class="or"></div>
+                <button type="button" class="btn-primary btn-primary--sm" style="max-width:280px;margin:0 auto">选择照片文件夹</button>
+              </div>
+              <p class="hint hint--center">照片留在本机 · 每个文件夹一本新画册</p>
+              <div class="trust-pill" style="justify-content:center">
+                <span>免注册</span><span>本地处理</span><span>自动分章 · 配文 · 排版</span>
+              </div>
+              <details class="details"><summary>其他方式</summary>
+                <p class="hint">粘贴路径 · 小文件夹上传试用</p>
+              </details>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="anno wide">
+        <strong>看点：</strong>A 保持单一主按钮（与现系统选夹一致）；B 增加拖放主舞台，降低「点按钮→系统对话框」的断裂感。
+      </p>
+    </div>
+
+    <div class="step-block" data-steps="side" data-step="fine">
+      <div class="compare-grid">
+        <div class="compare-col">
+          <div class="col-label"><span class="tag tag-a">方案 A.1</span> 精细制作（进阶折叠）</div>
+          <div class="viewport viewport--tall">
+            <div class="bg"></div><div class="scrim"></div>
+            <div class="dialog" style="max-height:90vh">
+              <div class="head">
+                <h2>精细制作</h2>
+                <button type="button" class="close">×</button>
+              </div>
+              <p class="verify-row" style="font-size:12px;margin-bottom:8px">📁 贵州暑假游 · 134 张</p>
+              <div class="scroll-body">
+                <p class="group-title">基本信息</p>
+                <div class="grid2">
+                  <label class="field"><span>游记名称</span><input value="贵州暑假游" /></label>
+                  <label class="field"><span>主要地点（可选）</span><input placeholder="例如：荔波、西江" /></label>
+                </div>
+                <p class="group-title">叙事偏好</p>
+                <label class="field">
+                  <span>写给编辑的一句话（可选）</span>
+                  <textarea rows="2" placeholder="例如：带娃慢走，别写成导游词"></textarea>
+                  <div class="chips">
+                    <button type="button" class="chip">带娃慢走</button>
+                    <button type="button" class="chip">想表达静谧</button>
+                    <button type="button" class="chip">第3天最难忘</button>
+                  </div>
+                </label>
+                <details class="details" style="margin-top:8px">
+                  <summary>进阶选项（日期 · 见闻 · 文件夹 · 排版）</summary>
+                  <div style="margin-top:10px">
+                    <div class="grid2">
+                      <label class="field"><span>开始日期</span><input type="date" /></label>
+                      <label class="field"><span>结束日期</span><input type="date" /></label>
+                    </div>
+                    <label class="field"><span>旅途见闻（可选）</span><textarea rows="2"></textarea></label>
+                    <p class="hint">版面密度 / 模板 / 精选文件夹名 等放此处…</p>
+                  </div>
+                </details>
+              </div>
+              <div class="actions-sticky">
+                <button type="button" class="btn-primary">按这些偏好开始 →</button>
+                <button type="button" class="btn-secondary">← 返回</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="compare-col">
+          <div class="col-label"><span class="tag tag-b">方案 B</span> 可选偏好（意图卡）</div>
+          <div class="viewport viewport--tall">
+            <div class="bg"></div><div class="scrim"></div>
+            <div class="dialog dialog--wide" style="max-height:90vh">
+              <div class="head head--split">
+                <button type="button" class="back">← 返回</button>
+                <h2>一点偏好</h2>
+                <button type="button" class="close">×</button>
+              </div>
+              <p class="hint" style="margin-top:0">都可选，不填也能出好稿。填得越多，文案与节奏更贴你。</p>
+              <div class="scroll-body scroll-body--tall">
+                <div class="intent-cards">
+                  <div class="intent-card">
+                    <div class="intent-ico">📍</div>
+                    <div>
+                      <strong>这趟旅行是怎样的？</strong>
+                      <span>名称 · 地点 · 日期（可从照片时间预填）</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid2">
+                  <label class="field"><span>画册名称</span><input value="贵州暑假游" /></label>
+                  <label class="field"><span>地点</span><input placeholder="荔波、西江…" /></label>
+                </div>
+                <p class="group-title">文案风格</p>
+                <label class="field">
+                  <span>告诉系统你的感觉</span>
+                  <textarea rows="2" placeholder="带娃慢走，别写成导游词"></textarea>
+                  <div class="chips">
+                    <button type="button" class="chip">带娃慢走</button>
+                    <button type="button" class="chip">静谧雨天</button>
+                    <button type="button" class="chip">第3天最难忘</button>
+                  </div>
+                </label>
+                <p class="group-title">版面气质</p>
+                <div class="layout-previews" role="radiogroup">
+                  <div class="layout-prev" aria-checked="true">
+                    <div class="mock mock--bal"></div>
+                    <small>智能平衡</small>
+                  </div>
+                  <div class="layout-prev" aria-checked="false">
+                    <div class="mock mock--hero"></div>
+                    <small>大图为主</small>
+                  </div>
+                  <div class="layout-prev" aria-checked="false">
+                    <div class="mock mock--col"></div>
+                    <small>拼图为主</small>
+                  </div>
+                </div>
+                <details class="details">
+                  <summary>补充素材（见闻 · 行程文件 · 精选目录名）</summary>
+                  <p class="hint">与现精细字段等价，默认折叠</p>
+                </details>
+              </div>
+              <div class="actions-sticky">
+                <button type="button" class="btn-primary">按偏好开始 →</button>
+                <button type="button" class="btn-secondary">跳过，直接做</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="anno wide">
+        <strong>看点：</strong>A 保留完整字段清单，用「进阶折叠」降噪；B 把字段重组为<strong>用户意图</strong>，版面用视觉样例代替 radio 长文，并允许「跳过」。
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 现状 ═══════════════ -->
+  <section class="panel" data-panel="now">
+    <p class="panel-note">
+      当前默认线上：底部 Sheet。选夹后确认区展开，快速/精细用 Tab，两个照片处理 checkbox 常显，精细字段同屏长表单。
+      已知问题见 PRD v3 IS-01～06（主 CTA 需滚动、选夹前后不互斥、高级选项噪音等）。
+    </p>
+    <div class="steps" data-steps-for="now">
+      <button type="button" aria-selected="true" data-step="n1">选夹前</button>
+      <button type="button" aria-selected="false" data-step="n2">快速分享确认</button>
+      <button type="button" aria-selected="false" data-step="n3">精细制作 Tab</button>
+    </div>
+
+    <div class="step-block" data-steps="now" data-step="n1" data-active="true">
+      <div class="viewport viewport--tall">
+        <div class="bg"></div><div class="scrim"></div>
+        <div class="dialog dialog--sheet">
+          <div class="handle"></div>
+          <div class="head">
+            <h2>制作我的游记画册</h2>
+            <button type="button" class="close">×</button>
+          </div>
+          <span class="badge-step">步骤 1 / 2 · 选择照片</span>
+          <button type="button" class="btn-primary">选择本次旅行的照片文件夹</button>
+          <p class="hint">相册里若有「精选」和「素材」两个子文件夹，封面会优先用精选（建议 8–20 张）。</p>
+          <details class="details"><summary>文件夹怎么选？</summary></details>
+          <details class="details"><summary>其他导入方式</summary></details>
+          <p class="hint">每个文件夹会生成一本新的游记画册，<strong style="color:#fff">不会覆盖</strong>已有作品。</p>
+        </div>
+      </div>
+      <p class="anno"><strong>痛点：</strong>桌面用底部 Sheet，垂直空间浪费；选夹说明偏长，主按钮之上信息密度不均。</p>
+    </div>
+
+    <div class="step-block" data-steps="now" data-step="n2">
+      <div class="viewport viewport--tall">
+        <div class="bg"></div><div class="scrim"></div>
+        <div class="dialog dialog--sheet" style="max-height:85vh">
+          <div class="handle"></div>
+          <div class="head">
+            <h2>制作我的游记画册</h2>
+            <button type="button" class="close">×</button>
+          </div>
+          <span class="badge-step">步骤 1 / 2 · 选择照片</span>
+          <button type="button" class="btn-primary" style="opacity:.5">选择本次旅行的照片文件夹</button>
+          <p class="hint">…精选/素材说明…</p>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
+            <p style="margin:0 0 8px;font-size:12px;color:var(--gold)">已选：C:\Photos\贵州暑假游</p>
+            <div class="tabs" role="tablist">
+              <button type="button" aria-selected="true">快速分享</button>
+              <button type="button" aria-selected="false">精细制作</button>
+            </div>
+            <label class="check"><input type="checkbox" checked /> 智能挑选照片（推荐）</label>
+            <p class="check-hint">自动去掉过于模糊和截图类照片。</p>
+            <label class="check"><input type="checkbox" /> 保留连拍与近似照片</label>
+            <p class="check-hint">默认会合并时间相近或画面相似的照片…</p>
+            <p class="hint">仅需文件夹即可开始，默认生成适合分享的长图。</p>
+            <button type="button" class="btn-primary">开始制作</button>
+            <button type="button" class="btn-ghost">重新选择文件夹</button>
+          </div>
+        </div>
+      </div>
+      <p class="anno">
+        <strong>痛点 IS-01/02/03：</strong>选夹按钮仍在、确认区叠在下方；小屏需滚到 CTA；两 checkbox 对多数用户是噪音；无缩略图验货。
+      </p>
+    </div>
+
+    <div class="step-block" data-steps="now" data-step="n3">
+      <div class="viewport viewport--tall">
+        <div class="bg"></div><div class="scrim"></div>
+        <div class="dialog dialog--sheet" style="max-height:88vh">
+          <div class="handle"></div>
+          <div class="head">
+            <h2>制作我的游记画册</h2>
+            <button type="button" class="close">×</button>
+          </div>
+          <div class="scroll-body scroll-body--tall">
+            <p style="margin:0 0 8px;font-size:12px;color:var(--gold)">已选：…\贵州暑假游</p>
+            <div class="tabs">
+              <button type="button" aria-selected="false">快速分享</button>
+              <button type="button" aria-selected="true">精细制作</button>
+            </div>
+            <label class="check"><input type="checkbox" checked /> 智能挑选…</label>
+            <label class="check"><input type="checkbox" /> 保留连拍…</label>
+            <label class="field"><span>游记名称</span><input /></label>
+            <label class="field"><span>主要地点（可选）</span><input /></label>
+            <div class="grid2">
+              <label class="field"><span>开始日期</span><input type="date" /></label>
+              <label class="field"><span>结束日期</span><input type="date" /></label>
+            </div>
+            <label class="field"><span>写给编辑的一句话</span><textarea rows="2"></textarea></label>
+            <label class="field"><span>旅途见闻与感悟</span><textarea rows="2"></textarea></label>
+            <label class="field"><span>行程计划文件</span><input type="file" /></label>
+            <label class="field"><span>精选文件夹</span><input placeholder="精选" /></label>
+            <label class="field"><span>素材文件夹</span><input placeholder="素材" /></label>
+            <p class="hint">版面密度三选一 + 模板下拉…（续）</p>
+            <button type="button" class="btn-primary">开始制作（专业）</button>
+          </div>
+        </div>
+      </div>
+      <p class="anno"><strong>痛点 IS-04：</strong>精细字段与快速同屏切换，像半个设置页；主 CTA 常需滚动才看见。</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 方案 A ═══════════════ -->
+  <section class="panel" data-panel="a">
+    <p class="panel-note blue">
+      方案 A 已收敛为 <strong>Wizard v3 + A.1 增量</strong>。
+      完整 P0/P1 帧见专稿 <a href="./import-wizard-a1.html">import-wizard-a1.html</a> ·
+      规格 <a href="../PRD-IMPORT-WIZARD-A1-DELTA.md">PRD-IMPORT-WIZARD-A1-DELTA.md</a>。
+      下游 payload / Importing / FirstSuccess <strong>零变更</strong>。
+    </p>
+    <div class="steps" data-steps-for="a">
+      <button type="button" aria-selected="true" data-step="a1">① 选文件夹</button>
+      <button type="button" aria-selected="false" data-step="a2">② 确认（A.1）</button>
+      <button type="button" aria-selected="false" data-step="a2d">② 抽屉展开</button>
+      <button type="button" aria-selected="false" data-step="a2b">②b 进阶折叠</button>
+    </div>
+
+    <div class="step-block" data-steps="a" data-step="a1" data-active="true">
+      <div class="viewport" style="min-height:380px">
+        <div class="bg"></div><div class="scrim"></div>
+        <div class="dialog">
+          <div class="head">
+            <h2>制作我的游记画册</h2>
+            <button type="button" class="close">×</button>
+          </div>
+          <button type="button" class="btn-primary" style="margin-top:10px">📁 选择本次旅行的照片文件夹</button>
+          <p class="hint hint--center">一次旅行一个文件夹，照片留在本机</p>
+          <details class="details"><summary>文件夹怎么选？</summary>
+            <p class="hint">一次旅行一个文件夹 · 子目录可放精选/素材 · 支持 JPG/PNG/WebP/HEIC</p>
+          </details>
+          <details class="details"><summary>其他导入方式</summary>
+            <p class="hint">小文件夹试用（≤200MB）· 粘贴路径</p>
+          </details>
+        </div>
+      </div>
+      <p class="anno"><strong>改进点：</strong>居中 Dialog；选夹前极简；帮助折叠。高度目标 ≤260px。</p>
+    </div>
+
+    <div class="step-block" data-steps="a" data-step="a2">
+      <div class="viewport">
+        <div class="bg"></div><div class="scrim"></div>
+        <div class="dialog">
+          <div class="head">
+            <h2>确认并开始</h2>
+            <button type="button" class="close">×</button>
+          </div>
+          <p class="steps-line"><span class="dim">① 选文件夹 →</span> <strong>② 确认并开始</strong></p>
+          <div class="verify">
+            <div class="verify-row">
+              <span>📁 贵州暑假游 · 已清点 134 张</span>
+              <button type="button" class="link">更换</button>
+            </div>
+            <p class="verify-foot">制作时将自动去重与挑选</p>
+            <div class="thumbs">
+              <div class="thumb"></div><div class="thumb"></div>
+              <div class="thumb"></div><div class="thumb"></div>
+            </div>
+          </div>
+          <div class="mode-cards">
+            <div class="mode-card" aria-checked="true">
+              <strong>● 快速分享（推荐）</strong>
+              <span>优先出微信长图，适合马上分享</span>
+            </div>
+            <div class="mode-card" aria-checked="false">
+              <strong>○ 精细制作</strong>
+              <span>多填一点，文案和节奏更贴你</span>
+            </div>
+          </div>
+          <div class="photo-row">
+            <span>照片处理：智能挑选已开启 · 连拍自动择优</span>
+            <button type="button">调整照片处理</button>
+          </div>
+          <button type="button" class="btn-primary">开始制作 →</button>
+          <p class="hint hint--center" style="margin-top:8px">约 3–8 分钟 · 可关闭此窗，稍后回来</p>
+          <p class="hint hint--center">每个文件夹会生成一本新游记画册，不会覆盖已有作品</p>
+        </div>
+      </div>
+      <p class="anno">
+        <strong>A.1：</strong>头栏仅关闭（更换在验货行）· 模式副文案贴结果 · CTA 信任行。
+        更多帧见 <a href="./import-wizard-a1.html">A.1 专稿</a>。
+      </p>
+    </div>
+
+    <div class="step-block" data-steps="a" data-step="a2d">
+      <div class="viewport viewport--tall">
+        <div class="bg"></div><div class="scrim"></div>
+        <div class="dialog">
+          <div class="head head--split">
+            <button type="button" class="back">← 重新选择</button>
+            <h2>确认并开始</h2>
+            <button type="button" class="close">×</button>
+          </div>
+          <p class="steps-line"><span class="dim">① 选文件夹 →</span> <strong>② 确认并开始</strong></p>
+          <div class="verify-row" style="margin-bottom:12px;font-size:13px">
+            <span>📁 demo-2025-8 · 已清点 129 张</span>
+            <button type="button" class="link">更换</button>
+          </div>
+          <div class="mode-cards">
+            <div class="mode-card" aria-checked="true"><strong>● 快速分享（推荐）</strong><span>微信长图</span></div>
+            <div class="mode-card" aria-checked="false"><strong>○ 精细制作</strong><span>更贴旅程</span></div>
+          </div>
+          <div class="drawer">
+            <p class="drawer-title">照片处理</p>
+            <label class="check"><input type="checkbox" checked /> 智能挑选照片（推荐）</label>
+            <p class="check-hint">自动去掉过于模糊和截图类照片。</p>
+            <label class="check"><input type="checkbox" /> 保留连拍与近似照片</label>
+            <p class="check-hint">默认合并近似；勾选后全部保留。完全相同文件仍去重。</p>
+          </div>
+          <button type="button" class="btn-primary">开始制作 →</button>
+        </div>
+      </div>
+      <p class="anno"><strong>注：</strong>抽屉展开态允许 body 内滚动；折叠态才是一屏硬约束。</p>
+    </div>
+
+    <div class="step-block" data-steps="a" data-step="a2b">
+      <div class="viewport viewport--tall">
+        <div class="bg"></div><div class="scrim"></div>
+        <div class="dialog" style="width:min(640px,94%)">
+          <div class="head">
+            <h2>精细制作</h2>
+            <button type="button" class="close">×</button>
+          </div>
+          <p style="font-size:12px;margin:0 0 8px;color:var(--muted)">📁 贵州暑假游 · 134 张</p>
+          <div class="scroll-body">
+            <p class="group-title">基本信息</p>
+            <div class="grid2">
+              <label class="field"><span>游记名称</span><input value="贵州暑假游" /></label>
+              <label class="field"><span>主要地点（可选）</span><input /></label>
+            </div>
+            <p class="group-title">叙事偏好</p>
+            <label class="field">
+              <span>写给编辑的一句话（可选）</span>
+              <textarea rows="2"></textarea>
+              <div class="chips">
+                <button type="button" class="chip">带娃慢走，别写成导游词</button>
+                <button type="button" class="chip">想表达静谧，雨天的感觉</button>
+              </div>
+            </label>
+            <details class="details">
+              <summary>进阶选项（日期 · 见闻 · 文件夹 · 排版 · 模板）</summary>
+              <p class="hint" style="margin-top:8px">日期可由 EXIF 预填；字段与现版零删减。</p>
+            </details>
+          </div>
+          <div class="actions-sticky">
+            <button type="button" class="btn-primary">按这些偏好开始 →</button>
+            <button type="button" class="btn-secondary">← 返回上一步</button>
+          </div>
+        </div>
+      </div>
+      <p class="anno"><strong>A1-02 / A1-07 / A1-13：</strong>进阶折叠 · 名称预填 · CTA「按这些偏好开始」。专稿见 <a href="./import-wizard-a1.html">A.1</a>。</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 方案 B ═══════════════ -->
+  <section class="panel" data-panel="b">
+    <p class="panel-note">
+      方案 B 不受 Bottom Sheet / 双模式 Tab 制约：把弹窗从「导入表单」改成「创作启动台」。
+      原则：结果前置、默认即专业、偏好可选且可后置到成稿后。
+    </p>
+    <div class="steps" data-steps-for="b">
+      <button type="button" aria-selected="true" data-step="b1">启动台空态</button>
+      <button type="button" aria-selected="false" data-step="b2">确认画</button>
+      <button type="button" aria-selected="false" data-step="b3">可选偏好</button>
+      <button type="button" aria-selected="false" data-step="b4">（展望）成稿后再调</button>
+    </div>
+
+    <div class="step-block" data-steps="b" data-step="b1" data-active="true">
+      <div class="viewport">
+        <div class="bg"></div><div class="scrim"></div>
+        <div class="dialog dialog--wide">
+          <div class="head">
+            <h2>制作我的游记画册</h2>
+            <button type="button" class="close">×</button>
+          </div>
+          <div class="dropzone">
+            <p style="color:#fff;font-size:15px;margin-bottom:8px">把一次旅行的照片文件夹拖进来</p>
+            <p class="or">—— 或者 ——</p>
+            <button type="button" class="btn-primary btn-primary--sm" style="max-width:300px;margin:0 auto">选择照片文件夹</button>
+          </div>
+          <p class="hint hint--center">照片留在本机 · 无需注册 · 每个文件夹一本新画册</p>
+          <div class="trust-pill" style="justify-content:center">
+            <span>自动分章</span><span>自动配文</span><span>自动排版</span>
+          </div>
+          <details class="details"><summary>其他导入方式</summary>
+            <p class="hint">粘贴路径 · 小文件夹上传（≤200MB 试用）</p>
+          </details>
+        </div>
+      </div>
+      <p class="anno"><strong>新点：</strong>拖放主舞台；信任标签外露；系统选夹仍是主备路径。</p>
+    </div>
+
+    <div class="step-block" data-steps="b" data-step="b2">
+      <div class="viewport viewport--wide">
+        <div class="bg"></div><div class="scrim"></div>
+        <div class="dialog dialog--wide">
+          <div class="head head--split">
+            <button type="button" class="back">← 换一批</button>
+            <h2>准备开始</h2>
+            <button type="button" class="close">×</button>
+          </div>
+          <div class="verify">
+            <div class="verify-row">
+              <span style="font-size:14px;color:#fff">贵州暑假游 · 已清点 134 张</span>
+              <button type="button" class="link">更换</button>
+            </div>
+            <div class="thumbs">
+              <div class="thumb"></div><div class="thumb"></div><div class="thumb"></div>
+              <div class="thumb"></div><div class="thumb"></div><div class="thumb"></div>
+            </div>
+          </div>
+          <p style="margin:12px 0 6px;font-size:12px;color:var(--muted)">先做哪一种？两种都会生成，这里只定「优先预览」</p>
+          <div class="deliveries">
+            <div class="delivery" aria-checked="true">
+              <div class="delivery-preview delivery-preview--long"></div>
+              <strong>微信长图（推荐）</strong>
+              <span>竖版一条，发朋友圈最省事</span>
+            </div>
+            <div class="delivery" aria-checked="false">
+              <div class="delivery-preview delivery-preview--scroll"></div>
+              <strong>大屏卷轴</strong>
+              <span>杂志感横滑，适合大屏阅读</span>
+            </div>
+          </div>
+          <button type="button" class="btn-primary">开始制作 →</button>
+          <button type="button" class="btn-ghost">先告诉系统一点偏好（可选）</button>
+          <p class="hint hint--center">智能挑选 / 去重已开启 · 制作中可关闭此窗，稍后回来</p>
+        </div>
+      </div>
+      <p class="anno">
+        <strong>新点：</strong>用交付物示意替代「快速/精细」抽象模式；精细降为次 CTA。
+        模式语义从「制作方式」变为「你更想先看什么」。
+      </p>
+    </div>
+
+    <div class="step-block" data-steps="b" data-step="b3">
+      <div class="viewport viewport--wide viewport--tall">
+        <div class="bg"></div><div class="scrim"></div>
+        <div class="dialog dialog--wide">
+          <div class="head head--split">
+            <button type="button" class="back">← 返回</button>
+            <h2>一点偏好</h2>
+            <button type="button" class="close">×</button>
+          </div>
+          <div class="scroll-body scroll-body--tall">
+            <p class="hint" style="margin-top:0">不填也能出好稿。以下按「你在想什么」组织，不是按系统字段。</p>
+            <p class="group-title">这趟旅行</p>
+            <div class="grid2">
+              <label class="field"><span>画册名称</span><input value="贵州暑假游" /></label>
+              <label class="field"><span>地点</span><input placeholder="荔波、西江" /></label>
+            </div>
+            <p class="group-title">文案感觉</p>
+            <label class="field">
+              <span>一句话告诉系统</span>
+              <textarea rows="2" placeholder="带娃慢走，别写成导游词"></textarea>
+              <div class="chips">
+                <button type="button" class="chip">带娃慢走</button>
+                <button type="button" class="chip">静谧雨天</button>
+                <button type="button" class="chip">第3天最难忘</button>
+              </div>
+            </label>
+            <p class="group-title">版面气质</p>
+            <div class="layout-previews">
+              <div class="layout-prev" aria-checked="true"><div class="mock mock--bal"></div><small>智能平衡</small></div>
+              <div class="layout-prev" aria-checked="false"><div class="mock mock--hero"></div><small>大图为主</small></div>
+              <div class="layout-prev" aria-checked="false"><div class="mock mock--col"></div><small>拼图为主</small></div>
+            </div>
+            <details class="details">
+              <summary>更多（见闻、行程文件、精选目录、模板、照片处理）</summary>
+              <p class="hint">专家项全集，默认不打扰</p>
+            </details>
+          </div>
+          <div class="actions-sticky">
+            <button type="button" class="btn-primary">按偏好开始 →</button>
+            <button type="button" class="btn-secondary">跳过</button>
+          </div>
+        </div>
+      </div>
+      <p class="anno"><strong>新点：</strong>意图化分组 + 视觉选版面 + 可跳过。与 A 的字段清单兼容，但心智完全不同。</p>
+    </div>
+
+    <div class="step-block" data-steps="b" data-step="b4">
+      <div class="viewport viewport--wide">
+        <div class="bg"></div><div class="scrim"></div>
+        <div class="dialog dialog--wide" style="text-align:center;padding:32px 28px">
+          <p style="margin:0 0 6px;font-size:11px;color:var(--ok)">✓ 生成完成</p>
+          <h2 style="margin:0 0 8px;font-size:22px;font-weight:400">你的游记画册好了</h2>
+          <p class="hint hint--center" style="margin-bottom:16px">134 张 → 自动分章成文 · 可先浏览，再按需调整</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;text-align:left">
+            <div class="delivery" aria-checked="true" style="cursor:default">
+              <div class="delivery-preview delivery-preview--long"></div>
+              <strong>打开长图</strong>
+              <span>保存并发微信</span>
+            </div>
+            <div class="delivery" style="cursor:default">
+              <div class="delivery-preview delivery-preview--scroll"></div>
+              <strong>打开卷轴</strong>
+              <span>大屏沉浸阅读</span>
+            </div>
+          </div>
+          <button type="button" class="btn-primary">打开作品 →</button>
+          <button type="button" class="btn-ghost">换风格 / 改偏好后重做（展望）</button>
+        </div>
+      </div>
+      <p class="anno">
+        <strong>展望（非本期必做）：</strong>把「版面密度、模板、连拍」等事后决策放到成功页/编辑器，
+        入口弹窗可进一步缩短为「选夹 → 开做」。此帧展示理想终态心智。
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 怎么选 ═══════════════ -->
+  <section class="panel" data-panel="decide">
+    <div class="decision">
+      <h3>决策对照表</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>维度</th>
+            <th><span class="tag tag-a">方案 A · 改进</span></th>
+            <th><span class="tag tag-b">方案 B · 全新</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>解决的核心问题</td>
+            <td>IS-01～06：滚动、噪音、无验货、桌面空间</td>
+            <td>心智升级：从「填表导入」到「启动创作」</td>
+          </tr>
+          <tr>
+            <td>快速用户路径</td>
+            <td>选夹 → 开始（2 次点击）</td>
+            <td>选夹/拖入 → 开始（同样 2 次，仪式感更强）</td>
+          </tr>
+          <tr>
+            <td>模式语义</td>
+            <td>快速分享 vs 精细制作（制作深度）</td>
+            <td>长图 vs 卷轴（交付物）+ 偏好可选</td>
+          </tr>
+          <tr>
+            <td>工程风险</td>
+            <td>低 · flag 已有 · 下游零侵入</td>
+            <td>中高 · 需重做 IA/文案/部分埋点语义</td>
+          </tr>
+          <tr>
+            <td>工期（估）</td>
+            <td>约 10～12 工作日（含进阶折叠）</td>
+            <td>约 3～4 周（含拖放、示意、意图卡）</td>
+          </tr>
+          <tr>
+            <td>适合若…</td>
+            <td>要尽快提升转化、灰度稳妥、复用 v3 PRD</td>
+            <td>愿投入重塑入口体验、强化品牌差异</td>
+          </tr>
+          <tr>
+            <td>建议策略</td>
+            <td colspan="2" style="color:var(--cream)">
+              <strong>先 A.1 后 B：</strong>先推全 Wizard v3 + A.1 P0/P1（见
+              <a href="../PRD-IMPORT-WIZARD-A1-DELTA.md">A.1 规格</a>）验证漏斗；
+              再把「交付物示意 / 拖放 / 偏好后置」作为 v4 演进，而不是一次赌全新。
+              若品牌叙事优先、可接受更长周期，可直接立 B 为下一代入口。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="anno wide" style="margin-top:16px">
+      线框文件：<code>docs/archive/import-sheet/import-modal-compare-v1.html</code> ·
+      关联：<a href="../PRD-IMPORT-SHEET-v3-WIZARD.md">PRD-IMPORT-SHEET-v3-WIZARD</a> ·
+      <a href="./import-wizard-v3.html">import-wizard-v3 线框</a>
+    </p>
+  </section>
+
+  <script>
+    (function () {
+      var nav = document.querySelector(".nav");
+      var panels = document.querySelectorAll(".panel");
+
+      nav.addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-panel]");
+        if (!btn) return;
+        nav.querySelectorAll("button").forEach(function (b) {
+          b.setAttribute("aria-selected", b === btn ? "true" : "false");
+        });
+        panels.forEach(function (p) {
+          p.setAttribute("data-active", p.getAttribute("data-panel") === btn.getAttribute("data-panel") ? "true" : "false");
+        });
+      });
+
+      document.querySelectorAll(".steps").forEach(function (stepNav) {
+        var key = stepNav.getAttribute("data-steps-for");
+        stepNav.addEventListener("click", function (e) {
+          var btn = e.target.closest("button[data-step]");
+          if (!btn) return;
+          stepNav.querySelectorAll("button").forEach(function (b) {
+            b.setAttribute("aria-selected", b === btn ? "true" : "false");
+          });
+          var step = btn.getAttribute("data-step");
+          document.querySelectorAll('.step-block[data-steps="' + key + '"]').forEach(function (block) {
+            block.setAttribute("data-active", block.getAttribute("data-step") === step ? "true" : "false");
+          });
+        });
+      });
+
+      // Interactive radio-like cards within wireframes
+      document.querySelectorAll(".mode-cards, .deliveries, .layout-previews").forEach(function (group) {
+        group.addEventListener("click", function (e) {
+          var card = e.target.closest("[aria-checked]");
+          if (!card || !group.contains(card)) return;
+          group.querySelectorAll("[aria-checked]").forEach(function (c) {
+            c.setAttribute("aria-checked", c === card ? "true" : "false");
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

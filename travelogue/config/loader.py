@@ -110,8 +110,6 @@ def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
         "success_refined_default_enabled",
         "importSheetLargeEnabled",
         "import_sheet_large_enabled",
-        "importWizardV3Enabled",
-        "import_wizard_v3_enabled",
         "layoutTemplatesInternal",
         "layout_templates_internal",
     }
@@ -200,7 +198,6 @@ def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
                     "importDualModeEnabled": "import_dual_mode_enabled",
                     "successRefinedDefaultEnabled": "success_refined_default_enabled",
                     "importSheetLargeEnabled": "import_sheet_large_enabled",
-                    "importWizardV3Enabled": "import_wizard_v3_enabled",
                 }
                 norm_key = mapping.get(key, key)
                 target[norm_key] = val
@@ -550,9 +547,6 @@ def load_config(path: Path | None = None) -> AppConfig:
             ),
             import_sheet_large_enabled=cfg_bool(
                 studio_raw, "import_sheet_large_enabled", "importSheetLargeEnabled", True
-            ),
-            import_wizard_v3_enabled=cfg_bool(
-                studio_raw, "import_wizard_v3_enabled", "importWizardV3Enabled", False
             ),
             layout_templates_internal=cfg_bool(
                 studio_raw, "layout_templates_internal", "layoutTemplatesInternal", False

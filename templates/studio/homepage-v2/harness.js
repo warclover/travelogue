@@ -22,7 +22,7 @@ import { renderShelf } from "./shelf.js";
 import { renderImportingPanel } from "./import-run.js";
 import { showFirstSuccess, captureImportShell } from "./first-success.js";
 import { showImportFailed } from "./import-failed.js";
-import { openImportSheet } from "./import-sheet.js";
+import { openImportSheet } from "./import-entry.js";
 
 const HARNESS_JOB_ID = "harness-job-1";
 
@@ -458,6 +458,7 @@ export function harnessApplyStartup() {
       return true;
     }
     case "sheet-open":
+      // 兼容旧 harness 名；打开 Wizard（Sheet 已退役）
       V2.state = "IdleEmpty";
       renderBentoEmpty(V2.manifest);
       openImportSheet();

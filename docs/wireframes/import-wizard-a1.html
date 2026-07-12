@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Import Wizard A.1 · 增量线框（P0/P1）</title>
+  <style>
+    :root {
+      --ink: #141210;
+      --cream: #f5f0e8;
+      --gold: #d2a657;
+      --muted: rgba(245, 240, 232, .55);
+      --line: rgba(255, 255, 255, .12);
+      --warn: #e0a060;
+      --label: #3d8bfd;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); font-size: 14px; background: #2a2824; color: var(--cream); }
+    a { color: var(--gold); }
+    .meta {
+      padding: 16px 24px; background: #1a1814; border-bottom: 2px solid var(--label);
+    }
+    .meta h1 { margin: 0 0 6px; font-size: 18px; color: #fff; }
+    .meta p, .meta li { font-size: 12px; color: var(--muted); line-height: 1.6; margin: 0; }
+    .meta ul { margin: 8px 0 0; padding-left: 18px; }
+    .meta .refs { margin-top: 8px; font-size: 11px; }
+    .tabs {
+      display: flex; gap: 6px; padding: 16px 24px 0; flex-wrap: wrap;
+      position: sticky; top: 0; z-index: 10; background: #2a2824;
+    }
+    .tabs button {
+      border: 1px solid var(--line); background: rgba(255,255,255,.06); color: var(--cream);
+      padding: 8px 14px; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 12px;
+    }
+    .tabs button[aria-selected="true"] {
+      background: #141210; border-bottom-color: #141210; font-weight: 600; color: #fff;
+    }
+    .tabs .pid {
+      margin-left: 4px; font-size: 9px; padding: 1px 5px; border-radius: 3px;
+      background: rgba(61,139,253,.25); color: #8bb8ff; vertical-align: middle;
+    }
+    .panel { display: none; padding: 20px 24px 40px; }
+    .panel[data-active="true"] { display: block; }
+    .viewport {
+      max-width: 720px; margin: 0 auto; min-height: 520px; position: relative;
+      border-radius: 12px; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+    .viewport--tall { min-height: 640px; }
+    .bg { position: absolute; inset: 0; background: linear-gradient(160deg, #1a1814, #2a3530); }
+    .scrim { position: absolute; inset: 0; background: rgba(6,5,4,.5); backdrop-filter: blur(6px); }
+    .dialog {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      width: min(560px, 92%); max-height: 88vh; overflow: hidden;
+      background: rgba(20, 18, 16, .97); border: 1px solid var(--line);
+      border-radius: 20px; padding: 20px 26px 22px; z-index: 2;
+      display: flex; flex-direction: column;
+    }
+    .dialog--wide { width: min(640px, 94%); }
+    .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .head h2 { margin: 0; font-size: 20px; font-weight: 400; color: #fff; }
+    .close { border: none; background: none; color: var(--muted); font-size: 22px; cursor: pointer; }
+    .link { border: none; background: none; color: var(--gold); font-size: 12px; cursor: pointer; padding: 0; }
+    .steps-line { font-size: 11px; color: var(--gold); margin: 0 0 14px; }
+    .steps-line .dim { color: var(--muted); }
+    .btn-primary {
+      display: block; width: 100%; min-height: 52px; border: none; border-radius: 8px;
+      background: var(--cream); color: var(--ink); font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .btn-ghost {
+      display: block; width: 100%; min-height: 40px; margin-top: 8px;
+      border: 1px solid var(--line); border-radius: 8px;
+      background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
+    }
+    .btn-secondary {
+      min-height: 48px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px;
+      background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; white-space: nowrap;
+    }
+    .hint { margin: 10px 0 0; font-size: 11px; color: var(--muted); line-height: 1.55; text-align: center; }
+    .hint--left { text-align: left; }
+    .hint--warn { color: var(--warn); text-align: left; margin: 6px 0 0; font-size: 11px; }
+    .trust {
+      margin: 8px 0 0; font-size: 11px; color: var(--muted); text-align: center; line-height: 1.4;
+    }
+    .details { margin-top: 12px; font-size: 12px; color: var(--muted); }
+    .details summary { cursor: pointer; color: var(--gold); }
+    .details[open] { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: rgba(255,255,255,.03); }
+    .error {
+      margin-top: 10px; padding: 8px 10px; border-radius: 6px;
+      background: rgba(200,80,60,.15); border: 1px solid rgba(200,80,60,.35);
+      color: #f0a090; font-size: 12px;
+    }
+    .verify-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
+    .verify-foot { font-size: 10px; color: var(--muted); margin: 4px 0 0; }
+    .thumbs { display: flex; gap: 6px; margin-top: 10px; }
+    .thumb {
+      width: 56px; height: 56px; border-radius: 6px; border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255,255,255,.1), rgba(255,255,255,.04));
+      position: relative; cursor: default;
+    }
+    .thumb:nth-child(2) { background: linear-gradient(160deg, #3a4a42, #1e2824); }
+    .thumb:nth-child(3) { background: linear-gradient(160deg, #4a3a2a, #2a2218); }
+    .thumb:nth-child(4) { background: linear-gradient(160deg, #2a3a4a, #181e28); }
+    .thumb:focus { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .thumb[data-tip]::after {
+      content: attr(data-tip); position: absolute; left: 50%; bottom: calc(100% + 6px);
+      transform: translateX(-50%); white-space: nowrap; font-size: 10px;
+      background: #0e0c0a; color: var(--cream); padding: 4px 8px; border-radius: 4px;
+      border: 1px solid var(--line); opacity: 0; pointer-events: none; transition: opacity .12s;
+      z-index: 5;
+    }
+    .thumb:hover::after, .thumb:focus::after { opacity: 1; }
+    .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+    .mode-card {
+      border: 1px solid var(--line); border-radius: 10px; padding: 12px; cursor: pointer;
+      background: rgba(255,255,255,.04); font-size: 12px; text-align: left;
+    }
+    .mode-card[aria-checked="true"] { border-color: var(--gold); background: rgba(210,166,87,.08); }
+    .mode-card strong { display: block; font-size: 13px; margin-bottom: 4px; color: #fff; }
+    .mode-card span { color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .photo-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      font-size: 11px; color: var(--muted); margin-bottom: 14px;
+    }
+    .photo-row.warn { color: var(--warn); }
+    .photo-row button {
+      border: 1px solid var(--line); background: transparent; color: var(--cream);
+      font-size: 11px; padding: 6px 10px; border-radius: 6px; cursor: pointer; flex-shrink: 0;
+    }
+    .group-title { font-size: 11px; color: var(--gold); letter-spacing: .06em; margin: 12px 0 8px; }
+    .field { display: block; margin-bottom: 10px; }
+    .field > span { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .field input, .field textarea {
+      width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line);
+      background: rgba(255,255,255,.06); color: var(--cream); font-size: 13px;
+    }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .chip {
+      border: 1px solid var(--line); background: rgba(255,255,255,.05); color: var(--muted);
+      font-size: 11px; padding: 4px 8px; border-radius: 999px; cursor: pointer;
+    }
+    .chip[aria-pressed="true"] { border-color: var(--gold); color: #fff; background: rgba(210,166,87,.15); }
+    .scroll-body { overflow-y: auto; max-height: 400px; padding-right: 4px; }
+    .actions-sticky {
+      display: flex; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);
+    }
+    .actions-sticky .btn-primary { flex: 1; }
+    .anno {
+      max-width: 720px; margin: 14px auto 0; padding: 10px 14px;
+      background: rgba(61,139,253,.1); border-left: 3px solid var(--label);
+      font-size: 11px; color: var(--muted); line-height: 1.55;
+    }
+    .anno strong { color: #fff; }
+    /* confirm overlay mock */
+    .confirm-overlay {
+      position: absolute; inset: 0; z-index: 5;
+      background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .confirm-box {
+      width: min(360px, 100%); background: #1a1814; border: 1px solid var(--line);
+      border-radius: 12px; padding: 18px 20px;
+    }
+    .confirm-box h3 { margin: 0 0 8px; font-size: 16px; color: #fff; font-weight: 500; }
+    .confirm-box p { margin: 0 0 16px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .confirm-actions { display: flex; flex-direction: column; gap: 8px; }
+    .delta-table {
+      max-width: 720px; margin: 0 auto 16px; font-size: 12px; border-collapse: collapse; width: 100%;
+    }
+    .delta-table th, .delta-table td {
+      border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; color: var(--muted);
+    }
+    .delta-table th { color: #fff; }
+    .tag {
+      display: inline-block; font-size: 9px; padding: 1px 6px; border-radius: 3px;
+      background: rgba(61,139,253,.25); color: #8bb8ff; margin-right: 4px;
+    }
+  </style>
+</head>
+<body>
+  <header class="meta">
+    <h1>Import Wizard A.1 · 增量线框</h1>
+    <p>在已批准 Wizard v3.0.1 上叠加 P0/P1：去重返回、进阶折叠、张数提示、信任行、失败兜底、模式文案、预填、缩略图 tip、关闭确认、非默认摘要警示。</p>
+    <ul>
+      <li>规格：<a href="../PRD-IMPORT-WIZARD-A1-DELTA.md">PRD-IMPORT-WIZARD-A1-DELTA.md</a></li>
+      <li>基线线框：<a href="./import-wizard-v3.html">import-wizard-v3.html</a> · 对比（归档）：<a href="../archive/import-sheet/import-modal-compare-v1.html">import-modal-compare-v1.html</a></li>
+    </ul>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" aria-selected="true" data-panel="s2">Step 2 · 确认<span class="pid">P0</span></button>
+    <button type="button" role="tab" aria-selected="false" data-panel="s2few">张数偏少<span class="pid">A1-03</span></button>
+    <button type="button" role="tab" aria-selected="false" data-panel="s2warn">非默认摘要<span class="pid">A1-10</span></button>
+    <button type="button" role="tab" aria-selected="false" data-panel="s1fail">Step 1 · 失败<span class="pid">A1-05</span></button>
+    <button type="button" role="tab" aria-selected="false" data-panel="s2b">Step 2b · 进阶折叠<span class="pid">A1-02</span></button>
+    <button type="button" role="tab" aria-selected="false" data-panel="close">关闭确认<span class="pid">A1-09</span></button>
+    <button type="button" role="tab" aria-selected="false" data-panel="delta">相对 v3 差异表</button>
+  </div>
+
+  <!-- Step 2 主帧 -->
+  <div class="panel" data-panel="s2" data-active="true">
+    <div class="viewport">
+      <div class="bg"></div><div class="scrim"></div>
+      <div class="dialog">
+        <div class="head">
+          <h2>确认并开始</h2>
+          <button type="button" class="close" aria-label="关闭">×</button>
+        </div>
+        <p class="steps-line"><span class="dim">① 选文件夹 →</span> <strong>② 确认并开始</strong></p>
+        <div class="verify-row">
+          <span>📁 贵州暑假游 · 已清点 134 张</span>
+          <button type="button" class="link" aria-label="更换文件夹，返回选择步骤">更换</button>
+        </div>
+        <p class="verify-foot">制作时将自动去重与挑选</p>
+        <div class="thumbs">
+          <div class="thumb" tabindex="0" data-tip="第 1 张 · IMG_1024"></div>
+          <div class="thumb" tabindex="0" data-tip="第 2 张 · IMG_1025"></div>
+          <div class="thumb" tabindex="0" data-tip="第 3 张 · IMG_1102"></div>
+          <div class="thumb" tabindex="0" data-tip="第 4 张 · IMG_1188"></div>
+        </div>
+        <div class="mode-cards" role="radiogroup">
+          <div class="mode-card" aria-checked="true">
+            <strong>● 快速分享（推荐）</strong>
+            <span>优先出微信长图，适合马上分享</span>
+          </div>
+          <div class="mode-card" aria-checked="false">
+            <strong>○ 精细制作</strong>
+            <span>多填一点，文案和节奏更贴你</span>
+          </div>
+        </div>
+        <div class="photo-row">
+          <span>照片处理：智能挑选已开启 · 连拍自动择优</span>
+          <button type="button">调整照片处理</button>
+        </div>
+        <button type="button" class="btn-primary">开始制作 →</button>
+        <p class="trust">约 3–8 分钟 · 可关闭此窗，稍后回来</p>
+        <p class="hint">每个文件夹会生成一本新游记画册，不会覆盖已有作品</p>
+      </div>
+    </div>
+    <p class="anno">
+      <strong>A1-01</strong> 头栏无「重新选择」，仅「更换」。
+      <strong>A1-04</strong> CTA 下信任行。
+      <strong>A1-06</strong> 模式副文案贴结果。
+      <strong>A1-08</strong> 缩略图 hover/focus 显示 tip（悬停左侧图可见）。
+    </p>
+  </div>
+
+  <!-- 张数偏少 -->
+  <div class="panel" data-panel="s2few">
+    <div class="viewport" style="min-height:480px">
+      <div class="bg"></div><div class="scrim"></div>
+      <div class="dialog">
+        <div class="head"><h2>确认并开始</h2><button type="button" class="close">×</button></div>
+        <p class="steps-line"><span class="dim">① 选文件夹 →</span> <strong>② 确认并开始</strong></p>
+        <div class="verify-row">
+          <span>📁 周末速写 · 已清点 3 张</span>
+          <button type="button" class="link">更换</button>
+        </div>
+        <p class="hint--warn">照片偏少，成册可能较短</p>
+        <div class="thumbs">
+          <div class="thumb" tabindex="0" data-tip="第 1 张"></div>
+          <div class="thumb" tabindex="0" data-tip="第 2 张"></div>
+          <div class="thumb" tabindex="0" data-tip="第 3 张"></div>
+        </div>
+        <div class="mode-cards">
+          <div class="mode-card" aria-checked="true"><strong>● 快速分享（推荐）</strong><span>优先出微信长图，适合马上分享</span></div>
+          <div class="mode-card" aria-checked="false"><strong>○ 精细制作</strong><span>多填一点，文案和节奏更贴你</span></div>
+        </div>
+        <div class="photo-row">
+          <span>照片处理：智能挑选已开启 · 连拍自动择优</span>
+          <button type="button">调整</button>
+        </div>
+        <button type="button" class="btn-primary">开始制作 →</button>
+        <p class="trust">约 3–8 分钟 · 可关闭此窗，稍后回来</p>
+      </div>
+    </div>
+    <p class="anno"><strong>A1-03：</strong>弱提示不禁用 CTA。&gt;300 张时文案为「照片较多，预计需要多几分钟」。</p>
+  </div>
+
+  <!-- 非默认摘要 -->
+  <div class="panel" data-panel="s2warn">
+    <div class="viewport" style="min-height:480px">
+      <div class="bg"></div><div class="scrim"></div>
+      <div class="dialog">
+        <div class="head"><h2>确认并开始</h2><button type="button" class="close">×</button></div>
+        <p class="steps-line"><span class="dim">① →</span> <strong>② 确认并开始</strong></p>
+        <div class="verify-row">
+          <span>📁 贵州暑假游 · 已清点 134 张</span>
+          <button type="button" class="link">更换</button>
+        </div>
+        <div class="thumbs">
+          <div class="thumb"></div><div class="thumb"></div><div class="thumb"></div><div class="thumb"></div>
+        </div>
+        <div class="mode-cards">
+          <div class="mode-card" aria-checked="true"><strong>● 快速分享（推荐）</strong><span>优先出微信长图…</span></div>
+          <div class="mode-card" aria-checked="false"><strong>○ 精细制作</strong><span>多填一点…</span></div>
+        </div>
+        <div class="photo-row warn">
+          <span>照片处理：已关闭智能挑选 · 已保留连拍与近似照片</span>
+          <button type="button">调整照片处理</button>
+        </div>
+        <button type="button" class="btn-primary">开始制作 →</button>
+        <p class="trust">约 3–8 分钟 · 可关闭此窗，稍后回来</p>
+      </div>
+    </div>
+    <p class="anno"><strong>A1-10：</strong>非默认态摘要用警示色，避免用户忘记自己改过开关。</p>
+  </div>
+
+  <!-- Step 1 失败 -->
+  <div class="panel" data-panel="s1fail">
+    <div class="viewport" style="min-height:460px">
+      <div class="bg"></div><div class="scrim"></div>
+      <div class="dialog">
+        <div class="head">
+          <h2>制作我的游记画册</h2>
+          <button type="button" class="close">×</button>
+        </div>
+        <button type="button" class="btn-primary" style="margin-top:8px">📁 选择本次旅行的照片文件夹</button>
+        <p class="hint">一次旅行一个文件夹，照片留在本机</p>
+        <div class="error" role="alert">无法读取该文件夹，请重试或改用下方方式。</div>
+        <details class="details" open>
+          <summary>文件夹怎么选？</summary>
+          <p class="hint hint--left">一次旅行一个文件夹 · 精选/素材子目录 · JPG/PNG/WebP/HEIC</p>
+        </details>
+        <details class="details" open id="more-import">
+          <summary>其他导入方式</summary>
+          <p class="hint hint--left" style="margin-top:8px">小文件夹试用（≤200MB）</p>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input type="text" placeholder="粘贴文件夹路径…" aria-label="文件夹路径"
+                   style="flex:1;padding:8px 10px;border-radius:6px;border:1px solid var(--gold);
+                          background:rgba(255,255,255,.06);color:var(--cream);font-size:13px" />
+            <button type="button" class="btn-secondary">使用此路径</button>
+          </div>
+        </details>
+      </div>
+    </div>
+    <p class="anno"><strong>A1-05：</strong>失败后「其他导入方式」自动展开，焦点落在路径输入（金框示意）。</p>
+  </div>
+
+  <!-- Step 2b -->
+  <div class="panel" data-panel="s2b">
+    <div class="viewport viewport--tall">
+      <div class="bg"></div><div class="scrim"></div>
+      <div class="dialog dialog--wide">
+        <div class="head">
+          <h2>精细制作</h2>
+          <button type="button" class="close">×</button>
+        </div>
+        <p style="margin:0 0 8px;font-size:12px;color:var(--muted)">📁 贵州暑假游 · 134 张</p>
+        <div class="scroll-body">
+          <p class="group-title">基本信息</p>
+          <div class="grid2">
+            <label class="field"><span>游记名称</span><input value="贵州暑假游" /></label>
+            <label class="field"><span>主要地点（可选）</span><input placeholder="例如：荔波、西江" /></label>
+          </div>
+          <p class="group-title">叙事偏好</p>
+          <label class="field">
+            <span>写给编辑的一句话（可选）</span>
+            <textarea rows="2" placeholder="例如：带娃慢走，别写成导游词"></textarea>
+            <div class="chips">
+              <button type="button" class="chip" aria-pressed="true">带娃慢走，别写成导游词</button>
+              <button type="button" class="chip" aria-pressed="false">想表达静谧，雨天的感觉</button>
+              <button type="button" class="chip" aria-pressed="false">第3天最难忘</button>
+            </div>
+          </label>
+          <details class="details" style="margin-top:12px">
+            <summary>进阶选项（日期 · 见闻 · 文件夹 · 排版 · 模板）</summary>
+            <div style="margin-top:10px">
+              <div class="grid2">
+                <label class="field"><span>开始日期（已自照片预填）</span><input type="date" value="2025-07-12" /></label>
+                <label class="field"><span>结束日期</span><input type="date" value="2025-07-18" /></label>
+              </div>
+              <label class="field"><span>旅途见闻与感悟</span><textarea rows="2"></textarea></label>
+              <label class="field"><span>行程计划文件</span><input type="file" /></label>
+              <div class="grid2">
+                <label class="field"><span>精选文件夹</span><input placeholder="精选" /></label>
+                <label class="field"><span>素材文件夹</span><input placeholder="素材" /></label>
+              </div>
+              <p class="hint hint--left">版面密度三选一 · 模板下拉 · 与现版字段零删减</p>
+            </div>
+          </details>
+          <div class="photo-row" style="margin-top:12px">
+            <span>照片处理：智能挑选已开启 · 连拍自动择优</span>
+            <button type="button">调整照片处理</button>
+          </div>
+        </div>
+        <div class="actions-sticky">
+          <button type="button" class="btn-primary">按这些偏好开始 →</button>
+          <button type="button" class="btn-secondary">← 返回上一步</button>
+        </div>
+        <p class="trust">约 3–8 分钟 · 可关闭此窗，稍后回来</p>
+      </div>
+    </div>
+    <p class="anno">
+      <strong>A1-02</strong> 进阶默认折叠。
+      <strong>A1-07</strong> 名称/日期预填。
+      <strong>A1-13（P2 示意）</strong> CTA「按这些偏好开始 →」。
+      Chip 可点切换按下态（A1-12 示意）。
+    </p>
+  </div>
+
+  <!-- 关闭确认 -->
+  <div class="panel" data-panel="close">
+    <div class="viewport">
+      <div class="bg"></div><div class="scrim"></div>
+      <div class="dialog" style="opacity:.55;pointer-events:none">
+        <div class="head"><h2>精细制作</h2><button type="button" class="close">×</button></div>
+        <label class="field"><span>游记名称</span><input value="贵州暑假游·改" /></label>
+        <p class="hint">（背景：用户已改字段，点了关闭）</p>
+      </div>
+      <div class="confirm-overlay">
+        <div class="confirm-box" role="alertdialog" aria-labelledby="cc-title">
+          <h3 id="cc-title">保留这次的填写？</h3>
+          <p>关闭后可从首页再次打开并继续；丢弃将清空本页已填内容与非默认照片选项。</p>
+          <div class="confirm-actions">
+            <button type="button" class="btn-primary" style="min-height:44px">保留并关闭</button>
+            <button type="button" class="btn-ghost" style="margin:0">丢弃并关闭</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="anno"><strong>A1-09：</strong>仅 2b 有改动或照片开关非默认时出现。快速路径 Step 2 默认态直接关。</p>
+  </div>
+
+  <!-- 差异表 -->
+  <div class="panel" data-panel="delta">
+    <table class="delta-table">
+      <thead>
+        <tr><th>ID</th><th>相对 v3.0.1</th><th>优先级</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="tag">A1-01</span></td><td>Step 2 头栏去掉「重新选择」，只留验货「更换」</td><td>P0</td></tr>
+        <tr><td><span class="tag">A1-02</span></td><td>2b 进阶折叠，首屏仅名称/地点/一句话</td><td>P0</td></tr>
+        <tr><td><span class="tag">A1-03</span></td><td>张数 &lt;4 / &gt;300 弱提示</td><td>P0</td></tr>
+        <tr><td><span class="tag">A1-04</span></td><td>CTA 下「约 3–8 分钟 · 可关闭…」</td><td>P0</td></tr>
+        <tr><td><span class="tag">A1-05</span></td><td>选夹失败自动展开其他导入方式</td><td>P0</td></tr>
+        <tr><td><span class="tag">A1-06</span></td><td>模式卡副文案贴结果</td><td>P1</td></tr>
+        <tr><td><span class="tag">A1-07</span></td><td>名称/EXIF 日期预填</td><td>P1</td></tr>
+        <tr><td><span class="tag">A1-08</span></td><td>缩略图 tip，无 Lightbox</td><td>P1</td></tr>
+        <tr><td><span class="tag">A1-09</span></td><td>有草稿时关闭确认</td><td>P1</td></tr>
+        <tr><td><span class="tag">A1-10</span></td><td>非默认摘要警示色</td><td>P1</td></tr>
+      </tbody>
+    </table>
+    <p class="anno" style="max-width:720px;margin:0 auto">
+      完整 AC / 埋点 / 评审议题见
+      <a href="../PRD-IMPORT-WIZARD-A1-DELTA.md">PRD-IMPORT-WIZARD-A1-DELTA.md</a> §5–§8。
+      推荐策略：<strong>P0 与 v3 同发</strong>，P1 同里程碑或灰度补丁（+约 2d）。
+    </p>
+  </div>
+
+  <script>
+    (function () {
+      var tabs = document.querySelector(".tabs");
+      tabs.addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-panel]");
+        if (!btn) return;
+        tabs.querySelectorAll("button").forEach(function (b) {
+          b.setAttribute("aria-selected", b === btn ? "true" : "false");
+        });
+        var id = btn.getAttribute("data-panel");
+        document.querySelectorAll(".panel").forEach(function (p) {
+          p.setAttribute("data-active", p.getAttribute("data-panel") === id ? "true" : "false");
+        });
+      });
+      document.querySelectorAll(".mode-cards").forEach(function (g) {
+        g.addEventListener("click", function (e) {
+          var c = e.target.closest(".mode-card");
+          if (!c) return;
+          g.querySelectorAll(".mode-card").forEach(function (x) {
+            x.setAttribute("aria-checked", x === c ? "true" : "false");
+          });
+        });
+      });
+      document.querySelectorAll(".chip").forEach(function (chip) {
+        chip.addEventListener("click", function () {
+          var on = chip.getAttribute("aria-pressed") === "true";
+          chip.setAttribute("aria-pressed", on ? "false" : "true");
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

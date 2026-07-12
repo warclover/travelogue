@@ -6,7 +6,7 @@ import { humanizeStudioError, failureNextHint } from "../js/errors.js";
 import { V2, $, show, setV2SkipLinkTarget } from "./store.js";
 import { captureImportShell } from "./first-success.js";
 import { startV2Import } from "./import-run.js";
-import { openImportSheet } from "./import-sheet.js";
+import { openImportSheet } from "./import-entry.js";
 import { syncVariantGuard } from "./variant-guard.js";
 
 var _wired = false;

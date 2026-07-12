@@ -5,7 +5,7 @@
 | 属性 | 内容 |
 |------|------|
 | **关联 PRD** | [PRD-PHASE4.md](./PRD-PHASE4.md) v0.4.3 |
-| **UX 线框** | [wireframes/studio-import-sheet-v1.html](./wireframes/studio-import-sheet-v1.html) |
+| **UX 线框** | [archive/import-sheet/studio-import-sheet-v1.html](./archive/import-sheet/studio-import-sheet-v1.html)（已归档） |
 | **代号** | P4-Intent |
 | **更新日期** | 2026-06-06 |
 

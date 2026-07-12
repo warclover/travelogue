@@ -7,7 +7,7 @@
 | **状态** | Draft（修订版） |
 | **Phase 14 代号** | 「双模式导入」— 快速分享 / 精细制作 |
 | **前置条件** | [PRD-PHASE5.md](./PRD-PHASE5.md) 双路径策略稳定；[PRD-PHASE13.md](./PRD-PHASE13.md) 模板能力稳定 |
-| **线框参考** | [wireframes/studio-import-sheet-v2-dual-mode.html](./wireframes/studio-import-sheet-v2-dual-mode.html) |
+| **线框参考** | [archive/import-sheet/studio-import-sheet-v2-dual-mode.html](./archive/import-sheet/studio-import-sheet-v2-dual-mode.html)（已归档） |
 | **关联文档** | [PRD-PHASE4.md](./PRD-PHASE4.md)、[SHARING.md](./SHARING.md)、[DATA-MODEL.md](./DATA-MODEL.md) |
 | **更新日期** | 2026-06-04 |
 

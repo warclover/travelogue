@@ -8,7 +8,7 @@ import { isDemoTrip } from "../js/constants.js";
 import { cssBackgroundImage } from "../js/dom.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { $, show, V2 } from "./store.js";
-import { openImportSheet } from "./import-sheet.js";
+import { openImportSheet } from "./import-entry.js";
 import { fetchTripsPage, SHELF_PAGE_SIZE } from "./trips-client.js";
 import { attachShelfTripMenu, closeAllShelfMenus } from "./shelf-menu.js";
 import { renderBenchRecent } from "./bento.js";

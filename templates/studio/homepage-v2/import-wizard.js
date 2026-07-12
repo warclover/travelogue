@@ -2,7 +2,7 @@
  * Import Wizard v3（PRD v3.0.1 · 两步向导 + 智能默认）。
  * 下游出口：startV2Import / startV2UploadImport（import-run.js）。
  */
-import { SHEET_FOCUSABLE, UPLOAD_BYTES_SOFT_LIMIT } from "../js/constants.js";
+import { SHEET_FOCUSABLE, UPLOAD_BYTES_SOFT_LIMIT, isDemoTrip } from "../js/constants.js";
 import { postJson } from "../js/http.js";
 import {
   trackStudioEvent,
@@ -11,7 +11,6 @@ import {
 } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
 import { startV2Import, startV2UploadImport, buildImportPayload } from "./import-run.js";
-import { isImportWizardV3Enabled } from "./import-sheet.js";
 
 var _open = false;
 var _previousFocus = null;
@@ -24,16 +23,25 @@ var _pendingUploadFiles = null;
 var _pendingPhotoCount = null;
 var _pendingFolderName = null;
 var _previewThumbs = [];
+var _previewThumbNames = [];
+var _previewDateStart = null;
+var _previewDateEnd = null;
 var _importStarted = false;
 var _photoCullTouched = false;
 var _keepDupesTouched = false;
 var _activeMode = "quick_share";
 var _drawerOpen = false;
 var _wired = false;
+var _titleUserEdited = false;
+var _dateUserEdited = false;
+var _fineEntrySnapshot = null;
+var _closeConfirmOpen = false;
+var _fineVisited = false;
 
 var IMPORT_DRAFT_KEY = "travelogue.studio.importDraft";
 var IMPORT_MODE_KEY = "travelogue.studio.lastImportMode";
 var FIRST_VISIT_KEY = "travelogue.studio.importWizardVisited";
+var FIRST_TIP_KEY = "travelogue.studio.importWizardFirstTipDismissed";
 var LAYOUT_DENSITY_VALUES = ["balanced", "hero_first", "collage_first"];
 
 function setBackgroundInert(inert) {
@@ -143,21 +151,27 @@ function readTemplateParams() {
 function updatePhotoSummary() {
   var cull = readPhotoCullEnabled();
   var keep = readKeepDupesEnabled();
-  var n = _pendingPhotoCount;
   var line = "";
-  if (cull && !keep) line = "照片处理：智能挑选已开启 · 连拍自动择优";
-  else if (cull && keep) line = "照片处理：智能挑选已开启 · 保留全部连拍";
-  else if (!cull && !keep) {
-    line = n != null
-      ? "照片处理：不做智能挑选，" + n + " 张全部参与排版"
-      : "照片处理：不做智能挑选，文件夹内照片全部参与排版";
+  var warn = false;
+  if (cull && !keep) {
+    line = "照片处理：智能挑选已开启 · 连拍自动择优";
+  } else if (cull && keep) {
+    line = "照片处理：智能挑选已开启 · 已保留连拍与近似照片";
+    warn = true;
+  } else if (!cull && !keep) {
+    line = "照片处理：已关闭智能挑选 · 连拍自动择优";
+    warn = true;
   } else {
-    line = "照片处理：不做智能挑选 · 保留全部连拍";
+    line = "照片处理：已关闭智能挑选 · 已保留连拍与近似照片";
+    warn = true;
   }
   var summary = $("v2-wizard-photo-summary");
   var summaryFine = $("v2-wizard-photo-summary-fine");
-  if (summary) summary.textContent = line;
-  if (summaryFine) summaryFine.textContent = line;
+  [summary, summaryFine].forEach(function (el) {
+    if (!el) return;
+    el.textContent = line;
+    el.classList.toggle("v2-wizard__photo-summary--warn", warn);
+  });
 }
 
 function updatePhotoCullOptoutUi() {
@@ -213,6 +227,42 @@ function thumbLimit() {
   return window.innerWidth >= 1280 ? 6 : 4;
 }
 
+function truncateBasename(name, maxLen) {
+  var s = String(name || "").trim();
+  if (!s) return "";
+  var max = maxLen || 16;
+  if (s.length <= max) return s;
+  return s.slice(0, Math.max(1, max - 1)) + "…";
+}
+
+function updateCountHint() {
+  var hint = $("v2-wizard-count-hint");
+  if (!hint) return;
+  var n = _pendingPhotoCount;
+  if (n == null || !Number.isFinite(n)) {
+    hint.textContent = "";
+    show(hint, false);
+    return;
+  }
+  var bucket = null;
+  var text = "";
+  if (n < 4) {
+    bucket = "few";
+    text = "照片偏少，成册可能较短";
+  } else if (n > 300) {
+    bucket = "many";
+    text = "照片较多，预计需要多几分钟";
+  }
+  if (!bucket) {
+    hint.textContent = "";
+    show(hint, false);
+    return;
+  }
+  hint.textContent = text;
+  show(hint, true);
+  trackStudioEvent("photo_count_hint_show", { bucket: bucket, photoCount: n });
+}
+
 function renderThumbs(thumbs) {
   var host = $("v2-wizard-thumbs");
   if (!host) return;
@@ -222,15 +272,27 @@ function renderThumbs(thumbs) {
     show(host, false);
     return;
   }
-  list.forEach(function (url) {
+  list.forEach(function (url, idx) {
+    var wrap = document.createElement("span");
+    wrap.className = "v2-wizard__thumb-wrap";
+    var name = truncateBasename(_previewThumbNames[idx] || "");
+    var tip = name ? ("第 " + (idx + 1) + " 张 · " + name) : ("第 " + (idx + 1) + " 张");
+    wrap.setAttribute("data-tip", tip);
     var img = document.createElement("img");
     img.className = "v2-wizard__thumb";
     img.src = url;
-    img.alt = "";
+    img.alt = tip;
+    img.title = tip;
+    img.tabIndex = 0;
     img.loading = "lazy";
     img.width = 56;
     img.height = 56;
-    host.appendChild(img);
+    img.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    wrap.appendChild(img);
+    host.appendChild(wrap);
   });
   show(host, true);
 }
@@ -273,17 +335,27 @@ function fetchAlbumPreview(albumPath) {
       if (!data) {
         _pendingPhotoCount = null;
         _previewThumbs = [];
+        _previewThumbNames = [];
+        _previewDateStart = null;
+        _previewDateEnd = null;
         renderVerifyLine();
+        updateCountHint();
         return;
       }
       var n = Number(data.photoCount);
       _pendingPhotoCount = Number.isFinite(n) && n >= 0 ? n : null;
       _previewThumbs = Array.isArray(data.thumbs) ? data.thumbs : [];
+      _previewThumbNames = Array.isArray(data.thumbNames) ? data.thumbNames : [];
       if (data.folderName) _pendingFolderName = String(data.folderName);
+      _previewDateStart = data.dateStart ? String(data.dateStart) : null;
+      _previewDateEnd = data.dateEnd ? String(data.dateEnd) : null;
       renderVerifyLine();
       renderThumbs(_previewThumbs);
+      updateCountHint();
       updatePhotoCullOptoutUi();
       updateLayoutDensityWarn();
+      if (_step === "fine") maybePrefillFineFromPreview();
+      updateDuplicateTitleNote();
       trackStudioEvent("preview_loaded", {
         photoCount: _pendingPhotoCount,
         thumbCount: Math.min(_previewThumbs.length, thumbLimit()),
@@ -333,10 +405,67 @@ function updateStartLabel() {
     return;
   }
   if (_activeMode === "fine_craft") {
-    start.textContent = "填写细节 →";
+    start.textContent = _fineVisited ? "继续编辑细节 →" : "填写细节 →";
   } else {
     start.textContent = "开始制作 →";
   }
+}
+
+function syncChipPressedState() {
+  var notes = safeGet("v2-wizard-user-notes");
+  document.querySelectorAll(".v2-wizard__chip[data-fill='v2-wizard-user-notes']").forEach(function (chip) {
+    var text = String(chip.textContent || "").trim();
+    chip.setAttribute("aria-pressed", notes && notes === text ? "true" : "false");
+  });
+}
+
+function findDuplicateTripTitle(title) {
+  var needle = String(title || "").trim();
+  if (!needle) return null;
+  var trips = (typeof V2 !== "undefined" && V2.trips) ? V2.trips : [];
+  for (var i = 0; i < trips.length; i++) {
+    var t = trips[i];
+    if (!t || isDemoTrip(t)) continue;
+    var existing = String(t.title || "").trim();
+    if (existing && existing === needle) return existing;
+  }
+  return null;
+}
+
+function updateDuplicateTitleNote() {
+  var title = "";
+  if (_titleUserEdited) title = safeGet("v2-wizard-trip-title");
+  if (!title) {
+    title = _pendingFolderName || safeGet("v2-wizard-trip-title") || basenameTitle(_pendingAlbumPath);
+  }
+  var match = findDuplicateTripTitle(title);
+  var text = match ? ("将新建一本，不会覆盖《" + match + "》") : "";
+  ["v2-wizard-dup-note", "v2-wizard-dup-note-fine"].forEach(function (id) {
+    var el = $(id);
+    if (!el) return;
+    el.textContent = text;
+    show(el, !!text);
+  });
+}
+
+function shouldShowFirstTip() {
+  try {
+    return !localStorage.getItem(FIRST_TIP_KEY);
+  } catch (_e) {
+    return false;
+  }
+}
+
+function dismissFirstTip() {
+  try { localStorage.setItem(FIRST_TIP_KEY, "1"); } catch (_e) { /* ignore */ }
+  var tip = $("v2-wizard-first-tip");
+  if (tip) show(tip, false);
+}
+
+function refreshFirstTip() {
+  var tip = $("v2-wizard-first-tip");
+  if (!tip) return;
+  show(tip, _step === "pick" && shouldShowFirstTip());
 }
 
 function showPanel(step) {
@@ -365,6 +494,153 @@ function toggleDrawer(open) {
   });
 }
 
+function expandFallbackImport() {
+  var details = $("v2-wizard-more-import");
+  if (details) details.open = true;
+  var pathInput = $("v2-wizard-album-path");
+  var upload = $("v2-wizard-album-upload");
+  if (pathInput) {
+    try { pathInput.focus(); } catch (_e) { /* ignore */ }
+  } else if (upload) {
+    try { upload.focus(); } catch (_e) { /* ignore */ }
+  }
+}
+
+function maybePrefillFineFromPreview() {
+  if (!_titleUserEdited) {
+    var name = _pendingFolderName || basenameTitle(_pendingAlbumPath);
+    if (name) safeSet("v2-wizard-trip-title", name.slice(0, 20));
+  }
+  if (!_dateUserEdited) {
+    if (_previewDateStart) safeSet("v2-wizard-date-start", _previewDateStart);
+    if (_previewDateEnd) safeSet("v2-wizard-date-end", _previewDateEnd);
+  }
+}
+
+function snapshotFineFields() {
+  return {
+    title: safeGet("v2-wizard-trip-title"),
+    place: safeGet("v2-wizard-trip-place"),
+    dateStart: safeGet("v2-wizard-date-start"),
+    dateEnd: safeGet("v2-wizard-date-end"),
+    userNotes: safeGet("v2-wizard-user-notes"),
+    travelNotes: safeGet("v2-wizard-travel-notes"),
+    featuredDir: safeGet("v2-wizard-featured-dir"),
+    materialDir: safeGet("v2-wizard-material-dir"),
+    layoutDensity: readLayoutDensity(),
+    templateMode: (function () {
+      var sel = $("v2-wizard-template-mode");
+      return sel ? String(sel.value || "smart") : "smart";
+    })(),
+    planFileName: (function () {
+      var input = $("v2-wizard-plan-file");
+      if (!input || !input.files || !input.files[0]) return "";
+      return String(input.files[0].name || "");
+    })(),
+  };
+}
+
+function fineFieldsDirty() {
+  if (!_fineEntrySnapshot) return false;
+  var cur = snapshotFineFields();
+  var keys = Object.keys(_fineEntrySnapshot);
+  for (var i = 0; i < keys.length; i++) {
+    var k = keys[i];
+    if (String(cur[k] || "") !== String(_fineEntrySnapshot[k] || "")) return true;
+  }
+  return false;
+}
+
+function photoPrefsNonDefault() {
+  return !readPhotoCullEnabled() || readKeepDupesEnabled();
+}
+
+function shouldConfirmClose() {
+  if (_step === "pick") return false;
+  if (_step === "fine" && fineFieldsDirty()) return true;
+  if ((_step === "confirm" || _step === "fine") && photoPrefsNonDefault()) return true;
+  return false;
+}
+
+function clearFineDraftFields() {
+  safeSet("v2-wizard-trip-title", "");
+  safeSet("v2-wizard-trip-place", "");
+  safeSet("v2-wizard-date-start", "");
+  safeSet("v2-wizard-date-end", "");
+  safeSet("v2-wizard-user-notes", "");
+  safeSet("v2-wizard-travel-notes", "");
+  safeSet("v2-wizard-featured-dir", "");
+  safeSet("v2-wizard-material-dir", "");
+  var plan = $("v2-wizard-plan-file");
+  if (plan) plan.value = "";
+  var planName = $("v2-wizard-plan-file-name");
+  if (planName) planName.textContent = "";
+  document.querySelectorAll('input[name="v2-wizard-layout-density"]').forEach(function (input) {
+    input.checked = input.value === "balanced";
+  });
+  var sel = $("v2-wizard-template-mode");
+  if (sel) sel.value = "smart";
+  var cull = $("v2-wizard-photo-cull");
+  if (cull) cull.checked = true;
+  var keep = $("v2-wizard-keep-dupes");
+  if (keep) keep.checked = false;
+  _photoCullTouched = false;
+  _keepDupesTouched = false;
+  _titleUserEdited = false;
+  _dateUserEdited = false;
+  _fineEntrySnapshot = null;
+  updatePhotoCullOptoutUi();
+  try { sessionStorage.removeItem(IMPORT_DRAFT_KEY); } catch (_e) { /* ignore */ }
+}
+
+function requestCloseWizard(reason) {
+  if (_closeConfirmOpen) return;
+  if (!shouldConfirmClose()) {
+    closeImportWizard(reason || "dismiss");
+    return;
+  }
+  _closeConfirmOpen = true;
+  var run = function (action) {
+    _closeConfirmOpen = false;
+    trackStudioEvent("close_confirm", { action: action });
+    if (action === "keep") {
+      saveDraft();
+      closeImportWizard(reason || "dismiss", { persistDraft: false });
+    } else if (action === "discard") {
+      // 丢弃须清 pending + 回 Step1，且关闭时不再 saveDraft（否则会把路径写回草稿）
+      clearFineDraftFields();
+      _fineVisited = false;
+      setActiveMode("quick_share", null);
+      goToStep1(true);
+      closeImportWizard(reason || "dismiss", { persistDraft: false });
+    }
+  };
+  if (typeof studioModal === "function") {
+    studioModal({
+      title: "保留这次的填写？",
+      body: "关闭后可从首页再次打开导入向导。选择保留会记住本次填写；丢弃则清空相关草稿。",
+      confirmText: "保留并关闭",
+      secondaryText: "丢弃并关闭",
+      cancelText: "继续填写",
+      stacked: true,
+    }).then(function (result) {
+      if (result === "confirm" || result === true) run("keep");
+      else if (result === "secondary") run("discard");
+      else {
+        _closeConfirmOpen = false;
+        trackStudioEvent("close_confirm", { action: "cancel" });
+      }
+    });
+    return;
+  }
+  if (window.confirm("保留这次的填写？\n确定=保留并关闭，取消=继续填写")) {
+    run("keep");
+  } else {
+    _closeConfirmOpen = false;
+    trackStudioEvent("close_confirm", { action: "cancel" });
+  }
+}
+
 function goToStep1(clearPending) {
   if (clearPending !== false) {
     _pendingAlbumPath = null;
@@ -372,10 +648,15 @@ function goToStep1(clearPending) {
     _pendingPhotoCount = null;
     _pendingFolderName = null;
     _previewThumbs = [];
+    _previewThumbNames = [];
+    _previewDateStart = null;
+    _previewDateEnd = null;
   }
   toggleDrawer(false);
   clearErrors();
+  updateCountHint();
   showPanel("pick");
+  refreshFirstTip();
   var pick = $("v2-wizard-pick");
   if (pick) pick.focus();
 }
@@ -390,15 +671,20 @@ function goToStep2(opts) {
   }
   renderVerifyLine();
   renderThumbs(_previewThumbs);
+  updateCountHint();
   updatePhotoCullOptoutUi();
   updateStartLabel();
   showPanel("confirm");
+  refreshFirstTip();
+  updateDuplicateTitleNote();
   if (_pendingAlbumPath && _pendingPhotoCount == null && !_pendingUploadFiles) {
     fetchAlbumPreview(_pendingAlbumPath);
   }
-  var titleInput = $("v2-wizard-trip-title");
-  if (titleInput && !titleInput.value && _pendingAlbumPath) {
-    titleInput.value = basenameTitle(_pendingAlbumPath);
+  if (!_titleUserEdited) {
+    var titleInput = $("v2-wizard-trip-title");
+    if (titleInput && !titleInput.value && _pendingAlbumPath) {
+      titleInput.value = basenameTitle(_pendingAlbumPath);
+    }
   }
   var start = $("v2-wizard-start");
   if (start) start.focus();
@@ -407,9 +693,17 @@ function goToStep2(opts) {
 function goToStep2b() {
   clearErrors();
   toggleDrawer(false);
+  _fineVisited = true;
+  maybePrefillFineFromPreview();
   renderVerifyLine();
   updatePhotoSummary();
+  syncChipPressedState();
+  updateDuplicateTitleNote();
+  var advanced = $("v2-wizard-advanced");
+  if (advanced) advanced.open = false;
   showPanel("fine");
+  refreshFirstTip();
+  _fineEntrySnapshot = snapshotFineFields();
   var titleInput = $("v2-wizard-trip-title");
   if (titleInput) titleInput.focus();
 }
@@ -420,6 +714,11 @@ function afterFolderPicked(albumPath, via) {
   _pendingFolderName = basenameTitle(albumPath);
   _pendingPhotoCount = null;
   _previewThumbs = [];
+  _previewThumbNames = [];
+  _previewDateStart = null;
+  _previewDateEnd = null;
+  _titleUserEdited = false;
+  _dateUserEdited = false;
   trackStudioEvent("pick_folder", { via: via || "native" });
   trackStudioEvent("folder_picked", { via: via || "native" });
   goToStep2({});
@@ -478,6 +777,8 @@ function restoreDraftFields(draft) {
   safeSet("v2-wizard-travel-notes", draft.travelNotes || "");
   safeSet("v2-wizard-featured-dir", draft.featuredDir || "");
   safeSet("v2-wizard-material-dir", draft.materialDir || "");
+  _titleUserEdited = !!(draft.title && String(draft.title).trim());
+  _dateUserEdited = !!(draft.dateStart || draft.dateEnd);
   var cull = $("v2-wizard-photo-cull");
   if (cull) cull.checked = draft.photoCullEnabled !== false;
   var keep = $("v2-wizard-keep-dupes");
@@ -584,16 +885,14 @@ function pickFolder() {
         var msg = data.message || data.detail ||
           "无法打开本机选文件夹。请在「其他导入方式」粘贴路径。";
         setStepError("pick", msg);
-        var details = $("v2-wizard-more-import");
-        if (details) details.open = true;
+        expandFallbackImport();
         return;
       }
       afterFolderPicked(data.albumPath, "native");
     })
     .catch(function () {
       setStepError("pick", "无法连接选文件夹服务。请粘贴路径，或确认 Studio 正在运行。");
-      var details = $("v2-wizard-more-import");
-      if (details) details.open = true;
+      expandFallbackImport();
     })
     .finally(function () {
       if (pickToast && pickToast.parentNode) pickToast.parentNode.removeChild(pickToast);
@@ -605,6 +904,7 @@ function submitWithPath() {
   var path = safeGet("v2-wizard-album-path");
   if (!path) {
     setStepError("pick", "请填写照片文件夹路径，例如 D:\\Photos\\Kyoto2025");
+    expandFallbackImport();
     return;
   }
   afterFolderPicked(path, "path");
@@ -665,6 +965,7 @@ function handleUploadInput() {
   setStepError("pick", "");
   confirmLargeUpload(files).then(function (proceed) {
     if (proceed) showUploadConfirm(files);
+    else expandFallbackImport();
   }).finally(function () {
     if (input) input.value = "";
     _uploadInFlight = false;
@@ -745,9 +1046,13 @@ function restoreSessionIfAny(opts) {
     : draft.wizardStep === "confirm" ? "confirm" : "confirm";
   setActiveMode(draft.mode === "fine_craft" ? "fine_craft" : "quick_share", "draft");
   if (step === "fine") {
+    _fineVisited = true;
     goToStep2({ modeSource: true });
     goToStep2b();
   } else {
+    if (draft.wizardStep === "fine" || draft.mode === "fine_craft") {
+      _fineVisited = !!draft.title || !!draft.userNotes || !!draft.place;
+    }
     goToStep2({ modeSource: true });
   }
   if (_pendingAlbumPath) {
@@ -765,7 +1070,6 @@ export function isImportWizardOpen() {
 
 export function openImportWizard(opts) {
   opts = opts || {};
-  if (!isImportWizardV3Enabled()) return;
   if (V2.state === "Importing") {
     if (typeof studioToast === "function") studioToast("正在制作中", { duration: 2200 });
     return;
@@ -793,7 +1097,12 @@ export function openImportWizard(opts) {
   if (_step === "pick" && pick) pick.focus();
 }
 
-export function closeImportWizard(reason) {
+/**
+ * @param {string} [reason]
+ * @param {{persistDraft?: boolean}} [opts] persistDraft 默认 true；丢弃/保留确认后已自行处理草稿时传 false
+ */
+export function closeImportWizard(reason, opts) {
+  opts = opts || {};
   if (!_open) return;
   var root = $("v2-wizard-root");
   var dialog = $("v2-import-wizard");
@@ -807,7 +1116,9 @@ export function closeImportWizard(reason) {
   if (!_importStarted) {
     trackStudioEvent("sheet_abandon", { step: _step });
   }
-  saveDraft();
+  if (opts.persistDraft !== false) {
+    saveDraft();
+  }
   if (_previousFocus && typeof _previousFocus.focus === "function") {
     _previousFocus.focus();
   } else {
@@ -835,38 +1146,69 @@ function loadTemplateSelectOptions() {
         sel.appendChild(opt);
       });
       sel.value = "smart";
+      updateTemplateModeHint(data, sel.value);
     })
     .catch(function () { /* keep static */ });
 }
 
+function updateTemplateModeHint(data, value) {
+  var hint = $("v2-wizard-template-hint");
+  if (!hint) return;
+  var hints = (data && data.modeHints) || {};
+  var v = String(value || "smart");
+  if (v.indexOf("manual:") === 0) {
+    hint.textContent = hints.manual || "全程使用你指定的模板。";
+    return;
+  }
+  hint.textContent = hints.smart || hint.textContent;
+}
+
+function wireTemplateSelect() {
+  var sel = $("v2-wizard-template-mode");
+  if (!sel || sel.dataset.wired === "1") return;
+  sel.dataset.wired = "1";
+  trackStudioEvent("template_selector_impression", { surface: "v2_sheet" });
+  sel.addEventListener("change", function () {
+    var v = String(sel.value || "smart");
+    trackStudioEvent("template_mode_changed", { value: v });
+    if (v.indexOf("manual:") === 0) {
+      trackStudioEvent("template_manual_selected", { template_id: v.slice(7) });
+    }
+    fetch("/__travelogue/templates")
+      .then(function (r) { return r.json(); })
+      .then(function (data) { updateTemplateModeHint(data, v); })
+      .catch(function () {});
+  });
+}
+
 export function initImportWizard() {
-  if (_wired || !isImportWizardV3Enabled()) return;
+  if (_wired) return;
   _wired = true;
   loadTemplateSelectOptions();
+  wireTemplateSelect();
 
   var pick = $("v2-wizard-pick");
   if (pick) pick.addEventListener("click", pickFolder);
 
   ["v2-wizard-close-pick", "v2-wizard-close-confirm", "v2-wizard-close-fine"].forEach(function (id) {
     var btn = $(id);
-    if (btn) btn.addEventListener("click", function () { closeImportWizard("close_btn"); });
+    if (btn) btn.addEventListener("click", function () { requestCloseWizard("close_btn"); });
   });
 
   var scrim = $("v2-wizard-scrim");
   if (scrim) scrim.addEventListener("click", function () {
-    if (V2.state !== "Importing") closeImportWizard("scrim");
+    if (V2.state !== "Importing") requestCloseWizard("scrim");
   });
 
-  ["v2-wizard-back-confirm", "v2-wizard-change-folder"].forEach(function (id) {
-    var btn = $(id);
-    if (btn) btn.addEventListener("click", function () { goToStep1(true); });
-  });
+  var changeFolder = $("v2-wizard-change-folder");
+  if (changeFolder) changeFolder.addEventListener("click", function () { goToStep1(true); });
 
   ["v2-wizard-back-fine", "v2-wizard-back-fine-action"].forEach(function (id) {
     var btn = $(id);
     if (btn) btn.addEventListener("click", function () {
       setActiveMode("fine_craft", "user");
       goToStep2({ modeSource: true });
+      updateStartLabel();
     });
   });
 
@@ -950,9 +1292,36 @@ export function initImportWizard() {
   ].forEach(function (id) {
     var el = $(id);
     if (!el) return;
-    el.addEventListener("input", function () { clearErrors(); saveDraft(); });
-    el.addEventListener("change", saveDraft);
+    el.addEventListener("input", function () {
+      if (id === "v2-wizard-trip-title") {
+        _titleUserEdited = true;
+        updateDuplicateTitleNote();
+      }
+      if (id === "v2-wizard-date-start" || id === "v2-wizard-date-end") _dateUserEdited = true;
+      if (id === "v2-wizard-user-notes") syncChipPressedState();
+      clearErrors();
+      saveDraft();
+    });
+    el.addEventListener("change", function () {
+      if (id === "v2-wizard-trip-title") {
+        _titleUserEdited = true;
+        updateDuplicateTitleNote();
+      }
+      if (id === "v2-wizard-date-start" || id === "v2-wizard-date-end") _dateUserEdited = true;
+      if (id === "v2-wizard-user-notes") syncChipPressedState();
+      saveDraft();
+    });
   });
+
+  var advanced = $("v2-wizard-advanced");
+  if (advanced) {
+    advanced.addEventListener("toggle", function () {
+      trackStudioEvent("advanced_fields_toggle", { open: !!advanced.open });
+    });
+  }
+
+  var firstTipDismiss = $("v2-wizard-first-tip-dismiss");
+  if (firstTipDismiss) firstTipDismiss.addEventListener("click", dismissFirstTip);
 
   document.querySelectorAll('input[name="v2-wizard-layout-density"]').forEach(function (input) {
     input.addEventListener("change", function () {
@@ -967,6 +1336,7 @@ export function initImportWizard() {
       var target = $(targetId);
       if (!target) return;
       target.value = chip.textContent || "";
+      if (targetId === "v2-wizard-user-notes") syncChipPressedState();
       saveDraft();
       target.focus();
     });
@@ -983,8 +1353,8 @@ export function initImportWizard() {
   }
 
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && _open && V2.state !== "Importing") {
-      closeImportWizard("esc");
+    if (e.key === "Escape" && _open && !_closeConfirmOpen && V2.state !== "Importing") {
+      requestCloseWizard("esc");
     }
   });
 }

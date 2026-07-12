@@ -55,6 +55,17 @@ const ALLOWED = new Set([
   "cover_opening_style_change",
   "cover_opening_style_selector_impression",
   "cover_joint_pick",
+  // Import Wizard v3 + A.1
+  "wizard_step_view",
+  "preview_loaded",
+  "advanced_drawer_open",
+  "folder_picked",
+  "import_mode_view",
+  "import_mode_switch",
+  "layout_density_change",
+  "photo_count_hint_show",
+  "advanced_fields_toggle",
+  "close_confirm",
 ]);
 
 const EVENT_RING_KEY = "travelogue.studio.eventRing";

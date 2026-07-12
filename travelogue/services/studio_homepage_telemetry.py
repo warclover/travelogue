@@ -88,6 +88,10 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "import_mode_view",
         "import_mode_switch",
         "layout_density_change",
+        # Import Wizard A.1（PRD-IMPORT-WIZARD-A1-DELTA §6）
+        "photo_count_hint_show",
+        "advanced_fields_toggle",
+        "close_confirm",
     }
 )
 

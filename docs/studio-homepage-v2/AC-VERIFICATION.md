@@ -13,7 +13,7 @@
 | AC-HP2-07 | 横拖不误触 Lightbox | **自动** | pointer move > DRAG_THRESHOLD → no open |
 | AC-HP2-08 | 奇数尾页左对齐留白 | **自动 + 人工** | 末 index 右槽 empty；截图 |
 | AC-HP2-09 | carousel 首尾 clamp 不 wrap | **自动** | index 边界单测；prev/next disabled |
-| AC-HP2-10 | 主 CTA → Sheet；路径仅在 Sheet | **自动** | e2e click CTA → sheet visible；无 path 在 Bento |
+| AC-HP2-10 | 主 CTA → Import UI（默认 Wizard `#v2-wizard-root`；flag off 为 Sheet）；路径仅在导入 UI 内 | **自动** | e2e click CTA → wizard/sheet visible；无 path 在 Bento |
 | AC-HP2-11 | trips≥1 → Bento **与**书架区同屏；Loading 无错误态闪屏 | **自动** | harness multi；`#v2-frame` visible + `#v2-shelf` visible |
 | AC-HP2-12 | iPad 1024 横屏 Bento；无 768 堆叠 | **人工 + 自动** | viewport 1024×768；grid 2-col |
 | AC-HP2-13 | 手机访问 → Unsupported | **自动** | viewport 390；CMP-HP2-15 visible |
