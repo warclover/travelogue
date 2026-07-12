@@ -35,6 +35,7 @@ from travelogue.web.studio_multipart import parse_multipart_form
 from travelogue.web.studio_pipeline import (
     assert_album_importable,
     infer_album_preview_date_range,
+    list_album_preview_candidates,
     sample_album_preview_thumbs,
 )
 from travelogue.web.studio_uploads import (
@@ -506,10 +507,13 @@ def handle_album_preview(handler: StudioHandlerProtocol) -> None:
         thumb_count = max(1, min(int(raw_count), 6)) if raw_count is not None else 4
     except (TypeError, ValueError):
         thumb_count = 4
+    candidates = list_album_preview_candidates(album_path)
     thumbs, photo_count, thumb_names = sample_album_preview_thumbs(
-        album_path, count=thumb_count
+        album_path, count=thumb_count, candidates=candidates
     )
-    date_start, date_end = infer_album_preview_date_range(album_path, budget_s=2.0)
+    date_start, date_end = infer_album_preview_date_range(
+        album_path, candidates=candidates, budget_s=1.0
+    )
     payload: dict = {
         "ok": True,
         "thumbs": thumbs,

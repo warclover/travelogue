@@ -240,7 +240,7 @@ def test_ac_a1_07_prefill_title_and_dates(wizard_server) -> None:
 
 
 def test_ac_a1_08_thumb_tip_no_lightbox(wizard_server) -> None:
-    """AC-A1-08 · thumb focus 有 tip；click 不打开 Lightbox。"""
+    """AC-A1-08 · thumb 有可访问名称（alt/title）；click 不打开 Lightbox。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})

@@ -413,6 +413,14 @@ def _fast_candidate_paths(album_dir: Path) -> list[Path]:
     return candidates
 
 
+def list_album_preview_candidates(album_dir: Path) -> list[Path]:
+    """Shared candidate list for thumbs + date-range preview (one rglob)."""
+    try:
+        return _fast_candidate_paths(album_dir)
+    except OSError:
+        return []
+
+
 def _render_thumb_data_url(path: Path, thumb_px: int) -> str | None:
     import base64
     from io import BytesIO
@@ -431,60 +439,106 @@ def _render_thumb_data_url(path: Path, thumb_px: int) -> str | None:
         return None
 
 
+def _peek_photo_datetime(path: Path):
+    """Lightweight taken-at for preview prefill (EXIF/filename/mtime; no RGB decode)."""
+    from datetime import datetime
+
+    from PIL import Image
+
+    from travelogue.media.image_ops import resolve_photo_datetime
+
+    try:
+        with Image.open(path) as img:
+            taken_at, _source = resolve_photo_datetime(path, img)
+            return taken_at
+    except Exception:
+        try:
+            return datetime.fromtimestamp(path.stat().st_mtime)
+        except OSError:
+            return None
+
+
+def _mtime_sample_paths(candidates: list[Path]) -> list[Path]:
+    """Pick earliest / latest / mid by mtime without a full sort copy when large."""
+    if not candidates:
+        return []
+    if len(candidates) <= 64:
+        try:
+            by_mtime = sorted(candidates, key=lambda p: p.stat().st_mtime)
+        except OSError:
+            return candidates[:1]
+        sample = [by_mtime[0]]
+        if len(by_mtime) > 1:
+            sample.append(by_mtime[-1])
+        if len(by_mtime) > 4:
+            mid = by_mtime[len(by_mtime) // 2]
+            if mid not in sample:
+                sample.append(mid)
+        return sample
+
+    earliest = latest = None
+    earliest_t = latest_t = None
+    mid = candidates[len(candidates) // 2]
+    for path in candidates:
+        try:
+            t = path.stat().st_mtime
+        except OSError:
+            continue
+        if earliest is None or t < earliest_t:
+            earliest, earliest_t = path, t
+        if latest is None or t > latest_t:
+            latest, latest_t = path, t
+    sample: list[Path] = []
+    if earliest is not None:
+        sample.append(earliest)
+    if latest is not None and latest not in sample:
+        sample.append(latest)
+    if mid not in sample:
+        sample.append(mid)
+    return sample
+
+
 def infer_album_preview_date_range(
     album_dir: Path,
     *,
-    budget_s: float = 2.0,
+    budget_s: float = 1.0,
+    candidates: list[Path] | None = None,
 ) -> tuple[str | None, str | None]:
     """Best-effort ISO date range for Wizard 2b prefill (A1-07).
 
-    Budget-capped: open at most a few extremes (EXIF → mtime). On timeout/failure
-    returns ``(None, None)`` so the client can still prefill folder name only.
+    Budget-capped and decode-light: peek EXIF/filename/mtime on a few extremes.
+    Pass ``candidates`` from a shared scan to avoid a second ``rglob``.
+    On timeout/failure returns ``(None, None)``.
     """
     from datetime import datetime
 
-    from travelogue.media.image_ops import load_image_normalized
-
     started = time.monotonic()
-    try:
-        candidates = _fast_candidate_paths(album_dir)
-    except OSError:
-        return None, None
+    if candidates is None:
+        try:
+            candidates = _fast_candidate_paths(album_dir)
+        except OSError:
+            return None, None
     if not candidates:
         return None, None
 
-    try:
-        by_mtime = sorted(candidates, key=lambda p: p.stat().st_mtime)
-    except OSError:
+    sample = _mtime_sample_paths(candidates)
+    if not sample:
         return None, None
-
-    sample: list[Path] = [by_mtime[0]]
-    if len(by_mtime) > 1:
-        sample.append(by_mtime[-1])
-    if len(by_mtime) > 4:
-        mid = by_mtime[len(by_mtime) // 2]
-        if mid not in sample:
-            sample.append(mid)
 
     taken: list[datetime] = []
     for path in sample:
         if time.monotonic() - started > budget_s:
             break
-        try:
-            loaded = load_image_normalized(path)
-            taken.append(loaded.taken_at)
-        except Exception:
-            try:
-                taken.append(datetime.fromtimestamp(path.stat().st_mtime))
-            except OSError:
-                continue
+        peeked = _peek_photo_datetime(path)
+        if peeked is not None:
+            taken.append(peeked)
 
-    if not taken and by_mtime:
+    if not taken:
         try:
-            taken = [
-                datetime.fromtimestamp(by_mtime[0].stat().st_mtime),
-                datetime.fromtimestamp(by_mtime[-1].stat().st_mtime),
-            ]
+            times = []
+            for path in sample[:2]:
+                times.append(datetime.fromtimestamp(path.stat().st_mtime))
+            taken = times
         except OSError:
             return None, None
 
@@ -501,6 +555,7 @@ def sample_album_preview_thumbs(
     count: int = 4,
     thumb_px: int = 112,
     max_photos: int = 250,
+    candidates: list[Path] | None = None,
 ) -> tuple[list[str], int, list[str]]:
     """Return JPEG data-URL thumbs evenly sampled from *album_dir*.
 
@@ -508,14 +563,19 @@ def sample_album_preview_thumbs(
     跳过逐张打开做 EXIF 排序的精确扫描，改为按文件名序抽样，photo_count 为快速
     候选计数（近似值，仅用于验货文案，不影响真实导入的精确统计口径）。
 
+    Pass ``candidates`` from a shared scan to avoid a second ``rglob``.
+
     Returns ``(thumbs, photo_count, thumb_names)``.
     """
     count = max(1, min(int(count or count), MAX_ALBUM_PREVIEW_THUMBS))
 
-    try:
-        fast_candidates = _fast_candidate_paths(album_dir)
-    except OSError:
-        return [], 0, []
+    if candidates is None:
+        try:
+            fast_candidates = _fast_candidate_paths(album_dir)
+        except OSError:
+            return [], 0, []
+    else:
+        fast_candidates = list(candidates)
 
     if not fast_candidates:
         return [], 0, []

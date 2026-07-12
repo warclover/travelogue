@@ -297,10 +297,16 @@ def test_studio_home_v2_import_sheet_modules() -> None:
     assert "填写细节 →" in wizard
     assert "requestCloseWizard" in wizard
     assert "photo_count_hint_show" in wizard
+    assert "resetPrefillableFieldsForNewFolder" in wizard
+    assert "syncFineSnapshotAfterPrefill" in wizard
+    assert "_countHintTrackedKey" in wizard
+    assert "照片处理：已关闭智能挑选" in wizard
+    assert "已关闭智能挑选 · 连拍自动择优" not in wizard
     assert "advanced_fields_toggle" in wizard
     assert "close_confirm" in wizard
     assert "updateTemplateModeHint" in wizard
     assert "wireTemplateSelect" in wizard
+    assert "导入向导加载失败" in entry
 
     # Sheet a11y / pick / upload 已迁到 Wizard
     assert "trapFocus" in wizard

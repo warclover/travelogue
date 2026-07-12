@@ -12,10 +12,18 @@ let _uiReady = null;
 
 function ensureUiReady() {
   if (_uiReady) return _uiReady;
-  _uiReady = import("./import-wizard.js").then(function (m) {
-    m.initImportWizard();
-    return m;
-  });
+  _uiReady = import("./import-wizard.js")
+    .then(function (m) {
+      m.initImportWizard();
+      return m;
+    })
+    .catch(function () {
+      _uiReady = null;
+      if (typeof studioToast === "function") {
+        studioToast("导入向导加载失败，请刷新重试", { duration: 3200 });
+      }
+      return null;
+    });
   return _uiReady;
 }
 
@@ -26,12 +34,14 @@ export function openImportSheet(opts) {
     return;
   }
   ensureUiReady().then(function (m) {
+    if (!m) return;
     m.openImportWizard(opts);
   });
 }
 
 export function closeImportSheet(reason) {
   ensureUiReady().then(function (m) {
+    if (!m) return;
     if (typeof m.isImportWizardOpen === "function" && m.isImportWizardOpen()) {
       m.closeImportWizard(reason);
     }

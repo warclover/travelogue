@@ -17,8 +17,8 @@ SECTIONS: list[tuple[str, int, int | None, str]] = [
     ("bench.css", 1445, 2078, "Bench + settings panel portaled styles"),
     ("shelf.css", 2079, 2299, "Web shelf revisit zone"),
     ("theme-classic.css", 2300, 2587, "Theme classic dark fallback"),
-    ("import-sheet.css", 2588, 2967, "Import sheet + form controls"),
-    ("import-wizard.css", 2968, 3385, "Import Wizard v3 dialog"),
+    # Import Sheet CSS retired (RET-3); Wizard owns import surface styles.
+    ("import-wizard.css", 2588, 3385, "Import Wizard dialog + form controls"),
     ("overlays.css", 3386, 3705, "Import scrim, importing, success, failed"),
     ("chrome.css", 3706, 3938, "Lightbox, unsupported, responsive, reduced motion"),
     ("dev-panel.css", 3939, None, "Dev harness panel"),

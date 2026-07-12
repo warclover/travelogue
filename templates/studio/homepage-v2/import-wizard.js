@@ -37,6 +37,7 @@ var _dateUserEdited = false;
 var _fineEntrySnapshot = null;
 var _closeConfirmOpen = false;
 var _fineVisited = false;
+var _countHintTrackedKey = null;
 
 var IMPORT_DRAFT_KEY = "travelogue.studio.importDraft";
 var IMPORT_MODE_KEY = "travelogue.studio.lastImportMode";
@@ -159,7 +160,7 @@ function updatePhotoSummary() {
     line = "照片处理：智能挑选已开启 · 已保留连拍与近似照片";
     warn = true;
   } else if (!cull && !keep) {
-    line = "照片处理：已关闭智能挑选 · 连拍自动择优";
+    line = "照片处理：已关闭智能挑选";
     warn = true;
   } else {
     line = "照片处理：已关闭智能挑选 · 已保留连拍与近似照片";
@@ -260,7 +261,11 @@ function updateCountHint() {
   }
   hint.textContent = text;
   show(hint, true);
-  trackStudioEvent("photo_count_hint_show", { bucket: bucket, photoCount: n });
+  var trackKey = String(_pendingAlbumPath || _pendingFolderName || "") + "|" + bucket + "|" + n;
+  if (_countHintTrackedKey !== trackKey) {
+    _countHintTrackedKey = trackKey;
+    trackStudioEvent("photo_count_hint_show", { bucket: bucket, photoCount: n });
+  }
 }
 
 function renderThumbs(thumbs) {
@@ -283,7 +288,6 @@ function renderThumbs(thumbs) {
     img.src = url;
     img.alt = tip;
     img.title = tip;
-    img.tabIndex = 0;
     img.loading = "lazy";
     img.width = 56;
     img.height = 56;
@@ -354,7 +358,10 @@ function fetchAlbumPreview(albumPath) {
       updateCountHint();
       updatePhotoCullOptoutUi();
       updateLayoutDensityWarn();
-      if (_step === "fine") maybePrefillFineFromPreview();
+      if (_step === "fine") {
+        maybePrefillFineFromPreview();
+        syncFineSnapshotAfterPrefill();
+      }
       updateDuplicateTitleNote();
       trackStudioEvent("preview_loaded", {
         photoCount: _pendingPhotoCount,
@@ -506,14 +513,37 @@ function expandFallbackImport() {
   }
 }
 
+/** 换夹后清掉会污染新导入的预填字段（名称 / 日期）。 */
+function resetPrefillableFieldsForNewFolder() {
+  safeSet("v2-wizard-trip-title", "");
+  safeSet("v2-wizard-date-start", "");
+  safeSet("v2-wizard-date-end", "");
+  _titleUserEdited = false;
+  _dateUserEdited = false;
+  _countHintTrackedKey = null;
+  _fineEntrySnapshot = null;
+}
+
 function maybePrefillFineFromPreview() {
   if (!_titleUserEdited) {
     var name = _pendingFolderName || basenameTitle(_pendingAlbumPath);
     if (name) safeSet("v2-wizard-trip-title", name.slice(0, 20));
+    else safeSet("v2-wizard-trip-title", "");
   }
   if (!_dateUserEdited) {
-    if (_previewDateStart) safeSet("v2-wizard-date-start", _previewDateStart);
-    if (_previewDateEnd) safeSet("v2-wizard-date-end", _previewDateEnd);
+    safeSet("v2-wizard-date-start", _previewDateStart || "");
+    safeSet("v2-wizard-date-end", _previewDateEnd || "");
+  }
+}
+
+/** preview 异步回填后，只同步系统预填字段进快照，避免误报 dirty。 */
+function syncFineSnapshotAfterPrefill() {
+  if (!_fineEntrySnapshot || _step !== "fine") return;
+  var cur = snapshotFineFields();
+  if (!_titleUserEdited) _fineEntrySnapshot.title = cur.title;
+  if (!_dateUserEdited) {
+    _fineEntrySnapshot.dateStart = cur.dateStart;
+    _fineEntrySnapshot.dateEnd = cur.dateEnd;
   }
 }
 
@@ -633,8 +663,11 @@ function requestCloseWizard(reason) {
     });
     return;
   }
-  if (window.confirm("保留这次的填写？\n确定=保留并关闭，取消=继续填写")) {
+  // studioModal 不可用时：二次 confirm 覆盖 keep / discard / cancel
+  if (window.confirm("保留这次的填写并关闭？\n确定=保留并关闭，取消=查看其他选项")) {
     run("keep");
+  } else if (window.confirm("丢弃这次的填写并关闭？\n确定=丢弃并关闭，取消=继续填写")) {
+    run("discard");
   } else {
     _closeConfirmOpen = false;
     trackStudioEvent("close_confirm", { action: "cancel" });
@@ -682,9 +715,14 @@ function goToStep2(opts) {
   }
   if (!_titleUserEdited) {
     var titleInput = $("v2-wizard-trip-title");
-    if (titleInput && !titleInput.value && _pendingAlbumPath) {
-      titleInput.value = basenameTitle(_pendingAlbumPath);
+    if (titleInput && _pendingAlbumPath) {
+      var nextTitle = (_pendingFolderName || basenameTitle(_pendingAlbumPath) || "").slice(0, 20);
+      titleInput.value = nextTitle;
     }
+  }
+  if (!_dateUserEdited && !_previewDateStart && !_previewDateEnd) {
+    safeSet("v2-wizard-date-start", "");
+    safeSet("v2-wizard-date-end", "");
   }
   var start = $("v2-wizard-start");
   if (start) start.focus();
@@ -717,8 +755,7 @@ function afterFolderPicked(albumPath, via) {
   _previewThumbNames = [];
   _previewDateStart = null;
   _previewDateEnd = null;
-  _titleUserEdited = false;
-  _dateUserEdited = false;
+  resetPrefillableFieldsForNewFolder();
   trackStudioEvent("pick_folder", { via: via || "native" });
   trackStudioEvent("folder_picked", { via: via || "native" });
   goToStep2({});

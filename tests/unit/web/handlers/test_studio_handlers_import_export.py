@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 from unittest.mock import patch
@@ -655,3 +656,27 @@ def test_infer_album_preview_date_range_empty(tmp_path: Path) -> None:
     empty = tmp_path / "empty-album"
     empty.mkdir()
     assert infer_album_preview_date_range(empty) == (None, None)
+
+
+def test_infer_album_preview_date_range_reuses_candidates(tmp_path: Path) -> None:
+    """Shared candidates avoid a second rglob; mtime extremes still yield ISO dates."""
+    from travelogue.web.studio_pipeline import (
+        infer_album_preview_date_range,
+        list_album_preview_candidates,
+    )
+
+    album = tmp_path / "reuse-scan"
+    album.mkdir()
+    for i, name in enumerate(("a.jpg", "b.jpg", "c.jpg")):
+        p = album / name
+        p.write_bytes(b"not-a-real-image")
+        # Stagger mtimes so earliest/latest differ when EXIF peek fails.
+        os.utime(p, (1_700_000_000 + i * 86_400, 1_700_000_000 + i * 86_400))
+
+    candidates = list_album_preview_candidates(album)
+    assert len(candidates) == 3
+    start, end = infer_album_preview_date_range(album, candidates=candidates, budget_s=1.0)
+    assert start is not None and end is not None
+    assert re.match(r"^\d{4}-\d{2}-\d{2}$", start)
+    assert re.match(r"^\d{4}-\d{2}-\d{2}$", end)
+    assert start <= end
