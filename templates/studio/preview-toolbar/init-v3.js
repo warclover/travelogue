@@ -90,6 +90,7 @@ import {
   snapshotReadingPayload,
   applyReaderSurfaceMode,
 } from "./features.js";
+import { mountBookendsPanel } from "./bookends.js";
 
 var READER_VIEW_KEY = "travelogue.studio.readerView";
 var EXPORT_HINT_KEY = "travelogue.studio.exportHintSeen"; // legacy; pulse 现用 shouldShowExportPulse
@@ -226,6 +227,13 @@ export function initToolbarV3(root, tripId) {
     },
     mountCoverStyleControls: function (slot) {
       mountCoverStyleControls(slot, tripId);
+    },
+    mountBookendsPanel: function (slot) {
+      mountBookendsPanel(slot, tripId, {
+        mountCoverStyleControls: function (inner, styleOpts) {
+          mountCoverStyleControls(inner, tripId, styleOpts || {});
+        },
+      });
     },
     syncCopyDisplayUi: function (container) {
       if (!container) return;

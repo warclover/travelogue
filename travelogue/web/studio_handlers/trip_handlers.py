@@ -21,6 +21,14 @@ from travelogue.web.studio_handlers.trip_list_handlers import (
     handle_patch_stratum_preference,
     handle_trips,
 )
+from travelogue.web.studio_handlers.bookends_handlers import (
+    handle_get_bookends,
+    handle_post_repick_closing,
+    handle_post_repick_opening,
+    handle_post_resolve_closing,
+    handle_post_resolve_opening,
+    handle_post_restore_auto,
+)
 from travelogue.web.studio_handlers.trip_moment_handlers import (
     handle_get_moment_curation,
     handle_patch_moment,
@@ -39,6 +47,7 @@ __all__ = [
     "handle_chapter_layout",
     "handle_delete_trip",
     "handle_entry",
+    "handle_get_bookends",
     "handle_get_moment_curation",
     "handle_get_cohort",
     "handle_patch_cohort",
@@ -51,6 +60,11 @@ __all__ = [
     "handle_patch_template",
     "handle_post_cohort_refresh",
     "handle_post_copy_telemetry",
+    "handle_post_repick_closing",
+    "handle_post_repick_opening",
+    "handle_post_resolve_closing",
+    "handle_post_resolve_opening",
+    "handle_post_restore_auto",
     "handle_rerender",
     "handle_trip_curate",
     "handle_trips",

@@ -235,35 +235,6 @@ def last_chapter_curated_asset_id(
     )
 
 
-def _resolve_closing_allow_cover(
-    trip: dict,
-    assets: dict[str, dict],
-    *,
-    prefer_landscape: bool,
-    screen_used: set[str],
-) -> str | None:
-    """Last resort: allow cover reuse so the closing screen still has a hero."""
-    ordered = _closing_candidate_ids(
-        trip, assets, screen_used_ids=screen_used, exclude_ids=set()
-    )
-    picked = _pick_best_closing(
-        ordered,
-        assets,
-        prefer_landscape=prefer_landscape,
-        screen_used_ids=screen_used,
-        exclude_ids=set(),
-    )
-    if picked:
-        return picked
-    return last_chapter_curated_asset_id(
-        trip,
-        assets,
-        prefer_landscape=prefer_landscape,
-        screen_used_ids=screen_used,
-        exclude_ids=set(),
-    )
-
-
 def resolve_closing_asset_id(
     trip: dict,
     assets: dict[str, dict],
@@ -271,7 +242,44 @@ def resolve_closing_asset_id(
     prefer_landscape: bool = False,
     exclude_ids: set[str] | None = None,
 ) -> str | None:
-    """Pick closing hero: prefer fresh (unused) assets, then screen tail."""
+    """Pick closing hero: prefer fresh (unused) assets, then screen tail.
+
+    B2a · never falls back to cover (PAIR-H1 / R-BE-09). Returns None when
+    no legal candidate remains.
+    """
+    try:
+        from travelogue.cover_engine.closing.pick import pick_closing_with_meta
+        from travelogue.config import get_config
+
+        cfg = get_config().bookends
+        pairing = cfg.pairing
+        result = pick_closing_with_meta(
+            trip,
+            prefer_landscape=prefer_landscape,
+            exclude_ids=exclude_ids,
+            assets=assets,
+            soft_weight=float(pairing.soft_weight),
+            near_dup_seconds=float(pairing.near_dup_seconds),
+            require_hard=bool(pairing.require_hard) and str(cfg.pairing_version) != "off",
+        )
+        return result["closing_asset_id"]
+    except Exception:
+        # NFR fail-open: legacy heuristic without cover reuse
+        return _resolve_closing_no_cover_fallback(
+            trip,
+            assets,
+            prefer_landscape=prefer_landscape,
+            exclude_ids=exclude_ids,
+        )
+
+
+def _resolve_closing_no_cover_fallback(
+    trip: dict,
+    assets: dict[str, dict],
+    *,
+    prefer_landscape: bool = False,
+    exclude_ids: set[str] | None = None,
+) -> str | None:
     screen_used = collect_layout_screen_asset_ids(trip)
     exclude_ids = set(exclude_ids or set())
     exclude_ids |= cover_ids_to_exclude(trip)
@@ -287,15 +295,10 @@ def resolve_closing_asset_id(
     )
     if picked:
         return picked
-    picked = last_chapter_curated_asset_id(
+    return last_chapter_curated_asset_id(
         trip,
         assets,
         prefer_landscape=prefer_landscape,
         screen_used_ids=screen_used,
         exclude_ids=exclude_ids,
-    )
-    if picked:
-        return picked
-    return _resolve_closing_allow_cover(
-        trip, assets, prefer_landscape=prefer_landscape, screen_used=screen_used
     )

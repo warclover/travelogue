@@ -276,7 +276,7 @@ def _attach_cover_explain(
         curation.pop("coverExplain", None)
 
 
-def sync_trip_covers(
+def _sync_trip_covers_core(
     trip: dict,
     *,
     export_layout: str | None = None,
@@ -290,14 +290,13 @@ def sync_trip_covers(
     force: bool = False,
     joint_enabled: bool | None = None,
 ) -> str:
-    """Write coverAssetId (+ coverByLayout when exportLayout=auto). Returns primary cover id.
+    """Core Opening write path (called via cover_engine.api.resolve_opening)."""
+    from travelogue.cover_engine.lock import is_opening_locked, sync_lock_mirrors
 
-    V6 · web path uses Cover Style Engine joint pick when unlocked (D-CSV6-53).
-    Mobile still uses pick_cover_asset_id. When coverJointLocked and not force, web is skipped.
-    """
     assets = assets if assets is not None else layout_eligible_assets(trip)
     layout = export_layout or trip.get("exportLayout") or "auto"
     curation = trip.setdefault("curation", {})
+    sync_lock_mirrors(trip)
     cs, cs_v2, ver = _cover_scoring_runtime(cover_scoring, cover_scoring_v2, scoring_version)
     p6 = bool(enable_phase6_cover_factors and cs.enable_phase6_factors)
     scoring_kwargs = {
@@ -361,7 +360,7 @@ def sync_trip_covers(
         apply_joint_pick(trip, explain, lock=True, layout="web")
         return str(explain.asset_id or "")
 
-    web_locked = bool(curation.get("coverJointLocked")) and not force
+    web_locked = is_opening_locked(trip) and not force
 
     if layout == "auto":
         mobile_id = _pick_cover_asset_id(
@@ -522,6 +521,42 @@ def sync_trip_covers(
         curation.pop("coverExplain", None)
     _write_blind_review(cover_id, layout)
     return cover_id
+
+
+def sync_trip_covers(
+    trip: dict,
+    *,
+    export_layout: str | None = None,
+    assets: list[dict] | None = None,
+    featured_weight: float = 1.35,
+    featured_min_for_cover_pool: int = 2,
+    enable_phase6_cover_factors: bool = True,
+    cover_scoring=None,
+    cover_scoring_v2=None,
+    scoring_version: str | None = None,
+    force: bool = False,
+    joint_enabled: bool | None = None,
+) -> str:
+    """Write coverAssetId (+ coverByLayout when exportLayout=auto). Returns primary cover id.
+
+    B1 · delegates to cover_engine.api.resolve_opening (D-CSV6-53 / Bookends).
+    """
+    from travelogue.cover_engine.api import resolve_opening
+
+    decision = resolve_opening(
+        trip,
+        layout=export_layout,
+        assets=assets,
+        featured_weight=featured_weight,
+        featured_min_for_cover_pool=featured_min_for_cover_pool,
+        enable_phase6_cover_factors=enable_phase6_cover_factors,
+        cover_scoring=cover_scoring,
+        cover_scoring_v2=cover_scoring_v2,
+        scoring_version=scoring_version,
+        force=force,
+        joint_enabled=joint_enabled,
+    )
+    return decision.cover_asset_id
 
 
 from travelogue.curation.chapter_items import (
@@ -1490,6 +1525,9 @@ def run_curate(
     )
     if apply_layout:
         record_applied_layout_density(trip, cfg=app_cfg)
+        from travelogue.cover_engine.api import maybe_resolve_closing_after_layout
+
+        maybe_resolve_closing_after_layout(trip, layout=layout)
 
     return CurateResult(
         chapter_count=len(trip.get("chapters", [])),

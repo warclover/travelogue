@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bookends · 成对正反例（DE-BE-01）</title>
+  <style>
+    :root {
+      --ink: #1c1915;
+      --muted: #5c564c;
+      --paper: #f3efe6;
+      --panel: #fffdf8;
+      --ok: #2f6b4f;
+      --bad: #8a3b2c;
+      --line: rgba(28, 25, 21, 0.12);
+      --font: "Iowan Old Style", "Palatino Linotype", "Songti SC", serif;
+      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 20% 0%, #ebe4d6 0%, transparent 50%),
+        linear-gradient(180deg, #e8e2d4, var(--paper));
+      line-height: 1.5;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 64px; }
+    h1 { font-family: var(--font); font-size: 28px; margin: 0 0 8px; }
+    .lead { color: var(--muted); max-width: 70ch; margin: 0 0 28px; }
+    .meta { font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+    .grid { display: grid; gap: 18px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: start;
+    }
+    @media (max-width: 720px) { .card { grid-template-columns: 1fr; } }
+    .badge {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+      padding: 4px 8px; border-radius: 999px; white-space: nowrap;
+    }
+    .badge--ok { background: rgba(47,107,79,.12); color: var(--ok); }
+    .badge--bad { background: rgba(138,59,44,.12); color: var(--bad); }
+    h2 { font-family: var(--font); font-size: 18px; margin: 0 0 6px; }
+    .desc { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+    .pair {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .pane {
+      border-radius: 10px; overflow: hidden; min-height: 140px;
+      position: relative; border: 1px solid var(--line);
+    }
+    .pane span {
+      position: absolute; left: 8px; top: 8px; font-size: 11px;
+      background: rgba(255,255,255,.82); padding: 2px 6px; border-radius: 4px;
+    }
+    .pane p {
+      position: absolute; left: 10px; right: 10px; bottom: 10px;
+      margin: 0; font-size: 12px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.45);
+    }
+    .p1 { background: linear-gradient(160deg, #6b4c3b, #c4a484 55%, #8a6a52); }
+    .p1b { background: linear-gradient(160deg, #3d4a55, #8fa0ad 50%, #5d6b76); }
+    .p2 { background: linear-gradient(160deg, #1f4d6e, #7eb6d4 45%, #3a6f8c); }
+    .p2b { background: linear-gradient(200deg, #12151c, #3a3348 40%, #1a1d28); }
+    .p3 { background: linear-gradient(160deg, #4a6741, #a8c08e); }
+    .p3b { background: linear-gradient(160deg, #4a6741, #a8c08e); outline: 2px solid var(--bad); outline-offset: -2px; }
+    .p4 { background: radial-gradient(circle at 50% 35%, #e8c9a8 0 28%, #7a5340 29% 100%); }
+    .p4b { background: radial-gradient(circle at 48% 40%, #efd0b4 0 34%, #6e4a3a 35% 100%); }
+    .p5 { background: linear-gradient(145deg, #d97706, #fbbf24 40%, #92400e); }
+    .p5b { background: linear-gradient(145deg, #b45309, #f59e0b 35%, #78350f); }
+    .p6 { background: linear-gradient(160deg, #334155, #94a3b8); }
+    .p6b {
+      background: repeating-linear-gradient(-45deg, #eee8dc, #eee8dc 8px, #e2d9c8 8px, #e2d9c8 16px);
+      display: grid; place-items: center; color: var(--muted); font-size: 13px;
+    }
+    .fixture { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    code { font-size: 11px; background: rgba(0,0,0,.05); padding: 1px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>成对正反例 · DE-BE-01</h1>
+    <p class="lead">PRD 附录 C 最低 6 组图例附件。用示意块表达「封面 × 封底」成对意图；自动化锚点见右侧 fixture。</p>
+    <p class="meta">关联：PRD-BOOKENDS-ENGINE-V1 §附录 C · ACCEPTANCE · 盲评手册</p>
+    <div class="grid">
+      <article class="card">
+        <div>
+          <h2>1. 人像封面 × 空景/道路封底</h2>
+          <p class="desc">正例：封面有人，封底留白或道路回望，情绪收束。</p>
+          <div class="pair">
+            <div class="pane p1"><span>封面</span><p>近景人像</p></div>
+            <div class="pane p1b"><span>封底</span><p>空景 / 道路</p></div>
+          </div>
+          <p class="fixture">Fixture：<code>test_bookends_closing_pairing.py</code>（PAIR 软对比）</p>
+        </div>
+        <span class="badge badge--ok">正 · 收束</span>
+      </article>
+      <article class="card">
+        <div>
+          <h2>2. 大风景封面 × 夜色/细节封底</h2>
+          <p class="desc">正例：开篇壮阔，结尾安静细节或夜色。</p>
+          <div class="pair">
+            <div class="pane p2"><span>封面</span><p>大风景</p></div>
+            <div class="pane p2b"><span>封底</span><p>夜色 / 细节</p></div>
+          </div>
+          <p class="fixture">Fixture：<code>test_bookends_dogfood_b2a.py</code></p>
+        </div>
+        <span class="badge badge--ok">正 · 反差</span>
+      </article>
+      <article class="card">
+        <div>
+          <h2>3. 同 id 首尾</h2>
+          <p class="desc">反例 · PAIR-H1：封面与封底不得同一张。</p>
+          <div class="pair">
+            <div class="pane p3"><span>封面</span><p>asset-A</p></div>
+            <div class="pane p3b"><span>封底</span><p>asset-A（禁止）</p></div>
+          </div>
+          <p class="fixture">AC-BE-10 / AC-BE-11 · <code>test_cover_closing.py</code></p>
+        </div>
+        <span class="badge badge--bad">反 · H1</span>
+      </article>
+      <article class="card">
+        <div>
+          <h2>4. 同脸大头连用</h2>
+          <p class="desc">反例 · PAIR-H3：人像封面后忌同主体近景封底。</p>
+          <div class="pair">
+            <div class="pane p4"><span>封面</span><p>大头 A</p></div>
+            <div class="pane p4b"><span>封底</span><p>大头 A（禁止）</p></div>
+          </div>
+          <p class="fixture">AC-BE-13 · <code>test_pair_h3</code></p>
+        </div>
+        <span class="badge badge--bad">反 · H3</span>
+      </article>
+      <article class="card">
+        <div>
+          <h2>5. 双高潮大场面</h2>
+          <p class="desc">反例 · 情绪：两端都是「最燃」画面，缺少回望。</p>
+          <div class="pair">
+            <div class="pane p5"><span>封面</span><p>高潮场面</p></div>
+            <div class="pane p5b"><span>封底</span><p>又一高潮（弱）</p></div>
+          </div>
+          <p class="fixture">盲评题干：「哪边更有收束/回望」</p>
+        </div>
+        <span class="badge badge--bad">反 · 情绪</span>
+      </article>
+      <article class="card">
+        <div>
+          <h2>6. 极小册仅 1 张合格图</h2>
+          <p class="desc">正例 · R-BE-09/17：无封底大图，保留 Colophon + 弱提示。</p>
+          <div class="pair">
+            <div class="pane p6"><span>封面</span><p>唯一合格图</p></div>
+            <div class="pane p6b">无封底大图<br/>Colophon + 弱提示</div>
+          </div>
+          <p class="fixture">AC-BE-11 / AC-BE-31 · <code>df-03-tiny</code></p>
+        </div>
+        <span class="badge badge--ok">正 · degraded</span>
+      </article>
+    </div>
+  </div>
+</body>
+</html>

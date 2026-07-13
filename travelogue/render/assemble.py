@@ -45,7 +45,6 @@ def build_render_context(
     from travelogue.render.cover_closing import (
         closing_focal_point,
         closing_use_contain_fit,
-        resolve_closing_asset_id,
         show_closing_title,
     )
     from travelogue.render.cover_opening import (
@@ -209,17 +208,39 @@ def build_render_context(
 
     closing_asset = None
     closing_id = ""
+    closing_has_hero = False
     if use_cover_closing:
-        closing_id = (
-            resolve_closing_asset_id(
-                trip,
-                assets,
-                prefer_landscape=image_layout in ("web", "auto"),
-                exclude_ids=moment_exclude,
-            )
-            or ""
-        )
+        curation = trip.get("curation") if isinstance(trip.get("curation"), dict) else {}
+        if "closingAssetId" in curation:
+            # Explicit null → no hero, do not recompute (ADR-017)
+            raw = curation.get("closingAssetId")
+            closing_id = str(raw).strip() if raw else ""
+        else:
+            from travelogue.cover_engine.api import maybe_resolve_closing_after_layout
+            from travelogue.cover_engine.lock import is_closing_locked
+
+            if not is_closing_locked(trip):
+                maybe_resolve_closing_after_layout(trip, layout=image_layout)
+                curation = trip.get("curation") if isinstance(trip.get("curation"), dict) else {}
+            raw = curation.get("closingAssetId") if "closingAssetId" in curation else None
+            if raw is None and "closingAssetId" not in curation:
+                # fail-open ephemeral pick without cover reuse
+                from travelogue.domain.closing_view import resolve_closing_asset_id
+
+                ephemeral = resolve_closing_asset_id(
+                    trip,
+                    assets,
+                    prefer_landscape=image_layout in ("web", "auto"),
+                    exclude_ids=moment_exclude,
+                )
+                closing_id = str(ephemeral or "").strip()
+            else:
+                closing_id = str(raw).strip() if raw else ""
+        if closing_id and moment_exclude and closing_id in moment_exclude:
+            # Prefer persisted id unless it collides with moment signature
+            closing_id = ""
         closing_asset = assets.get(closing_id) if closing_id else None
+        closing_has_hero = bool(closing_asset)
 
     closing_fx, closing_fy = (0.5, 0.45)
     closing_contain = False
@@ -359,6 +380,18 @@ def build_render_context(
         "hasMomentScreen": False,
         "momentScreen": {},
         "showClosingTitle": show_closing_title(meta_title) if use_cover_closing else False,
+        "hasClosingHero": closing_has_hero if use_cover_closing else False,
+        "closingDegraded": bool(
+            use_cover_closing
+            and isinstance(trip.get("curation"), dict)
+            and (trip.get("curation") or {}).get("bookendsDegraded")
+        )
+        or (use_cover_closing and not closing_has_hero),
+        "closingQuiet": (
+            use_cover_closing
+            and str((trip.get("meta") or {}).get("coverClosingStyle") or "")
+            == "colophon-quiet"
+        ),
         "closing": CoverRenderContext(
             src=closing_src,
             hasSrcset=bool(closing_srcset),

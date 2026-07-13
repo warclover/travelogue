@@ -1,0 +1,11 @@
+{
+  "version": "1",
+  "targets": {
+    "closingPreferBookendsMinRate": 0.6,
+    "coverARateMin": "freeze-from-cover-selection-signoff",
+    "totalAlbums": 10,
+    "minJudges": 3
+  },
+  "albums": [],
+  "notes": "Per album: sideA=legacy heuristic, sideB=bookends; randomize left/right for judges; record degraded, portraitCover, abstain."
+}

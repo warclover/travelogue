@@ -1,5 +1,14 @@
-<section class="cover-closing" data-block="cover-closing">
+<section
+  class="cover-closing{{#unless hasClosingHero}} cover-closing--no-hero{{/unless}}{{#if closingQuiet}} cover-closing--quiet{{/if}}"
+  data-block="cover-closing"
+  data-cover-closing="on"
+  {{#if closingQuiet}}data-cover-closing-style="colophon-quiet"{{else}}data-cover-closing-style="colophon-default"{{/if}}
+>
+  {{#if hasClosingHero}}
   {{> closing-hero}}
+  {{else}}
+  <p class="cover-closing__hint" data-block="closing-degraded-hint"{{#unless closingDegraded}} hidden{{/unless}}>已省略封底图</p>
+  {{/if}}
   <div class="cover-closing__panel">
     <span class="cover-closing__label">Colophon</span>
     {{#if useEpilogueStats}}

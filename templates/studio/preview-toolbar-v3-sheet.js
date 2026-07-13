@@ -479,8 +479,9 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     var wrap = document.createElement("div");
     wrap.className = "preview-sheet__book-layout";
     wrap.innerHTML =
-      '<p class="preview-sheet__hint preview-sheet__hint--lead">封面版式保存后立即生效。模板策略会自动重渲染。拼图改判、精选与旅行主角需点「更新版面」。</p>' +
-      '<div class="preview-sheet__cover-slot"></div>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--lead">封面与封底可在此成对调整。模板策略会自动重渲染。拼图改判、精选与旅行主角需点「更新版面」。</p>' +
+      '<div class="preview-sheet__bookends-slot"></div>' +
+      '<div class="preview-sheet__cover-slot" hidden></div>' +
       '<div class="preview-sheet__template-slot"></div>' +
       '<div class="preview-sheet__embed preview-sheet__embed--cohort"></div>' +
       '<button type="button" class="preview-sheet__primary preview-sheet__apply-layout" hidden>更新版面</button>' +
@@ -502,9 +503,17 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     var layoutWrap = renderLayoutPanel();
     bodyEl.appendChild(layoutWrap);
 
-    var coverSlot = layoutWrap.querySelector(".preview-sheet__cover-slot");
-    if (coverSlot && typeof hooks.mountCoverStyleControls === "function") {
-      hooks.mountCoverStyleControls(coverSlot);
+    var bookendsSlot = layoutWrap.querySelector(".preview-sheet__bookends-slot");
+    if (bookendsSlot && typeof hooks.mountBookendsPanel === "function") {
+      hooks.mountBookendsPanel(bookendsSlot);
+    } else {
+      var coverSlot = layoutWrap.querySelector(".preview-sheet__cover-slot");
+      if (coverSlot) {
+        coverSlot.hidden = false;
+        if (typeof hooks.mountCoverStyleControls === "function") {
+          hooks.mountCoverStyleControls(coverSlot);
+        }
+      }
     }
     var templateSlot = layoutWrap.querySelector(".preview-sheet__template-slot");
     if (templateSlot && typeof hooks.mountTemplateControls === "function") {

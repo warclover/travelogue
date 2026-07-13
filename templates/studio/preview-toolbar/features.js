@@ -436,7 +436,8 @@ export function readCoverOpeningStyleFromDom() {
   }
 
 
-export function mountCoverStyleControls(slot, tripId) {
+export function mountCoverStyleControls(slot, tripId, opts) {
+    opts = opts || {};
     if (!slot || slot.querySelector(".preview-sheet__cover-styles")) return;
     var section = document.createElement("div");
     section.className = "preview-sheet__section preview-sheet__cover-section";
@@ -488,6 +489,27 @@ export function mountCoverStyleControls(slot, tripId) {
       if (fitHintEl) {
         fitHintEl.hidden = true;
         fitHintEl.textContent = "";
+      }
+      // Nested under Bookends: route through repick-opening for closing cascade (R-BE-14)
+      if (opts.viaBookends && typeof opts.applyStyleViaBookends === "function") {
+        return Promise.resolve(opts.applyStyleViaBookends(next, keepCover))
+          .then(function (ok) {
+            setBusy(false);
+            if (ok === false) return;
+            selectedStyle = next;
+            syncSelection(next);
+            syncCoverOpeningStyleInDom(next);
+            trackStudioEvent("cover_opening_style_change", {
+              tripId: tripId,
+              coverOpeningStyle: next,
+              viaBookends: true,
+              repickCover: !keepCover,
+            });
+          })
+          .catch(function () {
+            setBusy(false);
+            showToolbarToast("保存失败", { error: true });
+          });
       }
       postJsonConflictRetry(tripApiBase(tripId) + "/save-copy", {
         patches: [{ path: "meta.coverOpeningStyle", value: next }],

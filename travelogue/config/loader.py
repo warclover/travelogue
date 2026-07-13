@@ -11,6 +11,7 @@ from travelogue.config._common import normalize_arc_mode, normalize_narrative_sc
 from travelogue.config.aesthetic import aesthetic_from_dict
 from travelogue.config.app import AppConfig
 from travelogue.config.clustering import GeocodeConfig, clustering_from_dict
+from travelogue.config.bookends import bookends_config_from_dict
 from travelogue.config.cohort import CohortConfig
 from travelogue.config.cover_scoring_params import CoverScoringParams
 from travelogue.config.cull import cull_from_dict
@@ -334,6 +335,7 @@ def load_config(path: Path | None = None) -> AppConfig:
         geocode_raw.mark_keys("enabled", "provider", "api_key_env", "apiKeyEnv")
     curate_raw = data.get("curate") if isinstance(data.get("curate"), dict) else {}
     curate_layout_raw = curate_raw.get("layout") if isinstance(curate_raw.get("layout"), dict) else {}
+    bookends_raw = data.get("bookends") if isinstance(data.get("bookends"), dict) else {}
     render_raw = data.get("render") if isinstance(data.get("render"), dict) else {}
     clustering_raw = data.get("clustering") if isinstance(data.get("clustering"), dict) else {}
     pipeline_raw = data.get("pipeline") if isinstance(data.get("pipeline"), dict) else {}
@@ -494,6 +496,7 @@ def load_config(path: Path | None = None) -> AppConfig:
                 curate_raw.get("moment") if isinstance(curate_raw.get("moment"), dict) else {}
             ),
         ),
+        bookends=bookends_config_from_dict(bookends_raw),
         narrative=NarrativeConfig(
             tone_default=str(narrative_raw.get("tone_default", "relaxed")),
             max_auto_fix_retries=int(narrative_raw.get("max_auto_fix_retries", 2)),

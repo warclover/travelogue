@@ -703,3 +703,199 @@ body.preview-sheet-open {
 .preview-sheet__body .preview-drawer__ghost {
   font-size: 13px;
 }
+
+/* Bookends · 封面与封底合页 */
+.preview-sheet__bookends {
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(20, 17, 13, 0.08);
+}
+
+.preview-sheet__bookends-sub {
+  margin: 2px 0 0;
+}
+
+.preview-sheet__bookends-oneliner {
+  margin: 8px 0 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(20, 17, 13, 0.78);
+}
+
+.preview-sheet__bookends.is-degraded .preview-sheet__bookends-oneliner {
+  color: rgba(120, 72, 20, 0.92);
+}
+
+.preview-sheet__bookends-status {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: 6px;
+  background: rgba(20, 17, 13, 0.05);
+  color: rgba(20, 17, 13, 0.78);
+}
+
+.preview-sheet__bookends.is-degraded .preview-sheet__bookends-status {
+  background: rgba(180, 110, 40, 0.12);
+  color: rgba(120, 72, 20, 0.95);
+}
+
+.preview-sheet__bookends.is-low-confidence .preview-sheet__bookends-status,
+.preview-sheet__bookends.is-soft-warn .preview-sheet__bookends-status {
+  background: rgba(90, 110, 140, 0.12);
+  color: rgba(40, 55, 80, 0.9);
+}
+
+.preview-sheet__bookends.is-pending-status .preview-sheet__bookends-status {
+  background: rgba(20, 17, 13, 0.04);
+  color: rgba(20, 17, 13, 0.62);
+}
+
+.preview-sheet__bookends-spread {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.preview-sheet__bookends-pane {
+  min-width: 0;
+  padding: 8px;
+  background: rgba(20, 17, 13, 0.03);
+  border-radius: 8px;
+}
+
+.preview-sheet__bookends-pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.preview-sheet__bookends-pane-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(20, 17, 13, 0.62);
+}
+
+.preview-sheet__bookends-lock {
+  font-size: 11px;
+  color: rgba(20, 17, 13, 0.55);
+  white-space: nowrap;
+}
+
+.preview-sheet__bookends-hero {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  background: rgba(20, 17, 13, 0.08) center / cover no-repeat;
+  margin-bottom: 8px;
+  display: grid;
+  place-items: center;
+}
+
+.preview-sheet__bookends-hero.is-empty {
+  background-image: none !important;
+  background-color: rgba(20, 17, 13, 0.04);
+  border: 1px dashed rgba(20, 17, 13, 0.18);
+}
+
+.preview-sheet__bookends-hero-empty {
+  font-size: 12px;
+  color: rgba(20, 17, 13, 0.55);
+  text-align: center;
+  padding: 0 8px;
+}
+
+.preview-sheet__bookends-style,
+.preview-sheet__bookends-pending,
+.preview-sheet__bookends-preview-note,
+.preview-sheet__bookends-empty-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: rgba(20, 17, 13, 0.65);
+}
+
+.preview-sheet__bookends-preview-note {
+  color: rgba(90, 110, 140, 0.95);
+}
+
+.preview-sheet__bookends-cands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preview-sheet__bookends-thumb {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  background: rgba(20, 17, 13, 0.08);
+}
+
+.preview-sheet__bookends-thumb.is-on {
+  border-color: rgba(20, 17, 13, 0.72);
+  opacity: 1;
+}
+
+.preview-sheet__bookends-thumb.is-muted {
+  opacity: 0.55;
+}
+
+.preview-sheet__bookends-thumb.is-preview:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.preview-sheet__bookends-thumb-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+}
+
+.preview-sheet__bookends-mobile {
+  margin: 10px 0 8px;
+  font-size: 12px;
+  color: rgba(20, 17, 13, 0.7);
+}
+
+.preview-sheet__bookends-mobile-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.preview-sheet__bookends-mobile-thumb {
+  flex: 0 0 56px;
+  width: 56px;
+  height: 72px;
+  border-radius: 6px;
+  background: rgba(20, 17, 13, 0.08) center / cover no-repeat;
+}
+
+.preview-sheet__bookends-mobile-thumb.is-empty {
+  border: 1px dashed rgba(20, 17, 13, 0.18);
+}
+
+.preview-sheet__bookends-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+@media (max-width: 520px) {
+  .preview-sheet__bookends-spread {
+    grid-template-columns: 1fr;
+  }
+}

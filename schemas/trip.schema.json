@@ -495,7 +495,29 @@
         },
         "coverJointLocked": {
           "type": "boolean",
-          "description": "V6 · after successful joint pick, web style+cover locked unless force/repick"
+          "description": "V6 · mirror of bookendsLock.opening (compat)"
+        },
+        "bookendsLock": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Bookends Engine · granular opening/closing locks (R-BE-20)",
+          "properties": {
+            "opening": { "type": "boolean" },
+            "closing": { "type": "boolean" }
+          }
+        },
+        "bookendsLocked": {
+          "type": "boolean",
+          "description": "Derived · bookendsLock.opening && bookendsLock.closing"
+        },
+        "closingAssetId": {
+          "description": "Bookends · closing hero asset id; null = explicit no-hero (B2a). Missing key = not yet resolved.",
+          "type": ["string", "null"]
+        },
+        "bookendsTelemetry": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Bookends Engine telemetry snapshot (PRD §9)"
         },
         "coverStyleExplain": {
           "type": "object",

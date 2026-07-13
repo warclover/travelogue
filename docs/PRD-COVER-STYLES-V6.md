@@ -7,7 +7,7 @@
 | **状态** | **M1+M2 代码门禁通过**（2026-07-10）· 有条件通过补丁已合入 · 视觉/E2E 走查后可封板 |
 | **主题代号** | 「封面多样式 V6」— 以 5 套 Opening 皮肤 **替代** V5 三款；引入 **Cover Style Engine**、样式↔图片联合策展与使用说明（**不含**封底改版与完整管理后台） |
 | **前置条件** | [PRD-COVER-STYLES-V5.md](./PRD-COVER-STYLES-V5.md) 已上线；[PRD-COVER-OPTIMIZATION-V4.md](./PRD-COVER-OPTIMIZATION-V4.md)；封面选图 v2（`cover_scoring_v2` / `pick_cover_asset_id`）；`cover-opening.hbs` / `cover-closing.hbs` 可用 |
-| **关联文档** | [cover-styles-v6-five-concepts-wireframe.html](./wireframes/cover-styles-v6-five-concepts-wireframe.html)、[cover-styles-v6-hi-fi-adefg.html](./wireframes/cover-styles-v6-hi-fi-adefg.html)、[cover-selection-plan.md](./cover-selection-plan.md)、`schemas/trip.schema.json`；**后续** `PRD-COVER-CLOSING-V1.md`（待立，见 §8.3 / 附录 F） |
+| **关联文档** | [cover-styles-v6-five-concepts-wireframe.html](./wireframes/cover-styles-v6-five-concepts-wireframe.html)、[cover-styles-v6-hi-fi-adefg.html](./wireframes/cover-styles-v6-hi-fi-adefg.html)、[cover-selection-plan.md](./cover-selection-plan.md)、`schemas/trip.schema.json`；**封底 / 引擎收口** → [PRD-BOOKENDS-ENGINE-V1.md](./PRD-BOOKENDS-ENGINE-V1.md)（兑现原 `PRD-COVER-CLOSING-V1`，见 §8.3 / 附录 F） |
 | **评审来源** | 2026-07-10 视觉评审 + Engine 讨论；**同日跨职能评审**（产品 / 架构 / UI·视觉 / 用户体验）→ 有条件通过；补丁见 v1.3.0 |
 | **验收** | [ACCEPTANCE-COVER-STYLES-V6.md](./ACCEPTANCE-COVER-STYLES-V6.md)（对齐 §10 + M1/M2；视觉/E2E 待补齐后封板） |
 | **实施清单** | [IMPLEMENTATION-COVER-STYLES-V6.md](./IMPLEMENTATION-COVER-STYLES-V6.md)（含 curate 挂点与锁定字段） |
@@ -762,7 +762,7 @@ Studio **首次**打开仍含 V5 `coverOpeningStyle` 的 trip 时，温和说明
 
 ### 8.3 封底 — 不纳入本 PRD 实施（**已拍板 · R-V6-06**）
 
-现网封底 **不回归**（G-CSV6-10 / **AC-CSV6-32**）。精修与软配对 → `PRD-COVER-CLOSING-V1.md`（附录 F）。  
+现网封底 **不回归**（G-CSV6-10 / **AC-CSV6-32**）。精修与软配对 → [PRD-BOOKENDS-ENGINE-V1.md](./PRD-BOOKENDS-ENGINE-V1.md)（原规划名 `PRD-COVER-CLOSING-V1` 的超集；附录 F）。  
 开合气质债为已知债；发布说明中承认，不作为 V6 Opening 回归缺陷。
 
 ### 8.4 一览表

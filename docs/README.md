@@ -296,7 +296,7 @@
 
 ---
 
-## 封面专项 · V4 / V5
+## 封面专项 · V4 / V5 / V6 / Bookends
 
 | 文档 | 说明 |
 |------|------|
@@ -309,8 +309,16 @@
 | [acceptance-records/cover-styles-prd-review-2026-06-15.md](./acceptance-records/cover-styles-prd-review-2026-06-15.md) | V5 跨职能评审纪要 |
 | [wireframes/cover-styles-v5-split-mat.html](./wireframes/cover-styles-v5-split-mat.html) | `split-mat` 线框 |
 | [wireframes/cover-styles-v5-magazine-head.html](./wireframes/cover-styles-v5-magazine-head.html) | `magazine-head` 线框 |
+| [PRD-COVER-STYLES-V6.md](./PRD-COVER-STYLES-V6.md) | **封面多样式 V6** · 五款 Opening + Cover Style Engine + 图×样式联合 |
+| [ACCEPTANCE-COVER-STYLES-V6.md](./ACCEPTANCE-COVER-STYLES-V6.md) | V6 验收 |
+| [IMPLEMENTATION-COVER-STYLES-V6.md](./IMPLEMENTATION-COVER-STYLES-V6.md) | V6 实施清单 |
+| [PRD-BOOKENDS-ENGINE-V1.md](./PRD-BOOKENDS-ENGINE-V1.md) | **Bookends Engine V1**（**v0.2.1** · 开发决议已合入）· 封面–封底引擎 + 成对约束 |
+| [adr/017-bookends-engine.md](./adr/017-bookends-engine.md) | ADR-017 · Bookends 挂点 / 锁 / 压字分期 / B2a·b |
+| [IMPLEMENTATION-BOOKENDS-ENGINE-V1.md](./IMPLEMENTATION-BOOKENDS-ENGINE-V1.md) | Bookends 实施清单（B0→B1→B2a→B2b） |
+| [ACCEPTANCE-BOOKENDS-ENGINE-V1.md](./ACCEPTANCE-BOOKENDS-ENGINE-V1.md) | Bookends 验收追踪（B1 起勾选） |
+| [acceptance-records/bookends-prd-review-2026-07-13.md](./acceptance-records/bookends-prd-review-2026-07-13.md) | Bookends PRD 跨职能评审纪要（产品/架构/算法/UIUX/体验/视觉/流程） |
 
-阅读顺序：**PRD-COVER-OPTIMIZATION-V4**（前置）→ **PRD-COVER-STYLES-V5** v1.1 → **IMPLEMENTATION** → **ACCEPTANCE**。
+阅读顺序：**PRD-COVER-OPTIMIZATION-V4** → **V5** → **V6** → **[PRD-BOOKENDS-ENGINE-V1](./PRD-BOOKENDS-ENGINE-V1.md)** → ADR-017 → IMPLEMENTATION → ACCEPTANCE。
 
 ---
 
@@ -471,6 +479,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-13 | Bookends：PRD v0.2.1 + [ADR-017](./adr/017-bookends-engine.md) + IMPLEMENTATION + ACCEPTANCE 索引 |
 | 2026-07-11 | 索引补 [PRD-DESKTOP-INSTALLER-V1.md](./PRD-DESKTOP-INSTALLER-V1.md)（Windows 可安装版 · Gate A/B/C） |
 | 2026-06-13 | 索引补 Phase 18–22 · Integration Sprint · ACCEPTANCE v1.3 闸门对齐 |
 | 2026-06-06 | 索引补 Phase 11–15 · M21 · Algorithm V2 · ADR-012 |

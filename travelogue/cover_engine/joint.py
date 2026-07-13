@@ -165,6 +165,19 @@ def pick_cover_style_and_asset(
     tid = _trip_id(trip)
     best: CoverJointExplain | None = None
     best_key = -1
+    best_unsafe: CoverJointExplain | None = None
+    best_unsafe_key = -1
+
+    hard_gate = False
+    try:
+        from travelogue.config import get_config
+
+        hard_gate = bool(get_config().bookends.title_safe.opening_hard_gate)
+    except Exception:
+        hard_gate = True
+
+    from travelogue.cover_engine.opening.title_safe import mark_title_safe
+
     for c in candidates:
         asset = c["asset"]
         for rec in styles:
@@ -177,11 +190,25 @@ def pick_cover_style_and_asset(
                 w_avoid=w_avoid,
             )
             key = _tie_break_key(tid, explain.style_id, explain.asset_id)
+            unsafe = bool(
+                mark_title_safe(asset, rec.id, hard_gate=hard_gate).get("titleUnsafe")
+            )
+            if hard_gate and unsafe:
+                if best_unsafe is None or explain.joint > best_unsafe.joint or (
+                    math.isclose(explain.joint, best_unsafe.joint) and key > best_unsafe_key
+                ):
+                    best_unsafe = explain
+                    best_unsafe_key = key
+                continue
             if best is None or explain.joint > best.joint or (
                 math.isclose(explain.joint, best.joint) and key > best_key
             ):
                 best = explain
                 best_key = key
+
+    if best is None and best_unsafe is not None:
+        # fail-open: only unsafe pairs existed
+        best = best_unsafe
 
     assert best is not None
     return best
@@ -279,12 +306,16 @@ def apply_joint_pick(
 
     curation["coverStyleExplain"] = _explain_to_dict(explain)
     if lock:
-        curation["coverJointLocked"] = True
+        from travelogue.cover_engine.lock import set_opening_locked
+
+        set_opening_locked(trip, True)
+
+    from travelogue.cover_engine.lock import is_opening_locked
 
     record_cover_joint_event(
         _trip_id(trip),
         explain,
-        locked=bool(curation.get("coverJointLocked")),
+        locked=is_opening_locked(trip),
     )
     return trip
 
@@ -402,6 +433,8 @@ def apply_style_keep_cover(trip: dict, style_id: str) -> CoverJointExplain:
     meta = trip.setdefault("meta", {})
     meta["coverOpeningStyle"] = style_id
     trip.setdefault("curation", {})["coverStyleExplain"] = _explain_to_dict(explain)
-    trip["curation"]["coverJointLocked"] = True
+    from travelogue.cover_engine.lock import set_opening_locked
+
+    set_opening_locked(trip, True)
     record_cover_joint_event(_trip_id(trip), explain, locked=True)
     return explain

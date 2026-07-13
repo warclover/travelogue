@@ -48,3 +48,31 @@ class CoverJointExplain:
     fit: float = 0.0
     avoid_penalty: float = 0.0
     low_confidence: bool = False
+
+
+@dataclass(frozen=True)
+class BookendsLockState:
+    opening: bool = False
+    closing: bool = False
+
+    @property
+    def all_locked(self) -> bool:
+        return self.opening and self.closing
+
+
+@dataclass(frozen=True)
+class BookendsDecision:
+    cover_asset_id: str
+    cover_by_layout: dict[str, str]
+    cover_opening_style: str
+    closing_asset_id: str | None
+    closing_style_id: str | None
+    closing_pending: bool
+    confidence: float
+    low_confidence: bool
+    degraded: bool
+    lock: BookendsLockState
+    locked: bool  # == lock.all_locked
+    explain: dict[str, Any]
+    scoring_versions: dict[str, str]
+    telemetry: dict[str, Any]
